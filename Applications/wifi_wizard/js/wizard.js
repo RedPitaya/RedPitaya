@@ -150,7 +150,9 @@
             if (param_name == 'WIFI_LIST') {
                 if (new_params[param_name].value != "")
                     WIZARD.updateList(JSON.parse(new_params[param_name].value))
-            } else if(param_name == 'WIFI_ERROR') {
+            } else if (param_name == 'WIFI_ERROR') {
+                console.log(new_params[param_name].value);
+            } else if (param_name == 'WIFI_OK') {
                 console.log(new_params[param_name].value);
             }
         }
@@ -180,7 +182,6 @@
 
         $('.btn-wifi-item').click(function() {
             $('#essid_enter').val($(this).attr('key'))
-            console.log($(this).attr('key'));
         });
     }
 

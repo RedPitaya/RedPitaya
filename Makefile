@@ -493,6 +493,7 @@ APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_SCPISERVER_DIR    = Applications/scpi_server
+APP_WIFIWIZARD_DIR    = Applications/wifi_wizard
 
 .PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server
 
@@ -513,6 +514,10 @@ lcr_meter: api $(NGINX)
 scpi_server: api $(NGINX)
 	$(MAKE) -C $(APP_SCPISERVER_DIR)
 	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+wifi_wizard: api $(NGINX)
+	$(MAKE) -C $(APP_WIFIWIZARD_DIR)
+	$(MAKE) -C $(APP_WIFIWIZARD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
 

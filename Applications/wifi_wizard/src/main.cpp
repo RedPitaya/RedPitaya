@@ -18,6 +18,7 @@ CStringParameter listOfWIFI("WIFI_LIST", CBaseParameter::RWSA, "", 10000);
 CStringParameter essidIn("WIFI_SSID", CBaseParameter::RW, "", 10000);
 CStringParameter passwIn("WIFI_PASSW", CBaseParameter::RW, "", 10000);
 CStringParameter errorOut("WIFI_ERROR", CBaseParameter::RW, "", 10000);
+CStringParameter okOut("WIFI_OK", CBaseParameter::RW, "", 10000);
 
 static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
@@ -28,10 +29,16 @@ const char *rp_app_desc(void) {
 
 int rp_app_init(void) {
     fprintf(stderr, "Loading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
-    CDataManager::GetInstance()->SetParamInterval(2000);
+    CDataManager::GetInstance()->SetParamInterval(1000);
 
     rpApp_Init();
     rpApp_OscRun();
+
+    if(!CheckIwlist())
+    	errorOut.Value() = "wireless-tools not installed";
+    else
+    	okOut.Value() = "wireless-tools installed";
+
     return 0;
 }
 
@@ -99,7 +106,7 @@ std::string ToString(std::vector<WIFINode> array) {
 bool CheckIwlist() {
 	std::string lineFromResult;
 	std::string tmpFileName = "iwlist.result";
-	std::string command = "iwlist -v" + tmpFileName;
+	std::string command = "iwlist -v > " + tmpFileName;
 
 	system(command.c_str());
 
@@ -115,6 +122,7 @@ bool CheckIwlist() {
 
 void InstallIwlist() {
 	system("apt-get install -y wireless-tools");
+	okOut.Value() = "wireless-tools installed";
 }
 
 std::string GetListOfWIFI(std::string wlanInterfaceName) {
@@ -160,15 +168,24 @@ std::string GetListOfWIFI(std::string wlanInterfaceName) {
 }
 
 void CreateWPA_SUPPL(std::string ssid, std::string pass) {
-	if(ssid == "" || pass == "")
+	if(ssid == "")
 		return;
 
 	std::stringstream result;
 
 	result << "ctrl_interface=/var/run/wpa_supplicant" << '\n' << "network={" << '\n';
 	result << "\t\tssid=\"" << ssid << "\"" << '\n';
-	result << "\t\tkey_mgmt=WPA-PSK\n";
-	result << "\t\tpsk=\"" << pass << "\"" << '\n';
+
+	if(pass != "")
+	{
+		result << "\t\tkey_mgmt=WPA-PSK\n";
+		result << "\t\tpsk=\"" << pass << "\"" << '\n';
+	}
+	else
+	{
+		result << "\t\tkey_mgmt=NONE\n";
+		result << "\t\tpsk=\"12345678\"" << '\n';
+	}
 	result << "}";
 
 	std::string command = "echo '" + result.str() + "' > /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
