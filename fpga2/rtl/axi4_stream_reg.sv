@@ -19,7 +19,7 @@ end else if (sti.TREADY) begin
   sto.TVALID <= sti.TVALID;
 end
 
-always_ff @(posedge sti.clk)
+always_ff @(posedge sti.ACLK)
 if (sti.transf) begin
   sto.TDATA  <= sti.TDATA ;
   sto.TKEEP  <= sti.TKEEP ;
