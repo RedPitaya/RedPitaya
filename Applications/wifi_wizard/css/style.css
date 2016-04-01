@@ -867,6 +867,7 @@ btn:active {
 }
 
 .connect-btn {
+    margin-top: 8px;
     background-color: #666666;
 }
 
