@@ -210,8 +210,11 @@ void CreateWPA_SUPPL(std::string ssid, std::string pass) {
 }
 
 bool ConnectToNetwork() {
-	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
+    // Kill wpa_supplicant, if it up
+	std::string command_Kill_supl = "killall pidof wpa_supplicant";
+	system(command_Kill_supl.c_str());
 
+	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
 	bool result = system(command.c_str());
 	if(result == 0)
 		return true;
