@@ -952,6 +952,9 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
 
+      $('#tx_modtyp_o_2').attr("disabled", "disabled");
+      $('#tx_modtyp_o_3').attr("disabled", "disabled");
+
     } else if (value) {
       /* external */
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
@@ -963,6 +966,9 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_muxin_gain_s').removeAttr("disabled");
       $('#apply_tx_muxin_gain').removeAttr("style");
 
+      $('#tx_modtyp_o_2').removeAttr("disabled");
+      $('#tx_modtyp_o_3').removeAttr("disabled");
+
     } else {
       /* (none) */
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
@@ -973,6 +979,9 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
 
       $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
+
+      $('#tx_modtyp_o_2').attr("disabled", "disabled");
+      $('#tx_modtyp_o_3').attr("disabled", "disabled");
     }
   }
 
