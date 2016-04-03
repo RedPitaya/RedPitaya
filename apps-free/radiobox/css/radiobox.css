@@ -116,6 +116,9 @@ input#tx_mod_osc_mag_s[disabled] {
 .form-bg-tx-muxin-gain {
   background:#805810;
 }
+.form-bg-tx-muxin-gain-ovrdrv {
+  background:#FF0000;
+}
 input#tx_muxin_gain_s[disabled] {
   background:#707070;
 }
@@ -149,6 +152,9 @@ select#rx_muxin_src_s[disabled] {
 }
 .form-bg-rx-muxin-gain {
   background:#805810;
+}
+.form-bg-rx-muxin-gain-ovrdrv {
+  background:#FF0000;
 }
 input#rx_muxin_gain_s[disabled] {
   background:#707070;

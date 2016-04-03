@@ -106,6 +106,7 @@ enum rb_params_enum_t {
     RB_RFOUT1_TERM,
     RB_RFOUT2_TERM,
     RB_QRG_INC,
+    RB_OVRDRV,
 
     RB_PARAMS_NUM
 } RB_PARAMS_ENUM;

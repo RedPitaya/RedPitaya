@@ -37,6 +37,12 @@ create_project -in_memory -part $part
 #set_property FAMILY 7SERIES [current_project]
 #set_property SIM_DEVICE 7SERIES [current_project]
 
+#set_property strategy {Vivado Synthesis Defaults} [get_runs synth_1]
+
+#set_property strategy {Vivado Implementation Defaults} [get_runs impl_1]
+#set_property strategy Performance_NetDelay_low [get_runs impl_1]
+#set_property strategy Performance_NetDelay_medium [get_runs impl_1]
+
 
 ################################################################################
 # create PS BD (processing system block design)
@@ -96,13 +102,10 @@ read_ip                           $path_ip/rb_cic_48k_to_8k_18T18.xcix
 read_ip                           $path_ip/rb_cic_5M_to_200k_18T18.xcix
 read_ip                           $path_ip/rb_cic_8k_to_41M664_18T18.xcix
 read_ip                           $path_ip/rb_cic_8k_to_48k_18T18.xcix
-read_ip                           $path_ip/rb_cordic_T_WS_O_SR_32T32_CR_B.xcix
+read_ip                           $path_ip/rb_cordic_T_WS_O_SR_18T18_NE_CR_EM_B.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
 read_ip                           $path_ip/rb_div_32Div13R13.xcix
-read_ip                           $path_ip/rb_dsp48_AaDmB_A16_D16_B16_P32.xcix
-read_ip                           $path_ip/rb_dsp48_AaDmBaC_A17_D17_B17_C35_P36.xcix
-read_ip                           $path_ip/rb_dsp48_AmB_A16_B16_P32.xcix
-read_ip                           $path_ip/rb_dsp48_AmBaC_A16_B16_C32_P32.xcix
+read_ip                           $path_ip/rb_dsp48_AaDmBaC_A18_D18_B18_C36_P37.xcix
 read_ip                           $path_ip/rb_fir_8k_to_8k_25c23_17i16_35o33.xcix
 read_ip                           $path_ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix
 read_ip                           $path_ip/rb_fir2_8k_to_8k_25c_17i16_35o32.xcix

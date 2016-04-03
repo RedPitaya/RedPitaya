@@ -129,7 +129,9 @@
                      - bit h14: STAT_RX_AFC_HIGH_SIG - '1' RX_AFC_HIGH_SIG the
                                 signal strength is high enough to let the AFC
                                 correct the frequency.
-                     - bit h17..h15: n/a
+                     - bit h15: n/a
+                     - bit h16: STAT_OVERDRIVE_TX - '1' any overdrive signal in the TX path is signaled.
+                     - bit h17: STAT_OVERDRIVE_RX - '1' any overdrive signal in the RX path is signaled.
                      - bit h18: STAT_LED0_ON - '1' RadioBox LED0 driver that is
                                 shown at the diodes, when STAT_LEDS_EN is '1'.
                      - bit h19: STAT_LED1_ON - '1' RadioBox LED1 driver that is
@@ -238,7 +240,8 @@
                          value = h50  RX_AUDIO output.
                          value = hF8  TX_CAR_OSC_INC frequency value.
                          value = hF9  RX_CAR_OSC_INC frequency value.
-                         value = hFF  LEDs show current test vector @see red_pitaya_radiobox.sv for details.
+                         value = hFE  current status of the overdrive signals.
+                         value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
                      - bit h0F..h08: n/a
                      - bit h17..h10: RFOUT1 source connection point
                          value = h00  silence.
@@ -421,7 +424,7 @@
 
     00050  R/W  TX:  RB_TX_MOD_QMIX_GAIN - TX_MOD_QMIX gain setting  (stage 2)
                      bit 15..00
-                     - bit h0F..h00: SIGNED 16 bit - TX_MOD_QMIX output amplitude.
+                     - bit h0F..h00: UNSIGNED 16 bit - TX_MOD_QMIX output amplitude.
                      - bit h1F..h10: n/a
 
 
@@ -530,6 +533,7 @@
 
 
     00160  R/W  RX:  RB_RX_MUXIN_SRC - Source signal for the analog input TX MUXer.
+                     bit 05..00
                      - bit h05..h00: Source ID
                          value = h00  no external signal used, TX_MOD_OSC used instead.
                          value = h03  Vp_Vn,     mapped to: vin[4].
@@ -558,28 +562,32 @@
                      - bit h1F..h10: n/a
 
     0016C  R/O  RX:  RB_RX_SIGNAL_STRENGTH - RX_AFC_CORDIC magnitude mean value 1/25 sec.
-                     bit 31..0, @ 125 MHz base frequency
-                     - bit h1F..h00: RX_AFC_CORDIC magnitude mean value register.
+                     bit 31..00, @ 125 MHz base frequency
+                     - bit h1F..h00: UNSIGNED 32 bit - RX_AFC_CORDIC magnitude mean value
+                                     register.
 
 
     00170  R/O  RX:  RB_RX_AFC_CORDIC_MAG - RX_AFC_CORDIC magnitude register.
                      bit 15..00, @ 125 MHz base frequency
-                     - bit h0F..h00: RX_AFC_CORDIC magnitude register.
+                     - bit h0F..h00: UNSIGNED 16 bit - RX_AFC_CORDIC magnitude register.
                      - bit h1F..h10: n/a
 
     00174  R/O  RX:  RB_RX_AFC_CORDIC_PHS - RX_AFC_CORDIC phase register.
                      bit 15..00, @ 125 MHz base frequency
-                     - bit h0F..h00: RX_AFC_CORDIC phase register.
+                     - bit h0F..h00:   SIGNED 16 bit - RX_AFC_CORDIC phase register.
                      - bit h1F..h10: n/a
 
     00178  R/O  RX:  RB_RX_AFC_CORDIC_PHS_PREV - RX_AFC_CORDIC previous phase register.
-                     bit 31..00, @ 125 MHz base frequency
-                     - bit h1F..h00: RX_AFC_CORDIC previous phase register - the 200 kHz clock before.
+                     bit 15..00, @ 125 MHz base frequency
+                     - bit h1F..h00:   SIGNED 16 bit - RX_AFC_CORDIC previous phase register -
+                                     the 200 kHz clock before.
+                     - bit h1F..h10: n/a
 
     0017C  R/O  RX:  RB_RX_AFC_CORDIC_PHS_DIFF - RX_AFC_CORDIC difference phase register.
-                     bit 31..00, @ 125 MHz base frequency
-                     - bit h1F..h00: RX_AFC_CORDIC phase difference register - the difference of phase
-                       within 200 kHz clocks.
+                     bit 15..00, @ 125 MHz base frequency
+                     - bit h1F..h00:   SIGNED 16 bit - RX_AFC_CORDIC phase difference register -
+                                     the difference of phase within 200 kHz clocks.
+                     - bit h1F..h10: n/a
 
 
     00180  R/W  RX:  RB_RX_MOD_SSB_AM_GAIN - SSB demodulator signal output gain.
@@ -603,22 +611,43 @@
                      - bit h1F..h10: n/a
 
 
-    001A0  R/W  RX:  RB_RFOUT1_GAIN - RFOUT1 amplitude register.
+    00190  R/W  RX:  RB_RFOUT1_GAIN - RFOUT1 amplitude register.
                      bit 15..00
                      - bit h0F..h00:   SIGNED 16 bit - RFOUT1 amplitude setting - 8 bit integer . 8 bit fraction value.
                      - bit h1F..h10: n/a
 
-    001A4  R/W  RX:  RB_RFOUT1_OFS - RFOUT1 offset register.
+    00194  R/W  RX:  RB_RFOUT1_OFS - RFOUT1 offset register.
                      bit 15..00
                      - bit h0F..h00:   SIGNED 16 bit - RFOUT1 offset value - 16 bit DAC value offset.
                      - bit h1F..h10: n/a
 
-    001A8  R/W  RX:  RB_RFOUT1_GAIN - RFOUT2 amplitude register.
+    00198  R/W  RX:  RB_RFOUT1_GAIN - RFOUT2 amplitude register.
                      bit 15..00
                      - bit h0F..h00:   SIGNED 16 bit - RFOUT2 amplitude setting - 8 bit integer . 8 bit fraction value.
                      - bit h1F..h10: n/a
 
-    001AC  R/W  RX:  RB_RFOUT2_OFS - RFOUT2 offset register.
+    0019C  R/W  RX:  RB_RFOUT2_OFS - RFOUT2 offset register.
                      bit 15..00
                      - bit h0F..h00:   SIGNED 16 bit - RFOUT2 offset value - 16 bit DAC value offset.
+                     - bit h1F..h10: n/a
+
+
+    001A0  R/O OMNI: RB_READOUT_RFIN1 - readout of current RFIN1.
+                     bit 15..00
+                     - bit h0F..h00:   SIGNED 16 bit - RFIN1 current data.
+                     - bit h1F..h10: n/a
+
+    001A4  R/O OMNI: RB_READOUT_RFIN2 - readout of current RFIN2.
+                     bit 15..00
+                     - bit h0F..h00:   SIGNED 16 bit - RFIN2 current data.
+                     - bit h1F..h10: n/a
+
+    001A8  R/O OMNI: RB_READOUT_RFOUT1 - readout of current RFOUT1.
+                     bit 15..00
+                     - bit h0F..h00:   SIGNED 16 bit - RFOUT1 current data.
+                     - bit h1F..h10: n/a
+
+    001AC  R/O OMNI: RB_READOUT_RFOUT2 - readout of current RFOUT2.
+                     bit 15..00
+                     - bit h0F..h00:   SIGNED 16 bit - RFOUT2 current data.
                      - bit h1F..h10: n/a
