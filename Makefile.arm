@@ -30,19 +30,6 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 
-################################################################################
-# versioning system
-################################################################################
-
-BUILD_NUMBER ?= 0
-REVISION ?= devbuild
-VER := $(shell cat $(ECOSYSTEM_DIR)/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
-VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
-export BUILD_NUMBER
-export REVISION
-export VERSION
-
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem

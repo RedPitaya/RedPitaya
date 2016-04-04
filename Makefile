@@ -1,11 +1,24 @@
 ################################################################################
+# versioning system
+################################################################################
+
+BUILD_NUMBER ?= 0
+REVISION ?= devbuild
+VER := $(shell cat Applications/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
+VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+export BUILD_NUMBER
+export REVISION
+export VERSION
+
+################################################################################
 #
 ################################################################################
 
 INSTALL_DIR=build
 TARGET=target
 
-ZIPFILE=ecosystem-$(VERSION).zip *
+ZIPFILE=ecosystem-$(VERSION).zip
 
 ################################################################################
 # tarball
@@ -16,9 +29,9 @@ all: zip
 $(INSTALL_DIR):
 	mkdir -p $@
 
-: $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) $(IDGEN) $(NGINX) \
-	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
-	   scpi api apps_pro rp_communication
+zip: $(ZIPFILE)
+
+$(ZIPFILE): x86 arm
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
@@ -37,7 +50,21 @@ $(INSTALL_DIR):
 	# copy configuration file for WiFi access point
 	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
 	# build zip file
-	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
+	cd $(TARGET); zip -r ../$(ZIPFILE) *
+
+################################################################################
+# X86 build (Vivado FPGA synthesis, FSBL, U-Boot, Linux kernel)
+################################################################################
+
+x86:
+	make -f Makefile.x86
+
+################################################################################
+# ARM userspace
+################################################################################
+
+arm:
+	make -f Makefile.arm
 
 ################################################################################
 # local (on RP board) install process

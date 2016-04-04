@@ -55,7 +55,7 @@ BOOT_UBOOT      = $(TMP)/boot.bin
 # tarball
 ################################################################################
 
-all: zip apps-free
+all: fpga u-boot $(LINUX) $(DEVICETREE) $(BOOT_UBOOT)
 
 $(DL):
 	mkdir -p $@
