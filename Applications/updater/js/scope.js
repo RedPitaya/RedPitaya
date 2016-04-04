@@ -25,6 +25,7 @@
                 UPD.checkUpdates();
                 break;
             case 3:
+                // UPD.nextStep();
                 UPD.downloadEcosystem();
                 break;
             case 4:
@@ -182,7 +183,7 @@
                         $.ajax({
                                 url: '/info/info.json',
                                 type: 'GET',
-                                timeout: 5000
+                                timeout: 1500
                             })
                             .fail(function(msg) {
                                 var res = msg.responseText;
@@ -208,9 +209,9 @@
                             .always(function() {
                                 console.log("complete");
                             });
-                    }, 1000);
+                    }, 2500);
                 });
-        }, 500);
+        }, 10000);
 
     }
 
