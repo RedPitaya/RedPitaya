@@ -101,7 +101,7 @@ int worker_exit(void)
 {
     int ret_val = 0;
 
-    fprintf(stderr, "DEBUG worker_exit: BEGIN\n");
+    //fprintf(stderr, "DEBUG worker_exit: BEGIN\n");
 
     //fprintf(stderr, "worker_exit: before signaling quit\n");
     pthread_mutex_lock(&s_worker_ctrl_mutex);
@@ -134,7 +134,7 @@ int worker_exit(void)
     rb_free_params(&s_worker_params);
     //fprintf(stderr, "worker_exit: after freeing worker_params\n");
 
-    fprintf(stderr, "DEBUG worker_exit: END\n");
+    //fprintf(stderr, "DEBUG worker_exit: END\n");
     return 0;
 }
 

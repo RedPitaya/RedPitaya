@@ -1395,7 +1395,7 @@ void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg)
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(double rx_mod_ssb_am_gain)
 {
-    double gain = ((double) 0xffff) * (rx_mod_ssb_am_gain / 100.0);
+    double gain = ((double) 0xffff) * 0.5 * (rx_mod_ssb_am_gain / 100.0);
 
     //fprintf(stderr, "INFO - fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am: (gain=%lf) <-- in(rx_mod_ssb_am_gain=%lf)\n",
     //        gain, rx_mod_ssb_am_gain);

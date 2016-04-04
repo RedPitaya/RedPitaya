@@ -301,7 +301,7 @@ int rp_create_traces(float** a_traces[TRACE_NUM])
 /*----------------------------------------------------------------------------------*/
 void rp_free_traces(float** a_traces[TRACE_NUM])
 {
-    fprintf(stderr, "rp_free_traces: BEGIN\n");
+    //fprintf(stderr, "rp_free_traces: BEGIN\n");
 
     if (!a_traces) {
         return;
@@ -321,7 +321,7 @@ void rp_free_traces(float** a_traces[TRACE_NUM])
     }
     *a_traces = NULL;
 
-    fprintf(stderr, "rp_free_traces: END\n\n");
+    //fprintf(stderr, "rp_free_traces: END\n\n");
 }
 
 
