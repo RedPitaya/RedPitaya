@@ -220,7 +220,7 @@
             var url_arr = window.location.href.split("/");;
             var url = url_arr[0] + '//' + url_arr[2];
             location.replace(url)
-        }, 2000);
+        }, 3500);
     }
 
 }(window.UPD = window.UPD || {}, jQuery));
