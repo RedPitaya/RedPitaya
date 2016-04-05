@@ -1,18 +1,16 @@
-TMP = tmp
-
 # check if download cache directory is available
-ifdef BR2_DL_DIR
-DL=$(BR2_DL_DIR)
-else
-DL=$(TMP)
-endif
+DL ?= dl
+
+INSTALL_DIR ?= build
+
+all: api libredpitaya ecosystem nginx apps-free scpi examples rp_communication $(DISCOVERY) $(HEARTBEAT) apps_pro
+
+$(INSTALL_DIR):
+	mkdir -p $@
 
 ################################################################################
 #
 ################################################################################
-
-INSTALL_DIR=build
-NAME=ecosystem
 
 # directories
 NGINX_DIR       = Bazaar/nginx
@@ -22,7 +20,6 @@ ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
 LIBRPLCR_DIR	= api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = api/rpApplications
-SDK_DIR         = SDK/
 
 # targets
 NGINX           = $(INSTALL_DIR)/sbin/nginx
@@ -40,21 +37,6 @@ define GREET_MSG
 ##############################################################################
 endef
 export GREET_MSG
-
-################################################################################
-# tarball
-################################################################################
-
-all: apps-free
-
-$(DL):
-	mkdir -p $@
-
-$(TMP):
-	mkdir -p $@
-
-$(INSTALL_DIR):
-	mkdir -p $@
 
 ################################################################################
 # API libraries
@@ -152,16 +134,13 @@ $(NGINX_TAR): | $(DL)
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-	mkdir -p Bazaar/nginx/nginx/objs/{src/{{core,misc},event/modules,http/modules/perl,os/{unix,win32},mail},addon/src}
-	cp -fr patches/nginx/nginx/* $@/
-	cp -f  patches/nginx.conf    $@/conf/
 
 $(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
-	$(MAKE) -C $(NGINX_DIR) SYSROOT=$(SYSROOT)
+	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 $(IDGEN): $(NGINX)
-	$(MAKE) -C $(IDGEN_DIR) SYSROOT=$(SYSROOT)
+	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
 nginx: $(NGINX) $(IDGEN)
@@ -316,8 +295,5 @@ clean:
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
-	make -C $(SDK_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
-	$(RM) $(INSTALL_DIR) -rf
-	$(RM) $(NAME)*.zip

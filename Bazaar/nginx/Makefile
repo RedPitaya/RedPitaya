@@ -27,16 +27,14 @@ CRYPTO_LIB=../tools/crypto++/libcryptopp.a
 # We will add things one-by-one accoording to our needs in add_modules.
 add_modules  = --add-module=../ngx_ext_modules/ngx_http_rp_module
 add_modules += --add-module=../ngx_ext_modules/lua-nginx-module
-#add_modules += --with-cc-opt="${SYSROOT}"
-#add_modules += --with-ld-opt="${SYSROOT}"
 
 VERSION=$(VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB) $(CRYPTO_LIB)
-	#cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules);
-	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC="$(CROSS_COMPILE)gcc $(SYSROOT)" LINK=$(CROSS_COMPILE)g++
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules);
+	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB): $(CRYPTO_LIB)
 	$(MAKE) -C $(WS_SERVER_DIR)

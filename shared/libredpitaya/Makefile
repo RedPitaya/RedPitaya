@@ -22,7 +22,7 @@ SRCS = $(subst .o,.c, $(OBJS)))
 TARGET=libredpitaya.a
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror $(SYSROOT) -I../include
+CFLAGS=-g -std=gnu99 -Wall -Werror -I../include
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc

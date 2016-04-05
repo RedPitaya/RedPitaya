@@ -69,9 +69,8 @@ x86:
 ################################################################################
 
 arm:
-	cp /usr/bin/qemu-arm-static $(ROOT_DIR)/usr/bin/
 	chroot $(ROOT_DIR)
-	make -f Makefile.arm 
+	make -f Makefile.arm DL=/dl
 
 ################################################################################
 # local (on RP board) install process
