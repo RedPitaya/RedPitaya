@@ -257,13 +257,11 @@
         var mc = new Hammer(myElement);
         mc.on('swipe', onSwipe);
 
-        var url_arr = window.location.href.split("/");;
-        var url = url_arr[0] + '//' + url_arr[2] + '/info/info.json';
         $.ajax({
             method: "GET",
-            url: url
+            url: '/get_info'
         }).done(function(msg) {
-            var info = JSON.parse(msg);
+            var info = msg;
             version = info['version'];
             $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
             checkUpdates(info);
