@@ -51,7 +51,10 @@ int main(int argc, char *argv[])
 	StartDaemon();
 	sleep(1);
 	system("killall nginx");
+    system("killall wpa_supplicant");
+    system("killall hostapd");
 	system("rw");
 	system("/bin/cp -fvr /tmp/build/* /opt/redpitaya/ > /tmp/update.log");
 	system("reboot");
+    return 0;
 }
