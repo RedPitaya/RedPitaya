@@ -1,5 +1,5 @@
 /*
- * Red Pitaya Oscilloscope client
+ * Red Pitaya UPDillUPDope client
  *
  * Author: Dakus <info@eskala.eu>
  *
@@ -8,45 +8,51 @@
  */
 
 (function(UPD, $, undefined) {
-    var currentStep = 1;
+    UPD.currentStep = 1;
     var ecosystems = [];
     var ecosystems_sizes = [];
     var chosen_eco = -1;
+
+    UPD.currentVer = undefined;
+
     UPD.startStep = function(step) {
-        currentStep = step;
-        $('#step_' + currentStep).css("color", "#CCC");
-        $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/loader.gif');
-        $('#step_' + currentStep).find('.step_icon').find('img').show();
-        switch (currentStep) {
+        UPD.currentStep = step;
+        $('#step_' + UPD.currentStep).css("color", "#CCC");
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/loader.gif');
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show();
+        switch (UPD.currentStep) {
             case 1:
-                UPD.chekcConnection();
+                UPD.checkConnection();
                 break;
             case 2:
-                UPD.checkUpdates();
+                UPD.checkVersion();
                 break;
             case 3:
+                UPD.checkUpdates();
+                break;
+            case 4:
                 // UPD.nextStep();
                 UPD.downloadEcosystem();
                 break;
-            case 4:
+            case 5:
                 UPD.applyChanges();
                 break;
-            case 5:
+            case 6:
                 UPD.prepareToRun();
                 break;
-            case 6:
+            case 7:
                 UPD.closeUpdate();
                 break;
         }
     }
 
     UPD.nextStep = function() {
-        $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/success.png');
-        $('#step_' + currentStep).find('.step_icon').find('img').show();
-        UPD.startStep(currentStep + 1);
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/success.png');
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show();
+        UPD.startStep(UPD.currentStep + 1);
     }
 
-    UPD.chekcConnection = function() {
+    UPD.checkConnection = function() {
         setTimeout(function() {
             UPD.nextStep();
             return;
@@ -56,6 +62,25 @@
             } else
                 $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
             $('#step_1').find('.error_msg').show();
+        }, 500);
+    }
+
+    UPD.checkVersion = function() {
+        setTimeout(function() {
+            $.ajax({
+                    url: '/get_info',
+                    type: 'GET',
+                    timeout: 1500
+                })
+                .done(function(msg) {
+                    UPD.currentVer = msg['version'];
+                    $('#step_2_version').text(msg['version']);
+                    UPD.nextStep();
+                })
+                .fail(function(msg) {
+                    $('#step_2_version').text('Unknown');
+                    UPD.nextStep();
+                })
         }, 500);
     }
 
@@ -69,8 +94,8 @@
                     var resp = msg.responseText;
                     var arr = resp.split('\n');
                     if (arr.length == 0 || arr.length <= 2 || arr.length % 2 != 0) {
-                        $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
                         return;
                     }
                     var list = [];
@@ -84,8 +109,8 @@
                         }
                     }
                     if (list.length == 0) {
-                        $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
                         return;
                     }
                     list.sort();
@@ -120,7 +145,7 @@
                 url: '/update_download?ecosystem=' + ecosystems[chosen_eco],
                 type: 'GET',
             }).always(function() {
-                $('#step_' + currentStep).find('.step_icon').find('img').hide();
+                $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
                 var check_progress = setInterval(function() {
                     $.ajax({
                         url: '/update_check',
@@ -130,8 +155,8 @@
                         var s = res.split(" ")[0];
                         var size = parseInt(s) * 1;
                         if (isNaN(size)) {
-                            $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                            $('#step_' + currentStep).find('.error_msg').show();
+                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                            $('#step_' + UPD.currentStep).find('.error_msg').show();
                             clearInterval(check_progress);
                         } else {
                             var percent = ((size / ecosystems_sizes[chosen_eco]) * 100).toFixed(2);
@@ -163,8 +188,8 @@
                     if (text.startsWith("OK"))
                         UPD.nextStep();
                     else {
-                        $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
                     }
                 })
         }, 500);
@@ -181,34 +206,26 @@
                 .always(function() {
                     var prepare_check = setInterval(function() {
                         $.ajax({
-                                url: '/info/info.json',
+                                url: '/get_info',
                                 type: 'GET',
                                 timeout: 1500
                             })
-                            .fail(function(msg) {
-                                var res = msg.responseText;
-                                var obj = undefined;
-                                try {
-                                    obj = JSON.parse(res);
-                                    if (obj != undefined && obj['version'] !== undefined) {
-                                        var eco = ecosystems[chosen_eco];
-                                        var arr = eco.split('-');
-                                        var ver = arr[1] + '-' + arr[2];
-                                        if (obj['version'] == ver) {
-                                            UPD.nextStep();
-                                            clearInterval(prepare_check);
-                                        } else {
-                                            $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                                            $('#step_' + currentStep).find('.error_msg').show();
-                                            clearInterval(prepare_check);
-                                        }
-
+                            .done(function(msg) {
+                                if (msg != undefined && msg['version'] !== undefined) {
+                                    var eco = ecosystems[chosen_eco];
+                                    var arr = eco.split('-');
+                                    var ver = arr[1] + '-' + arr[2];
+                                    if (msg['version'] == ver) {
+                                        UPD.nextStep();
+                                        clearInterval(prepare_check);
+                                    } else {
+                                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                                        clearInterval(prepare_check);
                                     }
-                                } catch(e){}
+
+                                }
                             })
-                            .always(function() {
-                                console.log("complete");
-                            });
                     }, 2500);
                 });
         }, 15000);
@@ -228,4 +245,27 @@
 // Page onload event handler
 $(document).ready(function() {
     UPD.startStep(1);
+    $('#ecosystem_ver').change(function(){
+        $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+        if(UPD.currentVer == undefined)
+            return;
+        var val = $('#ecosystem_ver').val();
+        var arr = val.split('-');
+
+        var oldMajor = parseFloat(UPD.currentVer.split('-')[0])*1;
+        var oldMinor = parseFloat(UPD.currentVer.split('-')[1])*1;
+
+        var majorVer = parseFloat(arr[1])*1
+        var minorVer = parseFloat(arr[2])*1
+
+        if(oldMajor >= majorVer)
+        {
+            if(oldMajor > majorVer)
+                $('#step_' + UPD.currentStep).find('.warn_msg').show();
+            else
+                if(oldMinor > minorVer)
+                    $('#step_' + UPD.currentStep).find('.warn_msg').show();
+        }
+
+    });
 })
