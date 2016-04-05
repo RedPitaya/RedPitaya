@@ -18,6 +18,11 @@ export VERSION
 INSTALL_DIR=build
 TARGET=target
 
+# check if download cache directory is available
+ifndef DL
+DL=$(TMP)
+endif
+
 ZIPFILE=ecosystem-$(VERSION).zip
 
 ################################################################################
@@ -64,7 +69,9 @@ x86:
 ################################################################################
 
 arm:
-	make -f Makefile.arm
+	cp /usr/bin/qemu-arm-static $(ROOT_DIR)/usr/bin/
+	chroot $(ROOT_DIR)
+	make -f Makefile.arm 
 
 ################################################################################
 # local (on RP board) install process
@@ -80,12 +87,45 @@ localinstall:
 	ro
 	systemctl start redpitaya_nginx
 
-imagemount:
-	DEVICE=`sudo losetup -f`
-	sudo losetup -v $DEVICE -o 127926272 ../red_pitaya_OS_23-Mar-2016.img
-	#sudo losetup -P -f ../red_pitaya_OS_23-Mar-2016.img
-	sudo mount -o ro ${DEVICE} ../debian
-	sudo losetup -d ${DEVICE}
+ROOT_IMG  = red_pitaya_OS_23-Mar-2016.img
+ROOT_DIR  = sysroot
+#ROOT_DEV := $(shell `losetup -f`)
+
+# should be run as root (sudo)
+root_mount:
+	# setup loop device
+	losetup -v $(ROOT_DEV) -o 127926272 $(DL)/$(ROOT_IMG)
+#	losetup -P -f $(DL)/$(ROOT_IMG)
+	mkdir -p                    $(ROOT_DIR)
+	# mount image
+#	mount -o ro $(ROOT_DEV)     $(ROOT_DIR)
+	mount       $(ROOT_DEV)     $(ROOT_DIR)
+	# mount runtime directories
+	mount --bind /proc          $(ROOT_DIR)/proc  
+	mount --bind /tmp           $(ROOT_DIR)/tmp  
+	mount --bind /sys           $(ROOT_DIR)/sys  
+	mount --bind /dev           $(ROOT_DIR)/dev  
+	mount --bind /dev/pts       $(ROOT_DIR)/dev/pts  
+	# mount git project
+	mkdir -p                    $(ROOT_DIR)/git
+	mount --bind `pwd`          $(ROOT_DIR)/git
+	# mount download directory
+	mkdir -p                    $(ROOT_DIR)/dl
+	mount --bind $(DL)          $(ROOT_DIR)/dl
+	# set prompt
+#	echo ubuntu-arm           > $(ROOT_DIR)/etc/debian_chroot
+	# copy networking configuration
+	cp /etc/resolv.conf         $(ROOT_DIR)/etc/
+	# copy emulator
+	cp /usr/bin/qemu-arm-static $(ROOT_DIR)/usr/bin/
+
+root_umount:
+	# remove emulator
+	rm                          $(ROOT_DIR)/usr/bin/qemu-arm-static
+	# umount image
+	umount -l                   $(ROOT_DIR)
+	# detach loop device
+	losetup -d  $(ROOT_DEV)
 
 ################################################################################
 #
