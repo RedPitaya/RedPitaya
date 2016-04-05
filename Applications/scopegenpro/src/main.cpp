@@ -360,10 +360,10 @@ void UpdateParams(void) {
     if(inMathScale.Value() != dvalue) {
         double mult = roundUpTo1(dvalue);
         inMathScaleMult.Value() = mult > 1.f ? mult / 10.f : mult * 10.f;
+	    inMathScale.Value() = dvalue;
+	    inMathScaleStr.Value() = std::to_string(dvalue);
     }
 
-    inMathScale.Value() = dvalue;
-    inMathScaleStr.Value() = std::to_string(dvalue);
 
 	rpApp_OscGetAmplitudeOffset(RPAPP_OSC_SOUR_CH1, &dvalue);
     in1Offset.Value() = dvalue;
