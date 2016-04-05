@@ -197,7 +197,7 @@
 
             SPEC.ws.onerror = function(ev) {
                 console.log('Websocket error: ', ev);
-                if (!SPEC.unexpectedClose)
+                if (!SPEC.state.socket_opened)
                     SPEC.startApp();
             };
 

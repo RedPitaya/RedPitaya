@@ -170,7 +170,7 @@
 	      });
 
 			LCR.ws.onerror = function(ev) {
-				if (!LCR.unexpectedClose)
+				if (!LCR.state.socket_opened)
 					LCR.startApp();
 	        	console.log('Websocket error: ', ev);
 	      	};
