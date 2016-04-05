@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	sleep(1);
 	system("killall nginx");
     system("killall hostapd");
-	system("rw");
+	system("mount -o rw,remount /opt/redpitaya");
 	system("/bin/cp -fr /tmp/build/* /opt/redpitaya/");
 	system("reboot");
     return 0;
