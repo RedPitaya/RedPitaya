@@ -61,6 +61,8 @@ $(ZIPFILE): x86 arm
 # X86 build (Vivado FPGA synthesis, FSBL, U-Boot, Linux kernel)
 ################################################################################
 
+.PHONY: x86
+
 x86:
 	make -f Makefile.x86
 
@@ -68,9 +70,10 @@ x86:
 # ARM userspace
 ################################################################################
 
+.PHONY: arm
+
 arm:
-	chroot $(ROOT_DIR)
-	make -f Makefile.arm DL=/dl
+	chroot $(ROOT_DIR) make -C git -f Makefile.arm DL=/dl
 
 ################################################################################
 # local (on RP board) install process
