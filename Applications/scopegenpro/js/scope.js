@@ -79,6 +79,7 @@
         editing: false,
         trig_dragging: false,
         cursor_dragging: false,
+        mouseover: false,
         resized: false,
         sel_sig_name: 'ch1',
         fine: false,
@@ -599,7 +600,7 @@
 
     OSC.cursorY = function(param_name, new_params) {
         var old_params = $.extend(true, {}, OSC.params.old);
-        if (!OSC.state.cursor_dragging) {
+        if (!OSC.state.cursor_dragging && !OSC.state.mouseover) {
             var y = (param_name == 'OSC_CURSOR_Y1' ? 'y1' : 'y2');
 
             if (new_params[param_name].value) {
@@ -644,7 +645,7 @@
 
 
     OSC.cursorX = function(param_name, new_params) {
-        if (!OSC.state.cursor_dragging) {
+        if (!OSC.state.cursor_dragging && !OSC.state.mouseover) {
             var x = (param_name == 'OSC_CURSOR_X1' ? 'x1' : 'x2');
 
             if (new_params[param_name].value) {
@@ -2091,10 +2092,21 @@ $(function() {
         OSC.changeXZoom(ev.target.id == 'jtk_left' ? '+' : '-');
     });
 
+    $('.y-offset-arrow').mousedown(function(event) {
+        OSC.state.cursor_dragging = true;
+    });
+
+    $('.y-offset-arrow').mouseup(function(event) {
+        OSC.state.cursor_dragging = true;
+    });
+
     // Voltage offset arrow dragging
     $('.y-offset-arrow').draggable({
         axis: 'y',
         containment: 'parent',
+        start: function(){
+            OSC.state.cursor_dragging = true;
+        },
         drag: function(ev, ui) {
             var margin_top = parseInt(ui.helper.css('marginTop'));
             var min_top = ((ui.helper.height() / 2) + margin_top) * -1;
@@ -2113,6 +2125,7 @@ $(function() {
                 OSC.updateYOffset(ui, true);
                 $('#info_box').empty();
             }
+            OSC.state.cursor_dragging = false;
         }
     });
 
@@ -2204,6 +2217,23 @@ $(function() {
             OSC.updateYCursorElems(ui, true);
             OSC.state.cursor_dragging = false;
         }
+    });
+
+    $('#cur_x1_arrow, #cur_x2_arrow, #cur_y1_arrow, #cur_y2_arrow').mouseenter(function(event) {
+        OSC.state.mouseover = true;
+    });
+
+    $('#cur_x1_arrow, #cur_x2_arrow, #cur_y1_arrow, #cur_y2_arrow').mouseleave(function(event) {
+        OSC.state.mouseover = false;
+    });
+
+
+    $('#cur_x1_arrow, #cur_x2_arrow, #cur_y1_arrow, #cur_y2_arrow').mousedown(function(event) {
+        OSC.state.cursor_dragging = true;
+    });
+
+    $('#cur_x1_arrow, #cur_x2_arrow, #cur_y1_arrow, #cur_y2_arrow').mouseup(function(event) {
+        OSC.state.cursor_dragging = false;
     });
 
     // X cursor arrows dragging
@@ -2584,7 +2614,7 @@ $(function() {
     });
     $("#graphs").mousemove(function(event) {
         if (OSC.state.line_moving) return;
-        if (laAxesMoving) {
+        if (laAxesMoving && !OSC.state.cursor_dragging && !OSC.state.mouseover) {
             if (!$.isEmptyObject(OSC.graphs)) {
                 var diff = event.pageX - curXPos;
                 curXPos = event.pageX;
