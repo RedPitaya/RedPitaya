@@ -2327,8 +2327,8 @@ rb_cordic_T_WS_O_SR_18T18_NE_CR_EM_B i_rb_rx_afc_cordic (
   .m_axis_dout_tvalid      ( rx_afc_cordic_polar_out_vld )
 );
 
-wire unsigned [ 15: 0] rx_afc_cordic_polar_out_mag = { rx_afc_cordic_polar_out[17:2] };
-wire   signed [ 15: 0] rx_afc_cordic_polar_out_phs = { rx_afc_cordic_polar_out[17], rx_afc_cordic_polar_out[16:2] };  // -0.999 .. +0.999 represents -180° .. +180°
+wire unsigned [ 15: 0] rx_afc_cordic_polar_out_mag =   rx_afc_cordic_polar_out[16:1];
+wire   signed [ 15: 0] rx_afc_cordic_polar_out_phs = { rx_afc_cordic_polar_out[24+17], rx_afc_cordic_polar_out[24+14:24+0] };  // -0.999 .. +0.999 represents -180° .. +180°
 
 
 always @(posedge clk_adc_125mhz)
@@ -2597,7 +2597,7 @@ wire   signed [ 15: 0] rx_mod_pm_out = rx_mod_pm_mix_out[30:15];
 //  RX_MOD_AMENV envelope ouput - strategy: difference to mean value of the magnitude
 
 reg  unsigned [ 47: 0] rx_mod_amenv_accu         = 'b0;                                                         // mean value of magnitue = mean value of AM envelope
-wire unsigned [ 47: 0] rx_mod_amenv_s1_sig_in    = { 16'b0, rx_afc_cordic_polar_out_mag[15:0], 16'b0 };
+wire unsigned [ 47: 0] rx_mod_amenv_s1_sig_in    = { 18'b0, rx_afc_cordic_polar_out_mag[15:0], 14'b0 };
 wire unsigned [ 47: 0] rx_mod_amenv_s1_out;
 
 rb_addsub_48M48 i_rb_rx_mod_amenv_accu_s1_addsub (     // mean value - signal integrator
