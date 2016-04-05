@@ -837,6 +837,14 @@ area:hover {
     display: none;
 }
 
+.warn_msg
+{
+    font-size: 12px;
+    color: orange;
+    display: none;
+}
+
+
 .select_ver
 {
     font-size: 15px;
