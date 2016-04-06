@@ -66,7 +66,11 @@
                 obj['description'] = value['description'];
                 obj['url'] = url + key + '/?type=run';
                 obj['image'] = url + key + '/info/icon.png';
-                obj['check_online'] = true;
+                if (key == 'scpi_server' || value['type'] == 'run')
+                    obj['check_online'] = false;
+                else
+                    obj['check_online'] = true;
+
                 obj['licensable'] = true;
                 obj['type'] = value['type'];
                 apps.push(obj);
@@ -88,22 +92,25 @@
         var key = parseInt($(this).attr('key')) * 1;
         e.preventDefault();
         if (apps[key].check_online) {
-            if (!OnlineChecker.isOnline() && apps[key].type !== 'run' && apps[key].id !== 'scpi_server') {
+            if (!OnlineChecker.isOnline())
+            {
                 if (apps[key].licensable)
+                {
+                    $('#ignore_link').attr('href', apps[key].url);
                     $('#lic_failed').show();
+                }
                 else
+                {
+                    $('#ignore_link').attr('href', "#");
                     $('#lic_failed').hide();
+                }
 
                 $('#ic_missing').modal('show');
                 return;
             }
         }
         if (apps[key].url != "" && apps[key].type !== 'run') {
-            if (apps[key].id !== 'scpi_server') {
-                licVerify(apps[key].url);
-            } else {
-                window.location = apps[key].url;
-            }
+            licVerify(apps[key].url);
         } else {
             if (apps[key].url != "")
                 window.location = apps[key].url;
@@ -272,7 +279,13 @@
             checkUpdates(info);
         });
 
-
+        $('#ignore_link').click(function(event) {
+            var elem = $(this)
+            if(elem.attr('href') != undefined && elem.attr('href') != '#')
+                window.location.replace(elem.attr('href'));
+            else
+                $('#ic_missing').modal('hide');
+        });
 
     });
 
