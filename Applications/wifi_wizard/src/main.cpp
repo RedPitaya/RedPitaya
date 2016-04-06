@@ -215,7 +215,7 @@ void ConnectToNetwork() {
 	system(command_Kill_supl.c_str());
 	system("mount -o,remount /dev/mmcblk0p1 /opt/redpitaya");
 
-	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
+	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf & disown";
 	// std::string command = "curl http://127.0.0.1/connect_wifi";
 	system(command.c_str());
 }
@@ -343,7 +343,7 @@ void OnNewParams(void) {
 			essidIn.Update();
 			passwIn.Update();
 			CreateWPA_SUPPL(essidIn.Value(), passwIn.Value());
-			ConnectToNetwork();
+			// ConnectToNetwork();
 		}
 		else
 			DisconnectNetwork();
