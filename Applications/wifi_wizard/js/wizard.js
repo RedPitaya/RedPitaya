@@ -351,12 +351,12 @@ $(function() {
             WIZARD.params.local['WIFI_CONNECT'] = { value: false };
             WIZARD.sendParams();
         }
-        setTimeout(function() {
-            $.ajax({
-                method: "GET",
-                url: '/start_supplicant'
-            }).always(function() { console.log("Starting supplicant"); });
-        }, 1500);
+        // setTimeout(function() {
+        //     $.ajax({
+        //         method: "GET",
+        //         url: '/start_supplicant'
+        //     }).always(function() { console.log("Starting supplicant"); });
+        // }, 1500);
         // WIZARD.sendParams();
         WIZARD.params.local = {};
     });

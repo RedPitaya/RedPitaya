@@ -12,6 +12,7 @@
 #include "version.h"
 #include <sys/types.h>
 #include <sys/sysinfo.h>
+#include <unistd.h>
 
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
 CStringParameter listOfWIFI("WIFI_LIST", CBaseParameter::RWSA, "", 10000);
@@ -60,6 +61,14 @@ int rp_app_init(void) {
 int rp_app_exit(void) {
     fprintf(stderr, "Unloading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
     rpApp_Release();
+    if (fork() == 0)
+    {
+	    int x;
+	    for (x = sysconf(_SC_OPEN_MAX); x>3; x--)
+	    {
+	        close (x);
+	    }
+    }
     return 0;
 }
 
@@ -205,7 +214,7 @@ void CreateWPA_SUPPL(std::string ssid, std::string pass) {
 	}
 	result << "}";
 
-	std::string command = "echo '" + result.str() + "' > /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf";
+	std::string command = "echo '" + result.str() + "' > /opt/redpitaya/wpa_supplicant.conf";
 	system(command.c_str());
 }
 
@@ -215,7 +224,9 @@ void ConnectToNetwork() {
 	system(command_Kill_supl.c_str());
 	system("mount -o,remount /dev/mmcblk0p1 /opt/redpitaya");
 
-	std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf & disown";
+	// std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf & disown";
+	system("ifdown wlan0");
+	std::string command = "ifup wlan0";
 	// std::string command = "curl http://127.0.0.1/connect_wifi";
 	system(command.c_str());
 }
@@ -343,7 +354,7 @@ void OnNewParams(void) {
 			essidIn.Update();
 			passwIn.Update();
 			CreateWPA_SUPPL(essidIn.Value(), passwIn.Value());
-			// ConnectToNetwork();
+			ConnectToNetwork();
 		}
 		else
 			DisconnectNetwork();
