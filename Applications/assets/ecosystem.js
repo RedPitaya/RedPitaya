@@ -96,11 +96,13 @@
             {
                 if (apps[key].licensable)
                 {
+                    $('#ignore_link').text('Ignore');
                     $('#ignore_link').attr('href', apps[key].url);
                     $('#lic_failed').show();
                 }
                 else
                 {
+                    $('#ignore_link').text('Close');
                     $('#ignore_link').attr('href', "#");
                     $('#lic_failed').hide();
                 }
