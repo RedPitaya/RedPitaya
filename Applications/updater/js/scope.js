@@ -199,37 +199,39 @@
 
     UPD.prepareToRun = function() {
         setTimeout(function() {
+            $('#step_' + UPD.currentStep).find('.warn_msg').show();
             $.ajax({
                     url: '/update_ecosystem',
                     type: 'GET',
                 })
                 .always(function() {
-                    var prepare_check = setInterval(function() {
-                        $.ajax({
-                                url: '/get_info',
-                                type: 'GET',
-                                timeout: 1500
-                            })
-                            .done(function(msg) {
-                                if (msg != undefined && msg['version'] !== undefined) {
-                                    var eco = ecosystems[chosen_eco];
-                                    var arr = eco.split('-');
-                                    var ver = arr[1] + '-' + arr[2];
-                                    if (msg['version'] == ver) {
-                                        UPD.nextStep();
-                                        clearInterval(prepare_check);
-                                    } else {
-                                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                                        clearInterval(prepare_check);
+                    setTimeout(function (){
+                        var prepare_check = setInterval(function() {
+                            $.ajax({
+                                    url: '/get_info',
+                                    type: 'GET',
+                                    timeout: 1500
+                                })
+                                .done(function(msg) {
+                                    if (msg != undefined && msg['version'] !== undefined) {
+                                        var eco = ecosystems[chosen_eco];
+                                        var arr = eco.split('-');
+                                        var ver = arr[1] + '-' + arr[2];
+                                        if (msg['version'] == ver) {
+                                            UPD.nextStep();
+                                            clearInterval(prepare_check);
+                                        } else {
+                                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                            $('#step_' + UPD.currentStep).find('.error_msg').show();
+                                            clearInterval(prepare_check);
+                                        }
+
                                     }
-
-                                }
-                            })
-                    }, 2500);
+                                })
+                        }, 2500);
+                    }, 15000);
                 });
-        }, 15000);
-
+        }, 500);
     }
 
     UPD.closeUpdate = function() {
@@ -245,26 +247,25 @@
 // Page onload event handler
 $(document).ready(function() {
     UPD.startStep(1);
-    $('#ecosystem_ver').change(function(){
+    $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
-        if(UPD.currentVer == undefined)
+        if (UPD.currentVer == undefined)
             return;
         var val = $('#ecosystem_ver').val();
         var arr = val.split('-');
 
-        var oldMajor = parseFloat(UPD.currentVer.split('-')[0])*1;
-        var oldMinor = parseFloat(UPD.currentVer.split('-')[1])*1;
+        var oldMajor = parseFloat(UPD.currentVer.split('-')[0]) * 1;
+        var oldMinor = parseFloat(UPD.currentVer.split('-')[1]) * 1;
 
-        var majorVer = parseFloat(arr[1])*1
-        var minorVer = parseFloat(arr[2])*1
+        var majorVer = parseFloat(arr[1]) * 1
+        var minorVer = parseFloat(arr[2]) * 1
 
-        if(oldMajor >= majorVer)
-        {
-            if(oldMajor > majorVer)
+        if (oldMajor >= majorVer) {
+            if (oldMajor > majorVer)
                 $('#step_' + UPD.currentStep).find('.warn_msg').show();
             else
-                if(oldMinor > minorVer)
-                    $('#step_' + UPD.currentStep).find('.warn_msg').show();
+            if (oldMinor > minorVer)
+                $('#step_' + UPD.currentStep).find('.warn_msg').show();
         }
 
     });
