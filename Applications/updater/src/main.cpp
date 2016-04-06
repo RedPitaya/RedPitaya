@@ -20,7 +20,6 @@
 const char* SRC_ROOT = "/tmp/build";
 const char* DST_ROOT = "/opt/redpitaya";
 
-// FILE* logFile;
 void signalHandlerStrong( int signum )
 {
 }
@@ -72,8 +71,6 @@ void listdir(const char *root, const char *d_name, int level)
             char path[1024];
             int len = snprintf(path, sizeof(path)-1, "%s/%s", d_name, entry->d_name);
             path[len] = 0;
-
-            // printf("%s/%s\n", level*2, name, entry->d_name);
             std::string dir(DST_ROOT);
             dir = dir + path;
             createDir(dir.c_str());
@@ -85,8 +82,6 @@ void listdir(const char *root, const char *d_name, int level)
             from = from + "/"+ entry->d_name;
             std::string to(DST_ROOT);
             to = to + d_name + "/" + entry->d_name;
-            // printf("%s/%s\n", d_name, entry->d_name);
-            printf("%s -> %s\n", from.c_str(), to.c_str());
             copyFile(from.c_str(), to.c_str());
         }
     } while ((entry = readdir(dir)));
@@ -96,40 +91,24 @@ void listdir(const char *root, const char *d_name, int level)
 void StartDaemon()
 {
     pid_t pid;
-
-    /* Fork off the parent process */
     pid = fork();
-
-    /* An error occurred */
     if (pid < 0)
         exit(EXIT_FAILURE);
-
-    /* Success: Let the parent terminate */
     if (pid > 0)
         exit(EXIT_SUCCESS);
-
-    /* On success: The child process becomes session leader */
     if (setsid() < 0)
         exit(EXIT_FAILURE);
-
-    /* Close all open file descriptors */
     int x;
     for (x = sysconf(_SC_OPEN_MAX); x>0; x--)
-    {
         close (x);
-    }
-    /* Open the log file */
 }
-
 
 int main(int argc, char *argv[])
 {
 
-
-    /* Catch, ignore and handle signals */
-    //TODO: Implement a working signal handler */
-
     StartDaemon();
+
+    // We will catch all signals and don't let them close us
     signal(SIGCHLD, signalHandlerStrong);
     signal(SIGHUP, signalHandlerStrong);
     signal(SIGABRT, signalHandlerStrong);
@@ -141,32 +120,18 @@ int main(int argc, char *argv[])
     signal(SIGUSR1, signalHandlerStrong);
     signal(SIGUSR2, signalHandlerStrong);
 
-    // logFile = fopen ("/root/daemon.log","a");
-    //fprintf (logFile, "----------------------------------------------------\n"); fflush(logFile);
-    //fprintf (logFile, "[StartDaemon] Daemon have started\n"); fflush(logFile);
-	// sleep(1);
- //    /*int res = 0;*/
-	/*res = */system("killall nginx");
- //    //fprintf (logFile, "> nohup killall nginx : %d\n", res); fflush(logFile);
- //    sleep(1);
-	/*res = */system("mount -o rw,remount /opt/redpitaya");
+    system("killall nginx");
+    system("mount -o rw,remount /opt/redpitaya");
+    system("killall hostapd");
 
-    /*res = */system("killall hostapd");
- //    //fprintf (logFile, "> nohup killall hostapd : %d\n", res); fflush(logFile);
- //    sleep(1);
-
- //    //fprintf (logFile, "> nohup mount -o rw,remount /opt/redpitaya : %d\n", res); fflush(logFile);
- //    sleep(1);
-
+    // If you will use /bin/cp -fr /tmp/build/* /opt/redpitaya
+    // These may cause accidental close of cp because it will receive signals
 	createDir(DST_ROOT);
     listdir(SRC_ROOT, "",0);
- //    //fprintf (logFile, "> nohup /bin/cp -fvr /tmp/build/* /opt/redpitaya/ : %d\n", res); fflush(logFile);
- //    sleep(17);
-
-	/*res = */system("nohup reboot & disown");
- //    //fprintf (logFile, "> nohup reboot : %d\n", res); fflush(logFile);
- //    sleep(1);
+    system("nohup reboot & disown");
     system("reboot");
+
+    // Ok, now we free
     signal(SIGCHLD, signalHandlerDefault);
     signal(SIGHUP, signalHandlerDefault);
     signal(SIGABRT, signalHandlerDefault);
