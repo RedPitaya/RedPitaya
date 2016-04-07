@@ -1,0 +1,18 @@
+### History
+
+**the time goes by**
+
+***
+
+    * 2015-12-26 - transmitter running SSB with good sideband rejection with the help of CICs and FIR.
+
+    * 2015-12-12 - first SSB setup running, but w/o filtering at that point of time.
+
+    * 2015-11-05 - data communication between front-end and back-end with double precision.
+
+    * 2015-10-19 - FPGA configuration ready for first transmitter set-up
+                   (AM, FM, PM modulations).
+
+    * 2015-09-05 - Initial set-up of DF4IAH/RedPitaya_RadioBox.
+
+    * <EOF>
