@@ -19,9 +19,7 @@ INSTALL_DIR=build
 TARGET=target
 
 # check if download cache directory is available
-ifndef DL
-DL=$(TMP)
-endif
+DL ?= dl
 
 ZIPFILE=ecosystem-$(VERSION).zip
 
@@ -89,14 +87,14 @@ localinstall:
 	ro
 	systemctl start redpitaya_nginx
 
-ROOT_IMG  = red_pitaya_OS_23-Mar-2016.img
+ROOT_IMG  = $(DL)/red_pitaya_OS_23-Mar-2016.img
 ROOT_DIR  = sysroot
 #ROOT_DEV := $(shell `losetup -f`)
 
 # should be run as root (sudo)
 root_mount:
 	# setup loop device
-	losetup -v $(ROOT_DEV) -o 127926272 $(DL)/$(ROOT_IMG)
+	losetup -v $(ROOT_DEV) -o 127926272 $(ROOT_IMG)
 #	losetup -P -f $(DL)/$(ROOT_IMG)
 	mkdir -p                    $(ROOT_DIR)
 	# mount image
