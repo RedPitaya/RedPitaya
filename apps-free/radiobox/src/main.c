@@ -131,6 +131,9 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Frequency QRG increment range controller - transport_pktIdx 4 */
         "qrg_inc_s",               50.0,   1,  0, 0.0,    100.0  },
 
+    { /* Overdrive flags - transport_pktIdx 4 */
+        "ovrdrv_s",                 0.0,   1,  0, 0.0,  65535.0  },
+
 
     { /* has to be last entry */
         NULL,                       0.0,  -1, -1, 0.0,      0.0  }
@@ -298,7 +301,7 @@ int rp_create_traces(float** a_traces[TRACE_NUM])
 /*----------------------------------------------------------------------------------*/
 void rp_free_traces(float** a_traces[TRACE_NUM])
 {
-    fprintf(stderr, "rp_free_traces: BEGIN\n");
+    //fprintf(stderr, "rp_free_traces: BEGIN\n");
 
     if (!a_traces) {
         return;
@@ -318,7 +321,7 @@ void rp_free_traces(float** a_traces[TRACE_NUM])
     }
     *a_traces = NULL;
 
-    fprintf(stderr, "rp_free_traces: END\n\n");
+    //fprintf(stderr, "rp_free_traces: END\n\n");
 }
 
 
@@ -378,6 +381,7 @@ void rb_update_param(rb_app_params_t** dst, const char* param_name, double param
         int idx = rb_find_parms_index(p_dst, param_name);
         if (idx >= 0) {
             /* update existing entry */
+#if 0
             double param_value_cor = param_value;
             if (param_value_cor < p_dst[idx].min_val) {
                 param_value_cor = p_dst[idx].min_val;
@@ -386,6 +390,10 @@ void rb_update_param(rb_app_params_t** dst, const char* param_name, double param
             }
             p_dst[idx].value = param_value_cor;
             //fprintf(stderr, "DEBUG rb_update_param - updating %s with value = %f, bounds corrected value = %f\n", param_name, param_value, param_value_cor);
+#else
+            p_dst[idx].value = param_value;
+            //fprintf(stderr, "DEBUG rb_update_param - updating %s with value = %f\n", param_name, param_value);
+#endif
 
             //fprintf(stderr, "DEBUG rb_update_param - list after modify:\n");
             //print_rb_params(*dst);
@@ -750,7 +758,8 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                     !strcmp("tx_mod_osc_mag_s",    src[i].name) ||
                     !strcmp("rfout1_term_s",       src[i].name) ||
                     !strcmp("rfout2_term_s",       src[i].name) ||
-                    !strcmp("qrg_inc_s",           src[i].name)) {
+                    !strcmp("qrg_inc_s",           src[i].name) ||
+                    !strcmp("ovrdrv_s",            src[i].name)) {
                     found = 1;
                 }
                 break;

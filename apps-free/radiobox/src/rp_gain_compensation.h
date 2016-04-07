@@ -73,7 +73,7 @@ float bspline_n_i_k(int i, int k, float t);
  * @param[in]  isTerminated    True if 50 ohms resistor is connected to the output line, False if the output line is open.
  * @retval     float           Compensation factor to be used for the output amplifier.
  */
-float get_compensation_factor(float frequency_hz, char isTerminated);
+float get_compensation_factor(float frequency_hz, int isTerminated);
 
 
 /** @} */
