@@ -27,7 +27,6 @@ create_project -part $part -force redpitaya ./project
 #set_property strategy {Vivado Synthesis Defaults} [get_runs synth_1]
 
 #set_property strategy {Vivado Implementation Defaults} [get_runs impl_1]
-#set_property strategy Performance_NetDelay_low [get_runs impl_1]
 #set_property strategy Performance_NetDelay_medium [get_runs impl_1]
 
 
