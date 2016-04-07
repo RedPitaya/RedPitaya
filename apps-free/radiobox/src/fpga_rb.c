@@ -342,7 +342,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
             fpga_rb_set_ctrl(loc_rb_run, loc_tx_modsrc, loc_tx_modtyp, loc_rx_modtyp, ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff), loc_rx_muxin_src,
                     loc_tx_car_osc_qrg, loc_rx_car_osc_qrg,
                     loc_tx_mod_osc_qrg, loc_tx_muxin_gain, loc_rx_muxin_gain, loc_tx_qrg_sel, loc_rx_qrg_sel,
-                    loc_tx_amp_rf_gain, loc_tx_mod_osc_mag, ((loc_rfout2_term & 0x01) << 0x01) | ( loc_rfout1_term & 0x01), loc_qrg_inc);
+                    loc_tx_amp_rf_gain, loc_tx_mod_osc_mag, loc_rfout1_term, loc_rfout2_term, loc_qrg_inc);
         }
     }
 
@@ -353,7 +353,6 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
 /*----------------------------------------------------------------------------*/
 int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb: base data of complete data set, pn: new overwriting data sets
 {
-  int    state              = 0;
   int    loc_tx_modtyp      = 0;
   int    loc_rx_modtyp      = 0;
   int    loc_qrg_inc        = 0;
@@ -404,26 +403,30 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb:
 
   /* get current FPGA settings */
   {
+    double   loc_RD_tx_car_osc_qrg = 0.0;
+    double   loc_RD_rx_car_osc_qrg = 0.0;
+    uint16_t loc_RD_ovrdrv         = 0;
+
+    //fprintf(stderr, "DEBUG - fpga_rb_update_all_params - get current FPGA settings ...\n");
+    fpga_rb_get_ctrl(
+            loc_tx_modtyp,
+            loc_rx_modtyp,
+            &loc_RD_tx_car_osc_qrg,
+            &loc_RD_rx_car_osc_qrg,
+            &loc_RD_ovrdrv);
+
     if (loc_qrg_inc != 50) {
-      double loc_RD_tx_car_osc_qrg = 0.0;
-      double loc_RD_rx_car_osc_qrg = 0.0;
-
-      //fprintf(stderr, "DEBUG - fpga_rb_update_all_params - get current FPGA settings ...\n");
-      fpga_rb_get_ctrl(
-              loc_tx_modtyp,
-              loc_rx_modtyp,
-              &loc_RD_tx_car_osc_qrg,
-              &loc_RD_rx_car_osc_qrg);
-
       rb_update_param(p_pn, "tx_car_osc_qrg_f", loc_RD_tx_car_osc_qrg);
       rb_update_param(p_pn, "rx_car_osc_qrg_f", loc_RD_rx_car_osc_qrg);
-      //print_rb_params(*p_pn);
-      state = 1;
     }
+
+    rb_update_param(p_pn, "ovrdrv_s", loc_RD_ovrdrv);
+
+    //print_rb_params(*p_pn);
   }
 
   //fprintf(stderr, "DEBUG - fpga_rb_get_fpga_params: END\n");
-  return state;
+  return 1;
 }
 
 
@@ -431,13 +434,14 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb:
 void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int rx_muxin_src,
         double tx_car_osc_qrg, double rx_car_osc_qrg,
         double tx_mod_osc_qrg, int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
-        int tx_amp_rf_gain, int tx_mod_osc_mag, int term, int qrg_inc)
+        int tx_amp_rf_gain, int tx_mod_osc_mag, int term_rfout1, int term_rfout2, int qrg_inc)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
     static double tx_car_osc_qrg_old = 0.0;
     static double rx_car_osc_qrg_old = 0.0;
     static uint32_t src_con_pnt_old = 0;
-    static int term_old = 0;
+    static int term_rfout1_old = 0;
+    static int term_rfout2_old = 0;
     double rfout1_amp_gain = 0.0;
     double rfout2_amp_gain = 0.0;
     int tx_car_osc_qrg_inc = 50;
@@ -458,15 +462,17 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
     /* RF Out x Gain settings - only when relevant changes were made */
     if (
-            (src_con_pnt_old != src_con_pnt) ||
-            (term_old != term) ||
-            (tx_car_osc_qrg_old != tx_car_osc_qrg) ||
-            (rx_car_osc_qrg_old != rx_car_osc_qrg)) {
+        (src_con_pnt_old    != src_con_pnt)    ||
+        (term_rfout1_old    != term_rfout1)    ||
+        (term_rfout2_old    != term_rfout2)    ||
+        (tx_car_osc_qrg_old != tx_car_osc_qrg) ||
+        (rx_car_osc_qrg_old != rx_car_osc_qrg)) {
       //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: setting src_con_pnt to new value = 0x%08x, old = 0x%08x / term = %d, term_old = %d\n", src_con_pnt, src_con_pnt_old, term, term_old);
       tx_car_osc_qrg_old = tx_car_osc_qrg;
       rx_car_osc_qrg_old = rx_car_osc_qrg;
       src_con_pnt_old = src_con_pnt;
-      term_old = term;
+      term_rfout1_old = term_rfout1;
+      term_rfout2_old = term_rfout2;
 
       double rfout_frequency[2];
       uint8_t rfout_con_pnt[2];
@@ -495,11 +501,19 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         }
       }
 
-      rfout1_amp_gain = get_compensation_factor(rfout_frequency[0], (term & 0x01 ?  1 : 0));
-      rfout2_amp_gain = get_compensation_factor(rfout_frequency[1], (term & 0x02 ?  1 : 0));
-      //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: get_compensation_factor(rfout1_term_on, QRG = %f) = %f, get_compensation_factor(rfout2_term_on, QRG = %f) = %f\n",
-      //        rfout_frequency[0], rfout1_amp_gain,
-      //        rfout_frequency[1], rfout2_amp_gain);
+      if (term_rfout1) {
+        rfout1_amp_gain = get_compensation_factor(rfout_frequency[0], (term_rfout1 == 0x01 ?  1 : 0));
+      } else {
+        rfout1_amp_gain = 1.0;
+      }
+      if (term_rfout2) {
+        rfout2_amp_gain = get_compensation_factor(rfout_frequency[1], (term_rfout2 == 0x01 ?  1 : 0));
+      } else {
+        rfout2_amp_gain = 1.0;
+      }
+      //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: get_compensation_factor(rfout1_term_on = %d, QRG = %f) = %f, get_compensation_factor(rfout2_term_on = %d, QRG = %f) = %f\n",
+      //        term_rfout1, rfout_frequency[0], rfout1_amp_gain,
+      //        term_rfout2, rfout_frequency[1], rfout2_amp_gain);
 
       fpga_rb_set_rfout1_gain_ofs(rfout1_amp_gain, 0.0);                                                   // RFOUT1_AMP    gain correction setting of the RF Output 1 line, DAC offset value
       fpga_rb_set_rfout2_gain_ofs(rfout2_amp_gain, 0.0);                                                   // RFOUT2_AMP    gain correction setting of the RF Output 2 line, DAC offset value
@@ -508,8 +522,6 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
     }
 
     if (rb_run) {
-      fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain, 0.0);                                       // TX_AMP_RF     gain setting [mV] is global and not modulation dependent
-
       fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(100.0);                                                  // RX_MOD_SSB_AM gain setting [ %] only for the SSB demodulator
       fpga_rb_set_rx_mod_amenv_gain__4mod_amenv(100.0);                                                    // RX_MOD_AMENV  gain setting [ %] only for the AM-Envelope demodulator
       fpga_rb_set_rx_mod_fm_gain__4mod_fm(100.0);                                                          // RX_MOD_FM     gain setting [ %] only for the FM demodulator
@@ -528,6 +540,11 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         }
         fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                             // TX_CAR_OSC frequency sweep increment
         fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(0.0, 1);                                    // CW operation
+        if (!(g_fpga_rb_reg_mem->status & 0x00000100)) {
+          // TX_MOD_OSC phase not zero: reset phase oscillator
+          g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                          // TX_MOD RESYNC activate
+          g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                          // TX_MOD RESYNC deactivate
+        }
       }
       break;
 
@@ -607,10 +624,12 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
           //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: USB\n");
 
           g_fpga_rb_reg_mem->ctrl &= ~0x00007076;                                                          // TX: turn off all STREAMING, RESET and RESYNC signals
+          fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain * 1.5, 0.0);                             // TX_AMP_RF  gain setting [mV] is global and not modulation dependent
           if (tx_car_osc_qrg_inc == 50) {
             fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg + ssb_weaver_osc_qrg);            // TX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
           }
           fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                           // TX_CAR_OSC frequency sweep increment
+
           fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(+ssb_weaver_osc_qrg);                        // TX_MOD_OSC weaver method mixer LO frequency
           fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(tx_mod_osc_mag, 0);                       // SSB operation has no carrier
         }
@@ -620,10 +639,12 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
           //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: LSB\n");
 
           g_fpga_rb_reg_mem->ctrl &= ~0x00007076;                                                          // TX: turn off all STREAMING, RESET and RESYNC signals
+          fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain * 1.5, 0.0);                             // TX_AMP_RF  gain setting [mV] is global and not modulation dependent
           if (tx_car_osc_qrg_inc == 50) {
             fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg - ssb_weaver_osc_qrg);            // TX_CAR_OSC frequency with ssb_weaver_osc_qrg correction
           }
           fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                           // TX_CAR_OSC frequency sweep increment
+
           fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(-ssb_weaver_osc_qrg);                        // TX_MOD_OSC weaver method mixer LO frequency
           fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(tx_mod_osc_mag, 0);                       // SSB operation has no carrier
         }
@@ -633,13 +654,23 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
           //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: AM\n");
 
           g_fpga_rb_reg_mem->ctrl &= ~0x00007076;                                                          // TX: turn off all STREAMING, RESET and RESYNC signals
+          fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain, 0.0);                                   // TX_AMP_RF  gain setting [mV] is global and not modulation dependent
           if (tx_car_osc_qrg_inc == 50) {
             fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                                 // TX_CAR_OSC frequency
           }
           fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                           // TX_CAR_OSC frequency sweep increment
+
           if (tx_modsrc == RB_MODSRC_MOD_OSC) {
             fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(tx_mod_osc_qrg);                           // TX_MOD_OSC frequency
+          } else {
+            fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(0.0);                                      // TX_MOD_OSC turning off
+            if (!(g_fpga_rb_reg_mem->status & 0x00000100)) {
+              // TX_MOD_OSC phase not zero: reset phase oscillator
+              g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                      // TX_MOD RESYNC activate
+              g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                      // TX_MOD RESYNC deactivate
+            }
           }
+
           fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(tx_mod_osc_mag, 1);                       // AM by streaming in amplitude
         }
         break;
@@ -648,8 +679,16 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
           //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: FM\n");
 
           g_fpga_rb_reg_mem->ctrl &= ~0x00007056;                                                          // TX: turn off offset STREAMING, RESET and RESYNC signals
+          fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain, 0.0);                                   // TX_AMP_RF  gain setting [mV] is global and not modulation dependent
           if (tx_modsrc == RB_MODSRC_MOD_OSC) {  // TODO scanner does not work for TX_MOD_FM
             fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(tx_mod_osc_qrg);                           // TX_MOD_OSC frequency
+          } else {
+            fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(0.0);                                      // TX_MOD_OSC turning off
+            if (!(g_fpga_rb_reg_mem->status & 0x00000100)) {
+              // TX_MOD_OSC phase not zero: reset phase oscillator
+              g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                      // TX_MOD RESYNC activate
+              g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                      // TX_MOD RESYNC deactivate
+            }
           }
           fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm(tx_car_osc_qrg, tx_mod_osc_mag);                       // FM by streaming in DDS increment
           g_fpga_rb_reg_mem->ctrl |=  0x00000020;                                                          // control: FM by TX_CAR_OSC increment streaming
@@ -660,23 +699,41 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
           //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for TX: PM\n");
 
           g_fpga_rb_reg_mem->ctrl &= ~0x00007036;                                                          // TX: turn off increment STREAMING, RESET and RESYNC signals
+          fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain, 0.0);                                   // TX_AMP_RF  gain setting [mV] is global and not modulation dependent
           if (tx_car_osc_qrg_inc == 50) {
             fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                                 // TX_CAR_OSC frequency
           }
           fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                           // TX_CAR_OSC frequency sweep increment
+
           if (tx_modsrc == RB_MODSRC_MOD_OSC) {
             fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(tx_mod_osc_qrg);                           // TX_MOD_OSC frequency
+          } else {
+            fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(0.0);                                      // TX_MOD_OSC turning off
+            if (!(g_fpga_rb_reg_mem->status & 0x00000100)) {
+              // TX_MOD_OSC phase not zero: reset phase oscillator
+              g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                      // TX_MOD RESYNC activate
+              g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                      // TX_MOD RESYNC deactivate
+            }
           }
+
           fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(tx_car_osc_qrg, tx_mod_osc_mag);                       // PM by streaming in DDS phase offset
           g_fpga_rb_reg_mem->ctrl |=  0x00000040;                                                          // control: PM by TX_CAR_OSC offset streaming
         }
         break;
 
         default:
+          fpga_rb_set_tx_amp_rf_gain_ofs__4mod_all(tx_amp_rf_gain, 0.0);                                   // TX_AMP_RF  gain setting [mV] is global and not modulation dependent
           if (tx_car_osc_qrg_inc == 50) {
             fpga_rb_set_tx_car_osc_qrg__4mod_cw_ssb_am_pm(tx_car_osc_qrg);                                 // CW mode keeps oscillator on QRG frequency
           }
           fpga_rb_set_tx_car_osc_qrg_inc__4mod_cw_ssb_am_pm(tx_car_osc_qrg_inc);                           // CW mode keeps scanner active
+
+          fpga_rb_set_tx_mod_osc_qrg__4mod_ssbweaver_am_fm_pm(0.0);                                        // TX_MOD_OSC turning off
+          if (!(g_fpga_rb_reg_mem->status & 0x00000100)) {
+            // TX_MOD_OSC phase not zero: reset phase oscillator
+            g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                        // TX_MOD RESYNC activate
+            g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                        // TX_MOD RESYNC deactivate
+          }
 
         }  // switch (tx_modtyp)
       }  // if (tx_modsrc != RB_MODSRC_NONE)
@@ -876,7 +933,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
 /*----------------------------------------------------------------------------*/
 void fpga_rb_get_ctrl(int tx_modtyp, int rx_modtyp,
-        double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg)
+        double* loc_RD_tx_car_osc_qrg, double* loc_RD_rx_car_osc_qrg, uint16_t* loc_RD_ovrdrv)
 {
     const int ssb_weaver_osc_qrg = 1700.0;
     //fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: requesting current FPGA data ...\n");
@@ -904,7 +961,9 @@ void fpga_rb_get_ctrl(int tx_modtyp, int rx_modtyp,
       *loc_RD_rx_car_osc_qrg += ssb_weaver_osc_qrg;
       break;
     }
-    //fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: ... tx_car_osc_qrg = %lf, rx_car_osc_qrg = %lf\n", *loc_RD_tx_car_osc_qrg, *loc_RD_rx_car_osc_qrg);
+
+    *loc_RD_ovrdrv = fpga_rb_get_ovrdrv();
+    //fprintf(stderr, "DEBUG - fpga_rb_get_ctrl: ... tx_car_osc_qrg = %lf, rx_car_osc_qrg = %lf, ovrdrv = %d\n", *loc_RD_tx_car_osc_qrg, *loc_RD_rx_car_osc_qrg, *loc_RD_ovrdrv);
 }
 
 
@@ -978,18 +1037,18 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(double tx_mod_qmix_g
     double gain, ofs;
 
     if (isOffset) {  // CW and AM modulation: reduced modulation by 1/2 and added offset to reach the maximum at the modulation peaks
-        gain = ((double) 0x3fff) * (tx_mod_qmix_grade / 100.0);
+        gain = ((double) 0x7fff) * (tx_mod_qmix_grade / 100.0);
         ofs  = ((double) ((1ULL << 47) - 1)) - (((double) ((1ULL << 46) - 1)) * (tx_mod_qmix_grade / 100.0));
 
     } else {  // SSB modulation: no offset but full modulation
-        gain = ((double) 0x7fff) * (tx_mod_qmix_grade / 100.0);
+        gain = ((double) 0xffff) * (tx_mod_qmix_grade / 100.0);
         ofs  = 0.0;
     }
 
     //fprintf(stderr, "INFO - fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_am: (gain=%lf, ofs=%lf) <-- in(tx_mod_qmix_grade=%lf)\n",
     //        gain, ofs, tx_mod_qmix_grade);
 
-    g_fpga_rb_reg_mem->tx_mod_qmix_gain   = ((uint32_t) gain) & 0x7fff;
+    g_fpga_rb_reg_mem->tx_mod_qmix_gain   = ((uint32_t) gain) & 0xffff;
     g_fpga_rb_reg_mem->tx_mod_qmix_ofs_lo = (uint32_t) (((uint64_t) ofs)  & 0xffffffff);                   // CW, and AM have carrier enabled,
     g_fpga_rb_reg_mem->tx_mod_qmix_ofs_hi = (uint32_t) (((uint64_t) ofs) >> 32);                           // SSB is zero symmetric w/o a carrier
 }
@@ -997,12 +1056,12 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_cw_ssbweaver_am(double tx_mod_qmix_g
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm(double tx_car_osc_qrg, double tx_mod_osc_mag)
 {
-    double gain = 0.5 + ((double) 0x7fff) * ((1UL << 14) * tx_mod_osc_mag / g_rp_main_calib_params.base_osc125mhz_realhz);
-    double ofs  = 0.5 + ((double) (1ULL << 48)) * (tx_car_osc_qrg / g_rp_main_calib_params.base_osc125mhz_realhz);
+    double gain = ((double) 0xffff) * ((1UL << 14) * tx_mod_osc_mag / g_rp_main_calib_params.base_osc125mhz_realhz);
+    double ofs  = ((double) (1ULL << 48)) * (tx_car_osc_qrg / g_rp_main_calib_params.base_osc125mhz_realhz);
     //fprintf(stderr, "INFO - fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm: (gain=%lf, ofs=%lf) <-- in(tx_car_osc_qrg=%lf, tx_mod_osc_mag=%lf)\n",
     //        gain, ofs, tx_car_osc_qrg, tx_mod_osc_mag);
 
-    g_fpga_rb_reg_mem->tx_mod_qmix_gain   = ((uint32_t) gain) & 0x7fff;                                    // FM deviation
+    g_fpga_rb_reg_mem->tx_mod_qmix_gain   = ((uint32_t) gain) & 0xffff;                                    // FM deviation
     g_fpga_rb_reg_mem->tx_mod_qmix_ofs_lo = (uint32_t) (((uint64_t) ofs)  & 0xffffffff);                   // FM carrier frequency
     g_fpga_rb_reg_mem->tx_mod_qmix_ofs_hi = (uint32_t) (((uint64_t) ofs) >> 32);
 }
@@ -1010,11 +1069,11 @@ void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_fm(double tx_car_osc_qrg, double tx_
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_tx_mod_qmix_gain_ofs__4mod_pm(double tx_car_osc_qrg, double tx_mod_osc_mag)
 {
-    double gain = 0.5 + ((double) 0x7fff) * (tx_mod_osc_mag / 360.0);
+    double gain = ((double) 0xffff) * (tx_mod_osc_mag / 180.0);
     //fprintf(stderr, "INFO - fpga_rb_set_tx_mod_osc_mixer_mod_pm: tx_car_osc_qrg=%lf, tx_mod_osc_mag=%lf\n",
     //        tx_car_osc_qrg, tx_mod_osc_mag);
 
-    g_fpga_rb_reg_mem->tx_mod_qmix_gain   = ((uint32_t) gain) & 0x7fff;                                    // PM phase magnitude
+    g_fpga_rb_reg_mem->tx_mod_qmix_gain   = ((uint32_t) gain) & 0xffff;                                    // PM phase magnitude
     g_fpga_rb_reg_mem->tx_mod_qmix_ofs_lo = 0UL;                                                           // PM based on zero phase w/o modulation
     g_fpga_rb_reg_mem->tx_mod_qmix_ofs_hi = 0UL;
 }
@@ -1336,7 +1395,7 @@ void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg)
 /*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(double rx_mod_ssb_am_gain)
 {
-    double gain = ((double) 0xffff) * (rx_mod_ssb_am_gain / 100.0);
+    double gain = ((double) 0xffff) * 0.5 * (rx_mod_ssb_am_gain / 100.0);
 
     //fprintf(stderr, "INFO - fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am: (gain=%lf) <-- in(rx_mod_ssb_am_gain=%lf)\n",
     //        gain, rx_mod_ssb_am_gain);
@@ -1405,6 +1464,14 @@ void fpga_rb_set_rfout2_gain_ofs(double rfout2_gain, uint16_t rfout2_ofs)
 
     g_fpga_rb_reg_mem->rfout2_gain = ((uint32_t) gain) & 0xffff;
     g_fpga_rb_reg_mem->rfout2_ofs  = rfout2_ofs;
+}
+
+/*----------------------------------------------------------------------------*/
+uint16_t fpga_rb_get_ovrdrv()
+{
+	uint16_t ovrdrv = (g_fpga_rb_reg_mem->status & 0x00C00000) >> 0x16;
+    //fprintf(stderr, "INFO - fpga_rb_get_ovrdrv: ovrdrv = 0x%02x\n", ovrdrv);
+	return ovrdrv;
 }
 
 

@@ -198,7 +198,7 @@ float bspline_n_i_k(int i, int k, float t)
 }
 
 /*----------------------------------------------------------------------------------*/
-float get_compensation_factor(float frequency_hz, char isTerminated)
+float get_compensation_factor(float frequency_hz, int isTerminated)
 {
     if (!frequency_hz) {
         return 0.0;  // marks the gain correction block to switch off

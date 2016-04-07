@@ -83,7 +83,7 @@
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
     tx_modtyp_s:            1,  // TX modulation: off
     rx_modtyp_s:            5,  // RX modulation: AM-sync USB
-    rbled_csp_s:          249,  // RB LEDs set to: RX_CAR_OSC_INC frequency value
+    rbled_csp_s:          254,  // RB LEDs set to: current status of the overdrive signals
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
@@ -99,9 +99,10 @@
 
     tx_amp_rf_gain_s:     200,  // 200 mV Vpp @ 50R results to -10 dBm
     tx_mod_osc_mag_s:     100,  // 100 % modulation by default
-    rfout1_term_s:          0,  // RF Output 1: '0' open ended, '1' 50 ohms terminated
-    rfout2_term_s:          0,  // RF Output 2: '0' open ended, '1' 50 ohms terminated
-    qrg_inc_s:             50   // Frequency range controller increment value [0%..100%]
+    rfout1_term_s:          2,  // RF Output 1: '0' neutral, '1' 50 ohms terminated, '2' open ended
+    rfout2_term_s:          2,  // RF Output 2: '0' neutral, '1' 50 ohms terminated, '2' open ended
+    qrg_inc_s:             50,  // Frequency range controller increment value [0%..100%]
+    ovrdrv_s:               0   // Current overdrive flags of the FPGA signals
   };
 
   // Other global variables
@@ -382,13 +383,29 @@
         checkKeyDoEnable(param_name, intVal);
       }
       else if (param_name == 'rfout1_term_s') {
-        $('#'+param_name).val(intVal);
+        $("input[name='" + param_name + "_rb'][value='" + intVal + "']").attr('checked', 'checked');
+        //console.log('DEBUG param_name %s, value = %d', param_name, intVal);
       }
       else if (param_name == 'rfout2_term_s') {
-        $('#'+param_name).val(intVal);
+        $("input[name='" + param_name + "_rb'][value='" + intVal + "']").attr('checked', 'checked');
+        //console.log('DEBUG param_name %s, value = %d', param_name, intVal);
       }
       else if (param_name == 'qrg_inc_s') {
-        //$('#'+param_name).val(intVal);
+        // nothing
+      }
+      else if (param_name == 'ovrdrv_s') {
+        //console.log('DEBUG param_name %s, value = %d', param_name, intVal);
+        if (intVal & 0x1) {  // TX signal path
+          $('#tx_muxin_gain_s').addClass('form-bg-tx-muxin-gain-ovrdrv');
+        } else {
+          $('#tx_muxin_gain_s').removeClass('form-bg-tx-muxin-gain-ovrdrv');
+        }
+
+        if (intVal & 0x2) {  // RX signal path
+          $('#rx_muxin_gain_s').addClass('form-bg-rx-muxin-gain-ovrdrv');
+        } else {
+          $('#rx_muxin_gain_s').removeClass('form-bg-rx-muxin-gain-ovrdrv');
+        }
       }
 
       /*
@@ -607,6 +624,9 @@ function processField(key) {
   if (key == 'rb_run'){
     value = ($('#RB_RUN').is(':visible') ?  1 : 0);
   }
+  else if (key == 'ovrdrv_s'){
+    value = 0;
+  }
   else if (key == 'tx_qrg_sel_s') {
     value = (field.hasClass('btnevttx_checked')) ?  1 : 0;
   }
@@ -614,16 +634,20 @@ function processField(key) {
     value = (field.hasClass('btnevtrx_checked')) ?  1 : 0;
   }
 
-  else if (field.is('button')) {
-    //console.log('DEBUG key ' + key + ' is a button');
-    value = (field.hasClass('active') ? 1 : 0);
+  else if (field.is('input:radio')) {
+    value = parseInt($('input[name=' + key + '_rb]:checked').val());
+    //console.log('DEBUG key %s is a input:radio, value = %d', key, value);
   }
 
-  else if (field.is('input:button, input:radio')) {
-    //console.log('DEBUG key ' + key + ' is a input:radio');
-    //value = parseInt($('input[name="' + key + '"]:checked').val());
+  else if (field.is('input:button')) {
     //console.log('DEBUG radio-button: ' + key + ' --> from: ' + RB.params.orig[key] + '  to: ' + value + '  text: ' + $('input[name="' + key + '"]:checked').text());
     value = (field.is(":checked") ?  1 : 0);
+    //console.log('DEBUG key %s is a input:button, value = %d', key, value);
+  }
+
+  else if (field.is('button')) {
+    value = (field.hasClass('active') ? 1 : 0);
+    //console.log('DEBUG key %s is a button, value = %d', key, value);
   }
 
   else if (field.is('select') || field.is('input')) {
@@ -632,7 +656,7 @@ function processField(key) {
     } else {
       value = parseInt(field.val());
     }
-    //console.log('DEBUG key ' + key + ' is a select or input: value = ' + value);
+    //console.log('DEBUG key %s is a selector or input, value = %d', key, value);
 
   } else {
     console.log('DEBUG key ' + key + ' field is UNKNOWN');
@@ -928,6 +952,9 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
 
+      $('#tx_modtyp_o_2').attr("disabled", "disabled");
+      $('#tx_modtyp_o_3').attr("disabled", "disabled");
+
     } else if (value) {
       /* external */
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
@@ -939,6 +966,9 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
       $('#tx_muxin_gain_s').removeAttr("disabled");
       $('#apply_tx_muxin_gain').removeAttr("style");
 
+      $('#tx_modtyp_o_2').removeAttr("disabled");
+      $('#tx_modtyp_o_3').removeAttr("disabled");
+
     } else {
       /* (none) */
       $('#tx_mod_osc_qrg_f').attr("disabled", "disabled");
@@ -949,6 +979,9 @@ function checkKeyDoEnable(key, value) {  // XXX checkKeyDoEnable controllers
 
       $('#tx_muxin_gain_s').attr("disabled", "disabled");
       $('#apply_tx_muxin_gain').attr("style", "visibility:hidden");
+
+      $('#tx_modtyp_o_2').attr("disabled", "disabled");
+      $('#tx_modtyp_o_3').attr("disabled", "disabled");
     }
   }
 
@@ -1510,6 +1543,10 @@ function cast_params2transport(params, pktIdx)
       transport['qrg_inc_s']      = value;
       RB.params.orig['qrg_inc_s'] = value;
     }
+
+    if (params['ovrdrv_s'] !== undefined) {
+      transport['ovrdrv_s'] = params['ovrdrv_s'];
+    }
     break;
 
   default:
@@ -1618,6 +1655,10 @@ function cast_transport2params(transport)
 
   if (transport['qrg_inc_s'] !== undefined) {
     params['qrg_inc_s'] = transport['qrg_inc_s'];
+  }
+
+  if (transport['ovrdrv_s'] !== undefined) {
+    params['ovrdrv_s'] = transport['ovrdrv_s'];
   }
 
   //console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');

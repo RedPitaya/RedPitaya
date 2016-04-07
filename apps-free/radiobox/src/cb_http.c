@@ -75,7 +75,7 @@ int rp_app_init(void)
     //fprintf(stderr, "INFO rp_app_init: osc125mhz = %lf\n", rp_main_calib_params.base_osc125mhz_realhz);
 
     // adjust ADC offset values to current environment
-    rp_measure_calib_params(&g_rp_main_calib_params);  // TODO - use only on user request - this line is included for development only.
+    //rp_measure_calib_params(&g_rp_main_calib_params);  // TODO - use only on user request - this line is included for development only.
 
     /* start-up worker thread */
     if (worker_init(g_rb_default_params, RB_PARAMS_NUM) < 0) {
@@ -91,7 +91,7 @@ int rp_app_init(void)
 int rp_app_exit(void)
 {
     //fprintf(stderr, "rp_app_exit: BEGIN\n");
-    fprintf(stderr, ">### Unloading radiobox version %s-%s. ###<\n", VERSION, REVISION);
+    fprintf(stderr, "\n<=== Unloading radiobox version %s-%s. ===>\n\n", VERSION, REVISION);
 
     /* turn off all LEDs */
     fpga_hk_setLeds(0, 0xff, 0x00);
