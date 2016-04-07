@@ -1381,8 +1381,7 @@ rb_dsp48_AaDmBaC_A18_D18_B18_C36_P37 i_rb_rx_muxin_amplifier_dsp48 (
 
 wire          [ 17: 0] rx_muxin_out = rx_muxin_mix_out[30:13];
 
-wire          [  5: 0] rb_overdrive_rx_muxin_ovl = rx_muxin_mix_out[35:30];
-assign rb_overdrive_rx_muxin = (!rx_muxin_mix_out[36] && (| rb_overdrive_rx_muxin_ovl)) || (rx_muxin_mix_out[36] && !(& rb_overdrive_rx_muxin_ovl));
+assign rb_overdrive_rx_muxin = (!rx_muxin_mix_out[36] && (| rx_muxin_mix_out[35:28])) || (rx_muxin_mix_out[36] && !(& rx_muxin_mix_out[35:28]));
 
 
 //---------------------------------------------------------------------------------
@@ -2587,8 +2586,8 @@ else if (clk_200khz)
 
 assign regs[REG_RD_RB_RX_SIGNAL_STRENGTH] = rx_mod_amenv_mean[47:32];
 
-wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 3'b0, rx_afc_cordic_polar_out_mag[15:0], 28'b0 };
-wire   signed [ 47: 0] rx_mod_amenv_mean_in   = { 1'b0, rx_mod_amenv_mean[47:1] };                          // 2^13 elements summed up, divide to get the average value
+wire   signed [ 47: 0] rx_mod_amenv_sig_in    = { 2'b0, rx_afc_cordic_polar_out_mag[15:0], 29'b0 };
+wire   signed [ 47: 0] rx_mod_amenv_mean_in   = { 2'b0, rx_mod_amenv_mean[47:2] };                          // 2^13 elements summed up, divide to get the average value
 wire   signed [ 47: 0] rx_mod_amenv_diff_out;
 
 rb_addsub_48M48 i_rb_rx_mod_amenv_accu_mod_addsub (                                                         // AM envelope demodulation
