@@ -201,20 +201,29 @@ void CreateWPA_SUPPL(std::string ssid, std::string pass) {
 	}
 	result << "}";
 
-	std::string command = "echo '" + result.str() + "' > /opt/redpitaya/wpa_supplicant.conf";
-	system(command.c_str());
+	std::string command1 = "echo '" + result.str() + "' > /opt/redpitaya/wpa_supplicant.conf";
+	std::string command2 = "echo '" + result.str() + "' > /opt/redpitaya/etc/network/wpa_supplicant.conf";
+
+	system("mount -o rw,remount /opt/redpitaya");
+	system(command1.c_str());
+	system(command2.c_str());
 }
 
 void ConnectToNetwork() {
+
+	fprintf(stderr, "[WiFi] ConnectToNetwork\n");
     // Kill wpa_supplicant, if it up
-	std::string command_Kill_supl = "killall pidof wpa_supplicant";
-	system(command_Kill_supl.c_str());
-	system("mount -o,remount /dev/mmcblk0p1 /opt/redpitaya");
+	// std::string command_Kill_supl = "killall pidof wpa_supplicant";
+	// system(command_Kill_supl.c_str());
+	// system("mount -o,remount /dev/mmcblk0p1 /opt/redpitaya");
 
 	// std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf & disown";
-	system("start-stop-daemon -Kbvx /sbin/wpa_supplicant");
-	system("killall wpa_supplicant");
-	system("start-stop-daemon -Sbvx /sbin/wpa_supplicant -- -B -D wext -i wlan0 -c /opt/redpitaya/wpa_supplicant.conf");
+	// system("start-stop-daemon -Kbvx /sbin/ifup");
+	// system("start-stop-daemon -Kbvx /sbin/wpa_supplicant");
+	system("start-stop-daemon -Sbvx /sbin/ifdown -- wlan0");
+	system("start-stop-daemon -Sbvx /sbin/ifup -- wlan0");
+	// system("start-stop-daemon -Sbvx /sbin/wpa_supplicant -- -B -D wext -i wlan0 -c /opt/redpitaya/wpa_supplicant.conf");
+	// system("start-stop-daemon -Sbvx /sbin/ifup -- wlan0");
 }
 
 bool DisconnectNetwork() {
