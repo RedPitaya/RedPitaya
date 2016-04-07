@@ -20,6 +20,7 @@ CStringParameter essidIn("WIFI_SSID", CBaseParameter::RW, "", 10000);
 CStringParameter passwIn("WIFI_PASSW", CBaseParameter::RW, "", 10000);
 CStringParameter errorOut("WIFI_ERROR", CBaseParameter::RW, "", 10000);
 CStringParameter okOut("WIFI_OK", CBaseParameter::RW, "", 10000);
+CStringParameter wifiName("WIFI_NAME", CBaseParameter::RWSA, "", 10000);
 CBooleanParameter installWT("WIFI_INSTALL", CBaseParameter::RW, false, 0);
 CBooleanParameter connectedWifi("WIFI_CONNECTED", CBaseParameter::RWSA, false, 0);
 CBooleanParameter doConnect("WIFI_CONNECT", CBaseParameter::RW, false, 0);
@@ -37,12 +38,6 @@ int rp_app_init(void) {
     CDataManager::GetInstance()->SetParamInterval(1000);
 
     rpApp_Init();
-    rpApp_OscRun();
-
-    // Kill wpa_supplicant, if it up
-	// std::string command_Kill_supl = "killall pidof wpa_supplicant";
-	// system(command_Kill_supl.c_str());
-
     // Check iw tools
     if(!CheckIwlist())
     	errorOut.Value() = "wt not installed";
@@ -61,14 +56,6 @@ int rp_app_init(void) {
 int rp_app_exit(void) {
     fprintf(stderr, "Unloading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
     rpApp_Release();
-    if (fork() == 0)
-    {
-	    int x;
-	    for (x = sysconf(_SC_OPEN_MAX); x>3; x--)
-	    {
-	        close (x);
-	    }
-    }
     return 0;
 }
 
@@ -225,10 +212,9 @@ void ConnectToNetwork() {
 	system("mount -o,remount /dev/mmcblk0p1 /opt/redpitaya");
 
 	// std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf & disown";
-	system("ifdown wlan0");
-	std::string command = "ifup wlan0";
-	// std::string command = "curl http://127.0.0.1/connect_wifi";
-	system(command.c_str());
+	system("start-stop-daemon -Kbvx /sbin/wpa_supplicant");
+	system("killall wpa_supplicant");
+	system("start-stop-daemon -Sbvx /sbin/wpa_supplicant -- -B -D wext -i wlan0 -c /opt/redpitaya/wpa_supplicant.conf");
 }
 
 bool DisconnectNetwork() {
@@ -251,9 +237,20 @@ bool CheckConnection() {
 	infile.close();
 
 	size_t found = lineFromResult.find("wlan0");
-		if (found != std::string::npos)
-			return true;
+	if (found != std::string::npos)
+	{
+		std::string net_name("cat ");
+		net_name =  net_name + tmpFileName + " | grep ESSID: | awk -F '\"' '{print $2}' > /tmp/wifi_name";
+		system(net_name.c_str());
 
+		std::ifstream infile2("/tmp/wifi_name");
+		std::string name("");
+		std::getline(infile2, name);
+		infile2.close();
+		wifiName.Value() = name;
+		return true;
+	}
+	wifiName.Value() = "";
 	return false;
 }
 

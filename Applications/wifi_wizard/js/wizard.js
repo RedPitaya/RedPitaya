@@ -47,6 +47,8 @@
         demo_label_visible: false
     };
 
+    WIZARD.wifiName = "";
+
     // Params cache
     WIZARD.params = {
         orig: {},
@@ -162,7 +164,13 @@
             } else if (param_name == 'WIFI_DONGLE_STATE') {
                 WIZARD.dongleEnablingDialog(new_params[param_name].value);
                 console.log("DONGLE: " + new_params[param_name].value);
+            } else if (param_name == 'WIFI_NAME') {
+                WIZARD.wifiName = new_params[param_name].value;
             }
+        }
+        $('.btn-wifi-item').css("color", "#cdcccc");
+        if (WIZARD.wifiName != undefined && WIZARD.wifiName != "") {
+            $('.btn-wifi-item[key=' + WIZARD.wifiName + ']').css('color', 'red');
         }
     };
 
@@ -203,9 +211,8 @@
 
             htmlList += icon + "<div key='" + list[item].essid + "' class='btn-wifi-item btn'>" + list[item].essid + "</div>";
         }
-        htmlList = "<div>Select Wi-Fi Network:</div>" + htmlList;
-        if ($('#list_container').html() != htmlList)
-            $('#list_container').html(htmlList);
+        if ($('#wifi_list').html() != htmlList)
+            $('#wifi_list').html(htmlList);
 
         $('.btn-wifi-item').click(function() {
             $('#essid_enter').val($(this).attr('key'))
@@ -342,22 +349,13 @@ $(function() {
         var pass = $('#passw_enter').val();
         WIZARD.params.local['WIFI_SSID'] = { value: ssid };
         WIZARD.params.local['WIFI_PASSW'] = { value: pass };
-        // WIZARD.sendParams();
         if (!WIZARD.state.connected) {
             WIZARD.params.local['WIFI_CONNECT'] = { value: true };
             WIZARD.sendParams();
-            // $.get("/connect_wifi");
         } else {
             WIZARD.params.local['WIFI_CONNECT'] = { value: false };
             WIZARD.sendParams();
         }
-        // setTimeout(function() {
-        //     $.ajax({
-        //         method: "GET",
-        //         url: '/start_supplicant'
-        //     }).always(function() { console.log("Starting supplicant"); });
-        // }, 1500);
-        // WIZARD.sendParams();
         WIZARD.params.local = {};
     });
 
@@ -370,9 +368,9 @@ $(function() {
             $('#offline_dialog').modal('show');
     });
 
-    var reloaded = $.cookie("scpi_forced_reload");
+    var reloaded = $.cookie("wifi_forced_reload");
     if (reloaded == undefined || reloaded == "false") {
-        $.cookie("scpi_forced_reload", "true");
+        $.cookie("wifi_forced_reload", "true");
         window.location.reload(true);
     }
 

@@ -7,15 +7,15 @@
 	var startUsing = 0;
     $(document).ready(function($) {
         AnalyticsCore.init(function(){
-            AnalyticsCore.sendScreenView('/scpi_server', 'Redpitaya', 'Remote control');
-            AnalyticsCore.sendSysInfo('/scpi_server');
-            AnalyticsCore.sendExecTime('/scpi_server', 'scpi_server');
+            AnalyticsCore.sendScreenView('/wifi_wizard', 'Redpitaya', 'Remote control');
+            AnalyticsCore.sendSysInfo('/wifi_wizard');
+            AnalyticsCore.sendExecTime('/wifi_wizard', 'wifi_wizard');
             startUsing = performance.now();
         });
     });
 
 	$(window).on('beforeunload', function(){
-	      $.cookie('scpi_server-run', performance.now() - startUsing);
+	      $.cookie('wifi_wizard-run', performance.now() - startUsing);
 	});
 
 })(jQuery);

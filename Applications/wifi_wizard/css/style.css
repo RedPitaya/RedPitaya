@@ -486,7 +486,7 @@ area:hover {
     background-color: transparent;
     text-shadow: 0px 0px;
     /*  box-shadow: 0 0 0 1px #777; */
-    color: #cdcccc !important;
+    color: #cdcccc;
 }
 
 .btn:hover,
