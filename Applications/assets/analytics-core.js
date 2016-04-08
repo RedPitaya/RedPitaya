@@ -151,14 +151,22 @@
             $('#analytics_dialog').modal('show');
             $('#enable_analytics').click(function(event) {
                 window['ga-disable-' + analytics_id] = false;
-                $.cookie('send_stats', true);
+                var date = new Date();
+                var minutes = 30;
+                date.setTime(date.getTime() + (14 * 24 * 60 * 60 * 1000)); // 2 weeks
+
+                $.cookie('send_stats', true, { expires: date });
                 sendData = true;
                 if (debugPrints) console.log("[AnalyticsCore] Analytics enabled");
                 successCallback();
             });
             $('#disable_analytics').click(function(event) {
+                var date = new Date();
+                var minutes = 30;
+                date.setTime(date.getTime() + (14 * 24 * 60 * 60 * 1000)); // 2 weeks
+
                 window['ga-disable-' + analytics_id] = true;
-                $.cookie('send_stats', false);
+                $.cookie('send_stats', false, { expires: date });
                 if (debugPrints) console.log("[AnalyticsCore] Analytics disabled");
                 sendData = false;
             });
