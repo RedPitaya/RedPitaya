@@ -241,10 +241,10 @@ void checkMathScale() {
         float vpp;
         rpApp_OscMeasureVpp(RPAPP_OSC_SOUR_MATH, &vpp);
 
-        // if((min_amp >= vpp) || (max_amp <= vpp)) {
-        //     rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.Value());
-        //     resetMathParams();
-        // } else
+        if((min_amp >= vpp) || (max_amp <= vpp)) {
+            rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.Value());
+            resetMathParams();
+        } else
         {
             rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, inMathScale.NewValue());
             inMathScale.Update();
