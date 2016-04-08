@@ -252,7 +252,7 @@
                     }
                 }
                 if (showUpdatePopup) {
-                    var htmlText = "<p id='update_required_text'>Update for your ecosystem is available. Please update your <a style='color:red' href='/updater/'>ecosystem here</a>.</p>";
+                    var htmlText = "<p id='update_required_text'><br/>New OS update is available. <br/> <a style='color:red' href='https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md'>More about this update</a> &nbsp;&nbsp;&nbsp; <a style='color:red' href='/updater/'>Update now!</a>.</p>";
 
                     PopupStack.add(htmlText);
                 }

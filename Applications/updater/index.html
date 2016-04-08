@@ -75,13 +75,13 @@
                         <div class="left-content-scpi" style="font-size: 18pt; color: white;">
                             <table class="main_table">
                                 <tr id="step_1" class="step">
-                                    <td class="step_desc">Step 1. Checking Internet connetion on RedPitaya
+                                    <td class="step_desc">Step 1. Checking download server availability
                                         <p class="error_msg">Your RedPitaya currently offline. Please follow <a style="color: #FFFF33" href="http://redpitaya.com/quick-start/" target="_blank">quick start instrucitons</a> to put it online.</p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_2" class="step">
-                                    <td class="step_desc">Step 2. Checking current version: <span id="step_2_version"></span>
+                                    <td class="step_desc">Step 2. Checking current OS version: <span id="step_2_version"></span>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
@@ -89,23 +89,22 @@
                                     <td class="step_desc">Step 3. Checking for updates
                                         <p class="select_ver">Select version to install:
                                             <select id="ecosystem_ver" disabled>
-                                            </select>
-                                            <button id="apply">Apply</button>
+                                            </select> and click <button id="apply">Apply</button>
                                         </p>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later</p>
-                                        <p class="warn_msg">You're trying to downgrade your ecosystem. Do it on your own risk!</p>
+                                        <p class="warn_msg">Warning: Downgrading the OS may cause unpredictable behavior</p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_4" class="step">
-                                    <td class="step_desc">Step 4. Downloading ecosystem update
+                                    <td class="step_desc">Step 4. Downloading OS update
                                         <p class="error_msg">Download problem has occured. Please check your RedPitaya power supply and Internet connection</p>
                                     </td>
                                     <td class="step_icon">
                                         <p id="percent" style="display: none;">0%</p><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_5" class="step">
-                                    <td class="step_desc">Step 5. Applying changes
+                                    <td class="step_desc">Step 5. Updating the OS
                                         <p class="error_msg">Can not extract file. Check your SD-card empty space or try to redownload it</p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
