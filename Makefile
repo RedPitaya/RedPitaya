@@ -16,8 +16,6 @@ export VERSION
 ################################################################################
 
 INSTALL_DIR=build
-TARGET=target
-
 # check if download cache directory is available
 DL ?= dl
 
@@ -35,25 +33,16 @@ $(INSTALL_DIR):
 zip: $(ZIPFILE)
 
 $(ZIPFILE): x86 arm
-	mkdir -p               $(TARGET)
-	# copy boot images and select FSBL as default
-	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
-	# copy device tree and Linux kernel
-	cp $(DEVICETREE)       $(TARGET)
-	cp $(LINUX)            $(TARGET)
 	# copy FPGA bitstream images and decompress them
-	mkdir -p               $(TARGET)/fpga
-	cp $(FPGA)             $(TARGET)/fpga/fpga.bit
-	cp fpga/archive/*.xz   $(TARGET)/fpga
-	cd $(TARGET)/fpga; xz -df *.xz
-	#
-	cp -r $(INSTALL_DIR)/* $(TARGET)
-	cp -r OS/filesystem/*  $(TARGET)
-	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
+	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
+	cd $(INSTALL_DIR)/fpga; xz -df *.xz
+	# TODO: check this step
+	cp -r OS/filesystem/*  $(INSTALL_DIR)
+	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
 	# copy configuration file for WiFi access point
-	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
+	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(INSTALL_DIR)/hostapd.conf
 	# build zip file
-	cd $(TARGET); zip -r ../$(ZIPFILE) *
+	cd $(INSTALL_DIR); zip -r ../$(ZIPFILE) *
 
 ################################################################################
 # X86 build (Vivado FPGA synthesis, FSBL, U-Boot, Linux kernel)

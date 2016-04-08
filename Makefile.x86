@@ -2,11 +2,7 @@
 TMP = tmp
 
 # check if download cache directory is available
-ifdef BR2_DL_DIR
-DL=$(BR2_DL_DIR)
-else
-DL=$(TMP)
-endif
+DL ?= dl
 
 UBOOT_TAG     = xilinx-v2015.2
 LINUX_TAG     = xilinx-v2015.1
@@ -36,8 +32,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 #
 ################################################################################
 
-INSTALL_DIR=build
-NAME=ecosystem
+INSTALL_DIR ?= build
 
 # directories
 FPGA_DIR        = fpga
@@ -46,10 +41,10 @@ FPGA_DIR        = fpga
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
 DTS             = $(FPGA_DIR)/sdk/dts/system.dts
-DEVICETREE      = $(TMP)/devicetree.dtb
-UBOOT           = $(TMP)/u-boot.elf
-LINUX           = $(TMP)/uImage
-BOOT_UBOOT      = $(TMP)/boot.bin
+DEVICETREE      = $(INSTALL_DIR)/devicetree.dtb
+UBOOT           = $(INSTALL_DIR)/u-boot.elf
+LINUX           = $(INSTALL_DIR)/uImage
+BOOT_UBOOT      = $(INSTALL_DIR)/boot.bin
 
 ################################################################################
 # tarball
@@ -74,6 +69,8 @@ $(INSTALL_DIR):
 
 fpga: $(DTREE_DIR)
 	make -C $(FPGA_DIR)
+	mkdir -p               $(INSTALL_DIR)/fpga
+	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga.bit
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -161,4 +158,3 @@ clean:
 	-make -C $(UBOOT_DIR) clean
 	# todo, remove downloaded libraries and symlinks
 	$(RM) $(INSTALL_DIR) -rf
-	$(RM) $(NAME)*.zip
