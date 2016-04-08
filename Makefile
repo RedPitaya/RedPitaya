@@ -71,7 +71,7 @@ x86:
 .PHONY: arm
 
 arm:
-	chroot $(ROOT_DIR) make -C git -f Makefile.arm DL=/dl
+#	chroot $(ROOT_DIR) make -C git -f Makefile.arm DL=/dl
 
 ################################################################################
 # local (on RP board) install process
