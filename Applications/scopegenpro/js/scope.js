@@ -2618,7 +2618,15 @@ $(function() {
             if (!$.isEmptyObject(OSC.graphs)) {
                 var diff = event.pageX - curXPos;
                 curXPos = event.pageX;
-                OSC.counts_offset -= diff;
+
+                var rel_off = diff * (512 / ($('#graphs').width() / 2));
+                OSC.counts_offset -= rel_off;
+                if (OSC.counts_offset > 500)
+                    OSC.counts_offset = 500;
+
+                if (OSC.counts_offset < -500)
+                    OSC.counts_offset = -500;
+
                 OSC.offsetForDecoded = OSC.counts_offset;
 
                 console.log(OSC.counts_offset);
