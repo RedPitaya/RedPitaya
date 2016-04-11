@@ -495,9 +495,9 @@ APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_SCPISERVER_DIR    = Applications/scpi_server
 APP_WIFIWIZARD_DIR    = Applications/wifi_wizard
 
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard
 
-apps_pro: scopegenpro spectrumpro lcr_meter scpi_server
+apps_pro: scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
@@ -548,7 +548,7 @@ clean:
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
-	-make -C $(SCPI_SERVER_DIR) clean
+	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
