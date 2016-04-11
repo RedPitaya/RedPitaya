@@ -95,7 +95,6 @@ BOOT_UBOOT      = $(TMP)/boot.bin
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
-HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 
 ################################################################################
 # versioning system
@@ -134,7 +133,7 @@ $(TMP):
 	mkdir -p $@
 
 $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
-	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
+	   examples $(DISCOVERY) ecosystem \
 	   scpi api apps_pro rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
@@ -460,9 +459,6 @@ rp_communication:
 
 $(DISCOVERY):
 	cp $(OS_TOOLS_DIR)/discovery.sh $@
-
-$(HEARTBEAT):
-	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
 ################################################################################
 # Red Pitaya ecosystem and free applications

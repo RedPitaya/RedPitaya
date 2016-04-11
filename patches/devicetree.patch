@@ -9,19 +9,17 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,82 @@
+@@ -86,3 +86,80 @@
  	fclk-enable = <0x0>;
  	ps-clk-frequency = <33333333>;
  };
 +
 +&gem0 {
-+	phy-handle = <&phy0>;
-+	ps7_ethernet_0_mdio: mdio {
-+		phy0: phy@1 {
-+			compatible = "lantiq,phy11g";
-+			device_type = "ethernet-phy";
-+			reg = <1>;
-+		};
++	phy-handle = <&ethernet_0_mdio>;
++	ethernet_0_mdio: mdio@1 {
++		compatible = "lantiq,phy11g";
++		device_type = "ethernet-phy";
++		reg = <1>;
 +	};
 +};
 +&i2c0 {
@@ -32,9 +30,9 @@
 +};
 +&spi1 {
 +	spidev@0 {
-+		compatible="spidev";
-+		reg =<0>; //chipselect 0
-+		spi-max-frequency= <50000000>;
++		compatible = "spidev";
++		reg = <0>; //chipselect 0
++		spi-max-frequency = <50000000>;
 +	};
 +};
 +&clkc {
@@ -65,23 +63,23 @@
 +};
 +/ {
 +	gpio-leds {
-+	    compatible = "gpio-leds";
-+	    led-8-yellow {
-+	        label = "led8";
-+	        gpios = <&gpio0 0 0>;
-+	        default-state = "off";
-+		linux,default-trigger = "mmc0";
-+	    };
-+	    led-9-red {
-+	        label = "led9";
-+	        gpios = <&gpio0 7 0>;
-+	        default-state = "off";
-+		linux,default-trigger = "hartbeat";
-+	    };
++		compatible = "gpio-leds";
++		led-8-yellow {
++			label = "led8";
++			gpios = <&gpio0 0 0>;
++			default-state = "off";
++			linux,default-trigger = "mmc0";
++		};
++		led-9-red {
++			label = "led9";
++			gpios = <&gpio0 7 0>;
++			default-state = "off";
++			linux,default-trigger = "heartbeat";
++		};
 +	};
 +};
 +/ {
-+	usb_phy0: phy0 {
++	usb_0_phy: phy@e0002000 {
 +		compatible = "ulpi-phy";
 +		#phy-cells = <0>;
 +		reg = <0xe0002000 0x1000>;
@@ -90,5 +88,5 @@
 +	};
 +};
 +&usb0 {
-+	usb-phy = <&usb_phy0>;
++	usb-phy = <&usb_0_phy>;
 +};
