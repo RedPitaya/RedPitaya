@@ -216,6 +216,7 @@ $(LINUX_DIR): $(LINUX_TAR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-iio-xadc.patch
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
 
 $(LINUX): $(LINUX_DIR)
