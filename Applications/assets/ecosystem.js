@@ -227,8 +227,6 @@
                 var resp = msg.responseText;
                 var arr = resp.split('\n');
                 if (arr.length == 0 || arr.length <= 2 || arr.length % 2 != 0) {
-                    $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                    $('#step_' + currentStep).find('.error_msg').show();
                     return;
                 }
                 var ecosystems = [];
