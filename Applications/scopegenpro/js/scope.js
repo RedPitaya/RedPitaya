@@ -2141,6 +2141,9 @@ $(function() {
             var buf_width = graph_width - 2;
             var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
 
+            OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px };
+            OSC.sendParams();
+
             $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
             $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + ui.position.left / ratio - 4).show();
         },
