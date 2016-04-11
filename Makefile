@@ -219,6 +219,7 @@ $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-xilinx-v2015.4.01-sound-drivers-Kconfig.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch

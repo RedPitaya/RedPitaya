@@ -1,0 +1,13 @@
+diff --git a/sound/drivers/Kconfig b/sound/drivers/Kconfig
+index 8545da9..a61a8a2 100644
+--- a/sound/drivers/Kconfig
++++ b/sound/drivers/Kconfig
+@@ -171,7 +171,7 @@ config SND_PORTMAN2X4
+ 
+ config SND_ML403_AC97CR
+ 	tristate "Xilinx ML403 AC97 Controller Reference"
+-	depends on XILINX_VIRTEX
++	depends on ARCH_ZYNQ
+ 	select SND_AC97_CODEC
+ 	help
+ 	  Say Y here to include support for the
