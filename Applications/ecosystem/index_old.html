@@ -1,0 +1,393 @@
+<html style="background-color: #1D1D1D">
+
+<head>
+    <meta charset="utf-8" />
+    <!--[if IE]>
+			<link rel="stylesheet" href="./ie9.css" type="text/css" />
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="./style.css" type="text/css" />
+    <link rel="stylesheet" href="assets/jquery.mCustomScrollbar.css" />
+    <!--link href="../assets/offline-theme-dark.css" rel="stylesheet" type="text/css"-->
+    <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
+    <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
+    <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
+    <script src="../assets/offline.min.js"></script>
+    <script src="../assets/ui.js"></script>
+    <script src="assets/jquery.mCustomScrollbar.concat.min.js"></script>
+    <script type="text/javascript">
+    var isOnline = true;
+    </script>
+    <script type="text/javascript">
+
+    </script>
+    <script type="text/javascript">
+    $(window).load(function() {
+        $("#mcs_container").mCustomScrollbar({
+            alwaysShowScrollbar: 2
+        });
+        $("#mcs_container2").mCustomScrollbar({
+            alwaysShowScrollbar: 2
+        });
+
+    });
+
+
+    var current_app = "";
+    var url_arr = window.location.href.split("/");;
+    var url = url_arr[0] + '//' + url_arr[2] + '/';
+    var getApps = function() {
+        $.ajax({
+            url: 'bazaar?apps=',
+            cache: false,
+            async: true
+        }).done(function(result) {
+            var buttons = $('#main_buttons');
+            $(buttons).removeAttr('id');
+            buttons = buttons.clone();
+            if (first_button == null)
+                first_button = buttons;
+            $(buttons).children('a').html("Visual programming");
+            $(buttons).children('a').attr('href', '#visualprogramming');
+            $(buttons).children('a').removeClass('lock');
+            $(buttons).appendTo('.list-group');
+            $(buttons).show();
+            current_app = 'visualprogramming';
+
+            desc = $('.description');
+            var first_button = null;
+            $.each(result, function(key, value) {
+                buttons = buttons.clone();
+                if (first_button == null)
+                    first_button = buttons;
+                $(buttons).children('a').html(value.name);
+                $(buttons).children('a').attr('href', '#' + key);
+                $(buttons).children('a').removeClass('lock');
+                if (value.type == 'demo')
+                    $(buttons).children('a').addClass('lock');
+
+                $(buttons).appendTo('.list-group');
+                $(buttons).show();
+                current_app = key;
+            });
+
+            $('a').unbind('click');
+            $('a').unbind('touchend');
+            $('a').on('click touchend', onLinkClicked);
+
+            $('.buttons').click(function() {
+                key = $(this).children('a').attr('href').substr(1);
+                if (key == 'visualprogramming') {
+                    $('.description').children('.name').html("Visual programming");
+                    $('.description').children('.icon').attr('src', 'images/img_visualprog.png');
+                    $('.description').children('.icon').css('width', '480px');
+                    $('.description').children('.desc').html('<p>This is the perfect tool for newcomers to have fun while learning and putting their ideas into practice. It is equally suitable for developers that would like to prototype their ideas faster</p> \
+								<p>Features:</p> \
+								<ul> \
+								<li>Program Red Pitaya via intuitive WEB based service using blocks or other programming languages (python, C/C++, Java Script,..)</li> \
+								<li>Create your own dashboards with real time graphs, dials, meters, sliders and buttons</li> \
+								<li>Connect sensors and measure temperature, moisture, alcohol, water level, vibrations, UV light, sound, pressure, air quality or detect motion and more</li> \
+								<li>Connect actuators and indicators such as LEDs, displays, motors or relays in order to control high load devices</li> \
+								<li>Share measurements or send notifications to email or even social networks like Facebook and Twitter</li> \
+								</ul> \
+							');
+                    $('#run').html('Run');
+                    $("#run").attr('href', 'http://account.redpitaya.com/try-visual-programming.php');
+                    $("#run").css('visibility', 'visible');
+                    $('#run').attr('target', "_blank");
+                    $("#demo").css('visibility', 'hidden');
+                } else {
+                    $('.description').children('.name').html(result[key].name);
+                    $('.description').children('.icon').attr('src', url + key + '/info/icon.png');
+                    $('.description').children('.icon').css('width', '');
+                    $('.description').children('.desc').html(result[key].description);
+                    $('#run').removeAttr('target');
+                    if (result[key].type == "demo") {
+                        $("#run").removeAttr('href');
+                        $("#run").attr('href2', url + 'instruct.html#' + key);
+                        $('#run').html('Run');
+                        $("#run").css('visibility', 'visible');
+                        $("#demo").css('visibility', 'hidden');
+                    } else if (result[key].type == "run") {
+                        $("#run").attr('href', url + key + '/?type=run');
+                        $('#run').html('Run');
+                        $("#run").css('visibility', 'visible');
+                        $("#demo").css('visibility', 'hidden');
+                    } else if (result[key].type == "old_app") {
+                        $('#run').html('Run');
+                        $("#run").attr('href', url + key);
+                        $("#run").css('visibility', 'visible');
+                        $("#demo").css('visibility', 'hidden');
+                    }
+
+                    $("#demo").attr('href', url + key + '/?type=run');
+
+                    $(desc).show();
+                }
+            });
+
+            first_button.click();
+
+            //$(selector).mCustomScrollbar({ option: value });
+            $("#mcs_container .buttons a").on('click', function() {
+                $("#mcs_container .buttons a").removeClass('item-active');
+                $("#mcs_container .buttons a").removeClass('item-active-lock');
+                if ($(this).hasClass('lock'))
+                    $(this).addClass('item-active-lock');
+                else
+                    $(this).addClass('item-active');
+            });
+
+
+        }).fail(function(msg) {
+            getApps();
+        });
+    }
+    getApps();
+
+    $(function() {
+        document.getElementsByTagName("title")[0].innerHTML = ("My Red Pitaya (" + window.location.hostname + ")");
+
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", 'info/info.json', false);
+        xmlHttp.send(null);
+        var info = JSON.parse(xmlHttp.responseText);
+        $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+    });
+    </script>
+    <title>My Red Pitaya</title>
+</head>
+
+<body style="background-color: #1D1D1D;">
+    <div class="pagewrapper">
+        <div class="panel panel-default" style="background-color: #1D1D1D; margin: 50px auto;">
+            <div class="panel-body">
+                <div class="divider"></div>
+                <div class="row" style="padding: 20px;">
+                    <div class="col-xs-2" style="min-width: 270px; height: 400;">
+                        <div id="mcs_container">
+                            <img class="appicon" style="width: 150px; margin: 0;" src="../assets/images/logo_white.png">
+                            <h4 style="color: silver;">Select the Instrument:</h4>
+                            <div class="list-group pull-left">
+                                <div class="buttons" id="main_buttons" style="width: 205px; display: none; margin: 20px auto; border-radius: 0px;">
+                                    <a href="#" id="buttons" style="border-radius: 0;" class="list-group-item">1</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bazaar-link" style="margin-top: 20px; margin-left: -40px">
+                            <a href="#" id="goto_bazaar" class="list-group-item more">Get more applications &nbsp;<img id="appstore_opened" style="display:none; width: 25px;" src="images/loader.gif"/></a>
+                        </div>
+                    </div>
+                    <div class="col-xm-9" id="right-col" style="mix-width: 500px; height: 400;color: silver;">
+                        <div id="mcs_container2">
+                            <div class="description" style="display: none;">
+                                <h2 class="name"></h2>
+                                <img class="icon" src="">
+                                <p class="desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="bazaar-link" style="float:right; visibility: hidden;">
+                        <a href="#run" id="run" class="list-group-item btn" style="margin: 0 60 0 0;">Run</a>
+                    </div>
+                    <div class="bazaar-link" style="float:right; visibility: hidden;">
+                        <a href="#demo" id="demo" class="list-group-item btn">Demo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="ver" style="color:#C0C0C0; margin-top: -45px;"></div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="bazaar_na" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
+                </div>
+                <div class="modal-body">
+                    Red Pitaya is at the moment unable to access application marketplace! Please try it again later or follow instructions about how to manualy install applications.
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" id="openInstructions" class="list-group-item btn">Open instructions</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ic_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="lic_failed">Licence verification failed! </p>
+                    <p>RedPitaya is offline and cannot access the server! </p> Please follow <a style="color: #dd0020" href="http://redpitaya.com/quick-start/" target="_blank">quick start instrucitons</a> to put it online.
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" id="quick_start" class="list-group-item btn">Open instructions</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    var onLinkClicked = function(e) {
+        if ($(this).attr('id') == 'run') {
+            if (!appstore_opened) {
+                if ($(this).attr('href') != undefined &&
+                    $(this).attr('href') == 'http://account.redpitaya.com/try-visual-programming.php') {
+                    if (!isOnline) {
+                        e.preventDefault();
+                        $('#lic_failed').hide();
+                        $('#ic_missing').modal('show');
+                        return;
+                    }
+                }
+                verifyLic($(this), e);
+            } else {
+                if ($(this).attr('href') != undefined && $(this).attr('href') != "")
+                    e.preventDefault();
+            }
+        } else if ($(this).attr('id') == 'demo') {
+            if (appstore_opened) {
+                if ($(this).attr('href') != undefined && $(this).attr('href') != "")
+                    e.preventDefault();
+            }
+
+        } else {
+            var el = $(this);
+            if (el.attr('id') == 'goto_bazaar') {
+                if (!isOnline) {
+                    e.preventDefault();
+                    $('#lic_failed').hide();
+                    $('#ic_missing').modal('show');
+                    return;
+                }
+                var url_arr = window.location.href.split("/");;
+                var url = url_arr[0] + '//' + url_arr[2] + '/bazaar';
+                window.location.replace(url);
+
+            } else if (el.attr('id') == 'openInstructions') {
+                $('#bazaar_na').modal('hide');
+                window.open('http://redpitaya.com/faq-page/#Applications|37515', '_blank');
+            } else if (el.attr('id') == 'quick_start') {
+                $('#bazaar_na').modal('hide');
+                window.open('http://redpitaya.com/quick-start/', '_blank');
+            } else {
+                var link = el.attr('href') != undefined ? el.attr('href') : el.attr('href2');
+                console.log('clicked ', link);
+                window.location = link;
+            }
+
+        }
+    }
+
+    var verifyLic = function(element, e) {
+        if (typeof String.prototype.startsWith != 'function') {
+            String.prototype.startsWith = function(str) {
+                return this.indexOf(str) === 0;
+            };
+        }
+
+        if (element.attr('href') == undefined) {
+            if (!isOnline) {
+                e.preventDefault();
+                $('#lic_failed').show();
+                $('#ic_missing').modal('show');
+                return;
+            }
+            var post_uri = 'http://store.redpitaya.com/upload_id_file/';
+            var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
+
+            $.ajax({
+                    method: "GET",
+                    url: "lic.lic"
+                })
+                .always(function(msg) {
+                    $.ajax({
+                            method: "GET",
+                            url: "idfile.id"
+                        })
+                        .done(function(msg) {
+                            var obj = jQuery.parseJSON(msg);
+                            if (obj != undefined && obj != null && obj.mac_address != undefined && obj.mac_address != null)
+                                req_uri = req_uri + obj.mac_address;
+                            $.ajax({
+                                    method: "POST",
+                                    url: post_uri,
+                                    data: 'id_file=' + encodeURIComponent(msg)
+                                })
+                                .done(function(msg) {
+                                    if (msg == "OK") {
+                                        $.ajax({
+                                                method: "GET",
+                                                url: req_uri
+                                            })
+                                            .done(function(msg) {
+                                                var res_msg = msg + "\r\n";
+                                                console.log(res_msg);
+                                                $.ajax({
+                                                        method: "POST",
+                                                        dataType: 'json',
+                                                        data: {
+                                                            'lic.lic': res_msg
+                                                        },
+                                                        contentType: 'application/json; charset=utf-8',
+                                                        url: "/lic_upload",
+                                                    })
+                                                    .done(function(msg) {})
+                                                    .fail(function(msg) {
+                                                        window.location = $('#demo').attr('href');
+                                                    });
+                                            })
+                                            .fail(function(msg) {
+                                                console.log("LIC: ERR2");
+                                                window.location = $('#demo').attr('href');
+                                            });
+                                    } else {
+                                        console.log("LIC: ERR3");
+                                        window.location = $('#demo').attr('href');
+                                    }
+                                })
+                                .fail(function(msg) {
+                                    console.log("LIC: ERR4");
+                                    window.location = $('#demo').attr('href');
+                                });
+                        })
+                        .fail(function(msg) {
+                            console.log("LIC: ERR4");
+                            window.location = $('#demo').attr('href');
+                        });
+                })
+        } else {
+            if (element.attr('href') != 'http://account.redpitaya.com/try-visual-programming.php')
+                window.location = element.attr('href');
+
+        }
+    }
+
+    $('a').unbind('click');
+    $('a').unbind('touchend');
+    $('a').on('click touchend', onLinkClicked);
+    </script>
+</body>
+
+</html>

@@ -193,12 +193,12 @@ int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
     uint32_t gain_hi_cha_filt_aa = 0x7D93;
     uint32_t gain_hi_cha_filt_bb = 0x437C7;
     uint32_t gain_hi_cha_filt_pp = 0x0;
-    uint32_t gain_hi_cha_filt_kk = 0xffffff;
+    uint32_t gain_hi_cha_filt_kk = 0xd9999a;
 
     uint32_t gain_hi_chb_filt_aa = 0x7D93;
     uint32_t gain_hi_chb_filt_bb = 0x437C7;
     uint32_t gain_hi_chb_filt_pp = 0x0;
-    uint32_t gain_hi_chb_filt_kk = 0xffffff;
+    uint32_t gain_hi_chb_filt_kk = 0xd9999a;
 
     if((fpga_trig_source < 0) || (fpga_dec_factor < 0)) {
         fprintf(stderr, "spectr_fpga_update_params() failed\n");

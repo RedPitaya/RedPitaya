@@ -1,0 +1,37 @@
+.browser_detect_dialog {
+    display: block;
+    position: fixed;
+    bottom: 1%;
+    right: 1%;
+    width: 300px;
+    height: 100px;
+    background-color: #27272C;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.shadow_box {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    z-index: 666;
+}
+
+.close_d {
+    float: right;
+    font-size: 21px;
+    font-weight: bold;
+    line-height: 1;
+    color: #000000;
+    text-shadow: 0 1px 0 #ffffff;
+    opacity: 0.2;
+    filter: alpha(opacity=20);
+}
+
+.close_d:hover,
+.close_d:focus {
+    color: #000000;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+}

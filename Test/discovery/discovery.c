@@ -73,7 +73,7 @@ int get_xilinx_dna(unsigned long long *dna)
         close(fd);
         return -1;
     }
-    
+
     close (fd);
 
     return 0;
@@ -117,6 +117,22 @@ std::string GetOSVersion(const std::string path)
     return ss.str();
 }
 
+std::string GetUrl()
+{
+    std::string defaulturl("http://account.redpitaya.com/discovery.php");
+    std::ifstream f("/opt/redpitaya/www/conf/testurl");
+    if (f.good()) {
+        std::string line;
+        std::getline(f, line);
+        f.close();
+        return line;
+    } else {
+        f.close();
+
+        return defaulturl;
+    }
+}
+
 std::string GetOSBuild(const std::string path)
 {
     std::ifstream infile(path);
@@ -130,7 +146,7 @@ std::string GetOSBuild(const std::string path)
     {
         std::getline(infile, line);
     }
-    
+
     infile.close();
 
     for(size_t i=0; i<line.length(); i++)
@@ -189,10 +205,19 @@ int main(int argc, char **argv)
     std::string vOS_VER;
     std::string vOS_BUILD;
 
+    bool verbose = false;
+
+    if (argc == 2)
+    {
+        std::string param(argv[1]);
+        if (param == "-v" || param == "--verbose")
+            verbose = true;
+    }
+
     unsigned long long dna;
     char string_buffer[18];
     int res;
-    
+
     // Get DNA
     get_xilinx_dna(&dna);
     sprintf(string_buffer, "%llX", dna);
@@ -245,6 +270,7 @@ int main(int argc, char **argv)
 
     // Build curl command
     std::stringstream cmd;
+<<<<<<< HEAD
 
     if(vDNA != "")
         cmd << "curl --data '" << "dna=" << vDNA;
@@ -260,6 +286,13 @@ int main(int argc, char **argv)
 
     if(vOS_BUILD != "")
         cmd << "&os_build=" << vOS_BUILD;
+=======
+    cmd << "curl '" << GetUrl() << "?dna=00" << vDNA << "&";
+    cmd << "ip_lan=" << vIP_LAN << "&";
+    cmd << "mac_lan=" << vMAC_LAN << "&";
+    cmd << "os_ver=" << vOS_VER << "&";
+    cmd << "os_build=" << vOS_BUILD;
+>>>>>>> origin/master_oldkernel_desktop
 
     if(vIP_WIFI != "")
         cmd << "&ip_wifi=" << vIP_WIFI;
@@ -267,10 +300,13 @@ int main(int argc, char **argv)
     if(vMAC_WIFI != "")
         cmd << "&mac_wifi=" << vMAC_WIFI;
 
-    cmd << "'" << " http://192.168.1.12:82/html/dumper.php";
+    cmd << "'";
+
+    if (verbose)
+        std::cout << "Executing: " << cmd.str().c_str() << std::endl;
 
     system(cmd.str().c_str());
-    
+
     return 0;
 }
 
