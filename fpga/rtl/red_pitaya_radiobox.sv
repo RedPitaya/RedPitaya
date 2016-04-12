@@ -59,6 +59,7 @@ module red_pitaya_radiobox #(
    // ADC clock & reset
    input                 clk_adc_125mhz  ,      // ADC based clock, 125 MHz
    input                 adc_rstn_i      ,      // ADC reset - active low
+   output                clk_48khz_o     ,      // sound interface 48 kHz sample rate
 
    // activation
    output                rb_activated    ,      // RB sub-module is activated
@@ -789,6 +790,8 @@ else
       clk_48khz <= 1'b0;
       clk_48khz_ctr = clk_48khz_ctr + 1;
       end
+
+assign clk_48khz_o = clk_48khz;
 
 
 parameter CLK_200KHZ_CTR_MAX = 624;

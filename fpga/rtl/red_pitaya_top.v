@@ -123,6 +123,9 @@ module red_pitaya_top (
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+// Clocks
+wire                  clk_48khz;
+
 // PLL signals
 wire                  adc_clk_in;
 wire                  pll_adc_clk;
@@ -140,6 +143,10 @@ wire                  ser_clk ;
 wire                  pwm_clk ;
 reg                   pwm_rstn;
 
+// Interrupt signals
+wire                  ac97_irq;
+wire         [14:0]   irqs = { 13'b0, ac97_irq };  // irqs[0] is mapped to IRQ-ID=61, SPI[29]
+
 // ADC signals
 wire                  adc_clk;
 reg                   adc_rstn;
@@ -154,6 +161,10 @@ reg                   dac_rst;
 reg          [14-1:0] dac_dat_a, dac_dat_b;
 wire         [14-1:0] dac_a    , dac_b    ;
 wire  signed [15-1:0] dac_a_sum, dac_b_sum;
+
+// AC97 audio/signal nodes
+wire         [16-1:0] ac97_line_in[0:0];
+wire         [16-1:0] ac97_line_out[1:0];
 
 // ASG
 wire  signed [14-1:0] asg_a    , asg_b    ;
@@ -235,7 +246,7 @@ red_pitaya_ps i_ps (
   .fclk_rstn_o   (frstn       ),
   .dcm_locked    (pll_locked  ),
   // Interrupts
-  .irq_f2p       (15'b0       ),
+  .irq_f2p       (irqs        ),
   // ADC analog inputs
   .vinp_i        (vinp_i      ),  // voltages p
   .vinn_i        (vinn_i      ),  // voltages n
@@ -599,15 +610,20 @@ red_pitaya_radiobox i_radiobox (
   // ADC clock & reset
   .clk_adc_125mhz  ( adc_clk                     ),  // clock 125 MHz
   .adc_rstn_i      ( adc_rstn                    ),  // reset - active low
+  .clk_48khz_o     ( clk_48khz                   ),  // sound interface 48 kHz sample rate
+
   // activation
   .rb_activated    ( rb_activated                ),  // RadioBox is enabled
+
   // LEDs
   .rb_leds_en      ( rb_leds_en                  ),  // RB does overwrite LEDs state
   .rb_leds_data    ( rb_leds_data                ),  // RB LEDs data
+
   // ADC data
   .adc_i           ( {adc_b, adc_a}              ),  // ADC data { CHB, CHA }
   // DAC data
   .rb_out_ch       ({rb_out_ch[1], rb_out_ch[0] }),  // RadioBox output signals
+
   // System bus
   .sys_addr        ( sys_addr                    ),  // address
   .sys_wdata       ( sys_wdata                   ),  // write data
@@ -617,6 +633,7 @@ red_pitaya_radiobox i_radiobox (
   .sys_rdata       ( sys_rdata[ 6*32+:32]        ),  // read data
   .sys_err         ( sys_err[6]                  ),  // error indicator
   .sys_ack         ( sys_ack[6]                  ),  // acknowledge signal
+
   // AXIS MASTER from the XADC
   .xadc_axis_aclk  ( xadc_axis_aclk              ),  // AXI-streaming from the XADC, clock from the AXI-S FIFO
   .xadc_axis_tdata ( xadc_axis_tdata             ),  // AXI-streaming from the XADC, data
@@ -626,11 +643,38 @@ red_pitaya_radiobox i_radiobox (
 );
 
 //---------------------------------------------------------------------------------
-// 7: unused system bus slave port
+// 7: OPB-AC97-Controller register compatible module  (like it is used as IP for the ML403 design)
 
+/*
+// unused system bus slave ports
 assign sys_rdata[7*32+:32] = 32'h0;
 assign sys_err  [7       ] =  1'b0;
 assign sys_ack  [7       ] =  1'b1;
+*/
+
+red_pitaya_ac97ctrl i_ac97ctrl (
+  // ADC clock & reset
+  .clk_adc_125mhz  ( adc_clk                     ),  // clock 125 MHz
+  .adc_rstn_i      ( adc_rstn                    ),  // reset - active low
+  .clk_48khz       ( clk_48khz                   ),  // sound frame clock from RadioBox
+
+   // AC97 lines
+  .ac97_line_i     ( ac97_line_in                ),  // AC97 line input nodes
+  .ac97_line_o     ( ac97_line_out               ),  // AC97 line output nodes
+
+   // Interrupts
+  .ac97_irq_o      ( ac97_irq                    ),  // IRQ line signaling any pending interrupts
+
+  // System bus
+  .sys_addr        ( sys_addr                    ),  // address
+  .sys_wdata       ( sys_wdata                   ),  // write data
+  .sys_sel         ( sys_sel                     ),  // write byte select
+  .sys_wen         ( sys_wen[7]                  ),  // write enable
+  .sys_ren         ( sys_ren[7]                  ),  // read enable
+  .sys_rdata       ( sys_rdata[ 7*32+:32]        ),  // read data
+  .sys_err         ( sys_err[7]                  ),  // error indicator
+  .sys_ack         ( sys_ack[7]                  )   // acknowledge signal
+);
 
 
 //---------------------------------------------------------------------------------
