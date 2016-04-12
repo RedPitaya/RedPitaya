@@ -10,6 +10,7 @@ B_VERSION=2014.02
 B_DIR=buildroot-$(B_VERSION)
 B_ARCHIVE=$(B_DIR).tar.gz
 B_DOWNLOAD=$(B_SERVER)/$(B_ARCHIVE)
+B_TAR=$(DL)/$(B_ARCHIVE)
 UIMAGE=$(B_DIR)/output/images/rootfs.cpio.uboot
 
 INSTALL_DIR ?= .
@@ -30,9 +31,12 @@ endif
 $(UIMAGE): $(B_DIR) overlay $(B_DIR)/.config
 	$(MAKE) -C $(B_DIR) USER_HOOKS_EXTRA_ENV='VERSION=$(VERSION) REVISION=$(REVISION)'
 
-$(B_DIR):
+$(B_TAR): | $(DL)
+	curl -L $(B_DOWNLOAD) -o $@
+
+$(B_DIR): $(B_TAR)
 	wget $(B_DOWNLOAD)
-	tar xfz $(B_ARCHIVE)
+	tar -xzf $< --strip-components=1 --directory=$@
 
 install: $(UIMAGE)
 	mkdir -p $(INSTALL_DIR)
