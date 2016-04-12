@@ -3,9 +3,6 @@ DL ?= dl
 
 INSTALL_DIR ?= build
 
-$(INSTALL_DIR):
-	mkdir -p $@
-
 ################################################################################
 #
 ################################################################################
@@ -37,6 +34,9 @@ endef
 export GREET_MSG
 
 all: api libredpitaya ecosystem nginx apps-free scpi examples rp_communication $(DISCOVERY) $(HEARTBEAT) apps_pro hostapd
+
+$(INSTALL_DIR):
+	mkdir -p $@
 
 ################################################################################
 # TODO hostapd should be deprecated if kernel 4.4 is used
