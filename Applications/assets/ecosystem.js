@@ -92,16 +92,12 @@
         var key = parseInt($(this).attr('key')) * 1;
         e.preventDefault();
         if (apps[key].check_online) {
-            if (!OnlineChecker.isOnline())
-            {
-                if (apps[key].licensable)
-                {
+            if (!OnlineChecker.isOnline()) {
+                if (apps[key].licensable) {
                     $('#ignore_link').text('Ignore');
                     $('#ignore_link').attr('href', apps[key].url);
                     $('#lic_failed').show();
-                }
-                else
-                {
+                } else {
                     $('#ignore_link').text('Close');
                     $('#ignore_link').attr('href', "#");
                     $('#lic_failed').hide();
@@ -168,10 +164,13 @@
                 var obj = jQuery.parseJSON(msg);
                 if (obj != undefined && obj != null && obj.mac_address != undefined && obj.mac_address != null)
                     req_uri = req_uri + obj.mac_address;
+                if (obj != undefined && obj != null && obj.zynq_id != undefined && obj.zynq_id != null) {
+                    req_uri = req_uri + "&rp_dna=" + obj.zynq_id;
+                }
                 $.ajax({
                         method: "POST",
                         url: post_uri,
-                        data: 'id_file=' + encodeURIComponent(msg)
+                        data: 'id_file=' + encodeURIComponent(msg) + '&version=2'
                     }).done(function(msg) {
                         if (msg == "OK") {
                             $.ajax({
@@ -281,7 +280,7 @@
 
         $('#ignore_link').click(function(event) {
             var elem = $(this)
-            if(elem.attr('href') != undefined && elem.attr('href') != '#')
+            if (elem.attr('href') != undefined && elem.attr('href') != '#')
                 window.location.replace(elem.attr('href'));
             else
                 $('#ic_missing').modal('hide');
