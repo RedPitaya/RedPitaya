@@ -130,6 +130,7 @@
                         if (chosen_eco != -1) {
                             UPD.nextStep();
                             $('#apply').hide();
+                            $('#and_click').hide();
                             $('#ecosystem_ver').attr('disabled', 'disabled');
                         }
                     });
