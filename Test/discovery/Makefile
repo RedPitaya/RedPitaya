@@ -20,7 +20,7 @@ REVISION ?= devbuild
 DISCOVERY_C = discovery.c
 
 # Executable name
-DISCOVERY=discovery
+TARGET=discovery
 
 # GCC compiling & linking flags
 CFLAGS  =-g -std=c++11 -Wall -I../../api/include
@@ -31,8 +31,8 @@ SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L../../api/lib
-LIBS= -lm -lpthread -lrp
+LIBPATH=
+LIBS=
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)g++
@@ -41,7 +41,7 @@ INSTALL_DIR ?= .
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
-all: $(TARGET) $(DISCOVERY) 
+all: $(TARGET)
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object
@@ -52,7 +52,7 @@ all: $(TARGET) $(DISCOVERY)
 
 # Makefile target with rules how to link executable for each target from list.
 
-$(DISCOVERY):
+$(TARGET):
 	$(CC) -o $@ $(DISCOVERY_C) $(CFLAGS) $(LIBPATH) $(LIBS)
 
 # Version header for traceability
@@ -61,10 +61,10 @@ version.h:
 
 # Clean target - when called it cleans all object files and executables.
 clean:
-	rm -f $(CALIBRATE) $(DISCOVERY) $(CALIBTUNE) *.o
+	rm -f $(TARGET) *.o
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
 install:
 	mkdir -p $(INSTALL_DIR)/bin
-	cp $(DISCOVERY) $(INSTALL_DIR)/bin
+	cp $(TARGET) $(INSTALL_DIR)/bin
