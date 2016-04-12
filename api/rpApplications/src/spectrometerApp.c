@@ -695,7 +695,7 @@ int rp_set_params(rp_app_params_t *p, int len)
 int spec_run(const wf_func_table_t* wf_f)
 {
     fprintf(stderr, "SPEC RUN Loading spectrum version %s-%s.\n", "1" ,"1");
-	rpApp_Init();
+	//rpApp_Init();
 
     if(rp_spectr_worker_init(wf_f) < 0) {
 	    fprintf(stderr, "rp_spectr_worker_init failed\n");
