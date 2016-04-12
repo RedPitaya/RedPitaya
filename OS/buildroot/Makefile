@@ -35,7 +35,6 @@ $(B_TAR): | $(DL)
 	curl -L $(B_DOWNLOAD) -o $@
 
 $(B_DIR): $(B_TAR)
-	wget $(B_DOWNLOAD)
 	tar -xzf $< --strip-components=1 --directory=$@
 
 install: $(UIMAGE)
