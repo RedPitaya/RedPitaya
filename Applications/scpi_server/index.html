@@ -64,10 +64,6 @@
                     </div>
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
-                            <li>
-                                <a id="OSC_RUN" href="#" style="">RUN</a>
-                                <a id="OSC_STOP" href="#" style="display:none;">STOP</a>
-                            </li>
                         </ul>
                     </div>
                 </div>
@@ -97,6 +93,16 @@
                         </div>
                         <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: green; display: none;">
                             SCPI server is running... (IP="<span id="ip-addr">127.0.0.1</span>", port="5000")
+                        </div>
+                        <div align="center">
+                            <ul class="">
+                                <li class="run_buttons" id="OSC_RUN">
+                                    <a href="#" id="a_run" style="">RUN</a>
+                                </li>
+                                <li class="run_buttons" id="OSC_STOP" style="display:none;">
+                                    <a href="#"  id="a_stop">STOP</a>
+                                </li>
+                            </ul>
                         </div>
                         <div align=center>
                             <a class="control_href" target="_blank" href="http://redpitaya.com/control/">Click here to see the example about how to Control your Red Pitaya using MATLAB/Python/LabVIEW/Scilab.</a>
