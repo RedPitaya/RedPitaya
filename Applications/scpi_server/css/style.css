@@ -164,6 +164,7 @@ area:hover {
 
 #OSC_RUN, #OSC_RUN:hover
 {
+  margin: 10px 50px;
   color: #31b44b;
 }
 
@@ -803,4 +804,29 @@ area:hover {
     height: 30px;
     width: 100%;
     white-space: nowrap;
+}
+
+.run_buttons
+{
+  margin-top: 20px;
+  width: 131px;
+  text-align: center;
+  list-style: none;
+  height: 40px;
+  padding-top:10px;
+  border: 1px solid;
+}
+
+.run_buttons:hover
+{
+  background: gray;
+  cursor: pointer;
+}
+
+#a_run{
+  color: #31b44b;
+}
+
+#a_stop{
+  color: red;
 }
