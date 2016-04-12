@@ -42,7 +42,7 @@
 /* constants */
 const char *json_content_str = "application/json";
 const char *c_bazaar_dir     = "/opt/redpitaya/www/apps";
-const char *c_bazaar_server  = "http://bazaar.staging.redpitaya.com";
+const char *c_bazaar_server  = "http://bazaar.redpitaya.com/";
 const char *c_tmp_dir        = "/tmp";
 
 const char *c_bazaar_uri = "/bazaar";
