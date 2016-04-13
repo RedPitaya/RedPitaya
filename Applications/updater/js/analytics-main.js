@@ -7,15 +7,15 @@
 	var startUsing = 0;
     $(document).ready(function($) {
         AnalyticsCore.init(function(){
-            AnalyticsCore.sendScreenView('/scpi_server', 'Redpitaya', 'Remote control');
-            AnalyticsCore.sendSysInfo('/scpi_server');
-            AnalyticsCore.sendExecTime('/scpi_server', 'scpi_server');
+            AnalyticsCore.sendScreenView('/updater', 'Redpitaya', 'Remote control');
+            AnalyticsCore.sendSysInfo('/updater');
+            AnalyticsCore.sendExecTime('/updater', 'updater');
             startUsing = performance.now();
         });
     });
 
 	$(window).on('beforeunload', function(){
-	      $.cookie('scpi_server-run', performance.now() - startUsing);
+	      $.cookie('updater-run', performance.now() - startUsing);
 	});
 
 })(jQuery);
