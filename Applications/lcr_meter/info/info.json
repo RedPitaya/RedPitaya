@@ -1,6 +1,6 @@
 {
 	"name": "LCR meter",
-	"version": "0.94-BUILD_NUMBER",
+	"version": "0.95-BUILD_NUMBER",
 	"revision": "REVISION",
 	"description": "LCR meter 100Hz/1kHz/10kHz/100kHz"
 }
