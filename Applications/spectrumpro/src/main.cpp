@@ -272,7 +272,9 @@ extern "C" void SpecIntervalInit()
 extern "C" int rp_app_init(void)
 {
     fprintf(stderr, "Loading spectrum version %s-%s.\n", VERSION_STR, REVISION_STR);
-    rpApp_Init();
+    //rpApp_Init();
+    rp_Init();
+    rp_Reset();
 
    if(IsDemoParam.Value())
        rp_GenReset();
