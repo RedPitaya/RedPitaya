@@ -301,6 +301,10 @@ for (genvar i=0; i<3; i++) begin: for_str
   assign axi_drx[i].TDATA           =    str_drx[i].TDATA  ;
   assign axi_drx[i].TLAST           =    str_drx[i].TLAST  ;
   assign axi_drx[i].TVALID          =    str_drx[i].TVALID ;
+  // TODO: fix this timing issue somewhere else
+  if (i==2)
+  assign str_drx[i].TREADY          = 1'b1;
+  else
   assign str_drx[i].TREADY          =    axi_drx[i].TREADY;
 
 end: for_str

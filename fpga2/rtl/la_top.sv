@@ -39,6 +39,7 @@ module la_top #(
 
 // streams
 axi4_stream_if #(.DN (DN), .DT (DT)) std            (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
+axi4_stream_if #(.DN (DN), .DT (DT)) stt            (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from trigger
 axi4_stream_if #(.DN (DN), .DT (DT)) sta_str        (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 axi4_stream_if #(.DN (DN), .DT (logic [8-1:0])) sta (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 
@@ -227,13 +228,13 @@ la_trigger #(
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor
-  .str      (std)
+  .sti      (std),
+  .sto      (stt)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
-
 acq #(
   .DN (DN),
   .TN (TN),
@@ -241,7 +242,7 @@ acq #(
   .CW (CW)
 ) acq (
   // stream input/output
-  .sti      (std),
+  .sti      (stt),
   .sto      (sta_str),
   // current time stamp
   .cts      (cts),

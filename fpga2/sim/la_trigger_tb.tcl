@@ -20,7 +20,8 @@ add wave -noupdate -hexadecimal /${top}/${dut}/cfg_edg_neg
 add wave -noupdate              /${top}/${dut}/sts_trg
 
 # busses
-axi4_stream_if str /${top}/str
+axi4_stream_if sti /${top}/sti
+axi4_stream_if sto /${top}/sto
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}

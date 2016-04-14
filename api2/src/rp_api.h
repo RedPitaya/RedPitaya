@@ -233,6 +233,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
 
 
 RP_STATUS rp_EnableDigitalPortDataRLE(bool enable);
+RP_STATUS rp_SoftwareTrigger(void);
 RP_STATUS rp_IsAcquistionComplete();
 
 RP_STATUS rp_GetTimebase(uint32_t timebase,

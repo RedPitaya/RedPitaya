@@ -219,18 +219,18 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR) $(INSTALL_DIR)/etc
 linux: $(LINUX)
 
 $(LINUX_TAR): | $(DL)
-#	curl -L $(LINUX_URL) -o $@
-	
+	curl -L $(LINUX_URL) -o $@
+
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
-
-	git clone --depth 1 -b dma_err https://github.com/na1pir/linux-xlnx.git $(LINUX_DIR)
+	tar -zxf $< --strip-components=1 --directory=$@
+#	git clone --depth 1 -b dma_err https://github.com/na1pir/linux-xlnx.git $(LINUX_DIR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 	#patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidmatest-cyc.patch
-	#patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
 	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
 	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
@@ -554,8 +554,6 @@ sdk:
 ################################################################################
 
 clean:
-#	rm tmp/linux-xlnx-xilinx-v2015.4.01/ -rf
-#	rm dl/linux-xlnx-xilinx-v2015.4.01.tar.gz
 	-make -C $(LINUX_DIR) clean
 	make -C $(FPGA_DIR) clean
 	-make -C $(UBOOT_DIR) clean

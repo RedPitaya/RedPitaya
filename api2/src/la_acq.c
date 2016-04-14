@@ -186,11 +186,19 @@ int rp_LaAcqGetCntConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t * a_reg) {
     return RP_OK;
 }
 
-int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t * pst_length) {
+int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t * pst_length, bool * buf_ovfl) {
     rp_la_cfg_regset_t *regset = (rp_la_cfg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->sts);
     rp_la_cfg_regset_t reg;
     reg.pre = ioread32(&regset->pre);
     reg.pst = ioread32(&regset->pst);
+
+    if(*trig_addr>=rp_LaAcqBufLenInSamples(handle)){
+    	*buf_ovfl=true;
+    }
+    else{
+        *buf_ovfl=false;
+    }
+
     *trig_addr=(reg.pre % rp_LaAcqBufLenInSamples(handle));
     *pst_length=reg.pst;
 
@@ -205,6 +213,7 @@ int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t
     if(!(inrangeUint32 (*trig_addr, 0, (rp_LaAcqBufLenInSamples(handle)-1)))){
         return RP_EOOR;
     }
+
 
     return RP_OK;
 }
@@ -262,9 +271,17 @@ int rp_LaAcqIsRLE(rp_handle_uio_t *handle, bool * state) {
     return RP_OK;
 }
 
-int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last) {
+int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last, bool * buf_ovfl) {
     rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
     *current = ioread32(&regset->sts_cur);
+
+    if(*last>=rp_LaAcqBufLenInSamples(handle)){
+    	*buf_ovfl=true;
+    }
+    else{
+        *buf_ovfl=false;
+    }
+
     *last = (ioread32(&regset->sts_lst)%rp_LaAcqBufLenInSamples(handle));
     if(*last>0){
         *last-=1;

@@ -1,3 +1,10 @@
+# Prerequisites
+
+libraries used by ModelSim-Altera software:
+    libxft2 
+    libxft2:i386
+    lib32ncurses5
+
 # Directory structure
 
 |  path           | contents
