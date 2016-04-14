@@ -240,6 +240,7 @@
                     OSC.params.local = {};
                 }, 2000);
                 OSC.unexpectedClose = true;
+                $('body').addClass('loaded');
             };
 
             OSC.ws.onclose = function() {
