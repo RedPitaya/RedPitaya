@@ -22,14 +22,12 @@ int rp_app_init(void) {
     fprintf(stderr, "Loading SCPI server version %s-%s.\n", VERSION_STR, REVISION_STR);
     CDataManager::GetInstance()->SetParamInterval(1000);
 
-    rpApp_Init();
-    rpApp_OscRun();
     return 0;
 }
 
 int rp_app_exit(void) {
     fprintf(stderr, "Unloading SCPI server version %s-%s.\n", VERSION_STR, REVISION_STR);
-    rpApp_Release();
+
     return 0;
 }
 
