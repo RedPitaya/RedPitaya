@@ -39,7 +39,7 @@
         setInterval(run, 8000);
         $(window).unload(function() {
             var date = new Date();
-            date.setTime(date.getTime() + (10 * 1000)); // 10 seconds
+            date.setTime(date.getTime() + (15 * 1000)); // 10 seconds
             $.cookie('online_status', OnlineChecker.online, { expires: date, path: '/' });
             return null;
         });
