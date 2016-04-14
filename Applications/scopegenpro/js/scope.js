@@ -126,7 +126,7 @@
                 if (dresult.status == 'OK') {
                     try {
                         OSC.connectWebSocket();
-                    } catch(e) {
+                    } catch (e) {
                         OSC.startApp();
                     }
                 } else if (dresult.status == 'ERROR') {
@@ -188,8 +188,7 @@
         $('#usagemem_view').text(((g_TotalMemory - g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
         $('#connection_icon').attr('src', '../assets/images/good_net.png');
         $('#connection_meter').attr('title', 'It seems like your connection is ok');
-        if(g_PacketsRecv < 5 || g_PacketsRecv > 25)
-        {
+        if (g_PacketsRecv < 5 || g_PacketsRecv > 25) {
             $('#connection_icon').attr('src', '../assets/images/bad_net.png');
             $('#connection_meter').attr('title', 'Connection problem');
         }
@@ -248,10 +247,10 @@
         }).fail(function(msg) {
             var info_json = msg.responseText
             var ver = '';
-            try{
+            try {
                 var obj = JSON.parse(msg.responseText);
                 ver = " " + obj['version'];
-            } catch(e) {};
+            } catch (e) {};
 
             body += " info.json: " + "%0D%0A" + msg.responseText;
             document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
@@ -304,7 +303,7 @@
 
             OSC.ws.onerror = function(ev) {
                 if (!OSC.state.socket_opened)
-                  OSC.startApp();
+                    OSC.startApp();
                 console.log('Websocket error: ', ev);
             };
 
@@ -335,8 +334,7 @@
                             OSC.parameterStack.push(receive.parameters);
                     }
 
-                    if (receive.signals)
-                    {
+                    if (receive.signals) {
                         g_PacketsRecv++;
                         OSC.signalStack.push(receive.signals);
                     }
@@ -1899,8 +1897,7 @@
 $(function() {
 
     var reloaded = $.cookie("osc_forced_reload");
-    if(reloaded == undefined || reloaded == "false")
-    {
+    if (reloaded == undefined || reloaded == "false") {
         $.cookie("osc_forced_reload", "true");
         window.location.reload(true);
     }
@@ -2105,7 +2102,7 @@ $(function() {
     $('.y-offset-arrow').draggable({
         axis: 'y',
         containment: 'parent',
-        start: function(){
+        start: function() {
             OSC.state.cursor_dragging = true;
         },
         drag: function(ev, ui) {
@@ -2130,34 +2127,44 @@ $(function() {
         }
     });
 
+    OSC.moveTimeOffset = function(new_left) {
+        var graph_width = $('#graph_grid').outerWidth();
+        var elem_width = $('#time_offset_arrow').width();
+        var zero_pos = (graph_width + 2) / 2;
+        var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
+        var new_value = +(((zero_pos - new_left - elem_width / 2 - 1) * ms_per_px).toFixed(6));
+        var buf_width = graph_width - 2;
+        var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
+
+        OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - new_left - elem_width / 2 - 1) * ms_per_px };
+        OSC.sendParams();
+
+        $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
+        $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + new_left / ratio - 4).show();
+    }
+
+    OSC.endTimeMove = function(new_left) {
+        if (!OSC.state.simulated_drag) {
+            var graph_width = $('#graph_grid').outerWidth();
+            var elem_width = $('#time_offset_arrow').width();
+            var zero_pos = (graph_width + 2) / 2;
+            var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
+
+            OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - new_left - elem_width / 2 - 1) * ms_per_px };
+            OSC.sendParams();
+            $('#info_box').empty();
+        }
+    }
+
     // Time offset arrow dragging
     $('#time_offset_arrow').draggable({
         axis: 'x',
         containment: 'parent',
         drag: function(ev, ui) {
-            var graph_width = $('#graph_grid').outerWidth();
-            var zero_pos = (graph_width + 2) / 2;
-            var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
-            var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px).toFixed(6));
-            var buf_width = graph_width - 2;
-            var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
-
-            OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px };
-            OSC.sendParams();
-
-            $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
-            $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + ui.position.left / ratio - 4).show();
+            OSC.moveTimeOffset(ui.position.left);
         },
         stop: function(ev, ui) {
-            if (!OSC.state.simulated_drag) {
-                var graph_width = $('#graph_grid').outerWidth();
-                var zero_pos = (graph_width + 2) / 2;
-                var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
-
-                OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px };
-                OSC.sendParams();
-                $('#info_box').empty();
-            }
+        	OSC.endTimeMove(ui.position.left);
         }
     });
 
@@ -2612,9 +2619,11 @@ $(function() {
 
     $("#graphs").mouseup(function(event) {
         laAxesMoving = false;
+        OSC.endTimeMove($('#time_offset_arrow').position().left);
     });
     $("#graphs").mouseout(function(event) {
         laAxesMoving = false;
+        OSC.endTimeMove($('#time_offset_arrow').position().left);
     });
     $("#graphs").mousemove(function(event) {
         if (OSC.state.line_moving) return;
@@ -2623,21 +2632,33 @@ $(function() {
                 var diff = event.pageX - curXPos;
                 curXPos = event.pageX;
 
-                var rel_off = diff * (512 / ($('#graphs').width() / 2));
-                OSC.counts_offset -= rel_off;
-                if (OSC.counts_offset > 500)
-                    OSC.counts_offset = 500;
+                var graphs_width = $('#graphs').width();
+                var graphs_offset = $('#graphs').offset().left;
 
-                if (OSC.counts_offset < -500)
-                    OSC.counts_offset = -500;
+                var arrow_left = $('#time_offset_arrow').offset().left;
+                var arrow_width = $('#time_offset_arrow').width();
 
-                OSC.offsetForDecoded = OSC.counts_offset;
+                if ((arrow_left + diff) <= graphs_offset) {
+                    diff = 0;
+                    $('#time_offset_arrow').offset({ left: graphs_offset });
+                }
 
-                console.log(OSC.counts_offset);
+                if ((arrow_left + diff) >= graphs_width) {
+                    diff = 0;
+                    $('#time_offset_arrow').offset({ left: (graphs_width) });
+                }
 
-                var buf_width = $('#buffer').width();
-                OSC.params.local['OSC_TIME_OFFSET'] = { value: (OSC.counts_offset * OSC.params.orig['OSC_TIME_SCALE'].value / 100) };
-                OSC.sendParams();
+                // console.log("Before", $('#time_offset_arrow').position().left)
+                $('#time_offset_arrow').offset({ left: ($('#time_offset_arrow').offset().left + diff) })
+                OSC.moveTimeOffset($('#time_offset_arrow').position().left);
+                // console.log("After", $('#time_offset_arrow').position().left)
+
+
+                // console.log(OSC.counts_offset);
+
+                // var buf_width = $('#buffer').width();
+                // OSC.params.local['OSC_TIME_OFFSET'] = { value: (OSC.counts_offset * OSC.params.orig['OSC_TIME_SCALE'].value / 100) };
+                // OSC.sendParams();
             }
         }
     });
