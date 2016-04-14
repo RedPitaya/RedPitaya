@@ -59,7 +59,7 @@ module red_pitaya_radiobox #(
    // ADC clock & reset
    input                 clk_adc_125mhz  ,      // ADC based clock, 125 MHz
    input                 adc_rstn_i      ,      // ADC reset - active low
-   output                clk_48khz_o     ,      // sound interface 48 kHz sample rate
+   input        [  1: 0] ac97_clks_i     ,      // sound interface sample rates
 
    // activation
    output                rb_activated    ,      // RB sub-module is activated
@@ -73,6 +73,10 @@ module red_pitaya_radiobox #(
 
    // DAC data
    output reg   [ 15: 0] rb_out_ch [1:0] ,      // RadioBox output signals
+
+  // ALSA
+   input        [ 31: 0] rb_line_out_i   ,      // Linux sound system ALSA LINE-OUT stereo, 2x 16 bit
+   output reg   [ 31: 0] rb_line_in_o    ,      // Linux sound system ALSA LINE-IN  stereo, 2x 16 bit
 
    // System bus - slave
    input        [ 31: 0] sys_addr        ,      // bus saddress
@@ -104,11 +108,10 @@ enum {
     REG_RW_RB_ICR,                              // h008: RB interrupt control register
     REG_RD_RB_ISR,                              // h00C: RB interrupt status register
     REG_RW_RB_DMA_CTRL,                         // h010: RB DMA control register
-    //REG_RD_RB_RSVD_H014,
-    REG_RW_RB_PWR_CTRL,                         // h018: RB power savings control register             RX_MOD:     (Bit  7: 0)
+    REG_RW_RB_PWR_CTRL,                         // h014: RB power savings control register             RX_MOD:     (Bit  7: 0)
                                                 //                                                     TX_MOD:     (Bit 15: 8)
-    REG_RW_RB_RFOUTx_LED_SRC_CON_PNT,           // h01C: RB_LED, RB_RFOUT1 and RB_RFOUT2 connection matrix
-
+    REG_RW_RB_RFOUTx_LED_SRC_CON_PNT,           // h018: RB_LED, RB_RFOUT1 and RB_RFOUT2 connection matrix
+    REG_RW_RB_LINE_IN_SRC_CON_PNT,              // h01C: LINE-IN11 L/R, LINE-IN2 L/R connection matrix
 
     /* TX section */
     REG_RW_RB_TX_CAR_OSC_INC_LO,                // h020: RB TX_CAR_OSC increment register              LSB:        (Bit 31: 0)
@@ -431,6 +434,10 @@ wire unsigned [  7: 0] rb_pwr_tx_modvar       = regs[REG_RW_RB_PWR_CTRL][15:8];
 wire unsigned [  7: 0] led_src_con_pnt        = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][ 7: 0];
 wire unsigned [  7: 0] rfout1_src_con_pnt     = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][23:16];
 wire unsigned [  7: 0] rfout2_src_con_pnt     = regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT][31:24];
+wire unsigned [  7: 0] line_in1l_src_con_pnt  = regs[REG_RW_RB_LINE_IN_SRC_CON_PNT][ 7: 0];
+wire unsigned [  7: 0] line_in1r_src_con_pnt  = regs[REG_RW_RB_LINE_IN_SRC_CON_PNT][15: 8];
+//wire unsigned [  7: 0] line_in2l_src_con_pnt  = regs[REG_RW_RB_LINE_IN_SRC_CON_PNT][23:16];
+//wire unsigned [  7: 0] line_in2r_src_con_pnt  = regs[REG_RW_RB_LINE_IN_SRC_CON_PNT][31:24];
 
 wire unsigned [  5: 0] tx_muxin_src           = regs[REG_RW_RB_TX_MUXIN_SRC][5:0];
 wire unsigned [  5: 0] rx_muxin_src           = regs[REG_RW_RB_RX_MUXIN_SRC][5:0];
@@ -757,15 +764,16 @@ else begin
 end
 
 
-parameter CLK_48KHZ_CTR_MAX = 2604;             // long run max value
-parameter CLK_48KHZ_FRC_MAX = 5;
+/*
+localparam CLK_48KHZ_CTR_MAX = 2604;                                   // long run max value
+localparam CLK_48KHZ_FRC_MAX = 5;
 
-reg  [ 11: 0] clk_48khz_ctr  = 0;
-reg  [  2: 0] clk_48khz_frc  = 0;
+reg  [ 11: 0] clk_48khz_ctr  = 'b0;
+reg  [  2: 0] clk_48khz_frc  = 'b0;
 reg           clk_48khz      = 'b0;
 reg           clk_8khz       = 'b0;
 
-always @(posedge clk_adc_125mhz)                // assign clk_48khz, clk_8khz
+always @(posedge clk_adc_125mhz)                                       // assign clk_48khz, clk_8khz
 if (!rb_clk_en) begin
    clk_48khz_ctr <= 'b0;
    clk_48khz_frc <= 'b0;
@@ -777,29 +785,30 @@ else
       clk_48khz <= 1'b1;
       if (clk_48khz_frc == CLK_48KHZ_FRC_MAX) begin
          clk_48khz_frc <= 1'b0;
-         clk_48khz_ctr <= 1'b0;                 // overflow of the frac part makes a long run
+         clk_48khz_ctr <= 1'b0;                                        // overflow of the frac part makes a long run
          clk_8khz <= 1'b1;
          end
       else begin
-         clk_48khz_frc = clk_48khz_frc + 1;
-         clk_48khz_ctr <= 12'b1;                // short run
+         clk_48khz_frc <= clk_48khz_frc + 1;
+         clk_48khz_ctr <= 12'b1;                                       // short run
          end
       end
    else begin
       clk_8khz  <= 1'b0;
       clk_48khz <= 1'b0;
-      clk_48khz_ctr = clk_48khz_ctr + 1;
+      clk_48khz_ctr <= clk_48khz_ctr + 1;
       end
+*/
+assign clk_8khz  = ac97_clks_i[0];
+assign clk_48khz = ac97_clks_i[1];
 
-assign clk_48khz_o = clk_48khz;
 
-
-parameter CLK_200KHZ_CTR_MAX = 624;
+localparam CLK_200KHZ_CTR_MAX = 624;
 
 reg                    clk_200khz     = 1'b0;
 reg  unsigned [ 11: 0] clk_200khz_ctr =  'b0;
 
-always @(posedge clk_adc_125mhz)                // assign clk_200khz
+always @(posedge clk_adc_125mhz)                                       // assign clk_200khz
 if (!rb_clk_en) begin
    clk_200khz     <= 1'b0;
    clk_200khz_ctr <=  'b0;
@@ -873,6 +882,8 @@ wire   signed [ 15: 0] tx_muxin_mix_in = (tx_muxin_src == 6'h20) ?  { adc_i[0], 
                                          (tx_muxin_src == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
                                          (tx_muxin_src == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
                                          (tx_muxin_src == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
+                                         (tx_muxin_src == 6'h30) ?  rb_line_out_i[15: 0]             :
+                                         (tx_muxin_src == 6'h31) ?  rb_line_out_i[31:16]             :
                                          16'b0                                                       ;
 wire   signed [ 17: 0] tx_muxin_mix_in_se = { tx_muxin_mix_in[15], tx_muxin_mix_in[15:0], 1'b0 };           // max. 1Vpp
 wire   signed [ 17: 0] tx_mod_adc_in = (tx_muxin_mix_in_se << tx_muxin_mix_log2);                           // signed value: input booster for
@@ -1348,6 +1359,8 @@ wire   signed [ 15: 0] rx_muxin_sig = (rx_muxin_src == 6'h20) ?  { ~adc_i[0], 2'
                                       (rx_muxin_src == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
                                       (rx_muxin_src == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
                                       (rx_muxin_src == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
+                                      (rx_muxin_src == 6'h30) ?  rb_line_out_i[15: 0]             :
+                                      (rx_muxin_src == 6'h31) ?  rb_line_out_i[31:16]             :
                                       16'b0                                                       ;
 wire   signed [ 47: 0] rx_muxin_sig_in = { {3{rx_muxin_sig[15]}},     rx_muxin_sig[14:0],     30'b0 };      // signed expansion
 wire   signed [ 47: 0] rx_muxin_ofs_in = { {3{rx_muxin_mix_ofs[15]}}, rx_muxin_mix_ofs[14:0], 30'b0 };
@@ -3240,9 +3253,8 @@ assign rb_out_ch[0] = rfout1_amp_out[23:8];
 reg  [ 15: 0] rfout2_amp_in = 16'b0;
 
 always @(posedge clk_adc_125mhz)
-if (!adc_rstn_i || !rb_reset_n) begin
+if (!adc_rstn_i || !rb_reset_n)
    rfout2_amp_in <= 16'b0;
-   end
 
 else if (rfout2_src_con_pnt && rb_reset_n)
    case (rfout2_src_con_pnt)
@@ -3495,6 +3507,482 @@ rb_dsp48_AaDmBaC_A18_D18_B18_C36_P37 i_rb_rfout2_amp_dsp48 (
 assign rb_out_ch[1] = rfout2_amp_out[23:8];
 
 
+//---------------------------------------------------------------------------------
+//  Linux LINE-IN 1 left signal assignment
+
+reg  [ 15: 0] rb_line_in1l_amp_in = 16'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i || !rb_reset_n)
+   rb_line_in1l_amp_in <= 16'b0;
+
+else if (line_in1l_src_con_pnt && rb_reset_n)
+   case (line_in1l_src_con_pnt)
+
+   RB_SRC_CON_PNT_NUM_TX_MUXIN_MIX_IN: begin
+      rb_line_in1l_amp_in <= tx_muxin_mix_in[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_ADC_IN: begin
+      rb_line_in1l_amp_in <= tx_mod_adc_in[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_ADC_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_adc_out[31:16];
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_MOD_OSC_I_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_OSC_Q_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_I_S1_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_qmix_i_s1_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_Q_S1_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_qmix_q_s1_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_I_S2_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_qmix_i_s2_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_Q_S2_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_qmix_q_s2_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_I_S3_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_qmix_i_s3_out[47:32];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_Q_S3_OUT: begin
+      rb_line_in1l_amp_in <= tx_mod_qmix_q_s3_out[47:32];
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_MOD_CIC_I_OUT: begin
+      if (tx_mod_cic_i_out_vld)
+         rb_line_in1l_amp_in <= tx_mod_cic_i_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_CIC_Q_OUT: begin
+      if (tx_mod_cic_q_out_vld)
+         rb_line_in1l_amp_in <= tx_mod_cic_q_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_FIR_I_OUT: begin
+      if (tx_mod_fir_i_out_vld)
+         rb_line_in1l_amp_in <= tx_mod_fir_i_out[32:17];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_FIR_Q_OUT: begin
+      if (tx_mod_fir_q_out_vld)
+         rb_line_in1l_amp_in <= tx_mod_fir_q_out[32:17];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_I_OUT: begin
+      rb_line_in1l_amp_in <= tx_car_regs_i_data;
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_Q_OUT: begin
+      rb_line_in1l_amp_in <= tx_car_regs_q_data;
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_CAR_OSC_I_OUT: begin
+      rb_line_in1l_amp_in <= tx_car_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_OSC_Q_OUT: begin
+      rb_line_in1l_amp_in <= tx_car_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_I_OUT: begin
+      rb_line_in1l_amp_in <= tx_car_qmix_i_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_Q_OUT: begin
+      rb_line_in1l_amp_in <= tx_car_qmix_q_out[30:15];
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_RF_AMP_OUT: begin
+      rb_line_in1l_amp_in <= tx_amp_rf_out[31:16];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_MUXIN_MIX_IN: begin
+      rb_line_in1l_amp_in <= rx_muxin_sig[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MUXIN_MIX_OUT: begin
+      rb_line_in1l_amp_in <= rx_muxin_out[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_OSC_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_car_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_OSC_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_car_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_car_qmix_i_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_car_qmix_q_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_5M_I_OUT: begin
+      if (rx_car_cic1_i_out_vld)
+         rb_line_in1l_amp_in <= rx_car_cic1_i_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_5M_Q_OUT: begin
+      if (rx_car_cic1_q_out_vld)
+         rb_line_in1l_amp_in <= rx_car_cic1_q_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_200K_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_car_regs2_i_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_200K_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_car_regs2_q_data[16:1];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_MOD_8K_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_regs1_i_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_8K_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_regs1_q_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB1_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_regs2_i_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB1_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_regs2_q_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_OSC_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_HLD_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_hld_i_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_HLD_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_hld_q_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_qmix_i_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_qmix_q_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB2_I_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_regs3_i_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB2_Q_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_regs3_q_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_48K_I_OUT: begin
+      if (rx_mod_cic4_i_out_vld)
+         rb_line_in1l_amp_in <= rx_mod_cic4_i_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_48K_Q_OUT: begin
+      if (rx_mod_cic4_q_out_vld)
+         rb_line_in1l_amp_in <= rx_mod_cic4_q_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_SSB_AM_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_ssb_am_out;
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
+      if (rx_afc_fir_i_out_vld)
+         rb_line_in1l_amp_in <= rx_afc_fir_i_out[32:17];
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
+      if (rx_afc_fir_q_out_vld)
+         rb_line_in1l_amp_in <= rx_afc_fir_q_out[32:17];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
+      rb_line_in1l_amp_in <= (rx_afc_cordic_polar_out_mag[15:0] - 16'h8000);
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
+      rb_line_in1l_amp_in <= rx_afc_cordic_polar_out_phs[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS_PREV: begin
+      rb_line_in1l_amp_in <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV][15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS_DIFF: begin
+      rb_line_in1l_amp_in <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS_DIFF][15:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AFC_INC_REG: begin
+      rb_line_in1l_amp_in <= { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][2:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:19] };
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_SUM_INC_REG: begin
+      rb_line_in1l_amp_in <= { regs[REG_RD_RB_RX_CAR_SUM_INC_HI][2:0], regs[REG_RD_RB_RX_CAR_SUM_INC_LO][31:19] };
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_MOD_FM_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_fm_out;
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_PM_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_pm_out;
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_AMENV_OUT: begin
+      rb_line_in1l_amp_in <= rx_mod_amenv_out;
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AUDIO_OUT: begin
+      rb_line_in1l_amp_in <= rx_audio_mux_out;
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC: begin
+      rb_line_in1l_amp_in <= tx_car_osc_inc[36:21];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC: begin
+      rb_line_in1l_amp_in <= rx_car_osc_inc[36:21];
+      end
+
+   RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
+      // rb_line_in1l_amp_in <= { 1'b0, rx_mod_cic1_chk_rst, 14'b0 };
+      // rb_line_in1l_amp_in <= rx_mod_amenv_mix_in[15:0];
+      rb_line_in1l_amp_in <= { ~rx_mod_amenv_mean[47], rx_mod_amenv_mean[46:32] };
+      end
+
+   default: begin
+      rb_line_in1l_amp_in <= led_ctr[19:4];                                                                 // error-ramp
+      end
+
+   endcase
+
+else                                                                                                        // RB_SRC_CON_PNT_NUM_DISABLED
+   rb_line_in1l_amp_in <= 16'b0;                                                                            // silence
+
+assign rb_line_in_o[15: 0] = rb_line_in1l_amp_in;                                                           // TODO
+
+
+//---------------------------------------------------------------------------------
+//  Linux LINE-IN 1 right signal assignment
+
+reg  [ 15: 0] rb_line_in1r_amp_in = 16'b0;
+
+always @(posedge clk_adc_125mhz)
+if (!adc_rstn_i || !rb_reset_n)
+   rb_line_in1r_amp_in <= 16'b0;
+
+else if (line_in1r_src_con_pnt && rb_reset_n)
+   case (line_in1r_src_con_pnt)
+
+   RB_SRC_CON_PNT_NUM_TX_MUXIN_MIX_IN: begin
+      rb_line_in1r_amp_in <= tx_muxin_mix_in[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_ADC_IN: begin
+      rb_line_in1r_amp_in <= tx_mod_adc_in[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_ADC_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_adc_out[31:16];
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_MOD_OSC_I_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_OSC_Q_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_I_S1_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_qmix_i_s1_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_Q_S1_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_qmix_q_s1_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_I_S2_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_qmix_i_s2_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_Q_S2_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_qmix_q_s2_out[31:16];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_I_S3_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_qmix_i_s3_out[47:32];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_QMIX_Q_S3_OUT: begin
+      rb_line_in1r_amp_in <= tx_mod_qmix_q_s3_out[47:32];
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_MOD_CIC_I_OUT: begin
+      if (tx_mod_cic_i_out_vld)
+         rb_line_in1r_amp_in <= tx_mod_cic_i_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_CIC_Q_OUT: begin
+      if (tx_mod_cic_q_out_vld)
+         rb_line_in1r_amp_in <= tx_mod_cic_q_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_FIR_I_OUT: begin
+      if (tx_mod_fir_i_out_vld)
+         rb_line_in1r_amp_in <= tx_mod_fir_i_out[32:17];
+      end
+   RB_SRC_CON_PNT_NUM_TX_MOD_FIR_Q_OUT: begin
+      if (tx_mod_fir_q_out_vld)
+         rb_line_in1r_amp_in <= tx_mod_fir_q_out[32:17];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_I_OUT: begin
+      rb_line_in1r_amp_in <= tx_car_regs_i_data;
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_CIC_41M664_Q_OUT: begin
+      rb_line_in1r_amp_in <= tx_car_regs_q_data;
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_CAR_OSC_I_OUT: begin
+      rb_line_in1r_amp_in <= tx_car_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_OSC_Q_OUT: begin
+      rb_line_in1r_amp_in <= tx_car_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_I_OUT: begin
+      rb_line_in1r_amp_in <= tx_car_qmix_i_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_TX_CAR_QMIX_Q_OUT: begin
+      rb_line_in1r_amp_in <= tx_car_qmix_q_out[30:15];
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_RF_AMP_OUT: begin
+      rb_line_in1r_amp_in <= tx_amp_rf_out[31:16];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_MUXIN_MIX_IN: begin
+      rb_line_in1r_amp_in <= rx_muxin_sig[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MUXIN_MIX_OUT: begin
+      rb_line_in1r_amp_in <= rx_muxin_out[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_OSC_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_car_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_OSC_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_car_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_car_qmix_i_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_QMIX_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_car_qmix_q_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_5M_I_OUT: begin
+      if (rx_car_cic1_i_out_vld)
+         rb_line_in1r_amp_in <= rx_car_cic1_i_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_5M_Q_OUT: begin
+      if (rx_car_cic1_q_out_vld)
+         rb_line_in1r_amp_in <= rx_car_cic1_q_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_200K_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_car_regs2_i_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_CAR_200K_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_car_regs2_q_data[16:1];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_MOD_8K_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_regs1_i_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_8K_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_regs1_q_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB1_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_regs2_i_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB1_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_regs2_q_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_OSC_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_osc_cos[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_OSC_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_osc_sin[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_HLD_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_hld_i_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_HLD_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_hld_q_data[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_qmix_i_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_QMIX_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_qmix_q_out[30:15];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB2_I_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_regs3_i_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_VB2_Q_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_regs3_q_data[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_48K_I_OUT: begin
+      if (rx_mod_cic4_i_out_vld)
+         rb_line_in1r_amp_in <= rx_mod_cic4_i_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_48K_Q_OUT: begin
+      if (rx_mod_cic4_q_out_vld)
+         rb_line_in1r_amp_in <= rx_mod_cic4_q_out[16:1];
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_SSB_AM_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_ssb_am_out;
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AFC_FIR_I_OUT: begin
+      if (rx_afc_fir_i_out_vld)
+         rb_line_in1r_amp_in <= rx_afc_fir_i_out[32:17];
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_FIR_Q_OUT: begin
+      if (rx_afc_fir_q_out_vld)
+         rb_line_in1r_amp_in <= rx_afc_fir_q_out[32:17];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_MAG: begin
+      rb_line_in1r_amp_in <= (rx_afc_cordic_polar_out_mag[15:0] - 16'h8000);
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS: begin
+      rb_line_in1r_amp_in <= rx_afc_cordic_polar_out_phs[15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS_PREV: begin
+      rb_line_in1r_amp_in <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV][15:0];
+      end
+   RB_SRC_CON_PNT_NUM_RX_AFC_CORDIC_PHS_DIFF: begin
+      rb_line_in1r_amp_in <= regs[REG_RD_RB_RX_AFC_CORDIC_PHS_DIFF][15:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AFC_INC_REG: begin
+      rb_line_in1r_amp_in <= { regs[REG_RD_RB_RX_CAR_AFC_INC_HI][2:0], regs[REG_RD_RB_RX_CAR_AFC_INC_LO][31:19] };
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_SUM_INC_REG: begin
+      rb_line_in1r_amp_in <= { regs[REG_RD_RB_RX_CAR_SUM_INC_HI][2:0], regs[REG_RD_RB_RX_CAR_SUM_INC_LO][31:19] };
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_MOD_FM_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_fm_out;
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_PM_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_pm_out;
+      end
+   RB_SRC_CON_PNT_NUM_RX_MOD_AMENV_OUT: begin
+      rb_line_in1r_amp_in <= rx_mod_amenv_out;
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_AUDIO_OUT: begin
+      rb_line_in1r_amp_in <= rx_audio_mux_out;
+      end
+
+   RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC: begin
+      rb_line_in1r_amp_in <= tx_car_osc_inc[36:21];
+      end
+
+   RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC: begin
+      rb_line_in1r_amp_in <= rx_car_osc_inc[36:21];
+      end
+
+   RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
+      // rb_line_in1r_amp_in <= { 1'b0, rx_mod_cic1_chk_rst, 14'b0 };
+      // rb_line_in1r_amp_in <= rx_mod_amenv_mix_in[15:0];
+      rb_line_in1r_amp_in <= { ~rx_mod_amenv_mean[47], rx_mod_amenv_mean[46:32] };
+      end
+
+   default: begin
+      rb_line_in1r_amp_in <= led_ctr[19:4];                                                                 // error-ramp
+      end
+
+   endcase
+
+else                                                                                                        // RB_SRC_CON_PNT_NUM_DISABLED
+   rb_line_in1r_amp_in <= 16'b0;                                                                            // silence
+
+assign rb_line_in_o[31:16] = rb_line_in1r_amp_in;                                                           // TODO
+
+
 // === Bus handling ===
 
 //---------------------------------------------------------------------------------
@@ -3559,6 +4047,7 @@ if (!adc_rstn_i) begin
    regs[REG_RW_RB_DMA_CTRL]                  <= 32'h00000000;
    regs[REG_RW_RB_PWR_CTRL]                  <= 32'h00000000;
    regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]    <= 32'h00000000;
+   regs[REG_RW_RB_LINE_IN_SRC_CON_PNT]       <= 32'h00000000;
    regs[REG_RW_RB_TX_CAR_OSC_INC_LO]         <= 32'h00000000;
    regs[REG_RW_RB_TX_CAR_OSC_INC_HI]         <= 32'h00000000;
    regs[REG_RW_RB_TX_CAR_OSC_OFS_LO]         <= 32'h00000000;
@@ -3625,11 +4114,14 @@ else begin
       20'h00010: begin
          regs[REG_RW_RB_DMA_CTRL]                 <= sys_wdata[31:0];
          end
-      20'h00018: begin
+      20'h00014: begin
          regs[REG_RW_RB_PWR_CTRL]                 <= { 16'b0, sys_wdata[15:0] };
          end
-      20'h0001C: begin
+      20'h00018: begin
          regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]   <= sys_wdata[31:0] & 32'hFFFF00FF;
+         end
+      20'h0001C: begin
+         regs[REG_RW_RB_LINE_IN_SRC_CON_PNT]      <= sys_wdata[31:0];
          end
 
       /* TX_CAR_OSC */
@@ -3818,13 +4310,17 @@ else begin
          sys_ack   <= sys_en;
          sys_rdata <= regs[REG_RW_RB_DMA_CTRL];
          end
-      20'h00018: begin
+      20'h00014: begin
          sys_ack   <= sys_en;
          sys_rdata <= regs[REG_RW_RB_PWR_CTRL];
          end
-      20'h0001C: begin
+      20'h00018: begin
          sys_ack   <= sys_en;
          sys_rdata <= regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT];
+         end
+      20'h0001C: begin
+         sys_ack   <= sys_en;
+         sys_rdata <= regs[REG_RW_RB_LINE_IN_SRC_CON_PNT];
          end
 
       /* TX_CAR_OSC */

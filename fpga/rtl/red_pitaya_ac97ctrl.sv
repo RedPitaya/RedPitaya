@@ -37,19 +37,27 @@
 `timescale 1ns / 1ps
 
 module red_pitaya_ac97ctrl #(
-  // parameter RSZ = 14  // RAM size 2^RSZ
+  parameter C_OPB_AWIDTH             = 32,      // silently ignored
+  parameter C_OPB_DWIDTH             = 32,      // register width
+  parameter C_BASEADDR       = 'h40700000,      // silently ignored - corresponds to red_pitaya_top address map connection
+  parameter C_HIGHADDR       = 'h407FFFFF,      // silently ignored - corresponds to red_pitaya_top address map connection
+  parameter C_PLAYBACK               =  1,      // 0 = no playback operation, 1 = playback operation active
+  parameter C_RECORD                 =  1,      // 0 = no record operation,   1 = record operation active
+  parameter C_PLAY_INTR_LEVEL        =  2,      // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
+  parameter C_REC_INTR_LEVEL         =  3       // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 )(
    // ADC clock & reset
    input                 clk_adc_125mhz  ,      // ADC based clock, 125 MHz
    input                 adc_rstn_i      ,      // ADC reset - active low
-   input                 clk_48khz       ,      // sound frame clock from RadioBox
+   output       [  1: 0] ac97_clks_o     ,      // audio/sound/signal sample frequencies
 
    // AC97 lines
-   input        [ 15: 0] ac97_line_i[0:0],      // AC97 line input nodes
-   output reg   [ 15: 0] ac97_line_o[1:0],      // AC97 line output nodes
+   output    [ 2*16-1:0] ac97_line_out_o ,      // AC97 line output nodes - [15:0] = LEFT, [31:16] = RIGHT
+   input     [ 2*16-1:0] ac97_line_in_i  ,      // AC97 line input nodes  - [15:0] = LEFT, [31:16] = RIGHT
 
    // Interrupts
-   output reg            ac97_irq_o      ,      // IRQ line signaling any pending interrupts
+   output reg            ac97_irq_play_o ,      // IRQ line signaling play   FIFO interrupt - high active
+   output reg            ac97_irq_rec_o  ,      // IRQ line signaling record FIFO interrupt - high active
 
    // System bus - slave
    input        [ 31: 0] sys_addr        ,      // bus saddress
@@ -66,63 +74,295 @@ module red_pitaya_ac97ctrl #(
 //---------------------------------------------------------------------------------
 //  Registers accessed by the system bus
 
+/*
 enum {
-    /* OMNI section */
-    REG_RW_RB_CTRL                        =  0, // h000: RB control register
-    REG_RD_RB_STATUS,                           // h004: EB status register
-    REG_RW_RB_ICR,                              // h008: RB interrupt control register
-    REG_RD_RB_ISR,                              // h00C: RB interrupt status register
-    REG_RW_RB_DMA_CTRL,                         // h010: RB DMA control register
-    //REG_RD_RB_RSVD_H014,
-    REG_RW_RB_PWR_CTRL,                         // h018: RB power savings control register             RX_MOD:     (Bit  7: 0)
+    REG_WO_AC97CTRL_FIFO_PLAY                   =  0, // h000: AC97CTRL play   FIFO, use LSB 16 bits
+    REG_RO_AC97CTRL_FIFO_REC,                         // h004: AC97CTRL record FIFO, use LSB 16 bits
+    REG_RO_AC97CTRL_STAT,                             // h008: AC97CTRL status register, @see REG_AC97CTRL_STAT_ENUMS
+    REG_WO_AC97CTRL_FIFO_RESET,                       // h00C: AC97CTRL FIFO reset register, @see REG_AC97CTRL_FIFO_RESET_ENUMS
+    REG_WO_AC97CTRL_CODEC_ADDR,                       // h010: AC97CTRL CODEC address register, @see REG_AC97CTRL_CTRL_ADDR_REG_ENUMS
+    REG_RO_AC97CTRL_CODEC_DATA_READ,                  // h014: AC97CTRL CODEC data read register, use LSB 8 bits
+    REG_WO_AC97CTRL_CODEC_DATA_WRITE,                 // h018: AC97CTRL CODEC data write register, use LSB 8 bits
 
-    REG_CTRL_COUNT
-} REG_CTRL_ENUMS;
+    REG_AC97CTRL_COUNT
+} REG_AC97CTRL_ENUMS;
+*/
 
-reg  [31: 0]    regs    [REG_CTRL_COUNT];       // AC97-Controller registers interface to be accessed by the system bus
+enum {
+    BIT_AC97CTRL_STAT_FIFO_PLAY_FULL            =  0, // 0 = Playback FIFO not Full,                                                              1 = Playback FIFO Full
+    BIT_AC97CTRL_STAT_FIFO_PLAY_HALFFULL            , // 0 = Playback FIFO not Half Full,                                                         1 = Playback FIFO Half Full
+    BIT_AC97CTRL_STAT_FIFO_REC_FULL                 , // 0 = Record FIFO not Full,                                                                1 = Record FIFO Full
+    BIT_AC97CTRL_STAT_FIFO_REC_EMPTY                , // 0 = Record FIFO not Empty,                                                               1 = Record FIFO Empty
+    BIT_AC97CTRL_STAT_REG_ACCESS_FINISHED           , // 0 = AC97 Controller waiting for access to control/status register in Codec to complete.  1 = AC97 Controller is finished accessing the control/status register in Codec.
+    BIT_AC97CTRL_STAT_CODEC_READY                   , // 0 = Codec is not ready to receive commands or data.                                      1 = Codec ready to run
+    BIT_AC97CTRL_STAT_FIFO_PLAY_UNDERRUN            , // 0 = FIFO has not underrun                                                                1 = FIFO has underrun
+    BIT_AC97CTRL_STAT_FIFO_REC_UNDERRUN               // 0 = FIFO has not underrun                                                                1 = FIFO has underrun
+} REG_AC97CTRL_STAT_ENUMS;
+
+enum {
+    BIT_AC97CTRL_FIFO_RESET_PLAY                =  0, // 0 = Do not Reset Play FIFO                                                               1 = Reset Play FIFO. Resetting the Play FIFO also clears the "Play FIFO Underrun" status bit.
+    BIT_AC97CTRL_FIFO_RESET_REC                       // 0 = Do not Reset Record FIFO                                                             1 = Reset Record FIFO. Resetting the record FIFO also clears the "Record FIFO Overrun" status bit.
+} REG_AC97CTRL_FIFO_RESET_ENUMS;
+
+localparam MASK_AC97CTRL_CTRL_ADDR_REG        = 'h07; // Sets the 7-bit address of control or status register in the Codec chip to be accessed. Writing to this register clears the "Register Access Finish" status bit.
+enum {
+    BIT_AC97CTRL_CTRL_ADDR_RW                   =  7  // 0 = Perform a write to the AC97 address register.                                      1 = Performs a read to the AC97 address register.
+} REG_AC97CTRL_CTRL_ADDR_REG_ENUMS;
 
 
 // === OMNI section ===
 
+localparam C_FIFO_SIZE                          = 16;
+
+reg           ac97ctrl_fifo_play_reset          = 1'b0;
+reg           ac97ctrl_fifo_rec_reset           = 1'b0;
+reg           ac97ctrl_codec_ready              = 1'b0;
+reg           ac97ctrl_access_prepare           = 1'b0;
+reg           ac97ctrl_access_ready             = 1'b0;
+wire          ac97ctrl_play_fifo_full;
+wire          ac97ctrl_play_fifo_halffull;
+wire          ac97ctrl_play_fifo_empty;
+reg           ac97ctrl_play_fifo_underrun       = 1'b0;
+wire          ac97ctrl_rec_fifo_empty;
+wire          ac97ctrl_rec_fifo_full;
+reg           ac97ctrl_rec_fifo_overrun         = 1'b0;
+
+reg           ac97ctrl_reset_delay              = 1'b0;
+reg  unsigned [4:0] ac97ctrl_reset_delay_ctr    =  'b0;
+
+always @(posedge clk_adc_125mhz)                // assign ac97ctrl_reset_delay
+if (!adc_rstn_i) begin
+   ac97ctrl_reset_delay     <= 1'b1;
+   ac97ctrl_reset_delay_ctr <=  'h1F;
+   end
+else if (!ac97ctrl_reset_delay_ctr)
+   ac97ctrl_reset_delay     <= 1'b0;
+else if (ac97ctrl_fifo_play_reset) begin
+   ac97ctrl_reset_delay     <= 1'b1;
+   ac97ctrl_reset_delay_ctr <=  'h1F;
+   end
+else
+   ac97ctrl_reset_delay_ctr = ac97ctrl_reset_delay_ctr - 1;
+
+always @(posedge clk_adc_125mhz)                // assign ac97ctrl_codec_ready
+if (!adc_rstn_i)
+   ac97ctrl_codec_ready <= 1'b0;
+else if (!ac97ctrl_reset_delay)
+   ac97ctrl_codec_ready <= 1'b1;
+
+always @(posedge clk_adc_125mhz)                // assign ac97ctrl_play_fifo_underrun
+if (!adc_rstn_i)
+   ac97ctrl_play_fifo_underrun <= 1'b0;
+else if (!ac97ctrl_reset_delay && ac97ctrl_play_fifo_empty && clk_48khz)
+   ac97ctrl_play_fifo_underrun <= 1'b1;
+else if (ac97ctrl_fifo_play_reset)
+   ac97ctrl_play_fifo_underrun <= 1'b0;
+
+always @(posedge clk_adc_125mhz)                // assign ac97ctrl_play_fifo_underrun
+if (!adc_rstn_i)
+   ac97ctrl_rec_fifo_overrun <= 1'b0;
+else if (!ac97ctrl_reset_delay && ac97ctrl_rec_fifo_full && clk_48khz)
+   ac97ctrl_rec_fifo_overrun <= 1'b1;
+else if (ac97ctrl_fifo_rec_reset)
+   ac97ctrl_rec_fifo_overrun <= 1'b0;
+
+
 //---------------------------------------------------------------------------------
-// Short hand names
+//  CLK_48KHZ and CLK_8KHZ generation
 
-//wire                   rb_enable              = regs[REG_RW_RB_CTRL][RB_CTRL_ENABLE];
-//wire unsigned [  7: 0] rb_pwr_rx_modvar       = regs[REG_RW_RB_PWR_CTRL][ 7:0];
+localparam CLK_48KHZ_CTR_MAX = 2604;             // long run max value
+localparam CLK_48KHZ_FRC_MAX = 5;
+
+reg  [ 11: 0] clk_48khz_ctr  = 'b0;
+reg  [  2: 0] clk_48khz_frc  = 'b0;
+reg           clk_48khz_r    = 'b0;
+reg           clk_8khz_r     = 'b0;
+
+always @(posedge clk_adc_125mhz)                // assign clk_48khz, clk_8khz
+if (!adc_rstn_i) begin
+   clk_48khz_ctr <= 'b0;
+   clk_48khz_frc <= 'b0;
+   clk_48khz_r <= 'b0;
+   clk_8khz_r  <= 'b0;
+   end
+else
+   if (clk_48khz_ctr == CLK_48KHZ_CTR_MAX) begin
+      clk_48khz_r <= 1'b1;
+      if (clk_48khz_frc == CLK_48KHZ_FRC_MAX) begin
+         clk_48khz_frc <= 1'b0;
+         clk_48khz_ctr <= 1'b0;                 // overflow of the frac part makes a long run
+         clk_8khz_r <= 1'b1;
+         end
+      else begin
+         clk_48khz_frc <= clk_48khz_frc + 1;
+         clk_48khz_ctr <= 12'b1;                // short run
+         end
+      end
+   else begin
+      clk_8khz_r  <= 1'b0;
+      clk_48khz_r <= 1'b0;
+      clk_48khz_ctr <= clk_48khz_ctr + 1;
+      end
+
+// drive clocks
+BUFG bufg_ac97_48khz_clk ( .O (clk_8khz  ), .I ( clk_8khz_r  ) );
+BUFG bufg_ac97_8khz_clk  ( .O (clk_48khz ), .I ( clk_48khz_r ) );
+
+assign ac97_clks_o = { clk_48khz, clk_8khz };    // ascending order
 
 
-
-/*
 //---------------------------------------------------------------------------------
-//  TX_CAR_OSC carrier frequency oscillator  (CW, FM, PM modulated)
-wire          tx_car_osc_reset_n      = rb_pwr_tx_OSC_rst_n & !tx_car_osc_reset;
+// AC97-CODEC registers
 
-wire [ 47: 0] tx_car_osc_stream_inc   = tx_car_osc_inc_mux ?    tx_mod_qmix_i_s3_out[47:0]         :
-                                                                tx_car_osc_inc                     ;
-wire [ 47: 0] tx_car_osc_stream_ofs   = tx_car_osc_ofs_mux ?    tx_mod_qmix_i_s3_out[47:0]         :
-                                                                tx_car_osc_ofs                     ;
-wire          tx_car_osc_axis_s_vld   = tx_car_osc_reset_n;
-wire [103: 0] tx_car_osc_axis_s_phase = { 7'b0, tx_car_osc_resync, tx_car_osc_stream_ofs, tx_car_osc_stream_inc };
+reg  [  6: 1] ac97ctrl_codec_addr           =  'b0;                                                         // word offset address
+reg  [ 15: 0] ac97ctrl_codec_data_write     =  'b0;
+wire [ 15: 0] ac97ctrl_codec_data_read_out;
+reg  [ 15: 0] ac97ctrl_codec_data_read      =  'b0;
+reg           ac97ctrl_codec_data_store     = 1'b0;
+reg           ac97ctrl_codec_data_recall    = 1'b0;
 
-wire          tx_car_osc_axis_m_vld;
-wire [ 31: 0] tx_car_osc_axis_m_data;
+ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
+  .clka                    ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .addra                   ( ac97ctrl_codec_addr[6:1]    ),  // AC97-CODEC word address
+  .dina                    ( ac97ctrl_codec_data_write   ),  // AC97-CODEC content data word
+  .wea                     ( ac97ctrl_codec_data_store   ),  // store data word
 
-rb_dds_48_16_125 i_rb_tx_car_osc_dds (
-  // global signals
-  .aclk                    ( clk_adc_125mhz              ),  // global 125 MHz clock
-  .aclken                  ( rb_pwr_tx_OSC_clken         ),  // power down on request
-  .aresetn                 ( tx_car_osc_reset_n          ),  // reset of TX_CAR_OSC
-
-  // simple-AXI slave in port: streaming data for TX_CAR_OSC modulation
-  .s_axis_phase_tvalid     ( tx_car_osc_axis_s_vld       ),  // AXIS slave data valid
-  .s_axis_phase_tdata      ( tx_car_osc_axis_s_phase     ),  // AXIS slave data
-
-  // simple-AXI master out port: TX_CAR_OSC signal
-  .m_axis_data_tvalid      ( tx_car_osc_axis_m_vld       ),  // AXIS master TX_CAR_OSC data valid
-  .m_axis_data_tdata       ( tx_car_osc_axis_m_data      )   // AXIS master TX_CAR_OSC output: Q SIGNED 16 bit, I SIGNED 16 bit
+  .clkb                    ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .addrb                   ( ac97ctrl_codec_addr         ),  // AC97-CODEC word address
+  .doutb                   ( ac97ctrl_codec_data_read_out)   // AC97-CODEC content data word
 );
 
-*/
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
+if (!adc_rstn_i)
+   ac97ctrl_codec_data_read <= 'b0;
+else if (ac97ctrl_codec_data_recall)
+   ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
+
+
+//---------------------------------------------------------------------------------
+//  Play & Record FIFOs
+
+reg  [ 15: 0] ac97ctrl_play_left       =  'b0;
+reg  [ 15: 0] ac97ctrl_play_right      =  'b0;
+reg           ac97ctrl_play_is_right   = 1'b0;
+reg           ac97ctrl_play_is_right_d = 1'b0;
+reg           ac97ctrl_play_fifo_push  = 1'b0;
+
+always @(posedge clk_adc_125mhz)                // assign ac97ctrl_play_fifo_push
+if (!adc_rstn_i)
+   ac97ctrl_play_fifo_push <= 1'b0;
+else
+   ac97ctrl_play_fifo_push <= (!ac97ctrl_play_is_right && ac97ctrl_play_is_right_d) ?  1'b1 : 1'b0;         // toggled right --> left
+
+wire          ac97ctrl_play_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_play_reset;
+wire [ 31: 0] ac97ctrl_play_fifo_write = { ac97ctrl_play_right, ac97ctrl_play_left };
+wire [ 31: 0] ac97ctrl_play_fifo_read;
+wire          ac97ctrl_play_fifo_pop   = clk_48khz;
+wire [  3: 0] ac97ctrl_play_fifo_ctr;
+
+ac97ctrl_16x32_sr_fifo i_ac97ctrl_play_fifo (
+  // global signals
+  .clk                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .srst                    ( ac97ctrl_play_fifo_reset    ),  // play FIFO reset
+
+  .din                     ( ac97ctrl_play_fifo_write    ),  // 16 bit play sample data to be pushed into the FIFO
+  .wr_en                   ( ac97ctrl_play_fifo_push     ),  // push new data
+
+  .dout                    ( ac97ctrl_play_fifo_read     ),  // 16 bit play sample data to be poped from the FIFO
+  .rd_en                   ( ac97ctrl_play_fifo_pop      ),  // pop data
+
+  .data_count              ( ac97ctrl_play_fifo_ctr      )   // content counter
+);
+
+assign ac97_line_out_o[ 2*16-1:0]  = ac97ctrl_play_fifo_read[31:0];
+assign ac97ctrl_play_fifo_full     = ( ac97ctrl_play_fifo_ctr ==  C_FIFO_SIZE)      ?  1'b1 : 1'b0;
+assign ac97ctrl_play_fifo_halffull = ( ac97ctrl_play_fifo_ctr <= (C_FIFO_SIZE / 2)) ?  1'b1 : 1'b0;
+assign ac97ctrl_play_fifo_empty    = (!ac97ctrl_play_fifo_ctr)                      ?  1'b1 : 1'b0;
+
+
+wire          ac97ctrl_rec_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_rec_reset;
+reg           ac97ctrl_rec_is_right   = 1'b0;
+wire [ 31: 0] ac97ctrl_rec_fifo_write = ac97_line_in_i[2*16-1:0];
+wire          ac97ctrl_rec_fifo_push  = clk_48khz;
+wire [ 31: 0] ac97ctrl_rec_fifo_read;
+reg           ac97ctrl_rec_fifo_pop   = 1'b0;
+wire [  3: 0] ac97ctrl_rec_fifo_ctr;
+
+ac97ctrl_16x32_sr_fifo i_ac97ctrl_rec_fifo (
+  // global signals
+  .clk                     ( clk_adc_125mhz              ),  // global 125 MHz clock
+  .srst                    ( ac97ctrl_rec_fifo_reset     ),  // record FIFO reset
+
+  .din                     ( ac97ctrl_rec_fifo_write     ),  // 16 bit play sample data to be pushed into the FIFO
+  .wr_en                   ( ac97ctrl_rec_fifo_push      ),  // push new data
+
+  .dout                    ( ac97ctrl_rec_fifo_read      ),  // 16 bit play sample data to be poped from the FIFO
+  .rd_en                   ( ac97ctrl_rec_fifo_pop       ),  // pop data
+
+  .data_count              ( ac97ctrl_rec_fifo_ctr       )   // content counter
+);
+
+assign ac97ctrl_rec_fifo_empty    = (!ac97ctrl_rec_fifo_ctr)                ?  1'b1 : 1'b0;
+assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr == C_FIFO_SIZE) ?  1'b1 : 1'b0;
+
+always @(posedge clk_adc_125mhz)                // assign ac97_irq_play_o
+if (!adc_rstn_i)
+   ac97_irq_play_o <= 1'b0;
+
+else if (C_PLAYBACK)
+   case (C_PLAY_INTR_LEVEL)
+
+   1: begin
+      if (!ac97ctrl_play_fifo_ctr)
+         ac97_irq_play_o <= 1'b1;
+      end
+   2: begin
+      if (ac97ctrl_play_fifo_ctr <= 4'd7)
+         ac97_irq_play_o <= 1'b1;
+      end
+   3: begin
+      if (ac97ctrl_play_fifo_ctr >= 4'd8)
+         ac97_irq_play_o <= 1'b1;
+      end
+   4: begin
+      if (ac97ctrl_play_fifo_ctr == C_FIFO_SIZE)
+         ac97_irq_play_o <= 1'b1;
+      end
+   default: begin
+      ac97_irq_play_o <= 1'b0;
+      end
+
+   endcase
+
+
+always @(posedge clk_adc_125mhz)                // assign ac97_irq_rec_o
+   if (!adc_rstn_i)
+      ac97_irq_rec_o  <= 1'b0;
+
+   else if (C_RECORD)
+      case (C_REC_INTR_LEVEL)
+
+      1: begin
+         if (!ac97ctrl_rec_fifo_ctr)
+            ac97_irq_rec_o <= 1'b1;
+         end
+      2: begin
+         if (ac97ctrl_rec_fifo_ctr <= 4'd7)
+            ac97_irq_rec_o <= 1'b1;
+         end
+      3: begin
+         if (ac97ctrl_rec_fifo_ctr >= 4'd8)
+            ac97_irq_rec_o <= 1'b1;
+         end
+      4: begin
+         if (ac97ctrl_rec_fifo_ctr == C_FIFO_SIZE)
+            ac97_irq_rec_o <= 1'b1;
+         end
+      default: begin
+         ac97_irq_rec_o <= 1'b0;
+         end
+
+      endcase
 
 
 // === Bus handling ===
@@ -133,35 +373,58 @@ rb_dds_48_16_125 i_rb_tx_car_osc_dds (
 // write access to the registers
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i) begin
-   regs[REG_RW_RB_CTRL]                      <= 32'h00000000;
-   regs[REG_RW_RB_ICR]                       <= 32'h00000000;
-   regs[REG_RD_RB_ISR]                       <= 32'h00000000;
-   regs[REG_RW_RB_DMA_CTRL]                  <= 32'h00000000;
-   regs[REG_RW_RB_PWR_CTRL]                  <= 32'h00000000;
+   ac97ctrl_play_left                             <=  'b0;
+   ac97ctrl_play_right                            <=  'b0;
+   ac97ctrl_play_is_right                         <= 1'b0;
+   ac97ctrl_play_is_right_d                       <= 1'b0;
+   ac97ctrl_access_prepare                        <= 1'b0;
+   ac97ctrl_access_ready                          <= 1'b0;
    end
 
+else if (ac97ctrl_reset_delay) begin
+   ac97ctrl_codec_data_write <= 'b0;
+   ac97ctrl_codec_data_store <= ac97ctrl_reset_delay_ctr[0];                                                // toggling store signal to fill-up the play FIFO
+   ac97ctrl_access_prepare   <= 1'b0;
+   ac97ctrl_access_ready     <= 1'b0;
+   end
 else begin
+   ac97ctrl_play_is_right_d   <= ac97ctrl_play_is_right;
+   ac97ctrl_codec_data_store  <= 1'b0;
+   ac97ctrl_codec_data_recall <= 1'b0;
+   ac97ctrl_fifo_play_reset   <= 1'b0;
+   ac97ctrl_fifo_rec_reset    <= 1'b0;
+   ac97ctrl_access_ready      <= ac97ctrl_access_prepare;
+
    if (sys_wen) begin
       casez (sys_addr[19:0])
 
-      /* control */
+      /* FIFO */
       20'h00000: begin
-         regs[REG_RW_RB_CTRL]                     <= sys_wdata[31:0];
-         end
-      20'h00008: begin
-         regs[REG_RW_RB_ICR]                      <= sys_wdata[31:0];
-         end
-      20'h00010: begin
-         regs[REG_RW_RB_DMA_CTRL]                 <= sys_wdata[31:0];
-         end
-      20'h00018: begin
-         regs[REG_RW_RB_PWR_CTRL]                 <= { 16'b0, sys_wdata[15:0] };
-         end
-      20'h0001C: begin
-         regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT]   <= sys_wdata[31:0] & 32'hFFFF00FF;
+         if (!ac97ctrl_play_is_right)
+            ac97ctrl_play_left                    <= sys_wdata[15:0];
+         else
+            ac97ctrl_play_right                   <= sys_wdata[15:0];
+         ac97ctrl_play_is_right <= !ac97ctrl_play_is_right;
          end
 
-      default:   begin
+      /* control */
+      20'h0000C: begin
+         if (sys_wdata[0])
+            ac97ctrl_fifo_play_reset              <= 1'b1;
+         if (sys_wdata[1])
+            ac97ctrl_fifo_rec_reset               <= 1'b1;
+         end
+      20'h00010: begin
+         ac97ctrl_codec_addr[6:1]                 <= sys_wdata[ 6:1];
+         ac97ctrl_access_ready                    <= 1'b0;
+         ac97ctrl_access_prepare                  <= 1'b1;
+         if (!sys_wdata[7])
+            ac97ctrl_codec_data_store             <= 1'b1;
+         else
+            ac97ctrl_codec_data_recall            <= 1'b1;
+         end
+      20'h00018: begin
+         ac97ctrl_codec_data_write                <= sys_wdata[15:0];
          end
 
       endcase
@@ -169,55 +432,50 @@ else begin
    end
 
 
-wire sys_en;
-assign sys_en = sys_wen | sys_ren;
+wire sys_en = sys_wen | sys_ren;
 
 // read access to the registers
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i) begin
-   sys_err      <= 1'b0;
-   sys_ack      <= 1'b0;
-   sys_rdata    <= 32'h00000000;
+   sys_err                                        <= 1'b0;
+   sys_ack                                        <= 1'b0;
+   sys_rdata                                      <=  'b0;
+   ac97ctrl_rec_fifo_pop                          <= 1'b0;
+   ac97ctrl_rec_is_right                          <= 1'b0;
    end
 
 else begin
    sys_err <= 1'b0;
+   ac97ctrl_rec_fifo_pop <= 1'b0;                                                                           // default value, to be overwritten
+
    if (sys_ren) begin
       case (sys_addr[19:0])
 
-      /* control */
-      20'h00000: begin
-         sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RW_RB_CTRL];
-         end
+      /* FIFO */
       20'h00004: begin
-         sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RD_RB_STATUS];
+         sys_ack                                  <= sys_en;
+         if (!ac97ctrl_rec_is_right)
+            sys_rdata                             <= { {C_OPB_DWIDTH - 16 {1'b0}}, ac97ctrl_rec_fifo_read[15: 0] };
+         else begin
+            sys_rdata                             <= { {C_OPB_DWIDTH - 16 {1'b0}}, ac97ctrl_rec_fifo_read[31:16] };
+            ac97ctrl_rec_fifo_pop <= 1'b1;
+            end
+         ac97ctrl_rec_is_right                    <= !ac97ctrl_rec_is_right;
          end
+
+      /* control */
       20'h00008: begin
-         sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RW_RB_ICR];
+         sys_ack                                  <= sys_en;
+         sys_rdata                                <= { {C_OPB_DWIDTH -  8 {1'b0}}, ac97ctrl_rec_fifo_overrun, ac97ctrl_play_fifo_underrun, ac97ctrl_codec_ready, ac97ctrl_access_ready, ac97ctrl_rec_fifo_empty, ac97ctrl_rec_fifo_full, ac97ctrl_play_fifo_halffull, ac97ctrl_play_fifo_full};
          end
-      20'h0000C: begin
-         sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RD_RB_ISR];
-         end
-      20'h00010: begin
-         sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RW_RB_DMA_CTRL];
-         end
-      20'h00018: begin
-         sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RW_RB_PWR_CTRL];
-         end
-      20'h0001C: begin
-         sys_ack   <= sys_en;
-         sys_rdata <= regs[REG_RW_RB_RFOUTx_LED_SRC_CON_PNT];
+      20'h00014: begin
+         sys_ack                                  <= sys_en;
+         sys_rdata                                <= { {C_OPB_DWIDTH -  16 {1'b0}}, ac97ctrl_codec_data_read };
          end
 
       default:   begin
-         sys_ack   <= sys_en;
-         sys_rdata <= 32'h00000000;
+         sys_ack                                  <= sys_en;
+         sys_rdata                                <= 'b0;
          end
 
       endcase
