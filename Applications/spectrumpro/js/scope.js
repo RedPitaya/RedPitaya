@@ -146,6 +146,7 @@
                         $('#get_lic').modal('show');
                 }, 2500);
                 SPEC.unexpectedClose = true;
+                $('body').addClass('loaded');
             };
 
             SPEC.ws.onclose = function() {

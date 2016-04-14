@@ -127,6 +127,7 @@
 						$('#get_lic').modal('show');
 				}, 2500);
 				LCR.unexpectedClose = true;
+				$('body').addClass('loaded');
 			};
 
 			LCR.ws.onclose = function() {

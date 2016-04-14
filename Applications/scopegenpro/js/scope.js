@@ -291,6 +291,7 @@
                 setTimeout(loadParams, 2000);
                 setTimeout(showLicenseDialog, 2500);
                 OSC.unexpectedClose = true;
+                $('body').addClass('loaded');
             };
 
             OSC.ws.onclose = function() {
@@ -1136,10 +1137,10 @@
                 OSC.graphs[sig_name].elem.show();
 
                 if (points.length !== 0) {
-                    $('#img_loading').hide();
+                    $('body').addClass('loaded');
                     OSC.loaderShow = false;
                 } else if (points.length === 0) {
-                    $('#img_loading').show();
+                    $('body').removeClass('loaded');
                     OSC.loaderShow = true;
                 }
 
@@ -1956,7 +1957,7 @@ $(function() {
         ev.preventDefault();
         OSC.params.local['OSC_AUTOSCALE'] = { value: true };
         OSC.sendParams();
-        $('#img_loading').show();
+        $('body').removeClass('loaded');
         OSC.loaderShow = true;
     });
 
