@@ -35,9 +35,11 @@
     <script src="js/pako.js"></script>
     <script src="js/scope.js?3"></script>
     <script src="js/jquery.browser.js"></script>
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
     <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
     <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
+    <script src="../assets/offline.min.js?1"></script>
     <script src="../assets/offline.min.js?1"></script>
     <script src="../assets/ui.js"></script>
     <script src="../assets/onlinecheck.js?1"></script>
@@ -49,6 +51,9 @@
 </head>
 
 <body>
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+    </div>
     <div id="header">
         <div id="connection_meter" title="It seems like your connection is ok"><img src="../assets/images/good_net.png" id="connection_icon" width="20px"><span id="throughput_view2">0 kB/s</span></div>
     </div>
