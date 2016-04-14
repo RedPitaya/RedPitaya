@@ -1498,23 +1498,20 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
 
         if(curDeltaSample < 1.0f) {
             int i;
-            for (i = 0; i < maxViewIdx /*&& (int) (((float)i * curDeltaSample) + buffFullOffset) < ADC_BUFFER_SIZE*/; ++i) {
-                int x0 = ((int)((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE;
-                int x1 = (x0 + 1) % ADC_BUFFER_SIZE;
-                float y = linear(x0, convertRawData(data[channel][x0], gainV1, calibScale1, dc_offs1), x0 + 1,
+            for (i = 0; i < maxViewIdx; ++i) {
+                int x0 = (((float)i * curDeltaSample) + buffFullOffset);
+                int x00 = ((size_t)x0) % ADC_BUFFER_SIZE;
+                int x1 = ((size_t)(x0 + 1)) % ADC_BUFFER_SIZE;
+                float y = linear(x0, convertRawData(data[channel][x00], gainV1, calibScale1, dc_offs1), x0 + 1,
 					convertRawData(data[channel][x1], gainV2, calibScale2, dc_offs2), ((float)i * curDeltaSample) + buffFullOffset);
                 ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, y, view + viewFullOffset + i));
             }
             maxViewIdx = i;
         } else {
             int i;
-            for (i = 0; i < maxViewIdx /*&& (int) (((float)i * curDeltaSample) + buffFullOffset) < ADC_BUFFER_SIZE*/; ++i) {
+            for (i = 0; i < maxViewIdx; ++i) {
 				const size_t idx = ((size_t)((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE;
 				ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, convertRawData(data[channel][idx], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
-/*
-                ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel,
-					convertRawData(data[channel][((size_t) ((size_t)((float)i * curDeltaSample) + buffFullOffset)) % ADC_BUFFER_SIZE], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
-*/
             }
             maxViewIdx = i;
         }
@@ -1611,7 +1608,7 @@ void *mainThreadFun() {
             _preZero = 0; //continuousMode ? 0 : (int) MAX(0, viewSize/2 - (_triggerDelay+_preTriggerCount)/_deltaSample);
             _postZero = 0; //(int) MAX(0, viewSize/2 - (_writePointer-(_triggerPosition+_triggerDelay))/_deltaSample);
             _startIndex = (_triggerPosition + _triggerDelay - (uint32_t) ((viewSize/2 -_preZero)*_deltaSample)) % ADC_BUFFER_SIZE;
-            _getBufSize = (uint32_t) ((viewSize-(_preZero + _postZero))*_deltaSample);
+            _getBufSize = (uint32_t) ((viewSize-(_preZero + _postZero))*_deltaSample) + 1;
 
             if(manuallyTriggered && continuousMode) {
                 ECHECK_APP_THREAD(rp_AcqGetWritePointer(&_writePointer));
@@ -1653,14 +1650,12 @@ void *mainThreadFun() {
             // Write data to view buffer
             for (rp_channel_t channel = RP_CH_1; channel <= RP_CH_2; ++channel) {
                 // first preZero data are wrong - from previout trigger. Last preZero data hasn't been overwritten
-//                for (int i = 0; i < _preZero; ++i) {
-//                    view[channel * viewSize + i] = 0;
-//                }
                 if(_deltaSample < 1.0f) {
                     for (int i = 0; i < viewSize-_postZero && (int) ((float)i * _deltaSample) < _getBufSize; ++i) {
                         int x0 = (int)((float)i * _deltaSample);
+                        int x00 = ((size_t)x0) % ADC_BUFFER_SIZE;
                         int x1 = ((x0 + 1) < (_getBufSize - 1)) ? (x0 + 1) : (_getBufSize - 1);
-                        float y = linear(x0, data[channel][x0], x0 + 1, data[channel][x1], ((float)i * _deltaSample));
+                        float y = linear(x0, data[channel][x00], x0 + 1, data[channel][x1], ((float)i * _deltaSample));
                         ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, y, view + ((channel * viewSize) + i + _preZero)));
                     }
                 } else {
