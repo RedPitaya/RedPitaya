@@ -1510,8 +1510,9 @@ static inline void threadUpdateView(uint16_t data[2][ADC_BUFFER_SIZE], uint32_t 
         } else {
             int i;
             for (i = 0; i < maxViewIdx; ++i) {
-				const size_t idx = ((size_t)((float)i * curDeltaSample) + buffFullOffset) % ADC_BUFFER_SIZE;
-				ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, convertRawData(data[channel][idx], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
+            	float s = ((float)i)*curDeltaSample + buffFullOffset;
+            	size_t idx = ((size_t)(int)s) % ADC_BUFFER_SIZE; // avoid UB
+            	ECHECK_APP_THREAD(scaleAmplitudeChannel((rpApp_osc_source) channel, convertRawData(data[channel][idx], gainV1, calibScale1, dc_offs1), view + viewFullOffset + i));
             }
             maxViewIdx = i;
         }
