@@ -248,6 +248,7 @@
 // Page onload event handler
 $(document).ready(function() {
     UPD.startStep(1);
+    $('body').addClass('loaded');
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
         if (UPD.currentVer == undefined)
