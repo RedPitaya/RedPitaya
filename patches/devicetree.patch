@@ -97,7 +97,7 @@
 +	#address-cells = <1>;
 +	#size-cells = <1>;
 +	#interrupt-cells = <2>;
-+	rp-ac97: sound@40700000 {
++	rp_sound: sound@40700000 {
 +		compatible = "xlnx,ml403-ac97cr", "ml403-ac97cr";
 +		reg = <0x40700000 0x100>;
 +		interrupts = <62 0>;
