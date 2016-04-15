@@ -25,8 +25,10 @@ set part xc7z010clg400-1
 create_project -part $part -force redpitaya ./project
 
 #set_property strategy {Vivado Synthesis Defaults} [get_runs synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs synth_1]
 
 #set_property strategy {Vivado Implementation Defaults} [get_runs impl_1]
+set_property strategy Area_Explore [get_runs impl_1]
 #set_property strategy Performance_NetDelay_medium [get_runs impl_1]
 
 
@@ -76,6 +78,8 @@ add_files                         $path_rtl/red_pitaya_rst_clken.sv
 add_files                         $path_rtl/red_pitaya_scope.v
 add_files                         $path_rtl/red_pitaya_top.v
 
+read_ip                           $path_ip/ac97ctrl_16x32_sr_fifo.xcix
+read_ip                           $path_ip/ac97ctrl_16x64_nc_blkmem.xcix
 read_ip                           $path_ip/rb_addsub_48M48.xcix
 read_ip                           $path_ip/rb_cic_125M_to_5M_18T18.xcix
 read_ip                           $path_ip/rb_cic_200k_to_8k_18T18.xcix
@@ -85,7 +89,6 @@ read_ip                           $path_ip/rb_cic_8k_to_41M664_18T18.xcix
 read_ip                           $path_ip/rb_cic_8k_to_48k_18T18.xcix
 read_ip                           $path_ip/rb_cordic_T_WS_O_SR_18T18_NE_CR_EM_B.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
-read_ip                           $path_ip/rb_div_32Div13R13.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmBaC_A18_D18_B18_C36_P37.xcix
 read_ip                           $path_ip/rb_fir_8k_to_8k_25c23_17i16_35o33.xcix
 read_ip                           $path_ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix

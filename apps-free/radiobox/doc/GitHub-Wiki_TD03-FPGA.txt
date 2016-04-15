@@ -158,7 +158,7 @@
     00010  R/W       RB_DMA_CTRL - DMA control register (reserved).
                      - bit h1F..h00: n/a
 
-    00018  R/W       RB_PWR_CTRL - power savings control register.
+    00014  R/W       RB_PWR_CTRL - power savings control register.
                      - bit h07..h00: RX modulation variant
                          value = h00  no power savings, all clocks of the receiver are turned on
                          value = h01  complete receiver is turned off
@@ -179,7 +179,7 @@
                          value = h08  components of the PM transmitter are turned on
                      - bit h1F..h10: n/a
 
-    0001C  R/W       RB_SRC_CON_PNT - output connection matrix for
+    00018  R/W       RB_SRC_CON_PNT - output connection matrix for
                                       RB_LEDs, RFOUT1 and RFOUT2.
                      - bit h07..h00: LEDs magnitude scope (logarithmic)  source position
                          value = h00  RadioBox does not touch LED state of other
@@ -248,7 +248,8 @@
                          value = hFE  current status of the overdrive signals.
                          value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
                      - bit h0F..h08: n/a
-                     - bit h17..h10: RFOUT1 source connection point
+                     - bit h17..h10: RFOUT1 source connection point   and
+                     - bit h1F..h18: RFOUT2 source connection point   the following connection point applies:
                          value = h00  silence.
                          value = h01  silence.
                          value = h04  TX_MUXIN_MIX in.
@@ -312,7 +313,14 @@
                          value = hF8  TX_CAR_OSC_INC frequency value.
                          value = hF9  RX_CAR_OSC_INC frequency value.
                          value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
-                     - bit h1F..h18: RFOUT2 source connection point
+
+    0001C  R/W       RB_SRC_CON_PNT2 - output connection matrix for
+                                       LINE-IN1 L/R, LINE-IN2 L/R.
+                     - bit h07..h00: Linux ALSA LINE-IN 1 Left
+                     - bit h0F..h08: Linux ALSA LINE-IN 1 Right
+                     - bit h17..h10: Linux ALSA LINE-IN 2 Left
+                     - bit h1F..h18: Linux ALSA LINE-IN 2 Right
+                       For all fields the same connection value applies
                          value = h00  silence.
                          value = h01  silence.
                          value = h04  TX_MUXIN_MIX in.
@@ -456,13 +464,15 @@
     00060  R/W  TX:  RB_RX_MUXIN_SRC - Source signal for the analog input TX MUXer.
                      - bit h05..h00: Source ID
                          value = h00  no external signal used, TX_MOD_OSC used instead.
-                         value = h03  Vp_Vn,     mapped to: vin[4].
-                         value = h10  XADC CH#0, mapped to: AI1.
-                         value = h11  XADC CH#1, mapped to: AI0.
-                         value = h18  XADC CH#8, mapped to: AI2.
-                         value = h19  XADC CH#9, mapped to: AI3.
-                         value = h20  ADC0,      mapped to: RF Input 1.
-                         value = h21  ADC1,      mapped to: RF Input 2.
+                         value = h03  Vp_Vn,      mapped to: vin[4].
+                         value = h10  XADC CH#0,  mapped to: AI1.
+                         value = h11  XADC CH#1,  mapped to: AI0.
+                         value = h18  XADC CH#8,  mapped to: AI2.
+                         value = h19  XADC CH#9,  mapped to: AI3.
+                         value = h20  ADC0,       mapped to: RF Input 1.
+                         value = h21  ADC1,       mapped to: RF Input 2.
+                         value = h30  LINE1_IN L, mapped to: Linux ALSA LINE-IN 1 Left.
+                         value = h31  LINE1_IN R, mapped to: Linux ALSA LINE-IN 1 Right.
                      - bit h1F..h06: n/a
 
     00064  R/W  TX:  RB_TX_MUXIN_GAIN - Source signal gain for TX MUXIN output amplifier.
@@ -558,6 +568,8 @@
                          value = h19  XADC CH#9, mapped to: AI3.
                          value = h20  ADC0,      mapped to: RF Input 1.
                          value = h21  ADC1,      mapped to: RF Input 2.
+                         value = h30  LINE1_IN L, mapped to: Linux ALSA LINE-IN 1 Left.
+                         value = h31  LINE1_IN R, mapped to: Linux ALSA LINE-IN 1 Right.
                      - bit h1F..h06: n/a
 
     00164  R/W  RX:  RB_RX_MUX_GAIN - Source signal gain for
