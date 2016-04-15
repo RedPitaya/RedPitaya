@@ -25,8 +25,10 @@ set part xc7z010clg400-1
 create_project -part $part -force redpitaya ./project
 
 #set_property strategy {Vivado Synthesis Defaults} [get_runs synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs synth_1]
 
 #set_property strategy {Vivado Implementation Defaults} [get_runs impl_1]
+set_property strategy Area_Explore [get_runs impl_1]
 #set_property strategy Performance_NetDelay_medium [get_runs impl_1]
 
 
