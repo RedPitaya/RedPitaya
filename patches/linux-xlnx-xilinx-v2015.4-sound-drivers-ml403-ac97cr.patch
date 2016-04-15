@@ -1,0 +1,163 @@
+diff --git a/sound/drivers/ml403-ac97cr.c b/sound/drivers/ml403-ac97cr.c
+index bdcb572..afd98b6 100644
+--- a/sound/drivers/ml403-ac97cr.c
++++ b/sound/drivers/ml403-ac97cr.c
+@@ -35,6 +35,7 @@
+ 
+ #include <linux/init.h>
+ #include <linux/module.h>
++#include <linux/regmap.h>
+ 
+ #include <linux/platform_device.h>
+ 
+@@ -422,9 +423,9 @@ snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
+ 	ml403_ac97cr = snd_pcm_substream_chip(substream);
+ 
+ 	spin_lock(&ml403_ac97cr->reg_lock);
+-	while ((full = (in_be32(CR_REG(ml403_ac97cr, STATUS)) &
++	while ((full = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+ 			CR_PLAYFULL)) != CR_PLAYFULL) {
+-		out_be32(CR_REG(ml403_ac97cr, PLAYFIFO), 0);
++		*(__be32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_be32(0);
+ 		copied_words++;
+ 	}
+ 	rec->hw_ready = 0;
+@@ -447,10 +448,9 @@ snd_ml403_ac97cr_playback_ind2_copy(struct snd_pcm_substream *substream,
+ 	src = (u16 *)(substream->runtime->dma_area + rec->sw_data);
+ 
+ 	spin_lock(&ml403_ac97cr->reg_lock);
+-	while (((full = (in_be32(CR_REG(ml403_ac97cr, STATUS)) &
++	while (((full = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+ 			 CR_PLAYFULL)) != CR_PLAYFULL) && (bytes > 1)) {
+-		out_be32(CR_REG(ml403_ac97cr, PLAYFIFO),
+-			 CR_PLAYDATA(src[copied_words]));
++		*(__be32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_be32(CR_PLAYDATA(src[copied_words]));
+ 		copied_words++;
+ 		bytes = bytes - 2;
+ 	}
+@@ -474,12 +474,12 @@ snd_ml403_ac97cr_capture_ind2_null(struct snd_pcm_substream *substream,
+ 	ml403_ac97cr = snd_pcm_substream_chip(substream);
+ 
+ 	spin_lock(&ml403_ac97cr->reg_lock);
+-	while ((empty = (in_be32(CR_REG(ml403_ac97cr, STATUS)) &
++	while ((empty = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+ 			 CR_RECEMPTY)) != CR_RECEMPTY) {
+ 		volatile u32 trash;
+ 
+-		trash = CR_RECDATA(in_be32(CR_REG(ml403_ac97cr, RECFIFO)));
+-		/* Hmmmm, really necessary? Don't want call to in_be32()
++		trash = CR_RECDATA(be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, RECFIFO)));
++		/* Hmmmm, really necessary? Don't want call to be32_to_cpu()
+ 		 * to be optimised away!
+ 		 */
+ 		trash++;
+@@ -504,9 +504,9 @@ snd_ml403_ac97cr_capture_ind2_copy(struct snd_pcm_substream *substream,
+ 	dst = (u16 *)(substream->runtime->dma_area + rec->sw_data);
+ 
+ 	spin_lock(&ml403_ac97cr->reg_lock);
+-	while (((empty = (in_be32(CR_REG(ml403_ac97cr, STATUS)) &
++	while (((empty = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+ 			  CR_RECEMPTY)) != CR_RECEMPTY) && (bytes > 1)) {
+-		dst[copied_words] = CR_RECDATA(in_be32(CR_REG(ml403_ac97cr,
++		dst[copied_words] = CR_RECDATA(be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr,
+ 							      RECFIFO)));
+ 		copied_words++;
+ 		bytes = bytes - 2;
+@@ -553,7 +553,7 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
+ 		ml403_ac97cr->ind_rec.hw_ready = 1;
+ 
+ 		/* clear play FIFO */
+-		out_be32(CR_REG(ml403_ac97cr, RESETFIFO), CR_PLAYRESET);
++		*(__be32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_be32(CR_PLAYRESET);
+ 
+ 		/* enable play irq */
+ 		ml403_ac97cr->enable_irq = 1;
+@@ -592,7 +592,7 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
+ 		ml403_ac97cr->capture_ind2_rec.hw_ready = 0;
+ 
+ 		/* clear record FIFO */
+-		out_be32(CR_REG(ml403_ac97cr, RESETFIFO), CR_RECRESET);
++		*(__be32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_be32(CR_RECRESET);
+ 
+ 		/* enable record irq */
+ 		ml403_ac97cr->enable_capture_irq = 1;
+@@ -889,26 +889,25 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
+ 	ml403_ac97cr->ac97_read++;
+ #endif
+ 	spin_lock(&ml403_ac97cr->reg_lock);
+-	out_be32(CR_REG(ml403_ac97cr, CODEC_ADDR),
+-		 CR_CODEC_ADDR(reg) | CR_CODEC_READ);
++	*(__be32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_be32(CR_CODEC_ADDR(reg) | CR_CODEC_READ);
+ 	spin_unlock(&ml403_ac97cr->reg_lock);
+ 	end_time = jiffies + (HZ / CODEC_TIMEOUT_AFTER_READ);
+ 	do {
+ 		spin_lock(&ml403_ac97cr->reg_lock);
+ #ifdef CODEC_STAT
+ 		rafaccess++;
+-		stat = in_be32(CR_REG(ml403_ac97cr, STATUS));
++		stat = be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS));
+ 		if ((stat & CR_RAF) == CR_RAF) {
+ 			value = CR_CODEC_DATAREAD(
+-				in_be32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
++				be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+ 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) reg=0x%x, "
+ 			       "value=0x%x / %d (STATUS=0x%x)\n",
+ 			       reg, value, value, stat);
+ #else
+-		if ((in_be32(CR_REG(ml403_ac97cr, STATUS)) &
++		if ((be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+ 		     CR_RAF) == CR_RAF) {
+ 			value = CR_CODEC_DATAREAD(
+-				in_be32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
++				be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+ 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
+ 			       "reg=0x%x, value=0x%x / %d\n",
+ 			       reg, value, value);
+@@ -925,7 +924,7 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
+ 	/* read the DATAREAD register anyway, see comment below */
+ 	spin_lock(&ml403_ac97cr->reg_lock);
+ 	value =
+-	    CR_CODEC_DATAREAD(in_be32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
++	    CR_CODEC_DATAREAD(be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+ 	spin_unlock(&ml403_ac97cr->reg_lock);
+ #ifdef CODEC_STAT
+ 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+@@ -997,10 +996,8 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
+ 	ml403_ac97cr->ac97_write++;
+ #endif
+ 	spin_lock(&ml403_ac97cr->reg_lock);
+-	out_be32(CR_REG(ml403_ac97cr, CODEC_DATAWRITE),
+-		 CR_CODEC_DATAWRITE(val));
+-	out_be32(CR_REG(ml403_ac97cr, CODEC_ADDR),
+-		 CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
++	*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAWRITE) = cpu_to_be32(CR_CODEC_DATAWRITE(val));
++	*(__be32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_be32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
+ 	spin_unlock(&ml403_ac97cr->reg_lock);
+ #ifdef CODEC_WRITE_CHECK_RAF
+ 	/* check CR_CODEC_RAF bit to see if write access to register is done;
+@@ -1011,10 +1008,10 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
+ 		spin_lock(&ml403_ac97cr->reg_lock);
+ #ifdef CODEC_STAT
+ 		rafaccess++;
+-		stat = in_be32(CR_REG(ml403_ac97cr, STATUS))
++		stat = be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS))
+ 		if ((stat & CR_RAF) == CR_RAF) {
+ #else
+-		if ((in_be32(CR_REG(ml403_ac97cr, STATUS)) &
++		if ((be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+ 		     CR_RAF) == CR_RAF) {
+ #endif
+ 			PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
+@@ -1070,10 +1067,9 @@ snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
+ 	PDEBUG(INIT_INFO, "chip_init():\n");
+ 	end_time = jiffies + HZ / CODEC_TIMEOUT_ON_INIT;
+ 	do {
+-		if (in_be32(CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
++		if (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
+ 			/* clear both hardware FIFOs */
+-			out_be32(CR_REG(ml403_ac97cr, RESETFIFO),
+-				 CR_RECRESET | CR_PLAYRESET);
++			*(__be32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_be32(CR_RECRESET | CR_PLAYRESET);
+ 			PDEBUG(INIT_INFO, "chip_init(): (done)\n");
+ 			return 0;
+ 		}
