@@ -24,13 +24,6 @@ set part xc7z010clg400-1
 
 create_project -part $part -force redpitaya ./project
 
-#set_property strategy {Vivado Synthesis Defaults} [get_runs synth_1]
-set_property strategy Flow_AreaOptimized_high [get_runs synth_1]
-
-#set_property strategy {Vivado Implementation Defaults} [get_runs impl_1]
-set_property strategy Area_Explore [get_runs impl_1]
-#set_property strategy Performance_NetDelay_medium [get_runs impl_1]
-
 
 ################################################################################
 # create PS BD (processing system block design)
@@ -63,6 +56,7 @@ add_files                         $path_rtl/axi_wr_fifo.v
 
 add_files                         $path_rtl/pwm.sv
 
+add_files                         $path_rtl/red_pitaya_ac97ctrl.sv
 add_files                         $path_rtl/red_pitaya_ams.v
 add_files                         $path_rtl/red_pitaya_asg_ch.v
 add_files                         $path_rtl/red_pitaya_asg.v
