@@ -1,5 +1,5 @@
 diff --git a/sound/drivers/ml403-ac97cr.c b/sound/drivers/ml403-ac97cr.c
-index bdcb572..afd98b6 100644
+index bdcb572..2cee531 100644
 --- a/sound/drivers/ml403-ac97cr.c
 +++ b/sound/drivers/ml403-ac97cr.c
 @@ -35,6 +35,7 @@
@@ -10,6 +10,24 @@ index bdcb572..afd98b6 100644
  
  #include <linux/platform_device.h>
  
+@@ -380,7 +381,7 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
+ 	.formats =          SNDRV_PCM_FMTBIT_S16_BE,
+ 	.rates =	    (SNDRV_PCM_RATE_CONTINUOUS |
+ 			     SNDRV_PCM_RATE_8000_48000),
+-	.rate_min =	    4000,
++	.rate_min =	    48000,
+ 	.rate_max =	    48000,
+ 	.channels_min =     2,
+ 	.channels_max =     2,
+@@ -399,7 +400,7 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
+ 	.formats =          SNDRV_PCM_FMTBIT_S16_BE,
+ 	.rates =            (SNDRV_PCM_RATE_CONTINUOUS |
+ 			     SNDRV_PCM_RATE_8000_48000),
+-	.rate_min =         4000,
++	.rate_min =         48000,
+ 	.rate_max =         48000,
+ 	.channels_min =     2,
+ 	.channels_max =     2,
 @@ -422,9 +423,9 @@ snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
  	ml403_ac97cr = snd_pcm_substream_chip(substream);
  
