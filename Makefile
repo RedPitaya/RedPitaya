@@ -231,6 +231,10 @@ $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) modules
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) INSTALL_MOD_PATH=../../$(TARGET) modules_install
+	rm $</../../$(TARGET)/lib/modules/4.0.0-xilinx/build
+	rm $</../../$(TARGET)/lib/modules/4.0.0-xilinx/source
 	cp $</arch/arm/boot/uImage $@
 
 ################################################################################
