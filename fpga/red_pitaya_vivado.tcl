@@ -120,8 +120,8 @@ synth_ip                          [get_ips ac97ctrl_*]
 synth_ip                          [get_ips clk_adc_pll]
 synth_ip                          [get_ips rb_*]
 
-#synth_design -top red_pitaya_top
-synth_design -top red_pitaya_top -flatten_hierarchy rebuilt -bufg 16 -keep_equivalent_registers
+synth_design -top red_pitaya_top -directive AreaOptimized_high
+#synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
 
 write_checkpoint         -force   $path_out/post_synth
 report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt
