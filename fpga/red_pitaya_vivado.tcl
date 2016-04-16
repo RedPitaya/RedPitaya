@@ -37,13 +37,6 @@ create_project -in_memory -part $part
 #set_property FAMILY 7SERIES [current_project]
 #set_property SIM_DEVICE 7SERIES [current_project]
 
-#set_property strategy {Vivado Synthesis Defaults} [get_runs synth_1]
-set_property strategy Flow_AreaOptimized_high [get_runs synth_1]
-
-#set_property strategy {Vivado Implementation Defaults} [get_runs impl_1]
-set_property strategy Area_Explore [get_runs impl_1]
-#set_property strategy Performance_NetDelay_medium [get_runs impl_1]
-
 
 ################################################################################
 # create PS BD (processing system block design)
@@ -81,6 +74,7 @@ read_verilog                      $path_rtl/axi_wr_fifo.v
 
 read_verilog   -sv                $path_rtl/pwm.sv
 
+read_verilog   -sv                $path_rtl/red_pitaya_ac97ctrl.sv
 read_verilog                      $path_rtl/red_pitaya_ams.v
 read_verilog                      $path_rtl/red_pitaya_asg.v
 read_verilog                      $path_rtl/red_pitaya_asg_ch.v
@@ -122,11 +116,12 @@ read_xdc                          $path_sdc/red_pitaya.xdc
 # write checkpoint design
 ################################################################################
 
+synth_ip                          [get_ips ac97ctrl_*]
 synth_ip                          [get_ips clk_adc_pll]
 synth_ip                          [get_ips rb_*]
 
 #synth_design -top red_pitaya_top
-synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
+synth_design -top red_pitaya_top -flatten_hierarchy rebuilt -bufg 16 -gated_clock_conversion auto -resource_sharing auto -keep_equivalent_registers -control_set_opt_threshold 1
 
 write_checkpoint         -force   $path_out/post_synth
 report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt
@@ -139,7 +134,7 @@ report_power             -file    $path_out/post_synth_power.rpt
 # write checkpoint design
 ################################################################################
 
-opt_design
+opt_design -directive ExploreArea
 power_opt_design
 place_design
 phys_opt_design
