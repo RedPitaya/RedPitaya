@@ -121,7 +121,7 @@ synth_ip                          [get_ips clk_adc_pll]
 synth_ip                          [get_ips rb_*]
 
 #synth_design -top red_pitaya_top
-synth_design -top red_pitaya_top -flatten_hierarchy rebuilt -bufg 16 -gated_clock_conversion auto -resource_sharing auto -keep_equivalent_registers -control_set_opt_threshold 1
+synth_design -top red_pitaya_top -flatten_hierarchy rebuilt -bufg 16 -keep_equivalent_registers
 
 write_checkpoint         -force   $path_out/post_synth
 report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt
