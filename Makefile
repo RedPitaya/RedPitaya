@@ -226,6 +226,7 @@ $(LINUX_DIR): $(LINUX_TAR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
+	cp -f apps-free/radiobox/doc/ml403-ac97cr.c $(LINUX_DIR)/sound/drivers/
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper

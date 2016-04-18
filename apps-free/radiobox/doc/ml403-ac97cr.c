@@ -103,6 +103,7 @@ MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
  * completely in a final version
  */
 #undef PDEBUG
+#define CONFIG_SND_DEBUG
 #ifdef CONFIG_SND_DEBUG
 /* "facilities" for PDEBUG */
 #define UNKNOWN       (1<<0)
@@ -386,7 +387,7 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
 			     SNDRV_PCM_INFO_MMAP_VALID),
 	.formats =          SNDRV_PCM_FMTBIT_S16_BE,
 	.rates =	    (SNDRV_PCM_RATE_CONTINUOUS |
-			     SNDRV_PCM_RATE_8000_48000),
+			     SNDRV_PCM_RATE_48000),
 	.rate_min =	    48000,
 	.rate_max =	    48000,
 	.channels_min =     2,
@@ -405,7 +406,7 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
 			     SNDRV_PCM_INFO_MMAP_VALID),
 	.formats =          SNDRV_PCM_FMTBIT_S16_BE,
 	.rates =            (SNDRV_PCM_RATE_CONTINUOUS |
-			     SNDRV_PCM_RATE_8000_48000),
+			     SNDRV_PCM_RATE_48000),
 	.rate_min =         48000,
 	.rate_max =         48000,
 	.channels_min =     2,
@@ -692,7 +693,7 @@ snd_ml403_ac97cr_pcm_capture_prepare(struct snd_pcm_substream *substream)
 
 static int snd_ml403_ac97cr_hw_free(struct snd_pcm_substream *substream)
 {
-	PDEBUG(WORK_INFO, "hw_free()\n");
+	PDEBUG(WORK_INFO, ": hw_free()\n");
 	return snd_pcm_lib_free_pages(substream);
 }
 
@@ -700,7 +701,7 @@ static int
 snd_ml403_ac97cr_hw_params(struct snd_pcm_substream *substream,
 			   struct snd_pcm_hw_params *hw_params)
 {
-	PDEBUG(WORK_INFO, "hw_params(): desired buffer bytes=%d, desired "
+	PDEBUG(WORK_INFO, ": hw_params() - desired buffer bytes=%d, desired "
 	       "period bytes=%d\n",
 	       params_buffer_bytes(hw_params), params_period_bytes(hw_params));
 	return snd_pcm_lib_malloc_pages(substream,
@@ -715,7 +716,7 @@ static int snd_ml403_ac97cr_playback_open(struct snd_pcm_substream *substream)
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 	runtime = substream->runtime;
 
-	PDEBUG(WORK_INFO, "open(playback)\n");
+	PDEBUG(WORK_INFO, ": open(playback)\n");
 	ml403_ac97cr->playback_substream = substream;
 	runtime->hw = snd_ml403_ac97cr_playback;
 
@@ -733,7 +734,7 @@ static int snd_ml403_ac97cr_capture_open(struct snd_pcm_substream *substream)
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 	runtime = substream->runtime;
 
-	PDEBUG(WORK_INFO, "open(capture)\n");
+	PDEBUG(WORK_INFO, ": open(capture)\n");
 	ml403_ac97cr->capture_substream = substream;
 	runtime->hw = snd_ml403_ac97cr_capture;
 
@@ -749,7 +750,7 @@ static int snd_ml403_ac97cr_playback_close(struct snd_pcm_substream *substream)
 
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
-	PDEBUG(WORK_INFO, "close(playback)\n");
+	PDEBUG(WORK_INFO, ": close(playback)\n");
 	ml403_ac97cr->playback_substream = NULL;
 	return 0;
 }
@@ -760,7 +761,7 @@ static int snd_ml403_ac97cr_capture_close(struct snd_pcm_substream *substream)
 
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
-	PDEBUG(WORK_INFO, "close(capture)\n");
+	PDEBUG(WORK_INFO, ": close(capture)\n");
 	ml403_ac97cr->capture_substream = NULL;
 	return 0;
 }
@@ -844,6 +845,8 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 #endif
 	unsigned long end_time;
 	u16 value = 0;
+
+	PDEBUG(CODEC_FAKE, ": read(reg=%02x)\n", reg);
 
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
@@ -968,6 +971,8 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	unsigned long end_time;
 #endif
 
+	PDEBUG(CODEC_FAKE, ": write(reg=%02x, val=%04x)\n", reg, val);
+
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 			   "access to unknown/unused codec register 0x%x "
@@ -1070,7 +1075,7 @@ static int
 snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
 {
 	unsigned long end_time;
-	PDEBUG(INIT_INFO, "chip_init():\n");
+	PDEBUG(INIT_INFO, ": chip_init()\n");
 	end_time = jiffies + HZ / CODEC_TIMEOUT_ON_INIT;
 	do {
 		if (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
@@ -1089,7 +1094,7 @@ snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
 
 static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
 {
-	PDEBUG(INIT_INFO, "free():\n");
+	PDEBUG(INIT_INFO, ": free()\n");
 	/* irq release */
 	if (ml403_ac97cr->irq >= 0)
 		free_irq(ml403_ac97cr->irq, ml403_ac97cr);
@@ -1098,14 +1103,14 @@ static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
 	/* give back "port" */
 	iounmap(ml403_ac97cr->port);
 	kfree(ml403_ac97cr);
-	PDEBUG(INIT_INFO, "free(): (done)\n");
+	PDEBUG(INIT_INFO, ": free() (done)\n");
 	return 0;
 }
 
 static int snd_ml403_ac97cr_dev_free(struct snd_device *snddev)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr = snddev->device_data;
-	PDEBUG(INIT_INFO, "dev_free():\n");
+	PDEBUG(INIT_INFO, ": dev_free()\n");
 	return snd_ml403_ac97cr_free(ml403_ac97cr);
 }
 
@@ -1120,6 +1125,8 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	};
 	struct resource *resource;
 	int irq;
+
+	PDEBUG(INIT_INFO, ": create()\n");
 
 	*rml403_ac97cr = NULL;
 	ml403_ac97cr = kzalloc(sizeof(*ml403_ac97cr), GFP_KERNEL);
@@ -1200,9 +1207,9 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 static void snd_ml403_ac97cr_mixer_free(struct snd_ac97 *ac97)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr = ac97->private_data;
-	PDEBUG(INIT_INFO, "mixer_free():\n");
+	PDEBUG(INIT_INFO, ": mixer_free()\n");
 	ml403_ac97cr->ac97 = NULL;
-	PDEBUG(INIT_INFO, "mixer_free(): (done)\n");
+	PDEBUG(INIT_INFO, ": mixer_free() (done)\n");
 }
 
 static int
@@ -1215,7 +1222,7 @@ snd_ml403_ac97cr_mixer(struct snd_ml403_ac97cr *ml403_ac97cr)
 		.write = snd_ml403_ac97cr_codec_write,
 		.read = snd_ml403_ac97cr_codec_read,
 	};
-	PDEBUG(INIT_INFO, "mixer():\n");
+	PDEBUG(INIT_INFO, ": mixer()\n");
 	err = snd_ac97_bus(ml403_ac97cr->card, 0, &ops, NULL, &bus);
 	if (err < 0)
 		return err;
@@ -1244,6 +1251,8 @@ snd_ml403_ac97cr_pcm(struct snd_ml403_ac97cr *ml403_ac97cr, int device)
 	struct snd_pcm *pcm;
 	int err;
 
+	PDEBUG(INIT_INFO, ": pcm()\n");
+
 	err = snd_pcm_new(ml403_ac97cr->card, "ML403AC97CR/1", device, 1, 1,
 			  &pcm);
 	if (err < 0)
@@ -1270,6 +1279,8 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	struct snd_ml403_ac97cr *ml403_ac97cr = NULL;
 	int err;
 	int dev = pfdev->id;
+
+	PDEBUG(INIT_INFO, ": probe()\n");
 
 	if (dev >= SNDRV_CARDS)
 		return -ENODEV;
@@ -1319,6 +1330,7 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 
 static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
 {
+        PDEBUG(INIT_INFO, ": remove()\n");
 	snd_card_free(platform_get_drvdata(pfdev));
 	return 0;
 }
