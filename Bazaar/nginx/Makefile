@@ -57,6 +57,7 @@ install:
 	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'
 	test -d '$(DESTDIR)/www/logs'             || mkdir -p '$(DESTDIR)/www/logs'
 	test -d '$(DESTDIR)/www/apps'             || mkdir -p '$(DESTDIR)/www/apps'
+	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
 	cp $(NGINX)                     '$(DESTDIR)/sbin/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
