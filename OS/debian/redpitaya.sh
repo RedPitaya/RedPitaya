@@ -38,6 +38,7 @@ apt-get -y install libboost-system1.55-dev libboost-regex1.55-dev libboost-threa
 apt-get -y install libcrypto++-dev
 apt-get -y install libcurl4-openssl-dev
 apt-get -y install libssl-dev
+apt-get -y install libjpeg-dev
 
 # tools used to compile applications
 apt-get -y install zip
