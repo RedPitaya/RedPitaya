@@ -62,10 +62,7 @@ drive may be overwritten, causing permanent loose of user data.
 
 ## Red Pitaya ecosystem extraction
 
-In case `ecosystem*.zip` was not available for the previous step, it can be extracted later to the FAT partition (128MB) of the SD card. In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image, boot scripts, the Linux kernel and a Buildroot filesystem. Two boot scripts are provided:
-- `u-boot.scr.buildroot` (default) for booting into the Buildroot system, here the Debian EXT4 partition is not needed
-- `u-boot.scr.debian` for booting into the Debian system
-The script executed by U-Boot is `u-boot.scr` which is by default a copy of the Debian boot script `u-boot.scr.debian`, booting into Buildroot can be enabled my copying the Buildroot script `u-boot.scr.buildroot` over `u-boot.scr`.
+In case `ecosystem*.zip` was not available for the previous step, it can be extracted later to the FAT partition (128MB) of the SD card. In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image (containing FPGA code), a boot script (`u-boot.scr`) and the Linux kernel.
 
 ## Wyliodrin
 
