@@ -73,7 +73,7 @@ rm $ROOT_DIR/usr/bin/qemu-arm-static
 ################################################################################
 
 # create a tarball
-tar -cvpzf debian_${ARCH}_${DATE}.tar.gz --one-file-system --strip-components=1 $ROOT_DIR
+tar -cvpzf debian_${ARCH}_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 
 # Unmount file systems
 umount $BOOT_DIR $ROOT_DIR
