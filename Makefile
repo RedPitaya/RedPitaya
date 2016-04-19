@@ -220,13 +220,13 @@ $(LINUX_DIR): $(LINUX_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-sound-drivers-Kconfig.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-sound-drivers-ml403-ac97cr.patch
+	#patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-sound-drivers-ml403-ac97cr.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
-	cp -f apps-free/radiobox/doc/ml403-ac97cr.c $(LINUX_DIR)/sound/drivers/
+	cp -f patches/ml403-ac97cr/ml403-ac97cr.c $(LINUX_DIR)/sound/drivers/
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
