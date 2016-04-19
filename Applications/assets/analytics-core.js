@@ -7,7 +7,7 @@
     var analytics_id = "UA-75663037-1";
     var location = 'www.redpitaya.com';
     var sendData = false;
-    var debugPrints = true;
+    var debugPrints = false;
 
     (function() {
         if ("performance" in window == false) {

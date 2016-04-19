@@ -194,11 +194,12 @@ CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
+DISCOVERY_DIR   = Test/discovery
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor generate acquire calib calibrate
+.PHONY: lcr bode monitor generate acquire calib calibrate discovery
 
-examples: lcr bode monitor generate acquire calib
+examples: lcr bode monitor generate acquire calib discovery
 # calibrate
 
 lcr:
@@ -224,6 +225,10 @@ acquire:
 calib:
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+discovery:
+	$(MAKE) -C $(DISCOVERY_DIR)
+	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR)
@@ -266,10 +271,12 @@ ifdef ENABLE_LICENSING
 APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
+APP_SCPISERVER_DIR  = Applications/scpi_server
+APP_UPDATER_DIR     = Applications/updater
 
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server updater
 
-apps_pro: scopegenpro spectrumpro lcr_meter
+apps_pro: scopegenpro spectrumpro lcr_meter scpi_server updater
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
@@ -283,6 +290,13 @@ lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+scpi_server: api $(NGINX)
+	$(MAKE) -C $(APP_SCPISERVER_DIR)
+	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+updater: api $(NGINX)
+	$(MAKE) -C $(APP_UPDATER_DIR)
+	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 else
 
 apps_pro:
