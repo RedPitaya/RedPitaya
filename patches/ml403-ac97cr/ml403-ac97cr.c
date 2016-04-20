@@ -63,8 +63,10 @@
 #include <sound/ac97_codec.h>
 
 #include <linux/of.h>
-#include <linux/of_gpio.h>
 #include <linux/of_device.h>
+#include <linux/of_address.h>
+#include <linux/of_irq.h>
+
 #include "pcm-indirect2.h"
 
 
@@ -75,15 +77,23 @@ MODULE_DESCRIPTION("Xilinx ML403 AC97 Controller Reference");
 MODULE_LICENSE("GPL");
 MODULE_SUPPORTED_DEVICE("{{Xilinx,ML403 AC97 Controller Reference}}");
 
-static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
-static char *id[SNDRV_CARDS] = SNDRV_DEFAULT_STR;
-static bool enable[SNDRV_CARDS] = SNDRV_DEFAULT_ENABLE;
+#if 0
+ static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
+ static char *id[SNDRV_CARDS] = SNDRV_DEFAULT_STR;
+ static bool enable[SNDRV_CARDS] = SNDRV_DEFAULT_ENABLE;
+#else
+ static int index = SNDRV_DEFAULT_IDX1;
+ static char *id = SNDRV_DEFAULT_STR1;
+ static bool enable = SNDRV_DEFAULT_ENABLE1;
+#endif
 
-module_param_array(index, int, NULL, 0444);
+static struct platform_device *platform_devices[SNDRV_CARDS]; 
+
+module_param(index, int, 0444);
 MODULE_PARM_DESC(index, "Index value for ML403 AC97 Controller Reference.");
-module_param_array(id, charp, NULL, 0444);
+module_param(id, charp, 0444);
 MODULE_PARM_DESC(id, "ID string for ML403 AC97 Controller Reference.");
-module_param_array(enable, bool, NULL, 0444);
+module_param(enable, bool, 0444);
 MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
 
 /* Special feature options */
@@ -793,6 +803,35 @@ static struct snd_pcm_ops snd_ml403_ac97cr_capture_ops = {
 	.pointer = snd_ml403_ac97cr_pcm_pointer,
 };
 
+
+/*********************************************************************
+ * of_device_id
+ *********************************************************************/
+static struct of_device_id ml403_ac97cr_dt_ids[] = {
+        { .compatible = "xlnx,ml403-ac97cr", },
+        { }
+};
+MODULE_DEVICE_TABLE(of, ml403_ac97cr_dt_ids);
+
+/* work with hotplug and coldplug */
+//MODULE_ALIAS("platform:" SND_ML403_AC97CR_DRIVER);
+MODULE_ALIAS("of:" SND_ML403_AC97CR_DRIVER);
+
+/* forward declarations */
+static int snd_ml403_ac97cr_probe(struct platform_device *pfdev);
+static int snd_ml403_ac97cr_remove(struct platform_device *pfdev);
+
+static struct platform_driver snd_ml403_ac97cr_driver = {
+        .probe = snd_ml403_ac97cr_probe,
+        .remove = snd_ml403_ac97cr_remove,
+        .driver = {
+                .name = SND_ML403_AC97CR_DRIVER,
+		.owner = THIS_MODULE,
+                .of_match_table = of_match_ptr(ml403_ac97cr_dt_ids),
+        },
+};
+
+
 static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
@@ -1128,7 +1167,10 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	static struct snd_device_ops ops = {
 		.dev_free = snd_ml403_ac97cr_dev_free,
 	};
+	//const struct of_device_id *of_id;
 	struct resource *resource;
+        struct resource res_dt;
+	struct device_node *np;
 	int irq;
 
 	PDEBUG(INIT_INFO, "create()\n");
@@ -1149,7 +1191,21 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	ml403_ac97cr->res_port = NULL;
 
 	PDEBUG(INIT_INFO, "Trying to reserve resources now ...\n");
-	resource = platform_get_resource(pfdev, IORESOURCE_MEM, 0);
+	//of_id = of_match_device(ml403_ac97cr_dt_ids, &pfdev->dev);
+	np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
+	PDEBUG(INIT_INFO, "got access to np = 0x%p\n", np);
+	if (np) {
+		/* Use of_id->data here */
+		of_address_to_resource(np, 0, &res_dt);
+		resource = &res_dt;
+		of_node_put(np);
+	} else {
+		resource = platform_get_resource(pfdev, IORESOURCE_MEM, 0);
+	}
+        if (!resource) {
+		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": can not get memory resource entry");
+		return -1;
+	}
 	/* get "port" */
 	ml403_ac97cr->port = ioremap_nocache(resource->start,
 					     (resource->end) -
@@ -1286,22 +1342,32 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	int dev = pfdev->id;
 
 	PDEBUG(INIT_INFO, "probe(dev=%d)\n", dev);
+	PDEBUG(INIT_INFO, "probe: index = %i, id = %s\n", index, id);
 
-	if (dev >= SNDRV_CARDS || dev < 0)
+#if 0
+	// get platform board data (old mechanism)
+	p = platform_get_drvdata(pfdev);
+	platform_set_drvdata(pfdev, NULL);
+#endif
+
+	if (dev >= SNDRV_CARDS)
 		return -ENODEV;
-	if (!enable[dev])
+	if (!enable)
 		return -ENOENT;
 
+#if 0
 	if (index[dev] < 0 || id[dev] == NULL) {
                 snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
-                           "index or id not set! index = %i, id = 0x%p\n", index[dev], id[dev]);
+                           "index or id not set! index = %i, id = %s\n", index[dev], id[dev]);
 		return -ENOENT;
 	}
+#endif
 
-	err = snd_card_new(&pfdev->dev, index[dev], id[dev], THIS_MODULE,
-			   0, &card);
-	if (err < 0)
+	if ((err = snd_card_new(&pfdev->dev, index, id, THIS_MODULE,
+				0, &card)) < 0) {
+		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": Cannot create card\n");
 		return err;
+	}
 	err = snd_ml403_ac97cr_create(card, pfdev, &ml403_ac97cr);
 	if (err < 0) {
 		PDEBUG(INIT_FAILURE, "probe(): create failed!\n");
@@ -1310,14 +1376,12 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	}
 	PDEBUG(INIT_INFO, "probe(): create done\n");
 	card->private_data = ml403_ac97cr;
-	err = snd_ml403_ac97cr_mixer(ml403_ac97cr);
-	if (err < 0) {
+	if ((err = snd_ml403_ac97cr_mixer(ml403_ac97cr)) < 0) {
 		snd_card_free(card);
 		return err;
 	}
 	PDEBUG(INIT_INFO, "probe(): mixer done\n");
-	err = snd_ml403_ac97cr_pcm(ml403_ac97cr, 0);
-	if (err < 0) {
+	if ((err = snd_ml403_ac97cr_pcm(ml403_ac97cr, 0)) < 0) {
 		snd_card_free(card);
 		return err;
 	}
@@ -1329,39 +1393,102 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 		(unsigned long)ml403_ac97cr->port, ml403_ac97cr->irq,
 		ml403_ac97cr->capture_irq, dev + 1);
 
-	err = snd_card_register(card);
-	if (err < 0) {
+	platform_set_drvdata(pfdev, card);
+
+	/* At this point card will be usable */
+	if ((err = snd_card_register(card)) < 0) {
 		snd_card_free(card);
 		return err;
 	}
-	platform_set_drvdata(pfdev, card);
 	PDEBUG(INIT_INFO, "probe(): (done)\n");
 	return 0;
 }
 
 static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
 {
+	struct snd_card *card;
+
         PDEBUG(INIT_INFO, "remove()\n");
-	snd_card_free(platform_get_drvdata(pfdev));
+
+        if ((card = platform_get_drvdata(pfdev)) != NULL)
+		snd_card_free(card);
 	return 0;
 }
 
-static const struct of_device_id ml403_ac97cr_dt_ids[] = {
-        { .compatible = "xlnx,ml403-ac97cr", "rp-sound@40700000" },
-        { }
-};
-MODULE_DEVICE_TABLE(of, ml403_ac97cr_dt_ids);
 
-/* work with hotplug and coldplug */
-MODULE_ALIAS("platform:" SND_ML403_AC97CR_DRIVER);
+/*********************************************************************
+ * module init stuff
+ *********************************************************************/
+static void snd_ml403_ac97cr_unregister_all(void)
+{
+	int i;
 
-static struct platform_driver snd_ml403_ac97cr_driver = {
-	.probe = snd_ml403_ac97cr_probe,
-	.remove = snd_ml403_ac97cr_remove,
-	.driver = {
-		.name = SND_ML403_AC97CR_DRIVER,
-		.of_match_table = of_match_ptr(ml403_ac97cr_dt_ids)
-	},
-};
+	for (i = 0; i < SNDRV_CARDS; ++i) {
+		if (platform_devices[i]) {
+			platform_device_unregister(platform_devices[i]);
+			platform_devices[i] = NULL;
+		}
+	}
+	platform_driver_unregister(&snd_ml403_ac97cr_driver);
+}
 
-module_platform_driver(snd_ml403_ac97cr_driver);
+#if 0
+static int __init snd_ml403_ac97cr_module_init(void)
+{
+        int i, cards, err;
+
+        err = platform_driver_register(&snd_ml403_ac97cr_driver);
+        if (err < 0)
+                return err;
+
+#if 0
+        err = alloc_fake_buffer();
+        if (err < 0) {
+                platform_driver_unregister(&snd_ml403_ac97cr_driver);
+                return err;
+        }
+#endif
+
+#if 0
+        cards = 0;
+	for (i = 0; i < SNDRV_CARDS; i++) {
+                struct platform_device *device;
+                if (!enable[i])
+                        continue;
+                device = platform_device_register_simple(SND_ML403_AC97CR_DRIVER,
+                                                         i, NULL, 0);
+                if (IS_ERR(device))
+                        continue;
+                if (!platform_get_drvdata(device)) {
+                        platform_device_unregister(device);
+                        continue;
+                }
+                platform_devices[i] = device;
+                cards++;
+        }
+        if (!cards) {
+#ifdef MODULE
+                printk(KERN_ERR "ML403_AC97CR soundcard not found or device busy\n");
+#endif
+                snd_ml403_ac97cr_unregister_all();
+                return -ENODEV;
+        }
+#endif
+
+        return 0;
+}
+
+static void __exit snd_ml403_ac97cr_module_exit(void)
+{
+	snd_ml403_ac97cr_unregister_all();
+}
+#endif
+
+#if 1
+ // automatic does platform_driver_register(), but no platform_device_register_simple()
+ module_platform_driver(snd_ml403_ac97cr_driver);
+#else
+ module_init(snd_ml403_ac97cr_module_init);
+ module_exit(snd_ml403_ac97cr_module_exit);
+#endif
+
