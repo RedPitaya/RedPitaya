@@ -222,7 +222,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
         rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_SWE_MASK);
     }
 
-    //rp_LaAcqFpgaRegDump(&la_acq_handle);
+    rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -490,6 +490,11 @@ RP_STATUS rp_RunStreaming(uint32_t * sampleInterval,
 };
 
 
+RP_STATUS rp_GetTrigPosition(uint32_t * tigger_pos){
+	*tigger_pos=acq_data.trig_sample;
+	return RP_API_OK;
+}
+
 /**
  * This function returns block-mode data, with or without down-sampling, starting at the
  * specified sample number. It is used to get the stored data from the driver after data
@@ -531,7 +536,7 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
     rp_LaAcqIsRLE(&la_acq_handle,&rle);
     if(rle){ // RLE mode
 
-    	printf("RLE mode\n");
+    	//printf("RLE mode\n");
 
         uint32_t current, last;
         bool buf_ovfl;
@@ -541,6 +546,8 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
         uint32_t first_sample=0;
         uint32_t samples=0;
         acq_data.trig_sample=0;
+
+        uint32_t fist_sample_len_adj;
 
         uint32_t len=0;
         uint32_t i=0;
@@ -562,12 +569,18 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 				if(len>=total){
 					first_sample=index;
 					samples=i;
-					//printf("len %d >= total %d\n",len,total);
+
+					// adjust first sample length so that it fits to the
+					// length of requested data
+
+					fist_sample_len_adj=len-total;
+
+					//printf("len %d >= total %d\n", len, total);
 					break;
 				}
 
-			   // printf("\n\r sta: samples=%d trig=%d, ", samples, acq_data.trig_sample);
-			   // printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
+			  //  printf("\n\r sta: samples=%d trig=%d, ", samples, acq_data.trig_sample);
+			  //  printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
 
 				if(index==0){
 					index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
@@ -579,7 +592,7 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 
 			}
 
-			//printf("copy data\n");
+		//	printf("fist_sample_len_adj %d\n", fist_sample_len_adj);
 
 			// copy data
 			index=first_sample;
@@ -587,9 +600,17 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 				if(index>=rp_LaAcqBufLenInSamples(&la_acq_handle)){
 					index=0;
 				}
+
 				acq_data.buf[i]=map[index];
+				 // adjust length of first sample
+				if(i==0){
+					acq_data.buf[i]-=(int16_t)(fist_sample_len_adj<<8);
+				}
+
 				index++;
 			}
+
+			acq_data.trig_sample=samples-acq_data.trig_sample;
 
 			printf("\n\r sta: samples=%d trig=%d", samples, acq_data.trig_sample);
 
@@ -891,7 +912,7 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
 
     rp_GenRun(&sig_gen_handle);
 
-   // rp_GenFpgaRegDump(&sig_gen_handle,len);
+    //rp_GenFpgaRegDump(&sig_gen_handle,len);
 
     return RP_API_OK;
 }
