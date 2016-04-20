@@ -1347,7 +1347,7 @@ static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
 }
 
 static const struct of_device_id ml403_ac97cr_dt_ids[] = {
-        { .compatible = "xlnx,ml403-ac97cr", },
+        { .compatible = "xlnx,ml403-ac97cr", "rp-sound@40700000" },
         { }
 };
 MODULE_DEVICE_TABLE(of, ml403_ac97cr_dt_ids);
