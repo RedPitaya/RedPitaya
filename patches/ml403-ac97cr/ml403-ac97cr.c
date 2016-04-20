@@ -1169,7 +1169,7 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	};
 	//const struct of_device_id *of_id;
 	struct resource *resource;
-        struct resource res_dt;
+        struct resource res_mem_dt;
 	struct device_node *np;
 	int irq;
 
@@ -1191,13 +1191,14 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	ml403_ac97cr->res_port = NULL;
 
 	PDEBUG(INIT_INFO, "Trying to reserve resources now ...\n");
+
+        /* get "port" */
 	//of_id = of_match_device(ml403_ac97cr_dt_ids, &pfdev->dev);
 	np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
 	PDEBUG(INIT_INFO, "got access to np = 0x%p\n", np);
 	if (np) {
-		/* Use of_id->data here */
-		of_address_to_resource(np, 0, &res_dt);
-		resource = &res_dt;
+		of_address_to_resource(np, 0, &res_mem_dt);
+		resource = &res_mem_dt;
 		of_node_put(np);
 	} else {
 		resource = platform_get_resource(pfdev, IORESOURCE_MEM, 0);
@@ -1206,7 +1207,6 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": can not get memory resource entry");
 		return -1;
 	}
-	/* get "port" */
 	ml403_ac97cr->port = ioremap_nocache(resource->start,
 					     (resource->end) -
 					     (resource->start) + 1);
@@ -1218,10 +1218,21 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		return -EBUSY;
 	}
 	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
-		   "remap controller memory region to "
-		   "0x%x done\n", (unsigned int)ml403_ac97cr->port);
+		   "remap controller memory region from 0x%x to "
+		   "0x%x done\n", (unsigned int) resource->start, (unsigned int)ml403_ac97cr->port);
+
 	/* get irq */
-	irq = platform_get_irq(pfdev, 0);
+	irq = -1;
+        np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
+        PDEBUG(INIT_INFO, "got access to np = 0x%p\n", np);
+        if (np) {
+                irq = of_irq_to_resource(np, 0, NULL);
+                of_node_put(np);
+        } else {
+		irq = platform_get_irq(pfdev, 0);
+        }
+        snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+                   "got IRQ = %d\n", irq);
 	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
 			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
@@ -1234,7 +1245,14 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
 		   "request (playback) irq %d done\n",
 		   ml403_ac97cr->irq);
-	irq = platform_get_irq(pfdev, 1);
+	irq = -1;
+        PDEBUG(INIT_INFO, "got access to np = 0x%p\n", np);
+        if (np) {
+                irq = of_irq_to_resource(np, 1, NULL);
+                of_node_put(np);
+        } else {
+                irq = platform_get_irq(pfdev, 1);
+        }
 	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
 			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
