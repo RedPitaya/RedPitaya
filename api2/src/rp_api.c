@@ -591,11 +591,11 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 				index++;
 			}
 
-			printf("\n\r sta: samples=%d trig=%d", samples, acq_data.trig_sample);
+			/*fprintf(stderr, "\n\r sta: samples=%d trig=%d", samples, acq_data.trig_sample);
 
 			for(i=0;i<samples;i++){
-				printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(acq_data.buf[i]>>8),(uint8_t)acq_data.buf[i]);
-			}
+				fprintf(stderr, "\r\n %d len: %02x val: %02x ", i,(uint8_t)(acq_data.buf[i]>>8),(uint8_t)acq_data.buf[i]);
+			}*/
 
 
 			*noOfSamples=samples;
