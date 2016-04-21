@@ -472,7 +472,7 @@ assign exp_exi.TLAST  = 1'b0;
 
 // IO buffer with output enable
 // TODO: this is hardcoded, since it somehow did not work before, simulation was fine, but synthesis might have a problem
-IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T({8'hff, 8'hf00}));
+IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T({8'h00, 8'hff}));
 //IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
 
 ////////////////////////////////////////////////////////////////////////////////
