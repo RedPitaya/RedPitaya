@@ -339,7 +339,7 @@ int rp_GenSetWaveformSampleRate(rp_handle_uio_t *handle, double * sample_rate)
 int rp_GenFpgaRegDump(rp_handle_uio_t *handle, uint32_t data_len)
 {
     int r;
-    r=FpgaRegDump("Gen reg",0,(uint32_t*)handle->regset,13);
+    r=FpgaRegDump("Gen reg",0,(uint32_t*)handle->regset,16);
 
     {
         lg_spec_regset_t *regset = (lg_spec_regset_t *) &(((asg_regset_t*)handle->regset)->gen_spec.lg_spec);

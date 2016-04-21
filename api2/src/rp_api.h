@@ -269,6 +269,8 @@ RP_STATUS rp_RunStreaming(uint32_t * sampleInterval,
                         RP_RATIO_MODE downSampleRatioMode,
                         uint32_t overviewBufferSize);
 
+RP_STATUS rp_GetTrigPosition(uint32_t * tigger_pos);
+
 RP_STATUS rp_GetValues(uint32_t startIndex,
                       uint32_t * noOfSamples,
                       uint32_t downSampleRatio,
