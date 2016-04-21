@@ -624,9 +624,12 @@ red_pitaya_radiobox i_radiobox (
   .adc_i           ( {adc_b, adc_a}              ),  // ADC data { CHB, CHA }
   // DAC data
   .rb_out_ch       ({rb_out_ch[1], rb_out_ch[0] }),  // RadioBox output signals
+
   // ALSA
   .rb_line_out_i   ( ac97_line_out[2*16-1:0]     ),  // Linux sound system ALSA LINE-OUT stereo, 2x 16 bit
   .rb_line_in_o    ( ac97_line_in [2*16-1:0]     ),  // Linux sound system ALSA LINE-IN  stereo, 2x 16 bit
+  .ac97_irq_play_i ( ac97_irq_play               ),  // monitor IRQ line for playing stream
+  .ac97_irq_rec_i  ( ac97_irq_rec                ),  // monitor IRQ line for recording stream
 
   // System bus
   .sys_addr        ( sys_addr                    ),  // address
