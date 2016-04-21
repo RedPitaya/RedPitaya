@@ -44,6 +44,7 @@ public:
 		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
 		, m_SentValue(_value)
 		, m_NeedUnregister(false)
+		, m_Dirty(false)
 	{}
 
 	~CCustomParameter()
@@ -73,16 +74,10 @@ public:
 		Type value = _value;
 		if(this->m_Value.min > value)
 		{
-			dbg_printf("Incorrect parameters value (min value)\n");
-//			dbg_printf("Incorrect parameters value: %f (min:%f), "
-//			"correcting it\n", (float)value, float(this->m_Value.min));
 		 	value = this->m_Value.min;
 
 		} else if(this->m_Value.max < value)
 		{
-			dbg_printf("Incorrect parameters value (max value)\n");
-//			dbg_printf("Incorrect parameters value: %f (max:%f), "
-//                    	" correcting it\n", (float)value, float(this->m_Value.max));
 			value = this->m_Value.max;
 		}
 
@@ -94,10 +89,18 @@ public:
 		this->m_Value.value = CheckMinMax(_value);
 	}
 
+	void SendValue(const Type& _value)
+	{
+		this->m_Value.value = CheckMinMax(_value);
+		m_Dirty = true;
+	}
+
 	bool IsValueChanged() const
 	{
-		bool tmp = (m_SentValue != this->m_Value.value);
+		bool tmp = (m_SentValue != this->m_Value.value) || m_Dirty;
 		m_SentValue = this->m_Value.value;
+		m_Dirty = false;
+
 		return tmp;
 	}
 
@@ -107,6 +110,7 @@ public:
 	}
 protected:
 	mutable Type m_SentValue;
+	mutable bool m_Dirty;
 	bool m_NeedUnregister;
 };
 
