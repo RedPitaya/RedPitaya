@@ -146,7 +146,7 @@ reg                   pwm_rstn;
 // Interrupt signals
 wire                  ac97_irq_play;
 wire                  ac97_irq_rec;
-wire         [14:0]   irqs = { 13'b0, ac97_irq_play | ac97_irq_rec };                                       // irqs[0] is mapped to IRQ-ID=61, SPI[29] -  high active
+wire         [15:1]   irqs = { 13'b0, ac97_irq_rec, ac97_irq_play };                                        // irqs[1] is mapped to IRQ-ID=62, SPI[30] -  high active. SPI[30]: play IRQ, SPI[31]: record IRQ
 
 // ADC signals
 wire                  adc_clk;
@@ -624,9 +624,12 @@ red_pitaya_radiobox i_radiobox (
   .adc_i           ( {adc_b, adc_a}              ),  // ADC data { CHB, CHA }
   // DAC data
   .rb_out_ch       ({rb_out_ch[1], rb_out_ch[0] }),  // RadioBox output signals
+
   // ALSA
   .rb_line_out_i   ( ac97_line_out[2*16-1:0]     ),  // Linux sound system ALSA LINE-OUT stereo, 2x 16 bit
   .rb_line_in_o    ( ac97_line_in [2*16-1:0]     ),  // Linux sound system ALSA LINE-IN  stereo, 2x 16 bit
+  .ac97_irq_play_i ( ac97_irq_play               ),  // monitor IRQ line for playing stream
+  .ac97_irq_rec_i  ( ac97_irq_rec                ),  // monitor IRQ line for recording stream
 
   // System bus
   .sys_addr        ( sys_addr                    ),  // address

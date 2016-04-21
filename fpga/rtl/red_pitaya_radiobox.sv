@@ -74,9 +74,11 @@ module red_pitaya_radiobox #(
    // DAC data
    output reg   [ 15: 0] rb_out_ch [1:0] ,      // RadioBox output signals
 
-  // ALSA
+   // ALSA
    input        [ 31: 0] rb_line_out_i   ,      // Linux sound system ALSA LINE-OUT stereo, 2x 16 bit
    output reg   [ 31: 0] rb_line_in_o    ,      // Linux sound system ALSA LINE-IN  stereo, 2x 16 bit
+   input                 ac97_irq_play_i ,      // monitor IRQ line for playing stream
+   input                 ac97_irq_rec_i  ,      // monitor IRQ line for recording stream
 
    // System bus - slave
    input        [ 31: 0] sys_addr        ,      // bus saddress
@@ -2962,7 +2964,7 @@ else if (led_src_con_pnt && rb_reset_n) begin
    RB_SRC_CON_PNT_NUM_TEST_OVERDRIVE: begin
       if (!led_ctr)
          //                LED7                    LED6                    LED5                    LED4                       LED3                 LED2                    LED1                    LED0
-         rb_leds_data <= { 1'b0,                   1'b0,                   rb_overdrive_rx_muxin,  rb_overdrive_rx_muxin_mon, 1'b0,                1'b0,                   rb_overdrive_tx_muxin,  rb_overdrive_tx_muxin_mon };
+         rb_leds_data <= { ac97_irq_rec_i,         ac97_irq_play_i,        rb_overdrive_rx_muxin,  rb_overdrive_rx_muxin_mon, 1'b0,                1'b0,                   rb_overdrive_tx_muxin,  rb_overdrive_tx_muxin_mon };
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
