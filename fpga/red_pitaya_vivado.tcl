@@ -116,6 +116,23 @@ read_xdc                          $path_sdc/red_pitaya.xdc
 # write checkpoint design
 ################################################################################
 
+set_property strategy Flow_AreaOptimized_high [get_runs rb_cic_125M_to_5M_18T18_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_cic_8k_to_41M664_18T18_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_fir2_8k_to_8k_25c_17i16_35o32_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_fir_8k_to_8k_25c23_17i16_35o33_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_fir3_200k_to_200k_24c_17i16_35o_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_cic_48k_to_8k_18T18_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_dds_48_16_125_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_dsp48_AaDmBaC_A18_D18_B18_C36_P37_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs ac97ctrl_16x32_sr_fifo_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_cic_5M_to_200k_18T18_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_addsub_48M48_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs ac97ctrl_16x64_nc_blkmem_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_cic_8k_to_48k_18T18_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_cic_200k_to_8k_18T18_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_cordic_T_WS_O_SR_18T18_NE_CR_EM_B_synth_1]
+set_property strategy Flow_AreaOptimized_high [get_runs rb_fir1_8k_to_8k_25c_17i16_35o32_synth_1]
+
 synth_ip                          [get_ips ac97ctrl_*]
 synth_ip                          [get_ips clk_adc_pll]
 synth_ip                          [get_ips rb_*]
