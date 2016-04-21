@@ -146,7 +146,7 @@ reg                   pwm_rstn;
 // Interrupt signals
 wire                  ac97_irq_play;
 wire                  ac97_irq_rec;
-wire         [14:0]   irqs = { 13'b0, ac97_irq_play | ac97_irq_rec };                                       // irqs[0] is mapped to IRQ-ID=61, SPI[29] -  high active
+wire         [15:1]   irqs = { 13'b0, ac97_irq_rec, ac97_irq_play };                                        // irqs[1] is mapped to IRQ-ID=62, SPI[30] -  high active. SPI[30]: play IRQ, SPI[31]: record IRQ
 
 // ADC signals
 wire                  adc_clk;
