@@ -65,7 +65,7 @@ int get_xilinx_dna(unsigned long long *dna)
     }
 
     hk_fpga_reg_mem_t *hk =(hk_fpga_reg_mem_t *)page_ptr;
-    *dna = hk->dna_hi & 0x00ffffff;
+    *dna = hk->dna_hi & 0x01ffffff;
 
     *dna = *dna << 32 | hk->dna_lo;
 
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
 
     // Get DNA
     get_xilinx_dna(&dna);
-    sprintf(string_buffer, "%llX", dna);
+    sprintf(string_buffer, "%016llX", dna);
     vDNA = string_buffer;
 
     // Get MAC_LAN
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
 
     // Build curl command
     std::stringstream cmd;
-    cmd << "curl '" << GetUrl() << "?dna=00" << vDNA << "&";
+    cmd << "curl '" << GetUrl() << "?dna=" << vDNA << "&";
     cmd << "ip_lan=" << vIP_LAN << "&";
     cmd << "mac_lan=" << vMAC_LAN << "&";
     cmd << "os_ver=" << vOS_VER << "&";
