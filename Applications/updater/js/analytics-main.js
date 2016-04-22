@@ -7,9 +7,9 @@
 	var startUsing = 0;
     $(document).ready(function($) {
         AnalyticsCore.init(function(){
+            AnalyticsCore.sendExecTime('/updater', 'updater');
             AnalyticsCore.sendScreenView('/updater', 'Redpitaya', 'Remote control');
             AnalyticsCore.sendSysInfo('/updater');
-            AnalyticsCore.sendExecTime('/updater', 'updater');
             startUsing = performance.now();
         });
     });

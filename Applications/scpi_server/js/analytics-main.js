@@ -7,9 +7,9 @@
 	var startUsing = 0;
     $(document).ready(function($) {
         AnalyticsCore.init(function(){
+            AnalyticsCore.sendExecTime('/scpi_server', 'scpi_server');
             AnalyticsCore.sendScreenView('/scpi_server', 'Redpitaya', 'Remote control');
             AnalyticsCore.sendSysInfo('/scpi_server');
-            AnalyticsCore.sendExecTime('/scpi_server', 'scpi_server');
             startUsing = performance.now();
         });
     });

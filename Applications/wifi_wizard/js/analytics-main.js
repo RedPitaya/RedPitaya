@@ -7,9 +7,9 @@
 	var startUsing = 0;
     $(document).ready(function($) {
         AnalyticsCore.init(function(){
+            AnalyticsCore.sendExecTime('/wifi_wizard', 'wifi_wizard');
             AnalyticsCore.sendScreenView('/wifi_wizard', 'Redpitaya', 'Remote control');
             AnalyticsCore.sendSysInfo('/wifi_wizard');
-            AnalyticsCore.sendExecTime('/wifi_wizard', 'wifi_wizard');
             startUsing = performance.now();
         });
     });
