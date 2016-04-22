@@ -87,8 +87,6 @@ MODULE_SUPPORTED_DEVICE("{{Xilinx,ML403 AC97 Controller Reference}}");
  static bool enable = SNDRV_DEFAULT_ENABLE1;
 #endif
 
-static struct platform_device *platform_devices[SNDRV_CARDS]; 
-
 module_param(index, int, 0444);
 MODULE_PARM_DESC(index, "Index value for ML403 AC97 Controller Reference.");
 module_param(id, charp, 0444);
@@ -445,9 +443,9 @@ snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((full = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while ((full = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			CR_PLAYFULL)) != CR_PLAYFULL) {
-		*(__be32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_be32(0);
+		*(__le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(0);
 		copied_words++;
 	}
 	rec->hw_ready = 0;
@@ -470,9 +468,9 @@ snd_ml403_ac97cr_playback_ind2_copy(struct snd_pcm_substream *substream,
 	src = (u16 *)(substream->runtime->dma_area + rec->sw_data);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((full = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while (((full = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			 CR_PLAYFULL)) != CR_PLAYFULL) && (bytes > 1)) {
-		*(__be32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_be32(CR_PLAYDATA(src[copied_words]));
+		*(__le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(CR_PLAYDATA(src[copied_words]));
 		copied_words++;
 		bytes = bytes - 2;
 	}
@@ -496,12 +494,12 @@ snd_ml403_ac97cr_capture_ind2_null(struct snd_pcm_substream *substream,
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((empty = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while ((empty = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			 CR_RECEMPTY)) != CR_RECEMPTY) {
 		volatile u32 trash;
 
-		trash = CR_RECDATA(be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, RECFIFO)));
-		/* Hmmmm, really necessary? Don't want call to be32_to_cpu()
+		trash = CR_RECDATA(le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, RECFIFO)));
+		/* Hmmmm, really necessary? Don't want call to le32_to_cpu()
 		 * to be optimised away!
 		 */
 		trash++;
@@ -526,9 +524,9 @@ snd_ml403_ac97cr_capture_ind2_copy(struct snd_pcm_substream *substream,
 	dst = (u16 *)(substream->runtime->dma_area + rec->sw_data);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((empty = (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while (((empty = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			  CR_RECEMPTY)) != CR_RECEMPTY) && (bytes > 1)) {
-		dst[copied_words] = CR_RECDATA(be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr,
+		dst[copied_words] = CR_RECDATA(le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr,
 							      RECFIFO)));
 		copied_words++;
 		bytes = bytes - 2;
@@ -575,7 +573,7 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 		ml403_ac97cr->ind_rec.hw_ready = 1;
 
 		/* clear play FIFO */
-		*(__be32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_be32(CR_PLAYRESET);
+		*(__le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_PLAYRESET);
 
 		/* enable play irq */
 		ml403_ac97cr->enable_irq = 1;
@@ -614,7 +612,7 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
 		ml403_ac97cr->capture_ind2_rec.hw_ready = 0;
 
 		/* clear record FIFO */
-		*(__be32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_be32(CR_RECRESET);
+		*(__le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET);
 
 		/* enable record irq */
 		ml403_ac97cr->enable_capture_irq = 1;
@@ -815,7 +813,7 @@ MODULE_DEVICE_TABLE(of, ml403_ac97cr_dt_ids);
 
 /* work with hotplug and coldplug */
 //MODULE_ALIAS("platform:" SND_ML403_AC97CR_DRIVER);
-MODULE_ALIAS("of:" SND_ML403_AC97CR_DRIVER);
+//MODULE_ALIAS("of:" SND_ML403_AC97CR_DRIVER);
 
 /* forward declarations */
 static int snd_ml403_ac97cr_probe(struct platform_device *pfdev);
@@ -942,25 +940,25 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	ml403_ac97cr->ac97_read++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
-	*(__be32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_be32(CR_CODEC_ADDR(reg) | CR_CODEC_READ);
+	*(__le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_READ);
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	end_time = jiffies + (HZ / CODEC_TIMEOUT_AFTER_READ);
 	do {
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS));
+		stat = le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS));
 		if ((stat & CR_RAF) == CR_RAF) {
 			value = CR_CODEC_DATAREAD(
-				be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+				le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) reg=0x%x, "
 			       "value=0x%x / %d (STATUS=0x%x)\n",
 			       reg, value, value, stat);
 #else
-		if ((be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+		if ((le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 		     CR_RAF) == CR_RAF) {
 			value = CR_CODEC_DATAREAD(
-				be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+				le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
 			       "reg=0x%x, value=0x%x / %d\n",
 			       reg, value, value);
@@ -977,7 +975,7 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	/* read the DATAREAD register anyway, see comment below */
 	spin_lock(&ml403_ac97cr->reg_lock);
 	value =
-	    CR_CODEC_DATAREAD(be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+	    CR_CODEC_DATAREAD(le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 	spin_unlock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
@@ -1051,8 +1049,8 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	ml403_ac97cr->ac97_write++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
-	*(__be32 *)CR_REG(ml403_ac97cr, CODEC_DATAWRITE) = cpu_to_be32(CR_CODEC_DATAWRITE(val));
-	*(__be32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_be32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
+	*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAWRITE) = cpu_to_le32(CR_CODEC_DATAWRITE(val));
+	*(__le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
 	spin_unlock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_WRITE_CHECK_RAF
 	/* check CR_CODEC_RAF bit to see if write access to register is done;
@@ -1063,10 +1061,10 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS))
+		stat = le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS))
 		if ((stat & CR_RAF) == CR_RAF) {
 #else
-		if ((be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) &
+		if ((le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 		     CR_RAF) == CR_RAF) {
 #endif
 			PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
@@ -1120,11 +1118,12 @@ snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
 {
 	unsigned long end_time;
 	PDEBUG(INIT_INFO, "chip_init()\n");
+
 	end_time = jiffies + HZ / CODEC_TIMEOUT_ON_INIT;
 	do {
-		if (be32_to_cpu(*(__be32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
+		if (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
 			/* clear both hardware FIFOs */
-			*(__be32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_be32(CR_RECRESET | CR_PLAYRESET);
+			*(__le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET | CR_PLAYRESET);
 			PDEBUG(INIT_INFO, "chip_init(): (done)\n");
 			return 0;
 		}
@@ -1437,76 +1436,6 @@ static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
 /*********************************************************************
  * module init stuff
  *********************************************************************/
-static void snd_ml403_ac97cr_unregister_all(void)
-{
-	int i;
 
-	for (i = 0; i < SNDRV_CARDS; ++i) {
-		if (platform_devices[i]) {
-			platform_device_unregister(platform_devices[i]);
-			platform_devices[i] = NULL;
-		}
-	}
-	platform_driver_unregister(&snd_ml403_ac97cr_driver);
-}
-
-#if 0
-static int __init snd_ml403_ac97cr_module_init(void)
-{
-        int i, cards, err;
-
-        err = platform_driver_register(&snd_ml403_ac97cr_driver);
-        if (err < 0)
-                return err;
-
-#if 0
-        err = alloc_fake_buffer();
-        if (err < 0) {
-                platform_driver_unregister(&snd_ml403_ac97cr_driver);
-                return err;
-        }
-#endif
-
-#if 0
-        cards = 0;
-	for (i = 0; i < SNDRV_CARDS; i++) {
-                struct platform_device *device;
-                if (!enable[i])
-                        continue;
-                device = platform_device_register_simple(SND_ML403_AC97CR_DRIVER,
-                                                         i, NULL, 0);
-                if (IS_ERR(device))
-                        continue;
-                if (!platform_get_drvdata(device)) {
-                        platform_device_unregister(device);
-                        continue;
-                }
-                platform_devices[i] = device;
-                cards++;
-        }
-        if (!cards) {
-#ifdef MODULE
-                printk(KERN_ERR "ML403_AC97CR soundcard not found or device busy\n");
-#endif
-                snd_ml403_ac97cr_unregister_all();
-                return -ENODEV;
-        }
-#endif
-
-        return 0;
-}
-
-static void __exit snd_ml403_ac97cr_module_exit(void)
-{
-	snd_ml403_ac97cr_unregister_all();
-}
-#endif
-
-#if 1
- // automatic does platform_driver_register(), but no platform_device_register_simple()
- module_platform_driver(snd_ml403_ac97cr_driver);
-#else
- module_init(snd_ml403_ac97cr_module_init);
- module_exit(snd_ml403_ac97cr_module_exit);
-#endif
-
+// automatic does platform_driver_register()
+module_platform_driver(snd_ml403_ac97cr_driver);
