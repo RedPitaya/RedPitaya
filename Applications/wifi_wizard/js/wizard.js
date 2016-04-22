@@ -30,7 +30,8 @@
     WIZARD.config.server_ip = ''; // Leave empty on production, it is used for testing only
     WIZARD.config.start_app_url = (WIZARD.config.server_ip.length ? 'http://' + WIZARD.config.server_ip : '') + '/bazaar?start=' + WIZARD.config.app_id + '?' + location.search.substr(1);
     WIZARD.config.stop_app_url = (WIZARD.config.server_ip.length ? 'http://' + WIZARD.config.server_ip : '') + '/bazaar?stop=' + WIZARD.config.app_id;
-    WIZARD.config.socket_url = 'ws://' + (WIZARD.config.server_ip.length ? WIZARD.config.server_ip : window.location.hostname) + ':9002'; // WebSocket server URI
+    // WIZARD.config.socket_url = 'ws://' + (WIZARD.config.server_ip.length ? WIZARD.config.server_ip : window.location.hostname) + ':9002'; // WebSocket server URI
+    WIZARD.config.socket_url = 'ws://' + (WIZARD.config.server_ip.length ? WIZARD.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
 
     WIZARD.bad_connection = [false, false, false, false]; // time in s.
 
