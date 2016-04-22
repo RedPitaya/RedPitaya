@@ -499,10 +499,11 @@ APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_SCPISERVER_DIR    = Applications/scpi_server
 APP_UPDATER_DIR    = Applications/updater
+APP_WIFIWIZARD_DIR    = Applications/wifi_wizard
 
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server updater
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server updater wifi_wizard
 
-apps_pro: scopegenpro spectrumpro lcr_meter scpi_server updater
+apps_pro: scopegenpro spectrumpro lcr_meter scpi_server updater wifi_wizard
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
@@ -520,9 +521,16 @@ scpi_server: api $(NGINX)
 	$(MAKE) -C $(APP_SCPISERVER_DIR)
 	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+<<<<<<< HEAD
 updater: api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+=======
+wifi_wizard: api $(NGINX)
+	$(MAKE) -C $(APP_WIFIWIZARD_DIR)
+	$(MAKE) -C $(APP_WIFIWIZARD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+>>>>>>> master_oldkernel_wifi_wizard
 else
 
 apps_pro:
@@ -552,8 +560,12 @@ clean:
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
+<<<<<<< HEAD
 	make -C $(DISCOVERY_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
+=======
+	make -C $(SCPI_SERVER_DIR) clean
+>>>>>>> master_oldkernel_wifi_wizard
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
