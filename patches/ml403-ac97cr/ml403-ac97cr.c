@@ -95,7 +95,7 @@ module_param(enable, bool, 0444);
 MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
 
 /* Special feature options */
-/*#define CODEC_WRITE_CHECK_RAF*/ /* don't return after a write to a codec
+#define CODEC_WRITE_CHECK_RAF     /* don't return after a write to a codec
 				   * register, while RAF bit is not set
 				   */
 /* Debug options for code which may be removed completely in a final version */
@@ -146,12 +146,12 @@ MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
 
 
 
-/* Defines for "waits"/timeouts (portions of HZ=250 on arch/ppc by default) */
-#define CODEC_TIMEOUT_ON_INIT       5	/* timeout for checking for codec
+/* Defines delay in millisecs */
+#define CODEC_TIMEOUT_ON_INIT     500	/* timeout for checking for codec
 					 * readiness (after insmod)
 					 */
 #ifndef CODEC_WRITE_CHECK_RAF
-#define CODEC_WAIT_AFTER_WRITE    100	/* general, static wait after a write
+#define CODEC_WAIT_AFTER_WRITE     25	/* general, static wait after a write
 					 * access to a codec register, may be
 					 * 0 to completely remove wait
 					 */
@@ -944,7 +944,7 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_READ);
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_02\n");
-	end_time = jiffies + (HZ / CODEC_TIMEOUT_AFTER_READ);
+	end_time = jiffies + (HZ * CODEC_TIMEOUT_AFTER_READ / 1000);
 	do {
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
@@ -1054,21 +1054,21 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	}
 	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
 		return;
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_51\n");
+	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_51\n");
 #ifdef CODEC_STAT
 	ml403_ac97cr->ac97_write++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
 	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAWRITE) = cpu_to_le32(CR_CODEC_DATAWRITE(val));
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_52\n");
+	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_52\n");
 	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
 	spin_unlock(&ml403_ac97cr->reg_lock);
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_53\n");
+	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_53\n");
 #ifdef CODEC_WRITE_CHECK_RAF
 	/* check CR_CODEC_RAF bit to see if write access to register is done;
 	 * loop until bit is set or timeout happens
 	 */
-	end_time = jiffies + HZ / CODEC_TIMEOUT_AFTER_WRITE;
+	end_time = jiffies + (HZ * CODEC_TIMEOUT_AFTER_WRITE / 1000);
 	do {
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
@@ -1076,11 +1076,11 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 		stat = le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS))
 		if ((stat & CR_RAF) == CR_RAF) {
 #else
-		PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_54\n");
+		PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_54\n");
 		if ((le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 		     CR_RAF) == CR_RAF) {
 #endif
-			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_55\n");
+			PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_55\n");
 			PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
 			       "reg=0x%x, value=%d / 0x%x\n",
 			       reg, val, val);
@@ -1092,13 +1092,13 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
 			spin_unlock(&ml403_ac97cr->reg_lock);
 			mutex_unlock(&ml403_ac97cr->cdc_mutex);
-			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_59\n");
+			PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_59\n");
 			return;
 		}
 		spin_unlock(&ml403_ac97cr->reg_lock);
 		schedule_timeout_uninterruptible(1);
 	} while (time_after(end_time, jiffies));
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_61\n");
+	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_61\n");
 #ifdef CODEC_STAT
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 		   "timeout while codec write "
@@ -1112,7 +1112,7 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 		   reg, val, val);
 #endif
 #else /* CODEC_WRITE_CHECK_RAF */
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_62\n");
+	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_62\n");
 #if CODEC_WAIT_AFTER_WRITE > 0
 	/* officially, in AC97 spec there is no possibility for a AC97
 	 * controller to determine, if write access is done or not - so: How
@@ -1121,14 +1121,14 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	 * Xilinx's example app in EDK 8.1i) and wait
 	 */
 	schedule_timeout_uninterruptible(HZ / CODEC_WAIT_AFTER_WRITE);
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_63\n");
+	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_63\n");
 #endif
 	PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
 	       "reg=0x%x, value=%d / 0x%x (no RAF check)\n",
 	       reg, val, val);
 #endif
 	mutex_unlock(&ml403_ac97cr->cdc_mutex);
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_69\n");
+	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_69\n");
 	return;
 }
 
@@ -1138,7 +1138,7 @@ snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
 	unsigned long end_time;
 	PDEBUG(INIT_INFO, "chip_init()\n");
 
-	end_time = jiffies + HZ / CODEC_TIMEOUT_ON_INIT;
+	end_time = jiffies + (HZ * CODEC_TIMEOUT_ON_INIT / 1000);
 	do {
 		if (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
 			/* clear both hardware FIFOs */
