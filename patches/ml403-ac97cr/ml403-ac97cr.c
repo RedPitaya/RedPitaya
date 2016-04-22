@@ -443,9 +443,9 @@ snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((full = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while ((full = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			CR_PLAYFULL)) != CR_PLAYFULL) {
-		*(__le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(0);
+		*(volatile __le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(0);
 		copied_words++;
 	}
 	rec->hw_ready = 0;
@@ -468,9 +468,9 @@ snd_ml403_ac97cr_playback_ind2_copy(struct snd_pcm_substream *substream,
 	src = (u16 *)(substream->runtime->dma_area + rec->sw_data);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((full = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while (((full = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			 CR_PLAYFULL)) != CR_PLAYFULL) && (bytes > 1)) {
-		*(__le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(CR_PLAYDATA(src[copied_words]));
+		*(volatile __le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(CR_PLAYDATA(src[copied_words]));
 		copied_words++;
 		bytes = bytes - 2;
 	}
@@ -494,11 +494,11 @@ snd_ml403_ac97cr_capture_ind2_null(struct snd_pcm_substream *substream,
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((empty = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while ((empty = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			 CR_RECEMPTY)) != CR_RECEMPTY) {
 		volatile u32 trash;
 
-		trash = CR_RECDATA(le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, RECFIFO)));
+		trash = CR_RECDATA(le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, RECFIFO)));
 		/* Hmmmm, really necessary? Don't want call to le32_to_cpu()
 		 * to be optimised away!
 		 */
@@ -524,9 +524,9 @@ snd_ml403_ac97cr_capture_ind2_copy(struct snd_pcm_substream *substream,
 	dst = (u16 *)(substream->runtime->dma_area + rec->sw_data);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((empty = (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
+	while (((empty = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 			  CR_RECEMPTY)) != CR_RECEMPTY) && (bytes > 1)) {
-		dst[copied_words] = CR_RECDATA(le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr,
+		dst[copied_words] = CR_RECDATA(le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr,
 							      RECFIFO)));
 		copied_words++;
 		bytes = bytes - 2;
@@ -573,7 +573,7 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 		ml403_ac97cr->ind_rec.hw_ready = 1;
 
 		/* clear play FIFO */
-		*(__le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_PLAYRESET);
+		*(volatile __le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_PLAYRESET);
 
 		/* enable play irq */
 		ml403_ac97cr->enable_irq = 1;
@@ -612,7 +612,7 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
 		ml403_ac97cr->capture_ind2_rec.hw_ready = 0;
 
 		/* clear record FIFO */
-		*(__le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET);
+		*(volatile __le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET);
 
 		/* enable record irq */
 		ml403_ac97cr->enable_capture_irq = 1;
@@ -941,7 +941,7 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	ml403_ac97cr->ac97_read++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
-	*(__le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_READ);
+	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_READ);
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_02\n");
 	end_time = jiffies + (HZ / CODEC_TIMEOUT_AFTER_READ);
@@ -949,33 +949,20 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS));
+		stat = le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS));
 		if ((stat & CR_RAF) == CR_RAF) {
 			value = CR_CODEC_DATAREAD(
-				le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+				le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) reg=0x%x, "
 			       "value=0x%x / %d (STATUS=0x%x)\n",
 			       reg, value, value, stat);
 #else
 		PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_03\n");
-		if ((le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
+		if ((le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 		     CR_RAF) == CR_RAF) {
-		        __le32 data_le32;
-			uint32_t data;
 			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_04\n");
-#if 1
-			PDEBUG(CODEC_SUCCESS, "addr of ml403_ac97cr = 0x%08x\n", ml403_ac97cr->port);
-			PDEBUG(CODEC_SUCCESS, "addr of ml403_ac97cr + CODEC_DATAREAD = 0x%08x\n", CR_REG(ml403_ac97cr, CODEC_DATAREAD));
-                        data_le32 = *(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD);
-		        PDEBUG(CODEC_SUCCESS, "content of ml403_ac97cr + CODEC_DATAREAD = 0x%08x\n", data_le32);
-			data = le32_to_cpu(data_le32);
-			PDEBUG(CODEC_SUCCESS, "le32_to_cpu( ... ) = 0x%08x\n", data);
-			value = CR_CODEC_DATAREAD(data);
-			PDEBUG(CODEC_SUCCESS, "CR_CODEC_DATAREAD( ... ) = 0x%08x\n", value);
-#else
 			value = CR_CODEC_DATAREAD(
-				le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
-#endif
+				le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_05\n");
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
 			       "reg=0x%x, value=0x%x / %d\n",
@@ -995,7 +982,7 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_11\n");
 	spin_lock(&ml403_ac97cr->reg_lock);
 	value =
-	    CR_CODEC_DATAREAD(le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+	    CR_CODEC_DATAREAD(le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_12\n");
 #ifdef CODEC_STAT
@@ -1072,9 +1059,9 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	ml403_ac97cr->ac97_write++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
-	*(__le32 *)CR_REG(ml403_ac97cr, CODEC_DATAWRITE) = cpu_to_le32(CR_CODEC_DATAWRITE(val));
+	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAWRITE) = cpu_to_le32(CR_CODEC_DATAWRITE(val));
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_52\n");
-	*(__le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
+	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_53\n");
 #ifdef CODEC_WRITE_CHECK_RAF
@@ -1086,11 +1073,11 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS))
+		stat = le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS))
 		if ((stat & CR_RAF) == CR_RAF) {
 #else
 		PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_54\n");
-		if ((le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) &
+		if ((le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
 		     CR_RAF) == CR_RAF) {
 #endif
 			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_55\n");
@@ -1153,9 +1140,9 @@ snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
 
 	end_time = jiffies + HZ / CODEC_TIMEOUT_ON_INIT;
 	do {
-		if (le32_to_cpu(*(__le32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
+		if (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
 			/* clear both hardware FIFOs */
-			*(__le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET | CR_PLAYRESET);
+			*(volatile __le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET | CR_PLAYRESET);
 			PDEBUG(INIT_INFO, "chip_init(): (done)\n");
 			return 0;
 		}
