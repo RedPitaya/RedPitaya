@@ -1194,7 +1194,6 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
         /* get "port" */
 	//of_id = of_match_device(ml403_ac97cr_dt_ids, &pfdev->dev);
 	np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
-	PDEBUG(INIT_INFO, "got access to np = 0x%p\n", np);
 	if (np) {
 		of_address_to_resource(np, 0, &res_mem_dt);
 		resource = &res_mem_dt;
@@ -1223,7 +1222,6 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	/* get irq */
 	irq = -1;
         np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
-        PDEBUG(INIT_INFO, "got access to np = 0x%p\n", np);
         if (np) {
                 irq = of_irq_to_resource(np, 0, NULL);
                 of_node_put(np);
@@ -1245,7 +1243,7 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		   "request (playback) irq %d done\n",
 		   ml403_ac97cr->irq);
 	irq = -1;
-        PDEBUG(INIT_INFO, "got access to np = 0x%p\n", np);
+        np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
         if (np) {
                 irq = of_irq_to_resource(np, 1, NULL);
                 of_node_put(np);
@@ -1359,26 +1357,11 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	int dev = pfdev->id;
 
 	PDEBUG(INIT_INFO, "probe(dev=%d)\n", dev);
-	PDEBUG(INIT_INFO, "probe: index = %i, id = %s\n", index, id);
-
-#if 0
-	// get platform board data (old mechanism)
-	p = platform_get_drvdata(pfdev);
-	platform_set_drvdata(pfdev, NULL);
-#endif
 
 	if (dev >= SNDRV_CARDS)
 		return -ENODEV;
 	if (!enable)
 		return -ENOENT;
-
-#if 0
-	if (index[dev] < 0 || id[dev] == NULL) {
-                snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
-                           "index or id not set! index = %i, id = %s\n", index[dev], id[dev]);
-		return -ENOENT;
-	}
-#endif
 
 	if ((err = snd_card_new(&pfdev->dev, index, id, THIS_MODULE,
 				0, &card)) < 0) {
