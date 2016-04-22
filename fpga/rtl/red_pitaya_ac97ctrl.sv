@@ -214,7 +214,7 @@ assign ac97_clks_o = { clk_48khz, clk_8khz };    // ascending order
 //---------------------------------------------------------------------------------
 // AC97-CODEC registers
 
-reg  [  6: 1] ac97ctrl_codec_addr           =  'b0;                                                         // word offset address
+reg  [  5: 0] ac97ctrl_codec_addr           =  'b0;                                                         // word offset address
 reg  [ 15: 0] ac97ctrl_codec_data_write     =  'b0;
 wire [ 15: 0] ac97ctrl_codec_data_read_out;
 reg  [ 15: 0] ac97ctrl_codec_data_read      =  'b0;
@@ -223,7 +223,7 @@ reg           ac97ctrl_codec_data_recall    = 1'b0;
 
 ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
   .clka                    ( clk_adc_125mhz              ),  // global 125 MHz clock
-  .addra                   ( ac97ctrl_codec_addr[6:1]    ),  // AC97-CODEC word address
+  .addra                   ( ac97ctrl_codec_addr         ),  // AC97-CODEC word address
   .dina                    ( ac97ctrl_codec_data_write   ),  // AC97-CODEC content data word
   .wea                     ( ac97ctrl_codec_data_store   ),  // store data word
 
@@ -423,7 +423,7 @@ else begin
             ac97ctrl_fifo_rec_reset               <= 1'b1;
          end
       20'h00010: begin
-         ac97ctrl_codec_addr[6:1]                 <= sys_wdata[ 6:1];
+         ac97ctrl_codec_addr[5:0]                 <= sys_wdata[ 6:1];
          ac97ctrl_access_ready                    <= 1'b0;
          ac97ctrl_access_prepare                  <= 1'b1;
          if (!sys_wdata[7])
