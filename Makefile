@@ -521,16 +521,14 @@ scpi_server: api $(NGINX)
 	$(MAKE) -C $(APP_SCPISERVER_DIR)
 	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-<<<<<<< HEAD
 updater: api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-=======
+
 wifi_wizard: api $(NGINX)
 	$(MAKE) -C $(APP_WIFIWIZARD_DIR)
 	$(MAKE) -C $(APP_WIFIWIZARD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
->>>>>>> master_oldkernel_wifi_wizard
 else
 
 apps_pro:
@@ -560,12 +558,9 @@ clean:
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
-<<<<<<< HEAD
 	make -C $(DISCOVERY_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
-=======
 	make -C $(SCPI_SERVER_DIR) clean
->>>>>>> master_oldkernel_wifi_wizard
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
