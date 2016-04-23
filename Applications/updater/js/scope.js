@@ -25,6 +25,7 @@
                 UPD.checkUpdates();
                 break;
             case 3:
+                // UPD.nextStep();
                 UPD.downloadEcosystem();
                 break;
             case 4:
@@ -182,7 +183,7 @@
                         $.ajax({
                                 url: '/info/info.json',
                                 type: 'GET',
-                                timeout: 750
+                                timeout: 1500
                             })
                             .fail(function(msg) {
                                 var res = msg.responseText;
@@ -194,7 +195,7 @@
                                         var arr = eco.split('-');
                                         var ver = arr[1] + '-' + arr[2];
                                         if (obj['version'] == ver) {
-                                            nextStep();
+                                            UPD.nextStep();
                                             clearInterval(prepare_check);
                                         } else {
                                             $('#step_' + currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
@@ -208,9 +209,9 @@
                             .always(function() {
                                 console.log("complete");
                             });
-                    }, 1000);
+                    }, 2500);
                 });
-        }, 500);
+        }, 15000);
 
     }
 
@@ -219,7 +220,7 @@
             var url_arr = window.location.href.split("/");;
             var url = url_arr[0] + '//' + url_arr[2];
             location.replace(url)
-        }, 2000);
+        }, 3500);
     }
 
 }(window.UPD = window.UPD || {}, jQuery));

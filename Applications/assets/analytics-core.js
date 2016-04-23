@@ -8,6 +8,27 @@
     var location = 'www.redpitaya.com';
     var sendData = false;
     var debugPrints = true;
+
+    (function() {
+        if ("performance" in window == false) {
+            window.performance = {};
+        }
+
+        Date.now = (Date.now || function() { // thanks IE8
+            return new Date().getTime();
+        });
+
+        if ("now" in window.performance == false) {
+            var nowOffset = Date.now();
+            if (performance.timing && performance.timing.navigationStart) {
+                nowOffset = performance.timing.navigationStart
+            }
+            window.performance.now = function now() {
+                return Date.now() - nowOffset;
+            }
+        }
+
+    })();
     /**
      * Creates a temporary global ga object and loads analy  tics.js.
      * Paramenters o, a, and m are all used internally.  They could have been declared using 'var',
@@ -77,6 +98,20 @@
         });
     }
 
+    AnalyticsCore.sendEventWithValue = function(page, event_category, event_action, event_label, event_value) {
+        if (!sendData) return;
+        if (debugPrints) console.log("[AnalyticsCore] sendEvent", page, event_category, event_action, event_label);
+        ga('send', {
+            location: location,
+            page: page,
+            hitType: 'event',
+            eventCategory: event_category,
+            eventAction: event_action,
+            eventLabel: event_label,
+            eventValue: event_value
+        });
+    }
+
     AnalyticsCore.sendTiming = function(page, timing_category, timing_var, timing_val) {
         if (!sendData) return;
         if (debugPrints) console.log("[AnalyticsCore] sendTiming", page, timing_category, timing_var, timing_val);
@@ -91,10 +126,9 @@
     }
 
     AnalyticsCore.sendExecTime = function(page, app) {
-        if($.cookie(app+'-run') !== undefined)
-        {
-            AnalyticsCore.sendTiming(page, "App execution time", app, $.cookie(app+'-run'));
-            AnalyticsCore.sendEvent(page, 'info', 'Execution time', $.cookie(app+'-run'));
+        if ($.cookie(app + '-run') !== undefined) {
+            AnalyticsCore.sendTiming(page, "App execution time", app, $.cookie(app + '-run'));
+            AnalyticsCore.sendEventWithValue(page, 'info', 'Execution time', $.cookie(app + '-run'), $.cookie(app + '-run'));
         }
 
     }

@@ -23,6 +23,6 @@
 killall wget &> /dev/null
 rm -rf /tmp/build
 mkdir -p /tmp/build
-wget -O /tmp/build/build.zip "http://downloads.redpitaya.com/downloads/$1" &> /dev/null
-cd /tmp/build && unzip build.zip &> /dev/null
+rm -rf /tmp/build/*
+wget -O /tmp/build/build.zip "http://downloads.redpitaya.com/jenkins/master_oldkernel_desktop/$1" &> /dev/null
 echo "OK"
