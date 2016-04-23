@@ -498,12 +498,10 @@ APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_SCPISERVER_DIR    = Applications/scpi_server
-APP_UPDATER_DIR    = Applications/updater
 APP_WIFIWIZARD_DIR    = Applications/wifi_wizard
-
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server updater wifi_wizard
-
-apps_pro: scopegenpro spectrumpro lcr_meter scpi_server updater wifi_wizard
+APP_UPDATER_DIR    = Applications/updater
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard updater
+apps_pro: scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard updater 
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
