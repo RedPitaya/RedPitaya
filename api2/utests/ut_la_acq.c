@@ -46,7 +46,9 @@ void* trigGen(void *arg)
 
 void* trigAcq(void *arg)
 {
-    sleep(2);
+    printf("\r\nTrigAcqThreadStarted");
+    sleep(3);
+    printf("\r\nSW trigger");
     rp_SoftwareTrigger();
     return NULL;
 }
@@ -55,7 +57,7 @@ void* trigAcq(void *arg)
 void la_acq_trig_test(void)
 {
 
-    for(int i=0; i<1; i++){
+   // for(int i=0; i<1; i++){
 
     //sleep(1);
 
@@ -71,18 +73,6 @@ void la_acq_trig_test(void)
     rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
     //printf("sample rate %lf",sample_rate);
 
-    // start gen a bit later in a new thread
-    if(pthread_create(&tid, NULL, &trigGen, NULL)!=0){
-    	CU_FAIL("can't create thread.");
-    }
-    /*
-    // software trig. acq.
-    if(pthread_create(&tid2, NULL, &trigAcq, NULL)!=0){
-		CU_FAIL("can't create thread.");
-   }
-   */
-
-
     printf("\r\nTriggers");
     s=rp_SetTriggerDigitalPortProperties(dir,2);
     if(s!=RP_API_OK){
@@ -92,10 +82,23 @@ void la_acq_trig_test(void)
     // enable RLE
     rp_EnableDigitalPortDataRLE(1);
 
+
+
+    // start gen a bit later in a new thread
+    if(pthread_create(&tid, NULL, &trigGen, NULL)!=0){
+    	CU_FAIL("can't create thread.");
+    }
+
+
+    // software trig. acq.
+    if(pthread_create(&tid2, NULL, &trigAcq, NULL)!=0){
+		CU_FAIL("can't create thread.");
+   }
+
     printf("\r\nRunBlock");
     double timeIndisposedMs;
     uint32_t pre=100;
-    uint32_t post=10;
+    uint32_t post=100;
     s=rp_RunBlock(pre,post,0,&timeIndisposedMs,&rpReadyCallback,NULL);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to acquire data.");
@@ -138,7 +141,7 @@ void la_acq_trig_test(void)
     printf("\n\r %04x",buf[trig_pos+1]);
 
     free(buf);
-    }
+    //}
 }
 
 void reg_rw_test(void){
