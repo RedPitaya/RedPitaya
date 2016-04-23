@@ -652,13 +652,6 @@ red_pitaya_radiobox i_radiobox (
 //---------------------------------------------------------------------------------
 // 7: OPB-AC97-Controller register compatible module  (like it is used as IP for the ML403 design)
 
-/*
-// unused system bus slave ports
-assign sys_rdata[7*32+:32] = 32'h0;
-assign sys_err  [7       ] =  1'b0;
-assign sys_ack  [7       ] =  1'b1;
-*/
-
 red_pitaya_ac97ctrl i_ac97ctrl (
   // ADC clock & reset
   .clk_adc_125mhz  ( adc_clk                     ),  // clock 125 MHz
@@ -673,6 +666,9 @@ red_pitaya_ac97ctrl i_ac97ctrl (
   .ac97_irq_play_o ( ac97_irq_play               ),  // IRQ line signaling any pending interrupts
   .ac97_irq_rec_o  ( ac97_irq_rec                ),  // IRQ line signaling any pending interrupts
 
+  // DEBUGGING LEDs
+  .ac97_leds_o     ( led_o                       ),  // DEBUGGING: diagnose LEDs
+
   // System bus
   .sys_addr        ( sys_addr                    ),  // address
   .sys_wdata       ( sys_wdata                   ),  // write data
@@ -683,6 +679,13 @@ red_pitaya_ac97ctrl i_ac97ctrl (
   .sys_err         ( sys_err[7]                  ),  // error indicator
   .sys_ack         ( sys_ack[7]                  )   // acknowledge signal
 );
+
+/*
+// unused system bus slave ports
+assign sys_rdata[7*32+:32] = 32'h0;
+assign sys_err  [7       ] =  1'b0;
+assign sys_ack  [7       ] =  1'b1;
+*/
 
 
 //---------------------------------------------------------------------------------
@@ -695,7 +698,7 @@ assign daisy_n_o = 2'bzz;
 //---------------------------------------------------------------------------------
 // LED output to be shared between HK, RB and PS
 
-assign led_o = rb_leds_en  ?  rb_leds_data :
-                              hk_leds_data;           // LED multiplexer for HK, RadioBox and PS switching
+//assign led_o = rb_leds_en  ?  rb_leds_data :
+//                              hk_leds_data;           // LED multiplexer for HK, RadioBox and PS switching
 
 endmodule

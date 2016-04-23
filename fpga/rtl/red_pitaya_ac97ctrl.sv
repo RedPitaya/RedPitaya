@@ -59,6 +59,9 @@ module red_pitaya_ac97ctrl #(
    output reg            ac97_irq_play_o ,      // IRQ line signaling play   FIFO interrupt - high active
    output reg            ac97_irq_rec_o  ,      // IRQ line signaling record FIFO interrupt - high active
 
+   // DEBUGGING LEDs
+   output       [  7: 0] ac97_leds_o     ,      // DEBUGGING: diagnose LEDs
+
    // System bus - slave
    input        [ 31: 0] sys_addr        ,      // bus saddress
    input        [ 31: 0] sys_wdata       ,      // bus write data
@@ -245,6 +248,8 @@ else if (ac97ctrl_codec_data_recall) begin
    end
 else if (ac97ctrl_codec_data_store)
    test_counter = test_counter + 1;
+
+assign ac97_leds_o[7:0] = test_counter[7:0];
 
 
 //---------------------------------------------------------------------------------
