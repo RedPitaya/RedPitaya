@@ -90,19 +90,19 @@ module_param(enable, bool, 0444);
 MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
 
 /* Special feature options */
-#define CODEC_WRITE_CHECK_RAF     /* don't return after a write to a codec
-				   * register, while RAF bit is not set
-				   */
+#define CODEC_WRITE_CHECK_RAF	/* don't return after a write to a codec
+				 * register, while RAF bit is not set
+				 */
 /* Debug options for code which may be removed completely in a final version */
 #ifdef CONFIG_SND_DEBUG
-/*#define CODEC_STAT*/            /* turn on some minimal "statistics"
-				   * about codec register usage
-				   */
-#define SND_PCM_INDIRECT2_STAT    /* turn on some "statistics" about the
-				   * process of copying bytes from the
-				   * intermediate buffer to the hardware
-				   * fifo and the other way round
-				   */
+/*#define CODEC_STAT*/		/* turn on some minimal "statistics"
+				 * about codec register usage
+				 */
+#define SND_PCM_INDIRECT2_STAT	/* turn on some "statistics" about the
+				 * process of copying bytes from the
+				 * intermediate buffer to the hardware
+				 * fifo and the other way round
+				 */
 #endif
 
 
@@ -112,28 +112,28 @@ MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
 #undef PDEBUG
 #ifdef CONFIG_SND_DEBUG
 /* "facilities" for PDEBUG */
-#define UNKNOWN       (1<<0)
-#define CODEC_SUCCESS (1<<1)
-#define CODEC_FAKE    (1<<2)
-#define INIT_INFO     (1<<3)
-#define INIT_FAILURE  (1<<4)
-#define WORK_INFO     (1<<5)
-#define WORK_FAILURE  (1<<6)
+#define UNKNOWN 	(1<<0)
+#define CODEC_SUCCESS	(1<<1)
+#define CODEC_FAKE	(1<<2)
+#define INIT_INFO	(1<<3)
+#define INIT_FAILURE	(1<<4)
+#define WORK_INFO	(1<<5)
+#define WORK_FAILURE	(1<<6)
 
 #define PDEBUG_FACILITIES (INIT_INFO | WORK_INFO | CODEC_SUCCESS | CODEC_FAKE | UNKNOWN | INIT_FAILURE | WORK_FAILURE)
 
 #if 0
 #define PDEBUG(fac, fmt, args...) do { \
-		if (fac & PDEBUG_FACILITIES) \
-			snd_printd(KERN_DEBUG SND_ML403_AC97CR_DRIVER ": " \
-				   fmt, ##args); \
+	if (fac & PDEBUG_FACILITIES) \
+		snd_printd(KERN_DEBUG SND_ML403_AC97CR_DRIVER ": " \
+			   fmt, ##args); \
 	} while (0)
 #else
 #define PDEBUG(fac, fmt, args...) do { \
-                if (fac & PDEBUG_FACILITIES) \
-                        printk(KERN_DEBUG SND_ML403_AC97CR_DRIVER ": " \
-                               fmt, ##args); \
-        } while (0)
+	if (fac & PDEBUG_FACILITIES) \
+		printk(KERN_DEBUG SND_ML403_AC97CR_DRIVER ": " \
+		       fmt, ##args); \
+	} while (0)
 #endif
 #else
 #define PDEBUG(fac, fmt, args...) /* nothing */
@@ -142,42 +142,42 @@ MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
 
 
 /* Defines delay in millisecs */
-#define CODEC_TIMEOUT_ON_INIT     500	/* timeout for checking for codec
+#define CODEC_TIMEOUT_ON_INIT	  250	/* timeout for checking for codec
 					 * readiness (after insmod)
 					 */
 #ifndef CODEC_WRITE_CHECK_RAF
-#define CODEC_WAIT_AFTER_WRITE     25	/* general, static wait after a write
+#define CODEC_WAIT_AFTER_WRITE	    0	/* general, static wait after a write
 					 * access to a codec register, may be
 					 * 0 to completely remove wait
 					 */
 #else
-#define CODEC_TIMEOUT_AFTER_WRITE   5	/* timeout after a write access to a
+#define CODEC_TIMEOUT_AFTER_WRITE 100	/* timeout after a write access to a
 					 * codec register, if RAF bit is used
 					 */
 #endif
-#define CODEC_TIMEOUT_AFTER_READ    5	/* timeout after a read access to a
+#define CODEC_TIMEOUT_AFTER_READ  100	/* timeout after a read access to a
 					 * codec register (checking RAF bit)
 					 */
 
 /* Infrastructure for codec register shadowing */
-#define LM4550_REG_OK        (1<<0)   /* register exists */
-#define LM4550_REG_DONEREAD  (1<<1)   /* read register once, value should be
-				       * the same currently in the register
-				       */
-#define LM4550_REG_NOSAVE    (1<<2)   /* values written to this register will
-				       * not be saved in the register
-				       */
-#define LM4550_REG_NOSHADOW  (1<<3)   /* don't do register shadowing, use plain
-				       * hardware access
-				       */
-#define LM4550_REG_READONLY  (1<<4)   /* register is read only */
-#define LM4550_REG_FAKEPROBE (1<<5)   /* fake write _and_ read actions during
-				       * probe() correctly
-				       */
-#define LM4550_REG_FAKEREAD  (1<<6)   /* fake read access, always return
-				       * default value
-				       */
-#define LM4550_REG_ALLFAKE   (LM4550_REG_FAKEREAD | LM4550_REG_FAKEPROBE)
+#define LM4550_REG_OK		(1<<0)  /* register exists */
+#define LM4550_REG_DONEREAD	(1<<1)  /* read register once, value should be
+					 * the same currently in the register
+					 */
+#define LM4550_REG_NOSAVE	(1<<2)  /* values written to this register will
+					 * not be saved in the register
+					 */
+#define LM4550_REG_NOSHADOW	(1<<3)  /* don't do register shadowing, use plain
+					 * hardware access
+					 */
+#define LM4550_REG_READONLY	(1<<4)  /* register is read only */
+#define LM4550_REG_FAKEPROBE	(1<<5)  /* fake write _and_ read actions during
+					 * probe() correctly
+					 */
+#define LM4550_REG_FAKEREAD	(1<<6)  /* fake read access, always return
+					 * default value
+					 */
+#define LM4550_REG_ALLFAKE	(LM4550_REG_FAKEREAD | LM4550_REG_FAKEPROBE)
 
 struct lm4550_reg {
 	u16 value;
@@ -187,105 +187,105 @@ struct lm4550_reg {
 };
 
 struct lm4550_reg lm4550_regfile[64] = {
-	[AC97_RESET / 2]              = {.flag = LM4550_REG_OK \
-						| LM4550_REG_NOSAVE \
-						| LM4550_REG_FAKEREAD,
-					 .def = 0x0D50},
-	[AC97_MASTER / 2]             = {.flag = LM4550_REG_OK
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x9F1F,
-					 .def = 0x8000},
-	[AC97_HEADPHONE / 2]          = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x9F1F,
-					 .def = 0x8000},
-	[AC97_MASTER_MONO / 2]        = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x801F,
-					 .def = 0x8000},
-	[AC97_PC_BEEP / 2]            = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x801E,
-					 .def = 0x0},
-	[AC97_PHONE / 2]              = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x801F,
-					 .def = 0x8008},
-	[AC97_MIC / 2]                = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x805F,
-					 .def = 0x8008},
-	[AC97_LINE / 2]               = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x9F1F,
-					 .def = 0x8808},
-	[AC97_CD / 2]                 = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x9F1F,
-					 .def = 0x8808},
-	[AC97_VIDEO / 2]              = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x9F1F,
-					 .def = 0x8808},
-	[AC97_AUX / 2]                = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x9F1F,
-					 .def = 0x8808},
-	[AC97_PCM / 2]                = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x9F1F,
-					 .def = 0x8008},
-	[AC97_REC_SEL / 2]            = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x707,
-					 .def = 0x0},
-	[AC97_REC_GAIN / 2]           = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .wmask = 0x8F0F,
-					 .def = 0x8000},
-	[AC97_GENERAL_PURPOSE / 2]    = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .def = 0x0,
-					 .wmask = 0xA380},
-	[AC97_3D_CONTROL / 2]         = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEREAD \
-						| LM4550_REG_READONLY,
-					 .def = 0x0101},
-	[AC97_POWERDOWN / 2]          = {.flag = LM4550_REG_OK \
-						| LM4550_REG_NOSHADOW \
-						| LM4550_REG_NOSAVE,
-					 .wmask = 0xFF00},
+	[AC97_RESET / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_NOSAVE \
+						 | LM4550_REG_FAKEREAD,
+					   .def = 0x0D50},
+	[AC97_MASTER / 2]		= {.flag = LM4550_REG_OK
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x9F1F,
+					   .def = 0x8000},
+	[AC97_HEADPHONE / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x9F1F,
+					   .def = 0x8000},
+	[AC97_MASTER_MONO / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x801F,
+					   .def = 0x8000},
+	[AC97_PC_BEEP / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x801E,
+					   .def = 0x0},
+	[AC97_PHONE / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x801F,
+					   .def = 0x8008},
+	[AC97_MIC / 2]			= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x805F,
+					   .def = 0x8008},
+	[AC97_LINE / 2]			= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x9F1F,
+					   .def = 0x8808},
+	[AC97_CD / 2]			= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x9F1F,
+					   .def = 0x8808},
+	[AC97_VIDEO / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x9F1F,
+					   .def = 0x8808},
+	[AC97_AUX / 2]			= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x9F1F,
+					   .def = 0x8808},
+	[AC97_PCM / 2]			= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x9F1F,
+					   .def = 0x8008},
+	[AC97_REC_SEL / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x707,
+					   .def = 0x0},
+	[AC97_REC_GAIN / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .wmask = 0x8F0F,
+					   .def = 0x8000},
+	[AC97_GENERAL_PURPOSE / 2]	= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .def = 0x0,
+					   .wmask = 0xA380},
+	[AC97_3D_CONTROL / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEREAD \
+						 | LM4550_REG_READONLY,
+					   .def = 0x0101},
+	[AC97_POWERDOWN / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_NOSHADOW \
+						 | LM4550_REG_NOSAVE,
+					   .wmask = 0xFF00},
 					/* may not write ones to
 					 * REF/ANL/DAC/ADC bits
 					 * FIXME: Is this ok?
 					 */
-	[AC97_EXTENDED_ID / 2]        = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEREAD \
-						| LM4550_REG_READONLY,
-					 .def = 0x0201}, /* primary codec */
-	[AC97_EXTENDED_STATUS / 2]    = {.flag = LM4550_REG_OK \
-						| LM4550_REG_NOSHADOW \
-						| LM4550_REG_NOSAVE,
-					 .wmask = 0x1},
-	[AC97_PCM_FRONT_DAC_RATE / 2] = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .def = 0xBB80,
-					 .wmask = 0xFFFF},
-	[AC97_PCM_LR_ADC_RATE / 2]    = {.flag = LM4550_REG_OK \
-						| LM4550_REG_FAKEPROBE,
-					 .def = 0xBB80,
-					 .wmask = 0xFFFF},
-	[AC97_VENDOR_ID1 / 2]         = {.flag = LM4550_REG_OK \
-						| LM4550_REG_READONLY \
-						| LM4550_REG_FAKEREAD,
-					 .def = 0x4E53},
-	[AC97_VENDOR_ID2 / 2]         = {.flag = LM4550_REG_OK \
-						| LM4550_REG_READONLY \
-						| LM4550_REG_FAKEREAD,
-					 .def = 0x4350}
+	[AC97_EXTENDED_ID / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEREAD \
+						 | LM4550_REG_READONLY,
+					   .def = 0x0201}, /* primary codec */
+	[AC97_EXTENDED_STATUS / 2]	= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_NOSHADOW \
+						 | LM4550_REG_NOSAVE,
+					   .wmask = 0x1},
+	[AC97_PCM_FRONT_DAC_RATE / 2]   = {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .def = 0xBB80,
+					   .wmask = 0xFFFF},
+	[AC97_PCM_LR_ADC_RATE / 2]	= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_FAKEPROBE,
+					   .def = 0xBB80,
+					   .wmask = 0xFFFF},
+	[AC97_VENDOR_ID1 / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_READONLY \
+						 | LM4550_REG_FAKEREAD,
+					   .def = 0x4E53},
+	[AC97_VENDOR_ID2 / 2]		= {.flag = LM4550_REG_OK \
+						 | LM4550_REG_READONLY \
+						 | LM4550_REG_FAKEREAD,
+					   .def = 0x4350}
 };
 
-#define LM4550_RF_OK(reg)    (lm4550_regfile[reg / 2].flag & LM4550_REG_OK)
+#define LM4550_RF_OK(reg)	(lm4550_regfile[reg / 2].flag & LM4550_REG_OK)
 
 static void lm4550_regfile_init(void)
 {
@@ -300,13 +300,13 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
 	int i;
 	for (i = 0; i < 64; i++)
 		if ((lm4550_regfile[i].flag & LM4550_REG_FAKEPROBE) &&
-		    (lm4550_regfile[i].value != lm4550_regfile[i].def)) {
+			(lm4550_regfile[i].value != lm4550_regfile[i].def)) {
 			PDEBUG(CODEC_FAKE, "lm4550_regfile_write_values_after_"
-			       "init(): reg=0x%x value=0x%x / %d is different "
-			       "from def=0x%x / %d\n",
-			       i, lm4550_regfile[i].value,
-			       lm4550_regfile[i].value, lm4550_regfile[i].def,
-			       lm4550_regfile[i].def);
+				   "init(): reg=0x%x value=0x%x / %d is different "
+				   "from def=0x%x / %d\n",
+				   i, lm4550_regfile[i].value,
+				   lm4550_regfile[i].value, lm4550_regfile[i].def,
+				   lm4550_regfile[i].def);
 			snd_ac97_write(ac97, i * 2, lm4550_regfile[i].value);
 			lm4550_regfile[i].flag |= LM4550_REG_DONEREAD;
 		}
@@ -314,38 +314,38 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
 
 
 /* direct registers */
-#define CR_REG(ml403_ac97cr, x) ((ml403_ac97cr)->port + (CR_REG_##x))
+#define CR_REG(ml403_ac97cr, x) (ml403_ac97cr->port + (CR_REG_##x))
 
-#define CR_REG_PLAYFIFO         0x00
-#define   CR_PLAYDATA(a)        ((a) & 0xFFFF)
+#define CR_REG_PLAYFIFO 	0x00
+#define   CR_PLAYDATA(a)	((a) & 0xFFFF)
 
-#define CR_REG_RECFIFO          0x04
-#define   CR_RECDATA(a)         ((a) & 0xFFFF)
+#define CR_REG_RECFIFO		0x04
+#define   CR_RECDATA(a) 	((a) & 0xFFFF)
 
-#define CR_REG_STATUS           0x08
-#define   CR_RECOVER            (1<<7)
-#define   CR_PLAYUNDER          (1<<6)
-#define   CR_CODECREADY         (1<<5)
-#define   CR_RAF                (1<<4)
-#define   CR_RECEMPTY           (1<<3)
-#define   CR_RECFULL            (1<<2)
-#define   CR_PLAYHALF           (1<<1)
-#define   CR_PLAYFULL           (1<<0)
+#define CR_REG_STATUS		0x08
+#define   CR_RECOVER		(1<<7)
+#define   CR_PLAYUNDER		(1<<6)
+#define   CR_CODECREADY 	(1<<5)
+#define   CR_RAF		(1<<4)
+#define   CR_RECEMPTY		(1<<3)
+#define   CR_RECFULL		(1<<2)
+#define   CR_PLAYHALF		(1<<1)
+#define   CR_PLAYFULL		(1<<0)
 
-#define CR_REG_RESETFIFO        0x0C
-#define   CR_RECRESET           (1<<1)
-#define   CR_PLAYRESET          (1<<0)
+#define CR_REG_RESETFIFO	0x0C
+#define   CR_RECRESET		(1<<1)
+#define   CR_PLAYRESET		(1<<0)
 
-#define CR_REG_CODEC_ADDR       0x10
+#define CR_REG_CODEC_ADDR	0x10
 /* UG082 says:
- * #define   CR_CODEC_ADDR(a)  ((a) << 1)
- * #define   CR_CODEC_READ     (1<<0)
- * #define   CR_CODEC_WRITE    (0<<0)
+ * #define   CR_CODEC_ADDR(a)   ((a) << 1)
+ * #define   CR_CODEC_READ	(1<<0)
+ * #define   CR_CODEC_WRITE	(0<<0)
  */
 /* RefDesign example says: */
-#define   CR_CODEC_ADDR(a)      (((a) & 0x7E)<<0)
-#define   CR_CODEC_READ         (1<<7)
-#define   CR_CODEC_WRITE        (0<<7)
+#define   CR_CODEC_ADDR(a)	(((a) & 0x7E)<<0)
+#define   CR_CODEC_READ 	(1<<7)
+#define   CR_CODEC_WRITE	(0<<7)
 
 #define CR_REG_CODEC_DATAREAD   0x14
 #define   CR_CODEC_DATAREAD(v)  ((v) & 0xFFFF)
@@ -353,7 +353,7 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
 #define CR_REG_CODEC_DATAWRITE  0x18
 #define   CR_CODEC_DATAWRITE(v) ((v) & 0xFFFF)
 
-#define CR_FIFO_SIZE            32
+#define CR_FIFO_SIZE		32
 
 struct snd_ml403_ac97cr {
 	/* lock for access to (controller) registers */
@@ -371,6 +371,7 @@ struct snd_ml403_ac97cr {
 
 	struct resource *res_port;
 	void __iomem *port;
+	u32 port_size;
 
 	struct snd_ac97 *ac97;
 	int ac97_fake;
@@ -390,41 +391,41 @@ struct snd_ml403_ac97cr {
 };
 
 static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
-	.info =	            (SNDRV_PCM_INFO_MMAP |
-			     SNDRV_PCM_INFO_INTERLEAVED |
-			     SNDRV_PCM_INFO_MMAP_VALID),
-	.formats =          SNDRV_PCM_FMTBIT_S16_BE,
-	.rates =	    (SNDRV_PCM_RATE_CONTINUOUS |
-			     SNDRV_PCM_RATE_48000),
-	.rate_min =	    48000,
-	.rate_max =	    48000,
-	.channels_min =     2,
-	.channels_max =     2,
-	.buffer_bytes_max = (128*1024),
-	.period_bytes_min = CR_FIFO_SIZE/2,
-	.period_bytes_max = (64*1024),
-	.periods_min =      2,
-	.periods_max =      (128*1024)/(CR_FIFO_SIZE/2),
-	.fifo_size =	    0,
+	.info =			(SNDRV_PCM_INFO_MMAP |
+				 SNDRV_PCM_INFO_INTERLEAVED |
+				 SNDRV_PCM_INFO_MMAP_VALID),
+	.formats =		 SNDRV_PCM_FMTBIT_S16_BE,
+	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
+				 SNDRV_PCM_RATE_48000),
+	.rate_min =		48000,
+	.rate_max =		48000,
+	.channels_min =	        2,
+	.channels_max =	        2,
+	.buffer_bytes_max =     (128*1024),
+	.period_bytes_min =     CR_FIFO_SIZE/2,
+	.period_bytes_max =     (64*1024),
+	.periods_min =	        2,
+	.periods_max =	        (128*1024)/(CR_FIFO_SIZE/2),
+	.fifo_size =		0,
 };
 
 static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
-	.info =	            (SNDRV_PCM_INFO_MMAP |
-			     SNDRV_PCM_INFO_INTERLEAVED |
-			     SNDRV_PCM_INFO_MMAP_VALID),
-	.formats =          SNDRV_PCM_FMTBIT_S16_BE,
-	.rates =            (SNDRV_PCM_RATE_CONTINUOUS |
-			     SNDRV_PCM_RATE_48000),
-	.rate_min =         48000,
-	.rate_max =         48000,
-	.channels_min =     2,
-	.channels_max =     2,
-	.buffer_bytes_max = (128*1024),
-	.period_bytes_min = CR_FIFO_SIZE/2,
-	.period_bytes_max = (64*1024),
-	.periods_min =      2,
-	.periods_max =      (128*1024)/(CR_FIFO_SIZE/2),
-	.fifo_size =	    0,
+	.info =			(SNDRV_PCM_INFO_MMAP |
+				 SNDRV_PCM_INFO_INTERLEAVED |
+				 SNDRV_PCM_INFO_MMAP_VALID),
+	.formats =		 SNDRV_PCM_FMTBIT_S16_BE,
+	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
+				 SNDRV_PCM_RATE_48000),
+	.rate_min =		48000,
+	.rate_max =		48000,
+	.channels_min =	        2,
+	.channels_max =	        2,
+	.buffer_bytes_max =     (128*1024),
+	.period_bytes_min =     CR_FIFO_SIZE/2,
+	.period_bytes_max =     (64*1024),
+	.periods_min =	        2,
+	.periods_max =	        (128*1024)/(CR_FIFO_SIZE/2),
+	.fifo_size =		0,
 };
 
 static size_t
@@ -438,10 +439,10 @@ snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((full = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
-			CR_PLAYFULL)) != CR_PLAYFULL) {
-		*(volatile __le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(0);
-		copied_words++;
+	while ((full = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+				 CR_PLAYFULL)) != CR_PLAYFULL) {
+	        iowrite32(0, CR_REG(ml403_ac97cr, PLAYFIFO));
+	        copied_words++;
 	}
 	rec->hw_ready = 0;
 	spin_unlock(&ml403_ac97cr->reg_lock);
@@ -463,9 +464,9 @@ snd_ml403_ac97cr_playback_ind2_copy(struct snd_pcm_substream *substream,
 	src = (u16 *)(substream->runtime->dma_area + rec->sw_data);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((full = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
-			 CR_PLAYFULL)) != CR_PLAYFULL) && (bytes > 1)) {
-		*(volatile __le32 *)CR_REG(ml403_ac97cr, PLAYFIFO) = cpu_to_le32(CR_PLAYDATA(src[copied_words]));
+	while (((full = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+				  CR_PLAYFULL)) != CR_PLAYFULL) && (bytes > 1)) {
+		iowrite32(CR_PLAYDATA(src[copied_words]), CR_REG(ml403_ac97cr, PLAYFIFO));
 		copied_words++;
 		bytes = bytes - 2;
 	}
@@ -489,11 +490,11 @@ snd_ml403_ac97cr_capture_ind2_null(struct snd_pcm_substream *substream,
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((empty = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
-			 CR_RECEMPTY)) != CR_RECEMPTY) {
+	while ((empty = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+				  CR_RECEMPTY)) != CR_RECEMPTY) {
 		volatile u32 trash;
 
-		trash = CR_RECDATA(le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, RECFIFO)));
+		trash = CR_RECDATA(ioread32(CR_REG(ml403_ac97cr, RECFIFO)));
 		/* Hmmmm, really necessary? Don't want call to le32_to_cpu()
 		 * to be optimised away!
 		 */
@@ -519,10 +520,10 @@ snd_ml403_ac97cr_capture_ind2_copy(struct snd_pcm_substream *substream,
 	dst = (u16 *)(substream->runtime->dma_area + rec->sw_data);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((empty = (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
-			  CR_RECEMPTY)) != CR_RECEMPTY) && (bytes > 1)) {
-		dst[copied_words] = CR_RECDATA(le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr,
-							      RECFIFO)));
+	while (((empty = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+				   CR_RECEMPTY)) != CR_RECEMPTY) && (bytes > 1)) {
+		dst[copied_words] = CR_RECDATA(ioread32(CR_REG(ml403_ac97cr,
+							RECFIFO)));
 		copied_words++;
 		bytes = bytes - 2;
 	}
@@ -568,7 +569,7 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 		ml403_ac97cr->ind_rec.hw_ready = 1;
 
 		/* clear play FIFO */
-		*(volatile __le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_PLAYRESET);
+		iowrite32(CR_PLAYRESET, CR_REG(ml403_ac97cr, RESETFIFO));
 
 		/* enable play irq */
 		ml403_ac97cr->enable_irq = 1;
@@ -594,7 +595,7 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 
 static int
 snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
-				      int cmd)
+					  int cmd)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
 	int err = 0;
@@ -607,7 +608,7 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
 		ml403_ac97cr->capture_ind2_rec.hw_ready = 0;
 
 		/* clear record FIFO */
-		*(volatile __le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET);
+		iowrite32(CR_RECRESET, CR_REG(ml403_ac97cr, RESETFIFO));
 
 		/* enable record irq */
 		ml403_ac97cr->enable_capture_irq = 1;
@@ -642,8 +643,8 @@ snd_ml403_ac97cr_pcm_playback_prepare(struct snd_pcm_substream *substream)
 	runtime = substream->runtime;
 
 	PDEBUG(WORK_INFO,
-	       "prepare(): period_bytes=%d, minperiod_bytes=%d\n",
-	       snd_pcm_lib_period_bytes(substream), CR_FIFO_SIZE / 2);
+		   "prepare(): period_bytes=%d, minperiod_bytes=%d\n",
+		   snd_pcm_lib_period_bytes(substream), CR_FIFO_SIZE / 2);
 
 	/* set sampling rate */
 	snd_ac97_set_rate(ml403_ac97cr->ac97, AC97_PCM_FRONT_DAC_RATE,
@@ -651,8 +652,7 @@ snd_ml403_ac97cr_pcm_playback_prepare(struct snd_pcm_substream *substream)
 	PDEBUG(WORK_INFO, "prepare(): rate=%d\n", runtime->rate);
 
 	/* init struct for intermediate buffer */
-	memset(&ml403_ac97cr->ind_rec, 0,
-	       sizeof(struct snd_pcm_indirect2));
+	memset(&ml403_ac97cr->ind_rec, 0, sizeof(struct snd_pcm_indirect2));
 	ml403_ac97cr->ind_rec.hw_buffer_size = CR_FIFO_SIZE;
 	ml403_ac97cr->ind_rec.sw_buffer_size =
 		snd_pcm_lib_buffer_bytes(substream);
@@ -660,9 +660,9 @@ snd_ml403_ac97cr_pcm_playback_prepare(struct snd_pcm_substream *substream)
 	ml403_ac97cr->ind_rec.min_multiple =
 		snd_pcm_lib_period_bytes(substream) / (CR_FIFO_SIZE / 2);
 	PDEBUG(WORK_INFO, "prepare(): hw_buffer_size=%d, "
-	       "sw_buffer_size=%d, min_multiple=%d\n",
-	       CR_FIFO_SIZE, ml403_ac97cr->ind_rec.sw_buffer_size,
-	       ml403_ac97cr->ind_rec.min_multiple);
+		   "sw_buffer_size=%d, min_multiple=%d\n",
+		   CR_FIFO_SIZE, ml403_ac97cr->ind_rec.sw_buffer_size,
+		   ml403_ac97cr->ind_rec.min_multiple);
 	return 0;
 }
 
@@ -676,8 +676,8 @@ snd_ml403_ac97cr_pcm_capture_prepare(struct snd_pcm_substream *substream)
 	runtime = substream->runtime;
 
 	PDEBUG(WORK_INFO,
-	       "prepare(capture): period_bytes=%d, minperiod_bytes=%d\n",
-	       snd_pcm_lib_period_bytes(substream), CR_FIFO_SIZE / 2);
+		   "prepare(capture): period_bytes=%d, minperiod_bytes=%d\n",
+		   snd_pcm_lib_period_bytes(substream), CR_FIFO_SIZE / 2);
 
 	/* set sampling rate */
 	snd_ac97_set_rate(ml403_ac97cr->ac97, AC97_PCM_LR_ADC_RATE,
@@ -710,8 +710,8 @@ snd_ml403_ac97cr_hw_params(struct snd_pcm_substream *substream,
 			   struct snd_pcm_hw_params *hw_params)
 {
 	PDEBUG(WORK_INFO, "hw_params() - desired buffer bytes=%d, desired "
-	       "period bytes=%d\n",
-	       params_buffer_bytes(hw_params), params_period_bytes(hw_params));
+		   "period bytes=%d\n",
+		   params_buffer_bytes(hw_params), params_period_bytes(hw_params));
 	return snd_pcm_lib_malloc_pages(substream,
 					params_buffer_bytes(hw_params));
 }
@@ -801,8 +801,8 @@ static struct snd_pcm_ops snd_ml403_ac97cr_capture_ops = {
  * of_device_id
  *********************************************************************/
 static struct of_device_id ml403_ac97cr_dt_ids[] = {
-        { .compatible = "xlnx,ml403-ac97cr", },
-        { }
+	{ .compatible = "xlnx,ml403-ac97cr", },
+	{ }
 };
 MODULE_DEVICE_TABLE(of, ml403_ac97cr_dt_ids);
 
@@ -815,13 +815,13 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev);
 static int snd_ml403_ac97cr_remove(struct platform_device *pfdev);
 
 static struct platform_driver snd_ml403_ac97cr_driver = {
-        .probe = snd_ml403_ac97cr_probe,
-        .remove = snd_ml403_ac97cr_remove,
-        .driver = {
-                .name = SND_ML403_AC97CR_DRIVER,
-		.owner = THIS_MODULE,
-                .of_match_table = of_match_ptr(ml403_ac97cr_dt_ids),
-        },
+	.probe = snd_ml403_ac97cr_probe,
+	.remove = snd_ml403_ac97cr_remove,
+	.driver = {
+	        .name = SND_ML403_AC97CR_DRIVER,
+	        .owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(ml403_ac97cr_dt_ids),
+	},
 };
 
 
@@ -867,15 +867,15 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 
 __disable_irq:
 	PDEBUG(INIT_INFO, "irq(): irq %d is meant to be disabled! So, now try "
-	       "to disable it _really_!\n", irq);
+		   "to disable it _really_!\n", irq);
 	disable_irq_nosync(irq);
 	return IRQ_HANDLED;
 }
 
+
 static unsigned short
-snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
+snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsigned short reg)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr = ac97->private_data;
 #ifdef CODEC_STAT
 	u32 stat;
 	u32 rafaccess = 0;
@@ -883,51 +883,56 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	unsigned long end_time;
 	u16 value = 0;
 
+	reg &= 0xfe;
 	PDEBUG(CODEC_FAKE, "read(reg=%02x)\n", reg);
 
+#if 0
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 			   "access to unknown/unused codec register 0x%x "
 			   "ignored!\n", reg);
 		return 0;
 	}
+	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_00\n");
+
 	/* check if we can fake/answer this access from our shadow register */
 	if ((lm4550_regfile[reg / 2].flag &
-	     (LM4550_REG_DONEREAD | LM4550_REG_ALLFAKE)) &&
-	    !(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
+		 (LM4550_REG_DONEREAD | LM4550_REG_ALLFAKE)) &&
+		!(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
 		if (lm4550_regfile[reg / 2].flag & LM4550_REG_FAKEREAD) {
 			PDEBUG(CODEC_FAKE, "codec_read(): faking read from "
-			       "reg=0x%x, val=0x%x / %d\n",
-			       reg, lm4550_regfile[reg / 2].def,
-			       lm4550_regfile[reg / 2].def);
+				   "reg=0x%x, val=0x%x / %d\n",
+				   reg, lm4550_regfile[reg / 2].def,
+				   lm4550_regfile[reg / 2].def);
 			return lm4550_regfile[reg / 2].def;
 		} else if ((lm4550_regfile[reg / 2].flag &
-			    LM4550_REG_FAKEPROBE) &&
+				LM4550_REG_FAKEPROBE) &&
 			   ml403_ac97cr->ac97_fake) {
 			PDEBUG(CODEC_FAKE, "codec_read(): faking read from "
-			       "reg=0x%x, val=0x%x / %d (probe)\n",
-			       reg, lm4550_regfile[reg / 2].value,
-			       lm4550_regfile[reg / 2].value);
+				   "reg=0x%x, val=0x%x / %d (probe)\n",
+				   reg, lm4550_regfile[reg / 2].value,
+				   lm4550_regfile[reg / 2].value);
 			return lm4550_regfile[reg / 2].value;
 		} else {
 #ifdef CODEC_STAT
 			PDEBUG(CODEC_FAKE, "codec_read(): read access "
-			       "answered by shadow register 0x%x (value=0x%x "
-			       "/ %d) (cw=%d cr=%d)\n",
-			       reg, lm4550_regfile[reg / 2].value,
-			       lm4550_regfile[reg / 2].value,
-			       ml403_ac97cr->ac97_write,
-			       ml403_ac97cr->ac97_read);
+				   "answered by shadow register 0x%x (value=0x%x "
+				   "/ %d) (cw=%d cr=%d)\n",
+				   reg, lm4550_regfile[reg / 2].value,
+				   lm4550_regfile[reg / 2].value,
+				   ml403_ac97cr->ac97_write,
+				   ml403_ac97cr->ac97_read);
 #else
 			PDEBUG(CODEC_FAKE, "codec_read(): read access "
-			       "answered by shadow register 0x%x (value=0x%x "
-			       "/ %d)\n",
-			       reg, lm4550_regfile[reg / 2].value,
-			       lm4550_regfile[reg / 2].value);
+				   "answered by shadow register 0x%x (value=0x%x "
+				   "/ %d)\n",
+				   reg, lm4550_regfile[reg / 2].value,
+				   lm4550_regfile[reg / 2].value);
 #endif
 			return lm4550_regfile[reg / 2].value;
 		}
 	}
+#endif
 	/* if we are here, we _have_ to access the codec really, no faking */
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_01\n");
 	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
@@ -936,32 +941,32 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	ml403_ac97cr->ac97_read++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
-	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_READ);
+	iowrite32(CR_CODEC_ADDR(reg) | CR_CODEC_READ, CR_REG(ml403_ac97cr, CODEC_ADDR));
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_02\n");
-	end_time = jiffies + (HZ * CODEC_TIMEOUT_AFTER_READ / 1000);
+	end_time = jiffies + ((HZ * CODEC_TIMEOUT_AFTER_READ) / 1000);
 	do {
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS));
+		stat = ioread32(CR_REG(ml403_ac97cr, STATUS));
 		if ((stat & CR_RAF) == CR_RAF) {
 			value = CR_CODEC_DATAREAD(
-				le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+				ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) reg=0x%x, "
-			       "value=0x%x / %d (STATUS=0x%x)\n",
-			       reg, value, value, stat);
+				   "value=0x%x / %d (STATUS=0x%x)\n",
+				   reg, value, value, stat);
 #else
 		PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_03\n");
-		if ((le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
-		     CR_RAF) == CR_RAF) {
+		if ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+			 CR_RAF) == CR_RAF) {
 			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_04\n");
 			value = CR_CODEC_DATAREAD(
-				le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+				ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_05\n");
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
-			       "reg=0x%x, value=0x%x / %d\n",
-			       reg, value, value);
+				   "reg=0x%x, value=0x%x / %d\n",
+				   reg, value, value);
 #endif
 			lm4550_regfile[reg / 2].value = value;
 			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
@@ -976,8 +981,7 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	/* read the DATAREAD register anyway, see comment below */
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_11\n");
 	spin_lock(&ml403_ac97cr->reg_lock);
-	value =
-	    CR_CODEC_DATAREAD(le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+	value = CR_CODEC_DATAREAD(ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_12\n");
 #ifdef CODEC_STAT
@@ -1003,12 +1007,16 @@ snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 	return value;
 }
 
-static void
-snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
-			     unsigned short val)
+static unsigned short
+snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr = ac97->private_data;
+	return snd_ml403_ac97cr_codec_read_internal((struct snd_ml403_ac97cr *)ac97->private_data, reg);
+}
 
+
+static void
+snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsigned short reg, unsigned short val)
+{
 #ifdef CODEC_STAT
 	u32 stat;
 	u32 rafaccess = 0;
@@ -1017,8 +1025,10 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	unsigned long end_time;
 #endif
 
+	reg &= 0xfe;
 	PDEBUG(CODEC_FAKE, "write(reg=%02x, val=%04x)\n", reg, val);
 
+#if 0
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 			   "access to unknown/unused codec register 0x%x "
@@ -1039,14 +1049,15 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 		val = val & lm4550_regfile[reg / 2].wmask;
 	}
 	if (((lm4550_regfile[reg / 2].flag & LM4550_REG_FAKEPROBE) &&
-	     ml403_ac97cr->ac97_fake) &&
-	    !(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
+		 ml403_ac97cr->ac97_fake) &&
+		!(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
 		PDEBUG(CODEC_FAKE, "codec_write(): faking write to reg=0x%x, "
-		       "val=0x%x / %d\n", reg, val, val);
+			   "val=0x%x / %d\n", reg, val, val);
 		lm4550_regfile[reg / 2].value = (val &
 						lm4550_regfile[reg / 2].wmask);
 		return;
 	}
+#endif
 	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
 		return;
 	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_51\n");
@@ -1054,35 +1065,35 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	ml403_ac97cr->ac97_write++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
-	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_DATAWRITE) = cpu_to_le32(CR_CODEC_DATAWRITE(val));
+	iowrite32(CR_CODEC_DATAWRITE(val), CR_REG(ml403_ac97cr, CODEC_DATAWRITE));
 	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_52\n");
-	*(volatile __le32 *)CR_REG(ml403_ac97cr, CODEC_ADDR) = cpu_to_le32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE);
+	iowrite32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE, CR_REG(ml403_ac97cr, CODEC_ADDR));
 	spin_unlock(&ml403_ac97cr->reg_lock);
 	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_53\n");
 #ifdef CODEC_WRITE_CHECK_RAF
 	/* check CR_CODEC_RAF bit to see if write access to register is done;
 	 * loop until bit is set or timeout happens
 	 */
-	end_time = jiffies + (HZ * CODEC_TIMEOUT_AFTER_WRITE / 1000);
+	end_time = jiffies + ((HZ * CODEC_TIMEOUT_AFTER_WRITE) / 1000);
 	do {
 		spin_lock(&ml403_ac97cr->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS))
+		stat = ioread32(CR_REG(ml403_ac97cr, STATUS))
 		if ((stat & CR_RAF) == CR_RAF) {
 #else
 		PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_54\n");
-		if ((le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) &
-		     CR_RAF) == CR_RAF) {
+		if ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+			 CR_RAF) == CR_RAF) {
 #endif
 			PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_55\n");
 			PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
-			       "reg=0x%x, value=%d / 0x%x\n",
-			       reg, val, val);
+				   "reg=0x%x, value=%d / 0x%x\n",
+				   reg, val, val);
 			if (!(lm4550_regfile[reg / 2].flag &
-			      LM4550_REG_NOSHADOW) &&
-			    !(lm4550_regfile[reg / 2].flag &
-			      LM4550_REG_NOSAVE))
+				  LM4550_REG_NOSHADOW) &&
+				!(lm4550_regfile[reg / 2].flag &
+				  LM4550_REG_NOSAVE))
 				lm4550_regfile[reg / 2].value = val;
 			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
 			spin_unlock(&ml403_ac97cr->reg_lock);
@@ -1106,7 +1117,7 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 		   "timeout while codec write (reg=0x%x, val=0x%x / %d)\n",
 		   reg, val, val);
 #endif
-#else /* CODEC_WRITE_CHECK_RAF */
+#else   /* CODEC_WRITE_CHECK_RAF */
 	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_62\n");
 #if CODEC_WAIT_AFTER_WRITE > 0
 	/* officially, in AC97 spec there is no possibility for a AC97
@@ -1119,13 +1130,20 @@ snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg,
 	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_63\n");
 #endif
 	PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
-	       "reg=0x%x, value=%d / 0x%x (no RAF check)\n",
-	       reg, val, val);
+		   "reg=0x%x, value=%d / 0x%x (no RAF check)\n",
+		   reg, val, val);
 #endif
 	mutex_unlock(&ml403_ac97cr->cdc_mutex);
 	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_69\n");
 	return;
 }
+
+static void
+snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg, unsigned short val)
+{
+	return snd_ml403_ac97cr_codec_write_internal((struct snd_ml403_ac97cr *)ac97->private_data, reg, val);
+}
+
 
 static int
 snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
@@ -1133,11 +1151,11 @@ snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
 	unsigned long end_time;
 	PDEBUG(INIT_INFO, "chip_init()\n");
 
-	end_time = jiffies + (HZ * CODEC_TIMEOUT_ON_INIT / 1000);
+	end_time = jiffies + ((HZ * CODEC_TIMEOUT_ON_INIT) / 1000);
 	do {
-		if (le32_to_cpu(*(volatile __le32 *)CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
+		if (ioread32(CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
 			/* clear both hardware FIFOs */
-			*(volatile __le32 *)CR_REG(ml403_ac97cr, RESETFIFO) = cpu_to_le32(CR_RECRESET | CR_PLAYRESET);
+			iowrite32(CR_RECRESET | CR_PLAYRESET, CR_REG(ml403_ac97cr, RESETFIFO));
 			PDEBUG(INIT_INFO, "chip_init(): (done)\n");
 			return 0;
 		}
@@ -1159,6 +1177,7 @@ static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
 		free_irq(ml403_ac97cr->capture_irq, ml403_ac97cr);
 	/* give back "port" */
 	iounmap(ml403_ac97cr->port);
+	release_mem_region((u32)ml403_ac97cr->port, ml403_ac97cr->port_size);
 	kfree(ml403_ac97cr);
 	PDEBUG(INIT_INFO, "free() (done)\n");
 	return 0;
@@ -1182,8 +1201,10 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	};
 	//const struct of_device_id *of_id;
 	struct resource *resource;
-        struct resource res_mem_dt;
+	struct resource res_mem_dt;
 	struct device_node *np;
+	int irq_pos0_dt;
+	int irq_pos1_dt;
 	int irq;
 
 	PDEBUG(INIT_INFO, "create()\n");
@@ -1201,31 +1222,39 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	ml403_ac97cr->capture_irq = -1;
 	ml403_ac97cr->enable_capture_irq = 0;
 	ml403_ac97cr->port = NULL;
+	ml403_ac97cr->port_size = 0;
 	ml403_ac97cr->res_port = NULL;
 
 	PDEBUG(INIT_INFO, "Trying to reserve resources now ...\n");
 
-        /* get "port" */
+	/* get device tree data */
 	//of_id = of_match_device(ml403_ac97cr_dt_ids, &pfdev->dev);
 	np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
 	if (np) {
 		of_address_to_resource(np, 0, &res_mem_dt);
-		resource = &res_mem_dt;
+		irq_pos0_dt = of_irq_to_resource(np, 0, NULL);
+		irq_pos1_dt = of_irq_to_resource(np, 1, NULL);
 		of_node_put(np);
+	}
+
+	/* get "port" */
+	if (np) {
+		resource = &res_mem_dt;
 	} else {
 		resource = platform_get_resource(pfdev, IORESOURCE_MEM, 0);
 	}
-        if (!resource) {
+		if (!resource) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": can not get memory resource entry");
 		return -1;
 	}
 	{
-	  // fake entries of the resource struct
-	  PDEBUG(INIT_INFO, "resource check: resource->start = 0x%08x, resource->end = 0x%08x\n", resource->start, resource->end);
+		// fake entries of the resource struct
+		PDEBUG(INIT_INFO, "resource check: resource->start = 0x%08x, resource->end = 0x%08x\n", resource->start, resource->end);
 	}
 
-        request_mem_region(resource->start, resource_size(resource), pfdev->name);
+	request_mem_region(resource->start, resource_size(resource), pfdev->name);
 	ml403_ac97cr->port = ioremap_nocache(resource->start, resource_size(resource));
+	ml403_ac97cr->port_size = resource_size(resource);
 	if (ml403_ac97cr->port == NULL) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
 			   "unable to remap memory region (%pR)\n",
@@ -1236,38 +1265,33 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
 		   "remap controller memory region from 0x%lx to "
 		   "0x%lx with length of %ld bytes done\n",
-                   (unsigned long) resource->start,
-                   (unsigned long) ml403_ac97cr->port,
-                   (unsigned long) resource_size(resource));
+		   (unsigned long) resource->start,
+		   (unsigned long) ml403_ac97cr->port,
+		   (unsigned long) resource_size(resource));
 
-        PDEBUG(INIT_INFO, "create(): start 1024 read access u32 words from the AC97 FPGA address section:\n");
+	PDEBUG(INIT_INFO, "create(): start 64 read access u32 words from the AC97 FPGA address section:\n");
 	unsigned int i;
-	for (i = 0; i < 256; i++) {
-	  u32 data;
-	  volatile void __iomem *addr_mmio;
+	for (i = 0; i < 64; i++) {
+		   u32 data;
+		   //volatile void __iomem *addr_mmio = NULL;
 
-	  // reading all ports
-	  addr_mmio = (volatile void __iomem *) ml403_ac97cr->port + ((i << 2) % 256);
-	  data = ioread32(addr_mmio);
-	  PDEBUG(INIT_INFO, "# READ addr_mmio = 0x%p --> data = 0x%08x\n", addr_mmio, data);
+		   // reading all ports
+		   data = snd_ml403_ac97cr_codec_read_internal(ml403_ac97cr, i << 1);
+		   PDEBUG(INIT_INFO, "# READ AC97  reg = 0x%02x --> data = 0x%04x\n", i << 1, data);
 	}
-        PDEBUG(INIT_INFO, "### end of test section - stopping module now ...\n");
-	iounmap(ml403_ac97cr->port);
-	release_mem_region(resource->start, resource_size(resource));
-        snd_ml403_ac97cr_free(ml403_ac97cr);
-        return -EBUSY;
+	PDEBUG(INIT_INFO, "### end of test section - stopping module now ...\n");
+	snd_ml403_ac97cr_free(ml403_ac97cr);
+	return -EBUSY;
 
 	/* get irq */
 	irq = -1;
-        np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
-        if (np) {
-                irq = of_irq_to_resource(np, 0, NULL);
-                of_node_put(np);
-        } else {
+	if (np) {
+		irq = irq_pos0_dt;
+	} else {
 		irq = platform_get_irq(pfdev, 0);
-        }
-        snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
-                   "got IRQ = %d\n", irq);
+	}
+	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+				   "got IRQ = %d\n", irq);
 	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
 			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
@@ -1281,13 +1305,11 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		   "request (playback) irq %d done\n",
 		   ml403_ac97cr->irq);
 	irq = -1;
-        np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
-        if (np) {
-                irq = of_irq_to_resource(np, 1, NULL);
-                of_node_put(np);
-        } else {
-                irq = platform_get_irq(pfdev, 1);
-        }
+	if (np) {
+		irq = irq_pos1_dt;
+	} else {
+		irq = platform_get_irq(pfdev, 1);
+	}
 	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
 			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
@@ -1351,7 +1373,7 @@ snd_ml403_ac97cr_mixer(struct snd_ml403_ac97cr *ml403_ac97cr)
 	ac97.private_data = ml403_ac97cr;
 	ac97.private_free = snd_ml403_ac97cr_mixer_free;
 	ac97.scaps = AC97_SCAP_AUDIO | AC97_SCAP_SKIP_MODEM |
-	    AC97_SCAP_NO_SPDIF;
+		AC97_SCAP_NO_SPDIF;
 	err = snd_ac97_mixer(bus, &ac97, &ml403_ac97cr->ac97);
 	ml403_ac97cr->ac97_fake = 0;
 	lm4550_regfile_write_values_after_init(ml403_ac97cr->ac97);
@@ -1446,9 +1468,9 @@ static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
 {
 	struct snd_card *card;
 
-        PDEBUG(INIT_INFO, "remove()\n");
+	PDEBUG(INIT_INFO, "remove()\n");
 
-        if ((card = platform_get_drvdata(pfdev)) != NULL)
+	if ((card = platform_get_drvdata(pfdev)) != NULL)
 		snd_card_free(card);
 	return 0;
 }
@@ -1460,3 +1482,4 @@ static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
 
 // automatic does platform_driver_register()
 module_platform_driver(snd_ml403_ac97cr_driver);
+
