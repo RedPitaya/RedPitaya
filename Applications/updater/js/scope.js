@@ -54,10 +54,7 @@
 
     UPD.checkConnection = function() {
         setTimeout(function() {
-            UPD.nextStep();
-            return;
             if (OnlineChecker.isOnline()) {
-
                 UPD.nextStep();
             } else
                 $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');

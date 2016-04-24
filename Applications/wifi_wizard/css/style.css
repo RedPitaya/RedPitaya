@@ -875,3 +875,14 @@ btn:active {
     padding-top: 10px;
     text-align: center;
 }
+
+a.list-group-item
+{
+    color: #cdcccc;
+}
+
+
+a.list-group-item:hover
+{
+    background-color: #444;
+}
