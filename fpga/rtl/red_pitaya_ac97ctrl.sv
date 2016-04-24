@@ -131,19 +131,15 @@ wire          ac97ctrl_rec_fifo_full;
 reg           ac97ctrl_rec_fifo_overrun         = 1'b0;
 
 reg           ac97ctrl_reset_delay              = 1'b0;
-reg  unsigned [4:0] ac97ctrl_reset_delay_ctr    =  'b0;
+reg  unsigned [1:0] ac97ctrl_reset_delay_ctr    =  'b0;
 
 always @(posedge clk_adc_125mhz)                // assign ac97ctrl_reset_delay
 if (!adc_rstn_i) begin
    ac97ctrl_reset_delay     <= 1'b1;
-   ac97ctrl_reset_delay_ctr <=  'h1F;
+   ac97ctrl_reset_delay_ctr <= 2'b11;
    end
 else if (!ac97ctrl_reset_delay_ctr)
    ac97ctrl_reset_delay     <= 1'b0;
-else if (ac97ctrl_fifo_play_reset) begin
-   ac97ctrl_reset_delay     <= 1'b1;
-   ac97ctrl_reset_delay_ctr <=  'h1F;
-   end
 else
    ac97ctrl_reset_delay_ctr = ac97ctrl_reset_delay_ctr - 1;
 
@@ -390,8 +386,6 @@ if (!adc_rstn_i) begin
    ac97ctrl_codec_data_write                      <=  'b0;
    ac97ctrl_codec_data_store                      <= 1'b0;
    ac97ctrl_codec_data_recall                     <= 1'b0;
-   ac97ctrl_access_prepare                        <= 1'b0;
-   ac97ctrl_access_ready                          <= 1'b0;
    ac97ctrl_fifo_play_reset                       <= 1'b0;
    ac97ctrl_fifo_rec_reset                        <= 1'b0;
    test_dw <= 1'b0;
@@ -410,8 +404,6 @@ else if (ac97ctrl_reset_delay) begin
    ac97ctrl_codec_data_write                      <=  'b0;
    ac97ctrl_codec_data_store                      <= 1'b0;
    ac97ctrl_codec_data_recall                     <= 1'b0;
-   ac97ctrl_access_prepare                        <= 1'b0;
-   ac97ctrl_access_ready                          <= 1'b0;
    ac97ctrl_fifo_play_reset                       <= 1'b1;                                                  // resetting the play FIFO
    ac97ctrl_fifo_rec_reset                        <= 1'b1;                                                  // resetting the rec  FIFO
    end
