@@ -77,15 +77,10 @@ MODULE_DESCRIPTION("Xilinx ML403 AC97 Controller Reference");
 MODULE_LICENSE("GPL");
 MODULE_SUPPORTED_DEVICE("{{Xilinx,ML403 AC97 Controller Reference}}");
 
-#if 0
- static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
- static char *id[SNDRV_CARDS] = SNDRV_DEFAULT_STR;
- static bool enable[SNDRV_CARDS] = SNDRV_DEFAULT_ENABLE;
-#else
- static int index = SNDRV_DEFAULT_IDX1;
- static char *id = SNDRV_DEFAULT_STR1;
- static bool enable = SNDRV_DEFAULT_ENABLE1;
-#endif
+
+static int index = SNDRV_DEFAULT_IDX1;
+static char *id = SNDRV_DEFAULT_STR1;
+static bool enable = SNDRV_DEFAULT_ENABLE1;
 
 module_param(index, int, 0444);
 MODULE_PARM_DESC(index, "Index value for ML403 AC97 Controller Reference.");
@@ -375,7 +370,7 @@ struct snd_ml403_ac97cr {
 	int enable_capture_irq;
 
 	struct resource *res_port;
-	void *port;
+	void __iomem *port;
 
 	struct snd_ac97 *ac97;
 	int ac97_fake;
@@ -1224,9 +1219,13 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": can not get memory resource entry");
 		return -1;
 	}
-	ml403_ac97cr->port = ioremap_nocache(resource->start,
-					     (resource->end) -
-					     (resource->start) + 1);
+	{
+	  // fake entries of the resource struct
+	  PDEBUG(INIT_INFO, "resource check: resource->start = 0x%08x, resource->end = 0x%08x\n", resource->start, resource->end);
+	}
+
+        request_mem_region(resource->start, resource_size(resource), pfdev->name);
+	ml403_ac97cr->port = ioremap_nocache(resource->start, resource_size(resource));
 	if (ml403_ac97cr->port == NULL) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
 			   "unable to remap memory region (%pR)\n",
@@ -1235,8 +1234,28 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		return -EBUSY;
 	}
 	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
-		   "remap controller memory region from 0x%x to "
-		   "0x%x done\n", (unsigned int) resource->start, (unsigned int)ml403_ac97cr->port);
+		   "remap controller memory region from 0x%lx to "
+		   "0x%lx with length of %ld bytes done\n",
+                   (unsigned long) resource->start,
+                   (unsigned long) ml403_ac97cr->port,
+                   (unsigned long) resource_size(resource));
+
+        PDEBUG(INIT_INFO, "create(): start 1024 read access u32 words from the AC97 FPGA address section:\n");
+	unsigned int i;
+	for (i = 0; i < 256; i++) {
+	  u32 data;
+	  volatile void __iomem *addr_mmio;
+
+	  // reading all ports
+	  addr_mmio = (volatile void __iomem *) ml403_ac97cr->port + ((i << 2) % 256);
+	  data = ioread32(addr_mmio);
+	  PDEBUG(INIT_INFO, "# READ addr_mmio = 0x%p --> data = 0x%08x\n", addr_mmio, data);
+	}
+        PDEBUG(INIT_INFO, "### end of test section - stopping module now ...\n");
+	iounmap(ml403_ac97cr->port);
+	release_mem_region(resource->start, resource_size(resource));
+        snd_ml403_ac97cr_free(ml403_ac97cr);
+        return -EBUSY;
 
 	/* get irq */
 	irq = -1;
