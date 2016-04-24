@@ -217,7 +217,6 @@ assign ac97_clks_o = { clk_48khz, clk_8khz };    // ascending order
 //---------------------------------------------------------------------------------
 // AC97-CODEC registers
 
-reg  unsigned [15:0] test_counter           =  'b0;
 reg  [  5: 0] ac97ctrl_codec_addr           =  'b0;                                                         // word offset address
 reg  [ 15: 0] ac97ctrl_codec_data_write     =  'b0;
 wire [ 15: 0] ac97ctrl_codec_data_read_out;
@@ -237,18 +236,10 @@ ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
 );
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
-if (!adc_rstn_i) begin
+if (!adc_rstn_i)
    ac97ctrl_codec_data_read <= 'b0;
-   test_counter <= 'b0;
-   end
-else if (ac97ctrl_codec_data_recall) begin
-   //ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
-   ac97ctrl_codec_data_read <= test_counter;
-   end
-else if (ac97ctrl_codec_data_store)
-   test_counter = test_counter + 1;
-
-assign ac97_leds_o[7:0] = test_counter[7:0];
+else if (ac97ctrl_codec_data_recall)
+   ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
 
 
 //---------------------------------------------------------------------------------
@@ -382,6 +373,11 @@ always @(posedge clk_adc_125mhz)                // assign ac97_irq_rec_o
 //---------------------------------------------------------------------------------
 //  System bus connection
 
+reg test_dw = 1'b0;
+reg test_a  = 1'b0;
+reg test_aw = 1'b0;
+reg test_ar = 1'b0;
+
 // write access to the registers
 always @(posedge clk_adc_125mhz)
 if (!adc_rstn_i) begin
@@ -398,6 +394,10 @@ if (!adc_rstn_i) begin
    ac97ctrl_access_ready                          <= 1'b0;
    ac97ctrl_fifo_play_reset                       <= 1'b0;
    ac97ctrl_fifo_rec_reset                        <= 1'b0;
+   test_dw <= 1'b0;
+   test_a  <= 1'b0;
+   test_aw <= 1'b0;
+   test_ar <= 1'b0;
    end
 
 else if (ac97ctrl_reset_delay) begin
@@ -455,13 +455,19 @@ else begin
          ac97ctrl_codec_addr[5:0]                 <= sys_wdata[ 6:1];
          ac97ctrl_access_ready                    <= 1'b0;
          ac97ctrl_access_prepare                  <= 1'b1;
-         if (sys_wdata[7])
+         if (sys_wdata[7]) begin
             ac97ctrl_codec_data_recall            <= 1'b1;                                                  // pulse to read  AC97 register data from one of the AC97 registers
-         else
+            test_ar <= !test_ar;
+            end
+         else begin
             ac97ctrl_codec_data_store             <= 1'b1;                                                  // pulse to write AC97 register data to   one of the AC97 registers
+            test_aw <= !test_aw;
+            end
+         test_a <= !test_a;
          end
       20'h00018: begin
          ac97ctrl_codec_data_write                <= sys_wdata[15:0];
+         test_dw <= !test_dw;
          end
 
       endcase
@@ -470,6 +476,7 @@ else begin
 
 
 wire sys_en = sys_wen | sys_ren;
+reg test_dr = 1'b0;
 
 // read access to the registers
 always @(posedge clk_adc_125mhz)
@@ -479,6 +486,7 @@ if (!adc_rstn_i) begin
    sys_rdata                                      <=  'b0;
    ac97ctrl_rec_fifo_pop                          <= 1'b0;
    ac97ctrl_rec_is_right                          <= 1'b0;
+   test_dr <= 1'b0;
    end
 
 else begin
@@ -508,8 +516,8 @@ else begin
          end
       20'h00014: begin
          sys_ack                                  <= sys_en;
-       //sys_rdata                                <= { {C_OPB_DWIDTH -  16{1'b0}}, ac97ctrl_codec_data_read[15:0] };
-         sys_rdata                                <= { {C_OPB_DWIDTH -  16{1'b0}}, test_counter[15:0] };
+         sys_rdata                                <= { {C_OPB_DWIDTH -  16{1'b0}}, ac97ctrl_codec_data_read[15:0] };
+         test_dr <= !test_dr;
          end
 
       default:   begin
@@ -530,5 +538,7 @@ else begin
       sys_ack <= 1'b0;
       end
    end
+
+assign ac97_leds_o[7:0] = { ac97ctrl_codec_ready, ac97ctrl_access_ready, 1'b0, test_dr, test_dw, test_ar, test_aw, test_a };
 
 endmodule
