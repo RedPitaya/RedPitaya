@@ -244,10 +244,12 @@ if (!adc_rstn_i) begin
 else if (ac97ctrl_codec_data_recall) begin
    //ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
    ac97ctrl_codec_data_read <= test_counter;
-   test_counter = test_counter + 1;
+   //test_counter = test_counter + 1;
    end
-else if (ac97ctrl_codec_data_store)
+//else if (ac97ctrl_codec_data_store)
+else if (sys_ren)
    test_counter = test_counter + 1;
+
 
 assign ac97_leds_o[7:0] = test_counter[7:0];
 
