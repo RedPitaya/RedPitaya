@@ -59,6 +59,9 @@ module red_pitaya_ac97ctrl #(
    output reg            ac97_irq_play_o ,      // IRQ line signaling play   FIFO interrupt - high active
    output reg            ac97_irq_rec_o  ,      // IRQ line signaling record FIFO interrupt - high active
 
+   // DEBUGGING LEDs
+   output       [  7: 0] ac97_leds_o     ,      // DEBUGGING: diagnose LEDs
+
    // System bus - slave
    input        [ 31: 0] sys_addr        ,      // bus saddress
    input        [ 31: 0] sys_wdata       ,      // bus write data
@@ -214,7 +217,8 @@ assign ac97_clks_o = { clk_48khz, clk_8khz };    // ascending order
 //---------------------------------------------------------------------------------
 // AC97-CODEC registers
 
-reg  [  6: 1] ac97ctrl_codec_addr           =  'b0;                                                         // word offset address
+reg  unsigned [15:0] test_counter           =  'b0;
+reg  [  5: 0] ac97ctrl_codec_addr           =  'b0;                                                         // word offset address
 reg  [ 15: 0] ac97ctrl_codec_data_write     =  'b0;
 wire [ 15: 0] ac97ctrl_codec_data_read_out;
 reg  [ 15: 0] ac97ctrl_codec_data_read      =  'b0;
@@ -223,20 +227,31 @@ reg           ac97ctrl_codec_data_recall    = 1'b0;
 
 ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
   .clka                    ( clk_adc_125mhz              ),  // global 125 MHz clock
-  .addra                   ( ac97ctrl_codec_addr[6:1]    ),  // AC97-CODEC word address
+  .addra                   ( ac97ctrl_codec_addr[5:0]    ),  // AC97-CODEC word address
   .dina                    ( ac97ctrl_codec_data_write   ),  // AC97-CODEC content data word
   .wea                     ( ac97ctrl_codec_data_store   ),  // store data word
 
   .clkb                    ( clk_adc_125mhz              ),  // global 125 MHz clock
-  .addrb                   ( ac97ctrl_codec_addr         ),  // AC97-CODEC word address
+  .addrb                   ( ac97ctrl_codec_addr[5:0]    ),  // AC97-CODEC word address
   .doutb                   ( ac97ctrl_codec_data_read_out)   // AC97-CODEC content data word
 );
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
-if (!adc_rstn_i)
+if (!adc_rstn_i) begin
    ac97ctrl_codec_data_read <= 'b0;
-else if (ac97ctrl_codec_data_recall)
-   ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
+   test_counter <= 'b0;
+   end
+else if (ac97ctrl_codec_data_recall) begin
+   //ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
+   ac97ctrl_codec_data_read <= test_counter;
+   //test_counter = test_counter + 1;
+   end
+//else if (ac97ctrl_codec_data_store)
+else if (sys_ren)
+   test_counter = test_counter + 1;
+
+
+assign ac97_leds_o[7:0] = test_counter[7:0];
 
 
 //---------------------------------------------------------------------------------
@@ -415,7 +430,7 @@ else begin
             ac97ctrl_fifo_rec_reset               <= 1'b1;
          end
       20'h00010: begin
-         ac97ctrl_codec_addr[6:1]                 <= sys_wdata[ 6:1];
+         ac97ctrl_codec_addr[5:0]                 <= sys_wdata[ 6:1];
          ac97ctrl_access_ready                    <= 1'b0;
          ac97ctrl_access_prepare                  <= 1'b1;
          if (!sys_wdata[7])
@@ -449,28 +464,32 @@ else begin
    ac97ctrl_rec_fifo_pop <= 1'b0;                                                                           // default value, to be overwritten
 
    if (sys_ren) begin
+      sys_ack                                     <= sys_en;
+      sys_rdata                                   <= { 16'b0, test_counter[15:0] };
+
+/*
       case (sys_addr[19:0])
 
-      /* FIFO */
+      / FIFO /
       20'h00004: begin
          sys_ack                                  <= sys_en;
          if (!ac97ctrl_rec_is_right)
-            sys_rdata                             <= { {C_OPB_DWIDTH - 16 {1'b0}}, ac97ctrl_rec_fifo_read[15: 0] };
+            sys_rdata                             <= { {C_OPB_DWIDTH - 16{1'b0}}, ac97ctrl_rec_fifo_read[15: 0] };
          else begin
-            sys_rdata                             <= { {C_OPB_DWIDTH - 16 {1'b0}}, ac97ctrl_rec_fifo_read[31:16] };
+            sys_rdata                             <= { {C_OPB_DWIDTH - 16{1'b0}}, ac97ctrl_rec_fifo_read[31:16] };
             ac97ctrl_rec_fifo_pop <= 1'b1;
             end
          ac97ctrl_rec_is_right                    <= !ac97ctrl_rec_is_right;
          end
 
-      /* control */
+      / control /
       20'h00008: begin
          sys_ack                                  <= sys_en;
-         sys_rdata                                <= { {C_OPB_DWIDTH -  8 {1'b0}}, ac97ctrl_rec_fifo_overrun, ac97ctrl_play_fifo_underrun, ac97ctrl_codec_ready, ac97ctrl_access_ready, ac97ctrl_rec_fifo_empty, ac97ctrl_rec_fifo_full, ac97ctrl_play_fifo_halffull, ac97ctrl_play_fifo_full};
+         sys_rdata                                <= { {C_OPB_DWIDTH -   8{1'b0}}, ac97ctrl_rec_fifo_overrun, ac97ctrl_play_fifo_underrun, ac97ctrl_codec_ready, ac97ctrl_access_ready, ac97ctrl_rec_fifo_empty, ac97ctrl_rec_fifo_full, ac97ctrl_play_fifo_halffull, ac97ctrl_play_fifo_full};
          end
       20'h00014: begin
          sys_ack                                  <= sys_en;
-         sys_rdata                                <= { {C_OPB_DWIDTH -  16 {1'b0}}, ac97ctrl_codec_data_read };
+         sys_rdata                                <= { {C_OPB_DWIDTH -  16{1'b0}}, ac97ctrl_codec_data_read[15:0] };
          end
 
       default:   begin
@@ -479,9 +498,9 @@ else begin
          end
 
       endcase
+*/
       end
-
-   else if (sys_wen) begin                                                                                  // keep sys_ack assignment in this process
+   else if (sys_wen) begin                                                                                  // keep sys_ack assignment in this process to remove the need for a comb. logic to generate this resulting signal from write || read
       sys_ack <= sys_en;
       end
 
