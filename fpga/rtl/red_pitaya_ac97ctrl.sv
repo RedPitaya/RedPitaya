@@ -244,12 +244,9 @@ if (!adc_rstn_i) begin
 else if (ac97ctrl_codec_data_recall) begin
    //ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
    ac97ctrl_codec_data_read <= test_counter;
-   //test_counter = test_counter + 1;
    end
-//else if (ac97ctrl_codec_data_store)
-else if (sys_ren)
+else if (ac97ctrl_codec_data_store)
    test_counter = test_counter + 1;
-
 
 assign ac97_leds_o[7:0] = test_counter[7:0];
 
@@ -394,21 +391,42 @@ if (!adc_rstn_i) begin
    ac97ctrl_play_is_right_d                       <= 1'b0;
    ac97ctrl_access_prepare                        <= 1'b0;
    ac97ctrl_access_ready                          <= 1'b0;
+   ac97ctrl_codec_data_write                      <=  'b0;
+   ac97ctrl_codec_data_store                      <= 1'b0;
+   ac97ctrl_codec_data_recall                     <= 1'b0;
+   ac97ctrl_access_prepare                        <= 1'b0;
+   ac97ctrl_access_ready                          <= 1'b0;
+   ac97ctrl_fifo_play_reset                       <= 1'b0;
+   ac97ctrl_fifo_rec_reset                        <= 1'b0;
    end
 
 else if (ac97ctrl_reset_delay) begin
-   ac97ctrl_codec_data_write <= 'b0;
-   ac97ctrl_codec_data_store <= ac97ctrl_reset_delay_ctr[0];                                                // toggling store signal to fill-up the play FIFO
-   ac97ctrl_access_prepare   <= 1'b0;
-   ac97ctrl_access_ready     <= 1'b0;
+   ac97ctrl_play_left                             <=  'b0;
+   ac97ctrl_play_right                            <=  'b0;
+   ac97ctrl_play_is_right                         <= 1'b0;
+   ac97ctrl_play_is_right_d                       <= 1'b0;
+   ac97ctrl_access_prepare                        <= 1'b0;
+   ac97ctrl_access_ready                          <= 1'b0;
+   ac97ctrl_codec_data_write                      <=  'b0;
+   ac97ctrl_codec_data_store                      <= 1'b0;
+   ac97ctrl_codec_data_recall                     <= 1'b0;
+   ac97ctrl_access_prepare                        <= 1'b0;
+   ac97ctrl_access_ready                          <= 1'b0;
+   ac97ctrl_fifo_play_reset                       <= 1'b1;                                                  // resetting the play FIFO
+   ac97ctrl_fifo_rec_reset                        <= 1'b1;                                                  // resetting the rec  FIFO
    end
+
 else begin
-   ac97ctrl_play_is_right_d   <= ac97ctrl_play_is_right;
-   ac97ctrl_codec_data_store  <= 1'b0;
-   ac97ctrl_codec_data_recall <= 1'b0;
-   ac97ctrl_fifo_play_reset   <= 1'b0;
-   ac97ctrl_fifo_rec_reset    <= 1'b0;
-   ac97ctrl_access_ready      <= ac97ctrl_access_prepare;
+   ac97ctrl_play_is_right_d                       <= ac97ctrl_play_is_right;
+   ac97ctrl_codec_data_store                      <= 1'b0;                                                  // this and the following lines are pre-sets and are returning to zero after each clock resulting a pulse
+   ac97ctrl_codec_data_recall                     <= 1'b0;
+   ac97ctrl_fifo_play_reset                       <= 1'b0;
+   ac97ctrl_fifo_rec_reset                        <= 1'b0;
+
+   if (ac97ctrl_access_prepare) begin
+      ac97ctrl_access_ready   <= 1'b1;
+      ac97ctrl_access_prepare <= 1'b0;
+      end
 
    if (sys_wen) begin
       casez (sys_addr[19:0])
@@ -424,19 +442,23 @@ else begin
 
       /* control */
       20'h0000C: begin
-         if (sys_wdata[0])
+         if (sys_wdata[0]) begin
             ac97ctrl_fifo_play_reset              <= 1'b1;
-         if (sys_wdata[1])
+            ac97ctrl_play_is_right <= 1'b0;
+            end
+         if (sys_wdata[1]) begin
             ac97ctrl_fifo_rec_reset               <= 1'b1;
+            // ac97ctrl_rec_is_right  is set in the read access section
+            end
          end
       20'h00010: begin
          ac97ctrl_codec_addr[5:0]                 <= sys_wdata[ 6:1];
          ac97ctrl_access_ready                    <= 1'b0;
          ac97ctrl_access_prepare                  <= 1'b1;
-         if (!sys_wdata[7])
-            ac97ctrl_codec_data_store             <= 1'b1;
+         if (sys_wdata[7])
+            ac97ctrl_codec_data_recall            <= 1'b1;                                                  // pulse to read  AC97 register data from one of the AC97 registers
          else
-            ac97ctrl_codec_data_recall            <= 1'b1;
+            ac97ctrl_codec_data_store             <= 1'b1;                                                  // pulse to write AC97 register data to   one of the AC97 registers
          end
       20'h00018: begin
          ac97ctrl_codec_data_write                <= sys_wdata[15:0];
@@ -465,12 +487,9 @@ else begin
 
    if (sys_ren) begin
       sys_ack                                     <= sys_en;
-      sys_rdata                                   <= { 16'b0, test_counter[15:0] };
-
-/*
       case (sys_addr[19:0])
 
-      / FIFO /
+      /* FIFO */
       20'h00004: begin
          sys_ack                                  <= sys_en;
          if (!ac97ctrl_rec_is_right)
@@ -479,17 +498,18 @@ else begin
             sys_rdata                             <= { {C_OPB_DWIDTH - 16{1'b0}}, ac97ctrl_rec_fifo_read[31:16] };
             ac97ctrl_rec_fifo_pop <= 1'b1;
             end
-         ac97ctrl_rec_is_right                    <= !ac97ctrl_rec_is_right;
+         ac97ctrl_rec_is_right <= !ac97ctrl_rec_is_right;
          end
 
-      / control /
+      /* control */
       20'h00008: begin
          sys_ack                                  <= sys_en;
          sys_rdata                                <= { {C_OPB_DWIDTH -   8{1'b0}}, ac97ctrl_rec_fifo_overrun, ac97ctrl_play_fifo_underrun, ac97ctrl_codec_ready, ac97ctrl_access_ready, ac97ctrl_rec_fifo_empty, ac97ctrl_rec_fifo_full, ac97ctrl_play_fifo_halffull, ac97ctrl_play_fifo_full};
          end
       20'h00014: begin
          sys_ack                                  <= sys_en;
-         sys_rdata                                <= { {C_OPB_DWIDTH -  16{1'b0}}, ac97ctrl_codec_data_read[15:0] };
+       //sys_rdata                                <= { {C_OPB_DWIDTH -  16{1'b0}}, ac97ctrl_codec_data_read[15:0] };
+         sys_rdata                                <= { {C_OPB_DWIDTH -  16{1'b0}}, test_counter[15:0] };
          end
 
       default:   begin
@@ -498,10 +518,12 @@ else begin
          end
 
       endcase
-*/
       end
+
    else if (sys_wen) begin                                                                                  // keep sys_ack assignment in this process to remove the need for a comb. logic to generate this resulting signal from write || read
       sys_ack <= sys_en;
+      if ((sys_addr[19:0] == 20'h0000C) && sys_wdata[1])                                                    // reset record FIFO
+         ac97ctrl_rec_is_right <= 1'b0;
       end
 
    else begin
