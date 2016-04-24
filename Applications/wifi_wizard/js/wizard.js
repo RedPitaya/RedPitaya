@@ -9,6 +9,8 @@
 
 (function(WIZARD, $, undefined) {
     WIZARD.currentStep = 0;
+    WIZARD.isInReboot = false;
+    WIZARD.connectedESSID = "";
 
     WIZARD.startStep = function(step) {
         WIZARD.currentStep = step;
@@ -55,9 +57,14 @@
         if (iwlistResult == undefined || iwlistResult == "")
             return;
 
+        WIZARD.isInReboot = false;
+        $('body').addClass('loaded');
+
         var essids = iwlistResult.match(/ESSID:(".*?")/g);
         var encryptions = iwlistResult.match(/Encryption key:((?:[a-z][a-z]+))/g);
         var sigLevel = iwlistResult.match(/Signal level\=(\d+)/g);
+        if (essids == null)
+            return;
 
         var htmlList = "";
 
@@ -80,11 +87,19 @@
 
             htmlList += icon + "<div key='" + essid + "' class='btn-wifi-item btn'>" + essid + "</div>";
         }
+
+
+        if (WIZARD.connectedESSID != "")
+            $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
         if ($('#wifi_list').html() != htmlList)
             $('#wifi_list').html(htmlList);
 
         $('.btn-wifi-item').click(function() {
             $('#essid_enter').val($(this).attr('key'))
+            if ($('#essid_enter').val() == WIZARD.connectedESSID)
+                $('#connect_btn').text('Disconnect');
+            else
+                $('#connect_btn').text('Connect');
         });
     }
 
@@ -97,8 +112,34 @@
                 .fail(function(msg) {
                     WIZARD.getScanResult(msg.responseText);
                 });
+            $.ajax({
+                    url: '/get_connected_wlan',
+                    type: 'GET',
+                })
+                .fail(function(msg) {
+                    if (msg.responseText == undefined || msg.responseText == "")
+                        return;
 
+                    WIZARD.isInReboot = false;
+                    $('body').addClass('loaded');
+
+                    var essids = msg.responseText.match(/ESSID:(".*?")/g);;
+                    if (essids == null)
+                        return;
+                    var essid = essids[0].substr(7, essids[0].length - 8);
+                    if (essid == "Red Pitaya AP")
+                        return;
+                    else {
+                        WIZARD.connectedESSID = essid;
+                        $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
+                    }
+                });
         }, 10000);
+    }
+
+    WIZARD.startWaiting = function() {
+        WIZARD.isInReboot = true;
+        $('body').removeClass('loaded');
     }
 
     WIZARD.steps = [WIZARD.checkDongle, WIZARD.checkWirelessTools, WIZARD.startScan];
@@ -118,11 +159,39 @@ $(document).ready(function() {
             });
     });
 
+    $('#essid_enter').keypress(function(event) {
+        if ($('#essid_enter').val() == WIZARD.connectedESSID)
+            $('#connect_btn').text('Disconnect');
+        else
+            $('#connect_btn').text('Connect');
+    });
+
     $('#connect_btn').click(function(event) {
-        if(WIZARD.currentStep != 2)
+        if (WIZARD.currentStep != 2)
             return;
         var essid = $('#essid_enter').val();
-        if(essid == "")
+        var password = $('#passw_enter').val();
+        if (essid == "") {
             $('#essid_enter').effect("shake");
+            return;
+        }
+        if ($(this).text() == "Connect") {
+            WIZARD.startWaiting();
+            $.ajax({
+                    url: '/connect_wifi?essid=' + essid + '&password=' + password,
+                    type: 'GET',
+                })
+        } else {
+            $.ajax({
+                    url: '/disconnect_wifi',
+                    type: 'GET',
+                })
+                .always(function() {
+                    WIZARD.connectedESSID = '';
+                });
+            $('#connect_btn').text('Connect');
+        }
+
+
     });
 });
