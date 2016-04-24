@@ -348,7 +348,7 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
  * #define   CR_CODEC_WRITE    (0<<0)
  */
 /* RefDesign example says: */
-#define   CR_CODEC_ADDR(a)      (((a) & 0x7E) << 0)
+#define   CR_CODEC_ADDR(a)      (((a) & 0x7E)<<0)
 #define   CR_CODEC_READ         (1<<7)
 #define   CR_CODEC_WRITE        (0<<7)
 
