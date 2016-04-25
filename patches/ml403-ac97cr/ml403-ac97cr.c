@@ -885,7 +885,6 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 
 	reg &= 0xfe;
 
-#if 0
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 			   "access to unknown/unused codec register 0x%x "
@@ -930,7 +929,6 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 			return lm4550_regfile[reg / 2].value;
 		}
 	}
-#endif
 	/* if we are here, we _have_ to access the codec really, no faking */
 	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
 		return 0;
@@ -1017,7 +1015,6 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 	reg &= 0xfe;
 	PDEBUG(CODEC_FAKE, "write(reg=%02x, val=%04x)\n", reg, val);
 
-#if 0
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 			   "access to unknown/unused codec register 0x%x "
@@ -1046,7 +1043,6 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 						lm4550_regfile[reg / 2].wmask);
 		return;
 	}
-#endif
 	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
 		return;
 #ifdef CODEC_STAT
