@@ -884,7 +884,6 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 	u16 value = 0;
 
 	reg &= 0xfe;
-	PDEBUG(CODEC_FAKE, "read(reg=%02x)\n", reg);
 
 #if 0
 	if (!LM4550_RF_OK(reg)) {
@@ -893,7 +892,6 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 			   "ignored!\n", reg);
 		return 0;
 	}
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_00\n");
 
 	/* check if we can fake/answer this access from our shadow register */
 	if ((lm4550_regfile[reg / 2].flag &
@@ -934,17 +932,14 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 	}
 #endif
 	/* if we are here, we _have_ to access the codec really, no faking */
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_01\n");
 	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
 		return 0;
 #ifdef CODEC_STAT
 	ml403_ac97cr->ac97_read++;
 #endif
-	PDEBUG(INIT_INFO, "codec_read(): writing address = 0x%p <-- data = 0x%04x\n", CR_REG(ml403_ac97cr, CODEC_ADDR), CR_CODEC_ADDR(reg) | CR_CODEC_READ);
 	spin_lock(&ml403_ac97cr->reg_lock);
 	iowrite32(CR_CODEC_ADDR(reg) | CR_CODEC_READ, CR_REG(ml403_ac97cr, CODEC_ADDR));
 	spin_unlock(&ml403_ac97cr->reg_lock);
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_02\n");
 	end_time = jiffies + ((HZ * CODEC_TIMEOUT_AFTER_READ) / 1000);
 	do {
 		spin_lock(&ml403_ac97cr->reg_lock);
@@ -958,13 +953,10 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 				   "value=0x%x / %d (STATUS=0x%x)\n",
 				   reg, value, value, stat);
 #else
-		PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_03\n");
 		if ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
 			 CR_RAF) == CR_RAF) {
-			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_04\n");
 			value = CR_CODEC_DATAREAD(
 				ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
-			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_05\n");
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
 				   "reg=0x%x, value=0x%x / %d\n",
 				   reg, value, value);
@@ -973,18 +965,15 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
 			spin_unlock(&ml403_ac97cr->reg_lock);
 			mutex_unlock(&ml403_ac97cr->cdc_mutex);
-			PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_09\n");
 			return value;
 		}
 		spin_unlock(&ml403_ac97cr->reg_lock);
 		schedule_timeout_uninterruptible(1);
 	} while (time_after(end_time, jiffies));
 	/* read the DATAREAD register anyway, see comment below */
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_11\n");
 	spin_lock(&ml403_ac97cr->reg_lock);
 	value = CR_CODEC_DATAREAD(ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 	spin_unlock(&ml403_ac97cr->reg_lock);
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_12\n");
 #ifdef CODEC_STAT
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 		   "timeout while codec read! "
@@ -1004,7 +993,6 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 	lm4550_regfile[reg / 2].value = value;
 	lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
 	mutex_unlock(&ml403_ac97cr->cdc_mutex);
-	PDEBUG(CODEC_SUCCESS, "codec_read(): MARK_19\n");
 	return value;
 }
 
@@ -1061,16 +1049,13 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 #endif
 	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
 		return;
-	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_51\n");
 #ifdef CODEC_STAT
 	ml403_ac97cr->ac97_write++;
 #endif
 	spin_lock(&ml403_ac97cr->reg_lock);
 	iowrite32(CR_CODEC_DATAWRITE(val), CR_REG(ml403_ac97cr, CODEC_DATAWRITE));
-	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_52\n");
 	iowrite32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE, CR_REG(ml403_ac97cr, CODEC_ADDR));
 	spin_unlock(&ml403_ac97cr->reg_lock);
-	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_53\n");
 #ifdef CODEC_WRITE_CHECK_RAF
 	/* check CR_CODEC_RAF bit to see if write access to register is done;
 	 * loop until bit is set or timeout happens
@@ -1083,11 +1068,9 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 		stat = ioread32(CR_REG(ml403_ac97cr, STATUS))
 		if ((stat & CR_RAF) == CR_RAF) {
 #else
-		PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_54\n");
 		if ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
 			 CR_RAF) == CR_RAF) {
 #endif
-			PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_55\n");
 			PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
 				   "reg=0x%x, value=%d / 0x%x\n",
 				   reg, val, val);
@@ -1099,13 +1082,11 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
 			spin_unlock(&ml403_ac97cr->reg_lock);
 			mutex_unlock(&ml403_ac97cr->cdc_mutex);
-			PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_59\n");
 			return;
 		}
 		spin_unlock(&ml403_ac97cr->reg_lock);
 		schedule_timeout_uninterruptible(1);
 	} while (time_after(end_time, jiffies));
-	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_61\n");
 #ifdef CODEC_STAT
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 		   "timeout while codec write "
@@ -1119,7 +1100,6 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 		   reg, val, val);
 #endif
 #else   /* CODEC_WRITE_CHECK_RAF */
-	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_62\n");
 #if CODEC_WAIT_AFTER_WRITE > 0
 	/* officially, in AC97 spec there is no possibility for a AC97
 	 * controller to determine, if write access is done or not - so: How
@@ -1128,14 +1108,12 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 	 * Xilinx's example app in EDK 8.1i) and wait
 	 */
 	schedule_timeout_uninterruptible(HZ / CODEC_WAIT_AFTER_WRITE);
-	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_63\n");
 #endif
 	PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
 		   "reg=0x%x, value=%d / 0x%x (no RAF check)\n",
 		   reg, val, val);
 #endif
 	mutex_unlock(&ml403_ac97cr->cdc_mutex);
-	PDEBUG(CODEC_SUCCESS, "codec_write(): MARK_69\n");
 	return;
 }
 
@@ -1180,8 +1158,8 @@ static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
 	/* give back "port" */
 	iounmap(ml403_ac97cr->port);
 	PDEBUG(INIT_INFO, "free() iounmap() done\n");
-	release_mem_region((u32)ml403_ac97cr->port, ml403_ac97cr->port_size);
-	PDEBUG(INIT_INFO, "free() release_mem_region() done\n");
+	//release_mem_region((u32)ml403_ac97cr->port, ml403_ac97cr->port_size);
+	//PDEBUG(INIT_INFO, "free() release_mem_region() done\n");
 	kfree(ml403_ac97cr);
 	PDEBUG(INIT_INFO, "free() (done)\n");
 	return 0;
