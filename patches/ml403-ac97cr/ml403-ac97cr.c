@@ -302,12 +302,12 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
 		if ((lm4550_regfile[i].flag & LM4550_REG_FAKEPROBE) &&
 			(lm4550_regfile[i].value != lm4550_regfile[i].def)) {
 			PDEBUG(CODEC_FAKE, "lm4550_regfile_write_values_after_"
-				   "init(): reg=0x%x value=0x%x / %d is different "
-				   "from def=0x%x / %d\n",
-				   i, lm4550_regfile[i].value,
+				   "init(): reg=0x%02x val=0x%04x / %d is different "
+				   "from def=0x%04x / %d - snd_ac97_write() called to update\n",
+			           (i << 1), lm4550_regfile[i].value,
 				   lm4550_regfile[i].value, lm4550_regfile[i].def,
 				   lm4550_regfile[i].def);
-			snd_ac97_write(ac97, i * 2, lm4550_regfile[i].value);
+			snd_ac97_write(ac97, (i << 1), lm4550_regfile[i].value);
 			lm4550_regfile[i].flag |= LM4550_REG_DONEREAD;
 		}
 }
@@ -898,7 +898,7 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 		!(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
 		if (lm4550_regfile[reg / 2].flag & LM4550_REG_FAKEREAD) {
 			PDEBUG(CODEC_FAKE, "codec_read(): faking read from "
-				   "reg=0x%x, val=0x%x / %d\n",
+				   "reg=0x%02x, val=0x%04x / %d\n",
 				   reg, lm4550_regfile[reg / 2].def,
 				   lm4550_regfile[reg / 2].def);
 			return lm4550_regfile[reg / 2].def;
@@ -906,7 +906,7 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 				LM4550_REG_FAKEPROBE) &&
 			   ml403_ac97cr->ac97_fake) {
 			PDEBUG(CODEC_FAKE, "codec_read(): faking read from "
-				   "reg=0x%x, val=0x%x / %d (probe)\n",
+				   "reg=0x%02x, val=0x%04x / %d (probe)\n",
 				   reg, lm4550_regfile[reg / 2].value,
 				   lm4550_regfile[reg / 2].value);
 			return lm4550_regfile[reg / 2].value;
@@ -947,8 +947,8 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 		if ((stat & CR_RAF) == CR_RAF) {
 			value = CR_CODEC_DATAREAD(
 				ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
-			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) reg=0x%x, "
-				   "value=0x%x / %d (STATUS=0x%x)\n",
+			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) reg=0x%02x, "
+				   "val=0x%04x / %d (STATUS=0x%04x)\n",
 				   reg, value, value, stat);
 #else
 		if ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
@@ -956,7 +956,7 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 			value = CR_CODEC_DATAREAD(
 				ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
-				   "reg=0x%x, value=0x%x / %d\n",
+				   "reg=0x%02x, val=0x%04x / %d\n",
 				   reg, value, value);
 #endif
 			lm4550_regfile[reg / 2].value = value;
@@ -975,14 +975,14 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 #ifdef CODEC_STAT
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 		   "timeout while codec read! "
-		   "(reg=0x%x, last STATUS=0x%x, DATAREAD=0x%x / %d, %d) "
+		   "(reg=0x%02x, last STATUS=0x%04x, DATAREAD=0x%04x / %d, %d) "
 		   "(cw=%d, cr=%d)\n",
 		   reg, stat, value, value, rafaccess,
 		   ml403_ac97cr->ac97_write, ml403_ac97cr->ac97_read);
 #else
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 		   "timeout while codec read! "
-		   "(reg=0x%x, DATAREAD=0x%x / %d)\n",
+		   "(reg=0x%02x, DATAREAD=0x%04x / %d)\n",
 		   reg, value, value);
 #endif
 	/* BUG: This is PURE speculation! But after _most_ read timeouts the
@@ -1013,7 +1013,7 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 #endif
 
 	reg &= 0xfe;
-	PDEBUG(CODEC_FAKE, "write(reg=%02x, val=%04x)\n", reg, val);
+	PDEBUG(CODEC_FAKE, "write(reg=%02x, val=%04x / %d)\n", reg, val, val);
 
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
@@ -1037,8 +1037,8 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 	if (((lm4550_regfile[reg / 2].flag & LM4550_REG_FAKEPROBE) &&
 		 ml403_ac97cr->ac97_fake) &&
 		!(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
-		PDEBUG(CODEC_FAKE, "codec_write(): faking write to reg=0x%x, "
-			   "val=0x%x / %d\n", reg, val, val);
+		PDEBUG(CODEC_FAKE, "codec_write(): faking write to reg=0x%02x, "
+			   "val=0x%04x / %d\n", reg, val, val);
 		lm4550_regfile[reg / 2].value = (val &
 						lm4550_regfile[reg / 2].wmask);
 		return;
@@ -1068,7 +1068,7 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 			 CR_RAF) == CR_RAF) {
 #endif
 			PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
-				   "reg=0x%x, value=%d / 0x%x\n",
+				   "reg=0x%02x, val=0x%04x / %d\n",
 				   reg, val, val);
 			if (!(lm4550_regfile[reg / 2].flag &
 				  LM4550_REG_NOSHADOW) &&
@@ -1086,13 +1086,13 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 #ifdef CODEC_STAT
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
 		   "timeout while codec write "
-		   "(reg=0x%x, val=0x%x / %d, last STATUS=0x%x, %d) "
+		   "(reg=0x%02x, val=0x%04x / %d, last STATUS=0x%04x, %d) "
 		   "(cw=%d, cr=%d)\n",
 		   reg, val, val, stat, rafaccess, ml403_ac97cr->ac97_write,
 		   ml403_ac97cr->ac97_read);
 #else
 	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
-		   "timeout while codec write (reg=0x%x, val=0x%x / %d)\n",
+		   "timeout while codec write (reg=0x%02x, val=0x%04x / %d)\n",
 		   reg, val, val);
 #endif
 #else   /* CODEC_WRITE_CHECK_RAF */
@@ -1106,7 +1106,7 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 	schedule_timeout_uninterruptible(HZ / CODEC_WAIT_AFTER_WRITE);
 #endif
 	PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
-		   "reg=0x%x, value=%d / 0x%x (no RAF check)\n",
+		   "reg=0x%02x, val=0x%04x / %d (no RAF check)\n",
 		   reg, val, val);
 #endif
 	mutex_unlock(&ml403_ac97cr->cdc_mutex);
