@@ -1247,25 +1247,6 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		   (unsigned long) ml403_ac97cr->port,
 		   (unsigned long) resource_size(resource));
 
-	PDEBUG(INIT_INFO, "create(): start 4x 64 read access u32 words from the AC97 FPGA address section:\n");
-	unsigned int i;
-	unsigned short cntr;
-	cntr = 0;
-	for (i = 0; i < 256; i++) {
-		   u32 data;
-
-		   // reading
-		   data = snd_ml403_ac97cr_codec_read_internal(ml403_ac97cr, (i % 64) << 1);
-		   PDEBUG(INIT_INFO, "# READ AC97  reg = 0x%02x --> data = 0x%04x\n", (i % 64) << 1, data);
-
-		   // writing
-		   snd_ml403_ac97cr_codec_write_internal(ml403_ac97cr, (i % 64) << 1, cntr++);
-		   schedule_timeout_uninterruptible(1);
-	}
-	PDEBUG(INIT_INFO, "### end of test section - stopping module now ...\n");
-	snd_ml403_ac97cr_free(ml403_ac97cr);
-	return -EBUSY;
-
 	/* get irq */
 	irq = -1;
 	if (np) {
