@@ -72,10 +72,10 @@
 
 #define SND_ML403_AC97CR_DRIVER "ml403-ac97cr"
 
-MODULE_AUTHOR("Joachim Foerster <JOFT@gmx.de>");
-MODULE_DESCRIPTION("Xilinx ML403 AC97 Controller Reference");
+MODULE_AUTHOR("Joachim Foerster <JOFT@gmx.de>, Ulrich Habel <espero7757@gmx.net>");
+MODULE_DESCRIPTION("Xilinx ML403 AC97 Controller Reference, RedPitaya-RadioBox sound system");
 MODULE_LICENSE("GPL");
-MODULE_SUPPORTED_DEVICE("{{Xilinx,ML403 AC97 Controller Reference}}");
+MODULE_SUPPORTED_DEVICE("{{RedPitaya,red_pitaya_ac97ctrl RadioBox sub-module}}");
 
 
 static int index = SNDRV_DEFAULT_IDX1;
@@ -83,11 +83,11 @@ static char *id = SNDRV_DEFAULT_STR1;
 static bool enable = SNDRV_DEFAULT_ENABLE1;
 
 module_param(index, int, 0444);
-MODULE_PARM_DESC(index, "Index value for ML403 AC97 Controller Reference.");
+MODULE_PARM_DESC(index, "Index value for RedPitaya-RadioBox sound system.");
 module_param(id, charp, 0444);
-MODULE_PARM_DESC(id, "ID string for ML403 AC97 Controller Reference.");
+MODULE_PARM_DESC(id, "ID string for RedPitaya-RadioBox sound system.");
 module_param(enable, bool, 0444);
-MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
+MODULE_PARM_DESC(enable, "Enable this RedPitaya-RadioBox sound system.");
 
 /* Special feature options */
 #define CODEC_WRITE_CHECK_RAF	/* don't return after a write to a codec
@@ -1411,7 +1411,7 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	}
 	PDEBUG(INIT_INFO, "probe(): PCM done\n");
 	strcpy(card->driver, SND_ML403_AC97CR_DRIVER);
-	strcpy(card->shortname, "ML403 AC97 Controller Reference");
+	strcpy(card->shortname, "ML403 AC97 RedPitaya RadioBox");
 	sprintf(card->longname, "%s %s at 0x%lx, irq %i & %i, device %i",
 		card->shortname, card->driver,
 		(unsigned long)ml403_ac97cr->port, ml403_ac97cr->irq,
