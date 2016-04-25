@@ -151,11 +151,11 @@ MODULE_PARM_DESC(enable, "Enable this ML403 AC97 Controller Reference.");
 					 * 0 to completely remove wait
 					 */
 #else
-#define CODEC_TIMEOUT_AFTER_WRITE 100	/* timeout after a write access to a
+#define CODEC_TIMEOUT_AFTER_WRITE  30	/* timeout after a write access to a
 					 * codec register, if RAF bit is used
 					 */
 #endif
-#define CODEC_TIMEOUT_AFTER_READ  100	/* timeout after a read access to a
+#define CODEC_TIMEOUT_AFTER_READ   30	/* timeout after a read access to a
 					 * codec register (checking RAF bit)
 					 */
 
@@ -940,6 +940,7 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 #ifdef CODEC_STAT
 	ml403_ac97cr->ac97_read++;
 #endif
+	PDEBUG(INIT_INFO, "codec_read(): writing address = 0x%p <-- data = 0x%04x\n", CR_REG(ml403_ac97cr, CODEC_ADDR), CR_CODEC_ADDR(reg) | CR_CODEC_READ);
 	spin_lock(&ml403_ac97cr->reg_lock);
 	iowrite32(CR_CODEC_ADDR(reg) | CR_CODEC_READ, CR_REG(ml403_ac97cr, CODEC_ADDR));
 	spin_unlock(&ml403_ac97cr->reg_lock);
@@ -1175,9 +1176,12 @@ static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
 		free_irq(ml403_ac97cr->irq, ml403_ac97cr);
 	if (ml403_ac97cr->capture_irq >= 0)
 		free_irq(ml403_ac97cr->capture_irq, ml403_ac97cr);
+	PDEBUG(INIT_INFO, "free() IRQs returned\n");
 	/* give back "port" */
 	iounmap(ml403_ac97cr->port);
+	PDEBUG(INIT_INFO, "free() iounmap() done\n");
 	release_mem_region((u32)ml403_ac97cr->port, ml403_ac97cr->port_size);
+	PDEBUG(INIT_INFO, "free() release_mem_region() done\n");
 	kfree(ml403_ac97cr);
 	PDEBUG(INIT_INFO, "free() (done)\n");
 	return 0;
@@ -1269,15 +1273,20 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		   (unsigned long) ml403_ac97cr->port,
 		   (unsigned long) resource_size(resource));
 
-	PDEBUG(INIT_INFO, "create(): start 64 read access u32 words from the AC97 FPGA address section:\n");
+	PDEBUG(INIT_INFO, "create(): start 4x 64 read access u32 words from the AC97 FPGA address section:\n");
 	unsigned int i;
-	for (i = 0; i < 64; i++) {
+	unsigned short cntr;
+	cntr = 0;
+	for (i = 0; i < 256; i++) {
 		   u32 data;
-		   //volatile void __iomem *addr_mmio = NULL;
 
-		   // reading all ports
-		   data = snd_ml403_ac97cr_codec_read_internal(ml403_ac97cr, i << 1);
-		   PDEBUG(INIT_INFO, "# READ AC97  reg = 0x%02x --> data = 0x%04x\n", i << 1, data);
+		   // reading
+		   data = snd_ml403_ac97cr_codec_read_internal(ml403_ac97cr, (i % 64) << 1);
+		   PDEBUG(INIT_INFO, "# READ AC97  reg = 0x%02x --> data = 0x%04x\n", (i % 64) << 1, data);
+
+		   // writing
+		   snd_ml403_ac97cr_codec_write_internal(ml403_ac97cr, (i % 64) << 1, cntr++);
+		   schedule_timeout_uninterruptible(1);
 	}
 	PDEBUG(INIT_INFO, "### end of test section - stopping module now ...\n");
 	snd_ml403_ac97cr_free(ml403_ac97cr);
