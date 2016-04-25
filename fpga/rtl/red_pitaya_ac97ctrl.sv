@@ -235,7 +235,10 @@ always @(posedge clk_adc_125mhz)                                                
 if (!adc_rstn_i)
    ac97ctrl_codec_data_read <= 'b0;
 else if (ac97ctrl_codec_data_recall_d[1])
-   ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
+   if (ac97ctrl_codec_addr[5:0] == (6'h26 >> 1))
+      ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out | 16'h000f;                                  // status always being "ready"
+   else
+      ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
 
 
 //---------------------------------------------------------------------------------
