@@ -219,6 +219,7 @@ wire [ 15: 0] ac97ctrl_codec_data_read_out;
 reg  [ 15: 0] ac97ctrl_codec_data_read      =  'b0;
 reg           ac97ctrl_codec_data_store     = 1'b0;
 reg           ac97ctrl_codec_data_recall    = 1'b0;
+reg  [  2: 0] ac97ctrl_codec_data_recall_d  =  'b0;
 
 ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
   .clka                    ( clk_adc_125mhz              ),  // global 125 MHz clock
@@ -234,7 +235,7 @@ ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
 if (!adc_rstn_i)
    ac97ctrl_codec_data_read <= 'b0;
-else if (ac97ctrl_codec_data_recall)
+else if (ac97ctrl_codec_data_recall_d[2])
    ac97ctrl_codec_data_read <= ac97ctrl_codec_data_read_out;
 
 
@@ -381,11 +382,11 @@ if (!adc_rstn_i) begin
    ac97ctrl_play_right                            <=  'b0;
    ac97ctrl_play_is_right                         <= 1'b0;
    ac97ctrl_play_is_right_d                       <= 1'b0;
-   ac97ctrl_access_prepare                        <= 1'b0;
    ac97ctrl_access_ready                          <= 1'b0;
    ac97ctrl_codec_data_write                      <=  'b0;
-   ac97ctrl_codec_data_store                      <= 1'b0;
    ac97ctrl_codec_data_recall                     <= 1'b0;
+   ac97ctrl_codec_data_recall_d                   <=  'b0;
+   ac97ctrl_codec_data_store                      <= 1'b0;
    ac97ctrl_fifo_play_reset                       <= 1'b0;
    ac97ctrl_fifo_rec_reset                        <= 1'b0;
    test_dw <= 1'b0;
@@ -399,26 +400,26 @@ else if (ac97ctrl_reset_delay) begin
    ac97ctrl_play_right                            <=  'b0;
    ac97ctrl_play_is_right                         <= 1'b0;
    ac97ctrl_play_is_right_d                       <= 1'b0;
-   ac97ctrl_access_prepare                        <= 1'b0;
    ac97ctrl_access_ready                          <= 1'b0;
    ac97ctrl_codec_data_write                      <=  'b0;
-   ac97ctrl_codec_data_store                      <= 1'b0;
    ac97ctrl_codec_data_recall                     <= 1'b0;
+   ac97ctrl_codec_data_recall_d                   <=  'b0;
+   ac97ctrl_codec_data_store                      <= 1'b0;
    ac97ctrl_fifo_play_reset                       <= 1'b1;                                                  // resetting the play FIFO
    ac97ctrl_fifo_rec_reset                        <= 1'b1;                                                  // resetting the rec  FIFO
    end
 
 else begin
+   if (ac97ctrl_codec_data_recall_d[2] || ac97ctrl_codec_data_store)
+      ac97ctrl_access_ready <= 1'b1;
+
    ac97ctrl_play_is_right_d                       <= ac97ctrl_play_is_right;
-   ac97ctrl_codec_data_store                      <= 1'b0;                                                  // this and the following lines are pre-sets and are returning to zero after each clock resulting a pulse
-   ac97ctrl_codec_data_recall                     <= 1'b0;
+   ac97ctrl_codec_data_recall_d[2:0]              <= { ac97ctrl_codec_data_recall_d[1:0], ac97ctrl_codec_data_recall };
+
+   ac97ctrl_codec_data_recall                     <= 1'b0;                                                  // this and the next lines are pre-sets and are returning to zero after each clock resulting a pulse
+   ac97ctrl_codec_data_store                      <= 1'b0;
    ac97ctrl_fifo_play_reset                       <= 1'b0;
    ac97ctrl_fifo_rec_reset                        <= 1'b0;
-
-   if (ac97ctrl_access_prepare) begin
-      ac97ctrl_access_ready   <= 1'b1;
-      ac97ctrl_access_prepare <= 1'b0;
-      end
 
    if (sys_wen) begin
       casez (sys_addr[19:0])
