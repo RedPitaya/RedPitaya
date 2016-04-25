@@ -16,8 +16,9 @@
 
 #include "rp_dma.h"
 
-#define RP_SGMNT_CNT 8
-#define RP_SGMNT_SIZE (128*1024)
+
+#define RP_SGMNT_CNT 8 // 240/RP_SGMNT_CNT must be int
+#define RP_SGMNT_SIZE (256*1025)
 
 int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle)
 {

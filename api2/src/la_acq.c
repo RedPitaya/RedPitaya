@@ -311,8 +311,8 @@ uint32_t rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle)
 int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle)
 {
     int r;
-    r=FpgaRegDump("La acq reg",0,(uint32_t*)handle->regset,6);
-    rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->trg);
-    FpgaRegDump("La acq trig reg",0,(uint32_t*)&regset->cmp_msk,5);
+    r=FpgaRegDump("La acq reg",0,(uint32_t*)handle->regset,23);
+    //rp_la_trg_regset_t *regset = (rp_la_trg_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->trg);
+    //FpgaRegDump("La acq trig reg",0,(uint32_t*)&regset->cmp_msk,5);
     return r;
 }

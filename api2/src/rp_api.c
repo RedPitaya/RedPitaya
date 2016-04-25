@@ -222,7 +222,7 @@ RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * dir
         rp_LaAcqGlobalTrigSet(&la_acq_handle, RP_TRG_LOA_SWE_MASK);
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     return RP_API_OK;
 }
@@ -379,9 +379,9 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     // configure FPGA to start block mode
 
    // TODO; sampling rate
-   // rp_la_decimation_regset_t dec;
-   // dec.dec=timebase;
-   // rp_LaAcqSetDecimation(&la_acq_handle, dec);
+    rp_la_decimation_regset_t dec;
+    dec.dec=timebase;
+    rp_LaAcqSetDecimation(&la_acq_handle, dec);
 
     rp_la_cfg_regset_t cfg;
     cfg.pre=noOfPreTriggerSamples;
@@ -397,7 +397,10 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
+    rp_LaAcqFpgaRegDump(&la_acq_handle);
+
     // block till acq. is complete
+    printf("\r\nBlocking read");
     rp_LaAcqBlockingRead(&la_acq_handle);
 
     // make sure acq. is stopped
@@ -420,6 +423,7 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
     }
 
     printf("\r\n trig_sample %d, pst_length %d, buf_ovfl %d", trig_sample, pst_length, buf_ovfl);
+
 
    // rp_DmaMemDump(&la_acq_handle);
 
