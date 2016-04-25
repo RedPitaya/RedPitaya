@@ -160,7 +160,7 @@ $(document).ready(function() {
             });
     });
 
-    $('#essid_enter').keypress(function(event) {
+    $('#essid_enter').keyup(function(event) {
         if ($('#essid_enter').val() == WIZARD.connectedESSID)
             $('#connect_btn').text('Disconnect');
         else
