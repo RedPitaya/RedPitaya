@@ -150,6 +150,7 @@ $(document).ready(function() {
     $('body').addClass('loaded');
     WIZARD.startStep(0);
     $('#get_wtools').click(function(event) {
+        WIZARD.startWaiting();
         $.ajax({
                 url: '/install_wireless',
                 type: 'GET',
