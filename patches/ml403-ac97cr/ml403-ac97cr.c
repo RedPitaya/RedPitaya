@@ -1255,11 +1255,11 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		irq = platform_get_irq(pfdev, 0);
 	}
 	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
-				   "got IRQ = %d\n", irq);
+		   "got play IRQ = %d\n", irq);
 	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
 			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
-			   "unable to grab IRQ %d\n",
+			   "unable to request play IRQ %d\n",
 			   irq);
 		snd_ml403_ac97cr_free(ml403_ac97cr);
 		return -EBUSY;
@@ -1274,10 +1274,12 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	} else {
 		irq = platform_get_irq(pfdev, 1);
 	}
+	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+		   "got capture IRQ = %d\n", irq);
 	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
 			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
-			   "unable to grab IRQ %d\n",
+			   "unable to request capture IRQ %d\n",
 			   irq);
 		snd_ml403_ac97cr_free(ml403_ac97cr);
 		return -EBUSY;
