@@ -529,6 +529,6 @@ else begin
       end
    end
 
-assign ac97_leds_o[7:0] = { 1'b0, ac97ctrl_rec_fifo_full, ac97ctrl_rec_fifo_overrun, ac97_irq_rec_o, 1'b0, ac97ctrl_play_fifo_hf, ac97ctrl_play_fifo_underrun, ac97_irq_play_o };
+assign ac97_leds_o[7:0] = { ac97ctrl_rec_fifo_overrun, ac97ctrl_rec_fifo_full, ac97_irq_rec_o, ac97ctrl_rec_fifo_he,  ac97ctrl_play_fifo_underrun, ac97ctrl_play_fifo_empty, ac97_irq_play_o, ac97ctrl_play_fifo_hf };
 
 endmodule
