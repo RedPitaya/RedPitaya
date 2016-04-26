@@ -149,15 +149,15 @@ else if (!ac97ctrl_reset_delay)
    ac97ctrl_codec_ready <= 1'b1;
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_play_fifo_underrun
-if (!adc_rstn_i)
+if (!adc_rstn_i || ac97ctrl_reset_delay)
    ac97ctrl_play_fifo_underrun <= 1'b0;
 else if (!ac97ctrl_reset_delay && ac97ctrl_play_fifo_empty && clk_48khz)
    ac97ctrl_play_fifo_underrun <= 1'b1;
 else if (ac97ctrl_fifo_play_reset)
    ac97ctrl_play_fifo_underrun <= 1'b0;
 
-always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_play_fifo_underrun
-if (!adc_rstn_i)
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_rec_fifo_overrun
+if (!adc_rstn_i || ac97ctrl_reset_delay)
    ac97ctrl_rec_fifo_overrun <= 1'b0;
 else if (!ac97ctrl_reset_delay && ac97ctrl_rec_fifo_full && clk_48khz)
    ac97ctrl_rec_fifo_overrun <= 1'b1;
@@ -304,8 +304,8 @@ ac97ctrl_16x32_sr_fifo i_ac97ctrl_rec_fifo (
   .data_count              ( ac97ctrl_rec_fifo_ctr       )   // content counter
 );
 
-assign ac97ctrl_rec_fifo_empty    = (!ac97ctrl_rec_fifo_ctr)                ?  1'b1 : 1'b0;
-assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr == C_FIFO_SIZE) ?  1'b1 : 1'b0;
+assign ac97ctrl_rec_fifo_empty    = (!ac97ctrl_rec_fifo_ctr)                      ?  1'b1 : 1'b0;
+assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr == (C_FIFO_SIZE - 1)) ?  1'b1 : 1'b0;
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_play_o
 if (!adc_rstn_i)
@@ -319,15 +319,15 @@ else if (C_PLAYBACK)
          ac97_irq_play_o <= 1'b1;
       end
    2: begin
-      if (ac97ctrl_play_fifo_ctr <  C_FIFO_SIZE)                                                            // <-- default setting, see @ top of file
+      if (ac97ctrl_play_fifo_ctr <  (C_FIFO_SIZE >> 1))                                                     // <-- default setting, see @ top of file
          ac97_irq_play_o <= 1'b1;
       end
    3: begin
-      if (ac97ctrl_play_fifo_ctr >= C_FIFO_SIZE)
+      if (ac97ctrl_play_fifo_ctr >= (C_FIFO_SIZE >> 1))
          ac97_irq_play_o <= 1'b1;
       end
    4: begin
-      if (ac97ctrl_play_fifo_ctr == C_FIFO_SIZE)
+      if (ac97ctrl_play_fifo_ctr >= (C_FIFO_SIZE - 1))
          ac97_irq_play_o <= 1'b1;
       end
    default: begin
@@ -338,33 +338,33 @@ else if (C_PLAYBACK)
 
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_rec_o
-   if (!adc_rstn_i)
-      ac97_irq_rec_o  <= 1'b0;
+if (!adc_rstn_i)
+   ac97_irq_rec_o  <= 1'b0;
 
-   else if (C_RECORD)
-      case (C_REC_INTR_LEVEL)                                                                               // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
+else if (C_RECORD)
+   case (C_REC_INTR_LEVEL)                                                                                  // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 
-      1: begin
-         if (!ac97ctrl_rec_fifo_ctr)
-            ac97_irq_rec_o <= 1'b1;
-         end
-      2: begin
-         if (ac97ctrl_rec_fifo_ctr <  C_FIFO_SIZE)
-            ac97_irq_rec_o <= 1'b1;
-         end
-      3: begin
-         if (ac97ctrl_rec_fifo_ctr >= C_FIFO_SIZE)                                                          // <-- default setting, see @ top of file
-            ac97_irq_rec_o <= 1'b1;
-         end
-      4: begin
-         if (ac97ctrl_rec_fifo_ctr == C_FIFO_SIZE)
-            ac97_irq_rec_o <= 1'b1;
-         end
-      default: begin
-         ac97_irq_rec_o <= 1'b0;
-         end
+   1: begin
+      if (!ac97ctrl_rec_fifo_ctr)
+         ac97_irq_rec_o <= 1'b1;
+      end
+   2: begin
+      if (ac97ctrl_rec_fifo_ctr <  (C_FIFO_SIZE >> 1))
+         ac97_irq_rec_o <= 1'b1;
+      end
+   3: begin
+      if (ac97ctrl_rec_fifo_ctr >= (C_FIFO_SIZE >> 1))                                                      // <-- default setting, see @ top of file
+         ac97_irq_rec_o <= 1'b1;
+      end
+   4: begin
+      if (ac97ctrl_rec_fifo_ctr >= (C_FIFO_SIZE - 1))
+         ac97_irq_rec_o <= 1'b1;
+      end
+   default: begin
+      ac97_irq_rec_o <= 1'b0;
+      end
 
-      endcase
+   endcase
 
 
 // === Bus handling ===
