@@ -34,7 +34,8 @@ inline bool CDataManager::NeedSend(const CBaseParameter& param) const
 	CBaseParameter::AccessMode mode = param.GetAccessMode();
 	return ((mode != CBaseParameter::AccessMode::WO) && (param.IsValueChanged() || m_send_all_params))
 			|| (mode == CBaseParameter::AccessMode::ROSA)
-			|| (mode == CBaseParameter::AccessMode::RWSA);
+			|| (mode == CBaseParameter::AccessMode::RWSA
+			|| param.NeedSend());
 }
 
 CDataManager::CDataManager()
@@ -115,6 +116,7 @@ std::string CDataManager::GetParamsJson()
 		if(NeedSend(*m_params[i])) {
 			JSONNode n(JSON_NODE);
 			n = m_params[i]->GetJSONObject();
+			m_params[i]->NeedSend(true); // no need
 			params.push_back(n);
 		}
 	}
