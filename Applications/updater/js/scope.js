@@ -56,10 +56,11 @@
         setTimeout(function() {
             if (OnlineChecker.isOnline()) {
                 UPD.nextStep();
-            } else
+            } else {
                 $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
-            $('#step_1').find('.error_msg').show();
-        }, 500);
+				$('#step_1').find('.error_msg').show();				
+			}
+        }, 3500);
     }
 
     UPD.checkVersion = function() {
