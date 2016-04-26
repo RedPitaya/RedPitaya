@@ -45,6 +45,7 @@ public:
 		, m_SentValue(_value)
 		, m_NeedUnregister(false)
 		, m_Dirty(false)
+		, m_NeedSend(false)
 	{}
 
 	~CCustomParameter()
@@ -75,8 +76,8 @@ public:
 		if(this->m_Value.min > value)
 		{
 		 	value = this->m_Value.min;
-
-		} else if(this->m_Value.max < value)
+		}
+		else if(this->m_Value.max < value)
 		{
 			value = this->m_Value.max;
 		}
@@ -89,11 +90,11 @@ public:
 		this->m_Value.value = CheckMinMax(_value);
 	}
 
-	void SendValue(const Type& _value)
-	{
-		this->m_Value.value = CheckMinMax(_value);
-		m_Dirty = true;
-	}
+	// void SendValue(const Type& _value)
+	// {
+	// 	this->m_Value.value = CheckMinMax(_value);
+	// 	m_Dirty = true;
+	// }
 
 	bool IsValueChanged() const
 	{
@@ -108,10 +109,26 @@ public:
 	{
 		m_NeedUnregister = _value;
 	}
+
+	void SendValue(const Type& _value)
+	{
+		this->m_Value.value = CheckMinMax(_value);
+		m_NeedSend = true;
+	}
+
+	bool NeedSend(bool _no_need=false) const
+	{
+		bool tmp = m_NeedSend;
+		if (_no_need)
+			m_NeedSend = false;
+		return tmp;
+	}
+
 protected:
 	mutable Type m_SentValue;
 	mutable bool m_Dirty;
 	bool m_NeedUnregister;
+	mutable bool m_NeedSend;
 };
 
 
