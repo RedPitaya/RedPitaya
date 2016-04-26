@@ -100,7 +100,7 @@
 
     AnalyticsCore.sendEventWithValue = function(page, event_category, event_action, event_label, event_value) {
         if (!sendData) return;
-        if (debugPrints) console.log("[AnalyticsCore] sendEvent", page, event_category, event_action, event_label);
+        if (debugPrints) console.log("[AnalyticsCore] sendEvent", page, event_category, event_action, event_label, parseInt(event_value));
         ga('send', {
             location: location,
             page: page,
@@ -108,7 +108,7 @@
             eventCategory: event_category,
             eventAction: event_action,
             eventLabel: event_label,
-            eventValue: event_value
+            eventValue: parseInt(event_value)
         });
     }
 
@@ -121,14 +121,14 @@
             hitType: 'timing',
             timingCategory: timing_category,
             timingVar: timing_var,
-            timingValue: timing_val
+            timingValue: parseInt(timing_val)
         });
     }
 
     AnalyticsCore.sendExecTime = function(page, app) {
         if ($.cookie(app + '-run') !== undefined) {
-            AnalyticsCore.sendTiming(page, "App execution time", app, $.cookie(app + '-run'));
             AnalyticsCore.sendEventWithValue(page, 'info', 'Execution time', $.cookie(app + '-run'), $.cookie(app + '-run'));
+            AnalyticsCore.sendTiming(page, "App execution time", app, $.cookie(app + '-run'));
         }
 
     }

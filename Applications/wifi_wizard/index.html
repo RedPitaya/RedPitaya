@@ -1,0 +1,209 @@
+<!-- $Id$
+ *
+ * Red Pitaya Oscilloscope client
+ *
+ * Author: Artem Kokos
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Red Pitaya</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css?2">
+    <script src="js/jquery-2.1.3.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+    <script src="js/jquery.ui.touch-punch.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery.flot.js"></script>
+    <script src="js/jquery.mousewheel.min.js"></script>
+    <script src="js/fastclick.min.js"></script>
+    <script src="js/jquery.simulate.js"></script>
+    <script src="js/zlib_and_gzip.min.js"></script>
+    <script src="js/jquery.cookie.js"></script>
+    <script src="js/wizard.js?3"></script>
+    <script src="../assets/analytics-core.js"></script>
+    <script src="js/analytics-main.js"></script>
+    <script src="js/jquery.browser.js"></script>
+    <link href="../assets/offline-theme-dark-indicator.css" rel="stylesheet" type="text/css">
+    <link href="../assets/offline-language-english.css" rel="stylesheet" type="text/css">
+    <link href="../assets/offline-language-english-indicator.css" rel="stylesheet" type="text/css">
+    <script src="../assets/offline.min.js"></script>
+    <script src="../assets/ui.js"></script>
+    <script src="../assets/onlinecheck.js"></script>
+    <script src="../assets/browsercheck.js"></script>
+    <script src="../assets/popupstack.js"></script>
+    <script src="../assets/jquery.browser.js"></script>
+    <link href="../assets/popupstack.css" rel="stylesheet" type="text/css" />
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+    </div>
+    <div id="header">
+        <div id="description">&nbsp;</div>
+    </div>
+    <div class="full-content">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">T</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">
+                            <img class="back-btn" src="img/arrow_nav_left.png">
+                        </a>
+                        <img class="logo" width=110 src="img/logo.png">
+                    </div>
+                    <div class="logo-wifi-wizard">
+                        RedPitaya Wi-Fi wizard
+                    </div>
+                </div>
+            </div>
+            <div id="global_container" style="position: relative;">
+                <div id="main">
+                    <div class="wifi-main-container">
+                        <div id="list_container" class="list-wifi-container">
+                            <div id="caption">Select Wi-Fi Network</div>
+                            <div id="wifi_list"><div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div></div>
+                        </div>
+                        <div id="controls_container" class="control-wifi-container">
+                            <div>Or enter SSID manualy:</div>
+                            <input type="text" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="essid_enter">
+                            <div>Enter password:</div>
+                            <input type="password" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="passw_enter">
+                            <button type="button" class="btn connect-btn" id="connect_btn">Connect</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        </div>
+    </div>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $("#ip-addr").text(window.location.hostname);
+    })
+    </script>
+    <!-- Install Iwlist Dialog -->
+    <div class="modal fade" id="wtools_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Wireless Software missing</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p id="wtools_missing_msg">Wireless-tool missing on your RedPitaya. Do you want to install it (iwlist, iwconfig)?</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" id="get_wtools" data-dismiss="modal" class="list-group-item btn">Yes</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="/" style="border: 1px solid;" class="list-group-item btn">No</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Dongle Not Enabled Dialog -->
+    <div class="modal fade" id="dongle_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Wi-Fi dongle missing</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p id="wtools_missing_msg">Wi-Fi dongle not connected to your RedPitaya. Please, connect it before working with wizard.</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="/" style="border: 1px solid; left: 140px;" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Offline Dialog -->
+    <div class="modal fade" id="offline_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Internet connection missing</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p id="wtools_missing_msg">Your RedPitaya has no connection to the Internet. Installing is not possible.</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" data-dismiss="modal" class="list-group-item btn">OK</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p>Please send us the report and help us to fix this issue</p>
+                    <p>Thank you!</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Statistics</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
