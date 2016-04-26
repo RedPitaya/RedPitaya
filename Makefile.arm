@@ -85,7 +85,7 @@ endif
 
 WEBSOCKETPP_TAG = 0.5.1
 LUANGINX_TAG    = v0.10.2
-NGINX_TAG       = 1.8.1
+NGINX_TAG       = 1.10.0
 
 CRYPTOPP_URL    = http://www.cryptopp.com/cryptopp563.zip
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
