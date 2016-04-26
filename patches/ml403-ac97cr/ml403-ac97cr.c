@@ -369,7 +369,7 @@ struct snd_ml403_ac97cr {
 	int capture_irq;
 	int enable_capture_irq;
 
-	struct resource *res_port;
+        void *port_phy;
 	void __iomem *port;
 	u32 port_size;
 
@@ -1154,8 +1154,8 @@ static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
 	/* give back "port" */
 	iounmap(ml403_ac97cr->port);
 	PDEBUG(INIT_INFO, "free() iounmap() done\n");
-	//release_mem_region((u32)ml403_ac97cr->port, ml403_ac97cr->port_size);
-	//PDEBUG(INIT_INFO, "free() release_mem_region() done\n");
+	release_mem_region((u32)ml403_ac97cr->port_phy, ml403_ac97cr->port_size);
+	PDEBUG(INIT_INFO, "free() release_mem_region() done\n");
 	kfree(ml403_ac97cr);
 	PDEBUG(INIT_INFO, "free() (done)\n");
 	return 0;
@@ -1200,8 +1200,8 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	ml403_ac97cr->capture_irq = -1;
 	ml403_ac97cr->enable_capture_irq = 0;
 	ml403_ac97cr->port = NULL;
+	ml403_ac97cr->port_phy = NULL;
 	ml403_ac97cr->port_size = 0;
-	ml403_ac97cr->res_port = NULL;
 
 	PDEBUG(INIT_INFO, "Trying to reserve resources now ...\n");
 
@@ -1221,7 +1221,7 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	} else {
 		resource = platform_get_resource(pfdev, IORESOURCE_MEM, 0);
 	}
-		if (!resource) {
+	if (!resource) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": can not get memory resource entry");
 		return -1;
 	}
@@ -1232,6 +1232,7 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 
 	request_mem_region(resource->start, resource_size(resource), pfdev->name);
 	ml403_ac97cr->port = ioremap_nocache(resource->start, resource_size(resource));
+	ml403_ac97cr->port_phy = (void *)resource->start;
 	ml403_ac97cr->port_size = resource_size(resource);
 	if (ml403_ac97cr->port == NULL) {
 		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
@@ -1243,9 +1244,9 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
 		   "remap controller memory region from 0x%lx to "
 		   "0x%lx with length of %ld bytes done\n",
-		   (unsigned long) resource->start,
+		   (unsigned long) ml403_ac97cr->port_phy,
 		   (unsigned long) ml403_ac97cr->port,
-		   (unsigned long) resource_size(resource));
+		   (unsigned long) ml403_ac97cr->port_size);
 
 	/* get irq */
 	irq = -1;
