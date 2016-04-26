@@ -132,7 +132,7 @@ reg           ac97ctrl_rec_fifo_overrun         = 1'b0;
 reg           ac97ctrl_reset_delay              = 1'b0;
 reg  unsigned [1:0] ac97ctrl_reset_delay_ctr    =  'b0;
 
-always @(posedge clk_adc_125mhz)                // assign ac97ctrl_reset_delay
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_reset_delay
 if (!adc_rstn_i) begin
    ac97ctrl_reset_delay     <= 1'b1;
    ac97ctrl_reset_delay_ctr <= 2'b11;
@@ -142,13 +142,13 @@ else if (!ac97ctrl_reset_delay_ctr)
 else
    ac97ctrl_reset_delay_ctr = ac97ctrl_reset_delay_ctr - 1;
 
-always @(posedge clk_adc_125mhz)                // assign ac97ctrl_codec_ready
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_ready
 if (!adc_rstn_i)
    ac97ctrl_codec_ready <= 1'b0;
 else if (!ac97ctrl_reset_delay)
    ac97ctrl_codec_ready <= 1'b1;
 
-always @(posedge clk_adc_125mhz)                // assign ac97ctrl_play_fifo_underrun
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_play_fifo_underrun
 if (!adc_rstn_i)
    ac97ctrl_play_fifo_underrun <= 1'b0;
 else if (!ac97ctrl_reset_delay && ac97ctrl_play_fifo_empty && clk_48khz)
@@ -156,7 +156,7 @@ else if (!ac97ctrl_reset_delay && ac97ctrl_play_fifo_empty && clk_48khz)
 else if (ac97ctrl_fifo_play_reset)
    ac97ctrl_play_fifo_underrun <= 1'b0;
 
-always @(posedge clk_adc_125mhz)                // assign ac97ctrl_play_fifo_underrun
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_play_fifo_underrun
 if (!adc_rstn_i)
    ac97ctrl_rec_fifo_overrun <= 1'b0;
 else if (!ac97ctrl_reset_delay && ac97ctrl_rec_fifo_full && clk_48khz)
@@ -168,7 +168,7 @@ else if (ac97ctrl_fifo_rec_reset)
 //---------------------------------------------------------------------------------
 //  CLK_48KHZ and CLK_8KHZ generation
 
-localparam CLK_48KHZ_CTR_MAX = 2604;             // long run max value
+localparam CLK_48KHZ_CTR_MAX = 2604;                                                                        // long run max value
 localparam CLK_48KHZ_FRC_MAX = 5;
 
 reg  [ 11: 0] clk_48khz_ctr  = 'b0;
@@ -176,7 +176,7 @@ reg  [  2: 0] clk_48khz_frc  = 'b0;
 reg           clk_48khz_r    = 'b0;
 reg           clk_8khz_r     = 'b0;
 
-always @(posedge clk_adc_125mhz)                // assign clk_48khz, clk_8khz
+always @(posedge clk_adc_125mhz)                                                                            // assign clk_48khz, clk_8khz
 if (!adc_rstn_i) begin
    clk_48khz_ctr <= 'b0;
    clk_48khz_frc <= 'b0;
@@ -188,12 +188,12 @@ else
       clk_48khz_r <= 1'b1;
       if (clk_48khz_frc == CLK_48KHZ_FRC_MAX) begin
          clk_48khz_frc <= 1'b0;
-         clk_48khz_ctr <= 1'b0;                 // overflow of the frac part makes a long run
+         clk_48khz_ctr <= 1'b0;                                                                             // overflow of the frac part makes a long run
          clk_8khz_r <= 1'b1;
          end
       else begin
          clk_48khz_frc <= clk_48khz_frc + 1;
-         clk_48khz_ctr <= 12'b1;                // short run
+         clk_48khz_ctr <= 12'b1;                                                                            // short run
          end
       end
    else begin
@@ -206,7 +206,7 @@ else
 BUFG bufg_ac97_48khz_clk ( .O (clk_8khz  ), .I ( clk_8khz_r  ) );
 BUFG bufg_ac97_8khz_clk  ( .O (clk_48khz ), .I ( clk_48khz_r ) );
 
-assign ac97_clks_o = { clk_48khz, clk_8khz };    // ascending order
+assign ac97_clks_o = { clk_48khz, clk_8khz };                                                               // ascending order
 
 
 //---------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ reg           ac97ctrl_play_is_right   = 1'b0;
 reg           ac97ctrl_play_is_right_d = 1'b0;
 reg           ac97ctrl_play_fifo_push  = 1'b0;
 
-always @(posedge clk_adc_125mhz)                // assign ac97ctrl_play_fifo_push
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_play_fifo_push
 if (!adc_rstn_i)
    ac97ctrl_play_fifo_push <= 1'b0;
 else
@@ -307,23 +307,23 @@ ac97ctrl_16x32_sr_fifo i_ac97ctrl_rec_fifo (
 assign ac97ctrl_rec_fifo_empty    = (!ac97ctrl_rec_fifo_ctr)                ?  1'b1 : 1'b0;
 assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr == C_FIFO_SIZE) ?  1'b1 : 1'b0;
 
-always @(posedge clk_adc_125mhz)                // assign ac97_irq_play_o
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_play_o
 if (!adc_rstn_i)
    ac97_irq_play_o <= 1'b0;
 
 else if (C_PLAYBACK)
-   case (C_PLAY_INTR_LEVEL)
+   case (C_PLAY_INTR_LEVEL)                                                                                 // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 
    1: begin
       if (!ac97ctrl_play_fifo_ctr)
          ac97_irq_play_o <= 1'b1;
       end
    2: begin
-      if (ac97ctrl_play_fifo_ctr <= 4'd7)
+      if (ac97ctrl_play_fifo_ctr <  C_FIFO_SIZE)                                                            // <-- default setting, see @ top of file
          ac97_irq_play_o <= 1'b1;
       end
    3: begin
-      if (ac97ctrl_play_fifo_ctr >= 4'd8)
+      if (ac97ctrl_play_fifo_ctr >= C_FIFO_SIZE)
          ac97_irq_play_o <= 1'b1;
       end
    4: begin
@@ -337,23 +337,23 @@ else if (C_PLAYBACK)
    endcase
 
 
-always @(posedge clk_adc_125mhz)                // assign ac97_irq_rec_o
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_rec_o
    if (!adc_rstn_i)
       ac97_irq_rec_o  <= 1'b0;
 
    else if (C_RECORD)
-      case (C_REC_INTR_LEVEL)
+      case (C_REC_INTR_LEVEL)                                                                               // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 
       1: begin
          if (!ac97ctrl_rec_fifo_ctr)
             ac97_irq_rec_o <= 1'b1;
          end
       2: begin
-         if (ac97ctrl_rec_fifo_ctr <= 4'd7)
+         if (ac97ctrl_rec_fifo_ctr <  C_FIFO_SIZE)
             ac97_irq_rec_o <= 1'b1;
          end
       3: begin
-         if (ac97ctrl_rec_fifo_ctr >= 4'd8)
+         if (ac97ctrl_rec_fifo_ctr >= C_FIFO_SIZE)                                                          // <-- default setting, see @ top of file
             ac97_irq_rec_o <= 1'b1;
          end
       4: begin
@@ -515,6 +515,6 @@ else begin
       end
    end
 
-assign ac97_leds_o[7:0] = { ac97ctrl_codec_ready, ac97ctrl_access_ready, 2'b0, ac97ctrl_rec_fifo_full, ac97ctrl_rec_fifo_overrun, ac97ctrl_play_fifo_halffull, ac97ctrl_play_fifo_underrun };
+assign ac97_leds_o[7:0] = { 1'b0, ac97ctrl_rec_fifo_full, ac97ctrl_rec_fifo_overrun, ac97_irq_rec_o, 1'b0, ac97ctrl_play_fifo_halffull, ac97ctrl_play_fifo_underrun, ac97_irq_play_o };
 
 endmodule
