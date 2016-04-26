@@ -166,13 +166,6 @@ if (sts_acq & sto_algn.transf) begin
   sto.TDATA <= sto_algn.TDATA;
   sto.TKEEP <= sto_algn.TKEEP; // TODO
   sto.TLAST <= sto_algn.TLAST | sts_stp;
-end
-
-
-always @(posedge sti.ACLK)
-if ( sto.TVALID )begin
-  $display("data:%3d TKEEP:%h TLAST:%h",sto.TDATA,sto.TKEEP,sto.TLAST);
-end
-    
+end    
 
 endmodule: acq
