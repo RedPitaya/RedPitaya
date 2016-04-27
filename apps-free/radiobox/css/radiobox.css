@@ -41,6 +41,28 @@ select#rbled_csp_s[disabled] {
   background:#707070;
 }
 
+#ac97_lol {
+  position:relative;
+  z-index:1;
+}
+.form-bg-ac97-lol {
+  background:#508050;
+}
+select#ac97_lol_s[disabled] {
+  background:#707070;
+}
+
+#ac97_lor {
+  position:relative;
+  z-index:1;
+}
+.form-bg-ac97-lor {
+  background:#508050;
+}
+select#ac97_lor_s[disabled] {
+  background:#707070;
+}
+
 #rx_car_osc_qrg {
   position:relative;
   z-index:1;
