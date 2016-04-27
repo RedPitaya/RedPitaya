@@ -842,6 +842,13 @@ btn:active {
     margin-left: 40%
 }
 
+
+.ap-main-container {
+    /*width: 400px;*/
+    /*left: 400px;*/
+    margin-left: 40%
+}
+
 .list-wifi-container {
     float: left;
     width: 200px;
@@ -871,18 +878,29 @@ btn:active {
     background-color: #666666;
 }
 
+.connect-btn {
+    margin-top: 8px;
+    background-color: #666666;
+    width: 200px;
+}
+
 .logo-wifi-wizard {
     padding-top: 10px;
     text-align: center;
 }
 
-a.list-group-item
-{
+a.list-group-item {
     color: #cdcccc;
 }
 
-
-a.list-group-item:hover
-{
+a.list-group-item:hover {
     background-color: #444;
+}
+
+.select_type{
+    width: 450px; margin: 10px auto;
+}
+.drop:hover {
+    background-color: #444;
+    border-color: #444;
 }

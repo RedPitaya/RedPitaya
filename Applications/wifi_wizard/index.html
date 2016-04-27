@@ -72,11 +72,21 @@
                 </div>
             </div>
             <div id="global_container" style="position: relative;">
+                <div class="dropdown select_type" style="">
+                    <button class="btn btn-primary dropdown-toggle drop" type="button" data-toggle="dropdown">Select connection type
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="wifi_mode">I would like to connect my Red Pitaya to WiFi network</a></li>
+                        <li><a href="#" id="ap_mode">Let Red Pitaya create it's own network (Red Pitaya AP)</a></li>
+                    </ul>
+                </div>
                 <div id="main">
-                    <div class="wifi-main-container">
+                    <div class="wifi-main-container" style="display: none;">
                         <div id="list_container" class="list-wifi-container">
                             <div id="caption">Select Wi-Fi Network</div>
-                            <div id="wifi_list"><div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div></div>
+                            <div id="wifi_list">
+                                <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
+                            </div>
                         </div>
                         <div id="controls_container" class="control-wifi-container">
                             <div>Or enter SSID manualy:</div>
@@ -85,6 +95,11 @@
                             <input type="password" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="passw_enter">
                             <button type="button" class="btn connect-btn" id="connect_btn">Connect</button>
                         </div>
+                    </div>
+                    <div class="ap-main-container" style="display: none;">
+                        <div>Access point name: Red Pitaya AP</div>
+                        <div>Password: redpitaya</div>
+                        <button type="button" class="btn connect-btn" id="apply_btn">Apply</button>
                     </div>
                 </div>
             </div>
