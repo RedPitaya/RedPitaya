@@ -1306,6 +1306,7 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
  * @param[in]  tx_modtyp        2==USB, 3==LSB, 4==AM, 7==FM, 8==PM - else ignored.
  * @param[in]  rx_modtyp        2==USB, 3==LSB, 4==AMenv, 5==AMsync_USB, 6==AMsync_LSB, 7==FM, 8==PM - else ignored.
  * @param[in]  src_con_pnt      RB LED controller, RF Output 1 and RF Output 2 setting to be used.
+ * @param[in]  src_con2_pnt     AC97 LineOut Left and AC97 LineOut Right setting to be used.
  * @param[in]  rx_muxin_src     0==Off, 1==RF Input 1, 2==RF Input 2.
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.
@@ -1320,7 +1321,7 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
  * @param[in]  term_rfout2      Termination of RFOut2: 0==neutral, 1==50 ohms, 2==open ended.
  * @param[in]  qrg_inc          Frequency QRG range controller increment value, 0%-100%.
  */
-void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int rx_muxin_src,
+void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int src_con2_pnt, int rx_muxin_src,
         double tx_car_osc_qrg, double rx_car_osc_qrg,
         double tx_mod_osc_qrg, int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
         int tx_amp_rf_gain, int tx_mod_osc_mag, int term_rfout1, int term_rfout2, int qrg_inc);
