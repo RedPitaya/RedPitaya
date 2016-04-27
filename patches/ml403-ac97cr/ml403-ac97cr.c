@@ -1187,6 +1187,9 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 
 	PDEBUG(INIT_INFO, "create()\n");
 
+	res_mem_dt.start = 0;
+	irq_pos1_dt = irq_pos0_dt = -1;
+
 	*rml403_ac97cr = NULL;
 	ml403_ac97cr = kzalloc(sizeof(*ml403_ac97cr), GFP_KERNEL);
 	if (ml403_ac97cr == NULL)
@@ -1210,13 +1213,14 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
 	if (np) {
 		of_address_to_resource(np, 0, &res_mem_dt);
-		irq_pos0_dt = of_irq_to_resource(np, 0, NULL);
-		irq_pos1_dt = of_irq_to_resource(np, 1, NULL);
+		irq_pos0_dt = irq_of_parse_and_map(np, 0);
+		irq_pos1_dt = irq_of_parse_and_map(np, 1);
 		of_node_put(np);
+		np = NULL;
 	}
 
 	/* get "port" */
-	if (np) {
+	if (res_mem_dt.start) {
 		resource = &res_mem_dt;
 	} else {
 		resource = platform_get_resource(pfdev, IORESOURCE_MEM, 0);
@@ -1250,7 +1254,7 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 
 	/* get irq */
 	irq = -1;
-	if (np) {
+	if (irq_pos0_dt > 0) {
 		irq = irq_pos0_dt;
 	} else {
 		irq = platform_get_irq(pfdev, 0);
@@ -1270,7 +1274,7 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		   "request (playback) irq %d done\n",
 		   ml403_ac97cr->irq);
 	irq = -1;
-	if (np) {
+	if (irq_pos1_dt > 0) {
 		irq = irq_pos1_dt;
 	} else {
 		irq = platform_get_irq(pfdev, 1);
