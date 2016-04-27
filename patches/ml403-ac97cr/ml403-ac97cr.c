@@ -304,7 +304,7 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
 			PDEBUG(CODEC_FAKE, "lm4550_regfile_write_values_after_"
 				   "init(): reg=0x%02x val=0x%04x / %d is different "
 				   "from def=0x%04x / %d - snd_ac97_write() called to update\n",
-			           (i << 1), lm4550_regfile[i].value,
+				   (i << 1), lm4550_regfile[i].value,
 				   lm4550_regfile[i].value, lm4550_regfile[i].def,
 				   lm4550_regfile[i].def);
 			snd_ac97_write(ac97, (i << 1), lm4550_regfile[i].value);
@@ -369,7 +369,7 @@ struct snd_ml403_ac97cr {
 	int capture_irq;
 	int enable_capture_irq;
 
-        void *port_phy;
+	void *port_phy;
 	void __iomem *port;
 	u32 port_size;
 
@@ -386,8 +386,8 @@ struct snd_ml403_ac97cr {
 	struct snd_pcm_substream *playback_substream;
 	struct snd_pcm_substream *capture_substream;
 
-	struct snd_pcm_indirect2 ind_rec; /* for playback */
-	struct snd_pcm_indirect2 capture_ind2_rec;
+	struct snd_pcm_indirect2 playback_ind2_pcm; /* for playback */
+	struct snd_pcm_indirect2 capture_ind2_pcm;
 };
 
 static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
@@ -399,13 +399,13 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
 				 SNDRV_PCM_RATE_48000),
 	.rate_min =		48000,
 	.rate_max =		48000,
-	.channels_min =	        2,
-	.channels_max =	        2,
+	.channels_min =		2,
+	.channels_max =		2,
 	.buffer_bytes_max =     (128*1024),
 	.period_bytes_min =     CR_FIFO_SIZE/2,
 	.period_bytes_max =     (64*1024),
-	.periods_min =	        2,
-	.periods_max =	        (128*1024)/(CR_FIFO_SIZE/2),
+	.periods_min =		2,
+	.periods_max =		(128*1024)/(CR_FIFO_SIZE/2),
 	.fifo_size =		0,
 };
 
@@ -418,13 +418,13 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
 				 SNDRV_PCM_RATE_48000),
 	.rate_min =		48000,
 	.rate_max =		48000,
-	.channels_min =	        2,
-	.channels_max =	        2,
+	.channels_min =		2,
+	.channels_max =		2,
 	.buffer_bytes_max =     (128*1024),
 	.period_bytes_min =     CR_FIFO_SIZE/2,
 	.period_bytes_max =     (64*1024),
-	.periods_min =	        2,
-	.periods_max =	        (128*1024)/(CR_FIFO_SIZE/2),
+	.periods_min =		2,
+	.periods_max =		(128*1024)/(CR_FIFO_SIZE/2),
 	.fifo_size =		0,
 };
 
@@ -441,8 +441,8 @@ snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
 	spin_lock(&ml403_ac97cr->reg_lock);
 	while ((full = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
 				 CR_PLAYFULL)) != CR_PLAYFULL) {
-	        iowrite32(0, CR_REG(ml403_ac97cr, PLAYFIFO));
-	        copied_words++;
+		iowrite32(0, CR_REG(ml403_ac97cr, PLAYFIFO));
+		copied_words++;
 	}
 	rec->hw_ready = 0;
 	spin_unlock(&ml403_ac97cr->reg_lock);
@@ -540,17 +540,17 @@ static snd_pcm_uframes_t
 snd_ml403_ac97cr_pcm_pointer(struct snd_pcm_substream *substream)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
-	struct snd_pcm_indirect2 *ind2_rec = NULL;
+	struct snd_pcm_indirect2 *ind2_pcm = NULL;
 
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	if (substream == ml403_ac97cr->playback_substream)
-		ind2_rec = &ml403_ac97cr->ind_rec;
+		ind2_pcm = &ml403_ac97cr->playback_ind2_pcm;
 	if (substream == ml403_ac97cr->capture_substream)
-		ind2_rec = &ml403_ac97cr->capture_ind2_rec;
+		ind2_pcm = &ml403_ac97cr->capture_ind2_pcm;
 
-	if (ind2_rec != NULL)
-		return snd_pcm_indirect2_pointer(substream, ind2_rec);
+	if (ind2_pcm != NULL)
+		return snd_pcm_indirect2_pointer(substream, ind2_pcm);
 	return (snd_pcm_uframes_t) 0;
 }
 
@@ -566,7 +566,7 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 		PDEBUG(WORK_INFO, "trigger(playback): START\n");
-		ml403_ac97cr->ind_rec.hw_ready = 1;
+		ml403_ac97cr->playback_ind2_pcm.hw_ready = 1;
 
 		/* clear play FIFO */
 		iowrite32(CR_PLAYRESET, CR_REG(ml403_ac97cr, RESETFIFO));
@@ -577,13 +577,15 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
 		PDEBUG(WORK_INFO, "trigger(playback): STOP\n");
-		ml403_ac97cr->ind_rec.hw_ready = 0;
-#ifdef SND_PCM_INDIRECT2_STAT
-		snd_pcm_indirect2_stat(substream, &ml403_ac97cr->ind_rec);
-#endif
+
 		/* disable play irq */
 		disable_irq_nosync(ml403_ac97cr->irq);
 		ml403_ac97cr->enable_irq = 0;
+
+		ml403_ac97cr->playback_ind2_pcm.hw_ready = 0;
+#ifdef SND_PCM_INDIRECT2_STAT
+		snd_pcm_indirect2_stat(substream, &ml403_ac97cr->playback_ind2_pcm);
+#endif
 		break;
 	default:
 		err = -EINVAL;
@@ -605,7 +607,7 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 		PDEBUG(WORK_INFO, "trigger(capture): START\n");
-		ml403_ac97cr->capture_ind2_rec.hw_ready = 0;
+		ml403_ac97cr->capture_ind2_pcm.hw_ready = 0;  // TODO: why 0 ?
 
 		/* clear record FIFO */
 		iowrite32(CR_RECRESET, CR_REG(ml403_ac97cr, RESETFIFO));
@@ -616,14 +618,16 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
 		PDEBUG(WORK_INFO, "trigger(capture): STOP\n");
-		ml403_ac97cr->capture_ind2_rec.hw_ready = 0;
-#ifdef SND_PCM_INDIRECT2_STAT
-		snd_pcm_indirect2_stat(substream,
-				       &ml403_ac97cr->capture_ind2_rec);
-#endif
+
 		/* disable capture irq */
 		disable_irq_nosync(ml403_ac97cr->capture_irq);
 		ml403_ac97cr->enable_capture_irq = 0;
+
+		ml403_ac97cr->capture_ind2_pcm.hw_ready = 0;
+#ifdef SND_PCM_INDIRECT2_STAT
+		snd_pcm_indirect2_stat(substream,
+				       &ml403_ac97cr->capture_ind2_pcm);
+#endif
 		break;
 	default:
 		err = -EINVAL;
@@ -652,17 +656,17 @@ snd_ml403_ac97cr_pcm_playback_prepare(struct snd_pcm_substream *substream)
 	PDEBUG(WORK_INFO, "prepare(): rate=%d\n", runtime->rate);
 
 	/* init struct for intermediate buffer */
-	memset(&ml403_ac97cr->ind_rec, 0, sizeof(struct snd_pcm_indirect2));
-	ml403_ac97cr->ind_rec.hw_buffer_size = CR_FIFO_SIZE;
-	ml403_ac97cr->ind_rec.sw_buffer_size =
+	memset(&ml403_ac97cr->playback_ind2_pcm, 0, sizeof(struct snd_pcm_indirect2));
+	ml403_ac97cr->playback_ind2_pcm.hw_buffer_size = CR_FIFO_SIZE;
+	ml403_ac97cr->playback_ind2_pcm.sw_buffer_size =
 		snd_pcm_lib_buffer_bytes(substream);
-	ml403_ac97cr->ind_rec.min_periods = -1;
-	ml403_ac97cr->ind_rec.min_multiple =
+	ml403_ac97cr->playback_ind2_pcm.min_periods = -1;
+	ml403_ac97cr->playback_ind2_pcm.min_multiple =
 		snd_pcm_lib_period_bytes(substream) / (CR_FIFO_SIZE / 2);
 	PDEBUG(WORK_INFO, "prepare(): hw_buffer_size=%d, "
 		   "sw_buffer_size=%d, min_multiple=%d\n",
-		   CR_FIFO_SIZE, ml403_ac97cr->ind_rec.sw_buffer_size,
-		   ml403_ac97cr->ind_rec.min_multiple);
+		   CR_FIFO_SIZE, ml403_ac97cr->playback_ind2_pcm.sw_buffer_size,
+		   ml403_ac97cr->playback_ind2_pcm.min_multiple);
 	return 0;
 }
 
@@ -685,17 +689,17 @@ snd_ml403_ac97cr_pcm_capture_prepare(struct snd_pcm_substream *substream)
 	PDEBUG(WORK_INFO, "prepare(capture): rate=%d\n", runtime->rate);
 
 	/* init struct for intermediate buffer */
-	memset(&ml403_ac97cr->capture_ind2_rec, 0,
+	memset(&ml403_ac97cr->capture_ind2_pcm, 0,
 	       sizeof(struct snd_pcm_indirect2));
-	ml403_ac97cr->capture_ind2_rec.hw_buffer_size = CR_FIFO_SIZE;
-	ml403_ac97cr->capture_ind2_rec.sw_buffer_size =
+	ml403_ac97cr->capture_ind2_pcm.hw_buffer_size = CR_FIFO_SIZE;
+	ml403_ac97cr->capture_ind2_pcm.sw_buffer_size =
 		snd_pcm_lib_buffer_bytes(substream);
-	ml403_ac97cr->capture_ind2_rec.min_multiple =
+	ml403_ac97cr->capture_ind2_pcm.min_multiple =
 		snd_pcm_lib_period_bytes(substream) / (CR_FIFO_SIZE / 2);
 	PDEBUG(WORK_INFO, "prepare(capture): hw_buffer_size=%d, "
 	       "sw_buffer_size=%d, min_multiple=%d\n", CR_FIFO_SIZE,
-	       ml403_ac97cr->capture_ind2_rec.sw_buffer_size,
-	       ml403_ac97cr->capture_ind2_rec.min_multiple);
+	       ml403_ac97cr->capture_ind2_pcm.sw_buffer_size,
+	       ml403_ac97cr->capture_ind2_pcm.min_multiple);
 	return 0;
 }
 
@@ -818,8 +822,8 @@ static struct platform_driver snd_ml403_ac97cr_driver = {
 	.probe = snd_ml403_ac97cr_probe,
 	.remove = snd_ml403_ac97cr_remove,
 	.driver = {
-	        .name = SND_ML403_AC97CR_DRIVER,
-	        .owner = THIS_MODULE,
+		.name = SND_ML403_AC97CR_DRIVER,
+		.owner = THIS_MODULE,
 		.of_match_table = of_match_ptr(ml403_ac97cr_dt_ids),
 	},
 };
@@ -829,25 +833,29 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
 
+	PDEBUG(INIT_INFO, "irq(): IRQ = %d, dev_id = 0x%p\n", irq, dev_id);
+
 	ml403_ac97cr = (struct snd_ml403_ac97cr *)dev_id;
 	if (ml403_ac97cr == NULL)
 		return IRQ_NONE;
 
-	if (irq == ml403_ac97cr->irq) {                 /* playback interrupt */
+	if (irq == ml403_ac97cr->irq) {			/* playback interrupt */
+		PDEBUG(INIT_INFO, "irq(): play - enable_irq = %d\n", ml403_ac97cr->enable_irq);
 		if (ml403_ac97cr->enable_irq) {
 			snd_pcm_indirect2_playback_interrupt(
 				ml403_ac97cr->playback_substream,
-				&ml403_ac97cr->ind_rec,
+				&ml403_ac97cr->playback_ind2_pcm,
 				snd_ml403_ac97cr_playback_ind2_copy,
 				snd_ml403_ac97cr_playback_ind2_zero);
 			return IRQ_HANDLED;
 		}
 
 	} else if (irq == ml403_ac97cr->capture_irq) {  /* capture interrupt */
+		PDEBUG(INIT_INFO, "irq(): capture - enable_capture_irq = %d\n", ml403_ac97cr->enable_capture_irq);
 		if (ml403_ac97cr->enable_capture_irq) {
 			snd_pcm_indirect2_capture_interrupt(
 				ml403_ac97cr->capture_substream,
-				&ml403_ac97cr->capture_ind2_rec,
+				&ml403_ac97cr->capture_ind2_pcm,
 				snd_ml403_ac97cr_capture_ind2_copy,
 				snd_ml403_ac97cr_capture_ind2_null);
 			return IRQ_HANDLED;
