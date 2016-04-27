@@ -209,6 +209,7 @@ assign ac97_clks_o = { clk_48khz, clk_8khz };                                   
 //---------------------------------------------------------------------------------
 // AC97-CODEC registers
 
+reg  [  1: 0] ac97ctrl_codec_pwrdn          =  'b0;
 reg  [  5: 0] ac97ctrl_codec_addr           =  'b0;                                                         // word offset address
 reg  [ 15: 0] ac97ctrl_codec_data_write     =  'b0;
 wire [ 15: 0] ac97ctrl_codec_data_read_out;
@@ -227,6 +228,12 @@ ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
   .addrb                   ( ac97ctrl_codec_addr[5:0]    ),  // AC97-CODEC word address
   .doutb                   ( ac97ctrl_codec_data_read_out)   // AC97-CODEC content data word
 );
+
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
+if (!adc_rstn_i)
+   ac97ctrl_codec_pwrdn <= 'b0;
+else if (ac97ctrl_codec_addr[5:0] == (6'h26 >> 1))
+   ac97ctrl_codec_pwrdn[1:0] = ac97ctrl_codec_data_write[9:8];                                              // [1]: 1 = DAC disabled (play), [0]: 1 = ADC disabled (rec)
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
 if (!adc_rstn_i)
@@ -256,7 +263,7 @@ else
 wire          ac97ctrl_play_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_play_reset;
 wire [ 31: 0] ac97ctrl_play_fifo_write = { ac97ctrl_play_right, ac97ctrl_play_left };
 wire [ 31: 0] ac97ctrl_play_fifo_read;
-wire          ac97ctrl_play_fifo_pop   = clk_48khz;
+wire          ac97ctrl_play_fifo_pop   = ac97ctrl_codec_pwrdn[1] ?  1'b0 : clk_48khz;
 wire [  3: 0] ac97ctrl_play_fifo_ctr;
 
 ac97ctrl_16x32_sr_fifo i_ac97ctrl_play_fifo (
@@ -279,7 +286,7 @@ assign ac97_line_out_o[ 2*16-1:0]  = ac97ctrl_play_fifo_read[31:0];
 wire          ac97ctrl_rec_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_rec_reset;
 reg           ac97ctrl_rec_is_right   = 1'b0;
 wire [ 31: 0] ac97ctrl_rec_fifo_write = ac97_line_in_i[2*16-1:0];
-wire          ac97ctrl_rec_fifo_push  = clk_48khz;
+wire          ac97ctrl_rec_fifo_push  = ac97ctrl_codec_pwrdn[0] ?  1'b0 : clk_48khz;
 wire [ 31: 0] ac97ctrl_rec_fifo_read;
 reg           ac97ctrl_rec_fifo_pop   = 1'b0;
 wire [  3: 0] ac97ctrl_rec_fifo_ctr;
@@ -315,6 +322,12 @@ if (!adc_rstn_i) begin
 else if (ac97ctrl_fifo_play_reset)
    ac97_irq_play_o <= 1'b0;
 
+else if (ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL != 4'h1))
+   ac97_irq_play_o <= 1'b0;
+
+else if (!ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL == 4'h1))
+   ac97_irq_play_o <= 1'b0;
+
 else if (C_PLAYBACK) begin
    case (C_PLAY_INTR_LEVEL)                                                                                 // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 
@@ -333,9 +346,6 @@ else if (C_PLAYBACK) begin
    4: begin
       if (ac97ctrl_play_fifo_full && !ac97ctrl_play_fifo_full_d)
          ac97_irq_play_o <= 1'b1;
-      end
-   default: begin
-      ac97_irq_play_o <= 1'b0;
       end
 
    endcase
@@ -364,6 +374,12 @@ if (!adc_rstn_i) begin
 else if (ac97ctrl_fifo_rec_reset)
    ac97_irq_rec_o <= 1'b0;
 
+else if (ac97ctrl_rec_fifo_empty && (C_REC_INTR_LEVEL != 4'h1))
+   ac97_irq_rec_o <= 1'b0;
+
+else if (!ac97ctrl_rec_fifo_empty && (C_REC_INTR_LEVEL == 4'h1))
+   ac97_irq_rec_o <= 1'b0;
+
 else if (C_RECORD) begin
    case (C_REC_INTR_LEVEL)                                                                                  // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 
@@ -382,9 +398,6 @@ else if (C_RECORD) begin
    4: begin
       if (ac97ctrl_rec_fifo_full && !ac97ctrl_rec_fifo_full_d)
          ac97_irq_rec_o <= 1'b1;
-      end
-   default: begin
-      ac97_irq_rec_o <= 1'b0;
       end
 
    endcase
