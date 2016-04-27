@@ -119,22 +119,15 @@ MODULE_PARM_DESC(enable, "Enable this RedPitaya-RadioBox sound system.");
 #define INIT_FAILURE	(1<<4)
 #define WORK_INFO	(1<<5)
 #define WORK_FAILURE	(1<<6)
+#define ISR_INFO        (1<<7)
 
 #define PDEBUG_FACILITIES (INIT_INFO | WORK_INFO | CODEC_SUCCESS | CODEC_FAKE | UNKNOWN | INIT_FAILURE | WORK_FAILURE)
 
-#if 0
 #define PDEBUG(fac, fmt, args...) do { \
 	if (fac & PDEBUG_FACILITIES) \
 		snd_printd(KERN_DEBUG SND_ML403_AC97CR_DRIVER ": " \
 			   fmt, ##args); \
 	} while (0)
-#else
-#define PDEBUG(fac, fmt, args...) do { \
-	if (fac & PDEBUG_FACILITIES) \
-		printk(KERN_DEBUG SND_ML403_AC97CR_DRIVER ": " \
-		       fmt, ##args); \
-	} while (0)
-#endif
 #else
 #define PDEBUG(fac, fmt, args...) /* nothing */
 #endif
@@ -430,110 +423,105 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
 
 static size_t
 snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
-				    struct snd_pcm_indirect2 *rec)
+				    struct snd_pcm_indirect2 *pcm)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
 	int copied_words = 0;
-	u32 full = 0;
+	u32 status = 0;
 
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((full = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+	while ((status = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
 				 CR_PLAYFULL)) != CR_PLAYFULL) {
 		iowrite32(0, CR_REG(ml403_ac97cr, PLAYFIFO));
 		copied_words++;
 	}
-	rec->hw_ready = 0;
+	pcm->hw_ready = 0;
 	spin_unlock(&ml403_ac97cr->reg_lock);
 
-	return (size_t) (copied_words * 2);
+	return (size_t) (copied_words << 1);
 }
 
 static size_t
 snd_ml403_ac97cr_playback_ind2_copy(struct snd_pcm_substream *substream,
-				    struct snd_pcm_indirect2 *rec,
+				    struct snd_pcm_indirect2 *pcm,
 				    size_t bytes)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
 	u16 *src;
 	int copied_words = 0;
-	u32 full = 0;
+	u32 status = 0;
 
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
-	src = (u16 *)(substream->runtime->dma_area + rec->sw_data);
+	src = (u16 *)(substream->runtime->dma_area + pcm->sw_data);
 
+        PDEBUG(ISR_INFO, "ind2_copy(playback): copying %d bytes to   the FPGA ...\n", bytes);
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((full = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+	while (((status = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
 				  CR_PLAYFULL)) != CR_PLAYFULL) && (bytes > 1)) {
-		iowrite32(CR_PLAYDATA(src[copied_words]), CR_REG(ml403_ac97cr, PLAYFIFO));
-		copied_words++;
-		bytes = bytes - 2;
+		iowrite32(CR_PLAYDATA(src[copied_words++]), CR_REG(ml403_ac97cr, PLAYFIFO));
+		bytes -= 2;
 	}
-	if (full != CR_PLAYFULL)
-		rec->hw_ready = 1;
+	if (status != CR_PLAYFULL)
+		pcm->hw_ready = 1;
 	else
-		rec->hw_ready = 0;
+		pcm->hw_ready = 0;
 	spin_unlock(&ml403_ac97cr->reg_lock);
+        PDEBUG(ISR_INFO, "ind2_copy(playback): ... done. hw_ready = %d\n", pcm->hw_ready);
 
-	return (size_t) (copied_words * 2);
+	return (size_t) (copied_words << 1);
 }
 
 static size_t
 snd_ml403_ac97cr_capture_ind2_null(struct snd_pcm_substream *substream,
-				   struct snd_pcm_indirect2 *rec)
+				   struct snd_pcm_indirect2 *pcm)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
 	int copied_words = 0;
-	u32 empty = 0;
 
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
 
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((empty = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
-				  CR_RECEMPTY)) != CR_RECEMPTY) {
-		volatile u32 trash;
-
-		trash = CR_RECDATA(ioread32(CR_REG(ml403_ac97cr, RECFIFO)));
-		/* Hmmmm, really necessary? Don't want call to le32_to_cpu()
-		 * to be optimised away!
-		 */
-		trash++;
+	while ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+				  CR_RECEMPTY) != CR_RECEMPTY) {
+		(void) ioread32(CR_REG(ml403_ac97cr, RECFIFO));
 		copied_words++;
 	}
-	rec->hw_ready = 0;
+	pcm->hw_ready = 1;
 	spin_unlock(&ml403_ac97cr->reg_lock);
 
-	return (size_t) (copied_words * 2);
+	return (size_t) (copied_words << 1);
 }
 
 static size_t
 snd_ml403_ac97cr_capture_ind2_copy(struct snd_pcm_substream *substream,
-				   struct snd_pcm_indirect2 *rec, size_t bytes)
+				   struct snd_pcm_indirect2 *pcm, size_t bytes)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
 	u16 *dst;
 	int copied_words = 0;
-	u32 empty = 0;
+	u32 status = 0;
 
 	ml403_ac97cr = snd_pcm_substream_chip(substream);
-	dst = (u16 *)(substream->runtime->dma_area + rec->sw_data);
+	dst = (u16 *)(substream->runtime->dma_area + pcm->sw_data);
 
+	PDEBUG(ISR_INFO, "ind2_copy(capture): copying %d bytes from the FPGA ...\n", bytes);
 	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((empty = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
+	while (((status = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
 				   CR_RECEMPTY)) != CR_RECEMPTY) && (bytes > 1)) {
-		dst[copied_words] = CR_RECDATA(ioread32(CR_REG(ml403_ac97cr,
+		dst[copied_words++] = CR_RECDATA(ioread32(CR_REG(ml403_ac97cr,
 							RECFIFO)));
-		copied_words++;
-		bytes = bytes - 2;
+		bytes -= 2;
 	}
-	if (empty != CR_RECEMPTY)
-		rec->hw_ready = 1;
+	if (status != CR_RECEMPTY)
+		pcm->hw_ready = 1;
 	else
-		rec->hw_ready = 0;
+		pcm->hw_ready = 0;
 	spin_unlock(&ml403_ac97cr->reg_lock);
+        PDEBUG(ISR_INFO, "ind2_copy(capture): ... done. hw_ready = %d\n", pcm->hw_ready);
 
-	return (size_t) (copied_words * 2);
+	return (size_t) (copied_words << 1);
 }
 
 static snd_pcm_uframes_t
@@ -607,7 +595,7 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 		PDEBUG(WORK_INFO, "trigger(capture): START\n");
-		ml403_ac97cr->capture_ind2_pcm.hw_ready = 0;  // TODO: why 0 ?
+		ml403_ac97cr->capture_ind2_pcm.hw_ready = 1;
 
 		/* clear record FIFO */
 		iowrite32(CR_RECRESET, CR_REG(ml403_ac97cr, RESETFIFO));
@@ -833,14 +821,14 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
 
-	PDEBUG(INIT_INFO, "irq(): IRQ = %d, dev_id = 0x%p\n", irq, dev_id);
+	PDEBUG(ISR_INFO, "irq(): IRQ = %d, dev_id = 0x%p\n", irq, dev_id);
 
 	ml403_ac97cr = (struct snd_ml403_ac97cr *)dev_id;
 	if (ml403_ac97cr == NULL)
 		return IRQ_NONE;
 
 	if (irq == ml403_ac97cr->playback_irq) {	/* playback interrupt */
-		PDEBUG(INIT_INFO, "irq(): play - enable_playback_irq = %d\n", ml403_ac97cr->enable_playback_irq);
+		PDEBUG(ISR_INFO, "irq(): play - enable_playback_irq = %d\n", ml403_ac97cr->enable_playback_irq);
 		if (ml403_ac97cr->enable_playback_irq) {
 			snd_pcm_indirect2_playback_interrupt(
 				ml403_ac97cr->playback_substream,
@@ -851,7 +839,7 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 		}
 
 	} else if (irq == ml403_ac97cr->capture_irq) {  /* capture interrupt */
-		PDEBUG(INIT_INFO, "irq(): capture - enable_capture_irq = %d\n", ml403_ac97cr->enable_capture_irq);
+		PDEBUG(ISR_INFO, "irq(): capture - enable_capture_irq = %d\n", ml403_ac97cr->enable_capture_irq);
 		if (ml403_ac97cr->enable_capture_irq) {
 			snd_pcm_indirect2_capture_interrupt(
 				ml403_ac97cr->capture_substream,
@@ -865,7 +853,7 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 		return IRQ_NONE;
 
 	/* superfluous IRQ catched */
-	PDEBUG(INIT_INFO, "irq(): irq %d is meant to be disabled! So, now try "
+	PDEBUG(WORK_FAILURE, "irq(): irq %d is meant to be disabled! So, now try "
 		   "to disable it _really_!\n", irq);
 	disable_irq_nosync(irq);
 	return IRQ_HANDLED;
