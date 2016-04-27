@@ -387,7 +387,7 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
 	.info =			(SNDRV_PCM_INFO_MMAP |
 				 SNDRV_PCM_INFO_INTERLEAVED |
 				 SNDRV_PCM_INFO_MMAP_VALID),
-	.formats =		 SNDRV_PCM_FMTBIT_S16_BE,
+	.formats =		 SNDRV_PCM_FMTBIT_S16_LE,
 	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
 				 SNDRV_PCM_RATE_48000),
 	.rate_min =		48000,
@@ -406,7 +406,7 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
 	.info =			(SNDRV_PCM_INFO_MMAP |
 				 SNDRV_PCM_INFO_INTERLEAVED |
 				 SNDRV_PCM_INFO_MMAP_VALID),
-	.formats =		 SNDRV_PCM_FMTBIT_S16_BE,
+	.formats =		 SNDRV_PCM_FMTBIT_S16_LE,
 	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
 				 SNDRV_PCM_RATE_48000),
 	.rate_min =		48000,
