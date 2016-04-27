@@ -834,29 +834,29 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 		return IRQ_NONE;
 
 	if (irq == ml403_ac97cr->irq) {                 /* playback interrupt */
-		if (ml403_ac97cr->enable_irq)
+		if (ml403_ac97cr->enable_irq) {
 			snd_pcm_indirect2_playback_interrupt(
 				ml403_ac97cr->playback_substream,
 				&ml403_ac97cr->ind_rec,
 				snd_ml403_ac97cr_playback_ind2_copy,
 				snd_ml403_ac97cr_playback_ind2_zero);
-		else
-			goto __disable_irq;
-	} else if (irq == ml403_ac97cr->capture_irq) {  /* record interrupt */
-		if (ml403_ac97cr->enable_capture_irq)
+			return IRQ_HANDLED;
+		}
+
+	} else if (irq == ml403_ac97cr->capture_irq) {  /* capture interrupt */
+		if (ml403_ac97cr->enable_capture_irq) {
 			snd_pcm_indirect2_capture_interrupt(
 				ml403_ac97cr->capture_substream,
 				&ml403_ac97cr->capture_ind2_rec,
 				snd_ml403_ac97cr_capture_ind2_copy,
 				snd_ml403_ac97cr_capture_ind2_null);
-		else
-			goto __disable_irq;
+			return IRQ_HANDLED;
+		}
+
 	} else
 		return IRQ_NONE;
-	}
-	return IRQ_HANDLED;
 
-__disable_irq:
+	/* superfluous IRQ catched */
 	PDEBUG(INIT_INFO, "irq(): irq %d is meant to be disabled! So, now try "
 		   "to disable it _really_!\n", irq);
 	disable_irq_nosync(irq);
