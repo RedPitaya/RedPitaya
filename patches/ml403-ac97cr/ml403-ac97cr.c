@@ -828,18 +828,12 @@ static struct platform_driver snd_ml403_ac97cr_driver = {
 static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 {
 	struct snd_ml403_ac97cr *ml403_ac97cr;
-	struct platform_device *pfdev;
-	int cmp_irq;
 
 	ml403_ac97cr = (struct snd_ml403_ac97cr *)dev_id;
 	if (ml403_ac97cr == NULL)
 		return IRQ_NONE;
 
-	pfdev = ml403_ac97cr->pfdev;
-
-	/* playback interrupt */
-	cmp_irq = platform_get_irq(pfdev, 0);
-	if (irq == cmp_irq) {
+	if (irq == ml403_ac97cr->irq) {                 /* playback interrupt */
 		if (ml403_ac97cr->enable_irq)
 			snd_pcm_indirect2_playback_interrupt(
 				ml403_ac97cr->playback_substream,
@@ -848,20 +842,17 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 				snd_ml403_ac97cr_playback_ind2_zero);
 		else
 			goto __disable_irq;
-	} else {
-		/* record interrupt */
-		cmp_irq = platform_get_irq(pfdev, 1);
-		if (irq == cmp_irq) {
-			if (ml403_ac97cr->enable_capture_irq)
-				snd_pcm_indirect2_capture_interrupt(
-					ml403_ac97cr->capture_substream,
-					&ml403_ac97cr->capture_ind2_rec,
-					snd_ml403_ac97cr_capture_ind2_copy,
-					snd_ml403_ac97cr_capture_ind2_null);
-			else
-				goto __disable_irq;
-		} else
-			return IRQ_NONE;
+	} else if (irq == ml403_ac97cr->capture_irq) {  /* record interrupt */
+		if (ml403_ac97cr->enable_capture_irq)
+			snd_pcm_indirect2_capture_interrupt(
+				ml403_ac97cr->capture_substream,
+				&ml403_ac97cr->capture_ind2_rec,
+				snd_ml403_ac97cr_capture_ind2_copy,
+				snd_ml403_ac97cr_capture_ind2_null);
+		else
+			goto __disable_irq;
+	} else
+		return IRQ_NONE;
 	}
 	return IRQ_HANDLED;
 
