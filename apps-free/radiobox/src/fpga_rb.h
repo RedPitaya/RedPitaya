@@ -1306,7 +1306,7 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn);
  * @param[in]  tx_modtyp        2==USB, 3==LSB, 4==AM, 7==FM, 8==PM - else ignored.
  * @param[in]  rx_modtyp        2==USB, 3==LSB, 4==AMenv, 5==AMsync_USB, 6==AMsync_LSB, 7==FM, 8==PM - else ignored.
  * @param[in]  src_con_pnt      RB LED controller, RF Output 1 and RF Output 2 setting to be used.
- * @param[in]  src_con2_pnt     AC97 LineOut Left and AC97 LineOut Right setting to be used.
+ * @param[in]  src_con2_pnt     AC97 LineIn Left and AC97 LineIn Right setting to be used.
  * @param[in]  rx_muxin_src     0==Off, 1==RF Input 1, 2==RF Input 2.
  * @param[in]  tx_car_osc_qrg   Frequency for TX_CAR_OSC in Hz.
  * @param[in]  rx_car_osc_qrg   Frequency for RX_CAR_OSC in Hz.

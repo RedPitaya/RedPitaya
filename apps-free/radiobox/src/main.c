@@ -135,10 +135,10 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
         "ovrdrv_s",                 0.0,   1,  0, 0.0,  65535.0  },
 
     { /* AC97 LineOut Left  CON_SRC_PNT - transport_pktIdx 4 */
-        "ac97_lol_s",               0.0,   1,  0, 0.0,    255.0  },
+        "ac97_lil_s",               0.0,   1,  0, 0.0,    255.0  },
 
     { /* AC97 LineOut Right CON_SRC_PNT - transport_pktIdx 4 */
-        "ac97_lor_s",               0.0,   1,  0, 0.0,    255.0  },
+        "ac97_lir_s",               0.0,   1,  0, 0.0,    255.0  },
 
 
     { /* has to be last entry */
@@ -785,8 +785,8 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                     !strcmp("rfout2_term_s",       src[i].name) ||
                     !strcmp("qrg_inc_s",           src[i].name) ||
                     !strcmp("ovrdrv_s",            src[i].name) ||
-                    !strcmp("ac97_lol_s",          src[i].name) ||
-                    !strcmp("ac97_lor_s",          src[i].name)) {
+                    !strcmp("ac97_lil_s",          src[i].name) ||
+                    !strcmp("ac97_lir_s",          src[i].name)) {
                     found = 1;
                 }
                 break;

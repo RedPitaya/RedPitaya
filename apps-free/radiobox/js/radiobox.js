@@ -104,10 +104,10 @@
     qrg_inc_s:             50,  // Frequency range controller increment value [0%..100%]
     ovrdrv_s:               0,  // Current overdrive flags of the FPGA signals
 
-    ac97_lol_s:            80,  // connect to RX_AUDIO_OUT (RX: audio signal)
-    ac97_lor_s:            80   // connect to RX_AUDIO_OUT (RX: audio signal)
-  //ac97_lol_s:            60,  // connect to RX_MOD_48K_I (RX: audio signal)
-  //ac97_lor_s:            61   // connect to RX_MOD_48K_Q (RX: audio signal)
+    ac97_lil_s:            80,  // connect to RX_AUDIO_OUT (RX: audio signal)
+    ac97_lir_s:            80   // connect to RX_AUDIO_OUT (RX: audio signal)
+  //ac97_lil_s:            60,  // connect to RX_MOD_48K_I (RX: audio signal)
+  //ac97_lir_s:            61   // connect to RX_MOD_48K_Q (RX: audio signal)
   };
 
   // Other global variables
@@ -412,10 +412,10 @@
           $('#rx_muxin_gain_s').removeClass('form-bg-rx-muxin-gain-ovrdrv');
         }
       }
-      else if (param_name == 'ac97_lol_s') {
+      else if (param_name == 'ac97_lil_s') {
         $('#'+param_name).val(intVal);
       }
-      else if (param_name == 'ac97_lor_s') {
+      else if (param_name == 'ac97_lir_s') {
         $('#'+param_name).val(intVal);
       }
 
@@ -1559,12 +1559,12 @@ function cast_params2transport(params, pktIdx)
       transport['ovrdrv_s'] = params['ovrdrv_s'];
     }
 
-    if (params['ac97_lol_s'] !== undefined) {
-      transport['ac97_lol_s'] = params['ac97_lol_s'];
+    if (params['ac97_lil_s'] !== undefined) {
+      transport['ac97_lil_s'] = params['ac97_lil_s'];
     }
 
-    if (params['ac97_lor_s'] !== undefined) {
-      transport['ac97_lor_s'] = params['ac97_lor_s'];
+    if (params['ac97_lir_s'] !== undefined) {
+      transport['ac97_lir_s'] = params['ac97_lir_s'];
     }
     break;
 
@@ -1680,12 +1680,12 @@ function cast_transport2params(transport)
     params['ovrdrv_s'] = transport['ovrdrv_s'];
   }
 
-  if (transport['ac97_lol_s'] !== undefined) {
-    params['ac97_lol_s'] = transport['ac97_lol_s'];
+  if (transport['ac97_lil_s'] !== undefined) {
+    params['ac97_lil_s'] = transport['ac97_lil_s'];
   }
 
-  if (transport['ac97_lor_s'] !== undefined) {
-    params['ac97_lor_s'] = transport['ac97_lor_s'];
+  if (transport['ac97_lir_s'] !== undefined) {
+    params['ac97_lir_s'] = transport['ac97_lir_s'];
   }
 
   //console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');

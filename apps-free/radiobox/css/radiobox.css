@@ -41,25 +41,25 @@ select#rbled_csp_s[disabled] {
   background:#707070;
 }
 
-#ac97_lol {
+#ac97_lil {
   position:relative;
   z-index:1;
 }
-.form-bg-ac97-lol {
+.form-bg-ac97-lil {
   background:#508050;
 }
-select#ac97_lol_s[disabled] {
+select#ac97_lil_s[disabled] {
   background:#707070;
 }
 
-#ac97_lor {
+#ac97_lir {
   position:relative;
   z-index:1;
 }
-.form-bg-ac97-lor {
+.form-bg-ac97-lir {
   background:#508050;
 }
-select#ac97_lor_s[disabled] {
+select#ac97_lir_s[disabled] {
   background:#707070;
 }
 

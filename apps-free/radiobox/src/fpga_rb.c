@@ -191,8 +191,8 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
     int    loc_rfout1_term    = 0;
     int    loc_rfout2_term    = 0;
     int    loc_qrg_inc        = 0;
-    int    loc_ac97_lol       = 0;
-    int    loc_ac97_lor       = 0;
+    int    loc_ac97_lil       = 0;
+    int    loc_ac97_lir       = 0;
 
     //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: BEGIN\n");
 
@@ -233,8 +233,8 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         loc_rfout1_term    = (int) pb[RB_RFOUT1_TERM].value;
         loc_rfout2_term    = (int) pb[RB_RFOUT2_TERM].value;
         loc_qrg_inc        = (int) pb[RB_QRG_INC].value;
-        loc_ac97_lol       = (int) pb[RB_AC97_LOL].value;
-        loc_ac97_lor       = (int) pb[RB_AC97_LOR].value;
+        loc_ac97_lil       = (int) pb[RB_AC97_LOL].value;
+        loc_ac97_lir       = (int) pb[RB_AC97_LOR].value;
         //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: ... done.\n");
     }
 
@@ -338,13 +338,13 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got qrg_inc_s = %d\n", (int) (pn[idx].value));
             loc_qrg_inc = ((int) (pn[idx].value));
 
-        } else if (!strcmp("ac97_lol_s", pn[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got ac97_lol_s = %d\n", (int) (pn[idx].value));
-            loc_ac97_lol = ((int) (pn[idx].value));
+        } else if (!strcmp("ac97_lil_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got ac97_lil_s = %d\n", (int) (pn[idx].value));
+            loc_ac97_lil = ((int) (pn[idx].value));
 
-        } else if (!strcmp("ac97_lor_s", pn[idx].name)) {
-            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got ac97_lor_s = %d\n", (int) (pn[idx].value));
-            loc_ac97_lor = ((int) (pn[idx].value));
+        } else if (!strcmp("ac97_lir_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got ac97_lir_s = %d\n", (int) (pn[idx].value));
+            loc_ac97_lir = ((int) (pn[idx].value));
 
         }  // else if ()
     }  // for ()
@@ -354,7 +354,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         if (loc_rb_run) {
             fpga_rb_set_ctrl(loc_rb_run, loc_tx_modsrc, loc_tx_modtyp, loc_rx_modtyp,
                     ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff),
-                    ((loc_ac97_lor    & 0xff) << 0x08) | ((loc_ac97_lol    & 0xff) << 0x00),
+                    ((loc_ac97_lir    & 0xff) << 0x08) | ((loc_ac97_lil    & 0xff) << 0x00),
                     loc_rx_muxin_src,
                     loc_tx_car_osc_qrg, loc_rx_car_osc_qrg,
                     loc_tx_mod_osc_qrg, loc_tx_muxin_gain, loc_rx_muxin_gain, loc_tx_qrg_sel, loc_rx_qrg_sel,
