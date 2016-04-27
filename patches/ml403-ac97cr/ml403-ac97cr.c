@@ -363,8 +363,8 @@ struct snd_ml403_ac97cr {
 	 */
 	struct mutex cdc_mutex;
 
-	int irq; /* for playback */
-	int enable_irq;	/* for playback */
+	int playback_irq;
+	int enable_playback_irq;
 
 	int capture_irq;
 	int enable_capture_irq;
@@ -386,7 +386,7 @@ struct snd_ml403_ac97cr {
 	struct snd_pcm_substream *playback_substream;
 	struct snd_pcm_substream *capture_substream;
 
-	struct snd_pcm_indirect2 playback_ind2_pcm; /* for playback */
+	struct snd_pcm_indirect2 playback_ind2_pcm;
 	struct snd_pcm_indirect2 capture_ind2_pcm;
 };
 
@@ -572,15 +572,15 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 		iowrite32(CR_PLAYRESET, CR_REG(ml403_ac97cr, RESETFIFO));
 
 		/* enable play irq */
-		ml403_ac97cr->enable_irq = 1;
-		enable_irq(ml403_ac97cr->irq);
+		ml403_ac97cr->enable_playback_irq = 1;
+		enable_irq(ml403_ac97cr->playback_irq);
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
 		PDEBUG(WORK_INFO, "trigger(playback): STOP\n");
 
 		/* disable play irq */
-		disable_irq_nosync(ml403_ac97cr->irq);
-		ml403_ac97cr->enable_irq = 0;
+		disable_irq_nosync(ml403_ac97cr->playback_irq);
+		ml403_ac97cr->enable_playback_irq = 0;
 
 		ml403_ac97cr->playback_ind2_pcm.hw_ready = 0;
 #ifdef SND_PCM_INDIRECT2_STAT
@@ -839,9 +839,9 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 	if (ml403_ac97cr == NULL)
 		return IRQ_NONE;
 
-	if (irq == ml403_ac97cr->irq) {			/* playback interrupt */
-		PDEBUG(INIT_INFO, "irq(): play - enable_irq = %d\n", ml403_ac97cr->enable_irq);
-		if (ml403_ac97cr->enable_irq) {
+	if (irq == ml403_ac97cr->playback_irq) {	/* playback interrupt */
+		PDEBUG(INIT_INFO, "irq(): play - enable_playback_irq = %d\n", ml403_ac97cr->enable_playback_irq);
+		if (ml403_ac97cr->enable_playback_irq) {
 			snd_pcm_indirect2_playback_interrupt(
 				ml403_ac97cr->playback_substream,
 				&ml403_ac97cr->playback_ind2_pcm,
@@ -1145,8 +1145,8 @@ static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
 {
 	PDEBUG(INIT_INFO, "free()\n");
 	/* irq release */
-	if (ml403_ac97cr->irq >= 0)
-		free_irq(ml403_ac97cr->irq, ml403_ac97cr);
+	if (ml403_ac97cr->playback_irq >= 0)
+		free_irq(ml403_ac97cr->playback_irq, ml403_ac97cr);
 	if (ml403_ac97cr->capture_irq >= 0)
 		free_irq(ml403_ac97cr->capture_irq, ml403_ac97cr);
 	PDEBUG(INIT_INFO, "free() IRQs returned\n");
@@ -1197,8 +1197,8 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	mutex_init(&ml403_ac97cr->cdc_mutex);
 	ml403_ac97cr->card = card;
 	ml403_ac97cr->pfdev = pfdev;
-	ml403_ac97cr->irq = -1;
-	ml403_ac97cr->enable_irq = 0;
+	ml403_ac97cr->playback_irq = -1;
+	ml403_ac97cr->enable_playback_irq = 0;
 	ml403_ac97cr->capture_irq = -1;
 	ml403_ac97cr->enable_capture_irq = 0;
 	ml403_ac97cr->port = NULL;
@@ -1268,10 +1268,10 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		snd_ml403_ac97cr_free(ml403_ac97cr);
 		return -EBUSY;
 	}
-	ml403_ac97cr->irq = irq;
+	ml403_ac97cr->playback_irq = irq;
 	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
 		   "request (playback) irq %d done\n",
-		   ml403_ac97cr->irq);
+		   ml403_ac97cr->playback_irq);
 	irq = -1;
 	if (irq_pos1_dt > 0) {
 		irq = irq_pos1_dt;
@@ -1420,7 +1420,7 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	strcpy(card->shortname, "ML403 AC97 RedPitaya RadioBox");
 	sprintf(card->longname, "%s %s at 0x%lx, irq %i & %i, device %i",
 		card->shortname, card->driver,
-		(unsigned long)ml403_ac97cr->port, ml403_ac97cr->irq,
+		(unsigned long)ml403_ac97cr->port, ml403_ac97cr->playback_irq,
 		ml403_ac97cr->capture_irq, dev + 1);
 
 	platform_set_drvdata(pfdev, card);
