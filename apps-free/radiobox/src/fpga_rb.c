@@ -1614,7 +1614,7 @@ int16_t rp_minimize_noise()
 
         test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), reduction);
         test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), reduction);
-        //fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", i, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+        //fprintf(stderr, "DEBUG rp_minimize_noise: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", i, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
         if (test_sig_hi < test_sig_lo) {
             min_ofs_value |= (1 << i);
         }
@@ -1623,12 +1623,12 @@ int16_t rp_minimize_noise()
     test_ofs_hi = min_ofs_value | 0b1;
     test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), 0);
     test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), 0);
-    //fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", 0, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+    //fprintf(stderr, "DEBUG rp_minimize_noise: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", 0, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
     if (test_sig_hi < test_sig_lo) {
         min_ofs_value = test_ofs_hi;
     }
 
-    //fprintf(stderr, "INFO rp_measure_calib_params: FINAL --> min_ofs_value=0x%04x=%d\n", min_ofs_value, min_ofs_value);
+    //fprintf(stderr, "INFO rp_minimize_noise: FINAL --> min_ofs_value=0x%04x=%d\n", min_ofs_value, min_ofs_value);
     return (int16_t) (((int32_t) min_ofs_value) - 0x8000);
 }
 
