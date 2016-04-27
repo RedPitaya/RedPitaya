@@ -232,8 +232,9 @@ ac97ctrl_16x64_nc_blkmem i_ac97ctrl_regs (
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
 if (!adc_rstn_i)
    ac97ctrl_codec_pwrdn <= 'b0;
-else if (ac97ctrl_codec_addr[5:0] == (6'h26 >> 1))
-   ac97ctrl_codec_pwrdn[1:0] = ac97ctrl_codec_data_write[9:8];                                              // [1]: 1 = DAC disabled (play), [0]: 1 = ADC disabled (rec)
+else if (ac97ctrl_codec_addr[5:0] == (6'h26 >> 1))                                                          // [1]: 1 = play disabled, [0]: 1 = capture disabled
+   ac97ctrl_codec_pwrdn[1:0] <= { (ac97ctrl_codec_data_write[9] || ac97ctrl_codec_data_write[12] || ac97ctrl_codec_data_write[13])  ,
+                                  (ac97ctrl_codec_data_write[8] || ac97ctrl_codec_data_write[12] || ac97ctrl_codec_data_write[13]) };
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_codec_data_read
 if (!adc_rstn_i)
@@ -365,10 +366,10 @@ assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr  ==  C_FIFO_SIZE    
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_rec_o
 if (!adc_rstn_i) begin
    ac97_irq_rec_o             <= 1'b0;
-   ac97ctrl_play_fifo_empty_d <= 1'b0;
-   ac97ctrl_play_fifo_he_d    <= 1'b0;
-   ac97ctrl_play_fifo_hf_d    <= 1'b0;
-   ac97ctrl_play_fifo_full_d  <= 1'b0;
+   ac97ctrl_rec_fifo_empty_d <= 1'b0;
+   ac97ctrl_rec_fifo_he_d    <= 1'b0;
+   ac97ctrl_rec_fifo_hf_d    <= 1'b0;
+   ac97ctrl_rec_fifo_full_d  <= 1'b0;
    end
 
 else if (ac97ctrl_fifo_rec_reset)
