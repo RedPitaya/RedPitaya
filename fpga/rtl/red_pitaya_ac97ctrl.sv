@@ -143,12 +143,16 @@ reg           ac97ctrl_rec_fifo_full_d          = 1'b0;
 reg           ac97ctrl_rec_fifo_overrun         = 1'b0;
 
 reg           ac97ctrl_reset_delay              = 1'b0;
-reg  unsigned [1:0] ac97ctrl_reset_delay_ctr    =  'b0;
+reg  unsigned [2:0] ac97ctrl_reset_delay_ctr    =  'b0;
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_reset_delay
 if (!adc_rstn_i) begin
    ac97ctrl_reset_delay     <= 1'b1;
-   ac97ctrl_reset_delay_ctr <= 2'b11;
+   ac97ctrl_reset_delay_ctr <= 3'b111;
+   end
+else if (ac97ctrl_fifo_play_reset) begin
+   ac97ctrl_reset_delay     <= 1'b1;
+   ac97ctrl_reset_delay_ctr <= 3'b111;
    end
 else if (!ac97ctrl_reset_delay_ctr)
    ac97ctrl_reset_delay     <= 1'b0;
@@ -258,11 +262,13 @@ reg           ac97ctrl_play_fifo_push  = 1'b0;
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_play_fifo_push
 if (!adc_rstn_i)
    ac97ctrl_play_fifo_push <= 1'b0;
+else if (ac97ctrl_reset_delay)
+   ac97ctrl_play_fifo_push <= 1'b1;
 else
    ac97ctrl_play_fifo_push <= (!ac97ctrl_play_is_right && ac97ctrl_play_is_right_d) ?  1'b1 : 1'b0;         // toggled right --> left
 
 wire          ac97ctrl_play_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_play_reset;
-wire [ 31: 0] ac97ctrl_play_fifo_write = { ac97ctrl_play_right, ac97ctrl_play_left };
+wire [ 31: 0] ac97ctrl_play_fifo_write = ac97ctrl_reset_delay ?  32'b0 : { ac97ctrl_play_right, ac97ctrl_play_left };
 wire [ 31: 0] ac97ctrl_play_fifo_read;
 wire          ac97ctrl_play_fifo_pop   = ac97ctrl_codec_pwrdn[1] ?  1'b0 : clk_48khz;
 wire [  3: 0] ac97ctrl_play_fifo_ctr;
@@ -320,13 +326,13 @@ if (!adc_rstn_i) begin
    ac97ctrl_play_fifo_full_d  <= 1'b0;
    end
 
-else if (ac97ctrl_fifo_play_reset)
+else if (ac97ctrl_fifo_play_reset)                                                                          // clear immediately when reset
    ac97_irq_play_o <= 1'b0;
 
-else if (ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL != 4'h1))
+else if (ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL != 4'h1))                                           // clear when level gets below the limit - all cases but '1'
    ac97_irq_play_o <= 1'b0;
 
-else if (!ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL == 4'h1))
+else if (!ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL == 4'h1))                                          // clear when level gets below the limit - special case '1'
    ac97_irq_play_o <= 1'b0;
 
 else if (C_PLAYBACK) begin
@@ -365,20 +371,20 @@ assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr  ==  C_FIFO_SIZE    
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_rec_o
 if (!adc_rstn_i) begin
-   ac97_irq_rec_o             <= 1'b0;
+   ac97_irq_rec_o            <= 1'b0;
    ac97ctrl_rec_fifo_empty_d <= 1'b0;
    ac97ctrl_rec_fifo_he_d    <= 1'b0;
    ac97ctrl_rec_fifo_hf_d    <= 1'b0;
    ac97ctrl_rec_fifo_full_d  <= 1'b0;
    end
 
-else if (ac97ctrl_fifo_rec_reset)
+else if (ac97ctrl_fifo_rec_reset)                                                                           // clear immediately when reset
    ac97_irq_rec_o <= 1'b0;
 
-else if (ac97ctrl_rec_fifo_empty && (C_REC_INTR_LEVEL != 4'h1))
+else if (ac97ctrl_rec_fifo_empty && (C_REC_INTR_LEVEL != 4'h1))                                             // clear when level gets below the limit - all cases but '1'
    ac97_irq_rec_o <= 1'b0;
 
-else if (!ac97ctrl_rec_fifo_empty && (C_REC_INTR_LEVEL == 4'h1))
+else if (!ac97ctrl_rec_fifo_empty && (C_REC_INTR_LEVEL == 4'h1))                                            // clear when level gets below the limit - special case '1'
    ac97_irq_rec_o <= 1'b0;
 
 else if (C_RECORD) begin
