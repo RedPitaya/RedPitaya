@@ -7,6 +7,8 @@
 module acq #(
   // data stream
   int unsigned DN = 1,   // data number
+  type DT = logic [8-1:0],
+  
   // trigger
   int unsigned TN = 1,   // trigger number
   // timer/counter
@@ -144,22 +146,26 @@ assign irq_stp = sts_stp;  // stop
 // output stream
 ////////////////////////////////////////////////////////////////////////////////
 
-assign sti.TREADY = sto.TREADY | ~sto.TVALID;
+// align data with control signals
+axi4_stream_if #(.DN (DN), .DT (DT)) sto_algn (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  
+axi4_stream_reg align_reg(.sti (sti), .sto (sto_algn));
+
+assign sto_algn.TREADY = sto.TREADY | ~sto.TVALID;
 
 // output valid
 always @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   sto.TVALID <= 1'b0;
 end else begin
-  sto.TVALID <= sts_acq & sti.TVALID;
+  sto.TVALID <= sts_acq & sto_algn.TVALID;
 end
 
 // output data
 always @(posedge sti.ACLK)
-if (sts_acq & sti.transf) begin
-  sto.TDATA <= sti.TDATA;
-  sto.TKEEP <= sti.TKEEP; // TODO
-  sto.TLAST <= sti.TLAST | sts_stp;
-end
+if (sts_acq & sto_algn.transf) begin
+  sto.TDATA <= sto_algn.TDATA;
+  sto.TKEEP <= sto_algn.TKEEP; // TODO
+  sto.TLAST <= sto_algn.TLAST | sts_stp;
+end    
 
 endmodule: acq

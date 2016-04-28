@@ -44,6 +44,7 @@ typedef struct {
     uint32_t       pre_samples;
     uint32_t       post_samples;
     uint32_t       trig_sample;
+    uint32_t       last_sample;
 } rp_acq_data_t;
 
 

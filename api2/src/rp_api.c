@@ -20,12 +20,14 @@
 const double c_max_dig_sampling_rate = 125e6;
 
 /** Maximal digital signal sampling frequency time interval [nS] */
-const double c_max_dig_sampling_rate_time_interval_ns = 4;
+const double c_max_dig_sampling_rate_time_interval_ns = 8;
 
 rp_handle_uio_t la_acq_handle;
 rp_handle_uio_t sig_gen_handle;
 
 rp_acq_data_t acq_data;
+
+bool g_acq_running=false;
 
 /*
 uio9: name=scope0, version=devicetree, events=0
@@ -239,8 +241,13 @@ RP_STATUS rp_EnableDigitalPortDataRLE(bool enable)
 }
 
 RP_STATUS rp_SoftwareTrigger(void){
-	rp_LaAcqTriggerAcq(&la_acq_handle);
-	return RP_API_OK;
+	if(g_acq_running){
+		rp_LaAcqTriggerAcq(&la_acq_handle);
+	    return RP_API_OK;
+	}
+	else{
+		return RP_INVALID_STATE;
+	}
 }
 
 RP_STATUS rp_IsAcquistionComplete(void){
@@ -368,6 +375,8 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_INVALID_TIMEBASE;
     }
 
+    printf("\r\n timeIntervalNanoseconds: %f", timeIntervalNanoseconds);
+
     if(!(inrangeUint32 (noOfPreTriggerSamples+noOfPostTriggerSamples, 10, maxSamples))){
         return RP_INVALID_PARAMETER;
     }
@@ -397,11 +406,13 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
-    rp_LaAcqFpgaRegDump(&la_acq_handle);
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
     // block till acq. is complete
     printf("\r\nBlocking read");
+    g_acq_running=true;
     rp_LaAcqBlockingRead(&la_acq_handle);
+    g_acq_running=false;
 
     // make sure acq. is stopped
     bool isStoped;
@@ -412,39 +423,49 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
-    printf("\r\n get trigger position");
-    // get trigger position
-    uint32_t trig_sample;
-    uint32_t pst_length;
-    bool buf_ovfl;
-    if(rp_LaAcqGetCntStatus(&la_acq_handle, &trig_sample, &pst_length, &buf_ovfl)!=RP_OK){
-        rp_LaAcqStopAcq(&la_acq_handle);
-        return RP_BLOCK_MODE_FAILED;
-    }
-
-    printf("\r\n trig_sample %d, pst_length %d, buf_ovfl %d", trig_sample, pst_length, buf_ovfl);
-
-
    // rp_DmaMemDump(&la_acq_handle);
 
-    // acquired number of post samples must match to req
-    if(pst_length!=noOfPostTriggerSamples){
-        rp_LaAcqStopAcq(&la_acq_handle);
-        return RP_BLOCK_MODE_FAILED;
+    uint32_t trig_sample;
+    uint32_t last_sample;
+
+    bool rle;
+    rp_LaAcqIsRLE(&la_acq_handle,&rle);
+    if(rle){
+    	// in the RLE mode we only check which was the last sample where acq. stopped
+        uint32_t current;
+        bool buf_ovfl;
+        rp_LaAcqGetRLEStatus(&la_acq_handle, &current, &last_sample, &buf_ovfl);
+        trig_sample=0;
+    }
+    else{
+        // get trigger position
+        uint32_t pst_length;
+        bool buf_ovfl;
+        if(rp_LaAcqGetCntStatus(&la_acq_handle, &trig_sample, &pst_length, &buf_ovfl)!=RP_OK){
+            rp_LaAcqStopAcq(&la_acq_handle);
+            return RP_BLOCK_MODE_FAILED;
+        }
+
+        printf("\r\n trig_sample %d, pst_length %d, buf_ovfl %d", trig_sample, pst_length, buf_ovfl);
+
+		// acquired number of post samples must match to req
+		if(pst_length!=noOfPostTriggerSamples){
+			rp_LaAcqStopAcq(&la_acq_handle);
+			return RP_BLOCK_MODE_FAILED;
+		}
     }
 
     // save properties of current acq.
     acq_data.pre_samples=noOfPreTriggerSamples;
     acq_data.post_samples=noOfPostTriggerSamples;
     acq_data.trig_sample=trig_sample;
+    acq_data.last_sample=last_sample;
 
     // acquisition is completed -> callback
     RP_STATUS status=RP_API_OK;
     (*rpReady)(status,pParameter);
 
     rp_LaAcqStopAcq(&la_acq_handle);
-
-    printf("\r\n RP_API_OK");
 
     return RP_API_OK;
 }
@@ -539,14 +560,7 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
     bool rle;
     rp_LaAcqIsRLE(&la_acq_handle,&rle);
     if(rle){ // RLE mode
-
-    	//printf("RLE mode\n");
-
-        uint32_t current, last;
-        bool buf_ovfl;
-        rp_LaAcqGetRLEStatus(&la_acq_handle, &current, &last, &buf_ovfl);
-
-        // find first sample an trigger sample
+        // try to find first sample and trigger sample
         uint32_t first_sample=0;
         uint32_t samples=0;
         acq_data.trig_sample=0;
@@ -555,8 +569,10 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 
         uint32_t len=0;
         uint32_t i=0;
-        uint32_t index = last;
+        uint32_t index = acq_data.last_sample;
         uint32_t total = acq_data.pre_samples+acq_data.post_samples;
+       // printf("\n\rtotal: %d", total);
+        bool trig_sample_found=false;
 
 			// find first and last sample
 			i=0;
@@ -566,10 +582,16 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 				i++;
 				len+=((uint8_t)(map[index]>>8))+1;
 
-				if(len==acq_data.post_samples){
-					acq_data.trig_sample=i;
+				// trigger position
+				if(!trig_sample_found){
+					if(len>=(acq_data.post_samples-1)){
+						//printf("\n\rtrig. sample found: i=%d len=%d", i, len);
+						acq_data.trig_sample=i;
+						trig_sample_found=true;
+					}
 				}
 
+				// first sample position
 				if(len>=total){
 					first_sample=index;
 					samples=i;
@@ -583,8 +605,8 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 					break;
 				}
 
-			  //  printf("\n\r sta: samples=%d trig=%d, ", samples, acq_data.trig_sample);
-			  //  printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
+			    //printf("\n\r sta: samples=%d trig=%d, ", samples, acq_data.trig_sample);
+			    //printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(map[index]>>8),(uint8_t)map[index]);
 
 				if(index==0){
 					index=rp_LaAcqBufLenInSamples(&la_acq_handle)-1;
@@ -613,6 +635,8 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 
 				index++;
 			}
+
+
 
 			acq_data.trig_sample=samples-acq_data.trig_sample;
 
@@ -873,9 +897,8 @@ RP_STATUS rp_DigSigGenOuput(bool enable)
 
 RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
 {
-	rp_GenTrigger(&sig_gen_handle);
+	return rp_GenTrigger(&sig_gen_handle);
    // rp_GenFpgaRegDump(&sig_gen_handle,0);
-    return RP_API_OK;
 }
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
