@@ -1,9 +1,7 @@
 /*
- * ALSA driver for Xilinx ML403 AC97 Controller Reference
- *   IP: opb_ac97_controller_ref_v1_00_a (EDK 8.1i)
- *   IP: opb_ac97_controller_ref_v1_00_a (EDK 9.1i)
+ * ALSA driver for RedPitaya AC97 Controller Emulation of the RadioBox sub-module
  *
- *  Copyright (c) by 2007  Joachim Foerster <JOFT@gmx.de>
+ *  Copyright (c) by 2016  Ulrich Habel <espero7757@gmx.net>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,14 +21,27 @@
 
 /* Some notes / status of this driver:
  *
- * - Don't wonder about some strange implementations of things - especially the
- * (heavy) shadowing of codec registers, with which I tried to reduce read
- * accesses to a minimum, because after a variable amount of accesses, the AC97
- * controller doesn't raise the register access finished bit anymore ...
+ * This module is based on the ml403-ac97cr sound driver for the Xilinx ML403 board.
+ * The RedPitaya allows additional applications to be run which can include its own
+ * FPGA configuration. Known as the red_pitaya_ac97ctrl.sv sub-module, that one
+ * features an AC97 controller that conforms nearly to the XILINX ML403 board AC97 IP.
  *
- * - Playback support seems to be pretty stable - no issues here.
- * - Capture support "works" now, too. Overruns don't happen any longer so often.
- *   But there might still be some ...
+ * This module enables the ALSA sound system to access that FPGA to give a stereo
+ * LINE-OUT stream and a stereo LINE-IN stream to the Linux kernel @ 48 kHz, LE. The
+ * module shadows some AC97 registers, the FPGA shadows all 64 words of the AC97 CODEC
+ * added by the status information register(s). The FPGA mimics the AC97 controller &
+ * CODEC to access the ADC and DACs of the RedPitaya board. Currently hardware version
+ * V1.1 is tested to work.
+ *
+ * Before ejecting the ALSA enabled FPGA module it is adviced to rmmod this sound module
+ * first.
+ *
+ * At the time of writing the FPGA sub-module RadioBox uses this ALSA device to make
+ * RadioBox attached to the Linux kernel sound system ALSA.
+ *
+ * Notice: Both, the FPGA registers are little endian and the kernel runs as little endian, too.
+ * Thus no byte swapping is needed. That is in contrast to the ml403-ac97cr former driver.
+ *
  */
 
 #include <linux/init.h>
@@ -70,12 +81,12 @@
 #include "pcm-indirect2.h"
 
 
-#define SND_ML403_AC97CR_DRIVER "ml403-ac97cr"
+#define SND_REDPITAYA_AC97_DRIVER "redpitaya-ac97"
 
-MODULE_AUTHOR("Joachim Foerster <JOFT@gmx.de>, Ulrich Habel <espero7757@gmx.net>");
-MODULE_DESCRIPTION("Xilinx ML403 AC97 Controller Reference, RedPitaya-RadioBox sound system");
+MODULE_AUTHOR("Ulrich Habel <espero7757@gmx.net>");
+MODULE_DESCRIPTION("RedPitaya-AC97 sound system");
 MODULE_LICENSE("GPL");
-MODULE_SUPPORTED_DEVICE("{{RedPitaya,red_pitaya_ac97ctrl RadioBox sub-module}}");
+MODULE_SUPPORTED_DEVICE("{{RedPitaya,red_pitaya_ac97ctrl AC97 sub-module}}");
 
 
 static int index = SNDRV_DEFAULT_IDX1;
@@ -83,11 +94,11 @@ static char *id = SNDRV_DEFAULT_STR1;
 static bool enable = SNDRV_DEFAULT_ENABLE1;
 
 module_param(index, int, 0444);
-MODULE_PARM_DESC(index, "Index value for RedPitaya-RadioBox sound system.");
+MODULE_PARM_DESC(index, "Index value for RedPitaya-AC97 sound system.");
 module_param(id, charp, 0444);
-MODULE_PARM_DESC(id, "ID string for RedPitaya-RadioBox sound system.");
+MODULE_PARM_DESC(id, "ID string for RedPitaya-AC97 sound system.");
 module_param(enable, bool, 0444);
-MODULE_PARM_DESC(enable, "Enable this RedPitaya-RadioBox sound system.");
+MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 sound system.");
 
 /* Special feature options */
 #define CODEC_WRITE_CHECK_RAF	/* don't return after a write to a codec
@@ -125,7 +136,7 @@ MODULE_PARM_DESC(enable, "Enable this RedPitaya-RadioBox sound system.");
 
 #define PDEBUG(fac, fmt, args...) do { \
 	if (fac & PDEBUG_FACILITIES) \
-		snd_printd(KERN_DEBUG SND_ML403_AC97CR_DRIVER ": " \
+		snd_printd(KERN_DEBUG SND_REDPITAYA_AC97_DRIVER ": " \
 			   fmt, ##args); \
 	} while (0)
 #else
@@ -307,48 +318,42 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
 
 
 /* direct registers */
-#define CR_REG(ml403_ac97cr, x) (ml403_ac97cr->port + (CR_REG_##x))
+#define CTRL_REG(redpitaya_ac97, x) (redpitaya_ac97->port + (CR_REG_##x))
 
-#define CR_REG_PLAYFIFO 	0x00
-#define   CR_PLAYDATA(a)	((a) & 0xFFFF)
+#define CTRL_REG_PLAYFIFO 	    0x00
+#define CTRL_PLAYDATA(a)	    ((a) & 0xFFFF)
 
-#define CR_REG_RECFIFO		0x04
-#define   CR_RECDATA(a) 	((a) & 0xFFFF)
+#define CTRL_REG_RECFIFO	    0x04
+#define CTRL_RECDATA(a) 	    ((a) & 0xFFFF)
 
-#define CR_REG_STATUS		0x08
-#define   CR_RECOVER		(1<<7)
-#define   CR_PLAYUNDER		(1<<6)
-#define   CR_CODECREADY 	(1<<5)
-#define   CR_RAF		(1<<4)
-#define   CR_RECEMPTY		(1<<3)
-#define   CR_RECFULL		(1<<2)
-#define   CR_PLAYHALF		(1<<1)
-#define   CR_PLAYFULL		(1<<0)
+#define CTRL_REG_STATUS		    0x08
+#define   CTRL_RECOVER		    (1<<7)
+#define   CTRL_PLAYUNDER	    (1<<6)
+#define   CTRL_CODECREADY 	    (1<<5)
+#define   CTRL_RAF		    (1<<4)
+#define   CTRL_RECEMPTY		    (1<<3)
+#define   CTRL_RECFULL		    (1<<2)
+#define   CTRL_PLAYHALF		    (1<<1)
+#define   CTRL_PLAYFULL		    (1<<0)
 
-#define CR_REG_RESETFIFO	0x0C
-#define   CR_RECRESET		(1<<1)
-#define   CR_PLAYRESET		(1<<0)
+#define CTRL_REG_RESETFIFO	    0x0C
+#define   CTRL_RECRESET		    (1<<1)
+#define   CTRL_PLAYRESET	    (1<<0)
 
-#define CR_REG_CODEC_ADDR	0x10
-/* UG082 says:
- * #define   CR_CODEC_ADDR(a)   ((a) << 1)
- * #define   CR_CODEC_READ	(1<<0)
- * #define   CR_CODEC_WRITE	(0<<0)
- */
-/* RefDesign example says: */
-#define   CR_CODEC_ADDR(a)	(((a) & 0x7E)<<0)
-#define   CR_CODEC_READ 	(1<<7)
-#define   CR_CODEC_WRITE	(0<<7)
+#define CTRL_REG_CODEC_ADDR	    0x10
+#define   CTRL_CODEC_ADDR(a)	    (((a) & 0x7E)<<0)
+#define   CTRL_CODEC_READ 	    (1<<7)
+#define   CTRL_CODEC_WRITE	    (0<<7)
 
-#define CR_REG_CODEC_DATAREAD   0x14
-#define   CR_CODEC_DATAREAD(v)  ((v) & 0xFFFF)
+#define CTRL_REG_CODEC_DATAREAD     0x14
+#define   CTRL_CODEC_DATAREAD(v)    ((v) & 0xFFFF)
 
-#define CR_REG_CODEC_DATAWRITE  0x18
-#define   CR_CODEC_DATAWRITE(v) ((v) & 0xFFFF)
+#define CTRL_REG_CODEC_DATAWRITE    0x18
+#define   CTRL_CODEC_DATAWRITE(v)   ((v) & 0xFFFF)
 
-#define CR_FIFO_SIZE		32
+#define CTRL_FIFO_SIZE		    32
 
-struct snd_ml403_ac97cr {
+struct snd_redpitaya_ac97 {
 	/* lock for access to (controller) registers */
 	spinlock_t reg_lock;
 	/* mutex for the whole sequence of accesses to (controller) registers
@@ -373,7 +378,7 @@ struct snd_ml403_ac97cr {
 	int ac97_write;
 #endif
 
-	struct platform_device *pfdev;
+	struct platform_device *pdev;
 	struct snd_card *card;
 	struct snd_pcm *pcm;
 	struct snd_pcm_substream *playback_substream;
@@ -383,7 +388,7 @@ struct snd_ml403_ac97cr {
 	struct snd_pcm_indirect2 capture_ind2_pcm;
 };
 
-static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
+static struct snd_pcm_hardware snd_redpitaya_ac97_playback = {
 	.info =			(SNDRV_PCM_INFO_MMAP |
 				 SNDRV_PCM_INFO_INTERLEAVED |
 				 SNDRV_PCM_INFO_MMAP_VALID),
@@ -402,7 +407,7 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_playback = {
 	.fifo_size =		0,
 };
 
-static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
+static struct snd_pcm_hardware snd_redpitaya_ac97_capture = {
 	.info =			(SNDRV_PCM_INFO_MMAP |
 				 SNDRV_PCM_INFO_INTERLEAVED |
 				 SNDRV_PCM_INFO_MMAP_VALID),
@@ -422,70 +427,70 @@ static struct snd_pcm_hardware snd_ml403_ac97cr_capture = {
 };
 
 static size_t
-snd_ml403_ac97cr_playback_ind2_zero(struct snd_pcm_substream *substream,
-				    struct snd_pcm_indirect2 *pcm)
+snd_redpitaya_ac97_playback_ind2_zero(struct snd_pcm_substream *substream,
+				      struct snd_pcm_indirect2 *pcm)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	int copied_words = 0;
 	u32 status = 0;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
-	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((status = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
-				 CR_PLAYFULL)) != CR_PLAYFULL) {
-		iowrite32(0, CR_REG(ml403_ac97cr, PLAYFIFO));
+	spin_lock(&redpitya_ac97->reg_lock);
+	while ((status = (ioread32(CTRL_REG(redpitya_ac97, STATUS)) &
+				   CTRL_PLAYFULL)) != CTRL_PLAYFULL) {
+		iowrite32(0, CTRL_REG(redpitya_ac97, PLAYFIFO));
 		copied_words++;
 	}
 	pcm->hw_ready = 0;
-	spin_unlock(&ml403_ac97cr->reg_lock);
+	spin_unlock(&redpitaya_ac97->reg_lock);
 
 	return (size_t) (copied_words << 1);
 }
 
 static size_t
-snd_ml403_ac97cr_playback_ind2_copy(struct snd_pcm_substream *substream,
-				    struct snd_pcm_indirect2 *pcm,
-				    size_t bytes)
+snd_redpitya_ac97_playback_ind2_copy(struct snd_pcm_substream *substream,
+				     struct snd_pcm_indirect2 *pcm,
+				     size_t bytes)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	u16 *src;
 	int copied_words = 0;
 	u32 status = 0;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 	src = (u16 *)(substream->runtime->dma_area + pcm->sw_data);
 
         PDEBUG(ISR_INFO, "ind2_copy(playback): copying %d bytes to   the FPGA ...\n", bytes);
-	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((status = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
-				  CR_PLAYFULL)) != CR_PLAYFULL) && (bytes > 1)) {
-		iowrite32(CR_PLAYDATA(src[copied_words++]), CR_REG(ml403_ac97cr, PLAYFIFO));
+	spin_lock(&redpitaya_ac97->reg_lock);
+	while (((status = (ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
+				    CTRL_PLAYFULL)) != CTRL_PLAYFULL) && (bytes > 1)) {
+		iowrite32(CTRL_PLAYDATA(src[copied_words++]), CTRL_REG(redpitaya_ac97, PLAYFIFO));
 		bytes -= 2;
 	}
-	if (status != CR_PLAYFULL)
+	if (status != CTRL_PLAYFULL)
 		pcm->hw_ready = 1;
 	else
 		pcm->hw_ready = 0;
-	spin_unlock(&ml403_ac97cr->reg_lock);
+	spin_unlock(&redpitaya_ac97->reg_lock);
         PDEBUG(ISR_INFO, "ind2_copy(playback): ... done. hw_ready = %d\n", pcm->hw_ready);
 
 	return (size_t) (copied_words << 1);
 }
 
 static size_t
-snd_ml403_ac97cr_capture_ind2_null(struct snd_pcm_substream *substream,
-				   struct snd_pcm_indirect2 *pcm)
+snd_redpitaya_ac97_capture_ind2_null(struct snd_pcm_substream *substream,
+				     struct snd_pcm_indirect2 *pcm)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	int copied_words = 0;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
-	spin_lock(&ml403_ac97cr->reg_lock);
-	while ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
-				  CR_RECEMPTY) != CR_RECEMPTY) {
-		(void) ioread32(CR_REG(ml403_ac97cr, RECFIFO));
+	spin_lock(&redpitaya_ac97->reg_lock);
+	while ((ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
+			 CTRL_RECEMPTY) != CTRL_RECEMPTY) {
+		(void) ioread32(CTRL_REG(redpitaya_ac97, RECFIFO));
 		copied_words++;
 	}
 	pcm->hw_ready = 1;
@@ -495,47 +500,47 @@ snd_ml403_ac97cr_capture_ind2_null(struct snd_pcm_substream *substream,
 }
 
 static size_t
-snd_ml403_ac97cr_capture_ind2_copy(struct snd_pcm_substream *substream,
-				   struct snd_pcm_indirect2 *pcm, size_t bytes)
+snd_redpitaya_ac97_capture_ind2_copy(struct snd_pcm_substream *substream,
+				     struct snd_pcm_indirect2 *pcm, size_t bytes)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	u16 *dst;
 	int copied_words = 0;
 	u32 status = 0;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 	dst = (u16 *)(substream->runtime->dma_area + pcm->sw_data);
 
 	PDEBUG(ISR_INFO, "ind2_copy(capture): copying %d bytes from the FPGA ...\n", bytes);
-	spin_lock(&ml403_ac97cr->reg_lock);
-	while (((status = (ioread32(CR_REG(ml403_ac97cr, STATUS)) &
-				   CR_RECEMPTY)) != CR_RECEMPTY) && (bytes > 1)) {
-		dst[copied_words++] = CR_RECDATA(ioread32(CR_REG(ml403_ac97cr,
-							RECFIFO)));
+	spin_lock(&redpitaya_ac97->reg_lock);
+	while (((status = (ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
+				    CTRL_RECEMPTY)) != CTRL_RECEMPTY) && (bytes > 1)) {
+		dst[copied_words++] = CTRL_RECDATA(ioread32(CTRL_REG(redpitaya_ac97,
+							    RECFIFO)));
 		bytes -= 2;
 	}
-	if (status != CR_RECEMPTY)
+	if (status != CTRL_RECEMPTY)
 		pcm->hw_ready = 1;
 	else
 		pcm->hw_ready = 0;
-	spin_unlock(&ml403_ac97cr->reg_lock);
+	spin_unlock(&redpitaya_ac97->reg_lock);
         PDEBUG(ISR_INFO, "ind2_copy(capture): ... done. hw_ready = %d\n", pcm->hw_ready);
 
 	return (size_t) (copied_words << 1);
 }
 
 static snd_pcm_uframes_t
-snd_ml403_ac97cr_pcm_pointer(struct snd_pcm_substream *substream)
+snd_redpitaya_ac97_pcm_pointer(struct snd_pcm_substream *substream)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	struct snd_pcm_indirect2 *ind2_pcm = NULL;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
-	if (substream == ml403_ac97cr->playback_substream)
-		ind2_pcm = &ml403_ac97cr->playback_ind2_pcm;
-	if (substream == ml403_ac97cr->capture_substream)
-		ind2_pcm = &ml403_ac97cr->capture_ind2_pcm;
+	if (substream == redpitaya_ac97->playback_substream)
+		ind2_pcm = &redpitaya_ac97->playback_ind2_pcm;
+	if (substream == redpitaya_ac97->capture_substream)
+		ind2_pcm = &redpitaya_ac97->capture_ind2_pcm;
 
 	if (ind2_pcm != NULL)
 		return snd_pcm_indirect2_pointer(substream, ind2_pcm);
@@ -543,36 +548,36 @@ snd_ml403_ac97cr_pcm_pointer(struct snd_pcm_substream *substream)
 }
 
 static int
-snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
-				      int cmd)
+snd_redpitaya_ac97_pcm_playback_trigger(struct snd_pcm_substream *substream,
+				        int cmd)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	int err = 0;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 		PDEBUG(WORK_INFO, "trigger(playback): START\n");
-		ml403_ac97cr->playback_ind2_pcm.hw_ready = 1;
+		redpitaya_ac97->playback_ind2_pcm.hw_ready = 1;
 
 		/* clear play FIFO */
-		iowrite32(CR_PLAYRESET, CR_REG(ml403_ac97cr, RESETFIFO));
+		iowrite32(CTRL_PLAYRESET, CTRL_REG(redpitaya_ac97, RESETFIFO));
 
 		/* enable play irq */
-		ml403_ac97cr->enable_playback_irq = 1;
-		enable_irq(ml403_ac97cr->playback_irq);
+		redpitaya_ac97->enable_playback_irq = 1;
+		enable_irq(redpitaya_ac97->playback_irq);
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
 		PDEBUG(WORK_INFO, "trigger(playback): STOP\n");
 
 		/* disable play irq */
-		disable_irq_nosync(ml403_ac97cr->playback_irq);
-		ml403_ac97cr->enable_playback_irq = 0;
+		disable_irq_nosync(redpitaya_ac97->playback_irq);
+		redpitaya_ac97->enable_playback_irq = 0;
 
-		ml403_ac97cr->playback_ind2_pcm.hw_ready = 0;
+		redpitaya_ac97->playback_ind2_pcm.hw_ready = 0;
 #ifdef SND_PCM_INDIRECT2_STAT
-		snd_pcm_indirect2_stat(substream, &ml403_ac97cr->playback_ind2_pcm);
+		snd_pcm_indirect2_stat(substream, &redpitaya_ac97->playback_ind2_pcm);
 #endif
 		break;
 	default:
@@ -584,37 +589,37 @@ snd_ml403_ac97cr_pcm_playback_trigger(struct snd_pcm_substream *substream,
 }
 
 static int
-snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
-					  int cmd)
+snd_redpitaya_ac97_pcm_capture_trigger(struct snd_pcm_substream *substream,
+				       int cmd)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	int err = 0;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 		PDEBUG(WORK_INFO, "trigger(capture): START\n");
-		ml403_ac97cr->capture_ind2_pcm.hw_ready = 1;
+		redpitaya_ac97->capture_ind2_pcm.hw_ready = 1;
 
 		/* clear record FIFO */
-		iowrite32(CR_RECRESET, CR_REG(ml403_ac97cr, RESETFIFO));
+		iowrite32(CTRL_RECRESET, CTRL_REG(redpitaya_ac97, RESETFIFO));
 
 		/* enable record irq */
-		ml403_ac97cr->enable_capture_irq = 1;
-		enable_irq(ml403_ac97cr->capture_irq);
+		redpitaya_ac97->enable_capture_irq = 1;
+		enable_irq(redpitaya_ac97->capture_irq);
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
 		PDEBUG(WORK_INFO, "trigger(capture): STOP\n");
 
 		/* disable capture irq */
-		disable_irq_nosync(ml403_ac97cr->capture_irq);
-		ml403_ac97cr->enable_capture_irq = 0;
+		disable_irq_nosync(redpitaya_ac97->capture_irq);
+		redpitaya_ac97->enable_capture_irq = 0;
 
-		ml403_ac97cr->capture_ind2_pcm.hw_ready = 0;
+		redpitaya_ac97->capture_ind2_pcm.hw_ready = 0;
 #ifdef SND_PCM_INDIRECT2_STAT
 		snd_pcm_indirect2_stat(substream,
-				       &ml403_ac97cr->capture_ind2_pcm);
+				       &redpitaya_ac97->capture_ind2_pcm);
 #endif
 		break;
 	default:
@@ -626,12 +631,12 @@ snd_ml403_ac97cr_pcm_capture_trigger(struct snd_pcm_substream *substream,
 }
 
 static int
-snd_ml403_ac97cr_pcm_playback_prepare(struct snd_pcm_substream *substream)
+snd_redpitaya_ac97_pcm_playback_prepare(struct snd_pcm_substream *substream)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	struct snd_pcm_runtime *runtime;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 	runtime = substream->runtime;
 
 	PDEBUG(WORK_INFO,
@@ -639,67 +644,68 @@ snd_ml403_ac97cr_pcm_playback_prepare(struct snd_pcm_substream *substream)
 		   snd_pcm_lib_period_bytes(substream), CR_FIFO_SIZE / 2);
 
 	/* set sampling rate */
-	snd_ac97_set_rate(ml403_ac97cr->ac97, AC97_PCM_FRONT_DAC_RATE,
+	snd_ac97_set_rate(redpitaya_ac97->ac97, AC97_PCM_FRONT_DAC_RATE,
 			  runtime->rate);
 	PDEBUG(WORK_INFO, "prepare(): rate=%d\n", runtime->rate);
 
 	/* init struct for intermediate buffer */
-	memset(&ml403_ac97cr->playback_ind2_pcm, 0, sizeof(struct snd_pcm_indirect2));
-	ml403_ac97cr->playback_ind2_pcm.hw_buffer_size = CR_FIFO_SIZE;
-	ml403_ac97cr->playback_ind2_pcm.sw_buffer_size =
+	memset(&redpitaya_ac97->playback_ind2_pcm, 0, sizeof(struct snd_pcm_indirect2));
+	redpitaya_ac97->playback_ind2_pcm.hw_buffer_size = CTRL_FIFO_SIZE;
+	redpitaya_ac97->playback_ind2_pcm.sw_buffer_size =
 		snd_pcm_lib_buffer_bytes(substream);
-	ml403_ac97cr->playback_ind2_pcm.min_periods = -1;
-	ml403_ac97cr->playback_ind2_pcm.min_multiple =
-		snd_pcm_lib_period_bytes(substream) / (CR_FIFO_SIZE / 2);
+	redpitaya_ac97->playback_ind2_pcm.min_periods = -1;
+	redpitaya_ac97->playback_ind2_pcm.min_multiple =
+		snd_pcm_lib_period_bytes(substream) / (CTRL_FIFO_SIZE / 2);
 	PDEBUG(WORK_INFO, "prepare(): hw_buffer_size=%d, "
 		   "sw_buffer_size=%d, min_multiple=%d\n",
-		   CR_FIFO_SIZE, ml403_ac97cr->playback_ind2_pcm.sw_buffer_size,
-		   ml403_ac97cr->playback_ind2_pcm.min_multiple);
+		   CTRL_FIFO_SIZE, redpitaya_ac97->playback_ind2_pcm.sw_buffer_size,
+		   redpitaya_ac97->playback_ind2_pcm.min_multiple);
 	return 0;
 }
 
 static int
-snd_ml403_ac97cr_pcm_capture_prepare(struct snd_pcm_substream *substream)
+snd_redpitaya_ac97_pcm_capture_prepare(struct snd_pcm_substream *substream)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	struct snd_pcm_runtime *runtime;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 	runtime = substream->runtime;
 
 	PDEBUG(WORK_INFO,
 		   "prepare(capture): period_bytes=%d, minperiod_bytes=%d\n",
-		   snd_pcm_lib_period_bytes(substream), CR_FIFO_SIZE / 2);
+		   snd_pcm_lib_period_bytes(substream), CTRL_FIFO_SIZE / 2);
 
 	/* set sampling rate */
-	snd_ac97_set_rate(ml403_ac97cr->ac97, AC97_PCM_LR_ADC_RATE,
+	snd_ac97_set_rate(redpitaya_ac97->ac97, AC97_PCM_LR_ADC_RATE,
 			  runtime->rate);
 	PDEBUG(WORK_INFO, "prepare(capture): rate=%d\n", runtime->rate);
 
 	/* init struct for intermediate buffer */
-	memset(&ml403_ac97cr->capture_ind2_pcm, 0,
+	memset(&redpitaya_ac97->capture_ind2_pcm, 0,
 	       sizeof(struct snd_pcm_indirect2));
-	ml403_ac97cr->capture_ind2_pcm.hw_buffer_size = CR_FIFO_SIZE;
-	ml403_ac97cr->capture_ind2_pcm.sw_buffer_size =
+	redpitaya_ac97->capture_ind2_pcm.hw_buffer_size = CTRL_FIFO_SIZE;
+	redpitaya_ac97->capture_ind2_pcm.sw_buffer_size =
 		snd_pcm_lib_buffer_bytes(substream);
-	ml403_ac97cr->capture_ind2_pcm.min_multiple =
-		snd_pcm_lib_period_bytes(substream) / (CR_FIFO_SIZE / 2);
+	redpitaya_ac97->capture_ind2_pcm.min_multiple =
+		snd_pcm_lib_period_bytes(substream) / (CTRL_FIFO_SIZE / 2);
 	PDEBUG(WORK_INFO, "prepare(capture): hw_buffer_size=%d, "
-	       "sw_buffer_size=%d, min_multiple=%d\n", CR_FIFO_SIZE,
-	       ml403_ac97cr->capture_ind2_pcm.sw_buffer_size,
-	       ml403_ac97cr->capture_ind2_pcm.min_multiple);
+	       "sw_buffer_size=%d, min_multiple=%d\n", CTRL_FIFO_SIZE,
+	       redpitaya_ac97r->capture_ind2_pcm.sw_buffer_size,
+	       redpitaya_ac97r->capture_ind2_pcm.min_multiple);
 	return 0;
 }
 
-static int snd_ml403_ac97cr_hw_free(struct snd_pcm_substream *substream)
+static int
+snd_redpitaya_ac97_hw_free(struct snd_pcm_substream *substream)
 {
 	PDEBUG(WORK_INFO, "hw_free()\n");
 	return snd_pcm_lib_free_pages(substream);
 }
 
 static int
-snd_ml403_ac97cr_hw_params(struct snd_pcm_substream *substream,
-			   struct snd_pcm_hw_params *hw_params)
+snd_redpitaya_ac97_hw_params(struct snd_pcm_substream *substream,
+			     struct snd_pcm_hw_params *hw_params)
 {
 	PDEBUG(WORK_INFO, "hw_params() - desired buffer bytes=%d, desired "
 		   "period bytes=%d\n",
@@ -708,138 +714,143 @@ snd_ml403_ac97cr_hw_params(struct snd_pcm_substream *substream,
 					params_buffer_bytes(hw_params));
 }
 
-static int snd_ml403_ac97cr_playback_open(struct snd_pcm_substream *substream)
+static int
+snd_redpitaya_ac97_playback_open(struct snd_pcm_substream *substream)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	struct snd_pcm_runtime *runtime;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 	runtime = substream->runtime;
 
 	PDEBUG(WORK_INFO, "open(playback)\n");
-	ml403_ac97cr->playback_substream = substream;
-	runtime->hw = snd_ml403_ac97cr_playback;
+	redpitaya_ac97->playback_substream = substream;
+	runtime->hw = snd_redpitaya_ac97_playback;
 
 	snd_pcm_hw_constraint_step(runtime, 0,
 				   SNDRV_PCM_HW_PARAM_PERIOD_BYTES,
-				   CR_FIFO_SIZE / 2);
+				   CTRL_FIFO_SIZE / 2);
 	return 0;
 }
 
-static int snd_ml403_ac97cr_capture_open(struct snd_pcm_substream *substream)
+static int
+snd_redpitaya_ac97_capture_open(struct snd_pcm_substream *substream)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	struct snd_pcm_runtime *runtime;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 	runtime = substream->runtime;
 
 	PDEBUG(WORK_INFO, "open(capture)\n");
-	ml403_ac97cr->capture_substream = substream;
-	runtime->hw = snd_ml403_ac97cr_capture;
+	redpitaya_ac97->capture_substream = substream;
+	runtime->hw = snd_redpitaya_ac97_capture;
 
 	snd_pcm_hw_constraint_step(runtime, 0,
 				   SNDRV_PCM_HW_PARAM_PERIOD_BYTES,
-				   CR_FIFO_SIZE / 2);
+				   CTRL_FIFO_SIZE / 2);
 	return 0;
 }
 
-static int snd_ml403_ac97cr_playback_close(struct snd_pcm_substream *substream)
+static int
+snd_redpitaya_ac97_playback_close(struct snd_pcm_substream *substream)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
 	PDEBUG(WORK_INFO, "close(playback)\n");
-	ml403_ac97cr->playback_substream = NULL;
+	redpitaya_ac97->playback_substream = NULL;
 	return 0;
 }
 
-static int snd_ml403_ac97cr_capture_close(struct snd_pcm_substream *substream)
+static int
+snd_redpitaya_ac97_capture_close(struct snd_pcm_substream *substream)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 
-	ml403_ac97cr = snd_pcm_substream_chip(substream);
+	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
 	PDEBUG(WORK_INFO, "close(capture)\n");
-	ml403_ac97cr->capture_substream = NULL;
+	redpitaya_ac97->capture_substream = NULL;
 	return 0;
 }
 
-static struct snd_pcm_ops snd_ml403_ac97cr_playback_ops = {
-	.open = snd_ml403_ac97cr_playback_open,
-	.close = snd_ml403_ac97cr_playback_close,
-	.ioctl = snd_pcm_lib_ioctl,
-	.hw_params = snd_ml403_ac97cr_hw_params,
-	.hw_free = snd_ml403_ac97cr_hw_free,
-	.prepare = snd_ml403_ac97cr_pcm_playback_prepare,
-	.trigger = snd_ml403_ac97cr_pcm_playback_trigger,
-	.pointer = snd_ml403_ac97cr_pcm_pointer,
+static struct snd_pcm_ops snd_redpitaya_ac97_playback_ops = {
+        .open        = snd_redpitaya_ac97_playback_open,
+	.close       = snd_redpitaya_ac97_playback_close,
+	.ioctl       = snd_pcm_lib_ioctl,
+	.hw_params   = snd_redpitaya_ac97_hw_params,
+	.hw_free     = snd_redpitaya_ac97_hw_free,
+	.prepare     = snd_redpitaya_ac97_pcm_playback_prepare,
+	.trigger     = snd_redpitaya_ac97_pcm_playback_trigger,
+	.pointer     = snd_redpitaya_ac97_pcm_pointer,
 };
 
-static struct snd_pcm_ops snd_ml403_ac97cr_capture_ops = {
-	.open = snd_ml403_ac97cr_capture_open,
-	.close = snd_ml403_ac97cr_capture_close,
-	.ioctl = snd_pcm_lib_ioctl,
-	.hw_params = snd_ml403_ac97cr_hw_params,
-	.hw_free = snd_ml403_ac97cr_hw_free,
-	.prepare = snd_ml403_ac97cr_pcm_capture_prepare,
-	.trigger = snd_ml403_ac97cr_pcm_capture_trigger,
-	.pointer = snd_ml403_ac97cr_pcm_pointer,
+static struct snd_pcm_ops snd_redpitaya_ac97_capture_ops = {
+	.open        = snd_redpitaya_ac97_capture_open,
+	.close       = snd_redpitaya_ac97_capture_close,
+	.ioctl       = snd_pcm_lib_ioctl,
+	.hw_params   = snd_redpitaya_ac97_hw_params,
+	.hw_free     = snd_redpitaya_ac97_hw_free,
+	.prepare     = snd_redpitaya_ac97_pcm_capture_prepare,
+	.trigger     = snd_redpitaya_ac97_pcm_capture_trigger,
+	.pointer     = snd_redpitaya_ac97_pcm_pointer,
 };
 
 
 /*********************************************************************
  * of_device_id
  *********************************************************************/
-static struct of_device_id ml403_ac97cr_dt_ids[] = {
-	{ .compatible = "xlnx,ml403-ac97cr", },
+static struct of_device_id redpitaya_ac97_dt_ids[] = {
+	{ .compatible = "redpitaya,redpitaya-ac97", },
 	{ }
 };
-MODULE_DEVICE_TABLE(of, ml403_ac97cr_dt_ids);
+MODULE_DEVICE_TABLE(of, redpitaya_ac97_dt_ids);
 
 /* work with hotplug and coldplug */
-//MODULE_ALIAS("platform:" SND_ML403_AC97CR_DRIVER);
-//MODULE_ALIAS("of:" SND_ML403_AC97CR_DRIVER);
+//MODULE_ALIAS("platform:" SND_REDPITAYA_AC97_DRIVER);
+//MODULE_ALIAS("of:" SND_REDPITAYA_AC97_DRIVER);
 
 /* forward declarations */
-static int snd_ml403_ac97cr_probe(struct platform_device *pfdev);
-static int snd_ml403_ac97cr_remove(struct platform_device *pfdev);
+static int snd_redpitaya_ac97_probe(struct platform_device *pdev);
+static int snd_redpitaya_ac97_remove(struct platform_device *pdev);
 
-static struct platform_driver snd_ml403_ac97cr_driver = {
-	.probe = snd_ml403_ac97cr_probe,
-	.remove = snd_ml403_ac97cr_remove,
-	.driver = {
-		.name = SND_ML403_AC97CR_DRIVER,
-		.owner = THIS_MODULE,
-		.of_match_table = of_match_ptr(ml403_ac97cr_dt_ids),
+static struct platform_driver snd_redpitaya_ac97_driver = {
+	.probe       = snd_redpitaya_ac97_probe,
+	.remove      = snd_redpitaya_ac97_remove,
+	.driver      = {
+		         .name           = SND_REDPITAYA_AC97_DRIVER,
+		         .owner          = THIS_MODULE,
+		         .of_match_table = of_match_ptr(redpitaya_ac97_dt_ids),
 	},
 };
 
 
-static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
+static irqreturn_t
+snd_redpitaya_ac97_irq(int irq, void *dev_id)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 
 	PDEBUG(ISR_INFO, "irq(): IRQ = %d, dev_id = 0x%p\n", irq, dev_id);
 
-	ml403_ac97cr = (struct snd_ml403_ac97cr *)dev_id;
-	if (ml403_ac97cr == NULL)
+	redpitaya_ac97 = (struct snd_redpitaya_ac97 *)dev_id;
+	if (redpitaya_ac97 == NULL)
 		return IRQ_NONE;
 
-	if (irq == ml403_ac97cr->playback_irq) {	/* playback interrupt */
-		PDEBUG(ISR_INFO, "irq(): play - enable_playback_irq = %d\n", ml403_ac97cr->enable_playback_irq);
-		if (ml403_ac97cr->enable_playback_irq) {
+	if (irq == redpitaya_ac97->playback_irq) {	/* playback interrupt */
+		PDEBUG(ISR_INFO, "irq(): play - enable_playback_irq = %d\n", redpitaya_ac97->enable_playback_irq);
+		if (redpitaya_ac97->enable_playback_irq) {
 			snd_pcm_indirect2_playback_interrupt(
-				ml403_ac97cr->playback_substream,
-				&ml403_ac97cr->playback_ind2_pcm,
-				snd_ml403_ac97cr_playback_ind2_copy,
-				snd_ml403_ac97cr_playback_ind2_zero);
+				redpitaya_ac97->playback_substream,
+				&redpitaya_ac97->playback_ind2_pcm,
+				snd_redpitaya_ac97_playback_ind2_copy,
+				snd_redpitaya_ac97_playback_ind2_zero);
 			return IRQ_HANDLED;
 		}
 
-	} else if (irq == ml403_ac97cr->capture_irq) {  /* capture interrupt */
-		PDEBUG(ISR_INFO, "irq(): capture - enable_capture_irq = %d\n", ml403_ac97cr->enable_capture_irq);
+	} else if (irq == redpitaya_ac97->capture_irq) {  /* capture interrupt */
+		PDEBUG(ISR_INFO, "irq(): capture - enable_capture_irq = %d\n", redpitaya_ac97->enable_capture_irq);
 		if (ml403_ac97cr->enable_capture_irq) {
 			snd_pcm_indirect2_capture_interrupt(
 				ml403_ac97cr->capture_substream,
@@ -861,7 +872,7 @@ static irqreturn_t snd_ml403_ac97cr_irq(int irq, void *dev_id)
 
 
 static unsigned short
-snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsigned short reg)
+snd_redpitaya_ac97_codec_read_internal(struct snd_redpitaya_ac97 *redpitaya_ac97, unsigned short reg)
 {
 #ifdef CODEC_STAT
 	u32 stat;
@@ -873,7 +884,7 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 	reg &= 0xfe;
 
 	if (!LM4550_RF_OK(reg)) {
-		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+		snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
 			   "access to unknown/unused codec register 0x%x "
 			   "ignored!\n", reg);
 		return 0;
@@ -891,7 +902,7 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 			return lm4550_regfile[reg / 2].def;
 		} else if ((lm4550_regfile[reg / 2].flag &
 				LM4550_REG_FAKEPROBE) &&
-			   ml403_ac97cr->ac97_fake) {
+			   redpitaya_ac97->ac97_fake) {
 			PDEBUG(CODEC_FAKE, "codec_read(): faking read from "
 				   "reg=0x%02x, val=0x%04x / %d (probe)\n",
 				   reg, lm4550_regfile[reg / 2].value,
@@ -904,8 +915,8 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 				   "/ %d) (cw=%d cr=%d)\n",
 				   reg, lm4550_regfile[reg / 2].value,
 				   lm4550_regfile[reg / 2].value,
-				   ml403_ac97cr->ac97_write,
-				   ml403_ac97cr->ac97_read);
+				   redpitaya_ac97->ac97_write,
+				   redpitaya_ac97->ac97_read);
 #else
 			PDEBUG(CODEC_FAKE, "codec_read(): read access "
 				   "answered by shadow register 0x%x (value=0x%x "
@@ -917,57 +928,57 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 		}
 	}
 	/* if we are here, we _have_ to access the codec really, no faking */
-	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
+	if (mutex_lock_interruptible(&redpitaya_ac97->cdc_mutex) != 0)
 		return 0;
 #ifdef CODEC_STAT
-	ml403_ac97cr->ac97_read++;
+	redpitaya_ac97->ac97_read++;
 #endif
-	spin_lock(&ml403_ac97cr->reg_lock);
-	iowrite32(CR_CODEC_ADDR(reg) | CR_CODEC_READ, CR_REG(ml403_ac97cr, CODEC_ADDR));
-	spin_unlock(&ml403_ac97cr->reg_lock);
+	spin_lock(&redpitaya_ac97->reg_lock);
+	iowrite32(CTRL_CODEC_ADDR(reg) | CTRL_CODEC_READ, CTRL_REG(redpitaya_ac97, CODEC_ADDR));
+	spin_unlock(&redpitaya_ac97->reg_lock);
 	end_time = jiffies + ((HZ * CODEC_TIMEOUT_AFTER_READ) / 1000);
 	do {
-		spin_lock(&ml403_ac97cr->reg_lock);
+		spin_lock(&redpitaya_ac97->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = ioread32(CR_REG(ml403_ac97cr, STATUS));
-		if ((stat & CR_RAF) == CR_RAF) {
-			value = CR_CODEC_DATAREAD(
-				ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+		stat = ioread32(CTRL_REG(redpitaya_ac97, STATUS));
+		if ((stat & CTRL_RAF) == CTRL_RAF) {
+			value = CTRL_CODEC_DATAREAD(
+				   ioread32(CTRL_REG(redpitaya_ac97, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) reg=0x%02x, "
 				   "val=0x%04x / %d (STATUS=0x%04x)\n",
 				   reg, value, value, stat);
 #else
-		if ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
-			 CR_RAF) == CR_RAF) {
+		if ((ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
+			 CTRL_RAF) == CTRL_RAF) {
 			value = CR_CODEC_DATAREAD(
-				ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
+				   ioread32(CTRL_REG(redpitaya_ac97, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
 				   "reg=0x%02x, val=0x%04x / %d\n",
 				   reg, value, value);
 #endif
 			lm4550_regfile[reg / 2].value = value;
 			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
-			spin_unlock(&ml403_ac97cr->reg_lock);
-			mutex_unlock(&ml403_ac97cr->cdc_mutex);
+			spin_unlock(&redpitaya_ac97r->reg_lock);
+			mutex_unlock(&redpitaya_ac97->cdc_mutex);
 			return value;
 		}
-		spin_unlock(&ml403_ac97cr->reg_lock);
+		spin_unlock(&redpitaya_ac97->reg_lock);
 		schedule_timeout_uninterruptible(1);
 	} while (time_after(end_time, jiffies));
 	/* read the DATAREAD register anyway, see comment below */
-	spin_lock(&ml403_ac97cr->reg_lock);
-	value = CR_CODEC_DATAREAD(ioread32(CR_REG(ml403_ac97cr, CODEC_DATAREAD)));
-	spin_unlock(&ml403_ac97cr->reg_lock);
+	spin_lock(&redpitaya_ac97->reg_lock);
+	value = CTRL_CODEC_DATAREAD(ioread32(CTRL_REG(redpitaya_ac97, CODEC_DATAREAD)));
+	spin_unlock(&redpitaya_ac97->reg_lock);
 #ifdef CODEC_STAT
-	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
 		   "timeout while codec read! "
 		   "(reg=0x%02x, last STATUS=0x%04x, DATAREAD=0x%04x / %d, %d) "
 		   "(cw=%d, cr=%d)\n",
 		   reg, stat, value, value, rafaccess,
-		   ml403_ac97cr->ac97_write, ml403_ac97cr->ac97_read);
+		   redpitaya_ac97->ac97_write, redpitaya_ac97->ac97_read);
 #else
-	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
 		   "timeout while codec read! "
 		   "(reg=0x%02x, DATAREAD=0x%04x / %d)\n",
 		   reg, value, value);
@@ -977,10 +988,11 @@ snd_ml403_ac97cr_codec_read_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsi
 	 */
 	lm4550_regfile[reg / 2].value = value;
 	lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
-	mutex_unlock(&ml403_ac97cr->cdc_mutex);
+	mutex_unlock(&redpitaya_ac97->cdc_mutex);
 	return value;
 }
 
+// TODO continue with replacement: redpitaya_ac97
 static unsigned short
 snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 {

@@ -97,8 +97,8 @@
 +	#address-cells = <1>;
 +	#size-cells = <1>;
 +	#interrupt-cells = <3>;
-+	rp-sound@40700000 {
-+		compatible = "xlnx,ml403-ac97cr";
++	redpitaya-ac97@40700000 {
++		compatible = "redpitaya,redpitaya-ac97";
 +		reg = <0x40700000 0x100>;
 +		interrupts = <0 30 1>, <0 31 1>;
 +		interrupt-parent = <&intc>;
