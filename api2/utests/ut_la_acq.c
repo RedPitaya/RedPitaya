@@ -47,12 +47,9 @@ void* trigGen(void *arg)
 void* trigAcq(void *arg)
 {
     printf("\r\nTrigAcqThreadStarted");
-    sleep(2);
+    sleep(3);
     printf("\r\nSW trigger");
-    if(rp_SoftwareTrigger()!=RP_API_OK){
-    	printf("\r\nCannot trigger acq.");
-    	rp_Stop();
-    }
+    rp_SoftwareTrigger();
     return NULL;
 }
 
@@ -65,9 +62,11 @@ void la_acq_trig_test(void)
     //sleep(1);
 
     RP_STATUS s;
-    RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
-    dir[0].channel=RP_DIGITAL_CHANNEL_7;
+    RP_DIGITAL_CHANNEL_DIRECTIONS dir[2];
+    dir[0].channel=RP_DIGITAL_CHANNEL_6;
     dir[0].direction=RP_DIGITAL_DIRECTION_RISING;
+    dir[1].channel=RP_DIGITAL_CHANNEL_7;
+    dir[1].direction=RP_DIGITAL_DIRECTION_LOW;
 
     rp_DigSigGenOuput(true);
     double sample_rate=125e6;
@@ -75,7 +74,7 @@ void la_acq_trig_test(void)
     //printf("sample rate %lf",sample_rate);
 
     printf("\r\nTriggers");
-    s=rp_SetTriggerDigitalPortProperties(dir,1);
+    s=rp_SetTriggerDigitalPortProperties(dir,2);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to set trigger properties.");
     }
@@ -92,17 +91,15 @@ void la_acq_trig_test(void)
 
 
     // software trig. acq.
-    /*
     if(pthread_create(&tid2, NULL, &trigAcq, NULL)!=0){
 		CU_FAIL("can't create thread.");
    }
-   */
 
     printf("\r\nRunBlock");
     double timeIndisposedMs;
     uint32_t pre=100;
     uint32_t post=100;
-    s=rp_RunBlock(pre,post,8,&timeIndisposedMs,&rpReadyCallback,NULL);
+    s=rp_RunBlock(pre,post,0,&timeIndisposedMs,&rpReadyCallback,NULL);
     if(s!=RP_API_OK){
         CU_FAIL("Failed to acquire data.");
     }

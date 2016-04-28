@@ -240,13 +240,13 @@ int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg)
 /** Decimation settings setter & getter */
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg) {
     rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->dec);
-    iowrite32((a_reg.dec-1), &regset->dec);
+    iowrite32(a_reg.dec, &regset->dec);
     return RP_OK;
 }
 
 int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg) {
     rp_la_decimation_regset_t *regset = (rp_la_decimation_regset_t *) &(((rp_la_acq_regset_t*)handle->regset)->dec);
-    a_reg->dec = (ioread32(&regset->dec)+1);
+    a_reg->dec = ioread32(&regset->dec);
     return RP_OK;
 }
 
