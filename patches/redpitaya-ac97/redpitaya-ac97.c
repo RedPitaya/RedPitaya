@@ -84,7 +84,7 @@
 #define SND_REDPITAYA_AC97_DRIVER "redpitaya-ac97"
 
 MODULE_AUTHOR("Ulrich Habel <espero7757@gmx.net>");
-MODULE_DESCRIPTION("RedPitaya-AC97 sound system");
+MODULE_DESCRIPTION("RedPitaya-AC97 FPGA sound system");
 MODULE_LICENSE("GPL");
 MODULE_SUPPORTED_DEVICE("{{RedPitaya,red_pitaya_ac97ctrl AC97 sub-module}}");
 
@@ -94,11 +94,11 @@ static char *id = SNDRV_DEFAULT_STR1;
 static bool enable = SNDRV_DEFAULT_ENABLE1;
 
 module_param(index, int, 0444);
-MODULE_PARM_DESC(index, "Index value for RedPitaya-AC97 sound system.");
+MODULE_PARM_DESC(index, "Index value for RedPitaya-AC97 FPGA sound system.");
 module_param(id, charp, 0444);
-MODULE_PARM_DESC(id, "ID string for RedPitaya-AC97 sound system.");
+MODULE_PARM_DESC(id, "ID string for RedPitaya-AC97 FPGA sound system.");
 module_param(enable, bool, 0444);
-MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 sound system.");
+MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 FPGA sound system.");
 
 /* Special feature options */
 #define CODEC_WRITE_CHECK_RAF	/* don't return after a write to a codec
@@ -191,71 +191,71 @@ struct lm4550_reg {
 };
 
 struct lm4550_reg lm4550_regfile[64] = {
-	[AC97_RESET / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_RESET >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_NOSAVE \
 						 | LM4550_REG_FAKEREAD,
 					   .def = 0x0D50},
-	[AC97_MASTER / 2]		= {.flag = LM4550_REG_OK
+	[AC97_MASTER >> 1]		= {.flag = LM4550_REG_OK
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x9F1F,
 					   .def = 0x8000},
-	[AC97_HEADPHONE / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_HEADPHONE >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x9F1F,
 					   .def = 0x8000},
-	[AC97_MASTER_MONO / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_MASTER_MONO >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x801F,
 					   .def = 0x8000},
-	[AC97_PC_BEEP / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_PC_BEEP >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x801E,
 					   .def = 0x0},
-	[AC97_PHONE / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_PHONE >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x801F,
 					   .def = 0x8008},
-	[AC97_MIC / 2]			= {.flag = LM4550_REG_OK \
+	[AC97_MIC >> 1]			= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x805F,
 					   .def = 0x8008},
-	[AC97_LINE / 2]			= {.flag = LM4550_REG_OK \
+	[AC97_LINE >> 1]			= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x9F1F,
 					   .def = 0x8808},
-	[AC97_CD / 2]			= {.flag = LM4550_REG_OK \
+	[AC97_CD >> 1]			= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x9F1F,
 					   .def = 0x8808},
-	[AC97_VIDEO / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_VIDEO >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x9F1F,
 					   .def = 0x8808},
-	[AC97_AUX / 2]			= {.flag = LM4550_REG_OK \
+	[AC97_AUX >> 1]			= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x9F1F,
 					   .def = 0x8808},
-	[AC97_PCM / 2]			= {.flag = LM4550_REG_OK \
+	[AC97_PCM >> 1]			= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x9F1F,
 					   .def = 0x8008},
-	[AC97_REC_SEL / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_REC_SEL >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x707,
 					   .def = 0x0},
-	[AC97_REC_GAIN / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_REC_GAIN >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .wmask = 0x8F0F,
 					   .def = 0x8000},
-	[AC97_GENERAL_PURPOSE / 2]	= {.flag = LM4550_REG_OK \
+	[AC97_GENERAL_PURPOSE >> 1]	= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .def = 0x0,
 					   .wmask = 0xA380},
-	[AC97_3D_CONTROL / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_3D_CONTROL >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEREAD \
 						 | LM4550_REG_READONLY,
 					   .def = 0x0101},
-	[AC97_POWERDOWN / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_POWERDOWN >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_NOSHADOW \
 						 | LM4550_REG_NOSAVE,
 					   .wmask = 0xFF00},
@@ -263,33 +263,33 @@ struct lm4550_reg lm4550_regfile[64] = {
 					 * REF/ANL/DAC/ADC bits
 					 * FIXME: Is this ok?
 					 */
-	[AC97_EXTENDED_ID / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_EXTENDED_ID >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEREAD \
 						 | LM4550_REG_READONLY,
 					   .def = 0x0201}, /* primary codec */
-	[AC97_EXTENDED_STATUS / 2]	= {.flag = LM4550_REG_OK \
+	[AC97_EXTENDED_STATUS >> 1]	= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_NOSHADOW \
 						 | LM4550_REG_NOSAVE,
 					   .wmask = 0x1},
-	[AC97_PCM_FRONT_DAC_RATE / 2]   = {.flag = LM4550_REG_OK \
+	[AC97_PCM_FRONT_DAC_RATE >> 1]   = {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .def = 0xBB80,
 					   .wmask = 0xFFFF},
-	[AC97_PCM_LR_ADC_RATE / 2]	= {.flag = LM4550_REG_OK \
+	[AC97_PCM_LR_ADC_RATE >> 1]	= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_FAKEPROBE,
 					   .def = 0xBB80,
 					   .wmask = 0xFFFF},
-	[AC97_VENDOR_ID1 / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_VENDOR_ID1 >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_READONLY \
 						 | LM4550_REG_FAKEREAD,
 					   .def = 0x4E53},
-	[AC97_VENDOR_ID2 / 2]		= {.flag = LM4550_REG_OK \
+	[AC97_VENDOR_ID2 >> 1]		= {.flag = LM4550_REG_OK \
 						 | LM4550_REG_READONLY \
 						 | LM4550_REG_FAKEREAD,
 					   .def = 0x4350}
 };
 
-#define LM4550_RF_OK(reg)	(lm4550_regfile[reg / 2].flag & LM4550_REG_OK)
+#define LM4550_RF_OK(reg)	(lm4550_regfile[reg >> 1].flag & LM4550_REG_OK)
 
 static void lm4550_regfile_init(void)
 {
@@ -318,7 +318,7 @@ static void lm4550_regfile_write_values_after_init(struct snd_ac97 *ac97)
 
 
 /* direct registers */
-#define CTRL_REG(redpitaya_ac97, x) (redpitaya_ac97->port + (CR_REG_##x))
+#define CTRL_REG(redpitaya_ac97, x) (redpitaya_ac97->port + (CTRL_REG_##x))
 
 #define CTRL_REG_PLAYFIFO 	    0x00
 #define CTRL_PLAYDATA(a)	    ((a) & 0xFFFF)
@@ -399,11 +399,11 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_playback = {
 	.rate_max =		48000,
 	.channels_min =		2,
 	.channels_max =		2,
-	.buffer_bytes_max =     (128*1024),
-	.period_bytes_min =     CR_FIFO_SIZE/2,
-	.period_bytes_max =     (64*1024),
+	.buffer_bytes_max =     (2*1024),
+	.period_bytes_min =     CTRL_FIFO_SIZE >> 1,
+	.period_bytes_max =     (1*1024),
 	.periods_min =		2,
-	.periods_max =		(128*1024)/(CR_FIFO_SIZE/2),
+	.periods_max =		(2*1024) / (CTRL_FIFO_SIZE >> 1),
 	.fifo_size =		0,
 };
 
@@ -418,11 +418,11 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_capture = {
 	.rate_max =		48000,
 	.channels_min =		2,
 	.channels_max =		2,
-	.buffer_bytes_max =     (128*1024),
-	.period_bytes_min =     CR_FIFO_SIZE/2,
-	.period_bytes_max =     (64*1024),
+	.buffer_bytes_max =     (2*1024),
+	.period_bytes_min =     CTRL_FIFO_SIZE >> 1,
+	.period_bytes_max =     (1*1024),
 	.periods_min =		2,
-	.periods_max =		(128*1024)/(CR_FIFO_SIZE/2),
+	.periods_max =		(2*1024) / (CTRL_FIFO_SIZE >> 1),
 	.fifo_size =		0,
 };
 
@@ -436,10 +436,10 @@ snd_redpitaya_ac97_playback_ind2_zero(struct snd_pcm_substream *substream,
 
 	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 
-	spin_lock(&redpitya_ac97->reg_lock);
-	while ((status = (ioread32(CTRL_REG(redpitya_ac97, STATUS)) &
+	spin_lock(&redpitaya_ac97->reg_lock);
+	while ((status = (ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
 				   CTRL_PLAYFULL)) != CTRL_PLAYFULL) {
-		iowrite32(0, CTRL_REG(redpitya_ac97, PLAYFIFO));
+		iowrite32(0, CTRL_REG(redpitaya_ac97, PLAYFIFO));
 		copied_words++;
 	}
 	pcm->hw_ready = 0;
@@ -449,12 +449,13 @@ snd_redpitaya_ac97_playback_ind2_zero(struct snd_pcm_substream *substream,
 }
 
 static size_t
-snd_redpitya_ac97_playback_ind2_copy(struct snd_pcm_substream *substream,
+snd_redpitaya_ac97_playback_ind2_copy(struct snd_pcm_substream *substream,
 				     struct snd_pcm_indirect2 *pcm,
-				     size_t bytes)
+				     size_t bytes_in)
 {
 	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	u16 *src;
+        int bytes = bytes_in;
 	int copied_words = 0;
 	u32 status = 0;
 
@@ -494,7 +495,7 @@ snd_redpitaya_ac97_capture_ind2_null(struct snd_pcm_substream *substream,
 		copied_words++;
 	}
 	pcm->hw_ready = 1;
-	spin_unlock(&ml403_ac97cr->reg_lock);
+	spin_unlock(&redpitaya_ac97->reg_lock);
 
 	return (size_t) (copied_words << 1);
 }
@@ -641,7 +642,7 @@ snd_redpitaya_ac97_pcm_playback_prepare(struct snd_pcm_substream *substream)
 
 	PDEBUG(WORK_INFO,
 		   "prepare(): period_bytes=%d, minperiod_bytes=%d\n",
-		   snd_pcm_lib_period_bytes(substream), CR_FIFO_SIZE / 2);
+		   snd_pcm_lib_period_bytes(substream), CTRL_FIFO_SIZE >> 1);
 
 	/* set sampling rate */
 	snd_ac97_set_rate(redpitaya_ac97->ac97, AC97_PCM_FRONT_DAC_RATE,
@@ -655,7 +656,7 @@ snd_redpitaya_ac97_pcm_playback_prepare(struct snd_pcm_substream *substream)
 		snd_pcm_lib_buffer_bytes(substream);
 	redpitaya_ac97->playback_ind2_pcm.min_periods = -1;
 	redpitaya_ac97->playback_ind2_pcm.min_multiple =
-		snd_pcm_lib_period_bytes(substream) / (CTRL_FIFO_SIZE / 2);
+		snd_pcm_lib_period_bytes(substream) / (CTRL_FIFO_SIZE >> 1);
 	PDEBUG(WORK_INFO, "prepare(): hw_buffer_size=%d, "
 		   "sw_buffer_size=%d, min_multiple=%d\n",
 		   CTRL_FIFO_SIZE, redpitaya_ac97->playback_ind2_pcm.sw_buffer_size,
@@ -674,7 +675,7 @@ snd_redpitaya_ac97_pcm_capture_prepare(struct snd_pcm_substream *substream)
 
 	PDEBUG(WORK_INFO,
 		   "prepare(capture): period_bytes=%d, minperiod_bytes=%d\n",
-		   snd_pcm_lib_period_bytes(substream), CTRL_FIFO_SIZE / 2);
+		   snd_pcm_lib_period_bytes(substream), CTRL_FIFO_SIZE >> 1);
 
 	/* set sampling rate */
 	snd_ac97_set_rate(redpitaya_ac97->ac97, AC97_PCM_LR_ADC_RATE,
@@ -688,11 +689,11 @@ snd_redpitaya_ac97_pcm_capture_prepare(struct snd_pcm_substream *substream)
 	redpitaya_ac97->capture_ind2_pcm.sw_buffer_size =
 		snd_pcm_lib_buffer_bytes(substream);
 	redpitaya_ac97->capture_ind2_pcm.min_multiple =
-		snd_pcm_lib_period_bytes(substream) / (CTRL_FIFO_SIZE / 2);
+		snd_pcm_lib_period_bytes(substream) / (CTRL_FIFO_SIZE >> 1);
 	PDEBUG(WORK_INFO, "prepare(capture): hw_buffer_size=%d, "
 	       "sw_buffer_size=%d, min_multiple=%d\n", CTRL_FIFO_SIZE,
-	       redpitaya_ac97r->capture_ind2_pcm.sw_buffer_size,
-	       redpitaya_ac97r->capture_ind2_pcm.min_multiple);
+	       redpitaya_ac97->capture_ind2_pcm.sw_buffer_size,
+	       redpitaya_ac97->capture_ind2_pcm.min_multiple);
 	return 0;
 }
 
@@ -729,7 +730,7 @@ snd_redpitaya_ac97_playback_open(struct snd_pcm_substream *substream)
 
 	snd_pcm_hw_constraint_step(runtime, 0,
 				   SNDRV_PCM_HW_PARAM_PERIOD_BYTES,
-				   CTRL_FIFO_SIZE / 2);
+				   CTRL_FIFO_SIZE >> 1);
 	return 0;
 }
 
@@ -748,7 +749,7 @@ snd_redpitaya_ac97_capture_open(struct snd_pcm_substream *substream)
 
 	snd_pcm_hw_constraint_step(runtime, 0,
 				   SNDRV_PCM_HW_PARAM_PERIOD_BYTES,
-				   CTRL_FIFO_SIZE / 2);
+				   CTRL_FIFO_SIZE >> 1);
 	return 0;
 }
 
@@ -851,12 +852,12 @@ snd_redpitaya_ac97_irq(int irq, void *dev_id)
 
 	} else if (irq == redpitaya_ac97->capture_irq) {  /* capture interrupt */
 		PDEBUG(ISR_INFO, "irq(): capture - enable_capture_irq = %d\n", redpitaya_ac97->enable_capture_irq);
-		if (ml403_ac97cr->enable_capture_irq) {
+		if (redpitaya_ac97->enable_capture_irq) {
 			snd_pcm_indirect2_capture_interrupt(
-				ml403_ac97cr->capture_substream,
-				&ml403_ac97cr->capture_ind2_pcm,
-				snd_ml403_ac97cr_capture_ind2_copy,
-				snd_ml403_ac97cr_capture_ind2_null);
+				redpitaya_ac97->capture_substream,
+				&redpitaya_ac97->capture_ind2_pcm,
+				snd_redpitaya_ac97_capture_ind2_copy,
+				snd_redpitaya_ac97_capture_ind2_null);
 			return IRQ_HANDLED;
 		}
 
@@ -885,46 +886,46 @@ snd_redpitaya_ac97_codec_read_internal(struct snd_redpitaya_ac97 *redpitaya_ac97
 
 	if (!LM4550_RF_OK(reg)) {
 		snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
-			   "access to unknown/unused codec register 0x%x "
+			   "access to unknown / unused codec register 0x%x "
 			   "ignored!\n", reg);
 		return 0;
 	}
 
-	/* check if we can fake/answer this access from our shadow register */
-	if ((lm4550_regfile[reg / 2].flag &
+	/* check if we can fake / answer this access from our shadow register */
+	if ((lm4550_regfile[reg >> 1].flag &
 		 (LM4550_REG_DONEREAD | LM4550_REG_ALLFAKE)) &&
-		!(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
-		if (lm4550_regfile[reg / 2].flag & LM4550_REG_FAKEREAD) {
+		!(lm4550_regfile[reg >> 1].flag & LM4550_REG_NOSHADOW)) {
+		if (lm4550_regfile[reg >> 1].flag & LM4550_REG_FAKEREAD) {
 			PDEBUG(CODEC_FAKE, "codec_read(): faking read from "
 				   "reg=0x%02x, val=0x%04x / %d\n",
-				   reg, lm4550_regfile[reg / 2].def,
-				   lm4550_regfile[reg / 2].def);
-			return lm4550_regfile[reg / 2].def;
-		} else if ((lm4550_regfile[reg / 2].flag &
+				   reg, lm4550_regfile[reg >> 1].def,
+				   lm4550_regfile[reg >> 1].def);
+			return lm4550_regfile[reg >> 1].def;
+		} else if ((lm4550_regfile[reg >> 1].flag &
 				LM4550_REG_FAKEPROBE) &&
 			   redpitaya_ac97->ac97_fake) {
 			PDEBUG(CODEC_FAKE, "codec_read(): faking read from "
 				   "reg=0x%02x, val=0x%04x / %d (probe)\n",
-				   reg, lm4550_regfile[reg / 2].value,
-				   lm4550_regfile[reg / 2].value);
-			return lm4550_regfile[reg / 2].value;
+				   reg, lm4550_regfile[reg >> 1].value,
+				   lm4550_regfile[reg >> 1].value);
+			return lm4550_regfile[reg >> 1].value;
 		} else {
 #ifdef CODEC_STAT
 			PDEBUG(CODEC_FAKE, "codec_read(): read access "
 				   "answered by shadow register 0x%x (value=0x%x "
 				   "/ %d) (cw=%d cr=%d)\n",
-				   reg, lm4550_regfile[reg / 2].value,
-				   lm4550_regfile[reg / 2].value,
+				   reg, lm4550_regfile[reg >> 1].value,
+				   lm4550_regfile[reg >> 1].value,
 				   redpitaya_ac97->ac97_write,
 				   redpitaya_ac97->ac97_read);
 #else
 			PDEBUG(CODEC_FAKE, "codec_read(): read access "
 				   "answered by shadow register 0x%x (value=0x%x "
 				   "/ %d)\n",
-				   reg, lm4550_regfile[reg / 2].value,
-				   lm4550_regfile[reg / 2].value);
+				   reg, lm4550_regfile[reg >> 1].value,
+				   lm4550_regfile[reg >> 1].value);
 #endif
-			return lm4550_regfile[reg / 2].value;
+			return lm4550_regfile[reg >> 1].value;
 		}
 	}
 	/* if we are here, we _have_ to access the codec really, no faking */
@@ -951,15 +952,15 @@ snd_redpitaya_ac97_codec_read_internal(struct snd_redpitaya_ac97 *redpitaya_ac97
 #else
 		if ((ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
 			 CTRL_RAF) == CTRL_RAF) {
-			value = CR_CODEC_DATAREAD(
+			value = CTRL_CODEC_DATAREAD(
 				   ioread32(CTRL_REG(redpitaya_ac97, CODEC_DATAREAD)));
 			PDEBUG(CODEC_SUCCESS, "codec_read(): (done) "
 				   "reg=0x%02x, val=0x%04x / %d\n",
 				   reg, value, value);
 #endif
-			lm4550_regfile[reg / 2].value = value;
-			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
-			spin_unlock(&redpitaya_ac97r->reg_lock);
+			lm4550_regfile[reg >> 1].value = value;
+			lm4550_regfile[reg >> 1].flag |= LM4550_REG_DONEREAD;
+			spin_unlock(&redpitaya_ac97->reg_lock);
 			mutex_unlock(&redpitaya_ac97->cdc_mutex);
 			return value;
 		}
@@ -986,22 +987,21 @@ snd_redpitaya_ac97_codec_read_internal(struct snd_redpitaya_ac97 *redpitaya_ac97
 	/* BUG: This is PURE speculation! But after _most_ read timeouts the
 	 * value in the register is ok!
 	 */
-	lm4550_regfile[reg / 2].value = value;
-	lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
+	lm4550_regfile[reg >> 1].value = value;
+	lm4550_regfile[reg >> 1].flag |= LM4550_REG_DONEREAD;
 	mutex_unlock(&redpitaya_ac97->cdc_mutex);
 	return value;
 }
 
-// TODO continue with replacement: redpitaya_ac97
 static unsigned short
-snd_ml403_ac97cr_codec_read(struct snd_ac97 *ac97, unsigned short reg)
+snd_redpitaya_ac97_codec_read(struct snd_ac97 *ac97, unsigned short reg)
 {
-	return snd_ml403_ac97cr_codec_read_internal((struct snd_ml403_ac97cr *)ac97->private_data, reg);
+	return snd_redpitaya_ac97_codec_read_internal((struct snd_redpitaya_ac97 *)ac97->private_data, reg);
 }
 
 
 static void
-snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, unsigned short reg, unsigned short val)
+snd_redpitaya_ac97_codec_write_internal(struct snd_redpitaya_ac97 *redpitaya_ac97, unsigned short reg, unsigned short val)
 {
 #ifdef CODEC_STAT
 	u32 stat;
@@ -1015,82 +1015,82 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 	PDEBUG(CODEC_FAKE, "write(reg=%02x, val=%04x / %d)\n", reg, val, val);
 
 	if (!LM4550_RF_OK(reg)) {
-		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
-			   "access to unknown/unused codec register 0x%x "
+		snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
+			   "access to unknown / unused codec register 0x%x "
 			   "ignored!\n", reg);
 		return;
 	}
-	if (lm4550_regfile[reg / 2].flag & LM4550_REG_READONLY) {
-		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+	if (lm4550_regfile[reg >> 1].flag & LM4550_REG_READONLY) {
+		snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
 			   "write access to read only codec register 0x%x "
 			   "ignored!\n", reg);
 		return;
 	}
-	if ((val & lm4550_regfile[reg / 2].wmask) != val) {
-		snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+	if ((val & lm4550_regfile[reg >> 1].wmask) != val) {
+		snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
 			   "write access to codec register 0x%x "
 			   "with bad value 0x%x / %d!\n",
 			   reg, val, val);
-		val = val & lm4550_regfile[reg / 2].wmask;
+		val = val & lm4550_regfile[reg >> 1].wmask;
 	}
-	if (((lm4550_regfile[reg / 2].flag & LM4550_REG_FAKEPROBE) &&
-		 ml403_ac97cr->ac97_fake) &&
-		!(lm4550_regfile[reg / 2].flag & LM4550_REG_NOSHADOW)) {
+	if (((lm4550_regfile[reg >> 1].flag & LM4550_REG_FAKEPROBE) &&
+	      redpitaya_ac97->ac97_fake) &&
+		!(lm4550_regfile[reg >> 1].flag & LM4550_REG_NOSHADOW)) {
 		PDEBUG(CODEC_FAKE, "codec_write(): faking write to reg=0x%02x, "
 			   "val=0x%04x / %d\n", reg, val, val);
-		lm4550_regfile[reg / 2].value = (val &
-						lm4550_regfile[reg / 2].wmask);
+		lm4550_regfile[reg >> 1].value = (val &
+						 lm4550_regfile[reg >> 1].wmask);
 		return;
 	}
-	if (mutex_lock_interruptible(&ml403_ac97cr->cdc_mutex) != 0)
+	if (mutex_lock_interruptible(&redpitaya_ac97->cdc_mutex) != 0)
 		return;
 #ifdef CODEC_STAT
-	ml403_ac97cr->ac97_write++;
+	redpitaya_ac97->ac97_write++;
 #endif
-	spin_lock(&ml403_ac97cr->reg_lock);
-	iowrite32(CR_CODEC_DATAWRITE(val), CR_REG(ml403_ac97cr, CODEC_DATAWRITE));
-	iowrite32(CR_CODEC_ADDR(reg) | CR_CODEC_WRITE, CR_REG(ml403_ac97cr, CODEC_ADDR));
-	spin_unlock(&ml403_ac97cr->reg_lock);
+	spin_lock(&redpitaya_ac97->reg_lock);
+	iowrite32(CTRL_CODEC_DATAWRITE(val), CTRL_REG(redpitaya_ac97, CODEC_DATAWRITE));
+	iowrite32(CTRL_CODEC_ADDR(reg) | CTRL_CODEC_WRITE, CTRL_REG(redpitaya_ac97, CODEC_ADDR));
+	spin_unlock(&redpitaya_ac97->reg_lock);
 #ifdef CODEC_WRITE_CHECK_RAF
-	/* check CR_CODEC_RAF bit to see if write access to register is done;
+	/* check CTRL_CODEC_RAF bit to see if write access to register is done;
 	 * loop until bit is set or timeout happens
 	 */
 	end_time = jiffies + ((HZ * CODEC_TIMEOUT_AFTER_WRITE) / 1000);
 	do {
-		spin_lock(&ml403_ac97cr->reg_lock);
+		spin_lock(&redpitaya_ac97->reg_lock);
 #ifdef CODEC_STAT
 		rafaccess++;
-		stat = ioread32(CR_REG(ml403_ac97cr, STATUS))
-		if ((stat & CR_RAF) == CR_RAF) {
+		stat = ioread32(CTRL_REG(redpitaya_ac97, STATUS))
+		if ((stat & CTRL_RAF) == CTRL_RAF) {
 #else
-		if ((ioread32(CR_REG(ml403_ac97cr, STATUS)) &
-			 CR_RAF) == CR_RAF) {
+		if ((ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
+			 CTRL_RAF) == CTRL_RAF) {
 #endif
 			PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
-				   "reg=0x%02x, val=0x%04x / %d\n",
-				   reg, val, val);
-			if (!(lm4550_regfile[reg / 2].flag &
-				  LM4550_REG_NOSHADOW) &&
-				!(lm4550_regfile[reg / 2].flag &
+			       "reg=0x%02x, val=0x%04x / %d\n",
+			       reg, val, val);
+			if (!(lm4550_regfile[reg >> 1].flag &
+			      LM4550_REG_NOSHADOW) &&
+				!(lm4550_regfile[reg >> 1].flag &
 				  LM4550_REG_NOSAVE))
-				lm4550_regfile[reg / 2].value = val;
-			lm4550_regfile[reg / 2].flag |= LM4550_REG_DONEREAD;
-			spin_unlock(&ml403_ac97cr->reg_lock);
-			mutex_unlock(&ml403_ac97cr->cdc_mutex);
+				lm4550_regfile[reg >> 1].value = val;
+			lm4550_regfile[reg >> 1].flag |= LM4550_REG_DONEREAD;
+			spin_unlock(&redpitaya_ac97->reg_lock);
+			mutex_unlock(&redpitaya_ac97->cdc_mutex);
 			return;
 		}
-		spin_unlock(&ml403_ac97cr->reg_lock);
+		spin_unlock(&redpitaya_ac97->reg_lock);
 		schedule_timeout_uninterruptible(1);
 	} while (time_after(end_time, jiffies));
 #ifdef CODEC_STAT
-	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
 		   "timeout while codec write "
 		   "(reg=0x%02x, val=0x%04x / %d, last STATUS=0x%04x, %d) "
 		   "(cw=%d, cr=%d)\n",
-		   reg, val, val, stat, rafaccess, ml403_ac97cr->ac97_write,
-		   ml403_ac97cr->ac97_read);
+		   reg, val, val, stat, rafaccess, redpitaya_ac97->ac97_write,
+		   redpitaya_ac97->ac97_read);
 #else
-	snd_printk(KERN_WARNING SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_WARNING SND_REDPITAYA_AC97_DRIVER ": "
 		   "timeout while codec write (reg=0x%02x, val=0x%04x / %d)\n",
 		   reg, val, val);
 #endif
@@ -1105,76 +1105,78 @@ snd_ml403_ac97cr_codec_write_internal(struct snd_ml403_ac97cr *ml403_ac97cr, uns
 	schedule_timeout_uninterruptible(HZ / CODEC_WAIT_AFTER_WRITE);
 #endif
 	PDEBUG(CODEC_SUCCESS, "codec_write(): (done) "
-		   "reg=0x%02x, val=0x%04x / %d (no RAF check)\n",
-		   reg, val, val);
+	       "reg=0x%02x, val=0x%04x / %d (no RAF check)\n",
+	       reg, val, val);
 #endif
-	mutex_unlock(&ml403_ac97cr->cdc_mutex);
+	mutex_unlock(&redpitaya_ac97->cdc_mutex);
 	return;
 }
 
 static void
-snd_ml403_ac97cr_codec_write(struct snd_ac97 *ac97, unsigned short reg, unsigned short val)
+snd_redpitaya_ac97_codec_write(struct snd_ac97 *ac97, unsigned short reg, unsigned short val)
 {
-	return snd_ml403_ac97cr_codec_write_internal((struct snd_ml403_ac97cr *)ac97->private_data, reg, val);
+	return snd_redpitaya_ac97_codec_write_internal((struct snd_redpitaya_ac97 *)ac97->private_data, reg, val);
 }
 
 
 static int
-snd_ml403_ac97cr_chip_init(struct snd_ml403_ac97cr *ml403_ac97cr)
+snd_redpitaya_ac97_chip_init(struct snd_redpitaya_ac97 *redpitaya_ac97)
 {
 	unsigned long end_time;
 	PDEBUG(INIT_INFO, "chip_init()\n");
 
 	end_time = jiffies + ((HZ * CODEC_TIMEOUT_ON_INIT) / 1000);
 	do {
-		if (ioread32(CR_REG(ml403_ac97cr, STATUS)) & CR_CODECREADY) {
+		if (ioread32(CTRL_REG(redpitaya_ac97, STATUS)) & CTRL_CODECREADY) {
 			/* clear both hardware FIFOs */
-			iowrite32(CR_RECRESET | CR_PLAYRESET, CR_REG(ml403_ac97cr, RESETFIFO));
+			iowrite32(CTRL_RECRESET | CTRL_PLAYRESET, CTRL_REG(redpitaya_ac97, RESETFIFO));
 			PDEBUG(INIT_INFO, "chip_init(): (done)\n");
 			return 0;
 		}
 		schedule_timeout_uninterruptible(1);
 	} while (time_after(end_time, jiffies));
-	snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_ERR SND_REDPITAYA_AC97_DRIVER ": "
 		   "timeout while waiting for codec, "
 		   "not ready!\n");
 	return -EBUSY;
 }
 
-static int snd_ml403_ac97cr_free(struct snd_ml403_ac97cr *ml403_ac97cr)
+static int
+snd_redpitaya_ac97_free(struct snd_redpitaya_ac97 *redpitaya_ac97)
 {
 	PDEBUG(INIT_INFO, "free()\n");
 	/* irq release */
-	if (ml403_ac97cr->playback_irq >= 0)
-		free_irq(ml403_ac97cr->playback_irq, ml403_ac97cr);
-	if (ml403_ac97cr->capture_irq >= 0)
-		free_irq(ml403_ac97cr->capture_irq, ml403_ac97cr);
+	if (redpitaya_ac97->playback_irq >= 0)
+		free_irq(redpitaya_ac97->playback_irq, redpitaya_ac97);
+	if (redpitaya_ac97->capture_irq >= 0)
+		free_irq(redpitaya_ac97->capture_irq, redpitaya_ac97);
 	PDEBUG(INIT_INFO, "free() IRQs returned\n");
 	/* give back "port" */
-	iounmap(ml403_ac97cr->port);
+	iounmap(redpitaya_ac97->port);
 	PDEBUG(INIT_INFO, "free() iounmap() done\n");
-	release_mem_region((u32)ml403_ac97cr->port_phy, ml403_ac97cr->port_size);
+	release_mem_region((u32)redpitaya_ac97->port_phy, redpitaya_ac97->port_size);
 	PDEBUG(INIT_INFO, "free() release_mem_region() done\n");
-	kfree(ml403_ac97cr);
+	kfree(redpitaya_ac97);
 	PDEBUG(INIT_INFO, "free() (done)\n");
 	return 0;
 }
 
-static int snd_ml403_ac97cr_dev_free(struct snd_device *snddev)
+static int
+snd_redpitaya_ac97_dev_free(struct snd_device *snddev)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr = snddev->device_data;
+	struct snd_redpitaya_ac97 *redpitaya_ac97 = snddev->device_data;
 	PDEBUG(INIT_INFO, "dev_free()\n");
-	return snd_ml403_ac97cr_free(ml403_ac97cr);
+	return snd_redpitaya_ac97_free(redpitaya_ac97);
 }
 
 static int
-snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
-			struct snd_ml403_ac97cr **rml403_ac97cr)
+snd_redpitaya_ac97_create(struct snd_card *card, struct platform_device *pdev,
+			  struct snd_redpitaya_ac97 **rredpitaya_ac97)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr;
+	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	int err;
 	static struct snd_device_ops ops = {
-		.dev_free = snd_ml403_ac97cr_dev_free,
+		.dev_free = snd_redpitaya_ac97_dev_free,
 	};
 	//const struct of_device_id *of_id;
 	struct resource *resource;
@@ -1189,27 +1191,27 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	res_mem_dt.start = 0;
 	irq_pos1_dt = irq_pos0_dt = -1;
 
-	*rml403_ac97cr = NULL;
-	ml403_ac97cr = kzalloc(sizeof(*ml403_ac97cr), GFP_KERNEL);
-	if (ml403_ac97cr == NULL)
+	*rredpitaya_ac97 = NULL;
+	redpitaya_ac97 = kzalloc(sizeof(*redpitaya_ac97), GFP_KERNEL);
+	if (redpitaya_ac97 == NULL)
 		return -ENOMEM;
-	spin_lock_init(&ml403_ac97cr->reg_lock);
-	mutex_init(&ml403_ac97cr->cdc_mutex);
-	ml403_ac97cr->card = card;
-	ml403_ac97cr->pfdev = pfdev;
-	ml403_ac97cr->playback_irq = -1;
-	ml403_ac97cr->enable_playback_irq = 0;
-	ml403_ac97cr->capture_irq = -1;
-	ml403_ac97cr->enable_capture_irq = 0;
-	ml403_ac97cr->port = NULL;
-	ml403_ac97cr->port_phy = NULL;
-	ml403_ac97cr->port_size = 0;
+	spin_lock_init(&redpitaya_ac97->reg_lock);
+	mutex_init(&redpitaya_ac97->cdc_mutex);
+	redpitaya_ac97->card = card;
+	redpitaya_ac97->pdev = pdev;
+	redpitaya_ac97->playback_irq = -1;
+	redpitaya_ac97->enable_playback_irq = 0;
+	redpitaya_ac97->capture_irq = -1;
+	redpitaya_ac97->enable_capture_irq = 0;
+	redpitaya_ac97->port = NULL;
+	redpitaya_ac97->port_phy = NULL;
+	redpitaya_ac97->port_size = 0;
 
 	PDEBUG(INIT_INFO, "Trying to reserve resources now ...\n");
 
 	/* get device tree data */
-	//of_id = of_match_device(ml403_ac97cr_dt_ids, &pfdev->dev);
-	np = of_find_matching_node(NULL, ml403_ac97cr_dt_ids);
+	//of_id = of_match_device(redpitaya_ac97_dt_ids, &pdev->dev);
+	np = of_find_matching_node(NULL, redpitaya_ac97_dt_ids);
 	if (np) {
 		of_address_to_resource(np, 0, &res_mem_dt);
 		irq_pos0_dt = irq_of_parse_and_map(np, 0);
@@ -1222,10 +1224,10 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 	if (res_mem_dt.start) {
 		resource = &res_mem_dt;
 	} else {
-		resource = platform_get_resource(pfdev, IORESOURCE_MEM, 0);
+		resource = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	}
 	if (!resource) {
-		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": can not get memory resource entry");
+		snd_printk(KERN_ERR SND_REDPITAYA_AC97_DRIVER ": can not get memory resource entry");
 		return -1;
 	}
 	{
@@ -1233,144 +1235,144 @@ snd_ml403_ac97cr_create(struct snd_card *card, struct platform_device *pfdev,
 		PDEBUG(INIT_INFO, "resource check: resource->start = 0x%08x, resource->end = 0x%08x\n", resource->start, resource->end);
 	}
 
-	request_mem_region(resource->start, resource_size(resource), pfdev->name);
-	ml403_ac97cr->port = ioremap_nocache(resource->start, resource_size(resource));
-	ml403_ac97cr->port_phy = (void *)resource->start;
-	ml403_ac97cr->port_size = resource_size(resource);
-	if (ml403_ac97cr->port == NULL) {
-		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
+	request_mem_region(resource->start, resource_size(resource), pdev->name);
+	redpitaya_ac97->port = ioremap_nocache(resource->start, resource_size(resource));
+	redpitaya_ac97->port_phy = (void *)resource->start;
+	redpitaya_ac97->port_size = resource_size(resource);
+	if (redpitaya_ac97->port == NULL) {
+		snd_printk(KERN_ERR SND_REDPITAYA_AC97_DRIVER ": "
 			   "unable to remap memory region (%pR)\n",
 			   resource);
-		snd_ml403_ac97cr_free(ml403_ac97cr);
+		snd_redpitaya_ac97_free(redpitaya_ac97);
 		return -EBUSY;
 	}
-	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_INFO SND_REDPITAYA_AC97_DRIVER ": "
 		   "remap controller memory region from 0x%lx to "
 		   "0x%lx with length of %ld bytes done\n",
-		   (unsigned long) ml403_ac97cr->port_phy,
-		   (unsigned long) ml403_ac97cr->port,
-		   (unsigned long) ml403_ac97cr->port_size);
+		   (unsigned long) redpitaya_ac97->port_phy,
+		   (unsigned long) redpitaya_ac97->port,
+		   (unsigned long) redpitaya_ac97->port_size);
 
 	/* get irq */
-	irq = -1;
+        irq = -1;
 	if (irq_pos0_dt > 0) {
 		irq = irq_pos0_dt;
 	} else {
-		irq = platform_get_irq(pfdev, 0);
+		irq = platform_get_irq(pdev, 0);
 	}
-	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_INFO SND_REDPITAYA_AC97_DRIVER ": "
 		   "got play IRQ = %d\n", irq);
-	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
-			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
-		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
+	if (request_irq(irq, snd_redpitaya_ac97_irq, 0,
+			dev_name(&pdev->dev), (void *)redpitaya_ac97)) {
+		snd_printk(KERN_ERR SND_REDPITAYA_AC97_DRIVER ": "
 			   "unable to request play IRQ %d\n",
 			   irq);
-		snd_ml403_ac97cr_free(ml403_ac97cr);
+		snd_redpitaya_ac97_free(redpitaya_ac97);
 		return -EBUSY;
 	}
-	ml403_ac97cr->playback_irq = irq;
-	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+	redpitaya_ac97->playback_irq = irq;
+	snd_printk(KERN_INFO SND_REDPITAYA_AC97_DRIVER ": "
 		   "request (playback) irq %d done\n",
-		   ml403_ac97cr->playback_irq);
+		   redpitaya_ac97->playback_irq);
 	irq = -1;
 	if (irq_pos1_dt > 0) {
 		irq = irq_pos1_dt;
 	} else {
-		irq = platform_get_irq(pfdev, 1);
+		irq = platform_get_irq(pdev, 1);
 	}
-	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+	snd_printk(KERN_INFO SND_REDPITAYA_AC97_DRIVER ": "
 		   "got capture IRQ = %d\n", irq);
-	if (request_irq(irq, snd_ml403_ac97cr_irq, 0,
-			dev_name(&pfdev->dev), (void *)ml403_ac97cr)) {
-		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": "
+	if (request_irq(irq, snd_redpitaya_ac97_irq, 0,
+			dev_name(&pdev->dev), (void *)redpitaya_ac97)) {
+		snd_printk(KERN_ERR SND_REDPITAYA_AC97_DRIVER ": "
 			   "unable to request capture IRQ %d\n",
 			   irq);
-		snd_ml403_ac97cr_free(ml403_ac97cr);
+		snd_redpitaya_ac97_free(redpitaya_ac97);
 		return -EBUSY;
 	}
-	ml403_ac97cr->capture_irq = irq;
-	snd_printk(KERN_INFO SND_ML403_AC97CR_DRIVER ": "
+	redpitaya_ac97->capture_irq = irq;
+	snd_printk(KERN_INFO SND_REDPITAYA_AC97_DRIVER ": "
 		   "request (capture) irq %d done\n",
-		   ml403_ac97cr->capture_irq);
+		   redpitaya_ac97->capture_irq);
 
-	err = snd_ml403_ac97cr_chip_init(ml403_ac97cr);
+	err = snd_redpitaya_ac97_chip_init(redpitaya_ac97);
 	if (err < 0) {
-		snd_ml403_ac97cr_free(ml403_ac97cr);
+		snd_redpitaya_ac97_free(redpitaya_ac97);
 		return err;
 	}
 
-	err = snd_device_new(card, SNDRV_DEV_LOWLEVEL, ml403_ac97cr, &ops);
+	err = snd_device_new(card, SNDRV_DEV_LOWLEVEL, redpitaya_ac97, &ops);
 	if (err < 0) {
 		PDEBUG(INIT_FAILURE, "probe(): snd_device_new() failed!\n");
-		snd_ml403_ac97cr_free(ml403_ac97cr);
+		snd_redpitaya_ac97_free(redpitaya_ac97);
 		return err;
 	}
 
-	*rml403_ac97cr = ml403_ac97cr;
+	*rredpitaya_ac97 = redpitaya_ac97;
 	return 0;
 }
 
-static void snd_ml403_ac97cr_mixer_free(struct snd_ac97 *ac97)
+static void snd_redpitaya_ac97_mixer_free(struct snd_ac97 *ac97)
 {
-	struct snd_ml403_ac97cr *ml403_ac97cr = ac97->private_data;
+	struct snd_redpitaya_ac97 *redpitaya_ac97 = ac97->private_data;
 	PDEBUG(INIT_INFO, "mixer_free()\n");
-	ml403_ac97cr->ac97 = NULL;
+	redpitaya_ac97->ac97 = NULL;
 	PDEBUG(INIT_INFO, "mixer_free() (done)\n");
 }
 
 static int
-snd_ml403_ac97cr_mixer(struct snd_ml403_ac97cr *ml403_ac97cr)
+snd_redpitaya_ac97_mixer(struct snd_redpitaya_ac97 *redpitaya_ac97)
 {
 	struct snd_ac97_bus *bus;
 	struct snd_ac97_template ac97;
 	int err;
 	static struct snd_ac97_bus_ops ops = {
-		.write = snd_ml403_ac97cr_codec_write,
-		.read = snd_ml403_ac97cr_codec_read,
+		.write = snd_redpitaya_ac97_codec_write,
+		.read = snd_redpitaya_ac97_codec_read,
 	};
 	PDEBUG(INIT_INFO, "mixer()\n");
-	err = snd_ac97_bus(ml403_ac97cr->card, 0, &ops, NULL, &bus);
+	err = snd_ac97_bus(redpitaya_ac97->card, 0, &ops, NULL, &bus);
 	if (err < 0)
 		return err;
 
 	memset(&ac97, 0, sizeof(ac97));
-	ml403_ac97cr->ac97_fake = 1;
+	redpitaya_ac97->ac97_fake = 1;
 	lm4550_regfile_init();
 #ifdef CODEC_STAT
-	ml403_ac97cr->ac97_read = 0;
-	ml403_ac97cr->ac97_write = 0;
+	redpitaya_ac97->ac97_read = 0;
+	redpitaya_ac97->ac97_write = 0;
 #endif
-	ac97.private_data = ml403_ac97cr;
-	ac97.private_free = snd_ml403_ac97cr_mixer_free;
+	ac97.private_data = redpitaya_ac97;
+	ac97.private_free = snd_redpitaya_ac97_mixer_free;
 	ac97.scaps = AC97_SCAP_AUDIO | AC97_SCAP_SKIP_MODEM |
 		AC97_SCAP_NO_SPDIF;
-	err = snd_ac97_mixer(bus, &ac97, &ml403_ac97cr->ac97);
-	ml403_ac97cr->ac97_fake = 0;
-	lm4550_regfile_write_values_after_init(ml403_ac97cr->ac97);
+	err = snd_ac97_mixer(bus, &ac97, &redpitaya_ac97->ac97);
+	redpitaya_ac97->ac97_fake = 0;
+	lm4550_regfile_write_values_after_init(redpitaya_ac97->ac97);
 	PDEBUG(INIT_INFO, "mixer(): (done) snd_ac97_mixer()=%d\n", err);
 	return err;
 }
 
 static int
-snd_ml403_ac97cr_pcm(struct snd_ml403_ac97cr *ml403_ac97cr, int device)
+snd_redpitaya_ac97_pcm(struct snd_redpitaya_ac97 *redpitaya_ac97, int device)
 {
 	struct snd_pcm *pcm;
 	int err;
 
 	PDEBUG(INIT_INFO, "pcm()\n");
 
-	err = snd_pcm_new(ml403_ac97cr->card, "ML403AC97CR/1", device, 1, 1,
+	err = snd_pcm_new(redpitaya_ac97->card, "RP-AC97/1", device, 1, 1,
 			  &pcm);
 	if (err < 0)
 		return err;
 	snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK,
-			&snd_ml403_ac97cr_playback_ops);
+			&snd_redpitaya_ac97_playback_ops);
 	snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_CAPTURE,
-			&snd_ml403_ac97cr_capture_ops);
-	pcm->private_data = ml403_ac97cr;
+			&snd_redpitaya_ac97_capture_ops);
+	pcm->private_data = redpitaya_ac97;
 	pcm->info_flags = 0;
-	strcpy(pcm->name, "ML403AC97CR DAC/ADC");
-	ml403_ac97cr->pcm = pcm;
+	strcpy(pcm->name, "RP-AC97 DAC/ADC");
+	redpitaya_ac97->pcm = pcm;
 
 	snd_pcm_lib_preallocate_pages_for_all(pcm, SNDRV_DMA_TYPE_CONTINUOUS,
 					  snd_dma_continuous_data(GFP_KERNEL),
@@ -1379,12 +1381,12 @@ snd_ml403_ac97cr_pcm(struct snd_ml403_ac97cr *ml403_ac97cr, int device)
 	return 0;
 }
 
-static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
+static int snd_redpitaya_ac97_probe(struct platform_device *pdev)
 {
 	struct snd_card *card;
-	struct snd_ml403_ac97cr *ml403_ac97cr = NULL;
+	struct snd_redpitaya_ac97 *redpitaya_ac97 = NULL;
 	int err;
-	int dev = pfdev->id;
+	int dev = pdev->id;
 
 	PDEBUG(INIT_INFO, "probe(dev=%d)\n", dev);
 
@@ -1393,37 +1395,37 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	if (!enable)
 		return -ENOENT;
 
-	if ((err = snd_card_new(&pfdev->dev, index, id, THIS_MODULE,
+	if ((err = snd_card_new(&pdev->dev, index, id, THIS_MODULE,
 				0, &card)) < 0) {
-		snd_printk(KERN_ERR SND_ML403_AC97CR_DRIVER ": Cannot create card\n");
+		snd_printk(KERN_ERR SND_REDPITAYA_AC97_DRIVER ": Cannot create card\n");
 		return err;
 	}
-	err = snd_ml403_ac97cr_create(card, pfdev, &ml403_ac97cr);
+	err = snd_redpitaya_ac97_create(card, pdev, &redpitaya_ac97);
 	if (err < 0) {
 		PDEBUG(INIT_FAILURE, "probe(): create failed!\n");
 		snd_card_free(card);
 		return err;
 	}
 	PDEBUG(INIT_INFO, "probe(): create done\n");
-	card->private_data = ml403_ac97cr;
-	if ((err = snd_ml403_ac97cr_mixer(ml403_ac97cr)) < 0) {
+	card->private_data = redpitaya_ac97;
+	if ((err = snd_redpitaya_ac97_mixer(redpitaya_ac97)) < 0) {
 		snd_card_free(card);
 		return err;
 	}
 	PDEBUG(INIT_INFO, "probe(): mixer done\n");
-	if ((err = snd_ml403_ac97cr_pcm(ml403_ac97cr, 0)) < 0) {
+	if ((err = snd_redpitaya_ac97_pcm(redpitaya_ac97, 0)) < 0) {
 		snd_card_free(card);
 		return err;
 	}
 	PDEBUG(INIT_INFO, "probe(): PCM done\n");
-	strcpy(card->driver, SND_ML403_AC97CR_DRIVER);
-	strcpy(card->shortname, "ML403 AC97 RedPitaya RadioBox");
+	strcpy(card->driver, SND_REDPITAYA_AC97_DRIVER);
+	strcpy(card->shortname, "RedPitaya-AC97");
 	sprintf(card->longname, "%s %s at 0x%lx, irq %i & %i, device %i",
 		card->shortname, card->driver,
-		(unsigned long)ml403_ac97cr->port, ml403_ac97cr->playback_irq,
-		ml403_ac97cr->capture_irq, dev + 1);
+		(unsigned long)redpitaya_ac97->port, redpitaya_ac97->playback_irq,
+		redpitaya_ac97->capture_irq, dev + 1);
 
-	platform_set_drvdata(pfdev, card);
+	platform_set_drvdata(pdev, card);
 
 	/* At this point card will be usable */
 	if ((err = snd_card_register(card)) < 0) {
@@ -1434,13 +1436,13 @@ static int snd_ml403_ac97cr_probe(struct platform_device *pfdev)
 	return 0;
 }
 
-static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
+static int snd_redpitaya_ac97_remove(struct platform_device *pdev)
 {
 	struct snd_card *card;
 
 	PDEBUG(INIT_INFO, "remove()\n");
 
-	if ((card = platform_get_drvdata(pfdev)) != NULL)
+	if ((card = platform_get_drvdata(pdev)) != NULL)
 		snd_card_free(card);
 	return 0;
 }
@@ -1451,5 +1453,5 @@ static int snd_ml403_ac97cr_remove(struct platform_device *pfdev)
  *********************************************************************/
 
 // automatic does platform_driver_register()
-module_platform_driver(snd_ml403_ac97cr_driver);
+module_platform_driver(snd_redpitaya_ac97_driver);
 
