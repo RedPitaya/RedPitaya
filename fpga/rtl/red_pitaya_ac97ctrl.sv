@@ -309,7 +309,7 @@ ac97ctrl_16x32_sr_fifo i_ac97ctrl_rec_fifo (
 assign ac97ctrl_play_fifo_empty   = (!ac97ctrl_play_fifo_ctr)                       ?  1'b1 : 1'b0;
 assign ac97ctrl_play_fifo_he      = ( ac97ctrl_play_fifo_ctr <  (C_FIFO_SIZE >> 1)) ?  1'b1 : 1'b0;
 assign ac97ctrl_play_fifo_hf      = ( ac97ctrl_play_fifo_ctr >= (C_FIFO_SIZE >> 1)) ?  1'b1 : 1'b0;
-assign ac97ctrl_play_fifo_full    = ( ac97ctrl_play_fifo_ctr ==  C_FIFO_SIZE      ) ?  1'b1 : 1'b0;
+assign ac97ctrl_play_fifo_full    = ( ac97ctrl_play_fifo_ctr ==  C_FIFO_SIZE -  1 ) ?  1'b1 : 1'b0;
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_play_o
 if (!adc_rstn_i) begin
@@ -361,7 +361,7 @@ else if (C_PLAYBACK) begin
 assign ac97ctrl_rec_fifo_empty    = (!ac97ctrl_rec_fifo_ctr)                        ?  1'b1 : 1'b0;
 assign ac97ctrl_rec_fifo_he       = ( ac97ctrl_rec_fifo_ctr  <  (C_FIFO_SIZE >> 1)) ?  1'b1 : 1'b0;
 assign ac97ctrl_rec_fifo_hf       = ( ac97ctrl_rec_fifo_ctr  >= (C_FIFO_SIZE >> 1)) ?  1'b1 : 1'b0;
-assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr  ==  C_FIFO_SIZE      ) ?  1'b1 : 1'b0;
+assign ac97ctrl_rec_fifo_full     = ( ac97ctrl_rec_fifo_ctr  ==  C_FIFO_SIZE -  1 ) ?  1'b1 : 1'b0;
 
 always @(posedge clk_adc_125mhz)                                                                            // assign ac97_irq_rec_o
 if (!adc_rstn_i) begin
