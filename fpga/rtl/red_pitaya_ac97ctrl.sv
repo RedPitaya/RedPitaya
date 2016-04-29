@@ -323,31 +323,36 @@ if (!adc_rstn_i) begin
 else if (ac97ctrl_fifo_play_reset)                                                                          // clear immediately when reset
    ac97_irq_play_o <= 1'b0;
 
-else if (ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL != 4'h1))                                           // clear when level gets below the limit - all cases but '1'
-   ac97_irq_play_o <= 1'b0;
-
-else if (!ac97ctrl_play_fifo_empty && (C_PLAY_INTR_LEVEL == 4'h1))                                          // clear when level gets below the limit - special case '1'
-   ac97_irq_play_o <= 1'b0;
-
 else if (C_PLAYBACK) begin
    case (C_PLAY_INTR_LEVEL)                                                                                 // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 
    1: begin
-      if (ac97ctrl_play_fifo_empty && !ac97ctrl_play_fifo_empty_d)
+      if (      ac97ctrl_play_fifo_empty && !ac97ctrl_play_fifo_empty_d)
          ac97_irq_play_o <= 1'b1;
+      else if (!ac97ctrl_play_fifo_empty &&  ac97ctrl_play_fifo_empty_d)
+         ac97_irq_play_o <= 1'b0;
       end
    2: begin
-      if (ac97ctrl_play_fifo_he && !ac97ctrl_play_fifo_he_d)                                                // <-- default setting, see @ top of file
+      if (      ac97ctrl_play_fifo_he    && !ac97ctrl_play_fifo_he_d   )                                    // <-- default setting, see @ top of file
          ac97_irq_play_o <= 1'b1;
+      else if (!ac97ctrl_play_fifo_he    &&  ac97ctrl_play_fifo_he_d   )
+         ac97_irq_play_o <= 1'b0;
       end
    3: begin
-      if (ac97ctrl_play_fifo_hf && !ac97ctrl_play_fifo_hf_d)
+      if (      ac97ctrl_play_fifo_hf    && !ac97ctrl_play_fifo_hf_d   )
          ac97_irq_play_o <= 1'b1;
+      else if (!ac97ctrl_play_fifo_hf    &&  ac97ctrl_play_fifo_hf_d   )
+         ac97_irq_play_o <= 1'b0;
       end
    4: begin
-      if (ac97ctrl_play_fifo_full && !ac97ctrl_play_fifo_full_d)
+      if (      ac97ctrl_play_fifo_full  && !ac97ctrl_play_fifo_full_d )
          ac97_irq_play_o <= 1'b1;
+      else if (!ac97ctrl_play_fifo_full  &&  ac97ctrl_play_fifo_full_d )
+         ac97_irq_play_o <= 1'b0;
       end
+
+   default:
+      ac97_irq_play_o <= 1'b0;
 
    endcase
 
@@ -385,21 +390,32 @@ else if (C_RECORD) begin
    case (C_REC_INTR_LEVEL)                                                                                  // 0 = No Interrupt, 1 = empty Num Words = 0, 2 = halfempty Num Words <= 7, 3 = halffull Num Words >= 8, 4 = full Num Words = 16
 
    1: begin
-      if (ac97ctrl_rec_fifo_empty && !ac97ctrl_rec_fifo_empty_d)
+      if (      ac97ctrl_rec_fifo_empty && !ac97ctrl_rec_fifo_empty_d)
          ac97_irq_rec_o <= 1'b1;
+      else if (!ac97ctrl_rec_fifo_empty &&  ac97ctrl_rec_fifo_empty_d)
+         ac97_irq_rec_o <= 1'b0;
       end
    2: begin
-      if (ac97ctrl_rec_fifo_he && !ac97ctrl_rec_fifo_he_d)
+      if (      ac97ctrl_rec_fifo_he    && !ac97ctrl_rec_fifo_he_d   )
          ac97_irq_rec_o <= 1'b1;
+      else if (!ac97ctrl_rec_fifo_he    &&  ac97ctrl_rec_fifo_he_d   )
+         ac97_irq_rec_o <= 1'b0;
       end
    3: begin
-      if (ac97ctrl_rec_fifo_hf && !ac97ctrl_rec_fifo_hf_d)                                                  // <-- default setting, see @ top of file
+      if (      ac97ctrl_rec_fifo_hf    && !ac97ctrl_rec_fifo_hf_d   )                                      // <-- default setting, see @ top of file
          ac97_irq_rec_o <= 1'b1;
+      else if (!ac97ctrl_rec_fifo_hf    &&  ac97ctrl_rec_fifo_hf_d   )
+         ac97_irq_rec_o <= 1'b0;
       end
    4: begin
-      if (ac97ctrl_rec_fifo_full && !ac97ctrl_rec_fifo_full_d)
+      if (      ac97ctrl_rec_fifo_full  && !ac97ctrl_rec_fifo_full_d )
          ac97_irq_rec_o <= 1'b1;
+      else if (!ac97ctrl_rec_fifo_full  &&  ac97ctrl_rec_fifo_full_d )
+         ac97_irq_rec_o <= 1'b0;
       end
+
+   default:
+      ac97_irq_rec_o <= 1'b0;
 
    endcase
 
