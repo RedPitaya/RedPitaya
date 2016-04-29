@@ -276,14 +276,14 @@ void rp_ac97_module_load(void)
 	rp_ac97_module_unload();
 #endif
 
-	system("modprobe snd_ml403_ac97cr");
+	system("modprobe snd_redpitaya_ac97");
 }
 
 
 /*----------------------------------------------------------------------------------*/
 void rp_ac97_module_unload(void)
 {
-	system("rmmod -f snd_ml403_ac97cr");
+	system("rmmod -f snd_redpitaya_ac97");
 }
 
 
