@@ -261,6 +261,7 @@ else if (ac97ctrl_reset_delay)
 else
    ac97ctrl_play_fifo_push <= (!ac97ctrl_play_is_right && ac97ctrl_play_is_right_d) ?  1'b1 : 1'b0;         // toggled right --> left
 
+
 wire          ac97ctrl_play_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_play_reset;
 wire [ 31: 0] ac97ctrl_play_fifo_write = ac97ctrl_reset_delay ?  32'b0 : { ac97ctrl_play_right, ac97ctrl_play_left };
 wire [ 31: 0] ac97ctrl_play_fifo_read;

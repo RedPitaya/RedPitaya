@@ -108,6 +108,7 @@ MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 FPGA sound system.");
 #undef CODEC_STAT
 #undef SND_PCM_INDIRECT2_STAT
 #undef CONFIG_SND_DEBUG
+
 #ifdef CONFIG_SND_DEBUG
 /*#define CODEC_STAT*/			/* turn on some minimal "statistics"
 					 * about codec register usage
@@ -396,10 +397,9 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_playback = {
 				 SNDRV_PCM_INFO_INTERLEAVED |
 				 SNDRV_PCM_INFO_MMAP_VALID),
 	.formats =		 SNDRV_PCM_FMTBIT_S16_LE,
-	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
-				 SNDRV_PCM_RATE_8000_192000),
-	.rate_min =		8000,
-	.rate_max =		192000,
+	.rates =		 SNDRV_PCM_RATE_48000,
+	.rate_min =		48000,
+	.rate_max =		48000,
 	.channels_min =		2,
 	.channels_max =		2,
 	.buffer_bytes_max =     (2*1024),
@@ -415,10 +415,9 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_capture = {
 				 SNDRV_PCM_INFO_INTERLEAVED |
 				 SNDRV_PCM_INFO_MMAP_VALID),
 	.formats =		 SNDRV_PCM_FMTBIT_S16_LE,
-	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
-				 SNDRV_PCM_RATE_8000_192000),
-	.rate_min =		8000,
-	.rate_max =		192000,
+	.rates =		 SNDRV_PCM_RATE_48000,
+	.rate_min =		48000,
+	.rate_max =		48000,
 	.channels_min =		2,
 	.channels_max =		2,
 	.buffer_bytes_max =     (2*1024),
