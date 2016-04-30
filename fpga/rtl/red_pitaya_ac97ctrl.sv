@@ -261,6 +261,7 @@ else if (ac97ctrl_reset_delay)
 else
    ac97ctrl_play_fifo_push <= (!ac97ctrl_play_is_right && ac97ctrl_play_is_right_d) ?  1'b1 : 1'b0;         // toggled right --> left
 
+reg  [ 31: 0] ac97_line_out_d = 'b0;
 wire          ac97ctrl_play_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_play_reset;
 wire [ 31: 0] ac97ctrl_play_fifo_write = ac97ctrl_reset_delay ?  32'b0 : { ac97ctrl_play_right, ac97ctrl_play_left };
 wire [ 31: 0] ac97ctrl_play_fifo_read;
@@ -281,7 +282,13 @@ ac97ctrl_16x32_sr_fifo i_ac97ctrl_play_fifo (
   .data_count              ( ac97ctrl_play_fifo_ctr      )   // content counter
 );
 
-assign ac97_line_out_o[ 2*16-1:0]  = ac97ctrl_play_fifo_read[31:0];
+always @(posedge clk_adc_125mhz)                                                                            // assign ac97ctrl_play_fifo_push
+if (!adc_rstn_i || ac97ctrl_play_fifo_reset)
+   ac97_line_out_d <= 'b0;
+else if (ac97ctrl_play_fifo_pop)
+   ac97_line_out_d <= ac97ctrl_play_fifo_read;
+
+assign ac97_line_out_o[ 2*16-1:0]  = ac97_line_out_d[31:0];
 
 
 wire          ac97ctrl_rec_fifo_reset = !adc_rstn_i || ac97ctrl_fifo_rec_reset;
