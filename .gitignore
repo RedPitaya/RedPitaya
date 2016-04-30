@@ -3,19 +3,23 @@
 *.ko
 *.obj
 *.elf
+
 # Precompiled Headers
 *.gch
 *.pch
+
 # Libraries
 *.lib
 *.a
 *.la
 *.lo
+
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
+
 # Executables
 *.exe
 *.out
@@ -55,4 +59,7 @@ sdk/
 *.runs/
 *.srcs/
 buildroot-*/
+
+# do not ignore NE10 lib
+!OS/debian/overlay/usr/local/lib/**
 
