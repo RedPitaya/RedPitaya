@@ -101,19 +101,19 @@ module_param(enable, bool, 0444);
 MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 FPGA sound system.");
 
 /* Special feature options */
-#define CODEC_WRITE_CHECK_RAF	/* don't return after a write to a codec
-				 * register, while RAF bit is not set
-				 */
+/*#define CODEC_WRITE_CHECK_RAF*/	/* don't return after a write to a codec
+					 * register, while RAF bit is not set
+					 */
 /* Debug options for code which may be removed completely in a final version */
 #ifdef CONFIG_SND_DEBUG
-/*#define CODEC_STAT*/		/* turn on some minimal "statistics"
-				 * about codec register usage
-				 */
-#define SND_PCM_INDIRECT2_STAT	/* turn on some "statistics" about the
-				 * process of copying bytes from the
-				 * intermediate buffer to the hardware
-				 * fifo and the other way round
-				 */
+/*#define CODEC_STAT*/			/* turn on some minimal "statistics"
+					 * about codec register usage
+					 */
+/*#define SND_PCM_INDIRECT2_STAT*/	/* turn on some "statistics" about the
+					 * process of copying bytes from the
+					 * intermediate buffer to the hardware
+					 * fifo and the other way round
+					 */
 #endif
 
 
