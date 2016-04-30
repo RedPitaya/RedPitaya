@@ -245,6 +245,7 @@
                          value = h50  RX_AUDIO output.
                          value = hF8  TX_CAR_OSC_INC frequency value.
                          value = hF9  RX_CAR_OSC_INC frequency value.
+                         value = hFD  AC97 diagnostic LEDs.
                          value = hFE  current status of the overdrive signals.
                          value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
                      - bit h0F..h08: n/a
