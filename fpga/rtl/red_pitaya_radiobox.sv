@@ -67,6 +67,7 @@ module red_pitaya_radiobox #(
    // LEDs
    output reg            rb_leds_en      ,      // RB LEDs are enabled and overwrites HK sub-module
    output reg   [  7: 0] rb_leds_data    ,      // RB LEDs data, LED0 is located at the connector, ... , LED7 is located near to the red / green / blue LEDs
+   input        [  7: 0] ac97_leds_i     ,      // AC97 diagnostic LEDs
 
    // ADC data
    input        [ 13: 0] adc_i[1:0]      ,      // ADC data { CHB, CHA }
@@ -393,6 +394,7 @@ enum {
     RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC               = 248,// current TX_CAR_OSC_INC value
     RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC               = 249,// current RX_CAR_OSC_INC value
 
+    RB_SRC_CON_PNT_NUM_TEST_AC97                    = 253,// AC97 diagnostic LEDs
     RB_SRC_CON_PNT_NUM_TEST_OVERDRIVE               = 254,// overdrive signals
     RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT              = 255 // Test vector, look at assignments within this file
 
@@ -2959,6 +2961,10 @@ else if (led_src_con_pnt && rb_reset_n) begin
 
    RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC: begin
       rb_leds_data <= rx_car_osc_inc[28:21];
+      end
+
+   RB_SRC_CON_PNT_NUM_TEST_AC97: begin
+      rb_leds_data <= ac97_leds_i;
       end
 
    RB_SRC_CON_PNT_NUM_TEST_OVERDRIVE: begin
