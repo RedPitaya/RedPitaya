@@ -69,6 +69,7 @@ module red_pitaya_top (
    inout            FIXED_IO_ps_srstb  ,
    inout            FIXED_IO_ddr_vrn   ,
    inout            FIXED_IO_ddr_vrp   ,
+
    // DDR
    inout  [15-1: 0] DDR_addr           ,
    inout  [ 3-1: 0] DDR_ba             ,
@@ -86,8 +87,9 @@ module red_pitaya_top (
    inout            DDR_reset_n        ,
    inout            DDR_we_n           ,
 
+
    // Red Pitaya periphery
-  
+
    // ADC
    input  [16-1: 2] adc_dat_a_i        ,  // ADC CH1
    input  [16-1: 2] adc_dat_b_i        ,  // ADC CH2
@@ -95,25 +97,31 @@ module red_pitaya_top (
    input            adc_clk_n_i        ,  // ADC data clock
    output [ 2-1: 0] adc_clk_o          ,  // optional ADC clock source
    output           adc_cdcs_o         ,  // ADC clock duty cycle stabilizer
+
    // DAC
    output [14-1: 0] dac_dat_o          ,  // DAC combined data
    output           dac_wrt_o          ,  // DAC write
    output           dac_sel_o          ,  // DAC channel select
    output           dac_clk_o          ,  // DAC clock
    output           dac_rst_o          ,  // DAC reset
+
    // PWM DAC
    output [ 4-1: 0] dac_pwm_o          ,  // serial PWM DAC
+
    // XADC
    input  [ 5-1: 0] vinp_i             ,  // voltages p
    input  [ 5-1: 0] vinn_i             ,  // voltages n
+
    // Expansion connector
    inout  [ 8-1: 0] exp_p_io           ,
    inout  [ 8-1: 0] exp_n_io           ,
+
    // SATA connector
    output [ 2-1: 0] daisy_p_o          ,  // line 1 is clock capable
    output [ 2-1: 0] daisy_n_o          ,
    input  [ 2-1: 0] daisy_p_i          ,  // line 1 is clock capable
    input  [ 2-1: 0] daisy_n_i          ,
+
    // LED
    output [ 8-1: 0] led_o       
 );
@@ -176,6 +184,8 @@ wire  signed [14-1:0] pid_a    , pid_b    ;
 // configuration
 wire                  digital_loop;
 
+// RadioBox in signals
+wire         [ 8-1:0] ac97_leds;
 // RadioBox out signals
 wire                  rb_leds_en;
 wire         [ 8-1:0] rb_leds_data;
@@ -619,6 +629,7 @@ red_pitaya_radiobox i_radiobox (
   // LEDs
   .rb_leds_en      ( rb_leds_en                  ),  // RB does overwrite LEDs state
   .rb_leds_data    ( rb_leds_data                ),  // RB LEDs data
+  .ac97_leds_i     ( ac97_leds                   ),  // AC97 diagnostic LEDs
 
   // ADC data
   .adc_i           ( {adc_b, adc_a}              ),  // ADC data { CHB, CHA }
@@ -667,7 +678,7 @@ red_pitaya_ac97ctrl i_ac97ctrl (
   .ac97_irq_rec_o  ( ac97_irq_rec                ),  // IRQ line signaling any pending interrupts
 
   // DEBUGGING LEDs
-  .ac97_leds_o     ( led_o                       ),  // DEBUGGING: diagnose LEDs
+  .ac97_leds_o     ( ac97_leds                   ),  // AC97 diagnostic LEDs
 
   // System bus
   .sys_addr        ( sys_addr                    ),  // address
@@ -698,7 +709,7 @@ assign daisy_n_o = 2'bzz;
 //---------------------------------------------------------------------------------
 // LED output to be shared between HK, RB and PS
 
-//assign led_o = rb_leds_en  ?  rb_leds_data :
-//                              hk_leds_data;           // LED multiplexer for HK, RadioBox and PS switching
+assign led_o = rb_leds_en  ?  rb_leds_data :
+                              hk_leds_data;           // LED multiplexer for HK, RadioBox and PS switching
 
 endmodule
