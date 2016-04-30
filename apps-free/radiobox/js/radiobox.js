@@ -83,7 +83,7 @@
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
     tx_modtyp_s:            1,  // TX modulation: off
     rx_modtyp_s:            5,  // RX modulation: AM-sync USB
-    rbled_csp_s:          254,  // RB LEDs set to: current status of the overdrive signals
+    rbled_csp_s:          253,  // AC97 diagnostic LEDs
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
@@ -102,7 +102,12 @@
     rfout1_term_s:          2,  // RF Output 1: '0' neutral, '1' 50 ohms terminated, '2' open ended
     rfout2_term_s:          2,  // RF Output 2: '0' neutral, '1' 50 ohms terminated, '2' open ended
     qrg_inc_s:             50,  // Frequency range controller increment value [0%..100%]
-    ovrdrv_s:               0   // Current overdrive flags of the FPGA signals
+    ovrdrv_s:               0,  // Current overdrive flags of the FPGA signals
+
+    ac97_lil_s:            80,  // connect to RX_AUDIO_OUT (RX: audio signal)
+    ac97_lir_s:            80   // connect to RX_AUDIO_OUT (RX: audio signal)
+  //ac97_lil_s:            60,  // connect to RX_MOD_48K_I (RX: audio signal)
+  //ac97_lir_s:            61   // connect to RX_MOD_48K_Q (RX: audio signal)
   };
 
   // Other global variables
@@ -406,6 +411,12 @@
         } else {
           $('#rx_muxin_gain_s').removeClass('form-bg-rx-muxin-gain-ovrdrv');
         }
+      }
+      else if (param_name == 'ac97_lil_s') {
+        $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'ac97_lir_s') {
+        $('#'+param_name).val(intVal);
       }
 
       /*
@@ -1547,6 +1558,14 @@ function cast_params2transport(params, pktIdx)
     if (params['ovrdrv_s'] !== undefined) {
       transport['ovrdrv_s'] = params['ovrdrv_s'];
     }
+
+    if (params['ac97_lil_s'] !== undefined) {
+      transport['ac97_lil_s'] = params['ac97_lil_s'];
+    }
+
+    if (params['ac97_lir_s'] !== undefined) {
+      transport['ac97_lir_s'] = params['ac97_lir_s'];
+    }
     break;
 
   default:
@@ -1659,6 +1678,14 @@ function cast_transport2params(transport)
 
   if (transport['ovrdrv_s'] !== undefined) {
     params['ovrdrv_s'] = transport['ovrdrv_s'];
+  }
+
+  if (transport['ac97_lil_s'] !== undefined) {
+    params['ac97_lil_s'] = transport['ac97_lil_s'];
+  }
+
+  if (transport['ac97_lir_s'] !== undefined) {
+    params['ac97_lir_s'] = transport['ac97_lir_s'];
   }
 
   //console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');

@@ -37,11 +37,6 @@ create_project -in_memory -part $part
 #set_property FAMILY 7SERIES [current_project]
 #set_property SIM_DEVICE 7SERIES [current_project]
 
-#set_property strategy {Vivado Synthesis Defaults} [get_runs synth_1]
-
-#set_property strategy {Vivado Implementation Defaults} [get_runs impl_1]
-#set_property strategy Performance_NetDelay_medium [get_runs impl_1]
-
 
 ################################################################################
 # create PS BD (processing system block design)
@@ -79,6 +74,7 @@ read_verilog                      $path_rtl/axi_wr_fifo.v
 
 read_verilog   -sv                $path_rtl/pwm.sv
 
+read_verilog   -sv                $path_rtl/red_pitaya_ac97ctrl.sv
 read_verilog                      $path_rtl/red_pitaya_ams.v
 read_verilog                      $path_rtl/red_pitaya_asg.v
 read_verilog                      $path_rtl/red_pitaya_asg_ch.v
@@ -94,6 +90,8 @@ read_verilog   -sv                $path_rtl/red_pitaya_rst_clken.sv
 read_verilog                      $path_rtl/red_pitaya_scope.v
 read_verilog                      $path_rtl/red_pitaya_top.v
 
+read_ip                           $path_ip/ac97ctrl_16x32_sr_fifo.xcix
+read_ip                           $path_ip/ac97ctrl_16x64_nc_blkmem.xcix
 read_ip                           $path_ip/rb_addsub_48M48.xcix
 read_ip                           $path_ip/rb_cic_125M_to_5M_18T18.xcix
 read_ip                           $path_ip/rb_cic_200k_to_8k_18T18.xcix
@@ -103,7 +101,6 @@ read_ip                           $path_ip/rb_cic_8k_to_41M664_18T18.xcix
 read_ip                           $path_ip/rb_cic_8k_to_48k_18T18.xcix
 read_ip                           $path_ip/rb_cordic_T_WS_O_SR_18T18_NE_CR_EM_B.xcix
 read_ip                           $path_ip/rb_dds_48_16_125.xcix
-read_ip                           $path_ip/rb_div_32Div13R13.xcix
 read_ip                           $path_ip/rb_dsp48_AaDmBaC_A18_D18_B18_C36_P37.xcix
 read_ip                           $path_ip/rb_fir_8k_to_8k_25c23_17i16_35o33.xcix
 read_ip                           $path_ip/rb_fir1_8k_to_8k_25c_17i16_35o32.xcix
@@ -119,11 +116,12 @@ read_xdc                          $path_sdc/red_pitaya.xdc
 # write checkpoint design
 ################################################################################
 
+synth_ip                          [get_ips ac97ctrl_*]
 synth_ip                          [get_ips clk_adc_pll]
 synth_ip                          [get_ips rb_*]
 
-#synth_design -top red_pitaya_top
-synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
+synth_design -top red_pitaya_top -directive AreaOptimized_high
+#synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
 
 write_checkpoint         -force   $path_out/post_synth
 report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt
@@ -136,7 +134,7 @@ report_power             -file    $path_out/post_synth_power.rpt
 # write checkpoint design
 ################################################################################
 
-opt_design
+opt_design -directive ExploreArea
 power_opt_design
 place_design
 phys_opt_design

@@ -216,16 +216,22 @@ $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-sound-drivers.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
-	cp -r patches/rtl8192cu $@/drivers/net/wireless/
-	cp -r patches/lantiq/*  $@/drivers/net/phy/
+	cp -r patches/rtl8192cu        $@/drivers/net/wireless/
+	cp -r patches/lantiq/*         $@/drivers/net/phy/
+	cp -r patches/redpitaya-ac97/* $@/sound/drivers/
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) modules
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) INSTALL_MOD_PATH=../../$(TARGET) modules_install
+	rm $</../../$(TARGET)/lib/modules/4.0.0-xilinx/build
+	rm $</../../$(TARGET)/lib/modules/4.0.0-xilinx/source
 	cp $</arch/arm/boot/uImage $@
 
 ################################################################################

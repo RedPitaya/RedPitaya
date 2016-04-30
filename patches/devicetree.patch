@@ -1,5 +1,5 @@
---- system.dts.old	2015-07-23 23:14:55.434444209 +0200
-+++ system.dts	2015-07-23 23:05:18.198460862 +0200
+--- system.dts.old	2016-04-07 22:30:50.781780245 +0200
++++ system.dts	2016-04-15 20:25:32.066679762 +0200
 @@ -26,7 +26,7 @@
  	};
  	memory {
@@ -9,8 +9,8 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,82 @@
- 	fclk-enable = <0x0>;
+@@ -86,3 +86,94 @@
+	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
 +
@@ -91,4 +91,16 @@
 +};
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
++};
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++	#interrupt-cells = <3>;
++	redpitaya-ac97@40700000 {
++		compatible = "redpitaya,redpitaya-ac97";
++		reg = <0x40700000 0x100>;
++		interrupts = <0 30 1>, <0 31 1>;
++		interrupt-parent = <&intc>;
++	};
 +};
