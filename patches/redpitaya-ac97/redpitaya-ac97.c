@@ -105,6 +105,9 @@ MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 FPGA sound system.");
 					 * register, while RAF bit is not set
 					 */
 /* Debug options for code which may be removed completely in a final version */
+#undef CODEC_STAT
+#undef SND_PCM_INDIRECT2_STAT
+#undef CONFIG_SND_DEBUG
 #ifdef CONFIG_SND_DEBUG
 /*#define CODEC_STAT*/			/* turn on some minimal "statistics"
 					 * about codec register usage
