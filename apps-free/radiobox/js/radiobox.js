@@ -83,7 +83,7 @@
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
     tx_modtyp_s:            1,  // TX modulation: off
     rx_modtyp_s:            5,  // RX modulation: AM-sync USB
-    rbled_csp_s:          254,  // RB LEDs set to: current status of the overdrive signals
+    rbled_csp_s:          253,  // AC97 diagnostic LEDs
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2

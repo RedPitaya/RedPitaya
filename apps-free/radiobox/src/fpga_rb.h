@@ -392,6 +392,7 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = hF8  TX_CAR_OSC_INC frequency value.
      *   value = hF9  RX_CAR_OSC_INC frequency value.
+     *   value = hFD  AC97 diagnostic LEDs.
      *   value = hFE  current status of the overdrive signals.
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
