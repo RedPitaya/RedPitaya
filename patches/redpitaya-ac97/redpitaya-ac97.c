@@ -130,9 +130,9 @@ MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 FPGA sound system.");
 #define INIT_FAILURE	(1<<4)
 #define WORK_INFO	(1<<5)
 #define WORK_FAILURE	(1<<6)
-#define ISR_INFO        (1<<7)
+#define ISR_INFO	(1<<7)
 
-#define PDEBUG_FACILITIES (INIT_INFO | WORK_INFO | CODEC_SUCCESS | CODEC_FAKE | UNKNOWN | INIT_FAILURE | WORK_FAILURE)
+#define PDEBUG_FACILITIES (UNKNOWN | INIT_FAILURE | WORK_FAILURE)
 
 #define PDEBUG(fac, fmt, args...) do { \
 	if (fac & PDEBUG_FACILITIES) \
@@ -394,9 +394,9 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_playback = {
 				 SNDRV_PCM_INFO_MMAP_VALID),
 	.formats =		 SNDRV_PCM_FMTBIT_S16_LE,
 	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
-				 SNDRV_PCM_RATE_48000),
-	.rate_min =		48000,
-	.rate_max =		48000,
+				 SNDRV_PCM_RATE_8000_192000),
+	.rate_min =		8000,
+	.rate_max =		192000,
 	.channels_min =		2,
 	.channels_max =		2,
 	.buffer_bytes_max =     (2*1024),
@@ -413,9 +413,9 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_capture = {
 				 SNDRV_PCM_INFO_MMAP_VALID),
 	.formats =		 SNDRV_PCM_FMTBIT_S16_LE,
 	.rates =		(SNDRV_PCM_RATE_CONTINUOUS |
-				 SNDRV_PCM_RATE_48000),
-	.rate_min =		48000,
-	.rate_max =		48000,
+				 SNDRV_PCM_RATE_8000_192000),
+	.rate_min =		8000,
+	.rate_max =		192000,
 	.channels_min =		2,
 	.channels_max =		2,
 	.buffer_bytes_max =     (2*1024),
@@ -451,18 +451,17 @@ snd_redpitaya_ac97_playback_ind2_zero(struct snd_pcm_substream *substream,
 static size_t
 snd_redpitaya_ac97_playback_ind2_copy(struct snd_pcm_substream *substream,
 				     struct snd_pcm_indirect2 *pcm,
-				     size_t bytes_in)
+				     size_t bytes)
 {
 	struct snd_redpitaya_ac97 *redpitaya_ac97;
 	u16 *src;
-        int bytes = bytes_in;
 	int copied_words = 0;
 	u32 status = 0;
 
 	redpitaya_ac97 = snd_pcm_substream_chip(substream);
 	src = (u16 *)(substream->runtime->dma_area + pcm->sw_data);
 
-        PDEBUG(ISR_INFO, "ind2_copy(playback): copying %d bytes to   the FPGA ...\n", bytes);
+        PDEBUG(ISR_INFO, "ind2_copy(playback): copying %d bytes to the FPGA ...\n", bytes);
 	spin_lock(&redpitaya_ac97->reg_lock);
 	while (((status = (ioread32(CTRL_REG(redpitaya_ac97, STATUS)) &
 				    CTRL_PLAYFULL)) != CTRL_PLAYFULL) && (bytes > 1)) {
@@ -474,7 +473,7 @@ snd_redpitaya_ac97_playback_ind2_copy(struct snd_pcm_substream *substream,
 	else
 		pcm->hw_ready = 0;
 	spin_unlock(&redpitaya_ac97->reg_lock);
-        PDEBUG(ISR_INFO, "ind2_copy(playback): ... done. hw_ready = %d\n", pcm->hw_ready);
+        PDEBUG(ISR_INFO, "ind2_copy(playback): ... copied_words = %d, hw_ready = %d, done.\n", copied_words, pcm->hw_ready);
 
 	return (size_t) (copied_words << 1);
 }
@@ -1371,13 +1370,13 @@ snd_redpitaya_ac97_pcm(struct snd_redpitaya_ac97 *redpitaya_ac97, int device)
 			&snd_redpitaya_ac97_capture_ops);
 	pcm->private_data = redpitaya_ac97;
 	pcm->info_flags = 0;
-	strcpy(pcm->name, "RP-AC97 DAC/ADC");
+	strcpy(pcm->name, "RP-AC97 stereo LineOut/LineIn");
 	redpitaya_ac97->pcm = pcm;
 
 	snd_pcm_lib_preallocate_pages_for_all(pcm, SNDRV_DMA_TYPE_CONTINUOUS,
 					  snd_dma_continuous_data(GFP_KERNEL),
-					  64 * 1024,
-					  128 * 1024);
+					  1 * 1024,
+					  2 * 1024);
 	return 0;
 }
 
