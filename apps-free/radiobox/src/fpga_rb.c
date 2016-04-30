@@ -634,7 +634,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       case RB_MODSRC_AC97_LINEOUT_L: {
         //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AC97 LINEIN Left\n");
 
-        fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 1.0);                                                     // TX MUXIN gain setting
+        fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0);                                                       // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000030;                                                      // source ID: 48
       }
       break;
@@ -642,7 +642,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       case RB_MODSRC_AC97_LINEOUT_R: {
         //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AC97 LINEIN Right\n");
 
-        fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 1.0);                                                     // TX MUXIN gain setting
+        fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0);                                                       // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000031;                                                      // source ID: 49
       }
       break;
@@ -841,6 +841,22 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       }
       break;
 #endif
+
+      case RB_MODSRC_AC97_LINEOUT_L: {
+        //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AC97-LINEOUT Left\n");
+
+        fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0);                                                       // RX MUXIN gain setting
+        g_fpga_rb_reg_mem->rx_muxin_src = 0x00000030;
+      }
+      break;
+
+      case RB_MODSRC_AC97_LINEOUT_R: {
+        //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AC97-LINEOUT Right\n");
+
+        fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0);                                                       // RX MUXIN gain setting
+        g_fpga_rb_reg_mem->rx_muxin_src = 0x00000031;
+      }
+      break;
 
       }  // switch (rx_modsrc)
 
