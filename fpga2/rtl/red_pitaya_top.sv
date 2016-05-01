@@ -55,8 +55,8 @@ module red_pitaya_top #(
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  inout  logic [ 8-1:0] exp_p_io   ,
-  inout  logic [ 8-1:0] exp_n_io   ,
+  output logic [ 8-1:0] exp_n_io   ,
+  input  logic [ 8-1:0] exp_p_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
@@ -421,58 +421,61 @@ axi4_stream_demux #(.DN (2), .DT (SBL_T)) demux_axi (
   .sto (axi_exi)
 );
 
-// output enable DDR
-ODDR #(
-  .IS_D1_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
-  .IS_D2_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
-  .DDR_CLK_EDGE ("SAME_EDGE")
-) oddr_exp_e [GDW-1:0] (
-  .Q  (exp_e           ),
-  .C  (exp_exe.ACLK    ),
-  .CE (exp_exe.TVALID  ),
-  .D1 (exp_exe.TDATA[0]),  // TODO: add DDR support for LG here
-  .D2 (exp_exe.TDATA[1]),
-  .R  (~exp_exe.ARESETn ),
-  .S  (1'b0)
-);
+// temporary solution for unit testing
+// IOBUF has been split into separate IBUF & OBUF
+// // output enable DDR
+// ODDR #(
+//   .IS_D1_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
+//   .IS_D2_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
+//   .DDR_CLK_EDGE ("SAME_EDGE")
+// ) oddr_exp_e [GDW-1:0] (
+//   .Q  (exp_e           ),
+//   .C  (exp_exe.ACLK    ),
+//   .CE (exp_exe.TVALID  ),
+//   .D1 (exp_exe.TDATA[0]),  // TODO: add DDR support for LG here
+//   .D2 (exp_exe.TDATA[1]),
+//   .R  (~exp_exe.ARESETn ),
+//   .S  (1'b0)
+// );
 
 assign exp_exe.TREADY = 1'b1;
 
-// output DDR
-ODDR #(
-  .DDR_CLK_EDGE ("SAME_EDGE")
-) oddr_exp_o [GDW-1:0] (
-  .Q  (exp_o           ),
-  .C  (exp_exo.ACLK    ),
-  .CE (exp_exo.TVALID  ),
-  .D1 (exp_exo.TDATA[0]),
-  .D2 (exp_exo.TDATA[1]),  // TODO: add DDR support for LG here
-  .R  (~exp_exo.ARESETn ),
-  .S  (1'b0            )
-);
-
+// // output DDR
+// ODDR #(
+//   .DDR_CLK_EDGE ("SAME_EDGE")
+// ) oddr_exp_o [GDW-1:0] (
+//   .Q  (exp_o           ),
+//   .C  (exp_exo.ACLK    ),
+//   .CE (exp_exo.TVALID  ),
+//   .D1 (exp_exo.TDATA[0]),
+//   .D2 (exp_exo.TDATA[1]),  // TODO: add DDR support for LG here
+//   .R  (~exp_exo.ARESETn ),
+//   .S  (1'b0            )
+// );
+assign exp_n_io = exp_exo.TDATA[0];
 assign exp_exo.TREADY = 1'b1;
 
-// input DDR
-IDDR #(
-  .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED")
-) iddr_exp_i [GDW-1:0] (
-  .Q1 (exp_exi.TDATA[0]),
-  .Q2 (exp_exi.TDATA[1]),  // TODO: add DDR support for LA here
-  .C  (exp_exi.ACLK    ),
-  .CE (exp_exi.TREADY  ),
-  .R  (~exp_exi.ARESETn ),
-  .S  (1'b0            ),
-  .D  (exp_i           )
-);
-
+// // input DDR
+// IDDR #(
+//   .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED")
+// ) iddr_exp_i [GDW-1:0] (
+//   .Q1 (exp_exi.TDATA[0]),
+//   .Q2 (exp_exi.TDATA[1]),  // TODO: add DDR support for LA here
+//   .C  (exp_exi.ACLK    ),
+//   .CE (exp_exi.TREADY  ),
+//   .R  (~exp_exi.ARESETn ),
+//   .S  (1'b0            ),
+//   .D  (exp_i           )
+// );
+assign exp_exi.TDATA[0] = exp_p_io ;
+assign exp_exi.TDATA[1] = exp_p_io ;
 assign exp_exi.TVALID = 1'b1;
 assign exp_exi.TKEEP  = '1;
 assign exp_exi.TLAST  = 1'b0;
 
 // IO buffer with output enable
 // TODO: this is hardcoded, since it somehow did not work before, simulation was fine, but synthesis might have a problem
-IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T({8'h00, 8'hff}));
+// IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T({8'h00, 8'hff}));
 //IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
 
 ////////////////////////////////////////////////////////////////////////////////
