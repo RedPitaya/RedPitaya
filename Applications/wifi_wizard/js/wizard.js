@@ -179,9 +179,9 @@ $(document).ready(function() {
         if ($(this).text() == "Connect") {
             WIZARD.startWaiting();
             $.ajax({
-                    url: '/connect_wifi?essid=' + essid + '&password=' + password,
-                    type: 'GET',
-                })
+                url: '/connect_wifi?essid="' + essid + '"&password="' + password + '"',
+                type: 'GET',
+            })
         } else {
             $.ajax({
                     url: '/disconnect_wifi',
@@ -193,6 +193,23 @@ $(document).ready(function() {
             $('#connect_btn').text('Connect');
         }
 
+    });
 
+    $('#wifi_mode').click(function() {
+        $('.ap-main-container').hide();
+        $('.wifi-main-container').show();
+    });
+
+    $('#ap_mode').click(function() {
+        $('.wifi-main-container').hide();
+        $('.ap-main-container').show();
+    });
+
+    $('#apply_btn').click(function() {
+        WIZARD.startWaiting();
+        $.ajax({
+            url: '/ap_mode',
+            type: 'GET',
+        })
     });
 });
