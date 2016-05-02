@@ -167,8 +167,8 @@ MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 FPGA sound system.");
 					 * codec register (checking RAF bit)
 					 */
 
-#define BUFFER_MAX_KB               2
-#define PERIODS_MAX_KB              1
+#define BUFFER_MAX_KB             256
+#define PERIODS_MAX_KB              2
 
 /* Infrastructure for codec register shadowing */
 #define LM4550_REG_OK		(1<<0)  /* register exists */
