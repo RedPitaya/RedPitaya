@@ -167,6 +167,9 @@ MODULE_PARM_DESC(enable, "Enable this RedPitaya-AC97 FPGA sound system.");
 					 * codec register (checking RAF bit)
 					 */
 
+#define BUFFER_MAX_KB               2
+#define PERIODS_MAX_KB              1
+
 /* Infrastructure for codec register shadowing */
 #define LM4550_REG_OK		(1<<0)  /* register exists */
 #define LM4550_REG_DONEREAD	(1<<1)  /* read register once, value should be
@@ -400,13 +403,13 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_playback = {
 	.rates =		 SNDRV_PCM_RATE_48000,
 	.rate_min =		48000,
 	.rate_max =		48000,
-	.channels_min =		2,
+	.channels_min =		1,
 	.channels_max =		2,
-	.buffer_bytes_max =     (2*1024),
+	.buffer_bytes_max =     (BUFFER_MAX_KB * 1024),
 	.period_bytes_min =     CTRL_FIFO_SIZE >> 1,
-	.period_bytes_max =     (1*1024),
+	.period_bytes_max =     (PERIODS_MAX_KB * 1024),
 	.periods_min =		2,
-	.periods_max =		(2*1024) / (CTRL_FIFO_SIZE >> 1),
+	.periods_max =		(BUFFER_MAX_KB * 1024) / (CTRL_FIFO_SIZE >> 1),
 	.fifo_size =		0,
 };
 
@@ -418,13 +421,13 @@ static struct snd_pcm_hardware snd_redpitaya_ac97_capture = {
 	.rates =		 SNDRV_PCM_RATE_48000,
 	.rate_min =		48000,
 	.rate_max =		48000,
-	.channels_min =		2,
+	.channels_min =		1,
 	.channels_max =		2,
-	.buffer_bytes_max =     (2*1024),
+	.buffer_bytes_max =     (BUFFER_MAX_KB * 1024),
 	.period_bytes_min =     CTRL_FIFO_SIZE >> 1,
-	.period_bytes_max =     (1*1024),
+	.period_bytes_max =     (PERIODS_MAX_KB * 1024),
 	.periods_min =		2,
-	.periods_max =		(2*1024) / (CTRL_FIFO_SIZE >> 1),
+	.periods_max =		(BUFFER_MAX_KB * 1024) / (CTRL_FIFO_SIZE >> 1),
 	.fifo_size =		0,
 };
 
@@ -1377,8 +1380,8 @@ snd_redpitaya_ac97_pcm(struct snd_redpitaya_ac97 *redpitaya_ac97, int device)
 
 	snd_pcm_lib_preallocate_pages_for_all(pcm, SNDRV_DMA_TYPE_CONTINUOUS,
 					  snd_dma_continuous_data(GFP_KERNEL),
-					  1 * 1024,
-					  2 * 1024);
+					  PERIODS_MAX_KB * 1024,
+					  BUFFER_MAX_KB  * 1024);
 	return 0;
 }
 
