@@ -64,7 +64,7 @@ zip: $(CONTROLLERHF) $(PDF)
 	mkdir -p target/$(APP)/doc
 	#cp -r $(CONTROLLERHF) $(CONTROLLER) $(FPGACFG) bin info index.html target/$(APP)
 	cp -r $(CONTROLLERHF) $(FPGA) $(FPGACFG) bin css fonts img info index.html js target/$(APP)
-	cp -r doc/*.pdf doc/html target/$(APP)/doc
+	cp -r doc/*.pdf doc/html doc/*.svg doc/*.png target/$(APP)/doc
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	#find target -type f -exec dos2unix {} \;
