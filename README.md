@@ -37,19 +37,7 @@ sudo apt-get install make curl xz-utils
 sudo apt-get install libssl-dev device-tree-compiler u-boot-tools
 ```
 
-2. Xilinx [Vivado 2015.4](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2015-4.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
-
-3. Linaro [ARM toolchain](https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/) for cross compiling Linux applications. We recommend to install it to `/opt/linaro/` since build process instructions relly on it.
-
-```bash
-TOOLCHAIN="http://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz"
-curl -O $TOOLCHAIN
-sudo mkdir -p /opt/linaro
-sudo chown $USER:$USER /opt/linaro
-tar -xpf *linaro*.tar.xz -C /opt/linaro
-```
-
-**NOTE:** you can skip installing Vivado tools, if you only wish to compile user space software.
+2. Xilinx [Vivado 2016.1](http://www.xilinx.com/support/download.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
 
 4. Missing `gmake` path
 
