@@ -1,5 +1,5 @@
 diff --git a/arch/arm/configs/xilinx_zynq_defconfig b/arch/arm/configs/xilinx_zynq_defconfig
-index 5b5257f..c36d031 100644
+index 5b5257f..3b696b9 100644
 --- a/arch/arm/configs/xilinx_zynq_defconfig
 +++ b/arch/arm/configs/xilinx_zynq_defconfig
 @@ -112,8 +112,9 @@ CONFIG_R8169=y
@@ -34,7 +34,7 @@ index 5b5257f..c36d031 100644
  CONFIG_HID_MICROSOFT=y
  CONFIG_USB=y
  CONFIG_USB_OTG=y
-@@ -224,6 +234,9 @@ CONFIG_COMMON_CLK_SI570=y
+@@ -224,10 +234,15 @@ CONFIG_COMMON_CLK_SI570=y
  CONFIG_MEMORY=y
  CONFIG_IIO=y
  CONFIG_XILINX_XADC=y
@@ -43,8 +43,14 @@ index 5b5257f..c36d031 100644
 +CONFIG_XILINX_INTC=y
  CONFIG_EXT2_FS=y
  CONFIG_EXT3_FS=y
++CONFIG_EXT3_FS_POSIX_ACL=y
  # CONFIG_EXT3_DEFAULTS_TO_ORDERED is not set
-@@ -247,3 +260,42 @@ CONFIG_RCU_CPU_STALL_TIMEOUT=60
+ CONFIG_EXT4_FS=y
++CONFIG_EXT4_FS_POSIX_ACL=y
+ # CONFIG_DNOTIFY is not set
+ CONFIG_MSDOS_FS=y
+ CONFIG_VFAT_FS=y
+@@ -247,3 +262,42 @@ CONFIG_RCU_CPU_STALL_TIMEOUT=60
  CONFIG_FONTS=y
  CONFIG_FONT_8x8=y
  CONFIG_FONT_8x16=y
