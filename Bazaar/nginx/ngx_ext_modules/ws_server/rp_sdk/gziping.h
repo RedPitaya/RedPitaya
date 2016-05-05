@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "gzip.h"
+#include "crypto++/gzip.h"
 
 using namespace CryptoPP;
 

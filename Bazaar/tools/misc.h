@@ -2,13 +2,13 @@
 #include <fstream>
 #include <sstream>
 
-#include "md5.h"
+#include "crypto++/md5.h"
 using CryptoPP::MD5;
-#include "hex.h"
+#include "crypto++/hex.h"
 using CryptoPP::HashFilter;
-#include "files.h"
+#include "crypto++/files.h"
 using CryptoPP::FileSource;
-#include "filters.h"
+#include "crypto++/filters.h"
 using CryptoPP::StringSink;
 
 const char* apps_path="/opt/redpitaya/www/apps";

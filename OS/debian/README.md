@@ -1,3 +1,31 @@
+## Quick release building
+
+If there are no changes needed to the Debian system, but a new ecosystem is available, then there is no need to bootstrap Debian and install Wyliodrin. Instead it is enough to delete all files from the FAT partition and extract `ecosystem*.zip` into the partition.
+Start with an existing release image:
+1. load Red Pitaya OS image onto a SD card of at least 4GB
+2. insert the card into a PC
+3. on Linux EXT4 partition will also be mounted, unmount it to avoid corruption
+4. remove all contents from FAT partition, take care to delete the files not to move them into a recycle bin (`SHFT+DEL`)
+5. extract `ecosystem*.zip` into the FAT partition
+6. unmount FAT partition
+7. make an image of the SD card
+8. remove SD card from PC
+9. shorten the image so it fits on all 4GB sd cards
+```bash
+head -c 3670016000 debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin-short.img
+```
+10. compress the image using zip
+11. upload image to download server
+```bash
+scp red_pitaya_OS_v0.94-RC??_?date?.img.zip uname@downloads.redpitaya.com/var/www/html/downloads/
+```
+12. make symbolic link to beta or stable
+```bash
+cd /var/www/html/downloads/
+ln -sf red_pitaya_OS_v0.94-RC??_?date?.img.zip red_pitaya_OS-beta.img.zip
+ln -sf red_pitaya_OS_v0.94-RC??_?date?.img.zip red_pitaya_OS-stable.img.zip
+```
+
 # Dependencies
 
 Ubuntu 2015.04 was used to build Debian/Ubuntu SD card images for Red Pitaya.
@@ -34,14 +62,7 @@ drive may be overwritten, causing permanent loose of user data.
 
 ## Red Pitaya ecosystem extraction
 
-In case `ecosystem*.zip` was not available for the previous step, it can be extracted later to the FAT partition (128MB) of the SD card. In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image, boot scripts, the Linux kernel and a Buildroot filesystem. Two boot scripts are provided:
-- `u-boot.scr.buildroot` (default) for booting into the Buildroot system, here the Debian EXT4 partition is not needed
-- `u-boot.scr.debian` for booting into the Debian system
-To enable booting into Debian just change the default boot script:
-```bash
-cp u-boot.scr.debian u-boot.scr
-```
-If there are no changes needed to the Debian system, but a new ecosystem is available, then there is no need to bootstrap Debian. Instead it is enough to delete all files from the FAT partition and repeat the ZIP file extraction and boot scrip renaming.
+In case `ecosystem*.zip` was not available for the previous step, it can be extracted later to the FAT partition (128MB) of the SD card. In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image (containing FPGA code), a boot script (`u-boot.scr`) and the Linux kernel.
 
 ## Wyliodrin
 
@@ -66,7 +87,7 @@ A cleanup can be performed to reduce the image size. Various things can be done 
 - remove temporary files
 - zero out empty space on the partition
 
-The next code only removes APT temporary files and zeroes out the filesystem empty space.
+The next code only removes APT temporary files and zeros out the filesystem empty space.
 ```bash
 apt-get clean
 cat /dev/zero > zero.file

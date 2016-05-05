@@ -15,8 +15,6 @@
 
 LIBREDPITAYA=libredpitaya/libredpitaya.a
 
-# Main GCC executable (used for compiling and linking)
-CC=$(CROSS_COMPILE)gcc
 # Installation directory
 INSTALL_DIR ?= .
 
@@ -37,7 +35,7 @@ INSTALL_DIR ?= .
 all: $(LIBREDPITAYA)
 
 $(LIBREDPITAYA):
-	$(MAKE) -C libredpitaya CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C libredpitaya
 
 # Clean target - when called it cleans all object files and executables.
 clean:

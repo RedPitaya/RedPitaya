@@ -1,3 +1,28 @@
+# Release 0.9?
+
+System Changes:
+- recoded Bazaar related Makefiles, instead of cross compilation, a native
+  compiler root system is used, running inside an ARM QEMU wirtualized
+  environment, this avoids library version issues, but emulation is slow
+- top Makefiles are now split into a system Makefile.x86, which requires x86
+  to run tools like Vivado and a user space Makefile.arm used to compile
+  applications (Bazaar, web apps, SCPI, API, ...)
+- updated Nginx from version 1.5.3 to the latest 1.10.0
+- removed NGINX patches
+- updated Lua Nginx from version v0.8.7 to the latest v0.10.2
+- updated Websocket++ from version 0.5.0 to a slightly newer 0.5.1
+- updated Crypto++ from version 5.6.2 to the latest 5.6.3
+- removed Buildroot, lately it was only used to provide libraries at compile
+  time, now Debian libraries are used directly
+- removing SDK, since it was not maintained, now it is possible to compile all
+  user space code directly on Red Pitaya
+- removed some deprecated/duplicated source code
+
+Application changes:
+- Makefile changes so applications can be compiled directly on Red Pitaya
+- removing 'libjpeg' sources from spectrum analyzer applications and instead
+  using the 'libjpeg-turbo' Debian system library
+
 # Release 0.94 RC24
 
 Changes:

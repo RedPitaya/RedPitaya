@@ -11,12 +11,13 @@ public:
 	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max)
 		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
 		, m_SentValue(_value)
-	{}	
-	
+		, m_NeedSend(false)
+	{}
+
 	~CCustomParameter()
 	{
 /*		CDataManager * man = CDataManager::GetInstance();
-		if(man)	
+		if(man)
 			man->UnRegisterParam(this->GetName());*/
 	}
 
@@ -29,20 +30,21 @@ public:
 		n.push_back(JSONNode("max", this->m_Value.max));
 		n.push_back(JSONNode("access_mode", this->m_Value.access_mode));
 		n.push_back(JSONNode("fpga_update", this->m_Value.fpga_update));
+
 		return n;
 	}
-	
+
 	Type CheckMinMax(Type _value)
 	{
 		Type value = _value;
-		if(this->m_Value.min > value) 
+		if(this->m_Value.min > value)
 		{
 			dbg_printf("Incorrect parameters value (min value)\n");
 //			dbg_printf("Incorrect parameters value: %f (min:%f), "
-//			"correcting it\n", (float)value, float(this->m_Value.min));				
+//			"correcting it\n", (float)value, float(this->m_Value.min));
 		 	value = this->m_Value.min;
 
-		} else if(this->m_Value.max < value) 
+		} else if(this->m_Value.max < value)
 		{
 			dbg_printf("Incorrect parameters value (max value)\n");
 //			dbg_printf("Incorrect parameters value: %f (max:%f), "
@@ -65,9 +67,22 @@ public:
 		return tmp;
 	}
 
+	void SendValue(const Type& _value)
+	{
+		this->m_Value.value = CheckMinMax(_value);
+		m_NeedSend = true;
+	}
+
+	bool NeedSend(bool _no_need=false) const
+	{
+		bool tmp = m_NeedSend;
+		if (_no_need)
+			m_NeedSend = false;
+		return tmp;
+	}
 protected:
 	mutable Type m_SentValue;
-
+	mutable bool m_NeedSend;
 };
 
 //template for signals
@@ -75,31 +90,31 @@ template <typename Type> class CCustomSignal : public CParameter<Type, std::vect
 {
 public:
 	CCustomSignal(std::string _name, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}	
+		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}
 
 	CCustomSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}	
-		
+		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}
+
 	~CCustomSignal()
 	{
 /*		CDataManager * man = CDataManager::GetInstance();
-		if(man)	
+		if(man)
 			man->UnRegisterSignal(this->GetName());*/
 	}
-	
+
 	JSONNode GetJSONObject()
 	{
 		JSONNode n(JSON_NODE);
 		n.set_name(this->m_Value.name);
 		n.push_back(JSONNode("size", this->m_Value.value.size()));
 
-		JSONNode child(JSON_ARRAY);	
-		child.set_name("value");	
+		JSONNode child(JSON_ARRAY);
+		child.set_name("value");
 		for(unsigned int i=0; i < this->m_Value.value.size(); i++)
-		{	
-			Type res = this->m_Value.value.at(i);			
+		{
+			Type res = this->m_Value.value.at(i);
 			child.push_back(JSONNode("", res));
-		}		
+		}
 		n.push_back(child);
 		return n;
 	}
@@ -130,12 +145,12 @@ public:
 	}
 };
 
-//custom CIntParameter 
+//custom CIntParameter
 class CIntParameter : public CCustomParameter<int>
 {
 public:
 	CIntParameter(std::string _name, CBaseParameter::AccessMode _access_mode, int _value, int _fpga_update, int _min, int _max)
-		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
 };
 
 //custom CFloatParameter
@@ -143,7 +158,7 @@ class CFloatParameter : public CCustomParameter<float>
 {
 public:
 	CFloatParameter(std::string _name, CBaseParameter::AccessMode _access_mode, float _value, int _fpga_update, float _min, float _max)
-		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
 };
 
 //custom CDoubleParameter
@@ -151,7 +166,7 @@ class CDoubleParameter : public CCustomParameter<double>
 {
 public:
 	CDoubleParameter(std::string _name, CBaseParameter::AccessMode _access_mode, double _value, int _fpga_update, double _min, double _max)
-		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};	
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
 };
 
 //custom CBooleanParameter

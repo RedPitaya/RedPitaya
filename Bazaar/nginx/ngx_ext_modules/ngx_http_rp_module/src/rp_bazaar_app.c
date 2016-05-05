@@ -229,6 +229,8 @@ inline int is_registered(const char *dir,
     struct stat stat_buf;
     const mode_t perms = S_IRUSR | S_IXUSR;
 
+    fprintf(stderr, "is_registered dir: %s\n app_id: %s\n fname: %s\n", dir, app_id, fname);
+
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
 
     if(stat((const char *)file, &stat_buf) < 0) {
@@ -255,6 +257,8 @@ inline int is_registered(const char *dir,
         rp_bazaar_app_unload_module(&app);
         return 0;
     }
+
+    fprintf(stderr, "App loaded %s\n", app_id);
 
     int is_reg = 1;
     if(app.verify_app_license_func)
@@ -372,9 +376,15 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         return rp_module_cmd_error(json_root, "Can not open apps directory",
                                    strerror(errno), pool);
 
+	int lcr_meter_found = 0;
     while((ep = readdir (dp))) {
         const char *app_id = ep->d_name;
         cJSON *info = NULL;
+
+        if (!strcmp("lcr_meter", app_id)) {
+			lcr_meter_found = 1;
+			continue;
+		}
 
         /* check if structure is correct, we need:
          *  <app_id>/info/info.json
@@ -396,7 +406,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         if (info == NULL)
             continue;
 
-        /* We have an application */
+       /* We have an application */
         int demo = !is_registered(dir, app_id, "controllerhf.so");
 
         if (verbose) {
@@ -418,9 +428,44 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             cJSON_Delete(j_ver, pool);
             cJSON_Delete(info, pool);
         }
+        usleep(5);
     }
 
     closedir(dp);
+
+	// lcr_meter
+    if (lcr_meter_found) {
+        cJSON *info = NULL;
+
+        if (!is_readable(dir, "lcr_meter", "info/icon.png"))
+            return 0;
+        if (!is_readable(dir, "lcr_meter", "fpga.conf"))
+            return 0;
+        if (!is_controller_ok(dir, "lcr_meter", "controllerhf.so"))
+            return 0;
+        if (!get_info(&info, dir, "lcr_meter", pool))
+            return 0;
+        if (info == NULL)
+            return 0;
+        int demo = !is_registered(dir, "lcr_meter", "controllerhf.so");
+
+        if (verbose) {
+            cJSON_AddItemToObject(info, "type", cJSON_CreateString(demo ? "demo" : "run", pool), pool);
+            cJSON_AddItemToObject(*json_root, "lcr_meter", info, pool);
+        } else {
+            cJSON *j_ver = cJSON_GetObjectItem(info, "version");
+            if(j_ver == NULL) {
+                fprintf(stderr, "Cannot get version from info JSON.\n");
+                cJSON_Delete(info, pool);
+                return 0;
+            } else {
+				cJSON_AddItemToObject(*json_root, "lcr_meter", cJSON_CreateString(j_ver->valuestring, pool), pool);
+				cJSON_AddItemToObject(*json_root, "type", cJSON_CreateString(demo ? "demo" : "run", pool), pool);
+				cJSON_Delete(j_ver, pool);
+				cJSON_Delete(info, pool);
+			}
+        }
+	}
 
     return 0;
 }

@@ -75,12 +75,46 @@ An example script `settings.sh` is provided for setting all necessary environmen
 Prepare a download cache for various source tarballs. This is an optional step which will speedup the build process by avoiding downloads for all but the first build. There is a default cache path defined in the `settings.sh` script, you can edit it and avoid a rebuild the next time.
 ```bash
 mkdir -p dl
-export BR2_DL_DIR=$PWD/dl
+export DL=$PWD/dl
 ```
 
-To build everything just run `make`.
+Download an ARM debian root environment (usually the latest) from Red Pitaya download servers. You can also create your own root environment following instructions in [OS/debian/README.md]. Correct file permissions are required for `schroot` to work properly.
+```
+wget http://downloads.redpitaya.com/downloads/debian_armhf_time_date.tar.gz
+sudo chown root:root debian_armhf_time_date.tar.gz
+sudo chmod 664 debian_armhf_time_date.tar.gz
+```
+
+Create schroot configuration file `/etc/schroot/chroot.d/red-pitaya-debian.conf`. Replace the tarball path stub with the absolute path of the previously downloaded image. Replace user names with a comma separeted list of users whom should be able to compile Red Pitaya.
+```
+[red-pitaya-debian]
+description=Red Pitaya Debian OS image
+type=file
+file=absolute-path-to-red-potaya-debian.tgz
+users=comma-seperated-list-of-users-with-access-permissions
+root-users=comma-seperated-list-of-users-with-root-access-permissions
+root-groups=root
+profile=desktop
+personality=linux
+preserve-environment=true
+```
+
+To build everything a few `make` steps are required.
 ```bash
-make
+make -f Makefile.x86
+pwd
+uname -a
+schroot -c red-pitaya-debian <<- EOL_CHROOT
+pwd
+uname -a
+make -f Makefile.arm CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT
+EOL_CHROOT
+make zip
+```
+
+To get an itteractive ARM shell do:
+```
+schroot -c red-pitaya-debian
 ```
 
 # Partial rebuild process
