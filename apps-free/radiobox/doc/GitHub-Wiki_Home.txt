@@ -1,0 +1,18 @@
+# Red Pitaya - RadioBox application
+
+#### This repository enhances the RedPitaya hardware and the ecosystem by add-ons for ***Transmitting*** and ***Receiving*** radio signals.
+
+It is intented to:
+* expand the FPGA features as well as 
+* creating an own **radio_box** application 
+
+to the RedPitaya ecosystem.
+
+***
+Finding out more ...
+* [Technical Descriptions](TD01-Technical-Descriptions)
+* [History](History)
+* [Credits](Credits)
+
+***
+Begin of project: 2015-09-05, by: Ulrich Habel (DF4IAH) and Walter Sandel (DD8UU)

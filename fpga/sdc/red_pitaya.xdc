@@ -34,6 +34,21 @@ set_property PACKAGE_PIN V15     [get_ports {adc_dat_a_i[13]}]
 set_property PACKAGE_PIN T16     [get_ports {adc_dat_a_i[14]}]
 set_property PACKAGE_PIN V16     [get_ports {adc_dat_a_i[15]}]
 
+set_property IOB TRUE [get_cells {adc_dat_a_reg[0]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[1]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[2]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[3]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[4]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[5]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[6]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[7]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[8]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[9]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[10]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[11]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[12]}]
+set_property IOB TRUE [get_cells {adc_dat_a_reg[13]}]
+
 # ADC B data
 set_property IOSTANDARD LVCMOS18 [get_ports {adc_dat_b_i[*]}]
 set_property IOB        TRUE     [get_ports {adc_dat_b_i[*]}]
@@ -54,6 +69,21 @@ set_property PACKAGE_PIN Y19     [get_ports {adc_dat_b_i[13]}]
 set_property PACKAGE_PIN W18     [get_ports {adc_dat_b_i[14]}]
 set_property PACKAGE_PIN Y18     [get_ports {adc_dat_b_i[15]}]
 
+set_property IOB TRUE [get_cells {adc_dat_b_reg[0]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[1]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[2]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[3]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[4]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[5]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[6]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[7]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[8]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[9]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[10]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[11]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[12]}]
+set_property IOB TRUE [get_cells {adc_dat_b_reg[13]}]
+
 set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports adc_clk_p_i]
 set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports adc_clk_n_i]
 set_property PACKAGE_PIN U18           [get_ports adc_clk_p_i]
@@ -63,10 +93,12 @@ set_property PACKAGE_PIN U19           [get_ports adc_clk_n_i]
 set_property IOSTANDARD LVCMOS18 [get_ports {adc_clk_o[*]}]
 set_property SLEW       FAST     [get_ports {adc_clk_o[*]}]
 set_property DRIVE      8        [get_ports {adc_clk_o[*]}]
-#set_property IOB        TRUE     [get_ports {adc_clk_o[*]}]
 
 set_property PACKAGE_PIN N20 [get_ports {adc_clk_o[0]}]
 set_property PACKAGE_PIN P20 [get_ports {adc_clk_o[1]}]
+
+#set_property IOB        TRUE     [get_ports {adc_clk_o[*]}]
+
 
 # ADC clock stabilizer
 set_property IOSTANDARD LVCMOS18 [get_ports adc_cdcs_o]
@@ -75,12 +107,23 @@ set_property SLEW       FAST     [get_ports adc_cdcs_o]
 set_property DRIVE      8        [get_ports adc_cdcs_o]
 
 ### DAC
-
-# data
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_dat_o[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports dac_clk_o]
+set_property IOSTANDARD LVCMOS33 [get_ports dac_rst_o]
+set_property IOSTANDARD LVCMOS33 [get_ports dac_sel_o]
+set_property IOSTANDARD LVCMOS33 [get_ports dac_wrt_o]
+
 set_property SLEW       SLOW     [get_ports {dac_dat_o[*]}]
+set_property SLEW       FAST     [get_ports dac_clk_o]
+set_property SLEW       FAST     [get_ports dac_rst_o]
+set_property SLEW       FAST     [get_ports dac_sel_o]
+set_property SLEW       FAST     [get_ports dac_wrt_o]
+
 set_property DRIVE      4        [get_ports {dac_dat_o[*]}]
-#set_property IOB        TRUE     [get_ports {dac_dat_o[*]}]
+set_property DRIVE      8        [get_ports dac_clk_o]
+set_property DRIVE      8        [get_ports dac_rst_o]
+set_property DRIVE      8        [get_ports dac_sel_o]
+set_property DRIVE      8        [get_ports dac_wrt_o]
 
 set_property PACKAGE_PIN M19 [get_ports {dac_dat_o[0]}]
 set_property PACKAGE_PIN M20 [get_ports {dac_dat_o[1]}]
@@ -97,20 +140,17 @@ set_property PACKAGE_PIN F20 [get_ports {dac_dat_o[11]}]
 set_property PACKAGE_PIN D20 [get_ports {dac_dat_o[12]}]
 set_property PACKAGE_PIN D19 [get_ports {dac_dat_o[13]}]
 
-# control
-set_property IOSTANDARD LVCMOS33 [get_ports dac_*_o]
-set_property SLEW       FAST     [get_ports dac_*_o]
-set_property DRIVE      8        [get_ports dac_*_o]
-#set_property IOB        TRUE     [get_ports dac_*_o]
-
 set_property PACKAGE_PIN M17 [get_ports dac_wrt_o]
 set_property PACKAGE_PIN N16 [get_ports dac_sel_o]
 set_property PACKAGE_PIN M18 [get_ports dac_clk_o]
 set_property PACKAGE_PIN N15 [get_ports dac_rst_o]
 
+#set_property IOB        TRUE     [get_ports dac_*_o]
+
+
 ### PWM DAC
 set_property IOSTANDARD LVCMOS18 [get_ports {dac_pwm_o[*]}]
-set_property SLEW FAST           [get_ports {dac_pwm_o[*]}]
+set_property SLEW SLOW           [get_ports {dac_pwm_o[*]}]
 set_property DRIVE 12            [get_ports {dac_pwm_o[*]}]
 set_property IOB TRUE            [get_ports {dac_pwm_o[*]}]
 
@@ -122,7 +162,7 @@ set_property PACKAGE_PIN U13 [get_ports {dac_pwm_o[3]}]
 ### XADC
 set_property IOSTANDARD LVCMOS33 [get_ports {vinp_i[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {vinn_i[*]}]
-set_property LOC XADC_X0Y0 [get_cells i_ams/XADC_inst]
+#set_property LOC XADC_X0Y0 [get_cells i_ps/system_i/system_i/xadc_GP1/inst]
 #AD0
 set_property PACKAGE_PIN C20 [get_ports {vinp_i[1]}]
 set_property PACKAGE_PIN B20 [get_ports {vinn_i[1]}]
@@ -206,17 +246,82 @@ set_property PACKAGE_PIN J14     [get_ports {led_o[7]}]
 #TIMESPEC TS_adc_clk = PERIOD "adc_clk" 125 MHz;
 
 create_clock -period 8.000 -name adc_clk [get_ports adc_clk_p_i]
-
-set_input_delay -clock adc_clk 3.400 [get_ports adc_dat_a_i[*]]
-set_input_delay -clock adc_clk 3.400 [get_ports adc_dat_b_i[*]]
-
 create_clock -period 4.000 -name rx_clk  [get_ports daisy_p_i[1]]
 
-set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_out]
-set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks ser_clk_out]
-set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_2clk_out]
-set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks adc_clk]
-set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks par_clk]
-set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2clk_out]
-set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2ph_out]
+# ADC-A
+set_input_delay -clock [get_clocks adc_clk] -min 1.000 [get_ports {adc_dat_a_i[*]}]
+set_input_delay -clock [get_clocks adc_clk] -max 3.400 [get_ports {adc_dat_a_i[*]}]
 
+# ADC-B
+set_input_delay -clock [get_clocks adc_clk] -min 1.000 [get_ports {adc_dat_b_i[*]}]
+set_input_delay -clock [get_clocks adc_clk] -max 3.400 [get_ports {adc_dat_b_i[*]}]
+
+# SATA
+#create_clock -period 4.000 -name rx_clk [get_ports {daisy_p_i[1]}]
+set_input_delay -clock [get_clocks rx_clk] -min 1.000 [get_ports {daisy_p_i[0]}]
+set_input_delay -clock [get_clocks rx_clk] -max 2.400 [get_ports {daisy_p_i[0]}]
+
+# DNA clock
+create_clock -period 64.000 -name dna_clk [get_nets i_hk/dna_clk]
+
+
+############################################################################
+# Min / Max delay                                                          #
+############################################################################
+
+set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_ams/*_reg[*]/D}] 0.000
+set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_ams/*_reg[*]/D}] 7.000
+
+set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_asg/*_reg[*]/D}] 0.000
+set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_asg/*_reg[*]/D}] 7.000
+
+set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_pid/*_reg[*]/D}] 0.000
+set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_pid/*_reg[*]/D}] 7.000
+
+set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[*][0]/D}]  0.000
+set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_radiobox/*_reg[*][0]/D}]  7.000
+
+set_min_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_scope/*_reg[*]/D}] 0.000
+set_max_delay -rise_from [get_pins {i_ps/axi_slave_gp0/wr_wdata_reg[*]/C}] -rise_to [get_pins {i_scope/*_reg[*]/D}] 7.000
+
+
+############################################################################
+# False paths                                                              #
+############################################################################
+
+set_false_path -from [get_clocks clk_fpga_0]   -to [get_clocks adc_clk]
+set_false_path -from [get_clocks clk_fpga_1]   -to [get_clocks adc_clk]
+set_false_path -from [get_clocks clk_fpga_2]   -to [get_clocks adc_clk]
+set_false_path -from [get_clocks clk_fpga_3]   -to [get_clocks adc_clk]
+set_false_path -from [get_clocks adc_clk]      -to [get_clocks clk_fpga_0]
+set_false_path -from [get_clocks adc_clk]      -to [get_clocks clk_fpga_1]
+set_false_path -from [get_clocks adc_clk]      -to [get_clocks clk_fpga_2]
+set_false_path -from [get_clocks adc_clk]      -to [get_clocks clk_fpga_3]
+
+set_false_path -from [get_clocks rx_clk]       -to [get_clocks adc_clk]
+set_false_path -from [get_clocks adc_clk]      -to [get_clocks rx_clk]
+
+set_false_path -from [get_ports {exp_p_io[*]}] -to [get_clocks adc_clk]
+set_false_path -from [get_ports {exp_n_io[*]}] -to [get_clocks adc_clk]
+set_false_path -from [get_clocks adc_clk]      -to [get_ports {exp_p_io[*]}]
+set_false_path -from [get_clocks adc_clk]      -to [get_ports {exp_n_io[*]}]
+
+set_false_path -from [get_clocks pll_adc_clk]  -to [get_clocks dna_clk]
+set_false_path -from [get_clocks dna_clk]      -to [get_clocks pll_adc_clk]
+
+#set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_out]
+#set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks ser_clk_out]
+#set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_2clk_out]
+#set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks adc_clk]
+#set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks par_clk]
+#set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2clk_out]
+#set_false_path -from [get_clocks dac_clk_out] -to [get_clocks dac_2ph_out]
+
+
+############################################################################
+# Bitstream constraints                                                     #
+############################################################################
+
+set_property BITSTREAM.CONFIG.OVERTEMPPOWERDOWN ENABLE [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
+set_property BITSTREAM.GENERAL.XADCENHANCEDLINEARITY On [current_design]
