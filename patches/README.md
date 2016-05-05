@@ -3,7 +3,7 @@
 ## FSBL (first stage boot loader)
 
 ### Version
-FSBL version is defined by the Vivado tool, version **2015.1** is used for this project.
+FSBL version is defined by the Vivado tool, version **2015.4** is used for this project.
 
 ### Patches
 ```
@@ -14,7 +14,7 @@ This patch seems to enable status reporting after a memory test. TODO: details
 ## U-Boot specifics
 
 ### Version
-A new version of U-Boot is provided with each Vivado version, the current version is **v2015.1**.
+A new version of U-Boot is provided with each Vivado version, the current version is **v2015.4**.
 
 ### Patches
 There are several patches for U-Boot:
