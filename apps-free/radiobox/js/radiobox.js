@@ -82,18 +82,18 @@
     rb_run:                 1,  // application running
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
     tx_modtyp_s:            1,  // TX modulation: off
-    rx_modtyp_s:            5,  // RX modulation: AM-sync USB
-    rbled_csp_s:          253,  // AC97 diagnostic LEDs
+    rx_modtyp_s:            4,  // RX modulation: AM-Env
+    rbled_csp_s:          254,  // AC97 diagnostic LEDs
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
-    tx_car_osc_qrg_f:  100000,  // 100 kHz
-    rx_car_osc_qrg_f:  100000,  // 100 kHz
+    tx_car_osc_qrg_f:  100000,  //  100 kHz
+    rx_car_osc_qrg_f: 7210000,  // 7210 kHz
 
     tx_mod_osc_qrg_f:    1000,  //   1 kHz
     tx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
-    rx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    rx_muxin_gain_s:       30,  // slider position in % of 100% (80% = FS input with booster 1:1)
     tx_qrg_sel_s:           1,  // QRG controller influence TX frequency
     rx_qrg_sel_s:           1,  // QRG controller influence RX frequency
 
