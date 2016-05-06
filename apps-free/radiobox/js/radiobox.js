@@ -64,7 +64,7 @@
         },
         mousewheelsum: 0,
         digit: {
-            e: [ 0, 0, 0, 0, 1, 2, 7, 0 ]  // reversed digits
+            e: [ 0, 0, 0, 0, 0, 0, 0, 0 ]  // reversed digits
         },
         editing: false,
         enter: false,
