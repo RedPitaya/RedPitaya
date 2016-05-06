@@ -4,8 +4,8 @@ TMP = tmp
 # check if download cache directory is available
 DL ?= dl
 
-UBOOT_TAG     = xilinx-v2015.2
-LINUX_TAG     = xilinx-v2015.1
+UBOOT_TAG     = xilinx-v2015.4
+LINUX_TAG     = xilinx-v2015.4.01
 DTREE_TAG     = xilinx-v2016.1
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
@@ -44,13 +44,13 @@ DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(INSTALL_DIR)/devicetree.dtb
 UBOOT           = $(INSTALL_DIR)/u-boot.elf
 LINUX           = $(INSTALL_DIR)/uImage
-BOOT_UBOOT      = $(INSTALL_DIR)/boot.bin
+BOOT            = $(INSTALL_DIR)/boot.bin
 
 ################################################################################
 # tarball
 ################################################################################
 
-all: fpga u-boot $(LINUX) $(DEVICETREE) $(BOOT_UBOOT)
+all: fpga u-boot linux devicetree $(BOOT)
 
 $(DL):
 	mkdir -p $@
@@ -109,14 +109,29 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 # Linux build provides: $(LINUX)
 ################################################################################
 
+.PHONY: linux
+
+linux: $(LINUX)
+
 $(LINUX_TAR): | $(DL)
 	curl -L $(LINUX_URL) -o $@
 
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG).patch
-	cp patches/linux-lantiq.c $@/drivers/net/phy/lantiq.c
+#	git clone --depth 1 -b dma_err https://github.com/na1pir/linux-xlnx.git $(LINUX_DIR)
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
+	#patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidmatest-cyc.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
+	cp -r patches/rtl8192cu $@/drivers/net/wireless/
+	cp -r patches/lantiq/*  $@/drivers/net/phy/
+	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
+	# DMA support related patches
+	cp -r patches/redpitaya $@/drivers/
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
@@ -127,6 +142,10 @@ $(LINUX): $(LINUX_DIR)
 ################################################################################
 # device tree processing
 ################################################################################
+
+.PHONY: devicetree
+
+devicetree: $(DEVICETREE)
 
 $(DTREE_TAR): | $(DL)
 	curl -L $(DTREE_URL) -o $@
@@ -144,7 +163,7 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
 # boot file generator
 ################################################################################
 
-$(BOOT_UBOOT): fpga $(UBOOT)
+$(BOOT): fpga $(UBOOT)
 	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
 

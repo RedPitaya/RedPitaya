@@ -5,20 +5,19 @@
 . /opt/Xilinx/Vivado/2016.1/settings64.sh
 
 ################################################################################
-# setup Linaro toolchain
+# setup cross compiler toolchain
 ################################################################################
 
 #export TOOLCHAIN_PATH=/opt/linaro/gcc-linaro-4.9-2015.02-3-x86_64_arm-linux-gnueabihf
 #export TOOLCHAIN_PATH=/opt/linaro/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf/
 #export PATH=$TOOLCHAIN_PATH/bin:$PATH
-#export CROSS_COMPILE=arm-linux-gnueabihf-
+export CROSS_COMPILE=arm-linux-gnueabihf-
 
 ################################################################################
-# setup Buildroot download cache directory, to avoid downloads
-# this path is also used by some other downloads
+# setup download cache directory, to avoid downloads
 ################################################################################
 
-export BR2_DL_DIR=dl
+#export DL=dl
 
 ################################################################################
 # common make procedure, should not be run by this script
