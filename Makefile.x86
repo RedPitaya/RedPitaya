@@ -42,6 +42,7 @@ FPGA2_DIR       = fpga2
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
 FPGA2           = $(FPGA2_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
+FSBL2           = $(FPGA2_DIR)/sdk/fsbl/executable.elf
 DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(INSTALL_DIR)/devicetree.dtb
 UBOOT           = $(INSTALL_DIR)/u-boot.elf
