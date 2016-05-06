@@ -247,7 +247,7 @@ index 0000000..f7a1f82
 +#define CONFIG_SYS_EEPROM_SIZE			8192 /* Bytes */
 +
 +//#define CONFIG_ENV_IS_IN_EEPROM
-+//#define CONFIG_ENV_SIZE		1024 /* Total Size of Environment Sector */
++#define CONFIG_ENV_SIZE		1024 /* Total Size of Environment Sector */
 +//#define CONFIG_ENV_OFFSET	(2048*3) /* WP area starts at last 1/4 of 8k eeprom */
 +
 +#define CONFIG_ENV_IS_IN_FAT
