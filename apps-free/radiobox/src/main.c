@@ -276,14 +276,14 @@ void rp_ac97_module_load(void)
 	rp_ac97_module_unload();
 #endif
 
-	system("modprobe snd_redpitaya_ac97; sleep 1; pulseaudio");
+	system("redpitaya-ac97_start.sh &");
 }
 
 
 /*----------------------------------------------------------------------------------*/
 void rp_ac97_module_unload(void)
 {
-	system("killall pulseaudio; sleep 1; rmmod snd_redpitaya_ac97 snd_ac97_codec ac97_bus");
+	system("redpitaya-ac97_stop.sh &");
 }
 
 

@@ -57,14 +57,14 @@
     eventClickId: '',
     qrgController: {
         tx: {
-            button_checked: true
+            button_checked: false
         },
         rx: {
             button_checked: true
         },
         mousewheelsum: 0,
         digit: {
-            e: [ 0, 0, 0, 0, 0, 1, 0, 0 ]  // reversed digits
+            e: [ 0, 0, 0, 0, 0, 0, 0, 0 ]  // reversed digits
         },
         editing: false,
         enter: false,
@@ -89,7 +89,7 @@
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
     tx_car_osc_qrg_f:       0,  //    0 kHz
-    rx_car_osc_qrg_f: 7210000,  // 7210 kHz
+    rx_car_osc_qrg_f: 7210000,  // 7210 kHz, @see also: RB.state.qrgController.digit.e[]
 
     tx_mod_osc_qrg_f:    1000,  //   1 kHz
     tx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
