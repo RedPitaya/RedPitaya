@@ -1,5 +1,5 @@
---- system.dts.old	2016-04-07 22:30:50.781780245 +0200
-+++ system.dts	2016-04-15 20:25:32.066679762 +0200
+--- system.dts.old	2016-05-06 01:01:41.187394113 +0200
++++ system.dts	2016-05-06 01:14:43.282854613 +0200
 @@ -26,7 +26,7 @@
  	};
  	memory {
@@ -9,8 +9,8 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,94 @@
-	fclk-enable = <0xf>;
+@@ -86,3 +86,89 @@
+ 	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
 +
@@ -34,9 +34,6 @@
 +		reg = <0>; //chipselect 0
 +		spi-max-frequency = <50000000>;
 +	};
-+};
-+&clkc {
-+	fclk-enable = <0xf>;
 +};
 +&xadc {
 +	compatible = "xlnx,axi-xadc-1.00.a";
@@ -95,7 +92,7 @@
 +	#address-cells = <1>;
 +	#size-cells = <1>;
 +	#interrupt-cells = <3>;
-+	redpitaya-ac97@40700000 {
++	snd_rp_ac97: redpitaya-ac97@40700000 {
 +		compatible = "redpitaya,redpitaya-ac97";
 +		reg = <0x40700000 0x100>;
 +		interrupts = <0 30 1>, <0 31 1>;
