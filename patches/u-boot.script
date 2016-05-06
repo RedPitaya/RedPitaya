@@ -1,3 +1,13 @@
+echo Set main memory address table
+setenv addr_script 0x2000000
+setenv addr_eeprom 0x2003000
+setenv addr_linux  0x2004000
+setenv addr_dtb    0x4000000
+
+echo Load and run EEPROM configuration
+eeprom read ${addr_eeprom} 0x1800 0x400
+source ${addr_eeprom}
+
 echo Set devicetree and ramdisk high loading address to 512MB
 setenv high        0x20000000
 setenv fdt_high    ${high}
@@ -5,11 +15,11 @@ setenv initrd_high ${high}
 
 echo Loading from SD card (FAT file system) to memory
 mmcinfo
-fatload mmc 0 0x2001000 uImage
-fatload mmc 0 0x4000000 devicetree.dtb
+fatload mmc 0 ${addr_linux} uImage
+fatload mmc 0 ${addr_dtb}   devicetree.dtb
 
 echo Booting Linux kernel with ramdisk and devicetree
 setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio" loglevel=7 dyndbg="file axidmatest.c +p"
-setenv sdboot bootm 0x2001000 - 0x4000000
+setenv sdboot bootm ${addr_linux} - ${addr_dtb}
 setenv bootdelay 0
 bootd

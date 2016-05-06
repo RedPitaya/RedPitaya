@@ -64,19 +64,6 @@ index fc8989b..cc01c54 100644
 +	default "zynq_red_pitaya" if TARGET_ZYNQ_RED_PITAYA
  
  endif
-diff --git a/common/main.c b/common/main.c
-index 2979fbe..690a589 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -82,6 +82,8 @@ void main_loop(void)
- 	if (cli_process_fdt(&s))
- 		cli_secure_boot_cmd(s);
- 
-+	setenv("sdboot", "echo Running script from SD... && mmcinfo && fatload mmc 0 0x2000000 u-boot.scr && source 0x2000000");
-+
- 	autoboot_command(s);
- 
- 	cli_loop();
 diff --git a/configs/zynq_red_pitaya_defconfig b/configs/zynq_red_pitaya_defconfig
 new file mode 100644
 index 0000000..f45c955
@@ -213,7 +200,7 @@ new file mode 100644
 index 0000000..f7a1f82
 --- /dev/null
 +++ b/include/configs/zynq_red_pitaya.h
-@@ -0,0 +1,69 @@
+@@ -0,0 +1,53 @@
 +#ifndef __CONFIG_ZYNQ_RED_PITAYA_H
 +#define __CONFIG_ZYNQ_RED_PITAYA_H
 +
@@ -259,28 +246,12 @@ index 0000000..f7a1f82
 +#define CONFIG_SYS_EEPROM_PAGE_WRITE_BITS	5
 +#define CONFIG_SYS_EEPROM_SIZE			8192 /* Bytes */
 +
-+#define CONFIG_ENV_IS_IN_EEPROM
-+#define CONFIG_ENV_SIZE		1024 /* Total Size of Environment Sector */
-+#define CONFIG_ENV_OFFSET	(2048*3) /* WP area starts at last 1/4 of 8k eeprom */
++//#define CONFIG_ENV_IS_IN_EEPROM
++//#define CONFIG_ENV_SIZE		1024 /* Total Size of Environment Sector */
++//#define CONFIG_ENV_OFFSET	(2048*3) /* WP area starts at last 1/4 of 8k eeprom */
 +
 +#define CONFIG_EXTRA_ENV_SETTINGS      \
-+	"test_env_merge=SUCESS\0"    \
-+	"kernel_image=uImage\0"    \
-+	"ramdisk_image=uramdisk.image.gz\0"     \
-+	"devicetree_image=devicetree.dtb\0"     \
-+	"bitstream_image=system.bit.bin\0"      \
-+	"loadbit_addr=0x100000\0"       \
-+	"kernel_size=0x500000\0"        \
-+	"devicetree_size=0x20000\0"     \
-+	"ramdisk_size=0x5E0000\0"       \
-+	"fdt_high=0x1e000000\0" \
-+	"initrd_high=0x20000000\0"      \
-+	"sdboot=echo Copying Linux from SD to RAM... && " \
-+		"mmcinfo && " \
-+		"fatload mmc 0 0x3000000 ${kernel_image} && " \
-+		"fatload mmc 0 0x2A00000 ${devicetree_image} && " \
-+		"fatload mmc 0 0x2000000 ${ramdisk_image} && " \
-+		"bootm 0x3000000 0x2000000 0x2A00000\0"
++	"sdboot=echo Running script from SD... && mmcinfo && fatload mmc 0 0x2000000 u-boot.scr && source 0x2000000"
 +
 +#endif /* __CONFIG_ZYNQ_RED_PITAYA_H */
 diff --git a/include/linux/mii.h b/include/linux/mii.h
