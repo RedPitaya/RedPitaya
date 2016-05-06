@@ -57,7 +57,7 @@
     eventClickId: '',
     qrgController: {
         tx: {
-            button_checked: true
+            button_checked: false
         },
         rx: {
             button_checked: true
