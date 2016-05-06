@@ -36,9 +36,11 @@ INSTALL_DIR ?= build
 
 # directories
 FPGA_DIR        = fpga
+FPGA2_DIR       = fpga2
 
 # targets
 FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
+FPGA2           = $(FPGA2_DIR)/out/red_pitaya.bit
 FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
 DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(INSTALL_DIR)/devicetree.dtb
