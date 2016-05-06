@@ -1,0 +1,5 @@
+config RPRX
+	tristate "Red Pitaya receiver DMA client for XILINX AXI DMA provider driver"
+	depends on XILINX_AXIDMA
+	help
+	  Simple DMA receiver client driver. Y fo Red Pitaya

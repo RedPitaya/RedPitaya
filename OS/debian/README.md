@@ -92,7 +92,7 @@ The next code only removes APT temporary files and zeros out the filesystem empt
 apt-get clean
 cat /dev/zero > zero.file
 sync
-rm zero.file
+rm -f zero.file
 history -c
 ```
 

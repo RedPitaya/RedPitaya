@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 rp_s = scpi.scpi(sys.argv[1])
 
-wave_form = 'sine'
+wave_form = 'saw'
 freq = 10000
 ampl = 0.9
 

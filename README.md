@@ -145,9 +145,8 @@ The build process downloads the Xilinx version of Linux sources from Github, app
 
 The created boot file contains FSBL, FPGA bitstream and U-Boot binary.
 ```bash
-make tmp/boot.bin.uboot
+make tmp/boot.bin
 ```
-Since file `tmp/boot.bin.uboot` is created it should be renamed to simply `tmp/boot.bin`. There are some preparations for creating a memory test `tmp/boot.bin.memtest` which would run from the SD card, but it did not go es easy es we would like, so it is not working.
 
 ## Linux user space
 

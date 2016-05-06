@@ -1,16 +1,30 @@
 --- system.dts.old	2015-07-23 23:14:55.434444209 +0200
 +++ system.dts	2015-07-23 23:05:18.198460862 +0200
-@@ -26,7 +26,7 @@
- 	};
- 	memory {
+@@ -28,6 +28,22 @@
  		device_type = "memory";
--		reg = <0x0 0x20000000>;
-+		reg = <0x0 0x1c000000>;
+ 		reg = <0x0 0x20000000>;
  	};
++	reserved-memory {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0x1000000>;
++			alignment = <0x2000>;
++			linux,cma-default;
++		};
++		rprx_reserverd: labuf@1c000000 {
++			/*compatible = "redpitaya,rprx-memory";*/
++			reg = <0x1c000000 0x2000000>;
++		};
++	};
  };
  &gem0 {
-@@ -86,3 +86,82 @@
- 	fclk-enable = <0x0>;
+ 	local-mac-address = [00 0a 35 00 00 00];
+@@ -86,3 +102,153 @@
+ 	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
 +
@@ -20,7 +34,7 @@
 +		phy0: phy@1 {
 +			compatible = "lantiq,phy11g";
 +			device_type = "ethernet-phy";
-+			reg = <1>;
++			reg = <32>;
 +		};
 +	};
 +};
@@ -40,7 +54,7 @@
 +&clkc {
 +	fclk-enable = <0xf>;
 +};
-+&xadc {
++/* &xadc {
 +	compatible = "xlnx,axi-xadc-1.00.a";
 +	clocks = <&clkc 18>;
 +	xlnx,channels {
@@ -62,7 +76,7 @@
 +			reg = <10>;
 +		};
 +	};
-+};
++}; */
 +/ {
 +	gpio-leds {
 +	    compatible = "gpio-leds";
@@ -91,4 +105,75 @@
 +};
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
++};
++/{
++   rprx_2: rprx@2 {
++       compatible ="redpitaya,rprx";
++       dmas = <&axi_dma_2 0
++           &axi_dma_2 1>;
++       dma-names = "axidma0", "axidma1";
++       memory-region = <&rprx_reserverd>;
++       };
++};
++/*/ {
++	dmatest_cyc_3: dmatest_cyc@3 {
++		compatible ="xlnx,axi-dma-test-cyc-1.00.a";
++		dmas = <&axi_dma_3 0
++			&axi_dma_3 1>;
++		dma-names = "axidma0", "axidma1";
++	};
++};*/
++/ {
++	id@40000000 {
++		compatible = "generic-uio";
++		reg = <0x40000000 0x10000>;
++	};
++	muxctl@40040000 {
++		compatible = "generic-uio";
++		reg = <0x40040000 0x10000>;
++	};
++	gpio@40080000 {
++		compatible = "generic-uio";
++		reg = <0x40080000 0x10000>;
++	};
++	led@400c0000 {
++		compatible = "generic-uio";
++		reg = <0x400c0000 0x10000>;
++	};
++	calib@40100000 {
++		compatible = "generic-uio";
++		reg = <0x40100000 0x10000>;
++	};
++	pdm@40140000 {
++		compatible = "generic-uio";
++		reg = <0x40140000 0x10000>;
++	};
++	pwm@40180000 {
++		compatible = "generic-uio";
++		reg = <0x40180000 0x10000>;
++	};
++	asg0@401c0000 {
++		compatible = "generic-uio";
++		reg = <0x401c0000 0x40000>;
++	};
++	asg1@40200000 {
++		compatible = "generic-uio";
++		reg = <0x40200000 0x40000>;
++	};
++	scope0@40240000 {
++		compatible = "generic-uio";
++		reg = <0x40240000 0x10000>;
++	};
++	scope1@40280000 {
++		compatible = "generic-uio";
++		reg = <0x40280000 0x10000>;
++	};
++	lg@402c0000 {
++		compatible = "generic-uio";
++		reg = <0x402c0000 0x40000>;
++	};
++	la@40300000 {
++		compatible = "generic-uio";
++		reg = <0x40300000 0x10000>;
++	};
 +};

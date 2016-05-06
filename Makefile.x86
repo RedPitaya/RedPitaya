@@ -65,12 +65,13 @@ $(INSTALL_DIR):
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-.PHONY: fpga
+.PHONY: fpga fpga2
 
 fpga: $(DTREE_DIR)
 	make -C $(FPGA_DIR)
-	mkdir -p               $(INSTALL_DIR)/fpga
-	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga.bit
+
+fpga2: $(DTREE_DIR)
+	make -C $(FPGA2_DIR)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -154,17 +155,17 @@ $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga
+$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 	cp $(DTS) $(TMP)/devicetree.dts
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA_DIR)/sdk/dts/ $(TMP)/devicetree.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA2_DIR)/sdk/dts/ $(TMP)/devicetree.dts
 
 ################################################################################
 # boot file generator
 ################################################################################
 
-$(BOOT): fpga $(UBOOT)
-	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
+$(BOOT): fpga2 $(UBOOT)
+	@echo img:{[bootloader] $(FSBL2) $(FPGA2) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
 
 ################################################################################
