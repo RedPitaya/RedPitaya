@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OUTNAME=rb_fir3_200k_to_200k_24c_17i16_35o__AllSets.coe
+OUTNAME=rb_fir3_200k_to_200k_24c_17i16_35o.coe
 
 # first clear file
 cat 0_*  >$OUTNAME

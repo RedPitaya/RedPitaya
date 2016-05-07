@@ -2196,14 +2196,14 @@ wire [ 15: 0] rx_mod_ssb_am_out = rx_mod_ssb_mix_out[32:17];
 //  1 = Set 2: FM / PM - low pass with abt. 2.56 kHz @ -6 dB
 //  hn=fir1(254, 50000/200000, 'low', 'barthannwin'); freqz(hn);
 //
-//  2 = Set 3: AM-Env wide - low pass with abt. 9 kHz @ -45 dB
-//  hn=fir1(254, 7000/200000, 'low', 'barthannwin'); freqz(hn);
+//  2 = Set 3: AM-Env wide - low pass
+//  hn=fir1(254, 8500/200000, 'low', 'barthannwin'); freqz(hn);
 //
-//  3= Set 4: AM-Env mid - low pass with abt. 9 kHz @ -45 dB
-//  hn=fir1(254, 7000/200000, 'low', 'barthannwin'); freqz(hn);
+//  3= Set 4: AM-Env mid - low pass
+//  hn=fir1(254, 6500/200000, 'low', 'barthannwin'); freqz(hn);
 //
-//  4 = Set 5: AM-Env narrow - low pass with abt. 9 kHz @ -45 dB
-//  hn=fir1(254, 7000/200000, 'low', 'barthannwin'); freqz(hn);
+//  4 = Set 5: AM-Env narrow - low pass
+//  hn=fir1(254, 4500/200000, 'low', 'barthannwin'); freqz(hn);
 
 wire unsigned [  7: 0] rx_afc_fir_cfg_in    = ((rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_FM)  ||
                                                (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM))    ?   8'd1                         :
