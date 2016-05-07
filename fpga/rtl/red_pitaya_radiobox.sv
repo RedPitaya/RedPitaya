@@ -177,7 +177,7 @@ enum {
     //REG_RD_RB_RX_RSVD_H150,
     //REG_RD_RB_RX_RSVD_H154,
     //REG_RD_RB_RX_RSVD_H158,
-    //REG_RD_RB_RX_RSVD_H15C,
+    REG_RW_RB_RX_EMENV_FILT_VARIANT,            // h15C: RB_RX_EMENV_FILT_VARIANT  wide, middle, narrow            (Bit  1: 0)
 
     REG_RW_RB_RX_MUXIN_SRC,                     // h160: RB audio signal RX MUXIN input selector:
                                                 //      d0 =(none),   d3 =VpVn,
@@ -469,6 +469,8 @@ wire   signed [ 47: 0] tx_mod_osc_ofs         = { regs[REG_RW_RB_TX_MOD_OSC_OFS_
 wire unsigned [ 47: 0] rx_car_osc_inc         = { regs[REG_RW_RB_RX_CAR_OSC_INC_HI][15:0], regs[REG_RW_RB_RX_CAR_OSC_INC_LO][31:0] };
 wire   signed [ 47: 0] rx_car_osc_ofs         = { regs[REG_RW_RB_RX_CAR_OSC_OFS_HI][15:0], regs[REG_RW_RB_RX_CAR_OSC_OFS_LO][31:0] };
 wire unsigned [ 47: 0] rx_car_osc_inc_scanner = { regs[REG_RW_RB_RX_CAR_OSC_INC_SCNR_HI][15:0], regs[REG_RW_RB_RX_CAR_OSC_INC_SCNR_LO][31:0] };
+
+wire unsigned [  1: 0] rx_afc_amenv_filtvar   = regs[REG_RW_RB_RX_EMENV_FILT_VARIANT][1:0];
 
 wire   signed [ 31: 0] rx_afc_cordic_phs      = regs[REG_RD_RB_RX_AFC_CORDIC_PHS];
 wire   signed [ 31: 0] rx_afc_cordic_phs_prev = regs[REG_RD_RB_RX_AFC_CORDIC_PHS_PREV];
@@ -2188,16 +2190,25 @@ wire [ 15: 0] rx_mod_ssb_am_out = rx_mod_ssb_mix_out[32:17];
 //  RX_AFC_FIR low pass filter for carrier detection - @ 200 kSPS
 //
 //  Coefficients built with Octave:
-//  Set 1: SSB / AM - band pass for 1700 Hz with abt. 440 Hz @ -40 dB band width
+//  0 = Set 1: AM-Sync (SSB) - band pass for 1700 Hz with abt. 440 Hz @ -40 dB band width
 //  hn=fir2(253, [0 1660/1000000 1680/1000000 1700/1000000 1720/1000000 1740/1000000 1], [0.000000001 0.00001 0.001 114 0.001 0.00001 0.000000001], 65536, kaiser(254, 0.01)); freqz(hn);
 //
-//  Set 2: FM / PM - low pass with abt. 2.56 kHz @ -6 dB
+//  1 = Set 2: FM / PM - low pass with abt. 2.56 kHz @ -6 dB
 //  hn=fir1(254, 50000/200000, 'low', 'barthannwin'); freqz(hn);
+//
+//  2 = Set 3: AM-Env wide - low pass with abt. 9 kHz @ -45 dB
+//  hn=fir1(254, 7000/200000, 'low', 'barthannwin'); freqz(hn);
+//
+//  3= Set 4: AM-Env mid - low pass with abt. 9 kHz @ -45 dB
+//  hn=fir1(254, 7000/200000, 'low', 'barthannwin'); freqz(hn);
+//
+//  4 = Set 5: AM-Env narrow - low pass with abt. 9 kHz @ -45 dB
+//  hn=fir1(254, 7000/200000, 'low', 'barthannwin'); freqz(hn);
 
-wire                   rx_afc_fir_is_set2   = ((rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_FM)      ||
-                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM)      ||
-                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_AM_ENV)) ?  1'b1 : 1'b0;
-wire unsigned [  7: 0] rx_afc_fir_cfg_in    = { 7'b0, rx_afc_fir_is_set2 };         // AXIS word expansion
+wire unsigned [  7: 0] rx_afc_fir_cfg_in    = ((rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_FM)  ||
+                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_PM))    ?   8'd1                         :
+                                               (rb_pwr_rx_modvar == RB_PWR_CTRL_RX_MOD_AM_ENV) ?  (8'd2 + rx_afc_amenv_filtvar) :
+                                                                                                   8'd0                         ;
 wire   signed [ 23: 0] rx_afc_fir_i_in      = { 7'b0, rx_car_regs2_i_data[17:1] };  // AXIS word expansion
 wire unsigned [ 39: 0] rx_afc_fir_i_out;
 wire                   rx_afc_fir_i_out_vld;
@@ -4234,6 +4245,11 @@ else begin
          regs[REG_RW_RB_RX_MOD_OSC_OFS_HI]        <= { 16'b0, sys_wdata[15:0] };
          end
 
+      /* RX filter variants */
+      20'h0015C: begin
+         regs[REG_RW_RB_RX_EMENV_FILT_VARIANT]    <= { 30'b0, sys_wdata[ 1:0] };
+         end
+
       /* RX_MUX */
       20'h00160: begin
          regs[REG_RW_RB_RX_MUXIN_SRC]             <= sys_wdata[31:0];
@@ -4481,6 +4497,12 @@ else begin
       20'h0014C: begin
          sys_ack   <= sys_en;
          sys_rdata <= regs[REG_RW_RB_RX_MOD_OSC_OFS_HI];
+         end
+
+      /* RX filter variants */
+      20'h0015C: begin
+         sys_ack   <= sys_en;
+         sys_rdata <= regs[REG_RW_RB_RX_EMENV_FILT_VARIANT];
          end
 
       /* RX_MUX */

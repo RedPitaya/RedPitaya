@@ -1026,12 +1026,16 @@ typedef struct fpga_rb_reg_mem_s {
      */
     uint32_t reserved_158;
 
-    /** @brief  Placeholder for addr: 0x4060015C
+
+    /** @brief  R/W RB_RX_EMENV_FILT_VARIANT -  bits  1..0 (addr: 0x4060015C)
      *
-     * n/a
+     * bit h01..h00: AM-Envelope filter wide, middle, narrow
+     *
+     * bit h1F..h02: n/a
      *
      */
-    uint32_t reserved_15c;
+    uint32_t rx_amenv_filtvar;
+
 
 
     /** @brief  R/W RB_RX_MUX_SRC -  bits 31..0 (addr: 0x40600160)
@@ -1479,6 +1483,13 @@ void fpga_rb_set_rx_mod_osc_qrg__4mod_ssbweaver_am(double rx_mod_osc_qrg);
  * @param[in]  rx_weaver_qrg   Weaver frequency in Hz to correct AFC frequency offset.
  */
 void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg);
+
+/**
+ * @brief Sets the FPGA RB_RX_EMENV_FILT_VARIANT register
+ *
+ * @param[in]  rx_amenv_filtvar   Filter selection: 0=wide, 1=middle, 2=narrow.
+ */
+void fpga_rb_set_rx_amenv_filtvar(int rx_amenv_filtvar);
 
 /**
  * @brief Calculates and programs the FPGA RX_MOD_SSB_AM mixer
