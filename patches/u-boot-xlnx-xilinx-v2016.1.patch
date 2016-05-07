@@ -1,17 +1,17 @@
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index daee8bc..c25f4a1 100644
+index d61e98f..f2db3ae 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
-@@ -54,7 +54,8 @@ dtb-$(CONFIG_ARCH_ZYNQ) += zynq-zc702.dtb \
+@@ -76,7 +76,8 @@ dtb-$(CONFIG_ARCH_ZYNQ) += zynq-zc702.dtb \
  	zynq-zc770-xm010.dtb \
  	zynq-zc770-xm011.dtb \
  	zynq-zc770-xm012.dtb \
 -	zynq-zc770-xm013.dtb
 +	zynq-zc770-xm013.dtb \
 +	zynq-red-pitaya.dtb
- dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-ep108.dtb	\
- 	zynqmp-zc1751-xm015-dc1.dtb		\
- 	zynqmp-zc1751-xm016-dc2.dtb
+ dtb-$(CONFIG_ARCH_ZYNQMP) += \
+ 	zynqmp-ep108.dtb			\
+ 	zynqmp-zcu102.dtb			\
 diff --git a/arch/arm/dts/zynq-red-pitaya.dts b/arch/arm/dts/zynq-red-pitaya.dts
 new file mode 100644
 index 0000000..d6278c2
@@ -43,10 +43,10 @@ index 0000000..d6278c2
 +	};
 +};
 diff --git a/arch/arm/mach-zynq/Kconfig b/arch/arm/mach-zynq/Kconfig
-index fc8989b..cc01c54 100644
+index 339e464..7937340 100644
 --- a/arch/arm/mach-zynq/Kconfig
 +++ b/arch/arm/mach-zynq/Kconfig
-@@ -54,6 +54,10 @@ config TARGET_ZYNQ_CC108
+@@ -46,6 +46,10 @@ config TARGET_ZYNQ_CC108
  	bool "Zynq CC108 Board"
  	select ZYNQ_CUSTOM_INIT
  
@@ -57,7 +57,7 @@ index fc8989b..cc01c54 100644
  endchoice
  
  config SYS_BOARD
-@@ -76,5 +80,6 @@ config SYS_CONFIG_NAME
+@@ -67,5 +71,6 @@ config SYS_CONFIG_NAME
  	default "zynq_cse" if TARGET_ZYNQ_CSE
  	default "zynq_afx" if TARGET_ZYNQ_AFX
  	default "zynq_cc108" if TARGET_ZYNQ_CC108
@@ -85,7 +85,7 @@ index 0000000..f45c955
 +CONFIG_OF_EMBED=y
 +# CONFIG_OF_CONTROL is not set
 diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
-index d096db8..41378bc 100644
+index 1e299b9..019b0db 100644
 --- a/drivers/net/phy/Makefile
 +++ b/drivers/net/phy/Makefile
 @@ -16,6 +16,7 @@ obj-$(CONFIG_PHY_ATHEROS) += atheros.o
@@ -182,10 +182,10 @@ index 0000000..4e9afc5
 +	return 0;
 +}
 diff --git a/drivers/net/phy/phy.c b/drivers/net/phy/phy.c
-index c8d08e8..3dcd66d 100644
+index 0e6e298..3d165b1 100644
 --- a/drivers/net/phy/phy.c
 +++ b/drivers/net/phy/phy.c
-@@ -463,6 +463,9 @@ int phy_init(void)
+@@ -464,6 +464,9 @@ int phy_init(void)
  #ifdef CONFIG_PHY_ET1011C
  	phy_et1011c_init();
  #endif
@@ -197,7 +197,7 @@ index c8d08e8..3dcd66d 100644
  #endif
 diff --git a/include/configs/zynq_red_pitaya.h b/include/configs/zynq_red_pitaya.h
 new file mode 100644
-index 0000000..f7a1f82
+index 0000000..fbc4516
 --- /dev/null
 +++ b/include/configs/zynq_red_pitaya.h
 @@ -0,0 +1,56 @@
@@ -271,7 +271,7 @@ index 66b83d8..f23c303 100644
  #define MII_DCOUNTER	    0x12	/* Disconnect counter	       */
  #define MII_FCSCOUNTER	    0x13	/* False carrier counter       */
 diff --git a/include/phy.h b/include/phy.h
-index 3f826b6..b086d37 100644
+index 0d3ad9e..7ebf459 100644
 --- a/include/phy.h
 +++ b/include/phy.h
 @@ -33,7 +33,7 @@
