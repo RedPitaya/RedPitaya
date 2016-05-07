@@ -69,11 +69,6 @@
         </div>
       </div>
 
-      <audio controls preload="none">
-      <source src="http://lab-red:8000/redpitaya.raw" type="audio/wav" />
-      <em>Sorry, your browser doesn't support HTML5 audio.</em>
-      </audio>
-
       <!-- Modal export-->
       <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
         <div class="modal-dialog">
@@ -437,6 +432,7 @@
           <span style="font-size: 70%">Linux AC97-LineIn Right</span>
         </td>
         <td class="table-header">
+          <span style="font-size: 70%">Play streamed AC97-LineIn</span>
         </td>
         </tr>
         <tr>
@@ -611,6 +607,12 @@
           </div>
         </td>
         <td>
+          <label class="col-xs-5 control-label">streaming player:</label>
+          <div class="col-xs-6">
+            <audio controls preload="none">
+              <source src="http://lab-red:8000/redpitaya.raw" type="audio/wav" />
+            </audio>
+          </div>
         </td>
         </tr>
 
