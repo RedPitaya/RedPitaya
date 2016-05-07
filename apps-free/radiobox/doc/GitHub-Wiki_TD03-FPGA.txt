@@ -558,6 +558,12 @@
                      - bit h1F..h10: n/a
 
 
+    0015C  R/W  RX:  RB_RX_EMENV_FILT_VARIANT - RX AM-Envelope filter variant.
+                     bit  1.. 0,
+                     - bit h01..h00: AM-Envelope filter wide, middle, narrow
+                     - bit h1F..h02: n/a
+
+
     00160  R/W  RX:  RB_RX_MUXIN_SRC - Source signal for the analog input TX MUXer.
                      bit 05..00
                      - bit h05..h00: Source ID

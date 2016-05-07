@@ -953,6 +953,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         }
         fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(rx_car_osc_qrg_inc);                             // RX_CAR_OSC frequency sweep increment
         fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                                // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
+        fpga_rb_set_rx_amenv_filtvar(RB_RX_AMENV_FILTVAR_wide);                                            // RB_RX_EMENV_FILT_VARIANT set RX_AFC_FIR filter to wide low-pass characteristics
       }
       break;
 
@@ -1441,6 +1442,17 @@ void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg)
 
     g_fpga_rb_reg_mem->rx_car_calc_weaver_inc_lo = bf_lo;
     g_fpga_rb_reg_mem->rx_car_calc_weaver_inc_hi = bf_hi;
+}
+
+/*----------------------------------------------------------------------------*/
+void fpga_rb_set_rx_amenv_filtvar(int rx_amenv_filtvar)
+{
+	if (rx_amenv_filtvar < 0)
+		rx_amenv_filtvar = 0;
+	else if (rx_amenv_filtvar > 2)
+		rx_amenv_filtvar = 2;
+
+    g_fpga_rb_reg_mem->rx_amenv_filtvar = ((uint32_t) rx_amenv_filtvar) & 0x0003;
 }
 
 /*----------------------------------------------------------------------------*/
