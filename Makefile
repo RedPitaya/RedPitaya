@@ -34,6 +34,7 @@ zip: $(ZIPFILE)
 
 $(ZIPFILE): x86 arm
 	# copy FPGA bitstream images and decompress them
+	mkdir -p $(INSTALL_DIR)/fpga
 	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
 	cd $(INSTALL_DIR)/fpga; xz -df *.xz
 	# TODO: check this step
