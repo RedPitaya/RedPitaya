@@ -71,6 +71,9 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Running mode - transport_pktIdx 1 */
         "rb_run",                   0.0,   1, 0, 0.0,       1.0  },
 
+    { /* ADC biasing mode - transport_pktIdx 1 */
+        "rb_calib",                 0.0,   1, 0, 0.0,       1.0  },
+
     { /* TX_CAR_OSC modulation source selector - transport_pktIdx 1 */
         "tx_modsrc_s",              0.0,   1,  0, 0.0,    255.0  },
 
