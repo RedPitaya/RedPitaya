@@ -1597,21 +1597,14 @@ uint32_t test_rx_measurement(int16_t adc_offset_val, int reduction)
     {
         struct timespec rqtp;
 
-#if 0
-        // 5 ms equals to 50 waves @ 10 kHz
-        rqtp.tv_sec  = 0;
-        rqtp.tv_nsec = 5000000L;
-        nanosleep(&rqtp, NULL);
-#endif
-
         // each 200 kHz timestamp there is a new result available - sum up to reduce noise during measurement
         rqtp.tv_sec  = 0;
         rqtp.tv_nsec = 5000L;
         nanosleep(&rqtp, NULL);
 
         int iter;
-        for (iter = 32; iter; --iter) {
-            sumreg += ((g_fpga_rb_reg_mem->rx_afc_cordic_mag + 16) >> 5);
+        for (iter = 8; iter; --iter) {
+            sumreg += ((g_fpga_rb_reg_mem->rx_afc_cordic_mag + 16) >> 5);  // each part is rounded
             nanosleep(&rqtp, NULL);
         }
     }
