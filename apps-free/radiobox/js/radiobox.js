@@ -139,15 +139,6 @@
     });
   };
 
-  function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
-    var err_modal = $('#modal_err');
-    err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
-    err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
-    err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
-    err_modal.find('.modal-body').html(err_msg);
-    err_modal.modal('show');
-  }
-
   // Initial Ajax Connection set-up
   RB.ac = function() {
     // init the RB.params.orig parameter list
@@ -629,6 +620,23 @@
   };
 }(window.RB = window.RB || {}, jQuery));
 
+function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
+  var err_modal = $('#modal_err');
+  err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
+  err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
+  err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
+  err_modal.find('.modal-body').html(err_msg);
+  err_modal.modal('show');
+}
+
+function showModalCalib(isShow) {
+  var calib_modal = $('#modal_calib');
+  if (isShow === true)
+    calib_modal.modal('show');
+  else
+    calib_modal.modal('hide');
+}
+
 function processField(key) {
   var field = $('#' + key);
 
@@ -1067,6 +1075,21 @@ $(function() {
     RB.sendParams();
   });
 
+  $('#RB_ADC_CALIB').on('click', function(ev) {
+    ev.preventDefault();
+    showModalCalib(true);
+  });
+  $('#btn_calib_bias').on('click', function(ev) {
+    ev.preventDefault();
+    //console.log('DEBUG btn_calib_bias clicked\n');
+    RB.params.local['rb_calib'] = 1;
+    RB.sendParams();
+  });
+  $('#btn_calib_close').on('click', function(ev) {
+    ev.preventDefault();
+    showModalCalib(false);
+  });
+
   /*
   // Selecting active signal
   //$('.menu-btn').on('click touchstart', function() {
@@ -1451,6 +1474,10 @@ function cast_params2transport(params, pktIdx)
   case 1:
     if (params['rb_run'] !== undefined) {
       transport['rb_run'] = params['rb_run'];
+    }
+
+    if (params['rb_calib'] !== undefined) {
+      transport['rb_calib'] = params['rb_calib'];
     }
 
     if (params['tx_modsrc_s'] !== undefined) {

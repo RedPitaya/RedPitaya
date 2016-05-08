@@ -167,11 +167,21 @@ void fpga_rb_reset(void)
     g_fpga_rb_reg_mem->ctrl = 0x00000001;
 }
 
+/*----------------------------------------------------------------------------*/
+void fpga_rb_calib(int calib, int enabled)
+{
+	if (calib > 0) {
+		rp_measure_calib_params(&g_rp_main_calib_params);
+	}
+
+	fpga_rb_enable(enabled);
+}
 
 /*----------------------------------------------------------------------------*/
 int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb: base data of complete data set, pn: new overwriting data sets
 {
     int    loc_rb_run         = 0;
+    int    loc_rb_calib       = 0;
     int    loc_tx_modsrc      = 0;
     int    loc_tx_modtyp      = 0;
     int    loc_rx_modtyp      = 0;
@@ -211,6 +221,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: getting local data: ...\n");
         //print_rb_params(pb);
         loc_rb_run         = (int) pb[RB_RUN].value;
+        loc_rb_calib       = 0;
         loc_tx_modsrc      = (int) pb[RB_TX_MODSRC].value;
         loc_tx_modtyp      = (int) pb[RB_TX_MODTYP].value;
         loc_rx_modtyp      = (int) pb[RB_RX_MODTYP].value;
@@ -258,6 +269,12 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_run = %d\n", (int) (pn[idx].value));
             loc_rb_run = ((int) (pn[idx].value));
             fpga_rb_enable(loc_rb_run);
+
+        } else if (!strcmp("rb_calib", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_calib = %d\n", (int) (pn[idx].value));
+            loc_rb_calib = ((int) (pn[idx].value));
+            fpga_rb_calib(loc_rb_calib, loc_rb_run);
+            pn[idx].value = 0.0;  // remove single-shot tag
 
         } else if (!strcmp("tx_modsrc_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modsrc_s = %d\n", (int) (pn[idx].value));

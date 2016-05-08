@@ -1272,6 +1272,14 @@ void fpga_rb_enable(int enable);
  */
 void fpga_rb_reset(void);
 
+/**
+ * @brief Activates RadioBox FPGA ADC biasing/calibration
+ *
+ * @param[in]     calib     Variant of the ADC biasing/calibration to be done.
+ * @param[in]     enabled   Should after the calibration the RadioBox state being enabled?
+ */
+void fpga_rb_calib(int calib, int enabled);
+
 
 /**
  * @brief Updates all modified data attributes to the RadioBox FPGA sub-module
