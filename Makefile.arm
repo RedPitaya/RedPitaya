@@ -20,7 +20,6 @@ LIBRPAPP_DIR    = api/rpApplications
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
-HEARTBEAT       = $(INSTALL_DIR)/sbin/heartbeat.sh
 
 define GREET_MSG
 ##############################################################################
@@ -33,7 +32,7 @@ define GREET_MSG
 endef
 export GREET_MSG
 
-all: api libredpitaya ecosystem nginx apps-free scpi examples rp_communication $(DISCOVERY) $(HEARTBEAT) apps_pro hostapd
+all: api libredpitaya ecosystem nginx apps-free scpi examples rp_communication $(DISCOVERY) apps_pro hostapd
 
 $(INSTALL_DIR):
 	mkdir -p $@
@@ -243,9 +242,6 @@ rp_communication:
 
 $(DISCOVERY):
 	cp $(OS_TOOLS_DIR)/discovery.sh $@
-
-$(HEARTBEAT):
-	cp $(OS_TOOLS_DIR)/heartbeat.sh $@
 
 ################################################################################
 # Red Pitaya ecosystem and free applications
