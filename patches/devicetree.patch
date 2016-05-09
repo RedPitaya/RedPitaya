@@ -23,19 +23,17 @@
  };
  &gem0 {
  	local-mac-address = [00 0a 35 00 00 00];
-@@ -86,3 +102,153 @@
+@@ -86,3 +102,151 @@
  	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
 +
 +&gem0 {
-+	phy-handle = <&phy0>;
-+	ps7_ethernet_0_mdio: mdio {
-+		phy0: phy@1 {
-+			compatible = "lantiq,phy11g";
-+			device_type = "ethernet-phy";
-+			reg = <32>;
-+		};
++	phy-handle = <&ethernet_0_mdio>;
++	ethernet_0_mdio: mdio@1 {
++		compatible = "lantiq,phy11g";
++		device_type = "ethernet-phy";
++		reg = <1>;
 +	};
 +};
 +&i2c0 {
