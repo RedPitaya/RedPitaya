@@ -212,7 +212,7 @@ new file mode 100644
 index 0000000..fdf5cfc
 --- /dev/null
 +++ b/include/configs/zynq_red_pitaya.h
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,50 @@
 +#ifndef __CONFIG_ZYNQ_RED_PITAYA_H
 +#define __CONFIG_ZYNQ_RED_PITAYA_H
 +
@@ -261,10 +261,6 @@ index 0000000..fdf5cfc
 +#define CONFIG_ENV_IS_IN_EEPROM
 +#define CONFIG_ENV_SIZE		1024 /* Total Size of Environment Sector */
 +#define CONFIG_ENV_OFFSET	(2048*3) /* WP area starts at last 1/4 of 8k eeprom */
-+
-+#define CONFIG_EXTRA_ENV_SETTINGS      \
-+	"fdt_high=0x1e000000\0" \
-+	"initrd_high=0x20000000\0"
 +
 +#endif /* __CONFIG_ZYNQ_RED_PITAYA_H */
 diff --git a/include/linux/mii.h b/include/linux/mii.h
