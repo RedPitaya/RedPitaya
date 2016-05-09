@@ -212,7 +212,7 @@ new file mode 100644
 index 0000000..fdf5cfc
 --- /dev/null
 +++ b/include/configs/zynq_red_pitaya.h
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,69 @@
 +#ifndef __CONFIG_ZYNQ_RED_PITAYA_H
 +#define __CONFIG_ZYNQ_RED_PITAYA_H
 +
@@ -264,8 +264,22 @@ index 0000000..fdf5cfc
 +
 +#define CONFIG_EXTRA_ENV_SETTINGS      \
 +	"test_env_merge=SUCESS\0"    \
++	"kernel_image=uImage\0"    \
++	"ramdisk_image=uramdisk.image.gz\0"     \
++	"devicetree_image=devicetree.dtb\0"     \
++	"bitstream_image=system.bit.bin\0"      \
++	"loadbit_addr=0x100000\0"       \
++	"kernel_size=0x500000\0"        \
++	"devicetree_size=0x20000\0"     \
++	"ramdisk_size=0x5E0000\0"       \
 +	"fdt_high=0x1e000000\0" \
-+	"initrd_high=0x20000000\0"
++	"initrd_high=0x20000000\0"      \
++	"sdboot=echo Copying Linux from SD to RAM... && " \
++		"mmcinfo && " \
++		"fatload mmc 0 0x3000000 ${kernel_image} && " \
++		"fatload mmc 0 0x2A00000 ${devicetree_image} && " \
++		"fatload mmc 0 0x2000000 ${ramdisk_image} && " \
++		"bootm 0x3000000 0x2000000 0x2A00000\0"
 +
 +#endif /* __CONFIG_ZYNQ_RED_PITAYA_H */
 diff --git a/include/linux/mii.h b/include/linux/mii.h
