@@ -279,14 +279,14 @@ void rp_ac97_module_load(void)
 	rp_ac97_module_unload();
 #endif
 
-	system("redpitaya-ac97_start.sh &");
+	system("redpitaya-ac97_start &");
 }
 
 
 /*----------------------------------------------------------------------------------*/
 void rp_ac97_module_unload(void)
 {
-	system("redpitaya-ac97_stop.sh &");
+	system("redpitaya-ac97_stop &");
 }
 
 

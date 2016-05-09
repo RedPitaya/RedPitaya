@@ -1,0 +1,8 @@
+#!/bin/sh
+
+modprobe snd_redpitaya_ac97
+sleep 1
+pulseaudio
+sleep 1
+arecord -D pulse -f dat | ices2 /etc/ices2/ices_pulse.xml &
+
