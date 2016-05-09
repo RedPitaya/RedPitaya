@@ -240,6 +240,7 @@ libexpat1-dev:armhf				install
 libfaad2:armhf					install
 libffi6:armhf					install
 libfftw3-single3:armhf				install
+libfile-copy-recursive-perl			install
 libfile-listing-perl				install
 libflac++6:armhf				install
 libflac8:armhf					install
@@ -750,6 +751,7 @@ u-boot-tools					install
 ucf						install
 udev						install
 unzip						install
+update-inetd					install
 usbutils					install
 util-linux					install
 va-driver-all:armhf				install
@@ -776,6 +778,7 @@ xfonts-base					install
 xfonts-encodings				install
 xfonts-scalable					install
 xfonts-utils					install
+xinetd						install
 xkb-data					install
 xrdp						install
 xserver-common					install
