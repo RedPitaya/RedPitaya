@@ -28,6 +28,13 @@ ioctl macro definitions
 #define SIMPLE_RX 18  //blocking until complete
 #define SIMPLE_TX 17  //blocking until complete
 #define SIMPLE 12 //blocking until complete
+#define STATUS 20
+
+#define STATUS_STOPPED 0
+#define STATUS_READY 1
+#define STATUS_BUSSY 2
+#define STATUS_ERROR 3
+
 
 #define SET_TX_SGMNT_CNT 14
 #define SET_TX_SGMNT_SIZE 13

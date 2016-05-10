@@ -39,6 +39,7 @@ struct rprx_channel{
 	dma_addr_t handle;
 	dma_addr_t rprx_handle;
 	struct dma_chan *chan;
+	char dmastatus; 
 	enum dma_status status;
 	struct completion cmp;
 	struct dma_device *dev;
@@ -118,14 +119,17 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 		dmaengine_terminate_all(rx->chan);
 		rx->flag = 1;
 		wake_up_interruptible(&rx->wq);
+		rx->dmastatus=STATUS_STOPPED;
 	}break;
 	case CYCLIC_RX:
 	{
 		dev_info(dev, "ioctl cyclic rx s:0x%lx c:0x%x\n",rx->segment_size,rx->segment_cnt);
 		smp_rmb();
+		rx->dmastatus=STATUS_BUSSY;
 		rx->d = rx->dev->device_prep_dma_cyclic(rx->chan,rx->addrp, rx->segment_size*rx->segment_cnt, rx->segment_size,DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
 		if(!rx->d){
 			dev_err(dev, "rxd not set properly\n");
+			rx->dmastatus=STATUS_ERROR;
 		}
 		else{
 			init_completion(&rx->cmp);
@@ -133,11 +137,17 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 			rx->d->callback_param = rx;
 			rx->cookie = rx->d->tx_submit(rx->d);
 			dev_info(dev, "submit\n");
-		if(dma_submit_error(rx->cookie)){
-			dev_err(dev, "submit error %d \n", rx->cookie);
-		}
-		rx->flag=0;
-		dma_async_issue_pending(rx->chan);
+			if(dma_submit_error(rx->cookie)){
+				dev_err(dev, "submit error %d \n", rx->cookie);
+				rx->flag=0;
+				dma_async_issue_pending(rx->chan);
+				rx->dmastatus=STATUS_ERROR;
+			}
+			else{
+				rx->flag=0;
+				dma_async_issue_pending(rx->chan);
+				rx->dmastatus=STATUS_READY;
+			}	
 		}
 	}break;
 	case SINGLE_RX:{
@@ -145,6 +155,7 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 		rx->d = dmaengine_prep_slave_single(rx->chan,rx->addrp, rx->segment_size*rx->segment_cnt, DMA_DEV_TO_MEM, DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
 		if(!rx->d){
 			dev_err(dev, "rxd not set properly\n");
+			rx->dmastatus=STATUS_ERROR;
 		}else{
 			init_completion(&rx->cmp);
 			rx->d->callback = rprx_slave_callback;
@@ -154,6 +165,7 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 		}
 		dev_info(dev, "dma_async_issue_pending \n");
 		dma_async_issue_pending(rx->chan);
+		rx->dmastatus=STATUS_READY;
 	break;
 	}
 	case SET_RX_SGMNT_CNT:{
@@ -163,6 +175,9 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 	case SET_RX_SGMNT_SIZE:{
 		rx->segment_size=arg;
 		dev_info(dev, "ioctl segment size set to 0x%lx \n",rx->segment_size);
+	}break;
+	case STATUS:{
+		put_user(rx->dmastatus,(char*)arg);	
 	}break;
 	default:
 		dev_info(dev, "ioctl %d-%lx not inmplemented \n",cmd,arg);
