@@ -80,6 +80,11 @@
             if (debugPrints) console.log("[AnalyticsCore] sendSysInfo", page);
             var info = JSON.parse(msg.responseText);
             $('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
+            if(info['version'].startsWith('0.94'))
+            {
+                AnalyticsCore.sendData = false;
+                return;
+            }
             AnalyticsCore.sendEvent(page, 'info', 'Revision', info['revision']);
             AnalyticsCore.sendEvent(page, 'info', 'Version', info['version']);
         });
