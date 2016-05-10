@@ -158,7 +158,7 @@ $(DTREE_DIR): $(DTREE_TAR)
 
 $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 	cp $(DTS) $(TMP)/devicetree.dts
-	cp $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi patch $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi.orig
+	cp $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi.orig
 	cp $(FPGA2_DIR)/sdk/dts/pl.dtsi $(FPGA2_DIR)/sdk/dts/pl.dtsi.orig
 	patch $(FPGA2_DIR)/sdk/dts/pl.dtsi patches/pl.patch
 	patch $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi patches/zynq-7000.patch
