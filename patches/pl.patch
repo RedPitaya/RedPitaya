@@ -92,7 +92,7 @@
  			};
  		};
  		xadc_wiz_0: xadc_wiz@84000000 {
- 			compatible = "xlnx,xadc-wiz-3.2";
+ 			compatible = "xlnx,xadc-wiz-3.3";
  			interrupt-parent = <&intc>;
  			interrupts = <0 52 4>;
 +			status = "disabled";
