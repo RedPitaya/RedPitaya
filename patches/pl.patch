@@ -84,7 +84,7 @@
  			};
  			dma-channel@80430030 {
  				compatible = "xlnx,axi-dma-s2mm-channel";
-@@ -97,12 +108,14 @@
+@@ -97,12 +108,13 @@
  				interrupts = <0 35 4>;
  				xlnx,datawidth = <0x10>;
  				xlnx,device-id = <0x3>;
@@ -95,7 +95,6 @@
  			compatible = "xlnx,xadc-wiz-3.3";
  			interrupt-parent = <&intc>;
  			interrupts = <0 52 4>;
-+			status = "disabled";
  			reg = <0x84000000 0x10000>;
  			xlnx,alarm-limit-r0 = <0xb5ed>;
  			xlnx,alarm-limit-r1 = <0x57e4>;
