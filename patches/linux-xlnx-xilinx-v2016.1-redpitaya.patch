@@ -1,0 +1,19 @@
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index c0cc96b..89eb024 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -182,4 +182,6 @@ source "drivers/thunderbolt/Kconfig"
+ 
+ source "drivers/android/Kconfig"
+ 
++source "drivers/redpitaya/Kconfig"
++
+ endmenu
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -172,3 +172,5 @@
+ obj-$(CONFIG_ANDROID)		+= android/
+ obj-$(CONFIG_NVMEM)		+= nvmem/
+ obj-$(CONFIG_FPGA)		+= fpga/
++# Red Pitaya drivers
++obj-$(CONFIG_RPRX)	+= redpitaya/

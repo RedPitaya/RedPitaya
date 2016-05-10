@@ -1,0 +1,4526 @@
+diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
+index 47c1641..e2dbd79 100644
+--- a/drivers/dma/xilinx/xilinx_dma.c
++++ b/drivers/dma/xilinx/xilinx_dma.c
+@@ -91,7 +91,7 @@
+ #define XILINX_DMA_LOOP_COUNT		1000000
+ 
+ /* Maximum number of Descriptors */
+-#define XILINX_DMA_NUM_DESCS		255
++#define XILINX_DMA_NUM_DESCS		240
+ #define XILINX_DMA_COALESCE_MAX		255
+ #define XILINX_DMA_NUM_APP_WORDS	5
+ 
+@@ -179,6 +179,8 @@ struct xilinx_dma_tx_descriptor {
+  * @tasklet: Cleanup work after irq
+  * @residue: Residue
+  * @desc_pendingcount: Descriptor pending count
++ * @cyclic_seg_v: Statically allocated segments base for cyclic dma
++ * @cyclic_seg_p: Physical allocated segments base for cyclic dma
+  */
+ struct xilinx_dma_chan {
+ 	struct xilinx_dma_device *xdev;
+@@ -204,6 +206,8 @@ struct xilinx_dma_chan {
+ 	struct tasklet_struct tasklet;
+ 	u32 residue;
+ 	u32 desc_pendingcount;
++	struct xilinx_dma_tx_segment *cyclic_seg_v;
++	dma_addr_t cyclic_seg_p;
+ };
+ 
+ /**
+@@ -406,6 +410,22 @@ static int xilinx_dma_alloc_chan_resources(struct dma_chan *dchan)
+ 		chan->seg_v[i].phys = chan->seg_p + sizeof(*chan->seg_v) * i;
+ 		list_add_tail(&chan->seg_v[i].node, &chan->free_seg_list);
+ 	}
++	/*
++	 * For Cyclic DMA We need to Program the Tail Descriptor
++	 * register with some value which is not a part of the BD chain
++	 * So allocating a desc segment during channel allocation for
++	 * programming tail descriptor.
++	 */
++	chan->cyclic_seg_v = dma_zalloc_coherent(chan->dev,
++						 sizeof(*chan->cyclic_seg_v),
++						 &chan->cyclic_seg_p,
++						 GFP_KERNEL);
++	if (!chan->cyclic_seg_v) {
++		dev_err(chan->dev,
++			"unable to allocate desc segment for cyclic DMA\n");
++		return -ENOMEM;
++	}
++	chan->cyclic_seg_v->phys = chan->cyclic_seg_p;
+ 
+ 	dma_cookie_init(dchan);
+ 
+@@ -465,6 +485,11 @@ static void xilinx_dma_free_chan_resources(struct dma_chan *dchan)
+ 	INIT_LIST_HEAD(&chan->free_seg_list);
+ 	spin_unlock_irqrestore(&chan->lock, flags);
+ 
++	/* Free Memory that is allocated for cyclic DMA Mode */
++	dma_free_coherent(chan->dev,
++			  sizeof(*chan->cyclic_seg_v),
++			  chan->cyclic_seg_v, chan->cyclic_seg_p);
++
+ 	/* Free memory that was allocated for the segments */
+ 	dma_free_coherent(chan->dev,
+ 			  sizeof(*chan->seg_v) * XILINX_DMA_NUM_DESCS,
+@@ -692,6 +717,15 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+ 
+ 	/* Start the transfer */
+ 	if (chan->has_sg && !chan->mcdma) {
++		if (chan->cyclic) {
++#ifdef CONFIG_PHYS_ADDR_T_64BIT
++			dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC, 
++					chan->cyclic_seg_v);
++#else
++			dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC, 
++				       chan->cyclic_seg_v);
++#endif
++		} else {
+ #ifdef CONFIG_PHYS_ADDR_T_64BIT
+ 		dma_ctrl_writeq(chan, XILINX_DMA_REG_TAILDESC,
+ 			       tail_segment->phys);
+@@ -699,6 +733,7 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
+ 		dma_ctrl_write(chan, XILINX_DMA_REG_TAILDESC,
+ 			       tail_segment->phys);
+ #endif
++		}
+ 	} else if (chan->has_sg && chan->mcdma) {
+ 
+ 		if (head_desc->direction == DMA_MEM_TO_DEV) {
+@@ -1172,7 +1207,7 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+ {
+ 	struct xilinx_dma_chan *chan = to_xilinx_chan(dchan);
+ 	struct xilinx_dma_tx_descriptor *desc;
+-	struct xilinx_dma_tx_segment *segment;
++	struct xilinx_dma_tx_segment *segment, *head_desc, *tail_desc;
+ 	size_t copy, sg_used;
+ 	unsigned int num_periods;
+ 	int i;
+@@ -1246,6 +1281,12 @@ static struct dma_async_tx_descriptor *xilinx_dma_prep_dma_cyclic(
+ 		segment->hw.control |= XILINX_DMA_BD_EOP;
+ 	}
+ 
++	head_desc = list_first_entry(&desc->segments,
++					struct xilinx_dma_tx_segment, node);
++	tail_desc = list_last_entry(&desc->segments,
++					struct xilinx_dma_tx_segment, node);
++	tail_desc->hw.next_desc = (u32) head_desc->phys;
++
+ 	return &desc->async_tx;
+ 
+ error:
+diff --git a/drivers/fpga/Kconfig b/drivers/fpga/Kconfig
+index c9b9fdf..168b032 100644
+--- a/drivers/fpga/Kconfig
++++ b/drivers/fpga/Kconfig
+@@ -11,6 +11,13 @@ config FPGA
+ 	  kernel.  The FPGA framework adds a FPGA manager class and FPGA
+ 	  manager drivers.
+ 
++config FPGA_BRIDGE
++	bool "FPGA Bridge Framework"
++	depends on OF
++	help
++	  Say Y here if you want to support bridges connected between host
++	  processors and FPGAs or between FPGAs.
++
+ if FPGA
+ 
+ config FPGA_MGR_SOCFPGA
+@@ -24,6 +31,19 @@ config FPGA_MGR_ZYNQ_FPGA
+ 	help
+ 	  FPGA manager driver support for Xilinx Zynq FPGAs.
+ 
++config FPGA_AREA
++	bool "Device Tree Based FPGA Reprogramming"
++	depends on FPGA_BRIDGE
++	help
++	  Enable FPGA Area which supports programming FPGAs under control of Device Tree.
++
++config SOCFPGA_FPGA_BRIDGE
++	bool "Altera SoCFPGA FPGA Bridges"
++	depends on ARCH_SOCFPGA && FPGA_BRIDGE
++	help
++	  Say Y to enable drivers for FPGA bridges for Altera SOCFPGA devices.
++
++
+ endif # FPGA
+ 
+ endmenu
+diff --git a/drivers/fpga/Makefile b/drivers/fpga/Makefile
+index 8d83fc6..415e844 100644
+--- a/drivers/fpga/Makefile
++++ b/drivers/fpga/Makefile
+@@ -8,3 +8,11 @@ obj-$(CONFIG_FPGA)			+= fpga-mgr.o
+ # FPGA Manager Drivers
+ obj-$(CONFIG_FPGA_MGR_SOCFPGA)		+= socfpga.o
+ obj-$(CONFIG_FPGA_MGR_ZYNQ_FPGA)	+= zynq-fpga.o
++
++# FPGA Bridge Drivers
++obj-$(CONFIG_FPGA_BRIDGE)	+= fpga-bridge.o
++obj-$(CONFIG_SOCFPGA_FPGA_BRIDGE)	+= altera-hps2fpga.o altera-fpga2sdram.o
++
++# High Level Interfaces
++obj-$(CONFIG_FPGA_AREA)	+= fpga-area.o
++
+diff --git a/drivers/fpga/altera-fpga2sdram.c b/drivers/fpga/altera-fpga2sdram.c
+new file mode 100644
+index 0000000..7815cce
+--- /dev/null
++++ b/drivers/fpga/altera-fpga2sdram.c
+@@ -0,0 +1,174 @@
++/*
++ * FPGA to SDRAM Bridge Driver for Altera SoCFPGA Devices
++ *
++ * Copyright (C) 2013-2015 Altera Corporation, All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++/*
++ * This driver manages a bridge between an FPGA and the SDRAM used by the ARM
++ * host processor system (HPS).
++ *
++ * The bridge contains 4 read ports, 4 write ports, and 6 command ports.
++ * Reconfiguring these ports requires that no SDRAM transactions occur during
++ * reconfiguration. The code reconfiguring the ports cannot run out of SDRAM
++ * nor can the FPGA access the SDRAM during reconfiguration. This driver does
++ * not support reconfiguring the ports. The ports are configured by code
++ * running out of on chip ram before Linux is started and the configuration
++ * is passed in a handoff register in the system manager.
++ *
++ * This driver supports enabling and disabling of the configured ports, which
++ * allows for safe reprogramming of the FPGA, assuming that the new FPGA image
++ * uses the same port configuration. Bridges must be disabled before
++ * reprogramming the FPGA and re-enabled after the FPGA has been programmed.
++ */
++
++#include <linux/fpga/fpga-bridge.h>
++#include <linux/kernel.h>
++#include <linux/mfd/syscon.h>
++#include <linux/module.h>
++#include <linux/of_platform.h>
++#include <linux/regmap.h>
++
++#define ALT_SDR_CTL_FPGAPORTRST_OFST	0x80
++#define ALT_SDR_CTL_FPGAPORTRST_PORTRSTN_MSK	0x00003fff
++#define ALT_SDR_CTL_FPGAPORTRST_RD_SHIFT	0
++#define ALT_SDR_CTL_FPGAPORTRST_WR_SHIFT	4
++#define ALT_SDR_CTL_FPGAPORTRST_CTRL_SHIFT	8
++
++#define SYSMGR_ISWGRP_HANDOFF3 (0x8C)
++#define ISWGRP_HANDOFF_FPGA2SDR SYSMGR_ISWGRP_HANDOFF3
++
++#define F2S_BRIDGE_NAME "fpga2sdram"
++
++struct alt_fpga2sdram_data {
++	struct device *dev;
++	struct regmap *sdrctl;
++	int mask;
++};
++
++static int alt_fpga2sdram_enable_show(struct fpga_bridge *bridge)
++{
++	struct alt_fpga2sdram_data *priv = bridge->priv;
++	int value;
++
++	regmap_read(priv->sdrctl, ALT_SDR_CTL_FPGAPORTRST_OFST, &value);
++
++	return (value & priv->mask) == priv->mask;
++}
++
++static inline int _alt_fpga2sdram_enable_set(struct alt_fpga2sdram_data *priv,
++	bool enable)
++{
++	return regmap_update_bits(priv->sdrctl, ALT_SDR_CTL_FPGAPORTRST_OFST,
++	priv->mask, enable ? priv->mask : 0);
++}
++
++static int alt_fpga2sdram_enable_set(struct fpga_bridge *bridge, bool enable)
++{
++	return _alt_fpga2sdram_enable_set(bridge->priv, enable);
++}
++
++struct prop_map {
++	char *prop_name;
++	u32 *prop_value;
++	u32 prop_max;
++};
++
++static const struct fpga_bridge_ops altera_fpga2sdram_br_ops = {
++	.enable_set = alt_fpga2sdram_enable_set,
++	.enable_show = alt_fpga2sdram_enable_show,
++};
++
++static const struct of_device_id altera_fpga_of_match[] = {
++	{ .compatible = "altr,socfpga-fpga2sdram-bridge" },
++	{},
++};
++
++static int alt_fpga_bridge_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct alt_fpga2sdram_data *priv;
++	u32 enable;
++	struct regmap *sysmgr;
++	int ret = 0;
++
++	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++	return -ENOMEM;
++
++	priv->dev = dev;
++
++	priv->sdrctl = syscon_regmap_lookup_by_compatible("altr,sdr-ctl");
++	if (IS_ERR(priv->sdrctl)) {
++	dev_err(dev, "regmap for altr,sdr-ctl lookup failed.\n");
++	return PTR_ERR(priv->sdrctl);
++	}
++
++	sysmgr = syscon_regmap_lookup_by_compatible("altr,sys-mgr");
++	if (IS_ERR(priv->sdrctl)) {
++	dev_err(dev, "regmap for altr,sys-mgr lookup failed.\n");
++	return PTR_ERR(sysmgr);
++	}
++
++	/* Get f2s bridge configuration saved in handoff register */
++	regmap_read(sysmgr, SYSMGR_ISWGRP_HANDOFF3, &priv->mask);
++
++	ret = fpga_bridge_register(dev, F2S_BRIDGE_NAME,
++	&altera_fpga2sdram_br_ops, priv);
++	if (ret)
++	return ret;
++
++	dev_info(dev, "driver initialized with handoff %08x\n", priv->mask);
++
++	if (!of_property_read_u32(dev->of_node, "bridge-enable", &enable)) {
++	if (enable > 1) {
++	dev_warn(dev, "invalid bridge-enable %u > 1\n", enable);
++	} else {
++	dev_info(dev, "%s bridge\n",
++	(enable ? "enabling" : "disabling"));
++	ret = _alt_fpga2sdram_enable_set(priv, enable);
++	if (ret) {
++	fpga_bridge_unregister(&pdev->dev);
++	return ret;
++	}
++	}
++	}
++
++	return ret;
++}
++
++static int alt_fpga_bridge_remove(struct platform_device *pdev)
++{
++	fpga_bridge_unregister(&pdev->dev);
++
++	return 0;
++}
++
++MODULE_DEVICE_TABLE(of, altera_fpga_of_match);
++
++static struct platform_driver altera_fpga_driver = {
++	.probe = alt_fpga_bridge_probe,
++	.remove = alt_fpga_bridge_remove,
++	.driver = {
++	.name	= "altera_fpga2sdram_bridge",
++	.of_match_table = of_match_ptr(altera_fpga_of_match),
++	},
++};
++
++module_platform_driver(altera_fpga_driver);
++
++MODULE_DESCRIPTION("Altera SoCFPGA FPGA to SDRAM Bridge");
++MODULE_AUTHOR("Alan Tull <atull@xxxxxxxxxxxxxxxxxxxxx>");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/fpga/altera-hps2fpga.c b/drivers/fpga/altera-hps2fpga.c
+new file mode 100644
+index 0000000..f8f2267
+--- /dev/null
++++ b/drivers/fpga/altera-hps2fpga.c
+@@ -0,0 +1,213 @@
++/*
++ * FPGA to/from HPS Bridge Driver for Altera SoCFPGA Devices
++ *
++ * Copyright (C) 2013-2015 Altera Corporation, All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++/*
++ * This driver manages bridges on a Altera SOCFPGA between the ARM host
++ * processor system (HPS) and the embedded FPGA.
++ *
++ * This driver supports enabling and disabling of the configured ports, which
++ * allows for safe reprogramming of the FPGA, assuming that the new FPGA image
++ * uses the same port configuration. Bridges must be disabled before
++ * reprogramming the FPGA and re-enabled after the FPGA has been programmed.
++ */
++
++#include <linux/clk.h>
++#include <linux/fpga/fpga-bridge.h>
++#include <linux/kernel.h>
++#include <linux/mfd/syscon.h>
++#include <linux/module.h>
++#include <linux/of_platform.h>
++#include <linux/regmap.h>
++#include <linux/reset.h>
++
++#define ALT_L3_REMAP_OFST	0x0
++#define ALT_L3_REMAP_MPUZERO_MSK	0x00000001
++#define ALT_L3_REMAP_H2F_MSK	0x00000008
++#define ALT_L3_REMAP_LWH2F_MSK	0x00000010
++
++#define HPS2FPGA_BRIDGE_NAME	"hps2fpga"
++#define LWHPS2FPGA_BRIDGE_NAME	"lwhps2fpga"
++#define FPGA2HPS_BRIDGE_NAME	"fpga2hps"
++
++struct altera_hps2fpga_data {
++	const char *name;
++	struct reset_control *bridge_reset;
++	struct regmap *l3reg;
++	/* The L3 REMAP register is write only, so keep a cached value. */
++	unsigned int l3_remap_value;
++	unsigned int remap_mask;
++	struct clk *clk;
++};
++
++static int alt_hps2fpga_enable_show(struct fpga_bridge *bridge)
++{
++	struct altera_hps2fpga_data *priv = bridge->priv;
++
++	return reset_control_status(priv->bridge_reset);
++}
++
++static int _alt_hps2fpga_enable_set(struct altera_hps2fpga_data *priv,
++	bool enable)
++{
++	int ret;
++
++	/* bring bridge out of reset */
++	if (enable)
++	ret = reset_control_deassert(priv->bridge_reset);
++	else
++	ret = reset_control_assert(priv->bridge_reset);
++	if (ret)
++	return ret;
++
++	/* Allow bridge to be visible to L3 masters or not */
++	if (priv->remap_mask) {
++	priv->l3_remap_value |= ALT_L3_REMAP_MPUZERO_MSK;
++
++	if (enable)
++	priv->l3_remap_value |= priv->remap_mask;
++	else
++	priv->l3_remap_value &= ~priv->remap_mask;
++
++	ret = regmap_write(priv->l3reg, ALT_L3_REMAP_OFST,
++	priv->l3_remap_value);
++	}
++
++	return ret;
++}
++
++static int alt_hps2fpga_enable_set(struct fpga_bridge *bridge, bool enable)
++{
++	return _alt_hps2fpga_enable_set(bridge->priv, enable);
++}
++
++static const struct fpga_bridge_ops altera_hps2fpga_br_ops = {
++	.enable_set = alt_hps2fpga_enable_set,
++	.enable_show = alt_hps2fpga_enable_show,
++};
++
++static struct altera_hps2fpga_data hps2fpga_data = {
++	.name = HPS2FPGA_BRIDGE_NAME,
++	.remap_mask = ALT_L3_REMAP_H2F_MSK,
++};
++
++static struct altera_hps2fpga_data lwhps2fpga_data = {
++	.name = LWHPS2FPGA_BRIDGE_NAME,
++	.remap_mask = ALT_L3_REMAP_LWH2F_MSK,
++};
++
++static struct altera_hps2fpga_data fpga2hps_data = {
++	.name = FPGA2HPS_BRIDGE_NAME,
++};
++
++static const struct of_device_id altera_fpga_of_match[] = {
++	{ .compatible = "altr,socfpga-hps2fpga-bridge",
++	.data = &hps2fpga_data },
++	{ .compatible = "altr,socfpga-lwhps2fpga-bridge",
++	.data = &lwhps2fpga_data },
++	{ .compatible = "altr,socfpga-fpga2hps-bridge",
++	.data = &fpga2hps_data },
++	{},
++};
++
++static int alt_fpga_bridge_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct altera_hps2fpga_data *priv;
++	const struct of_device_id *of_id;
++	u32 enable;
++	int ret;
++
++	of_id = of_match_device(altera_fpga_of_match, dev);
++	priv = (struct altera_hps2fpga_data *)of_id->data;
++
++	priv->bridge_reset = devm_reset_control_get(dev, priv->name);
++	if (IS_ERR(priv->bridge_reset)) {
++	dev_err(dev, "Could not get %s reset control\n", priv->name);
++	return PTR_ERR(priv->bridge_reset);
++	}
++
++	priv->l3reg = syscon_regmap_lookup_by_compatible("altr,l3regs");
++	if (IS_ERR(priv->l3reg)) {
++	dev_err(dev, "regmap for altr,l3regs lookup failed\n");
++	return PTR_ERR(priv->l3reg);
++	}
++
++	priv->clk = of_clk_get(dev->of_node, 0);
++	if (IS_ERR(priv->clk)) {
++	dev_err(dev, "no clock specified\n");
++	return PTR_ERR(priv->clk);
++	}
++
++	ret = clk_prepare_enable(priv->clk);
++	if (ret) {
++	dev_err(dev, "could not enable clock\n");
++	return -EBUSY;
++	}
++
++	ret = fpga_bridge_register(dev, priv->name, &altera_hps2fpga_br_ops,
++	priv);
++	if (ret)
++	return ret;
++
++	if (!of_property_read_u32(dev->of_node, "bridge-enable", &enable)) {
++	if (enable > 1) {
++	dev_warn(dev, "invalid bridge-enable %u > 1\n", enable);
++	} else {
++	dev_info(dev, "%s bridge\n",
++	(enable ? "enabling" : "disabling"));
++
++	ret = _alt_hps2fpga_enable_set(priv, enable);
++	if (ret) {
++	fpga_bridge_unregister(&pdev->dev);
++	return ret;
++	}
++	}
++	}
++
++	return ret;
++}
++
++static int alt_fpga_bridge_remove(struct platform_device *pdev)
++{
++	struct fpga_bridge *bridge = platform_get_drvdata(pdev);
++	struct altera_hps2fpga_data *priv = bridge->priv;
++
++	fpga_bridge_unregister(&pdev->dev);
++
++	clk_disable_unprepare(priv->clk);
++	clk_put(priv->clk);
++
++	return 0;
++}
++
++MODULE_DEVICE_TABLE(of, altera_fpga_of_match);
++
++static struct platform_driver alt_fpga_bridge_driver = {
++	.probe = alt_fpga_bridge_probe,
++	.remove = alt_fpga_bridge_remove,
++	.driver = {
++	.name	= "altera_hps2fpga_bridge",
++	.of_match_table = of_match_ptr(altera_fpga_of_match),
++	},
++};
++
++module_platform_driver(alt_fpga_bridge_driver);
++
++MODULE_DESCRIPTION("Altera SoCFPGA HPS to FPGA Bridge");
++MODULE_AUTHOR("Alan Tull <atull@xxxxxxxxxxxxxxxxxxxxx>");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/fpga/fpga-area.c b/drivers/fpga/fpga-area.c
+new file mode 100644
+index 0000000..92ef107
+--- /dev/null
++++ b/drivers/fpga/fpga-area.c
+@@ -0,0 +1,352 @@
++/*
++ * FPGA Tree Area Support for Device Tree controlled FPGA reprogramming
++ *
++ * Copyright (C) 2013-2015 Altera Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/fpga/fpga-bridge.h>
++#include <linux/fpga/fpga-mgr.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_platform.h>
++
++/*
++ * In the case of a FPGA doing full reconfiguration, the area == the whole
++ * FPGA. In the case of partial reconfiguration, several areas can be
++ * reconfigured separately.
++ */
++
++/**
++ * struct fpga_area
++ * @mgr:	FPGA Manager
++ * @flags:	Flags for reconfiguration
++ * @firmware_name: Name of FPGA image file
++ * @bridge_list: Linked list of FPGA bridges controlled by area
++ * @br:	FPGA Bridge corresponding to area
++ * @bus_np:	device node of ancestor FPGA Bus
++ */
++struct fpga_area {
++	struct fpga_manager *mgr;
++	u32 flags;
++	const char *firmware_name;
++	struct list_head bridge_list;
++	struct fpga_bridge *br;
++	struct device_node *bus_np;
++};
++
++/**
++ * fpga_area_get_parent_peer_bridges - get bridges that are peers of parent
++ * @area: FPGA Area struct
++ *
++ * Intended to support case where multiple bridges need to be disabled
++ * during FPGA reprogramming.
++ *
++ * Finds the FPGA bridge that is the parent of @area in the device tree.
++ * Creates a linked list of FPGA bridges that includes the parent bridge and
++ * its peers. Gets an exclusive reference to each of these bridges as they
++ * are added to the list. The list of bridges is saved in @area's
++ * fpga_bridge struct.
++ *
++ * These bridges must be disabled while the FPGA is being reprogrammed to
++ * support the children of the @area bridge and enabled after FPGA
++ * programming is finished.
++ *
++ * For the use case where no FPGA bridges are required, the parent node should
++ * be a FPGA Manager. In this case, the bridge list will end up empty.
++ *
++ * Returns error code or 0 for success. Returns 0 if the parent is a FPGA
++ * manager.
++ */
++static int fpga_area_get_parent_peer_bridges(struct fpga_area *area)
++{
++	struct device_node *parent, *child;
++	struct fpga_bridge *bridge;
++	int ret;
++
++	/* Create a list of bridges that are peers of area's parent */
++	parent = of_get_parent(area->br->dev.of_node);
++	parent = of_get_next_parent(parent);
++
++	for_each_child_of_node(parent, child) {
++	/* If node is a bridge, get it and add to list */
++	ret = fpga_bridge_get_to_list(child, &area->bridge_list);
++
++	/* if any of the bridges are in use, give up */
++	if (ret == -EBUSY) {
++	fpga_bridges_put(&area->bridge_list);
++	of_node_put(parent);
++	return PTR_ERR(bridge);
++	}
++	}
++	of_node_put(parent);
++
++	return 0;
++}
++
++/**
++ * fpga_area_get_bridges - create list of exclusive references to fpga bridges
++ * @area: FPGA Area struct
++ *
++ * Get exclusive references to a FPGA bridge or bridges.
++ * In the case of full reconfiguration build a list of bridges that are the
++ * parent of @area and its peers. We are reprogramming the full FPGA and
++ * need to have no communication on the processor/FPGA bridges while that
++ * is happening
++ * In the case of partial reconfiguration, only add the parent of @area to
++ * the list. This one bridge is a freeze block which is in the FPGA itself
++ * and is downstream from its parent bridge and the parent's peers.
++ *
++ * Return 0 for success. Return -ENODEV is there are no bridges.
++ * Pass other error codes ultimately from of_fpga_bridge_get() such as:
++ * Return -EBUSY if any of the bridges were already gotten.
++ */
++static int fpga_area_get_bridges(struct fpga_area *area)
++{
++	struct device_node *parent;
++	int ret = 0;
++
++	/* If parent is FPGA Manager, no bridges to get */
++	parent = of_get_parent(area->br->dev.of_node);
++	if (parent == area->mgr->dev.of_node) {
++	of_node_put(parent);
++	return -ENODEV;
++	}
++
++	if (area->flags & FPGA_MGR_PARTIAL_RECONFIG)
++	ret = fpga_bridge_get_to_list(parent, &area->bridge_list);
++	else
++	ret = fpga_area_get_parent_peer_bridges(area);
++
++	of_node_put(parent);
++
++	return ret;
++}
++
++/**
++ * fpga_area_load - program the FPGA based on info in area
++ * @area: FPGA Area struct
++ *
++ * Program the FPGA that the area has a reference to.
++ *
++ * Returns 0 for success or error codes passed down from
++ * fpga_mgr_firmware_load()
++ */
++static int fpga_area_load(struct fpga_area *area)
++{
++	return fpga_mgr_firmware_load(area->mgr,
++	area->flags,
++	area->firmware_name);
++}
++
++/**
++ * fpga_area_get_bus - find ancestor FPGA Bus, get a reference
++ * @area: FPGA Area struct
++ *
++ * Returns 0 for success or -ENODEV if not a child of a FPGA Bus.
++ */
++static int fpga_area_get_bus(struct fpga_area *area)
++{
++	struct device_node *np = area->br->dev.of_node;
++
++	of_node_get(np);
++
++	while (np && !of_device_is_compatible(np, "altr,fpga-bus"))
++	np = of_get_next_parent(np);
++
++	if (!np)
++	return -ENODEV;
++
++	area->bus_np = np;
++
++	return 0;
++}
++
++/**
++ * fpga_area_put_bus - put FPGA Bus saved in @area
++ * @area: FPGA Area struct
++ */
++static void fpga_area_put_bus(struct fpga_area *area)
++{
++	of_node_put(area->bus_np);
++	area->bus_np = NULL;
++}
++
++/**
++ * fpga_area_get_manager - get exclusive reference for FPGA Manager
++ * @area: FPGA Area struct
++ *
++ * One of the ancestor nodes of the FPGA Area should be a FPGA Bus. One of
++ * the children of that FPGA Bus should be a FPGA Manager.
++ * Assuming that fpga_area_get_bus() has already found the bus, this function
++ * finds the FPGA Manager and saves it in the area struct.
++ *
++ * Return: 0 for success or IS_ERR() condition containing error code.
++ */
++static int fpga_area_get_manager(struct fpga_area *area)
++{
++	struct device_node *child;
++	struct fpga_manager *mgr;
++
++	for_each_child_of_node(area->bus_np, child) {
++	mgr = of_fpga_mgr_get(child);
++	if (IS_ERR(mgr))
++	continue;
++
++	area->mgr = mgr;
++	return 0;
++	}
++
++	return -ENODEV;
++}
++
++/**
++ * fpga_area_put_manager - put exclusive reference to FPGA Manager
++ * @area: FPGA Area struct
++ */
++static void fpga_area_put_manager(struct fpga_area *area)
++{
++	fpga_mgr_put(area->mgr);
++	area->mgr = NULL;
++}
++
++/**
++ * fpga_area_probe - probe function for FPGA area
++ * @pdev: platform device
++ *
++ * If there is an image to program to a FPGA, get the FPGA Manager and bridges,
++ * reprogram the FPGA, and populate the child devices.
++ *
++ * If there are FPGA Bridges, this function will hold the references to the
++ * bridges; they are released in fpga_area_remove().
++ *
++ * Return: 0 for success, -EBUSY if someone already got the bridges or manager.
++ */
++static int fpga_area_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	struct fpga_area *area;
++	int ret;
++
++	area = devm_kzalloc(dev, sizeof(*area), GFP_KERNEL);
++	if (!area)
++	return -ENOMEM;
++
++	INIT_LIST_HEAD(&area->bridge_list);
++
++	ret = fpga_bridge_register(dev, "FPGA Area", NULL, area);
++	if (ret)
++	return ret;
++	area->br = dev_get_drvdata(dev);
++
++	if (of_property_read_string(np, "firmware-name",
++	&area->firmware_name)) {
++	of_platform_populate(np, of_default_bus_match_table, NULL, dev);
++	return 0;
++	}
++
++	if (of_property_read_bool(np, "partial-reconfig"))
++	area->flags |= FPGA_MGR_PARTIAL_RECONFIG;
++
++	ret = fpga_area_get_bus(area);
++	if (ret) {
++	dev_dbg(dev, "Should be child of a FPGA Bus");
++	goto err_unreg;
++	}
++
++	ret = fpga_area_get_manager(area);
++	if (ret) {
++	dev_dbg(dev, "Could not find FPGA Manager");
++	goto err_unreg;
++	}
++
++	/* Give up if there is an error other than no bridges. */
++	ret = fpga_area_get_bridges(area);
++	if (ret && ret != -ENODEV)
++	goto err_release;
++
++	ret = fpga_bridges_disable(&area->bridge_list);
++	if (ret)
++	goto err_release;
++
++	ret = fpga_area_load(area);
++	if (ret)
++	goto err_release;
++
++	ret = fpga_bridges_enable(&area->bridge_list);
++	if (ret)
++	goto err_release;
++
++	/* If successful, put the mgr, but keep the bridges */
++	fpga_area_put_manager(area);
++
++	of_platform_populate(np, of_default_bus_match_table, NULL, dev);
++
++	return 0;
++
++err_release:
++	fpga_bridges_put(&area->bridge_list);
++	fpga_area_put_manager(area);
++err_unreg:
++	fpga_bridge_unregister(dev);
++
++	return ret;
++}
++
++/**
++ * fpga_area_remove - remove a FPGA area
++ * @pdev: platform device
++ *
++ * Called when an FPGA Area is removed. If there are any FPGA Bridges in the
++ * area's bridge list, disable them and put them.
++ *
++ * Return: 0
++ */
++static int fpga_area_remove(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct fpga_bridge *bridge = dev_get_drvdata(dev);
++	struct fpga_area *area = bridge->priv;
++
++	fpga_area_put_bus(area);
++
++	fpga_bridges_disable(&area->bridge_list);
++	fpga_bridges_put(&area->bridge_list);
++
++	fpga_bridge_unregister(dev);
++
++	return 0;
++}
++
++static const struct of_device_id fpga_area_of_match[] = {
++	{ .compatible = "fpga-area", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, fpga_area_of_match);
++
++static struct platform_driver fpga_area_driver = {
++	.probe = fpga_area_probe,
++	.remove = fpga_area_remove,
++	.driver = {
++	.name	= "FPGA Area",
++	.of_match_table = of_match_ptr(fpga_area_of_match),
++	},
++};
++
++module_platform_driver(fpga_area_driver);
++
++MODULE_DESCRIPTION("Altera FPGA Bus");
++MODULE_AUTHOR("Alan Tull <atull@xxxxxxxxxxxxxxxxxxxxx>");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/fpga/fpga-bridge.c b/drivers/fpga/fpga-bridge.c
+new file mode 100644
+index 0000000..d28db3c
+--- /dev/null
++++ b/drivers/fpga/fpga-bridge.c
+@@ -0,0 +1,387 @@
++/*
++ * FPGA Bridge Framework Driver
++ *
++ * Copyright (C) 2013-2015 Altera Corporation, All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++#include <linux/fpga/fpga-bridge.h>
++#include <linux/idr.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_platform.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++
++static DEFINE_IDA(fpga_bridge_ida);
++static struct class *fpga_bridge_class;
++
++/* Lock for adding/removing bridges to linked lists*/
++spinlock_t bridge_list_lock;
++
++static int fpga_bridge_of_node_match(struct device *dev, const void *data)
++{
++	return dev->of_node == data;
++}
++/**
++ * fpga_bridge_enable - Enable transactions on the bridge
++ *
++ * @bridge: FPGA bridge
++ *
++ * Return: 0 for success, error code otherwise.
++ */
++int fpga_bridge_enable(struct fpga_bridge *bridge)
++{
++	dev_dbg(&bridge->dev, "enable\n");
++
++	if (bridge->br_ops && bridge->br_ops->enable_set)
++	return bridge->br_ops->enable_set(bridge, 1);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(fpga_bridge_enable);
++
++/**
++ * fpga_bridge_disable - Disable transactions on the bridge
++ *
++ * @bridge: FPGA bridge
++ *
++ * Return: 0 for success, error code otherwise.
++ */
++int fpga_bridge_disable(struct fpga_bridge *bridge)
++{
++	dev_dbg(&bridge->dev, "disable\n");
++
++	if (bridge->br_ops && bridge->br_ops->enable_set)
++	return bridge->br_ops->enable_set(bridge, 0);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(fpga_bridge_disable);
++
++/**
++ * of_fpga_bridge_get - get an exclusive reference to a fpga bridge
++ *
++ * @np: node pointer of a FPGA bridge
++ *
++ * Return fpga_bridge struct if successful.
++ * Return -EBUSY if someone already has a reference to the bridge.
++ * Return -ENODEV if @np is not a FPGA Bridge.
++ */
++struct fpga_bridge *of_fpga_bridge_get(struct device_node *np)
++{
++	struct device *dev;
++	struct fpga_bridge *bridge;
++	int ret = -ENODEV;
++
++	of_node_get(np);
++
++	dev = class_find_device(fpga_bridge_class, NULL, np,
++	fpga_bridge_of_node_match);
++	if (!dev)
++	goto err_dev;
++
++	bridge = to_fpga_bridge(dev);
++	if (!bridge)
++	goto err_dev;
++
++	if (!mutex_trylock(&bridge->mutex)) {
++	ret = -EBUSY;
++	goto err_dev;
++	}
++
++	if (!try_module_get(dev->parent->driver->owner))
++	goto err_ll_mod;
++
++	dev_dbg(&bridge->dev, "get\n");
++
++	return bridge;
++
++err_ll_mod:
++	mutex_unlock(&bridge->mutex);
++err_dev:
++	put_device(dev);
++	of_node_put(np);
++	return ERR_PTR(ret);
++}
++EXPORT_SYMBOL_GPL(of_fpga_bridge_get);
++
++/**
++ * fpga_bridge_put - release a reference to a bridge
++ *
++ * @bridge: FPGA bridge
++ */
++void fpga_bridge_put(struct fpga_bridge *bridge)
++{
++	dev_dbg(&bridge->dev, "put\n");
++
++	module_put(bridge->dev.parent->driver->owner);
++	mutex_unlock(&bridge->mutex);
++	put_device(&bridge->dev);
++}
++EXPORT_SYMBOL_GPL(fpga_bridge_put);
++
++/**
++ * fpga_bridges_enable - enable bridges in a list
++ * @bridge_list: list of FPGA bridges
++ *
++ * Enable each bridge in the list. If list is empty, do nothing.
++ *
++ * Return 0 for success or empty bridge list; return error code otherwise.
++ */
++int fpga_bridges_enable(struct list_head *bridge_list)
++{
++	struct fpga_bridge *bridge;
++	struct list_head *node;
++	int ret;
++
++	list_for_each(node, bridge_list) {
++	bridge = list_entry(node, struct fpga_bridge, node);
++	ret = fpga_bridge_enable(bridge);
++	if (ret)
++	return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(fpga_bridges_enable);
++
++/**
++ * fpga_bridges_disable - disable bridges in a list
++ *
++ * @bridge_list: list of FPGA bridges
++ *
++ * Disable each bridge in the list. If list is empty, do nothing.
++ *
++ * Return 0 for success or empty bridge list; return error code otherwise.
++ */
++int fpga_bridges_disable(struct list_head *bridge_list)
++{
++	struct fpga_bridge *bridge;
++	struct list_head *node;
++	int ret;
++
++	list_for_each(node, bridge_list) {
++	bridge = list_entry(node, struct fpga_bridge, node);
++	ret = fpga_bridge_disable(bridge);
++	if (ret)
++	return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(fpga_bridges_disable);
++
++/**
++ * fpga_bridges_put - put bridges
++ *
++ * @bridge_list: list of FPGA bridges
++ *
++ * For each bridge in the list, put the bridge and remove it from the list.
++ * If list is empty, do nothing.
++ */
++void fpga_bridges_put(struct list_head *bridge_list)
++{
++	struct fpga_bridge *bridge;
++	struct list_head *node, *next;
++	unsigned long flags;
++
++	list_for_each_safe(node, next, bridge_list) {
++	bridge = list_entry(node, struct fpga_bridge, node);
++
++	fpga_bridge_put(bridge);
++
++	spin_lock_irqsave(&bridge_list_lock, flags);
++	list_del(&bridge->node);
++	spin_unlock_irqrestore(&bridge_list_lock, flags);
++	}
++}
++EXPORT_SYMBOL_GPL(fpga_bridges_put);
++
++/**
++ * fpga_bridges_get_to_list - get a bridge, add it to a list
++ *
++ * @np: node pointer of a FPGA bridge
++ * @bridge_list: list of FPGA bridges
++ *
++ * Get an exclusive reference to the bridge and and it to the list.
++ *
++ * Return 0 for success, error code from of_fpga_bridge_get() othewise.
++ */
++int fpga_bridge_get_to_list(struct device_node *np,
++	struct list_head *bridge_list)
++{
++	struct fpga_bridge *bridge;
++	unsigned long flags;
++
++	bridge = of_fpga_bridge_get(np);
++	if (IS_ERR(bridge))
++	return PTR_ERR(bridge);
++
++	spin_lock_irqsave(&bridge_list_lock, flags);
++	list_add(&bridge->node, bridge_list);
++	spin_unlock_irqrestore(&bridge_list_lock, flags);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(fpga_bridge_get_to_list);
++
++static ssize_t name_show(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	struct fpga_bridge *bridge = to_fpga_bridge(dev);
++
++	return sprintf(buf, "%s\n", bridge->name);
++}
++
++static ssize_t state_show(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	struct fpga_bridge *bridge = to_fpga_bridge(dev);
++	int enable = 1;
++
++	if (bridge->br_ops && bridge->br_ops->enable_show)
++	enable = bridge->br_ops->enable_show(bridge);
++
++	return sprintf(buf, "%s\n", enable ? "enabled" : "disabled");
++}
++
++static DEVICE_ATTR_RO(name);
++static DEVICE_ATTR_RO(state);
++
++static struct attribute *fpga_bridge_attrs[] = {
++	&dev_attr_name.attr,
++	&dev_attr_state.attr,
++	NULL,
++};
++ATTRIBUTE_GROUPS(fpga_bridge);
++
++/**
++ * fpga_bridge_register - register a fpga bridge driver
++ * @dev:	FPGA bridge device from pdev
++ * @name:	FPGA bridge name
++ * @br_ops:	pointer to structure of fpga bridge ops
++ * @priv:	FPGA bridge private data
++ *
++ * Return: 0 for success, error code otherwise.
++ */
++int fpga_bridge_register(struct device *dev, const char *name,
++	const struct fpga_bridge_ops *br_ops, void *priv)
++{
++	struct fpga_bridge *bridge;
++	int id, ret = 0;
++
++	if (!name || !strlen(name)) {
++	dev_err(dev, "Attempt to register with no name!\n");
++	return -EINVAL;
++	}
++
++	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
++	if (!bridge)
++	return -ENOMEM;
++
++	id = ida_simple_get(&fpga_bridge_ida, 0, 0, GFP_KERNEL);
++	if (id < 0) {
++	ret = id;
++	goto error_kfree;
++	}
++
++	mutex_init(&bridge->mutex);
++	INIT_LIST_HEAD(&bridge->node);
++
++	bridge->name = name;
++	bridge->br_ops = br_ops;
++	bridge->priv = priv;
++
++	device_initialize(&bridge->dev);
++	bridge->dev.class = fpga_bridge_class;
++	bridge->dev.parent = dev;
++	bridge->dev.of_node = dev->of_node;
++	bridge->dev.id = id;
++	dev_set_drvdata(dev, bridge);
++
++	ret = dev_set_name(&bridge->dev, "br%d", id);
++	if (ret)
++	goto error_device;
++
++	ret = device_add(&bridge->dev);
++	if (ret)
++	goto error_device;
++
++	dev_info(bridge->dev.parent, "fpga bridge [%s] registered\n",
++	bridge->name);
++
++	return 0;
++
++error_device:
++	ida_simple_remove(&fpga_bridge_ida, id);
++error_kfree:
++	kfree(bridge);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(fpga_bridge_register);
++
++/**
++ * fpga_bridge_unregister - unregister a fpga bridge driver
++ * @dev: FPGA bridge device from pdev
++ */
++void fpga_bridge_unregister(struct device *dev)
++{
++	struct fpga_bridge *bridge = dev_get_drvdata(dev);
++
++	/*
++	* If the low level driver provides a method for putting bridge into
++	* a desired state upon unregister, do it.
++	*/
++	if (bridge->br_ops && bridge->br_ops->fpga_bridge_remove)
++	bridge->br_ops->fpga_bridge_remove(bridge);
++
++	device_unregister(&bridge->dev);
++}
++EXPORT_SYMBOL_GPL(fpga_bridge_unregister);
++
++static void fpga_bridge_dev_release(struct device *dev)
++{
++	struct fpga_bridge *bridge = to_fpga_bridge(dev);
++
++	ida_simple_remove(&fpga_bridge_ida, bridge->dev.id);
++	kfree(bridge);
++}
++
++static int __init fpga_bridge_dev_init(void)
++{
++	spin_lock_init(&bridge_list_lock);
++
++	fpga_bridge_class = class_create(THIS_MODULE, "fpga_bridge");
++	if (IS_ERR(fpga_bridge_class))
++	return PTR_ERR(fpga_bridge_class);
++
++	fpga_bridge_class->dev_groups = fpga_bridge_groups;
++	fpga_bridge_class->dev_release = fpga_bridge_dev_release;
++
++	return 0;
++}
++
++static void __exit fpga_bridge_dev_exit(void)
++{
++	class_destroy(fpga_bridge_class);
++	ida_destroy(&fpga_bridge_ida);
++}
++
++MODULE_DESCRIPTION("FPGA Bridge Driver");
++MODULE_AUTHOR("Alan Tull <atull@xxxxxxxxxxxxxxxxxxxxx>");
++MODULE_LICENSE("GPL v2");
++
++subsys_initcall(fpga_bridge_dev_init);
++module_exit(fpga_bridge_dev_exit);
+diff --git a/drivers/of/Kconfig b/drivers/of/Kconfig
+index e2a4841..59efeda 100644
+--- a/drivers/of/Kconfig
++++ b/drivers/of/Kconfig
+@@ -112,4 +112,11 @@ config OF_OVERLAY
+ 	  While this option is selected automatically when needed, you can
+ 	  enable it manually to improve device tree unit test coverage.
+ 
++config OF_CONFIGFS
++	bool "Device Tree Overlay ConfigFS interface"
++	select CONFIGFS_FS
++	depends on OF_OVERLAY
++	help
++	  Enable a simple user-space driven DT overlay interface.
++
+ endif # OF
+diff --git a/drivers/of/Makefile b/drivers/of/Makefile
+index 156c072..46c8f57 100644
+--- a/drivers/of/Makefile
++++ b/drivers/of/Makefile
+@@ -1,4 +1,5 @@
+ obj-y = base.o device.o platform.o
++obj-$(CONFIG_OF_CONFIGFS) += configfs.o
+ obj-$(CONFIG_OF_DYNAMIC) += dynamic.o
+ obj-$(CONFIG_OF_FLATTREE) += fdt.o
+ obj-$(CONFIG_OF_EARLY_FLATTREE) += fdt_address.o
+diff --git a/drivers/of/base.c b/drivers/of/base.c
+index 017dd94..7bb9f9a 100644
+--- a/drivers/of/base.c
++++ b/drivers/of/base.c
+@@ -27,6 +27,7 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/proc_fs.h>
++#include <linux/rhashtable.h>
+ 
+ #include "of_private.h"
+ 
+@@ -41,6 +42,16 @@ static const char *of_stdout_options;
+ 
+ struct kset *of_kset;
+ 
++const struct rhashtable_params of_phandle_ht_params = {
++	.key_offset = offsetof(struct device_node, phandle), /* base offset */
++	.key_len = sizeof(phandle),
++	.head_offset = offsetof(struct device_node, ht_node),
++	.automatic_shrinking = true,
++};
++
++struct rhashtable of_phandle_ht;
++bool of_phandle_ht_initialized;
++
+ /*
+  * Used to protect the of_aliases, to hold off addition of nodes to sysfs.
+  * This mutex must be held whenever modifications are being made to the
+@@ -156,12 +167,18 @@ int __of_add_property_sysfs(struct device_node *np, struct property *pp)
+ 	return rc;
+ }
+ 
+-int __of_attach_node_sysfs(struct device_node *np)
++int __of_attach_node_post(struct device_node *np)
+ {
+ 	const char *name;
+ 	struct property *pp;
+ 	int rc;
+ 
++	if (of_phandle_ht_available()) {
++		rc = of_phandle_ht_insert(np);
++		WARN(rc, "insert to phandle hash fail @%s\n",
++				of_node_full_name(np));
++	}
++
+ 	if (!IS_ENABLED(CONFIG_SYSFS))
+ 		return 0;
+ 
+@@ -192,6 +209,14 @@ int __of_attach_node_sysfs(struct device_node *np)
+ void __init of_core_init(void)
+ {
+ 	struct device_node *np;
++	int ret;
++
++	ret = rhashtable_init(&of_phandle_ht, &of_phandle_ht_params);
++	if (ret) {
++		pr_warn("devicetree: Failed to initialize hashtable\n");
++		return;
++	}
++	of_phandle_ht_initialized = 1;
+ 
+ 	/* Create the kset, and register existing nodes */
+ 	mutex_lock(&of_mutex);
+@@ -202,12 +227,16 @@ void __init of_core_init(void)
+ 		return;
+ 	}
+ 	for_each_of_allnodes(np)
+-		__of_attach_node_sysfs(np);
++		__of_attach_node_post(np);
+ 	mutex_unlock(&of_mutex);
+ 
+ 	/* Symlink in /proc as required by userspace ABI */
+ 	if (of_root)
+ 		proc_symlink("device-tree", NULL, "/sys/firmware/devicetree/base");
++
++	ret = of_overlay_init();
++	if (ret != 0)
++		pr_warn("of_init: of_overlay_init failed!\n");
+ }
+ 
+ static struct property *__of_find_property(const struct device_node *np,
+@@ -1068,9 +1097,14 @@ struct device_node *of_find_node_by_phandle(phandle handle)
+ 		return NULL;
+ 
+ 	raw_spin_lock_irqsave(&devtree_lock, flags);
+-	for_each_of_allnodes(np)
+-		if (np->phandle == handle)
+-			break;
++	/* when we're ready use the hash table */
++	if (of_phandle_ht_available() && !in_interrupt())
++		np = of_phandle_ht_lookup(handle);
++	else { /* fallback */
++		for_each_of_allnodes(np)
++			if (np->phandle == handle)
++				break;
++	}
+ 	of_node_get(np);
+ 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+ 	return np;
+diff --git a/drivers/of/configfs.c b/drivers/of/configfs.c
+new file mode 100644
+index 0000000..b68dea8
+--- /dev/null
++++ b/drivers/of/configfs.c
+@@ -0,0 +1,311 @@
++/*
++ * Configfs entries for device-tree
++ *
++ * Copyright (C) 2013 - Pantelis Antoniou <panto@antoniou-consulting.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version
++ * 2 of the License, or (at your option) any later version.
++ */
++#include <linux/ctype.h>
++#include <linux/cpu.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_fdt.h>
++#include <linux/spinlock.h>
++#include <linux/sizes.h>
++#include <linux/slab.h>
++#include <linux/proc_fs.h>
++#include <linux/configfs.h>
++#include <linux/types.h>
++#include <linux/stat.h>
++#include <linux/limits.h>
++#include <linux/file.h>
++#include <linux/vmalloc.h>
++#include <linux/firmware.h>
++
++#include "of_private.h"
++
++struct cfs_overlay_item {
++	struct config_item	item;
++
++	char			path[PATH_MAX];
++
++	const struct firmware	*fw;
++	struct device_node	*overlay;
++	int			ov_id;
++
++	void			*dtbo;
++	int			dtbo_size;
++};
++
++static int create_overlay(struct cfs_overlay_item *overlay, void *blob)
++{
++	int err;
++
++	/* unflatten the tree */
++	of_fdt_unflatten_tree(blob, &overlay->overlay);
++	if (overlay->overlay == NULL) {
++		pr_err("%s: failed to unflatten tree\n", __func__);
++		err = -EINVAL;
++		goto out_err;
++	}
++	pr_debug("%s: unflattened OK\n", __func__);
++
++	/* mark it as detached */
++	of_node_set_flag(overlay->overlay, OF_DETACHED);
++
++	/* perform resolution */
++	err = of_resolve_phandles(overlay->overlay);
++	if (err != 0) {
++		pr_err("%s: Failed to resolve tree\n", __func__);
++		goto out_err;
++	}
++	pr_debug("%s: resolved OK\n", __func__);
++
++	err = of_overlay_create(overlay->overlay);
++	if (err < 0) {
++		pr_err("%s: Failed to create overlay (err=%d)\n",
++				__func__, err);
++		goto out_err;
++	}
++	overlay->ov_id = err;
++
++out_err:
++	return err;
++}
++
++static inline struct cfs_overlay_item *to_cfs_overlay_item(
++		struct config_item *item)
++{
++	return item ? container_of(item, struct cfs_overlay_item, item) : NULL;
++}
++
++static ssize_t cfs_overlay_item_path_show(struct config_item *item, char *page)
++{
++	return sprintf(page, "%s\n", to_cfs_overlay_item(item)->path);
++}
++
++static ssize_t cfs_overlay_item_path_store(struct config_item *item,
++		const char *page, size_t count)
++{
++	struct cfs_overlay_item *overlay = to_cfs_overlay_item(item);
++	const char *p = page;
++	char *s;
++	int err;
++
++	/* if it's set do not allow changes */
++	if (overlay->path[0] != '\0' || overlay->dtbo_size > 0)
++		return -EPERM;
++
++	/* copy to path buffer (and make sure it's always zero terminated */
++	count = snprintf(overlay->path, sizeof(overlay->path) - 1, "%s", p);
++	overlay->path[sizeof(overlay->path) - 1] = '\0';
++
++	/* strip trailing newlines */
++	s = overlay->path + strlen(overlay->path);
++	while (s > overlay->path && *--s == '\n')
++		*s = '\0';
++
++	pr_debug("%s: path is '%s'\n", __func__, overlay->path);
++
++	err = request_firmware(&overlay->fw, overlay->path, NULL);
++	if (err != 0)
++		goto out_err;
++
++	err = create_overlay(overlay, (void *)overlay->fw->data);
++	if (err < 0)
++		goto out_err;
++
++	return count;
++
++out_err:
++
++	release_firmware(overlay->fw);
++	overlay->fw = NULL;
++
++	overlay->path[0] = '\0';
++	return err;
++}
++
++static ssize_t cfs_overlay_item_status_show(struct config_item *item,
++		char *page)
++{
++	return sprintf(page, "%s\n", to_cfs_overlay_item(item)->ov_id >= 0 ?
++					"applied" : "unapplied");
++}
++
++CONFIGFS_ATTR(cfs_overlay_item_, path);
++CONFIGFS_ATTR_RO(cfs_overlay_item_, status);
++
++static struct configfs_attribute *cfs_overlay_attrs[] = {
++	&cfs_overlay_item_attr_path,
++	&cfs_overlay_item_attr_status,
++	NULL,
++};
++
++ssize_t cfs_overlay_item_dtbo_read(struct config_item *item, void *buf,
++		size_t max_count)
++{
++	struct cfs_overlay_item *overlay = to_cfs_overlay_item(item);
++
++	pr_debug("%s: buf=%p max_count=%u\n", __func__,
++			buf, max_count);
++
++	if (overlay->dtbo == NULL)
++		return 0;
++
++	/* copy if buffer provided */
++	if (buf != NULL) {
++		/* the buffer must be large enough */
++		if (overlay->dtbo_size > max_count)
++			return -ENOSPC;
++
++		memcpy(buf, overlay->dtbo, overlay->dtbo_size);
++	}
++
++	return overlay->dtbo_size;
++}
++
++ssize_t cfs_overlay_item_dtbo_write(struct config_item *item, const void *buf,
++		size_t count)
++{
++	struct cfs_overlay_item *overlay = to_cfs_overlay_item(item);
++	int err;
++
++	/* if it's set do not allow changes */
++	if (overlay->path[0] != '\0' || overlay->dtbo_size > 0)
++		return -EPERM;
++
++	/* copy the contents */
++	overlay->dtbo = kmemdup(buf, count, GFP_KERNEL);
++	if (overlay->dtbo == NULL)
++		return -ENOMEM;
++
++	overlay->dtbo_size = count;
++
++	err = create_overlay(overlay, overlay->dtbo);
++	if (err < 0)
++		goto out_err;
++
++	return count;
++
++out_err:
++	kfree(overlay->dtbo);
++	overlay->dtbo = NULL;
++	overlay->dtbo_size = 0;
++
++	return err;
++}
++
++CONFIGFS_BIN_ATTR(cfs_overlay_item_, dtbo, NULL, SZ_1M);
++
++static struct configfs_bin_attribute *cfs_overlay_bin_attrs[] = {
++	&cfs_overlay_item_attr_dtbo,
++	NULL,
++};
++
++static void cfs_overlay_release(struct config_item *item)
++{
++	struct cfs_overlay_item *overlay = to_cfs_overlay_item(item);
++
++	if (overlay->ov_id >= 0)
++		of_overlay_destroy(overlay->ov_id);
++	if (overlay->fw)
++		release_firmware(overlay->fw);
++	/* kfree with NULL is safe */
++	kfree(overlay->dtbo);
++	kfree(overlay);
++}
++
++static struct configfs_item_operations cfs_overlay_item_ops = {
++	.release		= cfs_overlay_release,
++};
++
++static struct config_item_type cfs_overlay_type = {
++	.ct_item_ops	= &cfs_overlay_item_ops,
++	.ct_attrs	= cfs_overlay_attrs,
++	.ct_bin_attrs	= cfs_overlay_bin_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_item *cfs_overlay_group_make_item(
++		struct config_group *group, const char *name)
++{
++	struct cfs_overlay_item *overlay;
++
++	overlay = kzalloc(sizeof(*overlay), GFP_KERNEL);
++	if (!overlay)
++		return ERR_PTR(-ENOMEM);
++	overlay->ov_id = -1;
++
++	config_item_init_type_name(&overlay->item, name, &cfs_overlay_type);
++	return &overlay->item;
++}
++
++static void cfs_overlay_group_drop_item(struct config_group *group,
++		struct config_item *item)
++{
++	struct cfs_overlay_item *overlay = to_cfs_overlay_item(item);
++
++	config_item_put(&overlay->item);
++}
++
++static struct configfs_group_operations overlays_ops = {
++	.make_item	= cfs_overlay_group_make_item,
++	.drop_item	= cfs_overlay_group_drop_item,
++};
++
++static struct config_item_type overlays_type = {
++	.ct_group_ops   = &overlays_ops,
++	.ct_owner       = THIS_MODULE,
++};
++
++static struct configfs_group_operations of_cfs_ops = {
++	/* empty - we don't allow anything to be created */
++};
++
++static struct config_item_type of_cfs_type = {
++	.ct_group_ops   = &of_cfs_ops,
++	.ct_owner       = THIS_MODULE,
++};
++
++struct config_group of_cfs_overlay_group;
++
++struct config_group *of_cfs_def_groups[] = {
++	&of_cfs_overlay_group,
++	NULL
++};
++
++static struct configfs_subsystem of_cfs_subsys = {
++	.su_group = {
++		.cg_item = {
++			.ci_namebuf = "device-tree",
++			.ci_type = &of_cfs_type,
++		},
++		.default_groups = of_cfs_def_groups,
++	},
++	.su_mutex = __MUTEX_INITIALIZER(of_cfs_subsys.su_mutex),
++};
++
++static int __init of_cfs_init(void)
++{
++	int ret;
++
++	pr_info("%s\n", __func__);
++
++	config_group_init(&of_cfs_subsys.su_group);
++	config_group_init_type_name(&of_cfs_overlay_group, "overlays",
++			&overlays_type);
++
++	ret = configfs_register_subsystem(&of_cfs_subsys);
++	if (ret != 0) {
++		pr_err("%s: failed to register subsys\n", __func__);
++		goto out;
++	}
++	pr_info("%s: OK\n", __func__);
++out:
++	return ret;
++}
++late_initcall(of_cfs_init);
+diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
+index 53826b8..24af842 100644
+--- a/drivers/of/dynamic.c
++++ b/drivers/of/dynamic.c
+@@ -11,6 +11,7 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/proc_fs.h>
++#include <linux/rhashtable.h>
+ 
+ #include "of_private.h"
+ 
+@@ -41,9 +42,16 @@ void of_node_put(struct device_node *node)
+ }
+ EXPORT_SYMBOL(of_node_put);
+ 
+-void __of_detach_node_sysfs(struct device_node *np)
++void __of_detach_node_post(struct device_node *np)
+ {
+ 	struct property *pp;
++	int rc;
++
++	if (of_phandle_ht_available()) {
++		rc = of_phandle_ht_remove(np);
++		WARN(rc, "remove from phandle hash fail @%s\n",
++				of_node_full_name(np));
++	}
+ 
+ 	if (!IS_ENABLED(CONFIG_SYSFS))
+ 		return;
+@@ -251,7 +259,7 @@ int of_attach_node(struct device_node *np)
+ 	__of_attach_node(np);
+ 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+ 
+-	__of_attach_node_sysfs(np);
++	__of_attach_node_post(np);
+ 	mutex_unlock(&of_mutex);
+ 
+ 	of_reconfig_notify(OF_RECONFIG_ATTACH_NODE, &rd);
+@@ -304,7 +312,7 @@ int of_detach_node(struct device_node *np)
+ 	__of_detach_node(np);
+ 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+ 
+-	__of_detach_node_sysfs(np);
++	__of_detach_node_post(np);
+ 	mutex_unlock(&of_mutex);
+ 
+ 	of_reconfig_notify(OF_RECONFIG_DETACH_NODE, &rd);
+@@ -394,8 +402,9 @@ struct property *__of_prop_dup(const struct property *prop, gfp_t allocflags)
+ }
+ 
+ /**
+- * __of_node_dup() - Duplicate or create an empty device node dynamically.
+- * @fmt: Format string (plus vargs) for new full name of the device node
++ * __of_node_dupv() - Duplicate or create an empty device node dynamically.
++ * @fmt: Format string for new full name of the device node
++ * @vargs: va_list containing the arugments for the node full name
+  *
+  * Create an device tree node, either by duplicating an empty node or by allocating
+  * an empty one suitable for further modification.  The node data are
+@@ -403,17 +412,15 @@ struct property *__of_prop_dup(const struct property *prop, gfp_t allocflags)
+  * OF_DETACHED bits set. Returns the newly allocated node or NULL on out of
+  * memory error.
+  */
+-struct device_node *__of_node_dup(const struct device_node *np, const char *fmt, ...)
++struct device_node *__of_node_dupv(const struct device_node *np,
++		const char *fmt, va_list vargs)
+ {
+-	va_list vargs;
+ 	struct device_node *node;
+ 
+ 	node = kzalloc(sizeof(*node), GFP_KERNEL);
+ 	if (!node)
+ 		return NULL;
+-	va_start(vargs, fmt);
+ 	node->full_name = kvasprintf(GFP_KERNEL, fmt, vargs);
+-	va_end(vargs);
+ 	if (!node->full_name) {
+ 		kfree(node);
+ 		return NULL;
+@@ -445,6 +452,24 @@ struct device_node *__of_node_dup(const struct device_node *np, const char *fmt,
+ 	return NULL;
+ }
+ 
++/**
++ * __of_node_dup() - Duplicate or create an empty device node dynamically.
++ * @fmt: Format string (plus vargs) for new full name of the device node
++ *
++ * See: __of_node_dupv()
++ */
++struct device_node *__of_node_dup(const struct device_node *np,
++		const char *fmt, ...)
++{
++	va_list vargs;
++	struct device_node *node;
++
++	va_start(vargs, fmt);
++	node = __of_node_dupv(np, fmt, vargs);
++	va_end(vargs);
++	return node;
++}
++
+ static void __of_changeset_entry_destroy(struct of_changeset_entry *ce)
+ {
+ 	of_node_put(ce->np);
+@@ -606,10 +631,10 @@ static int __of_changeset_entry_apply(struct of_changeset_entry *ce)
+ 
+ 	switch (ce->action) {
+ 	case OF_RECONFIG_ATTACH_NODE:
+-		__of_attach_node_sysfs(ce->np);
++		__of_attach_node_post(ce->np);
+ 		break;
+ 	case OF_RECONFIG_DETACH_NODE:
+-		__of_detach_node_sysfs(ce->np);
++		__of_detach_node_post(ce->np);
+ 		break;
+ 	case OF_RECONFIG_ADD_PROPERTY:
+ 		/* ignore duplicate names */
+@@ -646,6 +671,7 @@ void of_changeset_init(struct of_changeset *ocs)
+ 	memset(ocs, 0, sizeof(*ocs));
+ 	INIT_LIST_HEAD(&ocs->entries);
+ }
++EXPORT_SYMBOL_GPL(of_changeset_init);
+ 
+ /**
+  * of_changeset_destroy - Destroy a changeset
+@@ -662,20 +688,9 @@ void of_changeset_destroy(struct of_changeset *ocs)
+ 	list_for_each_entry_safe_reverse(ce, cen, &ocs->entries, node)
+ 		__of_changeset_entry_destroy(ce);
+ }
++EXPORT_SYMBOL_GPL(of_changeset_destroy);
+ 
+-/**
+- * of_changeset_apply - Applies a changeset
+- *
+- * @ocs:	changeset pointer
+- *
+- * Applies a changeset to the live tree.
+- * Any side-effects of live tree state changes are applied here on
+- * sucess, like creation/destruction of devices and side-effects
+- * like creation of sysfs properties and directories.
+- * Returns 0 on success, a negative error value in case of an error.
+- * On error the partially applied effects are reverted.
+- */
+-int of_changeset_apply(struct of_changeset *ocs)
++int __of_changeset_apply(struct of_changeset *ocs)
+ {
+ 	struct of_changeset_entry *ce;
+ 	int ret;
+@@ -704,17 +719,30 @@ int of_changeset_apply(struct of_changeset *ocs)
+ }
+ 
+ /**
+- * of_changeset_revert - Reverts an applied changeset
++ * of_changeset_apply - Applies a changeset
+  *
+  * @ocs:	changeset pointer
+  *
+- * Reverts a changeset returning the state of the tree to what it
+- * was before the application.
+- * Any side-effects like creation/destruction of devices and
+- * removal of sysfs properties and directories are applied.
++ * Applies a changeset to the live tree.
++ * Any side-effects of live tree state changes are applied here on
++ * success, like creation/destruction of devices and side-effects
++ * like creation of sysfs properties and directories.
+  * Returns 0 on success, a negative error value in case of an error.
++ * On error the partially applied effects are reverted.
+  */
+-int of_changeset_revert(struct of_changeset *ocs)
++int of_changeset_apply(struct of_changeset *ocs)
++{
++	int ret;
++
++	mutex_lock(&of_mutex);
++	ret = __of_changeset_apply(ocs);
++	mutex_unlock(&of_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(of_changeset_apply);
++
++int __of_changeset_revert(struct of_changeset *ocs)
+ {
+ 	struct of_changeset_entry *ce;
+ 	int ret;
+@@ -742,6 +770,29 @@ int of_changeset_revert(struct of_changeset *ocs)
+ }
+ 
+ /**
++ * of_changeset_revert - Reverts an applied changeset
++ *
++ * @ocs:	changeset pointer
++ *
++ * Reverts a changeset returning the state of the tree to what it
++ * was before the application.
++ * Any side-effects like creation/destruction of devices and
++ * removal of sysfs properties and directories are applied.
++ * Returns 0 on success, a negative error value in case of an error.
++ */
++int of_changeset_revert(struct of_changeset *ocs)
++{
++	int ret;
++
++	mutex_lock(&of_mutex);
++	ret = __of_changeset_revert(ocs);
++	mutex_unlock(&of_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(of_changeset_revert);
++
++/**
+  * of_changeset_action - Perform a changeset action
+  *
+  * @ocs:	changeset pointer
+@@ -779,3 +830,254 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
+ 	list_add_tail(&ce->node, &ocs->entries);
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(of_changeset_action);
++
++/* changeset helpers */
++
++/**
++ * of_changeset_create_device_node - Create an empty device node
++ *
++ * @ocs:	changeset pointer
++ * @parent:	parent device node
++ * @fmt:	format string for the node's full_name
++ * @args:	argument list for the format string
++ *
++ * Create an empty device node, marking it as detached and allocated.
++ *
++ * Returns a device node on success, an error encoded pointer otherwise
++ */
++struct device_node *of_changeset_create_device_nodev(
++	struct of_changeset *ocs, struct device_node *parent,
++	const char *fmt, va_list vargs)
++{
++	struct device_node *node;
++
++	node = __of_node_dupv(NULL, fmt, vargs);
++	if (!node)
++		return ERR_PTR(-ENOMEM);
++
++	node->parent = parent;
++	return node;
++}
++
++/**
++ * of_changeset_create_device_node - Create an empty device node
++ *
++ * @ocs:	changeset pointer
++ * @parent:	parent device node
++ * @fmt:	Format string for the node's full_name
++ * ...		Arguments
++ *
++ * Create an empty device node, marking it as detached and allocated.
++ *
++ * Returns a device node on success, an error encoded pointer otherwise
++ */
++struct device_node *of_changeset_create_device_node(
++	struct of_changeset *ocs, struct device_node *parent,
++	const char *fmt, ...)
++{
++	va_list vargs;
++	struct device_node *node;
++
++	va_start(vargs, fmt);
++	node = of_changeset_create_device_nodev(ocs, parent, fmt, vargs);
++	va_end(vargs);
++	return node;
++}
++
++/**
++ * of_changeset_add_property_copy - Create a new property copying name & value
++ *
++ * @ocs:	changeset pointer
++ * @np:		device node pointer
++ * @name:	name of the property
++ * @value:	pointer to the value data
++ * @length:	length of the value in bytes
++ *
++ * Adds a property to the changeset by making copies of the name & value
++ * entries.
++ *
++ * Returns zero on success, a negative error value otherwise.
++ */
++int of_changeset_add_property_copy(struct of_changeset *ocs,
++		struct device_node *np, const char *name, const void *value,
++		int length)
++{
++	struct property *prop;
++	char *new_name;
++	void *new_value;
++	int ret = -ENOMEM;
++
++	prop = kzalloc(sizeof(*prop), GFP_KERNEL);
++	if (!prop)
++		goto out_no_prop;
++
++	new_name = kstrdup(name, GFP_KERNEL);
++	if (!new_name)
++		goto out_no_name;
++
++	/*
++	 * NOTE: There is no check for zero length value.
++	 * In case of a boolean property, this will allocate a value
++	 * of zero bytes. We do this to work around the use
++	 * of of_get_property() calls on boolean values.
++	 */
++	new_value = kmemdup(value, length, GFP_KERNEL);
++	if (!new_value)
++		goto out_no_value;
++
++	of_property_set_flag(prop, OF_DYNAMIC);
++
++	prop->name = new_name;
++	prop->value = new_value;
++	prop->length = length;
++
++	ret = of_changeset_add_property(ocs, np, prop);
++	if (ret != 0)
++		goto out_no_add;
++
++	return 0;
++
++out_no_add:
++	kfree(prop->value);
++out_no_value:
++	kfree(prop->name);
++out_no_name:
++	kfree(prop);
++out_no_prop:
++	return ret;
++}
++
++/**
++ * of_changeset_add_property_string - Create a new string property
++ *
++ * @ocs:	changeset pointer
++ * @np:		device node pointer
++ * @name:	name of the property
++ * @str:	string property
++ *
++ * Adds a string property to the changeset by making copies of the name
++ * and the string value.
++ *
++ * Returns zero on success, a negative error value otherwise.
++ */
++int of_changeset_add_property_string(struct of_changeset *ocs,
++		struct device_node *np, const char *name, const char *str)
++{
++	return of_changeset_add_property_copy(ocs, np, name, str,
++			strlen(str) + 1);
++}
++
++/**
++ * of_changeset_add_property_stringf - Create a new formatted string property
++ *
++ * @ocs:	changeset pointer
++ * @np:		device node pointer
++ * @name:	name of the property
++ * @fmt:	format of string property
++ * ...		arguments of the format string
++ *
++ * Adds a string property to the changeset by making copies of the name
++ * and the formatted value.
++ *
++ * Returns zero on success, a negative error value otherwise.
++ */
++int of_changeset_add_property_stringf(struct of_changeset *ocs,
++		struct device_node *np, const char *name, const char *fmt, ...)
++{
++	va_list vargs;
++	char *str;
++	int ret;
++
++	va_start(vargs, fmt);
++	str = kvasprintf(GFP_KERNEL, fmt, vargs);
++	va_end(vargs);
++
++	ret = of_changeset_add_property_string(ocs, np, name, str);
++
++	kfree(str);
++	return ret;
++}
++
++/**
++ * of_changeset_add_property_string_list - Create a new string list property
++ *
++ * @ocs:	changeset pointer
++ * @np:		device node pointer
++ * @name:	name of the property
++ * @strs:	pointer to the string list
++ * @count:	string count
++ *
++ * Adds a string list property to the changeset.
++ *
++ * Returns zero on success, a negative error value otherwise.
++ */
++int of_changeset_add_property_string_list(struct of_changeset *ocs,
++		struct device_node *np, const char *name, const char **strs,
++		int count)
++{
++	int total = 0, i, ret;
++	char *value, *s;
++
++	for (i = 0; i < count; i++) {
++		/* check if  it's NULL */
++		if (!strs[i])
++			return -EINVAL;
++		total += strlen(strs[i]) + 1;
++	}
++
++	value = kmalloc(total, GFP_KERNEL);
++	if (!value)
++		return -ENOMEM;
++
++	for (i = 0, s = value; i < count; i++) {
++		/* no need to check for NULL, check above */
++		strcpy(s, strs[i]);
++		s += strlen(strs[i]) + 1;
++	}
++
++	ret = of_changeset_add_property_copy(ocs, np, name, value, total);
++
++	kfree(value);
++
++	return ret;
++}
++
++/**
++ * of_changeset_add_property_u32 - Create a new u32 property
++ *
++ * @ocs:	changeset pointer
++ * @np:		device node pointer
++ * @name:	name of the property
++ * @val:	value in host endian format
++ *
++ * Adds a u32 property to the changeset.
++ *
++ * Returns zero on success, a negative error value otherwise.
++ */
++int of_changeset_add_property_u32(struct of_changeset *ocs,
++		struct device_node *np, const char *name, u32 val)
++{
++	/* in place */
++	val = cpu_to_be32(val);
++	return of_changeset_add_property_copy(ocs, np, name, &val, sizeof(val));
++}
++
++/**
++ * of_changeset_add_property_bool - Create a new u32 property
++ *
++ * @ocs:	changeset pointer
++ * @np:		device node pointer
++ * @name:	name of the property
++ *
++ * Adds a bool property to the changeset. Note that there is
++ * no option to set the value to false, since the property
++ * existing sets it to true.
++ *
++ * Returns zero on success, a negative error value otherwise.
++ */
++int of_changeset_add_property_bool(struct of_changeset *ocs,
++		struct device_node *np, const char *name)
++{
++	return of_changeset_add_property_copy(ocs, np, name, "", 0);
++}
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 655f79d..3349d2a 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -760,6 +760,16 @@ const void * __init of_flat_dt_match_machine(const void *default_match,
+ }
+ 
+ #ifdef CONFIG_BLK_DEV_INITRD
++#ifndef __early_init_dt_declare_initrd
++static void __early_init_dt_declare_initrd(unsigned long start,
++					   unsigned long end)
++{
++	initrd_start = (unsigned long)__va(start);
++	initrd_end = (unsigned long)__va(end);
++	initrd_below_start_ok = 1;
++}
++#endif
++
+ /**
+  * early_init_dt_check_for_initrd - Decode initrd location from flat tree
+  * @node: reference to node containing initrd location ('chosen')
+@@ -782,9 +792,7 @@ static void __init early_init_dt_check_for_initrd(unsigned long node)
+ 		return;
+ 	end = of_read_number(prop, len/4);
+ 
+-	initrd_start = (unsigned long)__va(start);
+-	initrd_end = (unsigned long)__va(end);
+-	initrd_below_start_ok = 1;
++	__early_init_dt_declare_initrd(start, end);
+ 
+ 	pr_debug("initrd_start=0x%llx  initrd_end=0x%llx\n",
+ 		 (unsigned long long)start, (unsigned long long)end);
+@@ -796,14 +804,13 @@ static inline void early_init_dt_check_for_initrd(unsigned long node)
+ #endif /* CONFIG_BLK_DEV_INITRD */
+ 
+ #ifdef CONFIG_SERIAL_EARLYCON
+-extern struct of_device_id __earlycon_of_table[];
+ 
+ static int __init early_init_dt_scan_chosen_serial(void)
+ {
+ 	int offset;
+-	const char *p;
++	const char *p, *q, *options = NULL;
+ 	int l;
+-	const struct of_device_id *match = __earlycon_of_table;
++	const struct earlycon_id *match;
+ 	const void *fdt = initial_boot_params;
+ 
+ 	offset = fdt_path_offset(fdt, "/chosen");
+@@ -818,27 +825,26 @@ static int __init early_init_dt_scan_chosen_serial(void)
+ 	if (!p || !l)
+ 		return -ENOENT;
+ 
+-	/* Remove console options if present */
+-	l = strchrnul(p, ':') - p;
++	q = strchrnul(p, ':');
++	if (*q != '\0')
++		options = q + 1;
++	l = q - p;
+ 
+ 	/* Get the node specified by stdout-path */
+ 	offset = fdt_path_offset_namelen(fdt, p, l);
+-	if (offset < 0)
+-		return -ENODEV;
+-
+-	while (match->compatible[0]) {
+-		u64 addr;
++	if (offset < 0) {
++		pr_warn("earlycon: stdout-path %.*s not found\n", l, p);
++		return 0;
++	}
+ 
+-		if (fdt_node_check_compatible(fdt, offset, match->compatible)) {
+-			match++;
++	for (match = __earlycon_table; match < __earlycon_table_end; match++) {
++		if (!match->compatible[0])
+ 			continue;
+-		}
+ 
+-		addr = fdt_translate_address(fdt, offset);
+-		if (addr == OF_BAD_ADDR)
+-			return -ENXIO;
++		if (fdt_node_check_compatible(fdt, offset, match->compatible))
++			continue;
+ 
+-		of_setup_earlycon(addr, match->data);
++		of_setup_earlycon(match, offset, options);
+ 		return 0;
+ 	}
+ 	return -ENODEV;
+@@ -976,13 +982,16 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
+ }
+ 
+ #ifdef CONFIG_HAVE_MEMBLOCK
++#ifndef MIN_MEMBLOCK_ADDR
++#define MIN_MEMBLOCK_ADDR	__pa(PAGE_OFFSET)
++#endif
+ #ifndef MAX_MEMBLOCK_ADDR
+ #define MAX_MEMBLOCK_ADDR	((phys_addr_t)~0)
+ #endif
+ 
+ void __init __weak early_init_dt_add_memory_arch(u64 base, u64 size)
+ {
+-	const u64 phys_offset = __pa(PAGE_OFFSET);
++	const u64 phys_offset = MIN_MEMBLOCK_ADDR;
+ 
+ 	if (!PAGE_ALIGNED(base)) {
+ 		if (size < PAGE_SIZE - (base & ~PAGE_MASK)) {
+diff --git a/drivers/of/fdt_address.c b/drivers/of/fdt_address.c
+index 8d3dc6f..dca8f9b 100644
+--- a/drivers/of/fdt_address.c
++++ b/drivers/of/fdt_address.c
+@@ -161,7 +161,7 @@ static int __init fdt_translate_one(const void *blob, int parent,
+  * that can be mapped to a cpu physical address). This is not really specified
+  * that way, but this is traditionally the way IBM at least do things
+  */
+-u64 __init fdt_translate_address(const void *blob, int node_offset)
++static u64 __init fdt_translate_address(const void *blob, int node_offset)
+ {
+ 	int parent, len;
+ 	const struct of_bus *bus, *pbus;
+@@ -239,3 +239,12 @@ u64 __init fdt_translate_address(const void *blob, int node_offset)
+  bail:
+ 	return result;
+ }
++
++/**
++ * of_flat_dt_translate_address - translate DT addr into CPU phys addr
++ * @node: node in the flat blob
++ */
++u64 __init of_flat_dt_translate_address(unsigned long node)
++{
++	return fdt_translate_address(initial_boot_params, node);
++}
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 4fa916d..72a2c19 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -636,6 +636,13 @@ static u32 __of_msi_map_rid(struct device *dev, struct device_node **np,
+ 		msi_base = be32_to_cpup(msi_map + 2);
+ 		rid_len = be32_to_cpup(msi_map + 3);
+ 
++		if (rid_base & ~map_mask) {
++			dev_err(parent_dev,
++				"Invalid msi-map translation - msi-map-mask (0x%x) ignores rid-base (0x%x)\n",
++				map_mask, rid_base);
++			return rid_out;
++		}
++
+ 		msi_controller_node = of_find_node_by_phandle(phandle);
+ 
+ 		matched = (masked_rid >= rid_base &&
+@@ -655,7 +662,7 @@ static u32 __of_msi_map_rid(struct device *dev, struct device_node **np,
+ 	if (!matched)
+ 		return rid_out;
+ 
+-	rid_out = masked_rid + msi_base;
++	rid_out = masked_rid - rid_base + msi_base;
+ 	dev_dbg(dev,
+ 		"msi-map at: %s, using mask %08x, rid-base: %08x, msi-base: %08x, length: %08x, rid: %08x -> %08x\n",
+ 		dev_name(parent_dev), map_mask, rid_base, msi_base,
+diff --git a/drivers/of/of_private.h b/drivers/of/of_private.h
+index 8e882e7..88b3b8f 100644
+--- a/drivers/of/of_private.h
++++ b/drivers/of/of_private.h
+@@ -45,6 +45,8 @@ static inline struct device_node *kobj_to_device_node(struct kobject *kobj)
+ extern int of_property_notify(int action, struct device_node *np,
+ 			      struct property *prop, struct property *old_prop);
+ extern void of_node_release(struct kobject *kobj);
++extern int __of_changeset_apply(struct of_changeset *ocs);
++extern int __of_changeset_revert(struct of_changeset *ocs);
+ #else /* CONFIG_OF_DYNAMIC */
+ static inline int of_property_notify(int action, struct device_node *np,
+ 				     struct property *prop, struct property *old_prop)
+@@ -77,9 +79,9 @@ extern void __of_update_property_sysfs(struct device_node *np,
+ 		struct property *newprop, struct property *oldprop);
+ 
+ extern void __of_attach_node(struct device_node *np);
+-extern int __of_attach_node_sysfs(struct device_node *np);
++extern int __of_attach_node_post(struct device_node *np);
+ extern void __of_detach_node(struct device_node *np);
+-extern void __of_detach_node_sysfs(struct device_node *np);
++extern void __of_detach_node_post(struct device_node *np);
+ 
+ /* iterators for transactions, used for overlays */
+ /* forward iterator */
+@@ -90,4 +92,44 @@ extern void __of_detach_node_sysfs(struct device_node *np);
+ #define for_each_transaction_entry_reverse(_oft, _te) \
+ 	list_for_each_entry_reverse(_te, &(_oft)->te_list, node)
+ 
++#if defined(CONFIG_OF_OVERLAY)
++extern int of_overlay_init(void);
++#else
++static inline int of_overlay_init(void)
++{
++	return 0;
++}
++#endif
++
++extern const struct rhashtable_params of_phandle_ht_params;
++extern struct rhashtable of_phandle_ht;
++extern bool of_phandle_ht_initialized;
++
++static inline bool of_phandle_ht_available(void)
++{
++	return of_phandle_ht_initialized;
++}
++
++static inline int of_phandle_ht_insert(struct device_node *np)
++{
++	if (!np || !np->phandle)
++		return 0;
++	return rhashtable_insert_fast(&of_phandle_ht,
++		&np->ht_node, of_phandle_ht_params);
++}
++
++static inline int of_phandle_ht_remove(struct device_node *np)
++{
++	if (!np || !np->phandle)
++		return 0;
++	return rhashtable_remove_fast(&of_phandle_ht,
++		&np->ht_node, of_phandle_ht_params);
++}
++
++static inline struct device_node *of_phandle_ht_lookup(phandle handle)
++{
++	return rhashtable_lookup_fast(&of_phandle_ht,
++			&handle, of_phandle_ht_params);
++}
++
+ #endif /* _LINUX_OF_PRIVATE_H */
+diff --git a/drivers/of/of_reserved_mem.c b/drivers/of/of_reserved_mem.c
+index 1a3556a..ed01c01 100644
+--- a/drivers/of/of_reserved_mem.c
++++ b/drivers/of/of_reserved_mem.c
+@@ -32,11 +32,13 @@ int __init __weak early_init_dt_alloc_reserved_memory_arch(phys_addr_t size,
+ 	phys_addr_t align, phys_addr_t start, phys_addr_t end, bool nomap,
+ 	phys_addr_t *res_base)
+ {
++	phys_addr_t base;
+ 	/*
+ 	 * We use __memblock_alloc_base() because memblock_alloc_base()
+ 	 * panic()s on allocation failure.
+ 	 */
+-	phys_addr_t base = __memblock_alloc_base(size, align, end);
++	end = !end ? MEMBLOCK_ALLOC_ANYWHERE : end;
++	base = __memblock_alloc_base(size, align, end);
+ 	if (!base)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
+index 54e5af9..de5aae1 100644
+--- a/drivers/of/overlay.c
++++ b/drivers/of/overlay.c
+@@ -20,11 +20,28 @@
+ #include <linux/slab.h>
+ #include <linux/err.h>
+ #include <linux/idr.h>
++#include <linux/sysfs.h>
++#include <linux/atomic.h>
+ 
+ #include "of_private.h"
+ 
++/* fwd. decl */
++struct of_overlay;
++struct of_overlay_info;
++
++/* an attribute for each fragment */
++struct fragment_attribute {
++	struct attribute attr;
++	ssize_t (*show)(struct kobject *kobj, struct fragment_attribute *fattr,
++			char *buf);
++	ssize_t (*store)(struct kobject *kobj, struct fragment_attribute *fattr,
++			 const char *buf, size_t count);
++	struct of_overlay_info *ovinfo;
++};
++
+ /**
+  * struct of_overlay_info - Holds a single overlay info
++ * @info:	info node that contains the target and overlay
+  * @target:	target of the overlay operation
+  * @overlay:	pointer to the overlay contents node
+  *
+@@ -32,8 +49,13 @@
+  * records.
+  */
+ struct of_overlay_info {
++	struct of_overlay *ov;
++	struct device_node *info;
+ 	struct device_node *target;
+ 	struct device_node *overlay;
++	struct attribute_group attr_group;
++	struct attribute *attrs[2];
++	struct fragment_attribute target_attr;
+ };
+ 
+ /**
+@@ -50,11 +72,26 @@ struct of_overlay {
+ 	struct list_head node;
+ 	int count;
+ 	struct of_overlay_info *ovinfo_tab;
++	const struct attribute_group **attr_groups;
+ 	struct of_changeset cset;
++	struct kobject kobj;
++	char *indirect_id;
++	struct device_node *target_root;
+ };
+ 
++/* master enable switch; once set to 0 can't be re-enabled */
++static atomic_t ov_enable = ATOMIC_INIT(1);
++
++static int __init of_overlay_disable_setup(char *str __always_unused)
++{
++	atomic_set(&ov_enable, 0);
++	return 1;
++}
++__setup("of_overlay_disable", of_overlay_disable_setup);
++
+ static int of_overlay_apply_one(struct of_overlay *ov,
+ 		struct device_node *target, const struct device_node *overlay);
++static int overlay_removal_is_ok(struct of_overlay *ov);
+ 
+ static int of_overlay_apply_single_property(struct of_overlay *ov,
+ 		struct device_node *target, struct property *prop)
+@@ -185,35 +222,141 @@ static int of_overlay_apply(struct of_overlay *ov)
+ 	return 0;
+ }
+ 
+-/*
+- * Find the target node using a number of different strategies
+- * in order of preference
+- *
+- * "target" property containing the phandle of the target
+- * "target-path" property containing the path of the target
+- */
+-static struct device_node *find_target_node(struct device_node *info_node)
++static struct device_node *find_target_node_direct(struct of_overlay *ov,
++		struct device_node *info_node)
+ {
++	struct device_node *target = NULL, *np;
+ 	const char *path;
++	char *newpath;
+ 	u32 val;
+ 	int ret;
+ 
+ 	/* first try to go by using the target as a phandle */
+ 	ret = of_property_read_u32(info_node, "target", &val);
+-	if (ret == 0)
+-		return of_find_node_by_phandle(val);
++	if (ret == 0) {
++		target = of_find_node_by_phandle(val);
++		if (!target) {
++			pr_err("%s: Could not find target phandle 0x%x\n",
++					__func__, val);
++			return NULL;
++		}
++		goto check_root;
++	}
+ 
+-	/* now try to locate by path */
++	/* failed, try to locate by path */
+ 	ret = of_property_read_string(info_node, "target-path", &path);
+-	if (ret == 0)
+-		return of_find_node_by_path(path);
++	if (ret == 0) {
++
++		if (!ov->target_root) {
++			target = of_find_node_by_path(path);
++			if (!target)
++				pr_err("%s: Could not find target path \"%s\"\n",
++						__func__, path);
++			return target;
++		}
++
++		/* remove preceding '/' from path; relative path */
++		if (*path == '/') {
++			while (*path == '/')
++				path++;
++
++			newpath = kasprintf(GFP_KERNEL, "%s%s%s",
++					of_node_full_name(ov->target_root),
++					*path ? "/" : "", path);
++			if (!newpath) {
++				pr_err("%s: Could not allocate \"%s%s%s\"\n",
++					__func__,
++					of_node_full_name(ov->target_root),
++					*path ? "/" : "", path);
++				return NULL;
++			}
++			target = of_find_node_by_path(newpath);
++			kfree(newpath);
+ 
+-	pr_err("%s: Failed to find target for node %p (%s)\n", __func__,
+-		info_node, info_node->name);
++			return target;
+ 
++		}
++		/* target is an alias, need to check */
++		target = of_find_node_by_path(path);
++		if (!target) {
++			pr_err("%s: Could not find alias \"%s\"\n",
++					__func__, path);
++			return NULL;
++		}
++		goto check_root;
++	}
++
++	return NULL;
++
++check_root:
++	if (!ov->target_root)
++		return target;
++
++	/* got a target, but we have to check it's under target root */
++	for (np = target; np; np = np->parent) {
++		if (np == ov->target_root)
++			return target;
++	}
++	pr_err("%s: target \"%s\" not under target_root \"%s\"\n",
++			__func__, of_node_full_name(target),
++			of_node_full_name(ov->target_root));
++	/* target is not under target_root */
++	of_node_put(target);
+ 	return NULL;
+ }
+ 
++/*
++ * Find the target node using a number of different strategies
++ * in order of preference. Respects the indirect id if available.
++ *
++ * "target" property containing the phandle of the target
++ * "target-path" property containing the path of the target
++ */
++static struct device_node *find_target_node(struct of_overlay *ov,
++		struct device_node *info_node)
++{
++	struct device_node *target;
++	struct device_node *target_indirect;
++	struct device_node *indirect;
++
++	/* try direct target */
++	target = find_target_node_direct(ov, info_node);
++	if (target)
++		return target;
++
++	/* try indirect if there */
++	if (!ov->indirect_id)
++		return NULL;
++
++	target_indirect = of_get_child_by_name(info_node, "target-indirect");
++	if (!target_indirect) {
++		pr_err("%s: Failed to find target-indirect node at %s\n",
++				__func__,
++				of_node_full_name(info_node));
++		return NULL;
++	}
++
++	indirect = of_get_child_by_name(target_indirect, ov->indirect_id);
++	of_node_put(target_indirect);
++	if (!indirect) {
++		pr_err("%s: Failed to find indirect child node \"%s\" at %s\n",
++				__func__, ov->indirect_id,
++				of_node_full_name(info_node));
++		return NULL;
++	}
++
++	target = find_target_node_direct(ov, indirect);
++
++	if (!target) {
++		pr_err("%s: Failed to find target for \"%s\" at %s\n",
++				__func__, ov->indirect_id,
++				of_node_full_name(indirect));
++	}
++	of_node_put(indirect);
++
++	return target;
++}
++
+ /**
+  * of_fill_overlay_info() - Fill an overlay info structure
+  * @ov		Overlay to fill
+@@ -235,10 +378,12 @@ static int of_fill_overlay_info(struct of_overlay *ov,
+ 	if (ovinfo->overlay == NULL)
+ 		goto err_fail;
+ 
+-	ovinfo->target = find_target_node(info_node);
++	ovinfo->target = find_target_node(ov, info_node);
+ 	if (ovinfo->target == NULL)
+ 		goto err_fail;
+ 
++	ovinfo->info = of_node_get(info_node);
++
+ 	return 0;
+ 
+ err_fail:
+@@ -249,6 +394,17 @@ err_fail:
+ 	return -EINVAL;
+ }
+ 
++static ssize_t target_show(struct kobject *kobj,
++		struct fragment_attribute *fattr, char *buf)
++{
++	struct of_overlay_info *ovinfo = fattr->ovinfo;
++
++	return snprintf(buf, PAGE_SIZE, "%s\n",
++			of_node_full_name(ovinfo->target));
++}
++
++static const struct fragment_attribute target_template_attr = __ATTR_RO(target);
++
+ /**
+  * of_build_overlay_info() - Build an overlay info array
+  * @ov		Overlay to build
+@@ -266,7 +422,7 @@ static int of_build_overlay_info(struct of_overlay *ov,
+ {
+ 	struct device_node *node;
+ 	struct of_overlay_info *ovinfo;
+-	int cnt, err;
++	int i, cnt, err;
+ 
+ 	/* worst case; every child is a node */
+ 	cnt = 0;
+@@ -287,14 +443,45 @@ static int of_build_overlay_info(struct of_overlay *ov,
+ 
+ 	/* if nothing filled, return error */
+ 	if (cnt == 0) {
+-		kfree(ovinfo);
+-		return -ENODEV;
++		err = -ENODEV;
++		goto err_free_ovinfo;
+ 	}
+ 
+ 	ov->count = cnt;
+ 	ov->ovinfo_tab = ovinfo;
+ 
++	ov->attr_groups = kcalloc(cnt + 1,
++			sizeof(struct attribute_group *), GFP_KERNEL);
++	if (ov->attr_groups == NULL) {
++		err = -ENOMEM;
++		goto err_free_ovinfo;
++	}
++
++	for (i = 0; i < cnt; i++) {
++		ovinfo = &ov->ovinfo_tab[i];
++
++		ov->attr_groups[i] = &ovinfo->attr_group;
++
++		ovinfo->target_attr = target_template_attr;
++		/* make lockdep happy */
++		sysfs_attr_init(&ovinfo->target_attr.attr);
++		ovinfo->target_attr.ovinfo = ovinfo;
++
++		ovinfo->attrs[0] = &ovinfo->target_attr.attr;
++		ovinfo->attrs[1] = NULL;
++
++		/* NOTE: direct reference to the full_name */
++		ovinfo->attr_group.name = kbasename(ovinfo->info->full_name);
++		ovinfo->attr_group.attrs = ovinfo->attrs;
++
++	}
++	ov->attr_groups[i] = NULL;
++
+ 	return 0;
++
++err_free_ovinfo:
++	kfree(ovinfo);
++	return err;
+ }
+ 
+ /**
+@@ -311,12 +498,16 @@ static int of_free_overlay_info(struct of_overlay *ov)
+ 	struct of_overlay_info *ovinfo;
+ 	int i;
+ 
++	/* free attribute groups space */
++	kfree(ov->attr_groups);
++
+ 	/* do it in reverse */
+ 	for (i = ov->count - 1; i >= 0; i--) {
+ 		ovinfo = &ov->ovinfo_tab[i];
+ 
+ 		of_node_put(ovinfo->target);
+ 		of_node_put(ovinfo->overlay);
++		of_node_put(ovinfo->info);
+ 	}
+ 	kfree(ov->ovinfo_tab);
+ 
+@@ -326,31 +517,104 @@ static int of_free_overlay_info(struct of_overlay *ov)
+ static LIST_HEAD(ov_list);
+ static DEFINE_IDR(ov_idr);
+ 
+-/**
+- * of_overlay_create() - Create and apply an overlay
+- * @tree:	Device node containing all the overlays
+- *
+- * Creates and applies an overlay while also keeping track
+- * of the overlay in a list. This list can be used to prevent
+- * illegal overlay removals.
+- *
+- * Returns the id of the created overlay, or a negative error number
+- */
+-int of_overlay_create(struct device_node *tree)
++static inline struct of_overlay *kobj_to_overlay(struct kobject *kobj)
++{
++	return container_of(kobj, struct of_overlay, kobj);
++}
++
++void of_overlay_release(struct kobject *kobj)
++{
++	struct of_overlay *ov = kobj_to_overlay(kobj);
++
++	of_node_put(ov->target_root);
++	kfree(ov->indirect_id);
++	kfree(ov);
++}
++
++static ssize_t enable_show(struct kobject *kobj,
++		struct kobj_attribute *attr, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%d\n", atomic_read(&ov_enable));
++}
++
++static ssize_t enable_store(struct kobject *kobj,
++		struct kobj_attribute *attr, const char *buf, size_t count)
++{
++	int ret;
++	bool new_enable;
++
++	ret = strtobool(buf, &new_enable);
++	if (ret != 0)
++		return ret;
++	/* if we've disabled it, no going back */
++	if (atomic_read(&ov_enable) == 0)
++		return -EPERM;
++	atomic_set(&ov_enable, (int)new_enable);
++	return count;
++}
++
++static struct kobj_attribute enable_attr = __ATTR_RW(enable);
++
++static const struct attribute *overlay_global_attrs[] = {
++	&enable_attr.attr,
++	NULL
++};
++
++static ssize_t can_remove_show(struct kobject *kobj,
++		struct kobj_attribute *attr, char *buf)
++{
++	struct of_overlay *ov = kobj_to_overlay(kobj);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", overlay_removal_is_ok(ov));
++}
++
++static struct kobj_attribute can_remove_attr = __ATTR_RO(can_remove);
++
++static struct attribute *overlay_attrs[] = {
++	&can_remove_attr.attr,
++	NULL
++};
++
++static struct kobj_type of_overlay_ktype = {
++	.release = of_overlay_release,
++	.sysfs_ops = &kobj_sysfs_ops,	/* default kobj sysfs ops */
++	.default_attrs = overlay_attrs,
++};
++
++static struct kset *ov_kset;
++
++static int __of_overlay_create(struct device_node *tree,
++		const char *indirect_id, struct device_node *target_root)
+ {
+ 	struct of_overlay *ov;
+ 	int err, id;
+ 
++	/* administratively disabled */
++	if (!atomic_read(&ov_enable))
++		return -EPERM;
++
+ 	/* allocate the overlay structure */
+ 	ov = kzalloc(sizeof(*ov), GFP_KERNEL);
+ 	if (ov == NULL)
+ 		return -ENOMEM;
+ 	ov->id = -1;
+ 
++	if (indirect_id) {
++		ov->indirect_id = kstrdup(indirect_id, GFP_KERNEL);
++		if (!ov->indirect_id) {
++			err = -ENOMEM;
++			goto err_no_mem;
++		}
++	}
++	ov->target_root = of_node_get(target_root);
++
+ 	INIT_LIST_HEAD(&ov->node);
+ 
+ 	of_changeset_init(&ov->cset);
+ 
++	/* initialize kobject */
++	kobject_init(&ov->kobj, &of_overlay_ktype);
++
+ 	mutex_lock(&of_mutex);
+ 
+ 	id = idr_alloc(&ov_idr, ov, 0, 0, GFP_KERNEL);
+@@ -379,20 +643,38 @@ int of_overlay_create(struct device_node *tree)
+ 	}
+ 
+ 	/* apply the changeset */
+-	err = of_changeset_apply(&ov->cset);
++	err = __of_changeset_apply(&ov->cset);
+ 	if (err) {
+-		pr_err("%s: of_changeset_apply() failed for tree@%s\n",
++		pr_err("%s: __of_changeset_apply() failed for tree@%s\n",
+ 				__func__, tree->full_name);
+ 		goto err_revert_overlay;
+ 	}
+ 
++	ov->kobj.kset = ov_kset;
++	err = kobject_add(&ov->kobj, NULL, "%d", id);
++	if (err != 0) {
++		pr_err("%s: kobject_add() failed for tree@%s\n",
++				__func__, tree->full_name);
++		goto err_cancel_overlay;
++	}
++
++	err = sysfs_create_groups(&ov->kobj, ov->attr_groups);
++	if (err != 0) {
++		pr_err("%s: sysfs_create_groups() failed for tree@%s\n",
++				__func__, tree->full_name);
++		goto err_remove_kobj;
++	}
++
+ 	/* add to the tail of the overlay list */
+ 	list_add_tail(&ov->node, &ov_list);
+ 
+ 	mutex_unlock(&of_mutex);
+ 
+ 	return id;
+-
++err_remove_kobj:
++	kobject_put(&ov->kobj);
++err_cancel_overlay:
++	__of_changeset_revert(&ov->cset);
+ err_revert_overlay:
+ err_abort_trans:
+ 	of_free_overlay_info(ov);
+@@ -400,13 +682,68 @@ err_free_idr:
+ 	idr_remove(&ov_idr, ov->id);
+ err_destroy_trans:
+ 	of_changeset_destroy(&ov->cset);
++err_no_mem:
++	of_node_put(ov->target_root);
++	kfree(ov->indirect_id);
+ 	kfree(ov);
+ 	mutex_unlock(&of_mutex);
+ 
+ 	return err;
+ }
++
++/**
++ * of_overlay_create() - Create and apply an overlay
++ * @tree:	Device node containing all the overlays
++ *
++ * Creates and applies an overlay while also keeping track
++ * of the overlay in a list. This list can be used to prevent
++ * illegal overlay removals.
++ *
++ * Returns the id of the created overlay, or an negative error number
++ */
++int of_overlay_create(struct device_node *tree)
++{
++	return __of_overlay_create(tree, NULL, NULL);
++}
+ EXPORT_SYMBOL_GPL(of_overlay_create);
+ 
++/**
++ * of_overlay_create_indirect() - Create and apply an overlay
++ * @tree:	Device node containing all the overlays
++ * @id:		Indirect property phandle
++ *
++ * Creates and applies an overlay while also keeping track
++ * of the overlay in a list. This list can be used to prevent
++ * illegal overlay removals.
++ *
++ * Returns the id of the created overlay, or an negative error number
++ */
++int of_overlay_create_indirect(struct device_node *tree, const char *id)
++{
++	return __of_overlay_create(tree, id, NULL);
++}
++EXPORT_SYMBOL_GPL(of_overlay_create_indirect);
++
++/**
++ * of_overlay_create_target_root() - Create and apply an overlay
++ *			under which will be limited to target_root
++ * @tree:		Device node containing all the overlays
++ * @target_root:	Target root for the overlay.
++ *
++ * Creates and applies an overlay while also keeping track
++ * of the overlay in a list. This list can be used to prevent
++ * illegal overlay removals. The overlay is only allowed to
++ * target nodes under the target_root node.
++ *
++ * Returns the id of the created overlay, or an negative error number
++ */
++int of_overlay_create_target_root(struct device_node *tree,
++		struct device_node *target_root)
++{
++	return __of_overlay_create(tree, NULL, target_root);
++}
++EXPORT_SYMBOL_GPL(of_overlay_create_target_root);
++
+ /* check whether the given node, lies under the given tree */
+ static int overlay_subtree_check(struct device_node *tree,
+ 		struct device_node *dn)
+@@ -511,11 +848,13 @@ int of_overlay_destroy(int id)
+ 
+ 
+ 	list_del(&ov->node);
+-	of_changeset_revert(&ov->cset);
++	sysfs_remove_groups(&ov->kobj, ov->attr_groups);
++	__of_changeset_revert(&ov->cset);
+ 	of_free_overlay_info(ov);
+ 	idr_remove(&ov_idr, id);
+ 	of_changeset_destroy(&ov->cset);
+-	kfree(ov);
++
++	kobject_put(&ov->kobj);
+ 
+ 	err = 0;
+ 
+@@ -542,10 +881,10 @@ int of_overlay_destroy_all(void)
+ 	/* the tail of list is guaranteed to be safe to remove */
+ 	list_for_each_entry_safe_reverse(ov, ovn, &ov_list, node) {
+ 		list_del(&ov->node);
+-		of_changeset_revert(&ov->cset);
++		__of_changeset_revert(&ov->cset);
+ 		of_free_overlay_info(ov);
+ 		idr_remove(&ov_idr, ov->id);
+-		kfree(ov);
++		kobject_put(&ov->kobj);
+ 	}
+ 
+ 	mutex_unlock(&of_mutex);
+@@ -553,3 +892,18 @@ int of_overlay_destroy_all(void)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(of_overlay_destroy_all);
++
++/* called from of_init() */
++int of_overlay_init(void)
++{
++	int rc;
++
++	ov_kset = kset_create_and_add("overlays", NULL, &of_kset->kobj);
++	if (!ov_kset)
++		return -ENOMEM;
++
++	rc = sysfs_create_files(&ov_kset->kobj, overlay_global_attrs);
++	WARN(rc, "%s: error adding global attributes\n", __func__);
++
++	return rc;
++}
+diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+index e16ea57..b3f27b6 100644
+--- a/drivers/of/unittest.c
++++ b/drivers/of/unittest.c
+@@ -530,23 +530,58 @@ static void __init of_unittest_changeset(void)
+ 	unittest(!of_changeset_add_property(&chgset, parent, ppadd), "fail add prop\n");
+ 	unittest(!of_changeset_update_property(&chgset, parent, ppupdate), "fail update prop\n");
+ 	unittest(!of_changeset_remove_property(&chgset, parent, ppremove), "fail remove prop\n");
+-	mutex_lock(&of_mutex);
+ 	unittest(!of_changeset_apply(&chgset), "apply failed\n");
+-	mutex_unlock(&of_mutex);
+ 
+ 	/* Make sure node names are constructed correctly */
+ 	unittest((np = of_find_node_by_path("/testcase-data/changeset/n2/n21")),
+ 		 "'%s' not added\n", n21->full_name);
+ 	of_node_put(np);
+ 
+-	mutex_lock(&of_mutex);
+ 	unittest(!of_changeset_revert(&chgset), "revert failed\n");
+-	mutex_unlock(&of_mutex);
+ 
+ 	of_changeset_destroy(&chgset);
+ #endif
+ }
+ 
++static void __init of_unittest_changeset_helper(void)
++{
++#ifdef CONFIG_OF_DYNAMIC
++	struct device_node *n1, *n2, *n21, *parent, *np;
++	struct of_changeset chgset;
++
++	of_changeset_init(&chgset);
++
++	parent = of_find_node_by_path("/testcase-data/changeset");
++
++	unittest(parent, "testcase setup failure\n");
++	n1 = of_changeset_create_device_node(&chgset,
++			parent, "/testcase-data/changeset/n1");
++	unittest(n1, "testcase setup failure\n");
++	n2 = of_changeset_create_device_node(&chgset,
++			parent, "/testcase-data/changeset/n2");
++	unittest(n2, "testcase setup failure\n");
++	n21 = of_changeset_create_device_node(&chgset, n2, "%s/%s",
++			"/testcase-data/changeset/n2", "n21");
++
++	of_changeset_init(&chgset);
++	unittest(!of_changeset_add_property_string(&chgset, parent,
++				"prop-add", "foo"), "fail add prop\n");
++	unittest(!__of_changeset_apply(&chgset), "apply failed\n");
++
++	/* Make sure node names are constructed correctly */
++	unittest((np = of_find_node_by_path("/testcase-data/changeset/n2/n21")),
++		 "'%s' not added\n", n21->full_name);
++	of_node_put(np);
++
++	unittest(!__of_changeset_revert(&chgset), "revert failed\n");
++
++	of_changeset_destroy(&chgset);
++
++	of_node_put(parent);
++#endif
++}
++
++
+ static void __init of_unittest_parse_interrupts(void)
+ {
+ 	struct device_node *np;
+@@ -868,7 +903,7 @@ static int attach_node_and_children(struct device_node *np)
+ 	of_node_clear_flag(np, OF_DETACHED);
+ 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+ 
+-	__of_attach_node_sysfs(np);
++	__of_attach_node_post(np);
+ 	mutex_unlock(&of_mutex);
+ 
+ 	while (child) {
+@@ -926,7 +961,7 @@ static int __init unittest_data_add(void)
+ 	if (!of_root) {
+ 		of_root = unittest_data_node;
+ 		for_each_of_allnodes(np)
+-			__of_attach_node_sysfs(np);
++			__of_attach_node_post(np);
+ 		of_aliases = of_find_node_by_path("/aliases");
+ 		of_chosen = of_find_node_by_path("/chosen");
+ 		return 0;
+@@ -1853,6 +1888,272 @@ static inline void of_unittest_overlay_i2c_15(void) { }
+ 
+ #endif
+ 
++static void of_unittest_overlay_16(void)
++{
++	int ret;
++	int overlay_nr = 16;
++	int unittest_nr = 16;
++	enum overlay_type ovtype = PDEV_OVERLAY;
++	int before = 0;
++	int after = 1;
++	struct device_node *np = NULL;
++	int id = -1;
++
++	/* unittest device must not be in before state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != before) {
++		unittest(0, "overlay @\"%s\" with device @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!before ? "enabled" : "disabled");
++		return;
++	}
++
++	np = of_find_node_by_path(overlay_path(overlay_nr));
++	if (np == NULL) {
++		unittest(0, "could not find overlay node @\"%s\"\n",
++				overlay_path(overlay_nr));
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ret = of_overlay_create_indirect(np, "unittest16");
++	if (ret < 0) {
++		unittest(0, "could not create overlay from \"%s\"\n",
++				overlay_path(overlay_nr));
++		goto out;
++	}
++	id = ret;
++	of_unittest_track_overlay(id);
++
++	ret = 0;
++
++out:
++	of_node_put(np);
++
++	if (ret)
++		return;
++
++	/* unittest device must be to set to after state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != after) {
++		unittest(0, "overlay @\"%s\" failed to create @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!after ? "enabled" : "disabled");
++		return;
++	}
++
++	unittest(1, "overlay test %d passed\n", 16);
++}
++
++static void of_unittest_overlay_17(void)
++{
++	int ret;
++	int overlay_nr = 17;
++	int unittest_nr = 17;
++	enum overlay_type ovtype = PDEV_OVERLAY;
++	int before = 0;
++	int after = 1;
++	const char *root_path;
++	struct device_node *np = NULL, *target_root = NULL;
++	int id = -1;
++
++	/* unittest device must not be in before state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != before) {
++		unittest(0, "overlay @\"%s\" with device @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!before ? "enabled" : "disabled");
++		return;
++	}
++
++	np = of_find_node_by_path(overlay_path(overlay_nr));
++	if (np == NULL) {
++		unittest(0, "could not find overlay node @\"%s\"\n",
++				overlay_path(overlay_nr));
++		ret = -EINVAL;
++		goto out;
++	}
++
++	root_path = "/testcase-data/overlay-node/test-bus/test-unittest17";
++	target_root = of_find_node_by_path(root_path);
++	if (!target_root) {
++		unittest(0, "could not find target_root node @\"%s\"\n",
++				root_path);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ret = of_overlay_create_target_root(np, target_root);
++	of_node_put(target_root);
++
++	if (ret < 0) {
++		unittest(0, "could not create overlay from \"%s\"\n",
++				overlay_path(overlay_nr));
++		goto out;
++	}
++	id = ret;
++	of_unittest_track_overlay(id);
++
++	ret = 0;
++
++out:
++	of_node_put(np);
++
++	if (ret)
++		return;
++
++	/* unittest device must be to set to after state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != after) {
++		unittest(0, "overlay @\"%s\" failed to create @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!after ? "enabled" : "disabled");
++		return;
++	}
++
++	unittest(1, "overlay test %d passed\n", 17);
++}
++
++static void of_unittest_overlay_18(void)
++{
++	int ret;
++	int overlay_nr = 18;
++	int unittest_nr = 18;
++	enum overlay_type ovtype = PDEV_OVERLAY;
++	int before = 0;
++	int after = 1;
++	const char *root_path;
++	struct device_node *np = NULL, *target_root = NULL;
++	int id = -1;
++
++	/* unittest device must not be in before state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != before) {
++		unittest(0, "overlay @\"%s\" with device @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!before ? "enabled" : "disabled");
++		return;
++	}
++
++	np = of_find_node_by_path(overlay_path(overlay_nr));
++	if (np == NULL) {
++		unittest(0, "could not find overlay node @\"%s\"\n",
++				overlay_path(overlay_nr));
++		ret = -EINVAL;
++		goto out;
++	}
++
++	root_path = "/testcase-data/overlay-node/test-bus/test-unittest18";
++	target_root = of_find_node_by_path(root_path);
++	if (!target_root) {
++		unittest(0, "could not find target_root node @\"%s\"\n",
++				root_path);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ret = of_overlay_create_target_root(np, target_root);
++	of_node_put(target_root);
++
++	if (ret < 0) {
++		unittest(0, "could not create overlay from \"%s\"\n",
++				overlay_path(overlay_nr));
++		goto out;
++	}
++	id = ret;
++	of_unittest_track_overlay(id);
++
++	ret = 0;
++
++out:
++	of_node_put(np);
++
++	if (ret)
++		return;
++
++	/* unittest device must be to set to after state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != after) {
++		unittest(0, "overlay @\"%s\" failed to create @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!after ? "enabled" : "disabled");
++		return;
++	}
++
++	unittest(1, "overlay test %d passed\n", 18);
++}
++
++static void of_unittest_overlay_19(void)
++{
++	int ret;
++	int overlay_nr = 19;
++	int unittest_nr = 19;
++	enum overlay_type ovtype = PDEV_OVERLAY;
++	int before = 0;
++	int after = 0;
++	const char *root_path;
++	struct device_node *np = NULL, *target_root = NULL;
++	int id = -1;
++
++	/* unittest device must not be in before state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != before) {
++		unittest(0, "overlay @\"%s\" with device @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!before ? "enabled" : "disabled");
++		return;
++	}
++
++	np = of_find_node_by_path(overlay_path(overlay_nr));
++	if (np == NULL) {
++		unittest(0, "could not find overlay node @\"%s\"\n",
++				overlay_path(overlay_nr));
++		ret = -EINVAL;
++		goto out;
++	}
++
++	root_path = "/testcase-data/overlay-node/test-bus/test-unittest19";
++	target_root = of_find_node_by_path(root_path);
++	if (!target_root) {
++		unittest(0, "could not find target_root node @\"%s\"\n",
++				root_path);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ret = of_overlay_create_target_root(np, target_root);
++	of_node_put(target_root);
++
++	if (ret >= 0) {
++		unittest(0, "created overlay from \"%s\" while we shouldn't\n",
++				overlay_path(overlay_nr));
++		id = ret;
++		of_unittest_track_overlay(id);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ret = 0;
++
++out:
++	of_node_put(np);
++
++	if (ret)
++		return;
++
++	/* unittest device must be to set to after state */
++	if (of_unittest_device_exists(unittest_nr, ovtype) != after) {
++		unittest(0, "overlay @\"%s\" failed to create @\"%s\" %s\n",
++				overlay_path(overlay_nr),
++				unittest_path(unittest_nr, ovtype),
++				!after ? "enabled" : "disabled");
++		return;
++	}
++
++	unittest(1, "overlay test %d passed\n", 16);
++}
++
++
+ static void __init of_unittest_overlay(void)
+ {
+ 	struct device_node *bus_np = NULL;
+@@ -1904,6 +2205,12 @@ static void __init of_unittest_overlay(void)
+ 	of_unittest_overlay_10();
+ 	of_unittest_overlay_11();
+ 
++	of_unittest_overlay_16();
++
++	of_unittest_overlay_17();
++	of_unittest_overlay_18();
++	of_unittest_overlay_19();
++
+ #if IS_BUILTIN(CONFIG_I2C)
+ 	if (unittest(of_unittest_overlay_i2c_init() == 0, "i2c init failed\n"))
+ 		goto out;
+@@ -1954,6 +2261,7 @@ static int __init of_unittest(void)
+ 	of_unittest_property_string();
+ 	of_unittest_property_copy();
+ 	of_unittest_changeset();
++	of_unittest_changeset_helper();
+ 	of_unittest_parse_interrupts();
+ 	of_unittest_parse_interrupts_extended();
+ 	of_unittest_match_node();
+diff --git a/drivers/tty/serial/earlycon.c b/drivers/tty/serial/earlycon.c
+index b5b2f2b..067783f 100644
+--- a/drivers/tty/serial/earlycon.c
++++ b/drivers/tty/serial/earlycon.c
+@@ -19,7 +19,8 @@
+ #include <linux/io.h>
+ #include <linux/serial_core.h>
+ #include <linux/sizes.h>
+-#include <linux/mod_devicetable.h>
++#include <linux/of.h>
++#include <linux/of_fdt.h>
+ 
+ #ifdef CONFIG_FIX_EARLYCON_MEM
+ #include <asm/fixmap.h>
+@@ -28,22 +29,15 @@
+ #include <asm/serial.h>
+ 
+ static struct console early_con = {
+-	.name =		"uart", /* 8250 console switch requires this name */
++	.name =		"uart",		/* fixed up at earlycon registration */
+ 	.flags =	CON_PRINTBUFFER | CON_BOOT,
+-	.index =	-1,
++	.index =	0,
+ };
+ 
+ static struct earlycon_device early_console_dev = {
+ 	.con = &early_con,
+ };
+ 
+-extern struct earlycon_id __earlycon_table[];
+-static const struct earlycon_id __earlycon_table_sentinel
+-	__used __section(__earlycon_table_end);
+-
+-static const struct of_device_id __earlycon_of_table_sentinel
+-	__used __section(__earlycon_of_table_end);
+-
+ static void __iomem * __init earlycon_map(unsigned long paddr, size_t size)
+ {
+ 	void __iomem *base;
+@@ -61,6 +55,39 @@ static void __iomem * __init earlycon_map(unsigned long paddr, size_t size)
+ 	return base;
+ }
+ 
++static void __init earlycon_init(struct earlycon_device *device,
++				 const char *name)
++{
++	struct console *earlycon = device->con;
++	struct uart_port *port = &device->port;
++	const char *s;
++	size_t len;
++
++	/* scan backwards from end of string for first non-numeral */
++	for (s = name + strlen(name);
++	     s > name && s[-1] >= '0' && s[-1] <= '9';
++	     s--)
++		;
++	if (*s)
++		earlycon->index = simple_strtoul(s, NULL, 10);
++	len = s - name;
++	strlcpy(earlycon->name, name, min(len + 1, sizeof(earlycon->name)));
++	earlycon->data = &early_console_dev;
++
++	if (port->iotype == UPIO_MEM || port->iotype == UPIO_MEM16 ||
++	    port->iotype == UPIO_MEM32 || port->iotype == UPIO_MEM32BE)
++		pr_info("%s%d at MMIO%s %pa (options '%s')\n",
++			earlycon->name, earlycon->index,
++			(port->iotype == UPIO_MEM) ? "" :
++			(port->iotype == UPIO_MEM16) ? "16" :
++			(port->iotype == UPIO_MEM32) ? "32" : "32be",
++			&port->mapbase, device->options);
++	else
++		pr_info("%s%d at I/O port 0x%lx (options '%s')\n",
++			earlycon->name, earlycon->index,
++			port->iobase, device->options);
++}
++
+ static int __init parse_options(struct earlycon_device *device, char *options)
+ {
+ 	struct uart_port *port = &device->port;
+@@ -71,10 +98,16 @@ static int __init parse_options(struct earlycon_device *device, char *options)
+ 		return -EINVAL;
+ 
+ 	switch (port->iotype) {
++	case UPIO_MEM:
++		port->mapbase = addr;
++		break;
++	case UPIO_MEM16:
++		port->regshift = 1;
++		port->mapbase = addr;
++		break;
+ 	case UPIO_MEM32:
+ 	case UPIO_MEM32BE:
+-		port->regshift = 2;	/* fall-through */
+-	case UPIO_MEM:
++		port->regshift = 2;
+ 		port->mapbase = addr;
+ 		break;
+ 	case UPIO_PORT:
+@@ -91,18 +124,6 @@ static int __init parse_options(struct earlycon_device *device, char *options)
+ 		strlcpy(device->options, options, length);
+ 	}
+ 
+-	if (port->iotype == UPIO_MEM || port->iotype == UPIO_MEM32 ||
+-	    port->iotype == UPIO_MEM32BE)
+-		pr_info("Early serial console at MMIO%s 0x%llx (options '%s')\n",
+-			(port->iotype == UPIO_MEM) ? "" :
+-			(port->iotype == UPIO_MEM32) ? "32" : "32be",
+-			(unsigned long long)port->mapbase,
+-			device->options);
+-	else
+-		pr_info("Early serial console at I/O port 0x%lx (options '%s')\n",
+-			port->iobase,
+-			device->options);
+-
+ 	return 0;
+ }
+ 
+@@ -120,7 +141,7 @@ static int __init register_earlycon(char *buf, const struct earlycon_id *match)
+ 	if (port->mapbase)
+ 		port->membase = earlycon_map(port->mapbase, 64);
+ 
+-	early_console_dev.con->data = &early_console_dev;
++	earlycon_init(&early_console_dev, match->name);
+ 	err = match->setup(&early_console_dev, buf);
+ 	if (err < 0)
+ 		return err;
+@@ -159,7 +180,7 @@ int __init setup_earlycon(char *buf)
+ 	if (early_con.flags & CON_ENABLED)
+ 		return -EALREADY;
+ 
+-	for (match = __earlycon_table; match->name[0]; match++) {
++	for (match = __earlycon_table; match < __earlycon_table_end; match++) {
+ 		size_t len = strlen(match->name);
+ 
+ 		if (strncmp(buf, match->name, len))
+@@ -197,20 +218,62 @@ static int __init param_setup_earlycon(char *buf)
+ }
+ early_param("earlycon", param_setup_earlycon);
+ 
+-int __init of_setup_earlycon(unsigned long addr,
+-			     int (*setup)(struct earlycon_device *, const char *))
++#ifdef CONFIG_OF_EARLY_FLATTREE
++
++int __init of_setup_earlycon(const struct earlycon_id *match,
++			     unsigned long node,
++			     const char *options)
+ {
+ 	int err;
+ 	struct uart_port *port = &early_console_dev.port;
++	const __be32 *val;
++	bool big_endian;
++	u64 addr;
+ 
+ 	spin_lock_init(&port->lock);
+ 	port->iotype = UPIO_MEM;
++	addr = of_flat_dt_translate_address(node);
++	if (addr == OF_BAD_ADDR) {
++		pr_warn("[%s] bad address\n", match->name);
++		return -ENXIO;
++	}
+ 	port->mapbase = addr;
+ 	port->uartclk = BASE_BAUD * 16;
+-	port->membase = earlycon_map(addr, SZ_4K);
++	port->membase = earlycon_map(port->mapbase, SZ_4K);
++
++	val = of_get_flat_dt_prop(node, "reg-offset", NULL);
++	if (val)
++		port->mapbase += be32_to_cpu(*val);
++	val = of_get_flat_dt_prop(node, "reg-shift", NULL);
++	if (val)
++		port->regshift = be32_to_cpu(*val);
++	big_endian = of_get_flat_dt_prop(node, "big-endian", NULL) != NULL ||
++		(IS_ENABLED(CONFIG_CPU_BIG_ENDIAN) &&
++		 of_get_flat_dt_prop(node, "native-endian", NULL) != NULL);
++	val = of_get_flat_dt_prop(node, "reg-io-width", NULL);
++	if (val) {
++		switch (be32_to_cpu(*val)) {
++		case 1:
++			port->iotype = UPIO_MEM;
++			break;
++		case 2:
++			port->iotype = UPIO_MEM16;
++			break;
++		case 4:
++			port->iotype = (big_endian) ? UPIO_MEM32BE : UPIO_MEM32;
++			break;
++		default:
++			pr_warn("[%s] unsupported reg-io-width\n", match->name);
++			return -EINVAL;
++		}
++	}
+ 
+-	early_console_dev.con->data = &early_console_dev;
+-	err = setup(&early_console_dev, NULL);
++	if (options) {
++		strlcpy(early_console_dev.options, options,
++			sizeof(early_console_dev.options));
++	}
++	earlycon_init(&early_console_dev, match->name);
++	err = match->setup(&early_console_dev, options);
+ 	if (err < 0)
+ 		return err;
+ 	if (!early_console_dev.con->write)
+@@ -220,3 +283,5 @@ int __init of_setup_earlycon(unsigned long addr,
+ 	register_console(early_console_dev.con);
+ 	return 0;
+ }
++
++#endif /* CONFIG_OF_EARLY_FLATTREE */
+diff --git a/fs/configfs/configfs_internal.h b/fs/configfs/configfs_internal.h
+index b65d1ef..ccc31fa 100644
+--- a/fs/configfs/configfs_internal.h
++++ b/fs/configfs/configfs_internal.h
+@@ -53,13 +53,14 @@ struct configfs_dirent {
+ #define CONFIGFS_ROOT		0x0001
+ #define CONFIGFS_DIR		0x0002
+ #define CONFIGFS_ITEM_ATTR	0x0004
++#define CONFIGFS_ITEM_BIN_ATTR	0x0008
+ #define CONFIGFS_ITEM_LINK	0x0020
+ #define CONFIGFS_USET_DIR	0x0040
+ #define CONFIGFS_USET_DEFAULT	0x0080
+ #define CONFIGFS_USET_DROPPING	0x0100
+ #define CONFIGFS_USET_IN_MKDIR	0x0200
+ #define CONFIGFS_USET_CREATING	0x0400
+-#define CONFIGFS_NOT_PINNED	(CONFIGFS_ITEM_ATTR)
++#define CONFIGFS_NOT_PINNED	(CONFIGFS_ITEM_ATTR | CONFIGFS_ITEM_BIN_ATTR)
+ 
+ extern struct mutex configfs_symlink_mutex;
+ extern spinlock_t configfs_dirent_lock;
+@@ -72,6 +73,8 @@ extern struct inode * configfs_new_inode(umode_t mode, struct configfs_dirent *,
+ extern int configfs_create(struct dentry *, umode_t mode, void (*init)(struct inode *));
+ 
+ extern int configfs_create_file(struct config_item *, const struct configfs_attribute *);
++extern int configfs_create_bin_file(struct config_item *,
++				    const struct configfs_bin_attribute *);
+ extern int configfs_make_dirent(struct configfs_dirent *,
+ 				struct dentry *, void *, umode_t, int);
+ extern int configfs_dirent_is_ready(struct configfs_dirent *);
+@@ -88,7 +91,7 @@ extern void configfs_release_fs(void);
+ extern struct rw_semaphore configfs_rename_sem;
+ extern const struct file_operations configfs_dir_operations;
+ extern const struct file_operations configfs_file_operations;
+-extern const struct file_operations bin_fops;
++extern const struct file_operations configfs_bin_file_operations;
+ extern const struct inode_operations configfs_dir_inode_operations;
+ extern const struct inode_operations configfs_root_inode_operations;
+ extern const struct inode_operations configfs_symlink_inode_operations;
+@@ -119,6 +122,13 @@ static inline struct configfs_attribute * to_attr(struct dentry * dentry)
+ 	return ((struct configfs_attribute *) sd->s_element);
+ }
+ 
++static inline struct configfs_bin_attribute *to_bin_attr(struct dentry *dentry)
++{
++	struct configfs_attribute *attr = to_attr(dentry);
++
++	return container_of(attr, struct configfs_bin_attribute, cb_attr);
++}
++
+ static inline struct config_item *configfs_get_config_item(struct dentry *dentry)
+ {
+ 	struct config_item * item = NULL;
+diff --git a/fs/configfs/dir.c b/fs/configfs/dir.c
+index a7a1b21..7ae97e8 100644
+--- a/fs/configfs/dir.c
++++ b/fs/configfs/dir.c
+@@ -255,6 +255,12 @@ static void configfs_init_file(struct inode * inode)
+ 	inode->i_fop = &configfs_file_operations;
+ }
+ 
++static void configfs_init_bin_file(struct inode *inode)
++{
++	inode->i_size = 0;
++	inode->i_fop = &configfs_bin_file_operations;
++}
++
+ static void init_symlink(struct inode * inode)
+ {
+ 	inode->i_op = &configfs_symlink_inode_operations;
+@@ -423,7 +429,9 @@ static int configfs_attach_attr(struct configfs_dirent * sd, struct dentry * den
+ 	spin_unlock(&configfs_dirent_lock);
+ 
+ 	error = configfs_create(dentry, (attr->ca_mode & S_IALLUGO) | S_IFREG,
+-				configfs_init_file);
++				(sd->s_type & CONFIGFS_ITEM_BIN_ATTR) ?
++					configfs_init_bin_file :
++					configfs_init_file);
+ 	if (error) {
+ 		configfs_put(sd);
+ 		return error;
+@@ -583,6 +591,7 @@ static int populate_attrs(struct config_item *item)
+ {
+ 	struct config_item_type *t = item->ci_type;
+ 	struct configfs_attribute *attr;
++	struct configfs_bin_attribute *bin_attr;
+ 	int error = 0;
+ 	int i;
+ 
+@@ -594,6 +603,13 @@ static int populate_attrs(struct config_item *item)
+ 				break;
+ 		}
+ 	}
++	if (t->ct_bin_attrs) {
++		for (i = 0; (bin_attr = t->ct_bin_attrs[i]) != NULL; i++) {
++			error = configfs_create_bin_file(item, bin_attr);
++			if (error)
++				break;
++		}
++	}
+ 
+ 	if (error)
+ 		detach_attrs(item);
+diff --git a/fs/configfs/file.c b/fs/configfs/file.c
+index d39099e..3687187 100644
+--- a/fs/configfs/file.c
++++ b/fs/configfs/file.c
+@@ -28,6 +28,7 @@
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ #include <linux/mutex.h>
++#include <linux/vmalloc.h>
+ #include <asm/uaccess.h>
+ 
+ #include <linux/configfs.h>
+@@ -48,6 +49,10 @@ struct configfs_buffer {
+ 	struct configfs_item_operations	* ops;
+ 	struct mutex		mutex;
+ 	int			needs_read_fill;
++	bool			read_in_progress;
++	bool			write_in_progress;
++	char			*bin_buffer;
++	int			bin_buffer_size;
+ };
+ 
+ 
+@@ -123,6 +128,87 @@ out:
+ 	return retval;
+ }
+ 
++/**
++ *	configfs_read_bin_file - read a binary attribute.
++ *	@file:	file pointer.
++ *	@buf:	buffer to fill.
++ *	@count:	number of bytes to read.
++ *	@ppos:	starting offset in file.
++ *
++ *	Userspace wants to read a binary attribute file. The attribute
++ *	descriptor is in the file's ->d_fsdata. The target item is in the
++ *	directory's ->d_fsdata.
++ *
++ *	We check whether we need to refill the buffer. If so we will
++ *	call the attributes' attr->read() twice. The first time we
++ *	will pass a NULL as a buffer pointer, which the attributes' method
++ *	will use to return the size of the buffer required. If no error
++ *	occurs we will allocate the buffer using vmalloc and call
++ *	attr->read() again passing that buffer as an argument.
++ *	Then we just copy to user-space using simple_read_from_buffer.
++ */
++
++static ssize_t
++configfs_read_bin_file(struct file *file, char __user *buf,
++		       size_t count, loff_t *ppos)
++{
++	struct configfs_buffer *buffer = file->private_data;
++	struct dentry *dentry = file->f_path.dentry;
++	struct config_item *item = to_item(dentry->d_parent);
++	struct configfs_bin_attribute *bin_attr = to_bin_attr(dentry);
++	ssize_t retval = 0;
++	ssize_t len = min_t(size_t, count, PAGE_SIZE);
++
++	mutex_lock(&buffer->mutex);
++
++	/* we don't support switching read/write modes */
++	if (buffer->write_in_progress) {
++		retval = -ETXTBSY;
++		goto out;
++	}
++	buffer->read_in_progress = 1;
++
++	if (buffer->needs_read_fill) {
++		/* perform first read with buf == NULL to get extent */
++		len = bin_attr->read(item, NULL, 0);
++		if (len <= 0) {
++			retval = len;
++			goto out;
++		}
++
++		/* do not exceed the maximum value */
++		if (bin_attr->cb_max_size && len > bin_attr->cb_max_size) {
++			retval = -EFBIG;
++			goto out;
++		}
++
++		buffer->bin_buffer = vmalloc(len);
++		if (buffer->bin_buffer == NULL) {
++			retval = -ENOMEM;
++			goto out;
++		}
++		buffer->bin_buffer_size = len;
++
++		/* perform second read to fill buffer */
++		len = bin_attr->read(item, buffer->bin_buffer, len);
++		if (len < 0) {
++			retval = len;
++			vfree(buffer->bin_buffer);
++			buffer->bin_buffer_size = 0;
++			buffer->bin_buffer = NULL;
++			goto out;
++		}
++
++		buffer->needs_read_fill = 0;
++	}
++
++	retval = simple_read_from_buffer(buf, count, ppos, buffer->bin_buffer,
++					buffer->bin_buffer_size);
++out:
++	mutex_unlock(&buffer->mutex);
++	return retval;
++}
++
+ 
+ /**
+  *	fill_write_buffer - copy buffer from userspace.
+@@ -209,10 +295,80 @@ configfs_write_file(struct file *file, const char __user *buf, size_t count, lof
+ 	return len;
+ }
+ 
+-static int check_perm(struct inode * inode, struct file * file)
++/**
++ *	configfs_write_bin_file - write a binary attribute.
++ *	@file:	file pointer
++ *	@buf:	data to write
++ *	@count:	number of bytes
++ *	@ppos:	starting offset
++ *
++ *	Writing to a binary attribute file is similar to a normal read.
++ *	We buffer the consecutive writes (binary attribute files do not
++ *	support lseek) in a continuously growing buffer, but we don't
++ *	commit until the close of the file.
++ */
++
++static ssize_t
++configfs_write_bin_file(struct file *file, const char __user *buf,
++			size_t count, loff_t *ppos)
++{
++	struct configfs_buffer *buffer = file->private_data;
++	struct dentry *dentry = file->f_path.dentry;
++	struct configfs_bin_attribute *bin_attr = to_bin_attr(dentry);
++	void *tbuf = NULL;
++	ssize_t len;
++
++	mutex_lock(&buffer->mutex);
++
++	/* we don't support switching read/write modes */
++	if (buffer->read_in_progress) {
++		len = -ETXTBSY;
++		goto out;
++	}
++	buffer->write_in_progress = 1;
++
++	/* buffer grows? */
++	if (*ppos + count > buffer->bin_buffer_size) {
++
++		if (bin_attr->cb_max_size &&
++			*ppos + count > bin_attr->cb_max_size) {
++			len = -EFBIG;
++		}
++
++		tbuf = vmalloc(*ppos + count);
++		if (tbuf == NULL) {
++			len = -ENOMEM;
++			goto out;
++		}
++
++		/* copy old contents */
++		if (buffer->bin_buffer) {
++			memcpy(tbuf, buffer->bin_buffer,
++				buffer->bin_buffer_size);
++			vfree(buffer->bin_buffer);
++		}
++
++		/* clear the new area */
++		memset(tbuf + buffer->bin_buffer_size, 0,
++			*ppos + count - buffer->bin_buffer_size);
++		buffer->bin_buffer = tbuf;
++		buffer->bin_buffer_size = *ppos + count;
++	}
++
++	len = simple_write_to_buffer(buffer->bin_buffer,
++			buffer->bin_buffer_size, ppos, buf, count);
++	if (len > 0)
++		*ppos += len;
++out:
++	mutex_unlock(&buffer->mutex);
++	return len;
++}
++
++static int check_perm(struct inode * inode, struct file * file, int type)
+ {
+ 	struct config_item *item = configfs_get_config_item(file->f_path.dentry->d_parent);
+ 	struct configfs_attribute * attr = to_attr(file->f_path.dentry);
++	struct configfs_bin_attribute *bin_attr = NULL;
+ 	struct configfs_buffer * buffer;
+ 	struct configfs_item_operations * ops = NULL;
+ 	int error = 0;
+@@ -220,6 +376,9 @@ static int check_perm(struct inode * inode, struct file * file)
+ 	if (!item || !attr)
+ 		goto Einval;
+ 
++	if (type & CONFIGFS_ITEM_BIN_ATTR)
++		bin_attr = to_bin_attr(file->f_path.dentry);
++
+ 	/* Grab the module reference for this attribute if we have one */
+ 	if (!try_module_get(attr->ca_owner)) {
+ 		error = -ENODEV;
+@@ -236,9 +395,14 @@ static int check_perm(struct inode * inode, struct file * file)
+ 	 * and we must have a store method.
+ 	 */
+ 	if (file->f_mode & FMODE_WRITE) {
+-		if (!(inode->i_mode & S_IWUGO) || !attr->store)
++		if (!(inode->i_mode & S_IWUGO))
++			goto Eaccess;
++
++		if ((type & CONFIGFS_ITEM_ATTR) && !attr->store)
+ 			goto Eaccess;
+ 
++		if ((type & CONFIGFS_ITEM_BIN_ATTR) && !bin_attr->write)
++			goto Eaccess;
+ 	}
+ 
+ 	/* File needs read support.
+@@ -246,7 +410,13 @@ static int check_perm(struct inode * inode, struct file * file)
+ 	 * must be a show method for it.
+ 	 */
+ 	if (file->f_mode & FMODE_READ) {
+-		if (!(inode->i_mode & S_IRUGO) || !attr->show)
++		if (!(inode->i_mode & S_IRUGO))
++			goto Eaccess;
++
++		if ((type & CONFIGFS_ITEM_ATTR) && !attr->show)
++			goto Eaccess;
++
++		if ((type & CONFIGFS_ITEM_BIN_ATTR) && !bin_attr->read)
+ 			goto Eaccess;
+ 	}
+ 
+@@ -260,6 +430,8 @@ static int check_perm(struct inode * inode, struct file * file)
+ 	}
+ 	mutex_init(&buffer->mutex);
+ 	buffer->needs_read_fill = 1;
++	buffer->read_in_progress = 0;
++	buffer->write_in_progress = 0;
+ 	buffer->ops = ops;
+ 	file->private_data = buffer;
+ 	goto Done;
+@@ -277,12 +449,7 @@ static int check_perm(struct inode * inode, struct file * file)
+ 	return error;
+ }
+ 
+-static int configfs_open_file(struct inode * inode, struct file * filp)
+-{
+-	return check_perm(inode,filp);
+-}
+-
+-static int configfs_release(struct inode * inode, struct file * filp)
++static int configfs_release(struct inode *inode, struct file *filp)
+ {
+ 	struct config_item * item = to_item(filp->f_path.dentry->d_parent);
+ 	struct configfs_attribute * attr = to_attr(filp->f_path.dentry);
+@@ -303,6 +470,47 @@ static int configfs_release(struct inode * inode, struct file * filp)
+ 	return 0;
+ }
+ 
++static int configfs_open_file(struct inode *inode, struct file *filp)
++{
++	return check_perm(inode, filp, CONFIGFS_ITEM_ATTR);
++}
++
++static int configfs_open_bin_file(struct inode *inode, struct file *filp)
++{
++	return check_perm(inode, filp, CONFIGFS_ITEM_BIN_ATTR);
++}
++
++static int configfs_release_bin_file(struct inode *inode, struct file *filp)
++{
++	struct configfs_buffer *buffer = filp->private_data;
++	struct dentry *dentry = filp->f_path.dentry;
++	struct config_item *item = to_item(dentry->d_parent);
++	struct configfs_bin_attribute *bin_attr = to_bin_attr(dentry);
++	ssize_t len = 0;
++	int ret;
++
++	buffer->read_in_progress = 0;
++
++	if (buffer->write_in_progress) {
++		buffer->write_in_progress = 0;
++
++		len = bin_attr->write(item, buffer->bin_buffer,
++				buffer->bin_buffer_size);
++
++		/* vfree on NULL is safe */
++		vfree(buffer->bin_buffer);
++		buffer->bin_buffer = NULL;
++		buffer->bin_buffer_size = 0;
++		buffer->needs_read_fill = 1;
++	}
++
++	ret = configfs_release(inode, filp);
++	if (len < 0)
++		return len;
++	return ret;
++}
++
++
+ const struct file_operations configfs_file_operations = {
+ 	.read		= configfs_read_file,
+ 	.write		= configfs_write_file,
+@@ -311,6 +519,14 @@ const struct file_operations configfs_file_operations = {
+ 	.release	= configfs_release,
+ };
+ 
++const struct file_operations configfs_bin_file_operations = {
++	.read		= configfs_read_bin_file,
++	.write		= configfs_write_bin_file,
++	.llseek		= NULL,		/* bin file is not seekable */
++	.open		= configfs_open_bin_file,
++	.release	= configfs_release_bin_file,
++};
++
+ /**
+  *	configfs_create_file - create an attribute file for an item.
+  *	@item:	item we're creating for.
+@@ -332,3 +548,24 @@ int configfs_create_file(struct config_item * item, const struct configfs_attrib
+ 	return error;
+ }
+ 
++/**
++ *	configfs_create_bin_file - create a binary attribute file for an item.
++ *	@item:	item we're creating for.
++ *	@attr:	atrribute descriptor.
++ */
++
++int configfs_create_bin_file(struct config_item *item,
++		const struct configfs_bin_attribute *bin_attr)
++{
++	struct dentry *dir = item->ci_dentry;
++	struct configfs_dirent *parent_sd = dir->d_fsdata;
++	umode_t mode = (bin_attr->cb_attr.ca_mode & S_IALLUGO) | S_IFREG;
++	int error = 0;
++
++	mutex_lock_nested(&dir->d_inode->i_mutex, I_MUTEX_NORMAL);
++	error = configfs_make_dirent(parent_sd, NULL, (void *) bin_attr, mode,
++				     CONFIGFS_ITEM_BIN_ATTR);
++	mutex_unlock(&dir->d_inode->i_mutex);
++
++	return error;
++}
+diff --git a/fs/configfs/inode.c b/fs/configfs/inode.c
+index eae8757..0cc810e 100644
+--- a/fs/configfs/inode.c
++++ b/fs/configfs/inode.c
+@@ -218,7 +218,7 @@ const unsigned char * configfs_get_name(struct configfs_dirent *sd)
+ 	if (sd->s_type & (CONFIGFS_DIR | CONFIGFS_ITEM_LINK))
+ 		return sd->s_dentry->d_name.name;
+ 
+-	if (sd->s_type & CONFIGFS_ITEM_ATTR) {
++	if (sd->s_type & (CONFIGFS_ITEM_ATTR | CONFIGFS_ITEM_BIN_ATTR)) {
+ 		attr = sd->s_element;
+ 		return attr->ca_name;
+ 	}
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index c4bd0e2..e9a81a6 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -157,7 +157,7 @@
+ #define EARLYCON_TABLE() STRUCT_ALIGN();			\
+ 			 VMLINUX_SYMBOL(__earlycon_table) = .;	\
+ 			 *(__earlycon_table)			\
+-			 *(__earlycon_table_end)
++			 VMLINUX_SYMBOL(__earlycon_table_end) = .;
+ #else
+ #define EARLYCON_TABLE()
+ #endif
+@@ -179,7 +179,6 @@
+ #define RESERVEDMEM_OF_TABLES()	OF_TABLE(CONFIG_OF_RESERVED_MEM, reservedmem)
+ #define CPU_METHOD_OF_TABLES()	OF_TABLE(CONFIG_SMP, cpu_method)
+ #define CPUIDLE_METHOD_OF_TABLES() OF_TABLE(CONFIG_CPU_IDLE, cpuidle_method)
+-#define EARLYCON_OF_TABLES()	OF_TABLE(CONFIG_SERIAL_EARLYCON, earlycon)
+ 
+ #ifdef CONFIG_ACPI
+ #define ACPI_PROBE_TABLE(name)						\
+@@ -526,8 +525,7 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
+-	EARLYCON_TABLE()						\
+-	EARLYCON_OF_TABLES()
++	EARLYCON_TABLE()
+ 
+ #define INIT_TEXT							\
+ 	*(.init.text)							\
+diff --git a/include/linux/configfs.h b/include/linux/configfs.h
+index 758a029..f7300d0 100644
+--- a/include/linux/configfs.h
++++ b/include/linux/configfs.h
+@@ -51,6 +51,7 @@ struct module;
+ struct configfs_item_operations;
+ struct configfs_group_operations;
+ struct configfs_attribute;
++struct configfs_bin_attribute;
+ struct configfs_subsystem;
+ 
+ struct config_item {
+@@ -84,6 +85,7 @@ struct config_item_type {
+ 	struct configfs_item_operations		*ct_item_ops;
+ 	struct configfs_group_operations	*ct_group_ops;
+ 	struct configfs_attribute		**ct_attrs;
++	struct configfs_bin_attribute		**ct_bin_attrs;
+ };
+ 
+ /**
+@@ -154,6 +156,54 @@ static struct configfs_attribute _pfx##attr_##_name = {	\
+ 	.store		= _pfx##_name##_store,		\
+ }
+ 
++struct file;
++struct vm_area_struct;
++
++struct configfs_bin_attribute {
++	struct configfs_attribute cb_attr;	/* std. attribute */
++	void *cb_private;			/* for user       */
++	size_t cb_max_size;			/* max core size  */
++	ssize_t (*read)(struct config_item *, void *, size_t);
++	ssize_t (*write)(struct config_item *, const void *, size_t);
++};
++
++#define CONFIGFS_BIN_ATTR(_pfx, _name, _priv, _maxsz)		\
++static struct configfs_bin_attribute _pfx##attr_##_name = {	\
++	.cb_attr = {						\
++		.ca_name	= __stringify(_name),		\
++		.ca_mode	= S_IRUGO | S_IWUSR,		\
++		.ca_owner	= THIS_MODULE,			\
++	},							\
++	.cb_private	= _priv,				\
++	.cb_max_size	= _maxsz,				\
++	.read		= _pfx##_name##_read,			\
++	.write		= _pfx##_name##_write,			\
++}
++
++#define CONFIGFS_BIN_ATTR_RO(_pfx, _name, _priv, _maxsz)	\
++static struct configfs_attribute _pfx##attr_##_name = {		\
++	.cb_attr = {						\
++		.ca_name	= __stringify(_name),		\
++		.ca_mode	= S_IRUGO,			\
++		.ca_owner	= THIS_MODULE,			\
++	},							\
++	.cb_private	= _priv,				\
++	.cb_max_size	= _maxsz,				\
++	.read		= _pfx##_name##_read,			\
++}
++
++#define CONFIGFS_BIN_ATTR_WO(_pfx, _name, _priv, _maxsz)	\
++static struct configfs_attribute _pfx##attr_##_name = {		\
++	.cb_attr = {						\
++		.ca_name	= __stringify(_name),		\
++		.ca_mode	= S_IWUSR,			\
++		.ca_owner	= THIS_MODULE,			\
++	},							\
++	.cb_private	= _priv,				\
++	.cb_max_size	= _maxsz,				\
++	.write		= _pfx##_name##_write,			\
++}
++
+ /*
+  * If allow_link() exists, the item can symlink(2) out to other
+  * items.  If the item is a group, it may support mkdir(2).
+diff --git a/include/linux/fpga/fpga-bridge.h b/include/linux/fpga/fpga-bridge.h
+new file mode 100644
+index 0000000..9e740ca
+--- /dev/null
++++ b/include/linux/fpga/fpga-bridge.h
+@@ -0,0 +1,56 @@
++#include <linux/device.h>
++
++#ifndef _LINUX_FPGA_BRIDGE_H
++#define _LINUX_FPGA_BRIDGE_H
++
++struct fpga_bridge;
++
++/**
++ * struct fpga_bridge_ops - ops for low level FPGA bridge drivers
++ * @enable_show: returns the FPGA bridge's status
++ * @enable_set: set a FPGA bridge as enabled or disabled
++ * @fpga_bridge_remove: set FPGA into a specific state during driver remove
++ */
++struct fpga_bridge_ops {
++	int (*enable_show)(struct fpga_bridge *bridge);
++	int (*enable_set)(struct fpga_bridge *bridge, bool enable);
++	void (*fpga_bridge_remove)(struct fpga_bridge *bridge);
++};
++
++/**
++ * struct fpga_bridge - FPGA bridge structure
++ * @name: name of low level FPGA bridge
++ * @dev: FPGA bridge device
++ * @mutex: enforces exclusive reference to bridge
++ * @br_ops: pointer to struct of FPGA bridge ops
++ * @node: FPGA bridge list node
++ * @priv: low level driver private date
++ */
++struct fpga_bridge {
++	const char *name;
++	struct device dev;
++	struct mutex mutex; /* for exclusive reference to bridge */
++	const struct fpga_bridge_ops *br_ops;
++	struct list_head node;
++	void *priv;
++};
++
++#define to_fpga_bridge(d) container_of(d, struct fpga_bridge, dev)
++
++struct fpga_bridge *of_get_fpga_bus(struct device_node *np);
++struct fpga_bridge *of_fpga_bridge_get(struct device_node *node);
++void fpga_bridge_put(struct fpga_bridge *bridge);
++int fpga_bridge_enable(struct fpga_bridge *bridge);
++int fpga_bridge_disable(struct fpga_bridge *bridge);
++
++int fpga_bridges_enable(struct list_head *bridge_list);
++int fpga_bridges_disable(struct list_head *bridge_list);
++void fpga_bridges_put(struct list_head *bridge_list);
++int fpga_bridge_get_to_list(struct device_node *np,
++	struct list_head *bridge_list);
++
++int fpga_bridge_register(struct device *dev, const char *name,
++	const struct fpga_bridge_ops *br_ops, void *priv);
++void fpga_bridge_unregister(struct device *dev);
++
++#endif /* _LINUX_FPGA_BRIDGE_H */
+diff --git a/include/linux/of.h b/include/linux/of.h
+index dd10626..4687d73 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -25,6 +25,7 @@
+ #include <linux/notifier.h>
+ #include <linux/property.h>
+ #include <linux/list.h>
++#include <linux/rhashtable.h>
+ 
+ #include <asm/byteorder.h>
+ #include <asm/errno.h>
+@@ -52,6 +53,7 @@ struct device_node {
+ 	phandle phandle;
+ 	const char *full_name;
+ 	struct fwnode_handle fwnode;
++	struct rhash_head ht_node;
+ 
+ 	struct	property *properties;
+ 	struct	property *deadprops;	/* removed properties */
+@@ -1037,6 +1039,27 @@ static inline int of_changeset_update_property(struct of_changeset *ocs,
+ {
+ 	return of_changeset_action(ocs, OF_RECONFIG_UPDATE_PROPERTY, np, prop);
+ }
++
++struct device_node *of_changeset_create_device_nodev(
++	struct of_changeset *ocs, struct device_node *parent,
++	const char *fmt, va_list vargs);
++__printf(3, 4) struct device_node *of_changeset_create_device_node(
++	struct of_changeset *ocs, struct device_node *parent,
++	const char *fmt, ...);
++int of_changeset_add_property_copy(struct of_changeset *ocs,
++	struct device_node *np, const char *name,
++	const void *value, int length);
++int of_changeset_add_property_string(struct of_changeset *ocs,
++	struct device_node *np, const char *name, const char *str);
++__printf(4, 5) int of_changeset_add_property_stringf(struct of_changeset *ocs,
++		struct device_node *np, const char *name, const char *fmt, ...);
++int of_changeset_add_property_string_list(struct of_changeset *ocs,
++	struct device_node *np, const char *name, const char **strs, int count);
++int of_changeset_add_property_u32(struct of_changeset *ocs,
++	struct device_node *np, const char *name, u32 val);
++int of_changeset_add_property_bool(struct of_changeset *ocs,
++	struct device_node *np, const char *name);
++
+ #else /* CONFIG_OF_DYNAMIC */
+ static inline int of_reconfig_notifier_register(struct notifier_block *nb)
+ {
+@@ -1056,6 +1079,59 @@ static inline int of_reconfig_get_state_change(unsigned long action,
+ {
+ 	return -EINVAL;
+ }
++
++static inline int of_changeset_create_device_node(struct of_changeset *ocs,
++	struct device_node *parent, const char *fmt, ...)
++{
++	return -EINVAL;
++}
++
++int of_changeset_add_property_copy(struct of_changeset *ocs,
++	struct device_node *np, const char *name,
++	const void *value, int length)
++{
++	return -EINVAL;
++}
++
++int of_changeset_add_property_string(struct of_changeset *ocs,
++	struct device_node *np, const char *name, const char *str)
++{
++	return -EINVAL;
++}
++
++static inline struct device_node *of_changeset_create_device_nodev(
++	struct of_changeset *ocs, struct device_node *parent,
++	const char *fmt, va_list vargs)
++{
++	return ERR_PTR(-EINVAL);
++}
++
++static inline __printf(4, 5) struct device_node *
++	of_changeset_add_property_stringf(
++		struct of_changeset *ocs, struct device_node *np,
++		const char *name, const char *fmt, ...)
++{
++	return ERR_PTR(-EINVAL);
++}
++
++static inline int of_changeset_add_property_string_list(
++	struct of_changeset *ocs, struct device_node *np, const char *name,
++	const char **strs, int count)
++{
++	return -EINVAL;
++}
++
++static inline int of_changeset_add_property_u32(struct of_changeset *ocs,
++	struct device_node *np, const char *name, u32 val)
++{
++	return -EINVAL;
++}
++
++static inline int of_changeset_add_property_bool(struct of_changeset *ocs,
++	struct device_node *np, const char *name)
++{
++	return -EINVAL;
++}
+ #endif /* CONFIG_OF_DYNAMIC */
+ 
+ /* CONFIG_OF_RESOLVE api */
+@@ -1083,6 +1159,10 @@ int of_overlay_create(struct device_node *tree);
+ int of_overlay_destroy(int id);
+ int of_overlay_destroy_all(void);
+ 
++int of_overlay_create_indirect(struct device_node *tree, const char *id);
++int of_overlay_create_target_root(struct device_node *tree,
++		struct device_node *target_root);
++
+ #else
+ 
+ static inline int of_overlay_create(struct device_node *tree)
+@@ -1100,6 +1180,18 @@ static inline int of_overlay_destroy_all(void)
+ 	return -ENOTSUPP;
+ }
+ 
++static inline int of_overlay_create_indirect(struct device_node *tree,
++		const char *id)
++{
++	return -ENOTSUPP;
++}
++
++static inline int of_overlay_create_target_root(struct device_node *tree,
++		struct device_node *target_root)
++{
++	return -ENOTSUPP;
++}
++
+ #endif
+ 
+ #endif /* _LINUX_OF_H */
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index df9ef38..2fbe868 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -88,7 +88,7 @@ extern void unflatten_device_tree(void);
+ extern void unflatten_and_copy_device_tree(void);
+ extern void early_init_devtree(void *);
+ extern void early_get_first_memblock_info(void *, phys_addr_t *);
+-extern u64 fdt_translate_address(const void *blob, int node_offset);
++extern u64 of_flat_dt_translate_address(unsigned long node);
+ extern void of_fdt_limit_memory(int limit);
+ #else /* CONFIG_OF_FLATTREE */
+ static inline void early_init_fdt_scan_reserved_mem(void) {}
+diff --git a/include/linux/serial_core.h b/include/linux/serial_core.h
+index 297d4fa..cbfcf38 100644
+--- a/include/linux/serial_core.h
++++ b/include/linux/serial_core.h
+@@ -145,11 +145,12 @@ struct uart_port {
+ 
+ #define UPIO_PORT		(SERIAL_IO_PORT)	/* 8b I/O port access */
+ #define UPIO_HUB6		(SERIAL_IO_HUB6)	/* Hub6 ISA card */
+-#define UPIO_MEM		(SERIAL_IO_MEM)		/* 8b MMIO access */
++#define UPIO_MEM		(SERIAL_IO_MEM)		/* driver-specific */
+ #define UPIO_MEM32		(SERIAL_IO_MEM32)	/* 32b little endian */
+ #define UPIO_AU			(SERIAL_IO_AU)		/* Au1x00 and RT288x type IO */
+ #define UPIO_TSI		(SERIAL_IO_TSI)		/* Tsi108/109 type IO */
+ #define UPIO_MEM32BE		(SERIAL_IO_MEM32BE)	/* 32b big endian */
++#define UPIO_MEM16		(SERIAL_IO_MEM16)	/* 16b little endian */
+ 
+ 	unsigned int		read_status_mask;	/* driver specific */
+ 	unsigned int		ignore_status_mask;	/* driver specific */
+@@ -341,21 +342,26 @@ struct earlycon_device {
+ 
+ struct earlycon_id {
+ 	char	name[16];
++	char	compatible[128];
+ 	int	(*setup)(struct earlycon_device *, const char *options);
+ } __aligned(32);
+ 
+-extern int setup_earlycon(char *buf);
+-extern int of_setup_earlycon(unsigned long addr,
+-			     int (*setup)(struct earlycon_device *, const char *));
++extern const struct earlycon_id __earlycon_table[];
++extern const struct earlycon_id __earlycon_table_end[];
++
++#define OF_EARLYCON_DECLARE(_name, compat, fn)				\
++	static const struct earlycon_id __UNIQUE_ID(__earlycon_##_name)	\
++	     __used __section(__earlycon_table)				\
++		= { .name = __stringify(_name),				\
++		    .compatible = compat,				\
++		    .setup = fn  }
+ 
+-#define EARLYCON_DECLARE(_name, func)					\
+-	static const struct earlycon_id __earlycon_##_name		\
+-		__used __section(__earlycon_table)			\
+-		 = { .name  = __stringify(_name),			\
+-		     .setup = func  }
++#define EARLYCON_DECLARE(_name, fn)	OF_EARLYCON_DECLARE(_name, "", fn)
+ 
+-#define OF_EARLYCON_DECLARE(name, compat, fn)				\
+-	_OF_DECLARE(earlycon, name, compat, fn, void *)
++extern int setup_earlycon(char *buf);
++extern int of_setup_earlycon(const struct earlycon_id *match,
++			     unsigned long node,
++			     const char *options);
+ 
+ struct uart_port *uart_get_console(struct uart_port *ports, int nr,
+ 				   struct console *c);
+diff --git a/include/uapi/linux/serial.h b/include/uapi/linux/serial.h
+index 25331f9..5d59c3e 100644
+--- a/include/uapi/linux/serial.h
++++ b/include/uapi/linux/serial.h
+@@ -69,6 +69,7 @@ struct serial_struct {
+ #define SERIAL_IO_AU	  4
+ #define SERIAL_IO_TSI	  5
+ #define SERIAL_IO_MEM32BE 6
++#define SERIAL_IO_MEM16	7
+ 
+ #define UART_CLEAR_FIFO		0x01
+ #define UART_USE_FIFO		0x02

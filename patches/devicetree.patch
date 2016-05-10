@@ -104,7 +104,7 @@
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
 +};
-+/{
++/*/{
 +   rprx_2: rprx@2 {
 +       compatible ="redpitaya,rprx";
 +       dmas = <&axi_dma_2 0
@@ -112,7 +112,7 @@
 +       dma-names = "axidma0", "axidma1";
 +       memory-region = <&rprx_reserverd>;
 +       };
-+};
++};*/
 +/*/ {
 +	dmatest_cyc_3: dmatest_cyc@3 {
 +		compatible ="xlnx,axi-dma-test-cyc-1.00.a";
@@ -121,7 +121,7 @@
 +		dma-names = "axidma0", "axidma1";
 +	};
 +};*/
-+/ {
++/*/ {
 +	id@40000000 {
 +		compatible = "generic-uio";
 +		reg = <0x40000000 0x10000>;
@@ -174,4 +174,4 @@
 +		compatible = "generic-uio";
 +		reg = <0x40300000 0x10000>;
 +	};
-+};
++};*/

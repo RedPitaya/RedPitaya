@@ -1,0 +1,34 @@
+--- fpga2/sdk/dts/zynq-7000.dtsi	2016-04-26 12:48:38.000000000 +0200
++++ "fpga2/sdk/dts/copy of zynq-7000.dtsi"	2016-04-29 16:55:04.804957568 +0200
+@@ -332,14 +332,23 @@
+ 			clock-names = "apb_pclk";
+ 		};
+ 
+-		devcfg: devcfg@f8007000 {
+-			clock-names = "ref_clk", "fclk0", "fclk1", "fclk2", "fclk3";
+-			clocks = <&clkc 12>, <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+-			compatible = "xlnx,zynq-devcfg-1.0";
+-			interrupt-parent = <&intc>;
+-			interrupts = <0 8 4>;
+-			reg = <0xf8007000 0x100>;
+-			syscon = <&slcr>;
++		fpga_bus@0 {
++				compatible = "altr,fpga-bus", "simple-bus";
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges;
++				fpga_mgr0: devcfg@f8007000 {
++					compatible = "xlnx,zynq-devcfg-1.0","simple-bus";
++					reg = <0xf8007000 0x100>;
++					interrupt-parent = <&intc>;
++					interrupts = <0 8 4>;
++					clocks = <&clkc 12>;
++					clock-names = "ref_clk";
++					syscon = <&slcr>;
++					#address-cells = <1>;
++					#size-cells = <1>;
++					ranges;
++				};
+ 		};
+ 
+ 		global_timer: timer@f8f00200 {

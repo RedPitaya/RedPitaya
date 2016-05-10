@@ -1,0 +1,130 @@
+/dts-v1/;
+/plugin/;
+/{
+		fragment@0 {
+				target-path = "/amba/fpga_bus\@0/devcfg\@f8007000";
+				__overlay__ {
+						#address-cells = <1>;
+						#size-cells = <1>;
+						area@0 {
+								compatible = "fpga-area";
+								#address-cells = <1>;
+								#size-cells = <1>;
+								ranges;
+
+								firmware-name = "/boot/fpga/fpga2.bin";
+						};
+				};
+		};
+		
+		fragment@1 {
+		target-path = "/amba_pl/dma\@80420000";
+			__overlay__ {
+						status = "okay";
+				};
+		};
+		fragment@2 {
+		target-path = "/amba_pl/dma\@80420000/dma-channel@80420000";
+			__overlay__ {
+						status = "okay";
+				};
+		};
+		fragment@3 {
+		target-path = "/amba_pl/dma\@80420000/dma-channel@80420030";
+			__overlay__ {
+						status = "okay";
+				};
+		};
+		fragment@4{
+			target-path="/amba_pl/id@40000000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@5{
+			target-path="/amba_pl/muxctl@40040000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@6{
+			target-path="/amba_pl/gpio@40080000";
+			__overlay__ {
+					status = "okay";
+				};
+		};
+		fragment@7{
+			target-path="/amba_pl/led@400c0000";
+			__overlay__ {		
+					status = "okay";
+			};
+		};
+		fragment@8{
+			target-path="/amba_pl/calib@40100000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@9{
+			target-path="/amba_pl/pdm@40140000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@a{
+			target-path="/amba_pl/pwm@40180000";
+			__overlay__ {
+					status = "okay";
+				};
+		};
+		fragment@b{
+			target-path="/amba_pl/asg0@401c0000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@c{
+			target-path="/amba_pl/asg1@40200000";
+			__overlay__ {
+					status = "okay";
+				};
+		};
+		fragment@d{
+			target-path="/amba_pl/scope0@40240000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@e{
+			target-path="/amba_pl/scope1@40280000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@f{
+			target-path="/amba_pl/lg@402c0000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@10{
+			target-path="/amba_pl/la@40300000";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+		fragment@11{
+			 target-path="/amba_pl/rprx@2";
+			__overlay__ {
+					status = "okay";
+			};
+		};
+};
+//compile overlay
+//dtc -O dtb -o amba_pl.dtbo -b 0 -@ amba_pl.dts
+//preprair
+//mkdir /sys/kernel/config/device-tree/overlays/amba_pl
+//apply
+//cat amba_pl.dtbo > /sys/kernel/config/device-tree/overlays/amba_pl/dtbo
+//remove
+//rmdir /sys/kernel/config/device-tree/overlays/amba_pl
