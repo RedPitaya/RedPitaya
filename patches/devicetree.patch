@@ -52,7 +52,7 @@
 +&clkc {
 +	fclk-enable = <0xf>;
 +};
-+/* &xadc {
++/* &xadc_wiz_0 {
 +	compatible = "xlnx,axi-xadc-1.00.a";
 +	clocks = <&clkc 18>;
 +	xlnx,channels {
