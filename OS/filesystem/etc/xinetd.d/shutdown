@@ -1,0 +1,31 @@
+# default: off
+# description: By connecting this TCP port the RedPitaya is instructed to shutdown at once.
+# This is the tcp version.
+service shutdown
+{
+	disable		= no
+	type		= UNLISTED
+	id		= ggz
+	port		= 5688
+	socket_type	= stream
+	protocol	= tcp
+	user		= root
+	wait		= no
+	server		= /sbin/shutdown
+	server_args	= +0
+}
+
+# This is the udp version.
+service shutdown
+{
+	disable		= yes
+	type		= UNLISTED
+	id		= ggz
+	port		= 5688
+	socket_type	= dgram
+	protocol	= udp
+	user		= root
+	wait		= yes
+	server		= /sbin/shutdown
+	server_args	= +0
+}
