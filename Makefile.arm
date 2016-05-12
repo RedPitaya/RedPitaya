@@ -187,6 +187,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 LCR_DIR         = Test/lcr
 BODE_DIR        = Test/bode
 MONITOR_DIR     = Test/monitor
+MONITOR_OLD_DIR     = Test/monitor_old
 GENERATE_DIR    = Test/generate
 ACQUIRE_DIR     = Test/acquire
 CALIB_DIR       = Test/calib
@@ -196,9 +197,9 @@ XADC_DIR        = Test/xadc
 DISCOVERY_DIR   = Test/discovery
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor generate acquire calib calibrate discovery
+.PHONY: lcr bode monitor monitor_old generate acquire calib calibrate discovery
 
-examples: lcr bode monitor generate acquire calib discovery
+examples: lcr bode monitor monitor_old generate acquire calib discovery
 # calibrate
 
 lcr:
@@ -212,6 +213,11 @@ bode:
 monitor:
 	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+monitor_old:
+	$(MAKE) -C $(MONITOR_OLD_DIR)
+	$(MAKE) -C $(MONITOR_OLD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 
 generate:
 	$(MAKE) -C $(GENERATE_DIR)
@@ -314,6 +320,7 @@ clean:
 	# todo, remove downloaded libraries and symlinks
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
+	make -C $(MONITOR_OLD_DIR) clean
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
