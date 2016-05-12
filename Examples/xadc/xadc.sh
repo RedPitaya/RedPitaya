@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # path to IIO device
-XADC_PATH=/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/
+XADC_PATH=/sys/bus/iio/devices/iio:device1/
 
 ################################################################################
 # temperature
@@ -44,7 +44,7 @@ done
 # for in_voltage9/10/11/12 full range is  7.01 V
 ################################################################################
 
-voltages=( "in_voltage8" )
+voltages=( "in_voltage8_vpvn" )
 
 for voltage in "${voltages[@]}"
 do
@@ -55,10 +55,11 @@ do
   echo "${voltage} = ${VAL} V"
 done
 
-voltages=( "in_voltage9" \
-           "in_voltage10" \
-           "in_voltage11" \
-           "in_voltage12" )
+
+voltages=( "in_voltage9_vaux0" \
+           "in_voltage10_vaux1" \
+           "in_voltage11_vaux8" \
+           "in_voltage12_vaux9" )
 
 for voltage in "${voltages[@]}"
 do
