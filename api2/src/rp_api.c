@@ -777,7 +777,8 @@ RP_STATUS rp_GetStreamingLatestValues(rpStreamingReady rpReady,
  * Always call this function after the end of a capture to ensure that the scope is ready for the next capture.
  */
 RP_STATUS rp_Stop(void){
-	return rp_LaAcqStopAcq(&la_acq_handle);
+	return rp_SoftwareTrigger();
+	//return rp_LaAcqStopAcq(&la_acq_handle);
 }
 
 /** SIGNAL GENERATION  */
