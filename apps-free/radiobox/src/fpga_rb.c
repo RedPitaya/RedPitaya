@@ -878,9 +878,9 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       }  // switch (rx_modsrc)
 
 
-      fpga_rb_set_rx_modtyp(rx_modtyp);                                                                    // power savings control: set RX modulation variant
+      fpga_rb_set_rx_modtyp(rx_modtyp & 0x0f);                                                             // power savings control: set RX modulation variant, main part of modulation-type
 
-      switch (rx_modtyp) {
+      switch (rx_modtyp & 0x0f) {
 
       case RB_RX_MODTYP_USB: {
         //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: USB\n");
@@ -970,7 +970,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         }
         fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(rx_car_osc_qrg_inc);                             // RX_CAR_OSC frequency sweep increment
         fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                                // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
-        fpga_rb_set_rx_amenv_filtvar(RB_RX_AMENV_FILTVAR_wide);                                            // RB_RX_EMENV_FILT_VARIANT set RX_AFC_FIR filter to wide low-pass characteristics
+        fpga_rb_set_rx_amenv_filtvar(rx_modtyp >> 4);                                                      // RB_RX_EMENV_FILT_VARIANT set RX_AFC_FIR filter to given characteristics
       }
       break;
 
@@ -978,7 +978,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(0.0);                                                // no need for oscillator to run
         fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(50);                                             // no need for oscillator to scan
 
-      }  // switch (rx_modtyp)
+      }  // switch (rx_modtyp & 0x0f)
 
 
     } else {  // else if (rb_run)

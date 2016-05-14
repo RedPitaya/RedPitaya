@@ -147,7 +147,7 @@ enum rb_tx_modtyp_enum_t {
     RB_TX_MODTYP_PM
 } RB_TX_MODTYP_ENUM;
 
-/** @brief RadioBox RX modulation types */
+/** @brief RadioBox RX modulation types - using 4 bits */
 enum rb_rx_modtyp_enum_t {
     RB_RX_MODTYP_ALL_ON     =  0,
     RB_RX_MODTYP_OFF,
@@ -161,6 +161,7 @@ enum rb_rx_modtyp_enum_t {
     RB_RX_MODTYP_PM
 } RB_RX_MODTYP_ENUM;
 
+/** @brief RadioBox RX modulation sub types (filter bandwidth) - using 4 bits */
 enum rb_rx_amenv_filtvar_enum_t {
 	RB_RX_AMENV_FILTVAR_wide = 0,
 	RB_RX_AMENV_FILTVAR_mid,
