@@ -584,7 +584,8 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         if (!(g_fpga_rb_reg_mem->status & 0x00000100)) {
           // TX_MOD_OSC phase not zero: reset phase oscillator
           g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                          // TX_MOD RESYNC activate
-          g_fpga_rb_reg_mem->ctrl |=  0x00101000;                                                          // TX_MOD RESYNC deactivate, ADC automatic offset compensation
+          g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                          // TX_MOD RESYNC deactivate
+          g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                         // ADC automatic offset compensation
         }
       }
       break;
