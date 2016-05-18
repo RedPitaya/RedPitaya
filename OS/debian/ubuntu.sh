@@ -43,9 +43,11 @@ update-locale LANG=en_US.UTF-8
 
 dpkg-reconfigure --frontend=noninteractive tzdata
 
-apt-get -y install openssh-server ca-certificates ntp ntpdate fake-hwclock \
-  usbutils psmisc lsof parted curl vim wpasupplicant hostapd isc-dhcp-server \
-  iw firmware-realtek firmware-ralink build-essential ifplugd sudo u-boot-tools
+apt-get -y install openssh-server ca-certificates ntp ntpdate \
+  usbutils psmisc lsof parted curl vim wpasupplicant isc-dhcp-server \
+  iw build-essential sudo u-boot-tools
+# TODO: firmware-realtek firmware-ralink
+# TODO: install was asking about /etc/{protocols,services}
 
 sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 EOF_CHROOT
