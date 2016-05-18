@@ -245,7 +245,7 @@ enum {
     RB_CTRL_RX_CAR_OSC_OFS_SRC_STREAM,          // RX_CAR_OSC offset: use SUM stream instead of OSC register setting
     RB_CTRL_RSVD_D23,
 
-    RB_CTRL_RSVD_D24,
+    RB_CTRL_ADC_AUTO_OFS,                       // ADC_AUTO_OFS enabling automatic A/D-Converter offset compensation
     RB_CTRL_RSVD_D25,
     RB_CTRL_RSVD_D26,
     RB_CTRL_RSVD_D27,
@@ -391,11 +391,21 @@ enum {
 
     RB_SRC_CON_PNT_NUM_RX_AUDIO_OUT                 = 80, // RX_AUDIO output
 
-    RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC               = 248,// current TX_CAR_OSC_INC value
-    RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC               = 249,// current RX_CAR_OSC_INC value
+    RB_SRC_CON_PNT_NUM_TX_CAR_OSC_INC               = 192,// current TX_CAR_OSC_INC value
+    RB_SRC_CON_PNT_NUM_RX_CAR_OSC_INC,                    // current RX_CAR_OSC_INC value
 
-    RB_SRC_CON_PNT_NUM_TEST_AC97                    = 253,// AC97 diagnostic LEDs
-    RB_SRC_CON_PNT_NUM_TEST_OVERDRIVE               = 254,// overdrive signals
+    RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_RFIN1           = 208,// current LSB bits from offset register of RFIN1
+    RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_RFIN2,                // current LSB bits from offset register of RFIN1
+    RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH0,              // current LSB bits from offset register of XADC channel 0
+    RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH8,              // current LSB bits from offset register of XADC channel 8
+    RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH1,              // current LSB bits from offset register of XADC channel 1
+    RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH9,              // current LSB bits from offset register of XADC channel 9
+    RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_VpVn,             // current LSB bits from offset register of XADC channel VpVn
+
+    RB_SRC_CON_PNT_NUM_TEST_AC97                    = 240,// AC97 diagnostic LEDs
+
+    RB_SRC_CON_PNT_NUM_TEST_OVERDRIVE               = 248,// overdrive signals
+
     RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT              = 255 // Test vector, look at assignments within this file
 
 } RB_SRC_CON_PNT_ENUM;                                    // 256 entries = 2^8 --> 8 bit field
@@ -408,6 +418,17 @@ enum {
     RB_XADC_MAPPING_VpVn,                                 // The dedicated Vp/Vn input mapped to: vinp_i[4]/vinn_i[4]
     RB_XADC_MAPPING__COUNT
 } RB_XADC_MAPPING_ENUM;
+
+enum {
+    RB_ADC_AUTO_OFS_RFIN1                           =  0, // RF SMA input 1
+    RB_ADC_AUTO_OFS_RFIN2,                                // RF SMA input 2
+    RB_ADC_AUTO_OFS_EXT_CH0,                              // XADC channel 0, synchron to channel 8
+    RB_ADC_AUTO_OFS_EXT_CH8,                              // XADC channel 8, synchron to channel 0
+    RB_ADC_AUTO_OFS_EXT_CH1,                              // XADC channel 1, synchron to channel 9
+    RB_ADC_AUTO_OFS_EXT_CH9,                              // XADC channel 9, synchron to channel 1
+    RB_ADC_AUTO_OFS_VpVn,                                 // The dedicated Vp/Vn input mapped to: vinp_i[4]/vinn_i[4]
+    RB_ADC_AUTO_OFS__COUNT
+} RB_ADC_OFFSET_MAPPING_ENUM;
 
 
 // === OMNI section ===
@@ -431,6 +452,8 @@ wire                   rx_car_osc_reset       = regs[REG_RW_RB_CTRL][RB_CTRL_RX_
 wire                   rx_car_osc_resync      = regs[REG_RW_RB_CTRL][RB_CTRL_RX_CAR_OSC_RESYNC];
 wire                   rx_mod_osc_reset       = regs[REG_RW_RB_CTRL][RB_CTRL_RX_MOD_OSC_RESET];
 wire                   rx_mod_osc_resync      = regs[REG_RW_RB_CTRL][RB_CTRL_RX_MOD_OSC_RESYNC];
+
+wire                   adc_auto_ofs           = regs[REG_RW_RB_CTRL][RB_CTRL_ADC_AUTO_OFS];
 
 wire unsigned [  7: 0] rb_pwr_rx_modvar       = regs[REG_RW_RB_PWR_CTRL][ 7:0];
 wire unsigned [  7: 0] rb_pwr_tx_modvar       = regs[REG_RW_RB_PWR_CTRL][15:8];
@@ -728,7 +751,7 @@ red_pitaya_rst_clken rb_rst_clken_rx_AFC (
 
 // AXI streaming master from XADC
 
-reg  [ 15: 0] rb_xadc[RB_XADC_MAPPING__COUNT - 1: 0];
+reg  signed   [ 15: 0] rb_xadc[RB_XADC_MAPPING__COUNT - 1: 0];
 
 always @(posedge xadc_axis_aclk) begin                                 // CLOCK_DOMAIN: FCLK_CLK0 (125 MHz) phase asynchron to clk_adc_125mhz
 if (!adc_rstn_i) begin
@@ -767,6 +790,163 @@ else begin
       endcase
       end
    end
+end
+
+
+// ADC AUTO OFS correction
+
+wire signed   [ 15: 0] xadc_in = xadc_axis_tdata;
+reg  signed   [ 15: 0] adc_enhanced[RB_ADC_AUTO_OFS__COUNT - 1 : 0] = '{RB_ADC_AUTO_OFS__COUNT{0}};
+reg  signed   [ 15: 0] adc_offset[  RB_ADC_AUTO_OFS__COUNT - 1 : 0] = '{RB_ADC_AUTO_OFS__COUNT{0}};
+reg  signed   [ 29: 0] adc_sumreg[  RB_ADC_AUTO_OFS__COUNT - 1 : 0] = '{RB_ADC_AUTO_OFS__COUNT{0}};
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_enhanced - corrected ADC values
+if (!adc_rstn_i) begin
+   adc_enhanced[RB_ADC_AUTO_OFS_RFIN1]   <= 'd0;
+   adc_enhanced[RB_ADC_AUTO_OFS_RFIN2]   <= 'd0;
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH0] <= 'd0;
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH8] <= 'd0;
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH1] <= 'd0;
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH9] <= 'd0;
+   adc_enhanced[RB_ADC_AUTO_OFS_VpVn]    <= 'd0;
+   end
+else if (adc_auto_ofs) begin
+   adc_enhanced[RB_ADC_AUTO_OFS_RFIN1]   <= { ~adc_i[0][13:0], 2'b0 }        - adc_offset[RB_ADC_AUTO_OFS_RFIN1];
+   adc_enhanced[RB_ADC_AUTO_OFS_RFIN2]   <= { ~adc_i[1][13:0], 2'b0 }        - adc_offset[RB_ADC_AUTO_OFS_RFIN2];
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH0] <= rb_xadc[RB_XADC_MAPPING_EXT_CH0] - adc_offset[RB_ADC_AUTO_OFS_EXT_CH0];
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH8] <= rb_xadc[RB_XADC_MAPPING_EXT_CH8] - adc_offset[RB_ADC_AUTO_OFS_EXT_CH8];
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH1] <= rb_xadc[RB_XADC_MAPPING_EXT_CH1] - adc_offset[RB_ADC_AUTO_OFS_EXT_CH1];
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH9] <= rb_xadc[RB_XADC_MAPPING_EXT_CH9] - adc_offset[RB_ADC_AUTO_OFS_EXT_CH9];
+   adc_enhanced[RB_ADC_AUTO_OFS_VpVn]    <= rb_xadc[RB_XADC_MAPPING_VpVn]    - adc_offset[RB_ADC_AUTO_OFS_VpVn];
+   end
+else begin
+   adc_enhanced[RB_ADC_AUTO_OFS_RFIN1]   <= { ~adc_i[0][13:0], 2'b0 };
+   adc_enhanced[RB_ADC_AUTO_OFS_RFIN2]   <= { ~adc_i[1][13:0], 2'b0 };
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH0] <= rb_xadc[RB_XADC_MAPPING_EXT_CH0];
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH8] <= rb_xadc[RB_XADC_MAPPING_EXT_CH8];
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH1] <= rb_xadc[RB_XADC_MAPPING_EXT_CH1];
+   adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH9] <= rb_xadc[RB_XADC_MAPPING_EXT_CH9];
+   adc_enhanced[RB_ADC_AUTO_OFS_VpVn]    <= rb_xadc[RB_XADC_MAPPING_VpVn];
+   end
+end
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_sumreg, adc_offset - adjust ADC offset values
+if (!adc_rstn_i || !adc_auto_ofs) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN1] <= 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_RFIN1] <= 'd0;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_RFIN1][29:28] == 2'b01) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN1] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_RFIN1] = adc_offset[RB_ADC_AUTO_OFS_RFIN1] + 1;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_RFIN1][29:28] == 2'b10) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN1] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_RFIN1] = adc_offset[RB_ADC_AUTO_OFS_RFIN1] - 1;
+   end
+else
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN1] = adc_sumreg[RB_ADC_AUTO_OFS_RFIN1] + adc_enhanced[RB_ADC_AUTO_OFS_RFIN1];
+end
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_sumreg, adc_offset - adjust ADC offset values
+if (!adc_rstn_i || !adc_auto_ofs) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN2] <= 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_RFIN2] <= 'd0;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_RFIN2][29:28] == 2'b01) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN2] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_RFIN2] = adc_offset[RB_ADC_AUTO_OFS_RFIN2] + 1;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_RFIN2][29:28] == 2'b10) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN2] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_RFIN2] = adc_offset[RB_ADC_AUTO_OFS_RFIN2] - 1;
+   end
+else
+   adc_sumreg[RB_ADC_AUTO_OFS_RFIN2] = adc_sumreg[RB_ADC_AUTO_OFS_RFIN2] + adc_enhanced[RB_ADC_AUTO_OFS_RFIN2];
+end
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_sumreg, adc_offset - adjust ADC offset values
+if (!adc_rstn_i || !adc_auto_ofs) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH0] <= 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH0] <= 'd0;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH0][29:28] == 2'b01) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH0] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH0] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH0] + 1;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH0][29:28] == 2'b10) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH0] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH0] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH0] - 1;
+   end
+else
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH0] = adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH0] + adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH0];
+end
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_sumreg, adc_offset - adjust ADC offset values
+if (!adc_rstn_i || !adc_auto_ofs) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH8] <= 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH8] <= 'd0;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH8][29:28] == 2'b01) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH8] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH8] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH8] + 1;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH8][29:28] == 2'b10) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH8] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH8] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH8] - 1;
+   end
+else
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH8] = adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH8] + adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH8];
+end
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_sumreg, adc_offset - adjust ADC offset values
+if (!adc_rstn_i || !adc_auto_ofs) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH1] <= 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH1] <= 'd0;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH1][29:28] == 2'b01) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH1] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH1] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH1] + 1;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH1][29:28] == 2'b10) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH1] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH1] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH1] - 1;
+   end
+else
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH1] = adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH1] + adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH1];
+end
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_sumreg, adc_offset - adjust ADC offset values
+if (!adc_rstn_i || !adc_auto_ofs) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH9] <= 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH9] <= 'd0;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH9][29:28] == 2'b01) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH9] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH9] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH9] + 1;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH9][29:28] == 2'b10) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH9] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_EXT_CH9] = adc_offset[RB_ADC_AUTO_OFS_EXT_CH9] - 1;
+   end
+else
+   adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH9] = adc_sumreg[RB_ADC_AUTO_OFS_EXT_CH9] + adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH9];
+end
+
+always @(posedge clk_adc_125mhz) begin                                 // assign adc_sumreg, adc_offset - adjust ADC offset values
+if (!adc_rstn_i || !adc_auto_ofs) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_VpVn] <= 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_VpVn] <= 'd0;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_VpVn][29:28] == 2'b01) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_VpVn] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_VpVn] = adc_offset[RB_ADC_AUTO_OFS_VpVn] + 1;
+   end
+else if (adc_sumreg[RB_ADC_AUTO_OFS_VpVn][29:28] == 2'b10) begin
+   adc_sumreg[RB_ADC_AUTO_OFS_VpVn] = 'd0;
+   adc_offset[RB_ADC_AUTO_OFS_VpVn] = adc_offset[RB_ADC_AUTO_OFS_VpVn] - 1;
+   end
+else
+   adc_sumreg[RB_ADC_AUTO_OFS_VpVn] = adc_sumreg[RB_ADC_AUTO_OFS_VpVn] + adc_enhanced[RB_ADC_AUTO_OFS_VpVn];
 end
 
 
@@ -881,16 +1061,16 @@ else if (rb_overdrive_rx_muxin)
 //---------------------------------------------------------------------------------
 //  ADC modulation offset correction and gain
 
-wire   signed [ 15: 0] tx_muxin_mix_in = (tx_muxin_src == 6'h20) ?  { adc_i[0], 2'b0 }               :
-                                         (tx_muxin_src == 6'h21) ?  { adc_i[1], 2'b0 }               :
-                                         (tx_muxin_src == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :      // swapped here due to pin connection warnings when swapping @ XADC <--> pins
-                                         (tx_muxin_src == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
-                                         (tx_muxin_src == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
-                                         (tx_muxin_src == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
-                                         (tx_muxin_src == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
-                                         (tx_muxin_src == 6'h30) ?  rb_line_out_i[15: 0]             :
-                                         (tx_muxin_src == 6'h31) ?  rb_line_out_i[31:16]             :
-                                         16'b0                                                       ;
+wire   signed [ 15: 0] tx_muxin_mix_in = (tx_muxin_src == 6'h20) ?  adc_enhanced[RB_ADC_AUTO_OFS_RFIN1]   :
+                                         (tx_muxin_src == 6'h21) ?  adc_enhanced[RB_ADC_AUTO_OFS_RFIN2]   :
+                                         (tx_muxin_src == 6'h18) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH0] :      // swapped here due to pin connection warnings when swapping @ XADC <--> pins
+                                         (tx_muxin_src == 6'h10) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH8] :
+                                         (tx_muxin_src == 6'h11) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH1] :
+                                         (tx_muxin_src == 6'h19) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH9] :
+                                         (tx_muxin_src == 6'h03) ?  adc_enhanced[RB_ADC_AUTO_OFS_VpVn]    :
+                                         (tx_muxin_src == 6'h30) ?  rb_line_out_i[15: 0]                  :
+                                         (tx_muxin_src == 6'h31) ?  rb_line_out_i[31:16]                  :
+                                         16'b0                                                            ;
 wire   signed [ 17: 0] tx_muxin_mix_in_se = { tx_muxin_mix_in[15], tx_muxin_mix_in[15:0], 1'b0 };           // max. 1Vpp
 wire   signed [ 17: 0] tx_mod_adc_in = (tx_muxin_mix_in_se << tx_muxin_mix_log2);                           // signed value: input booster for
                                                                                                             // factor: 1x .. 2^3=7 shift postions=128x (16 mV --> full-scale)
@@ -1358,16 +1538,16 @@ rb_dsp48_AaDmBaC_A18_D18_B18_C36_P37 i_rb_tx_amp_rf_dsp48 (
 //---------------------------------------------------------------------------------
 //  RX_MUXIN amplifier
 
-wire   signed [ 15: 0] rx_muxin_sig = (rx_muxin_src == 6'h20) ?  { ~adc_i[0], 2'b0 }              :
-                                      (rx_muxin_src == 6'h21) ?  { ~adc_i[1], 2'b0 }              :
-                                      (rx_muxin_src == 6'h18) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
-                                      (rx_muxin_src == 6'h10) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH8] :
-                                      (rx_muxin_src == 6'h11) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH1] :
-                                      (rx_muxin_src == 6'h19) ?  rb_xadc[RB_XADC_MAPPING_EXT_CH9] :
-                                      (rx_muxin_src == 6'h03) ?  rb_xadc[RB_XADC_MAPPING_VpVn]    :
-                                      (rx_muxin_src == 6'h30) ?  rb_line_out_i[15: 0]             :
-                                      (rx_muxin_src == 6'h31) ?  rb_line_out_i[31:16]             :
-                                      16'b0                                                       ;
+wire   signed [ 15: 0] rx_muxin_sig = (rx_muxin_src == 6'h20) ?  adc_enhanced[RB_ADC_AUTO_OFS_RFIN1]   :
+                                      (rx_muxin_src == 6'h21) ?  adc_enhanced[RB_ADC_AUTO_OFS_RFIN2]   :
+                                      (rx_muxin_src == 6'h18) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH0] :  // swapped here due to pin connection warnings when swapping @ XADC <--> pins
+                                      (rx_muxin_src == 6'h10) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH8] :
+                                      (rx_muxin_src == 6'h11) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH1] :
+                                      (rx_muxin_src == 6'h19) ?  adc_enhanced[RB_ADC_AUTO_OFS_EXT_CH9] :
+                                      (rx_muxin_src == 6'h03) ?  adc_enhanced[RB_ADC_AUTO_OFS_VpVn]    :
+                                      (rx_muxin_src == 6'h30) ?  rb_line_out_i[15: 0]                  :
+                                      (rx_muxin_src == 6'h31) ?  rb_line_out_i[31:16]                  :
+                                      16'b0                                                            ;
 wire   signed [ 47: 0] rx_muxin_sig_in = { {3{rx_muxin_sig[15]}},     rx_muxin_sig[14:0],     30'b0 };      // signed expansion
 wire   signed [ 47: 0] rx_muxin_ofs_in = { {3{rx_muxin_mix_ofs[15]}}, rx_muxin_mix_ofs[14:0], 30'b0 };
 wire   signed [ 47: 0] rx_muxin_biased_out;
@@ -2974,20 +3154,48 @@ else if (led_src_con_pnt && rb_reset_n) begin
       rb_leds_data <= rx_car_osc_inc[28:21];
       end
 
+   RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_RFIN1: begin
+      rb_leds_data <= adc_offset[RB_ADC_AUTO_OFS_RFIN1][7:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_RFIN2: begin
+      rb_leds_data <= adc_offset[RB_ADC_AUTO_OFS_RFIN2][7:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH0: begin
+      rb_leds_data <= adc_offset[RB_ADC_AUTO_OFS_EXT_CH0][7:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH8: begin
+      rb_leds_data <= adc_offset[RB_ADC_AUTO_OFS_EXT_CH8][7:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH1: begin
+      rb_leds_data <= adc_offset[RB_ADC_AUTO_OFS_EXT_CH1][7:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_CH9: begin
+      rb_leds_data <= adc_offset[RB_ADC_AUTO_OFS_EXT_CH9][7:0];
+      end
+
+   RB_SRC_CON_PNT_NUM_ADC_AUTO_OFS_EXT_VpVn: begin
+      rb_leds_data <= adc_offset[RB_ADC_AUTO_OFS_VpVn][7:0];
+      end
+
    RB_SRC_CON_PNT_NUM_TEST_AC97: begin
       rb_leds_data <= ac97_leds_i;
       end
 
    RB_SRC_CON_PNT_NUM_TEST_OVERDRIVE: begin
       if (!led_ctr)
-         //                LED7                    LED6                    LED5                    LED4                       LED3                 LED2                    LED1                    LED0
-         rb_leds_data <= { ac97_irq_rec_i,         ac97_irq_play_i,        rb_overdrive_rx_muxin,  rb_overdrive_rx_muxin_mon, 1'b0,                1'b0,                   rb_overdrive_tx_muxin,  rb_overdrive_tx_muxin_mon };
+         //                LED7                    LED6                    LED5                    LED4                       LED3                    LED2                       LED1                    LED0
+         rb_leds_data <= { ac97_irq_rec_i,         ac97_irq_play_i,        rb_overdrive_rx_muxin,  rb_overdrive_rx_muxin_mon, rb_overdrive_tx_muxin,  rb_overdrive_tx_muxin_mon, 1'b0,                   adc_auto_ofs };
       end
 
    RB_SRC_CON_PNT_NUM_TEST_VECTOR_OUT: begin
       if (!led_ctr)
-         //                LED7                    LED6                    LED5                    LED4                    LED3                    LED2                    LED1                    LED0
-         rb_leds_data <= { tx_car_osc_ofs_mux,     tx_car_osc_inc_mux,     rb_pwr_rx_AFC_rst_n,    rb_pwr_rx_MOD_rst_n,    rb_pwr_rx_CAR_rst_n,    rb_pwr_tx_Q_rst_n,      rb_pwr_tx_I_rst_n,      rb_pwr_tx_OSC_rst_n  };
+         //                LED7                    LED6                    LED5                    LED4                       LED3                    LED2                       LED1                    LED0
+         rb_leds_data <= { tx_car_osc_ofs_mux,     tx_car_osc_inc_mux,     rb_pwr_rx_AFC_rst_n,    rb_pwr_rx_MOD_rst_n,       rb_pwr_rx_CAR_rst_n,    rb_pwr_tx_Q_rst_n,         rb_pwr_tx_I_rst_n,      rb_pwr_tx_OSC_rst_n  };
       end
 
    default: begin

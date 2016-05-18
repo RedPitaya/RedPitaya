@@ -76,12 +76,13 @@
                                 RX_CAR_OSC DDS increment input to the second streamed
                                 input pipe. '0' places MUXer to registers
                                 "RX_CAR_OSC INC HI" and "RX_CAR_OSC INC LO".
-
                      - bit h16: RX_CAR_OSC OFS SRC STREAM - '1' places input MUXer for
                                 RX_CAR_OSC DDS offset input to the second streamed input
                                 pipe. '0' places MUXer to registers
                                 "RX_CAR_OSC OFS HI" and "RX_CAR_OSC OFS LO".
-                     - bit h1B..h17: n/a
+                     - bit h17: n/a
+                     - bit h18: ADC_AUTO_OFS enabling automatic A/D-Converter offset compensation
+                     - bit h1B..h19: n/a
                      - bit h1C: RX_MOD_OSC RESYNC - '1' stops incrementing the
                                 accumulating phase register. That holds the
                                 oscillator just there, where it is. With '0' the
