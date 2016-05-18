@@ -1,0 +1,18 @@
+# Defaults for icecast2 initscript
+# sourced by /etc/init.d/icecast2
+# installed at /etc/default/icecast2 by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# Full path to the server configuration file
+CONFIGFILE="/etc/icecast2/icecast.xml"
+
+# Name or ID of the user and group the daemon should run under
+USERID=icecast2
+GROUPID=icecast
+
+# Edit /etc/icecast2/icecast.xml and change at least the passwords.
+# Change this to true when done to enable the init.d script
+ENABLE=true

@@ -1,5 +1,5 @@
---- system.dts.old	2015-07-23 23:14:55.434444209 +0200
-+++ system.dts	2015-07-23 23:05:18.198460862 +0200
+--- system.dts.old	2016-05-06 01:01:41.187394113 +0200
++++ system.dts	2016-05-06 01:14:43.282854613 +0200
 @@ -26,7 +26,7 @@
  	};
  	memory {
@@ -9,19 +9,17 @@
  	};
  };
  &gem0 {
-@@ -86,3 +86,82 @@
- 	fclk-enable = <0x0>;
+@@ -86,3 +86,89 @@
+ 	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
 +
 +&gem0 {
-+	phy-handle = <&phy0>;
-+	ps7_ethernet_0_mdio: mdio {
-+		phy0: phy@1 {
-+			compatible = "lantiq,phy11g";
-+			device_type = "ethernet-phy";
-+			reg = <1>;
-+		};
++	phy-handle = <&ethernet_0_mdio>;
++	ethernet_0_mdio: mdio@1 {
++		compatible = "lantiq,phy11g";
++		device_type = "ethernet-phy";
++		reg = <1>;
 +	};
 +};
 +&i2c0 {
@@ -32,13 +30,10 @@
 +};
 +&spi1 {
 +	spidev@0 {
-+		compatible="spidev";
-+		reg =<0>; //chipselect 0
-+		spi-max-frequency= <50000000>;
++		compatible = "spidev";
++		reg = <0>; //chipselect 0
++		spi-max-frequency = <50000000>;
 +	};
-+};
-+&clkc {
-+	fclk-enable = <0xf>;
 +};
 +&xadc {
 +	compatible = "xlnx,axi-xadc-1.00.a";
@@ -65,23 +60,23 @@
 +};
 +/ {
 +	gpio-leds {
-+	    compatible = "gpio-leds";
-+	    led-8-yellow {
-+	        label = "led8";
-+	        gpios = <&gpio0 0 0>;
-+	        default-state = "off";
-+		linux,default-trigger = "mmc0";
-+	    };
-+	    led-9-red {
-+	        label = "led9";
-+	        gpios = <&gpio0 7 0>;
-+	        default-state = "off";
-+		linux,default-trigger = "hartbeat";
-+	    };
++		compatible = "gpio-leds";
++		led-8-yellow {
++			label = "led8";
++			gpios = <&gpio0 0 0>;
++			default-state = "off";
++			linux,default-trigger = "mmc0";
++		};
++		led-9-red {
++			label = "led9";
++			gpios = <&gpio0 7 0>;
++			default-state = "off";
++			linux,default-trigger = "heartbeat";
++		};
 +	};
 +};
 +/ {
-+	usb_phy0: phy0 {
++	usb_0_phy: phy@e0002000 {
 +		compatible = "ulpi-phy";
 +		#phy-cells = <0>;
 +		reg = <0xe0002000 0x1000>;
@@ -90,5 +85,17 @@
 +	};
 +};
 +&usb0 {
-+	usb-phy = <&usb_phy0>;
++	usb-phy = <&usb_0_phy>;
++};
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++	#interrupt-cells = <3>;
++	snd_rp_ac97: redpitaya-ac97@40700000 {
++		compatible = "redpitaya,redpitaya-ac97";
++		reg = <0x40700000 0x100>;
++		interrupts = <0 30 1>, <0 31 1>;
++		interrupt-parent = <&intc>;
++	};
 +};

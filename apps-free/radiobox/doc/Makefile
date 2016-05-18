@@ -5,15 +5,14 @@
 # $Id: Makefile 1200 2014-02-20 12:52:27Z ales.bardorfer $
 #
 
-.PHONY : all doxypdf fpgapdf clean
-
 PLANTUML_JAR ?= ./plantuml.jar
 DOXYPDF_FILENAME := RedPitaya_RadioBox_Development_Manual.pdf
 FPGAPDF_FILENAME := RedPitaya_RadioBox_FPGA-Register-Allocation_Manual.pdf
 
 
-#all: doxypdf fpgapdf
+.PHONY : all doxypdf fpgapdf clean
 
+#all: doxypdf fpgapdf
 all: doxypdf
 
 

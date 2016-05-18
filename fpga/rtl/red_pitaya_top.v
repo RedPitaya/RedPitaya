@@ -69,6 +69,7 @@ module red_pitaya_top (
    inout            FIXED_IO_ps_srstb  ,
    inout            FIXED_IO_ddr_vrn   ,
    inout            FIXED_IO_ddr_vrp   ,
+
    // DDR
    inout  [15-1: 0] DDR_addr           ,
    inout  [ 3-1: 0] DDR_ba             ,
@@ -86,8 +87,9 @@ module red_pitaya_top (
    inout            DDR_reset_n        ,
    inout            DDR_we_n           ,
 
+
    // Red Pitaya periphery
-  
+
    // ADC
    input  [16-1: 2] adc_dat_a_i        ,  // ADC CH1
    input  [16-1: 2] adc_dat_b_i        ,  // ADC CH2
@@ -95,25 +97,31 @@ module red_pitaya_top (
    input            adc_clk_n_i        ,  // ADC data clock
    output [ 2-1: 0] adc_clk_o          ,  // optional ADC clock source
    output           adc_cdcs_o         ,  // ADC clock duty cycle stabilizer
+
    // DAC
    output [14-1: 0] dac_dat_o          ,  // DAC combined data
    output           dac_wrt_o          ,  // DAC write
    output           dac_sel_o          ,  // DAC channel select
    output           dac_clk_o          ,  // DAC clock
    output           dac_rst_o          ,  // DAC reset
+
    // PWM DAC
    output [ 4-1: 0] dac_pwm_o          ,  // serial PWM DAC
+
    // XADC
    input  [ 5-1: 0] vinp_i             ,  // voltages p
    input  [ 5-1: 0] vinn_i             ,  // voltages n
+
    // Expansion connector
    inout  [ 8-1: 0] exp_p_io           ,
    inout  [ 8-1: 0] exp_n_io           ,
+
    // SATA connector
    output [ 2-1: 0] daisy_p_o          ,  // line 1 is clock capable
    output [ 2-1: 0] daisy_n_o          ,
    input  [ 2-1: 0] daisy_p_i          ,  // line 1 is clock capable
    input  [ 2-1: 0] daisy_n_i          ,
+
    // LED
    output [ 8-1: 0] led_o       
 );
@@ -122,6 +130,9 @@ module red_pitaya_top (
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
+
+// Clocks
+wire         [ 1:0]   ac97_clks;                                                                            // AC97 sample clocks in ascending order
 
 // PLL signals
 wire                  adc_clk_in;
@@ -140,6 +151,11 @@ wire                  ser_clk ;
 wire                  pwm_clk ;
 reg                   pwm_rstn;
 
+// Interrupt signals
+wire                  ac97_irq_play;
+wire                  ac97_irq_rec;
+wire         [15:1]   irqs = { 13'b0, ac97_irq_rec, ac97_irq_play };                                        // irqs[1] is mapped to IRQ-ID=62, SPI[30] -  high active. SPI[30]: play IRQ, SPI[31]: record IRQ
+
 // ADC signals
 wire                  adc_clk;
 reg                   adc_rstn;
@@ -155,6 +171,10 @@ reg          [14-1:0] dac_dat_a, dac_dat_b;
 wire         [14-1:0] dac_a    , dac_b    ;
 wire  signed [15-1:0] dac_a_sum, dac_b_sum;
 
+// AC97 audio/signal nodes
+wire     [ 2*16-1: 0] ac97_line_in;                                                                         // [15:0] = LEFT, [31:16] = RIGHT
+wire     [ 2*16-1: 0] ac97_line_out;                                                                        // [15:0] = LEFT, [31:16] = RIGHT
+
 // ASG
 wire  signed [14-1:0] asg_a    , asg_b    ;
 
@@ -164,6 +184,8 @@ wire  signed [14-1:0] pid_a    , pid_b    ;
 // configuration
 wire                  digital_loop;
 
+// RadioBox in signals
+wire         [ 8-1:0] ac97_leds;
 // RadioBox out signals
 wire                  rb_leds_en;
 wire         [ 8-1:0] rb_leds_data;
@@ -235,7 +257,7 @@ red_pitaya_ps i_ps (
   .fclk_rstn_o   (frstn       ),
   .dcm_locked    (pll_locked  ),
   // Interrupts
-  .irq_f2p       (15'b0       ),
+  .irq_f2p       (irqs        ),
   // ADC analog inputs
   .vinp_i        (vinp_i      ),  // voltages p
   .vinn_i        (vinn_i      ),  // voltages n
@@ -599,15 +621,27 @@ red_pitaya_radiobox i_radiobox (
   // ADC clock & reset
   .clk_adc_125mhz  ( adc_clk                     ),  // clock 125 MHz
   .adc_rstn_i      ( adc_rstn                    ),  // reset - active low
+  .ac97_clks_i     ( ac97_clks                   ),  // sound interface sample rates
+
   // activation
   .rb_activated    ( rb_activated                ),  // RadioBox is enabled
+
   // LEDs
   .rb_leds_en      ( rb_leds_en                  ),  // RB does overwrite LEDs state
   .rb_leds_data    ( rb_leds_data                ),  // RB LEDs data
+  .ac97_leds_i     ( ac97_leds                   ),  // AC97 diagnostic LEDs
+
   // ADC data
   .adc_i           ( {adc_b, adc_a}              ),  // ADC data { CHB, CHA }
   // DAC data
   .rb_out_ch       ({rb_out_ch[1], rb_out_ch[0] }),  // RadioBox output signals
+
+  // ALSA
+  .rb_line_out_i   ( ac97_line_out[2*16-1:0]     ),  // Linux sound system ALSA LINE-OUT stereo, 2x 16 bit
+  .rb_line_in_o    ( ac97_line_in [2*16-1:0]     ),  // Linux sound system ALSA LINE-IN  stereo, 2x 16 bit
+  .ac97_irq_play_i ( ac97_irq_play               ),  // monitor IRQ line for playing stream
+  .ac97_irq_rec_i  ( ac97_irq_rec                ),  // monitor IRQ line for recording stream
+
   // System bus
   .sys_addr        ( sys_addr                    ),  // address
   .sys_wdata       ( sys_wdata                   ),  // write data
@@ -617,6 +651,7 @@ red_pitaya_radiobox i_radiobox (
   .sys_rdata       ( sys_rdata[ 6*32+:32]        ),  // read data
   .sys_err         ( sys_err[6]                  ),  // error indicator
   .sys_ack         ( sys_ack[6]                  ),  // acknowledge signal
+
   // AXIS MASTER from the XADC
   .xadc_axis_aclk  ( xadc_axis_aclk              ),  // AXI-streaming from the XADC, clock from the AXI-S FIFO
   .xadc_axis_tdata ( xadc_axis_tdata             ),  // AXI-streaming from the XADC, data
@@ -626,11 +661,42 @@ red_pitaya_radiobox i_radiobox (
 );
 
 //---------------------------------------------------------------------------------
-// 7: unused system bus slave port
+// 7: OPB-AC97-Controller register compatible module  (like it is used as IP for the ML403 design)
 
+red_pitaya_ac97ctrl i_ac97ctrl (
+  // ADC clock & reset
+  .clk_adc_125mhz  ( adc_clk                     ),  // clock 125 MHz
+  .adc_rstn_i      ( adc_rstn                    ),  // reset - active low
+  .ac97_clks_o     ( ac97_clks                   ),  // sound frame clock from RadioBox
+
+   // AC97 lines
+  .ac97_line_out_o ( ac97_line_out[2*16-1:0]     ),  // Linux sound system ALSA LINE-OUT stereo, 2x 16 bit
+  .ac97_line_in_i  ( ac97_line_in [2*16-1:0]     ),  // Linux sound system ALSA LINE-IN  stereo, 2x 16 bit
+
+   // Interrupts
+  .ac97_irq_play_o ( ac97_irq_play               ),  // IRQ line signaling any pending interrupts
+  .ac97_irq_rec_o  ( ac97_irq_rec                ),  // IRQ line signaling any pending interrupts
+
+  // DEBUGGING LEDs
+  .ac97_leds_o     ( ac97_leds                   ),  // AC97 diagnostic LEDs
+
+  // System bus
+  .sys_addr        ( sys_addr                    ),  // address
+  .sys_wdata       ( sys_wdata                   ),  // write data
+  .sys_sel         ( sys_sel                     ),  // write byte select
+  .sys_wen         ( sys_wen[7]                  ),  // write enable
+  .sys_ren         ( sys_ren[7]                  ),  // read enable
+  .sys_rdata       ( sys_rdata[ 7*32+:32]        ),  // read data
+  .sys_err         ( sys_err[7]                  ),  // error indicator
+  .sys_ack         ( sys_ack[7]                  )   // acknowledge signal
+);
+
+/*
+// unused system bus slave ports
 assign sys_rdata[7*32+:32] = 32'h0;
 assign sys_err  [7       ] =  1'b0;
 assign sys_ack  [7       ] =  1'b1;
+*/
 
 
 //---------------------------------------------------------------------------------

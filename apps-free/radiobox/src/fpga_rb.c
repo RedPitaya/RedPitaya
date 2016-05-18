@@ -167,11 +167,21 @@ void fpga_rb_reset(void)
     g_fpga_rb_reg_mem->ctrl = 0x00000001;
 }
 
+/*----------------------------------------------------------------------------*/
+void fpga_rb_calib(int calib, int enabled)
+{
+	if (calib > 0) {
+		rp_measure_calib_params(&g_rp_main_calib_params);
+	}
+
+	fpga_rb_enable(enabled);
+}
 
 /*----------------------------------------------------------------------------*/
 int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb: base data of complete data set, pn: new overwriting data sets
 {
     int    loc_rb_run         = 0;
+    int    loc_rb_calib       = 0;
     int    loc_tx_modsrc      = 0;
     int    loc_tx_modtyp      = 0;
     int    loc_rx_modtyp      = 0;
@@ -191,6 +201,8 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
     int    loc_rfout1_term    = 0;
     int    loc_rfout2_term    = 0;
     int    loc_qrg_inc        = 0;
+    int    loc_ac97_lil       = 0;
+    int    loc_ac97_lir       = 0;
 
     //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: BEGIN\n");
 
@@ -209,6 +221,7 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: getting local data: ...\n");
         //print_rb_params(pb);
         loc_rb_run         = (int) pb[RB_RUN].value;
+        loc_rb_calib       = 0;
         loc_tx_modsrc      = (int) pb[RB_TX_MODSRC].value;
         loc_tx_modtyp      = (int) pb[RB_TX_MODTYP].value;
         loc_rx_modtyp      = (int) pb[RB_RX_MODTYP].value;
@@ -231,6 +244,8 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         loc_rfout1_term    = (int) pb[RB_RFOUT1_TERM].value;
         loc_rfout2_term    = (int) pb[RB_RFOUT2_TERM].value;
         loc_qrg_inc        = (int) pb[RB_QRG_INC].value;
+        loc_ac97_lil       = (int) pb[RB_AC97_LOL].value;
+        loc_ac97_lir       = (int) pb[RB_AC97_LOR].value;
         //fprintf(stderr, "DEBUG - fpga_rb_update_all_params: ... done.\n");
     }
 
@@ -254,6 +269,12 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_run = %d\n", (int) (pn[idx].value));
             loc_rb_run = ((int) (pn[idx].value));
             fpga_rb_enable(loc_rb_run);
+
+        } else if (!strcmp("rb_calib", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got rb_calib = %d\n", (int) (pn[idx].value));
+            loc_rb_calib = ((int) (pn[idx].value));
+            fpga_rb_calib(loc_rb_calib, loc_rb_run);
+            pn[idx].value = 0.0;  // remove single-shot tag
 
         } else if (!strcmp("tx_modsrc_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got tx_modsrc_s = %d\n", (int) (pn[idx].value));
@@ -333,13 +354,25 @@ int fpga_rb_update_all_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // p
         } else if (!strcmp("qrg_inc_s", pn[idx].name)) {
             //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got qrg_inc_s = %d\n", (int) (pn[idx].value));
             loc_qrg_inc = ((int) (pn[idx].value));
+
+        } else if (!strcmp("ac97_lil_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got ac97_lil_s = %d\n", (int) (pn[idx].value));
+            loc_ac97_lil = ((int) (pn[idx].value));
+
+        } else if (!strcmp("ac97_lir_s", pn[idx].name)) {
+            //fprintf(stderr, "INFO - fpga_rb_update_all_params: #got ac97_lir_s = %d\n", (int) (pn[idx].value));
+            loc_ac97_lir = ((int) (pn[idx].value));
+
         }  // else if ()
     }  // for ()
 
     /* set the new values */
     {
         if (loc_rb_run) {
-            fpga_rb_set_ctrl(loc_rb_run, loc_tx_modsrc, loc_tx_modtyp, loc_rx_modtyp, ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff), loc_rx_muxin_src,
+            fpga_rb_set_ctrl(loc_rb_run, loc_tx_modsrc, loc_tx_modtyp, loc_rx_modtyp,
+                    ((loc_rfout2_csp  & 0xff) << 0x18) | ((loc_rfout1_csp  & 0xff) << 0x10) | (loc_led_csp & 0xff),
+                    ((loc_ac97_lir    & 0xff) << 0x08) | ((loc_ac97_lil    & 0xff) << 0x00),
+                    loc_rx_muxin_src,
                     loc_tx_car_osc_qrg, loc_rx_car_osc_qrg,
                     loc_tx_mod_osc_qrg, loc_tx_muxin_gain, loc_rx_muxin_gain, loc_tx_qrg_sel, loc_rx_qrg_sel,
                     loc_tx_amp_rf_gain, loc_tx_mod_osc_mag, loc_rfout1_term, loc_rfout2_term, loc_qrg_inc);
@@ -431,21 +464,27 @@ int fpga_rb_get_fpga_params(rb_app_params_t* pb, rb_app_params_t** p_pn)  // pb:
 
 
 /*----------------------------------------------------------------------------*/
-void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int rx_muxin_src,
+void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, int src_con_pnt, int src_con_pnt2, int rx_muxin_src,
         double tx_car_osc_qrg, double rx_car_osc_qrg,
         double tx_mod_osc_qrg, int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
         int tx_amp_rf_gain, int tx_mod_osc_mag, int term_rfout1, int term_rfout2, int qrg_inc)
 {
-    const int ssb_weaver_osc_qrg = 1700.0;
-    static double tx_car_osc_qrg_old = 0.0;
-    static double rx_car_osc_qrg_old = 0.0;
+    const  int      ssb_weaver_osc_qrg = 1700.0;
+    static double   tx_car_osc_qrg_old = 0.0;
+    static double   rx_car_osc_qrg_old = 0.0;
     static uint32_t src_con_pnt_old = 0;
-    static int term_rfout1_old = 0;
-    static int term_rfout2_old = 0;
-    double rfout1_amp_gain = 0.0;
-    double rfout2_amp_gain = 0.0;
-    int tx_car_osc_qrg_inc = 50;
-    int rx_car_osc_qrg_inc = 50;
+    static uint32_t src_con_pnt2_old = 0;
+    static int      term_rfout1_old = 0;
+    static int      term_rfout2_old = 0;
+    double          rfout1_amp_gain = 0.0;
+    double          rfout2_amp_gain = 0.0;
+    int             tx_car_osc_qrg_inc = 50;
+    int             rx_car_osc_qrg_inc = 50;
+    uint32_t        adc_auto_ofs = 0x00000000;
+
+#if 1
+    adc_auto_ofs = 0x01000000;                                                                             // enable ADC automatic offset compensation
+#endif
 
     //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: checking tx_qrg_sel = %d, rx_qrg_sel = %d, qrg_inc = %d\n", tx_qrg_sel, rx_qrg_sel, qrg_inc);
     if (tx_qrg_sel) {
@@ -463,6 +502,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
     /* RF Out x Gain settings - only when relevant changes were made */
     if (
         (src_con_pnt_old    != src_con_pnt)    ||
+        (src_con_pnt2_old   != src_con_pnt2)   ||
         (term_rfout1_old    != term_rfout1)    ||
         (term_rfout2_old    != term_rfout2)    ||
         (tx_car_osc_qrg_old != tx_car_osc_qrg) ||
@@ -518,7 +558,8 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       fpga_rb_set_rfout1_gain_ofs(rfout1_amp_gain, 0.0);                                                   // RFOUT1_AMP    gain correction setting of the RF Output 1 line, DAC offset value
       fpga_rb_set_rfout2_gain_ofs(rfout2_amp_gain, 0.0);                                                   // RFOUT2_AMP    gain correction setting of the RF Output 2 line, DAC offset value
 
-      g_fpga_rb_reg_mem->src_con_pnt = src_con_pnt;
+      g_fpga_rb_reg_mem->src_con_pnt  = src_con_pnt;
+      g_fpga_rb_reg_mem->src_con_pnt2 = src_con_pnt2;
     }
 
     if (rb_run) {
@@ -544,6 +585,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
           // TX_MOD_OSC phase not zero: reset phase oscillator
           g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                          // TX_MOD RESYNC activate
           g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                          // TX_MOD RESYNC deactivate
+          g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                         // ADC automatic offset compensation
         }
       }
       break;
@@ -561,6 +603,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x20));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000020;                                                      // source ID: 32
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -569,6 +612,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x21));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000021;                                                      // source ID: 33
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -577,6 +621,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x10));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000010;                                                      // source ID: 16
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -585,6 +630,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x18));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000018;                                                      // source ID: 24
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -593,6 +639,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x11));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000011;                                                      // source ID: 17
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -601,6 +648,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x19));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000019;                                                      // source ID: 25
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -611,6 +659,22 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       }
       break;
 #endif
+
+      case RB_MODSRC_AC97_LINEOUT_L: {
+        //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AC97 LINEIN Left\n");
+
+        fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0);                                                       // TX MUXIN gain setting
+        g_fpga_rb_reg_mem->tx_muxin_src = 0x00000030;                                                      // source ID: 48
+      }
+      break;
+
+      case RB_MODSRC_AC97_LINEOUT_R: {
+        //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA tx_modsrc to AC97 LINEIN Right\n");
+
+        fpga_rb_set_tx_muxin_gain(tx_muxin_gain, 0);                                                       // TX MUXIN gain setting
+        g_fpga_rb_reg_mem->tx_muxin_src = 0x00000031;                                                      // source ID: 49
+      }
+      break;
 
       }  // switch (tx_modsrc)
 
@@ -756,6 +820,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x20));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000020;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -764,6 +829,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x21));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000021;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -772,6 +838,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x10));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000010;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -780,6 +847,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x18));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000018;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -788,6 +856,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x11));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000011;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -796,6 +865,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x19));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000019;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -807,12 +877,28 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
       break;
 #endif
 
+      case RB_MODSRC_AC97_LINEOUT_L: {
+        //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AC97-LINEOUT Left\n");
+
+        fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0);                                                       // RX MUXIN gain setting
+        g_fpga_rb_reg_mem->rx_muxin_src = 0x00000030;
+      }
+      break;
+
+      case RB_MODSRC_AC97_LINEOUT_R: {
+        //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA rx_modsrc to AC97-LINEOUT Right\n");
+
+        fpga_rb_set_rx_muxin_gain(rx_muxin_gain, 0);                                                       // RX MUXIN gain setting
+        g_fpga_rb_reg_mem->rx_muxin_src = 0x00000031;
+      }
+      break;
+
       }  // switch (rx_modsrc)
 
 
-      fpga_rb_set_rx_modtyp(rx_modtyp);                                                                    // power savings control: set RX modulation variant
+      fpga_rb_set_rx_modtyp(rx_modtyp & 0x0f);                                                             // power savings control: set RX modulation variant, main part of modulation-type
 
-      switch (rx_modtyp) {
+      switch (rx_modtyp & 0x0f) {
 
       case RB_RX_MODTYP_USB: {
         //fprintf(stderr, "INFO - fpga_rb_set_ctrl: setting FPGA for RX: USB\n");
@@ -902,6 +988,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         }
         fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(rx_car_osc_qrg_inc);                             // RX_CAR_OSC frequency sweep increment
         fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(0.0);                                                // RX_CAR_CALC_WEAVER AFC weaver frequency offset correction
+        fpga_rb_set_rx_amenv_filtvar(rx_modtyp >> 4);                                                      // RB_RX_EMENV_FILT_VARIANT set RX_AFC_FIR filter to given characteristics
       }
       break;
 
@@ -909,7 +996,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         fpga_rb_set_rx_car_osc_qrg__4mod_ssb_am_fm_pm(0.0);                                                // no need for oscillator to run
         fpga_rb_set_rx_car_osc_qrg_inc__4mod_ssb_am_fm_pm(50);                                             // no need for oscillator to scan
 
-      }  // switch (rx_modtyp)
+      }  // switch (rx_modtyp & 0x0f)
 
 
     } else {  // else if (rb_run)
@@ -1393,6 +1480,17 @@ void fpga_rb_set_rx_calc_afc_weaver__4mod_am_fm_pm(double rx_weaver_qrg)
 }
 
 /*----------------------------------------------------------------------------*/
+void fpga_rb_set_rx_amenv_filtvar(int rx_amenv_filtvar)
+{
+	if (rx_amenv_filtvar < 0)
+		rx_amenv_filtvar = 0;
+	else if (rx_amenv_filtvar > 2)
+		rx_amenv_filtvar = 2;
+
+    g_fpga_rb_reg_mem->rx_amenv_filtvar = ((uint32_t) rx_amenv_filtvar) & 0x0003;
+}
+
+/*----------------------------------------------------------------------------*/
 void fpga_rb_set_rx_mod_ssb_am_gain__4mod_ssb_am(double rx_mod_ssb_am_gain)
 {
     double gain = ((double) 0xffff) * 0.5 * (rx_mod_ssb_am_gain / 100.0);
@@ -1469,9 +1567,9 @@ void fpga_rb_set_rfout2_gain_ofs(double rfout2_gain, uint16_t rfout2_ofs)
 /*----------------------------------------------------------------------------*/
 uint16_t fpga_rb_get_ovrdrv()
 {
-	uint16_t ovrdrv = (g_fpga_rb_reg_mem->status & 0x00C00000) >> 0x16;
+    uint16_t ovrdrv = (g_fpga_rb_reg_mem->status & 0x00C00000) >> 0x16;
     //fprintf(stderr, "INFO - fpga_rb_get_ovrdrv: ovrdrv = 0x%02x\n", ovrdrv);
-	return ovrdrv;
+    return ovrdrv;
 }
 
 
@@ -1534,21 +1632,14 @@ uint32_t test_rx_measurement(int16_t adc_offset_val, int reduction)
     {
         struct timespec rqtp;
 
-#if 0
-        // 5 ms equals to 50 waves @ 10 kHz
-        rqtp.tv_sec  = 0;
-        rqtp.tv_nsec = 5000000L;
-        nanosleep(&rqtp, NULL);
-#endif
-
         // each 200 kHz timestamp there is a new result available - sum up to reduce noise during measurement
         rqtp.tv_sec  = 0;
         rqtp.tv_nsec = 5000L;
         nanosleep(&rqtp, NULL);
 
         int iter;
-        for (iter = 32; iter; --iter) {
-            sumreg += ((g_fpga_rb_reg_mem->rx_afc_cordic_mag + 16) >> 5);
+        for (iter = 8; iter; --iter) {
+            sumreg += ((g_fpga_rb_reg_mem->rx_afc_cordic_mag + 16) >> 5);  // each part is rounded
             nanosleep(&rqtp, NULL);
         }
     }
@@ -1579,7 +1670,7 @@ int16_t rp_minimize_noise()
 
         test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), reduction);
         test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), reduction);
-        //fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", i, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+        //fprintf(stderr, "DEBUG rp_minimize_noise: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", i, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
         if (test_sig_hi < test_sig_lo) {
             min_ofs_value |= (1 << i);
         }
@@ -1588,12 +1679,12 @@ int16_t rp_minimize_noise()
     test_ofs_hi = min_ofs_value | 0b1;
     test_sig_lo = test_rx_measurement((int16_t) (((int32_t) test_ofs_lo) - 0x8000), 0);
     test_sig_hi = test_rx_measurement((int16_t) (((int32_t) test_ofs_hi) - 0x8000), 0);
-    //fprintf(stderr, "DEBUG rp_measure_calib_params: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", 0, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
+    //fprintf(stderr, "DEBUG rp_minimize_noise: i=%02d, test_ofs_lo=0x%04x sig=%08x - test_ofs_hi=0x%04x sig=%08x\n", 0, test_ofs_lo, test_sig_lo, test_ofs_hi, test_sig_hi);
     if (test_sig_hi < test_sig_lo) {
         min_ofs_value = test_ofs_hi;
     }
 
-    //fprintf(stderr, "INFO rp_measure_calib_params: FINAL --> min_ofs_value=0x%04x=%d\n", min_ofs_value, min_ofs_value);
+    //fprintf(stderr, "INFO rp_minimize_noise: FINAL --> min_ofs_value=0x%04x=%d\n", min_ofs_value, min_ofs_value);
     return (int16_t) (((int32_t) min_ofs_value) - 0x8000);
 }
 

@@ -84,6 +84,7 @@ typedef struct rb_app_params_s {
 /** @brief RadioBox parameters */
 enum rb_params_enum_t {
     RB_RUN                  =  0,
+    RB_CALIB,
     RB_TX_MODSRC,
     RB_TX_MODTYP,
     RB_RX_MODTYP,
@@ -107,6 +108,8 @@ enum rb_params_enum_t {
     RB_RFOUT2_TERM,
     RB_QRG_INC,
     RB_OVRDRV,
+    RB_AC97_LOL,
+    RB_AC97_LOR,
 
     RB_PARAMS_NUM
 } RB_PARAMS_ENUM;
@@ -124,7 +127,11 @@ enum rb_modsrc_enum_t {
     RB_MODSRC_EXP_AI2,
     RB_MODSRC_EXP_AI3,
 
-    RB_MODSRC_MOD_OSC       = 15
+    RB_MODSRC_MOD_OSC       = 15,
+
+    RB_MODSRC_AC97_LINEOUT_L= 48,
+    RB_MODSRC_AC97_LINEOUT_R
+
 } RB_MODSRC_ENUM;
 
 
@@ -140,7 +147,7 @@ enum rb_tx_modtyp_enum_t {
     RB_TX_MODTYP_PM
 } RB_TX_MODTYP_ENUM;
 
-/** @brief RadioBox RX modulation types */
+/** @brief RadioBox RX modulation types - using 4 bits */
 enum rb_rx_modtyp_enum_t {
     RB_RX_MODTYP_ALL_ON     =  0,
     RB_RX_MODTYP_OFF,
@@ -153,6 +160,13 @@ enum rb_rx_modtyp_enum_t {
     RB_RX_MODTYP_FM,
     RB_RX_MODTYP_PM
 } RB_RX_MODTYP_ENUM;
+
+/** @brief RadioBox RX modulation sub types (filter bandwidth) - using 4 bits */
+enum rb_rx_amenv_filtvar_enum_t {
+	RB_RX_AMENV_FILTVAR_wide = 0,
+	RB_RX_AMENV_FILTVAR_mid,
+	RB_RX_AMENV_FILTVAR_nar
+} RB_RX_AMENV_FILTVAR_ENUM;
 
 
 /* Output signals */
@@ -208,6 +222,25 @@ const char* rp_app_desc(void);
 
 
 /* Internal helper functions */
+
+/**
+ * @brief Loads Linux kernel module for AC97 sound interface
+ *
+ * The FPGA includes an AC97 controller that is compatible to the Xilinx ML403 board IP block.
+ * Instead of connecting a TI LM4450 AC97 CODEC, the FPGA ac9ctrl sub-module emulates the CODEC.
+ *
+ */
+void rp_ac97_module_load(void);
+
+/**
+ * @brief Unloads Linux kernel module for AC97 sound interface
+ *
+ * The FPGA includes an AC97 controller that is compatible to the Xilinx ML403 board IP block.
+ * Instead of connecting a TI LM4450 AC97 CODEC, the FPGA ac9ctrl sub-module emulates the CODEC.
+ *
+ */
+void rp_ac97_module_unload(void);
+
 
 /**
  * @brief Prepares buffers for signal traces (not used yet)

@@ -20,6 +20,9 @@ all: $(CONTROLLER)
 $(CONTROLLER): $(OBJECTS)
 	$(CC) -o $(CONTROLLER) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
+Test_AC97_Access: Test_AC97_Access.c
+	$(CC) -o $@ $< $(CFLAGS)
+
 clean:
 	-$(RM) $(OBJECTS)
 	-$(RM) -r img

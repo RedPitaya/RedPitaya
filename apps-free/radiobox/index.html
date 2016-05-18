@@ -56,8 +56,7 @@
               <li class="dropdown">
                 <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
-                  <li><a id="" href="#" data-toggle="modal" data-target="#myModal">CON. MATRIX</a></li>
-                  <li><a id="" href="#" data-toggle="modal" data-target="#myModal">CALIBRATION</a></li>
+                  <li><a id="RB_ADC_CALIB" href="#" data-toggle="modal" data-target="#myModal">ADC-CALIB</a></li>
                 </ul>
               </li>
               <li>
@@ -197,11 +196,11 @@
                 <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
                 <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
+                <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">==============</option>
                 <option value="248">TX_CAR_OSC_INC value</option>
                 <option value="249">RX_CAR_OSC_INC value</option>
                 <option disabled="disabled">---------------------</option>
-                <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
-                <option disabled="disabled">==============</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
             </div>
@@ -283,10 +282,10 @@
                 <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
-                <option disabled="disabled">---------------------</option>
+                <option disabled="disabled">==============</option>
                 <option value="248">TX_CAR_OSC_INC value</option>
                 <option value="249">RX_CAR_OSC_INC value</option>
-                <option disabled="disabled">==============</option>
+                <option disabled="disabled">---------------------</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
             </div>
@@ -369,11 +368,20 @@
                 <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
                 <option disabled="disabled">---------------------</option>
                 <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
-                <option disabled="disabled">---------------------</option>
-                <option value="248">TX_CAR_OSC_INC value</option>
-                <option value="249">RX_CAR_OSC_INC value</option>
                 <option disabled="disabled">==============</option>
-                <option value="254">current status of the overdrive signals</option>
+                <option value="192">TX_CAR_OSC_INC value</option>
+                <option value="193">RX_CAR_OSC_INC value</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="208">ADC_RFIN1 offset value</option>
+                <option value="209">ADC_RFIN2 offset value</option>
+                <option value="210">XADC Ch-0 offset value</option>
+                <option value="211">XADC Ch-8 offset value</option>
+                <option value="212">XADC Ch-1 offset value</option>
+                <option value="213">XADC Ch-9 offset value</option>
+                <option value="214">XADC VpVn offset value</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="240">AC97 diagnostic LEDs</option>
+                <option value="248">current status of the overdrive signals</option>
                 <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
               </select>
             </div>
@@ -419,6 +427,198 @@
                 <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
               </span>
             </div>
+          </div>
+        </td>
+        </tr>
+
+        <tr>
+        <td class="table-header">
+          <span style="font-size: 70%">Linux AC97-LineIn Left</span>
+        </td>
+        <td class="table-header">
+          <span style="font-size: 70%">Linux AC97-LineIn Right</span>
+        </td>
+        <td class="table-header">
+          <span style="font-size: 70%">Play streamed AC97-LineIn</span>
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <div id="ac97_lil" class="form-group">
+          <label for="ac97_lil_s" class="col-xs-5 control-label">connect source point:</label>
+            <div class="col-xs-6">
+              <select id="ac97_lil_s" class="form-control form-bg-ac97-lil">
+                <option value="0">silence</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="4">TX_MUXIN_MIX in &nbsp; (audio signal)</option>
+                <option value="5">TX_MOD_ADC in &nbsp; (audio amplifier)</option>
+                <option value="6">TX_MOD_ADC out &nbsp; (audio amplifier)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2 &nbsp; (amplitude)</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2 &nbsp; (amplitude)</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3 &nbsp; (offset)</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3 &nbsp; (offset)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="16">TX_MOD_CIC I output &nbsp; (low pass)</option>
+                <option value="17">TX_MOD_CIC Q output &nbsp; (low pass)</option>
+                <option value="18">TX_MOD_FIR I output &nbsp; (voice band)</option>
+                <option value="19">TX_MOD_FIR Q output &nbsp; (voice band)</option>
+                <option value="20">TX_CAR_CIC I output &nbsp; (41.664 MHz interpolator)</option>
+                <option value="21">TX_CAR_CIC Q output &nbsp; (41.664 MHz interpolator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
+                <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="32">RX_MUXIN_MIX input</option>
+                <option value="33">RX_MUXIN_MIX output</option>
+                <option value="34">RX_CAR_OSC_I output</option>
+                <option value="35">RX_CAR_OSC_Q output</option>
+                <option value="36">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
+                <option value="37">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
+                <option value="38">RX_CAR_5M_I output &nbsp; (5 MHz decimation)</option>
+                <option value="39">RX_CAR_5M_Q output &nbsp; (5 MHz decimation)</option>
+                <option value="40">RX_CAR_200K_I output &nbsp; (200 kHz decimation)</option>
+                <option value="41">RX_CAR_200K_Q output &nbsp; (200 kHz decimation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="48">RX_MOD_8K_I output &nbsp; (8 kHz decimation)</option>
+                <option value="49">RX_MOD_8K_Q output &nbsp; (8 kHz decimation)</option>
+                <option value="50">RX_MOD_BP1_I output &nbsp; (voice band)</option>
+                <option value="51">RX_MOD_BP1_Q output &nbsp; (voice band)</option>
+                <option value="52">RX_MOD_OSC_I output</option>
+                <option value="53">RX_MOD_OSC_Q output</option>
+                <option value="54">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="55">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="56">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="57">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="58">RX_MOD_BP2_I output &nbsp; (weaver & CIC comp.)</option>
+                <option value="59">RX_MOD_BP2_Q output &nbsp; (weaver & CIC comp.)</option>
+                <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="66">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="67">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option value="68">RX_AFC_CORDIC_PHS_PREV output &nbsp; (AFC previous phase)</option>
+                <option value="69">RX_AFC_CORDIC_PHS_DIFF output &nbsp; (AFC phase difference)</option>
+                <option value="70">RX_AFC_INC_REG output &nbsp; (AFC increment correction)</option>
+                <option value="71">RX_SUM_INC_REG output &nbsp; (SUM increment correction)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
+                <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="248">TX_CAR_OSC_INC value</option>
+                <option value="249">RX_CAR_OSC_INC value</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
+              </select>
+            </div>
+          </div>
+        </td>
+        <td>
+        <div id="ac97_lir" class="form-group">
+          <label for="ac97_lir_s" class="col-xs-5 control-label">connect source point:</label>
+            <div class="col-xs-6">
+              <select id="ac97_lir_s" class="form-control form-bg-ac97-lir">
+                <option value="0">silence</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="4">TX_MUXIN_MIX in &nbsp; (audio signal)</option>
+                <option value="5">TX_MOD_ADC in &nbsp; (audio amplifier)</option>
+                <option value="6">TX_MOD_ADC out &nbsp; (audio amplifier)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="8">TX_MOD_OSC_I output</option>
+                <option value="9">TX_MOD_OSC_Q output</option>
+                <option value="10">TX_MOD_QMIX_I output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="11">TX_MOD_QMIX_Q output at stage 1 &nbsp; (analytic signal)</option>
+                <option value="12">TX_MOD_QMIX_I output at stage 2 &nbsp; (amplitude)</option>
+                <option value="13">TX_MOD_QMIX_Q output at stage 2 &nbsp; (amplitude)</option>
+                <option value="14">TX_MOD_QMIX_I output at stage 3 &nbsp; (offset)</option>
+                <option value="15">TX_MOD_QMIX_Q output at stage 3 &nbsp; (offset)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="16">TX_MOD_CIC I output &nbsp; (low pass)</option>
+                <option value="17">TX_MOD_CIC Q output &nbsp; (low pass)</option>
+                <option value="18">TX_MOD_FIR I output &nbsp; (voice band)</option>
+                <option value="19">TX_MOD_FIR Q output &nbsp; (voice band)</option>
+                <option value="20">TX_CAR_CIC I output &nbsp; (41.664 MHz interpolator)</option>
+                <option value="21">TX_CAR_CIC Q output &nbsp; (41.664 MHz interpolator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="24">TX_CAR_OSC_I output</option>
+                <option value="25">TX_CAR_OSC_Q output</option>
+                <option value="26">TX_CAR_QMIX_I output &nbsp; (RF modulator)</option>
+                <option value="27">TX_CAR_QMIX_Q output &nbsp; (RF modulator)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="28">TX_AMP_RF output (RF signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="32">RX_MUXIN_MIX input</option>
+                <option value="33">RX_MUXIN_MIX output</option>
+                <option value="34">RX_CAR_OSC_I output</option>
+                <option value="35">RX_CAR_OSC_Q output</option>
+                <option value="36">RX_CAR_QMIX_I output &nbsp; (down mixer)</option>
+                <option value="37">RX_CAR_QMIX_Q output &nbsp; (down mixer)</option>
+                <option value="38">RX_CAR_5M_I output &nbsp; (5 MHz decimation)</option>
+                <option value="39">RX_CAR_5M_Q output &nbsp; (5 MHz decimation)</option>
+                <option value="40">RX_CAR_200K_I output &nbsp; (200 kHz decimation)</option>
+                <option value="41">RX_CAR_200K_Q output &nbsp; (200 kHz decimation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="48">RX_MOD_8K_I output &nbsp; (8 kHz decimation)</option>
+                <option value="49">RX_MOD_8K_Q output &nbsp; (8 kHz decimation)</option>
+                <option value="50">RX_MOD_BP1_I output &nbsp; (voice band)</option>
+                <option value="51">RX_MOD_BP1_Q output &nbsp; (voice band)</option>
+                <option value="52">RX_MOD_OSC_I output</option>
+                <option value="53">RX_MOD_OSC_Q output</option>
+                <option value="54">RX_MOD_HLD_I output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="55">RX_MOD_HLD_Q output &nbsp; (oscillator S&H 8 kHz)</option>
+                <option value="56">RX_MOD_QMIX_I output &nbsp; (beat mixer)</option>
+                <option value="57">RX_MOD_QMIX_Q output &nbsp; (beat mixer)</option>
+                <option value="58">RX_MOD_BP2_I output &nbsp; (weaver & CIC comp.)</option>
+                <option value="59">RX_MOD_BP2_Q output &nbsp; (weaver & CIC comp.)</option>
+                <option value="60">RX_MOD_48K_I output &nbsp; (48 kHz interpolation)</option>
+                <option value="61">RX_MOD_48K_Q output &nbsp; (48 kHz interpolation)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="62">RX_MOD_SSB_AM output &nbsp; (SSB/AM-sync decoder signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="64">RX_AFC_FIR_I output &nbsp; (low pass)</option>
+                <option value="65">RX_AFC_FIR_Q output &nbsp; (low pass)</option>
+                <option value="66">RX_AFC_CORDIC_MAG output &nbsp; (AFC magnitude)</option>
+                <option value="67">RX_AFC_CORDIC_PHS output &nbsp; (AFC phase)</option>
+                <option value="68">RX_AFC_CORDIC_PHS_PREV output &nbsp; (AFC previous phase)</option>
+                <option value="69">RX_AFC_CORDIC_PHS_DIFF output &nbsp; (AFC phase difference)</option>
+                <option value="70">RX_AFC_INC_REG output &nbsp; (AFC increment correction)</option>
+                <option value="71">RX_SUM_INC_REG output &nbsp; (SUM increment correction)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="72">RX_MOD_FM output &nbsp; (FM decoder signal)</option>
+                <option value="73">RX_MOD_PM output &nbsp; (PM decoder signal)</option>
+                <option value="74">RX_MOD_AMENV output &nbsp; (AM-envelope decoder signal)</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="80">RX_AUDIO output &nbsp; (audio signal)</option>
+                <option disabled="disabled">==============</option>
+                <option value="248">TX_CAR_OSC_INC value</option>
+                <option value="249">RX_CAR_OSC_INC value</option>
+                <option disabled="disabled">---------------------</option>
+                <option value="255">test vector as signal @see red_pitaya_radiobox.sv for details</option>
+              </select>
+            </div>
+          </div>
+        </td>
+        <td>
+          <label class="col-xs-5 control-label">streaming player:</label>
+          <div class="col-xs-6">
+            <!-- audio controls preload="none">
+              <source src="http://lab-red:8000/redpitaya.raw" type="audio/wav" />
+            </audio -->
           </div>
         </td>
         </tr>
@@ -474,6 +674,9 @@
               <option id="tx_modsrc_o_5" value="5">EXP AI1</option>
               <option id="tx_modsrc_o_6" value="6">EXP AI2</option>
               <option id="tx_modsrc_o_7" value="7">EXP AI3</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="48">AC97-LINEOUT Left</option>
+              <option value="49">AC97-LINEOUT Right</option>
             </select>
             <span id="apply_tx_modsrc" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
@@ -595,13 +798,13 @@
             <td class="qrg_col04" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e7_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
             <td class="qrg_col05" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e6_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
 
-            <td class="qrg_col07" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e5_f" value="1" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col08" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e4_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col09" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e3_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col07" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e5_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col08" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e4_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col09" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e3_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
 
-            <td class="qrg_col11" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e2_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col12" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e1_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
-            <td class="qrg_col13" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e0_f" value="0" class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col11" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e2_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col12" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e1_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
+            <td class="qrg_col13" rowspan="2"><input type="text" maxlength="1" id="qrg_display_1e0_f" value=" " class="mswheelbtn form-bg-qrg qrg_display" readonly="readonly" /></td>
 
             <td class="qrg_col15"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_4_b" name="qrg_entry_4" value="4" /></td>
             <td class="qrg_col16"><input class="btnevt qrg_entry_but" type="button" id="qrg_entry_5_b" name="qrg_entry_5" value="5" /></td>
@@ -684,6 +887,9 @@
               <option value="5">EXP AI1</option>
               <option value="6">EXP AI2</option>
               <option value="7">EXP AI3</option>
+              <option disabled="disabled">---------------------</option>
+              <option value="48">AC97-LINEOUT Left</option>
+              <option value="49">AC97-LINEOUT Right</option>
             </select>
             <span id="apply_rx_muxin_src" class="input-group-btn" style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
@@ -705,16 +911,18 @@
           <label for="rx_modtyp_s" class="col-xs-5 control-label">RX mod. type:</label>
           <div class="col-xs-6">
             <select id="rx_modtyp_s" class="form-control form-bg-tx-modtyp">
-              <option value="1">(off)</option>
-              <option value="2">USB</option>
-              <option value="3">LSB</option>
+              <option value="1" >(off)</option>
+              <option value="2" >USB</option>
+              <option value="3" >LSB</option>
               <option disabled="disabled">---------------------</option>
-              <option value="4">AM-Envelope</option>
-              <option value="5">AM-Sync-USB</option>
-              <option value="6">AM-Sync-LSB</option>
+              <option value="4" >AM-Envelope &nbsp; (wide)</option>
+              <option value="20">AM-Envelope &nbsp; (middle)</option>
+              <option value="36">AM-Envelope &nbsp; (narrow)</option>
+              <option value="5" >AM-Sync-USB</option>
+              <option value="6" >AM-Sync-LSB</option>
               <option disabled="disabled">---------------------</option>
-              <option value="7">FM</option>
-              <option value="8">PM</option>
+              <option value="7" >FM</option>
+              <option value="8" >PM</option>
             </select>
             <span id="apply_rx_modtyp" class="input-group-btn" _style="visibility:hidden">
               <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle" /></button>
@@ -786,6 +994,22 @@
           <a href="/" class="btn btn-danger pull-left">Exit app</a>
           <button type="button" class="btn btn-default" id="btn_switch_app">Switch</button>
           <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="modal_calib" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_calib_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_calib_label">ADC Calibration</h4>
+        </div>
+        <div class="modal-body">
+          Run ADC offset bias settings?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" id="btn_calib_bias">Run ADC biasing</button>
+          <button type="button" class="btn btn-primary" id="btn_calib_close">Close</button>
         </div>
       </div>
     </div>

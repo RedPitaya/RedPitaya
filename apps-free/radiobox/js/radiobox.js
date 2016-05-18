@@ -57,14 +57,14 @@
     eventClickId: '',
     qrgController: {
         tx: {
-            button_checked: true
+            button_checked: false
         },
         rx: {
             button_checked: true
         },
         mousewheelsum: 0,
         digit: {
-            e: [ 0, 0, 0, 0, 0, 1, 0, 0 ]  // reversed digits
+            e: [ 0, 0, 0, 0, 0, 0, 0, 0 ]  // reversed digits
         },
         editing: false,
         enter: false,
@@ -82,19 +82,20 @@
     rb_run:                 1,  // application running
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
     tx_modtyp_s:            1,  // TX modulation: off
-    rx_modtyp_s:            5,  // RX modulation: AM-sync USB
-    rbled_csp_s:          254,  // RB LEDs set to: current status of the overdrive signals
+    rx_modtyp_s:            4,  // RX modulation: AM-Env
+//  rbled_csp_s:          240,  // AC97 diagnostic LEDs
+    rbled_csp_s:          248,  // overdrive signals
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2
 
-    tx_car_osc_qrg_f:  100000,  // 100 kHz
-    rx_car_osc_qrg_f:  100000,  // 100 kHz
+    tx_car_osc_qrg_f:       0,  //    0 kHz
+    rx_car_osc_qrg_f: 7210000,  // 7210 kHz, @see also: RB.state.qrgController.digit.e[]
 
     tx_mod_osc_qrg_f:    1000,  //   1 kHz
     tx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
-    rx_muxin_gain_s:       80,  // slider position in % of 100% (80% = FS input with booster 1:1)
-    tx_qrg_sel_s:           1,  // QRG controller influence TX frequency
+    rx_muxin_gain_s:       30,  // slider position in % of 100% (80% = FS input with booster 1:1)
+    tx_qrg_sel_s:           0,  // QRG controller influence TX frequency
     rx_qrg_sel_s:           1,  // QRG controller influence RX frequency
 
     tx_amp_rf_gain_s:     200,  // 200 mV Vpp @ 50R results to -10 dBm
@@ -102,7 +103,12 @@
     rfout1_term_s:          2,  // RF Output 1: '0' neutral, '1' 50 ohms terminated, '2' open ended
     rfout2_term_s:          2,  // RF Output 2: '0' neutral, '1' 50 ohms terminated, '2' open ended
     qrg_inc_s:             50,  // Frequency range controller increment value [0%..100%]
-    ovrdrv_s:               0   // Current overdrive flags of the FPGA signals
+    ovrdrv_s:               0,  // Current overdrive flags of the FPGA signals
+
+    ac97_lil_s:            80,  // connect to RX_AUDIO_OUT (RX: audio signal)
+    ac97_lir_s:            80   // connect to RX_AUDIO_OUT (RX: audio signal)
+  //ac97_lil_s:            60,  // connect to RX_MOD_48K_I (RX: audio signal)
+  //ac97_lir_s:            61   // connect to RX_MOD_48K_Q (RX: audio signal)
   };
 
   // Other global variables
@@ -133,15 +139,6 @@
       console.log('Can not connect the web-server (ERR3)');
     });
   };
-
-  function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
-    var err_modal = $('#modal_err');
-    err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
-    err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
-    err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
-    err_modal.find('.modal-body').html(err_msg);
-    err_modal.modal('show');
-  }
 
   // Initial Ajax Connection set-up
   RB.ac = function() {
@@ -407,6 +404,12 @@
           $('#rx_muxin_gain_s').removeClass('form-bg-rx-muxin-gain-ovrdrv');
         }
       }
+      else if (param_name == 'ac97_lil_s') {
+        $('#'+param_name).val(intVal);
+      }
+      else if (param_name == 'ac97_lir_s') {
+        $('#'+param_name).val(intVal);
+      }
 
       /*
       if (param_name.indexOf('RB_MEAS_VAL') == 0) {
@@ -617,6 +620,23 @@
     $('#right_menu').show();
   };
 }(window.RB = window.RB || {}, jQuery));
+
+function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
+  var err_modal = $('#modal_err');
+  err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
+  err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
+  err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
+  err_modal.find('.modal-body').html(err_msg);
+  err_modal.modal('show');
+}
+
+function showModalCalib(isShow) {
+  var calib_modal = $('#modal_calib');
+  if (isShow === true)
+    calib_modal.modal('show');
+  else
+    calib_modal.modal('hide');
+}
 
 function processField(key) {
   var field = $('#' + key);
@@ -1056,6 +1076,21 @@ $(function() {
     RB.sendParams();
   });
 
+  $('#RB_ADC_CALIB').on('click', function(ev) {
+    ev.preventDefault();
+    showModalCalib(true);
+  });
+  $('#btn_calib_bias').on('click', function(ev) {
+    ev.preventDefault();
+    //console.log('DEBUG btn_calib_bias clicked\n');
+    RB.params.local['rb_calib'] = 1;
+    RB.sendParams();
+  });
+  $('#btn_calib_close').on('click', function(ev) {
+    ev.preventDefault();
+    showModalCalib(false);
+  });
+
   /*
   // Selecting active signal
   //$('.menu-btn').on('click touchstart', function() {
@@ -1442,6 +1477,10 @@ function cast_params2transport(params, pktIdx)
       transport['rb_run'] = params['rb_run'];
     }
 
+    if (params['rb_calib'] !== undefined) {
+      transport['rb_calib'] = params['rb_calib'];
+    }
+
     if (params['tx_modsrc_s'] !== undefined) {
       transport['tx_modsrc_s'] = params['tx_modsrc_s'];
     }
@@ -1546,6 +1585,14 @@ function cast_params2transport(params, pktIdx)
 
     if (params['ovrdrv_s'] !== undefined) {
       transport['ovrdrv_s'] = params['ovrdrv_s'];
+    }
+
+    if (params['ac97_lil_s'] !== undefined) {
+      transport['ac97_lil_s'] = params['ac97_lil_s'];
+    }
+
+    if (params['ac97_lir_s'] !== undefined) {
+      transport['ac97_lir_s'] = params['ac97_lir_s'];
     }
     break;
 
@@ -1659,6 +1706,14 @@ function cast_transport2params(transport)
 
   if (transport['ovrdrv_s'] !== undefined) {
     params['ovrdrv_s'] = transport['ovrdrv_s'];
+  }
+
+  if (transport['ac97_lil_s'] !== undefined) {
+    params['ac97_lil_s'] = transport['ac97_lil_s'];
+  }
+
+  if (transport['ac97_lir_s'] !== undefined) {
+    params['ac97_lir_s'] = transport['ac97_lir_s'];
   }
 
   //console.log('INFO cast_transport2params: out(params=', params, ') <-- in(transport=', transport, ')\n');

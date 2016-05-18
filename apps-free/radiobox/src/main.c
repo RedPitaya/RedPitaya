@@ -71,6 +71,9 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
     { /* Running mode - transport_pktIdx 1 */
         "rb_run",                   0.0,   1, 0, 0.0,       1.0  },
 
+    { /* ADC biasing mode - transport_pktIdx 1 */
+        "rb_calib",                 0.0,   1, 0, 0.0,       1.0  },
+
     { /* TX_CAR_OSC modulation source selector - transport_pktIdx 1 */
         "tx_modsrc_s",              0.0,   1,  0, 0.0,    255.0  },
 
@@ -133,6 +136,12 @@ const rb_app_params_t g_rb_default_params[RB_PARAMS_NUM + 1] = {
 
     { /* Overdrive flags - transport_pktIdx 4 */
         "ovrdrv_s",                 0.0,   1,  0, 0.0,  65535.0  },
+
+    { /* AC97 LineOut Left  CON_SRC_PNT - transport_pktIdx 4 */
+        "ac97_lil_s",               0.0,   1,  0, 0.0,    255.0  },
+
+    { /* AC97 LineOut Right CON_SRC_PNT - transport_pktIdx 4 */
+        "ac97_lir_s",               0.0,   1,  0, 0.0,    255.0  },
 
 
     { /* has to be last entry */
@@ -259,6 +268,25 @@ int cast_1xdouble_to_4xbf(float* f_se, float* f_hi, float* f_mi, float* f_lo, do
 const char* rp_app_desc(void)
 {
     return (const char *)"RedPitaya RadioBox application by DF4IAH and DD8UU.\n";
+}
+
+
+/*----------------------------------------------------------------------------------*/
+void rp_ac97_module_load(void)
+{
+#if 0
+	// unload sound module first
+	rp_ac97_module_unload();
+#endif
+
+	system("redpitaya-ac97_start &");
+}
+
+
+/*----------------------------------------------------------------------------------*/
+void rp_ac97_module_unload(void)
+{
+	system("redpitaya-ac97_stop &");
 }
 
 
@@ -759,7 +787,9 @@ int rp_copy_params_rb2rp(rp_app_params_t** dst, const rb_app_params_t src[])
                     !strcmp("rfout1_term_s",       src[i].name) ||
                     !strcmp("rfout2_term_s",       src[i].name) ||
                     !strcmp("qrg_inc_s",           src[i].name) ||
-                    !strcmp("ovrdrv_s",            src[i].name)) {
+                    !strcmp("ovrdrv_s",            src[i].name) ||
+                    !strcmp("ac97_lil_s",          src[i].name) ||
+                    !strcmp("ac97_lir_s",          src[i].name)) {
                     found = 1;
                 }
                 break;
