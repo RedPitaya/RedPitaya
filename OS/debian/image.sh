@@ -52,7 +52,7 @@ mount $ROOT_DEV $ROOT_DIR
 
 OVERLAY=OS/debian/overlay
 
-. OS/debian/debian.sh 
+. OS/debian/ubuntu.sh 
 
 # enable chroot access with native execution
 cp /etc/resolv.conf         $ROOT_DIR/etc/
