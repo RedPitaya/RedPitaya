@@ -469,17 +469,22 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         double tx_mod_osc_qrg, int tx_muxin_gain, int rx_muxin_gain, int tx_qrg_sel, int rx_qrg_sel,
         int tx_amp_rf_gain, int tx_mod_osc_mag, int term_rfout1, int term_rfout2, int qrg_inc)
 {
-    const int ssb_weaver_osc_qrg = 1700.0;
-    static double tx_car_osc_qrg_old = 0.0;
-    static double rx_car_osc_qrg_old = 0.0;
+    const  int      ssb_weaver_osc_qrg = 1700.0;
+    static double   tx_car_osc_qrg_old = 0.0;
+    static double   rx_car_osc_qrg_old = 0.0;
     static uint32_t src_con_pnt_old = 0;
     static uint32_t src_con_pnt2_old = 0;
-    static int term_rfout1_old = 0;
-    static int term_rfout2_old = 0;
-    double rfout1_amp_gain = 0.0;
-    double rfout2_amp_gain = 0.0;
-    int tx_car_osc_qrg_inc = 50;
-    int rx_car_osc_qrg_inc = 50;
+    static int      term_rfout1_old = 0;
+    static int      term_rfout2_old = 0;
+    double          rfout1_amp_gain = 0.0;
+    double          rfout2_amp_gain = 0.0;
+    int             tx_car_osc_qrg_inc = 50;
+    int             rx_car_osc_qrg_inc = 50;
+    uint32_t        adc_auto_ofs = 0x00000000;
+
+#if 1
+    adc_auto_ofs = 0x01000000;                                                                             // enable ADC automatic offset compensation
+#endif
 
     //fprintf(stderr, "DEBUG - fpga_rb_set_ctrl: checking tx_qrg_sel = %d, rx_qrg_sel = %d, qrg_inc = %d\n", tx_qrg_sel, rx_qrg_sel, qrg_inc);
     if (tx_qrg_sel) {
@@ -579,7 +584,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
         if (!(g_fpga_rb_reg_mem->status & 0x00000100)) {
           // TX_MOD_OSC phase not zero: reset phase oscillator
           g_fpga_rb_reg_mem->ctrl &= ~0x00001000;                                                          // TX_MOD RESYNC activate
-          g_fpga_rb_reg_mem->ctrl |=  0x00001000;                                                          // TX_MOD RESYNC deactivate
+          g_fpga_rb_reg_mem->ctrl |=  0x00101000;                                                          // TX_MOD RESYNC deactivate, ADC automatic offset compensation
         }
       }
       break;
@@ -597,6 +602,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x20));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000020;                                                      // source ID: 32
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -605,6 +611,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x21));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000021;                                                      // source ID: 33
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -613,6 +620,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x10));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000010;                                                      // source ID: 16
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -621,6 +629,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x18));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000018;                                                      // source ID: 24
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -629,6 +638,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x11));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000011;                                                      // source ID: 17
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -637,6 +647,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_tx_muxin_gain(tx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x19));     // TX MUXIN gain setting
         g_fpga_rb_reg_mem->tx_muxin_src = 0x00000019;                                                      // source ID: 25
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -808,6 +819,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x20));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000020;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -816,6 +828,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x21));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000021;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -824,6 +837,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x10));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000010;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -832,6 +846,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x18));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000018;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -840,6 +855,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x11));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000011;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 
@@ -848,6 +864,7 @@ void fpga_rb_set_ctrl(int rb_run, int tx_modsrc, int tx_modtyp, int rx_modtyp, i
 
         fpga_rb_set_rx_muxin_gain(rx_muxin_gain, calib_get_ADC_offset(&g_rp_main_calib_params, 0x19));     // RX MUXIN gain setting
         g_fpga_rb_reg_mem->rx_muxin_src = 0x00000019;
+        g_fpga_rb_reg_mem->ctrl |= adc_auto_ofs;                                                           // ADC automatic offset compensation
       }
       break;
 

@@ -83,7 +83,8 @@
     tx_modsrc_s:            1,  // mod-source: RF Input 1 (audio signal)
     tx_modtyp_s:            1,  // TX modulation: off
     rx_modtyp_s:            4,  // RX modulation: AM-Env
-    rbled_csp_s:          254,  // AC97 diagnostic LEDs
+//  rbled_csp_s:          240,  // AC97 diagnostic LEDs
+    rbled_csp_s:          248,  // overdrive signals
     rfout1_csp_s:          28,  // connect to TX_AMP_RF out (TX: RF signal)
     rfout2_csp_s:          80,  // connect to RX_AUDIO_OUT (RX: audio signal)
     rx_muxin_src_s:         2,  // receiver RF input set to RF Input 2

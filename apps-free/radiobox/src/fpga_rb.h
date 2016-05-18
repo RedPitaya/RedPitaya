@@ -186,7 +186,11 @@ typedef struct fpga_rb_reg_mem_s {
      *
      * bit h16: RX_CAR_OSC OFS SRC STREAM - '1' places input MUXer for RX_CAR_OSC DDS offset input to the second streamed input pipe. '0' places MUXer to registers "RX_CAR_OSC OFS HI" and "RX_CAR_OSC OFS LO".
      *
-     * bit h1B..h17: n/a
+     * bit h17: n/a
+     *
+     * bit h18: ADC_AUTO_OFS - '1' enables automatic A/D-Converter offset compensation.  '0' disables that automatic compensation.
+     *
+     * bit h1B..h19: n/a
      *
      * bit h1C: RX_MOD_OSC RESYNC - '1' stops incrementing the accumulating phase register. That holds the oscillator just there, where it is. With '0' the RX_MOD_OSC resumes operation.
      *
@@ -390,10 +394,21 @@ typedef struct fpga_rb_reg_mem_s {
      *
      *   value = h50  RX_AUDIO output.
      *
-     *   value = hF8  TX_CAR_OSC_INC frequency value.
-     *   value = hF9  RX_CAR_OSC_INC frequency value.
-     *   value = hFD  AC97 diagnostic LEDs.
-     *   value = hFE  current status of the overdrive signals.
+     *   value = hC0  TX_CAR_OSC_INC frequency value.
+     *   value = hC1  RX_CAR_OSC_INC frequency value.
+     *
+     *   value = hD0  ADC_AUTO_OFS_RFIN1    offset register monitor.
+     *   value = hD1  ADC_AUTO_OFS_RFIN2    offset register monitor.
+     *   value = hD2  ADC_AUTO_OFS_EXT_CH0  offset register monitor.
+     *   value = hD3  ADC_AUTO_OFS_EXT_CH8  offset register monitor.
+     *   value = hD4  ADC_AUTO_OFS_EXT_CH1  offset register monitor.
+     *   value = hD5  ADC_AUTO_OFS_EXT_CH9  offset register monitor.
+     *   value = hD6  ADC_AUTO_OFS_EXT_VpVn offset register monitor.
+     *
+     *   value = hF0  AC97 diagnostic LEDs.
+     *
+     *   value = hF8  current status of the overdrive signals.
+     *
      *   value = hFF  current test vector @see red_pitaya_radiobox.sv for details.
      *
      * bit h0F..h08: n/a
