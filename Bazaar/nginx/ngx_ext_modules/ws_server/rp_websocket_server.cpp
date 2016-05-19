@@ -65,9 +65,10 @@ void rp_websocket_server::run(std::string docroot, uint16_t port) {
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
 	m_docroot = docroot;
 
-	m_endpoint.set_reuse_addr(true);
+	// m_endpoint.set_reuse_addr(true);
 	// listen on specified port
-	m_endpoint.listen(boost::asio::ip::tcp::v4(), port);
+	// m_endpoint.listen(boost::asio::ip::tcp::v4(), port);
+	m_endpoint.listen(port);
 	// Start the server accept loop
 	m_endpoint.start_accept();
 	// Start the ASIO io_service run loop
@@ -83,6 +84,7 @@ void rp_websocket_server::set_signal_timer() {
 
 	if(m_signal_timer!=NULL)
 		m_signal_timer->cancel();
+	fprintf(stderr, "set_signal_timer interval %d\n", interval);
 	int interval = m_params->get_signals_interval_func != 0 ? m_params->get_signals_interval_func() : m_params->signal_interval;
 	m_signal_timer = m_endpoint.set_timer(
 		interval,
@@ -99,6 +101,7 @@ void rp_websocket_server::set_param_timer() {
 	if(m_param_timer!=NULL)
 		m_param_timer->cancel();
 	int interval = m_params->get_params_interval_func != 0 ?  m_params->get_params_interval_func() : m_params->param_interval;
+	fprintf(stderr, "set_param_timer interval %d\n", interval);
 	m_param_timer = m_endpoint.set_timer(
 		interval,
 		websocketpp::lib::bind(
