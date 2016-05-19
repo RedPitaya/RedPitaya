@@ -46,6 +46,9 @@ dpkg-reconfigure --frontend=noninteractive tzdata
 # development tools
 apt-get -y install build-essential vim sudo u-boot-tools usbutils psmisc lsof parted
 
+# solving an issue with tty
+# http://askubuntu.com/questions/763631/console-login-on-ubuntu-core-16-04-core-armhf-tar-gz/766444
+ln -s /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@ttyPS0.service
 EOF_CHROOT
 
 . OS/debian/network.sh
