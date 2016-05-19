@@ -136,7 +136,7 @@ $(TMP):
 
 $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGINX) \
 	   examples $(DISCOVERY) $(HEARTBEAT) ecosystem \
-	   scpi api apps_pro rp_communication
+	   scpi api apps_pro apps_tools rp_communication
 	mkdir -p               $(TARGET)
 	# copy boot images and select FSBL as default
 	cp $(BOOT_UBOOT)       $(TARGET)/boot.bin
@@ -497,12 +497,10 @@ ifdef ENABLE_LICENSING
 APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
-APP_SCPISERVER_DIR    = Applications/scpi_server
-APP_UPDATER_DIR    = Applications/updater
 
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server updater
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter
 
-apps_pro: scopegenpro spectrumpro lcr_meter scpi_server updater
+apps_pro: scopegenpro spectrumpro lcr_meter
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
@@ -515,6 +513,19 @@ spectrumpro: api $(NGINX)
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+else
+
+apps_pro: scpi_server updater
+
+endif
+
+
+APP_SCPISERVER_DIR    = Applications/scpi_server
+APP_UPDATER_DIR    = Applications/updater
+
+.PHONY: apps_tools scpi_server updater
+
+apps_tools: scpi_server updater
 
 scpi_server: api $(NGINX)
 	$(MAKE) -C $(APP_SCPISERVER_DIR)
@@ -523,11 +534,6 @@ scpi_server: api $(NGINX)
 updater: api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-else
-
-apps_pro:
-
-endif
 
 ################################################################################
 # Red Pitaya SDK
