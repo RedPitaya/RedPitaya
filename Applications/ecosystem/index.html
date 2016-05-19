@@ -25,8 +25,9 @@
 
 
 			var current_app = "";
-			var url_arr = window.location.href.split("/");;
-		    var url = url_arr[0] + '//' + url_arr[2] + '/';
+			var url_arr = window.location.href.split("/");
+			var url = url_arr[0] + '//' + url_arr[2] + '/';
+			var shut_url = url_arr[0] + '//' + url_arr[2] + ':5688/';
 			$(function() {
 				$.ajax({
 					url: url + 'bazaar?apps=',
@@ -148,6 +149,12 @@
 				$('#ver').html(info['description'].substring(0, info['description'].length - 1) + ' ' + info['version']);
 			});
 
+			var shutdown = function() {
+				var xmlHttp = new XMLHttpRequest();
+				xmlHttp.open("GET", shut_url, false);
+				xmlHttp.send(null);
+				return false;
+			};
 		</script>
 		<title>My Red Pitaya</title>
 	</head>
@@ -170,6 +177,9 @@
 						</div>
 						<div class="bazaar-link" style="margin-top: 20px; margin-left: -40px">
 							<a href="bazaar" class="list-group-item more">Get more applications</a>
+						</div>
+						<div>
+							<a href="javascript:void(0)" title="Shut down RedPitaya safely - wait 10 secs after click before pulling the plug." onClick="shutdown();">Shutdown</a>
 						</div>
 					</div>
 

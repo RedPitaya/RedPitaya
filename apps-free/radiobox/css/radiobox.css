@@ -1,0 +1,332 @@
+.navbar-radiobox {
+}
+
+.bg-grad {
+  position:relative;
+  z-index:0;
+  background:linear-gradient(#004060 20%, #001040 80%);
+}
+
+
+#rfout1_csp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rfout1-csp {
+  background:#508050;
+}
+select#rfout1_csp_s[disabled] {
+  background:#707070;
+}
+
+#rfout2_csp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rfout2-csp {
+  background:#508050;
+}
+select#rfout2_csp_s[disabled] {
+  background:#707070;
+}
+
+#rbled_csp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rbled-csp {
+  background:#508050;
+}
+select#rbled_csp_s[disabled] {
+  background:#707070;
+}
+
+#ac97_lil {
+  position:relative;
+  z-index:1;
+}
+.form-bg-ac97-lil {
+  background:#508050;
+}
+select#ac97_lil_s[disabled] {
+  background:#707070;
+}
+
+#ac97_lir {
+  position:relative;
+  z-index:1;
+}
+.form-bg-ac97-lir {
+  background:#508050;
+}
+select#ac97_lir_s[disabled] {
+  background:#707070;
+}
+
+#rx_car_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-car-osc-qrg {
+  background:#0040c0;
+}
+
+#tx_mod_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-mod-osc-qrg {
+  background:#0040c0;
+}
+input#tx_mod_osc_qrg_f[disabled] {
+  background:#707070;
+}
+
+#tx_car_osc_qrg {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-car-osc-qrg {
+  background:#0040c0;
+}
+
+#tx_amp_rf_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-amp-rf-gain {
+  background:#602000;
+}
+
+#tx_modsrc {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-modsrc {
+  background:#707040;
+}
+select#tx_modsrc_s[disabled] {
+  background:#707070;
+}
+
+#tx_modtyp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-modtyp {
+  background:#707040;
+}
+select#tx_modtyp_s[disabled] {
+  background:#707070;
+}
+
+#tx_mod_osc_mag {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-mod-osc-mag {
+  background:#602000;
+}
+input#tx_mod_osc_mag_s[disabled] {
+  background:#707070;
+}
+
+#tx_muxin_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-tx-muxin-gain {
+  background:#805810;
+}
+.form-bg-tx-muxin-gain-ovrdrv {
+  background:#FF0000;
+}
+input#tx_muxin_gain_s[disabled] {
+  background:#707070;
+}
+
+
+#rx_modtyp {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-modtyp {
+  background:#707040;
+}
+select#rx_modtyp_s[disabled] {
+  background:#707070;
+}
+
+#rx_muxin_src {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-muxin-src {
+  background:#707040;
+}
+select#rx_muxin_src_s[disabled] {
+  background:#707070;
+}
+
+#rx_muxin_gain {
+  position:relative;
+  z-index:1;
+}
+.form-bg-rx-muxin-gain {
+  background:#805810;
+}
+.form-bg-rx-muxin-gain-ovrdrv {
+  background:#FF0000;
+}
+input#rx_muxin_gain_s[disabled] {
+  background:#707070;
+}
+
+
+.table-toolbox {
+  border:1px solid;
+  margin-left:15px;
+}
+
+.table-toolbox td {
+}
+
+.table-header {
+  font-size:200%;
+  padding-left:10px;
+  padding-bottom:15px;
+}
+
+
+#RB_RUN, #RB_RUN:hover {
+  color: #31b44b;
+}
+
+#RB_STOP, #RB_STOP:hover {
+  display: none;
+  color: #ee3739;
+}
+
+
+.qrg_table {
+    display:inline-block;
+    border:3px inset;
+    padding:15px;
+    color:#707078;
+    text-align:center;
+    font-size:225%;
+}
+.qrg_col01 {
+    width:10px;
+}
+.qrg_col02 {
+    width:60px;
+}
+.qrg_col03 {
+    width:40px;
+}
+.qrg_col04 {
+    width:50px;
+}
+.qrg_col05 {
+    width:50px;
+}
+.qrg_col06 {
+    width:5px;
+}
+.qrg_col07 {
+    width:50px;
+}
+.qrg_col08 {
+    width:50px;
+}
+.qrg_col09 {
+    width:50px;
+}
+.qrg_col10 {
+    width:5px;
+}
+.qrg_col11 {
+    width:50px;
+}
+.qrg_col12 {
+    width:50px;
+}
+.qrg_col13 {
+    width:50px;
+}
+.qrg_col14 {
+    width:75px;
+    padding-left:10px;
+    text-align:left;
+}
+.qrg_col15 {
+    width:55px;
+}
+.qrg_col16 {
+    width:55px;
+}
+.qrg_col17 {
+    width:55px;
+}
+.qrg_col18 {
+    width:35px;
+}
+.qrg_col19 {
+    width:25px;
+}
+.qrg_col20 {
+    width:17px;
+}
+
+.qrg_up_dn_but {
+    width:50px;
+}
+
+.qrg_tx, .qrg_no {
+    font-size:80%;
+    color:#e04000;
+}
+.qrg_rx, .qrg_yes {
+    font-size:80%;
+    color:#00b000;
+}
+
+.qrg_display {
+    height:100px;
+    width:48px;
+    font-size:40px;
+    text-align:center;
+}
+
+.qrg_entry_but {
+    width:50px;
+    height:50px;
+}
+.qrg_entry_but_del, .qrg_entry_but_enter {
+    font-size:75%;
+}
+
+#tx_car_osc_qrg .qrg-entering {
+    color:#ff8080;
+}
+
+#rx_car_osc_qrg .qrg-entering {
+    color:#80ff80;
+}
+
+.btnevttx_checked {
+    color:#f04000;
+    background-color:#ffe0e0;
+}
+
+.btnevtrx_checked {
+    color:#00a000;
+    background-color:#e0ffe0;
+}
+
+.range_vert {
+    height:180px;
+    writing-mode:bt-lr;
+    -webkit-appearance:slider-vertical;
+}

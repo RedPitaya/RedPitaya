@@ -1,0 +1,2 @@
+radix=10;
+coefdata=

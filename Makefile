@@ -112,10 +112,7 @@ export VERSION
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)
-# Branch: $(GIT_BRANCH_LOCAL)
-# Build: $(BUILD_NUMBER)
-# Commit: $(GIT_COMMIT)
+# Version: $(VER) SCS
 ##############################################################################
 endef
 export GREET_MSG
@@ -123,6 +120,8 @@ export GREET_MSG
 ################################################################################
 # tarball
 ################################################################################
+
+.PHONY: target_base
 
 all: zip sdk apps-free
 
@@ -152,6 +151,9 @@ $(TARGET): $(BOOT_UBOOT) u-boot $(DEVICETREE) $(LINUX) buildroot $(IDGEN) $(NGIN
 	@echo "$$GREET_MSG" >  $(TARGET)/version.txt
 	# copy configuration file for WiFi access point
 	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(TARGET)/hostapd.conf
+	# copy Linaro runtime library to fix dependency issues on Debian
+	# TODO: find a better solution
+	cp /opt/linaro/sysroot-linaro-eglibc-gcc4.9-2014.11-arm-linux-gnueabihf/usr/lib/libstdc++.so.6 $(TARGET)/lib
 
 zip: $(TARGET)
 	cd $(TARGET); zip -r ../$(NAME)-$(VERSION).zip *
@@ -189,8 +191,8 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
-	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
+	make -C $< ARCH=arm zynq_red_pitaya_defconfig
+	make -C $< ARCH=arm CFLAGS=$(UBOOT_CFLAGS) all
 	cp $</u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT_SCRIPT_BUILDROOT) $(UBOOT_SCRIPT_DEBIAN)
@@ -213,16 +215,22 @@ $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-sound-drivers.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
-	cp -r patches/rtl8192cu $@/drivers/net/wireless/
-	cp -r patches/lantiq/*  $@/drivers/net/phy/
+	cp -r patches/rtl8192cu        $@/drivers/net/wireless/
+	cp -r patches/lantiq/*         $@/drivers/net/phy/
+	cp -r patches/redpitaya-ac97/* $@/sound/drivers/
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) modules
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) INSTALL_MOD_PATH=../../$(TARGET) modules_install
+	rm $</../../$(TARGET)/lib/modules/4.0.0-xilinx/build
+	rm $</../../$(TARGET)/lib/modules/4.0.0-xilinx/source
 	cp $</arch/arm/boot/uImage $@
 
 ################################################################################
@@ -259,7 +267,7 @@ URAMDISK_DIR    = OS/buildroot
 .PHONY: buildroot
 
 $(INSTALL_DIR):
-	mkdir $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)
 
 buildroot: $(INSTALL_DIR)
 	$(MAKE) -C $(URAMDISK_DIR)
@@ -514,12 +522,17 @@ sdk:
 ################################################################################
 
 clean:
+	$(RM) $(DEVICETREE) $(TMP)/devicetree.dts
+	$(RM) $(UBOOT)
+	$(RM) $(LINUX)
+	$(RM) $(BOOT_UBOOT) boot_uboot.bif
 	-make -C $(LINUX_DIR) clean
+	make -C $(SDK_DIR) clean
 	make -C $(FPGA_DIR) clean
 	-make -C $(UBOOT_DIR) clean
 	make -C shared clean
 	# todo, remove downloaded libraries and symlinks
-	rm -rf Bazaar/tools/cryptopp
+	$(RM) -r Bazaar/tools/cryptopp
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATE_DIR) clean
@@ -527,10 +540,12 @@ clean:
 	make -C $(CALIB_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP_DIR)    clean
+ifdef ENABLE_LICENSING
 	make -C $(LIBRPAPP_DIR) clean
+endif
 	make -C $(SDK_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(APPS_FREE_DIR) clean
-	$(RM) $(INSTALL_DIR) -rf
-	$(RM) $(TARGET) -rf
+	$(RM) -r $(INSTALL_DIR)
+	$(RM) -r $(TARGET)
 	$(RM) $(NAME)*.zip

@@ -10,7 +10,7 @@
 
 #export TOOLCHAIN_PATH=/opt/linaro/gcc-linaro-4.9-2015.02-3-x86_64_arm-linux-gnueabihf
 export TOOLCHAIN_PATH=/opt/linaro/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf/
-export PATH=$PATH:$TOOLCHAIN_PATH/bin
+export PATH=$TOOLCHAIN_PATH/bin:$PATH
 export CROSS_COMPILE=arm-linux-gnueabihf-
 
 ################################################################################
@@ -20,6 +20,14 @@ export CROSS_COMPILE=arm-linux-gnueabihf-
 
 #export BR2_DL_DIR=$HOME/Workplace/buildroot/dl
 export BR2_DL_DIR=dl
+
+################################################################################
+# which boot image / file system should be entered? Select one of them
+# When both are selected, each one is prepared but Debian wins for the FSBL
+################################################################################
+
+#export FSBL_BR=1
+export FSBL_DEBIAN=1
 
 ################################################################################
 # common make procedure, should not be run by this script

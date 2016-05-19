@@ -1,0 +1,110 @@
+### The Mind Map
+
+**having the first idea is inspiring**
+
+***
+
+***RedPitaya - "RadioBox" application with FPGA enhancements***
+
+
+**Idea**:
+    
+        Planning and building up a RadioBox enhancement for the RedPitaya 
+        tool and being a part of the RedPitaya ecosystem.
+
+        Today (2015-09-06) the FPGA supports scope, oszillator, PID and 
+        some more features. The following entries show the 
+        current sub-modules:
+
+        Memory addresses accessed by the arm processors within the 
+        Zynq-7010:
+                0x40 0xxxxx     HouseKeeping
+                0x40 1xxxxx     Oscilloscope
+                0x40 2xxxxx     Arbitrary signal oscillator (ASG)
+                0x40 3xxxxx     PID controller
+                0x40 4xxxxx     Analog mixed signals (AMS)
+                0x40 5xxxxx     ( not assigned ) 
+                0x40 6xxxxx     RadioBox <-- NEW
+                0x40 7xxxxx     ( not assigned )
+
+        For more detailed information look for: RedPitaya_HDL_memory_map.odt
+
+        The new module RadioBox should have registers and facilities that
+        allows to create radio-signals or decode them without the help of
+        external SDR software using DSP routines.
+
+
+**the Parts inside**:
+
+        This new application should use the address space 0x406xxxxx that 
+        is still reserved. Like the scope or ASG that uses the ADC and 
+        DAC signals, this module will also connect to these devices.
+
+        The output mixer for the DAC shall be a synchronous design with
+        sub-module selection and additiv saturation controlled by the
+        house-keeping sub-module. That needs to be made in the
+        red_pitaya_top.v file. Another redisgn would be to make the address
+        decoder nicer than it is now (2015-09-05).
+
+        The FPGA section will be extended by a new verilog file called 
+        red_pitaya_radiobox.v that should contain following parts for the
+        transmitting and the receiving blocks.
+
+        a) Transmitter
+                - DDS oscillator with finer resolution than 1 hertz 
+                  (frequency increment register)
+                - DDS phase adder for phase modulations (PM)
+                - DDS frequency adder for frequency modulation (FM)
+                - amplitude register at the output stage for 
+                  amplitude modulation with a multiplier (AM)
+                - frequency shift keying needs a further DDS increment
+                  register
+
+                Furthermore should a technology being included to support 
+                SSB (single side band) transmissions with an easy to use 
+                interface. That technology should support digital modes, also - 
+                easying up with transformation between the time domain and the 
+                frequency domain. One solution for that would be a RFFT
+                transformation (Reverse Fast Fourrier Rransformation) where 
+                that part is done in the FPGA on its own removing the needs for 
+                a software solution running some DSP routines.
+
+                For an automated transfer between the CPU and the RFFT domain
+                a DMA engine could take that job to release the CPU from dumb 
+                operations. My idea is to shift in the frequncy domain data
+                for t+1 from the processor section to the FFT section avoiding 
+                clicking and noise artefacts.
+
+                Another frequency mixer (multiplier) would move the IF to
+                another band section where needed. That would be realized by 
+                an extra DDS with a simple phase accumulator and increment 
+                register. For finer signal treatment and a filter bank is 
+                desired to remove mirror frequencies, also.
+
+
+        b) Digital Modulations
+                At the starting point such features for building up a digital 
+                modulator/demodulator would be postponed until the basic 
+                transmitter and receiver block is up and running.
+
+                More ideas would be collected to have some of the most used 
+                data modulations to be coded as well as decoded.
+
+
+        c) Receiver
+                First a simple DDS and mixer would move the received signal to 
+                the IF range. 
+
+                A filter stage would follow to prepare for the decoder section 
+                with programmable parameters and inhibit mirror images.
+
+                Possibly extra decoders for AM, FM and SSB could be created 
+                with their mathematical representations to have the CPU part
+                lighted up for controlling but not signal calculations.
+
+                Here, a FFT would be obligatory to transform from the time to 
+                the frequency domain.
+
+                Like at the RFFT a DMA controller would help to deliver the
+                data just in time, where it is needed easy to pick up by the
+                application/library code.

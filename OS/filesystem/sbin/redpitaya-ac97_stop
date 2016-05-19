@@ -1,0 +1,7 @@
+#!/bin/sh
+
+killall ices2
+killall pulseaudio
+sleep 1
+rmmod snd_redpitaya_ac97 snd_ac97_codec ac97_bus
+
