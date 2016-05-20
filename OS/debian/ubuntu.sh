@@ -6,7 +6,7 @@
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
-# Install Debian base system to the root file system
+# Install Ubuntu base system to the root file system
 UBUNTU_BASE_TAR=ubuntu-base-16.04-core-armhf.tar.gz
 UBUNTU_BASE_URL=http://cdimage.ubuntu.com/ubuntu-base/releases/16.04/release/$UBUNTU_BASE_TAR
 test -f $UBUNTU_BASE_TAR || curl -L $UBUNTU_BASE_URL -o $UBUNTU_BASE_TAR
@@ -44,7 +44,8 @@ update-locale LANG=en_US.UTF-8
 dpkg-reconfigure --frontend=noninteractive tzdata
 
 # development tools
-apt-get -y install build-essential vim sudo u-boot-tools usbutils psmisc lsof parted
+apt-get -y install build-essential vim sudo u-boot-tools usbutils psmisc lsof
+apt-get -y install parted dosfstools
 
 # solving an issue with tty
 # http://askubuntu.com/questions/763631/console-login-on-ubuntu-core-16-04-core-armhf-tar-gz/766444
