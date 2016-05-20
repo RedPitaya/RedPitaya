@@ -14,9 +14,6 @@
 # current time and date are used to create the image name
 DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 
-# the ABI (armel/armhf) provided by the compiler is used to create the image name
-ARCH=armhf
-
 # default image size if 3GB, which is appropriate for all 4BG SD cards
 SIZE=3500
 
