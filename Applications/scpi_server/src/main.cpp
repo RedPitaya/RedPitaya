@@ -58,11 +58,6 @@ void UpdateParams(void) {
     isRunning.Value() = IsRunning();
 }
 
-bool check_params(const rp_calib_params_t& current_params, int step) {
-
-	return false;
-}
-
 int IsRunning(void) {
     FILE* pop = popen("/usr/bin/pgrep scpi-server", "r");
     char buf[1024];
