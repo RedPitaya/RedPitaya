@@ -3,7 +3,6 @@
 
 #include <DataManager.h>
 #include <CustomParameters.h>
-#include "rpApp.h"
 
 #define CH_SIGNAL_SIZE_DEFAULT		1024
 #define CALIB_FE_LV_REF_V           1.0f
