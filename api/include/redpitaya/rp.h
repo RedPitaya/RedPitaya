@@ -77,6 +77,8 @@ extern "C" {
 #define RP_EFRB   21
 /** Failed to write to the bus */
 #define RP_EFWB   22
+/** Extension module not connected */
+#define RP_EMNC   23
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
