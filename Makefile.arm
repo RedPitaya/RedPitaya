@@ -100,6 +100,7 @@ NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 
 CRYPTOPP_DIR    = Bazaar/tools/crypto++
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
+WEBSOCKETPP_PATCH_FILE = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp/websocketpp/transport/asio/endpoint.hpp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx
@@ -120,6 +121,7 @@ $(WEBSOCKETPP_TAR): | $(DL)
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
+	patch -R $(WEBSOCKETPP_PATCH_FILE) < patches/websocketpp.patch
 
 $(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
@@ -279,7 +281,7 @@ APP_UPDATER_DIR     = Applications/updater
 
 .PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard updater
 
-apps_pro: scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard updater 
+apps_pro: scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard updater
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
