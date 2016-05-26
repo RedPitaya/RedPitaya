@@ -6,7 +6,7 @@
 
 # List of applications to build
 ifeq ($(ENABLE_LICENSING),true)
-APPS=scopegenpro spectrumpro
+APPS=scopegenpro spectrumpro lcr_meter
 else
 APPS=
 endif
