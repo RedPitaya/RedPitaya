@@ -130,10 +130,13 @@ $(LINUX_DIR): $(LINUX_TAR)
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-iio-xadc.patch
 	cp -r patches/lantiq/*  $@/drivers/net/phy/
-	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
 	# DMA support related patches
+	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
 	cp -r patches/redpitaya $@/drivers/
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
+	# WiFi patches
+	cp -r patches/rtl8192cu $@/drivers/net/wireless/
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
