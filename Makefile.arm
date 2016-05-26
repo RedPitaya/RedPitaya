@@ -119,7 +119,7 @@ $(WEBSOCKETPP_TAR): | $(DL)
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-	patch -R $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
+	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
 
 $(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
