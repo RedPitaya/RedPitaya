@@ -279,9 +279,9 @@ APP_SCPISERVER_DIR  = Applications/scpi_server
 APP_WIFIWIZARD_DIR  = Applications/wifi_wizard
 APP_UPDATER_DIR     = Applications/updater
 
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard updater
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter
 
-apps_pro: scopegenpro spectrumpro lcr_meter scpi_server wifi_wizard updater
+apps_pro: scopegenpro spectrumpro lcr_meter
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
@@ -294,6 +294,19 @@ spectrumpro: api $(NGINX)
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+else
+
+apps_pro: scpi_server wifi_wizard updater
+
+endif
+
+
+APP_SCPISERVER_DIR    = Applications/scpi_server
+APP_UPDATER_DIR    = Applications/updater
+
+.PHONY: apps_tools scpi_server updater
+
+apps_tools: scpi_server updater
 
 scpi_server: api $(NGINX)
 	$(MAKE) -C $(APP_SCPISERVER_DIR)
@@ -306,12 +319,6 @@ updater: api $(NGINX)
 wifi_wizard: api $(NGINX)
 	$(MAKE) -C $(APP_WIFIWIZARD_DIR)
 	$(MAKE) -C $(APP_WIFIWIZARD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-else
-
-apps_pro:
-
-endif
 
 ################################################################################
 #
