@@ -26,8 +26,12 @@ CXXFLAGS+=-DALWAYS_PURCHASED
 endif
 
 ifeq ($(ENABLE_LICENSING),true)
-SOURCES+= licverify/LicenseVerificator.cpp licverify/encoder/encoder.cpp licverify/encoder/pubkey.cpp licverify/encoder/privkey.cpp
-CXXFLAGS+=-Ilicverify/encoder -DENABLE_LICENSING
+PRO_DIR=../../../../Applications
+SOURCES+= $(PRO_DIR)/licverify/LicenseVerificator.cpp \
+          $(PRO_DIR)/licverify/encoder/encoder.cpp \
+          $(PRO_DIR)/licverify/encoder/pubkey.cpp \
+          $(PRO_DIR)/licverify/encoder/privkey.cpp
+CXXFLAGS+=-I$(PRO_DIR) -I$(PRO_DIR)licverify/encoder -DENABLE_LICENSING
 endif
 
 ifeq ($(DIGITAL_LOOP),true)
