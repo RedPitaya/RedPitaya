@@ -16,7 +16,7 @@ LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
 LDFLAGS+= -Wl,--whole-archive
 LDFLAGS+= -L../../../Bazaar/tools/crypto++ -lcryptopp
 LDFLAGS+=-L$(RP_SDK) -lrp_sdk
-LDFLAGS+=-L$(RP_API) -lrpapp -lrp
+LDFLAGS+=-L$(RP_API) -lrp
 LDFLAGS+= -Wl,--no-whole-archive
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
