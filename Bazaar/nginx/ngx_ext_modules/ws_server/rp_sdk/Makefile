@@ -26,7 +26,7 @@ CXXFLAGS+=-DALWAYS_PURCHASED
 endif
 
 ifeq ($(ENABLE_LICENSING),true)
-PRO_DIR=../../../../Applications
+PRO_DIR=../../../../../Applications
 SOURCES+= $(PRO_DIR)/licverify/LicenseVerificator.cpp \
           $(PRO_DIR)/licverify/encoder/encoder.cpp \
           $(PRO_DIR)/licverify/encoder/pubkey.cpp \
