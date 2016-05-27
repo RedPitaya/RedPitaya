@@ -15,6 +15,9 @@
 #include <math.h>
 
 using websocketpp::lib::thread;
+using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::placeholders::_2;
+using websocketpp::lib::bind;
 
 rp_websocket_server::rp_websocket_server()
     : m_params(NULL)
