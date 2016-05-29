@@ -14,7 +14,7 @@ COMMON_FLAGS+=-Wall -fPIC -lstdc++ -Os -s
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
 LDFLAGS+= -Wl,--whole-archive
-LDFLAGS+= -L../../../Bazaar/tools/crypto++ -lcryptopp
+LDFLAGS+= -lcryptopp
 LDFLAGS+=-L$(RP_SDK) -lrp_sdk
 LDFLAGS+=-L$(RP_API) -lrp
 LDFLAGS+= -Wl,--no-whole-archive
