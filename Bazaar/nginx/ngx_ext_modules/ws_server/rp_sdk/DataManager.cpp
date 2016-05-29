@@ -5,7 +5,7 @@
 #include "misc.h"
 
 #ifdef ENABLE_LICENSING
-#include "licverify/LicenseVerificator.h"
+#include "LicenseVerificator.h"
 #endif
 
 #include "gziping.h"
