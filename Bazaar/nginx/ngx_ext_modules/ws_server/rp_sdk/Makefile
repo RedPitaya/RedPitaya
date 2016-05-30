@@ -31,7 +31,7 @@ SOURCES+= $(PRO_DIR)/licverify/LicenseVerificator.cpp \
           $(PRO_DIR)/licverify/encoder/encoder.cpp \
           $(PRO_DIR)/licverify/encoder/pubkey.cpp \
           $(PRO_DIR)/licverify/encoder/privkey.cpp
-CXXFLAGS+=-I$(PRO_DIR)/licverify -i. -DENABLE_LICENSING
+CXXFLAGS+=-I$(PRO_DIR)/licverify -I. -DENABLE_LICENSING
 endif
 
 ifeq ($(DIGITAL_LOOP),true)
