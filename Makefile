@@ -91,11 +91,11 @@ root_mount:
 #	mount -o ro $(ROOT_DEV)     $(ROOT_DIR)
 	mount       $(ROOT_DEV)     $(ROOT_DIR)
 	# mount runtime directories
-	mount --bind /proc          $(ROOT_DIR)/proc  
-	mount --bind /tmp           $(ROOT_DIR)/tmp  
-	mount --bind /sys           $(ROOT_DIR)/sys  
-	mount --bind /dev           $(ROOT_DIR)/dev  
-	mount --bind /dev/pts       $(ROOT_DIR)/dev/pts  
+	mount --bind /proc          $(ROOT_DIR)/proc
+	mount --bind /tmp           $(ROOT_DIR)/tmp
+	mount --bind /sys           $(ROOT_DIR)/sys
+	mount --bind /dev           $(ROOT_DIR)/dev
+	mount --bind /dev/pts       $(ROOT_DIR)/dev/pts
 	# mount git project
 	mkdir -p                    $(ROOT_DIR)/git
 	mount --bind `pwd`          $(ROOT_DIR)/git

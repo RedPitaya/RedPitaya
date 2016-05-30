@@ -458,7 +458,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
 
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf */
     char *fpga_name = NULL;
-    if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0) {
+    if(0 /*get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0*/) { // FIXME !!!
         /* Here we do not have application running anymore - load new FPGA */
         fprintf(stderr, "Loading specific FPGA from: '%s'\n", fpga_name);
         /* Try loading FPGA code

@@ -39,7 +39,7 @@ struct rprx_channel{
 	dma_addr_t handle;
 	dma_addr_t rprx_handle;
 	struct dma_chan *chan;
-	unsigned char dmastatus; 
+	unsigned char dmastatus;
 	enum dma_status status;
 	struct completion cmp;
 	struct dma_device *dev;
@@ -147,7 +147,7 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 				rx->flag=0;
 				dma_async_issue_pending(rx->chan);
 				rx->dmastatus=STATUS_READY;
-			}	
+			}
 		}
 	}break;
 	case SINGLE_RX:{
@@ -177,7 +177,7 @@ static long rprx_ioctl(struct file *file, unsigned int cmd , unsigned long arg)
 		dev_info(dev, "ioctl segment size set to 0x%lx \n",rx->segment_size);
 	}break;
 	case STATUS:{
-		put_user(rx->dmastatus,(char*)arg);	
+		put_user(rx->dmastatus,(char*)arg);
 	}break;
 	default:
 		dev_info(dev, "ioctl %d-%lx not inmplemented \n",cmd,arg);

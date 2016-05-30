@@ -138,6 +138,7 @@ std::string CDataManager::GetSignalsJson()
 			JSONNode n(JSON_NODE);
 			n = m_signals[i]->GetJSONObject();
 			signals.push_back(n);
+			m_signals[i]->Update();
 		}
 	}
 

@@ -9,9 +9,9 @@
 template <typename T, typename ValueT>
 class CParameter: public CBaseParameter //class for parameter and signal
 {
-public:	
+public:
 	CParameter(std::string _name, AccessMode _access_mode, ValueT _value, int _fpga_update, T _min, T _max); //parameter constructor
-	CParameter(std::string _name, AccessMode _access_mode, const ValueT& _value); //signal constructor	
+	CParameter(std::string _name, AccessMode _access_mode, const ValueT& _value); //signal constructor
 
 	const char* GetName() const;
 	virtual void Set(const ValueT& _value) = 0; //set the m_Value.value
@@ -20,15 +20,15 @@ public:
 	const ValueT& Value() const; // access the value
 	const ValueT& NewValue();  //access the value is stored in temp storage
 
-	void Update(); //apply change of value
-	
+	virtual void Update(); //apply change of value
+
 	virtual JSONNode GetJSONObject() = 0; //get JSON-formatted string with parameters or signals
 	void SetValueFromJSON(JSONNode _node);// set the m_TmpValue->value from JSON object
-	
+
 	AccessMode GetAccessMode() const;
 
-	bool IsValueChanged() const;
-	bool IsNewValue() const;
+	virtual bool IsValueChanged() const;
+	virtual bool IsNewValue() const;
 	void ClearNewValue();
 
 protected:
@@ -52,9 +52,9 @@ inline CParameter<T, ValueT>::CParameter(std::string _name, AccessMode _access_m
 	m_Value.max = _max;
 	m_Value.access_mode = _access_mode;
 	m_Value.fpga_update = _fpga_update;
-	
+
 	CDataManager * man = CDataManager::GetInstance();
-	if(man)	
+	if(man)
 		man->RegisterParam(this);
 }
 
@@ -67,14 +67,14 @@ inline CParameter<T, ValueT>::CParameter(std::string _name, AccessMode _access_m
 //	m_Value.max;
 	m_Value.access_mode = _access_mode;
 //	m_Value.fpga_update;
-	
+
 	CDataManager * man = CDataManager::GetInstance();
 	if(man)
 		man->RegisterSignal(this);
 }
 
 template <typename T, typename ValueT>
-inline ValueT& CParameter<T, ValueT>::Value() 
+inline ValueT& CParameter<T, ValueT>::Value()
 {
 	return m_Value.value;
 }
@@ -86,10 +86,10 @@ inline const ValueT& CParameter<T, ValueT>::Value() const
 }
 
 template <typename T, typename ValueT>
-inline const ValueT& CParameter<T, ValueT>::NewValue() 
+inline const ValueT& CParameter<T, ValueT>::NewValue()
 {
 	if(m_TmpValue.get() != nullptr)
-	{	
+	{
 		return m_TmpValue.get()->value;
 	}
 	else
@@ -99,11 +99,11 @@ inline const ValueT& CParameter<T, ValueT>::NewValue()
 }
 
 template <typename T, typename ValueT>
-inline void CParameter<T, ValueT>::Update() 
+inline void CParameter<T, ValueT>::Update()
 {
-	if(m_TmpValue.get() != nullptr)	
-	{			
-		Set(m_TmpValue.get()->value);	
+	if(m_TmpValue.get() != nullptr)
+	{
+		Set(m_TmpValue.get()->value);
 		m_TmpValue.reset();
 	}
 }

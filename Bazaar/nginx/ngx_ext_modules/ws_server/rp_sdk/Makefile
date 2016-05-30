@@ -18,8 +18,12 @@ SOURCES= DataManager.cpp \
 OBJDIR=./objs
 SDKOBJDIR=$(OBJDIR)/rp_sdk
 
+CRYPTO_DIR=../../../../tools/cryptopp
+CRYPTO_INSTALL_DIR=../../../../tools/build
+DECODERS_DIR=../../../../../Applications/la_pro/src/
+
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -DNDEBUG -I../../../../tools
+CXXFLAGS=-c -Wall -O0 -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -I$(CRYPTO_INSTALL_DIR)/include/cryptopp -I$(DECODERS_DIR) -DNDEBUG -I. -g
 
 ifeq ($(ALWAYS_PURCHASED),true)
 CXXFLAGS+=-DALWAYS_PURCHASED

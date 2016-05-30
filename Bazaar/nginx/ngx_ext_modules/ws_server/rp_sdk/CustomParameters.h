@@ -1,8 +1,40 @@
 #pragma once
 
 #include <stdio.h>
+#include <string.h>
 
 #include "Parameter.h"
+
+template <typename Type> class CDecoderParameter : public CParameter<Type, Type>
+{
+public:
+	CDecoderParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, int _min, int _max) // min/max - dummy args
+		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _value, _value)
+		, m_SentValue(_value)
+	{}
+
+	void Set(const Type& _value)
+	{
+		this->m_Value.value = _value;
+	}
+
+	bool IsValueChanged() const
+	{
+		bool tmp = memcmp(&m_SentValue, &this->m_Value.value, sizeof(Type)) != 0;
+		m_SentValue = this->m_Value.value;
+		return tmp;
+	}
+
+	virtual JSONNode GetJSONObject()
+	{
+		JSONNode n(JSON_NODE);
+		n.set_name(this->m_Value.name);
+		return n;
+	}
+protected:
+	mutable Type m_SentValue;
+};
+
 
 //template for params
 template <typename Type> class CCustomParameter : public CParameter<Type, Type>
@@ -11,6 +43,8 @@ public:
 	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max)
 		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
 		, m_SentValue(_value)
+		, m_NeedUnregister(false)
+		, m_Dirty(false)
 		, m_NeedSend(false)
 	{}
 
@@ -19,6 +53,12 @@ public:
 /*		CDataManager * man = CDataManager::GetInstance();
 		if(man)
 			man->UnRegisterParam(this->GetName());*/
+		if (m_NeedUnregister)
+		{
+			CDataManager * man = CDataManager::GetInstance();
+			if(man)
+				man->UnRegisterParam(this->GetName());
+		}
 	}
 
 	JSONNode GetJSONObject()
@@ -46,9 +86,6 @@ public:
 
 		} else if(this->m_Value.max < value)
 		{
-			dbg_printf("Incorrect parameters value (max value)\n");
-//			dbg_printf("Incorrect parameters value: %f (max:%f), "
-//                    	" correcting it\n", (float)value, float(this->m_Value.max));
 			value = this->m_Value.max;
 		}
 
@@ -60,10 +97,37 @@ public:
 		this->m_Value.value = CheckMinMax(_value);
 	}
 
+	// void SendValue(const Type& _value)
+	// {
+	// 	this->m_Value.value = CheckMinMax(_value);
+	// 	m_Dirty = true;
+	// }
+
 	bool IsValueChanged() const
 	{
-		bool tmp = (m_SentValue != this->m_Value.value);
+		bool tmp = (m_SentValue != this->m_Value.value) || m_Dirty;
 		m_SentValue = this->m_Value.value;
+		m_Dirty = false;
+
+		return tmp;
+	}
+
+	void NeedUnregister(bool _value)
+	{
+		m_NeedUnregister = _value;
+	}
+
+	void SendValue(const Type& _value)
+	{
+		this->m_Value.value = CheckMinMax(_value);
+		m_NeedSend = true;
+	}
+
+	bool NeedSend(bool _no_need=false) const
+	{
+		bool tmp = m_NeedSend;
+		if (_no_need)
+			m_NeedSend = false;
 		return tmp;
 	}
 
@@ -82,18 +146,23 @@ public:
 	}
 protected:
 	mutable Type m_SentValue;
+	mutable bool m_Dirty;
+	bool m_NeedUnregister;
 	mutable bool m_NeedSend;
 };
+
 
 //template for signals
 template <typename Type> class CCustomSignal : public CParameter<Type, std::vector<Type> >
 {
 public:
 	CCustomSignal(std::string _name, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)){}
+		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)),
+		m_Dirty(true){}
 
 	CCustomSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, Type _def_value)
-		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)){}
+		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)),
+		m_Dirty(true) {}
 
 	~CCustomSignal()
 	{
@@ -126,23 +195,49 @@ public:
 
 	Type& operator [](int _index)
 	{
+		m_Dirty = true;
 		return this->m_Value.value.at(_index);
 	}
 
 	void Set(const std::vector<Type>& _value)
 	{
+		m_Dirty = true;
 		this->m_Value.value = _value;
+	}
+
+	void Set(const Type* _value, size_t _size)
+	{
+		m_Dirty = true;
+		this->m_Value.value.assign(_value, _value + _size);
 	}
 
 	void Resize(int _new_size)
 	{
+		m_Dirty = true;
 		this->m_Value.value.resize(_new_size);
+	}
+
+	void Update()
+	{
+		m_Dirty = false;
 	}
 
 	int GetSize()
 	{
 		return this->m_Value.value.size();
 	}
+
+	std::vector<Type> GetData()
+	{
+		return this->m_Value.value;
+	}
+
+	bool IsValueChanged() const
+	{
+		return m_Dirty;
+	}
+private:
+	bool m_Dirty;
 };
 
 //custom CIntParameter
@@ -190,6 +285,8 @@ public:
 	}
 };
 
+
+
 //custom CIntSignal
 class CIntSignal : public CCustomSignal<int>
 {
@@ -198,6 +295,17 @@ public:
 		:CCustomSignal(_name, _size, _def_value){};
 
 	CIntSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, int _def_value)
+		:CCustomSignal(_name, _access_mode, _size, _def_value){};
+};
+
+//custom CByteSignal
+class CByteSignal : public CCustomSignal<uint8_t>
+{
+public:
+	CByteSignal(std::string _name, uint8_t _size, uint8_t _def_value)
+		:CCustomSignal(_name, _size, _def_value){};
+
+	CByteSignal(std::string _name, CBaseParameter::AccessMode _access_mode, uint8_t _size, uint8_t _def_value)
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
