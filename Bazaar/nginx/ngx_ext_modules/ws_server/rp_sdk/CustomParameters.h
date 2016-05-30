@@ -131,19 +131,6 @@ public:
 		return tmp;
 	}
 
-	void SendValue(const Type& _value)
-	{
-		this->m_Value.value = CheckMinMax(_value);
-		m_NeedSend = true;
-	}
-
-	bool NeedSend(bool _no_need=false) const
-	{
-		bool tmp = m_NeedSend;
-		if (_no_need)
-			m_NeedSend = false;
-		return tmp;
-	}
 protected:
 	mutable Type m_SentValue;
 	mutable bool m_Dirty;
