@@ -23,7 +23,7 @@
  };
  &gem0 {
  	local-mac-address = [00 0a 35 00 00 00];
-@@ -86,3 +102,152 @@
+@@ -86,3 +102,155 @@
  	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
