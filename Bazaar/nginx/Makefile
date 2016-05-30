@@ -9,7 +9,7 @@ NAME=redpitaya-nginx
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat ../../Applications/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+VER:=$(shell cat ../../apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
 NGINX_DIR=nginx
 NGINX=$(NGINX_DIR)/objs/nginx
