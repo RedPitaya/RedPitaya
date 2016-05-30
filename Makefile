@@ -4,7 +4,7 @@
 
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER := $(shell cat Applications/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
