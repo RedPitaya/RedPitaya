@@ -37,7 +37,6 @@ int rp_app_init(void) {
     fprintf(stderr, "Loading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
     CDataManager::GetInstance()->SetParamInterval(1000);
 
-    rpApp_Init();
     // Check iw tools
     if(!CheckIwlist())
     	errorOut.Value() = "wt not installed";
@@ -55,7 +54,6 @@ int rp_app_init(void) {
 
 int rp_app_exit(void) {
     fprintf(stderr, "Unloading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
-    rpApp_Release();
     return 0;
 }
 
@@ -85,10 +83,6 @@ void UpdateSignals(void) {
 void UpdateParams(void) {
 	listOfWIFI.Value() = GetListOfWIFI("wlan0");
 	connectedWifi.Value() = CheckConnection();
-}
-
-bool check_params(const rp_calib_params_t& current_params, int step) {
-	return false;
 }
 
 // Stringify list to JSON
