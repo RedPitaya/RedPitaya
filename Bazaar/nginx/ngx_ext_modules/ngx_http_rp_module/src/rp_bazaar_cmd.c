@@ -481,12 +481,14 @@ int rp_bazaar_start(ngx_http_request_t *r,
                 if (fpga_name)  free(fpga_name);
                 break;
             case FPGA_OK:
+            {
                 if (fpga_name)  free(fpga_name);
                 char dmaDrv[len];
                 len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
                 sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
                 system(dmaDrv);
                 break;
+            }
             default:
                 if (fpga_name)  free(fpga_name);
                 return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool);
