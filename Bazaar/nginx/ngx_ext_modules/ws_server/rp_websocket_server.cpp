@@ -68,10 +68,10 @@ void rp_websocket_server::run(std::string docroot, uint16_t port) {
 	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
 	m_docroot = docroot;
 
-	// m_endpoint.set_reuse_addr(true);
+	m_endpoint.set_reuse_addr(true);
 	// listen on specified port
-	// m_endpoint.listen(boost::asio::ip::tcp::v4(), port);
-	m_endpoint.listen(port);
+	m_endpoint.listen(boost::asio::ip::tcp::v4(), port);
+	// m_endpoint.listen(port);
 	// Start the server accept loop
 	m_endpoint.start_accept();
 	// Start the ASIO io_service run loop
