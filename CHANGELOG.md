@@ -10,8 +10,7 @@ System Changes:
 - updated Nginx from version 1.5.3 to the latest 1.10.0
 - removed NGINX patches
 - updated Lua Nginx from version v0.8.7 to the latest v0.10.2
-- updated Websocket++ from version 0.5.0 to a slightly newer 0.5.1
-- updated Crypto++ from version 5.6.2 to the latest 5.6.3
+- updated Websocket++ from version 0.5.0 to a slightly newer 0.7.0
 - removed Buildroot, lately it was only used to provide libraries at compile
   time, now Debian libraries are used directly
 - removing SDK, since it was not maintained, now it is possible to compile all
