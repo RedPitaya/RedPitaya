@@ -458,8 +458,9 @@ int rp_bazaar_start(ngx_http_request_t *r,
 
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf */
     char *fpga_name = NULL;
-    if(0 /*get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0*/) { // FIXME !!!
+    if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0) { // FIXME !!!
         /* Here we do not have application running anymore - load new FPGA */
+        system("/opt/redpitaya/rmamba_pl.sh");
         fprintf(stderr, "Loading specific FPGA from: '%s'\n", fpga_name);
         /* Try loading FPGA code
          *    - Test if fpga loaded correctly
@@ -481,6 +482,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
                 break;
             case FPGA_OK:
                 if (fpga_name)  free(fpga_name);
+                char dmaDrv[len];
+                len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
+                sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
+                system(dmaDrv);
                 break;
             default:
                 if (fpga_name)  free(fpga_name);
