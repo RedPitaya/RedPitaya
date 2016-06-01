@@ -11,9 +11,6 @@ INSTALL_DIR ?= build
 NGINX_DIR       = Bazaar/nginx
 IDGEN_DIR       = Bazaar/tools/idgen
 OS_TOOLS_DIR    = OS/tools
-LIBRP_DIR       = api/rpbase
-LIBRPLCR_DIR	= api/rpApplications/lcr_meter
-LIBRPAPP_DIR    = api/rpApplications
 
 # targets
 NGINX           = $(INSTALL_DIR)/sbin/nginx
@@ -49,7 +46,12 @@ hostapd:
 # API libraries
 ################################################################################
 
-.PHONY: api librp librpapp libredpitaya liblcr_meter
+LIBRP_DIR       = api/rpbase
+LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
+LIBRPAPP_DIR    = Applications/api/rpApplications
+
+.PHONY: api librp libredpitaya
+.PHONY: librpapp liblcr_meter
 
 libredpitaya:
 	$(MAKE) -C shared
