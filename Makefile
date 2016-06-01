@@ -37,6 +37,9 @@ $(ZIPFILE): x86 arm
 	mkdir -p $(INSTALL_DIR)/fpga
 	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
 	cd $(INSTALL_DIR)/fpga; xz -df *.xz
+
+	cp fpga2/out/red_pitaya.bit $(INSTALL_DIR)/fpga
+	mv $(INSTALL_DIR)/fpga/red_pitaya.bit $(INSTALL_DIR)/fpga/fpga_la.bit
 	# TODO: check this step
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
