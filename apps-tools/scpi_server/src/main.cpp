@@ -67,10 +67,10 @@ int IsRunning(void) {
     return atoi(buf);
 }
 
+// TODO: systemd services should be used here
 void OnNewParams(void) {
 /* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
 	fprintf(stderr, "-----LOG SCPI SERVER OnNewParams()------\n");
-    //IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
 
     if(IsRunning() && inRun.NewValue() == false)
     {
