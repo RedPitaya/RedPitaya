@@ -88,7 +88,7 @@ void rp_websocket_server::set_signal_timer() {
 	if(m_signal_timer!=NULL)
 		m_signal_timer->cancel();
 	int interval = m_params->get_signals_interval_func != 0 ? m_params->get_signals_interval_func() : m_params->signal_interval;
-	fprintf(stderr, "set_signal_timer interval %d\n", interval);
+	// fprintf(stderr, "set_signal_timer interval %d\n", interval);
 	m_signal_timer = m_endpoint.set_timer(
 		interval,
 		websocketpp::lib::bind(
@@ -104,7 +104,7 @@ void rp_websocket_server::set_param_timer() {
 	if(m_param_timer!=NULL)
 		m_param_timer->cancel();
 	int interval = m_params->get_params_interval_func != 0 ?  m_params->get_params_interval_func() : m_params->param_interval;
-	fprintf(stderr, "set_param_timer interval %d\n", interval);
+	// fprintf(stderr, "set_param_timer interval %d\n", interval);
 	m_param_timer = m_endpoint.set_timer(
 		interval,
 		websocketpp::lib::bind(
