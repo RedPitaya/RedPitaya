@@ -375,3 +375,5 @@ void OnNewParams(void) {
 		installWT.Value() = false;
 	}
 }
+
+void PostUpdateSignals(void){}

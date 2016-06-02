@@ -145,6 +145,7 @@ std::string CDataManager::GetSignalsJson()
 	JSONNode data_node(JSON_NODE);
 	data_node.set_name("data");
 	data_node.push_back(signals);
+	PostUpdateSignals();
 	return data_node.write();
 }
 
