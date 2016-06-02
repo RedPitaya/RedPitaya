@@ -26,5 +26,5 @@ public:
 	virtual bool IsValueChanged() const = 0;
 	virtual bool IsNewValue() const = 0;
 	virtual void ClearNewValue() = 0;
-	virtual bool NeedSend(bool _no_need=false) const { return true; };
+	virtual bool NeedSend(bool _no_need=false) const { return _no_need; };
 };
