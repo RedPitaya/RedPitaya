@@ -27,7 +27,7 @@ public:
 
 	AccessMode GetAccessMode() const;
 
-	virtual bool IsValueChanged() const;
+	virtual bool IsValueChanged() const = 0;
 	virtual bool IsNewValue() const;
 	void ClearNewValue();
 
@@ -122,11 +122,11 @@ inline CBaseParameter::AccessMode CParameter<T, ValueT>::GetAccessMode() const
 	return (CBaseParameter::AccessMode)m_Value.access_mode;
 }
 
-template <typename T, typename ValueT>
-inline bool CParameter<T, ValueT>::IsValueChanged() const
-{
-	return true;
-}
+// template <typename T, typename ValueT>
+// inline bool CParameter<T, ValueT>::IsValueChanged() const
+// {
+// 	return true;
+// }
 
 template <typename T, typename ValueT>
 inline bool CParameter<T, ValueT>::IsNewValue() const
