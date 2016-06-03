@@ -223,7 +223,7 @@ public:
 	{
 		return m_Dirty;
 	}
-private:
+protected:
 	bool m_Dirty;
 };
 
