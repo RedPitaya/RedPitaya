@@ -223,6 +223,11 @@ public:
 	{
 		return m_Dirty;
 	}
+
+	bool ForceSend()
+	{
+		m_Dirty = true;
+	}
 private:
 	bool m_Dirty;
 };
