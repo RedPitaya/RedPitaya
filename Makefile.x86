@@ -141,9 +141,6 @@ $(LINUX_DIR): $(LINUX_TAR)
 	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
 	cp -r patches/redpitaya $@/drivers/
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
-	# WiFi patches
-	cp -r patches/rtl8192cu $@/drivers/net/wireless/
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
