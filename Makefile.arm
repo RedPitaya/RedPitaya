@@ -287,9 +287,9 @@ APP_WIFIWIZARD_DIR  = Applications/wifi_wizard
 APP_UPDATER_DIR     = Applications/updater
 APP_LA_PRO_DIR 		= Applications/la_pro
 
-.PHONY: apps_pro scopegenpro spectrumpro lcr_meter la_pro
+.PHONY: apps_pro scopegenpro spectrumpro lcr_meter la_pro scpi_server wifi_wizard updater
 
-apps_pro: scopegenpro spectrumpro lcr_meter la_pro
+apps_pro: scopegenpro spectrumpro lcr_meter la_pro scpi_server wifi_wizard updater
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
