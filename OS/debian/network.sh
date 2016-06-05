@@ -16,7 +16,9 @@
 #ln -s                                                          wlan0.ap                  $ROOT_DIR/etc/network/interfaces.d/wlan0
 
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network                   $ROOT_DIR/etc/systemd/network/wired.network
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wifi.network                    $ROOT_DIR/etc/systemd/network/wifi.network
 
+#ln -s /opt/redpitaya/wpa_suplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlx001d43400d04.conf
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
@@ -28,11 +30,15 @@ apt-get -y install isc-dhcp-server
 apt-get -y install openssh-server ca-certificates
 
 # WiFi tools
-# TODO: firmware-realtek firmware-ralink
+apt-get -y install linux-firmware
 apt-get -y install wpasupplicant iw
 # TODO: install was asking about /etc/{protocols,services}
 
 sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
+# there is a Systemd approach to this, might be used later
+#sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
+
+# enable systemd-networkd service
+systemctl enable systemd-networkd
 EOF_CHROOT

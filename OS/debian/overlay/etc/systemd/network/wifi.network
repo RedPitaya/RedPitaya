@@ -1,0 +1,5 @@
+[Match]
+Name=wl*
+
+[Network]
+DHCP=v4

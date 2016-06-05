@@ -29,6 +29,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/securetty                     $ROOT_DI
 # setup locale and timezune, install packages
 chroot $ROOT_DIR <<- EOF_CHROOT
 # TODO seems sytemd is not running without /proc/cmdline or something
+#apt-get -y install dbus
 #hostnamectl set-hostname redpitaya
 #timedatectl set-timezone Europe/Ljubljana
 #localectl   set-locale   LANG="en_US.UTF-8"
@@ -44,12 +45,8 @@ update-locale LANG=en_US.UTF-8
 dpkg-reconfigure --frontend=noninteractive tzdata
 
 # development tools
-apt-get -y install build-essential vim sudo u-boot-tools usbutils psmisc lsof
+apt-get -y install build-essential less vim sudo u-boot-tools usbutils psmisc lsof
 apt-get -y install parted dosfstools
-
-# solving an issue with tty
-# http://askubuntu.com/questions/763631/console-login-on-ubuntu-core-16-04-core-armhf-tar-gz/766444
-ln -s /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@ttyPS0.service
 EOF_CHROOT
 
 . OS/debian/network.sh
