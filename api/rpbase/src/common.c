@@ -20,7 +20,7 @@
 
 #include "common.h"
 
-static int fd = NULL;
+static int fd = 0;
 
 int cmn_Init()
 {
