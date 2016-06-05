@@ -351,23 +351,27 @@ int get_fpga_path(const char *app_id,
     *fpga_file = malloc(fpga_size * sizeof(char));
 
     /* Read fpga.conf file into memory */
-    fread(*fpga_file, 1, fpga_size, f_stream);
+    int status;
+    status = fread(*fpga_file, 1, fpga_size, f_stream);
     fclose(f_stream);
 
     /* Terminate with null char */
     (*fpga_file)[fpga_size-1] = '\0';
 
+    if (!status) return -1;
     return 0;
 }
 
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose)
 {
-	static int once = 1;
-	if (once) {
-		system("bazaar idgen 0");
-		once = 0;
-	}
+    int status = 1;
+    static int once = 1;
+    if (once) {
+        status = system("bazaar idgen 0");
+        once = 0;
+    }
+    if (!status) return -1;
 
     DIR *dp;
     struct dirent *ep;
@@ -376,7 +380,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         return rp_module_cmd_error(json_root, "Can not open apps directory",
                                    strerror(errno), pool);
 
-	int lcr_meter_found = 0;
+    int lcr_meter_found = 0;
     while((ep = readdir (dp))) {
         const char *app_id = ep->d_name;
         cJSON *info = NULL;
