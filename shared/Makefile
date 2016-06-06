@@ -13,7 +13,7 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
-LIBREDPITAYA=libredpitaya/libredpitaya.a
+LIBREDPITAYA=libredpitaya/libredpitaya.so
 
 # Installation directory
 INSTALL_DIR ?= .

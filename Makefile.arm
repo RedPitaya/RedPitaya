@@ -55,6 +55,7 @@ LIBRPAPP_DIR    = Applications/api/rpApplications
 
 libredpitaya:
 	$(MAKE) -C shared
+	$(MAKE) -C shared install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp:
 	$(MAKE) -C $(LIBRP_DIR)

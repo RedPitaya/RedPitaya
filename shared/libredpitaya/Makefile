@@ -19,10 +19,10 @@ OBJS = system.o http.o
 SRCS = $(subst .o,.c, $(OBJS)))
 
 # Executable name
-TARGET=libredpitaya.a
+TARGET=libredpitaya.so
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror -I../include -lcurl
+CFLAGS=-shared -g -std=gnu99 -Wall -Werror -I../include -lcurl
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
