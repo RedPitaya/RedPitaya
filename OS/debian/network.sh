@@ -26,6 +26,9 @@ ln -s /opt/redpitaya/wpa_suplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0
 # otherwise WiFi adapters are named "wlx[MACAddress]"
 ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
 
+# use systemd-reloslver
+ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
 apt-get -y install iproute2 ntp ntpdate iputils-ping curl
@@ -47,5 +50,6 @@ sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # enable systemd-networkd and wpa_supplicant services
 systemctl enable systemd-networkd
+systemctl enable systemd-resolved
 systemctl enable wpa_supplicant@wlan0.service
 EOF_CHROOT
