@@ -1,0 +1,60 @@
+diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
+index 1e299b9..019b0db 100644
+--- a/drivers/net/phy/Makefile
++++ b/drivers/net/phy/Makefile
+@@ -16,6 +16,7 @@ obj-$(CONFIG_PHY_ATHEROS) += atheros.o
+ obj-$(CONFIG_PHY_BROADCOM) += broadcom.o
+ obj-$(CONFIG_PHY_CORTINA) += cortina.o
+ obj-$(CONFIG_PHY_DAVICOM) += davicom.o
++obj-$(CONFIG_PHY_LANTIQ) += lantiq.o
+ obj-$(CONFIG_PHY_ET1011C) += et1011c.o
+ obj-$(CONFIG_PHY_LXT) += lxt.o
+ obj-$(CONFIG_PHY_MARVELL) += marvell.o
+diff --git a/drivers/net/phy/phy.c b/drivers/net/phy/phy.c
+index 0e6e298..3d165b1 100644
+--- a/drivers/net/phy/phy.c
++++ b/drivers/net/phy/phy.c
+@@ -464,6 +464,9 @@ int phy_init(void)
+ #ifdef CONFIG_PHY_ET1011C
+ 	phy_et1011c_init();
+ #endif
++#ifdef CONFIG_PHY_LANTIQ
++	phy_lantiq_init();
++#endif
+ #ifdef CONFIG_PHY_LXT
+ 	phy_lxt_init();
+ #endif
+diff --git a/include/linux/mii.h b/include/linux/mii.h
+index 66b83d8..f23c303 100644
+--- a/include/linux/mii.h
++++ b/include/linux/mii.h
+@@ -19,6 +19,8 @@
+ #define MII_EXPANSION	    0x06	/* Expansion register	       */
+ #define MII_CTRL1000	    0x09	/* 1000BASE-T control	       */
+ #define MII_STAT1000	    0x0a	/* 1000BASE-T status	       */
++#define MII_MMD_CTRL	    0x0d	/* MMD Access Control Register */
++#define MII_MMD_DATA	    0x0e	/* MMD Access Data Register    */
+ #define MII_ESTATUS	    0x0f	/* Extended Status */
+ #define MII_DCOUNTER	    0x12	/* Disconnect counter	       */
+ #define MII_FCSCOUNTER	    0x13	/* False carrier counter       */
+diff --git a/include/phy.h b/include/phy.h
+index 0d3ad9e..7ebf459 100644
+--- a/include/phy.h
++++ b/include/phy.h
+@@ -33,7 +33,7 @@
+ 				SUPPORTED_10000baseT_Full)
+ 
+ #ifndef PHY_ANEG_TIMEOUT
+-#define PHY_ANEG_TIMEOUT	4000
++#define PHY_ANEG_TIMEOUT	10000
+ #endif
+ 
+ 
+@@ -243,6 +243,7 @@ int phy_atheros_init(void);
+ int phy_broadcom_init(void);
+ int phy_cortina_init(void);
+ int phy_davicom_init(void);
++int phy_lantiq_init(void);
+ int phy_et1011c_init(void);
+ int phy_lxt_init(void);
+ int phy_marvell_init(void);

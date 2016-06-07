@@ -1,0 +1,48 @@
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index d61e98f..f2db3ae 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -76,7 +76,8 @@ dtb-$(CONFIG_ARCH_ZYNQ) += zynq-zc702.dtb \
+ 	zynq-zc770-xm010.dtb \
+ 	zynq-zc770-xm011.dtb \
+ 	zynq-zc770-xm012.dtb \
+-	zynq-zc770-xm013.dtb
++	zynq-zc770-xm013.dtb \
++	zynq-red-pitaya.dtb
+ dtb-$(CONFIG_ARCH_ZYNQMP) += \
+ 	zynqmp-ep108.dtb			\
+ 	zynqmp-zcu102.dtb			\
+diff --git a/arch/arm/mach-zynq/Kconfig b/arch/arm/mach-zynq/Kconfig
+index 339e464..7937340 100644
+--- a/arch/arm/mach-zynq/Kconfig
++++ b/arch/arm/mach-zynq/Kconfig
+@@ -46,6 +46,9 @@ config TARGET_ZYNQ_CC108
+ 	bool "Zynq CC108 Board"
+ 	select ZYNQ_CUSTOM_INIT
+ 
++config TARGET_ZYNQ_RED_PITAYA
++	bool "Red Pitaya Board"
++
+ endchoice
+ 
+ config SYS_BOARD
+@@ -67,5 +71,6 @@ config SYS_CONFIG_NAME
+ 	default "zynq_cse" if TARGET_ZYNQ_CSE
+ 	default "zynq_afx" if TARGET_ZYNQ_AFX
+ 	default "zynq_cc108" if TARGET_ZYNQ_CC108
++	default "zynq_red_pitaya" if TARGET_ZYNQ_RED_PITAYA
+ 
+ endif
+diff --git a/common/main.c b/common/main.c
+index 5a03181..703c33c 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -83,6 +83,8 @@ void main_loop(void)
+ 	if (cli_process_fdt(&s))
+ 		cli_secure_boot_cmd(s);
+ 
++	setenv("sdboot", "echo Running script from SD... && mmcinfo && fatload mmc 0 0x2000000 u-boot.scr && source 0x2000000");
++
+ 	autoboot_command(s);
+ 
+ 	cli_loop();
