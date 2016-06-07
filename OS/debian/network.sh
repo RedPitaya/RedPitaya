@@ -31,19 +31,19 @@ ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
-apt-get -y install iproute2 ntp ntpdate iputils-ping curl
+apt-get -y install iproute2 iputils-ping curl
 apt-get -y install isc-dhcp-server
 
 # SSH access
 # TODO: check cert generation, should it be moved to first boot?
 apt-get -y install openssh-server ca-certificates
+# enable SSH access to the root user
+sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # WiFi tools
+# TODO: install was asking about /etc/{protocols,services}
 apt-get -y install linux-firmware
 apt-get -y install wpasupplicant iw
-# TODO: install was asking about /etc/{protocols,services}
-
-sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # there is a Systemd approach to this, might be used later
 #sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
@@ -52,4 +52,7 @@ sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
 systemctl enable wpa_supplicant@wlan0.service
+
+# enable network time service
+systemctl enable systemd-timesyncd
 EOF_CHROOT

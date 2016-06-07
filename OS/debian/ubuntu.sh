@@ -54,10 +54,10 @@ EOF_CHROOT
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
 apt-get clean
-service ntp stop
 history -c
 EOF_CHROOT
 
 # disable chroot access with native execution
+# TODO: check if this code is OK, resolve.conf is just a link, it should probably not be removed
 rm $ROOT_DIR/etc/resolv.conf
 rm $ROOT_DIR/usr/bin/qemu-arm-static
