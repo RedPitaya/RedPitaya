@@ -485,7 +485,7 @@ calibrate: api
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR)
 	cp api2/test/laboardtest build/bin/laboardtest
-
+	cp api2/test/install.sh build/install.sh
 rp_communication:
 	make -C $(COMM_DIR)
 
