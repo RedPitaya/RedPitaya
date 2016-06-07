@@ -79,6 +79,7 @@ while(1){
 	// Releasing resources
 	rp_GpioClose(&leds);
 	rp_GpioClose(&pins);
+	rp_MuxctlClose(&mux);
 	}
 return 0;
 }
