@@ -94,7 +94,7 @@ $(UBOOT_TAR): | $(DL)
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	patch -d $@ -p 1 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
+	patch -d $@ -p 1 < patches/u-boot/u-boot-xlnx-$(UBOOT_TAG).patch
 
 $(UBOOT): $(UBOOT_DIR)
 	mkdir -p $(@D)
@@ -103,7 +103,7 @@ $(UBOOT): $(UBOOT_DIR)
 	cp $</u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR)
-	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot.script $@
+	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
 
 $(ENVTOOLS_CFG): $(UBOOT_DIR)
 	mkdir -p $(INSTALL_DIR)/etc/
