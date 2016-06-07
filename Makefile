@@ -82,6 +82,7 @@ ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP_DIR       = api/rpbase
 LIBRPAPP_DIR    = api/rpApplications
 LIBRP2_DIR      = api2
+LIBRP2TEST_DIR	= api2/test
 SDK_DIR         = SDK/
 
 # targets
@@ -446,11 +447,11 @@ CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
-
+LA_TEST_DIR		= api2/test
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor generate acquire calib calibrate
+.PHONY: lcr bode monitor generate acquire calib calibrate laboardtest
 
-examples: lcr bode monitor generate acquire calib
+examples: lcr bode monitor generate acquire calib laboardtest
 # calibrate
 
 lcr:
@@ -480,6 +481,10 @@ calib:
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR)
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+laboardtest: api2
+	$(MAKE) -C $(LA_TEST_DIR)
+	$(MAKE) -C $(LA_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 rp_communication:
 	make -C $(COMM_DIR)
