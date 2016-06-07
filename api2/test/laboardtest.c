@@ -20,13 +20,14 @@
 #include "redpitaya/rp2.h"
 #include "gpio.h"
 #include "common.h"
-
+#include "muxctl.h"
 int main(int argc, char* argv[])
 {
 while(1){
 	uint32_t tmp=0;
 	rp_handle_uio_t pins;
 	rp_handle_uio_t leds;
+        rp_handle_uio_t mux;
 	unsigned char fail=0;
 
 // Initialization of API
@@ -38,7 +39,14 @@ while(1){
 		fprintf(stderr, "Red Pitaya led API init failed!\n");
 		return -1;
 	}
+	if (rp_MuxctlOpen("/dev/uio1", &mux) != RP_OK) {
+                fprintf(stderr, "Red Pitaya mux API init failed!\n");
+                return -1;
+        }
+
+
 	rp_GpioSetEnable(&pins, 0x0);
+	rp_MuxctlSetGpio(&mux,0x0);
 
 	unsigned int i;
 	for (i=0;i<=255;i++){
@@ -46,7 +54,7 @@ while(1){
 		usleep(500);
 		tmp=0;
 		rp_GpioGetState(&pins,&tmp);
-//		printf("test %u : %u\n",i,(unsigned int)(255-tmp));
+		printf("test %u : %u\n",i,(unsigned int)(255-tmp));
 		if(255-tmp!=i){
 			printf("combination: %d defective\n",i);
 			fail=1;
