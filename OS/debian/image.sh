@@ -18,7 +18,7 @@ DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 SIZE=3500
 
 #IMAGE=$1
-IMAGE=debian_${ARCH}_${DATE}.img
+IMAGE=redpitaya_debian_${DATE}.img
 
 dd if=/dev/zero of=$IMAGE bs=1M count=$SIZE
 
@@ -70,7 +70,7 @@ rm $ROOT_DIR/usr/bin/qemu-arm-static
 ################################################################################
 
 # create a tarball
-tar -cvpzf debian_${ARCH}_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
+tar -cvpzf redpitaya_debian_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 
 # Unmount file systems
 umount $BOOT_DIR $ROOT_DIR
