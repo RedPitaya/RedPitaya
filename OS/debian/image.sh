@@ -50,20 +50,7 @@ mount $ROOT_DEV $ROOT_DIR
 # install OS
 ################################################################################
 
-OVERLAY=OS/debian/overlay
-
 . OS/debian/ubuntu.sh 
-
-# enable chroot access with native execution
-cp /etc/resolv.conf         $ROOT_DIR/etc/
-cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
-
-. OS/debian/redpitaya.sh
-#. OS/debian/wyliodrin.sh
-
-# disable chroot access with native execution
-rm $ROOT_DIR/etc/resolv.conf
-rm $ROOT_DIR/usr/bin/qemu-arm-static
 
 ################################################################################
 # umount image

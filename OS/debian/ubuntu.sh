@@ -12,6 +12,8 @@ UBUNTU_BASE_URL=http://cdimage.ubuntu.com/ubuntu-base/releases/16.04/release/$UB
 test -f $UBUNTU_BASE_TAR || curl -L $UBUNTU_BASE_URL -o $UBUNTU_BASE_TAR
 tar -zxf $UBUNTU_BASE_TAR --directory=$ROOT_DIR
 
+OVERLAY=OS/debian/overlay
+
 # enable chroot access with native execution
 cp /etc/resolv.conf         $ROOT_DIR/etc/
 cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
@@ -22,25 +24,25 @@ install -v -m 664 -o root -D patches/fw_env.config                      $ROOT_DI
 install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $ROOT_DIR/etc/apt/apt.conf.d/99norecommends
 install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DIR/etc/apt/sources.list
 install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $ROOT_DIR/etc/fstab
-install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $ROOT_DIR/etc/hostname
-install -v -m 664 -o root -D $OVERLAY/etc/timezone                      $ROOT_DIR/etc/timezone
 install -v -m 664 -o root -D $OVERLAY/etc/securetty                     $ROOT_DIR/etc/securetty
 
-# setup locale and timezune, install packages
 chroot $ROOT_DIR <<- EOF_CHROOT
-apt-get -y install dbus udev
-# TODO seems sytemd is not running without /proc/cmdline or something
-#hostnamectl set-hostname redpitaya
-#timedatectl set-timezone Europe/Ljubljana
-#localectl   set-locale   LANG="en_US.UTF-8"
-
 apt-get update
 apt-get -y upgrade
-apt-get -y install locales
+apt-get -y install dbus udev
 
+# setup locale and timezune, install packages
+# TODO seems sytemd is not running without /proc/cmdline or something
+hostnamectl set-hostname redpitaya
+timedatectl set-timezone Europe/Ljubljana
+
+# setting locale
 sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
 locale-gen
 update-locale LANG=en_US.UTF-8
+sudo apt-get install console-data keyboard-configuration locales
+dpkg-reconfigure keyboard-configuration
+#localectl   set-locale   LANG="en_US.utf8"
 
 dpkg-reconfigure --frontend=noninteractive tzdata
 
@@ -50,6 +52,8 @@ apt-get -y install parted dosfstools
 EOF_CHROOT
 
 . OS/debian/network.sh
+. OS/debian/redpitaya.sh
+#. OS/debian/wyliodrin.sh
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
@@ -57,7 +61,9 @@ apt-get clean
 history -c
 EOF_CHROOT
 
+# TODO add file system cleanup for better compression
+
 # disable chroot access with native execution
-# TODO: check if this code is OK, resolve.conf is just a link, it should probably not be removed
 rm $ROOT_DIR/etc/resolv.conf
+ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf
 rm $ROOT_DIR/usr/bin/qemu-arm-static
