@@ -351,7 +351,9 @@ int get_fpga_path(const char *app_id,
     *fpga_file = malloc(fpga_size * sizeof(char));
 
     /* Read fpga.conf file into memory */
-    fread(*fpga_file, 1, fpga_size, f_stream);
+    if(!fread(*fpga_file, 1, fpga_size, f_stream))
+    	fprintf(stderr, "Error reading fpga file");
+
     fclose(f_stream);
 
     /* Terminate with null char */
@@ -363,12 +365,12 @@ int get_fpga_path(const char *app_id,
 int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
                                  ngx_pool_t *pool, int verbose)
 {
-	static int once = 1;
-	if (once) {
-		system("bazaar idgen 0");
-		once = 0;
-	}
-
+    static int once = 1;
+    if (once) {
+    	if(system("bazaar idgen 0"))
+            fprintf(stderr, "Problem with idfile generation");
+        once = 0;
+    }
     DIR *dp;
     struct dirent *ep;
 
