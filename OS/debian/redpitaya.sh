@@ -24,6 +24,9 @@ systemctl enable redpitaya_discovery
 systemctl enable redpitaya_nginx
 #systemctl enable redpitaya_scpi
 
+# applications used by Bazaar
+apt-get -y install wget
+
 # libraries used by Bazaar
 apt-get -y install libluajit-5.1-2 libpcre3 zlib1g lua-cjson unzip
 apt-get -y install libboost-system1.58.0 libboost-regex1.58.0 libboost-thread1.58.0
