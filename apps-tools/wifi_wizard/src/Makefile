@@ -12,7 +12,7 @@ INCLUDE+= -I../../../Bazaar/tools -I../../../Bazaar/tools/libjson
 
 COMMON_FLAGS+=-Wall -fPIC -lstdc++ -Os -s
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS =-shared $(COMMON_FLAGS) -L$(RP_SDK)/lib
+LDFLAGS =-shared $(COMMON_FLAGS)
 LDFLAGS+= -Wl,--whole-archive
 LDFLAGS+=-L$(RP_SDK) -lrp_sdk
 LDFLAGS+=-L$(RP_API) -lrp
