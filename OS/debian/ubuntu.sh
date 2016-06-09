@@ -33,16 +33,19 @@ apt-get update
 apt-get -y upgrade
 apt-get -y install dbus udev
 
-# setup locale and timezune, install packages
+# setup hostname and timezone
 # TODO seems sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
 #timedatectl set-timezone Europe/Ljubljana
 
-# setting locale
-apt-get -y install locales console-data keyboard-configuration
+# setup locale
+apt-get -y install locales
 sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
 locale-gen
 update-locale LANG=en_US.UTF-8
+
+# setup locale/keyboard
+#apt-get -y install locales console-data keyboard-configuration
 #dpkg-reconfigure keyboard-configuration
 #localectl   set-locale   LANG="en_US.utf8"
 
