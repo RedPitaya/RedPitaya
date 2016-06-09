@@ -24,6 +24,8 @@ install -v -m 664 -o root -D patches/fw_env.config                      $ROOT_DI
 install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $ROOT_DIR/etc/apt/apt.conf.d/99norecommends
 install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DIR/etc/apt/sources.list
 install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $ROOT_DIR/etc/fstab
+install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $ROOT_DIR/etc/hostname
+install -v -m 664 -o root -D $OVERLAY/etc/timezone                      $ROOT_DIR/etc/timezone
 install -v -m 664 -o root -D $OVERLAY/etc/securetty                     $ROOT_DIR/etc/securetty
 
 chroot $ROOT_DIR <<- EOF_CHROOT
@@ -33,15 +35,15 @@ apt-get -y install dbus udev
 
 # setup locale and timezune, install packages
 # TODO seems sytemd is not running without /proc/cmdline or something
-hostnamectl set-hostname redpitaya
-timedatectl set-timezone Europe/Ljubljana
+#hostnamectl set-hostname redpitaya
+#timedatectl set-timezone Europe/Ljubljana
 
 # setting locale
+apt-get -y install locales console-data keyboard-configuration
 sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
 locale-gen
 update-locale LANG=en_US.UTF-8
-sudo apt-get install console-data keyboard-configuration locales
-dpkg-reconfigure keyboard-configuration
+#dpkg-reconfigure keyboard-configuration
 #localectl   set-locale   LANG="en_US.utf8"
 
 dpkg-reconfigure --frontend=noninteractive tzdata
