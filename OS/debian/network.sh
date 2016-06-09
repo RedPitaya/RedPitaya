@@ -23,7 +23,9 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
 apt-get -y install iproute2 iputils-ping curl
-apt-get -y install isc-dhcp-server
+
+# WiFi AP configuration and DHCP server
+#apt-get -y install isc-dhcp-server
 
 # SSH access
 # TODO: check cert generation, should it be moved to first boot?
