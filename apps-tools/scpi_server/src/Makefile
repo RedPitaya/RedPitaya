@@ -15,8 +15,8 @@ CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS =-shared $(COMMON_FLAGS)
 LDFLAGS+= -Wl,--whole-archive
 LDFLAGS+= -lcryptopp
-LDFLAGS+=-L$(RP_SDK) -lrp_sdk
 LDFLAGS+=-L$(RP_API) -lrp
+LDFLAGS+=-L$(RP_SDK) -lrp_sdk
 LDFLAGS+= -Wl,--no-whole-archive
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
