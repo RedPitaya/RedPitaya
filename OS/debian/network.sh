@@ -44,7 +44,8 @@ ln -s /opt/redpitaya/wpa_suplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0
 ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
 
 # use systemd-reloslver
-ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+# TODO: this link is currently created at the end of the install process, just before unmounting the image (ubuntu.sh)
+#ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 # there is a Systemd approach to this, might be used later
 #sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
