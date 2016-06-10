@@ -12,4 +12,4 @@ Type=simple
 ExecStart=/sbin/wpa_supplicant -c/etc/wpa_supplicant/wpa_supplicant-%I.conf -i%I
 
 [Install]
-Alias=multi-user.target.wants/wpa_supplicant@%i.service
+WantedBy=sys-subsystem-net-devices-%i.device
