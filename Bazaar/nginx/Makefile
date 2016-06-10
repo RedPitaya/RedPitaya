@@ -31,7 +31,7 @@ VERSION=$(VER)-$(BUILD_NUMBER)
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
-	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules);
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules) --error-log-path=/dev/stderr;
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB):
@@ -50,7 +50,6 @@ install:
 	test -d '$(DESTDIR)/sbin'                 || mkdir -p '$(DESTDIR)/sbin'
 	test -d '$(DESTDIR)/lib'                  || mkdir -p '$(DESTDIR)/lib'
 	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'
-	test -d '$(DESTDIR)/www/logs'             || mkdir -p '$(DESTDIR)/www/logs'
 	test -d '$(DESTDIR)/www/apps'             || mkdir -p '$(DESTDIR)/www/apps'
 	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
 	cp $(NGINX)                     '$(DESTDIR)/sbin/'
