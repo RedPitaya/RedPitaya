@@ -51,6 +51,10 @@ update-locale LANG=en_US.UTF-8
 
 dpkg-reconfigure --frontend=noninteractive tzdata
 
+# add package containing add-apt-repository
+apt-get -y install software-properties-common
+add-apt-repository -yu ppa:redpitaya/zynq
+
 # development tools
 apt-get -y install build-essential less vim sudo u-boot-tools usbutils psmisc lsof
 apt-get -y install parted dosfstools
