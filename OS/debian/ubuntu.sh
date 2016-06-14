@@ -70,9 +70,21 @@ apt-get clean
 history -c
 EOF_CHROOT
 
-# TODO add file system cleanup for better compression
+################################################################################
+# cleanup
+################################################################################
+
+# file system cleanup for better compression
+cat /dev/zero > $ROOT_DIR/zero.file
+sync -f $ROOT_DIR/zero.file
+rm -f $ROOT_DIR/zero.file
+
+# remove ARM emulation
+rm $ROOT_DIR/usr/bin/qemu-arm-static
 
 # disable chroot access with native execution
 rm $ROOT_DIR/etc/resolv.conf
+# create a tarball (without resolv.conf link, since it causes schroot issues)
+tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
+# create resolv.conf link
 ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf
-rm $ROOT_DIR/usr/bin/qemu-arm-static

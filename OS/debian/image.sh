@@ -8,7 +8,7 @@
 ################################################################################
 
 ################################################################################
-# prepating and mounting image
+# prepating image
 ################################################################################
 
 # current time and date are used to create the image name
@@ -41,6 +41,10 @@ ROOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '3!d'`
 mkfs.vfat -v    $BOOT_DEV
 mkfs.ext4 -F -j $ROOT_DEV
 
+################################################################################
+# umount image
+################################################################################
+
 # Mount file systems
 mkdir -p $BOOT_DIR $ROOT_DIR
 mount $BOOT_DEV $BOOT_DIR
@@ -55,9 +59,6 @@ mount $ROOT_DEV $ROOT_DIR
 ################################################################################
 # umount image
 ################################################################################
-
-# create a tarball
-tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 
 # Unmount file systems
 umount $BOOT_DIR $ROOT_DIR
