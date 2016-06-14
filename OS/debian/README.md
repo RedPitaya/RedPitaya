@@ -145,3 +145,11 @@ To see the status of a specific service run:
 ```bash
 systemctl
 ```
+
+### debugging
+
+```
+systemd-analyze plot > /opt/redpitaya/www/apps/systemd-plot.svg
+systemd-analyze dot | dot -Tsvg > /opt/redpitaya/www/apps/systemd-dot.svg
+
+```
