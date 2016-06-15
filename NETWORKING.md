@@ -1,3 +1,95 @@
+# Network configuration
+
+The current network configuration is using [`systemd-networkd`](https://www.freedesktop.org/software/systemd/man/systemd.network.html) as the base. Almost all network configuration details are done by the bash script [`network.sh`](OS/debian/network.sh) during the creation of the Debian/Ubuntu SD card image. The script installs networking related packages and copies network configuration files from the Git repository.
+
+The decision to focus on `systemd-networkd` is arbitrary, while at the same time focusing at a single approach centered around [`systemd`](https://www.freedesktop.org/wiki/Software/systemd/) should minimize the efforts needed to maintain it.
+
+## UDEV
+
+`systemd` provides [predictable network interface names] using [`UDEV`](https://www.freedesktop.org/software/systemd/man/udev.html) rules. In our case the kernel names the USB WiFi adapeter `wlan0`, then `UDEV` rule `/lib/udev/rules.d/73-special-net-names.rules` renames it into `wlxMAC` using the following rule:
+```
+# Use MAC based names for network interfaces which are directly or indirectly
+# on USB and have an universally administered (stable) MAC address (second bit
+# is 0).
+ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", NAME=="", ATTR{address}=="?[014589cd]:*", IMPORT{builtin}="net_id", NAME="$env{ID_NET_NAME_MAC}"
+```
+For a simple generic WiFi configuration it is preferred to have the same interface name regardless of the used adapter.
+This is achieved by overriding `UDEV` rules with a modified rule file. The overriding is done by placing the modified rule file into directory `/etc/udev/rules.d/73-special-net-names.rules`. Since the remaining rules in the file are not relevant on Red Pitaya, it is also possible to deactivate the rule by creating a override file which links to `/dev/null`.
+```bash
+ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
+```
+
+## Wired setup
+
+The wired interface `eth0` configuration file [`/etc/systemd/network/wired.network`](OS/debian/overlay/etc/systemd/network/wired.network) configures it to use DHCP. A static IP address can be chosen by modifying the configuration file, and it is also possible to have both a DHCP provided and a static address at the same time.
+
+## Wireless client setup
+
+Similarly to the wired interface, the wireless interface `wlan0` configuration file [`/etc/systemd/network/wireless.network`](OS/debian/overlay/etc/systemd/network/wirless.network) configures it to use DHCP.
+
+Wireless networks almost universally use some king of encryption/authentication scheme for security. This is handled by the tool [`wpa_supplicant`](https://w1.fi/wpa_supplicant/).
+The default network configuration option on [Debian](https://wiki.debian.org/NetworkManager)/[Ubuntu](https://help.ubuntu.com/community/NetworkManager) is [NetworkManager](https://wiki.gnome.org/Projects/NetworkManager). Sometimes it conflicts with the default `systemd-networkd` install, this seems to be one of those cases. On [Debian](https://packages.debian.org/jessie/armhf/wpasupplicant/filelist)/Ubuntu a device specific [`wpa_supplicant@.service`](https://w1.fi/cgit/hostap/tree/wpa_supplicant/systemd/wpa_supplicant.service.arg.in) service is missing, so we made a [copy](OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service) in our Git repository.
+
+By default the service is installed as a dependency for `multi-user.target` which means it would delay `multi-user.target` if it could not start properly, for example due to the USB WiFi adapter not being plugged in. At the same time the service was not automatically started after the adapter was plugged into Red Pitaya. The next change fixes both.
+```
+ [Install]
+-Alias=multi-user.target.wants/wpa_supplicant@%i.service
++WantedBy=sys-subsystem-net-devices-%i.device
+```
+
+The encryption/authentication configuration file is linked to the FAT partition for easier user access. So it is enough to provide a proper `wpa_supplicant.conf` file on the FAT partition to enable wireless client mode.
+```bash
+ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+```
+This configuration file can be created using the `wpa_passphrase` tool can be used:
+```
+$ wpa_passphrase <ssid> [passphrase] > /opt/redpitaya/wpa_supplicant.conf
+```
+
+## Resolver
+
+To enable the `systemd` integrated resolver, a symlink for `/etc/resolv.conf` must be created.
+```bash
+ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+```
+It is also possible to add default DNS servers by adding them to `*.network` files.
+```
+nameserver=8.8.8.8
+nameserver=8.8.4.4
+```
+
+## NTP
+
+Instead of using the common `ntpd` the lightweight `systemd-timesyncd` [SNTP](http://www.ntp.org/ntpfaq/NTP-s-def.htm#AEN1271) client is used. Since by default NTP servers are provided by DHCP, no additional configuration changes to [`timesyncd.conf`](https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html) are needed.
+
+To observe the status of time synchronization do:
+```bash
+$ timedatectl status
+```
+To enable the service do:
+```bash
+# timedatectl set-ntp true
+```
+
+## `systemd` services
+
+Services handling the described configuration are enabled with:
+```bash
+systemctl enable systemd-networkd
+systemctl enable systemd-resolved
+systemctl enable wpa_supplicant@wlan0.service
+systemctl enable systemd-timesyncd
+```
+
+## SSH
+
+The Open SSH server is installed and access to the root user is enabled.
+TODO: changed certificate generation, so they will not be generated during SD card image creation. Instead certificates should be created during the first boot.
+
+## WiFi AP
+
+TODO
+
 # WiFi configuration
 
 Red Pitaya OS allows the use of USB WiFi adapters to achieve wireless connectivity. It is possible to setup WiFi in client mode, or to set up an access point.
