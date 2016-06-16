@@ -30,7 +30,7 @@ apt-get -y install wget
 # libraries used by Bazaar
 apt-get -y install libluajit-5.1-2 libpcre3 zlib1g lua-cjson unzip
 apt-get -y install libboost-system1.58.0 libboost-regex1.58.0 libboost-thread1.58.0
-apt-get -y install libcrypto++9v5
+apt-get -y install libcrypto++6
 apt-get -y install libssl1.0.0
 
 # libraries used to compile Bazaar
