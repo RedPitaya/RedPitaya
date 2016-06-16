@@ -32,6 +32,8 @@ apt-get -y install iproute2 iputils-ping curl
 apt-get -y install openssh-server ca-certificates
 # enable SSH access to the root user
 sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+# remove SSH keys, so they can be created at boot by ssh-reconfigure.service
+/bin/rm -v /etc/ssh/ssh_host_*
 
 # WiFi tools
 # TODO: install was asking about /etc/{protocols,services}
@@ -52,11 +54,12 @@ ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
 # there is a Systemd approach to this, might be used later
 #sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
 
-# enable systemd-networkd and wpa_supplicant services
+# enable systemd network related services
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
 systemctl enable wpa_supplicant@wlan0.service
-
-# enable network time service
 systemctl enable systemd-timesyncd
+
+# enable service for creating SSH keys on first boot
+systemctl enable ssh-reconfigure
 EOF_CHROOT
