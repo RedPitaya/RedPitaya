@@ -15,6 +15,7 @@ OS_TOOLS_DIR    = OS/tools
 # targets
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
+SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 
 define GREET_MSG
@@ -101,16 +102,19 @@ WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_T
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
+SOCKPROC_URL	= https://github.com/juce/sockproc/archive/master.zip
 
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
 LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
 NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
+SOCKPROC_TAR	= $(DL)/sockproc.zip
 
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx
+SOCKPROC_DIR    = Bazaar/tools/sockproc
 
 .PHONY: ecosystem nginx
 
@@ -121,6 +125,13 @@ $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
+
+$(SOCKPROC_TAR): | $(DL)
+	curl -L $(SOCKPROC_URL) -o $@
+
+$(SOCKPROC_DIR): $(SOCKPROC_TAR)
+	mkdir -p $@
+	unzip $< -d $(@D)
 
 $(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
@@ -144,6 +155,8 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f patches/nginx.conf $@/conf/
+	mkdir $@/conf/lua/
+	cp -fr lua/* $@/conf/lua/
 
 $(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 	$(MAKE) -C $(NGINX_DIR)
@@ -153,7 +166,13 @@ $(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
-nginx: $(NGINX) $(IDGEN)
+$(SOCKPROC):
+	$(MAKE) -C $(SOCKPROC_DIR)
+	DESTDIR = $(abspath $(INSTALL_DIR))
+	test -d '$(DESTDIR)/sbin' || mkdir -p '$(DESTDIR)/sbin'
+	cp $@ '$(DESTDIR)/sbin'
+
+nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 
 ################################################################################
 # SCPI server
