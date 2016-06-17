@@ -458,7 +458,8 @@ int rp_bazaar_start(ngx_http_request_t *r,
 
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf */
     char *fpga_name = NULL;
-    system("/opt/redpitaya/rmamba_pl.sh");
+    if (system("/opt/redpitaya/rmamba_pl.sh"))
+        fprintf(stderr, "Problem running /opt/redpitaya/rmamba_pl.sh");
     if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0) { // FIXME !!!
         /* Here we do not have application running anymore - load new FPGA */
         fprintf(stderr, "Loading specific FPGA from: '%s'\n", fpga_name);
@@ -486,7 +487,8 @@ int rp_bazaar_start(ngx_http_request_t *r,
                 char dmaDrv[len];
                 len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
                 sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
-                system(dmaDrv);
+                if (system(dmaDrv))
+                    fprintf(stderr, "Problem running %s", dmaDrv);
                 break;
             }
             default:
