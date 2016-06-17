@@ -97,18 +97,19 @@ api2: librp2
 WEBSOCKETPP_TAG = 0.7.0
 LUANGINX_TAG    = v0.10.2
 NGINX_TAG       = 1.10.0
+SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
-SOCKPROC_URL	= https://github.com/juce/sockproc/archive/master.zip
+SOCKPROC_URL	= https://github.com/juce/sockproc/archive/$(SOCKPROC_TAG).tar.gz
 
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
 LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
 NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
-SOCKPROC_TAR	= $(DL)/sockproc.zip
+SOCKPROC_TAR	= $(DL)/sockproc-$(SOCKPROC_TAG).tar.gz
 
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 LIBJSON_DIR     = Bazaar/tools/libjson
@@ -131,7 +132,7 @@ $(SOCKPROC_TAR): | $(DL)
 
 $(SOCKPROC_DIR): $(SOCKPROC_TAR)
 	mkdir -p $@
-	unzip $< -d $(@D)
+	tar -xzf $< --strip-components=1 --directory=$@
 
 $(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
@@ -166,11 +167,10 @@ $(IDGEN): $(NGINX)
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
-$(SOCKPROC):
-	$(MAKE) -C $(SOCKPROC_DIR)
-	DESTDIR = $(abspath $(INSTALL_DIR))
-	test -d '$(DESTDIR)/sbin' || mkdir -p '$(DESTDIR)/sbin'
-	cp $@ '$(DESTDIR)/sbin'
+$(SOCKPROC): $(SOCKPROC_DIR)
+	$(MAKE) -C $<
+	test -d $(INSTALL_DIR)/sbin || mkdir -p $(INSTALL_DIR)/sbin
+	cp $</sockproc $@
 
 nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 
