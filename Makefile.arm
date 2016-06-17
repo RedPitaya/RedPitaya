@@ -156,7 +156,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f patches/nginx.conf $@/conf/
 	mkdir $@/conf/lua/
-	cp -fr lua/* $@/conf/lua/
+	cp -fr patches/lua/* $@/conf/lua/
 
 $(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 	$(MAKE) -C $(NGINX_DIR)
