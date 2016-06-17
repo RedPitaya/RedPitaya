@@ -83,3 +83,5 @@ void OnNewParams(void) {
     	inRun.Value() = true;
     }
 }
+
+void PostUpdateSignals(void){}

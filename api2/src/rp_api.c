@@ -641,11 +641,9 @@ RP_STATUS rp_GetValues(uint32_t startIndex,
 			acq_data.trig_sample=samples-acq_data.trig_sample;
 
 			printf("\n\r sta: samples=%d trig=%d", samples, acq_data.trig_sample);
-
 			for(i=0;i<samples;i++){
 				printf("\r\n %d len: %02x val: %02x ", i,(uint8_t)(acq_data.buf[i]>>8),(uint8_t)acq_data.buf[i]);
 			}
-
 
 			*noOfSamples=samples;
     }
@@ -779,7 +777,8 @@ RP_STATUS rp_GetStreamingLatestValues(rpStreamingReady rpReady,
  * Always call this function after the end of a capture to ensure that the scope is ready for the next capture.
  */
 RP_STATUS rp_Stop(void){
-	return rp_LaAcqStopAcq(&la_acq_handle);
+	return rp_SoftwareTrigger();
+	//return rp_LaAcqStopAcq(&la_acq_handle);
 }
 
 /** SIGNAL GENERATION  */

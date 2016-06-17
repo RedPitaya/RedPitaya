@@ -12,5 +12,5 @@ void Gziping(const std::string& in, std::string& out)
 	zipper.MessageEnd();
 	*/
 
-	StringSource ss(in, true, new Gzip(new StringSink(out)));
+	StringSource ss(in, true, new Gzip(new StringSink(out), 1));
 }

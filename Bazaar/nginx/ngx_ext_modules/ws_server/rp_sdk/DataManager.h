@@ -53,6 +53,7 @@ int dbg_printf(const char * format, ...);
 // user callbacks
 void UpdateParams(void);
 void UpdateSignals(void);
+void PostUpdateSignals(void);
 void OnNewParams(void);
 void OnNewSignals(void);
 

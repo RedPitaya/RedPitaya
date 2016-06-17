@@ -1,6 +1,7 @@
 LIBJSON_DIR=../../../tools/libjson
 CXX=$(CROSS_COMPILE)g++
 CXXFLAGS=-c -Wall -Os -s -static -std=c++11 -Iwebsocketpp $(SYSROOT) -I$(LIBJSON_DIR) -I$(LIBJSON_DIR)/.. -L. -lboost_system -DWEBSOCKETPP_STRICT_MASKING
+
 SOURCES= rp_websocket_server.cpp \
 	ws_server.cpp \
 	$(LIBJSON_DIR)/_internal/Source/internalJSONNode.cpp \

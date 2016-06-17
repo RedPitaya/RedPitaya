@@ -49,8 +49,10 @@ hostapd:
 LIBRP_DIR       = api/rpbase
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
+ECOSYSTEM_DIR   = Applications/ecosystem
+LIBRP2_DIR      = api2
 
-.PHONY: api librp libredpitaya
+.PHONY: api2 api librp libredpitaya
 .PHONY: librpapp liblcr_meter
 
 libredpitaya:
@@ -60,6 +62,11 @@ libredpitaya:
 librp:
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+librp2:
+	$(MAKE) -C $(LIBRP2_DIR)
+	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 
 ifdef ENABLE_LICENSING
 
@@ -78,6 +85,8 @@ else
 api: librp
 
 endif
+
+api2: librp2
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -290,10 +299,11 @@ ifdef ENABLE_LICENSING
 APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
+APP_LA_PRO_DIR 		= Applications/la_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro
 
-apps-pro: scopegenpro spectrumpro lcr_meter
+apps-pro: scopegenpro spectrumpro lcr_meter la_pro
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
@@ -306,6 +316,11 @@ spectrumpro: api $(NGINX)
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+la_pro: api api2 $(NGINX)
+	$(MAKE) -C $(APP_LA_PRO_DIR)
+	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 else
 
 apps-pro:
@@ -327,6 +342,7 @@ clean:
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
 	-make -C $(SCPI_SERVER_DIR) clean
+	make -C $(LIBRP2_DIR)    clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean

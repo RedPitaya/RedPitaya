@@ -34,7 +34,7 @@ static char version[50];
 int rp_Init()
 {
     ECHECK(cmn_Init());
-	
+
     ECHECK(calib_Init());
     ECHECK(hk_Init());
     ECHECK(ams_Init());

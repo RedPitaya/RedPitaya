@@ -36,6 +36,7 @@ void rpReadyCallback(RP_STATUS status, void * pParameter)
 
 pthread_t tid;
 pthread_t tid2;
+pthread_t tid3;
 
 void* trigGen(void *arg)
 {
@@ -55,6 +56,16 @@ void* trigAcq(void *arg)
     }
     return NULL;
 }
+
+void* stopAcq(void *arg)
+{
+    printf("\r\nStopAcqThreadStarted");
+    sleep(2);
+    printf("\r\nStopAcq");
+    rp_Stop();
+    return NULL;
+}
+
 
 
 void la_acq_trig_test(void)
@@ -84,19 +95,24 @@ void la_acq_trig_test(void)
     rp_EnableDigitalPortDataRLE(1);
 
 
-
     // start gen a bit later in a new thread
+    /*
     if(pthread_create(&tid, NULL, &trigGen, NULL)!=0){
     	CU_FAIL("can't create thread.");
     }
-
+    */
 
     // software trig. acq.
     /*
     if(pthread_create(&tid2, NULL, &trigAcq, NULL)!=0){
 		CU_FAIL("can't create thread.");
-   }
-   */
+    }
+    */
+
+    // stop acq.
+    if(pthread_create(&tid3, NULL, &stopAcq, NULL)!=0){
+		CU_FAIL("can't create thread.");
+    }
 
     printf("\r\nRunBlock");
     double timeIndisposedMs;

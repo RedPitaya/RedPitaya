@@ -37,6 +37,9 @@ $(ZIPFILE): x86 arm
 	mkdir -p $(INSTALL_DIR)/fpga
 	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
 	cd $(INSTALL_DIR)/fpga; xz -df *.xz
+
+	cp fpga2/out/red_pitaya.bit $(INSTALL_DIR)/fpga
+	mv $(INSTALL_DIR)/fpga/red_pitaya.bit $(INSTALL_DIR)/fpga/fpga_la.bit
 	# TODO: check this step
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
@@ -91,11 +94,11 @@ root_mount:
 #	mount -o ro $(ROOT_DEV)     $(ROOT_DIR)
 	mount       $(ROOT_DEV)     $(ROOT_DIR)
 	# mount runtime directories
-	mount --bind /proc          $(ROOT_DIR)/proc  
-	mount --bind /tmp           $(ROOT_DIR)/tmp  
-	mount --bind /sys           $(ROOT_DIR)/sys  
-	mount --bind /dev           $(ROOT_DIR)/dev  
-	mount --bind /dev/pts       $(ROOT_DIR)/dev/pts  
+	mount --bind /proc          $(ROOT_DIR)/proc
+	mount --bind /tmp           $(ROOT_DIR)/tmp
+	mount --bind /sys           $(ROOT_DIR)/sys
+	mount --bind /dev           $(ROOT_DIR)/dev
+	mount --bind /dev/pts       $(ROOT_DIR)/dev/pts
 	# mount git project
 	mkdir -p                    $(ROOT_DIR)/git
 	mount --bind `pwd`          $(ROOT_DIR)/git
