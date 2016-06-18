@@ -1,0 +1,37 @@
+.net_settings_block {
+    width: 45%;
+    min-width: 350px;
+    float: left;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+#eth0_block {}
+
+.wlan0_block {}
+
+.type_select {
+    width: 250px;
+    text-align: right;
+    background-color: #444444;
+}
+
+.eht0_entries {
+    width: 350px;
+    min-width: 350px;
+    margin-top: 50px;
+}
+
+.eth0_inputs {
+    background-color: #444444;
+}
+
+#eth0_inputs_labels {
+    width: 175px;
+    float: left;
+}
+
+#eth0_inputs_entry {
+    width: 175px;
+    float: left;
+}

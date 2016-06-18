@@ -1,10 +1,9 @@
 /*
  * Red Pitaya WIZARDillWIZARDope client
  *
- * Author: Dakus <info@eskala.eu>
+ * Author: Artem Kokos <a.kokos@integrasources.com>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
- *
  */
 
 (function(WIZARD, $, undefined) {
@@ -137,6 +136,25 @@
         }, 10000);
     }
 
+    WIZARD.GetEth0Status = function() {
+        $.ajax({
+                url: '/get_eth0_status',
+                type: 'GET',
+            }).fail(function(msg) {
+                console.log(msg);
+                res1 = msg.responseText.split("          "); // 10 spaces in start of string
+                res2 = res1[1].split(" ");
+                res2.splice(0, 1);
+                res2.splice(1, 1);
+                res2.splice(2, 1);
+                res2[2] = res2[2].split("\n\n")[0]; // Remove two \n characters from last string in array
+                $('#ip_address_label').text(res2[0].split(":")[1]);
+                $('#broadcast_address_label').text(res2[1].split(":")[1]);
+                $('#net_mask_label').text(res2[2].split(":")[1]);
+            }).done(function(msg) {
+            });
+    }
+
     WIZARD.startWaiting = function() {
         WIZARD.isInReboot = true;
         $('body').removeClass('loaded');
@@ -147,6 +165,7 @@
 
 // Page onload event handler
 $(document).ready(function() {
+    WIZARD.GetEth0Status();
     $('body').addClass('loaded');
     WIZARD.startStep(0);
     $('#get_wtools').click(function(event) {
@@ -211,5 +230,11 @@ $(document).ready(function() {
             url: '/ap_mode',
             type: 'GET',
         })
+    });
+
+    $('#eth0_mode').change(function() {
+        $('.eht0_entries').hide();
+        $($(this).val()).show();
+        WIZARD.GetEth0Status();
     });
 });
