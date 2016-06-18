@@ -24,7 +24,7 @@ Other WiFi USB devices might also be supported by upstream kernel drivers, but t
 
 ## Client mode
 
-To enable client mode a configuration file `wpa_suplicant.conf` must be placed on the FAT partition on the SD card. Inside a shell on Red Pitaya this file is visible as `/opt/redpitaya/wpa_suplicant.conf`. This file must be edited to set the correct `<ssid>` and `<passphrase>` values to be able to connect to the WiFi access point (wireless router) of your choice.
+To enable client mode a configuration file `wpa_supplicant.conf` must be placed on the FAT partition on the SD card. Inside a shell on Red Pitaya this file is visible as `/opt/redpitaya/wpa_supplicant.conf`. This file must be edited to set the correct `<ssid>` and `<passphrase>` values to be able to connect to the WiFi access point (wireless router) of your choice.
 
 ### Password protected network
 
@@ -58,7 +58,7 @@ network={
 
 ## Access point mode
 
-To enable access point mode a configuration file `hostapd.conf` must be placed on the FAT partition on the SD card, and the client mode configuration file `wpa_suplicant.conf` must be removed. Inside a shell on Red Pitaya this file is visible as `/opt/redpitaya/hostapd.conf`.
+To enable access point mode a configuration file `hostapd.conf` must be placed on the FAT partition on the SD card, and the client mode configuration file `wpa_supplicant.conf` must be removed. Inside a shell on Red Pitaya this file is visible as `/opt/redpitaya/hostapd.conf`.
 ```
 interface=wlan0
 ssid=<ssid>
