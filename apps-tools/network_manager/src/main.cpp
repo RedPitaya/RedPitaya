@@ -30,11 +30,11 @@ static const float DEF_MIN_SCALE = 1.f/1000.f;
 static const float DEF_MAX_SCALE = 5.f;
 
 const char *rp_app_desc(void) {
-    return (const char *)"Red Pitaya Wi-Fi wizard application.\n";
+    return (const char *)"Red Pitaya network manager application.\n";
 }
 
 int rp_app_init(void) {
-    fprintf(stderr, "Loading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "Loading network manager version %s-%s.\n", VERSION_STR, REVISION_STR);
     CDataManager::GetInstance()->SetParamInterval(1000);
 
     // Check iw tools
@@ -53,7 +53,7 @@ int rp_app_init(void) {
 }
 
 int rp_app_exit(void) {
-    fprintf(stderr, "Unloading Wi-Fi wizard version %s-%s.\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "Unloading network manager version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
 }
 
@@ -139,7 +139,7 @@ std::string GetListOfWIFI(std::string wlanInterfaceName) {
 	int lineNumber = 0;
 
 	command << "iwlist " << wlanInterfaceName << " scan | grep '\\(ESSID\\|Encryption\\|Quality\\)' > " << tmpFileName;
-	// command << "cat /opt/redpitaya/www/apps/wifi_wizard/scan_wlan0_res | grep '\\(ESSID\\|Encryption\\|Quality\\)' > " << tmpFileName;
+	// command << "cat /opt/redpitaya/www/apps/network_manager/scan_wlan0_res | grep '\\(ESSID\\|Encryption\\|Quality\\)' > " << tmpFileName;
 
 	system(command.str().c_str());
 
@@ -211,7 +211,7 @@ void ConnectToNetwork() {
 	// system(command_Kill_supl.c_str());
 	// system("mount -o,remount /dev/mmcblk0p1 /opt/redpitaya");
 
-	// std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/wifi_wizard/wpa_supplicant.conf & disown";
+	// std::string command = "wpa_supplicant -B -D wext -i wlan0 -c /opt/redpitaya/www/apps/network_manager/wpa_supplicant.conf & disown";
 	// system("start-stop-daemon -Kbvx /sbin/ifup");
 	// system("start-stop-daemon -Kbvx /sbin/wpa_supplicant");
 	system("start-stop-daemon -Sbvx /sbin/ifdown -- wlan0");

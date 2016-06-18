@@ -7,15 +7,15 @@
 	var startUsing = 0;
     $(document).ready(function($) {
         AnalyticsCore.init(function(){
-            AnalyticsCore.sendExecTime('/wifi_wizard', 'wifi_wizard');
-            AnalyticsCore.sendScreenView('/wifi_wizard', 'Redpitaya', 'Remote control');
-            AnalyticsCore.sendSysInfo('/wifi_wizard');
+            AnalyticsCore.sendExecTime('/network_manager', 'network_manager');
+            AnalyticsCore.sendScreenView('/network_manager', 'Redpitaya', 'Remote control');
+            AnalyticsCore.sendSysInfo('/network_manager');
             startUsing = performance.now();
         });
     });
 
 	$(window).on('beforeunload', function(){
-	      $.cookie('wifi_wizard-run', performance.now() - startUsing);
+	      $.cookie('network_manager-run', performance.now() - startUsing);
 	});
 
 })(jQuery);

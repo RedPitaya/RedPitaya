@@ -273,14 +273,14 @@ $(DISCOVERY):
 # Red Pitaya ecosystem and free applications
 ################################################################################
 
-APP_ECOSYSTEM_DIR  = apps-tools/ecosystem
-APP_SCPISERVER_DIR = apps-tools/scpi_server
-APP_WIFIWIZARD_DIR = apps-tools/wifi_wizard
-APP_UPDATER_DIR    = apps-tools/updater
+APP_ECOSYSTEM_DIR      = apps-tools/ecosystem
+APP_SCPISERVER_DIR     = apps-tools/scpi_server
+APP_NETWORKMANAGER_DIR = apps-tools/network_manager
+APP_UPDATER_DIR        = apps-tools/updater
 
-.PHONY: apps-tools ecosystem scpi_server updater wifi_wizard
+.PHONY: apps-tools ecosystem scpi_server updater network_manager
 
-apps-tools: ecosystem scpi_server updater wifi_wizard
+apps-tools: ecosystem scpi_server updater network_manager
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -293,9 +293,9 @@ updater: api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-wifi_wizard: api $(NGINX)
-	$(MAKE) -C $(APP_WIFIWIZARD_DIR)
-	$(MAKE) -C $(APP_WIFIWIZARD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+network_manager: api $(NGINX)
+	$(MAKE) -C $(APP_NETWORKMANAGER_DIR)
+	$(MAKE) -C $(APP_NETWORKMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya ecosystem and free applications
