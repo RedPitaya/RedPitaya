@@ -1,22 +1,26 @@
-echo Set main memory address table
-setenv addr_script 0x2000000
-setenv addr_eeprom 0x2003000
-setenv addr_linux	0x2004000
-setenv addr_dtb	0x4000000
-echo "Set devicetree and ramdisk high loading address to"
-if test ${hw_rev} = '2.0'; then  
-	echo "256MB";
-	setenv high	0x10000000; 
-	setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 mem=256M ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio" loglevel=7 dyndbg="file axidmatest.c +p"
-else 
-	echo "512MB"; 
-	setenv high 0x20000000;
-	setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio" loglevel=7 dyndbg="file axidmatest.c +p"
+# set main memory address table
+addr_script = 0x2000000
+addr_eeprom = 0x2003000
+addr_linux  = 0x2004000
+addr_dtb    = 0x4000000
 
+# set default Linux kernel boot parameters
+setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
+
+if test ${hw_rev} = '2.0'
+then  
+  high = 0x10000000 
+  setenv bootargs ${bootargs} mem=256M
+else 
+  high = 0x20000000
 fi
+echo Set devicetree and ramdisk high loading address to ${high}
 
 setenv fdt_high    ${high}
 setenv initrd_high ${high}
+
+# set additional Linux kernel boot parameters, mostly debug options
+#setenv bootargs ${bootargs} loglevel=7 dyndbg="file axidmatest.c +p"
 
 echo Loading from SD card (FAT file system) to memory
 mmcinfo
