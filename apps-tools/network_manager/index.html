@@ -109,16 +109,18 @@
                         </div>
                         <div id="eth0_inputs_entry">
                             <div style="padding-top: 6px;">
-                                <input id="ip_address_input" type="text" class="form-control eth0_inputs">
+                                <input id="ip_address_input" type="text" class="form-control inputs">
                             </div>
                             <div style="padding-top: 6px;">
-                                <input id="net_mask_input" type="text" class="form-control eth0_inputs">
+                                <input id="net_mask_input" type="text" class="form-control inputs">
                             </div>
                             <div style="padding-top: 6px;">
-                                <input id="broadcast_address_input" type="text" class="form-control eth0_inputs">
+                                <input id="broadcast_address_input" type="text" class="form-control inputs">
                             </div>
                         </div>
-                        <div><button id="network_apply_manual" class="form-control btn eth0_apply">Apply</button></div>
+                        <div>
+                            <button id="network_apply_manual" class="form-control btn eth0_apply">Apply</button>
+                        </div>
                     </div>
                     <!-- DHCP SETTINGS -->
                     <div id="eth0_dhcp_result" class="eht0_entries" style="display: none;">
@@ -138,38 +140,84 @@
                                 <label id="broadcast_address_label_dhcp" style="font-size: 13pt;">Empty</label>
                             </div>
                         </div>
-                        <div><button id="network_apply_dhcp" class="form-control btn eth0_apply">Apply</button></div>
+                        <div>
+                            <button id="network_apply_dhcp" class="form-control btn eth0_apply">Apply</button>
+                        </div>
                     </div>
                 </div>
                 <!-- WLAN0 SETUP -->
                 <div id="wlan0_block" class="net_settings_block" align=center>
-                    <div>
-                        wlan0
-                    </div>
-                    <select id="wlan0_mode" class="form-control type_select">
-                        <option selected value="dhcp">Client</option>
-                        <option value="manual">Access point</option>
-                    </select>
-                    <div id="main">
-                        <div class="wifi-main-container" style="display: none;">
-                            <div id="list_container" class="list-wifi-container">
-                                <div id="caption">Select Wi-Fi Network</div>
-                                <div id="wifi_list">
-                                    <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
+                    <div id="wlan0_block_nodongle" style="display: none;"></div>
+                    <div id="wlan0_block_entry" style="display: block;">
+                        <div>
+                            wlan0
+                        </div>
+                        <select id="wlan0_mode" class="form-control type_select">
+                            <option selected value="#wlan0_client_result">Client</option>
+                            <option value="#wlan0_access_result">Access point</option>
+                        </select>
+                        <!-- WLAN ACCESS POINT SETTINGS -->
+                        <div id="wlan0_access_result" class="wlan0_entries" style="display: none;">
+                            <div id="eth0_inputs_labels">
+                                <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
+                                <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
+                            </div>
+                            <div id="eth0_inputs_entry">
+                                <div style="padding-top: 6px;">
+                                    <input id="essid_input" type="text" class="form-control inputs">
+                                </div>
+                                <div style="padding-top: 6px;">
+                                    <input id="password_input" type="password" class="form-control inputs">
                                 </div>
                             </div>
-                            <div id="controls_container" class="control-wifi-container">
-                                <div>Or enter SSID manualy:</div>
-                                <input type="text" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="essid_enter">
-                                <div>Enter password:</div>
-                                <input type="password" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="passw_enter">
-                                <button type="button" class="btn connect-btn" id="connect_btn">Connect</button>
+                            <div>
+                                <button id="access_point_create" class="form-control btn eth0_apply">Create</button>
                             </div>
                         </div>
-                        <div class="ap-main-container" style="display: none;">
-                            <div>Access point name: Red Pitaya AP</div>
-                            <div>Password: redpitaya</div>
-                            <button type="button" class="btn connect-btn" id="apply_btn">Apply</button>
+                        <!-- WLAN CLIENT SETTINGS -->
+                        <div id="wlan0_client_result" class="wlan0_entries" style="display: block;">
+                            <div id="wifi-list"></div>
+                            <div>
+                                OR
+                            </div>
+                            <div id="eth0_inputs_labels">
+                                <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
+                                <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
+                            </div>
+                            <div id="eth0_inputs_entry">
+                                <div style="padding-top: 6px;">
+                                    <input id="essid_input_client" type="text" class="form-control inputs">
+                                </div>
+                                <div style="padding-top: 6px;">
+                                    <input id="password_input_client" type="password" class="form-control inputs">
+                                </div>
+                            </div>
+                            <div>
+                                <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
+                                <button id="clear_entry" class="form-control btn eth0_apply">Clear</button>
+                            </div>
+                        </div>
+                        <div id="main">
+                            <div class="wifi-main-container" style="display: none;">
+                                <div id="list_container" class="list-wifi-container">
+                                    <div id="caption">Select Wi-Fi Network</div>
+                                    <div id="wifi_list">
+                                        <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
+                                    </div>
+                                </div>
+                                <div id="controls_container" class="control-wifi-container">
+                                    <div>Or enter SSID manualy:</div>
+                                    <input type="text" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="essid_enter">
+                                    <div>Enter password:</div>
+                                    <input type="password" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="passw_enter">
+                                    <button type="button" class="btn connect-btn" id="connect_btn">Connect</button>
+                                </div>
+                            </div>
+                            <div class="ap-main-container" style="display: none;">
+                                <div>Access point name: Red Pitaya AP</div>
+                                <div>Password: redpitaya</div>
+                                <button type="button" class="btn connect-btn" id="apply_btn">Apply</button>
+                            </div>
                         </div>
                     </div>
                 </div>

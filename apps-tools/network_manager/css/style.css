@@ -842,7 +842,6 @@ btn:active {
     margin-left: 40%
 }
 
-
 .ap-main-container {
     /*width: 400px;*/
     /*left: 400px;*/
@@ -897,9 +896,11 @@ a.list-group-item:hover {
     background-color: #444;
 }
 
-.select_type{
-    width: 450px; margin: 10px auto;
+.select_type {
+    width: 450px;
+    margin: 10px auto;
 }
+
 .drop:hover {
     background-color: #444;
     border-color: #444;
