@@ -28,10 +28,15 @@
                     timeout: 1500
                 })
                 .fail(function(msg) {
-                    if (msg.responseText.startsWith("OK"))
+                    if (msg.responseText.startsWith("OK")) {
+                        $('#wlan0_block_entry').show();
+                        $('#wlan0_block_nodongle').hide();
                         WIZARD.nextStep();
-                    else
-                        $('#dongle_missing').modal('show');
+                    } else {
+                        // $('#dongle_missing').modal('show');
+                        $('#wlan0_block_entry').hide();
+                        $('#wlan0_block_nodongle').show();
+                    }
                 })
         }, 500);
     }
@@ -94,11 +99,11 @@
             $('#wifi_list').html(htmlList);
 
         $('.btn-wifi-item').click(function() {
-            $('#essid_enter').val($(this).attr('key'))
-            if ($('#essid_enter').val() == WIZARD.connectedESSID)
-                $('#connect_btn').text('Disconnect');
+            $('#essid_input_client').val($(this).attr('key'))
+            if ($('#essid_input_client').val() == WIZARD.connectedESSID)
+                $('#essid_input_client').text('Disconnect');
             else
-                $('#connect_btn').text('Connect');
+                $('#essid_input_client').text('Connect');
         });
     }
 
@@ -207,20 +212,20 @@ $(document).ready(function() {
 
     $('#network_apply_dhcp').click(WIZARD.RenewDHCP);
 
-    $('#essid_enter').keyup(function(event) {
-        if ($('#essid_enter').val() == WIZARD.connectedESSID)
-            $('#connect_btn').text('Disconnect');
+    $('#essid_input').keyup(function(event) {
+        if ($('#essid_input_client').val() == WIZARD.connectedESSID)
+            $('#client_connect').text('Disconnect');
         else
-            $('#connect_btn').text('Connect');
+            $('#client_connect').text('Connect');
     });
 
-    $('#connect_btn').click(function(event) {
+    $('#client_connect').click(function(event) {
         if (WIZARD.currentStep != 2)
             return;
-        var essid = $('#essid_enter').val();
-        var password = $('#passw_enter').val();
+        var essid = $('#essid_input_client').val();
+        var password = $('#passw_input_client').val();
         if (essid == "") {
-            $('#essid_enter').effect("shake");
+            $('#essid_input_client').effect("shake");
             return;
         }
         if ($(this).text() == "Connect") {
@@ -237,7 +242,7 @@ $(document).ready(function() {
                 .always(function() {
                     WIZARD.connectedESSID = '';
                 });
-            $('#connect_btn').text('Connect');
+            $('#essid_input_client').text('Connect');
         }
 
     });
@@ -263,5 +268,22 @@ $(document).ready(function() {
     $('#eth0_mode').change(function() {
         $('.eht0_entries').hide();
         $($(this).val()).show();
+    });
+
+    $('#wlan0_mode').change(function() {
+        $('.wlan0_entries').hide();
+        $($(this).val()).show();
+    });
+
+    $('#access_point_create').click(function() {
+        $.ajax({
+            url: '/wifi_create_point?essid="' + $('#essid_input').val() + '"&password="' + $('#password_input').val() + '"',
+            type: 'GET',
+        });
+    });
+
+    $('#clear_entry').click(function() {
+        $('#essid_input_client').val("");
+        $('#password_input_client').val("");
     });
 });

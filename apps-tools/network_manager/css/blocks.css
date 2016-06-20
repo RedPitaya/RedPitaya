@@ -4,11 +4,14 @@
     float: left;
     margin-left: 5px;
     margin-right: 5px;
+    /*border: 1px solid white;
+    padding-top: 10px;
+    padding-bottom: 10px;*/
 }
 
 #eth0_block {}
 
-.wlan0_block {}
+#wlan0_block {}
 
 .type_select {
     width: 250px;
@@ -22,7 +25,13 @@
     margin-top: 50px;
 }
 
-.eth0_inputs {
+.wlan0_entries {
+    width: 350px;
+    min-width: 350px;
+    margin-top: 50px;
+}
+
+.inputs {
     background-color: #444444;
 }
 
@@ -37,7 +46,7 @@
 }
 
 .eth0_apply {
-	width: 100px;
-	background-color: #555555;
-	margin-top: 15px;
+    width: 100px;
+    background-color: #555555;
+    margin-top: 15px;
 }
