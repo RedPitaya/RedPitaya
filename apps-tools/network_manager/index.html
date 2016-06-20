@@ -77,31 +77,15 @@
                 <div id="eth0_block" class="net_settings_block" align=center>
                     <div>eth0</div>
                     <select id="eth0_mode" class="form-control type_select">
-                        <option selected value="#eth0_dhcp_result">DHCP</option>
+                        <option selected value="#eth0_current_set">Current settings</option>
+                        <option value="#eth0_dhcp_result">DHCP</option>
                         <option value="#eth0_manual_result">Manual</option>
                     </select>
-                    <div id="eth0_manual_result" class="eht0_entries" style="display: none;">
+                    <!-- CURRENT SETTINGS -->
+                    <div id="eth0_current_set" class="eht0_entries" style="display: block;">
                         <div id="eth0_inputs_labels">
                             <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
-                        </div>
-                        <div id="eth0_inputs_entry">
-                            <div style="padding-top: 6px;">
-                                <input id="ip_address_input" type="text" class="form-control eth0_inputs">
-                            </div>
-                            <div style="padding-top: 6px;">
-                                <input id="broadcast_address_input" type="text" class="form-control eth0_inputs">
-                            </div>
-                            <div style="padding-top: 6px;">
-                                <input id="net_mask_input" type="text" class="form-control eth0_inputs">
-                            </div>
-                        </div>
-                    </div>
-                    <div id="eth0_dhcp_result" class="eht0_entries" style="display: block;">
-                        <div id="eth0_inputs_labels">
-                            <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
+                            <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
                             <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
                         </div>
                         <div id="eth0_inputs_entry">
@@ -109,12 +93,52 @@
                                 <label id="ip_address_label" style="font-size: 13pt;">Empty</label>
                             </div>
                             <div style="padding-top: 10px;">
-                                <label id="broadcast_address_label" style="font-size: 13pt;">Empty</label>
-                            </div>
-                            <div style="padding-top: 10px;">
                                 <label id="net_mask_label" style="font-size: 13pt;">Empty</label>
                             </div>
+                            <div style="padding-top: 10px;">
+                                <label id="broadcast_address_label" style="font-size: 13pt;">Empty</label>
+                            </div>
                         </div>
+                    </div>
+                    <!-- MANUAL SETTINGS -->
+                    <div id="eth0_manual_result" class="eht0_entries" style="display: none;">
+                        <div id="eth0_inputs_labels">
+                            <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
+                            <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
+                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
+                        </div>
+                        <div id="eth0_inputs_entry">
+                            <div style="padding-top: 6px;">
+                                <input id="ip_address_input" type="text" class="form-control eth0_inputs">
+                            </div>
+                            <div style="padding-top: 6px;">
+                                <input id="net_mask_input" type="text" class="form-control eth0_inputs">
+                            </div>
+                            <div style="padding-top: 6px;">
+                                <input id="broadcast_address_input" type="text" class="form-control eth0_inputs">
+                            </div>
+                        </div>
+                        <div><button id="network_apply_manual" class="form-control btn eth0_apply">Apply</button></div>
+                    </div>
+                    <!-- DHCP SETTINGS -->
+                    <div id="eth0_dhcp_result" class="eht0_entries" style="display: none;">
+                        <div id="eth0_inputs_labels">
+                            <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
+                            <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
+                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
+                        </div>
+                        <div id="eth0_inputs_entry">
+                            <div style="padding-top: 10px;">
+                                <label id="ip_address_label_dhcp" style="font-size: 13pt;">Empty</label>
+                            </div>
+                            <div style="padding-top: 10px;">
+                                <label id="net_mask_label_dhcp" style="font-size: 13pt;">Empty</label>
+                            </div>
+                            <div style="padding-top: 10px;">
+                                <label id="broadcast_address_label_dhcp" style="font-size: 13pt;">Empty</label>
+                            </div>
+                        </div>
+                        <div><button id="network_apply_dhcp" class="form-control btn eth0_apply">Apply</button></div>
                     </div>
                 </div>
                 <!-- WLAN0 SETUP -->

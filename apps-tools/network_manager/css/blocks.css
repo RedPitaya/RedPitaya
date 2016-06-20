@@ -35,3 +35,9 @@
     width: 175px;
     float: left;
 }
+
+.eth0_apply {
+	width: 100px;
+	background-color: #555555;
+	margin-top: 15px;
+}

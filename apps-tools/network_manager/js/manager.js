@@ -1,26 +1,26 @@
 /*
- * Red Pitaya MANAGERillMANAGERope client
+ * Red Pitaya WIZARDillWIZARDope client
  *
  * Author: Artem Kokos <a.kokos@integrasources.com>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  */
 
-(function(MANAGER, $, undefined) {
-    MANAGER.currentStep = 0;
-    MANAGER.isInReboot = false;
-    MANAGER.connectedESSID = "";
+(function(WIZARD, $, undefined) {
+    WIZARD.currentStep = 0;
+    WIZARD.isInReboot = false;
+    WIZARD.connectedESSID = "";
 
-    MANAGER.startStep = function(step) {
-        MANAGER.currentStep = step;
-        MANAGER.steps[MANAGER.currentStep]();
+    WIZARD.startStep = function(step) {
+        WIZARD.currentStep = step;
+        WIZARD.steps[WIZARD.currentStep]();
     }
 
-    MANAGER.nextStep = function() {
-        MANAGER.startStep(MANAGER.currentStep + 1);
+    WIZARD.nextStep = function() {
+        WIZARD.startStep(WIZARD.currentStep + 1);
     }
 
-    MANAGER.checkDongle = function() {
+    WIZARD.checkDongle = function() {
         setTimeout(function() {
             $.ajax({
                     url: '/check_dongle',
@@ -29,14 +29,14 @@
                 })
                 .fail(function(msg) {
                     if (msg.responseText.startsWith("OK"))
-                        MANAGER.nextStep();
+                        WIZARD.nextStep();
                     else
                         $('#dongle_missing').modal('show');
                 })
         }, 500);
     }
 
-    MANAGER.checkWirelessTools = function() {
+    WIZARD.checkWirelessTools = function() {
         setTimeout(function() {
             $.ajax({
                     url: '/check_wireless',
@@ -45,18 +45,18 @@
                 })
                 .fail(function(msg) {
                     if (msg.responseText.startsWith("OK"))
-                        MANAGER.nextStep();
+                        WIZARD.nextStep();
                     else
                         $('#wtools_missing').modal('show');
                 });
         }, 500);
     }
 
-    MANAGER.getScanResult = function(iwlistResult) {
+    WIZARD.getScanResult = function(iwlistResult) {
         if (iwlistResult == undefined || iwlistResult == "")
             return;
 
-        MANAGER.isInReboot = false;
+        WIZARD.isInReboot = false;
         $('body').addClass('loaded');
 
         var essids = iwlistResult.match(/ESSID:(".*?")/g);
@@ -88,28 +88,28 @@
         }
 
 
-        if (MANAGER.connectedESSID != "")
-            $('.btn-wifi-item[key=' + MANAGER.connectedESSID + ']').css('color', 'red');
+        if (WIZARD.connectedESSID != "")
+            $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
         if ($('#wifi_list').html() != htmlList)
             $('#wifi_list').html(htmlList);
 
         $('.btn-wifi-item').click(function() {
             $('#essid_enter').val($(this).attr('key'))
-            if ($('#essid_enter').val() == MANAGER.connectedESSID)
+            if ($('#essid_enter').val() == WIZARD.connectedESSID)
                 $('#connect_btn').text('Disconnect');
             else
                 $('#connect_btn').text('Connect');
         });
     }
 
-    MANAGER.startScan = function() {
+    WIZARD.startScan = function() {
         setInterval(function() {
             $.ajax({
                     url: '/get_wnet_list',
                     type: 'GET',
                 })
                 .fail(function(msg) {
-                    MANAGER.getScanResult(msg.responseText);
+                    WIZARD.getScanResult(msg.responseText);
                 });
             $.ajax({
                     url: '/get_connected_wlan',
@@ -119,7 +119,7 @@
                     if (msg.responseText == undefined || msg.responseText == "")
                         return;
 
-                    MANAGER.isInReboot = false;
+                    WIZARD.isInReboot = false;
                     $('body').addClass('loaded');
 
                     var essids = msg.responseText.match(/ESSID:(".*?")/g);;
@@ -129,65 +129,93 @@
                     if (essid == "Red Pitaya AP")
                         return;
                     else {
-                        MANAGER.connectedESSID = essid;
-                        $('.btn-wifi-item[key=' + MANAGER.connectedESSID + ']').css('color', 'red');
+                        WIZARD.connectedESSID = essid;
+                        $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
                     }
                 });
         }, 10000);
     }
 
-    MANAGER.GetEth0Status = function() {
+    WIZARD.RenewDHCP = function() {
         $.ajax({
-                url: '/get_eth0_status',
-                type: 'GET',
-            }).fail(function(msg) {
-                console.log(msg);
-                res1 = msg.responseText.split("          "); // 10 spaces in start of string
-                res2 = res1[1].split(" ");
-                res2.splice(0, 1);
-                res2.splice(1, 1);
-                res2.splice(2, 1);
-                res2[2] = res2[2].split("\n\n")[0]; // Remove two \n characters from last string in array
-                $('#ip_address_label').text(res2[0].split(":")[1]);
-                $('#broadcast_address_label').text(res2[1].split(":")[1]);
-                $('#net_mask_label').text(res2[2].split(":")[1]);
-            }).done(function(msg) {
-            });
+            url: '/set_eth0_dhcp',
+            type: 'GET',
+        }).fail(function(msg) {}).done(function(msg) {});
     }
 
-    MANAGER.startWaiting = function() {
-        MANAGER.isInReboot = true;
+    WIZARD.GetEth0Status = function() {
+        $.ajax({
+            url: '/get_eth0_status',
+            type: 'GET',
+        }).fail(function(msg) {
+            var res1 = msg.responseText;
+            var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
+            var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            Mask = Mask[0].split(" ")[1].split("/")[1];
+            var IPbrd = res1.match(/brd\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/);
+            IPbrd = (IPbrd != null) ? IPbrd[0].split(" ")[1] : "none";
+
+            $('#ip_address_label').text(IPaddr);
+            $('#broadcast_address_label').text(IPbrd);
+            $('#net_mask_label').text(Mask);
+
+            $('#ip_address_label_dhcp').text(IPaddr);
+            $('#broadcast_address_label_dhcp').text(IPbrd);
+            $('#net_mask_label_dhcp').text(Mask);
+
+        }).done(function(msg) {});
+    }
+
+    WIZARD.ManualSetEth0 = function() {
+        var IPaddr = $('#ip_address_input').val();
+        var Brd = $('#broadcast_address_input').val();
+        var Mask = $('#net_mask_input').val();
+        $.ajax({
+            url: '/set_eth0_manual?ipaddr="' + IPaddr + '"&brdaddr="' + Brd + '"&netmask="' + Mask + '"',
+            type: 'GET',
+        });
+        setTimeout(window.open("http://" + $('#ip_address_input').val() + "/network_manager/", "_self"), 10000);
+    }
+
+    WIZARD.startWaiting = function() {
+        WIZARD.isInReboot = true;
         $('body').removeClass('loaded');
     }
 
-    MANAGER.steps = [MANAGER.checkDongle, MANAGER.checkWirelessTools, MANAGER.startScan];
-}(window.MANAGER = window.MANAGER || {}, jQuery));
+    WIZARD.steps = [WIZARD.checkDongle, WIZARD.checkWirelessTools, WIZARD.startScan];
+}(window.WIZARD = window.WIZARD || {}, jQuery));
 
 // Page onload event handler
 $(document).ready(function() {
-    MANAGER.GetEth0Status();
+    setInterval(WIZARD.GetEth0Status, 1000);
+
     $('body').addClass('loaded');
-    MANAGER.startStep(0);
+    WIZARD.startStep(0);
     $('#get_wtools').click(function(event) {
-        MANAGER.startWaiting();
+        WIZARD.startWaiting();
         $.ajax({
                 url: '/install_wireless',
                 type: 'GET',
             })
             .fail(function(msg) {
-                MANAGER.nextStep();
+                WIZARD.nextStep();
             });
     });
 
+    $('#network_apply_manual').click(WIZARD.ManualSetEth0);
+
+    $('#network_apply_dhcp').click(WIZARD.RenewDHCP);
+
     $('#essid_enter').keyup(function(event) {
-        if ($('#essid_enter').val() == MANAGER.connectedESSID)
+        if ($('#essid_enter').val() == WIZARD.connectedESSID)
             $('#connect_btn').text('Disconnect');
         else
             $('#connect_btn').text('Connect');
     });
 
     $('#connect_btn').click(function(event) {
-        if (MANAGER.currentStep != 2)
+        if (WIZARD.currentStep != 2)
             return;
         var essid = $('#essid_enter').val();
         var password = $('#passw_enter').val();
@@ -196,7 +224,7 @@ $(document).ready(function() {
             return;
         }
         if ($(this).text() == "Connect") {
-            MANAGER.startWaiting();
+            WIZARD.startWaiting();
             $.ajax({
                 url: '/connect_wifi?essid="' + essid + '"&password="' + password + '"',
                 type: 'GET',
@@ -207,7 +235,7 @@ $(document).ready(function() {
                     type: 'GET',
                 })
                 .always(function() {
-                    MANAGER.connectedESSID = '';
+                    WIZARD.connectedESSID = '';
                 });
             $('#connect_btn').text('Connect');
         }
@@ -225,7 +253,7 @@ $(document).ready(function() {
     });
 
     $('#apply_btn').click(function() {
-        MANAGER.startWaiting();
+        WIZARD.startWaiting();
         $.ajax({
             url: '/ap_mode',
             type: 'GET',
@@ -235,6 +263,5 @@ $(document).ready(function() {
     $('#eth0_mode').change(function() {
         $('.eht0_entries').hide();
         $($(this).val()).show();
-        MANAGER.GetEth0Status();
     });
 });
