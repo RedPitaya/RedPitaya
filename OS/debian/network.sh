@@ -48,7 +48,7 @@ apt-get -y install wpasupplicant iw
 apt-get -y install wireless-tools
 
 # WiFi tools (AP)
-apt-get -y install libnl-3-dev pkg-config
+apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
 # compile hostapd
@@ -61,7 +61,6 @@ cd hostapd
 cp defconfig .config
 echo CONFIG_DRIVER_RTW=y >> .config
 echo CONFIG_LIBNL32=y    >> .config
-ln -s /lib/arm-linux-gnueabihf/libnl-genl-3.so.200 /lib/arm-linux-gnueabihf/libnl-genl-3.so
 make
 make install
 
