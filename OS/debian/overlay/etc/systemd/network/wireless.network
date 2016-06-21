@@ -1,5 +1,5 @@
 [Match]
-Name=wl*
+Name=wlan0
 
 [Network]
 DHCP=v4

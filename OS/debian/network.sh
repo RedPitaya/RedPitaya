@@ -19,6 +19,7 @@
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network                  $ROOT_DIR/etc/systemd/network/wired.network
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network               $ROOT_DIR/etc/systemd/network/wireless.network
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service         $ROOT_DIR/etc/systemd/system/wpa_supplicant@.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.service    $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.service
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
@@ -39,6 +40,8 @@ sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 # TODO: install was asking about /etc/{protocols,services}
 apt-get -y install linux-firmware
 apt-get -y install wpasupplicant iw
+
+# 
 
 # this enables placing the WiFi WPA configuration into the FAT partition
 ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
