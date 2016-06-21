@@ -48,21 +48,25 @@ apt-get -y install wpasupplicant iw
 apt-get -y install wireless-tools
 
 # WiFi tools (AP)
-apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config
+apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config libssl-dev
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
 # compile hostapd
-git clone https://github.com/pritambaral/hostapd-rtl871xdrv.git
-wget http://w1.fi/releases/hostapd-2.5.tar.gz
+apt-get -y install build-essential gcc 
+#git clone https://github.com/pritambaral/hostapd-rtl871xdrv.git
+curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/master.tar.gz -o hostapd-rtl871xdrv-master.tar.gz
+tar zxvf hostapd-rtl871xdrv-master.tar.gz
+curl -L http://w1.fi/releases/hostapd-2.5.tar.gz -o hostapd-2.5.tar.gz
 tar zxvf hostapd-2.5.tar.gz
 cd hostapd-2.5
-patch -p1 -i ../hostapd-rtl871xdrv/rtlxdrv.patch
+patch -p1 -i ../hostapd-rtl871xdrv-master/rtlxdrv.patch
 cd hostapd
 cp defconfig .config
 echo CONFIG_DRIVER_RTW=y >> .config
 echo CONFIG_LIBNL32=y    >> .config
 make
 make install
+cd ../../
 
 # this enables placing the WiFi WPA configuration into the FAT partition
 ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
