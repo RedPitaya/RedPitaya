@@ -75,7 +75,10 @@
             <div id="global_container" style="position: relative;">
                 <!-- ETH0 SETUP -->
                 <div id="eth0_block" class="net_settings_block" align=center>
-                    <div>eth0</div>
+                    <div>
+                        <div style="position: absolute;"><img src="img/net-icons/lan.png"></div>
+                        <div>eth0</div>
+                    </div>
                     <select id="eth0_mode" class="form-control type_select">
                         <option selected value="#eth0_current_set">Current settings</option>
                         <option value="#eth0_dhcp_result">DHCP</option>
@@ -147,10 +150,14 @@
                 </div>
                 <!-- WLAN0 SETUP -->
                 <div id="wlan0_block" class="net_settings_block" align=center>
-                    <div id="wlan0_block_nodongle" style="display: none;"></div>
+                    <div id="wlan0_block_nodongle" style="display: none;">
+                        <img src="img/net-icons/nodongle.png">
+                        <div style="margin-top: 15px;">WIFI DONGLE IS NOT CONNECTED</div>
+                    </div>
                     <div id="wlan0_block_entry" style="display: block;">
                         <div>
-                            wlan0
+                            <div style="position: absolute;"><img src="img/net-icons/wlan.png"></div>
+                            <div>wlan0</div>
                         </div>
                         <select id="wlan0_mode" class="form-control type_select">
                             <option selected value="#wlan0_client_result">Client</option>
