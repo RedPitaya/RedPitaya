@@ -51,6 +51,20 @@ apt-get -y install wireless-tools
 apt-get -y install libnl-3-dev pkg-config
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
+# compile hostapd
+git clone https://github.com/pritambaral/hostapd-rtl871xdrv.git
+wget http://w1.fi/releases/hostapd-2.5.tar.gz
+tar zxvf hostapd-2.5.tar.gz
+cd hostapd-2.5
+patch -p1 -i ../hostapd-rtl871xdrv/rtlxdrv.patch
+cd hostapd
+cp defconfig .config
+echo CONFIG_DRIVER_RTW=y >> .config
+echo CONFIG_LIBNL32=y    >> .config
+ln -s /lib/arm-linux-gnueabihf/libnl-genl-3.so.200 /lib/arm-linux-gnueabihf/libnl-genl-3.so
+make
+make install
+
 # this enables placing the WiFi WPA configuration into the FAT partition
 ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 
