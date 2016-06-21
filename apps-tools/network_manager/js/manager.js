@@ -21,7 +21,7 @@
     }
 
     WIZARD.checkDongle = function() {
-        setTimeout(function() {
+        setInterval(function() {
             $.ajax({
                     url: '/check_dongle',
                     type: 'GET',
@@ -38,7 +38,7 @@
                         $('#wlan0_block_nodongle').show();
                     }
                 })
-        }, 500);
+        }, 5500);
     }
 
     WIZARD.checkWirelessTools = function() {
@@ -168,6 +168,12 @@
             $('#ip_address_label_dhcp').text(IPaddr);
             $('#broadcast_address_label_dhcp').text(IPbrd);
             $('#net_mask_label_dhcp').text(Mask);
+
+            if ($('#eth0_manual_result').css('display') === 'none') {
+                $('#ip_address_input').val(IPaddr);
+                $('#broadcast_address_input').val(IPbrd);
+                $('#net_mask_input').val(Mask);
+            }
 
         }).done(function(msg) {});
     }
