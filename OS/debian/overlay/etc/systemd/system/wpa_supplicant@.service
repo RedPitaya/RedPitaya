@@ -5,6 +5,9 @@ After=sys-subsystem-net-devices-%i.device
 Before=network.target
 Wants=network.target
 
+# check for configuration file existence
+ConditionPathExists=!/opt/redpitaya/wpa_supplicant.conf
+
 # NetworkManager users will probably want the dbus version instead.
 
 [Service]

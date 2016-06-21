@@ -17,7 +17,10 @@
 
 # systemd-networkd wired/wireless network configuration (DHCP and WPA supplicant for WiFi)
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network                  $ROOT_DIR/etc/systemd/network/wired.network
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.client        $ROOT_DIR/etc/systemd/network/wireless.network.client
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.ap            $ROOT_DIR/etc/systemd/network/wireless.network.ap
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network               $ROOT_DIR/etc/systemd/network/wireless.network
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.link                  $ROOT_DIR/etc/systemd/network/wireless.link
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service         $ROOT_DIR/etc/systemd/system/wpa_supplicant@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.service    $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.service
 
@@ -41,7 +44,12 @@ sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 apt-get -y install linux-firmware
 apt-get -y install wpasupplicant iw
 
-# 
+# WiFi tools (wext)
+apt-get -y install wireless-tools
+
+# WiFi tools (AP)
+apt-get -y install libnl-3-dev pkg-config
+ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
 # this enables placing the WiFi WPA configuration into the FAT partition
 ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
@@ -60,8 +68,11 @@ ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
 # enable systemd network related services
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
-systemctl enable wpa_supplicant@wlan0.service
 systemctl enable systemd-timesyncd
+systemctl enable wpa_supplicant@wlan0.service
+systemctl enable wpa_supplicant_wext@wlan0wext.service
+systemctl enable hostapd@wlan0.service 
+systemctl enable hostapd@wlan0wext.service 
 
 # enable service for creating SSH keys on first boot
 systemctl enable ssh-reconfigure
