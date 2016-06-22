@@ -3,3 +3,4 @@ Name=eth0
 
 [Network]
 DHCP=ipv4
+IPForward=yes
