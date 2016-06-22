@@ -19,10 +19,15 @@
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network                  $ROOT_DIR/etc/systemd/network/wired.network
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.client        $ROOT_DIR/etc/systemd/network/wireless.network.client
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.ap            $ROOT_DIR/etc/systemd/network/wireless.network.ap
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network               $ROOT_DIR/etc/systemd/network/wireless.network
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.link                  $ROOT_DIR/etc/systemd/network/wireless.link
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-client.service    $ROOT_DIR/etc/systemd/system/wireless-mode-client.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-ap.service        $ROOT_DIR/etc/systemd/system/wireless-mode-ap.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service         $ROOT_DIR/etc/systemd/system/wpa_supplicant@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.service    $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostapd@.service                $ROOT_DIR/etc/systemd/system/hostapd@.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.path            $ROOT_DIR/etc/systemd/system/wpa_supplicant@.path
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.path       $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.path
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostapd@.path                   $ROOT_DIR/etc/systemd/system/hostapd@.path
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
@@ -69,7 +74,7 @@ make install
 cd ../../
 
 # this enables placing the WiFi WPA configuration into the FAT partition
-ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
 
 # this is a fix for persistent naming rules for USB network adapters
 # otherwise WiFi adapters are named "wlx[MACAddress]"
@@ -88,8 +93,14 @@ systemctl enable systemd-resolved
 systemctl enable systemd-timesyncd
 systemctl enable wpa_supplicant@wlan0.service
 systemctl enable wpa_supplicant_wext@wlan0wext.service
-systemctl enable hostapd@wlan0.service 
-systemctl enable hostapd@wlan0wext.service 
+systemctl enable hostapd@wlan0.service
+systemctl enable hostapd@wlan0wext.service
+systemctl enable wireless-mode-client.service
+systemctl enable wireless-mode-ap.service
+#systemctl enable wpa_supplicant@wlan0.path
+#systemctl enable wpa_supplicant_wext@wlan0wext.path
+#systemctl enable hostapd@wlan0.path
+#systemctl enable hostapd@wlan0wext.path
 
 # enable service for creating SSH keys on first boot
 systemctl enable ssh-reconfigure
