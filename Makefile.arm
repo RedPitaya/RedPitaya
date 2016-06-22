@@ -29,19 +29,10 @@ define GREET_MSG
 endef
 export GREET_MSG
 
-all: api libredpitaya nginx scpi examples rp_communication $(DISCOVERY) apps-tools apps-pro apps-free hostapd
+all: api libredpitaya nginx scpi examples rp_communication $(DISCOVERY) apps-tools apps-pro apps-free
 
 $(INSTALL_DIR):
 	mkdir -p $@
-
-################################################################################
-# TODO hostapd should be deprecated if kernel 4.4 is used
-################################################################################
-
-.PHONY: hostapd
-
-hostapd:
-	$(MAKE) -C OS/buildroot/hostapd install INSTALL_DIR=$(INSTALL_DIR)/sbin
 
 ################################################################################
 # API libraries
