@@ -16,7 +16,9 @@
 #ln -s                                                          wlan0.ap                  $ROOT_DIR/etc/network/interfaces.d/wlan0
 
 # systemd-networkd wired/wireless network configuration (DHCP and WPA supplicant for WiFi)
+mkdir                                                                                    $ROOT_DIR/etc/iptables
 install -v -m 664 -o root -D $OVERLAY/etc/iptables/iptables.rules                        $ROOT_DIR/etc/iptables/iptables.rules
+install -V -m 755 -o root -D $OVERLAY/etc/systemd/system/iptables-flush                  $ROOT_DIR/etc/systemd/system/iptables-flush
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network                  $ROOT_DIR/etc/systemd/network/wired.network
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.client        $ROOT_DIR/etc/systemd/network/wireless.network.client
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.ap            $ROOT_DIR/etc/systemd/network/wireless.network.ap
@@ -99,7 +101,7 @@ systemctl enable hostapd@wlan0.service
 systemctl enable hostapd@wlan0wext.service
 systemctl enable wireless-mode-client.service
 systemctl enable wireless-mode-ap.service
-#systemctl enable iptables.service
+systemctl enable iptables.service
 #systemctl enable wpa_supplicant@wlan0.path
 #systemctl enable wpa_supplicant_wext@wlan0wext.path
 #systemctl enable hostapd@wlan0.path
