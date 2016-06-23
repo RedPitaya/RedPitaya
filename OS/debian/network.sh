@@ -16,6 +16,7 @@
 #ln -s                                                          wlan0.ap                  $ROOT_DIR/etc/network/interfaces.d/wlan0
 
 # systemd-networkd wired/wireless network configuration (DHCP and WPA supplicant for WiFi)
+install -v -m 664 -o root -D $OVERLAY/etc/iptables/iptables.rules                        $ROOT_DIR/etc/iptables/iptables.rules
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network                  $ROOT_DIR/etc/systemd/network/wired.network
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.client        $ROOT_DIR/etc/systemd/network/wireless.network.client
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.ap            $ROOT_DIR/etc/systemd/network/wireless.network.ap
@@ -25,6 +26,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-ap.servic
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service         $ROOT_DIR/etc/systemd/system/wpa_supplicant@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.service    $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostapd@.service                $ROOT_DIR/etc/systemd/system/hostapd@.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/iptables.service                $ROOT_DIR/etc/systemd/system/iptables.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.path            $ROOT_DIR/etc/systemd/system/wpa_supplicant@.path
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.path       $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.path
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostapd@.path                   $ROOT_DIR/etc/systemd/system/hostapd@.path
@@ -97,6 +99,7 @@ systemctl enable hostapd@wlan0.service
 systemctl enable hostapd@wlan0wext.service
 systemctl enable wireless-mode-client.service
 systemctl enable wireless-mode-ap.service
+#systemctl enable iptables.service
 #systemctl enable wpa_supplicant@wlan0.path
 #systemctl enable wpa_supplicant_wext@wlan0wext.path
 #systemctl enable hostapd@wlan0.path
