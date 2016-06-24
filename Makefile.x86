@@ -109,7 +109,7 @@ $(UBOOT): $(UBOOT_DIR)
 	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
 	cp $</u-boot $@
 
-$(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR)
+$(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
 
 $(ENVTOOLS_CFG): $(UBOOT_DIR)
