@@ -14,6 +14,7 @@ ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key
 ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key.pub
 
 [Service]
+Type=oneshot
 ExecStart=/usr/sbin/dpkg-reconfigure openssh-server
 
 [Install]
