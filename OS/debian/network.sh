@@ -33,6 +33,11 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.path   
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.path       $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.path
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostapd@.path                   $ROOT_DIR/etc/systemd/system/hostapd@.path
 
+# Avahi daemon configuration files
+install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/ssh.service                     $ROOT_DIR/etc/avahi/services/ssh.service
+install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/bazaar.service                  $ROOT_DIR/etc/avahi/services/bazaar.service
+install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/scpi.service                    $ROOT_DIR/etc/avahi/services/scpi.service
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
 apt-get -y install iproute2 iputils-ping curl
@@ -88,8 +93,8 @@ ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
 # TODO: this link is currently created at the end of the install process, just before unmounting the image (ubuntu.sh)
 #ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
-# there is a Systemd approach to this, might be used later
-#sed -i '/^#net.ipv4.ip_forward=1$/s/^#//' /etc/sysctl.conf
+# Avahi daemon
+apt-get -y install avahi-daemon
 
 # enable systemd network related services
 systemctl enable systemd-networkd
@@ -106,6 +111,7 @@ systemctl enable iptables.service
 #systemctl enable wpa_supplicant_wext@wlan0wext.path
 #systemctl enable hostapd@wlan0.path
 #systemctl enable hostapd@wlan0wext.path
+systemctl enable avahi-daemon.service
 
 # enable service for creating SSH keys on first boot
 systemctl enable ssh-reconfigure
