@@ -15,4 +15,4 @@ PIDFile=/run/hostapd.pid
 ExecStart=/usr/local/bin/hostapd /etc/hostapd/hostapd.conf -P /run/hostapd.pid -B
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sys-subsystem-net-devices-%i.device
