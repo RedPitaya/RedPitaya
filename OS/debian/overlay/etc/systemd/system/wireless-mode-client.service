@@ -8,7 +8,7 @@ Wants=network.target
 ConditionPathExists=/opt/redpitaya/wpa_supplicant.conf
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/bin/ln -sf wireless.network.client /etc/systemd/network/wireless.network
 
 [Install]
