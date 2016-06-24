@@ -1,6 +1,5 @@
 [Match]
 Driver=rtl8192cu
-Type=wlan
 
 [Link]
-Name=wlan0-wext
+Name=wlan0wext
