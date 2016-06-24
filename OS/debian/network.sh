@@ -65,6 +65,7 @@ apt-get -y install wireless-tools
 
 # WiFi tools (AP)
 apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config libssl-dev
+mkdir -p /etc/hostapd/
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
 # compile hostapd
