@@ -68,6 +68,7 @@ apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config libssl-dev
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
 # compile hostapd
+apt-get -y install iptables
 apt-get -y install build-essential gcc 
 #git clone https://github.com/pritambaral/hostapd-rtl871xdrv.git
 curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/master.tar.gz -o hostapd-rtl871xdrv-master.tar.gz
