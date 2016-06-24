@@ -23,6 +23,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network         
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.client        $ROOT_DIR/etc/systemd/network/wireless.network.client
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.ap            $ROOT_DIR/etc/systemd/network/wireless.network.ap
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/10-wireless.link               $ROOT_DIR/etc/systemd/network/10-wireless.link
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/ssh-reconfigure.service         $ROOT_DIR/etc/systemd/system/ssh-reconfigure.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-client.service    $ROOT_DIR/etc/systemd/system/wireless-mode-client.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-ap.service        $ROOT_DIR/etc/systemd/system/wireless-mode-ap.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service         $ROOT_DIR/etc/systemd/system/wpa_supplicant@.service
