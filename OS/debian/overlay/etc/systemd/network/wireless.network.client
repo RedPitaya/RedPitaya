@@ -1,5 +1,6 @@
 [Match]
-Name=wlan0*
+Name=wlan*
 
 [Network]
-DHCP=v4
+LinkLocalAddressing=yes
+DHCP=yes
