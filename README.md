@@ -37,7 +37,7 @@ sudo apt-get install make curl xz-utils
 sudo apt-get install libssl-dev device-tree-compiler u-boot-tools
 ```
 
-2. Xilinx [Vivado 2016.1](http://www.xilinx.com/support/download.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
+2. Xilinx [Vivado 2016.2](http://www.xilinx.com/support/download.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
 
 4. Missing `gmake` path
 

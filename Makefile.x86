@@ -6,7 +6,7 @@ DL ?= dl
 
 UBOOT_TAG     = xilinx-v2016.1
 LINUX_TAG     = xilinx-v2016.1
-DTREE_TAG     = xilinx-v2016.1
+DTREE_TAG     = xilinx-v2016.2
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
