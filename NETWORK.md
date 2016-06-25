@@ -1,6 +1,6 @@
 # Quick setup
 
-**NOTE: a reboot is required to switch betwee access point and client modes.**
+**NOTE: a reboot is required to switch between access point and client modes.**
 
 ## WiFi client
 
@@ -20,7 +20,7 @@ Restart wpa supplicant:
 
 ## WiFi access point
 
-Write a `hostapd.conf` configuration file to the FAT partition,
+Write a [`hostapd.conf`](https://w1.fi/cgit/hostap/plain/hostapd/hostapd.conf) configuration file to the FAT partition,
 and remove the `wpa_supplicant.conf` client configuration file if exists:
 ```bash
 # rw
@@ -175,8 +175,8 @@ The [`hostapd@.service`](OS/debian/overlay/etc/systemd/system/hostapd@.service)
 is handling the start of the daemon. Hotplugging is achieved the same way as with
 `wpa_supplicant@.service`.
 
-To enable access point mode a configuration file `hostapd.conf` must be placed on
-the FAT partition on the SD card, and the client mode configuration file `wpa_supplicant.conf`
+To enable access point mode a configuration file [`hostapd.conf`](https://w1.fi/cgit/hostap/plain/hostapd/hostapd.conf)
+ must be placed on the FAT partition on the SD card, and the client mode configuration file `wpa_supplicant.conf`
 must be removed. Inside a shell on Red Pitaya this file is visible as `/opt/redpitaya/hostapd.conf`.
 
 The next example `hostapd.conf` file is for the `rtl871xdrv` driver:
