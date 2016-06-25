@@ -141,6 +141,9 @@ $(LINUX_DIR): $(LINUX_TAR)
 	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
 	cp -r patches/redpitaya $@/drivers/
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
+	# WiFi patches
+	cp -r patches/rtl8192cu $@/drivers/net/wireless/
+	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
@@ -175,6 +178,7 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 	cp patches/amba_pl.sh patches/rmamba_pl.sh $(INSTALL_DIR)
 	cp $(FPGA2_DIR)/sdk/dts/pl.dtsi.orig $(FPGA2_DIR)/sdk/dts/pl.dtsi
 	cp $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi.orig $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi
+
 ################################################################################
 # boot file generator
 ################################################################################
