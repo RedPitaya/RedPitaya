@@ -1,10 +1,35 @@
 # Quick setup
 
+**NOTE: a reboot is required to switch betwee access point and client modes.**
+
 ## WiFi client
 
 List wireless access pints:
+```bash
+# iwlist scan
+```
+Write a `wpa_supplicant.conf` configuration file to the FAT partition:
+```bash
+# rw
+$ wpa_passphrase <ssid> [passphrase] > /opt/redpitaya/wpa_supplicant.conf
+```
+Restart wpa supplicant:
+```bash
+# systemctl restart wpa_supplicant_wext@wlan0wext.service
 ```
 
+## WiFi access point
+
+Write a `hostapd.conf` configuration file to the FAT partition,
+and remove the `wpa_supplicant.conf` client configuration file if exists:
+```bash
+# rw
+$ nano /opt/redpitaya/hostapd.conf
+$ rm /opt/redpitaya/wpa_supplicant.conf
+```
+Restart access point service:
+```bash
+# systemctl restart hostapd@wlan0wext.service
 ```
 
 # Network configuration
