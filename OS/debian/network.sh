@@ -81,7 +81,7 @@ ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
 #ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 # Avahi daemon
-apt-get -y install avahi-daemon
+apt-get -y install avahi-daemon libnss-mdns
 
 # enable systemd network related services
 systemctl enable systemd-networkd
@@ -98,8 +98,12 @@ systemctl enable iptables.service
 #systemctl enable wpa_supplicant_wext@wlan0wext.path
 #systemctl enable hostapd@wlan0.path
 #systemctl enable hostapd@wlan0wext.path
+
+# zeroconf/avahi
 systemctl enable hostname-mac.service
 systemctl enable avahi-daemon.service
+mkdir -p /etc/systemd/system/avahi-daemon.service.d
+printf "[Unit]\nAfter = systemd-resolved.service\n" > /etc/systemd/system/avahi-daemon.service.d/ad.conf
 
 # enable service for creating SSH keys on first boot
 systemctl enable ssh-reconfigure
