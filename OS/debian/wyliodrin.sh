@@ -21,7 +21,7 @@ echo “127.0.0.1 localhost” >> /etc/hosts
 
 sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools
 sudo apt-get install -y git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config
-sudo apt-get install -y libhiredis0.10 libhiredis-dev redis-server libevent-dev
+sudo apt-get install -y libhiredis0.13 libhiredis-dev redis-server libevent-dev
 
 ################################################################################
 # install node.js
@@ -29,7 +29,7 @@ sudo apt-get install -y libhiredis0.10 libhiredis-dev redis-server libevent-dev
 
 #sudo apt-get install -y nodejs npm
 apt-get install wget
-wget https://gist.github.com/raw/3245130/v0.10.24/node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz 
+wget https://gist.github.com/raw/3245130/v0.10.24/node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
 tar xvzf node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
 cd node-v0.10.24-linux-arm-armv6j-vfp-hard
 cp -R * /usr/local
@@ -80,6 +80,7 @@ git config --global http.sslVerify false
 #git clone https://github.com/Wyliodrin/libwyliodrin.git
 git clone https://github.com/RedPitaya/libwyliodrin.git
 cd libwyliodrin/
+git checkout red-pitaya
 mkdir build
 cd build
 # header file and dynamic library are not yet in the path
