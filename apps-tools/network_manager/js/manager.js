@@ -180,6 +180,19 @@
         }).done(function(msg) {});
     }
 
+    WIZARD.checkMasterModeWifi = function() {
+        $.ajax({
+            url: '/get_ap_status',
+            type: 'GET',
+        }).fail(function(msg) {
+            if (msg.responseText == "OK\n") {
+                $('#access_point_create').text("Remove");
+            } else {
+                $('#access_point_create').text("Create");
+            }
+        });
+    }
+
     WIZARD.ManualSetEth0 = function() {
         var IPaddr = $('#ip_address_input').val();
         var Brd = $('#broadcast_address_input').val();
@@ -202,6 +215,7 @@
 // Page onload event handler
 $(document).ready(function() {
     setInterval(WIZARD.GetEth0Status, 1000);
+    setInterval(WIZARD.checkMasterModeWifi, 2000);
 
     $('body').addClass('loaded');
     WIZARD.startStep(0);
@@ -284,10 +298,17 @@ $(document).ready(function() {
     });
 
     $('#access_point_create').click(function() {
-        $.ajax({
-            url: '/wifi_create_point?essid="' + $('#essid_input').val() + '"&password="' + $('#password_input').val() + '"',
-            type: 'GET',
-        });
+        if ($('#access_point_create').text() == "Create") {
+            $.ajax({
+                url: '/wifi_create_point?essid="' + $('#essid_input').val() + '"&password="' + $('#password_input').val() + '"',
+                type: 'GET',
+            });
+        } else {
+            $.ajax({
+                url: '/remove_ap',
+                type: 'GET',
+            });
+        }
     });
 
     $('#clear_entry').click(function() {

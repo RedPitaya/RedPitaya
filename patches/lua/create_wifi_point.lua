@@ -4,6 +4,7 @@ local shell = require("shell")
 local args = ngx.req.get_uri_args()
 
 local status, out, err = shell.execute("rm -f /opt/redpitaya/wpa_supplicant.conf")
+local status, out, err = shell.execute("systemctl stop wpa_supplicant_wext@wlan0wext.service")
 local status, out, err = shell.execute("rm -f /opt/redpitaya/hostapd.conf")
 
 local status, out, err = shell.execute("echo interface=wlan0wext >> /opt/redpitaya/hostapd.conf")
