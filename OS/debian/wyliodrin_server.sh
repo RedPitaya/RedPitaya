@@ -112,14 +112,6 @@ ldconfig
 cd $SANDBOX_PATH
 rm -rf pybass
 
-# Install BrickPi
-cd $SANDBOX_PATH
-git clone https://github.com/DexterInd/BrickPi_Python.git
-cd BrickPi_Python
-python setup.py install
-cd $SANDBOX_PATH
-rm -rf BrickPi_Python
-
 # Install node
 cd $SANDBOX_PATH
 wget https://gist.githubusercontent.com/raw/3245130/v0.10.24/node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
@@ -132,12 +124,14 @@ rm -rf node-v0.10.24-linux-arm-armv6j-vfp-hard
 
 # Install libwyliodrin
 cd $SANDBOX_PATH
-git clone https://github.com/Wyliodrin/libwyliodrin.git
+#git clone https://github.com/Wyliodrin/libwyliodrin.git
+git clone https://github.com/RedPitaya/libwyliodrin.git
 cd libwyliodrin
-git checkout $LWVERSION
+#git checkout $LWVERSION
+git checkout red-pitaya
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DRASPBERRYPI=ON ..
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DREDPITAYA=ON -DSWIG_EXECUTABLE=/usr/bin/swig3.0 -DREDPITAYA_LIBRARIES=/opt/redpitaya/lib/librp.so -DREDPITAYA_INCLUDE_DIR=/opt/redpitaya/include ..
 make
 make install
 cd $SANDBOX_PATH
@@ -161,7 +155,7 @@ cd wyliodrin-server
 git checkout $WVERSION
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DRASPBERRYPI=ON ..
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DREDPITAYA=ON -DSWIG_EXECUTABLE=/usr/bin/swig3.0 -DREDPITAYA_LIBRARIES=/opt/redpitaya/lib/librp.so -DREDPITAYA_INCLUDE_DIR=/opt/redpitaya/include ..
 make
 make install
 cd $SANDBOX_PATH
@@ -194,23 +188,23 @@ rm -rf wyliodrin-app-server
 
 # Set boardtype to raspberry
 mkdir -p /etc/wyliodrin
-echo -n raspberrypi > /etc/wyliodrin/boardtype
+echo -n redpitaya > /etc/wyliodrin/boardtype
 
-# Create settings_raspberry.json
+# Create settings_redpitaya.json
 printf '{
   "config_file":  "/boot/wyliodrin.json",
   "home":         "/wyliodrin",
   "mount_file":   "/wyliodrin/projects/mnt",
   "build_file":   "/wyliodrin/projects/build",
   "shell":        "bash",
-  "run":          "sudo -E make -f Makefile.raspberrypi run",
+  "run":          "sudo -E make -f Makefile.redpitaya run",
   "stop":         "sudo kill -9",
   "poweroff":     "sudo poweroff",
   "logout":       "/etc/wyliodrin/logs.out",
   "logerr":       "/etc/wyliodrin/logs.err",
   "hlogout":      "/etc/wyliodrin/hlogs.out",
   "hlogerr":      "/etc/wyliodrin/hlogs.err"
-}\n' > /etc/wyliodrin/settings_raspberrypi.json
+}\n' > /etc/wyliodrin/settings_redpitaya.json
 
 # Create home
 mkdir /wyliodrin
