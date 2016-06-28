@@ -87,6 +87,8 @@ apt-get -y install avahi-daemon libnss-mdns
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
 systemctl enable systemd-timesyncd
+
+# wireless related services
 systemctl enable wpa_supplicant@wlan0.service
 systemctl enable wpa_supplicant_wext@wlan0wext.service
 systemctl enable hostapd@wlan0.service
@@ -106,5 +108,5 @@ mkdir -p /etc/systemd/system/avahi-daemon.service.d
 printf "[Unit]\nAfter = systemd-resolved.service\n" > /etc/systemd/system/avahi-daemon.service.d/ad.conf
 
 # enable service for creating SSH keys on first boot
-systemctl enable ssh-reconfigure
+systemctl enable ssh-reconfigure.service
 EOF_CHROOT
