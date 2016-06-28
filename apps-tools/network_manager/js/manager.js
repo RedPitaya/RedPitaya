@@ -31,14 +31,16 @@
                     if (msg.responseText.startsWith("OK")) {
                         $('#wlan0_block_entry').show();
                         $('#wlan0_block_nodongle').hide();
-                        WIZARD.nextStep();
                     } else {
                         // $('#dongle_missing').modal('show');
                         $('#wlan0_block_entry').hide();
                         $('#wlan0_block_nodongle').show();
                     }
                 })
-        }, 5500);
+        }, 3000);
+        if(WIZARD.currentStep > 2)
+            WIZARD.currentStep = 0;
+        WIZARD.nextStep();
     }
 
     WIZARD.checkWirelessTools = function() {
@@ -101,9 +103,9 @@
         $('.btn-wifi-item').click(function() {
             $('#essid_input_client').val($(this).attr('key'))
             if ($('#essid_input_client').val() == WIZARD.connectedESSID)
-                $('#essid_input_client').text('Disconnect');
+                $('#client_connect').text('Disconnect');
             else
-                $('#essid_input_client').text('Connect');
+                $('#client_connect').text('Connect');
         });
     }
 
