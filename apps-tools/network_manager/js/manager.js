@@ -226,10 +226,10 @@ $(document).ready(function() {
     });
 
     $('#client_connect').click(function(event) {
-        if (WIZARD.currentStep != 2)
-            return;
+        // if (WIZARD.currentStep != 2)
+        //     return;
         var essid = $('#essid_input_client').val();
-        var password = $('#passw_input_client').val();
+        var password = $('#password_input_client').val();
         if (essid == "") {
             $('#essid_input_client').effect("shake");
             return;

@@ -183,25 +183,29 @@
                         </div>
                         <!-- WLAN CLIENT SETTINGS -->
                         <div id="wlan0_client_result" class="wlan0_entries" style="display: block;">
-                            <div id="wifi-list"></div>
-                            <div>
+                            <div id="wifi_list">
+                                <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
+                            </div>
+                            <div id="separator_or">
                                 OR
                             </div>
-                            <div id="eth0_inputs_labels">
-                                <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
-                                <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
-                            </div>
-                            <div id="eth0_inputs_entry">
-                                <div style="padding-top: 6px;">
-                                    <input id="essid_input_client" type="text" class="form-control inputs">
-                                </div>
-                                <div style="padding-top: 6px;">
-                                    <input id="password_input_client" type="password" class="form-control inputs">
-                                </div>
-                            </div>
                             <div>
-                                <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
-                                <button id="clear_entry" class="form-control btn eth0_apply">Clear</button>
+                                <div id="eth0_inputs_labels">
+                                    <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
+                                </div>
+                                <div id="eth0_inputs_entry">
+                                    <div style="padding-top: 6px;">
+                                        <input id="essid_input_client" type="text" class="form-control inputs">
+                                    </div>
+                                    <div style="padding-top: 6px;">
+                                        <input id="password_input_client" type="password" class="form-control inputs">
+                                    </div>
+                                </div>
+                                <div>
+                                    <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
+                                    <button id="clear_entry" class="form-control btn eth0_apply">Clear</button>
+                                </div>
                             </div>
                         </div>
                         <div id="main">

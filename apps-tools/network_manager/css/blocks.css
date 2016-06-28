@@ -60,3 +60,12 @@
     max-width: 320px;
     color: #abac0c;
 }
+
+#wifi_list {
+    text-align: left;
+    width: 200px;
+}
+
+#separator_or {
+    width: 200px;
+}
