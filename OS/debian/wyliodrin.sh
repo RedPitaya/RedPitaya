@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ################################################################################
 # Authors:
 # - Ioana Culic <ioana.culic@wyliodrin.com>
@@ -5,19 +7,6 @@
 # License:
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
-
-# Wyliodrin service
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
-
-# this file is otherwise available on the mounted FAT partion, should be removed later
-mkdir -p $ROOT_DIR/opt/redpitaya/lib
-mkdir -p $ROOT_DIR/opt/redpitaya/include/redpitaya
-cp -r $BOOT_DIR/opt/redpitaya/lib     $ROOT_DIR/opt/redpitaya/
-cp -r $BOOT_DIR/opt/redpitaya/include $ROOT_DIR/opt/redpitaya/
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-echo “127.0.1.1 red-pitaya” >> /etc/hosts
-echo “127.0.0.1 localhost” >> /etc/hosts
 
 sudo apt-get install -y libfuse-dev libicu-dev libjansson-dev libi2c-dev i2c-tools
 sudo apt-get install -y git python python-redis python-dev swig3.0 libpcre3 cmake pkg-config
@@ -48,7 +37,7 @@ rm -f  node-v0.10.24-linux-arm-armv6j-vfp-hard.tar.gz
 # sudo apt-get install -y nodejs
 
 ################################################################################
-# setup Fuse
+# setup Fuse and user running wyliodrin
 ################################################################################
 
 mkdir /wyliodrin
@@ -102,8 +91,3 @@ systemctl enable redpitaya_wyliodrin
 
 # stop the redos-server service, since it is keeping open the mounted fylesystem
 systemctl stop redis-server
-EOF_CHROOT
-
-# removing directory which belongs to a mounted FAT patrition
-rm -rf $ROOT_DIR/opt/redpitaya/lib
-rm -rf $ROOT_DIR/opt/redpitaya/include
