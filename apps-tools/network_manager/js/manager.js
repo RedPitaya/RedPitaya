@@ -38,7 +38,7 @@
                     }
                 })
         }, 3000);
-        if(WIZARD.currentStep > 2)
+        if (WIZARD.currentStep > 2)
             WIZARD.currentStep = 0;
         WIZARD.nextStep();
     }
