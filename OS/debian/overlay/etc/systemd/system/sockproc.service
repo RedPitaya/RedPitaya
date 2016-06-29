@@ -1,6 +1,6 @@
 [Unit]
 Description=sockproc enables Lua running shell scripts
-Before=redpitaya_nginx.service
+After=redpitaya_nginx.service
 Wants=network.target
 
 [Service]
@@ -9,4 +9,4 @@ Type=forking
 ExecStart=/opt/redpitaya/sbin/sockproc /tmp/shell.sock
 
 [Install]
-WantedBy=redpitaya_nginx.service
+WantedBy=multi-user.target
