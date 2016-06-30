@@ -56,7 +56,7 @@ dpkg-reconfigure --frontend=noninteractive tzdata
 #add-apt-repository -yu ppa:redpitaya/zynq
 
 # development tools
-apt-get -y install build-essential less vim sudo u-boot-tools usbutils psmisc lsof
+apt-get -y install build-essential less vim nano sudo u-boot-tools usbutils psmisc lsof
 apt-get -y install parted dosfstools
 EOF_CHROOT
 
