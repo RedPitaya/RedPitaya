@@ -1,0 +1,22 @@
+diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
+index d0e7dfc..b133b4e 100644
+--- a/drivers/spi/spidev.c
++++ b/drivers/spi/spidev.c
+@@ -692,12 +692,13 @@ static const struct file_operations spidev_fops = {
+ static struct class *spidev_class;
+ 
+ #ifdef CONFIG_OF
+-static const struct of_device_id spidev_dt_ids[] = {
+-	{ .compatible = "rohm,dh2228fv" },
+-	{ .compatible = "lineartechnology,ltc2488" },
+-	{},
++static struct of_device_id spidev_dt_ids[] = {
++	{ /* This is filled with module_parm */ },
++	{ /* Sentinel */ },
+ };
+ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
++module_param_string(of_id, spidev_dt_ids[0].compatible, 128, 0);
++MODULE_PARM_DESC(of_id, "Openfirmware id of the device to be handled by spidev");
+ #endif
+ 
+ /*-------------------------------------------------------------------------*/
