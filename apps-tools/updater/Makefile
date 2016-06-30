@@ -28,7 +28,7 @@ $(CONTROLLER):
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r fpga.conf css fonts img *.html info js *.sh daemon target/$(APP)
+	cp -r nginx.conf fpga.conf css fonts img *.html info js *.sh daemon target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *

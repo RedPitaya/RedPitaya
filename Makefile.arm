@@ -146,7 +146,7 @@ $(NGINX_TAR): | $(DL)
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-	cp -f patches/nginx.conf $@/conf/
+	cp -f apps-tools/nginx.conf $@/conf/
 	mkdir $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 
