@@ -5,7 +5,7 @@ setenv addr_linux  0x02004000
 setenv addr_dtb    0x04000000
 
 # set default Linux kernel boot parameters
-setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio" spidev_dt_ids.of_id="spidev1"
+setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
 
 if test ${hw_rev} = '2.0'
 then  
