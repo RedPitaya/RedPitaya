@@ -44,6 +44,9 @@ apt-get -y install libcurl4-openssl-dev
 apt-get -y install libssl-dev
 apt-get -y install libjpeg-dev
 
+# libraries used by lcrmeter
+sudo apt-get install -y libi2c-dev i2c-tools
+
 # tools used to compile applications
 apt-get -y install zip
 
