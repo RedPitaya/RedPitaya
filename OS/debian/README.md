@@ -153,3 +153,10 @@ systemd-analyze plot > /opt/redpitaya/www/apps/systemd-plot.svg
 systemd-analyze dot | dot -Tsvg > /opt/redpitaya/www/apps/systemd-dot.svg
 
 ```
+
+## WiFi
+
+```
+wpa_passphrase MyNetwork SuperSecretPassphrase > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+```
+

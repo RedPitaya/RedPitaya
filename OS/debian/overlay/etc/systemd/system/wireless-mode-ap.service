@@ -1,0 +1,16 @@
+[Unit]
+Description=Wireless mode set AP
+Before=hostapd@.service
+Before=systemd-networkd.service
+Wants=network.target
+
+# check existence of configuration file
+ConditionPathExists= /opt/redpitaya/hostapd.conf
+ConditionPathExists=!/opt/redpitaya/wpa_supplicant.conf
+
+[Service]
+Type=oneshot
+ExecStart=/bin/ln -sf wireless.network.ap /etc/systemd/network/wireless.network
+
+[Install]
+WantedBy=multi-user.target

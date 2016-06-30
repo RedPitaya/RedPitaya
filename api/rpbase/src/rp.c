@@ -272,7 +272,8 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
     uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
-        return RP_ELID;
+        if (direction == RP_OUT)  return RP_OK;
+        else                      return RP_ELID;
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;

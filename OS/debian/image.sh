@@ -8,7 +8,7 @@
 ################################################################################
 
 ################################################################################
-# prepating and mounting image
+# prepating image
 ################################################################################
 
 # current time and date are used to create the image name
@@ -18,7 +18,7 @@ DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 SIZE=3500
 
 #IMAGE=$1
-IMAGE=redpitaya_debian_${DATE}.img
+IMAGE=redpitaya_ubuntu_${DATE}.img
 
 dd if=/dev/zero of=$IMAGE bs=1M count=$SIZE
 
@@ -41,6 +41,10 @@ ROOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '3!d'`
 mkfs.vfat -v    $BOOT_DEV
 mkfs.ext4 -F -j $ROOT_DEV
 
+################################################################################
+# umount image
+################################################################################
+
 # Mount file systems
 mkdir -p $BOOT_DIR $ROOT_DIR
 mount $BOOT_DEV $BOOT_DIR
@@ -50,27 +54,11 @@ mount $ROOT_DEV $ROOT_DIR
 # install OS
 ################################################################################
 
-OVERLAY=OS/debian/overlay
-
-. OS/debian/debian.sh 
-
-# enable chroot access with native execution
-cp /etc/resolv.conf         $ROOT_DIR/etc/
-cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
-
-. OS/debian/redpitaya.sh
-#. OS/debian/wyliodrin.sh
-
-# disable chroot access with native execution
-rm $ROOT_DIR/etc/resolv.conf
-rm $ROOT_DIR/usr/bin/qemu-arm-static
+. OS/debian/ubuntu.sh 
 
 ################################################################################
 # umount image
 ################################################################################
-
-# create a tarball
-tar -cvpzf redpitaya_debian_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 
 # Unmount file systems
 umount $BOOT_DIR $ROOT_DIR

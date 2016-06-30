@@ -1,0 +1,6 @@
+[Match]
+Name=wlan*
+
+[Network]
+LinkLocalAddressing=yes
+DHCP=yes

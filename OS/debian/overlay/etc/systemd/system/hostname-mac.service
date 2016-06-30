@@ -1,0 +1,14 @@
+[Unit]
+Description=Set hostname to redpitaya-[MAC]
+Before=systemd-networkd.service
+#Before=systemd-hostnamed.service
+Before=avahi-daemon.service
+
+[Service]
+Type=oneshot
+#ExecStart=/bin/sh -c "echo redpitaya-`sed 's/://g' /sys/class/net/eth0/address` > /etc/hostname"
+#ExecStart=/bin/sh -c "hostnamectl set-hostname redpitaya-`cat /sys/class/net/eth0/address`"
+ExecStart=/bin/sh -c "hostnamectl set-hostname redpitaya-`sed 's/://g' /sys/class/net/eth0/address`"
+
+[Install]
+WantedBy=multi-user.target

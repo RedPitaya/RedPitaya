@@ -10,10 +10,13 @@ different places one would expect.
 | directories  | contents
 |--------------|----------------------------------------------------------------
 | api          | `librp.so` API source code
+| api2         | `librp2.so` API source code
 | Applications | WEB applications (controller modules & GUI clients).
 | apps-free    | WEB application for the old environment (also with controller modules & GUI clients).
+| apps-tools   | WEB interface home page and some system management applications
 | Bazaar       | Nginx server with dependencies, Bazaar module & application controller module loader.
 | fpga         | FPGA design (RTL, bench, simulation and synthesis scripts)
+| fpga2        | FPGA design (RTL, bench, simulation and synthesis scripts) SystemVerilog based for newer applications
 | OS/buildroot | GNU/Linux operating system components
 | patches      | Directory containing patches
 | scpi-server  | SCPI server
@@ -37,7 +40,7 @@ sudo apt-get install make curl xz-utils
 sudo apt-get install libssl-dev device-tree-compiler u-boot-tools
 ```
 
-2. Xilinx [Vivado 2016.1](http://www.xilinx.com/support/download.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
+2. Xilinx [Vivado 2016.2](http://www.xilinx.com/support/download.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
 
 4. Missing `gmake` path
 
@@ -66,19 +69,21 @@ mkdir -p dl
 export DL=$PWD/dl
 ```
 
-Download an ARM debian root environment (usually the latest) from Red Pitaya download servers. You can also create your own root environment following instructions in [OS/debian/README.md]. Correct file permissions are required for `schroot` to work properly.
+Download the ARM Ubuntu root environment (usually the latest) from Red Pitaya download servers.
+You can also create your own root environment following instructions in [OS/debian/README.md].
+Correct file permissions are required for `schroot` to work properly.
 ```
-wget http://downloads.redpitaya.com/downloads/debian_armhf_time_date.tar.gz
-sudo chown root:root debian_armhf_time_date.tar.gz
-sudo chmod 664 debian_armhf_time_date.tar.gz
+wget http://downloads.redpitaya.com/ubuntu/redpitaya_ubuntu-latest.tar.gz
+sudo chown root:root redpitaya_ubuntu-latest.tar.gz
+sudo chmod 664 redpitaya_ubuntu-latest.tar.gz
 ```
 
-Create schroot configuration file `/etc/schroot/chroot.d/red-pitaya-debian.conf`. Replace the tarball path stub with the absolute path of the previously downloaded image. Replace user names with a comma separeted list of users whom should be able to compile Red Pitaya.
+Create schroot configuration file `/etc/schroot/chroot.d/red-pitaya-ubuntu.conf`. Replace the tarball path stub with the absolute path of the previously downloaded image. Replace user names with a comma separeted list of users whom should be able to compile Red Pitaya.
 ```
 [red-pitaya-debian]
 description=Red Pitaya Debian OS image
 type=file
-file=absolute-path-to-red-potaya-debian.tgz
+file=absolute-path-to-red-pitaya-ubuntu.tar.gz
 users=comma-seperated-list-of-users-with-access-permissions
 root-users=comma-seperated-list-of-users-with-root-access-permissions
 root-groups=root
@@ -90,11 +95,7 @@ preserve-environment=true
 To build everything a few `make` steps are required.
 ```bash
 make -f Makefile.x86
-pwd
-uname -a
 schroot -c red-pitaya-debian <<- EOL_CHROOT
-pwd
-uname -a
 make -f Makefile.arm CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT
 EOL_CHROOT
 make zip

@@ -1,0 +1,5 @@
+[Match]
+Driver=rtl8192cu
+
+[Link]
+Name=wlan0wext
