@@ -22,9 +22,33 @@
     }
 })();
 
+
+(function() {
+
+    if ("performance" in window == false) {
+        window.performance = {};
+    }
+
+    Date.now = (Date.now || function() { // thanks IE8
+        return new Date().getTime();
+    });
+
+    if ("now" in window.performance == false) {
+        var nowOffset = Date.now();
+        if (performance.timing && performance.timing.navigationStart) {
+            nowOffset = performance.timing.navigationStart
+        }
+        window.performance.now = function now() {
+            return Date.now() - nowOffset;
+        }
+    }
+
+})();
+
 (function(OSC, $, undefined) {
 
     // App configuration
+    OSC.start_time = 0;
     OSC.config = {};
     OSC.config.app_id = 'scpi_server';
     OSC.config.server_ip = ''; // Leave empty on production, it is used for testing only
@@ -241,6 +265,7 @@
                     OSC.params.local = {};
                 }, 2000);
                 OSC.unexpectedClose = true;
+                OSC.startTime = performance.now();
                 $('body').addClass('loaded');
             };
 
@@ -248,7 +273,12 @@
                 OSC.state.socket_opened = false;
                 console.log('Socket closed');
                 if (OSC.unexpectedClose == true) {
-                    $('#feedback_error').modal('show');
+                    var currentTime = performance.now();
+                    var timeDiff = OSC.startTime = performance.now();
+                    if (timeDiff < 10000)
+                        location.reload();
+                    else
+                        $('#feedback_error').modal('show');
                 }
             };
 
@@ -285,7 +315,7 @@
 
             OSC.ws.onerror = function(ev) {
                 if (!OSC.state.socket_opened)
-                  OSC.startApp();
+                    OSC.startApp();
                 console.log('Websocket error: ', ev);
             };
 
