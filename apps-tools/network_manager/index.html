@@ -80,12 +80,12 @@
                         <div>eth0</div>
                     </div>
                     <select id="eth0_mode" class="form-control type_select">
-                        <option selected value="#eth0_current_set">Current settings</option>
-                        <option value="#eth0_dhcp_result">DHCP</option>
+                        <!-- <option value="#eth0_current_set">Current settings</option> -->
+                        <option selected value="#eth0_dhcp_result">DHCP</option>
                         <option value="#eth0_manual_result">Manual</option>
                     </select>
                     <!-- CURRENT SETTINGS -->
-                    <div id="eth0_current_set" class="eht0_entries" style="display: block;">
+                    <!-- <div id="eth0_current_set" class="eht0_entries" style="display: none;">
                         <div id="eth0_inputs_labels">
                             <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
                             <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
@@ -102,7 +102,7 @@
                                 <label id="broadcast_address_label" style="font-size: 13pt;">Empty</label>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <!-- MANUAL SETTINGS -->
                     <div id="eth0_manual_result" class="eht0_entries" style="display: none;">
                         <div id="eth0_inputs_labels">
@@ -126,7 +126,7 @@
                         </div>
                     </div>
                     <!-- DHCP SETTINGS -->
-                    <div id="eth0_dhcp_result" class="eht0_entries" style="display: none;">
+                    <div id="eth0_dhcp_result" class="eht0_entries" style="display: block;">
                         <div id="eth0_inputs_labels">
                             <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
                             <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
