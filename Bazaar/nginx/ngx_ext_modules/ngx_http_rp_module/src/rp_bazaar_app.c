@@ -231,7 +231,10 @@ inline int is_registered(const char *dir,
 
     fprintf(stderr, "is_registered dir: %s\n app_id: %s\n fname: %s\n", dir, app_id, fname);
     if(!strcmp(app_id, "scopegenpro"))
-    	return true;
+    	return 1;
+
+	if(!strcmp(app_id, "spectrumpro"))
+    	return 1;
 
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
 
