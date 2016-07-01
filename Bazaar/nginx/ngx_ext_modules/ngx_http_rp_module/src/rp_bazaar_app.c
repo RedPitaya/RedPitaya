@@ -230,6 +230,8 @@ inline int is_registered(const char *dir,
     const mode_t perms = S_IRUSR | S_IXUSR;
 
     fprintf(stderr, "is_registered dir: %s\n app_id: %s\n fname: %s\n", dir, app_id, fname);
+    if(!strcmp(app_id, "scopegenpro"))
+    	return true;
 
     sprintf(file, "%s/%s/%s", dir, app_id, fname);
 
