@@ -16,7 +16,7 @@ CStringParameter OutCommandParam("out_command", CBaseParameter::RO, "", 1);
 
 int dbg_printf(const char * format, ...)
 {
-	static FILE* log = fopen("/var/log/nginx/rp_sdk.log", "wt");
+	static FILE* log = fopen("/var/log/redpitaya_nginx/rp_sdk.log", "wt");
 	if(log)
 	{
 		va_list va;
