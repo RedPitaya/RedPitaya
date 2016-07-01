@@ -64,6 +64,8 @@
             var level = parseInt(sigLevel[i].substr(13)) * 1;
             // console.log(essid, encryption, level);
 
+            htmlList += "<div>";
+
             var icon = "";
             var lock = (encryption) ? "<img src='img/wifi-icons/lock.png' width=15>" : "";
             if (level < 25)
@@ -75,9 +77,9 @@
             else
                 icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_3.png' width=25>" + lock + "</div>";
 
-            htmlList += icon + "<div key='" + essid + "' class='btn-wifi-item btn'>" + essid + "</div>";
+            htmlList += icon + "<div key='" + essid + "' class='btn-wifi-item btn'>" + essid + "&nbsp;</div>";
+            htmlList += "</div>";
         }
-
 
         if (WIZARD.connectedESSID != "")
             $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
