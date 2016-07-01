@@ -43,22 +43,6 @@
         WIZARD.nextStep();
     }
 
-    WIZARD.checkWirelessTools = function() {
-        setTimeout(function() {
-            $.ajax({
-                    url: '/check_wireless',
-                    type: 'GET',
-                    timeout: 1500
-                })
-                .fail(function(msg) {
-                    if (msg.responseText.startsWith("OK"))
-                        WIZARD.nextStep();
-                    else
-                        $('#wtools_missing').modal('show');
-                });
-        }, 500);
-    }
-
     WIZARD.getScanResult = function(iwlistResult) {
         if (iwlistResult == undefined || iwlistResult == "")
             return;
@@ -209,7 +193,7 @@
         $('body').removeClass('loaded');
     }
 
-    WIZARD.steps = [WIZARD.checkDongle, WIZARD.checkWirelessTools, WIZARD.startScan];
+    WIZARD.steps = [WIZARD.checkDongle, WIZARD.startScan];
 }(window.WIZARD = window.WIZARD || {}, jQuery));
 
 // Page onload event handler
@@ -219,16 +203,6 @@ $(document).ready(function() {
 
     $('body').addClass('loaded');
     WIZARD.startStep(0);
-    $('#get_wtools').click(function(event) {
-        WIZARD.startWaiting();
-        $.ajax({
-                url: '/install_wireless',
-                type: 'GET',
-            })
-            .fail(function(msg) {
-                WIZARD.nextStep();
-            });
-    });
 
     $('#network_apply_manual').click(WIZARD.ManualSetEth0);
 
