@@ -92,29 +92,41 @@
         var key = parseInt($(this).attr('key')) * 1;
         e.preventDefault();
         if (apps[key].check_online) {
-            if (!OnlineChecker.isOnline()) {
-                if (apps[key].licensable) {
-                    $('#ignore_link').text('Ignore');
-                    $('#ignore_link').attr('href', apps[key].url);
-                    $('#lic_failed').show();
-                } else {
-                    $('#ignore_link').text('Close');
-                    $('#ignore_link').attr('href', "#");
-                    $('#lic_failed').hide();
-                }
+            OnlineChecker.checkAsync(function() {
+                if (!OnlineChecker.isOnline()) {
+                    if (apps[key].licensable) {
+                        $('#ignore_link').text('Ignore');
+                        $('#ignore_link').attr('href', apps[key].url);
+                        $('#lic_failed').show();
+                    } else {
+                        $('#ignore_link').text('Close');
+                        $('#ignore_link').attr('href', "#");
+                        $('#lic_failed').hide();
+                    }
 
-                $('#ic_missing').modal('show');
-                return;
-            }
-        }
-        if (apps[key].url != "" && apps[key].type !== 'run') {
-            licVerify(apps[key].url);
+                    $('#ic_missing').modal('show');
+                    return;
+                }
+                if (apps[key].url != "" && apps[key].type !== 'run') {
+                    licVerify(apps[key].url);
+                } else {
+                    if (apps[key].url != "")
+                        window.location = apps[key].url;
+                }
+                if (apps[key].callback !== undefined)
+                    apps[key].callback();
+            });
         } else {
-            if (apps[key].url != "")
-                window.location = apps[key].url;
+            if (apps[key].url != "" && apps[key].type !== 'run') {
+                licVerify(apps[key].url);
+            } else {
+                if (apps[key].url != "")
+                    window.location = apps[key].url;
+            }
+            if (apps[key].callback !== undefined)
+                apps[key].callback();
         }
-        if (apps[key].callback !== undefined)
-            apps[key].callback();
+
     }
 
     var showFeedBack = function() {
