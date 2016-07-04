@@ -38,6 +38,7 @@ module la_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
+axi4_stream_if #(.DN (DN), .DT (DT)) stn            (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from negator
 axi4_stream_if #(.DN (DN), .DT (DT)) std            (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
 axi4_stream_if #(.DN (DN), .DT (DT)) stt            (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from trigger
 axi4_stream_if #(.DN (DN), .DT (DT)) sta_str        (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
@@ -212,6 +213,18 @@ str_dec #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// bitwise negator
+////////////////////////////////////////////////////////////////////////////////
+
+// for now this negates all inputs, a more generic version should be used someday
+assign stn.TDATA  = ~std.TDATA ;
+assign stn.TKEEP  =  std.TKEEP ;
+assign stn.TLAST  =  std.TLAST ;
+assign stn.TVALID =  std.TVALID;
+
+assign std.TREADY =  stn.TREADY;
+
+////////////////////////////////////////////////////////////////////////////////
 // Edge detection (trigger source)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -228,7 +241,7 @@ la_trigger #(
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor
-  .sti      (std),
+  .sti      (stn),
   .sto      (stt)
 );
 

@@ -4,7 +4,7 @@ TMP = tmp
 # check if download cache directory is available
 DL ?= dl
 
-UBOOT_TAG     = xilinx-v2016.1
+UBOOT_TAG     = xilinx-v2016.2
 LINUX_TAG     = xilinx-v2016.1
 DTREE_TAG     = xilinx-v2016.2
 
@@ -45,15 +45,13 @@ FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
 FSBL2           = $(FPGA2_DIR)/sdk/fsbl/executable.elf
 DTS             = $(FPGA_DIR)/sdk/dts/system.dts
 DEVICETREE      = $(INSTALL_DIR)/devicetree.dtb
-UBOOT           = $(INSTALL_DIR)/u-boot.elf
 LINUX           = $(INSTALL_DIR)/uImage
-BOOT            = $(INSTALL_DIR)/boot.bin
 
 ################################################################################
 # tarball
 ################################################################################
 
-all: fpga u-boot linux devicetree $(BOOT)
+all: fpga u-boot linux devicetree bootimage
 
 $(DL):
 	mkdir -p $@
@@ -80,6 +78,8 @@ fpga2: $(DTREE_DIR)
 # U-Boot build provides: $(UBOOT)
 ################################################################################
 
+UBOOT           = $(TMP)/u-boot.elf
+
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
 
 UBOOT_SCRIPT    = $(INSTALL_DIR)/u-boot.scr
@@ -103,11 +103,10 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 	cp patches/u-boot/lantiq.c                  $@/drivers/net/phy/lantiq.c
 	patch -d $@ -p 1 < patches/u-boot/u-boot-xlnx-$(UBOOT_TAG)-lantiq.patch
 
-$(UBOOT): $(UBOOT_DIR)
-	mkdir -p $(@D)
+$(UBOOT): $(UBOOT_DIR) $(TMP)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
-	cp $</u-boot $@
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS)
+	cp $(UBOOT_DIR)/u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
@@ -184,7 +183,13 @@ $(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
 # boot file generator
 ################################################################################
 
-$(BOOT): fpga2 $(UBOOT)
+BOOT = $(INSTALL_DIR)/boot.bin
+
+.PHONY: boot
+
+boot: $(BOOT)
+
+$(BOOT): fpga2 $(UBOOT) $(INSTALL_DIR)
 	@echo img:{[bootloader] $(FSBL2) $(FPGA2) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
 
