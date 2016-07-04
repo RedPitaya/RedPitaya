@@ -156,7 +156,7 @@
             $('#net_gateway_label').text(gateway);
 
             // if ($('#eth0_manual_result').css('display') === 'none') {
-            //     $('#ip_address_input').val(IPaddr);
+            //     $('#ip_address_and_mask_input').val(IPaddr);
             //     $('#broadcast_address_input').val(IPbrd);
             //     $('#net_mask_input').val(Mask);
             // }
@@ -178,17 +178,19 @@
     }
 
     WIZARD.ManualSetEth0 = function() {
-        var IPaddr = $('#ip_address_input').val();
+        var IPaddr = $('#ip_address_and_mask_input').val();
         var Brd = $('#broadcast_address_input').val();
         var Gateway = $("#gateway_input").val();
         var DNS = $("#dns_address_input").val();
         var dhcp_flag = $("#dchp_checkbox").prop("checked");
 
+        var addr = '/set_eth0' + ((IPaddr !== "") ? ('?address="' + IPaddr + '"&') : '?') + 'broadcast="' + Brd + '"&gateway="' + Gateway + '"&dns="' + DNS + '"&dhcp=' + ((dhcp_flag) ? 'yes' : 'no') + '"'
+
         $.ajax({
-            url: '/set_eth0' + (IPaddr !== "") ? ('?address="' + IPaddr + '&') : '?' + '"broadcast="' + Brd + '"&gateway="' + Gateway + '"&dns="' + DNS + '"&dhcp=' + (dhcp_flag) ? 'yes' : 'no' + '"',
+            url: addr,
             type: 'GET',
         });
-        setTimeout(window.open("http://" + $('#ip_address_input').val() + "/network_manager/", "_self"), 10000); // For update this page with new IP eth0 params
+        //setTimeout(window.open("http://" + $('#ip_address_and_mask_input').val().split("/")[0] + "/network_manager/", "_self"), 10000); // For update this page with new IP eth0 params
     }
 
     WIZARD.startWaiting = function() {
