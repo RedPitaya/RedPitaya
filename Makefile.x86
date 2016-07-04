@@ -4,7 +4,7 @@ TMP = tmp
 # check if download cache directory is available
 DL ?= dl
 
-UBOOT_TAG     = xilinx-v2016.1
+UBOOT_TAG     = xilinx-v2016.2
 LINUX_TAG     = xilinx-v2016.1
 DTREE_TAG     = xilinx-v2016.2
 
