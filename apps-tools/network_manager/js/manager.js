@@ -30,11 +30,14 @@
                 .fail(function(msg) {
                     if (msg.responseText.startsWith("OK")) {
                         $('#wlan0_block_entry').show();
+                        $('#wlan0_block_entry2').show();
                         $('#wlan0_block_nodongle').hide();
+                        $('#wlan0_block_nodongle2').hide();
                     } else {
-                        // $('#dongle_missing').modal('show');
                         $('#wlan0_block_entry').hide();
+                        $('#wlan0_block_entry2').hide();
                         $('#wlan0_block_nodongle').show();
+                        $('#wlan0_block_nodongle2').show();
                     }
                 })
         }, 3000);
@@ -62,7 +65,6 @@
             var essid = essids[i].substr(7, essids[i].length - 8);
             var encryption = (encryptions[i].substr(15) == "on") ? true : false;
             var level = parseInt(sigLevel[i].substr(13)) * 1;
-            // console.log(essid, encryption, level);
 
             htmlList += "<div>";
 
@@ -142,6 +144,7 @@
             type: 'GET',
         }).fail(function(msg) {
             var res1 = msg.responseText;
+            var gateway = msg.responseText.split("gateway")[1].split("\n")[0]
             var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
             var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
@@ -149,19 +152,14 @@
             var IPbrd = res1.match(/brd\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/);
             IPbrd = (IPbrd != null) ? IPbrd[0].split(" ")[1] : "none";
 
-            $('#ip_address_label').text(IPaddr);
-            $('#broadcast_address_label').text(IPbrd);
-            $('#net_mask_label').text(Mask);
+            $('#ip_address_label').text(IPaddr + " / " + Mask);
+            $('#net_gateway_label').text(gateway);
 
-            $('#ip_address_label_dhcp').text(IPaddr);
-            $('#broadcast_address_label_dhcp').text(IPbrd);
-            $('#net_mask_label_dhcp').text(Mask);
-
-            if ($('#eth0_manual_result').css('display') === 'none') {
-                $('#ip_address_input').val(IPaddr);
-                $('#broadcast_address_input').val(IPbrd);
-                $('#net_mask_input').val(Mask);
-            }
+            // if ($('#eth0_manual_result').css('display') === 'none') {
+            //     $('#ip_address_input').val(IPaddr);
+            //     $('#broadcast_address_input').val(IPbrd);
+            //     $('#net_mask_input').val(Mask);
+            // }
 
         }).done(function(msg) {});
     }
@@ -182,12 +180,15 @@
     WIZARD.ManualSetEth0 = function() {
         var IPaddr = $('#ip_address_input').val();
         var Brd = $('#broadcast_address_input').val();
-        var Mask = $('#net_mask_input').val();
+        var Gateway = $("#gateway_input").val();
+        var DNS = $("#dns_address_input").val();
+        var dhcp_flag = $("#dchp_checkbox").prop("checked");
+
         $.ajax({
-            url: '/set_eth0_manual?ipaddr="' + IPaddr + '"&brdaddr="' + Brd + '"&netmask="' + Mask + '"',
+            url: '/set_eth0' + (IPaddr !== "") ? ('?address="' + IPaddr + '&') : '?' + '"broadcast="' + Brd + '"&gateway="' + Gateway + '"&dns="' + DNS + '"&dhcp=' + (dhcp_flag) ? 'yes' : 'no' + '"',
             type: 'GET',
         });
-        setTimeout(window.open("http://" + $('#ip_address_input').val() + "/network_manager/", "_self"), 10000);
+        setTimeout(window.open("http://" + $('#ip_address_input').val() + "/network_manager/", "_self"), 10000); // For update this page with new IP eth0 params
     }
 
     WIZARD.startWaiting = function() {
@@ -207,8 +208,6 @@ $(document).ready(function() {
     WIZARD.startStep(0);
 
     $('#network_apply_manual').click(WIZARD.ManualSetEth0);
-
-    $('#network_apply_dhcp').click(WIZARD.RenewDHCP);
 
     $('#essid_input').keyup(function(event) {
         if ($('#essid_input_client').val() == WIZARD.connectedESSID)

@@ -1,5 +1,5 @@
 .net_settings_block {
-    width: 35%;
+    /*width: 32%;*/
     min-width: 400px;
     float: left;
     margin-left: 5px;
@@ -9,14 +9,16 @@
     padding-top: 10px;
     padding-bottom: 10px;
     padding-left: 10px;
-    min-height: 450px;
+    min-height: 465px;
 }
 
 #eth0_block {
-    margin-left: 10%;
+    /*margin-left: 10%;*/
 }
 
 #wlan0_block {}
+
+#wlan0_block2 {}
 
 .type_select {
     width: 250px;
@@ -27,7 +29,7 @@
 .eht0_entries {
     width: 350px;
     min-width: 350px;
-    margin-top: 50px;
+    margin-top: 10px;
 }
 
 .wlan0_entries {
@@ -61,6 +63,11 @@
     color: #abac0c;
 }
 
+#wlan0_block_nodongle2 {
+    max-width: 320px;
+    color: #abac0c;
+}
+
 #wifi_list {
     text-align: left;
     width: 200px;
@@ -69,3 +76,12 @@
 #separator_or {
     width: 200px;
 }
+
+#eth0_inputs {}
+
+#dchp_checkbox {
+    width: 25px;
+    height: 25px;
+}
+
+#all_networks {}
