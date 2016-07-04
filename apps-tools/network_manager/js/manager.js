@@ -155,12 +155,6 @@
             $('#ip_address_label').text(IPaddr + " / " + Mask);
             $('#net_gateway_label').text(gateway);
 
-            // if ($('#eth0_manual_result').css('display') === 'none') {
-            //     $('#ip_address_and_mask_input').val(IPaddr);
-            //     $('#broadcast_address_input').val(IPbrd);
-            //     $('#net_mask_input').val(Mask);
-            // }
-
         }).done(function(msg) {});
     }
 
@@ -219,8 +213,6 @@ $(document).ready(function() {
     });
 
     $('#client_connect').click(function(event) {
-        // if (WIZARD.currentStep != 2)
-        //     return;
         var essid = $('#essid_input_client').val();
         var password = $('#password_input_client').val();
         if (essid == "") {
@@ -277,7 +269,7 @@ $(document).ready(function() {
     $('#access_point_create').click(function() {
         if ($('#access_point_create').text() == "Create") {
             $.ajax({
-                url: '/wifi_create_point?essid="' + $('#essid_input').val() + '"&password="' + $('#password_input').val() + '"',
+                url: '/wifi_create_point?essid=' + $('#essid_input').val() + '&password=' + $('#password_input').val() + '',
                 type: 'GET',
             });
         } else {
