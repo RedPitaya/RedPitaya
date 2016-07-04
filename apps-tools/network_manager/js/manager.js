@@ -30,11 +30,14 @@
                 .fail(function(msg) {
                     if (msg.responseText.startsWith("OK")) {
                         $('#wlan0_block_entry').show();
+                        $('#wlan0_block_entry2').show();
                         $('#wlan0_block_nodongle').hide();
+                        $('#wlan0_block_nodongle2').hide();
                     } else {
-                        // $('#dongle_missing').modal('show');
                         $('#wlan0_block_entry').hide();
+                        $('#wlan0_block_entry2').hide();
                         $('#wlan0_block_nodongle').show();
+                        $('#wlan0_block_nodongle2').show();
                     }
                 })
         }, 3000);
@@ -62,7 +65,6 @@
             var essid = essids[i].substr(7, essids[i].length - 8);
             var encryption = (encryptions[i].substr(15) == "on") ? true : false;
             var level = parseInt(sigLevel[i].substr(13)) * 1;
-            // console.log(essid, encryption, level);
 
             htmlList += "<div>";
 

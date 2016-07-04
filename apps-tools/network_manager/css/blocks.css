@@ -18,6 +18,8 @@
 
 #wlan0_block {}
 
+#wlan0_block2 {}
+
 .type_select {
     width: 250px;
     text-align: right;
@@ -57,6 +59,11 @@
 }
 
 #wlan0_block_nodongle {
+    max-width: 320px;
+    color: #abac0c;
+}
+
+#wlan0_block_nodongle2 {
     max-width: 320px;
     color: #abac0c;
 }
