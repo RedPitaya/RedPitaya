@@ -101,11 +101,15 @@ end else begin
   casez (bus.addr[BDW-1:0])
     // ID
     'h00:  bus.rdata <= ID;
-    // EFUSE
-    'h08:  bus.rdata <= efuse;
-    // DNA
-    'h10:  bus.rdata <= {                            dna_value[32-1: 0]};
-    'h14:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
+// TODO: this is compatible with older releases, but not properly 64bit alligned
+    'h04:  bus.rdata <= {                            dna_value[32-1: 0]};
+    'h08:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
+    'h10:  bus.rdata <= efuse;
+//    // EFUSE
+//    'h08:  bus.rdata <= efuse;
+//    // DNA
+//    'h10:  bus.rdata <= {                            dna_value[32-1: 0]};
+//    'h14:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
     // GITH
     'h20:  bus.rdata <= GITH[32*0+:32];
     'h24:  bus.rdata <= GITH[32*1+:32];
