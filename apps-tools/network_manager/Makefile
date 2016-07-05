@@ -13,19 +13,9 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 
 INSTALL_DIR ?= .
 
-CONTROLLER=controllerhf.so
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
-ARTIFACTS=$(CONTROLLER)
 
-CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
-export CFLAGS
-
-all: $(CONTROLLER)
-
-$(CONTROLLER):
-	$(MAKE) -C src
-
-$(ZIP): $(CONTROLLER)
+$(ZIP):
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
 	cp -r nginx.conf fpga.conf css fonts img *.html info js target/$(APP)
