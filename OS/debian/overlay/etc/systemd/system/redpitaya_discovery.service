@@ -4,7 +4,8 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/opt/redpitaya/sbin/discovery.sh
+ExecStartPre=/bin/sh -c "cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg"
+ExecStart=/opt/redpitaya/bin/discovery
 
 [Install]
 WantedBy=multi-user.target
