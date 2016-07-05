@@ -144,7 +144,7 @@
             type: 'GET',
         }).fail(function(msg) {
             var res1 = msg.responseText;
-            var gateway = msg.responseText.split("gateway")[1].split("\n")[0]
+            var gateway = msg.responseText.split("gateway:")[1].split("\n")[0]
             var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
             var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
@@ -178,7 +178,29 @@
         var DNS = $("#dns_address_input").val();
         var dhcp_flag = $("#dchp_checkbox").prop("checked");
 
-        var addr = '/set_eth0' + ((IPaddr !== "") ? ('?address="' + IPaddr + '"&') : '?') + 'broadcast="' + Brd + '"&gateway="' + Gateway + '"&dns="' + DNS + '"&dhcp=' + ((dhcp_flag) ? 'yes' : 'no') + '"'
+        var params = [];
+
+        if (IPaddr != "")
+            params.push('address=' + IPaddr);
+        if (Brd != "")
+            params.push('broadcast=' + Brd);
+        if (Gateway != "")
+            params.push('gateway=' + Gateway);
+        if (DNS != "")
+            params.push('dns=' + DNS);
+        if (dhcp_flag != false)
+            params.push('dhcp=' + ((dhcp_flag) ? 'yes' : 'no'));
+
+        var addr = '/set_eth0';
+
+        if (params.length != 0) {
+            addr += '?';
+            for (var i = 0; i < params.length; i++) {
+                addr += params[i];
+                if (i < (params.length - 1))
+                    addr += '&';
+            }
+        }
 
         $.ajax({
             url: addr,
