@@ -178,7 +178,29 @@
         var DNS = $("#dns_address_input").val();
         var dhcp_flag = $("#dchp_checkbox").prop("checked");
 
-        var addr = '/set_eth0' + ((IPaddr !== "") ? ('?address="' + IPaddr + '"&') : '?') + 'broadcast="' + Brd + '"&gateway="' + Gateway + '"&dns="' + DNS + '"&dhcp=' + ((dhcp_flag) ? 'yes' : 'no') + '"'
+        var params = [];
+
+        if (IPaddr != "")
+            params.push('address=' + IPaddr);
+        if (Brd != "")
+            params.push('broadcast=' + Brd);
+        if (Gateway != "")
+            params.push('gateway=' + Gateway);
+        if (DNS != "")
+            params.push('dns=' + DNS);
+        if (dhcp_flag != false)
+            params.push('dhcp=' + ((dhcp_flag) ? 'yes' : 'no'));
+
+        var addr = '/set_eth0';
+
+        if (params.length != 0) {
+            addr += '?';
+            for (var i = 0; i < params.length; i++) {
+                addr += params[i];
+                if (i < (params.length - 1))
+                    addr += '&';
+            }
+        }
 
         $.ajax({
             url: addr,
