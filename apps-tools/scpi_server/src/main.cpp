@@ -67,20 +67,19 @@ int IsRunning(void) {
     return atoi(buf);
 }
 
-// TODO: systemd services should be used here
 void OnNewParams(void) {
-/* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
-	fprintf(stderr, "-----LOG SCPI SERVER OnNewParams()------\n");
+    /*------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
+    fprintf(stderr, "-----LOG SCPI SERVER OnNewParams()------\n");
 
     if(IsRunning() && inRun.NewValue() == false)
     {
-    	system("killall scpi-server");
-    	inRun.Value() = false;
+        system("systemctl start redpitaya_scpi.service");
+        inRun.Value() = false;
     }
     else if(!IsRunning() && inRun.NewValue() == true)
     {
-    	system("export LD_LIBRARY_PATH=/opt/redpitaya/lib/ && /opt/redpitaya/bin/scpi-server &");
-    	inRun.Value() = true;
+        system("systemctl stop redpitaya_scpi.service");
+        inRun.Value() = true;
     }
 }
 
