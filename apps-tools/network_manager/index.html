@@ -73,167 +73,139 @@
                 </div>
             </div>
             <div id="global_container" style="position: relative;">
-                <!-- ETH0 SETUP -->
-                <div id="eth0_block" class="net_settings_block" align=center>
-                    <div>
-                        <div style="position: absolute;"><img src="img/net-icons/lan.png"></div>
-                        <div>eth0</div>
-                    </div>
-                    <select id="eth0_mode" class="form-control type_select">
-                        <!-- <option value="#eth0_current_set">Current settings</option> -->
-                        <option selected value="#eth0_dhcp_result">DHCP</option>
-                        <option value="#eth0_manual_result">Manual</option>
-                    </select>
-                    <!-- CURRENT SETTINGS -->
-                    <!-- <div id="eth0_current_set" class="eht0_entries" style="display: none;">
-                        <div id="eth0_inputs_labels">
-                            <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
-                        </div>
-                        <div id="eth0_inputs_entry">
-                            <div style="padding-top: 10px;">
-                                <label id="ip_address_label" style="font-size: 13pt;">Empty</label>
-                            </div>
-                            <div style="padding-top: 10px;">
-                                <label id="net_mask_label" style="font-size: 13pt;">Empty</label>
-                            </div>
-                            <div style="padding-top: 10px;">
-                                <label id="broadcast_address_label" style="font-size: 13pt;">Empty</label>
-                            </div>
-                        </div>
-                    </div> -->
-                    <!-- MANUAL SETTINGS -->
-                    <div id="eth0_manual_result" class="eht0_entries" style="display: none;">
-                        <div id="eth0_inputs_labels">
-                            <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
-                        </div>
-                        <div id="eth0_inputs_entry">
-                            <div style="padding-top: 6px;">
-                                <input id="ip_address_input" type="text" class="form-control inputs">
-                            </div>
-                            <div style="padding-top: 6px;">
-                                <input id="net_mask_input" type="text" class="form-control inputs">
-                            </div>
-                            <div style="padding-top: 6px;">
-                                <input id="broadcast_address_input" type="text" class="form-control inputs">
-                            </div>
-                        </div>
+                <div id="all_networks">
+                    <!-- ETH0 SETUP -->
+                    <div id="eth0_block" class="net_settings_block" align=center>
                         <div>
-                            <button id="network_apply_manual" class="form-control btn eth0_apply">Apply</button>
+                            <div style="position: absolute;"><img src="img/net-icons/lan.png"></div>
+                            <div>eth0</div>
                         </div>
-                    </div>
-                    <!-- DHCP SETTINGS -->
-                    <div id="eth0_dhcp_result" class="eht0_entries" style="display: block;">
-                        <div id="eth0_inputs_labels">
-                            <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Net mask:</div>
-                            <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
-                        </div>
-                        <div id="eth0_inputs_entry">
-                            <div style="padding-top: 10px;">
-                                <label id="ip_address_label_dhcp" style="font-size: 13pt;">Empty</label>
-                            </div>
-                            <div style="padding-top: 10px;">
-                                <label id="net_mask_label_dhcp" style="font-size: 13pt;">Empty</label>
-                            </div>
-                            <div style="padding-top: 10px;">
-                                <label id="broadcast_address_label_dhcp" style="font-size: 13pt;">Empty</label>
-                            </div>
-                        </div>
-                        <div>
-                            <button id="network_apply_dhcp" class="form-control btn eth0_apply">Apply</button>
-                        </div>
-                    </div>
-                </div>
-                <!-- WLAN0 SETUP -->
-                <div id="wlan0_block" class="net_settings_block" align=center>
-                    <div id="wlan0_block_nodongle" style="display: none;">
-                        <img src="img/net-icons/nodongle.png">
-                        <div style="margin-top: 15px;">WIFI DONGLE IS NOT CONNECTED</div>
-                    </div>
-                    <div id="wlan0_block_entry" style="display: block;">
-                        <div>
-                            <div style="position: absolute;"><img src="img/net-icons/wlan.png"></div>
-                            <div>wlan0</div>
-                        </div>
-                        <select id="wlan0_mode" class="form-control type_select">
-                            <option selected value="#wlan0_client_result">Client</option>
-                            <option value="#wlan0_access_result">Access point</option>
-                        </select>
-                        <!-- WLAN ACCESS POINT SETTINGS -->
-                        <div id="wlan0_access_result" class="wlan0_entries" style="display: none;">
-                            <div id="eth0_inputs_labels">
-                                <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
-                                <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
-                            </div>
-                            <div id="eth0_inputs_entry">
-                                <div style="padding-top: 6px;">
-                                    <input id="essid_input" type="text" class="form-control inputs">
+                        <!-- MANUAL SETTINGS -->
+                        <label id="eth0_status_label" style="font-size: 13pt;">Status:</label>
+                        <div id="eth0_status_result" class="eht0_entries" style="display: block;">
+                            <dev id="eth0_status">
+                                <div id="eth0_inputs_labels">
+                                    <div style="font-size: 15pt; padding-top: 10px;">Address:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">Gateway:</div>
                                 </div>
-                                <div style="padding-top: 6px;">
-                                    <input id="password_input" type="password" class="form-control inputs">
+                                <div id="eth0_inputs_entry">
+                                    <div style="padding-top: 10px;">
+                                        <label id="ip_address_label" style="font-size: 13pt;">None</label>
+                                    </div>
+                                    <div style="padding-top: 10px;">
+                                        <label id="net_gateway_label" style="font-size: 13pt;">None</label>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <button id="access_point_create" class="form-control btn eth0_apply">Create</button>
-                            </div>
+                            </dev>
                         </div>
-                        <!-- WLAN CLIENT SETTINGS -->
-                        <div id="wlan0_client_result" class="wlan0_entries" style="display: block;">
-                            <div id="wifi_list">
-                                <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
-                            </div>
-                            <div id="separator_or">
-                                OR
-                            </div>
+                        <label id="eth0_configure_label" style="font-size: 13pt; margin-top: 30px;">Configure:</label>
+                        <div if="eth0_manual_results">
+                            <dev id="eth0_inputs">
+                                <div id="eth0_inputs_labels">
+                                    <div style="font-size: 15pt; padding-top: 10px;">DHCP:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">Gateway:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">DNS:</div>
+                                </div>
+                                <div id="eth0_inputs_entry">
+                                    <div style="padding-top: 6px;">
+                                        <input id="dchp_checkbox" type="checkbox" name="dhcp_enabled" value="on" class="" />
+                                    </div>
+                                    <div style="padding-top: 6px;">
+                                        <input id="ip_address_and_mask_input" type="text" class="form-control inputs">
+                                    </div>
+                                    <div style="padding-top: 6px;">
+                                        <input id="gateway_input" type="text" class="form-control inputs">
+                                    </div>
+                                    <div style="padding-top: 6px;">
+                                        <input id="broadcast_address_input" type="text" class="form-control inputs">
+                                    </div>
+                                    <div style="padding-top: 6px;">
+                                        <input id="dns_address_input" type="text" class="form-control inputs">
+                                    </div>
+                                </div>
+                                <div>
+                                    <button id="network_apply_manual" class="form-control btn eth0_apply">Apply</button>
+                                </div>
+                            </dev>
+                        </div>
+                    </div>
+                    <!-- WLAN0 SETUP -->
+                    <div id="wlan0_block" class="net_settings_block" align=center>
+                        <div id="wlan0_block_nodongle" style="display: none;">
+                            <img src="img/net-icons/nodongle.png">
+                            <div style="margin-top: 15px;">WIFI DONGLE IS NOT CONNECTED</div>
+                        </div>
+                        <div id="wlan0_block_entry" style="display: block;">
                             <div>
+                                <div style="position: absolute;"><img src="img/net-icons/wlan.png"></div>
+                                <div>wlan0</div>
+                            </div>
+                            <!-- WLAN ACCESS POINT SETTINGS -->
+                            <div id="wlan0_access_result" class="wlan0_entries" style="display: block;">
                                 <div id="eth0_inputs_labels">
                                     <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
                                     <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
                                 </div>
                                 <div id="eth0_inputs_entry">
                                     <div style="padding-top: 6px;">
-                                        <input id="essid_input_client" type="text" class="form-control inputs">
+                                        <input id="essid_input" type="text" class="form-control inputs">
                                     </div>
                                     <div style="padding-top: 6px;">
-                                        <input id="password_input_client" type="password" class="form-control inputs">
+                                        <input id="password_input" type="password" class="form-control inputs">
                                     </div>
                                 </div>
                                 <div>
-                                    <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
-                                    <button id="clear_entry" class="form-control btn eth0_apply">Clear</button>
+                                    <button id="access_point_create" class="form-control btn eth0_apply">Create</button>
                                 </div>
                             </div>
                         </div>
-                        <div id="main">
-                            <div class="wifi-main-container" style="display: none;">
-                                <div id="list_container" class="list-wifi-container">
-                                    <div id="caption">Select Wi-Fi Network</div>
-                                    <div id="wifi_list">
-                                        <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
+                    </div>
+                    <!-- WLAN0 SETUP -->
+                    <div id="wlan0_block2" class="net_settings_block" align=center>
+                        <div id="wlan0_block_nodongle2" style="display: none;">
+                            <img src="img/net-icons/nodongle.png">
+                            <div style="margin-top: 15px;">WIFI DONGLE IS NOT CONNECTED</div>
+                        </div>
+                        <div id="wlan0_block_entry2" style="display: block;">
+                            <div>
+                                <div style="position: absolute;"><img src="img/net-icons/wlan.png"></div>
+                                <div>wlan0</div>
+                            </div>
+                            <!-- WLAN CLIENT SETTINGS -->
+                            <div id="wlan0_client_result" class="wlan0_entries" style="display: block;">
+                                <div id="wifi_list">
+                                    <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
+                                </div>
+                                <div id="separator_or">
+                                    OR
+                                </div>
+                                <div>
+                                    <div id="eth0_inputs_labels">
+                                        <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
+                                        <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
+                                    </div>
+                                    <div id="eth0_inputs_entry">
+                                        <div style="padding-top: 6px;">
+                                            <input id="essid_input_client" type="text" class="form-control inputs">
+                                        </div>
+                                        <div style="padding-top: 6px;">
+                                            <input id="password_input_client" type="password" class="form-control inputs">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
+                                        <button id="clear_entry" class="form-control btn eth0_apply">Clear</button>
                                     </div>
                                 </div>
-                                <div id="controls_container" class="control-wifi-container">
-                                    <div>Or enter SSID manualy:</div>
-                                    <input type="text" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="essid_enter">
-                                    <div>Enter password:</div>
-                                    <input type="password" class="form-control no-up-down input-wifi" maxlength="100" placeholder="" id="passw_enter">
-                                    <button type="button" class="btn connect-btn" id="connect_btn">Connect</button>
-                                </div>
-                            </div>
-                            <div class="ap-main-container" style="display: none;">
-                                <div>Access point name: Red Pitaya AP</div>
-                                <div>Password: redpitaya</div>
-                                <button type="button" class="btn connect-btn" id="apply_btn">Apply</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <div>
         <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">

@@ -80,8 +80,8 @@ sudo chmod 664 redpitaya_ubuntu-latest.tar.gz
 
 Create schroot configuration file `/etc/schroot/chroot.d/red-pitaya-ubuntu.conf`. Replace the tarball path stub with the absolute path of the previously downloaded image. Replace user names with a comma separeted list of users whom should be able to compile Red Pitaya.
 ```
-[red-pitaya-debian]
-description=Red Pitaya Debian OS image
+[red-pitaya-ubuntu]
+description=Red Pitaya Debian/Ubuntu OS image
 type=file
 file=absolute-path-to-red-pitaya-ubuntu.tar.gz
 users=comma-seperated-list-of-users-with-access-permissions
@@ -95,7 +95,7 @@ preserve-environment=true
 To build everything a few `make` steps are required.
 ```bash
 make -f Makefile.x86
-schroot -c red-pitaya-debian <<- EOL_CHROOT
+schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
 make -f Makefile.arm CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT
 EOL_CHROOT
 make zip
@@ -121,7 +121,29 @@ The next components can be built separately.
 
 Here *base system* represents everything before Linux user space.
 
-### FPGA and device tree
+To be able to compile FPGA and cross compile *base system* software, it is necessary to setup the Vivado FPGA tools and ARM SDK.
+
+```bash
+$ . settings.sh
+```
+
+On some systems (including Ubuntu 16.04) the library setup provided by Vivado conflicts with default system libraries. To avoid this disable library overrides specified by Vivado.
+
+```bash
+$ export LD_LIBRARY_PATH=""
+```
+
+After building the base system it can be installed into the directory later used to create the FAT filesystem compressed image.
+
+```bash
+$ make -f Makefile.x86 install
+```
+
+### FPGA and device tree sources
+
+```bash
+$ make -f Makefile.x86 fpga
+```
 
 Detailed instructions are provided for [building the FPGA](fpga/README.md#build-process) including some [device tree details](fpga/README.md#device-tree).
 
@@ -129,16 +151,18 @@ Detailed instructions are provided for [building the FPGA](fpga/README.md#build-
 
 To build the U-Boot binary and boot scripts (used to select between booting into Buildroot or Debian):
 ```bash
-make tmp/u-boot.elf
-make build/u-boot.scr
+make -f Makefile.x86 u-boot
 ```
 The build process downloads the Xilinx version of U-Boot sources from Github, applies patches and starts the build process. Patches are available in the `patches/` directory.
 
-### Linux kernel
+### Linux kernel and device tree binaries
 
 To build a Linux image:
 ```bash
-make tmp/uImage
+make -f Makefile.x86 linux
+make -f Makefile.x86 linux-install
+make -f Makefile.x86 devicetree
+make -f Makefile.x86 devicetree-install
 ```
 The build process downloads the Xilinx version of Linux sources from Github, applies patches and starts the build process. Patches are available in the `patches/` directory.
 
@@ -146,17 +170,10 @@ The build process downloads the Xilinx version of Linux sources from Github, app
 
 The created boot file contains FSBL, FPGA bitstream and U-Boot binary.
 ```bash
-make tmp/boot.bin
+make -f Makefile.x86 boot
 ```
 
 ## Linux user space
-
-### Buildroot
-
-Buildroot is the most basic Linux distribution available for Red Pitaya. It is also used to provide some sources which are dependencies for user space applications.
-```bash
-make build/uramdisk.image.gz
-``` 
 
 ### Debian OS
 
