@@ -1,5 +1,5 @@
 /*
- * Red Pitaya WIZARDillWIZARDope client
+ * Red Pitaya Network Manager
  *
  * Author: Artem Kokos <a.kokos@integrasources.com>
  *
@@ -176,7 +176,7 @@
         var Brd = $('#broadcast_address_input').val();
         var Gateway = $("#gateway_input").val();
         var DNS = $("#dns_address_input").val();
-        var dhcp_flag = $("#dchp_checkbox").prop("checked");
+        var dhcp_flag = ($("#eth0_mode").val() == "#eth0_dhcp_mode") ? true : false;
 
         var params = [];
 
@@ -225,7 +225,7 @@ $(document).ready(function() {
     $('body').addClass('loaded');
     WIZARD.startStep(0);
 
-    $('#network_apply_manual').click(WIZARD.ManualSetEth0);
+    $('#network_apply').click(WIZARD.ManualSetEth0);
 
     $('#essid_input').keyup(function(event) {
         if ($('#essid_input_client').val() == WIZARD.connectedESSID)
@@ -279,8 +279,11 @@ $(document).ready(function() {
     });
 
     $('#eth0_mode').change(function() {
-        $('.eht0_entries').hide();
-        $($(this).val()).show();
+        if ($(this).val() == "#eth0_static_mode") {
+            $($(this).val()).show();
+        } else {
+            $("#eth0_static_mode").hide();
+        }
     });
 
     $('#wlan0_mode').change(function() {

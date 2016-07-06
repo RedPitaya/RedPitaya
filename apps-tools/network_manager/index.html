@@ -78,10 +78,9 @@
                     <div id="eth0_block" class="net_settings_block" align=center>
                         <div>
                             <div style="position: absolute;"><img src="img/net-icons/lan.png"></div>
-                            <div>eth0</div>
+                            <div>Wired connection status</div>
                         </div>
                         <!-- MANUAL SETTINGS -->
-                        <label id="eth0_status_label" style="font-size: 13pt;">Status:</label>
                         <div id="eth0_status_result" class="eht0_entries" style="display: block;">
                             <dev id="eth0_status">
                                 <div id="eth0_inputs_labels">
@@ -97,38 +96,37 @@
                                     </div>
                                 </div>
                             </dev>
-                        </div>
-                        <label id="eth0_configure_label" style="font-size: 13pt; margin-top: 30px;">Configure:</label>
-                        <div if="eth0_manual_results">
-                            <dev id="eth0_inputs">
-                                <div id="eth0_inputs_labels">
-                                    <div style="font-size: 15pt; padding-top: 10px;">DHCP:</div>
-                                    <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
-                                    <div style="font-size: 15pt; padding-top: 10px;">Gateway:</div>
-                                    <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
-                                    <div style="font-size: 15pt; padding-top: 10px;">DNS:</div>
-                                </div>
-                                <div id="eth0_inputs_entry">
-                                    <div style="padding-top: 6px;">
-                                        <input id="dchp_checkbox" type="checkbox" name="dhcp_enabled" value="on" class="" />
+                            <select id="eth0_mode" class="form-control type_select">
+                                <option selected value="#eth0_dhcp_mode">DHCP</option>
+                                <option value="#eth0_static_mode">Static</option>
+                            </select>
+                            <div id="eth0_static_mode" style="display: none;">
+                                <dev id="eth0_inputs">
+                                    <div id="eth0_inputs_labels">
+                                        <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
+                                        <div style="font-size: 15pt; padding-top: 10px;">Gateway:</div>
+                                        <div style="font-size: 15pt; padding-top: 10px;">Broadcast:</div>
+                                        <div style="font-size: 15pt; padding-top: 10px;">DNS:</div>
                                     </div>
-                                    <div style="padding-top: 6px;">
-                                        <input id="ip_address_and_mask_input" type="text" class="form-control inputs">
+                                    <div id="eth0_inputs_entry">
+                                        <div style="padding-top: 6px;">
+                                            <input id="ip_address_and_mask_input" type="text" class="form-control inputs">
+                                        </div>
+                                        <div style="padding-top: 6px;">
+                                            <input id="gateway_input" type="text" class="form-control inputs">
+                                        </div>
+                                        <div style="padding-top: 6px;">
+                                            <input id="broadcast_address_input" type="text" class="form-control inputs">
+                                        </div>
+                                        <div style="padding-top: 6px;">
+                                            <input id="dns_address_input" type="text" class="form-control inputs">
+                                        </div>
                                     </div>
-                                    <div style="padding-top: 6px;">
-                                        <input id="gateway_input" type="text" class="form-control inputs">
-                                    </div>
-                                    <div style="padding-top: 6px;">
-                                        <input id="broadcast_address_input" type="text" class="form-control inputs">
-                                    </div>
-                                    <div style="padding-top: 6px;">
-                                        <input id="dns_address_input" type="text" class="form-control inputs">
-                                    </div>
-                                </div>
-                                <div>
-                                    <button id="network_apply_manual" class="form-control btn eth0_apply">Apply</button>
-                                </div>
-                            </dev>
+                                </dev>
+                            </div>
+                            <div>
+                                <button id="network_apply" class="form-control btn eth0_apply">Apply</button>
+                            </div>
                         </div>
                     </div>
                     <!-- WLAN0 SETUP -->
