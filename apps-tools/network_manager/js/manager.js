@@ -109,6 +109,7 @@
             .fail(function(msg) {
                 if (msg.responseText == undefined || msg.responseText == "\n" || msg.responseText == "") {
                     WIZARD.WIFIConnected = false;
+                    $("#wlan0_essid_label").text("None");
                     return;
                 }
 
@@ -117,14 +118,17 @@
                 $('body').addClass('loaded');
 
                 var essids = msg.responseText.match(/ESSID:(".*?")/g);;
-                if (essids == null)
+                if (essids == null) {
+                    $("#wlan0_essid_label").text("None");
                     return;
+                }
                 var essid = essids[0].substr(7, essids[0].length - 8);
                 if (essid == "Red Pitaya AP")
                     return;
                 else {
                     WIZARD.connectedESSID = essid;
                     $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
+                    $("#wlan0_essid_label").text(WIZARD.connectedESSID);
                 }
             });
     }
@@ -138,7 +142,8 @@
             var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
 
             if (IPaddr == null) {
-                $('#wlan0_address_label').text("None");
+                if (!WIZARD.WIFIConnected)
+                    $('#wlan0_address_label').text("None");
                 return;
             }
 
@@ -181,6 +186,7 @@
             if (msg.responseText == "OK\n") {
                 $('#access_point_create').text("Remove");
                 $('#wlan0_mode_label').text("Access Point");
+                $('#wlan0_address_label').text("192.168.128.1");
             } else {
                 $('#access_point_create').text("Create");
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
