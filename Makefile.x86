@@ -234,8 +234,6 @@ $(ZIPFILE): install
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
-	# copy configuration file for WiFi access point
-	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(INSTALL_DIR)/hostapd.conf
 	# build zip file
 	cd $(INSTALL_DIR); zip -r ../$(ZIPFILE) *
 
