@@ -70,6 +70,7 @@ echo CONFIG_LIBNL32=y    >> .config
 make
 make install
 cd ../../
+rm -rf hostapd*
 
 # this enables placing the WiFi WPA configuration into the FAT partition
 ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf

@@ -7,6 +7,7 @@
 #include <map>
 
 #include <unistd.h>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -237,25 +238,25 @@ int main(int argc, char **argv)
     if(!res)
         vMAC_WIFI = string_buffer;
 
-    // Get IP_LAN
-    struct ifaddrs *addr;
-    getifaddrs(&addr);
-    std::map<std::string, std::string> ip_map;
 
-    while(addr)
-    {
-        struct sockaddr_in *pAddr = (struct sockaddr_in *)addr->ifa_addr;
-        ip_map[std::string(addr->ifa_name)] = std::string(inet_ntoa(pAddr->sin_addr));
-        addr = addr->ifa_next;
-    }
+	// Get LAN IP
+    struct ifaddrs* ifAddrStruct = 0;
+    void* tmp_ptr = 0;      
+    getifaddrs(&ifAddrStruct);
 
-    for (auto it = ip_map.begin(); it != ip_map.end(); ++it)
-    {
-        if(it->first == "eth0")
-            vIP_LAN = it->second;
-        if(it->first == "wlan0")
-            vIP_WIFI = it->second;
+    for (ifaddrs* ifa = ifAddrStruct; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            tmp_ptr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+            char addr_buf[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, tmp_ptr, addr_buf, INET_ADDRSTRLEN);
+			if (!strcmp(ifa->ifa_name, "eth0") && addr_buf[1] != '6') // exclude 169...
+				vIP_LAN = addr_buf;
+			if(!strcmp(ifa->ifa_name, "wlan0"))
+				vIP_WIFI = addr_buf;
+		}
     }
+    if (ifAddrStruct) 
+        freeifaddrs(ifAddrStruct);
 
     vOS_VER = GetOSVersion("/opt/redpitaya/www/apps/info/info.json");
     vOS_BUILD = GetOSBuild("/opt/redpitaya/www/apps/info/info.json");

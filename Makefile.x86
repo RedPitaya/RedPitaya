@@ -1,10 +1,58 @@
+################################################################################
+# versioning system
+################################################################################
 
-TMP = tmp
+BUILD_NUMBER ?= 0
+REVISION ?= devbuild
+VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+GIT_BRANCH_LOCAL = $(shell echo $(GIT_BRANCH) | sed -e 's/.*\///')
+VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+export BUILD_NUMBER
+export REVISION
+export VERSION
+
+define GREET_MSG
+##############################################################################
+# Red Pitaya GNU/Linux Ecosystem
+# Version: $(VER)
+# Branch: $(GIT_BRANCH_LOCAL)
+# Build: $(BUILD_NUMBER)
+# Commit: $(GIT_COMMIT)
+##############################################################################
+endef
+export GREET_MSG
+
+################################################################################
+# targets
+################################################################################
+
+all: fpga devicetree u-boot linux boot
+
+install: linux-install devicetree-install boot
+
+################################################################################
+#
+################################################################################
 
 # check if download cache directory is available
-DL ?= dl
+DL          ?= dl
+TMP          = tmp
+INSTALL_DIR  = build
 
-UBOOT_TAG     = xilinx-v2016.1
+$(DL):
+	mkdir -p $@
+
+$(TMP):
+	mkdir -p $@
+
+$(INSTALL_DIR):
+	mkdir -p $@
+
+################################################################################
+# X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
+################################################################################
+
+UBOOT_TAG     = xilinx-v2016.2
 LINUX_TAG     = xilinx-v2016.1
 DTREE_TAG     = xilinx-v2016.2
 
@@ -29,56 +77,24 @@ LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
 ################################################################################
-#
-################################################################################
-
-INSTALL_DIR ?= build
-
-# directories
-FPGA_DIR        = fpga
-FPGA2_DIR       = fpga2
-
-# targets
-FPGA            = $(FPGA_DIR)/out/red_pitaya.bit
-FPGA2           = $(FPGA2_DIR)/out/red_pitaya.bit
-FSBL            = $(FPGA_DIR)/sdk/fsbl/executable.elf
-FSBL2           = $(FPGA2_DIR)/sdk/fsbl/executable.elf
-DTS             = $(FPGA_DIR)/sdk/dts/system.dts
-DEVICETREE      = $(INSTALL_DIR)/devicetree.dtb
-UBOOT           = $(INSTALL_DIR)/u-boot.elf
-LINUX           = $(INSTALL_DIR)/uImage
-BOOT            = $(INSTALL_DIR)/boot.bin
-
-################################################################################
-# tarball
-################################################################################
-
-all: fpga u-boot linux devicetree $(BOOT)
-
-$(DL):
-	mkdir -p $@
-
-$(TMP):
-	mkdir -p $@
-
-$(INSTALL_DIR):
-	mkdir -p $@
-
-################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-.PHONY: fpga fpga2
+FPGA_DIR = fpga2
+
+FPGA = $(FPGA_DIR)/out/red_pitaya.bit
+FSBL = $(FPGA_DIR)/sdk/fsbl/executable.elf
+
+.PHONY: fpga
 
 fpga: $(DTREE_DIR)
 	make -C $(FPGA_DIR)
 
-fpga2: $(DTREE_DIR)
-	make -C $(FPGA2_DIR)
-
 ################################################################################
 # U-Boot build provides: $(UBOOT)
 ################################################################################
+
+UBOOT           = $(TMP)/u-boot.elf
 
 ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
 
@@ -103,11 +119,10 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 	cp patches/u-boot/lantiq.c                  $@/drivers/net/phy/lantiq.c
 	patch -d $@ -p 1 < patches/u-boot/u-boot-xlnx-$(UBOOT_TAG)-lantiq.patch
 
-$(UBOOT): $(UBOOT_DIR)
-	mkdir -p $(@D)
+$(UBOOT): $(UBOOT_DIR) $(TMP)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) all
-	cp $</u-boot $@
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS)
+	cp $(UBOOT_DIR)/u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
@@ -120,7 +135,9 @@ $(ENVTOOLS_CFG): $(UBOOT_DIR)
 # Linux build provides: $(LINUX)
 ################################################################################
 
-.PHONY: linux
+LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
+
+.PHONY: linux linux-install
 
 linux: $(LINUX)
 
@@ -150,13 +167,17 @@ $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
-	cp $</arch/arm/boot/uImage $@
+
+linux-install: linux $(INSTALL_DIR)
+	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
 ################################################################################
 # device tree processing
 ################################################################################
 
-.PHONY: devicetree
+DEVICETREE = $(TMP)/devicetree.dtb
+
+.PHONY: devicetree devicetree-install
 
 devicetree: $(DEVICETREE)
 
@@ -167,26 +188,56 @@ $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DTREE_DIR) $(LINUX) fpga2
-	cp $(DTS) $(TMP)/devicetree.dts
-	cp $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi.orig
-	cp $(FPGA2_DIR)/sdk/dts/pl.dtsi $(FPGA2_DIR)/sdk/dts/pl.dtsi.orig
-	patch $(FPGA2_DIR)/sdk/dts/pl.dtsi patches/pl.patch
-	patch $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi patches/zynq-7000.patch
+$(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
+	cp $(FPGA_DIR)/sdk/dts/*.dtsi     $(TMP)
+	cp $(FPGA_DIR)/sdk/dts/system.dts $(TMP)/devicetree.dts
+	patch $(TMP)/zynq-7000.dtsi patches/zynq-7000.patch
+	patch $(TMP)/pl.dtsi        patches/pl.patch
 	patch $(TMP)/devicetree.dts patches/devicetree.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(FPGA2_DIR)/sdk/dts/ $(TMP)/devicetree.dts
-	tools/dtc/bin/dtc -O dtb -o $(INSTALL_DIR)/amba_pl.dtbo -b 0 -@ patches/amba_pl.dts
-	cp patches/amba_pl.sh patches/rmamba_pl.sh $(INSTALL_DIR)
-	cp $(FPGA2_DIR)/sdk/dts/pl.dtsi.orig $(FPGA2_DIR)/sdk/dts/pl.dtsi
-	cp $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi.orig $(FPGA2_DIR)/sdk/dts/zynq-7000.dtsi
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP) $(TMP)/devicetree.dts
+	tools/dtc/bin/dtc -O dtb -o $(TMP)/amba_pl.dtbo -b 0 -@ patches/amba_pl.dts
+
+devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
+	cp $(DEVICETREE)        $(INSTALL_DIR)
+	cp $(TMP)/amba_pl.dtbo  $(INSTALL_DIR)
+	cp patches/amba_pl.sh   $(INSTALL_DIR)
+	cp patches/rmamba_pl.sh $(INSTALL_DIR)
 
 ################################################################################
 # boot file generator
 ################################################################################
 
-$(BOOT): fpga2 $(UBOOT)
-	@echo img:{[bootloader] $(FSBL2) $(FPGA2) $(UBOOT) } > boot_uboot.bif
+BOOT = $(INSTALL_DIR)/boot.bin
+
+.PHONY: boot
+
+boot: $(BOOT)
+
+$(BOOT): fpga $(UBOOT) $(INSTALL_DIR)
+	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
+
+################################################################################
+# tarball
+################################################################################
+
+ZIPFILE=ecosystem-$(VERSION).zip
+
+zip: $(ZIPFILE)
+
+$(ZIPFILE): install
+	# copy FPGA bitstream images and decompress them
+	mkdir -p               $(INSTALL_DIR)/fpga
+	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
+	cd                     $(INSTALL_DIR)/fpga; xz -df *.xz
+	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp -r OS/filesystem/*  $(INSTALL_DIR)
+	# create version file
+	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
+	# copy configuration file for WiFi access point
+	cp OS/debian/overlay/etc/hostapd/hostapd.conf $(INSTALL_DIR)/hostapd.conf
+	# build zip file
+	cd $(INSTALL_DIR); zip -r ../$(ZIPFILE) *
 
 ################################################################################
 #

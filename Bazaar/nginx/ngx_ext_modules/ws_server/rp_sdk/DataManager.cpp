@@ -155,18 +155,20 @@ void CDataManager::OnNewParams(std::string _params)
 	n = libjson::parse(_params);
 	JSONNode m(JSON_NODE);
 
-	for(size_t i=0; i < m_params.size(); i++)
+	for (size_t i=0; i < m_params.size(); ++i)
 		m_params[i]->ClearNewValue();
 
-	for(size_t i=0; i < n.size(); i++) {
+	for (size_t i=0; i < n.size(); ++i)
+	{
 		m = n.at(i);
-		const char* name = m.name().c_str();
+		std::string name = m.name();
 
-		for(size_t j=0; j < m_params.size(); j++) {
-			if(m_params[j]->GetAccessMode() != CBaseParameter::AccessMode::RO)
+		for (size_t j=0; j < m_params.size(); ++j)
+		{
+			if (m_params[j]->GetAccessMode() != CBaseParameter::AccessMode::RO)
 			{
-				const char* param_name = m_params[j]->GetName();
-				if(!strcmp(param_name, name))
+				std::string param_name = m_params[j]->GetName();
+				if (name == param_name)
 					m_params[j]->SetValueFromJSON(m);
 			}
 		}

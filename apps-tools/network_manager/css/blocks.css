@@ -1,5 +1,5 @@
 .net_settings_block {
-    width: 35%;
+    /*width: 32%;*/
     min-width: 400px;
     float: left;
     margin-left: 5px;
@@ -9,17 +9,15 @@
     padding-top: 10px;
     padding-bottom: 10px;
     padding-left: 10px;
-    min-height: 450px;
+    min-height: 465px;
 }
 
-#eth0_block {
-    margin-left: 10%;
-}
+#eth0_block {}
 
 #wlan0_block {}
 
 .type_select {
-    width: 250px;
+    width: 200px;
     text-align: right;
     background-color: #444444;
 }
@@ -27,7 +25,7 @@
 .eht0_entries {
     width: 350px;
     min-width: 350px;
-    margin-top: 50px;
+    margin-top: 10px;
 }
 
 .wlan0_entries {
@@ -40,12 +38,12 @@
     background-color: #444444;
 }
 
-#eth0_inputs_labels {
+.status_labels {
     width: 175px;
     float: left;
 }
 
-#eth0_inputs_entry {
+.status_entry {
     width: 175px;
     float: left;
 }
@@ -68,4 +66,17 @@
 
 #separator_or {
     width: 200px;
+}
+
+#eth0_inputs {}
+
+#dchp_checkbox {
+    width: 25px;
+    height: 25px;
+}
+
+#all_networks {
+    max-width: 820px;
+    min-width: 420px;
+    margin: auto;
 }
