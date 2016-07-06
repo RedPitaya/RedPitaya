@@ -12,13 +12,9 @@
     min-height: 465px;
 }
 
-#eth0_block {
-    /*margin-left: 10%;*/
-}
+#eth0_block {}
 
 #wlan0_block {}
-
-#wlan0_block2 {}
 
 .type_select {
     width: 200px;
@@ -63,11 +59,6 @@
     color: #abac0c;
 }
 
-#wlan0_block_nodongle2 {
-    max-width: 320px;
-    color: #abac0c;
-}
-
 #wifi_list {
     text-align: left;
     width: 200px;
@@ -84,4 +75,8 @@
     height: 25px;
 }
 
-#all_networks {}
+#all_networks {
+    max-width: 820px;
+    min-width: 420px;
+    margin: auto;
+}

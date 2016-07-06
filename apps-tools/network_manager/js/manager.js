@@ -30,14 +30,10 @@
                 .fail(function(msg) {
                     if (msg.responseText.startsWith("OK")) {
                         $('#wlan0_block_entry').show();
-                        $('#wlan0_block_entry2').show();
                         $('#wlan0_block_nodongle').hide();
-                        $('#wlan0_block_nodongle2').hide();
                     } else {
                         $('#wlan0_block_entry').hide();
-                        $('#wlan0_block_entry2').hide();
                         $('#wlan0_block_nodongle').show();
-                        $('#wlan0_block_nodongle2').show();
                     }
                 })
         }, 3000);
@@ -287,7 +283,7 @@ $(document).ready(function() {
     });
 
     $('#wlan0_mode').change(function() {
-        $('.wlan0_entries').hide();
+        $(".wlan0_entries").hide();
         $($(this).val()).show();
     });
 
