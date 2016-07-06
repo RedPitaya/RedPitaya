@@ -31,7 +31,7 @@
 .wlan0_entries {
     width: 350px;
     min-width: 350px;
-    margin-top: 50px;
+    margin-top: 25px;
 }
 
 .inputs {
@@ -39,11 +39,13 @@
 }
 
 .status_labels {
+	margin-top: 25px;
     width: 175px;
     float: left;
 }
 
 .status_entry {
+	margin-top: 25px;
     width: 175px;
     float: left;
 }
