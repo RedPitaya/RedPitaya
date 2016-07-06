@@ -38,12 +38,12 @@
     background-color: #444444;
 }
 
-#eth0_inputs_labels {
+.status_labels {
     width: 175px;
     float: left;
 }
 
-#eth0_inputs_entry {
+.status_entry {
     width: 175px;
     float: left;
 }

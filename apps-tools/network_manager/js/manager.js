@@ -10,6 +10,7 @@
     WIZARD.currentStep = 0;
     WIZARD.isInReboot = false;
     WIZARD.connectedESSID = "";
+    WIZARD.WIFIConnected = false;
 
     WIZARD.startStep = function(step) {
         WIZARD.currentStep = step;
@@ -94,44 +95,67 @@
     }
 
     WIZARD.startScan = function() {
-        setInterval(function() {
-            $.ajax({
-                    url: '/get_wnet_list',
-                    type: 'GET',
-                })
-                .fail(function(msg) {
-                    WIZARD.getScanResult(msg.responseText);
-                });
-            $.ajax({
-                    url: '/get_connected_wlan',
-                    type: 'GET',
-                })
-                .fail(function(msg) {
-                    if (msg.responseText == undefined || msg.responseText == "")
-                        return;
+        $.ajax({
+                url: '/get_wnet_list',
+                type: 'GET',
+            })
+            .fail(function(msg) {
+                WIZARD.getScanResult(msg.responseText);
+            });
+        $.ajax({
+                url: '/get_connected_wlan',
+                type: 'GET',
+            })
+            .fail(function(msg) {
+                if (msg.responseText == undefined || msg.responseText == "\n" || msg.responseText == "") {
+                    WIZARD.WIFIConnected = false;
+                    $("#wlan0_essid_label").text("None");
+                    return;
+                }
 
-                    WIZARD.isInReboot = false;
-                    $('body').addClass('loaded');
+                WIZARD.isInReboot = false;
+                WIZARD.WIFIConnected = true;
+                $('body').addClass('loaded');
 
-                    var essids = msg.responseText.match(/ESSID:(".*?")/g);;
-                    if (essids == null)
-                        return;
-                    var essid = essids[0].substr(7, essids[0].length - 8);
-                    if (essid == "Red Pitaya AP")
-                        return;
-                    else {
-                        WIZARD.connectedESSID = essid;
-                        $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
-                    }
-                });
-        }, 10000);
+                var essids = msg.responseText.match(/ESSID:(".*?")/g);;
+                if (essids == null) {
+                    $("#wlan0_essid_label").text("None");
+                    return;
+                }
+                var essid = essids[0].substr(7, essids[0].length - 8);
+                if (essid == "Red Pitaya AP")
+                    return;
+                else {
+                    WIZARD.connectedESSID = essid;
+                    $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
+                    $("#wlan0_essid_label").text(WIZARD.connectedESSID);
+                }
+            });
     }
 
-    WIZARD.RenewDHCP = function() {
+    WIZARD.GetWlan0Status = function() {
         $.ajax({
-            url: '/set_eth0_dhcp',
+            url: '/get_wlan0_status',
             type: 'GET',
-        }).fail(function(msg) {}).done(function(msg) {});
+        }).fail(function(msg) {
+            var res1 = msg.responseText;
+            var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+
+            if (IPaddr == null) {
+                if (!WIZARD.WIFIConnected)
+                    $('#wlan0_address_label').text("None");
+                return;
+            }
+
+            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
+            var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            Mask = Mask[0].split(" ")[1].split("/")[1];
+            // var IPbrd = res1.match(/brd\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/);
+            // IPbrd = (IPbrd != null) ? IPbrd[0].split(" ")[1] : "none";
+
+            $('#wlan0_address_label').text(IPaddr + " / " + Mask);
+
+        }).done(function(msg) {});
     }
 
     WIZARD.GetEth0Status = function() {
@@ -145,11 +169,11 @@
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
             var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             Mask = Mask[0].split(" ")[1].split("/")[1];
-            var IPbrd = res1.match(/brd\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/);
-            IPbrd = (IPbrd != null) ? IPbrd[0].split(" ")[1] : "none";
+            // var IPbrd = res1.match(/brd\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/);
+            // IPbrd = (IPbrd != null) ? IPbrd[0].split(" ")[1] : "none";
 
-            $('#ip_address_label').text(IPaddr + " / " + Mask);
-            $('#net_gateway_label').text(gateway);
+            $('#eth0_address_label').text(IPaddr + " / " + Mask);
+            $('#eth0_gateway_label').text(gateway);
 
         }).done(function(msg) {});
     }
@@ -161,8 +185,11 @@
         }).fail(function(msg) {
             if (msg.responseText == "OK\n") {
                 $('#access_point_create').text("Remove");
+                $('#wlan0_mode_label').text("Access Point");
+                $('#wlan0_address_label').text("192.168.128.1");
             } else {
                 $('#access_point_create').text("Create");
+                $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
             }
         });
     }
@@ -215,7 +242,9 @@
 
 // Page onload event handler
 $(document).ready(function() {
+    setInterval(WIZARD.startScan, 2500);
     setInterval(WIZARD.GetEth0Status, 1000);
+    setInterval(WIZARD.GetWlan0Status, 1000);
     setInterval(WIZARD.checkMasterModeWifi, 2000);
 
     $('body').addClass('loaded');
