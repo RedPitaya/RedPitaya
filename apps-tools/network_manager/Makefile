@@ -15,7 +15,9 @@ INSTALL_DIR ?= .
 
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 
-$(ZIP):
+all:
+
+$(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
 	cp -r nginx.conf fpga.conf css fonts img *.html info js target/$(APP)

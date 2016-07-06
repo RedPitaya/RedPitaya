@@ -10,13 +10,11 @@ INSTALL_DIR ?= build
 # directories
 NGINX_DIR       = Bazaar/nginx
 IDGEN_DIR       = Bazaar/tools/idgen
-OS_TOOLS_DIR    = OS/tools
 
 # targets
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
-DISCOVERY       = $(INSTALL_DIR)/sbin/discovery.sh
 
 define GREET_MSG
 ##############################################################################
@@ -29,7 +27,7 @@ define GREET_MSG
 endef
 export GREET_MSG
 
-all: api libredpitaya nginx scpi examples rp_communication $(DISCOVERY) apps-tools apps-pro apps-free
+all: api libredpitaya nginx scpi examples rp_communication apps-tools apps-pro apps-free
 
 $(INSTALL_DIR):
 	mkdir -p $@
@@ -254,13 +252,6 @@ calibrate: api
 
 rp_communication:
 	make -C $(COMM_DIR)
-
-################################################################################
-# Red Pitaya OS tools
-################################################################################
-
-$(DISCOVERY):
-	cp $(OS_TOOLS_DIR)/discovery.sh $@
 
 ################################################################################
 # Red Pitaya ecosystem and free applications

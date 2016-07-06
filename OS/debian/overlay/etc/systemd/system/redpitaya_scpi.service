@@ -11,6 +11,7 @@ Restart=always
 #EnvironmentFile=/etc/sysconfig/redpitaya
 Environment=PATH_REDPITAYA=/opt/redpitaya
 Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+ExecStartPre=/bin/sh -c "cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg"
 ExecStart =/opt/redpitaya/bin/scpi-server
 #ExecReload=
 ExecStop  =/bin/kill -15 $MAINPID
