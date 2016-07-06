@@ -150,8 +150,6 @@
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
             var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             Mask = Mask[0].split(" ")[1].split("/")[1];
-            // var IPbrd = res1.match(/brd\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/);
-            // IPbrd = (IPbrd != null) ? IPbrd[0].split(" ")[1] : "none";
 
             $('#wlan0_address_label').text(IPaddr + " / " + Mask);
 
@@ -169,8 +167,6 @@
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
             var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             Mask = Mask[0].split(" ")[1].split("/")[1];
-            // var IPbrd = res1.match(/brd\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/);
-            // IPbrd = (IPbrd != null) ? IPbrd[0].split(" ")[1] : "none";
 
             $('#eth0_address_label').text(IPaddr + " / " + Mask);
             $('#eth0_gateway_label').text(gateway);
@@ -196,7 +192,6 @@
 
     WIZARD.ManualSetEth0 = function() {
         var IPaddr = $('#ip_address_and_mask_input').val();
-        var Brd = $('#broadcast_address_input').val();
         var Gateway = $("#gateway_input").val();
         var DNS = $("#dns_address_input").val();
         var dhcp_flag = ($("#eth0_mode").val() == "#eth0_dhcp_mode") ? true : false;
@@ -205,8 +200,6 @@
 
         if (IPaddr != "")
             params.push('address=' + IPaddr);
-        if (Brd != "")
-            params.push('broadcast=' + Brd);
         if (Gateway != "")
             params.push('gateway=' + Gateway);
         if (DNS != "")
@@ -293,14 +286,6 @@ $(document).ready(function() {
     $('#ap_mode').click(function() {
         $('.wifi-main-container').hide();
         $('.ap-main-container').show();
-    });
-
-    $('#apply_btn').click(function() {
-        WIZARD.startWaiting();
-        $.ajax({
-            url: '/ap_mode',
-            type: 'GET',
-        })
     });
 
     $('#eth0_mode').change(function() {
