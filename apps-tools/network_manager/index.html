@@ -82,11 +82,11 @@
                         </div>
                         <div id="eth0_status_result" class="eht0_entries" style="display: block;">
                             <dev id="eth0_status">
-                                <div id="eth0_inputs_labels" class="status_labels">
+                                <div id="eth0_inputs_labels" class="status_labels" style="min-height: 125px;">
                                     <div style="font-size: 15pt; padding-top: 10px;">Address:</div>
                                     <div style="font-size: 15pt; padding-top: 10px;">Gateway:</div>
                                 </div>
-                                <div id="eth0_inputs_entry" class="status_entry">
+                                <div id="eth0_inputs_entry" class="status_entry" style="min-height: 125px;">
                                     <div style="padding-top: 10px;">
                                         <label id="eth0_address_label" style="font-size: 13pt;">None</label>
                                     </div>
@@ -95,6 +95,7 @@
                                     </div>
                                 </div>
                             </dev>
+                            <div style="height: 30px;"></div>
                             <select id="eth0_mode" class="form-control type_select">
                                 <option selected value="#eth0_dhcp_mode">DHCP</option>
                                 <option value="#eth0_static_mode">Static</option>
@@ -136,12 +137,12 @@
                                 <div>Wireless connection status</div>
                             </div>
                             <dev id="wlan0_status">
-                                <div id="wlan0_inputs_labels" class="status_labels">
+                                <div id="wlan0_inputs_labels" class="status_labels" style="min-height: 160px;">
                                     <div style="font-size: 15pt; padding-top: 10px;">Mode:</div>
                                     <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
                                     <div style="font-size: 15pt; padding-top: 10px;">Address:</div>
                                 </div>
-                                <div id="wlan0_inputs_entry" class="status_entry">
+                                <div id="wlan0_inputs_entry" class="status_entry" style="min-height: 160px;">
                                     <div style="padding-top: 10px;">
                                         <label id="wlan0_mode_label" style="font-size: 13pt;">None</label>
                                     </div>
