@@ -7,6 +7,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.clien
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.ap            $ROOT_DIR/etc/systemd/network/wireless.network.ap
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/10-wireless.link               $ROOT_DIR/etc/systemd/network/10-wireless.link
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/ssh-reconfigure.service         $ROOT_DIR/etc/systemd/system/ssh-reconfigure.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless_adapter_up@.service    $ROOT_DIR/etc/systemd/system/wireless_adapter_up@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-client.service    $ROOT_DIR/etc/systemd/system/wireless-mode-client.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-ap.service        $ROOT_DIR/etc/systemd/system/wireless-mode-ap.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service         $ROOT_DIR/etc/systemd/system/wpa_supplicant@.service
@@ -91,6 +92,8 @@ systemctl enable systemd-timesyncd.service
 systemctl enable systemd-networkd-wait-online.service
 
 # wireless related services
+systemctl enable wireless_adapter_up@wlan0.service
+systemctl enable wireless_adapter_up@wlan0wext.service
 systemctl enable wpa_supplicant@wlan0.service
 systemctl enable wpa_supplicant_wext@wlan0wext.service
 systemctl enable hostapd@wlan0.service
