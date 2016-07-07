@@ -80,10 +80,10 @@
             htmlList += "</div>";
         }
 
-        if (WIZARD.connectedESSID != "")
-            $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
         if ($('#wifi_list').html() != htmlList)
             $('#wifi_list').html(htmlList);
+        if (WIZARD.connectedESSID != "")
+            $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
 
         $('.btn-wifi-item').click(function() {
             $('#essid_input_client').val($(this).attr('key'))
@@ -127,7 +127,7 @@
                     return;
                 else {
                     WIZARD.connectedESSID = essid;
-                    $('.btn-wifi-item[key=\'' + WIZARD.connectedESSID + '\']').css('color', 'red');
+                    // $('.btn-wifi-item[key=\'' + WIZARD.connectedESSID + '\']').css('color', 'red');
                     $("#wlan0_essid_label").text(WIZARD.connectedESSID);
                 }
             });
