@@ -83,7 +83,7 @@
         if ($('#wifi_list').html() != htmlList)
             $('#wifi_list').html(htmlList);
         if (WIZARD.connectedESSID != "")
-            $('.btn-wifi-item[key=' + WIZARD.connectedESSID + ']').css('color', 'red');
+            $('.btn-wifi-item[key="' + WIZARD.connectedESSID + '"]').css('color', 'red');
 
         $('.btn-wifi-item').click(function() {
             $('#essid_input_client').val($(this).attr('key'))
