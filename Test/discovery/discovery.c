@@ -244,16 +244,23 @@ int main(int argc, char **argv)
     void* tmp_ptr = 0;      
     getifaddrs(&ifAddrStruct);
 
+    std::stringstream whole_struct;
+
     for (ifaddrs* ifa = ifAddrStruct; ifa; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr->sa_family == AF_INET) {
+        // if (ifa->ifa_addr->sa_family == AF_INET) {
             tmp_ptr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
             char addr_buf[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmp_ptr, addr_buf, INET_ADDRSTRLEN);
-			if (!strcmp(ifa->ifa_name, "eth0") && addr_buf[1] != '6') // exclude 169...
-				vIP_LAN = addr_buf;
-			if(!strcmp(ifa->ifa_name, "wlan0"))
-				vIP_WIFI = addr_buf;
-		}
+
+            whole_struct << ifa->ifa_name << ": " << addr_buf << std::endl;
+
+            if (ifa->ifa_addr->sa_family == AF_INET) {
+				if (!strcmp(ifa->ifa_name, "eth0") && addr_buf[1] != '6') // exclude 169...
+					vIP_LAN = addr_buf;
+				if(!strcmp(ifa->ifa_name, "wlan0wext"))
+					vIP_WIFI = addr_buf;
+			}
+		// }
     }
     if (ifAddrStruct) 
         freeifaddrs(ifAddrStruct);
@@ -284,8 +291,11 @@ int main(int argc, char **argv)
 
     cmd << "'";
 
-    if (verbose)
+    if (verbose) {
         std::cout << "Executing: " << cmd.str().c_str() << std::endl;
+        std::cout << "getifaddrs() returned: " << std::endl << std::endl;
+        std::cout << whole_struct.str();
+    }
 
     system(cmd.str().c_str());
 
