@@ -85,9 +85,10 @@ ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
 apt-get -y install avahi-daemon libnss-mdns
 
 # enable systemd network related services
-systemctl enable systemd-networkd
-systemctl enable systemd-resolved
-systemctl enable systemd-timesyncd
+systemctl enable systemd-networkd.service
+systemctl enable systemd-resolved.service
+systemctl enable systemd-timesyncd.service
+systemctl enable systemd-networkd-wait-online.service
 
 # wireless related services
 systemctl enable wpa_supplicant@wlan0.service
