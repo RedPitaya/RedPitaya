@@ -80,10 +80,15 @@
             htmlList += "</div>";
         }
 
+        // Update networks list if need
         if ($('#wifi_list').html() != htmlList)
             $('#wifi_list').html(htmlList);
+
+        // Mark connected ESSID
         if (WIZARD.connectedESSID != "")
             $('.btn-wifi-item[key="' + WIZARD.connectedESSID + '"]').css('color', 'red');
+        else
+            $('#client_connect').text('Connect');
 
         $('.btn-wifi-item').click(function() {
             $('#essid_input_client').val($(this).attr('key'))
@@ -127,7 +132,6 @@
                     return;
                 else {
                     WIZARD.connectedESSID = essid;
-                    // $('.btn-wifi-item[key=\'' + WIZARD.connectedESSID + '\']').css('color', 'red');
                     $("#wlan0_essid_label").text(WIZARD.connectedESSID);
                 }
             });
@@ -162,7 +166,7 @@
             type: 'GET',
         }).fail(function(msg) {
             var res1 = msg.responseText;
-            var gateway = msg.responseText.split("gateway:")[1].split("\n")[0]
+            var gateway = msg.responseText.split("gateway:")[1].split("\n")[0];
             var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
             var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
@@ -182,7 +186,7 @@
             if (msg.responseText == "OK\n") {
                 $('#access_point_create').text("Remove");
                 $('#wlan0_mode_label').text("Access Point");
-                $('#wlan0_address_label').text("192.168.128.1");
+                // $('#wlan0_address_label').text("192.168.128.1");
             } else {
                 $('#access_point_create').text("Create");
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
