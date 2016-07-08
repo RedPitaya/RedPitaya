@@ -73,12 +73,12 @@ void OnNewParams(void) {
 
     if(IsRunning() && inRun.NewValue() == false)
     {
-        system("systemctl start redpitaya_scpi.service");
+        system("systemctl stop redpitaya_scpi.service");
         inRun.Value() = false;
     }
     else if(!IsRunning() && inRun.NewValue() == true)
     {
-        system("systemctl stop redpitaya_scpi.service");
+        system("systemctl start redpitaya_scpi.service");
         inRun.Value() = true;
     }
 }

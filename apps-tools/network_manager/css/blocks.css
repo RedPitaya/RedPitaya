@@ -31,19 +31,21 @@
 .wlan0_entries {
     width: 350px;
     min-width: 350px;
-    margin-top: 50px;
+    margin-top: 25px;
 }
 
 .inputs {
     background-color: #444444;
 }
 
-#eth0_inputs_labels {
+.status_labels {
+	margin-top: 25px;
     width: 175px;
     float: left;
 }
 
-#eth0_inputs_entry {
+.status_entry {
+	margin-top: 25px;
     width: 175px;
     float: left;
 }
