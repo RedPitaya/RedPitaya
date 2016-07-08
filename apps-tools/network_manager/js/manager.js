@@ -277,7 +277,7 @@ $(document).ready(function() {
         var essid = $('#essid_input_client').val();
         var password = $('#password_input_client').val();
         if (essid == "") {
-            $('#essid_input_client').effect("shake");
+            // $('#essid_input_client').effect("shake");
             return;
         }
         if ($(this).text() == "Connect") {
