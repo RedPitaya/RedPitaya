@@ -142,8 +142,9 @@
                     // Mark connected ESSID
                     if (WIZARD.connectedESSID != "")
                         $('.btn-wifi-item[key="' + WIZARD.connectedESSID + '"]').css('color', 'red');
-                    else
+                    else {
                         $('#client_connect').text('Connect');
+                    }
 
                     $("#wlan0_essid_label").text(WIZARD.connectedESSID);
                 }
@@ -295,6 +296,8 @@ $(document).ready(function() {
                     WIZARD.connectedESSID = '';
                 });
             $('#essid_input_client').text('Connect');
+            WIZARD.connectedESSID = "";
+            $('#wifi_list').html();
         }
 
     });
