@@ -100,6 +100,9 @@
     }
 
     WIZARD.startScan = function() {
+        // Show loader gif
+        $('#wifi_list').html("<div style='float: left; width: 100%; text-align: center;'><img src='/assets/images/loader.gif' width='35px'></div>");
+
         $.ajax({
                 url: '/get_wnet_list',
                 type: 'GET',
@@ -107,6 +110,9 @@
             .fail(function(msg) {
                 WIZARD.getScanResult(msg.responseText);
             });
+    }
+
+    WIZARD.getConnectedWlan = function() {
         $.ajax({
                 url: '/get_connected_wlan',
                 type: 'GET',
@@ -122,7 +128,7 @@
                 WIZARD.WIFIConnected = true;
                 $('body').addClass('loaded');
 
-                var essids = msg.responseText.match(/ESSID:(".*?")/g);;
+                var essids = msg.responseText.match(/ESSID:(".*?")/g);
                 if (essids == null) {
                     $("#wlan0_essid_label").text("None");
                     return;
@@ -132,6 +138,13 @@
                     return;
                 else {
                     WIZARD.connectedESSID = essid;
+
+                    // Mark connected ESSID
+                    if (WIZARD.connectedESSID != "")
+                        $('.btn-wifi-item[key="' + WIZARD.connectedESSID + '"]').css('color', 'red');
+                    else
+                        $('#client_connect').text('Connect');
+
                     $("#wlan0_essid_label").text(WIZARD.connectedESSID);
                 }
             });
@@ -239,15 +252,19 @@
 
 // Page onload event handler
 $(document).ready(function() {
-    setInterval(WIZARD.startScan, 2500);
+    WIZARD.startScan();
+    // setInterval(WIZARD.startScan, 2500);
     setInterval(WIZARD.GetEth0Status, 1000);
     setInterval(WIZARD.GetWlan0Status, 1000);
     setInterval(WIZARD.checkMasterModeWifi, 2000);
+    setInterval(WIZARD.getConnectedWlan, 2000);
 
     $('body').addClass('loaded');
     WIZARD.startStep(0);
 
     $('#network_apply').click(WIZARD.ManualSetEth0);
+
+    $('#refresh_list_btn').click(WIZARD.startScan);
 
     $('#essid_input').keyup(function(event) {
         if ($('#essid_input_client').val() == WIZARD.connectedESSID)
