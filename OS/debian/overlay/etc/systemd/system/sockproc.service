@@ -6,7 +6,7 @@ Wants=network.target
 [Service]
 Type=forking
 #PIDFile=/tmp/shell.sock
-ExecStartPre=-rm -f /tmp/shell.sock
+ExecStartPre=-/bin/rm -f /tmp/shell.sock
 ExecStart=/opt/redpitaya/sbin/sockproc /tmp/shell.sock
 
 [Install]
