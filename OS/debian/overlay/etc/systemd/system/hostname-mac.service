@@ -6,9 +6,9 @@ Before=avahi-daemon.service
 
 [Service]
 Type=oneshot
-#ExecStart=/bin/sh -c "echo redpitaya-`sed 's/://g' /sys/class/net/eth0/address` > /etc/hostname"
-#ExecStart=/bin/sh -c "hostnamectl set-hostname redpitaya-`cat /sys/class/net/eth0/address`"
-ExecStart=/bin/sh -c "hostnamectl set-hostname redpitaya-`sed 's/://g' /sys/class/net/eth0/address`"
+#ExecStart=/bin/sh -c "echo rp-`sed 's/://g' /sys/class/net/eth0/address` > /etc/hostname"
+#ExecStart=/bin/sh -c "hostnamectl set-hostname rp-`cat /sys/class/net/eth0/address`"
+ExecStart=/bin/sh -c "hostnamectl set-hostname rp-`sed 's/://g' /sys/class/net/eth0/address | tail -c 7`"
 
 [Install]
 WantedBy=multi-user.target

@@ -111,6 +111,9 @@ Switching between the two option is implemented
 by [/etc/systemd/system/wireless-mode-ap.service](OS/debian/overlay/etc/systemd/system/wireless-mode-ap.service)
 and [/etc/systemd/system/wireless-mode-client.service](OS/debian/overlay/etc/systemd/system/wireless-mode-client.service)
 which must be run early at boot before most other network related services are run.
+If no wireless configuration file is available, then a third service
+[/etc/systemd/system/wireless_adapter_up@.service](OS/debian/overlay/etc/systemd/system/wireless_adapter_up@.service)
+will link `wirless.network` to client mode, and it will power up the adapter if so `iwlist` will work.
 
 The choice of the interface is driven by the availability of access point
 `/opt/redpitaya/hostapd.conf` and client `/opt/redpitaya/wpa_supplicant.conf`
@@ -292,21 +295,24 @@ enabled inside `systemd.network` files with the line `LinkLocalAddressing=yes`.
 All interfaces have this setting enabled, this way each active interface will
 acquire an address in the reserved `169.254.0.0/16` address block.
 
-With zeroconf support on the computer used to access the device name resolving is also available.
+If the computer used to access the device supports zeroconf (Avahi/Bobjour) name resolving is also available.
 Since there can be multiple devices on a single network they must be distinguished.
-The Ethernet MAC number (`<MAC>`) printed on the Ethernet connector on each device is used
+The last three segments of the Ethernet MAC number without semicolons
+(as printed on the Ethernet connector on each device) is used
 to generate the hostname, which is then used to generate a link name.
+For example if the MAC address is `00:26:32:f0:f1:f2` then the shortened string `shortMAC` is `f0f1f2`.
+
 Hostname generation is done by [/etc/systemd/system/hostname-mac.service](OS/debian/overlay/etc/systemd/system/hostname-mac.service)
 which must run early during the boot process.
 
 Each device can now be accessed using the URL:
 ```
-http://redpitaya-<MAC>.local
+http://rp-<shortMAC>.local
 ```
 
 Similarly to get SSH access use:
 ```
-ssh root@redpitaya-<MAC>.local
+ssh root@rp-<shortMAC>.local
 ```
 
 This service is a good alternative for our *Discovery* service provided on redpitaya.com servers.
