@@ -189,10 +189,10 @@ typedef struct packed {
 irq_t irq;
 
 // system bus
-sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
-sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
+sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
-logic [GDW-1:0] gpio_e;  // output enable
+logic [GDW-1:0] gpio_t;  // output enable
 logic [GDW-1:0] gpio_o;  // output
 logic [GDW-1:0] gpio_i;  // input
 
@@ -281,6 +281,12 @@ red_pitaya_ps ps (
   // ADC analog inputs
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
+  // LED
+  .led           (led_o),
+  // GPIO
+  .gpio_i        (gpio_i),
+  .gpio_o        (gpio_o),
+  .gpio_t        (gpio_t),
   // interrupts
   .irq           (irq         ),
   // system read/write channel
@@ -329,6 +335,9 @@ for (genvar i=13; i<16; i++) begin: for_sys
 end: for_sys
 endgenerate
 
+sys_bus_stub sys_bus_stub_2 (sys[2]); // previously used by GPIO
+sys_bus_stub sys_bus_stub_3 (sys[3]); // previously used by LED
+
 ////////////////////////////////////////////////////////////////////////////////
 // Current time stamp
 ////////////////////////////////////////////////////////////////////////////////
@@ -373,18 +382,7 @@ muxctl muxctl (
 // GPIO
 ////////////////////////////////////////////////////////////////////////////////
 
-gpio #(.DW (GDW)) gpio (
-  // expansion connector
-  .gpio_e  (gpio_e),
-  .gpio_o  (gpio_o),
-  .gpio_i  (gpio_i),
-  // interrupt
-  .irq     (irq.gio_out),
-  // system bus
-  .bus     (sys[2])
-);
-
-assign axi_exe[0].TDATA  = {2{gpio_e}};
+assign axi_exe[0].TDATA  = {2{gpio_t}};
 assign axi_exe[0].TKEEP  = '1;
 assign axi_exe[0].TLAST  = 1'b1;
 assign axi_exe[0].TVALID = 1'b1;
@@ -498,23 +496,6 @@ debounce #(
   .d_p  (trg.gio_out[0]),
   .d_n  (trg.gio_out[1])
 );
-
-////////////////////////////////////////////////////////////////////////////////
-// LED
-////////////////////////////////////////////////////////////////////////////////
-
-gpio #(.DW (8)) led (
-  // expansion connector
-  .gpio_e  (     ),
-  .gpio_o  (led_o),
-  .gpio_i  (led_o),
-  // interrupts
-  .irq     (),
-  // system bus
-  .bus     (sys[3])
-);
-
-//IOBUF iobuf_led [GDW-1:0] (.O(gpio_i), .IO(led_o), .I(gpio_o), .T(~gpio_e));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Calibration
