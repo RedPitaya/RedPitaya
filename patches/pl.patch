@@ -95,7 +95,7 @@
  			compatible = "xlnx,xadc-wiz-3.3";
  			interrupt-parent = <&intc>;
  			interrupts = <0 52 4>;
- 			reg = <0x84000000 0x10000>;
+ 			reg = <0x83c00000 0x10000>;
  			xlnx,alarm-limit-r0 = <0xb5ed>;
  			xlnx,alarm-limit-r1 = <0x57e4>;
 @@ -183,5 +196,78 @@
