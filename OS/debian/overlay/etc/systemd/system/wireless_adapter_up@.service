@@ -11,6 +11,7 @@ ConditionPathExists=!/opt/redpitaya/hostapd.conf
 
 [Service]
 Type=oneshot
+ExecStart=/bin/ln -sf wireless.network.client /etc/systemd/network/wireless.network
 ExecStart=/sbin/ip link set dev %I up
 
 [Install]
