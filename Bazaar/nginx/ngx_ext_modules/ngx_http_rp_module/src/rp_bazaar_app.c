@@ -391,7 +391,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
          *  <app_id>/info/info.json
          *  <app_id>/info/icon.png
          *  <app_id>/controllerhf.so
-         *  <app_id>/fpga.bit
+         *  <app_id>/fpga.conf
          * And we must be able to load the application and test mandatory
          * functions.
          */
