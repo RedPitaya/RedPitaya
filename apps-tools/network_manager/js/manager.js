@@ -7,40 +7,35 @@
  */
 
 (function(WIZARD, $, undefined) {
-    WIZARD.currentStep = 0;
     WIZARD.isInReboot = false;
     WIZARD.connectedESSID = "";
     WIZARD.WIFIConnected = false;
 
-    WIZARD.startStep = function(step) {
-        WIZARD.currentStep = step;
-        WIZARD.steps[WIZARD.currentStep]();
-    }
-
-    WIZARD.nextStep = function() {
-        WIZARD.startStep(WIZARD.currentStep + 1);
-    }
-
     WIZARD.checkDongle = function() {
-        setInterval(function() {
-            $.ajax({
-                    url: '/check_dongle',
-                    type: 'GET',
-                    timeout: 1500
-                })
-                .fail(function(msg) {
-                    if (msg.responseText.startsWith("OK")) {
-                        $('#wlan0_block_entry').show();
-                        $('#wlan0_block_nodongle').hide();
-                    } else {
-                        $('#wlan0_block_entry').hide();
-                        $('#wlan0_block_nodongle').show();
+        $.ajax({
+                url: '/check_dongle',
+                type: 'GET',
+                timeout: 1500
+            })
+            .fail(function(msg) {
+                if (msg.responseText.startsWith("OK")) {
+                    var check = false;
+
+                    if ($('#wlan0_block_entry').css('display') == 'none')
+                        check = true;
+
+                    $('#wlan0_block_entry').show();
+                    $('#wlan0_block_nodongle').hide();
+
+                    if (check) {
+                        WIZARD.startScan();
+                        check = false;
                     }
-                })
-        }, 3000);
-        if (WIZARD.currentStep > 2)
-            WIZARD.currentStep = 0;
-        WIZARD.nextStep();
+                } else {
+                    $('#wlan0_block_entry').hide();
+                    $('#wlan0_block_nodongle').show();
+                }
+            })
     }
 
     WIZARD.getScanResult = function(iwlistResult) {
@@ -247,8 +242,6 @@
         WIZARD.isInReboot = true;
         $('body').removeClass('loaded');
     }
-
-    WIZARD.steps = [WIZARD.checkDongle, WIZARD.startScan];
 }(window.WIZARD = window.WIZARD || {}, jQuery));
 
 // Page onload event handler
@@ -259,9 +252,9 @@ $(document).ready(function() {
     setInterval(WIZARD.GetWlan0Status, 1000);
     setInterval(WIZARD.checkMasterModeWifi, 2000);
     setInterval(WIZARD.getConnectedWlan, 2000);
+    setInterval(WIZARD.checkDongle, 3000);
 
     $('body').addClass('loaded');
-    WIZARD.startStep(0);
 
     $('#network_apply').click(WIZARD.ManualSetEth0);
 
