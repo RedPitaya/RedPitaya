@@ -205,12 +205,13 @@ CALIBRATE_DIR   = Test/calibrate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 DISCOVERY_DIR   = Test/discovery
+LA_TEST_DIR     = api2/test
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generate acquire calib calibrate discovery
+.PHONY: lcr bode monitor monitor_old generate acquire calib calibrate discovery laboardtest
 
 examples: lcr bode monitor monitor_old generate acquire calib discovery
-# calibrate
+# calibrate laboardtest
 
 lcr:
 	$(MAKE) -C $(LCR_DIR)
@@ -249,6 +250,10 @@ calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR)
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+laboardtest: api2
+	$(MAKE) -C $(LA_TEST_DIR)
+	cp api2/test/laboardtest build/bin/laboardtest
+	cp api2/test/install.sh build/install.sh
 rp_communication:
 	make -C $(COMM_DIR)
 
