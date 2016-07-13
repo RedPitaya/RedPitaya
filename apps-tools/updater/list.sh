@@ -1,5 +1,5 @@
 #!/bin/bash
-wget -O /tmp/download.html http://downloads.redpitaya.com/downloads/ &> /dev/null
+wget -O /tmp/download.html http://downloads.redpitaya.com/downloads/0.96 &> /dev/null
 
 IFS=$'\n'
 for l in `cat /tmp/download.html`; do
