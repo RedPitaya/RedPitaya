@@ -7,15 +7,6 @@ INSTALL_DIR ?= build
 #
 ################################################################################
 
-# directories
-NGINX_DIR       = Bazaar/nginx
-IDGEN_DIR       = Bazaar/tools/idgen
-
-# targets
-NGINX           = $(INSTALL_DIR)/sbin/nginx
-IDGEN           = $(INSTALL_DIR)/sbin/idgen
-SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
-
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
@@ -82,6 +73,13 @@ api2: librp2
 # Red Pitaya ecosystem
 ################################################################################
 
+# directories
+NGINX_DIR       = Bazaar/nginx
+
+# targets
+NGINX           = $(INSTALL_DIR)/sbin/nginx
+IDGEN           = $(INSTALL_DIR)/sbin/idgen
+SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 
 WEBSOCKETPP_TAG = 0.7.0
 LUANGINX_TAG    = v0.10.2
@@ -154,9 +152,20 @@ $(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANG
 	mkdir -p $(INSTALL_DIR)/www/conf/lua
 	cp -fr $(NGINX_DIR)/nginx/conf/lua/* $(abspath $(INSTALL_DIR))/www/conf/lua
 
-$(IDGEN): $(NGINX)
+ifdef ENABLE_LICENSING
+
+IDGEN_DIR = Applications/idgen
+
+$(IDGEN):
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
+
+else
+
+$(IDGEN):
+	touch $(IDGEN)
+
+endif
 
 $(SOCKPROC): $(SOCKPROC_DIR)
 	$(MAKE) -C $<
