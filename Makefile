@@ -20,6 +20,9 @@ export GREET_MSG
 
 all: api libredpitaya nginx scpi examples rp_communication apps-tools apps-pro apps-free
 
+$(DL):
+	mkdir -p $@
+
 $(INSTALL_DIR):
 	mkdir -p $@
 
@@ -270,6 +273,30 @@ rp_communication:
 # Red Pitaya ecosystem and free applications
 ################################################################################
 
+LIB_BOOTSTRAP_TAG = 3.3.6
+LIB_BOOTSTRAP_URL = https://github.com/twbs/bootstrap/releases/download/v$(LIB_BOOTSTRAP_TAG)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist.zip
+LIB_BOOTSTRAP_TAR = $(DL)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist.zip
+LIB_BOOTSTRAP_DIR = apps-tools/assets/bootstrap
+
+$(LIB_BOOTSTRAP_TAR): | $(DL)
+	curl -L $(LIB_BOOTSTRAP_URL) -o $@
+
+$(LIB_BOOTSTRAP_DIR): $(LIB_BOOTSTRAP_TAR)
+	unzip $< -d $(@D)
+	mv $(@D)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist $@
+
+LIB_JQUERY_TAG = 3.0.0
+LIB_JQUERY_URL = https://code.jquery.com/jquery-$(LIB_JQUERY_TAG).min.js
+LIB_JQUERY_TAR = $(DL)/jquery-$(LIB_JQUERY_TAG).min.js
+LIB_JQUERY_FIL = apps-tools/assets/jquery-$(LIB_JQUERY_TAG).min.js
+
+$(LIB_JQUERY_TAR): | $(DL)
+	curl -L $(LIB_JQUERY_URL) -o $@
+
+$(LIB_JQUERY_FIL): $(LIB_JQUERY_TAR)
+	mkdir -p $@
+	cp $< $(@D)
+
 APP_ECOSYSTEM_DIR      = apps-tools/ecosystem
 APP_SCPISERVER_DIR     = apps-tools/scpi_server
 APP_NETWORKMANAGER_DIR = apps-tools/network_manager
@@ -279,7 +306,7 @@ APP_UPDATER_DIR        = apps-tools/updater
 
 apps-tools: ecosystem scpi_server updater network_manager
 
-ecosystem:
+ecosystem: $(LIB_BOOTSTRAP_DIR)
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 scpi_server: api $(NGINX)
