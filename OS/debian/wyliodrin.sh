@@ -87,7 +87,25 @@ echo -n redpitaya > wyliodrin-server-nodejs/board.type
 # systemd service
 ################################################################################
 
-systemctl enable redpitaya_wyliodrin
+# there is a service manager web interface available now
+#systemctl enable redpitaya_wyliodrin
 
 # stop the redos-server service, since it is keeping open the mounted fylesystem
 systemctl stop redis-server
+
+################################################################################
+# cleanup
+################################################################################
+
+# remove SSH keys, so they can be created at boot by ssh-reconfigure.service
+/bin/rm -v /etc/ssh/ssh_host_*
+
+# clean shell
+apt-get clean
+history -c
+
+# file system cleanup for better compression
+cat /dev/zero > $ROOT_DIR/zero.file
+sync -f $ROOT_DIR/zero.file
+rm -f $ROOT_DIR/zero.file
+halt
