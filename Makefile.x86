@@ -96,13 +96,11 @@ fpga: $(DTREE_DIR)
 
 UBOOT           = $(TMP)/u-boot.elf
 
-ENVTOOLS_CFG    = $(INSTALL_DIR)/etc/fw_env.config
-
 UBOOT_SCRIPT    = $(INSTALL_DIR)/u-boot.scr
 
 .PHONY: u-boot
 
-u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(ENVTOOLS_CFG)
+u-boot: $(UBOOT) $(UBOOT_SCRIPT)
 
 $(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
@@ -126,10 +124,6 @@ $(UBOOT): $(UBOOT_DIR) $(TMP)
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
-
-$(ENVTOOLS_CFG): $(UBOOT_DIR)
-	mkdir -p $(INSTALL_DIR)/etc/
-	cp $</tools/env/fw_env.config $(INSTALL_DIR)/etc
 
 ################################################################################
 # Linux build provides: $(LINUX)

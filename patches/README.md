@@ -109,10 +109,8 @@ Linux kernel configuration is based on `arch/arm/configs/xilinx_zynq_defconfig`,
 OS costumization can be split between generic components (file system mounting, network configuration, wireless access point) and Red Pitaya specific components (starting Nginx and SCPI servers).
 
 ### U-Boot tools
-Executables `fw_printenv` and `fw_setenv` (a symbolic link to `fw_printenv`) and configuration file `OS/buildroot/overlay/etc/fw_env.config` should be copied to the OS image:
+Configuration file `patches/fw_env.config` should be copied to the OS image:
 ```
-/usr/sbin/fw_printenv
-/usr/sbin/fw_setenv
 /etc/fw_env.config
 ```
 
