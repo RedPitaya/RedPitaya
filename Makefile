@@ -315,7 +315,6 @@ updater: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 scpi_server: ecosystem api $(NGINX)
-	$(MAKE) -C $(APP_SCPISERVER_DIR)
 	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 wyliodrin_manager: ecosystem
