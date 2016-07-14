@@ -7,15 +7,15 @@
 	var startUsing = 0;
     $(document).ready(function($) {
         AnalyticsCore.init(function(){
-            AnalyticsCore.sendExecTime('/scpi_server', 'scpi_server');
-            AnalyticsCore.sendScreenView('/scpi_server', 'Redpitaya', 'Remote control');
-            AnalyticsCore.sendSysInfo('/scpi_server');
+            AnalyticsCore.sendExecTime('/wyliodrin_manager', 'wyliodrin_manager');
+            AnalyticsCore.sendScreenView('/wyliodrin_manager', 'Redpitaya', 'Visual Programing');
+            AnalyticsCore.sendSysInfo('/wyliodrin_manager');
             startUsing = performance.now();
         });
     });
 
 	$(window).on('beforeunload', function(){
-	      $.cookie('scpi_server-run', performance.now() - startUsing);
+	      $.cookie('wyliodrin_manager-run', performance.now() - startUsing);
 	});
 
 })(jQuery);
