@@ -66,13 +66,6 @@
                 obj['description'] = value['description'];
                 obj['url'] = url + key + '/?type=run';
                 obj['image'] = url + key + '/info/icon.png';
-
-                // Specific for SCPI server
-                if (key == 'scpi_server' || value['type'] == 'run')
-                    obj['check_online'] = false;
-                else
-                    obj['check_online'] = true;
-
                 obj['licensable'] = true;
                 obj['type'] = value['type'];
                 apps.push(obj);
@@ -315,6 +308,7 @@
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
         { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://wiki.redpitaya.com/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 })(jQuery);

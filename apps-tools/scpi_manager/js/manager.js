@@ -31,7 +31,7 @@
 
     SCPI.StartServer = function() {
         $.ajax({
-                url: '/start_scpi_server',
+                url: '/start_scpi_manager',
                 type: 'GET',
                 timeout: 1500
             })
@@ -42,7 +42,7 @@
 
     SCPI.StopServer = function() {
         $.ajax({
-                url: '/stop_scpi_server',
+                url: '/stop_scpi_manager',
                 type: 'GET',
                 timeout: 1500
             })

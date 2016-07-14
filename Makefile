@@ -298,14 +298,14 @@ rp_communication:
 #	cp $< $(@D)
 
 APP_ECOSYSTEM_DIR        = apps-tools/ecosystem
-APP_SCPISERVER_DIR       = apps-tools/scpi_server
+APP_SCPIMANAGER_DIR      = apps-tools/scpi_manager
 APP_WYLIODRINMANAGER_DIR = apps-tools/wyliodrin_manager
 APP_NETWORKMANAGER_DIR   = apps-tools/network_manager
 APP_UPDATER_DIR          = apps-tools/updater
 
-.PHONY: apps-tools ecosystem updater scpi_server wyliodrin_manager network_manager
+.PHONY: apps-tools ecosystem updater scpi_manager wyliodrin_manager network_manager
 
-apps-tools: ecosystem updater scpi_server wyliodrin_manager network_manager
+apps-tools: ecosystem updater scpi_manager wyliodrin_manager network_manager
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -314,8 +314,8 @@ updater: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-scpi_server: ecosystem api $(NGINX)
-	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+scpi_manager: ecosystem api $(NGINX)
+	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 wyliodrin_manager: ecosystem
 	$(MAKE) -C $(APP_WYLIODRINMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
