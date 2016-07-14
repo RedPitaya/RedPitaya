@@ -15,18 +15,23 @@
                 timeout: 1500
             })
             .fail(function(msg) {
-                if (msg.responseText.split('\n')[0] != "inactive") {
+                if (msg.responseText.split('\n')[0] == "active") {
                     $('#VPS_RUN').hide();
                     $('#VPS_STOP').css('display', 'block');
                     $('#label-is-runnung').hide();
                     $('#label-is-not-runnung').show();
-                } else {}
+                } else {
+                    $('#VPS_STOP').hide();
+                    $('#VPS_RUN').css('display', 'block');
+                    $('#label-is-not-runnung').hide();
+                    $('#label-is-runnung').show();
+                }
             })
     }
 
     VPS.StartServer = function() {
         $.ajax({
-                url: '/start_wyliodrin_status',
+                url: '/start_wyliodrin_server',
                 type: 'GET',
                 timeout: 1500
             })
@@ -37,7 +42,7 @@
 
     VPS.StopServer = function() {
         $.ajax({
-                url: '/stop_wyliodrin_status',
+                url: '/stop_wyliodrin_server',
                 type: 'GET',
                 timeout: 1500
             })
@@ -49,6 +54,7 @@
 
 // Page onload event handler
 $(function() {
+    VPS.CheckServerStatus();
     setInterval(VPS.CheckServerStatus, 3000);
 
     $('#VPS_RUN').click(VPS.StartServer);
