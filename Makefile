@@ -319,11 +319,9 @@ scpi_server: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPISERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 wyliodrin_manager: ecosystem
-	$(MAKE) -C $(APP_WYLIODRINMANAGER_DIR)
 	$(MAKE) -C $(APP_WYLIODRINMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 network_manager: ecosystem
-	$(MAKE) -C $(APP_NETWORKMANAGER_DIR)
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################

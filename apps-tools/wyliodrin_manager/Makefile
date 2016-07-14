@@ -12,23 +12,10 @@ REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
 INSTALL_DIR ?= .
+TARGET = $(INSTALL_DIR)/www/apps/$(APP)
 
-ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
-
-all:
-
-$(ZIP):
-	-$(RM) target -rf
-	mkdir -p target/$(APP)
-	cp -r fpga.conf css img *.html info js target/$(APP)
-	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
-	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
-	cd target; zip -r ../$(ZIP) *
-	$(RM) target -rf
-
-install: $(ZIP)
-	unzip $(ZIP) -d $(INSTALL_DIR)/www/apps
-
-clean:
-	-$(RM) target -rf
-	-$(RM) $(ZIP)
+install:
+	mkdir -p $(TARGET)
+	cp -r nginx.conf fpga.conf css img *.html info js $(TARGET)
+	sed -i $(TARGET)/info/info.json -e 's/REVISION/$(REVISION)/'
+	sed -i $(TARGET)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
