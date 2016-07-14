@@ -13,22 +13,14 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 
 INSTALL_DIR ?= .
 
-CONTROLLER=controllerhf.so
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
-ARTIFACTS=$(CONTROLLER)
 
-CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
-export CFLAGS
+all:
 
-all: $(CONTROLLER)
-
-$(CONTROLLER):
-	$(MAKE) -C src
-
-$(ZIP): $(CONTROLLER)
+$(ZIP):
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) fpga.conf css fonts img *.html info js target/$(APP)
+	cp -r fpga.conf css img *.html info js target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *
@@ -38,6 +30,5 @@ install: $(ZIP)
 	unzip $(ZIP) -d $(INSTALL_DIR)/www/apps
 
 clean:
-	$(MAKE) -C src clean
 	-$(RM) target -rf
 	-$(RM) $(ZIP)
