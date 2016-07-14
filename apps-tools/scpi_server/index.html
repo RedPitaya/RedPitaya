@@ -1,6 +1,6 @@
 <!-- $Id$
  *
- * Red Pitaya Oscilloscope client
+ * Red Pitaya SCPI service manager
  *
  * Author: Dakus <info@eskala.eu>
  *
@@ -20,9 +20,8 @@
     <script src="js/jquery-2.1.3.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
     <script src="js/jquery.ui.touch-punch.min.js"></script>
-    <script src="js/jquery.mousewheel.min.js"></script>
-    <script src="js/jquery.cookie.js"></script>
-    <script src="js/scope.js?3"></script>
+    <script src="js/manager.js?3"></script>
+    <script src="js/jquery.cookie.js?3"></script>
     <script src="../assets/analytics-core.js"></script>
     <script src="js/analytics-main.js?1"></script>
     <script src="js/jquery.browser.js?1"></script>
@@ -89,11 +88,11 @@
                         </div>
                         <div align="center">
                             <ul class="">
-                                <li class="run_buttons" id="OSC_RUN">
+                                <li class="run_buttons" id="SCPI_RUN">
                                     <a href="#" id="a_run" style="">RUN</a>
                                 </li>
-                                <li class="run_buttons" id="OSC_STOP" style="display:none;">
-                                    <a href="#"  id="a_stop">STOP</a>
+                                <li class="run_buttons" id="SCPI_STOP" style="display:none;">
+                                    <a href="#" id="a_stop">STOP</a>
                                 </li>
                             </ul>
                         </div>
