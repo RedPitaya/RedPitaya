@@ -273,29 +273,29 @@ rp_communication:
 # Red Pitaya ecosystem and free applications
 ################################################################################
 
-LIB_BOOTSTRAP_TAG = 3.3.6
-LIB_BOOTSTRAP_URL = https://github.com/twbs/bootstrap/releases/download/v$(LIB_BOOTSTRAP_TAG)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist.zip
-LIB_BOOTSTRAP_TAR = $(DL)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist.zip
-LIB_BOOTSTRAP_DIR = apps-tools/assets/bootstrap
+#LIB_BOOTSTRAP_TAG = 3.3.6
+#LIB_BOOTSTRAP_URL = https://github.com/twbs/bootstrap/releases/download/v$(LIB_BOOTSTRAP_TAG)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist.zip
+#LIB_BOOTSTRAP_TAR = $(DL)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist.zip
+#LIB_BOOTSTRAP_DIR = apps-tools/assets/bootstrap
+#
+#$(LIB_BOOTSTRAP_TAR): | $(DL)
+#	curl -L $(LIB_BOOTSTRAP_URL) -o $@
+#
+#$(LIB_BOOTSTRAP_DIR): $(LIB_BOOTSTRAP_TAR)
+#	unzip $< -d $(@D)
+#	mv $(@D)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist $@
 
-$(LIB_BOOTSTRAP_TAR): | $(DL)
-	curl -L $(LIB_BOOTSTRAP_URL) -o $@
-
-$(LIB_BOOTSTRAP_DIR): $(LIB_BOOTSTRAP_TAR)
-	unzip $< -d $(@D)
-	mv $(@D)/bootstrap-$(LIB_BOOTSTRAP_TAG)-dist $@
-
-LIB_JQUERY_TAG = 3.0.0
-LIB_JQUERY_URL = https://code.jquery.com/jquery-$(LIB_JQUERY_TAG).min.js
-LIB_JQUERY_TAR = $(DL)/jquery-$(LIB_JQUERY_TAG).min.js
-LIB_JQUERY_FIL = apps-tools/assets/jquery-$(LIB_JQUERY_TAG).min.js
-
-$(LIB_JQUERY_TAR): | $(DL)
-	curl -L $(LIB_JQUERY_URL) -o $@
-
-$(LIB_JQUERY_FIL): $(LIB_JQUERY_TAR)
-	mkdir -p $@
-	cp $< $(@D)
+#LIB_JQUERY_TAG = 3.0.0
+#LIB_JQUERY_URL = https://code.jquery.com/jquery-$(LIB_JQUERY_TAG).min.js
+#LIB_JQUERY_TAR = $(DL)/jquery-$(LIB_JQUERY_TAG).min.js
+#LIB_JQUERY_FIL = apps-tools/assets/jquery-$(LIB_JQUERY_TAG).min.js
+#
+#$(LIB_JQUERY_TAR): | $(DL)
+#	curl -L $(LIB_JQUERY_URL) -o $@
+#
+#$(LIB_JQUERY_FIL): $(LIB_JQUERY_TAR)
+#	mkdir -p $@
+#	cp $< $(@D)
 
 APP_ECOSYSTEM_DIR        = apps-tools/ecosystem
 APP_SCPISERVER_DIR       = apps-tools/scpi_server
@@ -307,10 +307,10 @@ APP_UPDATER_DIR          = apps-tools/updater
 
 apps-tools: ecosystem updater scpi_server wyliodrin_manager network_manager
 
-ecosystem: $(LIB_BOOTSTRAP_DIR)
+ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-updater: api $(NGINX)
+updater: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -322,7 +322,7 @@ wyliodrin_manager: ecosystem
 	$(MAKE) -C $(APP_WYLIODRINMANAGER_DIR)
 	$(MAKE) -C $(APP_WYLIODRINMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-network_manager:
+network_manager: ecosystem
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR)
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
