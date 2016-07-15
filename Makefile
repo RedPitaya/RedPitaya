@@ -18,7 +18,7 @@ define GREET_MSG
 endef
 export GREET_MSG
 
-all: api libredpitaya nginx scpi examples rp_communication apps-tools apps-pro apps-free
+all: api libredpitaya nginx scpi examples rp_communication apps-tools apps-pro
 
 $(DL):
 	mkdir -p $@
@@ -327,13 +327,16 @@ network_manager: ecosystem
 # Red Pitaya ecosystem and free applications
 ################################################################################
 
-APPS_FREE_DIR   = apps-free/
+APPS_FREE_DIR = apps-free
 
 .PHONY: apps-free
 
 apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) all
 	$(MAKE) -C $(APPS_FREE_DIR) install
+
+apps-free-clean:
+	$(MAKE) -C $(APPS_FREE_DIR) clean
 
 ################################################################################
 # Red Pitaya PRO applications
@@ -392,4 +395,4 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
-	make -C $(APPS_FREE_DIR) clean
+	apps-free-clean
