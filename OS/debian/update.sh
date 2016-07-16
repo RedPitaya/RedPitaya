@@ -13,46 +13,31 @@
 
 IMAGE=$1
 
+BOOT_DIR=boot
+
 DEVICE=`losetup -f`
 
-losetup $DEVICE $IMAGE
+mkdir $BOOT_DIR
+losetup --offset 4194304 $DEVICE $IMAGE
 
-BOOT_DIR=boot
-ROOT_DIR=root
-
-BOOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '2!d'`
-ROOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '3!d'`
-
-# Mount file systems
-mkdir -p $BOOT_DIR $ROOT_DIR
-mount $BOOT_DEV $BOOT_DIR
-mount $ROOT_DEV $ROOT_DIR
+mount -t vfat $DEVICE $BOOT_DIR
 
 ################################################################################
-# install OS
+# install ecosystem
 ################################################################################
 
-OVERLAY=OS/debian/overlay
+# reove old ecosystem files
+rm -rf $BOOT_DIR/*
 
-#source OS/debian/debian.sh 
-
-# enable chroot access with native execution
-cp /etc/resolv.conf         $ROOT_DIR/etc/
-cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
-
-#source OS/debian/redpitaya.sh
-. OS/debian/wyliodrin.sh
-
-# disable chroot access with native execution
-rm $ROOT_DIR/etc/resolv.conf
-rm $ROOT_DIR/usr/bin/qemu-arm-static
+# Copy files to the boot file system
+unzip ecosystem*.zip -d $BOOT_DIR
 
 ################################################################################
 # umount image
 ################################################################################
 
 # Unmount file systems
-umount $BOOT_DIR $ROOT_DIR
-rmdir $BOOT_DIR $ROOT_DIR
+umount $BOOT_DIR
+rmdir $BOOT_DIR
 
 losetup -d $DEVICE
