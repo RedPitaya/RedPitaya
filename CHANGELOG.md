@@ -1,26 +1,91 @@
-# Release 0.9?
+# Release 0.96 RC?
+
+Application changes:
+- partial cleanup of copied JS/CSS code and images
+
+# Release 0.96 RC1
 
 System Changes:
 - recoded Bazaar related Makefiles, instead of cross compilation, a native
-  compiler root system is used, running inside an ARM QEMU wirtualized
+  compiler root system is used, running inside an ARM QEMU virtualized
   environment, this avoids library version issues, but emulation is slow
 - top Makefiles are now split into a system Makefile.x86, which requires x86
-  to run tools like Vivado and a user space Makefile.arm used to compile
+  to run tools like Vivado and a user space Makefile used to compile
   applications (Bazaar, web apps, SCPI, API, ...)
 - updated Nginx from version 1.5.3 to the latest 1.10.0
 - removed NGINX patches
 - updated Lua Nginx from version v0.8.7 to the latest v0.10.2
-- updated Websocket++ from version 0.5.0 to a slightly newer 0.7.0
+- updated Websocket++ from version 0.5.0 to a slightly newer 0.7.0,
+  and provided a patch for an issue triggered by kernel update to 4.4
 - removed Buildroot, lately it was only used to provide libraries at compile
   time, now Debian libraries are used directly
 - removing SDK, since it was not maintained, now it is possible to compile all
   user space code directly on Red Pitaya
 - removed some deprecated/duplicated source code
+- Vivado/U-Boot/Linux were updated to xilins-v2016.2
+- the Linaro compiler is no longer needed, ARMHF compiler is now part of Vivado SDK
+
+OS changes:
+- the OS was switched from Debian Jessie to Ubintu 16.04,
+  the main reason for the switch is access to Launchpad PPA
+- OS image building scripts are now a bit cleaner with separation into
+  generic Ubuntu settings, network and Red Pitaya specific settings
+
+Network:
+- the network setup was entirely recoded using systemd specific tools
+- zeroconf support was added
+- the network setup is now properly documented in NETWORK.md
+
+FPGA2:
+- `fpga2` project was added, which is used by `api2` and the LA application
+- the project is rewritten in SystemVerilog mostly to make the code shorter
+- instead of storing samples in a short buffer, Xilinx DMA is used to copy data into the main memory
+- more thought is (should be) given to modules with Linux kernel drivers available
+
+API2:
+- UIO is used to divide the memory space into separate segments each controlled by a separate driver
+- device tree overlays are used to handle loading various FPGA images, this is not yet ready for public use
 
 Application changes:
 - Makefile changes so applications can be compiled directly on Red Pitaya
 - removing 'libjpeg' sources from spectrum analyzer applications and instead
   using the 'libjpeg-turbo' Debian system library
+
+Network manager
+/SCPI/Wyliodrin managers
+
+# Release 0.95
+
+New applications:
+- LCR meter application - accurately measures capacitors, inductors and resistors using the test frequencies of 100Hz, 1 kHz, 10kHz and 100kHz.
+
+Application improvements:
+-SCPI server:
+  - can now be started directly from WEB browser via Remote control app
+- Oscilloscope:
+  - navigation was improved (time offset can now be set by mouse dragging, t/div can be changed by scrolling)
+  - user is now able to retrieve signal acquired into ADC buffer even if acquisition is stopped
+  - stability of data transfer was improved together with network performance indication 
+  - gain setting is now remembered when quitting app
+  - trigger status is now properly updated at high frequencies
+  - we fixed few normal trigger issues
+- Spectrum analyzer:
+  - acquire algorithm fix that fixes spectrum issues
+
+General system improvements:
+- discovery service & market access problems are now solved
+- user is now able to upgrade Red Pitaya OS directly from the WEB browser
+  rewriting complete SD card image is now only necesary in case of Debian/Ubuntu changes (usually systemd and network related)
+- Red Pitaya desktop was improved so it is more simple to use and also provides better support for tablets and smartphones
+- browser detection was added that suggest users to install or upgrade to recommended version
+- online/offline detection was added so that user knows if Red Pitaya can access the internet / if it is possible use some features that requires internet connection
+- switching between contributed and official applications doesn’t causes problems anymore
+- system crashes reports with debug information can now be sent to Red Pitaya team on user request
+- Feedback app - enables user to send feedback our support with attached information about Red Pitaya OS, computer OS & browser
+- Analytics is sent to Red Pitaya team on user request in order to track system events that can help improve user experience 
+
+Other:
+- access to wiki page was added, but the main news is that we also updated wiki documentation
 
 # Release 0.94 RC24
 
