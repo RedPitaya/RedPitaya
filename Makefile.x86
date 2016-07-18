@@ -185,17 +185,17 @@ $(DTREE_DIR): $(DTREE_TAR)
 $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
 	cp $(FPGA_DIR)/sdk/dts/*.dtsi $(TMP)
 	cp $(FPGA_DIR)/sdk/dts/*.dts  $(TMP)
-	#patch $(TMP)/zynq-7000.dtsi patches/zynq-7000.patch
-	#patch $(TMP)/pl.dtsi        patches/pl.patch
-	patch $(TMP)/system.dts patches/devicetree.patch
+	#patch $(TMP)/zynq-7000.dtsi patches/devicetree/zynq-7000.patch
+	#patch $(TMP)/pl.dtsi        patches/devicetree/pl.patch
+	patch $(TMP)/system.dts     patches/devicetree/system.patch
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP) $(TMP)/devicetree.dts
-	tools/dtc/bin/dtc -O dtb -o $(TMP)/amba_pl.dtbo -b 0 -@ patches/amba_pl.dts
+	tools/dtc/bin/dtc -O dtb -o $(TMP)/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
-	cp $(DEVICETREE)        $(INSTALL_DIR)
-	cp $(TMP)/amba_pl.dtbo  $(INSTALL_DIR)
-	cp patches/amba_pl.sh   $(INSTALL_DIR)
-	cp patches/rmamba_pl.sh $(INSTALL_DIR)
+	cp $(DEVICETREE)                   $(INSTALL_DIR)
+	cp $(TMP)/amba_pl.dtbo             $(INSTALL_DIR)
+	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
+	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
 
 ################################################################################
 # boot file generator
