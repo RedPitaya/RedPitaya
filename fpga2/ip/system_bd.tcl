@@ -506,7 +506,6 @@ CONFIG.PCW_EN_RST3_PORT {1} \
 CONFIG.PCW_EN_SDIO0 {1} \
 CONFIG.PCW_EN_SPI1 {1} \
 CONFIG.PCW_EN_TTC0 {1} \
-CONFIG.PCW_EN_UART0 {1} \
 CONFIG.PCW_EN_UART1 {1} \
 CONFIG.PCW_EN_USB0 {1} \
 CONFIG.PCW_FCLK0_PERIPHERAL_CLKSRC {IO PLL} \
@@ -585,7 +584,7 @@ CONFIG.PCW_MIO_13_DIRECTION {inout} \
 CONFIG.PCW_MIO_13_IOTYPE {LVCMOS 3.3V} \
 CONFIG.PCW_MIO_13_PULLUP {enabled} \
 CONFIG.PCW_MIO_13_SLEW {slow} \
-CONFIG.PCW_MIO_14_DIRECTION {in} \
+CONFIG.PCW_MIO_14_DIRECTION {out} \
 CONFIG.PCW_MIO_14_IOTYPE {LVCMOS 3.3V} \
 CONFIG.PCW_MIO_14_PULLUP {enabled} \
 CONFIG.PCW_MIO_14_SLEW {slow} \
@@ -781,8 +780,8 @@ CONFIG.PCW_MIO_9_DIRECTION {in} \
 CONFIG.PCW_MIO_9_IOTYPE {LVCMOS 3.3V} \
 CONFIG.PCW_MIO_9_PULLUP {enabled} \
 CONFIG.PCW_MIO_9_SLEW {slow} \
-CONFIG.PCW_MIO_TREE_PERIPHERALS {GPIO#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#GPIO#UART 1#UART 1#SPI 1#SPI 1#SPI 1#SPI 1#UART 0#UART 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#SD 0#SD 0#SD 0#SD 0#SD 0#SD 0#SD 0#SD 0#USB Reset#GPIO#I2C 0#I2C 0#Enet 0#Enet 0} \
-CONFIG.PCW_MIO_TREE_SIGNALS {gpio[0]#qspi0_ss_b#qspi0_io[0]#qspi0_io[1]#qspi0_io[2]#qspi0_io[3]#qspi0_sclk#gpio[7]#tx#rx#mosi#miso#sclk#ss[0]#rx#tx#tx_clk#txd[0]#txd[1]#txd[2]#txd[3]#tx_ctl#rx_clk#rxd[0]#rxd[1]#rxd[2]#rxd[3]#rx_ctl#data[4]#dir#stp#nxt#data[0]#data[1]#data[2]#data[3]#clk#data[5]#data[6]#data[7]#clk#cmd#data[0]#data[1]#data[2]#data[3]#cd#wp#reset#gpio[49]#scl#sda#mdc#mdio} \
+CONFIG.PCW_MIO_TREE_PERIPHERALS {GPIO#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#Quad SPI Flash#GPIO#UART 1#UART 1#SPI 1#SPI 1#SPI 1#SPI 1#SPI 1#SPI 1#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#Enet 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#USB 0#SD 0#SD 0#SD 0#SD 0#SD 0#SD 0#SD 0#SD 0#USB Reset#GPIO#I2C 0#I2C 0#Enet 0#Enet 0} \
+CONFIG.PCW_MIO_TREE_SIGNALS {gpio[0]#qspi0_ss_b#qspi0_io[0]#qspi0_io[1]#qspi0_io[2]#qspi0_io[3]#qspi0_sclk#gpio[7]#tx#rx#mosi#miso#sclk#ss[0]#ss[1]#ss[2]#tx_clk#txd[0]#txd[1]#txd[2]#txd[3]#tx_ctl#rx_clk#rxd[0]#rxd[1]#rxd[2]#rxd[3]#rx_ctl#data[4]#dir#stp#nxt#data[0]#data[1]#data[2]#data[3]#clk#data[5]#data[6]#data[7]#clk#cmd#data[0]#data[1]#data[2]#data[3]#cd#wp#reset#gpio[49]#scl#sda#mdc#mdio} \
 CONFIG.PCW_NAND_CYCLES_T_AR {1} \
 CONFIG.PCW_NAND_CYCLES_T_CLR {1} \
 CONFIG.PCW_NAND_CYCLES_T_RC {11} \
@@ -900,10 +899,10 @@ CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {0} \
 CONFIG.PCW_SPI0_SPI0_IO {<Select>} \
 CONFIG.PCW_SPI1_GRP_SS0_ENABLE {1} \
 CONFIG.PCW_SPI1_GRP_SS0_IO {MIO 13} \
-CONFIG.PCW_SPI1_GRP_SS1_ENABLE {0} \
-CONFIG.PCW_SPI1_GRP_SS1_IO {<Select>} \
-CONFIG.PCW_SPI1_GRP_SS2_ENABLE {0} \
-CONFIG.PCW_SPI1_GRP_SS2_IO {<Select>} \
+CONFIG.PCW_SPI1_GRP_SS1_ENABLE {1} \
+CONFIG.PCW_SPI1_GRP_SS1_IO {MIO 14} \
+CONFIG.PCW_SPI1_GRP_SS2_ENABLE {1} \
+CONFIG.PCW_SPI1_GRP_SS2_IO {MIO 15} \
 CONFIG.PCW_SPI1_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_SPI1_SPI1_IO {MIO 10 .. 15} \
 CONFIG.PCW_SPI_PERIPHERAL_CLKSRC {IO PLL} \
@@ -956,8 +955,8 @@ CONFIG.PCW_TTC_PERIPHERAL_FREQMHZ {50} \
 CONFIG.PCW_UART0_BAUD_RATE {115200} \
 CONFIG.PCW_UART0_GRP_FULL_ENABLE {0} \
 CONFIG.PCW_UART0_GRP_FULL_IO {<Select>} \
-CONFIG.PCW_UART0_PERIPHERAL_ENABLE {1} \
-CONFIG.PCW_UART0_UART0_IO {MIO 14 .. 15} \
+CONFIG.PCW_UART0_PERIPHERAL_ENABLE {0} \
+CONFIG.PCW_UART0_UART0_IO {<Select>} \
 CONFIG.PCW_UART1_BAUD_RATE {115200} \
 CONFIG.PCW_UART1_GRP_FULL_ENABLE {0} \
 CONFIG.PCW_UART1_GRP_FULL_IO {<Select>} \
@@ -1139,8 +1138,6 @@ CONFIG.PCW_ENET0_GRP_MDIO_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET0_PERIPHERAL_DIVISOR0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET0_PERIPHERAL_DIVISOR1.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET0_PERIPHERAL_FREQMHZ.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_ENET0_RESET_ENABLE.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_ENET0_RESET_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET1_ENET1_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET1_GRP_MDIO_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET1_GRP_MDIO_IO.VALUE_SRC {DEFAULT} \
@@ -1162,7 +1159,6 @@ CONFIG.PCW_EN_QSPI.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_SDIO0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_SPI1.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_TTC0.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_EN_UART0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_UART1.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_USB0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_FCLK0_PERIPHERAL_CLKSRC.VALUE_SRC {DEFAULT} \
@@ -1204,7 +1200,6 @@ CONFIG.PCW_I2C0_RESET_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_I2C1_GRP_INT_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_I2C1_GRP_INT_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_I2C1_I2C1_IO.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_I2C1_PERIPHERAL_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_I2C1_RESET_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_I2C1_RESET_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_I2C_PERIPHERAL_FREQMHZ.VALUE_SRC {DEFAULT} \
@@ -1455,7 +1450,6 @@ CONFIG.PCW_QSPI_GRP_FBCLK_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_FBCLK_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_IO1_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_IO1_IO.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_SINGLE_SS_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_SS1_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_SS1_IO.VALUE_SRC {DEFAULT} \
@@ -1488,9 +1482,7 @@ CONFIG.PCW_SPI0_GRP_SS2_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_SPI0_SPI0_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_SPI1_GRP_SS0_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_SPI1_GRP_SS0_IO.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_SPI1_GRP_SS1_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_SPI1_GRP_SS1_IO.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_SPI1_GRP_SS2_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_SPI1_GRP_SS2_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_SPI_PERIPHERAL_CLKSRC.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_SPI_PERIPHERAL_DIVISOR0.VALUE_SRC {DEFAULT} \
@@ -1840,33 +1832,33 @@ preplace inst axi_interconnect_gp1 -pg 1 -lvl 3 -y 1070 -defaultsOSRD
 preplace inst axi_gpio_1 -pg 1 -lvl 8 -y 1130 -defaultsOSRD
 preplace inst axis_data_fifo_o0 -pg 1 -lvl 7 -y 960 -defaultsOSRD
 preplace inst axis_data_fifo_i0 -pg 1 -lvl 5 -y 1310 -defaultsOSRD
-preplace inst axis_clock_converter_o0 -pg 1 -lvl 8 -y 970 -defaultsOSRD
 preplace inst axis_data_fifo_o1 -pg 1 -lvl 7 -y 1170 -defaultsOSRD
 preplace inst axis_data_fifo_i1 -pg 1 -lvl 5 -y 1570 -defaultsOSRD
+preplace inst axis_clock_converter_o0 -pg 1 -lvl 8 -y 970 -defaultsOSRD
 preplace inst proc_sys_reset -pg 1 -lvl 2 -y 1400 -defaultsOSRD
 preplace inst axis_clock_converter_o1 -pg 1 -lvl 8 -y 1280 -defaultsOSRD
-preplace inst axi_interconnect_dma_1 -pg 1 -lvl 7 -y 420 -defaultsOSRD
 preplace inst axi_interconnect_dma_o0 -pg 1 -lvl 7 -y 1440 -defaultsOSRD
-preplace netloc axis_clock_converter_7_M_AXIS 1 8 1 NJ
+preplace inst axi_interconnect_dma_1 -pg 1 -lvl 7 -y 420 -defaultsOSRD
 preplace netloc axi_gpio_0_gpio_io_t 1 8 1 NJ
+preplace netloc axis_clock_converter_7_M_AXIS 1 8 1 NJ
 preplace netloc axi_dma_2_mm2s_introut 1 6 1 2150
 preplace netloc S_AXI_STR_RX0_aclk_1 1 0 4 NJ 1310 NJ 1310 NJ 1310 NJ
-preplace netloc axi_interconnect_8_M01_AXI 1 3 3 NJ 540 NJ 540 N
 preplace netloc axis_data_fifo_3_M_AXIS 1 5 1 1560
+preplace netloc axi_interconnect_8_M01_AXI 1 3 3 NJ 540 NJ 540 N
 preplace netloc axi_dma_0_mm2s_introut 1 6 1 2120
-preplace netloc proc_sys_reset_interconnect_aresetn 1 2 6 540 1320 900 1420 1240 980 1590 460 2090 1080 2570
+preplace netloc proc_sys_reset_interconnect_aresetn 1 2 6 540 1320 890 1420 1240 980 1590 460 2090 1080 2570
 preplace netloc axis_data_fifo_7_M_AXIS 1 7 1 N
 preplace netloc M_AXI_STR_TX0_arstn_1 1 0 8 NJ 850 NJ 850 NJ 850 NJ 850 NJ 850 NJ 480 NJ 870 NJ
 preplace netloc axi_gpio_1_gpio_io_o 1 8 1 NJ
 preplace netloc axi_dma_2_M_AXI_S2MM 1 6 1 2060
 preplace netloc processing_system7_0_fclk_reset1_n 1 8 1 NJ
-preplace netloc axi_interconnect_0_M04_AXI 1 3 1 880
+preplace netloc axi_interconnect_0_M04_AXI 1 3 1 870
 preplace netloc M_AXI_STR_TX1_aclk_1 1 0 8 NJ 1260 NJ 1260 NJ 1290 NJ 1430 NJ 1430 NJ 1260 NJ 1260 NJ
 preplace netloc xlconcat_0_dout 1 7 1 2490
 preplace netloc axi_dma_0_M_AXI_SG 1 6 1 2030
 preplace netloc processing_system7_FCLK_CLK0 1 8 1 NJ
 preplace netloc IRQ_SCP1_1 1 0 7 NJ 740 NJ 740 NJ 740 NJ 740 NJ 740 NJ 740 NJ
-preplace netloc processing_system7_FCLK_CLK1 1 1 8 180 1250 550 1360 890 1640 1220 960 1570 440 2080 1050 2530 1760 3050
+preplace netloc processing_system7_FCLK_CLK1 1 1 8 180 1250 550 1360 880 1640 1220 960 1570 440 2080 1050 2530 1760 3050
 preplace netloc S01_AXI_1 1 6 1 2020
 preplace netloc processing_system7_FCLK_CLK3 1 8 1 NJ
 preplace netloc axi_interconnect_1_M00_AXI 1 7 1 2480
@@ -1892,8 +1884,8 @@ preplace netloc Vaux0_1 1 0 4 NJ 1800 NJ 1800 NJ 1800 NJ
 preplace netloc axis_data_fifo_6_M_AXIS 1 7 1 2540
 preplace netloc S_AXI_STR_RX1_aclk_1 1 0 4 NJ 1570 NJ 1570 NJ 1570 NJ
 preplace netloc IRQ_LG_1 1 0 7 NJ 780 NJ 780 NJ 780 NJ 780 NJ 780 NJ 780 NJ
-preplace netloc axi_interconnect_2_M00_AXI 1 7 1 2520
 preplace netloc processing_system7_M_AXI_GP1 1 2 7 560 800 NJ 800 NJ 800 NJ 800 NJ 880 NJ 880 3010
+preplace netloc axi_interconnect_2_M00_AXI 1 7 1 2520
 preplace netloc axi_interconnect_8_M02_AXI 1 3 5 NJ 1070 NJ 1070 NJ 1070 NJ 1070 2500
 preplace netloc Vaux8_1 1 0 4 NJ 1840 NJ 1840 NJ 1840 NJ
 preplace netloc xadc_wiz_0_ip2intc_irpt 1 4 3 NJ 470 NJ 470 2010
@@ -1902,12 +1894,12 @@ preplace netloc processing_system7_0_fclk_clk2 1 8 1 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 8 1 NJ
 preplace netloc axi_dma_2_M_AXI_MM2S 1 6 1 2050
 preplace netloc processing_system7_0_fclk_reset0_n 1 8 1 NJ
-preplace netloc axi_interconnect_8_M03_AXI 1 3 5 NJ 1090 NJ 1090 NJ 1090 NJ 1090 2540
 preplace netloc M_AXI_STR_TX0_aclk_1 1 0 8 NJ 790 NJ 790 NJ 790 NJ 790 NJ 790 NJ 790 NJ 1040 NJ
+preplace netloc axi_interconnect_8_M03_AXI 1 3 5 NJ 1090 NJ 1090 NJ 1090 NJ 1090 2540
 preplace netloc axi_interconnect_5_M00_AXI 1 7 1 2550
 preplace netloc S_AXI_STR_RX0_1 1 0 4 NJ 1280 NJ 1280 NJ 1280 NJ
-preplace netloc M_AXI_STR_TX1_arstn_1 1 0 8 NJ 1470 NJ 1490 NJ 1460 NJ 1460 NJ 1460 NJ 1280 NJ 1280 NJ
 preplace netloc processing_system7_0_M_AXI_GP0 1 8 1 NJ
+preplace netloc M_AXI_STR_TX1_arstn_1 1 0 8 NJ 1470 NJ 1490 NJ 1460 NJ 1460 NJ 1460 NJ 1280 NJ 1280 NJ
 preplace netloc axis_clock_converter_3_M_AXIS 1 4 1 1230
 preplace netloc AXI_GPIO_I_1 1 0 9 NJ 750 NJ 750 NJ 750 NJ 750 NJ 750 NJ 750 NJ 1780 NJ 1780 3030
 preplace netloc Vaux1_1 1 0 4 NJ 1820 NJ 1820 NJ 1820 NJ
@@ -1916,7 +1908,7 @@ preplace netloc Vaux9_1 1 0 4 NJ 1860 NJ 1860 NJ 1860 NJ
 preplace netloc axi_dma_0_s2mm_introut 1 6 1 2110
 preplace netloc xlconstant_dout 1 1 1 NJ
 preplace netloc IRQ_GEN0_1 1 0 7 NJ 760 NJ 760 NJ 760 NJ 760 NJ 760 NJ 760 NJ
-preplace netloc axi_interconnect_0_M00_AXI 1 3 3 910 860 NJ 860 NJ
+preplace netloc axi_interconnect_0_M00_AXI 1 3 3 900 860 NJ 860 NJ
 preplace netloc axi_dma_2_s2mm_introut 1 6 1 2100
 levelinfo -pg 1 -40 100 360 710 1060 1400 1810 2310 2790 3070 -top 0 -bot 2000
 ",
