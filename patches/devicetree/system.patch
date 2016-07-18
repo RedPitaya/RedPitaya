@@ -23,7 +23,7 @@
  };
  &gem0 {
  	local-mac-address = [00 0a 35 00 00 00];
-@@ -86,3 +102,79 @@
+@@ -86,3 +102,122 @@
  	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
@@ -102,4 +102,47 @@
 +};
 +&usb0 {
 +	usb-phy = <&usb_phy0>;
++};
++&spi1 {
++	rpidisplay: rpi-display@1 { 
++		compatible = "ilitek,ili9341"; 
++		reg = <1>; 
++		spi-max-frequency = <32000000>; 
++
++		rotate = <0>; 
++		bgr; 
++		fps = <10>; 
++		buswidth = <8>; 
++
++		reset-gpios = <&gpio0 62 0>; 
++		dc-gpios = <&gpio0 63 0>; 
++		
++		debug = <0>; 
++	}; 
++
++	rpidisplay_ts: rpi-display-ts@2 { 
++		compatible = "ti,ads7846"; 
++		reg = <2>; 
++		spi-max-frequency = <1000000>; 
++
++		interrupts = <64 0>; 
++		interrupt-parent = <&gpio0>; 
++		pendown-gpio = <&gpio0 64 0>; 
++		vcc-supply = <&fixedreg33>;
++
++	}; 
++};
++/{
++	backlight {
++		compatible = "gpio-backlight";
++		gpios = <&gpio0 55 0>;
++		default-on;
++	};
++
++	fixedreg33: fixed33@0 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-supply";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++	};
 +};
