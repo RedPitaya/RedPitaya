@@ -110,12 +110,11 @@ axi4_stream_if #(         .DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARES
 axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
 
 // DMA sterams RX/TX
-axi4_stream_if #(         .DT (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
-
+axi4_stream_if #(         .DT (SBL_T))         str_drx [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 
 // AXI4-Stream DMA RX/TX
-axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
-axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
+axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
+axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_dtx [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
 
 axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exe [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
 axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exo [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
@@ -296,25 +295,19 @@ red_pitaya_ps ps (
   .stx           (axi_dtx     )
 );
 
-generate
-for (genvar i=0; i<3; i++) begin: for_str
+// OSC [0]
+assign axi_drx[0].TKEEP  =     {2{str_drx[0].TKEEP}};
+assign axi_drx[0].TDATA  =        str_drx[0].TDATA  ;
+assign axi_drx[0].TLAST  =        str_drx[0].TLAST  ;
+assign axi_drx[0].TVALID =        str_drx[0].TVALID ;
+assign str_drx[0].TREADY =        axi_drx[0].TREADY ;
 
-  // RX
-//  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
-//  assign sai[i].TKEEP[DN*b+:DN] = {DN{sti[i].kep}};
-//  end: for_byte_i
-  assign axi_drx[i].TKEEP           = {2{str_drx[i].TKEEP}};
-  assign axi_drx[i].TDATA           =    str_drx[i].TDATA  ;
-  assign axi_drx[i].TLAST           =    str_drx[i].TLAST  ;
-  assign axi_drx[i].TVALID          =    str_drx[i].TVALID ;
-  // TODO: fix this timing issue somewhere else
-  if (i==2)
-  assign str_drx[i].TREADY          = 1'b1;
-  else
-  assign str_drx[i].TREADY          =    axi_drx[i].TREADY;
-
-end: for_str
-endgenerate
+assign axi_drx[1].TKEEP  = 1 ? {2{str_drx[1].TKEEP}} : {2{str_drx[2].TKEEP}};
+assign axi_drx[1].TDATA  = 1 ?    str_drx[1].TDATA   :    str_drx[2].TDATA  ;
+assign axi_drx[1].TLAST  = 1 ?    str_drx[1].TLAST   :    str_drx[2].TLAST  ;
+assign axi_drx[1].TVALID = 1 ?    str_drx[1].TVALID  :    str_drx[2].TVALID ;
+assign str_drx[1].TREADY =        axi_drx[1].TREADY;
+assign str_drx[2].TREADY =        axi_drx[1].TREADY;
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
@@ -743,7 +736,8 @@ endgenerate
 ////////////////////////////////////////////////////////////////////////////////
 
 generate
-for (genvar i=0; i<MNA; i++) begin: for_acq
+//for (genvar i=0; i<MNA; i++) begin: for_acq
+for (genvar i=0; i<1; i++) begin: for_acq
 
 scope_top #(
   .TN ($bits(trg)),
@@ -802,11 +796,6 @@ assign axi_exo[1].TVALID =    str_lgo.TVALID  ;
 
 assign str_lgo.TREADY = axi_exo[1].TREADY;
 
-// TODO: for now just a loopback
-// this is an attempt to minimize the related DMA
-
-assign axi_dtx[2].TREADY = 1'b1;
-
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)
 ////////////////////////////////////////////////////////////////////////////////
@@ -830,16 +819,6 @@ la_top #(
   .irq_stp   (irq.la_stp),
   // System bus
   .bus       (sys[12])
-);
-
-////////////////////////////////////////////////////////////////////////////////
-// on demand HW processor
-////////////////////////////////////////////////////////////////////////////////
-
-axi4_stream_pas loopback (
-  .ena (1'b1),
-  .sti (axi_dtx[3]),
-  .sto (axi_drx[3])
 );
 
 endmodule: red_pitaya_top
