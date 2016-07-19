@@ -2,8 +2,10 @@
 # Vivado tcl script for building RedPitaya FPGA in non project mode
 #
 # Usage:
-# vivado -mode tcl -source red_pitaya_vivado.tcl
+# vivado -mode tcl -source red_pitaya_vivado.tcl -tclargs projectname
 ################################################################################
+
+set prj $::argv
 
 ################################################################################
 # define paths
@@ -19,6 +21,8 @@ set path_sdk sdk
 file mkdir $path_out
 file mkdir $path_sdk
 
+cd prj/$prj
+
 ################################################################################
 # setup an in memory project
 ################################################################################
@@ -27,20 +31,13 @@ set part xc7z010clg400-1
 
 create_project -in_memory -part $part
 
-# experimental attempts to avoid a warning
-#get_projects
-#get_designs
-#list_property  [current_project]
-#set_property FAMILY 7SERIES [current_project]
-#set_property SIM_DEVICE 7SERIES [current_project]
-
 ################################################################################
 # create PS BD (processing system block design)
 ################################################################################
 
-# file was created from GUI using "write_bd_tcl -force ip/system_bd.tcl"
+# file was created from GUI using "write_bd_tcl -force ip/system.tcl"
 # create PS BD
-source                            $path_ip/system_bd.tcl
+source                            $path_ip/system.tcl
 
 # generate SDK files
 generate_target all [get_files    system.bd]
@@ -53,54 +50,10 @@ write_hwdef -force       -file    $path_sdk/red_pitaya.hwdef
 # 3. constraints
 ################################################################################
 
-# template
-#read_verilog                      $path_rtl/...
-
 read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
-read_verilog                      $path_rtl/axi4_slave.sv
-read_verilog                      $path_rtl/axi4_lite_slave.v
-
-read_verilog                      $path_rtl/axi4_if.sv
-read_verilog                      $path_rtl/axi4_lite_if.sv
-read_verilog                      $path_rtl/axi4_stream_if.sv
-read_verilog                      $path_rtl/axi4_stream_pas.sv
-read_verilog                      $path_rtl/axi4_stream_reg.sv
-read_verilog                      $path_rtl/axi4_stream_mux.sv
-read_verilog                      $path_rtl/axi4_stream_demux.sv
-read_verilog                      $path_rtl/axi4_stream_cnt.sv
-read_verilog                      $path_rtl/sys_bus_if.sv
-read_verilog                      $path_rtl/sys_bus_interconnect.sv
-read_verilog                      $path_rtl/sys_bus_stub.sv
-read_verilog                      $path_rtl/str_to_ram.sv
-read_verilog                      $path_rtl/spi_if.sv
-
-read_verilog                      $path_rtl/id.sv
-read_verilog                      $path_rtl/red_pitaya_calib.sv
-read_verilog                      $path_rtl/pid_block.sv
-read_verilog                      $path_rtl/pid.sv
-read_verilog                      $path_rtl/red_pitaya_pll.sv
-read_verilog                      $path_rtl/red_pitaya_ps.sv
-read_verilog                      $path_rtl/red_pitaya_top.sv
-read_verilog                      $path_rtl/sys_reg_array_o.sv
-read_verilog                      $path_rtl/cts.sv
-read_verilog                      $path_rtl/muxctl.sv
-read_verilog                      $path_rtl/gpio.sv
-read_verilog                      $path_rtl/pdm.sv
-read_verilog                      $path_rtl/pwm.sv
-read_verilog                      $path_rtl/linear.sv
-read_verilog                      $path_rtl/asg_top.sv
-read_verilog                      $path_rtl/asg.sv
-read_verilog                      $path_rtl/scope_top.sv
-read_verilog                      $path_rtl/scope_filter.sv
-read_verilog                      $path_rtl/scope_dec_avg.sv
-read_verilog                      $path_rtl/scope_edge.sv
-read_verilog                      $path_rtl/acq.sv
-read_verilog                      $path_rtl/rle.sv
-read_verilog                      $path_rtl/debounce.sv
-read_verilog                      $path_rtl/la_top.sv
-read_verilog                      $path_rtl/la_trigger.sv
-read_verilog                      $path_rtl/str_dec.sv
+read_verilog                      ../../$path_rtl
+read_verilog                      $path_rtl
 
 read_xdc                          $path_sdc/red_pitaya.xdc
 

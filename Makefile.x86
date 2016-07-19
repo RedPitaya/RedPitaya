@@ -81,14 +81,15 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 ################################################################################
 
 FPGA_DIR = fpga2
+FPGA_PRJ = logic
 
-FPGA = $(FPGA_DIR)/out/red_pitaya.bit
-FSBL = $(FPGA_DIR)/sdk/fsbl/executable.elf
+FPGA = $(FPGA_DIR)/prj/$(FPGA_PRJ)/out/red_pitaya.bit
+FSBL = $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/fsbl/executable.elf
 
 .PHONY: fpga
 
 fpga: $(DTREE_DIR)
-	make -C $(FPGA_DIR)
+	make -C $(FPGA_DIR) PRJ=$(FPGA_PRJ)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -183,8 +184,8 @@ $(DTREE_DIR): $(DTREE_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 
 $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
-	cp $(FPGA_DIR)/sdk/dts/*.dtsi $(TMP)
-	cp $(FPGA_DIR)/sdk/dts/*.dts  $(TMP)
+	cp $(FPGA_DIR)prj/$(FPGA_PRJ)/sdk/dts/*.dtsi $(TMP)
+	cp $(FPGA_DIR)prj/$(FPGA_PRJ)/sdk/dts/*.dts  $(TMP)
 	#patch $(TMP)/zynq-7000.dtsi patches/devicetree/zynq-7000.patch
 	#patch $(TMP)/pl.dtsi        patches/devicetree/pl.patch
 	patch $(TMP)/system.dts     patches/devicetree/system.patch
