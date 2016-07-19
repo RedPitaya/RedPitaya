@@ -55,6 +55,7 @@ add_files                         $path_rtl/sys_bus_if.sv
 add_files                         $path_rtl/sys_bus_interconnect.sv
 add_files                         $path_rtl/sys_bus_stub.sv
 add_files                         $path_rtl/str_to_ram.sv
+add_files                         $path_rtl/spi_if.sv
 
 add_files                         $path_rtl/id.sv
 add_files                         $path_rtl/red_pitaya_calib.sv

@@ -61,6 +61,8 @@ module red_pitaya_ps (
   input  logic  [16-1:0] gpio_i,
   output logic  [16-1:0] gpio_o,
   output logic  [16-1:0] gpio_t,
+  // SPI
+  spi_if.m               spi0,
   // interrupts
   input  logic  [13-1:0] irq,
   // system read/write channel
@@ -200,6 +202,13 @@ system_wrapper system_i (
   .AXI_GPIO_I (gpio_i),
   .AXI_GPIO_O (gpio_o),
   .AXI_GPIO_T (gpio_t),
+  // SPI
+  .SPI0_MISO_I (spi0.miso_i),  .SPI0_MISO_O (spi0.miso_o),  .SPI0_MISO_T (spi0.miso_t),
+  .SPI0_MOSI_I (spi0.mosi_i),  .SPI0_MOSI_O (spi0.mosi_o),  .SPI0_MOSI_T (spi0.mosi_t),
+  .SPI0_SCLK_I (spi0.sclk_i),  .SPI0_SCLK_O (spi0.sclk_o),  .SPI0_SCLK_T (spi0.sclk_t),
+  .SPI0_SS_I   (spi0.ss_i  ),  .SPI0_SS_O   (spi0.ss_o  ),  .SPI0_SS_T   (spi0.ss_t  ),
+                               .SPI0_SS1_O  (spi0.ss1_o ),
+                               .SPI0_SS2_O  (spi0.ss2_o ),
   // IRQ
   // TODO: actual interrupts should be connnected
   .IRQ_LG   (1'b0),

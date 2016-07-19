@@ -135,6 +135,9 @@ logic [MNG-1:0] [14-1:0] dac_dat;
 localparam type CLM_T = logic signed [16-1:0];
 localparam type CLS_T = logic signed [14-1:0];
 
+// SPI0
+spi_if spi0;
+
 // multiplexer configuration
 logic           mux_gpio;
 logic [MNG-1:0] mux_loop;
@@ -286,6 +289,8 @@ red_pitaya_ps ps (
   .gpio_i        (gpio_i),
   .gpio_o        (gpio_o),
   .gpio_t        (gpio_t),
+  // SPI0
+  .spi0          (spi0),
   // interrupts
   .irq           (irq         ),
   // system read/write channel
@@ -372,6 +377,44 @@ muxctl muxctl (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// TFT ports
+////////////////////////////////////////////////////////////////////////////////
+
+logic [GDW-1:0] iomux_i;
+logic [GDW-1:0] iomux_o;
+logic [GDW-1:0] iomux_t;
+
+IOBUF iobuf_exp [GDW-1:0] (.O (iomux_o), .IO({exp_n_io, exp_p_io}), .I(iomux_i), .T(iomux_t);
+
+assign gpio_i = iomux_i;
+
+assign spi0.sclk_i = iomux_i [0+1];
+assign spi0.mosi_i = iomux_i [8+1];
+assign spi0.miso_i = iomux_i [0+2];
+assign spi0.ss_i   = iomux_i [0+2];
+
+//      N              P                   
+assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [8+0], gpio_o [0+0]};
+assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.mosi_o , spi0.sclk_o };
+assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o   , spi0.miso_o };
+assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [8+3], spi0.ss1_o  };
+assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [8+4], gpio_o [0+4]};
+assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [8+5], gpio_o [0+5]};
+assign {iomux_o [8+6], iomux_o [0+6]} = {gpio_o [8+6], gpio_o [0+6]};
+assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [8+7], gpio_o [0+7]};
+
+//      N              P                   
+assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [8+0], gpio_t [0+0]};
+assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.mosi_t , spi0.sclk_t };
+assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t   , spi0.miso_t };
+assign {iomux_t [8+2], iomux_t [0+2]} = {gpio_t [8+3], 1'b0        };
+assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [8+4], gpio_t [0+4]};
+assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [8+5], gpio_t [0+5]};
+assign {iomux_t [8+6], iomux_t [0+6]} = {gpio_t [8+6], gpio_t [0+6]};
+assign {iomux_t [8+7], iomux_t [0+7]} = {gpio_t [8+7], gpio_t [0+7]};
+
+
+////////////////////////////////////////////////////////////////////////////////
 // GPIO
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -385,7 +428,7 @@ assign axi_exo[0].TKEEP  = '1;
 assign axi_exo[0].TLAST  = 1'b1;
 assign axi_exo[0].TVALID = 1'b1;
 
-assign gpio_i = axi_exi[0].TDATA;
+//assign gpio_i = axi_exi[0].TDATA;
 assign axi_exi[0].TREADY = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -443,7 +486,7 @@ assign exp_exe.TREADY = 1'b1;
 //   .R  (~exp_exo.ARESETn ),
 //   .S  (1'b0            )
 // );
-assign exp_n_io = exp_exo.TDATA[0];
+//assign exp_n_io = exp_exo.TDATA[0];
 assign exp_exo.TREADY = 1'b1;
 
 // // input DDR
@@ -458,8 +501,8 @@ assign exp_exo.TREADY = 1'b1;
 //   .S  (1'b0            ),
 //   .D  (exp_i           )
 // );
-assign exp_exi.TDATA[0] = exp_p_io ;
-assign exp_exi.TDATA[1] = exp_p_io ;
+//assign exp_exi.TDATA[0] = exp_p_io ;
+//assign exp_exi.TDATA[1] = exp_p_io ;
 assign exp_exi.TVALID = 1'b1;
 assign exp_exi.TKEEP  = '1;
 assign exp_exi.TLAST  = 1'b0;
