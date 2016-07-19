@@ -33,7 +33,7 @@
  * 
  */
 
-module red_pitaya_pid_block #(
+module pid_block #(
   // stream parameters
   int unsigned DWI = 14,
   int unsigned DWO = 14,
@@ -154,4 +154,4 @@ end else begin
     dat_o <= pid_sum[14-1:0] ;
 end
 
-endmodule: red_pitaya_pid_block
+endmodule: pid_block

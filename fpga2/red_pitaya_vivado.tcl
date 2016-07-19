@@ -77,8 +77,8 @@ read_verilog                      $path_rtl/spi_if.sv
 
 read_verilog                      $path_rtl/id.sv
 read_verilog                      $path_rtl/red_pitaya_calib.sv
-read_verilog                      $path_rtl/red_pitaya_pid_block.sv
-read_verilog                      $path_rtl/red_pitaya_pid.sv
+read_verilog                      $path_rtl/pid_block.sv
+read_verilog                      $path_rtl/pid.sv
 read_verilog                      $path_rtl/red_pitaya_pll.sv
 read_verilog                      $path_rtl/red_pitaya_ps.sv
 read_verilog                      $path_rtl/red_pitaya_top.sv

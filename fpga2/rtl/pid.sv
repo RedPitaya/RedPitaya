@@ -37,7 +37,7 @@
  * 
  */
 
-module red_pitaya_pid #(
+module pid #(
   // data stream parameters
   int unsigned DWI = 14,  // data width input
   int unsigned DWO = 14,  // data width output
@@ -96,7 +96,7 @@ cfg_t [CNO-1:0] [CNI-1:0] set_ki  ;
 cfg_t [CNO-1:0] [CNI-1:0] set_kd  ;
 logic [CNO-1:0] [CNI-1:0] set_irst;
 
-red_pitaya_pid_block #(
+pid_block #(
   .PSR (PSR),
   .ISR (ISR),
   .DSR (DSR)      
@@ -214,4 +214,4 @@ if (bus.ren) begin
   end
 end
 
-endmodule: red_pitaya_pid
+endmodule: pid
