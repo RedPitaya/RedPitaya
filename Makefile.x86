@@ -188,7 +188,7 @@ $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
 	#patch $(TMP)/zynq-7000.dtsi patches/devicetree/zynq-7000.patch
 	#patch $(TMP)/pl.dtsi        patches/devicetree/pl.patch
 	patch $(TMP)/system.dts     patches/devicetree/system.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP) $(TMP)/devicetree.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP) $(TMP)/system.dts
 	tools/dtc/bin/dtc -O dtb -o $(TMP)/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
