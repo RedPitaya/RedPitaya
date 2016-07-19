@@ -53,7 +53,7 @@ add_files                         .srcs/sources_1/bd/system/hdl/system_wrapper.v
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
 
-read_xdc                          $path_sdc/red_pitaya.xdc
+read_xdc                          ../../$path_sdc/red_pitaya.xdc
 
 ################################################################################
 # define paths
