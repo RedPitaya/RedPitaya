@@ -5,7 +5,7 @@
 # vivado -mode tcl -source red_pitaya_vivado.tcl -tclargs projectname
 ################################################################################
 
-set prj $::argv
+cd prj/$::argv
 
 ################################################################################
 # define paths
@@ -20,8 +20,6 @@ set path_sdk sdk
 
 file mkdir $path_out
 file mkdir $path_sdk
-
-cd prj/$prj
 
 ################################################################################
 # setup an in memory project

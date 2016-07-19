@@ -5,7 +5,7 @@
 # vivado -mode batch -source red_pitaya_vivado_project.tcl -tclargs projectname
 ################################################################################
 
-set prj $::argv
+cd prj/$::argv
 
 ################################################################################
 # define paths
@@ -14,8 +14,6 @@ set prj $::argv
 set path_rtl rtl
 set path_ip  ip
 set path_sdc sdc
-
-cd prj/$prj
 
 ################################################################################
 # setup an in memory project
