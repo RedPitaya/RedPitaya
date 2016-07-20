@@ -378,7 +378,7 @@ logic [GDW-1:0] iomux_t;
 
 IOBUF iobuf_exp [GDW-1:0] (.O (iomux_o), .IO({exp_n_io, exp_p_io}), .I(iomux_i), .T(iomux_t));
 
-assign gpio_i [GDW-1:0]] = iomux_i;
+assign gpio_i [GDW-1:0] = iomux_i;
 
 assign spi0.sclk_i = iomux_i [0+1];
 assign spi0.mosi_i = iomux_i [8+1];
