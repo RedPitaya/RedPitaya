@@ -321,12 +321,12 @@ for (genvar i=13; i<16; i++) begin: for_sys
 end: for_sys
 endgenerate
 
-sys_bus_stub sys_bus_stub_2 (sys[2]); // previously used by GPIO
-sys_bus_stub sys_bus_stub_3 (sys[3]); // previously used by LED
-sys_bus_stub sys_bus_stub_6 (sys[6]);
+sys_bus_stub sys_bus_stub_2  (sys[ 2]); // previously used by GPIO
+sys_bus_stub sys_bus_stub_3  (sys[ 3]); // previously used by LED
+sys_bus_stub sys_bus_stub_6  (sys[ 6]);
 
-sys_bus_stub sys_bus_stub_3 (sys[11]);
-sys_bus_stub sys_bus_stub_3 (sys[12]);
+sys_bus_stub sys_bus_stub_11 (sys[11]);
+sys_bus_stub sys_bus_stub_12 (sys[12]);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Current time stamp
