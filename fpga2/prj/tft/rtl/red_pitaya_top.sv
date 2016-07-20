@@ -183,13 +183,9 @@ irq_t irq;
 sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
-logic [GDW-1:0] gpio_t;  // output enable
-logic [GDW-1:0] gpio_o;  // output
-logic [GDW-1:0] gpio_i;  // input
-
-logic [GDW-1:0] exp_e;  // output enable
-logic [GDW-1:0] exp_o;  // output
-logic [GDW-1:0] exp_i;  // input
+logic [24-1:0] gpio_t;  // output enable
+logic [24-1:0] gpio_o;  // output
+logic [24-1:0] gpio_i;  // input
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -272,8 +268,6 @@ red_pitaya_ps ps (
   // ADC analog inputs
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
-  // LED
-  .led           (led_o),
   // GPIO
   .gpio_i        (gpio_i),
   .gpio_o        (gpio_o),
@@ -369,6 +363,12 @@ muxctl muxctl (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// LED
+////////////////////////////////////////////////////////////////////////////////
+
+IOBUF iobuf_exp [GDW-1:0] (.O (gpio_o[23:16]), .IO(led_o), .I(gpio_i[23:16]), .T(gpio_o[23:16]));
+
+////////////////////////////////////////////////////////////////////////////////
 // TFT ports
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -378,7 +378,7 @@ logic [GDW-1:0] iomux_t;
 
 IOBUF iobuf_exp [GDW-1:0] (.O (iomux_o), .IO({exp_n_io, exp_p_io}), .I(iomux_i), .T(iomux_t));
 
-assign gpio_i = iomux_i;
+assign gpio_i [GDW-1:0]] = iomux_i;
 
 assign spi0.sclk_i = iomux_i [0+1];
 assign spi0.mosi_i = iomux_i [8+1];
@@ -420,7 +420,7 @@ debounce #(
   .ena  (1'b1),
   .len  (20'd62500),  // 0.5ms
   // input stream
-  .d_i  (exp_i[0]),
+  .d_i  (gpio_i[0]),
   .d_o  (),
   .d_p  (trg.gio_out[0]),
   .d_n  (trg.gio_out[1])
