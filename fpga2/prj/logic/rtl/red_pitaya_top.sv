@@ -107,6 +107,7 @@ axi4_stream_if #(         .DT (SBA_T)) str_osc [MNA-1:0] (.ACLK (adc_clk), .ARES
 axi4_stream_if #(         .DT (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 axi4_stream_if #(         .DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
 // digital input streams
+axi4_stream_if #(         .DT (SBL_T)) str_lai           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LA
 axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
 
 // DMA sterams RX/TX
@@ -115,14 +116,6 @@ axi4_stream_if #(         .DT (SBL_T))         str_drx [3-1:0] (.ACLK (adc_clk),
 // AXI4-Stream DMA RX/TX
 axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_dtx [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
-
-axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exe [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exo [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exi [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -139,7 +132,6 @@ localparam type CLS_T = logic signed [14-1:0];
 spi_if spi0 ();
 
 // multiplexer configuration
-logic           mux_gpio;
 logic [MNG-1:0] mux_loop;
 logic [MNG-1:0] mux_gen ;
 logic           mux_lg  ;
@@ -307,10 +299,10 @@ assign axi_drx[0].TLAST  =        str_drx[0].TLAST  ;
 assign axi_drx[0].TVALID =        str_drx[0].TVALID ;
 assign str_drx[0].TREADY =        axi_drx[0].TREADY ;
 
-assign axi_drx[1].TKEEP  = 1 ? {2{str_drx[1].TKEEP}} : {2{str_drx[2].TKEEP}};
-assign axi_drx[1].TDATA  = 1 ?    str_drx[1].TDATA   :    str_drx[2].TDATA  ;
-assign axi_drx[1].TLAST  = 1 ?    str_drx[1].TLAST   :    str_drx[2].TLAST  ;
-assign axi_drx[1].TVALID = 1 ?    str_drx[1].TVALID  :    str_drx[2].TVALID ;
+assign axi_drx[1].TKEEP  = 0 ? {2{str_drx[1].TKEEP}} : {2{str_drx[2].TKEEP}};
+assign axi_drx[1].TDATA  = 0 ?    str_drx[1].TDATA   :    str_drx[2].TDATA  ;
+assign axi_drx[1].TLAST  = 0 ?    str_drx[1].TLAST   :    str_drx[2].TLAST  ;
+assign axi_drx[1].TVALID = 0 ?    str_drx[1].TVALID  :    str_drx[2].TVALID ;
 assign str_drx[1].TREADY =        axi_drx[1].TREADY;
 assign str_drx[2].TREADY =        axi_drx[1].TREADY;
 
@@ -333,8 +325,9 @@ for (genvar i=13; i<16; i++) begin: for_sys
 end: for_sys
 endgenerate
 
-sys_bus_stub sys_bus_stub_2 (sys[2]); // previously used by GPIO
-sys_bus_stub sys_bus_stub_3 (sys[3]); // previously used by LED
+sys_bus_stub sys_bus_stub_2  (sys[ 2]); // previously used by GPIO
+sys_bus_stub sys_bus_stub_3  (sys[ 3]); // previously used by LED
+sys_bus_stub sys_bus_stub_6  (sys[ 6]);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Current time stamp
@@ -368,7 +361,7 @@ id #(
 
 muxctl muxctl (
   // global configuration
-  .mux_gpio  (mux_gpio),
+  .mux_gpio  (),
   .mux_loop  (mux_loop),
   .mux_gen   (mux_gen ),
   .mux_lg    (mux_lg  ),
@@ -377,83 +370,18 @@ muxctl muxctl (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// TFT ports
+// GPIO ports
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [GDW-1:0] iomux_i;
-logic [GDW-1:0] iomux_o;
-logic [GDW-1:0] iomux_t;
-
-IOBUF iobuf_exp [GDW-1:0] (.O (iomux_o), .IO({exp_n_io, exp_p_io}), .I(iomux_i), .T(iomux_t));
-
-assign gpio_i = iomux_i;
-
-assign spi0.sclk_i = iomux_i [0+1];
-assign spi0.mosi_i = iomux_i [8+1];
-assign spi0.miso_i = iomux_i [0+2];
-assign spi0.ss_i   = iomux_i [0+2];
-
-//      N              P                   
-assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [8+0], gpio_o [0+0]};
-assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.mosi_o , spi0.sclk_o };
-assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o   , spi0.miso_o };
-assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [8+3], spi0.ss1_o  };
-assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [8+4], gpio_o [0+4]};
-assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [8+5], gpio_o [0+5]};
-assign {iomux_o [8+6], iomux_o [0+6]} = {gpio_o [8+6], gpio_o [0+6]};
-assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [8+7], gpio_o [0+7]};
-
-//      N              P                   
-assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [8+0], gpio_t [0+0]};
-assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.mosi_t , spi0.sclk_t };
-assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t   , spi0.miso_t };
-assign {iomux_t [8+2], iomux_t [0+2]} = {gpio_t [8+3], 1'b0        };
-assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [8+4], gpio_t [0+4]};
-assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [8+5], gpio_t [0+5]};
-assign {iomux_t [8+6], iomux_t [0+6]} = {gpio_t [8+6], gpio_t [0+6]};
-assign {iomux_t [8+7], iomux_t [0+7]} = {gpio_t [8+7], gpio_t [0+7]};
-
+assign gpio_i = {exp_n_io, exp_p_io};
 
 ////////////////////////////////////////////////////////////////////////////////
-// GPIO
+// LA (DDR) extension connector
 ////////////////////////////////////////////////////////////////////////////////
 
-assign axi_exe[0].TDATA  = {2{gpio_t}};
-assign axi_exe[0].TKEEP  = '1;
-assign axi_exe[0].TLAST  = 1'b1;
-assign axi_exe[0].TVALID = 1'b1;
-
-assign axi_exo[0].TDATA  = {2{gpio_o}};
-assign axi_exo[0].TKEEP  = '1;
-assign axi_exo[0].TLAST  = 1'b1;
-assign axi_exo[0].TVALID = 1'b1;
-
-//assign gpio_i = axi_exi[0].TDATA;
-assign axi_exi[0].TREADY = 1'b1;
-
-////////////////////////////////////////////////////////////////////////////////
-// extension connector
-////////////////////////////////////////////////////////////////////////////////
-
-// GPIO multiplexer
-
-axi4_stream_mux #(.DN (2), .DT (SBL_T)) mux_axe (
-  .sel (mux_gpio),
-  .sti (axi_exe),
-  .sto (exp_exe)
-);
-
-axi4_stream_mux #(.DN (2), .DT (SBL_T)) mux_axo (
-  .sel (mux_gpio),
-  .sti (axi_exo),
-  .sto (exp_exo)
-);
-
-axi4_stream_demux #(.DN (2), .DT (SBL_T)) demux_axi (
-  .sel (mux_gpio),
-  .sti (exp_exi),
-  .sto (axi_exi)
-);
+//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 // temporary solution for unit testing
 // IOBUF has been split into separate IBUF & OBUF
@@ -472,22 +400,22 @@ axi4_stream_demux #(.DN (2), .DT (SBL_T)) demux_axi (
 //   .S  (1'b0)
 // );
 
-assign exp_exe.TREADY = 1'b1;
+//assign exp_exe.TREADY = 1'b1;
 
 // // output DDR
 // ODDR #(
 //   .DDR_CLK_EDGE ("SAME_EDGE")
 // ) oddr_exp_o [GDW-1:0] (
 //   .Q  (exp_o           ),
-//   .C  (exp_exo.ACLK    ),
-//   .CE (exp_exo.TVALID  ),
-//   .D1 (exp_exo.TDATA[0]),
-//   .D2 (exp_exo.TDATA[1]),  // TODO: add DDR support for LG here
-//   .R  (~exp_exo.ARESETn ),
+//   .C  (str_lgo.ACLK    ),
+//   .CE (str_lgo.TVALID  ),
+//   .D1 (str_lgo.TDATA[0]),
+//   .D2 (str_lgo.TDATA[1]),  // TODO: add DDR support for LG here
+//   .R  (~str_lgo.ARESETn ),
 //   .S  (1'b0            )
 // );
-//assign exp_n_io = exp_exo.TDATA[0];
-assign exp_exo.TREADY = 1'b1;
+
+//assign str_lgo.TREADY = 1'b1;
 
 // // input DDR
 // IDDR #(
@@ -501,16 +429,36 @@ assign exp_exo.TREADY = 1'b1;
 //   .S  (1'b0            ),
 //   .D  (exp_i           )
 // );
-//assign exp_exi.TDATA[0] = exp_p_io ;
-//assign exp_exi.TDATA[1] = exp_p_io ;
-assign exp_exi.TVALID = 1'b1;
-assign exp_exi.TKEEP  = '1;
-assign exp_exi.TLAST  = 1'b0;
+//assign exp_exi.TDATA[0] = exp_p_io;
+//assign exp_exi.TDATA[1] = exp_n_io;
+//assign exp_exi.TVALID = 1'b1;
+//assign exp_exi.TKEEP  = '1;
+//assign exp_exi.TLAST  = 1'b0;
 
 // IO buffer with output enable
 // TODO: this is hardcoded, since it somehow did not work before, simulation was fine, but synthesis might have a problem
 // IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T({8'h00, 8'hff}));
 //IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
+
+////////////////////////////////////////////////////////////////////////////////
+// LA (SDR) extension connector
+////////////////////////////////////////////////////////////////////////////////
+
+SBL_T exp_i;
+SBL_T exp_o;
+SBL_T exp_t;
+
+assign exp_o =  str_lgo.TDATA[0];
+assign exp_t = ~str_lgo.TDATA[1];
+
+assign str_lgo.TREADY = 1'b1;
+
+assign str_lai.TDATA  = exp_i;
+assign str_lai.TVALID = 1'b1;
+assign str_lai.TKEEP  = '1;
+assign str_lai.TLAST  = 1'b0;
+
+IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
 
 ////////////////////////////////////////////////////////////////////////////////
 // debounce
@@ -584,51 +532,6 @@ pdm #(
   // PWM outputs
   .pdm      (dac_pwm_o)
 );
-
-////////////////////////////////////////////////////////////////////////////////
-// PWM
-////////////////////////////////////////////////////////////////////////////////
-
-`ifdef ENABLE_PWM
-
-localparam int unsigned PWM_CHN = 4;
-localparam int unsigned PWM_DWC = 8;
-localparam type PWM_T = logic [PWM_DWC-1:0];
-
-PWM_T [PWM_CHN-1:0] pwm_cfg;
-
-sys_reg_array_o #(
-  .RT (PWM_T  ),
-  .RN (PWM_CHN)
-) regset_pwm (
-  .val       (pwm_cfg),
-  .bus       (sys[6])
-);
-
-pwm #(
-  .DWC (PWM_DWC),
-  .CHN (PWM_CHN)
-) pwm (
-  // system signals
-  .clk      (pdm_clk ),
-  .rstn     (pdm_rstn),
-  .cke      (1'b1),
-  // configuration
-  .ena      (1'b1),
-  .rng      (8'd255),
-  // input stream
-  .str_dat  (pwm_cfg),
-  .str_vld  (1'b1   ),
-  .str_rdy  (       ),
-  // PWM outputs
-  .pwm      ()
-);
-
-`else
-
-sys_bus_stub sys_bus_stub_6 (sys[6]);
-
-`endif // ENABLE_PWM
 
 ////////////////////////////////////////////////////////////////////////////////
 // Daisy dummy code
@@ -827,18 +730,6 @@ asg_top #(
   .bus       (sys[11])
 );
 
-assign axi_exe[1].TDATA  = {2{str_lgo.TDATA[1]}};
-assign axi_exe[1].TKEEP  =    str_lgo.TKEEP   ;
-assign axi_exe[1].TLAST  =    str_lgo.TLAST   ;
-assign axi_exe[1].TVALID =    str_lgo.TVALID  ;
-
-assign axi_exo[1].TDATA  = {2{str_lgo.TDATA[0]}};
-assign axi_exo[1].TKEEP  =    str_lgo.TKEEP   ;
-assign axi_exo[1].TLAST  =    str_lgo.TLAST   ;
-assign axi_exo[1].TVALID =    str_lgo.TVALID  ;
-
-assign str_lgo.TREADY = axi_exo[1].TREADY;
-
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)
 ////////////////////////////////////////////////////////////////////////////////
@@ -849,7 +740,7 @@ la_top #(
   .CW (32)
 ) la (
   // streams
-  .sti       (axi_exi[1]),
+  .sti       (exp_exi),
   .sto       (str_drx[2]),
   // current time stamp
   .cts       (cts),
