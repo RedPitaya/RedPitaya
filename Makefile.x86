@@ -184,8 +184,8 @@ $(DTREE_DIR): $(DTREE_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 
 $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
-	cp $(FPGA_DIR)prj/$(FPGA_PRJ)/sdk/dts/*.dtsi $(TMP)
-	cp $(FPGA_DIR)prj/$(FPGA_PRJ)/sdk/dts/*.dts  $(TMP)
+	cp $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts/*.dtsi $(TMP)
+	cp $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts/*.dts  $(TMP)
 	#patch $(TMP)/zynq-7000.dtsi patches/devicetree/zynq-7000.patch
 	#patch $(TMP)/pl.dtsi        patches/devicetree/pl.patch
 	patch $(TMP)/system.dts     patches/devicetree/system.patch
