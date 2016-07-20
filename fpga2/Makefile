@@ -38,7 +38,7 @@ $(FPGA_BIT):
 	$(VIVADO) -source red_pitaya_vivado.tcl -tclargs $(PRJ)
 
 $(FSBL_ELF): $(FPGA_BIT)
-	$(HSI) -source red_pitaya_hsi_fsbl.tcl
+	$(HSI) -source red_pitaya_hsi_fsbl.tcl -tclargs $(PRJ)
 
 $(DEVICE_TREE): $(FPGA_BIT)
-	$(HSI) -source red_pitaya_hsi_dts.tcl
+	$(HSI) -source red_pitaya_hsi_dts.tcl -tclargs $(PRJ)
