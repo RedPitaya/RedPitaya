@@ -48,11 +48,9 @@ write_hwdef -force       -file    $path_sdk/red_pitaya.hwdef
 # 3. constraints
 ################################################################################
 
-add_files                         .srcs/sources_1/bd/system/hdl/system_wrapper.v
-
-read_verilog                      ../../$path_rtl/interface/*.sv
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
+add_files                         .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 read_xdc                          ../../$path_sdc/red_pitaya.xdc
 

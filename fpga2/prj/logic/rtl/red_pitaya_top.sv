@@ -136,7 +136,7 @@ localparam type CLM_T = logic signed [16-1:0];
 localparam type CLS_T = logic signed [14-1:0];
 
 // SPI0
-spi_if spi0;
+spi_if spi0 ();
 
 // multiplexer configuration
 logic           mux_gpio;
