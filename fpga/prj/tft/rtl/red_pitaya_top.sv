@@ -420,7 +420,7 @@ debounce #(
   .ena  (1'b1),
   .len  (20'd62500),  // 0.5ms
   // input stream
-  .d_i  (exp_p_io[0]),
+  .d_i  (iomux_i[0]),
   .d_o  (),
   .d_p  (trg.gio_out[0]),
   .d_n  (trg.gio_out[1])
