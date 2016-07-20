@@ -80,7 +80,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_DIR = fpga2
+FPGA_DIR = fpga
 FPGA_PRJ = tft
 
 FPGA = $(FPGA_DIR)/prj/$(FPGA_PRJ)/out/red_pitaya.bit

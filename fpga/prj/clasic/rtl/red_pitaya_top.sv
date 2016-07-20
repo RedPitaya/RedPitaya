@@ -61,61 +61,65 @@
  * 
  */
 
-module red_pitaya_top (
-   // PS connections
-   inout  [54-1: 0] FIXED_IO_mio       ,
-   inout            FIXED_IO_ps_clk    ,
-   inout            FIXED_IO_ps_porb   ,
-   inout            FIXED_IO_ps_srstb  ,
-   inout            FIXED_IO_ddr_vrn   ,
-   inout            FIXED_IO_ddr_vrp   ,
-   // DDR
-   inout  [15-1: 0] DDR_addr           ,
-   inout  [ 3-1: 0] DDR_ba             ,
-   inout            DDR_cas_n          ,
-   inout            DDR_ck_n           ,
-   inout            DDR_ck_p           ,
-   inout            DDR_cke            ,
-   inout            DDR_cs_n           ,
-   inout  [ 4-1: 0] DDR_dm             ,
-   inout  [32-1: 0] DDR_dq             ,
-   inout  [ 4-1: 0] DDR_dqs_n          ,
-   inout  [ 4-1: 0] DDR_dqs_p          ,
-   inout            DDR_odt            ,
-   inout            DDR_ras_n          ,
-   inout            DDR_reset_n        ,
-   inout            DDR_we_n           ,
+module red_pitaya_top #(
+  // identification
+  bit [0:5*32-1] GITH = '0,
+  // module numbers
+  int unsigned MNA = 2,  // number of acquisition modules
+  int unsigned MNG = 2   // number of generator   modules
+)(
+  // PS connections
+  inout  logic [54-1:0] FIXED_IO_mio     ,
+  inout  logic          FIXED_IO_ps_clk  ,
+  inout  logic          FIXED_IO_ps_porb ,
+  inout  logic          FIXED_IO_ps_srstb,
+  inout  logic          FIXED_IO_ddr_vrn ,
+  inout  logic          FIXED_IO_ddr_vrp ,
+  // DDR
+  inout  logic [15-1:0] DDR_addr   ,
+  inout  logic [ 3-1:0] DDR_ba     ,
+  inout  logic          DDR_cas_n  ,
+  inout  logic          DDR_ck_n   ,
+  inout  logic          DDR_ck_p   ,
+  inout  logic          DDR_cke    ,
+  inout  logic          DDR_cs_n   ,
+  inout  logic [ 4-1:0] DDR_dm     ,
+  inout  logic [32-1:0] DDR_dq     ,
+  inout  logic [ 4-1:0] DDR_dqs_n  ,
+  inout  logic [ 4-1:0] DDR_dqs_p  ,
+  inout  logic          DDR_odt    ,
+  inout  logic          DDR_ras_n  ,
+  inout  logic          DDR_reset_n,
+  inout  logic          DDR_we_n   ,
 
-   // Red Pitaya periphery
-  
-   // ADC
-   input  [16-1: 2] adc_dat_a_i        ,  // ADC CH1
-   input  [16-1: 2] adc_dat_b_i        ,  // ADC CH2
-   input            adc_clk_p_i        ,  // ADC data clock
-   input            adc_clk_n_i        ,  // ADC data clock
-   output [ 2-1: 0] adc_clk_o          ,  // optional ADC clock source
-   output           adc_cdcs_o         ,  // ADC clock duty cycle stabilizer
-   // DAC
-   output [14-1: 0] dac_dat_o          ,  // DAC combined data
-   output           dac_wrt_o          ,  // DAC write
-   output           dac_sel_o          ,  // DAC channel select
-   output           dac_clk_o          ,  // DAC clock
-   output           dac_rst_o          ,  // DAC reset
-   // PWM DAC
-   output [ 4-1: 0] dac_pwm_o          ,  // serial PWM DAC
-   // XADC
-   input  [ 5-1: 0] vinp_i             ,  // voltages p
-   input  [ 5-1: 0] vinn_i             ,  // voltages n
-   // Expansion connector
-   inout  [ 8-1: 0] exp_p_io           ,
-   inout  [ 8-1: 0] exp_n_io           ,
-   // SATA connector
-   output [ 2-1: 0] daisy_p_o          ,  // line 1 is clock capable
-   output [ 2-1: 0] daisy_n_o          ,
-   input  [ 2-1: 0] daisy_p_i          ,  // line 1 is clock capable
-   input  [ 2-1: 0] daisy_n_i          ,
-   // LED
-   output [ 8-1: 0] led_o       
+  // Red Pitaya periphery
+
+  // ADC
+  input  logic [MNA-1:0] [16-1:2] adc_dat_i,  // ADC data
+  input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
+  output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
+  output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
+  // DAC
+  output logic [14-1:0] dac_dat_o  ,  // DAC combined data
+  output logic          dac_wrt_o  ,  // DAC write
+  output logic          dac_sel_o  ,  // DAC channel select
+  output logic          dac_clk_o  ,  // DAC clock
+  output logic          dac_rst_o  ,  // DAC reset
+  // PWM DAC
+  output logic [ 4-1:0] dac_pwm_o  ,  // serial PWM DAC
+  // XADC
+  input  logic [ 5-1:0] vinp_i     ,  // voltages p
+  input  logic [ 5-1:0] vinn_i     ,  // voltages n
+  // Expansion connector
+  inout  logic [ 8-1:0] exp_p_io   ,
+  inout  logic [ 8-1:0] exp_n_io   ,
+  // SATA connector
+  output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
+  output logic [ 2-1:0] daisy_n_o  ,
+  input  logic [ 2-1:0] daisy_p_i  ,  // line 1 is clock capable
+  input  logic [ 2-1:0] daisy_n_i  ,
+  // LED
+  inout  logic [ 8-1:0] led_o
 );
 
 //---------------------------------------------------------------------------------
@@ -291,7 +295,7 @@ wire                  digital_loop;
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
-IBUFDS i_clk (.I (adc_clk_p_i), .IB (adc_clk_n_i), .O (adc_clk_in));  // differential clock input
+IBUFDS i_clk (.I (adc_clk_i[1]), .IB (adc_clk_i[0]), .O (adc_clk_in));  // differential clock input
 
 red_pitaya_pll pll (
   // inputs
@@ -343,8 +347,8 @@ assign adc_cdcs_o = 1'b1 ;
 // lowest 2 bits reserved for 16bit ADC
 always @(posedge adc_clk)
 begin
-  adc_dat_a <= adc_dat_a_i[16-1:2];
-  adc_dat_b <= adc_dat_b_i[16-1:2];
+  adc_dat_a <= adc_dat_i[0][16-1:2];
+  adc_dat_b <= adc_dat_i[1][16-1:2];
 end
     
 // transform into 2's complement (negative slope)

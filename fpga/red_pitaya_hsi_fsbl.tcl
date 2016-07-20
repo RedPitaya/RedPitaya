@@ -2,8 +2,10 @@
 # HSI tcl script for building RedPitaya FSBL
 #
 # Usage:
-# hsi -mode tcl -source red_pitaya_hsi_fsbl.tcl
+# hsi -mode tcl -source red_pitaya_hsi_fsbl.tcl -tclargs projectname
 ################################################################################
+
+cd prj/$::argv
 
 set path_sdk sdk
 
