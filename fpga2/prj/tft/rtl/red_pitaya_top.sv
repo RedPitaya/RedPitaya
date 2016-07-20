@@ -106,11 +106,9 @@ axi4_stream_if #(         .DT (SBA_T)) str_osc [MNA-1:0] (.ACLK (adc_clk), .ARES
 // analog output streams
 axi4_stream_if #(         .DT (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 axi4_stream_if #(         .DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
-// digital input streams
-axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
 
 // DMA sterams RX/TX
-axi4_stream_if #(         .DT (SBL_T))         str_drx [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
+axi4_stream_if #(         .DT (SBL_T))         str_drx [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 
 // AXI4-Stream DMA RX/TX
 axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
@@ -292,18 +290,17 @@ red_pitaya_ps ps (
 );
 
 // OSC [0]
-assign axi_drx[0].TKEEP  =     {2{str_drx[0].TKEEP}};
-assign axi_drx[0].TDATA  =        str_drx[0].TDATA  ;
-assign axi_drx[0].TLAST  =        str_drx[0].TLAST  ;
-assign axi_drx[0].TVALID =        str_drx[0].TVALID ;
-assign str_drx[0].TREADY =        axi_drx[0].TREADY ;
-
-assign axi_drx[1].TKEEP  = 1 ? {2{str_drx[1].TKEEP}} : {2{str_drx[2].TKEEP}};
-assign axi_drx[1].TDATA  = 1 ?    str_drx[1].TDATA   :    str_drx[2].TDATA  ;
-assign axi_drx[1].TLAST  = 1 ?    str_drx[1].TLAST   :    str_drx[2].TLAST  ;
-assign axi_drx[1].TVALID = 1 ?    str_drx[1].TVALID  :    str_drx[2].TVALID ;
-assign str_drx[1].TREADY =        axi_drx[1].TREADY;
-assign str_drx[2].TREADY =        axi_drx[1].TREADY;
+assign axi_drx[0].TKEEP  = {2{str_drx[0].TKEEP}};
+assign axi_drx[0].TDATA  =    str_drx[0].TDATA  ;
+assign axi_drx[0].TLAST  =    str_drx[0].TLAST  ;
+assign axi_drx[0].TVALID =    str_drx[0].TVALID ;
+assign str_drx[0].TREADY =    axi_drx[0].TREADY ;
+// OSC [1]
+assign axi_drx[1].TKEEP  = {2{str_drx[1].TKEEP}};
+assign axi_drx[1].TDATA  =    str_drx[1].TDATA  ;
+assign axi_drx[1].TLAST  =    str_drx[1].TLAST  ;
+assign axi_drx[1].TVALID =    str_drx[1].TVALID ;
+assign str_drx[1].TREADY =    axi_drx[1].TREADY ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
