@@ -55,8 +55,8 @@ module red_pitaya_top #(
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  output logic [ 8-1:0] exp_n_io   ,
-  input  logic [ 8-1:0] exp_p_io   ,
+  inout  logic [ 8-1:0] exp_n_io   ,
+  inout  logic [ 8-1:0] exp_p_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
@@ -190,7 +190,7 @@ logic [GDW-1:0] gpio_t;  // output enable
 logic [GDW-1:0] gpio_o;  // output
 logic [GDW-1:0] gpio_i;  // input
 
-logic [GDW-1:0] exp_e;  // output enable
+logic [GDW-1:0] exp_t;  // output enable
 logic [GDW-1:0] exp_o;  // output
 logic [GDW-1:0] exp_i;  // input
 
@@ -443,10 +443,6 @@ assign gpio_i = {exp_n_io, exp_p_io};
 ////////////////////////////////////////////////////////////////////////////////
 // LA (SDR) extension connector
 ////////////////////////////////////////////////////////////////////////////////
-
-SBL_T exp_i;
-SBL_T exp_o;
-SBL_T exp_t;
 
 assign exp_o =  str_lgo.TDATA[0];
 assign exp_t = ~str_lgo.TDATA[1];
