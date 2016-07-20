@@ -50,14 +50,14 @@ write_hwdef -force       -file    $path_sdk/red_pitaya.hwdef
 
 add_files                         .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
-add_files                         ../../$path_rtl/interface
+read_verilog                      ../../$path_rtl/interface/*.sv
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
 
 read_xdc                          ../../$path_sdc/red_pitaya.xdc
 
 ################################################################################
-# define paths
+# ser parameter containing Git hash
 ################################################################################
 
 set gith [exec git log -1 --format="%H"]
