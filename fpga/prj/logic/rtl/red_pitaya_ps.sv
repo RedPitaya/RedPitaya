@@ -55,12 +55,10 @@ module red_pitaya_ps (
   // XADC
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
-  // LED
-  output logic   [8-1:0] led,
   // GPIO
-  input  logic  [16-1:0] gpio_i,
-  output logic  [16-1:0] gpio_o,
-  output logic  [16-1:0] gpio_t,
+  input  logic  [24-1:0] gpio_i,
+  output logic  [24-1:0] gpio_o,
+  output logic  [24-1:0] gpio_t,
   // SPI
   spi_if.m               spi0,
   // interrupts
@@ -196,12 +194,10 @@ system_wrapper system_i (
   .M_AXI_STR_TX1_tlast   (stx[1].TLAST  ),  .M_AXI_STR_TX0_tlast   (stx[0].TLAST  ),
   .M_AXI_STR_TX1_tready  (stx[1].TREADY ),  .M_AXI_STR_TX0_tready  (stx[0].TREADY ),
   .M_AXI_STR_TX1_tvalid  (stx[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (stx[0].TVALID ),
-  // LED
-  .AXI_LED_O  (led_o),
   // GPIO
-  .AXI_GPIO_I (gpio_i),
-  .AXI_GPIO_O (gpio_o),
-  .AXI_GPIO_T (gpio_t),
+  .GPIO_I (gpio_i),
+  .GPIO_O (gpio_o),
+  .GPIO_T (gpio_t),
   // SPI
   .SPI0_MISO_I (spi0.miso_i),  .SPI0_MISO_O (spi0.miso_o),  .SPI0_MISO_T (spi0.miso_t),
   .SPI0_MOSI_I (spi0.mosi_i),  .SPI0_MOSI_O (spi0.mosi_o),  .SPI0_MOSI_T (spi0.mosi_t),
