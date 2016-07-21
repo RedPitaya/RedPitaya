@@ -145,16 +145,46 @@ For now only LED8 and LED9 are accessible using a kernel driver. LED [7:0] are n
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
-The base value of `MIO` GPIOs was determined to be `906`.
+There are 54+64=118 GPIO provided by ZYNQ PS, MIO provides 54 GPIO,
+and EMIO provide additional 64 GPIO.
+
+The next formula is used to calculate the `gpio_base` index.
+```
+base_gpio = ZYNQ_GPIO_NR_GPIOS - ARCH_NR_GPIOS = 1024 - 118 = -906
+```
+
+Values for the used macros can be found in the kernel sources.
 ```bash
-redpitaya> find /sys/class/gpio/ -name gpiochip*
+$ grep ZYNQ_GPIO_NR_GPIOS drivers/gpio/gpio-zynq.c
+#define	ZYNQ_GPIO_NR_GPIOS	118
+$ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2016.1
+tmp/linux-xlnx-xilinx-v2016.1/.config:CONFIG_ARCH_NR_GPIO=1024
+```
+
+Another way to find the `gpio_base` index is to check the given name inside `sysfs`.
+```bash
+# find /sys/class/gpio/ -name gpiochip*
 /sys/class/gpio/gpiochip906
 ```
 
-GPIOs are accessible at base value + MIO index:
+The default pin assignment for GPIO is described in the next table.
+
+| LED     | color  | GPIO             | MIO/EMIO index | `sysfs` index              | dedicated meaning     |
+|---------|--------|------------------|----------------|----------------------------|-----------------------|
+|         |        | `exp_p_io [7:0]` | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` | 
+|         |        | `exp_n_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` | 
+| `[7:0]` | yellow |                  | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` | 
+| `  [8]` | yellow |                  | `MIO[0]`       | `906+   [0]    = 906`      | CPU heartbeat (user defined)
+| `  [9]` | reg    |                  | `MIO[7]`       | `906+   [7]    = 913`      | SD card access (user defined)
+
+GPIOs are accessible at the `sysfs` index.
+The next example will light up LED[0], and read back its value.
 ```bash
-echo 906 > /sys/class/gpio/export
-echo 913 > /sys/class/gpio/export
+export INDEX=976
+echo $INDEX > /sys/class/gpio/export
+echo out    > /sys/class/gpio/gpio$INDEX/direction
+echo 1      > /sys/class/gpio/gpio$INDEX/value
+echo          /sys/class/gpio/gpio$INDEX/value
 ```
 
 ### Linux access to LED
