@@ -386,24 +386,24 @@ assign spi0.miso_i = iomux_i [0+2];
 assign spi0.ss_i   = iomux_i [8+2];
 
 //      N              P                   
-assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [8+0], gpio_o [0+0]};
+assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [0+1], gpio_o [0+0]};
 assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.mosi_o , spi0.sclk_o };
 assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o   , spi0.miso_o };
-assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [8+3], spi0.ss1_o  };
-assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [8+4], gpio_o [0+4]};
-assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [8+5], gpio_o [0+5]};
-assign {iomux_o [8+6], iomux_o [0+6]} = {gpio_o [8+6], gpio_o [0+6]};
-assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [8+7], gpio_o [0+7]};
+assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [0+7], spi0.ss1_o  };
+assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [8+1], gpio_o [8+0]};
+assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [8+3], gpio_o [8+2]};
+assign {iomux_o [8+6], iomux_o [0+6]} = {gpio_o [8+5], gpio_o [8+4]};
+assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [8+7], gpio_o [8+6]};
 
 //      N              P                   
-assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [8+0], gpio_t [0+0]};
+assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [0+1], gpio_t [0+0]};
 assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.mosi_t , spi0.sclk_t };
 assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t   , spi0.miso_t };
-assign {iomux_t [8+3], iomux_t [0+3]} = {gpio_t [8+3], 1'b0        };
-assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [8+4], gpio_t [0+4]};
-assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [8+5], gpio_t [0+5]};
-assign {iomux_t [8+6], iomux_t [0+6]} = {gpio_t [8+6], gpio_t [0+6]};
-assign {iomux_t [8+7], iomux_t [0+7]} = {gpio_t [8+7], gpio_t [0+7]};
+assign {iomux_t [8+3], iomux_t [0+3]} = {gpio_t [0+7], 1'b0        };
+assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [8+1], gpio_t [8+0]};
+assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [8+3], gpio_t [8+2]};
+assign {iomux_t [8+6], iomux_t [0+6]} = {gpio_t [8+5], gpio_t [8+4]};
+assign {iomux_t [8+7], iomux_t [0+7]} = {gpio_t [8+7], gpio_t [8+6]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // debounce
