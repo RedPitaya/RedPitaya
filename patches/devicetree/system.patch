@@ -23,7 +23,7 @@
  };
  &gem0 {
  	local-mac-address = [00 0a 35 00 00 00];
-@@ -86,3 +102,122 @@
+@@ -86,3 +102,126 @@
  	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
@@ -133,6 +133,10 @@
 +	}; 
 +};
 +/{
++	aliases {
++		spi0 = &spi0;
++	};
++
 +	backlight {
 +		compatible = "gpio-backlight";
 +		gpios = <&gpio0 55 0>;
