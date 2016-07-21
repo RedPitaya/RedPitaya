@@ -366,7 +366,7 @@ muxctl muxctl (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_led [8-1:0] (.O (gpio_o[23:16]), .IO(led_o), .I(gpio_i[23:16]), .T(gpio_t[23:16]));
+IOBUF iobuf_led [8-1:0] (.O (gpio_i[23:16]), .IO(led_o), .I(gpio_o[23:16]), .T(gpio_t[23:16]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // TFT ports
@@ -376,7 +376,7 @@ logic [GDW-1:0] iomux_i;
 logic [GDW-1:0] iomux_o;
 logic [GDW-1:0] iomux_t;
 
-IOBUF iobuf_exp [GDW-1:0] (.O (iomux_o), .IO({exp_n_io, exp_p_io}), .I(iomux_i), .T(iomux_t));
+IOBUF iobuf_exp [GDW-1:0] (.O (iomux_i), .IO({exp_n_io, exp_p_io}), .I(iomux_o), .T(iomux_t));
 
 assign gpio_i [GDW-1:0] = iomux_i;
 
