@@ -378,12 +378,20 @@ logic [GDW-1:0] iomux_t;
 
 IOBUF iobuf_exp [GDW-1:0] (.O (iomux_i), .IO({exp_n_io, exp_p_io}), .I(iomux_o), .T(iomux_t));
 
-assign gpio_i [GDW-1:0] = iomux_i;
-
 assign spi0.sclk_i = iomux_i [0+1];
 assign spi0.mosi_i = iomux_i [8+1];
 assign spi0.miso_i = iomux_i [0+2];
 assign spi0.ss_i   = iomux_i [8+2];
+
+//      N              P                   
+assign {gpio_i [0+1], gpio_i [0+0]} = {iomux_i [8+0], iomux_i [0+0]};
+assign {gpio_i [0+3], gpio_i [0+2]} = {iomux_i [8+1], iomux_i [0+1]};
+assign {gpio_i [0+5], gpio_i [0+4]} = {iomux_i [8+2], iomux_i [0+2]};
+assign {gpio_i [0+7], gpio_i [0+6]} = {iomux_i [8+3], iomux_i [0+3]};
+assign {gpio_i [8+1], gpio_i [8+0]} = {iomux_i [8+4], iomux_i [0+4]};
+assign {gpio_i [8+3], gpio_i [8+2]} = {iomux_i [8+5], iomux_i [0+5]};
+assign {gpio_i [8+5], gpio_i [8+4]} = {iomux_i [8+6], iomux_i [0+6]};
+assign {gpio_i [8+7], gpio_i [8+6]} = {iomux_i [8+7], iomux_i [0+7]};
 
 //      N              P                   
 assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [0+1], gpio_o [0+0]};
