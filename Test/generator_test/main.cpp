@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
@@ -78,48 +79,45 @@ void deinit()
 }
 
 
-float signal_diff(const float* signal1, const float* signal2, size_t size, float amplitude, float threshold, int times)
+size_t getPeak(const float* signal, size_t size, float amplitude)
 {
-	bool done1 = false, done2 = false;
-	size_t first_peak_idx1 = 0, first_peak_idx2 = 0;
+	size_t peak = 0;
 	for (size_t i = 50; i < size - 50; ++i)
 	{
-		if (!done1 && signal1[i] > amplitude/2)
+		if (signal[i] > amplitude*0.8)
 		{
-			if (signal1[i + 1] > signal1[i]) // up
-				first_peak_idx1 = i;
+			if (signal[i + 1] > signal[i]) // up
+				peak = i;
 			else // down
-				done1 = true;
+				break;
 		}
-
-		if (!done2 && signal2[i] > amplitude/2)
-		{
-			if (signal2[i + 1] > signal2[i])
-				first_peak_idx2 = i;
-			else
-				done2 = true;
-		}
-
-		if (done1 && done2)
-			break;
 	}
 
+	return peak;
+}
+
+
+float signal_diff(const float* signal1, const float* signal2, size_t size, float amplitude, float threshold, int times)
+{
+	size_t peak_idx1 = std::max_element(signal1 + 50, signal1 + size - 50) - signal1; //getPeak(signal1, size, amplitude);
+	size_t peak_idx2 = std::max_element(signal2 + 50, signal2 + size - 50) - signal2; //getPeak(signal2, size, amplitude);
+
 	if (g_verbose)
-		printf("p1 %d %f p2 %d %f\n", first_peak_idx1, signal1[first_peak_idx1], first_peak_idx2, signal2[first_peak_idx2]);
+		printf("p1 %d %f p2 %d %f\n", peak_idx1, signal1[peak_idx1], peak_idx2, signal2[peak_idx2]);
 
 	int cur_times = times;
-	for (size_t i = 2; i < size - std::max(first_peak_idx1, first_peak_idx2); ++i)
+	for (size_t i = 0; i < size - std::max(peak_idx1, peak_idx2); ++i)
 	{
-		float diff = fabs(signal1[i + first_peak_idx1] - signal2[i + first_peak_idx2]);
+		float dt = fabs(signal1[i + peak_idx1] - signal2[i + peak_idx2]);
 		if (g_verbose)
-			printf("%f %f\n", signal1[i + first_peak_idx1], signal2[i + first_peak_idx2]);
-		if (diff > threshold)
+			printf("%f %f\n", signal1[i + peak_idx1], signal2[i + peak_idx2]);
+		if (dt > threshold)
 			--cur_times;
 		else
 			cur_times = times;			
 
 		if (!cur_times)
-			return diff;
+			return dt;
 	}
 
 	return 0.f;
