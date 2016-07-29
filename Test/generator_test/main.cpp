@@ -101,7 +101,7 @@ float signal_diff(float* signal1, float* signal2, size_t size, float amplitude, 
 {
 	size_t peak_idx1 = std::max_element(signal1 + CUT_SIG, signal1 + size - CUT_SIG) - signal1; //getPeak(signal1, size, amplitude);
 	size_t peak_idx2 = std::max_element(signal2 + CUT_SIG, signal2 + size - CUT_SIG) - signal2; //getPeak(signal2, size, amplitude);
-	float mean = std::accumulate(signal1 + CUT_SIG, signal1 + size - CUT_SIG, 0.f)/size;
+	float mean = std::accumulate(signal1 + CUT_SIG, signal1 + size - CUT_SIG, 0.f)/(size - CUT_SIG*2.f);
 
 	for (size_t i = peak_idx1; i < size - 50; ++i)
 		signal1[i] -= mean;
