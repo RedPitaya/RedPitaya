@@ -18,9 +18,9 @@ using std::stoi;
 using std::stof;
 
 
-enum { ADC_BUFF_SIZE = 16384, SAMPLE_RATE = 125000000 };
-std::mutex mutex;
+enum { ADC_BUFF_SIZE = 16384, SAMPLE_RATE = 125000000, CUT_SIG = 50 };
 bool g_verbose;
+std::mutex mutex;
 
 
 int load_fpga(const char* fpga_file)
@@ -99,9 +99,9 @@ size_t getPeak(const float* signal, size_t size, float amplitude)
 
 float signal_diff(float* signal1, float* signal2, size_t size, float amplitude, float threshold, int times)
 {
-	size_t peak_idx1 = std::max_element(signal1 + 50, signal1 + size - 50) - signal1; //getPeak(signal1, size, amplitude);
-	size_t peak_idx2 = std::max_element(signal2 + 50, signal2 + size - 50) - signal2; //getPeak(signal2, size, amplitude);
-	float mean = std::accumulate(signal1 + 50, signal1 + size - 50, 0.f)/size;
+	size_t peak_idx1 = std::max_element(signal1 + CUT_SIG, signal1 + size - CUT_SIG) - signal1; //getPeak(signal1, size, amplitude);
+	size_t peak_idx2 = std::max_element(signal2 + CUT_SIG, signal2 + size - CUT_SIG) - signal2; //getPeak(signal2, size, amplitude);
+	float mean = std::accumulate(signal1 + CUT_SIG, signal1 + size - CUT_SIG, 0.f)/size;
 
 	for (size_t i = peak_idx1; i < size - 50; ++i)
 		signal1[i] -= mean;
@@ -112,7 +112,7 @@ float signal_diff(float* signal1, float* signal2, size_t size, float amplitude, 
 	int cur_times = times;
 	for (size_t i = 0; i < size - std::max(peak_idx1, peak_idx2); ++i)
 	{
-		float dt = fabs((signal1[i + peak_idx1]) - signal2[i + peak_idx2]);
+		float dt = fabs(signal1[i + peak_idx1] - signal2[i + peak_idx2]);
 		if (g_verbose)
 			printf("%f %f\n", signal1[i + peak_idx1], signal2[i + peak_idx2]);
 		if (dt > threshold)
@@ -123,12 +123,12 @@ float signal_diff(float* signal1, float* signal2, size_t size, float amplitude, 
 		if (!cur_times)
 		{
 			FILE* f = fopen("/tmp/in.txt", "w");
-			for (size_t i = peak_idx1; i < size - 50; ++i)
+			for (size_t i = peak_idx1; i < size - CUT_SIG; ++i)
 				fprintf(f, "%f ", signal1[i]);
 			fclose(f);
 
 			f = fopen("/tmp/out.txt", "w");
-			for (size_t i = peak_idx2; i < size - 50; ++i)
+			for (size_t i = peak_idx2; i < size - CUT_SIG; ++i)
 				fprintf(f, "%f ", signal2[i]);
 			fclose(f);
 
