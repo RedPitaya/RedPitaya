@@ -97,10 +97,14 @@ size_t getPeak(const float* signal, size_t size, float amplitude)
 }
 
 
-float signal_diff(const float* signal1, const float* signal2, size_t size, float amplitude, float threshold, int times)
+float signal_diff(float* signal1, float* signal2, size_t size, float amplitude, float threshold, int times)
 {
 	size_t peak_idx1 = std::max_element(signal1 + 50, signal1 + size - 50) - signal1; //getPeak(signal1, size, amplitude);
 	size_t peak_idx2 = std::max_element(signal2 + 50, signal2 + size - 50) - signal2; //getPeak(signal2, size, amplitude);
+	float mean = std::accumulate(signal1 + 50, signal1 + size - 50, 0.f)/size;
+
+	for (size_t i = peak_idx1; i < size - 50; ++i)
+		signal1[i] -= mean;
 
 	if (g_verbose)
 		printf("p1 %d %f p2 %d %f\n", peak_idx1, signal1[peak_idx1], peak_idx2, signal2[peak_idx2]);
@@ -108,7 +112,7 @@ float signal_diff(const float* signal1, const float* signal2, size_t size, float
 	int cur_times = times;
 	for (size_t i = 0; i < size - std::max(peak_idx1, peak_idx2); ++i)
 	{
-		float dt = fabs(signal1[i + peak_idx1] - signal2[i + peak_idx2]);
+		float dt = fabs((signal1[i + peak_idx1]) - signal2[i + peak_idx2]);
 		if (g_verbose)
 			printf("%f %f\n", signal1[i + peak_idx1], signal2[i + peak_idx2]);
 		if (dt > threshold)
@@ -117,7 +121,19 @@ float signal_diff(const float* signal1, const float* signal2, size_t size, float
 			cur_times = times;			
 
 		if (!cur_times)
+		{
+			FILE* f = fopen("/tmp/in.txt", "w");
+			for (size_t i = peak_idx1; i < size - 50; ++i)
+				fprintf(f, "%f ", signal1[i]);
+			fclose(f);
+
+			f = fopen("/tmp/out.txt", "w");
+			for (size_t i = peak_idx2; i < size - 50; ++i)
+				fprintf(f, "%f ", signal2[i]);
+			fclose(f);
+
 			return dt;
+		}
 	}
 
 	return 0.f;
@@ -227,16 +243,6 @@ int run_test_signals(int freq, float amplitude, float threshold, int times)
 	if (ret != 0.f)
 	{	
 		fprintf(stderr, "error: diff = %f, save data to /tmp/in.txt and /tmp/out.txt\n", ret);
-
-		FILE* f = fopen("/tmp/in.txt", "w");
-		for (size_t i = 0; i < size; ++i)
-			fprintf(f, "%f ", in[i]);
-		fclose(f);
-
-		f = fopen("/tmp/out.txt", "w");
-		for (size_t i = 0; i < size; ++i)
-			fprintf(f, "%f ", out2[i]);
-		fclose(f);
 	}
 
 	// cleanup
