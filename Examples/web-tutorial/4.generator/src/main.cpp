@@ -70,13 +70,13 @@ void set_generator_config()
 
 const char *rp_app_desc(void)
 {
-    return (const char *)"Red Pitaya LED control.\n";
+    return (const char *)"Red Pitaya generator.\n";
 }
 
 
 int rp_app_init(void)
 {
-    fprintf(stderr, "Loading LED control\n");
+    fprintf(stderr, "Loading generator application\n");
 
     // Initialization of API
     if (rpApp_Init() != RP_OK) 
@@ -99,7 +99,7 @@ int rp_app_init(void)
 
 int rp_app_exit(void)
 {
-    fprintf(stderr, "Unloading LED control\n");
+    fprintf(stderr, "Unloading generator application\n");
 
     // Disabe generator
     rp_GenOutEnable(RP_CH_1);
