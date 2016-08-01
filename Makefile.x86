@@ -170,7 +170,7 @@ linux-install: linux $(INSTALL_DIR)
 # device tree processing
 ################################################################################
 
-DEVICETREE = $(TMP)/devicetree.dtb
+DEVICETREE = $(TMP)/dts/devicetree.dtb
 
 .PHONY: devicetree devicetree-install
 
@@ -184,20 +184,20 @@ $(DTREE_DIR): $(DTREE_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 
 $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
-	cp $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts/*.dtsi $(TMP)
-	cp $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts/*.dts  $(TMP)
-	#patch $(TMP)/zynq-7000.dtsi patches/devicetree/zynq-7000.patch
-	#patch $(TMP)/pl.dtsi        patches/devicetree/pl.patch
-	patch $(TMP)/system.dts     patches/devicetree/system.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP) $(TMP)/system.dts
-	tools/dtc/bin/dtc -O dtb -o $(TMP)/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
+	cp -r $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts $(TMP)/dts
+	cat patches/devicetree/system.patch          $(TMP)/dts/system.dts
+	#patch $(TMP)/dts/zynq-7000.dtsi patches/devicetree/zynq-7000.patch
+	#patch $(TMP)/dts/pl.dtsi        patches/devicetree/pl.patch
+	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts $(TMP)/dts/system.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts $(TMP)/dts/system.dts
+	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
 	# create device tree source from binary for reference
-	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts -o $(TMP)/system.dtb $(DEVICETREE)
+	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dtb $(DEVICETREE)
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp $(DEVICETREE)                   $(INSTALL_DIR)
-	cp $(TMP)/system.dtb               $(INSTALL_DIR)
-	cp $(TMP)/amba_pl.dtbo             $(INSTALL_DIR)
+	cp $(TMP)/dts/dtraw.dts            $(INSTALL_DIR)
+	cp $(TMP)/dts/amba_pl.dtbo         $(INSTALL_DIR)
 	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
 	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
 

@@ -1,163 +1,94 @@
---- system.dts.old	2015-07-23 23:14:55.434444209 +0200
-+++ system.dts	2015-07-23 23:05:18.198460862 +0200
-@@ -28,6 +28,22 @@
- 		device_type = "memory";
- 		reg = <0x0 0x20000000>;
- 	};
-+	reserved-memory {
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges;
-+		linux,cma {
-+			compatible = "shared-dma-pool";
-+			reusable;
-+			size = <0x1000000>;
-+			alignment = <0x2000>;
-+			linux,cma-default;
-+		};
-+		rprx_reserverd: labuf@1c000000 {
-+			/*compatible = "redpitaya,rprx-memory";*/
-+			reg = <0x1c000000 0x2000000>;
-+		};
-+	};
- };
- &gem0 {
- 	local-mac-address = [00 0a 35 00 00 00];
-@@ -86,3 +102,137 @@
- 	fclk-enable = <0xf>;
- 	ps-clk-frequency = <33333333>;
- };
-+&gem0 {
-+	phy-handle = <&ethernet_0_mdio>;
-+	ethernet_0_mdio: mdio@1 {
-+		compatible = "lantiq,phy11g";
-+		device_type = "ethernet-phy";
-+		reg = <1>;
-+	};
-+};
-+&i2c0 {
-+	eep@50 {
-+		compatible = "24c64";
-+		reg = <0x50>;
-+	};
-+};
-+&spi1 {
-+	spidev@0 {
-+		compatible = "spidev";
-+		reg = <0>; //chipselect 0
-+		spi-max-frequency = <50000000>;
-+	};
-+};
-+&clkc {
-+	fclk-enable = <0xf>;
-+};
-+&xadc_wiz_0 {
-+	compatible = "xlnx,axi-xadc-1.00.a";
-+	clocks = <&clkc 18>;
-+	xlnx,channels {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		channel@0 {
-+			reg = <0>;
-+		};
-+		channel@1 {
-+			reg = <1>;
-+		};
-+		channel@2 {
-+			reg = <2>;
-+		};
-+		channel@9 {
-+			reg = <9>;
-+		};
-+		channel@10 {
-+			reg = <10>;
-+		};
-+	};
-+};
-+/ {
-+	gpio-leds {
-+		compatible = "gpio-leds";
-+		led-8-yellow {
-+			label = "led8";
-+			gpios = <&gpio0 0 0>;
-+			default-state = "off";
-+			linux,default-trigger = "mmc0";
-+		};
-+		led-9-red {
-+			label = "led9";
-+			gpios = <&gpio0 7 0>;
-+			default-state = "off";
-+			linux,default-trigger = "heartbeat";
-+		};
-+	};
-+};
-+/ {
-+	usb_phy0: phy0 {
-+		compatible = "ulpi-phy";
-+		#phy-cells = <0>;
-+		reg = <0xe0002000 0x1000>;
-+		view-port = <0x0170>;
-+		drv-vbus;
-+	};
-+};
-+&usb0 {
-+	usb-phy = <&usb_phy0>;
-+};
-+&spi0 {
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+
-+	is-decoded-cs = <0>;
-+	num-cs = <3>;
-+
-+	rpidisplay: rpi-display@0 { 
-+		compatible = "ilitek,ili9341"; 
-+		reg = <0>; 
-+		spi-max-frequency = <32000000>; 
-+
-+		rotate = <0>; 
-+		bgr; 
-+		fps = <10>; 
-+		buswidth = <8>; 
-+
-+		reset-gpios = <&gpio0 62 0>; 
-+		dc-gpios = <&gpio0 63 0>; 
-+		
-+		debug = <0>; 
-+	}; 
-+
-+	rpidisplay_ts: rpi-display-ts@1 { 
-+		compatible = "ti,ads7846"; 
-+		reg = <1>; 
-+		spi-max-frequency = <1000000>; 
-+
-+		interrupts = <64 0>; 
-+		interrupt-parent = <&gpio0>; 
-+		pendown-gpio = <&gpio0 64 0>; 
-+		vcc-supply = <&fixedreg33>;
-+	}; 
-+
-+	myspidev: spidev@2 {
-+		compatible = "linux,spidev";
-+		reg = <2>;
-+		spi-max-frequency = <1000000>;
-+	};
-+};
-+/{
-+	aliases {
-+		spi0 = &spi0;
-+	};
-+
-+	backlight {
-+		compatible = "gpio-backlight";
-+		gpios = <&gpio0 55 0>;
-+		default-on;
-+	};
-+
-+	fixedreg33: fixed33@0 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "fixed-supply";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+	};
-+};
+/ {
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		linux,cma {
+			compatible = "shared-dma-pool";
+			reusable;
+			size = <0x1000000>;
+			alignment = <0x2000>;
+			linux,cma-default;
+		};
+		rprx_reserverd: labuf@1c000000 {
+			/*compatible = "redpitaya,rprx-memory";*/
+			reg = <0x1c000000 0x2000000>;
+		};
+	};
+};
+&gem0 {
+	phy-handle = <&ethernet_0_mdio>;
+	ethernet_0_mdio: mdio@1 {
+		compatible = "lantiq,phy11g";
+		device_type = "ethernet-phy";
+		reg = <1>;
+	};
+};
+&i2c0 {
+	eep@50 {
+		compatible = "24c64";
+		reg = <0x50>;
+	};
+};
+&spi1 {
+	spidev@0 {
+		compatible = "spidev";
+		reg = <0>; //chipselect 0
+		spi-max-frequency = <50000000>;
+	};
+};
+&clkc {
+	fclk-enable = <0xf>;
+};
+&xadc_wiz_0 {
+	compatible = "xlnx,axi-xadc-1.00.a";
+	clocks = <&clkc 18>;
+	xlnx,channels {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		channel@0 {
+			reg = <0>;
+		};
+		channel@1 {
+			reg = <1>;
+		};
+		channel@2 {
+			reg = <2>;
+		};
+		channel@9 {
+			reg = <9>;
+		};
+		channel@10 {
+			reg = <10>;
+		};
+	};
+};
+/ {
+	gpio-leds {
+		compatible = "gpio-leds";
+		led-8-yellow {
+			label = "led8";
+			gpios = <&gpio0 0 0>;
+			default-state = "off";
+			linux,default-trigger = "mmc0";
+		};
+		led-9-red {
+			label = "led9";
+			gpios = <&gpio0 7 0>;
+			default-state = "off";
+			linux,default-trigger = "heartbeat";
+		};
+	};
+};
+/ {
+	usb_phy0: phy0 {
+		compatible = "ulpi-phy";
+		#phy-cells = <0>;
+		reg = <0xe0002000 0x1000>;
+		view-port = <0x0170>;
+		drv-vbus;
+	};
+};
+&usb0 {
+	usb-phy = <&usb_phy0>;
+};
