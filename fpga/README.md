@@ -187,6 +187,9 @@ echo 1      > /sys/class/gpio/gpio$INDEX/value
 echo          /sys/class/gpio/gpio$INDEX/value
 ```
 
+**NOTE**: A new userspace ABI for GPIO is comming in kernel v4.8, ioctl will be used instead of sysfs.
+https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next
+
 ### Linux access to LED
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
