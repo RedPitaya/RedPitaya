@@ -191,9 +191,12 @@ $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
 	patch $(TMP)/system.dts     patches/devicetree/system.patch
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP) $(TMP)/system.dts
 	tools/dtc/bin/dtc -O dtb -o $(TMP)/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
+	# create device tree source from binary for reference
+	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts -o $(TMP)/system.dtb $(DEVICETREE)
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp $(DEVICETREE)                   $(INSTALL_DIR)
+	cp $(TMP)/system.dtb               $(INSTALL_DIR)
 	cp $(TMP)/amba_pl.dtbo             $(INSTALL_DIR)
 	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
 	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
