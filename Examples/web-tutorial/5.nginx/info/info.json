@@ -1,0 +1,6 @@
+{
+    "name": "NGINX requests application",
+    "version": "0.94-31",
+    "revision": "ca8ae99",
+    "description": "Send requests to NGINX on the Red Pitaya"
+}
