@@ -184,11 +184,10 @@ $(DTREE_DIR): $(DTREE_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 
 $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
-	cp -r $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts $(TMP)/dts
-	cat patches/devicetree/system.patch          $(TMP)/dts/system.dts
-	#patch $(TMP)/dts/zynq-7000.dtsi patches/devicetree/zynq-7000.patch
-	#patch $(TMP)/dts/pl.dtsi        patches/devicetree/pl.patch
-	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts $(TMP)/dts/system.dts
+	cp -r $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts       $(TMP)/dts
+	#cat patches/devicetree/zynq-7000.dts         >> $(TMP)/dts/zynq-7000.dtsi
+	cat patches/devicetree/system.dts            >> $(TMP)/dts/system.dts
+	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts >> $(TMP)/dts/system.dts
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts $(TMP)/dts/system.dts
 	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
 	# create device tree source from binary for reference
