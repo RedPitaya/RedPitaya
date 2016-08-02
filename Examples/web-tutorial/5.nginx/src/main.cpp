@@ -15,20 +15,20 @@
 
 const char *rp_app_desc(void)
 {
-    return (const char *)"Template application.\n";
+    return (const char *)"Red Pitaya NGINX requests.\n";
 }
 
 
 int rp_app_init(void)
 {
-    fprintf(stderr, "Loading template application\n");
+    fprintf(stderr, "Loading NGINX requests application\n");
     return 0;
 }
 
 
 int rp_app_exit(void)
 {
-    fprintf(stderr, "Unloading template application\n");
+    fprintf(stderr, "Unloading NGINX requests application\n");
     return 0;
 }
 

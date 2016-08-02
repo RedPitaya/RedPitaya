@@ -32,13 +32,13 @@ CIntParameter GAIN("GAIN", CBaseParameter::RW, 1, 0, 1, 100);
 
 const char *rp_app_desc(void)
 {
-    return (const char *)"Red Pitaya LED control.\n";
+    return (const char *)"Red Pitaya read voltage.\n";
 }
 
 
 int rp_app_init(void)
 {
-    fprintf(stderr, "Loading LED control\n");
+    fprintf(stderr, "Loading read voltage application\n");
 
     // Initialization of API
     if (rpApp_Init() != RP_OK) 
@@ -57,7 +57,7 @@ int rp_app_init(void)
 
 int rp_app_exit(void)
 {
-    fprintf(stderr, "Unloading LED control\n");
+    fprintf(stderr, "Unloading read voltage application\n");
 
     rpApp_Release();
 
