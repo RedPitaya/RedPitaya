@@ -11,11 +11,18 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-INSTALL_DIR ?= .
-TARGET = $(INSTALL_DIR)/www/apps/$(APP)
+INSTALL_DIR ?= ../../build
 
-install:
-	mkdir -p $(TARGET)
-	cp -r nginx.conf fpga.conf css *.html info js $(TARGET)
-	sed -i $(TARGET)/info/info.json -e 's/REVISION/$(REVISION)/'
-	sed -i $(TARGET)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
+CONTROLLERHF = controllerhf.so
+
+CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
+export CFLAGS
+
+all: $(CONTROLLERHF)
+
+$(CONTROLLERHF):
+	$(MAKE) -C src
+
+clean:
+	$(MAKE) -C src clean
+	-$(RM) *.so

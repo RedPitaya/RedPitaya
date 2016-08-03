@@ -50,11 +50,36 @@
                 if (msg.responseText) {} else {}
             })
     }
+
+    SCPI.GetIP = function() {
+        $.ajax({
+            url: '/get_ip',
+            type: 'GET',
+        }).fail(function(msg) {
+
+            var res = msg.responseText;
+            var IPaddr = res.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
+            $('#ip-addr').text(IPaddr);
+
+        }).done(function(msg) {
+
+            var res = msg.responseText;
+            var IPaddr = res.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
+            $('#ip-addr').text(IPaddr);
+        });
+    }
+
 }(window.SCPI = window.SCPI || {}, jQuery));
+
+
+
 
 // Page onload event handler
 $(function() {
     SCPI.CheckServerStatus();
+    setInterval(SCPI.GetIP, 1000);
     setInterval(SCPI.CheckServerStatus, 3000);
 
     $('#SCPI_RUN').click(SCPI.StartServer);

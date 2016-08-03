@@ -66,7 +66,16 @@
                 obj['description'] = value['description'];
                 obj['url'] = url + key + '/?type=run';
                 obj['image'] = url + key + '/info/icon.png';
-                obj['licensable'] = true;
+
+                // FIXME: It is bad solution.
+                if (obj['name'] == 'spectrumpro' ||
+                    obj['name'] == 'scopegenpro' ||
+                    obj['name'] == 'ba_pro' ||
+                    obj['name'] == 'lcr_meter')
+                    obj['licensable'] = false;
+                else
+                    obj['licensable'] = true;
+
                 obj['type'] = value['type'];
                 apps.push(obj);
             });
