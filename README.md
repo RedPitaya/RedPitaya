@@ -103,7 +103,7 @@ make zip
 
 To get an itteractive ARM shell do:
 ```
-schroot -c red-pitaya-debian
+schroot -c red-pitaya-ubuntu
 ```
 
 # Partial rebuild process
@@ -112,7 +112,7 @@ The next components can be built separately.
 - FPGA + device tree
 - u-Boot
 - Linux kernel
-- Debian OS
+- Debian/Ubuntu OS
 - API
 - SCPI server
 - free applications
@@ -149,7 +149,7 @@ Detailed instructions are provided for [building the FPGA](fpga/README.md#build-
 
 ### U-boot
 
-To build the U-Boot binary and boot scripts (used to select between booting into Buildroot or Debian):
+To build the U-Boot binary and boot scripts (used to select between booting into Buildroot or Debian/Ubuntu):
 ```bash
 make -f Makefile.x86 u-boot
 ```
@@ -175,9 +175,9 @@ make -f Makefile.x86 boot
 
 ## Linux user space
 
-### Debian OS
+### Debian/Ubuntu OS
 
-[Debian OS instructions](OS/debian/README.md) are detailed elsewhere.
+[Debian/Ubuntu OS instructions](OS/debian/README.md) are detailed elsewhere.
 
 ### API
 
