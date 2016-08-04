@@ -291,18 +291,23 @@ red_pitaya_ps ps (
 );
 
 // OSC [0]
-assign axi_drx[0].TKEEP  =     {2{str_drx[0].TKEEP}};
-assign axi_drx[0].TDATA  =        str_drx[0].TDATA  ;
-assign axi_drx[0].TLAST  =        str_drx[0].TLAST  ;
-assign axi_drx[0].TVALID =        str_drx[0].TVALID ;
-assign str_drx[0].TREADY =        axi_drx[0].TREADY ;
+assign axi_drx[0].TKEEP  = {2{str_drx[0].TKEEP}};
+assign axi_drx[0].TDATA  =    str_drx[0].TDATA  ;
+assign axi_drx[0].TLAST  =    str_drx[0].TLAST  ;
+assign axi_drx[0].TVALID =    str_drx[0].TVALID ;
+assign str_drx[0].TREADY =    axi_drx[0].TREADY ;
 
-assign axi_drx[1].TKEEP  = 0 ? {2{str_drx[1].TKEEP}} : {2{str_drx[2].TKEEP}};
-assign axi_drx[1].TDATA  = 0 ?    str_drx[1].TDATA   :    str_drx[2].TDATA  ;
-assign axi_drx[1].TLAST  = 0 ?    str_drx[1].TLAST   :    str_drx[2].TLAST  ;
-assign axi_drx[1].TVALID = 0 ?    str_drx[1].TVALID  :    str_drx[2].TVALID ;
-assign str_drx[1].TREADY =        axi_drx[1].TREADY;
-assign str_drx[2].TREADY =        axi_drx[1].TREADY;
+assign axi_drx[1].TKEEP  = {2{str_drx[1].TKEEP}};
+assign axi_drx[1].TDATA  =    str_drx[1].TDATA  ;
+assign axi_drx[1].TLAST  =    str_drx[1].TLAST  ;
+assign axi_drx[1].TVALID =    str_drx[1].TVALID ;
+assign str_drx[1].TREADY =    axi_drx[1].TREADY ;
+
+assign axi_drx[2].TKEEP  = {2{str_drx[2].TKEEP}};
+assign axi_drx[2].TDATA  =    str_drx[2].TDATA  ;
+assign axi_drx[2].TLAST  =    str_drx[2].TLAST  ;
+assign axi_drx[2].TVALID =    str_drx[2].TVALID ;
+assign str_drx[2].TREADY =    axi_drx[2].TREADY ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
@@ -729,6 +734,8 @@ asg_top #(
   // System bus
   .bus       (sys[11])
 );
+
+assign axi_dtx[2].TVALID = 1'b0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)
