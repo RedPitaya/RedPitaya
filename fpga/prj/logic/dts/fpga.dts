@@ -4,13 +4,13 @@
  */
 
 &axi_dma_0 {
-	status = "disabled"
+	status = "disabled";
 };
 &axi_dma_1 {
-	status = "disabled"
+	status = "disabled";
 };
 &axi_dma_2 {
-	status = "disabled"
+	status = "disabled";
 };
 
 /*
