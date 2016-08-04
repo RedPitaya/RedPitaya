@@ -81,7 +81,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 ################################################################################
 
 FPGA_DIR = fpga
-FPGA_PRJ = tft
+FPGA_PRJ = logic_orig
 
 FPGA = $(FPGA_DIR)/prj/$(FPGA_PRJ)/out/red_pitaya.bit
 FSBL = $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/fsbl/executable.elf
