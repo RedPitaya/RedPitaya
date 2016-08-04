@@ -103,6 +103,7 @@ report_clock_utilization -file    $path_out/clock_util.rpt
 report_utilization       -file    $path_out/post_route_util.rpt
 report_power             -file    $path_out/post_route_power.rpt
 report_drc               -file    $path_out/post_imp_drc.rpt
+report_io                -file    $path_out/post_imp_io.rpt
 #write_verilog            -force   $path_out/bft_impl_netlist.v
 #write_xdc -no_fixed_only -force   $path_out/bft_impl.xdc
 
