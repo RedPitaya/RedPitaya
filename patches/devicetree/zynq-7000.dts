@@ -2,7 +2,7 @@
  * Remove the existing 'devcfg' node and replace it with a 'fpga_bus' node
  */
 
-/delete-node/ devcfg;
+/delete-node/ &devcfg;
 
 &amba { 
 	fpga_bus@f8007000 {
