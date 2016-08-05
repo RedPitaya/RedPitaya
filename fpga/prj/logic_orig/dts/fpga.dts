@@ -9,6 +9,12 @@
 &axi_dma_1 {
 	status = "disabled";
 };
+&axi_dma_2 {
+	status = "disabled";
+};
+&axi_dma_3 {
+	status = "disabled";
+};
 
 /*
  * Add Red Pitaya custom DMA consumer
