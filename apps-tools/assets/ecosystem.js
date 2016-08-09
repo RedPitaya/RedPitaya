@@ -67,6 +67,14 @@
                 obj['url'] = url + key + '/?type=run';
                 obj['image'] = url + key + '/info/icon.png';
 
+                $.ajax({
+                    url: obj['image'],
+                    cache: false,
+                    async: true
+                }).fail(function(msg) {
+                    getListOfApps();
+                });
+
                 // FIXME: It is bad solution.
                 if (obj['name'] == 'spectrumpro' ||
                     obj['name'] == 'scopegenpro' ||
