@@ -407,8 +407,8 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         if (info == NULL)
             continue;
 
-       /* We have an application */
-        int demo = !is_registered(dir, app_id, "controllerhf.so");
+        /* We have an application */
+        //int demo = !is_registered(dir, app_id, "controllerhf.so");
         int demo = 0;
 
         if (verbose) {
