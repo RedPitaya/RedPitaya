@@ -7,7 +7,7 @@ setenv addr_dtb    0x04000000
 # set default Linux kernel boot parameters
 setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
 
-if test ${hw_rev} = 'STEM_10_B_v1.0'
+if test ${hw_rev} = 'STEM_12510_v1.0'
 then  
   setenv high     0x10000000
   setenv bootargs ${bootargs} mem=256M

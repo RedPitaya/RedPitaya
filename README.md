@@ -38,6 +38,10 @@ You will need the following to build the Red Pitaya components:
 sudo apt-get install make curl xz-utils
 # U-Boot build dependencies
 sudo apt-get install libssl-dev device-tree-compiler u-boot-tools
+# secure chroot
+sudo apt-get install schroot
+# QEMU
+sudo apt-get install qemu qemu-user qemu-user-static
 ```
 
 2. Xilinx [Vivado 2016.2](http://www.xilinx.com/support/download.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
@@ -96,7 +100,7 @@ To build everything a few `make` steps are required.
 ```bash
 make -f Makefile.x86
 schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-make -f Makefile.arm CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT
+make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT
 EOL_CHROOT
 make zip
 ```

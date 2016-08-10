@@ -57,17 +57,40 @@
             type: 'GET',
         }).fail(function(msg) {
 
-            var res = msg.responseText;
-            var IPaddr = res.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
-            $('#ip-addr').text(IPaddr);
+            var res = msg.responseText.split(";");
+
+            var ethIP = res[0].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            var wlanIP = res[1].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+
+            if (ethIP != null){
+                ethIP = ethIP[0].split(" ")[1].split("/")[0];
+                $('#ip-addr').text(ethIP);
+            }
+            else if (wlanIP != null){
+                wlanIP = wlanIP[0].split(" ")[1].split("/")[0];
+                $('#ip-addr').text(wlanIP);
+            }
+            else $('#ip-addr').text("None");
+
+            
 
         }).done(function(msg) {
 
-            var res = msg.responseText;
-            var IPaddr = res.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
-            $('#ip-addr').text(IPaddr);
+            var res = msg.responseText.split(";");
+
+            var ethIP = res[0].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            var wlanIP = res[1].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+
+            if (ethIP != null){
+                ethIP = ethIP[0].split(" ")[1].split("/")[0];
+                $('#ip-addr').text(ethIP);
+            }
+            else if (wlanIP != null){
+                wlanIP = wlanIP[0].split(" ")[1].split("/")[0];
+                $('#ip-addr').text(wlanIP);
+            }
+            else $('#ip-addr').text("None");
+
         });
     }
 
