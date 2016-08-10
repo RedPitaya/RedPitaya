@@ -409,6 +409,7 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
 
        /* We have an application */
         int demo = !is_registered(dir, app_id, "controllerhf.so");
+        int demo = 0;
 
         if (verbose) {
             /* Attach whole info JSON */
@@ -448,7 +449,8 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
             return 0;
         if (info == NULL)
             return 0;
-        int demo = !is_registered(dir, "lcr_meter", "controllerhf.so");
+        //int demo = !is_registered(dir, "lcr_meter", "controllerhf.so");
+        int demo = 0;
 
         if (verbose) {
             cJSON_AddItemToObject(info, "type", cJSON_CreateString(demo ? "demo" : "run", pool), pool);
