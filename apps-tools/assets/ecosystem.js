@@ -76,13 +76,14 @@
                 });
 
                 // FIXME: It is bad solution.
-                if (obj['name'] == 'spectrumpro' ||
+                /*if (obj['name'] == 'spectrumpro' ||
                     obj['name'] == 'scopegenpro' ||
                     obj['name'] == 'ba_pro' ||
                     obj['name'] == 'lcr_meter')
                     obj['licensable'] = false;
                 else
-                    obj['licensable'] = true;
+                    obj['licensable'] = true;*/
+                 obj['licensable'] = false;
 
                 obj['type'] = value['type'];
                 apps.push(obj);
