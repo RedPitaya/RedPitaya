@@ -322,8 +322,8 @@ APPS_FREE_DIR = apps-free
 .PHONY: apps-free
 
 apps-free: lcr bode
-	$(MAKE) -C $(APPS_FREE_DIR) all
-	$(MAKE) -C $(APPS_FREE_DIR) install
+	$(MAKE) -C $(APPS_FREE_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-clean:
 	$(MAKE) -C $(APPS_FREE_DIR) clean
