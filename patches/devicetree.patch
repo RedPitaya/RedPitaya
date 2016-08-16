@@ -23,7 +23,7 @@
  };
  &gem0 {
  	local-mac-address = [00 0a 35 00 00 00];
-@@ -86,3 +102,79 @@
+@@ -86,3 +102,185 @@
  	fclk-enable = <0xf>;
  	ps-clk-frequency = <33333333>;
  };
@@ -40,6 +40,112 @@
 +		compatible = "24c64";
 +		reg = <0x50>;
 +	};
++gpio@20 {
++	compatible = "nxp,pca9557";
++	reg = <0x1a>;
++/*	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pca9505>;
++	interrupt-parent = <&gpio3>;
++	interrupts = <23 IRQ_TYPE_LEVEL_LOW>;*/
++};
++
++i2c-mux@75 {
++	compatible = "nxp,pca9547";
++	#address-cells = <1>;
++	#size-cells = <0>;
++	reg = <0x70>;
++	status="okay";	
++	i2c@1 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		reg = <1>;
++		gpio@20 {
++			ompatible = "nxp,pca9557";
++			reg = <0x1a>;
++		};
++		pca9555_20: pca9555@20 {
++			compatible = "nxp,pca9555";
++			gpio-controller;
++			#gpio-cells = <2>;
++			reg = <0x20>;
++		};
++		pca9555_21: pca9555@21 {
++			compatible = "nxp,pca9555";
++			gpio-controller;
++			#gpio-cells = <2>;
++			reg = <0x21>;
++		};
++};
++   i2c@2 {
++            #address-cells = <1>;
++             #size-cells = <0>;
++              reg = <2>;
++               gpio@20 {
++			compatible = "nxp,pca9557";
++			reg = <0x1a>;
++	};
++  };
++   i2c@3 {
++            #address-cells = <1>;
++             #size-cells = <0>;
++              reg = <3>;
++               gpio@20 {
++			compatible = "nxp,pca9557";
++			reg = <0x1a>;
++	};
++  };
++   i2c@4 {
++            #address-cells = <1>;
++             #size-cells = <0>;
++              reg = <4>;
++               gpio@20 {
++			compatible = "nxp,pca9557";
++			reg = <0x1a>;
++		};
++       };
++        i2c@5 {
++       #address-cells = <1>;
++        #size-cells = <0>;
++         reg = <5>;
++  };
++   i2c@6 {
++            #address-cells = <1>;
++             #size-cells = <0>;
++              reg = <6>;
++               gpio@20 {
++			compatible = "nxp,pca9557";
++			reg = <0x1a>;
++		};
++       };
++        i2c@7 {
++    #address-cells = <1>;
++     #size-cells = <0>;
++      reg = <7>;
++       gpio@20 {
++		compatible = "nxp,pca9557";
++		reg = <0x1a>;
++	};
++  };
++   i2c@8 {
++            #address-cells = <1>;
++             #size-cells = <0>;
++              reg = <8>;
++               gpio@20 {
++			compatible = "nxp,pca9557";
++			reg = <0x1a>;
++		};
++  };
++   i2c@9 {
++            #address-cells = <1>;
++             #size-cells = <0>;
++              reg = <9>;
++               gpio@20 {
++			compatible = "nxp,pca9557";
++			reg = <0x1a>;
++		};
++       };
++
++};
 +};
 +&spi1 {
 +	spidev@0 {
