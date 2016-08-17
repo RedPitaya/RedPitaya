@@ -215,30 +215,35 @@
                                         .done(function(msg) {})
                                         .fail(function(msg) {
                                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                            window.location = success_url;
+											if(success_url != undefined)
+												window.location = success_url;
                                         });
                                 })
                                 .fail(function(msg) {
                                     console.log("LIC: ERR2");
                                     setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                    window.location = success_url;
+									if(success_url != undefined)
+										window.location = success_url;
                                 });
                         } else {
                             console.log("LIC: ERR3");
                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                            window.location = success_url;
+							if(success_url != undefined)
+								window.location = success_url;
                         }
                     })
                     .fail(function(msg) {
                         console.log("LIC: ERR4");
                         setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                        window.location = success_url;
+						if(success_url != undefined)
+							window.location = success_url;
                     });
             })
             .fail(function(msg) {
                 console.log("LIC: ERR4");
                 setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                window.location = success_url;
+				if(success_url != undefined)
+					window.location = success_url;
             });
     }
 
@@ -330,4 +335,6 @@
         { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
+	
+	licVerify(undefined)
 })(jQuery);
