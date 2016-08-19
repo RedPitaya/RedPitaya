@@ -29,9 +29,10 @@ SOURCE_DIR  = .
 OUTPUT_DIR  = ../../lib
 
 SHARED_LIB=$(OUTPUT_DIR)/librp.so
+STATIC_LIB=$(OUTPUT_DIR)/librp.a
 
 # Library name
-TARGET=$(SHARED_LIB)
+TARGET=$(SHARED_LIB) $(STATIC_LIB)
 
 # List of compiled object files
 OBJECTS =	common.o \
@@ -64,6 +65,8 @@ LIBS=-lm -lpthread
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
 
+AR=$(CROSS_COMPILE)ar
+
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
 all: $(TARGET)
@@ -81,6 +84,10 @@ $(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
 $(SHARED_LIB): $(OBJS)
 	mkdir -p $(OUTPUT_DIR)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LDFLAGS)
+
+$(STATIC_LIB): $(OBJS)
+	mkdir -p $(OUTPUT_DIR)
+	$(AR) rcs $@ $^
 
 # Version header for traceability
 version.h:
