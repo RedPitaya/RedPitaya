@@ -27,8 +27,10 @@ INSTALL_DIR ?= .
 SOURCE_DIR  = .
 OUTPUT_DIR  = ../lib
 
+SHARED_LIB=$(OUTPUT_DIR)/librp2.so
+
 # Library name
-TARGET=$(OUTPUT_DIR)/librp2.so
+TARGET=$(SHARED_LIB)
 
 # List of compiled object files
 OBJECTS =	pdm.o \
@@ -71,9 +73,9 @@ $(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
 
-# Makefile target with rules how to link executable for each target from $(TARGET)
-# list.
-$(TARGET): $(OBJS)
+# Makefile target with rules how to link executable for each target from
+# $(SHARED_LIB) list.
+$(SHARED_LIB): $(OBJS)
 	mkdir -p $(OUTPUT_DIR)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LDFLAGS)
 
