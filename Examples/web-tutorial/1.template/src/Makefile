@@ -3,20 +3,19 @@ RM=rm
 
 CXXSOURCES=main.cpp
 
-RP_API=/root/redpitaya-public/api/lib
-RP_SDK=/root/redpitaya-public/Bazaar/nginx/ngx_ext_modules/ws_server/rp_sdk
+INCLUDE =  -I$(INSTALL_DIR)/include
+INCLUDE += -I$(INSTALL_DIR)/include/api2
+INCLUDE += -I$(INSTALL_DIR)/include/apiApp
+INCLUDE += -I$(INSTALL_DIR)/rp_sdk
 
-INCLUDE = -I$(RP_SDK)
-INCLUDE+= -I/root/redpitaya-public/Applications/api/rpApplications/src -I/root/redpitaya-public/api/include
-INCLUDE+= -I/root/redpitaya-public/Bazaar/tools/libjson
+LIBS = -L$(INSTALL_DIR)/lib
+LIBS += -L$(INSTALL_DIR)/rp_sdk
 
 COMMON_FLAGS+=-Wall -fPIC -Os -s
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
-LDFLAGS =-shared $(COMMON_FLAGS) -L/root/redpitaya-public/Applications/api/lib -L/root/redpitaya-public/api/lib
+LDFLAGS = -shared $(COMMON_FLAGS) $(LIBS)
 LDFLAGS+= -Wl,--whole-archive,--no-as-needed
-LDFLAGS+= -lcryptopp
-LDFLAGS+=-L$(RP_API) -lrpapp -lrp
-LDFLAGS+=-L$(RP_SDK) -lrp_sdk
+LDFLAGS+= -lcryptopp -lrpapp -lrp -lrp_sdk
 LDFLAGS+= -Wl,--no-whole-archive
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)

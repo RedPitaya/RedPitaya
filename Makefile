@@ -40,14 +40,17 @@ LIBRP2_DIR      = api2
 .PHONY: librpapp liblcr_meter
 
 libredpitaya:
+	$(MAKE) -C shared clean
 	$(MAKE) -C shared
 	$(MAKE) -C shared install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp:
+	$(MAKE) -C $(LIBRP_DIR) clean
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp2:
+	$(MAKE) -C $(LIBRP2_DIR) clean
 	$(MAKE) -C $(LIBRP2_DIR)
 	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -57,10 +60,12 @@ ifdef ENABLE_LICENSING
 api: librp librpapp liblcr_meter
 
 librpapp:
+	$(MAKE) -C $(LIBRPAPP_DIR) clean
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 liblcr_meter:
+	$(MAKE) -C $(LIBRPLCR_DIR) clean
 	$(MAKE) -C $(LIBRPLCR_DIR)
 	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -150,6 +155,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	cp -fr patches/lua/* $@/conf/lua/
 
 $(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
+	$(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	mkdir -p $(INSTALL_DIR)/www/conf/lua
@@ -160,6 +166,7 @@ ifdef ENABLE_LICENSING
 IDGEN_DIR = Applications/idgen
 
 $(IDGEN):
+	$(MAKE) -C $(IDGEN_DIR) clean
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 
@@ -199,6 +206,7 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 #	patch -d $@ -p1 < patches/scpi-parser-$(SCPI_PARSER_TAG).patch
 
 scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
+	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -224,35 +232,43 @@ examples: lcr bode monitor monitor_old calib discovery
 # calibrate laboardtest
 
 lcr:
+	$(MAKE) -C $(LCR_DIR) clean
 	$(MAKE) -C $(LCR_DIR)
 	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 bode:
+	$(MAKE) -C $(BODE_DIR) clean
 	$(MAKE) -C $(BODE_DIR)
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor:
+	$(MAKE) -C $(MONITOR_DIR) clean
 	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor_old:
+	$(MAKE) -C $(MONITOR_OLD_DIR) clean
 	$(MAKE) -C $(MONITOR_OLD_DIR)
 	$(MAKE) -C $(MONITOR_OLD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 
 calib:
+	$(MAKE) -C $(CALIB_DIR) clean
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 discovery:
+	$(MAKE) -C $(DISCOVERY_DIR) clean
 	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
+	$(MAKE) -C $(CALIBRATE_DIR) clean
 	$(MAKE) -C $(CALIBRATE_DIR)
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 laboardtest: api2
+	$(MAKE) -C $(LA_TEST_DIR) clean
 	$(MAKE) -C $(LA_TEST_DIR)
 	cp api2/test/laboardtest build/bin/laboardtest
 	cp api2/test/install.sh build/install.sh
@@ -298,9 +314,11 @@ APP_UPDATER_DIR          = apps-tools/updater
 apps-tools: ecosystem updater scpi_manager wyliodrin_manager network_manager
 
 ecosystem:
+	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 updater: ecosystem api $(NGINX)
+	$(MAKE) -C $(APP_UPDATER_DIR) clean
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -322,8 +340,9 @@ APPS_FREE_DIR = apps-free
 .PHONY: apps-free
 
 apps-free: lcr bode
-	$(MAKE) -C $(APPS_FREE_DIR) all
-	$(MAKE) -C $(APPS_FREE_DIR) install
+	$(MAKE) -C $(APPS_FREE_DIR) clean
+	$(MAKE) -C $(APPS_FREE_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-clean:
 	$(MAKE) -C $(APPS_FREE_DIR) clean
@@ -344,19 +363,23 @@ APP_LA_PRO_DIR 		= Applications/la_pro
 apps-pro: scopegenpro spectrumpro lcr_meter la_pro
 
 scopegenpro: api $(NGINX)
-	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrumpro: api $(NGINX)
-	$(MAKE) -C $(APP_SPECTRUMPRO_DIR)
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
-	$(MAKE) -C $(APP_LCRMETER_DIR)
+	$(MAKE) -C $(APP_LCRMETER_DIR) clean
+	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 la_pro: api api2 $(NGINX)
-	$(MAKE) -C $(APP_LA_PRO_DIR)
+	$(MAKE) -C $(APP_LA_PRO_DIR) clean
+	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
