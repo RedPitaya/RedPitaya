@@ -2,7 +2,7 @@
     
     // App configuration
     APP.config = {};
-    APP.config.app_id = 'led_control';
+    APP.config.app_id = '2.led';
     APP.config.app_url = '/bazaar?start=' + APP.config.app_id + '?' + location.search.substr(1);
     APP.config.socket_url = 'ws://' + window.location.hostname + ':9002';
 

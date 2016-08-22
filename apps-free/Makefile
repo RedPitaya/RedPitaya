@@ -5,17 +5,14 @@
 #List of applications to build
 APPS = scope scope+gen scope+pid spectrum freqanalyzer bode_plotter impedance_analyzer teslameter lti scope+istsensor
 
-all: zips
-
-zips:
+all:
 	for APP in $(APPS); do \
 		$(MAKE) -C $$APP; \
 	done
 
 install:
-	mkdir build
 	for APP in $(APPS); do \
-		$(MAKE) -C $$APP INSTALL_DIR=../../build zip; \
+		$(MAKE) -C $$APP install; \
 	done
 
 clean:
