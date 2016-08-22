@@ -2,7 +2,7 @@
 /plugin/;
 /{
 		fragment@0 {
-				target-path = "/amba/fpga_bus\@0/devcfg\@f8007000";
+				target-path = "/amba/fpga_bus\@f8007000/devcfg\@f8007000";
 				__overlay__ {
 						#address-cells = <1>;
 						#size-cells = <1>;
