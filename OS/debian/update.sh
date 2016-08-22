@@ -26,7 +26,7 @@ mount -t vfat $DEVICE $BOOT_DIR
 # install ecosystem
 ################################################################################
 
-# reove old ecosystem files
+# remove old ecosystem files
 rm -rf $BOOT_DIR/*
 
 # Copy files to the boot file system
