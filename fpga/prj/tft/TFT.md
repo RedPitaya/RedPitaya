@@ -8,7 +8,6 @@ http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
 3. remove all files from FAT partition on the SD card
 
 4. extract ecosystem onto the SD card:
-https://jenkins.redpitaya.com/job/redpitaya-jpl/lastSuccessfulBuild/artifact/ecosystem-0.96-54-devbuild.zip
 
 5. power up the board
 
