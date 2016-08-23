@@ -11,6 +11,7 @@ cd prj/$::argv
 # define paths
 ################################################################################
 
+set path_sdc brd
 set path_rtl rtl
 set path_ip  ip
 set path_sdc sdc
@@ -20,6 +21,12 @@ set path_sdk sdk
 
 file mkdir $path_out
 file mkdir $path_sdk
+
+################################################################################
+# list board files
+################################################################################
+
+set_param board.repoPaths [list $path_brd]
 
 ################################################################################
 # setup an in memory project

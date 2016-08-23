@@ -21,6 +21,7 @@ Project specific code is placed inside the `fpga/prj/name/` directories and is s
 | `fpga/*.tcl`    | TCL scripts to be run inside FPGA tools
 | `fpga/archive/` | archive of XZ compressed FPGA bit files
 | `fpga/doc/`     | documentation (block diagrams, address space, ...)
+| `fpga/brd/`     | board files [Vivado System-Level Design Entry](http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf))
 | `fpga/ip/`      | third party IP, for now Zynq block diagrams
 | `fpga/rtl/`     | Verilog (SystemVerilog) "Register-Transfer Level"
 | `fpga/sdc/`     | "Synopsys Design Constraints" contains Xilinx design constraints
