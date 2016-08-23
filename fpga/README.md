@@ -7,6 +7,14 @@ libraries used by ModelSim-Altera software:
 
 # Directory structure
 
+Initially there was a single FPGA project containing all functionality intended to be used by all applications.
+Ideally we would maintain this project by fixing bugs and adding new functionality, but there are limits to
+how much functionality can be compiled into a FPGA and developers are not always able to keep backward compatibility.
+
+So there are now multiple FPGA projects, some with generic functionality, some with specific functionality for an application.
+Common code for all projects is placed directly into the `fpga` directory. Common code are mostly reusable modules.
+Project specific code is placed inside the `fpga/prj/name/` directories and is similarly organized as common code.
+
 |  path           | contents
 |-----------------|-------------------------------------------------------------
 | `fpga/Makefile` | main Makefile, used to run FPGA related tools
@@ -18,6 +26,8 @@ libraries used by ModelSim-Altera software:
 | `fpga/sdc/`     | "Synopsys Design Constraints" contains Xilinx design constraints
 | `fpga/sim/`     | simulation scripts
 | `fpga/tbn/`     | Verilog (SystemVerilog) "test bench"
+| `fpga/dts/`     | device tree source files
+| `fpga/prj/name` | project specific code
 |                 |
 | `fpga/hsi/`     | "Hardware Software Interface" contains FSBL (First Stage Boot Loader) and DTS (Design Tree) builds
 
@@ -34,15 +44,14 @@ The next scripts perform various tasks:
 
 | TCL script                      | action
 |---------------------------------|---------------------------------------------
-| `red_pitaya_hsi_dram_test.tcl`  | should create the `zynq_dram_test` but the produced binary can not be run from a SD card
-| `red_pitaya_hsi_dts.tcl`        | creates device tree sources
-| `red_pitaya_hsi_fsbl.tcl`       | creates FSBL executable binary
-| `red_pitaya_vivado_project.tcl` | creates a Vivado project for graphical editing
 | `red_pitaya_vivado.tcl`         | creates the bitstream and reports
+| `red_pitaya_vivado_project.tcl` | creates a Vivado project for graphical editing
+| `red_pitaya_hsi_fsbl.tcl`       | creates FSBL executable binary
+| `red_pitaya_hsi_dts.tcl`        | creates device tree sources
 
-To generate a bit file, reports, device tree and FSBL, run:
+To generate a bit file, reports, device tree and FSBL, run (replace `name` with project name):
 ```bash
-make
+make PRJ=name
 ```
 
 To generate and open a Vivado project using GUI, run:
