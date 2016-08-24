@@ -18,6 +18,8 @@ STRIP=$(CROSS_COMPILE)strip
 NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
 JOBS=$$(($(NUM_CPU)+1))
 
+LIBJSON_DIR = ../tools/libjson
+
 WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
 
@@ -52,9 +54,15 @@ install:
 	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'
 	test -d '$(DESTDIR)/www/apps'             || mkdir -p '$(DESTDIR)/www/apps'
 	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
+	test -d '$(DESTDIR)/rp_sdk' 		 	  || mkdir -p '$(DESTDIR)/rp_sdk'
+	test -d '$(DESTDIR)/rp_sdk/libjson' 	  || mkdir -p '$(DESTDIR)/rp_sdk/libjson'
 	cp $(NGINX)                     '$(DESTDIR)/sbin/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
+	cp -r $(WS_SERVER_DIR)/rp_sdk/*.h '$(DESTDIR)/rp_sdk/'
+	cp -r $(WS_SERVER_DIR)/rp_sdk/*.a '$(DESTDIR)/rp_sdk/'
+	cp -r $(LIBJSON_DIR)/*.h '$(DESTDIR)/rp_sdk/libjson/'
+	cp -r $(LIBJSON_DIR)/_internal '$(DESTDIR)/rp_sdk/libjson/'
 
 
 clean:

@@ -10,11 +10,13 @@
 #   2. Memtest (stand alone memory test) ELF binary.
 #   4. Linux device tree source (dts).
 
+PRJ ?= logic
+
 # build artefacts
-FPGA_BIT=out/red_pitaya.bit
-FSBL_ELF=sdk/fsbl/executable.elf
-MEMTEST_ELF=sdk/dram_test/executable.elf
-DEVICE_TREE=sdk/dts/system.dts
+FPGA_BIT    = prj/$(PRJ)/out/red_pitaya.bit
+FSBL_ELF    = prj/$(PRJ)/sdk/fsbl/executable.elf
+MEMTEST_ELF = prj/$(PRJ)/sdk/dram_test/executable.elf
+DEVICE_TREE = prj/$(PRJ)/sdk/dts/system.dts
 
 # Vivado from Xilinx provides IP handling, FPGA compilation
 # hsi (hardware software interface) provides software integration
@@ -24,22 +26,19 @@ HSI    = hsi    -nolog -nojournal -mode batch
 
 .PHONY: all clean project
 
-all: $(FPGA_BIT) $(FSBL_ELF) $(MEMTEST_ELF) $(DEVICE_TREE)
+all: $(FPGA_BIT) $(FSBL_ELF) $(DEVICE_TREE)
 
 clean:
-	rm -rf out .Xil .srcs sdk
+	rm -rf out .Xil .srcs sdk project
 
 project:
-	vivado -source red_pitaya_vivado_project.tcl
+	vivado -source red_pitaya_vivado_project.tcl -tclargs $(PRJ)
 
 $(FPGA_BIT):
-	$(VIVADO) -source red_pitaya_vivado.tcl
+	$(VIVADO) -source red_pitaya_vivado.tcl -tclargs $(PRJ)
 
 $(FSBL_ELF): $(FPGA_BIT)
-	$(HSI) -source red_pitaya_hsi_fsbl.tcl
-
-$(MEMTEST_ELF): $(FPGA_BIT)
-	$(HSI) -source red_pitaya_hsi_dram_test.tcl
+	$(HSI) -source red_pitaya_hsi_fsbl.tcl -tclargs $(PRJ)
 
 $(DEVICE_TREE): $(FPGA_BIT)
-	$(HSI) -source red_pitaya_hsi_dts.tcl
+	$(HSI) -source red_pitaya_hsi_dts.tcl -tclargs $(PRJ)

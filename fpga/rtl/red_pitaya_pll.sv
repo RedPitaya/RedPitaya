@@ -20,7 +20,7 @@ module red_pitaya_pll (
   output logic clk_dac_2x,  // DAC clock
   output logic clk_dac_2p,  // DAC clock
   output logic clk_ser   ,  // fast serial clock
-  output logic clk_pwm   ,  // PWM clock
+  output logic clk_pdm   ,  // PDM clock
   // status outputs
   output logic pll_locked
 );
@@ -48,7 +48,7 @@ PLLE2_ADV #(
    .CLKOUT4_DIVIDE       ( 4         ),  // 4->250MHz, 2->500MHz
    .CLKOUT4_PHASE        ( 0.000     ),
    .CLKOUT4_DUTY_CYCLE   ( 0.5       ),
-   .CLKOUT5_DIVIDE       ( 4         ),
+   .CLKOUT5_DIVIDE       ( 8         ),
    .CLKOUT5_PHASE        ( 0.000     ),
    .CLKOUT5_DUTY_CYCLE   ( 0.5       ),
    .CLKIN1_PERIOD        ( 8.000     ),
@@ -61,7 +61,7 @@ PLLE2_ADV #(
    .CLKOUT2      (clk_dac_2x),
    .CLKOUT3      (clk_dac_2p),
    .CLKOUT4      (clk_ser   ),
-   .CLKOUT5      (clk_pwm   ),
+   .CLKOUT5      (clk_pdm   ),
    // Input clock control
    .CLKFBIN      (clk_fb    ),
    .CLKIN1       (clk       ),
