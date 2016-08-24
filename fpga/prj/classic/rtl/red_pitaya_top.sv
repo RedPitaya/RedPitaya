@@ -122,35 +122,35 @@ module red_pitaya_top #(
   inout  logic [ 8-1:0] led_o
 );
 
-//---------------------------------------------------------------------------------
-//
-//  Connections to PS
+////////////////////////////////////////////////////////////////////////////////
+// local signals
+////////////////////////////////////////////////////////////////////////////////
 
-wire  [  4-1: 0] fclk               ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
-wire  [  4-1: 0] frstn              ;
+logic [  4-1: 0] fclk               ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
+logic [  4-1: 0] frstn              ;
 
-wire             ps_sys_clk         ;
-wire             ps_sys_rstn        ;
-wire  [ 32-1: 0] ps_sys_addr        ;
-wire  [ 32-1: 0] ps_sys_wdata       ;
-wire  [  4-1: 0] ps_sys_sel         ;
-wire             ps_sys_wen         ;
-wire             ps_sys_ren         ;
-wire  [ 32-1: 0] ps_sys_rdata       ;
-wire             ps_sys_err         ;
-wire             ps_sys_ack         ;
+logic            ps_sys_clk         ;
+logic            ps_sys_rstn        ;
+logic [ 32-1: 0] ps_sys_addr        ;
+logic [ 32-1: 0] ps_sys_wdata       ;
+logic [  4-1: 0] ps_sys_sel         ;
+logic            ps_sys_wen         ;
+logic            ps_sys_ren         ;
+logic [ 32-1: 0] ps_sys_rdata       ;
+logic            ps_sys_err         ;
+logic            ps_sys_ack         ;
 
 // AXI masters
-wire             axi1_clk    , axi0_clk    ;
-wire             axi1_rstn   , axi0_rstn   ;
-wire  [ 32-1: 0] axi1_waddr  , axi0_waddr  ;
-wire  [ 64-1: 0] axi1_wdata  , axi0_wdata  ;
-wire  [  8-1: 0] axi1_wsel   , axi0_wsel   ;
-wire             axi1_wvalid , axi0_wvalid ;
-wire  [  4-1: 0] axi1_wlen   , axi0_wlen   ;
-wire             axi1_wfixed , axi0_wfixed ;
-wire             axi1_werr   , axi0_werr   ;
-wire             axi1_wrdy   , axi0_wrdy   ;
+logic            axi1_clk    , axi0_clk    ;
+logic            axi1_rstn   , axi0_rstn   ;
+logic [ 32-1: 0] axi1_waddr  , axi0_waddr  ;
+logic [ 64-1: 0] axi1_wdata  , axi0_wdata  ;
+logic [  8-1: 0] axi1_wsel   , axi0_wsel   ;
+logic            axi1_wvalid , axi0_wvalid ;
+logic [  4-1: 0] axi1_wlen   , axi0_wlen   ;
+logic            axi1_wfixed , axi0_wfixed ;
+logic            axi1_werr   , axi0_werr   ;
+logic            axi1_wrdy   , axi0_wrdy   ;
 
 red_pitaya_ps i_ps (
   .FIXED_IO_mio       (  FIXED_IO_mio                ),
@@ -209,17 +209,17 @@ red_pitaya_ps i_ps (
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
-wire              sys_clk   = ps_sys_clk  ;
-wire              sys_rstn  = ps_sys_rstn ;
-wire  [  32-1: 0] sys_addr  = ps_sys_addr ;
-wire  [  32-1: 0] sys_wdata = ps_sys_wdata;
-wire  [   4-1: 0] sys_sel   = ps_sys_sel  ;
-wire  [8   -1: 0] sys_wen   ;
-wire  [8   -1: 0] sys_ren   ;
-wire  [8*32-1: 0] sys_rdata ;
-wire  [8* 1-1: 0] sys_err   ;
-wire  [8* 1-1: 0] sys_ack   ;
-wire  [8   -1: 0] sys_cs    ;
+logic             sys_clk   = ps_sys_clk  ;
+logic             sys_rstn  = ps_sys_rstn ;
+logic [  32-1: 0] sys_addr  = ps_sys_addr ;
+logic [  32-1: 0] sys_wdata = ps_sys_wdata;
+logic [   4-1: 0] sys_sel   = ps_sys_sel  ;
+logic [8   -1: 0] sys_wen   ;
+logic [8   -1: 0] sys_ren   ;
+logic [8*32-1: 0] sys_rdata ;
+logic [8* 1-1: 0] sys_err   ;
+logic [8* 1-1: 0] sys_ack   ;
+logic [8   -1: 0] sys_cs    ;
 
 assign sys_cs = 8'h01 << sys_addr[22:20];
 
@@ -250,45 +250,45 @@ assign sys_ack  [7       ] =  1'b1;
 ////////////////////////////////////////////////////////////////////////////////
 
 // PLL signals
-wire                  adc_clk_in;
-wire                  pll_adc_clk;
-wire                  pll_dac_clk_1x;
-wire                  pll_dac_clk_2x;
-wire                  pll_dac_clk_2p;
-wire                  pll_ser_clk;
-wire                  pll_pwm_clk;
-wire                  pll_locked;
+logic                 adc_clk_in;
+logic                 pll_adc_clk;
+logic                 pll_dac_clk_1x;
+logic                 pll_dac_clk_2x;
+logic                 pll_dac_clk_2p;
+logic                 pll_ser_clk;
+logic                 pll_pwm_clk;
+logic                 pll_locked;
 
 // fast serial signals
-wire                  ser_clk ;
+logic                 ser_clk ;
 
 // PWM clock and reset
-wire                  pwm_clk ;
-reg                   pwm_rstn;
+logic                 pwm_clk ;
+logic                 pwm_rstn;
 
 // ADC signals
-wire                  adc_clk;
-reg                   adc_rstn;
-reg          [14-1:0] adc_dat_a, adc_dat_b;
-wire  signed [14-1:0] adc_a    , adc_b    ;
+logic                 adc_clk;
+logic                 adc_rstn;
+logic        [14-1:0] adc_dat_a, adc_dat_b;
+logic signed [14-1:0] adc_a    , adc_b    ;
 
 // DAC signals
-wire                  dac_clk_1x;
-wire                  dac_clk_2x;
-wire                  dac_clk_2p;
-reg                   dac_rst;
-reg          [14-1:0] dac_dat_a, dac_dat_b;
-wire         [14-1:0] dac_a    , dac_b    ;
-wire  signed [15-1:0] dac_a_sum, dac_b_sum;
+logic                 dac_clk_1x;
+logic                 dac_clk_2x;
+logic                 dac_clk_2p;
+logic                 dac_rst;
+logic        [14-1:0] dac_dat_a, dac_dat_b;
+logic        [14-1:0] dac_a    , dac_b    ;
+logic signed [15-1:0] dac_a_sum, dac_b_sum;
 
 // ASG
-wire  signed [14-1:0] asg_a    , asg_b    ;
+logic signed [14-1:0] asg_a    , asg_b    ;
 
 // PID
-wire  signed [14-1:0] pid_a    , pid_b    ;
+logic signed [14-1:0] pid_a    , pid_b    ;
 
 // configuration
-wire                  digital_loop;
+logic                 digital_loop;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reaset)
@@ -384,9 +384,9 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(da
 //---------------------------------------------------------------------------------
 //  House Keeping
 
-wire  [  8-1: 0] exp_p_in , exp_n_in ;
-wire  [  8-1: 0] exp_p_out, exp_n_out;
-wire  [  8-1: 0] exp_p_dir, exp_n_dir;
+logic [  8-1: 0] exp_p_in , exp_n_in ;
+logic [  8-1: 0] exp_p_out, exp_n_out;
+logic [  8-1: 0] exp_p_dir, exp_n_dir;
 
 red_pitaya_hk i_hk (
   // system signals
@@ -420,7 +420,7 @@ IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_di
 //---------------------------------------------------------------------------------
 //  Oscilloscope application
 
-wire trig_asg_out ;
+logic trig_asg_out ;
 
 red_pitaya_scope i_scope (
   // ADC
@@ -501,10 +501,10 @@ red_pitaya_pid i_pid (
 //  Analog mixed signals
 //  XADC and slow PWM DAC control
 
-wire  [ 24-1: 0] pwm_cfg_a;
-wire  [ 24-1: 0] pwm_cfg_b;
-wire  [ 24-1: 0] pwm_cfg_c;
-wire  [ 24-1: 0] pwm_cfg_d;
+logic [ 24-1: 0] pwm_cfg_a;
+logic [ 24-1: 0] pwm_cfg_b;
+logic [ 24-1: 0] pwm_cfg_c;
+logic [ 24-1: 0] pwm_cfg_d;
 
 red_pitaya_ams i_ams (
    // power test
