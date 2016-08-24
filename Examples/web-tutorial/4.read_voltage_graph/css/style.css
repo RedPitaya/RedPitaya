@@ -12,7 +12,7 @@ body {
 
 #content {
     width: 800px;
-    height: 650px;
+    height: 600px;
     margin: 0 auto;
     background-color: #333333;
     text-align: center;
@@ -32,12 +32,3 @@ body {
 #value {
     margin-top: 20px;
 }
-
-#gain_setup {
-    margin-top: 20px;
-}
-
-#gain_set {
-    margin-top: 10px;
-}
-
