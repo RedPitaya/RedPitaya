@@ -1,7 +1,8 @@
 package.path = package.path..";/opt/redpitaya/www/conf/lua/?.lua"
 
 local shell = require("shell")
-shell.execute("rm -fr /tmp/online.txt")
+--shell.execute("rm -fr /tmp/online.txt")
+shell.execute("> /tmp/online.txt")
 shell.execute("wget http://redpitaya.com/robots.txt -O /tmp/online.txt 2> /dev/null")
 
 local fh = io.open("/tmp/online.txt", "r")
