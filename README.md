@@ -15,8 +15,7 @@ different places one would expect.
 | apps-free    | WEB application for the old environment (also with controller modules & GUI clients).
 | apps-tools   | WEB interface home page and some system management applications
 | Bazaar       | Nginx server with dependencies, Bazaar module & application controller module loader.
-| fpga         | FPGA design (RTL, bench, simulation and synthesis scripts)
-| fpga2        | FPGA design (RTL, bench, simulation and synthesis scripts) SystemVerilog based for newer applications
+| fpga         | FPGA design (RTL, bench, simulation and synthesis scripts) SystemVerilog based for newer applications
 | OS/buildroot | GNU/Linux operating system components
 | patches      | Directory containing patches
 | scpi-server  | SCPI server
@@ -42,6 +41,8 @@ sudo apt-get install libssl-dev device-tree-compiler u-boot-tools
 sudo apt-get install schroot
 # QEMU
 sudo apt-get install qemu qemu-user qemu-user-static
+# 32 bit libraries
+sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
 ```
 
 2. Xilinx [Vivado 2016.2](http://www.xilinx.com/support/download.html) FPGA development tools. The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it. Preferably use the default install location.
@@ -102,7 +103,7 @@ make -f Makefile.x86
 schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
 make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT
 EOL_CHROOT
-make zip
+make -f Makefile.x86 zip
 ```
 
 To get an itteractive ARM shell do:

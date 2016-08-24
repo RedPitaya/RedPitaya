@@ -1,0 +1,34 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    color: #cdcccc;
+    overflow: auto;
+    margin: 0;
+}
+
+#content {
+    width: 800px;
+    height: 600px;
+    margin: 0 auto;
+    background-color: #333333;
+    text-align: center;
+}
+
+#hello_message {
+    padding-top: 20px;
+    margin-bottom: 20px;
+}
+
+#placeholder {
+    width:700px;
+    height:450px;
+    margin: 0 auto;
+}
+
+#value {
+    margin-top: 20px;
+}
