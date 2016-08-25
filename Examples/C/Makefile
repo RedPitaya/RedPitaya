@@ -1,5 +1,3 @@
-#Cross compiler definition
-
 CFLAGS  = -g -std=gnu99 -Wall -Werror
 CFLAGS += -Wl,--no-as-needed
 CFLAGS += -I/opt/redpitaya/include
