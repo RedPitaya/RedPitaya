@@ -223,14 +223,6 @@ axi4_slave #(
   .bus       (bus)
 );
 
-assign sys_clk_o  = axi_gp.ACLK   ;
-assign sys_rstn_o = axi_gp.ARESETn;
-
-assign axi_gp.ACLK =  axi0_clk_i ;
-
-always @(posedge axi0_clk_i)
-axi_gp.ARESETn <= fclk_rstn[0];
-
 ////////////////////////////////////////////////////////////////////////////////
 // PS STUB
 ////////////////////////////////////////////////////////////////////////////////
