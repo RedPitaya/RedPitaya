@@ -173,8 +173,8 @@ SBA_T [2-1:0]            pid_dat;
 logic                    digital_loop;
 
 // system bus
-sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
-sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if ps_sys      (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if sys [8-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 logic [24-1:0] gpio_t;  // output enable
 logic [24-1:0] gpio_o;  // output
@@ -286,7 +286,7 @@ red_pitaya_ps ps (
 
 sys_bus_interconnect #(
   .SN (8),
-  .SW (18)
+  .SW (20)
 ) sys_bus_interconnect (
   .bus_m (ps_sys),
   .bus_s (sys)
@@ -295,9 +295,10 @@ sys_bus_interconnect #(
 // silence unused busses
 generate
 for (genvar i=5; i<8; i++) begin: for_sys
-  sys_bus_stub sys_bus_stub_13_16 (sys[i]);
+  sys_bus_stub sys_bus_stub_5_7 (sys[i]);
 end: for_sys
 endgenerate
+
 ////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
 ////////////////////////////////////////////////////////////////////////////////
