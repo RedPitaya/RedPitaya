@@ -196,62 +196,92 @@ int rp_IdGetDNA(uint64_t *dna) {
     return RP_OK;
 }
 
-/**
- * LED methods
- */
-
-int rp_LEDSetState(uint32_t state) {
-    iowrite32(state, &hk->led_control);
-    return RP_OK;
+static void sys_set_gpio_val (int unsigned pin, int unsigned val) {
+    int unsigned gpio_base = 906;
+    unsigned int gpio = gpio_base + pin;
+    // export
+    FILE *fp_exp;
+    fp_exp = fopen ("/sys/class/gpio/export", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
+    // set value
+    FILE *fp_val;
+    char path_val[80];
+    sprintf (path_val, "/sys/class/gpio/gpio%u/value", gpio);
+    fp_val = fopen(path_val, "w");
+    fprintf (fp_val, val ? "1" : "0");
+    fclose(fp_val);
+    // unexport
+    fp_exp = fopen ("/sys/class/gpio/unexport", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
 }
 
-int rp_LEDGetState(uint32_t *state) {
-    *state = ioread32(&hk->led_control);
-    return RP_OK;
+static int sys_get_gpio_val (int unsigned pin, int unsigned *val) {
+    int unsigned gpio_base = 906;
+    unsigned int gpio = gpio_base + pin;
+    // export
+    FILE *fp_exp;
+    fp_exp = fopen ("/sys/class/gpio/export", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
+    // get value
+    FILE *fp_val;
+    char path_val[80];
+    sprintf (path_val, "/sys/class/gpio/gpio%u/value", gpio);
+    fp_val = fopen(path_val, "w");
+    int status = fscanf (fp_val, "%u", val);
+    fclose(fp_val);
+    // unexport
+    fp_exp = fopen ("/sys/class/gpio/unexport", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
+    return (status);
 }
 
-/**
- * GPIO methods
- */
-
-int rp_GPIOnSetDirection(uint32_t direction) {
-    iowrite32(direction, &hk->ex_cd_n);
-    return RP_OK;
+static void sys_set_gpio_dir (int unsigned pin, int unsigned dir) {
+    int unsigned gpio_base = 906;
+    unsigned int gpio = gpio_base + pin;
+    // export
+    FILE *fp_exp;
+    fp_exp = fopen ("/sys/class/gpio/export", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
+    // set value
+    FILE *fp_dir;
+    char path_dir[80];
+    sprintf (path_dir, "/sys/class/gpio/gpio%u/direction", gpio);
+    fp_dir = fopen(path_dir, "w");
+    fprintf (fp_dir, dir ? "out" : "in");
+    fclose(fp_dir);
+    // unexport
+    fp_exp = fopen ("/sys/class/gpio/unexport", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
 }
 
-int rp_GPIOnGetDirection(uint32_t *direction) {
-    *direction = ioread32(&hk->ex_cd_n);
-    return RP_OK;
-}
-
-int rp_GPIOnSetState(uint32_t state) {
-    iowrite32(state, &hk->ex_co_n);
-    return RP_OK;
-}
-
-int rp_GPIOnGetState(uint32_t *state) {
-    *state = ioread32(&hk->ex_ci_n);
-    return RP_OK;
-}
-
-int rp_GPIOpSetDirection(uint32_t direction) {
-    iowrite32(direction, &hk->ex_cd_p);
-    return RP_OK;
-}
-
-int rp_GPIOpGetDirection(uint32_t *direction) {
-    *direction = ioread32(&hk->ex_cd_p);
-    return RP_OK;
-}
-
-int rp_GPIOpSetState(uint32_t state) {
-    iowrite32(state, &hk->ex_co_p);
-    return RP_OK;
-}
-
-int rp_GPIOpGetState(uint32_t *state) {
-    *state = ioread32(&hk->ex_ci_p);
-    return RP_OK;
+static int sys_get_gpio_dir (int unsigned pin, int unsigned *dir) {
+    int unsigned gpio_base = 906;
+    unsigned int gpio = gpio_base + pin;
+    // export
+    FILE *fp_exp;
+    fp_exp = fopen ("/sys/class/gpio/export", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
+    // set value
+    FILE *fp_dir;
+    char path_dir[80];
+    sprintf (path_dir, "/sys/class/gpio/gpio%u/direction", gpio);
+    fp_dir = fopen(path_dir, "w");
+    char direction[4];
+    int status = fscanf (fp_dir, "%s", direction);
+    *dir = direction[0] == 'o' ? RP_OUT : RP_IN;
+    fclose(fp_dir);
+    // unexport
+    fp_exp = fopen ("/sys/class/gpio/unexport", "w");
+    fprintf (fp_exp, "%u", gpio);
+    fclose (fp_exp);
+    return (status);
 }
 
 /**
@@ -259,89 +289,53 @@ int rp_GPIOpGetState(uint32_t *state) {
  */
 
 int rp_DpinReset() {
-    iowrite32(0, &hk->ex_cd_p);
-    iowrite32(0, &hk->ex_cd_n);
-    iowrite32(0, &hk->ex_co_p);
-    iowrite32(0, &hk->ex_co_n);
-    iowrite32(0, &hk->led_control);
+    // GPIO
+    for (int unsigned i=0; i<16; i++) {
+        sys_set_gpio_dir (i, RP_IN);
+        sys_set_gpio_val (i, RP_LOW);
+    }
+    // LED
+    for (int unsigned i=16; i<24; i++) {
+        sys_set_gpio_dir (i, RP_OUT);
+        sys_set_gpio_val (i, RP_LOW);
+    }
+    
     iowrite32(0, &hk->digital_loop);
     return RP_OK;
 }
 
 int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
-    uint32_t tmp;
-    if (pin < RP_DIO0_P) {
+    if (pin < RP_LED0) {
+        // DIO_P/DIO_N
+        sys_set_gpio_dir (pin, direction);
+    } else {
         // LEDS
         if (direction == RP_OUT)  return RP_OK;
         else                      return RP_ELID;
-    } else if (pin < RP_DIO0_N) {
-        // DIO_P
-        pin -= RP_DIO0_P;
-        tmp = ioread32(&hk->ex_cd_p);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
-    } else {
-        // DIO_N
-        pin -= RP_DIO0_N;
-        tmp = ioread32(&hk->ex_cd_n);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_n);
     }
     return RP_OK;
 }
 
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
-    if (pin < RP_DIO0_P) {
-        // LEDS
-        *direction = RP_OUT;
-    } else if (pin < RP_DIO0_N) {
-        // DIO_P
-        pin -= RP_DIO0_P;
-        *direction = (ioread32(&hk->ex_cd_p) >> pin) & 0x1;
-    } else {
-        // DIO_N
-        pin -= RP_DIO0_N;
-        *direction = (ioread32(&hk->ex_cd_n) >> pin) & 0x1;
-    }
+    // DIO_P/DIO_N/LED
+    sys_get_gpio_dir (pin, direction);
     return RP_OK;
 }
 
 int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
-    uint32_t tmp;
     rp_pinDirection_t direction;
     rp_DpinGetDirection(pin, &direction);
     if (!direction) {
         return RP_EWIP;
     }
-    if (pin < RP_DIO0_P) {
-        // LEDS
-        tmp = ioread32(&hk->led_control);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->led_control);
-    } else if (pin < RP_DIO0_N) {
-        // DIO_P
-        pin -= RP_DIO0_P;
-        tmp = ioread32(&hk->ex_co_p);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_p);
-    } else {
-        // DIO_N
-        pin -= RP_DIO0_N;
-        tmp = ioread32(&hk->ex_co_n);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_n);
-    }
+    // DIO_P/DIO_N/LED
+    sys_set_gpio_dir (pin, direction);
     return RP_OK;
 }
 
 int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
-    if (pin < RP_DIO0_P) {
-        // LEDS
-        *state = (ioread32(&hk->led_control) >> pin) & 0x1;
-    } else if (pin < RP_DIO0_N) {
-        // DIO_P
-        pin -= RP_DIO0_P;
-        *state = (ioread32(&hk->ex_ci_p) >> pin) & 0x1;
-    } else {
-        // DIO_N
-        pin -= RP_DIO0_N;
-        *state = (ioread32(&hk->ex_ci_n) >> pin) & 0x1;
-    }
+    // DIO_P/DIO_N/LED
+    sys_get_gpio_val (pin, state);
     return RP_OK;
 }
 
