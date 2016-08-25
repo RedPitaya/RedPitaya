@@ -443,7 +443,7 @@ red_pitaya_scope i_scope (
   .adc_b_i         (  adc_dat[1]    ),  // CH 2
   .adc_clk_i       (  adc_clk       ),  // clock
   .adc_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_ext_i      (  exp_p_io[0]   ),  // external trigger
+  .trig_ext_i      (  gpio_i[0]     ),  // external trigger
   .trig_asg_i      (  trig_asg_out  ),  // ASG trigger
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
@@ -478,8 +478,8 @@ red_pitaya_asg i_asg (
   .dac_b_o         (  asg_dat[1]    ),  // CH 2
   .dac_clk_i       (  adc_clk       ),  // clock
   .dac_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_a_i        (  exp_p_io[0]   ),
-  .trig_b_i        (  exp_p_io[0]   ),
+  .trig_a_i        (  gpio_i[0]     ),
+  .trig_b_i        (  gpio_i[0]     ),
   .trig_out_o      (  trig_asg_out  ),
   // System bus
   .sys_addr        (  sys[2].addr   ),  // address
