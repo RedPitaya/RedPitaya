@@ -7,7 +7,6 @@
 module muxctl #(
   int unsigned DW = 8 // data width
 )(
-  output logic  [1-1:0] mux_gpio,
   output logic  [2-1:0] mux_loop,
   output logic  [2-1:0] mux_gen ,
   output logic  [1-1:0] mux_lg  ,
@@ -20,12 +19,10 @@ localparam int unsigned BDW = 4;
 
 always_ff @(posedge bus.clk)
 if (!bus.rstn) begin
-  mux_gpio <= 1'b1; // TODO: this should not be the final default
   mux_loop <= '0;
   mux_gen  <= '0;
   mux_lg   <= '0;
 end else if (bus.wen) begin
-  if (bus.addr[BDW-1:0]=='h00)   mux_gpio <= bus.wdata;
   if (bus.addr[BDW-1:0]=='h04)   mux_loop <= bus.wdata;
   if (bus.addr[BDW-1:0]=='h08)   mux_gen  <= bus.wdata;
   if (bus.addr[BDW-1:0]=='h0c)   mux_lg   <= bus.wdata;
@@ -44,8 +41,6 @@ if (!bus.rstn) begin
 end else begin
   bus.ack <= sys_en;
   casez (bus.addr[BDW-1:0])
-    // GPIO
-    'h00:  bus.rdata <= 32'(mux_gpio);
     'h04:  bus.rdata <= 32'(mux_loop);
     'h08:  bus.rdata <= 32'(mux_gen );
     'h0c:  bus.rdata <= 32'(mux_lg  );

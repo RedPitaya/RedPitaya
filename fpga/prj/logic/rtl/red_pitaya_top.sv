@@ -164,8 +164,6 @@ trg_t trg;
 
 // interrupts
 typedef struct packed {
-  // GPIO
-  logic   [1-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // analog generator
   logic [MNG-1:0] gen_trg;  // event    triggers
   logic [MNG-1:0] gen_stp;  // software triggers
@@ -364,7 +362,6 @@ id #(
 
 muxctl muxctl (
   // global configuration
-  .mux_gpio  (),
   .mux_loop  (mux_loop),
   .mux_gen   (mux_gen ),
   .mux_lg    (mux_lg  ),

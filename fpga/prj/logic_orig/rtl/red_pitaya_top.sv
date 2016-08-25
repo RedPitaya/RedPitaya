@@ -117,10 +117,6 @@ axi4_stream_if #(         .DT (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARES
 axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
 
-axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exe [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exo [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         axi_exi [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
-
 axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
@@ -137,7 +133,6 @@ localparam type CLM_T = logic signed [16-1:0];
 localparam type CLS_T = logic signed [14-1:0];
 
 // multiplexer configuration
-logic           mux_gpio;
 logic [MNG-1:0] mux_loop;
 logic [MNG-1:0] mux_gen ;
 logic           mux_lg  ;
@@ -150,8 +145,6 @@ CLS_T [MNG-1:0] dac_cfg_sum;  // offset
 
 // triggers
 typedef struct packed {
-  // GPIO
-  logic   [2-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // analog generator
   logic [MNG-1:0] gen_out;  // event    triggers
   logic [MNG-1:0] gen_swo;  // software triggers
@@ -170,8 +163,6 @@ trg_t trg;
 
 // interrupts
 typedef struct packed {
-  // GPIO
-  logic   [1-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // analog generator
   logic [MNG-1:0] gen_trg;  // event    triggers
   logic [MNG-1:0] gen_stp;  // software triggers
@@ -192,9 +183,9 @@ irq_t irq;
 sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
 
-logic [GDW-1:0] gpio_e;  // output enable
-logic [GDW-1:0] gpio_o;  // output
-logic [GDW-1:0] gpio_i;  // input
+logic [24-1:0] gpio_t;  // output enable
+logic [24-1:0] gpio_o;  // output
+logic [24-1:0] gpio_i;  // input
 
 logic [GDW-1:0] exp_e;  // output enable
 logic [GDW-1:0] exp_o;  // output
@@ -281,6 +272,10 @@ red_pitaya_ps ps (
   // ADC analog inputs
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
+  // GPIO
+  .gpio_i        (gpio_i),
+  .gpio_o        (gpio_o),
+  .gpio_t        (gpio_t),
   // interrupts
   .irq           (irq         ),
   // system read/write channel
@@ -329,6 +324,8 @@ for (genvar i=13; i<16; i++) begin: for_sys
 end: for_sys
 endgenerate
 
+sys_bus_stub sys_bus_stub_2 (sys[2]);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Current time stamp
 ////////////////////////////////////////////////////////////////////////////////
@@ -361,7 +358,6 @@ id #(
 
 muxctl muxctl (
   // global configuration
-  .mux_gpio  (mux_gpio),
   .mux_loop  (mux_loop),
   .mux_gen   (mux_gen ),
   .mux_lg    (mux_lg  ),
@@ -370,56 +366,8 @@ muxctl muxctl (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// GPIO
-////////////////////////////////////////////////////////////////////////////////
-
-gpio #(.DW (GDW)) gpio (
-  // expansion connector
-  .gpio_e  (gpio_e),
-  .gpio_o  (gpio_o),
-  .gpio_i  (gpio_i),
-  // interrupt
-  .irq     (irq.gio_out),
-  // system bus
-  .bus     (sys[2])
-);
-
-assign axi_exe[0].TDATA  = {2{gpio_e}};
-assign axi_exe[0].TKEEP  = '1;
-assign axi_exe[0].TLAST  = 1'b1;
-assign axi_exe[0].TVALID = 1'b1;
-
-assign axi_exo[0].TDATA  = {2{gpio_o}};
-assign axi_exo[0].TKEEP  = '1;
-assign axi_exo[0].TLAST  = 1'b1;
-assign axi_exo[0].TVALID = 1'b1;
-
-assign gpio_i = axi_exi[0].TDATA;
-assign axi_exi[0].TREADY = 1'b1;
-
-////////////////////////////////////////////////////////////////////////////////
 // extension connector
 ////////////////////////////////////////////////////////////////////////////////
-
-// GPIO multiplexer
-
-axi4_stream_mux #(.DN (2), .DT (SBL_T)) mux_axe (
-  .sel (mux_gpio),
-  .sti (axi_exe),
-  .sto (exp_exe)
-);
-
-axi4_stream_mux #(.DN (2), .DT (SBL_T)) mux_axo (
-  .sel (mux_gpio),
-  .sti (axi_exo),
-  .sto (exp_exo)
-);
-
-axi4_stream_demux #(.DN (2), .DT (SBL_T)) demux_axi (
-  .sel (mux_gpio),
-  .sti (exp_exi),
-  .sto (axi_exi)
-);
 
 // temporary solution for unit testing
 // IOBUF has been split into separate IBUF & OBUF
@@ -503,18 +451,13 @@ debounce #(
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-gpio #(.DW (8)) led (
-  // expansion connector
-  .gpio_e  (     ),
-  .gpio_o  (led_o),
-  .gpio_i  (led_o),
-  // interrupts
-  .irq     (),
-  // system bus
-  .bus     (sys[3])
-);
+IOBUF iobuf_led [GDW-1:0] (.O (gpio_o[23:16]), .IO(led_o), .I(gpio_i[23:16]), .T(gpio_o[23:16]));
 
-//IOBUF iobuf_led [GDW-1:0] (.O(gpio_i), .IO(led_o), .I(gpio_o), .T(~gpio_e));
+////////////////////////////////////////////////////////////////////////////////
+// GPIO ports
+////////////////////////////////////////////////////////////////////////////////
+
+assign gpio_i = {exp_n_io, exp_p_io};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Calibration
@@ -809,17 +752,17 @@ asg_top #(
   .bus       (sys[11])
 );
 
-assign axi_exe[1].TDATA  = {2{str_lgo.TDATA[1]}};
-assign axi_exe[1].TKEEP  =    str_lgo.TKEEP   ;
-assign axi_exe[1].TLAST  =    str_lgo.TLAST   ;
-assign axi_exe[1].TVALID =    str_lgo.TVALID  ;
+assign exp_exe[1].TDATA  = {2{str_lgo.TDATA[1]}};
+assign exp_exe[1].TKEEP  =    str_lgo.TKEEP   ;
+assign exp_exe[1].TLAST  =    str_lgo.TLAST   ;
+assign exp_exe[1].TVALID =    str_lgo.TVALID  ;
 
-assign axi_exo[1].TDATA  = {2{str_lgo.TDATA[0]}};
-assign axi_exo[1].TKEEP  =    str_lgo.TKEEP   ;
-assign axi_exo[1].TLAST  =    str_lgo.TLAST   ;
-assign axi_exo[1].TVALID =    str_lgo.TVALID  ;
+assign exp_exo[1].TDATA  = {2{str_lgo.TDATA[0]}};
+assign exp_exo[1].TKEEP  =    str_lgo.TKEEP   ;
+assign exp_exo[1].TLAST  =    str_lgo.TLAST   ;
+assign exp_exo[1].TVALID =    str_lgo.TVALID  ;
 
-assign str_lgo.TREADY = axi_exo[1].TREADY;
+assign str_lgo.TREADY = exp_exo[1].TREADY;
 
 // TODO: for now just a loopback
 // this is an attempt to minimize the related DMA
@@ -836,7 +779,7 @@ la_top #(
   .CW (32)
 ) la (
   // streams
-  .sti       (axi_exi[1]),
+  .sti       (exp_exi),
   .sto       (str_drx[2]),
   // current time stamp
   .cts       (cts),

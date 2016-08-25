@@ -354,7 +354,6 @@ id #(
 
 muxctl muxctl (
   // global configuration
-  .mux_gpio  (),
   .mux_loop  (mux_loop),
   .mux_gen   (mux_gen ),
   .mux_lg    (mux_lg  ),
