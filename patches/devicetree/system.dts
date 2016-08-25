@@ -10,9 +10,9 @@
 			alignment = <0x2000>;
 			linux,cma-default;
 		};
-		rprx_reserverd: labuf@1c000000 {
+		rprx_reserverd: labuf@c000000 {
 			/*compatible = "redpitaya,rprx-memory";*/
-			reg = <0x1c000000 0x2000000>;
+			reg = <0xc000000 0x2000000>;
 		};
 	};
 };
