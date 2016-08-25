@@ -426,7 +426,7 @@ red_pitaya_hk i_hk (
   .sys_ack         (  sys[0].ack    )
 );
 
-IOBUF iobuf_led   [8-1:0] (.O(gpio_i[23:16]), .IO(exp_p_io), .I(gpio_o[23:16]), .T(gpio_t[23:16]) );
+IOBUF iobuf_led   [8-1:0] (.O(gpio_i[23:16]), .IO(led_o),    .I(gpio_o[23:16]), .T(gpio_t[23:16]) );
 
 IOBUF iobuf_exp_p [8-1:0] (.O(gpio_i[ 7: 0]), .IO(exp_p_io), .I(gpio_o[ 7: 0]), .T(gpio_t[ 7: 0]) );
 IOBUF iobuf_exp_n [8-1:0] (.O(gpio_i[15: 8]), .IO(exp_n_io), .I(gpio_o[15: 8]), .T(gpio_t[15: 8]) );
