@@ -99,7 +99,10 @@
 
             refillList();
             placeElements();
-            $('body').addClass('loaded');
+            setTimeout(function(){
+                $('body').addClass('loaded');
+            }, 500);
+            
         }).fail(function(msg) { getListOfApps(); });
     }
 

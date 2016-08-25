@@ -22,8 +22,6 @@ CFloatSignal VOLTAGE("VOLTAGE", SIGNAL_SIZE_DEFAULT, 0.0f);
 std::vector<float> g_data(SIGNAL_SIZE_DEFAULT);
 
 
-//Parameter
-CIntParameter GAIN("GAIN", CBaseParameter::RW, 1, 0, 1, 100);
 
 
 
@@ -98,7 +96,7 @@ void UpdateSignals(void)
 
     //Push it to vector
     g_data.erase(g_data.begin());
-    g_data.push_back(val * GAIN.Value());
+    g_data.push_back(val);
 
     //Write data to signal
     for(int i = 0; i < SIGNAL_SIZE_DEFAULT; i++) 
@@ -111,10 +109,7 @@ void UpdateSignals(void)
 void UpdateParams(void){}
 
 
-void OnNewParams(void) 
-{
-    GAIN.Update();
-}
+void OnNewParams(void) {}
 
 
 void OnNewSignals(void){}

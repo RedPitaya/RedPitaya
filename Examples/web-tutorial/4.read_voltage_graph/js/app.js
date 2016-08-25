@@ -2,7 +2,7 @@
     
     // App configuration
     APP.config = {};
-    APP.config.app_id = '3.read_voltage';
+    APP.config.app_id = '4.read_voltage_graph';
     APP.config.app_url = '/bazaar?start=' + APP.config.app_id + '?' + location.search.substr(1);
     APP.config.socket_url = 'ws://' + window.location.hostname + ':9002';
 
@@ -17,7 +17,7 @@
 
     // Parameters
     APP.processing = false;
-    APP.gain = 1;
+
 
 
 
@@ -64,10 +64,7 @@
 
             APP.ws.onopen = function() {
                 $('#hello_message').text("Hello, Red Pitaya!");
-                console.log('Socket opened');   
-
-                //Set initial gain
-                APP.setGain();
+                console.log('Socket opened');
             };
 
             APP.ws.onclose = function() {
@@ -117,19 +114,6 @@
     };
 
 
-
-    //Set gain
-    APP.setGain = function() {
-
-        APP.gain = $('#gain_set').val();
-
-        var local = {};
-        local['GAIN'] = { value: APP.gain };
-        APP.ws.send(JSON.stringify({ parameters: local }));
-
-        $('#gain_value').text(APP.gain);
-
-    };
 
 
     // Processes newly received data for signals
@@ -202,13 +186,6 @@ $(function() {
                     max: 1024,
                     show: false
                 }
-    });
-
-
-    // Input change
-    $("#gain_set").on("change input", function() {
-
-        APP.setGain(); 
     });
 
     // Start application
