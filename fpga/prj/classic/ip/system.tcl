@@ -233,6 +233,9 @@ CONFIG.WUSER_WIDTH {0} \
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
+  set GPIO_I [ create_bd_port -dir I -from 23 -to 0 -type data GPIO_I ]
+  set GPIO_O [ create_bd_port -dir O -from 23 -to 0 -type data GPIO_O ]
+  set GPIO_T [ create_bd_port -dir O -from 23 -to 0 -type data GPIO_T ]
   set M_AXI_GP0_ACLK [ create_bd_port -dir I -type clk M_AXI_GP0_ACLK ]
   set_property -dict [ list \
 CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
@@ -350,6 +353,7 @@ CONFIG.PCW_EN_4K_TIMER {0} \
 CONFIG.PCW_EN_CLK1_PORT {1} \
 CONFIG.PCW_EN_CLK2_PORT {1} \
 CONFIG.PCW_EN_CLK3_PORT {1} \
+CONFIG.PCW_EN_EMIO_GPIO {1} \
 CONFIG.PCW_EN_EMIO_TTC0 {1} \
 CONFIG.PCW_EN_ENET0 {1} \
 CONFIG.PCW_EN_I2C0 {1} \
@@ -395,8 +399,9 @@ CONFIG.PCW_FTM_CTI_OUT0 {<Select>} \
 CONFIG.PCW_FTM_CTI_OUT1 {<Select>} \
 CONFIG.PCW_FTM_CTI_OUT2 {<Select>} \
 CONFIG.PCW_FTM_CTI_OUT3 {<Select>} \
-CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {0} \
-CONFIG.PCW_GPIO_EMIO_GPIO_IO {<Select>} \
+CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {1} \
+CONFIG.PCW_GPIO_EMIO_GPIO_IO {24} \
+CONFIG.PCW_GPIO_EMIO_GPIO_WIDTH {24} \
 CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} \
 CONFIG.PCW_GPIO_MIO_GPIO_IO {MIO} \
 CONFIG.PCW_GPIO_PERIPHERAL_ENABLE {0} \
@@ -1003,6 +1008,7 @@ CONFIG.PCW_ENET_RESET_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET_RESET_POLARITY.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET_RESET_SELECT.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_4K_TIMER.VALUE_SRC {DEFAULT} \
+CONFIG.PCW_EN_EMIO_GPIO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_EMIO_TTC0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_ENET0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_I2C0.VALUE_SRC {DEFAULT} \
@@ -1042,8 +1048,7 @@ CONFIG.PCW_FTM_CTI_OUT0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_FTM_CTI_OUT1.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_FTM_CTI_OUT2.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_FTM_CTI_OUT3.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_GPIO_EMIO_GPIO_IO.VALUE_SRC {DEFAULT} \
+CONFIG.PCW_GPIO_EMIO_GPIO_WIDTH.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_GPIO_MIO_GPIO_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_GPIO_PERIPHERAL_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_I2C0_GRP_INT_ENABLE.VALUE_SRC {DEFAULT} \
@@ -1305,7 +1310,6 @@ CONFIG.PCW_QSPI_GRP_FBCLK_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_FBCLK_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_IO1_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_IO1_IO.VALUE_SRC {DEFAULT} \
-CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_SINGLE_SS_IO.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_SS1_ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_QSPI_GRP_SS1_IO.VALUE_SRC {DEFAULT} \
@@ -1539,6 +1543,7 @@ CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
   connect_bd_intf_net -intf_net s_axi_hp1_1 [get_bd_intf_ports S_AXI_HP1] [get_bd_intf_pins processing_system7/S_AXI_HP1]
 
   # Create port connections
+  connect_bd_net -net GPIO_I_1 [get_bd_ports GPIO_I] [get_bd_pins processing_system7/GPIO_I]
   connect_bd_net -net m_axi_gp0_aclk_1 [get_bd_ports M_AXI_GP0_ACLK] [get_bd_pins processing_system7/M_AXI_GP0_ACLK]
   connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_protocol_converter_0/aresetn] [get_bd_pins proc_sys_reset/interconnect_aresetn]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins proc_sys_reset/peripheral_aresetn] [get_bd_pins xadc/s_axi_aresetn]
@@ -1550,6 +1555,8 @@ CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
   connect_bd_net -net processing_system7_0_fclk_reset1_n [get_bd_ports FCLK_RESET1_N] [get_bd_pins processing_system7/FCLK_RESET1_N]
   connect_bd_net -net processing_system7_0_fclk_reset2_n [get_bd_ports FCLK_RESET2_N] [get_bd_pins processing_system7/FCLK_RESET2_N]
   connect_bd_net -net processing_system7_0_fclk_reset3_n [get_bd_ports FCLK_RESET3_N] [get_bd_pins proc_sys_reset/ext_reset_in] [get_bd_pins processing_system7/FCLK_RESET3_N]
+  connect_bd_net -net processing_system7_GPIO_O [get_bd_ports GPIO_O] [get_bd_pins processing_system7/GPIO_O]
+  connect_bd_net -net processing_system7_GPIO_T [get_bd_ports GPIO_T] [get_bd_pins processing_system7/GPIO_T]
   connect_bd_net -net s_axi_hp0_aclk [get_bd_ports S_AXI_HP0_aclk] [get_bd_pins processing_system7/S_AXI_HP0_ACLK]
   connect_bd_net -net s_axi_hp1_aclk [get_bd_ports S_AXI_HP1_aclk] [get_bd_pins processing_system7/S_AXI_HP1_ACLK]
   connect_bd_net -net xadc_wiz_0_ip2intc_irpt [get_bd_pins processing_system7/IRQ_F2P] [get_bd_pins xadc/ip2intc_irpt]
@@ -1565,60 +1572,66 @@ CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
   regenerate_bd_layout -layout_string {
    guistr: "# # String gsaved with Nlview 6.5.12  2016-01-29 bk=1.3547 VDI=39 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
-preplace port FCLK_CLK3 -pg 1 -y 250 -defaultsOSRD
-preplace port S_AXI_HP1 -pg 1 -y 160 -defaultsOSRD
-preplace port DDR -pg 1 -y 30 -defaultsOSRD
-preplace port Vp_Vn -pg 1 -y 850 -defaultsOSRD
-preplace port Vaux0 -pg 1 -y 870 -defaultsOSRD
-preplace port FCLK_RESET0_N -pg 1 -y 270 -defaultsOSRD
-preplace port M_AXI_GP0_ACLK -pg 1 -y 180 -defaultsOSRD
-preplace port Vaux1 -pg 1 -y 890 -defaultsOSRD
-preplace port S_AXI_HP0_aclk -pg 1 -y 220 -defaultsOSRD
-preplace port M_AXI_GP0 -pg 1 -y 90 -defaultsOSRD
-preplace port FCLK_RESET1_N -pg 1 -y 290 -defaultsOSRD
-preplace port S_AXI_HP1_aclk -pg 1 -y 240 -defaultsOSRD
-preplace port FCLK_RESET3_N -pg 1 -y 330 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -y 50 -defaultsOSRD
-preplace port FCLK_RESET2_N -pg 1 -y 310 -defaultsOSRD
-preplace port FCLK_CLK0 -pg 1 -y 190 -defaultsOSRD
-preplace port FCLK_CLK1 -pg 1 -y 210 -defaultsOSRD
-preplace port Vaux8 -pg 1 -y 910 -defaultsOSRD
-preplace port FCLK_CLK2 -pg 1 -y 230 -defaultsOSRD
-preplace port Vaux9 -pg 1 -y 930 -defaultsOSRD
-preplace port S_AXI_HP0 -pg 1 -y 140 -defaultsOSRD
-preplace inst axi_protocol_converter_0 -pg 1 -lvl 2 -y 460 -defaultsOSRD
-preplace inst xlconstant -pg 1 -lvl 1 -y 620 -defaultsOSRD
-preplace inst processing_system7 -pg 1 -lvl 2 -y 180 -defaultsOSRD
-preplace inst xadc -pg 1 -lvl 2 -y 900 -defaultsOSRD
-preplace inst proc_sys_reset -pg 1 -lvl 2 -y 620 -defaultsOSRD
-preplace netloc Vaux0_1 1 0 2 NJ 870 N
+preplace port FCLK_CLK3 -pg 1 -y 310 -defaultsOSRD
+preplace port S_AXI_HP1 -pg 1 -y 180 -defaultsOSRD
+preplace port DDR -pg 1 -y 90 -defaultsOSRD
+preplace port Vp_Vn -pg 1 -y 910 -defaultsOSRD
+preplace port Vaux0 -pg 1 -y 930 -defaultsOSRD
+preplace port M_AXI_GP0_ACLK -pg 1 -y 200 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 330 -defaultsOSRD
+preplace port Vaux1 -pg 1 -y 950 -defaultsOSRD
+preplace port S_AXI_HP0_aclk -pg 1 -y 240 -defaultsOSRD
+preplace port M_AXI_GP0 -pg 1 -y 150 -defaultsOSRD
+preplace port FCLK_RESET1_N -pg 1 -y 350 -defaultsOSRD
+preplace port S_AXI_HP1_aclk -pg 1 -y 260 -defaultsOSRD
+preplace port FCLK_RESET3_N -pg 1 -y 390 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 110 -defaultsOSRD
+preplace port FCLK_RESET2_N -pg 1 -y 370 -defaultsOSRD
+preplace port FCLK_CLK0 -pg 1 -y 250 -defaultsOSRD
+preplace port FCLK_CLK1 -pg 1 -y 270 -defaultsOSRD
+preplace port Vaux8 -pg 1 -y 970 -defaultsOSRD
+preplace port FCLK_CLK2 -pg 1 -y 290 -defaultsOSRD
+preplace port Vaux9 -pg 1 -y 990 -defaultsOSRD
+preplace port S_AXI_HP0 -pg 1 -y 160 -defaultsOSRD
+preplace portBus GPIO_T -pg 1 -y 70 -defaultsOSRD
+preplace portBus GPIO_I -pg 1 -y 20 -defaultsOSRD
+preplace portBus GPIO_O -pg 1 -y 50 -defaultsOSRD
+preplace inst xlconstant -pg 1 -lvl 1 -y 680 -defaultsOSRD
+preplace inst axi_protocol_converter_0 -pg 1 -lvl 2 -y 520 -defaultsOSRD
+preplace inst processing_system7 -pg 1 -lvl 2 -y 200 -defaultsOSRD
+preplace inst xadc -pg 1 -lvl 2 -y 960 -defaultsOSRD
+preplace inst proc_sys_reset -pg 1 -lvl 2 -y 680 -defaultsOSRD
 preplace netloc processing_system7_0_ddr 1 2 1 N
-preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 240 390 720
-preplace netloc s_axi_hp0_1 1 0 2 NJ 140 N
+preplace netloc Vaux0_1 1 0 2 NJ 930 N
+preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 160 590 680
+preplace netloc s_axi_hp0_1 1 0 2 NJ 160 N
+preplace netloc GPIO_I_1 1 0 3 NJ -40 NJ -40 690
+preplace netloc processing_system7_GPIO_O 1 2 1 N
 preplace netloc processing_system7_0_fclk_reset2_n 1 2 1 N
 preplace netloc processing_system7_0_M_AXI_GP0 1 2 1 N
 preplace netloc xlconstant_dout 1 1 1 NJ
 preplace netloc processing_system7_0_fclk_reset1_n 1 2 1 N
-preplace netloc Vp_Vn_1 1 0 2 NJ 850 N
-preplace netloc processing_system7_0_M_AXI_GP1 1 1 2 260 530 710
-preplace netloc xadc_wiz_0_ip2intc_irpt 1 1 2 230 730 710
-preplace netloc s_axi_hp0_aclk 1 0 2 NJ 220 N
-preplace netloc s_axi_hp1_1 1 0 2 NJ 160 N
-preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 2 250 710 710
-preplace netloc Vaux8_1 1 0 2 NJ 910 N
-preplace netloc axi_protocol_converter_0_M_AXI 1 1 2 260 720 730
-preplace netloc s_axi_hp1_aclk 1 0 2 NJ 240 N
+preplace netloc processing_system7_0_M_AXI_GP1 1 1 2 160 450 670
+preplace netloc Vp_Vn_1 1 0 2 NJ 910 N
+preplace netloc xadc_wiz_0_ip2intc_irpt 1 1 2 130 1130 650
+preplace netloc s_axi_hp0_aclk 1 0 2 NJ 240 N
+preplace netloc s_axi_hp1_1 1 0 2 NJ 180 N
+preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 2 150 770 650
+preplace netloc axi_protocol_converter_0_M_AXI 1 1 2 160 780 670
+preplace netloc Vaux8_1 1 0 2 NJ 970 N
+preplace netloc processing_system7_GPIO_T 1 2 1 N
+preplace netloc s_axi_hp1_aclk 1 0 2 NJ 260 N
 preplace netloc processing_system7_0_fclk_reset0_n 1 2 1 N
-preplace netloc Vaux9_1 1 0 2 NJ 930 N
 preplace netloc processing_system7_0_fixed_io 1 2 1 N
+preplace netloc Vaux9_1 1 0 2 NJ 990 N
 preplace netloc processing_system7_0_fclk_clk0 1 2 1 N
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 2 260 1070 720
-preplace netloc Vaux1_1 1 0 2 NJ 890 N
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 2 150 790 660
+preplace netloc Vaux1_1 1 0 2 NJ 950 N
 preplace netloc processing_system7_0_fclk_clk1 1 2 1 N
-preplace netloc m_axi_gp0_aclk_1 1 0 2 NJ 180 N
+preplace netloc m_axi_gp0_aclk_1 1 0 2 NJ 200 N
 preplace netloc processing_system7_0_fclk_clk2 1 2 1 N
-preplace netloc processing_system7_0_fclk_clk3 1 1 2 220 380 730
-levelinfo -pg 1 -10 150 490 780 -top -20 -bot 1180
+preplace netloc processing_system7_0_fclk_clk3 1 1 2 140 440 690
+levelinfo -pg 1 -40 60 430 840 -top -50 -bot 1140
 ",
 }
 
