@@ -379,6 +379,9 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
+  // local variables
+  logic signed [15-1:0] dac_sum;
+
   // Sumation of ASG and PID signal perform saturation before sending to DAC 
   assign dac_sum[i] = asg_dat[i] + pid_dat[i];
 
