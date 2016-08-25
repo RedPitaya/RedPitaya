@@ -379,13 +379,16 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
+  // local variables
+  logic signed [15-1:0] dac_sum;
+
   // Sumation of ASG and PID signal perform saturation before sending to DAC 
-  assign dac_sum[i] = asg_dat[i] + pid_dat[i];
+  assign dac_sum = asg_dat[i] + pid_dat[i];
 
   // saturation
-  assign dac_sat[i] = (^dac_sum[i][15-1:15-2]) ?
-                       {dac_sum[i][15-1], {13{~dac_sum[i][15-1]}}}
-                     :  dac_sum[i][14-1:0];
+  assign dac_sat[i] = (^dac_sum[15-1:15-2]) ?
+                       {dac_sum[15-1], {13{~dac_sum[15-1]}}}
+                     :  dac_sum[14-1:0];
 
   // output registers + signed to unsigned (also to negative slope)
   always @(posedge dac_clk_1x)
@@ -439,7 +442,7 @@ red_pitaya_scope i_scope (
   .adc_b_i         (  adc_dat[1]    ),  // CH 2
   .adc_clk_i       (  adc_clk       ),  // clock
   .adc_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_ext_i      (  exp_p_in[0]   ),  // external trigger
+  .trig_ext_i      (  exp_p_io[0]   ),  // external trigger
   .trig_asg_i      (  trig_asg_out  ),  // ASG trigger
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
@@ -474,8 +477,8 @@ red_pitaya_asg i_asg (
   .dac_b_o         (  asg_dat[1]    ),  // CH 2
   .dac_clk_i       (  adc_clk       ),  // clock
   .dac_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_a_i        (  exp_p_in[0]   ),
-  .trig_b_i        (  exp_p_in[0]   ),
+  .trig_a_i        (  exp_p_io[0]   ),
+  .trig_b_i        (  exp_p_io[0]   ),
   .trig_out_o      (  trig_asg_out  ),
   // System bus
   .sys_addr        (  sys[2].addr   ),  // address
