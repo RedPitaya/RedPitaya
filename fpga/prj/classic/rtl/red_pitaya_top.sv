@@ -161,6 +161,7 @@ logic                    dac_clk_2x;
 logic                    dac_clk_2p;
 logic                    dac_rst;
 logic [MNG-1:0] [14-1:0] dac_dat;
+logic [MNG-1:0] [14-1:0] dac_sat;
 
 // ASG
 SBG_T [2-1:0]            asg_dat;
@@ -366,7 +367,7 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   adc_dat_raw <= {adc_dat_i[i][16-1], ~adc_dat_i[i][16-2:2]};
 
   // digital loopback multiplexer
-  assign adc_dat[i] = digital_loop ? adc_dat_raw[i];
+  assign adc_dat[i] = digital_loop ? dac_sat[i] : adc_dat_raw[i];
 
 end: for_adc
 endgenerate
@@ -378,19 +379,17 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
-  logic [14-1:0] dac_tmp;
-
   // Sumation of ASG and PID signal perform saturation before sending to DAC 
   assign dac_sum[i] = asg_dat[i] + pid_dat[i];
 
   // saturation
-  assign dac_tmp[i] = (^dac_sum[i][15-1:15-2]) ?
+  assign dac_sat[i] = (^dac_sum[i][15-1:15-2]) ?
                        {dac_sum[i][15-1], {13{~dac_sum[i][15-1]}}}
                      :  dac_sum[i][14-1:0];
 
   // output registers + signed to unsigned (also to negative slope)
   always @(posedge dac_clk_1x)
-  dac_dat[i] <= {dac_tmp[i][14-1], ~dac_tmp[i][14-2:0]};
+  dac_dat[i] <= {dac_sat[i][14-1], ~dac_sat[i][14-2:0]};
 
 end: for_dac
 endgenerate
