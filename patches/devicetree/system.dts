@@ -40,7 +40,7 @@
 &clkc {
 	fclk-enable = <0xf>;
 };
-&xadc_wiz_0 {
+&xadc {
 	compatible = "xlnx,axi-xadc-1.00.a";
 	clocks = <&clkc 18>;
 	xlnx,channels {
