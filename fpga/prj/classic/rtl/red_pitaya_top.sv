@@ -151,8 +151,11 @@ logic                 pwm_rstn;
 logic                 adc_clk;
 logic                 adc_rstn;
 
-logic        [14-1:0] adc_dat_a, adc_dat_b;
-logic signed [14-1:0] adc_a    , adc_b    ;
+// stream bus type
+localparam type SBA_T = logic signed [14-1:0];  // acquire
+localparam type SBG_T = logic signed [14-1:0];  // generate
+
+SBA_T [MNA-1:0]          adc_dat;
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -165,10 +168,10 @@ logic        [14-1:0] dac_a    , dac_b    ;
 logic signed [15-1:0] dac_a_sum, dac_b_sum;
 
 // ASG
-logic signed [14-1:0] asg_a    , asg_b    ;
+SBG_T [2-1:0]            asg_dat;
 
 // PID
-logic signed [14-1:0] pid_a    , pid_b    ;
+SBA_T [2-1:0]            pid_dat;
 
 // configuration
 logic                    digital_loop;
@@ -386,25 +389,27 @@ assign adc_clk_o = 2'b10;
 // ADC clock duty cycle stabilizer is enabled
 assign adc_cdcs_o = 1'b1 ;
 
+logic [2-1:0] [14-1:0] adc_dat_raw;
+
 // IO block registers should be used here
 // lowest 2 bits reserved for 16bit ADC
 always @(posedge adc_clk)
 begin
-  adc_dat_a <= adc_dat_i[0][16-1:2];
-  adc_dat_b <= adc_dat_i[1][16-1:2];
+  adc_dat_raw[0] <= adc_dat_i[0][16-1:2];
+  adc_dat_raw[1] <= adc_dat_i[1][16-1:2];
 end
     
 // transform into 2's complement (negative slope)
-assign adc_a = digital_loop ? dac_a : {adc_dat_a[14-1], ~adc_dat_a[14-2:0]};
-assign adc_b = digital_loop ? dac_b : {adc_dat_b[14-1], ~adc_dat_b[14-2:0]};
+assign adc_dat[0] = digital_loop ? dac_a : {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
+assign adc_dat[1] = digital_loop ? dac_b : {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
 
 // Sumation of ASG and PID signal perform saturation before sending to DAC 
-assign dac_a_sum = asg_a + pid_a;
-assign dac_b_sum = asg_b + pid_b;
+assign dac_a_sum = asg_dat[0] + pid_dat[0];
+assign dac_b_sum = asg_dat[1] + pid_dat[1];
 
 // saturation
 assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
@@ -467,8 +472,8 @@ logic trig_asg_out;
 
 red_pitaya_scope i_scope (
   // ADC
-  .adc_a_i         (  adc_a         ),  // CH 1
-  .adc_b_i         (  adc_b         ),  // CH 2
+  .adc_a_i         (  adc_dat[0]    ),  // CH 1
+  .adc_b_i         (  adc_dat[1]    ),  // CH 2
   .adc_clk_i       (  adc_clk       ),  // clock
   .adc_rstn_i      (  adc_rstn      ),  // reset - active low
   .trig_ext_i      (  gpio_i[0]     ),  // external trigger
@@ -502,8 +507,8 @@ red_pitaya_scope i_scope (
 
 red_pitaya_asg i_asg (
    // DAC
-  .dac_a_o         (  asg_a         ),  // CH 1
-  .dac_b_o         (  asg_b         ),  // CH 2
+  .dac_a_o         (  asg_dat[0]    ),  // CH 1
+  .dac_b_o         (  asg_dat[1]    ),  // CH 2
   .dac_clk_i       (  adc_clk       ),  // clock
   .dac_rstn_i      (  adc_rstn      ),  // reset - active low
   .trig_a_i        (  gpio_i[0]     ),
@@ -528,10 +533,10 @@ red_pitaya_pid i_pid (
    // signals
   .clk_i           (  adc_clk       ),  // clock
   .rstn_i          (  adc_rstn      ),  // reset - active low
-  .dat_a_i         (  adc_a         ),  // in 1
-  .dat_b_i         (  adc_b         ),  // in 2
-  .dat_a_o         (  pid_a         ),  // out 1
-  .dat_b_o         (  pid_b         ),  // out 2
+  .dat_a_i         (  adc_dat[0]    ),  // in 1
+  .dat_b_i         (  adc_dat[1]    ),  // in 2
+  .dat_a_o         (  pid_dat[0]    ),  // out 1
+  .dat_b_o         (  pid_dat[1]    ),  // out 2
   // System bus
   .sys_addr        (  sys_addr      ),  // address
   .sys_wdata       (  sys_wdata     ),  // write data
