@@ -61,6 +61,7 @@ static void print_usage(const char *prog)
 //todo combine register values
 static void parse_opts(int argc, char *argv[])
 {
+	dirty[]={0,0};
 	while (1) {
 		static const struct option lopts[] = {
 			{ "sdr", 0, 0, 's' },
@@ -87,6 +88,8 @@ static void parse_opts(int argc, char *argv[])
 			data[0]|=0b10100100;
 			data[1]|=0b100;
 			printf("SRD\n");
+			dirty[0]=1;
+			dirty[1]=1;
 
 		break;
 		case 'i'://instruments
@@ -97,6 +100,8 @@ static void parse_opts(int argc, char *argv[])
                         data[0]|=0b1011000;
                         data[1]|=0b1000;
 			printf("INSTRUMENTS\n");
+			dirty[0]=1;
+                        dirty[1]=1;
 		break;
 		case '1':
 			//LV AC:	 O1.4=1  O1.5=0  O1.6=0  O1.7=1
@@ -104,24 +109,28 @@ static void parse_opts(int argc, char *argv[])
 				data[1]&=~0xf0;
 				data[1]|=0x90;
 				printf("CH1 LV AC\n");
+	                        dirty[1]=1;
+
 			}
 			//LV DC:	 O1.4=1  O1.5=0  O1.6=1  O1.7=0
              		else if(t==1){
 				data[1]&=~0xf0;
 				data[1]|=0x50;
 				printf("CH1 LV DC\n");
+                                dirty[1]=1;
 			}
 			//HV AC:	 O1.4=0  O1.5=1  O1.6=0  O1.7=1
                         else if(t==2){
 				data[1]&=~0xf0;
 				data[1]|=0xa0;
 				printf("CH1 HV AC\n");
+                        	dirty[1]=1;
 			}
 			//HV DC:	 O1.4=0  O1.5=1  O1.6=1  O1.7=0
                         else if(t==3){
 				data[1]&=~0xf0;
 				data[1]|=0x60;
-
+                        	dirty[1]=1;
 				printf("CH1 HV DC");
 			}
 			else {
@@ -138,6 +147,8 @@ static void parse_opts(int argc, char *argv[])
 				data[0]|=0x1;
                         	data[1]|=0x1;
                         	printf("CH2 LV AC\n");
+                        	dirty[0]=1;
+                        	dirty[1]=1;
                         }
 			//LV DC:
 			//		 O0.0=1  O0.1=0
@@ -148,6 +159,8 @@ static void parse_opts(int argc, char *argv[])
 				data[0]|=0x1;
                         	data[1]|=0x2;
                         	printf("CH2 LV DC\n");
+                        	dirty[0]=1;
+                        	dirty[1]=1;
                         }
 			//HV AC:
 			//		 O0.0=0  O0.1=1
@@ -158,6 +171,8 @@ static void parse_opts(int argc, char *argv[])
 				data[0]|=0x2;
                         	data[1]|=0x1;
                         	printf("CH2 HV AC\n");
+                        	dirty[0]=1;
+                        	dirty[1]=1;
                         }
 			//HV DC:
 			//		 O0.0=0  O0.1=1
@@ -168,6 +183,8 @@ static void parse_opts(int argc, char *argv[])
 				data[0]|=0x2;
                         	data[1]|=0x2;
                         	printf("CH2 HV DC\n");
+                        	dirty[0]=1;
+                        	dirty[1]=1;
                         }
                         else {
                                 printf("error\n");
