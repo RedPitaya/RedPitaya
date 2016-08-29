@@ -1,9 +1,7 @@
-#Cross compiler definition
-CC = $(CROSS_COMPILE)gcc
-
 CFLAGS  = -g -std=gnu99 -Wall -Werror
-CFLAGS += -I../../api/include
-CFLAGS += -L ../../api/lib -lm -lpthread -lrp
+CFLAGS += -Wl,--no-as-needed
+CFLAGS += -I/opt/redpitaya/include
+CFLAGS += -L/opt/redpitaya/lib -lm -lpthread -lrp
 
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=)
