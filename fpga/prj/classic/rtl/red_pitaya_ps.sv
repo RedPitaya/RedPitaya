@@ -1,25 +1,13 @@
-/**
- * $Id: red_pitaya_ps.v 961 2014-01-21 11:40:39Z matej.oblak $
- *
- * @brief Red Pitaya Processing System (PS) wrapper. Including simple AXI slave.
- *
- * @Author Matej Oblak
- *
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in Verilog hardware description language (HDL).
- * Please visit http://en.wikipedia.org/wiki/Verilog
- * for more details on the language used herein.
- */
-
-
+////////////////////////////////////////////////////////////////////////////////
+// @brief Red Pitaya Processing System (PS) wrapper. Including simple AXI slave.
+// @Author Matej Oblak
+// (c) Red Pitaya  http://www.redpitaya.com
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * GENERAL DESCRIPTION:
  *
  * Wrapper of block design.  
- *
- *
  *
  *                   /-------\
  *   PS CLK -------> |       | <---------------------> SPI master & slave
@@ -31,56 +19,53 @@
  *                   \-------/         | SLAVE |
  *                                     \-------/
  *
- *
- *
  * Module wrappes PS module (BD design from Vivado or EDK from PlanAhead).
  * There is also included simple AXI slave which serves as master for custom
  * system bus. With this simpler bus it is more easy for newbies to develop 
  * their own module communication with ARM.
- * 
  */
 
 module red_pitaya_ps (
   // PS peripherals
-  inout   [ 54-1: 0] FIXED_IO_mio       ,
-  inout              FIXED_IO_ps_clk    ,
-  inout              FIXED_IO_ps_porb   ,
-  inout              FIXED_IO_ps_srstb  ,
-  inout              FIXED_IO_ddr_vrn   ,
-  inout              FIXED_IO_ddr_vrp   ,
+  inout  logic [ 54-1:0] FIXED_IO_mio       ,
+  inout  logic           FIXED_IO_ps_clk    ,
+  inout  logic           FIXED_IO_ps_porb   ,
+  inout  logic           FIXED_IO_ps_srstb  ,
+  inout  logic           FIXED_IO_ddr_vrn   ,
+  inout  logic           FIXED_IO_ddr_vrp   ,
   // DDR
-  inout   [ 15-1: 0] DDR_addr           ,
-  inout   [  3-1: 0] DDR_ba             ,
-  inout              DDR_cas_n          ,
-  inout              DDR_ck_n           ,
-  inout              DDR_ck_p           ,
-  inout              DDR_cke            ,
-  inout              DDR_cs_n           ,
-  inout   [  4-1: 0] DDR_dm             ,
-  inout   [ 32-1: 0] DDR_dq             ,
-  inout   [  4-1: 0] DDR_dqs_n          ,
-  inout   [  4-1: 0] DDR_dqs_p          ,
-  inout              DDR_odt            ,
-  inout              DDR_ras_n          ,
-  inout              DDR_reset_n        ,
-  inout              DDR_we_n           ,
-
-  output  [  4-1: 0] fclk_clk_o         ,
-  output  [  4-1: 0] fclk_rstn_o        ,
+  inout  logic [ 15-1:0] DDR_addr           ,
+  inout  logic [  3-1:0] DDR_ba             ,
+  inout  logic           DDR_cas_n          ,
+  inout  logic           DDR_ck_n           ,
+  inout  logic           DDR_ck_p           ,
+  inout  logic           DDR_cke            ,
+  inout  logic           DDR_cs_n           ,
+  inout  logic [  4-1:0] DDR_dm             ,
+  inout  logic [ 32-1:0] DDR_dq             ,
+  inout  logic [  4-1:0] DDR_dqs_n          ,
+  inout  logic [  4-1:0] DDR_dqs_p          ,
+  inout  logic           DDR_odt            ,
+  inout  logic           DDR_ras_n          ,
+  inout  logic           DDR_reset_n        ,
+  inout  logic           DDR_we_n           ,
+  // system signals
+  output logic [  4-1:0] fclk_clk_o         ,
+  output logic [  4-1:0] fclk_rstn_o        ,
   // XADC
-  input    [ 5-1: 0] vinp_i             ,  // voltages p
-  input    [ 5-1: 0] vinn_i             ,  // voltages n
+  input  logic  [ 5-1:0] vinp_i             ,  // voltages p
+  input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // system read/write channel
-  output             sys_clk_o          ,  // system clock
-  output             sys_rstn_o         ,  // system reset - active low
-  output  [ 32-1: 0] sys_addr_o         ,  // system read/write address
-  output  [ 32-1: 0] sys_wdata_o        ,  // system write data
-  output  [  4-1: 0] sys_sel_o          ,  // system write byte select
-  output             sys_wen_o          ,  // system write enable
-  output             sys_ren_o          ,  // system read enable
-  input   [ 32-1: 0] sys_rdata_i        ,  // system read data
-  input              sys_err_i          ,  // system error indicator
-  input              sys_ack_i          ,  // system acknowledge signal
+  output logic           sys_clk_o          ,  // system clock
+  output logic           sys_rstn_o         ,  // system reset - active low
+  output logic [ 32-1:0] sys_addr_o         ,  // system read/write address
+  output logic [ 32-1:0] sys_wdata_o        ,  // system write data
+  output logic [  4-1:0] sys_sel_o          ,  // system write byte select
+  output logic           sys_wen_o          ,  // system write enable
+  output logic           sys_ren_o          ,  // system read enable
+  input  logic [ 32-1:0] sys_rdata_i        ,  // system read data
+  input  logic           sys_err_i          ,  // system error indicator
+  input  logic           sys_ack_i          ,  // system acknowledge signal
   // AXI masters
   input              axi1_clk_i   , axi0_clk_i   ,  // global clock
   input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
@@ -223,11 +208,12 @@ assign hp1_saxi_clk_i  = axi1_clk_i     ;
 assign hp1_saxi_rstn_i = axi1_rstn_i    ;
 assign hp1_saxi_aclk   = hp1_saxi_clk_i ;
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 // AXI SLAVE
+////////////////////////////////////////////////////////////////////////////////
 
-wire [  4-1: 0] fclk_clk             ;
-wire [  4-1: 0] fclk_rstn            ;
+logic [4-1:0] fclk_clk ;
+logic [4-1:0] fclk_rstn;
 
 wire            gp0_maxi_arvalid     ;
 wire            gp0_maxi_awvalid     ;
@@ -340,15 +326,13 @@ gp0_maxi_arstn <= fclk_rstn[0];
 
 
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 // PS STUB
+////////////////////////////////////////////////////////////////////////////////
 
 assign fclk_rstn_o = fclk_rstn;
 
-BUFG i_fclk0_buf  (.O(fclk_clk_o[0]), .I(fclk_clk[0]));
-BUFG i_fclk1_buf  (.O(fclk_clk_o[1]), .I(fclk_clk[1]));
-BUFG i_fclk2_buf  (.O(fclk_clk_o[2]), .I(fclk_clk[2]));
-BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
+BUFG fclk_buf [4-1:0] (.O(fclk_clk_o), .I(fclk_clk));
 
 system_wrapper system_i (
   // MIO

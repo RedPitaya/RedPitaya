@@ -1,24 +1,14 @@
-/**
- * $Id: red_pitaya_top.v 1271 2014-02-25 12:32:34Z matej.oblak $
- *
- * @brief Red Pitaya TOP module. It connects external pins and PS part with 
- *        other application modules. 
- *
- * @Author Matej Oblak
- *
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in Verilog hardware description language (HDL).
- * Please visit http://en.wikipedia.org/wiki/Verilog
- * for more details on the language used herein.
- */
-
+////////////////////////////////////////////////////////////////////////////////
+// Red Pitaya TOP module. It connects external pins and PS part with
+// other application modules.
+// Authors: Matej Oblak, Iztok Jeras
+// (c) Red Pitaya  http://www.redpitaya.com
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * GENERAL DESCRIPTION:
  *
  * Top module connects PS part with rest of Red Pitaya applications.  
- *
  *
  *                   /-------\      
  *   PS DDR <------> |  PS   |      AXI <-> custom bus
@@ -49,7 +39,6 @@
  *               |    |
  *               (FREE)
  *
- *
  * Inside analog module, ADC data is translated from unsigned neg-slope into
  * two's complement. Similar is done on DAC data.
  *
@@ -58,7 +47,6 @@
  *
  * Daisy chain connects with other boards with fast serial link. Data which is
  * send and received is at the moment undefined. This is left for the user.
- * 
  */
 
 module red_pitaya_top #(
@@ -106,7 +94,7 @@ module red_pitaya_top #(
   output logic          dac_clk_o  ,  // DAC clock
   output logic          dac_rst_o  ,  // DAC reset
   // PWM DAC
-  output logic [ 4-1:0] dac_pwm_o  ,  // serial PWM DAC
+  output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PWM DAC
   // XADC
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
@@ -122,12 +110,12 @@ module red_pitaya_top #(
   inout  logic [ 8-1:0] led_o
 );
 
-//---------------------------------------------------------------------------------
-//
-//  Connections to PS
+////////////////////////////////////////////////////////////////////////////////
+// local signals
+////////////////////////////////////////////////////////////////////////////////
 
-wire  [  4-1: 0] fclk               ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
-wire  [  4-1: 0] frstn              ;
+logic [4-1:0] fclk ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
+logic [4-1:0] frstn;
 
 wire             ps_sys_clk         ;
 wire             ps_sys_rstn        ;
@@ -141,18 +129,18 @@ wire             ps_sys_err         ;
 wire             ps_sys_ack         ;
 
 // AXI masters
-wire             axi1_clk    , axi0_clk    ;
-wire             axi1_rstn   , axi0_rstn   ;
-wire  [ 32-1: 0] axi1_waddr  , axi0_waddr  ;
-wire  [ 64-1: 0] axi1_wdata  , axi0_wdata  ;
-wire  [  8-1: 0] axi1_wsel   , axi0_wsel   ;
-wire             axi1_wvalid , axi0_wvalid ;
-wire  [  4-1: 0] axi1_wlen   , axi0_wlen   ;
-wire             axi1_wfixed , axi0_wfixed ;
-wire             axi1_werr   , axi0_werr   ;
-wire             axi1_wrdy   , axi0_wrdy   ;
+logic            axi1_clk    , axi0_clk    ;
+logic            axi1_rstn   , axi0_rstn   ;
+logic [ 32-1: 0] axi1_waddr  , axi0_waddr  ;
+logic [ 64-1: 0] axi1_wdata  , axi0_wdata  ;
+logic [  8-1: 0] axi1_wsel   , axi0_wsel   ;
+logic            axi1_wvalid , axi0_wvalid ;
+logic [  4-1: 0] axi1_wlen   , axi0_wlen   ;
+logic            axi1_wfixed , axi0_wfixed ;
+logic            axi1_werr   , axi0_werr   ;
+logic            axi1_wrdy   , axi0_wrdy   ;
 
-red_pitaya_ps i_ps (
+red_pitaya_ps ps (
   .FIXED_IO_mio       (  FIXED_IO_mio                ),
   .FIXED_IO_ps_clk    (  FIXED_IO_ps_clk             ),
   .FIXED_IO_ps_porb   (  FIXED_IO_ps_porb            ),
@@ -175,12 +163,12 @@ red_pitaya_ps i_ps (
   .DDR_ras_n     (DDR_ras_n   ),
   .DDR_reset_n   (DDR_reset_n ),
   .DDR_we_n      (DDR_we_n    ),
-
+  // system signals
   .fclk_clk_o    (fclk        ),
   .fclk_rstn_o   (frstn       ),
   // ADC analog inputs
-  .vinp_i        (vinp_i      ),  // voltages p
-  .vinn_i        (vinn_i      ),  // voltages n
+  .vinp_i        (vinp_i      ),
+  .vinn_i        (vinn_i      ),
    // system read/write channel
   .sys_clk_o     (ps_sys_clk  ),  // system clock
   .sys_rstn_o    (ps_sys_rstn ),  // system reset - active low
@@ -244,6 +232,43 @@ assign sys_ack  [6       ] =  1'b1;
 assign sys_rdata[7*32+:32] = 32'h0; 
 assign sys_err  [7       ] =  1'b0;
 assign sys_ack  [7       ] =  1'b1;
+
+////////////////////////////////////////////////////////////////////////////////
+// Analog mixed signals (PDM analog outputs)
+////////////////////////////////////////////////////////////////////////////////
+
+logic [4-1:0] [24-1:0] pwm_cfg;
+
+red_pitaya_ams i_ams (
+   // power test
+  .clk_i           (  adc_clk       ),  // clock
+  .rstn_i          (  adc_rstn      ),  // reset - active low
+  // PWM configuration
+  .dac_a_o         (  pwm_cfg[0]    ),
+  .dac_b_o         (  pwm_cfg[1]    ),
+  .dac_c_o         (  pwm_cfg[2]    ),
+  .dac_d_o         (  pwm_cfg[3]    ),
+   // System bus
+  .sys_addr        (  sys_addr   ),  // address
+  .sys_wdata       (  sys_wdata  ),  // write data
+  .sys_sel         (  sys_sel    ),  // write byte select
+  .sys_wen         (  sys_wen[4] ),  // write enable
+  .sys_ren         (  sys_ren[4] ),  // read enable
+  .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
+  .sys_err         (  sys_err[4] ),  // error indicator
+  .sys_ack         (  sys_ack[4] )   // acknowledge signal
+);
+
+red_pitaya_pwm pwm [4-1:0] (
+  // system signals
+  .clk   (pwm_clk ),
+  .rstn  (pwm_rstn),
+  // configuration
+  .cfg   (pwm_cfg),
+  // PWM outputs
+  .pwm_o (dac_pwm_o),
+  .pwm_s ()
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
@@ -332,6 +357,13 @@ always @(posedge pwm_clk)
 pwm_rstn <=  frstn[0] &  pll_locked;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Daisy dummy code
+////////////////////////////////////////////////////////////////////////////////
+
+assign daisy_p_o = 1'bz;
+assign daisy_n_o = 1'bz;
+
+////////////////////////////////////////////////////////////////////////////////
 // ADC IO
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -381,8 +413,9 @@ ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(da
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
-//---------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 //  House Keeping
+////////////////////////////////////////////////////////////////////////////////
 
 wire  [  8-1: 0] exp_p_in , exp_n_in ;
 wire  [  8-1: 0] exp_p_out, exp_n_out;
@@ -417,10 +450,11 @@ red_pitaya_hk i_hk (
 IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
 IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
 
-//---------------------------------------------------------------------------------
-//  Oscilloscope application
+////////////////////////////////////////////////////////////////////////////////
+// oscilloscope
+////////////////////////////////////////////////////////////////////////////////
 
-wire trig_asg_out ;
+logic trig_asg_out;
 
 red_pitaya_scope i_scope (
   // ADC
@@ -452,8 +486,10 @@ red_pitaya_scope i_scope (
   .sys_ack         (  sys_ack[1]                 )   // acknowledge signal
 );
 
-//---------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 //  DAC arbitrary signal generator
+////////////////////////////////////////////////////////////////////////////////
+
 
 red_pitaya_asg i_asg (
    // DAC
@@ -475,8 +511,10 @@ red_pitaya_asg i_asg (
   .sys_ack         (  sys_ack[2]                 )   // acknowledge signal
 );
 
-//---------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 //  MIMO PID controller
+////////////////////////////////////////////////////////////////////////////////
+
 
 red_pitaya_pid i_pid (
    // signals
@@ -496,52 +534,5 @@ red_pitaya_pid i_pid (
   .sys_err         (  sys_err[3]                 ),  // error indicator
   .sys_ack         (  sys_ack[3]                 )   // acknowledge signal
 );
-
-//---------------------------------------------------------------------------------
-//  Analog mixed signals
-//  XADC and slow PWM DAC control
-
-wire  [ 24-1: 0] pwm_cfg_a;
-wire  [ 24-1: 0] pwm_cfg_b;
-wire  [ 24-1: 0] pwm_cfg_c;
-wire  [ 24-1: 0] pwm_cfg_d;
-
-red_pitaya_ams i_ams (
-   // power test
-  .clk_i           (  adc_clk                    ),  // clock
-  .rstn_i          (  adc_rstn                   ),  // reset - active low
-  // PWM configuration
-  .dac_a_o         (  pwm_cfg_a                  ),
-  .dac_b_o         (  pwm_cfg_b                  ),
-  .dac_c_o         (  pwm_cfg_c                  ),
-  .dac_d_o         (  pwm_cfg_d                  ),
-   // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[4]                 ),  // write enable
-  .sys_ren         (  sys_ren[4]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
-  .sys_err         (  sys_err[4]                 ),  // error indicator
-  .sys_ack         (  sys_ack[4]                 )   // acknowledge signal
-);
-
-red_pitaya_pwm pwm [4-1:0] (
-  // system signals
-  .clk   (pwm_clk ),
-  .rstn  (pwm_rstn),
-  // configuration
-  .cfg   ({pwm_cfg_d, pwm_cfg_c, pwm_cfg_b, pwm_cfg_a}),
-  // PWM outputs
-  .pwm_o (dac_pwm_o),
-  .pwm_s ()
-);
-
-//---------------------------------------------------------------------------------
-//  Daisy chain
-//  simple communication module
-
-assign daisy_p_o = 1'bz;
-assign daisy_n_o = 1'bz;
 
 endmodule
