@@ -731,17 +731,17 @@ asg_top #(
   .bus       (sys[11])
 );
 
-assign exp_exe[1].TDATA  = {2{str_lgo.TDATA[1]}};
-assign exp_exe[1].TKEEP  =    str_lgo.TKEEP   ;
-assign exp_exe[1].TLAST  =    str_lgo.TLAST   ;
-assign exp_exe[1].TVALID =    str_lgo.TVALID  ;
+assign exp_exe.TDATA  = {2{str_lgo.TDATA[1]}};
+assign exp_exe.TKEEP  =    str_lgo.TKEEP   ;
+assign exp_exe.TLAST  =    str_lgo.TLAST   ;
+assign exp_exe.TVALID =    str_lgo.TVALID  ;
 
-assign exp_exo[1].TDATA  = {2{str_lgo.TDATA[0]}};
-assign exp_exo[1].TKEEP  =    str_lgo.TKEEP   ;
-assign exp_exo[1].TLAST  =    str_lgo.TLAST   ;
-assign exp_exo[1].TVALID =    str_lgo.TVALID  ;
+assign exp_exo.TDATA  = {2{str_lgo.TDATA[0]}};
+assign exp_exo.TKEEP  =    str_lgo.TKEEP   ;
+assign exp_exo.TLAST  =    str_lgo.TLAST   ;
+assign exp_exo.TVALID =    str_lgo.TVALID  ;
 
-assign str_lgo.TREADY = exp_exo[1].TREADY;
+assign str_lgo.TREADY = exp_exo.TREADY;
 
 // TODO: for now just a loopback
 // this is an attempt to minimize the related DMA
