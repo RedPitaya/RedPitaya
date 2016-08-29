@@ -1,13 +1,25 @@
-////////////////////////////////////////////////////////////////////////////////
-// @brief Red Pitaya Processing System (PS) wrapper. Including simple AXI slave.
-// @Author Matej Oblak
-// (c) Red Pitaya  http://www.redpitaya.com
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * $Id: red_pitaya_ps.v 961 2014-01-21 11:40:39Z matej.oblak $
+ *
+ * @brief Red Pitaya Processing System (PS) wrapper. Including simple AXI slave.
+ *
+ * @Author Matej Oblak
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in Verilog hardware description language (HDL).
+ * Please visit http://en.wikipedia.org/wiki/Verilog
+ * for more details on the language used herein.
+ */
+
+
 
 /**
  * GENERAL DESCRIPTION:
  *
  * Wrapper of block design.  
+ *
+ *
  *
  *                   /-------\
  *   PS CLK -------> |       | <---------------------> SPI master & slave
@@ -19,48 +31,56 @@
  *                   \-------/         | SLAVE |
  *                                     \-------/
  *
+ *
+ *
  * Module wrappes PS module (BD design from Vivado or EDK from PlanAhead).
  * There is also included simple AXI slave which serves as master for custom
  * system bus. With this simpler bus it is more easy for newbies to develop 
  * their own module communication with ARM.
+ * 
  */
 
 module red_pitaya_ps (
   // PS peripherals
-  inout  logic [ 54-1:0] FIXED_IO_mio       ,
-  inout  logic           FIXED_IO_ps_clk    ,
-  inout  logic           FIXED_IO_ps_porb   ,
-  inout  logic           FIXED_IO_ps_srstb  ,
-  inout  logic           FIXED_IO_ddr_vrn   ,
-  inout  logic           FIXED_IO_ddr_vrp   ,
+  inout   [ 54-1: 0] FIXED_IO_mio       ,
+  inout              FIXED_IO_ps_clk    ,
+  inout              FIXED_IO_ps_porb   ,
+  inout              FIXED_IO_ps_srstb  ,
+  inout              FIXED_IO_ddr_vrn   ,
+  inout              FIXED_IO_ddr_vrp   ,
   // DDR
-  inout  logic [ 15-1:0] DDR_addr           ,
-  inout  logic [  3-1:0] DDR_ba             ,
-  inout  logic           DDR_cas_n          ,
-  inout  logic           DDR_ck_n           ,
-  inout  logic           DDR_ck_p           ,
-  inout  logic           DDR_cke            ,
-  inout  logic           DDR_cs_n           ,
-  inout  logic [  4-1:0] DDR_dm             ,
-  inout  logic [ 32-1:0] DDR_dq             ,
-  inout  logic [  4-1:0] DDR_dqs_n          ,
-  inout  logic [  4-1:0] DDR_dqs_p          ,
-  inout  logic           DDR_odt            ,
-  inout  logic           DDR_ras_n          ,
-  inout  logic           DDR_reset_n        ,
-  inout  logic           DDR_we_n           ,
-  // system signals
-  output logic [  4-1:0] fclk_clk_o         ,
-  output logic [  4-1:0] fclk_rstn_o        ,
+  inout   [ 15-1: 0] DDR_addr           ,
+  inout   [  3-1: 0] DDR_ba             ,
+  inout              DDR_cas_n          ,
+  inout              DDR_ck_n           ,
+  inout              DDR_ck_p           ,
+  inout              DDR_cke            ,
+  inout              DDR_cs_n           ,
+  inout   [  4-1: 0] DDR_dm             ,
+  inout   [ 32-1: 0] DDR_dq             ,
+  inout   [  4-1: 0] DDR_dqs_n          ,
+  inout   [  4-1: 0] DDR_dqs_p          ,
+  inout              DDR_odt            ,
+  inout              DDR_ras_n          ,
+  inout              DDR_reset_n        ,
+  inout              DDR_we_n           ,
+
+  output  [  4-1: 0] fclk_clk_o         ,
+  output  [  4-1: 0] fclk_rstn_o        ,
   // XADC
-  input  logic  [ 5-1:0] vinp_i             ,  // voltages p
-  input  logic  [ 5-1:0] vinn_i             ,  // voltages n
-  // GPIO
-  input  logic  [24-1:0] gpio_i,
-  output logic  [24-1:0] gpio_o,
-  output logic  [24-1:0] gpio_t,
+  input    [ 5-1: 0] vinp_i             ,  // voltages p
+  input    [ 5-1: 0] vinn_i             ,  // voltages n
   // system read/write channel
-  sys_bus_if.m           bus,
+  output             sys_clk_o          ,  // system clock
+  output             sys_rstn_o         ,  // system reset - active low
+  output  [ 32-1: 0] sys_addr_o         ,  // system read/write address
+  output  [ 32-1: 0] sys_wdata_o        ,  // system write data
+  output  [  4-1: 0] sys_sel_o          ,  // system write byte select
+  output             sys_wen_o          ,  // system write enable
+  output             sys_ren_o          ,  // system read enable
+  input   [ 32-1: 0] sys_rdata_i        ,  // system read data
+  input              sys_err_i          ,  // system error indicator
+  input              sys_ack_i          ,  // system acknowledge signal
   // AXI masters
   input              axi1_clk_i   , axi0_clk_i   ,  // global clock
   input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
@@ -203,33 +223,132 @@ assign hp1_saxi_clk_i  = axi1_clk_i     ;
 assign hp1_saxi_rstn_i = axi1_rstn_i    ;
 assign hp1_saxi_aclk   = hp1_saxi_clk_i ;
 
-////////////////////////////////////////////////////////////////////////////////
+//------------------------------------------------------------------------------
 // AXI SLAVE
-////////////////////////////////////////////////////////////////////////////////
 
-logic [4-1:0] fclk_clk ;
-logic [4-1:0] fclk_rstn;
+wire [  4-1: 0] fclk_clk             ;
+wire [  4-1: 0] fclk_rstn            ;
 
-axi4_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
+wire            gp0_maxi_arvalid     ;
+wire            gp0_maxi_awvalid     ;
+wire            gp0_maxi_bready      ;
+wire            gp0_maxi_rready      ;
+wire            gp0_maxi_wlast       ;
+wire            gp0_maxi_wvalid      ;
+wire [ 12-1: 0] gp0_maxi_arid        ;
+wire [ 12-1: 0] gp0_maxi_awid        ;
+wire [ 12-1: 0] gp0_maxi_wid         ;
+wire [  2-1: 0] gp0_maxi_arburst     ;
+wire [  2-1: 0] gp0_maxi_arlock      ;
+wire [  3-1: 0] gp0_maxi_arsize      ;
+wire [  2-1: 0] gp0_maxi_awburst     ;
+wire [  2-1: 0] gp0_maxi_awlock      ;
+wire [  3-1: 0] gp0_maxi_awsize      ;
+wire [  3-1: 0] gp0_maxi_arprot      ;
+wire [  3-1: 0] gp0_maxi_awprot      ;
+wire [ 32-1: 0] gp0_maxi_araddr      ;
+wire [ 32-1: 0] gp0_maxi_awaddr      ;
+wire [ 32-1: 0] gp0_maxi_wdata       ;
+wire [  4-1: 0] gp0_maxi_arcache     ;
+wire [  4-1: 0] gp0_maxi_arlen       ;
+wire [  4-1: 0] gp0_maxi_arqos       ;
+wire [  4-1: 0] gp0_maxi_awcache     ;
+wire [  4-1: 0] gp0_maxi_awlen       ;
+wire [  4-1: 0] gp0_maxi_awqos       ;
+wire [  4-1: 0] gp0_maxi_wstrb       ;
+wire            gp0_maxi_aclk        ;
+wire            gp0_maxi_arready     ;
+wire            gp0_maxi_awready     ;
+wire            gp0_maxi_bvalid      ;
+wire            gp0_maxi_rlast       ;
+wire            gp0_maxi_rvalid      ;
+wire            gp0_maxi_wready      ;
+wire [ 12-1: 0] gp0_maxi_bid         ;
+wire [ 12-1: 0] gp0_maxi_rid         ;
+wire [  2-1: 0] gp0_maxi_bresp       ;
+wire [  2-1: 0] gp0_maxi_rresp       ;
+wire [ 32-1: 0] gp0_maxi_rdata       ;
+reg             gp0_maxi_arstn       ;
 
-axi4_slave #(
-  .DW (32),
-  .AW (32),
-  .IW (12)
+axi_slave #(
+  .AXI_DW     (  32     ), // data width (8,16,...,1024)
+  .AXI_AW     (  32     ), // address width
+  .AXI_IW     (  12     )  // ID width
 ) axi_slave_gp0 (
-  // AXI bus
-  .axi       (axi_gp),
+  // global signals
+  .axi_clk_i        (  gp0_maxi_aclk           ),  // global clock
+  .axi_rstn_i       (  gp0_maxi_arstn          ),  // global reset
+  // axi write address channel
+  .axi_awid_i       (  gp0_maxi_awid           ),  // write address ID
+  .axi_awaddr_i     (  gp0_maxi_awaddr         ),  // write address
+  .axi_awlen_i      (  gp0_maxi_awlen          ),  // write burst length
+  .axi_awsize_i     (  gp0_maxi_awsize         ),  // write burst size
+  .axi_awburst_i    (  gp0_maxi_awburst        ),  // write burst type
+  .axi_awlock_i     (  gp0_maxi_awlock         ),  // write lock type
+  .axi_awcache_i    (  gp0_maxi_awcache        ),  // write cache type
+  .axi_awprot_i     (  gp0_maxi_awprot         ),  // write protection type
+  .axi_awvalid_i    (  gp0_maxi_awvalid        ),  // write address valid
+  .axi_awready_o    (  gp0_maxi_awready        ),  // write ready
+  // axi write data channel
+  .axi_wid_i        (  gp0_maxi_wid            ),  // write data ID
+  .axi_wdata_i      (  gp0_maxi_wdata          ),  // write data
+  .axi_wstrb_i      (  gp0_maxi_wstrb          ),  // write strobes
+  .axi_wlast_i      (  gp0_maxi_wlast          ),  // write last
+  .axi_wvalid_i     (  gp0_maxi_wvalid         ),  // write valid
+  .axi_wready_o     (  gp0_maxi_wready         ),  // write ready
+  // axi write response channel
+  .axi_bid_o        (  gp0_maxi_bid            ),  // write response ID
+  .axi_bresp_o      (  gp0_maxi_bresp          ),  // write response
+  .axi_bvalid_o     (  gp0_maxi_bvalid         ),  // write response valid
+  .axi_bready_i     (  gp0_maxi_bready         ),  // write response ready
+  // axi read address channel
+  .axi_arid_i       (  gp0_maxi_arid           ),  // read address ID
+  .axi_araddr_i     (  gp0_maxi_araddr         ),  // read address
+  .axi_arlen_i      (  gp0_maxi_arlen          ),  // read burst length
+  .axi_arsize_i     (  gp0_maxi_arsize         ),  // read burst size
+  .axi_arburst_i    (  gp0_maxi_arburst        ),  // read burst type
+  .axi_arlock_i     (  gp0_maxi_arlock         ),  // read lock type
+  .axi_arcache_i    (  gp0_maxi_arcache        ),  // read cache type
+  .axi_arprot_i     (  gp0_maxi_arprot         ),  // read protection type
+  .axi_arvalid_i    (  gp0_maxi_arvalid        ),  // read address valid
+  .axi_arready_o    (  gp0_maxi_arready        ),  // read address ready
+  // axi read data channel
+  .axi_rid_o        (  gp0_maxi_rid            ),  // read response ID
+  .axi_rdata_o      (  gp0_maxi_rdata          ),  // read data
+  .axi_rresp_o      (  gp0_maxi_rresp          ),  // read response
+  .axi_rlast_o      (  gp0_maxi_rlast          ),  // read last
+  .axi_rvalid_o     (  gp0_maxi_rvalid         ),  // read response valid
+  .axi_rready_i     (  gp0_maxi_rready         ),  // read response ready
   // system read/write channel
-  .bus       (bus)
+  .sys_addr_o       (  sys_addr_o              ),  // system read/write address
+  .sys_wdata_o      (  sys_wdata_o             ),  // system write data
+  .sys_sel_o        (  sys_sel_o               ),  // system write byte select
+  .sys_wen_o        (  sys_wen_o               ),  // system write enable
+  .sys_ren_o        (  sys_ren_o               ),  // system read enable
+  .sys_rdata_i      (  sys_rdata_i             ),  // system read data
+  .sys_err_i        (  sys_err_i               ),  // system error indicator
+  .sys_ack_i        (  sys_ack_i               )   // system acknowledge signal
 );
 
-////////////////////////////////////////////////////////////////////////////////
+assign sys_clk_o  = gp0_maxi_aclk   ;
+assign sys_rstn_o = gp0_maxi_arstn  ;
+
+assign gp0_maxi_aclk  =  axi0_clk_i ;
+
+always @(posedge axi0_clk_i)
+gp0_maxi_arstn <= fclk_rstn[0];
+
+
+
+//------------------------------------------------------------------------------
 // PS STUB
-////////////////////////////////////////////////////////////////////////////////
 
 assign fclk_rstn_o = fclk_rstn;
 
-BUFG fclk_buf [4-1:0] (.O(fclk_clk_o), .I(fclk_clk));
+BUFG i_fclk0_buf  (.O(fclk_clk_o[0]), .I(fclk_clk[0]));
+BUFG i_fclk1_buf  (.O(fclk_clk_o[1]), .I(fclk_clk[1]));
+BUFG i_fclk2_buf  (.O(fclk_clk_o[2]), .I(fclk_clk[2]));
+BUFG i_fclk3_buf  (.O(fclk_clk_o[3]), .I(fclk_clk[3]));
 
 system_wrapper system_i (
   // MIO
@@ -271,50 +390,45 @@ system_wrapper system_i (
   .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
   .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
-  .M_AXI_GP0_ACLK    (axi_gp.ACLK   ),
-//  .M_AXI_GP0_ARESETn (axi_gp.ARESETn),
-  .M_AXI_GP0_arvalid (axi_gp.ARVALID),
-  .M_AXI_GP0_awvalid (axi_gp.AWVALID),
-  .M_AXI_GP0_bready  (axi_gp.BREADY ),
-  .M_AXI_GP0_rready  (axi_gp.RREADY ),
-  .M_AXI_GP0_wlast   (axi_gp.WLAST  ),
-  .M_AXI_GP0_wvalid  (axi_gp.WVALID ),
-  .M_AXI_GP0_arid    (axi_gp.ARID   ),
-  .M_AXI_GP0_awid    (axi_gp.AWID   ),
-  .M_AXI_GP0_wid     (axi_gp.WID    ),
-  .M_AXI_GP0_arburst (axi_gp.ARBURST),
-  .M_AXI_GP0_arlock  (axi_gp.ARLOCK ),
-  .M_AXI_GP0_arsize  (axi_gp.ARSIZE ),
-  .M_AXI_GP0_awburst (axi_gp.AWBURST),
-  .M_AXI_GP0_awlock  (axi_gp.AWLOCK ),
-  .M_AXI_GP0_awsize  (axi_gp.AWSIZE ),
-  .M_AXI_GP0_arprot  (axi_gp.ARPROT ),
-  .M_AXI_GP0_awprot  (axi_gp.AWPROT ),
-  .M_AXI_GP0_araddr  (axi_gp.ARADDR ),
-  .M_AXI_GP0_awaddr  (axi_gp.AWADDR ),
-  .M_AXI_GP0_wdata   (axi_gp.WDATA  ),
-  .M_AXI_GP0_arcache (axi_gp.ARCACHE),
-  .M_AXI_GP0_arlen   (axi_gp.ARLEN  ),
-  .M_AXI_GP0_arqos   (axi_gp.ARQOS  ),
-  .M_AXI_GP0_awcache (axi_gp.AWCACHE),
-  .M_AXI_GP0_awlen   (axi_gp.AWLEN  ),
-  .M_AXI_GP0_awqos   (axi_gp.AWQOS  ),
-  .M_AXI_GP0_wstrb   (axi_gp.WSTRB  ),
-  .M_AXI_GP0_arready (axi_gp.ARREADY),
-  .M_AXI_GP0_awready (axi_gp.AWREADY),
-  .M_AXI_GP0_bvalid  (axi_gp.BVALID ),
-  .M_AXI_GP0_rlast   (axi_gp.RLAST  ),
-  .M_AXI_GP0_rvalid  (axi_gp.RVALID ),
-  .M_AXI_GP0_wready  (axi_gp.WREADY ),
-  .M_AXI_GP0_bid     (axi_gp.BID    ),
-  .M_AXI_GP0_rid     (axi_gp.RID    ),
-  .M_AXI_GP0_bresp   (axi_gp.BRESP  ),
-  .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
-  .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
-  // GPIO
-  .GPIO_I (gpio_i),
-  .GPIO_O (gpio_o),
-  .GPIO_T (gpio_t),
+  .M_AXI_GP0_ACLK    (axi0_clk_i),
+  .M_AXI_GP0_arvalid (gp0_maxi_arvalid),  // out
+  .M_AXI_GP0_awvalid (gp0_maxi_awvalid),  // out
+  .M_AXI_GP0_bready  (gp0_maxi_bready ),  // out
+  .M_AXI_GP0_rready  (gp0_maxi_rready ),  // out
+  .M_AXI_GP0_wlast   (gp0_maxi_wlast  ),  // out
+  .M_AXI_GP0_wvalid  (gp0_maxi_wvalid ),  // out
+  .M_AXI_GP0_arid    (gp0_maxi_arid   ),  // out 12
+  .M_AXI_GP0_awid    (gp0_maxi_awid   ),  // out 12
+  .M_AXI_GP0_wid     (gp0_maxi_wid    ),  // out 12
+  .M_AXI_GP0_arburst (gp0_maxi_arburst),  // out 2
+  .M_AXI_GP0_arlock  (gp0_maxi_arlock ),  // out 2
+  .M_AXI_GP0_arsize  (gp0_maxi_arsize ),  // out 3
+  .M_AXI_GP0_awburst (gp0_maxi_awburst),  // out 2
+  .M_AXI_GP0_awlock  (gp0_maxi_awlock ),  // out 2
+  .M_AXI_GP0_awsize  (gp0_maxi_awsize ),  // out 3
+  .M_AXI_GP0_arprot  (gp0_maxi_arprot ),  // out 3
+  .M_AXI_GP0_awprot  (gp0_maxi_awprot ),  // out 3
+  .M_AXI_GP0_araddr  (gp0_maxi_araddr ),  // out 32
+  .M_AXI_GP0_awaddr  (gp0_maxi_awaddr ),  // out 32
+  .M_AXI_GP0_wdata   (gp0_maxi_wdata  ),  // out 32
+  .M_AXI_GP0_arcache (gp0_maxi_arcache),  // out 4
+  .M_AXI_GP0_arlen   (gp0_maxi_arlen  ),  // out 4
+  .M_AXI_GP0_arqos   (gp0_maxi_arqos  ),  // out 4
+  .M_AXI_GP0_awcache (gp0_maxi_awcache),  // out 4
+  .M_AXI_GP0_awlen   (gp0_maxi_awlen  ),  // out 4
+  .M_AXI_GP0_awqos   (gp0_maxi_awqos  ),  // out 4
+  .M_AXI_GP0_wstrb   (gp0_maxi_wstrb  ),  // out 4
+  .M_AXI_GP0_arready (gp0_maxi_arready),  // in
+  .M_AXI_GP0_awready (gp0_maxi_awready),  // in
+  .M_AXI_GP0_bvalid  (gp0_maxi_bvalid ),  // in
+  .M_AXI_GP0_rlast   (gp0_maxi_rlast  ),  // in
+  .M_AXI_GP0_rvalid  (gp0_maxi_rvalid ),  // in
+  .M_AXI_GP0_wready  (gp0_maxi_wready ),  // in
+  .M_AXI_GP0_bid     (gp0_maxi_bid    ),  // in 12
+  .M_AXI_GP0_rid     (gp0_maxi_rid    ),  // in 12
+  .M_AXI_GP0_bresp   (gp0_maxi_bresp  ),  // in 2
+  .M_AXI_GP0_rresp   (gp0_maxi_rresp  ),  // in 2
+  .M_AXI_GP0_rdata   (gp0_maxi_rdata  ),  // in 32
   // HP0                                  // HP1
   .S_AXI_HP0_arready (hp0_saxi_arready),  .S_AXI_HP1_arready (hp1_saxi_arready), // out
   .S_AXI_HP0_awready (hp0_saxi_awready),  .S_AXI_HP1_awready (hp1_saxi_awready), // out
@@ -356,9 +470,5 @@ system_wrapper system_i (
   .S_AXI_HP0_wdata   (hp0_saxi_wdata  ),  .S_AXI_HP1_wdata   (hp1_saxi_wdata  ), // in 64
   .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  )  // in 8
 );
-
-// since the PS GP0 port is AXI3 and the local bus is AXI4
-assign axi_gp.AWREGION = '0;
-assign axi_gp.ARREGION = '0;
 
 endmodule
