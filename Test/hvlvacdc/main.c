@@ -83,9 +83,9 @@ static void parse_opts(int argc, char *argv[])
 			//		O0.2=1  O0.3=0  O0.4=0  O0.5=1  O0.6=0  O0.7=1
 			//		O1.2=1  O1.3=0
 			data[0]&=~0x7e;
-			data[1]&=~0x6
-			data[0]|=b10100100;
-			data[1]|=b100;
+			data[1]&=~0x6;
+			data[0]|=0b10100100;
+			data[1]|=0b100;
 			printf("SRD\n");
 
 		break;
@@ -93,37 +93,34 @@ static void parse_opts(int argc, char *argv[])
 			//		 O0.2=0  O0.3=1  O0.4=1  O0.5=0  O0.6=1  O0.7=0
 			//		 O1.2=0  O1.3=1
 			data[0]&=~0x7e;
-                        data[1]&=~0x6
-                        data[0]|=b1011000;
-                        data[1]|=b1000;
+                        data[1]&=~0x6;
+                        data[0]|=0b1011000;
+                        data[1]|=0b1000;
 			printf("INSTRUMENTS\n");
 		break;
 		case '1':
 			//LV AC:	 O1.4=1  O1.5=0  O1.6=0  O1.7=1
 			if(t==0){
-                        //data[0];
-                        //data[1];
-
+				data[1]&=~0xf0;
+				data[1]|=0x90;
 				printf("CH1 LV AC\n");
 			}
 			//LV DC:	 O1.4=1  O1.5=0  O1.6=1  O1.7=0
              		else if(t==1){
-                        //data[0];
-                        //data[1];
-
+				data[1]&=~0xf0;
+				data[1]|=0x50;
 				printf("CH1 LV DC\n");
 			}
 			//HV AC:	 O1.4=0  O1.5=1  O1.6=0  O1.7=1
                         else if(t==2){
-                        //data[0];
-                        //data[1];
-
+				data[1]&=~0xf0;
+				data[1]|=0xa0;
 				printf("CH1 HV AC\n");
 			}
 			//HV DC:	 O1.4=0  O1.5=1  O1.6=1  O1.7=0
                         else if(t==3){
-                        //data[0];
-                        //data[1];
+				data[1]&=~0xf0;
+				data[1]|=0x60;
 
 				printf("CH1 HV DC");
 			}
@@ -136,36 +133,40 @@ static void parse_opts(int argc, char *argv[])
 			//		 O0.0=1  O0.1=0
 			//		 O1.0=1  O1.1=0
                         if(t==0){
-                        //data[0];
-                        //data[1];
-
+                        	data[0]&=0x3;
+                        	data[1]&=0x3;
+				data[0]|=0x1;
+                        	data[1]|=0x1;
                         	printf("CH2 LV AC\n");
                         }
 			//LV DC:
 			//		 O0.0=1  O0.1=0
 			//		 O1.0=0  O1.1=1
                         else if(t==1){
-                        //data[0];
-                        //data[1];
-
+                        	data[0]&=~0x3;
+                        	data[1]&=~0x3;
+				data[0]|=0x1;
+                        	data[1]|=0x2;
                         	printf("CH2 LV DC\n");
                         }
 			//HV AC:
 			//		 O0.0=0  O0.1=1
 			//		 O1.0=1  O1.1=0
                         else if(t==2){
-                        //data[0];
-                        //data[1];
-
+                        	data[0]&=~0x3;
+                        	data[1]&=~0x3;
+				data[0]|=0x2;
+                        	data[1]|=0x1;
                         	printf("CH2 HV AC\n");
                         }
 			//HV DC:
 			//		 O0.0=0  O0.1=1
 			//		 O1.0=0  O1.1=1
                         else if(t==3){
-                        //data[0];
-                        //data[1];
-
+                        	data[0]&=~0x3;
+                        	data[1]&=~0x3;
+				data[0]|=0x2;
+                        	data[1]|=0x2;
                         	printf("CH2 HV DC\n");
                         }
                         else {
