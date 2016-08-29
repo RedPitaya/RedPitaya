@@ -196,8 +196,12 @@ int rp_IdGetDNA(uint64_t *dna) {
     return RP_OK;
 }
 
+/**
+ * Digital Pin Input Output methods
+ */
+
 static void sys_set_gpio_val (int unsigned pin, int unsigned val) {
-    int unsigned gpio_base = 906;
+    int unsigned gpio_base = 960;
     unsigned int gpio = gpio_base + pin;
     // export
     FILE *fp_exp;
@@ -218,7 +222,7 @@ static void sys_set_gpio_val (int unsigned pin, int unsigned val) {
 }
 
 static int sys_get_gpio_val (int unsigned pin, int unsigned *val) {
-    int unsigned gpio_base = 906;
+    int unsigned gpio_base = 960;
     unsigned int gpio = gpio_base + pin;
     // export
     FILE *fp_exp;
@@ -229,7 +233,7 @@ static int sys_get_gpio_val (int unsigned pin, int unsigned *val) {
     FILE *fp_val;
     char path_val[80];
     sprintf (path_val, "/sys/class/gpio/gpio%u/value", gpio);
-    fp_val = fopen(path_val, "w");
+    fp_val = fopen(path_val, "r");
     int status = fscanf (fp_val, "%u", val);
     fclose(fp_val);
     // unexport
@@ -240,7 +244,7 @@ static int sys_get_gpio_val (int unsigned pin, int unsigned *val) {
 }
 
 static void sys_set_gpio_dir (int unsigned pin, int unsigned dir) {
-    int unsigned gpio_base = 906;
+    int unsigned gpio_base = 960;
     unsigned int gpio = gpio_base + pin;
     // export
     FILE *fp_exp;
@@ -261,7 +265,7 @@ static void sys_set_gpio_dir (int unsigned pin, int unsigned dir) {
 }
 
 static int sys_get_gpio_dir (int unsigned pin, int unsigned *dir) {
-    int unsigned gpio_base = 906;
+    int unsigned gpio_base = 960;
     unsigned int gpio = gpio_base + pin;
     // export
     FILE *fp_exp;
@@ -272,7 +276,7 @@ static int sys_get_gpio_dir (int unsigned pin, int unsigned *dir) {
     FILE *fp_dir;
     char path_dir[80];
     sprintf (path_dir, "/sys/class/gpio/gpio%u/direction", gpio);
-    fp_dir = fopen(path_dir, "w");
+    fp_dir = fopen(path_dir, "r");
     char direction[4];
     int status = fscanf (fp_dir, "%s", direction);
     *dir = direction[0] == 'o' ? RP_OUT : RP_IN;
@@ -283,10 +287,6 @@ static int sys_get_gpio_dir (int unsigned pin, int unsigned *dir) {
     fclose (fp_exp);
     return (status);
 }
-
-/**
- * Digital Pin Input Output methods
- */
 
 int rp_DpinReset() {
     // GPIO
@@ -329,7 +329,7 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
         return RP_EWIP;
     }
     // DIO_P/DIO_N/LED
-    sys_set_gpio_dir (pin, direction);
+    sys_set_gpio_val (pin, state);
     return RP_OK;
 }
 
