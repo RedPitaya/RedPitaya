@@ -61,7 +61,8 @@ static void print_usage(const char *prog)
 //todo combine register values
 static void parse_opts(int argc, char *argv[])
 {
-	dirty[]={0,0};
+	dirty[0]=0;
+	dirty[1]=0;
 	while (1) {
 		static const struct option lopts[] = {
 			{ "sdr", 0, 0, 's' },
@@ -226,12 +227,14 @@ int main(int argc, char *argv[]){
 	parse_opts(argc, argv);
 
 	//send outputs to output registeres
-       	if(dirty[0])
+       	if(dirty[0]){
 		i2c_smbus_write_word_data(file, 2, data[0]);
-
-	if(dirty[1])
+		printf("data[0]=%x\n",data[0]);
+}
+	if(dirty[1]){
 		i2c_smbus_write_word_data(file, 3, data[1]);
-
+		printf("data[1]=%x\n",data[1]);
+}
 	if (file)
 		close(file);
 }
