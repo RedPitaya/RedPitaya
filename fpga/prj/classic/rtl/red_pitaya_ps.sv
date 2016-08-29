@@ -55,6 +55,10 @@ module red_pitaya_ps (
   // XADC
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
+  // GPIO
+  input  logic  [24-1:0] gpio_i,
+  output logic  [24-1:0] gpio_o,
+  output logic  [24-1:0] gpio_t,
   // system read/write channel
   output logic           sys_clk_o          ,  // system clock
   output logic           sys_rstn_o         ,  // system reset - active low
@@ -413,6 +417,10 @@ system_wrapper system_i (
   .M_AXI_GP0_bresp   (gp0_maxi_bresp  ),  // in 2
   .M_AXI_GP0_rresp   (gp0_maxi_rresp  ),  // in 2
   .M_AXI_GP0_rdata   (gp0_maxi_rdata  ),  // in 32
+  // GPIO
+  .GPIO_I (gpio_i),
+  .GPIO_O (gpio_o),
+  .GPIO_T (gpio_t),
   // HP0                                  // HP1
   .S_AXI_HP0_arready (hp0_saxi_arready),  .S_AXI_HP1_arready (hp1_saxi_arready), // out
   .S_AXI_HP0_awready (hp0_saxi_awready),  .S_AXI_HP1_awready (hp1_saxi_awready), // out
