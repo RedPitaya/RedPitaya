@@ -70,11 +70,11 @@ int rp_spectr_prepare_freq_vector(float **freq_out, double f_s, float freq_range
         return -1;
     }
 
-    step = (int)round((float)c_dsp_sig_len / (float)SPECTR_OUT_SIG_LEN);
+    step = (int)round((float)c_dsp_sig_len / (float)SPECTR_OUT_SIG_LENGTH);
     if(step < 1)
         step = 1;
 
-    for(i = 0, j = 0; i < SPECTR_OUT_SIG_LEN; i++, j+=step) {
+    for(i = 0, j = 0; i < SPECTR_OUT_SIG_LENGTH; i++, j+=step) {
         /* We use full FPGA signal length range for this calculation, eventhough
          * the output vector is smaller. */
         f[i] = (float)j / (float)SPECTR_FPGA_SIG_LEN * freq_smpl / unit_div;
@@ -273,7 +273,7 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
         return -1;
     }
 
-    for(i = 0; i < SPECTR_OUT_SIG_LEN; i++) {
+    for(i = 0; i < SPECTR_OUT_SIG_LENGTH; i++) {
 
         /* Conversion to power (Watts) */
     	
@@ -330,11 +330,11 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
 	  ixxa=max_pw_idx_cha+ii-c_pwr_int_cnts;
 	  ixxb=max_pw_idx_chb+ii-c_pwr_int_cnts;
 	  
-	if ((ixxa>=0) && (ixxa<SPECTR_OUT_SIG_LEN)) 
+	if ((ixxa>=0) && (ixxa<SPECTR_OUT_SIG_LENGTH)) 
 	 {
 	   cha_pwr+=pow(10.0,cha_o[ixxa]/10.0);
 	 }
-	if ((ixxb>=0) && (ixxb<SPECTR_OUT_SIG_LEN)) 
+	if ((ixxb>=0) && (ixxb<SPECTR_OUT_SIG_LENGTH)) 
 	 {
 	   chb_pwr+=pow(10.0,chb_o[ixxb]/10.0);
 	 }	 
@@ -355,10 +355,10 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
 
        
     *peak_power_cha = max_pw_cha;
-    *peak_freq_cha = ((float)max_pw_idx_cha / (float)SPECTR_OUT_SIG_LEN * 
+    *peak_freq_cha = ((float)max_pw_idx_cha / (float)SPECTR_OUT_SIG_LENGTH * 
                       freq_smpl  / 2) / unit_div;
     *peak_power_chb = max_pw_chb;
-    *peak_freq_chb = ((float)max_pw_idx_chb / (float)SPECTR_OUT_SIG_LEN * 
+    *peak_freq_chb = ((float)max_pw_idx_chb / (float)SPECTR_OUT_SIG_LENGTH * 
                       freq_smpl / 2) / unit_div;
 
     return 0;
