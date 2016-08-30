@@ -362,10 +362,11 @@ APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
+APP_BA_PRO_DIR 		= Applications/ba_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
-apps-pro: scopegenpro spectrumpro lcr_meter la_pro
+apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
@@ -386,6 +387,11 @@ la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+ba_pro: api $(NGINX)
+	$(MAKE) -C $(APP_BA_PRO_DIR) clean
+	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
 
