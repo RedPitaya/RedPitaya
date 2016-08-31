@@ -1,4 +1,6 @@
 #include <linux/i2c-dev.h>
+#include <linux/types.h>
+#include <sys/ioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -25,20 +27,28 @@
 
 
 
-uint8_t data[]={0,0};
-uint8_t dirty[]={0,0};
+uint8_t data[2];//[]={0,0};
+uint8_t dirty[2];//[]={0,0};
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
+static void pabort(const char *s)
+{
+	perror(s);
+	abort();
+}
 
 static void print_usage(const char *prog)
 {
-        printf("Usage: %s [-4 -5 -6 -1 -2 -l -o]\n", prog);
-        puts(	"  -led4 \n"
-		"  -led5 \n"
-		"  -led6 \n"
-        	"  -gpio1 \n"
- 		"  -gpio2 \n"
-        	"  -LA in1 \n"
-        	"  -Osciloscop trigger \n"
-		);
+        printf("Usage: %s [-4 -5 -6 -1 -2 -l -o -h]\n",prog);
+        puts(	"  -4 led4 \n"
+		"  -5 led5 \n"
+		"  -6 led6 \n"
+        	"  -1 gpio1 \n"
+ 		"  -2 gpio2 \n"
+        	"  -l LA in1 \n"
+        	"  -o Osciloscop trigger \n"
+		"  -h help\n");
         exit(1);
 }
 //todo combine register values
@@ -55,16 +65,16 @@ static void parse_opts(int argc, char *argv[])
 			{ "gpio2", 0, 0, '2' },
 			{ "la", 0, 0, 'l' },
 			{ "osc", 0, 0, 'o' },
+			{ "help", 0, 0, 'h' },
 			{ NULL, 0, 0, 0 },
 		};
 
-		int c/*,t*/;
+		char c;
 
-		c = getopt_long(argc, argv, "45612lo", lopts, NULL);
+		c = getopt_long(argc, argv, "45612loh", lopts, NULL);
 
 		if (c == -1)
 			break;
-	//	t=atoi(optarg);
 		switch (c) {
 
 		case '4':// o0.0=1
@@ -74,50 +84,50 @@ static void parse_opts(int argc, char *argv[])
 			dirty[0]=1;
 
 
-		break;
+			break;
 		case '5':// o0.1=1
 			data[0]&=~0x2;
                         data[0]|=0x2;
 			printf("led5\n");
 			dirty[0]=1;
-		break;
+			break;
 		case '6':// o0.2=1
                         data[0]&=~0x4;
                         data[0]|=0x4;
 			printf("led6\n");
                         dirty[0]=1;
-		break;
-		case '1':// o1.2=1 
+			break;
+		case '1':// o1.2=1
                         data[1]&=~0x4;
                         data[1]|=0x4;
                         printf("gpio1\n");
                         dirty[1]=1;
-		break;
+			break;
                 case '2':// o1.3=1
                         data[1]&=~0x8;
                         data[1]|=0x8;
                         printf("gpio2\n");
                         dirty[1]=1;
 
-                break;
+                	break;
                 case 'l':// o1.1=0 o1.0=1
                         data[1]&=~0x3;
                         data[1]|=0x1;
                         printf("LA\n");
                         dirty[1]=1;
-
-                break;
+                	break;
                 case 'o':// o1.1=1 o1.o=0
                         data[1]&=~0x3;
                         data[1]|=0x2;
                         printf("OSC. tr.\n");
                         dirty[1]=1;
-
-                break;
-
-		default:
+        	        break;
+//		case 'h':
+//			print_usage();
+//			break;
+		default :
 			print_usage(argv[0]);
-		break;
+			break;
 		}
 	}
 }
@@ -127,28 +137,35 @@ int main(int argc, char *argv[]){
 	int adapter_nr = 1;
 
 	char filename[20];
+
+	parse_opts(argc, argv);
+
+	printf("parsing done\n");
 	snprintf(filename, 19, "/dev/i2c-%d", adapter_nr);
+	printf("%s\n",filename);
 	file = open(filename, O_RDWR);
 	if (file < 0) {
 		//ERROR HANDLING;
+		pabort("no i2c device file\n");
 	   	exit(1);
 	 	}
-		//read gpio expander on 0x1a
+		//read gpio expander on 0x20
 	int addr = 0x20;
 	if (ioctl(file, I2C_SLAVE, addr) < 0) {
     		//ERROR HANDLING;
+		pabort("ioctl addr fail\n");
 		exit(1);
   	}
 
 //	int32_t res;
 
-	parse_opts(argc, argv);
+//	parse_opts(argc, argv);
 
 	//set pins for input
 	i2c_smbus_write_word_data(file, 0x6, 0);
 	i2c_smbus_write_word_data(file, 0x7, 0);
 
-	parse_opts(argc, argv);
+//	parse_opts(argc, argv);
 
 	//send outputs to output registeres
        	if(dirty[0]){
