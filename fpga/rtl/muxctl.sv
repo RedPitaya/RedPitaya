@@ -23,9 +23,9 @@ if (!bus.rstn) begin
   mux_gen  <= '0;
   mux_lg   <= '0;
 end else if (bus.wen) begin
-  if (bus.addr[BDW-1:0]=='h04)   mux_loop <= bus.wdata;
-  if (bus.addr[BDW-1:0]=='h08)   mux_gen  <= bus.wdata;
-  if (bus.addr[BDW-1:0]=='h0c)   mux_lg   <= bus.wdata;
+  if (bus.addr[BDW-1:0]=='h00)   mux_loop <= bus.wdata;
+  if (bus.addr[BDW-1:0]=='h04)   mux_gen  <= bus.wdata;
+  if (bus.addr[BDW-1:0]=='h08)   mux_lg   <= bus.wdata;
 end
 
 always_ff @(posedge bus.clk)
@@ -41,9 +41,9 @@ if (!bus.rstn) begin
 end else begin
   bus.ack <= sys_en;
   casez (bus.addr[BDW-1:0])
-    'h04:  bus.rdata <= 32'(mux_loop);
-    'h08:  bus.rdata <= 32'(mux_gen );
-    'h0c:  bus.rdata <= 32'(mux_lg  );
+    'h00:  bus.rdata <= 32'(mux_loop);
+    'h04:  bus.rdata <= 32'(mux_gen );
+    'h08:  bus.rdata <= 32'(mux_lg  );
     default: bus.rdata <= '0;
   endcase
 end
