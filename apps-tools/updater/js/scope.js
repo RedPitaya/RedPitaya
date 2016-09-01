@@ -83,7 +83,7 @@
     }
 
     UPD.checkUpdates = function(type = '') {
-        $('#apply').hide();
+        $('#select_ver').hide();
         setTimeout(function() {
             $.ajax({
                     url: '/update_list?type=' + type,
@@ -124,7 +124,6 @@
                     }
                     $('#ecosystem_ver').removeAttr('disabled');
                     $('.select_ver').show();
-        			$('#apply').show();
                     $('#apply').click(function(event) {
                         var val = $('#ecosystem_ver').val();
                         chosen_eco = ecosystems.indexOf(val);
@@ -135,6 +134,7 @@
                             $('#ecosystem_ver').attr('disabled', 'disabled');
                         }
                     });
+					$('#ecosystem_ver').change();
                 });
 
         }, 500);
@@ -246,6 +246,22 @@
 
 }(window.UPD = window.UPD || {}, jQuery));
 
+UPD.getChangelog = function(ecosystem) {
+	$.ajax({
+		url: '/update_changelog?' + ecosystem,
+		type: 'GET',
+	})
+	.fail(function(msg) {
+		//var text = msg.responseText;
+		$('#changelog_text').html(msg);
+	})
+	.done(function(msg) {
+		//var text = msg.responseText;
+		$('#changelog_text').html(msg);
+	})
+}
+
+
 // Page onload event handler
 $(document).ready(function() {
     UPD.startStep(1);
@@ -267,8 +283,7 @@ $(document).ready(function() {
         if (oldMajor >= majorVer) {
             if (oldMajor > majorVer)
                 $('#step_' + UPD.currentStep).find('.warn_msg').show();
-            else
-            if (oldMinor > minorVer)
+            else if (oldMinor > minorVer)
                 $('#step_' + UPD.currentStep).find('.warn_msg').show();
         }
 
@@ -282,4 +297,10 @@ $(document).ready(function() {
 			UPD.checkUpdates();
 		}
 	});
+
+	$('#ecosystem_ver').change(function() {
+		console.log($('#ecosystem_ver:selected').text())
+		UPD.getChangelog($('#ecosystem_ver:selected').text())
+	});
 })
+

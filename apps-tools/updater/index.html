@@ -94,9 +94,10 @@
 											</select>
                                         </p>
                                         <p class="warn_msg" id="warn">Warning: Install this versions on your own risk!</p>
-                                        <p class="select_ver">Select version to install:
+                                        <p class="select_ver" id="select_ver">Select version to install:
                                             <select id="ecosystem_ver" disabled>
                                             </select><span id="and_click"> and click </span><button id="apply">Apply</button>
+											<a id="" href="#" data-toggle="modal" data-target="#changelog">CHANGELOG</a>
                                         </p>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later</p>
                                     </td>
@@ -133,6 +134,17 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="changelog" role="dialog" data-backdrop="static">
+        <div class="modal-dialog modal-nm" id="modal">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div id="changelog_text">
+          			</div>
+					<button type="button" class="btn" data-dismiss="modal">OK</button>
+                </div>
+           </div>
+        </div>
+	</div>
 </body>
 
 </html>
