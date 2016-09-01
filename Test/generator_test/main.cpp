@@ -79,64 +79,47 @@ void deinit()
 }
 
 
-size_t getPeak(const float* signal, size_t size, float amplitude)
+double sigSum(const float* sig1, const float* sig2, size_t size)
 {
-	size_t peak = 0;
-	for (size_t i = 50; i < size - 50; ++i)
-	{
-		if (signal[i] > amplitude*0.8)
-		{
-			if (signal[i + 1] > signal[i]) // up
-				peak = i;
-			else // down
-				break;
-		}
-	}
+	double sum = 0;
+	for (size_t i = 0; i < size; ++i)
+		sum += sig1[i]*sig2[i];
 
-	return peak;
+	return sum;
 }
 
-
-float signal_diff(float* signal1, float* signal2, size_t size, float amplitude, float threshold, int times)
+void writeSigToFile(const float* sig, size_t size, const char* path)
 {
-	size_t peak_idx1 = std::max_element(signal1 + CUT_SIG, signal1 + size - CUT_SIG) - signal1; //getPeak(signal1, size, amplitude);
-	size_t peak_idx2 = std::max_element(signal2 + CUT_SIG, signal2 + size - CUT_SIG) - signal2; //getPeak(signal2, size, amplitude);
-	float mean = std::accumulate(signal1 + CUT_SIG, signal1 + size - CUT_SIG, 0.f)/(size - CUT_SIG*2.f);
+	FILE* f = fopen(path, "w");
+	for (size_t i = 0; i < size; ++i)
+		fprintf(f, "%f ", sig[i]);
+	fclose(f);
+}
 
-	for (size_t i = peak_idx1; i < size - 50; ++i)
-		signal1[i] -= mean;
-
+double signal_corr(const float* signal1, const float* signal2, size_t size, float amplitude, float threshold)
+{
+	double K = sigSum(signal2, signal2, size);
+	double k0 = sigSum(signal1, signal2, size);
 	if (g_verbose)
-		printf("p1 %d %f p2 %d %f\n", peak_idx1, signal1[peak_idx1], peak_idx2, signal2[peak_idx2]);
+		printf("SUM(OUT*OUT) = %f\n", K);
+	size_t start = 0;
 
-	int cur_times = times;
-	for (size_t i = 0; i < size - std::max(peak_idx1, peak_idx2); ++i)
+	for (size_t shift = 1; shift < size; ++shift)
 	{
-		float dt = fabs(signal1[i + peak_idx1] - signal2[i + peak_idx2]);
-		if (g_verbose)
-			printf("%f %f\n", signal1[i + peak_idx1], signal2[i + peak_idx2]);
-		if (dt > threshold)
-			--cur_times;
-		else
-			cur_times = times;			
-
-		if (!cur_times)
+		double k = sigSum(signal1, signal2 + shift, size - shift);
+		if (k > k0)
 		{
-			FILE* f = fopen("/tmp/in.txt", "w");
-			for (size_t i = peak_idx1; i < size - CUT_SIG; ++i)
-				fprintf(f, "%f ", signal1[i]);
-			fclose(f);
-
-			f = fopen("/tmp/out.txt", "w");
-			for (size_t i = peak_idx2; i < size - CUT_SIG; ++i)
-				fprintf(f, "%f ", signal2[i]);
-			fclose(f);
-
-			return dt;
+			k0 = k;
+			start = shift;
 		}
 	}
+	if (g_verbose)
+		printf("SUM(IN*OUT) = %f\n", k0);
 
-	return 0.f;
+	writeSigToFile(signal1 + start, size - start, "/tmp/in.txt");
+	writeSigToFile(signal2 + start, size - start, "/tmp/out.txt");
+
+	return fabs(1. - K/k0);
 }
 
 
@@ -217,7 +200,7 @@ int SafeThreadGen(rp_channel_t channel, float freq, float amplitude, float* data
 }
 
 
-int run_test_signals(int freq, float amplitude, float threshold, int times)
+double run_test_signals(int freq, float amplitude, float threshold)
 {
 	// get decimation and signal size
     int decimation;
@@ -236,20 +219,15 @@ int run_test_signals(int freq, float amplitude, float threshold, int times)
 	SafeThreadAcqData(in, api_decimation, size, decimation);
     rp_GenOutDisable(RP_CH_1);
 
-	// diff
-	float ret = signal_diff(in, out2, size, amplitude, threshold, times);
-
-	// check error
-	if (ret != 0.f)
-	{	
-		fprintf(stderr, "error: diff = %f, save data to /tmp/in.txt and /tmp/out.txt\n", ret);
-	}
+	double ret = signal_corr(in, out2, size, amplitude, threshold);
+	if (g_verbose)
+		printf("SUM(OUT*OUT) / SUM(IN*OUT) = %lf\n", ret);
 
 	// cleanup
 	delete[] in;
 	delete[] out;
 
-	return ret != 0.f; // 0 - is good
+	return ret;
 }
 
 
@@ -258,8 +236,8 @@ int main(int argc, char** argv)
 	init();
 
 
-	float threshold = 0.5, amplitude = 1;
-	int times = 5, freq = 1e6;
+	double threshold = 0.5, amplitude = 0.9;
+	int freq = 1e6;
 
 	static struct option long_options[] =
 	{
@@ -281,11 +259,10 @@ int main(int argc, char** argv)
 		switch (c)
 		{
 			case 'h': 
-				printf("usage:\nthreshold(-t 0.5) freq(-f 1000000) amplitude(-a 1) counts(-c 5) help(-h) verbose(-v false)\n");
+				printf("usage:\nthreshold(-t 0.5) freq(-f 1000000) amplitude(-a 0.9) help(-h) verbose(-v false)\n");
 				return 0;
 			case 'v': g_verbose = true; break;
 			case 't': threshold = stof(optarg); break;
-			case 'c': times = stoi(optarg); break;
 			case 'f': freq = stoi(optarg); break;
 			case 'a': amplitude = stof(optarg); break;
 		}
@@ -293,12 +270,14 @@ int main(int argc, char** argv)
 
 
 	if (g_verbose)
-		printf("freq %d amplitude %f threshold %f times %d\n", freq, amplitude, threshold, times);
+		printf("freq %d amplitude %f threshold %f\n", freq, amplitude, threshold);
 
-	int ret = run_test_signals(freq, amplitude, threshold, times);
-	if (ret)
-		return ret; // error
-
+	double ret = run_test_signals(freq, amplitude, threshold);
+	if (ret > threshold)
+	{
+		fprintf(stderr, "error: threshold < %lf\nwrite signals to /tmp/in.txt and /tmp/out.txt\n", ret);
+		return 1;
+	}
 
 	deinit();
 }
