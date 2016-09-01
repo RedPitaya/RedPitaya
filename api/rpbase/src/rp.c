@@ -289,29 +289,28 @@ static int sys_get_gpio_dir (int unsigned pin, int unsigned *dir) {
 }
 
 int rp_DpinReset() {
-    // GPIO
-    for (int unsigned i=0; i<16; i++) {
-        sys_set_gpio_dir (i, RP_IN);
-        sys_set_gpio_val (i, RP_LOW);
-    }
     // LED
-    for (int unsigned i=16; i<24; i++) {
+    for (int unsigned i=0; i<8; i++) {
         sys_set_gpio_dir (i, RP_OUT);
         sys_set_gpio_val (i, RP_LOW);
     }
-    
+    // GPIO
+    for (int unsigned i=8; i<24; i++) {
+        sys_set_gpio_dir (i, RP_IN);
+        sys_set_gpio_val (i, RP_LOW);
+    }
     iowrite32(0, &hk->digital_loop);
     return RP_OK;
 }
 
 int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
     if (pin < RP_LED0) {
-        // DIO_P/DIO_N
-        sys_set_gpio_dir (pin, direction);
-    } else {
         // LEDS
         if (direction == RP_OUT)  return RP_OK;
         else                      return RP_ELID;
+    } else {
+        // DIO_P/DIO_N
+        sys_set_gpio_dir (pin, direction);
     }
     return RP_OK;
 }

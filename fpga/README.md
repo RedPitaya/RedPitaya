@@ -151,7 +151,7 @@ Range: 1V / ratio = 7.01
 
 For now only LED8 and LED9 are accessible using a kernel driver. LED [7:0] are not driven by a kernel driver, since the Linux GPIO/LED subsystem does not allow access to multiple pins simultaneously.
 
-### Linux access to GPIO
+### Linux access to GPIO/LED
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
@@ -181,16 +181,16 @@ The default pin assignment for GPIO is described in the next table.
 
 | LED     | color  | GPIO             | MIO/EMIO index | `sysfs` index              | dedicated meaning     |
 |---------|--------|------------------|----------------|----------------------------|-----------------------|
-|         |        | `exp_p_io [7:0]` | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` | 
-|         |        | `exp_n_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` | 
-| `[7:0]` | yellow |                  | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` | 
+|         |        | `exp_p_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` |
+|         |        | `exp_n_io [7:0]` | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` |
+| `[7:0]` | yellow |                  | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` |
 | `  [8]` | yellow |                  | `MIO[0]`       | `906+   [0]    = 906`      | CPU heartbeat (user defined)
 | `  [9]` | reg    |                  | `MIO[7]`       | `906+   [7]    = 913`      | SD card access (user defined)
 
 GPIOs are accessible at the `sysfs` index.
 The next example will light up LED[0], and read back its value.
 ```bash
-export INDEX=976
+export INDEX=960
 echo $INDEX > /sys/class/gpio/export
 echo out    > /sys/class/gpio/gpio$INDEX/direction
 echo 1      > /sys/class/gpio/gpio$INDEX/value
@@ -205,13 +205,12 @@ https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
 By providing GPIO/LED details in the device tree, it is possible to access LEDs using a dedicated kernel interface.
-NOTE: only LED 8 and LED 9 support this interface for now.
 
 To show CPU load on LED 9 use:
 ```bash
 echo heartbeat > /sys/class/leds/led9/trigger
 ```
-To switch LED 8 on use:
+To switch LED 8 ON use:
 ```bash
 echo 1 > /sys/class/leds/led8/brightness
 ```

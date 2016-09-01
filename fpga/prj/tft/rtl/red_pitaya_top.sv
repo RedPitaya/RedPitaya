@@ -365,7 +365,7 @@ muxctl muxctl (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_led [8-1:0] (.O (gpio_i[23:16]), .IO(led_o), .I(gpio_o[23:16]), .T(gpio_t[23:16]));
+IOBUF iobuf_led [8-1:0] (.O (gpio_i[7:0]), .IO(led_o), .I(gpio_o[7:0]), .T(gpio_t[7:0]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // TFT ports
@@ -383,34 +383,34 @@ assign spi0.miso_i = iomux_i [0+2];
 assign spi0.ss_i   = iomux_i [8+2];
 
 //      N              P                   
-assign {gpio_i [0+1], gpio_i [0+0]} = {iomux_i [8+0], iomux_i [0+0]};
-assign {gpio_i [0+3], gpio_i [0+2]} = {iomux_i [8+1], iomux_i [0+1]};
-assign {gpio_i [0+5], gpio_i [0+4]} = {iomux_i [8+2], iomux_i [0+2]};
-assign {gpio_i [0+7], gpio_i [0+6]} = {iomux_i [8+3], iomux_i [0+3]};
-assign {gpio_i [8+1], gpio_i [8+0]} = {iomux_i [8+4], iomux_i [0+4]};
-assign {gpio_i [8+3], gpio_i [8+2]} = {iomux_i [8+5], iomux_i [0+5]};
-assign {gpio_i [8+5], gpio_i [8+4]} = {iomux_i [8+6], iomux_i [0+6]};
-assign {gpio_i [8+7], gpio_i [8+6]} = {iomux_i [8+7], iomux_i [0+7]};
+assign {gpio_i [08+1], gpio_i [08+0]} = {iomux_i [8+0], iomux_i [0+0]};
+assign {gpio_i [08+3], gpio_i [08+2]} = {iomux_i [8+1], iomux_i [0+1]};
+assign {gpio_i [08+5], gpio_i [08+4]} = {iomux_i [8+2], iomux_i [0+2]};
+assign {gpio_i [08+7], gpio_i [08+6]} = {iomux_i [8+3], iomux_i [0+3]};
+assign {gpio_i [16+1], gpio_i [16+0]} = {iomux_i [8+4], iomux_i [0+4]};
+assign {gpio_i [16+3], gpio_i [16+2]} = {iomux_i [8+5], iomux_i [0+5]};
+assign {gpio_i [16+5], gpio_i [16+4]} = {iomux_i [8+6], iomux_i [0+6]};
+assign {gpio_i [16+7], gpio_i [16+6]} = {iomux_i [8+7], iomux_i [0+7]};
 
 //      N              P                   
-assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [0+1], gpio_o [0+0]};
-assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.mosi_o , spi0.sclk_o };
-assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o   , spi0.miso_o };
-assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [0+7], spi0.ss1_o  };
-assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [8+1], gpio_o [8+0]};
-assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [8+3], gpio_o [8+2]};
-assign {iomux_o [8+6], iomux_o [0+6]} = {gpio_o [8+5], gpio_o [8+4]};
-assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [8+7], gpio_o [8+6]};
+assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [08+1], gpio_o [08+0]};
+assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.mosi_o  , spi0.sclk_o  };
+assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o    , spi0.miso_o  };
+assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [08+7], spi0.ss1_o   };
+assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [16+1], gpio_o [16+0]};
+assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [16+3], gpio_o [16+2]};
+assign {iomux_o [8+6], iomux_o [0+6]} = {gpio_o [16+5], gpio_o [16+4]};
+assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [16+7], gpio_o [16+6]};
 
 //      N              P                   
-assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [0+1], gpio_t [0+0]};
-assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.mosi_t , spi0.sclk_t };
-assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t   , spi0.miso_t };
-assign {iomux_t [8+3], iomux_t [0+3]} = {gpio_t [0+7], 1'b0        };
-assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [8+1], gpio_t [8+0]};
-assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [8+3], gpio_t [8+2]};
-assign {iomux_t [8+6], iomux_t [0+6]} = {gpio_t [8+5], gpio_t [8+4]};
-assign {iomux_t [8+7], iomux_t [0+7]} = {gpio_t [8+7], gpio_t [8+6]};
+assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [08+1], gpio_t [08+0]};
+assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.mosi_t  , spi0.sclk_t  };
+assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t    , spi0.miso_t  };
+assign {iomux_t [8+3], iomux_t [0+3]} = {gpio_t [08+7], 1'b0         };
+assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [16+1], gpio_t [16+0]};
+assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [16+3], gpio_t [16+2]};
+assign {iomux_t [8+6], iomux_t [0+6]} = {gpio_t [16+5], gpio_t [16+4]};
+assign {iomux_t [8+7], iomux_t [0+7]} = {gpio_t [16+7], gpio_t [16+6]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // debounce

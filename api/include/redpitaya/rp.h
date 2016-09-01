@@ -88,6 +88,14 @@ extern "C" {
  * Type representing digital input output pins.
  */
 typedef enum {
+    RP_LED0,       // LED 0
+    RP_LED1,       // LED 1
+    RP_LED2,       // LED 2
+    RP_LED3,       // LED 3
+    RP_LED4,       // LED 4
+    RP_LED5,       // LED 5
+    RP_LED6,       // LED 6
+    RP_LED7,       // LED 7
     RP_DIO0_P,     // DIO_P 0
     RP_DIO1_P,     // DIO_P 1
     RP_DIO2_P,     // DIO_P 2
@@ -103,15 +111,7 @@ typedef enum {
     RP_DIO4_N,     // DIO_N 4
     RP_DIO5_N,     // DIO_N 5
     RP_DIO6_N,     // DIO_N 6
-    RP_DIO7_N,     // DIO_N 7
-    RP_LED0,       // LED 0
-    RP_LED1,       // LED 1
-    RP_LED2,       // LED 2
-    RP_LED3,       // LED 3
-    RP_LED4,       // LED 4
-    RP_LED5,       // LED 5
-    RP_LED6,       // LED 6
-    RP_LED7        // LED 7
+    RP_DIO7_N      // DIO_N 7
 } rp_dpin_t;
 
 /**

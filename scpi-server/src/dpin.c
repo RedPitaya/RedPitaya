@@ -23,6 +23,14 @@
 
 /* Param choice definition - Must remain the same! */
 const scpi_choice_def_t scpi_RpDpin[] = {
+    {"LED0",   16},
+    {"LED1",   17},
+    {"LED2",   18},
+    {"LED3",   19},
+    {"LED4",   20},
+    {"LED5",   21},
+    {"LED6",   22},
+    {"LED7",   23},
     {"DIO0_P",  0},
     {"DIO1_P",  1},
     {"DIO2_P",  2},
@@ -39,14 +47,6 @@ const scpi_choice_def_t scpi_RpDpin[] = {
     {"DIO5_N", 13},
     {"DIO6_N", 14},
     {"DIO7_N", 15},
-    {"LED0",   16},
-    {"LED1",   17},
-    {"LED2",   18},
-    {"LED3",   19},
-    {"LED4",   20},
-    {"LED5",   21},
-    {"LED6",   22},
-    {"LED7",   23},
     SCPI_CHOICE_LIST_END
 };
 
