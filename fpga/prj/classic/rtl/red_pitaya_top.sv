@@ -176,16 +176,9 @@ SBA_T [2-1:0]            pid_dat;
 // configuration
 logic                    digital_loop;
 
-logic            ps_sys_clk         ;
-logic            ps_sys_rstn        ;
-logic [ 32-1: 0] ps_sys_addr        ;
-logic [ 32-1: 0] ps_sys_wdata       ;
-logic [  4-1: 0] ps_sys_sel         ;
-logic            ps_sys_wen         ;
-logic            ps_sys_ren         ;
-logic [ 32-1: 0] ps_sys_rdata       ;
-logic            ps_sys_err         ;
-logic            ps_sys_ack         ;
+// system bus
+sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
+sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
 
 logic [24-1:0] gpio_t;  // output enable
 logic [24-1:0] gpio_o;  // output
@@ -208,7 +201,7 @@ red_pitaya_pll pll (
   .clk_dac_2x  (pll_dac_clk_2x),  // DAC clock 250MHz
   .clk_dac_2p  (pll_dac_clk_2p),  // DAC clock 250MHz -45DGR
   .clk_ser     (pll_ser_clk   ),  // fast serial clock
-  .clk_pwm     (pll_pwm_clk   ),  // PWM clock
+  .clk_pdm     (pll_pwm_clk   ),  // PWM clock
   // status outputs
   .pll_locked  (pll_locked)
 );
@@ -270,16 +263,7 @@ red_pitaya_ps ps (
   .gpio_o        (gpio_o),
   .gpio_t        (gpio_t),
   // system read/write channel
-  .sys_clk_o     (ps_sys_clk  ),  // system clock
-  .sys_rstn_o    (ps_sys_rstn ),  // system reset - active low
-  .sys_addr_o    (ps_sys_addr ),  // system read/write address
-  .sys_wdata_o   (ps_sys_wdata),  // system write data
-  .sys_sel_o     (ps_sys_sel  ),  // system write byte select
-  .sys_wen_o     (ps_sys_wen  ),  // system write enable
-  .sys_ren_o     (ps_sys_ren  ),  // system read enable
-  .sys_rdata_i   (ps_sys_rdata),  // system read data
-  .sys_err_i     (ps_sys_err  ),  // system error indicator
-  .sys_ack_i     (ps_sys_ack  ),  // system acknowledge signal
+  .bus           (ps_sys      ),
   // AXI masters
   .axi1_clk_i    (axi1_clk    ),  .axi0_clk_i    (axi0_clk    ),  // global clock
   .axi1_rstn_i   (axi1_rstn   ),  .axi0_rstn_i   (axi0_rstn   ),  // global reset
@@ -297,11 +281,11 @@ red_pitaya_ps ps (
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
-wire              sys_clk   = ps_sys_clk  ;
-wire              sys_rstn  = ps_sys_rstn ;
-wire  [  32-1: 0] sys_addr  = ps_sys_addr ;
-wire  [  32-1: 0] sys_wdata = ps_sys_wdata;
-wire  [   4-1: 0] sys_sel   = ps_sys_sel  ;
+wire              sys_clk   = ps_sys.clk  ;
+wire              sys_rstn  = ps_sys.rstn ;
+wire  [  32-1: 0] sys_addr  = ps_sys.addr ;
+wire  [  32-1: 0] sys_wdata = ps_sys.wdata;
+wire  [   4-1: 0] sys_sel   = 4'hf;
 wire  [8   -1: 0] sys_wen   ;
 wire  [8   -1: 0] sys_ren   ;
 wire  [8*32-1: 0] sys_rdata ;
@@ -311,13 +295,13 @@ wire  [8   -1: 0] sys_cs    ;
 
 assign sys_cs = 8'h01 << sys_addr[22:20];
 
-assign sys_wen = sys_cs & {8{ps_sys_wen}};
-assign sys_ren = sys_cs & {8{ps_sys_ren}};
+assign sys_wen = sys_cs & {8{ps_sys.wen}};
+assign sys_ren = sys_cs & {8{ps_sys.ren}};
 
-assign ps_sys_rdata = sys_rdata[sys_addr[22:20]*32+:32];
+assign ps_sys.rdata = sys_rdata[sys_addr[22:20]*32+:32];
 
-assign ps_sys_err   = |(sys_cs & sys_err);
-assign ps_sys_ack   = |(sys_cs & sys_ack);
+assign ps_sys.err   = |(sys_cs & sys_err);
+assign ps_sys.ack   = |(sys_cs & sys_ack);
 
 // unused system bus slave ports
 
