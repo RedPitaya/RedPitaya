@@ -108,7 +108,9 @@ sys_bus_model bus (
 red_pitaya_hk hk (
   .clk_i          (clk      ),
   .rstn_i         (rstn     ),
-   // System bus
+  // global configuration
+  .digital_loop   (),
+  // System bus
   .sys_addr       (sys_addr ),
   .sys_wdata      (sys_wdata),
   .sys_sel        (sys_sel  ),
