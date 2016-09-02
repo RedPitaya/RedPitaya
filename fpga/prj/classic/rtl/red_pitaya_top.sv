@@ -437,17 +437,8 @@ red_pitaya_hk i_hk (
   // system signals
   .clk_i           (  adc_clk       ),  // clock
   .rstn_i          (  adc_rstn      ),  // reset - active low
-  // LED
-  .led_o           (),  // LED output
   // global configuration
   .digital_loop    (  digital_loop  ),
-  // Expansion connector
-  .exp_p_dat_i     (8'b0),  // input data
-  .exp_p_dat_o     (),  // output data
-  .exp_p_dir_o     (),  // 1-output enable
-  .exp_n_dat_i     (8'b0),
-  .exp_n_dat_o     (),
-  .exp_n_dir_o     (),
    // System bus
   .sys_addr        (  sys_addr   ),  // address
   .sys_wdata       (  sys_wdata  ),  // write data
