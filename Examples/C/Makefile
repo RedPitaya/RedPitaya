@@ -1,7 +1,7 @@
 CFLAGS  = -g -std=gnu99 -Wall -Werror
-CFLAGS += -Wl,--no-as-needed
 CFLAGS += -I/opt/redpitaya/include
-CFLAGS += -L/opt/redpitaya/lib -lm -lpthread -lrp
+LDFLAGS = -L/opt/redpitaya/lib
+LDLIBS = -lm -lpthread -lrp
 
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=)
