@@ -857,6 +857,12 @@ area:hover {
     height: 27px;
 }
 
+#ecosystem_type {
+    color: black;
+    width: 150px;
+    height: 27px;
+}
+
 #apply{
     color:black;
 }

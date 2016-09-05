@@ -12,6 +12,7 @@
     var ecosystems = [];
     var ecosystems_sizes = [];
     var chosen_eco = -1;
+	var isApply = false;
 
     UPD.currentVer = undefined;
 
@@ -31,7 +32,6 @@
                 UPD.checkUpdates();
                 break;
             case 4:
-                // UPD.nextStep();
                 UPD.downloadEcosystem();
                 break;
             case 5:
@@ -73,11 +73,11 @@
                 .done(function(msg) {
                     UPD.currentVer = msg['version'];
                     $('#step_2_version').text(msg['version']);
-                    UPD.nextStep();
+                    //UPD.nextStep();
                 })
                 .fail(function(msg) {
                     $('#step_2_version').text('Unknown');
-                    UPD.nextStep();
+                    //UPD.nextStep();
                 })
         }, 500);
     }
@@ -98,6 +98,7 @@
                         return;
                     }
                     var list = [];
+					ecosystems = [];
                     for (var i = 0; i < arr.length; i += 2) {
                         if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
                             var size = parseInt(arr[i + 1]) * 1;
@@ -125,6 +126,9 @@
                     $('#ecosystem_ver').removeAttr('disabled');
                     $('.select_ver').show();
                     $('#apply').click(function(event) {
+						if (isApply)
+							return; // FIXME!
+						isApply = true;
                         var val = $('#ecosystem_ver').val();
                         chosen_eco = ecosystems.indexOf(val);
                         if (chosen_eco != -1) {
@@ -252,20 +256,32 @@ UPD.getChangelog = function(ecosystem) {
 		type: 'GET',
 	})
 	.fail(function(msg) {
-		//var text = msg.responseText;
 		$('#changelog_text').html(msg);
 	})
 	.done(function(msg) {
-		//var text = msg.responseText;
 		$('#changelog_text').html(msg);
 	})
 }
 
+function checkDev() {
+    $.ajax({
+        url: '/updater/dev',
+        type: 'GET',
+    }).fail(function(msg) {
+		if (msg[0] == 'd')
+			$('#ecosystem_type').append($('<option>', { value: '3', text: 'Dev'}));
+    }).done(function(msg) {
+		if (msg[0] == 'd')
+			$('#ecosystem_type').append($('<option>', { value: '3', text: 'Dev'}));
+    })
+}
 
 // Page onload event handler
 $(document).ready(function() {
     UPD.startStep(1);
-    $('body').addClass('loaded');
+    $('body').addClass('loaded');	
+	checkDev();
+
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
 		$('#warn').hide();
@@ -291,8 +307,11 @@ $(document).ready(function() {
 	$('#ecosystem_type').change(function(){
 		if ($(this).val() == '2') {
 			$('#warn').show();
-			UPD.checkUpdates('../0.92');
-		} else {
+			UPD.checkUpdates('../beta_0.96');
+		} else if ($(this).val() == '3') {
+			$('#warn').show();
+			UPD.checkUpdates('../dev');
+		} else { // stable
 			$('#warn').hide();
 			UPD.checkUpdates();
 		}
