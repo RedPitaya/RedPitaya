@@ -88,30 +88,30 @@ extern "C" {
  * Type representing digital input output pins.
  */
 typedef enum {
-    RP_LED0,       // LED 0
-    RP_LED1,       // LED 1
-    RP_LED2,       // LED 2
-    RP_LED3,       // LED 3
-    RP_LED4,       // LED 4
-    RP_LED5,       // LED 5
-    RP_LED6,       // LED 6
-    RP_LED7,       // LED 7
-    RP_DIO0_P,     // DIO_P 0
-    RP_DIO1_P,     // DIO_P 1
-    RP_DIO2_P,     // DIO_P 2
-    RP_DIO3_P,     // DIO_P 3
-    RP_DIO4_P,     // DIO_P 4
-    RP_DIO5_P,     // DIO_P 5
-    RP_DIO6_P,     // DIO_P 6
-    RP_DIO7_P,	   // DIO_P 7
-    RP_DIO0_N,     // DIO_N 0
-    RP_DIO1_N,     // DIO_N 1
-    RP_DIO2_N,     // DIO_N 2
-    RP_DIO3_N,     // DIO_N 3
-    RP_DIO4_N,     // DIO_N 4
-    RP_DIO5_N,     // DIO_N 5
-    RP_DIO6_N,     // DIO_N 6
-    RP_DIO7_N      // DIO_N 7
+    RP_LED0,       //!< LED 0
+    RP_LED1,       //!< LED 1
+    RP_LED2,       //!< LED 2
+    RP_LED3,       //!< LED 3
+    RP_LED4,       //!< LED 4
+    RP_LED5,       //!< LED 5
+    RP_LED6,       //!< LED 6
+    RP_LED7,       //!< LED 7
+    RP_DIO0_P,     //!< DIO_P 0
+    RP_DIO1_P,     //!< DIO_P 1
+    RP_DIO2_P,     //!< DIO_P 2
+    RP_DIO3_P,     //!< DIO_P 3
+    RP_DIO4_P,     //!< DIO_P 4
+    RP_DIO5_P,     //!< DIO_P 5
+    RP_DIO6_P,     //!< DIO_P 6
+    RP_DIO7_P,	   //!< DIO_P 7
+    RP_DIO0_N,     //!< DIO_N 0
+    RP_DIO1_N,     //!< DIO_N 1
+    RP_DIO2_N,     //!< DIO_N 2
+    RP_DIO3_N,     //!< DIO_N 3
+    RP_DIO4_N,     //!< DIO_N 4
+    RP_DIO5_N,     //!< DIO_N 5
+    RP_DIO6_N,     //!< DIO_N 6
+    RP_DIO7_N      //!< DIO_N 7
 } rp_dpin_t;
 
 /**
@@ -430,6 +430,27 @@ int rp_IdGetID(uint32_t *id);
 int rp_IdGetDNA(uint64_t *dna);
 
 ///@}
+
+
+/**
+ * LED methods
+ */
+
+int rp_LEDSetState(uint32_t state);
+int rp_LEDGetState(uint32_t *state);
+
+/**
+ * GPIO methods
+ */
+
+int rp_GPIOnSetDirection(uint32_t direction);
+int rp_GPIOnGetDirection(uint32_t *direction);
+int rp_GPIOnSetState(uint32_t state);
+int rp_GPIOnGetState(uint32_t *state);
+int rp_GPIOpSetDirection(uint32_t direction);
+int rp_GPIOpGetDirection(uint32_t *direction);
+int rp_GPIOpSetState(uint32_t state);
+int rp_GPIOpGetState(uint32_t *state);
 
 
 /** @name Digital Input/Output
