@@ -53,14 +53,14 @@
     }
 
     UPD.checkConnection = function() {
-        setTimeout(function() {
+		OnlineChecker.checkAsync(function() {
             if (OnlineChecker.isOnline()) {
                 UPD.nextStep();
             } else {
                 $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
 				$('#step_1').find('.error_msg').show();				
 			}
-        }, 3500);
+        });
     }
 
     UPD.checkVersion = function() {
@@ -82,10 +82,11 @@
         }, 500);
     }
 
-    UPD.checkUpdates = function() {
+    UPD.checkUpdates = function(type = '') {
+        $('#apply').hide();
         setTimeout(function() {
             $.ajax({
-                    url: '/update_list',
+                    url: '/update_list?type=' + type,
                     type: 'GET',
                 })
                 .fail(function(msg) {
@@ -112,6 +113,7 @@
                         return;
                     }
                     list.sort();
+					$('#ecosystem_ver').empty();
                     for (var i = list.length - 1; i >= 0; i--) {
                         var item = list[i].split('-');
                         var ver = item[1];
@@ -122,6 +124,7 @@
                     }
                     $('#ecosystem_ver').removeAttr('disabled');
                     $('.select_ver').show();
+        			$('#apply').show();
                     $('#apply').click(function(event) {
                         var val = $('#ecosystem_ver').val();
                         chosen_eco = ecosystems.indexOf(val);
@@ -249,6 +252,7 @@ $(document).ready(function() {
     $('body').addClass('loaded');
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+		$('#warn').hide();
         if (UPD.currentVer == undefined)
             return;
         var val = $('#ecosystem_ver').val();
@@ -269,4 +273,13 @@ $(document).ready(function() {
         }
 
     });
+	$('#ecosystem_type').change(function(){
+		if ($(this).val() == '2') {
+			$('#warn').show();
+			UPD.checkUpdates('../0.92');
+		} else {
+			$('#warn').hide();
+			UPD.checkUpdates();
+		}
+	});
 })
