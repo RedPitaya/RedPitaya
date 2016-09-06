@@ -326,8 +326,8 @@ $(document).ready(function() {
 	});
 
 	$('#ecosystem_ver').change(function() {
-		console.log($('#ecosystem_ver:selected').text())
-		UPD.getChangelog(UPD.type + '/' + UPD.currentVer + '.changelog');
+		let cur = $('#ecosystem_ver option:selected').text().split(' ')[0];
+		UPD.getChangelog(UPD.type + '/' + cur + '.changelog');
 	});
 })
 
