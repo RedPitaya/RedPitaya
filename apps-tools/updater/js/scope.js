@@ -74,11 +74,11 @@
                 .done(function(msg) {
                     UPD.currentVer = msg['version'];
                     $('#step_2_version').text(msg['version']);
-                    //UPD.nextStep();
+                    UPD.nextStep();
                 })
                 .fail(function(msg) {
                     $('#step_2_version').text('Unknown');
-                    //UPD.nextStep();
+                    UPD.nextStep();
                 })
         }, 500);
     }
@@ -130,7 +130,7 @@
                     $('.select_ver').show();
                     $('#apply').click(function(event) {
 						if (isApply)
-							return; // FIXME!
+							return; // FIXME
 						isApply = true;
                         var val = $('#ecosystem_ver').val();
                         chosen_eco = ecosystems.indexOf(val);
@@ -149,6 +149,10 @@
     }
 
     UPD.downloadEcosystem = function() {
+		if (!isApply) {
+        	--UPD.currentStep; // FIXME
+			return;
+		}
         setTimeout(function() {
             $.ajax({
                 url: '/update_download?ecosystem=' + UPD.type + '/' + ecosystems[chosen_eco],
