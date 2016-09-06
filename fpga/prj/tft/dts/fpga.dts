@@ -79,11 +79,11 @@
               #size-cells = <1>;
               partition@qspi-fsbl-uboot {
                         label = "qspi-fsbl-uboot";
-                        reg = <0x0 0x100000>;
+                        reg = <0x0 0x200000>;
               };
               partition@qspi-linux {
                         label = "qspi-linux";
-                        reg = <0x100000 0x500000>;
+                        reg = <0x200000 0x400000>;
               };
               partition@qspi-device-tree {
                         label = "qspi-device-tree";
