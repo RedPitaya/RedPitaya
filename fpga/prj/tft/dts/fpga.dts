@@ -19,8 +19,8 @@
 		fps = <10>; 
 		buswidth = <8>; 
 
-		reset-gpios = <&gpio0 62 0>; 
-		dc-gpios = <&gpio0 63 0>; 
+		reset-gpios = <&gpio0 70 0>; 
+		dc-gpios = <&gpio0 71 0>; 
 		
 		debug = <0>; 
 	}; 
@@ -30,9 +30,9 @@
 		reg = <1>; 
 		spi-max-frequency = <1000000>; 
 
-		interrupts = <64 0>; 
+		interrupts = <72 0>; 
 		interrupt-parent = <&gpio0>; 
-		pendown-gpio = <&gpio0 64 0>; 
+		pendown-gpio = <&gpio0 72 0>; 
 		vcc-supply = <&fixedreg33>;
 	}; 
 
@@ -49,7 +49,7 @@
 
 	backlight {
 		compatible = "gpio-backlight";
-		gpios = <&gpio0 55 0>;
+		gpios = <&gpio0 63 0>;
 		default-on;
 	};
 

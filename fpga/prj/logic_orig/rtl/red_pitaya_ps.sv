@@ -55,6 +55,10 @@ module red_pitaya_ps (
   // XADC
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
+  // GPIO
+  input  logic  [24-1:0] gpio_i,
+  output logic  [24-1:0] gpio_o,
+  output logic  [24-1:0] gpio_t,
   // interrupts
   input  logic  [13-1:0] irq,
   // system read/write channel
@@ -188,9 +192,12 @@ system_wrapper system_i (
   .M_AXI_STR_TX3_tlast   (stx[3].TLAST  ),  .M_AXI_STR_TX2_tlast   (stx[2].TLAST  ), // .M_AXI_STR_TX1_tlast   (stx[1].TLAST  ),  .M_AXI_STR_TX0_tlast   (stx[0].TLAST  ),
   .M_AXI_STR_TX3_tready  (stx[3].TREADY ),  .M_AXI_STR_TX2_tready  (stx[2].TREADY ), // .M_AXI_STR_TX1_tready  (stx[1].TREADY ),  .M_AXI_STR_TX0_tready  (stx[0].TREADY ),
   .M_AXI_STR_TX3_tvalid  (stx[3].TVALID ),  .M_AXI_STR_TX2_tvalid  (stx[2].TVALID ), // .M_AXI_STR_TX1_tvalid  (stx[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (stx[0].TVALID ),
+  // GPIO
+  .GPIO_I (gpio_i),
+  .GPIO_O (gpio_o),
+  .GPIO_T (gpio_t),
   // IRQ
   // TODO: actual interrupts should be connnected
-  .IRQ_GPIO (1'b0),
   .IRQ_LG   (1'b0),
   .IRQ_LA   (1'b0),
   .IRQ_GEN0 (1'b0),

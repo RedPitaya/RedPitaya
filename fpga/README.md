@@ -62,9 +62,9 @@ make project
 
 # Simulation
 
-ModelSim as provoded for free from altera is used to run simulations. Scripts expect the default install location. On Ubuntu the inslall process fails to create an appropriate path to executable files, so this path must be created:
+ModelSim as provided for free from Altera is used to run simulations. Scripts expect the default install location. On Ubuntu the inslall process fails to create an appropriate path to executable files, so this path must be created:
 ```bash
-ln 
+ln -s $HOME/altera/16.0/modelsim_ase/linux $HOME/altera/16.0/modelsim_ase/linux_rh60
 ```
 
 To run simmulation, Vivado tools have to be installed, but there is no need to source `settings.sh` for not the path to the ModelSim simulator is hardcoded into the simulation `Makefile`.
@@ -151,7 +151,7 @@ Range: 1V / ratio = 7.01
 
 For now only LED8 and LED9 are accessible using a kernel driver. LED [7:0] are not driven by a kernel driver, since the Linux GPIO/LED subsystem does not allow access to multiple pins simultaneously.
 
-### Linux access to GPIO
+### Linux access to GPIO/LED
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
@@ -181,16 +181,16 @@ The default pin assignment for GPIO is described in the next table.
 
 | LED     | color  | GPIO             | MIO/EMIO index | `sysfs` index              | dedicated meaning     |
 |---------|--------|------------------|----------------|----------------------------|-----------------------|
-|         |        | `exp_p_io [7:0]` | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` | 
-|         |        | `exp_n_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` | 
-| `[7:0]` | yellow |                  | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` | 
+|         |        | `exp_p_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` |
+|         |        | `exp_n_io [7:0]` | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` |
+| `[7:0]` | yellow |                  | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` |
 | `  [8]` | yellow |                  | `MIO[0]`       | `906+   [0]    = 906`      | CPU heartbeat (user defined)
 | `  [9]` | reg    |                  | `MIO[7]`       | `906+   [7]    = 913`      | SD card access (user defined)
 
 GPIOs are accessible at the `sysfs` index.
 The next example will light up LED[0], and read back its value.
 ```bash
-export INDEX=976
+export INDEX=960
 echo $INDEX > /sys/class/gpio/export
 echo out    > /sys/class/gpio/gpio$INDEX/direction
 echo 1      > /sys/class/gpio/gpio$INDEX/value
@@ -205,13 +205,12 @@ https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
 By providing GPIO/LED details in the device tree, it is possible to access LEDs using a dedicated kernel interface.
-NOTE: only LED 8 and LED 9 support this interface for now.
 
 To show CPU load on LED 9 use:
 ```bash
 echo heartbeat > /sys/class/leds/led9/trigger
 ```
-To switch LED 8 on use:
+To switch LED 8 ON use:
 ```bash
 echo 1 > /sys/class/leds/led8/brightness
 ```

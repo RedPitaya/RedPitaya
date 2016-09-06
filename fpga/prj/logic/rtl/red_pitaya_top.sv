@@ -164,8 +164,6 @@ trg_t trg;
 
 // interrupts
 typedef struct packed {
-  // GPIO
-  logic   [1-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // analog generator
   logic [MNG-1:0] gen_trg;  // event    triggers
   logic [MNG-1:0] gen_stp;  // software triggers
@@ -195,7 +193,7 @@ logic [GDW-1:0] exp_o;  // output
 logic [GDW-1:0] exp_i;  // input
 
 ////////////////////////////////////////////////////////////////////////////////
-// PLL (clock and reaset)
+// PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
@@ -364,7 +362,6 @@ id #(
 
 muxctl muxctl (
   // global configuration
-  .mux_gpio  (),
   .mux_loop  (mux_loop),
   .mux_gen   (mux_gen ),
   .mux_lg    (mux_lg  ),
@@ -376,13 +373,13 @@ muxctl muxctl (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_led [GDW-1:0] (.O (gpio_o[23:16]), .IO(led_o), .I(gpio_i[23:16]), .T(gpio_o[23:16]));
+IOBUF iobuf_led [GDW-1:0] (.O (gpio_o[7:0]), .IO(led_o), .I(gpio_i[7:0]), .T(gpio_o[7:0]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO ports
 ////////////////////////////////////////////////////////////////////////////////
 
-assign gpio_i = {exp_n_io, exp_p_io};
+assign gpio_i [23:8] = {exp_n_io, exp_p_io};
 
 ////////////////////////////////////////////////////////////////////////////////
 // LA (DDR) extension connector
