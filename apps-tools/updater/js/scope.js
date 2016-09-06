@@ -112,7 +112,9 @@
                         $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
                         $('#step_' + UPD.currentStep).find('.error_msg').show();
                         return;
-                    }
+                    } else {
+                        $('#step_' + UPD.currentStep).find('.error_msg').hide();
+					}
                     list.sort();
 					$('#ecosystem_ver').empty();
                     for (var i = list.length - 1; i >= 0; i--) {
