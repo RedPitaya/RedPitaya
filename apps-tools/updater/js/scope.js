@@ -15,6 +15,7 @@
 	var isApply = false;
 
     UPD.currentVer = undefined;
+	UPD.type = '0.96';
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -254,7 +255,7 @@
 
 UPD.getChangelog = function(ecosystem) {
 	$.ajax({
-		url: '/update_changelog?' + ecosystem,
+		url: '/update_changelog?id=' + ecosystem,
 		type: 'GET',
 	})
 	.fail(function(msg) {
@@ -309,19 +310,20 @@ $(document).ready(function() {
 	$('#ecosystem_type').change(function(){
 		if ($(this).val() == '2') {
 			$('#warn').show();
-			UPD.checkUpdates('beta_0.96');
+			UPD.type = 'beta_0.96';
 		} else if ($(this).val() == '3') {
 			$('#warn').show();
-			UPD.checkUpdates('dev');
+			UPD.type = 'dev';
 		} else { // stable
 			$('#warn').hide();
-			UPD.checkUpdates('0.96');
+			UPD.type = '0.96';
 		}
+		UPD.checkUpdates(UPD.type);
 	});
 
 	$('#ecosystem_ver').change(function() {
 		console.log($('#ecosystem_ver:selected').text())
-		UPD.getChangelog($('#ecosystem_ver:selected').text())
+		UPD.getChangelog(UPD.type + '/' + UPD.currentVer + '.changelog');
 	});
 })
 
