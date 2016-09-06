@@ -314,13 +314,13 @@ $(document).ready(function() {
 	$('#ecosystem_type').change(function(){
 		if ($(this).val() == '2') {
 			$('#warn').show();
-			UPD.type = 'beta_0.96';
+			UPD.type = 'beta_0.97';
 		} else if ($(this).val() == '3') {
 			$('#warn').show();
 			UPD.type = 'dev';
 		} else { // stable
 			$('#warn').hide();
-			UPD.type = '0.96';
+			UPD.type = '0.97';
 		}
 		UPD.checkUpdates(UPD.type);
 	});
