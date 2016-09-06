@@ -151,7 +151,7 @@
     UPD.downloadEcosystem = function() {
         setTimeout(function() {
             $.ajax({
-                url: '/update_download?ecosystem=' + ecosystems[chosen_eco],
+                url: '/update_download?ecosystem=' + UPD.type + '/' + ecosystems[chosen_eco],
                 type: 'GET',
             }).always(function() {
                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
@@ -172,7 +172,7 @@
                             $('#percent').text(percent + "%");
                             $('#percent').show();
 
-                            if (size == ecosystems_sizes[chosen_eco]) {
+                            if (size >= ecosystems_sizes[chosen_eco]) {
                                 $('#percent').hide();
                                 UPD.nextStep();
                                 clearInterval(check_progress);
