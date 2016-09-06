@@ -67,14 +67,23 @@
                 obj['url'] = url + key + '/?type=run';
                 obj['image'] = url + key + '/info/icon.png';
 
+                $.ajax({
+                    url: obj['image'],
+                    cache: false,
+                    async: true
+                }).fail(function(msg) {
+                    getListOfApps();
+                });
+
                 // FIXME: It is bad solution.
-                if (obj['name'] == 'spectrumpro' ||
+                /*if (obj['name'] == 'spectrumpro' ||
                     obj['name'] == 'scopegenpro' ||
                     obj['name'] == 'ba_pro' ||
                     obj['name'] == 'lcr_meter')
                     obj['licensable'] = false;
                 else
-                    obj['licensable'] = true;
+                    obj['licensable'] = true;*/
+                 obj['licensable'] = false;
 
                 obj['type'] = value['type'];
                 apps.push(obj);
@@ -83,12 +92,17 @@
             for (var i = 0; i < default_apps.length; i++) {
                 if (default_apps[i].id == "marketplace")
                     default_apps[i].url = url + 'bazaar'
+                if(default_apps[i].url[0]=="/")
+                    default_apps[i].url = window.location.origin + default_apps[i].url;
                 apps.push(default_apps[i]);
             }
 
             refillList();
             placeElements();
-            $('body').addClass('loaded');
+            setTimeout(function(){
+                $('body').addClass('loaded');
+            }, 500);
+            
         }).fail(function(msg) { getListOfApps(); });
     }
 
@@ -206,30 +220,35 @@
                                         .done(function(msg) {})
                                         .fail(function(msg) {
                                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                            window.location = success_url;
+											if(success_url != undefined)
+												window.location = success_url;
                                         });
                                 })
                                 .fail(function(msg) {
                                     console.log("LIC: ERR2");
                                     setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                    window.location = success_url;
+									if(success_url != undefined)
+										window.location = success_url;
                                 });
                         } else {
                             console.log("LIC: ERR3");
                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                            window.location = success_url;
+							if(success_url != undefined)
+								window.location = success_url;
                         }
                     })
                     .fail(function(msg) {
                         console.log("LIC: ERR4");
                         setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                        window.location = success_url;
+						if(success_url != undefined)
+							window.location = success_url;
                     });
             })
             .fail(function(msg) {
                 console.log("LIC: ERR4");
                 setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                window.location = success_url;
+				if(success_url != undefined)
+					window.location = success_url;
             });
     }
 
@@ -316,9 +335,11 @@
         { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
         { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://wiki.redpitaya.com/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "tutorials", name: "Tutorials", description: "RedPitaya tutorials.", url: "http://wiki.redpitaya.com/index.php?title=Tutorials_overview", image: "../assets/images/tutors.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        //{ id: "tutorials", name: "Tutorials", description: "RedPitaya tutorials.", url: "http://wiki.redpitaya.com/index.php?title=Tutorials_overview", image: "../assets/images/tutors.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager/", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
+
+	licVerify(undefined)
 })(jQuery);

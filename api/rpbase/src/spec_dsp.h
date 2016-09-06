@@ -17,7 +17,9 @@
 
 #include "redpitaya/rp.h"
 
-#define c_dsp_sig_len (SPECTR_FPGA_SIG_LEN>>1)
+#define SPECTR_OUT_SIG_LENGTH (8*1024)
+//#define c_dsp_sig_len (SPECTR_OUT_SIG_LENGTH>>1)
+ #define c_dsp_sig_len (SPECTR_OUT_SIG_LENGTH)
 
 extern const double c_c2v;
 

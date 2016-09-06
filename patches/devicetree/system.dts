@@ -10,9 +10,9 @@
 			alignment = <0x2000>;
 			linux,cma-default;
 		};
-		rprx_reserverd: labuf@1c000000 {
+		rprx_reserverd: labuf@a000000 {
 			/*compatible = "redpitaya,rprx-memory";*/
-			reg = <0x1c000000 0x2000000>;
+			reg = <0xa000000 0x2000000>;
 		};
 	};
 };
@@ -40,7 +40,7 @@
 &clkc {
 	fclk-enable = <0xf>;
 };
-&xadc_wiz_0 {
+&xadc {
 	compatible = "xlnx,axi-xadc-1.00.a";
 	clocks = <&clkc 18>;
 	xlnx,channels {

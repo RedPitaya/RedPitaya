@@ -10,7 +10,7 @@
     
     // App configuration
     APP.config = {};
-    APP.config.app_id = 'template_app';
+    APP.config.app_id = '1.template';
     APP.config.app_url = '/bazaar?start=' + APP.config.app_id + '?' + location.search.substr(1);
     APP.config.socket_url = 'ws://' + window.location.hostname + ':9002';
 

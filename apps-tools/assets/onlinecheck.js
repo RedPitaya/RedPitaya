@@ -43,7 +43,7 @@
             if (OnlineChecker.callback != undefined)
                 OnlineChecker.callback();
         });
-        Offline.check();
+        //Offline.check();
         var run = function() {
                 Offline.check();
             }

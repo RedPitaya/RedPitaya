@@ -54,12 +54,14 @@
 
     UPD.checkConnection = function() {
         setTimeout(function() {
-            if (OnlineChecker.isOnline()) {
-                UPD.nextStep();
-            } else {
-                $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
-				$('#step_1').find('.error_msg').show();				
-			}
+            OnlineChecker.checkAsync(function() {
+                if (OnlineChecker.isOnline()) {
+                    UPD.nextStep();
+                } else {
+                    $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
+				    $('#step_1').find('.error_msg').show();				
+			    }
+            });
         }, 3500);
     }
 
@@ -132,6 +134,7 @@
                             $('#ecosystem_ver').attr('disabled', 'disabled');
                         }
                     });
+					$('#ecosystem_ver').change();
                 });
 
         }, 500);
@@ -243,6 +246,22 @@
 
 }(window.UPD = window.UPD || {}, jQuery));
 
+UPD.getChangelog = function(ecosystem) {
+	$.ajax({
+		url: '/update_changelog?' + ecosystem,
+		type: 'GET',
+	})
+	.fail(function(msg) {
+		//var text = msg.responseText;
+		$('#changelog_text').html(msg);
+	})
+	.done(function(msg) {
+		//var text = msg.responseText;
+		$('#changelog_text').html(msg);
+	})
+}
+
+
 // Page onload event handler
 $(document).ready(function() {
     UPD.startStep(1);
@@ -269,4 +288,11 @@ $(document).ready(function() {
         }
 
     });
+
+	$('#ecosystem_ver').change(function() {
+		console.log($('#ecosystem_ver:selected').text())
+		UPD.getChangelog($('#ecosystem_ver:selected').text())
+	});
+
 })
+

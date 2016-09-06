@@ -21,12 +21,12 @@ typedef enum {
     RP_API_OK, ///< The Red Pitaya is functioning correctly
     RP_MAX_UNITS_OPENED, ///< An attempt has been made to open more than RP_MAX_UNITS.
     RP_MEMORY_FAIL, //< Not enough memory could be allocated on the host machine
-    RP_NOT_FOUND, ///< No PicoScope could be found
+    RP_NOT_FOUND, ///< No Red Pitaya could be found
     RP_FW_FAIL, ///< Unable to download firmware
     RP_OPEN_OPERATION_IN_PROGRESS, ///<
     RP_OPERATION_FAILED, ///<
-    RP_NOT_RESPONDING, ///< The PicoScope is not responding to commands from the PC
-    RP_CONFIG_FAIL, ///< The configuration information in the PicoScope has become corrupt or is missing
+    RP_NOT_RESPONDING, ///< The Red Pitaya is not responding to commands from the PC
+    RP_CONFIG_FAIL, ///< The configuration information in the Red Pitaya has become corrupt or is missing
     RP_KERNEL_DRIVER_TOO_OLD, ///< The picopp.sys file is too old to be used with the device driver
     RP_EEPROM_CORRUPT, ///< The EEPROM has become corrupt, so the device will use a default setting
     RP_OS_NOT_SUPPORTED, ///< The operating system on the PC is not supported by this driver
@@ -90,7 +90,7 @@ typedef enum {
     RP_FPGA_FAIL,
     RP_POWER_MANAGER,
     RP_INVALID_ANALOGUE_OFFSET, ///< An impossible analogue offset value was specified in ps3000aSetChannel
-    RP_PLL_LOCK_FAILED, ///< Unable to configure the PicoScope
+    RP_PLL_LOCK_FAILED, ///< Unable to configure the Red Pitaya
     RP_ANALOG_BOARD, ///< The oscilloscope's analog board is not detected, or is not connected to thedigital board
     RP_CONFIG_FAIL_AWG, ///< Unable to configure the signal generator
     RP_INITIALISE_FPGA, ///< The FPGA cannot be initialized, so unit cannot be opened

@@ -55,8 +55,8 @@ module red_pitaya_top #(
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  inout  logic [ 8-1:0] exp_n_io   ,
   inout  logic [ 8-1:0] exp_p_io   ,
+  inout  logic [ 8-1:0] exp_n_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
@@ -164,8 +164,6 @@ trg_t trg;
 
 // interrupts
 typedef struct packed {
-  // GPIO
-  logic   [1-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // analog generator
   logic [MNG-1:0] gen_trg;  // event    triggers
   logic [MNG-1:0] gen_stp;  // software triggers
@@ -195,7 +193,7 @@ logic [GDW-1:0] exp_o;  // output
 logic [GDW-1:0] exp_i;  // input
 
 ////////////////////////////////////////////////////////////////////////////////
-// PLL (clock and reaset)
+// PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
@@ -291,18 +289,23 @@ red_pitaya_ps ps (
 );
 
 // OSC [0]
-assign axi_drx[0].TKEEP  =     {2{str_drx[0].TKEEP}};
-assign axi_drx[0].TDATA  =        str_drx[0].TDATA  ;
-assign axi_drx[0].TLAST  =        str_drx[0].TLAST  ;
-assign axi_drx[0].TVALID =        str_drx[0].TVALID ;
-assign str_drx[0].TREADY =        axi_drx[0].TREADY ;
+assign axi_drx[0].TKEEP  = {2{str_drx[0].TKEEP}};
+assign axi_drx[0].TDATA  =    str_drx[0].TDATA  ;
+assign axi_drx[0].TLAST  =    str_drx[0].TLAST  ;
+assign axi_drx[0].TVALID =    str_drx[0].TVALID ;
+assign str_drx[0].TREADY =    axi_drx[0].TREADY ;
 
-assign axi_drx[1].TKEEP  = 0 ? {2{str_drx[1].TKEEP}} : {2{str_drx[2].TKEEP}};
-assign axi_drx[1].TDATA  = 0 ?    str_drx[1].TDATA   :    str_drx[2].TDATA  ;
-assign axi_drx[1].TLAST  = 0 ?    str_drx[1].TLAST   :    str_drx[2].TLAST  ;
-assign axi_drx[1].TVALID = 0 ?    str_drx[1].TVALID  :    str_drx[2].TVALID ;
-assign str_drx[1].TREADY =        axi_drx[1].TREADY;
-assign str_drx[2].TREADY =        axi_drx[1].TREADY;
+assign axi_drx[1].TKEEP  = {2{str_drx[1].TKEEP}};
+assign axi_drx[1].TDATA  =    str_drx[1].TDATA  ;
+assign axi_drx[1].TLAST  =    str_drx[1].TLAST  ;
+assign axi_drx[1].TVALID =    str_drx[1].TVALID ;
+assign str_drx[1].TREADY =    axi_drx[1].TREADY ;
+
+assign axi_drx[2].TKEEP  = {2{str_drx[2].TKEEP}};
+assign axi_drx[2].TDATA  =    str_drx[2].TDATA  ;
+assign axi_drx[2].TLAST  =    str_drx[2].TLAST  ;
+assign axi_drx[2].TVALID =    str_drx[2].TVALID ;
+assign str_drx[2].TREADY =    axi_drx[2].TREADY ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
@@ -359,7 +362,6 @@ id #(
 
 muxctl muxctl (
   // global configuration
-  .mux_gpio  (),
   .mux_loop  (mux_loop),
   .mux_gen   (mux_gen ),
   .mux_lg    (mux_lg  ),
@@ -371,13 +373,13 @@ muxctl muxctl (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_led [GDW-1:0] (.O (gpio_o[23:16]), .IO(led_o), .I(gpio_i[23:16]), .T(gpio_o[23:16]));
+IOBUF iobuf_led [GDW-1:0] (.O (gpio_o[7:0]), .IO(led_o), .I(gpio_i[7:0]), .T(gpio_o[7:0]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO ports
 ////////////////////////////////////////////////////////////////////////////////
 
-assign gpio_i = {exp_n_io, exp_p_io};
+assign gpio_i [23:8] = {exp_n_io, exp_p_io};
 
 ////////////////////////////////////////////////////////////////////////////////
 // LA (DDR) extension connector
@@ -729,6 +731,8 @@ asg_top #(
   // System bus
   .bus       (sys[11])
 );
+
+assign axi_dtx[2].TVALID = 1'b0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)

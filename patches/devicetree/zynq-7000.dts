@@ -2,7 +2,7 @@
  * Remove the existing 'devcfg' node and replace it with a 'fpga_bus' node
  */
 
-/delete-node/ devcfg;
+/delete-node/ &devcfg;
 
 &amba { 
 	fpga_bus@f8007000 {
@@ -15,8 +15,8 @@
 			reg = <0xf8007000 0x100>;
 			interrupt-parent = <&intc>;
 			interrupts = <0 8 4>;
-			clocks = <&clkc 12>;
-			clock-names = "ref_clk";
+			clocks = <&clkc 12>, <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+			clock-names = "ref_clk", "fclk0", "fclk1", "fclk2", "fclk3";
 			syscon = <&slcr>;
 			#address-cells = <1>;
 			#size-cells = <1>;

@@ -32,7 +32,6 @@ TARGET=$(OUTPUT_DIR)/librp2.so
 
 # List of compiled object files
 OBJECTS =	pdm.o \
-		gpio.o \
 		id.o \
 		muxctl.o \
 		calib.o \
@@ -87,5 +86,7 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
+	mkdir -p $(INSTALL_DIR)/include/api2
 	cp  $(TARGET) $(INSTALL_DIR)/lib
 	cp -r ../include/* $(INSTALL_DIR)/include
+	cp -r *.h $(INSTALL_DIR)/include/api2

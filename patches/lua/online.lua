@@ -1,13 +1,13 @@
 package.path = package.path..";/opt/redpitaya/www/conf/lua/?.lua"
 
 local shell = require("shell")
-shell.execute("rm -fr /tmp/online.txt")
+--shell.execute("rm -fr /tmp/online.txt")
+shell.execute("> /tmp/online.txt")
 shell.execute("wget http://redpitaya.com/robots.txt -O /tmp/online.txt 2> /dev/null")
 
-fh,err = io.open("/tmp/online.txt", "r")
+local fh = io.open("/tmp/online.txt", "r")
 if not fh then
     ngx.status = 404
-    fh:close()
     return ngx.exit(ngx.HTTP_NOT_FOUND)
 end
 line = fh:read()

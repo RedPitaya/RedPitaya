@@ -11,6 +11,7 @@ cd prj/$::argv
 # define paths
 ################################################################################
 
+set path_brd brd
 set path_rtl rtl
 set path_ip  ip
 set path_sdc sdc
@@ -20,6 +21,12 @@ set path_sdk sdk
 
 file mkdir $path_out
 file mkdir $path_sdk
+
+################################################################################
+# list board files
+################################################################################
+
+set_param board.repoPaths [list $path_brd]
 
 ################################################################################
 # setup an in memory project
@@ -103,6 +110,7 @@ report_clock_utilization -file    $path_out/clock_util.rpt
 report_utilization       -file    $path_out/post_route_util.rpt
 report_power             -file    $path_out/post_route_power.rpt
 report_drc               -file    $path_out/post_imp_drc.rpt
+report_io                -file    $path_out/post_imp_io.rpt
 #write_verilog            -force   $path_out/bft_impl_netlist.v
 #write_xdc -no_fixed_only -force   $path_out/bft_impl.xdc
 
