@@ -60,6 +60,9 @@ add-apt-repository -yu ppa:redpitaya/zynq
 # development tools
 apt-get -y install build-essential less vim nano sudo u-boot-tools usbutils psmisc lsof
 apt-get -y install parted dosfstools
+
+# install file system tools
+apt-get -y install mtd-utils
 EOF_CHROOT
 
 . OS/debian/network.sh
@@ -85,9 +88,8 @@ rm -f $ROOT_DIR/zero.file
 # remove ARM emulation
 rm $ROOT_DIR/usr/bin/qemu-arm-static
 
-# disable chroot access with native execution
-rm $ROOT_DIR/etc/resolv.conf
 # create a tarball (without resolv.conf link, since it causes schroot issues)
+rm $ROOT_DIR/etc/resolv.conf
 tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
-# create resolv.conf link
+# recreate resolv.conf link
 ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf
