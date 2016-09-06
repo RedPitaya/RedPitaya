@@ -65,7 +65,7 @@
  * QSPI Flash specific code
  */
 
-&qspi: {
+&qspi {
       xlnx,fb-clk = <0x1>;
       xlnx,qspi-mode = <0x0>;
       flash0: s25fl128s@0 {
