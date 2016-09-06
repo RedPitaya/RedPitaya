@@ -82,7 +82,7 @@
         }, 500);
     }
 
-    UPD.checkUpdates = function(type = '') {
+    UPD.checkUpdates = function(type = '0.96') {
         $('#select_ver').hide();
         setTimeout(function() {
             $.ajax({
@@ -307,13 +307,13 @@ $(document).ready(function() {
 	$('#ecosystem_type').change(function(){
 		if ($(this).val() == '2') {
 			$('#warn').show();
-			UPD.checkUpdates('../beta_0.96');
+			UPD.checkUpdates('beta_0.96');
 		} else if ($(this).val() == '3') {
 			$('#warn').show();
-			UPD.checkUpdates('../dev');
+			UPD.checkUpdates('dev');
 		} else { // stable
 			$('#warn').hide();
-			UPD.checkUpdates();
+			UPD.checkUpdates('0.96');
 		}
 	});
 
