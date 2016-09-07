@@ -199,12 +199,12 @@ system system_i (
   .GPIO_tri_o (gpio_o),
   .GPIO_tri_t (gpio_t),
   // SPI
-  .SPI0_io1_i (spi0.miso_i),  .SPI0_io1_o (spi0.miso_o),  .SPI0_io1_t (spi0.miso_t),  // MISO <=> IO[1]
-  .SPI0_io0_i (spi0.mosi_i),  .SPI0_io0_o (spi0.mosi_o),  .SPI0_io0_t (spi0.mosi_t),  // MOSI <=> IO[0]
-  .SPI0_sck_i (spi0.sclk_i),  .SPI0_sck_o (spi0.sclk_o),  .SPI0_sck_t (spi0.sclk_t),
-  .SPI0_ss_i  (spi0.ss_i  ),  .SPI0_ss_o  (spi0.ss_o  ),  .SPI0_ss_t  (spi0.ss_t  ),
-                              .SPI0_ss1_o (spi0.ss1_o ),
-                              .SPI0_ss2_o (spi0.ss2_o ),
+  .SPI0_io1_i (spi0.io_i[1]),  .SPI0_io1_o (spi0.io_o[1]),  .SPI0_io1_t (spi0.io_t[1]),  // MISO <=> IO[1]
+  .SPI0_io0_i (spi0.io_i[0]),  .SPI0_io0_o (spi0.io_o[0]),  .SPI0_io0_t (spi0.io_t[0]),  // MOSI <=> IO[0]
+  .SPI0_sck_i (spi0.sck_i  ),  .SPI0_sck_o (spi0.sck_o  ),  .SPI0_sck_t (spi0.sck_t  ),
+  .SPI0_ss_i  (spi0.ss_i   ),  .SPI0_ss_o  (spi0.ss_o   ),  .SPI0_ss_t  (spi0.ss_t   ),
+                               .SPI0_ss1_o (spi0.ss1_o  ),
+                               .SPI0_ss2_o (spi0.ss2_o  ),
   // IRQ
   // TODO: actual interrupts should be connnected
   .IRQ_LG   (1'b0),

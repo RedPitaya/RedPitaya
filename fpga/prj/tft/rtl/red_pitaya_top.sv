@@ -377,10 +377,10 @@ logic [GDW-1:0] iomux_t;
 
 IOBUF iobuf_exp [GDW-1:0] (.O (iomux_i), .IO({exp_n_io, exp_p_io}), .I(iomux_o), .T(iomux_t));
 
-assign spi0.sclk_i = iomux_i [0+1];
-assign spi0.mosi_i = iomux_i [8+1];
-assign spi0.miso_i = iomux_i [0+2];
-assign spi0.ss_i   = iomux_i [8+2];
+assign spi0.sck_i   = iomux_i [0+1];
+assign spi0.io_i[0] = iomux_i [8+1];
+assign spi0.io_i[1] = iomux_i [0+2];
+assign spi0.ss_i    = iomux_i [8+2];
 
 //      N              P                   
 assign {gpio_i [08+1], gpio_i [08+0]} = {iomux_i [8+0], iomux_i [0+0]};
@@ -394,8 +394,8 @@ assign {gpio_i [16+7], gpio_i [16+6]} = {iomux_i [8+7], iomux_i [0+7]};
 
 //      N              P                   
 assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [08+1], gpio_o [08+0]};
-assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.mosi_o  , spi0.sclk_o  };
-assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o    , spi0.miso_o  };
+assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.io_o[1] , spi0.sck_o   };
+assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o    , spi0.io_o[1] };
 assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [08+7], spi0.ss1_o   };
 assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [16+1], gpio_o [16+0]};
 assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [16+3], gpio_o [16+2]};
@@ -404,8 +404,8 @@ assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [16+7], gpio_o [16+6]};
 
 //      N              P                   
 assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [08+1], gpio_t [08+0]};
-assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.mosi_t  , spi0.sclk_t  };
-assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t    , spi0.miso_t  };
+assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.io_t[0] , spi0.sck_t   };
+assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t    , spi0.io_t[1] };
 assign {iomux_t [8+3], iomux_t [0+3]} = {gpio_t [08+7], 1'b0         };
 assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [16+1], gpio_t [16+0]};
 assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [16+3], gpio_t [16+2]};
