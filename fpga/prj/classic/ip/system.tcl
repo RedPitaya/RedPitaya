@@ -155,6 +155,7 @@ proc create_root_design { parentCell } {
   # Create interface ports
   set DDR [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR ]
   set FIXED_IO [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_processing_system7:fixedio_rtl:1.0 FIXED_IO ]
+  set GPIO [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 GPIO ]
   set M_AXI_GP0 [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI_GP0 ]
   set_property -dict [ list \
 CONFIG.ADDR_WIDTH {32} \
@@ -162,6 +163,7 @@ CONFIG.DATA_WIDTH {32} \
 CONFIG.FREQ_HZ {125000000} \
 CONFIG.PROTOCOL {AXI3} \
  ] $M_AXI_GP0
+  set SPI0 [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:spi_rtl:1.0 SPI0 ]
   set S_AXI_HP0 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_HP0 ]
   set_property -dict [ list \
 CONFIG.ADDR_WIDTH {32} \
@@ -233,9 +235,6 @@ CONFIG.WUSER_WIDTH {0} \
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
-  set GPIO_I [ create_bd_port -dir I -from 23 -to 0 -type data GPIO_I ]
-  set GPIO_O [ create_bd_port -dir O -from 23 -to 0 -type data GPIO_O ]
-  set GPIO_T [ create_bd_port -dir O -from 23 -to 0 -type data GPIO_T ]
   set M_AXI_GP0_ACLK [ create_bd_port -dir I -type clk M_AXI_GP0_ACLK ]
   set_property -dict [ list \
 CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
@@ -354,6 +353,7 @@ CONFIG.PCW_EN_CLK1_PORT {1} \
 CONFIG.PCW_EN_CLK2_PORT {1} \
 CONFIG.PCW_EN_CLK3_PORT {1} \
 CONFIG.PCW_EN_EMIO_GPIO {1} \
+CONFIG.PCW_EN_EMIO_SPI0 {1} \
 CONFIG.PCW_EN_EMIO_TTC0 {1} \
 CONFIG.PCW_EN_ENET0 {1} \
 CONFIG.PCW_EN_I2C0 {1} \
@@ -362,6 +362,7 @@ CONFIG.PCW_EN_RST1_PORT {1} \
 CONFIG.PCW_EN_RST2_PORT {1} \
 CONFIG.PCW_EN_RST3_PORT {1} \
 CONFIG.PCW_EN_SDIO0 {1} \
+CONFIG.PCW_EN_SPI0 {1} \
 CONFIG.PCW_EN_SPI1 {1} \
 CONFIG.PCW_EN_TTC0 {1} \
 CONFIG.PCW_EN_UART0 {1} \
@@ -748,14 +749,14 @@ CONFIG.PCW_SDIO_PERIPHERAL_VALID {1} \
 CONFIG.PCW_SMC_PERIPHERAL_CLKSRC {IO PLL} \
 CONFIG.PCW_SMC_PERIPHERAL_DIVISOR0 {1} \
 CONFIG.PCW_SMC_PERIPHERAL_FREQMHZ {100} \
-CONFIG.PCW_SPI0_GRP_SS0_ENABLE {0} \
-CONFIG.PCW_SPI0_GRP_SS0_IO {<Select>} \
-CONFIG.PCW_SPI0_GRP_SS1_ENABLE {0} \
-CONFIG.PCW_SPI0_GRP_SS1_IO {<Select>} \
-CONFIG.PCW_SPI0_GRP_SS2_ENABLE {0} \
-CONFIG.PCW_SPI0_GRP_SS2_IO {<Select>} \
-CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {0} \
-CONFIG.PCW_SPI0_SPI0_IO {<Select>} \
+CONFIG.PCW_SPI0_GRP_SS0_ENABLE {1} \
+CONFIG.PCW_SPI0_GRP_SS0_IO {EMIO} \
+CONFIG.PCW_SPI0_GRP_SS1_ENABLE {1} \
+CONFIG.PCW_SPI0_GRP_SS1_IO {EMIO} \
+CONFIG.PCW_SPI0_GRP_SS2_ENABLE {1} \
+CONFIG.PCW_SPI0_GRP_SS2_IO {EMIO} \
+CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {1} \
+CONFIG.PCW_SPI0_SPI0_IO {EMIO} \
 CONFIG.PCW_SPI1_GRP_SS0_ENABLE {1} \
 CONFIG.PCW_SPI1_GRP_SS0_IO {MIO 13} \
 CONFIG.PCW_SPI1_GRP_SS1_ENABLE {0} \
@@ -1009,11 +1010,13 @@ CONFIG.PCW_ENET_RESET_POLARITY.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_ENET_RESET_SELECT.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_4K_TIMER.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_EMIO_GPIO.VALUE_SRC {DEFAULT} \
+CONFIG.PCW_EN_EMIO_SPI0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_EMIO_TTC0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_ENET0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_I2C0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_QSPI.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_SDIO0.VALUE_SRC {DEFAULT} \
+CONFIG.PCW_EN_SPI0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_SPI1.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_TTC0.VALUE_SRC {DEFAULT} \
 CONFIG.PCW_EN_UART0.VALUE_SRC {DEFAULT} \
@@ -1539,11 +1542,12 @@ CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP1 [get_bd_intf_pins axi_protocol_converter_0/S_AXI] [get_bd_intf_pins processing_system7/M_AXI_GP1]
   connect_bd_intf_net -intf_net processing_system7_0_ddr [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_fixed_io [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7/FIXED_IO]
+  connect_bd_intf_net -intf_net processing_system7_GPIO_0 [get_bd_intf_ports GPIO] [get_bd_intf_pins processing_system7/GPIO_0]
+  connect_bd_intf_net -intf_net processing_system7_SPI_0 [get_bd_intf_ports SPI0] [get_bd_intf_pins processing_system7/SPI_0]
   connect_bd_intf_net -intf_net s_axi_hp0_1 [get_bd_intf_ports S_AXI_HP0] [get_bd_intf_pins processing_system7/S_AXI_HP0]
   connect_bd_intf_net -intf_net s_axi_hp1_1 [get_bd_intf_ports S_AXI_HP1] [get_bd_intf_pins processing_system7/S_AXI_HP1]
 
   # Create port connections
-  connect_bd_net -net GPIO_I_1 [get_bd_ports GPIO_I] [get_bd_pins processing_system7/GPIO_I]
   connect_bd_net -net m_axi_gp0_aclk_1 [get_bd_ports M_AXI_GP0_ACLK] [get_bd_pins processing_system7/M_AXI_GP0_ACLK]
   connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_protocol_converter_0/aresetn] [get_bd_pins proc_sys_reset/interconnect_aresetn]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins proc_sys_reset/peripheral_aresetn] [get_bd_pins xadc/s_axi_aresetn]
@@ -1555,8 +1559,6 @@ CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
   connect_bd_net -net processing_system7_0_fclk_reset1_n [get_bd_ports FCLK_RESET1_N] [get_bd_pins processing_system7/FCLK_RESET1_N]
   connect_bd_net -net processing_system7_0_fclk_reset2_n [get_bd_ports FCLK_RESET2_N] [get_bd_pins processing_system7/FCLK_RESET2_N]
   connect_bd_net -net processing_system7_0_fclk_reset3_n [get_bd_ports FCLK_RESET3_N] [get_bd_pins proc_sys_reset/ext_reset_in] [get_bd_pins processing_system7/FCLK_RESET3_N]
-  connect_bd_net -net processing_system7_GPIO_O [get_bd_ports GPIO_O] [get_bd_pins processing_system7/GPIO_O]
-  connect_bd_net -net processing_system7_GPIO_T [get_bd_ports GPIO_T] [get_bd_pins processing_system7/GPIO_T]
   connect_bd_net -net s_axi_hp0_aclk [get_bd_ports S_AXI_HP0_aclk] [get_bd_pins processing_system7/S_AXI_HP0_ACLK]
   connect_bd_net -net s_axi_hp1_aclk [get_bd_ports S_AXI_HP1_aclk] [get_bd_pins processing_system7/S_AXI_HP1_ACLK]
   connect_bd_net -net xadc_ip2intc_irpt [get_bd_pins processing_system7/IRQ_F2P] [get_bd_pins xadc/ip2intc_irpt]
@@ -1572,66 +1574,66 @@ CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
   regenerate_bd_layout -layout_string {
    guistr: "# # String gsaved with Nlview 6.5.12  2016-01-29 bk=1.3547 VDI=39 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
-preplace port FCLK_CLK3 -pg 1 -y 310 -defaultsOSRD
-preplace port S_AXI_HP1 -pg 1 -y 180 -defaultsOSRD
-preplace port DDR -pg 1 -y 90 -defaultsOSRD
-preplace port Vp_Vn -pg 1 -y 910 -defaultsOSRD
-preplace port Vaux0 -pg 1 -y 930 -defaultsOSRD
-preplace port M_AXI_GP0_ACLK -pg 1 -y 200 -defaultsOSRD
-preplace port FCLK_RESET0_N -pg 1 -y 330 -defaultsOSRD
-preplace port Vaux1 -pg 1 -y 950 -defaultsOSRD
-preplace port S_AXI_HP0_aclk -pg 1 -y 240 -defaultsOSRD
-preplace port M_AXI_GP0 -pg 1 -y 150 -defaultsOSRD
-preplace port FCLK_RESET1_N -pg 1 -y 350 -defaultsOSRD
-preplace port S_AXI_HP1_aclk -pg 1 -y 260 -defaultsOSRD
-preplace port FCLK_RESET3_N -pg 1 -y 390 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -y 110 -defaultsOSRD
-preplace port FCLK_RESET2_N -pg 1 -y 370 -defaultsOSRD
-preplace port FCLK_CLK0 -pg 1 -y 250 -defaultsOSRD
-preplace port FCLK_CLK1 -pg 1 -y 270 -defaultsOSRD
-preplace port Vaux8 -pg 1 -y 970 -defaultsOSRD
-preplace port FCLK_CLK2 -pg 1 -y 290 -defaultsOSRD
-preplace port Vaux9 -pg 1 -y 990 -defaultsOSRD
-preplace port S_AXI_HP0 -pg 1 -y 160 -defaultsOSRD
-preplace portBus GPIO_T -pg 1 -y 70 -defaultsOSRD
-preplace portBus GPIO_I -pg 1 -y 20 -defaultsOSRD
-preplace portBus GPIO_O -pg 1 -y 50 -defaultsOSRD
-preplace inst xlconstant -pg 1 -lvl 1 -y 680 -defaultsOSRD
-preplace inst axi_protocol_converter_0 -pg 1 -lvl 2 -y 520 -defaultsOSRD
-preplace inst processing_system7 -pg 1 -lvl 2 -y 200 -defaultsOSRD
-preplace inst xadc -pg 1 -lvl 2 -y 960 -defaultsOSRD
-preplace inst proc_sys_reset -pg 1 -lvl 2 -y 680 -defaultsOSRD
+preplace port FCLK_CLK3 -pg 1 -y 600 -defaultsOSRD
+preplace port S_AXI_HP1 -pg 1 -y 320 -defaultsOSRD
+preplace port DDR -pg 1 -y 80 -defaultsOSRD
+preplace port Vp_Vn -pg 1 -y 1200 -defaultsOSRD
+preplace port Vaux0 -pg 1 -y 1220 -defaultsOSRD
+preplace port M_AXI_GP0_ACLK -pg 1 -y 340 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 620 -defaultsOSRD
+preplace port Vaux1 -pg 1 -y 1240 -defaultsOSRD
+preplace port S_AXI_HP0_aclk -pg 1 -y 380 -defaultsOSRD
+preplace port M_AXI_GP0 -pg 1 -y 440 -defaultsOSRD
+preplace port FCLK_RESET1_N -pg 1 -y 640 -defaultsOSRD
+preplace port S_AXI_HP1_aclk -pg 1 -y 400 -defaultsOSRD
+preplace port FCLK_RESET3_N -pg 1 -y 680 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 100 -defaultsOSRD
+preplace port FCLK_RESET2_N -pg 1 -y 660 -defaultsOSRD
+preplace port FCLK_CLK0 -pg 1 -y 540 -defaultsOSRD
+preplace port FCLK_CLK1 -pg 1 -y 560 -defaultsOSRD
+preplace port Vaux8 -pg 1 -y 1260 -defaultsOSRD
+preplace port FCLK_CLK2 -pg 1 -y 580 -defaultsOSRD
+preplace port Vaux9 -pg 1 -y 1280 -defaultsOSRD
+preplace port S_AXI_HP0 -pg 1 -y 300 -defaultsOSRD
+preplace portBus GPIO_T -pg 1 -y 60 -defaultsOSRD
+preplace portBus GPIO_I -pg 1 -y -70 -defaultsOSRD
+preplace portBus GPIO_O -pg 1 -y 40 -defaultsOSRD
+preplace inst xlconstant -pg 1 -lvl 1 -y 970 -defaultsOSRD
+preplace inst axi_protocol_converter_0 -pg 1 -lvl 2 -y 810 -defaultsOSRD
+preplace inst processing_system7 -pg 1 -lvl 2 -y 340 -defaultsOSRD
+preplace inst xadc -pg 1 -lvl 2 -y 1250 -defaultsOSRD
+preplace inst proc_sys_reset -pg 1 -lvl 2 -y 970 -defaultsOSRD
 preplace netloc processing_system7_0_ddr 1 2 1 N
-preplace netloc Vaux0_1 1 0 2 NJ 930 N
-preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 160 590 680
-preplace netloc s_axi_hp0_1 1 0 2 NJ 160 N
-preplace netloc GPIO_I_1 1 0 3 NJ -40 NJ -40 690
+preplace netloc Vaux0_1 1 0 2 NJ 1220 N
+preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 150 740 660
+preplace netloc s_axi_hp0_1 1 0 2 NJ 300 N
+preplace netloc GPIO_I_1 1 0 3 NJ -70 NJ -70 650
 preplace netloc processing_system7_GPIO_O 1 2 1 N
 preplace netloc processing_system7_0_fclk_reset2_n 1 2 1 N
 preplace netloc processing_system7_0_M_AXI_GP0 1 2 1 N
 preplace netloc xlconstant_dout 1 1 1 NJ
+preplace netloc xadc_ip2intc_irpt 1 1 2 140 1080 650
 preplace netloc processing_system7_0_fclk_reset1_n 1 2 1 N
-preplace netloc processing_system7_0_M_AXI_GP1 1 1 2 160 450 670
-preplace netloc Vp_Vn_1 1 0 2 NJ 910 N
-preplace netloc xadc_ip2intc_irpt 1 1 2 130 1130 650
-preplace netloc s_axi_hp0_aclk 1 0 2 NJ 240 N
-preplace netloc s_axi_hp1_1 1 0 2 NJ 180 N
-preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 2 150 770 650
-preplace netloc axi_protocol_converter_0_M_AXI 1 1 2 160 780 670
-preplace netloc Vaux8_1 1 0 2 NJ 970 N
+preplace netloc processing_system7_0_M_AXI_GP1 1 1 2 160 730 650
+preplace netloc Vp_Vn_1 1 0 2 NJ 1200 N
+preplace netloc s_axi_hp0_aclk 1 0 2 NJ 380 N
+preplace netloc s_axi_hp1_1 1 0 2 NJ 320 N
+preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 2 160 880 650
+preplace netloc axi_protocol_converter_0_M_AXI 1 1 2 160 1060 660
+preplace netloc Vaux8_1 1 0 2 NJ 1260 N
 preplace netloc processing_system7_GPIO_T 1 2 1 N
-preplace netloc s_axi_hp1_aclk 1 0 2 NJ 260 N
+preplace netloc s_axi_hp1_aclk 1 0 2 NJ 400 N
 preplace netloc processing_system7_0_fclk_reset0_n 1 2 1 N
 preplace netloc processing_system7_0_fixed_io 1 2 1 N
-preplace netloc Vaux9_1 1 0 2 NJ 990 N
+preplace netloc Vaux9_1 1 0 2 NJ 1280 N
 preplace netloc processing_system7_0_fclk_clk0 1 2 1 N
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 2 150 790 660
-preplace netloc Vaux1_1 1 0 2 NJ 950 N
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 2 150 1070 650
+preplace netloc Vaux1_1 1 0 2 NJ 1240 N
 preplace netloc processing_system7_0_fclk_clk1 1 2 1 N
-preplace netloc m_axi_gp0_aclk_1 1 0 2 NJ 200 N
+preplace netloc m_axi_gp0_aclk_1 1 0 2 NJ 340 N
 preplace netloc processing_system7_0_fclk_clk2 1 2 1 N
-preplace netloc processing_system7_0_fclk_clk3 1 1 2 140 440 690
-levelinfo -pg 1 -40 60 430 840 -top -50 -bot 1140
+preplace netloc processing_system7_0_fclk_clk3 1 1 2 130 -50 660
+levelinfo -pg 1 -40 60 430 760 -top -90 -bot 1430
 ",
 }
 
