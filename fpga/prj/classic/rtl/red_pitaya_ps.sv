@@ -231,7 +231,7 @@ assign fclk_rstn_o = fclk_rstn;
 
 BUFG fclk_buf [4-1:0] (.O(fclk_clk_o), .I(fclk_clk));
 
-system_wrapper system_i (
+system system_i (
   // MIO
   .FIXED_IO_mio      (FIXED_IO_mio     ),
   .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
@@ -312,9 +312,24 @@ system_wrapper system_i (
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
   .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
   // GPIO
-  .GPIO_I (gpio_i),
-  .GPIO_O (gpio_o),
-  .GPIO_T (gpio_t),
+  .GPIO_tri_i (gpio_i),
+  .GPIO_tri_o (gpio_o),
+  .GPIO_tri_t (gpio_t),
+  // SPI
+  .SPI0_io0_i (1'b0),
+  .SPI0_io0_o (),
+  .SPI0_io0_t (),
+  .SPI0_io1_i (1'b0),
+  .SPI0_io1_o (),
+  .SPI0_io1_t (),
+  .SPI0_sck_i (1'b0),
+  .SPI0_sck_o (),
+  .SPI0_sck_t (),
+  .SPI0_ss1_o (),
+  .SPI0_ss2_o (),
+  .SPI0_ss_i  (1'b0),
+  .SPI0_ss_o  (),
+  .SPI0_ss_t  (),
   // HP0                                  // HP1
   .S_AXI_HP0_arready (hp0_saxi_arready),  .S_AXI_HP1_arready (hp1_saxi_arready), // out
   .S_AXI_HP0_awready (hp0_saxi_awready),  .S_AXI_HP1_awready (hp1_saxi_awready), // out

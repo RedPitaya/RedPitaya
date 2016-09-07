@@ -98,7 +98,7 @@ assign fclk_rstn_o = fclk_rstn;
 
 BUFG fclk_buf [4-1:0] (.O(fclk_clk_o), .I(fclk_clk));
 
-system_wrapper system_i (
+system system_i (
   // MIO
   .FIXED_IO_mio      (FIXED_IO_mio     ),
   .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
@@ -195,16 +195,16 @@ system_wrapper system_i (
   .M_AXI_STR_TX1_tready  (stx[1].TREADY ),  .M_AXI_STR_TX0_tready  (stx[0].TREADY ),
   .M_AXI_STR_TX1_tvalid  (stx[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (stx[0].TVALID ),
   // GPIO
-  .GPIO_I (gpio_i),
-  .GPIO_O (gpio_o),
-  .GPIO_T (gpio_t),
+  .GPIO_tri_i (gpio_i),
+  .GPIO_tri_o (gpio_o),
+  .GPIO_tri_t (gpio_t),
   // SPI
-  .SPI0_MISO_I (spi0.miso_i),  .SPI0_MISO_O (spi0.miso_o),  .SPI0_MISO_T (spi0.miso_t),
-  .SPI0_MOSI_I (spi0.mosi_i),  .SPI0_MOSI_O (spi0.mosi_o),  .SPI0_MOSI_T (spi0.mosi_t),
-  .SPI0_SCLK_I (spi0.sclk_i),  .SPI0_SCLK_O (spi0.sclk_o),  .SPI0_SCLK_T (spi0.sclk_t),
-  .SPI0_SS_I   (spi0.ss_i  ),  .SPI0_SS_O   (spi0.ss_o  ),  .SPI0_SS_T   (spi0.ss_t  ),
-                               .SPI0_SS1_O  (spi0.ss1_o ),
-                               .SPI0_SS2_O  (spi0.ss2_o ),
+  .SPI0_io1_i (spi0.miso_i),  .SPI0_io1_o (spi0.miso_o),  .SPI0_io1_t (spi0.miso_t),  // MISO <=> IO[1]
+  .SPI0_io0_i (spi0.mosi_i),  .SPI0_io0_o (spi0.mosi_o),  .SPI0_io0_t (spi0.mosi_t),  // MOSI <=> IO[0]
+  .SPI0_sck_i (spi0.sclk_i),  .SPI0_sck_o (spi0.sclk_o),  .SPI0_sck_t (spi0.sclk_t),
+  .SPI0_ss_i  (spi0.ss_i  ),  .SPI0_ss_o  (spi0.ss_o  ),  .SPI0_ss_t  (spi0.ss_t  ),
+                              .SPI0_ss1_o (spi0.ss1_o ),
+                              .SPI0_ss2_o (spi0.ss2_o ),
   // IRQ
   // TODO: actual interrupts should be connnected
   .IRQ_LG   (1'b0),
