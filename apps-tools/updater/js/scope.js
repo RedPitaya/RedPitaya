@@ -276,10 +276,10 @@ function checkDev() {
         type: 'GET',
     }).fail(function(msg) {
 		if (msg[0] == 'd')
-			$('#ecosystem_type').append($('<option>', { value: '3', text: 'Dev'}));
+			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
     }).done(function(msg) {
 		if (msg[0] == 'd')
-			$('#ecosystem_type').append($('<option>', { value: '3', text: 'Dev'}));
+			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
     })
 }
 
@@ -291,7 +291,6 @@ $(document).ready(function() {
 
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
-		$('#warn').hide();
         if (UPD.currentVer == undefined)
             return;
         var val = $('#ecosystem_ver').val();
@@ -312,15 +311,18 @@ $(document).ready(function() {
 
     });
 	$('#ecosystem_type').change(function(){
-		if ($(this).val() == '2') {
-			$('#warn').show();
-			UPD.type = 'beta_0.97';
-		} else if ($(this).val() == '3') {
-			$('#warn').show();
-			UPD.type = 'dev';
-		} else { // stable
+		if ($(this).val() == '1') {
+			$('#warn').hide();
+			UPD.type = '0.96';
+		} else if ($(this).val() == '2') {
 			$('#warn').hide();
 			UPD.type = '0.97';
+		} else if ($(this).val() == '3') {
+			$('#warn').show();
+			UPD.type = 'beta_0.97';
+		} else if ($(this).val() == '4') {
+			$('#warn').show();
+			UPD.type = 'dev';
 		}
 		UPD.checkUpdates(UPD.type);
 	});
