@@ -230,7 +230,7 @@ $(ZIPFILE): install
 	mkdir -p               $(INSTALL_DIR)/fpga
 	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
 	cd                     $(INSTALL_DIR)/fpga; xz -df *.xz
-	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga_classic.bit
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
