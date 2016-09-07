@@ -147,7 +147,7 @@ logic                 ser_clk ;
 logic                 pwm_clk ;
 logic                 pwm_rstn;
 
-// ADC signals
+// ADC clock/reset
 logic                 adc_clk;
 logic                 adc_rstn;
 
@@ -523,4 +523,4 @@ red_pitaya_pid i_pid (
   .sys_ack         (  sys_ack[3]    )   // acknowledge signal
 );
 
-endmodule
+endmodule: red_pitaya_top
