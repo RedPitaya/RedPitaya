@@ -263,9 +263,13 @@ UPD.getChangelog = function(ecosystem) {
 		type: 'GET',
 	})
 	.fail(function(msg) {
+		if (msg == "")
+			msg = "Changelog is empty";
 		$('#changelog_text').html(msg);
 	})
 	.done(function(msg) {
+		if (msg == "")
+			msg = "Changelog is empty";
 		$('#changelog_text').html(msg);
 	})
 }
