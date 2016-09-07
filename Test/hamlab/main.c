@@ -55,6 +55,7 @@ int main(int argc, char *argv[]){
 	       	        // if 0x14 then add overlay for i2c mux
 			switch(res){
 				case 0x0a://if 0x0a powerm hamlab 
+					printf("HAMLAB PWRM %s %d \n",filename,res);
 					//insert adt7470 0x5c overlay or somehow enable this driver 
 					//there is no compatible line inside this driver, so it will probably allways stay in kernel, just find a way to set temperature
 
@@ -63,10 +64,13 @@ int main(int argc, char *argv[]){
 					//insert adt7470 0x5c overlay or somehow enable this driver
 				break;
 				case 0x14://if 0x14 hamlab motherboard with i2cmux 2x pca9555 0x200x21
+					printf("HAMLAB EXTM %s %d \n",filename,res);
 					//insert overlay for i2c mux
-					system("bash /root/hamlab_i2cmux.sh");
+					system("bash hamlab_i2cmux.sh");
+					printf("i2c expander overlay inserted\n");
 					//set init state of relays
-					
+					system("../hvlvacdc/main -i -1 1 -2 1");
+					system("../laosc/main -o");
 				break;
 				case 0x15:// if 0x15 eelab motherboard with i2cmux 2x pca9555 0x20 0x21
 					//insert overlay for i2c mux
@@ -78,8 +82,10 @@ int main(int argc, char *argv[]){
 				case 0x50:// if 0x50 eelab bench power supplay
 				break;
 				case 0x80:// if 0x80 0.8m-10m filters
+					printf("HAMLAB C25 %s %d \n",filename,res);
 				break;
 				case 0x94:// if 0x94 preselector
+					printf("HAMLAB C25 %s %d \n",filename,res);
 				break;
 				case 0xc8:// if 0xc8 power probe
 				break;
