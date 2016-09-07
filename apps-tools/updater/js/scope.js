@@ -262,13 +262,8 @@ UPD.getChangelog = function(ecosystem) {
 		url: '/update_changelog?id=' + ecosystem,
 		type: 'GET',
 	})
-	.fail(function(msg) {
-		if (msg == "")
-			msg = "Changelog is empty";
-		$('#changelog_text').html(msg);
-	})
 	.done(function(msg) {
-		if (msg == "")
+		if (msg.length < 3)
 			msg = "Changelog is empty";
 		$('#changelog_text').html(msg);
 	})
