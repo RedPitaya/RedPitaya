@@ -56,17 +56,21 @@ int main(int argc, char *argv[]){
 			switch(res){
 				case 0x0a://if 0x0a powerm hamlab 
 					//insert adt7470 0x5c overlay or somehow enable this driver 
+					//there is no compatible line inside this driver, so it will probably allways stay in kernel, just find a way to set temperature
+
 				break;
 				case 0x0b:// if 0x0b powerm eelab  
 					//insert adt7470 0x5c overlay or somehow enable this driver
 				break;
 				case 0x14://if 0x14 hamlab motherboard with i2cmux 2x pca9555 0x200x21
 					//insert overlay for i2c mux
-					//insert overlay for gpio expander
+					system("bash /root/hamlab_i2cmux.sh");
+					//set init state of relays
+					
 				break;
 				case 0x15:// if 0x15 eelab motherboard with i2cmux 2x pca9555 0x20 0x21
 					//insert overlay for i2c mux
-					//insert overlay for gpio expander
+					//set init state of relays
 				break;
 				case 0x32:// if 0x32 eelab dmm	
 					//gpios maybe
