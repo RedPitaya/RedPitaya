@@ -428,7 +428,7 @@ assign {gpio_i [16+7], gpio_i [16+6]} = {iomux_i [8+7], iomux_i [0+7]};
 
 //      N              P                   
 assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [08+1], gpio_o [08+0]};
-assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.io_o[1] , spi0.sck_o   };
+assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.io_o[0] , spi0.sck_o   };
 assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o    , spi0.io_o[1] };
 assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [08+7], spi0.ss1_o   };
 assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [16+1], gpio_o [16+0]};

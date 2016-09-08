@@ -6,7 +6,7 @@ interface spi_if #(
 logic sck_i;
 logic sck_o;
 logic sck_t;
-// quad IO [MOSI, MISO, WP#, HOLD#]
+// quad IO [HOLD#, WP#, MISO, MOSI]
 logic [4-1:0] io_i;
 logic [4-1:0] io_o;
 logic [4-1:0] io_t;
