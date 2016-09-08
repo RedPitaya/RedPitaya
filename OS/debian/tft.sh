@@ -4,17 +4,11 @@ apt-get -y install fake-hwclock \
   xfonts-base tightvncserver xfce4-panel xfce4-session xfwm4 xfdesktop4 \
   xfce4-terminal thunar gnome-icon-theme \
   xserver-xorg xinit xserver-xorg-video-fbdev
-
-X11DIR=$root_dir/usr/share/X11/xorg.conf.d
-mkdir -p $X11DIR
-cat << EOF_FBDEV > $X11DIR/99-fbdev.conf
-Section "Device"  
-  Identifier "myfb"
-  Driver "fbdev"
-  Option "fbdev" "/dev/fb0"
-EndSection
-EOF_FBDEV
+apt-get -y install xinput evtest
 
 #echo te-audio-codec >> $root_dir/etc/modules
 
 EOF_CHROOT
+
+install -v -m 664 -o root -D $OVERLAY/usr/share/X11/xorg.conf.d/99-fbdev.conf $ROOT_DIR/usr/share/X11/xorg.conf.d/99-fbdev.conf
+install -v -m 664 -o root -D $OVERLAY/etc/X11/xinit/xinitrc                   $ROOT_DIR/etc/X11/xinit/xinitrc
