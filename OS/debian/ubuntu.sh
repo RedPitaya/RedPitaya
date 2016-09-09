@@ -68,7 +68,7 @@ EOF_CHROOT
 . OS/debian/network.sh
 . OS/debian/redpitaya.sh
 #. OS/debian/wyliodrin.sh
-. OS/debian/tft.sh
+#. OS/debian/tft.sh
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
