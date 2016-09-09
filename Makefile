@@ -90,8 +90,8 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 
 WEBSOCKETPP_TAG = 0.7.0
-LUANGINX_TAG    = v0.10.2
-NGINX_TAG       = 1.10.0
+LUANGINX_TAG    = v0.10.6
+NGINX_TAG       = 1.10.1
 SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
@@ -220,15 +220,16 @@ MONITOR_DIR     = Test/monitor
 MONITOR_OLD_DIR = Test/monitor_old
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
+GENERATOR_DIR	= Test/generate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 DISCOVERY_DIR   = Test/discovery
 LA_TEST_DIR     = api2/test
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old calib calibrate discovery laboardtest
+.PHONY: lcr bode monitor monitor_old generator calib calibrate discovery laboardtest
 
-examples: lcr bode monitor monitor_old calib discovery
+examples: lcr bode monitor monitor_old calib generator discovery
 # calibrate laboardtest
 
 lcr:
@@ -251,6 +252,10 @@ monitor_old:
 	$(MAKE) -C $(MONITOR_OLD_DIR)
 	$(MAKE) -C $(MONITOR_OLD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+generator:
+	$(MAKE) -C $(GENERATOR_DIR) clean
+	$(MAKE) -C $(GENERATOR_DIR)
+	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
@@ -357,10 +362,11 @@ APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
+APP_BA_PRO_DIR 		= Applications/ba_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
-apps-pro: scopegenpro spectrumpro lcr_meter la_pro
+apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
@@ -381,6 +387,11 @@ la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+ba_pro: api $(NGINX)
+	$(MAKE) -C $(APP_BA_PRO_DIR) clean
+	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 else
 

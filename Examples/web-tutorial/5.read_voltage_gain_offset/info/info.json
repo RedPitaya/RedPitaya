@@ -1,0 +1,6 @@
+{
+    "name": "Read voltage (gain + offset)",
+    "version": "0.94-31",
+    "revision": "ca8ae99",
+    "description": "Read voltage from slow input on the Red Pitaya"
+}

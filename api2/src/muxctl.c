@@ -29,24 +29,9 @@ int rp_MuxctlClose(rp_handle_uio_t *handle) {
 
 int rp_MuxctlReset(rp_handle_uio_t *handle) {
     muxctl_regset_t *regset = (muxctl_regset_t *) handle->regset;
-    iowrite32(0, &regset->gpio);
     iowrite32(0, &regset->loop);
     iowrite32(0, &regset->gen );
     iowrite32(0, &regset->lg  );
-    return RP_OK;
-}
-
-// GPIO
-
-int rp_MuxctlSetGpio(rp_handle_uio_t *handle, uint32_t mux) {
-    muxctl_regset_t *regset = (muxctl_regset_t *) handle->regset;
-    iowrite32(mux, &regset->gpio);
-    return RP_OK;
-}
-
-int rp_MuxctlGetGpio(rp_handle_uio_t *handle, uint32_t *mux) {
-    muxctl_regset_t *regset = (muxctl_regset_t *) handle->regset;
-    *mux = ioread32(&regset->gpio);
     return RP_OK;
 }
 

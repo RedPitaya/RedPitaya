@@ -1,4 +1,19 @@
+# Prerequisites
+
+libraries used by ModelSim-Altera software:
+    libxft2 
+    libxft2:i386
+    lib32ncurses5
+
 # Directory structure
+
+Initially there was a single FPGA project containing all functionality intended to be used by all applications.
+Ideally we would maintain this project by fixing bugs and adding new functionality, but there are limits to
+how much functionality can be compiled into a FPGA and developers are not always able to keep backward compatibility.
+
+So there are now multiple FPGA projects, some with generic functionality, some with specific functionality for an application.
+Common code for all projects is placed directly into the `fpga` directory. Common code are mostly reusable modules.
+Project specific code is placed inside the `fpga/prj/name/` directories and is similarly organized as common code.
 
 |  path           | contents
 |-----------------|-------------------------------------------------------------
@@ -6,11 +21,14 @@
 | `fpga/*.tcl`    | TCL scripts to be run inside FPGA tools
 | `fpga/archive/` | archive of XZ compressed FPGA bit files
 | `fpga/doc/`     | documentation (block diagrams, address space, ...)
+| `fpga/brd/`     | board files [Vivado System-Level Design Entry](http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf))
 | `fpga/ip/`      | third party IP, for now Zynq block diagrams
 | `fpga/rtl/`     | Verilog (SystemVerilog) "Register-Transfer Level"
 | `fpga/sdc/`     | "Synopsys Design Constraints" contains Xilinx design constraints
 | `fpga/sim/`     | simulation scripts
 | `fpga/tbn/`     | Verilog (SystemVerilog) "test bench"
+| `fpga/dts/`     | device tree source files
+| `fpga/prj/name` | project specific code
 |                 |
 | `fpga/hsi/`     | "Hardware Software Interface" contains FSBL (First Stage Boot Loader) and DTS (Design Tree) builds
 
@@ -27,20 +45,41 @@ The next scripts perform various tasks:
 
 | TCL script                      | action
 |---------------------------------|---------------------------------------------
-| `red_pitaya_hsi_dram_test.tcl`  | should create the `zynq_dram_test` but the produced binary can not be run from a SD card
-| `red_pitaya_hsi_dts.tcl`        | creates device tree sources
-| `red_pitaya_hsi_fsbl.tcl`       | creates FSBL executable binary
-| `red_pitaya_vivado_project.tcl` | creates a Vivado project for graphical editing
 | `red_pitaya_vivado.tcl`         | creates the bitstream and reports
+| `red_pitaya_vivado_project.tcl` | creates a Vivado project for graphical editing
+| `red_pitaya_hsi_fsbl.tcl`       | creates FSBL executable binary
+| `red_pitaya_hsi_dts.tcl`        | creates device tree sources
 
-To generate a bit file, reports, device tree and FSBL, run:
+To generate a bit file, reports, device tree and FSBL, run (replace `name` with project name):
 ```bash
-make
+make PRJ=name
 ```
 
 To generate and open a Vivado project using GUI, run:
 ```bash
 make project
+```
+
+# Simulation
+
+ModelSim as provided for free from Altera is used to run simulations. Scripts expect the default install location. On Ubuntu the inslall process fails to create an appropriate path to executable files, so this path must be created:
+```bash
+ln -s $HOME/altera/16.0/modelsim_ase/linux $HOME/altera/16.0/modelsim_ase/linux_rh60
+```
+
+To run simmulation, Vivado tools have to be installed, but there is no need to source `settings.sh` for not the path to the ModelSim simulator is hardcoded into the simulation `Makefile`.
+```bash
+cd fpga/sim
+```
+
+Simulations can be run by running `make` with the bench file name as target:
+```bash
+make top_tb
+```
+
+Some simulations have a waveform window configuration script like `top_tb.tcl` which will prepare an organized waveform window.
+```bash
+make top_tb WAV=1
 ```
 
 # Device tree
@@ -112,34 +151,66 @@ Range: 1V / ratio = 7.01
 
 For now only LED8 and LED9 are accessible using a kernel driver. LED [7:0] are not driven by a kernel driver, since the Linux GPIO/LED subsystem does not allow access to multiple pins simultaneously.
 
-### Linux access to GPIO
+### Linux access to GPIO/LED
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
-The base value of `MIO` GPIOs was determined to be `906`.
+There are 54+64=118 GPIO provided by ZYNQ PS, MIO provides 54 GPIO,
+and EMIO provide additional 64 GPIO.
+
+The next formula is used to calculate the `gpio_base` index.
+```
+base_gpio = ZYNQ_GPIO_NR_GPIOS - ARCH_NR_GPIOS = 1024 - 118 = -906
+```
+
+Values for the used macros can be found in the kernel sources.
 ```bash
-redpitaya> find /sys/class/gpio/ -name gpiochip*
+$ grep ZYNQ_GPIO_NR_GPIOS drivers/gpio/gpio-zynq.c
+#define	ZYNQ_GPIO_NR_GPIOS	118
+$ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2016.1
+tmp/linux-xlnx-xilinx-v2016.1/.config:CONFIG_ARCH_NR_GPIO=1024
+```
+
+Another way to find the `gpio_base` index is to check the given name inside `sysfs`.
+```bash
+# find /sys/class/gpio/ -name gpiochip*
 /sys/class/gpio/gpiochip906
 ```
 
-GPIOs are accessible at base value + MIO index:
+The default pin assignment for GPIO is described in the next table.
+
+| LED     | color  | GPIO             | MIO/EMIO index | `sysfs` index              | dedicated meaning     |
+|---------|--------|------------------|----------------|----------------------------|-----------------------|
+|         |        | `exp_p_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` |
+|         |        | `exp_n_io [7:0]` | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` |
+| `[7:0]` | yellow |                  | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` |
+| `  [8]` | yellow |                  | `MIO[0]`       | `906+   [0]    = 906`      | CPU heartbeat (user defined)
+| `  [9]` | reg    |                  | `MIO[7]`       | `906+   [7]    = 913`      | SD card access (user defined)
+
+GPIOs are accessible at the `sysfs` index.
+The next example will light up LED[0], and read back its value.
 ```bash
-echo 906 > /sys/class/gpio/export
-echo 913 > /sys/class/gpio/export
+export INDEX=960
+echo $INDEX > /sys/class/gpio/export
+echo out    > /sys/class/gpio/gpio$INDEX/direction
+echo 1      > /sys/class/gpio/gpio$INDEX/value
+echo          /sys/class/gpio/gpio$INDEX/value
 ```
+
+**NOTE**: A new userspace ABI for GPIO is comming in kernel v4.8, ioctl will be used instead of sysfs.
+https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next
 
 ### Linux access to LED
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
 By providing GPIO/LED details in the device tree, it is possible to access LEDs using a dedicated kernel interface.
-NOTE: only LED 8 and LED 9 support this interface for now.
 
 To show CPU load on LED 9 use:
 ```bash
 echo heartbeat > /sys/class/leds/led9/trigger
 ```
-To switch LED 8 on use:
+To switch LED 8 ON use:
 ```bash
 echo 1 > /sys/class/leds/led8/brightness
 ```

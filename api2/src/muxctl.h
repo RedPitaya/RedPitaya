@@ -23,7 +23,6 @@ static const int MUXCTL_BASE_SIZE = 0x30;
 
 // Muxctl structure declaration
 typedef struct {
-  uint32_t gpio;
   uint32_t loop;
   uint32_t gen ;
   uint32_t lg  ;

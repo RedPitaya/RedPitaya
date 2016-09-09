@@ -44,6 +44,13 @@ apt-get -y install libcurl4-openssl-dev
 apt-get -y install libssl-dev
 apt-get -y install libjpeg-dev
 
+# JSON libraries
+apt-get -y install libjson-c-dev rapidjson-dev
+# Websockets++ library
+apt-get -y install libwebsocketpp-dev
+# IIO library
+apt-get -y install libiio-dev
+
 # libraries used by lcrmeter
 sudo apt-get install -y libi2c-dev i2c-tools
 

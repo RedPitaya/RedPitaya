@@ -15,8 +15,7 @@ different places one would expect.
 | apps-free    | WEB application for the old environment (also with controller modules & GUI clients).
 | apps-tools   | WEB interface home page and some system management applications
 | Bazaar       | Nginx server with dependencies, Bazaar module & application controller module loader.
-| fpga         | FPGA design (RTL, bench, simulation and synthesis scripts)
-| fpga2        | FPGA design (RTL, bench, simulation and synthesis scripts) SystemVerilog based for newer applications
+| fpga         | FPGA design (RTL, bench, simulation and synthesis scripts) SystemVerilog based for newer applications
 | OS/buildroot | GNU/Linux operating system components
 | patches      | Directory containing patches
 | scpi-server  | SCPI server

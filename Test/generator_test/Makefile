@@ -12,7 +12,7 @@ INCLUDE  = -I../../Applications/api/rpApplications/lcr_meter/src -I../../../api/
 INCLUDE += -I../../Applications/api/rpApplications/src/ 
 INCLUDE += -I../../api/include
 
-COMMON_FLAGS += -Wall -O0 -g
+COMMON_FLAGS += -Wall -O3 -funroll-loops -fopenmp
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS += $(COMMON_FLAGS) -std=gnu++11 $(INCLUDE)
 LDFLAGS += -Wl,--whole-archive

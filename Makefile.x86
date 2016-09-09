@@ -80,15 +80,17 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_DIR = fpga2
+FPGA_DIR = fpga
+#FPGA_PRJ = classic
+FPGA_PRJ = logic_orig
 
-FPGA = $(FPGA_DIR)/out/red_pitaya.bit
-FSBL = $(FPGA_DIR)/sdk/fsbl/executable.elf
+FPGA = $(FPGA_DIR)/prj/$(FPGA_PRJ)/out/red_pitaya.bit
+FSBL = $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/fsbl/executable.elf
 
 .PHONY: fpga
 
 fpga: $(DTREE_DIR)
-	make -C $(FPGA_DIR)
+	make -C $(FPGA_DIR) PRJ=$(FPGA_PRJ)
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -169,7 +171,7 @@ linux-install: linux $(INSTALL_DIR)
 # device tree processing
 ################################################################################
 
-DEVICETREE = $(TMP)/devicetree.dtb
+DEVICETREE = $(TMP)/dts/devicetree.dtb
 
 .PHONY: devicetree devicetree-install
 
@@ -183,22 +185,22 @@ $(DTREE_DIR): $(DTREE_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 
 $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
-	cp $(FPGA_DIR)/sdk/dts/*.dtsi     $(TMP)
-	cp $(FPGA_DIR)/sdk/dts/system.dts $(TMP)/devicetree.dts
-	patch $(TMP)/zynq-7000.dtsi patches/zynq-7000.patch
-	patch $(TMP)/pl.dtsi        patches/pl.patch
-	patch $(TMP)/devicetree.dts patches/devicetree.patch
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP) $(TMP)/devicetree.dts
-	tools/dtc/bin/dtc -O dtb -o $(TMP)/amba_pl.dtbo -b 0 -@ patches/amba_pl.dts
+	mkdir -p                                        $(TMP)/dts
+	cp -r $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts/*     $(TMP)/dts
+#	cat patches/devicetree/zynq-7000.dts         >> $(TMP)/dts/system.dts
+	cat patches/devicetree/system.dts            >> $(TMP)/dts/system.dts
+	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts >> $(TMP)/dts/system.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts $(TMP)/dts/system.dts
+	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
 	# create device tree source from binary for reference
-	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dtraw.dts $(DEVICETREE)
+	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
-	cp $(DEVICETREE)        $(INSTALL_DIR)
-	cp $(TMP)/dtraw.dts     $(INSTALL_DIR)
-	cp $(TMP)/amba_pl.dtbo  $(INSTALL_DIR)
-	cp patches/amba_pl.sh   $(INSTALL_DIR)
-	cp patches/rmamba_pl.sh $(INSTALL_DIR)
+	cp $(DEVICETREE)                   $(INSTALL_DIR)
+	cp $(TMP)/dts/dtraw.dts            $(INSTALL_DIR)
+	cp $(TMP)/dts/amba_pl.dtbo         $(INSTALL_DIR)
+	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
+	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
 
 ################################################################################
 # boot file generator
