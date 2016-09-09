@@ -1,15 +1,15 @@
 # Prerequisites
 
-libraries used by ModelSim-Altera software:
-    libxft2 
-    libxft2:i386
-    lib32ncurses5
+Install libraries used by ModelSim-Altera software:
+```bash
+# apt-get install libxft2 libxft2:i386 lib32ncurses5
+```
 
 # Directory structure
 
 Initially there was a single FPGA project containing all functionality intended to be used by all applications.
 Ideally we would maintain this project by fixing bugs and adding new functionality, but there are limits to
-how much functionality can be compiled into a FPGA and developers are not always able to keep backward compatibility.
+how much functionality can be compiled into an FPGA and developers are not always able to keep backward compatibility.
 
 So there are now multiple FPGA projects, some with generic functionality, some with specific functionality for an application.
 Common code for all projects is placed directly into the `fpga` directory. Common code are mostly reusable modules.
@@ -27,8 +27,8 @@ Project specific code is placed inside the `fpga/prj/name/` directories and is s
 | `fpga/sdc/`     | "Synopsys Design Constraints" contains Xilinx design constraints
 | `fpga/sim/`     | simulation scripts
 | `fpga/tbn/`     | Verilog (SystemVerilog) "test bench"
-| `fpga/dts/`     | device tree source files
-| `fpga/prj/name` | project specific code
+| `fpga/dts/`     | device tree source include files
+| `fpga/prj/name` | project `name` specific code
 |                 |
 | `fpga/hsi/`     | "Hardware Software Interface" contains FSBL (First Stage Boot Loader) and DTS (Design Tree) builds
 
@@ -57,7 +57,7 @@ make PRJ=name
 
 To generate and open a Vivado project using GUI, run:
 ```bash
-make project
+make project PRJ=name
 ```
 
 # Simulation
@@ -67,7 +67,7 @@ ModelSim as provided for free from Altera is used to run simulations. Scripts ex
 ln -s $HOME/altera/16.0/modelsim_ase/linux $HOME/altera/16.0/modelsim_ase/linux_rh60
 ```
 
-To run simmulation, Vivado tools have to be installed, but there is no need to source `settings.sh` for not the path to the ModelSim simulator is hardcoded into the simulation `Makefile`.
+To run simulation, Vivado tools have to be installed. There is no need to source `settings.sh`, For now the path to the ModelSim simulator is hard coded into the simulation `Makefile`.
 ```bash
 cd fpga/sim
 ```
@@ -94,7 +94,9 @@ Running `make` inside this directory will create a device tree source and some i
 | `pl.dtsi`        | description of AXI attached peripherals inside PL (programmable logic)
 | `system.dts`     | description of all peripherals, includes the above `*.dtsi` files
 
-To enable some Linux drivers (Ethernet, XADC, I2C EEPROM, SPI, GPIO and LED) the device tree source is patched using `../patches/devicetree.patch`.
+To enable some Linux drivers (Ethernet, XADC, I2C EEPROM, SPI, GPIO and LED)
+additional configuration files. Generic device tree files can be found in `fpga/dts`
+while project specific code is in `fpga/prj/name/dts/`
 
 # Signal mapping
 
@@ -197,7 +199,7 @@ echo 1      > /sys/class/gpio/gpio$INDEX/value
 echo          /sys/class/gpio/gpio$INDEX/value
 ```
 
-**NOTE**: A new userspace ABI for GPIO is comming in kernel v4.8, ioctl will be used instead of sysfs.
+**NOTE**: A new user space ABI for GPIO is coming in kernel v4.8, ioctl will be used instead of `sysfs`.
 https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next
 
 ### Linux access to LED
@@ -208,9 +210,9 @@ By providing GPIO/LED details in the device tree, it is possible to access LEDs 
 
 To show CPU load on LED 9 use:
 ```bash
-echo heartbeat > /sys/class/leds/led9/trigger
+echo heartbeat > /sys/class/leds/led0/trigger
 ```
 To switch LED 8 ON use:
 ```bash
-echo 1 > /sys/class/leds/led8/brightness
+echo 1 > /sys/class/leds/led0/brightness
 ```
