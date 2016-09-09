@@ -82,8 +82,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
 FPGA_DIR = fpga
 #FPGA_PRJ = classic
-#FPGA_PRJ = logic_orig
-FPGA_PRJ = tft
+FPGA_PRJ = logic_orig
 
 FPGA = $(FPGA_DIR)/prj/$(FPGA_PRJ)/out/red_pitaya.bit
 FSBL = $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/fsbl/executable.elf
@@ -228,7 +227,7 @@ $(ZIPFILE): install
 	mkdir -p               $(INSTALL_DIR)/fpga
 	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
 	cd                     $(INSTALL_DIR)/fpga; xz -df *.xz
-	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga_classic.bit
+	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
