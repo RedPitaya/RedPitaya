@@ -1,4 +1,5 @@
 interface spi_if #(
+  int unsigned DW = 4,  // data width
   int unsigned SSN = 3  // slave select width
 );
 
@@ -7,9 +8,9 @@ logic sck_i;
 logic sck_o;
 logic sck_t;
 // quad IO [HOLD#, WP#, MISO, MOSI]
-logic [4-1:0] io_i;
-logic [4-1:0] io_o;
-logic [4-1:0] io_t;
+logic [DW-1:0] io_i;
+logic [DW-1:0] io_o;
+logic [DW-1:0] io_t;
 // primary slave select
 logic ss_i;
 logic ss_o;
@@ -18,6 +19,7 @@ logic ss_t;
 logic ss1_o;
 logic ss2_o;
 
+// master
 modport m (
   input  sck_i,
   output sck_o,
@@ -32,6 +34,7 @@ modport m (
   output ss2_o
 );
 
+// slave
 modport s (
   output sck_i,
   input  sck_o,

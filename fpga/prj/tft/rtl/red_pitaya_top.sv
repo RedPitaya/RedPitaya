@@ -136,9 +136,8 @@ logic                    digital_loop;
 sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
 
-logic [24-1:0] gpio_t;  // output enable
-logic [24-1:0] gpio_o;  // output
-logic [24-1:0] gpio_i;  // input
+// GPIO interface
+gpio_if #(.DW (24)) gpio ();
 
 // SPI0
 spi_if spi0 ();
@@ -218,9 +217,7 @@ red_pitaya_ps ps (
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
   // GPIO
-  .gpio_i        (gpio_i),
-  .gpio_o        (gpio_o),
-  .gpio_t        (gpio_t),
+  .gpio          (gpio),
   // SPI0
   .spi0          (spi0),
   // system read/write channel
@@ -399,7 +396,7 @@ red_pitaya_hk i_hk (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_led [8-1:0] (.O (gpio_i[7:0]), .IO(led_o), .I(gpio_o[7:0]), .T(gpio_t[7:0]));
+IOBUF iobuf_led [8-1:0] (.O (gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // TFT ports
@@ -417,34 +414,34 @@ assign spi0.io_i[1] = iomux_i [0+2];
 assign spi0.ss_i    = iomux_i [8+2];
 
 //      N              P                   
-assign {gpio_i [08+1], gpio_i [08+0]} = {iomux_i [8+0], iomux_i [0+0]};
-assign {gpio_i [08+3], gpio_i [08+2]} = {iomux_i [8+1], iomux_i [0+1]};
-assign {gpio_i [08+5], gpio_i [08+4]} = {iomux_i [8+2], iomux_i [0+2]};
-assign {gpio_i [08+7], gpio_i [08+6]} = {iomux_i [8+3], iomux_i [0+3]};
-assign {gpio_i [16+1], gpio_i [16+0]} = {iomux_i [8+4], iomux_i [0+4]};
-assign {gpio_i [16+3], gpio_i [16+2]} = {iomux_i [8+5], iomux_i [0+5]};
-assign {gpio_i [16+5], gpio_i [16+4]} = {iomux_i [8+6], iomux_i [0+6]};
-assign {gpio_i [16+7], gpio_i [16+6]} = {iomux_i [8+7], iomux_i [0+7]};
+assign {gpio.i [08+1], gpio.i [08+0]} = {iomux_i [8+0], iomux_i [0+0]};
+assign {gpio.i [08+3], gpio.i [08+2]} = {iomux_i [8+1], iomux_i [0+1]};
+assign {gpio.i [08+5], gpio.i [08+4]} = {iomux_i [8+2], iomux_i [0+2]};
+assign {gpio.i [08+7], gpio.i [08+6]} = {iomux_i [8+3], iomux_i [0+3]};
+assign {gpio.i [16+1], gpio.i [16+0]} = {iomux_i [8+4], iomux_i [0+4]};
+assign {gpio.i [16+3], gpio.i [16+2]} = {iomux_i [8+5], iomux_i [0+5]};
+assign {gpio.i [16+5], gpio.i [16+4]} = {iomux_i [8+6], iomux_i [0+6]};
+assign {gpio.i [16+7], gpio.i [16+6]} = {iomux_i [8+7], iomux_i [0+7]};
 
 //      N              P                   
-assign {iomux_o [8+0], iomux_o [0+0]} = {gpio_o [08+1], gpio_o [08+0]};
+assign {iomux_o [8+0], iomux_o [0+0]} = {gpio.o [08+1], gpio.o [08+0]};
 assign {iomux_o [8+1], iomux_o [0+1]} = {spi0.io_o[0] , spi0.sck_o   };
 assign {iomux_o [8+2], iomux_o [0+2]} = {spi0.ss_o    , spi0.io_o[1] };
-assign {iomux_o [8+3], iomux_o [0+3]} = {gpio_o [08+7], spi0.ss1_o   };
-assign {iomux_o [8+4], iomux_o [0+4]} = {gpio_o [16+1], gpio_o [16+0]};
-assign {iomux_o [8+5], iomux_o [0+5]} = {gpio_o [16+3], gpio_o [16+2]};
-assign {iomux_o [8+6], iomux_o [0+6]} = {gpio_o [16+5], gpio_o [16+4]};
-assign {iomux_o [8+7], iomux_o [0+7]} = {gpio_o [16+7], gpio_o [16+6]};
+assign {iomux_o [8+3], iomux_o [0+3]} = {gpio.o [08+7], spi0.ss1_o   };
+assign {iomux_o [8+4], iomux_o [0+4]} = {gpio.o [16+1], gpio.o [16+0]};
+assign {iomux_o [8+5], iomux_o [0+5]} = {gpio.o [16+3], gpio.o [16+2]};
+assign {iomux_o [8+6], iomux_o [0+6]} = {gpio.o [16+5], gpio.o [16+4]};
+assign {iomux_o [8+7], iomux_o [0+7]} = {gpio.o [16+7], gpio.o [16+6]};
 
 //      N              P                   
-assign {iomux_t [8+0], iomux_t [0+0]} = {gpio_t [08+1], gpio_t [08+0]};
+assign {iomux_t [8+0], iomux_t [0+0]} = {gpio.t [08+1], gpio.t [08+0]};
 assign {iomux_t [8+1], iomux_t [0+1]} = {spi0.io_t[0] , spi0.sck_t   };
 assign {iomux_t [8+2], iomux_t [0+2]} = {spi0.ss_t    , spi0.io_t[1] };
-assign {iomux_t [8+3], iomux_t [0+3]} = {gpio_t [08+7], 1'b0         };
-assign {iomux_t [8+4], iomux_t [0+4]} = {gpio_t [16+1], gpio_t [16+0]};
-assign {iomux_t [8+5], iomux_t [0+5]} = {gpio_t [16+3], gpio_t [16+2]};
-assign {iomux_t [8+6], iomux_t [0+6]} = {gpio_t [16+5], gpio_t [16+4]};
-assign {iomux_t [8+7], iomux_t [0+7]} = {gpio_t [16+7], gpio_t [16+6]};
+assign {iomux_t [8+3], iomux_t [0+3]} = {gpio.t [08+7], 1'b0         };
+assign {iomux_t [8+4], iomux_t [0+4]} = {gpio.t [16+1], gpio.t [16+0]};
+assign {iomux_t [8+5], iomux_t [0+5]} = {gpio.t [16+3], gpio.t [16+2]};
+assign {iomux_t [8+6], iomux_t [0+6]} = {gpio.t [16+5], gpio.t [16+4]};
+assign {iomux_t [8+7], iomux_t [0+7]} = {gpio.t [16+7], gpio.t [16+6]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // oscilloscope
@@ -458,7 +455,7 @@ red_pitaya_scope i_scope (
   .adc_b_i         (  adc_dat[1]    ),  // CH 2
   .adc_clk_i       (  adc_clk       ),  // clock
   .adc_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_ext_i      (  gpio_i[8]     ),  // external trigger
+  .trig_ext_i      (  gpio.i[8]     ),  // external trigger
   .trig_asg_i      (  trig_asg_out  ),  // ASG trigger
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
@@ -493,8 +490,8 @@ red_pitaya_asg i_asg (
   .dac_b_o         (  asg_dat[1]    ),  // CH 2
   .dac_clk_i       (  adc_clk       ),  // clock
   .dac_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_a_i        (  gpio_i[8]     ),
-  .trig_b_i        (  gpio_i[8]     ),
+  .trig_a_i        (  gpio.i[8]     ),
+  .trig_b_i        (  gpio.i[8]     ),
   .trig_out_o      (  trig_asg_out  ),
   // System bus
   .sys_addr        (  sys_addr      ),  // address

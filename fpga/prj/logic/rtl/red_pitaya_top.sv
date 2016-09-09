@@ -144,8 +144,6 @@ CLS_T [MNG-1:0] dac_cfg_sum;  // offset
 
 // triggers
 typedef struct packed {
-  // GPIO
-  logic   [2-1:0] gio_out;  // 2   - event    triggers from GPIO       {negedge, posedge}
   // analog generator
   logic [MNG-1:0] gen_out;  // event    triggers
   logic [MNG-1:0] gen_swo;  // software triggers
@@ -184,9 +182,8 @@ irq_t irq;
 sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
-logic [24-1:0] gpio_t;  // output enable
-logic [24-1:0] gpio_o;  // output
-logic [24-1:0] gpio_i;  // input
+// GPIO interface
+gpio_if #(.DW (24)) gpio ();
 
 logic [GDW-1:0] exp_t;  // output enable
 logic [GDW-1:0] exp_o;  // output
@@ -274,9 +271,7 @@ red_pitaya_ps ps (
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
   // GPIO
-  .gpio_i        (gpio_i),
-  .gpio_o        (gpio_o),
-  .gpio_t        (gpio_t),
+  .gpio          (gpio),
   // SPI0
   .spi0          (spi0),
   // interrupts
@@ -373,21 +368,21 @@ muxctl muxctl (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_led [GDW-1:0] (.O (gpio_o[7:0]), .IO(led_o), .I(gpio_i[7:0]), .T(gpio_o[7:0]));
+IOBUF iobuf_led [8-1:0] (.O (gpios.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO ports
 ////////////////////////////////////////////////////////////////////////////////
 
-assign gpio_i [23:8] = {exp_n_io, exp_p_io};
+assign gpio.i [23:8] = {exp_n_io, exp_p_io};
 
 ////////////////////////////////////////////////////////////////////////////////
 // LA (DDR) extension connector
 ////////////////////////////////////////////////////////////////////////////////
 
-//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+//axi4_stream_if #(.DN (2), .DT (SBL_T)) exp_exe (.ACLK (adc_clk), .ARESETn (adc_rstn));
+//axi4_stream_if #(.DN (2), .DT (SBL_T)) exp_exo (.ACLK (adc_clk), .ARESETn (adc_rstn));
+//axi4_stream_if #(.DN (2), .DT (SBL_T)) exp_exi (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 // temporary solution for unit testing
 // IOBUF has been split into separate IBUF & OBUF

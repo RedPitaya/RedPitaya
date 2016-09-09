@@ -55,8 +55,8 @@ module red_pitaya_top #(
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  output logic [ 8-1:0] exp_n_io   ,
   input  logic [ 8-1:0] exp_p_io   ,
+  output logic [ 8-1:0] exp_n_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
@@ -180,12 +180,11 @@ typedef struct packed {
 irq_t irq;
 
 // system bus
-sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
-sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
+sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
-logic [24-1:0] gpio_t;  // output enable
-logic [24-1:0] gpio_o;  // output
-logic [24-1:0] gpio_i;  // input
+// GPIO interface
+gpio_if #(.DW (24)) gpio ();
 
 logic [GDW-1:0] exp_e;  // output enable
 logic [GDW-1:0] exp_o;  // output
@@ -273,9 +272,7 @@ red_pitaya_ps ps (
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
   // GPIO
-  .gpio_i        (gpio_i),
-  .gpio_o        (gpio_o),
-  .gpio_t        (gpio_t),
+  .gpio          (gpio),
   // interrupts
   .irq           (irq         ),
   // system read/write channel
@@ -366,6 +363,18 @@ muxctl muxctl (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// LED
+////////////////////////////////////////////////////////////////////////////////
+
+IOBUF iobuf_led [8-1:0] (.O (gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
+
+////////////////////////////////////////////////////////////////////////////////
+// GPIO ports
+////////////////////////////////////////////////////////////////////////////////
+
+assign gpio.i [23:8] = {exp_n_io, exp_p_io};
+
+////////////////////////////////////////////////////////////////////////////////
 // extension connector
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -425,18 +434,6 @@ assign exp_exi.TLAST  = 1'b0;
 // TODO: this is hardcoded, since it somehow did not work before, simulation was fine, but synthesis might have a problem
 // IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T({8'h00, 8'hff}));
 //IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
-
-////////////////////////////////////////////////////////////////////////////////
-// LED
-////////////////////////////////////////////////////////////////////////////////
-
-IOBUF iobuf_led [8-1:0] (.O (gpio_i[7:0]), .IO(led_o), .I(gpio_o[7:0]), .T(gpio_t[7:0]));
-
-////////////////////////////////////////////////////////////////////////////////
-// GPIO ports
-////////////////////////////////////////////////////////////////////////////////
-
-assign gpio_i [23:8] = {exp_n_io, exp_p_io};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Calibration

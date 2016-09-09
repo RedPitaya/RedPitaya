@@ -56,9 +56,7 @@ module red_pitaya_ps (
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // GPIO
-  input  logic  [24-1:0] gpio_i,
-  output logic  [24-1:0] gpio_o,
-  output logic  [24-1:0] gpio_t,
+  gpio_if.m              gpio,
   // SPI
   spi_if.m               spi0,
   // system read/write channel
@@ -314,9 +312,9 @@ system system_i (
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
   .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
   // GPIO
-  .GPIO_tri_i (gpio_i),
-  .GPIO_tri_o (gpio_o),
-  .GPIO_tri_t (gpio_t),
+  .GPIO_tri_i (gpio.i),
+  .GPIO_tri_o (gpio.o),
+  .GPIO_tri_t (gpio.t),
   // SPI
   .SPI0_io1_i (spi0.io_i[1]),  .SPI0_io1_o (spi0.io_o[1]),  .SPI0_io1_t (spi0.io_t[1]),  // MISO <=> IO[1]
   .SPI0_io0_i (spi0.io_i[0]),  .SPI0_io0_o (spi0.io_o[0]),  .SPI0_io0_t (spi0.io_t[0]),  // MOSI <=> IO[0]
