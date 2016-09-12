@@ -196,7 +196,7 @@ export INDEX=960
 echo $INDEX > /sys/class/gpio/export
 echo out    > /sys/class/gpio/gpio$INDEX/direction
 echo 1      > /sys/class/gpio/gpio$INDEX/value
-echo          /sys/class/gpio/gpio$INDEX/value
+cat           /sys/class/gpio/gpio$INDEX/value
 ```
 
 **NOTE**: A new user space ABI for GPIO is coming in kernel v4.8, ioctl will be used instead of `sysfs`.
