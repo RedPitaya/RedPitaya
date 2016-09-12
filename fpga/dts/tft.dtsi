@@ -1,0 +1,63 @@
+/*
+ * TFT controller specific code
+ */
+
+&spi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	is-decoded-cs = <0>;
+	num-cs = <3>;
+
+	rpidisplay: rpi-display@0 {
+		compatible = "ilitek,ili9341";
+		reg = <0>;
+		spi-max-frequency = <32000000>;
+
+		rotate = <90>;
+		bgr;
+		fps = <10>;
+		buswidth = <8>;
+
+		reset-gpios = <&gpio0 70 0>;
+		dc-gpios = <&gpio0 71 0>;
+
+		debug = <0>;
+	};
+
+	rpidisplay_ts: rpi-display-ts@1 {
+		compatible = "ti,ads7846";
+		reg = <1>;
+		spi-max-frequency = <1000000>;
+
+		ti,swap-xy;
+		interrupts = <72 0>;
+		interrupt-parent = <&gpio0>;
+		pendown-gpio = <&gpio0 72 0>;
+		vcc-supply = <&fixedreg33>;
+	};
+
+	myspidev: spidev@2 {
+		compatible = "linux,spidev";
+		reg = <2>;
+		spi-max-frequency = <1000000>;
+	};
+};
+/{
+	aliases {
+		spi0 = &spi0;
+	};
+
+	backlight {
+		compatible = "gpio-backlight";
+		gpios = <&gpio0 63 0>;
+		default-on;
+	};
+
+	fixedreg33: fixed33@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-supply";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+};

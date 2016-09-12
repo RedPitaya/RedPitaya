@@ -1,7 +1,3 @@
-/include/ "system.dtsi"
-/include/ "led-user.dtsi"
-/include/ "uio.dtsi"
-
 /*
  * Disable DMA after boot, must be anabled by a DT overlay
  * TODO: it is probably not necessary to also disable each channel
@@ -14,6 +10,9 @@
 	status = "disabled";
 };
 &axi_dma_2 {
+	status = "disabled";
+};
+&axi_dma_3 {
 	status = "disabled";
 };
 

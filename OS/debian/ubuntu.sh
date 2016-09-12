@@ -8,7 +8,7 @@
 
 # Install Ubuntu base system to the root file system
 UBUNTU_BASE_VER=16.04.1
-UBUNTU_BASE_TAR=ubuntu-base-${UBUNTU_BASE_VER}-core-armhf.tar.gz
+UBUNTU_BASE_TAR=ubuntu-base-${UBUNTU_BASE_VER}-base-armhf.tar.gz
 UBUNTU_BASE_URL=http://cdimage.ubuntu.com/ubuntu-base/releases/${UBUNTU_BASE_VER}/release/${UBUNTU_BASE_TAR}
 test -f $UBUNTU_BASE_TAR || curl -L $UBUNTU_BASE_URL -o $UBUNTU_BASE_TAR
 tar -zxf $UBUNTU_BASE_TAR --directory=$ROOT_DIR
@@ -60,11 +60,15 @@ add-apt-repository -yu ppa:redpitaya/zynq
 # development tools
 apt-get -y install build-essential less vim nano sudo u-boot-tools usbutils psmisc lsof
 apt-get -y install parted dosfstools
+
+# install file system tools
+apt-get -y install mtd-utils
 EOF_CHROOT
 
 . OS/debian/network.sh
 . OS/debian/redpitaya.sh
 #. OS/debian/wyliodrin.sh
+#. OS/debian/tft.sh
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
@@ -84,9 +88,8 @@ rm -f $ROOT_DIR/zero.file
 # remove ARM emulation
 rm $ROOT_DIR/usr/bin/qemu-arm-static
 
-# disable chroot access with native execution
-rm $ROOT_DIR/etc/resolv.conf
 # create a tarball (without resolv.conf link, since it causes schroot issues)
+rm $ROOT_DIR/etc/resolv.conf
 tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
-# create resolv.conf link
+# recreate resolv.conf link
 ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf

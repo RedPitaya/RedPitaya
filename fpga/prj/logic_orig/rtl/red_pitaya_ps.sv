@@ -56,9 +56,7 @@ module red_pitaya_ps (
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // GPIO
-  input  logic  [24-1:0] gpio_i,
-  output logic  [24-1:0] gpio_o,
-  output logic  [24-1:0] gpio_t,
+  gpio_if.m              gpio,
   // interrupts
   input  logic  [13-1:0] irq,
   // system read/write channel
@@ -96,7 +94,7 @@ assign fclk_rstn_o = fclk_rstn;
 
 BUFG fclk_buf [4-1:0] (.O(fclk_clk_o), .I(fclk_clk));
 
-system_wrapper system_i (
+system system_i (
   // MIO
   .FIXED_IO_mio      (FIXED_IO_mio     ),
   .FIXED_IO_ps_clk   (FIXED_IO_ps_clk  ),
@@ -193,9 +191,9 @@ system_wrapper system_i (
   .M_AXI_STR_TX3_tready  (stx[3].TREADY ),  .M_AXI_STR_TX2_tready  (stx[2].TREADY ), // .M_AXI_STR_TX1_tready  (stx[1].TREADY ),  .M_AXI_STR_TX0_tready  (stx[0].TREADY ),
   .M_AXI_STR_TX3_tvalid  (stx[3].TVALID ),  .M_AXI_STR_TX2_tvalid  (stx[2].TVALID ), // .M_AXI_STR_TX1_tvalid  (stx[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (stx[0].TVALID ),
   // GPIO
-  .GPIO_I (gpio_i),
-  .GPIO_O (gpio_o),
-  .GPIO_T (gpio_t),
+  .GPIO_tri_i (gpio.i),
+  .GPIO_tri_o (gpio.o),
+  .GPIO_tri_t (gpio.t),
   // IRQ
   // TODO: actual interrupts should be connnected
   .IRQ_LG   (1'b0),

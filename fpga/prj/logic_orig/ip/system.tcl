@@ -155,6 +155,7 @@ proc create_root_design { parentCell } {
   # Create interface ports
   set DDR [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR ]
   set FIXED_IO [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_processing_system7:fixedio_rtl:1.0 FIXED_IO ]
+  set GPIO [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 GPIO ]
   set M_AXI_GP0 [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI_GP0 ]
   set_property -dict [ list \
 CONFIG.ADDR_WIDTH {32} \
@@ -248,9 +249,6 @@ CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX3:S_AXI_STR_RX3} \
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
-  set GPIO_I [ create_bd_port -dir I -from 23 -to 0 -type data GPIO_I ]
-  set GPIO_O [ create_bd_port -dir O -from 23 -to 0 -type data GPIO_O ]
-  set GPIO_T [ create_bd_port -dir O -from 23 -to 0 -type data GPIO_T ]
   set IRQ_GEN0 [ create_bd_port -dir I -type intr IRQ_GEN0 ]
   set_property -dict [ list \
 CONFIG.SENSITIVITY {EDGE_RISING} \
@@ -1779,10 +1777,10 @@ CONFIG.NUM_PORTS {15} \
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_ports M_AXI_GP0] [get_bd_intf_pins processing_system7/M_AXI_GP0]
   connect_bd_intf_net -intf_net processing_system7_0_ddr [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_fixed_io [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7/FIXED_IO]
+  connect_bd_intf_net -intf_net processing_system7_GPIO_0 [get_bd_intf_ports GPIO] [get_bd_intf_pins processing_system7/GPIO_0]
   connect_bd_intf_net -intf_net processing_system7_M_AXI_GP1 [get_bd_intf_pins axi_interconnect_0/S00_AXI] [get_bd_intf_pins processing_system7/M_AXI_GP1]
 
   # Create port connections
-  connect_bd_net -net GPIO_I_1 [get_bd_ports GPIO_I] [get_bd_pins processing_system7/GPIO_I]
   connect_bd_net -net IRQ_GEN0_1 [get_bd_ports IRQ_GEN0] [get_bd_pins xlconcat_0/In11]
   connect_bd_net -net IRQ_GEN1_1 [get_bd_ports IRQ_GEN1] [get_bd_pins xlconcat_0/In12]
   connect_bd_net -net IRQ_LA_1 [get_bd_ports IRQ_LA] [get_bd_pins xlconcat_0/In10]
@@ -1811,8 +1809,6 @@ CONFIG.NUM_PORTS {15} \
   connect_bd_net -net processing_system7_FCLK_CLK0 [get_bd_ports FCLK_CLK0] [get_bd_pins processing_system7/FCLK_CLK0]
   connect_bd_net -net processing_system7_FCLK_CLK1 [get_bd_ports FCLK_CLK1] [get_bd_pins axi_dma_0/m_axi_mm2s_aclk] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_0/m_axi_sg_aclk] [get_bd_pins axi_dma_0/s_axi_lite_aclk] [get_bd_pins axi_dma_1/m_axi_mm2s_aclk] [get_bd_pins axi_dma_1/m_axi_s2mm_aclk] [get_bd_pins axi_dma_1/m_axi_sg_aclk] [get_bd_pins axi_dma_1/s_axi_lite_aclk] [get_bd_pins axi_dma_2/m_axi_mm2s_aclk] [get_bd_pins axi_dma_2/m_axi_s2mm_aclk] [get_bd_pins axi_dma_2/m_axi_sg_aclk] [get_bd_pins axi_dma_2/s_axi_lite_aclk] [get_bd_pins axi_dma_3/m_axi_mm2s_aclk] [get_bd_pins axi_dma_3/m_axi_s2mm_aclk] [get_bd_pins axi_dma_3/m_axi_sg_aclk] [get_bd_pins axi_dma_3/s_axi_lite_aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/M04_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_1/ACLK] [get_bd_pins axi_interconnect_1/M00_ACLK] [get_bd_pins axi_interconnect_1/S00_ACLK] [get_bd_pins axi_interconnect_1/S01_ACLK] [get_bd_pins axi_interconnect_2/ACLK] [get_bd_pins axi_interconnect_2/M00_ACLK] [get_bd_pins axi_interconnect_2/S00_ACLK] [get_bd_pins axi_interconnect_2/S01_ACLK] [get_bd_pins axi_interconnect_3/ACLK] [get_bd_pins axi_interconnect_3/M00_ACLK] [get_bd_pins axi_interconnect_3/S00_ACLK] [get_bd_pins axi_interconnect_3/S01_ACLK] [get_bd_pins axi_interconnect_4/ACLK] [get_bd_pins axi_interconnect_4/M00_ACLK] [get_bd_pins axi_interconnect_4/S00_ACLK] [get_bd_pins axi_interconnect_4/S01_ACLK] [get_bd_pins axi_interconnect_5/ACLK] [get_bd_pins axi_interconnect_5/M00_ACLK] [get_bd_pins axi_interconnect_5/S00_ACLK] [get_bd_pins axi_interconnect_5/S01_ACLK] [get_bd_pins axi_interconnect_5/S02_ACLK] [get_bd_pins axi_interconnect_5/S03_ACLK] [get_bd_pins axis_clock_converter_2/m_axis_aclk] [get_bd_pins axis_clock_converter_6/s_axis_aclk] [get_bd_pins axis_data_fifo_2/s_axis_aclk] [get_bd_pins axis_data_fifo_6/s_axis_aclk] [get_bd_pins proc_sys_reset/slowest_sync_clk] [get_bd_pins processing_system7/FCLK_CLK1] [get_bd_pins processing_system7/M_AXI_GP1_ACLK] [get_bd_pins processing_system7/S_AXI_GP0_ACLK] [get_bd_pins processing_system7/S_AXI_HP0_ACLK] [get_bd_pins processing_system7/S_AXI_HP1_ACLK] [get_bd_pins processing_system7/S_AXI_HP2_ACLK] [get_bd_pins processing_system7/S_AXI_HP3_ACLK] [get_bd_pins xadc/s_axi_aclk]
   connect_bd_net -net processing_system7_FCLK_CLK3 [get_bd_ports FCLK_CLK3] [get_bd_pins processing_system7/FCLK_CLK3]
-  connect_bd_net -net processing_system7_GPIO_O [get_bd_ports GPIO_O] [get_bd_pins processing_system7/GPIO_O]
-  connect_bd_net -net processing_system7_GPIO_T [get_bd_ports GPIO_T] [get_bd_pins processing_system7/GPIO_T]
   connect_bd_net -net xadc_ip2intc_irpt [get_bd_pins xadc/ip2intc_irpt] [get_bd_pins xlconcat_0/In8]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins processing_system7/IRQ_F2P] [get_bd_pins xlconcat_0/dout]
   connect_bd_net -net xlconstant_dout [get_bd_pins proc_sys_reset/aux_reset_in] [get_bd_pins xlconstant/dout]
@@ -1841,153 +1837,149 @@ CONFIG.NUM_PORTS {15} \
   regenerate_bd_layout -layout_string {
    guistr: "# # String gsaved with Nlview 6.5.12  2016-01-29 bk=1.3547 VDI=39 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
-preplace port S_AXI_STR_RX2_aclk -pg 1 -y 2260 -defaultsOSRD
-preplace port IRQ_SCP1 -pg 1 -y 1990 -defaultsOSRD
-preplace port IRQ_LG -pg 1 -y 1890 -defaultsOSRD
-preplace port IRQ_GEN0 -pg 1 -y 1930 -defaultsOSRD
-preplace port FCLK_CLK3 -pg 1 -y 1230 -defaultsOSRD
-preplace port DDR -pg 1 -y 1010 -defaultsOSRD
+preplace port S_AXI_STR_RX2_aclk -pg 1 -y 2660 -defaultsOSRD
+preplace port IRQ_SCP1 -pg 1 -y 2120 -defaultsOSRD
+preplace port IRQ_LG -pg 1 -y 2020 -defaultsOSRD
+preplace port IRQ_GEN0 -pg 1 -y 2060 -defaultsOSRD
+preplace port FCLK_CLK3 -pg 1 -y 1030 -defaultsOSRD
+preplace port DDR -pg 1 -y 810 -defaultsOSRD
 preplace port M_AXI_STR_TX1_aclk -pg 1 -y 60 -defaultsOSRD
-preplace port IRQ_GEN1 -pg 1 -y 1950 -defaultsOSRD
-preplace port Vp_Vn -pg 1 -y 2450 -defaultsOSRD
+preplace port IRQ_GEN1 -pg 1 -y 2100 -defaultsOSRD
+preplace port Vp_Vn -pg 1 -y 2330 -defaultsOSRD
 preplace port S_AXI_STR_RX0_aclk -pg 1 -y 140 -defaultsOSRD
-preplace port Vaux0 -pg 1 -y 2470 -defaultsOSRD
+preplace port Vaux0 -pg 1 -y 2350 -defaultsOSRD
 preplace port M_AXI_GP0_ACLK -pg 1 -y 970 -defaultsOSRD
-preplace port FCLK_RESET0_N -pg 1 -y 1250 -defaultsOSRD
-preplace port Vaux1 -pg 1 -y 2490 -defaultsOSRD
-preplace port S_AXI_STR_RX2_arstn -pg 1 -y 2220 -defaultsOSRD
+preplace port FCLK_RESET0_N -pg 1 -y 1050 -defaultsOSRD
+preplace port Vaux1 -pg 1 -y 2370 -defaultsOSRD
+preplace port S_AXI_STR_RX2_arstn -pg 1 -y 2620 -defaultsOSRD
 preplace port S_AXI_STR_RX0_arstn -pg 1 -y 160 -defaultsOSRD
-preplace port M_AXI_STR_TX2_arstn -pg 1 -y 1550 -defaultsOSRD
+preplace port M_AXI_STR_TX2_arstn -pg 1 -y 1610 -defaultsOSRD
 preplace port M_AXI_STR_TX1_arstn -pg 1 -y 80 -defaultsOSRD
 preplace port M_AXI_STR_TX0_aclk -pg 1 -y 20 -defaultsOSRD
-preplace port M_AXI_STR_TX0 -pg 1 -y 2150 -defaultsOSRD
-preplace port M_AXI_GP0 -pg 1 -y 1070 -defaultsOSRD
+preplace port M_AXI_STR_TX0 -pg 1 -y 2140 -defaultsOSRD
+preplace port M_AXI_GP0 -pg 1 -y 870 -defaultsOSRD
 preplace port S_AXI_STR_RX1_arstn -pg 1 -y 200 -defaultsOSRD
 preplace port M_AXI_STR_TX3_aclk -pg 1 -y 100 -defaultsOSRD
-preplace port M_AXI_STR_TX1 -pg 1 -y 2330 -defaultsOSRD
-preplace port M_AXI_STR_TX2_aclk -pg 1 -y 1570 -defaultsOSRD
-preplace port IRQ_LA -pg 1 -y 1910 -defaultsOSRD
-preplace port FCLK_RESET1_N -pg 1 -y 1270 -defaultsOSRD
-preplace port M_AXI_STR_TX2 -pg 1 -y 1640 -defaultsOSRD
-preplace port FCLK_RESET3_N -pg 1 -y 1310 -defaultsOSRD
-preplace port M_AXI_STR_TX3 -pg 1 -y 1750 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -y 1030 -defaultsOSRD
-preplace port FCLK_RESET2_N -pg 1 -y 1290 -defaultsOSRD
-preplace port S_AXI_STR_RX0 -pg 1 -y 2150 -defaultsOSRD
+preplace port M_AXI_STR_TX1 -pg 1 -y 2550 -defaultsOSRD
+preplace port M_AXI_STR_TX2_aclk -pg 1 -y 1630 -defaultsOSRD
+preplace port IRQ_LA -pg 1 -y 2040 -defaultsOSRD
+preplace port FCLK_RESET1_N -pg 1 -y 1070 -defaultsOSRD
+preplace port M_AXI_STR_TX2 -pg 1 -y 1660 -defaultsOSRD
+preplace port FCLK_RESET3_N -pg 1 -y 1110 -defaultsOSRD
+preplace port M_AXI_STR_TX3 -pg 1 -y 1760 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 830 -defaultsOSRD
+preplace port FCLK_RESET2_N -pg 1 -y 1090 -defaultsOSRD
+preplace port S_AXI_STR_RX0 -pg 1 -y 2140 -defaultsOSRD
 preplace port S_AXI_STR_RX3_arstn -pg 1 -y 240 -defaultsOSRD
 preplace port M_AXI_STR_TX3_arstn -pg 1 -y 120 -defaultsOSRD
-preplace port FCLK_CLK0 -pg 1 -y 1170 -defaultsOSRD
-preplace port S_AXI_STR_RX1 -pg 1 -y 2330 -defaultsOSRD
+preplace port FCLK_CLK0 -pg 1 -y 970 -defaultsOSRD
+preplace port S_AXI_STR_RX1 -pg 1 -y 2550 -defaultsOSRD
 preplace port S_AXI_STR_RX3_aclk -pg 1 -y 220 -defaultsOSRD
 preplace port S_AXI_STR_RX1_aclk -pg 1 -y 180 -defaultsOSRD
-preplace port FCLK_CLK1 -pg 1 -y 1190 -defaultsOSRD
-preplace port Vaux8 -pg 1 -y 2510 -defaultsOSRD
-preplace port S_AXI_STR_RX2 -pg 1 -y 2200 -defaultsOSRD
+preplace port FCLK_CLK1 -pg 1 -y 990 -defaultsOSRD
+preplace port GPIO -pg 1 -y 790 -defaultsOSRD
+preplace port Vaux8 -pg 1 -y 2390 -defaultsOSRD
+preplace port S_AXI_STR_RX2 -pg 1 -y 2600 -defaultsOSRD
 preplace port M_AXI_STR_TX0_arstn -pg 1 -y 40 -defaultsOSRD
-preplace port IRQ_SCP0 -pg 1 -y 1970 -defaultsOSRD
-preplace port FCLK_CLK2 -pg 1 -y 1210 -defaultsOSRD
-preplace port Vaux9 -pg 1 -y 2530 -defaultsOSRD
-preplace port S_AXI_STR_RX3 -pg 1 -y 1390 -defaultsOSRD
-preplace portBus GPIO_T -pg 1 -y 990 -defaultsOSRD
-preplace portBus GPIO_I -pg 1 -y 1590 -defaultsOSRD
-preplace portBus GPIO_O -pg 1 -y 970 -defaultsOSRD
-preplace inst axi_interconnect_4 -pg 1 -lvl 7 -y 1120 -defaultsOSRD
-preplace inst axis_data_fifo_2 -pg 1 -lvl 5 -y 1900 -defaultsOSRD
+preplace port IRQ_SCP0 -pg 1 -y 2080 -defaultsOSRD
+preplace port FCLK_CLK2 -pg 1 -y 1010 -defaultsOSRD
+preplace port Vaux9 -pg 1 -y 2410 -defaultsOSRD
+preplace port S_AXI_STR_RX3 -pg 1 -y 1650 -defaultsOSRD
+preplace inst axi_interconnect_4 -pg 1 -lvl 7 -y 1420 -defaultsOSRD
+preplace inst axis_data_fifo_2 -pg 1 -lvl 5 -y 1950 -defaultsOSRD
 preplace inst axi_interconnect_5 -pg 1 -lvl 7 -y 760 -defaultsOSRD
-preplace inst axi_dma_0 -pg 1 -lvl 6 -y 460 -defaultsOSRD
+preplace inst axi_dma_0 -pg 1 -lvl 6 -y 440 -defaultsOSRD
 preplace inst axi_dma_1 -pg 1 -lvl 6 -y 700 -defaultsOSRD
-preplace inst xlconstant -pg 1 -lvl 1 -y 2060 -defaultsOSRD
-preplace inst axi_dma_2 -pg 1 -lvl 6 -y 1720 -defaultsOSRD
-preplace inst axi_dma_3 -pg 1 -lvl 6 -y 1430 -defaultsOSRD
-preplace inst xlconcat_0 -pg 1 -lvl 7 -y 1960 -defaultsOSRD
-preplace inst processing_system7 -pg 1 -lvl 8 -y 1120 -defaultsOSRD
+preplace inst xlconstant -pg 1 -lvl 1 -y 2240 -defaultsOSRD
+preplace inst axi_dma_2 -pg 1 -lvl 6 -y 1490 -defaultsOSRD
+preplace inst axi_dma_3 -pg 1 -lvl 6 -y 1760 -defaultsOSRD
+preplace inst xlconcat_0 -pg 1 -lvl 7 -y 1950 -defaultsOSRD
+preplace inst processing_system7 -pg 1 -lvl 8 -y 950 -defaultsOSRD
 preplace inst axis_data_fifo_6 -pg 1 -lvl 7 -y 1630 -defaultsOSRD
-preplace inst axis_clock_converter_2 -pg 1 -lvl 4 -y 2240 -defaultsOSRD
-preplace inst xadc -pg 1 -lvl 4 -y 2500 -defaultsOSRD
-preplace inst axi_interconnect_0 -pg 1 -lvl 3 -y 1800 -defaultsOSRD
+preplace inst axis_clock_converter_2 -pg 1 -lvl 4 -y 2640 -defaultsOSRD
+preplace inst xadc -pg 1 -lvl 4 -y 2380 -defaultsOSRD
+preplace inst axi_interconnect_0 -pg 1 -lvl 3 -y 1850 -defaultsOSRD
 preplace inst axi_interconnect_1 -pg 1 -lvl 7 -y 140 -defaultsOSRD
-preplace inst axis_clock_converter_6 -pg 1 -lvl 8 -y 1640 -defaultsOSRD
+preplace inst axis_clock_converter_6 -pg 1 -lvl 8 -y 1660 -defaultsOSRD
 preplace inst axi_interconnect_2 -pg 1 -lvl 7 -y 420 -defaultsOSRD
-preplace inst proc_sys_reset -pg 1 -lvl 2 -y 2060 -defaultsOSRD
-preplace inst axi_interconnect_3 -pg 1 -lvl 7 -y 1420 -defaultsOSRD
-preplace netloc axi_dma_2_mm2s_introut 1 6 1 1990
-preplace netloc S_AXI_STR_RX1_1 1 0 9 NJ 2330 NJ 2330 NJ 2330 NJ 2330 NJ 2330 NJ 2330 NJ 2330 NJ 2330 NJ
-preplace netloc axi_dma_0_mm2s_introut 1 6 1 2140
-preplace netloc proc_sys_reset_interconnect_aresetn 1 2 6 590 2080 910 1900 1250 1750 1610 1550 2180 1710 NJ
+preplace inst proc_sys_reset -pg 1 -lvl 2 -y 2240 -defaultsOSRD
+preplace inst axi_interconnect_3 -pg 1 -lvl 7 -y 1120 -defaultsOSRD
+preplace netloc axi_dma_2_mm2s_introut 1 6 1 1970
+preplace netloc S_AXI_STR_RX1_1 1 0 9 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ
+preplace netloc axi_dma_0_mm2s_introut 1 6 1 2080
+preplace netloc proc_sys_reset_interconnect_aresetn 1 2 6 550 2430 870 2030 1180 1800 1540 580 2100 1720 NJ
 preplace netloc axi_dma_3_M_AXI_MM2S 1 6 1 2050
 preplace netloc processing_system7_0_fclk_reset1_n 1 8 1 NJ
-preplace netloc axi_interconnect_0_M04_AXI 1 3 1 920
-preplace netloc xlconcat_0_dout 1 7 1 2520
-preplace netloc axi_dma_1_M_AXI_MM2S 1 6 1 2010
-preplace netloc axi_dma_0_M_AXI_SG 1 6 1 2150
+preplace netloc axi_interconnect_0_M04_AXI 1 3 1 860
+preplace netloc xlconcat_0_dout 1 7 1 2470
+preplace netloc axi_dma_1_M_AXI_MM2S 1 6 1 1950
+preplace netloc axi_dma_0_M_AXI_SG 1 6 1 2090
 preplace netloc processing_system7_FCLK_CLK0 1 8 1 NJ
-preplace netloc IRQ_SCP1_1 1 0 7 NJ 1960 NJ 1960 NJ 2050 NJ 2050 NJ 2050 NJ 2050 NJ
-preplace netloc axi_dma_3_M_AXI_S2MM 1 6 1 2060
-preplace netloc xadc_ip2intc_irpt 1 4 3 1250 1980 NJ 1980 NJ
-preplace netloc processing_system7_FCLK_CLK1 1 1 8 200 1970 570 2270 930 1920 1240 1740 1600 1130 2170 1270 2510 1360 3010
-preplace netloc axi_interconnect_0_M01_AXI 1 3 3 NJ 1780 NJ 1780 1580
-preplace netloc S01_AXI_1 1 6 1 2150
-preplace netloc axi_interconnect_0_M02_AXI 1 3 3 NJ 1800 NJ 1800 1630
-preplace netloc axi_dma_3_s2mm_introut 1 6 1 2000
+preplace netloc IRQ_SCP1_1 1 0 7 NJ 2120 NJ 2120 NJ 2120 NJ 2120 NJ 2120 NJ 2120 NJ
+preplace netloc axi_dma_3_M_AXI_S2MM 1 6 1 2030
+preplace netloc xadc_ip2intc_irpt 1 4 3 NJ 2260 NJ 2260 2050
+preplace netloc processing_system7_FCLK_CLK1 1 1 8 180 2150 540 2420 880 2040 1210 2040 1560 560 2110 1270 2460 1160 2950
+preplace netloc axi_interconnect_0_M01_AXI 1 3 3 NJ 1830 NJ 1830 1550
+preplace netloc S01_AXI_1 1 6 1 2000
+preplace netloc axi_interconnect_0_M02_AXI 1 3 3 860 1430 NJ 1430 NJ
+preplace netloc axi_dma_3_s2mm_introut 1 6 1 1920
 preplace netloc processing_system7_FCLK_CLK3 1 8 1 NJ
-preplace netloc axi_dma_1_s2mm_introut 1 6 1 2070
-preplace netloc processing_system7_GPIO_O 1 8 1 NJ
-preplace netloc axi_interconnect_1_M00_AXI 1 7 1 2540
+preplace netloc axi_dma_1_s2mm_introut 1 6 1 2010
+preplace netloc axi_interconnect_1_M00_AXI 1 7 1 2480
 preplace netloc m_axi_gp0_aclk_1 1 0 8 NJ 970 NJ 970 NJ 970 NJ 970 NJ 970 NJ 970 NJ 970 NJ
-preplace netloc IRQ_SCP0_1 1 0 7 NJ 1950 NJ 1950 NJ 2040 NJ 2040 NJ 2040 NJ 2040 NJ
-preplace netloc axi_dma_3_M_AXI_SG 1 6 1 2030
-preplace netloc M_AXI_STR_TX2_arstn_1 1 0 8 NJ 1550 NJ 1550 NJ 1550 NJ 1550 NJ 1550 NJ 1560 NJ 1720 NJ
-preplace netloc axi_dma_0_M_AXIS_MM2S 1 5 2 1580 340 1980
-preplace netloc axi_dma_3_M_AXIS_MM2S 1 6 3 NJ 1750 NJ 1750 NJ
-preplace netloc IRQ_LA_1 1 0 7 NJ 1910 NJ 1910 NJ 2010 NJ 2010 NJ 2010 NJ 2010 NJ
+preplace netloc IRQ_SCP0_1 1 0 7 NJ 2080 NJ 2080 NJ 2080 NJ 2080 NJ 2080 NJ 2080 NJ
+preplace netloc axi_dma_3_M_AXI_SG 1 6 1 1990
+preplace netloc M_AXI_STR_TX2_arstn_1 1 0 8 NJ 1610 NJ 1620 NJ 1620 NJ 1620 NJ 1620 NJ 1620 NJ 1730 NJ
+preplace netloc axi_dma_0_M_AXIS_MM2S 1 5 2 1550 320 1920
+preplace netloc axi_dma_3_M_AXIS_MM2S 1 6 3 NJ 1760 NJ 1760 NJ
+preplace netloc IRQ_LA_1 1 0 7 NJ 2050 NJ 2050 NJ 2060 NJ 2060 NJ 2060 NJ 2040 NJ
 preplace netloc axi_dma_1_M_AXI_SG 1 6 1 N
 preplace netloc processing_system7_0_ddr 1 8 1 NJ
-preplace netloc axi_interconnect_4_M00_AXI 1 7 1 N
-preplace netloc processing_system7_GPIO_T 1 8 1 NJ
-preplace netloc axi_dma_2_M_AXIS_MM2S 1 6 1 2160
-preplace netloc IRQ_GEN1_1 1 0 7 NJ 1940 NJ 1940 NJ 2030 NJ 2030 NJ 2030 NJ 2030 NJ
+preplace netloc axi_interconnect_4_M00_AXI 1 7 1 2440
+preplace netloc axi_dma_2_M_AXIS_MM2S 1 6 1 2090
+preplace netloc IRQ_GEN1_1 1 0 7 NJ 2100 NJ 2100 NJ 2100 NJ 2100 NJ 2100 NJ 2090 NJ
 preplace netloc processing_system7_0_fixed_io 1 8 1 NJ
-preplace netloc axis_clock_converter_2_M_AXIS 1 4 1 1230
-preplace netloc axi_dma_0_M_AXI_MM2S 1 6 1 1990
-preplace netloc axi_interconnect_3_M00_AXI 1 7 1 2500
-preplace netloc axi_dma_3_mm2s_introut 1 6 1 2010
+preplace netloc axis_clock_converter_2_M_AXIS 1 4 1 1190
+preplace netloc axi_dma_0_M_AXI_MM2S 1 6 1 1930
+preplace netloc axi_interconnect_3_M00_AXI 1 7 1 2430
+preplace netloc axi_dma_3_mm2s_introut 1 6 1 1930
 preplace netloc axis_clock_converter_6_M_AXIS 1 8 1 NJ
-preplace netloc axi_dma_0_M_AXI_S2MM 1 6 1 2000
-preplace netloc axis_data_fifo_2_M_AXIS 1 5 1 1640
-preplace netloc Vp_Vn_1 1 0 4 NJ 2450 NJ 2450 NJ 2450 NJ
-preplace netloc processing_system7_0_fclk_reset3_n 1 1 8 190 1590 NJ 1590 NJ 1590 NJ 1590 NJ 1590 NJ 1760 NJ 1760 3000
-preplace netloc Vaux0_1 1 0 4 NJ 2470 NJ 2470 NJ 2470 NJ
-preplace netloc axis_data_fifo_6_M_AXIS 1 7 1 N
-preplace netloc axi_dma_2_M_AXI_SG 1 6 1 2040
-preplace netloc IRQ_LG_1 1 0 7 NJ 1900 NJ 1900 NJ 2000 NJ 2000 NJ 2000 NJ 2000 NJ
-preplace netloc axi_dma_1_mm2s_introut 1 6 1 2080
-preplace netloc processing_system7_M_AXI_GP1 1 2 7 610 1600 NJ 1600 NJ 1600 NJ 1600 NJ 1770 NJ 1770 2980
-preplace netloc axi_interconnect_2_M00_AXI 1 7 1 2520
-preplace netloc Vaux8_1 1 0 4 NJ 2510 NJ 2510 NJ 2510 NJ
-preplace netloc S_AXI_STR_RX2_aclk_1 1 0 4 NJ 2260 NJ 2260 NJ 2260 NJ
-preplace netloc S_AXI_STR_RX2_1 1 0 4 NJ 2200 NJ 2200 NJ 2200 NJ
+preplace netloc axi_dma_0_M_AXI_S2MM 1 6 1 1940
+preplace netloc axis_data_fifo_2_M_AXIS 1 5 1 1570
+preplace netloc Vp_Vn_1 1 0 4 NJ 2330 NJ 2330 NJ 2330 NJ
+preplace netloc processing_system7_0_fclk_reset3_n 1 1 8 170 1610 NJ 1610 NJ 1610 NJ 1610 NJ 1610 NJ 1710 NJ 1570 2940
+preplace netloc processing_system7_GPIO_0 1 8 1 NJ
+preplace netloc Vaux0_1 1 0 4 NJ 2350 NJ 2350 NJ 2350 NJ
+preplace netloc axis_data_fifo_6_M_AXIS 1 7 1 2430
+preplace netloc axi_dma_2_M_AXI_SG 1 6 1 1970
+preplace netloc IRQ_LG_1 1 0 7 NJ 2020 NJ 2020 NJ 2050 NJ 2050 NJ 2030 NJ 2030 NJ
+preplace netloc axi_dma_1_mm2s_introut 1 6 1 2020
+preplace netloc processing_system7_M_AXI_GP1 1 2 7 560 1640 NJ 1640 NJ 1640 NJ 1640 NJ 1750 NJ 1750 2930
+preplace netloc axi_interconnect_2_M00_AXI 1 7 1 2460
+preplace netloc Vaux8_1 1 0 4 NJ 2390 NJ 2390 NJ 2390 NJ
+preplace netloc S_AXI_STR_RX2_aclk_1 1 0 4 NJ 2660 NJ 2660 NJ 2660 NJ
+preplace netloc S_AXI_STR_RX2_1 1 0 4 NJ 2600 NJ 2600 NJ 2600 NJ
 preplace netloc processing_system7_0_fclk_clk2 1 8 1 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 8 1 NJ
-preplace netloc S_AXI_STR_RX3_1 1 0 6 NJ 1390 NJ 1390 NJ 1390 NJ 1390 NJ 1390 NJ
-preplace netloc S_AXI_STR_RX2_arstn_1 1 0 4 NJ 2220 NJ 2220 NJ 2220 NJ
+preplace netloc S_AXI_STR_RX3_1 1 0 6 NJ 1650 NJ 1650 NJ 1650 NJ 1720 NJ 1720 NJ
+preplace netloc S_AXI_STR_RX2_arstn_1 1 0 4 NJ 2620 NJ 2620 NJ 2620 NJ
 preplace netloc processing_system7_0_fclk_reset0_n 1 8 1 NJ
-preplace netloc axi_interconnect_5_M00_AXI 1 7 1 2530
-preplace netloc S_AXI_STR_RX0_1 1 0 9 NJ 2150 NJ 2150 NJ 2150 NJ 2150 NJ 2150 NJ 2150 NJ 2150 NJ 2150 NJ
+preplace netloc axi_interconnect_5_M00_AXI 1 7 1 2470
+preplace netloc S_AXI_STR_RX0_1 1 0 9 NJ 2140 NJ 2140 NJ 2140 NJ 2140 NJ 2140 NJ 2140 NJ 2140 NJ 2140 NJ
 preplace netloc processing_system7_0_M_AXI_GP0 1 8 1 NJ
-preplace netloc axi_dma_1_M_AXIS_MM2S 1 5 2 1620 580 1980
-preplace netloc Vaux1_1 1 0 4 NJ 2490 NJ 2490 NJ 2490 NJ
-preplace netloc M_AXI_STR_TX2_aclk_1 1 0 8 NJ 1570 NJ 1570 NJ 1570 NJ 1570 NJ 1570 NJ 1570 NJ 1730 NJ
-preplace netloc axi_dma_1_M_AXI_S2MM 1 6 1 2020
-preplace netloc Vaux9_1 1 0 4 NJ 2530 NJ 2530 NJ 2530 NJ
-preplace netloc axi_dma_0_s2mm_introut 1 6 1 2130
+preplace netloc axi_dma_1_M_AXIS_MM2S 1 5 2 1580 570 1920
+preplace netloc Vaux1_1 1 0 4 NJ 2370 NJ 2370 NJ 2370 NJ
+preplace netloc M_AXI_STR_TX2_aclk_1 1 0 8 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ 1630 NJ 1740 NJ
+preplace netloc axi_dma_1_M_AXI_S2MM 1 6 1 1960
+preplace netloc Vaux9_1 1 0 4 NJ 2410 NJ 2410 NJ 2410 NJ
+preplace netloc axi_dma_0_s2mm_introut 1 6 1 2070
 preplace netloc xlconstant_dout 1 1 1 NJ
-preplace netloc IRQ_GEN0_1 1 0 7 NJ 1930 NJ 1930 NJ 2020 NJ 2020 NJ 2020 NJ 2020 NJ
-preplace netloc axi_interconnect_0_M03_AXI 1 3 3 NJ 1820 NJ 1820 1620
-preplace netloc axi_interconnect_0_M00_AXI 1 3 3 NJ 1760 NJ 1760 1570
-preplace netloc S00_AXI_1 1 6 1 2100
-preplace netloc GPIO_I_1 1 0 9 NJ 1590 NJ 1580 NJ 1580 NJ 1580 NJ 1580 NJ 1580 NJ 1740 NJ 1740 2990
-preplace netloc axi_dma_2_s2mm_introut 1 6 1 1980
-levelinfo -pg 1 0 110 370 760 1080 1410 1810 2340 2760 3030 -top 0 -bot 2670
+preplace netloc IRQ_GEN0_1 1 0 7 NJ 2060 NJ 2060 NJ 2070 NJ 2070 NJ 2070 NJ 2050 NJ
+preplace netloc axi_interconnect_0_M03_AXI 1 3 3 NJ 1870 NJ 1870 1580
+preplace netloc axi_interconnect_0_M00_AXI 1 3 3 NJ 1810 NJ 1810 1530
+preplace netloc S00_AXI_1 1 6 1 1980
+preplace netloc axi_dma_2_s2mm_introut 1 6 1 1950
+levelinfo -pg 1 0 90 350 710 1030 1370 1750 2270 2710 2970 -top 0 -bot 2730
 ",
 }
 
