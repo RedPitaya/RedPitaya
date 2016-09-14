@@ -2,17 +2,17 @@
 	pinctrl_i2c2gpio: i2c2gpio {
 		mux {
 			function = "gpio0";
-			groups = "gpio0_10_grp", "gpio0_11_grp", "gpio0_12_grp", "gpio0_13_grp";
+			groups = "gpio0_50_grp", "gpio0_51_grp";
 		};
 
 		conf {
-			groups = "gpio0_10_grp", "gpio0_11_grp", "gpio0_12_grp", "gpio0_13_grp";
+			groups = "gpio0_50_grp", "gpio0_51_grp";
 			slew-rate = <0>;
-			io-standard = <3>;  // LVCMOS33
+			io-standard = <2>;  // LVCMOS25
 		};
 
 		conf-pull-none {
-			pins = "MIO10", "MIO11", "MIO12", "MIO13";
+			pins = "MIO50", "MIO51";
 			bias-disable;
 		};
 	};
