@@ -87,6 +87,9 @@ logic           cfg_rle;  // RLE enable
 logic  [CW-1:0] sts_cur;  // current     counter status
 logic  [CW-1:0] sts_lst;  // last packet counter status
 
+// bitwise input polarity
+DT              cfg_pol;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +130,9 @@ if (~bus.rstn) begin
 
   // RLE
   cfg_rle <= 1'b0;
+
+  // bitwise input polarity
+  cfg_pol <= '0;
 end else begin
   if (bus.wen) begin
     // acquire regset
@@ -147,6 +153,9 @@ end else begin
 
     // RLE
     if (bus.addr[BAW-1:0]=='h54)   cfg_rle <= bus.wdata[0];
+
+    // bitwise input polarity
+    if (bus.addr[BAW-1:0]=='h60)   cfg_pol <= DT'(bus.wdata);
   end
 end
 
@@ -191,6 +200,9 @@ begin
     'h58 : bus.rdata <=              32'(sts_cur);
     'h5c : bus.rdata <=              32'(sts_lst);
 
+    // bitwise input polarity
+    'h60 : bus.rdata <=              32'(cfg_pol);
+
     default : bus.rdata <= '0;
   endcase
 end
@@ -213,16 +225,15 @@ str_dec #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// bitwise negator
+// bitwise input polarity
 ////////////////////////////////////////////////////////////////////////////////
 
-// for now this negates all inputs, a more generic version should be used someday
-assign stn.TDATA  = ~std.TDATA ;
-assign stn.TKEEP  =  std.TKEEP ;
-assign stn.TLAST  =  std.TLAST ;
-assign stn.TVALID =  std.TVALID;
+assign stn.TDATA  = std.TDATA ^ cfg_pol;
+assign stn.TKEEP  = std.TKEEP ;
+assign stn.TLAST  = std.TLAST ;
+assign stn.TVALID = std.TVALID;
 
-assign std.TREADY =  stn.TREADY;
+assign std.TREADY = stn.TREADY;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Edge detection (trigger source)

@@ -250,6 +250,20 @@ int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a
     return RP_OK;
 }
 
+/** Bitwise input polarity setter & getter */
+int rp_LaAcqSetPolarity(rp_handle_uio_t *handle, uint32_t a_reg) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    iowrite32(a_reg, &regset->cfg_pol);
+    return RP_OK;
+}
+
+int rp_LaAcqGetPolarity(rp_handle_uio_t *handle, uint32_t * a_reg) {
+    rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
+    *a_reg = ioread32(&regset->cfg_pol);
+    return RP_OK;
+}
+
+/** RLE settings */
 int rp_LaAcqEnableRLE(rp_handle_uio_t *handle) {
     rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
     iowrite32(RP_LA_ACQ_RLE_ENABLE_MASK, &regset->cfg_rle);

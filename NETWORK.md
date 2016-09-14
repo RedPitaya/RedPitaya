@@ -358,3 +358,32 @@ systemctl enable avahi-daemon.service
 # enable service for creating SSH keys on first boot
 systemctl enable ssh-reconfigure
 ```
+
+# Wireless driver
+
+## Current setup
+
+Currently an [out of tree driver](patches/rtl8192cu/) is used to support devices based on the `RTL8188CUS` chip.
+For example:
+```
+# lsusb
+Bus 001 Device 003: ID 0bda:8176 Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+```
+
+This driver supports client and access point modes, and is the most documented driver/device combination
+for seeing up an access point using an USB adapter. Most of the documentation is intended for Raspberry Pi.
+
+We would like to get rid of this driver, since it requires maintaining a patch,
+and it requires deprecated user space tools `wireless extensions` and a
+[patched `hostapd`](OS/debian/network.sh).
+
+## Proposed future setup
+
+There is another much newer driver available in the kernel tree, but it currently only supports client mode.
+
+We are following progress on the `rtl8xxxu` driver in the
+[authors (Jes Sorensen)](https://git.kernel.org/cgit/linux/kernel/git/jes/linux.git/) repository
+on [kernel.org](https://git.kernel.org/cgit/).
+
+We already tested this new driver in the past, and it worked well in client mode.
