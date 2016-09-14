@@ -92,6 +92,7 @@ typedef struct {
     uint32_t cfg_rle;               ///< RLE configuration register
     uint32_t sts_cur;               ///<
     uint32_t sts_lst;               ///<
+    uint32_t cfg_pol;               ///< bitwise input polarity
 } rp_la_acq_regset_t;
 
 
@@ -115,6 +116,8 @@ int rp_LaAcqSetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t a_reg);
 int rp_LaAcqGetTrigSettings(rp_handle_uio_t *handle, rp_la_trg_regset_t * a_reg);
 int rp_LaAcqSetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t a_reg);
 int rp_LaAcqGetDecimation(rp_handle_uio_t *handle, rp_la_decimation_regset_t * a_reg);
+int rp_LaAcqSetPolarity(rp_handle_uio_t *handle, uint32_t a_reg);
+int rp_LaAcqGetPolarity(rp_handle_uio_t *handle, uint32_t * a_reg);
 
 int rp_LaAcqEnableRLE(rp_handle_uio_t *handle);
 int rp_LaAcqDisableRLE(rp_handle_uio_t *handle);
