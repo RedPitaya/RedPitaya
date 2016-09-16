@@ -242,7 +242,7 @@ int main(int argc, char *argv[]){
 		exit(1);
   	}
 
-	//set pins for input
+	//set pins for output
 	i2c_smbus_write_word_data(file, 0x6, 0);
 	i2c_smbus_write_word_data(file, 0x7, 0);
 
@@ -250,13 +250,13 @@ int main(int argc, char *argv[]){
        	if(dirty[0]){
 		i2c_smbus_write_word_data(file, 2, data[0]);
 		printf("data[0]=%x\n",data[0]);
-		usleep(1000);
+		usleep(6000);
 		i2c_smbus_write_word_data(file, 2, 0);
 	}
 	if(dirty[1]){
 		i2c_smbus_write_word_data(file, 3, data[1]);
 		printf("data[1]=%x\n",data[1]);
-		usleep(1000);
+		usleep(6000);
 		i2c_smbus_write_word_data(file, 3, 0);
 	}
 
