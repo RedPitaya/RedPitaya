@@ -1,4 +1,4 @@
 [submodule "Applications"]
 	path = Applications
 	url = ../redpitaya-pro.git
-	branch = master
+	branch = release_97_dev
