@@ -23,9 +23,10 @@ int main(int argc, char *argv[]){
 //		adapter_nr=atoi(argv[1]);
 //	}
 	char filename[20];
-	for(;adapter_nr<10;adapter_nr++)
+	for(;adapter_nr<9;adapter_nr++)
 	{
 		snprintf(filename, 19, "/dev/i2c-%d", adapter_nr);
+		printf("%s\n",filename);
 		file = open(filename, O_RDWR);
 		if (file < 0) {
 			//ERROR HANDLING;
@@ -40,14 +41,16 @@ int main(int argc, char *argv[]){
 			exit(1);
 	  	}
 		// 0x3; //Device control register
-		int32_t res;
+int32_t res;
 		//	uint8_t i;
 		//	char buf[10];
 		//set pins for input
-		i2c_smbus_write_word_data(file, 0x3, 0xff);
+		i2c_smbus_write_byte_data(file, 0x3, 0xff);
+		i2c_smbus_write_byte_data(file, 0x2, 0x0);
 
 	       	//read input register
-	       	res = i2c_smbus_read_word_data(file, 0);
+	       	res = i2c_smbus_read_byte_data(file, 0);
+		printf("res:%d\n",res);
 	       	if (res < 0) {
 	               // ERROR HANDLING: i2c transaction failed
 		printf("Error reading pins from i2c gpio expander\n");
@@ -66,11 +69,20 @@ int main(int argc, char *argv[]){
 				case 0x14://if 0x14 hamlab motherboard with i2cmux 2x pca9555 0x200x21
 					printf("HAMLAB EXTM %s %d \n",filename,res);
 					//insert overlay for i2c mux
-					system("bash hamlab_i2cmux.sh");
-					printf("i2c expander overlay inserted\n");
+					system("sh hamlab_i2cmux.sh");
+					//printf("i2c expander overlay inserted\n");
+					//system("i2cset 8 0x20 6 0");
+					//system("i2cset 8 0x20 7 0");
+					//system("i2cset 8 0x21 6 0");
+					//system("i2cset 8 0x21 7 0");
+
+                                        //system("i2cset 8 0x20 2 0");
+                                        //system("i2cset 8 0x20 3 0");
+                                        //system("i2cset 8 0x21 2 0");
+                                        //system("i2cset 8 0x21 3 0");
 					//set init state of relays
-					system("../hvlvacdc/main -i -1 1 -2 1");
-					system("../laosc/main -o");
+					//system("../hvlvacdc/main -i -1 1 -2 1");
+					//system("../laosc/main -o");
 				break;
 				case 0x15:// if 0x15 eelab motherboard with i2cmux 2x pca9555 0x20 0x21
 					//insert overlay for i2c mux
