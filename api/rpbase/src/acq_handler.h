@@ -21,6 +21,7 @@
 
 int acq_SetArmKeep(bool enable);
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state);
+int acq_SetCoupling(rp_channel_t channel, rp_pinState_t state);
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state);
 int acq_GetGainV(rp_channel_t channel, float* voltage);
 int acq_SetDecimation(rp_acq_decimation_t decimation);
