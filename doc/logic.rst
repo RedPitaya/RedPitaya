@@ -157,7 +157,7 @@ the DMA, and further memory storage.
 DMA
 ---
 
-The DMA is provided by Xilinx
+The DMA is provided by Xilinx.
 
 ==========
 Memory map
@@ -369,7 +369,10 @@ trigger did not arrive yet, the request might block.
           ^                   ^   ^                      ^
           from          trigger   write pointer         to
 
-### Request data after trigger
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Request data after trigger
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Depending on data rate and the distance from the trigger, blocking might take
 a long time. This will reduce the display rate, so it should be used
 carefully.
