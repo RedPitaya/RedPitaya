@@ -176,10 +176,22 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 
     if (channel == RP_CH_1) {
         gain = &gain_ch_a;
+	//in hamlab and eelab systems we must use relays for switching between LV and HV gains
+	//hvlv userspace driver uses i2c comands to control relays that replaces repitaya jumpers
+	if(state== RP_LOW){
+		system("hvlv -i -1 0");
+	}else{
+		system("hvlv -i -1 1");
+	}
     }
 
     else {
         gain = &gain_ch_b;
+	if(state== RP_LOW){
+		system("hvlv -i -2 0");
+	}else{
+		system("hvlv -i -2 1");
+	}
     }
 
     // Read old values which are dependent on the gain...
@@ -211,6 +223,29 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     }
 
     return status;
+}
+
+/*  Function cals HAMLAB userspace system relay driver for seting hardware.
+    It is not possible to read relay state from hardware that it is why we do not have getter function.
+    RP_LOW represents AC coupling and RP_HIGH represents DC coupling
+*/
+int acq_SetCoupling(rp_channel_t channel, rp_pinState_t state)
+{
+    if (channel == RP_CH_1) {
+        if(state== RP_LOW){
+                system("acdc -i -1 0");
+        }else{
+                system("acdc -i -1 1");
+        }
+    }
+    else {
+        if(state== RP_LOW){
+                system("acdc -i -2 0");
+        }else{
+                system("acdc -i -2 1");
+        }
+    }
+    return RP_OK;
 }
 
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state)
@@ -899,6 +934,8 @@ int acq_SetDefault() {
 
     ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
     ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
+    ECHECK(acq_SetCoupling(RP_CH_1, RP_LOW));
+    ECHECK(acq_SetCoupling(RP_CH_2, RP_LOW));
     ECHECK(acq_SetDecimation(RP_DEC_1));
     ECHECK(acq_SetSamplingRate(RP_SMP_125M));
     ECHECK(acq_SetAveraging(true));

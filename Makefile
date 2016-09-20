@@ -224,12 +224,14 @@ GENERATOR_DIR	= Test/generate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 DISCOVERY_DIR   = Test/discovery
+ACDC		= Test/acdc
+HVLV		= Test/hvlv
 LA_TEST_DIR     = api2/test
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator calib calibrate discovery laboardtest
+.PHONY: lcr bode monitor monitor_old generator calib calibrate discovery laboardtest acdc hvlv
 
-examples: lcr bode monitor monitor_old calib generator discovery
+examples: lcr bode monitor monitor_old calib generator discovery acdc hvlv
 # calibrate laboardtest
 
 lcr:
@@ -266,6 +268,16 @@ discovery:
 	$(MAKE) -C $(DISCOVERY_DIR) clean
 	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+acdc:
+        $(MAKE) -C $(ACDC) clean
+        $(MAKE) -C $(ACDC)
+        $(MAKE) -C $(ACDC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+hvlv:
+        $(MAKE) -C $(HVLV) clean
+        $(MAKE) -C $(HVLV)
+        $(MAKE) -C $(HVLV) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
