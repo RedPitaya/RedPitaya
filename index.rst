@@ -12,6 +12,12 @@
 
 .. toctree::
    :maxdepth: 2
+   :caption: Network
+
+   doc/network
+
+.. toctree::
+   :maxdepth: 2
    :caption: FPGA
 
    doc/logic
