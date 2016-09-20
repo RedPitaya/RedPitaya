@@ -4,7 +4,7 @@
 Block diagram
 =============
 
-.. code-block:: shell-session
+.. code-block:: none
 
  
               input [DW-1:0] o
@@ -193,7 +193,7 @@ used to specify the minimum number of samples to be streamed before trigger
 counting starts. After `trg_cnt` reaches `trg_siz` another `trg_pst` samples must
 be stored, before the last sample in the packet is streamed and acquisition stops.
 
-.. code-block::
+.. code-block:: none
 
    trg_cnt = 0..................1.......2.......3 = trg_siz
    
@@ -205,7 +205,7 @@ be stored, before the last sample in the packet is streamed and acquisition stop
 Another example requires just a specified amount of samples after acquire is
 started (``run`` request). I am not sure yet, how to handle the start of acquisition.
 
-.. code-block:: c
+.. code-block:: none
 
    .......T__________________________........
           
@@ -221,7 +221,7 @@ the number of trigger events still present in the FIFO, one of the bits is used
 to indicate overflow. Trigger FIFO size is configurable so that for example only
 the last trigger is needed it can be obtained without reading the whole FIFO. 
 
-.. code-block::
+.. code-block:: c
 
    struct {
       // trigger configuration
@@ -344,7 +344,7 @@ no trigger received yet. User must check that `trigger+from > 0` otherwise
 some data can be invalid.
 
 
-.. code-block::
+.. code-block:: none
 
     ---------------------------------------------------------------------------
    |                                                                           |
@@ -361,7 +361,7 @@ trigger on the screen. Since it is possible some requested data after the
 trigger did not arrive yet, the request might block.
 
 
-.. code-block::
+.. code-block:: none
 
     ---------------------------------------------------------------------------
    |                                                                           |
@@ -378,7 +378,7 @@ a long time. This will reduce the display rate, so it should be used
 carefully.
 
 
-.. code-block::
+.. code-block:: none
 
     ---------------------------------------------------------------------------
    |                                                                           |

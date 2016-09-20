@@ -119,7 +119,7 @@ Create schroot configuration file ``/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 Replace the tarball path stub with the absolute path of the previously downloaded image.
 Replace user names with a comma separeted list of users whom should be able to compile Red Pitaya.
 
-.. code-block::
+.. code-block:: none
 
    [red-pitaya-ubuntu]
    description=Red Pitaya Debian/Ubuntu OS image
