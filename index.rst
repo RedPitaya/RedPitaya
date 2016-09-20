@@ -8,19 +8,19 @@
    :maxdepth: 2
    :caption: User Documentation
 
-   user
+   doc/user
 
 .. toctree::
    :maxdepth: 2
    :caption: FPGA
 
-   logic
+   doc/logic
 
 .. toctree::
    :maxdepth: 2
    :caption: Visual Programming
 
-   visual
+   doc/visual
 
 ==================
 Indices and tables
