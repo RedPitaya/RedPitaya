@@ -74,7 +74,7 @@ UDEV
 In our case the kernel names the USB WiFi adapter ``wlan0``, then ``UDEV`` rule ``/lib/udev/rules.d/73-usb-net-by-mac.rules``
 renames it into ``enx{MAC}`` using the following rule:
 
-.. code-block:: shell-session
+.. code-block:: none
 
    # Use MAC based names for network interfaces which are directly or indirectly
    # on USB and have an universally administered (stable) MAC address (second bit
@@ -96,7 +96,7 @@ modified rule file into directory ``/etc/udev/rules.d/73-usb-net-by-mac.rules``.
 Since the remaining rules in the file are not relevant on Red Pitaya, it is also
 possible to deactivate the rule by creating a override file which links to ``/dev/null``.
 
-.. code-block::
+.. code-block:: shell-session
 
    # ln -s /dev/null /etc/udev/rules.d/73-usb-net-by-mac.rules
 
@@ -125,7 +125,7 @@ but this can not appropriate to be set as the release default since it can
 cause IP address collisions. A fixed IP address can be configured by adding the
 next lines to `systemd.network  <https://www.freedesktop.org/software/systemd/man/systemd.network.html>`_ files.
 
-.. code-block::
+.. code-block:: none
 
    [Network]
    Address=192.168.0.15/24
@@ -187,7 +187,7 @@ for example due to the USB WiFi adapter not being plugged in. At the same time
 the service was not automatically started after the adapter was plugged into
 Red Pitaya. The next change fixes both.
 
-.. code-block::
+.. code-block:: none
 
     [Install]
    -Alias=multi-user.target.wants/wpa_supplicant@%i.service
@@ -232,7 +232,7 @@ must be removed. Inside a shell on Red Pitaya this file is visible as ``/opt/red
 
 The next example ``hostapd.conf`` file is for the ``rtl871xdrv`` driver.
 
-.. code-block::
+.. code-block:: none
 
    interface=wlan0wext
    ssid=<ssid>
@@ -255,7 +255,7 @@ If the configuration file is written for a device supported by a ``nl80211`` dri
 then the driver line should be ``driver=nl80211`` instead of ``driver=rtl871xdrv``.
 The interface line must also be changed from ``interface=wlan0wext`` to ``interface=wlan0``.
 
-.. code-block::
+.. code-block:: none
 
    interface=wlan0
    ssid=<ssid>
@@ -281,7 +281,7 @@ if the wired interface is connected to the local network.
 In the wired network configuration file `/etc/systemd/network/wired.network <../OS/debian/overlay/etc/systemd/network/wired.network>`_
 there are two lines to enable IP forwarding and masquerading.
 
-.. code-block::
+.. code-block:: none
 
    IPForward=yes
    IPMasquerade=yes
@@ -322,7 +322,7 @@ To enable the ``systemd`` integrated resolver, a symlink for ``/etc/resolv.conf`
 
 It is also possible to add default DNS servers by adding them to ``*.network`` files.
 
-.. code-block::
+.. code-block:: none
 
    nameserver=8.8.8.8
    nameserver=8.8.4.4
