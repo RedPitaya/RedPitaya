@@ -13,6 +13,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
 
@@ -171,7 +172,7 @@ int acq_SetArmKeep(bool enable) {
 
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 {
-
+    int status=RP_OK;
     rp_pinState_t *gain = NULL;
 
     if (channel == RP_CH_1) {
@@ -179,18 +180,18 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 	//in hamlab and eelab systems we must use relays for switching between LV and HV gains
 	//hvlv userspace driver uses i2c comands to control relays that replaces repitaya jumpers
 	if(state== RP_LOW){
-		system("hvlv -i -1 0");
+		if(system("hvlv -i -1 0")==-1)status=EXIT_FAILURE;
 	}else{
-		system("hvlv -i -1 1");
+		if(system("hvlv -i -1 1")==-1)status=EXIT_FAILURE;
 	}
     }
 
     else {
         gain = &gain_ch_b;
 	if(state== RP_LOW){
-		system("hvlv -i -2 0");
+		if(system("hvlv -i -2 0")==-1)status=EXIT_FAILURE;
 	}else{
-		system("hvlv -i -2 1");
+		if(system("hvlv -i -2 1")==-1)status=EXIT_FAILURE;
 	}
     }
 
@@ -205,7 +206,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     *gain = state;
 
     // And recalculate new values...
-    int status = acq_SetChannelThreshold(channel, ch_thr);
+    status = acq_SetChannelThreshold(channel, ch_thr);
     if (status == RP_OK) {
         status = acq_SetChannelThresholdHyst(channel, ch_hyst);
     }
@@ -231,21 +232,22 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 */
 int acq_SetCoupling(rp_channel_t channel, rp_pinState_t state)
 {
+    bool status=RP_OK;
     if (channel == RP_CH_1) {
         if(state== RP_LOW){
-                system("acdc -i -1 0");
+                if(system("acdc -i -1 0")==-1)status=EXIT_FAILURE;
         }else{
-                system("acdc -i -1 1");
+                if(system("acdc -i -1 1")==-1)status=EXIT_FAILURE;
         }
     }
     else {
         if(state== RP_LOW){
-                system("acdc -i -2 0");
+                if(system("acdc -i -2 0")==-1)status=EXIT_FAILURE;
         }else{
-                system("acdc -i -2 1");
+                if(system("acdc -i -2 1")==-1)status=EXIT_FAILURE;
         }
     }
-    return RP_OK;
+    return status;
 }
 
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state)
