@@ -270,14 +270,14 @@ discovery:
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 acdc:
-        $(MAKE) -C $(ACDC) clean
-        $(MAKE) -C $(ACDC)
-        $(MAKE) -C $(ACDC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(ACDC) clean
+	$(MAKE) -C $(ACDC)
+	$(MAKE) -C $(ACDC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 hvlv:
-        $(MAKE) -C $(HVLV) clean
-        $(MAKE) -C $(HVLV)
-        $(MAKE) -C $(HVLV) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(HVLV) clean
+	$(MAKE) -C $(HVLV)
+	$(MAKE) -C $(HVLV) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
