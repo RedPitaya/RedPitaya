@@ -226,12 +226,13 @@ XADC_DIR        = Test/xadc
 DISCOVERY_DIR   = Test/discovery
 ACDC		= Test/acdc
 HVLV		= Test/hvlv
+LAOSC           = Test/laosc
 LA_TEST_DIR     = api2/test
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator calib calibrate discovery laboardtest acdc hvlv
+.PHONY: lcr bode monitor monitor_old generator calib calibrate discovery laboardtest acdc hvlv laosc
 
-examples: lcr bode monitor monitor_old calib generator discovery acdc hvlv
+examples: lcr bode monitor monitor_old calib generator discovery acdc hvlv laosc
 # calibrate laboardtest
 
 lcr:
@@ -278,6 +279,11 @@ hvlv:
 	$(MAKE) -C $(HVLV) clean
 	$(MAKE) -C $(HVLV)
 	$(MAKE) -C $(HVLV) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+laosc:
+        $(MAKE) -C $(LAOSC) clean
+        $(MAKE) -C $(LAOSC)
+        $(MAKE) -C $(LAOSC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
