@@ -190,7 +190,7 @@ $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
 	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts >> $(TMP)/dts/system.dts
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i $(FPGA_DIR)/dts $(TMP)/dts/system.dts
 	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
-	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/hamlab_i2cmux.dts -b 0 -@ patches/devicetree/hamlab_i2cmux.dts
+	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/hamlab_i2cmux.dtbo -b 0 -@ patches/devicetree/hamlab_i2cmux.dts
 	# create device tree source from binary for reference
 	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
@@ -200,7 +200,8 @@ devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp $(TMP)/dts/amba_pl.dtbo         $(INSTALL_DIR)
 	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
 	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
-
+	cp $(TMP)/dts/hamlab_i2cmux.dtbo   $(INSTALL_DIR)
+	cp patches/devicetree/hamlab_i2cmux.sh $(INSTALL_DIR)
 ################################################################################
 # boot file generator
 ################################################################################
