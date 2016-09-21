@@ -18,8 +18,8 @@ all: $(OBJS)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 install:
-        mkdir -p $(INSTALL_DIR)/bin
-        cp $(OBJS) $(INSTALL_DIR)/bin	
+	mkdir -p $(INSTALL_DIR)/bin
+	cp $(OBJS) $(INSTALL_DIR)/bin	
 
 clean:
 	$(RM) *.o
