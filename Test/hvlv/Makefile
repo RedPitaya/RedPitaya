@@ -1,3 +1,5 @@
+INSTALL_DIR ?= .
+
 CC = $(CROSS_COMPILE)gcc
 
 CFLAGS  = -g -std=gnu99 -Wall -Werror
@@ -14,6 +16,10 @@ all: $(OBJS)
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
+
+install:
+        mkdir -p $(INSTALL_DIR)/bin
+        cp $(OBJS) $(INSTALL_DIR)/bin	
 
 clean:
 	$(RM) *.o
