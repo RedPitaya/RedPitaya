@@ -281,9 +281,9 @@ hvlv:
 	$(MAKE) -C $(HVLV) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 laosc:
-        $(MAKE) -C $(LAOSC) clean
-        $(MAKE) -C $(LAOSC)
-        $(MAKE) -C $(LAOSC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(LAOSC) clean
+	$(MAKE) -C $(LAOSC)
+	$(MAKE) -C $(LAOSC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
