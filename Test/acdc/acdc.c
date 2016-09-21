@@ -1,16 +1,12 @@
-#include <i2c-dev.h>
-#include <smbus.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
-//#include <time.h>
 #include <string.h>
-//#include <sys/stat.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
-
+#include <linux/i2c-dev.h>
 //
 //pca9555
 //reg 0 1 input port reg read

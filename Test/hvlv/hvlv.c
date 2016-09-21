@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
-//#include <time.h>
 #include <string.h>
-//#include <sys/stat.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
