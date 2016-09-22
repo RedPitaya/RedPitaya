@@ -12,3 +12,4 @@ i2cset -y 8 0x21 2 0
 i2cset -y 8 0x21 3 0
 
 echo adt7470 0x2e > /sys/bus/i2c/devices/i2c-2/new_device
+echo 123 > /sys/class/hwmon/hwmon0/pwm3_auto_point2_pwm
