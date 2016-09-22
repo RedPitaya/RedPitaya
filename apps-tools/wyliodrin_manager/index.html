@@ -64,7 +64,7 @@
                     <div class="left-content-vp list-vp">
                         <p class="color-dark-blue">Visual programing server application enables user to:</p>
                         <ul>
-                            <li>Program Red Piataya remotely using only a WEB browser</li>
+                            <li>Program Red Pitaya remotely using only a WEB browser</li>
                             <li>Program even if you don't know a programming language</li>
                             <li>Visualise sensor data and debug programs using graphs</li>
                             <li>Program in Blockly, Python or Javascript</li>
@@ -77,8 +77,6 @@
                             <li><a href="http://redpitaya.com/extension-module/" class="color-dark-blue">Sensor Extension Module</a></li>
                             <li><a href="http://redpitaya.com/blinking-led-with-visual-programming/" class="color-dark-blue">Example 1</a></li>
                             <li><a href="http://redpitaya.com/alarm/" class="color-dark-blue">Example 2</a></li>
-                            <li><a href="https://store.redpitaya.com/customer/account/create/" class="color-dark-blue">Registrated account</a></li>
-                            <li><a href="http://store.redpitaya.com/visual-programming.html" class="color-dark-blue">Visual Programming Licence</a></li>
                         </ul>
                     </div>
                 </div>
@@ -99,11 +97,17 @@
                             </li>
                         </ul>
                     </div>
-                    <div id="label-is-not-runnung" align=center style="font-size: 16pt; display: none;" class="color-red">
+                    <div id="label-is-stopped-nl" align=center style="font-size: 16pt; display: none;" class="color-red">
                         Error: Visual Programming server cannot be started. Identification file is missing.
+                    </div>
+                    <div id="label-is-stopped" align=center style="font-size: 16pt; display: none;" class="color-red">
+                        Visual Programming server is stopped.
                     </div>
                     <div id="label-is-runnung" align=center style="font-size: 16pt; display: none;" class="color-green">
                         Visual Programming server is started.
+                    </div>
+                    <div id="label-is-updating" align=center style="font-size: 16pt; display: none;" class="color-yellow">
+                        Updating...
                     </div>
                     <div id="vp-go-to-vp"align=center>
                     	<div class="vp-buttons vp-button-big">
@@ -116,8 +120,8 @@
                 	<div id="vp-instructions-body" class="top-line">
                 		If you are running Visual Programming for the <span class="color-dark-blue">FIRST TIME</span><br>
                 		you will need to have:<br>
-                		1. Registrated account on the www.redpitaya.com page<br>
-                		2. Visual Programming license activated for your account (free 7 day trial is available)<br>
+                		1. <a href="https://store.redpitaya.com/customer/account/create/" class="color-dark-blue">Registrated account</a> on the www.redpitaya.com page<br>
+                		2. <a href="http://store.redpitaya.com/visual-programming.html" class="color-dark-blue">Visual Programming licence</a> activated for your account (free 7 day trial is available)<br>
                 		3. Identification file "wyliodrin.json" uploaded on your Red Pitaya board<br>
                 	</div>
                 </div>
