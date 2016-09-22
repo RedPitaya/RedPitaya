@@ -230,9 +230,9 @@ LAOSC           = Test/laosc
 LA_TEST_DIR     = api2/test
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator calib calibrate discovery laboardtest acdc hvlv laosc
+.PHONY: monitor monitor_old generator calib calibrate discovery laboardtest acdc hvlv laosc
 
-examples: lcr bode monitor monitor_old calib generator discovery acdc hvlv laosc
+examples: monitor monitor_old calib generator discovery acdc hvlv laosc
 # calibrate laboardtest
 
 lcr:
@@ -362,7 +362,7 @@ APPS_FREE_DIR = apps-free
 
 .PHONY: apps-free
 
-apps-free: lcr bode
+apps-free: 
 	$(MAKE) -C $(APPS_FREE_DIR) clean
 	$(MAKE) -C $(APPS_FREE_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -382,9 +382,9 @@ APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
 APP_BA_PRO_DIR 		= Applications/ba_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
+.PHONY: apps-pro scopegenpro spectrumpro la_pro 
 
-apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro
+apps-pro: scopegenpro spectrumpro la_pro 
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
