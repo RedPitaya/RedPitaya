@@ -1,4 +1,4 @@
 [submodule "Applications"]
 	path = Applications
 	url = ../../redpitaya-2-0/redpitaya-pro.git
-	branch = master
+	branch = hamlab

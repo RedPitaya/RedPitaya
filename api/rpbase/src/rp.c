@@ -502,6 +502,11 @@ int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
  * Acquire methods
  */
 
+int rp_AcqSetCoupling(rp_channel_t channel, rp_pinState_t state)
+{
+	return acq_SetCoupling(channel, state);
+}
+
 int rp_AcqSetArmKeep(bool enable)
 {
     return acq_SetArmKeep(enable);

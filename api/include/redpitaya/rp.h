@@ -628,6 +628,8 @@ int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val);
  */
 ///@{
 
+int rp_AcqSetCoupling(rp_channel_t channel, rp_pinState_t state);
+
 /**
  * Enables continous acquirement even after trigger has happened.
  * @param enable True for enabling and false disabling
