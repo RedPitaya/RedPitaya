@@ -195,6 +195,8 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 	}
     }
 
+    if(system("laosc -o")==-1)status=EXIT_FAILURE;
+
     // Read old values which are dependent on the gain...
     rp_pinState_t old_gain;
     float ch_thr, ch_hyst;
