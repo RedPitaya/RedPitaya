@@ -87,13 +87,20 @@
                                 </tr>
                                 <tr id="step_3" class="step">
                                     <td class="step_desc">Step 3. Checking for updates
-                                        <p class="select_ver">Select version to install:
+                                        <p class="select_ver">Select release type:
+                                            <select id="ecosystem_type" >
+												<option value="1">Stable 0.96</option>
+												<option value="2">Stable 0.97</option>
+												<option value="3">Beta</option>
+											</select>
+                                        </p>
+                                        <p id="warn">Warning: Install this versions on your own risk!</p>
+                                        <p class="select_ver" id="select_ver">Select version to install:
                                             <select id="ecosystem_ver" disabled>
                                             </select><span id="and_click"> and click </span><button id="apply">Apply</button>
 											<a id="" href="#" data-toggle="modal" data-target="#changelog">CHANGELOG</a>
                                         </p>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later</p>
-                                        <p class="warn_msg">Warning: Downgrading the OS may cause unpredictable behavior</p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
