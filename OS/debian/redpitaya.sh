@@ -19,12 +19,15 @@ install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                   
 # TODO: this Wyliodrin service is only here since wyliodrin.sh can not be run in a virtualized environment
 # Wyliodrin service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
+# HAMLAB
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hamlab_i2cmux.service       $ROOT_DIR/etc/systemd/system/hamlab_i2cmux.service
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 systemctl enable redpitaya_discovery
 systemctl enable redpitaya_nginx
 systemctl enable sockproc
 #systemctl enable redpitaya_scpi
+systemctl enable hamlab_i2cmux.service
 
 # applications used by Bazaar
 apt-get -y install wget

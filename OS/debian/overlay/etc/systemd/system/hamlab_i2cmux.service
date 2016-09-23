@@ -1,0 +1,11 @@
+[Unit]
+Description=HAMLAB I2C configuration
+Wants=systemd-remount-fs.service
+After=systemd-remount-fs.service
+
+[Service]
+Type=oneshot
+ExecStart=hamlab_i2cmux.sh
+
+[Install]
+WantedBy=multi-user.target
