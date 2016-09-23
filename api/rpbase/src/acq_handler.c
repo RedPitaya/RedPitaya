@@ -237,16 +237,16 @@ int acq_SetCoupling(rp_channel_t channel, rp_pinState_t state)
     bool status=RP_OK;
     if (channel == RP_CH_1) {
         if(state== RP_LOW){
-                if(system("acdc -i -1 0")==-1)status=EXIT_FAILURE;
-        }else{
                 if(system("acdc -i -1 1")==-1)status=EXIT_FAILURE;
+        }else{
+                if(system("acdc -i -1 0")==-1)status=EXIT_FAILURE;
         }
     }
     else {
         if(state== RP_LOW){
-                if(system("acdc -i -2 0")==-1)status=EXIT_FAILURE;
-        }else{
                 if(system("acdc -i -2 1")==-1)status=EXIT_FAILURE;
+        }else{
+                if(system("acdc -i -2 0")==-1)status=EXIT_FAILURE;
         }
     }
     return status;
