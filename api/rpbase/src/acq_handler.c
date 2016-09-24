@@ -180,18 +180,18 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 	//in hamlab and eelab systems we must use relays for switching between LV and HV gains
 	//hvlv userspace driver uses i2c comands to control relays that replaces repitaya jumpers
 	if(state== RP_LOW){
-		if(system("hvlv -i -1 1")==-1)status=EXIT_FAILURE;
-	}else{
 		if(system("hvlv -i -1 0")==-1)status=EXIT_FAILURE;
+	}else{
+		if(system("hvlv -i -1 1")==-1)status=EXIT_FAILURE;
 	}
     }
 
     else {
         gain = &gain_ch_b;
 	if(state== RP_LOW){
-		if(system("hvlv -i -2 1")==-1)status=EXIT_FAILURE;
-	}else{
 		if(system("hvlv -i -2 0")==-1)status=EXIT_FAILURE;
+	}else{
+		if(system("hvlv -i -2 1")==-1)status=EXIT_FAILURE;
 	}
     }
 
@@ -237,16 +237,16 @@ int acq_SetCoupling(rp_channel_t channel, rp_pinState_t state)
     bool status=RP_OK;
     if (channel == RP_CH_1) {
         if(state== RP_LOW){
-                if(system("acdc -i -1 1")==-1)status=EXIT_FAILURE;
-        }else{
                 if(system("acdc -i -1 0")==-1)status=EXIT_FAILURE;
+        }else{
+                if(system("acdc -i -1 1")==-1)status=EXIT_FAILURE;
         }
     }
     else {
         if(state== RP_LOW){
-                if(system("acdc -i -2 1")==-1)status=EXIT_FAILURE;
-        }else{
                 if(system("acdc -i -2 0")==-1)status=EXIT_FAILURE;
+        }else{
+                if(system("acdc -i -2 1")==-1)status=EXIT_FAILURE;
         }
     }
     return status;
