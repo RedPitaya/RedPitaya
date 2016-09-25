@@ -60,8 +60,8 @@ static void pabort(const char *s)
 static void print_usage(const char *prog)
 {
         printf("Usage: [-1:2:sih]\n");
-        puts(	"  -1 [0-hv 1-lv] \n"
-        	"  -2 [0-hv 1-lv] \n"
+        puts(	"  -1 [0-lv 1-hv] \n"
+        	"  -2 [0-lv 1-hv] \n"
                	"  -i INSTRUMENTS use with -1  and -2 \n"
 		"  -h help\n" );
         exit(1);
@@ -151,22 +151,22 @@ static void parse_opts(int argc, char *argv[])
 
 		break;
 		case '1':
-			//HV:	 O1.4=1  O1.5=0
+			//LV:	 O1.4=1  O1.5=0
 			t=atoi(optarg);
 			if(t==0){
 				data[1]&=~0x30;
 				data[1]|=0x20;
-				printf("CH1 HV\n");
+				printf("CH1 LV\n");
         			i2c_smbus_write_byte_data(file, 3, data[1]);
         			printf("data[1]=0x%x\n",data[1]);
         			usleep(8000);
         			i2c_smbus_write_byte_data(file, 3, 0);
 			}
-			//LV:	 O1.4=0  O1.5=1
+			//HV:	 O1.4=0  O1.5=1
                         else if(t==1){
 				data[1]&=~0x30;
 				data[1]|=0x10;
-				printf("CH1 LV\n");
+				printf("CH1 HV\n");
         			i2c_smbus_write_byte_data(file, 3, data[1]);
         			printf("data[1]=%x\n",data[1]);
         			usleep(8000);
@@ -179,24 +179,24 @@ static void parse_opts(int argc, char *argv[])
 		break;
 		case '2':
 			t=atoi(optarg);
-			//HV:
+			//LV:
 			//		 O0.0=1  O0.1=0
 			if(t==0){
                         	data[0]&=0x3;
 				data[0]|=0x1;
-                        	printf("CH2 HV\n");
+                        	printf("CH2 LV\n");
         			i2c_smbus_write_byte_data(file, 2, data[0]);
         			printf("data[0]=0x%x\n",data[0]);
         			usleep(8000);
         			i2c_smbus_write_byte_data(file, 2, 0);
 
                         }
-			//LV:
+			//HV:
 			//		 O0.0=0  O0.1=1
 			else if(t==1){
                         	data[0]&=~0x3;
 				data[0]|=0x2;
-                        	printf("CH2 LV\n");
+                        	printf("CH2 HV\n");
         			i2c_smbus_write_byte_data(file, 2, data[0]);
         			printf("data[0]=0x%x\n",data[0]);
         			usleep(8000);
