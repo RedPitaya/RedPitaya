@@ -36,11 +36,11 @@
                 timeout: 1500
             })
             .fail(function(msg) {
-                if (msg.responseText.split('\n')[1] == "active") {
+                if (msg.responseText.includes('active')) {
                     $('#VPS_RUN').hide();
                     $('#VPS_STOP').css('display', 'inline-block');
                     VPS.UpdateServerStatus("running");
-                } else {
+                } else {  
                     $('#VPS_STOP').hide();
                     $('#VPS_RUN').css('display', 'inline-block');
                     VPS.UpdateServerStatus("stopped");
