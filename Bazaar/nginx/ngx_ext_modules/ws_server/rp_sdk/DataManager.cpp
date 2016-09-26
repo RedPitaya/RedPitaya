@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <cstring>
+#include <map>
 #include "DataManager.h"
 #include "CustomParameters.h"
 #include "misc.h"
@@ -230,6 +231,21 @@ void CDataManager::SetSignalInterval(int _interval)
 void CDataManager::SendAllParams()
 {
 	m_send_all_params = true;
+}
+
+std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
+{
+	std::map<std::string, bool> res;
+	const char* data = get_app_features(app_id.c_str());
+	fprintf(stderr, "GET FEATURES %s\n", data);
+
+	JSONNode arr = libjson::parse(data);
+	for (auto n : arr) 
+	{
+		res[n.name()] = n
+	}
+
+	return res;
 }
 
 extern "C" int ws_set_params(const char *_params)
