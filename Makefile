@@ -220,7 +220,7 @@ SDR_NAME = sdr-transceiver-hpsdr
 SDR_DIR = Applications/sdr
 SDR_SCRIPT = sdr-transceiver-hpsdr-bazaar.sh
 sdr: 
-	$(MAKE) -C $(SDR_DIR)
+	$(MAKE) -C $(SDR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya tools
