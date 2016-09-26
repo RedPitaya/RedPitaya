@@ -217,9 +217,10 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 .PHONY: sdr
 
 SDR_NAME = sdr-transceiver-hpsdr
-SDR_PATH = Applications/sdr
+SDR_DIR = Applications/sdr
 SDR_SCRIPT = sdr-transceiver-hpsdr-bazaar.sh
-sdr: cd Applications/sdr && sh scripts/sdr-transceiver-hpsdr-bazaar.sh
+sdr: 
+	$(MAKE) -C $(SDR_DIR)
 
 ################################################################################
 # Red Pitaya tools
