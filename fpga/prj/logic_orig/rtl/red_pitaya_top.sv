@@ -409,7 +409,10 @@ assign exp_exe.TREADY = 1'b1;
 //   .R  (~exp_exo.ARESETn ),
 //   .S  (1'b0            )
 // );
-assign exp_n_io = exp_exo.TDATA[0];
+// TODO: for now never drive GPIO
+assign exp_p_io = 'z;
+assign exp_n_io = 'z;
+//assign exp_n_io = exp_exo.TDATA[0];
 assign exp_exo.TREADY = 1'b1;
 
 // // input DDR
