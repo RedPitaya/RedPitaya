@@ -18,7 +18,7 @@ define GREET_MSG
 endef
 export GREET_MSG
 
-all: api libredpitaya nginx scpi examples rp_communication apps-tools apps-pro sdr
+all: sdr api libredpitaya nginx scpi examples rp_communication apps-tools apps-pro
 
 $(DL):
 	mkdir -p $@
@@ -219,8 +219,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 SDR_NAME = sdr-transceiver-hpsdr
 SDR_PATH = Applications/sdr
 SDR_SCRIPT = sdr-transceiver-hpsdr-bazaar.sh
-sdr: cd $(SDR_PATH) && sh scripts/$(SDR_SCRIPT)
-	cp -r $(SDR_PATH)/$(SDR_NAME)/* $(SDR_PATH)
+sdr: cd Applications/sdr && sh scripts/sdr-transceiver-hpsdr-bazaar.sh
 
 ################################################################################
 # Red Pitaya tools
