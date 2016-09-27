@@ -16,12 +16,18 @@
         $('#label-is-updating').hide();
 
         if (status == "running"){
+        	$('#VPS_RUN').hide();
+            $('#VPS_STOP').css('display', 'inline-block');
             $('#label-is-runnung').show();
         }
         else if (status == "no-license"){
+        	$('#VPS_STOP').hide();
+            $('#VPS_RUN').css('display', 'inline-block');
             $('#label-is-stopped-nl').show();
         }
         else if (status == "stopped"){
+        	$('#VPS_STOP').hide();
+            $('#VPS_RUN').css('display', 'inline-block');
             $('#label-is-stopped').show();
         }
         else if (status == "updating"){
@@ -36,14 +42,10 @@
                 timeout: 1500
             })
             .fail(function(msg) {
-                if (msg.responseText.includes('active')) {
-                    $('#VPS_RUN').hide();
-                    $('#VPS_STOP').css('display', 'inline-block');
-                    VPS.UpdateServerStatus("running");
-                } else {  
-                    $('#VPS_STOP').hide();
-                    $('#VPS_RUN').css('display', 'inline-block');
+                if (msg.responseText.includes('inactive') || msg.responseText.includes('fail')) {
                     VPS.UpdateServerStatus("stopped");
+                } else {  
+                    VPS.UpdateServerStatus("running");
                 }
             })
     }
