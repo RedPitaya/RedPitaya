@@ -237,7 +237,8 @@ std::vector<std::string> CDataManager::GetFeatures(const std::string& app_id)
 {
 	std::vector<std::string> res;
 	const char* data = get_app_features(app_id.c_str());
-	fprintf(stderr, "GET FEATURES\n");
+	if (!data)
+		return res;
 
 	JSONNode arr = libjson::parse(data);
 	for (auto n : arr) 
