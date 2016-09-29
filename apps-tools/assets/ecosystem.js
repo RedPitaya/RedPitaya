@@ -1,7 +1,7 @@
 //-------------------------------------------------
 //-------------------------------------------------
 
-(function($) {
+(function(RedPitayaOS, $) {
 
     var reloaded = $.cookie("main_forced_reload");
     if (reloaded == undefined || reloaded == "false") {
@@ -10,43 +10,7 @@
     }
     var apps = [];
     var version = '';
-
-    placeElements = function() {
-        var elemWidth = $('.app-item').outerWidth(true);
-        var containerWidth = $('#list-container').width();
-        var elemsInRow = Math.floor(containerWidth / elemWidth);
-        elemsInRow = (elemsInRow == 0) ? 1 : elemsInRow;
-
-        var elemHeight = $('.app-item').outerHeight(true);
-        var containerHeight = $('#main-container').height();
-        var elemsInCol = Math.floor(containerHeight / elemHeight);
-        elemsInCol = (elemsInCol == 0) ? 1 : elemsInCol;
-
-
-
-        $("ul.paging").quickPager({
-            pageSize: elemsInRow * elemsInCol
-        });
-    }
-
-    var refillList = function() {
-        $('.app-item').unbind('click');
-        $('.app-item').unbind('mouseenter');
-        $('.app-item').unbind('mouseleave');
-        $('#main-container').empty();
-        $('#main-container').append('<ul class="paging" id="list-container"></ul>');
-
-        $('#list-container').empty();
-        for (var i = 0; i < apps.length; i++) {
-            var txt = '<li class="app-item" key="' + i + '" >';
-            txt += '<a href="#" class="app-link"><div class="img-container"><img class="app-icon" src="' + apps[i]['image'] + '"></div><span class="app-name">' + apps[i]['name'] + '</span></a>';
-            txt += '</li>';
-            $('#list-container').append(txt);
-        }
-        $('.app-item').click(clickApp);
-        $('.app-item').mouseenter(overApp);
-        $('.app-item').mouseleave(leaveApp);
-    }
+    var revision = '';
 
     var getListOfApps = function() {
         $('#loader-desc').html('Getting the list of applications');
@@ -74,111 +38,19 @@
                 }).fail(function(msg) {
                     getListOfApps();
                 });
-
-                // FIXME: It is bad solution.
-                /*if (obj['name'] == 'spectrumpro' ||
-                    obj['name'] == 'scopegenpro' ||
-                    obj['name'] == 'ba_pro' ||
-                    obj['name'] == 'lcr_meter')
-                    obj['licensable'] = false;
-                else
-                    obj['licensable'] = true;*/
-                 obj['licensable'] = false;
+                obj['licensable'] = false;
 
                 obj['type'] = value['type'];
                 apps.push(obj);
             });
 
-            for (var i = 0; i < default_apps.length; i++) {
-                if (default_apps[i].id == "marketplace")
-                    default_apps[i].url = url + 'bazaar'
-                if(default_apps[i].url[0]=="/")
-                    default_apps[i].url = window.location.origin + default_apps[i].url;
-                apps.push(default_apps[i]);
-            }
+            Desktop.setApplications(apps);
 
-            refillList();
-            placeElements();
-            setTimeout(function(){
+            setTimeout(function() {
                 $('body').addClass('loaded');
             }, 500);
-            
+
         }).fail(function(msg) { getListOfApps(); });
-    }
-
-    var clickApp = function(e) {
-        var key = parseInt($(this).attr('key')) * 1;
-        e.preventDefault();
-        if (apps[key].check_online) {
-            OnlineChecker.checkAsync(function() {
-                if (!OnlineChecker.isOnline()) {
-                    if (apps[key].licensable) {
-                        $('#ignore_link').text('Ignore');
-                        $('#ignore_link').attr('href', apps[key].url);
-                        $('#lic_failed').show();
-                    } else {
-                        $('#ignore_link').text('Close');
-                        $('#ignore_link').attr('href', "#");
-                        $('#lic_failed').hide();
-                    }
-
-                    $('#ic_missing').modal('show');
-                    return;
-                }
-                if (apps[key].url != "" && apps[key].type !== 'run') {
-                    licVerify(apps[key].url);
-                } else {
-                    if (apps[key].url != "")
-                        window.location = apps[key].url;
-                }
-                if (apps[key].callback !== undefined)
-                    apps[key].callback();
-            });
-        } else {
-            if (apps[key].url != "" && apps[key].type !== 'run') {
-                licVerify(apps[key].url);
-            } else {
-                if (apps[key].url != "")
-                    window.location = apps[key].url;
-            }
-            if (apps[key].callback !== undefined)
-                apps[key].callback();
-        }
-
-    }
-
-    var showFeedBack = function() {
-        mail = "support@redpitaya.com";
-        subject = "Feedback Red Pitaya OS " + version;
-        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-        document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
-    }
-
-    var overApp = function(e) {
-        var key = parseInt($(this).attr('key')) * 1;
-        $('#description').html(apps[key].description);
-    }
-
-    var leaveApp = function(e) {
-        $('#description').html("");
-    }
-
-    var onSwipe = function(ev) {
-        if ($('.simplePagerNav').length == 0)
-            return;
-        var rel = 1;
-        if (ev.direction == Hammer.DIRECTION_LEFT)
-            rel = parseInt($('.active-dot').parent().attr('rel')) * 1 + 1;
-        else if (ev.direction == Hammer.DIRECTION_RIGHT) {
-            var crel = parseInt($('.active-dot').parent().attr('rel')) * 1;
-            if (crel == 1) return;
-            rel = crel - 1;
-        }
-        var obj = $('.simplePageNav' + rel).find('a');
-        if (obj.length == 0)
-            return;
-        else obj.click();
     }
 
     var licVerify = function(success_url) {
@@ -220,34 +92,34 @@
                                         .done(function(msg) {})
                                         .fail(function(msg) {
                                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                            if(success_url != undefined)
+                                            if (success_url != undefined)
                                                 window.location = success_url;
                                         });
                                 })
                                 .fail(function(msg) {
                                     console.log("LIC: ERR2");
                                     setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                    if(success_url != undefined)
+                                    if (success_url != undefined)
                                         window.location = success_url;
                                 });
                         } else {
                             console.log("LIC: ERR3");
                             setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                            if(success_url != undefined)
+                            if (success_url != undefined)
                                 window.location = success_url;
                         }
                     })
                     .fail(function(msg) {
                         console.log("LIC: ERR4");
                         setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                        if(success_url != undefined)
+                        if (success_url != undefined)
                             window.location = success_url;
                     });
             })
             .fail(function(msg) {
                 console.log("LIC: ERR4");
                 setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                if(success_url != undefined)
+                if (success_url != undefined)
                     window.location = success_url;
             });
     }
@@ -291,27 +163,31 @@
             })
     }
 
+    RedPitayaOS.getVersion = function() {
+    	return version;
+    }
+
+
+    RedPitayaOS.getRevision = function() {
+    	return revision;
+    }
+
+    var printRpVersion = function(msg) {
+        var info = msg;
+        version = info['version'];
+        revision = info['revision'];
+        $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
+        checkUpdates(info);
+    }
+
     $(document).ready(function($) {
         getListOfApps();
-
-        var myElement = document.getElementById('main-container');
-        var mc = new Hammer(myElement);
-        mc.on('swipe', onSwipe);
-
         $.ajax({
-            method: "GET",
-            url: '/get_info'
-        }).done(function(msg) {
-            var info = msg;
-            version = info['version'];
-            $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
-            checkUpdates(info);
-        }).fail(function(msg) {
-            var info = JSON.parse(msg.responseText);
-            version = info['version'];
-            $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
-            checkUpdates(info);
-        });
+                method: "GET",
+                url: '/get_info'
+            })
+            .done(printRpVersion)
+            .fail(printRpVersion);
 
         $('#ignore_link').click(function(event) {
             var elem = $(this)
@@ -323,24 +199,5 @@
 
     });
 
-    $(window).resize(function($) {
-        refillList();
-        placeElements();
-    });
-
-    var default_apps = [
-        // { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
-        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
-        { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
-        { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://wiki.redpitaya.com/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "tutorials", name: "Create own WEB application", description: "RedPitaya tutorials.", url: "http://wiki.redpitaya.com/index.php?title=Tutorials_overview", image: "../assets/images/tutors.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager/", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-    ];
-
     licVerify(undefined)
-})(jQuery);
+})(window.RedPitayaOS = window.RedPitayaOS || {}, jQuery);
