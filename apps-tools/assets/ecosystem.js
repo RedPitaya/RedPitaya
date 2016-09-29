@@ -45,10 +45,10 @@
             });
 
             Desktop.setApplications(apps);
-
             setTimeout(function() {
+				licVerify(undefined);
                 $('body').addClass('loaded');
-            }, 500);
+            }, 666);
 
         }).fail(function(msg) { getListOfApps(); });
     }
@@ -199,5 +199,4 @@
 
     });
 
-    licVerify(undefined)
 })(window.RedPitayaOS = window.RedPitayaOS || {}, jQuery);
