@@ -144,10 +144,10 @@ static void parse_opts(int argc, char *argv[])
 			i2c_smbus_write_byte_data(file, 3, data[1]);
                         break;
 
-                case 'l':// o1.1=0 o1.0=1
+                case 'o':// o1.1=0 o1.0=1
                         data[1]&=~0x3;
                         data[1]|=0x1;
-                        printf("LA\n");
+                        printf("OSC. tr.\n");
 
 			//send outputs to output registeres
         		i2c_smbus_write_byte_data(file, 3, data[1]);
@@ -155,10 +155,10 @@ static void parse_opts(int argc, char *argv[])
         		usleep(8000);
         		i2c_smbus_write_byte_data(file, 3, 0);
                 	break;
-                case 'o':// o1.1=1 o1.o=0
+                case 'l':// o1.1=1 o1.o=0
                         data[1]&=~0x3;
                         data[1]|=0x2;
-                        printf("OSC. tr.\n");
+                        printf("LA\n");
 
 		        //send outputs to output registeres
         		i2c_smbus_write_byte_data(file, 3, data[1]);
