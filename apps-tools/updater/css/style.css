@@ -844,6 +844,12 @@ area:hover {
     display: none;
 }
 
+#warn
+{
+    font-size: 12px;
+    color: orange;
+    display: none;
+}
 
 .select_ver
 {
@@ -852,6 +858,12 @@ area:hover {
 }
 
 #ecosystem_ver {
+    color: black;
+    width: 150px;
+    height: 27px;
+}
+
+#ecosystem_type {
     color: black;
     width: 150px;
     height: 27px;
