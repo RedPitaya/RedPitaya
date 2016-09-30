@@ -1,0 +1,14 @@
+/include/ "miso2gpio.dtsi"
+
+i2c@0 {
+	pca9555: pca9555@20 {	
+		compatible = "nxp,pca9555";
+		interrupt-parent = <&gpio0>;
+		interrupts = <&gpio0 10 0>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		reg = <0x20>;
+	};	
+};
