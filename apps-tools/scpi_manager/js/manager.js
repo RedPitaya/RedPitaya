@@ -101,6 +101,11 @@
 
 // Page onload event handler
 $(function() {
+
+    // Init help
+    Help.init(helpListSCPI);
+    Help.setState("idle");
+
     SCPI.CheckServerStatus();
     setInterval(SCPI.GetIP, 1000);
     setInterval(SCPI.CheckServerStatus, 3000);

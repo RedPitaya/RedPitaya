@@ -104,6 +104,11 @@
 
 // Page onload event handler
 $(function() {
+
+    // Init help
+    Help.init(helpListVP);
+    Help.setState("idle");
+
     VPS.UpdateServerStatus("updating");
     VPS.CheckIdentificationFileStatus();
     setInterval(VPS.CheckIdentificationFileStatus, 3000);

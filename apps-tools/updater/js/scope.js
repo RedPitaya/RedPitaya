@@ -294,6 +294,11 @@ function checkDev() {
 
 // Page onload event handler
 $(document).ready(function() {
+
+    // Init help
+    Help.init(helpListUpdater);
+    Help.setState("idle");
+    
     UPD.startStep(1);
     $('body').addClass('loaded');	
 	checkDev();
