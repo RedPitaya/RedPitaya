@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 #include "BaseParameter.h"
 
 struct Data {
@@ -46,6 +47,7 @@ public:
 	void SetSignalInterval(int _interval);
 
 	void SendAllParams();
+	std::map<std::string, bool> GetFeatures(const std::string& app_id);
 };
 
 int dbg_printf(const char * format, ...);

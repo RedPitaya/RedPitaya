@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <cstring>
+#include <map>
 #include "DataManager.h"
 #include "CustomParameters.h"
 #include "misc.h"
@@ -10,7 +11,6 @@
 
 #include "gziping.h"
 
-CBooleanParameter IsDemoParam("is_demo", CBaseParameter::RO, false, 1);
 CStringParameter InCommandParam("in_command", CBaseParameter::WO, "", 1);
 CStringParameter OutCommandParam("out_command", CBaseParameter::RO, "", 1);
 
@@ -232,6 +232,21 @@ void CDataManager::SendAllParams()
 	m_send_all_params = true;
 }
 
+std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
+{
+	std::map<std::string, bool> res;
+#ifdef ENABLE_LICENSING
+	const char* data = get_app_features(app_id.c_str());
+	if (!data)
+		return res;
+
+	JSONNode arr = libjson::parse(data);
+	for (auto n : arr) 
+		res[n.begin()->as_string()] = true;
+#endif
+	return res;
+}
+
 extern "C" int ws_set_params(const char *_params)
 {
 	CDataManager * man = CDataManager::GetInstance();
@@ -328,8 +343,6 @@ extern "C" int ws_get_signals_interval(void)
 
 extern "C" int ws_set_demo_mode(int a)
 {
-	dbg_printf("Set demo mode\n");
-	IsDemoParam.Set(true);
 	return 0;
 }
 
