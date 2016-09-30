@@ -235,6 +235,7 @@ void CDataManager::SendAllParams()
 std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
 {
 	std::map<std::string, bool> res;
+#ifdef ENABLE_LICENSING
 	const char* data = get_app_features(app_id.c_str());
 	if (!data)
 		return res;
@@ -242,7 +243,7 @@ std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
 	JSONNode arr = libjson::parse(data);
 	for (auto n : arr) 
 		res[n.begin()->as_string()] = true;
-
+#endif
 	return res;
 }
 
