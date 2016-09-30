@@ -1,3 +1,2 @@
 /include/ "system.dtsi"
 /include/ "led-user.dtsi"
-/include/ "spi2gpio.dtsi"
