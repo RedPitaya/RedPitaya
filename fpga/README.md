@@ -194,8 +194,8 @@ The default pin assignment for GPIO is described in the next table.
 | `C6` | `E2[ 4]`  | SPI1_MOSI        |  `MIO[11]`     | `906+   [11]   = 917`      | requires `pinctrl` changes to be active
 | `D9` | `E2[ 5]`  | SPI1_SCK         |  `MIO[12]`     | `906+   [12]   = 918`      | requires `pinctrl` changes to be active
 | `E8` | `E2[ 6]`  | SPI1_CS#         |  `MIO[13]`     | `906+   [13]   = 919`      | requires `pinctrl` changes to be active
-| `B13`| `E2[ 9]`  | I2C1_SCL         |  `MIO[50]`     | `906+   [50]   = 956`      | requires `pinctrl` changes to be active
-| `B9` | `E2[10]`  | I2C1_SDA         |  `MIO[51]`     | `906+   [51]   = 957`      | requires `pinctrl` changes to be active
+| `B13`| `E2[ 9]`  | I2C0_SCL         |  `MIO[50]`     | `906+   [50]   = 956`      | requires `pinctrl` changes to be active
+| `B9` | `E2[10]`  | I2C0_SDA         |  `MIO[51]`     | `906+   [51]   = 957`      | requires `pinctrl` changes to be active
 
 GPIOs are accessible at the `sysfs` index.
 The next example will light up LED[0], and read back its value.
@@ -224,3 +224,12 @@ To switch LED 8 ON use:
 ```bash
 echo 1 > /sys/class/leds/led0/brightness
 ```
+
+### PS `pinctrl` for MIO signals
+
+| dts              | description                    |
+|------------------|--------------------------------|
+| `spi2gpio.dtsi`  | E2 connector, SPI1 signals     |
+| `i2c2gpio.dtsi`  | E2 connector, I2C0 signals     |
+| `uart2gpio.dtsi` | E2 connector, UART1 signals    |
+| `miso2gpio.dtsi` | E2 connector, SPI1 MISO signal |
