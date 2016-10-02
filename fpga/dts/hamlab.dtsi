@@ -1,6 +1,10 @@
+/*
+ * HAMLAB specific features, mostly GPIO on I2C
+*/
+
 /include/ "miso2gpio.dtsi"
 
-i2c@0 {
+&i2c0 {
 	pca9555: pca9555@20 {	
 		compatible = "nxp,pca9555";
 		interrupt-parent = <&gpio0>;
