@@ -18,9 +18,15 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: FPGA
+   :caption: LA
 
    doc/logic
+
+.. toctree::
+   :maxdepth: 2
+   :caption: FPGA
+
+   fpga/fpga
 
 .. toctree::
    :maxdepth: 2
