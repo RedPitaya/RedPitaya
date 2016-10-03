@@ -107,7 +107,7 @@ axi4_stream_if #(         .DT (SBA_T)) str_osc [MNA-1:0] (.ACLK (adc_clk), .ARES
 axi4_stream_if #(         .DT (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 axi4_stream_if #(         .DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
 // digital input streams
-axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
+//axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
 
 // DMA sterams RX/TX
 axi4_stream_if #(         .DT (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
@@ -117,8 +117,8 @@ axi4_stream_if #(         .DT (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARES
 axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
 
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+//axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 // DAC signals
@@ -395,7 +395,8 @@ assign gpio.i [23:8] = {exp_n_io, exp_p_io};
 //   .S  (1'b0)
 // );
 
-assign exp_exe.TREADY = 1'b1;
+//assign exp_exe.TREADY = 1'b1;
+//assign exp_exe.TREADY = 1'b0;
 
 // // output DDR
 // ODDR #(
@@ -714,35 +715,37 @@ endgenerate
 // LG (logic generator)
 ////////////////////////////////////////////////////////////////////////////////
 
-asg_top #(
-  .EN_LIN (0),
-  .DT (SBL_T),
-  .TN ($bits(trg))
-) lg (
-  // stream output
-  .sto       (str_lgo),
-  // triggers
-  .trg_ext   (trg),
-  .trg_swo   (trg.lg_swo),
-  .trg_out   (trg.lg_out),
-  // interrupts
-  .irq_trg   (irq.lg_trg),
-  .irq_stp   (irq.lg_stp),
-  // System bus
-  .bus       (sys[11])
-);
+//asg_top #(
+//  .EN_LIN (0),
+//  .DT (SBL_T),
+//  .TN ($bits(trg))
+//) lg (
+//  // stream output
+//  .sto       (str_lgo),
+//  // triggers
+//  .trg_ext   (trg),
+//  .trg_swo   (trg.lg_swo),
+//  .trg_out   (trg.lg_out),
+//  // interrupts
+//  .irq_trg   (irq.lg_trg),
+//  .irq_stp   (irq.lg_stp),
+//  // System bus
+//  .bus       (sys[11])
+//);
 
-assign exp_exe.TDATA  = {2{str_lgo.TDATA[1]}};
-assign exp_exe.TKEEP  =    str_lgo.TKEEP   ;
-assign exp_exe.TLAST  =    str_lgo.TLAST   ;
-assign exp_exe.TVALID =    str_lgo.TVALID  ;
+sys_bus_stub sys_bus_stub_11 (sys[11]);
 
-assign exp_exo.TDATA  = {2{str_lgo.TDATA[0]}};
-assign exp_exo.TKEEP  =    str_lgo.TKEEP   ;
-assign exp_exo.TLAST  =    str_lgo.TLAST   ;
-assign exp_exo.TVALID =    str_lgo.TVALID  ;
-
-assign str_lgo.TREADY = exp_exo.TREADY;
+//assign exp_exe.TDATA  = {2{str_lgo.TDATA[1]}};
+//assign exp_exe.TKEEP  =    str_lgo.TKEEP   ;
+//assign exp_exe.TLAST  =    str_lgo.TLAST   ;
+//assign exp_exe.TVALID =    str_lgo.TVALID  ;
+//
+//assign exp_exo.TDATA  = {2{str_lgo.TDATA[0]}};
+//assign exp_exo.TKEEP  =    str_lgo.TKEEP   ;
+//assign exp_exo.TLAST  =    str_lgo.TLAST   ;
+//assign exp_exo.TVALID =    str_lgo.TVALID  ;
+//
+//assign str_lgo.TREADY = exp_exo.TREADY;
 
 // TODO: for now just a loopback
 // this is an attempt to minimize the related DMA
