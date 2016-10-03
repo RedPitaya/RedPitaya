@@ -134,68 +134,98 @@ Device tree is used by Linux to describe features and address space of memory ma
 
 Running ``make`` inside this directory will create a device tree source and some include files:
 
-| device tree file | contents
-|------------------|------------------------------------------------------------
-| `zynq-7000.dtsi` | description of peripherals inside PS (processing system)
-| `pl.dtsi`        | description of AXI attached peripherals inside PL (programmable logic)
-| `system.dts`     | description of all peripherals, includes the above `*.dtsi` files
++------------------+------------------------------------------------------------------------+
+| device tree file | contents                                                               |
++==================+========================================================================+
+| `zynq-7000.dtsi` | description of peripherals inside PS (processing system)               |
++------------------+------------------------------------------------------------------------+
+| `pl.dtsi`        | description of AXI attached peripherals inside PL (programmable logic) |
++------------------+------------------------------------------------------------------------+
+| `system.dts`     | description of all peripherals, includes the above ``*.dtsi`` files    |
++------------------+------------------------------------------------------------------------+
 
-To enable some Linux drivers (Ethernet, XADC, I2C EEPROM, SPI, GPIO and LED)
-additional configuration files. Generic device tree files can be found in `fpga/dts`
-while project specific code is in `fpga/prj/name/dts/`
+To enable some Linux drivers (Ethernet, XADC, I2C EEPROM, SPI, GPIO and LED) additional configuration files.
+Generic device tree files can be found in ``fpga/dts`` while project specific code is in ``fpga/prj/name/dts/``.
 
-# Signal mapping
+==============
+Signal mapping
+==============
 
-## XADC inputs
+-----------
+XADC inputs
+-----------
 
 XADC input data can be accessed through the Linux IIO (Industrial IO) driver interface.
 
++--------+-----------+----------+---------+------------------+--------------------+-------+
 | E2 con | schematic | ZYNQ p/n | XADC in | IIO filename     | measurement target | range |
-|--------|-----------|----------|---------|------------------|--------------------|-------|
++========+===========+==========+=========+==================+====================+=======+
 | AI0    | AIF[PN]0  | B19/A20  | AD8     | in_voltage11_raw | general purpose    | 7.01V |
++--------+-----------+----------+---------+------------------+--------------------+-------+
 | AI1    | AIF[PN]1  | C20/B20  | AD0     | in_voltage9_raw  | general purpose    | 7.01V |
++--------+-----------+----------+---------+------------------+--------------------+-------+
 | AI2    | AIF[PN]2  | E17/D18  | AD1     | in_voltage10_raw | general purpose    | 7.01V |
++--------+-----------+----------+---------+------------------+--------------------+-------+
 | AI3    | AIF[PN]3  | E18/E19  | AD9     | in_voltage12_raw | general purpose    | 7.01V |
++--------+-----------+----------+---------+------------------+--------------------+-------+
 |        | AIF[PN]4  | K9 /L10  | AD      | in_voltage0_raw  | 5V power supply    | 12.2V |
++--------+-----------+----------+---------+------------------+--------------------+-------+
 
-### Input range
+~~~~~~~~~~~
+Input range
+~~~~~~~~~~~
 
-The default mounting intends for unipolar XADC inputs, which allow for observing only positive signals with a saturation range of *0V ~ 1V*. There are additional voltage dividers use to extend this range up to the power supply voltage. It is possible to configure XADC inputs into a bipolar mode with a range of *-0.5V ~ +0.5V*, but it requires removing R273 and providing a *0.5V ~ 1V* common voltage on the E2 connector.
+The default mounting intends for unipolar XADC inputs,
+which allow for observing only positive signals with a saturation range of *0V ~ 1V*.
+There are additional voltage dividers use to extend this range up to the power supply voltage.
+It is possible to configure XADC inputs into a bipolar mode with a range of *-0.5V ~ +0.5V*,
+but it requires removing R273 and providing a *0.5V ~ 1V* common voltage on the E2 connector.
 
-**NOTE:** Unfortunately there is a design error, where the XADC input range in unipolar mode was thought to be *0V ~ 0.5V*. Consequently the voltage dividers were miss designed for a range of double the supply voltage.
+**NOTE:** Unfortunately there is a design error,
+where the XADC input range in unipolar mode was thought to be *0V ~ 0.5V*.
+Consequently the voltage dividers were miss designed for a range of double the supply voltage.
 
 #### 5V power supply
 
-```
-                         -------------------0  Vout
-           ------------  |  ------------
- Vin  0----| 56.0kOHM |-----| 4.99kOHM |----0  GND
-           ------------     ------------
-```
+.. code-block:: shell-session
+
+                           -------------------0  Vout
+             ------------  |  ------------
+   Vin  0----| 56.0kOHM |-----| 4.99kOHM |----0  GND
+             ------------     ------------
+
 Ratio: 4.99/(56.0+4.99)=0.0818
 Range: 1V / ratio = 12.2V
 
 #### General purpose inputs
 
-```
-                         -------------------0  Vout
-           ------------  |  ------------
- Vin  0----| 30.0kOHM |-----| 4.99kOHM |----0  GND
-           ------------     ------------
-```
+.. code-block:: shell-session
+
+                           -------------------0  Vout
+             ------------  |  ------------
+   Vin  0----| 30.0kOHM |-----| 4.99kOHM |----0  GND
+             ------------     ------------
+   
 Ratio: 4.99/(30.0+4.99)=0.143
 Range: 1V / ratio = 7.01
 
+---------
+GPIO LEDs
+---------
 
-## GPIO LEDs
-
-| LED     | color  | SW driver       | dedicated meaning
-|---------|--------|-----------------|----------------------------------
-| `[7:0]` | yellow | RP API          | user defined
-| `  [8]` | yellow | kernel `MIO[0]` | CPU heartbeat (user defined)
-| `  [9]` | reg    | kernel `MIO[7]` | SD card access (user defined)
-| ` [10]` | green  | none            | "Power Good" status
-| ` [11]` | blue   | none            | FPGA programming "DONE"
++-----------+--------+-------------------+-------------------------------+
+| LED       | color  | SW driver         | dedicated meaning             |
++===========+========+===================+===============================+
+| ``[7:0]`` | yellow | RP API            | user defined                  |
++-----------+--------+-------------------+-------------------------------+
+| ``  [8]`` | yellow | kernel ``MIO[0]`` | CPU heartbeat (user defined)  |
++-----------+--------+-------------------+-------------------------------+
+| ``  [9]`` | reg    | kernel ``MIO[7]`` | SD card access (user defined) |
++-----------+--------+-------------------+-------------------------------+
+| `` [10]`` | green  | none              | *Power Good* status           |
++-----------+--------+-------------------+-------------------------------+
+| `` [11]`` | blue   | none              | FPGA programming *DONE*       |
++-----------+--------+-------------------+-------------------------------+
 
 For now only LED8 and LED9 are accessible using a kernel driver. LED [7:0] are not driven by a kernel driver, since the Linux GPIO/LED subsystem does not allow access to multiple pins simultaneously.
 
