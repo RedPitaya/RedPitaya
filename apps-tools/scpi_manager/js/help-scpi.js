@@ -2,13 +2,13 @@ var helpListSCPI =
 {
   idle: [
     {
-      Text: "Description1",
-      URL: "http://redpitaya.com",
+      Text: "How to control your Red Pitaya remotely?",
+      URL: "http://redpitaya.com/control/",
       Img: "pool"
     },
     {
-      Text: "Description2fdgfdgdfgfdg",
-      URL: "http://redpitaya.com",
+      Text: "Red Pitaya's Forum",
+      URL: "http://forum.redpitaya.com/",
       Img: "star"
     }
   ],

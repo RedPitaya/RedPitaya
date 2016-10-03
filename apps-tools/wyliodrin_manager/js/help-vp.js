@@ -2,13 +2,18 @@ var helpListVP =
 {
   idle: [
     {
-      Text: "Description1",
-      URL: "http://redpitaya.com",
+      Text: "Visual Programming instructions",
+      URL: "http://redpitaya.com/visual-programming-instructions/",
       Img: "pool"
     },
     {
-      Text: "Description2fdgfdgdfgfdg",
-      URL: "http://redpitaya.com",
+      Text: "Visual Programming interface",
+      URL: "http://redpitaya.com/visual-programming-interface/",
+      Img: "pool"
+    },
+    {
+      Text: "Red Pitaya's Forum",
+      URL: "http://forum.redpitaya.com/",
       Img: "star"
     }
   ],
