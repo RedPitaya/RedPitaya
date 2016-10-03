@@ -57,7 +57,6 @@ write_hwdef -force       -file    $path_sdk/red_pitaya.hwdef
 
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
-add_files                         .srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 read_xdc                          ../../$path_sdc/red_pitaya.xdc
 

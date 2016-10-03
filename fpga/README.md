@@ -1,15 +1,15 @@
 # Prerequisites
 
-libraries used by ModelSim-Altera software:
-    libxft2 
-    libxft2:i386
-    lib32ncurses5
+Install libraries used by ModelSim-Altera software:
+```bash
+# apt-get install libxft2 libxft2:i386 lib32ncurses5
+```
 
 # Directory structure
 
 Initially there was a single FPGA project containing all functionality intended to be used by all applications.
 Ideally we would maintain this project by fixing bugs and adding new functionality, but there are limits to
-how much functionality can be compiled into a FPGA and developers are not always able to keep backward compatibility.
+how much functionality can be compiled into an FPGA and developers are not always able to keep backward compatibility.
 
 So there are now multiple FPGA projects, some with generic functionality, some with specific functionality for an application.
 Common code for all projects is placed directly into the `fpga` directory. Common code are mostly reusable modules.
@@ -27,8 +27,8 @@ Project specific code is placed inside the `fpga/prj/name/` directories and is s
 | `fpga/sdc/`     | "Synopsys Design Constraints" contains Xilinx design constraints
 | `fpga/sim/`     | simulation scripts
 | `fpga/tbn/`     | Verilog (SystemVerilog) "test bench"
-| `fpga/dts/`     | device tree source files
-| `fpga/prj/name` | project specific code
+| `fpga/dts/`     | device tree source include files
+| `fpga/prj/name` | project `name` specific code
 |                 |
 | `fpga/hsi/`     | "Hardware Software Interface" contains FSBL (First Stage Boot Loader) and DTS (Design Tree) builds
 
@@ -57,7 +57,7 @@ make PRJ=name
 
 To generate and open a Vivado project using GUI, run:
 ```bash
-make project
+make project PRJ=name
 ```
 
 # Simulation
@@ -67,7 +67,7 @@ ModelSim as provided for free from Altera is used to run simulations. Scripts ex
 ln -s $HOME/altera/16.0/modelsim_ase/linux $HOME/altera/16.0/modelsim_ase/linux_rh60
 ```
 
-To run simmulation, Vivado tools have to be installed, but there is no need to source `settings.sh` for not the path to the ModelSim simulator is hardcoded into the simulation `Makefile`.
+To run simulation, Vivado tools have to be installed. There is no need to source `settings.sh`, For now the path to the ModelSim simulator is hard coded into the simulation `Makefile`.
 ```bash
 cd fpga/sim
 ```
@@ -94,7 +94,9 @@ Running `make` inside this directory will create a device tree source and some i
 | `pl.dtsi`        | description of AXI attached peripherals inside PL (programmable logic)
 | `system.dts`     | description of all peripherals, includes the above `*.dtsi` files
 
-To enable some Linux drivers (Ethernet, XADC, I2C EEPROM, SPI, GPIO and LED) the device tree source is patched using `../patches/devicetree.patch`.
+To enable some Linux drivers (Ethernet, XADC, I2C EEPROM, SPI, GPIO and LED)
+additional configuration files. Generic device tree files can be found in `fpga/dts`
+while project specific code is in `fpga/prj/name/dts/`
 
 # Signal mapping
 
@@ -179,13 +181,21 @@ Another way to find the `gpio_base` index is to check the given name inside `sys
 
 The default pin assignment for GPIO is described in the next table.
 
-| LED     | color  | GPIO             | MIO/EMIO index | `sysfs` index              | dedicated meaning     |
-|---------|--------|------------------|----------------|----------------------------|-----------------------|
-|         |        | `exp_p_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` |
-|         |        | `exp_n_io [7:0]` | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` |
-| `[7:0]` | yellow |                  | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` |
-| `  [8]` | yellow |                  | `MIO[0]`       | `906+   [0]    = 906`      | CPU heartbeat (user defined)
-| `  [9]` | reg    |                  | `MIO[7]`       | `906+   [7]    = 913`      | SD card access (user defined)
+| FPGA | connector | GPIO             | MIO/EMIO index | `sysfs` index              |color   dedicated meaning     |
+|------|-----------|------------------|----------------|----------------------------|------------------------------|
+|      |           | `exp_p_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` |
+|      |           | `exp_n_io [7:0]` | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` |
+|      |           | LED `[7:0]`      | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` | yellow
+|      |           | LED `  [8]`      |  `MIO[ 0]`     | `906+   [ 0]   = 906`      | yellow = CPU heartbeat (user defined)
+|      |           | LED `  [9]`      |  `MIO[ 7]`     | `906+   [ 7]   = 913`      | red    = SD card access (user defined)
+| `D5` | `E2[ 7]`  | UART1_TX         |  `MIO[ 8]`     | `906+   [ 8]   = 914`      | output only
+| `B5` | `E2[ 8]`  | UART1_RX         |  `MIO[ 9]`     | `906+   [ 9]   = 915`      | requires `pinctrl` changes to be active
+| `E9` | `E2[ 3]`  | SPI1_MISO        |  `MIO[10]`     | `906+   [10]   = 916`      | requires `pinctrl` changes to be active
+| `C6` | `E2[ 4]`  | SPI1_MOSI        |  `MIO[11]`     | `906+   [11]   = 917`      | requires `pinctrl` changes to be active
+| `D9` | `E2[ 5]`  | SPI1_SCK         |  `MIO[12]`     | `906+   [12]   = 918`      | requires `pinctrl` changes to be active
+| `E8` | `E2[ 6]`  | SPI1_CS#         |  `MIO[13]`     | `906+   [13]   = 919`      | requires `pinctrl` changes to be active
+| `B13`| `E2[ 9]`  | I2C0_SCL         |  `MIO[50]`     | `906+   [50]   = 956`      | requires `pinctrl` changes to be active
+| `B9` | `E2[10]`  | I2C0_SDA         |  `MIO[51]`     | `906+   [51]   = 957`      | requires `pinctrl` changes to be active
 
 GPIOs are accessible at the `sysfs` index.
 The next example will light up LED[0], and read back its value.
@@ -194,10 +204,10 @@ export INDEX=960
 echo $INDEX > /sys/class/gpio/export
 echo out    > /sys/class/gpio/gpio$INDEX/direction
 echo 1      > /sys/class/gpio/gpio$INDEX/value
-echo          /sys/class/gpio/gpio$INDEX/value
+cat           /sys/class/gpio/gpio$INDEX/value
 ```
 
-**NOTE**: A new userspace ABI for GPIO is comming in kernel v4.8, ioctl will be used instead of sysfs.
+**NOTE**: A new user space ABI for GPIO is coming in kernel v4.8, ioctl will be used instead of `sysfs`.
 https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next
 
 ### Linux access to LED
@@ -208,9 +218,18 @@ By providing GPIO/LED details in the device tree, it is possible to access LEDs 
 
 To show CPU load on LED 9 use:
 ```bash
-echo heartbeat > /sys/class/leds/led9/trigger
+echo heartbeat > /sys/class/leds/led0/trigger
 ```
 To switch LED 8 ON use:
 ```bash
-echo 1 > /sys/class/leds/led8/brightness
+echo 1 > /sys/class/leds/led0/brightness
 ```
+
+### PS `pinctrl` for MIO signals
+
+| dts              | description                    |
+|------------------|--------------------------------|
+| `spi2gpio.dtsi`  | E2 connector, SPI1 signals     |
+| `i2c2gpio.dtsi`  | E2 connector, I2C0 signals     |
+| `uart2gpio.dtsi` | E2 connector, UART1 signals    |
+| `miso2gpio.dtsi` | E2 connector, SPI1 MISO signal |

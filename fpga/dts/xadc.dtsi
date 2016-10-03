@@ -1,0 +1,27 @@
+/*
+ * Zynq XADC configuration
+*/
+
+&xadc {
+	compatible = "xlnx,axi-xadc-1.00.a";
+	clocks = <&clkc 18>;
+	xlnx,channels {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		channel@0 {
+			reg = <0>;
+		};
+		channel@1 {
+			reg = <1>;
+		};
+		channel@2 {
+			reg = <2>;
+		};
+		channel@9 {
+			reg = <9>;
+		};
+		channel@10 {
+			reg = <10>;
+		};
+	};
+};

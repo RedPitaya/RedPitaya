@@ -52,22 +52,30 @@ Most of the WiFi configuration complexity comes from two sources:
 ## UDEV
 
 `systemd` provides [predictable network interface names] using [`UDEV`](https://www.freedesktop.org/software/systemd/man/udev.html) rules.
-In our case the kernel names the USB WiFi adapter `wlan0`, then `UDEV` rule `/lib/udev/rules.d/73-special-net-names.rules`
-renames it into `wlxMAC` using the following rule:
+In our case the kernel names the USB WiFi adapter `wlan0`, then `UDEV` rule `/lib/udev/rules.d/73-usb-net-by-mac.rules`
+renames it into `enx{MAC}` using the following rule:
 ```
 # Use MAC based names for network interfaces which are directly or indirectly
 # on USB and have an universally administered (stable) MAC address (second bit
 # is 0).
-ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", NAME=="", ATTR{address}=="?[014589cd]:*", IMPORT{builtin}="net_id", NAME="$env{ID_NET_NAME_MAC}"
+
+IMPORT{cmdline}="net.ifnames", ENV{net.ifnames}=="0", GOTO="usb_net_by_mac_end"
+PROGRAM="/bin/readlink /etc/udev/rules.d/80-net-setup-link.rules", RESULT=="/dev/null", GOTO="usb_net_by_mac_end"
+
+ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", NAME=="", \
+    ATTR{address}=="?[014589cd]:*", \
+    IMPORT{builtin}="net_id", NAME="$env{ID_NET_NAME_MAC}"
+
+LABEL="usb_net_by_mac_end"
 ```
 For a simple generic WiFi configuration it is preferred to have the same
 interface name regardless of the used adapter. This is achieved by overriding
 `UDEV` rules with a modified rule file. The overriding is done by placing the
-modified rule file into directory `/etc/udev/rules.d/73-special-net-names.rules`.
+modified rule file into directory `/etc/udev/rules.d/73-usb-net-by-mac.rules`.
 Since the remaining rules in the file are not relevant on Red Pitaya, it is also
 possible to deactivate the rule by creating a override file which links to `/dev/null`.
 ```bash
-ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
+ln -s /dev/null /etc/udev/rules.d/73-usb-net-by-mac.rules
 ```
 
 For user space tools to be able to distinguish between adapters using old and new drivers,
@@ -350,3 +358,32 @@ systemctl enable avahi-daemon.service
 # enable service for creating SSH keys on first boot
 systemctl enable ssh-reconfigure
 ```
+
+# Wireless driver
+
+## Current setup
+
+Currently an [out of tree driver](patches/rtl8192cu/) is used to support devices based on the `RTL8188CUS` chip.
+For example:
+```
+# lsusb
+Bus 001 Device 003: ID 0bda:8176 Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+```
+
+This driver supports client and access point modes, and is the most documented driver/device combination
+for seeing up an access point using an USB adapter. Most of the documentation is intended for Raspberry Pi.
+
+We would like to get rid of this driver, since it requires maintaining a patch,
+and it requires deprecated user space tools `wireless extensions` and a
+[patched `hostapd`](OS/debian/network.sh).
+
+## Proposed future setup
+
+There is another much newer driver available in the kernel tree, but it currently only supports client mode.
+
+We are following progress on the `rtl8xxxu` driver in the
+[authors (Jes Sorensen)](https://git.kernel.org/cgit/linux/kernel/git/jes/linux.git/) repository
+on [kernel.org](https://git.kernel.org/cgit/).
+
+We already tested this new driver in the past, and it worked well in client mode.

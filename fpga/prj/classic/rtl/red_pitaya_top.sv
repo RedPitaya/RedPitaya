@@ -147,7 +147,7 @@ logic                 ser_clk ;
 logic                 pwm_clk ;
 logic                 pwm_rstn;
 
-// ADC signals
+// ADC clock/reset
 logic                 adc_clk;
 logic                 adc_rstn;
 
@@ -180,9 +180,8 @@ logic                    digital_loop;
 sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
 
-logic [24-1:0] gpio_t;  // output enable
-logic [24-1:0] gpio_o;  // output
-logic [24-1:0] gpio_i;  // input
+// GPIO interface
+gpio_if #(.DW (24)) gpio ();
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reset)
@@ -259,9 +258,7 @@ red_pitaya_ps ps (
   .vinp_i        (vinp_i      ),
   .vinn_i        (vinn_i      ),
   // GPIO
-  .gpio_i        (gpio_i),
-  .gpio_o        (gpio_o),
-  .gpio_t        (gpio_t),
+  .gpio          (gpio),
   // system read/write channel
   .bus           (ps_sys      ),
   // AXI masters
@@ -434,10 +431,18 @@ red_pitaya_hk i_hk (
   .sys_ack         (  sys_ack[0] )   // acknowledge signal
 );
 
-IOBUF iobuf_led   [8-1:0] (.O(gpio_i[7:0]), .IO(led_o),    .I(gpio_o[7:0]), .T(gpio_t[7:0]) );
+////////////////////////////////////////////////////////////////////////////////
+// LED
+////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_exp_p [8-1:0] (.O(gpio_i[15: 8]), .IO(exp_p_io), .I(gpio_o[15: 8]), .T(gpio_t[15: 8]) );
-IOBUF iobuf_exp_n [8-1:0] (.O(gpio_i[23:16]), .IO(exp_n_io), .I(gpio_o[23:16]), .T(gpio_t[23:16]) );
+IOBUF iobuf_led [8-1:0] (.O (gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
+
+////////////////////////////////////////////////////////////////////////////////
+// GPIO
+////////////////////////////////////////////////////////////////////////////////
+
+IOBUF iobuf_exp_p [8-1:0] (.O(gpio.i[15: 8]), .IO(exp_p_io), .I(gpio.o[15: 8]), .T(gpio.t[15: 8]) );
+IOBUF iobuf_exp_n [8-1:0] (.O(gpio.i[23:16]), .IO(exp_n_io), .I(gpio.o[23:16]), .T(gpio.t[23:16]) );
 
 ////////////////////////////////////////////////////////////////////////////////
 // oscilloscope
@@ -451,7 +456,7 @@ red_pitaya_scope i_scope (
   .adc_b_i         (  adc_dat[1]    ),  // CH 2
   .adc_clk_i       (  adc_clk       ),  // clock
   .adc_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_ext_i      (  gpio_i[8]     ),  // external trigger
+  .trig_ext_i      (  gpio.i[8]     ),  // external trigger
   .trig_asg_i      (  trig_asg_out  ),  // ASG trigger
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
@@ -486,8 +491,8 @@ red_pitaya_asg i_asg (
   .dac_b_o         (  asg_dat[1]    ),  // CH 2
   .dac_clk_i       (  adc_clk       ),  // clock
   .dac_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_a_i        (  gpio_i[8]     ),
-  .trig_b_i        (  gpio_i[8]     ),
+  .trig_a_i        (  gpio.i[8]     ),
+  .trig_b_i        (  gpio.i[8]     ),
   .trig_out_o      (  trig_asg_out  ),
   // System bus
   .sys_addr        (  sys_addr      ),  // address
@@ -523,4 +528,4 @@ red_pitaya_pid i_pid (
   .sys_ack         (  sys_ack[3]    )   // acknowledge signal
 );
 
-endmodule
+endmodule: red_pitaya_top

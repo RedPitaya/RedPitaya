@@ -1,0 +1,12 @@
+/*
+ * list devices on SPI bus
+*/
+
+&spi1 {
+	spidev@0 {
+		compatible = "spidev";
+		reg = <0>; //chipselect 0
+		spi-max-frequency = <50000000>;
+	};
+};
+

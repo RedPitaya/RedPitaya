@@ -76,7 +76,7 @@ ln -s /opt/redpitaya/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
 
 # this is a fix for persistent naming rules for USB network adapters
 # otherwise WiFi adapters are named "wlx[MACAddress]"
-ln -s /dev/null /etc/udev/rules.d/73-special-net-names.rules
+ln -s /dev/null /etc/udev/rules.d/73-usb-net-by-mac.rules
 
 # use systemd-reloslver
 # TODO: this link is currently created at the end of the install process, just before unmounting the image (ubuntu.sh)
