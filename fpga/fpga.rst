@@ -50,61 +50,89 @@ Project specific code is placed inside the ``fpga/prj/name/`` directories and is
 | ``fpga/hsi/``     | "Hardware Software Interface" contains FSBL (First Stage Boot Loader) and DTS (Design Tree) builds |
 +-------------------+----------------------------------------------------------+
 
-# Build process
+=============
+Build process
+=============
 
-Xilinx Vivado 2016.2 (including SDK) is required. If installed at the default location, then the next command will properly configure system variables:
-```bash
-. /opt/Xilinx/Vivado/2016.2/settings64.sh
-```
+Xilinx Vivado 2016.2 (including SDK) is required.
+If installed at the default location, then the next command will properly configure system variables:
 
-The default mode for building the FPGA is to run a TCL script inside Vivado. Non project mode is used, to avoid the generation of project files, which are too many and difficult to handle. This allows us to only place source files and scripts under version control.
+.. code-block:: shell-session
+
+   $ . /opt/Xilinx/Vivado/2016.2/settings64.sh
+
+The default mode for building the FPGA is to run a TCL script inside Vivado.
+Non project mode is used, to avoid the generation of project files,
+which are too many and difficult to handle.
+This allows us to only place source files and scripts under version control.
 
 The next scripts perform various tasks:
 
-| TCL script                      | action
-|---------------------------------|---------------------------------------------
-| `red_pitaya_vivado.tcl`         | creates the bitstream and reports
-| `red_pitaya_vivado_project.tcl` | creates a Vivado project for graphical editing
-| `red_pitaya_hsi_fsbl.tcl`       | creates FSBL executable binary
-| `red_pitaya_hsi_dts.tcl`        | creates device tree sources
++-----------------------------------+------------------------------------------------+
+| TCL script                        | action                                         |
++===================================+================================================+
+| ``red_pitaya_vivado.tcl``         | creates the bitstream and reports              |
++-----------------------------------+------------------------------------------------+
+| ``red_pitaya_vivado_project.tcl`` | creates a Vivado project for graphical editing |
++-----------------------------------+------------------------------------------------+
+| ``red_pitaya_hsi_fsbl.tcl``       | creates FSBL executable binary                 |
++-----------------------------------+------------------------------------------------+
+| ``red_pitaya_hsi_dts.tcl``        | creates device tree sources                    |
++-----------------------------------+------------------------------------------------+
 
-To generate a bit file, reports, device tree and FSBL, run (replace `name` with project name):
-```bash
-make PRJ=name
-```
+To generate a bit file, reports, device tree and FSBL, run (replace ``name`` with project name):
+
+.. code-block:: shell-session
+
+   $ make PRJ=name
 
 To generate and open a Vivado project using GUI, run:
-```bash
-make project PRJ=name
-```
 
-# Simulation
+.. code-block:: shell-session
 
-ModelSim as provided for free from Altera is used to run simulations. Scripts expect the default install location. On Ubuntu the inslall process fails to create an appropriate path to executable files, so this path must be created:
-```bash
-ln -s $HOME/altera/16.0/modelsim_ase/linux $HOME/altera/16.0/modelsim_ase/linux_rh60
-```
+   $ make project PRJ=name
 
-To run simulation, Vivado tools have to be installed. There is no need to source `settings.sh`, For now the path to the ModelSim simulator is hard coded into the simulation `Makefile`.
-```bash
-cd fpga/sim
-```
+==========
+Simulation
+==========
 
-Simulations can be run by running `make` with the bench file name as target:
-```bash
-make top_tb
-```
+ModelSim as provided for free from Altera is used to run simulations.
+Scripts expect the default install location.
+On Ubuntu the inslall process fails to create an appropriate path to executable files,
+so this path must be created:
 
-Some simulations have a waveform window configuration script like `top_tb.tcl` which will prepare an organized waveform window.
-```bash
-make top_tb WAV=1
-```
+.. code-block:: shell-session
 
-# Device tree
+   $ ln -s $HOME/altera/16.0/modelsim_ase/linux $HOME/altera/16.0/modelsim_ase/linux_rh60
+
+To run simulation, Vivado tools have to be installed.
+There is no need to source ``settings.sh``.
+For now the path to the ModelSim simulator is hard coded into the simulation ``Makefile``.
+
+.. code-block:: shell-session
+
+   $ cd fpga/sim
+
+Simulations can be run by running ``make`` with the bench file name as target:
+
+.. code-block:: shell-session
+
+   $ make top_tb
+
+Some simulations have a waveform window configuration script like ``top_tb.tcl``
+which will prepare an organized waveform window.
+
+.. code-block:: shell-session
+
+   $ make top_tb WAV=1
+
+===========
+Device tree
+===========
 
 Device tree is used by Linux to describe features and address space of memory mapped hardware attached to the CPU.
 
-Running `make` inside this directory will create a device tree source and some include files:
+Running ``make`` inside this directory will create a device tree source and some include files:
 
 | device tree file | contents
 |------------------|------------------------------------------------------------
