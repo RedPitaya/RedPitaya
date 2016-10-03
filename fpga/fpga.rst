@@ -20,35 +20,39 @@ So there are now multiple FPGA projects, some with generic functionality, some w
 Common code for all projects is placed directly into the ``fpga`` directory. Common code are mostly reusable modules.
 Project specific code is placed inside the ``fpga/prj/name/`` directories and is similarly organized as common code.
 
-+-------------------+----------------------------------------------------------+
-|  path             | contents                                                 |
-+===================+==========================================================+
-| ``fpga/Makefile`` | main Makefile, used to run FPGA related tools            |
-+-------------------+----------------------------------------------------------+
-| ``fpga/*.tcl``    | TCL scripts to be run inside FPGA tools                  |
-+-------------------+----------------------------------------------------------+
-| ``fpga/archive/`` | archive of XZ compressed FPGA bit files                  |
-+-------------------+----------------------------------------------------------+
-| ``fpga/doc/``     | documentation (block diagrams, address space, ...)       |
-+-------------------+----------------------------------------------------------+
-| ``fpga/brd/``     | board files [Vivado System-Level Design Entry](http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf)) |
-+-------------------+----------------------------------------------------------+
-| ``fpga/ip/``      | third party IP, for now Zynq block diagrams              |
-+-------------------+----------------------------------------------------------+
-| ``fpga/rtl/``     | Verilog (SystemVerilog) *Register-Transfer Level*        |
-+-------------------+----------------------------------------------------------+
-| ``fpga/sdc/``     | "Synopsys Design Constraints" contains Xilinx design constraints |
-+-------------------+----------------------------------------------------------+
-| ``fpga/sim/``     | simulation scripts                                       |
-+-------------------+----------------------------------------------------------+
-| ``fpga/tbn/``     | Verilog (SystemVerilog) *test bench*                     |
-+-------------------+----------------------------------------------------------+
-| ``fpga/dts/``     | device tree source include files                         |
-+-------------------+----------------------------------------------------------+
-| ``fpga/prj/name`` | project `name` specific code                             |
-+-------------------+----------------------------------------------------------+
-| ``fpga/hsi/``     | "Hardware Software Interface" contains FSBL (First Stage Boot Loader) and DTS (Design Tree) builds |
-+-------------------+----------------------------------------------------------+
++-------------------+------------------------------------------------------------------+
+|  path             | contents                                                         |
++===================+==================================================================+
+| ``fpga/Makefile`` | main Makefile, used to run FPGA related tools                    |
++-------------------+------------------------------------------------------------------+
+| ``fpga/*.tcl``    | TCL scripts to be run inside FPGA tools                          |
++-------------------+------------------------------------------------------------------+
+| ``fpga/archive/`` | archive of XZ compressed FPGA bit files                          |
++-------------------+------------------------------------------------------------------+
+| ``fpga/doc/``     | documentation (block diagrams, address space, ...)               |
++-------------------+------------------------------------------------------------------+
+| ``fpga/brd/``     | board files [ug895]_                                             |
++-------------------+------------------------------------------------------------------+
+| ``fpga/ip/``      | third party IP, for now Zynq block diagrams                      |
++-------------------+------------------------------------------------------------------+
+| ``fpga/rtl/``     | Verilog (SystemVerilog) *Register-Transfer Level*                |
++-------------------+------------------------------------------------------------------+
+| ``fpga/sdc/``     | *Synopsys Design Constraints* contains Xilinx design constraints |
++-------------------+------------------------------------------------------------------+
+| ``fpga/sim/``     | simulation scripts                                               |
++-------------------+------------------------------------------------------------------+
+| ``fpga/tbn/``     | Verilog (SystemVerilog) *test bench*                             |
++-------------------+------------------------------------------------------------------+
+| ``fpga/dts/``     | device tree source include files                                 |
++-------------------+------------------------------------------------------------------+
+| ``fpga/prj/name`` | project `name` specific code                                     |
++-------------------+------------------------------------------------------------------+
+| ``fpga/hsi/``     | *Hardware Software Interface* contains                           |
+|                   | FSBL (First Stage Boot Loader) and                               |
+|                   | DTS (Design Tree) builds                                         |
++-------------------+------------------------------------------------------------------+
+
+.. [ug895] [Vivado System-Level Design Entry](http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf))
 
 =============
 Build process
