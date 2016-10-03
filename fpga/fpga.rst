@@ -191,7 +191,7 @@ Consequently the voltage dividers were miss designed for a range of double the s
 
 #### 5V power supply
 
-.. code-block:: shell-session
+.. code-block:: none
 
                            -------------------0  Vout
              ------------  |  ------------
@@ -203,7 +203,7 @@ Range: 1V / ratio = 12.2V
 
 #### General purpose inputs
 
-.. code-block:: shell-session
+.. code-block:: none
 
                            -------------------0  Vout
              ------------  |  ------------
@@ -222,94 +222,125 @@ GPIO LEDs
 +===========+========+===================+===============================+
 | ``[7:0]`` | yellow | RP API            | user defined                  |
 +-----------+--------+-------------------+-------------------------------+
-| ``  [8]`` | yellow | kernel ``MIO[0]`` | CPU heartbeat (user defined)  |
+|   ``[8]`` | yellow | kernel ``MIO[0]`` | CPU heartbeat (user defined)  |
 +-----------+--------+-------------------+-------------------------------+
-| ``  [9]`` | reg    | kernel ``MIO[7]`` | SD card access (user defined) |
+|   ``[9]`` | reg    | kernel ``MIO[7]`` | SD card access (user defined) |
 +-----------+--------+-------------------+-------------------------------+
-| `` [10]`` | green  | none              | *Power Good* status           |
+|  ``[10]`` | green  | none              | *Power Good* status           |
 +-----------+--------+-------------------+-------------------------------+
-| `` [11]`` | blue   | none              | FPGA programming *DONE*       |
+|  ``[11]`` | blue   | none              | FPGA programming *DONE*       |
 +-----------+--------+-------------------+-------------------------------+
 
-For now only LED8 and LED9 are accessible using a kernel driver. LED [7:0] are not driven by a kernel driver, since the Linux GPIO/LED subsystem does not allow access to multiple pins simultaneously.
-
-### Linux access to GPIO/LED
+~~~~~~~~~~~~~~~~~~~~~~~~
+Linux access to GPIO/LED
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
 There are 54+64=118 GPIO provided by ZYNQ PS, MIO provides 54 GPIO,
 and EMIO provide additional 64 GPIO.
 
-The next formula is used to calculate the `gpio_base` index.
-```
-base_gpio = ZYNQ_GPIO_NR_GPIOS - ARCH_NR_GPIOS = 1024 - 118 = -906
-```
+The next formula is used to calculate the ``gpio_base`` index.
+
+.. code-block:: none
+
+   base_gpio = ZYNQ_GPIO_NR_GPIOS - ARCH_NR_GPIOS = 1024 - 118 = -906
 
 Values for the used macros can be found in the kernel sources.
-```bash
-$ grep ZYNQ_GPIO_NR_GPIOS drivers/gpio/gpio-zynq.c
-#define	ZYNQ_GPIO_NR_GPIOS	118
-$ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2016.1
-tmp/linux-xlnx-xilinx-v2016.1/.config:CONFIG_ARCH_NR_GPIO=1024
-```
+
+.. code-block:: shell-session
+
+   $ grep ZYNQ_GPIO_NR_GPIOS drivers/gpio/gpio-zynq.c
+   #define	ZYNQ_GPIO_NR_GPIOS	118
+   $ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2016.1
+   tmp/linux-xlnx-xilinx-v2016.1/.config:CONFIG_ARCH_NR_GPIO=1024
 
 Another way to find the `gpio_base` index is to check the given name inside `sysfs`.
-```bash
-# find /sys/class/gpio/ -name gpiochip*
-/sys/class/gpio/gpiochip906
-```
+
+.. code-block:: shell-session
+
+   # find /sys/class/gpio/ -name gpiochip*
+   /sys/class/gpio/gpiochip906
 
 The default pin assignment for GPIO is described in the next table.
 
-| FPGA | connector | GPIO             | MIO/EMIO index | `sysfs` index              |color   dedicated meaning     |
-|------|-----------|------------------|----------------|----------------------------|------------------------------|
-|      |           | `exp_p_io [7:0]` | `EMIO[15: 8]`  | `906+54+[15: 8]=[975:968]` |
-|      |           | `exp_n_io [7:0]` | `EMIO[23:16]`  | `906+54+[23:16]=[983:976]` |
-|      |           | LED `[7:0]`      | `EMIO[ 7: 0]`  | `906+54+[ 7: 0]=[967:960]` | yellow
-|      |           | LED `  [8]`      |  `MIO[ 0]`     | `906+   [ 0]   = 906`      | yellow = CPU heartbeat (user defined)
-|      |           | LED `  [9]`      |  `MIO[ 7]`     | `906+   [ 7]   = 913`      | red    = SD card access (user defined)
-| `D5` | `E2[ 7]`  | UART1_TX         |  `MIO[ 8]`     | `906+   [ 8]   = 914`      | output only
-| `B5` | `E2[ 8]`  | UART1_RX         |  `MIO[ 9]`     | `906+   [ 9]   = 915`      | requires `pinctrl` changes to be active
-| `E9` | `E2[ 3]`  | SPI1_MISO        |  `MIO[10]`     | `906+   [10]   = 916`      | requires `pinctrl` changes to be active
-| `C6` | `E2[ 4]`  | SPI1_MOSI        |  `MIO[11]`     | `906+   [11]   = 917`      | requires `pinctrl` changes to be active
-| `D9` | `E2[ 5]`  | SPI1_SCK         |  `MIO[12]`     | `906+   [12]   = 918`      | requires `pinctrl` changes to be active
-| `E8` | `E2[ 6]`  | SPI1_CS#         |  `MIO[13]`     | `906+   [13]   = 919`      | requires `pinctrl` changes to be active
-| `B13`| `E2[ 9]`  | I2C0_SCL         |  `MIO[50]`     | `906+   [50]   = 956`      | requires `pinctrl` changes to be active
-| `B9` | `E2[10]`  | I2C0_SDA         |  `MIO[51]`     | `906+   [51]   = 957`      | requires `pinctrl` changes to be active
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| FPGA   | connector  | GPIO               | MIO/EMIO index   | ``sysfs`` index              | color, dedicated meaning                  |
++========+============+====================+==================+==============================+===========================================+
+|        |            | ``exp_p_io [7:0]`` | ``EMIO[15: 8]``  | ``906+54+[15: 8]=[975:968]`` |                                           |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+|        |            | ``exp_n_io [7:0]`` | ``EMIO[23:16]``  | ``906+54+[23:16]=[983:976]`` |                                           |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+|        |            | LED ``[7:0]``      | ``EMIO[ 7: 0]``  | ``906+54+[ 7: 0]=[967:960]`` | yellow                                    |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+|        |            | LED ``  [8]``      |  ``MIO[ 0]``     | ``906+   [ 0]   = 906``      | yellow = CPU heartbeat (user defined)     |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+|        |            | LED ``  [9]``      |  ``MIO[ 7]``     | ``906+   [ 7]   = 913``      | red    = SD card access (user defined)    |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``D5`` | ``E2[ 7]`` | UART1_TX           |  ``MIO[ 8]``     | ``906+   [ 8]   = 914``      | output only                               |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``B5`` | ``E2[ 8]`` | UART1_RX           |  ``MIO[ 9]``     | ``906+   [ 9]   = 915``      | requires ``pinctrl`` changes to be active |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``E9`` | ``E2[ 3]`` | SPI1_MISO          |  ``MIO[10]``     | ``906+   [10]   = 916``      | requires ``pinctrl`` changes to be active |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``C6`` | ``E2[ 4]`` | SPI1_MOSI          |  ``MIO[11]``     | ``906+   [11]   = 917``      | requires ``pinctrl`` changes to be active |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``D9`` | ``E2[ 5]`` | SPI1_SCK           |  ``MIO[12]``     | ``906+   [12]   = 918``      | requires ``pinctrl`` changes to be active |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``E8`` | ``E2[ 6]`` | SPI1_CS#           |  ``MIO[13]``     | ``906+   [13]   = 919``      | requires ``pinctrl`` changes to be active |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``B13``| ``E2[ 9]`` | I2C0_SCL           |  ``MIO[50]``     | ``906+   [50]   = 956``      | requires ``pinctrl`` changes to be active |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+| ``B9`` | ``E2[10]`` | I2C0_SDA           |  ``MIO[51]``     | ``906+   [51]   = 957``      | requires ``pinctrl`` changes to be active |
++--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
 
-GPIOs are accessible at the `sysfs` index.
-The next example will light up LED[0], and read back its value.
-```bash
-export INDEX=960
-echo $INDEX > /sys/class/gpio/export
-echo out    > /sys/class/gpio/gpio$INDEX/direction
-echo 1      > /sys/class/gpio/gpio$INDEX/value
-cat           /sys/class/gpio/gpio$INDEX/value
-```
+GPIOs are accessible at the ``sysfs`` index.
+The next example will light up ``LED[0]``, and read back its value.
 
-**NOTE**: A new user space ABI for GPIO is coming in kernel v4.8, ioctl will be used instead of `sysfs`.
+.. code-block:: shell-session
+
+   $ export INDEX=960
+   $ echo $INDEX > /sys/class/gpio/export
+   $ echo out    > /sys/class/gpio/gpio$INDEX/direction
+   $ echo 1      > /sys/class/gpio/gpio$INDEX/value
+   $ cat           /sys/class/gpio/gpio$INDEX/value
+
+**NOTE**: A new user space ABI for GPIO is coming in kernel v4.8, ioctl will be used instead of ``sysfs``.
 https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next
 
-### Linux access to LED
+~~~~~~~~~~~~~~~~~~~
+Linux access to LED
+~~~~~~~~~~~~~~~~~~~
 
 This document is used as reference: http://www.wiki.xilinx.com/Linux+GPIO+Driver
 
 By providing GPIO/LED details in the device tree, it is possible to access LEDs using a dedicated kernel interface.
 
 To show CPU load on LED 9 use:
-```bash
-echo heartbeat > /sys/class/leds/led0/trigger
-```
+
+.. code-block:: shell-session
+
+   $ echo heartbeat > /sys/class/leds/led0/trigger
+
 To switch LED 8 ON use:
-```bash
-echo 1 > /sys/class/leds/led0/brightness
-```
 
-### PS `pinctrl` for MIO signals
+.. code-block:: shell-session
 
-| dts              | description                    |
-|------------------|--------------------------------|
-| `spi2gpio.dtsi`  | E2 connector, SPI1 signals     |
-| `i2c2gpio.dtsi`  | E2 connector, I2C0 signals     |
-| `uart2gpio.dtsi` | E2 connector, UART1 signals    |
-| `miso2gpio.dtsi` | E2 connector, SPI1 MISO signal |
+   $ echo 1 > /sys/class/leds/led0/brightness
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PS ``pinctrl`` for MIO signals
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++--------------------+--------------------------------+
+| dts                | description                    |
++====================+================================+
+| ``spi2gpio.dtsi``  | E2 connector, SPI1 signals     |
++--------------------+--------------------------------+
+| ``i2c2gpio.dtsi``  | E2 connector, I2C0 signals     |
++--------------------+--------------------------------+
+| ``uart2gpio.dtsi`` | E2 connector, UART1 signals    |
++--------------------+--------------------------------+
+| ``miso2gpio.dtsi`` | E2 connector, SPI1 MISO signal |
++--------------------+--------------------------------+
+
