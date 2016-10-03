@@ -8,7 +8,7 @@
 	pca9555: pca9555@20 {	
 		compatible = "nxp,pca9555";
 		interrupt-parent = <&gpio0>;
-		interrupts = <&gpio0 10 0>;
+		interrupts = <&gpio0 10>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		interrupt-controller;
