@@ -415,7 +415,7 @@ assign gpio.i [23:8] = {exp_n_io, exp_p_io};
 //assign exp_n_io = 'z;
 //assign exp_n_io = exp_exo.TDATA[0];
 //assign exp_exo.TREADY = 1'b1;
-assign exp_exo.TREADY = 1'b0;
+//assign exp_exo.TREADY = 1'b0;
 
 // // input DDR
 // IDDR #(
