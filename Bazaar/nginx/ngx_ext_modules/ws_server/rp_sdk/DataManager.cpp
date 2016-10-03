@@ -341,11 +341,6 @@ extern "C" int ws_get_signals_interval(void)
 	return 0;
 }
 
-extern "C" int ws_set_demo_mode(int a)
-{
-	return 0;
-}
-
 extern "C" int verify_app_license(const char* app_id)
 {
 #ifdef ENABLE_LICENSING

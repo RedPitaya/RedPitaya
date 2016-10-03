@@ -68,5 +68,4 @@ extern "C" const char * ws_get_params(void);
 extern "C" const char * ws_get_signals(void);
 extern "C" int ws_set_params(const char *_params);
 extern "C" int ws_set_signals(const char *_signals);
-extern "C" int ws_set_demo_mode(int a);
 extern "C" void ws_gzip(const char* _in, void* _out, size_t* size_);
