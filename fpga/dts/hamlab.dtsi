@@ -6,7 +6,7 @@
  * 2 = high-to-low edge triggered
 */
 
-/include/ "miso2gpio.dtsi"
+/include/ "spi2gpio.dtsi"
 
 &i2c0 {
 	pca9555: pca9555@20 {	
