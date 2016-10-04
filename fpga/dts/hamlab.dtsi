@@ -23,17 +23,19 @@
 
 // KEYS test code
 
-gpio-keys {
-	compatible = "gpio-keys";
-	autorepeat;
-	up {
-		label = "GPIO Key A";
-		linux,code = <30>;
-		gpios = <&pca9555 1 1>;
-	};
-	down {
-		label = "GPIO Key B";
-		linux,code = <48>;
-		gpios = <&pca9555 2 1>;
+/ {
+	gpio-keys {
+		compatible = "gpio-keys";
+		autorepeat;
+		up {
+			label = "GPIO Key A";
+			linux,code = <30>;
+			gpios = <&pca9555 1 1>;
+		};
+		down {
+			label = "GPIO Key B";
+			linux,code = <48>;
+			gpios = <&pca9555 2 1>;
+		};
 	};
 };
