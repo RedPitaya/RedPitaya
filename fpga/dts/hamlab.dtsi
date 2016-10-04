@@ -6,13 +6,13 @@
  * 2 = high-to-low edge triggered
 */
 
-/include/ "spi2gpio.dtsi"
+/include/ "miso2gpio.dtsi"
 
 &i2c0 {
 	pca9555: pca9555@20 {	
 		compatible = "nxp,pca9555";
 		interrupt-parent = <&gpio0>;
-		interrupts = <10 0x2>;
+		interrupts = <11 0x2>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		interrupt-controller;
