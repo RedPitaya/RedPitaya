@@ -238,6 +238,7 @@ int main(int argc, char** argv)
 
 	double threshold = 0.5, amplitude = 0.9;
 	int freq = 1e6;
+	bool loop = false;
 
 	static struct option long_options[] =
 	{
@@ -247,6 +248,9 @@ int main(int argc, char** argv)
 		{"counts", required_argument, 0, 'c'},
 		{"freq", required_argument, 0, 'f'},
 		{"amplitude", required_argument, 0, 'a'},
+		{"loop", no_argument, 0, 'l'},
+		{"lv", no_argument, 0, 'i'},
+		{"hv", no_argument, 0, 'j'},
 		{0, 0, 0, 0}
 	};
 
@@ -259,12 +263,15 @@ int main(int argc, char** argv)
 		switch (c)
 		{
 			case 'h': 
-				printf("usage:\nthreshold(-t 0.5) freq(-f 1000000) amplitude(-a 0.9) help(-h) verbose(-v false)\n");
+				printf("usage:\nthreshold(-t 0.5) freq(-f 1000000) amplitude(-a 0.9) help(-h) verbose(-v false) loop(-l) lv(-i) hv(-j)\n");
 				return 0;
 			case 'v': g_verbose = true; break;
 			case 't': threshold = stof(optarg); break;
 			case 'f': freq = stoi(optarg); break;
 			case 'a': amplitude = stof(optarg); break;
+			case 'l': loop = true; break;
+			case 'i': rp_AcqSetGain(RP_CH_1, RP_LOW); break;
+			case 'j': rp_AcqSetGain(RP_CH_1, RP_HIGH); break;
 		}
 	}
 
@@ -272,12 +279,14 @@ int main(int argc, char** argv)
 	if (g_verbose)
 		printf("freq %d amplitude %f threshold %f\n", freq, amplitude, threshold);
 
-	double ret = run_test_signals(freq, amplitude, threshold);
-	if (ret > threshold)
+	do 
 	{
-		fprintf(stderr, "error: threshold < %lf\nwrite signals to /tmp/in.txt and /tmp/out.txt\n", ret);
-		return 1;
-	}
+		double ret = run_test_signals(freq, amplitude, threshold);
+		if (ret > threshold)
+		{
+			fprintf(stderr, "error: threshold < %lf\nwrite signals to /tmp/in.txt and /tmp/out.txt\n", ret);
+		}
+	} while (loop);
 
 	deinit();
 }
