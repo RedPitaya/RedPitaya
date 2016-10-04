@@ -369,6 +369,4 @@ RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
                                 uint32_t shots,
                                 uint32_t delay_between_shots,
                                 uint32_t triggerSourceMask);
-
-extern rp_handle_uio_t la_acq_handle;
 #endif // _RP_API_H_
