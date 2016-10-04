@@ -26,7 +26,7 @@ SRCS = $(subst .o,.c, $(OBJS)))
 TARGET=ut_main
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99  -Wall -Werror
+CFLAGS=-g -std=gnu99
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../src -I../include
 
