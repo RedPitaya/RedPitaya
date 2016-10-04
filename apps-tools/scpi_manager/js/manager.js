@@ -113,4 +113,8 @@ $(function() {
     $('#SCPI_RUN').click(SCPI.StartServer);
 
     $('#SCPI_STOP').click(SCPI.StopServer);
+
+    $('#SCPI_EXAMPLES').click(function(){
+        window.open('http://redpitaya.com/examples-new/','_blank');
+    });
 });

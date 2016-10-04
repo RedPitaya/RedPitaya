@@ -20,6 +20,10 @@
 	z-index: 2001;
 }
 
+#HELP_BUTTON:hover {
+	cursor: pointer;
+}
+
 
 #HELP_LIST {
 	display: none;
