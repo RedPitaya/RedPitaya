@@ -51,8 +51,8 @@ int main()
     }
 
     rp_DigSigGenOuput(true);
-    double sample_rate=125e6;
-    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256,&sample_rate,0,0,RP_TRG_DGEN_SWE_MASK);
+    double sample_rate = 1000000;
+    rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256, &sample_rate, 0, 0, RP_TRG_DGEN_SWE_MASK);
 
     RP_STATUS s;
     RP_DIGITAL_CHANNEL_DIRECTIONS dir[1];
@@ -75,9 +75,9 @@ int main()
 
     printf("\r\nRunBlock");
     double timeIndisposedMs;
-    uint32_t pre = 100;
-    uint32_t post = 100;
-    s = rp_RunBlock(pre, post, 8, &timeIndisposedMs, &rpReadyCallback, NULL);
+    uint32_t pre = 100000;
+    uint32_t post = 100000;
+    s = rp_RunBlock(pre, post, 1, &timeIndisposedMs, &rpReadyCallback, NULL);
     if (s != RP_API_OK) {
         puts("Failed to acquire data.");
     }
