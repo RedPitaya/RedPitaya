@@ -6,9 +6,33 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Documentation
+   :caption: Quick start
+
+   doc/quick-start
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
 
    doc/user
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer Guide
+
+   doc/developer
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Hardware Guide
+
+   doc/hardware
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Software Guide
+
+   doc/software
 
 .. toctree::
    :maxdepth: 2
