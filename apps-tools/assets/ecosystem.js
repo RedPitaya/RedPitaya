@@ -11,6 +11,7 @@
     var apps = [];
     var version = '';
     var revision = '';
+    var stem_ver = '';
 
     var getListOfApps = function() {
         $('#loader-desc').html('Getting the list of applications');
@@ -176,7 +177,8 @@
         var info = msg;
         version = info['version'];
         revision = info['revision'];
-        $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
+        stem_ver = info['stem_ver'];
+        $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + "</a>");
         checkUpdates(info);
     }
 
@@ -200,24 +202,3 @@
     });
 
 })(window.RedPitayaOS = window.RedPitayaOS || {}, jQuery);
-    $(window).resize(function($) {
-        refillList();
-        placeElements();
-    });
-
-    var default_apps = [
-        // { id: "visualprogramming", name: "Visual Programming", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "http://account.redpitaya.com/try-visual-programming.php", image: "images/img_visualprog.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
-        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
-        { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
-        { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://wiki.redpitaya.com/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "tutorials", name: "Tutorials", description: "RedPitaya tutorials.", url: "http://wiki.redpitaya.com/index.php?title=Tutorials_overview", image: "../assets/images/tutors.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager/", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "updater", name: "Updater", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-    ];
-
-	licVerify(undefined)
-})(jQuery);
