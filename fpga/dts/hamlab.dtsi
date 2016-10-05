@@ -1,5 +1,9 @@
 /*
  * HAMLAB specific features, mostly GPIO on I2C
+ *
+ * pca9555 I2C GPIO extender interrupt is connected
+ * to MIO[10] used as GPIO, 0x2 specifies trigger mode:
+ * 2 = high-to-low edge triggered
 */
 
 /include/ "miso2gpio.dtsi"
@@ -8,11 +12,28 @@
 	pca9555: pca9555@20 {	
 		compatible = "nxp,pca9555";
 		interrupt-parent = <&gpio0>;
-		interrupts = <&gpio0 10>;
+		interrupts = <11 0x2>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		interrupt-controller;
 		#interrupt-cells = <2>;
 		reg = <0x20>;
 	};	
+};
+
+// KEYS test code
+
+gpio-keys {
+	compatible = "gpio-keys";
+	autorepeat;
+	up {
+		label = "GPIO Key A";
+		linux,code = <30>;
+		gpios = <&pca9555 1 1>;
+	};
+	down {
+		label = "GPIO Key B";
+		linux,code = <48>;
+		gpios = <&pca9555 2 1>;
+	};
 };
