@@ -6,7 +6,8 @@
  * 2 = high-to-low edge triggered
 */
 
-/include/ "miso2gpio.dtsi"
+///include/ "miso2gpio.dtsi"
+/include/ "spi2gpio.dtsi"
 
 &i2c0 {
 	pca9555: pca9555@20 {	
@@ -27,15 +28,30 @@
 	gpio-keys {
 		compatible = "gpio-keys";
 		autorepeat;
-		up {
+		key_A {
 			label = "GPIO Key A";
 			linux,code = <30>;
 			gpios = <&pca9555 1 1>;
 		};
-		down {
+		key_B {
 			label = "GPIO Key B";
 			linux,code = <48>;
 			gpios = <&pca9555 2 1>;
 		};
+		key_C {
+			label = "GPIO Key C";
+			linux,code = <46>;
+			gpios = <&gpio0 10 1>;
+		};
+//		key_power {
+//			label = "GPIO Key POWER";
+//			linux,code = <116>;
+//			gpios = <&gpio0 12 1>;
+//		};
+	};
+
+	gpio-poweroff {
+		compatible = "gpio-poweroff";
+		gpios = <&pca9555 0 0>;
 	};
 };
