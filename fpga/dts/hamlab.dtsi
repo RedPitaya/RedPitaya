@@ -10,8 +10,18 @@
 /include/ "spi2gpio.dtsi"
 
 &i2c0 {
-	pca9555: pca9555@20 {	
-		compatible = "nxp,pca9555";
+//	gpio_expander: pca9555@20 {	
+//		compatible = "nxp,pca9555";
+//		interrupt-parent = <&gpio0>;
+//		interrupts = <11 0x2>;
+//		gpio-controller;
+//		#gpio-cells = <2>;
+//		interrupt-controller;
+//		#interrupt-cells = <2>;
+//		reg = <0x20>;
+//	};	
+	gpio_expander: mcp23017@20 {	
+		compatible = "microchip,mcp23017";
 		interrupt-parent = <&gpio0>;
 		interrupts = <11 0x2>;
 		gpio-controller;
@@ -19,6 +29,7 @@
 		interrupt-controller;
 		#interrupt-cells = <2>;
 		reg = <0x20>;
+		microchip,irq-mirror;
 	};	
 };
 
@@ -31,12 +42,12 @@
 		key_A {
 			label = "GPIO Key A";
 			linux,code = <30>;
-			gpios = <&pca9555 1 1>;
+			gpios = <&gpio_expander 1 1>;
 		};
 		key_B {
 			label = "GPIO Key B";
 			linux,code = <48>;
-			gpios = <&pca9555 2 1>;
+			gpios = <&gpio_expander 2 1>;
 		};
 		key_C {
 			label = "GPIO Key C";
@@ -52,6 +63,6 @@
 
 	gpio-poweroff {
 		compatible = "gpio-poweroff";
-		gpios = <&pca9555 0 0>;
+		gpios = <&gpio_expander 0 0>;
 	};
 };
