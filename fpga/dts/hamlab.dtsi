@@ -23,7 +23,7 @@
 	gpio_expander: mcp23017@20 {	
 		compatible = "microchip,mcp23017";
 		interrupt-parent = <&gpio0>;
-		interrupts = <11 0x2>;
+		interrupts = <11 0x8>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		interrupt-controller;
@@ -63,6 +63,6 @@
 
 	gpio-poweroff {
 		compatible = "gpio-poweroff";
-		gpios = <&gpio_expander 0 0>;
+		gpios = <&gpio_expander 8 0>;
 	};
 };
