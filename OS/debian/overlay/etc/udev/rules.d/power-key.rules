@@ -1,8 +1,0 @@
-ACTION=="remove", GOTO="power_switch_end"
-
-#SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_PATH}=="platform-gpio-keys*", ATTRS{keys}=="*", TAG+="power-switch"
-SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_PATH}=="gpio-keys*", ATTRS{keys}=="*", TAG+="power-switch" 
-#SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="gpio-keys", TAG+="power-switch" 
-
-LABEL="power_switch_end"
-
