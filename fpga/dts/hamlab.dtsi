@@ -3,7 +3,12 @@
  *
  * pca9555 I2C GPIO extender interrupt is connected
  * to MIO[10] used as GPIO, 0x2 specifies trigger mode:
+ * 1 = low-to-high edge triggered
  * 2 = high-to-low edge triggered
+ * 4 = high level triggered
+ * 8 = low level triggered
+ *
+ * http://developer.toradex.com/knowledge-base/gpio-(linux)#GPIO_power_management_keys
 */
 
 ///include/ "miso2gpio.dtsi"
