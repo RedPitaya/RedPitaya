@@ -21,6 +21,11 @@
 		#size-cells = <0>;
 		reg = <0x70>;
 		status="okay";
+		i2c@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+		};
 		i2c@1 {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -51,15 +56,10 @@
 			#size-cells = <0>;
 			reg = <6>;
 		};
-		i2c@7 {
+		hamlab_extension: i2c@7 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			reg = <7>;
-		};
-		hamlab_extension: i2c@8 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			reg = <8>;
 			hamlab_extension_gpio_expander: pca9535@21 {	
 				compatible = "nxp,pca9535";
 				reg = <0x21>;
@@ -119,6 +119,6 @@
         // Power OFF signal, extension board GPIO expander port P16 (14=8+6)
 	hamlab-poweroff {
 		compatible = "gpio-poweroff";
-		gpios = <&hamlab_extension_gpio_expander 14 0>;
+		gpios = <&hamlab_extension_gpio_expander 12 0>;
 	};
 };
