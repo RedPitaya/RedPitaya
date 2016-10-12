@@ -81,7 +81,7 @@
 		compatible = "generic-uio";
 		status = "okay";
 		interrupt-parent = <&gpio0>;
-		interrupts = <10 IRQ_TYPE_LEVEL_LOW>;
+		interrupts = <10 0x8>;
 	};
 	// Power button on MIO[11] (MISO)
 	hamlab_keys {
