@@ -10,6 +10,11 @@
 				#size-cells = <0>;
 				reg = <0x70>;
 				status="okay";
+				i2c@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <0>;
+				};
 				i2c@1 {
 					#address-cells = <1>;
 					#size-cells = <0>;
@@ -44,17 +49,17 @@
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <7>;
+					hamlab_extension_gpio_expander: pca9555@21 {	
+						compatible = "nxp,pca9555";
+						reg = <0x21>;
+						gpio-controller;
+						#gpio-cells = <2>;
+//						interrupt-parent = <&gpio0>;
+//						interrupts = <11 0x2>;
+//						interrupt-controller;
+//						#interrupt-cells = <2>;
+			};
 				};
-				i2c@8 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					reg = <8>;
-				};
-				i2c@9 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					reg = <9>;
-				};	
 			};
 		};
 	};
