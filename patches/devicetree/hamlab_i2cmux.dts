@@ -65,7 +65,7 @@
 	};
 	
 	fragment@f0 {
-		target-path = "/";
+		target-path = "/amba";
 		__overlay__ {
 		// DMM data ready is mapped as UIO interrupt connected to MIO[10] (MOSI)
 			dmm: dmm {
