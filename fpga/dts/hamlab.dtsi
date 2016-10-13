@@ -13,7 +13,7 @@
 
 ///include/ "miso2gpio.dtsi"
 /include/ "spi2gpio.dtsi"
-
+/*
 &i2c0 {
 	i2c_mux: i2c-mux@70 {
 		compatible = "nxp,pca9547";
@@ -73,7 +73,7 @@
 		};
 	};
 };
-
+*/
 
 / {
 	// DMM data ready is mapped as UIO interrupt connected to MIO[10] (MOSI)

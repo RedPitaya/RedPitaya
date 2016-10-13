@@ -210,17 +210,19 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-############
+################################################################################
 # SDR
-############
+################################################################################
 
 .PHONY: sdr
 
-SDR_NAME = sdr-transceiver-hpsdr
-SDR_DIR = Applications/sdr
-SDR_SCRIPT = sdr-transceiver-hpsdr-bazaar.sh
-sdr: 
-	$(MAKE) -C $(SDR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+SDR_ZIP = sdr_transceiver_hpsdr-0.94-1298.zip
+SDR_URL = http://downloads.redpitaya.com/downloads/sdr/$(SDR_ZIP)
+
+sdr: | $(DL)
+	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
+	mkdir -p $(INSTALL_DIR)/www/apps
+	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 
 ################################################################################
 # Red Pitaya tools
