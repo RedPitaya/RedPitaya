@@ -58,9 +58,62 @@
 //						interrupts = <11 0x2>;
 //						interrupt-controller;
 //						#interrupt-cells = <2>;
-			};
+					};
 				};
 			};
 		};
 	};
+	
+	fragment@f0 {
+		target-path = "/";
+		__overlay__ {
+		// DMM data ready is mapped as UIO interrupt connected to MIO[10] (MOSI)
+			dmm: dmm {
+				compatible = "generic-uio";
+				status = "okay";
+				interrupt-parent = <&gpio0>;
+				interrupts = <10 0x8>;
+			};
+			// Power button on MIO[11] (MISO)
+			hamlab_keys {
+				compatible = "gpio-keys";
+				autorepeat;
+				hamlab_key_power {
+					label = "HAMLAB Key POWER";
+					linux,code = <116>;
+					gpios = <&gpio0 11 1>;
+				};
+			};
+			hamlab_led {
+				compatible = "gpio-leds";
+				hamlab_led_power {
+					label = "HAMLAB LED POWER";
+					gpios = <&hamlab_extension_gpio_expander 13 0>;
+					default-state = "on";
+				};
+				hamlab_led_test0 {
+					label = "HAMLAB LED test 0";
+					gpios = <&hamlab_extension_gpio_expander 0 0>;
+					default-state = "off";
+				};
+				hamlab_led_test1 {
+					label = "HAMLAB LED test 1";
+					gpios = <&hamlab_extension_gpio_expander 1 0>;
+					default-state = "off";
+				};
+				hamlab_led_test2 {
+					label = "HAMLAB LED test 2";
+					gpios = <&hamlab_extension_gpio_expander 2 0>;
+					default-state = "off";
+				};
+			};
+			// Power OFF signal, extension board GPIO expander port P16 (14=8+6)
+			hamlab-poweroff {
+				compatible = "gpio-poweroff";
+				gpios = <&hamlab_extension_gpio_expander 12 0>;
+			};
+	
+		};	
+	};
+
 };
