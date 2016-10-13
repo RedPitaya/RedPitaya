@@ -221,6 +221,7 @@ SDR_URL = http://downloads.redpitaya.com/downloads/sdr/$(SDR_ZIP)
 
 sdr: | $(DL)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
+	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 
 ################################################################################
