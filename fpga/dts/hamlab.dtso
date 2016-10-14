@@ -18,37 +18,6 @@
 /plugin/;
 
 / {
-        fragment@0 {
-                target = <&pinctrl0>;
-                __overlay__ {
-                        pinctrl_spi2gpio: spi2gpio {
-                                mux {
-                                        function = "gpio0";
-                                        groups = "gpio0_10_grp", "gpio0_11_grp", "gpio0_12_grp", "gpio0_13_grp";
-                                };
-
-                                conf {
-                                        groups = "gpio0_10_grp", "gpio0_11_grp", "gpio0_12_grp", "gpio0_13_grp";
-                                        slew-rate = <0>;
-                                        io-standard = <3>;  // LVCMOS33
-                                };
-
-                                conf-pull-none {
-                                        pins = "MIO10", "MIO11", "MIO12", "MIO13";
-                                        bias-disable;
-                                };
-                        };
-                };
-        };
-
-        fragment@1 {
-                target = <&gpio0>;
-                __overlay__ {
-                        pinctrl-names = "default";
-                        pinctrl-0 = <&pinctrl_spi2gpio>;
-                };
-        };
-
 	fragment@2 {
 		target = <&i2c0>;
 		__overlay__ {
@@ -104,10 +73,12 @@
 						reg = <0x21>;
 						gpio-controller;
 						#gpio-cells = <2>;
-//						interrupt-parent = <&gpio0>;
-//						interrupts = <11 0x2>;
-//						interrupt-controller;
-//						#interrupt-cells = <2>;
+						interrupt-parent = <&gpio0>;
+						interrupts = <11 0x2>;
+						interrupt-controller;
+						#interrupt-cells = <2>;
+						pinctrl-names = "default";
+						pinctrl-0 = <&pinctrl_miso2gpio>;
 					};	
 				};
 			};
@@ -117,12 +88,12 @@
 	fragment@3 {
 		target-path = "/";
 		__overlay__ {
-			// DMM data ready is mapped as UIO interrupt connected to MIO[10] (MOSI)
+			// DMM data ready is mapped as UIO interrupt connected to gpio_expander [15]
 			dmm: dmm {
 				compatible = "generic-uio";
 				status = "okay";
-				interrupt-parent = <&gpio0>;
-				interrupts = <10 0x8>;
+				interrupt-parent = <&hamlab_extension_gpio_expander>;
+				interrupts = <15 0x2>;
 			};
 
 			// Power button on MIO[11] (MISO)
@@ -132,7 +103,7 @@
 				hamlab_key_power {
 					label = "HAMLAB Key POWER";
 					linux,code = <116>;
-					gpios = <&gpio0 11 1>;
+					gpios = <&hamlab_extension_gpio_expander 14 1>;
 				};
 			};
 			hamlab_led {
