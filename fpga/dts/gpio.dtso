@@ -1,0 +1,134 @@
+/*
+ * HAMLAB specific features, mostly GPIO on I2C
+ *
+ * pca9555 I2C GPIO extender interrupt is connected
+ * to MIO[10] used as GPIO, 0x2 specifies trigger mode:
+ * 1 = low-to-high edge triggered
+ * 2 = high-to-low edge triggered
+ * 4 = high level triggered
+ * 8 = low level triggered
+ *
+ * http://developer.toradex.com/knowledge-base/gpio-(linux)#GPIO_power_management_keys
+*/
+
+///include/ "miso2gpio.dtsi"
+/include/ "spi2gpio.dtsi"
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@0 {
+		target = <&i2c0>;
+		__overlay__ {
+			i2c_mux: i2c-mux@70 {
+				compatible = "nxp,pca9547";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x70>;
+				status="okay";
+				i2c@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <0>;
+				};
+				i2c@1 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <1>;
+				};
+				i2c@2 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <2>;
+				};
+				i2c@3 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <3>;
+				};
+				i2c@4 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <4>;
+				};
+				i2c@5 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <5>;
+				};
+				i2c@6 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <6>;
+				};
+				hamlab_extension: i2c@7 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <7>;
+					hamlab_extension_gpio_expander: pca9535@21 {	
+						compatible = "nxp,pca9535";
+						reg = <0x21>;
+						gpio-controller;
+						#gpio-cells = <2>;
+//						interrupt-parent = <&gpio0>;
+//						interrupts = <11 0x2>;
+//						interrupt-controller;
+//						#interrupt-cells = <2>;
+					};	
+				};
+			};
+		};
+	};
+	fragment@1 {
+		target-path = </>;
+		__overlay__ {
+			// DMM data ready is mapped as UIO interrupt connected to MIO[10] (MOSI)
+			dmm: dmm {
+				compatible = "generic-uio";
+				status = "okay";
+				interrupt-parent = <&gpio0>;
+				interrupts = <10 0x8>;
+			};
+
+			// Power button on MIO[11] (MISO)
+			hamlab_keys {
+				compatible = "gpio-keys";
+				autorepeat;
+				hamlab_key_power {
+					label = "HAMLAB Key POWER";
+					linux,code = <116>;
+					gpios = <&gpio0 11 1>;
+				};
+			};
+			hamlab_led {
+				compatible = "gpio-leds";
+				hamlab_led_power {
+					label = "HAMLAB LED POWER";
+					gpios = <&hamlab_extension_gpio_expander 13 0>;
+					default-state = "on";
+				};
+				hamlab_led_test0 {
+					label = "HAMLAB LED test 0";
+					gpios = <&hamlab_extension_gpio_expander 0 0>;
+					default-state = "off";
+				};
+				hamlab_led_test1 {
+					label = "HAMLAB LED test 1";
+					gpios = <&hamlab_extension_gpio_expander 1 0>;
+					default-state = "off";
+				};
+				hamlab_led_test2 {
+					label = "HAMLAB LED test 2";
+					gpios = <&hamlab_extension_gpio_expander 2 0>;
+					default-state = "off";
+				};
+			};
+		        // Power OFF signal, extension board GPIO expander port P16 (14=8+6)
+			hamlab-poweroff {
+				compatible = "gpio-poweroff";
+				gpios = <&hamlab_extension_gpio_expander 12 0>;
+			};
+		};
+	};
+};
