@@ -26,13 +26,13 @@ class scpi (object):
             self._socket.connect((host, port))
 
         except socket.error as e:
-            print 'SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e)
+            print('SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e))
 
     def rx_txt(self, chunksize = 4096):
         """Receive text string and return it after removing the delimiter."""
         msg = ''
         while 1:
-            chunk = self._socket.recv(chunksize + len(self.delimiter)) # Receive chunk size of 2^n preferably
+            chunk = self._socket.recv(chunksize + len(self.delimiter)).decode('utf-8') # Receive chunk size of 2^n preferably
             msg += chunk
             if (len(chunk) and chunk[-2:] == self.delimiter):
                 break
@@ -63,7 +63,7 @@ class scpi (object):
 
     def tx_txt(self, msg):
         """Send text string ending and append delimiter."""
-        return self._socket.send(msg + self.delimiter)
+        return self._socket.send((msg + self.delimiter).encode('utf-8'))
 
     def close(self):
         """Close IP connection."""
@@ -73,4 +73,3 @@ class scpi (object):
         if self._socket is not None:
             self._socket.close()
         self._socket = None
-
