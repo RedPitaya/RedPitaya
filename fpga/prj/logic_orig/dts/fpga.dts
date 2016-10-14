@@ -2,4 +2,3 @@
 /include/ "led-user.dtsi"
 /include/ "dma.dtsi"
 /include/ "uio.dtsi"
-/include/ "hamlab.dtsi"
