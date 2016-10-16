@@ -12,8 +12,6 @@ Welcome to the Red Pitaya documentation.
     software
     redPitayauOS
  
-..     :hidden:
- 
 .. Indices and tables
 .. ==================
 .. 
