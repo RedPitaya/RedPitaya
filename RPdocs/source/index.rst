@@ -4,9 +4,6 @@ Welcome to the Red Pitaya documentation.
 .. toctree::
     :maxdepth: 4
     :numbered:
-    :titlesonly:
-    :glob:
-    :hidden:
     
     quickStart 
     tmApplications
@@ -15,6 +12,7 @@ Welcome to the Red Pitaya documentation.
     software
     redPitayauOS
  
+..     :hidden:
  
 .. Indices and tables
 .. ==================
