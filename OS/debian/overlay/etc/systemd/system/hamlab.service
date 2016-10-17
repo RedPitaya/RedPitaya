@@ -5,7 +5,7 @@ After=systemd-remount-fs.service
 
 [Service]
 Type=oneshot
-ExecStart=hamlab.sh
+ExecStart=/opt/redpitaya/hamlab.sh
 
 [Install]
 WantedBy=multi-user.target
