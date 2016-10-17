@@ -69,6 +69,7 @@ EOF_CHROOT
 . OS/debian/redpitaya.sh
 #. OS/debian/wyliodrin.sh
 #. OS/debian/tft.sh
+. OS/debian/hamlab.sh
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
