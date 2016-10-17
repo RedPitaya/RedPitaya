@@ -36,10 +36,10 @@ laosc	(in next hw revision this application becomes irelavent since
 	-2 for gpio2 
 	-0 for setting all pins on pca9555 device pins to 0  
 	
-After boot hamlab_i2cmux.sh script must be run for above applications to work.
+After boot hamlab.sh script must be run for above applications to work.
 This can be done automaticly with systemd, by copiing 
-OS/debian/overlay/etc/systemd/system/hamlab_i2cmux.service into /etc/systemd/system/hamlab_i2cmux.service 
-and running "systemctl enable hamlab_i2cmux.service"
+OS/debian/overlay/etc/systemd/system/hamlab.service into /etc/systemd/system/hamlab.service 
+and running "systemctl enable hamlab.service"
 
 
 

@@ -69,7 +69,7 @@ int32_t res;
 				case 0x14://if 0x14 hamlab motherboard with i2cmux 2x pca9555 0x200x21
 					printf("HAMLAB EXTM %s %d \n",filename,res);
 					//insert overlay for i2c mux
-					system("sh hamlab_i2cmux.sh");
+					system("sh hamlab.sh");
 					//printf("i2c expander overlay inserted\n");
 					//system("i2cset 8 0x20 6 0");
 					//system("i2cset 8 0x20 7 0");

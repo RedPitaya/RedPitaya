@@ -200,8 +200,8 @@ devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp $(TMP)/dts/amba_pl.dtbo         $(INSTALL_DIR)
 	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
 	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
-	cp $(TMP)/dts/hamlab_i2cmux.dtbo   $(INSTALL_DIR)
-	cp patches/devicetree/hamlab_i2cmux.sh $(INSTALL_DIR)
+	cp $(TMP)/dts/hamlab.dtbo          $(INSTALL_DIR)
+	cp patches/devicetree/hamlab.sh    $(INSTALL_DIR)
 ################################################################################
 # boot file generator
 ################################################################################
