@@ -18,6 +18,7 @@
 	fragment@2 {
 		target = <&i2c0>;
 		__overlay__ {
+			clock-frequency = <100000>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			i2c_mux: i2c-mux@70 {
