@@ -11,9 +11,6 @@
  * http://developer.toradex.com/knowledge-base/gpio-(linux)#GPIO_power_management_keys
 */
 
-///include/ "miso2gpio.dtsi"
-/include/ "spi2gpio.dtsi"
-
 /dts-v1/;
 /plugin/;
 

@@ -190,7 +190,7 @@ $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
 	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts >> $(TMP)/dts/system.dts
 	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i $(FPGA_DIR)/dts $(TMP)/dts/system.dts
 	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/amba_pl.dtbo patches/devicetree/amba_pl.dts
-	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/hamlab.dtbo  fpga/dts/hamlab.dtso
+	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/hamlab_i2cmux.dtbo  fpga/dts/hamlab.dtso
 	# create device tree source from binary for reference
 	tools/dtc/bin/dtc -@ -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
