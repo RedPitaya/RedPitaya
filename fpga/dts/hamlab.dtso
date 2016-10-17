@@ -71,10 +71,10 @@
 						reg = <0x21>;
 						gpio-controller;
 						#gpio-cells = <2>;
-						interrupt-parent = <&gpio0>;
-						interrupts = <11 0x2>;
-						interrupt-controller;
-						#interrupt-cells = <2>;
+//						interrupt-parent = <&gpio0>;
+//						interrupts = <11 0x2>;
+//						interrupt-controller;
+//						#interrupt-cells = <2>;
 						pinctrl-names = "default";
 						pinctrl-0 = <&pinctrl_miso2gpio>;
 					};	
@@ -101,7 +101,8 @@
 				hamlab_key_power {
 					label = "HAMLAB Key POWER";
 					linux,code = <116>;
-					gpios = <&hamlab_extension_gpio_expander 14 1>;
+//					gpios = <&hamlab_extension_gpio_expander 14 1>;
+					gpios = <&gpio0 11 1>;
 				};
 			};
 			hamlab_led {
