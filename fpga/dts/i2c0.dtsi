@@ -3,7 +3,6 @@
 */
 
 &i2c0 {
-	clock-frequency = <100000>;
 	eep@50 {
 		compatible = "24c64";
 		reg = <0x50>;
