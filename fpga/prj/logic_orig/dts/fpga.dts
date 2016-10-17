@@ -2,5 +2,4 @@
 /include/ "led-user.dtsi"
 /include/ "dma.dtsi"
 /include/ "uio.dtsi"
-/include/ "spi2gpio.dtsi"
-///include/ "hamlab.dtsi"
+/include/ "miso2gpio.dtsi"
