@@ -24,7 +24,10 @@ The table describes address space partitioning implemented on FPGA via AXI GP0 i
 The memory block is divided into 8 parts. Each part is occupied by individual IP core. Address space of individual application is described in the subsection below. The size of each IP core address space is 4MByte. 
 For additional information and better understanding check other documents (schematics, specifications...).
 
+.. .. table:: Truth table for "not"
+..    :widths: auto
 
+.. tabularcolumns:: |c p{2cm}|c p{5cm}||c p{5cm}|c p{5cm}|
 
 +--------+-------------+------------+----------------------------------+
 |        |    Start    | End        | Module Name                      |
@@ -52,7 +55,10 @@ Red Pitaya Modules
 Here are described submodules used in Red Pitaya FPGA logic.
 
 Housekeeping
-~~~~~~~~~~~~
+""""""""""""
+
+.. tabularcolumns:: |c p{2cm}|c p{10cm}||c p{2cm}|c p{2cm}|
+
 +----------+------------------------------------------------+------+-----+
 | offset   | description                                    | bits | R/W |
 +==========+================================================+======+=====+
@@ -135,7 +141,7 @@ Housekeeping
 
 
 Oscilloscope
-~~~~~~~~~~~~
+""""""""""""
 
 +----------+----------------------------------------------------+------+-----+
 | offset   | description                                        | bits | R/W |
@@ -948,7 +954,7 @@ Signal mapping
 ^^^^^^^^^^^^^^
 
 XADC inputs
-~~~~~~~~~~~
+"""""""""""
 
 XADC input data can be accessed through the Linux IIO (Industrial IO) driver interface.
 
@@ -967,7 +973,7 @@ XADC input data can be accessed through the Linux IIO (Industrial IO) driver int
 +--------+-----------+----------+---------+------------------+--------------------+-------+
 
 Input range
-~~~~~~~~~~~
+""""""""""""
 
 The default mounting intends for unipolar XADC inputs,
 which allow for observing only positive signals with a saturation range of *0V ~ 1V*.
