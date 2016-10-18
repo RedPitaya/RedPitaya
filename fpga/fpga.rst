@@ -297,6 +297,9 @@ The default pin assignment for GPIO is described in the next table.
    | ``B9`` | ``E2[10]`` | I2C0_SDA           |  ``MIO[51]``     | ``906+   [51]   = 957``      | requires ``pinctrl`` changes to be active |
    +--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
 
+End of table 1.
+
+
 .. table:: GPIO to MIO and connector mappings
    :widths: grid
 
@@ -330,6 +333,8 @@ The default pin assignment for GPIO is described in the next table.
    | ``B9`` | ``E2[10]`` | I2C0_SDA           |  ``MIO[51]``     | ``906+   [51]   = 957``      | requires ``pinctrl`` changes to be active |
    +--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
 
+End of table 22
+
 .. table:: GPIO to MIO and connector mappings
 
    +------+-----------+----------------+----------------+--------------------------+----------------------------------------+
@@ -361,6 +366,8 @@ The default pin assignment for GPIO is described in the next table.
    +-------+-----------+---------------+----------------+--------------------------+----------------------------------------+
    |  B9  |  E2[10]   | I2C0_SDA       |  MIO[51]       | 906+   [51]   = 957      | requires pinctrl changes to be active  |
    +--------+-----------+--------------+----------------+--------------------------+----------------------------------------+
+
+End of table 3.
 
 GPIOs are accessible at the ``sysfs`` index.
 The next example will light up ``LED[0]``, and read back its value.
