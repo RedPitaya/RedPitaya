@@ -1,8 +1,8 @@
 .. Quick start
 
-===========
+###########
 Quick start
-===========
+###########
 
 =============================
 Connect using Network manager

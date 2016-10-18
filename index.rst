@@ -5,20 +5,23 @@
 =======================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
+   :numbered:
    :caption: Quick start
 
    doc/quick-start
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
+   :numbered:
    :caption: User Guide
 
    doc/user
    doc/visual
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
+   :numbered:
    :caption: Developer Guide
 
    doc/developer
