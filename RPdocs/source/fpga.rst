@@ -143,6 +143,8 @@ Housekeeping
 Oscilloscope
 """"""""""""
 
+.. tabularcolumns:: |p{15mm}|p{105mm}|p{15mm}|p{15mm}|
+
 +----------+----------------------------------------------------+------+-----+
 | offset   | description                                        | bits | R/W |
 +==========+====================================================+======+=====+
@@ -390,6 +392,8 @@ Oscilloscope
 Arbitrary Signal Generator (ASG)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. tabularcolumns:: |p{15mm}|p{105mm}|p{15mm}|p{15mm}|
+
 +----------+----------------------------------------------------+------+-----+    
 | offset   | description                                        | bits | R/W |
 +==========+====================================================+======+=====+
@@ -574,6 +578,8 @@ Arbitrary Signal Generator (ASG)
 PID Controller
 ~~~~~~~~~~~~~~
 
+.. tabularcolumns:: |p{15mm}|p{105mm}|p{15mm}|p{15mm}|
+
 +----------+----------------------------------------------------+------+-----+    
 | offset   | description                                        | bits | R/W |
 +==========+====================================================+======+=====+
@@ -692,6 +698,8 @@ PID Controller
 Analog Mixed Signals (AMS)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. tabularcolumns:: |p{15mm}|p{105mm}|p{15mm}|p{15mm}|
+
 +----------+-----------------------------------------------------+------+-----+    
 | offset   | description                                         | bits | R/W |
 +==========+=====================================================+======+=====+
@@ -762,6 +770,8 @@ Analog Mixed Signals (AMS)
 Daisy Chain
 ~~~~~~~~~~~
 
+.. tabularcolumns:: |p{15mm}|p{105mm}|p{15mm}|p{15mm}|
+
 +----------+----------------------------------------------------+------+-----+    
 | offset   | description                                        | bits | R/W |
 +==========+====================================================+======+=====+
@@ -822,6 +832,9 @@ Daisy Chain
 
 Power Test
 ~~~~~~~~~~
+
+.. tabularcolumns:: |p{15mm}|p{105mm}|p{15mm}|p{15mm}|
+
 +----------+----------------------------------------------------+------+-----+    
 | offset   | description                                        | bits | R/W |
 +==========+====================================================+======+=====+
@@ -844,6 +857,9 @@ Directory structure
 There are multiple FPGA projects, some with generic functionality, some with specific functionality for an application.
 Common code for all projects is placed directly into the ``fpga`` directory. Common code are mostly reusable modules.
 Project specific code is placed inside the ``fpga/prj/name/`` directories and is similarly organized as common code.
+
+
+.. tabularcolumns:: |p{30mm}|p{120mm}|
 
 +-------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |  path             | contents                                                                                                                                                                 |
@@ -892,6 +908,8 @@ which are too many and difficult to handle.
 This allows us to only place source files and scripts under version control.
 
 The next scripts perform various tasks:
+
+.. tabularcolumns:: |p{60mm}|p{60mm}|
 
 +-----------------------------------+------------------------------------------------+
 | TCL script                        | action                                         |
