@@ -265,6 +265,7 @@ Another way to find the `gpio_base` index is to check the given name inside `sys
 The default pin assignment for GPIO is described in the next table.
 
 .. table:: GPIO to MIO and connector mappings
+
    :widths: auto
 
    +--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
@@ -301,6 +302,7 @@ End of table 1.
 
 
 .. table:: GPIO to MIO and connector mappings
+
    :widths: grid
 
    +--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
