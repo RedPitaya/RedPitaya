@@ -185,7 +185,7 @@ Pin  Description            FPGA pin number FPGA pin description Voltage levels
 7    UART(TX)               C8              PS_MIO08             3.3V
 8    UART(RX)               C5              PS_MIO09             3.3V
 9    I2C(SCL)               B9              PS_MIO50_501         3.3V
-10   I2C(SDA)               B13              PS_MIO51_501        3.3V
+10   I2C(SDA)               B13             PS_MIO51_501         3.3V
 11   Ext com.mode                                                GND (default)
 12   GND                                                       
 13   Analog Input 0                                              0-3.5V
