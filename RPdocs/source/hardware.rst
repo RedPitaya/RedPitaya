@@ -53,6 +53,7 @@ Analog inputs
     - Input coupling: DC
     - Input noise level: < -119 dBm / Hz (D)
     - Input impedance: 1 MΩ / 10pF (A,B)
+    - Full scale voltage: 2Vpp, (46 Vpp for lowgain jumper setting) (T,V) 
     - Full scale voltage: 2Vpp, (46 Vpp for lowgain jumper setting) (T,V)
     - DC offset error: <5 % FS (G) 
     - gain error: < 3% (at high gain jumper setting), <10% (at low gain jumper setting) (G) 
@@ -61,9 +62,9 @@ Analog inputs
     - Input channel isolation: typical performance 65 dB @ 10 kHz, 50 dB @ 100 kHz, 55 dB @ 1 M, 55 dB @ 10 MHz, 52 dB 
       @ 20 MHz, 48 dB @ 30 MHz, 44 dB @ 40 MHz, 40 dB @ 50 MHz. (C) 
     - Harmonics 
-    - at -­3 dBFS: typical performance <­-45 dBc (E) 
-    - at ­-20 dBFS: typical performance <­-60 dBc (E) 
-    - Spurious frequency components: Typically <­-90 dBFS (F) 
+    - at -3 dBFS: typical performance <-45 dBc (E) 
+    - at -20 dBFS: typical performance <-60 dBc (E) 
+    - Spurious frequency components: Typically <-90 dBFS (F) 
     - Connector type: SMA (U) 
     - Frequency response is adjusted by digital compensation 
 
@@ -81,11 +82,11 @@ Analog outputs
     - DC offset error: < 5% FS (G) 
     - Gain error: < 5% (G) 
     - Full scale power: > 9 dBm (L) 
-    - Harmonics: typical performance: (at ­8 dBm) 
-    - ­ -51 dBc @ 1 MHz 
-    - ­ -49 dBc @ 10 MHz 
-    - ­ -48 dBc @ 20 MHz 
-    - ­ -53 dBc @ 45 MHz 
+    - Harmonics: typical performance: (at 8 dBm) 
+    -  -51 dBc @ 1 MHz 
+    -  -49 dBc @ 10 MHz 
+    -  -48 dBc @ 20 MHz 
+    -  -53 dBc @ 45 MHz 
 
 Auxiliary analog input channels
 -------------------------------
@@ -112,16 +113,16 @@ General purpose digital input/output channels: (N)
     - Number of digital input/output pins: 16 
     - Voltage level: 3.3 V 
     - Direction: configurable 
-    - Location: IDC connector E1 (pins 3­24 ) 
+    - Location: IDC connector E1 (pins 324 ) 
 
 Extension connector 
 -------------------
 
     - Connector: 2 x 26 pins IDC (M) 
     - Power supply: 
-    - Available voltages: +5V, +3.3V, ­3.3V 
+    - Available voltages: +5V, +3.3V, 3.3V 
     - Current limitations: 500 mA for +5V and +3.3V (to be shared between extension module and USB devices), 50 mA 
-      for ­3.3V supply. 
+      for 3.3V supply. 
     
 Extension connector E1
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -231,7 +232,7 @@ Schematics of extension connectors is shown in picture bellow.
    requirements. 
 #. The output channels are designed to drive 50 Ω loads. Terminate outputs when channels are not used. Connect 
    parallel 50 Ω load (SMA tee junction) in high impedance load applications. 
-#. Measured at ­10 dBm output power level 
+#. Measured at 10 dBm output power level 
 #. Typical power level with 1 MHz sine is 9.5 dBm. Output power is subject to slew rate limitations. 
 #. Detailed scheme available within documentation (Red_Pitaya_Schematics_v1.0.1.pdf) 
 #. To avoid speed limitations on digital General Purpose Input / Output pins are directly connected to FPGA. FPGA
@@ -247,7 +248,7 @@ Schematics of extension connectors is shown in picture bellow.
    value defines the maximum admissible input voltage.
 #. Jumper settings are limited to the positions described in the user manual. Any other configuration or use of
    different jumper type may damage the product. 
-#. SMA connectors on the cables connected to Red Pitaya must correspond to the standard MIL­C­39012. It’s Important that
+#. SMA connectors on the cables connected to Red Pitaya must correspond to the standard MILC39012. It’s Important that
    central pin is of suitable length, otherwise the SMA connector installed in Red Pitaya will mechanically damage the
    SMA connector. Central pin of the SMA connector on Red Pitaya will loose contact to the board and the board will 
    not be possible to repair due to the mechanical damage (separation of the pad from the board). 
