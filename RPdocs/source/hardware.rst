@@ -49,11 +49,11 @@ Analog inputs
     - Number of channels: 2
     - Bandwidth: 50 MHz (3 dB)
     - Sample rate: 125 Msps 
-    - ADC resolution 14 bits 
-    - Input coupling: DC 
-    - Input noise level: < -­119 dBm /Hz (D)
-    - Input impedance: 1 MΩ // 10 pF (A,B) 
-    - Full scale voltage: 2Vpp, (46 Vpp for low­gain jumper setting) (T,V) 
+    - ADC resolution 14 bits
+    - Input coupling: DC
+    - Input noise level: < -119 dBm / Hz (D)
+    - Input impedance: 1 MΩ / 10pF (A,B)
+    - Full scale voltage: 2Vpp, (46 Vpp for lowgain jumper setting) (T,V)
     - DC offset error: <5 % FS (G) 
     - gain error: < 3% (at high gain jumper setting), <10% (at low gain jumper setting) (G) 
     - Absolute maximum input voltage rating: 30 V (S) (1500 V ESD) 
