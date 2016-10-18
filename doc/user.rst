@@ -1,5 +1,9 @@
 .. User Guide
 
+##########
+User guide
+##########
+
 ================
 T&M applications
 ================
