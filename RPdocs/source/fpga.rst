@@ -27,7 +27,7 @@ For additional information and better understanding check other documents (schem
 .. .. table:: Truth table for "not"
 ..    :widths: auto
 
-.. tabularcolumns:: |c p{2cm}|c p{5cm}||c p{5cm}|c p{5cm}|
+.. tabularcolumns:: |p{15mm}|p{22mm}|p{22mm}|c p{55mm}|
 
 +--------+-------------+------------+----------------------------------+
 |        |    Start    | End        | Module Name                      |
@@ -56,8 +56,6 @@ Here are described submodules used in Red Pitaya FPGA logic.
 
 Housekeeping
 """"""""""""
-
-.. tabularcolumns:: |c p{2cm}|c p{10cm}||c p{2cm}|c p{2cm}|
 
 +----------+------------------------------------------------+------+-----+
 | offset   | description                                    | bits | R/W |
