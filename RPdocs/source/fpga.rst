@@ -49,7 +49,7 @@ For additional information and better understanding check other documents (schem
 | CS[7]  | 0x40700000  | 0x407FFFFF | Power test                       |
 +--------+-------------+------------+----------------------------------+
 
-.. tabularcolumns:: |p{15mm}|p{22mm}|p{22mm}|c,p{55mm}|
+.. tabularcolumns:: |p{15mm}|p{22mm}|p{22mm}|cp{55mm}|
 
 +--------+-------------+------------+----------------------------------+
 |        |    Start    | End        | Module Name                      |
@@ -71,7 +71,7 @@ For additional information and better understanding check other documents (schem
 | CS[7]  | 0x40700000  | 0x407FFFFF | Power test                       |
 +--------+-------------+------------+----------------------------------+
 
-.. tabularcolumns:: |p{15mm}|p{22mm}|p{22mm}|c;p{55mm}|
+.. tabularcolumns:: |p{15mm}|p{22mm}|p{22mm}|p{55mm}c|
 
 +--------+-------------+------------+----------------------------------+
 |        |    Start    | End        | Module Name                      |
