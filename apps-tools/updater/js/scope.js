@@ -9,11 +9,13 @@
 
 (function(UPD, $, undefined) {
     UPD.currentStep = 1;
-    var ecosystems = [];
-    var ecosystems_sizes = [];
-    var chosen_eco = -1;
+    UPD.ecosystems = [];
+    UPD.ecosystems_sizes = [];
+    UPD.chosen_eco = -1;
+	UPD.isApply = false;
 
     UPD.currentVer = undefined;
+	UPD.type = '0.97';
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -28,10 +30,9 @@
                 UPD.checkVersion();
                 break;
             case 3:
-                UPD.checkUpdates();
+                UPD.checkUpdates(UPD.type);
                 break;
             case 4:
-                // UPD.nextStep();
                 UPD.downloadEcosystem();
                 break;
             case 5:
@@ -53,16 +54,14 @@
     }
 
     UPD.checkConnection = function() {
-        setTimeout(function() {
-            OnlineChecker.checkAsync(function() {
-                if (OnlineChecker.isOnline()) {
-                    UPD.nextStep();
-                } else {
-                    $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
-				    $('#step_1').find('.error_msg').show();				
-			    }
-            });
-        }, 3500);
+		OnlineChecker.checkAsync(function() {
+            if (OnlineChecker.isOnline()) {
+                UPD.nextStep();
+            } else {
+                $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
+				$('#step_1').find('.error_msg').show();				
+			}
+        });
     }
 
     UPD.checkVersion = function() {
@@ -84,27 +83,38 @@
         }, 500);
     }
 
-    UPD.checkUpdates = function() {
+    UPD.checkUpdates = function(type) {
+        $('#select_ver').hide();
         setTimeout(function() {
             $.ajax({
-                    url: '/update_list',
+                    url: '/update_list?type=' + type,
                     type: 'GET',
                 })
                 .fail(function(msg) {
                     var resp = msg.responseText;
                     var arr = resp.split('\n');
                     if (arr.length == 0 || arr.length <= 2 || arr.length % 2 != 0) {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                        return;
+                        if(UPD.type == "0.97")
+                        {
+                            $("#ecosystem_type").val("2");
+                            UPD.type = "0.96";
+                            UPD.checkUpdates('0.96');
+                            return;
+                        } else {
+                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                            $('#step_' + UPD.currentStep).find('.error_msg').show();
+                            return;
+                        }
                     }
                     var list = [];
+					UPD.ecosystems = [];
+                    UPD.ecosystems_sizes = [];
                     for (var i = 0; i < arr.length; i += 2) {
                         if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
                             var size = parseInt(arr[i + 1]) * 1;
                             var sizeM = size / (1024 * 1024);
-                            ecosystems_sizes.push(size);
-                            ecosystems.push(arr[i]);
+                            UPD.ecosystems_sizes.push(size);
+                            UPD.ecosystems.push(arr[i]);
                             list.push(arr[i] + "-" + sizeM.toFixed(2) + "M");
                         }
                     }
@@ -112,8 +122,11 @@
                         $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
                         $('#step_' + UPD.currentStep).find('.error_msg').show();
                         return;
-                    }
+                    } else {
+                        $('#step_' + UPD.currentStep).find('.error_msg').hide();
+					}
                     list.sort();
+					$('#ecosystem_ver').empty();
                     for (var i = list.length - 1; i >= 0; i--) {
                         var item = list[i].split('-');
                         var ver = item[1];
@@ -125,9 +138,13 @@
                     $('#ecosystem_ver').removeAttr('disabled');
                     $('.select_ver').show();
                     $('#apply').click(function(event) {
+						if (UPD.isApply)
+							return; // FIXME
+                        $('.select_ver').hide();
+						UPD.isApply = true;
                         var val = $('#ecosystem_ver').val();
-                        chosen_eco = ecosystems.indexOf(val);
-                        if (chosen_eco != -1) {
+                        UPD.chosen_eco = UPD.ecosystems.indexOf(val);
+                        if (UPD.chosen_eco != -1) {
                             UPD.nextStep();
                             $('#apply').hide();
                             $('#and_click').hide();
@@ -142,9 +159,13 @@
     }
 
     UPD.downloadEcosystem = function() {
+		if (!UPD.isApply) {
+        	--UPD.currentStep; // FIXME
+			return;
+		}
         setTimeout(function() {
             $.ajax({
-                url: '/update_download?ecosystem=' + ecosystems[chosen_eco],
+                url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
                 type: 'GET',
             }).always(function() {
                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
@@ -161,11 +182,11 @@
                             $('#step_' + UPD.currentStep).find('.error_msg').show();
                             clearInterval(check_progress);
                         } else {
-                            var percent = ((size / ecosystems_sizes[chosen_eco]) * 100).toFixed(2);
+                            var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
                             $('#percent').text(percent + "%");
                             $('#percent').show();
 
-                            if (size == ecosystems_sizes[chosen_eco]) {
+                            if (size >= UPD.ecosystems_sizes[UPD.chosen_eco]) {
                                 $('#percent').hide();
                                 UPD.nextStep();
                                 clearInterval(check_progress);
@@ -216,7 +237,7 @@
                                 })
                                 .done(function(msg) {
                                     if (msg != undefined && msg['version'] !== undefined) {
-                                        var eco = ecosystems[chosen_eco];
+                                        var eco = UPD.ecosystems[UPD.chosen_eco];
                                         var arr = eco.split('-');
                                         var ver = arr[1] + '-' + arr[2];
                                         if (msg['version'] == ver) {
@@ -248,24 +269,40 @@
 
 UPD.getChangelog = function(ecosystem) {
 	$.ajax({
-		url: '/update_changelog?' + ecosystem,
+		url: '/update_changelog?id=' + ecosystem,
 		type: 'GET',
 	})
-	.fail(function(msg) {
-		//var text = msg.responseText;
-		$('#changelog_text').html(msg);
-	})
 	.done(function(msg) {
-		//var text = msg.responseText;
+		if (msg.length < 3)
+			msg = "Changelog is empty";
 		$('#changelog_text').html(msg);
 	})
 }
 
+function checkDev() {
+    $.ajax({
+        url: '/updater/dev',
+        type: 'GET',
+    }).fail(function(msg) {
+		if (msg[0] == 'd')
+			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
+    }).done(function(msg) {
+		if (msg[0] == 'd')
+			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
+    })
+}
 
 // Page onload event handler
 $(document).ready(function() {
+
+    // Init help
+    Help.init(helpListUpdater);
+    Help.setState("idle");
+    
     UPD.startStep(1);
-    $('body').addClass('loaded');
+    $('body').addClass('loaded');	
+	checkDev();
+
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
         if (UPD.currentVer == undefined)
@@ -282,17 +319,31 @@ $(document).ready(function() {
         if (oldMajor >= majorVer) {
             if (oldMajor > majorVer)
                 $('#step_' + UPD.currentStep).find('.warn_msg').show();
-            else
-            if (oldMinor > minorVer)
+            else if (oldMinor > minorVer)
                 $('#step_' + UPD.currentStep).find('.warn_msg').show();
         }
 
     });
-
-	$('#ecosystem_ver').change(function() {
-		console.log($('#ecosystem_ver:selected').text())
-		UPD.getChangelog($('#ecosystem_ver:selected').text())
+	$('#ecosystem_type').change(function(){
+		if ($(this).val() == '1') {
+			$('#warn').hide();
+			UPD.type = '0.97';
+		} else if ($(this).val() == '2') {
+			$('#warn').hide();
+			UPD.type = '0.96';
+		} else if ($(this).val() == '3') {
+			$('#warn').show();
+			UPD.type = 'beta_0.97';
+		} else if ($(this).val() == '4') {
+			$('#warn').show();
+			UPD.type = 'dev';
+		}
+		UPD.checkUpdates(UPD.type);
 	});
 
+	$('#ecosystem_ver').change(function() {
+		let cur = $('#ecosystem_ver option:selected').text().split(' ')[0];
+		UPD.getChangelog(UPD.type + '/' + cur + '.changelog');
+	});
 })
 

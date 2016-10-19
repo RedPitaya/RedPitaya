@@ -101,7 +101,7 @@ To build everything a few `make` steps are required.
 ```bash
 make -f Makefile.x86
 schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT
+make
 EOL_CHROOT
 make -f Makefile.x86 zip
 ```
