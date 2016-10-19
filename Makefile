@@ -348,7 +348,7 @@ APP_UPDATER_DIR          = apps-tools/updater
 
 .PHONY: apps-tools ecosystem updater scpi_manager wyliodrin_manager network_manager
 
-apps-tools: ecosystem updater scpi_manager wyliodrin_manager network_manager
+apps-tools: ecosystem updater scpi_manager network_manager
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
