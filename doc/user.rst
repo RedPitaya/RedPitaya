@@ -1,8 +1,14 @@
-.. User Guide
+.. User guide
 
 ##########
 User guide
 ##########
+
+.. toctree::
+   :maxdepth: 3
+   :numbered:
+
+   doc/visual
 
 ================
 T&M applications

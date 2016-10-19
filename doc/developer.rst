@@ -1,4 +1,8 @@
-.. User
+.. Developer guide
+
+###############
+Developer Guide
+###############
 
 =======================================
  Red Pitaya ecosystem and applications
