@@ -246,6 +246,11 @@
 
 // Page onload event handler
 $(document).ready(function() {
+
+     // Init help
+    Help.init(helpListNM);
+    Help.setState("idle");
+    
     WIZARD.startScan();
     // setInterval(WIZARD.startScan, 2500);
     setInterval(WIZARD.GetEth0Status, 1000);

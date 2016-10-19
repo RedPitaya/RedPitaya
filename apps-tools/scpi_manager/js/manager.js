@@ -101,6 +101,11 @@
 
 // Page onload event handler
 $(function() {
+
+    // Init help
+    Help.init(helpListSCPI);
+    Help.setState("idle");
+
     SCPI.CheckServerStatus();
     setInterval(SCPI.GetIP, 1000);
     setInterval(SCPI.CheckServerStatus, 3000);
@@ -108,4 +113,8 @@ $(function() {
     $('#SCPI_RUN').click(SCPI.StartServer);
 
     $('#SCPI_STOP').click(SCPI.StopServer);
+
+    $('#SCPI_EXAMPLES').click(function(){
+        window.open('http://redpitaya.com/examples-new/','_blank');
+    });
 });
