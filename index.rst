@@ -1,8 +1,4 @@
-.. Red Pitaya documentation master file
-
-=======================================
- Red Pitaya ecosystem and applications
-=======================================
+.. Red Pitaya documentation
 
 .. toctree::
    :maxdepth: 4
@@ -17,7 +13,6 @@
    :caption: User Guide
 
    doc/user
-   doc/visual
 
 .. toctree::
    :maxdepth: 4
