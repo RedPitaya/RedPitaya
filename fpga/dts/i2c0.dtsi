@@ -3,6 +3,9 @@
 */
 
 &i2c0 {
+	resets = <&rstc 288>;
+	reset-names = "resets";
+	status="ok";
 	eep@50 {
 		compatible = "24c64";
 		reg = <0x50>;

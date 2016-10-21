@@ -1,0 +1,74 @@
+/*
+ * HAMLAB specific features, mostly GPIO on I2C
+ *
+ * pca9555 I2C GPIO extender interrupt is connected
+ * to MIO[10] used as GPIO, 0x2 specifies trigger mode:
+ * 1 = low-to-high edge triggered
+ * 2 = high-to-low edge triggered
+ * 4 = high level triggered
+ * 8 = low level triggered
+ *
+ * http://developer.toradex.com/knowledge-base/gpio-(linux)#GPIO_power_management_keys
+*/
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@2 {
+		target = <&i2c0>;
+		__overlay__ {
+			clock-frequency = <100000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			i2c_mux: i2c-mux@70 {
+				compatible = "nxp,pca9547";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x70>;
+				status="okay";
+				i2c@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <0>;
+				};
+				i2c@1 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <1>;
+				};
+				i2c@2 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <2>;
+				};
+				i2c@3 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <3>;
+				};
+				i2c@4 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <4>;
+				};
+				i2c@5 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <5>;
+				};
+				i2c@6 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <6>;
+				};
+				i2c@7 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <7>;
+				};
+			};
+		};
+	};
+};
+
