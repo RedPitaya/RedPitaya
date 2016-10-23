@@ -88,6 +88,8 @@ Official applications
 Oscilloscope and Signal Generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. image:: Oscilloscope&Signal_generator.png
+
 Oscilloscope & signal generator features:
     - Run/stop and auto set functionality
     - Signals position and scale controls
@@ -103,7 +105,6 @@ Hardware specifications:
 
 Oscilloscope:
 
-.. TODO (http://wiki.redpitaya.com/index.php?title=Oscilloscope_and_Signal_Generator)
 
 =========================== ==========================
 Input channels              2 (SMA connectors)
@@ -138,7 +139,7 @@ More about `outputs specification <http://wiki.redpitaya.com/index.php?title=Ana
 Spectrum analyzer
 ~~~~~~~~~~~~~~~~~
 
-.. TODO slike (http://wiki.redpitaya.com/index.php?title=Spectrum_analyzer)
+.. image:: Spectrum_analyzer_1.jpg
 
 
 This version of Spectrum analyzer app. is based on FFT calculation and it not on sweep mode processing.
@@ -184,8 +185,6 @@ Spurious frequency components < -90 dBFS Typically
 
 Command line utilities
 ----------------------
-
-.. TODO slike (http://wiki.redpitaya.com/index.php?title=Command_line_utilities)
 
 Red pitaya command line utilities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -287,8 +286,6 @@ Alternatively, save the data directly to the NFS mount point::
 Copying data - Linux users
 """"""""""""""""""""""""""
 
-.. http://wiki.redpitaya.com/index.php?title=Command_line_utilities
-
 In case NFS share is not available, you can use secure copy::
 
     redpitaya> scp my_local_file <user>@<destination_ip>:/<path_to_directory>/
@@ -296,20 +293,21 @@ In case NFS share is not available, you can use secure copy::
 Alternatively Linux users can use graphical SCP/SFTP clients, such as Nautilus for example (explorer window). 
 To access the address line, type [CTRL + L] and type in the following URL: sftp://root@<ip_address>
 
-.. TODO Nautilus address bar.png http://wiki.redpitaya.com/index.php?title=Command_line_utilities
+.. figure:: 797px-Nautilus_address_bar.png
 
-Figure: Nautilus URL/address bar.
+   Figure: Nautilus URL/address bar.
+
 Type the Red Pitaya password (next Figure). The default Red Pitaya password for the root account is »root«. For 
 changing the root password, refer to buildroot configuration - a mechanism for building the Red Pitaya root 
 file-system, including the /etc/passwd file hosing the root password.
 
-.. Nautilus password window.png http://wiki.redpitaya.com/index.php?title=Command_line_utilities
+.. image:: Nautilus_password_window.png
 
 After logging in, the main screen will show the directory content of Red Pitaya’s root filesystem. Navigate to select 
 your stored data and use the intuitive copy-paste and drag & drop principles to manipulate the files on Red Pitaya 
 (see next Figure).
 
-.. TODO Nautilus root fs.png http://wiki.redpitaya.com/index.php?title=Command_line_utilities
+.. image:: Nautilus_root_fs.png
 
 Copying data - Windows users
 """"""""""""""""""""""""""""
@@ -317,16 +315,20 @@ Copying data - Windows users
 Windows users should use an SCP client such as WinSCP. Download and install it, following its installation 
 instructions. To log in to Red Pitaya, see example screen in next Figure.
 
-.. TODO WinSCP login screen.png http://wiki.redpitaya.com/index.php?title=Command_line_utilities
+.. figure:: WinSCP_login_screen.png
+   
+   Figure: WinSCP login screen.
 
-Figure: WinSCP login screen.
 After logging in, the main screen will show the content of the Red Pitaya root filesystem. Navigate to select your
 stored data and use the intuitive copy-paste and drag & drop principles to manipulate the files on Red Pitaya (see 
 next Figure).
 
-.. TODO WinSCP directory content.png http://wiki.redpitaya.com/index.php?title=Command_line_utilities
+.. figure:: WinSCP_directory_content.png
 
-Figure: Directory content on Red Pitaya.
+   Figure: Directory content on Red Pitaya.
+
 Select the destination (local) directory to save the data file to (see next Figure).
 
-.. TODO WinSCP filesave.png http://wiki.redpitaya.com/index.php?title=Command_line_utilities
+.. figure:: WinSCP_filesave.png
+   
+   Figure: Select file copy destination.

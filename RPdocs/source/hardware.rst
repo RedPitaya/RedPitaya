@@ -6,10 +6,11 @@ Hardware
 ..                  STEM boards
 ..                                   STEM 125-10
 
-The central component of the Red Pitaya board is a Xilinx ZC7Z010 system-on-chip (SoC) device.
-It contains a dual-core ARM9 processor clocked at 800 MHz, which hosts a Linux distribution on the Red Pitaya board.
-The SoC also contains an FPGA with 28k logic cells, a 2.1 Mb of block RAM (BRAM), and 80 DSP slices. The SoC is
-equipped with additional 512MB of RAM memory.
+The central component of the Red Pitaya board is a 
+`Xilinx ZC7Z010 <http://www.xilinx.com/products/silicon-devices/soc/zynq-7000.html#productTable>`_ system-on-chip 
+(SoC) device. It contains a dual-core ARM9 processor clocked at 800 MHz, which hosts a Linux distribution on the Red 
+Pitaya board. The SoC also contains an FPGA with 28k logic cells, a 2.1 Mb of block RAM (BRAM), and 80 DSP slices. 
+The SoC is equipped with additional 512MB of RAM memory.
 The board features an 1Gbit Ethernet port, a USB Host port and a USB Com port for easy communication with a PC over a 
 serial interface.
 Operating system is loaded from an SD card. Xilinx ZC7Z010 has integrated general purpose digital I/O, I2C,UART,SPI 
@@ -18,7 +19,7 @@ relatively slow(100kS/s) A/D and D/A converters which can be accessed through ex
 The board features a powerful analog frontend for analog signal acquisition and generation. Main components of analog 
 frontend are are two 14-bit ADC and two 14-bit DAC with a maximum sample rate of 125 MS/s.    
 
-.. slika http://wiki.redpitaya.com/index.php?title=Hardware_Overview ( Figure: Red Pitaya board HW overview )
+.. image:: RedPitaya_HW_overview.png
 
 Fast analog inputs and outputs are one of the main features of Red Pitaya board since they are used when running web 
 applications such is Oscilloscope 
@@ -41,7 +42,7 @@ Console connection  micro USB
 Power connector     micro USB - 5V, 2A max
 =================== ============================================================
 
-.. slike http://wiki.redpitaya.com/index.php?title=Hardware_Overview
+.. image:: RedPitaya_HW_architecture.png
 
 Analog inputs
 -------------
@@ -208,7 +209,7 @@ Pin  Description            FPGA pin number FPGA pin description Voltage levels
 \ :sup:`1` Red Pitaya Version 1.0 has -3.3V on pin 2. Red Pitaya Version 1.1 has -3.4V on pin 2.
 Schematics of extension connectors is shown in picture bellow.
 
-.. slika http://wiki.redpitaya.com/index.php?title=Extension_connectors
+.. image:: Extension_connector.png
 
 **Notes:**
 
@@ -268,14 +269,22 @@ Extension module template
 External ADC clock
 ------------------
 
-.. slik http://wiki.redpitaya.com/index.php?title=External_ADC_clock
-
 ADC clock can be provided by:
     * On board 125MHz XO (default)
     * From external source / through extension connector E2 (R25,R26 should be moved to location R23,R24)
     * Directly from FPGA (R25,R26 should be moved to location R27,R28)
 
-.. Schematic:
+Schematic:
+
+.. image:: External_clk.png
+
+Top side:
+
+.. image:: External_clock_top.png
+
+Bottom side:
+
+.. image:: External_clock_bottom.png
 
 STEM schematics
 ---------------
@@ -405,7 +414,32 @@ Certificates
 Besides the functional testing Red Pitaya passed the safety and electromagnetic compatibility (EMC) tests at an 
 external `testing and certification institute <http://www.siq.si/?L=3>`_.
 
-.. -TODO  wiki (http://wiki.redpitaya.com/index.php?title=Certificates_%26_test_reports)
+CB test certificate - Safety
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. image:: SI-4208.jpg
+
+CB Test certificate - EMC
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. image:: SI-4169.jpg
+
+MET Approval Letter
+^^^^^^^^^^^^^^^^^^^
+
+.. image:: MET_Approval_Letter_41185.jpg
+
+NRTLC Certification Record
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. image:: NRTLC_Certification_Record.jpg
+
+Test reports (excerpts):
+^^^^^^^^^^^^^^^^^^^^^^^^
+ - `Electrical Safety <https://www.dropbox.com/s/u98odeh683o2d8b/TR60950-1.pdf>`_
+ - `EMC-1 <https://www.dropbox.com/s/fmgswpw3ou79hqa/TR251-0.pdf>`_
+ - `EMC-2 <https://www.dropbox.com/s/h8y2o1tz41bcdhd/TR251-1.pdf>`_
+ - `EMC-3 <https://www.dropbox.com/s/zmw0cbf40yn4do0/TR251_2.pdf>`_
+
 
 Cooling options 
 ---------------
@@ -435,6 +469,8 @@ Extension modules
 Impedance analyzer (LCR)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. image:: LCR_2.png
+
 Impedance analyzer application enables measurements of Impedance, Phase and other parameters of selected DUT (Device 
 Under Test). Measurements can be performed in “Frequency sweep” mode with 1Hz of frequency resolution or in 
 “Measurements sweep” mode with desired numbers of measurement at constant frequency. Selectable frequency range is
@@ -447,23 +483,28 @@ or Inductors can be extrapolated from given picture. Basic accuracy of the Imped
 analyzer application is calibrated for 1 m Kelvin probes. More accurate measurements can be performed in Measurement 
 sweep at constant frequency.
 
-.. TODO LCR range.png
+.. image:: LCR_range.png
 
 When using Impedance analyzer application optimal results are achieved when the Red Pitaya GND is connected to your 
 mains EARTH lead as is shown below. We also recommend shielding of Red Pitaya and LCR extension module.
 
-.. TODO E module connection.png
+.. image:: E_module_connection.png
 
 On pictures below are shown comparison measurements of the selected DUT. Measurements are taken with Red Pitaya and 
 Keysight precision LCR meter. From this plots you can extract basic Red Pitaya accuracy. Notice Red Pitaya LCR 
 meter / Impedance analyzer are not certificated for certain accuracy or range.
 
-.. TODO LCR 100R.png LCR 100K.png LCR 1M.png
+.. image:: LCR_100R.png
+   :width: 45%
+.. image:: LCR_100K.png
+   :width: 45%
+.. image:: LCR_1M.png
+   :width: 45%
 
 Impedance analyzer application can be used without LCR Extension module using manual setting of shunt resistor. This 
 option is described below. Notice that you will need to change “C_cable” parameter in the code when using your setup.
 
-.. TODO Impedance analyzer manaul R Shunt.png
+.. inage:: Impedance_analyzer_manaul_R_Shunt.png
 
 .. TODO Sensor module
 .. TODO ^^^^^^^^^^^^^
