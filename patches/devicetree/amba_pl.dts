@@ -1,8 +1,8 @@
 /dts-v1/;
 /plugin/;
 /{
-		fragment@0 {
-				target-path = "/amba/fpga_bus\@f8007000/devcfg\@f8007000";
+/*		fragment@0 {
+				target-path = "/amba/devcfg\@f8007000";
 				__overlay__ {
 						#address-cells = <1>;
 						#size-cells = <1>;
@@ -15,7 +15,7 @@
 								firmware-name = "/boot/fpga/fpga2.bin";
 						};
 				};
-		};
+		};*/
 		
 		fragment@1 {
 		target-path = "/amba_pl/dma\@80420000";
