@@ -53,7 +53,7 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG     = xilinx-v2016.2
-LINUX_TAG     = xilinx-v2016.1
+LINUX_TAG     = redpitaya-v2016.1
 DTREE_TAG     = xilinx-v2016.2
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
@@ -66,12 +66,8 @@ DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
 
 # it is possible to use an alternative download location (local) by setting environment variables
 UBOOT_URL     ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
-LINUX_URL     ?= https://github.com/Xilinx/linux-xlnx/archive/$(LINUX_TAG).tar.gz
+LINUX_URL     ?= https://github.com/RedPitaya/linux-xlnx/archive/$(LINUX_TAG).tar.gz
 DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
-
-UBOOT_GIT     ?= https://github.com/Xilinx/u-boot-xlnx.git
-LINUX_GIT     ?= https://github.com/Xilinx/linux-xlnx.git
-DTREE_GIT     ?= https://github.com/Xilinx/device-tree-xlnx.git
 
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
@@ -150,21 +146,6 @@ $(LINUX_TAR): | $(DL)
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-#	git clone -b fix_cyclic https://github.com/na1pir/linux-xlnx.git $(LINUX_DIR)
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-config.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-eeprom.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-lantiq.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-axidma.patch
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-iio-xadc.patch
-#	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-spidev.patch
-	cp -r patches/lantiq/*  $@/drivers/net/phy/
-	# DMA support related patches
-	#cp -r patches/xilinx/*  $@/drivers/dma/xilinx/
-	cp -r patches/redpitaya $@/drivers/
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-redpitaya.patch
-	# WiFi patches
-	cp -r patches/rtl8192cu $@/drivers/net/wireless/
-	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
