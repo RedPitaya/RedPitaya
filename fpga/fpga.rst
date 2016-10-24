@@ -185,9 +185,11 @@ There are additional voltage dividers use to extend this range up to the power s
 It is possible to configure XADC inputs into a bipolar mode with a range of *-0.5V ~ +0.5V*,
 but it requires removing R273 and providing a *0.5V ~ 1V* common voltage on the E2 connector.
 
-**NOTE:** Unfortunately there is a design error,
-where the XADC input range in unipolar mode was thought to be *0V ~ 0.5V*.
-Consequently the voltage dividers were miss designed for a range of double the supply voltage.
+.. note::
+
+   Unfortunately there is a design error,
+   where the XADC input range in unipolar mode was thought to be *0V ~ 0.5V*.
+   Consequently the voltage dividers were miss designed for a range of double the supply voltage.
 
 #### 5V power supply
 
@@ -305,8 +307,10 @@ The next example will light up ``LED[0]``, and read back its value.
    $ echo 1      > /sys/class/gpio/gpio$INDEX/value
    $ cat           /sys/class/gpio/gpio$INDEX/value
 
-**NOTE**: A new user space ABI for GPIO is coming in kernel v4.8, ioctl will be used instead of ``sysfs``.
-https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next
+.. note::
+
+   A new user space ABI for GPIO is coming in kernel v4.8, ioctl will be used instead of ``sysfs``.
+   https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next
 
 ~~~~~~~~~~~~~~~~~~~
 Linux access to LED
