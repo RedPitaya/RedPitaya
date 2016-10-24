@@ -190,7 +190,10 @@ $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
 	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts >> $(TMP)/dts/system.dts
 	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i $(FPGA_DIR)/dts $(TMP)/dts/system.dts
 	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/amba_pl.dtbo patches/devicetree/amba_pl.dts
-	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/hamlab.dtbo  fpga/dts/hamlab.dtso
+	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/hamlab.dtbo  patches/devicetree/hamlab.dtso
+	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/i2cmux.dtbo patches/devicetree/i2cmux.dtso
+	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/disablei2c.dtbo patches/devicetree/disablei2c.dtso
+	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/gpioi2chamlab.dtbo patches/devicetree/gpioi2chamlab.dtso 
 	# create device tree source from binary for reference
 	tools/dtc/bin/dtc -@ -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
@@ -202,6 +205,9 @@ devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
 	cp $(TMP)/dts/hamlab.dtbo          $(INSTALL_DIR)
 	cp patches/devicetree/hamlab.sh    $(INSTALL_DIR)
+	cp $(TMP)/dts/i2cmux.dtbo 	   $(INSTALL_DIR)
+	cp $(TMP)/dts/disablei2c.dtbo  	   $(INSTALL_DIR)
+	cp $(TMP)/dts/gpioi2chamlab.dtbo   $(INSTALL_DIR)
 ################################################################################
 # boot file generator
 ################################################################################
