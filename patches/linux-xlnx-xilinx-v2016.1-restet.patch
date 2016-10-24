@@ -1,0 +1,46 @@
+--- ../dl/linux-xlnx-xilinx-v2016.1/drivers/reset/reset-zynq.c	2016-04-26 12:38:17.000000000 +0200
++++ linux-xlnx-xilinx/drivers/reset/reset-zynq.c	2016-10-21 15:53:54.000000000 +0200
+@@ -32,6 +32,9 @@
+ #define to_zynq_reset_data(p)		\
+ 	container_of((p), struct zynq_reset_data, rcdev)
+ 
++
++
++
+ static int zynq_reset_assert(struct reset_controller_dev *rcdev,
+ 			     unsigned long id)
+ {
+@@ -39,6 +42,8 @@
+ 
+ 	int bank = id / BITS_PER_LONG;
+ 	int offset = id % BITS_PER_LONG;
++	
++	printk("zynq reset assert\n");
+ 
+ 	pr_debug("%s: %s reset bank %u offset %u\n", KBUILD_MODNAME, __func__,
+ 		 bank, offset);
+@@ -66,6 +71,16 @@
+ 				  ~BIT(offset));
+ }
+ 
++
++int zynq_reset(struct reset_controller_dev *rcdev,
++			     unsigned long id)
++{
++	zynq_reset_assert(rcdev,id);
++	return zynq_reset_deassert(rcdev,id);
++}
++
++
++
+ static int zynq_reset_status(struct reset_controller_dev *rcdev,
+ 			     unsigned long id)
+ {
+@@ -88,6 +103,7 @@
+ 
+ static struct reset_control_ops zynq_reset_ops = {
+ 	.assert		= zynq_reset_assert,
++	.reset		= zynq_reset,
+ 	.deassert	= zynq_reset_deassert,
+ 	.status		= zynq_reset_status,
+ };

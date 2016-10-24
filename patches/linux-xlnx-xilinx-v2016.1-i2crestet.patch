@@ -1,0 +1,30 @@
+--- ../dl/linux-xlnx-xilinx-v2016.1/drivers/i2c/busses/i2c-cadence.c	2016-04-26 12:38:17.000000000 +0200
++++ linux-xlnx-xilinx/drivers/i2c/busses/i2c-cadence.c	2016-10-21 14:29:20.000000000 +0200
+@@ -19,6 +19,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/of.h>
+ #include <linux/pm_runtime.h>
++#include <linux/reset.h>
+ 
+ /* Register offsets for the I2C device. */
+ #define CDNS_I2C_CR_OFFSET		0x00 /* Control Register, RW */
+@@ -550,6 +551,10 @@
+ 
+ 	/* Disable the interrupts */
+ 	cdns_i2c_writereg(CDNS_I2C_IXR_ALL_INTR_MASK, CDNS_I2C_IDR_OFFSET);
++	
++	/*try to call reset for cadance hw controller*/
++	device_reset_optional(&adap->dev);
++	
+ 	/* Clear the hold bit and fifos */
+ 	regval = cdns_i2c_readreg(CDNS_I2C_CR_OFFSET);
+ 	regval &= ~(CDNS_I2C_CR_HOLD | CDNS_I2C_CR_SLVMON);
+@@ -1003,6 +1008,8 @@
+ 	init_completion(&id->xfer_done);
+ 	snprintf(id->adap.name, sizeof(id->adap.name),
+ 		 "Cadence I2C at %08lx", (unsigned long)r_mem->start);
++//add reset in probe function		 
++	cdns_i2c_master_reset(&id->adap);
+ 
+ 	id->clk = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(id->clk)) {
