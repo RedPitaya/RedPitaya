@@ -3,7 +3,6 @@ CC = $(CROSS_COMPILE)gcc
 
 CFLAGS  = -g -std=gnu99 -Wall -Werror
 CFLAGS += -lm -lpthread
-CFLAGS += -I../../patches/redpitaya/
 CFLAGS += -I../src -I../include
 CFLAGS += -L ../lib
 #CFLAGS += -lrp2
