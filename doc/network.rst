@@ -127,9 +127,9 @@ used (described later).
 
 A static IP address can be chosen by modifying the configuration file. It is
 also possible to have both a DHCP provided and a static address at the same time,
-but this can not appropriate to be set as the release default since it can
-cause IP address collisions. A fixed IP address can be configured by adding the
-next lines to `systemd.network  <https://www.freedesktop.org/software/systemd/man/systemd.network.html>`_ files.
+but this is not a good choice for the release default since it can cause IP address collisions.
+A fixed IP address can be configured by adding the next lines to
+`systemd.network  <https://www.freedesktop.org/software/systemd/man/systemd.network.html>`_ files.
 
 .. code-block:: none
 
