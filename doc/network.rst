@@ -141,12 +141,12 @@ A fixed IP address can be configured by adding the next lines to
 Wireless setup
 --------------
 
-The wireless interface ``wlan0`` configuration file is `/etc/systemd/network/wireless.network <../OS/debian/overlay/etc/systemd/network/wirless.network>`_.
+The wireless interface ``wlan0`` configuration file is `/etc/systemd/network/wireless.network <../OS/debian/overlay/etc/systemd/network/wireless.network>`_.
 
 To support two modes this file must be linked to either the client mode configuration
-`/etc/systemd/network/wireless.network.client <../OS/debian/overlay/etc/systemd/network/wirless.network.client>`_
+`/etc/systemd/network/wireless.network.client <../OS/debian/overlay/etc/systemd/network/wireless.network.client>`_
 or the access point configuration
-`/etc/systemd/network/wireless.network.ap <../OS/debian/overlay/etc/systemd/network/wirless.network.ap>`_.
+`/etc/systemd/network/wireless.network.ap <../OS/debian/overlay/etc/systemd/network/wireless.network.ap>`_.
 Switching between the two option is implemented by
 `/etc/systemd/system/wireless-mode-ap.service <../OS/debian/overlay/etc/systemd/system/wireless-mode-ap.service>`_
 and
@@ -154,7 +154,7 @@ and
 which must be run early at boot before most other network related services are run.
 If no wireless configuration file is available, then a third service
 `/etc/systemd/system/wireless_adapter_up@.service <OS/debian/overlay/etc/systemd/system/wireless_adapter_up@.service>`_
-will link ``wirless.network`` to client mode, and it will power up the adapter so that ``iwlist`` will work.
+will link ``wireless.network`` to client mode, and it will power up the adapter so that ``iwlist`` will work.
 
 The choice of the interface is driven by the availability of access point ``/opt/redpitaya/hostapd.conf``
 and client ``/opt/redpitaya/wpa_supplicant.conf`` configuration files.
