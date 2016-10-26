@@ -80,7 +80,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_PRJ_LIST = classic logic_orig v0.94
+FPGA_PRJ_LST = classic logic_orig v0.94
 
 FPGA_DIR = fpga
 #FPGA_PRJ = classic
@@ -95,8 +95,8 @@ fpga: $(DTREE_DIR)
 	make -C $(FPGA_DIR) PRJ=$(FPGA_PRJ)
 
 fpga_all: $(DTREE_DIR)
-	for FPGA_PRJ_ITM in FPGA_PRJ_LST; do \
-	    make -C $(FPGA_DIR) PRJ=$(FPGA_PRJ_ITM); \
+	for FPGA_PRJ_ITM in $(FPGA_PRJ_LST); do \
+	    make -C $(FPGA_DIR) PRJ=$$FPGA_PRJ_ITM; \
 	done
 
 ################################################################################
