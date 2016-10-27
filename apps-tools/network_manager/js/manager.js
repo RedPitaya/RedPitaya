@@ -155,8 +155,9 @@
             var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
 
             if (IPaddr == null) {
-                if (!WIZARD.WIFIConnected)
+                if (!WIZARD.WIFIConnected){
                     $('#wlan0_address_label').text("None");
+                }
                 return;
             }
 
@@ -199,7 +200,7 @@
             } else {
                 $('#access_point_create').text("Create");
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
-            }
+            }        	
         });
     }
 
@@ -325,10 +326,21 @@ $(document).ready(function() {
 
     $('#access_point_create').click(function() {
         if ($('#access_point_create').text() == "Create") {
-            $.ajax({
-                url: '/wifi_create_point?essid=' + $('#essid_input').val() + '&password=' + $('#password_input').val() + '',
-                type: 'GET',
-            });
+        	$('#essid_check').hide();
+        	$('#pass_check').hide();
+        	if ($('#essid_input').val().length > 0 && $('#password_input').val().length >= 8){
+	        	WIZARD.startWaiting();
+	            $.ajax({
+	                url: '/wifi_create_point?essid=' + $('#essid_input').val() + '&password=' + $('#password_input').val() + '',
+	                type: 'GET',
+	            });
+        	}
+        	else {
+        		if ($('#essid_input').val().length == 0)
+        			$('#essid_check').show();
+        		if ($('#password_input').val().length < 8)
+        			$('#pass_check').show();
+        	}
         } else {
             $.ajax({
                 url: '/remove_ap',
