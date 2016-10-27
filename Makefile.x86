@@ -77,22 +77,29 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 ################################################################################
 
 FPGA_PRJ_LST = classic logic_orig v0.94
-
-FPGA_DIR = fpga
-#FPGA_PRJ = classic
 FPGA_PRJ = logic_orig
-
-FPGA = $(FPGA_DIR)/prj/$(FPGA_PRJ)/out/red_pitaya.bit
-FSBL = $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/fsbl/executable.elf
 
 .PHONY: fpga fpga_all
 
-fpga: $(DTREE_DIR)
-	make -C $(FPGA_DIR) PRJ=$(FPGA_PRJ)
+fpga: $(INSTALL_DIR)/fpga
+	# copy FPGA bitstream images and decompress them
+	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
+	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
+	# backward compatibility, TODO, should be removed at next OS release
+	cp $(INSTALL_DIR)/fpga/logic_orig/fpga.bit  $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(INSTALL_DIR)/fpga/0.94/fpga.bit        $(INSTALL_DIR)/fpga/fpga_0.94.bit
+
+$(INSTALL_DIR)/fpga: fpga_all
 
 fpga_all: $(DTREE_DIR)
+	mkdir -p $(INSTALL_DIR)/fpga
 	for FPGA_PRJ_ITM in $(FPGA_PRJ_LST); do \
-	    make -C $(FPGA_DIR) PRJ=$$FPGA_PRJ_ITM; \
+	    make -C fpga PRJ=$$FPGA_PRJ_ITM; \
+	    mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_PRJ); \
+	    cp    fpga/prj/$(FPGA_PRJ)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fpga.bit; \
+	    cp    fpga/prj/$(FPGA_PRJ)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fsbl.elf; \
+	    cp -r fpga/prj/$(FPGA_PRJ)/sdk/dts                  $(INSTALL_DIR)/fpga/$(FPGA_PRJ)         ; \
+	    cp    fpga/prj/$(FPGA_PRJ)/dts/fpga.dts             $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts     ; \
 	done
 
 ################################################################################
@@ -173,10 +180,9 @@ $(DTREE_DIR): $(DTREE_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 
 $(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
-	mkdir -p                                        $(TMP)/dts
-	cp -r $(FPGA_DIR)/prj/$(FPGA_PRJ)/sdk/dts/*     $(TMP)/dts
-	cat $(FPGA_DIR)/prj/$(FPGA_PRJ)/dts/fpga.dts >> $(TMP)/dts/system.dts
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i $(FPGA_DIR)/dts $(TMP)/dts/system.dts
+	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
+	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system.dts
+	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system.dts
 	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
 	# create device tree source from binary for reference
 	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
@@ -198,6 +204,9 @@ BOOT = $(INSTALL_DIR)/boot.bin
 
 boot: $(BOOT)
 
+FPGA = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fpga.bit
+FSBL = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fsbl.elf
+
 $(BOOT): fpga $(UBOOT) $(INSTALL_DIR)
 	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
@@ -211,11 +220,6 @@ ZIPFILE=ecosystem-$(VERSION).zip
 zip: $(ZIPFILE)
 
 $(ZIPFILE): install
-	# copy FPGA bitstream images and decompress them
-	mkdir -p               $(INSTALL_DIR)/fpga
-	cp fpga/archive/*.xz   $(INSTALL_DIR)/fpga
-	cd                     $(INSTALL_DIR)/fpga; xz -df *.xz
-	cp $(FPGA)             $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
@@ -228,7 +232,7 @@ $(ZIPFILE): install
 
 clean:
 	-make -C $(LINUX_DIR) clean
-	make -C $(FPGA_DIR) clean
+	make -C fpga clean
 	-make -C $(UBOOT_DIR) clean
 	# todo, remove downloaded libraries and symlinks
 	$(RM) $(INSTALL_DIR) -rf
