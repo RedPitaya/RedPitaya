@@ -300,15 +300,15 @@ endgenerate
 logic [4-1:0] [24-1:0] pwm_cfg;
 
 red_pitaya_ams i_ams (
-   // power test
-  .clk_i           (  adc_clk       ),  // clock
-  .rstn_i          (  adc_rstn      ),  // reset - active low
+  // power test
+  .clk_i           (adc_clk ),  // clock
+  .rstn_i          (adc_rstn),  // reset - active low
   // PWM configuration
-  .dac_a_o         (  pwm_cfg[0]    ),
-  .dac_b_o         (  pwm_cfg[1]    ),
-  .dac_c_o         (  pwm_cfg[2]    ),
-  .dac_d_o         (  pwm_cfg[3]    ),
-   // System bus
+  .dac_a_o         (pwm_cfg[0]),
+  .dac_b_o         (pwm_cfg[1]),
+  .dac_c_o         (pwm_cfg[2]),
+  .dac_d_o         (pwm_cfg[3]),
+  // System bus
   .sys_addr        (sys[4].addr ),
   .sys_wdata       (sys[4].wdata),
   .sys_sel         (sys[4].sel  ),
@@ -395,10 +395,10 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(da
 
 red_pitaya_hk i_hk (
   // system signals
-  .clk_i           (  adc_clk       ),  // clock
-  .rstn_i          (  adc_rstn      ),  // reset - active low
+  .clk_i           (adc_clk ),  // clock
+  .rstn_i          (adc_rstn),  // reset - active low
   // global configuration
-  .digital_loop    (  digital_loop  ),
+  .digital_loop    (digital_loop),
    // System bus
   .sys_addr        (sys[0].addr ),
   .sys_wdata       (sys[0].wdata),
@@ -431,12 +431,12 @@ logic trig_asg_out;
 
 red_pitaya_scope i_scope (
   // ADC
-  .adc_a_i         (  adc_dat[0]    ),  // CH 1
-  .adc_b_i         (  adc_dat[1]    ),  // CH 2
-  .adc_clk_i       (  adc_clk       ),  // clock
-  .adc_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_ext_i      (  gpio.i[8]     ),  // external trigger
-  .trig_asg_i      (  trig_asg_out  ),  // ASG trigger
+  .adc_a_i       (adc_dat[0]  ),  // CH 1
+  .adc_b_i       (adc_dat[1]  ),  // CH 2
+  .adc_clk_i     (adc_clk     ),  // clock
+  .adc_rstn_i    (adc_rstn    ),  // reset - active low
+  .trig_ext_i    (gpio.i[8]   ),  // external trigger
+  .trig_asg_i    (trig_asg_out),  // ASG trigger
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
   .axi0_rstn_o   (axi0_rstn  ),  .axi1_rstn_o   (axi1_rstn  ),
@@ -466,13 +466,13 @@ red_pitaya_scope i_scope (
 
 red_pitaya_asg i_asg (
    // DAC
-  .dac_a_o         (  asg_dat[0]    ),  // CH 1
-  .dac_b_o         (  asg_dat[1]    ),  // CH 2
-  .dac_clk_i       (  adc_clk       ),  // clock
-  .dac_rstn_i      (  adc_rstn      ),  // reset - active low
-  .trig_a_i        (  gpio.i[8]     ),
-  .trig_b_i        (  gpio.i[8]     ),
-  .trig_out_o      (  trig_asg_out  ),
+  .dac_a_o         (asg_dat[0]  ),  // CH 1
+  .dac_b_o         (asg_dat[1]  ),  // CH 2
+  .dac_clk_i       (adc_clk     ),  // clock
+  .dac_rstn_i      (adc_rstn    ),  // reset - active low
+  .trig_a_i        (gpio.i[8]   ),
+  .trig_b_i        (gpio.i[8]   ),
+  .trig_out_o      (trig_asg_out),
   // System bus
   .sys_addr        (sys[2].addr ),
   .sys_wdata       (sys[2].wdata),
@@ -490,12 +490,12 @@ red_pitaya_asg i_asg (
 
 red_pitaya_pid i_pid (
    // signals
-  .clk_i           (  adc_clk       ),  // clock
-  .rstn_i          (  adc_rstn      ),  // reset - active low
-  .dat_a_i         (  adc_dat[0]    ),  // in 1
-  .dat_b_i         (  adc_dat[1]    ),  // in 2
-  .dat_a_o         (  pid_dat[0]    ),  // out 1
-  .dat_b_o         (  pid_dat[1]    ),  // out 2
+  .clk_i           (adc_clk   ),  // clock
+  .rstn_i          (adc_rstn  ),  // reset - active low
+  .dat_a_i         (adc_dat[0]),  // in 1
+  .dat_b_i         (adc_dat[1]),  // in 2
+  .dat_a_o         (pid_dat[0]),  // out 1
+  .dat_b_o         (pid_dat[1]),  // out 2
   // System bus
   .sys_addr        (sys[3].addr ),
   .sys_wdata       (sys[3].wdata),
