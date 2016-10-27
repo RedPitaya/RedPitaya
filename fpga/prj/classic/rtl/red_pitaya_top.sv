@@ -177,8 +177,8 @@ SBA_T [2-1:0]            pid_dat;
 logic                    digital_loop;
 
 // system bus
-sys_bus_if   ps_sys       (.clk  (adc_clk), .rstn    (adc_rstn));
-sys_bus_if   sys [16-1:0] (.clk  (adc_clk), .rstn    (adc_rstn));
+sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
@@ -278,41 +278,20 @@ red_pitaya_ps ps (
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
-wire              sys_clk   = ps_sys.clk  ;
-wire              sys_rstn  = ps_sys.rstn ;
-wire  [  32-1: 0] sys_addr  = ps_sys.addr ;
-wire  [  32-1: 0] sys_wdata = ps_sys.wdata;
-wire  [   4-1: 0] sys_sel   = 4'hf;
-wire  [8   -1: 0] sys_wen   ;
-wire  [8   -1: 0] sys_ren   ;
-wire  [8*32-1: 0] sys_rdata ;
-wire  [8* 1-1: 0] sys_err   ;
-wire  [8* 1-1: 0] sys_ack   ;
-wire  [8   -1: 0] sys_cs    ;
+sys_bus_interconnect #(
+  .SN (8),
+  .SW (20)
+) sys_bus_interconnect (
+  .bus_m (ps_sys),
+  .bus_s (sys)
+);
 
-assign sys_cs = 8'h01 << sys_addr[22:20];
-
-assign sys_wen = sys_cs & {8{ps_sys.wen}};
-assign sys_ren = sys_cs & {8{ps_sys.ren}};
-
-assign ps_sys.rdata = sys_rdata[sys_addr[22:20]*32+:32];
-
-assign ps_sys.err   = |(sys_cs & sys_err);
-assign ps_sys.ack   = |(sys_cs & sys_ack);
-
-// unused system bus slave ports
-
-assign sys_rdata[5*32+:32] = 32'h0; 
-assign sys_err  [5       ] =  1'b0;
-assign sys_ack  [5       ] =  1'b1;
-
-assign sys_rdata[6*32+:32] = 32'h0; 
-assign sys_err  [6       ] =  1'b0;
-assign sys_ack  [6       ] =  1'b1;
-
-assign sys_rdata[7*32+:32] = 32'h0; 
-assign sys_err  [7       ] =  1'b0;
-assign sys_ack  [7       ] =  1'b1;
+// silence unused busses
+generate
+for (genvar i=5; i<8; i++) begin: for_sys
+  sys_bus_stub sys_bus_stub_5_7 (sys[i]);
+end: for_sys
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
@@ -330,14 +309,14 @@ red_pitaya_ams i_ams (
   .dac_c_o         (  pwm_cfg[2]    ),
   .dac_d_o         (  pwm_cfg[3]    ),
    // System bus
-  .sys_addr        (  sys_addr   ),  // address
-  .sys_wdata       (  sys_wdata  ),  // write data
-  .sys_sel         (  sys_sel    ),  // write byte select
-  .sys_wen         (  sys_wen[4] ),  // write enable
-  .sys_ren         (  sys_ren[4] ),  // read enable
-  .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
-  .sys_err         (  sys_err[4] ),  // error indicator
-  .sys_ack         (  sys_ack[4] )   // acknowledge signal
+  .sys_addr        (sys[4].addr ),
+  .sys_wdata       (sys[4].wdata),
+  .sys_sel         (sys[4].sel  ),
+  .sys_wen         (sys[4].wen  ),
+  .sys_ren         (sys[4].ren  ),
+  .sys_rdata       (sys[4].rdata),
+  .sys_err         (sys[4].err  ),
+  .sys_ack         (sys[4].ack  )
 );
 
 red_pitaya_pwm pwm [4-1:0] (
@@ -421,14 +400,14 @@ red_pitaya_hk i_hk (
   // global configuration
   .digital_loop    (  digital_loop  ),
    // System bus
-  .sys_addr        (  sys_addr   ),  // address
-  .sys_wdata       (  sys_wdata  ),  // write data
-  .sys_sel         (  sys_sel    ),  // write byte select
-  .sys_wen         (  sys_wen[0] ),  // write enable
-  .sys_ren         (  sys_ren[0] ),  // read enable
-  .sys_rdata       (  sys_rdata[ 0*32+31: 0*32]  ),  // read data
-  .sys_err         (  sys_err[0] ),  // error indicator
-  .sys_ack         (  sys_ack[0] )   // acknowledge signal
+  .sys_addr        (sys[0].addr ),
+  .sys_wdata       (sys[0].wdata),
+  .sys_sel         (sys[0].sel  ),
+  .sys_wen         (sys[0].wen  ),
+  .sys_ren         (sys[0].ren  ),
+  .sys_rdata       (sys[0].rdata),
+  .sys_err         (sys[0].err  ),
+  .sys_ack         (sys[0].ack  )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -470,14 +449,14 @@ red_pitaya_scope i_scope (
   .axi0_werr_i   (axi0_werr  ),  .axi1_werr_i   (axi1_werr  ),
   .axi0_wrdy_i   (axi0_wrdy  ),  .axi1_wrdy_i   (axi1_wrdy  ),
   // System bus
-  .sys_addr        (  sys_addr   ),  // address
-  .sys_wdata       (  sys_wdata  ),  // write data
-  .sys_sel         (  sys_sel    ),  // write byte select
-  .sys_wen         (  sys_wen[1] ),  // write enable
-  .sys_ren         (  sys_ren[1] ),  // read enable
-  .sys_rdata       (  sys_rdata[ 1*32+31: 1*32]  ),  // read data
-  .sys_err         (  sys_err[1] ),  // error indicator
-  .sys_ack         (  sys_ack[1] )   // acknowledge signal
+  .sys_addr      (sys[1].addr ),
+  .sys_wdata     (sys[1].wdata),
+  .sys_sel       (sys[1].sel  ),
+  .sys_wen       (sys[1].wen  ),
+  .sys_ren       (sys[1].ren  ),
+  .sys_rdata     (sys[1].rdata),
+  .sys_err       (sys[1].err  ),
+  .sys_ack       (sys[1].ack  )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -495,14 +474,14 @@ red_pitaya_asg i_asg (
   .trig_b_i        (  gpio.i[8]     ),
   .trig_out_o      (  trig_asg_out  ),
   // System bus
-  .sys_addr        (  sys_addr      ),  // address
-  .sys_wdata       (  sys_wdata     ),  // write data
-  .sys_sel         (  sys_sel       ),  // write byte select
-  .sys_wen         (  sys_wen[2]    ),  // write enable
-  .sys_ren         (  sys_ren[2]    ),  // read enable
-  .sys_rdata       (  sys_rdata[ 2*32+31: 2*32]  ),  // read data
-  .sys_err         (  sys_err[2]    ),  // error indicator
-  .sys_ack         (  sys_ack[2]    )   // acknowledge signal
+  .sys_addr        (sys[2].addr ),
+  .sys_wdata       (sys[2].wdata),
+  .sys_sel         (sys[2].sel  ),
+  .sys_wen         (sys[2].wen  ),
+  .sys_ren         (sys[2].ren  ),
+  .sys_rdata       (sys[2].rdata),
+  .sys_err         (sys[2].err  ),
+  .sys_ack         (sys[2].ack  )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -518,14 +497,14 @@ red_pitaya_pid i_pid (
   .dat_a_o         (  pid_dat[0]    ),  // out 1
   .dat_b_o         (  pid_dat[1]    ),  // out 2
   // System bus
-  .sys_addr        (  sys_addr      ),  // address
-  .sys_wdata       (  sys_wdata     ),  // write data
-  .sys_sel         (  sys_sel       ),  // write byte select
-  .sys_wen         (  sys_wen[3]    ),  // write enable
-  .sys_ren         (  sys_ren[3]    ),  // read enable
-  .sys_rdata       (  sys_rdata[ 3*32+31: 3*32]  ),  // read data
-  .sys_err         (  sys_err[3]    ),  // error indicator
-  .sys_ack         (  sys_ack[3]    )   // acknowledge signal
+  .sys_addr        (sys[3].addr ),
+  .sys_wdata       (sys[3].wdata),
+  .sys_sel         (sys[3].sel  ),
+  .sys_wen         (sys[3].wen  ),
+  .sys_ren         (sys[3].ren  ),
+  .sys_rdata       (sys[3].rdata),
+  .sys_err         (sys[3].err  ),
+  .sys_ack         (sys[3].ack  )
 );
 
 endmodule: red_pitaya_top
