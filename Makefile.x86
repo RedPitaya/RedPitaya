@@ -101,6 +101,7 @@ fpga_all: $(DTREE_DIR)
 	    cp -r fpga/prj/$(FPGA_PRJ)/sdk/dts                  $(INSTALL_DIR)/fpga/$(FPGA_PRJ)         ; \
 	    cp    fpga/prj/$(FPGA_PRJ)/dts/fpga.dts             $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts     ; \
 	done
+	cd $(INSTALL_DIR)/fpga; zip -r ../../fpga.zip *
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
