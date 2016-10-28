@@ -365,14 +365,22 @@ They are again created on the first boot by `/etc/systemd/system/ssh-reconfigure
 Due to this the first boot takes a bit longer.
 This way the SSH encryption certificates are unique on each board.
 
---------
-Zeroconf
---------
+-----------------------------
+Zero-configuration networking
+-----------------------------
 
-``systemd-networkd`` can provide interfaces with link-local addresses, if this is
-enabled inside ``systemd.network`` files with the line ``LinkLocalAddressing=yes``.
+~~~~~~~~~~~~~~~~~~
+Link-local address
+~~~~~~~~~~~~~~~~~~
+
+``systemd-networkd`` can provide interfaces with `link-local addresses <https://en.wikipedia.org/wiki/Link-local_address>`_,
+if this is enabled inside ``systemd.network`` files with the line ``LinkLocalAddressing=yes``.
 All interfaces have this setting enabled, this way each active interface will
 acquire an address in the reserved ``169.254.0.0/16`` address block.
+
+~~~~~~~~
+Zeroconf
+~~~~~~~~
 
 If the computer used to access the device supports zeroconf (Avahi/Bobjour) name resolving is also available.
 Since there can be multiple devices on a single network they must be distinguished.
