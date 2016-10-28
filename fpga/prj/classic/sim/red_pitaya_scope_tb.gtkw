@@ -60,7 +60,6 @@ red_pitaya_scope_tb.sys_rdata[31:0]
 @28
 red_pitaya_scope_tb.sys_ren
 @22
-red_pitaya_scope_tb.sys_sel[3:0]
 red_pitaya_scope_tb.sys_wdata[31:0]
 @28
 red_pitaya_scope_tb.sys_wen

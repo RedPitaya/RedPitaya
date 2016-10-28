@@ -311,7 +311,6 @@ red_pitaya_ams i_ams (
   // System bus
   .sys_addr        (sys[4].addr ),
   .sys_wdata       (sys[4].wdata),
-  .sys_sel         (sys[4].sel  ),
   .sys_wen         (sys[4].wen  ),
   .sys_ren         (sys[4].ren  ),
   .sys_rdata       (sys[4].rdata),
@@ -402,7 +401,6 @@ red_pitaya_hk i_hk (
    // System bus
   .sys_addr        (sys[0].addr ),
   .sys_wdata       (sys[0].wdata),
-  .sys_sel         (sys[0].sel  ),
   .sys_wen         (sys[0].wen  ),
   .sys_ren         (sys[0].ren  ),
   .sys_rdata       (sys[0].rdata),
@@ -451,7 +449,6 @@ red_pitaya_scope i_scope (
   // System bus
   .sys_addr      (sys[1].addr ),
   .sys_wdata     (sys[1].wdata),
-  .sys_sel       (sys[1].sel  ),
   .sys_wen       (sys[1].wen  ),
   .sys_ren       (sys[1].ren  ),
   .sys_rdata     (sys[1].rdata),
@@ -476,7 +473,6 @@ red_pitaya_asg i_asg (
   // System bus
   .sys_addr        (sys[2].addr ),
   .sys_wdata       (sys[2].wdata),
-  .sys_sel         (sys[2].sel  ),
   .sys_wen         (sys[2].wen  ),
   .sys_ren         (sys[2].ren  ),
   .sys_rdata       (sys[2].rdata),
@@ -499,7 +495,6 @@ red_pitaya_pid i_pid (
   // System bus
   .sys_addr        (sys[3].addr ),
   .sys_wdata       (sys[3].wdata),
-  .sys_sel         (sys[3].sel  ),
   .sys_wen         (sys[3].wen  ),
   .sys_ren         (sys[3].ren  ),
   .sys_rdata       (sys[3].rdata),

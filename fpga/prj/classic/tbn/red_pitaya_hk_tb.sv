@@ -56,7 +56,6 @@ end
 
 logic [ 32-1: 0] sys_addr ;
 logic [ 32-1: 0] sys_wdata;
-logic [  4-1: 0] sys_sel  ;
 logic            sys_wen  ;
 logic            sys_ren  ;
 logic [ 32-1: 0] sys_rdata;
@@ -97,7 +96,6 @@ sys_bus_model bus (
   // bus protocol signals
   .sys_addr     (sys_addr ),
   .sys_wdata    (sys_wdata),
-  .sys_sel      (sys_sel  ),
   .sys_wen      (sys_wen  ),
   .sys_ren      (sys_ren  ),
   .sys_rdata    (sys_rdata),
@@ -113,7 +111,6 @@ red_pitaya_hk hk (
   // System bus
   .sys_addr       (sys_addr ),
   .sys_wdata      (sys_wdata),
-  .sys_sel        (sys_sel  ),
   .sys_wen        (sys_wen  ),
   .sys_ren        (sys_ren  ),
   .sys_rdata      (sys_rdata),
