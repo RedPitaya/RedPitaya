@@ -177,8 +177,8 @@ SBA_T [2-1:0]            pid_dat;
 logic                    digital_loop;
 
 // system bus
-sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
-sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   ps_sys      (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [8-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
