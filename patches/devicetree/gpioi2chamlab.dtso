@@ -33,7 +33,7 @@
 			};
 		};
 
-	fragment@22 {
+	/*fragment@22 {
 		target-path = "/";
 		__overlay__ {
 			// DMM data ready is mapped as UIO interrupt connected to gpio_expander [15]
@@ -82,6 +82,49 @@
 			hamlab-poweroff {
 				compatible = "gpio-poweroff";
 				gpios = <&hamlab_extension_gpio_expander 12 0>;
+			};
+		};
+	};*/
+	
+	fragment@23 {
+		target-path = "/";
+		__overlay__ {
+			hamlab_relays {
+				compatible = "gpio-leds";
+				hamlab_logic {
+					label = "HAMLAB_logic";
+					gpios = <&hamlab_extension_gpio_expander 4 0>;
+					default-state = "off";
+				};
+				
+				hamlab_trig {
+					label = "HAMLAB_trig";
+					gpios = <&hamlab_extension_gpio_expander 5 0>;
+					default-state = "off";
+				};
+
+				hamlab_o1gen {
+					label = "HAMLAB_o1gen";
+					gpios = <&hamlab_extension_gpio_expander 7 0>;
+					default-state = "off";
+				};				
+				
+				hamlab_o1sdr {
+					label = "HAMLAB_o1sdr";
+					gpios = <&hamlab_extension_gpio_expander 8 0>;
+					default-state = "off";
+				};
+				hamlab_o2gen {
+					label = "HAMLAB_o2gen";
+					gpios = <&hamlab_extension_gpio_expander 9 0>;
+					default-state = "off";
+				};				
+				
+				hamlab_o2sdr {
+					label = "HAMLAB_o2sdr";
+					gpios = <&hamlab_extension_gpio_expander 10 0>;
+					default-state = "off";
+				};
 			};
 		};
 	};
