@@ -88,6 +88,7 @@ fpga: $(INSTALL_DIR)/fpga
 	# backward compatibility, TODO, should be removed at next OS release
 	cp $(INSTALL_DIR)/fpga/logic_orig/fpga.bit  $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit       $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/classic/fpga.bit     $(INSTALL_DIR)/fpga/fpga_classic.bit
 
 $(INSTALL_DIR)/fpga: fpga_all
 
