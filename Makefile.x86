@@ -95,11 +95,11 @@ fpga_all: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
 	for FPGA_PRJ_ITM in $(FPGA_PRJ_LST); do \
 	    make -C fpga PRJ=$$FPGA_PRJ_ITM; \
-	    mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_PRJ); \
-	    cp    fpga/prj/$(FPGA_PRJ)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fpga.bit; \
-	    cp    fpga/prj/$(FPGA_PRJ)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fsbl.elf; \
-	    cp -r fpga/prj/$(FPGA_PRJ)/sdk/dts                  $(INSTALL_DIR)/fpga/$(FPGA_PRJ)         ; \
-	    cp    fpga/prj/$(FPGA_PRJ)/dts/fpga.dts             $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts/    ; \
+	    mkdir -p $(INSTALL_DIR)/fpga/$$FPGA_PRJ_ITM; \
+	    cp    fpga/prj/$$FPGA_PRJ_ITM/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$$FPGA_PRJ_ITM/fpga.bit; \
+	    cp    fpga/prj/$$FPGA_PRJ_ITM/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$$FPGA_PRJ_ITM/fsbl.elf; \
+	    cp -r fpga/prj/$$FPGA_PRJ_ITM/sdk/dts                  $(INSTALL_DIR)/fpga/$$FPGA_PRJ_ITM         ; \
+	    cp    fpga/prj/$$FPGA_PRJ_ITM/dts/fpga.dts             $(INSTALL_DIR)/fpga/$$FPGA_PRJ_ITM/dts/    ; \
 	done
 	cd $(INSTALL_DIR)/fpga; zip -r ../../fpga.zip *
 
