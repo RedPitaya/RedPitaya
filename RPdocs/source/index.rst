@@ -1,21 +1,12 @@
 Welcome to the Red Pitaya documentation.
-========================================
+########################################
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 5
     :numbered:
     
-    quickStart 
-    tmApplications
-    hardware
-    fpga
-    software
-    redPitayauOS
- 
-.. Indices and tables
-.. ==================
-.. 
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
+    ./quickStart/quickStart.rst
+    ./appsFeatures/appsTop.rst
+    ./developerGuide/devGuideTop.rst
 
+    

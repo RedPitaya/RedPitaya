@@ -83,13 +83,10 @@ struktura:
             Cooling options ( zumi )
             
             LEDs - status
-             blue – FPGA bitstream status (in normal operation this LED is turned ON indicating fpga bitstream was successfully loaded)
-             
-             green – power supply status (in normal operation this LED is turned ON indicating that all power supplies on Red Pitaya are working properly)   
-                
-             red – hartbeat blinking pattern should show CPU load (in normal operation this LED is blinking)   
-                
-             orange – SD card access indicator (in normal operation this LED is blinking in slow intervals)   
+                blue – FPGA bitstream status (in normal operation this LED is turned ON indicating fpga bitstream was successfully loaded)
+                green – power supply status (in normal operation this LED is turned ON indicating that all power supplies on Red Pitaya are working properly)
+                red – hartbeat blinking pattern should show CPU load (in normal operation this LED is blinking)
+                orange – SD card access indicator (in normal operation this LED is blinking in slow intervals)   
 
     
     software
@@ -97,6 +94,10 @@ struktura:
             overview ( razlicni designi )
             zdruzi http://redpitaya.com/examples-new/fpga-blink-led-tutorial/
             source offitial FPGA image (kje, kakko
+            https://github.com/jeras/RedPitaya/blob/master/OS/debian/README.rst
+            https://github.com/jeras/RedPitaya/blob/master/fpga/fpga.rst
+
+            
             
             Register map ( 0.94 )
         

@@ -1,0 +1,4 @@
+Cooling options
+###############
+
+.. TODO (zumy)
