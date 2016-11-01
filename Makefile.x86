@@ -82,7 +82,10 @@ FPGA_PRJ = logic_orig
 .PHONY: fpga fpga_all
 
 fpga: $(INSTALL_DIR)/fpga
-	# copy FPGA bitstream images and decompress them
+	mkdir -p $(INSTALL_DIR)/fpga
+	# extract FPGA bitstream images
+	unzip fpga.zip -d $(INSTALL_DIR)/fpga
+	# copy archived FPGA bitstream images and decompress them
 	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
 	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
 	# backward compatibility, TODO, should be removed at next OS release
