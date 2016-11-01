@@ -184,13 +184,13 @@ $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DTREE_DIR) $(LINUX_DIR) $(INSTALL_DIR)/fpga $(TMP)
+$(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system.dts
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system.dts
-	tools/dtc/bin/dtc -O dtb -o $(TMP)/dts/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
+	tools/dtc/bin/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system.dts
+	tools/dtc/bin/dtc -I dts -O dtb -o $(TMP)/dts/amba_pl.dtbo -b 0 -@ patches/devicetree/amba_pl.dts
 	# create device tree source from binary for reference
-	$(LINUX_DIR)/scripts/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
+	tools/dtc/bin/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp $(DEVICETREE)                   $(INSTALL_DIR)
@@ -212,7 +212,7 @@ boot: $(BOOT)
 FPGA = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fpga.bit
 FSBL = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fsbl.elf
 
-$(BOOT): fpga $(UBOOT) $(INSTALL_DIR)
+$(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
 	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
 
