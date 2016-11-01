@@ -184,7 +184,7 @@ $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-$(DEVICETREE): $(DTREE_DIR) linux fpga $(TMP)
+$(DEVICETREE): $(DTREE_DIR) $(LINUX_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system.dts
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system.dts
