@@ -1,3 +1,14 @@
+# Release 0.9?
+
+Linux kernel:
+- added support for I2C GPIO expanders (PCA953X, MCP23S08)
+- added GPIO based drivers for SPI, I2C and 1-wire
+- enabled reset controller support
+- patched Cadence I2C controller driver to add proper HW reset
+- changed kernel patching procedure, the kernel is now forked,
+  and patches are commited to the fork Git repo
+- updated kernel to 2016.2
+
 # Release 0.96 RC?
 
 Application changes:
