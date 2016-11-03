@@ -108,9 +108,9 @@ This is achieved using `systemd.link <https://www.freedesktop.org/software/syste
 Wired setup
 ===========
 
-The wired interface eth0 configuration file 
-`/etc/systemd/network/wired.network <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/overlay/etc/systemd/network/wired.network>`_ 
-configures it to use DHCP.
+The wired interface 
+`eth0 configuration file  <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/overlay/etc/systemd/network/wired.network>`_ 
+/etc/systemd/network/wired.network configures it to use DHCP.
 
 In previous releases, where a `different DHCP client was used <http://linux.die.net/man/8/dhclient>`_ , it was 
 possible to define a fixed lease, which would provide a fallback address if DHCP fails. Using the systemd integrated 
@@ -165,11 +165,11 @@ Wireless client setup
 ---------------------
 
 Wireless networks almost universally use some king of encryption/authentication scheme for security. This is handled 
-by the tool `wpa_supplicant <https://w1.fi/wpa_supplicant/>`_. The default network configuration option on
-`Debian <https://wiki.debian.org/NetworkManager>`_/`Ubuntu <https://help.ubuntu.com/community/NetworkManager>`_
+by the tool `wpa_supplicant <https://w1.fi/wpa_supplicant/>`_. The default network configuration option 
+`on Debian <https://wiki.debian.org/NetworkManager>`_/`Ubuntu <https://help.ubuntu.com/community/NetworkManager>`_
 is `NetworkManager <https://wiki.gnome.org/Projects/NetworkManager>`_. Sometimes it conflicts with the default 
-`systemd-networkd` install, this seems to be one of those cases. On 
-`Debian <https://packages.debian.org/jessie/armhf/wpasupplicant/filelist>`_/Ubuntu a device specific 
+`systemd-networkd` install, this seems to be one of those cases. 
+On `Debian <https://packages.debian.org/jessie/armhf/wpasupplicant/filelist>`_/Ubuntu a device specific 
 `wpa_supplicant@.service` <https://w1.fi/cgit/hostap/tree/wpa_supplicant/systemd/wpa_supplicant.service.arg.in>`_
 service is missing, so we made a copy 
 `wpa_supplicant@.service <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
@@ -218,116 +218,136 @@ The `hostapd@.service <https://github.com/RedPitaya/RedPitaya/blob/master/OS/deb
 is handling the start of the daemon. Hotplugging is achieved the same way as with `wpa_supplicant@.service`.
 
 To enable access point mode a configuration file `hostapd.conf <https://w1.fi/cgit/hostap/plain/hostapd/hostapd.conf>`_
- must be placed on the FAT partition on the SD card, and the client mode configuration file `wpa_supplicant.conf`
+must be placed on the FAT partition on the SD card, and the client mode configuration file `wpa_supplicant.conf`
 must be removed. Inside a shell on Red Pitaya this file is visible as `/opt/redpitaya/hostapd.conf`.
 
 The next example `hostapd.conf` file is for the `rtl871xdrv` driver:
-```
-interface=wlan0wext
-ssid=<ssid>
-driver=rtl871xdrv
-hw_mode=g
-channel=6
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=<passphrase>
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-```
-This file must be edited to set the chosen `<ssid>` and `<passphrase>`.
-Other settings are for the currently most secure personal encryption.
+
+    interface=wlan0wext
+    ssid=<ssid>
+    driver=rtl871xdrv
+    hw_mode=g
+    channel=6
+    macaddr_acl=0
+    auth_algs=1
+    ignore_broadcast_ssid=0
+    wpa=2
+    wpa_passphrase=<passphrase>
+    wpa_key_mgmt=WPA-PSK
+    wpa_pairwise=TKIP
+    rsn_pairwise=CCMP
+
+This file must be edited to set the chosen `<ssid>` and `<passphrase>`. Other settings are for the currently most 
+secure personal encryption.
 
 If the configuration file is written for a device supported by a `nl80211` driver,
 then the driver line should be `driver=nl80211` instead of `driver=rtl871xdrv`.
 The interface line must also be changed from `interface=wlan0wext` to `interface=wlan0`.
-```
-interface=wlan0
-ssid=<ssid>
-driver=nl80211
-hw_mode=g
-channel=6
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=<passphrase>
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-```
+ 
+.. code-block:: shell-session
+    
+    interface=wlan0
+    ssid=<ssid>
+    driver=nl80211
+    hw_mode=g
+    channel=6
+    macaddr_acl=0
+    auth_algs=1
+    ignore_broadcast_ssid=0
+    wpa=2
+    wpa_passphrase=<passphrase>
+    wpa_key_mgmt=WPA-PSK
+    wpa_pairwise=TKIP
+    rsn_pairwise=CCMP
 
-### Wireless router
+Wireless router
+---------------
 
 In access point mode Red Pitaya behaves as a wireless router,
 if the wired interface is connected to the local network.
 
-In the wired network configuration file [`/etc/systemd/network/wired.network`](OS/debian/overlay/etc/systemd/network/wired.network)
+In the wired network configuration file `/etc/systemd/network/wired.network <OS/debian/overlay/etc/systemd/network/wired.network>`_
 there are two lines to enable IP forwarding and masquerading.
-```
-IPForward=yes
-IPMasquerade=yes
-```
-An iptables configuration [`/etc/iptables/iptables.rules`](OS/debian/overlay/etc/iptables/iptables.rules)
-is enbled by the iptables service [`/etc/systemd/system/iptables.service`](OS/debian/overlay/etc/systemd/system/iptables.service)
+ 
+.. code-block:: shell-session
+    
+    IPForward=yes
+    IPMasquerade=yes
 
-**NOTE: this functionality combined with default passwords can be a serious security issue.
-And since it is not needed to provide advertized functionality, we might remove it in the future.**
+An iptables configuration `/etc/iptables/iptables.rules <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/overlay/etc/iptables/iptables.rules>`_
+is enbled by the iptables service `/etc/systemd/system/iptables.service <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/overlay/etc/systemd/system/iptables.service>`_
 
-### Supported USB WiFi adapters
+.. note::
+    
+    This functionality combined with default passwords can be a serious security issue.
+    And since it is not needed to provide advertized functionality, we might remove it in the future.**
+
+Supported USB WiFi adapters
+---------------------------
 
 Our main target was a low cost USB adapter which also supports access point mode.
 The Edimax EW-7811Un adapter is also commonly used on Raspberry PI.
-```bash
-$ lsusb
-ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un 802.11n Wireless Adapter [Realtek RTL8188CUS]
-```
+ 
+.. code-block:: shell-session
+    
+    $ lsusb
+    ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un 802.11n Wireless Adapter [Realtek RTL8188CUS]
+
 The kernel upstream driver for this chip is now working well, so a working
 driver was copied from the Raspberry PI repository and applied as a patch.
 
 Other WiFi USB devices might also be supported by upstream kernel drivers,
 but there is no comprehensive list for now.
 
-## Resolver
+Resolver
+========
 
 To enable the `systemd` integrated resolver, a symlink for `/etc/resolv.conf` must be created.
-```bash
-ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
-```
-It is also possible to add default DNS servers by adding them to `*.network` files.
-```
-nameserver=8.8.8.8
-nameserver=8.8.4.4
-```
+ 
+.. code-block:: shell-session
+    
+    ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
-## NTP
+It is also possible to add default DNS servers by adding them to `*.network` files.
+ 
+.. code-block:: shell-session
+    
+    nameserver=8.8.8.8
+    nameserver=8.8.4.4
+
+NTP
+====
 
 Instead of using the common `ntpd` the lightweight `systemd-timesyncd`
-[SNTP](http://www.ntp.org/ntpfaq/NTP-s-def.htm#AEN1271) client is used.
-Since by default NTP servers are provided by DHCP, no additional configuration changes to
-[`timesyncd.conf`](https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html) are needed.
+`SNTP <http://www.ntp.org/ntpfaq/NTP-s-def.htm#AEN1271>`_ client is used. Since by default NTP servers are provided by
+DHCP, no additional configuration changes to
+`timesyncd.conf <https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html>`_ are needed.
 
 To observe the status of time synchronization do:
-```bash
-$ timedatectl status
-```
-To enable the service do:
-```bash
-# timedatectl set-ntp true
-```
+ 
+.. code-block:: shell-session
+    
+    $ timedatectl status
 
-## SSH
+To enable the service do:
+ 
+.. code-block:: shell-session
+    
+    # timedatectl set-ntp true
+
+
+SSH
+===
 
 The Open SSH server is installed and access to the root user is enabled.
 
 At the end of the SD card Debian/Ubuntu image creation encryption certificates are removed.
-They are again created on the first boot by [`/etc/systemd/system/ssh-reconfigure.service`](OS/debian/overlay/etc/systemd/system/ssh-reconfigure.service).
-Due to this the first boot takes a bit longer.
-This way the SSH encryption certificates are unique on each board.
+They are again created on the first boot by 
+`/etc/systemd/system/ssh-reconfigure.service <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/overlay/etc/systemd/system/ssh-reconfigure.service>`_.
+Due to this the first boot takes a bit longer. This way the SSH encryption certificates are unique on each board.
 
-## Zeroconf
+Zeroconf
+========
 
 `systemd-networkd` can provide interfaces with link-local addresses, if this is
 enabled inside `systemd.network` files with the line `LinkLocalAddressing=yes`.
@@ -341,80 +361,94 @@ The last three segments of the Ethernet MAC number without semicolons
 to generate the hostname, which is then used to generate a link name.
 For example if the MAC address is `00:26:32:f0:f1:f2` then the shortened string `shortMAC` is `f0f1f2`.
 
-Hostname generation is done by [/etc/systemd/system/hostname-mac.service](OS/debian/overlay/etc/systemd/system/hostname-mac.service)
+Hostname generation is done by `/etc/systemd/system/hostname-mac.service <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/overlay/etc/systemd/system/hostname-mac.service>`_
 which must run early during the boot process.
 
 Each device can now be accessed using the URL:
-```
-http://rp-<shortMAC>.local
-```
+ 
+.. code-block:: shell-session
+    
+   http://rp-<shortMAC>.local
 
 Similarly to get SSH access use:
-```
-ssh root@rp-<shortMAC>.local
-```
+ 
+.. code-block:: shell-session
+    
+   ssh root@rp-<shortMAC>.local
+
 
 This service is a good alternative for our *Discovery* service provided on redpitaya.com servers.
 
-[Avahi daemon](http://www.avahi.org/) is used to advertise specific services.
+`Avahi daemon <http://www.avahi.org/>`_ is used to advertise specific services.
 Three configuration files are provided:
-* HTTP [/etc/avahi/services/bazaar.service](OS/debian/overlay/etc/avahi/services/bazaar.service)
-* SSH  [/etc/avahi/services/ssh.service](OS/debian/overlay/etc/avahi/services/ssh.service)
-* SCPI [/etc/avahi/services/scpi.service](OS/debian/overlay/etc/avahi/services/scpi.service)
+   
+   - HTTP [/etc/avahi/services/bazaar.service](OS/debian/overlay/etc/avahi/services/bazaar.service)
+   - SSH  [/etc/avahi/services/ssh.service](OS/debian/overlay/etc/avahi/services/ssh.service)
+   - SCPI [/etc/avahi/services/scpi.service](OS/debian/overlay/etc/avahi/services/scpi.service)
 
-NOTE: This services were enabled just recently, so full extent of their usefulness is still unknown.
+.. note::
 
-## `systemd` services
+    This services were enabled just recently, so full extent of their usefulness is still unknown.
+
+`systemd` services
+==================
 
 Services handling the described configuration are enabled with:
-```bash
-# enable systemd network related services
-systemctl enable systemd-networkd
-systemctl enable systemd-resolved
-systemctl enable systemd-timesyncd
-systemctl enable wpa_supplicant@wlan0.service
-systemctl enable wpa_supplicant_wext@wlan0wext.service
-systemctl enable hostapd@wlan0.service
-systemctl enable hostapd@wlan0wext.service
-systemctl enable wireless-mode-client.service
-systemctl enable wireless-mode-ap.service
-systemctl enable iptables.service
-#systemctl enable wpa_supplicant@wlan0.path
-#systemctl enable wpa_supplicant_wext@wlan0wext.path
-#systemctl enable hostapd@wlan0.path
-#systemctl enable hostapd@wlan0wext.path
-systemctl enable hostname-mac.service
-systemctl enable avahi-daemon.service
+ 
+.. code-block:: shell-session
+    
+   # enable systemd network related services
+    systemctl enable systemd-networkd
+    systemctl enable systemd-resolved
+    systemctl enable systemd-timesyncd
+    systemctl enable wpa_supplicant@wlan0.service
+    systemctl enable wpa_supplicant_wext@wlan0wext.service
+    systemctl enable hostapd@wlan0.service
+    systemctl enable hostapd@wlan0wext.service
+    systemctl enable wireless-mode-client.service
+    systemctl enable wireless-mode-ap.service
+    systemctl enable iptables.service
+    #systemctl enable wpa_supplicant@wlan0.path
+    #systemctl enable wpa_supplicant_wext@wlan0wext.path
+    #systemctl enable hostapd@wlan0.path
+    #systemctl enable hostapd@wlan0wext.path
+    systemctl enable hostname-mac.service
+    systemctl enable avahi-daemon.service
 
-# enable service for creating SSH keys on first boot
-systemctl enable ssh-reconfigure
-```
+    # enable service for creating SSH keys on first boot
+    systemctl enable ssh-reconfigure
 
-# Wireless driver
+Wireless driver
+***************
 
-## Current setup
+Current setup
+=============
 
-Currently an [out of tree driver](patches/rtl8192cu/) is used to support devices based on the `RTL8188CUS` chip.
+Currently an `out of tree driver <https://github.com/RedPitaya/RedPitaya/blob/master/patches/rtl8192cu>`_ is used to 
+support devices based on the `RTL8188CUS` chip.
+
 For example:
-```
-# lsusb
-Bus 001 Device 003: ID 0bda:8176 Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-```
-
+ 
+.. code-block:: shell-session
+    
+   # lsusb
+    Bus 001 Device 003: ID 0bda:8176 Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter
+    Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+    
 This driver supports client and access point modes, and is the most documented driver/device combination
 for seeing up an access point using an USB adapter. Most of the documentation is intended for Raspberry Pi.
 
 We would like to get rid of this driver, since it requires maintaining a patch,
 and it requires deprecated user space tools `wireless extensions` and a
-[patched `hostapd`](OS/debian/network.sh).
+`patched `hostapd` <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/network.sh>`_.
 
-## Proposed future setup
+Proposed future setup
+=====================
 
 There is another much newer driver available in the kernel tree, but it currently only supports client mode.
 
 We are following progress on the `rtl8xxxu` driver in the
-[authors (Jes Sorensen)](https://git.kernel.org/cgit/linux/kernel/git/jes/linux.git/) repository
-on [kernel.org](https://git.kernel.org/cgit/).
+`authors (Jes Sorensen) <https://git.kernel.org/cgit/linux/kernel/git/jes/linux.git/>`_ repository
+on `kernel.org <https://git.kernel.org/cgit/>`_.
 
 We already tested this new driver in the past, and it worked well in client mode.
