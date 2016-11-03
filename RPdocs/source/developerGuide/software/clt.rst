@@ -13,7 +13,7 @@ Signal generator utility
 ========================
 
 The Red Pitaya signal generator can be controlled through the
-`generate <https://github.com/RedPitaya/RedPitaya/tree/master/Test/generate>`_command line utility, but be aware it
+`generate <https://github.com/RedPitaya/RedPitaya/tree/master/Test/generate>`_ command line utility, but be aware it
 interferes with the GUI based Oscilloscope & Generator application. Usage instructions (see Table 7 as well):
  
 .. code-block:: shell-session
@@ -183,7 +183,7 @@ Select the destination (local) directory to save the data file to (see next Figu
     Figure: Select file copy destination.
 
 Accessing system registers
-=========================
+==========================
 
 The system registers can be accessed through the 
 `monitor <https://github.com/RedPitaya/RedPitaya/tree/master/Test/monitor>`_ utility. Usage instructions:
