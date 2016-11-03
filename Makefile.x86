@@ -83,7 +83,9 @@ FPGA_PRJ = logic_orig
 
 .PHONY: fpga fpga_all
 
-fpga: $(FPGA_TAR)
+fpga: $(INSTALL_DIR)/fpga
+
+$(INSTALL_DIR)/fpga: $(FPGA_TAR)
 	mkdir -p $(INSTALL_DIR)/fpga
 	# extract FPGA bitstream images
 	unzip $(FPGA_TAR) -d $(INSTALL_DIR)/fpga
