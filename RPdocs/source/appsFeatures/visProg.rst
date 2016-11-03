@@ -1,7 +1,7 @@
 Visual Programing
 #################
 
-.. https://owncloud.redpitaya.com/index.php/apps/files/?dir=%2FWEB%20page%2Fapps%2FVisual%20Programming
+.. <https://owncloud.redpitaya.com/index.php/apps/files/?dir=%2FWEB%20page%2Fapps%2FVisual%20Programming
 
 If you too are struggling to get your head around the complexity of programming languages – or indeed if you want to 
 introduce children to electrical engineering – then Red Pitaya’s Visual Programming is definitely the answer. 
@@ -68,6 +68,59 @@ to check our videos with examples.
 
 .. image:: VP_Slika_03.png
 
+
+Sensors
+*******
+
+=========== ==============  =======================
+Connectors                  Voltage levels
+=========== ==============  =======================
+Digital     D0,D2,D4,D6,D8  3.3V (not 5V tolerant) 
+Analog      A0,A1,A2        0-3.3V 
+I2C         I2C             3.3V
+=========== ==============  =======================
+
+.. image:: ext_module.png
+
+========================================================================================    ==================
+Sensor information                                                                          Where to connect?
+========================================================================================    ==================
+`Temperature sensor <http://wiki.seeedstudio.com/wiki/Grove_-_Temperature_Sensor>`_         Analog
+`Motion sensor <http://wiki.seeedstudio.com/wiki/Grove_-_PIR_Motion_Sensor>`_               Digital
+`Touch sensor <http://wiki.seeedstudio.com/wiki/Grove_-_Touch_Sensor>`_                     Digital
+`Button <http://wiki.seeedstudio.com/wiki/Grove_-_Button>`_                                 Digital
+Switch
+Digital
+`Tilt <http://wiki.seeedstudio.com/wiki/Grove_-_Tilt_Switch>`_                              Digital
+`Potentiometer <http://wiki.seeedstudio.com/wiki/Grove_-_Rotary_Angle_Sensor>`_             Analog
+`Light sensor <http://wiki.seeed.cc/Grove-Light_Sensor/>`_                                  Analog
+`Air quality sensor <http://wiki.seeedstudio.com/wiki/Grove_-_Air_Quality_Sensor_v1.>`_     Analog
+`Vibration sensor <http://wiki.seeedstudio.com/wiki/Grove_-_Piezo_Vibration_Sensor>`_       Analog
+`Moisture sensor <http://wiki.seeedstudio.com/wiki/Grove_-_Moisture_Sensor>`_               Analog
+`Water sensor <http://wiki.seeedstudio.com/wiki/Grove_-_Water_Sensor>`_                     Analog
+`Alcohol sensor <http://wiki.seeedstudio.com/wiki/Grove_-_Alcohol_Sensor>`_                 Analog
+Barometer ``not supported at the moment``                                                   i2c
+`Sound sensor <http://wiki.seeed.cc/Grove-Sound_Sensor/>`_                                  Analog
+`UV sensor <http://wiki.seeedstudio.com/wiki/Grove_-_UV_Sensor>`_                           Analog
+Accelerometer ``not supported at the moment``                                               i2c
+========================================================================================    ==================
+
+========================================================================================    ==================
+Actuators                                                                                   Where to connect?
+========================================================================================    ==================
+`Relay <http://wiki.seeedstudio.com/wiki/Grove_-_Relay>`_                                   Digital
+========================================================================================    ==================
+
+========================================================================================    ==================
+Indicators                                                                                  Where to connect?
+========================================================================================    ==================
+`Buzzer <http://wiki.seeedstudio.com/wiki/Grove_-_Buzzer>`_                                 Digital
+`LED <https://www.seeedstudio.com/grove-led-p-767.html?cPath=156_157>`_                     Digital
+7 segment display                                                                           Digital pins
+LED bar                                                                                     Digital pins
+Groove LCD                                                                                  Digital pins
+LCD                                                                                         Digital pins
+========================================================================================    ==================
 
 Examples
 ********

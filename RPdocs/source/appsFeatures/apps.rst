@@ -4,7 +4,13 @@ Applications
 
 
 ..  (slike, opis, primer uporabe)
-.. TODO        http://redpitaya.com/w3bdev/
+
+.. osciloscope in signal generator isti tekst
+.. TODO http://redpitaya.com/apps/oscilloscope/
+    dodaj tabelo specsov
+    
+.. logic analyzer 
+.. itd.
 
 Bode analyzer
 *************

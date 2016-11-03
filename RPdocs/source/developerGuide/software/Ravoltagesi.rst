@@ -3,9 +3,9 @@ Reading analog voltage from slow inputs
 
  .. TODO referenca extension connector E2
  
- In this example we will print voltage measured on one of Red Pitaya slow analog inputs that are located on extension 
- connector E2. 
-Notice that any of four AI pins (0-3) can be used.
+| In this example we will print voltage measured on one of Red Pitaya slow analog inputs that are located on extension 
+  connector E2. 
+| Notice that any of four AI pins (0-3) can be used.
 
 Web UI
 ******

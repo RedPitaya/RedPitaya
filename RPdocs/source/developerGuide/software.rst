@@ -9,4 +9,6 @@ Software
    software/webApps
    software/clt
    software/os
+   software/ssh
+   software/network
    

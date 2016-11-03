@@ -53,7 +53,7 @@ By default the username is root and password is root.
 List of supported SCPI commands 
 *******************************
 
-.. TODO (link - https://dl.dropboxusercontent.com/s/eiihbzicmucjtlz/SCPI_commands_beta_release.pdf)
+.. (link - https://dl.dropboxusercontent.com/s/eiihbzicmucjtlz/SCPI_commands_beta_release.pdf)
 
 Table of correlated SCPI and API commands on Red Pitaya.
 

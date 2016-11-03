@@ -8,5 +8,7 @@ Welcome to the Red Pitaya documentation.
     ./quickStart/quickStart.rst
     ./appsFeatures/appsTop.rst
     ./developerGuide/devGuideTop.rst
-
+    
+    
+.. TODO skopiraj v https://gitlab.redpitaya.com/redpitaya-2-0/redpitaya-public.git branch doc
     

@@ -1,140 +1,45 @@
-Qick start
-##########
+Quick start
+###########
 
-Prepare SD card
-***************
+.. note::
 
-1. Download the Red Pitaya Image File
+    USERS THAT ARE RUNNING OS 0.96 ARE ALSO ABLE TO CONNECT TO THE RED PITAYA WITHOUT USING ONLINE DISCOVERY SERVICE
+
+.. note::
     
-    .. image:: microSDcard-RP.png
-       :width: 10%
+    If you are Windows user make sure to install Bonjour Print Services available `here <www.redpitaya.com/bonjour>`_.
+
+.. note::
+
+   Make shure that your SD card is programmed and inserted into RED PITAYA. However older versions were shipped with 
+   blank SD cards. To properly preapare it please follow the steps in the Prepare SD card paragraph.    
     
-    `Download <http://blog.redpitaya.com/quick-start/Login>`_
+This is the most common and recommended way of connecting and using your Red Pitaya STEMLab boards. Your LAN network 
+needs to have DHCP settings enabled which is the case in majority of the local networks,  whit this,  simple “plug and
+play”  approach is enabled. Having STEMLab board connected the local network will enable quick access to all Red 
+Pitaya applications using only your web browser. Simply follow this 3 simple steps:
+
     
-    - FAQ: `Where can I find more about Red Pitaya OS releases? <http://blog.redpitaya.com/faq-page/#Software|32740>`_
-    - FAQ: `Where can I find old Red Pitaya OS & application relases? <http://blog.redpitaya.com/faq-page/#Software|25467>`_
+    1. Connect power supply to the Red Pitaya STEMlab board
+    2. Connect STEMlab board to the router or direc to the PC ethernet socket
+    3. Open your web browser and in the URL filed type:   ``rp-xxxxxx.local/``
+       
+.. note::
+
+    ``xxxxxx`` are the last 6 characters from MAC address of your STEMlab board. MAC address is written on the 
+    Ethernet connector.
     
-2. Unzip
-
-3. Select your operating system and follow the instructions:  
-
-    1. Windows
-
-
-        1. Insert SD card into your PC or SD card reader.
-        
-        .. image:: 1.jpg
-        
-        2. Download Win32 Disk Imager to your Desktop and unzip it.
-        
-        .. image:: 2.png
-        
-        3. Open unzipped folder, right-click on the WinDisk32Imager, and select 'Run as Administrator'.
-        
-        .. image:: 3.png
-        
-        4. Under image file box select unzipped Red Pitaya image file.
-        
-        .. image:: 4.png
-        
-        5. Under device box select the drive letter of the SD card.
-        
-        .. image:: 5.png
-        
-        .. note::
-        
-            Be careful to select the correct drive; if you choose the wrong one you risk erasing data from the 
-            computer's hard disk! You can easily see the drive letter (for example E:) by looking in the left column 
-            of Windows Explorer.
-        
-        .. image:: 5_2.png
-        
-        6. Click Write and wait for the write to complete.
-        
-        .. image:: 6.png
-        
-        7.  Exit the Imager.
-        
-        .. image:: 7.png
-        
-    2. Linux
+.. figure:: connect-2.png
     
-        1. Insert SD card into your PC or SD card reader.
-        
-        .. image:: 1.jpg 
-        
-        2. Run Disks application to format the SD card.
-        
-        .. image:: ubuntu_disk_format.jpg
-        
-        3. Open the Terminal and check the available disks with "df -h". Our SD card is 4GB and mounted to /dev/sdb
+    Figure 1: Connecting your STEMlab board to the LAN network.
 
-        .. image:: ubuntu_sdprepare1.png
-        
-        4. Unmount the SD card with "umount /dev/sdbN" (make sure you replace N with the right number).
-        
-        .. image:: ubuntu_sdprepare3.png
-        
-        5. Write the image to the SD card with the following command : dd if=red_pitaya_image_file of=/dev/sdb bs=1M
-        
-        .. note::
-        
-            Replace the red_pitaya_image_file with the name of the unzipped Red Pitaya SD Card Image and
-            /dev/device_name is replaced with the path to the SD Card, usually it will be /dev/sdb.
-        
-        .. image:: 51.png
-        
-        
-        6. Wait until the process has finished.
-        
-        .. image:: 61.png
+After the **third step** you will get a Red Pitaya STEMlab main page as shown below.
 
-    3. MacOS
-        
-        1. Insert SD card into your PC or SD card reader.
-        
-        .. image:: 1.jpg
-        
-        2. Download Apple Pi Baker and unzip it.
-        
-        .. image:: 21.png
+.. figure:: connect-3.png
 
-
-        3. Press "crtl" key and click on ApplePi-Baker icon, then click Open in order to run it.
-        
-        .. image:: 3-1.png
-
-
-        4. Enter your admin password and click OK.
-        
-        .. image:: 41.png
-
-
-        5. Select SD card drive. This can be recognized by the size of the card that is 4GB.
-        
-        .. image:: 52.png
-
-
-        6. Select Red Pitaya OS image file.
-        
-        .. image:: 62.png
-
-        7. Click "Restore Backup" button in order to write image to SD card.
-        
-        .. image:: 71.png
-
-
-        8. It's coffee time, application will show you Estimated Time for Accomplishment.
-
-        .. image:: 8.png
-
-        9. When operation is completed click "OK" and quit ApplePi-Baker.
-
-        .. image:: 9.png
-        
-        FAQ: `How to install Red Pitaya OS on MAC not using ApplePiBaker? <http://blog.redpitaya.com/faq-page/#QuickStart|23547>`_
-
-4.  Insert SD card into Red Pitaya
-
-    .. image:: pitaya-quick-start-insert-sd-card.png
+    Figure 2: STEMlab main page user interface.
     
+.. TODO dodaj referenco na Prepare SD card
+
+
+   
