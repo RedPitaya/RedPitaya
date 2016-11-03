@@ -85,7 +85,7 @@ FPGA_PRJ = logic_orig
 
 fpga: $(INSTALL_DIR)/fpga
 
-$(INSTALL_DIR)/fpga: $(FPGA_TAR)
+$(INSTALL_DIR)/fpga: | $(FPGA_TAR)
 	mkdir -p $(INSTALL_DIR)/fpga
 	# extract FPGA bitstream images
 	unzip $(FPGA_TAR) -d $(INSTALL_DIR)/fpga
