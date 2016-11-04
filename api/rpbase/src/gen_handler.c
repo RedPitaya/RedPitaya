@@ -223,7 +223,7 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
         }
     }
     else if (channel == RP_CH_2) {
-    	chA_arb_size = length;
+    	chB_arb_size = length;// before: chA_arb_size = length;
         if(chB_waveform==RP_WAVEFORM_ARBITRARY){
         	return synthesize_signal(channel);
         }
