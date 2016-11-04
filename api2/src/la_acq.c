@@ -58,7 +58,7 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
     if (status != RP_OK) {
         return status;
     }
-    if (system("laosc -l")==-1){
+    if (system("gpiorelay -l")==-1){
 	status=EXIT_FAILURE;
 	return status;
     }
