@@ -58,7 +58,7 @@ $(INSTALL_DIR):
 # X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
 ################################################################################
 
-UBOOT_TAG     = xilinx-v2016.2
+UBOOT_TAG     = redpitaya-v2016.2
 LINUX_TAG     = redpitaya-v2016.2
 DTREE_TAG     = xilinx-v2016.4
 
@@ -71,7 +71,7 @@ LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
 DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
 
 # it is possible to use an alternative download location (local) by setting environment variables
-UBOOT_URL     ?= https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
+UBOOT_URL     ?= https://github.com/RedPitaya/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
 LINUX_URL     ?= https://github.com/RedPitaya/linux-xlnx/archive/$(LINUX_TAG).tar.gz
 DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
 
@@ -134,14 +134,6 @@ $(UBOOT_TAR): | $(DL)
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	# Red Pitaya configuration
-	cp patches/u-boot/zynq-red-pitaya.dts       $@/arch/arm/dts/zynq-red-pitaya.dts
-	cp patches/u-boot/zynq_red_pitaya_defconfig $@/configs/zynq_red_pitaya_defconfig
-	cp patches/u-boot/zynq_red_pitaya.h         $@/include/configs/zynq_red_pitaya.h
-	patch -d $@ -p 1 < patches/u-boot/u-boot-xlnx-$(UBOOT_TAG)-config.patch
-	# add Lantiq PHY driver
-	cp patches/u-boot/lantiq.c                  $@/drivers/net/phy/lantiq.c
-	patch -d $@ -p 1 < patches/u-boot/u-boot-xlnx-$(UBOOT_TAG)-lantiq.patch
 
 $(UBOOT): $(UBOOT_DIR) $(TMP)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig
