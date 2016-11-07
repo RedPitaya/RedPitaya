@@ -245,6 +245,35 @@
     }
 }(window.WIZARD = window.WIZARD || {}, jQuery));
 
+
+
+
+checkESSID = function(essid) {
+    if (essid.length > 0) {
+        return true;
+    }
+    $('#essid_check_len').show();
+    return false
+};
+
+checkPassword = function(pass) {
+    if (pass.length >= 8) {
+        for (var i = 0; i < pass.length; i++){
+            var code = pass.charCodeAt(i);
+            if (code < 32 || code > 126){
+                $('#pass_check_sym').show();
+                return false;
+            }
+        }
+        return true;
+    }
+    $('#pass_check_len').show();
+    return false;
+};
+
+
+
+
 // Page onload event handler
 $(document).ready(function() {
 
@@ -326,20 +355,18 @@ $(document).ready(function() {
 
     $('#access_point_create').click(function() {
         if ($('#access_point_create').text() == "Create") {
-        	$('#essid_check').hide();
-        	$('#pass_check').hide();
-        	if ($('#essid_input').val().length > 0 && $('#password_input').val().length >= 8){
+        	$('#essid_check_len').hide();
+        	$('#pass_check_len').hide();
+            $('#pass_check_sym').hide();
+            var essid_check = checkESSID( $('#essid_input').val() );
+            var pass_check = checkPassword( $('#password_input').val() );
+
+        	if (essid_check && pass_check){
 	        	WIZARD.startWaiting();
 	            $.ajax({
 	                url: '/wifi_create_point?essid=' + $('#essid_input').val() + '&password=' + $('#password_input').val() + '',
 	                type: 'GET',
 	            });
-        	}
-        	else {
-        		if ($('#essid_input').val().length == 0)
-        			$('#essid_check').show();
-        		if ($('#password_input').val().length < 8)
-        			$('#pass_check').show();
         	}
         } else {
             $.ajax({
