@@ -257,7 +257,7 @@ int main(int argc, char **argv)
             if (ifa->ifa_addr->sa_family == AF_INET) {
 				if (!strcmp(ifa->ifa_name, "eth0") && addr_buf[1] != '6') // exclude 169...
 					vIP_LAN = addr_buf;
-				if(!strcmp(ifa->ifa_name, "wlan0wext"))
+				if(!strcmp(ifa->ifa_name, "wlan0"))
 					vIP_WIFI = addr_buf;
 			}
 		// }

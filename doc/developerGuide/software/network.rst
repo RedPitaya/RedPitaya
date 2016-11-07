@@ -25,6 +25,10 @@ List wireless access pints:
 
    # iwlist scan
 
+.. code-block:: shell-session
+
+   # iw dev wlan0 scan
+
 Write a ``wpa_supplicant.conf`` configuration file to the FAT partition:
 
 .. code-block:: shell-session
@@ -36,7 +40,7 @@ Restart wpa supplicant:
 
 .. code-block:: shell-session
 
-    # systemctl restart wpa_supplicant_wext@wlan0wext.service
+    # systemctl restart wpa_supplicant@wlan0.service
 
 =================
 WiFi access point
@@ -55,7 +59,7 @@ Restart access point service:
 
 .. code-block:: shell-session
 
-   # systemctl restart hostapd@wlan0wext.service
+   # systemctl restart hostapd@wlan0.service
 
 *********************
 Network configuration
@@ -72,12 +76,8 @@ The decision to focus on ``systemd-networkd`` is arbitrary, while at the same ti
 focusing at a single approach centered around `systemd <https://www.freedesktop.org/wiki/Software/systemd/>`_
 should minimize the efforts needed to maintain it.
 
-Most of the WiFi configuration complexity comes from two sources:
-
-    1. mixing WiFi drivers based on new `mac80211 <https://wireless.wiki.kernel.org/en/developers/documentation/mac80211>`_ API,
-       and the old deprecated `wext <https://wireless.wiki.kernel.org/en/developers/documentation/wireless-extensions>`_ API,
-       this also requires some duplication of user space tools
-    2. support for switching between WiFi access point and client mode
+Most of the WiFi configuration complexity comes from
+support for switching between WiFi access point and client mode.
 
 ====
 UDEV
@@ -112,12 +112,6 @@ possible to deactivate the rule by creating a override file which links to ``/de
 .. code-block:: shell-session
 
    # ln -s /dev/null /etc/udev/rules.d/73-usb-net-by-mac.rules
-
-For user space tools to be able to distinguish between adapters using old and new drivers,
-adapeter interfaces using the ``rtl8192cu`` are renamed into ``wlan0wext`` while adapter
-interfaces using other drivers keep the default name ``wlan0``. This is achieved using
-`systemd.link  <https://www.freedesktop.org/software/systemd/man/systemd.link.html>`_ file
-`/etc/systemd/network/10-wireless.link <../OS/debian/overlay/etc/systemd/network/10-wireless.link>`_.
 
 ===========
 Wired setup
@@ -206,13 +200,6 @@ Red Pitaya. The next change fixes both.
    -Alias=multi-user.target.wants/wpa_supplicant@%i.service
    +WantedBy=sys-subsystem-net-devices-%i.device
 
-Since WiFi drivers using two different APIs are allowed, and each API requires
-a slightly different ``wpa_supplicant`` configuration, there are also two different services:
-`wpa_supplicant@.service <../OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
-triggered by the presence of network interface ``wlan0`` and
-`wpa_supplicant_wext@.service <../OS/debian/overlay/etc/systemd/system/wpa_supplicant_wext@.service>`_
-triggered by the presence of network interface ``wlan0wext``.
-
 The encryption/authentication configuration file is linked to the FAT partition
 for easier user access. So it is enough to provide a proper ``wpa_supplicant.conf``
 file on the FAT partition to enable wireless client mode.
@@ -226,6 +213,12 @@ This configuration file can be created using the `wpa_passphrase` tool can be us
 .. code-block:: shell-session
 
    $ wpa_passphrase <ssid> [passphrase] > /opt/redpitaya/wpa_supplicant.conf
+
+List wireless access pints (for ``nl80211`` based adapters like BCM43143):
+
+.. code-block:: shell-session
+
+   # iwlist scan
 
 ---------------------------
 Wireless access point setup
@@ -243,31 +236,6 @@ To enable access point mode a configuration file `hostapd.conf <https://w1.fi/cg
 must be placed on the FAT partition on the SD card, and the client mode configuration file ``wpa_supplicant.conf``
 must be removed. Inside a shell on Red Pitaya this file is visible as ``/opt/redpitaya/hostapd.conf``.
 
-The next example ``hostapd.conf`` file is for the ``rtl871xdrv`` driver.
-
-.. code-block:: none
-
-   interface=wlan0wext
-   ssid=<ssid>
-   driver=rtl871xdrv
-   hw_mode=g
-   channel=6
-   macaddr_acl=0
-   auth_algs=1
-   ignore_broadcast_ssid=0
-   wpa=2
-   wpa_passphrase=<passphrase>
-   wpa_key_mgmt=WPA-PSK
-   wpa_pairwise=TKIP
-   rsn_pairwise=CCMP
-
-This file must be edited to set the chosen ``<ssid>`` and ``<passphrase>``.
-Other settings are for the currently most secure personal encryption.
-
-If the configuration file is written for a device supported by a ``nl80211`` driver,
-then the driver line should be ``driver=nl80211`` instead of ``driver=rtl871xdrv``.
-The interface line must also be changed from ``interface=wlan0wext`` to ``interface=wlan0``.
-
 .. code-block:: none
 
    interface=wlan0
@@ -283,6 +251,9 @@ The interface line must also be changed from ``interface=wlan0wext`` to ``interf
    wpa_key_mgmt=WPA-PSK
    wpa_pairwise=TKIP
    rsn_pairwise=CCMP
+
+This file must be edited to set the chosen ``<ssid>`` and ``<passphrase>``.
+Other settings are for the currently most secure personal encryption.
 
 ~~~~~~~~~~~~~~~
 Wireless router
@@ -431,16 +402,12 @@ Services handling the described configuration are enabled with.
    systemctl enable systemd-resolved
    systemctl enable systemd-timesyncd
    systemctl enable wpa_supplicant@wlan0.service
-   systemctl enable wpa_supplicant_wext@wlan0wext.service
    systemctl enable hostapd@wlan0.service
-   systemctl enable hostapd@wlan0wext.service
    systemctl enable wireless-mode-client.service
    systemctl enable wireless-mode-ap.service
    systemctl enable iptables.service
    #systemctl enable wpa_supplicant@wlan0.path
-   #systemctl enable wpa_supplicant_wext@wlan0wext.path
    #systemctl enable hostapd@wlan0.path
-   #systemctl enable hostapd@wlan0wext.path
    systemctl enable hostname-mac.service
    systemctl enable avahi-daemon.service
    
