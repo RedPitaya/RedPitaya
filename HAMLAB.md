@@ -1,4 +1,12 @@
 Applications (userspace drivers) that were developed for EXTM HAMLAB v1.0 hardware are;
+
+new applications:
+
+gpiorelay for sdr outputs/ instruments outputs, ext-tr / logic
+hamrf - for instruments acdc, hvlv and sdr in
+
+old applications:
+
 hvlv 
 	this application is able to switch between 
 	SDR mode with "hvlv -s" and 
