@@ -5,8 +5,7 @@
 &gem0 {
 	phy-handle = <&ethernet_0_mdio>;
 	ethernet_0_mdio: mdio@1 {
-		compatible = "lantiq,phy11g";
-		device_type = "ethernet-phy";
+		compatible = "lantiq,phy11g", "ethernet-phy-ieee802.3-c22";
 		reg = <1>;
 	};
 };
