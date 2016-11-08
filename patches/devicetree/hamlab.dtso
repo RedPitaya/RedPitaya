@@ -143,12 +143,12 @@
 				compatible = "gpio-leds";
 				hamlab_logic {
 					label = "HAMLAB_logic";
-					gpios = <&hamlab_extension_gpio_expander 4 0>;
+					gpios = <&hamlab_extension_gpio_expander 3 0>;
 					default-state = "off";
 				};
 				hamlab_trig {
 					label = "HAMLAB_trig";
-					gpios = <&hamlab_extension_gpio_expander 5 0>;
+					gpios = <&hamlab_extension_gpio_expander 4 0>;
 					default-state = "off";
 				};
 				hamlab_o1gen {
@@ -158,17 +158,17 @@
 				};				
 				hamlab_o1sdr {
 					label = "HAMLAB_o1sdr";
-					gpios = <&hamlab_extension_gpio_expander 8 0>;
+					gpios = <&hamlab_extension_gpio_expander 6 0>;
 					default-state = "off";
 				};
 				hamlab_o2gen {
 					label = "HAMLAB_o2gen";
-					gpios = <&hamlab_extension_gpio_expander 9 0>;
+					gpios = <&hamlab_extension_gpio_expander 8 0>;
 					default-state = "off";
 				};				
 				hamlab_o2sdr {
 					label = "HAMLAB_o2sdr";
-					gpios = <&hamlab_extension_gpio_expander 10 0>;
+					gpios = <&hamlab_extension_gpio_expander 9 0>;
 					default-state = "off";
 				};
 			};
