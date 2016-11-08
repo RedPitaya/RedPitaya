@@ -86,13 +86,13 @@
 	fragment@3 {
 		target-path = "/";
 		__overlay__ {
-			// DMM data ready is mapped as UIO interrupt connected to gpio_expander [15]
-	/*		dmm: dmm {
-				compatible = "generic-uio";
-				status = "okay";
-				interrupt-parent = <&hamlab_extension_gpio_expander>;
-				interrupts = <15 0x2>;
-			};*/
+//			// DMM data ready is mapped as UIO interrupt connected to gpio_expander [15]
+//			dmm: dmm {
+//				compatible = "generic-uio";
+//				status = "okay";
+//				interrupt-parent = <&hamlab_extension_gpio_expander>;
+//				interrupts = <15 0x2>;
+//			};
 
 			// Power button on MIO[11] (MISO)
 			hamlab_keys {
@@ -108,22 +108,22 @@
 			hamlab_led {
 				compatible = "gpio-leds";
 				hamlab_led_power {
-					label = "HAMLAB LED POWER";
+					label = "HAMLAB_LED_POWER";
 					gpios = <&hamlab_extension_gpio_expander 13 0>;
 					default-state = "on";
 				};
 				hamlab_led_test0 {
-					label = "HAMLAB LED test 0";
+					label = "HAMLAB_LED_test_0";
 					gpios = <&hamlab_extension_gpio_expander 0 0>;
 					default-state = "off";
 				};
 				hamlab_led_test1 {
-					label = "HAMLAB LED test 1";
+					label = "HAMLAB_LED_test_1";
 					gpios = <&hamlab_extension_gpio_expander 1 0>;
 					default-state = "off";
 				};
 				hamlab_led_test2 {
-					label = "HAMLAB LED test 2";
+					label = "HAMLAB_LED_test_2";
 					gpios = <&hamlab_extension_gpio_expander 2 0>;
 					default-state = "off";
 				};
@@ -136,7 +136,7 @@
 		};
 	};
 	
-		fragment@4 {
+	fragment@4 {
 		target-path = "/";
 		__overlay__ {
 			hamlab_relays {
@@ -146,19 +146,16 @@
 					gpios = <&hamlab_extension_gpio_expander 4 0>;
 					default-state = "off";
 				};
-				
 				hamlab_trig {
 					label = "HAMLAB_trig";
 					gpios = <&hamlab_extension_gpio_expander 5 0>;
 					default-state = "off";
 				};
-
 				hamlab_o1gen {
 					label = "HAMLAB_o1gen";
 					gpios = <&hamlab_extension_gpio_expander 7 0>;
 					default-state = "off";
 				};				
-				
 				hamlab_o1sdr {
 					label = "HAMLAB_o1sdr";
 					gpios = <&hamlab_extension_gpio_expander 8 0>;
@@ -169,7 +166,6 @@
 					gpios = <&hamlab_extension_gpio_expander 9 0>;
 					default-state = "off";
 				};				
-				
 				hamlab_o2sdr {
 					label = "HAMLAB_o2sdr";
 					gpios = <&hamlab_extension_gpio_expander 10 0>;
