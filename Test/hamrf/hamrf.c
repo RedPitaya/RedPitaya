@@ -69,7 +69,7 @@ static void parse_opts(int argc, char *argv[])
 	data[0]=0;
 	data[1]=0;
 
-	file = open("/dev/i2c-5", O_RDWR);
+	file = open("/dev/i2c-7", O_RDWR);
         if (file < 0) {
                 //ERROR HANDLING;
                 pabort("no i2c device file\n");
