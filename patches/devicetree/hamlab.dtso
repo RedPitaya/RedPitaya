@@ -66,9 +66,9 @@
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <7>;
-					hamlab_extension_gpio_expander: pca9535@21 {	
+					hamlab_extension_gpio_expander: pca9535@20 {	
 						compatible = "nxp,pca9535";
-						reg = <0x21>;
+						reg = <0x20>;
 						gpio-controller;
 						#gpio-cells = <2>;
 //						interrupt-parent = <&gpio0>;
