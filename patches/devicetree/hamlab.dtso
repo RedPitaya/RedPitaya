@@ -153,22 +153,22 @@
 				};
 				hamlab_o1gen {
 					label = "HAMLAB_o1gen";
-					gpios = <&hamlab_extension_gpio_expander 7 0>;
+					gpios = <&hamlab_extension_gpio_expander 6 0>;
 					default-state = "off";
 				};				
 				hamlab_o1sdr {
 					label = "HAMLAB_o1sdr";
-					gpios = <&hamlab_extension_gpio_expander 6 0>;
+					gpios = <&hamlab_extension_gpio_expander 7 0>;
 					default-state = "off";
 				};
 				hamlab_o2gen {
 					label = "HAMLAB_o2gen";
-					gpios = <&hamlab_extension_gpio_expander 8 0>;
+					gpios = <&hamlab_extension_gpio_expander 9 0>;
 					default-state = "off";
 				};				
 				hamlab_o2sdr {
 					label = "HAMLAB_o2sdr";
-					gpios = <&hamlab_extension_gpio_expander 9 0>;
+					gpios = <&hamlab_extension_gpio_expander 8 0>;
 					default-state = "off";
 				};
 			};
