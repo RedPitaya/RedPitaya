@@ -15,32 +15,6 @@
 //reg 6 7 configuration 1===in 0===out write
 //
 
-//0x20__________p02_____p03_____p16_____p17_____p06_____p07_____p13_____p12_____p04_____p05_____p14_____p15____
-//		so1p	so1s	so2p	so2s	acdc1p	acdc1s  acdc2s	acdc2p	att1p	att1s	att2p	att2s
-//_____________________________________________________________________________________________________________
-//sdr mode		y		y	
-//_____________________________________________________________________________________________________________
-//instrument	y		y		
-//_____________________________________________________________________________________________________________
-//hv ch1									y
-//_____________________________________________________________________________________________________________
-//hv ch2											y
-//____________________________________________________________________________________________________________
-//lv ch1										y
-//_____________________________________________________________________________________________________________
-//lv ch2												y
-//_____________________________________________________________________________________________________________
-//ac ch1					y
-//_____________________________________________________________________________________________________________
-//ac ch2							y
-//_____________________________________________________________________________________________________________
-//dc ch1						y
-//_____________________________________________________________________________________________________________
-//dc ch2								y
-//_____________________________________________________________________________________________________________
-
-
-
 uint8_t data[]={0,0};
 int addr = 0x20;
 
@@ -106,7 +80,7 @@ static void parse_opts(int argc, char *argv[])
 		//t=atoi(optarg);
 		switch (c) {
 
-			case 's'://sdr
+			case 'i'://instruments
 			//so1p
 				i2c_smbus_write_byte_data(file, 2, 4);
 				usleep(6000);
@@ -117,7 +91,7 @@ static void parse_opts(int argc, char *argv[])
 				i2c_smbus_write_byte_data(file, 3, 0);
 
 			break;
-			case 'i'://instruments
+			case 's'://sdr
 			//so1s
 				i2c_smbus_write_byte_data(file, 2, 8);
 				usleep(6000);
@@ -128,29 +102,27 @@ static void parse_opts(int argc, char *argv[])
 				i2c_smbus_write_byte_data(file, 3, 0);
 			break;
 			case '1':
-				//AC:	 O.7=1 acdc1s
+				//dc
 				t=atoi(optarg);
-				if(t==0){
-					
+				if(t==1){
 					i2c_smbus_write_byte_data(file, 2, 0x80);
 					usleep(6000);
 					i2c_smbus_write_byte_data(file, 2, 0);
-					
 				}
-				//DC:	 O.6=1 acdc1p
-				else if(t==1){
+				//ac
+				else if(t==0){
 					i2c_smbus_write_byte_data(file, 2, 0x40);
 					usleep(6000);
 					i2c_smbus_write_byte_data(file, 2, 0);
 
 				}
-				//LV:	0.4=1 att1p
+				//LV
 				else if(t==2){
 					i2c_smbus_write_byte_data(file, 2, 0x10);
 					usleep(6000);
 					i2c_smbus_write_byte_data(file, 2, 0);
 				}
-				//HV:	 O.5=1 att1s
+				//HV
 				else if(t==3){
 					i2c_smbus_write_byte_data(file, 2, 0x20);
 					usleep(6000);
@@ -162,31 +134,27 @@ static void parse_opts(int argc, char *argv[])
 			break;
 			case '2':
 				t=atoi(optarg);
-				//AC:
-				//	O1.2=1 acdc2p
-				if(t==0){
+				//dc
+				if(t==1){
 					i2c_smbus_write_byte_data(file, 3, 4);
 					usleep(6000);
 					i2c_smbus_write_byte_data(file, 3, 0);
 				}
-				//DC:
-				//	1.3=1 acdc2s
-				else if(t==1){
+				//ac
+				else if(t==0){
 					i2c_smbus_write_byte_data(file, 3, 8);
 					usleep(6000);
 					i2c_smbus_write_byte_data(file, 3, 0);
 
 				}
-				//LV: 
-				//	1.4=1 att2p
+				//LV
 				else if(t==2){
 
 					i2c_smbus_write_byte_data(file, 3, 0x10);
 					usleep(6000);
 					i2c_smbus_write_byte_data(file, 3, 0);
 				}
-				//HV:	
-				//	1.5=1 att2s
+				//HV
 				else if(t==3){
 					i2c_smbus_write_byte_data(file, 3, 0x20);
 					usleep(6000);
