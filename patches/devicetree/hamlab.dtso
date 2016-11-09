@@ -27,7 +27,7 @@
 				#size-cells = <0>;
 				reg = <0x70>;
 				status="okay";
-				i2c@0 {
+				hamlab_sdr: i2c@0 {
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <0>;
@@ -57,7 +57,7 @@
 					#size-cells = <0>;
 					reg = <5>;
 				};
-				i2c@6 {
+				hamlab_rf: i2c@6 {
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <6>;
@@ -171,6 +171,16 @@
 					gpios = <&hamlab_extension_gpio_expander 8 0>;
 					default-state = "off";
 				};
+			};
+		};
+	};
+
+	fragment@5 {
+		target = "&hamlab_rf";
+		__overlay__ {
+			hamlab_eeprom eep@51 {
+				compatible = "24c64";
+				reg = <0x51>;
 			};
 		};
 	};

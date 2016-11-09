@@ -51,4 +51,36 @@ and running "systemctl enable hamlab.service"
 
 
 
+# debugging I2C devices
+
+## Extension Board
+
+```
+$ # PCA9547 (I2C mux)
+$ i2cdump -y -f              0 0x70
+$ # PCA9557 (ID)
+$ i2cdump -y -f -r 0x00-0x03 0 0x1f
+$ # PCA9535 (GPIO expander)
+$ i2cdump -y -f -r 0x00-0x07 8 0x20
+```
+
+## RF Board
+
+```
+$ # PCA9557 (ID)
+$ i2cdump -y -f -r 0x00-0x03 7 0x1a
+$ # PCA9535 (GPIO expander)
+$ i2cdump -y -f -r 0x00-0x07 7 0x20
+$ # 24LC64FT
+$ i2cdump -y -f              7 0x51
+```
+
+## SDR Board
+
+```
+$ # PCA9557 (ID)
+$ i2cdump -y -f -r 0x00-0x03 1 0x18
+$ # PCA9555 (GPIO expander)
+$ i2cdump -y -f -r 0x00-0x07 1 0x20
+```
 
