@@ -154,16 +154,25 @@
                                 <option value="#wlan0_ap_mode">Access Point Mode</option>
                             </select>
                             <!-- WLAN ACCESS POINT SETTINGS -->
-                            <div id="wlan0_ap_mode" class="wlan0_entries" style="display: none;">
-                                <div id="eth0_inputs_labels" class="status_labels">
-                                    <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
-                                    <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
+                            <div id="wlan0_ap_mode" class="wlan0_entries" style="display: none; padding-top: 25px">
+
+                                <div id="essid_check_len" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>
+                                <div id="eth0_inputs_labels" class="status_labels">                
+                                    <div style="font-size: 15pt;">ESSID:</div>  
                                 </div>
                                 <div id="eth0_inputs_entry" class="status_entry">
-                                    <div style="padding-top: 6px;">
+                                    <div>
                                         <input id="essid_input" type="text" class="form-control inputs">
                                     </div>
-                                    <div style="padding-top: 6px;">
+                                </div>
+
+                                <div id="pass_check_len" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
+                                <div id="pass_check_sym" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
+                                <div id="eth0_inputs_labels" class="status_labels">                
+                                    <div style="font-size: 15pt;">Password:</div>
+                                </div>
+                                <div id="eth0_inputs_entry" class="status_entry">          
+                                    <div>
                                         <input id="password_input" type="password" class="form-control inputs">
                                     </div>
                                 </div>
@@ -180,7 +189,7 @@
                                 <div id="separator_or">
                                     OR
                                 </div>
-                                <div>
+                                <div style="display: block; padding-top: 25px">
                                     <div id="eth0_inputs_labels" class="status_labels">
                                         <div style="font-size: 15pt; padding-top: 10px;">ESSID:</div>
                                         <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
