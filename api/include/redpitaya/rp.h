@@ -788,7 +788,7 @@ int rp_AcqGetPreTriggerCounter(uint32_t* value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerLevel(float voltage);
+int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage);
 
 /**
  * Gets currently set trigger threshold value in volts

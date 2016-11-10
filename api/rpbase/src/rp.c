@@ -611,9 +611,9 @@ int rp_AcqGetTriggerLevel(float* voltage)
     return acq_GetTriggerLevel(voltage);
 }
 
-int rp_AcqSetTriggerLevel(float voltage)
+int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage)
 {
-    return acq_SetTriggerLevel(voltage);
+    return acq_SetTriggerLevel(channel, voltage);
 }
 
 int rp_AcqGetTriggerHyst(float* voltage)

@@ -560,10 +560,9 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
     return osc_GetWritePointerAtTrig(pos);
 }
 
-int acq_SetTriggerLevel(float voltage)
+int acq_SetTriggerLevel(rp_channel_t channel, float voltage)
 {
-    ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
-    ECHECK(acq_SetChannelThreshold(RP_CH_2, voltage));
+    ECHECK(acq_SetChannelThreshold(channel, voltage));
     return RP_OK;
 }
 
