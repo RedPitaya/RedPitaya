@@ -60,6 +60,9 @@ apt-get -y install zip
 # debug tools
 apt-get -y install gdb cgdb libcunit1-ncurses-dev
 
+# miscelaneous tools
+apt-get -y install bc
+
 EOF_CHROOT
 
 # profile for PATH variables, ...

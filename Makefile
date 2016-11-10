@@ -91,7 +91,7 @@ SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 
 WEBSOCKETPP_TAG = 0.7.0
 LUANGINX_TAG    = v0.10.6
-NGINX_TAG       = 1.10.1
+NGINX_TAG       = 1.11.4
 SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz

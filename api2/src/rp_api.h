@@ -337,6 +337,8 @@ typedef enum rpTriggerSource {
     RP_SIGGEN_TRIGGER_RAW // reserved
 } RP_SIGGEN_TRIG_SOURCE;
 
+RP_STATUS rp_SetPolarity(uint32_t reg);
+
 RP_STATUS rp_DigSigGenOuput(bool enable);
 
 RP_STATUS rp_SigGenSoftwareControl(int16_t state);

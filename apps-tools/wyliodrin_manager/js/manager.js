@@ -8,6 +8,33 @@
  */
 
 (function(VPS, $, undefined) {
+
+    VPS.UpdateServerStatus = function(status){
+        $('#label-is-runnung').hide();
+        $('#label-is-stopped-nl').hide();
+        $('#label-is-stopped').hide();
+        $('#label-is-updating').hide();
+
+        if (status == "running"){
+        	$('#VPS_RUN').hide();
+            $('#VPS_STOP').css('display', 'inline-block');
+            $('#label-is-runnung').show();
+        }
+        else if (status == "no-license"){
+        	$('#VPS_STOP').hide();
+            $('#VPS_RUN').css('display', 'inline-block');
+            $('#label-is-stopped-nl').show();
+        }
+        else if (status == "stopped"){
+        	$('#VPS_STOP').hide();
+            $('#VPS_RUN').css('display', 'inline-block');
+            $('#label-is-stopped').show();
+        }
+        else if (status == "updating"){
+            $('#label-is-updating').show();
+        }
+    }
+
     VPS.CheckServerStatus = function() {
         $.ajax({
                 url: '/get_wyliodrin_status',
@@ -15,16 +42,11 @@
                 timeout: 1500
             })
             .fail(function(msg) {
-                if (msg.responseText.split('\n')[1] == "active") {
-                    $('#VPS_RUN').hide();
-                    $('#VPS_STOP').css('display', 'inline-block');
-                    $('#label-is-runnung').show();
-                } else {
-                    $('#VPS_STOP').hide();
-                    $('#VPS_RUN').css('display', 'inline-block');
-                    $('#label-is-runnung').hide();
+                if (msg.responseText.includes('inactive') || msg.responseText.includes('fail')) {
+                    VPS.UpdateServerStatus("stopped");
+                } else {  
+                    VPS.UpdateServerStatus("running");
                 }
-                VPS.CheckIdentificationFileStatus();
             })
     }
 
@@ -39,18 +61,18 @@
                     var username = msg.responseText.split('\n')[0].match("([A-Za-z])[^\"]*(?=@)")[0];
                     $('#vp-identification-fail').hide();
                     $('#vp-missing').hide();
-                    $('#label-is-not-runnung').hide();
                     $('#vp-identification-success').show();
                     $('#vp-present').show();
                     $('#vp-username').text(username);
+                    VPS.CheckServerStatus();
                 } else {
                     $('#vp-identification-success').hide();
-                    $('#vp-present').hide();
-                    $('#vp-identification-fail').show();
+                    $('#vp-present').hide();       
                     $('#vp-missing').show();
-                    $('#label-is-not-runnung').show();
+                    $('#vp-identification-fail').show();
+                    VPS.UpdateServerStatus("no-license");
                     VPS.StopServer();
-                }
+                } 
             })
     }
 
@@ -77,10 +99,19 @@
     }
 }(window.VPS = window.VPS || {}, jQuery));
 
+
+
+
 // Page onload event handler
 $(function() {
-    VPS.CheckServerStatus();
-    setInterval(VPS.CheckServerStatus, 3000);
+
+    // Init help
+    Help.init(helpListVP);
+    Help.setState("idle");
+
+    VPS.UpdateServerStatus("updating");
+    VPS.CheckIdentificationFileStatus();
+    setInterval(VPS.CheckIdentificationFileStatus, 3000);
 
     $('#VPS_RUN').click(VPS.StartServer);
 
@@ -95,7 +126,7 @@ $(function() {
     });
 
     $('#vp-upload-button').click(function() {
-
+        VPS.UpdateServerStatus("updating");
         var formData = new FormData($('#vp-upload-form')[0]);
         $.ajax({
             url: '/upload_wyliodrin_file',
@@ -106,7 +137,7 @@ $(function() {
             cache: false,
             contentType: false,
             processData: false
-        });
+        }); 
     });
     
 });

@@ -250,6 +250,11 @@ RP_STATUS rp_SoftwareTrigger(void){
 	}
 }
 
+RP_STATUS rp_SetPolarity(uint32_t reg)
+{
+	return rp_LaAcqSetPolarity(&la_acq_handle, reg);
+}
+
 RP_STATUS rp_IsAcquistionComplete(void){
     int i=0;
     while(i<3){
