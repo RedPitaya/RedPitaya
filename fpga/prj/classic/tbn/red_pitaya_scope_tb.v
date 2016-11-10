@@ -38,7 +38,6 @@ reg              sys_clk         ;
 reg              sys_rstn        ;
 wire  [ 32-1: 0] sys_addr        ;
 wire  [ 32-1: 0] sys_wdata       ;
-wire  [  4-1: 0] sys_sel         ;
 wire             sys_wen         ;
 wire             sys_ren         ;
 wire  [ 32-1: 0] sys_rdata       ;
@@ -51,7 +50,6 @@ sys_bus_model i_bus
   .sys_rstn_i     (  sys_rstn     ),
   .sys_addr_o     (  sys_addr     ),
   .sys_wdata_o    (  sys_wdata    ),
-  .sys_sel_o      (  sys_sel      ),
   .sys_wen_o      (  sys_wen      ),
   .sys_ren_o      (  sys_ren      ),
   .sys_rdata_i    (  sys_rdata    ),
@@ -100,7 +98,6 @@ red_pitaya_scope i_scope
   .sys_rstn_i      (  sys_rstn      ),  // reset - active low
   .sys_addr_i      (  sys_addr      ),  // address
   .sys_wdata_i     (  sys_wdata     ),  // write data
-  .sys_sel_i       (  sys_sel       ),  // write byte select
   .sys_wen_i       (  sys_wen       ),  // write enable
   .sys_ren_i       (  sys_ren       ),  // read enable
   .sys_rdata_o     (  sys_rdata     ),  // read data
