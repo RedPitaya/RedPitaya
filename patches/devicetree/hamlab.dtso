@@ -178,7 +178,7 @@
 	fragment@5 {
 		target = <&hamlab_rf>;
 		__overlay__ {
-			hamlab_eeprom eep@51 {
+			hamlab_eeprom : eep@51 {
 				compatible = "24c64";
 				reg = <0x51>;
 			};
