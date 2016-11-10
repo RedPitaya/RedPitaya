@@ -1,35 +1,10 @@
-.. Red Pitaya documentation
+Welcome to the Red Pitaya documentation.
+########################################
 
 .. toctree::
-   :maxdepth: 4
-   :numbered:
-   :caption: Quick start
-
-   doc/quick-start
-
-.. toctree::
-   :maxdepth: 4
-   :numbered:
-   :caption: User Guide
-
-   doc/user
-
-.. toctree::
-   :maxdepth: 4
-   :numbered:
-   :caption: Developer Guide
-
-   doc/developer
-   doc/hardware
-   doc/software
-   doc/network
-   doc/logic
-   fpga/fpga
-
-==================
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    :maxdepth: 5
+    :numbered:
+    
+    ./doc/quickStart/quickStart.rst
+    ./doc/appsFeatures/appsTop.rst
+    ./doc/developerGuide/devGuideTop.rst
