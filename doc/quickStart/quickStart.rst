@@ -9,7 +9,7 @@ Quick start
    first
    unlock
    connect
-   newSD
+   SDcard
    examles
 
 `Troubleshooting <http://wiki.redpitaya.com/index.php?title=Troubleshooting>`_ 
