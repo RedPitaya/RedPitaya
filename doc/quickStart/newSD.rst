@@ -1,5 +1,6 @@
+###############
 Prepare SD card
-################
+###############
 
 1. Download the Red Pitaya Image File
     
@@ -15,29 +16,30 @@ Prepare SD card
 
 3. Select your operating system and follow the instructions:  
 
+*******
 Windows
 *******
 
 
     1. Insert SD card into your PC or SD card reader.
     
-    .. image:: 1.jpg
+    .. image:: SDcard_Win_insert.jpg
     
-    2. Download Win32 Disk Imager to your Desktop and unzip it.
+    2. Download `Win32 Disk Imager <https://sourceforge.net/projects/win32diskimager/>`_ and extract it.
     
-    .. image:: 2.png
+    .. image:: SDcard_Win_Win32DiskImager.png
     
-    3. Open unzipped folder, right-click on the WinDisk32Imager, and select 'Run as Administrator'.
+    3. Open unzipped folder, right-click on the ``WinDisk32Imager``, and select **Run as Administrator**.
     
-    .. image:: 3.png
+    .. image:: SDcard_Win_RunAsAdmin.png
     
     4. Under image file box select unzipped Red Pitaya image file.
     
-    .. image:: 4.png
+    .. image:: SDcard_Win_SelectImg.png
     
     5. Under device box select the drive letter of the SD card.
     
-    .. image:: 5.png
+    .. image:: SDcard_Win_SelectDrive.png
     
     .. note::
     
@@ -45,16 +47,17 @@ Windows
         computer's hard disk! You can easily see the drive letter (for example E:) by looking in the left column 
         of Windows Explorer.
     
-    .. image:: 5_2.png
+    .. image:: SDcard_Win_DriveLetter.png
     
     6. Click Write and wait for the write to complete.
     
-    .. image:: 6.png
+    .. image:: SDcard_Win_Write.png
     
     7.  Exit the Imager.
     
-    .. image:: 7.png
-    
+    .. image:: SDcard_Win_Exit.png
+
+*****
 Linux
 *****
 
