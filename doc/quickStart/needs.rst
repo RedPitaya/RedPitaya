@@ -8,6 +8,11 @@ in each STEM kits available from our `WEB store <http://redpitaya.com/#products>
    * 4GB (up to 32GB) Class 10 micro SD card with pre-loaded Red Pitaya OS,
    * Ethernet cable.
 
+Additional Required Items not supplied with the STEM kits:
+
+   * computer with internet browser (Chrome browser recommended),
+   * router with DHCP server enabled and access to the internet.
+
 .. note::
 
    Red Pitaya should not be powered from a power supply that is <2A
@@ -15,11 +20,6 @@ in each STEM kits available from our `WEB store <http://redpitaya.com/#products>
    causing re-boots and network disconnections.
    Same problem might appear if Red Pitaya is powered directly from USB on a PC or HUB
    that cannot provide enough power or when using bad powering cable.
-
-Additional Required Items not supplied with the STEM kits:
-
-   * computer with internet browser (Chrome browser recommended),
-   * router with DHCP server enabled and access to the internet.
 
 .. note::
 
