@@ -234,14 +234,21 @@ int main(int argc, char **argv)
     // Get MAC_WIFI
     res = 0;
     sprintf(string_buffer, "00:00:00:00:00:00");
-    res = GetMACAddressLinux("/sys/class/net/wlan0/address", string_buffer);
+    res = GetMACAddressLinux("/sys/class/net/wlan0wext/address", string_buffer);
     if(!res)
         vMAC_WIFI = string_buffer;
+    else
+    {
+        sprintf(string_buffer, "00:00:00:00:00:00");
+        res = GetMACAddressLinux("/sys/class/net/wlan0/address", string_buffer);
+        if(!res)
+            vMAC_WIFI = string_buffer;
+    }
 
 
 	// Get LAN IP
     struct ifaddrs* ifAddrStruct = 0;
-    void* tmp_ptr = 0;      
+    void* tmp_ptr = 0;
     getifaddrs(&ifAddrStruct);
 
     std::stringstream whole_struct;
@@ -257,12 +264,12 @@ int main(int argc, char **argv)
             if (ifa->ifa_addr->sa_family == AF_INET) {
 				if (!strcmp(ifa->ifa_name, "eth0") && addr_buf[1] != '6') // exclude 169...
 					vIP_LAN = addr_buf;
-				if(!strcmp(ifa->ifa_name, "wlan0wext"))
+				if(!strcmp(ifa->ifa_name, "wlan0wext") || !strcmp(ifa->ifa_name, "wlan0"))
 					vIP_WIFI = addr_buf;
 			}
 		// }
     }
-    if (ifAddrStruct) 
+    if (ifAddrStruct)
         freeifaddrs(ifAddrStruct);
 
     vOS_VER = GetOSVersion("/opt/redpitaya/www/apps/info/info.json");
