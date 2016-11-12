@@ -19,8 +19,8 @@ This instructions are based on similar instructions for `Raspberry Pi <https://w
 3. Select your operating system and follow the instructions:
 
    * :ref:`Windows <windows>` (GUI),
-   * :ref:`Linux <linux>` (`GUI <linux-gui>`/`CLI <linux-cli>`),
-   * :ref:`macOS <macos>` (`GUI <macos-gui>`/`CLI <macos-cli>`).
+   * :ref:`Linux <linux>` (:ref:`GUI <linux_gui>`/:ref:`CLI <linux_cli>`),
+   * :ref:`macOS <macos>` (:ref:`GUI <macos_gui>`/:ref:`CLI <macos_cli>`).
 
 4. Insert SD card into Red Pitaya
 
@@ -76,13 +76,13 @@ Windows
 Linux
 *****
 
-.. _linux-gui:
+.. _linux_gui:
 
 =========================
 Ubuntu using Image Writer
 =========================
 
-.. _linux-cli:
+.. _linux_cli:
 
 ============
 Command line
@@ -135,7 +135,7 @@ Command line
 macOS
 *****
 
-.. _macos-gui:
+.. _macos_gui:
 
 ===================
 Using ApplePi-Baker
@@ -177,7 +177,7 @@ Using ApplePi-Baker
 
 .. image:: 9.png
 
-.. _macos-cli:
+.. _macos_cli:
 
 ************
 Command line
