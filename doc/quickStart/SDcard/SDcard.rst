@@ -2,27 +2,36 @@
 Prepare SD card
 ###############
 
-This instructions are based on similar instructions for `Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
-
-1. Download the `Red Pitaya Image File <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_
+1. Download the `Red Pitaya SD card image <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_.
 
    http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
     
    .. image:: microSDcard-RP.png
       :width: 10%
-   
+
+   .. note::
+
+      You can find older Red Pitaya OS images and Ecosystem zipfiles
+      on our `download server <http://downloads.redpitaya.com/downloads/>`_.
+
+      http://downloads.redpitaya.com/downloads/
+
+   TODO: should the next two lines be removed?
    - FAQ: `Where can I find more about Red Pitaya OS releases? <http://blog.redpitaya.com/faq-page/#Software|32740>`_
    - FAQ: `Where can I find old Red Pitaya OS & application relases? <http://blog.redpitaya.com/faq-page/#Software|25467>`_
     
-2. Unzip
+2. Unzip the SD card image.
 
-3. Select your operating system and follow the instructions:
+3. Write the image onto a SD card. Instructions are available for various operating systems:
 
    * :ref:`Windows <windows>` (GUI),
    * :ref:`Linux <linux>` (:ref:`GUI <linux_gui>`/:ref:`CLI <linux_cli>`),
    * :ref:`macOS <macos>` (:ref:`GUI <macos_gui>`/:ref:`CLI <macos_cli>`).
 
-4. Insert SD card into Red Pitaya
+   This instructions are based on similar instructions for
+   `Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
+
+4. Insert the SD card into Red Pitaya.
 
    .. image:: pitaya-quick-start-insert-sd-card.png
 
@@ -81,6 +90,16 @@ Linux
 =========================
 Ubuntu using Image Writer
 =========================
+
+1. Right click on the extracted SD card image and select **Open With > Disk Image Writer**.
+
+2. In the **Restore Disk Image** window select your SD card in the **Destination** pull down menu.
+   Be carefull to select the correct device, use the size for orientation (for example 4GB SD card).
+
+3. You will be asked to confirm your choice and enter a password.
+   Additiona dialog windows will again show the selected destination drive,
+   take the oportunity to think again if you choose the right device.
+
 
 .. _linux_cli:
 
@@ -147,40 +166,40 @@ Using ApplePi-Baker
 
 2. Download `ApplePi-Baker <http://www.tweaking4all.com/software/macosx-software/macosx-apple-pi-baker/>`_ and extract it.
 
-.. image:: DScard_macOS_ApplePi-Baker.png
+.. image:: SDcard_macOS_ApplePi-Baker.png
 
 3. Press **crtl** key and click on *ApplePi-Baker* icon, then click *Open* in order to run it.
 
-.. image:: DScard_macOS_open.png
+.. image:: SDcard_macOS_open.png
 
 4. Enter your admin password and click OK.
 
-.. image:: DScard_macOS_password.png
+.. image:: SDcard_macOS_password.png
 
 5. Select SD card drive. This can be recognized by the size of the card that is 4GB.
 
-.. image:: 52.png
+.. image:: SDcard_macOS_ApplePi-Baker_drive.png
 
 6. Select Red Pitaya OS image file.
 
-.. image:: 62.png
+.. image:: SDcard_macOS_ApplePi-Baker_image.png
 
 7. Click "Restore Backup" button in order to write image to SD card.
 
-.. image:: 71.png
+.. image:: SDcard_macOS_ApplePi-Baker_restore.png
 
 8. It's coffee time, application will show you Estimated Time for Accomplishment.
 
-.. image:: 8.png
+.. image:: SDcard_macOS_ApplePi-Baker_wait.png
 
 9. When operation is completed click "OK" and quit ApplePi-Baker.
 
-.. image:: 9.png
+.. image:: SDcard_macOS_ApplePi-Baker_quit.png
 
 .. _macos_cli:
 
-************
+============
 Command line
-************
+============
 
 FAQ: `How to install Red Pitaya OS on MAC not using ApplePiBaker? <http://blog.redpitaya.com/faq-page/#QuickStart|23547>`_
