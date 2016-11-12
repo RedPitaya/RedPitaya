@@ -4,12 +4,12 @@ Prepare SD card
 
 This instructions are based on similar instructions for `Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
 
-1. Download the Red Pitaya Image File
+1. Download the `Red Pitaya Image File <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_
+
+   http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
     
    .. image:: microSDcard-RP.png
       :width: 10%
-   
-   `Download <http://blog.redpitaya.com/quick-start/Login>`_
    
    - FAQ: `Where can I find more about Red Pitaya OS releases? <http://blog.redpitaya.com/faq-page/#Software|32740>`_
    - FAQ: `Where can I find old Red Pitaya OS & application relases? <http://blog.redpitaya.com/faq-page/#Software|25467>`_
@@ -18,9 +18,9 @@ This instructions are based on similar instructions for `Raspberry Pi <https://w
 
 3. Select your operating system and follow the instructions:
 
-   * :ref:`Windows <windows>`,
-   * :ref:`Linux <linux>`,
-   * :ref:`macOS <macos>`.
+   * :ref:`Windows <windows>` (GUI),
+   * :ref:`Linux <linux>` (`GUI <linux-gui>`/`CLI <linux-cli>`),
+   * :ref:`macOS <macos>` (`GUI <macos-gui>`/`CLI <macos-cli>`).
 
 4. Insert SD card into Red Pitaya
 
@@ -76,9 +76,13 @@ Windows
 Linux
 *****
 
+.. _linux-gui:
+
 =========================
 Ubuntu using Image Writer
 =========================
+
+.. _linux-cli:
 
 ============
 Command line
@@ -124,9 +128,14 @@ Command line
 
 6. Wait until the process has finished.
 
+
+.. _macos:
+
 *****
 macOS
 *****
+
+.. _macos-gui:
 
 ===================
 Using ApplePi-Baker
@@ -167,6 +176,8 @@ Using ApplePi-Baker
 9. When operation is completed click "OK" and quit ApplePi-Baker.
 
 .. image:: 9.png
+
+.. _macos-cli:
 
 ************
 Command line
