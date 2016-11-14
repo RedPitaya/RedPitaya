@@ -1,3 +1,4 @@
+#########################
 Applications and Features
 #########################
 
@@ -10,6 +11,8 @@ Applications and Features
     :numbered:
     
     apps
+    bazaar
     newtworkManager
+    examples/examples
     visProg
     remCon
