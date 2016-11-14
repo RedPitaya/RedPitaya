@@ -4,6 +4,7 @@ Connect to your Red Pitaya
 
 .. TODO preveri slovnico
 
+*******************************
 Network connectivity user guide
 *******************************
 
@@ -14,16 +15,16 @@ on simple connectivity and quick accessibility.
 Having a graphical user interface for your Oscilloscope,
 Signal Generator, LCR meter and other Red Pitaya applications,
 directly on your PC without any limitations such are limited
-commands or controls or any installation of additional 
-software will provide you with a unique working experience. 
-  
+commands or controls or any installation of additional
+software will provide you with a unique working experience.
+
 Red Pitaya STEMLab boards can be connected over:
 
-1. Local Area Network (LAN) – Requires DHCP settings on your local network rout  
+1. Local Area Network (LAN) – Requires a DHCP server on your LAN router
 4. Direct Ethernet cable connection – Requires additional setting on users PC and STEMLab board
-2. Wireless Network – Requires an additional WiFi dongle available at Red Pitaya store
+2. Wireless Network client – Requires an additional WiFi dongle available at Red Pitaya store
 3. Access Point Mode – STEMLab board creates its own WiFi network
-    
+
 .. image:: connect-1.png
 
 *****
@@ -31,16 +32,18 @@ Wired
 *****
 
 ========================
-Local Area Network (LAN)  
+Local Area Network (LAN)
 ========================
 
-This is the most common and recommended way of connecting and using your Red Pitaya STEMLab boards. Your LAN network 
-needs to have DHCP settings enabled which is the case in majority of the local networks,  whit this,  simple “plug and
-play”  approach is enabled. Having STEMLab board connected the local network will enable quick access to all Red 
-Pitaya applications using only your web browser. Simply follow this 3 simple steps:
+This is the most common and recommended way of connecting and using your Red Pitaya STEMLab boards.
+Your LAN network needs to have DHCP settings enabled which is the case in majority of the local networks,
+with this, simple *plug and play* approach is enabled.
+Having STEMLab board connected the local network will enable quick access
+to all Red Pitaya applications using only your web browser.
+Simply follow this 3 simple steps:
 
 1. Connect power supply to the Red Pitaya STEMlab board
-2. Connect STEMlab board to the router or direc to the PC ethernet socket
+2. Connect STEMlab board to the router or direc to the PC Ethernet socket
 3. Open your web browser and in the URL filed type:   ``rp-xxxxxx.local/``
        
 .. note::
@@ -62,9 +65,10 @@ After the **third step** you will get a Red Pitaya STEMlab main page as shown be
 Direct Ethernet cable connection
 ================================
 
-If there are some restrictions for the user to have STEMlab boards on the DHCP LAN network **permanently** there is a 
-possibility to directly connect to your STEMLab board. This type of connection requires additional settings on your PC
-and STEMLab board. 
+If there are some restrictions for the user to have STEMlab boards
+on the DHCP LAN network **permanently** there is
+a possibility to directly connect to your STEMLab board.
+This type of connection requires additional settings on your PC and STEMLab board. 
 
 .. note::
 
@@ -77,24 +81,25 @@ How to set direct Ethernet connection is described bellow.
 
 First step in connecting STEMlab board directly to LAN network and setting a static IP on it. 
 
-1. Use recommended connection described in **Local Area Network (LAN)** section. Once you are successfully 
-   connected to your STEMlab board, open Network Manager and  chose “Static” option. Input the static IP, default
-   getaway and DNS. Click “Apply”. **Fields Gateway and DNS can be left empty.**
+1. Use recommended connection described in **Local Area Network (LAN)** section.
+   Once you are successfully connected to your STEMlab board,
+   open Network Manager and chose ``Static`` option.
+   Input the static IP and click **Apply**.
 
    .. image:: connect-11.png
 
-2. Second step is to set a network setting on the PC
+2. Second step is to set a network setting on the PC.
    Here we give an example on the Ubuntu 14.04 but it is very similar on the other OS also.
-   To set a direct connection with your PC  follow next steps:
+   To set a direct connection with your PC follow next steps:
     
    1. Open network manager on your PC
    2. Add new Ethernet connection
-      **(There is no need to create new network since you can set static IP settings on the existing network and
-      skip all steps up to step 5.)**
+      **(There is no need to create new network since you can set
+      static IP settings on the existing network and skip all steps up to step 5.)**
 
    .. image:: connect-12.png
 
-3. Select “Ethernet” connection and press “Create” button
+3. Select **Ethernet** connection and press **Create** button
 
    .. image:: connect-13.png
 
@@ -102,19 +107,21 @@ First step in connecting STEMlab board directly to LAN network and setting a sta
 
    .. image:: connect-14.png
 
-5. Select “Method – Manual”, Press “Add” button and insert:
+5. Select **Method – Manual**, Press **Add** button and insert:
 
-   - static IP address of your PC (must be different from the IP address of  the STEMlab board),  
+   - static IP address of your PC (must be different from the IP address of the STEMlab board),  
    - Netmask (input: 255.255.255.0)
    - Getaway (can be left empty)
-   - DNS servers  (can be left empty) and click **Save** button.
+   - DNS servers (can be left empty) and click **Save** button.
 
    .. image:: connect-15.png 
 
 .. note::
 
-    Once you have this settings arranged, connect Ethernet cable between your STEMlab board and  PC, open web
-    browser, in the web browser URL field input chosen STEMlab board static IP (in our example it is 192.168.0.15) 
+    Once you have this settings arranged,
+    connect Ethernet cable between your STEMlab board and PC,
+    open web browser, in the web browser URL field input
+    chosen STEMlab board static IP (in our example ``192.168.0.15``)
     and press enter.
 
 .. image:: connect-16.png 
@@ -160,14 +167,19 @@ Wireless
 Wireless Network Connection
 ===========================
 
-This type of the connection will enable wireless connection to the Red Pitaya STEMLab board via your local WiFi 
-network. In order to connect your STEMLab board to the same WiFi network on which you have connected your PC/Laptop 
-first you need to use LAN connection.  Access your STEMLab board via web browser and start Network Manager
-application. Trough this application all network settings of the STEMLab board are manageable. Simply select the
-desired WiFi network, input password and select connect. Once you have arranged WiFi network you don't need LAN
-connection anymore and after the restart of the STEMLab board it will connect to the preset WiFi network
-automatically.  Notice: Connecting the STEMLab via WiFi network the additional WiFi dongle is needed. WiFi dongle is
-available here [Link to RS or similar].    
+This type of the connection will enable wireless connection
+to the Red Pitaya STEMLab board via your local WiFi network.
+In order to connect your STEMLab board to the same WiFi network
+on which you have connected your PC/Laptop first you need to use LAN connection.
+Access your STEMLab board via web browser and start Network Manager application.
+Trough this application all network settings of the STEMLab board are manageable.
+Simply select the desired WiFi network, input password and select connect.
+Once you have arranged WiFi network you don't need LAN connection anymore and
+after the restart of the STEMLab board it will connect to the preset WiFi network automatically.
+
+.. note::
+   Connecting the STEMLab via WiFi network the additional WiFi dongle is needed.
+   WiFi dongle is available here [Link to RS or similar].    
 
 .. image:: connect-4.png
 
@@ -178,7 +190,8 @@ Steps on how to connect your STEMlab board over WiFi network are described bello
 1. Start your STEMlab web user interface (Use connection described **Local Area Network (LAN) connection**)
 2. Open Network Manager application
 3. Insert WiFi dongle in the USB plug on the STEMlab board.
-   Supported WiFi dongles are described here [ `FAQ <http://redpitaya.com/faq/>`_ ]
+   Recommended WIFI USB dongle is Edimax EW7811Un.
+   In general all WIFI USB dongles that use RTL8188CUS chipset should work.
     
     .. image:: connect-5.png
 
@@ -187,14 +200,18 @@ Steps on how to connect your STEMlab board over WiFi network are described bello
 
    .. image:: connect-6.png
 
-6. When your STEMlab board is connected  the IP address will be shown on the user interface. This IP address is 
-   only for WiFi connection. You can check the connection by inputing a WiFi IP address in the web browser URL 
-   field (press enter after inputing). 
+6. When your STEMlab board is connected
+   the IP address will be shown on the user interface.
+   This IP address is only for WiFi connection.
+   You can check the connection by inputting a WiFi IP address
+   in the web browser URL field (press enter after inputting). 
    
    .. image:: connect-7.png   
 
-Now you have WiFi connection established. If you restart STEMlab board it will connect to selected network 
-automatically (if selected network is available). Also you can disconnect LAN connection and your board will be 
+Now you have WiFi connection established.
+If you restart STEMlab board it will connect to selected network 
+automatically (if selected network is available).
+Also you can disconnect LAN connection and your board will be 
 still available over the WiFi network i.e WiFi IP address.
     
 .. note::
@@ -205,19 +222,23 @@ still available over the WiFi network i.e WiFi IP address.
 Access Point mode
 =================
 
-This type of the connection is ideal if there is no LAN or WiFi network. STEMLab board will simply create its own WiFi
-network on which users PC/Laptop or Tablet can be connected. Access Point mode is arranged via Network Manager 
-application where you give the name to your STEMLab network and  enable it. Since Access Point mode is enabled via 
-Network Manager application  this means that first you need to use LAN network, access your STEMLab board and arrange
-the Access Point mode. After this there is no need for LAN network and after restarting the STEMLab the settings are
-saved.  Notice: Connecting the STEMLab via Access Point mode the additional WiFi dongle is needed. WiFi dongle is 
-available [Link to RS or similar].
+This type of the connection is ideal if there is no LAN or WiFi network.
+STEMLab board will simply create its own WiFi network on which users PC/Laptop or Tablet can be connected.
+Access Point mode is arranged via Network Manager application where you give the name to your STEMLab network and enable it.
+Since Access Point mode is enabled via Network Manager application this means that first you need to use LAN network,
+access your STEMLab board and arrange the Access Point mode.
+After this there is no need for LAN network and after restarting the STEMLab the settings are saved.
+
+.. note::
+
+   Connecting the STEMLab via Access Point mode the additional WiFi dongle is needed.
+   WiFi dongle is available [Link to RS or similar].
 
 .. image:: connect-8.png
 
 How to create Access Point network and connect to it is describe below.
 
-1. Start your STEMlab web user interface (Use connection described **Local Area Network (LAN) connection )**
+1. Start your STEMlab web user interface (Use connection described **Local Area Network (LAN) connection**)
 2. Open Network Manager application
 3. Input the name and password of the Access Point network to be created
    (Password name should be at least 8 characters long. Do not use special signs.)
