@@ -202,4 +202,38 @@ Using ApplePi-Baker
 Command line
 ============
 
-FAQ: `How to install Red Pitaya OS on MAC not using ApplePiBaker? <http://blog.redpitaya.com/faq-page/#QuickStart|23547>`_
+#. Insert SD card into your PC or SD card reader.
+
+   .. image:: SDcard_insert.jpg
+
+#. Click **cmd + space**, type **Disk Utility** into the search box and press enter.
+   From the menu select your SD card and click on **Erase** button (be careful not to delete your disk!).
+
+   .. image:: SDcard_macOS_DiskUtility.png
+
+#. Click **cmd + space**, type in **Terminal** and press enter.
+   In the terminal window type: ``cd``, press enter,
+   then type: ``cd Desktop`` and press enter again.
+
+#. Unmount the partition so that you will be allowed to overwrite the disk.
+   In Terminal type: ``diskutil list`` and press enter.
+   This will show you the list of all memory devices.
+
+   .. image:: Screen-Shot-2015-08-07-at-16.59.50.png
+
+   Unmount with: ``diskutil UnmountDisk /dev/diskn``
+   (insert the number ``n`` of your disk correctly!)
+
+   .. image:: Screen-Shot-2015-08-07-at-17.14.34.png
+
+#. Type in: ``sudo dd bs=1m if=path_of_your_image.img of=/dev/rdiskn``
+   (Remember to replace ``n`` with the number that you noted before!)
+   (notice there is letter ``r`` in front of the disk name, use that as well!)
+
+   .. image:: Screen-Shot-2015-08-07-at-17.14.45.png
+
+#. Type in your password and wait a few minutes for the image to be written.
+
+#. When the image is written, type: ``diskutil eject /dev/diskn`` and press enter.
+
+#. Safely eject the SD card.
