@@ -45,7 +45,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Red Pitaya'
+project = u'Red Pitaya STEMlab'
+title = u'Red Pitaya STEMlab Documentation'
 copyright = u'2016, Red Pitaya d.d.'
 author = u'Red Pitaya'
 
@@ -224,8 +225,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'RedPitaya.tex', u'Red Pitaya Documentation',
-     u'Red Pitaya', 'manual'),
+    (master_doc, 'RedPitaya-STEMlab.tex', title, author, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -259,8 +259,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'redpitaya', u'Red Pitaya Documentation',
-     [author], 1)
+    (master_doc, 'RedPitaya-STEMlab', title, author, 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -273,8 +272,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'RedPitaya', u'Red Pitaya Documentation',
-     author, 'RedPitaya', 'One line description of project.',
+    (master_doc, 'RedPitaya-STEMlab', title, author, 'RedPitaya', 'One line description of project.',
      'Miscellaneous'),
 ]
 
