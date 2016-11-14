@@ -12,11 +12,11 @@ LEDs and GPIOs
 
 Parameter options:
 
-   ``<dir> = {OUTP,INP}``
-   ``<gpio> = {{DIO0_P...DIO7_P}, {DIO0_N...DIO7_N}}``
-   ``<led> = {LED0...LED8}``
-   ``<pin> = {gpio, led}``
-   ``<state> = {0,1}``
+* ``<dir> = {OUTP,INP}``
+* ``<gpio> = {{DIO0_P...DIO7_P}, {DIO0_N...DIO7_N}}``
+* ``<led> = {LED0...LED8}``
+* ``<pin> = {gpio, led}``
+* ``<state> = {0,1}``
 
 .. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|
 
@@ -45,10 +45,10 @@ Analog Inputs and Outputs
 
 Parameter options:
 
-   ``<ain> = {AIN0, AIN1, AIN2, AIN3}``
-   ``<aout> = {AOUT0, AOUT1, AOUT2, AOUT3}``
-   ``<pin> = {ain, aout}``
-   ``<value> = {value in Volts}``
+* ``<ain> = {AIN0, AIN1, AIN2, AIN3}``
+* ``<aout> = {AOUT0, AOUT1, AOUT2, AOUT3}``
+* ``<pin> = {ain, aout}``
+* ``<value> = {value in Volts}``
    
 .. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|p{28mm}|
 
@@ -70,201 +70,172 @@ Parameter options:
 Signal Generator
 ================
 
-``<n> = {1,2}`` (set channel OUT1 or OUT2)
+Parameter options:
 
-.. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|p{28mm}|
+* ``<n> = {1,2}`` (set channel OUT1 or OUT2)
+* ``<state> = {ON,OFF}`` Default: ``OFF``
+* ``<frequency> = {0Hz...62.5e6Hz}`` Default: ``1000``
+* ``<func> = {SINE, SQUARE, TRIANGLE, SAWU, SAWD, PWM, ARBITRARY}`` Default: ``SINE``
+* ``<amplitude> = {-1V...1V}`` Default: ``1``
+* ``<offset> = {-1V...1V}`` Default: ``0``
+* ``<phase> = {-360deg ... 360deg}`` Default: ``0``
+* ``<dcyc> = {0%...100%}`` Default: ``50``
+* ``<array> = {value1, ...}`` max. 16k values, floats in the range -1 to 1
+* ``<burst> = {ON,OFF}`` Default: ``OFF``
+* ``<count> = {1...50000, INF}`` ``INF`` = infinity/continuous, Default: ``1``
+* ``<time> = {1us-500s}`` Value in *us*.
+* ``<trigger> = {EXT_PE, EXT_NE, INT, GATED}``
+   * ``EXT`` = External
+   * ``INT`` = Internal
+   * ``GATED`` = gated busts
 
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| SCPI                                 | OPTIONS                   | DESCRIPTION                       | API                             |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``OUTPUT<n>:STATE <par>``          | | <par>={ON,OFF}          | Disable or enable fast            | ``rp_GenOutEnable``             |
-| |                                    | |                         | analog outputs.                   | ``rp_GenOutDisable``            |
-| | Examples:                          | | Default: OFF            |                                   |                                 |
-| | OUTPUT1:STATE ON                   | |                         |                                   |                                 |
-| | OUTPUT2:STATE OFF                  | |                         |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:FREQ:FIX <value>``       | | <value>={frequency      | Set frequency of fast analog      | ``rp_GenFreq``                  |
-| |                                    | | 0Hz62.5e6Hz}            | outputs.                          |                                 |
-| | Examples:                          | |                         |                                   |                                 |
-| | SOUR1:FREQ:FIX 1000                | | Default: 1000           |                                   |                                 |
-| | SOUR2:FREQ:FIX 100000              | |                         |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:FUNC <par>``             | |  <par>={SINE, SQUARE,   | Set waveform of fast analog       | ``rp_GenWaveform``              |
-| |                                    | |  TRIANGLE, SAWU, SAWD   | outputs.                          |                                 |
-| | Examples:                          | |  PWM, ARBITRARY}        |                                   |                                 |
-| | SOUR1:FUNC SINE                    | |                         |                                   |                                 |
-| | SOUR2:FUNC TRIANGLE                | |  Default: SINE          |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:VOLT <value>``           | | <value>={amplitude 1V   | Set amplitude voltage of          | ``rp_GenAmp``                   |
-| |                                    | |  1V}                    | fast analog outputs.              |                                 |
-| | Examples:                          | |                         | Amplitude + offset value          |                                 |
-| | SOUR1:VOLT 1                       | | Default: 1              | must be less than maximum         |                                 |
-| | SOUR2:VOLT 0.5                     | |                         | output range +/ 1V                |                                 |
-| |                                    | | AMP+OFFS <= \|1\|V      |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:VOLT:OFFS <value>``      | | <value>={offset -1V     | Set offset voltage of fast        | ``rp_GenOffset``                |
-| |                                    | | -1V}                    | analog outputs. Amplitude         |                                 |
-| | Examples:                          | |                         | + offset value must be less       |                                 |
-| | SOUR1:VOLT:OFFS 0.2                | | Default: 0              | than maximum output range         |                                 |
-| | SOUR1:VOLT:OFFS 0.1                | |                         | +/ 1V                             |                                 |
-| |                                    | | AMP+OFFS <= \|1\|V      |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:PHAS <value>``           | | <value>={phase 360deg   | Set phase of fast analog          | ``rp_GenPhase``                 |
-| |                                    |    360deg}                | outputs.                          |                                 |
-| | Examples:                          | |                         |                                   |                                 |
-| | SOUR2:PHAS 30                      | | Default: 0              |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:DCYC <par>``             | | <value>={duty cycle     | Set duty cycle of PWM             | ``rp_GenDutyCycle``             |
-| |                                    |   0100}                   | waveform.                         |                                 |
-| | Examples:                          | |                         |                                   |                                 |
-| | SOUR1:DCYC 34                      | | Default: 50             |                                   |                                 |
-| | SOUR2:DCYC 50                      | |                         |                                   |                                 |
-| |                                    | | Only for PWM            |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:TRAC:DATA:DATA <array>`` | | <array>={value1,        | Import data for arbitrary         | ``rp_GenArbWaveform``           |
-| |                                    |   value2,...valueN}       | waveform generation.              |                                 |
-| | Examples:                          |   max. 16k values         |                                   |                                 |
-| | SOUR1:TRAC:DATA:DATA               | |                         |                                   |                                 |
-| | 1,0.5,0.2                          | | Values are floats in    |                                   |                                 |
-| |                                    |   range from -1 to 1.     |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:BURS:STAT <par>``        | | <par>={ON,OFF}          | Enable or disable                 | ``rp_GenMode``                  |
-| |                                    | |                         | burst (pulse) mode.               |                                 |
-| | Examples:                          | | Default: OFF            | Red Pitaya will generate          |                                 |
-| | SOUR1:BURS:STAT ON                 | |                         | Rtimes N periods of signal        |                                 |
-| | SOUR1:BURS:STAT OFF                | |                         | and then stop. Time               |                                 |
-| |                                    | |                         | between is P.                     |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:BURS:NCYC <value>``      | | <value>={burst count    | Set N number of generated         | ``rp_GenBurstCount``            |
-| |                                    |   150000, INF}            | signals in one burst              |                                 |
-| |                                    | |                         |                                   |                                 |
-| |                                    | | INF = infinity -        |                                   |                                 |
-| |                                    |   continuous              |                                   |                                 |
-| | Examples:                          | |                         |                                   |                                 |
-| | SOUR1:BURS:NCYC 3                  | | Default: 1              |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR1:BURS:NOR <value>``         | | <value>={burst          | Set R number of repeated bursts.  | ``rp_GenBurstRepetitions``      |
-| |                                    | | repetitions 150000,     |                                   |                                 |
-| | Examples:                          | | INF}                    |                                   |                                 |
-| | SOUR1:BURS:NOR 5                   | |                         |                                   |                                 |
-| |                                    | | INF = infinity          |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR1:BURS:INT:PER <value>``     | <value>={bust period      | Set P total time of one burst     | ``rp_GenBurstPeriod``           |
-| |                                    | 1us500s}                  | in micro seconds. This            |                                 |
-| | Examples:                          |                           | includes the signal and           |                                 |
-| | SOUR1:BURS:INT:PER 1000000         |                           | delay.                            |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:TRIG:SOUR <par>``        | <par>={EXT_PE,EXT_NE,IN   | Set trigger source for            | ``rp_GenTriggerSource``         |
-| |                                    | T, GATED}                 | selected signal.                  |                                 |
-| | Examples:                          |                           |                                   |                                 |
-| | SOUR1:TRIG:SOUR EXT                | EXT = External            |                                   |                                 |
-| |                                    | INT = Internal            |                                   |                                 |
-| |                                    | GATED = gated busts       |                                   |                                 |
-| |                                    |                           |                                   |                                 |
-| |                                    | Default: INT              |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``SOUR<n>:TRIG:IMM``               |                           | Triggers selected source          | ``rp_GenTrigger``               |
-| |                                    |                           | immediately.                      |                                 |
-| | Examples:                          |                           |                                   |                                 |
-| | SOUR1:TRIG:IMM                     |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``TRIG:IMM``                       |                           | Triggers both sources             | ``rp_GenTrigger``               |
-| |                                    |                           | immediately.                      |                                 |
-| | Examples:                          |                           |                                   |                                 |
-| | TRIG:IMM                           |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``GEN:RST``                        |                           | Reset generator to default        |                                 |
-| |                                    |                           | settings.                         |                                 |
-| | Examples:                          |                           |                                   |                                 |
-| | GEN:RST                            |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
+.. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|
+
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| SCPI                                 | API                        | description                                                              |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``OUTPUT<n>:STATE <state>``        | | ``rp_GenOutEnable``      | Disable or enable fast analog outputs.                                   |
+| | Examples:                          | | ``rp_GenOutDisable``     |                                                                          |
+| | OUTPUT1:STATE ON                   |                            |                                                                          |
+| | OUTPUT2:STATE OFF                  |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:FREQ:FIX <frequency>``   | ``rp_GenFreq``             | Set frequency of fast analog outputs.                                    |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:FREQ:FIX 1000                |                            |                                                                          |
+| | SOUR2:FREQ:FIX 100000              |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:FUNC <func>``            | ``rp_GenWaveform``         | Set waveform of fast analog outputs.                                     |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:FUNC SINE                    |                            |                                                                          |
+| | SOUR2:FUNC TRIANGLE                |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:VOLT <amplitude>``       | ``rp_GenAmp``              | | Set amplitude voltage of fast analog outputs.                          |
+| | Examples:                          |                            | | Amplitude + offset value must be less than maximum output range +/- 1V |
+| | SOUR1:VOLT 1                       |                            |                                                                          |
+| | SOUR2:VOLT 0.5                     |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:VOLT:OFFS <offset>``     | ``rp_GenOffset``           | | Set offset voltage of fast analog outputs.                             |
+| | Examples:                          |                            | | Amplitude + offset value must be less than maximum output range +/- 1V |
+| | SOUR1:VOLT:OFFS 0.2                |                            |                                                                          |
+| | SOUR1:VOLT:OFFS 0.1                |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:PHAS <phase>``           | ``rp_GenPhase``            | Set phase of fast analog outputs.                                        |
+| | Examples:                          |                            |                                                                          |
+| | SOUR2:PHAS 30                      |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:DCYC <par>``             | ``rp_GenDutyCycle``        | Set duty cycle of PWM waveform.                                          |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:DCYC 34                      |                            |                                                                          |
+| | SOUR2:DCYC 50                      |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:TRAC:DATA:DATA <array>`` | ``rp_GenArbWaveform``      | Import data for arbitrary waveform generation.                           |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:TRAC:DATA:DATA               |                            |                                                                          |
+| | 1,0.5,0.2                          |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:BURS:STAT <burst>``      | ``rp_GenMode``             | Enable or disable burst (pulse) mode.                                    |
+| | Examples:                          |                            | Red Pitaya will generate **R** number of **N** periods of signal         |
+| | SOUR1:BURS:STAT ON                 |                            | and then stop. Time between bursts is **P**.                             |
+| | SOUR1:BURS:STAT OFF                |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:BURS:NCYC <count>``      | ``rp_GenBurstCount``       | Set N number of periods in one burst.                                    |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:BURS:NCYC 3                  |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR1:BURS:NOR <count>``         | ``rp_GenBurstRepetitions`` | Set R number of repeated bursts.                                         |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:BURS:NOR 5                   |                            |                                                                          |
++--------------------------------------+----------------------------+---------------------------+----------------------------------------------+
+| | ``SOUR1:BURS:INT:PER <time>``      | ``rp_GenBurstPeriod``      | Set P total time of one burst in in micro seconds.                       |
+| | Examples:                          |                            | This includes the signal and delay.                                      |
+| | SOUR1:BURS:INT:PER 1000000         |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:TRIG:SOUR <trigger>``    | ``rp_GenTriggerSource``    | Set trigger source for selected signal.                                  |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:TRIG:SOUR EXT                |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``SOUR<n>:TRIG:IMM``               | ``rp_GenTrigger``          | Triggers selected source immediately.                                    |
+| | Examples:                          |                            |                                                                          |
+| | SOUR1:TRIG:IMM                     |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``TRIG:IMM``                       | ``rp_GenTrigger``          | Triggers both sources immediately.                                       |
+| | Examples:                          |                            |                                                                          |
+| | TRIG:IMM                           |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
+| | ``GEN:RST``                        |                            | Reset generator to default settings.                                     |
+| | Examples:                          |                            |                                                                          |
+| | GEN:RST                            |                            |                                                                          |
++--------------------------------------+----------------------------+--------------------------------------------------------------------------+
 
 =======
 Acquire
 =======
 
-``<n> = {1,2}`` (set channel IN1 or IN2)
+Parameter options:
+
+* ``<n> = {1,2}`` (set channel IN1 or IN2)
 
 -------
 Control
 -------
 
-.. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|p{28mm}|
+.. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|
 
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| SCPI                                 | OPTIONS                   | DESCRIPTION                       | API                             |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:START``                      |                           | Starts acquisition.               | ``rp_AcqStart``                 |
-| |                                    |                           |                                   |                                 |
-| | Examples:                          |                           |                                   |                                 |
-| | ACQ:START                          |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:STOP``                       |                           | Stops acquisition.                | ``rp_AcqStop``                  |
-| |                                    |                           |                                   |                                 |
-| | Examples:                          |                           |                                   |                                 |
-| | ACQ:STOP                           |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:RST``                        |                           | Stops acquisition and sets        | ``rp_AcqReset``                 |
-| |                                    |                           | all parameters to default         |                                 |
-| | Examples:                          |                           | values.                           |                                 |
-| | ACQ:STOP                           |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
++-----------------+-----------------+--------------------------------------------------------------+
+| SCPI            | API             | description                                                  |
++=================+=================+==============================================================+
+| | ``ACQ:START`` | ``rp_AcqStart`` | Starts acquisition.                                          |
+| | Examples:     |                 |                                                              |
+| | ACQ:START     |                 |                                                              |
++-----------------+-----------------+--------------------------------------------------------------+
+| | ``ACQ:STOP``  | ``rp_AcqStop``  | Stops acquisition.                                           |
+| | Examples:     |                 |                                                              |
+| | ACQ:STOP      |                 |                                                              |
++-----------------+-----------------+--------------------------------------------------------------+
+| | ``ACQ:RST``   | ``rp_AcqReset`` | Stops acquisition and sets all parameters to default values. |
+| | Examples:     |                 |                                                              |
+| | ACQ:STOP      |                 |                                                              |
++-----------------+-----------------+--------------------------------------------------------------+
 
 --------------------------
 Sampling rate & decimation
 --------------------------
 
+Parameter options:
+
+* ``<decimation> = {1,8,64,1024,8192,65536}`` Default: ``1``
+* ``<samplerate> = {125MHz, 15_6MHz, 1_9MHz, 103_8kHz, 15_2kHz, 1_9kHz}`` Default: ``125MHz``
+* ``<average> = {OFF,ON}`` Default: ``ON``
+
 .. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|p{28mm}|
 
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| ``ACQ:DEC <par>``                    | <par>={1,8,64,1024,8192,  | Set decimation factor.            | ``rp_AcqSetDecimation``         |
-|                                      | 65536}                    |                                   |                                 |
-|                                      |                           |                                   |                                 |
-|                                      | Default: 1                |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:DEC?``                       |                           | Get decimation factor.            | ``rp_AcqGetDecimation``         |
-| |                                    |                           |                                   |                                 |
-| | Example:                           |                           |                                   |                                 |
-| | ACQ:DEC?                           |                           |                                   |                                 |
-| |                                    |                           |                                   |                                 |
-| | Query return:                      |                           |                                   |                                 |
-| | {1,8,64,1024,8192,65536}           |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| ``ACQ:SRAT <par>``                   | | <par>={125MHz,15_6MHz,  | Set sampling rate.                | ``rp_AcqSetSamplingRate``       |
-|                                      | | 1_9MHz,103_8kHz,        |                                   |                                 |
-|                                      | | 15_2kHz, 1_9kHz}        |                                   |                                 |
-|                                      | |                         |                                   |                                 |
-|                                      | | Default: 125MHz         |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:SRAT?``                      |                           | Get sampling rate.                | ``rp_AcqGetSamplingRate``       |
-| |                                    |                           |                                   |                                 |
-| | Example:                           |                           |                                   |                                 |
-| | ACQ:SRAT?                          |                           |                                   |                                 |
-| | Query return:                      |                           |                                   |                                 |
-| | {125MHz,15_6MHz,                   |                           |                                   |                                 |
-| | 1_9MHz,103_8kHz, 15_2kHz,          |                           |                                   |                                 |
-| | 1_9kHz}                            |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:SRA:HZ?``                    |                           | Get sampling rate in Hz.          | ``rp_AcqGetSamplingRateHz``     |
-| |                                    |                           |                                   |                                 |
-| | Example:                           |                           |                                   |                                 |
-| | ACQ:SRA:HZ?                        |                           |                                   |                                 |
-| |                                    |                           |                                   |                                 |
-| | Query return:                      |                           |                                   |                                 |
-| | 125000000 Hz                       |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:AVG <par>``                  | | <par>={OFF,ON}          | Enable/disable averaging.         | ``rp_AcqSetAveraging``          |
-| |                                    | |                         |                                   |                                 |
-| |                                    | | Default: ON             |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
-| | ``ACQ:AVG?``                       |                           | Get averaging status.             | ``rp_AcqGetAveraging``          |
-| |                                    |                           |                                   |                                 |
-| | Example:                           |                           |                                   |                                 |
-| | ACQ:AVG?                           |                           |                                   |                                 |
-| |                                    |                           |                                   |                                 |
-| | Query return:                      |                           |                                   |                                 |
-| | {OFF,ON}                           |                           |                                   |                                 |
-+--------------------------------------+---------------------------+-----------------------------------+---------------------------------+
++--------------------------------------+-----------------------------+-----------------------------------+
+| SCPI                                 | API                         | description                       |
++======================================+=============================+===================================+
+| ``ACQ:DEC <decimation>``             | ``rp_AcqSetDecimation``     | Set decimation factor.            |
++--------------------------------------+-----------------------------+-----------------------------------+
+| | ``ACQ:DEC?`` > ``<decimation>``    | ``rp_AcqGetDecimation``     | Get decimation factor.            |
+| | Example:                           |                             |                                   |
+| | ACQ:DEC?                           |                             |                                   |
++--------------------------------------+-----------------------------+-----------------------------------+
+| ``ACQ:SRAT <par>``                   | ``rp_AcqSetSamplingRate``   | Set sampling rate.                |
++--------------------------------------+-----------------------------+-----------------------------------+
+| | ``ACQ:SRAT?`` > ``<samplerate>``   | ``rp_AcqGetSamplingRate``   | Get sampling rate.                |
+| | Example:                           |                             |                                   |
+| | ACQ:SRAT?                          |                             |                                   |
++--------------------------------------+-----------------------------+-----------------------------------+
+| | ``ACQ:SRA:HZ?``                    | ``rp_AcqGetSamplingRateHz`` | Get sampling rate in Hz.          |
+| | Example:                           |                             |                                   |
+| | ACQ:SRA:HZ?                        |                             |                                   |
+| | Query return:                      |                             |                                   |
+| | 125000000 Hz                       |                             |                                   |
++--------------------------------------+-----------------------------+-----------------------------------+
+| | ``ACQ:AVG <par>``                  | ``rp_AcqSetAveraging``      | Enable/disable averaging.         |
++--------------------------------------+-----------------------------+-----------------------------------+
+| | ``ACQ:AVG?``                       | ``rp_AcqGetAveraging``      | Get averaging status.             |
+| | Example:                           |                             |                                   |
+| | ACQ:AVG?                           |                             |                                   |
++--------------------------------------+-----------------------------+-----------------------------------+
 
 =======
 Trigger
