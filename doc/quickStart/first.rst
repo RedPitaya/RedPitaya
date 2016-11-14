@@ -1,3 +1,4 @@
+##################
 Connect to STEMlab
 ##################
 
@@ -11,9 +12,9 @@ will enable quick access to all Red Pitaya applications
 using only your web browser.
 Simply follow this 3 simple steps:
 
-   1. Connect power supply to the Red Pitaya STEMlab board
-   2. Connect STEMlab board to the router
-   3. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
+1. Connect power supply to the Red Pitaya STEMlab board
+2. Connect STEMlab board to the router
+3. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
        
 .. note::
 

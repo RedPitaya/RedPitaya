@@ -8,7 +8,6 @@ Quick start
    needs
    first
    unlock
-   connect
    SDcard/SDcard
    examles
 
