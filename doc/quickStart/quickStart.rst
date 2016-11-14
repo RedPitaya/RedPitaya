@@ -10,5 +10,4 @@ Quick start
    unlock
    SDcard/SDcard
    examles
-
-`Troubleshooting <http://wiki.redpitaya.com/index.php?title=Troubleshooting>`_ 
+   troubleshooting
