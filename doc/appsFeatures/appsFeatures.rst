@@ -10,9 +10,9 @@ Applications and Features
     :maxdepth: 5
     :numbered:
     
-    apps
-    bazaar
+    apps-featured/apps-featured
+    marketplace/marketplace
     newtworkManager
     examples/examples
-    visProg
-    remCon
+    visualProgramming/visualProgramming
+    remoteConnection/remoteConnection

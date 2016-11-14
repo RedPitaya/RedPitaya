@@ -6,5 +6,5 @@ Welcome to the Red Pitaya documentation.
     :numbered:
     
     ./doc/quickStart/quickStart.rst
-    ./doc/appsFeatures/appsTop.rst
+    ./doc/appsFeatures/appsFeatures.rst
     ./doc/developerGuide/devGuideTop.rst
