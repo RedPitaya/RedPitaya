@@ -7,12 +7,12 @@ Applications and Features
             slika glavne applikacije z razlagami ( desktop app )
     
 .. toctree::
-    :maxdepth: 5
-    :numbered:
-    
-    apps-featured/apps-featured
-    marketplace/marketplace
-    newtworkManager
-    examples/examples
-    visualProgramming/visualProgramming
-    remoteControl/remoteControl
+   :maxdepth: 5
+   :numbered:
+   
+   apps-featured/apps-featured
+   marketplace/marketplace
+   newtworkManager
+   examples/examples
+   visualProgramming/visualProgramming
+   remoteControl/remoteControl
