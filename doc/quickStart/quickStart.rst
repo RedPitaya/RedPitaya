@@ -9,5 +9,5 @@ Quick start
    first
    unlock
    SDcard/SDcard
-   examles
-   troubleshooting
+   examles/examles
+   troubleshooting/troubleshooting

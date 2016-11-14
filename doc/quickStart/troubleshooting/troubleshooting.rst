@@ -46,7 +46,36 @@ Troubleshooting
 
 #. WIFI connection is too slow
 
-   FAQ
+   If your wireless connection with Red Pitaya works very slowly and
+   all the applications seems very unresponsive and are not running smoothly,
+   please check the following:
+
+   – check the wifi signal strength on your PC/tablet/smartphone
+   – check the wifi signal strength of your Red Pitaya.
+
+      #. Connect to your Red Pitaya via SSH connection. `How? <>`_
+
+      #. Enter ``cat /proc/net/wireless`` command in order to get
+         information about link quality and signal strength.
+
+         .. image:: Screen-Shot-2015-09-26-at-20.28.27.png
+
+         Link quality measures the number of packet errors that occur.
+         The lower the number of packet errors, the higher this will be.
+         Link quality goes from 0-100%.
+
+         Level or signal strength is a simple measure of the amplitude of the signal that is received.
+         The closer you are to the access point, the higher this will be.
+
+   – If you are in the area with many routers around you
+     it might happen that more of them operate at the same wifi channel
+     which drastically decreases data throughput and slows down connection.
+     Here are the instructions how to
+     `change your wifi router channel in order to optimize your wireless signal
+     <http://www.howtogeek.com/howto/21132/change-your-wi-fi-router-channel-to-optimize-your-wireless-signal/>`_.
+     For MAC users we recommend using diagnosed using Scan feature of
+     `Wireless diagnostic <http://www.howtogeek.com/211034/troubleshoot-and-analyze-your-mac%E2%80%99s-wi-fi-with-the-wireless-diagnostics-tool/>`_
+     tool in order to find best wifi channel.
 
 #. I cannot upgrade OS, access marketplace or unlock applications.
 
