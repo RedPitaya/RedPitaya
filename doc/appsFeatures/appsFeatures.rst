@@ -15,4 +15,4 @@ Applications and Features
     newtworkManager
     examples/examples
     visualProgramming/visualProgramming
-    remoteConnection/remoteConnection
+    remoteControl/remoteControl
