@@ -19,11 +19,13 @@ What if this doesn't help?
 
    Clear your browser cache and history.
 
-******************************
-Problems connect to Red Pitaya
-******************************
+*********************************
+Problems connecting to Red Pitaya
+*********************************
 
 #. First check the LEDs:
+
+
    image:
    If Green LED is not ON or it is blinking.
    Seems like something is wrong with the power supply or maybe it’s USB cable.
@@ -56,8 +58,8 @@ If your wireless connection with Red Pitaya works very slowly and
 all the applications seems very unresponsive and are not running smoothly,
 please check the following:
 
-– check the wifi signal strength on your PC/tablet/smartphone
-– check the wifi signal strength of your Red Pitaya.
+* check the wifi signal strength on your PC/tablet/smartphone
+* check the wifi signal strength of your Red Pitaya.
 
    #. Connect to your Red Pitaya via SSH connection. `How? <>`_
 
@@ -73,7 +75,7 @@ please check the following:
       Level or signal strength is a simple measure of the amplitude of the signal that is received.
       The closer you are to the access point, the higher this will be.
 
-– If you are in the area with many routers around you
+* If you are in the area with many routers around you
   it might happen that more of them operate at the same wifi channel
   which drastically decreases data throughput and slows down connection.
   Here are the instructions how to
