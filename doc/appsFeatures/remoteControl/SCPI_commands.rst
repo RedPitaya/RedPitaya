@@ -187,7 +187,6 @@ Sampling rate & decimation
 Parameter options:
 
 * ``<decimation> = {1,8,64,1024,8192,65536}`` Default: ``1``
-* ``<samplerate> = {125MHz, 15_6MHz, 1_9MHz, 103_8kHz, 15_2kHz, 1_9kHz}`` Default: ``125MHz``
 * ``<average> = {OFF,ON}`` Default: ``ON``
 
 .. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|
