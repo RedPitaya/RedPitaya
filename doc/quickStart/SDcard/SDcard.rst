@@ -2,6 +2,48 @@
 Prepare SD card
 ###############
 
+**********
+Background
+**********
+
+A Red Pitaya SD card contains two partitions:
+
+1. 128MB FAT contains the **ecosystem**
+
+   * boot files: FSBL, FPGA images, U-Boot, Linux kernel
+   * Red Pitaya API libraries and header files
+   * Red Pitaya web applications, scripts, tools
+   * customized Nginx web server
+
+2. ~4GB Ext4 contains the **OS**
+
+   * Ubuntu/Debian OS
+   * various libraries
+   * network setup customization
+   * systemd services customization
+
+Most of Red Pitaya source code translates into the ecosystem,
+Therefore this is updated more often.
+The OS is changed less frequently.
+
+.. note::
+
+   You can find older and development Red Pitaya OS images and Ecosystem zipfiles
+   on our `download server <http://downloads.redpitaya.com/downloads/>`_.
+
+   http://downloads.redpitaya.com/downloads/
+
+.. note::
+
+   A list of new features, bugfixes and known bugs for each Red Pitaya release
+   can be found in our `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_.
+
+**********************************
+Download and install SD card image
+**********************************
+
+The next procedure will create a clean SD card.
+
 #. Download the `Red Pitaya SD card image <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_.
 
    http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
@@ -9,17 +51,6 @@ Prepare SD card
    .. image:: microSDcard-RP.png
       :width: 10%
 
-   .. note::
-
-      You can find older Red Pitaya OS images and Ecosystem zipfiles
-      on our `download server <http://downloads.redpitaya.com/downloads/>`_.
-
-      http://downloads.redpitaya.com/downloads/
-
-   TODO: should the next two lines be removed?
-   - FAQ: `Where can I find more about Red Pitaya OS releases? <http://blog.redpitaya.com/faq-page/#Software|32740>`_
-   - FAQ: `Where can I find old Red Pitaya OS & application relases? <http://blog.redpitaya.com/faq-page/#Software|25467>`_
-    
 #. Unzip the SD card image.
 
 #. Write the image onto a SD card. Instructions are available for various operating systems:
@@ -38,9 +69,9 @@ Prepare SD card
 
 .. _windows:
 
-*******
+=======
 Windows
-*******
+=======
 
 #. Insert SD card into your PC or SD card reader.
 
@@ -83,15 +114,15 @@ Windows
 
 .. _linux:
 
-*****
+=====
 Linux
-*****
+=====
 
 .. _linux_gui:
 
-=========================
+-------------------------
 Ubuntu using Image Writer
-=========================
+-------------------------
 
 #. Right click on the extracted SD card image and select **Open With > Disk Image Writer**.
 
@@ -105,9 +136,9 @@ Ubuntu using Image Writer
 
 .. _linux_cli:
 
-============
+------------
 Command line
-============
+------------
 
 .. note::
    Please note that the use of the ``dd`` tool can overwrite any partition of your machine.
@@ -152,15 +183,15 @@ Command line
 
 .. _macos:
 
-*****
+=====
 macOS
-*****
+=====
 
 .. _macos_gui:
 
-===================
+-------------------
 Using ApplePi-Baker
-===================
+-------------------
     
 #. Insert SD card into your PC or SD card reader.
 
@@ -201,9 +232,9 @@ Using ApplePi-Baker
 
 .. _macos_cli:
 
-============
+------------
 Command line
-============
+------------
 
 #. Insert SD card into your PC or SD card reader.
 
@@ -240,3 +271,57 @@ Command line
 #. When the image is written, type: ``diskutil eject /dev/diskn`` and press enter.
 
 #. Safely eject the SD card.
+
+
+*****************************
+Upgrading Red Pitaya software
+*****************************
+
+Instead of writing the whole SD card image,
+it is possible to upgrade only the ecosystem.
+
+=====================
+Web interface upgrade
+=====================
+
+At boot Red Pitaya checks for software updates,
+and alerts the user if a new release is available.
+Users can also check for updates manually.
+
+#. Open Red Pitaya desktop using your WEB browser
+
+#. Click on the *upgrade note* or on the *ecosystem version label* in bottom right corner.
+
+#. Make sure your Red Pitaya OS is 0.96
+
+   .. image:: 
+
+#. Start OS updater
+
+   .. note::
+
+#. Follow the steps in the OS updater app in order to install new OS.
+   Notice that OS upgrade might cause your Red Pitaya desktop to freeze for a few minutes.
+
+==============
+Manual upgrade
+==============
+
+A manual upgrade allows you to fix a corrupted SD card image
+(if only the FAT partition is corrupted) or to install
+older, newer or custom ecosystem zip files.
+
+#. Download a zip file from our `download server <http://downloads.redpitaya.com/downloads/>`_.
+
+#. Insert SD card into card reader.
+
+#. Delete all files from the FAT partition.
+   Use ``Shift + Delete`` to avoid placing files
+   into a trash bin on the same partition.
+
+#. Extract the ecosystem zip file contents onto the now empty partition.
+
+If you wish too keep wireless settings skip deleting the next files:
+
+* ``wpa_supplicant.conf``
+* ``hostapd.conf``
