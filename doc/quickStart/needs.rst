@@ -1,3 +1,4 @@
+################################
 What do I needed before I start?
 ################################
 
@@ -39,5 +40,5 @@ Additional Required Items not supplied with the STEM kits:
 
    * upgrading Red Pitaya OS,
    * installing applications from the marketplace,
-   * unlocking applications
+   * unlocking applications,
    * and using visual programming.
