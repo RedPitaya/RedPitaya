@@ -21,13 +21,13 @@ Simply follow this 3 simple steps:
    ``xxxxxx`` are the last 6 characters from MAC address of your STEMlab board.
    MAC address is written on the Ethernet connector.
     
-.. figure:: connect-2.png
+.. figure:: connect/connect-2.png
     
    Figure 1: Connecting your STEMlab board to the LAN network.
 
 After the **third step** you will get a Red Pitaya STEMlab main page as shown below.
 
-.. figure:: connect-3.png
+.. figure:: connect/connect-3.png
 
    Figure 2: STEMlab main page user interface.
 

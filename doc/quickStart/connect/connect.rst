@@ -4,10 +4,6 @@ Connect to your Red Pitaya
 
 .. TODO preveri slovnico
 
-*******************************
-Network connectivity user guide
-*******************************
-
 For electronic equipment used today and tomorrow
 a network connectivity is and will be an industry standard.
 Red Pitaya STEMLab boards are network attachable devices focused
@@ -20,10 +16,10 @@ software will provide you with a unique working experience.
 
 Red Pitaya STEMLab boards can be connected over:
 
-1. Local Area Network (LAN) – Requires a DHCP server on your LAN router
-4. Direct Ethernet cable connection – Requires additional setting on users PC and STEMLab board
-2. Wireless Network client – Requires an additional WiFi dongle available at Red Pitaya store
-3. Access Point Mode – STEMLab board creates its own WiFi network
+#. Local Area Network (LAN) - Requires a DHCP server on your LAN router
+#. Direct Ethernet cable connection - Requires additional setting on users PC and STEMLab board
+#. Wireless Network client - Requires an additional WiFi dongle available at Red Pitaya store
+#. Access Point Mode - STEMLab board creates its own WiFi network
 
 .. image:: connect-1.png
 
@@ -44,7 +40,7 @@ Simply follow this 3 simple steps:
 
 1. Connect power supply to the Red Pitaya STEMlab board
 2. Connect STEMlab board to the router or direc to the PC Ethernet socket
-3. Open your web browser and in the URL filed type:   ``rp-xxxxxx.local/``
+3. Open your web browser and in the URL filed type: ``rp-xxxxxx.local/``
        
 .. note::
 
@@ -126,39 +122,6 @@ First step in connecting STEMlab board directly to LAN network and setting a sta
 
 .. image:: connect-16.png 
 
-.. TODO
-.. USB Console connectivity
-.. *************************
-.. 
-.. This type of connection is used for direct USB serial console connectivity. Here user access STEMLab board via 
-.. console/terminal. This is useful for the developers and more demanding users. Connecting to the STEMLab board via USB 
-.. will open Linux Terminal where user can control STEMLab board completely using command line tools. Notice: For STEMLab
-.. 125-14 you need additional USB to microUSB cable, for STEMLab 125-10 additional serial to USB adapter.
-.. 
-.. .. image:: connect-17.png
-.. 
-.. 1. Connect your Red Pitaya and PC with micro USB B to USB A cable and follow the instructions for your OS.
-.. 
-.. .. image:: pitaya-USB-connection-300x164.png
-.. 
-.. Serial console connection is independent from the Ethernet connection. Use a Micro USB cable to connect your computer
-.. with Red Pitaya. Connection instructions will be given for Windows, Linux and OS X users separately.
-.. 
-.. Serial port configuration:
-.. 
-.. .. image:: Selection_002.png
-.. 
-.. **User name and password to login are “root”.**
-.. 
-.. Windows users
-.. =============
-.. 
-.. Download and install the `FTD driver <http://www.ftdichip.com/Drivers/VCP.htm>`_ to your PC. After installation, a new
-.. COM port will appear in the Device Manager you can use in Hyperterminal or another terminal utility to connect to Red 
-.. Pitaya.
-.. 
-.. `FAQ <http://redpitaya.com/faq/>`_    
-    
 ********
 Wireless
 ********
@@ -250,4 +213,3 @@ How to create Access Point network and connect to it is describe below.
    IP address in Access Point mode is always the same: 192.168.128.1
 
 .. image:: connect-9.png
-
