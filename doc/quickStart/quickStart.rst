@@ -10,4 +10,5 @@ Quick start
    first
    unlock
    SDcard/SDcard
+   upgrade
    troubleshooting/troubleshooting
