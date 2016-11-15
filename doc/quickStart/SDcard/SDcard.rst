@@ -288,17 +288,15 @@ At boot Red Pitaya checks for software updates,
 and alerts the user if a new release is available.
 Users can also check for updates manually.
 
-#. Open Red Pitaya desktop using your WEB browser
+#. Open Red Pitaya desktop using your WEB browser.
 
-#. Click on the *upgrade note* or on the *ecosystem version label* in bottom right corner.
+#. Click on the **upgrade alert** or on the **ecosystem version label** in bottom right corner.
 
-#. Make sure your Red Pitaya OS is 0.96
+   .. image:: SDcard_upgrade_desktop.png
 
-   .. image:: 
+#. Delect ecosystem version and start OS updater
 
-#. Start OS updater
-
-   .. note::
+   .. image:: SDcard_update_manager.png
 
 #. Follow the steps in the OS updater app in order to install new OS.
    Notice that OS upgrade might cause your Red Pitaya desktop to freeze for a few minutes.
