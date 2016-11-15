@@ -12,7 +12,7 @@ LEDs and GPIOs
 
 Parameter options:
 
-* ``<dir> = {OUTP,INP}``
+* ``<dir> = {OUT,IN}``
 * ``<gpio> = {{DIO0_P...DIO7_P}, {DIO0_N...DIO7_N}}``
 * ``<led> = {LED0...LED8}``
 * ``<pin> = {gpio, led}``
@@ -25,8 +25,8 @@ Parameter options:
 +====================================+=========================+======================================================+
 | | ``DIG:PIN:DIR <dir>,<gpio>``     | ``rp_DpinSetDirection`` | Set direction of digital pins to output or input.    |
 | | Examples:                        |                         |                                                      |                       
-| | ``DIG:PIN:DIR OUTP,DIO0_N``      |                         |                                                      |  
-| | ``DIG:PIN:DIR INP,DIO1_P``       |                         |                                                      |                  
+| | ``DIG:PIN:DIR OUT,DIO0_N``       |                         |                                                      |  
+| | ``DIG:PIN:DIR IN,DIO1_P``        |                         |                                                      |                  
 +------------------------------------+-------------------------+------------------------------------------------------+
 | | ``DIG:PIN <pin>,<state>``        | ``rp_DpinSetState``     | Set state of digital outputs to 1 (HIGH) or 0 (LOW). |
 | | Examples:                        |                         |                                                      |
