@@ -1,2 +1,3 @@
-# documentation
-This project is intended to learn read the docs
+The previous README file is available [here](doc/developer.rst).
+
+Work in progress documentation <http://redpitaya.readthedocs.io/en/latest/index.html>.
