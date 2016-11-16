@@ -17,7 +17,7 @@ while 1:
 rp_s.tx_txt('ACQ:SOUR1:DATA?')
 buff_string = rp_s.rx_txt()
 buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-buff = map(float, buff_string)
+buff = list(map(float, buff_string))
 
 plot.plot(buff)
 plot.ylabel('Voltage')

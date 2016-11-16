@@ -54,7 +54,7 @@ rp_s.tx_txt('OUTPUT2:STATE ON')
 rp_s.tx_txt('SOUR1:TRAC:DATA:DATA?')
 buff_string = rp_s.rx_txt()
 buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-buff = map(float, buff_string)
+buff = list(map(float, buff_string))
 
 import matplotlib.pyplot as plt
 plt.plot(buff)
