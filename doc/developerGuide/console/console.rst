@@ -14,7 +14,7 @@ The debug console can be used to follow the boot process:
    During the boot process U-Boot will show status and debug information.
 
    After FSBL starts U-Boot, there is a 3 second delay
-   before U-Boot starts the linux kernel.
+   before U-Boot starts the Linux kernel.
    If during this time a key is pressed,
    U-boot will stop the boot process
    and give the user access to its shell.
@@ -55,21 +55,113 @@ Pitaya.
 Linux
 -----
 
+There is broad support for USB to serial converters in the Linux kernel,
+so in most cases the converter will be detested soon after connecting it.
+
+You can see the driver output in the kernel log using ``dmesg``:
+
+.. code-block:: none
+   :emphasize-lines: 11
+
+   $ dmesg
+   ...
+   [95074.784075] usb 1-2.4.3: new full-speed USB device number 20 using ehci-pci
+   [95074.885386] usb 1-2.4.3: New USB device found, idVendor=0403, idProduct=6015
+   [95074.885399] usb 1-2.4.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+   [95074.885406] usb 1-2.4.3: Product: FT231X USB UART
+   [95074.885411] usb 1-2.4.3: Manufacturer: FTDI
+   [95074.885416] usb 1-2.4.3: SerialNumber: DN003P0Q
+   [95074.890105] ftdi_sio 1-2.4.3:1.0: FTDI USB Serial Device converter detected
+   [95074.890228] usb 1-2.4.3: Detected FT-X
+   [95074.891157] usb 1-2.4.3: FTDI USB Serial Device converter now attached to ttyUSB0
+
+The first board connected to your PC will create a device named ``/dev/ttyUSB0``.
+If **N** USB to serial devices are connected, they will appear as
+``/dev/ttyUSBn`` where **n** in in **{0, 1, ..., N-1}**.
+To access this devices programs should be run with ``sudo``.
+
+~~~~~~~~~~~
+``minicom``
+~~~~~~~~~~~
+
+Minicom is a text-based modem control and terminal emulation program .
+It is commonly used for setting up a remote serial console.
+
+To configure ``minicom`` use the ``-s`` option.
+
 .. code-block:: shell-session
 
-   $ sudo screen /dev/ttyUSB1 115200 cs8 ixoff
+   sudo minicom -s
+
+A configuration menu will open.
+
+.. code-block:: none
+
+   +-----[configuration]------+
+   | Filenames and paths      |
+   | File transfer protocols  |
+   | Serial port setup        |
+   | Modem and dialing        |
+   | Screen and keyboard      |
+   | Save setup as dfl        |
+   | Save setup as..          |
+   | Exit                     |
+   | Exit from Minicom        |
+   +--------------------------+
+
+Go to ``Serial port setup``, press **Enter** and setup the next options:
+
+* Serial Device: ``/dev/ttyUSB0`` (device index ``0`` or a higher number)
+* Bps/Par/Bits: ``115200 8N1`` (baud rate, byte length, parity and stop bits)
+* Hardware/Software Flow Control: No (flow control should be disabled)
+
+.. code-block:: none
+
+   +-----------------------------------------------------------------------+
+   | A -    Serial Device      : /dev/ttyUSB0                              |
+   | B - Lockfile Location     : /var/lock                                 |
+   | C -   Callin Program      :                                           |
+   | D -  Callout Program      :                                           |
+   | E -    Bps/Par/Bits       : 115200 8N1                                |
+   | F - Hardware Flow Control : No                                        |
+   | G - Software Flow Control : No                                        |
+   |                                                                       |
+   |    Change which setting?                                              |
+   +-----------------------------------------------------------------------+
+
+``minicom`` requires some special ``Control+a`` key sequences to operate.
+Please see the `manual <https://linux.die.net/man/1/minicom>`_ for details.
+
+~~~~~~~~~~
+``screen``
+~~~~~~~~~~
+
+GNU ``screen`` is in general a terminal multiplexer.
+It also supports connecting to a serial console,
+and provides syntax to configure the serial connection
+baud rate, byte length, parity and flow control, ...
+
+Compared to ``minicom`` it provides better fonts,
+better support for terminal window re-sizing, ...
+
+.. code-block:: shell-session
+
+   $ sudo screen /dev/ttyUSB1 115200 cs8
+
+Similar to ``minicom``, ``screen`` requires some special ``Control+a`` key sequences to operate.
+Please see the `manual <https://www.gnu.org/software/screen/manual/screen.html>`_ for details.
 
 =======================
 Reference boot sequence
 =======================
 
-You can compare this reference boot sequences agains yours.
+You can compare this reference boot sequences against yours.
 
 ------
 U-Boot
 ------
 
-.. code-block:: shell-session
+.. code-block:: none
 
    U-Boot 2016.01 (Nov 16 2016 - 12:23:28 +0100), Build: jenkins-redpitaya-master-156
    
