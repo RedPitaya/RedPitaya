@@ -47,82 +47,21 @@
 
             Desktop.setApplications(apps);
             setTimeout(function() {
-				licVerify(undefined);
                 $('body').addClass('loaded');
             }, 666);
 
-        }).fail(function(msg) { getListOfApps(); });
-    }
+            if (window.Worker) {
+            	var worker = new Worker("../assets/licVerifyWorker.js");
+            	worker.postMessage(null);
+            	worker.onmessage = function(e) {
+            		console.log(e.data);
+				};
+				worker.onerror = function(e) {
+            		console.log(e.message);
+				};
+			}
 
-    var licVerify = function(success_url) {
-        var post_uri = 'http://store.redpitaya.com/upload_id_file/';
-        var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
-        $('#loader-desc').html('Preparing application to run');
-        $('body').removeClass('loaded');
-        $.ajax({
-                method: "GET",
-                url: "idfile.id"
-            })
-            .done(function(msg) {
-                var obj = jQuery.parseJSON(msg);
-                if (obj != undefined && obj != null && obj.mac_address != undefined && obj.mac_address != null)
-                    req_uri = req_uri + obj.mac_address;
-                if (obj != undefined && obj != null && obj.zynq_id != undefined && obj.zynq_id != null) {
-                    req_uri = req_uri + "&rp_dna=" + obj.zynq_id;
-                }
-                $.ajax({
-                        method: "POST",
-                        url: post_uri,
-                        data: 'id_file=' + encodeURIComponent(msg) + '&version=2'
-                    }).done(function(msg) {
-                        if (msg == "OK") {
-                            $.ajax({
-                                    method: "GET",
-                                    url: req_uri
-                                }).done(function(msg) {
-                                    var res_msg = msg + "\r\n";
-                                    $.ajax({
-                                            method: "POST",
-                                            dataType: 'json',
-                                            data: {
-                                                'lic.lic': res_msg
-                                            },
-                                            contentType: 'application/json; charset=utf-8',
-                                            url: "/lic_upload",
-                                        })
-                                        .done(function(msg) {})
-                                        .fail(function(msg) {
-                                            setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                            if (success_url != undefined)
-                                                window.location = success_url;
-                                        });
-                                })
-                                .fail(function(msg) {
-                                    console.log("LIC: ERR2");
-                                    setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                                    if (success_url != undefined)
-                                        window.location = success_url;
-                                });
-                        } else {
-                            console.log("LIC: ERR3");
-                            setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                            if (success_url != undefined)
-                                window.location = success_url;
-                        }
-                    })
-                    .fail(function(msg) {
-                        console.log("LIC: ERR4");
-                        setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                        if (success_url != undefined)
-                            window.location = success_url;
-                    });
-            })
-            .fail(function(msg) {
-                console.log("LIC: ERR4");
-                setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-                if (success_url != undefined)
-                    window.location = success_url;
-            });
+        }).fail(function(msg) { getListOfApps(); });
     }
 
     var checkUpdates = function(current) {

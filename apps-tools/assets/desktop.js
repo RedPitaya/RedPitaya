@@ -162,22 +162,14 @@
                     $('#ic_missing').modal('show');
                     return;
                 }
-                if (applications[key].url != "" && applications[key].type !== 'run') {
-                    licVerify(applications[key].url);
-                } else {
-                    if (applications[key].url != "")
-                        window.location = applications[key].url;
-                }
+                if (applications[key].url != "")
+                    window.location = applications[key].url;
                 if (applications[key].callback !== undefined)
                     applications[key].callback(key);
             });
         } else {
-            if (applications[key].url != "" && applications[key].type !== 'run') {
-                licVerify(applications[key].url);
-            } else {
-                if (applications[key].url != "")
-                    window.location = applications[key].url;
-            }
+            if (applications[key].url != "")
+                window.location = applications[key].url;
             if (applications[key].callback !== undefined)
                 applications[key].callback(key);
         }

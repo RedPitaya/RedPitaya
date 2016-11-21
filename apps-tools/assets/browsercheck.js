@@ -13,6 +13,24 @@
     BrowserChecker.browserVer = 0;
 
 
+    BrowserChecker.isOnline = function(){
+        var result = false;
+        $.ajax({
+            method: "GET",
+            url: "http://redpitaya.com/robots.txt",
+            async: false,
+            timeout: 300
+        }).done(function(msg) {
+            if (msg.indexOf("User-agent") == 0)
+                result = true;
+        }).fail(function(msg) {
+            result = false;
+        });
+
+        return result;
+    }
+
+
     BrowserChecker.checkName = function() {
         BrowserChecker.browserName = $.browser.name;
         // alert(JSON.stringify($.browser));
