@@ -6,7 +6,18 @@ Remote control
 
 .. image:: SCPI_web_lr.png
 
-The STEMLab board can be controlled remotely over LAN or wireless interface using Matlab, Labview, Scilab or Python via the Red Pitaya SCPI (Standard Commands for Programmable Instrumentation) list of commands. The SCPI interface/environment is commonly used to control T&M instruments for development, research or test automation purposes. SCPI uses a set of SCPI commands that are recognized by the instruments to enable specific actions to be taken (e.g.: acquiring data from fast analog inputs, generating signals and controlling other periphery of the Red Pitaya STEMLab platform). The SCPI commands are extremely useful when complex signal analysis is required where SW environment such as MATLAB provides powerful data analysis tools and SCPI commands simple access to raw data acquired on STEMLab board.
+The STEMLab board can be controlled remotely over LAN or wireless interface
+using Matlab, Labview, Scilab or Python via the Red Pitaya
+SCPI (Standard Commands for Programmable Instrumentation) list of commands.
+The SCPI interface/environment is commonly used to control T&M instruments
+for development, research or test automation purposes.
+SCPI uses a set of SCPI commands that are recognized by the instruments
+to enable specific actions to be taken
+(e.g.: acquiring data from fast analog inputs, generating signals and
+controlling other periphery of the Red Pitaya STEMLab platform).
+The SCPI commands are extremely useful when complex signal analysis
+is required where SW environment such as MATLAB provides powerful data analysis tools
+and SCPI commands simple access to raw data acquired on STEMLab board.
 
 **Features**
 
