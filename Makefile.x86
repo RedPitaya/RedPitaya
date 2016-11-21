@@ -59,7 +59,7 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG     = redpitaya-v2016.4
-LINUX_TAG     = branch-redpitaya-v2016.3
+LINUX_TAG     = branch-redpitaya-v2016.3-sdsoc
 DTREE_TAG     = xilinx-v2016.4
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
