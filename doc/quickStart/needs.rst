@@ -24,9 +24,9 @@ Additional Required Items not supplied with the STEM kits:
 
 .. note::
 
-   If you are Windows user make sure to install `Bonjour Print Services <www.redpitaya.com/bonjour>`_.
+   If you are Windows user make sure to install `Bonjour Print Services <http://redpitaya.com/bonjour>`_.
 
-   www.redpitaya.com/bonjour
+   http://redpitaya.com/bonjour
 
 .. note::
 
