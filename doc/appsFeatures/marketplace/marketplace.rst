@@ -72,9 +72,15 @@ Frequency Response analyzer
 The Frequency Response analyzer enables the measurements of the frequency amplitude response of the desired DUT (Device Under Test). The measurements of the frequency response are in the range from 0Hz to 60MHz.
 The measurements are done in real time and the frequency range is NOT adjustable. Measuring can be done for each channel independently, i.e. it enables simultaneous measurements of two DUTs. The application works in such way that it is generating band noise signals on OUT1 and OUT2, this signal is fed to the DUT where the DUT’s response is acquired on IN1 and IN2. The acquired signals are analyzed using the DFT algorithm and the frequency response of the DUT is plotted on the GUI. This application is very useful for filter measurements and similar.
 
-More about this application can be found here:
+.. image:: 600px-F_analyzer.png
 
-   http://wiki.redpitaya.com/index.php?title=Frequency_Response_analyzer
+Frequency response analyzer enables measurements of frequency amplitude response of desired DUT (Device Under Test).
+The measurements of frequency response are in range from 0Hz to 60MHz.
+Measurements are in real time and the frequency range is NOT adjustable.
+Measurement can be done for each channel independently, i.e it enables simultaneously measurements of two DUTs.
+How to connect DUT to the Red Pitaya when using Frequency Response analyser is shown in picture below.
+
+.. image:: 600px-Frequency_response_analyzer_connections.png
 
 ==========
 Teslameter
@@ -92,9 +98,56 @@ Impedance analyzer
 
 The Impedance analyzer application enables measurements of Impedance, Phase and other parameters of the selected DUT (Device Under Test). Measurements can be performed in the “Frequency sweep” mode with 1Hz frequency resolution or in the “Measurements sweep” mode with the desired number of measurements at constant frequency. The selectable frequency range is from 1Hz to 60MHz, although the recommended frequency range is up to 1MHz. The impedance range is from 0.1 Ohm to 10 Mohm. When using the Impedance analyzer application with the LCR Extension module, insert 0 in the shunt resistor field.
 
-More about this application can be found here:
+.. image:: LCR_2.png
 
-   http://wiki.redpitaya.com/index.php?title=Impedance_analyzer
+Impedance analyzer application enables measurements of Impedance,
+Phase and other parameters of selected DUT (Device Under Test).
+Measurements can be performed in *Frequency sweep* mode
+with 1Hz of frequency resolution or in *Measurements sweep* mode
+with desired numbers of measurement at constant frequency.
+Selectable frequency range is from 1Hz to 60MHz,
+although the recommended frequency range is up to 1MHz*.
+Impedance range is from 0.1 Ohm – 10 MOhm*.
+When using Impedance analyzer application with LCR Extension module
+insert 0 in the shunt resistor field.
+
+.. note::
+
+   Impedance range is dependent on the selected frequency and maximum accuracy
+   and suitable measurement can not be performed at all frequencies and impedance ranges.
+   Impedance range is given in picture bellow. Range for Capacitors or Inductors
+   can be extrapolated from given picture. Basic accuracy of the Impedance analyzer is 5%.
+   Impedance analyzer application is calibrated for 1 m Kelvin probes.
+   More accurate measurements can be performed in Measurement sweep at constant frequency.
+
+.. image:: LCR_range.png
+
+When using Impedance analyzer application optimal results are achieved wheni
+the Red Pitaya GND is connected to your mains EARTH lead as is shown below.
+We also recommend shielding of Red Pitaya and LCR extension module.
+
+.. image:: E_module_connection.png
+
+On pictures below are shown comparison measurements of the selected DUT.
+Measurements are taken with Red Pitaya and Keysight precision LCR meter.
+From this plots you can extract basic Red Pitaya accuracy.
+
+.. note::
+
+    Red Pitaya LCR meter/Impedance analyzer are not certificated for certain accuracy or range.
+
+.. image:: LCR_100R.png
+.. image:: LCR_100K.png
+.. image:: LCR_1M.png
+
+Impedance analyzer application can be used without LCR Extension module
+using manual setting of shunt resistor. This option is described below.
+
+.. note::
+
+   You will need to change ``C_cable`` parameter in the code when using your setup.
+
+.. image:: Impedance_analyzer_manaul_R_Shunt.png
 
 ==================================================
 Multichannel Pule High analyzer – (by Pavel Demin)
@@ -105,7 +158,6 @@ The Pulse Height Analyzer (PHA) is an instrument used for the analysis of electr
 More about this application can be found here:
 
    http://pavel-demin.github.io/red-pitaya-notes/
-
 
 *****************************************************
 Manually downloading and installing free applications
