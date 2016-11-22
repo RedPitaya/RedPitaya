@@ -44,7 +44,7 @@
      * @param {DOMElement?} m First script tag in document.
      */       
     (function(i, s, o, g, r, a, m) {
-            if (BrowserChecker.isOnline()){
+            BrowserChecker.isOnline(function(){
                 online = true;
                 i['GoogleAnalyticsObject'] = r; // Acts as a pointer to support renaming.
 
@@ -63,7 +63,7 @@
                 a.async = 1;
                 a.src = g;
                 m.parentNode.insertBefore(a, m);
-            }        
+            });
     })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
 

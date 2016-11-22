@@ -13,21 +13,23 @@
     BrowserChecker.browserVer = 0;
 
 
-    BrowserChecker.isOnline = function(){
-        var result = false;
-        $.ajax({
+    BrowserChecker.isOnline = function(callback){
+    	var get_uri = 'http://store.redpitaya.com/get_lic/';
+
+	 	$.ajax({
             method: "GET",
-            url: "http://redpitaya.com/robots.txt",
-            async: false,
+            url: get_uri,
             timeout: 300
         }).done(function(msg) {
-            if (msg.indexOf("User-agent") == 0)
-                result = true;
+        	if (msg.includes("-1")){
+            	console.log("online");
+            	callback();
+        	}
+        	else
+        		console.log("offline");
         }).fail(function(msg) {
-            result = false;
+            console.log("offline");
         });
-
-        return result;
     }
 
 

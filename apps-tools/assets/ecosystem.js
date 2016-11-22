@@ -118,7 +118,11 @@
         revision = info['revision'];
         stem_ver = info['stem_ver'];
         $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + "</a>");
-        checkUpdates(info);
+
+        BrowserChecker.isOnline(function()
+            {
+                checkUpdates(info);
+            });
     }
 
     $(document).ready(function($) {
