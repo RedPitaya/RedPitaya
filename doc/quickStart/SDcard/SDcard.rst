@@ -276,9 +276,9 @@ Command line
 #. Safely eject the SD card.
 
 
-*****************************
+#############################
 Upgrading Red Pitaya software
-*****************************
+#############################
 
 Instead of writing the whole SD card image,
 it is possible to upgrade only the ecosystem.
