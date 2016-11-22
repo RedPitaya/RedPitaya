@@ -24,9 +24,13 @@ Additional Required Items not supplied with the STEM kits:
 
 .. note::
 
-   If you are Windows user make sure to install `Bonjour Print Services <www.redpitaya.com/bonjour>`_.
+   **Windows 7/8** users should install `Bonjour Print Services <http://redpitaya.com/bonjour>`_,
+   otherwise access to ``*.local`` addresses will not work.
 
-   www.redpitaya.com/bonjour
+   http://redpitaya.com/bonjour
+
+   **Windows 10** already supports mDNS and DNS-SD,
+   so there is no need to install additional software.
 
 .. note::
 

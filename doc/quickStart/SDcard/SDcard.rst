@@ -44,9 +44,12 @@ Download and install SD card image
 
 The next procedure will create a clean SD card.
 
-#. Download the `Red Pitaya SD card image <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_.
+#. Download the Red Pitaya SD card image
+   `stable <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_ or
+   `beta <http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip>`_.
 
-   http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
+   Stable: http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
+   Beta: http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
     
    .. image:: microSDcard-RP.png
       :width: 10%
@@ -273,9 +276,9 @@ Command line
 #. Safely eject the SD card.
 
 
-*****************************
+#############################
 Upgrading Red Pitaya software
-*****************************
+#############################
 
 Instead of writing the whole SD card image,
 it is possible to upgrade only the ecosystem.
