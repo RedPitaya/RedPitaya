@@ -191,7 +191,7 @@ When using Impedance analyzer application optimal results are achieved wheni
 the Red Pitaya GND is connected to your mains EARTH lead as is shown below.
 We also recommend shielding of Red Pitaya and LCR extension module.
 
-.. image:: E_module_connection.png
+.. image:: 600px-E_module_connection.png
 
 On pictures below are shown comparison measurements of the selected DUT.
 Measurements are taken with Red Pitaya and Keysight precision LCR meter.
@@ -201,9 +201,9 @@ From this plots you can extract basic Red Pitaya accuracy.
 
     Red Pitaya LCR meter/Impedance analyzer are not certificated for certain accuracy or range.
 
-.. image:: LCR_100R.png
-.. image:: LCR_100K.png
-.. image:: LCR_1M.png
+.. image:: 300px-LCR_100R.png
+.. image:: 300px-LCR_100K.png
+.. image:: 300px-LCR_1M.png
 
 Impedance analyzer application can be used without LCR Extension module
 using manual setting of shunt resistor. This option is described below.
@@ -212,7 +212,7 @@ using manual setting of shunt resistor. This option is described below.
 
    You will need to change ``C_cable`` parameter in the code when using your setup.
 
-.. image:: Impedance_analyzer_manaul_R_Shunt.png
+.. image:: 600px-Impedance_analyzer_manaul_R_Shunt.png
 
 ==================================================
 Multichannel Pule High analyzer – (by Pavel Demin)
