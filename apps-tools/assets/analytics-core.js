@@ -8,6 +8,7 @@
     var location = 'www.redpitaya.com';
     var sendData = false;
     var debugPrints = false;
+    var online = false;
 
     (function() {
         if ("performance" in window == false) {
@@ -30,7 +31,7 @@
 
     })();
     /**
-     * Creates a temporary global ga object and loads analy  tics.js.
+     * Creates a temporary global ga object and loads analytics.js.
      * Paramenters o, a, and m are all used internally.  They could have been declared using 'var',
      * instead they are declared as parameters to save 4 bytes ('var ').
      *
@@ -41,25 +42,28 @@
      * @param {string}      r Global name of analytics object.  Defaults to 'ga'.
      * @param {DOMElement?} a Async script tag.
      * @param {DOMElement?} m First script tag in document.
-     */
+     */       
     (function(i, s, o, g, r, a, m) {
-        i['GoogleAnalyticsObject'] = r; // Acts as a pointer to support renaming.
+            BrowserChecker.isOnline(function(){
+                online = true;
+                i['GoogleAnalyticsObject'] = r; // Acts as a pointer to support renaming.
 
-        // Creates an initial ga() function.  The queued commands will be executed once analytics.js loads.
-        i[r] = i[r] || function() {
-                (i[r].q = i[r].q || []).push(arguments)
-            },
+                // Creates an initial ga() function.  The queued commands will be executed once analytics.js loads.
+                i[r] = i[r] || function() {
+                        (i[r].q = i[r].q || []).push(arguments)
+                    },
 
-            // Sets the time (as an integer) this tag was executed.  Used for timing hits.
-            i[r].l = 1 * new Date();
+                    // Sets the time (as an integer) this tag was executed.  Used for timing hits.
+                    i[r].l = 1 * new Date();
 
-        // Insert the script tag asynchronously.  Inserts above current tag to prevent blocking in
-        // addition to using the async attribute.
-        a = s.createElement(o),
-            m = s.getElementsByTagName(o)[0];
-        a.async = 1;
-        a.src = g;
-        m.parentNode.insertBefore(a, m)
+                // Insert the script tag asynchronously.  Inserts above current tag to prevent blocking in
+                // addition to using the async attribute.
+                a = s.createElement(o),
+                    m = s.getElementsByTagName(o)[0];
+                a.async = 1;
+                a.src = g;
+                m.parentNode.insertBefore(a, m);
+            });
     })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
 
@@ -150,40 +154,42 @@
     }
 
     AnalyticsCore.init = function(successCallback) {
-        ga('create', analytics_id, 'auto');
-        var stat = $.cookie('send_stats');
-        if (stat === undefined) {
-            $('#analytics_dialog').modal('show');
-            $('#enable_analytics').click(function(event) {
-                window['ga-disable-' + analytics_id] = false;
-                var date = new Date();
-                var minutes = 30;
-                date.setTime(date.getTime() + (14 * 24 * 60 * 60 * 1000)); // 2 weeks
+        if (online){
+            ga('create', analytics_id, 'auto');
+            var stat = $.cookie('send_stats');
+            if (stat === undefined) {
+                $('#analytics_dialog').modal('show');
+                $('#enable_analytics').click(function(event) {
+                    window['ga-disable-' + analytics_id] = false;
+                    var date = new Date();
+                    var minutes = 30;
+                    date.setTime(date.getTime() + (14 * 24 * 60 * 60 * 1000)); // 2 weeks
 
-                $.cookie('send_stats', true, { expires: date });
-                sendData = true;
-                if (debugPrints) console.log("[AnalyticsCore] Analytics enabled");
-                successCallback();
-            });
-            $('#disable_analytics').click(function(event) {
-                var date = new Date();
-                var minutes = 30;
-                date.setTime(date.getTime() + (14 * 24 * 60 * 60 * 1000)); // 2 weeks
+                    $.cookie('send_stats', true, { expires: date });
+                    sendData = true;
+                    if (debugPrints) console.log("[AnalyticsCore] Analytics enabled");
+                    successCallback();
+                });
+                $('#disable_analytics').click(function(event) {
+                    var date = new Date();
+                    var minutes = 30;
+                    date.setTime(date.getTime() + (14 * 24 * 60 * 60 * 1000)); // 2 weeks
 
-                window['ga-disable-' + analytics_id] = true;
-                $.cookie('send_stats', false, { expires: date });
+                    window['ga-disable-' + analytics_id] = true;
+                    $.cookie('send_stats', false, { expires: date });
+                    if (debugPrints) console.log("[AnalyticsCore] Analytics disabled");
+                    sendData = false;
+                });
+
+            } else if (stat == "false") {
                 if (debugPrints) console.log("[AnalyticsCore] Analytics disabled");
                 sendData = false;
-            });
-
-        } else if (stat == "false") {
-            if (debugPrints) console.log("[AnalyticsCore] Analytics disabled");
-            sendData = false;
-            window['ga-disable-' + analytics_id] = true;
-        } else {
-            if (debugPrints) console.log("[AnalyticsCore] Analytics enabled");
-            sendData = true;
-            successCallback();
+                window['ga-disable-' + analytics_id] = true;
+            } else {
+                if (debugPrints) console.log("[AnalyticsCore] Analytics enabled");
+                sendData = true;
+                successCallback();
+            }
         }
     };
 
