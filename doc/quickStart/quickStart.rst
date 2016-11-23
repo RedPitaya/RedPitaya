@@ -10,4 +10,5 @@ Quick start
    first
    unlock
    SDcard/SDcard
+   alucase/alucase
    troubleshooting/troubleshooting
