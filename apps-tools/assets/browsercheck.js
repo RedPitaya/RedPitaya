@@ -22,13 +22,13 @@
             timeout: 300
         }).done(function(msg) {
         	if (msg.includes("-1")){
-            	console.log("online");
+            	//console.log("online");
             	callback();
         	}
         	else
-        		console.log("offline");
+        		//console.log("offline");
         }).fail(function(msg) {
-            console.log("offline");
+            //console.log("offline");
         });
     }
 
