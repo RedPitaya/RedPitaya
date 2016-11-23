@@ -25,7 +25,7 @@
             	//console.log("online");
             	callback();
         	}
-        	else
+        	//else
         		//console.log("offline");
         }).fail(function(msg) {
             //console.log("offline");
