@@ -514,12 +514,18 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     }
 
     // Now set threshold
-    int result = rp_AcqSetTriggerLevel((float) value.value);
-
+    int result = 0;
+    result = rp_AcqSetTriggerLevel(RP_CH_1, (float) value.value);
     if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV Failed to set trigger level: %s\n", rp_GetError(result));
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV1 Failed to set trigger level: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
+    result = rp_AcqSetTriggerLevel(RP_CH_2, (float) value.value);
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV2 Failed to set trigger level: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
 
     RP_LOG(LOG_INFO, "*ACQ:TRIG:LEV Successfully set trigger level.\n");
     return SCPI_RES_OK;

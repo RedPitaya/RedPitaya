@@ -14,6 +14,8 @@
 	// Init function
 	Help.init = function(states) {
 
+		return;
+
 		// If states not exists
 		if (!states) 
 			return;

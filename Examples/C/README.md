@@ -19,6 +19,11 @@ cd Examples/C
 make digital_led_blink
 ```
 
+Applications based on the API require a specific FPGA image to be loaded:
+```bash
+cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+```
+
 Execute the application. The path to Red Pitaya shared libraries must be provided explicitly. Some applications run in a continuous loop, press `CTRL+C` to stop them.
 ```bash
 LD_LIBRARY_PATH=/opt/redpitaya/lib ./digital_led_blink
