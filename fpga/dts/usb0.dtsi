@@ -12,5 +12,6 @@
 	};
 };
 &usb0 {
-	usb-phy = <&usb_phy0>;
+	phys = <&usb_phy0>;
+        phy-names = "usb-phy";
 };
