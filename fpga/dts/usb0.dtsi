@@ -12,6 +12,11 @@
 	};
 };
 &usb0 {
-	phys = <&usb_phy0>;
-        phy-names = "usb-phy";
+	usb-phy = <&usb_phy0>;
+// 
+// some ducumentation states "usb-phy" is deprecated
+// and the next code should be used instead
+// but this seems to be just plain wrong
+//	phys = <&usb_phy0>;
+//	phy-names = "usb-phy";
 };
