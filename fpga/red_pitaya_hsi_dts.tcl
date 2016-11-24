@@ -5,6 +5,7 @@
 # hsi -mode tcl -source red_pitaya_hsi_dts.tcl -tclargs projectname
 ################################################################################
 
+exec mkdir prj/$::argv
 cd prj/$::argv
 
 set path_sdk sdk

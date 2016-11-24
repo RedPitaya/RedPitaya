@@ -5,6 +5,7 @@
 # vivado -mode batch -source red_pitaya_vivado_project.tcl -tclargs projectname
 ################################################################################
 
+exec mkdir prj/$::argv
 cd prj/$::argv
 
 ################################################################################
