@@ -2,12 +2,42 @@
  * TFT controller specific code
  */
 
-&spi0 {
-	#address-cells = <1>;
-	#size-cells = <0>;
+&pinctrl0 {
+	pinctrl_spi1_tft: spi1_tft {
+		mux_spi {
+			function = "spi1";
+			groups = "spi1_0_grp";
+		};
+                mux_ss {
+                	function = "spi1_ss";
+                	groups   = "spi1_0_ss0_grp, spi1_3_ss1_grp";
+                };
 
-	is-decoded-cs = <0>;
-	num-cs = <3>;
+		conf_spi {
+			pins = "MIO10", "MIO11", "MIO12";
+			slew-rate = <1>;
+			bias-disable;
+			io-standard = <3>;  // LVCMOS33
+		};
+		conf_ss0 {
+			pins = "MIO13"";
+			slew-rate = \<0\>;
+			bias-pull-up;
+			io-standard = \<3\>;  // LVCMOS33
+		};
+		conf_ss {
+			pins = "MIO50";
+			slew-rate = \<0\>;
+			bias-pull-up;
+			io-standard = \<2\>;  // LVCMOS25
+		};
+	};
+};
+
+&spi1 {
+	num-cs = <2>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_spi1_tft>;
 
 	rpidisplay: rpi-display@0 {
 		compatible = "ilitek,ili9341";
@@ -36,18 +66,8 @@
 		pendown-gpio = <&gpio0 72 0>;
 		vcc-supply = <&fixedreg33>;
 	};
-
-	myspidev: spidev@2 {
-		compatible = "linux,spidev";
-		reg = <2>;
-		spi-max-frequency = <1000000>;
-	};
 };
 /{
-	aliases {
-		spi0 = &spi0;
-	};
-
 	backlight {
 		compatible = "gpio-backlight";
 		gpios = <&gpio0 63 0>;
