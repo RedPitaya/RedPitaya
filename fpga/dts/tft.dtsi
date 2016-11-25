@@ -20,16 +20,16 @@
 			io-standard = <3>;  // LVCMOS33
 		};
 		conf_ss0 {
-			pins = "MIO13"";
-			slew-rate = \<0\>;
+			pins = "MIO13";
+			slew-rate = <0>;
 			bias-pull-up;
-			io-standard = \<3\>;  // LVCMOS33
+			io-standard = <3>;  // LVCMOS33
 		};
 		conf_ss {
 			pins = "MIO50";
-			slew-rate = \<0\>;
+			slew-rate = <0>;
 			bias-pull-up;
-			io-standard = \<2\>;  // LVCMOS25
+			io-standard = <2>;  // LVCMOS25
 		};
 	};
 };
