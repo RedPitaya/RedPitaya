@@ -132,8 +132,9 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 ################################################################################
 
 LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
+LINUX_CONFIG = $(LINUX_DIR)/.config
 
-.PHONY: linux linux-install
+.PHONY: linux linux-config linux-menuconfig linux-install
 
 linux: $(LINUX)
 
@@ -159,13 +160,21 @@ $(LINUX_DIR): $(LINUX_TAR)
 	cp -r patches/rtl8192cu $@/drivers/net/wireless/
 	patch -d $@ -p 1 < patches/linux-xlnx-$(LINUX_TAG)-wifi.patch
 
-$(LINUX): $(LINUX_DIR)
+$(LINUX_CONFIG): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
-	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+
+$(LINUX): $(LINUX_CONFIG)
+	make -C $(LINUX_DIR) ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage modules
+
+linux-config: $(LINUX_CONFIG)
+
+linux-menuconfig: $(LINUX_CONFIG)
+	make -C $(LINUX_DIR) ARCH=arm menuconfig
 
 linux-install: linux $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
+	make -C $(LINUX_DIR) ARCH=arm CFLAGS=$(LINUX_CFLAGS) INSTALL_MOD_PATH=$(abspath $(INSTALL_DIR)) modules_install
 
 ################################################################################
 # device tree processing
