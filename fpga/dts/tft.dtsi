@@ -5,6 +5,11 @@
 &pinctrl0 {
 	pinctrl_spi1_tft: spi1_tft {
                 // SPI1 for TFT and touch
+                // SPI1_MOSI - MIO[10]
+                // SPI1_MISO - MIO[11]
+                // SPI1_SCLK - MIO[12]
+                // SPI1_SSn0 - MIO[13]
+                // SPI1_SSN1 - MIO[50]
 		mux_spi {
 			function = "spi1";
 			groups = "spi1_0_grp";
@@ -31,7 +36,7 @@
 			bias-pull-up;
 			io-standard = <2>;  // LVCMOS25
 		};
-                // TFT DC
+                // TFT D/C (data/control)
 		mux_tft_dc {
 			function = "gpio0";
 			groups = "gpio0_8_grp";
