@@ -92,28 +92,43 @@ the user expects some value in creating ranges, then the Manual mode can be used
       measure Z as the complex value Z=\|Z\|e^(jP) where P is the measured phase and \|Z\| is the impedance amplitude.
       All other parameters are calculated from the Series or the Parallel equivalent circuit.
     - Export of measured data in .csv format
-    - Min, Max, Average measurements       
+    - Min, Max, Average measurements  
+    - 1000 logging points     
 
-.. image:: LCR_range.png
-
-Frequency response analyzer enables measurements of frequency amplitude response of desired DUT (Device Under Test).
-The measurements of frequency response are in range from 0Hz to 60MHz.
-Measurements are in real time and the frequency range is NOT adjustable.
-Measurement can be done for each channel independently, i.e it enables simultaneously measurements of two DUTs.
-How to connect DUT to the Red Pitaya when using Frequency Response analyser is shown in picture below.
+Connecting the LCR module
+*************************
 
 .. image:: E_module_connection.png
 
-On pictures below are shown comparison measurements of the selected DUT. Measurements are taken with Red Pitaya and 
-Keysight precision LCR meter. From this plots you can extract basic Red Pitaya accuracy. Notice Red Pitaya LCR meter / Impedance analyzer are not certificated for certain accuracy or range.
+Fatures
+*******
 
-.. image:: LCR_100R.png
-   :width: 45%
-.. image:: LCR_100K.png
-   :width: 45%
-.. image:: LCR_1M.png
-   :width: 45%
-   
-Impedance analyzer application can be used without LCR Extension module using manual setting of shunt resistor. This option is described below. Notice that you will need to change “C_cable” parameter in the code when using your setup.
-
-.. image:: Impedance_analyzer_manaul_R_Shunt.png
++-------------------------------+----------------------------+----------------------------+
+|                               | STEMlab 125 - 10           | STEMlab 125 - 14           |
++-------------------------------+----------------------------+----------------------------+
+| Measured primary parameters   | Z, L, C, R                 | Z, L, C, R                 |
++-------------------------------+----------------------------+----------------------------+
+| Measured secondary parameters | P, D, Q, E                 | P, D, Q, E                 |
++-------------------------------+----------------------------+----------------------------+
+| Selectable frequencies        | 100Hz, 1kHz, 10kHz, 100kHz | 100Hz, 1kHz, 10kHz, 100kHz |
++-------------------------------+----------------------------+----------------------------+
+| Impedance range               | 1 Ohm-10 MOhm              | 1 Ohm-10 MOhm              |
++-------------------------------+----------------------------+----------------------------+
+| DC bias                       | 0.5 V                      | 0.5 V                      |
++-------------------------------+----------------------------+----------------------------+
+| Basic accuracy                | 5,00%                      | 1,00%                      |
++-------------------------------+----------------------------+----------------------------+
+| Max input voltage             | 0.5Vpp                     | 0.5Vpp                     |
++-------------------------------+----------------------------+----------------------------+
+| Input protection              | Yes                        | Yes                        |
++-------------------------------+----------------------------+----------------------------+
+| Parameter range Z             | 1 Ohm-10 MOhm              | 1 Ohm-10 MOhm              |
++-------------------------------+----------------------------+----------------------------+
+| Parameter range Rs, Rp        | 1 Ohm-10 MOhm              | 1 Ohm-10 MOhm              |
++-------------------------------+----------------------------+----------------------------+
+| Parameter range Ls, Lp        | 100nH-1000 H               | 100nH-1000 H               |
++-------------------------------+----------------------------+----------------------------+
+| Parameter range Cs, Cp        | 10pF - 100 mF              | 1pF - 100 mF               |
++-------------------------------+----------------------------+----------------------------+
+| Parameter range P             |  ± 180 deg                 | ± 180 deg                  |
++-------------------------------+----------------------------+----------------------------+
