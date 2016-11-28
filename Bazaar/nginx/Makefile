@@ -24,16 +24,18 @@ WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
 
 # Remove everything we can.
-# We will add things one-by-one accoording to our needs in add_modules.
-add_modules  = --add-module=../ngx_ext_modules/ngx_http_rp_module
-add_modules += --add-module=../ngx_ext_modules/lua-nginx-module
+# We will add things one-by-one accoording to our needs.
+configuration  = --add-module=../ngx_ext_modules/ngx_http_rp_module
+configuration += --add-module=../ngx_ext_modules/lua-nginx-module
+configuration += --error-log-path=/var/log/redpitaya_nginx/error.log
+configuration += --with-ipv6
 
 VERSION=$(VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
-	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(add_modules) --error-log-path=/var/log/redpitaya_nginx/error.log;
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(configuration);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB):
