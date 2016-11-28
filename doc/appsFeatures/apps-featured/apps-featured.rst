@@ -3,7 +3,7 @@ Applications
 ############
 
 .. toctree::
-   :maxdepth: 6
+   :maxdepth: 2
    :numbered:
    
    ./oscSigGen/osc.rst
