@@ -10,8 +10,8 @@
 			groups = "spi1_0_grp";
 		};
                 mux_ss {
-                	function = "spi1_ss";
-                	groups   = "spi1_0_ss0_grp", "spi1_3_ss1_grp";
+			function = "spi1_ss";
+			groups   = "spi1_0_ss0_grp", "spi1_3_ss1_grp";
                 };
 		conf_spi {
 			pins = "MIO10", "MIO11", "MIO12";
@@ -42,7 +42,17 @@
 			slew-rate = <0>;
 			io-standard = <3>;  // LVCMOS33
 		};
-                // TFT RESET
+		// TFT reset
+		mux_tft_dc {
+			function = "gpio0";
+			groups = "gpio0_51_grp";
+		};
+		conf_tft_dc {
+			pins = "MIO51";
+			bias-pull-up;
+			slew-rate = <0>;
+			io-standard = <3>;  // LVCMOS33
+		};
 		// touch pendown
 		mux_touch_pendow {
 			function = "gpio0";
@@ -72,7 +82,7 @@
 		fps = <10>;
 		buswidth = <8>;
 
-		reset-gpios = <&gpio0 70 0>;
+		reset-gpios = <&gpio0 51 0>;
 		dc-gpios = <&gpio0 8 0>;
 
 		debug = <0>;
