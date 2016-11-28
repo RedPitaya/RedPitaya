@@ -2,42 +2,6 @@
 Prepare SD card
 ###############
 
-**********
-Background
-**********
-
-A Red Pitaya SD card contains two partitions:
-
-1. 128MB FAT contains the **ecosystem**
-
-   * boot files: FSBL, FPGA images, U-Boot, Linux kernel
-   * Red Pitaya API libraries and header files
-   * Red Pitaya web applications, scripts, tools
-   * customized Nginx web server
-
-2. ~4GB Ext4 contains the **OS**
-
-   * Ubuntu/Debian OS
-   * various libraries
-   * network setup customization
-   * systemd services customization
-
-Most of Red Pitaya source code translates into the ecosystem,
-Therefore this is updated more often.
-The OS is changed less frequently.
-
-.. note::
-
-   You can find older and development Red Pitaya OS images and Ecosystem zipfiles
-   on our `download server <http://downloads.redpitaya.com/downloads/>`_.
-
-   http://downloads.redpitaya.com/downloads/
-
-.. note::
-
-   A list of new features, bugfixes and known bugs for each Red Pitaya release
-   can be found in our `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_.
-
 **********************************
 Download and install SD card image
 **********************************
@@ -268,6 +232,42 @@ Command line
 #. When the image is written, type: ``diskutil eject /dev/diskn`` and press enter.
 
 #. Safely eject the SD card.
+
+**********
+Background
+**********
+
+A Red Pitaya SD card contains two partitions:
+
+1. 128MB FAT contains the **ecosystem**
+
+   * boot files: FSBL, FPGA images, U-Boot, Linux kernel
+   * Red Pitaya API libraries and header files
+   * Red Pitaya web applications, scripts, tools
+   * customized Nginx web server
+
+2. ~4GB Ext4 contains the **OS**
+
+   * Ubuntu/Debian OS
+   * various libraries
+   * network setup customization
+   * systemd services customization
+
+Most of Red Pitaya source code translates into the ecosystem,
+Therefore this is updated more often.
+The OS is changed less frequently.
+
+.. note::
+
+   You can find older and development Red Pitaya OS images and Ecosystem zipfiles
+   on our `download server <http://downloads.redpitaya.com/downloads/>`_.
+
+   http://downloads.redpitaya.com/downloads/
+
+.. note::
+
+   A list of new features, bugfixes and known bugs for each Red Pitaya release
+   can be found in our `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_.
 
 
 #############################
