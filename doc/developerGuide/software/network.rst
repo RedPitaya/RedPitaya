@@ -178,13 +178,13 @@ Wireless client setup
 Wireless networks almost universally use some king of encryption/authentication scheme for security.
 This is handled by the tool `wpa_supplicant <https://w1.fi/wpa_supplicant/>`_.
 The default network configuration option on
-`Debian <https://wiki.debian.org/NetworkManager>`_ /
-`Ubuntu <https://help.ubuntu.com/community/NetworkManager>`_
+`Debian NetworkManager <https://wiki.debian.org/NetworkManager>`_ /
+`Ubuntu NetworkManager <https://help.ubuntu.com/community/NetworkManager>`_
 is `NetworkManager  <https://wiki.gnome.org/Projects/NetworkManager>`_.
 Sometimes it conflicts with the default ``systemd-networkd`` install, this seems to be one
-of those cases. On `Debian <https://packages.debian.org/jessie/armhf/wpasupplicant/filelist)/Ubuntu>`_
-a device specific `wpa_supplicant@.service <https://w1.fi/cgit/hostap/tree/wpa_supplicant/systemd/wpa_supplicant.service.arg.in>`_
-service is missing, so we made a copy `wpa_supplicant@.service <OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
+of those cases. On `Debian <https://packages.debian.org/jessie/armhf/wpasupplicant/filelist>`_ / Ubuntu
+a device `specific @.service <https://w1.fi/cgit/hostap/tree/wpa_supplicant/systemd/wpa_supplicant.service.arg.in>`_
+service is missing, so we made a copy `copy of wpa_supplicant@.service <OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
 in our Git repository.
 
 By default the service is installed as a dependency for ``multi-user.target``
