@@ -43,11 +43,11 @@
 			io-standard = <3>;  // LVCMOS33
 		};
 		// TFT reset
-		mux_tft_dc {
+		mux_tft_reset {
 			function = "gpio0";
 			groups = "gpio0_51_grp";
 		};
-		conf_tft_dc {
+		conf_tft_reset {
 			pins = "MIO51";
 			bias-pull-up;
 			slew-rate = <0>;
