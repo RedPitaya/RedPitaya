@@ -101,11 +101,12 @@
 	};
 };
 /{
-	backlight {
-		compatible = "gpio-backlight";
-		gpios = <&gpio0 63 0>;
-		default-on;
-	};
+	// Backlight should be uncommented if there is a GPIO available
+//	backlight {
+//		compatible = "gpio-backlight";
+//		gpios = <&gpio0 63 0>;
+//		default-on;
+//	};
 
 	fixedreg33: fixed33@0 {
 		compatible = "regulator-fixed";
