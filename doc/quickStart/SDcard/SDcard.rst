@@ -63,8 +63,8 @@ The next procedure will create a clean SD card.
     :backlinks: none
     :depth: 1
 
-   This instructions are based on similar instructions for
-   `Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
+This instructions are based on similar instructions for
+`Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
 
 #. Insert the SD card into Red Pitaya.
 
@@ -277,9 +277,9 @@ Upgrading Red Pitaya software
 Instead of writing the whole SD card image,
 it is possible to upgrade only the ecosystem.
 
-=====================
+*********************
 Web interface upgrade
-=====================
+*********************
 
 At boot Red Pitaya checks for software updates,
 and alerts the user if a new release is available.
@@ -298,9 +298,9 @@ Users can also check for updates manually.
 #. Follow the steps in the OS updater app in order to install new OS.
    Notice that OS upgrade might cause your Red Pitaya desktop to freeze for a few minutes.
 
-==============
+**************
 Manual upgrade
-==============
+**************
 
 A manual upgrade allows you to fix a corrupted SD card image
 (if only the FAT partition is corrupted) or to install
