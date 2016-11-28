@@ -130,7 +130,7 @@ Go to ``Serial port setup``, press **Enter** and setup the next options:
    +-----------------------------------------------------------------------+
 
 ``minicom`` requires some special ``Control+a`` key sequences to operate.
-Please see the `manual <https://linux.die.net/man/1/minicom>`_ for details.
+Please see the `minicom manual <https://linux.die.net/man/1/minicom>`_ for details.
 
 ~~~~~~~~~~
 ``screen``
@@ -149,7 +149,7 @@ better support for terminal window re-sizing, ...
    $ sudo screen /dev/ttyUSB1 115200 cs8
 
 Similar to ``minicom``, ``screen`` requires some special ``Control+a`` key sequences to operate.
-Please see the `manual <https://www.gnu.org/software/screen/manual/screen.html>`_ for details.
+Please see the `screen manual <https://www.gnu.org/software/screen/manual/screen.html>`_ for details.
 
 =======================
 Reference boot sequence
