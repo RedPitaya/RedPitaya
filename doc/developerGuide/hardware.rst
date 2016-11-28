@@ -2,7 +2,7 @@ Hardware
 ########
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 6
    :numbered:
 
    125-10/top.rst

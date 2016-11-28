@@ -23,9 +23,9 @@ What if this doesn't help?
 Connecting to Red Pitaya
 ************************
 
-#. First check the LEDs:
+.. image:: blinking-all-led-on.png
 
-.. image::
+#. First check the LEDs:
 
    If Green LED is not ON or it is blinking.
    Seems like something is wrong with the power supply or maybe it’s USB cable.
@@ -47,7 +47,7 @@ Connecting to Red Pitaya
 
 #. Make sure your Red Pitaya and computer are connected to same local network
 
-#. If you are Windows users make sure you have installed bonjur.
+#. If you are a Windows users make sure you have installed bonjur.
 
 ********************
 Slow WIFI connection
@@ -60,6 +60,7 @@ please check the following:
 * check the wifi signal strength on your PC/tablet/smartphone
 * check the wifi signal strength of your Red Pitaya.
 
+    .. TODO dodaj link do direktorija
    #. Connect to your Red Pitaya via SSH connection. `How? <>`_
 
    #. Enter ``cat /proc/net/wireless`` command in order to get

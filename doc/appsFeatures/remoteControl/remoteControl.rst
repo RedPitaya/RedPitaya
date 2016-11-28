@@ -30,9 +30,9 @@ Features
 - Incorporate your STEMLab and Labview  into testing and production lines
 - Take quick measurements directly with your PC 
 
-********
-Examples
-********
+******
+How to
+******
 
 In order to execute your Matlab, Labview, Scilab or Python
 scripts on the STEMLab board first you need to start SCPI server.

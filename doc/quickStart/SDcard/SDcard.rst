@@ -58,9 +58,10 @@ The next procedure will create a clean SD card.
 
 #. Write the image onto a SD card. Instructions are available for various operating systems:
 
-   * :ref:`Windows <windows>` (GUI),
-   * :ref:`Linux <linux>` (:ref:`GUI <linux_gui>`/:ref:`CLI <linux_cli>`),
-   * :ref:`macOS <macos>` (:ref:`GUI <macos_gui>`/:ref:`CLI <macos_cli>`).
+.. contents::
+    :local:
+    :backlinks: none
+    :depth: 1
 
    This instructions are based on similar instructions for
    `Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
@@ -69,8 +70,6 @@ The next procedure will create a clean SD card.
 
    .. image:: pitaya-quick-start-insert-sd-card.png
 
-
-.. _windows:
 
 =======
 Windows
@@ -113,9 +112,6 @@ Windows
 #. Exit the Imager.
 
    .. image:: SDcard_Win_Exit.png
-
-
-.. _linux:
 
 =====
 Linux
@@ -183,8 +179,6 @@ Command line
 
 #. Wait until the process has finished.
 
-
-.. _macos:
 
 =====
 macOS

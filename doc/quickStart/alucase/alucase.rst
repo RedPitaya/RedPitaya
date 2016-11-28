@@ -18,7 +18,7 @@ In the aluminum case, we want to take a look here.
 delivery
 ********
 
-.. image:: rp_alucase_02.jpg
+.. figure:: rp_alucase_02.jpg
 
    Red Pitaya Aluminum Case: delivery
 
@@ -39,7 +39,7 @@ A property that was, today, hardly anywhere is mentioned
 and given the heat that the Red Pitaya generates, seems extremely useful,
 I was a bit surprised: The entire case acts as a heat sink.
 
-.. image:: rp_alucase_03.jpg
+.. figure:: rp_alucase_03.jpg
 
    Red Pitaya Aluminum Case: Interior
 

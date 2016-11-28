@@ -4,7 +4,7 @@ STEM 125-14
 .. TODO overview
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 6
    
    fastIO
    extent

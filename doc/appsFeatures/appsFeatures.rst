@@ -7,7 +7,7 @@ Applications and Features
             slika glavne applikacije z razlagami ( desktop app )
     
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 6
    :numbered:
    
    apps-featured/apps-featured

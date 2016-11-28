@@ -47,9 +47,9 @@ Connect your Red Pitaya and PC with micro USB B to USB A cable and follow the in
 Windows
 -------
 
-Download and install the `FTD driver <http://www.ftdichip.com/Drivers/VCP.htm>`_ to your PC. After installation, a new
-COM port will appear in the Device Manager you can use in Hyperterminal or another terminal utility to connect to Red 
-Pitaya.
+Download and install the `FTD driver <http://www.ftdichip.com/Drivers/VCP.htm>`_ to your PC. After installation, a 
+new COM port will appear in the Device Manager you can use in Hyperterminal or another terminal utility to connect to 
+Red Pitaya.
 
 -----
 Linux

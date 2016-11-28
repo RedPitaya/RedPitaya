@@ -236,7 +236,8 @@ Manually downloading and installing free applications
 *****************************************************
 
 If you have problems with installing free applications via
-Bazaar web page or your Red Pitaya doesn’t have an internet access,
+`Bazaar web page <http://bazaar.redpitaya.com/>`_
+or your Red Pitaya doesn’t have an internet access,
 here are the instructions on how to install free applications manually.
 
 #. Download ``appname.zip`` file of the desired application from

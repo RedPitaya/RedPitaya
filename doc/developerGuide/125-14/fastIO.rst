@@ -63,6 +63,49 @@ Start your Red Pitaya and connect to it via Terminal.
    
    redpitaya> calib
  
+    Usage: calib [OPTION]...
+    
+    OPTIONS:
+     -r    Read calibration values from eeprom (to stdout).
+     -w    Write calibration values to eeprom (from stdin).
+     -f    Use factory address space.
+     -d    Reset calibration values in eeprom with factory defaults.
+     -v    Produce verbose output.
+     -h    Print this info.
+
+The EEPROM is a non-volatile memory, therefore the calibration coefficients
+will not change during Red Pitaya power cycles,
+nor will they change with software upgrades via Bazaar
+or with manual modifications of the SD card content. 
+Example of calibration parameters readout from EEPROM with verbose output:
+
+.. code-block:: shell-session
+   
+   redpitaya> calib -r -v
+   FE_CH1_FS_G_HI = 45870551      # IN1 gain coefficient for LV (± 1V range)  jumper configuration.
+   FE_CH2_FS_G_HI = 45870551      # IN2 gain coefficient for LV (± 1V range)  jumper configuration.
+   FE_CH1_FS_G_LO = 1016267064    # IN1 gain coefficient for HV (± 20V range) jumper configuration.
+   FE_CH2_FS_G_LO = 1016267064    # IN2 gain coefficient for HV (± 20V range) jumper configuration.
+   FE_CH1_DC_offs = 78            # IN1 DC offset  in ADC samples.
+   FE_CH2_DC_offs = 25            # IN2 DC offset  in ADC samples.
+   BE_CH1_FS = 42755331           # OUT1 gain coefficient.
+   BE_CH2_FS = 42755331           # OUT2 gain coefficient.
+   BE_CH1_DC_offs = -150          # OUT1 DC offset in DAC samples.
+   BE_CH2_DC_offs = -150          # OUT2 DC offset in DAC samples.
+
+Example of the same calibration parameters readout from EEPROM with non-verbose output, suitable for editing within 
+scripts::
+
+    redpitaya> calib -r
+           45870551            45870551          1016267064          1016267064 
+
+You can write changed calibration parameters using **calib -w** command:
+1. Type calib -w in to command line (terminal)
+2. Press enter
+3. Paste or write new calibration parameters
+4. Press enter
+
+ 
    Usage: calib [OPTION]...
    
    OPTIONS:
@@ -140,9 +183,9 @@ INPUTS
 Parameter                   Jumper settings Value
 =========================== =============== ===========
 DC GAIN ACCURACY @ 122 kS/s LV              0.2%
-DC OFFSET @ 122 kS/s        LV              +/- 0.5 mV
+DC OFFSET @ 122 kS/s        LV              ± 0.5 mV
 DC GAIN ACCURACY @ 122 kS/s HV              0.5%
-DC OFFSET @ 122 kS/s        HV              +/- 5 mV
+DC OFFSET @ 122 kS/s        HV              ± 5 mV
 =========================== =============== ===========
 
 AC gain accuracy can be extracted form Frequency response - Bandwidth. 
@@ -163,7 +206,7 @@ classical Oscilloscopes. To achieve calibration results given below, Red Pitaya 
 Parameter         Value
 ================= ==========
 DC GAIN ACCURACY  0.4%
-DC OFFSET         +/- 4 mV
+DC OFFSET         ± 4 mV
 RIPPLE(@ 0.5V DC) 0.4 mVpp
 ================= ==========
 

@@ -106,11 +106,11 @@ Parameter options:
 | | ``SOUR2:FUNC TRIANGLE``            |                            |                                                                          |
 +--------------------------------------+----------------------------+--------------------------------------------------------------------------+
 | | ``SOUR<n>:VOLT <amplitude>``       | ``rp_GenAmp``              | | Set amplitude voltage of fast analog outputs.                          |
-| | Examples:                          |                            | | Amplitude + offset value must be less than maximum output range +/- 1V |
+| | Examples:                          |                            | | Amplitude + offset value must be less than maximum output range ± 1V   |
 | | ``SOUR2:VOLT 0.5``                 |                            |                                                                          |
 +--------------------------------------+----------------------------+--------------------------------------------------------------------------+
 | | ``SOUR<n>:VOLT:OFFS <offset>``     | ``rp_GenOffset``           | | Set offset voltage of fast analog outputs.                             |
-| | Examples:                          |                            | | Amplitude + offset value must be less than maximum output range +/- 1V |
+| | Examples:                          |                            | | Amplitude + offset value must be less than maximum output range ± 1V   |
 | | ``SOUR1:VOLT:OFFS 0.2``            |                            |                                                                          |
 +--------------------------------------+----------------------------+--------------------------------------------------------------------------+
 | | ``SOUR<n>:PHAS <phase>``           | ``rp_GenPhase``            | Set phase of fast analog outputs.                                        |

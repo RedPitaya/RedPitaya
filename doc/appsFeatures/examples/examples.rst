@@ -6,7 +6,7 @@ We believe in enpowering individuals to conduct their own education, discover th
 ideas with other passionate people.
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 6
    :numbered:
 
    digital

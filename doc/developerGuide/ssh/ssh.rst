@@ -11,13 +11,11 @@ Access information for SSH connection:
     
 Connection instructions are available for:
 
-* :ref:`Windows <windows>`,
-* :ref:`Linux <linux>`,
-* :ref:`macOS <macos>`.
-
-
-.. _windows:
-
+.. contents::
+    :local:
+    :backlinks: none
+    :depth: 1
+    
 =======
 Windows
 =======
@@ -40,9 +38,6 @@ Command prompt pops-up after login is successful.
 
    Figure: SSH connection via PuTTy
 
-
-.. _linux:
-
 =====
 Linux
 =====
@@ -55,9 +50,6 @@ Start Terminal and type (replace IP address with the right one):
    root@192.168.1.100's password: root
    Red Pitaya GNU/Linux/Ecosystem version 0.90-299
    redpitaya>
-
-
-.. _macos:
 
 =====
 macOS

@@ -2,7 +2,7 @@ Digital communication interfaces
 ################################
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 6
    :numbered:
    
    i2c

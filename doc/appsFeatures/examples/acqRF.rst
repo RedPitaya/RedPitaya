@@ -2,7 +2,7 @@ Acquiring signals at RF inputs (125 MS/s)
 #########################################
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 6
    :numbered:
    
    acqRF-exm1
