@@ -1,6 +1,6 @@
------------------
-Example 4 - Alarm
------------------
+-----
+Alarm
+-----
 
 This example is a combination of previous examples and is also introducing functions.
 The PIR motion sensor will detect moving persons, while the LED and buzzer will be used to sound the alarm.
@@ -17,6 +17,10 @@ Components:
 3. `Grove PIR Motion Sensor <http://www.seeedstudio.com/wiki/Grove_-_PIR_Motion_Sensor>`_
 4. `Grove Buzzer <http://www.seeedstudio.com/wiki/Grove_-_Buzzer>`_
 
+.. note:: 
+
+    Extension module can be purchased from Red Pitaya `store <http://store.redpitaya.com/>`_. 
+    
 .. image:: wiring.png
    :alt: Wiring for Alarm
 

@@ -64,10 +64,14 @@ Pitaya” section in the Visual Programing Interface. The Extension module can b
 via a micro USB connector. A set of nine JUMPERS is used for reconnecting certain extension module connectors to 
 different :ref:`E1 <E1>` or :ref:`E2 <E2>` pins or changing power supply settings. For example: With J1 and J3 you
 can set the source of VCC- external or from Red Pitaya. A full schematic of the Extension module is available on our 
-web page. Don’t forget to check our videos with examples.
+web page. Don’t forget to check our videos with :ref:`examples <visExamp>`.
 
 .. image:: VP_sensors.png
 
+.. note:: 
+
+    The extension module can be purchased from Red Pitaya `store <http://store.redpitaya.com/>`_. 
+    
 ==========
 Connectors
 ==========
@@ -223,12 +227,14 @@ Groove LCD                                                                      
 LCD                                                                                         Digital pins
 ========================================================================================    ============
 
+.. _visExamp:
+
 ********
 Examples
 ********
 
 .. toctree::
-   :maxdepth: 6
+   :maxdepth: 1
    :numbered:
    
    visualExamples/example_1/example

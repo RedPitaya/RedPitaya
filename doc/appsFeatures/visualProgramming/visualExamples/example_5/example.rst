@@ -1,6 +1,6 @@
-------------------------------
-Example 5 - Temperature logger
-------------------------------
+------------------
+Temperature logger
+------------------
 
 This example shows how analog sensors can be used.
 The previous digital sensors only supported digital values like ``ON/OFF``, ``HIGH/LOW`` or ``1/0``.
@@ -16,6 +16,10 @@ Components:
 1. Red Pitaya
 2. extension module
 3. `Grove Temperature Sensor V1.2 <http://www.seeedstudio.com/wiki/Grove_-_Temperature_Sensor_V1.2>`_
+
+.. note:: 
+
+    Extension module can be purchased from Red Pitaya `store <http://store.redpitaya.com/>`_. 
 
 .. image:: wiring.png
    :alt: Wiring for Temperature logger

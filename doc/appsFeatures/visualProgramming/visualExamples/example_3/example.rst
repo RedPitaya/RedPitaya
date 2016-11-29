@@ -1,6 +1,6 @@
------------------------------
-Example 3 - PIR Motion Sensor
------------------------------
+-----------------
+PIR Motion Sensor
+-----------------
 
 The previous examples only used indicators, LED and buzzer.
 This example is using an infra red sensor to detect motion,
@@ -17,6 +17,10 @@ Components:
 1. Red Pitaya
 2. extension module
 3. `Grove PIR Motion Sensor <http://www.seeedstudio.com/wiki/Grove_-_PIR_Motion_Sensor>`_
+
+.. note:: 
+
+    Extension module can be purchased from Red Pitaya `store <http://store.redpitaya.com/>`_. 
 
 .. image:: wiring.png
    :alt: Wiring for PIR Motion Sensor

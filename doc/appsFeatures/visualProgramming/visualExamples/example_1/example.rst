@@ -1,6 +1,6 @@
----------------------
-Example 1 - LED blink
----------------------
+---------
+LED blink
+---------
 
 Every developer facing a new toy (development board) starts with simple tasks, like lighting a LED.
 

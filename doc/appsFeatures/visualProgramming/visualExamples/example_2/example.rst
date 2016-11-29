@@ -1,9 +1,13 @@
-------------------
-Example 2 - Buzzer
-------------------
+------
+Buzzer
+------
 
 This example introduces the extension module, the Grove Buzzer, *Dashboard* block *Switch* and variables.
 We will be able to use an on screen switch is used to turn a buzzer ``ON`` and ``OFF``.
+
+.. note:: 
+
+    Extension module can be purchased from Red Pitaya `store <http://store.redpitaya.com/>`_. 
 
 ~~~~~~
 Wiring
