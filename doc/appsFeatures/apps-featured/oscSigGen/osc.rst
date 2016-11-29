@@ -73,7 +73,7 @@ The available settings are the following:
     - **INVERT:** Reflects the graph on the X axis.
     - **Probe attenuation:** (must be selected manually) The division that was set on the probe.
     - **Vertical offset:** Moves the curve up or down.
-    - **LV and HV:** Must be selected according to the jumper position on each channel.
+    - **LV and HV:** Must be selected according to the jumper `position <http://wiki.redpitaya.com/index.php?title=Analog_frontend_-_Inputs>`_ on each channel.
 
     
 Outputs
@@ -114,7 +114,8 @@ steady fashion. The parameter Source defines the trigger source used for this. T
     - **STOP** Pause triggers.
     - **RUN** Starts/continues triggering.
 
-The Source parameter defines the source used for this purpose. With the IN1 or the IN2 the signal at the respective input is selected; with the EXT you can invoke the trigger from outside through Pin 3 on the header row E1.
+The Source parameter defines the source used for this purpose. With the IN1 or the IN2 the signal at the respective 
+input is selected; with the EXT you can invoke the trigger from outside through Pin 3 on the header row :ref:`E1 <E1>`.
 
 Math
 =====
@@ -178,7 +179,7 @@ Oscilloscope
 +-----------------------------+-------------------------------+------------------------------+
 | Input channels              | 2                             | 2                            |
 +-----------------------------+-------------------------------+------------------------------+
-| Bandwidth                   | 40MHz                         | 40MHz                        |
+| Bandwidth                   | 40MHz                         | 50MHz                        |
 +-----------------------------+-------------------------------+------------------------------+
 | Resolution                  | 10bit                         | 14bit                        |
 +-----------------------------+-------------------------------+------------------------------+
@@ -188,7 +189,7 @@ Oscilloscope
 +-----------------------------+-------------------------------+------------------------------+
 | Input coupling              | DC                            | DC                           |
 +-----------------------------+-------------------------------+------------------------------+
-| Minimal Voltage Sensitivity | ± 0.244mV / ± 2.44mV          |                              |
+| Minimal Voltage Sensitivity | ± 1.95mV / ± 39mV             | ± 0.122mV / ± 2.44mV         |
 +-----------------------------+-------------------------------+------------------------------+
 | External Trigger            | Yes                           | Yes                          |
 +-----------------------------+-------------------------------+------------------------------+
@@ -214,7 +215,7 @@ Signal generator
 +------------------+-------------------+------------------+
 | External Trigger | Yes               | Yes              |
 +------------------+-------------------+------------------+
-| Output load      | 50Ω               | 50 Ω             |
+| Output load      | 50 Ω              | 50 Ω             |
 +------------------+-------------------+------------------+
 
 

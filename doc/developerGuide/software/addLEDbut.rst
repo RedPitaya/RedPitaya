@@ -1,9 +1,13 @@
+.. _ABCLED:
+
+###########################
 Add a button to control LED
 ###########################
 
 You can control Red Pitaya's peripherals via Web UI. In this tutorial will be shown how to turn on and off LED on Red
 Pitaya using parameters.
 
+******
 Web UI
 ******
 
@@ -71,6 +75,7 @@ Red Pitaya can update real LED state.
     Parameter that transfers local LED state to Red Pitaya backend is called LED_STATE. You can change name of this 
     parameter, but don’t forget to use the same name also in controller.
     
+**********
 Controller
 **********
 

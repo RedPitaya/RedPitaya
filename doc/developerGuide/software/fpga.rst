@@ -2,10 +2,7 @@ FPGA
 ####
 
 .. TODO overview ( razlicni designi )
-.. TODO ni dostopni http://redpitaya.com/examples-new/fpga-blink-led-tutorial/
     source offitial FPGA image (kje, kakko
-    odt/README.rst
-    odtfpga.rst
             
 Register map 
 ************
@@ -15,9 +12,6 @@ Red Pitaya HDL design has multiple functions, which are configured by registers.
 The table describes address space partitioning implemented on FPGA via AXI GP0 interface. All registers have offsets aligned to 4 bytes and are 32-bit wide. Granularity is 32-bit, meaning that minimum transfer size is 4 bytes. The organization is little-endian.
 The memory block is divided into 8 parts. Each part is occupied by individual IP core. Address space of individual application is described in the subsection below. The size of each IP core address space is 4MByte. 
 For additional information and better understanding check other documents (schematics, specifications...).
-
-.. .. table:: Truth table for "not"
-..    :widths: auto
 
 .. tabularcolumns:: |p{15mm}|p{22mm}|p{22mm}|p{55mm}|
 

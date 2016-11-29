@@ -2,6 +2,7 @@
 Fast analog IO
 ##############
 
+*************
 Analog inputs
 *************
 
@@ -16,8 +17,11 @@ Analog inputs
 * Full scale voltage: 2Vpp, (46 Vpp for lowgain jumper setting) (T,V)
 * DC offset error: <5 % FS (G) 
 * gain error: < 3% (at high gain jumper setting), <10% (at low gain jumper setting) (G) 
-* Absolute maximum input voltage rating: 30 V (S) (1500 V ESD) 
+* **Absolute maximum input voltage rating: 30 V (S) (1500 V ESD)**
 * Overload protection: protection diodes (under the input voltage rating conditions) 
+
+.. TODO http://wiki.redpitaya.com/index.php?title=Analog_frontend_-_Inputs
+
 * Input channel isolation: typical performance 65 dB @ 10 kHz, 50 dB @ 100 kHz, 55 dB @ 1 M, 55 dB @ 10 MHz, 52 dB 
 * @ 20 MHz, 48 dB @ 30 MHz, 44 dB @ 40 MHz, 40 dB @ 50 MHz. (C) 
 * Harmonics 
@@ -27,6 +31,7 @@ Analog inputs
 * Connector type: SMA (U) 
 * Frequency response is adjusted by digital compensation 
 
+**************
 Analog outputs
 **************
 
@@ -47,6 +52,7 @@ Analog outputs
 * -48 dBc @ 20 MHz 
 * -53 dBc @ 45 MHz 
 
+***********************************
 Analog inptus & outputs calibration
 ***********************************
 
@@ -192,6 +198,7 @@ AC gain accuracy can be extracted form Frequency response - Bandwidth.
 
 .. image:: 800px-Bandwidth_of_Fast_Analog_Inputs.png
 
+=======
 OUTPUTS
 =======
 

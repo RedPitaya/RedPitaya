@@ -1,7 +1,7 @@
 SPI
 ###
 
-http://blog.redpitaya.com/examples-new/spi/
+.. http://blog.redpitaya.com/examples-new/spi/
 
 Description
 ***********

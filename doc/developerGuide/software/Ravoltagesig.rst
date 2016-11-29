@@ -1,10 +1,8 @@
 Reading analog voltage from slow inputs + graph
 ###############################################
 
-.. TODO referenca Reading analog voltage from slow inputs (value)
-
-In this example we will plot on graph voltage measured on one of Red Pitaya slow analog inputs. We take Reading
-analog voltage from slow inputs (value) as a basis.
+In this example we will plot on graph voltage measured on one of Red Pitaya slow analog inputs. We take 
+Reading analog voltage from slow inputs :ref:`example <ReadAVSI>` as a basis.
 
 Web UI
 ******

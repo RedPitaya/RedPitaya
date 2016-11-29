@@ -14,8 +14,8 @@ Components:
 .. image:: wiring.png
    :alt: Wiring for LED blink
 
-This example does not require the extension module yet,
-there are 8 LEDs on the Red Pitaya board, which can be turn ``ON`` or ``OFF``.
+This example does not require an extension module.
+There are 8 LEDs on the Red Pitaya board, which can be turned ``ON`` or ``OFF``.
 
 ~~~~~~~~~~~
 Description

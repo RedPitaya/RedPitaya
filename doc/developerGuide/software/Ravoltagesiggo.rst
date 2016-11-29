@@ -1,12 +1,12 @@
+#################################################################
 Reading analog voltage from slow inputs + graph + gain and offset
 #################################################################
 
-.. TODO referenca Reading analog voltage from slow inputs (graph).
+In this example we will modify our oscilloscope made in Reading analog voltage from slow inputs
+:ref:`example <ReadAVSI>`. We will add gain and offset settings to present how some parameters set in UI can be then 
+applied on the signal in the backend.
 
-In this example we will modify our oscilloscope made in Reading analog voltage from slow inputs (graph).
-We will add gain and offset settings to present how some parameters set in UI can be then applied on the signal in the
-backend.
-
+******
 Web UI
 ******
 
@@ -52,6 +52,7 @@ They will be used by controller.
 
     $('#offset_value').text(APP.offset);
 
+**********
 Controller
 **********
 

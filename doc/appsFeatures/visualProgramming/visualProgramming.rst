@@ -62,9 +62,9 @@ Arduino Uno shields for all sorts of projects, so just find your desired shield 
 For this, unlike using Grove modules, you will need to read raw data from the analog or digital pins using the “Red 
 Pitaya” section in the Visual Programing Interface. The Extension module can be powered from the external power supply
 via a micro USB connector. A set of nine JUMPERS is used for reconnecting certain extension module connectors to 
-different E1* or E2* pins or changing power supply settings. For example: With J1 and J3 you can set the source of
-VCC- external or from Red Pitaya. A full schematic of the Extension module is available on our web page. Don’t forget
-to check our videos with examples.
+different :ref:`E1 <E1>` or :ref:`E2 <E2>` pins or changing power supply settings. For example: With J1 and J3 you
+can set the source of VCC- external or from Red Pitaya. A full schematic of the Extension module is available on our 
+web page. Don’t forget to check our videos with examples.
 
 .. image:: VP_sensors.png
 

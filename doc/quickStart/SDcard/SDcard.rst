@@ -1,3 +1,5 @@
+.. _prepareSD:
+
 ###############
 Prepare SD card
 ###############
@@ -8,15 +10,16 @@ Download and install SD card image
 
 The next procedure will create a clean SD card.
 
-#. Download the Red Pitaya SD card image
-   `stable <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_ or
-   `beta <http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip>`_.
+#. Download the Red Pitaya SD card image:
 
-   Stable: http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
+   - `Stable <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_
+   - `Beta <http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip>`_.
+
+..    Stable: http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
    Beta: http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
     
-   .. image:: microSDcard-RP.png
-      :width: 10%
+.. image:: microSDcard-RP.png
+    :width: 10%
 
 #. Unzip the SD card image.
 
@@ -27,10 +30,7 @@ The next procedure will create a clean SD card.
     :backlinks: none
     :depth: 1
 
-This instructions are based on similar instructions for
-`Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
-
-#. Insert the SD card into Red Pitaya.
+4. Insert the SD card into Red Pitaya.
 
    .. image:: pitaya-quick-start-insert-sd-card.png
 
@@ -262,8 +262,6 @@ The OS is changed less frequently.
    You can find older and development Red Pitaya OS images and Ecosystem zipfiles
    on our `download server <http://downloads.redpitaya.com/downloads/>`_.
 
-   http://downloads.redpitaya.com/downloads/
-
 .. note::
 
    A list of new features, bugfixes and known bugs for each Red Pitaya release
@@ -291,12 +289,15 @@ Users can also check for updates manually.
 
    .. image:: SDcard_upgrade_desktop.png
 
-#. Delect ecosystem version and start OS updater
+#. Select ecosystem version and start OS updater
 
    .. image:: SDcard_update_manager.png
 
 #. Follow the steps in the OS updater app in order to install new OS.
-   Notice that OS upgrade might cause your Red Pitaya desktop to freeze for a few minutes.
+   
+.. note::
+   
+   OS upgrade might cause your Red Pitaya desktop to freeze for a few minutes.
 
 **************
 Manual upgrade

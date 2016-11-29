@@ -183,7 +183,8 @@ The default mounting intends for unipolar XADC inputs,
 which allow for observing only positive signals with a saturation range of *0V ~ 1V*.
 There are additional voltage dividers use to extend this range up to the power supply voltage.
 It is possible to configure XADC inputs into a bipolar mode with a range of *-0.5V ~ +0.5V*,
-but it requires removing R273 and providing a *0.5V ~ 1V* common voltage on the E2 connector.
+but it requires removing R273 and providing a *0.5V ~ 1V* common voltage on the :ref:`E2 <E2>`
+connector.
 
 .. note::
 

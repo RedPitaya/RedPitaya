@@ -34,9 +34,9 @@ Additional Required Items not supplied with the STEM kits:
 
 .. note::
 
-   Before STEM kits were introduced all Red Pitaya kits were shipped with blank SD cards.
-   If you have such a kit, please follow the steps in the Prepare SD card paragraph
-   to properly load Red Pitaya OS to your SD card.
+   Before STEM kits were introduced all Red Pitaya kits were shipped with a blank SD cards.
+   If you have such a kit, please follow the steps in the :ref:`Prepare SD card <prepareSD>` 
+   paragraph to properly load Red Pitaya OS to your SD card.
 
 .. note::
 

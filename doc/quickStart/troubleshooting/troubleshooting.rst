@@ -1,53 +1,50 @@
+.. _troubleshooting:
+
 ###############
 Troubleshooting
 ###############
 
-*******************
-Upgrading to new OS
-*******************
+*********************************
+Problems connecting to Red Pitaya
+*********************************
 
-* licensing is not working
-* status always shows offline
-* OS version information is not updated
-* other malfunctions of the OS and applications
-
-Solution:
-
-   Force refresh of the Red Pitaya application page
-
-What if this doesn't help?
-
-   Clear your browser cache and history.
-
-************************
-Connecting to Red Pitaya
-************************
+.. TODO slika s ETH kablom
 
 .. image:: blinking-all-led-on.png
 
 #. First check the LEDs:
 
-   If Green LED is not ON or it is blinking.
-   Seems like something is wrong with the power supply or maybe it’s USB cable.
-   Make sure that:
+   a. If **green LED** is not **ON** or it is **blinking**.
+      Seems like something is wrong with the power supply or maybe it’s USB cable.
+      Make sure that:
 
-   * you have plugged the USB cable into the right USB connector on Red Pitaya
-   * your power supply is 5V/2A
-   * try to replace USB cable and also USB power supply
+       1. you have plugged the USB cable into the right USB connector on Red Pitaya
+       2. your power supply is 5V/2A
+       3. try to replace USB cable and also USB power supply
 
-   If Green LED is ON, but Blue LED is not.
-   In this case there is an error while loading Red Pitaya system from the SD card. Make sure that:
+   #. If **green LED** is **ON**, but **blue LED** is **OFF**.
+      In this case there is an error while loading Red Pitaya system from the SD card. Make sure that:
 
-   * you have properly inserted Red Pitaya SD card and that it has properly installed Red Pitaya OS
-   * try to use another SD card
+       * you have properly inserted Red Pitaya SD card and that it has properly installed Red Pitaya OS 
+         (Notice that Red Pitayas already comes with pre-installed OS on SD cards. Anyhow, SD cards might get corrupted - 
+         in such case follow these instructions to properly re-install Red Pitaya OS to SD card)
+       
+       * try to use another SD card
 
-   If Green and blue LEDs are on, but red and orange LEDs are not blinking.
-   Red LED is indicating CPU heartbeat, while orange LED indicates access to SD card.
-   Notice that this two LEDs always starts blinking 10s after green and blue LEDs are turned ON.
+   #. If **green** and **blue** LEDs are **ON**, but **red** and **orange** LEDs are **not blinking**.
+      Red LED is indicating CPU heartbeat, while orange LED indicates access to SD card.
+      Notice that this two LEDs always starts blinking 10s after green and blue LEDs are turned ON.
 
-#. Make sure your Red Pitaya and computer are connected to same local network
+#. Make sure your Red Pitaya and computer are connected to same :ref:`local network <faqConnected>`.
 
-#. If you are a Windows users make sure you have installed bonjur.
+#. If you are a Windows users make sure you have installed `Bonjour Print Services <http://redpitaya.com/bonjour>`_.
+
+****************************************************************************
+Problems with upgrading OS, accessing market place or unlocking applications 
+****************************************************************************
+
+1. Make sure your Red Pitaya has access to the internet. :ref:`How <internetAccess>`?
+#. Force refresh of the Red Pitaya application page. `How <http://www.wikihow.com/Force-Refresh-in-Your-Internet-BrowserforceRefresh>`_? 
 
 ********************
 Slow WIFI connection
@@ -60,7 +57,7 @@ please check the following:
 * check the wifi signal strength on your PC/tablet/smartphone
 * check the wifi signal strength of your Red Pitaya.
 
-   1. Connect to your Red Pitaya via SSH connection. `SSH <ssh>`_
+   1. Connect to your Red Pitaya via SSH connection. :ref:`SSH connection <ssh>`
 
    #. Enter ``cat /proc/net/wireless`` command in order to get
       information about link quality and signal strength.
@@ -84,15 +81,15 @@ please check the following:
   `Wireless diagnostic <http://www.howtogeek.com/211034/troubleshoot-and-analyze-your-mac%E2%80%99s-wi-fi-with-the-wireless-diagnostics-tool/>`_
   tool in order to find best wifi channel.
 
-**********************************************************************
-Problems with upgradin OS, marketplace access or application unlocking
-**********************************************************************
-
-Make sure your Red Pitaya has access to the internet.
-
+.. note::
+    
+    For full preformence the wired connection is preffered. 
+  
 ###
 FAQ
 ###
+
+.. _internetAccess:
 
 ******************************************************************
 How can I make sure that my Red Pitaya has access to the internet?
@@ -116,6 +113,10 @@ How can I make sure that my Red Pitaya has access to the internet?
       4 packets transmitted, 4 received, 0% packet loss, time 3004ms
       rtt min/avg/max/mdev = 27.140/27.212/27.329/0.136 ms
 
+      
+      
+.. _faqConnected:
+      
 ******************************************************************************************************
 How can I make sure that Red Pitaya is connected to the same network as my computer/tablet/smartphone?
 ******************************************************************************************************
@@ -150,40 +151,18 @@ the same local network as your Red Pitaya and try the following:
 
    .. image:: MAC.png
 
-   If you have established wireless connection,
-   then you will most probably find the MAC address
-   written on your wireless USB dongle.
+.. note:: 
+
+   If you have established wireless connection, then you should check the MAC
+   address of your wireless USB dongle. Ususaly MAC address shuld be written 
+   on the USB dongle.
 
 3. Type your Red Pitaya IP into your WEB browser and connect to it.
 
    .. image:: Screen-Shot-2015-09-26-at-09.34.00.png
 
-If your Red Pitaya is not listed on the list
-of your local network devices in the local network,
-then it is necessary to check that your Red Pitaya
-is connected to your local network.
-
-***********************************************************
-How to discover my board’s IP address using its MAC number?
-***********************************************************
-
-Red Pitaya provides the Discovery tool for finding the
-IP address of a board if you know its MAC address.
-Follow the next steps to configure and use the tool:
-
-#. log into `redpitaya.com <http://redpitaya.com/>`_ with your user account
-#. click the `MY RP <https://store.redpitaya.com/customer/account/login/>`_ link
-   in the right top corner to get to the board management page (including discovery)
-#. click the `Add New Board <http://redpitaya.com/quick-start/>`_ link which will send you
-   to the `Quick Start <http://redpitaya.com/quick-start/>`_ page
-#. at the bottom of the quick start page enter your Red Pitaya MAC address and a name for the board then press **LET’S START**
-#. now by visiting `MY RP <http://store.redpitaya.com/myequipment/list/>`_ you can see a list of your boards
-   with their MAC and IP addresses and for each board a list of licensed applications
-
-.. note::
-
-   For now the old discovery should be still active,
-   and should work if you use the old ``ecosystem.zip`` release.
+If your Red Pitaya is not listed on the list of your local network devices in the local network,
+then it is necessary to check that your Red Pitaya is connected to your local network.
 
 ***********************************************************
 How to find Red Pitaya URL if it is not written on sticker.
@@ -196,28 +175,10 @@ If RP MAC address is ``00:26:33:F1:13:D5``, last 6 digits are ``F113D5`` and URL
 
 .. image:: Screen-Shot-2016-08-17-at-09.50.31-503x600.png
 
-***********************************
-How to solve connectivity problems?
-***********************************
 
-If **START** button is gray or clicking on it doesn’t connect you with your Red Pitaya,
-please check the following:
+.. TODO zumre pripravi teks za Is Red Pitaya connected to my local network 
 
-*  Try to restart your Red Pitaya, wait for 60s and then refresh the
-   `MY EQUIPMENT <http://store.redpitaya.com/myequipment/list/>`_ page.
-
-   .. note::
-
-      Last access time in the table should be updated each time
-      Red Pitaya was successfully restarted and connected to the server.
-
-*  If you are trying to establish wireless connection,
-   please make sure you are using one of the supported WIFI dongles
-*  Check if your PC/tablet/smartphone and Red Pitaya
-   are both connected to the same local network. How?
-*  Make sure that your Red Pitaya has access to the internet. How?
-
-If your WIFI connection with Red Pitaya seems very slow please read this FAQ.
+.. _isConnected:
 
 ********************************************
 Is Red Pitaya connected to my local network?
@@ -238,3 +199,4 @@ Is Red Pitaya connected to my local network?
 3. Type Red Pitaya IP to your WEB browser to see if you can connect to it
 
    .. image:: Screen-Shot-2015-09-26-at-09.34.00.png
+   

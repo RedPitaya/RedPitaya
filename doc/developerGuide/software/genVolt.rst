@@ -1,9 +1,7 @@
 Generating voltage
 ##################
 
-.. TODO  reference Reading analog voltage from slow inputs
-
-Take Reading analog voltage from slow inputs example as a basic application for this example, because it is the 
+Take Reading analog voltage from slow inputs :ref:`example <ReadAVSI>` as a basic application for this example, because it is the 
 simplest way to check generating voltage using one device. In this program we will set frequency, amplitude and 
 waveform of generating signal.
 

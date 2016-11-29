@@ -1,12 +1,14 @@
+.. _ReadAVSI:
+
+#######################################
 Reading analog voltage from slow inputs
 #######################################
 
- .. TODO referenca extension connector E2
- 
 | In this example we will print voltage measured on one of Red Pitaya slow analog inputs that are located on extension 
-  connector E2. 
+  connector :ref:`E2 <E2>`. 
 | Notice that any of four AI pins (0-3) can be used.
 
+******
 Web UI
 ******
 
@@ -70,8 +72,8 @@ By **APP.readValue()** we send request of reading voltage to controller.
     var local = {};
     local['READ_VALUE'] = { value: true };
     APP.ws.send(JSON.stringify({ parameters: local }));
-
     
+**********
 Controller
 **********
 

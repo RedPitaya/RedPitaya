@@ -9,12 +9,16 @@ analyze different bus (I2C, SPI, and UART) and decode the transmitted data. All 
 and do not require the installation of any native software. Users can access them via a web browser using their 
 smartphone, tablet or a PC running any popular operating system (MAC, Linux, Windows, Android, and iOS).
 
+.. note:: 
+
+     To use the Logic analyzer PRO application an additional extension module is needed. Module can be purchased from
+     Red Pitaya `store <http://store.redpitaya.com/>`_. 
 
 Logic Analyzer application possibilities:
 
-   1. **Basic Logic Analyzer - Without the Logic Analyzer extension modul** – Using directly the GPIO expansion 
+   1. **Logic Analyzer Basic - Logic Analyzer extension module not reacquired** – Using directly the GPIO expansion 
       connector of the STEMLab board. **Works only with STEMlab 125-10!**
-   2. **Logic Analyzer PRO - With the Logic Analyzer extension module** – Enabling different logic levels, board 
+   2. **Logic Analyzer PRO - Logic Analyzer extension module reacquired** – Enabling different logic levels, board 
       protection and higher performances. **Works with STEMlab 125-14 & STEMlab 125-10**
 
 The graphical user interface of the Logic Analyzer fits well into the overall design of the Red Pitaya applications 
@@ -101,7 +105,7 @@ packed into a CSV file. This then ends up directly in the download folder and ca
 CURSORS:
 ========
 
-As with the Oscilloscope the Logic Analyze rApp also provides CURSORS for quick measurements. Because there are no 
+As with the Oscilloscope the Logic Analyzer App also provides CURSORS for quick measurements. Because there are no 
 variable amplitude readings but only discrete signal levels, the cursors are available exclusively for the X axis. 
 When enabled, the cursors will show the relative time respectively to zero point (trigger event) and the difference 
 between the two.
@@ -112,11 +116,11 @@ SPECIFICATIONS
 **************
 
 +-------------------------+----------------------+----------------------+
-|                         | Basic Logic Analyzer | Logic Analyzer PRO   |
+|                         | Logic Analyzer Basic | Logic Analyzer PRO   |
 +-------------------------+----------------------+----------------------+
 | Channels                | 8th                  | 8th                  |
 +-------------------------+----------------------+----------------------+
-| Sampling rate (max.)    | 12MS/s               | 125ms/s              |
+| Sampling rate (max.)    | 12MS/s               | 125MS/s              |
 +-------------------------+----------------------+----------------------+
 | Maximum Input Frequency | 3MHz                 | 50MHz                |
 +-------------------------+----------------------+----------------------+
@@ -124,12 +128,12 @@ SPECIFICATIONS
 +-------------------------+----------------------+----------------------+
 | Input voltage           | 3.3V                 | 2.5 ... 5.5V         |
 +-------------------------+----------------------+----------------------+
-| Overload protection     | -                    | integrated           |
+| Overload protection     | not available        | integrated           |
 +-------------------------+----------------------+----------------------+
-| Level thresholds        | -                    | | 0.8V (low)         |
-|                         |                      | | 2.0V (high)        |
+| Level thresholds        | | 0.8V (low)         | | 0.8V (low)         |
+|                         | | 2.0V (high)        | | 2.0V (high)        |
 +-------------------------+----------------------+----------------------+
-| Input impedance         | -                    | 100k, 3 pF           |
+| Input impedance         | 100k, 3 pF           | 100k, 3 pF           |
 +-------------------------+----------------------+----------------------+
 | Trigger types           | Level, edge, pattern | Level, edge, pattern |
 +-------------------------+----------------------+----------------------+
@@ -150,13 +154,13 @@ plug it on your STEMLab and connect the leads to the desired measurement points.
 
 .. image:: Slika_09_LA.png
 
-To use the Logic analyzer without the extension module (Basic Logic Analyzer) you need to be more careful in 
-connecting the Logic analyzer probes to the extension connector E1 on the STEMLab board. The pins used for Logic 
+To use the Logic analyzer without the extension module (Logic Analyzer Basic) you need to be more careful in 
+connecting the Logic analyzer probes to the extension connector :ref:`E1 <E1>` on the STEMLab board. The pins used for Logic 
 analyzer board are shown in picture below.
 
 .. note:: 
     
-    Using directly the GPIO expansion connector E1 pins of the STEMLab board w orks only with STEMlab 125-10! Picture 
+    Using directly the GPIO expansion connector :ref:`E1 <E1>` pins of the STEMLab board w orks only with STEMlab 125-10! Picture 
     bellow(left) shows connection for the STEMlab 125 – 10 board.
     
 .. image:: Slika_10_LA.png

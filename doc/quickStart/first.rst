@@ -33,6 +33,6 @@ After the **third step** you will get a Red Pitaya STEMlab main page as shown be
 
 .. note::
 
-   For any issues during setup, check `troubleshoots <../../>`_
-   or check the `forums <http://forum.redpitaya.com/>`_ for a solution.
-   If you cannot find a sulution, please post your problem, providing as much detail as possible.
+    For any issues during setup, check :ref:`troubleshoots <troubleshooting>`
+    or check the `forums <http://forum.redpitaya.com/>`_ for a solution.
+    If you cannot find a solution, please post your problem, providing as much detail as possible.

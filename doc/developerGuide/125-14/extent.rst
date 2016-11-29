@@ -1,6 +1,8 @@
-Extention
+#########
+Extension
 #########
 
+*******************
 Extension connector
 *******************
 
@@ -9,7 +11,10 @@ Extension connector
     - Available voltages: +5V, +3.3V, 3.3V 
     - Current limitations: 500 mA for +5V and +3.3V (to be shared between extension module and USB devices), 50 mA 
       for 3.3V supply. 
+
+.. _E1:
     
+======================
 Extension connector E1
 ======================
 
@@ -49,6 +54,9 @@ Pin  Description FPGA pin number FPGA pin description     Voltage levels
 
 All DIOx_y pins are LVCMOS33. abs. max. ratings are: min. –0.40V max. 3.3V + 0.55V    
 
+.. _E2:
+
+======================
 Extension connector E2
 ======================
 
@@ -147,25 +155,28 @@ Information furnished by Red Pitaya d.d. is believed to be accurate and reliable
 assumed for its use. Contents may be subject to change without any notice. 
 
 
+===============================
 Auxiliary analog input channels
 ===============================
     
     - Number of channels: 4 
     - Nominal sampling rate: 100 ksps (H) 
     - ADC resolution 12 bits 
-    - Connector: dedicated pins on IDC connector E2 (pins 13,14,15,16) 
+    - Connector: dedicated pins on IDC connector :ref:`E2 <E2>` (pins 13,14,15,16) 
     - Input voltage range: 0 to +3.5 V 
     - Input coupling: DC 
 
+================================
 Auxiliary analog output channels 
 ================================
 
     - Number of channels: 4 
     - Output type: Low pass filtered PWM (I) 
     - PWM time resolution: 4ns (1/250 MHz)
-    - Connector: dedicated pins on IDC connector E2 (pins 17,18,19,20) v - Output voltage range: 0 to +1.8 V 
+    - Connector: dedicated pins on IDC connector :ref:`E2 <E2>` (pins 17,18,19,20) v - Output voltage range: 0 to +1.8 V 
     - Output coupling: DC 
 
+==================================================
 General purpose digital input/output channels: (N) 
 ==================================================
 
@@ -174,17 +185,19 @@ General purpose digital input/output channels: (N)
     - Direction: configurable 
     - Location: IDC connector E1 (pins 324 ) 
     
+===============================================
 Powering Red Pitaya through extension connector
 ===============================================
 
-Red Pitaya can be also powered through pin1 of the extension connector E2, but in such case external protection must
+Red Pitaya can be also powered through pin1 of the extension connector :ref:`E2 <E2>`, but in such case external protection must
 be provided by the user in order to protect the board!
 
 .. image:: Protection.png
 
 Protection circuit between +5V that is provided over micro USB power connector and +5VD that is connected to pin1 of 
-the extension connector E2.
+the extension connector :ref:`E2 <E2>`.
 
+=================
 Extension modules
 =================
 

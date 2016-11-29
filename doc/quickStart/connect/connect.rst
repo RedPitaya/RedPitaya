@@ -4,8 +4,6 @@ Connect to your Red Pitaya
 
 .. TODO preveri slovnico
 
-For electronic equipment used today and tomorrow
-a network connectivity is and will be an industry standard.
 Red Pitaya STEMLab boards are network attachable devices focused
 on simple connectivity and quick accessibility.
 Having a graphical user interface for your Oscilloscope,
@@ -26,6 +24,8 @@ Red Pitaya STEMLab boards can be connected over:
 *****
 Wired
 *****
+
+.. _LAN:
 
 ========================
 Local Area Network (LAN)
@@ -146,11 +146,9 @@ after the restart of the STEMLab board it will connect to the preset WiFi networ
 
 .. image:: connect-4.png
 
-.. TODO link na Local Area Network (LAN)
-
 Steps on how to connect your STEMlab board over WiFi network are described bellow:
  
-1. Start your STEMlab web user interface (Use connection described **Local Area Network (LAN) connection**)
+1. Start your STEMlab web user interface (Use connection described in :ref:`Local Area Network (LAN) connection <LAN>`)
 2. Open Network Manager application
 3. Insert WiFi dongle in the USB plug on the STEMlab board.
    Recommended WIFI USB dongle is Edimax EW7811Un.

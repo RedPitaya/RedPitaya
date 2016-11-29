@@ -1,3 +1,4 @@
+###############
 System overview
 ###############
 
@@ -14,10 +15,10 @@ control LEDs on board, load FPGA image, work with fast inputs and outputs and lo
 Frontend and backend requires communication within each other. This is mostly done with Red Pitaya network APIs which 
 are technically based on extended websocket connection. When you're writing your application you don't need to think 
 about communication and data transfer. Our network APIs take care about data transfer. All you need is simply follow 
-of some rules. You can read about this rules in How to add a button to control LED.
+of some rules. You can read about this rules in How to 
+:ref:`add a button to control LED <ABCLED>`.
 
-.. TODO link na How to add a button to control LED
-
+********
 Frontend
 ********
 
@@ -43,6 +44,7 @@ calculations inside UI. Let your Red Pitaya do this. So here is typical workflow
     - Controller sends parameters and signals to WebUI in JSON format
     - Web UI recieves these parameters signals and then applies them on the screen
     
+*******
 Backend
 *******
 

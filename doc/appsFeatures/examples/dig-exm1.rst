@@ -1,13 +1,18 @@
+.. _blink:
+
+#####
 Blink
 #####
 
 .. http://blog.redpitaya.com/examples-new/blink/
 
+***********
 Description
 ***********
 
 This example shows how to control one of the Red Pitaya on board LEDs and make it blink.
 
+*****************
 Required hardware
 *****************
 
@@ -15,6 +20,7 @@ Required hardware
 
 .. image:: output_y49qDi.gif
 
+***************
 Code - MATLAB ®
 ***************
 
@@ -90,6 +96,7 @@ MATLAB editor, save project and press run.
         return EXIT_SUCCESS;
     }
 
+*************
 Code - Python
 *************
 
@@ -119,6 +126,7 @@ Code - Python
         rp_s.tx_txt('DIG:PIN LED' + str(led) + ',' + str(0))
 
 
+*************
 Code - Scilab
 *************
 
@@ -142,6 +150,7 @@ Code - Scilab
 
     SOCKET_close(tcpipObj);
 
+**************
 Code - LabVIEW
 **************
 
