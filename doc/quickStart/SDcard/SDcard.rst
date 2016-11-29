@@ -2,42 +2,6 @@
 Prepare SD card
 ###############
 
-**********
-Background
-**********
-
-A Red Pitaya SD card contains two partitions:
-
-1. 128MB FAT contains the **ecosystem**
-
-   * boot files: FSBL, FPGA images, U-Boot, Linux kernel
-   * Red Pitaya API libraries and header files
-   * Red Pitaya web applications, scripts, tools
-   * customized Nginx web server
-
-2. ~4GB Ext4 contains the **OS**
-
-   * Ubuntu/Debian OS
-   * various libraries
-   * network setup customization
-   * systemd services customization
-
-Most of Red Pitaya source code translates into the ecosystem,
-Therefore this is updated more often.
-The OS is changed less frequently.
-
-.. note::
-
-   You can find older and development Red Pitaya OS images and Ecosystem zipfiles
-   on our `download server <http://downloads.redpitaya.com/downloads/>`_.
-
-   http://downloads.redpitaya.com/downloads/
-
-.. note::
-
-   A list of new features, bugfixes and known bugs for each Red Pitaya release
-   can be found in our `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_.
-
 **********************************
 Download and install SD card image
 **********************************
@@ -63,8 +27,8 @@ The next procedure will create a clean SD card.
     :backlinks: none
     :depth: 1
 
-   This instructions are based on similar instructions for
-   `Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
+This instructions are based on similar instructions for
+`Raspberry Pi <https://www.raspberrypi.org/documentation/installation/installing-images/>`_.
 
 #. Insert the SD card into Red Pitaya.
 
@@ -269,6 +233,42 @@ Command line
 
 #. Safely eject the SD card.
 
+**********
+Background
+**********
+
+A Red Pitaya SD card contains two partitions:
+
+1. 128MB FAT contains the **ecosystem**
+
+   * boot files: FSBL, FPGA images, U-Boot, Linux kernel
+   * Red Pitaya API libraries and header files
+   * Red Pitaya web applications, scripts, tools
+   * customized Nginx web server
+
+2. ~4GB Ext4 contains the **OS**
+
+   * Ubuntu/Debian OS
+   * various libraries
+   * network setup customization
+   * systemd services customization
+
+Most of Red Pitaya source code translates into the ecosystem,
+Therefore this is updated more often.
+The OS is changed less frequently.
+
+.. note::
+
+   You can find older and development Red Pitaya OS images and Ecosystem zipfiles
+   on our `download server <http://downloads.redpitaya.com/downloads/>`_.
+
+   http://downloads.redpitaya.com/downloads/
+
+.. note::
+
+   A list of new features, bugfixes and known bugs for each Red Pitaya release
+   can be found in our `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_.
+
 
 #############################
 Upgrading Red Pitaya software
@@ -277,9 +277,9 @@ Upgrading Red Pitaya software
 Instead of writing the whole SD card image,
 it is possible to upgrade only the ecosystem.
 
-=====================
+*********************
 Web interface upgrade
-=====================
+*********************
 
 At boot Red Pitaya checks for software updates,
 and alerts the user if a new release is available.
@@ -298,9 +298,9 @@ Users can also check for updates manually.
 #. Follow the steps in the OS updater app in order to install new OS.
    Notice that OS upgrade might cause your Red Pitaya desktop to freeze for a few minutes.
 
-==============
+**************
 Manual upgrade
-==============
+**************
 
 A manual upgrade allows you to fix a corrupted SD card image
 (if only the FAT partition is corrupted) or to install

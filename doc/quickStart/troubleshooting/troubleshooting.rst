@@ -60,8 +60,7 @@ please check the following:
 * check the wifi signal strength on your PC/tablet/smartphone
 * check the wifi signal strength of your Red Pitaya.
 
-    .. TODO dodaj link do direktorija
-   #. Connect to your Red Pitaya via SSH connection. `How? <>`_
+   1. Connect to your Red Pitaya via SSH connection. `SSH <ssh>`_
 
    #. Enter ``cat /proc/net/wireless`` command in order to get
       information about link quality and signal strength.

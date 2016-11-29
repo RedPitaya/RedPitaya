@@ -2,7 +2,7 @@ Welcome to the Red Pitaya documentation.
 ########################################
 
 .. toctree::
-    :maxdepth: 5
+    :maxdepth: 2
     :numbered:
     
     ./doc/quickStart/quickStart.rst
