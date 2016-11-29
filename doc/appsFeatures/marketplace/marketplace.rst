@@ -14,8 +14,7 @@ What do I need to use the Marketplace? To use the Red Pitaya STEMlab Marketplace
 only one version of the Red Pitaya STEM board is needed (STEM 125-10 or STEM 125-14).
 Some applications may require additional hardware/software.
 For additional guidance and information get in touch with the
-Red Pitaya community via the Forum http://forum.redpitaya.com/
-Applications
+Red Pitaya community via the `forum <http://forum.redpitaya.com/>`_.
 
 ==============
 PID controller
@@ -103,7 +102,7 @@ is done quickly through the application’s web interface.
 
 More about this application can be fund here:
 
-   http://redpitaya.com/physical-system-modelling/
+   http://blog.redpitaya.com/physical-system-modelling/
 
 ===========================
 Frequency Response analyzer
@@ -146,7 +145,7 @@ where the application (trough gain parameters) can be adjusted to the users of f
 
 More about this application can be found here:
 
-   http://redpitaya.com/emc-measurements-teslameter-project/
+   http://blog.redpitaya.com/emc-measurements-teslameter-project/
 
 ==================
 Impedance analyzer
@@ -236,7 +235,7 @@ Manually downloading and installing free applications
 *****************************************************
 
 If you have problems with installing free applications via
-`Bazaar web page <http://bazaar.redpitaya.com/>`_
+`marketplace <http://bazaar.redpitaya.com/>`_
 or your Red Pitaya doesn’t have an internet access,
 here are the instructions on how to install free applications manually.
 
