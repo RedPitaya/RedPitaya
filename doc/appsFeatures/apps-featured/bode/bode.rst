@@ -81,6 +81,12 @@ Specifications
 | Frequency sweep modes                      | Linear/Logarithmic            |  Linear/Logarithmic            |
 +--------------------------------------------+-------------------------------+--------------------------------+
 
+.. note::
+
+    Plese take care that `jumpers <http://wiki.redpitaya.com/index.php?title=Analog_frontend_-_Inputs>`_
+    are set to the correct input rage!
+    
+
 HW connections
 **************
 
