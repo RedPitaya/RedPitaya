@@ -216,7 +216,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 .PHONY: sdr
 
-SDR_ZIP = sdr_transceiver_hpsdr-0.94-1414.zip
+SDR_ZIP = sdr_transceiver_hpsdr-0.94-1415.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/sdr/$(SDR_ZIP)
 
 sdr: | $(DL)
