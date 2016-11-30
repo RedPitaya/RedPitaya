@@ -74,8 +74,7 @@ MATLAB
 
 Check `demo <http://redpitaya.com/wp-content/themes/StemLabs/apps/scpi/videos/SCPI_Demo.ogv>`_ video.
 
-.. TODO dodaj link na example
-More examples about how to control STEMlab from MATLAB can be find here.
+More examples about how to control STEMlab from MATLAB can be find :ref:`here <examples>`.
 
 ======
 Python
@@ -109,8 +108,7 @@ Python
 
    .. image:: scpi-example-cli.png
 
-.. TODO dodaj link na example
-More examples about how to control STEMlab from MATLAB can be find here.
+More examples about how to control STEMlab from MATLAB can be find :ref:`here <examples>`.
 
 =======
 LabVIEW
@@ -131,8 +129,7 @@ You can access example VIs by going to:
 #. click Search tab
 #. Enter **RedPitaya** in Enter keyword(s) field
 
-.. TODO dodaj link na example
-More examples about how to control STEMlab from MATLAB can be find here.
+More examples about how to control STEMlab from MATLAB can be find :ref:`here <examples>`.
 
 ======
 SCILAB
@@ -165,8 +162,7 @@ Different code examples can be found on the `Examples page <http://redpitaya.com
    at the same time can diminish the performance of your Red Pitaya.
    This is because the same resource is used for both tasks.
 
-.. TODO dodaj link na example
-More examples about how to control STEMlab from MATLAB can be find here.
+More examples about how to control STEMlab from MATLAB can be find :ref:`here <examples>`.
    
 *****************************
 Starting SCPI server manually
@@ -186,6 +182,8 @@ and start SCPI server with the following command:
 .. image:: scpi-ssh.png
 
 .. include:: SCPI_commands.rst
+
+.. _examples:
 
 ********
 Examples
