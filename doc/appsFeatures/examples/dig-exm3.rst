@@ -139,5 +139,4 @@ Code - LabVIEW
 
 .. image:: Push-button-and-turn-on-LED_LV.png
 
-`Dowload file 1 <https://dl.dropboxusercontent.com/s/02fl6jylyr0slr5/Push%20button%20and%20turn%20on%20LED.vi?>`_
-`Dowload file 2 <https://dl.dropboxusercontent.com/s/02fl6jylyr0slr5/Push%20button%20and%20turn%20on%20LED.vi?>`_
+`Dowload <https://dl.dropboxusercontent.com/s/02fl6jylyr0slr5/Push%20button%20and%20turn%20on%20LED.vi?>`_
