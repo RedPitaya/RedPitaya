@@ -6,18 +6,6 @@ List of supported SCPI commands
 
 Table of correlated SCPI and API commands on Red Pitaya.
 
-==============
-LEDs and GPIOs
-==============
-
-Parameter options:
-
-* ``<dir> = {OUT,IN}``
-* ``<gpio> = {{DIO0_P...DIO7_P}, {DIO0_N...DIO7_N}}``
-* ``<led> = {LED0...LED8}``
-* ``<pin> = {gpio, led}``
-* ``<state> = {0,1}``
-
 .. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|
 
 +------------------------------------+-------------------------+------------------------------------------------------+
@@ -38,6 +26,18 @@ Parameter options:
 | | ``DIG:PIN? DIO0_N``              |                         |                                                      |
 | | ``DIG:PIN? LED2``                |                         |                                                      |
 +------------------------------------+-------------------------+------------------------------------------------------+
+
+==============
+LEDs and GPIOs
+==============
+
+Parameter options:
+
+* ``<dir> = {OUT,IN}``
+* ``<gpio> = {{DIO0_P...DIO7_P}, {DIO0_N...DIO7_N}}``
+* ``<led> = {LED0...LED8}``
+* ``<pin> = {gpio, led}``
+* ``<state> = {0,1}``
 
 =========================
 Analog Inputs and Outputs
