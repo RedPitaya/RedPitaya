@@ -7,10 +7,4 @@ Create your own WEB applications
    
    sysOver
    firstApp
-   addLEDbut
-   Ravoltagesi
-   Ravoltagesig
-   Ravoltagesiggo
-   genVolt
-   nginx 
-   
+   webExamples
