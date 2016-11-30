@@ -2,7 +2,7 @@ Developers guide
 ################
 
 .. toctree::
-    :maxdepth: 6
+    :maxdepth: 2
     :numbered:
 
     hardware
