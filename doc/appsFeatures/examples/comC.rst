@@ -6,7 +6,7 @@ Compiling and running C examples
 When compiling on the target no special preparations are needed. A native toolchain is available directly on the
 Debian system.
 
-First connect to your board over SSH (replace the IP, the default password is `root`).
+First connect to your board over :ref:`SSH <ssh>` (replace the IP, the default password is `root`).
 
 .. code-block:: shell-session
 
