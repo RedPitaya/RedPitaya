@@ -90,7 +90,7 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 
 WEBSOCKETPP_TAG = 0.7.0
-LUANGINX_TAG    = v0.10.6
+LUANGINX_TAG    = v0.10.7
 NGINX_TAG       = 1.11.4
 SOCKPROC_TAG    = master
 
