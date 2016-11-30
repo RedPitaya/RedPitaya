@@ -228,8 +228,6 @@ Figure: Connectivity option – 20 pins.
 
 Figure: Possible implementation of some functionality (`preliminary version <https://www.dropbox.com/s/h4hmabxlf5xw7g4/Schematic_GPIO16_A_InformativeOnly.pdf>`_). 
 
-.. TODO link gre na dropbox imajo uporabniki dostop?
-
 .. figure:: RPEM_Template2_Pcb3D.jpg
 
 Figure: Option - forced air flow.
@@ -244,5 +242,3 @@ External links:
   - `GPIO16_A_Informative Schematic diagram <https://www.dropbox.com/s/h4hmabxlf5xw7g4/Schematic_GPIO16_A_InformativeOnly.pdf>`_
   - `PCB option - forced air flow 3d image <https://www.dropbox.com/s/v2g7x6hmrndjv4h/RPEM_Template2_Pcb3D.jpg>`_
   - `3D STEP option - forced air flow - model <https://www.dropbox.com/s/bhhe9n5xktr69cq/RPEM_Template2_A_3D.step>`_
-
-.. TODO link gre na dropbox imajo uporabniki dostop?  

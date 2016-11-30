@@ -182,6 +182,7 @@ Gain parameters can be optimized by repeating calibration and measurement step.
 
 In the table bellow typical results after calibration are shown. 
 
+======
 INPUTS
 ======
 
