@@ -46,20 +46,17 @@ To run an examples follow instructions bellow:
    .. image:: scpi-development.png
 
 #. Start SCPI server by selecting RUN button.
+   Please notice the IP of your STEMlab (192.168.178.100) board as it will be needed to connect to your board.
 
    .. image:: scpi-app-run.png
 
    .. image:: scpi-app-stop.png
 
+#. Follow the instructions bellow sutable to your environment. 
+
    .. note::
 
       It is not possible to run SCPI commands/programs in parallel with web applications. 
-
-   Once you have SCPI server running you can execute your SCPI programs.
-   How to run your code in all environments is explained below:
- 
-A complete list of SCPI list commands can downloaded from 
-`here <https://dl.dropboxusercontent.com/s/b51h4hp6nnodf0d/SCPI_commands_beta_release_3_3_3016.pdf>`_.
  
 .. contents::
     :local:
@@ -75,7 +72,10 @@ MATLAB
 #. Replace the IP in the example with the IP of your STEMlab board
 #. Hit RUN or F5 on your keyboard to run the code
 
-Check demo video here:  http://redpitaya.com/apps/scpi/
+Check `demo <http://redpitaya.com/wp-content/themes/StemLabs/apps/scpi/videos/SCPI_Demo.ogv>`_ video.
+
+.. TODO dodaj link na example
+More examples about how to control STEMlab from MATLAB can be find here.
 
 ======
 Python
@@ -109,6 +109,9 @@ Python
 
    .. image:: scpi-example-cli.png
 
+.. TODO dodaj link na example
+More examples about how to control STEMlab from MATLAB can be find here.
+
 =======
 LabVIEW
 =======
@@ -127,6 +130,9 @@ You can access example VIs by going to:
 #. Help -> Find Examples...
 #. click Search tab
 #. Enter **RedPitaya** in Enter keyword(s) field
+
+.. TODO dodaj link na example
+More examples about how to control STEMlab from MATLAB can be find here.
 
 ======
 SCILAB
@@ -158,10 +164,13 @@ Different code examples can be found on the `Examples page <http://redpitaya.com
    Communicating with scpi server and working with web based instruments
    at the same time can diminish the performance of your Red Pitaya.
    This is because the same resource is used for both tasks.
+
+.. TODO dodaj link na example
+More examples about how to control STEMlab from MATLAB can be find here.
    
-******************************
-Starting SCPI server  manually
-******************************
+*****************************
+Starting SCPI server manually
+*****************************
 
 Assuming you have successfully connected to your STEMlab board using :ref:`these<faqConnected>` instructions.
 Remotely connect using Putty on Windows machines or
@@ -176,6 +185,19 @@ and start SCPI server with the following command:
 
 .. image:: scpi-ssh.png
 
-
-
 .. include:: SCPI_commands.rst
+
+********
+Examples
+********
+
+.. toctree::
+   :maxdepth: 2
+   :numbered:
+
+   ../examples/digital
+   ../examples/analog
+   ../examples/genRF
+   ../examples/acqRF
+   ../examples/digcomIF
+   ../examples/comC

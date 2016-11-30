@@ -9,6 +9,5 @@ Applications and Features
    apps-featured/apps-featured
    marketplace/marketplace
    newtworkManager
-   examples/examples
    visualProgramming/visualProgramming
    remoteControl/remoteControl
