@@ -1,7 +1,10 @@
+.. _clu:
+
+######################
 Command line utilities
 ######################
- 
 
+*********************************
 Red Pitaya command line utilities
 *********************************
 
@@ -9,6 +12,12 @@ Red Pitaya command line utilities
    
    Command line utilities must not be used in parallel with a WEB application.
 
+.. contents::
+    :local:
+    :backlinks: none
+    :depth: 1   
+    
+========================
 Signal generator utility
 ========================
 
@@ -62,7 +71,7 @@ Example (2 Vpp square wave signal with 1 MHz on channel 1):
     (OUT1, OUT2) to the Red Pitaya input (IN1, IN2), 50 Ω terminations should be connected at the Red Pitaya inputs 
     through the T-type connector.
     
-    
+==========================
 Signal acquisition utility
 ==========================
 
@@ -107,7 +116,8 @@ Example (acquire 1024 samples with decimation 8):
     -139     -88
     -134     -82
     ...
-    
+ 
+===================
 Saving data buffers
 ===================
 
@@ -132,6 +142,7 @@ Alternatively, save the data directly to the NFS mount point:
     
    redpitaya> acquire 1024 8 > /mnt/my_remote_file
 
+--------------------------
 Copying data - Linux users
 --------------------------
 
@@ -158,6 +169,7 @@ After logging in, the main screen will show the directory content of Red Pitaya�
 
 .. image:: Nautilus_root_fs.png
 
+----------------------------
 Copying data - Windows users
 ----------------------------
 
@@ -182,6 +194,7 @@ Select the destination (local) directory to save the data file to (see next Figu
 
     Figure: Select file copy destination.
 
+==========================
 Accessing system registers
 ==========================
 
@@ -228,9 +241,9 @@ The –ams switch provides access to analog mixed signals including Zynq SoC tem
     
    redpitaya> monitor -sdac 0.9 0.8 0.7 0.6
 
-Accessing FPGA registers
-========================
-
+============================================
+Monitor utility for accessing FPGA registers
+============================================
 
 Red Pitaya signal processing is based on two computational engines: the FPGA and the dual core processor in order to
 effectively split the tasks. Most of the high data rate signal processing is implemented within the FPGA building 
