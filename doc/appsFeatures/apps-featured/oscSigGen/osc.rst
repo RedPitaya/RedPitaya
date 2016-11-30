@@ -73,7 +73,7 @@ The available settings are the following:
     - **INVERT:** Reflects the graph on the X axis.
     - **Probe attenuation:** (must be selected manually) The division that was set on the probe.
     - **Vertical offset:** Moves the curve up or down.
-    - **LV and HV:** Must be selected according to the jumper `position <http://wiki.redpitaya.com/index.php?title=Analog_frontend_-_Inputs>`_ on each channel.
+    - **LV and HV:** Must be selected according to the jumper :ref:`position <anain>` on each channel.
 
     
 Outputs
