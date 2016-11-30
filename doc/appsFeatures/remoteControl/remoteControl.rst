@@ -181,6 +181,8 @@ and start SCPI server with the following command:
 
 .. image:: scpi-ssh.png
 
+.. _scpiCommand:
+
 .. include:: SCPI_commands.rst
 
 .. _examples:
