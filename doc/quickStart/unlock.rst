@@ -14,4 +14,4 @@ Unlocking apps or extending the license
 
    Aplication may not be yet present in your current Red Pitaya OS.
    Make sure you are using latest OS version!
-   It is available here: www.redpitaya.com/quick-start
+   It is available :ref:`here <prepareSD>`. 

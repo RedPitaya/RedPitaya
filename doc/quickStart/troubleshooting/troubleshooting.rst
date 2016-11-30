@@ -27,7 +27,7 @@ Problems connecting to Red Pitaya
 
        * you have properly inserted Red Pitaya SD card and that it has properly installed Red Pitaya OS 
          (Notice that Red Pitayas already comes with pre-installed OS on SD cards. Anyhow, SD cards might get corrupted - 
-         in such case follow these instructions to properly re-install Red Pitaya OS to SD card)
+         in such case follow :ref:`these instructions <prepareSD>` to properly re-install Red Pitaya OS to SD card)
        
        * try to use another SD card
 
