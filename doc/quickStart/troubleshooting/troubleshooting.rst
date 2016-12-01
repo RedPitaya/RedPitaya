@@ -8,9 +8,7 @@ Troubleshooting
 Problems connecting to Red Pitaya
 *********************************
 
-.. TODO slika s ETH kablom
-
-.. image:: blinking-all-led-on.png
+.. image:: blinking-pitaya-eth.gif
 
 #. First check the LEDs:
 
