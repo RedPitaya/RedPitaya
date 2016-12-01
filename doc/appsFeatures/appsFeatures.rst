@@ -7,7 +7,6 @@ Applications and Features
    :numbered:
    
    apps-featured/apps-featured
-   marketplace/marketplace
    newtworkManager
    visualProgramming/visualProgramming
    remoteControl/remoteControl
