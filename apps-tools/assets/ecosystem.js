@@ -1,7 +1,7 @@
 //-------------------------------------------------
 //-------------------------------------------------
 
-(function($) {
+(function(RedPitayaOS, $) {
 
     var reloaded = $.cookie("main_forced_reload");
     if (reloaded == undefined || reloaded == "false") {
@@ -10,43 +10,8 @@
     }
     var apps = [];
     var version = '';
-
-    placeElements = function() {
-        var elemWidth = $('.app-item').outerWidth(true);
-        var containerWidth = $('#list-container').width();
-        var elemsInRow = Math.floor(containerWidth / elemWidth);
-        elemsInRow = (elemsInRow == 0) ? 1 : elemsInRow;
-
-        var elemHeight = $('.app-item').outerHeight(true);
-        var containerHeight = $('#main-container').height();
-        var elemsInCol = Math.floor(containerHeight / elemHeight);
-        elemsInCol = (elemsInCol == 0) ? 1 : elemsInCol;
-
-
-
-        $("ul.paging").quickPager({
-            pageSize: elemsInRow * elemsInCol
-        });
-    }
-
-    var refillList = function() {
-        $('.app-item').unbind('click');
-        $('.app-item').unbind('mouseenter');
-        $('.app-item').unbind('mouseleave');
-        $('#main-container').empty();
-        $('#main-container').append('<ul class="paging" id="list-container"></ul>');
-
-        $('#list-container').empty();
-        for (var i = 0; i < apps.length; i++) {
-            var txt = '<li class="app-item" key="' + i + '" >';
-            txt += '<a href="#" class="app-link"><div class="img-container"><img class="app-icon" src="' + apps[i]['image'] + '"></div><span class="app-name">' + apps[i]['name'] + '</span></a>';
-            txt += '</li>';
-            $('#list-container').append(txt);
-        }
-        $('.app-item').click(clickApp);
-        $('.app-item').mouseenter(overApp);
-        $('.app-item').mouseleave(leaveApp);
-    }
+    var revision = '';
+    var stem_ver = '';
 
     var getListOfApps = function() {
         $('#loader-desc').html('Getting the list of applications');
