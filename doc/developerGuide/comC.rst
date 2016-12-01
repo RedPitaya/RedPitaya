@@ -2,7 +2,7 @@
 Compiling and running C applications
 ####################################
 
-**Compiling and running on target**
+**Compiling and running on STEMlab board**
 
 When compiling on the target no special preparations are needed. A native toolchain is available directly on the
 Debian system.
