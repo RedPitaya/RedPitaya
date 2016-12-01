@@ -191,6 +191,16 @@ and start SCPI server with the following command:
 Examples
 ********
 
+In the list bellow you will find examples of remote control and C algorithms. This examples are covering all
+basic STEMlab functionalities such as: 
+
+    - signal generation
+    - signal acquisition
+    - digital I/O control
+    - communication protocols 
+    
+You can edit and change them according to your needs and develop customized programs and routines.
+
 .. toctree::
    :maxdepth: 2
    :numbered:
