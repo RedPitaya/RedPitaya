@@ -27,7 +27,6 @@ install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DI
 install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $ROOT_DIR/etc/fstab
 install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $ROOT_DIR/etc/hostname
 install -v -m 664 -o root -D $OVERLAY/etc/timezone                      $ROOT_DIR/etc/timezone
-install -v -m 664 -o root -D $OVERLAY/etc/securetty                     $ROOT_DIR/etc/securetty
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get update
@@ -71,15 +70,28 @@ EOF_CHROOT
 #. OS/debian/tft.sh
 . OS/debian/hamlab.sh
 
+################################################################################
+# handle users
+################################################################################
+
+# http://0pointer.de/blog/projects/serial-console.html
+
+install -v -m 664 -o root -D $OVERLAY/etc/securetty $ROOT_DIR/etc/securetty
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/serial-getty@ttyPS0.service.d/override.conf \
+                            $ROOT_DIR/etc/systemd/system/serial-getty@ttyPS0.service.d/override.conf
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
-apt-get clean
-history -c
 EOF_CHROOT
 
 ################################################################################
 # cleanup
 ################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+apt-get clean
+history -c
+EOF_CHROOT
 
 # file system cleanup for better compression
 cat /dev/zero > $ROOT_DIR/zero.file
@@ -88,6 +100,10 @@ rm -f $ROOT_DIR/zero.file
 
 # remove ARM emulation
 rm $ROOT_DIR/usr/bin/qemu-arm-static
+
+################################################################################
+# archiving image
+################################################################################
 
 # create a tarball (without resolv.conf link, since it causes schroot issues)
 rm $ROOT_DIR/etc/resolv.conf

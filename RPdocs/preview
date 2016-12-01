@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+make html 2>&1  | \
+grep -v "verilog/src/unisims" --line-buffered | \
+GREP_COLORS='mt=01;91' grep  -ie "error\w*\|fatal\w*\|failed\w*"   -e '^' --color=always --line-buffered |\
+GREP_COLORS='mt=01;93' grep  -ie "warn\w*\|SEVERE\w*" -e '^' --color=always --line-buffered |\
+GREP_COLORS='mt=01;96' grep  -ie "build\w*" -e '^' --color=always --line-buffered |\
+GREP_COLORS='mt=01;32' grep  -ie "succeed\w*\|done\w*" -e '^' --color=always --line-buffered ;
+# xdg-open build/html/index.html

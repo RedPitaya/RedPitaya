@@ -1,0 +1,114 @@
+TODO:
+
+struktura:
+
+    Quick start
+        za uporabnike aplikacij ( DHCP )
+    
+    applications & features  / user guide
+        overview ( vse kar je na RP, ko jo uporabnik dobi iz skatle )
+            slika glavne applikacije z razlagami ( desktop app - zumi)
+        
+        lista appsov (slike, opis, primer uporabe)
+        http://redpitaya.com/w3bdev/
+        
+        network manager - how to connect
+            wired
+                cable connection to router (DHCP mode)
+                cable connection to PC (static IP mode)
+            wifi
+                create own network
+                connect to existing network
+                
+        visual programing
+        https://owncloud.redpitaya.com/index.php/apps/files/?dir=%2FWEB%20page%2Fapps%2FVisual%20Programming
+        
+        Remote control MATLAB/LABVIEW
+        https://owncloud.redpitaya.com/index.php/apps/files/?dir=%2FWEB%20page%2Fapps%2FSCPI
+            overview ( owncloud )
+            
+            quick start
+                how to start server from WEB interface or manualy from shell
+                    dodam notri v dokument (http://redpitaya.com/control/?with=matlab)
+                    WEB (zumi)
+                
+                how to start controling Red Pitaya using
+                    (http://redpitaya.com/control/?with=matlab spodaj)
+                    MATLAB  ( zumi )
+                    LABVIEW ( zumi )
+                    Python  ( zumi )
+                    SCILAB  ( zumi )
+                exampli (link - http://redpitaya.com/examples-new/ )
+            List of supported SCPI commands (link - https://dl.dropboxusercontent.com/s/eiihbzicmucjtlz/SCPI_commands_beta_release.pdf)
+     
+    
+    developer guide
+    overview
+    WEB applications
+        - overview
+        - seting the environment
+        - how to create own WEB app
+        - examples
+        - how to upload it to market place
+    
+    hardware
+        STEM 125-10
+        STEM 125-14
+            overview
+            FAST analog IO
+                Analog inputs  
+                Analog outputs
+                Analog inptus & outputs calibration
+                
+            extention connection
+                Extension connector
+                    Extension connector E1
+                    Extension connector E2
+                Auxiliary analog input channels
+                Auxiliary analog output channels
+                General purpose digital input/output channels: (N)
+                comunication
+                Powering Red Pitaya through extension connector
+                
+                Extension module template (http://wiki.redpitaya.com/index.php?title=GPIO16)
+            
+            External ADC clock
+            
+            shematics
+            
+            Mechanical specifications 
+            
+            Certificates 
+            
+            Cooling options ( zumi )
+            
+            LEDs - status
+                blue – FPGA bitstream status (in normal operation this LED is turned ON indicating fpga bitstream was successfully loaded)
+                green – power supply status (in normal operation this LED is turned ON indicating that all power supplies on Red Pitaya are working properly)
+                red – hartbeat blinking pattern should show CPU load (in normal operation this LED is blinking)
+                orange – SD card access indicator (in normal operation this LED is blinking in slow intervals)   
+
+    
+    software
+        fpga
+            overview ( razlicni designi )
+            zdruzi http://redpitaya.com/examples-new/fpga-blink-led-tutorial/
+            source offitial FPGA image (kje, kakko
+            https://github.com/jeras/RedPitaya/blob/master/OS/debian/README.rst
+            https://github.com/jeras/RedPitaya/blob/master/fpga/fpga.rst
+
+            
+            
+            Register map ( 0.94 )
+        
+        create your own WEB apps ( http://wiki.redpitaya.com/index.php?title=Tutorials_overview )
+        comand line tools
+            acquire  ( opisi parametrov iz applikacije )
+            generate ( opisi parametrov iz applikacije )
+            monitor  ( opisi parametrov iz applikacije )
+            bode     ( opisi parametrov iz applikacije )
+            LCR      ( opisi parametrov iz applikacije )
+        redPitayauOS
+        
+    
+    

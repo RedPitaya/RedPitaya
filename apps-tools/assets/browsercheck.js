@@ -13,6 +13,26 @@
     BrowserChecker.browserVer = 0;
 
 
+    BrowserChecker.isOnline = function(callback){
+    	var get_uri = 'http://store.redpitaya.com/get_lic/';
+
+	 	$.ajax({
+            method: "GET",
+            url: get_uri,
+            timeout: 300
+        }).done(function(msg) {
+        	if (msg.includes("-1")){
+            	//console.log("online");
+            	callback();
+        	}
+        	//else
+        		//console.log("offline");
+        }).fail(function(msg) {
+            //console.log("offline");
+        });
+    }
+
+
     BrowserChecker.checkName = function() {
         BrowserChecker.browserName = $.browser.name;
         // alert(JSON.stringify($.browser));

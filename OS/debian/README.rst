@@ -1,6 +1,9 @@
-======================
+Red Pitaya OS
+#############
+
+**********************
 Quick release building
-======================
+**********************
 
 If there are no changes needed to the Debian system, but a new ecosystem is available,
 then there is no need to bootstrap Debian and install Wyliodrin.
@@ -37,9 +40,9 @@ Start with an existing release image:
       $ ln -sf red_pitaya_OS_v0.94-RC??_?date?.img.zip red_pitaya_OS-beta.img.zip
       $ ln -sf red_pitaya_OS_v0.94-RC??_?date?.img.zip red_pitaya_OS-stable.img.zip
 
-============
+************
 Dependencies
-============
+************
 
 Ubuntu 2016.04 was used to build Debian/Ubuntu SD card images for Red Pitaya.
 
@@ -49,9 +52,9 @@ The next two packages need to be installed:
 
    $ sudo apt-get install debootstrap qemu-user-static
 
-=====================
+*********************
 Image build Procedure
-=====================
+*********************
 
 Multiple steps are needed to prepare a proper SD card image.
 
@@ -59,9 +62,9 @@ Multiple steps are needed to prepare a proper SD card image.
 2. Add Red Pitaya ecosystem ZIP.
 3. Optionally install Wyliodrin.
 
-----------------
+================
 Debian bootstrap
-----------------
+================
 
 Run the next command inside the project root directory. Root or ``sudo`` privileges are needed.
 
@@ -90,18 +93,18 @@ The generated image can be written to a SD card using the ``dd`` command or the 
    If the wrong device is specified, the content of another
    drive may be overwritten, causing permanent loose of user data.
 
--------------------------------
+===============================
 Red Pitaya ecosystem extraction
--------------------------------
+===============================
 
 In case ``ecosystem*.zip`` was not available for the previous step,
 it can be extracted later to the FAT partition (128MB) of the SD card.
 In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image (containing FPGA code),
 a boot script (``u-boot.scr``) and the Linux kernel.
 
----------
+==========
 Wyliodrin
----------
+==========
 
 Unfortunately there are issues with Wyliodrin install process inside a virtualized environment.
 Therefore the provided script ``wiliodrin.sh`` must be run from a shell on a running Red Pitaya board.
@@ -127,9 +130,9 @@ Most of the effort was spent on attempts to replace compiling dependencies
 from source with packages provided in Debian.
 The unfinished branch can be provided to interested developers.
 
--------------------
+===================
 Reducing image size
--------------------
+===================
 
 A cleanup can be performed to reduce the image size. Various things can be done to reduce the image size:
 
@@ -148,9 +151,9 @@ The next code only removes APT temporary files and zeros out the filesystem empt
    $ rm -f zero.file
    $ history -c
 
-------------------------
+========================
 Creating a SD card image
-------------------------
+========================
 
 Since Wiliodrin and maybe the ecosystem ZIP are not part of the original SD card image.
 The updated SD card contents should be copied into an image using ``dd`` or the ``Disks`` tool (Create Disk Image).
@@ -176,13 +179,13 @@ Zip is used, since it is also available by default on MS Windows.
 
    $ zip debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin.img.zip
 
-============
+************
 Debian Usage
-============
+************
 
--------
+=======
 Systemd
--------
+=======
 
 Systemd is used as the init system and services are used to start/stop Red Pitaya applications/servers.
 Service files are located in ``OS/debian/overlay/etc/systemd/system/*.service``.
@@ -219,18 +222,18 @@ To see the status of a specific service run:
 
    $ systemctl
 
-~~~~~~~~~
+---------
 Debugging
-~~~~~~~~~
+---------
 
 .. code-block:: shell-session
 
    $ systemd-analyze plot > /opt/redpitaya/www/apps/systemd-plot.svg
    $ systemd-analyze dot | dot -Tsvg > /opt/redpitaya/www/apps/systemd-dot.svg
 
------
+=====
 Wi-Fi
------
+=====
 
 .. code-block:: shell-session
 

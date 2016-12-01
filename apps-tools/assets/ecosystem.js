@@ -74,182 +74,29 @@
                 }).fail(function(msg) {
                     getListOfApps();
                 });
-
-                // FIXME: It is bad solution.
-                /*if (obj['name'] == 'spectrumpro' ||
-                    obj['name'] == 'scopegenpro' ||
-                    obj['name'] == 'ba_pro' ||
-                    obj['name'] == 'lcr_meter')
-                    obj['licensable'] = false;
-                else
-                    obj['licensable'] = true;*/
-                 obj['licensable'] = false;
+                obj['licensable'] = false;
 
                 obj['type'] = value['type'];
                 apps.push(obj);
             });
 
-            for (var i = 0; i < default_apps.length; i++) {
-                if (default_apps[i].id == "marketplace")
-                    default_apps[i].url = url + 'bazaar'
-                if(default_apps[i].url[0]=="/")
-                    default_apps[i].url = window.location.origin + default_apps[i].url;
-                apps.push(default_apps[i]);
-            }
-
-            refillList();
-            placeElements();
-            setTimeout(function(){
+            Desktop.setApplications(apps);
+            setTimeout(function() {
                 $('body').addClass('loaded');
-            }, 500);
-            
+            }, 666);
+
+            if (window.Worker) {
+            	var worker = new Worker("../assets/licVerifyWorker.js");
+            	worker.postMessage(null);
+            	worker.onmessage = function(e) {
+            		console.log(e.data);
+				};
+				worker.onerror = function(e) {
+            		console.log(e.message);
+				};
+			}
+
         }).fail(function(msg) { getListOfApps(); });
-    }
-
-    var clickApp = function(e) {
-        var key = parseInt($(this).attr('key')) * 1;
-        e.preventDefault();
-        if (apps[key].check_online) {
-            OnlineChecker.checkAsync(function() {
-                if (!OnlineChecker.isOnline()) {
-                    if (apps[key].licensable) {
-                        $('#ignore_link').text('Ignore');
-                        $('#ignore_link').attr('href', apps[key].url);
-                        $('#lic_failed').show();
-                    } else {
-                        $('#ignore_link').text('Close');
-                        $('#ignore_link').attr('href', "#");
-                        $('#lic_failed').hide();
-                    }
-
-                    $('#ic_missing').modal('show');
-                    return;
-                }
-                if (apps[key].url != "" && apps[key].type !== 'run') {
-                    licVerify(apps[key].url);
-                } else {
-                    if (apps[key].url != "")
-                        window.location = apps[key].url;
-                }
-                if (apps[key].callback !== undefined)
-                    apps[key].callback();
-            });
-        } else {
-            if (apps[key].url != "" && apps[key].type !== 'run') {
-                licVerify(apps[key].url);
-            } else {
-                if (apps[key].url != "")
-                    window.location = apps[key].url;
-            }
-            if (apps[key].callback !== undefined)
-                apps[key].callback();
-        }
-
-    }
-
-    var showFeedBack = function() {
-        mail = "support@redpitaya.com";
-        subject = "Feedback Red Pitaya OS " + version;
-        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-        document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
-    }
-
-    var overApp = function(e) {
-        var key = parseInt($(this).attr('key')) * 1;
-        $('#description').html(apps[key].description);
-    }
-
-    var leaveApp = function(e) {
-        $('#description').html("");
-    }
-
-    var onSwipe = function(ev) {
-        if ($('.simplePagerNav').length == 0)
-            return;
-        var rel = 1;
-        if (ev.direction == Hammer.DIRECTION_LEFT)
-            rel = parseInt($('.active-dot').parent().attr('rel')) * 1 + 1;
-        else if (ev.direction == Hammer.DIRECTION_RIGHT) {
-            var crel = parseInt($('.active-dot').parent().attr('rel')) * 1;
-            if (crel == 1) return;
-            rel = crel - 1;
-        }
-        var obj = $('.simplePageNav' + rel).find('a');
-        if (obj.length == 0)
-            return;
-        else obj.click();
-    }
-
-    var licVerify = function(success_url) {
-        var post_uri = 'http://store.redpitaya.com/upload_id_file/';
-        var req_uri = 'http://store.redpitaya.com/get_lic/?rp_mac=';
-        $('#loader-desc').html('Preparing application to run');
-        $('body').removeClass('loaded');
-        $.ajax({
-                method: "GET",
-                url: "idfile.id"
-            })
-            .done(function(msg) {
-                var obj = jQuery.parseJSON(msg);
-                if (obj != undefined && obj != null && obj.mac_address != undefined && obj.mac_address != null)
-                    req_uri = req_uri + obj.mac_address;
-                if (obj != undefined && obj != null && obj.zynq_id != undefined && obj.zynq_id != null) {
-                    req_uri = req_uri + "&rp_dna=" + obj.zynq_id;
-                }
-                $.ajax({
-                        method: "POST",
-                        url: post_uri,
-                        data: 'id_file=' + encodeURIComponent(msg) + '&version=2'
-                    }).done(function(msg) {
-                        if (msg == "OK") {
-                            $.ajax({
-                                    method: "GET",
-                                    url: req_uri
-                                }).done(function(msg) {
-                                    var res_msg = msg + "\r\n";
-                                    $.ajax({
-                                            method: "POST",
-                                            dataType: 'json',
-                                            data: {
-                                                'lic.lic': res_msg
-                                            },
-                                            contentType: 'application/json; charset=utf-8',
-                                            url: "/lic_upload",
-                                        })
-                                        .done(function(msg) {})
-                                        .fail(function(msg) {
-                                            setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-											if(success_url != undefined)
-												window.location = success_url;
-                                        });
-                                })
-                                .fail(function(msg) {
-                                    console.log("LIC: ERR2");
-                                    setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-									if(success_url != undefined)
-										window.location = success_url;
-                                });
-                        } else {
-                            console.log("LIC: ERR3");
-                            setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-							if(success_url != undefined)
-								window.location = success_url;
-                        }
-                    })
-                    .fail(function(msg) {
-                        console.log("LIC: ERR4");
-                        setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-						if(success_url != undefined)
-							window.location = success_url;
-                    });
-            })
-            .fail(function(msg) {
-                console.log("LIC: ERR4");
-                setTimeout(function() { $('body').addClass('loaded'); }, 2000);
-				if(success_url != undefined)
-					window.location = success_url;
-            });
     }
 
     var checkUpdates = function(current) {
@@ -291,27 +138,36 @@
             })
     }
 
+    RedPitayaOS.getVersion = function() {
+    	return version;
+    }
+
+
+    RedPitayaOS.getRevision = function() {
+    	return revision;
+    }
+
+    var printRpVersion = function(msg) {
+        var info = msg;
+        version = info['version'];
+        revision = info['revision'];
+        stem_ver = info['stem_ver'];
+        $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + "</a>");
+
+        BrowserChecker.isOnline(function()
+            {
+                checkUpdates(info);
+            });
+    }
+
     $(document).ready(function($) {
         getListOfApps();
-
-        var myElement = document.getElementById('main-container');
-        var mc = new Hammer(myElement);
-        mc.on('swipe', onSwipe);
-
         $.ajax({
-            method: "GET",
-            url: '/get_info'
-        }).done(function(msg) {
-            var info = msg;
-            version = info['version'];
-            $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
-            checkUpdates(info);
-        }).fail(function(msg) {
-            var info = JSON.parse(msg.responseText);
-            version = info['version'];
-            $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + info['version'] + "</a>");
-            checkUpdates(info);
-        });
+                method: "GET",
+                url: '/get_info'
+            })
+            .done(printRpVersion)
+            .fail(printRpVersion);
 
         $('#ignore_link').click(function(event) {
             var elem = $(this)
@@ -323,19 +179,4 @@
 
     });
 
-    $(window).resize(function($) {
-        refillList();
-        placeElements();
-    });
-
-    var default_apps = [
-        { id: "appstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
-        { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://wiki.redpitaya.com/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "Updater", name: "Updater", description: "Updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-    ];
-
-	licVerify(undefined)
-})(jQuery);
+})(window.RedPitayaOS = window.RedPitayaOS || {}, jQuery);
