@@ -2,6 +2,14 @@
 Compiling and running C applications
 ####################################
 
+You can write simple C algorithms, make executables and run them on the STEMlab board. A list of
+built in functions (APIs) is available providing full control over STEMlab board (signal generation and
+acquisition, digital I/O control, communication: I2C, SPI, UART and other)
+How to compile an C algorithm is shown in the instructions below, while a list of Examples is available
+here [link na Examples for Remote control and C algorithms stran].
+Note: When you copy the source code from our repository(following instructions bellow) you will also
+copy all C examples to your STEMlab board. After that only the compiling step is needed.
+
 **Compiling and running on STEMlab board**
 
 When compiling on the target no special preparations are needed. A native toolchain is available directly on the
