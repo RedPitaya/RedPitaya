@@ -1,5 +1,6 @@
-Compiling and running C examples
-################################
+####################################
+Compiling and running C applications
+####################################
 
 **Compiling and running on target**
 
