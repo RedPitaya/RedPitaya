@@ -2,5 +2,5 @@
 Name=wlan*
 
 [Network]
-LinkLocalAddressing=yes
-DHCP=yes
+LinkLocalAddressing=ipv4
+DHCP=ipv4
