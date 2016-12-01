@@ -36,6 +36,7 @@ Red Pitaya board analog frontend features 2 fast analog inputs.
     .. note::
     
         Voltage ranges are set by input jumpers as is shown here:
+        
         Gain can be individually adjusted for both input channels. The adjustment is done by bridging the jumpers located behind the corresponding input SMA connector.
     
         .. image:: Jumper_settings.png 
