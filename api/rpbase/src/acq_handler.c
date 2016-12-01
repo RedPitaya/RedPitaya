@@ -178,24 +178,24 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     if (channel == RP_CH_1) {
         gain = &gain_ch_a;
 	//in hamlab and eelab systems we must use relays for switching between LV and HV gains
-	//hvlv userspace driver uses i2c comands to control relays that replaces repitaya jumpers
+	//userspace driver uses i2c comands to control relays that replaces repitaya jumpers
 	if(state== RP_LOW){
-		if(system("hvlv -i -1 1")==-1)status=EXIT_FAILURE;
+		if(system("hamrf -i -1 3")==-1)status=EXIT_FAILURE;
 	}else{
-		if(system("hvlv -i -1 0")==-1)status=EXIT_FAILURE;
+		if(system("hamrf -i -1 2")==-1)status=EXIT_FAILURE;
 	}
     }
 
     else {
         gain = &gain_ch_b;
 	if(state== RP_LOW){
-		if(system("hvlv -i -2 1")==-1)status=EXIT_FAILURE;
+		if(system("hamrf -i -2 3")==-1)status=EXIT_FAILURE;
 	}else{
-		if(system("hvlv -i -2 0")==-1)status=EXIT_FAILURE;
+		if(system("hamrf -i -2 2")==-1)status=EXIT_FAILURE;
 	}
     }
-
-    if(system("laosc -o")==-1)status=EXIT_FAILURE;
+    //switch to external triger
+    if(system("gpiorelay -t")==-1)status=EXIT_FAILURE;
 
     // Read old values which are dependent on the gain...
     rp_pinState_t old_gain;
@@ -237,16 +237,16 @@ int acq_SetCoupling(rp_channel_t channel, rp_pinState_t state)
     bool status=RP_OK;
     if (channel == RP_CH_1) {
         if(state== RP_LOW){
-                if(system("acdc -i -1 0")==-1)status=EXIT_FAILURE;
+                if(system("hamrf -i -1 0")==-1)status=EXIT_FAILURE;
         }else{
-                if(system("acdc -i -1 1")==-1)status=EXIT_FAILURE;
+                if(system("hamrf -i -1 1")==-1)status=EXIT_FAILURE;
         }
     }
     else {
         if(state== RP_LOW){
-                if(system("acdc -i -2 0")==-1)status=EXIT_FAILURE;
+                if(system("hamrf -i -2 0")==-1)status=EXIT_FAILURE;
         }else{
-                if(system("acdc -i -2 1")==-1)status=EXIT_FAILURE;
+                if(system("hamrf -i -2 1")==-1)status=EXIT_FAILURE;
         }
     }
     return status;
@@ -560,10 +560,9 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
     return osc_GetWritePointerAtTrig(pos);
 }
 
-int acq_SetTriggerLevel(float voltage)
+int acq_SetTriggerLevel(rp_channel_t channel, float voltage)
 {
-    ECHECK(acq_SetChannelThreshold(RP_CH_1, voltage));
-    ECHECK(acq_SetChannelThreshold(RP_CH_2, voltage));
+    ECHECK(acq_SetChannelThreshold(channel, voltage));
     return RP_OK;
 }
 

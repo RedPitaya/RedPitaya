@@ -27,7 +27,7 @@
 				#size-cells = <0>;
 				reg = <0x70>;
 				status="okay";
-				i2c@0 {
+				hamlab_sdr: i2c@0 {
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <0>;
@@ -57,7 +57,7 @@
 					#size-cells = <0>;
 					reg = <5>;
 				};
-				i2c@6 {
+				hamlab_rf: i2c@6 {
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <6>;
@@ -66,9 +66,9 @@
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <7>;
-					hamlab_extension_gpio_expander: pca9535@21 {	
+					hamlab_extension_gpio_expander: pca9535@20 {	
 						compatible = "nxp,pca9535";
-						reg = <0x21>;
+						reg = <0x20>;
 						gpio-controller;
 						#gpio-cells = <2>;
 //						interrupt-parent = <&gpio0>;
@@ -86,13 +86,13 @@
 	fragment@3 {
 		target-path = "/";
 		__overlay__ {
-			// DMM data ready is mapped as UIO interrupt connected to gpio_expander [15]
-			dmm: dmm {
-				compatible = "generic-uio";
-				status = "okay";
-				interrupt-parent = <&hamlab_extension_gpio_expander>;
-				interrupts = <15 0x2>;
-			};
+//			// DMM data ready is mapped as UIO interrupt connected to gpio_expander [15]
+//			dmm: dmm {
+//				compatible = "generic-uio";
+//				status = "okay";
+//				interrupt-parent = <&hamlab_extension_gpio_expander>;
+//				interrupts = <15 0x2>;
+//			};
 
 			// Power button on MIO[11] (MISO)
 			hamlab_keys {
@@ -108,22 +108,22 @@
 			hamlab_led {
 				compatible = "gpio-leds";
 				hamlab_led_power {
-					label = "HAMLAB LED POWER";
+					label = "HAMLAB_LED_POWER";
 					gpios = <&hamlab_extension_gpio_expander 13 0>;
 					default-state = "on";
 				};
 				hamlab_led_test0 {
-					label = "HAMLAB LED test 0";
+					label = "HAMLAB_LED_test_0";
 					gpios = <&hamlab_extension_gpio_expander 0 0>;
 					default-state = "off";
 				};
 				hamlab_led_test1 {
-					label = "HAMLAB LED test 1";
+					label = "HAMLAB_LED_test_1";
 					gpios = <&hamlab_extension_gpio_expander 1 0>;
 					default-state = "off";
 				};
 				hamlab_led_test2 {
-					label = "HAMLAB LED test 2";
+					label = "HAMLAB_LED_test_2";
 					gpios = <&hamlab_extension_gpio_expander 2 0>;
 					default-state = "off";
 				};
@@ -132,6 +132,55 @@
 			hamlab-poweroff {
 				compatible = "gpio-poweroff";
 				gpios = <&hamlab_extension_gpio_expander 12 0>;
+			};
+		};
+	};
+	
+	fragment@4 {
+		target-path = "/";
+		__overlay__ {
+			hamlab_relays {
+				compatible = "gpio-leds";
+				hamlab_logic {
+					label = "HAMLAB_logic";
+					gpios = <&hamlab_extension_gpio_expander 3 0>;
+					default-state = "off";
+				};
+				hamlab_trig {
+					label = "HAMLAB_trig";
+					gpios = <&hamlab_extension_gpio_expander 4 0>;
+					default-state = "off";
+				};
+				hamlab_o1gen {
+					label = "HAMLAB_o1gen";
+					gpios = <&hamlab_extension_gpio_expander 6 0>;
+					default-state = "off";
+				};				
+				hamlab_o1sdr {
+					label = "HAMLAB_o1sdr";
+					gpios = <&hamlab_extension_gpio_expander 7 0>;
+					default-state = "off";
+				};
+				hamlab_o2gen {
+					label = "HAMLAB_o2gen";
+					gpios = <&hamlab_extension_gpio_expander 9 0>;
+					default-state = "off";
+				};				
+				hamlab_o2sdr {
+					label = "HAMLAB_o2sdr";
+					gpios = <&hamlab_extension_gpio_expander 8 0>;
+					default-state = "off";
+				};
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <&hamlab_rf>;
+		__overlay__ {
+			hamlab_eeprom: eep@51 {
+				compatible = "24c64";
+				reg = <0x51>;
 			};
 		};
 	};

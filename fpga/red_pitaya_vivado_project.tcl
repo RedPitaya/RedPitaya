@@ -41,6 +41,7 @@ generate_target all [get_files    system.bd]
 ################################################################################
 
 add_files                         ../../$path_rtl
+add_files                         ../../$path_rtl/classic
 add_files                         $path_rtl
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc

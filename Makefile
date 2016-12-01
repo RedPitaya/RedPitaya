@@ -216,7 +216,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 .PHONY: sdr
 
-SDR_ZIP = sdr_transceiver_hpsdr-0.94-1298.zip
+SDR_ZIP = sdr_transceiver_hpsdr-0.94-1415.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/sdr/$(SDR_ZIP)
 
 sdr: | $(DL)
@@ -238,15 +238,14 @@ GENERATOR_DIR	= Test/generate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 DISCOVERY_DIR   = Test/discovery
-ACDC		= Test/acdc
-HVLV		= Test/hvlv
-LAOSC           = Test/laosc
+HAMRF		= Test/hamrf
+GPIORELAY	= Test/gpiorelay
 LA_TEST_DIR     = api2/test
 
 .PHONY: examples rp_communication
-.PHONY: monitor monitor_old generator calib calibrate discovery laboardtest acdc hvlv laosc
+.PHONY: monitor monitor_old generator calib calibrate discovery laboardtest hamrf gpiorelay
 
-examples: monitor monitor_old calib generator discovery acdc hvlv laosc
+examples: monitor monitor_old calib generator discovery hamrf gpiorelay
 # calibrate laboardtest
 
 lcr:
@@ -284,20 +283,15 @@ discovery:
 	$(MAKE) -C $(DISCOVERY_DIR)
 	$(MAKE) -C $(DISCOVERY_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-acdc:
-	$(MAKE) -C $(ACDC) clean
-	$(MAKE) -C $(ACDC)
-	$(MAKE) -C $(ACDC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+gpiorelay:
+	$(MAKE) -C $(GPIORELAY) clean
+	$(MAKE) -C $(GPIORELAY)
+	$(MAKE) -C $(GPIORELAY) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-hvlv:
-	$(MAKE) -C $(HVLV) clean
-	$(MAKE) -C $(HVLV)
-	$(MAKE) -C $(HVLV) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-laosc:
-	$(MAKE) -C $(LAOSC) clean
-	$(MAKE) -C $(LAOSC)
-	$(MAKE) -C $(LAOSC) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+hamrf:
+	$(MAKE) -C $(HAMRF) clean
+	$(MAKE) -C $(HAMRF)
+	$(MAKE) -C $(HAMRF) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean

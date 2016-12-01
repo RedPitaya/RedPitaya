@@ -46,7 +46,6 @@ module axi4_lite_slave #(
   // RP system read/write channel
   output     [ AXI_AW-1: 0] sys_addr_o     ,  //!< system bus read/write address.
   output     [ AXI_DW-1: 0] sys_wdata_o    ,  //!< system bus write data.
-  output reg [ AXI_SW-1: 0] sys_sel_o      ,  //!< system bus write byte select.
   output reg                sys_wen_o      ,  //!< system bus write enable.
   output reg                sys_ren_o      ,  //!< system bus read enable.
   input      [ AXI_DW-1: 0] sys_rdata_i    ,  //!< system bus read data.
@@ -140,11 +139,9 @@ always @(posedge axi_clk_i)
 if (axi_rstn_i == 1'b0) begin
    sys_wen_o  <= 1'b0 ;
    sys_ren_o  <= 1'b0 ;
-   sys_sel_o  <= {AXI_SW{1'b0}} ;
 end else begin
    sys_wen_o  <= wr_do && axi_wvalid_i;
    sys_ren_o  <= axi_arvalid_i && axi_arready_o;
-   sys_sel_o  <= {AXI_SW{1'b1}} ;
 end
 
 assign sys_addr_o  = rd_do ? rd_araddr : wr_awaddr  ;

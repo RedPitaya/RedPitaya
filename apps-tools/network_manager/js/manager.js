@@ -155,8 +155,9 @@
             var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
 
             if (IPaddr == null) {
-                if (!WIZARD.WIFIConnected)
+                if (!WIZARD.WIFIConnected){
                     $('#wlan0_address_label').text("None");
+                }
                 return;
             }
 
@@ -199,7 +200,7 @@
             } else {
                 $('#access_point_create').text("Create");
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
-            }
+            }        	
         });
     }
 
@@ -243,6 +244,35 @@
         $('body').removeClass('loaded');
     }
 }(window.WIZARD = window.WIZARD || {}, jQuery));
+
+
+
+
+checkESSID = function(essid) {
+    if (essid.length > 0) {
+        return true;
+    }
+    $('#essid_check_len').show();
+    return false
+};
+
+checkPassword = function(pass) {
+    if (pass.length >= 8) {
+        for (var i = 0; i < pass.length; i++){
+            var code = pass.charCodeAt(i);
+            if (code < 32 || code > 126){
+                $('#pass_check_sym').show();
+                return false;
+            }
+        }
+        return true;
+    }
+    $('#pass_check_len').show();
+    return false;
+};
+
+
+
 
 // Page onload event handler
 $(document).ready(function() {
@@ -325,10 +355,19 @@ $(document).ready(function() {
 
     $('#access_point_create').click(function() {
         if ($('#access_point_create').text() == "Create") {
-            $.ajax({
-                url: '/wifi_create_point?essid=' + $('#essid_input').val() + '&password=' + $('#password_input').val() + '',
-                type: 'GET',
-            });
+        	$('#essid_check_len').hide();
+        	$('#pass_check_len').hide();
+            $('#pass_check_sym').hide();
+            var essid_check = checkESSID( $('#essid_input').val() );
+            var pass_check = checkPassword( $('#password_input').val() );
+
+        	if (essid_check && pass_check){
+	        	WIZARD.startWaiting();
+	            $.ajax({
+	                url: '/wifi_create_point?essid=' + $('#essid_input').val() + '&password=' + $('#password_input').val() + '',
+	                type: 'GET',
+	            });
+        	}
         } else {
             $.ajax({
                 url: '/remove_ap',

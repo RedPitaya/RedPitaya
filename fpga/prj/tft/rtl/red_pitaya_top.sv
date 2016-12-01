@@ -243,7 +243,6 @@ wire              sys_clk   = ps_sys.clk  ;
 wire              sys_rstn  = ps_sys.rstn ;
 wire  [  32-1: 0] sys_addr  = ps_sys.addr ;
 wire  [  32-1: 0] sys_wdata = ps_sys.wdata;
-wire  [   4-1: 0] sys_sel   = 4'hf;
 wire  [8   -1: 0] sys_wen   ;
 wire  [8   -1: 0] sys_ren   ;
 wire  [8*32-1: 0] sys_rdata ;
@@ -293,7 +292,6 @@ red_pitaya_ams i_ams (
    // System bus
   .sys_addr        (  sys_addr   ),  // address
   .sys_wdata       (  sys_wdata  ),  // write data
-  .sys_sel         (  sys_sel    ),  // write byte select
   .sys_wen         (  sys_wen[4] ),  // write enable
   .sys_ren         (  sys_ren[4] ),  // read enable
   .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
@@ -384,7 +382,6 @@ red_pitaya_hk i_hk (
    // System bus
   .sys_addr        (  sys_addr   ),  // address
   .sys_wdata       (  sys_wdata  ),  // write data
-  .sys_sel         (  sys_sel    ),  // write byte select
   .sys_wen         (  sys_wen[0] ),  // write enable
   .sys_ren         (  sys_ren[0] ),  // read enable
   .sys_rdata       (  sys_rdata[ 0*32+31: 0*32]  ),  // read data
@@ -471,7 +468,6 @@ red_pitaya_scope i_scope (
   // System bus
   .sys_addr        (  sys_addr   ),  // address
   .sys_wdata       (  sys_wdata  ),  // write data
-  .sys_sel         (  sys_sel    ),  // write byte select
   .sys_wen         (  sys_wen[1] ),  // write enable
   .sys_ren         (  sys_ren[1] ),  // read enable
   .sys_rdata       (  sys_rdata[ 1*32+31: 1*32]  ),  // read data
@@ -496,7 +492,6 @@ red_pitaya_asg i_asg (
   // System bus
   .sys_addr        (  sys_addr      ),  // address
   .sys_wdata       (  sys_wdata     ),  // write data
-  .sys_sel         (  sys_sel       ),  // write byte select
   .sys_wen         (  sys_wen[2]    ),  // write enable
   .sys_ren         (  sys_ren[2]    ),  // read enable
   .sys_rdata       (  sys_rdata[ 2*32+31: 2*32]  ),  // read data
@@ -519,7 +514,6 @@ red_pitaya_pid i_pid (
   // System bus
   .sys_addr        (  sys_addr      ),  // address
   .sys_wdata       (  sys_wdata     ),  // write data
-  .sys_sel         (  sys_sel       ),  // write byte select
   .sys_wen         (  sys_wen[3]    ),  // write enable
   .sys_ren         (  sys_ren[3]    ),  // read enable
   .sys_rdata       (  sys_rdata[ 3*32+31: 3*32]  ),  // read data

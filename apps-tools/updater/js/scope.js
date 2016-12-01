@@ -47,6 +47,10 @@
         }
     }
 
+    UPD.restartStep = function() {
+        UPD.startStep(UPD.currentStep);
+    }
+
     UPD.nextStep = function() {
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/success.png');
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').show();
@@ -93,6 +97,12 @@
                 .fail(function(msg) {
                     var resp = msg.responseText;
                     var arr = resp.split('\n');
+
+                    $('#retry').click(function(event) {
+                        $('#step_' + UPD.currentStep).find('.error_msg').hide();
+                        UPD.restartStep();
+                    });
+
                     if (arr.length == 0 || arr.length <= 2 || arr.length % 2 != 0) {
                         if(UPD.type == "0.97")
                         {

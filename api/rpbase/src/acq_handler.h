@@ -39,7 +39,7 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue);
 int acq_GetTriggerDelay(int32_t* decimated_data_num);
 int acq_SetTriggerDelayNs(int64_t time_ns, bool updateMaxValue);
 int acq_GetTriggerDelayNs(int64_t* time_ns);
-int acq_SetTriggerLevel(float voltage);
+int acq_SetTriggerLevel(rp_channel_t channel, float voltage);
 int acq_GetTriggerLevel(float *voltage);
 int acq_GetPreTriggerCounter(uint32_t* value);
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage);
