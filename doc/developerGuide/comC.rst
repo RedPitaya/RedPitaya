@@ -40,4 +40,6 @@ a continuous loop, press `CTRL+C` to stop them.
     
     LD_LIBRARY_PATH=/opt/redpitaya/lib ./digital_led_blink
 
-More examples about how to control STEMlab using APIs can be found  :ref:`here (SCPI commands) <scpiCommand>`.    
+
+More examples about how to control STEMlab using APIs can be found :ref:`here <examples>`.
+    

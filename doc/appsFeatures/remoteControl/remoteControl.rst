@@ -200,4 +200,3 @@ Examples
    ../examples/genRF
    ../examples/acqRF
    ../examples/digcomIF
-   ../examples/comC
