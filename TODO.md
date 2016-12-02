@@ -11,18 +11,42 @@ FPGA:
   - use DMA from Xilinx
   - continuous mode
   - trigger mode
-- add configurable PLL
 
 Linux:
-- upgrade to 3.19, there are Ethernet and USB driver issues
-- write IIO drivers
-- rethink user management and security
+- Write IIO drivers for streaming data from/to ADC/DAC.
+- Update to kernel 4.6 (tag xilinx-v2016.3)
+  * We already ported the simplest of our patches.
+  * The Lantiq PHY driver needed an update, Pavel Did most of the work.
+    There is now a patch available for the upstream kernel.
+    https://www.spinics.net/lists/netdev/msg379071.html
+    https://www.spinics.net/lists/netdev/msg379072.html
+    But it does not work. I updated Pavel's code to be closer to
+    the the upstream patch and this one works.
+    I also asked the author of the patch for help, we will see.
+  * The FPGA manager patch will be difficult to apply.
+    It requires devicetree overlay changes only upstreamed in 4.8.
+    https://lkml.org/lkml/2016/11/1/392
+    https://www.spinics.net/lists/devicetree/msg147528.html
+    I tried to merge upstream v4.8 into xilinx-v2016.3,
+    there are some nontrivial conflicts to solve.
+    For now we will wait for Xilinx to port kernel 4.8.
+
+OS:
+- Rethink user management and security.
+- Create a single UIO device for FPGA v0.94 and handle access permissions
+  using UDEV rules
 
 Bazaar:
-- review the Nginx current patch, try to remove it and instead update the config file
-- update Nginx to newer version
-- update Buildroot to newer version
+- replace current JSON libraries with precompiled ones installed
+  as Debian packages
+- move our code into a dynamic module, and use the system Nginx
+- perhaps, recode Lua code into C, so Lua can be removed from Nginx
+- make sure our module creates a response to a HTTP request,
+  our log is now filled with warnings due to missing responses
+- integrate redpitaya.so library, it is not used elsewhere
 - use API to get Zynq DNA (there are 2 instances)
+- We should use hierarchical inheritance to reduce the ammount
+  of configuration lines in nginx.conf.
 
 API:
 - move type definitins (structures, constants) to header files
@@ -30,9 +54,7 @@ API:
 - avoid using read modify write access to registers
 
 Applications:
-- remove library sources from GIT, use sources from Buildroot instead
-- replace kiss FFT with NE10 library
-- replace libjpeg with turbo-jpeg from Buildroot
+- replace kiss FFT with NE10 library (already available in Debian)
 
 SCPI:
 - migrate to latest upstream
