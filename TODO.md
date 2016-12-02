@@ -12,6 +12,12 @@ FPGA:
   - continuous mode
   - trigger mode
 
+U-Boot:
+- Remove source file patch, which enables modifying the boot
+  sequence stored in the EEPROM environment.
+  A better solution would be to use a script
+  to load only parts of the environment.
+
 Linux:
 - Write IIO drivers for streaming data from/to ADC/DAC.
 - Update to kernel 4.6 (tag xilinx-v2016.3)
