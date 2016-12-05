@@ -3,5 +3,3 @@
 /dev/mmcblk0p2  /               ext4    errors=remount-ro      0       1
 /dev/mmcblk0p1  /boot           vfat    defaults,ro            0       0
 /dev/mmcblk0p1  /opt/redpitaya  vfat    defaults,ro            0       2
-# TODO: TMPFS is used for spectrumpro, it should be removed when a better approach is found
-tmpfs           /tmp/ram        tmpfs   nodev,nosuid,size=16M  0       0

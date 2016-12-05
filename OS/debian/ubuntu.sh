@@ -42,6 +42,9 @@ apt-get update
 apt-get -y upgrade
 apt-get -y install dbus udev
 
+# install fake hardware clock
+apt-get -y install fake-hwclock
+
 # setup hostname and timezone
 # TODO seems sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
