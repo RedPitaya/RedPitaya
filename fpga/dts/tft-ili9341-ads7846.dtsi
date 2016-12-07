@@ -80,28 +80,26 @@
 	rpidisplay: rpi-display@0 {
 		compatible = "ilitek,ili9341";
 		reg = <0>;
+
 		spi-max-frequency = <32000000>;
-
 		rotate = <90>;
-		bgr;
 		fps = <10>;
+		bgr;
 		buswidth = <8>;
-
 		reset-gpios = <&gpio0 51 0>;
 		dc-gpios = <&gpio0 8 0>;
-
 		debug = <0>;
 	};
 
 	rpidisplay_ts: rpi-display-ts@1 {
 		compatible = "ti,ads7846";
 		reg = <1>;
-		spi-max-frequency = <1000000>;
 
 		ti,swap-xy;
+		spi-max-frequency = <1000000>;
+		pendown-gpio = <&gpio0 9 0>;
 		interrupts = <9 0>;
 		interrupt-parent = <&gpio0>;
-		pendown-gpio = <&gpio0 9 0>;
 		vcc-supply = <&fixedreg33>;
 	};
 };

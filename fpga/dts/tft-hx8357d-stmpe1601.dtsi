@@ -96,7 +96,7 @@
 		compatible = "st,stmpe610";
 		reg = <1>;
 
-		spi-max-frequency = <500000>;
+		spi-max-frequency = <1000000>;
 		irq-gpio = <&gpio0 9 0x2>; /* IRQF_TRIGGER_FALLING */
 		interrupts = <9 2>; /* high-to-low edge triggered */
 		interrupt-parent = <&gpio0>;
@@ -128,7 +128,6 @@
 };
 
 /{
-	// Backlight should be uncommented if there is a GPIO available
 	backlight {
 		compatible = "gpio-backlight";
 		gpios = <&stmpe_gpio 2 0>;
