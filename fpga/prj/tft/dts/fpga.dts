@@ -1,4 +1,4 @@
 /include/ "system.dtsi"
 /include/ "led-user.dtsi"
-/include/ "tft-hx8357d-stmpe1601.dtsi"
+/include/ "tft-hx8357d-stmpe601.dtsi"
 /include/ "qspi.dtsi"
