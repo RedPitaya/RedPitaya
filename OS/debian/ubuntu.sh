@@ -125,3 +125,6 @@ rm $ROOT_DIR/etc/resolv.conf
 tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 # recreate resolv.conf link
 ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf
+
+# one final sync to be sure
+sync
