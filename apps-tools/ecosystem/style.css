@@ -37,21 +37,30 @@ a:visited {
     background-color: black;
     color: #CCC;
     text-align: center;
-    padding: 6px;
+    padding: 2px;
     overflow: hidden;
     height: 30px;
     width: 100%;
     white-space: nowrap;
 }
 
+#power_off {
+    float: right;
+    width: 5%;
+    text-align: right;
+    cursor: pointer;
+}
+
 #description {
+    padding-top: 4px;
     overflow: hidden;
-    width: 80%;
+    width: 95%;
     height: 30px;
     white-space: nowrap;
     margin-left: auto;
     display: inline-block;
     position: relative;
+    float: left;
 }
 
 #description:after {
