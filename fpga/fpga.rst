@@ -39,7 +39,7 @@ Project specific code is placed inside the ``fpga/prj/name/`` directories and is
 +-------------------+------------------------------------------------------------------+
 | ``fpga/doc/``     | documentation (block diagrams, address space, ...)               |
 +-------------------+------------------------------------------------------------------+
-| ``fpga/brd/``     | board files |ug895|                                              |
+| ``fpga/brd/``     | board files |ug895|_                                             |
 +-------------------+------------------------------------------------------------------+
 | ``fpga/ip/``      | third party IP, for now Zynq block diagrams                      |
 +-------------------+------------------------------------------------------------------+
