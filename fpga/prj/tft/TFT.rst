@@ -2,8 +2,9 @@
 Interfacing SPI TFT displays with touch
 #######################################
 
-This document describes how to connect a SPI interface based
-TFT display with touch support.
+This document describes how to connect a
+SPI interface based TFT display with touch support
+to the E2 connector, without the need for specific FPGA code.
 The given setup has advantages and drawbacks.
 
 **PROS:**
@@ -28,7 +29,11 @@ Hardware setup
 It is possible to reconfigure **Zynq** MIO signals using the ``pinctrl`` kernel driver.
 This TFT display setup takes advantage of this by repurposing SPI, I2C and UART signals
 on the E2 connector as SPI and GPIO signals which are required by the TFT display interface.
-The reconfiguration is performed by loading a *device tree*.
+
+.. |tft-E2| replace:: ``tft-E2.dtsi``
+.. _tft-E2: dts/tft/tft-E2.dtsi
+
+The reconfiguration is performed by including the |tft-E2|_ device tree.
 
 +-----------------+-----+----------+--------+--------+----------+-----+-------------------+
 | SPI TFT+touch   | MIO | function |    pin |  pin   | function | MIO | SPI TFT+touch     |
@@ -82,37 +87,24 @@ Software setup
 
 Instructions for starting XFCE on the TFT display.
 
-1. download OS image:
-http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
-
-2. copy the image onto the SD card
-
-3. remove all files from FAT partition on the SD card
-
-4. extract ecosystem onto the SD card:
-
-5. power up the board
-
-6. SSH into the board and run the next code to install the graphical interface
+A set of Ubuntu/Debian packages should be installed:
 
 .. code-block:: shell-session
 
-   apt-get -y install fake-hwclock \
+   apt-get -y install \
      python3 python3-numpy build-essential libfftw3-dev python3-scipy \
      xfonts-base tightvncserver xfce4-panel xfce4-session xfwm4 xfdesktop4 \
      xfce4-terminal thunar gnome-icon-theme \
      xserver-xorg xinit xserver-xorg-video-fbdev
 
-   X11DIR=$root_dir/usr/share/X11/xorg.conf.d
-   mkdir -p $X11DIR
-   cat << EOF_FBDEV > $X11DIR/99-fbdev.conf
-   Section "Device"  
-     Identifier "myfb"
-     Driver "fbdev"
-     Option "fbdev" "/dev/fb0"
-   EndSection
+.. |99-fbdev.conf| replace:: ``/usr/share/X11/xorg.conf.d/99-fbdev.conf``
+.. _99-fbdev.conf: ../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
-7. over SSH start the X server
+An X11 configuration file should be added to the system |99-fbdev.conf|_:
+
+.. literalinclude:: ../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+
+Over SSH start the X server:
 
 .. code-block:: shell-session
 
@@ -122,48 +114,88 @@ http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
 Tested/Supported devices
 ************************
 
-For now a single device was tested.
-As we try more devices, this will grow into a table of device tree files
+The next table lists supported devices
+and coresponding of device tree files
 each supporting a set of displays depending on the used TFT and touch drivers.
 
-https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf
-
-
-+--------------------------------+-------------------------------+-----------------------------------+
-|                                | specifications                | technical details                 |
-+--------------------------------+------+------------+-----------+----------------+------------------+
-| name                           | size | resolution | touch     | TFT controller | touch controller |
-+================================+======+============+===========+================+==================+
-| MI0283QT Adapter Rev 1.5       | 2.8" | 240x320    |           | TI ADS7846     | TI ADS7846       |
-+--------------------------------+------+------------+-----------+----------------+------------------+
-| Adafruit PiTFT 3.5" (original) | 3.5" | 480x320    | resistive |                |                  |
-+--------------------------------+------+------------+-----------+----------------+------------------+
++---------------+-------------------------------+-----------------------------------+-------------------------+
+|               | specifications                | technical details                 | devicetree              |
+|               +------+------------+-----------+----------------+------------------+                         |
+| screen name   | size | resolution | touch     | TFT controller | touch controller |                         |
++===============+======+============+===========+================+==================+=========================+
+| |MI0283QT-2|_ | 2.8" | 240x320    |           | |ILI9341|_     | |ADS7846|_       | |tft-ili9341-ads7846|_  |
++---------------+------+------------+-----------+----------------+------------------+-------------------------+
+| |PiTFT-35|_   | 3.5" | 480x320    | resistive | |HX8357D|_     | |STMPE610|_      | |tft-hx8357d-stmpe601|_ |
++---------------+------+------------+-----------+----------------+------------------+-------------------------+
 
 ========================
 MI0283QT Adapter Rev 1.5
 ========================
 
-Vendor        - http://www.watterott.com/de/MI0283QT-2-Adapter
-Documentation - https://github.com/watterott/MI0283QT-Adapter
+.. |MI0283QT-2| replace:: MI0283QT Adapter Rev 1.5
+.. _MI0283QT-2: https://github.com/watterott/MI0283QT-Adapter
+
+.. |ILI9341| replace:: ILI9341
+.. _ILI9341: https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf
+
+.. |ADS7846| replace:: ADS7846
+.. _ADS7846: http://www.ti.com/lit/ds/symlink/ads7846.pdf
+
+.. |tft-ili9341-ads7846| replace:: ``tft-ili9341-ads7846.dtsi``
+.. _tft-ili9341-ads7846: dts/tft/tft-ili9341-ads7846.dtsi
 
 ==============================
 Adafruit PiTFT 3.5" (original)
 ==============================
 
-`Adafruit PiTFT 3.5" Touch Screen for Raspberry Pi <https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi>`_
+.. |PiTFT-35| replace:: Adafruit PiTFT 3.5" Touch Screen for Raspberry Pi
+.. _PiTFT-35: https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi
 
-Instructions for: 
+.. |HX8357D| replace:: HX8357D
+.. _HX8357D: https://cdn-shop.adafruit.com/datasheets/HX8357-D_DS_April2012.pdf
 
-.. code-block:: shell-session
+.. |STMPE610| replace:: STMPE610
+.. _STMPE610: https://cdn-shop.adafruit.com/datasheets/STMPE610.pdf
 
-   sudo mkdir /etc/X11/xorg.conf.d
+.. |tft-hx8357d-stmpe601| replace:: ``tft-hx8357d-stmpe601.dtsi``
+.. _tft-hx8357d-stmpe601: dts/tft/tft-hx8357d-stmpe601.dtsi
 
-   sudo nano /etc/X11/xorg.conf.d/99-calibration.conf
+Male connector pinout based on the |PiTFT-35|
+`schematic <https://cdn-learn.adafruit.com/assets/assets/000/019/763/original/adafruit_products_schem.png?1411058465>`_.
 
-   Section "InputClass"
-   	Identifier      "calibration"
-   	MatchProduct    "stmpe-ts"
-   	Option  "Calibration"   "3800 120 200 3900"
-   	Option  "SwapAxes"      "1"
-   EndSection
++-------------------+--------+--------+-------------------+
+| SPI TFT+touch     |    pin |  pin   | SPI TFT+touch     |
++===================+========+========+===================+
+| SPI_SSs[1], touch | ``26`` | ``25`` | GND               |
++-------------------+--------+--------+-------------------+
+| SPI_SSn[0], TFT   | ``24`` | ``23`` | SPI_SCLK          |
++-------------------+--------+--------+-------------------+
+| TFT D/C           | ``22`` | ``21`` | SPI_MISO          |
++-------------------+--------+--------+-------------------+
+| GND               | ``20`` | ``19`` | SPI_MOSI          |
++-------------------+--------+--------+-------------------+
+| touch pendown     | ``18`` | ``17`` |                   |
++-------------------+--------+--------+-------------------+
+|                   | ``16`` | ``15`` |                   |
++-------------------+--------+--------+-------------------+
+| GND               | ``14`` | ``13`` |                   |
++-------------------+--------+--------+-------------------+
+|                   | ``12`` | ``11`` |                   |
++-------------------+--------+--------+-------------------+
+|                   | ``10`` |  ``9`` | GND               |
++-------------------+--------+--------+-------------------+
+|                   |  ``8`` |  ``7`` |                   |
++-------------------+--------+--------+-------------------+
+| GND               |  ``6`` |  ``5`` |                   |
++-------------------+--------+--------+-------------------+
+|                   |  ``4`` |  ``3`` |                   |
++-------------------+--------+--------+-------------------+
+| +5V               |  ``2`` |  ``1`` |                   |
++-------------------+--------+--------+-------------------+
 
+.. |99-calibration.conf| replace:: ``/etc/X11/xorg.conf.d/99-calibration.conf``
+.. _99-calibration.conf: ../OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
+
+A calibration file should be added to the system |99-calibration.conf|_:
+
+.. literalinclude:: ../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
