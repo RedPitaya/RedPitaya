@@ -21,16 +21,6 @@ The given setup has advantages and drawbacks.
   calibration data in the EEPROM.
 * Backlight control is not supported.
 
-*****************
-Supported devices
-*****************
-
-For now a single device was tested.
-As we try more devices, this will grow into a table of device tree files
-each supporting a set of displays depending on the used TFT and touch drivers.
-
-#. `MI0283QT Adapter Rev 1.5 <http://www.watterott.com/de/MI0283QT-2-Adapter>`_
-
 **************
 Hardware setup
 **************
@@ -104,25 +94,76 @@ http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
 5. power up the board
 
 6. SSH into the board and run the next code to install the graphical interface
-```bash
-apt-get -y install fake-hwclock \
-  python3 python3-numpy build-essential libfftw3-dev python3-scipy \
-  xfonts-base tightvncserver xfce4-panel xfce4-session xfwm4 xfdesktop4 \
-  xfce4-terminal thunar gnome-icon-theme \
-  xserver-xorg xinit xserver-xorg-video-fbdev
 
-X11DIR=$root_dir/usr/share/X11/xorg.conf.d
-mkdir -p $X11DIR
-cat << EOF_FBDEV > $X11DIR/99-fbdev.conf
-Section "Device"  
-  Identifier "myfb"
-  Driver "fbdev"
-  Option "fbdev" "/dev/fb0"
-EndSection
-```
+.. code-block:: shell-session
+
+   apt-get -y install fake-hwclock \
+     python3 python3-numpy build-essential libfftw3-dev python3-scipy \
+     xfonts-base tightvncserver xfce4-panel xfce4-session xfwm4 xfdesktop4 \
+     xfce4-terminal thunar gnome-icon-theme \
+     xserver-xorg xinit xserver-xorg-video-fbdev
+
+   X11DIR=$root_dir/usr/share/X11/xorg.conf.d
+   mkdir -p $X11DIR
+   cat << EOF_FBDEV > $X11DIR/99-fbdev.conf
+   Section "Device"  
+     Identifier "myfb"
+     Driver "fbdev"
+     Option "fbdev" "/dev/fb0"
+   EndSection
 
 7. over SSH start the X server
-```bash
-startx
-```
+
+.. code-block:: shell-session
+
+   startx
+
+************************
+Tested/Supported devices
+************************
+
+For now a single device was tested.
+As we try more devices, this will grow into a table of device tree files
+each supporting a set of displays depending on the used TFT and touch drivers.
+
+https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf
+
+
++--------------------------------+-------------------------------+-----------------------------------+
+|                                | specifications                | technical details                 |
++--------------------------------+------+------------+-----------+----------------+------------------+
+| name                           | size | resolution | touch     | TFT controller | touch controller |
++================================+======+============+===========+================+==================+
+| MI0283QT Adapter Rev 1.5       | 2.8" | 240x320    |           | TI ADS7846     | TI ADS7846       |
++--------------------------------+------+------------+-----------+----------------+------------------+
+| Adafruit PiTFT 3.5" (original) | 3.5" | 480x320    | resistive |                |                  |
++--------------------------------+------+------------+-----------+----------------+------------------+
+
+========================
+MI0283QT Adapter Rev 1.5
+========================
+
+Vendor        - http://www.watterott.com/de/MI0283QT-2-Adapter
+Documentation - https://github.com/watterott/MI0283QT-Adapter
+
+==============================
+Adafruit PiTFT 3.5" (original)
+==============================
+
+`Adafruit PiTFT 3.5" Touch Screen for Raspberry Pi <https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi>`_
+
+Instructions for: 
+
+.. code-block:: shell-session
+
+   sudo mkdir /etc/X11/xorg.conf.d
+
+   sudo nano /etc/X11/xorg.conf.d/99-calibration.conf
+
+   Section "InputClass"
+   	Identifier      "calibration"
+   	MatchProduct    "stmpe-ts"
+   	Option  "Calibration"   "3800 120 200 3900"
+   	Option  "SwapAxes"      "1"
+   EndSection
 
