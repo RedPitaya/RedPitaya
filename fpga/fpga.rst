@@ -24,6 +24,8 @@ There are multiple FPGA projects, some with generic functionality, some with spe
 Common code for all projects is placed directly into the ``fpga`` directory. Common code are mostly reusable modules.
 Project specific code is placed inside the ``fpga/prj/name/`` directories and is similarly organized as common code.
 
+.. |ug895| replace:: `Vivado System-Level Design Entry <http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf>`_
+
 .. tabularcolumns:: |p{30mm}|p{120mm}|
 
 +-------------------+------------------------------------------------------------------+
@@ -57,8 +59,6 @@ Project specific code is placed inside the ``fpga/prj/name/`` directories and is
 |                   | FSBL (First Stage Boot Loader) and                               |
 |                   | DTS (Design Tree) builds                                         |
 +-------------------+------------------------------------------------------------------+
-
-.. |ug895| replace:: `Vivado System-Level Design Entry <http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf>`_
 
 ****************
 Building process
