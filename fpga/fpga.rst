@@ -25,7 +25,7 @@ Common code for all projects is placed directly into the ``fpga`` directory. Com
 Project specific code is placed inside the ``fpga/prj/name/`` directories and is similarly organized as common code.
 
 .. |ug895| replace:: Vivado System-Level Design Entry
-.. _ug895: http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf>`_
+.. _ug895: http://www.xilinx.com/support/documentation/sw_manuals/xilinx2016_2/ug895-vivado-system-level-design-entry.pdf
 
 .. tabularcolumns:: |p{30mm}|p{120mm}|
 
