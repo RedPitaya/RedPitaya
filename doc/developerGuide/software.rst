@@ -1,3 +1,4 @@
+########
 Software
 ########
 
@@ -12,4 +13,5 @@ Software
    console/console
    software/network
    ../../fpga/fpga
+   comC
    

@@ -26,12 +26,24 @@ install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $ROOT_DI
 install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DIR/etc/apt/sources.list
 install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $ROOT_DIR/etc/fstab
 install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $ROOT_DIR/etc/hostname
-install -v -m 664 -o root -D $OVERLAY/etc/timezone                      $ROOT_DIR/etc/timezone
+
+# set timezone and fake RTC time
+if [ "${TIMEZONE}" == "" ]; then
+  TIMEZONE="Europe/Ljubljana"
+fi
+echo $TIMEZONE  > $ROOT_DIR/etc/timezone
+# the fake HW clock  will be UTC, so an adjust file is not needed
+#echo $MYADJTIME > $ROOT_DIR/etc/adjtime
+# fake HW time is set to the image build time
+echo `date +"%F %T"`    > $ROOT_DIR/etc/fake-hwclock.data
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get update
 apt-get -y upgrade
 apt-get -y install dbus udev
+
+# install fake hardware clock
+apt-get -y install fake-hwclock
 
 # setup hostname and timezone
 # TODO seems sytemd is not running without /proc/cmdline or something
@@ -93,6 +105,10 @@ apt-get clean
 history -c
 EOF_CHROOT
 
+# kill -k file users and list them -m before Unmount file systems
+fuser -km $BOOT_DIR
+fuser -km $ROOT_DIR
+
 # file system cleanup for better compression
 cat /dev/zero > $ROOT_DIR/zero.file
 sync -f $ROOT_DIR/zero.file
@@ -110,3 +126,6 @@ rm $ROOT_DIR/etc/resolv.conf
 tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 # recreate resolv.conf link
 ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf
+
+# one final sync to be sure
+sync

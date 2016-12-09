@@ -210,7 +210,7 @@ Settings->Calibration and follow instructions.
 
 - Calibration using **calib** utility
     
-Start your Red Pitaya and connect to it via Terminal.
+Start your Red Pitaya and connect to it via a terminal.
 
 .. code-block:: shell-session
    

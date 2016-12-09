@@ -1,6 +1,6 @@
-################################
-What do I needed before I start?
-################################
+##############################
+What do I need before I start?
+##############################
 
 The following essential items needed to start are already included
 in each STEM kits available from our `WEB store <http://redpitaya.com/#products>`_:
@@ -26,8 +26,6 @@ Additional Required Items not supplied with the STEM kits:
 
    **Windows 7/8** users should install `Bonjour Print Services <http://redpitaya.com/bonjour>`_,
    otherwise access to ``*.local`` addresses will not work.
-
-   http://redpitaya.com/bonjour
 
    **Windows 10** already supports mDNS and DNS-SD,
    so there is no need to install additional software.

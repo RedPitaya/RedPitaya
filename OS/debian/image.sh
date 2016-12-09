@@ -7,6 +7,11 @@
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
+# Optional system variables:
+# TIMEZONE - it is written into /etc/timezone
+# 
+
+
 ################################################################################
 # prepating image
 ################################################################################

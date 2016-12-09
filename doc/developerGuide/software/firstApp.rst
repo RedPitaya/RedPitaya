@@ -16,7 +16,7 @@ After successful connection execute rw command in order to make file-system writ
 
    $ rw
 
-Also you need to install Git for cloning Red Pitaya project from GitHub. It will help you to manage changes. ::
+Also you need to install Git for cloning Red Pitaya project from GitHub. It will help you to manage changes.
 
 .. code-block:: shell-session
 

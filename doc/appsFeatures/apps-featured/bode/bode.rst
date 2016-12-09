@@ -83,8 +83,7 @@ Specifications
 
 .. note::
 
-    Plese take care that `jumpers <http://wiki.redpitaya.com/index.php?title=Analog_frontend_-_Inputs>`_
-    are set to the correct input rage!
+    Plese take care that :ref:`position <anain>` are set to the correct input rage!
     
 
 HW connections
