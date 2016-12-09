@@ -369,7 +369,7 @@ which can be used to modify MIO functionality at runtime.
 +====================+======================================================+
 | ``spi2gpio.dtsi``  | E2 connector, SPI1 signals are repurposed as GPIO    |
 +--------------------+------------------------------------------------------+
-| ``i2c2gpio.dtsi``  | E2 connector, I2C0 signals are repurposed as GPIO    |    |
+| ``i2c2gpio.dtsi``  | E2 connector, I2C0 signals are repurposed as GPIO    |
 +--------------------+------------------------------------------------------+
 | ``uart2gpio.dtsi`` | E2 connector, UART1 signals are repurposed as GPIO   |
 +--------------------+------------------------------------------------------+
