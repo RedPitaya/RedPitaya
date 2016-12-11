@@ -24,6 +24,10 @@ install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/bazaar.service         
 install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/scpi.service                    $ROOT_DIR/etc/avahi/services/scpi.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostname-mac.service            $ROOT_DIR/etc/systemd/system/hostname-mac.service
 
+# hostapd versions
+export HOSTAPD_VER=2.6
+export HAPATCH_VER=hostapd_2_6
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
 apt-get -y install iproute2 iputils-ping curl
@@ -55,14 +59,12 @@ ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 # compile hostapd
 apt-get -y install iptables
 apt-get -y install build-essential gcc 
-#git clone https://github.com/pritambaral/hostapd-rtl871xdrv.git
-curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/master.tar.gz -o hostapd-rtl871xdrv-master.tar.gz
-curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/hostapd_2_6.tar.gz -o hostapd-rtl871xdrv.tar.gz
-tar zxvf hostapd-rtl871xdrv.tar.gz
-curl -L http://w1.fi/releases/hostapd-2.6.tar.gz -o hostapd.tar.gz
-tar zxvf hostapd.tar.gz
-cd hostapd
-patch -p1 -i ../hostapd-rtl871xdrv/rtlxdrv.patch
+curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/${HAPATCH_VER}.tar.gz -o hostapd-rtl871xdrv-${HAPATCH_VER}.tar.gz
+tar zxvf hostapd-rtl871xdrv-${HAPATCH_VER}.tar.gz
+curl -L http://w1.fi/releases/hostapd-${HOSTAPD_VER}.tar.gz -o hostapd-${HOSTAPD_VER}.tar.gz
+tar zxvf hostapd-${HOSTAPD_VER}.tar.gz
+cd hostapd-${HOSTAPD_VER}
+patch -p1 -i ../hostapd-rtl871xdrv-${HAPATCH_VER}/rtlxdrv.patch
 cd hostapd
 cp defconfig .config
 echo CONFIG_DRIVER_RTW=y >> .config
