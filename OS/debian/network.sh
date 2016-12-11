@@ -57,11 +57,12 @@ apt-get -y install iptables
 apt-get -y install build-essential gcc 
 #git clone https://github.com/pritambaral/hostapd-rtl871xdrv.git
 curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/master.tar.gz -o hostapd-rtl871xdrv-master.tar.gz
-tar zxvf hostapd-rtl871xdrv-master.tar.gz
-curl -L http://w1.fi/releases/hostapd-2.5.tar.gz -o hostapd-2.5.tar.gz
-tar zxvf hostapd-2.5.tar.gz
-cd hostapd-2.5
-patch -p1 -i ../hostapd-rtl871xdrv-master/rtlxdrv.patch
+curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/hostapd_2_6.tar.gz -o hostapd-rtl871xdrv.tar.gz
+tar zxvf hostapd-rtl871xdrv.tar.gz
+curl -L http://w1.fi/releases/hostapd-2.6.tar.gz -o hostapd.tar.gz
+tar zxvf hostapd.tar.gz
+cd hostapd
+patch -p1 -i ../hostapd-rtl871xdrv/rtlxdrv.patch
 cd hostapd
 cp defconfig .config
 echo CONFIG_DRIVER_RTW=y >> .config
