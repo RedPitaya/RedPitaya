@@ -28,7 +28,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $ROOT_DI
 install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $ROOT_DIR/etc/hostname
 
 # set timezone and fake RTC time
-if [ "${TIMEZONE}" == "" ]; then
+if [ "$TIMEZONE" = "" ]; then
   TIMEZONE="Europe/Ljubljana"
 fi
 echo $TIMEZONE  > $ROOT_DIR/etc/timezone
