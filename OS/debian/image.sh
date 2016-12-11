@@ -39,8 +39,8 @@ parted -s $DEVICE mklabel msdos
 parted -s $DEVICE mkpart primary fat16   4MB 128MB
 parted -s $DEVICE mkpart primary ext4  128MB 100%
 
-BOOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '2!d'`
-ROOT_DEV=/dev/`lsblk -lno NAME $DEVICE | sed '3!d'`
+BOOT_DEV=/dev/`lsblk -lno NAME -x NAME $DEVICE | sed '2!d'`
+ROOT_DEV=/dev/`lsblk -lno NAME -x NAME $DEVICE | sed '3!d'`
 
 # Create file systems
 mkfs.vfat -v    $BOOT_DEV
