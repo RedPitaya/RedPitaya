@@ -161,7 +161,7 @@ char *ngx_http_rp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     if ( !access ("/opt/redpitaya/www/conf/testbazaar", 0) )
     {
         FILE * fp;
-        fp = fopen("/etc/motd", "r");
+        fp = fopen("/opt/redpitaya/version.txt", "r");
         if (fp == NULL)
         {
             ngx_conf_merge_str_value(conf->bazaar_server, prev->bazaar_server, c_bazaar_server);
