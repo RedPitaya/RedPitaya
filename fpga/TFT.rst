@@ -144,6 +144,39 @@ MI0283QT Adapter Rev 1.5
 .. |tft-ili9341-ads7846| replace:: ``tft-ili9341-ads7846.dtsi``
 .. _tft-ili9341-ads7846: dts/tft/tft-ili9341-ads7846.dtsi
 
+The device is powered by **+5V**,
+and it generates 3.3V using an onboard LDO.
+Therefore all IO are 3.3V, so there are no conflicts.
+
+Connector pinout based on the |MI0283QT-2|_
+`schematic <https://github.com/watterott/MI0283QT-Adapter/blob/master/hardware/MI0283QT_v15.pdf>`_.
+
++-------------------+-----------+--------+--------+-----------+-------------------+
+| SPI TFT+touch     |           |    pin |  pin   |           | SPI TFT+touch     |
++===================+===========+========+========+===========+===================+
+|                   | ADS_VREF  | ``16`` | ``15`` | ADS_VBAT  |                   |
++-------------------+-----------+--------+--------+-----------+-------------------+
+|                   | ADS_AUX   | ``14`` | ``13`` | ADS_IRQ   | touch pendown     |
++-------------------+-----------+--------+--------+-----------+-------------------+
+| TFT D/C           | BUSY-RS   | ``12`` | ``11`` | A-ADS_CS  | SPI_SSs[1], touch |
++-------------------+-----------+--------+--------+-----------+-------------------+
+| SPI_SCLK          | A-SCL     | ``10`` |  ``9`` | SDO       | SPI_MISO          |
++-------------------+-----------+--------+--------+-----------+-------------------+
+| SPI_MOSI          | A-SDI     |  ``8`` |  ``7`` | A-LCD_CS  | SPI_SSn[0], TFT   |
++-------------------+-----------+--------+--------+-----------+-------------------+
+| TFT RESETn        | A-LCD_RST |  ``6`` |  ``5`` | LCD_LED   | backlight         |
++-------------------+-----------+--------+--------+-----------+-------------------+
+| +5V               | VCC       |  ``4`` |  ``3`` | VCC       |                   |
++-------------------+-----------+--------+--------+-----------+-------------------+
+| GND               | GND       |  ``2`` |  ``1`` | GND       |                   |
++-------------------+-----------+--------+--------+-----------+-------------------+
+
+Backlight control is not available on the E2 connector.
+A simple solution is to connect the **LCD_LED** signal
+to +5V VCC, this can be done with a simple jumper
+between the two display connector pins.
+Otherwise it would be possible to repurpose a LED on Red Pitaya.
+
 ==============================
 Adafruit PiTFT 3.5" (original)
 ==============================
@@ -160,7 +193,11 @@ Adafruit PiTFT 3.5" (original)
 .. |tft-hx8357d-stmpe601| replace:: ``tft-hx8357d-stmpe601.dtsi``
 .. _tft-hx8357d-stmpe601: dts/tft/tft-hx8357d-stmpe601.dtsi
 
-Male connector pinout based on the |PiTFT-35|
+The device is powered by **+5V**,
+and it generates 3.3V using an onboard LDO.
+Therefore all IO are 3.3V, so there are no conflicts.
+
+Male connector pinout based on the |PiTFT-35|_
 `schematic <https://cdn-learn.adafruit.com/assets/assets/000/019/763/original/adafruit_products_schem.png?1411058465>`_.
 
 +-------------------+--------+--------+-------------------+
