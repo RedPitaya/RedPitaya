@@ -19,37 +19,110 @@ OVERLAY=OS/debian/overlay
 cp /etc/resolv.conf         $ROOT_DIR/etc/
 cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
 
-# copy U-Boot environment tools
-install -v -m 664 -o root -D patches/fw_env.config                      $ROOT_DIR/etc/fw_env.config
+################################################################################
+# APT settings
+################################################################################
 
 install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $ROOT_DIR/etc/apt/apt.conf.d/99norecommends
 install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DIR/etc/apt/sources.list
-install -v -m 664 -o root -D $OVERLAY/etc/fstab                         $ROOT_DIR/etc/fstab
-install -v -m 664 -o root -D $OVERLAY/etc/hostname                      $ROOT_DIR/etc/hostname
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+apt-get update
+apt-get -y upgrade
+
+# add package containing add-apt-repository
+apt-get -y install software-properties-common
+# add PPA: https://launchpad.net/~redpitaya/+archive/ubuntu/zynq
+add-apt-repository -yu ppa:redpitaya/zynq
+EOF_CHROOT
+
+################################################################################
+# miscelaneous tools
+################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+apt-get -y install dbus udev
+
+# development tools
+apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
+apt-get -y install parted dosfstools
+
+# install file system tools
+apt-get -y install mtd-utils
+EOF_CHROOT
+
+################################################################################
+# File System table
+################################################################################
+
+install -v -m 664 -o root -D $OVERLAY/etc/fstab  $ROOT_DIR/etc/fstab
+
+################################################################################
+# U-Boot environment EEPROM memory map
+################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+# development tools
+apt-get -y install u-boot-tools
+EOF_CHROOT
+
+# copy U-Boot environment tools
+install -v -m 664 -o root -D patches/fw_env.config  $ROOT_DIR/etc/fw_env.config
+
+################################################################################
+# hostname
+################################################################################
+
+install -v -m 664 -o root -D $OVERLAY/etc/hostname  $ROOT_DIR/etc/hostname
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+# TODO seems sytemd is not running without /proc/cmdline or something
+#hostnamectl set-hostname redpitaya
+EOF_CHROOT
+
+################################################################################
+# time and locale
+################################################################################
 
 # set timezone and fake RTC time
 if [ "$TIMEZONE" = "" ]; then
   TIMEZONE="Europe/Ljubljana"
 fi
-echo $TIMEZONE  > $ROOT_DIR/etc/timezone
-# the fake HW clock  will be UTC, so an adjust file is not needed
+echo $TIMEZONE > $ROOT_DIR/etc/timezone
+# the fake HW clock will be UTC, so an adjust file is not needed
 #echo $MYADJTIME > $ROOT_DIR/etc/adjtime
 # fake HW time is set to the image build time
-echo `date +"%F %T"`    > $ROOT_DIR/etc/fake-hwclock.data
+echo `date -u +"%F %T"` > $ROOT_DIR/etc/fake-hwclock.data
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-apt-get update
-apt-get -y upgrade
-apt-get -y install dbus udev
-
 # install fake hardware clock
 apt-get -y install fake-hwclock
 
-# setup hostname and timezone
-# TODO seems sytemd is not running without /proc/cmdline or something
-#hostnamectl set-hostname redpitaya
-#timedatectl set-timezone Europe/Ljubljana
+dpkg-reconfigure --frontend=noninteractive tzdata
 
+# TODO seems sytemd is not running without /proc/cmdline or something
+#timedatectl set-timezone Europe/Ljubljana
+EOF_CHROOT
+
+################################################################################
+# locale and keyboard
+################################################################################
+
+# set timezone and fake RTC time
+if [ "$TIMEZONE" = "" ]; then
+  TIMEZONE="Europe/Ljubljana"
+fi
+echo timezone = TIMEZONE
+echo $TIMEZONE > $ROOT_DIR/etc/timezone
+
+# the fake HW clock will be UTC, so an adjust file is not needed
+#echo $MYADJTIME > $ROOT_DIR/etc/adjtime
+# fake HW time is set to the image build time
+DATETIME=`date -u +"%F %T"`
+echo date/time = $DATETIME
+echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
+
+chroot $ROOT_DIR <<- EOF_CHROOT
 # setup locale
 apt-get -y install locales
 sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
@@ -60,21 +133,11 @@ update-locale LANG=en_US.UTF-8
 #apt-get -y install locales console-data keyboard-configuration
 #dpkg-reconfigure keyboard-configuration
 #localectl   set-locale   LANG="en_US.utf8"
-
-dpkg-reconfigure --frontend=noninteractive tzdata
-
-# add package containing add-apt-repository
-apt-get -y install software-properties-common
-# add PPA: https://launchpad.net/~redpitaya/+archive/ubuntu/zynq
-add-apt-repository -yu ppa:redpitaya/zynq
-
-# development tools
-apt-get -y install build-essential less vim nano sudo u-boot-tools usbutils psmisc lsof
-apt-get -y install parted dosfstools
-
-# install file system tools
-apt-get -y install mtd-utils
 EOF_CHROOT
+
+################################################################################
+# run other scripts
+################################################################################
 
 . OS/debian/network.sh
 . OS/debian/redpitaya.sh
