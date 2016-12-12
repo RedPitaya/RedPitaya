@@ -13,7 +13,7 @@ export VERSION
 
 SUBMODULE_UBT = ""
 SUBMODULE_LIN = ""
-SUBMODULE_APP = `git submodule status Applications`
+SUBMODULE_APP = $(shell git submodule status Applications)
 
 define GREET_MSG
 ##############################################################################
