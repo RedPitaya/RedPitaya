@@ -70,7 +70,5 @@ install -v -m 664 -o root -D $OVERLAY/etc/profile.d/profile.sh   $ROOT_DIR/etc/p
 install -v -m 664 -o root -D $OVERLAY/etc/profile.d/alias.sh     $ROOT_DIR/etc/profile.d/alias.sh
 install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $ROOT_DIR/etc/profile.d/redpitaya.sh
 
-# remove existing MOTD and replace it with a link to Red Pitaya version.txt
-# TODO this approach worked on Debian but does not work well on Ubuntu 16.04
-#rm $ROOT_DIR/etc/motd
-#ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd 
+# MOTD (the static part) is a link to Red Pitaya version.txt
+ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd 
