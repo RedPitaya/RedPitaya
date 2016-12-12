@@ -197,6 +197,9 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     //switch to external triger
     if(system("gpiorelay -t")==-1)status=EXIT_FAILURE;
 
+    //switch to instruments
+    if(system("gpiorelay -i")==-1)status=EXIT_FAILURE;
+
     // Read old values which are dependent on the gain...
     rp_pinState_t old_gain;
     float ch_thr, ch_hyst;
