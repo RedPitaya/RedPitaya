@@ -11,13 +11,20 @@ export BUILD_NUMBER
 export REVISION
 export VERSION
 
+SUBMODULE_UBT = ""
+SUBMODULE_LIN = ""
+SUBMODULE_APP = $(shell git submodule status Applications)
+
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
 # Version: $(VER)
-# Branch: $(GIT_BRANCH_LOCAL)
 # Build: $(BUILD_NUMBER)
+# Branch: $(GIT_BRANCH_LOCAL)
 # Commit: $(GIT_COMMIT)
+# U-Boot: $(SUBMODULE_UBT)
+# Linux Kernel: $(SUBMODULE_LIN)
+# Pro Applications: $(SUBMODULE_APP)
 ##############################################################################
 endef
 export GREET_MSG

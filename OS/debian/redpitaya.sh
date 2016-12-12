@@ -17,8 +17,10 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/sockproc.service       
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_scpi.service      $ROOT_DIR/etc/systemd/system/redpitaya_scpi.service
 install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
 # TODO: this Wyliodrin service is only here since wyliodrin.sh can not be run in a virtualized environment
+# TODO: wyliodrin.sh install script is copied onto the image
 # Wyliodrin service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
+install -v -m 664 -o root -D OS/debian/wyliodrin.sh $ROOT_DIR/root/wyliodrin.sh
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 systemctl enable redpitaya_discovery
@@ -70,7 +72,5 @@ install -v -m 664 -o root -D $OVERLAY/etc/profile.d/profile.sh   $ROOT_DIR/etc/p
 install -v -m 664 -o root -D $OVERLAY/etc/profile.d/alias.sh     $ROOT_DIR/etc/profile.d/alias.sh
 install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $ROOT_DIR/etc/profile.d/redpitaya.sh
 
-# remove existing MOTD and replace it with a link to Red Pitaya version.txt
-# TODO this approach worked on Debian but does not work well on Ubuntu 16.04
-#rm $ROOT_DIR/etc/motd
-#ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd 
+# MOTD (the static part) is a link to Red Pitaya version.txt
+ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd 
