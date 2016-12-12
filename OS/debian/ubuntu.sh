@@ -71,18 +71,30 @@ install -v -m 664 -o root -D patches/fw_env.config  $ROOT_DIR/etc/fw_env.config
 
 ################################################################################
 # hostname
+# NOTE: redpitaya.py enables a systemd service
+# which changes the hostname on boot, to an unique value
 ################################################################################
-
-install -v -m 664 -o root -D $OVERLAY/etc/hostname  $ROOT_DIR/etc/hostname
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # TODO seems sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
 EOF_CHROOT
 
+install -v -m 664 -o root -D $OVERLAY/etc/hostname  $ROOT_DIR/etc/hostname
+
 ################################################################################
 # time and locale
 ################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+# install fake hardware clock
+apt-get -y install fake-hwclock
+
+dpkg-reconfigure --frontend=noninteractive tzdata
+
+# TODO seems sytemd is not running without /proc/cmdline or something
+#timedatectl set-timezone Europe/Ljubljana
+EOF_CHROOT
 
 # set timezone and fake RTC time
 if [ "$TIMEZONE" = "" ]; then
@@ -97,16 +109,6 @@ echo $TIMEZONE > $ROOT_DIR/etc/timezone
 DATETIME=`date -u +"%F %T"`
 echo date/time = $DATETIME
 echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-# install fake hardware clock
-apt-get -y install fake-hwclock
-
-dpkg-reconfigure --frontend=noninteractive tzdata
-
-# TODO seems sytemd is not running without /proc/cmdline or something
-#timedatectl set-timezone Europe/Ljubljana
-EOF_CHROOT
 
 ################################################################################
 # locale and keyboard
