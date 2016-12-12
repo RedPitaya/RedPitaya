@@ -88,11 +88,15 @@ EOF_CHROOT
 if [ "$TIMEZONE" = "" ]; then
   TIMEZONE="Europe/Ljubljana"
 fi
+echo timezone = $TIMEZONE
 echo $TIMEZONE > $ROOT_DIR/etc/timezone
+
 # the fake HW clock will be UTC, so an adjust file is not needed
 #echo $MYADJTIME > $ROOT_DIR/etc/adjtime
 # fake HW time is set to the image build time
-echo `date -u +"%F %T"` > $ROOT_DIR/etc/fake-hwclock.data
+DATETIME=`date -u +"%F %T"`
+echo date/time = $DATETIME
+echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # install fake hardware clock
@@ -107,20 +111,6 @@ EOF_CHROOT
 ################################################################################
 # locale and keyboard
 ################################################################################
-
-# set timezone and fake RTC time
-if [ "$TIMEZONE" = "" ]; then
-  TIMEZONE="Europe/Ljubljana"
-fi
-echo timezone = TIMEZONE
-echo $TIMEZONE > $ROOT_DIR/etc/timezone
-
-# the fake HW clock will be UTC, so an adjust file is not needed
-#echo $MYADJTIME > $ROOT_DIR/etc/adjtime
-# fake HW time is set to the image build time
-DATETIME=`date -u +"%F %T"`
-echo date/time = $DATETIME
-echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # setup locale
