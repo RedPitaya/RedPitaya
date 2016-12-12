@@ -6,7 +6,7 @@
 	status = "disabled";
 };
 
-&i2c0 {
+&spi1 {
 	spidev@0 {
 		status = "disabled";
 	};
