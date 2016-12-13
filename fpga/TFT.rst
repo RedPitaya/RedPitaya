@@ -177,6 +177,13 @@ to +5V VCC, this can be done with a simple jumper
 between the two display connector pins.
 Otherwise it would be possible to repurpose a LED on Red Pitaya.
 
+.. |95-ads7846.rules| replace:: ``/etc/udev/rules.d/95-ads7846.rules``
+.. _95-ads7846.rules: ../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+
+The |95-ads7846.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
+
+.. literalinclude:: _95-ads7846.rules
+
 ==============================
 Adafruit PiTFT 3.5" (original)
 ==============================
@@ -229,6 +236,14 @@ Male connector pinout based on the |PiTFT-35|_
 +-------------------+--------+--------+-------------------+
 | +5V               |  ``2`` |  ``1`` |                   |
 +-------------------+--------+--------+-------------------+
+
+.. |95-stmpe.rules| replace:: ``/etc/udev/rules.d/95-stmpe.rules``
+.. _95-stmpe.rules: ../OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
+
+The |95-stmpe.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
+
+.. literalinclude:: _95-stmpe.rules
+
 
 .. |99-calibration.conf| replace:: ``/etc/X11/xorg.conf.d/99-calibration.conf``
 .. _99-calibration.conf: ../OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
