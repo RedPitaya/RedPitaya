@@ -23,7 +23,7 @@ DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 SIZE=3500
 
 #IMAGE=$1
-IMAGE=redpitaya_ubuntu_${DATE}.img
+IMAGE=hamlab_ubuntu_${DATE}.img
 
 dd if=/dev/zero of=$IMAGE bs=1M count=$SIZE
 
