@@ -202,7 +202,6 @@ $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/hamlab.dtbo  patches/devicetree/hamlab.dtso
 	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/i2cmux.dtbo patches/devicetree/i2cmux.dtso
 	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/disablei2c.dtbo patches/devicetree/disablei2c.dtso
-	tools/dtc/bin/dtc -@ -I dts -O dtb -o $(TMP)/dts/gpioi2chamlab.dtbo patches/devicetree/gpioi2chamlab.dtso 
 	# create device tree source from binary for reference
 	tools/dtc/bin/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
