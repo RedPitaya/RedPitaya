@@ -215,7 +215,6 @@ devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp patches/devicetree/hamlab.sh    $(INSTALL_DIR)
 	cp $(TMP)/dts/i2cmux.dtbo 	   $(INSTALL_DIR)
 	cp $(TMP)/dts/disablei2c.dtbo  	   $(INSTALL_DIR)
-	cp $(TMP)/dts/gpioi2chamlab.dtbo   $(INSTALL_DIR)
 	cp patches/devicetree/disablei2c.sh $(INSTALL_DIR)
 
 ################################################################################
