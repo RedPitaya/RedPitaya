@@ -1,3 +1,5 @@
+.. _network:
+
 #######
 Network 
 #######
@@ -7,6 +9,11 @@ Quick setup
 ***********
 
 .. note:: A reboot is required to switch between access point and client modes.
+
+.. note:: 
+    
+    In order to set wireless or direct Ethernet connection you need to access Red Pitaya STEMlab 
+    :ref:`Console interface <console>`.
 
 ===========
 WiFi client

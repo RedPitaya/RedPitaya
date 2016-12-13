@@ -2,8 +2,6 @@
 Register map 
 ************
 
-.. TODO preveri z iztokom kaj je s id.rst konflit z Housekeeping?
-
 Red Pitaya HDL design has multiple functions, which are configured by registers. It also uses memory locations to store capture data and generate output signals. All of this are described in this document. Memory location is written in a way that is seen by SW. 
 
 The table describes address space partitioning implemented on FPGA via AXI GP0 interface. All registers have offsets aligned to 4 bytes and are 32-bit wide. Granularity is 32-bit, meaning that minimum transfer size is 4 bytes. The organization is little-endian.

@@ -44,15 +44,18 @@ Assembly
 
 1. Remove small plastic feet by pressing the clips at the top, with
    a small pair of pliers and push the feet down.
-#. Repeat the prosedure with the heat sink pressing the clips together on the bottom
-   and push the holder gently up.
-
-#. The heat sink is still bonded with the FPGA, slightly turn the heat sink
-   untill it comes loose.
    
 .. figure:: rp_alucase_07.jpg
 
     Bottom of the Red Pitaya board showing the plastic feet.
+
+#. For STEMlab_14 repeat the procedure with the heat sink by pressing the clips together on the bottom
+   and push the holder gently up.
+   
+#. The heat sink is still bonded with the FPGA, slightly turn the heat sink, as shown in
+   the picture below, until it comes loose.
+   
+.. image:: STEMlab_10_heatsink.png
 
 .. figure:: rp_alucase_08.jpg
     

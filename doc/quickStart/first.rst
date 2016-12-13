@@ -1,3 +1,5 @@
+.. _ConnectSTEMlab:
+
 ##################
 Connect to STEMlab
 ##################
@@ -15,6 +17,11 @@ Simply follow this 3 simple steps:
 #. Connect STEMlab board to the router
 #. Connect power supply to the Red Pitaya STEMlab board
 #. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
+
+.. note:: 
+
+    For arranging other types of connections (wireless, direct ethernet connection) use the  
+    :ref:`Network manager application <networkManager>`.
        
 .. note::
 
