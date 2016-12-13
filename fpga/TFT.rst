@@ -251,3 +251,39 @@ The |95-stmpe.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchsc
 A calibration file should be added to the system |99-calibration.conf|_:
 
 .. literalinclude:: ../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+
+*************************
+Debugging/Troubleshooting
+*************************
+
+================================
+``pinctrl``, GPIO and interrupts
+================================
+
+To see current ``pinctrl`` settings try:
+
+.. code-block:: shell-session
+
+   $ cat /sys/kernel/debug/pinctrl/pinctrl-maps
+
+To see the status of GPIO signals try:
+
+.. code-block:: shell-session
+
+   $ cat /sys/kernel/debug/gpio
+
+To see the status of interrupts try:
+
+.. code-block:: shell-session
+
+   $ cat /proc/interrupts
+
+=====
+Touch
+=====
+
+``evtest`` can be used to see lowlevel touch events (and keyboard/mouse):
+
+.. code-block:: shell-session
+
+   sudo apt-get install -y evtest
