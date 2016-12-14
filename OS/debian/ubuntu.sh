@@ -158,6 +158,7 @@ EOF_CHROOT
 chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get clean
 history -c
+sync
 EOF_CHROOT
 
 # kill -k file users and list them -m before Unmount file systems

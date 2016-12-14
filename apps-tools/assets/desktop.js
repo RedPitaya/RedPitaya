@@ -10,14 +10,14 @@
 
     var groups = [{
         name: "System",
-        description: "System tools for configuring your Red Pitaya",
+        description: "System tools for configuring your HAMlab",
         image: "../assets/images/system.png",
         applications: ["updater", "wifi", "licmngr"]
     }, {
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
         image: "../assets/images/development.png",
-        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github"]
+        applications: ["fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github"]
     }];
     var currentGroup = undefined;
 
@@ -169,7 +169,7 @@
 
     var showFeedBack = function() {
         mail = "hamlab@redpitaya.com";
-        subject = "Feedback Red Pitaya OS " + RedPitayaOS.getVersion();
+        subject = "Feedback HAMlab OS " + RedPitayaOS.getVersion();
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
         document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
@@ -204,11 +204,10 @@
 
     var default_applications = [
         { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
         { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://hamlabdoc.readthedocs.io/en/latest/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the HAMlab", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "updater", name: "HAMlab OS Update", description: "HAMlab ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
     var backButton = {
