@@ -44,7 +44,7 @@ a:visited {
     white-space: nowrap;
 }
 
-#power_off {
+#reboot {
     float: right;
     width: 5%;
     text-align: right;
