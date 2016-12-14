@@ -186,7 +186,8 @@ Updating ecosystem only
 A script is provided for updating an existing image to a newer ecosystem zippfile
 without making modifications to the ``ext4`` partition.
 
-.. literalinclude:: OS/debian/image-update.sh
+.. literalinclude:: image-update.sh
+   :lines: 9-
 
 The script should be run with the image and ecosystem files as arguments:
 
@@ -204,6 +205,7 @@ there is a possibility a file system might be corrupted.
 The next procedure performs a file system check without changing anything.
 
 .. literalinclude:: image-fsck.sh
+   :lines: 9-
 
 Use this script on an image before releasing it.
 
