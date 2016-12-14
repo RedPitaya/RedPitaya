@@ -14,9 +14,9 @@
         image: "../assets/images/system.png",
         applications: ["updater", "wifi", "licmngr"]
     }, {
-        name: "Development",
-        description: "Documentation, tutorials and a lot of interesting stuff",
-        image: "../assets/images/development.png",
+        name: "User manual",
+        description: "Documentation and sources",
+        image: "../assets/images/instr.png",
         applications: ["fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github"]
     }];
     var currentGroup = undefined;
@@ -205,7 +205,7 @@
     var default_applications = [
         { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
-        { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://hamlabdoc.readthedocs.io/en/latest/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "instructions", name: "User Manual", description: "Quick start instructions, user manuals, specifications & more.", url: "http://hamlabdoc.readthedocs.io/en/latest/", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the HAMlab", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "HAMlab OS Update", description: "HAMlab ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
