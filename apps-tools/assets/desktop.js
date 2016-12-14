@@ -14,7 +14,7 @@
         image: "../assets/images/system.png",
         applications: ["updater", "wifi", "licmngr"]
     }, {
-        name: "User manual",
+        name: "Documentation",
         description: "Documentation and sources",
         image: "../assets/images/instr.png",
         applications: ["fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github"]
