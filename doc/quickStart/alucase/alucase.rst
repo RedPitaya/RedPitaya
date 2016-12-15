@@ -52,7 +52,7 @@ Assembly
 #. For STEMlab 125 -14 repeat the procedure with the heat sink by pressing the clips together on the bottom
    and push the holder gently up.
    
-#. The heat sink is still bonded with the FPGA, slightly turn the heat sink, as shown in
+#. The heat sink STEMlab 125 -10 is bonded with the FPGA, slightly turn the heat sink, as shown in
    the picture below, until it comes loose.
    
 .. image:: STEMlab_10_heatsink.png
