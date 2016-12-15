@@ -63,7 +63,7 @@ Multiple steps are needed to prepare a proper SD card image.
 3. Optionally install Wyliodrin.
 
 ================
-Debian bootstrap
+Ubuntu bootstrap
 ================
 
 Run the next command inside the project root directory. Root or ``sudo`` privileges are needed.
@@ -75,7 +75,7 @@ Run the next command inside the project root directory. Root or ``sudo`` privile
 This will create an image with a name containing the current date and time.
 Two scripts ``debian.sh`` and ``redpitaya.sh`` will also be called from ``image.sh``.
 
-``debian.sh`` bootstraps a Debian system into the EXT4 partition.
+``ubuntu.sh`` bootstraps an Ubuntu system into the EXT4 partition.
 It also updates packages and adds a working network configuration for Red Pitaya.
 ``redpitaya.sh`` extracts ``ecosystem*.zip`` (if one exists in the current directory) into the FAT partition.
 It also configures some Red Pitaya Systemd services.
@@ -179,6 +179,40 @@ Zip is used, since it is also available by default on MS Windows.
 
    $ zip debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin.img.zip
 
+=======================
+Updating ecosystem only
+=======================
+
+A script is provided for updating an existing image to a newer ecosystem zippfile
+without making modifications to the ``ext4`` partition.
+
+.. literalinclude:: image-update.sh
+   :lines: 9-
+
+The script should be run with the image and ecosystem files as arguments:
+
+.. code-block:: shell-session
+
+   # ./image-update.sh redpitaya_ubuntu_*.img ecosystem*.zip
+
+=================
+File system check
+=================
+
+If the image creation involved multiple steps performed by the user,
+for example some installation/setup procedure performed on a live Red Pitaya,
+there is a possibility a file system might be corrupted.
+The next procedure performs a file system check without changing anything.
+
+.. literalinclude:: image-fsck.sh
+   :lines: 9-
+
+Use this script on an image before releasing it.
+
+.. code-block:: shell-session
+
+   # ./image-fsck.sh redpitaya_ubuntu_*.img
+
 ************
 Debian Usage
 ************
@@ -230,11 +264,3 @@ Debugging
 
    $ systemd-analyze plot > /opt/redpitaya/www/apps/systemd-plot.svg
    $ systemd-analyze dot | dot -Tsvg > /opt/redpitaya/www/apps/systemd-dot.svg
-
-=====
-Wi-Fi
-=====
-
-.. code-block:: shell-session
-
-   $ wpa_passphrase MyNetwork SuperSecretPassphrase > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
