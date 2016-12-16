@@ -1,8 +1,7 @@
 #!/bin/sh
 ################################################################################
-# Authors:
-# - Pavel Demin <pavel.demin@uclouvain.be>
-# - Iztok Jeras <iztok.jeras@redpitaya.com>
+# Author:
+# Iztok Jeras <iztok.jeras@redpitaya.com>
 # License:
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
@@ -12,25 +11,30 @@
 ################################################################################
 
 IMAGE=$1
+ECOSYSTEM=$2
 
 BOOT_DIR=boot
 
 DEVICE=`losetup -f`
 
 mkdir $BOOT_DIR
-losetup --offset 4194304 $DEVICE $IMAGE
+losetup -P $DEVICE $IMAGE
 
-mount -t vfat $DEVICE $BOOT_DIR
+BOOT_DEV=/dev/`lsblk -lno NAME -x NAME $DEVICE | sed '2!d'`
+ROOT_DEV=/dev/`lsblk -lno NAME -x NAME $DEVICE | sed '3!d'`
+
+mount -t vfat $BOOT_DEV $BOOT_DIR
 
 ################################################################################
 # install ecosystem
 ################################################################################
 
+# TODO: a format or a zeroing dd would be more appropriate
 # remove old ecosystem files
 rm -rf $BOOT_DIR/*
 
 # Copy files to the boot file system
-unzip ecosystem*.zip -d $BOOT_DIR
+unzip $ECOSYSTEM -d $BOOT_DIR
 
 ################################################################################
 # umount image
