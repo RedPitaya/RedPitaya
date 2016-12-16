@@ -246,6 +246,13 @@
         var myElement = document.getElementById('main-container');
         var mc = new Hammer(myElement);
         mc.on('swipe', onSwipe);
+        $("#reboot").click(function(event) {
+            $('#reboot_dialog').modal("show");
+        });
+        $("#reboot_confirm").click(function(event) {
+            $.get('/reboot');
+            setTimeout(function(){ window.close(); }, 1000);
+        });
     });
 
 })(window.Desktop = window.Desktop || {}, jQuery);
