@@ -11,7 +11,7 @@ int main (int argc, char **argv) {
     int status;
 
     // Initialization of API
-    if (rp_GenOpen("/dev/uio7", &handle) != RP_OK) {
+    if (rp_GenOpen("/dev/uio/asg0", &handle) != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
     }

@@ -29,37 +29,6 @@ rp_acq_data_t acq_data;
 
 bool g_acq_running=false;
 
-/*
-uio9: name=scope0, version=devicetree, events=0
-        map[0]: addr=0x40090000, size=65536
-uio8: name=asg1, version=devicetree, events=0
-        map[0]: addr=0x40080000, size=65536
-uio7: name=asg0, version=devicetree, events=0
-        map[0]: addr=0x40070000, size=65536
-uio6: name=pwm, version=devicetree, events=0
-        map[0]: addr=0x40060000, size=65536
-uio5: name=pdm, version=devicetree, events=0
-        map[0]: addr=0x40050000, size=65536
-uio4: name=calib, version=devicetree, events=0
-        map[0]: addr=0x40040000, size=65536
-uio3: name=led, version=devicetree, events=0
-        map[0]: addr=0x40030000, size=65536
-uio2: name=gpio, version=devicetree, events=0
-        map[0]: addr=0x40020000, size=65536
-uio13: name=dummy, version=devicetree, events=0
-        map[0]: addr=0x83C00000, size=4194304
-uio12: name=la, version=devicetree, events=0
-        map[0]: addr=0x400C0000, size=65536
-uio11: name=lg, version=devicetree, events=0
-        map[0]: addr=0x400B0000, size=65536
-uio10: name=scope1, version=devicetree, events=0
-        map[0]: addr=0x400A0000, size=65536
-uio1: name=muxctl, version=devicetree, events=0
-        map[0]: addr=0x40010000, size=65536
-uio0: name=id, version=devicetree, events=0
-        map[0]: addr=0x40000000, size=65536
-		*/
-
 /**
  * Open device
  */
@@ -67,14 +36,13 @@ RP_STATUS rp_OpenUnit(void)
 {
     int r=RP_API_OK;
 
-    if(rp_LaAcqOpen("/dev/uio12", &la_acq_handle)!=RP_API_OK){
+    if(rp_LaAcqOpen("/dev/uio/la", &la_acq_handle)!=RP_API_OK){
         r=-1;
     }
 
     //rp_LaAcqFpgaRegDump(&la_acq_handle);
 
-   // if(rp_GenOpen("/dev/dummy", &sig_gen_handle)!=RP_API_OK){
-    if(rp_GenOpen("/dev/uio11", &sig_gen_handle)!=RP_API_OK){
+    if(rp_GenOpen("/dev/uio/lg", &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;

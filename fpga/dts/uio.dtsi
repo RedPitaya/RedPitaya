@@ -13,16 +13,6 @@
 		reg = <0x40040000 0x10000>;
 		status = "disabled";
 	};
-	gpio: gpio@40080000 {
-		compatible = "generic-uio";
-		reg = <0x40080000 0x10000>;
-		status = "disabled";
-	};
-	led: led@400c0000 {
-		compatible = "generic-uio";
-		reg = <0x400c0000 0x10000>;
-		status = "disabled";
-	};
 	calib: calib@40100000 {
 		compatible = "generic-uio";
 		reg = <0x40100000 0x10000>;
@@ -38,7 +28,7 @@
 		reg = <0x40180000 0x10000>;
 		status = "disabled";
 	};
-	asg: asg0@401c0000 {
+	asg0: asg0@401c0000 {
 		compatible = "generic-uio";
 		reg = <0x401c0000 0x40000>;
 		status = "disabled";

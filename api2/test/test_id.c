@@ -9,7 +9,7 @@ int main (int argc, char **argv) {
     rp_handle_uio_t handle;
 
     // Initialization of API
-    if (rp_IdOpen("/dev/uio0", &handle) != RP_OK) {
+    if (rp_IdOpen("/dev/uio/id", &handle) != RP_OK) {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
     }
