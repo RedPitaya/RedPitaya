@@ -117,6 +117,9 @@ LabVIEW
 To set up the LabVIEW driver for Red Pitaya,
 download the 
 `Red_Pitaya_LabVIEW_Driver&Examples.zip <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AACv9uCj-E5A6dJLN4YcomaTa/Red_Pitaya_LabVIEW_Driver%26Examples_v0.8.zip>`_ file.
+
+Alternatively from: http://sine.ni.com/apps/utf8/niid_web_display.download_page?p_id_guid=1554CCD2AB3D19F3E05400144FFA2D85
+
 Unpack it and copy the RedPitaya folder to your LabVIEW installations ``instr.lib`` folder
 e.g. ``C:/Program Files/National Instruments/LabVIEW 2010/instr.lib``.
 The RedPitaya driver should appear after restarting LabVIEW in
