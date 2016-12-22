@@ -73,11 +73,10 @@ static int init_spi(){
 	 *        mode |= SPI_READY;
 	 *
 	 * multiple possibilities possible using | */
-	int mode = 0;
+	uint8_t mode;
 
 	/* Opening file stream */
 	spi_fd = open("/dev/spidev1.0", O_RDWR | O_NOCTTY);
-
 	if(spi_fd < 0){
 		printf("Error opening spidev0.1. Error: %s\n", strerror(errno));
 		return -1;
@@ -85,7 +84,7 @@ static int init_spi(){
 
 	/* Setting mode (CPHA, CPOL) */
 	if(ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0){
-		printf("Error setting SPI_IOC_RD_MODE. Error: %s\n", strerror(errno));
+		printf("Error setting SPI MODE. Error: %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -93,7 +92,7 @@ static int init_spi(){
 	int spi_speed = 1000000;
 
 	if(ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed) < 0){
-		printf("Error setting SPI_IOC_WR_MAX_SPEED_HZ. Error: %s\n", strerror(errno));
+		printf("Error setting SPI MAX_SPEED_HZ. Error: %s\n", strerror(errno));
 		return -1;
 	}
 
