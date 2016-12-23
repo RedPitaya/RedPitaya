@@ -9,25 +9,11 @@
 # Copy files to the boot file system
 unzip ecosystem*.zip -d $BOOT_DIR
 
-# Systemd services
-install -v -m 664 -o root -d                                                         $ROOT_DIR/var/log/redpitaya_nginx
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_discovery.service $ROOT_DIR/etc/systemd/system/redpitaya_discovery.service
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service     $ROOT_DIR/etc/systemd/system/redpitaya_nginx.service
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/sockproc.service            $ROOT_DIR/etc/systemd/system/sockproc.service
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_scpi.service      $ROOT_DIR/etc/systemd/system/redpitaya_scpi.service
-install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
-# TODO: this Wyliodrin service is only here since wyliodrin.sh can not be run in a virtualized environment
-# TODO: wyliodrin.sh install script is copied onto the image
-# Wyliodrin service
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
-install -v -m 664 -o root -D OS/debian/wyliodrin.sh $ROOT_DIR/root/wyliodrin.sh
+################################################################################
+# install various packages
+################################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-systemctl enable redpitaya_discovery
-systemctl enable redpitaya_nginx
-systemctl enable sockproc
-#systemctl enable redpitaya_scpi
-
 # applications used by Bazaar
 apt-get -y install wget
 
@@ -64,8 +50,72 @@ apt-get -y install gdb cgdb libcunit1-ncurses-dev
 
 # miscelaneous tools
 apt-get -y install bc
-
 EOF_CHROOT
+
+################################################################################
+# systemd services
+################################################################################
+
+install -v -m 664 -o root -d                                                         $ROOT_DIR/var/log/redpitaya_nginx
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_discovery.service $ROOT_DIR/etc/systemd/system/redpitaya_discovery.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service     $ROOT_DIR/etc/systemd/system/redpitaya_nginx.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/sockproc.service            $ROOT_DIR/etc/systemd/system/sockproc.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_scpi.service      $ROOT_DIR/etc/systemd/system/redpitaya_scpi.service
+install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
+# TODO: this Wyliodrin service is only here since wyliodrin.sh can not be run in a virtualized environment
+# TODO: wyliodrin.sh install script is copied onto the image
+# Wyliodrin service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
+install -v -m 664 -o root -D OS/debian/wyliodrin.sh $ROOT_DIR/root/wyliodrin.sh
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+systemctl enable redpitaya_discovery
+systemctl enable redpitaya_nginx
+systemctl enable sockproc
+#systemctl enable redpitaya_scpi
+EOF_CHROOT
+
+################################################################################
+# create users and groups
+################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+# add system groups for HW access
+groupadd --system xdevcfg
+groupadd --system uio
+groupadd --system led
+groupadd --system gpio
+groupadd --system spi
+groupadd --system eeprom
+groupadd --system xadc
+groupadd --system dma
+
+# add system groups for running daemons
+# for running bazar (Nginx), sockproc
+useradd --system redpitaya_nginx
+useradd --system scpi
+useradd --system wyliodrin
+
+# add a default user
+useradd -m -c "Red Pitaya" -s /bin/bash -G sudo,xdevcfg,uio,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya
+
+# add HW access rights to Nginx user "redpitaya_nginx"
+usermod -a -G xdevcfg,uio,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya_nginx
+
+# add HW access rights to users "scpi" and "wyliodrin"
+usermod -a -G uio,led,gpio,spi,i2c,eeprom,dialout,dma scpi
+usermod -a -G uio,led,gpio,spi,i2c,eeprom,dialout,dma wyliodrin
+
+# TODO: Bazaar code should be moved from /dev/mem to /dev/uio/*
+usermod -a -G kmem redpitaya
+usermod -a -G kmem redpitaya_nginx
+usermod -a -G kmem scpi
+usermod -a -G kmem wyliodrin
+EOF_CHROOT
+
+###############################################################################
+# configuring shell
+###############################################################################
 
 # profile for PATH variables, ...
 install -v -m 664 -o root -D $OVERLAY/etc/profile.d/profile.sh   $ROOT_DIR/etc/profile.d/profile.sh
@@ -73,4 +123,4 @@ install -v -m 664 -o root -D $OVERLAY/etc/profile.d/alias.sh     $ROOT_DIR/etc/p
 install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $ROOT_DIR/etc/profile.d/redpitaya.sh
 
 # MOTD (the static part) is a link to Red Pitaya version.txt
-ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd 
+ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd
