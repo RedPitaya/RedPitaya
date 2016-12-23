@@ -1,5 +1,8 @@
 # Release 0.9?
 
+U-Boot:
+- updated to upstream xilinx-v2016.2
+
 Linux kernel:
 - added support for I2C GPIO expanders (PCA953X, MCP23S08)
 - added GPIO based drivers for SPI, I2C and 1-wire
@@ -7,7 +10,28 @@ Linux kernel:
 - patched Cadence I2C controller driver to add proper HW reset
 - changed kernel patching procedure, the kernel is now forked,
   and patches are commited to the fork Git repo
-- updated kernel to 2016.2
+- updated to upstream xilinx-v2016.2
+- added TFT framebuffer and touch screen drivers
+- added GPIO expander and HW monitor device drivers for HAMLAB
+
+FPGA:
+- updated build procedure to create bitstreams from multiple projects
+- moved device tree code to the FPGA directory
+- instead of patching just append or include `*.dtsi` files
+- adddd UIO device which covers the entire FPGA address space
+- added UDEV code for renaming UIO devices
+- added UDEV code for changing group access permissions
+  xdevcfg,uio,led,gpio,spi,i2c,dialout,dma
+
+OS:
+- 
+
+API:
+- changed API to map /dev/uio/
+
+Documentation:
+- recoded most documentation into reStructuredText, so it can be published on
+  http://redpitaya.readthedocs.io/en/latest/
 
 # Release 0.96 RC?
 
