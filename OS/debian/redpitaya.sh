@@ -79,6 +79,9 @@ EOF_CHROOT
 # create users and groups
 ################################################################################
 
+# UDEV rules setting hardware access group rights
+install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/10-redpitaya.rules            $ROOT_DIR/etc/udev/rules.d/10-redpitaya.rules
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 # add system groups for HW access
 groupadd --system xdevcfg
