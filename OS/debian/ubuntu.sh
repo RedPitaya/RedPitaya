@@ -19,6 +19,8 @@ OVERLAY=OS/debian/overlay
 cp /etc/resolv.conf         $ROOT_DIR/etc/
 cp /usr/bin/qemu-arm-static $ROOT_DIR/usr/bin/
 
+export LC_ALL=en_US.UTF-8
+
 ################################################################################
 # APT settings
 ################################################################################
@@ -37,19 +39,65 @@ add-apt-repository -yu ppa:redpitaya/zynq
 EOF_CHROOT
 
 ################################################################################
-# miscelaneous tools
+# locale and keyboard
+# setting LC_ALL overides values for all LC_* variables, this avids complaints
+# about missing locales if some of this variables are inherited over SSH
 ################################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-apt-get -y install dbus udev
+# setup locale
+apt-get -y install locales
+sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
 
-# development tools
-apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
-apt-get -y install parted dosfstools
-
-# install file system tools
-apt-get -y install mtd-utils
+# setup locale/keyboard
+#apt-get -y install locales console-data keyboard-configuration
+#dpkg-reconfigure keyboard-configuration
+#localectl   set-locale   LANG="en_US.utf8"
 EOF_CHROOT
+
+################################################################################
+# hostname
+# NOTE: redpitaya.py enables a systemd service
+# which changes the hostname on boot, to an unique value
+################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+# TODO seems sytemd is not running without /proc/cmdline or something
+#hostnamectl set-hostname redpitaya
+EOF_CHROOT
+
+install -v -m 664 -o root -D $OVERLAY/etc/hostname  $ROOT_DIR/etc/hostname
+
+################################################################################
+# timezone and fake HW time
+################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+# install fake hardware clock
+apt-get -y install fake-hwclock
+
+dpkg-reconfigure --frontend=noninteractive tzdata
+
+# TODO seems sytemd is not running without /proc/cmdline or something
+#timedatectl set-timezone Europe/Ljubljana
+EOF_CHROOT
+
+# set default timezone
+if [ "$TIMEZONE" = "" ]; then
+  TIMEZONE="Etc/UTC"
+fi
+# set timezone and fake RTC time
+echo timezone = $TIMEZONE
+echo $TIMEZONE > $ROOT_DIR/etc/timezone
+
+# the fake HW clock will be UTC, so an adjust file is not needed
+#echo $MYADJTIME > $ROOT_DIR/etc/adjtime
+# fake HW time is set to the image build time
+DATETIME=`date -u +"%F %T"`
+echo date/time = $DATETIME
+echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
 
 ################################################################################
 # File System table
@@ -70,61 +118,18 @@ EOF_CHROOT
 install -v -m 664 -o root -D patches/fw_env.config  $ROOT_DIR/etc/fw_env.config
 
 ################################################################################
-# hostname
-# NOTE: redpitaya.py enables a systemd service
-# which changes the hostname on boot, to an unique value
+# miscelaneous tools
 ################################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-# TODO seems sytemd is not running without /proc/cmdline or something
-#hostnamectl set-hostname redpitaya
-EOF_CHROOT
+apt-get -y install dbus udev
 
-install -v -m 664 -o root -D $OVERLAY/etc/hostname  $ROOT_DIR/etc/hostname
+# development tools
+apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
+apt-get -y install parted dosfstools
 
-################################################################################
-# time and locale
-################################################################################
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-# install fake hardware clock
-apt-get -y install fake-hwclock
-
-dpkg-reconfigure --frontend=noninteractive tzdata
-
-# TODO seems sytemd is not running without /proc/cmdline or something
-#timedatectl set-timezone Europe/Ljubljana
-EOF_CHROOT
-
-# set timezone and fake RTC time
-if [ "$TIMEZONE" = "" ]; then
-  TIMEZONE="Europe/Ljubljana"
-fi
-echo timezone = $TIMEZONE
-echo $TIMEZONE > $ROOT_DIR/etc/timezone
-
-# the fake HW clock will be UTC, so an adjust file is not needed
-#echo $MYADJTIME > $ROOT_DIR/etc/adjtime
-# fake HW time is set to the image build time
-DATETIME=`date -u +"%F %T"`
-echo date/time = $DATETIME
-echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
-
-################################################################################
-# locale and keyboard
-################################################################################
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-# setup locale
-apt-get -y install locales
-sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
-locale-gen
-update-locale LANG=en_US.UTF-8
-
-# setup locale/keyboard
-#apt-get -y install locales console-data keyboard-configuration
-#dpkg-reconfigure keyboard-configuration
-#localectl   set-locale   LANG="en_US.utf8"
+# install file system tools
+apt-get -y install mtd-utils
 EOF_CHROOT
 
 ################################################################################
