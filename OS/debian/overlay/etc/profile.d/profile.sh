@@ -6,7 +6,7 @@ export HOSTNAME=`/bin/hostname`
 export HISTSIZE=1000
 export HISTFILESIZE=1000
 export PAGER='/usr/bin/less '
-export EDITOR='/usr/bin/nano'
+export EDITOR='/bin/nano'
 export INPUTRC=/etc/inputrc
 
 export LS_OPTIONS='--color=auto'
