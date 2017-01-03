@@ -18,7 +18,7 @@
 #include <ngx_http.h>
 #include <ngx_log.h>
 
-#include "redpitaya/http.h"
+#include "http.h"
 #include "ngx_http_rp_module.h"
 #include "rp_bazaar_cmd.h"
 #include "rp_bazaar_app.h"

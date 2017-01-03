@@ -10,7 +10,6 @@ in the following directories recursively:
 - FPGA
 - Test
 - shared/include
-- shared/libredpitaya
 
 
 Copyright (c) 2014, Red Pitaya, d.o.o.

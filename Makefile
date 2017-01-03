@@ -18,7 +18,7 @@ define GREET_MSG
 endef
 export GREET_MSG
 
-all: api libredpitaya nginx scpi examples rp_communication apps-tools apps-pro
+all: api nginx scpi examples rp_communication apps-tools apps-pro
 
 $(DL):
 	mkdir -p $@
@@ -36,13 +36,8 @@ LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 LIBRP2_DIR      = api2
 
-.PHONY: api2 api librp libredpitaya
+.PHONY: api2 api librp
 .PHONY: librpapp liblcr_meter
-
-libredpitaya:
-	$(MAKE) -C shared clean
-	$(MAKE) -C shared
-	$(MAKE) -C shared install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp:
 	$(MAKE) -C $(LIBRP_DIR) clean
@@ -154,7 +149,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 
-$(NGINX): libredpitaya $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
+$(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 	$(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))

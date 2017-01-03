@@ -17,7 +17,7 @@
 #include <ctype.h>
 #include <curl/curl.h>
 
-#include "redpitaya/http.h"
+#include "http.h"
 
 
 /* Debug channel */
