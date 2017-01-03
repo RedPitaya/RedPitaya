@@ -14,7 +14,7 @@
 #
 
 # List of compiled object files (not yet linked to executable)
-OBJS = system.o http.o
+OBJS = http.o
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.c, $(OBJS)))
 
