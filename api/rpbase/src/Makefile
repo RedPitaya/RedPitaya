@@ -55,9 +55,6 @@ CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../../include
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
-# Red Pitaya common SW directory
-SHARED=../../shared/
-
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBS=-lm -lpthread
@@ -88,10 +85,6 @@ $(SHARED_LIB): $(OBJS)
 $(STATIC_LIB): $(OBJS)
 	mkdir -p $(OUTPUT_DIR)
 	$(AR) rcs $@ $^
-
-# Version header for traceability
-version.h:
-	cp $(SHARED)/include/redpitaya/version.h . 
 
 # Clean target - when called it cleans all object files and executables.
 clean:

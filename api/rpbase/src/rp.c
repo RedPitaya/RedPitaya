@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "version.h"
+#include "redpitaya/version.h"
 #include "common.h"
 #include "housekeeping.h"
 #include "oscilloscope.h"

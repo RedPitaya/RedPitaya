@@ -27,11 +27,9 @@ CALIBRATE2=calibrateApp2
 CALIBTUNE=calibTune
 
 # GCC compiling & linking flags
-CFLAGS  =-g -std=gnu99 -Wall -Werror -I../../api/include
+CFLAGS  = -g -std=gnu99 -Wall -Werror -I../../api/include
+CFLAGS += -I../../api/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-
-# Red Pitaya common SW directory
-SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
@@ -51,7 +49,7 @@ all: $(TARGET) $(CALIBRATE2)
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then
 # objects (.o) files.
-%.o: %.c version.h
+%.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from list.
@@ -63,10 +61,6 @@ $(CALIBRATE2):
 
 $(CALIBTUNE):
 	$(CC) $(CFLAGS) $(LIBPATH) $(LIBS) -o $@ $(CALIBTUNE_C)
-
-# Version header for traceability
-version.h:
-	cp $(SHARED)/include/redpitaya/version.h .
 
 # Clean target - when called it cleans all object files and executables.
 clean:

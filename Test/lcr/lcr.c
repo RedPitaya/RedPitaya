@@ -34,7 +34,7 @@
 #include "main_osc.h"
 #include "fpga_osc.h"
 #include "fpga_awg.h"
-#include "version.h"
+#include "redpitaya/version.h"
 
 #define M_PI 3.14159265358979323846
 

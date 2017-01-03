@@ -22,7 +22,7 @@
 
 #include "main_osc.h"
 #include "fpga_osc.h"
-#include "version.h"
+#include "redpitaya/version.h"
 
 /**
  * GENERAL DESCRIPTION:

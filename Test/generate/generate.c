@@ -19,7 +19,7 @@
 #include <string.h>
 
 #include "fpga_awg.h"
-#include "version.h"
+#include "redpitaya/version.h"
 
 /**
  * GENERAL DESCRIPTION:
