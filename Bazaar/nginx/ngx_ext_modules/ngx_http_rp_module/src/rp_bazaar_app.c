@@ -80,21 +80,17 @@ int rp_bazaar_get_mac(const char* nic, char *mac)
 int rp_bazaar_get_dna(unsigned long long *dna)
 {
     void *page_ptr;
-    long page_addr, page_size = sysconf(_SC_PAGESIZE);
-    const long c_dna_fpga_base_addr = 0x40000000;
     const long c_dna_fpga_base_size = 0x20;
     int fd = -1;
 
-    fd = open("/dev/mem", O_RDONLY | O_SYNC);
+    fd = open("/dev/uio/api", O_RDONLY | O_SYNC);
     if(fd < 0) {
-        fprintf(stderr, "open(/dev/mem) failed: %s\n", strerror(errno));
+        fprintf(stderr, "ERROR: failed open of UIO device: %s\n", strerror(errno));
         return -1;
     }
 
-    page_addr = c_dna_fpga_base_addr & (~(page_size-1));
-
     page_ptr = mmap(NULL, c_dna_fpga_base_size, PROT_READ,
-                          MAP_SHARED, fd, page_addr);
+                          MAP_SHARED, fd, 0x0);
 
     if((void *)page_ptr == MAP_FAILED) {
         fprintf(stderr, "mmap() failed: %s\n", strerror(errno));

@@ -20,7 +20,7 @@
 #include <stdbool.h>
 
 // Base Oscilloscope address
-static const int OSC_BASE_ADDR = 0x40100000;
+static const int OSC_BASE_ADDR = 0x00100000;
 static const int OSC_BASE_SIZE = 0x30000;
 
 // Oscilloscope Channel A input signal buffer offset

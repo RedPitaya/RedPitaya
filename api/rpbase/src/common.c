@@ -25,7 +25,7 @@ static int fd = 0;
 int cmn_Init()
 {
     if (!fd) {
-        if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) {
+        if((fd = open("/dev/uio/api", O_RDWR | O_SYNC)) == -1) {
             return RP_EOMD;
         }
     }
@@ -48,6 +48,8 @@ int cmn_Map(size_t size, size_t offset, void** mapped)
     if(fd == -1) {
         return RP_EMMD;
     }
+
+    offset = (offset >> 20) * sysconf(_SC_PAGESIZE);
 
     *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
 

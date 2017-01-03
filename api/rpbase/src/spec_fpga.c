@@ -76,21 +76,17 @@ int __spectr_fpga_cleanup_mem(void)
 static int get_hw_rev(hw_rev_t *hw_rev)
 {
     void *page_ptr;
-    long page_addr, page_size = sysconf(_SC_PAGESIZE);
-    const long c_hk_fpga_base_addr = 0x40000000;
     const long c_hk_fpga_base_size = 0x20;
     int fd = -1;
 
-    fd = open("/dev/mem", O_RDONLY | O_SYNC);
+    fd = open("/dev/uio/api", O_RDONLY | O_SYNC);
     if(fd < 0) {
-        fprintf(stderr, "open(/dev/mem) failed: %s\n", strerror(errno));
+        fprintf(stderr, "ERROR: failed open of UIO device: %s\n", strerror(errno));
         return -1;
     }
 
-    page_addr = c_hk_fpga_base_addr & (~(page_size-1));
-
     page_ptr = mmap(NULL, c_hk_fpga_base_size, PROT_READ,
-                          MAP_SHARED, fd, page_addr);
+                          MAP_SHARED, fd, 0x0);
 
     if((void *)page_ptr == MAP_FAILED) {
         fprintf(stderr, "mmap() failed: %s\n", strerror(errno));
@@ -135,7 +131,6 @@ static int update_hw_spec_par(void)
 int spectr_fpga_init(void)
 {
     void *page_ptr;
-    long page_addr, page_off, page_size = sysconf(_SC_PAGESIZE);
 
     /* update hw specific parmateres */
     if(update_hw_spec_par()<0){
@@ -146,23 +141,20 @@ int spectr_fpga_init(void)
     if(__spectr_fpga_cleanup_mem() < 0)
         return -1;
 
-    g_spectr_fpga_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    g_spectr_fpga_mem_fd = open("/dev/uio/api", O_RDWR | O_SYNC);
     if(g_spectr_fpga_mem_fd < 0) {
-        fprintf(stderr, "open(/dev/mem) failed: %s\n", strerror(errno));
+        fprintf(stderr, "ERROR: failed open of UIO device: %s\n", strerror(errno));
         return -1;
     }
 
-    page_addr = SPECTR_FPGA_BASE_ADDR & (~(page_size-1));
-    page_off  = SPECTR_FPGA_BASE_ADDR - page_addr;
-
     page_ptr = mmap(NULL, SPECTR_FPGA_BASE_SIZE, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, g_spectr_fpga_mem_fd, page_addr);
+                          MAP_SHARED, g_spectr_fpga_mem_fd, 0x0);
     if((void *)page_ptr == MAP_FAILED) {
         fprintf(stderr, "mmap() failed: %s\n", strerror(errno));
         __spectr_fpga_cleanup_mem();
         return -1;
     }
-    g_spectr_fpga_reg_mem = page_ptr + page_off;
+    g_spectr_fpga_reg_mem = page_ptr + SPECTR_FPGA_BASE_ADDR;
     g_spectr_fpga_cha_mem = (uint32_t *)g_spectr_fpga_reg_mem +
         (SPECTR_FPGA_CHA_OFFSET / sizeof(uint32_t));
     g_spectr_fpga_chb_mem = (uint32_t *)g_spectr_fpga_reg_mem +

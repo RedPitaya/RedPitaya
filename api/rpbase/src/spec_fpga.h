@@ -17,8 +17,7 @@
 
 #include <stdint.h>
 
-/* Housekeeping base address 0x40000000 */
-#define HK_FPGA_BASE_ADDR 0x40000000
+/* Housekeeping */
 #define HK_FPGA_HW_REV_MASK 0x0000000f
 
 typedef enum {
@@ -39,8 +38,8 @@ typedef struct hk_fpga_reg_mem_s {
     uint32_t dna_hi;
 } hk_fpga_reg_mem_t;
 
-/* Base address 0x40100000 */
-#define SPECTR_FPGA_BASE_ADDR 0x40100000
+/* Base address */
+#define SPECTR_FPGA_BASE_ADDR 0x00100000
 #define SPECTR_FPGA_BASE_SIZE 0x30000
 
 #define SPECTR_FPGA_SIG_LEN   (16*1024)

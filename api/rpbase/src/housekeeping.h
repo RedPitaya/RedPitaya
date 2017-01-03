@@ -21,7 +21,7 @@
 #include <stdbool.h>
 
 // Base Housekeeping address
-static const int HOUSEKEEPING_BASE_ADDR = 0x40000000;
+static const int HOUSEKEEPING_BASE_ADDR = 0x00000000;
 static const int HOUSEKEEPING_BASE_SIZE = 0x30;
 
 // Housekeeping structure declaration

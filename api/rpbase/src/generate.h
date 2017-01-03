@@ -42,7 +42,7 @@
 #define MICRO                   1e6
 
 // Base Generate address
-#define GENERATE_BASE_ADDR      0x40200000
+#define GENERATE_BASE_ADDR      0x00200000
 #define GENERATE_BASE_SIZE      0x00030000
 
 typedef struct ch_properties {

@@ -16,7 +16,7 @@
 #define __ANALOG_MIXED_SIGNALS_H
 
 // Base Analog Mixed Signals address
-static const int ANALOG_MIXED_SIGNALS_BASE_ADDR = 0x40400000;
+static const int ANALOG_MIXED_SIGNALS_BASE_ADDR = 0x00400000;
 static const int ANALOG_MIXED_SIGNALS_BASE_SIZE = 0x30;
 
 typedef struct analog_mixed_signals_control_s {
