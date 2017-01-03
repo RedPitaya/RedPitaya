@@ -15,12 +15,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <sys/mman.h>
 #include <net/if.h>
 #include <arpa/inet.h>
 
@@ -118,57 +116,3 @@ int get_ip(const char *nic, struct in_addr *ip)
     return ret;
 }
 
-
-/*----------------------------------------------------------------------------*/
-/**
- * @brief Get Xilinx DNA number.
- *
- * Function reads the Xilinx DNA number of Red Pitaya.
- *
- * @param[out]   dna    64-bit unsigned DNA number.
- *
- * @retval   0 Success
- * @retval < 0 Failure
- */
-int get_xilinx_dna(unsigned long long *dna)
-{
-    void *page_ptr;
-    long page_addr, page_size = sysconf(_SC_PAGESIZE);
-    const long c_dna_fpga_base_addr = 0x40000000;
-    const long c_dna_fpga_base_size = 0x20;
-    int fd = -1;
-
-    fd = open("/dev/mem", O_RDONLY | O_SYNC);
-    if(fd < 0) {
-        PDEBUG("%s: open(/dev/mem) failed: %s\n",
-               __FUNCTION__, strerror(errno));
-        return -1;
-    }
-
-    page_addr = c_dna_fpga_base_addr & (~(page_size-1));
-
-    page_ptr = mmap(NULL, c_dna_fpga_base_size, PROT_READ,
-                          MAP_SHARED, fd, page_addr);
-
-    if((void *)page_ptr == MAP_FAILED) {
-        PDEBUG("%s: mmap() failed: %s\n",
-               __FUNCTION__, strerror(errno));
-        close(fd);
-        return -1;
-    }
-
-    hk_fpga_reg_mem_t *hk = page_ptr;
-    *dna = hk->dna_hi & 0x00ffffff;
-    *dna = *dna << 32 | hk->dna_lo;
-
-    if(munmap(page_ptr, c_dna_fpga_base_size) < 0) {
-        PDEBUG("%s: munmap() failed: %s\n", 
-               __FUNCTION__, strerror(errno));
-        close(fd);
-        return -1;
-    }
-
-    close (fd);
-
-    return 0;
-}
