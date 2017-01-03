@@ -23,6 +23,9 @@ int main (int argc, char **argv) {
     volatile void *regset1;
     size_t length;
     off_t offset;
+    off_t page_size = sysconf(_SC_PAGESIZE);
+
+    printf("DEBUG: page size is 0x%08lx\n", page_size);
 
     // try opening the device
     fd = open("/dev/uio/ps2pl", O_RDWR);
@@ -33,7 +36,7 @@ int main (int argc, char **argv) {
 
     // get regset pointer
     length = 0x1000; // 12 bit page size
-    offset = 0x10000;
+    offset = 1 * page_size;
     regset1 = mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_SHARED, fd, offset);
     //printf ("1:0x%08x\n\r", (uint32_t) regset);
     if (regset1 == MAP_FAILED) {
