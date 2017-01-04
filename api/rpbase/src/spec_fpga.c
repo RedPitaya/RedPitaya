@@ -73,69 +73,10 @@ int __spectr_fpga_cleanup_mem(void)
     return 0;
 }
 
-static int get_hw_rev(hw_rev_t *hw_rev)
-{
-    void *page_ptr;
-    const long c_hk_fpga_base_size = 0x20;
-    int fd = -1;
-
-    fd = open("/dev/uio/api", O_RDONLY | O_SYNC);
-    if(fd < 0) {
-        fprintf(stderr, "ERROR: failed open of UIO device: %s\n", strerror(errno));
-        return -1;
-    }
-
-    page_ptr = mmap(NULL, c_hk_fpga_base_size, PROT_READ,
-                          MAP_SHARED, fd, 0x0);
-
-    if((void *)page_ptr == MAP_FAILED) {
-        fprintf(stderr, "mmap() failed: %s\n", strerror(errno));
-        close(fd);
-        return -1;
-    }
-
-    hk_fpga_reg_mem_t *hk = page_ptr;
-    *hw_rev = hk->rev & HK_FPGA_HW_REV_MASK;
-
-    if(munmap(page_ptr, c_hk_fpga_base_size) < 0) {
-        fprintf(stderr, "munmap() failed: %s\n", strerror(errno));
-        close(fd);
-        return -1;
-    }
-
-    close (fd);
-
-    return 0;
-}
-
-static int update_hw_spec_par(void)
-{
-    hw_rev_t rev;
-    if(get_hw_rev(&rev)<0){
-    	return -1;
-    }
-    switch(rev){
-    case eHwRevC:
-    	g_spectr_fpga_adc_max_v=c_spectr_fpga_adc_max_v_revC;
-    	break;
-    case eHwRevD:
-    	g_spectr_fpga_adc_max_v=c_spectr_fpga_adc_max_v_revD;
-    	break;
-    default:
-    	return -1;
-    break;
-    }
-    return 0;
-}
-
 int spectr_fpga_init(void)
 {
-    void *page_ptr;
-
-    /* update hw specific parmateres */
-    if(update_hw_spec_par()<0){
-    	return -1;
-    }
+    /* update hw specific parmateres, NOTE, this is now hardcoded */
+    g_spectr_fpga_adc_max_v = c_spectr_fpga_adc_max_v_revD;
 
     /* If maybe needed, cleanup the FD & memory pointer */
     if(__spectr_fpga_cleanup_mem() < 0)
@@ -147,14 +88,13 @@ int spectr_fpga_init(void)
         return -1;
     }
 
-    page_ptr = mmap(NULL, SPECTR_FPGA_BASE_SIZE, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, g_spectr_fpga_mem_fd, 0x0);
-    if((void *)page_ptr == MAP_FAILED) {
+    g_spectr_fpga_reg_mem = mmap(NULL, SPECTR_FPGA_BASE_SIZE, PROT_READ | PROT_WRITE,
+                          MAP_SHARED, g_spectr_fpga_mem_fd, (SPECTR_FPGA_BASE_ADDR >> 20) * sysconf(_SC_PAGESIZE));
+    if((void *)g_spectr_fpga_reg_mem == MAP_FAILED) {
         fprintf(stderr, "mmap() failed: %s\n", strerror(errno));
         __spectr_fpga_cleanup_mem();
         return -1;
     }
-    g_spectr_fpga_reg_mem = page_ptr + SPECTR_FPGA_BASE_ADDR;
     g_spectr_fpga_cha_mem = (uint32_t *)g_spectr_fpga_reg_mem +
         (SPECTR_FPGA_CHA_OFFSET / sizeof(uint32_t));
     g_spectr_fpga_chb_mem = (uint32_t *)g_spectr_fpga_reg_mem +

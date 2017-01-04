@@ -17,30 +17,9 @@
 
 #include <stdint.h>
 
-/* Housekeeping */
-#define HK_FPGA_HW_REV_MASK 0x0000000f
-
-typedef enum {
-	eHwRevC=0,
-	eHwRevD
-} hw_rev_t;
-
-/* FPGA housekeeping structure */
-typedef struct hk_fpga_reg_mem_s {
-    /* configuration:
-     * bit   [3:0] - hw revision
-     * bits [31:4] - reserved
-     */
-    uint32_t rev;
-    /* DNA low word */
-    uint32_t dna_lo;
-    /* DNA high word */
-    uint32_t dna_hi;
-} hk_fpga_reg_mem_t;
-
 /* Base address */
 #define SPECTR_FPGA_BASE_ADDR 0x00100000
-#define SPECTR_FPGA_BASE_SIZE 0x30000
+#define SPECTR_FPGA_BASE_SIZE 0x00030000
 
 #define SPECTR_FPGA_SIG_LEN   (16*1024)
 
