@@ -4,19 +4,20 @@ DL ?= dl
 INSTALL_DIR ?= build
 
 ################################################################################
-#
+# versioning system
 ################################################################################
 
-define GREET_MSG
-##############################################################################
-# Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)
-# Branch: $(GIT_BRANCH_LOCAL)
-# Build: $(BUILD_NUMBER)
-# Commit: $(GIT_COMMIT)
-##############################################################################
-endef
-export GREET_MSG
+VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+BUILD_NUMBER ?= 0
+REVISION ?= $(shell git rev-parse --short HEAD)
+VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+export BUILD_NUMBER
+export REVISION
+export VERSION
+
+################################################################################
+#
+################################################################################
 
 all: api nginx scpi examples rp_communication apps-tools apps-pro
 
