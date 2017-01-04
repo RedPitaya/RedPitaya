@@ -3,7 +3,7 @@
 */
 
 &i2c0 {
-	eep@50 {
+	eeprom@50 {
 		compatible = "24c64";
 		reg = <0x50>;
 	};
