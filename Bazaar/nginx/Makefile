@@ -41,11 +41,6 @@ $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
 $(WS_SERVER_LIB):
 	$(MAKE) -C $(WS_SERVER_DIR)
 
-$(DEPLIBS):
-	mkdir -p $(DEPLIBS_DIR)
-	$(MAKE) -C $(SHARED)
-	$(MAKE) -C $(SHARED) install INSTALL_DIR=$(abspath $(DEPLIBS_DIR))
-
 # Override default nginx install, since Red Pitaya uses only a subset
 # of its default install.
 # TODO: Configure nginx to exclude client_body_temp.
