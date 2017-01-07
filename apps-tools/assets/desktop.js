@@ -214,6 +214,7 @@
         { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager/", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Active Learning", description: "Active Learning with Red Pitaya", url: "http://redpitaya-active-learning.readthedocs.io/en/latest", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "jupyter", name: "Jupyter server", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
     var backButton = {

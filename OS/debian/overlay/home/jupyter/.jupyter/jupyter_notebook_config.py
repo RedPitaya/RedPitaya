@@ -1,5 +1,10 @@
+## Web interface configuration 
 ## The IP address the notebook server will listen on.
-c.NotebookApp.ip = '*'
+c.NotebookApp.ip = 'localhost'
+c.NotebookApp.port = 8888
+c.NotebookApp.base_url = '/jupyter/'
+c.NotebookApp.trust_xheaders = True
+c.NotebookApp.tornado_settings = {'static_url_prefix': '/jupyter/static/'}
 
 ## Token used for authenticating first-time connections to the server.
 #  
