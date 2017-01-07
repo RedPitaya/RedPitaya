@@ -5,15 +5,51 @@
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
+###############################################################################
+# install packages
+###############################################################################
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 # Python package manager
-apt-get -y install python3-dev python3-pip
+apt-get -y install python3-dev python3-cffi python3-wheel python3-setuptools python3-pip python3-zmq python3-jinja2 python3-pygments python3-six python3-html5lib python3-terminado python3-decorator python3-ptyprocess python3-pexpect python3-simplegeneric python3-wcwidth python3-pickleshare python3-bleach python3-mistune python3-jsonschema
+apt-get -y install python3-numpy python3-matplotlib
 
 pip3 install --upgrade pip
-pip3 install setuptools
 pip3 install jupyter
 EOF_CHROOT
 
-# Running Jupyter
-# jupyter notebook --no-browser --ip='*'
+###############################################################################
+# create user and add it into groups for HW access rights
+###############################################################################
 
+chroot $ROOT_DIR <<- EOF_CHROOT
+useradd -m -c "Jupyter notebook user" -s /bin/bash -G xdevcfg,uio,led,gpio,spi,i2c,dialout,dma jupyter
+EOF_CHROOT
+
+###############################################################################
+# systemd service
+###############################################################################
+
+# copy systemd service
+install -v -m 664 -o root -D  $OVERLAY/etc/systemd/system/jupyter.service \
+                             $ROOT_DIR/etc/systemd/system/jupyter.service
+
+# create configuration directory
+# let the owner be root, since the user should not change it easily
+install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_config.py \
+                             $ROOT_DIR/home/jupyter/.jupyter/jupyter_notebook_config.py
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+systemctl enable jupyter
+EOF_CHROOT
+
+###############################################################################
+# copy notebook examples
+###############################################################################
+
+mkdir -p $ROOT_DIR/home/jupyter/notebook
+cp jupyter/* $ROOT_DIR/home/jupyter/notebook
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+chown -R redpitaya:redpitaya /home/jupyter/*
+EOF_CHROOT
