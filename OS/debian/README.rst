@@ -23,7 +23,7 @@ Start with an existing release image:
 
    .. code-block:: shell-session
 
-      $ head -c 3670016000 debian_armhf.img > debian_armhf-short.img
+      $ head -c 3670016000 debian_armhf_*.img > debian_armhf_*-short.img
 
 10. compress the image using zip
 11. upload image to download server
@@ -198,6 +198,8 @@ Service files are located in ``OS/debian/overlay/etc/systemd/system/*.service``.
 +-------------------------+----------------------------------------------------------------------------------------------------+
 | service                 | description                                                                                        |
 +=========================+====================================================================================================+
+| ``jupyter``             | Jupyter notebbok for Python development                                                            |
++-------------------------+----------------------------------------------------------------------------------------------------+
 | ``redpitaya_scpi``      | SCPI server, is disabled by default, since it conflicts with WEB applications                      |
 +-------------------------+----------------------------------------------------------------------------------------------------+
 | ``redpitaya_discovery`` | Device discovery, is run once after boot to send Ethernet MAC and IP address to a discovery server |
