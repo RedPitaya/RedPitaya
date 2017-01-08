@@ -75,6 +75,12 @@ Example (2 Vpp square wave signal with 1 MHz on channel 1):
 Signal acquisition utility
 ==========================
 
+If acquire command is not working, it has to be compiled:
+.. code-block:: shell-session
+    cd /root/RedPitaya/Test/acquire
+    make
+    ./acquire
+
 The signal from Red Pitaya can be acquired through the `acquire <https://github.com/RedPitaya/RedPitaya/tree/master/Test/acquire>`_
 command line utility. It will return raw samples from the ADC buffer to standard output, with no calibration
 compensation. Usage instructions (see Table 8 as well):
