@@ -48,8 +48,9 @@ EOF_CHROOT
 ###############################################################################
 
 mkdir -p $ROOT_DIR/home/jupyter/notebook
-cp jupyter/* $ROOT_DIR/home/jupyter/notebook
+cp -v jupyter/* $ROOT_DIR/home/jupyter/notebook
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-chown -R redpitaya:redpitaya /home/jupyter/*
+chown -v -R jupyter:jupyter /home/jupyter/*
+chown -v -R jupyter:jupyter /home/jupyter/.jupyter
 EOF_CHROOT
