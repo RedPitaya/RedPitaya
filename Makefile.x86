@@ -10,8 +10,8 @@ export BUILD_NUMBER
 export REVISION
 export VERSION
 
-SUBMODULE_UBT = ""
-SUBMODULE_LIN = ""
+SUBMODULE_UBT = "xilinx-v2016.2"
+SUBMODULE_LIN = "redpitaya-v2016.2"
 SUBMODULE_APP = $(shell git submodule status Applications)
 
 define GREET_MSG
@@ -59,7 +59,7 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG     = xilinx-v2016.2
-LINUX_TAG     = branch-redpitaya-v2016.2
+LINUX_TAG     = redpitaya-v2016.2
 DTREE_TAG     = xilinx-v2016.2
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
