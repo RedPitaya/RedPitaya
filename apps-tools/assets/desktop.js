@@ -17,7 +17,7 @@
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
         image: "../assets/images/development.png",
-        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github"]
+        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github","activelearning"]
     }];
     var currentGroup = undefined;
 
@@ -213,6 +213,7 @@
         { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "visualprogramming", name: "Visual Programing", description: "Perfect tool for newcomers to have fun while learning and putting their ideas into practice", url: "/wyliodrin_manager/", image: "../wyliodrin_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "activelearning", name: "Active Learning", description: "Active Learning with Red Pitaya", url: "http://redpitaya-active-learning.readthedocs.io/en/latest", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
     var backButton = {
