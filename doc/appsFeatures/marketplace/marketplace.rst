@@ -34,12 +34,12 @@ The PID can be controlled through FPGA registers that are described
 inside the PID controller section of the FPGA register map.
 
 ========================================
-Network Vector Analyzer (by Pavel Demin)
+Vector Network Analyzer (by Pavel Demin)
 ========================================
 
-A vector network analyzer is an instrument that measures
+A vector network analyzer (VNA) is an instrument that measures
 the network parameters of electrical networks (commonly s-parameters).
-Network analyzers are often used to characterize two-port networks
+Vector network analyzers are often used to characterize two-port networks
 such as amplifiers and filters, but they can be used on
 networks with an arbitrary number of ports.
 This application will enable measurements of the desired DUT (Device Under Test)
@@ -51,7 +51,7 @@ providing the measured results/parameters, such as:
 * Return loss.
 
 The measurements are nicely represented on the Smith chart.
-You can find more about the Vector Network analyzer on this link:
+You can find more about the vector network analyzer at this link:
 
    http://pavel-demin.github.io/red-pitaya-notes/vna/
 
@@ -62,9 +62,9 @@ SDR – Software Defined Radio (by Pavel Demin)
 Alongside other instruments, the Red Pitaya STEM board can be used as a SDR platform.
 A simple installation of the SDR Transceiver application will transform your STEM board into a SDR platform.
 To run the SDR on the STEM board you will need to install
-one of the following types of SDR software such as HPSDR, SDR#, PowerSDR, GNURadio or similar.
+one of the following types of SDR software such as HDSDR, SDR#, PowerSDR mRX PS, GNU Radio or similar.
 
-You can find more about the SDR on the Red Pitaya STEM on the links below:
+You can find more about the SDR on the Red Pitaya STEM at the links below:
 
    http://redpitaya.com/red-pitaya-as-sdr-transceiver/
 
@@ -214,21 +214,21 @@ using manual setting of shunt resistor. This option is described below.
 .. image:: 600px-Impedance_analyzer_manaul_R_Shunt.png
 
 ==================================================
-Multichannel Pule High analyzer – (by Pavel Demin)
+Multichannel Pulse Height Analyzer – (by Pavel Demin)
 ==================================================
 
-The Pulse Height Analyzer (PHA) is an instrument used for the analysis of electrical signals
+The Multichannel Pulse Height Analyzer (MCPHA) is an instrument used for the analysis of electrical signals
 in the form of pulses of varying heights which may come from different sensors and similar.
 The pulse signals are acquired where the number of pulses
 of each height is saved and the histogram plot is given
-where the X axis represents number of pulses,
-and the Y axis represents the pulses’ amplitude.
+where the X axis represents the pulses’ amplitude,
+and the Y axis represents the number of pulses.
 With the Red Pitaya STEM board, you can acquire pulses
-whose period can be in the range from 20ns to 1s.
+whose period can be in the range from 1us to 1s.
 
 More about this application can be found here:
 
-   http://pavel-demin.github.io/red-pitaya-notes/
+   http://pavel-demin.github.io/red-pitaya-notes/mcpha/
 
 *****************************************************
 Manually downloading and installing free applications
