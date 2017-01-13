@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2016.2
+set scripts_vivado_version 2016.4
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -184,12 +184,16 @@ CONFIG.HAS_WSTRB {1} \
 CONFIG.ID_WIDTH {0} \
 CONFIG.MAX_BURST_LENGTH {16} \
 CONFIG.NUM_READ_OUTSTANDING {1} \
+CONFIG.NUM_READ_THREADS {1} \
 CONFIG.NUM_WRITE_OUTSTANDING {1} \
+CONFIG.NUM_WRITE_THREADS {1} \
 CONFIG.PHASE {0.000} \
 CONFIG.PROTOCOL {AXI3} \
 CONFIG.READ_WRITE_MODE {READ_WRITE} \
+CONFIG.RUSER_BITS_PER_BYTE {0} \
 CONFIG.RUSER_WIDTH {0} \
 CONFIG.SUPPORTS_NARROW_BURST {1} \
+CONFIG.WUSER_BITS_PER_BYTE {0} \
 CONFIG.WUSER_WIDTH {0} \
  ] $S_AXI_HP0
   set S_AXI_HP1 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_HP1 ]
@@ -212,12 +216,16 @@ CONFIG.HAS_WSTRB {1} \
 CONFIG.ID_WIDTH {0} \
 CONFIG.MAX_BURST_LENGTH {16} \
 CONFIG.NUM_READ_OUTSTANDING {1} \
+CONFIG.NUM_READ_THREADS {1} \
 CONFIG.NUM_WRITE_OUTSTANDING {1} \
+CONFIG.NUM_WRITE_THREADS {1} \
 CONFIG.PHASE {0.000} \
 CONFIG.PROTOCOL {AXI3} \
 CONFIG.READ_WRITE_MODE {READ_WRITE} \
+CONFIG.RUSER_BITS_PER_BYTE {0} \
 CONFIG.RUSER_WIDTH {0} \
 CONFIG.SUPPORTS_NARROW_BURST {1} \
+CONFIG.WUSER_BITS_PER_BYTE {0} \
 CONFIG.WUSER_WIDTH {0} \
  ] $S_AXI_HP1
   set Vaux0 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 Vaux0 ]
@@ -380,10 +388,10 @@ CONFIG.PCW_FCLK2_PERIPHERAL_DIVISOR1 {4} \
 CONFIG.PCW_FCLK3_PERIPHERAL_CLKSRC {IO PLL} \
 CONFIG.PCW_FCLK3_PERIPHERAL_DIVISOR0 {5} \
 CONFIG.PCW_FCLK3_PERIPHERAL_DIVISOR1 {1} \
-CONFIG.PCW_FCLK_CLK0_BUF {true} \
-CONFIG.PCW_FCLK_CLK1_BUF {true} \
-CONFIG.PCW_FCLK_CLK2_BUF {true} \
-CONFIG.PCW_FCLK_CLK3_BUF {true} \
+CONFIG.PCW_FCLK_CLK0_BUF {TRUE} \
+CONFIG.PCW_FCLK_CLK1_BUF {TRUE} \
+CONFIG.PCW_FCLK_CLK2_BUF {TRUE} \
+CONFIG.PCW_FCLK_CLK3_BUF {TRUE} \
 CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {125} \
 CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {250} \
 CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {50} \
@@ -830,10 +838,10 @@ CONFIG.PCW_UIPARAM_DDR_ADV_ENABLE {0} \
 CONFIG.PCW_UIPARAM_DDR_AL {0} \
 CONFIG.PCW_UIPARAM_DDR_BANK_ADDR_COUNT {3} \
 CONFIG.PCW_UIPARAM_DDR_BL {8} \
-CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY0 {0.0} \
-CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY1 {0.0} \
-CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY2 {0.0} \
-CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY3 {0.0} \
+CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY0 {0.25} \
+CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY1 {0.25} \
+CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY2 {0.25} \
+CONFIG.PCW_UIPARAM_DDR_BOARD_DELAY3 {0.25} \
 CONFIG.PCW_UIPARAM_DDR_BUS_WIDTH {16 Bit} \
 CONFIG.PCW_UIPARAM_DDR_CL {7} \
 CONFIG.PCW_UIPARAM_DDR_CLOCK_0_LENGTH_MM {0} \
@@ -1528,6 +1536,11 @@ CONFIG.INTERFACE_SELECTION.VALUE_SRC {DEFAULT} \
 CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
  ] $xadc
 
+  set_property -dict [ list \
+CONFIG.NUM_READ_OUTSTANDING {1} \
+CONFIG.NUM_WRITE_OUTSTANDING {1} \
+ ] [get_bd_intf_pins /xadc/s_axi_lite]
+
   # Create instance: xlconstant, and set properties
   set xlconstant [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant ]
 
@@ -1572,15 +1585,16 @@ CONFIG.VCCDDRO_ALARM_LOWER.VALUE_SRC {DEFAULT} \
 
   # Perform GUI Layout
   regenerate_bd_layout -layout_string {
-   guistr: "# # String gsaved with Nlview 6.5.12  2016-01-29 bk=1.3547 VDI=39 GEI=35 GUI=JA:1.6
+   guistr: "# # String gsaved with Nlview 6.6.5b  2016-09-06 bk=1.3687 VDI=39 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
 preplace port FCLK_CLK3 -pg 1 -y 600 -defaultsOSRD
 preplace port S_AXI_HP1 -pg 1 -y 320 -defaultsOSRD
+preplace port SPI0 -pg 1 -y 230 -defaultsOSRD
 preplace port DDR -pg 1 -y 80 -defaultsOSRD
 preplace port Vp_Vn -pg 1 -y 1200 -defaultsOSRD
 preplace port Vaux0 -pg 1 -y 1220 -defaultsOSRD
-preplace port M_AXI_GP0_ACLK -pg 1 -y 340 -defaultsOSRD
 preplace port FCLK_RESET0_N -pg 1 -y 620 -defaultsOSRD
+preplace port M_AXI_GP0_ACLK -pg 1 -y 340 -defaultsOSRD
 preplace port Vaux1 -pg 1 -y 1240 -defaultsOSRD
 preplace port S_AXI_HP0_aclk -pg 1 -y 380 -defaultsOSRD
 preplace port M_AXI_GP0 -pg 1 -y 440 -defaultsOSRD
@@ -1592,48 +1606,45 @@ preplace port FCLK_RESET2_N -pg 1 -y 660 -defaultsOSRD
 preplace port FCLK_CLK0 -pg 1 -y 540 -defaultsOSRD
 preplace port FCLK_CLK1 -pg 1 -y 560 -defaultsOSRD
 preplace port Vaux8 -pg 1 -y 1260 -defaultsOSRD
+preplace port GPIO -pg 1 -y 60 -defaultsOSRD
 preplace port FCLK_CLK2 -pg 1 -y 580 -defaultsOSRD
 preplace port Vaux9 -pg 1 -y 1280 -defaultsOSRD
 preplace port S_AXI_HP0 -pg 1 -y 300 -defaultsOSRD
-preplace portBus GPIO_T -pg 1 -y 60 -defaultsOSRD
-preplace portBus GPIO_I -pg 1 -y -70 -defaultsOSRD
-preplace portBus GPIO_O -pg 1 -y 40 -defaultsOSRD
-preplace inst xlconstant -pg 1 -lvl 1 -y 970 -defaultsOSRD
 preplace inst axi_protocol_converter_0 -pg 1 -lvl 2 -y 810 -defaultsOSRD
+preplace inst xlconstant -pg 1 -lvl 1 -y 970 -defaultsOSRD
 preplace inst processing_system7 -pg 1 -lvl 2 -y 340 -defaultsOSRD
 preplace inst xadc -pg 1 -lvl 2 -y 1250 -defaultsOSRD
 preplace inst proc_sys_reset -pg 1 -lvl 2 -y 970 -defaultsOSRD
-preplace netloc processing_system7_0_ddr 1 2 1 N
 preplace netloc Vaux0_1 1 0 2 NJ 1220 N
-preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 150 740 660
+preplace netloc processing_system7_0_ddr 1 2 1 750
+preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 140 680 680
 preplace netloc s_axi_hp0_1 1 0 2 NJ 300 N
-preplace netloc GPIO_I_1 1 0 3 NJ -70 NJ -70 650
-preplace netloc processing_system7_GPIO_O 1 2 1 N
-preplace netloc processing_system7_0_fclk_reset2_n 1 2 1 N
-preplace netloc processing_system7_0_M_AXI_GP0 1 2 1 N
+preplace netloc processing_system7_SPI_0 1 2 1 NJ
+preplace netloc processing_system7_0_fclk_reset2_n 1 2 1 690
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 1 760
 preplace netloc xlconstant_dout 1 1 1 NJ
-preplace netloc xadc_ip2intc_irpt 1 1 2 140 1080 650
-preplace netloc processing_system7_0_fclk_reset1_n 1 2 1 N
-preplace netloc processing_system7_0_M_AXI_GP1 1 1 2 160 730 650
+preplace netloc xadc_ip2intc_irpt 1 1 2 140 580 670
+preplace netloc processing_system7_0_fclk_reset1_n 1 2 1 710
 preplace netloc Vp_Vn_1 1 0 2 NJ 1200 N
+preplace netloc processing_system7_0_M_AXI_GP1 1 1 2 150 560 670
 preplace netloc s_axi_hp0_aclk 1 0 2 NJ 380 N
 preplace netloc s_axi_hp1_1 1 0 2 NJ 320 N
-preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 2 160 880 650
-preplace netloc axi_protocol_converter_0_M_AXI 1 1 2 160 1060 660
+preplace netloc proc_sys_reset_0_interconnect_aresetn 1 1 2 170 730 660
 preplace netloc Vaux8_1 1 0 2 NJ 1260 N
-preplace netloc processing_system7_GPIO_T 1 2 1 N
+preplace netloc axi_protocol_converter_0_M_AXI 1 1 2 160 740 650
 preplace netloc s_axi_hp1_aclk 1 0 2 NJ 400 N
-preplace netloc processing_system7_0_fclk_reset0_n 1 2 1 N
-preplace netloc processing_system7_0_fixed_io 1 2 1 N
+preplace netloc processing_system7_0_fclk_reset0_n 1 2 1 720
 preplace netloc Vaux9_1 1 0 2 NJ 1280 N
-preplace netloc processing_system7_0_fclk_clk0 1 2 1 N
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 2 150 1070 650
+preplace netloc processing_system7_0_fixed_io 1 2 1 760
+preplace netloc processing_system7_0_fclk_clk0 1 2 1 750
+preplace netloc proc_sys_reset_0_peripheral_aresetn 1 1 2 150 880 650
 preplace netloc Vaux1_1 1 0 2 NJ 1240 N
-preplace netloc processing_system7_0_fclk_clk1 1 2 1 N
+preplace netloc processing_system7_GPIO_0 1 2 1 740J
+preplace netloc processing_system7_0_fclk_clk1 1 2 1 740
 preplace netloc m_axi_gp0_aclk_1 1 0 2 NJ 340 N
-preplace netloc processing_system7_0_fclk_clk2 1 2 1 N
-preplace netloc processing_system7_0_fclk_clk3 1 1 2 130 -50 660
-levelinfo -pg 1 -40 60 430 760 -top -90 -bot 1430
+preplace netloc processing_system7_0_fclk_clk2 1 2 1 730
+preplace netloc processing_system7_0_fclk_clk3 1 1 2 130 600 700
+levelinfo -pg 1 -40 60 430 780 -top -90 -bot 1430
 ",
 }
 
