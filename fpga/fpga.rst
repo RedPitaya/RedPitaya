@@ -14,7 +14,7 @@ Install libraries:
 
    # apt-get install libxft2 libxft2:i386 lib32ncurses5
 
-2. *Xilinx Vivado 2016.2 (including SDK)* 
+2. *Xilinx Vivado 2016.4 (including SDK)* 
 
 *******************
 Directory structure
@@ -69,7 +69,7 @@ If Xilinx Vivado is installed at the default location, then the next command wil
 
 .. code-block:: shell-session
 
-   $ . /opt/Xilinx/Vivado/2016.2/settings64.sh
+   $ . /opt/Xilinx/Vivado/2016.4/settings64.sh
 
 The default mode for building the FPGA is to run a TCL script inside Vivado.
 Non project mode is used, to avoid the generation of project files,
