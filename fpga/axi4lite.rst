@@ -43,7 +43,7 @@ to be optimized depending on trafic patterns on each of the streams.
 | ``AWRERADY``      |                |
 +-------------------+----------------+
 
-.. wavedrom:
+.. wavedrom::
 
    {signal: [
      ['system',
