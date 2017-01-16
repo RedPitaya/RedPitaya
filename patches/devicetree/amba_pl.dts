@@ -1,21 +1,21 @@
 /dts-v1/;
 /plugin/;
 /{
-		fragment@0 {
-				target-path = "/amba/fpga_bus\@f8007000/devcfg\@f8007000";
-				__overlay__ {
-						#address-cells = <1>;
-						#size-cells = <1>;
-						area@0 {
-								compatible = "fpga-area";
-								#address-cells = <1>;
-								#size-cells = <1>;
-								ranges;
-
-								firmware-name = "/boot/fpga/fpga2.bin";
-						};
-				};
-		};
+//		fragment@0 {
+//				target-path = "/amba/fpga_bus\@f8007000/devcfg\@f8007000";
+//				__overlay__ {
+//						#address-cells = <1>;
+//						#size-cells = <1>;
+//						area@0 {
+//								compatible = "fpga-area";
+//								#address-cells = <1>;
+//								#size-cells = <1>;
+//								ranges;
+//
+//								firmware-name = "/boot/fpga/fpga2.bin";
+//						};
+//				};
+//		};
 		
 		fragment@1 {
 		target-path = "/amba_pl/dma\@80420000";
@@ -44,18 +44,6 @@
 		fragment@5{
 			target-path="/amba_pl/muxctl@40040000";
 			__overlay__ {
-					status = "okay";
-			};
-		};
-		fragment@6{
-			target-path="/amba_pl/gpio@40080000";
-			__overlay__ {
-					status = "okay";
-				};
-		};
-		fragment@7{
-			target-path="/amba_pl/led@400c0000";
-			__overlay__ {		
 					status = "okay";
 			};
 		};
