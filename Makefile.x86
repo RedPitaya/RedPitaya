@@ -34,7 +34,7 @@ export GREET_MSG
 
 all: fpga devicetree u-boot linux boot
 
-install: linux-install devicetree-install boot
+install: linux-install devicetree-install boot jupyter-install
 
 ################################################################################
 #
@@ -224,6 +224,19 @@ FSBL = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fsbl.elf
 $(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
 	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -w -o $@
+
+################################################################################
+# jupyter
+################################################################################
+
+.PHONY: jupyter-install
+
+jupyter-install:
+	mkdir -p $(INSTALL_DIR)/jupyter
+	cp -r jupyter/* $(INSTALL_DIR)/jupyter/
+	curl -L	https://github.com/jakevdp/WhirlwindTourOfPython/archive/master.tar.gz -o WhirlwindTourOfPython.tar.gz
+	mkdir -p $(INSTALL_DIR)/jupyter/WhirlwindTourOfPython
+	tar -xzf WhirlwindTourOfPython.tar.gz --strip-components=1 --directory=$(INSTALL_DIR)/jupyter/WhirlwindTourOfPython
 
 ################################################################################
 # tarball

@@ -40,6 +40,10 @@ install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_co
                              $ROOT_DIR/home/jupyter/.jupyter/jupyter_notebook_config.py
 
 chroot $ROOT_DIR <<- EOF_CHROOT
+chown -v -R jupyter:jupyter /home/jupyter/.jupyter
+EOF_CHROOT
+
+chroot $ROOT_DIR <<- EOF_CHROOT
 systemctl enable jupyter
 EOF_CHROOT
 
@@ -47,10 +51,5 @@ EOF_CHROOT
 # copy notebook examples
 ###############################################################################
 
-mkdir -p $ROOT_DIR/home/jupyter/notebook
-cp -v jupyter/* $ROOT_DIR/home/jupyter/notebook
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-chown -v -R jupyter:jupyter /home/jupyter/*
-chown -v -R jupyter:jupyter /home/jupyter/.jupyter
-EOF_CHROOT
+ln -s /opt/redpitaya/jupyter/examples      $ROOT_DIR/home/jupyter/examples
+ln -s /opt/redpitaya/jupyter/welcome.ipynb $ROOT_DIR/home/jupyter/welcome.ipynb
