@@ -213,9 +213,9 @@ using manual setting of shunt resistor. This option is described below.
 
 .. image:: 600px-Impedance_analyzer_manaul_R_Shunt.png
 
-==================================================
+=====================================================
 Multichannel Pulse Height Analyzer – (by Pavel Demin)
-==================================================
+=====================================================
 
 The Multichannel Pulse Height Analyzer (MCPHA) is an instrument used for the analysis of electrical signals
 in the form of pulses of varying heights which may come from different sensors and similar.
