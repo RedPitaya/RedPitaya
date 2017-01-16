@@ -229,7 +229,7 @@ General purpose inputs
    
 .. math::
 
-   ratio = \frac{4.99 k\Omega}{(30.0 k\Omega + 4.99  k\Omega) = 0.143
+   ratio = \frac{4.99 k\Omega}{30.0 k\Omega + 4.99  k\Omega} = 0.143
 
    range = \frac{1 V}{ratio} = 7.01 V
 
