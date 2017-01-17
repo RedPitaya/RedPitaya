@@ -34,6 +34,9 @@ class base:
 	def Init():
 		return rp_api.rp_Init()
 
+	def Release():
+		return rp_api.rp_Release()
+
 	def GenReset():
 		return rp_api.rp_GenReset()
 
@@ -78,6 +81,9 @@ class base:
 
 	def AIpinGetValue(pin, value):
 		return rp_api.rp_AIpinGetValue(pin, byref(value))
+
+	def AOpinSetValue(pin, value):
+		return rp_api.rp_AOpinSetValue(pin, c_float(value))
 
 class misc:
 	def CreateFloatBuffer(size):
