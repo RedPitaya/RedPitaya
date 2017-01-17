@@ -6,6 +6,20 @@ rp_api = CDLL('/opt/redpitaya/lib/librp.so')
 CH_1 = 0
 CH_2 = 1
 
+RP_LED0 = 0
+RP_LED1 = 1
+RP_LED2 = 2
+RP_LED3 = 3
+RP_LED4 = 4
+RP_LED5 = 5
+RP_LED6 = 6
+RP_LED7 = 7
+RP_LED8 = 8
+RP_LED9 = 9
+
+RP_LOW  = 0
+RP_HIGH = 1
+
 TRIG_SRC_DISABLED = 0 # Trigger is disabled
 TRIG_SRC_NOW      = 1 # Trigger triggered now (immediately)
 TRIG_SRC_CHA_PE   = 2 # Trigger set to Channel A threshold positive edge
