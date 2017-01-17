@@ -10,7 +10,7 @@ export BUILD_NUMBER
 export REVISION
 export VERSION
 
-SUBMODULE_UBT = "xilinx-v2016.2"
+SUBMODULE_UBT = "redpitaya-v2016.4"
 SUBMODULE_LIN = "redpitaya-v2016.2"
 SUBMODULE_APP = $(shell git submodule status Applications)
 
@@ -58,7 +58,7 @@ $(INSTALL_DIR):
 # X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
 ################################################################################
 
-UBOOT_TAG     = branch-redpitaya-v2016.4
+UBOOT_TAG     = redpitaya-v2016.4
 LINUX_TAG     = redpitaya-v2016.2
 DTREE_TAG     = xilinx-v2016.4
 
