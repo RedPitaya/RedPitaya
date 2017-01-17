@@ -33,6 +33,21 @@ logic  [2-1:0] RRESP   ;
 logic          RVALID  ;
 logic          RREADY  ;
 
+// local signals for transfer conditions
+logic AWtransfer;
+logic  Wtransfer;
+logic  Btransfer;
+logic ARtransfer;
+logic  Rtransfer;
+
+// transfer conditions
+assign AWtransfer = AWVALID & AWREADY;
+assign  Wtransfer =  WVALID &  WREADY;
+assign  Btransfer =  BVALID &  BREADY;
+assign ARtransfer = ARVALID & ARREADY;
+assign  Rtransfer =  RVALID &  RREADY;
+
+// master port
 modport m (
   input  ACLK    ,
   input  ARESETn ,
@@ -57,6 +72,7 @@ modport m (
   output RREADY
 );
 
+// slave port
 modport s (
   input  ACLK    ,
   input  ARESETn ,
