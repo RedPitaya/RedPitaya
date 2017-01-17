@@ -188,15 +188,15 @@ Input range
 -----------
 
 The default mounting intends for unipolar XADC inputs,
-which allow for observing only positive signals with a saturation range of *0V ~ 1V*.
+which allow for observing only positive signals with a saturation range of **0V ~ 1V**.
 There are additional voltage dividers use to extend this range up to the power supply voltage.
-It is possible to configure XADC inputs into a bipolar mode with a range of *-0.5V ~ +0.5V*,
-but it requires removing R273 and providing a *0.5V ~ 1V* common voltage on the E2 connector.
+It is possible to configure XADC inputs into a bipolar mode with a range of **-0.5V ~ +0.5V**,
+but it requires removing R273 and providing a **0.5V ~ 1V** common voltage on the E2 connector.
 
 .. note::
 
    Unfortunately there is a design error,
-   where the XADC input range in unipolar mode was thought to be *0V ~ 0.5V*.
+   where the XADC input range in unipolar mode was thought to be **0V ~ 0.5V**.
    Consequently the voltage dividers were miss designed for a range of double the supply voltage.
 
 ~~~~~~~~~~~~~~~
@@ -205,13 +205,16 @@ but it requires removing R273 and providing a *0.5V ~ 1V* common voltage on the 
 
 .. code-block:: none
 
-                           -------------------0  Vout
-             ------------  |  ------------
-   Vin  0----| 56.0kOHM |-----| 4.99kOHM |----0  GND
-             ------------     ------------
+                          ----------------0  Vout
+             ----------  |  ----------
+   Vin  0----| 56.0kΩ |-----| 4.99kΩ |----0  GND
+             ----------     ----------
 
-Ratio: 4.99/(56.0+4.99)=0.0818
-Range: 1V / ratio = 12.2V
+.. math::
+
+   ratio = \frac{4.99 k\Omega}{56.0 k\Omega +4.99 k\Omega} = 0.0818
+
+   range = \frac{1 V}{ratio} = 12.2 V
 
 ~~~~~~~~~~~~~~~~~~~~~~
 General purpose inputs
@@ -219,13 +222,16 @@ General purpose inputs
 
 .. code-block:: none
 
-                           -------------------0  Vout
-             ------------  |  ------------
-   Vin  0----| 30.0kOHM |-----| 4.99kOHM |----0  GND
-             ------------     ------------
+                          ----------------0  Vout
+             ----------  |  ----------
+   Vin  0----| 30.0kΩ |-----| 4.99kΩ |----0  GND
+             ----------     ----------
    
-Ratio: 4.99/(30.0+4.99)=0.143
-Range: 1V / ratio = 7.01
+.. math::
+
+   ratio = \frac{4.99 k\Omega}{30.0 k\Omega + 4.99  k\Omega} = 0.143
+
+   range = \frac{1 V}{ratio} = 7.01 V
 
 =============
 GPIO and LEDs
