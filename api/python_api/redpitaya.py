@@ -73,5 +73,14 @@ class base:
 	def AcqGetOldestDataV(channel, buff_size, buff):
 		return rp_api.rp_AcqGetOldestDataV(0, byref(buff_size), byref(buff));
 
+	def DpinSetState(pin, state):
+		return rp_api.rp_DpinSetState(pin, state)
+
+	def AIpinGetValue(pin, value):
+		return rp_api.rp_AIpinGetValue(pin, byref(value))
+
+class misc:
 	def CreateFloatBuffer(size):
 		return (c_float*size)()
+
+
