@@ -33,3 +33,5 @@ buff = misc.CreateFloatBuffer(size.value)
 base.AcqGetOldestDataV(CH_1, size, buff);
 for i in range(size.value):
 	print(buff[i])
+
+base.Release()
