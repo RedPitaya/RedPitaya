@@ -44,7 +44,7 @@ Start with an existing release image:
 Dependencies
 ************
 
-Ubuntu 2016.04 was used to build Debian/Ubuntu SD card images for Red Pitaya.
+Ubuntu 2016.04.01 was used to build Debian/Ubuntu SD card images for Red Pitaya.
 
 The next two packages need to be installed:
 
