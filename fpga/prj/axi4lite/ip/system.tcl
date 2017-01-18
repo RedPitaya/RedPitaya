@@ -170,19 +170,22 @@ CONFIG.PROTOCOL {AXI4LITE} \
 
   # Create ports
   set FCLK_CLK0 [ create_bd_port -dir O -type clk FCLK_CLK0 ]
-  set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
- ] $FCLK_CLK0
   set FCLK_CLK1 [ create_bd_port -dir O -type clk FCLK_CLK1 ]
-  set_property -dict [ list \
-CONFIG.ASSOCIATED_BUSIF {M_AXI_STR_TX3:S_AXI_STR_RX3} \
- ] $FCLK_CLK1
   set FCLK_CLK2 [ create_bd_port -dir O -type clk FCLK_CLK2 ]
   set FCLK_CLK3 [ create_bd_port -dir O -type clk FCLK_CLK3 ]
   set FCLK_RESET0_N [ create_bd_port -dir O -type rst FCLK_RESET0_N ]
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
+  set PL_ACLK [ create_bd_port -dir I -type clk PL_ACLK ]
+  set_property -dict [ list \
+CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
+CONFIG.FREQ_HZ {125000000} \
+ ] $PL_ACLK
+  set PL_ARESETn [ create_bd_port -dir I -type rst PL_ARESETn ]
+  set_property -dict [ list \
+CONFIG.POLARITY {ACTIVE_LOW} \
+ ] $PL_ARESETn
 
   # Create instance: axi_protocol_converter_0, and set properties
   set axi_protocol_converter_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_protocol_converter:2.1 axi_protocol_converter_0 ]
@@ -1428,14 +1431,16 @@ CONFIG.PCW_WDT_WDT_IO.VALUE_SRC {DEFAULT} \
   connect_bd_intf_net -intf_net processing_system7_M_AXI_GP0 [get_bd_intf_pins axi_protocol_converter_0/S_AXI] [get_bd_intf_pins processing_system7/M_AXI_GP0]
 
   # Create port connections
+  connect_bd_net -net PL_ACLK_1 [get_bd_ports PL_ACLK] [get_bd_pins axi_protocol_converter_0/aclk] [get_bd_pins processing_system7/M_AXI_GP0_ACLK]
+  connect_bd_net -net PL_ARESETn_1 [get_bd_ports PL_ARESETn] [get_bd_pins axi_protocol_converter_0/aresetn]
   connect_bd_net -net processing_system7_0_fclk_clk2 [get_bd_ports FCLK_CLK2] [get_bd_pins processing_system7/FCLK_CLK2]
-  connect_bd_net -net processing_system7_0_fclk_reset0_n [get_bd_ports FCLK_RESET0_N] [get_bd_pins axi_protocol_converter_0/aresetn] [get_bd_pins processing_system7/FCLK_RESET0_N]
   connect_bd_net -net processing_system7_0_fclk_reset1_n [get_bd_ports FCLK_RESET1_N] [get_bd_pins processing_system7/FCLK_RESET1_N]
   connect_bd_net -net processing_system7_0_fclk_reset2_n [get_bd_ports FCLK_RESET2_N] [get_bd_pins processing_system7/FCLK_RESET2_N]
   connect_bd_net -net processing_system7_0_fclk_reset3_n [get_bd_ports FCLK_RESET3_N] [get_bd_pins processing_system7/FCLK_RESET3_N]
-  connect_bd_net -net processing_system7_FCLK_CLK0 [get_bd_ports FCLK_CLK0] [get_bd_pins axi_protocol_converter_0/aclk] [get_bd_pins processing_system7/FCLK_CLK0] [get_bd_pins processing_system7/M_AXI_GP0_ACLK]
+  connect_bd_net -net processing_system7_FCLK_CLK0 [get_bd_ports FCLK_CLK0] [get_bd_pins processing_system7/FCLK_CLK0]
   connect_bd_net -net processing_system7_FCLK_CLK1 [get_bd_ports FCLK_CLK1] [get_bd_pins processing_system7/FCLK_CLK1]
   connect_bd_net -net processing_system7_FCLK_CLK3 [get_bd_ports FCLK_CLK3] [get_bd_pins processing_system7/FCLK_CLK3]
+  connect_bd_net -net processing_system7_FCLK_RESET0_N [get_bd_ports FCLK_RESET0_N] [get_bd_pins processing_system7/FCLK_RESET0_N]
 
   # Create address segments
   create_bd_addr_seg -range 0x00001000 -offset 0x40000000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs M_AXI_GP0/Reg] SEG_M_AXI_GP0_Reg
@@ -1446,37 +1451,41 @@ CONFIG.PCW_WDT_WDT_IO.VALUE_SRC {DEFAULT} \
 #  -string -flagsOSRD
 preplace port FCLK_CLK3 -pg 1 -y 360 -defaultsOSRD
 preplace port DDR -pg 1 -y 160 -defaultsOSRD
-preplace port Vp_Vn -pg 1 -y 100 -defaultsOSRD
+preplace port Vp_Vn -pg 1 -y 150 -defaultsOSRD
 preplace port Vaux0 -pg 1 -y 20 -defaultsOSRD
 preplace port FCLK_RESET0_N -pg 1 -y 380 -defaultsOSRD
 preplace port Vaux1 -pg 1 -y 40 -defaultsOSRD
 preplace port M_AXI_GP0 -pg 1 -y 70 -defaultsOSRD
+preplace port PL_ACLK -pg 1 -y 110 -defaultsOSRD
 preplace port FCLK_RESET1_N -pg 1 -y 400 -defaultsOSRD
 preplace port FCLK_RESET3_N -pg 1 -y 440 -defaultsOSRD
 preplace port FIXED_IO -pg 1 -y 180 -defaultsOSRD
 preplace port FCLK_RESET2_N -pg 1 -y 420 -defaultsOSRD
+preplace port PL_ARESETn -pg 1 -y 90 -defaultsOSRD
 preplace port FCLK_CLK0 -pg 1 -y 300 -defaultsOSRD
 preplace port FCLK_CLK1 -pg 1 -y 320 -defaultsOSRD
 preplace port Vaux8 -pg 1 -y 60 -defaultsOSRD
 preplace port GPIO -pg 1 -y 140 -defaultsOSRD
 preplace port FCLK_CLK2 -pg 1 -y 340 -defaultsOSRD
-preplace port Vaux9 -pg 1 -y 80 -defaultsOSRD
+preplace port Vaux9 -pg 1 -y 130 -defaultsOSRD
 preplace inst axi_protocol_converter_0 -pg 1 -lvl 2 -y 70 -defaultsOSRD
 preplace inst processing_system7 -pg 1 -lvl 1 -y 290 -defaultsOSRD
 preplace netloc processing_system7_0_ddr 1 1 2 NJ 160 NJ
 preplace netloc processing_system7_0_fclk_reset3_n 1 1 2 NJ 440 NJ
-preplace netloc processing_system7_FCLK_CLK0 1 0 3 20 90 430 300 NJ
+preplace netloc processing_system7_FCLK_RESET0_N 1 1 2 NJ 380 NJ
+preplace netloc processing_system7_FCLK_CLK0 1 1 2 NJ 300 NJ
 preplace netloc processing_system7_0_fclk_reset2_n 1 1 2 NJ 420 NJ
 preplace netloc processing_system7_FCLK_CLK1 1 1 2 NJ 320 NJ
 preplace netloc processing_system7_0_fclk_reset1_n 1 1 2 NJ 400 NJ
+preplace netloc PL_ARESETn_1 1 0 2 NJ 90 NJ
 preplace netloc processing_system7_FCLK_CLK3 1 1 2 NJ 360 NJ
-preplace netloc axi_protocol_converter_0_M_AXI 1 2 1 N
+preplace netloc axi_protocol_converter_0_M_AXI 1 2 1 NJ
 preplace netloc processing_system7_M_AXI_GP0 1 1 1 420
-preplace netloc processing_system7_0_fclk_reset0_n 1 1 2 440 380 NJ
 preplace netloc processing_system7_0_fixed_io 1 1 2 NJ 180 NJ
 preplace netloc processing_system7_GPIO_0 1 1 2 NJ 140 NJ
+preplace netloc PL_ACLK_1 1 0 2 20 70 NJ
 preplace netloc processing_system7_0_fclk_clk2 1 1 2 NJ 340 NJ
-levelinfo -pg 1 0 220 570 720 -top 0 -bot 490
+levelinfo -pg 1 0 220 550 700 -top 0 -bot 490
 ",
 }
 

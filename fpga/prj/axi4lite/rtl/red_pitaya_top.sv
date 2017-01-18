@@ -123,7 +123,9 @@ CLM_T [MNG-1:0] dac_cfg_mul;  // gain
 CLS_T [MNG-1:0] dac_cfg_sum;  // offset
 
 // system bus
-axi4_lite_if bus (.ACLK (fclk[0]), .ARESETn (frstn[o]));
+logic bus_ACLK;
+logic bus_ARESETn;
+axi4_lite_if bus (.ACLK (bus_ACLK), .ARESETn (bus_ARESETn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
@@ -177,6 +179,10 @@ always_ff @(posedge pdm_clk, posedge top_rst)
 if (top_rst) pdm_rstn <= 1'b0;
 else         pdm_rstn <= ~top_rst;
 
+// system bus clock and reset
+assign bus_ACLK = adc_clk;
+assign bus_ARESETn = adc_rstn;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Connections to PS
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +231,6 @@ axi4lite_gpio #(
   // bus
   .bus (bus)
 );
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // LED
