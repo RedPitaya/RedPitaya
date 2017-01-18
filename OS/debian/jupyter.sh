@@ -23,7 +23,7 @@ EOF_CHROOT
 ###############################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-useradd -m -c "Jupyter notebook user" -s /bin/bash -G xdevcfg,uio,led,gpio,spi,i2c,eeprom,dialout,dma jupyter
+useradd -m -c "Jupyter notebook user" -s /bin/bash -G xdevcfg,uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma jupyter
 EOF_CHROOT
 
 ###############################################################################

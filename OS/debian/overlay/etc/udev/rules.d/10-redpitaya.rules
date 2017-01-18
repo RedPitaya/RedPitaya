@@ -33,6 +33,7 @@ SUBSYSTEM=="i2c", DRIVER=="at24", RUN+="/bin/chgrp eeprom /sys%p/eeprom", RUN+="
 # XADC
 # give group access rights
 SUBSYSTEM=="iio", ATTR{name}=="xadc", GROUP="xadc"
+SUBSYSTEM=="iio", ACTION=="add", RUN+="/bin/chgrp -R xadc /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 
 # Red Pitaya DMA
 # give group access rights

@@ -100,14 +100,14 @@ useradd --system scpi
 useradd --system wyliodrin
 
 # add a default user
-useradd -m -c "Red Pitaya" -s /bin/bash -G sudo,xdevcfg,uio,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya
+useradd -m -c "Red Pitaya" -s /bin/bash -G sudo,xdevcfg,uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya
 
 # add HW access rights to Nginx user "redpitaya_nginx"
-usermod -a -G xdevcfg,uio,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya_nginx
+usermod -a -G xdevcfg,uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya_nginx
 
 # add HW access rights to users "scpi" and "wyliodrin"
-usermod -a -G uio,led,gpio,spi,i2c,eeprom,dialout,dma scpi
-usermod -a -G uio,led,gpio,spi,i2c,eeprom,dialout,dma wyliodrin
+usermod -a -G uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma scpi
+usermod -a -G uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma wyliodrin
 
 # TODO: Bazaar code should be moved from /dev/mem to /dev/uio/*
 usermod -a -G kmem redpitaya
