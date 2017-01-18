@@ -5,6 +5,7 @@ from redpitaya import *
 from time import sleep
 
 base.Init()
+
 base.GenReset()
 base.GenFreq(CH_1, 20000.0)
 base.GenAmp(CH_1, 1.0)
@@ -21,12 +22,9 @@ base.AcqStart()
 sleep(1)
 base.AcqSetTriggerSrc(TRIG_SRC_CHA_PE)
 
-state = c_long(TRIG_STATE_TRIGGERED)
-while True:
+state = c_long(TRIG_STATE_WAITING)
+while state.value != TRIG_STATE_TRIGGERED:
 	ret = base.AcqGetTriggerState(state)
-	if (state.value == TRIG_STATE_TRIGGERED):
-		print("TRIGGERED")
-		break
 
 size = c_long(16384)
 buff = misc.CreateFloatBuffer(size.value)
