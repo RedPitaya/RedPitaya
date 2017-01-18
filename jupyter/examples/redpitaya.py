@@ -1,6 +1,8 @@
 from ctypes import *
 import time
+import os
 
+os.system('cat /opt/redpitaya/fpga/v0.94/fpga.bit > /dev/xdevcfg')
 rp_api = CDLL('/opt/redpitaya/lib/librp.so')
 
 CH_1 = 0
