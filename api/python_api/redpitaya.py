@@ -78,6 +78,10 @@ class base:
 	def GenWaveform(channel, form):
 		return rp_api.rp_GenWaveform(channel, form)
 
+	def GenArbWaveform(channel, buf):
+		arr = (c_float * len(buf))(*buf)
+		return rp_api.rp_GenArbWaveform(channel, arr, len(buf));
+
 	def GenOutEnable(channel):
 		return rp_api.rp_GenOutEnable(channel)
 
