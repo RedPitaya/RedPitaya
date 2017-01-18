@@ -22,14 +22,13 @@ base.AcqStart()
 sleep(1)
 base.AcqSetTriggerSrc(TRIG_SRC_CHA_PE)
 
-state = c_long(TRIG_STATE_WAITING)
-while state.value != TRIG_STATE_TRIGGERED:
-	ret = base.AcqGetTriggerState(state)
+while base.AcqGetTriggerState() == TRIG_STATE_WAITING:
+	pass
+print('triggered')
 
-size = c_long(16384)
-buff = misc.CreateFloatBuffer(size.value)
-base.AcqGetOldestDataV(CH_1, size, buff);
-for i in range(size.value):
-	print(buff[i])
+size = base.AcqGetBufSize()
+buff = base.AcqGetOldestDataV(CH_1, size);
+for v in buff:
+	print(v)
 
 base.Release()

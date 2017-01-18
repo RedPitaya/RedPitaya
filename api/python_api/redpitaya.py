@@ -43,6 +43,21 @@ WAVEFORM_ARBITRARY = 7 # Use defined wave form
 TRIG_STATE_TRIGGERED = 0 # Trigger is triggered/disabled
 TRIG_STATE_WAITING   = 1 # Trigger is set up and waiting (to be triggered)
 
+TRIG_SRC_DISABLED = 0 # Trigger is disabled
+TRIG_SRC_NOW      = 1 # Trigger triggered now (immediately)
+TRIG_SRC_CHA_PE   = 2 # Trigger set to Channel A threshold positive edge
+TRIG_SRC_CHA_NE   = 3 # Trigger set to Channel A threshold negative edge
+TRIG_SRC_CHB_PE   = 4 # Trigger set to Channel B threshold positive edge
+TRIG_SRC_CHB_NE   = 5 # Trigger set to Channel B threshold negative edge
+TRIG_SRC_EXT_PE   = 6 # Trigger set to external trigger positive edge (DIO0_P pin)
+TRIG_SRC_EXT_NE   = 7 # Trigger set to external trigger negative edge (DIO0_P pin)
+TRIG_SRC_AWG_PE   = 8 # Trigger set to arbitrary wave generator application positive edge
+TRIG_SRC_AWG_NE   = 9 # Trigger set to arbitrary wave generator application negative edge
+
+
+class misc:
+	def CreateFloatBuffer(size):
+		return (c_float*size)()
 
 class base:
 	def Init():
@@ -84,23 +99,29 @@ class base:
 	def AcqSetTriggerSrc(source):
 		return rp_api.rp_AcqSetTriggerSrc(source)
 
-	def AcqGetTriggerState(state):
-		return rp_api.rp_AcqGetTriggerState(byref(state))
+	def AcqGetTriggerState():
+		state = c_long(TRIG_STATE_WAITING)
+		rp_api.rp_AcqGetTriggerState(byref(state))
+		return state.value
 
-	def AcqGetOldestDataV(channel, buff_size, buff):
-		return rp_api.rp_AcqGetOldestDataV(0, byref(buff_size), byref(buff));
+	def AcqGetBufSize():
+		size = c_long(0)
+		rp_api.rp_AcqGetBufSize(byref(size))
+		return size.value
+
+	def AcqGetOldestDataV(channel, size):
+		buff = misc.CreateFloatBuffer(size)
+		buff_size = c_long(size)
+		rp_api.rp_AcqGetOldestDataV(channel, byref(buff_size), byref(buff));
+		return [ buff[i] for i in range(buff_size.value) ]
 
 	def DpinSetState(pin, state):
 		return rp_api.rp_DpinSetState(pin, state)
 
-	def AIpinGetValue(pin, value):
-		return rp_api.rp_AIpinGetValue(pin, byref(value))
+	def AIpinGetValue(pin):
+		value = c_float(0)
+		rp_api.rp_AIpinGetValue(pin, byref(value))
+		return value.value
 
 	def AOpinSetValue(pin, value):
 		return rp_api.rp_AOpinSetValue(pin, c_float(value))
-
-class misc:
-	def CreateFloatBuffer(size):
-		return (c_float*size)()
-
-
