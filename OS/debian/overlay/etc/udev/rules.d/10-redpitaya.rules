@@ -9,7 +9,7 @@ SUBSYSTEM=="uio", SYMLINK+="uio/%s{name}" GROUP="uio"
 # LEDs
 # give group access rights
 # http://unix.stackexchange.com/questions/20125/how-can-i-change-the-permissions-in-sys-to-alter-the-state-of-a-led-light-using
-# this will chenge the group to 'redpitaya' and copy gropu rights from the user
+# this will change the group to 'redpitaya' and copy group rights from the user
 SUBSYSTEM=="leds", ACTION=="add",                          RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 SUBSYSTEM=="leds", ACTION=="change", ENV{TRIGGER}!="none", RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 
@@ -36,5 +36,5 @@ SUBSYSTEM=="iio", ATTR{name}=="xadc", GROUP="xadc"
 
 # Red Pitaya DMA
 # give group access rights
-# TODO: current driver has an empty DRIVER properly, this should be updated
+# TODO: current driver has an empty DRIVER property, this should be updated
 SUBSYSTEM=="chardrv", KERNEL=="rprx*", GROUP="dma"
