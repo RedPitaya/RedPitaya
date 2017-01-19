@@ -2,8 +2,7 @@
 
 from redpitaya import *
 from math import pi, sin
-
-base.Init()
+from time import sleep
 
 buf_size = base.AcqGetBufSize()
 
@@ -30,4 +29,23 @@ base.GenFreq(CH_2, 4000.0);
 base.GenOutEnable(CH_1);
 base.GenOutEnable(CH_2);
 
-base.Release()
+
+base.AcqReset()
+base.AcqSetDecimation(1)
+base.AcqSetTriggerLevel(CH_1, 0.1)
+base.AcqSetTriggerDelay(CH_1)
+
+base.AcqStart()
+
+sleep(1)
+base.AcqSetTriggerSrc(TRIG_SRC_CHA_PE)
+
+while base.AcqGetTriggerState() == TRIG_STATE_WAITING:
+    pass
+print('triggered')
+
+size = base.AcqGetBufSize()
+buff1 = base.AcqGetOldestDataV(CH_1, size);
+plot(buff1)
+buff2 = base.AcqGetOldestDataV(CH_2, size);
+plot(buff2)

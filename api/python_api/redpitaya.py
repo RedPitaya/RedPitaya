@@ -1,8 +1,9 @@
 from ctypes import *
 import time
 import os
+import matplotlib.pyplot as plt
 
-os.system('cat /opt/redpitaya/fpga/v0.94/fpga.bit > /dev/xdevcfg')
+#os.system('cat /opt/redpitaya/fpga/v0.94/fpga.bit > /dev/xdevcfg')
 rp_api = CDLL('/opt/redpitaya/lib/librp.so')
 
 CH_1 = 0
@@ -131,3 +132,10 @@ class base:
 
     def AOpinSetValue(pin, value):
         return rp_api.rp_AOpinSetValue(pin, c_float(value))
+
+def plot(data):
+    plt.figure()
+    plt.plot(data)
+    plt.show()
+
+base.Init()

@@ -3,8 +3,6 @@
 from redpitaya import *
 from time import sleep
 
-base.Init()
-
 base.GenReset()
 base.GenFreq(CH_1, 20000.0)
 base.GenAmp(CH_1, 1.0)
@@ -27,7 +25,4 @@ print('triggered')
 
 size = base.AcqGetBufSize()
 buff = base.AcqGetOldestDataV(CH_1, size);
-for v in buff:
-    print(v)
-
-base.Release()
+plot(buff)
