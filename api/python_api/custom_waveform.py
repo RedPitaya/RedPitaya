@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-from ctypes import *
 from redpitaya import *
-from time import sleep
 from math import pi, sin
 
 base.Init()

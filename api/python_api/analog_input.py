@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from ctypes import *
 from redpitaya import *
 
 base.Init()
