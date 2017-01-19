@@ -12,12 +12,12 @@ base.AcqStart()
 base.AcqSetTriggerSrc(TRIG_SRC_EXT_PE)
 
 while base.AcqGetTriggerState() != TRIG_STATE_TRIGGERED:
-	pass
+    pass
 print('triggered')
 
 size = base.AcqGetBufSize();
 buff = base.AcqGetOldestDataV(CH_1, size)
 for v in buff:
-	print(v)
+    print(v)
 
 base.Release()

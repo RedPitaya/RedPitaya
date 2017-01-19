@@ -13,9 +13,9 @@ t = []
 x = []
 y = []
 for i in range(buf_size):
-	t.append((2*pi)/buf_size*i)
-	x.append(sin(t[i]) + ((1.0/3.0) * sin(t[i] * 3)))
-	y.append((1.0/2.0) * sin(t[i]) + (1.0/4.0) * sin(t[i] * 4))
+    t.append((2*pi)/buf_size*i)
+    x.append(sin(t[i]) + ((1.0/3.0) * sin(t[i] * 3)))
+    y.append((1.0/2.0) * sin(t[i]) + (1.0/4.0) * sin(t[i] * 4))
 
 base.GenWaveform(CH_1, WAVEFORM_ARBITRARY)
 base.GenWaveform(CH_2, WAVEFORM_ARBITRARY)
