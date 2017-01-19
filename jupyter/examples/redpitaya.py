@@ -1,6 +1,7 @@
 from ctypes import *
 import time
 import os
+import matplotlib.pyplot as plt
 
 os.system('cat /opt/redpitaya/fpga/v0.94/fpga.bit > /dev/xdevcfg')
 rp_api = CDLL('/opt/redpitaya/lib/librp.so')
@@ -58,76 +59,83 @@ TRIG_SRC_AWG_NE   = 9 # Trigger set to arbitrary wave generator application nega
 
 
 class misc:
-	def CreateFloatBuffer(size):
-		return (c_float*size)()
+    def CreateFloatBuffer(size):
+        return (c_float*size)()
 
 class base:
-	def Init():
-		return rp_api.rp_Init()
+    def Init():
+        return rp_api.rp_Init()
 
-	def Release():
-		return rp_api.rp_Release()
+    def Release():
+        return rp_api.rp_Release()
 
-	def GenReset():
-		return rp_api.rp_GenReset()
+    def GenReset():
+        return rp_api.rp_GenReset()
 
-	def GenFreq(channel, freq):
-		return rp_api.rp_GenFreq(channel, c_float(freq))
+    def GenFreq(channel, freq):
+        return rp_api.rp_GenFreq(channel, c_float(freq))
 
-	def GenAmp(channel, freq):
-		return rp_api.rp_GenAmp(channel, c_float(freq))
-	
-	def GenWaveform(channel, form):
-		return rp_api.rp_GenWaveform(channel, form)
+    def GenAmp(channel, freq):
+        return rp_api.rp_GenAmp(channel, c_float(freq))
+    
+    def GenWaveform(channel, form):
+        return rp_api.rp_GenWaveform(channel, form)
 
-	def GenArbWaveform(channel, buf):
-		arr = (c_float * len(buf))(*buf)
-		return rp_api.rp_GenArbWaveform(channel, arr, len(buf));
+    def GenArbWaveform(channel, buf):
+        arr = (c_float * len(buf))(*buf)
+        return rp_api.rp_GenArbWaveform(channel, arr, len(buf));
 
-	def GenOutEnable(channel):
-		return rp_api.rp_GenOutEnable(channel)
+    def GenOutEnable(channel):
+        return rp_api.rp_GenOutEnable(channel)
 
-	def AcqReset():
-		return rp_api.rp_AcqReset()
+    def AcqReset():
+        return rp_api.rp_AcqReset()
 
-	def AcqSetDecimation(dec_factor):
-		return rp_api.rp_AcqSetDecimation(dec_factor)
+    def AcqSetDecimation(dec_factor):
+        return rp_api.rp_AcqSetDecimation(dec_factor)
 
-	def AcqSetTriggerLevel(channel, level):
-		return rp_api.rp_AcqSetTriggerLevel(channel, c_float(level))
+    def AcqSetTriggerLevel(channel, level):
+        return rp_api.rp_AcqSetTriggerLevel(channel, c_float(level))
 
-	def AcqSetTriggerDelay(delay):
-		return rp_api.rp_AcqSetTriggerDelay(delay)
+    def AcqSetTriggerDelay(delay):
+        return rp_api.rp_AcqSetTriggerDelay(delay)
 
-	def AcqStart():
-		return rp_api.rp_AcqStart()
+    def AcqStart():
+        return rp_api.rp_AcqStart()
 
-	def AcqSetTriggerSrc(source):
-		return rp_api.rp_AcqSetTriggerSrc(source)
+    def AcqSetTriggerSrc(source):
+        return rp_api.rp_AcqSetTriggerSrc(source)
 
-	def AcqGetTriggerState():
-		state = c_long(TRIG_STATE_WAITING)
-		rp_api.rp_AcqGetTriggerState(byref(state))
-		return state.value
+    def AcqGetTriggerState():
+        state = c_long(TRIG_STATE_WAITING)
+        rp_api.rp_AcqGetTriggerState(byref(state))
+        return state.value
 
-	def AcqGetBufSize():
-		size = c_long(0)
-		rp_api.rp_AcqGetBufSize(byref(size))
-		return size.value
+    def AcqGetBufSize():
+        size = c_long(0)
+        rp_api.rp_AcqGetBufSize(byref(size))
+        return size.value
 
-	def AcqGetOldestDataV(channel, size):
-		buff = misc.CreateFloatBuffer(size)
-		buff_size = c_long(size)
-		rp_api.rp_AcqGetOldestDataV(channel, byref(buff_size), byref(buff));
-		return [ buff[i] for i in range(buff_size.value) ]
+    def AcqGetOldestDataV(channel, size):
+        buff = misc.CreateFloatBuffer(size)
+        buff_size = c_long(size)
+        rp_api.rp_AcqGetOldestDataV(channel, byref(buff_size), byref(buff));
+        return [ buff[i] for i in range(buff_size.value) ]
 
-	def DpinSetState(pin, state):
-		return rp_api.rp_DpinSetState(pin, state)
+    def DpinSetState(pin, state):
+        return rp_api.rp_DpinSetState(pin, state)
 
-	def AIpinGetValue(pin):
-		value = c_float(0)
-		rp_api.rp_AIpinGetValue(pin, byref(value))
-		return value.value
+    def AIpinGetValue(pin):
+        value = c_float(0)
+        rp_api.rp_AIpinGetValue(pin, byref(value))
+        return value.value
 
-	def AOpinSetValue(pin, value):
-		return rp_api.rp_AOpinSetValue(pin, c_float(value))
+    def AOpinSetValue(pin, value):
+        return rp_api.rp_AOpinSetValue(pin, c_float(value))
+
+def plot(data):
+    plt.figure()
+    plt.plot(data)
+    plt.show()
+
+base.Init()

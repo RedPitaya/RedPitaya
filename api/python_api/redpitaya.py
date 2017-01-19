@@ -3,7 +3,7 @@ import time
 import os
 import matplotlib.pyplot as plt
 
-#os.system('cat /opt/redpitaya/fpga/v0.94/fpga.bit > /dev/xdevcfg')
+os.system('cat /opt/redpitaya/fpga/v0.94/fpga.bit > /dev/xdevcfg')
 rp_api = CDLL('/opt/redpitaya/lib/librp.so')
 
 CH_1 = 0
