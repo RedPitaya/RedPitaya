@@ -5,7 +5,9 @@ import sys
 
 base.Init()
 
-values = map(float, sys.argv[1:])
+values = [1,1,1,1]
+if len(sys.argv) > 1:
+    values = map(float, sys.argv[1:])
 
 for i, v in enumerate(values):
     print("pin[%d] = %f" % (i, v))
