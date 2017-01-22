@@ -40,7 +40,7 @@ apt-get -y install libwebsocketpp-dev
 apt-get -y install libiio-dev python-libiio iiod libiio-utils libiio-cil-dev
 
 # libraries used by lcrmeter
-sudo apt-get install -y libi2c-dev i2c-tools
+apt-get install -y libi2c-dev i2c-tools
 
 # tools used to compile applications
 apt-get -y install zip
@@ -50,6 +50,12 @@ apt-get -y install gdb cgdb libcunit1-ncurses-dev
 
 # miscelaneous tools
 apt-get -y install bc
+
+# Git can be used to share notebook examples
+apt-get -y install git
+
+# Device tree compiler can be used to compile custom overlays
+apt-get -y install device-tree-copiler libudev
 EOF_CHROOT
 
 ################################################################################
