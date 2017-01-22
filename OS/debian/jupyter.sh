@@ -24,9 +24,17 @@ apt-get -y install python3-matplotlib
 pip3 install --upgrade pip
 pip3 install jupyter
 
-# additional Python support for I2C, SPI, UART
-pip3 install pyudev
-#pip3 install 
+# https://plot.ly/python/ for interactive graphs
+pip3 install plotly
+
+# additional Python support for GPIO, LED, PWM, SPI, I2C, MMIO, Serial
+# https://pypi.python.org/pypi/python-periphery
+pip3 install python-periphery
+
+# UDEV support can be used to search for peripherals loaded using DT overlays
+# https://pypi.python.org/pypi/pyudev
+# https://pypi.python.org/pypi/pyfdt
+pip3 install pyudev pyfdt
 EOF_CHROOT
 
 ###############################################################################
