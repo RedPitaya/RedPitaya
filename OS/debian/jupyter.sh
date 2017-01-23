@@ -10,12 +10,31 @@
 ###############################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-# Python package manager
+# Sigrok
+apt-get -y install libsigrok libsigrokdecode sigrok-cli
+# OWFS 1-wire library
+apt-get -y install owfs python-ow
+
+# Python package manager, Jupyter dependencies
 apt-get -y install python3-dev python3-cffi python3-wheel python3-setuptools python3-pip python3-zmq python3-jinja2 python3-pygments python3-six python3-html5lib python3-terminado python3-decorator python3-ptyprocess python3-pexpect python3-simplegeneric python3-wcwidth python3-pickleshare python3-bleach python3-mistune python3-jsonschema
-apt-get -y install python3-numpy python3-matplotlib
+# Python numerical processing and plotting
+apt-get -y install python3-numpy python3-scipy python3-pandas
+apt-get -y install python3-matplotlib
 
 pip3 install --upgrade pip
 pip3 install jupyter
+
+# https://plot.ly/python/ for interactive graphs
+pip3 install plotly
+
+# additional Python support for GPIO, LED, PWM, SPI, I2C, MMIO, Serial
+# https://pypi.python.org/pypi/python-periphery
+pip3 install python-periphery
+
+# UDEV support can be used to search for peripherals loaded using DT overlays
+# https://pypi.python.org/pypi/pyudev
+# https://pypi.python.org/pypi/pyfdt
+pip3 install pyudev pyfdt
 EOF_CHROOT
 
 ###############################################################################
