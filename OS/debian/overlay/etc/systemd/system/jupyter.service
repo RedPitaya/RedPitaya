@@ -13,8 +13,8 @@ Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bi
 ExecStart=/usr/local/bin/jupyter notebook --no-browser
 ExecStop=/bin/kill $MAINPID
 PIDFile=/var/run/jupyter.pid
-User=jupyter
-Group=jupyter
+#User=jupyter
+#Group=jupyter
 WorkingDirectory=/home/jupyter
 
 [Install]

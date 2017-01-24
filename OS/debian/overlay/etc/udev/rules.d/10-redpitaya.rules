@@ -10,13 +10,16 @@ SUBSYSTEM=="uio", SYMLINK+="uio/%s{name}" GROUP="uio"
 # give group access rights
 # http://unix.stackexchange.com/questions/20125/how-can-i-change-the-permissions-in-sys-to-alter-the-state-of-a-led-light-using
 # this will change the group to 'redpitaya' and copy group rights from the user
-SUBSYSTEM=="leds", ACTION=="add",                          RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
-SUBSYSTEM=="leds", ACTION=="change", ENV{TRIGGER}!="none", RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
+#SUBSYSTEM=="leds", ACTION=="add",                          RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
+#SUBSYSTEM=="leds", ACTION=="change", ENV{TRIGGER}!="none", RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 
 # GPIO
 # give group access rights
 # https://www.raspberrypi.org/forums/viewtopic.php?f=29&t=9667
-SUBSYSTEM=="gpio", ACTION=="add", RUN+="/bin/chgrp -R gpio /sys/class/gpio", RUN+="/bin/chmod -R g=u /sys/class/gpio"
+#SUBSYSTEM=="gpio", ACTION=="add",    RUN+="/bin/chgrp -R gpio /sys/class/gpio", RUN+="/bin/chmod -R g=u /sys/class/gpio"
+#SUBSYSTEM=="gpio", ACTION=="change", RUN+="/bin/chgrp -R gpio /sys/class/gpio", RUN+="/bin/chmod -R g=u /sys/class/gpio"
+#SUBSYSTEM=="gpio", ACTION=="add",    RUN+="/bin/chgrp -R gpio /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
+#SUBSYSTEM=="gpio", ACTION=="change", RUN+="/bin/chgrp -R gpio /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 
 # SPI
 # give group access rights
@@ -25,7 +28,7 @@ SUBSYSTEM=="spidev", GROUP="spi"
 # I2C
 # /dev/i2c-0 device is already part of the group "i2c"
 # EEPROM
-SUBSYSTEM=="i2c", DRIVER=="at24", RUN+="/bin/chgrp eeprom /sys%p/eeprom", RUN+="/bin/chmod g=u /sys%p/eeprom"
+#SUBSYSTEM=="i2c", DRIVER=="at24", RUN+="/bin/chgrp eeprom /sys%p/eeprom", RUN+="/bin/chmod g=u /sys%p/eeprom"
 
 # UART1
 # /dev/ttyPS1 device is already part of the group "dialout"
@@ -33,7 +36,7 @@ SUBSYSTEM=="i2c", DRIVER=="at24", RUN+="/bin/chgrp eeprom /sys%p/eeprom", RUN+="
 # XADC
 # give group access rights
 SUBSYSTEM=="iio", ATTR{name}=="xadc", GROUP="xadc"
-SUBSYSTEM=="iio", ACTION=="add", RUN+="/bin/chgrp -R xadc /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
+#SUBSYSTEM=="iio", ACTION=="add", RUN+="/bin/chgrp -R xadc /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 
 # Red Pitaya DMA
 # give group access rights
