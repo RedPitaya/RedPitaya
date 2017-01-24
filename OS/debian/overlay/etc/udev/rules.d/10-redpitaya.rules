@@ -10,8 +10,8 @@ SUBSYSTEM=="uio", SYMLINK+="uio/%s{name}" GROUP="uio"
 # give group access rights
 # http://unix.stackexchange.com/questions/20125/how-can-i-change-the-permissions-in-sys-to-alter-the-state-of-a-led-light-using
 # this will change the group to 'redpitaya' and copy group rights from the user
-SUBSYSTEM=="leds", ACTION=="add",                          RUN+="/bin/chgrp -R led /sys/class/leds", RUN+="/bin/chmod -R g=u /sys/class/leds"
-SUBSYSTEM=="leds", ACTION=="change", ENV{TRIGGER}!="none", RUN+="/bin/chgrp -R led /sys/class/leds", RUN+="/bin/chmod -R g=u /sys/class/leds"
+SUBSYSTEM=="leds", ACTION=="add",                          RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
+SUBSYSTEM=="leds", ACTION=="change", ENV{TRIGGER}!="none", RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 
 # GPIO
 # give group access rights
