@@ -58,7 +58,7 @@ install -v -m 664 -o root -D  $OVERLAY/etc/systemd/system/jupyter.service \
                              $ROOT_DIR/etc/systemd/system/jupyter.service
 
 # create configuration directory for users root and jupyter
-install -v -m 664 -o root -D  $OVERLAY/root/.jupyter/jupyter_notebook_config.py \
+install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_config.py \
                              $ROOT_DIR/root/.jupyter/jupyter_notebook_config.py
 # let the owner be root, since the user should not change it easily
 install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_config.py \
