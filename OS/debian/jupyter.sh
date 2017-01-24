@@ -69,7 +69,7 @@ systemctl enable jupyter
 EOF_CHROOT
 
 ###############################################################################
-# copy notebook examples
+# copy/link notebook examples
 ###############################################################################
 
 ln -s /opt/redpitaya/jupyter/experiments   $ROOT_DIR/home/jupyter/experiments
