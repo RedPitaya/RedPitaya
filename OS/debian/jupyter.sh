@@ -34,6 +34,7 @@ pip3 install bokeh
 # https://pypi.python.org/pypi/python-periphery
 pip3 install python-periphery
 pip3 install smbus2
+pip3 install i2cdev
 
 # UDEV support can be used to search for peripherals loaded using DT overlays
 # https://pypi.python.org/pypi/pyudev
