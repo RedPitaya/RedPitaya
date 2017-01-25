@@ -42,7 +42,7 @@ env | grep CROSS_COMPILE
 ```
 The output should be something like: CROSS_COMPILE=arm-linux-gnueabihf-. 
 If this gives you a blank result, you should either set the CROSS_COMPILE variable to be pointing at the gnu cross
-compiler or check our how to build red pitaya OS [wiki-page](http://wiki.redpitaya.com/index.php?title=Red_Pitaya_OS)
+compiler or check our how to build red pitaya OS [GitHub document](https://github.com/RedPitaya/RedPitaya/blob/master/doc/developer.rst)
 
 If you don't have gcc cross compiler installed, you can install it with the following command:
 ```bash
