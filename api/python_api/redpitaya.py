@@ -1,6 +1,7 @@
 from ctypes import *
 import time
 import os
+import numpy as np
 import matplotlib.pyplot as plt
 
 os.system('cat /opt/redpitaya/fpga/v0.94/fpga.bit > /dev/xdevcfg')
@@ -120,7 +121,8 @@ class base:
         buff = misc.CreateFloatBuffer(size)
         buff_size = c_long(size)
         rp_api.rp_AcqGetOldestDataV(channel, byref(buff_size), byref(buff));
-        return [ buff[i] for i in range(buff_size.value) ]
+        nbuff = np.frombuffer(buff, np.float32)
+        return nbuff
 
     def DpinSetState(pin, state):
         return rp_api.rp_DpinSetState(pin, state)
