@@ -11,9 +11,16 @@ cd prj/$::argv
 # define paths
 ################################################################################
 
+set path_brd brd
 set path_rtl rtl
 set path_ip  ip
 set path_sdc sdc
+
+################################################################################
+# list board files
+################################################################################
+
+set_param board.repoPaths [list $path_brd]
 
 ################################################################################
 # setup an in memory project
@@ -27,6 +34,7 @@ create_project -part $part -force redpitaya ./project
 # create PS BD (processing system block design)
 ################################################################################
 
+# file was created from GUI using "write_bd_tcl -force ip/system.tcl"
 # create PS BD
 source                            $path_ip/system.tcl
 
@@ -43,13 +51,15 @@ generate_target all [get_files    system.bd]
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
 
-add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
+#add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
+add_files -fileset constrs_1      ../../$path_sdc/red_pitaya.xdc
+
+################################################################################
+# start gui
+################################################################################
 
 import_files -force
 
 update_compile_order -fileset sources_1
 
-################################################################################
-################################################################################
-
-#start_gui
+set_property top red_pitaya_top [current_fileset]
