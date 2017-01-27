@@ -247,6 +247,7 @@ std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
 
 #ifdef ALWAYS_PURCHASED
 	res["app"] = true;
+	res["pro"] = true;
 	res["stem14"] = true;
 #endif
 
