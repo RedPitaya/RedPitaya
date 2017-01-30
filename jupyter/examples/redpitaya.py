@@ -40,7 +40,7 @@ class redpitaya (object):
     TRIG_SRC_AWG_PE   = 8 # Trigger set to arbitrary wave generator application positive edge
     TRIG_SRC_AWG_NE   = 9 # Trigger set to arbitrary wave generator application negative edge
 
-    def __init__(self, bitstream = "/opt/redpitaya/fpga/v0.94/fpga.bit"):
+    def __init__(self, bitstream = "/opt/redpitaya/fpga/classic/fpga.bit"):
         os.system('cat '+bitstream+' > /dev/xdevcfg')
         self.rp_api = CDLL('/opt/redpitaya/lib/librp.so')
         self.Init()
