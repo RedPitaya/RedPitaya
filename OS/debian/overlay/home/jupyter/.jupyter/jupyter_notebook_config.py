@@ -1,6 +1,6 @@
 ## Web interface configuration 
 ## The IP address the notebook server will listen on.
-c.NotebookApp.ip = 'localhost'
+c.NotebookApp.ip = 127.0.0.1
 c.NotebookApp.port = 8888
 c.NotebookApp.base_url = '/jupyter/'
 c.NotebookApp.trust_xheaders = True
