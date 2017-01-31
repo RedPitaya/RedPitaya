@@ -3,7 +3,7 @@
 */
 
 /include/ "memory.dtsi"
-// /include/ "ethernet.dtsi"
+/include/ "ethernet.dtsi"
 /include/ "i2c0.dtsi"
 /include/ "spi1.dtsi"
 /include/ "usb0.dtsi"
