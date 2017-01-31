@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?> 
-<board schema_version="2.1" vendor="redpitaya.com" name="redpitaya" display_name="Red Pitaya" url="redpitaya.com" preset_file="preset.xml" board_image="redpitaya.png">
-  <file_version>0.9</file_version>
-  <description>Red Pitaya development board</description>
+<board schema_version="2.1" vendor="redpitaya.com" name="redpitaya" display_name="Red Pitaya STEMLab-14" url="http://redpitaya.com" preset_file="preset.xml" board_image="redpitaya.png">
+<file_version>1.1</file_version>
+  <description>Red Pitaya STEMLab-14</description>
 
   <compatible_board_revisions>
     <revision id="0">1.0</revision>
@@ -10,12 +10,12 @@
 
   <components>
 
-    <component name="part0" display_name="Zynq 7010" type="fpga" part_name="xc7z010clg400-1" pin_map_file="part0_pins.xml" vendor="xilinx.com" spec_url="www.xilinx.com">
+    <component name="part0" display_name="Zynq 7010" type="fpga" part_name="xc7z010clg400-1" pin_map_file="part0_pins.xml" vendor="xilinx" spec_url="http://redpitaya.com">
       <description>FPGA part on the board</description>
 
       <interfaces>
 
-        <interface mode="master" name="led" type="xilinx.com:interface:gpio_rtl:1.0" of_component="led_8bit">
+        <interface mode="master" name="led_8bit" type="xilinx.com:interface:gpio_rtl:1.0" of_component="led_8bit">
           <description>LED[7:0] Yellow</description>
           <parameters></parameters>
           <preferred_ips>
@@ -36,7 +36,7 @@
             </port_map>
           </port_maps>
         </interface>
-      
+
         <interface mode="master" name="gpio" type="xilinx.com:interface:gpio_rtl:1.0" of_component="gpio_16bit">
           <description>GPIO[15:0] connector</description>
           <parameters></parameters>
