@@ -37,6 +37,9 @@ Linux:
     there are some nontrivial conflicts to solve.
     For now we will wait for Xilinx to port kernel 4.8.
 
+    OF_CONFIGFS Patches (they were rebased onto v4.10-rc1):
+    http://elinux.org/R-Car/DT-Overlays
+
 OS:
 - Rethink user management and security.
 - Create a single UIO device for FPGA v0.94 and handle access permissions
