@@ -1,0 +1,3619 @@
+<!-- $Id$
+ *
+ * Red Pitaya Oscilloscope client.
+ *
+ * Author: Dakus <info@eskala.eu>
+ *         
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in Javascript & HTML.
+ * Please visit http://en.wikipedia.org/wiki/JavaScript
+ *              http://en.wikipedia.org/wiki/HTML
+ * for more details on the languages used herein.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Power analyzer</title>
+  <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link href="stylepwr.css?6" rel="stylesheet" type="text/css">
+  <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+  <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+  <script src="../assets/flot/jquery.flot.js"></script>
+  <script src="../assets/flot/jquery.flot.selection.min.js"></script>
+  <script src="../assets/flot/jquery.flot.navigate.js"></script>
+  <script src="../assets/flot/jquery.flot.resize.min.js"></script>
+  <script src="../assets/flot/jquery.flot.touch.js?2"></script>
+  <script type="text/javascript">
+  
+  // Settings which can be modified
+   
+  var app_id = 'poweranalyzer';  
+  var root_url = '';
+  //var root_url = 'http://10.0.1.221';      // Test local
+  //var root_url = 'http://192.168.53.133';  // Test remote and local
+  //var root_url = 'http://192.168.1.100';   // Default RedPitaya IP
+  var start_app_url = root_url + '/bazaar?start=' + app_id;
+  var stop_app_url = root_url + '/bazaar?stop=';
+  var get_url = root_url + '/data';
+  var post_url = root_url + '/data';
+  
+  var update_interval = 50;              // Update interval for PC, milliseconds
+  var update_interval_mobdev = 500;      // Update interval for mobile devices, milliseconds 
+  var request_timeout = 3000;            // Milliseconds
+  var long_timeout = 20000;              // Milliseconds
+  var meas_panel_dec = 4;                // Decimation for numerical measure panel to make it human readable
+  var meas_panel_dec_mobdev = 2;         // Decimation for numerical measure panel for mobile devices
+  var points_per_px = 5;                 // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
+  var xdecimal_places = 2;               // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
+  var trigger_level_xdecimal_places = 4; // Number of decimal places for trigger level tooltip
+  var range_offset = 1;                  // Percentages
+    
+  var xmin = -1000000;
+  var xmax = 1000000;  
+  var y1min = -1;
+  var y1max = 1;
+  var y2min = -1;
+  var y2max = 1;
+  var y3min = -1;
+  var y3max = 1;
+  
+  var y1 = 1;
+  var y2 = 1;
+  var y3 = 1;
+
+  var time_range_max = [131, 1048, 8.38, 134.2, 1.07, 8.58, 131];
+  var range_steps = [0.5, 1, 2, 5, 10, 20, 50, 100];
+  
+  var plot_options = {
+    colors: ['#3276B1', '#D2322D', '#E6B800', '#009900'],    // channel1, channel2, trigger line
+    lines: { lineWidth: 1 },
+    selection: { mode: 'x' },
+    zoom: { interactive: false, trigger: null },
+    xaxes: [{ show: true, position: 'bottom',  min: xmin, max: xmax, ticks: 8 }],
+    yaxes: [ {show: true, color: '#3276B1', tickColor: '#CCCCCC',
+		      position: 'left', 
+		      min: y1min, max: y1max, ticks: 8, font: {color: '#3276B1'}}, 
+             {show: true, color: '#D2322D', tickColor: '#CCCCCC', 
+			  position: 'left', 
+		      min: y2min, max: y2max, alignTicksWithAxis: 1, ticks: 8, font: {color: '#D2322D'}}, 
+             {show: true, color: '#E6B800', tickColor: '#CCCCCC', 
+			  position: 'left', 
+			  min: y3min, max: y3max, alignTicksWithAxis: 1, ticks: 8, font: {color: '#E6B800'}} ],
+    grid: { borderWidth: {top:1, right: 1, bottom: 1, left: 0}, 
+		    borderColor: { top: '#CCCCCC', right:'#CCCCCC', bottom: '#CCCCCC'}},
+    legend: { show: false},
+    touch: { autoWidth: false, autoHeight: false }
+  };
+  
+  var plot1_options = {
+	bars: {show: true, align: 'center', barWidth: 0.5, fill: true},
+	shadowSize: 0,
+	xaxis:{ show: true, tickLength: 2},
+	grid: {borderWidth: 1, borderColor:'#AAAAAA'}  
+  };
+  
+  var plot2_options = {
+	bars: {show: true, align: 'center', barWidth: 0.5, fill: true},
+	shadowSize: 0,
+	xaxis:{ show: true, tickLength: 2 },
+	grid: {borderWidth: 1, borderColor:'#AAAAAA'}  	  
+  };
+  
+  // Settings which should not be modified
+  
+  var update_timer = null;
+  var zoompan_timer = null;
+  var downloading = false;
+  var sending = false;
+  var send_que = false;
+  var use_long_timeout = false;
+  var trig_dragging = false;
+  var touch_last_y = 0;
+  var user_editing = false;
+  var app_started = false;
+  var last_get_failed = false;
+  var refresh_counter = 0;
+  var autorun = 1;
+  var datasets = [];
+  var plot = null;
+  var dataset1 = [];
+  var plot1 = null;
+  var dataset2 = [];
+  var plot2 = null;
+  var params = {
+    original: null,
+    local: null
+  };
+  
+  // Default parameters - posted after server side app is started 
+  var def_params = {
+    en_avg_at_dec: 1
+  }; 
+    
+  // On page loaded
+  
+  $(function() { 
+    
+    // Show different buttons on touch screens    
+    if(window.ontouchstart === undefined) {
+      $('.btn-lg').removeClass('btn-lg');
+      $('.accordion .btn, .modal .btn').addClass('btn-sm');
+      $('#btn_zoompan').remove();
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').show();
+    }
+    else {
+      update_interval = update_interval_mobdev;
+      $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
+      $('#btn_zoompan').show();
+    }
+    
+    // Add application ID in the message from modal popup
+    $('.app-id').text(app_id);
+    
+    // Disable all controls until the params state is loaded for the first time 
+    $('input, select, button', '.container').prop('disabled', true);
+    
+    // Events binding for trigger controls
+    
+    $('#trigger_canvas').on({
+      'mousedown touchstart': function(evt) {
+      
+        // Ignore the event if trigger source is External or mode is not Normal
+        if(!params.original || params.original.trig_mode != 1 || params.original.trig_source == 2) {
+          return;
+        }
+      
+        trig_dragging = true;
+        $('input, select', '#accordion').blur();
+        mouseDownMove(this, evt);
+        evt.preventDefault();
+        return false;
+      },
+      'mousemove touchmove': function(evt) {
+        if(! trig_dragging) {
+          return;
+        }
+        mouseDownMove(this, evt);
+        evt.preventDefault();
+        return false;
+      },
+      'mouseup mouseout touchend': mouseUpOut
+    });
+    
+    $('input,select', '#accordion').on('focus', function() {
+      user_editing = true;
+    });
+    
+    $('#trig_mode').on('change', function() {
+      onDropdownChange($(this), 'trig_mode', true);
+        if($('#trig_source').val == 0) {
+		   $('#trig_lev_units').text("V");
+		} else if ($('#trig_source').val == 1) {
+		   $('#trig_lev_units').text("A");
+	    }
+    });
+    
+    $('#trig_source').on('change', function() { 
+		onDropdownChange($(this), 'trig_source');
+		if($(this).val == 0) {
+		   $('#trig_lev_units').text("V");
+		} else if ($(this).val == 1) {
+		   $('#trig_lev_units').text("A");
+		} else {     
+		   $('#trig_lev_units').text(" ");
+		}
+    });
+    
+    $('#trig_edge').on('change', function() { onDropdownChange($(this), 'trig_edge'); });
+    
+    $('#trig_level')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_trig_level').show();
+      })
+      .on('blur', function() {
+        $('#apply_trig_level').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var tlev = parseLocalFloat($(this).val());
+        var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
+        if(! isNaN(tlev)) {
+          params.local.trig_level = tlev;
+          updateTriggerSlider(undefined, false);
+          redrawPlot();
+          sendParams();
+        }
+        else {
+          tlev = params.local.trig_level;
+          $(this).val(tlev)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {				//enter
+          $(this).blur();
+        }
+      });
+    
+    // Events binding for range controls
+    
+    $('#freq_range').on('change', function() {
+      onDropdownChange($(this), 'time_range', true);
+      if(plot) {
+		  var options = plot.getOptions();
+		  var axes = plot.getAxes();
+		  
+	  }
+      autoscaleX();
+    });
+       
+    $('#scale_U_plus, #scale_U_minus').on('click', function() {
+      if(plot) {
+		var direction = ($(this).attr('id') == 'scale_U_minus' ? 'dim' : 'exp');
+		var options = plot.getOptions();
+	    var axes = plot.getAxes();
+		var min = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+        var max = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+        
+        if(direction == 'dim') {
+			min *= 1.2;
+            max *= 1.2;
+	    }
+	    else {	
+			min /= 1.2;
+            max /= 1.2;
+        }
+        
+        options.yaxes[0].min = min;
+        options.yaxes[0].max = max;
+        
+        plot.setupGrid();
+        plot.draw();
+        
+        updateTriggerSlider();
+      } 
+    
+    });
+    
+    $('#auto_scale_U').on('click', function() {
+      if(plot) {
+		  
+		var options = plot.getOptions();
+		var axis= plot.getAxes().yaxis;
+    
+        // Set Y scale to data min/max + 10%
+        options.yaxes[0].min = (axis.datamin < 0 ? axis.datamin * 1.1 : axis.datamin - axis.datamin * 0.1); 
+        options.yaxes[0].max = (axis.datamax > 0 ? axis.datamax * 1.1 : axis.datamax + axis.datamax * 0.1);
+ 
+        plot.setupGrid();
+        plot.draw();
+ 
+        updateTriggerSlider();
+      }
+    
+    });
+    
+    $('#scale_I_plus, #scale_I_minus').on('click', function() {
+      if(plot) {
+		var direction = ($(this).attr('id') == 'scale_I_minus' ? 'dim' : 'exp');
+		var options = plot.getOptions();
+	    var axes = plot.getAxes();
+		var min = (options.yaxes[1].min !== null ? options.yaxes[1].min : axes.y2axis.min);
+        var max = (options.yaxes[1].max !== null ? options.yaxes[1].max : axes.y2axis.max);
+        
+        if(direction == 'dim') {
+			min *= 1.2;
+            max *= 1.2;
+		} else {	
+			min /= 1.2;
+            max /= 1.2;
+        }
+        
+        options.yaxes[1].min = min;
+        options.yaxes[1].max = max;
+        
+        plot.setupGrid();
+        plot.draw();
+        
+        updateTriggerSlider();
+      } 
+    
+    });
+    
+    $('#auto_scale_I').on('click', function() {
+      if(plot) {
+		  
+		var options = plot.getOptions();
+		var axis= plot.getAxes().y2axis;
+    
+        // Set Y scale to data min/max + 10%
+        options.yaxes[1].min = (axis.datamin < 0 ? axis.datamin * 1.1 : axis.datamin - axis.datamin * 0.1); 
+        options.yaxes[1].max = (axis.datamax > 0 ? axis.datamax * 1.1 : axis.datamax + axis.datamax * 0.1);
+ 
+        plot.setupGrid();
+        plot.draw();
+ 
+        updateTriggerSlider();
+      }
+    
+    });
+    
+    $('#scale_P_plus, #scale_P_minus').on('click', function() {
+      if(plot) {
+		var direction = ($(this).attr('id') == 'scale_P_minus' ? 'dim' : 'exp');
+		var options = plot.getOptions();
+	    var axes = plot.getAxes();
+		var min = (options.yaxes[2].min !== null ? options.yaxes[2].min : axes.y3axis.min);
+        var max = (options.yaxes[2].max !== null ? options.yaxes[2].max : axes.y3axis.max);
+        
+        if(direction == 'dim') {
+			min *= 1.2;
+            max *= 1.2;
+		} else {	
+			min /= 1.2;
+            max /= 1.2;
+        }
+        
+        options.yaxes[2].min = min;
+        options.yaxes[2].max = max;
+        
+        plot.setupGrid();
+        plot.draw();
+        
+      } 
+    
+    });
+    
+    $('#auto_scale_P').on('click', function() {
+      if(plot) {
+		  
+		var options = plot.getOptions();
+		var axis= plot.getAxes().y3axis;
+    
+        // Set Y scale to data min/max + 10%
+        options.yaxes[2].min = (axis.datamin < 0 ? axis.datamin * 1.1 : axis.datamin - axis.datamin * 0.1); 
+        options.yaxes[2].max = (axis.datamax > 0 ? axis.datamax * 1.1 : axis.datamax + axis.datamax * 0.1);
+ 
+        plot.setupGrid();
+        plot.draw();
+ 
+      }
+    
+    });
+    
+    $('#scale_all_plus, #scale_all_minus').on('click', function() {
+      if(plot) {
+		var direction = ($(this).attr('id') == 'scale_all_minus' ? 'dim' : 'exp');
+		var options = plot.getOptions();
+	    var axes = plot.getAxes();
+		var min1 = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+        var max1 = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+        var min2 = (options.yaxes[1].min !== null ? options.yaxes[1].min : axes.y2axis.min);
+        var max2 = (options.yaxes[1].max !== null ? options.yaxes[1].max : axes.y2axis.max);
+        var min3 = (options.yaxes[2].min !== null ? options.yaxes[2].min : axes.y3axis.min);
+        var max3 = (options.yaxes[2].max !== null ? options.yaxes[2].max : axes.y3axis.max);
+        
+        if(direction == 'dim') {
+			min1 *= 1.2;
+            max1 *= 1.2;
+            min2 *= 1.2;
+            max2 *= 1.2;
+            min3 *= 1.2;
+            max3 *= 1.2;
+		} 
+		else {	
+			min1 /= 1.2;
+            max1 /= 1.2;
+            min2 /= 1.2;
+            max2 /= 1.2;
+            min3 /= 1.2;
+            max3 /= 1.2;
+        }
+        
+        options.yaxes[0].min = min1;
+        options.yaxes[0].max = max1;
+        options.yaxes[1].min = min2;
+        options.yaxes[1].max = max2;
+        options.yaxes[2].min = min3;
+        options.yaxes[2].max = max3;
+        
+        plot.setupGrid();
+        plot.draw();
+        
+        updateTriggerSlider();
+      } 
+    
+    });
+    
+    $('#scale_x_minus, #scale_x_plus').on('click', function() {
+		
+		if(plot) {
+        var direction = ($(this).attr('id') == 'scale_x_minus' ? 'minus' : 'plus');
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.xaxes[0].min !== null ? options.xaxes[0].min : axes.xaxis.min);
+        var max = (options.xaxes[0].max !== null ? options.xaxes[0].max : axes.xaxis.max);
+        
+        
+        if(direction == 'plus') {
+          min *= 1.1;
+          max *= 1.1;
+        }
+        else {
+          min /= 1.1;
+          max /= 1.1;
+        }
+        
+        options.xaxes[0].min = min;
+        options.xaxes[0].max = max;
+
+        plot.setupGrid();
+        plot.draw();
+        
+        params.local.xmin = min;
+        params.local.xmax = max;
+               
+        sendParams(true);
+      }
+		
+    });
+    
+    
+    $('#offset_x_minus, #offset_x_plus').on('click', function() {
+      if(plot) {
+        var direction = ($(this).attr('id') == 'offset_x_minus' ? 'left' : 'right');
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.xaxes[0].min !== null ? options.xaxes[0].min : axes.xaxis.min);
+        var max = (options.xaxes[0].max !== null ? options.xaxes[0].max : axes.xaxis.max);
+        var offset = (max - min) * range_offset/50;
+        
+        if(direction == 'left') {
+          min += offset;
+          max += offset;
+        }
+        else {
+          min -= offset;
+          max -= offset;
+        }
+        
+        options.xaxes[0].min = min;
+        options.xaxes[0].max = max;
+
+        plot.setupGrid();
+        plot.draw();
+        
+        params.local.xmin = min;
+        params.local.xmax = max;
+               
+        sendParams(true);
+      }
+    });
+    
+    $('#offset_x_zero').on('click', function() {
+      if(plot) {
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.xaxes[0].min !== null ? options.xaxes[0].min : axes.xaxis.min);
+        var max = (options.xaxes[0].max !== null ? options.xaxes[0].max : axes.xaxis.max);
+        var range = (max - min);
+              
+        options.xaxes[0].min = 0;
+        options.xaxes[0].max = range;
+
+        plot.setupGrid();
+        plot.draw();
+         
+        params.local.xmin = min;
+        params.local.xmax = max;
+               
+        sendParams(true);       
+      }
+    });
+    
+    $('#offset_U_minus, #offset_U_plus').on('click', function() {
+      if(plot) {
+        var direction = ($(this).attr('id') == 'offset_U_minus' ? 'down' : 'up');
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+        var max = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+        var offset = (max + Math.abs(min)) * 0.1;
+        
+        if(direction == 'down') {
+          min += offset;
+          max += offset;
+        }
+        else {
+          min -= offset;
+          max -= offset;
+        }
+        
+        options.yaxes[0].min = min;
+        options.yaxes[0].max = max;
+
+        plot.setupGrid();
+        plot.draw();
+               
+        updateTriggerSlider();
+      }
+    });
+    
+    $('#offset_U_zero').on('click', function() {
+      if(plot) {
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+        var max = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+        var range = (max - min) / 2;
+              
+        options.yaxes[0].min = -range;
+        options.yaxes[0].max = range;
+
+        plot.setupGrid();
+        plot.draw();
+               
+        updateTriggerSlider();
+      }
+    });
+    
+    $('#offset_I_minus, #offset_I_plus').on('click', function() {
+      if(plot) {
+        var direction = ($(this).attr('id') == 'offset_I_minus' ? 'down' : 'up');
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.yaxes[1].min !== null ? options.yaxes[1].min : axes.y2axis.min);
+        var max = (options.yaxes[1].max !== null ? options.yaxes[1].max : axes.y2axis.max);
+        var offset = (max + Math.abs(min)) * 0.1;
+        
+        if(direction == 'down') {
+          min += offset;
+          max += offset;
+        }
+        else {
+          min -= offset;
+          max -= offset;
+        }
+        
+        options.yaxes[1].min = min;
+        options.yaxes[1].max = max;
+
+        plot.setupGrid();
+        plot.draw();
+               
+        updateTriggerSlider();
+      }
+    });
+    
+    $('#offset_I_zero').on('click', function() {
+      if(plot) {
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.yaxes[1].min !== null ? options.yaxes[1].min : axes.y2axis.min);
+        var max = (options.yaxes[1].max !== null ? options.yaxes[1].max : axes.y2axis.max);
+        var range = (max - min) / 2;
+              
+        options.yaxes[1].min = -range;
+        options.yaxes[1].max = range;
+
+        plot.setupGrid();
+        plot.draw();
+               
+        updateTriggerSlider();
+      }
+    });
+        
+        $('#offset_P_minus, #offset_P_plus').on('click', function() {
+      if(plot) {
+        var direction = ($(this).attr('id') == 'offset_P_minus' ? 'down' : 'up');
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.yaxes[2].min !== null ? options.yaxes[2].min : axes.y3axis.min);
+        var max = (options.yaxes[2].max !== null ? options.yaxes[2].max : axes.y3axis.max);
+        var offset = (max + Math.abs(min)) * 0.1;
+        
+        if(direction == 'down') {
+          min += offset;
+          max += offset;
+        }
+        else {
+          min -= offset;
+          max -= offset;
+        }
+        
+        options.yaxes[2].min = min;
+        options.yaxes[2].max = max;
+
+        plot.setupGrid();
+        plot.draw();
+               
+      }
+    });
+    
+    $('#offset_P_zero').on('click', function() {
+      if(plot) {
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min = (options.yaxes[2].min !== null ? options.yaxes[2].min : axes.y3axis.min);
+        var max = (options.yaxes[2].max !== null ? options.yaxes[2].max : axes.y3axis.max);
+        var range = (max - min) / 2;
+              
+        options.yaxes[2].min = -range;
+        options.yaxes[2].max = range;
+
+        plot.setupGrid();
+        plot.draw();
+               
+        updateTriggerSlider();
+      }
+    });
+    
+    $('#offset_all_minus, #offset_all_plus').on('click', function() {
+      if(plot) {
+        var direction = ($(this).attr('id') == 'offset_all_minus' ? 'down' : 'up');
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min1 = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+        var max1 = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+        var min2 = (options.yaxes[1].min !== null ? options.yaxes[1].min : axes.y2axis.min);
+        var max2 = (options.yaxes[1].max !== null ? options.yaxes[1].max : axes.y2axis.max);
+        var min3 = (options.yaxes[2].min !== null ? options.yaxes[2].min : axes.y3axis.min);
+        var max3 = (options.yaxes[2].max !== null ? options.yaxes[2].max : axes.y3axis.max);
+        
+        var offset1 = (max1 + Math.abs(min1)) * 0.1;
+        var offset2 = (max2 + Math.abs(min2)) * 0.1;
+        var offset3 = (max3 + Math.abs(min3)) * 0.1;
+        
+        if(direction == 'down') {
+          min1 += offset1;
+          max1 += offset1;
+          min2 += offset2;
+          max2 += offset2;
+          min3 += offset3;
+          max3 += offset3;
+        }
+        else {
+          min1 -= offset1;
+          max1 -= offset1;
+          min2 -= offset2;
+          max2 -= offset2;
+          min3 -= offset3;
+          max3 -= offset3;
+        }
+        
+        options.yaxes[0].min = min1;
+        options.yaxes[0].max = max1;
+        options.yaxes[1].min = min2;
+        options.yaxes[1].max = max2;
+        options.yaxes[2].min = min3;
+        options.yaxes[2].max = max3;
+
+        plot.setupGrid();
+        plot.draw();
+               
+        updateTriggerSlider();
+      }
+    });
+    
+    $('#offset_all_zero').on('click', function() {
+      if(plot) {
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        var min1 = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+        var max1 = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+        var min2 = (options.yaxes[1].min !== null ? options.yaxes[1].min : axes.y2axis.min);
+        var max2 = (options.yaxes[1].max !== null ? options.yaxes[1].max : axes.y2axis.max);
+        var min3 = (options.yaxes[2].min !== null ? options.yaxes[2].min : axes.y3axis.min);
+        var max3 = (options.yaxes[2].max !== null ? options.yaxes[2].max : axes.y3axis.max);
+        
+        var range1 = (max1 - min1) / 2;
+        var range2 = (max2 - min2) / 2;
+        var range3 = (max3 - min3) / 2;
+   
+        options.yaxes[0].min = -range1;
+        options.yaxes[0].max =  range1;
+        options.yaxes[1].min = -range2;
+        options.yaxes[1].max =  range2;
+        options.yaxes[2].min = -range3;
+        options.yaxes[2].max =  range3;
+
+        plot.setupGrid();
+        plot.draw();
+               
+        updateTriggerSlider();
+      }
+    });
+    
+    $('#harm_num')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_harm_num').show();
+      })
+      .on('blur', function() {
+        $('#apply_harm_num').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var num = parseLocalFloat($(this).val());
+        if(! isNaN(num) && num > 1 && num < 100) {
+          params.local.harm_num = num;
+          sendParams();
+        }
+        else {
+          num = params.local.harm_num;
+          $(this).val(num);
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {				//enter
+          $(this).blur();
+        }
+      });
+      
+    // Events binding for gain controls
+            
+    $('#prb_x2').on('change', function() { onRadiobuttonChange($(this), 'diff_prb_att'); });
+    $('#prb_x20').on('change', function() { onRadiobuttonChange($(this), 'diff_prb_att'); });
+    $('#prb_othr').on('change', function() { onRadiobuttonChange($(this), 'diff_prb_att'); });
+    
+    $('#cur_prb_0').on('change', function() { onRadiobuttonChange($(this), 'curr_probe_select'); });
+    $('#cur_prb_1').on('change', function() { onRadiobuttonChange($(this), 'curr_probe_select'); });
+    $('#cur_prb_2').on('change', function() { onRadiobuttonChange($(this), 'curr_probe_select'); });
+    $('#cur_prb_3').on('change', function() { onRadiobuttonChange($(this), 'curr_probe_select'); });
+    $('#cur_prb_4').on('change', function() { onRadiobuttonChange($(this), 'curr_probe_select'); });
+    
+    $('#probe_factor')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_probe_factor').show();
+      })
+      .on('blur', function() {
+        $('#apply_probe_factor').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var pfact = parseLocalFloat($(this).val());
+        if(! isNaN(pfact)) {
+		  params.local.scale_ch2 = pfact;
+          sendParams();
+        }
+        else {
+          pfact = params.local.scale_ch2;
+          $(this).val(pfact)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {				//enter
+          $(this).blur();
+        }
+      });
+      
+      $('#probe_attenuation')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_probe_attenuation').show();
+      })
+      .on('blur', function() {
+        $('#apply_probe_attenuation').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var patt = parseLocalFloat($(this).val());
+        if(! isNaN(patt)) {
+		  params.local.scale_ch1 = patt;
+          sendParams();
+        }
+        else {
+          patt = params.local.scale_ch1;
+          $(this).val(patt)
+        }
+        user_editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {				//enter
+          $(this).blur();
+        }
+      });
+      
+     
+    $('#measure_sel :checkbox').on('change', function () {
+		 var id = this.id;
+		 onCheckBoxChange(id);
+	     
+	}); 
+         
+    // Modals
+    
+    $('#modal_err, #modal_app').modal({ show: false, backdrop: 'static', keyboard: false });
+    
+    $('#btn_switch_app').on('click', function() {
+      var newapp_id = $('#new_app_id').text();
+      if(newapp_id.length) {
+        location.href = location.href.replace(app_id, newapp_id);
+      }
+    });
+    
+    $('.btn-app-restart').on('click', function() {
+      location.reload();
+    });
+    
+    $('#btn_retry_get').on('click', function() {
+      $('#modal_err').modal('hide');
+      updateGraphData();
+    });
+    
+    $('.btn-close-modal').on('click', function() {
+      $(this).closest('.modal').modal('hide');
+    });
+      
+    // Other event bindings
+    
+    $('#trigger_tooltip').tooltip({
+      title: '',
+      trigger: 'manual',
+      placement: 'auto left',
+      animation: false
+    });
+    
+    $('.btn').on('click', function() {
+      var btn = $(this);
+      setTimeout(function() { btn.blur(); }, 10);
+    });
+    
+    $('#btn_toolbar .btn').on('blur', function() {
+      $(this).removeClass('active');
+    });
+    
+    $('#meas_save').on('click', function(event) {
+		event.stopImmediatePropagation();
+    });
+    
+    $('#run_stop').on('click', function(event) {
+		event.stopImmediatePropagation();
+    });
+    
+    $(document).on('click', '.accordion > .panel > .panel-heading', function(event) {
+      $(this).next('.panel-collapse').collapse('toggle');
+      event.stopImmediatePropagation();
+    });
+    
+    // Tooltips for range buttons
+    $('#scale_x_minus, #scale_x_plus, #range_y_minus, #range_y_plus').tooltip({
+      container: 'body'
+    });
+    
+    // Load first data
+    updateGraphData();
+    
+    // Stop the application when page is unloaded
+    window.onbeforeunload = function() { 
+      $.ajax({
+        url: stop_app_url,
+        async: false
+      });
+    };
+
+  });
+  
+  function startApp() {
+    $.get(
+      start_app_url
+    )
+    .done(function(dresult) {
+      if(dresult.status == 'ERROR') {
+        showModalError((dresult.reason ? dresult.reason : 'Could not start the application.'), true);
+      }
+      else {
+        $.post(
+          post_url, 
+          JSON.stringify({ datasets: { params: def_params } })
+        )
+        .done(function(dresult) {
+          app_started = true;
+          updateGraphData();      
+        })
+        .fail(function() {
+          showModalError('Could not initialize the application with default parameters.', false, true);
+        });
+      }
+    })
+    .fail(function() {
+      showModalError('Could not start the application.', true);
+    });
+  }
+  
+  function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
+    var err_modal = $('#modal_err');
+    
+    err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
+    err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
+    err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
+    err_modal.find('.modal-body').html(err_msg);
+    err_modal.modal('show');
+  }   
+  
+  function updateGraphData() {
+    if(downloading) {
+      return;
+    }
+    if(update_timer) {
+      clearTimeout(update_timer);
+      update_timer = null;
+    }
+    downloading = true;
+    
+    // Send params if there are any unsent changes
+    sendParams();
+    
+    var arun_before_ajax = autorun;
+    var long_timeout_used = use_long_timeout;
+    
+    $.ajax({
+      url: get_url,
+      timeout: (use_long_timeout ? long_timeout : request_timeout),
+      cache: false
+    })
+    .done(function(dresult) {
+      last_get_failed = false;
+    
+      if(dresult.status === 'ERROR') {
+        if(! app_started) {
+          startApp();
+        }
+        else {
+          showModalError((dresult.reason ? dresult.reason : 'Application error.'), true, true);
+        }
+      }
+      else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+        // Check if the application started on the server is the same as on client
+        if(app_id !== dresult.app.id) {
+          if(! app_started) {
+            startApp();
+          }
+          else {
+            $('#new_app_id').text(dresult.app.id);
+            $('#modal_app').modal('show');
+          }
+          return;
+        }
+        
+        app_started = true;
+      
+        // Check if trigger mode (which may switch autorun) was changed during ajax request
+        var arun_after_ajax = autorun;
+        
+        var pwrdataset = {data:[], color: 2, label: 'Channel 3', axis: 3};
+        datasets = [];
+        
+        for(var i=0; i<dresult.datasets.g1[0].data.length; i++){
+		  pwrdataset.data[i] = [];
+		  pwrdataset.data[i][0] = dresult.datasets.g1[0].data[i][0];	
+		  pwrdataset.data[i][1] = dresult.datasets.g1[0].data[i][1] *
+				                  dresult.datasets.g1[1].data[i][1];
+		}
+        
+        
+        for(var i=0; i<dresult.datasets.g1.length; i++) {
+          dresult.datasets.g1[i].color = i;
+          dresult.datasets.g1[i].label = 'Channel ' + (i+1);          
+          datasets.push(dresult.datasets.g1[i]);
+        }
+        
+        datasets.push(pwrdataset);
+        
+        dataset1 = [];
+        dataset2 = [];
+        
+        var s1 = {data:[], color:'#3276B1'};
+        var s2 = {data:[], color:'#D2322D'};
+    
+        for(var i=0; i<39; i++) {
+			var paramU = 'meas_U' + (i+2);
+			var paramI = 'meas_I' + (i+2);
+			s1.data[i] = [];
+			s2.data[i] = [];
+			s1.data[i][0] = i+2;
+			s1.data[i][1] = dresult.datasets.params[paramU];
+			s2.data[i][0] = i+2;
+			s2.data[i][1] = dresult.datasets.params[paramI];
+		}
+		
+		dataset1.push(s1);
+		dataset2.push(s2);
+                       
+        if(! plot || ! plot1 || ! plot2 ) {
+          initPlot(dresult.datasets.params);
+        }
+        else {
+          // Apply the params state received from server if not in edit mode
+          if(! user_editing) {
+            loadParams(dresult.datasets.params);
+            
+            // Restore the autorun value modified by loadParams 
+            if(arun_before_ajax != arun_after_ajax) {
+              autorun = arun_after_ajax; 
+            }
+          }
+          // Time units must be always updated
+          else {
+            updateTimeUnits(dresult.datasets.params);
+          }
+          
+          // Force X min/max
+          //if(dresult.datasets.params.forcex_flag == 1) {
+          //  var options = plot.getOptions();
+           // options.xaxes[0].min = dresult.datasets.params.xmin;
+          //  options.xaxes[0].max = dresult.datasets.params.xmax;
+         // }
+          
+          // Redraw the plot using new datasets
+          plot.setData(filterData(datasets, plot.width()));
+          plot.setupGrid();
+          plot.draw();       
+        }
+        
+        if(! trig_dragging) {
+          updateTriggerSlider();
+        }
+        
+        updateRanges();
+
+        if(autorun || dresult.status === 'AGAIN') {
+          if(autorun) {
+            $('#btn_single').prop('disabled', true);
+          }
+          update_timer = setTimeout(function() {
+            updateGraphData();
+          }, update_interval);
+        }
+        else {
+          $('#btn_single').prop('disabled', false);
+        }
+      }
+      else {
+        showModalError('Wrong application data received.', true, true);
+      }
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      if(last_get_failed) {
+        showModalError('Data receiving failed.<br>Error status: ' + textStatus, true, true);
+        last_get_failed = false;
+      }
+      else {
+        last_get_failed = true;
+        downloading = false;
+        updateGraphData();  // One more try
+      }
+    })
+    .always(function() {
+      if(! last_get_failed) {
+        downloading = false;
+        
+        if(params.local) {
+          // Disable trigger level input if trigger source is External or mode is not Normal
+          if(params.original.trig_mode != 1 || params.original.trig_source == 2) {
+            $('#trig_level').prop('disabled', true);
+            if($('#trig_level').is(':focus')) {
+              $('#trig_level').blur();
+            }
+            $('#apply_trig_level').hide().parent().removeClass('input-group');
+          }
+          else {
+            $('#trig_level').prop('disabled', false);
+          }
+          
+          // Manage the state of other components
+          $('#accordion').find('input,select').not('#trig_level').prop('disabled', false);
+          $('.btn').not('#btn_single, #range_y_plus, #range_y_minus, #scale_x_plus, #scale_x_minus').prop('disabled', false);
+        }
+      }
+      
+      if(long_timeout_used) {
+        use_long_timeout = false;
+      }
+    });
+  }
+  
+  function initPlot(init_params) {
+    var plot_holder = $('#plot_holder');
+    var plot1_holder = $('#plot1_holder');
+    var plot2_holder = $('#plot2_holder');
+    var ymax_U = init_params.gui_reset_y_range_U / 4;
+    var ymin_U = ymax_U * -1;
+    var ymax_I = init_params.gui_reset_y_range_I / 4;
+    var ymin_I = ymax_I * -1;
+    var ymax_P = init_params.gui_reset_y_range_P / 20;
+    var ymin_P = ymax_P * -1;
+    
+    // Load received params
+    loadParams(init_params);
+    
+    // When xmin/xmax are null, the min/max values of received data will be used. For ymin/ymax use the gui_reset_y_range param.
+    $.extend(true, plot_options, {
+      xaxes: [{ min: null, max: null }],
+      yaxes: [{ min: ymin_U, max: ymax_U }, 
+              { min: ymin_I, max: ymax_I }, 
+              { min: ymin_P, max: ymax_P }]
+    });
+        
+    // Local optimization    
+    var filtered_data = filterData(datasets, plot_holder.width());
+  
+    // Plot first creation and drawing
+    plot = $.plot(
+      plot_holder, 
+      filtered_data,
+      plot_options
+    );
+    
+    plot1 = $.plot(
+      plot1_holder, 
+      dataset1,
+      plot1_options
+    );
+    
+    plot2 = $.plot(
+      plot2_holder, 
+      dataset2,
+      plot2_options
+    );
+    
+    // Selection
+    plot_holder.bind('plotselected', function(event, ranges) {
+    
+      // Clamp the zooming to prevent eternal zoom
+      /*if(ranges.xaxis.to - ranges.xaxis.from < 0.00001) {
+         ranges.xaxis.to = ranges.xaxis.from + 0.00001;
+      }
+      if(ranges.yaxis.to - ranges.yaxis.from < 0.00001) {
+         ranges.yaxis.to = ranges.yaxis.from + 0.00001;
+      }
+      if(ranges.y2axis.to - ranges.y2axis.from < 0.00001) {
+         ranges.y2axis.to = ranges.y2axis.from + 0.00001;
+      }
+      if(ranges.y3axis.to - ranges.y3axis.from < 0.00001) {
+         ranges.y3axis.to = ranges.y3axis.from + 0.00001;
+      }*/
+  
+      // Do the zooming
+      plot = $.plot(
+        plot_holder, 
+        getData(ranges.xaxis.from, ranges.xaxis.to),
+        $.extend(true, plot_options, {
+          xaxis: [{ min: ranges.xaxis.from, max: ranges.xaxis.to }],
+          /*yaxes: [{ min: ranges.yaxis.from, max: ranges.yaxis.to },
+                  { min: ranges.y2axis.from, max: ranges.y2axis.to },
+                  { min: ranges.y3axis.from, max: ranges.y3axis.to }]*/
+        })
+      );
+      
+      params.local.xmin = parseFloat(ranges.xaxis.from.toFixed(xdecimal_places));
+      params.local.xmax = parseFloat(ranges.xaxis.to.toFixed(xdecimal_places));
+      
+      updateTriggerSlider();
+      sendParams(true);
+    });
+    
+    // Zoom / Pan
+    plot_holder.on('plotzoom plotpan touchmove touchend', function(event) {
+      
+      if(zoompan_timer) {
+        clearTimeout(zoompan_timer);
+        zoompan_timer = null;
+      }
+      
+      zoompan_timer = setTimeout(function() {
+        zoompan_timer = null;
+        
+        var xaxis = plot.getAxes().xaxis;
+        params.local.xmin = parseFloat(xaxis.min.toFixed(xdecimal_places));
+        params.local.xmax = parseFloat(xaxis.max.toFixed(xdecimal_places));
+        
+        updateTriggerSlider();
+        sendParams(true);
+                
+      }, 250);
+    });
+  }
+  
+  function onDropdownChange(that, param_name, do_get) {
+    params.local[param_name] = parseInt(that.val());
+    sendParams(do_get);
+    that.blur();
+    user_editing = false;
+  }
+  
+  function onRadiobuttonChange(that, param_name, do_get) {
+    params.local[param_name] = parseInt(that.val());
+    sendParams(do_get);
+    that.blur();
+    user_editing = false;
+    resetZoom();
+  }
+  
+  function loadParams(orig_params) {
+    if(! $.isPlainObject(orig_params)) {
+      return;
+    }
+    
+    // Ignore xmin/xmax values received from server. That values must be used only on AUTO button click 
+    // and on ForceX flag, but that is done before the sendParams() function is called.
+    if(plot) {
+      var options = plot.getOptions();
+      if(options.xaxes[0].min && options.xaxes[0].max) {
+        orig_params.xmin = options.xaxes[0].min;
+        orig_params.xmax = options.xaxes[0].max;
+      }
+    }
+    
+    // Same data in local and original params
+    params.original = $.extend({}, orig_params);
+    params.local = $.extend({}, params.original);
+
+    // Autorun if trigger mode is Auto(0) or Normal(1), stop if it is Single(2)
+    autorun = (params.original.trig_mode == 2 ? 0 : 1);
+    
+    // Enable the Single button when not in autorun mode
+    $('#btn_single').prop('disabled', autorun);
+    
+    //$('#trig_mode').val(params.original.trig_mode);
+    $('#trig_source').val(params.original.trig_source);
+     if($('#trig_source').val == 0) {
+		   $('#trig_lev_units').text("V");
+		} else if ($('#trig_source').val == 1) {
+		   $('#trig_lev_units').text("A");
+	    }
+    $('#trig_edge').val(params.original.trig_edge);
+    var scale = (params.original.trig_source == 0 ? params.original.scale_ch1 : params.original.scale_ch2);
+    $('#trig_level').val(floatToLocalString(params.original.trig_level));
+    
+    $('#freq_range').val(params.original.time_range);
+    
+    if (((refresh_counter++ % meas_panel_dec) == 0) || params.local.trig_mode == 2) {
+		
+		if (plot1 && plot2) {
+			plot1.setData(dataset1);
+			plot2.setData(dataset2);
+			plot1.setupGrid();
+			plot2.setupGrid();
+			plot1.draw();
+			plot2.draw();
+	    }
+	    
+	    $('#info_amp_U').html(floatToLocalString(shortenFloat(params.original.meas_amp_U)));
+        $('#info_amp_I').html(floatToLocalString(shortenFloat(params.original.meas_amp_I)));
+        $('#info_avg_U').html(floatToLocalString(shortenFloat(params.original.meas_avg_U)));
+        $('#info_avg_I').html(floatToLocalString(shortenFloat(params.original.meas_avg_I)));
+        $('#info_max_U').html(floatToLocalString(shortenFloat(params.original.meas_max_U)));
+        $('#info_max_I').html(floatToLocalString(shortenFloat(params.original.meas_max_I)));
+        $('#info_min_U').html(floatToLocalString(shortenFloat(params.original.meas_min_U)));
+        $('#info_min_I').html(floatToLocalString(shortenFloat(params.original.meas_min_I)));
+        
+	}
+		
+	$('#info_P').html(floatToLocalString(shortenFloat(params.original.meas_p)));
+    $('#info_Q').html(floatToLocalString(shortenFloat(params.original.meas_q)));
+    $('#info_S').html(floatToLocalString(shortenFloat(params.original.meas_s)));
+    $('#info_P1').html(floatToLocalString(shortenFloat(params.original.meas_p_1)));
+    $('#info_Q1').html(floatToLocalString(shortenFloat(params.original.meas_q_1)));
+    $('#info_Ph').html(floatToLocalString(shortenFloat(params.original.meas_p_h)));
+    $('#info_Qh1').html(floatToLocalString(shortenFloat(params.original.meas_q_h1)));
+    $('#info_Qh2').html(floatToLocalString(shortenFloat(params.original.meas_q_h2)));
+    $('#info_Q2').html(floatToLocalString(shortenFloat(params.original.meas_q_2)));
+    $('#info_freq').html(convertHz(params.original.meas_freq));
+    $('#info_cosfi').html(floatToLocalString(shortenFloat(params.original.meas_cos_fi_1)));
+	$('#info_PF').html(floatToLocalString(shortenFloat(params.original.meas_pf)));
+		
+    $('#info_Uef').html(floatToLocalString(shortenFloat(params.original.meas_U_ef)));
+    $('#info_Ief').html(floatToLocalString(shortenFloat(params.original.meas_I_ef)));
+    $('#info_U1ef').html(floatToLocalString(shortenFloat(params.original.meas_fft_u_1)));
+    $('#info_I1ef').html(floatToLocalString(shortenFloat(params.original.meas_fft_i_1)));
+    $('#info_sum_Uh').html(floatToLocalString(shortenFloat(params.original.meas_sum_u_h)));
+    $('#info_sum_Ih').html(floatToLocalString(shortenFloat(params.original.meas_sum_i_h)));                   
+    $('#info_thd_U').html(floatToLocalString(shortenFloat(params.original.meas_thd_u)));
+    $('#info_thd_I').html(floatToLocalString(shortenFloat(params.original.meas_thd_i)));
+    
+    for (var i=1; i<41; i++) {
+		var id_U = '#info_U' + i;
+		var param_U = 'meas_U' + i;
+		var id_I = '#info_I' + i;
+		var param_I = 'meas_I' + i;
+		var id_fiU = '#info_fiU' + i;
+		var param_fiU = 'meas_fiU' + i;
+		var id_fiI = '#info_fiI' + i;
+		var param_fiI = 'meas_fiI' + i;
+	
+		$(id_U).html(floatToLocalString(shortenFloat(params.original[param_U])));
+		$(id_I).html(floatToLocalString(shortenFloat(params.original[param_I])));
+		
+		if (i > 1) {
+			$(id_fiU).html(floatToLocalString(shortenFloat(params.original[param_fiU])));
+			$(id_fiI).html(floatToLocalString(shortenFloat(params.original[param_fiI])));
+		}
+	}
+           
+    $('#diff_prb_att').val(params.original.diff_prb_att);
+    $('#probe_attenuation').val(params.original.scale_ch1);
+    $('#cur_prb_sel').val(params.original.curr_probe_select);
+    $('#probe_factor').val(params.original.scale_ch2);
+    
+    $('#harm_num').val(params.original.harm_num);
+        
+    if(params.original.en_avg_at_dec) {
+      $('#btn_avg').removeClass('btn-default').addClass('btn-primary');
+    }
+    else {
+      $('#btn_avg').removeClass('btn-primary').addClass('btn-default');
+    }
+    
+    updateTimeUnits(orig_params);
+    $('#ytitle_U').show();
+    $('#ytitle_I').show();
+    $('#ytitle_P').show();
+  }
+  
+  function updateTimeUnits(new_params) {
+    if(! $.isPlainObject(new_params)) {
+      return;
+    } 
+    
+    params.original.time_units = params.local.time_units = new_params.time_units;
+
+    var timeu_lbl = (params.original.time_units == 0 ? 'μs' : (params.original.time_units == 1 ? 'ms' : 's'));
+    $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
+  }
+  
+  function isParamChanged() {
+    if(params.original) {
+      for(var key in params.original) {
+        if(params.original[key] != params.local[key]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  function sendParams(refresh_data, force_send, single_btn) {
+    if(sending || (force_send !== true && !isParamChanged())) {
+      send_que = sending;
+      return;
+    }
+    
+    var auto_flag = params.local.auto_flag;  // Keep the value of auto_flag, because in POST response it is always 0
+    sending = true;
+    params.local.single_btn = (single_btn === true ? 1 : 0);
+    use_long_timeout = !!auto_flag;
+  
+    $.ajax({
+      type: 'POST',
+      url: post_url,
+      data: JSON.stringify({ datasets: { params: params.local } }),
+      timeout: (use_long_timeout ? long_timeout : request_timeout),
+      cache: false
+    })
+    .done(function(dresult) {
+      // OK: Load the params received as POST result
+      if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+      
+        // Use the provided min/max values only once after AUTO button was clicked
+        if(auto_flag == 1 && dresult.datasets.params.min_y !== dresult.datasets.params.max_y) {
+          var options = plot.getOptions();
+          
+          options.xaxes[0].min = dresult.datasets.params.xmin;
+          options.xaxes[0].max = dresult.datasets.params.xmax;
+          options.yaxes[0].min = dresult.datasets.params.min_y_U;
+          options.yaxes[0].max = dresult.datasets.params.max_y_U;
+          options.yaxes[1].min = dresult.datasets.params.min_y_U;
+          options.yaxes[1].max = dresult.datasets.params.max_y_U;
+          options.yaxes[2].min = dresult.datasets.params.min_y_P;
+          options.yaxes[2].max = dresult.datasets.params.max_y_P;
+          
+          // Enable both channels after click on AUTO button
+          if(!$('#btn_ch1').data('checked') || !$('#btn_ch2').data('checked')) {
+            $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-U');
+            $('#btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-I');
+            redrawPlot();
+          }
+          // Both channels are already active, do a quick redraw
+          else {
+            plot.setupGrid();
+            plot.draw();
+          }
+        }
+      
+        if(auto_flag == 0 && dresult.datasets.params.forcex_flag == 1) {
+          var options = plot.getOptions();
+          
+          options.xaxes[0].min = dresult.datasets.params.xmin;
+          options.xaxes[0].max = dresult.datasets.params.xmax;
+         
+          plot.setupGrid();
+          plot.draw();
+        }      
+      
+        loadParams(dresult.datasets.params);
+        updateTriggerSlider();
+        
+        if(refresh_data && !downloading) {
+          updateGraphData();
+        } 
+      }
+      else if(dresult.status == 'ERROR') {
+        showModalError((dresult.reason ? dresult.reason : 'Error while sending data (E1).'), false, true, true);
+        send_que = false;
+      }
+      else {
+        showModalError('Error while sending data (E2).', false, true, true);
+      }
+    })
+    .fail(function() {
+      showModalError('Error while sending data (E3).', false, true, true);
+    })
+    .always(function() {
+      sending = false;
+      user_editing = false;
+      
+      if(send_que) {
+        send_que = false;
+        setTimeout(function(refresh_data) {
+          sendParams(refresh_data);
+        }, 100);
+      }
+    });
+  }
+  
+  function getData(from, to) {
+    var rangedata = new Array();
+    for(var i=0; i<datasets.length; i++) {
+      if(! $('#btn_ch' + (i+1)).data('checked')) {
+        continue;
+      }
+      rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [], yaxis: i+1 });
+      for(var j=0; j<datasets[i].data.length; j++) {
+        if(datasets[i].data[j][0] > to) {
+          break;
+        }
+        if(datasets[i].data[j][0] >= from) {
+          rangedata[rangedata.length - 1].data.push(datasets[i].data[j]);
+        }
+      }
+    }
+    rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
+    return rangedata;
+  }
+  
+  // Use only data for selected channels and do downsamling (data decimation), which is required for 
+  // better performance. On the canvas cannot be shown too much graph points. 
+  function filterData(dsets, points) {
+    var filtered = [];
+    var num_of_channels = 3;
+
+    for(var l=0; l<num_of_channels; l++) {
+      if(! $('#btn_ch' + (l+1)).data('checked')) {
+        continue;
+      }
+
+      i = Math.min(l, dsets.length - 1);
+
+      filtered.push({ color: dsets[i].color, label: dsets[i].label, data: [], yaxis: i+1 });
+      
+      if(points_per_px === null || dsets[i].data.length > points * points_per_px) {
+        var step = Math.ceil(dsets[i].data.length / (points * points_per_px));
+        var k = 0;
+        for(var j=0; j<dsets[i].data.length; j++) {
+          if(k > 0 && ++k < step) {
+            continue;
+          }
+          filtered[filtered.length - 1].data.push(dsets[i].data[j]);
+          k = 1;
+        }
+      }
+      else {
+        filtered[filtered.length - 1].data = dsets[i].data.slice(0);
+      }
+    }
+    
+    filtered = addTriggerDataSet(filtered);
+    return filtered;
+  }
+  
+  // Add a data series for the trigger level line
+  function addTriggerDataSet(dsets) {
+
+    // Transform trigger level to real values
+    var ch = (params.local.trig_source == 0 ? 0 : 1);
+    var tlev = params.local.trig_level;
+  
+    // Don't add trigger dataset if trigger level is outside the visible area...
+    if(plot) {
+      var y1axis = plot.getAxes().yaxis;
+      var y2axis = plot.getAxes().y2axis;
+      if((ch == 0 && (tlev < y1axis.min || tlev > y1axis.max)) ||
+         (ch == 1 && (tlev < y2axis.min || tlev > y2axis.max))) {
+        return dsets;
+      }
+    }
+    // ...or trigger mode is not Normal
+    if(params.local.trig_mode != 1) {
+      return dsets;
+    }
+    // ...or trigger source is external
+    if(params.local.trig_source == 2) {
+      return dsets;
+    }
+    // ...or outside of received data for Y axis
+    if(ch == 0) {
+        var ch1ymin = null, 
+            ch1ymax = null;
+            // Find Y min/max values from data for first visible channel
+        for(var i=0; i<dsets[0].data.length; i++) {
+            ch1ymin = (ch1ymin === null || ch1ymin > dsets[0].data[i][1] ? dsets[0].data[i][1] : ch1ymin);
+            ch1ymax = (ch1ymax === null || ch1ymax < dsets[0].data[i][1] ? dsets[0].data[i][1] : ch1ymax);
+        }
+        if(tlev < ch1ymin || tlev > ch1ymax) {
+        return dsets;
+        }
+    }
+    else {
+        var ch2ymin = null, 
+            ch2ymax = null;
+            // Find Y min/max values from data for second visible channel
+        for(var i=0; i<dsets[1].data.length; i++) {
+            ch2ymin = (ch2ymin === null || ch2ymin > dsets[1].data[i][1] ? dsets[1].data[i][1] : ch2ymin);
+            ch2ymax = (ch2ymax === null || ch2ymax < dsets[1].data[i][1] ? dsets[1].data[i][1] : ch2ymax);
+        }
+      // Check if trigger level is outside of found values
+        if(tlev < Math.min(ch1ymin, ch2ymin) || tlev > Math.max(ch1ymax, ch2ymax)) {
+           return dsets;
+        }
+    }
+  
+    var index = 0;
+    var dxmin = 0;
+    var dxmax = 1;
+    
+    if(dsets.length && dsets[0].data[0]) {
+      index = dsets.length;
+      
+      dxmin = dsets[0].data[0][0];
+      dxmax = dsets[0].data[dsets[0].data.length - 1][0];
+    }
+    dsets[index] = { color: 3, data: [[dxmin, tlev], [dxmax, tlev]], shadowSize: 1 };
+    
+    return dsets;
+  }
+  
+  function runStop(btn) {
+	
+	var btn = $(btn);
+	var checked = !btn.data('checked');
+	btn.data('checked', checked).toggleClass('btn-default btn-primary');
+	
+	if(btn.hasClass('btn-primary')) {
+       params.local.trig_mode = parseFloat($('#trig_mode').val());
+    }
+    else{
+       params.local.trig_mode = 2;
+    }
+    
+    sendParams(true, true);
+    
+    // Autorun if trigger mode is Auto(0) or Normal(1), stop if it is Single(2).
+    autorun = (params.local.trig_mode == 2 ? 0 : 1); 
+     
+    if(autorun) {
+      updateGraphData();
+    }
+    else {
+      if(update_timer) {
+        clearTimeout(update_timer);
+        update_timer = null;
+      }
+    }
+    
+    
+  }
+  
+  function singleUpdate() {
+    if(! autorun) {
+      sendParams(true, true, true);
+    }
+  }
+  
+  function redrawPlot() {
+    if(! downloading) {
+      if(!plot || !! plot1 || !! plot2) {
+        updateGraphData();
+      }
+      else {
+        var options = plot.getOptions();
+        plot = $.plot(
+          plot.getPlaceholder(), 
+          filterData(datasets, plot.width()),
+          $.extend(true, plot_options, {
+            xaxes: [{ min: options.xaxes[0].min, max: options.xaxes[0].max }],
+            yaxes: [{ min: options.yaxes[0].min, max: options.yaxes[0].max}, 
+                    { min: options.yaxes[1].min, max: options.yaxes[1].max}, 
+                    { min: options.yaxes[2].min, max: options.yaxes[2].max}]
+          })
+        );
+              
+        updateTriggerSlider();        
+      }
+    }
+  }
+  
+  function setVisibleChannels(btn) {
+	 
+	var options = plot.getOptions();  
+	  
+	if (btn.id == 'btn_ch3') { 
+	    var btn = $(btn);
+	    var checked = !btn.data('checked');
+	    y3 = !checked;
+	    btn.data('checked', checked).toggleClass('btn-inactive btn-P');
+		//$('#ytitle_P').toggleClass('hidden', y3);
+
+    }
+	else if (btn.id == 'btn_ch1'){
+		var other_btn = $('#btn_ch2');
+        var btn = $(btn);
+        var checked = !btn.data('checked');
+        y1 = !checked;
+    
+        btn.data('checked', checked).toggleClass('btn-inactive btn-U');
+    
+        // At least one button must be checked, so that at least one graph will be visible.
+        if(! checked) {
+            other_btn.data('checked', true).removeClass('btn-inactive').addClass('btn-I');
+        }
+    }
+    else if (btn.id == 'btn_ch2'){
+		var other_btn = $('#btn_ch1');
+        var btn = $(btn);
+        var checked = !btn.data('checked');
+        y2 = !checked;
+    
+        btn.data('checked', checked).toggleClass('btn-inactive btn-I');
+    
+        // At least one button must be checked, so that at least one graph will be visible.
+        if(! checked) {
+            other_btn.data('checked', true).removeClass('btn-inactive').addClass('btn-U');
+        }
+    }
+
+  }
+  
+  function writeMeasurements(btn) {
+	  
+	var btn = $(btn);
+	var checked = !btn.data('checked');
+	btn.data('checked', checked).toggleClass('btn-default btn-primary');
+	
+	if(btn.hasClass('btn-primary')) {
+       params.local.write_params = 1;
+    }
+    else{
+       params.local.write_params = 0;
+    }
+
+    sendParams(true, true);
+	
+  }
+  
+  function autoscaleY() {
+    if(! plot) {
+      return;
+    }
+    
+    var options = plot.getOptions();
+    var axis_U = plot.getAxes().yaxis;
+    var axis_I = plot.getAxes().y2axis;
+    var axis_P = plot.getAxes().y3axis;
+    
+    // Set Y scale to data min/max + 10%
+    options.yaxes[0].min = (axis_U.datamin < 0 ? axis_U.datamin * 1.1 : axis_U.datamin - axis_U.datamin * 0.1); 
+    options.yaxes[0].max = (axis_U.datamax > 0 ? axis_U.datamax * 1.1 : axis_U.datamax + axis_U.datamax * 0.1);
+    options.yaxes[1].min = (axis_I.datamin < 0 ? axis_I.datamin * 1.1 : axis_I.datamin - axis_I.datamin * 0.1); 
+    options.yaxes[1].max = (axis_I.datamax > 0 ? axis_I.datamax * 1.1 : axis_I.datamax + axis_I.datamax * 0.1);
+    options.yaxes[2].min = (axis_P.datamin < 0 ? axis_P.datamin * 1.1 : axis_P.datamin - axis_P.datamin * 0.1); 
+    options.yaxes[2].max = (axis_P.datamax > 0 ? axis_P.datamax * 1.1 : axis_P.datamax + axis_P.datamax * 0.1);
+ 
+    plot.setupGrid();
+    plot.draw();
+ 
+    updateTriggerSlider();
+  }
+  
+  function autoscaleX() { 
+	if(! plot) {
+      return;
+    } 
+    
+    var t_range = params.local.time_range;
+    var x_min = 0;
+    var x_max = time_range_max[t_range]; 
+    
+	var options = plot.getOptions();
+    options.xaxes[0].min = x_min;
+    options.xaxes[0].max = x_max;  
+	 
+	plot.setupGrid();
+    plot.draw();
+    
+    params.local.xmin = x_min;
+    params.local.xmax = x_max;
+    
+    sendParams(true, true);  
+	  
+  }	  
+  
+  function setAvgAtDec() {
+    if(! plot) {
+      return;
+    }
+    
+    $('#btn_avg').toggleClass('btn-default btn-primary');
+
+    if($('#btn_avg').hasClass('btn-primary')) {
+      params.local.en_avg_at_dec = 1;
+    }
+    else{
+      params.local.en_avg_at_dec = 1;
+    }
+
+    sendParams(true, true);
+  }
+
+  function resetZoom() {
+    if(! plot) {
+      return;
+    }
+    
+    $('#btn_ch1').data('checked', true).removeClass('btn-inactive').addClass('btn-U');
+    $('#btn_ch2').data('checked', true).removeClass('btn-inactive').addClass('btn-I');
+    $('#btn_ch3').data('checked', true).removeClass('btn-inactive').addClass('btn-P');
+    
+    var ymax_U = params.original.gui_reset_y_range_U / 2;
+    var ymin_U = ymax_U * -1;
+    var ymax_I = params.original.gui_reset_y_range_I / 2;
+    var ymin_I = ymax_I * -1;
+    var ymax_P = params.original.gui_reset_y_range_P / 2;
+    var ymin_P = ymax_P * -1;
+    var range = params.original.time_range;
+    var x_min = 0;
+    var x_max = time_range_max[range];
+    
+    $.extend(true, plot_options, {
+      xaxes: [{ min: x_min, max: x_max }],
+      yaxes: [{ min: ymin_U, max: ymax_U }, { min: ymin_I, max: ymax_I }, 
+               {min: ymin_P, max: ymax_P}]
+    });
+         
+    var options = plot.getOptions();
+    options.xaxes[0].min = x_min;
+    options.xaxes[0].max = x_max;
+    options.yaxes[0].min = ymin_U;
+    options.yaxes[0].max = ymax_U;
+    options.yaxes[1].min = ymin_I;
+    options.yaxes[1].max = ymax_I;
+    options.yaxes[2].min = ymin_P;
+    options.yaxes[2].max = ymax_P; 
+    
+    plot.setupGrid();
+    plot.draw();
+    
+    params.local.xmin = x_min;
+    params.local.xmax = x_max;
+    
+    sendParams(true, true);
+  }
+
+  function updateZoom() {
+    if(! plot) {
+      return;
+    }
+    
+    params.local.xmin = 0;
+    params.local.xmax = time_range_max[params.local.time_range];
+  
+    var axes = plot.getAxes();
+    var options = plot.getOptions();
+    
+    options.xaxes[0].min = params.local.xmin;
+    options.xaxes[0].max = params.local.xmax;
+    options.yaxes[0].min = axes.yaxis.min;
+    options.yaxes[0].max = axes.yaxis.max;
+    options.yaxes[1].min = axes.y2axis.min;
+    options.yaxes[1].max = axes.y2axis.max;
+    options.yaxes[2].min = axes.y3axis.min;
+    options.yaxes[2].max = axes.y3axis.max;
+    
+    plot.setupGrid();
+    plot.draw();
+
+    sendParams(true, true);
+  }
+  
+  function selectTool(toolname) {
+    $('#selzoompan .btn').removeClass('btn-primary').addClass('btn-default');
+    $(this).toggleClass('btn-default btn-primary');
+  
+    if(toolname == 'zoomin') {
+      enableZoomInSelection();
+    }
+    if(toolname == 'zoomout') {
+      enableZoomOut();
+    }
+    else if(toolname == 'pan') {
+      enablePanning();
+    }
+  }
+
+  function enableZoomInSelection() {
+    if(plot_options.hasOwnProperty('selection')) {
+      return;
+    }
+    
+    var plot_pholder = plot.getPlaceholder();
+
+    // Disable panning and zoom out
+    delete plot_options.pan;
+    plot_pholder.off('click.rp');
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        selection: { mode: 'x' },
+        xaxes: [{ min: axes.xaxis.min, max: axes.xaxis.max }],
+        yaxes: [{min: axes.yaxis.min, max: axes.yaxis.max}, 
+                {min: axes.y2axis.min, max: axes.y2axis.max}, 
+                {min: axes.y3axis.min, max: axes.y3axis.max}]
+      })
+    );
+  }
+  
+  function enableZoomOut() {
+    var plot_pholder = plot.getPlaceholder();
+    
+    plot_pholder.on('click.rp', function(event) {
+      var offset = $(event.target).offset();
+      
+      plot.zoomOut({
+        center: { left: event.pageX - offset.left, top: event.pageY - offset.top },
+        amount: 1.2
+      });
+    });
+    
+    // Disable zoom in selection and panning
+    delete plot_options.selection;
+    delete plot_options.pan;
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        xaxes: [{ min: axes.xaxis.min, max: axes.xaxis.max }],
+        yaxes: [{ min: axes.yaxis.min, max: axes.yaxis.max }, 
+                 {min: axes.y2axis.min, max: axes.y2axis.max}, 
+                 {min: axes.y3axis.min, max: axes.y3axis.max}]
+      })
+    );
+  }
+  
+  function enablePanning() {
+    if(plot_options.hasOwnProperty('pan')) {
+      return;
+    }
+    
+    var plot_pholder = plot.getPlaceholder();
+    
+    // Disable selection zooming and zoom out
+    delete plot_options.selection;
+    plot_pholder.off('click.rp');
+    
+    // Get current min/max for both axes to use them to fix the current view
+    var axes = plot.getAxes();
+    
+    plot = $.plot(
+      plot_pholder, 
+      plot.getData(),
+      $.extend(true, plot_options, {
+        pan: { interactive: true },
+        xaxes: [{ min: axes.xaxis.min, max: axes.xaxis.max }],
+        yaxes: [{ min: axes.yaxis.min, max: axes.yaxis.max }, 
+                { min: axes.y2axis.min, max: axes.y2axis.max}, 
+                { min: axes.y3axis.min, max: axes.y3axis.max}]
+      })
+    );
+  }
+  
+  function mouseDownMove(that, evt) {
+    var y;
+    user_editing = true;
+    
+    if(evt.type.indexOf('touch') > -1) {
+      y = evt.originalEvent.touches[0].clientY - that.getBoundingClientRect().top - plot.getPlotOffset().top;
+      touch_last_y = y;
+    }
+    else {
+      y = evt.clientY - that.getBoundingClientRect().top - plot.getPlotOffset().top;
+    }
+    updateTriggerSlider(y);
+    
+    if (params.local.trig_source == 0 ) {
+       $('#trigger_tooltip').data('bs.tooltip').options.title = plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places);
+    }
+    else {
+		$('#trigger_tooltip').data('bs.tooltip').options.title = plot.getAxes().y2axis.c2p(y).toFixed(trigger_level_xdecimal_places);
+    }
+    
+    $('#trigger_tooltip').tooltip('show');
+  }
+
+  function mouseUpOut(evt) {
+    if(trig_dragging) {
+      trig_dragging = false;
+      
+      var y;
+      if(evt.type.indexOf('touch') > -1) {
+        y = evt.originalEvent.touches[0].clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
+        y = touch_last_y;
+      }
+      else {
+        y = evt.clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
+      }
+      
+      if (params.local.trig_source == 0 ) {
+        params.local.trig_level = parseFloat(plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places));           
+      }
+      else {
+	    params.local.trig_level = parseFloat(plot.getAxes().y2axis.c2p(y).toFixed(trigger_level_xdecimal_places));	  
+	  }
+      updateTriggerSlider();
+      redrawPlot();
+      sendParams();
+    }
+    else {
+      user_editing = false;
+    }
+    $('#trigger_tooltip').tooltip('hide');
+  }
+  
+  function updateTriggerSlider(y, update_input) {
+    if(! plot) {
+      return;
+    }
+    
+    var canvas = $('#trigger_canvas')[0];
+    var context = canvas.getContext('2d');
+    var plot_offset = plot.getPlotOffset();
+    var ymax_U = params.original.gui_reset_y_range_U / 2;
+    var ymin_U = ymax_U * -1;
+    var ymax_I = params.original.gui_reset_y_range_I / 2;
+    var ymin_I = ymax_I * -1;
+    
+    // Transform trigger level to real values
+    // TODO: local or original params?
+    var chnl = (params.local.trig_source == 0 ? 0 : 1);
+    var tlev = params.local.trig_level;
+
+    
+   
+    if(chnl == 0) {
+		
+        // If trigger level is outside the predefined ymin/ymax, change the level
+        if(tlev < ymin_U) {
+           tlev = ymin_U;
+        }
+        else if(tlev > ymax_U) {
+          tlev = ymax_U;
+        }
+    
+        if(y === undefined) { 
+           if(update_input !== false) {
+                $('#trig_level').not(':focus').val(floatToLocalString(tlev));
+            }
+            y = plot.getAxes().yaxis.p2c(tlev);
+        }
+    
+        // If trigger source is External or mode is not Normal or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
+        context.clearRect(0, 0, canvas.width, canvas.height); 
+        var yaxis = plot.getAxes().yaxis;
+        if(params.original.trig_mode != 1 || tlev < yaxis.min || tlev > yaxis.max || params.original.trig_source == 2) {
+            context.lineWidth = 1;
+            context.strokeStyle = '#dddddd';
+            context.stroke();
+            context.beginPath();
+            context.moveTo(10, plot_offset.top);
+            context.lineTo(10, canvas.height - plot_offset.bottom + 1);
+            context.stroke();
+        }
+        else {
+            context.beginPath();
+            context.arc(10, y + plot_offset.top, 8, 0, 2 * Math.PI, false);
+            context.fillStyle = '#009900';
+            context.fill();
+            context.lineWidth = 1;
+            context.strokeStyle = '#007700';
+            context.stroke();
+            context.beginPath();
+            context.moveTo(10, plot_offset.top);
+            context.lineTo(10, canvas.height - plot_offset.bottom + 1);
+            context.stroke();
+        }
+        $('#trigger_tooltip').css({ top: y + plot_offset.top }); 
+    
+    } else {
+       // If trigger level is outside the predefined ymin/ymax, change the level
+        if(tlev < ymin_I) {
+            tlev = ymin_I;
+        }
+        else if(tlev > ymax_I) {
+            tlev = ymax_I;
+        }
+    
+        if(y === undefined) {
+            if(update_input !== false) {
+                $('#trig_level').not(':focus').val(floatToLocalString(tlev));
+            }
+            y = plot.getAxes().y2axis.p2c(tlev);
+        }
+    
+        // If trigger source is External or mode is not Normal or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
+        context.clearRect(0, 0, canvas.width, canvas.height); 
+        var yaxis = plot.getAxes().y2axis;
+        if(params.original.trig_mode != 1 || tlev < yaxis.min || tlev > yaxis.max || params.original.trig_source == 2) {
+            context.lineWidth = 1;
+            context.strokeStyle = '#dddddd';
+            context.stroke();
+            context.beginPath();
+            context.moveTo(10, plot_offset.top);
+            context.lineTo(10, canvas.height - plot_offset.bottom + 1);
+            context.stroke();
+        }
+        else {
+            context.beginPath();
+            context.arc(10, y + plot_offset.top, 8, 0, 2 * Math.PI, false);
+            context.fillStyle = '#009900';
+            context.fill();
+            context.lineWidth = 1;
+            context.strokeStyle = '#007700';
+            context.stroke();
+            context.beginPath();
+            context.moveTo(10, plot_offset.top);
+            context.lineTo(10, canvas.height - plot_offset.bottom + 1);
+            context.stroke();
+        }
+        $('#trigger_tooltip').css({ top: y + plot_offset.top });
+    }
+     
+  }
+  
+  function updateRanges() {
+    var xunit = (params.local.time_units == 0 ? 'μs' : (params.local.time_units == 1 ? 'ms' : 's'));
+    var yunit = 'V';
+    var axes = plot.getAxes();
+    var xrange = axes.xaxis.max - axes.xaxis.min;
+    var y1range = axes.yaxis.max - axes.yaxis.min;
+    var y2range = axes.y2axis.max - axes.y2axis.min;
+    var y3range = axes.y3axis.max - axes.y3axis.min;
+    var y1minrange = 5e-4;  // Volts
+    var y2minrange = 5e-4;
+    var y3minrange = 5e-4;
+    var y1maxrange = params.original.gui_reset_y_range_U;
+    var y2maxrange = params.original.gui_reset_y_range_I;
+    var y3maxrange = params.original.gui_reset_y_range_P;
+    var xmaxrange = 10.0;  // seconds
+    var xminrange = 20e-9; // seconds
+    var decimals = 0;
+
+    if(xunit == 'μs' && xrange < 1) {
+      xrange *= 1000;
+      xunit = 'ns';
+    }
+    if(xrange < 1) {
+      decimals = 1;
+    }
+    var seconds = (xunit == 'ns' ? 1e-9 : ( xunit == 'μs' ? 1e-6 : (xunit == 'ms' ? 1e-3 : 1)));
+    
+
+    $('#range_x').html(+(Math.round(xrange + "e+" + decimals) + "e-" + decimals) + ' ' + xunit);
+    
+    var nearest_x = getNearestRanges(xrange);
+    var nearest_y1 = getNearestRanges(y1range);
+    var nearest_y2 = getNearestRanges(y2range);
+    var nearest_y3 = getNearestRanges(y3range);
+        
+    // X limitations 
+    if(nearest_x.next * seconds > xmaxrange) {
+      nearest_x.next = null;
+      $('#scale_x_plus').prop('disabled', true);
+    }
+    else {
+      $('#scale_x_plus').prop('disabled', false);
+    }
+    if(nearest_x.prev * seconds < xminrange) {
+      nearest_x.prev = null;
+      $('#scale_x_minus').prop('disabled', true);
+    }
+    else {
+      $('#scale_x_minus').prop('disabled', false);
+    }
+    
+    $('#scale_x_minus').data({ nearest: nearest_x.prev, unit: xunit });
+    $('#scale_x_plus').data({ nearest: nearest_x.next, unit: xunit });
+    
+    // Y limitations
+    if(nearest_y1.next - nearest_y1.prev >= y1maxrange) {
+      nearest_y1.next = null;
+    }
+    if(nearest_y1.prev < y1minrange) {
+      nearest_y1.prev = null;
+    }
+    
+    if(nearest_y2.next - nearest_y2.prev >= y2maxrange) {
+      nearest_y2.next = null;
+    }
+    if(nearest_y2.prev < y2minrange) {
+      nearest_y2.prev = null;
+    }
+     
+    if(nearest_y3.next - nearest_y3.prev >= y3maxrange) {
+      nearest_y3.next = null;
+    }
+    if(nearest_y3.prev < y3minrange) {
+      nearest_y3.prev = null;
+    }
+
+  }
+  
+  function getNearestRanges(number) {
+    var log10 = Math.floor(Math.log(number) / Math.LN10); 
+    var normalized = number / Math.pow(10, log10);    
+    var i = 0;
+    var prev = null;
+    var next = null;
+    
+    while(i < range_steps.length - 1) {
+      var ratio = range_steps[i+1] / normalized;
+      if(ratio > 0.99 && ratio < 1.01) {
+        prev = range_steps[i];
+        next = range_steps[i+2];
+        break;
+      }
+      if(range_steps[i] < normalized && normalized < range_steps[i+1]) {
+        prev = range_steps[i];
+        next = range_steps[i+1];
+        break;
+      }
+      i++;
+    }
+
+    return { 
+      prev: prev * Math.pow(10, log10), 
+      next: next * Math.pow(10, log10) 
+    };
+  }
+  
+  function serverAutoScale() {
+    params.local.auto_flag = 1;
+    sendParams(true);
+  }
+  
+  function getLocalDecimalSeparator() {
+    var n = 1.1;
+    return n.toLocaleString().substring(1,2);
+  }
+  
+  function parseLocalFloat(num) {
+    return +(num.replace(getLocalDecimalSeparator(), '.'));
+  }
+  
+  function floatToLocalString(num) {
+    // Workaround for a bug in Safari 6 (reference: https://github.com/mleibman/SlickGrid/pull/472)
+    //return num.toString().replace('.', getLocalDecimalSeparator());
+    return (num + '').replace('.', getLocalDecimalSeparator());
+  }
+  
+  function shortenFloat(value) {
+    return value.toFixed(Math.abs(value) >= 10 ? 2 : 6);
+  }
+
+  function convertHz(value) {
+    var unit = '';
+    var decsep = getLocalDecimalSeparator();
+    
+    if(value >= 1e6) {
+      value /= 1e6;
+      unit = '<span class="unit">MHz</span>';
+    }
+    else if(value >= 1e3) {
+      value /= 1e3;
+      unit = '<span class="unit">kHz</span>';
+    }
+    else {
+      unit = '<span class="unit">Hz</span>';
+    }
+
+    // Fix to 4 decimal digits in total regardless of the decimal point placement
+    var eps = 1e-2;
+    if (value >= 100 - eps) {
+      value = value.toFixed(3);
+    }
+    else if  (value >= 10 - eps) {
+      value = value.toFixed(4);
+    }
+    else {
+      value = value.toFixed(5);
+    }
+    
+    value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
+    return value + unit;
+  }
+  
+  function convertSec(value) {
+    var unit = '';
+    var decsep = getLocalDecimalSeparator();
+    
+    if(value < 1e-6) {
+      value *= 1e9;
+      unit = '<span class="unit">ns</span>';
+    }
+    else if(value < 1e-3) {
+      value *= 1e6;
+      unit = '<span class="unit">μs</span>';
+    }
+    else if(value < 1) {
+      value *= 1e3
+      unit = '<span class="unit">ms</span>';
+    }
+    else {
+      unit = '<span class="unit">s</span>';
+    }
+
+    // Fix to 4 decimal digits in total regardless of the decimal point placement
+    var eps = 1e-2;
+    if (value >= 100 - eps) {
+      value = value.toFixed(1);
+    }
+    else if  (value >= 10 - eps) {
+      value = value.toFixed(2);
+    }
+    else {
+      value = value.toFixed(3);
+    }
+    
+    value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
+    return value + unit;
+  }
+  
+  function onCheckBoxChange(id) {
+	  
+	var text = '#text_' + id;
+	var info = '#info_' + id;
+    var unit = '#unit_' + id;
+    
+	$(text).toggleClass("hidden");
+	$(info).toggleClass("hidden");
+	$(unit).toggleClass("hidden");
+	  
+  }
+ 
+  </script>
+  <script src="../assets/redpitaya.custom.js"></script>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
+      <img class="logo pull-left" src="../assets/images/logo_white.png">
+      <h2 class="page-title">Power analyzer</h2>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-8">
+        <div class="graph-holder well well-small">
+          <div id="trigger_cnv_holder">
+            <canvas id="trigger_canvas" width="25" height="460"></canvas>
+            <div id="trigger_tooltip"></div>
+          </div>
+          <div id="plot_holder" class="pwr"></div> 
+	      <div id="xtitle_pwr">
+		    <span id="ytitle_P">[W]</span>
+		    <span id="ytitle_I">[A]</span>
+		    <span id="ytitle_U">[V]</span>
+		    <span id="xtitle"></span>
+		  </div>
+        </div>
+       <div class="accordion">
+        <div class="panel panel-default" id="measurepan">
+          <div class="panel-heading" style="padding-top: 4px; padding-bottom:4px;">
+		   <div class="row"> 
+			<div class="col-xs-8">   
+            <h4 class="panel-title" style="padding-top:7px" >
+              <a data-toggle="collapse" href="#measure">
+                Measurement result
+              </a>
+            </h4>
+            </div>
+            <div class="col-xs-4">
+            <button id="meas_save" class="btn btn-default btn-lg" data-checked="false" onclick="writeMeasurements(this)">
+				Save measurements
+			</button>
+			</div>
+		   </div>
+          </div>
+          <div id="measure" class="panel-collapse collapse in">
+            <div class="panel-body">
+             <ul class="nav nav-tabs">
+			     <li>
+			       <a data-toggle="tab" href="#pwr_measure_info">Power measurements</a>
+			     </li>
+			     <li>
+				    <a data-toggle="tab" href="#ch_measure_info">Channel measurements</a>
+			     </li>
+			     <li>
+				    <a data-toggle="tab" href="#harm_measure_info">Harmonics measurements</a>
+			     </li>
+			     <li  class="active">
+				    <a data-toggle="tab" href="#harm_measure_graph">Harmonics graph</a>
+			     </li>
+			    </ul>
+			    <div class="tab-content">
+		        <div id="pwr_measure_info" class="tab-pane">
+              <div class="row">
+              	<div class="col-xs-2 txt-right">P:</div>
+                <div class="col-xs-2"><span id="info_P">-</span><span class="unit">W</span></div>
+                <div class="col-xs-2 txt-right">S:</div>
+                <div class="col-xs-2"><span id="info_S">-</span><span class="unit">VA</span></div>
+                <div class="col-xs-2 txt-right"><span id="text_Q">Q:</span></div>
+                <div class="col-xs-2">
+					<span id="info_Q">-</span>
+					<span id="unit_Q" class="unit">VAr</span>
+				</div>
+              </div>
+              <div class="row">
+                <div class="col-xs-2 txt-right"><span id="text_P1" class="hidden">P fundamental:</span></div>
+                <div class="col-xs-2">
+					<span id="info_P1" class="hidden">-</span>
+					<span id="unit_P1" class="unit hidden">W</span>
+				</div>
+                <div class="col-xs-2 txt-right"><span id="text_Qh1" class="hidden">Q harmonics:</span></div>
+                <div class="col-xs-2">
+					<span id="info_Qh1" class="hidden">-</span>
+					<span id="unit_Qh1" class="unit hidden">VAr</span>
+                </div>
+              <div class="col-xs-2 txt-right"><span id="text_Q2" class="hidden">Q:</span></div>
+                <div class="col-xs-2">
+					<span id="info_Q2" class="hidden">-</span>
+					<span id="unit_Q2" class="unit hidden">VAr</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-2 txt-right"><span id="text_Ph" class="hidden">P harmonics:</span></div>
+                <div class="col-xs-2">
+					<span id="info_Ph" class="hidden">-</span>
+					<span id="unit_Ph" class="unit hidden">W</span>
+                </div>
+                <div class="col-xs-2 txt-right"><span id="text_Qh2" class="hidden">Q harmonics:</span></div>
+                <div class="col-xs-2">
+					<span id="info_Qh2" class="hidden">-</span>
+					<span id="unit_Qh2" class="unit hidden">VAr</span>
+                </div>
+                <div class="col-xs-2 txt-right"><span id="text_Q1" class="hidden">Q fundamental:</span></div>
+                <div class="col-xs-2">
+					<span id="info_Q1" class="hidden">-</span>
+					<span id="unit_Q1" class="unit hidden">VAr</span>
+                </div>                                
+              </div>
+              <div class="row">
+                <div class="col-xs-2 txt-right">freq:</div>
+                <div class="col-xs-2"><span id="info_freq">-</span></div>
+                <div class="col-xs-2 txt-right">cos(fi):</div>
+                <div class="col-xs-2"><span id="info_cosfi">-</span></div>
+                <div class="col-xs-2 txt-right">PF:</div>
+                <div class="col-xs-2"><span id="info_PF">-</span></div>
+              </div>
+             </div>
+             <div id="ch_measure_info" class="tab-pane">
+              <div class="row group-label">
+                <div class="col-xs-6" style="text-align: center">U</div>
+                <div class="col-xs-6" style="text-align: center">I</div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right">Uef:</div>
+                <div class="col-xs-3"><span id="info_Uef">-</span><span class="unit">V</span></div>
+                <div class="col-xs-3 txt-right">Ief:</div>
+                <div class="col-xs-3"><span id="info_Ief">-</span><span class="unit">A</span></div>
+              </div> 
+              <div class="row">
+                <div class="col-xs-3 txt-right">U 1 ef:</div>
+                <div class="col-xs-3"><span id="info_U1ef">-</span><span class="unit">V</span></div>
+                <div class="col-xs-3 txt-right">I 1 ef:</div>
+                <div class="col-xs-3"><span id="info_I1ef">-</span><span class="unit">A</span></div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right"><span id="text_sum_Uh" class="hidden">sum U harmonics:</span></div>
+                <div class="col-xs-3">
+					<span class="hidden" id="info_sum_Uh">-</span>
+					<span id="unit_sum_Uh" class="unit hidden">V</span>
+                </div>
+                <div class="col-xs-3 txt-right"><span id="text_sum_Ih" class="hidden">sum I harmonics:</span></div>
+                <div class="col-xs-3">
+					<span id="info_sum_Ih" class="hidden">-</span>
+					<span id="unit_sum_Ih" class="unit hidden">A</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right"><span id="text_thd_U" class="hidden">thd U:</span></div>
+                <div class="col-xs-3">
+					<span id="info_thd_U" class="hidden">-</span>
+					<span id="unit_thd_U" class="unit hidden">%</span>
+				</div>
+                <div class="col-xs-3 txt-right"><span id="text_thd_I" class="hidden">thd I:</span></div>
+                <div class="col-xs-3">
+					<span id="info_thd_I" class="hidden">-</span>
+					<span id="unit_thd_I" class="unit hidden">%</span>
+				</div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right"><span id="text_amp_U" class="hidden">amp U:</span></div>
+                <div class="col-xs-3">
+					<span id="info_amp_U" class="hidden">-</span>
+					<span id="unit_amp_U" class="unit hidden">Vpp</span>
+                </div>
+                <div class="col-xs-3 txt-right"><span id="text_amp_I" class="hidden">amp I:</span></div>
+                <div class="col-xs-3">
+					<span id="info_amp_I" class="hidden">-</span>
+					<span id="unit_amp_I" class="unit hidden">App</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right"><span id="text_avg_U" class="hidden">avg U:</span></div>
+                <div class="col-xs-3">
+					<span id="info_avg_U" class="hidden">-</span>
+					<span id="unit_avg_U" class="unit hidden">V</span>
+                </div>
+                <div class="col-xs-3 txt-right"><span id="text_avg_I" class="hidden">avg I:</span></div>
+                <div class="col-xs-3">
+					<span id="info_avg_I" class="hidden">-</span>
+					<span id="unit_avg_I" class="unit hidden">A</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right"><span id="text_max_U" class="hidden">max U:</span></div>
+                <div class="col-xs-3">
+					<span id="info_max_U" class="hidden">-</span>
+					<span id="unit_max_U" class="unit hidden">V</span>
+                </div>
+                <div class="col-xs-3 txt-right"><span id="text_max_I" class="hidden">max I:</span></div>
+                <div class="col-xs-3">
+					<span id="info_max_I" class="hidden">-</span>
+					<span id="unit_max_I" class="unit hidden">A</span>
+				</div>
+              </div>  
+              <div class="row">
+                <div class="col-xs-3 txt-right"><span id="text_min_U" class="hidden">min U:</span></div>
+                <div class="col-xs-3">
+					<span id="info_min_U" class="hidden">-</span>
+					<span id="unit_min_U" class="unit hidden">V</span>
+				</div>
+                <div class="col-xs-3 txt-right"><span id="text_min_I" class="hidden">min I:</span></div>
+                <div class="col-xs-3">
+					<span id="info_min_I" class="hidden">-</span>
+					<span id="unit_min_I" class="unit hidden">A</span>
+				</div>
+              </div>
+             </div> 
+             <div id="harm_measure_info" class="tab-pane">
+			  <div class="row">
+				  <div class="col-xs-3 group-label">
+					  <span style="padding-left: 20px">Voltage harmonics</span>
+				  </div>
+				  <div class="col-xs-9 group-label">
+					  unit: V
+				  </div>
+			  </div>	  
+               <table class="table">
+				  <tbody>
+					<tr>
+					  <th><span>U1</span></th>
+					  <th><span id="info_U1">-</span></th>
+					  <th><span>U2</span></th>
+					  <th><span id="info_U2" class="hidden">-</span></th>
+					  <th><span>U3</span></th>
+					  <th><span id="info_U3">-</span></th>
+					  <th><span>U4</span></th>
+					  <th><span id="info_U4" class="hidden">-</span></th>
+					  <th><span>U5</span></th>
+					  <th><span id="info_U5">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th>fi</th>
+					  <th></th><th><span id="info_fiU2" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU3">-</span></th>
+					  <th></th><th><span id="info_fiU4" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU5">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>U6</span></th>
+					  <th><span id="info_U6" class="hidden">-</span></th>
+					  <th><span>U7</span></th>
+					  <th><span id="info_U7">-</span></th>
+					  <th><span>U8</span></th>
+					  <th><span id="info_U8" class="hidden">-</span></th>
+					  <th><span>U9</span></th>
+					  <th><span id="info_U9" class="hidden">-</span></th>
+					  <th><span>U10</span></th>
+					  <th><span id="info_U10" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiU6" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiU7">-</span></th>
+					  <th></th><th><span id="info_fiU8" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU9" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU10" class="hidden">-</span></th>	
+					</tr>
+					<tr>
+					  <th><span>U11</span></th>
+					  <th><span id="info_U11" class="hidden">-</span></th>
+					  <th><span>U12</span></th>
+					  <th><span id="info_U12" class="hidden">-</span></th>
+					  <th><span>U13</span></th>
+					  <th><span id="info_U13" class="hidden">-</span></th>
+					  <th><span>U14</span></th>
+					  <th><span id="info_U14" class="hidden">-</span></th>
+					  <th><span>U15</span></th>
+					  <th><span id="info_U15" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiU11" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiU12" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU13" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU14" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU15" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>U16</span></th>
+					  <th><span id="info_U16" class="hidden">-</span></th>
+					  <th><span>U17</span></th>
+					  <th><span id="info_U17" class="hidden">-</span></th>
+					  <th><span>U18</span></th>
+					  <th><span id="info_U18" class="hidden">-</span></th>
+					  <th><span>U19</span></th>
+					  <th><span id="info_U19" class="hidden">-</span></th>
+					  <th><span>U20</span></th>
+					  <th><span id="info_U20" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiU16" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiU17" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU18" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU19" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU20" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>U21</span></th>
+					  <th><span id="info_U21" class="hidden">-</span></th>
+					  <th><span>U22</span></th>
+					  <th><span id="info_U22" class="hidden">-</span></th>
+					  <th><span>U23</span></th>
+					  <th><span id="info_U23" class="hidden">-</span></th>
+					  <th><span>U24</span></th>
+					  <th><span id="info_U24" class="hidden">-</span></th>
+					  <th><span>U25</span></th>
+					  <th><span id="info_U25" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiU21" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiU22" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU23" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU24" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU25" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>U26</span></th>
+					  <th><span id="info_U26" class="hidden">-</span></th>
+					  <th><span>U27</span></th>
+					  <th><span id="info_U27" class="hidden">-</span></th>
+					  <th><span>U28</span></th>
+					  <th><span id="info_U28" class="hidden">-</span></th>
+					  <th><span>U29</span></th>
+					  <th><span id="info_U29" class="hidden">-</span></th>
+					  <th><span>U30</span></th>
+					  <th><span id="info_U30" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiU26" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiU27" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU28" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU29" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU30" class="hidden">-</span></th>				
+					</tr>
+					<tr>
+					  <th><span>U31</span></th>
+					  <th><span id="info_U31" class="hidden">-</span></th>
+					  <th><span>U32</span></th>
+					  <th><span id="info_U32" class="hidden">-</span></th>
+					  <th><span>U33</span></th>
+					  <th><span id="info_U33" class="hidden">-</span></th>
+					  <th><span>U34</span></th>
+					  <th><span id="info_U34" class="hidden">-</span></th>
+					  <th><span>U35</span></th>
+					  <th><span id="info_U35" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiU31" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiU32" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU33" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU34" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU35" class="hidden">-</span></th>
+					</tr>
+					<tr>
+				      <th><span>U36</span></th>
+				      <th><span id="info_U36" class="hidden">-</span></th>
+					  <th><span>U37</span></th>
+					  <th><span id="info_U37" class="hidden">-</span></th>
+					  <th><span>U38</span></th>
+					  <th><span id="info_U38" class="hidden">-</span></th>
+					  <th><span>U39</span></th>
+					  <th><span id="info_U39" class="hidden">-</span></th>
+					  <th><span>U40</span></th>
+					  <th><span id="info_U40" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiU36" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiU37" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU38" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU39" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiU40" class="hidden">-</span></th>
+					</tr>  
+				 </tbody>
+				</table>
+				<div class="row">
+				  <div class="col-xs-3 group-label">
+					  <span style="padding-left: 20px">Current harmonics</span>
+				  </div>
+				  <div class="col-xs-9 group-label">
+					  unit: A
+				  </div>
+				</div>
+				<table class="table">
+				   <tbody>
+					<tr>
+					  <th><span>I1</span></th>
+					  <th><span id="info_I1">-</span></th>
+					  <th><span>I2</span></th>
+					  <th><span id="info_I2" class="hidden">-</span></th>
+					  <th><span>I3</span></th>
+					  <th><span id="info_I3">-</span></th>
+					  <th><span>I4</span></th>
+					  <th><span id="info_I4" class="hidden">-</span></th>
+					  <th><span>I5</span></th>
+					  <th><span id="info_I5">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th>fi</th>
+					  <th></th><th><span id="info_fiI2" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI3">-</span></th>
+					  <th></th><th><span id="info_fiI4" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI5">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>I6</span></th>
+					  <th><span id="info_I6" class="hidden">-</span></th>
+					  <th><span>I7</span></th>
+					  <th><span id="info_I7">-</span></th>
+					  <th><span>I8</span></th>
+					  <th><span id="info_I8" class="hidden">-</span></th>
+					  <th><span>I9</span></th>
+					  <th><span id="info_I9" class="hidden">-</span></th>
+					  <th><span>I10</span></th>
+					  <th><span id="info_I10" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiI6" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiI7">-</span></th>
+					  <th></th><th><span id="info_fiI8" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI9" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI10" class="hidden">-</span></th>	
+					</tr>
+					<tr>
+					  <th><span>I11</span></th>
+					  <th><span id="info_I11" class="hidden">-</span></th>
+					  <th><span>I12</span></th>
+					  <th><span id="info_I12" class="hidden">-</span></th>
+					  <th><span>I13</span></th>
+					  <th><span id="info_I13" class="hidden">-</span></th>
+					  <th><span>I14</span></th>
+					  <th><span id="info_I14" class="hidden">-</span></th>
+					  <th><span>I15</span></th>
+					  <th><span id="info_I15" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiI11" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI12" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI13" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI14" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI15" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>I16</span></th>
+					  <th><span id="info_I16" class="hidden">-</span></th>
+					  <th><span>I17</span></th>
+					  <th><span id="info_I17" class="hidden">-</span></th>
+					  <th><span>I18</span></th>
+					  <th><span id="info_I18" class="hidden">-</span></th>
+					  <th><span>I19</span></th>
+					  <th><span id="info_I19" class="hidden">-</span></th>
+					  <th><span>I20</span></th>
+					  <th><span id="info_I20" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiI16" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiI17" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI18" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI19" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI20" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>I21</span></th>
+					  <th><span id="info_I21" class="hidden">-</span></th>
+					  <th><span>I22</span></th>
+					  <th><span id="info_I22" class="hidden">-</span></th>
+					  <th><span>I23</span></th>
+					  <th><span id="info_I23" class="hidden">-</span></th>
+					  <th><span>I24</span></th>
+					  <th><span id="info_I24" class="hidden">-</span></th>
+					  <th><span>I25</span></th>
+					  <th><span id="info_I25" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiI21" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiI22" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI23" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI24" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI25" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th><span>I26</span></th>
+					  <th><span id="info_I26" class="hidden">-</span></th>
+					  <th><span>I27</span></th>
+					  <th><span id="info_I27" class="hidden">-</span></th>
+					  <th><span>I28</span></th>
+					  <th><span id="info_I28" class="hidden">-</span></th>
+					  <th><span>I29</span></th>
+					  <th><span id="info_I29" class="hidden">-</span></th>
+					  <th><span>I30</span></th>
+					  <th><span id="info_I30" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiI26" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiI27" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI28" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI29" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI30" class="hidden">-</span></th>				
+					</tr>
+					<tr>
+					  <th><span>I31</span></th>
+					  <th><span id="info_I31" class="hidden">-</span></th>
+					  <th><span>I32</span></th>
+					  <th><span id="info_I32" class="hidden">-</span></th>
+					  <th><span>I33</span></th>
+					  <th><span id="info_I33" class="hidden">-</span></th>
+					  <th><span>I34</span></th>
+					  <th><span id="info_I34" class="hidden">-</span></th>
+					  <th><span>I35</span></th>
+					  <th><span id="info_I35" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiI31" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiI32" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI33" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI34" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI35" class="hidden">-</span></th>
+					</tr>
+					<tr>
+				      <th><span>I36</span></th>
+				      <th><span id="info_I36" class="hidden">-</span></th>
+					  <th><span>I37</span></th>
+					  <th><span id="info_I37" class="hidden">-</span></th>
+					  <th><span>I38</span></th>
+					  <th><span id="info_I38" class="hidden">-</span></th>
+					  <th><span>I39</span></th>
+					  <th><span id="info_I39" class="hidden">-</span></th>
+					  <th><span>I40</span></th>
+					  <th><span id="info_I40" class="hidden">-</span></th>
+					</tr>
+					<tr>
+					  <th></th><th><span id="info_fiI36" class="hidden">-</span></th>	
+					  <th></th><th><span id="info_fiI37" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI38" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI39" class="hidden">-</span></th>
+					  <th></th><th><span id="info_fiI40" class="hidden">-</span></th>
+					</tr> 
+				  </tbody>  
+			   </table>	   
+             </div>
+             <div id="harm_measure_graph" class="tab-pane active">
+				<div id="plot1_holder" style="width:500px; height:300px"></div>
+				<div id="plot2_holder" style="width:500px; height:300px"></div>
+			 </div>
+            </div>  
+           </div>
+          </div>
+        </div>
+       </div>
+      </div>
+      <div class="panel-group col-xs-12 col-sm-12 col-md-4 accordion" id="accordion">
+        <div class="panel panel-default">
+          <div class="panel-heading" style="padding-top: 3px; padding-bottom: 4px">
+		   <div class="row">
+			<div class="col-xs-8">
+            <h4 class="panel-title" style="padding-top: 7px">
+              <a data-toggle="collapse" href="#acquisition">
+                Acquisition settings
+              </a>
+            </h4>
+            </div>
+            <div class="col-xs-4">
+            <button id="run_stop" class="btn btn-primary btn-lg" data-checked="true" 
+					style="padding-top: 5px; padding-bottom: 5px" onclick="runStop(this)">
+				Run
+			</button>
+			</div>
+		   </div>
+          </div>
+          <div id="acquisition" class="panel-collapse collapse">
+           <div class="panel-body">
+              <form class="form-horizontal" role="form" onsubmit="return false">
+               <div class="group-label" style="padding: 10px">Voltage</div>
+                <div class="form-group">
+                 <label for="diff_prb_att" style="padding-left: 15px">Probe attenuation:</label>             
+                   <div class="btn-group btn-group-justified" id="diff_prb_att" style="padding: 0px 15px" data-toggle="buttons">
+                   <label class="btn btn-default active">
+                    <input type="radio" name="attenuation" id="prb_x2" checked value="0"> x20                   
+                   </label>
+                   <label class="btn btn-default">
+                    <input type="radio" name="attenuation" id="prb_x20" value="1"> x200                  
+                   </label>
+                   <label class="btn btn-default">
+                    <input type="radio" name="attenuation" id="prb_othr" value="2"> other                  
+                   </label>
+                  </div>
+                 </div>
+                  <div class="form-group">
+                  <label for="probe_attenuation" class="col-xs-4 control-label">Factor input:</label>
+                  <div class="col-xs-5">
+                    <input type="text" id="probe_attenuation" value="20" class="form-control" autocomplete="off">
+                    <span id="apply_probe_attenuation" class="input-group-btn" style="display: none;">
+                      <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>                
+                </div> 
+               <div class="group-label" style="padding: 10px">Current</div>
+                <div class="form-group">
+                 <label for="curr_prb_sel" style="padding-left: 15px">Current probe select:</label>                                   
+                   <div class="btn-group btn-group-justified" id="curr_prb_sel" style="padding: 0px 15px" data-toggle="buttons">
+                    <label class="btn btn-default">
+                     <input type="radio" name="transducer" id="cur_prb_1" value="1"> max 300 A                   
+                    </label>
+                   <label class="btn btn-default">
+                    <input type="radio" name="transducer" id="cur_prb_2" value="2"> max 150 A                  
+                   </label>
+                   <label class="btn btn-default">
+                    <input type="radio" name="transducer" id="cur_prb_3" value="3"> max 100 A                  
+                   </label>
+                   <label class="btn btn-default active">
+                    <input type="radio" name="transducer" id="cur_prb_4" checked value="4"> max 25 A                  
+                   </label>
+                    <label class="btn btn-default">
+                    <input type="radio" name="transducer" id="cur_prb_0" value="0"> other                  
+                   </label>
+                  </div>
+                  </div>
+                  <div class="form-group">
+                  <label for="probe_factor" class="col-xs-4 control-label">Probe factor:</label>
+                  <div class="col-xs-5">
+                    <input type="text" id="probe_factor" value="1" class="form-control" autocomplete="off">
+                    <span id="apply_probe_factor" class="input-group-btn" style="display: none;">
+                      <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                </div>                                            
+                <div class="group-label" style="padding: 10px">Frequency</div>
+                 <div class="form-group">
+                 <label for="freq_range" class="col-xs-4 control-label" style="white-space: nowrap;">Freq. range:</label>
+                 <div class="col-xs-8">
+                  <select id="freq_range" class="form-control">
+                    <option value="0">62.5 MHz</option>
+                    <option value="1">7.8 MHz</option>
+                    <option value="2">976 KHz</option>
+                    <option value="3">61 KHz</option>
+                    <option value="4">7.6 KHz</option>
+                    <option value="5">953 Hz</option>
+                    <option value="6">direct</option> 
+                  </select>
+                </div>
+               </div>
+              </form>
+            </div>      
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#trigger">
+                Trigger
+              </a>
+            </h4>
+          </div>
+          <div id="trigger" class="panel-collapse collapse">
+            <div class="panel-body">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="trig_source" class="col-xs-4 control-label">Source:</label>
+                  <div class="col-xs-8">
+                    <select id="trig_source" class="form-control">
+                      <option value="0">Channel 1</option>
+                      <option value="1">Channel 2</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="trig_mode" class="col-xs-4 control-label">Mode:</label>
+                  <div class="col-xs-8">
+                    <select id="trig_mode" class="form-control">
+                      <option value="0">Auto</option>
+                      <option value="1">Normal</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="trig_edge" class="col-xs-4 control-label">Edge:</label>
+                  <div class="col-xs-8">
+                    <select id="trig_edge" class="form-control">
+                      <option value="0">Rising</option>
+                      <option value="1">Falling</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="trig_level" class="col-xs-4 control-label">Level:</label>
+                  <div class="col-xs-5">
+                    <input type="text" id="trig_level" value="0" class="form-control" autocomplete="off">
+                    <span id="apply_trig_level" class="input-group-btn" style="display: none;">
+                      <button class="btn btn-primary btn-lg" type="button"><span class="glyphicon glyphicon-ok-circle"></span></button>
+                    </span>
+                  </div>
+                  <div id="trig_lev_units" class="col-xs-3" style="padding: 7px 0 0;">-</div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-default">
+           <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#plot_set">
+                Plot settings
+              </a>
+            </h4>
+          </div>
+          <div id="plot_set" class="panel-collapse collapse in">
+            <div class="panel-body">
+			    <div class="row">
+				    <div class="col-xs-6 col-sm-3">
+						<button id="btn_ch1" class="btn btn-U btn-block" data-checked="true" onclick="setVisibleChannels(this)">U</button> 
+						<div class="btn-group-vertical btn-lg">
+				  		  <button id="scale_U_plus" type="button" class="btn btn-U" style="padding: 5px">
+							  <span class="glyphicon glyphicon-chevron-up"></span></br>
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button id="auto_scale_U" type="button" class="btn btn-primary btn-U" style="padding: 5px">
+							  <span class="glyphicon glyphicon-resize-vertical" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button id="scale_U_minus" type="button" class="btn btn-primary btn-U" style="padding: 5px">
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span></br>
+							  <span class="glyphicon glyphicon-chevron-up"></span>
+				  		  </button>
+				  	    </div>
+						<div class="btn-group-vertical btn-lg">
+				  		 <button id="offset_U_plus" type="button" class="btn btn-primary btn-U">
+							 <span class="glyphicon glyphicon-arrow-up"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_U_zero" class="btn btn-primary btn-U">
+							 <span class="glyphicon glyphicon-minus"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_U_minus" class="btn btn-primary btn-U">
+							 <span class="glyphicon glyphicon-arrow-down"></span>
+				  		 </button>
+				  	    </div>
+	                </div>
+                    <div class="col-xs-6 col-sm-3">
+				      <button id="btn_ch2" class="btn btn-primary btn-block btn-I" data-checked="true" onclick="setVisibleChannels(this)">I</button>
+				      <div class="btn-group-vertical btn-lg">
+				  		  <button type="button" id="scale_I_plus" class="btn btn-I" style="padding: 5px">
+							  <span class="glyphicon glyphicon-chevron-up"></span></br>
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button type="button" id="auto_scale_I" class="btn btn-I" style="padding: 5px">
+							  <span class="glyphicon glyphicon-resize-vertical" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button type="button" id="scale_I_minus" class="btn btn-I" style="padding: 5px"> 
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span></br>
+							  <span class="glyphicon glyphicon-chevron-up"></span>
+				  		  </button>
+				  	  </div>
+				      <div class="btn-group-vertical btn-lg">
+				  		 <button type="button" id="offset_I_plus" class="btn btn-I">
+							 <span class="glyphicon glyphicon-arrow-up"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_I_zero" class="btn btn-I">
+							 <span class="glyphicon glyphicon-minus"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_I_minus" class="btn btn-primary btn-I">
+							 <span class="glyphicon glyphicon-arrow-down"></span>
+				  		 </button>
+				  	  </div> 
+				    </div>
+                    <div class="col-xs-6 col-sm-3">
+				      <button id="btn_ch3" class="btn btn-primary btn-block btn-P" data-checked="true" onclick="setVisibleChannels(this)">P</button>
+				      <div class="btn-group-vertical btn-lg">
+				  		  <button type="button" id="scale_P_plus" class="btn btn-primary btn-P" style="padding: 5px">
+							  <span class="glyphicon glyphicon-chevron-up"></span></br>
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button type="button" id="auto_scale_P" class="btn btn-primary btn-P" style="padding: 5px">
+							  <span class="glyphicon glyphicon-resize-vertical" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button type="button" id="scale_P_minus" class="btn btn-primary btn-P" style="padding: 5px">
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span></br>
+							  <span class="glyphicon glyphicon-chevron-up"></span>
+				  		  </button>
+				  	  </div>
+				      <div class="btn-group-vertical btn-lg">
+				  		 <button type="button" id="offset_P_plus" class="btn btn-primary btn-P">
+							 <span class="glyphicon glyphicon-arrow-up"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_P_zero" class="btn btn-primary btn-P">
+							 <span class="glyphicon glyphicon-minus"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_P_minus" class="btn btn-primary btn-P">
+							 <span class="glyphicon glyphicon-arrow-down"></span>
+				  		 </button>
+				  	  </div>
+				   </div>
+			       <div class="col-xs-6 col-sm-3">
+				      <button id="btn_all" class="btn btn-primary btn-block btn-all" data-checked="true">All</button>
+				      <div class="btn-group-vertical btn-lg">
+				  		  <button type="button" id="scale_all_plus" class="btn btn-primary btn-all" style="padding: 5px">
+							  <span class="glyphicon glyphicon-chevron-up"></span></br>
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button type="button" id="btn_autoscale_y" class="btn btn-primary btn-all" data-autozoom="false" onclick="autoscaleY()" style="padding: 5px">
+				  		    <span class="glyphicon glyphicon-resize-vertical btn-all" style="padding-right: 2px"></span>
+				  		  </button>
+				  		  <button type="button" id="scale_all_minus" class="btn btn-primary btn-all" style="padding: 5px">
+							  <span class="glyphicon glyphicon-chevron-down" style="padding-right: 2px"></span></br>
+							  <span class="glyphicon glyphicon-chevron-up"></span>
+				  		  </button>
+				  	  </div>
+				      <div class="btn-group-vertical btn-lg">
+				  		 <button type="button" id="offset_all_plus" class="btn btn-primary btn-all">
+							 <span class="glyphicon glyphicon-arrow-up"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_all_zero" class="btn btn-primary btn-all">
+							 <span class="glyphicon glyphicon-minus"></span>
+				  		 </button>
+				  		 <button type="button" id="offset_all_minus" class="btn btn-primary btn-all">
+							 <span class="glyphicon glyphicon-arrow-down"></span>
+				  		 </button>
+				  	  </div>
+				   </div>   
+				</div>
+				<div class="row">
+					<div class="col-xs-6">
+				       <div class="btn-group btn-group-horizontal">
+				  		  <button type="button" id="scale_x_plus" class="btn btn-primary btn-all" style="padding: 5px 3px">
+							  <span class="glyphicon glyphicon-chevron-right"></span>
+							  <span class="glyphicon glyphicon-chevron-left"></span>
+				  		  </button>
+				  		  <button type="button" id="scale_x_auto" class="btn btn-primary btn-all" style="padding: 1px 3px 0px" onclick="autoscaleX()">
+							  <span class="glyphicon glyphicon-resize-horizontal" style="padding-top: 0px"></span>
+						  </button>
+				  	      <button type="button" id="scale_x_minus" class="btn btn-primary btn-all" style="padding: 5px 3px">
+							 <span class="glyphicon glyphicon-chevron-left"></span>
+							 <span class="glyphicon glyphicon-chevron-right"></span> 
+				  	      </button>
+				  	    </div>
+				  	</div>
+				  	<div class="col-xs-6">
+				  	    <div class="btn-group btn-group-horizontal">
+				  		  <button type="button" id="offset_x_minus" class="btn btn-primary btn-all">
+							  <span class="glyphicon glyphicon-arrow-left"></span>
+				  		  </button>
+				  		  <button type="button" id="offset_x_zero" class="btn btn-primary btn-all">
+							  <span class="glyphicon glyphicon-step-backward"></span>
+							  <span class="glyphicon glyphicon-minus"></span>
+						   </button>
+				  	      <button type="button" id="offset_x_plus" class="btn btn-primary btn-all">
+							  <span class="glyphicon glyphicon-arrow-right"></span>
+						  </button>
+				  	    </div>
+				  	</div>     
+				</div>
+				<div class="row">									   			 				 
+				   <div class="col-xs-6">
+				     <div id="selzoompan" class="btn-group" data-toggle="buttons">
+                      <button id="btn_zoomin" class="btn btn-primary" onclick="selectTool.call(this, 'zoomin')" style="display: none">
+                        <span class="glyphicon glyphicon-zoom-in"></span>
+                      </button>
+                      <button id="btn_zoomout" class="btn btn-default" onclick="selectTool.call(this, 'zoomout')" style="display: none">
+                        <span class="glyphicon glyphicon-zoom-out"></span>
+                      </button>
+                      <button id="btn_pan" class="btn btn-default" onclick="selectTool.call(this, 'pan')" style="display: none">
+                       <span class="glyphicon glyphicon-move"></span>
+                      </button>
+                      <button id="btn_zoompan" class="btn btn-primary btn-lg" onclick="selectTool.call(this, 'zoompan')" style="display: none">
+                        <span class="glyphicon glyphicon-search"></span><span class="glyphicon glyphicon-move"></span>
+                      </button>
+                     </div>
+				  </div>
+				  <div class="col-xs-6">
+				     <button class="btn btn-primary btn-lg" onclick="resetZoom()">
+                       <span class="glyphicon glyphicon-retweet"></span> Reset zoom
+                     </button>  
+				  </div>
+				</div>	
+			 </div>
+		   </div>
+		 </div>
+		 <div class="panel panel-default">
+           <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#measure_sel">
+                Select measurements
+              </a>
+            </h4>
+          </div>
+          <div id="measure_sel" class="panel-collapse collapse in">
+          <div class="panel-body">
+			 <ul class="nav nav-tabs">
+			   <li class="active">
+			     <a data-toggle="tab" href="#pwr_measure">Power</a>
+			   </li>
+			   <li>
+				 <a data-toggle="tab" href="#ch_measure">Channel</a>
+			   </li>
+			   <li>
+				 <a data-toggle="tab" href="#harm_measure">Harmonics</a>
+			   </li>
+			 </ul>
+			 <div class="tab-content">
+		      <div id="pwr_measure" class="tab-pane active">		 
+			    <form role="form" onsubmit="return false">
+				  <div class="form-group">
+					  <div class="row">
+					   <div class="col-xs-4">
+						</div>
+						<div class="col-xs-4">
+						</div>
+						<div class="col-xs-4">
+						 <label class="checkbox"><input type="checkbox" id="Q" checked>Q</label>
+						</div>
+					 </div>
+					 <div class="row">
+					    <div class="col-xs-4">
+						</div>
+						<div class="col-xs-4">
+						</div>
+						<div class="col-xs-4">
+						 √(S²−P²)
+						</div>
+					 </div>
+					 <div class="row">
+					   <div class="col-xs-4">
+						 <label class="checkbox"><input type="checkbox" id="P1">P fund</label>
+						</div>
+						<div class="col-xs-4">
+						 <label class="checkbox"><input type="checkbox" id="Qh1">Q harm</label>
+						</div>
+						<div class="col-xs-4">
+						 <label class="checkbox"><input type="checkbox" id="Q2">Q</label>
+						</div>
+					 </div>
+					 <div class="row">
+					   <div class="col-xs-4">
+						</div>
+						<div class="col-xs-4">
+						 U1×√(∑Ih²)
+						</div>
+						<div class="col-xs-4">
+						 ∑(U×I×sin(φ))</label>
+						</div>
+					 </div>
+					 <div class="row">
+					   <div class="col-xs-4">
+						 <label class="checkbox"><input type="checkbox" id="Ph">P harm</label>
+						</div>
+						<div class="col-xs-4">
+						 <label class="checkbox"><input type="checkbox" id="Qh2">Q harm</label>
+						</div>
+						<div class="col-xs-4">
+						 <label class="checkbox"><input type="checkbox" id="Q1">Q fund</label>
+						</div>
+					 </div>		
+					 <div class="row">
+					   <div class="col-xs-4">
+						 ∑Ph
+						</div>
+						<div class="col-xs-4">
+						 ∑(Uh×Ih×sin(φh))</label>
+						</div>
+						<div class="col-xs-4">
+						</div>
+					 </div>		
+				  </div>
+			   </form>
+			  </div>
+		      <div id="ch_measure" class="tab-pane">		 
+			   <form role="form" onsubmit="return false">
+				 <div class="form-group">
+					<div class="row group-label">
+    					<div class="col-xs-4">U</div>
+	   				    <div class="col-xs-4">I</div>
+	   			    </div>
+	   			    <div class="row">
+    					 <div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="sum_Uh">Sum h</label></div>
+    					 <div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="sum_Ih">Sum h</label></div>
+	   				     <div class="col-xs-4"><label for="harm_num" class="control-label">Number of</label></div>
+	   			    </div>
+	   			    <div class="row">
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="thd_U">THD</label></div>
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="thd_I">THD</label></div>
+	   				    <div class="col-xs-4"><label for="harm_num" class="control-label">harmonics</label></div>
+	   			    </div>
+	   			    <div class="row">
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="amp_U">amp</label></div>
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="amp_I">amp</label></div>
+	   				    <div class="col-xs-4"><label for="harm_num" class="control-label">for THD</label></div>
+	   			    </div>
+	   			    <div class="row">
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="avg_U">avg</label></div>
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="avg_I">avg</label></div>
+	   				    <div class="col-xs-4"><label for="harm_num" class="control-label">and sum</label></div>
+	   			    </div>
+	   			    <div class="row">
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="max_U">max</label></div>
+    					<div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="max_I">max</label></div>
+	   				    <div class="col-xs-4"><label for="harm_num" class="control-label">calculation:</label></div>
+	   			    </div>
+	   			    <div class="row">
+    				  <div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="min_U">min</label></div>
+    				  <div class="col-xs-4"><label class="checkbox"><input type="checkbox" id="min_I">min</label></div>
+	   				  <div class="col-xs-4"><input type="text" id="harm_num" value="99" class="form-control" autocomplete="off">
+                         <span id="apply_harm_num" class="input-group-btn" style="display: none;">
+                            <button class="btn btn-primary btn-lg" type="button">
+								<span class="glyphicon glyphicon-ok-circle"></span>
+						    </button>
+                          </span>
+                      </div>
+	   			    </div>
+				 </div>
+			   </form>
+			  </div>
+		      <div id="harm_measure" class="tab-pane">		 
+			    <form role="form" onsubmit="return false">
+				  <div class="form-group">
+				   <div class="row group-label">
+					<span style="padding-left: 16px">Voltage</span>
+				   </div>	
+				  <table class="table">
+				      <tbody>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U1" checked>1.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U2">2.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U3" checked>3.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U4">4.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U5" checked>5.</label></th>						  	
+						</tr>
+						<tr>
+						  <th>fi</th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU2"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU3" checked></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU4"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU5" checked></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U6">6.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U7" checked>7.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U8">8.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U9">9.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U10">10.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU6"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU7" checked></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU8"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU9"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU10"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U11">11.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U12">12.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U13">13.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U14">14.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U15">15.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU11"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU12"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU13"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU14"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU15"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U16">16.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U17">17.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U18">18.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U19">19.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U20">20.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU16"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU17"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU18"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU19"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU20"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U21">21.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U22">22.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U23">23.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U24">24.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U25">25.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU21"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU22"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU23"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU24"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU25"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U26">26.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U27">27.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U28">28.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U29">29.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U30">30.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU26"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU27"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU28"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU29"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU30"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U31">31.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U32">32.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U33">33.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U34">34.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U35">35.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU31"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU32"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU33"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU34"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU35"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="U36">36.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U37">37.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U38">38.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U39">39.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="U40">40.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU36"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU37"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU38"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU39"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiU40"></label></th>						  	
+						</tr>   
+					  </tbody>
+					 </table>
+					 <div class="row group-label">
+					      <span style="padding-left: 16px">Current</span>
+					 </div>
+				     <table class="table">	
+					  <tbody>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I1" checked>1.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I2">2.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I3" checked>3.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I4">4.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I5" checked>5.</label></th>						  	
+						</tr>
+						<tr>
+						  <th>fi</th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI2"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI3" checked></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI4"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI5" checked></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I6">6.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I7" checked>7.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I8">8.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I9">9.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I10">10.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI6"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI7" checked></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI8"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI9"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI10"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I11">11.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I12">12.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I13">13.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I14">14.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I15">15.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI11"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI12"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI13"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI14"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI15"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I16">16.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I17">17.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I18">18.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I19">19.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I20">20.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI16"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI17"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI18"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fi19"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiIU20"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I21">21.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I22">22.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I23">23.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I24">24.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I25">25.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI21"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI22"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI23"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI24"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI25"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I26">26.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I27">27.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I28">28.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I29">29.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I30">30.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI26"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI27"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI28"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI29"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI30"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I31">31.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I32">32.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I33">33.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I34">34.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I35">35.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI31"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI32"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI33"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI34"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI35"></label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="I36">36.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I37">37.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I38">38.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I39">39.</label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="I40">40.</label></th>						  	
+						</tr>
+						<tr>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI36"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI37"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI38"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI39"></label></th>
+						  <th><label class="checkbox"><input type="checkbox" id="fiI40"></label></th>						  	
+						</tr>   
+					  </tbody>
+					</table>  					 				   					  			
+				   </div> 
+				 </form>
+			  </div>
+			 </div>			 
+		    </div>
+		  </div>
+		</div>  
+      </div>
+     </div>
+    </div>
+    <div class="footer clearfix">
+      <p class="pull-right" style="margin: 4px 0 0">&copy; 2014 - Red Pitaya</p>
+    </div>
+  </div>
+  <div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_err_label">Application error</h4>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-close-modal" id="btn_ignore">Ignore</button>
+          <button type="button" class="btn btn-default" id="btn_retry_get">Retry</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal_app_label">Application stopped</h4>
+        </div>
+        <div class="modal-body">
+          The <strong><span class="app-id"></span></strong> application was stopped. The current started application is <strong><span id="new_app_id"></span></strong>.<br />
+          Do you want to switch to newly started application or to restart <strong><span class="app-id"></span></strong>?
+        </div>
+        <div class="modal-footer">
+          <a href="/index.html" class="btn btn-danger pull-left">Exit app</a>
+          <button type="button" class="btn btn-default" id="btn_switch_app">Switch</button>
+          <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
