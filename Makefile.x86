@@ -10,8 +10,9 @@ export BUILD_NUMBER
 export REVISION
 export VERSION
 
-SUBMODULE_UBT = "redpitaya-v2016.4"
-SUBMODULE_LIN = "branch-redpitaya-v2017.1"
+UBOOT_TAG     = redpitaya-v2016.4
+LINUX_TAG     = branch-redpitaya-v2017.1
+DTREE_TAG     = xilinx-v2016.4
 SUBMODULE_APP = $(shell git submodule status Applications)
 
 define GREET_MSG
@@ -21,8 +22,9 @@ define GREET_MSG
 # Build: $(BUILD_NUMBER)
 # Branch: $(GIT_LOCAL_BRANCH)
 # Commit: $(GIT_COMMIT)
-# U-Boot: $(SUBMODULE_UBT)
-# Linux Kernel: $(SUBMODULE_LIN)
+# U-Boot: $(UBOOT_TAG)
+# Linux Kernel: $(LINUX_TAG)
+# Device tree: $(DTREE_TAG)
 # Pro Applications: $(SUBMODULE_APP)
 ##############################################################################
 endef
@@ -57,10 +59,6 @@ $(INSTALL_DIR):
 ################################################################################
 # X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
 ################################################################################
-
-UBOOT_TAG     = redpitaya-v2016.4
-LINUX_TAG     = branch-redpitaya-v2017.1
-DTREE_TAG     = xilinx-v2016.4
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
