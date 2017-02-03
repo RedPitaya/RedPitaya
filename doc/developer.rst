@@ -204,6 +204,23 @@ FPGA and device tree sources
 Detailed instructions are provided for `building the FPGA <fpga/README.md#build-process>`_
 including some `device tree details <fpga/README.md#device-tree>`_.
 
+--------------------------------------
+Device Tree compiler + overlay patches
+--------------------------------------
+
+Download the Device Tree compiler with overlay patches from Pantelis Antoniou.
+Compile and install it.
+Otherwise a binary is available in ``tools/dtc``.
+
+.. code-block:: shell-session
+
+   $ sudo apt-get install flex bison
+   $ git clone git@github.com:pantoniou/dtc.git
+   $ cd dtc
+   $ git checkout overlays
+   $ make
+   $ sudo make install PREFIX=/usr
+
 ~~~~~~
 U-boot
 ~~~~~~
