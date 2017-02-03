@@ -13,7 +13,8 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 # Sigrok
 apt-get -y install libsigrok libsigrokdecode sigrok-cli
 # OWFS 1-wire library
-apt-get -y install owfs python-ow
+# NOTE: for now do not install OWFS, and avoid another http/ftp server from running by default
+#apt-get -y install owfs python-ow
 
 # Python package manager, Jupyter dependencies
 apt-get -y install python3-dev python3-cffi python3-wheel python3-setuptools python3-pip python3-zmq python3-jinja2 python3-pygments python3-six python3-html5lib python3-terminado python3-decorator python3-ptyprocess python3-pexpect python3-simplegeneric python3-wcwidth python3-pickleshare python3-bleach python3-mistune python3-jsonschema
