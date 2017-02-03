@@ -78,6 +78,4 @@ EOF_CHROOT
 # copy/link notebook examples
 ###############################################################################
 
-ln -s /opt/redpitaya/jupyter/experiments   $ROOT_DIR/home/jupyter/experiments
-ln -s /opt/redpitaya/jupyter/examples      $ROOT_DIR/home/jupyter/examples
 ln -s /opt/redpitaya/jupyter/welcome.ipynb $ROOT_DIR/home/jupyter/welcome.ipynb
