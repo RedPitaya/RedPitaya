@@ -55,7 +55,19 @@ apt-get -y install bc
 apt-get -y install git
 
 # Device tree compiler can be used to compile custom overlays
-apt-get -y install device-tree-copiler libudev
+apt-get -y install libudev
+#apt-get -y install device-tree-copiler
+
+# NOTE: we have to compile a custom device tree compiler with overlay support
+apt-get -y install build-essential gcc bison flex
+curl -L https://github.com/pantoniou/dtc/archive/overlays.tar.gz -o dtc.tar.gz
+tar zxvf dtc.tar.gz
+cd dtc
+git checkout overlays
+make
+make install PREFIX=$BOOT_DIR/usr
+cd ../
+rm -rf dtc
 EOF_CHROOT
 
 ################################################################################
