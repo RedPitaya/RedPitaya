@@ -2,13 +2,15 @@
  * System changes should be common to all FPGA images
 */
 
+/include/ "fpga-region.dtsi"
 /include/ "memory.dtsi"
+/include/ "clkc.dtsi"
 /include/ "ethernet.dtsi"
 /include/ "i2c0.dtsi"
 /include/ "spi1.dtsi"
 /include/ "usb0.dtsi"
-/include/ "clkc.dtsi"
-/include/ "xadc.dtsi"
 /include/ "led-system.dtsi"
 /include/ "uio-ps2pl.dtsi"
 /include/ "uio-api.dtsi"
+// this one actually depends on FPGA code
+/include/ "xadc.dtsi"

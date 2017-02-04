@@ -1,0 +1,13 @@
+/*
+ * FPGA region
+*/
+
+&amba {
+	fpga_region0: fpga-region0 {
+		compatible = "fpga-region";
+		fpga-mgr = <&devcfg>;
+		#address-cells = <0x1>;
+		#size-cells = <0x1>;
+		ranges;
+	};
+};
