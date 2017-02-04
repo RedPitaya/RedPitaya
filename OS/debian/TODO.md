@@ -24,6 +24,11 @@ python3-scipy
 python3-pandas
 python3-matplotlib
 
+python3-cycler
+
+
+cffi wheel setuptools pip zmq jinja2 pygments six html5lib terminado decorator ptyprocess pexpect simplegeneric wcwidth pickleshare bleach mistune jsonschema numpy scipy pandas matplotlib
+
 http://packages.ubuntu.com/xenial/python3-dev
 https://packages.debian.org/sid/python3-dev
 http://http.debian.net/debian/pool/main/p/python3-defaults/python3-defaults_3.5.3-1.dsc
@@ -119,3 +124,31 @@ http://http.debian.net/debian/pool/main/p/pandas/pandas_0.19.2-5.dsc
 http://packages.ubuntu.com/xenial/python3-matplotlib
 https://packages.debian.org/sid/python3-matplotlib
 http://http.debian.net/debian/pool/main/m/matplotlib/matplotlib_2.0.0-3.dsc
+
+
+https://packages.debian.org/sid/python3-cycler
+http://http.debian.net/debian/pool/main/p/python-cycler/python-cycler_0.10.0-1.dsc
+
+
+Dependencies:
+
+https://packages.debian.org/sid/python3-distro
+http://http.debian.net/debian/pool/main/p/python-distro/python-distro_1.0.1-2.dsc
+
+https://packages.debian.org/sid/python3-webencodings
+http://http.debian.net/debian/pool/main/p/python-webencodings/python-webencodings_0.5-2.dsc
+
+https://packages.debian.org/sid/python3-pytest-expect
+http://http.debian.net/debian/pool/main/p/pytest-expect/pytest-expect_1.1.0-1.dsc
+
+https://packages.debian.org/sid/python3-colorspacious
+http://http.debian.net/debian/pool/main/c/colorspacious/colorspacious_1.1.0-1.dsc
+
+https://packages.debian.org/sid/python3-pytest
+http://http.debian.net/debian/pool/main/p/pytest/pytest_3.0.6-1.dsc
+
+
+http://http.debian.net/debian/pool/main/p/python3.5/python3.5_3.5.3-1.dsc
+http://http.debian.net/debian/pool/main/g/gcc-6/gcc-6_6.3.0-5.dsc
+http://http.debian.net/debian/pool/main/g/gcc-defaults/gcc-defaults_1.165.dsc
+
