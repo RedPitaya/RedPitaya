@@ -67,7 +67,7 @@ git checkout overlays
 make
 make install PREFIX=$BOOT_DIR/usr
 cd ../
-rm -rf dtc
+rm -rf dtc-overlays dtc.tar.gz
 EOF_CHROOT
 
 ################################################################################
