@@ -63,7 +63,6 @@ apt-get -y install build-essential gcc bison flex
 curl -L https://github.com/pantoniou/dtc/archive/overlays.tar.gz -o dtc.tar.gz
 tar zxvf dtc.tar.gz
 cd dtc-overlays
-git checkout overlays
 make
 make install PREFIX=$BOOT_DIR/usr
 cd ../
