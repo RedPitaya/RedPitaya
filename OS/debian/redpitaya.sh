@@ -64,7 +64,7 @@ curl -L https://github.com/pantoniou/dtc/archive/overlays.tar.gz -o dtc.tar.gz
 tar zxvf dtc.tar.gz
 cd dtc-overlays
 make
-make install PREFIX=$BOOT_DIR/usr
+make install PREFIX=/usr
 cd ../
 rm -rf dtc-overlays dtc.tar.gz
 EOF_CHROOT
