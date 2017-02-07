@@ -2,6 +2,11 @@
  * FPGA region
 */
 
+// use FPGA manager driver instead of the Xilinx devcfg driver
+&devcfg {
+	compatible = "xlnx,zynqmp-pcap-fpga";
+};
+
 &amba {
 	fpga_region0: fpga-region0 {
 		compatible = "fpga-region";
