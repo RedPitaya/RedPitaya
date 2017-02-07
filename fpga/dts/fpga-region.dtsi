@@ -4,7 +4,7 @@
 
 // use FPGA manager driver instead of the Xilinx devcfg driver
 &devcfg {
-	compatible = "xlnx,zynqmp-pcap-fpga";
+	compatible = "xlnx,zynq-pcap-fpga";
 };
 
 &amba {
