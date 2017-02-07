@@ -61,6 +61,44 @@ Project specific code is placed inside the ``fpga/prj/name/`` directories and is
 |                   | DTS (Design Tree) builds                                         |
 +-------------------+------------------------------------------------------------------+
 
+*****************
+FPGA sub-projects
+*****************
+
+There are multiple FPGA sub-projects they mostly contain incremental changes
+on the first Red Pitaya release.
+
++-------------------+------------------------------------------------------------------+
+| ``prj/name``      | desctiption                                                      |
++===================+==================================================================+
+| 0.93              | This is the original Red Pitaya release including all bugs.      |
+|                   | For deprecated application backward compatibility only.          |
++-------------------+------------------------------------------------------------------+
+| 0.94              | 1. The CDC (clock domain crossing) code on the custom CPU bus    |
+|                   |    was removed. Instead CDC for GP0 port already available in    |
+|                   |    PS was used. This improves speed and reliability and reduces  |
+|                   |    RTL complexity.                                               |
+|                   | 2. A value increment bug in the generator was fixed, this should |
+|                   |    improve generated frequencies near half sampling rate.        |
+|                   | 3. XADC custom RTL wrapper was replaced with Xilinx AXI XADC.    |
+|                   |    This enables the use of the Linux driver with IIO streaming   |
+|                   |    support.                                                      |
++-------------------+------------------------------------------------------------------+
+| classic           | 1. A lot of the code was rewritten in SystemVerilog.             |
+|                   | 2. Removed GPIO and LED registers from housekeeping, instead the |   
+|                   |    GPIO controller inside PL is used. This enables the use of    |
+|                   |    Linux kernel features for GPIO (IRQ, SPI, I2C, 1-wire) and    |
+|                   |    LED (triggers).                                               |
++-------------------+------------------------------------------------------------------+
+| logic_orig        | This image is used by the logic analyzer, it is using DMA to     |
+|                   | transfer data to man DDR3 RAM. ADC and DAS code is unfinished.   |
++-------------------+------------------------------------------------------------------+
+| axi4lite          | Image intended for testing various AXI4 bus implementations.     |
+|                   | It contains a Vivado ILA (integrated logic ananlyzer) to         |
+|                   | observe and review the performance of the bus implementation.    |
++-------------------+------------------------------------------------------------------+
+
+
 ****************
 Building process
 ****************
