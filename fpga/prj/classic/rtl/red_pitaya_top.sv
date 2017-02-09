@@ -392,7 +392,7 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(da
 //  House Keeping
 ////////////////////////////////////////////////////////////////////////////////
 
-red_pitaya_hk i_hk (
+red_pitaya_id i_id (
   // system signals
   .clk_i           (adc_clk ),  // clock
   .rstn_i          (adc_rstn),  // reset - active low

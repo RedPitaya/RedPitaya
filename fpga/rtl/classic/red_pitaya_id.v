@@ -1,5 +1,5 @@
 /**
- * $Id: red_pitaya_hk.v 961 2014-01-21 11:40:39Z matej.oblak $
+ * $Id: red_pitaya_id.v 961 2014-01-21 11:40:39Z matej.oblak $
  *
  * @brief Red Pitaya house keeping.
  *
@@ -21,7 +21,7 @@
  * ID register which user can define at compile time.
  */
 
-module red_pitaya_hk #(
+module red_pitaya_id #(
   parameter DWL = 8, // data width for LED
   parameter DWE = 8, // data width for extension
   parameter [57-1:0] DNA = 57'h0823456789ABCDE
