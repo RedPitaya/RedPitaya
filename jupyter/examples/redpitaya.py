@@ -29,17 +29,6 @@ class redpitaya (object):
     TRIG_STATE_TRIGGERED = 0 # Trigger is triggered/disabled
     TRIG_STATE_WAITING   = 1 # Trigger is set up and waiting (to be triggered)
 
-    TRIG_SRC_DISABLED = 0 # Trigger is disabled
-    TRIG_SRC_NOW      = 1 # Trigger triggered now (immediately)
-    TRIG_SRC_CHA_PE   = 2 # Trigger set to Channel A threshold positive edge
-    TRIG_SRC_CHA_NE   = 3 # Trigger set to Channel A threshold negative edge
-    TRIG_SRC_CHB_PE   = 4 # Trigger set to Channel B threshold positive edge
-    TRIG_SRC_CHB_NE   = 5 # Trigger set to Channel B threshold negative edge
-    TRIG_SRC_EXT_PE   = 6 # Trigger set to external trigger positive edge (DIO0_P pin)
-    TRIG_SRC_EXT_NE   = 7 # Trigger set to external trigger negative edge (DIO0_P pin)
-    TRIG_SRC_AWG_PE   = 8 # Trigger set to arbitrary wave generator application positive edge
-    TRIG_SRC_AWG_NE   = 9 # Trigger set to arbitrary wave generator application negative edge
-
     def __init__(self, bitstream = "/opt/redpitaya/fpga/classic/fpga.bit"):
         os.system('cat '+bitstream+' > /dev/xdevcfg')
         self.rp_api = CDLL('/opt/redpitaya/lib/librp.so')
@@ -76,8 +65,13 @@ class redpitaya (object):
     def AcqReset(self):
         return self.rp_api.rp_AcqReset()
 
-    def AcqSetDecimation(self, dec_factor):
-        return self.rp_api.rp_AcqSetDecimation(dec_factor)
+    def AcqSetDecimationFactor(self, value):
+        return self.rp_api.rp_AcqSetDecimationFactor(value)
+
+    def AcqGetDecimationFactor(self):
+        value = c_int(0)
+        self.rp_api.rp_AcqGetDecimationFactor(byref(value))
+        return value.value
 
     def AcqSetTriggerLevel(self, channel, level):
         return self.rp_api.rp_AcqSetTriggerLevel(channel, c_float(level))
@@ -90,6 +84,11 @@ class redpitaya (object):
 
     def AcqSetTriggerSrc(self, source):
         return self.rp_api.rp_AcqSetTriggerSrc(source)
+
+    def AcqGetTriggerSrc(self):
+        value = c_int(0)
+        self.rp_api.rp_AcqGetTriggerSrc(byref(value))
+        return value.value
 
     def AcqGetTriggerState(self, ):
         state = c_long(self.TRIG_STATE_WAITING)
