@@ -179,77 +179,8 @@ typedef struct osc_control_s {
      */
     uint32_t chb_filt_pp;
 
-    /** @brief ChA AXI lower address
-    * bits [31:0] - starting writing address
-    */
-    uint32_t cha_axi_low;
-
-    /** @brief ChA AXI High address
-    * bits [31:0] - starting writing address
-    */
-    uint32_t cha_axi_high;
-
-    /** @brief ChA AXI delay after trigger
-    * bits [31:0] - Number of decimated data
-    * after trig written into memory
-    */
-    uint32_t cha_trig_delay;
-
-    /**@brief ChB AXI enable master
-    * bits [0] Enable AXI master
-    * bits [31:0] reserved
-    */
-    uint32_t cha_enable_axi_m;
-
-    /**@brief ChA AXI write pointer trigger
-    * Write pointer at time the trigger arrived
-    */
-    uint32_t cha_w_ptr_trig;
-
-    /**@brief ChA AXI write pointer current
-    * Current write pointer
-    */
-    uint32_t cha_w_ptr_curr;
-
-    /* Reserved 0x68 & 0x6C */
-    uint32_t reserved_2;
-    uint32_t reserved_3;
-
-    /** @brief ChB AXI lower address
-    * bits [31:0] - starting writing address
-    */
-    uint32_t chb_axi_low;
-
-    /** @brief ChB AXI High address
-    * bits [31:0] - starting writing address
-    */
-    uint32_t chb_axi_high;
-
-    /** @brief ChB AXI delay after trigger
-    * bits [31:0] - Number of decimated data
-    * after trig written into memory
-    */
-    uint32_t chb_trig_delay;
-
-    /**@brief ChB AXI enable master
-    * bits [0] Enable AXI master
-    * bits [31:0] reserved
-    */
-    uint32_t chb_enable_axi_m;
-
-    /**@brief ChB AXI write pointer trigger
-    * Write pointer at time the trigger arrived
-    */
-    uint32_t chb_w_ptr_trig;
-
-    /**@brief ChB AXI write pointer current
-    * Current write pointer
-    */
-    uint32_t chb_w_ptr_curr;
-
     /* Reserved 0x88 & 0x8C */
-    uint32_t reserved_4;
-    uint32_t reserved_5;
+    uint32_t reserved_4[16];
 
     /**@brief Trigger debuncer time
     * bits [19:0] Number of ADC clock periods
