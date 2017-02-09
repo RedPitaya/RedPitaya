@@ -411,7 +411,6 @@ endif
 ################################################################################
 
 clean:
-	make -C shared clean
 	# todo, remove downloaded libraries and symlinks
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
