@@ -31,8 +31,7 @@ static volatile uint32_t *osc_chb = NULL;
 
 int osc_Init()
 {
-//    ECHECK(cmn_Init());
-    ECHECK(cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg));
+    cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg);
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
     return RP_OK;
@@ -40,10 +39,9 @@ int osc_Init()
 
 int osc_Release()
 {
-    ECHECK(cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg));
+    cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg);
     osc_cha = NULL;
     osc_chb = NULL;
-//    ECHECK(cmn_Release());
     return RP_OK;
 }
 
@@ -190,37 +188,37 @@ int osc_GetHysteresisChB(uint32_t* hysteresis)
  */
 int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
 {
-    ECHECK(cmn_SetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA));
-    ECHECK(cmn_SetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER));
-    ECHECK(cmn_SetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER));
-    ECHECK(cmn_SetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER));
+    cmn_SetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA);
+    cmn_SetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER);
+    cmn_SetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER);
+    cmn_SetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER);
     return RP_OK;
 }
 
 int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp)
 {
-    ECHECK(cmn_GetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA));
-    ECHECK(cmn_GetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER));
-    ECHECK(cmn_GetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER));
-    ECHECK(cmn_GetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER));
+    cmn_GetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA);
+    cmn_GetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER);
+    cmn_GetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER);
+    cmn_GetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER);
     return RP_OK;
 }
 
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
 {
-    ECHECK(cmn_SetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA));
-    ECHECK(cmn_SetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER));
-    ECHECK(cmn_SetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER));
-    ECHECK(cmn_SetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER));
+    cmn_SetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA);
+    cmn_SetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER);
+    cmn_SetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER);
+    cmn_SetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER);
     return RP_OK;
 }
 
 int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp)
 {
-    ECHECK(cmn_GetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA));
-    ECHECK(cmn_GetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER));
-    ECHECK(cmn_GetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER));
-    ECHECK(cmn_GetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER));
+    cmn_GetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA);
+    cmn_GetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER);
+    cmn_GetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER);
+    cmn_GetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER);
     return RP_OK;
 }
 

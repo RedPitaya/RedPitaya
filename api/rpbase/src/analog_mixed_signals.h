@@ -39,12 +39,12 @@ static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 156;
 static volatile analog_mixed_signals_control_t *ams = NULL;
 
 static int ams_Init() {
-    ECHECK(cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams));
+    cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams);
     return RP_OK;
 }
 
 static int ams_Release() {
-    ECHECK(cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams));
+    cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams);
     return RP_OK;
 }
 

@@ -56,12 +56,12 @@ int hk_EnableDigitalLoop(bool enable);
 static volatile housekeeping_control_t *hk = NULL;
 
 static int hk_Init() {
-    ECHECK(cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk));
+    cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
     return RP_OK;
 }
 
 static int hk_Release() {
-    ECHECK(cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk));
+    cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk);
     return RP_OK;
 }
 

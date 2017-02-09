@@ -88,7 +88,7 @@ static uint32_t cnvTimeToSmpls(int64_t time_ns)
     /* Calculate sampling period (including decimation) */
 
     uint32_t decimation;
-    ECHECK(acq_GetDecimationFactor(&decimation));
+    acq_GetDecimationFactor(&decimation);
 
     int64_t smpl_p = (ADC_SAMPLE_PERIOD * (int64_t)decimation);
     return (int32_t)round((double)time_ns / smpl_p);
@@ -107,7 +107,7 @@ static int64_t cnvSmplsToTime(int32_t samples)
     /* Calculate time (including decimation) */
 
     uint32_t decimation;
-    ECHECK(acq_GetDecimationFactor(&decimation));
+    acq_GetDecimationFactor(&decimation);
 
     return (int64_t)samples * ADC_SAMPLE_PERIOD * (int32_t)decimation;
 }
@@ -120,7 +120,7 @@ static int64_t cnvSmplsToTime(int32_t samples)
 static int setEqFilters(rp_channel_t channel)
 {
     rp_pinState_t gain;
-    ECHECK(acq_GetGain(channel, &gain));
+    acq_GetGain(channel, &gain);
 
     // Update equalization filter with default coefficients
     if (channel == RP_CH_1)
@@ -186,8 +186,8 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     rp_pinState_t old_gain;
     float ch_thr, ch_hyst;
     old_gain = *gain;
-    ECHECK(acq_GetChannelThreshold(channel, &ch_thr));
-    ECHECK(acq_GetChannelThresholdHyst(channel, &ch_hyst));
+    acq_GetChannelThreshold(channel, &ch_thr);
+    acq_GetChannelThresholdHyst(channel, &ch_hyst);
 
     // Now update the gain
     *gain = state;
@@ -254,35 +254,23 @@ int acq_SetDecimation(rp_acq_decimation_t decimation)
     int64_t time_ns = 0;
 
     if (triggerDelayInNs) {
-        ECHECK(acq_GetTriggerDelayNs(&time_ns));
+        acq_GetTriggerDelayNs(&time_ns);
     }
 
     switch (decimation) {
-    case RP_DEC_1:
-        ECHECK(osc_SetDecimation(DEC_1));
-        break;
-    case RP_DEC_8:
-        ECHECK(osc_SetDecimation(DEC_8));
-        break;
-    case RP_DEC_64:
-        ECHECK(osc_SetDecimation(DEC_64));
-        break;
-    case RP_DEC_1024:
-        ECHECK(osc_SetDecimation(DEC_1024));
-        break;
-    case RP_DEC_8192:
-        ECHECK(osc_SetDecimation(DEC_8192));
-        break;
-    case RP_DEC_65536:
-        ECHECK(osc_SetDecimation(DEC_65536));
-        break;
+    case RP_DEC_1:     osc_SetDecimation(DEC_1);     break;
+    case RP_DEC_8:     osc_SetDecimation(DEC_8);     break;
+    case RP_DEC_64:    osc_SetDecimation(DEC_64);    break;
+    case RP_DEC_1024:  osc_SetDecimation(DEC_1024);  break;
+    case RP_DEC_8192:  osc_SetDecimation(DEC_8192);  break;
+    case RP_DEC_65536: osc_SetDecimation(DEC_65536); break;
     default:
         return RP_EOOR;
     }
 
     // Now update trigger delay based on new decimation
     if (triggerDelayInNs) {
-        ECHECK(acq_SetTriggerDelayNs(time_ns, true));
+        acq_SetTriggerDelayNs(time_ns, true);
     }
 
     return RP_OK;
@@ -291,82 +279,50 @@ int acq_SetDecimation(rp_acq_decimation_t decimation)
 int acq_GetDecimation(rp_acq_decimation_t* decimation)
 {
     uint32_t decimationVal;
-    ECHECK(osc_GetDecimation(&decimationVal));
+    osc_GetDecimation(&decimationVal);
 
-    if (decimationVal == DEC_1) {
-        *decimation = RP_DEC_1;
-        return RP_OK;
-    }
-    else if (decimationVal == DEC_8) {
-        *decimation = RP_DEC_8;
-        return RP_OK;
-    }
-    else if (decimationVal == DEC_64) {
-        *decimation = RP_DEC_64;
-        return RP_OK;
-    }
-    else if (decimationVal == DEC_1024) {
-        *decimation = RP_DEC_1024;
-        return RP_OK;
-    }
-    else if (decimationVal == DEC_8192) {
-        *decimation = RP_DEC_8192;
-        return RP_OK;
-    }
-    else if (decimationVal == DEC_65536) {
-        *decimation = RP_DEC_65536;
-        return RP_OK;
-    }
+    if      (decimationVal == DEC_1)      *decimation = RP_DEC_1;
+    else if (decimationVal == DEC_8)      *decimation = RP_DEC_8;
+    else if (decimationVal == DEC_64)     *decimation = RP_DEC_64;
+    else if (decimationVal == DEC_1024)   *decimation = RP_DEC_1024;
+    else if (decimationVal == DEC_8192)   *decimation = RP_DEC_8192;
+    else if (decimationVal == DEC_65536)  *decimation = RP_DEC_65536;
     else {
         return RP_EOOR;
     }
+
+    return RP_OK;
 }
 
 int acq_GetDecimationFactor(uint32_t* decimation)
 {
     rp_acq_decimation_t decimationVal;
-    ECHECK(acq_GetDecimation(&decimationVal));
+    acq_GetDecimation(&decimationVal);
 
     switch (decimationVal) {
-    case RP_DEC_1:
-        *decimation = DEC_1;
-        return RP_OK;
-    case RP_DEC_8:
-        *decimation = DEC_8;
-        return RP_OK;
-    case RP_DEC_64:
-        *decimation = DEC_64;
-        return RP_OK;
-    case RP_DEC_1024:
-        *decimation = DEC_1024;
-        return RP_OK;
-    case RP_DEC_8192:
-        *decimation = DEC_8192;
-        return RP_OK;
-    case RP_DEC_65536:
-        *decimation = DEC_65536;
-        return RP_OK;
+    case RP_DEC_1:     *decimation = DEC_1;     break;
+    case RP_DEC_8:     *decimation = DEC_8;     break;
+    case RP_DEC_64:    *decimation = DEC_64;    break;
+    case RP_DEC_1024:  *decimation = DEC_1024;  break;
+    case RP_DEC_8192:  *decimation = DEC_8192;  break;
+    case RP_DEC_65536: *decimation = DEC_65536; break;
     default:
         return RP_EOOR;
     }
+
+    return RP_OK;
 }
 
 
 int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
 {
     switch (sampling_rate) {
-    case RP_SMP_125M:
-        return acq_SetDecimation(RP_DEC_1);
-    case RP_SMP_15_625M:
-        return acq_SetDecimation(RP_DEC_8);
-    case RP_SMP_1_953M:
-        return acq_SetDecimation(RP_DEC_64);
-    case RP_SMP_122_070K:
-        return acq_SetDecimation(RP_DEC_1024);
-    case RP_SMP_15_258K:
-        return acq_SetDecimation(RP_DEC_8192);
-    case RP_SMP_1_907K:
-        return acq_SetDecimation(RP_DEC_65536);
+    case RP_SMP_125M:      return acq_SetDecimation(RP_DEC_1);
+    case RP_SMP_15_625M:   return acq_SetDecimation(RP_DEC_8);
+    case RP_SMP_1_953M:    return acq_SetDecimation(RP_DEC_64);
+    case RP_SMP_122_070K:  return acq_SetDecimation(RP_DEC_1024);
+    case RP_SMP_15_258K:   return acq_SetDecimation(RP_DEC_8192);
+    case RP_SMP_1_907K:    return acq_SetDecimation(RP_DEC_65536);
     default:
         return RP_EOOR;
     }
@@ -375,30 +331,20 @@ int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
 int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
 {
     rp_acq_decimation_t decimation;
-    ECHECK(acq_GetDecimation(&decimation));
+    acq_GetDecimation(&decimation);
 
     switch (decimation) {
-    case RP_DEC_1:
-        *sampling_rate = RP_SMP_125M;
-        return RP_OK;
-    case RP_DEC_8:
-        *sampling_rate = RP_SMP_15_625M;
-        return RP_OK;
-    case RP_DEC_64:
-        *sampling_rate = RP_SMP_1_953M;
-        return RP_OK;
-    case RP_DEC_1024:
-        *sampling_rate = RP_SMP_122_070K;
-        return RP_OK;
-    case RP_DEC_8192:
-        *sampling_rate = RP_SMP_15_258K;
-        return RP_OK;
-    case RP_DEC_65536:
-        *sampling_rate = RP_SMP_1_907K;
-        return RP_OK;
+    case RP_DEC_1:     *sampling_rate = RP_SMP_125M;     break;
+    case RP_DEC_8:     *sampling_rate = RP_SMP_15_625M;  break;
+    case RP_DEC_64:    *sampling_rate = RP_SMP_1_953M;   break;
+    case RP_DEC_1024:  *sampling_rate = RP_SMP_122_070K; break;
+    case RP_DEC_8192:  *sampling_rate = RP_SMP_15_258K;  break;
+    case RP_DEC_65536: *sampling_rate = RP_SMP_1_907K;   break;
     default:
         return RP_EOOR;
     }
+
+    return RP_OK;
 }
 
 int acq_GetSamplingRateHz(float* sampling_rate)
@@ -406,27 +352,15 @@ int acq_GetSamplingRateHz(float* sampling_rate)
     float max_rate = 125000000.0f;
 
     rp_acq_decimation_t decimation;
-    ECHECK(acq_GetDecimation(&decimation));
+    acq_GetDecimation(&decimation);
 
     switch(decimation){
-        case RP_DEC_1:
-            *sampling_rate = max_rate / 1;
-            break;
-        case RP_DEC_8:
-            *sampling_rate = max_rate / 8;
-            break;
-        case RP_DEC_64:
-            *sampling_rate = max_rate / 64;
-            break;
-        case RP_DEC_1024:
-            *sampling_rate = max_rate / 1024;
-            break;
-        case RP_DEC_8192:
-            *sampling_rate = max_rate / 8192;
-            break;
-        case RP_DEC_65536:
-            *sampling_rate = max_rate / 65536;
-            break;
+        case RP_DEC_1:     *sampling_rate = max_rate / 1;     break;
+        case RP_DEC_8:     *sampling_rate = max_rate / 8;     break;
+        case RP_DEC_64:    *sampling_rate = max_rate / 64;    break;
+        case RP_DEC_1024:  *sampling_rate = max_rate / 1024;  break;
+        case RP_DEC_8192:  *sampling_rate = max_rate / 8192;  break;
+        case RP_DEC_65536: *sampling_rate = max_rate / 65536; break;
     }
 
     return RP_OK;
@@ -456,7 +390,7 @@ int acq_GetTriggerSrc(rp_acq_trig_src_t* source)
 int acq_GetTriggerState(rp_acq_trig_state_t* state)
 {
     bool stateB;
-    ECHECK(osc_GetTriggerState(&stateB));
+    osc_GetTriggerState(&stateB);
 
     if (stateB) {
         *state=RP_TRIG_STATE_TRIGGERED;
@@ -478,7 +412,7 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
         trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
     }
 
-    ECHECK(osc_SetTriggerDelay(trig_dly));
+    osc_SetTriggerDelay(trig_dly);
     triggerDelayInNs = false;
     return RP_OK;
 }
@@ -486,7 +420,7 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
 int acq_SetTriggerDelayNs(int64_t time_ns, bool updateMaxValue)
 {
     int32_t samples = cnvTimeToSmpls(time_ns);
-    ECHECK(acq_SetTriggerDelay(samples, updateMaxValue));
+    acq_SetTriggerDelay(samples, updateMaxValue);
     triggerDelayInNs = true;
     return RP_OK;
 }
@@ -502,7 +436,7 @@ int acq_GetTriggerDelay(int32_t* decimated_data_num)
 int acq_GetTriggerDelayNs(int64_t* time_ns)
 {
     int32_t samples;
-    ECHECK(acq_GetTriggerDelay(&samples));
+    acq_GetTriggerDelay(&samples);
     *time_ns=cnvSmplsToTime(samples);
     return RP_OK;
 }
@@ -523,13 +457,13 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
 
 int acq_SetTriggerLevel(rp_channel_t channel, float voltage)
 {
-    ECHECK(acq_SetChannelThreshold(channel, voltage));
+    acq_SetChannelThreshold(channel, voltage);
     return RP_OK;
 }
 
 int acq_GetTriggerLevel(float *voltage)
 {
-    ECHECK(acq_GetChannelThreshold(RP_CH_1, voltage));
+    acq_GetChannelThreshold(RP_CH_1, voltage);
     return RP_OK;
 }
 
@@ -538,8 +472,8 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
     float gainV;
     rp_pinState_t gain;
 
-    ECHECK(acq_GetGainV(channel, &gainV));
-    ECHECK(acq_GetGain(channel, &gain));;
+    acq_GetGainV(channel, &gainV);
+    acq_GetGain(channel, &gain);
 
     if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
@@ -569,14 +503,14 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     uint32_t cnts;
 
     if (channel == RP_CH_1) {
-        ECHECK(osc_GetThresholdChA(&cnts));
+        osc_GetThresholdChA(&cnts);
     }
     else {
-        ECHECK(osc_GetThresholdChB(&cnts));
+        osc_GetThresholdChB(&cnts);
     }
 
-    ECHECK(acq_GetGainV(channel, &gainV));
-    ECHECK(acq_GetGain(channel, &gain));
+    acq_GetGainV(channel, &gainV);
+    acq_GetGain(channel, &gain);
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = GET_OFFSET(channel, gain, calib);
@@ -589,14 +523,14 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
 
 int acq_SetTriggerHyst(float voltage)
 {
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, voltage));
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, voltage));
+    acq_SetChannelThresholdHyst(RP_CH_1, voltage);
+    acq_SetChannelThresholdHyst(RP_CH_2, voltage);
     return RP_OK;
 }
 
 int acq_GetTriggerHyst(float *voltage)
 {
-    ECHECK(acq_GetChannelThresholdHyst(RP_CH_1, voltage));
+    acq_GetChannelThresholdHyst(RP_CH_1, voltage);
     return RP_OK;
 }
 
@@ -606,8 +540,8 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
     float gainV;
     rp_pinState_t gain;
 
-    ECHECK(acq_GetGainV(channel, &gainV));
-    ECHECK(acq_GetGain(channel, &gain));;
+    acq_GetGainV(channel, &gainV);
+    acq_GetGain(channel, &gain);
 
     if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
@@ -633,14 +567,14 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
     uint32_t cnts;
 
     if (channel == RP_CH_1) {
-        ECHECK(osc_GetHysteresisChA(&cnts));
+        osc_GetHysteresisChA(&cnts);
     }
     else {
-        ECHECK(osc_GetHysteresisChB(&cnts));
+        osc_GetHysteresisChB(&cnts);
     }
 
-    ECHECK(acq_GetGainV(channel, &gainV));
-    ECHECK(acq_GetGain(channel, &gain));
+    acq_GetGainV(channel, &gainV);
+    acq_GetGain(channel, &gain);
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = GET_OFFSET(channel, gain, calib);
@@ -653,7 +587,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 
 int acq_Start()
 {
-    ECHECK(osc_WriteDataIntoMemory(true));
+    osc_WriteDataIntoMemory(true);
     return RP_OK;
 }
 
@@ -664,7 +598,7 @@ int acq_Stop()
 
 int acq_Reset()
 {
-    ECHECK(acq_SetDefault());
+    acq_SetDefault();
     return osc_ResetWriteStateMachine();
 }
 
@@ -706,7 +640,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
     rp_pinState_t gain;
-    ECHECK(acq_GetGain(channel, &gain));
+    acq_GetGain(channel, &gain);
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = GET_OFFSET(channel, gain, calib);
@@ -755,7 +689,7 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
     uint32_t pos;
 
-    ECHECK(acq_GetWritePointer(&pos));
+    acq_GetWritePointer(&pos);
     pos++;
 
     return acq_GetDataRaw(channel, pos, size, buffer);
@@ -766,7 +700,7 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t pos;
-    ECHECK(acq_GetWritePointer(&pos));
+    acq_GetWritePointer(&pos);
 
     pos++;
 
@@ -784,8 +718,8 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
 
     float gainV;
     rp_pinState_t gain;
-    ECHECK(acq_GetGainV(channel, &gainV));
-    ECHECK(acq_GetGain(channel, &gain));
+    acq_GetGainV(channel, &gainV);
+    acq_GetGain(channel, &gain);
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs = GET_OFFSET(channel, gain, calib);
@@ -808,10 +742,10 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
 
     float gainV1, gainV2;
     rp_pinState_t gain1, gain2;
-    ECHECK(acq_GetGainV(RP_CH_1, &gainV1));
-    ECHECK(acq_GetGain(RP_CH_1, &gain1));
-    ECHECK(acq_GetGainV(RP_CH_2, &gainV2));
-    ECHECK(acq_GetGain(RP_CH_2, &gain2));
+    acq_GetGainV(RP_CH_1, &gainV1);
+    acq_GetGain(RP_CH_1, &gain1);
+    acq_GetGainV(RP_CH_2, &gainV2);
+    acq_GetGain(RP_CH_2, &gain2);
 
     rp_calib_params_t calib = calib_GetParams();
     int32_t dc_offs1 = gain1 == RP_HIGH ? calib.fe_ch1_hi_offs : calib.fe_ch1_lo_offs;
@@ -862,7 +796,7 @@ int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     uint32_t pos;
 
-    ECHECK(acq_GetWritePointer(&pos));
+    acq_GetWritePointer(&pos);
     pos++;
 
     return acq_GetDataV(channel, pos, size, buffer);
@@ -873,7 +807,7 @@ int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t pos;
-    ECHECK(acq_GetWritePointer(&pos));
+    acq_GetWritePointer(&pos);
 
     pos = (pos - (*size)) % ADC_BUFFER_SIZE;
 
@@ -891,19 +825,19 @@ int acq_GetBufferSize(uint32_t *size) {
  * @return
  */
 int acq_SetDefault() {
-    ECHECK(acq_SetChannelThreshold(RP_CH_1, 0.0));
-    ECHECK(acq_SetChannelThreshold(RP_CH_2, 0.0));
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_1, 0.0));
-    ECHECK(acq_SetChannelThresholdHyst(RP_CH_2, 0.0));
+    acq_SetChannelThreshold(RP_CH_1, 0.0);
+    acq_SetChannelThreshold(RP_CH_2, 0.0);
+    acq_SetChannelThresholdHyst(RP_CH_1, 0.0);
+    acq_SetChannelThresholdHyst(RP_CH_2, 0.0);
 
-    ECHECK(acq_SetGain(RP_CH_1, RP_LOW));
-    ECHECK(acq_SetGain(RP_CH_2, RP_LOW));
-    ECHECK(acq_SetDecimation(RP_DEC_1));
-    ECHECK(acq_SetSamplingRate(RP_SMP_125M));
-    ECHECK(acq_SetAveraging(true));
-    ECHECK(acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED));
-    ECHECK(acq_SetTriggerDelay(0, false));
-    ECHECK(acq_SetTriggerDelayNs(0, false));
+    acq_SetGain(RP_CH_1, RP_LOW);
+    acq_SetGain(RP_CH_2, RP_LOW);
+    acq_SetDecimation(RP_DEC_1);
+    acq_SetSamplingRate(RP_SMP_125M);
+    acq_SetAveraging(true);
+    acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED);
+    acq_SetTriggerDelay(0, false);
+    acq_SetTriggerDelayNs(0, false);
 
     return RP_OK;
 }

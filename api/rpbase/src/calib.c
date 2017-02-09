@@ -31,7 +31,7 @@ static rp_calib_params_t calib, failsafa_params;
 
 int calib_Init()
 {
-    ECHECK(calib_ReadParams(&calib));
+    calib_ReadParams(&calib);
     return RP_OK;
 }
 
@@ -178,7 +178,7 @@ uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
 
 int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    ECHECK(calib_ReadParams(&params));
+    calib_ReadParams(&params);
 	failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -218,13 +218,13 @@ int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_p
 		}
 	}
     else
-		ECHECK(calib_WriteParams(params));
+		calib_WriteParams(params);
     return calib_Init();
 }
 
 int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    ECHECK(calib_ReadParams(&params));
+    calib_ReadParams(&params);
 	failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -250,13 +250,13 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_
 				out_params->fe_ch2_fs_g_lo = params.fe_ch2_fs_g_lo)
 	}
     else
-		ECHECK(calib_WriteParams(params));
+		calib_WriteParams(params);
     return calib_Init();
 }
 
 int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    ECHECK(calib_ReadParams(&params));
+    calib_ReadParams(&params);
     failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -282,13 +282,13 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_
 				out_params->fe_ch2_fs_g_hi = params.fe_ch2_fs_g_hi)
 	}
     else
-		ECHECK(calib_WriteParams(params));
+		calib_WriteParams(params);
     return calib_Init();
 }
 
 int calib_SetBackEndOffset(rp_channel_t channel) {
     rp_calib_params_t params;
-    ECHECK(calib_ReadParams(&params));
+    calib_ReadParams(&params);
 
 	failsafa_params = params;
     /* Reset current calibration parameters*/
@@ -299,24 +299,24 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     calib = params;
 
     /* Generate zero signal */
-    ECHECK(rp_GenReset());
-    ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
-    ECHECK(rp_GenAmp(channel, 0));
-    ECHECK(rp_GenOffset(channel, 0));
-    ECHECK(rp_GenOutEnable(channel));
+    rp_GenReset();
+    rp_GenWaveform(channel, RP_WAVEFORM_SINE);
+    rp_GenAmp(channel, 0);
+    rp_GenOffset(channel, 0);
+    rp_GenOutEnable(channel);
 
     CHANNEL_ACTION(channel,
             params.be_ch1_dc_offs = -calib_GetDataMedian(channel, RP_LOW),
             params.be_ch2_dc_offs = -calib_GetDataMedian(channel, RP_LOW))
 
     /* Set new local parameter */
-	ECHECK(calib_WriteParams(params));
+	calib_WriteParams(params);
     return calib_Init();
 }
 
 int calib_SetBackEndScale(rp_channel_t channel) {
     rp_calib_params_t params;
-    ECHECK(calib_ReadParams(&params));
+    calib_ReadParams(&params);
 	failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -327,12 +327,12 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     calib = params;
 
     /* Generate constant signal signal */
-    ECHECK(rp_GenReset());
-    ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_PWM));
-    ECHECK(rp_GenDutyCycle(channel, 1));
-    ECHECK(rp_GenAmp(channel, CONSTANT_SIGNAL_AMPLITUDE));
-    ECHECK(rp_GenOffset(channel, 0));
-    ECHECK(rp_GenOutEnable(channel));
+    rp_GenReset();
+    rp_GenWaveform(channel, RP_WAVEFORM_PWM);
+    rp_GenDutyCycle(channel, 1);
+    rp_GenAmp(channel, CONSTANT_SIGNAL_AMPLITUDE);
+    rp_GenOffset(channel, 0);
+    rp_GenOutEnable(channel);
 
     /* Calculate real max adc voltage */
     float value = calib_GetDataMedianFloat(channel, RP_LOW);
@@ -343,33 +343,33 @@ int calib_SetBackEndScale(rp_channel_t channel) {
             params.be_ch2_fs = calibValue)
 
     /* Set new local parameter */
-	ECHECK(calib_WriteParams(params));
+	calib_WriteParams(params);
     return calib_Init();
 }
 
 static int getGenAmp(rp_channel_t channel, float amp, float* min, float* max) {
-    ECHECK(rp_GenReset());
-    ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
-    ECHECK(rp_GenAmp(channel, amp));
-    ECHECK(rp_GenOffset(channel, 0));
-    ECHECK(rp_GenOutEnable(channel));
+    rp_GenReset();
+    rp_GenWaveform(channel, RP_WAVEFORM_SINE);
+    rp_GenAmp(channel, amp);
+    rp_GenOffset(channel, 0);
+    rp_GenOutEnable(channel);
 
     return calib_GetDataMinMaxFloat(channel, RP_LOW, min, max);
 }
 
 static int getGenDC_int(rp_channel_t channel, float dc) {
-    ECHECK(rp_GenReset());
-    ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_DC));
-    ECHECK(rp_GenAmp(channel, 0));
-    ECHECK(rp_GenOffset(channel, dc));
-    ECHECK(rp_GenOutEnable(channel));
+    rp_GenReset();
+    rp_GenWaveform(channel, RP_WAVEFORM_DC);
+    rp_GenAmp(channel, 0);
+    rp_GenOffset(channel, dc);
+    rp_GenOutEnable(channel);
 
     return calib_GetDataMedian(channel, RP_LOW);
 }
 
 int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    ECHECK(calib_ReadParams(&params));
+    calib_ReadParams(&params);
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
@@ -416,29 +416,29 @@ int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) 
 				out_params->be_ch2_dc_offs = params.be_ch2_dc_offs)
 	}
     else
-		ECHECK(calib_WriteParams(params));
+		calib_WriteParams(params);
     return calib_Init();
 }
 
 int calib_Reset() {
     calib_SetToZero();
-    ECHECK(calib_WriteParams(calib));
+    calib_WriteParams(calib);
     return calib_Init();
 }
 
 int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain) {
     /* Acquire data */
-    ECHECK(rp_AcqReset());
-    ECHECK(rp_AcqSetGain(channel, gain));
-    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
-    ECHECK(rp_AcqStart());
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    rp_AcqReset();
+    rp_AcqSetGain(channel, gain);
+    rp_AcqSetDecimation(RP_DEC_64);
+    rp_AcqStart();
+    rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
     usleep(1000000);
-    ECHECK(rp_AcqStop());
+    rp_AcqStop();
 
     int16_t data[BUFFER_LENGTH];
     uint32_t bufferSize = (uint32_t) BUFFER_LENGTH;
-    ECHECK(rp_AcqGetDataRaw(channel, 0, &bufferSize, data));
+    rp_AcqGetDataRaw(channel, 0, &bufferSize, data);
 
     long long avg = 0;
     for(int i = 0; i < BUFFER_LENGTH; ++i)
@@ -450,19 +450,19 @@ int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain) {
 }
 
 float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
-    ECHECK(rp_AcqReset());
-    ECHECK(rp_AcqSetGain(channel, gain));
-    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
-    ECHECK(rp_AcqStart());
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    rp_AcqReset();
+    rp_AcqSetGain(channel, gain);
+    rp_AcqSetDecimation(RP_DEC_64);
+    rp_AcqStart();
+    rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
     usleep(1000000);
     int BUF_SIZE = BUFFER_LENGTH;
 
-    ECHECK(rp_AcqStop());
+    rp_AcqStop();
 
     float data[BUF_SIZE];
     uint32_t bufferSize = (uint32_t) BUF_SIZE;
-    ECHECK(rp_AcqGetDataV(channel, 0, &bufferSize, data));
+    rp_AcqGetDataV(channel, 0, &bufferSize, data);
 
     double avg = 0;
     for(int i = 0; i < BUFFER_LENGTH; ++i)
@@ -474,19 +474,19 @@ float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
 }
 
 int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max) {
-    ECHECK(rp_AcqReset());
-    ECHECK(rp_AcqSetGain(channel, gain));
-    ECHECK(rp_AcqSetDecimation(RP_DEC_64));
-    ECHECK(rp_AcqStart());
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    rp_AcqReset();
+    rp_AcqSetGain(channel, gain);
+    rp_AcqSetDecimation(RP_DEC_64);
+    rp_AcqStart();
+    rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
     usleep(1000000);
     int BUF_SIZE = BUFFER_LENGTH;
 
-    ECHECK(rp_AcqStop());
+    rp_AcqStop();
 
     float data[BUF_SIZE];
     uint32_t bufferSize = (uint32_t) BUF_SIZE;
-    ECHECK(rp_AcqGetDataV(channel, 0, &bufferSize, data));
+    rp_AcqGetDataV(channel, 0, &bufferSize, data);
 
     float _min = data[0];
     float _max = data[0];
@@ -503,7 +503,7 @@ int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* mi
 
 int calib_setCachedParams() {
 	fprintf(stderr, "write FAILSAFE PARAMS\n");
-    ECHECK(calib_WriteParams(failsafa_params));
+    calib_WriteParams(failsafa_params);
     calib = failsafa_params;
 
     return 0;

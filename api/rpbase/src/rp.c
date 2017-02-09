@@ -33,46 +33,46 @@ static char version[50];
 
 int rp_Init()
 {
-    ECHECK(cmn_Init());
+    cmn_Init();
 
-    ECHECK(calib_Init());
-    ECHECK(hk_Init());
-    ECHECK(ams_Init());
-    ECHECK(generate_Init());
-    ECHECK(osc_Init());
+    calib_Init();
+    hk_Init();
+    ams_Init();
+    generate_Init();
+    osc_Init();
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
-    ECHECK(rp_Reset());
+    rp_Reset();
 
     return RP_OK;
 }
 
 int rp_CalibInit()
 {
-    ECHECK(calib_Init());
+    calib_Init();
 
     return RP_OK;
 }
 
 int rp_Release()
 {
-    ECHECK(osc_Release())
-    ECHECK(generate_Release());
-    ECHECK(ams_Release());
-    ECHECK(hk_Release());
-    ECHECK(calib_Release());
-    ECHECK(cmn_Release());
+    osc_Release();
+    generate_Release();
+    ams_Release();
+    hk_Release();
+    calib_Release();
+    cmn_Release();
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
 }
 
 int rp_Reset()
 {
-    ECHECK(rp_DpinReset());
-    ECHECK(rp_AOpinReset());
-    ECHECK(rp_GenReset());
-    ECHECK(rp_AcqReset());
+    rp_DpinReset();
+    rp_AOpinReset();
+    rp_GenReset();
+    rp_AcqReset();
     // TODO: Place other module resetting here (in reverse order)
     return 0;
 }
@@ -85,54 +85,30 @@ const char* rp_GetVersion()
 
 const char* rp_GetError(int errorCode) {
     switch (errorCode) {
-        case RP_OK:
-            return "OK";
-        case RP_EOED:
-            return "Failed to Open EEPROM Device.";
-        case RP_EOMD:
-            return "Failed to open memory device.";
-        case RP_ECMD:
-            return "Failed to close memory device.";
-        case RP_EMMD:
-            return "Failed to map memory device.";
-        case RP_EUMD:
-            return "Failed to unmap memory device.";
-        case RP_EOOR:
-            return "Value out of range.";
-        case RP_ELID:
-            return "LED input direction is not valid.";
-        case RP_EMRO:
-            return "Modifying read only filed is not allowed.";
-        case RP_EWIP:
-            return "Writing to input pin is not valid.";
-        case RP_EPN:
-            return "Invalid Pin number.";
-        case RP_UIA:
-            return "Uninitialized Input Argument.";
-        case RP_FCA:
-            return "Failed to Find Calibration Parameters.";
-        case RP_RCA:
-            return "Failed to Read Calibration Parameters.";
-        case RP_BTS:
-            return "Buffer too small";
-        case RP_EIPV:
-            return "Invalid parameter value";
-        case RP_EUF:
-            return "Unsupported Feature";
-        case RP_ENN:
-            return "Data not normalized";
-        case RP_EFOB:
-            return "Failed to open bus";
-        case RP_EFCB:
-            return "Failed to close bus";
-        case RP_EABA:
-            return "Failed to acquire bus access";
-        case RP_EFRB:
-            return "Failed to read from the bus";
-        case RP_EFWB:
-            return "Failed to write to the bus";
-        default:
-            return "Unknown error";
+        case RP_OK:    return "OK";
+        case RP_EOED:  return "Failed to Open EEPROM Device.";
+        case RP_EOMD:  return "Failed to open memory device.";
+        case RP_ECMD:  return "Failed to close memory device.";
+        case RP_EMMD:  return "Failed to map memory device.";
+        case RP_EUMD:  return "Failed to unmap memory device.";
+        case RP_EOOR:  return "Value out of range.";
+        case RP_ELID:  return "LED input direction is not valid.";
+        case RP_EMRO:  return "Modifying read only filed is not allowed.";
+        case RP_EWIP:  return "Writing to input pin is not valid.";
+        case RP_EPN:   return "Invalid Pin number.";
+        case RP_UIA:   return "Uninitialized Input Argument.";
+        case RP_FCA:   return "Failed to Find Calibration Parameters.";
+        case RP_RCA:   return "Failed to Read Calibration Parameters.";
+        case RP_BTS:   return "Buffer too small";
+        case RP_EIPV:  return "Invalid parameter value";
+        case RP_EUF:   return "Unsupported Feature";
+        case RP_ENN:   return "Data not normalized";
+        case RP_EFOB:  return "Failed to open bus";
+        case RP_EFCB:  return "Failed to close bus";
+        case RP_EABA:  return "Failed to acquire bus access";
+        case RP_EFRB:  return "Failed to read from the bus";
+        case RP_EFWB:  return "Failed to write to the bus";
+        default:       return "Unknown error";
     }
 }
 
