@@ -52,23 +52,14 @@ static bool triggerDelayInNs = false;
 rp_acq_trig_src_t last_trig_src = RP_TRIG_SRC_DISABLED;
 
 /* @brief Default filter equalization coefficients */
-static const uint32_t GAIN_LO_CHA_FILT_AA = 0x7D93;
-static const uint32_t GAIN_LO_CHA_FILT_BB = 0x437C7;
-static const uint32_t GAIN_LO_CHA_FILT_PP = 0x2666;
-static const uint32_t GAIN_LO_CHA_FILT_KK = 0xd9999a;
-static const uint32_t GAIN_LO_CHB_FILT_AA = 0x7D93;
-static const uint32_t GAIN_LO_CHB_FILT_BB = 0x437C7;
-static const uint32_t GAIN_LO_CHB_FILT_PP = 0x2666;
-static const uint32_t GAIN_LO_CHB_FILT_KK = 0xd9999a;
-static const uint32_t GAIN_HI_CHA_FILT_AA = 0x4C5F;
-static const uint32_t GAIN_HI_CHA_FILT_BB = 0x2F38B;
-static const uint32_t GAIN_HI_CHA_FILT_PP = 0x2666;
-static const uint32_t GAIN_HI_CHA_FILT_KK = 0xd9999a;
-static const uint32_t GAIN_HI_CHB_FILT_AA = 0x4C5F;
-static const uint32_t GAIN_HI_CHB_FILT_BB = 0x2F38B;
-static const uint32_t GAIN_HI_CHB_FILT_PP = 0x2666;
-static const uint32_t GAIN_HI_CHB_FILT_KK = 0xd9999a;
-
+static const uint32_t GAIN_LO_FILT_AA = 0x7D93;
+static const uint32_t GAIN_LO_FILT_BB = 0x437C7;
+static const uint32_t GAIN_LO_FILT_PP = 0x2666;
+static const uint32_t GAIN_LO_FILT_KK = 0xd9999a;
+static const uint32_t GAIN_HI_FILT_AA = 0x4C5F;
+static const uint32_t GAIN_HI_FILT_BB = 0x2F38B;
+static const uint32_t GAIN_HI_FILT_PP = 0x2666;
+static const uint32_t GAIN_HI_FILT_KK = 0xd9999a;
 
 #define GET_OFFSET_CH1(gain, calib) (gain == RP_HIGH ? calib.fe_ch1_hi_offs : calib.fe_ch1_lo_offs)
 #define GET_OFFSET_CH2(gain, calib) (gain == RP_HIGH ? calib.fe_ch2_hi_offs : calib.fe_ch2_lo_offs)
@@ -123,43 +114,12 @@ static int setEqFilters(rp_channel_t channel)
     acq_GetGain(channel, &gain);
 
     // Update equalization filter with default coefficients
-    if (channel == RP_CH_1)
-    {
-        if (gain == RP_HIGH)
-        {
-            return osc_SetEqFiltersChA(
-                    GAIN_HI_CHA_FILT_AA,
-                    GAIN_HI_CHA_FILT_BB,
-                    GAIN_HI_CHA_FILT_KK,
-                    GAIN_HI_CHA_FILT_PP);
-        }
-        else
-        {
-            return osc_SetEqFiltersChA(
-                    GAIN_LO_CHA_FILT_AA,
-                    GAIN_LO_CHA_FILT_BB,
-                    GAIN_LO_CHA_FILT_KK,
-                    GAIN_LO_CHA_FILT_PP);
-        }
-    }
-    else
-    {
-        if (gain == RP_HIGH)
-        {
-            return osc_SetEqFiltersChB(
-                    GAIN_HI_CHB_FILT_AA,
-                    GAIN_HI_CHB_FILT_BB,
-                    GAIN_HI_CHB_FILT_KK,
-                    GAIN_HI_CHB_FILT_PP);
-        }
-        else
-        {
-            return osc_SetEqFiltersChB(
-                    GAIN_LO_CHB_FILT_AA,
-                    GAIN_LO_CHB_FILT_BB,
-                    GAIN_LO_CHB_FILT_KK,
-                    GAIN_LO_CHB_FILT_PP);
-        }
+    if (channel == RP_CH_1) {
+        if (gain == RP_HIGH)  return osc_SetEqFiltersChA(GAIN_HI_FILT_AA, GAIN_HI_FILT_BB, GAIN_HI_FILT_KK, GAIN_HI_FILT_PP);
+        else                  return osc_SetEqFiltersChA(GAIN_LO_FILT_AA, GAIN_LO_FILT_BB, GAIN_LO_FILT_KK, GAIN_LO_FILT_PP);
+    } else {
+        if (gain == RP_HIGH)  return osc_SetEqFiltersChB(GAIN_HI_FILT_AA, GAIN_HI_FILT_BB, GAIN_HI_FILT_KK, GAIN_HI_FILT_PP);
+        else                  return osc_SetEqFiltersChB(GAIN_LO_FILT_AA, GAIN_LO_FILT_BB, GAIN_LO_FILT_KK, GAIN_LO_FILT_PP);
     }
 }
 
