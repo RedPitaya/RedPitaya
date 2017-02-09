@@ -120,18 +120,6 @@ localparam int unsigned GDW = 8+8;
 logic [4-1:0] fclk ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
 logic [4-1:0] frstn;
 
-// AXI masters
-logic            axi1_clk    , axi0_clk    ;
-logic            axi1_rstn   , axi0_rstn   ;
-logic [ 32-1: 0] axi1_waddr  , axi0_waddr  ;
-logic [ 64-1: 0] axi1_wdata  , axi0_wdata  ;
-logic [  8-1: 0] axi1_wsel   , axi0_wsel   ;
-logic            axi1_wvalid , axi0_wvalid ;
-logic [  4-1: 0] axi1_wlen   , axi0_wlen   ;
-logic            axi1_wfixed , axi0_wfixed ;
-logic            axi1_werr   , axi0_werr   ;
-logic            axi1_wrdy   , axi0_wrdy   ;
-
 // PLL signals
 logic                 adc_clk_in;
 logic                 pll_adc_clk;
@@ -260,18 +248,7 @@ red_pitaya_ps ps (
   // GPIO
   .gpio          (gpio),
   // system read/write channel
-  .bus           (ps_sys      ),
-  // AXI masters
-  .axi1_clk_i    (axi1_clk    ),  .axi0_clk_i    (axi0_clk    ),  // global clock
-  .axi1_rstn_i   (axi1_rstn   ),  .axi0_rstn_i   (axi0_rstn   ),  // global reset
-  .axi1_waddr_i  (axi1_waddr  ),  .axi0_waddr_i  (axi0_waddr  ),  // system write address
-  .axi1_wdata_i  (axi1_wdata  ),  .axi0_wdata_i  (axi0_wdata  ),  // system write data
-  .axi1_wsel_i   (axi1_wsel   ),  .axi0_wsel_i   (axi0_wsel   ),  // system write byte select
-  .axi1_wvalid_i (axi1_wvalid ),  .axi0_wvalid_i (axi0_wvalid ),  // system write data valid
-  .axi1_wlen_i   (axi1_wlen   ),  .axi0_wlen_i   (axi0_wlen   ),  // system write burst length
-  .axi1_wfixed_i (axi1_wfixed ),  .axi0_wfixed_i (axi0_wfixed ),  // system write burst type (fixed / incremental)
-  .axi1_werr_o   (axi1_werr   ),  .axi0_werr_o   (axi0_werr   ),  // system write error
-  .axi1_wrdy_o   (axi1_wrdy   ),  .axi0_wrdy_o   (axi0_wrdy   )   // system write ready
+  .bus           (ps_sys      )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -430,17 +407,6 @@ red_pitaya_scope i_scope (
   .adc_rstn_i    (adc_rstn    ),  // reset - active low
   .trig_ext_i    (gpio.i[8]   ),  // external trigger
   .trig_asg_i    (trig_asg_out),  // ASG trigger
-  // AXI0 master                 // AXI1 master
-  .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
-  .axi0_rstn_o   (axi0_rstn  ),  .axi1_rstn_o   (axi1_rstn  ),
-  .axi0_waddr_o  (axi0_waddr ),  .axi1_waddr_o  (axi1_waddr ),
-  .axi0_wdata_o  (axi0_wdata ),  .axi1_wdata_o  (axi1_wdata ),
-  .axi0_wsel_o   (axi0_wsel  ),  .axi1_wsel_o   (axi1_wsel  ),
-  .axi0_wvalid_o (axi0_wvalid),  .axi1_wvalid_o (axi1_wvalid),
-  .axi0_wlen_o   (axi0_wlen  ),  .axi1_wlen_o   (axi1_wlen  ),
-  .axi0_wfixed_o (axi0_wfixed),  .axi1_wfixed_o (axi1_wfixed),
-  .axi0_werr_i   (axi0_werr  ),  .axi1_werr_i   (axi1_werr  ),
-  .axi0_wrdy_i   (axi0_wrdy  ),  .axi1_wrdy_i   (axi1_wrdy  ),
   // System bus
   .sys_addr      (sys[1].addr ),
   .sys_wdata     (sys[1].wdata),
