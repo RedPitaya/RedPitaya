@@ -43,6 +43,7 @@ class redpitaya (object):
     def Release(self):
         return self.rp_api.rp_Release()
 
+
     def GenReset(self):
         return self.rp_api.rp_GenReset()
 
@@ -62,6 +63,7 @@ class redpitaya (object):
     def GenOutEnable(self, channel):
         return self.rp_api.rp_GenOutEnable(channel)
 
+
     def AcqReset(self):
         return self.rp_api.rp_AcqReset()
 
@@ -75,6 +77,19 @@ class redpitaya (object):
 
     def AcqSetTriggerLevel(self, channel, level):
         return self.rp_api.rp_AcqSetTriggerLevel(channel, c_float(level))
+
+    def AcqGetTriggerLevel(self, channel):
+        value = c_float(0)
+        self.rp_api.rp_AcqGetTriggerLevel(byref(value))
+        return value.value
+
+    def AcqSetTriggerHyst(self, channel, level):
+        return self.rp_api.rp_rp_AcqSetTriggerHyst(channel, c_float(level))
+
+    def AcqGetTriggerHyst(self, channel):
+        value = c_float(0)
+        self.rp_api.rp_AcqGetTriggerHyst(byref(value))
+        return value.value
 
     def AcqSetTriggerDelay(self, delay):
         return self.rp_api.rp_AcqSetTriggerDelay(delay)
