@@ -8,7 +8,7 @@
 		__overlay__ {
 			#address-cells = <1>;
 			#size-cells = <1>;
-			firmware-name = "redpitaya/axi4lite.bin";
+			firmware-name = "redpitaya/fpga.bin";
 		};
 	};
 };
