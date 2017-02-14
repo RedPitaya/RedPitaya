@@ -6,7 +6,7 @@ Quick release building
 **********************
 
 If there are no changes needed to the Debian system, but a new ecosystem is available,
-then there is no need to bootstrap Debian and install Wyliodrin.
+then there is no need to bootstrap Debian.
 Instead it is enough to delete all files from the FAT partition
 and extract ``ecosystem*.zip`` into the partition.
 Start with an existing release image:
@@ -23,7 +23,7 @@ Start with an existing release image:
 
    .. code-block:: shell-session
 
-      $ head -c 3670016000 debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin-short.img
+      $ head -c 3670016000 debian_armhf.img > debian_armhf-short.img
 
 10. compress the image using zip
 11. upload image to download server
@@ -60,7 +60,6 @@ Multiple steps are needed to prepare a proper SD card image.
 
 1. Bootstrap Debian system with network configuration and Red Pitaya specifics.
 2. Add Red Pitaya ecosystem ZIP.
-3. Optionally install Wyliodrin.
 
 ================
 Ubuntu bootstrap
@@ -102,34 +101,6 @@ it can be extracted later to the FAT partition (128MB) of the SD card.
 In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image (containing FPGA code),
 a boot script (``u-boot.scr``) and the Linux kernel.
 
-==========
-Wyliodrin
-==========
-
-Unfortunately there are issues with Wyliodrin install process inside a virtualized environment.
-Therefore the provided script ``wiliodrin.sh`` must be run from a shell on a running Red Pitaya board.
-The script can be copied to the FAT partition and executed from the ``/root/`` directory.
-Some code which is meant to be executed on the development machine,
-should be comment out (everything outside the ``chroot``, including the ``chroot`` lines themselves).
-
-.. code-block:: shell-session
-
-   $ cd /root
-   $ . /opt/redpitaya/wyliodrin.sh
-
-The Wyliodrin team provided the initial support for Red Pitaya inside the ``libwyliodrin`` library.
-We are using a fork of the library which includes a few bug fixes and new features.
-Please have a look at the commit history for details.
-It would make sense to ask the Wyliodrin team to accept this changes into upstream.
-
-https://github.com/RedPitaya/libwyliodrin
-
-Some effort was made to port the newer C based ``wyliodrin-server``
-instead of using the current ``node.js`` based server.
-Most of the effort was spent on attempts to replace compiling dependencies
-from source with packages provided in Debian.
-The unfinished branch can be provided to interested developers.
-
 ===================
 Reducing image size
 ===================
@@ -160,7 +131,7 @@ The updated SD card contents should be copied into an image using ``dd`` or the 
 
 .. code-block:: shell-session
 
-    $ dd bs=4M if=/dev/sd? of=debian_armhf_*_wyliodrin.img
+    $ dd bs=4M if=/dev/sd? of=debian_armhf_*.img
 
 Initially the SD card image was designed to be about 3.7GB in size,
 so it would fit all 4GB SD cards.
@@ -169,15 +140,15 @@ To remove the empty space from the SD card image do:
 
 .. code-block:: shell-session
 
-   $ head -c 3670016000 debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin-short.img
-   $ mv debian_armhf_*_wyliodrin-short.img debian_armhf_*_wyliodrin.im
+   $ head -c 3670016000 debian_armhf_*.img > debian_armhf_*-short.img
+   $ mv debian_armhf_*-short.img debian_armhf_*.img
 
 The image size can be further reduced by compressing it.
 Zip is used, since it is also available by default on MS Windows.
 
 .. code-block:: shell-session
 
-   $ zip debian_armhf_*_wyliodrin.img > debian_armhf_*_wyliodrin.img.zip
+   $ zip debian_armhf_*.img > debian_armhf_*.img.zip
 
 =======================
 Updating ecosystem only
@@ -227,8 +198,6 @@ Service files are located in ``OS/debian/overlay/etc/systemd/system/*.service``.
 +-------------------------+----------------------------------------------------------------------------------------------------+
 | service                 | description                                                                                        |
 +=========================+====================================================================================================+
-| ``redpitaya_wyliodrin`` | Wyliodrin server, is running by default                                                            |
-+-------------------------+----------------------------------------------------------------------------------------------------+
 | ``redpitaya_scpi``      | SCPI server, is disabled by default, since it conflicts with WEB applications                      |
 +-------------------------+----------------------------------------------------------------------------------------------------+
 | ``redpitaya_discovery`` | Device discovery, is run once after boot to send Ethernet MAC and IP address to a discovery server |

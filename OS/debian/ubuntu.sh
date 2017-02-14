@@ -138,7 +138,6 @@ EOF_CHROOT
 
 . OS/debian/network.sh
 . OS/debian/redpitaya.sh
-#. OS/debian/wyliodrin.sh
 . OS/debian/jupyter.sh
 #. OS/debian/tft.sh
 

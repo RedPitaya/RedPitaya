@@ -320,14 +320,13 @@ rp_communication:
 
 APP_ECOSYSTEM_DIR        = apps-tools/ecosystem
 APP_SCPIMANAGER_DIR      = apps-tools/scpi_manager
-APP_WYLIODRINMANAGER_DIR = apps-tools/wyliodrin_manager
 APP_NETWORKMANAGER_DIR   = apps-tools/network_manager
 APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager wyliodrin_manager network_manager jupyter_manager
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager
 
-apps-tools: ecosystem updater scpi_manager wyliodrin_manager network_manager jupyter_manager
+apps-tools: ecosystem updater scpi_manager network_manager jupyter_manager
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
@@ -340,9 +339,6 @@ updater: ecosystem api $(NGINX)
 
 scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-wyliodrin_manager: ecosystem
-	$(MAKE) -C $(APP_WYLIODRINMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 network_manager: ecosystem
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))

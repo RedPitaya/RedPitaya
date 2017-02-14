@@ -1,7 +1,7 @@
-# Release 0.9?
+# Release 0.97
 
 U-Boot:
-- updated to upstream xilinx-v2016.2
+- updated to upstream xilinx-v2016.4
 
 Linux kernel:
 - added support for I2C GPIO expanders (PCA953X, MCP23S08)
@@ -28,10 +28,14 @@ OS:
 
 API:
 - changed API to map /dev/uio/
+- added cleaner API1
 
 Documentation:
 - recoded most documentation into reStructuredText, so it can be published on
   http://redpitaya.readthedocs.io/en/latest/
+
+Wyliodrin:
+- removed
 
 # Release 0.96 RC?
 

@@ -79,11 +79,6 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/sockproc.service            $ROOT_DIR/etc/systemd/system/sockproc.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_scpi.service      $ROOT_DIR/etc/systemd/system/redpitaya_scpi.service
 install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
-# TODO: this Wyliodrin service is only here since wyliodrin.sh can not be run in a virtualized environment
-# TODO: wyliodrin.sh install script is copied onto the image
-# Wyliodrin service
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_wyliodrin.service $ROOT_DIR/etc/systemd/system/redpitaya_wyliodrin.service
-install -v -m 664 -o root -D OS/debian/wyliodrin.sh $ROOT_DIR/root/wyliodrin.sh
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 systemctl enable redpitaya_discovery
@@ -114,7 +109,6 @@ groupadd --system dma
 # for running bazar (Nginx), sockproc
 useradd --system redpitaya_nginx
 useradd --system scpi
-useradd --system wyliodrin
 
 # add a default user
 useradd -m -c "Red Pitaya" -s /bin/bash -G sudo,xdevcfg,uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya
@@ -122,15 +116,13 @@ useradd -m -c "Red Pitaya" -s /bin/bash -G sudo,xdevcfg,uio,xadc,led,gpio,spi,i2
 # add HW access rights to Nginx user "redpitaya_nginx"
 usermod -a -G xdevcfg,uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma redpitaya_nginx
 
-# add HW access rights to users "scpi" and "wyliodrin"
+# add HW access rights to users "scpi"
 usermod -a -G uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma scpi
-usermod -a -G uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma wyliodrin
 
 # TODO: Bazaar code should be moved from /dev/mem to /dev/uio/*
 usermod -a -G kmem redpitaya
 usermod -a -G kmem redpitaya_nginx
 usermod -a -G kmem scpi
-usermod -a -G kmem wyliodrin
 EOF_CHROOT
 
 ###############################################################################
