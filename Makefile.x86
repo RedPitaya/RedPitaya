@@ -226,9 +226,6 @@ $(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
 jupyter-install:
 	mkdir -p $(INSTALL_DIR)/jupyter
 	cp -r jupyter/* $(INSTALL_DIR)/jupyter/
-	curl -L	https://github.com/jakevdp/WhirlwindTourOfPython/archive/master.tar.gz -o WhirlwindTourOfPython.tar.gz
-	mkdir -p $(INSTALL_DIR)/jupyter/WhirlwindTourOfPython
-	tar -xzf WhirlwindTourOfPython.tar.gz --strip-components=1 --directory=$(INSTALL_DIR)/jupyter/WhirlwindTourOfPython
 
 ################################################################################
 # tarball

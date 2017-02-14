@@ -78,4 +78,7 @@ EOF_CHROOT
 # copy/link notebook examples
 ###############################################################################
 
+mkdir $ROOT_DIR/home/jupyter/WhirlwindTourOfPython
+git clone https://github.com/jakevdp/WhirlwindTourOfPython.git $ROOT_DIR/home/jupyter/WhirlwindTourOfPython
+
 ln -s /opt/redpitaya/jupyter/welcome.ipynb $ROOT_DIR/home/jupyter/welcome.ipynb
