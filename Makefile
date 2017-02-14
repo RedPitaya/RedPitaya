@@ -32,18 +32,24 @@ $(INSTALL_DIR):
 ################################################################################
 
 LIBRP_DIR       = api/rpbase
+LIBRP1_DIR      = api1
+LIBRP2_DIR      = api2
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
-LIBRP2_DIR      = api2
 
-.PHONY: api2 api librp
+.PHONY: api api1 api2 librp librp1
 .PHONY: librpapp liblcr_meter
 
 librp:
 	$(MAKE) -C $(LIBRP_DIR) clean
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+librp1:
+	$(MAKE) -C $(LIBRP1_DIR) clean
+	$(MAKE) -C $(LIBRP1_DIR)
+	$(MAKE) -C $(LIBRP1_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp2:
 	$(MAKE) -C $(LIBRP2_DIR) clean
@@ -70,6 +76,8 @@ else
 api: librp
 
 endif
+
+api1: librp1
 
 api2: librp2
 

@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "redpitaya/version.h"
 #include "common.h"
 #include "housekeeping.h"
 #include "acq.h"
@@ -25,8 +24,6 @@
 // include source files
 #include "acq.c"
 #include "gen.c"
-
-static char version[50];
 
 /**
  * Global methods
@@ -56,11 +53,6 @@ int rp_Reset() {
     rp_GenReset();
     rp_AcqReset();
     return 0;
-}
-
-const char* rp_GetVersion() {
-    sprintf(version, "%s (%s)", VERSION_STR, REVISION_STR);
-    return version;
 }
 
 const char* rp_GetError(int errorCode) {
