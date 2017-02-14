@@ -163,7 +163,7 @@ set_property PACKAGE_PIN M14 [get_ports {exp_p_io[7]}]
 set_property PACKAGE_PIN M15 [get_ports {exp_n_io[7]}]
 
 #set_property PULLDOWN TRUE [get_ports {exp_p_io[0]}]
-#set_property PULLDOWN TRUE [get_ports {exp_n_io[0]}]
+set_property PULLDOWN TRUE [get_ports {exp_n_io[0]}]
 #set_property PULLUP   TRUE [get_ports {exp_p_io[7]}]
 #set_property PULLUP   TRUE [get_ports {exp_n_io[7]}]
 
