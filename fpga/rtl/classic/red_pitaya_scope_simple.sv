@@ -536,6 +536,8 @@ end else begin
 
      20'h1???? : begin sys_ack <= adc_rd_dv;       sys_rdata <= adc_a_rd     ; end
      20'h2???? : begin sys_ack <= adc_rd_dv;       sys_rdata <= adc_b_rd     ; end
+
+     default   : begin sys_ack <= sys_en;          sys_rdata <= 'x           ; end
    endcase
 end
 

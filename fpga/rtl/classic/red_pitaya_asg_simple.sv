@@ -255,6 +255,8 @@ end else begin
 
      20'h1zzzz : begin sys_ack <= ack_dly;         sys_rdata <= buf_a_rdata                        ; end
      20'h2zzzz : begin sys_ack <= ack_dly;         sys_rdata <= buf_b_rdata                        ; end
+
+     default   : begin sys_ack <= sys_en;          sys_rdata <= 'x                                 ; end
    endcase
 end
 
