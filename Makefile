@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all: api nginx scpi examples rp_communication apps-tools apps-pro
+all: api api1 nginx scpi examples rp_communication apps-tools apps-pro
 
 $(DL):
 	mkdir -p $@
