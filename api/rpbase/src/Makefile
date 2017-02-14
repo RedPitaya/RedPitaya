@@ -89,7 +89,6 @@ $(STATIC_LIB): $(OBJS)
 # Clean target - when called it cleans all object files and executables.
 clean:
 	rm -f $(TARGET) $(OBJECTS_DIR)/*.o
-	rm -rf $(INSTALL_DIR)/lib
 
 # Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
 # executables to that location.
