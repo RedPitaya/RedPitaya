@@ -164,48 +164,48 @@ int32_t calib_FullScaleFromVoltage(float voltage) {
     return (int32_t) (voltage / 100.0 * (float)((uint64_t)1<<32));
 }
 
-int32_t calib_GetAcqOffset(rp_channel_t channel, rp_pinState_t gain) {
-    return (gain == RP_HIGH ? calib.fe_hi_offs[channel]
-                            : calib.fe_lo_offs[channel]);
+int32_t calib_GetAcqOffset(int unsigned channel, int unsigned gain) {
+    return (gain == 1 ? calib.fe_hi_offs[channel]
+                      : calib.fe_lo_offs[channel]);
 }
 
-float calib_GetAcqScale(rp_channel_t channel, rp_pinState_t gain) {
+float calib_GetAcqScale(int unsigned channel, int unsigned gain) {
     return (calib_FullScaleToVoltage(calib.fe_fs_g[gain][channel]) * GAIN_V(gain));
 }
 
-int32_t calib_GetGenOffset(rp_channel_t channel) {
+int32_t calib_GetGenOffset(int unsigned channel) {
     return (calib.be_dc_offs[channel]);
 }
 
-float calib_GetGenScale(rp_channel_t channel) {
+float calib_GetGenScale(int unsigned channel) {
     return (calib_FullScaleToVoltage(calib.be_fs[channel]));
 }
 
-int calib_SetAcqOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
+int calib_SetAcqOffset(int unsigned channel, int unsigned gain, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
     failsafe_params = params;
 
     /* Reset current calibration parameters*/
-    if (gain == RP_LOW)  params.fe_lo_offs[channel] = 0;
-    else                 params.fe_hi_offs[channel] = 0;
+    if (gain == 0)  params.fe_lo_offs[channel] = 0;
+    else            params.fe_hi_offs[channel] = 0;
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
 
-    if (gain == RP_LOW)  params.fe_lo_offs[channel] = calib_GetDataMedian(channel, RP_LOW);
-    else                 params.fe_hi_offs[channel] = calib_GetDataMedian(channel, RP_HIGH);
+    if (gain == 0)  params.fe_lo_offs[channel] = calib_GetDataMedian(channel, 0);
+    else            params.fe_hi_offs[channel] = calib_GetDataMedian(channel, 1);
 
     /* Set new local parameter */
     if (out_params) {
         // *out_params = params;
-        if (gain == RP_LOW)  out_params->fe_lo_offs[channel] = params.fe_lo_offs[channel];
-        else                 out_params->fe_hi_offs[channel] = params.fe_hi_offs[channel];
+        if (gain == 0)  out_params->fe_lo_offs[channel] = params.fe_lo_offs[channel];
+        else            out_params->fe_hi_offs[channel] = params.fe_hi_offs[channel];
     } else
         calib_WriteParams(params);
     return calib_Init();
 }
 
-int calib_SetAcqScale(rp_channel_t channel, rp_pinState_t gain, float referentialVoltage, rp_calib_params_t* out_params) {
+int calib_SetAcqScale(int unsigned channel, int unsigned gain, float referentialVoltage, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
     failsafe_params = params;
@@ -216,7 +216,7 @@ int calib_SetAcqScale(rp_channel_t channel, rp_pinState_t gain, float referentia
     calib = params;
 
     /* Calculate real max adc voltage */
-    //float value = calib_GetDataMedianFloat(channel, RP_LOW); TODO
+    //float value = calib_GetDataMedianFloat(channel, 0); TODO
     float value = calib_GetDataMedianFloat(channel, gain);
     uint32_t calibValue = calib_FullScaleFromVoltage(GAIN_V(gain) * referentialVoltage / value);
 
@@ -230,7 +230,7 @@ int calib_SetAcqScale(rp_channel_t channel, rp_pinState_t gain, float referentia
     return calib_Init();
 }
 
-int calib_SetBackEndOffset(rp_channel_t channel) {
+int calib_SetBackEndOffset(int unsigned channel) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
 
@@ -247,14 +247,14 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     rp_GenOffset(channel, 0);
     rp_GenOutEnable(channel);
 
-    params.be_dc_offs[channel] = -calib_GetDataMedian(channel, RP_LOW),
+    params.be_dc_offs[channel] = -calib_GetDataMedian(channel, 0),
 
     /* Set new local parameter */
     calib_WriteParams(params);
     return calib_Init();
 }
 
-int calib_SetBackEndScale(rp_channel_t channel) {
+int calib_SetBackEndScale(int unsigned channel) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
     failsafe_params = params;
@@ -273,7 +273,7 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     rp_GenOutEnable(channel);
 
     /* Calculate real max adc voltage */
-    float value = calib_GetDataMedianFloat(channel, RP_LOW);
+    float value = calib_GetDataMedianFloat(channel, 0);
     uint32_t calibValue = calib_FullScaleFromVoltage((float) (value / CONSTANT_SIGNAL_AMPLITUDE));
 
     params.be_fs[channel] = calibValue;
@@ -283,27 +283,27 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     return calib_Init();
 }
 
-static int getGenAmp(rp_channel_t channel, float amp, float* min, float* max) {
+static int getGenAmp(int unsigned channel, float amp, float* min, float* max) {
     rp_GenReset();
     rp_GenWaveform(channel, RP_WAVEFORM_SINE);
     rp_GenAmp(channel, amp);
     rp_GenOffset(channel, 0);
     rp_GenOutEnable(channel);
 
-    return calib_GetDataMinMaxFloat(channel, RP_LOW, min, max);
+    return calib_GetDataMinMaxFloat(channel, 0, min, max);
 }
 
-static int getGenDC_int(rp_channel_t channel, float dc) {
+static int getGenDC_int(int unsigned channel, float dc) {
     rp_GenReset();
     rp_GenWaveform(channel, RP_WAVEFORM_DC);
     rp_GenAmp(channel, 0);
     rp_GenOffset(channel, dc);
     rp_GenOutEnable(channel);
 
-    return calib_GetDataMedian(channel, RP_LOW);
+    return calib_GetDataMedian(channel, 0);
 }
 
-int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
+int calib_CalibrateBackEnd(int unsigned channel, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
 
@@ -349,7 +349,7 @@ int calib_Reset() {
     return calib_Init();
 }
 
-int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain) {
+int32_t calib_GetDataMedian(int unsigned channel, int unsigned gain) {
     /* Acquire data */
     rp_AcqReset();
     rp_AcqSetGain(channel, gain);
@@ -372,7 +372,7 @@ int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain) {
     return avg;
 }
 
-float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
+float calib_GetDataMedianFloat(int unsigned channel, int unsigned gain) {
     rp_AcqReset();
     rp_AcqSetGain(channel, gain);
     rp_AcqSetDecimationFactor(64);
@@ -396,7 +396,7 @@ float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
     return avg;
 }
 
-int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max) {
+int calib_GetDataMinMaxFloat(int unsigned channel, int unsigned gain, float* min, float* max) {
     rp_AcqReset();
     rp_AcqSetGain(channel, gain);
     rp_AcqSetDecimationFactor(64);

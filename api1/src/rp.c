@@ -92,27 +92,27 @@ rp_calib_params_t rp_GetCalibrationSettings()
     return calib_GetParams();
 }
 
-int rp_CalibrateAcqOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
+int rp_CalibrateAcqOffset(int unsigned channel, int unsigned gain, rp_calib_params_t* out_params) {
     return calib_SetAcqOffset(channel, gain, out_params);
 }
 
-int rp_CalibrateAcqScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
+int rp_CalibrateAcqScaleLV(int unsigned channel, float referentialVoltage, rp_calib_params_t* out_params) {
     return calib_SetAcqScale(channel, 0, referentialVoltage, out_params);
 }
 
-int rp_CalibrateAcqScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
+int rp_CalibrateAcqScaleHV(int unsigned channel, float referentialVoltage, rp_calib_params_t* out_params) {
     return calib_SetAcqScale(channel, 1, referentialVoltage, out_params);
 }
 
-int rp_CalibrateGenOffset(rp_channel_t channel) {
+int rp_CalibrateGenOffset(int unsigned channel) {
     return calib_SetGenOffset(channel);
 }
 
-int rp_CalibrateGenScale(rp_channel_t channel) {
+int rp_CalibrateGenScale(int unsigned channel) {
     return calib_SetGenScale(channel);
 }
 
-int rp_CalibrateGen(rp_channel_t channel, rp_calib_params_t* out_params) {
+int rp_CalibrateGen(int unsigned channel, rp_calib_params_t* out_params) {
     return calib_CalibrateGen(channel, out_params);
 }
 

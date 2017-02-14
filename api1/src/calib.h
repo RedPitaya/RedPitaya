@@ -32,23 +32,23 @@ float   calib_FullScaleToVoltage  (uint32_t cnt);
 int32_t calib_FullScaleFromVoltage(float    voltage);
 int32_t calib_Saturate(int unsigned bits, int32_t cnt);
 
-int32_t calib_GetAcqOffset(rp_channel_t channel, rp_pinState_t gain);
-float   calib_GetAcqScale (rp_channel_t channel, rp_pinState_t gain);
-int     calib_SetAcqOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params);
-int     calib_SetAcqScale (rp_channel_t channel, rp_pinState_t gain, float referentialVoltage, rp_calib_params_t* out_params);
+int32_t calib_GetAcqOffset(int unsigned channel, int unsigned gain);
+float   calib_GetAcqScale (int unsigned channel, int unsigned gain);
+int     calib_SetAcqOffset(int unsigned channel, int unsigned gain, rp_calib_params_t* out_params);
+int     calib_SetAcqScale (int unsigned channel, int unsigned gain, float referentialVoltage, rp_calib_params_t* out_params);
 
-int32_t calib_GetGenOffset(rp_channel_t channel);
-float   calib_GetGenScale (rp_channel_t channel);
-int     calib_SetGenOffset(rp_channel_t channel);
-int     calib_SetGenScale (rp_channel_t channel);
+int32_t calib_GetGenOffset(int unsigned channel);
+float   calib_GetGenScale (int unsigned channel);
+int     calib_SetGenOffset(int unsigned channel);
+int     calib_SetGenScale (int unsigned channel);
 
-int calib_CalibrateGen(rp_channel_t channel, rp_calib_params_t* out_params);
+int calib_CalibrateGen(int unsigned channel, rp_calib_params_t* out_params);
 
 int calib_Reset();
 
-int32_t calib_GetDataMedian     (rp_channel_t channel, rp_pinState_t gain);
-float   calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
-int     calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
+int32_t calib_GetDataMedian     (int unsigned channel, int unsigned gain);
+float   calib_GetDataMedianFloat(int unsigned channel, int unsigned gain);
+int     calib_GetDataMinMaxFloat(int unsigned channel, int unsigned gain, float* min, float* max);
 
 int calib_setCachedParams();
 #endif //__CALIB_H

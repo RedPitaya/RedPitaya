@@ -40,38 +40,35 @@ static int gen_Release() {
     return RP_OK;
 }
 
-static int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
-    CHANNEL_ACTION(channel,
-            generate->AtriggerSelector = value,
-            generate->BtriggerSelector = value)
+static int generate_setTriggerSource(int unsigned channel, unsigned short value) {
+    if (channel == 0)  generate->AtriggerSelector = value;
+    else               generate->BtriggerSelector = value;
     return RP_OK;
 }
 
-static int generate_getTriggerSource(rp_channel_t channel, uint32_t *value) {
-    CHANNEL_ACTION(channel,
-            *value = generate->AtriggerSelector,
-            *value = generate->BtriggerSelector)
+static int generate_getTriggerSource(int unsigned channel, uint32_t *value) {
+    if (channel == 0)  *value = generate->AtriggerSelector;
+    else               *value = generate->BtriggerSelector;
     return RP_OK;
 }
 
-static int generate_setGatedBurst(rp_channel_t channel, uint32_t value) {
-    CHANNEL_ACTION(channel,
-            generate->AgatedBursts = value,
-            generate->BgatedBursts = value)
+static int generate_setGatedBurst(int unsigned channel, uint32_t value) {
+    if (channel == 0)  generate->AgatedBursts = value;
+    else               generate->BgatedBursts = value;
     return RP_OK;
 }
 
-static int generate_setBurstCount(rp_channel_t channel, uint32_t num) {
+static int generate_setBurstCount(int unsigned channel, uint32_t num) {
     generate->properties_ch[channel].cyclesInOneBurst = num;
     return RP_OK;
 }
 
-static int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions) {
+static int generate_setBurstRepetitions(int unsigned channel, uint32_t repetitions) {
     generate->properties_ch[channel].burstRepetitions = repetitions;
     return RP_OK;
 }
 
-static int generate_setBurstDelay(rp_channel_t channel, uint32_t delay) {
+static int generate_setBurstDelay(int unsigned channel, uint32_t delay) {
     generate->properties_ch[channel].delayBetweenBurstRepetitions = delay;
     return RP_OK;
 }
@@ -157,7 +154,7 @@ static int synthesis_PWM(float ratio, float *data_out) {
     return RP_OK;
 }
 
-static int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) {
+static int synthesis_arbitrary(int unsigned channel, float *data_out, uint32_t * size) {
     float *pointer;
     pointer = ch_arbitraryData[channel];
     for (int unsigned i = 0; i < BUFFER_LENGTH; i++) {
@@ -186,7 +183,7 @@ static int synthesis_square(float frequency, float *data_out) {
     return RP_OK;
 }
 
-static int synthesize_signal(rp_channel_t channel) {
+static int synthesize_signal(int unsigned channel) {
     float data[BUFFER_LENGTH];
     rp_waveform_t waveform;
     float dutyCycle, frequency;
@@ -223,7 +220,7 @@ static int gen_Synchronise() {
     return RP_OK;
 }
 
-static int triggerIfInternal(rp_channel_t channel) {
+static int triggerIfInternal(int unsigned channel) {
     uint32_t value = 0;
     generate_getTriggerSource(channel, &value);
     if (value == RP_GEN_TRIG_SRC_INTERNAL)
@@ -236,67 +233,67 @@ static int triggerIfInternal(rp_channel_t channel) {
 */
 
 int rp_GenReset() {
-    rp_GenOutDisable(RP_CH_1);
-    rp_GenOutDisable(RP_CH_2);
-    rp_GenFreq(RP_CH_1, 1000);
-    rp_GenFreq(RP_CH_2, 1000);
-    rp_GenBurstRepetitions(RP_CH_1, 1);
-    rp_GenBurstRepetitions(RP_CH_2, 1);
-    rp_GenBurstPeriod(RP_CH_1, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
-    rp_GenBurstPeriod(RP_CH_2, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
-    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
-    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
-    rp_GenOffset(RP_CH_1, 0);
-    rp_GenOffset(RP_CH_2, 0);
-    rp_GenAmp(RP_CH_1, 1);
-    rp_GenAmp(RP_CH_2, 1);
-    rp_GenDutyCycle(RP_CH_1, 0.5);
-    rp_GenDutyCycle(RP_CH_2, 0.5);
-    rp_GenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
-    rp_GenMode(RP_CH_2, RP_GEN_MODE_CONTINUOUS);
-    rp_GenBurstCount(RP_CH_1, 1);
-    rp_GenBurstCount(RP_CH_2, 1);
-    rp_GenBurstPeriod(RP_CH_1, BURST_PERIOD_MIN);
-    rp_GenBurstPeriod(RP_CH_2, BURST_PERIOD_MIN);
-    rp_GenTriggerSource(RP_CH_1, RP_GEN_TRIG_SRC_INTERNAL);
-    rp_GenTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
-    rp_GenPhase(RP_CH_1, 0.0);
-    rp_GenPhase(RP_CH_2, 0.0);
+    rp_GenOutDisable(1);
+    rp_GenOutDisable(1);
+    rp_GenFreq(0, 1000);
+    rp_GenFreq(1, 1000);
+    rp_GenBurstRepetitions(0, 1);
+    rp_GenBurstRepetitions(1, 1);
+    rp_GenBurstPeriod(0, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
+    rp_GenBurstPeriod(1, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
+    rp_GenWaveform(0, RP_WAVEFORM_SINE);
+    rp_GenWaveform(1, RP_WAVEFORM_SINE);
+    rp_GenOffset(0, 0);
+    rp_GenOffset(1, 0);
+    rp_GenAmp(0, 1);
+    rp_GenAmp(1, 1);
+    rp_GenDutyCycle(0, 0.5);
+    rp_GenDutyCycle(1, 0.5);
+    rp_GenMode(0, RP_GEN_MODE_CONTINUOUS);
+    rp_GenMode(1, RP_GEN_MODE_CONTINUOUS);
+    rp_GenBurstCount(0, 1);
+    rp_GenBurstCount(1, 1);
+    rp_GenBurstPeriod(0, BURST_PERIOD_MIN);
+    rp_GenBurstPeriod(1, BURST_PERIOD_MIN);
+    rp_GenTriggerSource(0, RP_GEN_TRIG_SRC_INTERNAL);
+    rp_GenTriggerSource(1, RP_GEN_TRIG_SRC_INTERNAL);
+    rp_GenPhase(0, 0.0);
+    rp_GenPhase(1, 0.0);
     return RP_OK;
 }
 
-int rp_GenOutDisable(rp_channel_t channel) {
-    if (channel == RP_CH_1)  generate->AsetOutputTo0 = 1;
-    else                     generate->BsetOutputTo0 = 1;
+int rp_GenOutDisable(int unsigned channel) {
+    if (channel == 0)  generate->AsetOutputTo0 = 1;
+    else               generate->BsetOutputTo0 = 1;
     return RP_OK;
 }
 
-int rp_GenOutEnable(rp_channel_t channel) {
-    if (channel == RP_CH_1)  generate->AsetOutputTo0 = 0;
-    else                     generate->BsetOutputTo0 = 0;
+int rp_GenOutEnable(int unsigned channel) {
+    if (channel == 0)  generate->AsetOutputTo0 = 0;
+    else               generate->BsetOutputTo0 = 0;
     return RP_OK;
 }
 
-int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
-    if (channel == RP_CH_1)  *value = !generate->AsetOutputTo0;
-    else                     *value = !generate->BsetOutputTo0;
+int rp_GenOutIsEnabled(int unsigned channel, bool *value) {
+    if (channel == 0)  *value = !generate->AsetOutputTo0;
+    else               *value = !generate->BsetOutputTo0;
     return RP_OK;
 }
 
-int rp_GenAmp(rp_channel_t channel, float amplitude) {
+int rp_GenAmp(int unsigned channel, float amplitude) {
     ch_amplitude[channel] = amplitude;
     float calib_scl = calib_GetGenScale(channel) / (float)(1<<13);
     generate->properties_ch[channel].amplitudeScale = calib_Saturate(14, (int32_t)(amplitude / calib_scl));
     return RP_OK;
 }
 
-int rp_GenGetAmp(rp_channel_t channel, float *amplitude) {
+int rp_GenGetAmp(int unsigned channel, float *amplitude) {
     float calib_scl = calib_GetGenScale(channel) / (float)(1<<13);
     *amplitude = (float)(generate->properties_ch[channel].amplitudeScale) * calib_scl;
     return RP_OK;
 }
 
-int rp_GenOffset(rp_channel_t channel, float offset) {
+int rp_GenOffset(int unsigned channel, float offset) {
     ch_offset[channel] = offset;
     // TODO: calibration
     //int32_t calib_off = calib_GetGenOffset(channel);
@@ -304,30 +301,30 @@ int rp_GenOffset(rp_channel_t channel, float offset) {
     return RP_OK;
 }
 
-int rp_GenGetOffset(rp_channel_t channel, float *offset) {
+int rp_GenGetOffset(int unsigned channel, float *offset) {
     // TODO: calibration
     //int32_t calib_off = calib_GetGenOffset(channel);
     *offset = (float)generate->properties_ch[channel].amplitudeOffset / (float)(1<<13);
     return RP_OK;
 }
 
-int rp_GenFreq(rp_channel_t channel, float frequency) {
+int rp_GenFreq(int unsigned channel, float frequency) {
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX)
         return RP_EOOR;
     ch_frequency[channel] = frequency;
     rp_GenBurstPeriod(channel, ch_burstPeriod[channel]);
     generate->properties_ch[channel].counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
-    channel == RP_CH_1 ? (generate->ASM_WrapPointer = 1) : (generate->BSM_WrapPointer = 1);
+    channel == 0 ? (generate->ASM_WrapPointer = 1) : (generate->BSM_WrapPointer = 1);
     synthesize_signal(channel);
     return gen_Synchronise();
 }
 
-int rp_GenGetFreq(rp_channel_t channel, float *frequency) {
+int rp_GenGetFreq(int unsigned channel, float *frequency) {
     *frequency = (float) round((generate->properties_ch[channel].counterStep * DAC_FREQUENCY) / (65536 * BUFFER_LENGTH));
     return RP_OK;
 }
 
-int rp_GenPhase(rp_channel_t channel, float phase) {
+int rp_GenPhase(int unsigned channel, float phase) {
     if (phase < PHASE_MIN || phase > PHASE_MAX)
         return RP_EOOR;
     if (phase < 0)
@@ -337,24 +334,24 @@ int rp_GenPhase(rp_channel_t channel, float phase) {
     return gen_Synchronise();
 }
 
-int rp_GenGetPhase(rp_channel_t channel, float *phase) {
+int rp_GenGetPhase(int unsigned channel, float *phase) {
     *phase = ch_phase[channel];
     return RP_OK;
 }
 
-int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
+int rp_GenWaveform(int unsigned channel, rp_waveform_t type) {
     ch_waveform[channel] = type;
     if (type == RP_WAVEFORM_ARBITRARY)  ch_size[channel] = ch_arb_size[channel];
     else                                ch_size[channel] = BUFFER_LENGTH;
     return synthesize_signal(channel);
 }
 
-int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type) {
+int rp_GenGetWaveform(int unsigned channel, rp_waveform_t *type) {
     *type = ch_waveform[channel];
     return RP_OK;
 }
 
-int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
+int rp_GenArbWaveform(int unsigned channel, float *waveform, uint32_t length) {
     // Check if waveform is normalized
     float min = FLT_MAX, max = -FLT_MAX; // initial values
     for (int unsigned i=0; i<length; i++) {
@@ -376,7 +373,7 @@ int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
     return RP_OK;
 }
 
-int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length) {
+int rp_GenGetArbWaveform(int unsigned channel, float *waveform, uint32_t *length) {
     // If this waveform was not set, then this method will return incorrect waveform
     float *pointer;
     *length = ch_arb_size[channel];
@@ -386,19 +383,19 @@ int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length
     return RP_OK;
 }
 
-int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
+int rp_GenDutyCycle(int unsigned channel, float ratio) {
     if (ratio < DUTY_CYCLE_MIN || ratio > DUTY_CYCLE_MAX)
         return RP_EOOR;
     ch_dutyCycle[channel] = ratio;
     return synthesize_signal(channel);
 }
 
-int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio) {
+int rp_GenGetDutyCycle(int unsigned channel, float *ratio) {
     *ratio = ch_dutyCycle[channel];
     return RP_OK;
 }
 
-int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
+int rp_GenMode(int unsigned channel, rp_gen_mode_t mode) {
     if (mode == RP_GEN_MODE_CONTINUOUS) {
         generate_setGatedBurst(channel, 0);
         generate_setBurstDelay(channel, 0);
@@ -418,7 +415,7 @@ int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         return RP_EIPV;
 }
 
-int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode) {
+int rp_GenGetMode(int unsigned channel, rp_gen_mode_t *mode) {
     uint32_t num;
     rp_GenGetBurstCount(channel, &num);
     if (num != 0)  *mode = RP_GEN_MODE_BURST;
@@ -426,7 +423,7 @@ int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode) {
     return RP_OK;
 }
 
-int rp_GenBurstCount(rp_channel_t channel, int num) {
+int rp_GenBurstCount(int unsigned channel, int num) {
     if ((num < BURST_COUNT_MIN || num > BURST_COUNT_MAX) && num == 0)
         return RP_EOOR;
     ch_burstCount[channel] = num;
@@ -437,12 +434,12 @@ int rp_GenBurstCount(rp_channel_t channel, int num) {
     return triggerIfInternal(channel);
 }
 
-int rp_GenGetBurstCount(rp_channel_t channel, uint32_t *num) {
+int rp_GenGetBurstCount(int unsigned channel, uint32_t *num) {
     *num = generate->properties_ch[channel].cyclesInOneBurst;
     return RP_OK;
 }
 
-int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
+int rp_GenBurstRepetitions(int unsigned channel, int repetitions) {
     if ((repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) && repetitions != -1)
         return RP_EOOR;
     ch_burstRepetition[channel] = repetitions;
@@ -453,12 +450,12 @@ int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
     return triggerIfInternal(channel);
 }
 
-int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions) {
+int rp_GenGetBurstRepetitions(int unsigned channel, int *repetitions) {
     *repetitions = generate->properties_ch[channel].burstRepetitions + 1;
     return RP_OK;
 }
 
-int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period) {
+int rp_GenBurstPeriod(int unsigned channel, uint32_t period) {
     if (period < BURST_PERIOD_MIN || period > BURST_PERIOD_MAX)
         return RP_EOOR;
     int burstCount;
@@ -473,7 +470,7 @@ int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period) {
     return triggerIfInternal(channel);
 }
 
-int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period) {
+int rp_GenGetBurstPeriod(int unsigned channel, uint32_t *period) {
     uint32_t delay, burstCount;
     float frequency;
     delay = generate->properties_ch[channel].delayBetweenBurstRepetitions;
@@ -485,7 +482,7 @@ int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period) {
     return RP_OK;
 }
 
-int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
+int rp_GenTriggerSource(int unsigned channel, rp_trig_src_t src) {
     if (src == RP_GEN_TRIG_GATED_BURST) {
         generate_setGatedBurst(channel, 1);
         rp_GenMode(channel, RP_GEN_MODE_BURST);
@@ -508,11 +505,10 @@ int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     }
 }
 
-int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
+int rp_GenGetTriggerSource(int unsigned channel, rp_trig_src_t *src) {
     uint32_t gated;
-    CHANNEL_ACTION(channel,
-            gated = generate->AgatedBursts,
-            gated = generate->BgatedBursts)
+    if (channel == 0)  gated = generate->AgatedBursts;
+    else               gated = generate->BgatedBursts;
     if (gated == 1)
         *src = RP_GEN_TRIG_GATED_BURST;
     else
@@ -528,8 +524,8 @@ int rp_GenTrigger(uint32_t channel) {
             return generate_setTriggerSource(channel, RP_GEN_TRIG_SRC_INTERNAL);
         case 2:
         case 3:
-            rp_GenMode(RP_CH_1, RP_GEN_MODE_BURST);
-            rp_GenMode(RP_CH_2, RP_GEN_MODE_BURST);
+            rp_GenMode(0, RP_GEN_MODE_BURST);
+            rp_GenMode(1, RP_GEN_MODE_BURST);
             // simultaneously trigger both channels
             return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);
         default:

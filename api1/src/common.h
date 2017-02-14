@@ -21,17 +21,6 @@
 
 #include "redpitaya/rp1.h"
 
-#define CHANNEL_ACTION(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION) \
-if ((CHANNEL) == RP_CH_1) { \
-    CHANNEL_1_ACTION; \
-} \
-else if ((CHANNEL) == RP_CH_2) { \
-    CHANNEL_2_ACTION; \
-} \
-else { \
-    return RP_EPN; \
-}
-
 // unmasked IO read/write (p - pointer, v - value)
 #define ioread32(p) (*(volatile uint32_t *)(p))
 #define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))
@@ -50,8 +39,7 @@ else { \
 
 #define FLOAT_EPS 0.00001f
 
-#define GAIN_V(gain) (gain == RP_HIGH ? 20.0 : 1.0)
-#define FULL_SCALE_NORM     20.0    // V
+#define GAIN_V(gain) (gain ? 20.0 : 1.0)
 
 /* @brief Number of ADC acquisition bits. */
 #define ADC_BITS 14

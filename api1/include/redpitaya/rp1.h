@@ -84,28 +84,6 @@ extern "C" {
 
 ///@}
 
-/**
- * Type representing pin's high or low state (on/off).
- */
-typedef enum {
-    RP_LOW, //!< Low state
-    RP_HIGH //!< High state
-} rp_pinState_t;
-
-/**
- * Type representing analog input output pins.
- */
-typedef enum {
-    RP_AOUT0,      //!< Analog output 0
-    RP_AOUT1,      //!< Analog output 1
-    RP_AOUT2,      //!< Analog output 2
-    RP_AOUT3,      //!< Analog output 3
-    RP_AIN0,       //!< Analog input 0
-    RP_AIN1,       //!< Analog input 1
-    RP_AIN2,       //!< Analog input 2
-    RP_AIN3        //!< Analog input 3
-} rp_apin_t;
-
 typedef enum {
     RP_WAVEFORM_SINE,       //!< Wave form sine
     RP_WAVEFORM_SQUARE,     //!< Wave form square
@@ -132,14 +110,6 @@ typedef enum {
 } rp_trig_src_t;
 
 /**
- * Type representing Input/Output channels.
- */
-typedef enum {
-    RP_CH_1, //!< Channel A
-    RP_CH_2  //!< Channel B
-} rp_channel_t;
-
-/**
  * Type representing different trigger sources used at acquiring signal.
  */
 typedef enum {
@@ -154,7 +124,6 @@ typedef enum {
     RP_TRIG_SRC_AWG_PE,   //!< Trigger set to arbitrary wave generator application positive edge
     RP_TRIG_SRC_AWG_NE    //!< Trigger set to arbitrary wave generator application negative edge
 } rp_acq_trig_src_t;
-
 
 /**
  * Type representing different trigger states.
@@ -248,7 +217,7 @@ rp_calib_params_t rp_GetCalibrationSettings();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateAcqOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) ;
+int rp_CalibrateAcqOffset(int unsigned channel, int unsigned gain, rp_calib_params_t* out_params) ;
 
 /**
 * Calibrates input channel low voltage scale. Jumpers must be set to LV.
@@ -259,7 +228,7 @@ int rp_CalibrateAcqOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_par
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateAcqScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
+int rp_CalibrateAcqScaleLV(int unsigned channel, float referentialVoltage, rp_calib_params_t* out_params);
 
 /**
 * Calibrates input channel high voltage scale. Jumpers must be set to HV.
@@ -270,7 +239,7 @@ int rp_CalibrateAcqScaleLV(rp_channel_t channel, float referentialVoltage, rp_ca
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateAcqScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
+int rp_CalibrateAcqScaleHV(int unsigned channel, float referentialVoltage, rp_calib_params_t* out_params);
 
 /**
 * Calibrates output channel offset.
@@ -280,7 +249,7 @@ int rp_CalibrateAcqScaleHV(rp_channel_t channel, float referentialVoltage, rp_ca
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateGenOffset(rp_channel_t channel);
+int rp_CalibrateGenOffset(int unsigned channel);
 
 /**
 * Calibrates output channel voltage scale.
@@ -290,7 +259,7 @@ int rp_CalibrateGenOffset(rp_channel_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateGenScale(rp_channel_t channel);
+int rp_CalibrateGenScale(int unsigned channel);
 
 /**
 * Calibrates output channel.
@@ -300,7 +269,7 @@ int rp_CalibrateGenScale(rp_channel_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrateGen(rp_channel_t channel, rp_calib_params_t* out_params);
+int rp_CalibrateGen(int unsigned channel, rp_calib_params_t* out_params);
 
 /**
 * Set default calibration values.
@@ -463,7 +432,7 @@ int rp_AcqGetPreTriggerCounter(uint32_t* value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage);
+int rp_AcqSetTriggerLevel(int unsigned channel, float voltage);
 
 /**
  * Gets currently set trigger threshold value in volts
@@ -498,7 +467,7 @@ int rp_AcqGetTriggerHyst(float* voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state);
+int rp_AcqSetGain(int unsigned channel, int unsigned state);
 
 /**
  * Returns the currently set acquire gain state in the library. It may not be set to the same value as
@@ -508,7 +477,7 @@ int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state);
+int rp_AcqGetGain(int unsigned channel, int unsigned* state);
 
 /**
  * Returns the currently set acquire gain in the library. It may not be set to the same value as
@@ -518,7 +487,7 @@ int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetGainV(rp_channel_t channel, float* voltage);
+int rp_AcqGetGainV(int unsigned channel, float* voltage);
 
 /**
  * Returns current position of ADC write pointer.
@@ -568,7 +537,7 @@ int rp_AcqReset();
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
+int rp_AcqGetDataPosRaw(int unsigned channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
 
 /**
  * Returns the ADC buffer in Volt units from start to end position.
@@ -581,7 +550,7 @@ int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_p
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
+int rp_AcqGetDataPosV(int unsigned channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
 
 /**
  * Returns the ADC buffer in raw units from specified position and desired size.
@@ -593,7 +562,7 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
+int rp_AcqGetDataRaw(int unsigned channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the ADC buffer in raw units from specified position and desired size.
@@ -617,7 +586,7 @@ int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, int16_t* buffer[2]);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
+int rp_AcqGetOldestDataRaw(int unsigned channel, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the latest ADC buffer samples in raw units.
@@ -628,7 +597,7 @@ int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
+int rp_AcqGetLatestDataRaw(int unsigned channel, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the ADC buffer in Volt units from specified position and desired size.
@@ -640,7 +609,7 @@ int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
+int rp_AcqGetDataV(int unsigned channel, uint32_t pos, uint32_t* size, float* buffer);
 
 /**
  * Returns the ADC buffer in Volt units from specified position and desired size.
@@ -664,7 +633,7 @@ int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer[2]);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
+int rp_AcqGetOldestDataV(int unsigned channel, uint32_t* size, float* buffer);
 
 /**
  * Returns the latest ADC buffer samples in Volt units.
@@ -675,7 +644,7 @@ int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
+int rp_AcqGetLatestDataV(int unsigned channel, uint32_t* size, float* buffer);
 
 
 int rp_AcqGetBufSize(uint32_t* size);
@@ -698,7 +667,7 @@ int rp_GenReset();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenOutEnable(rp_channel_t channel);
+int rp_GenOutEnable(int unsigned channel);
 
 /**
 * Disables output
@@ -706,7 +675,7 @@ int rp_GenOutEnable(rp_channel_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenOutDisable(rp_channel_t channel);
+int rp_GenOutDisable(int unsigned channel);
 
 /**
 * Gets value true if channel is enabled otherwise return false.
@@ -715,7 +684,7 @@ int rp_GenOutDisable(rp_channel_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenOutIsEnabled(rp_channel_t channel, bool *value);
+int rp_GenOutIsEnabled(int unsigned channel, bool *value);
 
 /**
 * Sets channel signal peak to peak amplitude.
@@ -724,7 +693,7 @@ int rp_GenOutIsEnabled(rp_channel_t channel, bool *value);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenAmp(rp_channel_t channel, float amplitude);
+int rp_GenAmp(int unsigned channel, float amplitude);
 
 /**
 * Gets channel signal peak to peak amplitude.
@@ -733,7 +702,7 @@ int rp_GenAmp(rp_channel_t channel, float amplitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetAmp(rp_channel_t channel, float *amplitude);
+int rp_GenGetAmp(int unsigned channel, float *amplitude);
 
 /**
 * Sets DC offset of the signal. signal = signal + DC_offset.
@@ -742,7 +711,7 @@ int rp_GenGetAmp(rp_channel_t channel, float *amplitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenOffset(rp_channel_t channel, float offset);
+int rp_GenOffset(int unsigned channel, float offset);
 
 /**
 * Gets DC offset of the signal.
@@ -751,7 +720,7 @@ int rp_GenOffset(rp_channel_t channel, float offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetOffset(rp_channel_t channel, float *offset);
+int rp_GenGetOffset(int unsigned channel, float *offset);
 
 /**
 * Sets channel signal frequency.
@@ -760,7 +729,7 @@ int rp_GenGetOffset(rp_channel_t channel, float *offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenFreq(rp_channel_t channel, float frequency);
+int rp_GenFreq(int unsigned channel, float frequency);
 
 /**
 * Gets channel signal frequency.
@@ -769,7 +738,7 @@ int rp_GenFreq(rp_channel_t channel, float frequency);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetFreq(rp_channel_t channel, float *frequency);
+int rp_GenGetFreq(int unsigned channel, float *frequency);
 
 /**
 * Sets channel signal phase. This shifts the signal in time.
@@ -778,7 +747,7 @@ int rp_GenGetFreq(rp_channel_t channel, float *frequency);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenPhase(rp_channel_t channel, float phase);
+int rp_GenPhase(int unsigned channel, float phase);
 
 /**
 * Gets channel signal phase.
@@ -787,7 +756,7 @@ int rp_GenPhase(rp_channel_t channel, float phase);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetPhase(rp_channel_t channel, float *phase);
+int rp_GenGetPhase(int unsigned channel, float *phase);
 
 /**
 * Sets channel signal waveform. This determines how the signal looks.
@@ -796,7 +765,7 @@ int rp_GenGetPhase(rp_channel_t channel, float *phase);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type);
+int rp_GenWaveform(int unsigned channel, rp_waveform_t type);
 
 /**
 * Gets channel signal waveform.
@@ -805,7 +774,7 @@ int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type);
+int rp_GenGetWaveform(int unsigned channel, rp_waveform_t *type);
 
 /**
 * Sets user defined waveform.
@@ -815,7 +784,7 @@ int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length);
+int rp_GenArbWaveform(int unsigned channel, float *waveform, uint32_t length);
 
 /**
 * Gets user defined waveform.
@@ -825,7 +794,7 @@ int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length);
+int rp_GenGetArbWaveform(int unsigned channel, float *waveform, uint32_t *length);
 
 /**
 * Sets duty cycle of PWM signal.
@@ -834,7 +803,7 @@ int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenDutyCycle(rp_channel_t channel, float ratio);
+int rp_GenDutyCycle(int unsigned channel, float ratio);
 
 /**
 * Gets duty cycle of PWM signal.
@@ -843,7 +812,7 @@ int rp_GenDutyCycle(rp_channel_t channel, float ratio);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio);
+int rp_GenGetDutyCycle(int unsigned channel, float *ratio);
 
 /**
 * Sets generation mode.
@@ -852,7 +821,7 @@ int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode);
+int rp_GenMode(int unsigned channel, rp_gen_mode_t mode);
 
 /**
 * Gets generation mode.
@@ -861,7 +830,7 @@ int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode);
+int rp_GenGetMode(int unsigned channel, rp_gen_mode_t *mode);
 
 /**
 * Sets number of generated waveforms in a burst.
@@ -870,7 +839,7 @@ int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenBurstCount(rp_channel_t channel, int num);
+int rp_GenBurstCount(int unsigned channel, int num);
 
 /**
 * Gets number of generated waveforms in a burst.
@@ -879,7 +848,7 @@ int rp_GenBurstCount(rp_channel_t channel, int num);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstCount(rp_channel_t channel, uint32_t *num);
+int rp_GenGetBurstCount(int unsigned channel, uint32_t *num);
 
 /**
 * Sets number of burst repetitions. This determines how many bursts will be generated.
@@ -888,7 +857,7 @@ int rp_GenGetBurstCount(rp_channel_t channel, uint32_t *num);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions);
+int rp_GenBurstRepetitions(int unsigned channel, int repetitions);
 
 /**
 * Gets number of burst repetitions.
@@ -897,7 +866,7 @@ int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions);
+int rp_GenGetBurstRepetitions(int unsigned channel, int *repetitions);
 
 /**
 * Sets the time/period of one burst in micro seconds. Period must be equal or greater then the time of one burst.
@@ -907,7 +876,7 @@ int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period);
+int rp_GenBurstPeriod(int unsigned channel, uint32_t period);
 
 /**
 * Gets the period of one burst in micro seconds.
@@ -916,7 +885,7 @@ int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period);
+int rp_GenGetBurstPeriod(int unsigned channel, uint32_t *period);
 
 /**
 * Sets trigger source.
@@ -925,7 +894,7 @@ int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
+int rp_GenTriggerSource(int unsigned channel, rp_trig_src_t src);
 
 /**
 * Gets trigger source.
@@ -934,7 +903,7 @@ int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
+int rp_GenGetTriggerSource(int unsigned channel, rp_trig_src_t *src);
 
 /**
 * Sets Trigger for specified channel/channels.
@@ -942,7 +911,7 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenTrigger(uint32_t channel);
+int rp_GenTrigger(int unsigned channel);
 
 #ifdef __cplusplus
 }

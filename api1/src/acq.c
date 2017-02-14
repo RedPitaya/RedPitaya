@@ -64,7 +64,7 @@ static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE/2;
 static const uint64_t ADC_SAMPLE_PERIOD = 8;
 
 /* @brief Currently set Gain state */
-static rp_pinState_t gain_ch [2] = {RP_LOW, RP_LOW};
+static int unsigned gain_ch [2] = {0, 0};
 
 /* @brief Default filter equalization coefficients LO/HI */
 static const uint32_t FILT_AA[] = {0x7D93  , 0x4C5F  };
@@ -108,18 +108,18 @@ static void osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coe
  * @param channel Channel A or B
  * @return 0 when successful
  */
-static int setEqFilters(rp_channel_t channel) {
-    rp_pinState_t gain = gain_ch [channel];
+static int setEqFilters(int unsigned channel) {
+    int unsigned gain = gain_ch [channel];
     // Update equalization filter with default coefficients
-    if (channel == RP_CH_1)  osc_SetEqFiltersChA(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
-    else                     osc_SetEqFiltersChB(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
+    if (channel == 0)  osc_SetEqFiltersChA(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
+    else               osc_SetEqFiltersChB(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
     return RP_OK;
 }
 
 /*----------------------------------------------------------------------------*/
 
-static int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage) {
-    rp_pinState_t gain = gain_ch [channel];
+static int acq_SetChannelThresholdHyst(int unsigned channel, float voltage) {
+    int unsigned gain = gain_ch [channel];
     if (fabs(voltage) - fabs(GAIN_V(gain)) > FLOAT_EPS)
         return RP_EOOR;
     int32_t calib_off = calib_GetAcqOffset(channel, gain);
@@ -203,24 +203,24 @@ int rp_AcqGetPreTriggerCounter(uint32_t* value) {
     return RP_OK;
 }
 
-int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state) {
+int rp_AcqGetGain(int unsigned channel, int unsigned* state) {
     return gain_ch [channel];
 }
 
-int rp_AcqGetGainV(rp_channel_t channel, float* voltage) {
+int rp_AcqGetGainV(int unsigned channel, float* voltage) {
     return GAIN_V(gain_ch[channel]);
 }
 
-static int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage) {
-    rp_pinState_t gain = gain_ch [channel];
+static int acq_GetChannelThresholdHyst(int unsigned channel, float* voltage) {
+    int unsigned gain = gain_ch [channel];
     int32_t calib_off = calib_GetAcqOffset(channel, gain);
     float   calib_scl = calib_GetAcqScale (channel, gain);
     *voltage = (float) (osc_reg->hystersis[channel] + calib_off) * calib_scl;
     return RP_OK;
 }
 
-static int acq_GetChannelThreshold(rp_channel_t channel, float* voltage) {
-    rp_pinState_t gain = gain_ch [channel];
+static int acq_GetChannelThreshold(int unsigned channel, float* voltage) {
+    int unsigned gain = gain_ch [channel];
     int32_t calib_off = calib_GetAcqOffset(channel, gain);
     float   calib_scl = calib_GetAcqScale (channel, gain);
     *voltage = (float) (osc_reg->thr[channel] + calib_off) * calib_scl;
@@ -228,10 +228,10 @@ static int acq_GetChannelThreshold(rp_channel_t channel, float* voltage) {
     return RP_OK;
 }
 
-int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state) {
-    rp_pinState_t gain = gain_ch [channel];
+int rp_AcqSetGain(int unsigned channel, int unsigned state) {
+    int unsigned gain = gain_ch [channel];
     // Read old values which are dependent on the gain...
-    rp_pinState_t old_gain;
+    int unsigned old_gain;
     float ch_thr, ch_hyst;
     old_gain = gain;
     acq_GetChannelThreshold    (channel, &ch_thr );
@@ -256,12 +256,12 @@ int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state) {
 }
 
 int rp_AcqGetTriggerLevel(float* voltage) {
-    acq_GetChannelThreshold(RP_CH_1, voltage);
+    acq_GetChannelThreshold(0, voltage);
     return RP_OK;
 }
 
-int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage) {
-    rp_pinState_t gain = gain_ch [channel];
+int rp_AcqSetTriggerLevel(int unsigned channel, float voltage) {
+    int unsigned gain = gain_ch [channel];
     if (fabs(voltage) - fabs(GAIN_V(gain)) > FLOAT_EPS)
         return RP_EOOR;
     int32_t calib_off = calib_GetAcqOffset(channel, gain);
@@ -273,12 +273,12 @@ int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage) {
 }
 
 int rp_AcqGetTriggerHyst(float* voltage) {
-    return acq_GetChannelThresholdHyst(RP_CH_1, voltage);
+    return acq_GetChannelThresholdHyst(0, voltage);
 }
 
 int rp_AcqSetTriggerHyst(float voltage) {
-    acq_SetChannelThresholdHyst(RP_CH_1, voltage);
-    acq_SetChannelThresholdHyst(RP_CH_2, voltage);
+    acq_SetChannelThresholdHyst(0, voltage);
+    acq_SetChannelThresholdHyst(1, voltage);
     return RP_OK;
 }
 
@@ -301,13 +301,13 @@ int rp_AcqStop() {
 }
 
 int rp_AcqReset() {
-    rp_AcqSetTriggerLevel(RP_CH_1, 0.0);
-    rp_AcqSetTriggerLevel(RP_CH_2, 0.0);
-    acq_SetChannelThresholdHyst(RP_CH_1, 0.0);
-    acq_SetChannelThresholdHyst(RP_CH_2, 0.0);
+    rp_AcqSetTriggerLevel(0, 0.0);
+    rp_AcqSetTriggerLevel(1, 0.0);
+    acq_SetChannelThresholdHyst(0, 0.0);
+    acq_SetChannelThresholdHyst(1, 0.0);
 
-    rp_AcqSetGain(RP_CH_1, RP_LOW);
-    rp_AcqSetGain(RP_CH_2, RP_LOW);
+    rp_AcqSetGain(0, 0);
+    rp_AcqSetGain(1, 0);
     rp_AcqSetDecimationFactor(1);
     rp_AcqSetAveraging(true);
     rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
@@ -315,7 +315,7 @@ int rp_AcqReset() {
     return cmn_SetBits(&osc_reg->conf, (0x1 << 1), RST_WR_ST_MCH_MASK);
 }
 
-int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t* buffer_size) {
+int rp_AcqGetDataPosRaw(int unsigned channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t* buffer_size) {
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
     if (size > *buffer_size)
         return RP_BTS;
@@ -323,7 +323,7 @@ int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_p
     return rp_AcqGetDataRaw(channel, start_pos, buffer_size, buffer);
 }
 
-int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t* buffer_size) {
+int rp_AcqGetDataPosV(int unsigned channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t* buffer_size) {
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
     if (size > *buffer_size)
         return RP_BTS;
@@ -331,7 +331,7 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
     return rp_AcqGetDataV(channel, start_pos, buffer_size, buffer);
 }
 
-int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer) {
+int rp_AcqGetDataRaw(int unsigned channel,  uint32_t pos, uint32_t* size, int16_t* buffer) {
     *size = MIN(*size, ADC_BUFFER_SIZE);
     for (uint32_t i = 0; i < (*size); ++i)
         buffer[i] = osc_ch[channel][(pos + i) % ADC_BUFFER_SIZE];
@@ -344,13 +344,13 @@ int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, int16_t* buffer[2]) {
     return RP_OK;
 }
 
-int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+int rp_AcqGetOldestDataRaw(int unsigned channel, uint32_t* size, int16_t* buffer) {
     uint32_t pos;
     rp_AcqGetWritePointer(&pos);
     return rp_AcqGetDataRaw(channel, pos+1, size, buffer);
 }
 
-int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+int rp_AcqGetLatestDataRaw(int unsigned channel, uint32_t* size, int16_t* buffer) {
     *size = MIN(*size, ADC_BUFFER_SIZE);
     uint32_t pos;
     rp_AcqGetWritePointer(&pos);
@@ -358,9 +358,9 @@ int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
     return rp_AcqGetDataRaw(channel, pos, size, buffer);
 }
 
-int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer) {
+int rp_AcqGetDataV(int unsigned channel, uint32_t pos, uint32_t* size, float* buffer) {
     *size = MIN(*size, ADC_BUFFER_SIZE);
-    rp_pinState_t gain = gain_ch [channel];
+    int unsigned gain = gain_ch [channel];
     int32_t calib_off = calib_GetAcqOffset(channel, gain);
     float   calib_scl = calib_GetAcqScale (channel, gain);
     for (uint32_t i = 0; i < (*size); ++i)
@@ -374,13 +374,13 @@ int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer[2]) {
     return RP_OK;
 }
 
-int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer) {
+int rp_AcqGetOldestDataV(int unsigned channel, uint32_t* size, float* buffer) {
     uint32_t pos;
     rp_AcqGetWritePointer(&pos);
     return rp_AcqGetDataV(channel, pos+1, size, buffer);
 }
 
-int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer) {
+int rp_AcqGetLatestDataV(int unsigned channel, uint32_t* size, float* buffer) {
     *size = MIN(*size, ADC_BUFFER_SIZE);
     uint32_t pos;
     rp_AcqGetWritePointer(&pos);
