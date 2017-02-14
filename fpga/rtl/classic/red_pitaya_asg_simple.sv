@@ -88,7 +88,7 @@ logic      [  32-1:0] set_a_rdly   , set_b_rdly   ;
 logic                 set_a_rgate  , set_b_rgate  ;
 logic                 buf_a_we     , buf_b_we     ;
 logic      [ RSZ-1:0] buf_a_addr   , buf_b_addr   ;
-logic signed [14-1:0] buf_a_rdata  , buf_b_rdata  ;
+logic signed [32-1:0] buf_a_rdata  , buf_b_rdata  ;
 logic      [ RSZ-1:0] buf_a_rpnt   , buf_b_rpnt   ;
 logic      [  32-1:0] buf_a_rpnt_rd, buf_b_rpnt_rd;
 logic                 trig_a_sw    , trig_b_sw    ;
