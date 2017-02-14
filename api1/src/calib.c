@@ -230,7 +230,7 @@ int calib_SetAcqScale(int unsigned channel, int unsigned gain, float referential
     return calib_Init();
 }
 
-int calib_SetBackEndOffset(int unsigned channel) {
+int calib_SetGenOffset(int unsigned channel) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
 
@@ -254,7 +254,7 @@ int calib_SetBackEndOffset(int unsigned channel) {
     return calib_Init();
 }
 
-int calib_SetBackEndScale(int unsigned channel) {
+int calib_SetGenScale(int unsigned channel) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
     failsafe_params = params;
@@ -303,7 +303,7 @@ static int getGenDC_int(int unsigned channel, float dc) {
     return calib_GetDataMedian(channel, 0);
 }
 
-int calib_CalibrateBackEnd(int unsigned channel, rp_calib_params_t* out_params) {
+int calib_CalibrateGen(int unsigned channel, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
     calib_ReadParams(&params);
 
