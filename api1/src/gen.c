@@ -209,7 +209,7 @@ static int synthesize_signal(int unsigned channel) {
     generate->properties_ch[channel].counterWrap = 65536 * size - 1;
 
     for (int unsigned i=0; i<BUFFER_LENGTH; i++)
-        data_ch[channel][i] = calib_Saturate(DATA_BIT_LENGTH, data[i] / AMPLITUDE_MAX);
+        data_ch[channel][i] = calib_Saturate(DATA_BIT_LENGTH, data[i] * ADC_BITS_MAX);
     return RP_OK;
 }
 
@@ -271,13 +271,13 @@ int rp_GenOutIsEnabled(int unsigned channel, bool *value) {
 
 int rp_GenAmp(int unsigned channel, float amplitude) {
     ch_amplitude[channel] = amplitude;
-    float calib_scl = calib_GetGenScale(channel) / (float)(1<<13);
-    generate->properties_ch[channel].amplitudeScale = calib_Saturate(14, (int32_t)(amplitude / calib_scl));
+    float calib_scl = DAC_BITS_MAX / calib_GetGenScale(channel);
+    generate->properties_ch[channel].amplitudeScale = calib_Saturate(14, (int32_t)(amplitude * calib_scl));
     return RP_OK;
 }
 
 int rp_GenGetAmp(int unsigned channel, float *amplitude) {
-    float calib_scl = calib_GetGenScale(channel) / (float)(1<<13);
+    float calib_scl = calib_GetGenScale(channel) / DAC_BITS_MAX;
     *amplitude = (float)(generate->properties_ch[channel].amplitudeScale) * calib_scl;
     return RP_OK;
 }
@@ -285,15 +285,17 @@ int rp_GenGetAmp(int unsigned channel, float *amplitude) {
 int rp_GenOffset(int unsigned channel, float offset) {
     ch_offset[channel] = offset;
     // TODO: calibration
-    //int32_t calib_off = calib_GetGenOffset(channel);
-    generate->properties_ch[channel].amplitudeOffset = calib_Saturate(14, (int32_t)(offset * (float)(1<<13)));
+    int32_t calib_off =                calib_GetGenOffset(channel);
+    float   calib_scl = DAC_BITS_MAX / calib_GetGenScale (channel);
+    generate->properties_ch[channel].amplitudeOffset = calib_Saturate(14, (int32_t)(offset * calib_scl + calib_off));
     return RP_OK;
 }
 
 int rp_GenGetOffset(int unsigned channel, float *offset) {
     // TODO: calibration
-    //int32_t calib_off = calib_GetGenOffset(channel);
-    *offset = (float)generate->properties_ch[channel].amplitudeOffset / (float)(1<<13);
+    int32_t calib_off = -calib_GetGenOffset(channel);
+    float   calib_scl =  calib_GetGenScale (channel) / DAC_BITS_MAX;
+    *offset = (float)(generate->properties_ch[channel].amplitudeOffset + calib_off) * calib_scl;
     return RP_OK;
 }
 
@@ -303,7 +305,8 @@ int rp_GenFreq(int unsigned channel, float frequency) {
     ch_frequency[channel] = frequency;
     rp_GenBurstPeriod(channel, ch_burstPeriod[channel]);
     generate->properties_ch[channel].counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
-    channel == 0 ? (generate->ASM_WrapPointer = 1) : (generate->BSM_WrapPointer = 1);
+    channel == 0 ? (generate->ASM_WrapPointer = 1)
+                 : (generate->BSM_WrapPointer = 1);
     synthesize_signal(channel);
     return gen_Synchronise();
 }
@@ -319,7 +322,6 @@ int rp_GenPhase(int unsigned channel, float phase) {
     if (phase < 0)
         phase += 360;
     ch_phase[channel] = phase;
-    synthesize_signal(channel);
     return gen_Synchronise();
 }
 

@@ -42,14 +42,16 @@
 #define GAIN_V(gain) (gain ? 20.0 : 1.0)
 
 /* @brief Number of ADC acquisition bits. */
-#define ADC_BITS 14
-
-/* @brief ADC acquisition bits mask. */
+#define ADC_BITS     14
 #define ADC_BITS_MSK (1<<ADC_BITS)-1
-
-/* @brief ADC acquisition max/min values */
 #define ADC_BITS_MAX ( (1<<(ADC_BITS-1))-1)
 #define ADC_BITS_MIN (-(1<<(ADC_BITS-1))  )
+
+/* @brief Number of DAC generator bits. */
+#define DAC_BITS     14
+#define DAC_BITS_MSK (1<<ADC_BITS)-1
+#define DAC_BITS_MAX ( (1<<(ADC_BITS-1))-1)
+#define DAC_BITS_MIN (-(1<<(ADC_BITS-1))  )
 
 int cmn_Init();
 int cmn_Release();
