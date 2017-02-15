@@ -3,9 +3,6 @@ import os
 import numpy as np
 
 class redpitaya (object):
-    CH_1 = 0
-    CH_2 = 1
-
     TRIG_SRC_DISABLED = 0 # Trigger is disabled
     TRIG_SRC_NOW      = 1 # Trigger triggered now (immediately)
     TRIG_SRC_CHA_PE   = 2 # Trigger set to Channel A threshold positive edge
@@ -29,10 +26,11 @@ class redpitaya (object):
     TRIG_STATE_TRIGGERED = 0 # Trigger is triggered/disabled
     TRIG_STATE_WAITING   = 1 # Trigger is set up and waiting (to be triggered)
 
-    def __init__(self, bitstream = "/opt/redpitaya/fpga/classic/fpga.bit"):
-        os.system('cat '+bitstream+' > /dev/xdevcfg')
-        self.rp_api = CDLL('/opt/redpitaya/lib/librp.so')
-        self.Init()
+    def __init__(self, bitstream = "/opt/redpitaya/fpga/classic/fpga.bit", init = True):
+        self.rp_api = CDLL('/opt/redpitaya/lib/librp1.so')
+        if init:
+            os.system('cat '+bitstream+' > /dev/xdevcfg')
+            self.Init()
 
     def __del__(self):
         self.Release()
