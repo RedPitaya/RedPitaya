@@ -29,6 +29,14 @@ static const int OSC_BASE_SIZE = 0x30000;
 // Oscilloscope Channel B input signal buffer offset
 #define OSC_CHB_OFFSET 0x20000
 
+// @brief Channel A/B Equalization filter
+typedef struct {
+    uint32_t aa;  // bits [31:18] - reserved, bits [17:0] - AA coefficient (pole)
+    uint32_t bb;  // bits [31:25] - reserved, bits [24:0] - BB coefficient (zero)
+    uint32_t kk;  // bits [31:25] - reserved, bits [24:0] - KK coefficient (gain)
+    uint32_t pp;  // bits [31:25] - reserved, bits [24:0] - PP coefficient (pole)
+} osc_filter;
+
 // Oscilloscope structure declaration
 typedef struct osc_control_s {
 
@@ -73,7 +81,7 @@ typedef struct osc_control_s {
      * 32 bit number - how many decimated samples should be stored into a buffer.
      * (max 16k samples)
      */
-    uint32_t trigger_delay;
+    uint32_t dly_pst;
 
     /** @brief Offset 0x14 - Data decimation register
      *
@@ -122,53 +130,8 @@ typedef struct osc_control_s {
      */
     uint32_t pre_trigger_counter;
 
-    /** @brief ChA Equalization filter
-     * bits [17:0] - AA coefficient (pole)
-     * bits [31:18] - reserved
-     */
-    uint32_t cha_filt_aa;
-
-    /** @brief ChA Equalization filter
-     * bits [24:0] - BB coefficient (zero)
-     * bits [31:25] - reserved
-     */
-    uint32_t cha_filt_bb;
-
-    /** @brief ChA Equalization filter
-     * bits [24:0] - KK coefficient (gain)
-     * bits [31:25] - reserved
-     */
-    uint32_t cha_filt_kk;
-
-    /** @brief ChA Equalization filter
-     * bits [24:0] - PP coefficient (pole)
-     * bits [31:25] - reserved
-     */
-    uint32_t cha_filt_pp;
-
-    /** @brief ChB Equalization filter
-     * bits [17:0] - AA coefficient (pole)
-     * bits [31:18] - reserved
-     */
-    uint32_t chb_filt_aa;
-
-    /** @brief ChB Equalization filter
-     * bits [24:0] - BB coefficient (zero)
-     * bits [31:25] - reserved
-     */
-    uint32_t chb_filt_bb;
-
-    /** @brief ChB Equalization filter
-     * bits [24:0] - KK coefficient (gain)
-     * bits [31:25] - reserved
-     */
-    uint32_t chb_filt_kk;
-
-    /** @brief ChB Equalization filter
-     * bits [24:0] - PP coefficient (pole)
-     * bits [31:25] - reserved
-     */
-    uint32_t chb_filt_pp;
+    // @brief Channel A/B Equalization filter
+    osc_filter filter [2];
 
     /* Reserved 0x88 & 0x8C */
     uint32_t reserved_4[16];
@@ -181,6 +144,8 @@ typedef struct osc_control_s {
     */
     uint32_t trig_dbc_t;
 
+    uint32_t dly_pre;
+
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
 } osc_control_t;
@@ -189,12 +154,8 @@ static const uint32_t DATA_DEC_MASK         = 0x1FFFF;      // (17 bits)
 static const uint32_t DATA_AVG_MASK         = 0x1;          // (1 bit)
 static const uint32_t TRIG_SRC_MASK         = 0xF;          // (4 bits)
 static const uint32_t START_DATA_WRITE_MASK = 0x1;          // (1 bit)
-static const uint32_t THRESHOLD_MASK        = 0x3FFF;       // (14 bits)
-static const uint32_t HYSTERESIS_MASK       = 0x3FFF;       // (14 bits)
 static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
 static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
-static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
-static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
 static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
 static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2st bit)
 static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)

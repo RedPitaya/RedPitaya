@@ -386,37 +386,32 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source);
 int rp_AcqGetTriggerState(rp_acq_trig_state_t* state);
 
 /**
- * Sets the number of decimated data after trigger written into memory.
- * @param decimated_data_num Number of decimated data. It must not be higher than the ADC buffer size.
+ * Sets the minimum number of decimated data samples before trigger written into memory.
+ * @param daley Number of decimated data samples. It must not be higher than the ADC buffer size.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerDelay(int32_t decimated_data_num);
+int rp_AcqSetPreTriggerDelay(uint32_t delay);
 
 /**
- * Returns current number of decimated data after trigger written into memory.
+ * Returns the minimum number of decimated data samples before trigger written into memory.
  * @param decimated_data_num Number of decimated data.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerDelay(int32_t* decimated_data_num);
+int rp_AcqGetPreTriggerDelay(uint32_t* delay);
 
 /**
- * Sets the amount of decimated data in nanoseconds after trigger written into memory.
- * @param time_ns Time in nanoseconds. Number of ADC samples within the specified
- * time must not be higher than the ADC buffer size.
+ * Sets the number of decimated data samples after trigger written into memory.
+ * @param daley Number of decimated data samples. It must not be higher than the ADC buffer size.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerDelayNs(int64_t time_ns);
+int rp_AcqSetPostTriggerDelay(uint32_t delay);
 
 /**
- * Returns the current amount of decimated data in nanoseconds after trigger written into memory.
- * @param time_ns Time in nanoseconds.
+ * Returns current number of decimated data samples after trigger written into memory.
+ * @param decimated_data_num Number of decimated data.
  * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerDelayNs(int64_t* time_ns);
+int rp_AcqGetPostTriggerDelay(uint32_t* delay);
 
 /**
  * Returns the number of valid data ponts before trigger.
@@ -440,7 +435,7 @@ int rp_AcqSetTriggerLevel(int unsigned channel, float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerLevel(float* voltage);
+int rp_AcqGetTriggerLevel(int unsigned channel, float* voltage);
 
 /**
  * Sets the trigger threshold hysteresis value in volts.
@@ -449,7 +444,7 @@ int rp_AcqGetTriggerLevel(float* voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerHyst(float voltage);
+int rp_AcqSetTriggerHyst(int unsigned channel, float voltage);
 
 /**
  * Gets currently set trigger threshold hysteresis value in volts
@@ -457,7 +452,7 @@ int rp_AcqSetTriggerHyst(float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerHyst(float* voltage);
+int rp_AcqGetTriggerHyst(int unsigned channel, float* voltage);
 
 /**
  * Sets the acquire gain state. The gain should be set to the same value as it is set on the Red Pitaya

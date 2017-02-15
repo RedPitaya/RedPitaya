@@ -57,76 +57,35 @@ static int osc_Release() {
  * for more details on the language used herein.
  */
 
-/* @brief Trig. reg. value offset when set to 0 */
-static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE/2;
-
-/* @brief Sampling period (non-decimated) - 8 [ns]. */
-static const uint64_t ADC_SAMPLE_PERIOD = 8;
-
 /* @brief Currently set Gain state */
 static int unsigned gain_ch [2] = {0, 0};
 
 /* @brief Default filter equalization coefficients LO/HI */
-static const uint32_t FILT_AA[] = {0x7D93  , 0x4C5F  };
-static const uint32_t FILT_BB[] = {0x437C7 , 0x2F38B };
-static const uint32_t FILT_PP[] = {0x2666  , 0x2666  };
-static const uint32_t FILT_KK[] = {0xd9999a, 0xd9999a};
-
-/**
- * Equalization filters
- */
-static void osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
-    osc_reg->cha_filt_aa = coef_aa;
-    osc_reg->cha_filt_bb = coef_bb;
-    osc_reg->cha_filt_kk = coef_kk;
-    osc_reg->cha_filt_pp = coef_pp;
-}
-
-static void osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
-    osc_reg->chb_filt_aa = coef_aa;
-    osc_reg->chb_filt_bb = coef_bb;
-    osc_reg->chb_filt_kk = coef_kk;
-    osc_reg->chb_filt_pp = coef_pp;
-}
-
-//static void osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
-//    coef_aa = osc_reg->cha_filt_aa;
-//    coef_bb = osc_reg->cha_filt_bb;
-//    coef_kk = osc_reg->cha_filt_kk;
-//    coef_pp = osc_reg->cha_filt_pp;
-//}
-//
-//static void osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
-//    coef_aa = osc_reg->chb_filt_aa;
-//    coef_bb = osc_reg->chb_filt_bb;
-//    coef_kk = osc_reg->chb_filt_kk;
-//    coef_pp = osc_reg->chb_filt_pp;
-//}
+static const osc_filter OSC_FILT [2] = {{0x7D93, 0x437C7, 0x2666, 0xd9999a},
+                                        {0x4C5F, 0x2F38B, 0x2666, 0xd9999a}};
 
 /**
  * Sets equalization filter with default coefficients per channel
  * @param channel Channel A or B
  * @return 0 when successful
  */
-static int setEqFilters(int unsigned channel) {
-    int unsigned gain = gain_ch [channel];
-    // Update equalization filter with default coefficients
-    if (channel == 0)  osc_SetEqFiltersChA(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
-    else               osc_SetEqFiltersChB(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
+int rp_AcqSetEqFilters(int unsigned channel, osc_filter coef) {
+    osc_reg->filter[channel].aa = coef.aa;
+    osc_reg->filter[channel].bb = coef.bb;
+    osc_reg->filter[channel].kk = coef.kk;
+    osc_reg->filter[channel].pp = coef.pp;
+    return RP_OK;
+}
+
+int rp_AcqGetEqFilters(int unsigned channel, osc_filter *coef) {
+    coef->aa = osc_reg->filter[channel].aa;
+    coef->bb = osc_reg->filter[channel].bb;
+    coef->kk = osc_reg->filter[channel].kk;
+    coef->pp = osc_reg->filter[channel].pp;
     return RP_OK;
 }
 
 /*----------------------------------------------------------------------------*/
-
-static int acq_SetChannelThresholdHyst(int unsigned channel, float voltage) {
-    int unsigned gain = gain_ch [channel];
-    if (fabs(voltage) - fabs(GAIN_V(gain)) > FLOAT_EPS)
-        return RP_EOOR;
-    int32_t calib_off =                calib_GetAcqOffset(channel, gain);
-    float   calib_scl = ADC_BITS_MAX / calib_GetAcqScale (channel, gain);
-    osc_reg->hystersis[channel] = calib_Saturate(ADC_BITS, (int32_t) (voltage * calib_scl) + calib_off);
-    return RP_OK;
-}
 
 static uint32_t getSizeFromStartEndPos(uint32_t start_pos, uint32_t end_pos) {
     end_pos   = end_pos   % ADC_BUFFER_SIZE;
@@ -183,18 +142,23 @@ int rp_AcqGetTriggerState(rp_acq_trig_state_t* state) {
     return RP_OK;
 }
 
-int rp_AcqSetTriggerDelay(int32_t decimated_data_num) {
-    int32_t trig_dly;
-    if (decimated_data_num < -TRIG_DELAY_ZERO_OFFSET)
-        trig_dly = 0;
-    else
-        trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
-    osc_reg->trigger_delay = trig_dly;
+int rp_AcqSetPreTriggerDelay(uint32_t delay) {
+    osc_reg->dly_pre = delay;
     return RP_OK;
 }
 
-int rp_AcqGetTriggerDelay(int32_t* decimated_data_num) {
-    *decimated_data_num = osc_reg->trigger_delay - TRIG_DELAY_ZERO_OFFSET;
+int rp_AcqGetPreTriggerDelay(uint32_t* delay) {
+    *delay = osc_reg->dly_pre;
+    return RP_OK;
+}
+
+int rp_AcqSetPostTriggerDelay(uint32_t delay) {
+    osc_reg->dly_pst = delay;
+    return RP_OK;
+}
+
+int rp_AcqGetPostTriggerDelay(uint32_t* delay) {
+    *delay = osc_reg->dly_pst;
     return RP_OK;
 }
 
@@ -211,52 +175,38 @@ int rp_AcqGetGainV(int unsigned channel, float* voltage) {
     return GAIN_V(gain_ch[channel]);
 }
 
-static int acq_GetChannelThresholdHyst(int unsigned channel, float* voltage) {
-    int unsigned gain = gain_ch [channel];
-    int32_t calib_off = -calib_GetAcqOffset(channel, gain);
-    float   calib_scl =  calib_GetAcqScale (channel, gain) / ADC_BITS_MAX;
-    *voltage = (float) (osc_reg->hystersis[channel] + calib_off) * calib_scl;
-    return RP_OK;
-}
-
-static int acq_GetChannelThreshold(int unsigned channel, float* voltage) {
-    int unsigned gain = gain_ch [channel];
-    int32_t calib_off = -calib_GetAcqOffset(channel, gain);
-    float   calib_scl =  calib_GetAcqScale (channel, gain) / ADC_BITS_MAX;
-    *voltage = (float) (osc_reg->thr[channel] + calib_off) * calib_scl;
-    fprintf(stderr, "%s-1: scl = %f, off = %d, voltage = %f, cnt = %d\n", __func__, calib_scl, calib_off, *voltage, osc_reg->thr[channel]);
-    return RP_OK;
-}
-
 int rp_AcqSetGain(int unsigned channel, int unsigned state) {
     int unsigned gain = gain_ch [channel];
     // Read old values which are dependent on the gain...
     int unsigned old_gain;
     float ch_thr, ch_hyst;
     old_gain = gain;
-    acq_GetChannelThreshold    (channel, &ch_thr );
-    acq_GetChannelThresholdHyst(channel, &ch_hyst);
+    rp_AcqGetTriggerLevel(channel, &ch_thr );
+    rp_AcqGetTriggerHyst (channel, &ch_hyst);
     // Now update the gain
     gain = state;
     // And recalculate new values...
     int status = rp_AcqSetTriggerLevel(channel, ch_thr);
     if (status == RP_OK)
-        status = acq_SetChannelThresholdHyst(channel, ch_hyst);
+        status = rp_AcqSetTriggerHyst(channel, ch_hyst);
     // In case of an error, put old values back and report the error
     if (status != RP_OK) {
         gain = old_gain;
         rp_AcqSetTriggerLevel(channel, ch_thr);
-        acq_SetChannelThresholdHyst(channel, ch_hyst);
+        rp_AcqSetTriggerHyst (channel, ch_hyst);
     } else {
     // At the end if everything is ok, update also equalization filters based on the new gain.
     // Updating eq filters should never fail...
-        status = setEqFilters(channel);
+        status = rp_AcqSetEqFilters(channel, OSC_FILT[gain_ch[channel]]);
     }
     return status;
 }
 
-int rp_AcqGetTriggerLevel(float* voltage) {
-    acq_GetChannelThreshold(0, voltage);
+int rp_AcqGetTriggerLevel(int unsigned channel, float* voltage) {
+    int unsigned gain = gain_ch [channel];
+    int32_t calib_off = -calib_GetAcqOffset(channel, gain);
+    float   calib_scl =  calib_GetAcqScale (channel, gain) / ADC_BITS_MAX;
+    *voltage = (float) (osc_reg->thr[channel] + calib_off) * calib_scl;
     return RP_OK;
 }
 
@@ -267,18 +217,25 @@ int rp_AcqSetTriggerLevel(int unsigned channel, float voltage) {
     int32_t calib_off =                calib_GetAcqOffset(channel, gain);
     float   calib_scl = ADC_BITS_MAX / calib_GetAcqScale (channel, gain);
     int32_t cnt = calib_Saturate(ADC_BITS, (int32_t)(voltage * calib_scl) + calib_off);
-    fprintf(stderr, "%s-1: off = %d, scl = %f, cnt = %d, voltage = %f\n", __func__, calib_off, calib_scl, cnt, voltage);
     osc_reg->thr[channel] = cnt;
     return RP_OK;
 }
 
-int rp_AcqGetTriggerHyst(float* voltage) {
-    return acq_GetChannelThresholdHyst(0, voltage);
+int rp_AcqGetTriggerHyst(int unsigned channel, float* voltage) {
+    int unsigned gain = gain_ch [channel];
+    int32_t calib_off = -calib_GetAcqOffset(channel, gain);
+    float   calib_scl =  calib_GetAcqScale (channel, gain) / ADC_BITS_MAX;
+    *voltage = (float) (osc_reg->hystersis[channel] + calib_off) * calib_scl;
+    return RP_OK;
 }
 
-int rp_AcqSetTriggerHyst(float voltage) {
-    acq_SetChannelThresholdHyst(0, voltage);
-    acq_SetChannelThresholdHyst(1, voltage);
+int rp_AcqSetTriggerHyst(int unsigned channel, float voltage) {
+    int unsigned gain = gain_ch [channel];
+    if (fabs(voltage) - fabs(GAIN_V(gain)) > FLOAT_EPS)
+        return RP_EOOR;
+    int32_t calib_off =                calib_GetAcqOffset(channel, gain);
+    float   calib_scl = ADC_BITS_MAX / calib_GetAcqScale (channel, gain);
+    osc_reg->hystersis[channel] = calib_Saturate(ADC_BITS, (int32_t) (voltage * calib_scl) + calib_off);
     return RP_OK;
 }
 
@@ -301,17 +258,16 @@ int rp_AcqStop() {
 }
 
 int rp_AcqReset() {
-    rp_AcqSetTriggerLevel(0, 0.0);
-    rp_AcqSetTriggerLevel(1, 0.0);
-    acq_SetChannelThresholdHyst(0, 0.0);
-    acq_SetChannelThresholdHyst(1, 0.0);
-
-    rp_AcqSetGain(0, 0);
-    rp_AcqSetGain(1, 0);
+    for (int unsigned ch=0; ch<2; ch++) {
+        rp_AcqSetTriggerLevel(ch, 0.0);
+        rp_AcqSetTriggerHyst (ch, 0.0);
+        rp_AcqSetGain(ch, 0);
+    }
     rp_AcqSetDecimationFactor(1);
-    rp_AcqSetAveraging(true);
+    rp_AcqSetAveraging(false);
     rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
-    rp_AcqSetTriggerDelay(0);
+    rp_AcqSetPreTriggerDelay (ADC_BUFFER_SIZE/2);
+    rp_AcqSetPostTriggerDelay(ADC_BUFFER_SIZE/2);
     return cmn_SetBits(&osc_reg->conf, (0x1 << 1), RST_WR_ST_MCH_MASK);
 }
 
