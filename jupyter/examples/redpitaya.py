@@ -3,6 +3,9 @@ import os
 import numpy as np
 
 class redpitaya (object):
+
+    FS = 125000000 # sampling frequency
+
     TRIG_SRC_DISABLED = 0 # Trigger is disabled
     TRIG_SRC_NOW      = 1 # Trigger triggered now (immediately)
     TRIG_SRC_CHA_PE   = 2 # Trigger set to Channel A threshold positive edge
