@@ -24,6 +24,8 @@
 int calib_Init();
 int calib_Release();
 
+int calib_ReadParams(rp_calib_params_t *calib_params);
+
 rp_calib_params_t calib_GetParams();
 int calib_WriteParams(rp_calib_params_t calib_params);
 void calib_SetToZero();

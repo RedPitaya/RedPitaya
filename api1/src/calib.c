@@ -21,8 +21,6 @@
 
 #define CALIB_MAGIC 0xAABBCCDD
 
-int calib_ReadParams(rp_calib_params_t *calib_params);
-
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;
 
@@ -64,15 +62,13 @@ int calib_ReadParams(rp_calib_params_t *calib_params) {
     size_t  size;
 
     /* sanity check */
-    if(calib_params == NULL) {
+    if(calib_params == NULL)
         return RP_UIA;
-    }
-
     /* open EEPROM device */
+
     fp = fopen(eeprom_device, "r");
-    if(fp == NULL) {
+    if(fp == NULL)
         return RP_EOED;
-    }
 
     /* ...and seek to the appropriate storage offset */
     if(fseek(fp, eeprom_calib_off, SEEK_SET) < 0) {
@@ -101,9 +97,8 @@ int calib_WriteParams(rp_calib_params_t calib_params) {
 
     /* open EEPROM device */
     fp = fopen(eeprom_device, "w+");
-    if(fp == NULL) {
+    if(fp == NULL)
         return RP_EOED;
-    }
 
     /* ...and seek to the appropriate storage offset */
     if(fseek(fp, eeprom_calib_off, SEEK_SET) < 0) {
