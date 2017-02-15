@@ -233,32 +233,21 @@ static int triggerIfInternal(int unsigned channel) {
 */
 
 int rp_GenReset() {
-    rp_GenOutDisable(1);
-    rp_GenOutDisable(1);
-    rp_GenFreq(0, 1000);
-    rp_GenFreq(1, 1000);
-    rp_GenBurstRepetitions(0, 1);
-    rp_GenBurstRepetitions(1, 1);
-    rp_GenBurstPeriod(0, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
-    rp_GenBurstPeriod(1, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
-    rp_GenWaveform(0, RP_WAVEFORM_SINE);
-    rp_GenWaveform(1, RP_WAVEFORM_SINE);
-    rp_GenOffset(0, 0);
-    rp_GenOffset(1, 0);
-    rp_GenAmp(0, 1);
-    rp_GenAmp(1, 1);
-    rp_GenDutyCycle(0, 0.5);
-    rp_GenDutyCycle(1, 0.5);
-    rp_GenMode(0, RP_GEN_MODE_CONTINUOUS);
-    rp_GenMode(1, RP_GEN_MODE_CONTINUOUS);
-    rp_GenBurstCount(0, 1);
-    rp_GenBurstCount(1, 1);
-    rp_GenBurstPeriod(0, BURST_PERIOD_MIN);
-    rp_GenBurstPeriod(1, BURST_PERIOD_MIN);
-    rp_GenTriggerSource(0, RP_GEN_TRIG_SRC_INTERNAL);
-    rp_GenTriggerSource(1, RP_GEN_TRIG_SRC_INTERNAL);
-    rp_GenPhase(0, 0.0);
-    rp_GenPhase(1, 0.0);
+    for (int unsigned i=0; i<2; i++) {
+        rp_GenOutDisable(i);
+        rp_GenFreq(i, 1000);
+        rp_GenBurstRepetitions(i, 1);
+        rp_GenBurstPeriod(i, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
+        rp_GenWaveform(i, RP_WAVEFORM_SINE);
+        rp_GenOffset(i, 0);
+        rp_GenAmp(i, 1);
+        rp_GenDutyCycle(i, 0.5);
+        rp_GenMode(i, RP_GEN_MODE_CONTINUOUS);
+        rp_GenBurstCount(i, 1);
+        rp_GenBurstPeriod(i, BURST_PERIOD_MIN);
+        rp_GenTriggerSource(i, RP_GEN_TRIG_SRC_INTERNAL);
+        rp_GenPhase(i, 0.0);
+    }
     return RP_OK;
 }
 
