@@ -386,6 +386,20 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source);
 int rp_AcqGetTriggerState(rp_acq_trig_state_t* state);
 
 /**
+ * Sets the minimum number of decimated data samples before trigger written into memory.
+ * @param daley Number of decimated data samples. It must not be higher than the ADC buffer size.
+ * @return If the function is successful, the return value is RP_OK.
+ */
+int rp_AcqSetPreTriggerDelay(uint32_t delay);
+
+/**
+ * Returns the minimum number of decimated data samples before trigger written into memory.
+ * @param decimated_data_num Number of decimated data.
+ * @return If the function is successful, the return value is RP_OK.
+ */
+int rp_AcqGetPreTriggerDelay(uint32_t* delay);
+
+/**
  * Sets the number of decimated data samples after trigger written into memory.
  * @param daley Number of decimated data samples. It must not be higher than the ADC buffer size.
  * @return If the function is successful, the return value is RP_OK.
