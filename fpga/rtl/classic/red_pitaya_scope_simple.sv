@@ -155,7 +155,7 @@ end else begin
    adc_dv <= (adc_dec_cnt >= set_dec);
 
    adc_a_dat <= set_avg_en ? (adc_a_sum >> set_dec_shf) : adc_a_filt_out;
-   adc_b_dat <= set_avg_en ? (adc_b_sum >> set_dec_shf) : adc_a_filt_out;
+   adc_b_dat <= set_avg_en ? (adc_b_sum >> set_dec_shf) : adc_b_filt_out;
 end
 
 //---------------------------------------------------------------------------------
