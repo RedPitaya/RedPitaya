@@ -183,18 +183,13 @@ int rp_AcqGetTriggerState(rp_acq_trig_state_t* state) {
     return RP_OK;
 }
 
-int rp_AcqSetTriggerDelay(int32_t decimated_data_num) {
-    int32_t trig_dly;
-    if (decimated_data_num < -TRIG_DELAY_ZERO_OFFSET)
-        trig_dly = 0;
-    else
-        trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
-    osc_reg->trigger_delay = trig_dly;
+int rp_AcqSetPostTriggerDelay(uint32_t delay) {
+    osc_reg->dly_pst = delay;
     return RP_OK;
 }
 
-int rp_AcqGetTriggerDelay(int32_t* decimated_data_num) {
-    *decimated_data_num = osc_reg->trigger_delay - TRIG_DELAY_ZERO_OFFSET;
+int rp_AcqGetPostTriggerDelay(uint32_t* delay) {
+    *delay = osc_reg->dly_pst;
     return RP_OK;
 }
 
@@ -301,17 +296,15 @@ int rp_AcqStop() {
 }
 
 int rp_AcqReset() {
-    rp_AcqSetTriggerLevel(0, 0.0);
-    rp_AcqSetTriggerLevel(1, 0.0);
-    acq_SetChannelThresholdHyst(0, 0.0);
-    acq_SetChannelThresholdHyst(1, 0.0);
-
-    rp_AcqSetGain(0, 0);
-    rp_AcqSetGain(1, 0);
+    for (int unsigned ch=0; ch<2; ch++) {
+        rp_AcqSetTriggerLevel(ch, 0.0);
+        rp_AcqSetTriggerHyst (0.0);
+        rp_AcqSetGain(ch, 0);
+    }
     rp_AcqSetDecimationFactor(1);
     rp_AcqSetAveraging(true);
     rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
-    rp_AcqSetTriggerDelay(0);
+    rp_AcqSetPostTriggerDelay(ADC_BUFFER_SIZE/2);
     return cmn_SetBits(&osc_reg->conf, (0x1 << 1), RST_WR_ST_MCH_MASK);
 }
 

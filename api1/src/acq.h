@@ -73,7 +73,7 @@ typedef struct osc_control_s {
      * 32 bit number - how many decimated samples should be stored into a buffer.
      * (max 16k samples)
      */
-    uint32_t trigger_delay;
+    uint32_t dly_pst;
 
     /** @brief Offset 0x14 - Data decimation register
      *
