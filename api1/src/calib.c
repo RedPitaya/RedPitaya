@@ -237,7 +237,6 @@ int calib_SetGenOffset(int unsigned channel) {
 
     /* Generate zero signal */
     rp_GenReset();
-    rp_GenWaveform(channel, RP_WAVEFORM_SINE);
     rp_GenAmp(channel, 0);
     rp_GenOffset(channel, 0);
     rp_GenOutEnable(channel);
