@@ -181,6 +181,8 @@ typedef struct osc_control_s {
     */
     uint32_t trig_dbc_t;
 
+    uint32_t dly_pre;
+
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
 } osc_control_t;

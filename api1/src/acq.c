@@ -57,12 +57,6 @@ static int osc_Release() {
  * for more details on the language used herein.
  */
 
-/* @brief Trig. reg. value offset when set to 0 */
-static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE/2;
-
-/* @brief Sampling period (non-decimated) - 8 [ns]. */
-static const uint64_t ADC_SAMPLE_PERIOD = 8;
-
 /* @brief Currently set Gain state */
 static int unsigned gain_ch [2] = {0, 0};
 
@@ -180,6 +174,16 @@ int rp_AcqGetTriggerState(rp_acq_trig_state_t* state) {
     uint32_t stateB = osc_reg->conf & TRIG_ST_MCH_MASK;
     if (stateB)  *state = RP_TRIG_STATE_TRIGGERED;
     else         *state = RP_TRIG_STATE_WAITING;
+    return RP_OK;
+}
+
+int rp_AcqSetPreTriggerDelay(uint32_t delay) {
+    osc_reg->dly_pre = delay;
+    return RP_OK;
+}
+
+int rp_AcqGetPreTriggerDelay(uint32_t* delay) {
+    *delay = osc_reg->dly_pre;
     return RP_OK;
 }
 
@@ -304,6 +308,7 @@ int rp_AcqReset() {
     rp_AcqSetDecimationFactor(1);
     rp_AcqSetAveraging(true);
     rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
+    rp_AcqSetPreTriggerDelay (ADC_BUFFER_SIZE/2);
     rp_AcqSetPostTriggerDelay(ADC_BUFFER_SIZE/2);
     return cmn_SetBits(&osc_reg->conf, (0x1 << 1), RST_WR_ST_MCH_MASK);
 }
