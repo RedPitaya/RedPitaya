@@ -69,10 +69,10 @@ class redpitaya (object):
         return self.rp_api.rp_AcqReset()
 
     def AcqSetDecimationFactor(self, value):
-        return self.rp_api.rp_AcqSetDecimationFactor(value)
+        return self.rp_api.rp_AcqSetDecimationFactor(c_uint(value))
 
     def AcqGetDecimationFactor(self):
-        value = c_int(0)
+        value = c_uint(0)
         self.rp_api.rp_AcqGetDecimationFactor(byref(value))
         return value.value
 
@@ -92,8 +92,21 @@ class redpitaya (object):
         self.rp_api.rp_AcqGetTriggerHyst(byref(value))
         return value.value
 
-    def AcqSetTriggerDelay(self, delay):
-        return self.rp_api.rp_AcqSetTriggerDelay(delay)
+    def AcqSetPreTriggerDelay(self, delay):
+        return self.rp_api.rp_AcqSetPreTriggerDelay(c_uint(delay))
+
+    def AcqGetPreTriggerDelay(self, delay):
+        value = c_uint(0)
+        self.rp_api.rp_AcqSetPreTriggerDelay(byref(delay))
+        return value.value
+
+    def AcqSetPostTriggerDelay(self, delay):
+        return self.rp_api.rp_AcqSetPostTriggerDelay(c_uint(delay))
+
+    def AcqGetPostTriggerDelay(self, delay):
+        value = c_uint(0)
+        self.rp_api.rp_AcqSetPostTriggerDelay(byref(delay))
+        return value.value
 
     def AcqStart(self):
         return self.rp_api.rp_AcqStart()
