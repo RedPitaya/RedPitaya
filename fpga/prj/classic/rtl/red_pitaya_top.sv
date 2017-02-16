@@ -399,7 +399,7 @@ IOBUF iobuf_exp_n [8-1:0] (.O(gpio.i[23:16]), .IO(exp_n_io), .I(gpio.o[23:16]), 
 
 logic trig_asg_out;
 
-red_pitaya_scope_simple i_scope (
+red_pitaya_scope i_scope (
   // ADC
   .adc_a_i       (adc_dat[0]  ),  // CH 1
   .adc_b_i       (adc_dat[1]  ),  // CH 2
@@ -422,7 +422,7 @@ red_pitaya_scope_simple i_scope (
 ////////////////////////////////////////////////////////////////////////////////
 
 
-red_pitaya_asg_simple i_asg (
+red_pitaya_asg i_asg (
    // DAC
   .dac_a_o         (asg_dat[0]  ),  // CH 1
   .dac_b_o         (asg_dat[1]  ),  // CH 2
