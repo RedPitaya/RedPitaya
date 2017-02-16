@@ -61,52 +61,27 @@ static int osc_Release() {
 static int unsigned gain_ch [2] = {0, 0};
 
 /* @brief Default filter equalization coefficients LO/HI */
-static const uint32_t FILT_AA[] = {0x7D93  , 0x4C5F  };
-static const uint32_t FILT_BB[] = {0x437C7 , 0x2F38B };
-static const uint32_t FILT_PP[] = {0x2666  , 0x2666  };
-static const uint32_t FILT_KK[] = {0xd9999a, 0xd9999a};
-
-/**
- * Equalization filters
- */
-static void osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
-    osc_reg->cha_filt_aa = coef_aa;
-    osc_reg->cha_filt_bb = coef_bb;
-    osc_reg->cha_filt_kk = coef_kk;
-    osc_reg->cha_filt_pp = coef_pp;
-}
-
-static void osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
-    osc_reg->chb_filt_aa = coef_aa;
-    osc_reg->chb_filt_bb = coef_bb;
-    osc_reg->chb_filt_kk = coef_kk;
-    osc_reg->chb_filt_pp = coef_pp;
-}
-
-//static void osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
-//    coef_aa = osc_reg->cha_filt_aa;
-//    coef_bb = osc_reg->cha_filt_bb;
-//    coef_kk = osc_reg->cha_filt_kk;
-//    coef_pp = osc_reg->cha_filt_pp;
-//}
-//
-//static void osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
-//    coef_aa = osc_reg->chb_filt_aa;
-//    coef_bb = osc_reg->chb_filt_bb;
-//    coef_kk = osc_reg->chb_filt_kk;
-//    coef_pp = osc_reg->chb_filt_pp;
-//}
+static const osc_filter OSC_FILT [2] = {{0x7D93, 0x437C7, 0x2666, 0xd9999a},
+                                        {0x4C5F, 0x2F38B, 0x2666, 0xd9999a}};
 
 /**
  * Sets equalization filter with default coefficients per channel
  * @param channel Channel A or B
  * @return 0 when successful
  */
-static int setEqFilters(int unsigned channel) {
-    int unsigned gain = gain_ch [channel];
-    // Update equalization filter with default coefficients
-    if (channel == 0)  osc_SetEqFiltersChA(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
-    else               osc_SetEqFiltersChB(FILT_AA[gain], FILT_BB[gain], FILT_KK[gain], FILT_PP[gain]);
+int rp_AcqSetEqFilters(int unsigned channel, osc_filter coef) {
+    osc_reg->filter[channel].aa = coef.aa;
+    osc_reg->filter[channel].bb = coef.bb;
+    osc_reg->filter[channel].kk = coef.kk;
+    osc_reg->filter[channel].pp = coef.pp;
+    return RP_OK;
+}
+
+int rp_AcqGetEqFilters(int unsigned channel, osc_filter *coef) {
+    coef->aa = osc_reg->filter[channel].aa;
+    coef->bb = osc_reg->filter[channel].bb;
+    coef->kk = osc_reg->filter[channel].kk;
+    coef->pp = osc_reg->filter[channel].pp;
     return RP_OK;
 }
 
@@ -222,7 +197,7 @@ int rp_AcqSetGain(int unsigned channel, int unsigned state) {
     } else {
     // At the end if everything is ok, update also equalization filters based on the new gain.
     // Updating eq filters should never fail...
-        status = setEqFilters(channel);
+        status = rp_AcqSetEqFilters(channel, OSC_FILT[gain_ch[channel]]);
     }
     return status;
 }
