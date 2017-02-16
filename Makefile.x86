@@ -84,7 +84,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
 FPGA_TAR = fpga.zip
 
-FPGA_PRJ_LST = classic logic_orig v0.94 axi4lite
+FPGA_PRJ_LST = classic logic_orig v0.94 axi4lite mercury
 FPGA_PRJ = logic_orig
 
 .PHONY: fpga fpga_all

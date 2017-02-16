@@ -29,7 +29,7 @@ class redpitaya (object):
     TRIG_STATE_TRIGGERED = 0 # Trigger is triggered/disabled
     TRIG_STATE_WAITING   = 1 # Trigger is set up and waiting (to be triggered)
 
-    def __init__(self, bitstream = "/opt/redpitaya/fpga/classic/fpga.bit", init = True):
+    def __init__(self, bitstream = "/opt/redpitaya/fpga/mercury/fpga.bit", init = True):
         self.rp_api = CDLL('/opt/redpitaya/lib/librp1.so')
         if init:
             os.system('cat '+bitstream+' > /dev/xdevcfg')
