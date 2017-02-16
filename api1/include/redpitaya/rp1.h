@@ -435,7 +435,7 @@ int rp_AcqSetTriggerLevel(int unsigned channel, float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerLevel(float* voltage);
+int rp_AcqGetTriggerLevel(int unsigned channel, float* voltage);
 
 /**
  * Sets the trigger threshold hysteresis value in volts.
@@ -444,7 +444,7 @@ int rp_AcqGetTriggerLevel(float* voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerHyst(float voltage);
+int rp_AcqSetTriggerHyst(int unsigned channel, float voltage);
 
 /**
  * Gets currently set trigger threshold hysteresis value in volts
@@ -452,7 +452,7 @@ int rp_AcqSetTriggerHyst(float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerHyst(float* voltage);
+int rp_AcqGetTriggerHyst(int unsigned channel, float* voltage);
 
 /**
  * Sets the acquire gain state. The gain should be set to the same value as it is set on the Red Pitaya
