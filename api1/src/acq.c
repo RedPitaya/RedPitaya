@@ -61,8 +61,8 @@ static int osc_Release() {
 static int unsigned gain_ch [2] = {0, 0};
 
 /* @brief Default filter equalization coefficients LO/HI */
-static const osc_filter OSC_FILT [2] = {{0x7D93, 0x437C7, 0x2666, 0xd9999a},
-                                        {0x4C5F, 0x2F38B, 0x2666, 0xd9999a}};
+static const osc_filter OSC_FILT [2] = {{0x7D93, 0x437C7, 0xd9999a, 0x2666},
+                                        {0x4C5F, 0x2F38B, 0xd9999a, 0x2666}};
 
 /**
  * Sets equalization filter with default coefficients per channel
