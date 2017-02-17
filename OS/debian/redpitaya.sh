@@ -36,8 +36,6 @@ apt-get -y install libjpeg-dev
 apt-get -y install libjson-c-dev rapidjson-dev
 # Websockets++ library
 apt-get -y install libwebsocketpp-dev
-# IIO library
-apt-get -y install libiio-dev python-libiio iiod libiio-utils libiio-cil-dev
 
 # libraries used by lcrmeter
 apt-get install -y libi2c-dev i2c-tools
@@ -57,8 +55,10 @@ apt-get -y install git
 # Device tree compiler can be used to compile custom overlays
 apt-get -y install libudev
 #apt-get -y install device-tree-copiler
+EOF_CHROOT
 
 # NOTE: we have to compile a custom device tree compiler with overlay support
+chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get -y install build-essential gcc bison flex
 curl -L https://github.com/pantoniou/dtc/archive/overlays.tar.gz -o dtc.tar.gz
 tar zxvf dtc.tar.gz
@@ -67,6 +67,28 @@ make
 make install PREFIX=/usr
 cd ../
 rm -rf dtc-overlays dtc.tar.gz
+EOF_CHROOT
+
+# IIO library, the version provided in debian is old, missing Python 3 bindings
+chroot $ROOT_DIR <<- EOF_CHROOT
+#apt-get -y install libiio-dev python-libiio iiod libiio-utils libiio-cil-dev
+
+# https://wiki.analog.com/resources/eval/user-guides/ad-fmcdaq2-ebz/software/linux/applications/libiio#how_to_build_it
+apt-get -y install libxml2 libxml2-dev bison flex libcdk5-dev cmake
+apt-get -y install libaio-dev libusb-1.0-0-dev libserialport-dev libxml2-dev libavahi-client-dev
+# git clone https://github.com/analogdevicesinc/libiio.git
+# cd libiio
+# git checkout -b v0.9 v0.9
+curl -L https://github.com/analogdevicesinc/libiio/archive/v0.9.tar.gz -o libiio.tar.gz
+tar zxvf libiio.tar.gz
+cd libiio-0.9
+cmake ./
+make all
+make install
+pip3 install bindings/python/
+# cleanup
+cd ../
+rm -rf libiio-0.9 libiio.tar.gz
 EOF_CHROOT
 
 ################################################################################
