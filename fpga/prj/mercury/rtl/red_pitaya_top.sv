@@ -152,14 +152,9 @@ logic                    dac_clk_2p;
 logic                    dac_rst;
 
 logic        [14-1:0] dac_dat_a, dac_dat_b;
-logic        [14-1:0] dac_a    , dac_b    ;
-logic signed [15-1:0] dac_a_sum, dac_b_sum;
 
 // ASG
 SBG_T [2-1:0]            asg_dat;
-
-// PID
-SBA_T [2-1:0]            pid_dat;
 
 // configuration
 logic                    digital_loop;
@@ -270,6 +265,8 @@ for (genvar i=5; i<8; i++) begin: for_sys
 end: for_sys
 endgenerate
 
+sys_bus_stub sys_bus_stub_3 (sys[3]);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
 ////////////////////////////////////////////////////////////////////////////////
@@ -336,26 +333,18 @@ begin
 end
     
 // transform into 2's complement (negative slope)
-assign adc_dat[0] = digital_loop ? dac_a : {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
-assign adc_dat[1] = digital_loop ? dac_b : {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
+assign adc_dat[0] = digital_loop ? asg_dat[0] : {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
+assign adc_dat[1] = digital_loop ? asg_dat[1] : {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
 
-// Sumation of ASG and PID signal perform saturation before sending to DAC 
-assign dac_a_sum = asg_dat[0] + pid_dat[0];
-assign dac_b_sum = asg_dat[1] + pid_dat[1];
-
-// saturation
-assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
-assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
-
 // output registers + signed to unsigned (also to negative slope)
 always @(posedge dac_clk_1x)
 begin
-  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
-  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
+  dac_dat_a <= {asg_dat[0][14-1], ~asg_dat[0][14-2:0]};
+  dac_dat_b <= {asg_dat[1][14-1], ~asg_dat[1][14-2:0]};
 end
 
 // DDR outputs
@@ -439,28 +428,6 @@ red_pitaya_asg_simple i_asg (
   .sys_rdata       (sys[2].rdata),
   .sys_err         (sys[2].err  ),
   .sys_ack         (sys[2].ack  )
-);
-
-////////////////////////////////////////////////////////////////////////////////
-//  MIMO PID controller
-////////////////////////////////////////////////////////////////////////////////
-
-red_pitaya_pid i_pid (
-   // signals
-  .clk_i           (adc_clk   ),  // clock
-  .rstn_i          (adc_rstn  ),  // reset - active low
-  .dat_a_i         (adc_dat[0]),  // in 1
-  .dat_b_i         (adc_dat[1]),  // in 2
-  .dat_a_o         (pid_dat[0]),  // out 1
-  .dat_b_o         (pid_dat[1]),  // out 2
-  // System bus
-  .sys_addr        (sys[3].addr ),
-  .sys_wdata       (sys[3].wdata),
-  .sys_wen         (sys[3].wen  ),
-  .sys_ren         (sys[3].ren  ),
-  .sys_rdata       (sys[3].rdata),
-  .sys_err         (sys[3].err  ),
-  .sys_ack         (sys[3].ack  )
 );
 
 endmodule: red_pitaya_top
