@@ -1,3 +1,21 @@
+Jupyter:
+- terminal should run `bash`
+- terminal middle mouse button paste should be fixed,
+  it works well in PYNQ, since the latest Jupyter code is used,
+  it might be just an upstream regression
+- there is this error in the log:
+  `404 GET /jupyter/nbextensions/widgets/notebook/js/extension.js`
+  so some widgets are not working
+- use generator/acquire from logic_orig
+- rethink start/trigger/stop synchronization
+- each channel should have own UIO DT node and driver,
+  so they could be used by separate applications
+- UIO devices should be opened exclusively,
+  to avoid conflicts between applications
+- FPGA image should not be reloaded by default,
+  to avoid crashing other applications already using the FPGA
+- add device tree overlay and FPGA manager support
+
 FPGA:
 - replace undocumented system bus with AXI4 Lite
 - move CPU accessible registers out from processing modules

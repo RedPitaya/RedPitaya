@@ -22,13 +22,21 @@ FPGA:
 - added UDEV code for renaming UIO devices
 - added UDEV code for changing group access permissions
   xdevcfg,uio,led,gpio,spi,i2c,dialout,dma
+- added the Mercury project, will be used to implement new features,
+  initially only supported in Jupyter
+- the `axi4lite` project is used to test AXI4 bus implementations,
+  for now here is a basic AXI4-Lite slave (GPIO) and
+  an integrated logic analyzer for observing bus performance and bugs
 
 OS:
-- 
+- Update to Ubuntu 16.04.2
+- OS build script cleanup, mostly to organize the code into topics
+- partially removed IPv6 support, it was causing issues with zeroconf
+- installed more libraries (libiio v0.9, ...)
 
 API:
 - changed API to map /dev/uio/
-- added cleaner API1
+- added cleaner API1 just used by Jupyter apps now, it is far from stable
 
 Documentation:
 - recoded most documentation into reStructuredText, so it can be published on
@@ -36,6 +44,13 @@ Documentation:
 
 Wyliodrin:
 - removed
+
+Applications:
+- added bode analyzer
+
+Jupyter:
+- added Jupyter for interactive Python notebooks
+- added a few basic exampleds
 
 # Release 0.96 RC?
 
