@@ -76,7 +76,7 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 # https://wiki.analog.com/resources/eval/user-guides/ad-fmcdaq2-ebz/software/linux/applications/libiio#how_to_build_it
 apt-get -y install libxml2 libxml2-dev bison flex libcdk5-dev cmake
 apt-get -y install libaio-dev libusb-1.0-0-dev libserialport-dev libxml2-dev libavahi-client-dev
-git clone --tag v0.9 --depth 1 https://github.com/analogdevicesinc/libiio.git
+git clone --branch v0.9 --depth 1 https://github.com/analogdevicesinc/libiio.git
 cd libiio
 cmake ./
 make all
