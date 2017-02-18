@@ -87,6 +87,20 @@ cd ../
 rm -rf libiio
 EOF_CHROOT
 
+## Ne10 library, the version in launchpad fails to build
+# TODO: 'make install' is not working yet
+#chroot $ROOT_DIR <<- EOF_CHROOT
+#sudo apt-get install cmake
+#git clone --depth 1 https://github.com/projectNe10/Ne10.git
+#cd Ne10
+#mkdir build && cd build             # Create the `build` directory and navigate into it
+#export NE10_LINUX_TARGET_ARCH=armv7 # Set the target architecture (can also be "aarch64")
+#cmake -DGNULINUX_PLATFORM=ON ..     # Run CMake to generate the build files
+#make                                # Build the project
+## cleanup
+#cd ../../
+#rm -rf Ne10
+#EOF_CHROOT
 ################################################################################
 # systemd services
 ################################################################################
