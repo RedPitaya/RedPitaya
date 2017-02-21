@@ -1,0 +1,41 @@
+/dts-v1/;
+/plugin/;
+/ {
+//	fragment@0 {
+//		target = <&fpga_region0>;
+//		#address-cells = <1>;
+//		#size-cells = <1>;
+//		__overlay__ {
+//			#address-cells = <1>;
+//			#size-cells = <1>;
+//			firmware-name = "redpitaya/axi4lite.bin";
+//		};
+//	};
+	fragment@1 {
+		target = <&amba_pl>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		__overlay__ {
+			hwid: hwid@40000000 {
+				compatible = "generic-uio";
+				reg = <0x40000000 0x1000>;
+			};
+			scope0: scope0@40100000 {
+				compatible = "generic-uio";
+				reg = <0x40200000 0x10000>;
+			};
+			asg0: asg0@40200000 {
+				compatible = "generic-uio";
+				reg = <0x40200000 0x0100>,
+				      <0x40204000 0x4000>;
+				reg-names = "ctl", "mem";
+			};
+			asg1: asg1@40300000 {
+				compatible = "generic-uio";
+				reg = <0x40300000 0x0100>,
+				      <0x40304000 0x4000>;
+				reg-names = "ctl", "mem";
+			};
+		};
+	};
+};
