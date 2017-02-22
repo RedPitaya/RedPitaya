@@ -57,6 +57,8 @@ pip3 install --upgrade pip
 pip3 install jupyter
 pip3 install ipywidgets
 jupyter nbextension enable --py widgetsnbextension
+# this is just a debug line, to see if configuration was saved
+jupyter nbextension list
 
 # https://plot.ly/python/ for interactive graphs
 pip3 install plotly
