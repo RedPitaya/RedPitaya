@@ -92,13 +92,13 @@ class redpitaya (object):
         self.rp_api.rp_AcqGetTriggerHyst(byref(value))
         return value.value
 
-    def AcqSetPreTriggerDelay(self, delay):
-        return self.rp_api.rp_AcqSetPreTriggerDelay(c_uint(delay))
+#    def AcqSetPreTriggerDelay(self, delay):
+#        return self.rp_api.rp_AcqSetPreTriggerDelay(c_uint(delay))
 
-    def AcqGetPreTriggerDelay(self, delay):
-        value = c_uint(0)
-        self.rp_api.rp_AcqSetPreTriggerDelay(byref(delay))
-        return value.value
+#    def AcqGetPreTriggerDelay(self, delay):
+#        value = c_uint(0)
+#        self.rp_api.rp_AcqSetPreTriggerDelay(byref(delay))
+#        return value.value
 
     def AcqSetPostTriggerDelay(self, delay):
         return self.rp_api.rp_AcqSetPostTriggerDelay(c_uint(delay))
