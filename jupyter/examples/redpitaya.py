@@ -136,6 +136,13 @@ class redpitaya (object):
         nbuff = np.frombuffer(buff, np.float32)
         return nbuff
 
+    def AcqGetLatestDataV(self, channel, size):
+        buff = (c_float*size)()
+        buff_size = c_long(size)
+        self.rp_api.rp_AcqGetLatestDataV(channel, byref(buff_size), byref(buff));
+        nbuff = np.frombuffer(buff, np.float32)
+        return nbuff
+
     def AIpinGetValue(self, pin):
         value = c_float(0)
         self.rp_api.rp_AIpinGetValue(pin, byref(value))
