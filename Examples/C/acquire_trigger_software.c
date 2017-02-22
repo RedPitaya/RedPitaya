@@ -26,7 +26,6 @@ int main(int argc, char **argv){
 
         rp_AcqReset();
         rp_AcqSetDecimation(1);
-        rp_AcqSetTriggerLevel(0.1); //Trig level is set in Volts while in SCPI 
         rp_AcqSetTriggerDelay(0);
 
         rp_AcqStart();
