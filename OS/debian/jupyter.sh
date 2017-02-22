@@ -6,6 +6,37 @@
 ################################################################################
 
 ###############################################################################
+# create user and add it into groups for HW access rights
+###############################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+useradd -m -c "Jupyter notebook user" -s /bin/bash -G xdevcfg,uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma jupyter
+EOF_CHROOT
+
+###############################################################################
+# systemd service
+###############################################################################
+
+# copy systemd service
+install -v -m 664 -o root -D  $OVERLAY/etc/systemd/system/jupyter.service \
+                             $ROOT_DIR/etc/systemd/system/jupyter.service
+
+# create configuration directory for users root and jupyter
+install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_config.py \
+                             $ROOT_DIR/root/.jupyter/jupyter_notebook_config.py
+# let the owner be root, since the user should not change it easily
+install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_config.py \
+                             $ROOT_DIR/home/jupyter/.jupyter/jupyter_notebook_config.py
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+chown -v -R jupyter:jupyter /home/jupyter/.jupyter
+EOF_CHROOT
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+systemctl enable jupyter
+EOF_CHROOT
+
+###############################################################################
 # install packages
 ###############################################################################
 
@@ -43,37 +74,6 @@ pip3 install i2cdev
 # https://pypi.python.org/pypi/pyudev
 # https://pypi.python.org/pypi/pyfdt
 pip3 install pyudev pyfdt
-EOF_CHROOT
-
-###############################################################################
-# create user and add it into groups for HW access rights
-###############################################################################
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-useradd -m -c "Jupyter notebook user" -s /bin/bash -G xdevcfg,uio,xadc,led,gpio,spi,i2c,eeprom,dialout,dma jupyter
-EOF_CHROOT
-
-###############################################################################
-# systemd service
-###############################################################################
-
-# copy systemd service
-install -v -m 664 -o root -D  $OVERLAY/etc/systemd/system/jupyter.service \
-                             $ROOT_DIR/etc/systemd/system/jupyter.service
-
-# create configuration directory for users root and jupyter
-install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_config.py \
-                             $ROOT_DIR/root/.jupyter/jupyter_notebook_config.py
-# let the owner be root, since the user should not change it easily
-install -v -m 664 -o root -D  $OVERLAY/home/jupyter/.jupyter/jupyter_notebook_config.py \
-                             $ROOT_DIR/home/jupyter/.jupyter/jupyter_notebook_config.py
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-chown -v -R jupyter:jupyter /home/jupyter/.jupyter
-EOF_CHROOT
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-systemctl enable jupyter
 EOF_CHROOT
 
 ###############################################################################
