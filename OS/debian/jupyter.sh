@@ -25,7 +25,7 @@ apt-get -y install python3-matplotlib
 pip3 install --upgrade pip
 pip3 install jupyter
 pip3 install ipywidgets
-jupyter nbextension enable --py widgetsnbextension
+jupyter nbextension enable --system --py widgetsnbextension
 
 # https://plot.ly/python/ for interactive graphs
 pip3 install plotly
