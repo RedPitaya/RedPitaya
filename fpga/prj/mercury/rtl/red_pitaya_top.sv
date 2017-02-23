@@ -379,6 +379,9 @@ red_pitaya_scope_simple i_scope (
 generate
 for (genvar i=0; i<MNG; i++) begin: for_asg
 
+  // simple loopback for trigger
+  logic trg;
+
   asg_top #(
     .EN_LIN (1),
     .DT (SBG_T),
@@ -387,8 +390,8 @@ for (genvar i=0; i<MNG; i++) begin: for_asg
     // stream output
     .sto       (str_dac[i]),
     // triggers
-    .trg_ext   ('0),
-    .trg_swo   (),
+    .trg_ext   (trg),
+    .trg_swo   (trg),
     .trg_out   (),
     // interrupts
     .irq_trg   (),
