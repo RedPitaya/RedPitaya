@@ -1,29 +1,33 @@
+source "axi4_if.tcl"
+source "axi4_lite_if.tcl"
+source "axi4_stream_if.tcl"
+source "sys_bus_if.tcl"
+
+# set top hierarcy name
+set top top_tb
+
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /gpio_tb/clk
-add wave -noupdate /gpio_tb/rstn
-add wave -noupdate /gpio_tb/gpio_e
-add wave -noupdate /gpio_tb/gpio_o
-add wave -noupdate /gpio_tb/gpio_io
-# AXI4-Lite bus
-add wave -noupdate -expand -group axi4_lite -group param /gpio_tb/axi4_lite/AW
-add wave -noupdate -expand -group axi4_lite -group param /gpio_tb/axi4_lite/DW
-add wave -noupdate -expand -group axi4_lite -group param /gpio_tb/axi4_lite/SW
-add wave -noupdate -expand -group axi4_lite -group AW    /gpio_tb/axi4_lite/AW*
-add wave -noupdate -expand -group axi4_lite -group  W    /gpio_tb/axi4_lite/W*
-add wave -noupdate -expand -group axi4_lite -group  B    /gpio_tb/axi4_lite/B*
-add wave -noupdate -expand -group axi4_lite -group AR    /gpio_tb/axi4_lite/AR*
-add wave -noupdate -expand -group axi4_lite -group  R    /gpio_tb/axi4_lite/R*
+# signals
+add wave -noupdate /${top}/clk
+add wave -noupdate /${top}/rstn
+add wave -noupdate /${top}/led
+add wave -noupdate /${top}/exp_p_io
+add wave -noupdate /${top}/exp_n_io
+# busses
+#axi4_lite_if axi4_lite /${top}/top/ps/axi4_lite
+axi4_if      axi_gp    /${top}/top/ps/axi_gp
+sys_bus_if   ps_sys    /${top}/top/ps_sys
+sys_bus_if   sys_asg1  /${top}/top/sys\[2\]
 
-# difine Radix
-radix signal /gpio_tb/axi4_lite/AW -decimal -unsigned
-radix signal /gpio_tb/axi4_lite/DW -decimal -unsigned
-radix signal /gpio_tb/axi4_lite/SW -decimal -unsigned
-radix signal /gpio_tb/axi4_lite/AWADDR -hexadecimal
-radix signal /gpio_tb/axi4_lite/WDATA  -hexadecimal
-radix signal /gpio_tb/axi4_lite/ARADDR -hexadecimal
-radix signal /gpio_tb/axi4_lite/RDATA  -hexadecimal
-#-fpoint
+axi4_stream_if axi_adc_0 /${top}/top/str_adc\[0\]
+axi4_stream_if axi_adc_1 /${top}/top/str_adc\[1\]
+axi4_stream_if axi_dac_0 /${top}/top/str_dac\[0\]
+axi4_stream_if axi_dac_1 /${top}/top/str_dac\[1\]
+
+# LG/LA
+#add wave -noupdate -group LG /${top}/top/lg/*
+#add wave -noupdate -group LA /${top}/top/la/*
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}
