@@ -175,7 +175,8 @@ if (~bus.addr[CWM+2]) begin
     default : bus.rdata <= '0;
   endcase
 end else begin
-           bus.rdata <= bus_buf.rdata;
+    if (EN_LIN)  bus.rdata <= $signed(bus_buf.rdata);
+    else         bus.rdata <=         bus_buf.rdata ;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
