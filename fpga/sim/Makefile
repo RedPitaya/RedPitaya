@@ -29,6 +29,7 @@ SIP=$(PATH_SIP)/oserdese2/oserdese2_002.vp \
 RTL =$(wildcard $(PATH_RTL)/*.sv)
 RTL+=$(wildcard $(PATH_RTL)/*.v)
 RTL+=$(wildcard $(PATH_RTL)/*/*.sv)
+RTL+=$(wildcard $(PATH_RTL)/*/*.v)
 
 # testbench files
 TBN=$(wildcard $(PATH_TBN)/*.sv)
