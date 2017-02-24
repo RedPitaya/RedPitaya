@@ -1,7 +1,9 @@
-source "axi4_if.tcl"
-source "axi4_lite_if.tcl"
-source "axi4_stream_if.tcl"
-source "sys_bus_if.tcl"
+set path_inf "../../../sim"
+
+source "${path_inf}/axi4_if.tcl"
+source "${path_inf}/axi4_lite_if.tcl"
+source "${path_inf}/axi4_stream_if.tcl"
+source "${path_inf}/sys_bus_if.tcl"
 
 # set top hierarcy name
 set top top_tb

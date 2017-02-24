@@ -180,7 +180,7 @@ assign FCLK_RESET3_N = rstn;
 axi4_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (
   .ACLK    (M_AXI_GP0_ACLK   ),
 //.ARESETn (M_AXI_GP0_ARESETn)
-  .ARESETn (S_AXI_STR_RX0_arstn)
+  .ARESETn (rstn)
 );
 
 assign                  M_AXI_GP0_araddr  = axi_gp.ARADDR ;
