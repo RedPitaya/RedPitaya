@@ -80,7 +80,7 @@ assign sti.TREADY = str_mul.TREADY | ~str_mul.TVALID;
 generate
 for (genvar i=0; i<DN; i++) begin: for_shf
   assign str_shf.TDATA[i] = str_mul.TDATA[i] >>> (DWM-2);
-  assign str_shf.TKEEP[i] = str_mul.TKEEP[i] >>> (DWM-2);
+  assign str_shf.TKEEP[i] = str_mul.TKEEP[i];
 end: for_shf
 endgenerate
 
