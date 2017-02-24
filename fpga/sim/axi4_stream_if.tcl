@@ -1,7 +1,9 @@
-proc axi4_stream_if {name path} {
+proc axi4_stream_if {name path {params false}} {
   # parameters
-# add wave -noupdate -group ${name}           ${path}/DT
-  add wave -noupdate -group ${name} -unsigned ${path}/DN
+  if {${params}} {
+  # add wave -noupdate -group ${name}           ${path}/DT
+    add wave -noupdate -group ${name} -unsigned ${path}/DN
+  }
   # system signals
   add wave -noupdate -group ${name}           ${path}/ACLK
   add wave -noupdate -group ${name}           ${path}/ARESETn

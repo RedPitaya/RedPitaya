@@ -1,7 +1,10 @@
-proc sys_bus_if {name path} {
-  add wave -noupdate -group ${name} -unsigned ${path}/DW
-  add wave -noupdate -group ${name} -unsigned ${path}/AW
-  add wave -noupdate -group ${name} -unsigned ${path}/SW
+proc sys_bus_if {name path {params false}} {
+  # parameters
+  if {${params}} {
+    add wave -noupdate -group ${name} -unsigned ${path}/DW
+    add wave -noupdate -group ${name} -unsigned ${path}/AW
+    add wave -noupdate -group ${name} -unsigned ${path}/SW
+  }
   add wave -noupdate -group ${name}           ${path}/clk
   add wave -noupdate -group ${name}           ${path}/rstn
   add wave -noupdate -group ${name}           ${path}/wen

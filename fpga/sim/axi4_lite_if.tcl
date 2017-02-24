@@ -1,8 +1,10 @@
-proc axi4_lite_if {name path} {
+proc axi4_lite_if {name path {params false}} {
   # parameters
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/AW
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/DW
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/SW
+  if {${params}} {
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/AW
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/DW
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/SW
+  }
   # system signals
   add wave -noupdate -group ${name}                        ${path}/ACLK
   add wave -noupdate -group ${name}                        ${path}/ARESETn

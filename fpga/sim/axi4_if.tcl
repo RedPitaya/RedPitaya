@@ -1,10 +1,12 @@
-proc axi4_if {name path} {
+proc axi4_if {name path {params false}} {
   # parameters
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/AW
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/DW
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/SW
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/IW
-  add wave -noupdate -group ${name} -group param -unsigned ${path}/LW
+  if {${params}} {
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/AW
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/DW
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/SW
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/IW
+    add wave -noupdate -group ${name} -group param -unsigned ${path}/LW
+  }
   # system signals
   add wave -noupdate -group ${name}                        ${path}/ACLK
   add wave -noupdate -group ${name}                        ${path}/ARESETn
