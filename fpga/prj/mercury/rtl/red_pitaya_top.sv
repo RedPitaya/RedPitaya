@@ -200,7 +200,7 @@ generate
 for (genvar i=0; i<MNG; i++) begin: for_dac
   // output registers + signed to unsigned (also to negative slope)
   always @(posedge dac_clk_1x)
-  if (str_dac[i].TVALID & str_dac[i].TKEEP)
+  if (str_dac[i].TVALID & str_dac[i].TREADY & str_dac[i].TKEEP)
       dac_raw[i] = {str_dac[i].TDATA[0][$bits(SBG_T)-1], ~str_dac[i].TDATA[0][$bits(SBG_T)-2:0]};
 
   // TREADY is always active
