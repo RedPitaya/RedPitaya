@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Module: Linear transformation (gain, offset and saturation)
+// Module: Linear transformation, gain (multiplication)
 // Author: Matej Oblak, Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
@@ -8,11 +8,9 @@
 //
 // GENERAL DESCRIPTION:
 //
-// A linear transformation is applied to the signal. Multiplication by gain and
-// offset addition. At the end there is a saturation module to meet the output
-// data width.
+// Multiplication by gain factor is applied to the input.
 //
-// sto = floor (((x * mul) >>> (DWM-1)) + sum)
+// sto = (x * mul) >>> (DWM-1)
 //
 // BLOCK DIAGRAM:
 //
@@ -25,17 +23,17 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-module linear #(
+module lin_mul #(
   int unsigned DN = 1,
   type DTI = logic signed [8-1:0], // data type for input
   type DTO = logic signed [8-1:0], // data type for output
   type DTM = logic signed [8-1:0]  // data type for multiplicand
 )(
   // input stream input/output
-  axi4_stream_if.d sti,      // input
-  axi4_stream_if.s sto,      // output
+  axi4_stream_if.d sti,  // input
+  axi4_stream_if.s sto,  // output
   // configuration
-  input DTM        cfg_mul,  // gain
+  input DTM    cfg_mul   // gain
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,4 +85,4 @@ assign sto.TVALID = str.TVALID;
 
 assign str.TREADY = sto.TREADY;
 
-endmodule: linear
+endmodule: lin_mul

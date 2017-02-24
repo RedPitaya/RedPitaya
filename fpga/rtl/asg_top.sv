@@ -231,17 +231,31 @@ asg #(
 generate
 if (EN_LIN) begin: en_lin
 
-  linear #(
+  axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
+
+  lin_mul #(
     .DN  (DN),
     .DTI (DT),
     .DTO (DT),
-    .DWM ($bits(DTM))
-  ) linear (
+    .DTM (logic signed [16-1:0])
+  ) lin_mul (
     // stream input/output
     .sti       (stg),
+    .sto       (str),
+    // configuration
+    .cfg_mul   (cfg_mul)
+  );
+
+  lin_add #(
+    .DN  (DN),
+    .DTI (DT),
+    .DTO (DT),
+    .DTS (DT)
+  ) lin_add (
+    // stream input/output
+    .sti       (str),
     .sto       (sto),
     // configuration
-    .cfg_mul   (cfg_mul),
     .cfg_sum   (cfg_sum)
   );
 

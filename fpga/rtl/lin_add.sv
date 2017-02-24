@@ -31,10 +31,10 @@ module lin_add #(
   type DTS = DTI                   // data type for output
 )(
   // input stream input/output
-  axi4_stream_if.d sti,      // input
-  axi4_stream_if.s sto,      // output
+  axi4_stream_if.d sti,  // input
+  axi4_stream_if.s sto,  // output
   // configuration
-  input DTS        cfg_sum   // offset
+  input DTS    cfg_sum   // offset
 );
 
 ////////////////////////////////////////////////////////////////////////////////
