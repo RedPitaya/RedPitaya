@@ -99,7 +99,7 @@ if (~axi.ARESETn) begin
 end else begin
    // accept just one read request - write has priority
    if      (axi.ARVALID & ~rd_do & ~axi.AWVALID & ~wr_do)  rd_do <= 1'b1;
-   else if (axi.RREADY  &  rd_do & ack)           rd_do <= 1'b0;
+   else if (axi.RREADY  &  rd_do & ack)                    rd_do <= 1'b0;
    // latch ID and address
    if (axi.ARVALID & axi.ARREADY) begin
       rd_arid   <= axi.ARID  ;
@@ -131,8 +131,8 @@ if (~axi.ARESETn) begin
    wr_error <= 1'b0;
 end else begin
    // accept just one write request - if idle
-   if      (axi.AWVALID & ~wr_do & ~rd_do)        wr_do  <= 1'b1;
-   else if (axi.BREADY  &  wr_do & ack)  wr_do  <= 1'b0;
+   if      (axi.AWVALID & ~wr_do & ~rd_do)  wr_do <= 1'b1;
+   else if (axi.BREADY  &  wr_do & ack)     wr_do <= 1'b0;
    // latch ID and address
    if (axi.AWVALID & axi.AWREADY) begin
       wr_awid   <= axi.AWID  ;
