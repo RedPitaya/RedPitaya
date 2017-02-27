@@ -43,8 +43,9 @@ module lin_add #(
 
 localparam int unsigned DWI = $bits(DTI);
 localparam int unsigned DWO = $bits(DTO);
+localparam int unsigned DWS = $bits(DTS);
 
-axi4_stream_if #(.DN (DN), .DT (logic signed [DWI+2-1:0])) str (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [DWO+1-1:0])) str (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // summation
