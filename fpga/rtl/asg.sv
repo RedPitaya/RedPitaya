@@ -155,27 +155,35 @@ logic               sts_rdy;  // ready
 //  DAC buffer RAM
 ////////////////////////////////////////////////////////////////////////////////
 
-// CPU write access
-always @(posedge bus.clk)
-if (bus.wen)  buf_mem[bus.addr] <= bus.wdata;
+logic bus_ena;
+assign bus_ena = bus.wen | bus.ren;
 
-// CPU read-back access
+// CPU read/write access
 always @(posedge bus.clk)
-if (bus.ren)  bus.rdata <= buf_mem[bus.addr];
+for (int unsigned i=0; i<2; i++) begin
+// TODO: asymetric bus width is failing synthesis
+//  if (bus_ena) begin
+//                  bus.rdata [16*i+:16] <= buf_mem [{bus.addr>>2,i[0]}];
+//    if (bus.wen)  buf_mem [{bus.addr>>2,i[0]}] <= bus.wdata [16*i+:16];
+//  end
+  if (bus.ren)  bus.rdata <= buf_mem [bus.addr>>2];
+  if (bus.wen)  buf_mem [bus.addr>>2] <= bus.wdata;
+end
 
 // CPU control signals
 always_ff @(posedge bus.clk)
 if (~bus.rstn)  bus.ack <= 1'b0;
-else            bus.ack <= bus.ren | bus.wen;
+else            bus.ack <= bus_ena;
 
 assign bus.err = 1'b0;
 
-// stream read
+// stream read data
 always @(posedge sto.ACLK)
-begin 
-  if (sts_aen)  buf_raddr <= ptr_cur[CWF+:CWM];
-  if (sts_ren)  buf_rdata <= buf_mem[buf_raddr];
-end
+if (sts_ren)  buf_rdata <= buf_mem[buf_raddr];
+
+// stream read pointer
+always @(posedge sto.ACLK)
+if (sts_aen)  buf_raddr <= ptr_cur[CWF+:CWM];
 
 // valid signal used to enable memory read access
 always @(posedge sto.ACLK)
