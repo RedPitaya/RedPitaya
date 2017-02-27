@@ -71,7 +71,7 @@ always @ (posedge clk) cts <= cts + 1;
 
 // clocking 
 default clocking cb @ (posedge clk);
-  // current time stamp
+  // system signals
   input  rstn;
   // current time stamp
   input  cts;

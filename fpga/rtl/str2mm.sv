@@ -4,26 +4,21 @@
 
 module str2mm #(
   type DT = logic signed [16-1:0],
-  int unsigned DN = 1<<14
+  int unsigned DN = 1,
+  int unsigned DL = 1<<14
 )(
-   // ADC
-   input  logic                 adc_clk_i ,  // ADC clock
-   input  logic                 adc_rstn_i,  // ADC reset - active low
-   input  logic signed [14-1:0] adc_a_i   ,  // ADC data CHA
-   // System bus
-   input  logic          sys_wen   ,  // bus write enable
-   input  logic          sys_ren   ,  // bus read enable
-   input  logic [32-1:0] sys_addr  ,  // bus saddress
-   input  logic [32-1:0] sys_wdata ,  // bus write data
-   output logic [32-1:0] sys_rdata ,  // bus read data
-   output logic          sys_err   ,  // bus error indicator
-   output logic          sys_ack      // bus acknowledge signal
+  // stream input
+  axi4_stream_if.s str,
+  // System bus
+  sys_bus_if.s     bus,
+  // control (synchronous clear)
+  input  logic     clr
 );
 
-localparam int unsigned AW = $clog2(DN);
+localparam int unsigned AW = $clog2(DL);
 
 // memory
-DT             buf_dat [0:DN-1];
+DT             buf_dat [0:DL-1];
 // write port
 logic          buf_wen;
 logic [AW-1:0] buf_wad;
@@ -54,5 +49,13 @@ if (buf_wen)
 always @(posedge str.ACLK)
 if (bus.ren)
   bus.rdata <= buf_dat [bus.addr];
+
+always @(posedge str.ACLK)
+if (~bus.rstn) begin
+  bus.err <= 1'b0;
+  bus.ack <= 1'b0;
+end else if (bus.wen | bus.ren) begin
+  bus.ack <= 1'b1;
+end
 
 endmodule: str2mm
