@@ -217,6 +217,13 @@ ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst   ), .D2(dac_rst   ), .C(
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_raw[0]), .D2(dac_raw[1]), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
 ////////////////////////////////////////////////////////////////////////////////
+// Daisy dummy code
+////////////////////////////////////////////////////////////////////////////////
+
+assign daisy_p_o = 1'bz;
+assign daisy_n_o = 1'bz;
+
+////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -224,8 +231,8 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_raw[0]), .D2(dac_raw[1]), .C(
 logic                    digital_loop;
 
 // system bus
-sys_bus_if   ps_sys      (.clk (adc_clk), .rstn (adc_rstn));
-sys_bus_if   sys [8-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
@@ -270,12 +277,12 @@ red_pitaya_ps ps (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
+// system bus decoder & multiplexer (it breaks memory addresses into 16 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
 sys_bus_interconnect #(
-  .SN (8),
-  .SW (20)
+  .SN (16),
+  .SW (16)
 ) sys_bus_interconnect (
   .bus_m (ps_sys),
   .bus_s (sys)
@@ -283,10 +290,32 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=5; i<8; i++) begin: for_sys
-  sys_bus_stub sys_bus_stub_5_7 (sys[i]);
-end: for_sys
+for (genvar i=2; i<4; i++) begin: for_sys_2_4
+  sys_bus_stub sys_bus_stub_2_4 (sys[i]);
+end: for_sys_2_4
 endgenerate
+generate
+for (genvar i=12; i<16; i++) begin: for_sys_12_16
+  sys_bus_stub sys_bus_stub_12_16 (sys[i]);
+end: for_sys_12_16
+endgenerate
+
+////////////////////////////////////////////////////////////////////////////////
+// LED and GPIO
+////////////////////////////////////////////////////////////////////////////////
+
+IOBUF iobuf_led   [8-1:0] (.O(gpio.i[ 7: 0]), .IO(led_o)   , .I(gpio.o[ 7: 0]), .T(gpio.t[ 7: 0]));
+IOBUF iobuf_exp_p [8-1:0] (.O(gpio.i[15: 8]), .IO(exp_p_io), .I(gpio.o[15: 8]), .T(gpio.t[15: 8]));
+IOBUF iobuf_exp_n [8-1:0] (.O(gpio.i[23:16]), .IO(exp_n_io), .I(gpio.o[23:16]), .T(gpio.t[23:16]));
+
+////////////////////////////////////////////////////////////////////////////////
+// identification
+////////////////////////////////////////////////////////////////////////////////
+
+id #(.GITH (GITH)) id (
+  // System bus
+  .bus (sys[0])
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
@@ -294,7 +323,7 @@ endgenerate
 
 logic [4-1:0] [24-1:0] pwm_cfg;
 
-red_pitaya_ams i_ams (
+red_pitaya_ams ams (
   // power test
   .clk_i           (adc_clk ),  // clock
   .rstn_i          (adc_rstn),  // reset - active low
@@ -304,13 +333,13 @@ red_pitaya_ams i_ams (
   .dac_c_o         (pwm_cfg[2]),
   .dac_d_o         (pwm_cfg[3]),
   // System bus
-  .sys_addr        (sys[4].addr ),
-  .sys_wdata       (sys[4].wdata),
-  .sys_wen         (sys[4].wen  ),
-  .sys_ren         (sys[4].ren  ),
-  .sys_rdata       (sys[4].rdata),
-  .sys_err         (sys[4].err  ),
-  .sys_ack         (sys[4].ack  )
+  .sys_addr        (sys[1].addr ),
+  .sys_wdata       (sys[1].wdata),
+  .sys_wen         (sys[1].wen  ),
+  .sys_ren         (sys[1].ren  ),
+  .sys_rdata       (sys[1].rdata),
+  .sys_err         (sys[1].err  ),
+  .sys_ack         (sys[1].ack  )
 );
 
 red_pitaya_pwm pwm [4-1:0] (
@@ -325,52 +354,46 @@ red_pitaya_pwm pwm [4-1:0] (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// Daisy dummy code
-////////////////////////////////////////////////////////////////////////////////
-
-assign daisy_p_o = 1'bz;
-assign daisy_n_o = 1'bz;
-
-////////////////////////////////////////////////////////////////////////////////
-//  House Keeping
-////////////////////////////////////////////////////////////////////////////////
-
-id #(.GITH (GITH)) id (
-  // System bus
-  .bus (sys[0])
-);
-
-////////////////////////////////////////////////////////////////////////////////
-// LED and GPIO
-////////////////////////////////////////////////////////////////////////////////
-
-IOBUF iobuf_led   [8-1:0] (.O(gpio.i[ 7: 0]), .IO(led_o)   , .I(gpio.o[ 7: 0]), .T(gpio.t[ 7: 0]));
-IOBUF iobuf_exp_p [8-1:0] (.O(gpio.i[15: 8]), .IO(exp_p_io), .I(gpio.o[15: 8]), .T(gpio.t[15: 8]));
-IOBUF iobuf_exp_n [8-1:0] (.O(gpio.i[23:16]), .IO(exp_n_io), .I(gpio.o[23:16]), .T(gpio.t[23:16]));
-
-////////////////////////////////////////////////////////////////////////////////
 // oscilloscope
 ////////////////////////////////////////////////////////////////////////////////
 
-logic trig_asg_out;
+generate
+for (genvar i=0; i<MNA; i++) begin: for_acq
 
-red_pitaya_scope_simple i_scope (
-  // ADC
-  .adc_a_i       (str_adc[0].TDATA  ),  // CH 1
-  .adc_b_i       (str_adc[1].TDATA  ),  // CH 2
-  .adc_clk_i     (str_adc[0].ACLK   ),  // clock
-  .adc_rstn_i    (str_adc[0].ARESETn),  // reset - active low
-  .trig_ext_i    (gpio.i[8]   ),  // external trigger
-  .trig_asg_i    (trig_asg_out),  // ASG trigger
-  // System bus
-  .sys_addr      (sys[1].addr ),
-  .sys_wdata     (sys[1].wdata),
-  .sys_wen       (sys[1].wen  ),
-  .sys_ren       (sys[1].ren  ),
-  .sys_rdata     (sys[1].rdata),
-  .sys_err       (sys[1].err  ),
-  .sys_ack       (sys[1].ack  )
-);
+  axi4_stream_if #(.DT (SBA_T)) str (.ACLK (str_adc[i].ACLK), .ARESETn (str_adc[i].ARESETn));
+
+  // simple loopback for trigger
+  logic trg;
+
+  scope_top #(
+    .DT (SBA_T),
+    .TN (1),
+    .TW (64)
+  ) scope (
+    // streams
+    .sti      (str_adc[i]),
+    .sto      (str),
+    // current time stamp
+    .cts      ('0),
+    // triggers
+    .trg_ext  (trg),
+    .trg_swo  (trg),
+    .trg_out  (),
+    // interrupts
+    .irq_trg  (),
+    .irq_stp  (),
+    // System bus
+    .bus      (sys[4+2*i+0])
+  );
+
+  str2mm #(
+  ) str2mm (
+    .str  (str),
+    .bus  (sys[4+2*i+1])
+  );
+
+end: for_acq
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 //  DAC arbitrary signal generator
@@ -388,16 +411,17 @@ for (genvar i=0; i<MNG; i++) begin: for_asg
     .TN (1)
   ) asg (
     // stream output
-    .sto       (str_dac[i]),
+    .sto      (str_dac[i]),
     // triggers
-    .trg_ext   (trg),
-    .trg_swo   (trg),
-    .trg_out   (),
+    .trg_ext  (trg),
+    .trg_swo  (trg),
+    .trg_out  (),
     // interrupts
-    .irq_trg   (),
-    .irq_stp   (),
+    .irq_trg  (),
+    .irq_stp  (),
     // System bus
-    .bus       (sys[2+i])
+    .bus_reg  (sys[8+2*i+0]),
+    .bus_tbl  (sys[8+2*i+1])
   );
 
 end: for_asg
