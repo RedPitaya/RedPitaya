@@ -172,24 +172,22 @@ end else begin
     if (bus.addr[BAW-1:0]=='h10)   cfg_pre <= bus.wdata[CW-1:0];
     if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
 
-    // configuration
-    if (bus.addr[BAW-1:0]=='h40)   cfg_rng <= bus.wdata;
-
     // edge detection
-    if (bus.addr[BAW-1:0]=='h50)   cfg_lvl <= bus.wdata[DWI-1:0];
-    if (bus.addr[BAW-1:0]=='h54)   cfg_hst <= bus.wdata[DWI-1:0];
-    if (bus.addr[BAW-1:0]=='h58)   cfg_edg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h40)   cfg_lvl <= bus.wdata[DWI-1:0];
+    if (bus.addr[BAW-1:0]=='h44)   cfg_hst <= bus.wdata[DWI-1:0];
+    if (bus.addr[BAW-1:0]=='h48)   cfg_edg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h4c)   cfg_rng <= bus.wdata[      0];
 
     // dacimation
-    if (bus.addr[BAW-1:0]=='h60)   cfg_avg <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h64)   cfg_dec <= bus.wdata[DCW-1:0];
-    if (bus.addr[BAW-1:0]=='h68)   cfg_shr <= bus.wdata[DSW-1:0];
+    if (bus.addr[BAW-1:0]=='h50)   cfg_avg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h54)   cfg_dec <= bus.wdata[DCW-1:0];
+    if (bus.addr[BAW-1:0]=='h58)   cfg_shr <= bus.wdata[DSW-1:0];
     // filter
-    if (bus.addr[BAW-1:0]=='h6c)   cfg_byp <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h70)   cfg_faa <= bus.wdata[ 18-1:0];
-    if (bus.addr[BAW-1:0]=='h74)   cfg_fbb <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h78)   cfg_fkk <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h7c)   cfg_fpp <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h5c)   cfg_byp <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h60)   cfg_faa <= bus.wdata[ 18-1:0];
+    if (bus.addr[BAW-1:0]=='h64)   cfg_fbb <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h68)   cfg_fkk <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h6c)   cfg_fpp <= bus.wdata[ 25-1:0];
   end
 end
 
@@ -218,24 +216,22 @@ begin
     'h30 : bus.rdata <=              32'(cts_stp >>  0);
     'h34 : bus.rdata <=              32'(cts_stp >> 32);
 
-    // configuration
-    'h40 : bus.rdata <=                  cfg_rng ;
-
     // edge detection
-    'h50 : bus.rdata <=                  cfg_lvl ;
-    'h54 : bus.rdata <=                  cfg_hst ;
-    'h58 : bus.rdata <=              32'(cfg_edg);
+    'h40 : bus.rdata <=                  cfg_lvl ;
+    'h44 : bus.rdata <=                  cfg_hst ;
+    'h48 : bus.rdata <=              32'(cfg_edg);
+    'h4c : bus.rdata <=              32'(cfg_rng);
 
     // decimation
-    'h60 : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
-    'h64 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
-    'h68 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
+    'h50 : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
+    'h54 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+    'h58 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
     // filter
-    'h6c : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
-    'h70 : bus.rdata <=                  cfg_faa ;
-    'h74 : bus.rdata <=                  cfg_fbb ;
-    'h78 : bus.rdata <=                  cfg_fkk ;
-    'h7c : bus.rdata <=                  cfg_fpp ;
+    'h5c : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
+    'h60 : bus.rdata <=                  cfg_faa ;
+    'h64 : bus.rdata <=                  cfg_fbb ;
+    'h68 : bus.rdata <=                  cfg_fkk ;
+    'h6c : bus.rdata <=                  cfg_fpp ;
 
     default : bus.rdata <= '0;
   endcase
