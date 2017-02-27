@@ -8,7 +8,7 @@
 //		__overlay__ {
 //			#address-cells = <1>;
 //			#size-cells = <1>;
-//			firmware-name = "redpitaya/axi4lite.bin";
+//			firmware-name = "redpitaya/mercury.bin";
 //		};
 //	};
 	fragment@1 {
@@ -20,20 +20,32 @@
 				compatible = "generic-uio";
 				reg = <0x40000000 0x1000>;
 			};
-			scope0: scope0@40100000 {
+			ams: ams@40010000 {
 				compatible = "generic-uio";
-				reg = <0x40200000 0x10000>;
+				reg = <0x40010000 0x1000>;
 			};
-			asg0: asg0@40200000 {
+			acq0: acq0@40040000 {
 				compatible = "generic-uio";
-				reg = <0x40200000 0x0100>,
-				      <0x40204000 0x4000>;
+				reg = <0x40040000 0x10000>,
+				      <0x40050000 0x10000>;
 				reg-names = "ctl", "mem";
 			};
-			asg1: asg1@40300000 {
+			acq1: acq1@40040000 {
 				compatible = "generic-uio";
-				reg = <0x40300000 0x0100>,
-				      <0x40304000 0x4000>;
+				reg = <0x40040000 0x10000>,
+				      <0x40050000 0x10000>;
+				reg-names = "ctl", "mem";
+			};
+			asg0: asg0@40080000 {
+				compatible = "generic-uio";
+				reg = <0x40080000 0x01000>,
+				      <0x40090000 0x10000>;
+				reg-names = "ctl", "mem";
+			};
+			asg1: asg1@400a0000 {
+				compatible = "generic-uio";
+				reg = <0x400a0000 0x01000>,
+				      <0x400b0000 0x10000>;
 				reg-names = "ctl", "mem";
 			};
 		};
