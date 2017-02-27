@@ -8,7 +8,7 @@ module str2mm #(
   int unsigned DL = 1<<14
 )(
   // stream input
-  axi4_stream_if.s str,
+  axi4_stream_if.d str,
   // System bus
   sys_bus_if.s     bus
 );
