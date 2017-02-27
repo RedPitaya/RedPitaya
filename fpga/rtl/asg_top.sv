@@ -51,33 +51,21 @@ module asg_top #(
   output logic           irq_trg,  // trigger
   output logic           irq_stp,  // stop
   // System bus
-  sys_bus_if.s           bus
+  sys_bus_if.s           bus_reg,  // CPU access to memory mapped registers
+  sys_bus_if.s           bus_tbl   // CPU access to waveform table
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 // read/write access to buffer
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO: the generic bus decoder should be used instead
-sys_bus_if #(.DW ($bits(DT)), .AW (CWM)) bus_buf (.clk (bus.clk), .rstn (bus.rstn));
-
-assign bus_buf.ren   = bus.ren & bus.addr[CWM+2];
-assign bus_buf.wen   = bus.wen & bus.addr[CWM+2];
-assign bus_buf.addr  = bus.addr[2+:CWM];
-assign bus_buf.wdata = bus.wdata;
-
-always_ff @(posedge bus.clk)
-if (~bus.rstn) begin
-  bus.err <= 1'b0;
-  bus.ack <= 1'b0;
+always_ff @(posedge bus_reg.clk)
+if (~bus_reg.rstn) begin
+  bus_reg.err <= 1'b0;
+  bus_reg.ack <= 1'b0;
 end else begin
-  if (~bus.addr[CWM+2]) begin
-    bus.err <= 1'b0;
-    bus.ack <= bus.wen | bus.ren;
-  end else begin
-    bus.err <= bus_buf.err;
-    bus.ack <= bus_buf.ack;
-  end
+  bus_reg.err <= 1'b0;
+  bus_reg.ack <= bus_reg.wen | bus_reg.ren;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,11 +93,13 @@ logic               sts_run;  // running status
 DTM                 cfg_mul;
 DTS                 cfg_sum;
 
+logic ctl_wen;
+
 localparam int unsigned BAW=6;
 
 // write access
-always_ff @(posedge bus.clk)
-if (~bus.rstn) begin
+always_ff @(posedge bus_reg.clk)
+if (~bus_reg.rstn) begin
   // configuration
   cfg_trg <= '0;
   cfg_siz <= '0;
@@ -125,59 +115,56 @@ if (~bus.rstn) begin
   cfg_mul <= '0;
   cfg_sum <= '0;
 end else begin
-  if (bus.wen & ~bus.addr[CWM+2]) begin
+  if (bus_reg.wen) begin
     // trigger configuration
-    if (bus.addr[BAW-1:0]=='h04)  cfg_trg <= bus.wdata[     TN-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_trg <= bus_reg.wdata[     TN-1:0];
     // buffer configuration
-    if (bus.addr[BAW-1:0]=='h10)  cfg_siz <= bus.wdata[CWM+CWF-1:0];
-    if (bus.addr[BAW-1:0]=='h14)  cfg_off <= bus.wdata[CWM+CWF-1:0];
-    if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata[CWM+CWF-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h10)  cfg_siz <= bus_reg.wdata[CWM+CWF-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h14)  cfg_off <= bus_reg.wdata[CWM+CWF-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h18)  cfg_stp <= bus_reg.wdata[CWM+CWF-1:0];
     // burst mode
-    if (bus.addr[BAW-1:0]=='h20)  cfg_ben <= bus.wdata[          0];
-    if (bus.addr[BAW-1:0]=='h20)  cfg_inf <= bus.wdata[          1];
-    if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata[    CWM-1:0];
-    if (bus.addr[BAW-1:0]=='h28)  cfg_bln <= bus.wdata[     32-1:0];
-    if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h20)  cfg_ben <= bus_reg.wdata[          0];
+    if (bus_reg.addr[BAW-1:0]=='h20)  cfg_inf <= bus_reg.wdata[          1];
+    if (bus_reg.addr[BAW-1:0]=='h24)  cfg_bdl <= bus_reg.wdata[    CWM-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h28)  cfg_bln <= bus_reg.wdata[     32-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus_reg.wdata[     16-1:0];
     // linear transformation
-    if (bus.addr[BAW-1:0]=='h38)  cfg_mul <= DTM'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h3c)  cfg_sum <= DTS'(bus.wdata);
+    if (bus_reg.addr[BAW-1:0]=='h38)  cfg_mul <= DTM'(bus_reg.wdata);
+    if (bus_reg.addr[BAW-1:0]=='h3c)  cfg_sum <= DTS'(bus_reg.wdata);
   end
 end
 
 // control signals
-assign ctl_rst = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]=='h00) & bus.wdata[0];  // reset
-assign trg_swo = bus.wen & ~bus.addr[CWM+2] & (bus.addr[BAW:0]=='h00) & bus.wdata[1];  // trigger
+assign ctl_wen = bus_reg.wen & ~bus_reg.addr[CWM+2] & (bus_reg.addr[BAW:0]=='h00);
+
+assign ctl_rst = ctl_wen & bus_reg.wdata[0];  // reset
+assign trg_swo = ctl_wen & bus_reg.wdata[1];  // trigger
 
 // read access
-always_ff @(posedge bus.clk)
-if (~bus.addr[CWM+2]) begin
-  casez (bus.addr[BAW-1:0])
-    'h00 : bus.rdata <= {{32-      4{1'b0}},~sts_run, sts_run, 2'b00};
-    // trigger configuration
-    'h04 : bus.rdata <= {{32-     TN{1'b0}}, cfg_trg};
-    // buffer configuration
-    'h10 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
-    'h14 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
-    'h18 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_stp};
-    // burst mode
-    'h20 : bus.rdata <= {{32-      2{1'b0}}, cfg_inf
-                                           , cfg_ben};
-    'h24 : bus.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
-    'h28 : bus.rdata <=                      cfg_bln ;
-    'h2c : bus.rdata <= {{32-     16{1'b0}}, cfg_bnm};
-    // status
-    'h30 : bus.rdata <= 32'(sts_bln);
-    'h34 : bus.rdata <= 32'(sts_bnm);
-    // linear transformation (should be properly sign extended)
-    'h38 : bus.rdata <= cfg_mul;
-    'h3c : bus.rdata <= cfg_sum;
+always_ff @(posedge bus_reg.clk)
+casez (bus_reg.addr[BAW-1:0])
+  'h00 : bus_reg.rdata <= {{32-      4{1'b0}},~sts_run, sts_run, 2'b00};
+  // trigger configuration
+  'h04 : bus_reg.rdata <= {{32-     TN{1'b0}}, cfg_trg};
+  // buffer configuration
+  'h10 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
+  'h14 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
+  'h18 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_stp};
+  // burst mode
+  'h20 : bus_reg.rdata <= {{32-      2{1'b0}}, cfg_inf
+                                             , cfg_ben};
+  'h24 : bus_reg.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
+  'h28 : bus_reg.rdata <=                      cfg_bln ;
+  'h2c : bus_reg.rdata <= {{32-     16{1'b0}}, cfg_bnm};
+  // status
+  'h30 : bus_reg.rdata <= 32'(sts_bln);
+  'h34 : bus_reg.rdata <= 32'(sts_bnm);
+  // linear transformation (should be properly sign extended)
+  'h38 : bus_reg.rdata <= cfg_mul;
+  'h3c : bus_reg.rdata <= cfg_sum;
 
-    default : bus.rdata <= '0;
-  endcase
-end else begin
-    if (EN_LIN)  bus.rdata <= $signed(bus_buf.rdata);
-    else         bus.rdata <=         bus_buf.rdata ;
-end
+  default : bus_reg.rdata <= '0;
+endcase
 
 ////////////////////////////////////////////////////////////////////////////////
 // generator core instance 
@@ -223,7 +210,7 @@ asg #(
   .sts_bnm   (sts_bnm),
   .sts_run   (sts_run),
   // CPU buffer access
-  .bus       (bus_buf)
+  .bus       (bus_tbl)
 );
 
 // TODO: this will be a continuous stream, data stream control needs rethinking
