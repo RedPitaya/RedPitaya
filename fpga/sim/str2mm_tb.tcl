@@ -12,7 +12,6 @@ quietly WaveActivateNextPane {} 0
 
 add wave -noupdate              /${top}/clk
 add wave -noupdate              /${top}/rstn
-add wave -noupdate              /${top}/clr
 
 # busses
 axi4_stream_if sti /${top}/str

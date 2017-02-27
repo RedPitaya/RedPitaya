@@ -23,7 +23,6 @@ typedef DT DT_A [];
 // system signals
 logic          clk ;  // clock
 logic          rstn;  // reset - active low
-logic          clr ;  // synchronous clear
 
 // stream input/output
 axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
@@ -42,12 +41,13 @@ always #(TP/2) clk = ~clk;
 // clocking 
 default clocking cb @ (posedge clk);
   input  rstn;
-  output clr;
 endclocking: cb
 
 ////////////////////////////////////////////////////////////////////////////////
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
+
+logic signed [ 32-1: 0] rdata_blk [];
 
 initial begin
   // initialization
@@ -58,7 +58,6 @@ initial begin
 
   // tests
   test_block;
-  test_pass;
 
   // end simulation
   ##4;
@@ -80,29 +79,12 @@ task test_block;
   // add packet into queue
   cli.add_pkt (dti);
   str_src.run (cli);
+  // read table
+  rdata_blk = new [80];
+  for (int i=0; i<8; i++) begin
+    busm.read(i*4, rdata_blk [i]);  // read table
+  end
 endtask: test_block
-
-task test_pass;
-  DT dti [];
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
-  // prepare data
-  cli = new;
-  dti = cli.range (-8, 8);
-  // add packet into queue
-  cli.add_pkt (dti);
-  str_src.run (cli);
-endtask: test_pass
-
-////////////////////////////////////////////////////////////////////////////////
-// helper tasks
-////////////////////////////////////////////////////////////////////////////////
-
-// generate reset pulse
-task clr_pls ();
-  cb.clr <= 1'b1;
-  ##1;
-  cb.clr <= 1'b0;
-endtask: clr_pls
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
@@ -119,8 +101,7 @@ str2mm #(
 ) str2mm (
   // stream input/output
   .str      (str),
-  .bus      (bus),
-  .clr      (clr)
+  .bus      (bus)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
