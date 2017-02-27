@@ -49,7 +49,7 @@ end
 always @(posedge bus.clk)
 if (bus.ren) begin
   for (int unsigned i=0; i<2; i++) begin
-    bus.rdata [16*i+:16] <= buf_dat [{bus.addr>>1,i[0]}];
+    bus.rdata [16*i+:16] <= buf_dat [{bus.addr>>2,i[0]}];
   end
 end
 
