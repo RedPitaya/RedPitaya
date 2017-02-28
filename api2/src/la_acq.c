@@ -49,7 +49,7 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
         return status;
     }
 
-    status = rp_DmaOpen("/dev/rprx", handle);
+    status = rp_DmaOpen("/dev/amba_pl:rprx@2", handle);
     if (status != RP_OK) {
         return status;
     }
