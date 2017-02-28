@@ -74,7 +74,7 @@ class acq (object):
         uio = uio+str(index)
 
         # set input range (there is no default)
-        self.input_range = input_range
+        self.__input_range = input_range
 
         # open device file
         try:
@@ -127,7 +127,7 @@ class acq (object):
     def input_range (self, value: float):
         if value in self.ranges:
             self.__input_range = value
-            self.filter_coeficients (self.filters[value]):
+            self.filter_coeficients (self.filters[value])
         else:
             raise ValueError("Input range can be one of {} volts.".format(self.ranges))
 
@@ -139,9 +139,17 @@ class acq (object):
         """activate SW trigger"""
         self.regset.ctl_sts = self.CTL_SWT_MASK
 
-    def status (self) -> bool:
+    def start (self):
+        """start acquisition"""
+        self.regset.ctl_sts = self.CTL_STA_MASK
+
+    def stop (self):
+        """stop acquisition"""
+        self.regset.ctl_sts = self.CTL_STO_MASK
+
+    def status (self) -> int:
         """start state machine"""
-        return (bool(self.regset.ctl_sts & self.CTL_STA_MASK))
+        return (self.regset.ctl_sts)
 
     @property
     def trigger_mask (self):
@@ -154,23 +162,23 @@ class acq (object):
 
     @property
     def continuous (self) -> bool:
-        return (bool(self.regset.cfg_mod & MOD_CON_MASK))
+        return (bool(self.regset.cfg_mod & self.MOD_CON_MASK))
 
     @continuous.setter
     def continuous (self, value: bool):
         tmp = self.regset.cfg_mod
-        if value:  self.regset.cfg_mod |  MOD_CON_MASK
-        else:      self.regset.cfg_mod & ~MOD_CON_MASK
+        if value:  self.regset.cfg_mod |  self.MOD_CON_MASK
+        else:      self.regset.cfg_mod & ~self.MOD_CON_MASK
 
     @property
     def automatic (self) -> bool:
-        return (bool(self.regset.cfg_mod & MOD_AUT_MASK))
+        return (bool(self.regset.cfg_mod & self.MOD_AUT_MASK))
 
     @automatic.setter
     def automatic (self, value: bool):
         tmp = self.regset.cfg_mod
-        if value:  self.regset.cfg_mod |  MOD_AUT_MASK
-        else:      self.regset.cfg_mod & ~MOD_AUT_MASK
+        if value:  self.regset.cfg_mod |  self.MOD_AUT_MASK
+        else:      self.regset.cfg_mod & ~self.MOD_AUT_MASK
 
     @property
     def triger_pre_delay (self) -> int:
@@ -278,3 +286,9 @@ class acq (object):
         self.regset.cfg_fbb = value[1]
         self.regset.cfg_fkk = value[2]
         self.regset.cfg_fpp = value[3]
+
+    def data(self):
+        """Data containing normalized values in the range [-1,1]"""
+        siz = self.N
+        # TODO: nparray
+        return [self.table[i] / self.DWr * self.__input_range for i in range(siz)]
