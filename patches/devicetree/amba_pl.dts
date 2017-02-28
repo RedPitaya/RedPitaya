@@ -1,21 +1,18 @@
 /dts-v1/;
 /plugin/;
 /{
-//		fragment@0 {
-//				target-path = "/amba/fpga_bus\@f8007000/devcfg\@f8007000";
-//				__overlay__ {
-//						#address-cells = <1>;
-//						#size-cells = <1>;
-//						area@0 {
-//								compatible = "fpga-area";
-//								#address-cells = <1>;
-//								#size-cells = <1>;
-//								ranges;
-//
-//								firmware-name = "/boot/fpga/fpga2.bin";
-//						};
-//				};
-//		};
+		fragment@0 {
+				target = <&fpga_region0>;
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				__overlay__ {
+					#address-cells = <1>;
+					#size-cells = <1>;
+					firmware-name = "redpitaya/fpga_la.bin";
+				};
+			};
+		};
 		
 		fragment@1 {
 		target-path = "/amba_pl/dma\@80420000";
