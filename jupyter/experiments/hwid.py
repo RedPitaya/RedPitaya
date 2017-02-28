@@ -16,7 +16,7 @@ class hwid ():
     ])
 
     def __init__ (self, uio:str = '/dev/uio/hwid'):
-        
+
         # open device file
         try:
             self.uio_dev = os.open(uio, os.O_RDWR | os.O_SYNC)
@@ -39,7 +39,7 @@ class hwid ():
 
         regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_mem)
         self.regset = regset_array[0]
-        
+
     def __del__ (self):
         self.uio_mem.close()
         try:
