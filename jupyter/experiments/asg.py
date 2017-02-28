@@ -26,7 +26,7 @@ class asg (object):
     CTL_STA_MASK = np.uint32(1<<2) # 1 - start
     CTL_SWT_MASK = np.uint32(1<<1) # 1 - sw trigger bit (sw trigger must be enabled)
     CTL_RST_MASK = np.uint32(1<<0) # 1 - reset state machine so that it is in known state
-    
+
     regset_dtype = np.dtype([
         # control/status
         ('ctl_sts', 'uint32'),
@@ -53,9 +53,9 @@ class asg (object):
 
     def __init__ (self, index:int, uio:str = '/dev/uio/asg'):
         """Module instance index should be provided"""
-        
+
         uio = uio+str(index)
-        
+
         # open device file
         try:
             self.uio_dev = os.open(uio, os.O_RDWR | os.O_SYNC)
@@ -78,7 +78,7 @@ class asg (object):
 
         regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_reg)
         self.regset = regset_array[0]
-        
+
         # map buffer table
         try:
             self.uio_tbl = mmap.mmap(
@@ -129,26 +129,26 @@ class asg (object):
 
     @property
     def amplitude (self) -> float:
-        """Output amplitude in Vols"""
+        """Output amplitude in vols"""
         return (self.regset.cfg_mul / self.DWMr)
-    
+
     @amplitude.setter
     def amplitude (self, value: float):
-        """Output amplitude in Vols"""
+        """Output amplitude in vols"""
         # TODO: fix saturation
         if (-1.0 <= value <= 1.0):
             self.regset.cfg_mul = value * self.DWMr
         else:
             raise ValueError("Output amplitude should be inside [-1,1]")
-    
+
     @property
     def offset (self) -> float:
-        """Output offset in Vols"""
+        """Output offset in vols"""
         return (self.regset.cfg_sum / self.DWSr)
-    
+
     @offset.setter
     def offset (self, value: float):
-        """Output offset in Vols"""
+        """Output offset in vols"""
         # TODO: fix saturation
         if (-1.0 <= value <= 1.0):
             self.regset.cfg_sum = value * self.DWSr
@@ -161,7 +161,7 @@ class asg (object):
         siz = self.regset.cfg_siz + 1
         stp = self.regset.cfg_stp + 1
         return (stp / siz * self.FS)
-    
+
     @frequency.setter
     def frequency (self, value: float):
         """Frequency in Hz"""
@@ -170,14 +170,14 @@ class asg (object):
             self.regset.cfg_stp = int(siz * (value / self.FS)) - 1
         else:
             raise ValueError("Frequency should be less then half the sample rate. f < FS/2 = {}".format(self.FS/2))
-    
+
     @property
     def phase (self) -> float:
         """Phase in angular degrees"""
         siz = self.regset.cfg_siz + 1
         off = self.regset.cfg_off
         return (stp / siz * 360)
-    
+
     @phase.setter
     def phase (self, value: float):
         """Phase in angular degrees"""
@@ -191,7 +191,7 @@ class asg (object):
         siz = (self.regset.cfg_siz + 1) >> self.CWF
         # TODO: nparray
         return [self.table[i] / self.DWr for i in range(siz)]
-    
+
     @waveform.setter
     def waveform (self, value):
         """Waveworm table containing normalized values in the range [-1,1]"""
@@ -205,19 +205,19 @@ class asg (object):
         else:
             raise ValueError("Waveform table size should not excede buffer size. N = {}".format(self.N))
 
-    class modes(Enum):
-        CONTINUOUS = ctypes.c_uint32(0x0)
-        BURST_FIN  = ctypes.c_uint32(0x1)
-        BURST_INF  = ctypes.c_uint32(0x3)
-    
     @property
     def trigger_mask (self):
-        return (modes(self.regset.cfg_trg))
+        return (self.regset.cfg_trg)
 
     @trigger_mask.setter
     def trigger_mask (self, value):
         # TODO check range
         self.regset.cfg_trg = value
+
+    class modes(Enum):
+        CONTINUOUS = ctypes.c_uint32(0x0)
+        BURST_FIN  = ctypes.c_uint32(0x1)
+        BURST_INF  = ctypes.c_uint32(0x3)
 
     @property
     def mode (self):
@@ -236,7 +236,7 @@ class asg (object):
     def burst_repetitions (self, value: int):
         # TODO check range
         self.regset.cfg_bnm = value
-        
+
     @property
     def burst_data_len (self) -> int:
         return (self.regset.cfg_bdl)
@@ -245,7 +245,7 @@ class asg (object):
     def burst_data_len (self, value: int):
         # TODO check range
         self.regset.cfg_bdl = value
-        
+
     @property
     def burst_period_len (self) -> int:
         return (self.regset.cfg_bln)
