@@ -8,23 +8,30 @@ class acq (object):
     # sampling frequency
     FS = 125000000.0
     # linear addition multiplication register width
-    DW  = 14
-    DWM = 14
-    DWS = 14
+    DW = 14
     # fixed point range
     DWr  = (1 << (DW -1)) - 1
-    DWMr = (1 << (DWM-2))
-    DWSr = (1 << (DWS-1)) - 1
     # buffer parameters
-    CWM = 14  # counter width magnitude (fixed point integer)
-    CWF = 16  # counter width fraction  (fixed point fraction)
-    N = 2**CWM # table size
+    N = 2**14 # table size
     # control register masks
     CTL_STO_MASK = np.uint32(1<<3) # 1 - stop/abort; returns 1 when stopped
     CTL_STA_MASK = np.uint32(1<<2) # 1 - start
     CTL_SWT_MASK = np.uint32(1<<1) # 1 - sw trigger bit (sw trigger must be enabled)
     CTL_RST_MASK = np.uint32(1<<0) # 1 - reset state machine so that it is in known state
-    
+    # mode register masks
+    MOD_AUT_MASK = np.uint32(1<<1)  # automatic
+    MOD_CON_MASK = np.uint32(1<<0)  # continuous
+    # trigger edge dictionary
+    edges = {'positive': 0, 'negative': 1,
+             'pos'     : 0, 'neg'     : 1,
+             'p'       : 0, 'n'       : 1,
+             '+'       : 0, '-'       : 1}
+    # analog stage range voltages
+    ranges = (1, 20)
+    # filter coeficients
+    filters = {1 : (0x7D93, 0x437C7, 0xd9999a, 0x2666),
+               20: (0x4C5F, 0x2F38B, 0xd9999a, 0x2666)}
+
     regset_dtype = np.dtype([
         # control/status
         ('ctl_sts', 'uint32'),
@@ -49,22 +56,26 @@ class acq (object):
         ('cfg_rng', 'uint32'),  # range (not used by HW)
 
         # decimation
-        ('cfg_byp', 'uint32'),  # bypass
         ('cfg_dec', 'uint32'),  # decimation factor
         ('cfg_shr', 'uint32'),  # shift right
-        # filter
         ('cfg_avg', 'uint32'),  # average enable
+        # filter
+        ('cfg_byp', 'uint32'),  # bypass
         ('cfg_faa', 'uint32'),  # AA coeficient
         ('cfg_fbb', 'uint32'),  # BB coeficient
         ('cfg_fkk', 'uint32'),  # KK coeficient
         ('cfg_fpp', 'uint32')   # PP coeficient
     ])
 
-    def __init__ (self, index:int, uio:str = '/dev/uio/acq'):
+    def __init__ (self, index:int, input_range:float, uio:str = '/dev/uio/acq'):
         """Module instance index should be provided"""
-        
+
+        # use index
         uio = uio+str(index)
-        
+
+        # set input range (there is no default)
+        self.input_range = input_range
+
         # open device file
         try:
             self.uio_dev = os.open(uio, os.O_RDWR | os.O_SYNC)
@@ -87,7 +98,7 @@ class acq (object):
 
         regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_reg)
         self.regset = regset_array[0]
-        
+
         # map buffer table
         try:
             self.uio_tbl = mmap.mmap(
@@ -108,21 +119,33 @@ class acq (object):
         except OSError as e:
             raise IOError(e.errno, "Closing {}: {}".format(uio, e.strerror))
 
+    @property
+    def input_range (self) -> float:
+        return (self.__input_range)
+
+    @input_range.setter
+    def input_range (self, value: float):
+        if value in self.ranges:
+            self.__input_range = value
+            self.filter_coeficients (self.filters[value]):
+        else:
+            raise ValueError("Input range can be one of {} volts.".format(self.ranges))
+
     def reset (self):
-        # reset state machine
+        """reset state machine"""
         self.regset.ctl_sts = self.CTL_RST_MASK
 
     def trigger (self):
-        # activate SW trigger
+        """activate SW trigger"""
         self.regset.ctl_sts = self.CTL_SWT_MASK
 
     def status (self) -> bool:
-        # start state machine
-        return bool(self.regset.ctl_sts & self.CTL_STA_MASK)
+        """start state machine"""
+        return (bool(self.regset.ctl_sts & self.CTL_STA_MASK))
 
     @property
     def trigger_mask (self):
-        return (modes(self.regset.cfg_trg))
+        return (self.regset.cfg_trg)
 
     @trigger_mask.setter
     def trigger_mask (self, value):
@@ -130,10 +153,128 @@ class acq (object):
         self.regset.cfg_trg = value
 
     @property
-    def mode (self):
-        return (modes(self.regset.cfg_bst))
+    def continuous (self) -> bool:
+        return (bool(self.regset.cfg_mod & MOD_CON_MASK))
 
-    @mode.setter
-    def mode (self, value):
+    @continuous.setter
+    def continuous (self, value: bool):
+        tmp = self.regset.cfg_mod
+        if value:  self.regset.cfg_mod |  MOD_CON_MASK
+        else:      self.regset.cfg_mod & ~MOD_CON_MASK
+
+    @property
+    def automatic (self) -> bool:
+        return (bool(self.regset.cfg_mod & MOD_AUT_MASK))
+
+    @automatic.setter
+    def automatic (self, value: bool):
+        tmp = self.regset.cfg_mod
+        if value:  self.regset.cfg_mod |  MOD_AUT_MASK
+        else:      self.regset.cfg_mod & ~MOD_AUT_MASK
+
+    @property
+    def triger_pre_delay (self) -> int:
+        # TODO units should be secconds
+        return (self.regset.cfg_pre)
+
+    @triger_pre_delay.setter
+    def trigger_pre_delay (self, value: int):
+        # TODO units should be secconds
         # TODO check range
-        self.regset.cfg_bst = value
+        self.regset.cfg_pre = value
+
+    @property
+    def triger_post_delay (self) -> int:
+        # TODO units should be secconds
+        return (self.regset.cfg_pst)
+
+    @triger_post_delay.setter
+    def trigger_post_delay (self, value: int):
+        # TODO units should be secconds
+        # TODO check range
+        self.regset.cfg_pst = value
+
+    @property
+    def triger_pre_status (self) -> int:
+        # TODO units should be secconds
+        return (self.regset.sts_pre)
+
+    @property
+    def triger_post_status (self) -> int:
+        # TODO units should be secconds
+        return (self.regset.sts_pst)
+
+    @property
+    def level (self) -> float:
+        """Trigger level in vols"""
+        return (self.regset.cfg_lvl / self.DWMr * self.__input_range)
+
+    @level.setter
+    def level (self, value: float):
+        """Trigger level in vols"""
+        if (-1.0 <= value <= 1.0):
+            self.regset.cfg_lvl = value / self.__input_range * self.DWr
+        else:
+            raise ValueError("Trigger level should be inside [{},{}]".format(self.__input_range))
+
+    @property
+    def hysteresis (self) -> float:
+        """Trigger hysteresis in vols"""
+        return (self.regset.cfg_hst / self.DWMr * self.__input_range)
+
+    @hysteresis.setter
+    def hysteresis (self, value: float):
+        """Trigger hysteresis in vols"""
+        if (-1.0 <= value <= 1.0):
+            self.regset.cfg_hst = value / self.__input_range * self.DWr
+        else:
+            raise ValueError("Trigger level should be inside [{},{}]".format(self.__input_range))
+
+    @property
+    def edge (self) -> str:
+        """Trigger edge as a string 'pos'/'neg'"""
+        return (bool(self.regset.cfg_mod & MOD_CON_MASK))
+
+    @edge.setter
+    def edge (self, value: str):
+        """Trigger edge as a string 'pos'/'neg'"""
+        if (value in self.edges):
+            self.regset.cfg_edg = self.edges[value]
+        else:
+            raise ValueError("Trigger edge should be obe of {}".format(list(self.edges.keys())))
+
+    @property
+    def decimation (self) -> int:
+        return (self.regset.cfg_dec + 1)
+
+    @decimation.setter
+    def decimation (self, value: int):
+        # TODO check range
+        self.regset.cfg_dec = value - 1
+
+    @property
+    def average (self) -> bool:
+        # TODO units should be secconds
+        return (bool(self.regset.cfg_avg))
+
+    @average.setter
+    def average (self, value: bool):
+        # TODO check range, for non 2**n decimation factors,
+        # scaling should be applied in addition to shift
+        self.regset.cfg_avg = int(value)
+        self.regset.cfg_shr = math.ceil(math.log2(self.decimation))
+
+    @property
+    def filter_coeficients (self) -> tuple:
+        return (self.regset.cfg_faa,
+                self.regset.cfg_fbb,
+                self.regset.cfg_fkk,
+                self.regset.cfg_fpp)
+
+    @filter_coeficients.setter
+    def filter_coeficients (self, value: tuple):
+        # TODO check range
+        self.regset.cfg_faa = value[0]
+        self.regset.cfg_fbb = value[1]
+        self.regset.cfg_fkk = value[2]
+        self.regset.cfg_fpp = value[3]
