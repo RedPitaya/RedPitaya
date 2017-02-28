@@ -1,7 +1,10 @@
 import os
-import mmap
-import numpy as np
 import fcntl
+import mmap
+
+import ctypes
+import numpy as np
+from enum import Enum
 
 class asg (object):
     # sampling frequency
@@ -61,7 +64,7 @@ class asg (object):
 
         # exclusive lock
         try:
-            fcntl.flock(self.uio_dev, fcntl.LOCK_EX)
+            fcntl.flock(self.uio_dev, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError as e:
             raise IOError(e.errno, "Locking {}: {}".format(uio, e.strerror))
 
