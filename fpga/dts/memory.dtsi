@@ -16,7 +16,11 @@
 		};
 		rprx_reserverd: labuf@a000000 {
 			/*compatible = "redpitaya,rprx-memory";*/
-			reg = <0xa000000 0x2000000>;
+			reg = <0xa000000 0x1000000>;
+		};
+		rprx1_reserverd: labuf1@b000000 {
+		    /*compatible = "redpitaya,rprx-memory";*/
+		    reg = <0xb000000 0x1000000>;
 		};
 	};
 };

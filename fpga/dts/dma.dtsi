@@ -21,6 +21,25 @@
  */
 
 &amba_pl {
+
+	rprx_0: rprx@0 {
+		compatible ="redpitaya,rprx";
+		dmas = <&axi_dma_0 0
+		        &axi_dma_0 1>;
+		dma-names = "axidma0", "axidma1";
+		memory-region = <&rprx_reserverd>;
+		status = "disabled";
+	};
+
+	rprx_1: rprx@1 {
+		compatible ="redpitaya,rprx";
+		dmas = <&axi_dma_1 0
+		        &axi_dma_1 1>;
+		dma-names = "axidma0", "axidma1";
+		memory-region = <&rprx1_reserverd>;
+		status = "disabled";
+	};
+
 	rprx_2: rprx@2 {
 		compatible ="redpitaya,rprx";
 		dmas = <&axi_dma_2 0
