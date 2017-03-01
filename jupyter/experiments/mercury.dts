@@ -26,14 +26,14 @@
 			};
 			acq0: acq0@40040000 {
 				compatible = "generic-uio";
-				reg = <0x40040000 0x10000>,
+				reg = <0x40040000 0x01000>,
 				      <0x40050000 0x10000>;
 				reg-names = "ctl", "mem";
 			};
 			acq1: acq1@40040000 {
 				compatible = "generic-uio";
-				reg = <0x40040000 0x10000>,
-				      <0x40050000 0x10000>;
+				reg = <0x40060000 0x01000>,
+				      <0x40070000 0x10000>;
 				reg-names = "ctl", "mem";
 			};
 			asg0: asg0@40080000 {
