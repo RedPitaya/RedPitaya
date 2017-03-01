@@ -39,9 +39,9 @@ initial begin
 end
 
 // ADC cycle counter
-int unsigned dac_cyc=0;
+int unsigned cyc=0;
 always_ff @ (posedge clk)
-dac_cyc <= dac_cyc+1;
+cyc <= cyc+1;
 
 always begin
   trig <= 1'b0 ;
@@ -62,8 +62,10 @@ end
 
 initial begin
   repeat(100) @(posedge clk);
-  //test_id (32'h40000000);
-  test_asg (32'h40200000);
+  //test_id            (32'h40000000);
+  test_asg           (32'h40080000, 32'h40090000);
+  repeat(16) @(posedge clk);
+  test_acq_automatic (32'h40040000, 32'h40050000);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
   repeat(16) @(posedge clk);
@@ -133,166 +135,188 @@ endtask: axi_write
 localparam int unsigned DWM = 14;
 localparam int unsigned CWM = 14;
 localparam int unsigned CWF = 16;
-localparam ADR_BUF = 1 << (CWM+2);
 
 //int buf_len = 2**CWM;
 int buf_len = 'hff+1;
 real freq  = 10_000; // 10kHz
 real phase = 0; // DEG
 
+task test_acq_automatic (
+  int unsigned regset,
+  int unsigned buffer
+);
+  repeat(10) @(posedge clk);
+  // bypass input filter
+  axi_write(regset+'h5c, 'h1);
+
+  // enable automatic mode
+  axi_write(regset+'h04, 'h2);  // cfg_aut <= 1
+  // configure trigger
+  axi_write(regset+'h10, 'd0);  // cfg_pre
+  axi_write(regset+'h14, 'd4);  // cfg_pst
+  // ignore triggers
+  axi_write(regset+'h08, 'b0000);
+  // start acquire
+  axi_write(regset+'h00, 4'b0100);
+  repeat(1000) @(posedge clk);
+endtask: test_acq_automatic
+
+
 task test_asg (
-  int unsigned base
+  int unsigned regset,
+  int unsigned buffer
 );
   logic signed [ 32-1: 0] rdata_blk [];
   repeat(10) @(posedge clk);
 
   // configure amplitude and DC offset
-  axi_write(base+'h38, 1 << (DWM-2));  // amplitude
-  axi_write(base+'h3c, 0);             // DC offset
+  axi_write(regset+'h38, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h3c, 0);             // DC offset
 
   // write table
   for (int i=0; i<buf_len; i++) begin
-    axi_write(base+ADR_BUF + (i*4), i);  // write table
+    axi_write(buffer + (i*4), i);  // write table
   end
 //  // read table
 //  rdata_blk = new [80];
 //  for (int i=0; i<buf_len; i++) begin
-//    axi_read(base+ADR_BUF + (i*4), rdata_blk [i]);  // read table
+//    axi_read(buffer + (i*4), rdata_blk [i]);  // read table
 //  end
 
   // configure frequency and phase
-  axi_write(base+'h10,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(base+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-  axi_write(base+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+  axi_write(regset+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
   // configure burst mode
-  axi_write(base+'h20, 2'b00);  // burst disable
+  axi_write(regset+'h20, 2'b00);  // burst disable
   // enable SW trigger
-  axi_write(base+'h04, 'b1);
+  axi_write(regset+'h04, 'b1);
   // start (trigger)
-  axi_write(base+'h00, 2'b10);
+  axi_write(regset+'h00, 2'b10);
   repeat(22) @(posedge clk);
   // stop (reset)
-  axi_write(base+'h00, 2'b01);
+//  axi_write(regset+'h00, 2'b01);
   repeat(20) @(posedge clk);
 
 //  // burst mode
-//  axi_write(base+'h24, buf_len - 1);  // burst data length
-//  axi_write(base+'h28, buf_len - 1);  // burst idle length
-//  axi_write(base+'h2c, 100);  // repetitions
-//  axi_write(base+'h20, 'b11);  // enable burst mode and infinite repetitions
+//  axi_write(regset+'h24, buf_len - 1);  // burst data length
+//  axi_write(regset+'h28, buf_len - 1);  // burst idle length
+//  axi_write(regset+'h2c, 100);  // repetitions
+//  axi_write(regset+'h20, 'b11);  // enable burst mode and infinite repetitions
 //  // start
-//  axi_write(base+'h00, 2'b10);
+//  axi_write(regset+'h00, 2'b10);
 //  repeat(100) @(posedge clk);
 //  // stop (reset)
-////axi_write(base+'h00, 2'b01);
+////axi_write(regset+'h00, 2'b01);
 ////repeat(20) @(posedge clk);
 endtask: test_asg
 
 
 task test_lg (
-  int unsigned base
+  int unsigned regset,
+  int unsigned buffer
 );
   logic signed [ 32-1: 0] rdata_blk [];
   repeat(10) @(posedge clk);
 
 //  // configure amplitude and DC offset
-//  axi_write(base+'h38, 1 << (DWM-2));  // amplitude
-//  axi_write(base+'h3c, 0);             // DC offset
+//  axi_write(regset+'h38, 1 << (DWM-2));  // amplitude
+//  axi_write(regset+'h3c, 0);             // DC offset
 
   // write table
   for (int i=0; i<buf_len; i++) begin
-    axi_write(base+ADR_BUF + (i*4), i);  // write table
+    axi_write(buffer + (i*4), i);  // write table
   end
 //  // read table
 //  rdata_blk = new [80];
 //  for (int i=0; i<buf_len; i++) begin
-//    axi_read(base+ADR_BUF + (i*4), rdata_blk [i]);  // read table
+//    axi_read(buffer + (i*4), rdata_blk [i]);  // read table
 //  end
 
   // configure LG output enable
-  axi_write(base+'h38, '1);  // output ebable
-  axi_write(base+'h3c, '0);  // open drain
-//axi_write(base+'h3c, 2);  // open drain
+  axi_write(regset+'h38, '1);  // output ebable
+  axi_write(regset+'h3c, '0);  // open drain
+//axi_write(regset+'h3c, 2);  // open drain
 
   // configure frequency and phase
-  axi_write(base+'h10,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(base+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//axi_write(base+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
-  axi_write(base+'h18, 1                           * 2**CWF - 1);  // step
+  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//axi_write(regset+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  axi_write(regset+'h18, 1                           * 2**CWF - 1);  // step
   // configure burst mode
-  axi_write(base+'h20, 2'b00);  // burst disable
+  axi_write(regset+'h20, 2'b00);  // burst disable
   // enable SW trigger
-  axi_write(base+'h04, 'b100);
+  axi_write(regset+'h04, 'b100);
   // start
-  axi_write(base+'h00, 2'b10);
+  axi_write(regset+'h00, 2'b10);
   repeat(22) @(posedge clk);
   // stop (reset)
-  axi_write(base+'h00, 2'b01);
+  axi_write(regset+'h00, 2'b01);
   repeat(20) @(posedge clk);
 
   // burst mode
-  axi_write(base+'h24, buf_len - 1);  // burst data length
-  axi_write(base+'h28, buf_len - 1);  // burst idle length
-  axi_write(base+'h2c, 100);  // repetitions
-  axi_write(base+'h20, 'b11);  // enable burst mode and infinite repetitions
+  axi_write(regset+'h24, buf_len - 1);  // burst data length
+  axi_write(regset+'h28, buf_len - 1);  // burst idle length
+  axi_write(regset+'h2c, 100);  // repetitions
+  axi_write(regset+'h20, 'b11);  // enable burst mode and infinite repetitions
   // start
-  axi_write(base+'h00, 2'b10);
+  axi_write(regset+'h00, 2'b10);
   repeat(100) @(posedge clk);
   // stop (reset)
-//axi_write(base+'h00, 2'b01);
+//axi_write(regset+'h00, 2'b01);
 //repeat(20) @(posedge clk);
 endtask: test_lg
 
 
 task test_la (
-  int unsigned base
+  int unsigned regset
 );
   repeat(10) @(posedge clk);
 
   // configure trigger
-  axi_write(base+'h40, 16'h0000);  // cfg_cmp_msk
-  axi_write(base+'h44, 16'h0000);  // cfg_cmp_val
-  axi_write(base+'h48, 16'h0001);  // cfg_edg_pos
-  axi_write(base+'h4c, 16'h0000);  // cfg_edg_neg
+  axi_write(regset+'h40, 16'h0000);  // cfg_cmp_msk
+  axi_write(regset+'h44, 16'h0000);  // cfg_cmp_val
+  axi_write(regset+'h48, 16'h0001);  // cfg_edg_pos
+  axi_write(regset+'h4c, 16'h0000);  // cfg_edg_neg
 
-  axi_write(base+'h10, 'd8 );  // cfg_pre
-  axi_write(base+'h14, 'd16);  // cfg_pst
+  axi_write(regset+'h10, 'd8 );  // cfg_pre
+  axi_write(regset+'h14, 'd16);  // cfg_pst
   // enable LA trigger source
-  axi_write(base+'h08, 'b0010);
+  axi_write(regset+'h08, 'b0010);
   // start acquire
-  axi_write(base+'h00, 4'b0100);
+  axi_write(regset+'h00, 4'b0100);
   repeat(1000) @(posedge clk);
 endtask: test_la
 
 
 task test_la_automatic (
-  int unsigned base
+  int unsigned regset
 );
   repeat(10) @(posedge clk);
 
   // enable automatic mode
-  axi_write(base+'h04, 'h2);  // cfg_aut <= 1
+  axi_write(regset+'h04, 'h2);  // cfg_aut <= 1
   // configure trigger
-  axi_write(base+'h10, 'd0);  // cfg_pre
-  axi_write(base+'h14, 'd4);  // cfg_pst
+  axi_write(regset+'h10, 'd0);  // cfg_pre
+  axi_write(regset+'h14, 'd4);  // cfg_pst
   // ignore triggers
-  axi_write(base+'h08, 'b0000);
+  axi_write(regset+'h08, 'b0000);
   // start acquire
-  axi_write(base+'h00, 4'b0100);
+  axi_write(regset+'h00, 4'b0100);
   repeat(1000) @(posedge clk);
 endtask: test_la_automatic
 
 
 task test_id (
-  int unsigned base
+  int unsigned regset
 );
   int unsigned dat;
   // configure trigger
-  axi_read(base+'h20, dat);
-  axi_read(base+'h24, dat);
-  axi_read(base+'h28, dat);
-  axi_read(base+'h2c, dat);
-  axi_read(base+'h30, dat);
+  axi_read(regset+'h20, dat);
+  axi_read(regset+'h24, dat);
+  axi_read(regset+'h28, dat);
+  axi_read(regset+'h2c, dat);
+  axi_read(regset+'h30, dat);
 endtask: test_id
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -405,7 +429,8 @@ red_pitaya_top #(
 );
 
 // ADC
-assign adc_dat    = '0;
+assign adc_dat[0] = cyc;
+assign adc_dat[1] = cyc;
 assign adc_clk[1] =  clk;
 assign adc_clk[0] = ~clk;
 // adc_clk_o

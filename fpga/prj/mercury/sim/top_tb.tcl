@@ -20,12 +20,16 @@ add wave -noupdate /${top}/exp_n_io
 #axi4_lite_if axi4_lite /${top}/top/ps/axi4_lite
 axi4_if      axi_gp    /${top}/top/ps/axi_gp
 sys_bus_if   ps_sys    /${top}/top/ps_sys
-sys_bus_if   sys_asg1  /${top}/top/sys\[2\]
 
 axi4_stream_if axi_adc_0 /${top}/top/str_adc\[0\]
 axi4_stream_if axi_adc_1 /${top}/top/str_adc\[1\]
 axi4_stream_if axi_dac_0 /${top}/top/str_dac\[0\]
 axi4_stream_if axi_dac_1 /${top}/top/str_dac\[1\]
+
+# ACQ debug
+axi4_stream_if scope0_stf /${top}/top/for_acq\[0\]/scope/stf
+axi4_stream_if scope0_std /${top}/top/for_acq\[0\]/scope/std
+axi4_stream_if scope0_sto /${top}/top/for_acq\[0\]/scope/sto
 
 # LG/LA
 #add wave -noupdate -group LG /${top}/top/lg/*
