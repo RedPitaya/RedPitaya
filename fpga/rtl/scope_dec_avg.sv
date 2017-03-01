@@ -26,6 +26,7 @@ module scope_dec_avg #(
 logic signed [DCW+DWI-1:0] sum;
 
 logic        [DCW    -1:0] cnt;
+logic                      vld;
 
 assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
@@ -50,12 +51,15 @@ end else begin
     end else begin
     end
   end
+  sto.TVALID <= vld;
 end
 
+assign vld = ~|cnt;
+
 always_ff @(posedge sti.ACLK)
-begin
-  if (cfg_avg) sto.TDATA <= sti.TDATA;
-  else         sto.TDATA <= sum >>> cfg_shr;
+if (vld) begin
+  if (cfg_avg) sto.TDATA <= sum >>> cfg_shr;
+  else         sto.TDATA <= sti.TDATA;
 end
 
 // TODO: last signal should not be lost due to decimation
