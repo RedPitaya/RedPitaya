@@ -202,34 +202,34 @@ class acq (object):
         else:      self.regset.cfg_mod &= ~self.MOD_AUT_MASK
 
     @property
-    def triger_pre_delay (self) -> int:
+    def trigger_pre_delay (self) -> int:
         # TODO units should be secconds
         return (self.regset.cfg_pre)
 
-    @triger_pre_delay.setter
+    @trigger_pre_delay.setter
     def trigger_pre_delay (self, value: int):
         # TODO units should be secconds
         # TODO check range
         self.regset.cfg_pre = value
 
     @property
-    def triger_post_delay (self) -> int:
+    def trigger_post_delay (self) -> int:
         # TODO units should be secconds
         return (self.regset.cfg_pst)
 
-    @triger_post_delay.setter
+    @trigger_post_delay.setter
     def trigger_post_delay (self, value: int):
         # TODO units should be secconds
         # TODO check range
         self.regset.cfg_pst = value
 
     @property
-    def triger_pre_status (self) -> int:
+    def trigger_pre_status (self) -> int:
         # TODO units should be secconds
         return (self.regset.sts_pre)
 
     @property
-    def triger_post_status (self) -> int:
+    def trigger_post_status (self) -> int:
         # TODO units should be secconds
         return (self.regset.sts_pst)
 
