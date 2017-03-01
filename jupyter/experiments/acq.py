@@ -27,10 +27,10 @@ class acq (object):
              'p'       : 0, 'n'       : 1,
              '+'       : 0, '-'       : 1}
     # analog stage range voltages
-    ranges = (1, 20)
+    ranges = (1.0, 20.0)
     # filter coeficients
-    filters = {1 : (0x7D93, 0x437C7, 0xd9999a, 0x2666),
-               20: (0x4C5F, 0x2F38B, 0xd9999a, 0x2666)}
+    filters = { 1.0: (0x7D93, 0x437C7, 0xd9999a, 0x2666),
+               20.0: (0x4C5F, 0x2F38B, 0xd9999a, 0x2666)}
 
     regset_dtype = np.dtype([
         # control/status
@@ -73,9 +73,6 @@ class acq (object):
         # use index
         uio = uio+str(index)
 
-        # set input range (there is no default)
-        self.__input_range = input_range
-
         # open device file
         try:
             self.uio_dev = os.open(uio, os.O_RDWR | os.O_SYNC)
@@ -111,6 +108,9 @@ class acq (object):
         #table_array = np.recarray(1, self.table_dtype, buf=self.uio_tbl)
         self.table = np.frombuffer(self.uio_tbl, 'int32')
 
+        # set input range (there is no default)
+        self.input_range = input_range
+
     def __del__ (self):
         self.uio_tbl.close()
         self.uio_reg.close()
@@ -118,6 +118,29 @@ class acq (object):
             os.close(self.uio_dev)
         except OSError as e:
             raise IOError(e.errno, "Closing {}: {}".format(uio, e.strerror))
+
+    def show_regset (self):
+        print (
+            "ctl_sts = 0x{reg:x} = {reg:d}                              \n".format(reg=self.regset.ctl_sts)+
+            "cfg_mod = 0x{reg:x} = {reg:d}  # mode                      \n".format(reg=self.regset.cfg_mod)+
+            "cfg_trg = 0x{reg:x} = {reg:d}  # trigger mask              \n".format(reg=self.regset.cfg_trg)+
+            "cfg_pre = 0x{reg:x} = {reg:d}  # configuration pre  trigger\n".format(reg=self.regset.cfg_pre)+
+            "cfg_pst = 0x{reg:x} = {reg:d}  # configuration post trigger\n".format(reg=self.regset.cfg_pst)+
+            "sts_pre = 0x{reg:x} = {reg:d}  # status pre  trigger       \n".format(reg=self.regset.sts_pre)+
+            "sts_pst = 0x{reg:x} = {reg:d}  # status post trigger       \n".format(reg=self.regset.sts_pst)+
+            "cfg_lvl = 0x{reg:x} = {reg:d}  # level                     \n".format(reg=self.regset.cfg_lvl)+
+            "cfg_hst = 0x{reg:x} = {reg:d}  # hysteresis                \n".format(reg=self.regset.cfg_hst)+
+            "cfg_edg = 0x{reg:x} = {reg:d}  # edge (0-pos, 1-neg)       \n".format(reg=self.regset.cfg_edg)+
+            "cfg_rng = 0x{reg:x} = {reg:d}  # range (not used by HW)    \n".format(reg=self.regset.cfg_rng)+
+            "cfg_dec = 0x{reg:x} = {reg:d}  # decimation factor         \n".format(reg=self.regset.cfg_dec)+
+            "cfg_shr = 0x{reg:x} = {reg:d}  # shift right               \n".format(reg=self.regset.cfg_shr)+
+            "cfg_avg = 0x{reg:x} = {reg:d}  # average enable            \n".format(reg=self.regset.cfg_avg)+
+            "cfg_byp = 0x{reg:x} = {reg:d}  # bypass                    \n".format(reg=self.regset.cfg_byp)+
+            "cfg_faa = 0x{reg:x} = {reg:d}  # AA coeficient             \n".format(reg=self.regset.cfg_faa)+
+            "cfg_fbb = 0x{reg:x} = {reg:d}  # BB coeficient             \n".format(reg=self.regset.cfg_fbb)+
+            "cfg_fkk = 0x{reg:x} = {reg:d}  # KK coeficient             \n".format(reg=self.regset.cfg_fkk)+
+            "cfg_fpp = 0x{reg:x} = {reg:d}  # PP coeficient             \n".format(reg=self.regset.cfg_fpp)
+        )
 
     @property
     def input_range (self) -> float:
@@ -127,7 +150,7 @@ class acq (object):
     def input_range (self, value: float):
         if value in self.ranges:
             self.__input_range = value
-            self.filter_coeficients (self.filters[value])
+            self.filter_coeficients = self.filters[value]
         else:
             raise ValueError("Input range can be one of {} volts.".format(self.ranges))
 
@@ -166,9 +189,8 @@ class acq (object):
 
     @continuous.setter
     def continuous (self, value: bool):
-        tmp = self.regset.cfg_mod
-        if value:  self.regset.cfg_mod |  self.MOD_CON_MASK
-        else:      self.regset.cfg_mod & ~self.MOD_CON_MASK
+        if value:  self.regset.cfg_mod |=  self.MOD_CON_MASK
+        else:      self.regset.cfg_mod &= ~self.MOD_CON_MASK
 
     @property
     def automatic (self) -> bool:
@@ -176,9 +198,8 @@ class acq (object):
 
     @automatic.setter
     def automatic (self, value: bool):
-        tmp = self.regset.cfg_mod
-        if value:  self.regset.cfg_mod |  self.MOD_AUT_MASK
-        else:      self.regset.cfg_mod & ~self.MOD_AUT_MASK
+        if value:  self.regset.cfg_mod |=  self.MOD_AUT_MASK
+        else:      self.regset.cfg_mod &= ~self.MOD_AUT_MASK
 
     @property
     def triger_pre_delay (self) -> int:
