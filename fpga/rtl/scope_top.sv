@@ -32,7 +32,8 @@
 
 module scope_top #(
   // stream parameters
-  type DT = logic signed [14-1:0],
+  int unsigned DN = 1,   // data number
+  type DT = logic signed [16-1:0],
   // decimation parameters
   int unsigned DCW = 17,  // data width for counter
   int unsigned DSW =  4,  // data width for shifter
@@ -59,16 +60,13 @@ module scope_top #(
   sys_bus_if.s           bus
 );
 
-localparam int unsigned DWI = $bits(DT);  // data width for input
-localparam int unsigned DWO = $bits(DT);  // data width for output
-
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
 // streams
-axi4_stream_if #(.DT (logic signed [DWI-1:0])) stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from filter
-axi4_stream_if #(.DT (logic signed [DWI-1:0])) std (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
+axi4_stream_if #(.DT (DT)) stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from filter
+axi4_stream_if #(.DT (DT)) std (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
 
 // acquire regset
 
@@ -101,8 +99,8 @@ logic  [TN-1:0] cfg_trg;  // trigger select
 logic                  cfg_rng;  // range select (this one is only used by the firmware)
 
 // edge detection configuration
-logic signed [DWI-1:0] cfg_lvl;  // level
-logic        [DWI-1:0] cfg_hst;  // hystheresis
+DT                     cfg_lvl;  // level
+DT                     cfg_hst;  // hystheresis
 logic                  cfg_edg;  // edge (0-pos, 1-neg)
 
 // decimation configuration
@@ -173,8 +171,8 @@ end else begin
     if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
 
     // edge detection
-    if (bus.addr[BAW-1:0]=='h40)   cfg_lvl <= bus.wdata[DWI-1:0];
-    if (bus.addr[BAW-1:0]=='h44)   cfg_hst <= bus.wdata[DWI-1:0];
+    if (bus.addr[BAW-1:0]=='h40)   cfg_lvl <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h44)   cfg_hst <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h48)   cfg_edg <= bus.wdata[      0];
     if (bus.addr[BAW-1:0]=='h4c)   cfg_rng <= bus.wdata[      0];
 
@@ -251,10 +249,13 @@ assign tmp_sti.TKEEP  = cfg_byp ? '0         :     sti.TKEEP ;
 assign tmp_sti.TVALID = cfg_byp ? '0         :     sti.TVALID;
 assign     sti.TREADY = cfg_byp ? stf.TREADY : tmp_sti.TREADY;
 
+//localparam int unsigned DWI = $bits(DT);  // data width for input
+//localparam int unsigned DWO = $bits(DT);  // data width for output
+
 scope_filter #(
   // stream parameters
-  .DWI (DWI),
-  .DWO (DWO)
+  .DWI (14),
+  .DWO (14)
 ) filter (
   // input stream
   .sti      (tmp_sti),
@@ -281,8 +282,8 @@ assign tmp_stf.TREADY = cfg_byp ? '0         :     stf.TREADY;
 
 scope_dec_avg #(
   // stream parameters
-  .DWI (DWI),
-  .DWO (DWO),
+  .DTI (DT),
+  .DTO (DT),
   // decimation parameters
   .DCW (17),
   .DSW ( 4)
@@ -304,7 +305,7 @@ scope_dec_avg #(
 
 scope_edge #(
   // stream parameters
-  .DWI (DWI)
+  .DT (DT)
 ) edge_i (
   // control
   .ctl_rst  (ctl_rst),
@@ -323,6 +324,8 @@ scope_edge #(
 ////////////////////////////////////////////////////////////////////////////////
 
 acq #(
+  .DN (DN),
+  .DT (DT),
   .TN (TN),
   .TW (TW),
   .CW (CW)

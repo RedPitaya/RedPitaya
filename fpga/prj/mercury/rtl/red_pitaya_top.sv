@@ -167,7 +167,7 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   // IO block registers should be used here
   // lowest 2 bits reserved for 16bit ADC
   always @(posedge adc_clk)
-  adc_raw <= adc_dat_i[i][16-1:2];
+  adc_raw <= adc_dat_i[i];
 
   // transform into 2's complement (negative slope)
   assign str_adc[i].TDATA  = {adc_raw[$bits(SBA_T)-1], ~adc_raw[$bits(SBA_T)-2:0]};
@@ -366,6 +366,7 @@ for (genvar i=0; i<MNA; i++) begin: for_acq
   logic trg;
 
   scope_top #(
+    .DN (1),
     .DT (SBA_T),
     .TN (1),
     .TW (64)

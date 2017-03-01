@@ -6,26 +6,26 @@
 
 module scope_edge #(
   // stream parameters
-  parameter DWI = 14   // data width for input
+  type DT = logic signed [16-1:0]
 )(
   // control
-  input  logic                  ctl_rst,  // synchronous reset
+  input  logic      ctl_rst,  // synchronous reset
   // configuration
-  input  logic                  cfg_edg,  // edge select (0-rising, 1-falling)
-  input  logic signed [DWI-1:0] cfg_lvl,  // level
-  input  logic        [DWI-1:0] cfg_hst,  // hystheresis
+  input  logic      cfg_edg,  // edge select (0-rising, 1-falling)
+  input  DT         cfg_lvl,  // level
+  input  DT         cfg_hst,  // hystheresis
   // output triggers
-  output logic                  sts_trg,  // positive edge
+  output logic      sts_trg,  // positive edge
   // stream monitor
-  axi4_stream_if.m              str
+  axi4_stream_if.m  str
 );
 
 // level +/- hystheresys
-logic signed [DWI-0:0] cfg_lvn;
+DT cfg_lvn;
 
 always @(posedge str.ACLK)
 begin
-  cfg_lvn <= cfg_lvl - $signed({1'b0, cfg_hst});
+  cfg_lvn <= cfg_lvl + cfg_hst;
 end
 
 // edge status signals

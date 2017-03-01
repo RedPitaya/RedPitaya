@@ -6,8 +6,8 @@
 
 module scope_dec_avg #(
   // stream parameters
-  int unsigned DWI = 14,  // data width for input
-  int unsigned DWO = 14,  // data width for output
+  type DTI = logic signed [16-1:0],  // data width for input
+  type DTO = logic signed [16-1:0],  // data width for output
   // decimation parameters
   int unsigned DCW = 17,  // data width for counter
   int unsigned DSW =  4   // data width for shifter
@@ -23,10 +23,10 @@ module scope_dec_avg #(
   axi4_stream_if.s              sto       // output
 );
 
-logic signed [DCW+DWI-1:0] sum;
+logic signed [$bits(DTI)+DCW-1:0] sum;
 
-logic        [DCW    -1:0] cnt;
-logic                      vld;
+logic                   [DCW-1:0] cnt;
+logic                             vld;
 
 assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
