@@ -188,6 +188,7 @@ $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system.dts
 	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system.dts
 	tools/dtc/dtc -@ -I dts -O dtb -o $(TMP)/dts/amba_pl.dtbo patches/devicetree/amba_pl.dtso
+	tools/dtc/dtc -@ -I dts -O dtb -o $(TMP)/dts/fpga.dtbo patches/devicetree/fpga.dtso
 	# create device tree source from binary for reference
 	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
@@ -195,9 +196,12 @@ devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp $(DEVICETREE)                   $(INSTALL_DIR)
 	cp $(TMP)/dts/dtraw.dts            $(INSTALL_DIR)
 	cp $(TMP)/dts/amba_pl.dtbo         $(INSTALL_DIR)
+	cp $(TMP)/dts/fpga.dtbo            $(INSTALL_DIR)
 	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
 	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
-
+	cp patches/devicetree/fpga.sh      $(INSTALL_DIR)
+	cp patches/devicetree/rmfpga.sh    $(INSTALL_DIR)
+	
 ################################################################################
 # boot file generator
 ################################################################################
