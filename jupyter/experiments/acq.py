@@ -100,13 +100,13 @@ class acq (object):
         try:
             self.uio_tbl = mmap.mmap(
                 # TODO: probably the length should be rounded up to mmap.PAGESIZE
-                fileno=self.uio_dev, length=4*self.N, offset=mmap.PAGESIZE,
+                fileno=self.uio_dev, length=2*self.N, offset=mmap.PAGESIZE,
                 flags=mmap.MAP_SHARED, prot=(mmap.PROT_READ | mmap.PROT_WRITE))
         except OSError as e:
             raise IOError(e.errno, "Mapping (buffer) {}: {}".format(uio, e.strerror))
 
         #table_array = np.recarray(1, self.table_dtype, buf=self.uio_tbl)
-        self.table = np.frombuffer(self.uio_tbl, 'int32')
+        self.table = np.frombuffer(self.uio_tbl, 'int16')
 
         # set input range (there is no default)
         self.input_range = input_range
@@ -292,6 +292,15 @@ class acq (object):
         # scaling should be applied in addition to shift
         self.regset.cfg_avg = int(value)
         self.regset.cfg_shr = math.ceil(math.log2(self.decimation))
+
+    @property
+    def filter_bypass (self) -> bool:
+        return (bool(self.regset.cfg_byp))
+
+    @filter_bypass.setter
+    def filter_bypass (self, value: bool):
+        if value:  self.regset.cfg_byp = 0x1
+        else:      self.regset.cfg_mod = 0x0
 
     @property
     def filter_coeficients (self) -> tuple:
