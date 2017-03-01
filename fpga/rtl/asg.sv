@@ -163,11 +163,11 @@ always @(posedge bus.clk)
 for (int unsigned i=0; i<2; i++) begin
 // TODO: asymetric bus width is failing synthesis
 //  if (bus_ena) begin
-//                  bus.rdata [16*i+:16] <= buf_mem [{bus.addr>>2,i[0]}];
-//    if (bus.wen)  buf_mem [{bus.addr>>2,i[0]}] <= bus.wdata [16*i+:16];
+//                  bus.rdata [16*i+:16] <= buf_mem [{bus.addr[2+:CWM-1],i[0]}];
+//    if (bus.wen)  buf_mem [{bus.addr[2+:CWM-1],i[0]}] <= bus.wdata [16*i+:16];
 //  end
-  if (bus.ren)  bus.rdata <= buf_mem [bus.addr>>2];
-  if (bus.wen)  buf_mem [bus.addr>>2] <= bus.wdata;
+  if (bus.ren)  bus.rdata <= buf_mem [bus.addr[2+:CWM]];
+  if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
 end
 
 // CPU control signals
