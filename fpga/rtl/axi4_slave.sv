@@ -85,8 +85,8 @@ logic           xx_do;
 assign xx_do = rd_do | wr_do;
 
 // check if access type is supported
-assign wr_errorw = (axi.AWLEN != 4'h0) | (axi.AWSIZE != 3'b010); // error if write burst and more/less than 4B transfer
-assign rd_errorw = (axi.ARLEN != 4'h0) | (axi.ARSIZE != 3'b010); // error if read  burst and more/less than 4B transfer
+assign wr_errorw = (axi.AWLEN != 4'h0) | ~((axi.AWSIZE == 3'b010) | (axi.AWSIZE == 3'b001)); // error if write burst and more/less than 4B transfer
+assign rd_errorw = (axi.ARLEN != 4'h0) | ~((axi.ARSIZE == 3'b010) | (axi.ARSIZE == 3'b001)); // error if read  burst and more/less than 4B transfer
 
 ////////////////////////////////////////////////////////////////////////////////
 // write access
