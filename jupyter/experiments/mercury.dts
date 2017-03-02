@@ -20,7 +20,7 @@
 				compatible = "generic-uio";
 				reg = <0x40000000 0x1000>;
 			};
-			ams: ams@40010000 {
+			pdm: pdm@40010000 {
 				compatible = "generic-uio";
 				reg = <0x40010000 0x1000>;
 			};
