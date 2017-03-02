@@ -255,8 +255,8 @@ assign     sti.TREADY = cfg_byp ? stf.TREADY : tmp_sti.TREADY;
 
 scope_filter #(
   // stream parameters
-  .DWI (14),
-  .DWO (14)
+  .DTI (DT),
+  .DTO (DT)
 ) filter (
   // input stream
   .sti      (tmp_sti),
