@@ -562,6 +562,11 @@ fpga_stat_t rp_bazaar_app_load_fpga(const char *fpga_file)
         fprintf(stderr,"error removing old fpga overlay");
     }
     char convert_fpga[fpga_size+78];
+    
+    if(system("mkdir -p /lib/firmware/redpitaya")){
+        fprintf(stderr,"error making firmware directory");
+    }
+    
     sprintf(convert_fpga,"python /opt/redpitaya/fpga-bit-to-bin.py -f %s /lib/firmware/redpitaya/fpga.bin",fpga_file);
     if(system(convert_fpga)){
         fprintf(stderr,"error converting bit to bin");
