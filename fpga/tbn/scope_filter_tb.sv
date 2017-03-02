@@ -8,12 +8,15 @@
 
 module scope_filter_tb #(
   // clock time periods
-  realtime  TP = 4.0ns,  // 250MHz
-  // PWM parameters
-  int unsigned DWI = 14,   // data width for input
-  int unsigned DWO = 14,   // data width for output
-  int unsigned DWC = DWO   // data width for coeficients
+  realtime  TP = 8.0ns,  // 125MHz
+  // stream parameters
+  int unsigned DN = 1,
+  type DTI = logic signed [16-1:0],   // data width for input
+  type DTO = logic signed [16-1:0]    // data width for output
 );
+
+typedef DTI DTI_A []; 
+typedef DTO DTO_A []; 
 
 // system signals
 logic                  clk ;  // clock
@@ -26,15 +29,24 @@ logic signed [ 25-1:0] cfg_pp;   // config PP coefficient
 logic signed [ 25-1:0] cfg_kk;   // config KK coefficient
 
 // stream input/output
-axi4_stream_if #(.DT (logic signed [DWI-1:0])) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DT (logic signed [DWO-1:0])) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
-// clock and test sequence
+// clock
 ////////////////////////////////////////////////////////////////////////////////
 
 initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
+
+// clocking 
+default clocking cb @ (posedge clk);
+  input  rstn;
+endclocking: cb
+
+////////////////////////////////////////////////////////////////////////////////
+// test sequence
+////////////////////////////////////////////////////////////////////////////////
 
 initial begin
   // for now initialize configuration to an idle value
@@ -46,43 +58,59 @@ initial begin
   cfg_bb = 'h437C7;
   cfg_pp = 'h2666;
   cfg_kk = 'hd9999a;
-
   // initialization
-  rstn = 1'b0;
-  repeat(4) @(posedge clk);
-  // start
-  rstn = 1'b1;
-  repeat(4) @(posedge clk);
+  rstn <= 1'b0;
+  ##4;
+  rstn <= 1'b1;
+  ##4;
 
-  // send data into stream
-  for (int i=-8; i<8; i++) begin
-    str_src.put(i);
-  end
-  repeat(16) @(posedge clk);
-  repeat(4) @(posedge clk);
+  test_block;
 
   // end simulation
-  repeat(4) @(posedge clk);
+  ##4;
   $finish();
 end
+
+// calculate filter
+// TODO: implement actual calculation
+function automatic DTO_A calc (ref DTI_A dat);
+  calc = new [dat.size()] (dat);
+endfunction: calc
+
+////////////////////////////////////////////////////////////////////////////////
+// tests
+////////////////////////////////////////////////////////////////////////////////
+
+task test_block;
+  DTI dti [];
+  DTO dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTI)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTI)) clo;
+  // prepare data
+  cli = new;
+  clo = new;
+  dti = cli.range (-8, 8);
+  dto = calc(dti);
+  // send data into stream
+  cli.add_pkt (dti);
+  clo.add_pkt (dto);
+  fork
+    str_src.run (cli);
+    str_drn.run (clo);
+  join
+  // check received data
+//  error += clo.check (dto);
+endtask: test_block
 
 ////////////////////////////////////////////////////////////////////////////////
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(
-  .DW  (DWI)
-) str_src (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream
-  .str      (sti)
-);
+axi4_stream_src #(.DN (DN), .DT (DTI)) str_src (.str (sti));
 
 scope_filter #(
-  .DWI (DWI),
-  .DWO (DWO)
+  .DTI (DTI),
+  .DTO (DTO)
 ) filter (
   // stream input/output
   .sti      (sti),
@@ -100,7 +128,7 @@ red_pitaya_dfilt1 dfilt1 (
    // ADC
    .adc_clk_i  (clk ),
    .adc_rstn_i (rstn),
-   .adc_dat_i  (sti.dat),
+   .adc_dat_i  (sti.TDATA[0][14-1:0]),
    .adc_dat_o  (),
    // configuration
    .cfg_aa_i   (cfg_aa),
@@ -109,15 +137,7 @@ red_pitaya_dfilt1 dfilt1 (
    .cfg_pp_i   (cfg_pp)
 );
 
-axi4_stream_drn #(
-  .DW  (DWI)
-) str_drn (
-  // system signals
-  .clk      (clk ),
-  .rstn     (rstn),
-  // stream
-  .str      (sto)
-);
+axi4_stream_drn #(.DN (DN), .DT (DTO)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

@@ -21,8 +21,8 @@
 
 module scope_filter #(
   int unsigned DN = 1, // TODO: functionality not yet enabled
-  int unsigned DWI = 14,
-  int unsigned DWO = 14
+  type DTI = logic signed [16-1:0],
+  type DTO = logic signed [16-1:0]
 )(
   // configuration
   input  logic signed [ 18-1:0] cfg_aa,   // config AA coefficient
@@ -60,9 +60,9 @@ axi4_stream_if #(.DN (DN), .DT (logic signed [15-1:0])) iir2 (.ACLK (sti.ACLK), 
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef logic signed [   DWI-1:0] fir_buf_t;  // data buffer
-typedef logic signed [29    -1:0] fir_cfg_t;  // coeficients
-typedef logic signed [25+DWI-1:0] fir_mul_t;  // multiplications
+typedef logic signed [   $bits(DTI)-1:0] fir_buf_t;  // data buffer
+typedef logic signed [29           -1:0] fir_cfg_t;  // coeficients
+typedef logic signed [25+$bits(DTI)-1:0] fir_mul_t;  // multiplications
 
 axi4_stream_if #(.DN (DN), .DT (fir_mul_t [2-1:0])) firm (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
@@ -175,7 +175,7 @@ assign kk_mult = ($signed(iir2.TDATA) * $signed(cfg_kk)) >>> 24;
 // saturation
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn)      sto.TDATA <= '0;
-else if (iir2.transf)  sto.TDATA <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {DWO-1{~kk_mult[40-1]}}} : kk_mult[DWO-1:0];
+else if (iir2.transf)  sto.TDATA <= kk_mult[40-1:40-2] ? {kk_mult[40-1], {$bits(DTO)-1{~kk_mult[40-1]}}} : kk_mult[$bits(DTO)-1:0];
 
 assign sto.TLAST = 1'b0;
 assign sto.TKEEP = '1;
