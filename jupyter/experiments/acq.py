@@ -50,8 +50,8 @@ class acq (object):
         ('cts_stp', 'uint32',2),  # stop
         ('rsv1'   , 'uint32',2),  # reserved
         # edge detection
-        ('cfg_lvl', 'uint32'),  # level
-        ('cfg_hst', 'uint32'),  # hysteresis
+        ('cfg_pos', 'uint32'),  # positive level
+        ('cfg_neg', 'uint32'),  # negative level
         ('cfg_edg', 'uint32'),  # edge (0-pos, 1-neg)
         ('cfg_rng', 'uint32'),  # range (not used by HW)
 
@@ -128,8 +128,8 @@ class acq (object):
             "cfg_pst = 0x{reg:x} = {reg:d}  # configuration post trigger\n".format(reg=self.regset.cfg_pst)+
             "sts_pre = 0x{reg:x} = {reg:d}  # status pre  trigger       \n".format(reg=self.regset.sts_pre)+
             "sts_pst = 0x{reg:x} = {reg:d}  # status post trigger       \n".format(reg=self.regset.sts_pst)+
-            "cfg_lvl = 0x{reg:x} = {reg:d}  # level                     \n".format(reg=self.regset.cfg_lvl)+
-            "cfg_hst = 0x{reg:x} = {reg:d}  # hysteresis                \n".format(reg=self.regset.cfg_hst)+
+            "cfg_pos = 0x{reg:x} = {reg:d}  # positive level            \n".format(reg=self.regset.cfg_pos)+
+            "cfg_neg = 0x{reg:x} = {reg:d}  # negative level            \n".format(reg=self.regset.cfg_neg)+
             "cfg_edg = 0x{reg:x} = {reg:d}  # edge (0-pos, 1-neg)       \n".format(reg=self.regset.cfg_edg)+
             "cfg_rng = 0x{reg:x} = {reg:d}  # range (not used by HW)    \n".format(reg=self.regset.cfg_rng)+
             "cfg_dec = 0x{reg:x} = {reg:d}  # decimation factor         \n".format(reg=self.regset.cfg_dec)+
@@ -236,28 +236,19 @@ class acq (object):
     @property
     def level (self) -> float:
         """Trigger level in vols"""
-        return (self.regset.cfg_lvl / self.DWMr * self.__input_range)
+        return ([self.regset.cfg_pos, self.regset.cfg_neg] / self.DWMr * self.__input_range)
 
     @level.setter
-    def level (self, value: float):
+    def level (self, value: tuple):
         """Trigger level in vols"""
-        if (-1.0 <= value <= 1.0):
-            self.regset.cfg_lvl = value / self.__input_range * self.DWr
+        if (-1.0 <= value[0] <= 1.0):
+            self.regset.cfg_pos = value[0] / self.__input_range * self.DWr
         else:
-            raise ValueError("Trigger level should be inside [{},{}]".format(self.__input_range))
-
-    @property
-    def hysteresis (self) -> float:
-        """Trigger hysteresis in vols"""
-        return (self.regset.cfg_hst / self.DWMr * self.__input_range)
-
-    @hysteresis.setter
-    def hysteresis (self, value: float):
-        """Trigger hysteresis in vols"""
-        if (-1.0 <= value <= 1.0):
-            self.regset.cfg_hst = value / self.__input_range * self.DWr
+            raise ValueError("Trigger positive level should be inside [{},{}]".format(self.__input_range))
+        if (-1.0 <= value[1] <= 1.0):
+            self.regset.cfg_neg = value[0] / self.__input_range * self.DWr
         else:
-            raise ValueError("Trigger level should be inside [{},{}]".format(self.__input_range))
+            raise ValueError("Trigger negative level should be inside [{},{}]".format(self.__input_range))
 
     @property
     def edge (self) -> str:
