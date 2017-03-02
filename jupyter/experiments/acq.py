@@ -8,9 +8,9 @@ class acq (object):
     # sampling frequency
     FS = 125000000.0
     # linear addition multiplication register width
-    DW = 14
+    DW = 16
     # fixed point range
-    DWr  = (1 << (DW -1)) - 1
+    DWr  = (1 << (DW-1)) - 1
     # buffer parameters
     N = 2**14 # table size
     # control register masks
