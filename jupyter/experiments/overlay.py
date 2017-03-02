@@ -13,12 +13,16 @@ class overlay (object):
         else:
             raise IOError('Device tree overlay source {}.dts does not exist.'.format(self.overlay))
 
-        os.system("dtc -I dts -O dtb -o {0}.dtbo -@ {0}.dts".format(self.overlay))
-        os.system('cat /opt/redpitaya/fpga/{}/fpga.bit > /dev/xdevcfg'.format(self.overlay))
-
+        # if it does not exists create overlay directory
         if not os.path.isdir(self.syspath):
             os.system("mkdir {}".format(self.syspath))
-        if not self.status():
+
+        if self.status():
+            raise ResourceWarning('Requested overlay is already loaded.')
+        else:
+            os.system("dtc -I dts -O dtb -o {0}.dtbo -@ {0}.dts".format(self.overlay))
+            # TODO: loading FPGA should be handled by device tree overlay
+            os.system('cat /opt/redpitaya/fpga/{}/fpga.bit > /dev/xdevcfg'.format(self.overlay))
             os.system("cat {}.dtbo > {}/dtbo".format(self.overlay, self.syspath))
 
     def __del__ (self):
