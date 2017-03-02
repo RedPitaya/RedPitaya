@@ -150,4 +150,4 @@ end
 
 assign adc_dat_o = r5_reg ;
 
-endmodule
+endmodule: red_pitaya_dfilt1
