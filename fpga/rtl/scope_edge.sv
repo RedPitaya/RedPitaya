@@ -6,49 +6,73 @@
 
 module scope_edge #(
   // stream parameters
+  int unsigned DN = 1, // TODO: for now only value 1 is permitted
   type DT = logic signed [16-1:0]
 )(
   // control
   input  logic      ctl_rst,  // synchronous reset
   // configuration
   input  logic      cfg_edg,  // edge select (0-rising, 1-falling)
-  input  DT         cfg_lvl,  // level
-  input  DT         cfg_hst,  // hystheresis
+  input  DT         cfg_pos,  // positive level
+  input  DT         cfg_neg,  // negative level
   // output triggers
-  output logic      sts_trg,  // positive edge
-  // stream monitor
-  axi4_stream_if.m  str
+  output logic      sts_trg,
+  // stream
+  axi4_stream_if.d  sti,
+  axi4_stream_if.s  sto
 );
 
-// level +/- hystheresys
-DT cfg_lvn;
+// position of the sign bit
+localparam int unsigned SGN = $bits(DT);
 
-always @(posedge str.ACLK)
-begin
-  cfg_lvn <= cfg_lvl + cfg_hst;
+// subtraction from pos/neg levels
+logic signed [SGN:0] sub_pos;
+logic signed [SGN:0] sub_neg;
+
+// level status signal and registered version
+logic sts_lvl, sts_reg;
+
+// subtraction stream
+axi4_stream_if #(.DN (DN), .DT (DT)) sts (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  
+
+////////////////////////////////////////////////////////////////////////////////
+// subtraction stage
+////////////////////////////////////////////////////////////////////////////////
+
+// subtraction
+always @(posedge sti.ACLK)
+if (sti.transf) begin
+  sub_pos <= sti.TDATA - cfg_pos;
+  sub_neg <= cfg_neg - sti.TDATA;
 end
 
-// edge status signals
-logic [2-1:0] sts_edg;
+// add to the stream the delay caused by subtraction stage
+axi4_stream_reg reg_sub (.sti (sti), .sto (sts));
 
-always @(posedge str.ACLK)
-if (~str.ARESETn) begin
-  sts_edg <= '0;
-  sts_trg <= '0;
+////////////////////////////////////////////////////////////////////////////////
+// trigger stage
+////////////////////////////////////////////////////////////////////////////////
+
+// toggle pos/neg edge, if pos/neg level is passed
+assign sts_lvl = sts_reg ^ ((~cfg_edg ^ sts_reg) ? sub_neg[SGN] : sub_pos[SGN]);
+
+always @(posedge sts.ACLK)
+if (~sts.ARESETn) begin
+  sts_reg <= 1'b0;
+  sts_trg <= 1'b0;
 end else begin
   if (ctl_rst) begin
-    sts_edg <= '0;
-    sts_trg <= '0;
-  end else begin
-    if (str.transf) begin
-           if (str.TDATA >= cfg_lvl)  sts_edg[0] <= 1'b1;  // level reached
-      else if (str.TDATA <  cfg_lvn)  sts_edg[0] <= 1'b0;  // signal goes under hysteresis
-  
-      sts_edg[1] <= sts_edg[0];
-    end
-  
-    sts_trg <= sts_edg[0] & ~sts_edg[1]; // make 1 cyc pulse 
+    sts_reg <= 1'b0;
+    sts_trg <= 1'b0;
+  end else if (sts.transf) begin
+    // store previous level status
+    sts_reg <= sts_lvl;
+    // trigger pulse if level status changes to active
+    sts_trg <= sts_lvl & ~sts_reg;
   end
 end
+
+// add to the stream the delay caused by trigger stage
+axi4_stream_reg reg_trg (.sti (sts), .sto (sto));
 
 endmodule: scope_edge

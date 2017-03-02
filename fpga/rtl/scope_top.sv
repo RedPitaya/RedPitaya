@@ -67,6 +67,7 @@ module scope_top #(
 // streams
 axi4_stream_if #(.DT (DT)) stf (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from filter
 axi4_stream_if #(.DT (DT)) std (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from decimator
+axi4_stream_if #(.DT (DT)) ste (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from edge detection
 
 // acquire regset
 
@@ -99,8 +100,8 @@ logic  [TN-1:0] cfg_trg;  // trigger select
 logic                  cfg_rng;  // range select (this one is only used by the firmware)
 
 // edge detection configuration
-DT                     cfg_lvl;  // level
-DT                     cfg_hst;  // hystheresis
+DT                     cfg_pos;  // level
+DT                     cfg_neg;  // hystheresis
 logic                  cfg_edg;  // edge (0-pos, 1-neg)
 
 // decimation configuration
@@ -148,8 +149,8 @@ if (~bus.rstn) begin
   cfg_rng <= '0;
 
   // edge detection
-  cfg_lvl <= '0;
-  cfg_hst <= '0;
+  cfg_pos <= '0;
+  cfg_neg <= '0;
   cfg_edg <= '0;
 
   // filter/dacimation
@@ -171,8 +172,8 @@ end else begin
     if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
 
     // edge detection
-    if (bus.addr[BAW-1:0]=='h40)   cfg_lvl <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h44)   cfg_hst <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h40)   cfg_pos <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h44)   cfg_neg <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h48)   cfg_edg <= bus.wdata[      0];
     if (bus.addr[BAW-1:0]=='h4c)   cfg_rng <= bus.wdata[      0];
 
@@ -215,8 +216,8 @@ begin
     'h34 : bus.rdata <=              32'(cts_stp >> 32);
 
     // edge detection
-    'h40 : bus.rdata <=                  cfg_lvl ;
-    'h44 : bus.rdata <=                  cfg_hst ;
+    'h40 : bus.rdata <=                  cfg_pos ;
+    'h44 : bus.rdata <=                  cfg_neg ;
     'h48 : bus.rdata <=              32'(cfg_edg);
     'h4c : bus.rdata <=              32'(cfg_rng);
 
@@ -311,12 +312,13 @@ scope_edge #(
   .ctl_rst  (ctl_rst),
   // configuration
   .cfg_edg  (cfg_edg),
-  .cfg_lvl  (cfg_lvl),
-  .cfg_hst  (cfg_hst),
+  .cfg_pos  (cfg_pos),
+  .cfg_neg  (cfg_neg),
   // output triggers
   .sts_trg  (trg_out),
   // stream monitor
-  .str      (std)
+  .sti      (std),
+  .sto      (ste)
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,7 +333,7 @@ acq #(
   .CW (CW)
 ) acq (
   // stream input/output
-  .sti      (std),
+  .sti      (ste),
   .sto      (sto),
   // current time stamp
   .cts      (cts),
