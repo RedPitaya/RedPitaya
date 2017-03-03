@@ -12,7 +12,7 @@ class pdm ():
     V = 1.8  # voltage
 
     regset_dtype = np.dtype([
-        ('pdm' , 'uint32', self.DN)
+        ('pdm' , 'uint32', DN)
     ])
 
     def __init__ (self, uio:str = '/dev/uio/pdm'):
@@ -49,7 +49,7 @@ class pdm ():
 
     @property
     def pdm (self) -> tuple:
-        return ([self.regset.pdm[i] / self.DWr * self.V for i in range(self.DN))
+        return ([self.regset.pdm[i] / self.DWr * self.V for i in range(self.DN)])
 
     @pdm.setter
     def pdm (self, value: tuple):
