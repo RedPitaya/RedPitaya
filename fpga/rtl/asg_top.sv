@@ -45,11 +45,12 @@ module asg_top #(
   axi4_stream_if.s       sto,
   // triggers
   input  logic  [TN-1:0] trg_ext,  // external input
-  output logic           trg_swo,  // output from software
-  output logic           trg_out,  // output from engine
+  // events
+  output logic           evn_sws,  // software start
+  output logic           evn_per,  // machine period
   // interrupts
   output logic           irq_trg,  // trigger
-  output logic           irq_stp,  // stop
+  output logic           evn_stp,  // stop
   // System bus
   sys_bus_if.s           bus_reg,  // CPU access to memory mapped registers
   sys_bus_if.s           bus_tbl   // CPU access to waveform table
@@ -138,12 +139,12 @@ end
 assign ctl_wen = bus_reg.wen & ~bus_reg.addr[CWM+2] & (bus_reg.addr[BAW:0]=='h00);
 
 assign ctl_rst = ctl_wen & bus_reg.wdata[0];  // reset
-assign trg_swo = ctl_wen & bus_reg.wdata[1];  // trigger
+assign evn_sws = ctl_wen & bus_reg.wdata[1];  // start
 
 // read access
 always_ff @(posedge bus_reg.clk)
 casez (bus_reg.addr[BAW-1:0])
-  'h00 : bus_reg.rdata <= {{32-      4{1'b0}},~sts_run, sts_run, 2'b00};
+  'h00 : bus_reg.rdata <= {{32-      3{1'b0}},~sts_run, sts_run, 1'b0};
   // trigger configuration
   'h04 : bus_reg.rdata <= {{32-     TN{1'b0}}, cfg_trg};
   // buffer configuration
@@ -188,10 +189,10 @@ asg #(
   .sto       (stg    ),
   // trigger
   .trg_i     (trg_ext),
-  .trg_o     (trg_out),
+  .trg_o     (evn_per),
   // interrupts
   .irq_trg   (irq_trg),
-  .irq_stp   (irq_stp),
+  .irq_stp   (evn_stp),
   // control
   .ctl_rst   (ctl_rst),
   // configuration

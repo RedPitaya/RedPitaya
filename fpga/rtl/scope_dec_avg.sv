@@ -6,6 +6,7 @@
 
 module scope_dec_avg #(
   // stream parameters
+  int unsigned DN = 1,
   type DTI = logic signed [16-1:0],  // data width for input
   type DTO = logic signed [16-1:0],  // data width for output
   // decimation parameters
@@ -58,8 +59,8 @@ assign vld = ~|cnt;
 
 always_ff @(posedge sti.ACLK)
 if (vld) begin
-  if (cfg_avg) sto.TDATA <= sum >>> cfg_shr;
-  else         sto.TDATA <= sti.TDATA;
+  if (cfg_avg) sto.TDATA[0] <= sum >>> cfg_shr;
+  else         sto.TDATA[0] <= sti.TDATA[0];
 end
 
 // TODO: last signal should not be lost due to decimation
