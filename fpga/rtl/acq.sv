@@ -8,20 +8,14 @@ module acq #(
   // data stream
   int unsigned DN = 1,   // data number
   type DT = logic [8-1:0],
-  
-  // trigger
-  int unsigned TN = 1,   // trigger number
   // timer/counter
-  int unsigned TW = 32,  // time width
   int unsigned CW = 32   // counter width
 )(
   // stream input/output
   axi4_stream_if.d  sti,
   axi4_stream_if.s  sto,
-  // current time stamp
-  input  logic [TW-1:0] cts,
   // events
-  output logic          evn_end,  // end
+  output logic          evn_lst,  // last
   // control
   input  logic          ctl_rst,
   // configuration (mode)
@@ -33,13 +27,13 @@ module acq #(
   // configuration/status post trigger
   input  logic [CW-1:0] cfg_pst,
   output logic [CW-1:0] sts_pst,
-  // control/status/timestamp start
+  // control/status start
   input  logic          ctl_str,
   output logic          sts_str,
-  // control/status/timestamp stop
+  // control/status stop
   input  logic          ctl_stp,
   output logic          sts_stp,
-  // control/status/timestamp trigger
+  // control/status trigger
   input  logic          ctl_trg,
   output logic          sts_trg
 );
@@ -49,7 +43,8 @@ module acq #(
 ////////////////////////////////////////////////////////////////////////////////
 
 logic ena_pre;
-logic sts_end;
+logic sts_acq;
+logic sts_lst;
 logic trg;
 
 logic [CW-1:0] nxt_pre;
@@ -67,16 +62,16 @@ assign sts_str =  sts_acq;
 assign sts_stp = ~sts_acq;
 
 // stop event
-assign sts_end = sts_acq & (ctl_stp
+assign sts_lst = sts_acq & (ctl_stp
                | (sts_trg & end_pst & ~cfg_con)
                | (sti.transf & sti.TLAST) );
 
 always @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
-  evn_end <= 1'b0;
+  evn_lst <= 1'b0;
 end else begin
   // TODO: make sure it is a proper pulse
-  evn_end <= sts_end;
+  evn_lst <= sts_lst;
 end
 
 assign trg = ctl_trg & sts_acq & ena_pre & ~sts_trg;
@@ -99,9 +94,9 @@ end else begin
     sts_trg <= 1'b0;
   end else begin
     // acquire stop/start
-    if (sts_end) begin
+    if (sts_lst) begin
       sts_acq <= 1'b0;
-    end else if (ctl_acq) begin
+    end else if (ctl_str) begin
       sts_acq <= 1'b1;
       sts_trg <= cfg_aut;
       ena_pre <= ~|cfg_pre;
@@ -153,7 +148,7 @@ always @(posedge sti.ACLK)
 if (sts_acq & sto_algn.transf) begin
   sto.TDATA <= sto_algn.TDATA;
   sto.TKEEP <= sto_algn.TKEEP; // TODO
-  sto.TLAST <= sto_algn.TLAST | sts_end;
+  sto.TLAST <= sto_algn.TLAST | sts_lst;
 end    
 
 endmodule: acq

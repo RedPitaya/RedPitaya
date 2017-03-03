@@ -38,19 +38,19 @@ module asg_top #(
   // burst counter parameters
   int unsigned CWL = 32,  // counter width length
   int unsigned CWN = 16,  // counter width number
-  // trigger parameters
-  int unsigned TN  =  4   // external trigger array  width
+  // event parameters
+  int unsigned EW  =  4   // external trigger array  width
 )(
   // stream output
   axi4_stream_if.s       sto,
   // triggers
-  input  logic  [TN-1:0] trg_ext,  // external input
+  input  logic  [EW-1:0] evn_ext,  // external input
   // events
-  output logic           evn_sws,  // software start
-  output logic           evn_per,  // machine period
-  // interrupts
-  output logic           irq_trg,  // trigger
+  output logic           evn_str,  // start
   output logic           evn_stp,  // stop
+  output logic           evn_trg,  // trigger
+  output logic           evn_per,  // period
+  output logic           evn_lst,  // last
   // System bus
   sys_bus_if.s           bus_reg,  // CPU access to memory mapped registers
   sys_bus_if.s           bus_tbl   // CPU access to waveform table
@@ -73,12 +73,18 @@ end
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
-logic               ctl_rst ;
-// configuration
-logic      [TN-1:0] cfg_trg;  // trigger mask
+// event masks
+logic      [EW-1:0] cfg_str;  // start
+logic      [EW-1:0] cfg_stp;  // stop
+logic      [EW-1:0] cfg_trg;  // trigger
+// event control signals
+logic               ctl_rst;
+logic               ctl_str;
+logic               ctl_stp;
+logic               ctl_trg;
 
 logic [CWM+CWF-1:0] cfg_siz;  // table size
-logic [CWM+CWF-1:0] cfg_stp;  // address increment step (frequency)
+logic [CWM+CWF-1:0] cfg_ste;  // address increment step (frequency)
 logic [CWM+CWF-1:0] cfg_off;  // address initial offset (phase)
 // burst mode configuraton
 logic               cfg_ben;  // burst enable
@@ -94,15 +100,14 @@ logic               sts_run;  // running status
 DTM                 cfg_mul;
 DTS                 cfg_sum;
 
-logic ctl_wen;
-
 localparam int unsigned BAW=6;
 
 // write access
 always_ff @(posedge bus_reg.clk)
 if (~bus_reg.rstn) begin
-  // configuration
+  // event configuration
   cfg_trg <= '0;
+  // state machine
   cfg_siz <= '0;
   cfg_off <= '0;
   cfg_stp <= '0;
@@ -117,12 +122,14 @@ if (~bus_reg.rstn) begin
   cfg_sum <= '0;
 end else begin
   if (bus_reg.wen) begin
-    // trigger configuration
-    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_trg <= bus_reg.wdata[     TN-1:0];
+    // event configuration
+    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_str <= bus_reg.wdata[     EW-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_stp <= bus_reg.wdata[     EW-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_trg <= bus_reg.wdata[     EW-1:0];
     // buffer configuration
     if (bus_reg.addr[BAW-1:0]=='h10)  cfg_siz <= bus_reg.wdata[CWM+CWF-1:0];
     if (bus_reg.addr[BAW-1:0]=='h14)  cfg_off <= bus_reg.wdata[CWM+CWF-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h18)  cfg_stp <= bus_reg.wdata[CWM+CWF-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h18)  cfg_ste <= bus_reg.wdata[CWM+CWF-1:0];
     // burst mode
     if (bus_reg.addr[BAW-1:0]=='h20)  cfg_ben <= bus_reg.wdata[          0];
     if (bus_reg.addr[BAW-1:0]=='h20)  cfg_inf <= bus_reg.wdata[          1];
@@ -136,21 +143,38 @@ end else begin
 end
 
 // control signals
-assign ctl_wen = bus_reg.wen & ~bus_reg.addr[CWM+2] & (bus_reg.addr[BAW:0]=='h00);
-
-assign ctl_rst = ctl_wen & bus_reg.wdata[0];  // reset
-assign evn_sws = ctl_wen & bus_reg.wdata[1];  // start
+always_ff @(posedge bus_reg.clk)
+if (~bus_reg.rstn) begin
+  ctl_rst <= 1'b0;
+  evn_str <= 1'b0;
+  evn_stp <= 1'b0;
+  evn_trg <= 1'b0;
+end else begin
+  if (bus_reg.wen & (bus_reg.addr[BAW-1:0]=='h00)) begin
+    ctl_rst <= bus_reg.wdata[0];  // reset
+    evn_str <= bus_reg.wdata[1];  // start
+    evn_stp <= bus_reg.wdata[1];  // stop
+    evn_trg <= bus_reg.wdata[1];  // trigger
+  end else begin
+    ctl_rst <= 1'b0;
+    evn_str <= 1'b0;
+    evn_stp <= 1'b0;
+    evn_trg <= 1'b0;
+  end
+end
 
 // read access
 always_ff @(posedge bus_reg.clk)
 casez (bus_reg.addr[BAW-1:0])
   'h00 : bus_reg.rdata <= {{32-      3{1'b0}},~sts_run, sts_run, 1'b0};
-  // trigger configuration
-  'h04 : bus_reg.rdata <= {{32-     TN{1'b0}}, cfg_trg};
+  // event configuration
+  'h04 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_str};
+  'h04 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_stp};
+  'h04 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_trg};
   // buffer configuration
   'h10 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
   'h14 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
-  'h18 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_stp};
+  'h18 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_ste};
   // burst mode
   'h20 : bus_reg.rdata <= {{32-      2{1'b0}}, cfg_inf
                                              , cfg_ben};
@@ -171,11 +195,14 @@ endcase
 // generator core instance 
 ////////////////////////////////////////////////////////////////////////////////
 
+assign ctl_str = evn_ext & cfg_str;
+assign ctl_stp = evn_ext & cfg_stp;
+assign ctl_trg = evn_ext & cfg_trg;
+
 // stream from generator
 axi4_stream_if #(.DN (DN), .DT (DT)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
 
 asg #(
-  .TN (TN),
   .DN (DN),
   .DT (DT),
   // buffer parameters
@@ -186,32 +213,29 @@ asg #(
   .CWN (CWN)
 ) asg (
   // stream output
-  .sto       (stg    ),
-  // trigger
-  .trg_i     (trg_ext),
-  .trg_o     (evn_per),
-  // interrupts
-  .irq_trg   (irq_trg),
-  .irq_stp   (evn_stp),
+  .sto      (stg    ),
   // control
-  .ctl_rst   (ctl_rst),
+  .ctl_rst  (ctl_rst),
+  .ctl_trg  (ctl_trg),
+  // events
+  .evn_per  (evn_per),
+  .evn_lst  (evn_lst),
   // configuration
-  .cfg_trg   (cfg_trg),
-  .cfg_siz   (cfg_siz),
-  .cfg_stp   (cfg_stp),
-  .cfg_off   (cfg_off),
+  .cfg_siz  (cfg_siz),
+  .cfg_off  (cfg_off),
+  .cfg_ste  (cfg_ste),
   // configuration (burst mode)
-  .cfg_ben   (cfg_ben),
-  .cfg_inf   (cfg_inf),
-  .cfg_bdl   (cfg_bdl),
-  .cfg_bln   (cfg_bln),
-  .cfg_bnm   (cfg_bnm),
+  .cfg_ben  (cfg_ben),
+  .cfg_inf  (cfg_inf),
+  .cfg_bdl  (cfg_bdl),
+  .cfg_bln  (cfg_bln),
+  .cfg_bnm  (cfg_bnm),
   // status
-  .sts_bln   (sts_bln),
-  .sts_bnm   (sts_bnm),
-  .sts_run   (sts_run),
+  .sts_bln  (sts_bln),
+  .sts_bnm  (sts_bnm),
+  .sts_run  (sts_run),
   // CPU buffer access
-  .bus       (bus_tbl)
+  .bus      (bus_tbl)
 );
 
 // TODO: this will be a continuous stream, data stream control needs rethinking

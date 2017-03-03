@@ -39,24 +39,20 @@ module scope_top #(
   int unsigned DSW =  4,  // data width for shifter
   // aquisition parameters
   int unsigned CW = 32,  // counter width
-  // trigger parameters
-  int unsigned TN =  4,  // external trigger array  width
-  // timestamp parameters
-  int unsigned TW = 64   // timestamp width
+  // event parameters
+  int unsigned EW =  4   // external trigger array  width
 )(
   // streams
   axi4_stream_if.d       sti,      // input
   axi4_stream_if.s       sto,      // output
-  // current time stamp
-  input  logic  [TW-1:0] cts,
   // external events
-  input  logic  [TN-1:0] evn_ext,
+  input  logic  [EW-1:0] evn_ext,
   // event sources
   output logic           evn_str,  // software start
   output logic           evn_stp,  // software stop
   output logic           evn_trg,  // software trigger
   output logic           evn_lvl,  // level/edge
-  output logic           evn_end,  // ecquire end
+  output logic           evn_lst,  // last
   // System bus
   sys_bus_if.s           bus
 );
@@ -83,21 +79,20 @@ logic  [CW-1:0] sts_pre;
 // configuration/status post trigger
 logic  [CW-1:0] cfg_pst;
 logic  [CW-1:0] sts_pst;
-// control/status/timestamp start
+// control/status start
 logic           ctl_str;
 logic           sts_str;
-// control/status/timestamp trigger
-logic           sts_trg;
-logic           sts_trg;
-// control/status/timestamp stop
+// control/status stop
 logic           ctl_stp;
 logic           sts_stp;
+// control/status trigger
+logic           ctl_trg;
+logic           sts_trg;
 
-// trigger
-logic  [TN-1:0] cfg_trg;  // trigger select
-
-// configuration
-logic                  cfg_rng;  // range select (this one is only used by the firmware)
+// event select masks
+logic  [EW-1:0] cfg_str;  // start
+logic  [EW-1:0] cfg_stp;  // stop
+logic  [EW-1:0] cfg_trg;  // trigger
 
 // edge detection configuration
 DT                     cfg_pos;  // positive level
@@ -141,18 +136,14 @@ if (~bus.rstn) begin
   // acquire regset
   cfg_con <= 1'b0;
   cfg_aut <= 1'b0;
+  // event masks
   cfg_trg <= '0;
   cfg_pre <= '0;
   cfg_pst <= '0;
-
-  // configuration
-  cfg_rng <= '0;
-
   // edge detection
   cfg_pos <= '0;
   cfg_neg <= '0;
   cfg_edg <= '0;
-
   // filter/dacimation
   cfg_byp <= '0;
   cfg_avg <= '0;
@@ -167,18 +158,17 @@ end else begin
     // acquire regset
     if (bus.addr[BAW-1:0]=='h04)   cfg_con <= bus.wdata[     0];
     if (bus.addr[BAW-1:0]=='h04)   cfg_aut <= bus.wdata[     1];
+    // event masks
     if (bus.addr[BAW-1:0]=='h08)   cfg_str <= bus.wdata[EW-1:0];
     if (bus.addr[BAW-1:0]=='h08)   cfg_stp <= bus.wdata[EW-1:0];
     if (bus.addr[BAW-1:0]=='h08)   cfg_trg <= bus.wdata[EW-1:0];
+    // trigger pre/post time
     if (bus.addr[BAW-1:0]=='h10)   cfg_pre <= bus.wdata[CW-1:0];
     if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
-
     // edge detection
     if (bus.addr[BAW-1:0]=='h40)   cfg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h44)   cfg_neg <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h48)   cfg_edg <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h4c)   cfg_rng <= bus.wdata[      0];
-
     // dacimation
     if (bus.addr[BAW-1:0]=='h50)   cfg_dec <= bus.wdata[DCW-1:0];
     if (bus.addr[BAW-1:0]=='h54)   cfg_shr <= bus.wdata[DSW-1:0];
@@ -220,20 +210,19 @@ begin
     // acquire regset
     'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
     'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
+    // event masks
     'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
     'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
     'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
+    // trigger pre/post time
     'h10 : bus.rdata <=              32'(cfg_pre);
     'h14 : bus.rdata <=              32'(cfg_pst);
     'h18 : bus.rdata <=              32'(sts_pre);
     'h1c : bus.rdata <=              32'(sts_pst);
-
     // edge detection
     'h40 : bus.rdata <=                  cfg_pos ;
     'h44 : bus.rdata <=                  cfg_neg ;
     'h48 : bus.rdata <=              32'(cfg_edg);
-    'h4c : bus.rdata <=              32'(cfg_rng);
-
     // decimation
     'h50 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
     'h54 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
@@ -338,24 +327,20 @@ scope_edge #(
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-assign ctl_str = evn_ext & msk_str;
-assign ctl_stp = evn_ext & msk_stp;
-assign ctl_trg = evn_ext & msk_trg;
+assign ctl_str = evn_ext & cfg_str;
+assign ctl_stp = evn_ext & cfg_stp;
+assign ctl_trg = evn_ext & cfg_trg;
 
 acq #(
   .DN (DN),
   .DT (DT),
-  .TN (TN),
-  .TW (TW),
   .CW (CW)
 ) acq (
   // stream input/output
   .sti      (ste),
   .sto      (sto),
-  // current time stamp
-  .cts      (cts),
   // events
-  .evn_stp  (evn_stp),
+  .evn_lst  (evn_lst),
   // control
   .ctl_rst  (ctl_rst),
   // configuration (mode)
@@ -367,15 +352,15 @@ acq #(
   // configuration/status post trigger
   .cfg_pst  (cfg_pst),
   .sts_pst  (sts_pst),
-  // control/status/timestamp acquire
-  .ctl_acq  (ctl_str),
-  .sts_acq  (sts_acq),
-  // control/status/timestamp stop
+  // control/status start
+  .ctl_str  (ctl_str),
+  .sts_str  (sts_str),
+  // control/status stop
   .ctl_stp  (ctl_stp),
   .sts_stp  (sts_stp),
-  // control/status/timestamp trigger
+  // control/status trigger
   .ctl_trg  (ctl_trg),
-  .sts_trg  (sts_trg),
+  .sts_trg  (sts_trg)
 );
 
 endmodule: scope_top

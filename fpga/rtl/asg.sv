@@ -29,8 +29,8 @@
 //
 // PERIODIC MODE (FREQUENCY/PHASE AND RESOLUTION
 // 
-// The frequency is specified by the cfg_stp value, the phase by the cfg_off
-// value and both also depend on the buffer length cfg_siz. The cfg_stp (step
+// The frequency is specified by the cfg_ste value, the phase by the cfg_off
+// value and both also depend on the buffer length cfg_siz. The cfg_ste (step
 // length) and cfg_off (initial position) values are fixed point with a
 // magnitude of CWM bits and a fraction of CWF bits.
 //
@@ -44,10 +44,10 @@
 // control variables.
 //
 // Frequency:
-// f = Fs/(cfg_siz+1) * (cfg_stp+1)/(2**CWF)
+// f = Fs/(cfg_siz+1) * (cfg_ste+1)/(2**CWF)
 //
 // Frequency (max bufer size):
-// f = Fs/(2**(CWM+CWF)) * (cfg_stp+1)
+// f = Fs/(2**(CWM+CWF)) * (cfg_ste+1)
 //
 // Phase:
 // Φ = 360°/(cfg_siz+1) * (cfg_off+1)/(2**CWF)
@@ -60,7 +60,7 @@
 // ΔΦ = 360°/2**(CWM+CWF)
 //
 // Example values:
-// The default fixed point format for cfg_stp and cfg_off is u14.16 and the
+// The default fixed point format for cfg_ste and cfg_off is u14.16 and the
 // default buffer size is 2**14=16384 locations.
 // Fs = 125MHz
 // Δf = 125MHz/2**(14+16) = 0.116Hz
@@ -83,8 +83,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module asg #(
-  // trigger
-  int unsigned TN = 1,
   // data bus
   int unsigned DN = 1,
   type DT = logic [8-1:0],
@@ -99,15 +97,13 @@ module asg #(
   axi4_stream_if.s           sto    ,
   // control
   input  logic               ctl_rst,  // set FSM to reset
-  // trigger
-  input  logic      [TN-1:0] trg_i  ,  // input
+  input  logic               ctl_trg,  // trigger
   // events
   output logic               evn_per,  // period
-  output logic               evn_stp,  // stop
+  output logic               evn_lst,  // last
   // configuration (periodic mode)
-  input  logic      [TN-1:0] cfg_trg,  // trigger mask
   input  logic [CWM+CWF-1:0] cfg_siz,  // data table size
-  input  logic [CWM+CWF-1:0] cfg_stp,  // pointer step    size
+  input  logic [CWM+CWF-1:0] cfg_ste,  // pointer step    size
   input  logic [CWM+CWF-1:0] cfg_off,  // pointer initial offset (used to define phase)
   // configuration (burst mode)
   input  logic               cfg_ben,  // burst enable
@@ -247,17 +243,12 @@ assign end_bnm = (sts_bnm == cfg_bnm) & ~cfg_inf;
 assign end_bln = (sts_bln == cfg_bln);
 assign end_bdl = (sts_bln == cfg_bdl);
 
-// next value of burst period counter
-
-logic trg;
-assign trg = |(trg_i & cfg_trg);
-
-assign sts_trg = sts_run ? sts_rpt : trg;
+assign sts_trg = sts_run ? sts_rpt : ctl_trg;
 assign sts_rpt = sts_run & end_bln & cfg_ben;
 
 // events
-assign evn_stp = sts_lst;
 assign evn_per = sts_rpt;
+assign evn_lst = sts_lst;
 
 ////////////////////////////////////////////////////////////////////////////////
 // read pointer logic
@@ -282,7 +273,7 @@ end else begin
 end
 
 // next pointer value and overflow
-assign ptr_nxt     = ptr_cur + (cfg_stp + 1);
+assign ptr_nxt     = ptr_cur + (cfg_ste + 1);
 assign ptr_nxt_sub = ptr_nxt - (cfg_siz + 1);
 assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+CWF];
 

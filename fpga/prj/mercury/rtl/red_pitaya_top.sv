@@ -230,6 +230,32 @@ assign daisy_n_o = 1'bz;
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+// acquire events
+typedef struct packed {
+  logic str;  // software start
+  logic stp;  // software stop
+  logic trg;  // software trigger
+  logic lvl;  // level/edge
+  logic lst;  // last
+} evn_acq_t;
+
+// generator events
+typedef struct packed {
+  logic str;  // software start
+  logic stp;  // software stop
+  logic trg;  // software trigger
+  logic per;  // period
+  logic lst;  // last
+} evn_asg_t;
+
+// all events
+typedef struct packed {
+  evn_acq_t [MNA-1:0] acq;  // acquire
+  evn_asg_t [MNG-1:0] gen;  // generate
+} evn_top_t;
+
+evn_top_t evn;
+
 // configuration
 logic                    digital_loop;
 
@@ -372,21 +398,18 @@ for (genvar i=0; i<MNA; i++) begin: for_acq
   scope_top #(
     .DN (1),
     .DT (SBA_T),
-    .TN (1),
-    .TW (64)
+    .EW ($bits(evn_top_t))
   ) scope (
     // streams
     .sti      (str_adc[i]),
     .sto      (str),
-    // current time stamp
-    .cts      ('0),
-    // triggers
-    .trg_ext  (trg),
-    .trg_swo  (trg),
-    .trg_out  (),
-    // interrupts
-    .irq_trg  (),
-    .irq_stp  (),
+    // events
+    .evn_ext  (evn),
+    .evn_str  (evn.acq[i].str),
+    .evn_stp  (evn.acq[i].stp),
+    .evn_trg  (evn.acq[i].trg),
+    .evn_lvl  (evn.acq[i].lvl),
+    .evn_lst  (evn.acq[i].lst),
     // System bus
     .bus      (sys[4+2*i+0])
   );
@@ -413,17 +436,17 @@ for (genvar i=0; i<MNG; i++) begin: for_asg
   asg_top #(
     .EN_LIN (1),
     .DT (SBG_T),
-    .TN (1)
+    .EW ($bits(evn_top_t))
   ) asg (
     // stream output
     .sto      (str_dac[i]),
-    // triggers
-    .trg_ext  (trg),
-    .trg_swo  (trg),
-    .trg_out  (),
-    // interrupts
-    .irq_trg  (),
-    .irq_stp  (),
+    // events
+    .evn_ext  (evn),
+    .evn_str  (evn.gen[i].str),
+    .evn_stp  (evn.gen[i].stp),
+    .evn_trg  (evn.gen[i].trg),
+    .evn_per  (evn.gen[i].per),
+    .evn_lst  (evn.gen[i].lst),
     // System bus
     .bus_reg  (sys[8+2*i+0]),
     .bus_tbl  (sys[8+2*i+1])
