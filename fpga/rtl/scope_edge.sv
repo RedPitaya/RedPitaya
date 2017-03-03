@@ -42,8 +42,8 @@ axi4_stream_if #(.DN (DN), .DT (DT)) sts (.ACLK (sti.ACLK), .ARESETn (sti.ARESET
 // subtraction
 always @(posedge sti.ACLK)
 if (sti.transf) begin
-  sub_pos <= sti.TDATA - cfg_pos;
-  sub_neg <= cfg_neg - sti.TDATA;
+  sub_pos <= cfg_pos - sti.TDATA[0];
+  sub_neg <= sti.TDATA[0] - cfg_neg;
 end
 
 // add to the stream the delay caused by subtraction stage
@@ -54,7 +54,7 @@ axi4_stream_reg reg_sub (.sti (sti), .sto (sts));
 ////////////////////////////////////////////////////////////////////////////////
 
 // toggle pos/neg edge, if pos/neg level is passed
-assign sts_lvl = sts_reg ^ ((~cfg_edg ^ sts_reg) ? sub_neg[SGN] : sub_pos[SGN]);
+assign sts_lvl = sts_reg ^ ((cfg_edg ^ sts_reg) ? sub_neg[SGN] : sub_pos[SGN]);
 
 always @(posedge sts.ACLK)
 if (~sts.ARESETn) begin
