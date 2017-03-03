@@ -101,10 +101,9 @@ module asg #(
   input  logic               ctl_rst,  // set FSM to reset
   // trigger
   input  logic      [TN-1:0] trg_i  ,  // input
-  output logic               trg_o  ,  // output event
-  // interrupts
-  output logic               irq_trg,  // trigger
-  output logic               irq_stp,  // stop
+  // events
+  output logic               evn_per,  // period
+  output logic               evn_stp,  // stop
   // configuration (periodic mode)
   input  logic      [TN-1:0] cfg_trg,  // trigger mask
   input  logic [CWM+CWF-1:0] cfg_siz,  // data table size
@@ -162,12 +161,12 @@ assign bus_ena = bus.wen | bus.ren;
 always @(posedge bus.clk)
 for (int unsigned i=0; i<2; i++) begin
 // TODO: asymetric bus width is failing synthesis
-//  if (bus_ena) begin
-//                  bus.rdata [16*i+:16] <= buf_mem [{bus.addr[2+:CWM-1],i[0]}];
-//    if (bus.wen)  buf_mem [{bus.addr[2+:CWM-1],i[0]}] <= bus.wdata [16*i+:16];
-//  end
-  if (bus.ren)  bus.rdata <= buf_mem [bus.addr[2+:CWM]];
-  if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
+  if (bus_ena) begin
+                  bus.rdata [16*i+:16] <= buf_mem [{bus.addr[2+:CWM-1],i[0]}];
+    if (bus.wen)  buf_mem [{bus.addr[2+:CWM-1],i[0]}] <= bus.wdata [16*i+:16];
+  end
+//  if (bus.ren)  bus.rdata <= buf_mem [bus.addr[2+:CWM]];
+//  if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
 end
 
 // CPU control signals
@@ -256,9 +255,9 @@ assign trg = |(trg_i & cfg_trg);
 assign sts_trg = sts_run ? sts_rpt : trg;
 assign sts_rpt = sts_run & end_bln & cfg_ben;
 
-// interrupts
-assign irq_trg = sts_trg;
-assign irq_stp = sts_lst;
+// events
+assign evn_stp = sts_lst;
+assign evn_per = sts_rpt;
 
 ////////////////////////////////////////////////////////////////////////////////
 // read pointer logic
@@ -290,11 +289,6 @@ assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+CWF];
 ////////////////////////////////////////////////////////////////////////////////
 // output stream
 ////////////////////////////////////////////////////////////////////////////////
-
-// trigger output
-always_ff @(posedge sto.ACLK)
-if (~sto.ARESETn)  trg_o <= 1'b0;
-else               trg_o <= sts_trg;
 
 // output data
 assign sto.TDATA = buf_rdata;
