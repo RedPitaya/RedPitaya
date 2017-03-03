@@ -21,42 +21,41 @@
 
 module red_pitaya_dfilt1 (
    // ADC
-   input                 adc_clk_i       ,  //!< ADC clock
-   input                 adc_rstn_i      ,  //!< ADC reset - active low
-   input      [ 14-1: 0] adc_dat_i       ,  //!< ADC data
-   output     [ 14-1: 0] adc_dat_o       ,  //!< ADC data
-
+   input                        adc_clk_i ,  // ADC clock
+   input                        adc_rstn_i,  // ADC reset - active low
+   input  logic signed [14-1:0] adc_dat_i ,  // ADC data
+   output logic signed [14-1:0] adc_dat_o ,  // ADC data
    // configuration
-   input      [ 18-1: 0] cfg_aa_i        ,  //!< config AA coefficient
-   input      [ 25-1: 0] cfg_bb_i        ,  //!< config BB coefficient
-   input      [ 25-1: 0] cfg_kk_i        ,  //!< config KK coefficient
-   input      [ 25-1: 0] cfg_pp_i           //!< config PP coefficient
+   input  logic signed [18-1:0] cfg_aa_i,  // AA coefficient
+   input  logic signed [25-1:0] cfg_bb_i,  // BB coefficient
+   input  logic signed [25-1:0] cfg_kk_i,  // KK coefficient
+   input  logic signed [25-1:0] cfg_pp_i   // PP coefficient
 );
 
 //---------------------------------------------------------------------------------
 //  FIR
 
-wire [ 39-1: 0] bb_mult   ;
-wire [ 33-1: 0] r2_sum    ;
-reg  [ 33-1: 0] r1_reg    ;
-reg  [ 23-1: 0] r2_reg    ;
-reg  [ 32-1: 0] r01_reg   ;
-reg  [ 28-1: 0] r02_reg   ;
+logic signed [39-1:0] bb_mult;
+logic signed [33-1:0] r2_sum ;
+logic signed [33-1:0] r1_reg ;
+logic signed [23-1:0] r2_reg ;
+logic signed [32-1:0] r01_reg;
+logic signed [28-1:0] r02_reg;
 
-assign bb_mult = $signed(adc_dat_i) * $signed(cfg_bb_i);
-assign r2_sum  = $signed(r01_reg) + $signed(r1_reg);
+assign bb_mult = adc_dat_i * cfg_bb_i;
+assign r2_sum  = r01_reg + r1_reg;
 
 always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0) begin
-   r1_reg  <= 33'h0 ;
-   r2_reg  <= 23'h0 ;
-   r01_reg <= 32'h0 ;
-   r02_reg <= 28'h0 ;
+if (~adc_rstn_i) begin
+   r1_reg  <= '0;
+   r2_reg  <= '0;
+   r01_reg <= '0;
+   r02_reg <= '0;
 end else begin
-   r1_reg  <= $signed(r02_reg) - $signed(r01_reg) ;
-   r2_reg  <= r2_sum[33-1:10];
-   r01_reg <= {adc_dat_i,18'h0};
-   r02_reg <= bb_mult[39-2:10];
+   r1_reg  <= r02_reg - r01_reg;
+   r2_reg  <= r2_sum >>> 10;
+   r01_reg <= adc_dat_i <<< 18;
+   r02_reg <= bb_mult >>> 10;
 end
 
 //---------------------------------------------------------------------------------
@@ -66,7 +65,7 @@ wire [ 41-1: 0] aa_mult   ;
 wire [ 49-1: 0] r3_sum    ; //24 + 25
 (* use_dsp48="yes" *) reg  [ 23-1: 0] r3_reg    ;
 
-assign aa_mult = $signed(r3_reg) * $signed(cfg_aa_i);
+assign aa_mult = $signed(r3_reg) * cfg_aa_i;
 assign r3_sum  = $signed({r2_reg,25'h0}) + $signed({r3_reg,25'h0}) - $signed(aa_mult[41-1:0]);
 
 always @(posedge adc_clk_i)
@@ -84,7 +83,7 @@ wire [ 16-1: 0] r4_sum    ;
 reg  [ 15-1: 0] r4_reg    ;
 reg  [ 15-1: 0] r3_shr    ;
 
-assign pp_mult = $signed(r4_reg) * $signed(cfg_pp_i);
+assign pp_mult = $signed(r4_reg) * cfg_pp_i;
 assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
 
 always @(posedge adc_clk_i)
@@ -104,7 +103,7 @@ reg  [ 15-1: 0] r4_reg_r  ;
 reg  [ 15-1: 0] r4_reg_rr ;
 reg  [ 14-1: 0] r5_reg    ;
 
-assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk_i);
+assign kk_mult = $signed(r4_reg_rr) * cfg_kk_i;
 
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
