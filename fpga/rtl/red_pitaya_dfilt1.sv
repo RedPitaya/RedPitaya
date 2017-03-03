@@ -34,21 +34,6 @@ module red_pitaya_dfilt1 (
 );
 
 //---------------------------------------------------------------------------------
-//  register configuration - timing improvements
-
-reg  [ 18-1: 0] cfg_aa_r  ;
-reg  [ 25-1: 0] cfg_bb_r  ;
-reg  [ 25-1: 0] cfg_kk_r  ;
-reg  [ 25-1: 0] cfg_pp_r  ;
-
-always @(posedge adc_clk_i) begin
-   cfg_aa_r <= cfg_aa_i ;
-   cfg_bb_r <= cfg_bb_i ;
-   cfg_kk_r <= cfg_kk_i ;
-   cfg_pp_r <= cfg_pp_i ;
-end
-
-//---------------------------------------------------------------------------------
 //  FIR
 
 wire [ 39-1: 0] bb_mult   ;
@@ -59,7 +44,7 @@ reg  [ 32-1: 0] r01_reg   ;
 reg  [ 28-1: 0] r02_reg   ;
 
 
-assign bb_mult = $signed(adc_dat_i) * $signed(cfg_bb_r);
+assign bb_mult = $signed(adc_dat_i) * $signed(cfg_bb_i);
 assign r2_sum  = $signed(r01_reg) + $signed(r1_reg);
 
 always @(posedge adc_clk_i) begin
@@ -85,7 +70,7 @@ wire [ 49-1: 0] r3_sum    ; //24 + 25
 (* use_dsp48="yes" *) reg  [ 23-1: 0] r3_reg    ;
 
 
-assign aa_mult = $signed(r3_reg) * $signed(cfg_aa_r);
+assign aa_mult = $signed(r3_reg) * $signed(cfg_aa_i);
 assign r3_sum  = $signed({r2_reg,25'h0}) + $signed({r3_reg,25'h0}) - $signed(aa_mult[41-1:0]);
 
 always @(posedge adc_clk_i) begin
@@ -105,7 +90,7 @@ wire [ 16-1: 0] r4_sum    ;
 reg  [ 15-1: 0] r4_reg    ;
 reg  [ 15-1: 0] r3_shr    ;
 
-assign pp_mult = $signed(r4_reg) * $signed(cfg_pp_r);
+assign pp_mult = $signed(r4_reg) * $signed(cfg_pp_i);
 assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
 
 always @(posedge adc_clk_i) begin
@@ -127,7 +112,7 @@ reg  [ 15-1: 0] r4_reg_r  ;
 reg  [ 15-1: 0] r4_reg_rr ;
 reg  [ 14-1: 0] r5_reg    ;
 
-assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk_r);
+assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk_i);
 
 always @(posedge adc_clk_i) begin
    if (adc_rstn_i == 1'b0) begin
