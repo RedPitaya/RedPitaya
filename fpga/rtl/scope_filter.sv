@@ -40,7 +40,7 @@ module scope_filter #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_if #(.DN (DN), .DT (logic signed [23-1:0])) fir  (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [23-1:0])) fir0 (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 axi4_stream_if #(.DN (DN), .DT (logic signed [23-1:0])) iir1 (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 axi4_stream_if #(.DN (DN), .DT (logic signed [15-1:0])) iir2 (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
@@ -50,18 +50,18 @@ axi4_stream_if #(.DN (DN), .DT (logic signed [15-1:0])) iir2 (.ACLK (sti.ACLK), 
 //
 // Time domain:
 //
-// y[n] = ( ( 2**18 + bb / 2**10) * x[n-0] +
-//          (-2**18             ) * x[n-1] ) / 2**10
+// y[n] = ( (             2**18) * x[n-0] +
+//          (bb / 2**10 - 2**18) * x[n-1] ) / 2**10
 //
 // Frequency domain:
 //
-// y[n] = ( (     2**18) *        ) +
-//          (bb - 2**18) * z^(-1) ) / 2**10
+// y[n] = ( (           - 2**18) *        ) +
+//          (bb / 2**10 - 2**18) * z^(-1) ) / 2**10
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef logic signed [   $bits(DTI)-1:0] fir_buf_t;  // data buffer
-typedef logic signed [29           -1:0] fir_cfg_t;  // coeficients
+typedef logic signed [30           -1:0] fir_cfg_t;  // coeficients
 typedef logic signed [25+$bits(DTI)-1:0] fir_mul_t;  // multiplications
 
 axi4_stream_if #(.DN (DN), .DT (fir_mul_t [2-1:0])) firm (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
@@ -78,8 +78,8 @@ if (~sti.ARESETn)     fir_buf [1] <= '0;
 else if (sti.transf)  fir_buf [1] <= fir_buf [0];
 
 // FIR coeficients
-assign fir_cfg [0] =  (1 <<< (18+10)) + cfg_bb;
-assign fir_cfg [1] = -(1 <<< (18+10))         ;
+assign fir_cfg [0] =  (1 <<< (18+10))         ;
+assign fir_cfg [1] = -(1 <<< (18+10)) + cfg_bb;
 
 // multiplications
 generate
@@ -91,25 +91,20 @@ endgenerate
 
 // final summation
 always_ff @(posedge sti.ACLK)
-if (firm.transf)  fir.TDATA <= (firm.TDATA[0][1] + firm.TDATA[0][0]) >>> 10;
-
-
-
-// TODO: a generic FOR filter should be used here
+if (firm.transf)  fir0.TDATA <= (firm.TDATA[0][1] + firm.TDATA[0][0]) >>> 10;
 
 // control signals
 always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   firm.TVALID <= 1'b0;
-  fir.TVALID     <= 1'b0;
+  fir0.TVALID <= 1'b0;
 end else begin
   if (sti.TREADY)  firm.TVALID <= sti.TVALID;
-  if (firm.TREADY) fir.TVALID  <= firm.TVALID;
+  if (firm.TREADY) fir0.TVALID <= firm.TVALID;
 end
 
-assign sti.TREADY     = firm.TREADY | ~firm.TVALID;
-
-assign firm.TREADY = fir.TREADY     | ~fir.TVALID;
+assign sti.TREADY  = firm.TREADY | ~firm.TVALID;
+assign firm.TREADY = fir0.TREADY | ~fir0.TVALID;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -128,15 +123,15 @@ assign firm.TREADY = fir.TREADY     | ~fir.TVALID;
 
 // data processing
 always_ff @(posedge sti.ACLK)
-if (~sti.ARESETn)     iir1.TDATA <= '0;
-else if (fir.transf)  iir1.TDATA <= ((fir.TDATA <<< 25) + (iir1.TDATA * ((1 <<< 25) - cfg_aa))) >>> 25;
+if (~sti.ARESETn)      iir1.TDATA <= '0;
+else if (fir0.transf)  iir1.TDATA <= ((fir0.TDATA <<< 25) + (iir1.TDATA * ((1 <<< 25) - cfg_aa))) >>> 25;
 
 // control signals
 always_ff @(posedge sti.ACLK)
-if (~sti.ARESETn)     iir1.TVALID <= 1'b0;
-else if (fir.TREADY)  iir1.TVALID <= fir.TVALID;
+if (~sti.ARESETn)      iir1.TVALID <= 1'b0;
+else if (fir0.TREADY)  iir1.TVALID <= fir0.TVALID;
 
-assign fir.TREADY = iir1.TREADY | ~iir1.TVALID;
+assign fir0.TREADY = iir1.TREADY | ~iir1.TVALID;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

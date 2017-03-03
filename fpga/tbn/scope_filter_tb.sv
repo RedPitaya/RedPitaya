@@ -111,7 +111,7 @@ axi4_stream_src #(.DN (DN), .DT (DTI)) str_src (.str (sti));
 scope_filter #(
   .DTI (DTI),
   .DTO (DTO)
-) filter (
+) scope_filter (
   // stream input/output
   .sti      (sti),
   .sto      (sto),
