@@ -61,66 +61,59 @@ end
 //---------------------------------------------------------------------------------
 //  IIR 1
 
-wire [ 41-1: 0] aa_mult   ;
-wire [ 49-1: 0] r3_sum    ; //24 + 25
-(* use_dsp48="yes" *) reg  [ 23-1: 0] r3_reg    ;
+logic signed [41-1:0] aa_mult;
+logic signed [49-1:0] r3_sum ; //24 + 25
+(* use_dsp48="yes" *) logic signed [23-1:0] r3_reg;
 
-assign aa_mult = $signed(r3_reg) * cfg_aa_i;
-assign r3_sum  = $signed({r2_reg,25'h0}) + $signed({r3_reg,25'h0}) - $signed(aa_mult[41-1:0]);
+assign aa_mult = r3_reg * cfg_aa_i;
+assign r3_sum  = (r2_reg <<< 25) + (r3_reg <<< 25) - aa_mult;
 
 always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0) begin
-   r3_reg  <= 23'h0 ;
+if (~adc_rstn_i) begin
+   r3_reg <= '0;
 end else begin
-   r3_reg  <= r3_sum[49-2:25] ;
+   r3_reg <= r3_sum >>> 25;
 end
 
 //---------------------------------------------------------------------------------
 //  IIR 2
 
-wire [ 40-1: 0] pp_mult   ;
-wire [ 16-1: 0] r4_sum    ;
-reg  [ 15-1: 0] r4_reg    ;
-reg  [ 15-1: 0] r3_shr    ;
+logic signed [40-1:0] pp_mult;
+logic signed [16-1:0] r4_sum ;
+logic signed [15-1:0] r4_reg ;
+logic signed [15-1:0] r3_shr ;
 
-assign pp_mult = $signed(r4_reg) * cfg_pp_i;
-assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
+assign pp_mult = r4_reg * cfg_pp_i;
+assign r4_sum  = r3_shr + (pp_mult >>> 16);
 
 always @(posedge adc_clk_i)
-if (adc_rstn_i == 1'b0) begin
-   r3_shr <= 15'h0 ;
-   r4_reg <= 15'h0 ;
+if (~adc_rstn_i) begin
+   r3_shr <= '0;
+   r4_reg <= '0;
 end else begin
-   r3_shr <= r3_reg[23-1:8] ;
-   r4_reg <= r4_sum[16-2:0] ;
+   r3_shr <= r3_reg >>> 8;
+   r4_reg <= r4_sum;
 end
 
 //---------------------------------------------------------------------------------
 //  Scaling
 
-wire [ 40-1: 0] kk_mult   ;
-reg  [ 15-1: 0] r4_reg_r  ;
-reg  [ 15-1: 0] r4_reg_rr ;
-reg  [ 14-1: 0] r5_reg    ;
+logic signed [40-1:0] kk_mult  ;
+logic signed [15-1:0] r4_reg_r ;
+logic signed [15-1:0] r4_reg_rr;
+logic signed [14-1:0] r5_reg   ;
 
-assign kk_mult = $signed(r4_reg_rr) * cfg_kk_i;
+assign kk_mult = r4_reg * cfg_kk_i;
 
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
-   r4_reg_r  <= 15'h0 ;
-   r4_reg_rr <= 15'h0 ;
-   r5_reg    <= 14'h0 ;
+   r5_reg    <= '0;
 end else begin
-   r4_reg_r  <= r4_reg   ;
-   r4_reg_rr <= r4_reg_r ;
-   if ($signed(kk_mult[40-2:24]) > $signed(14'h1FFF))
-      r5_reg <= 14'h1FFF ;
-   else if ($signed(kk_mult[40-2:24]) < $signed(14'h2000))
-      r5_reg <= 14'h2000 ;
-   else
-      r5_reg <= kk_mult[24+14-1:24];
+   if      ((kk_mult >>> 24) > $signed(14'h1FFF))  r5_reg <= 14'h1FFF;
+   else if ((kk_mult >>> 24) < $signed(14'h2000))  r5_reg <= 14'h2000;
+   else                                            r5_reg <= kk_mult >>> 24;
 end
 
-assign adc_dat_o = r5_reg ;
+assign adc_dat_o = r5_reg;
 
 endmodule: red_pitaya_dfilt1
