@@ -43,23 +43,20 @@ reg  [ 23-1: 0] r2_reg    ;
 reg  [ 32-1: 0] r01_reg   ;
 reg  [ 28-1: 0] r02_reg   ;
 
-
 assign bb_mult = $signed(adc_dat_i) * $signed(cfg_bb_i);
 assign r2_sum  = $signed(r01_reg) + $signed(r1_reg);
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      r1_reg  <= 33'h0 ;
-      r2_reg  <= 23'h0 ;
-      r01_reg <= 32'h0 ;
-      r02_reg <= 28'h0 ;
-   end
-   else begin
-      r1_reg  <= $signed(r02_reg) - $signed(r01_reg) ;
-      r2_reg  <= r2_sum[33-1:10];
-      r01_reg <= {adc_dat_i,18'h0};
-      r02_reg <= bb_mult[39-2:10];
-   end
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   r1_reg  <= 33'h0 ;
+   r2_reg  <= 23'h0 ;
+   r01_reg <= 32'h0 ;
+   r02_reg <= 28'h0 ;
+end else begin
+   r1_reg  <= $signed(r02_reg) - $signed(r01_reg) ;
+   r2_reg  <= r2_sum[33-1:10];
+   r01_reg <= {adc_dat_i,18'h0};
+   r02_reg <= bb_mult[39-2:10];
 end
 
 //---------------------------------------------------------------------------------
@@ -69,17 +66,14 @@ wire [ 41-1: 0] aa_mult   ;
 wire [ 49-1: 0] r3_sum    ; //24 + 25
 (* use_dsp48="yes" *) reg  [ 23-1: 0] r3_reg    ;
 
-
 assign aa_mult = $signed(r3_reg) * $signed(cfg_aa_i);
 assign r3_sum  = $signed({r2_reg,25'h0}) + $signed({r3_reg,25'h0}) - $signed(aa_mult[41-1:0]);
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      r3_reg  <= 23'h0 ;
-   end
-   else begin
-      r3_reg  <= r3_sum[49-2:25] ;
-   end
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   r3_reg  <= 23'h0 ;
+end else begin
+   r3_reg  <= r3_sum[49-2:25] ;
 end
 
 //---------------------------------------------------------------------------------
@@ -93,15 +87,13 @@ reg  [ 15-1: 0] r3_shr    ;
 assign pp_mult = $signed(r4_reg) * $signed(cfg_pp_i);
 assign r4_sum  = $signed(r3_shr) + $signed(pp_mult[40-2:16]);
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      r3_shr <= 15'h0 ;
-      r4_reg <= 15'h0 ;
-   end
-   else begin
-      r3_shr <= r3_reg[23-1:8] ;
-      r4_reg <= r4_sum[16-2:0] ;
-   end
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   r3_shr <= 15'h0 ;
+   r4_reg <= 15'h0 ;
+end else begin
+   r3_shr <= r3_reg[23-1:8] ;
+   r4_reg <= r4_sum[16-2:0] ;
 end
 
 //---------------------------------------------------------------------------------
@@ -114,23 +106,20 @@ reg  [ 14-1: 0] r5_reg    ;
 
 assign kk_mult = $signed(r4_reg_rr) * $signed(cfg_kk_i);
 
-always @(posedge adc_clk_i) begin
-   if (adc_rstn_i == 1'b0) begin
-      r4_reg_r  <= 15'h0 ;
-      r4_reg_rr <= 15'h0 ;
-      r5_reg    <= 14'h0 ;
-   end
-   else begin
-      r4_reg_r  <= r4_reg   ;
-      r4_reg_rr <= r4_reg_r ;
-
-      if ($signed(kk_mult[40-2:24]) > $signed(14'h1FFF))
-         r5_reg <= 14'h1FFF ;
-      else if ($signed(kk_mult[40-2:24]) < $signed(14'h2000))
-         r5_reg <= 14'h2000 ;
-      else
-         r5_reg <= kk_mult[24+14-1:24];
-   end
+always @(posedge adc_clk_i)
+if (adc_rstn_i == 1'b0) begin
+   r4_reg_r  <= 15'h0 ;
+   r4_reg_rr <= 15'h0 ;
+   r5_reg    <= 14'h0 ;
+end else begin
+   r4_reg_r  <= r4_reg   ;
+   r4_reg_rr <= r4_reg_r ;
+   if ($signed(kk_mult[40-2:24]) > $signed(14'h1FFF))
+      r5_reg <= 14'h1FFF ;
+   else if ($signed(kk_mult[40-2:24]) < $signed(14'h2000))
+      r5_reg <= 14'h2000 ;
+   else
+      r5_reg <= kk_mult[24+14-1:24];
 end
 
 assign adc_dat_o = r5_reg ;
