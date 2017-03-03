@@ -42,6 +42,10 @@ always #(TP/2) clk = ~clk;
 // clocking 
 default clocking cb @ (posedge clk);
   input  rstn;
+  input  cfg_aa;
+  input  cfg_bb;
+  input  cfg_pp;
+  input  cfg_kk;
 endclocking: cb
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,14 +54,10 @@ endclocking: cb
 
 initial begin
   // for now initialize configuration to an idle value
-  cfg_aa = 0;
-  cfg_bb = 0;
-  cfg_pp = 0;
-  cfg_kk = 0;
-  cfg_aa = 'h7D93;
-  cfg_bb = 'h437C7;
-  cfg_pp = 'h2666;
-  cfg_kk = 'hd9999a;
+  cfg_aa <= 'h7D93;
+  cfg_bb <= 'h437C7;
+  cfg_pp <= 'h2666;
+  cfg_kk <= 'hd9999a;
   // initialization
   rstn <= 1'b0;
   ##4;
