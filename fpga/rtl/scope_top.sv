@@ -5,31 +5,6 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * GENERAL DESCRIPTION:
- *
- * This is simple data aquisition module, primerly used for scilloscope 
- * application. It consists from three main parts.
- *
- *
- *                /--------\      /-----------\            /-----\
- *   ADC CHA ---> | DFILT1 | ---> | AVG & DEC | ---------> | BUF | --->  SW
- *                \--------/      \-----------/     |      \-----/
- *
- * Input data is optionaly averaged and decimated via average filter.
- *
- * Trigger section makes triggers from input ADC data or external digital 
- * signal. To make trigger from analog signal schmitt trigger is used, external
- * trigger goes first over debouncer, which is separate for pos. and neg. edge.
- *
- * Data capture buffer is realized with BRAM. Writing into ram is done with 
- * arm/trig logic. With adc_arm_do signal (SW) writing is enabled, this is active
- * until trigger arrives and adc_dly_cnt counts to zero. Value adc_wp_trig
- * serves as pointer which shows when trigger arrived. This is used to show
- * pre-trigger data.
- * 
- */
-
 module scope_top #(
   // stream parameters
   int unsigned DN = 1,   // data number
@@ -159,26 +134,26 @@ end else begin
     if (bus.addr[BAW-1:0]=='h04)   cfg_con <= bus.wdata[     0];
     if (bus.addr[BAW-1:0]=='h04)   cfg_aut <= bus.wdata[     1];
     // event masks
-    if (bus.addr[BAW-1:0]=='h08)   cfg_str <= bus.wdata[EW-1:0];
-    if (bus.addr[BAW-1:0]=='h08)   cfg_stp <= bus.wdata[EW-1:0];
-    if (bus.addr[BAW-1:0]=='h08)   cfg_trg <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h10)   cfg_str <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h14)   cfg_stp <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h18)   cfg_trg <= bus.wdata[EW-1:0];
     // trigger pre/post time
-    if (bus.addr[BAW-1:0]=='h10)   cfg_pre <= bus.wdata[CW-1:0];
-    if (bus.addr[BAW-1:0]=='h14)   cfg_pst <= bus.wdata[CW-1:0];
+    if (bus.addr[BAW-1:0]=='h20)   cfg_pre <= bus.wdata[CW-1:0];
+    if (bus.addr[BAW-1:0]=='h24)   cfg_pst <= bus.wdata[CW-1:0];
     // edge detection
-    if (bus.addr[BAW-1:0]=='h40)   cfg_pos <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h44)   cfg_neg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h48)   cfg_edg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h30)   cfg_pos <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h34)   cfg_neg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h38)   cfg_edg <= bus.wdata[      0];
     // dacimation
-    if (bus.addr[BAW-1:0]=='h50)   cfg_dec <= bus.wdata[DCW-1:0];
-    if (bus.addr[BAW-1:0]=='h54)   cfg_shr <= bus.wdata[DSW-1:0];
-    if (bus.addr[BAW-1:0]=='h58)   cfg_avg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h40)   cfg_dec <= bus.wdata[DCW-1:0];
+    if (bus.addr[BAW-1:0]=='h44)   cfg_shr <= bus.wdata[DSW-1:0];
+    if (bus.addr[BAW-1:0]=='h48)   cfg_avg <= bus.wdata[      0];
     // filter
-    if (bus.addr[BAW-1:0]=='h5c)   cfg_byp <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h60)   cfg_faa <= bus.wdata[ 18-1:0];
-    if (bus.addr[BAW-1:0]=='h64)   cfg_fbb <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h68)   cfg_fkk <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h6c)   cfg_fpp <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h4c)   cfg_byp <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h50)   cfg_faa <= bus.wdata[ 18-1:0];
+    if (bus.addr[BAW-1:0]=='h54)   cfg_fbb <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h58)   cfg_fkk <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h5c)   cfg_fpp <= bus.wdata[ 25-1:0];
   end
 end
 
@@ -211,29 +186,28 @@ begin
     'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
     'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
     // event masks
-    'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
-    'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
-    'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
+    'h10 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
+    'h14 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
+    'h18 : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
     // trigger pre/post time
-    'h10 : bus.rdata <=              32'(cfg_pre);
-    'h14 : bus.rdata <=              32'(cfg_pst);
-    'h18 : bus.rdata <=              32'(sts_pre);
-    'h1c : bus.rdata <=              32'(sts_pst);
+    'h20 : bus.rdata <=              32'(cfg_pre);
+    'h24 : bus.rdata <=              32'(cfg_pst);
+    'h28 : bus.rdata <=              32'(sts_pre);
+    'h2c : bus.rdata <=              32'(sts_pst);
     // edge detection
-    'h40 : bus.rdata <=                  cfg_pos ;
-    'h44 : bus.rdata <=                  cfg_neg ;
-    'h48 : bus.rdata <=              32'(cfg_edg);
+    'h30 : bus.rdata <=                  cfg_pos ;
+    'h34 : bus.rdata <=                  cfg_neg ;
+    'h38 : bus.rdata <=              32'(cfg_edg);
     // decimation
-    'h50 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
-    'h54 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
-    'h58 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
+    'h40 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+    'h44 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
+    'h48 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
     // filter
-    'h5c : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
-    'h60 : bus.rdata <=                  cfg_faa ;
-    'h64 : bus.rdata <=                  cfg_fbb ;
-    'h68 : bus.rdata <=                  cfg_fkk ;
-    'h6c : bus.rdata <=                  cfg_fpp ;
-
+    'h4c : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
+    'h50 : bus.rdata <=                  cfg_faa ;
+    'h54 : bus.rdata <=                  cfg_fbb ;
+    'h58 : bus.rdata <=                  cfg_fkk ;
+    'h5c : bus.rdata <=                  cfg_fpp ;
     default : bus.rdata <= '0;
   endcase
 end
