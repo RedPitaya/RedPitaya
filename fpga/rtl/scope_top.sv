@@ -7,15 +7,15 @@
 
 module scope_top #(
   // stream parameters
-  int unsigned DN = 1,   // data number
+  int unsigned DN = 1,  // data number
   type DT = logic signed [16-1:0],
   // decimation parameters
   int unsigned DCW = 17,  // data width for counter
   int unsigned DSW =  4,  // data width for shifter
   // aquisition parameters
-  int unsigned CW = 32,  // counter width
+  int unsigned CW  = 32,  // counter width
   // event parameters
-  int unsigned EW =  4   // external trigger array  width
+  int unsigned EW  =  4   // external trigger array  width
 )(
   // streams
   axi4_stream_if.d       sti,      // input
@@ -43,6 +43,11 @@ axi4_stream_if #(.DT (DT)) ste (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // f
 
 // acquire regset
 
+// event select masks
+logic  [EW-1:0] cfg_str;  // start
+logic  [EW-1:0] cfg_stp;  // stop
+logic  [EW-1:0] cfg_trg;  // trigger
+
 // control
 logic           ctl_rst;
 // control/status start
@@ -54,6 +59,7 @@ logic           sts_stp;
 // control/status trigger
 logic           ctl_trg;
 logic           sts_trg;
+
 // configuration (mode)
 logic           cfg_con;  // continuous
 logic           cfg_aut;  // automatic
@@ -63,11 +69,6 @@ logic  [CW-1:0] sts_pre;
 // configuration/status post trigger
 logic  [CW-1:0] cfg_pst;
 logic  [CW-1:0] sts_pst;
-
-// event select masks
-logic  [EW-1:0] cfg_str;  // start
-logic  [EW-1:0] cfg_stp;  // stop
-logic  [EW-1:0] cfg_trg;  // trigger
 
 // edge detection configuration
 DT                     cfg_pos;  // positive level
@@ -90,29 +91,28 @@ logic signed [ 25-1:0] cfg_fpp;  // PP coefficient
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
-// control signals
-wire sys_en;
-assign sys_en = bus.wen | bus.ren;
-
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;
 end else begin
   bus.err <= 1'b0;
-  bus.ack <= sys_en;
+  bus.ack <= bus.wen | bus.ren;
 end
 
 localparam int unsigned BAW=7;
 
 // write access
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   // acquire regset
   cfg_con <= 1'b0;
   cfg_aut <= 1'b0;
   // event masks
+  cfg_str <= '0;
+  cfg_stp <= '0;
   cfg_trg <= '0;
+  // configuration
   cfg_pre <= '0;
   cfg_pst <= '0;
   // edge detection
@@ -131,23 +131,23 @@ if (~bus.rstn) begin
 end else begin
   if (bus.wen) begin
     // acquire regset
-    if (bus.addr[BAW-1:0]=='h04)   cfg_con <= bus.wdata[     0];
-    if (bus.addr[BAW-1:0]=='h04)   cfg_aut <= bus.wdata[     1];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_con <= bus.wdata[     0];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_aut <= bus.wdata[     1];
     // event masks
-    if (bus.addr[BAW-1:0]=='h10)   cfg_str <= bus.wdata[EW-1:0];
-    if (bus.addr[BAW-1:0]=='h14)   cfg_stp <= bus.wdata[EW-1:0];
-    if (bus.addr[BAW-1:0]=='h18)   cfg_trg <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h10)  cfg_str <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h14)  cfg_stp <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h18)  cfg_trg <= bus.wdata[EW-1:0];
     // trigger pre/post time
-    if (bus.addr[BAW-1:0]=='h20)   cfg_pre <= bus.wdata[CW-1:0];
-    if (bus.addr[BAW-1:0]=='h24)   cfg_pst <= bus.wdata[CW-1:0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata[CW-1:0];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata[CW-1:0];
     // edge detection
-    if (bus.addr[BAW-1:0]=='h30)   cfg_pos <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h34)   cfg_neg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h38)   cfg_edg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_pos <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h34)  cfg_neg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[      0];
     // dacimation
-    if (bus.addr[BAW-1:0]=='h40)   cfg_dec <= bus.wdata[DCW-1:0];
-    if (bus.addr[BAW-1:0]=='h44)   cfg_shr <= bus.wdata[DSW-1:0];
-    if (bus.addr[BAW-1:0]=='h48)   cfg_avg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h40)  cfg_dec <= bus.wdata[DCW-1:0];
+    if (bus.addr[BAW-1:0]=='h44)  cfg_shr <= bus.wdata[DSW-1:0];
+    if (bus.addr[BAW-1:0]=='h48)  cfg_avg <= bus.wdata[      0];
     // filter
     if (bus.addr[BAW-1:0]=='h4c)   cfg_byp <= bus.wdata[      0];
     if (bus.addr[BAW-1:0]=='h50)   cfg_faa <= bus.wdata[ 18-1:0];
@@ -166,10 +166,10 @@ if (~bus.rstn) begin
   evn_trg <= 1'b0;
 end else begin
   if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
-  ctl_rst <= bus.wdata[0];  // reset
-  evn_str <= bus.wdata[1];  // start
-  evn_stp <= bus.wdata[2];  // stop
-  evn_trg <= bus.wdata[3];  // trigger
+    ctl_rst <= bus.wdata[0];  // reset
+    evn_str <= bus.wdata[1];  // start
+    evn_stp <= bus.wdata[2];  // stop
+    evn_trg <= bus.wdata[3];  // trigger
   end else begin
     ctl_rst <= 1'b0;
     evn_str <= 1'b0;
@@ -180,37 +180,35 @@ end
 
 // read access
 always_ff @(posedge bus.clk)
-begin
-  casez (bus.addr[BAW-1:0])
-    // acquire regset
-    'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
-    'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
-    // event masks
-    'h10 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
-    'h14 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
-    'h18 : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
-    // trigger pre/post time
-    'h20 : bus.rdata <=              32'(cfg_pre);
-    'h24 : bus.rdata <=              32'(cfg_pst);
-    'h28 : bus.rdata <=              32'(sts_pre);
-    'h2c : bus.rdata <=              32'(sts_pst);
-    // edge detection
-    'h30 : bus.rdata <=                  cfg_pos ;
-    'h34 : bus.rdata <=                  cfg_neg ;
-    'h38 : bus.rdata <=              32'(cfg_edg);
-    // decimation
-    'h40 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
-    'h44 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
-    'h48 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
-    // filter
-    'h4c : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
-    'h50 : bus.rdata <=                  cfg_faa ;
-    'h54 : bus.rdata <=                  cfg_fbb ;
-    'h58 : bus.rdata <=                  cfg_fkk ;
-    'h5c : bus.rdata <=                  cfg_fpp ;
-    default : bus.rdata <= '0;
-  endcase
-end
+casez (bus.addr[BAW-1:0])
+  // control
+  'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
+  'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
+  // event masks
+  'h10 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
+  'h14 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
+  'h18 : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
+  // trigger pre/post time
+  'h20 : bus.rdata <=              32'(cfg_pre);
+  'h24 : bus.rdata <=              32'(cfg_pst);
+  'h28 : bus.rdata <=              32'(sts_pre);
+  'h2c : bus.rdata <=              32'(sts_pst);
+  // edge detection
+  'h30 : bus.rdata <=                  cfg_pos ;
+  'h34 : bus.rdata <=                  cfg_neg ;
+  'h38 : bus.rdata <=              32'(cfg_edg);
+  // decimation
+  'h40 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+  'h44 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
+  'h48 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
+  // filter
+  'h4c : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
+  'h50 : bus.rdata <=                  cfg_faa ;
+  'h54 : bus.rdata <=                  cfg_fbb ;
+  'h58 : bus.rdata <=                  cfg_fkk ;
+  'h5c : bus.rdata <=                  cfg_fpp ;
+  default : bus.rdata <= 'x;
+endcase
 
 ////////////////////////////////////////////////////////////////////////////////
 // correction filter
@@ -313,8 +311,6 @@ acq #(
   // stream input/output
   .sti      (ste),
   .sto      (sto),
-  // events
-  .evn_lst  (evn_lst),
   // control
   .ctl_rst  (ctl_rst),
   // control/status start
@@ -326,6 +322,8 @@ acq #(
   // control/status trigger
   .ctl_trg  (ctl_trg),
   .sts_trg  (sts_trg),
+  // events
+  .evn_lst  (evn_lst),
   // configuration (mode)
   .cfg_con  (cfg_con),
   .cfg_aut  (cfg_aut),

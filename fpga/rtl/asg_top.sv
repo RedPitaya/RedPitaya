@@ -26,8 +26,8 @@
 module asg_top #(
   // functionality enable
   bit EN_LIN = 1,
-  // data path
-  int unsigned DN = 1,
+  // stream parameters
+  int unsigned DN = 1,  // data number
   type DT = logic [8-1:0],
   // configuration parameters
   type DTM = DT,  // data type for multiplication
@@ -43,46 +43,41 @@ module asg_top #(
 )(
   // stream output
   axi4_stream_if.s       sto,
-  // triggers
-  input  logic  [EW-1:0] evn_ext,  // external input
-  // events
-  output logic           evn_str,  // start
-  output logic           evn_stp,  // stop
-  output logic           evn_trg,  // trigger
+  // external events
+  input  logic  [EW-1:0] evn_ext,
+  // event sources
+  output logic           evn_str,  // software start
+  output logic           evn_stp,  // software stop
+  output logic           evn_trg,  // software trigger
   output logic           evn_per,  // period
   output logic           evn_lst,  // last
   // System bus
-  sys_bus_if.s           bus_reg,  // CPU access to memory mapped registers
+  sys_bus_if.s           bus    ,  // CPU access to memory mapped registers
   sys_bus_if.s           bus_tbl   // CPU access to waveform table
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// read/write access to buffer
+// local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-always_ff @(posedge bus_reg.clk)
-if (~bus_reg.rstn) begin
-  bus_reg.err <= 1'b0;
-  bus_reg.ack <= 1'b0;
-end else begin
-  bus_reg.err <= 1'b0;
-  bus_reg.ack <= bus_reg.wen | bus_reg.ren;
-end
+// event select masks
+logic  [EW-1:0] cfg_str;  // start
+logic  [EW-1:0] cfg_stp;  // stop
+logic  [EW-1:0] cfg_trg;  // trigger
 
-////////////////////////////////////////////////////////////////////////////////
-//  System bus connection
-////////////////////////////////////////////////////////////////////////////////
+// control
+logic           ctl_rst;
+// control/status start
+logic           ctl_str;
+logic           sts_str;
+// control/status stop
+logic           ctl_stp;
+logic           sts_stp;
+// control/status trigger
+logic           ctl_trg;
+logic           sts_trg;
 
-// event masks
-logic      [EW-1:0] cfg_str;  // start
-logic      [EW-1:0] cfg_stp;  // stop
-logic      [EW-1:0] cfg_trg;  // trigger
-// event control signals
-logic               ctl_rst;
-logic               ctl_str;
-logic               ctl_stp;
-logic               ctl_trg;
-
+// configuration
 logic [CWM+CWF-1:0] cfg_siz;  // table size
 logic [CWM+CWF-1:0] cfg_ste;  // address increment step (frequency)
 logic [CWM+CWF-1:0] cfg_off;  // address initial offset (phase)
@@ -100,12 +95,27 @@ logic               sts_run;  // running status
 DTM                 cfg_mul;
 DTS                 cfg_sum;
 
+////////////////////////////////////////////////////////////////////////////////
+//  System bus connection
+////////////////////////////////////////////////////////////////////////////////
+
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  bus.err <= 1'b0;
+  bus.ack <= 1'b0;
+end else begin
+  bus.err <= 1'b0;
+  bus.ack <= bus.wen | bus.ren;
+end
+
 localparam int unsigned BAW=6;
 
 // write access
-always_ff @(posedge bus_reg.clk)
-if (~bus_reg.rstn) begin
-  // event configuration
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  // event masks
+  cfg_str <= '0;
+  cfg_stp <= '0;
   cfg_trg <= '0;
   // state machine
   cfg_siz <= '0;
@@ -121,40 +131,40 @@ if (~bus_reg.rstn) begin
   cfg_mul <= '0;
   cfg_sum <= '0;
 end else begin
-  if (bus_reg.wen) begin
-    // event configuration
-    if (bus_reg.addr[BAW-1:0]=='h10)  cfg_str <= bus_reg.wdata[     EW-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h14)  cfg_stp <= bus_reg.wdata[     EW-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h18)  cfg_trg <= bus_reg.wdata[     EW-1:0];
+  if (bus.wen) begin
+    // event masks
+    if (bus.addr[BAW-1:0]=='h10)  cfg_str <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h14)  cfg_stp <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h18)  cfg_trg <= bus.wdata[EW-1:0];
     // buffer configuration
-    if (bus_reg.addr[BAW-1:0]=='h20)  cfg_siz <= bus_reg.wdata[CWM+CWF-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h24)  cfg_off <= bus_reg.wdata[CWM+CWF-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h28)  cfg_ste <= bus_reg.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_siz <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_off <= bus.wdata[CWM+CWF-1:0];
+    if (bus.addr[BAW-1:0]=='h28)  cfg_ste <= bus.wdata[CWM+CWF-1:0];
     // burst mode
-    if (bus_reg.addr[BAW-1:0]=='h30)  cfg_ben <= bus_reg.wdata[          0];
-    if (bus_reg.addr[BAW-1:0]=='h30)  cfg_inf <= bus_reg.wdata[          1];
-    if (bus_reg.addr[BAW-1:0]=='h34)  cfg_bdl <= bus_reg.wdata[    CWM-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h38)  cfg_bln <= bus_reg.wdata[     32-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus_reg.wdata[     16-1:0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_ben <= bus.wdata[          0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_inf <= bus.wdata[          1];
+    if (bus.addr[BAW-1:0]=='h34)  cfg_bdl <= bus.wdata[    CWM-1:0];
+    if (bus.addr[BAW-1:0]=='h38)  cfg_bln <= bus.wdata[     32-1:0];
+    if (bus.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus.wdata[     16-1:0];
     // linear transformation
-    if (bus_reg.addr[BAW-1:0]=='h48)  cfg_mul <= DTM'(bus_reg.wdata);
-    if (bus_reg.addr[BAW-1:0]=='h4c)  cfg_sum <= DTS'(bus_reg.wdata);
+    if (bus.addr[BAW-1:0]=='h48)  cfg_mul <= DTM'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h4c)  cfg_sum <= DTS'(bus.wdata);
   end
 end
 
 // control signals
-always_ff @(posedge bus_reg.clk)
-if (~bus_reg.rstn) begin
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
   ctl_rst <= 1'b0;
   evn_str <= 1'b0;
   evn_stp <= 1'b0;
   evn_trg <= 1'b0;
 end else begin
-  if (bus_reg.wen & (bus_reg.addr[BAW-1:0]=='h00)) begin
-    ctl_rst <= bus_reg.wdata[0];  // reset
-    evn_str <= bus_reg.wdata[1];  // start
-    evn_stp <= bus_reg.wdata[1];  // stop
-    evn_trg <= bus_reg.wdata[1];  // trigger
+  if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
+    ctl_rst <= bus.wdata[0];  // reset
+    evn_str <= bus.wdata[1];  // start
+    evn_stp <= bus.wdata[2];  // stop
+    evn_trg <= bus.wdata[3];  // trigger
   end else begin
     ctl_rst <= 1'b0;
     evn_str <= 1'b0;
@@ -164,31 +174,32 @@ end else begin
 end
 
 // read access
-always_ff @(posedge bus_reg.clk)
-casez (bus_reg.addr[BAW-1:0])
-  'h00 : bus_reg.rdata <= {{32-      3{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
-  // event configuration
-  'h10 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_str};
-  'h14 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_stp};
-  'h18 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_trg};
+always_ff @(posedge bus.clk)
+casez (bus.addr[BAW-1:0])
+  // control
+  'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
+  // event masks
+  'h10 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
+  'h14 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
+  'h18 : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
   // buffer configuration
-  'h20 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
-  'h24 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
-  'h28 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_ste};
+  'h20 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
+  'h24 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
+  'h28 : bus.rdata <= {{32-CWM-CWF{1'b0}}, cfg_ste};
   // burst mode
-  'h30 : bus_reg.rdata <= {{32-      2{1'b0}}, cfg_inf
+  'h30 : bus.rdata <= {{32-      2{1'b0}}, cfg_inf
                                              , cfg_ben};
-  'h34 : bus_reg.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
-  'h38 : bus_reg.rdata <=                      cfg_bln ;
-  'h3c : bus_reg.rdata <= {{32-     16{1'b0}}, cfg_bnm};
+  'h34 : bus.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
+  'h38 : bus.rdata <=                      cfg_bln ;
+  'h3c : bus.rdata <= {{32-     16{1'b0}}, cfg_bnm};
   // status
-  'h40 : bus_reg.rdata <= 32'(sts_bln);
-  'h44 : bus_reg.rdata <= 32'(sts_bnm);
+  'h40 : bus.rdata <= 32'(sts_bln);
+  'h44 : bus.rdata <= 32'(sts_bnm);
   // linear transformation (should be properly sign extended)
-  'h48 : bus_reg.rdata <= cfg_mul;
-  'h4c : bus_reg.rdata <= cfg_sum;
+  'h48 : bus.rdata <= cfg_mul;
+  'h4c : bus.rdata <= cfg_sum;
   // default is 'x for better optimization
-  default : bus_reg.rdata <= 'x;
+  default : bus.rdata <= 'x;
 endcase
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -213,10 +224,10 @@ asg #(
   .CWN (CWN)
 ) asg (
   // stream output
-  .sto      (stg    ),
+  .sto      (stg),
   // control
   .ctl_rst  (ctl_rst),
-  // control/status acquire
+  // control/status start
   .ctl_str  (ctl_str),
   .sts_str  (sts_str),
   // control/status stop

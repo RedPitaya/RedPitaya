@@ -448,7 +448,7 @@ for (genvar i=0; i<MNG; i++) begin: for_asg
     .evn_per  (evn.gen[i].per),
     .evn_lst  (evn.gen[i].lst),
     // System bus
-    .bus_reg  (sys[8+2*i+0]),
+    .bus      (sys[8+2*i+0]),
     .bus_tbl  (sys[8+2*i+1])
   );
 
