@@ -123,22 +123,22 @@ if (~bus_reg.rstn) begin
 end else begin
   if (bus_reg.wen) begin
     // event configuration
-    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_str <= bus_reg.wdata[     EW-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_stp <= bus_reg.wdata[     EW-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h04)  cfg_trg <= bus_reg.wdata[     EW-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h10)  cfg_str <= bus_reg.wdata[     EW-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h14)  cfg_stp <= bus_reg.wdata[     EW-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h18)  cfg_trg <= bus_reg.wdata[     EW-1:0];
     // buffer configuration
-    if (bus_reg.addr[BAW-1:0]=='h10)  cfg_siz <= bus_reg.wdata[CWM+CWF-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h14)  cfg_off <= bus_reg.wdata[CWM+CWF-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h18)  cfg_ste <= bus_reg.wdata[CWM+CWF-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h20)  cfg_siz <= bus_reg.wdata[CWM+CWF-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h24)  cfg_off <= bus_reg.wdata[CWM+CWF-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h28)  cfg_ste <= bus_reg.wdata[CWM+CWF-1:0];
     // burst mode
-    if (bus_reg.addr[BAW-1:0]=='h20)  cfg_ben <= bus_reg.wdata[          0];
-    if (bus_reg.addr[BAW-1:0]=='h20)  cfg_inf <= bus_reg.wdata[          1];
-    if (bus_reg.addr[BAW-1:0]=='h24)  cfg_bdl <= bus_reg.wdata[    CWM-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h28)  cfg_bln <= bus_reg.wdata[     32-1:0];
-    if (bus_reg.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus_reg.wdata[     16-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h30)  cfg_ben <= bus_reg.wdata[          0];
+    if (bus_reg.addr[BAW-1:0]=='h30)  cfg_inf <= bus_reg.wdata[          1];
+    if (bus_reg.addr[BAW-1:0]=='h34)  cfg_bdl <= bus_reg.wdata[    CWM-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h38)  cfg_bln <= bus_reg.wdata[     32-1:0];
+    if (bus_reg.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus_reg.wdata[     16-1:0];
     // linear transformation
-    if (bus_reg.addr[BAW-1:0]=='h38)  cfg_mul <= DTM'(bus_reg.wdata);
-    if (bus_reg.addr[BAW-1:0]=='h3c)  cfg_sum <= DTS'(bus_reg.wdata);
+    if (bus_reg.addr[BAW-1:0]=='h48)  cfg_mul <= DTM'(bus_reg.wdata);
+    if (bus_reg.addr[BAW-1:0]=='h4c)  cfg_sum <= DTS'(bus_reg.wdata);
   end
 end
 
@@ -166,29 +166,29 @@ end
 // read access
 always_ff @(posedge bus_reg.clk)
 casez (bus_reg.addr[BAW-1:0])
-  'h00 : bus_reg.rdata <= {{32-      3{1'b0}},~sts_run, sts_run, 1'b0};
+  'h00 : bus_reg.rdata <= {{32-      3{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
   // event configuration
-  'h04 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_str};
-  'h04 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_stp};
-  'h04 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_trg};
+  'h10 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_str};
+  'h14 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_stp};
+  'h18 : bus_reg.rdata <= {{32-     EW{1'b0}}, cfg_trg};
   // buffer configuration
-  'h10 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
-  'h14 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
-  'h18 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_ste};
+  'h20 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_siz};
+  'h24 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_off};
+  'h28 : bus_reg.rdata <= {{32-CWM-CWF{1'b0}}, cfg_ste};
   // burst mode
-  'h20 : bus_reg.rdata <= {{32-      2{1'b0}}, cfg_inf
+  'h30 : bus_reg.rdata <= {{32-      2{1'b0}}, cfg_inf
                                              , cfg_ben};
-  'h24 : bus_reg.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
-  'h28 : bus_reg.rdata <=                      cfg_bln ;
-  'h2c : bus_reg.rdata <= {{32-     16{1'b0}}, cfg_bnm};
+  'h34 : bus_reg.rdata <= {{32-    CWM{1'b0}}, cfg_bdl};
+  'h38 : bus_reg.rdata <=                      cfg_bln ;
+  'h3c : bus_reg.rdata <= {{32-     16{1'b0}}, cfg_bnm};
   // status
-  'h30 : bus_reg.rdata <= 32'(sts_bln);
-  'h34 : bus_reg.rdata <= 32'(sts_bnm);
+  'h40 : bus_reg.rdata <= 32'(sts_bln);
+  'h44 : bus_reg.rdata <= 32'(sts_bnm);
   // linear transformation (should be properly sign extended)
-  'h38 : bus_reg.rdata <= cfg_mul;
-  'h3c : bus_reg.rdata <= cfg_sum;
-
-  default : bus_reg.rdata <= '0;
+  'h48 : bus_reg.rdata <= cfg_mul;
+  'h4c : bus_reg.rdata <= cfg_sum;
+  // default is 'x for better optimization
+  default : bus_reg.rdata <= 'x;
 endcase
 
 ////////////////////////////////////////////////////////////////////////////////
