@@ -216,7 +216,15 @@ asg #(
   .sto      (stg    ),
   // control
   .ctl_rst  (ctl_rst),
+  // control/status acquire
+  .ctl_str  (ctl_str),
+  .sts_str  (sts_str),
+  // control/status stop
+  .ctl_stp  (ctl_stp),
+  .sts_stp  (sts_stp),
+  // control/status trigger
   .ctl_trg  (ctl_trg),
+  .sts_trg  (sts_trg),
   // events
   .evn_per  (evn_per),
   .evn_lst  (evn_lst),
