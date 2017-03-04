@@ -97,7 +97,15 @@ module asg #(
   axi4_stream_if.s           sto    ,
   // control
   input  logic               ctl_rst,  // set FSM to reset
-  input  logic               ctl_trg,  // trigger
+  // control/status acquire
+  input  logic               ctl_str,
+  output logic               sts_str,
+  // control/status stop
+  input  logic               ctl_stp,
+  output logic               sts_stp,
+  // control/status trigger
+  input  logic               ctl_trg,
+  output logic               sts_trg,
   // events
   output logic               evn_per,  // period
   output logic               evn_lst,  // last
@@ -140,7 +148,6 @@ logic               end_bnm;  // burst repetitions
 // status and events
 logic               sts_vld;  // valid
 logic               sts_lst;  // last
-logic               sts_trg;  // trigger event
 logic               sts_rpt;  // repeat  event
 logic               sts_aen;  // address enable
 logic               sts_ren;  // read    enable

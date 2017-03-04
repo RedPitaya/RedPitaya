@@ -9,8 +9,6 @@
 module asg_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
-  // trigger
-  int unsigned TN = 1,
   // data parameters
   int unsigned DWO = 14,  // RAM data width
   int unsigned DWM = 16,  // data width for multiplier (gain)
@@ -31,14 +29,19 @@ logic          rstn;  // reset - active low
 
 // control
 logic               ctl_rst;  // set FSM to reset
-// trigger
-logic      [TN-1:0] trg_i  ;  // input
-logic               trg_o  ;  // output event
-// interrupts
-logic               irq_trg;  // trigger
-logic               irq_stp;  // stop
+// control/status acquire
+logic               ctl_str;
+logic               sts_str;
+// control/status stop
+logic               ctl_stp;
+logic               sts_stp;
+// control/status trigger
+logic               ctl_trg;
+logic               sts_trg;
+// events
+logic               evn_per;  // period
+logic               evn_lst;  // last
 // configuration
-logic      [TN-1:0] cfg_trg;  // trigger mask
 logic [CWM+CWF-1:0] cfg_siz;  // data tablesize
 logic [CWM+CWF-1:0] cfg_stp;  // pointer step    size
 logic [CWM+CWF-1:0] cfg_off;  // pointer initial offset (used to define phase)
@@ -62,38 +65,72 @@ axi4_stream_if #(.DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 int unsigned error;
 
 ////////////////////////////////////////////////////////////////////////////////
-// clock and time stamp
+// clock
 ////////////////////////////////////////////////////////////////////////////////
 
 initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
+
+// clocking 
+default clocking cb @ (posedge clk);
+  // system signals
+  input  rstn;
+  // events
+  input  evn_per;
+  input  evn_lst;
+  // control
+  output ctl_rst;
+  // control/status start
+  output ctl_str;
+  input  sts_str;
+  // control/status stop
+  output ctl_stp;
+  input  sts_stp;
+  // control/status trigger
+  output ctl_trg;
+  input  sts_trg;
+  // configuration
+  output cfg_siz;
+  output cfg_stp;
+  output cfg_off;
+  // configuration (burst mode)
+  output cfg_ben;
+  output cfg_inf;
+  output cfg_bdl;
+  output cfg_bln;
+  output cfg_bnm;
+  // status
+  input  sts_bln;
+  input  sts_bnm;
+  input  sts_run;
+endclocking: cb
 
 ////////////////////////////////////////////////////////////////////////////////
 // test sequence
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  // for now initialize configuration to an idle value
-  ctl_rst = 1'b0;
   // control
-  trg_i   = '0;
+  ctl_rst <= 1'b0;
+  ctl_str <= 1'b0;
+  ctl_stp <= 1'b0;
+  ctl_trg <= 1'b0;
   // configuration
-  cfg_trg = '1;
-  cfg_siz = (1<<CWM+CWF)-1;
-  cfg_stp = (1<<CWF    )-1;
-  cfg_off = (0<<CWF    );
+  cfg_siz <= (1<<CWM+CWF)-1;
+  cfg_stp <= (1<<CWF    )-1;
+  cfg_off <= (0<<CWF    );
   // configuration (burst mode)
-  cfg_ben = 1'b0;
-  cfg_inf = 0;
-  cfg_bdl = 0;
-  cfg_bln = 0;
-  cfg_bnm = 0;
+  cfg_ben <= 1'b0;
+  cfg_inf <= 0;
+  cfg_bdl <= 0;
+  cfg_bln <= 0;
+  cfg_bnm <= 0;
 
   // reset sequence
-  rstn = 1'b0;
-  repeat(4) @(posedge clk);
-  rstn = 1'b1;
-  repeat(4) @(posedge clk);
+  rstn <= 1'b0;
+  ##4;
+  rstn <= 1'b1;
+  ##4;
 
   // writing to buffer
   dat_table = new [1<<CWM];
@@ -117,7 +154,7 @@ initial begin
   else        $display ("SUCCESS");
 
   // end simulation
-  repeat(4) @(posedge clk);
+  ##4;
   $finish();
 end
 
@@ -134,18 +171,32 @@ endtask: buf_write
 // helper tasks
 ////////////////////////////////////////////////////////////////////////////////
 
-// generate trigger pulse
+// generate reset pulse
 task rst_pls ();
-  ctl_rst = 1'b1;
-  @(posedge clk);
-  ctl_rst = 1'b0;
+  cb.ctl_rst <= 1'b1;
+  ##1;
+  cb.ctl_rst <= 1'b0;
 endtask: rst_pls
 
+// activate acquire
+task str_pls ();
+  cb.ctl_str <= 1'b1;
+  ##1;
+  cb.ctl_str <= 1'b0;
+endtask: str_pls
+
+// stop acquire
+task stp_pls ();
+  cb.ctl_stp <= 1'b1;
+  ##1;
+  cb.ctl_stp <= 1'b0;
+endtask: stp_pls
+
 // generate trigger pulse
-task trg_pls (logic [TN-1:0] trg);
-  trg_i = trg;
-  @(posedge clk);
-  trg_i = '0;
+task trg_pls ();
+  cb.ctl_trg <= 1'b1;
+  ##1;
+  cb.ctl_trg <= 1'b0;
 endtask: trg_pls
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,8 +220,8 @@ task automatic test_burst_num (
     cfg_bnm = bnm-1;
     len = bln*bnm;
     $display ("Note: burst number = %d", bnm);
-    trg_pls (1'b1);
-    repeat (len+8) @(posedge clk);
+    trg_pls ();
+    ##(len+8);
     // check stream length
     if (str_drn.buf_siz != len) begin
       error++;
@@ -212,10 +263,10 @@ task automatic test_burst_inf (
     cfg_bnm = bnm-1;
     len = bln*bnm;
     $display ("Note: burst length = %d", bnm);
-    trg_pls (1'b1);
-    repeat (len+32) @(posedge clk);
+    trg_pls ();
+    ##(len+32);
     rst_pls ();
-    repeat (4) @(posedge clk);
+    ##4;
     // check stream length
     if (str_drn.buf_siz <= len) begin
       error++;
@@ -262,14 +313,19 @@ asg #(
   .sto      (str),
   // control
   .ctl_rst  (ctl_rst),
-  // trigger
-  .trg_i    (trg_i),
-  .trg_o    (trg_o),
-  // interrupts
-  .irq_trg  (irq_trg),
-  .irq_stp  (irq_stp),
+  // control/status start
+  .ctl_str  (ctl_str),
+  .sts_str  (sts_str),
+  // control/status stop
+  .ctl_stp  (ctl_stp),
+  .sts_stp  (sts_stp),
+  // control/status trigger
+  .ctl_trg  (ctl_trg),
+  .sts_trg  (sts_trg),
+  // events
+  .evn_per  (evn_per),
+  .evn_lst  (evn_lst),
   // configuration
-  .cfg_trg  (cfg_trg),
   .cfg_siz  (cfg_siz),
   .cfg_stp  (cfg_stp),
   .cfg_off  (cfg_off),
@@ -287,12 +343,7 @@ asg #(
   .bus      (bus)
 );
 
-axi4_stream_drn #(
-  .DN (DN),
-  .DT (DT)
-) str_drn (
-  .str      (str)
-);
+axi4_stream_drn #(.DN (DN), .DT (DT)) str_drn (.str (str));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms

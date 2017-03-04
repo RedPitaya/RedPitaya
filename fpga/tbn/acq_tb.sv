@@ -10,8 +10,6 @@ module acq_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // parameters
-  int unsigned TN = 1,   // trigger number
-  int unsigned TW = 64,  // time width
   int unsigned CW = 32,  // counter width
   // data bus type
   int unsigned DN = 1,
@@ -24,34 +22,28 @@ typedef DT DT_A [];
 logic          clk ;  // clock
 logic          rstn;  // reset - active low
 
-// current time stamp
-logic [TW-1:0] cts;
-// interrupts
-logic          irq_trg;  // trigger
-logic          irq_stp;  // stop
+// events
+logic          evn_lst;  // last
 // control
 logic          ctl_rst;
+// control/status acquire
+logic          ctl_str;
+logic          sts_str;
+// control/status stop
+logic          ctl_stp;
+logic          sts_stp;
+// control/status trigger
+logic          ctl_trg;
+logic          sts_trg;
 // configuration (mode)
 logic          cfg_con;  // continuous
 logic          cfg_aut;  // automatic
 // configuration/status pre trigger
-logic [TN-1:0] cfg_trg;
 logic [CW-1:0] cfg_pre;
 logic [CW-1:0] sts_pre;
 // configuration/status post trigger
 logic [CW-1:0] cfg_pst;
 logic [CW-1:0] sts_pst;
-// control/status/timestamp acquire
-logic          ctl_acq;  // acquire start
-logic          sts_acq;
-logic [TW-1:0] cts_acq;
-// control/status/timestamp trigger
-logic [TN-1:0] ctl_trg;
-logic          sts_trg;
-logic [TW-1:0] cts_trg;
-// control/status/timestamp stop
-logic          ctl_stp;  // acquire stop
-logic [TW-1:0] cts_stp;
 
 // stream input/output
 axi4_stream_if #(.DN (DN), .DT (DT)) sti (.ACLK (clk), .ARESETn (rstn));
@@ -60,47 +52,38 @@ axi4_stream_if #(.DN (DN), .DT (DT)) sto (.ACLK (clk), .ARESETn (rstn));
 int unsigned error = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-// clock and time stamp
+// clock
 ////////////////////////////////////////////////////////////////////////////////
 
 initial        clk = 1'h0;
 always #(TP/2) clk = ~clk;
 
-initial                cts  = 0;
-always @ (posedge clk) cts <= cts + 1;
-
 // clocking 
 default clocking cb @ (posedge clk);
   // system signals
   input  rstn;
-  // current time stamp
-  input  cts;
-  // interrupts
-  input  irq_trg;
-  input  irq_stp;
+  // events
+  input  evn_lst;
   // control
   output ctl_rst;
+  // control/status start
+  output ctl_str;
+  input  sts_str;
+  // control/status stop
+  output ctl_stp;
+  input  sts_stp;
+  // control/status trigger
+  output ctl_trg;
+  input  sts_trg;
   // configuration (mode)
   output cfg_con;
   output cfg_aut;
   // configuration/status pre trigger
-  output cfg_trg;
   output cfg_pre;
   input  sts_pre;
   // configuration/status post trigger
   output cfg_pst;
   input  sts_pst;
-  // control/status/timestamp acquire
-  output ctl_acq;
-  input  sts_acq;
-  input  cts_acq;
-  // control/status/timestamp trigger
-  output ctl_trg;
-  input  sts_trg;
-  input  cts_trg;
-  // control/status/timestamp stop
-  output ctl_stp;
-  input  cts_stp;
 endclocking: cb
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,14 +93,13 @@ endclocking: cb
 initial begin
   // for now initialize configuration to an idle value
   cb.ctl_rst <= 1'b0;
-  cb.cfg_trg <= '1;
   cb.cfg_con <= 1'b0;
   cb.cfg_aut <= 1'b0;
   cb.cfg_pre <= 0;
   cb.cfg_pst <= 0;
-  cb.ctl_acq <= 1'b0;
-  cb.ctl_trg <= 1'b0;
+  cb.ctl_str <= 1'b0;
   cb.ctl_stp <= 1'b0;
+  cb.ctl_trg <= 1'b0;
 
   // initialization
   rstn <= 1'b0;
@@ -179,7 +161,7 @@ task test_pass;
   cli.add_pkt (dti);
   clo.add_pkt (dto);
   // activate acquire
-  acq_pls;
+  str_pls;
   fork
     str_src.run (cli);
     str_drn.run (clo);
@@ -215,10 +197,10 @@ task test_trigger (
                     .rdy_fix (rdy_fix) );
   clo.add_pkt (dto);
   // activate acquire
-  acq_pls;
+  str_pls;
   fork
     wait ((sti.TDATA == 0) & sti.transf) begin
-      trg_pls ('1);
+      trg_pls ();
     end
     str_src.run (cli);
     str_drn.run (clo);
@@ -254,7 +236,7 @@ task test_stop (
                     .rdy_fix (rdy_fix) );
   clo.add_pkt (dto);
   // activate acquire
-  acq_pls;
+  str_pls;
   fork
     str_src.run (cli);
     str_drn.run (clo);
@@ -278,11 +260,11 @@ task rst_pls ();
 endtask: rst_pls
 
 // activate acquire
-task acq_pls ();
-  cb.ctl_acq <= 1'b1;
+task str_pls ();
+  cb.ctl_str <= 1'b1;
   ##1;
-  cb.ctl_acq <= 1'b0;
-endtask: acq_pls
+  cb.ctl_str <= 1'b0;
+endtask: str_pls
 
 // stop acquire
 task stp_pls ();
@@ -292,10 +274,10 @@ task stp_pls ();
 endtask: stp_pls
 
 // generate trigger pulse
-task trg_pls (logic [TN-1:0] trg);
-  cb.ctl_trg <= trg;
+task trg_pls ();
+  cb.ctl_trg <= 1'b1;
   ##1;
-  cb.ctl_trg <= '0;
+  cb.ctl_trg <= 1'b0;
 endtask: trg_pls
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,22 +288,26 @@ axi4_stream_src #(.DN (DN), .DT (DT)) str_src (.str (sti));
 
 acq #(
   .DN (DN),
-  .TN (TN),
-  .TW (TW),
+  .DT (DT),
   .CW (CW)
 ) acq (
   // stream input/output
   .sti      (sti),
   .sto      (sto),
-  // current time stamp
-  .cts      (cts),
-  // interrupts
-  .irq_trg  (irq_trg),
-  .irq_stp  (irq_stp),
+  // events
+  .evn_lst  (evn_lst),
   // control
   .ctl_rst  (ctl_rst),
+  // control/status start
+  .ctl_str  (ctl_str),
+  .sts_str  (sts_str),
+  // control/status stop
+  .ctl_stp  (ctl_stp),
+  .sts_stp  (sts_stp),
+  // control/status trigger
+  .ctl_trg  (ctl_trg),
+  .sts_trg  (sts_trg),
   // configuration (mode)
-  .cfg_trg  (cfg_trg),
   .cfg_con  (cfg_con),
   .cfg_aut  (cfg_aut),
   // configuration/status pre trigger
@@ -329,18 +315,7 @@ acq #(
   .sts_pre  (sts_pre),
   // configuration/status post trigger
   .cfg_pst  (cfg_pst),
-  .sts_pst  (sts_pst),
-  // control/status/timestamp acquire
-  .ctl_acq  (ctl_acq),  // acquire start
-  .sts_acq  (sts_acq),
-  .cts_acq  (cts_acq),
-  // control/status/timestamp trigger
-  .ctl_trg  (ctl_trg),
-  .sts_trg  (sts_trg),
-  .cts_trg  (cts_trg),
-  // control/status/timestamp stop
-  .ctl_stp  (ctl_stp),  // acquire stop
-  .cts_stp  (cts_stp)
+  .sts_pst  (sts_pst)
 );
 
 axi4_stream_drn #(.DN (DN), .DT (DT)) str_drn (.str (sto));

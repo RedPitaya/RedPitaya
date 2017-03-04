@@ -18,15 +18,6 @@ module acq #(
   output logic          evn_lst,  // last
   // control
   input  logic          ctl_rst,
-  // configuration (mode)
-  input  logic          cfg_con,  // continuous
-  input  logic          cfg_aut,  // automatic
-  // configuration/status pre trigger
-  input  logic [CW-1:0] cfg_pre,
-  output logic [CW-1:0] sts_pre,
-  // configuration/status post trigger
-  input  logic [CW-1:0] cfg_pst,
-  output logic [CW-1:0] sts_pst,
   // control/status start
   input  logic          ctl_str,
   output logic          sts_str,
@@ -35,7 +26,16 @@ module acq #(
   output logic          sts_stp,
   // control/status trigger
   input  logic          ctl_trg,
-  output logic          sts_trg
+  output logic          sts_trg,
+  // configuration (mode)
+  input  logic          cfg_con,  // continuous
+  input  logic          cfg_aut,  // automatic
+  // configuration/status pre trigger
+  input  logic [CW-1:0] cfg_pre,
+  output logic [CW-1:0] sts_pre,
+  // configuration/status post trigger
+  input  logic [CW-1:0] cfg_pst,
+  output logic [CW-1:0] sts_pst
 );
 
 ////////////////////////////////////////////////////////////////////////////////

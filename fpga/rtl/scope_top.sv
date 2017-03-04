@@ -70,15 +70,6 @@ axi4_stream_if #(.DT (DT)) ste (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // f
 
 // control
 logic           ctl_rst;
-// configuration (mode)
-logic           cfg_con;  // continuous
-logic           cfg_aut;  // automatic
-// configuration/status pre trigger
-logic  [CW-1:0] cfg_pre;
-logic  [CW-1:0] sts_pre;
-// configuration/status post trigger
-logic  [CW-1:0] cfg_pst;
-logic  [CW-1:0] sts_pst;
 // control/status start
 logic           ctl_str;
 logic           sts_str;
@@ -88,6 +79,15 @@ logic           sts_stp;
 // control/status trigger
 logic           ctl_trg;
 logic           sts_trg;
+// configuration (mode)
+logic           cfg_con;  // continuous
+logic           cfg_aut;  // automatic
+// configuration/status pre trigger
+logic  [CW-1:0] cfg_pre;
+logic  [CW-1:0] sts_pre;
+// configuration/status post trigger
+logic  [CW-1:0] cfg_pst;
+logic  [CW-1:0] sts_pst;
 
 // event select masks
 logic  [EW-1:0] cfg_str;  // start
@@ -185,21 +185,21 @@ end
 // control signals
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  evn_trg <= 1'b0;
-  evn_stp <= 1'b0;
-  evn_str <= 1'b0;
   ctl_rst <= 1'b0;
+  evn_str <= 1'b0;
+  evn_stp <= 1'b0;
+  evn_trg <= 1'b0;
 end else begin
   if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
-  evn_trg <= bus.wdata[3];  // trigger
-  evn_stp <= bus.wdata[2];  // stop
-  evn_str <= bus.wdata[1];  // start
   ctl_rst <= bus.wdata[0];  // reset
+  evn_str <= bus.wdata[1];  // start
+  evn_stp <= bus.wdata[2];  // stop
+  evn_trg <= bus.wdata[3];  // trigger
   end else begin
-    evn_trg <= 1'b0;
-    evn_stp <= 1'b0;
-    evn_str <= 1'b0;
     ctl_rst <= 1'b0;
+    evn_str <= 1'b0;
+    evn_stp <= 1'b0;
+    evn_trg <= 1'b0;
   end
 end
 
@@ -343,15 +343,6 @@ acq #(
   .evn_lst  (evn_lst),
   // control
   .ctl_rst  (ctl_rst),
-  // configuration (mode)
-  .cfg_con  (cfg_con),
-  .cfg_aut  (cfg_aut),
-  // configuration/status pre trigger
-  .cfg_pre  (cfg_pre),
-  .sts_pre  (sts_pre),
-  // configuration/status post trigger
-  .cfg_pst  (cfg_pst),
-  .sts_pst  (sts_pst),
   // control/status start
   .ctl_str  (ctl_str),
   .sts_str  (sts_str),
@@ -360,7 +351,16 @@ acq #(
   .sts_stp  (sts_stp),
   // control/status trigger
   .ctl_trg  (ctl_trg),
-  .sts_trg  (sts_trg)
+  .sts_trg  (sts_trg),
+  // configuration (mode)
+  .cfg_con  (cfg_con),
+  .cfg_aut  (cfg_aut),
+  // configuration/status pre trigger
+  .cfg_pre  (cfg_pre),
+  .sts_pre  (sts_pre),
+  // configuration/status post trigger
+  .cfg_pst  (cfg_pst),
+  .sts_pst  (sts_pst)
 );
 
 endmodule: scope_top
