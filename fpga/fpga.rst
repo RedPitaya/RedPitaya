@@ -146,6 +146,7 @@ To generate and open a Vivado project using GUI, run:
 Simulation
 **********
 
+
 ModelSim as provided for free from Altera is used to run simulations.
 Scripts expect the default install location.
 On Ubuntu the inslall process fails to create an appropriate path to executable files,
@@ -153,7 +154,8 @@ so this path must be created:
 
 .. code-block:: shell-session
 
-   $ ln -s $HOME/altera/16.0/modelsim_ase/linux $HOME/altera/16.0/modelsim_ase/linux_rh60
+   $ ln -s $HOME/intelFPGA/16.1/modelsim_ase/linux $HOME/intelFPGA/16.1/modelsim_ase/linux_rh60
+   $ sudo apt install libxft2:i386
 
 To run simulation, Vivado tools have to be installed.
 There is no need to source ``settings.sh``.
