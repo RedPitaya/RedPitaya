@@ -428,16 +428,15 @@ endgenerate
 ////////////////////////////////////////////////////////////////////////////////
 
 generate
-for (genvar i=0; i<MNG; i++) begin: for_asg
+for (genvar i=0; i<MNG; i++) begin: for_gen
 
   // simple loopback for trigger
   logic trg;
 
-  asg_top #(
-    .EN_LIN (1),
+  gen_top #(
     .DT (SBG_T),
     .EW ($bits(evn_top_t))
-  ) asg (
+  ) gen (
     // stream output
     .sto      (str_dac[i]),
     // events
@@ -452,7 +451,7 @@ for (genvar i=0; i<MNG; i++) begin: for_asg
     .bus_tbl  (sys[8+2*i+1])
   );
 
-end: for_asg
+end: for_gen
 endgenerate
 
 endmodule: red_pitaya_top

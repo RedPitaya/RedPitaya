@@ -23,9 +23,7 @@
  * with other applications (scope) is also available. Both channels are independant.
  */
 
-module asg_top #(
-  // functionality enable
-  bit EN_LIN = 1,
+module gen_top #(
   // stream parameters
   int unsigned DN = 1,  // data number
   type DT = logic [8-1:0],
@@ -39,7 +37,7 @@ module asg_top #(
   int unsigned CWL = 32,  // counter width length
   int unsigned CWN = 16,  // counter width number
   // event parameters
-  int unsigned EW  =  4   // external trigger array  width
+  int unsigned EW  =  5   // external trigger array  width
 )(
   // stream output
   axi4_stream_if.s       sto,
@@ -259,48 +257,32 @@ asg #(
 
 // TODO: this will be a continuous stream, data stream control needs rethinking
 
-generate
-if (EN_LIN) begin: en_lin
+axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
 
-  axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
+lin_mul #(
+  .DN  (DN),
+  .DTI (DT),
+  .DTO (DT),
+  .DTM (DTM)
+) lin_mul (
+  // stream input/output
+  .sti       (stg),
+  .sto       (str),
+  // configuration
+  .cfg_mul   (cfg_mul)
+);
 
-  lin_mul #(
-    .DN  (DN),
-    .DTI (DT),
-    .DTO (DT),
-    .DTM (DTM)
-  ) lin_mul (
-    // stream input/output
-    .sti       (stg),
-    .sto       (str),
-    // configuration
-    .cfg_mul   (cfg_mul)
-  );
+lin_add #(
+  .DN  (DN),
+  .DTI (DT),
+  .DTO (DT),
+  .DTS (DTS)
+) lin_add (
+  // stream input/output
+  .sti       (str),
+  .sto       (sto),
+  // configuration
+  .cfg_sum   (cfg_sum)
+);
 
-  lin_add #(
-    .DN  (DN),
-    .DTI (DT),
-    .DTO (DT),
-    .DTS (DTS)
-  ) lin_add (
-    // stream input/output
-    .sti       (str),
-    .sto       (sto),
-    // configuration
-    .cfg_sum   (cfg_sum)
-  );
-
-end else begin
-
-  assign sto.TVALID = stg.TVALID;
-  assign sto.TKEEP  = stg.TKEEP ;
-  assign sto.TLAST  = stg.TLAST ;
-  assign stg.TREADY = sto.TREADY;
-
-  assign sto.TDATA  = '{cfg_mul & (~cfg_sum | cfg_sum & ~stg.TDATA),  // output enable (optional open colector)
-                                                         stg.TDATA};  // output
-
-end
-endgenerate
-
-endmodule: asg_top
+endmodule: gen_top

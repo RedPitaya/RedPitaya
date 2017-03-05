@@ -4,8 +4,8 @@ source "axi4_stream_if.tcl"
 source "sys_bus_if.tcl"
 
 # set top hierarcy name
-set top asg_top_tb
-set dut asg_top
+set top gen_top_tb
+set dut gen_top
 
 onerror {resume}
 quietly WaveActivateNextPane {} 0
@@ -16,29 +16,35 @@ add wave -noupdate /${top}/rstn
 
 # configuration/control/status
 add wave -noupdate           /${top}/${dut}/asg/ctl_rst
-add wave -noupdate           /${top}/${dut}/asg/trg_i
-add wave -noupdate           /${top}/${dut}/asg/trg_o
-add wave -noupdate           /${top}/${dut}/asg/cfg_trg
+add wave -noupdate -bin      /${top}/${dut}/evn
+add wave -noupdate -bin      /${top}/${dut}/cfg_str
+add wave -noupdate -bin      /${top}/${dut}/cfg_stp
+add wave -noupdate -bin      /${top}/${dut}/cfg_trg
+add wave -noupdate           /${top}/${dut}/asg/ctl_str
+add wave -noupdate           /${top}/${dut}/asg/sts_str
+add wave -noupdate           /${top}/${dut}/asg/ctl_stp
+add wave -noupdate           /${top}/${dut}/asg/sts_stp
+add wave -noupdate           /${top}/${dut}/asg/ctl_trg
+add wave -noupdate           /${top}/${dut}/asg/sts_trg
 add wave -noupdate -hex      /${top}/${dut}/asg/cfg_siz
-add wave -noupdate -hex      /${top}/${dut}/asg/cfg_stp
 add wave -noupdate -hex      /${top}/${dut}/asg/cfg_off
+add wave -noupdate -hex      /${top}/${dut}/asg/cfg_ste
 add wave -noupdate           /${top}/${dut}/asg/cfg_ben
 add wave -noupdate           /${top}/${dut}/asg/cfg_inf
 add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bdl
 add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bln
 add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bnm
-add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bln;
-add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bnm;
-add wave -noupdate           /${top}/${dut}/asg/sts_run
+add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bln
+add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bnm
 add wave -noupdate           /${top}/${dut}/asg/sts_vld
-add wave -noupdate           /${top}/${dut}/asg/sts_trg
 add wave -noupdate           /${top}/${dut}/asg/sts_aen
 add wave -noupdate           /${top}/${dut}/asg/sts_ren
 
 # busses
-axi4_stream_if stg /${top}/${dut}/stg
-axi4_stream_if str /${top}/str
-sys_bus_if     bus /${top}/bus
+axi4_stream_if stg     /${top}/${dut}/stg
+axi4_stream_if str     /${top}/str
+sys_bus_if     bus     /${top}/bus
+sys_bus_if     bus_tbl /${top}/bus_tbl
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}
