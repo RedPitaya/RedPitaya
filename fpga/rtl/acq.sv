@@ -27,9 +27,6 @@ module acq #(
   // control/status trigger
   input  logic          ctl_trg,
   output logic          sts_trg,
-  // configuration (mode)
-  input  logic          cfg_con,  // continuous
-  input  logic          cfg_aut,  // automatic
   // configuration/status pre trigger
   input  logic [CW-1:0] cfg_pre,
   output logic [CW-1:0] sts_pre,
@@ -63,7 +60,7 @@ assign sts_stp = ~sts_acq;
 
 // stop event
 assign sts_lst = sts_acq & (ctl_stp
-               | (sts_trg & end_pst & ~cfg_con)
+               | (sts_trg & end_pst)
                | (sti.transf & sti.TLAST) );
 
 always @(posedge sti.ACLK)
@@ -98,7 +95,7 @@ end else begin
       sts_acq <= 1'b0;
     end else if (ctl_str) begin
       sts_acq <= 1'b1;
-      sts_trg <= cfg_aut;
+      sts_trg <= ctl_trg;
       ena_pre <= ~|cfg_pre;
       sts_pre <= '0;
       sts_pst <= '0;

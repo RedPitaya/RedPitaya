@@ -44,11 +44,11 @@ always_ff @ (posedge clk)
 cyc <= cyc+1;
 
 always begin
-  trig <= 1'b0 ;
+  trig <= 1'b0;
   repeat(100000) @(posedge clk);
-  trig <= 1'b1 ;
+  trig <= 1'b1;
   repeat(1200) @(posedge clk);
-  trig <= 1'b0 ;
+  trig <= 1'b0;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,18 +146,19 @@ task test_acq_automatic (
   int unsigned buffer
 );
   repeat(10) @(posedge clk);
+  // start/stop/trigger masks
+  axi_write(regset+'h04, 'b00001<<10);  // start
+  axi_write(regset+'h08, 'b00010<<10);  // stop
+  axi_write(regset+'h0c, 'b00100<<10);  // trigger
   // bypass input filter
   axi_write(regset+'h5c, 'h1);
 
-  // enable automatic mode
-  axi_write(regset+'h04, 'h2);  // cfg_aut <= 1
   // configure trigger
   axi_write(regset+'h10, 'd0);  // cfg_pre
   axi_write(regset+'h14, 'd4);  // cfg_pst
-  // ignore triggers
-  axi_write(regset+'h08, 'b0000);
-  // start acquire
-  axi_write(regset+'h00, 4'b0100);
+  // start/trigger acquire
+  axi_write(regset+'h00, 4'b0010);
+  axi_write(regset+'h00, 4'b1000);
   repeat(1000) @(posedge clk);
 endtask: test_acq_automatic
 
@@ -170,8 +171,8 @@ task test_asg (
   repeat(10) @(posedge clk);
 
   // configure amplitude and DC offset
-  axi_write(regset+'h48, 1 << (DWM-2));  // amplitude
-  axi_write(regset+'h4c, 0);             // DC offset
+  axi_write(regset+'h38, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h3c, 0);             // DC offset
 
   // write table
   for (int i=0; i<buf_len; i++) begin
@@ -190,16 +191,16 @@ task test_asg (
 //  end
 
   // configure frequency and phase
-  axi_write(regset+'h20,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(regset+'h24, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-  axi_write(regset+'h28, 2**CWF);  // step
+  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+  axi_write(regset+'h18, 2**CWF);  // step
 //  axi_write(regset+'h28, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
   // configure burst mode
-  axi_write(regset+'h30, 2'b00);  // burst disable
+  axi_write(regset+'h20, 2'b00);  // burst disable
   // start/stop/trigger masks
-  axi_write(regset+'h10, 'b00001);  // start
-  axi_write(regset+'h14, 'b00010);  // stop
-  axi_write(regset+'h18, 'b00100);  // trigger
+  axi_write(regset+'h04, 'b00001);  // start
+  axi_write(regset+'h08, 'b00010);  // stop
+  axi_write(regset+'h0c, 'b00100);  // trigger
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
