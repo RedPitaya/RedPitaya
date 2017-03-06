@@ -14,31 +14,49 @@ quietly WaveActivateNextPane {} 0
 add wave -noupdate /${top}/clk
 add wave -noupdate /${top}/rstn
 
-# configuration/control/status
-add wave -noupdate           /${top}/${dut}/asg/ctl_rst
-add wave -noupdate -bin      /${top}/${dut}/evn_ext
-add wave -noupdate -bin      /${top}/${dut}/cfg_str
-add wave -noupdate -bin      /${top}/${dut}/cfg_stp
-add wave -noupdate -bin      /${top}/${dut}/cfg_trg
+# control/status
+add wave -noupdate           /${top}/${dut}/ctl_rst
 add wave -noupdate           /${top}/${dut}/ctl_str
 add wave -noupdate           /${top}/${dut}/sts_str
 add wave -noupdate           /${top}/${dut}/ctl_stp
 add wave -noupdate           /${top}/${dut}/sts_stp
 add wave -noupdate           /${top}/${dut}/ctl_trg
 add wave -noupdate           /${top}/${dut}/sts_trg
-add wave -noupdate -hex      /${top}/${dut}/asg/cfg_siz
-add wave -noupdate -hex      /${top}/${dut}/asg/cfg_off
-add wave -noupdate -hex      /${top}/${dut}/asg/cfg_ste
-add wave -noupdate           /${top}/${dut}/asg/cfg_ben
-add wave -noupdate           /${top}/${dut}/asg/cfg_inf
-add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bdl
-add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bln
-add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bnm
-add wave -noupdate -unsigned /${top}/${dut}/asg/sts_bln
-add wave -noupdate -unsigned /${top}/${dut}/asg/sts_bnm
+# event control/configuration
+add wave -noupdate -bin      /${top}/${dut}/evn_ext
+add wave -noupdate -bin      /${top}/${dut}/cfg_str
+add wave -noupdate -bin      /${top}/${dut}/cfg_stp
+add wave -noupdate -bin      /${top}/${dut}/cfg_trg
+# frequency/phase
+add wave -noupdate -hex      /${top}/${dut}/cfg_siz
+add wave -noupdate -hex      /${top}/${dut}/cfg_off
+add wave -noupdate -hex      /${top}/${dut}/cfg_ste
+# burst configuration
+add wave -noupdate           /${top}/${dut}/cfg_ben
+add wave -noupdate           /${top}/${dut}/cfg_inf
+add wave -noupdate -unsigned /${top}/${dut}/cfg_bdl
+add wave -noupdate -unsigned /${top}/${dut}/cfg_bln
+add wave -noupdate -unsigned /${top}/${dut}/cfg_bnm
+# burst status
+add wave -noupdate -unsigned /${top}/${dut}/sts_bln
+add wave -noupdate -unsigned /${top}/${dut}/sts_bnm
+# offset and amplitude
+add wave -noupdate -unsigned /${top}/${dut}/cfg_mul
+add wave -noupdate -unsigned /${top}/${dut}/cfg_sum
+
+# counter end status
+add wave -noupdate           /${top}/${dut}/asg/end_bdl
+add wave -noupdate           /${top}/${dut}/asg/end_bln
+add wave -noupdate           /${top}/${dut}/asg/end_bnm
+# status
+add wave -noupdate           /${top}/${dut}/asg/sts_adr
 add wave -noupdate           /${top}/${dut}/asg/sts_vld
-add wave -noupdate           /${top}/${dut}/asg/sts_aen
-add wave -noupdate           /${top}/${dut}/asg/sts_ren
+add wave -noupdate           /${top}/${dut}/asg/sts_lst
+add wave -noupdate           /${top}/${dut}/asg/sts_rdy
+# events
+add wave -noupdate           /${top}/${dut}/asg/ctl_run
+add wave -noupdate           /${top}/${dut}/asg/ctl_end
+add wave -noupdate           /${top}/${dut}/asg/ctl_rpt
 
 # busses
 axi4_stream_if stg     /${top}/${dut}/stg

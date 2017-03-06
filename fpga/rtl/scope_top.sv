@@ -15,7 +15,7 @@ module scope_top #(
   // aquisition parameters
   int unsigned CW  = 32,  // counter width
   // event parameters
-  int unsigned EW  =  4   // external trigger array  width
+  int unsigned EW  =  5   // external trigger array  width
 )(
   // streams
   axi4_stream_if.d       sti,      // input
@@ -71,14 +71,14 @@ logic  [CW-1:0] cfg_pst;
 logic  [CW-1:0] sts_pst;
 
 // edge detection configuration
-DT                     cfg_pos;  // positive level
-DT                     cfg_neg;  // negative level
-logic                  cfg_edg;  // edge (0-pos, 1-neg)
+DT              cfg_pos;  // positive level
+DT              cfg_neg;  // negative level
+logic           cfg_edg;  // edge (0-pos, 1-neg)
 
 // decimation configuration
-logic                  cfg_avg;  // averaging enable
-logic        [DCW-1:0] cfg_dec;  // decimation factor
-logic        [DSW-1:0] cfg_shr;  // shift right
+logic           cfg_avg;  // averaging enable
+logic [DCW-1:0] cfg_dec;  // decimation factor
+logic [DSW-1:0] cfg_shr;  // shift right
 
 // filter configuration
 logic                  cfg_byp;  // bypass
@@ -131,29 +131,29 @@ if (~bus.rstn) begin
 end else begin
   if (bus.wen) begin
     // acquire regset
-    if (bus.addr[BAW-1:0]=='h04)  cfg_con <= bus.wdata[     0];
-    if (bus.addr[BAW-1:0]=='h04)  cfg_aut <= bus.wdata[     1];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_con <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_aut <= bus.wdata[      1];
     // event masks
-    if (bus.addr[BAW-1:0]=='h10)  cfg_str <= bus.wdata[EW-1:0];
-    if (bus.addr[BAW-1:0]=='h14)  cfg_stp <= bus.wdata[EW-1:0];
-    if (bus.addr[BAW-1:0]=='h18)  cfg_trg <= bus.wdata[EW-1:0];
+    if (bus.addr[BAW-1:0]=='h10)  cfg_str <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h14)  cfg_stp <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h18)  cfg_trg <= bus.wdata[ EW-1:0];
     // trigger pre/post time
-    if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata[CW-1:0];
-    if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata[CW-1:0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata[ CW-1:0];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata[ CW-1:0];
     // edge detection
     if (bus.addr[BAW-1:0]=='h30)  cfg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h34)  cfg_neg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[       0];
     // dacimation
     if (bus.addr[BAW-1:0]=='h40)  cfg_dec <= bus.wdata[DCW-1:0];
     if (bus.addr[BAW-1:0]=='h44)  cfg_shr <= bus.wdata[DSW-1:0];
     if (bus.addr[BAW-1:0]=='h48)  cfg_avg <= bus.wdata[      0];
     // filter
-    if (bus.addr[BAW-1:0]=='h4c)   cfg_byp <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h50)   cfg_faa <= bus.wdata[ 18-1:0];
-    if (bus.addr[BAW-1:0]=='h54)   cfg_fbb <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h58)   cfg_fkk <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h5c)   cfg_fpp <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h4c)  cfg_byp <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h50)  cfg_faa <= bus.wdata[ 18-1:0];
+    if (bus.addr[BAW-1:0]=='h54)  cfg_fbb <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h58)  cfg_fkk <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h5c)  cfg_fpp <= bus.wdata[ 25-1:0];
   end
 end
 
@@ -299,9 +299,9 @@ scope_edge #(
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-assign ctl_str = evn_ext & cfg_str;
-assign ctl_stp = evn_ext & cfg_stp;
-assign ctl_trg = evn_ext & cfg_trg;
+assign ctl_str = |(evn_ext & cfg_str);
+assign ctl_stp = |(evn_ext & cfg_stp);
+assign ctl_trg = |(evn_ext & cfg_trg);
 
 acq #(
   .DN (DN),

@@ -122,7 +122,6 @@ module asg #(
   // status
   output logic     [CWL-1:0] sts_bln,  // burst length counter
   output logic     [CWN-1:0] sts_bnm,  // burst number counter
-  output logic               sts_run,  // running status
   // System bus
   sys_bus_if.s               bus
 );
@@ -145,16 +144,18 @@ logic               ptr_nxt_sub_neg;
 logic               end_bdl;  // burst data length
 logic               end_bln;  // burst      length
 logic               end_bnm;  // burst repetitions
-// status and events
-logic               sts_vld;  // valid
+// status
+logic               sts_adr;  // address enable
+logic               sts_vld;  // valid (read data enable)
 logic               sts_lst;  // last
-logic               sts_rpt;  // repeat  event
-logic               sts_aen;  // address enable
-logic               sts_ren;  // read    enable
 logic               sts_rdy;  // ready
+// events
+logic               ctl_run;  // run start event
+logic               ctl_end;  // run end event
+logic               ctl_rpt;  // repeat event
 
 ////////////////////////////////////////////////////////////////////////////////
-//  DAC buffer RAM
+// table RAM CPU access
 ////////////////////////////////////////////////////////////////////////////////
 
 logic bus_ena;
@@ -179,29 +180,30 @@ else            bus.ack <= bus_ena;
 
 assign bus.err = 1'b0;
 
+////////////////////////////////////////////////////////////////////////////////
+// table RAM stream read
+////////////////////////////////////////////////////////////////////////////////
+
 // stream read data
 always @(posedge sto.ACLK)
-if (sts_ren)  buf_rdata <= buf_mem[buf_raddr];
+if (sts_vld)  buf_rdata <= buf_mem[buf_raddr];
 
 // stream read pointer
 always @(posedge sto.ACLK)
-if (sts_aen)  buf_raddr <= ptr_cur[CWF+:CWM];
+if (sts_trg)  buf_raddr <= ptr_cur[CWF+:CWM];
 
 // valid signal used to enable memory read access
 always @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
   sts_vld <= 1'b0;
-  sts_ren <= 1'b0;
   sts_lst <= 1'b0;
 end else begin
   if (ctl_rst) begin
     sts_vld <= 1'b0;
-    sts_ren <= 1'b0;
     sts_lst <= 1'b0;
   end else if (sts_rdy) begin
-    sts_vld <= sts_run; 
-    sts_ren <= sts_aen;
-    sts_lst <= sts_rpt & end_bnm;
+    sts_vld <= sts_trg; 
+    sts_lst <= ctl_end;
   end
 end
 
@@ -209,7 +211,7 @@ end
 //  read pointer & state machine
 ////////////////////////////////////////////////////////////////////////////////
 
-// start stop signals
+// start status
 always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
   sts_str <= 1'b0;
@@ -224,40 +226,56 @@ end else begin
   end
 end
 
+// stop status
 assign sts_stp = ~sts_str;
+
+// control run start/end events
+assign ctl_run = ctl_trg & (sts_str | ctl_str);
+assign ctl_end = ctl_stp | (ctl_rpt & end_bnm); 
+// burst repeat event
+assign ctl_rpt = cfg_ben & sts_trg & end_bln;
+
 
 // state machine
 always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
-  sts_aen <= 1'b0;
-  sts_run <= 1'b0;
+  sts_trg <= 1'b0;
+  sts_adr <= 1'b0;
   sts_bln <= '0;
   sts_bnm <= '0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
-    sts_aen <= 1'b0;
-    sts_run <= 1'b0;
+    sts_trg <= 1'b0;
+    sts_adr <= 1'b0;
     sts_bln <= '0;
     sts_bnm <= '0;
   end else if (sts_rdy) begin
-    if (cfg_ben) begin
-      // burst mode
-      if (sts_trg) begin
-        sts_aen <= sts_run ? ~end_bnm : 1'b1;
-        sts_run <= sts_run ? ~end_bnm : 1'b1;
-        sts_bnm <= sts_run ? sts_bnm + !cfg_inf : '0;
-        sts_bln <= '0;
-      end else begin
-        if (end_bdl) sts_aen <= 1'b0;
-        if (sts_run) sts_bln <= sts_bln + 1; 
-      end
-    end else begin
-      // periodic mode
-      if (sts_trg) begin
-        sts_aen <= 1'b1;
-        sts_run <= 1'b1;
-      end
+    // TODO: handle TVALID signal
+    // triger (run) status
+    if          (ctl_end) begin
+      sts_trg <= 1'b0;
+    end else if (ctl_run) begin
+      sts_trg <= 1'b1;
+    end
+    // address enable status
+    if          (ctl_end) begin
+      sts_adr <= 1'b0;
+    end else if (ctl_run) begin
+      sts_adr <= 1'b1;
+    end else if (cfg_ben)
+      if          (ctl_rpt & ~end_bnm) begin
+        sts_adr <= 1'b1;
+      end else if (end_bdl) begin
+        sts_adr <= 1'b0;
+    end
+    // burst counters
+    if (ctl_run) begin
+      sts_bnm <= '0;
+      sts_bln <= '0;
+    end else if (cfg_ben) begin
+      sts_bnm <= sts_bnm + ctl_rpt;
+      sts_bln <= ctl_rpt ? '0 : sts_bln + sts_trg; 
     end
   end
 end
@@ -267,11 +285,14 @@ assign end_bnm = (sts_bnm == cfg_bnm) & ~cfg_inf;
 assign end_bln = (sts_bln == cfg_bln);
 assign end_bdl = (sts_bln == cfg_bdl);
 
-assign sts_trg = sts_run ? sts_rpt : ctl_trg;
-assign sts_rpt = sts_run & end_bln & cfg_ben;
-
 // events
-assign evn_per = sts_rpt;
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
+  evn_per <= 1'b0;
+end else begin
+  evn_per <= ctl_rpt;
+end
+
 assign evn_lst = sts_lst;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,10 +308,10 @@ end else begin
     ptr_cur <= '0;
   end else if (sts_rdy) begin
     // start on trigger, new triggers are ignored while ASG is running
-    if (sts_trg) begin
+    if (ctl_run) begin
       ptr_cur <= cfg_off;
     // modulo (proper wrapping) increment pointer
-    end else if (sts_aen) begin
+    end else if (sts_adr) begin
       ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
     end
   end

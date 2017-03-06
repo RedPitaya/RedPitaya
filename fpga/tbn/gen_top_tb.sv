@@ -39,11 +39,11 @@ axi4_stream_if #(.DN (1), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 // events
 typedef struct packed {
-  logic str;  // software start
-  logic stp;  // software stop
-  logic trg;  // software trigger
-  logic per;  // period
   logic lst;  // last
+  logic per;  // period
+  logic trg;  // software trigger
+  logic stp;  // software stop
+  logic str;  // software start
 } evn_asg_t;
 
 evn_asg_t evn;
@@ -87,6 +87,11 @@ logic signed [ 32-1: 0] rdata_blk [];
 // signal generation
 ////////////////////////////////////////////////////////////////////////////////
 
+localparam int CTL_RST = 4'b0001;
+localparam int CTL_STR = 4'b0010;
+localparam int CTL_STP = 4'b0100;
+localparam int CTL_TRG = 4'b1000;
+
 //int buf_len = 2**CWM;
 int buf_len = 8;
 real freq  = 10_000; // 10kHz
@@ -96,16 +101,17 @@ initial begin
   ##10;
   // write table
   for (int i=0; i<buf_len; i++) begin
-    busm_tbl.write((i*2), i);  // write table
+    busm_tbl.write((i*4), i);  // write table
   end
   // read table
   rdata_blk = new [80];
   for (int i=0; i<buf_len; i++) begin
-    busm_tbl.read((i*2), rdata_blk [i]);  // read table
+    busm_tbl.read((i*4), rdata_blk [i]);  // read table
   end
   // configure amplitude and DC offset
   busm.write('h48, 1 << ($bits(DTM)-2));  // amplitude
   busm.write('h4c, 0);                    // DC offset
+
   // configure frequency and phase
   busm.write('h20,  buf_len                    * 2**CWF - 1);  // table size
   busm.write('h24, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
@@ -117,12 +123,15 @@ initial begin
   busm.write('h10, 5'b00001);  // start
   busm.write('h14, 5'b00010);  // stop
   busm.write('h18, 5'b00100);  // trigger
-  // start
-  busm.write('h00, 4'b0010);
+  // start/trigger
+  busm.write('h00, CTL_STR);
+  busm.write('h00, CTL_TRG);
   ##22;
-
+  // stop
+  busm.write('h00, CTL_STP);
+  ##20;
   // reset
-  busm.write('h00, 4'b0001);
+  busm.write('h00, CTL_RST);
   ##20;
 
   // configure frequency and phase
@@ -133,12 +142,13 @@ initial begin
   busm.write('h34, 4-1);  // burst data length
   busm.write('h38, 8-1);  // burst      length
   busm.write('h3c, 4-1);  // burst number of repetitions
-  // start
-  busm.write('h00, 4'b0010);
+  // start/trigger
+  busm.write('h00, CTL_STR);
+  busm.write('h00, CTL_TRG);
+  // wait for burst end, so there is no need to stop
   ##120;
-
-  // stop (reset)
-  busm.write('h00, 4'b0001);
+  // reset
+  busm.write('h00, CTL_RST);
   ##20;
 
   // end simulation
