@@ -232,20 +232,20 @@ assign daisy_n_o = 1'bz;
 
 // acquire events
 typedef struct packed {
-  logic str;  // software start
-  logic stp;  // software stop
-  logic trg;  // software trigger
-  logic lvl;  // level/edge
   logic lst;  // last
+  logic lvl;  // level/edge
+  logic trg;  // software trigger
+  logic stp;  // software stop
+  logic str;  // software start
 } evn_acq_t;
 
 // generator events
 typedef struct packed {
-  logic str;  // software start
-  logic stp;  // software stop
-  logic trg;  // software trigger
-  logic per;  // period
   logic lst;  // last
+  logic per;  // period
+  logic trg;  // software trigger
+  logic stp;  // software stop
+  logic str;  // software start
 } evn_asg_t;
 
 // all events
@@ -392,9 +392,6 @@ for (genvar i=0; i<MNA; i++) begin: for_acq
 
   axi4_stream_if #(.DT (SBA_T)) str (.ACLK (str_adc[i].ACLK), .ARESETn (str_adc[i].ARESETn));
 
-  // simple loopback for trigger
-  logic trg;
-
   scope_top #(
     .DN (1),
     .DT (SBA_T),
@@ -429,9 +426,6 @@ endgenerate
 
 generate
 for (genvar i=0; i<MNG; i++) begin: for_gen
-
-  // simple loopback for trigger
-  logic trg;
 
   gen_top #(
     .DT (SBG_T),
