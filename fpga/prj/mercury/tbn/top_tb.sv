@@ -151,7 +151,7 @@ task test_acq_automatic (
   axi_write(regset+'h08, 'b00010<<10);  // stop
   axi_write(regset+'h0c, 'b00100<<10);  // trigger
   // bypass input filter
-  axi_write(regset+'h5c, 'h1);
+  axi_write(regset+'h3c, 'h1);
 
   // configure trigger
   axi_write(regset+'h10, 'd0);  // cfg_pre

@@ -5,7 +5,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module scope_top #(
+module osc_top #(
   // stream parameters
   int unsigned DN = 1,  // data number
   type DT = logic signed [16-1:0],
@@ -125,26 +125,26 @@ if (~bus.rstn) begin
 end else begin
   if (bus.wen) begin
     // event masks
-    if (bus.addr[BAW-1:0]=='h10)  cfg_str <= bus.wdata[ EW-1:0];
-    if (bus.addr[BAW-1:0]=='h14)  cfg_stp <= bus.wdata[ EW-1:0];
-    if (bus.addr[BAW-1:0]=='h18)  cfg_trg <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h04)  cfg_str <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h08)  cfg_stp <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h0c)  cfg_trg <= bus.wdata[ EW-1:0];
     // trigger pre/post time
-    if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata[ CW-1:0];
-    if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata[ CW-1:0];
+    if (bus.addr[BAW-1:0]=='h10)  cfg_pre <= bus.wdata[ CW-1:0];
+    if (bus.addr[BAW-1:0]=='h14)  cfg_pst <= bus.wdata[ CW-1:0];
     // edge detection
-    if (bus.addr[BAW-1:0]=='h30)  cfg_pos <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h34)  cfg_neg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_pos <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h24)  cfg_neg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h28)  cfg_edg <= bus.wdata[      0];
     // dacimation
-    if (bus.addr[BAW-1:0]=='h40)  cfg_dec <= bus.wdata[DCW-1:0];
-    if (bus.addr[BAW-1:0]=='h44)  cfg_shr <= bus.wdata[DSW-1:0];
-    if (bus.addr[BAW-1:0]=='h48)  cfg_avg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata[DCW-1:0];
+    if (bus.addr[BAW-1:0]=='h34)  cfg_shr <= bus.wdata[DSW-1:0];
+    if (bus.addr[BAW-1:0]=='h38)  cfg_avg <= bus.wdata[      0];
     // filter
-    if (bus.addr[BAW-1:0]=='h4c)  cfg_byp <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h50)  cfg_faa <= bus.wdata[ 18-1:0];
-    if (bus.addr[BAW-1:0]=='h54)  cfg_fbb <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h58)  cfg_fkk <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h5c)  cfg_fpp <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h3c)  cfg_byp <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h40)  cfg_faa <= bus.wdata[ 18-1:0];
+    if (bus.addr[BAW-1:0]=='h44)  cfg_fbb <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h48)  cfg_fkk <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h4c)  cfg_fpp <= bus.wdata[ 25-1:0];
   end
 end
 
@@ -175,28 +175,28 @@ casez (bus.addr[BAW-1:0])
   // control
   'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
   // event masks
-  'h10 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
-  'h14 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
-  'h18 : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
+  'h04 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
+  'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
+  'h0c : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
   // trigger pre/post time
-  'h20 : bus.rdata <=              32'(cfg_pre);
-  'h24 : bus.rdata <=              32'(cfg_pst);
-  'h28 : bus.rdata <=              32'(sts_pre);
-  'h2c : bus.rdata <=              32'(sts_pst);
+  'h10 : bus.rdata <=              32'(cfg_pre);
+  'h14 : bus.rdata <=              32'(cfg_pst);
+  'h18 : bus.rdata <=              32'(sts_pre);
+  'h1c : bus.rdata <=              32'(sts_pst);
   // edge detection
-  'h30 : bus.rdata <=                  cfg_pos ;
-  'h34 : bus.rdata <=                  cfg_neg ;
-  'h38 : bus.rdata <=              32'(cfg_edg);
+  'h20 : bus.rdata <=                  cfg_pos ;
+  'h24 : bus.rdata <=                  cfg_neg ;
+  'h28 : bus.rdata <=              32'(cfg_edg);
   // decimation
-  'h40 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
-  'h44 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
-  'h48 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
+  'h30 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+  'h34 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
+  'h38 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
   // filter
-  'h4c : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
-  'h50 : bus.rdata <=                  cfg_faa ;
-  'h54 : bus.rdata <=                  cfg_fbb ;
-  'h58 : bus.rdata <=                  cfg_fkk ;
-  'h5c : bus.rdata <=                  cfg_fpp ;
+  'h3c : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
+  'h40 : bus.rdata <=                  cfg_faa ;
+  'h44 : bus.rdata <=                  cfg_fbb ;
+  'h48 : bus.rdata <=                  cfg_fkk ;
+  'h4c : bus.rdata <=                  cfg_fpp ;
   default : bus.rdata <= 'x;
 endcase
 
@@ -322,4 +322,4 @@ acq #(
   .sts_pst  (sts_pst)
 );
 
-endmodule: scope_top
+endmodule: osc_top

@@ -388,15 +388,15 @@ pdm #(
 ////////////////////////////////////////////////////////////////////////////////
 
 generate
-for (genvar i=0; i<MNA; i++) begin: for_acq
+for (genvar i=0; i<MNA; i++) begin: for_osc
 
   axi4_stream_if #(.DT (SBA_T)) str (.ACLK (str_adc[i].ACLK), .ARESETn (str_adc[i].ARESETn));
 
-  scope_top #(
+  osc_top #(
     .DN (1),
     .DT (SBA_T),
     .EW ($bits(evn_top_t))
-  ) scope (
+  ) osc (
     // streams
     .sti      (str_adc[i]),
     .sto      (str),
@@ -417,7 +417,7 @@ for (genvar i=0; i<MNA; i++) begin: for_acq
     .bus  (sys[4+2*i+1])
   );
 
-end: for_acq
+end: for_osc
 endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
