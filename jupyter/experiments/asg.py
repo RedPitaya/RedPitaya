@@ -22,22 +22,25 @@ class asg (object):
     CWF = 16  # counter width fraction  (fixed point fraction)
     N = 2**CWM # table size
     # control register masks
-    CTL_STO_MASK = np.uint32(1<<3) # 1 - stop/abort; returns 1 when stopped
-    CTL_STA_MASK = np.uint32(1<<2) # 1 - start
-    CTL_SWT_MASK = np.uint32(1<<1) # 1 - sw trigger bit (sw trigger must be enabled)
+    CTL_TRG_MASK = np.uint32(1<<3) # 1 - sw trigger bit (sw trigger must be enabled)
+    CTL_STP_MASK = np.uint32(1<<2) # 1 - stop/abort; returns 1 when stopped
+    CTL_STR_MASK = np.uint32(1<<1) # 1 - start
     CTL_RST_MASK = np.uint32(1<<0) # 1 - reset state machine so that it is in known state
 
     regset_dtype = np.dtype([
         # control/status
         ('ctl_sts', 'uint32'),
-        # trigger configuration
-        ('cfg_trg', 'uint32'),  # trigger mask
-        ('rsv0'   , 'uint32', 2),  # reserved
+        ('rsv0'   , 'uint32', 3),  # reserved
+        # start/stop/trigger masks
+        ('cfg_str', 'uint32'),  # start
+        ('cfg_stp', 'uint32'),  # stop
+        ('cfg_trg', 'uint32'),  # trigger
+        ('rsv1'   , 'uint32', 1),
         # buffer configuration
         ('cfg_siz', 'uint32'),  # size
         ('cfg_off', 'uint32'),  # offset
         ('cfg_stp', 'uint32'),  # step
-        ('rsv1'   , 'uint32'),  # reserved
+        ('rsv2'   , 'uint32', 1),
         # burst mode
         ('cfg_bmd', 'uint32'),  # mode [1:0] = [inf, ben]
         ('cfg_bdl', 'uint32'),  # data length
@@ -101,31 +104,57 @@ class asg (object):
 
     def show_regset (self):
         print (
-            "ctl_sts = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.ctl_sts)+
-            "cfg_trg = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_trg)+
-            "cfg_siz = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_siz)+
-            "cfg_off = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_off)+
-            "cfg_stp = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_stp)+
-            "cfg_bmd = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_bmd)+
-            "cfg_bdl = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_bdl)+
-            "cfg_bnm = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_bnm)+
-            "sts_bln = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.sts_bln)+
-            "sts_bnm = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.sts_bnm)+
-            "cfg_mul = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_mul)+
-            "cfg_sum = 0x{reg:x} = {reg:d}\n".format(reg=self.regset.cfg_sum)
+            "ctl_sts = 0x{reg:x} = {reg:d}  # control/status                 \n".format(reg=self.regset.ctl_sts)+
+            "cfg_str = 0x{reg:x} = {reg:d}  # mask start                     \n".format(reg=self.regset.cfg_str)+
+            "cfg_stp = 0x{reg:x} = {reg:d}  # mask stop                      \n".format(reg=self.regset.cfg_stp)+
+            "cfg_trg = 0x{reg:x} = {reg:d}  # mask trigger                   \n".format(reg=self.regset.cfg_trg)+
+            "cfg_siz = 0x{reg:x} = {reg:d}  # table size                     \n".format(reg=self.regset.cfg_siz)+
+            "cfg_off = 0x{reg:x} = {reg:d}  # table offset                   \n".format(reg=self.regset.cfg_off)+
+            "cfg_stp = 0x{reg:x} = {reg:d}  # table step                     \n".format(reg=self.regset.cfg_stp)+
+            "cfg_bmd = 0x{reg:x} = {reg:d}  # burst mode [1:0] = [inf, ben]  \n".format(reg=self.regset.cfg_bmd)+
+            "cfg_bdl = 0x{reg:x} = {reg:d}  # burst data length              \n".format(reg=self.regset.cfg_bdl)+
+            "cfg_bln = 0x{reg:x} = {reg:d}  # burst length (data+pause)      \n".format(reg=self.regset.cfg_bln)+
+            "cfg_bnm = 0x{reg:x} = {reg:d}  # burst number of bursts pulses  \n".format(reg=self.regset.cfg_bnm)+
+            "sts_bln = 0x{reg:x} = {reg:d}  # burst length (current position)\n".format(reg=self.regset.sts_bln)+
+            "sts_bnm = 0x{reg:x} = {reg:d}  # burst number (current counter) \n".format(reg=self.regset.sts_bnm)+
+            "cfg_mul = 0x{reg:x} = {reg:d}  # multiplier (amplitude)         \n".format(reg=self.regset.cfg_mul)+
+            "cfg_sum = 0x{reg:x} = {reg:d}  # addedr (offset)                \n".format(reg=self.regset.cfg_sum)
         )
 
     def reset (self):
         # reset state machine
         self.regset.ctl_sts = self.CTL_RST_MASK
 
+    def start (self):
+        # reset state machine
+        self.regset.ctl_sts = self.CTL_STR_MASK
+
+    def stop (self):
+        # reset state machine
+        self.regset.ctl_sts = self.CTL_STP_MASK
+
     def trigger (self):
         # activate SW trigger
-        self.regset.ctl_sts = self.CTL_SWT_MASK
+        self.regset.ctl_sts = self.CTL_TRG_MASK
 
-    def status (self) -> bool:
-        # start state machine
-        return bool(self.regset.ctl_sts & self.CTL_STA_MASK)
+    def status (self) -> tuple:
+        # [start, trigger] status
+        return (bool(self.regset.ctl_sts & self.CTL_STR_MASK),
+                bool(self.regset.ctl_sts & self.CTL_TRG_MASK))
+
+    @property
+    def mask (self) -> tuple:
+        """Enable masks for [start, stop, trigger] signals"""
+        return ([self.regset.cfg_str,
+                 self.regset.cfg_stp,
+                 self.regset.cfg_trg])
+
+    @mask.setter
+    def mask (self, value: tuple):
+        """Enable masks for [start, stop, trigger] signals"""
+        self.regset.cfg_str = value [0]
+        self.regset.cfg_stp = value [1]
+        self.regset.cfg_trg = value [2]
 
     @property
     def amplitude (self) -> float:
@@ -204,15 +233,6 @@ class asg (object):
             self.regset.cfg_siz = (siz << self.CWF) - 1
         else:
             raise ValueError("Waveform table size should not excede buffer size. N = {}".format(self.N))
-
-    @property
-    def trigger_mask (self):
-        return (self.regset.cfg_trg)
-
-    @trigger_mask.setter
-    def trigger_mask (self, value):
-        # TODO check range
-        self.regset.cfg_trg = value
 
     class modes(Enum):
         CONTINUOUS = ctypes.c_uint32(0x0)
