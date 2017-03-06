@@ -109,20 +109,21 @@ initial begin
     busm_tbl.read((i*4), rdata_blk [i]);  // read table
   end
   // configure amplitude and DC offset
-  busm.write('h48, 1 << ($bits(DTM)-2));  // amplitude
-  busm.write('h4c, 0);                    // DC offset
+  busm.write('h38, 1 << ($bits(DTM)-2));  // amplitude
+  busm.write('h3c, 0);                    // DC offset
+
+  // all events are SW driven
+  busm.write('h04, 5'b00001);  // start
+  busm.write('h08, 5'b00010);  // stop
+  busm.write('h0c, 5'b00100);  // trigger
 
   // configure frequency and phase
-  busm.write('h20,  buf_len                    * 2**CWF - 1);  // table size
-  busm.write('h24, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//busm.write('h28, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
-  busm.write('h28, 1                           * 2**CWF - 1);  // step
+  busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size
+  busm.write('h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//busm.write('h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  busm.write('h18, 1                           * 2**CWF - 1);  // step
   // configure burst mode
-  busm.write('h30, 2'b00);  // burst disable
-  // all events are SW driven
-  busm.write('h10, 5'b00001);  // start
-  busm.write('h14, 5'b00010);  // stop
-  busm.write('h18, 5'b00100);  // trigger
+  busm.write('h20, 2'b00);  // burst disable
   // start/trigger
   busm.write('h00, CTL_STR);
   busm.write('h00, CTL_TRG);
@@ -135,13 +136,13 @@ initial begin
   ##20;
 
   // configure frequency and phase
-  busm.write('h24, 0 * 2**CWF    );  // offset
-  busm.write('h28, 1 * 2**CWF - 1);  // step
+  busm.write('h14, 0 * 2**CWF    );  // offset
+  busm.write('h18, 1 * 2**CWF - 1);  // step
   // configure burst mode
-  busm.write('h30, 2'b01);  // burst enable
-  busm.write('h34, 4-1);  // burst data length
-  busm.write('h38, 8-1);  // burst      length
-  busm.write('h3c, 4-1);  // burst number of repetitions
+  busm.write('h20, 2'b01);  // burst enable
+  busm.write('h24, 4-1);  // burst data length
+  busm.write('h28, 8-1);  // burst      length
+  busm.write('h2c, 4-1);  // burst number of repetitions
   // start/trigger
   busm.write('h00, CTL_STR);
   busm.write('h00, CTL_TRG);

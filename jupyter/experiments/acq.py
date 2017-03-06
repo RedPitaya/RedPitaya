@@ -14,13 +14,10 @@ class acq (object):
     # buffer parameters
     N = 2**14 # table size
     # control register masks
-    CTL_STO_MASK = np.uint32(1<<3) # 1 - stop/abort; returns 1 when stopped
-    CTL_STA_MASK = np.uint32(1<<2) # 1 - start
-    CTL_SWT_MASK = np.uint32(1<<1) # 1 - sw trigger bit (sw trigger must be enabled)
+    CTL_TRG_MASK = np.uint32(1<<3) # 1 - sw trigger bit (sw trigger must be enabled)
+    CTL_STP_MASK = np.uint32(1<<2) # 1 - stop/abort; returns 1 when stopped
+    CTL_STR_MASK = np.uint32(1<<1) # 1 - start
     CTL_RST_MASK = np.uint32(1<<0) # 1 - reset state machine so that it is in known state
-    # mode register masks
-    MOD_AUT_MASK = np.uint32(1<<1)  # automatic
-    MOD_CON_MASK = np.uint32(1<<0)  # continuous
     # trigger edge dictionary
     edges = {'positive': 0, 'negative': 1,
              'pos'     : 0, 'neg'     : 1,
@@ -35,7 +32,10 @@ class acq (object):
     regset_dtype = np.dtype([
         # control/status
         ('ctl_sts', 'uint32'),
-        ('cfg_mod', 'uint32'),  # mode
+        # start/stop/trigger masks
+        ('cfg_str', 'uint32'),  # start
+        ('cfg_stp', 'uint32'),  # stop
+        ('cfg_trg', 'uint32'),  # trigger
         # trigger configuration
         ('cfg_trg', 'uint32'),  # trigger mask
         ('rsv0'   , 'uint32'),  # reserved
@@ -54,7 +54,6 @@ class acq (object):
         ('cfg_neg', 'uint32'),  # negative level
         ('cfg_edg', 'uint32'),  # edge (0-pos, 1-neg)
         ('cfg_rng', 'uint32'),  # range (not used by HW)
-
         # decimation
         ('cfg_dec', 'uint32'),  # decimation factor
         ('cfg_shr', 'uint32'),  # shift right
@@ -121,8 +120,10 @@ class acq (object):
 
     def show_regset (self):
         print (
-            "ctl_sts = 0x{reg:x} = {reg:d}                              \n".format(reg=self.regset.ctl_sts)+
-            "cfg_mod = 0x{reg:x} = {reg:d}  # mode                      \n".format(reg=self.regset.cfg_mod)+
+            "ctl_sts = 0x{reg:x} = {reg:d}  # control/status                 \n".format(reg=self.regset.ctl_sts)+
+            "cfg_str = 0x{reg:x} = {reg:d}  # mask start                     \n".format(reg=self.regset.cfg_str)+
+            "cfg_stp = 0x{reg:x} = {reg:d}  # mask stop                      \n".format(reg=self.regset.cfg_stp)+
+            "cfg_trg = 0x{reg:x} = {reg:d}  # mask trigger                   \n".format(reg=self.regset.cfg_trg)+
             "cfg_trg = 0x{reg:x} = {reg:d}  # trigger mask              \n".format(reg=self.regset.cfg_trg)+
             "cfg_pre = 0x{reg:x} = {reg:d}  # configuration pre  trigger\n".format(reg=self.regset.cfg_pre)+
             "cfg_pst = 0x{reg:x} = {reg:d}  # configuration post trigger\n".format(reg=self.regset.cfg_pst)+
@@ -158,48 +159,36 @@ class acq (object):
         """reset state machine"""
         self.regset.ctl_sts = self.CTL_RST_MASK
 
-    def trigger (self):
-        """activate SW trigger"""
-        self.regset.ctl_sts = self.CTL_SWT_MASK
-
     def start (self):
         """start acquisition"""
-        self.regset.ctl_sts = self.CTL_STA_MASK
+        self.regset.ctl_sts = self.CTL_STR_MASK
 
     def stop (self):
         """stop acquisition"""
-        self.regset.ctl_sts = self.CTL_STO_MASK
+        self.regset.ctl_sts = self.CTL_STP_MASK
+
+    def trigger (self):
+        """activate SW trigger"""
+        self.regset.ctl_sts = self.CTL_TRG_MASK
 
     def status (self) -> int:
-        """start state machine"""
-        return (self.regset.ctl_sts)
+        """[start, trigger] status"""
+        return (bool(self.regset.ctl_sts & self.CTL_STR_MASK),
+                bool(self.regset.ctl_sts & self.CTL_TRG_MASK))
 
     @property
-    def trigger_mask (self):
-        return (self.regset.cfg_trg)
+    def mask (self) -> tuple:
+        """Enable masks for [start, stop, trigger] signals"""
+        return ([self.regset.cfg_str,
+                 self.regset.cfg_stp,
+                 self.regset.cfg_trg])
 
-    @trigger_mask.setter
-    def trigger_mask (self, value):
-        # TODO check range
-        self.regset.cfg_trg = value
-
-    @property
-    def continuous (self) -> bool:
-        return (bool(self.regset.cfg_mod & self.MOD_CON_MASK))
-
-    @continuous.setter
-    def continuous (self, value: bool):
-        if value:  self.regset.cfg_mod |=  self.MOD_CON_MASK
-        else:      self.regset.cfg_mod &= ~self.MOD_CON_MASK
-
-    @property
-    def automatic (self) -> bool:
-        return (bool(self.regset.cfg_mod & self.MOD_AUT_MASK))
-
-    @automatic.setter
-    def automatic (self, value: bool):
-        if value:  self.regset.cfg_mod |=  self.MOD_AUT_MASK
-        else:      self.regset.cfg_mod &= ~self.MOD_AUT_MASK
+    @mask.setter
+    def mask (self, value: tuple):
+        """Enable masks for [start, stop, trigger] signals"""
+        self.regset.cfg_str = value [0]
+        self.regset.cfg_stp = value [1]
+        self.regset.cfg_trg = value [2]
 
     @property
     def trigger_pre_delay (self) -> int:

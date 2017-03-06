@@ -30,12 +30,10 @@ class asg (object):
     regset_dtype = np.dtype([
         # control/status
         ('ctl_sts', 'uint32'),
-        ('rsv0'   , 'uint32', 3),  # reserved
         # start/stop/trigger masks
         ('cfg_str', 'uint32'),  # start
         ('cfg_stp', 'uint32'),  # stop
         ('cfg_trg', 'uint32'),  # trigger
-        ('rsv1'   , 'uint32', 1),
         # buffer configuration
         ('cfg_siz', 'uint32'),  # size
         ('cfg_off', 'uint32'),  # offset
@@ -57,6 +55,7 @@ class asg (object):
     def __init__ (self, index:int, uio:str = '/dev/uio/asg'):
         """Module instance index should be provided"""
 
+        # use index
         uio = uio+str(index)
 
         # open device file
@@ -122,23 +121,23 @@ class asg (object):
         )
 
     def reset (self):
-        # reset state machine
+        """reset state machine"""
         self.regset.ctl_sts = self.CTL_RST_MASK
 
     def start (self):
-        # reset state machine
+        """start acquisition"""
         self.regset.ctl_sts = self.CTL_STR_MASK
 
     def stop (self):
-        # reset state machine
+        """stop acquisition"""
         self.regset.ctl_sts = self.CTL_STP_MASK
 
     def trigger (self):
-        # activate SW trigger
+        """activate SW trigger"""
         self.regset.ctl_sts = self.CTL_TRG_MASK
 
-    def status (self) -> tuple:
-        # [start, trigger] status
+    def status (self) -> int:
+        """[start, trigger] status"""
         return (bool(self.regset.ctl_sts & self.CTL_STR_MASK),
                 bool(self.regset.ctl_sts & self.CTL_TRG_MASK))
 

@@ -60,9 +60,6 @@ logic           sts_stp;
 logic           ctl_trg;
 logic           sts_trg;
 
-// configuration (mode)
-logic           cfg_con;  // continuous
-logic           cfg_aut;  // automatic
 // configuration/status pre trigger
 logic  [CW-1:0] cfg_pre;
 logic  [CW-1:0] sts_pre;
@@ -105,9 +102,6 @@ localparam int unsigned BAW=7;
 // write access
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  // acquire regset
-  cfg_con <= 1'b0;
-  cfg_aut <= 1'b0;
   // event masks
   cfg_str <= '0;
   cfg_stp <= '0;
@@ -130,9 +124,6 @@ if (~bus.rstn) begin
   cfg_fpp <= '0;
 end else begin
   if (bus.wen) begin
-    // acquire regset
-    if (bus.addr[BAW-1:0]=='h04)  cfg_con <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h04)  cfg_aut <= bus.wdata[      1];
     // event masks
     if (bus.addr[BAW-1:0]=='h10)  cfg_str <= bus.wdata[ EW-1:0];
     if (bus.addr[BAW-1:0]=='h14)  cfg_stp <= bus.wdata[ EW-1:0];
@@ -143,7 +134,7 @@ end else begin
     // edge detection
     if (bus.addr[BAW-1:0]=='h30)  cfg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h34)  cfg_neg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[       0];
+    if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[      0];
     // dacimation
     if (bus.addr[BAW-1:0]=='h40)  cfg_dec <= bus.wdata[DCW-1:0];
     if (bus.addr[BAW-1:0]=='h44)  cfg_shr <= bus.wdata[DSW-1:0];
@@ -183,7 +174,6 @@ always_ff @(posedge bus.clk)
 casez (bus.addr[BAW-1:0])
   // control
   'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
-  'h04 : bus.rdata <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
   // event masks
   'h10 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
   'h14 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
@@ -324,9 +314,6 @@ acq #(
   .sts_trg  (sts_trg),
   // events
   .evn_lst  (evn_lst),
-  // configuration (mode)
-  .cfg_con  (cfg_con),
-  .cfg_aut  (cfg_aut),
   // configuration/status pre trigger
   .cfg_pre  (cfg_pre),
   .sts_pre  (sts_pre),
