@@ -16,7 +16,7 @@ add wave -noupdate /${top}/rstn
 
 # configuration/control/status
 add wave -noupdate           /${top}/${dut}/asg/ctl_rst
-add wave -noupdate -bin      /${top}/${dut}/evn
+add wave -noupdate -bin      /${top}/${dut}/evn_ext
 add wave -noupdate -bin      /${top}/${dut}/cfg_str
 add wave -noupdate -bin      /${top}/${dut}/cfg_stp
 add wave -noupdate -bin      /${top}/${dut}/cfg_trg
@@ -34,8 +34,8 @@ add wave -noupdate           /${top}/${dut}/asg/cfg_inf
 add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bdl
 add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bln
 add wave -noupdate -unsigned /${top}/${dut}/asg/cfg_bnm
-add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bln
-add wave -noupdate -unsigned /${top}/${dut}/asg/cnt_bnm
+add wave -noupdate -unsigned /${top}/${dut}/asg/sts_bln
+add wave -noupdate -unsigned /${top}/${dut}/asg/sts_bnm
 add wave -noupdate           /${top}/${dut}/asg/sts_vld
 add wave -noupdate           /${top}/${dut}/asg/sts_aen
 add wave -noupdate           /${top}/${dut}/asg/sts_ren
