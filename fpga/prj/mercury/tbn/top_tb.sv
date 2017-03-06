@@ -170,13 +170,19 @@ task test_asg (
   repeat(10) @(posedge clk);
 
   // configure amplitude and DC offset
-  axi_write(regset+'h38, 1 << (DWM-2));  // amplitude
-  axi_write(regset+'h3c, 0);             // DC offset
+  axi_write(regset+'h48, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h4c, 0);             // DC offset
 
   // write table
   for (int i=0; i<buf_len; i++) begin
     axi_write(buffer + (i*4), i);  // write table
   end
+//  for (int i=0; i<buf_len; i+=2) begin
+//    logic [2-1:0] [16-1:0] data;
+//    data [0] = i;
+//    data [1] = i+1;
+//    axi_write(buffer + (i*2), data);  // write table
+//  end
 //  // read table
 //  rdata_blk = new [80];
 //  for (int i=0; i<buf_len; i++) begin
@@ -184,15 +190,19 @@ task test_asg (
 //  end
 
   // configure frequency and phase
-  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-  axi_write(regset+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  axi_write(regset+'h20,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(regset+'h24, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+  axi_write(regset+'h28, 2**CWF);  // step
+//  axi_write(regset+'h28, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
   // configure burst mode
-  axi_write(regset+'h20, 2'b00);  // burst disable
-  // enable SW trigger
-  axi_write(regset+'h04, 'b1);
-  // start (trigger)
-  axi_write(regset+'h00, 2'b10);
+  axi_write(regset+'h30, 2'b00);  // burst disable
+  // start/stop/trigger masks
+  axi_write(regset+'h10, 'b00001);  // start
+  axi_write(regset+'h14, 'b00010);  // stop
+  axi_write(regset+'h18, 'b00100);  // trigger
+  // start, trigger
+  axi_write(regset+'h00, 4'b0010);
+  axi_write(regset+'h00, 4'b1000);
   repeat(22) @(posedge clk);
   // stop (reset)
 //  axi_write(regset+'h00, 2'b01);
