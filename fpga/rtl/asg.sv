@@ -209,6 +209,23 @@ end
 //  read pointer & state machine
 ////////////////////////////////////////////////////////////////////////////////
 
+// start stop signals
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
+  sts_str <= 1'b0;
+end else begin
+  // synchronous clear
+  if (ctl_rst) begin
+    sts_str <= 1'b0;
+  end else if (ctl_stp) begin
+    sts_str <= 1'b0;
+  end else if (ctl_str) begin
+    sts_str <= 1'b1;
+  end
+end
+
+assign sts_stp = ~sts_str;
+
 // state machine
 always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin

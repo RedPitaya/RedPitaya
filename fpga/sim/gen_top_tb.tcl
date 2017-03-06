@@ -20,12 +20,12 @@ add wave -noupdate -bin      /${top}/${dut}/evn
 add wave -noupdate -bin      /${top}/${dut}/cfg_str
 add wave -noupdate -bin      /${top}/${dut}/cfg_stp
 add wave -noupdate -bin      /${top}/${dut}/cfg_trg
-add wave -noupdate           /${top}/${dut}/asg/ctl_str
-add wave -noupdate           /${top}/${dut}/asg/sts_str
-add wave -noupdate           /${top}/${dut}/asg/ctl_stp
-add wave -noupdate           /${top}/${dut}/asg/sts_stp
-add wave -noupdate           /${top}/${dut}/asg/ctl_trg
-add wave -noupdate           /${top}/${dut}/asg/sts_trg
+add wave -noupdate           /${top}/${dut}/ctl_str
+add wave -noupdate           /${top}/${dut}/sts_str
+add wave -noupdate           /${top}/${dut}/ctl_stp
+add wave -noupdate           /${top}/${dut}/sts_stp
+add wave -noupdate           /${top}/${dut}/ctl_trg
+add wave -noupdate           /${top}/${dut}/sts_trg
 add wave -noupdate -hex      /${top}/${dut}/asg/cfg_siz
 add wave -noupdate -hex      /${top}/${dut}/asg/cfg_off
 add wave -noupdate -hex      /${top}/${dut}/asg/cfg_ste
