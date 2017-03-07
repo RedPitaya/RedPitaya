@@ -134,26 +134,22 @@ assign end_pst = (nxt_pst == cfg_pst);
 // output stream
 ////////////////////////////////////////////////////////////////////////////////
 
-// align data with control signals
-axi4_stream_if #(.DN (DN), .DT (DT)) sto_algn (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  
-axi4_stream_reg align_reg(.sti (sti), .sto (sto_algn));
-
-assign sto_algn.TREADY = sto.TREADY | ~sto.TVALID;
+assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
 // output valid
 always @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   sto.TVALID <= 1'b0;
 end else begin
-  sto.TVALID <= sts_str & sto_algn.TVALID;
+  sto.TVALID <= sts_str & sti.TVALID;
 end
 
 // output data
 always @(posedge sti.ACLK)
-if (sts_str & sto_algn.transf) begin
-  sto.TDATA <= sto_algn.TDATA;
-  sto.TKEEP <= sto_algn.TKEEP; // TODO
-  sto.TLAST <= sto_algn.TLAST | sts_lst;
+if (sts_str & sti.transf) begin
+  sto.TDATA <= sti.TDATA;
+  sto.TKEEP <= sti.TKEEP; // TODO
+  sto.TLAST <= sti.TLAST | sts_lst;
 end    
 
 endmodule: acq
