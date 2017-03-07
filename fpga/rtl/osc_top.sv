@@ -279,7 +279,7 @@ scope_edge #(
   .cfg_pos  (cfg_pos),
   .cfg_neg  (cfg_neg),
   // output triggers
-  .sts_trg  (evn_edg),
+  .sts_trg  (evn_lvl),
   // stream monitor
   .sti      (std),
   .sto      (ste)
