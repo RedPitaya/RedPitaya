@@ -36,19 +36,11 @@ class acq (object):
         ('cfg_str', 'uint32'),  # start
         ('cfg_stp', 'uint32'),  # stop
         ('cfg_trg', 'uint32'),  # trigger
-        # trigger configuration
-        ('cfg_trg', 'uint32'),  # trigger mask
-        ('rsv0'   , 'uint32'),  # reserved
         # pre/post trigger counters
         ('cfg_pre', 'uint32'),  # configuration pre  trigger
         ('cfg_pst', 'uint32'),  # configuration post trigger
         ('sts_pre', 'uint32'),  # status pre  trigger
         ('sts_pst', 'uint32'),  # status post trigger
-        # timestamp
-        ('cts_acq', 'uint32',2),  # start
-        ('cts_trg', 'uint32',2),  # trigger
-        ('cts_stp', 'uint32',2),  # stop
-        ('rsv1'   , 'uint32',2),  # reserved
         # edge detection
         ('cfg_pos', 'uint32'),  # positive level
         ('cfg_neg', 'uint32'),  # negative level
@@ -120,27 +112,26 @@ class acq (object):
 
     def show_regset (self):
         print (
-            "ctl_sts = 0x{reg:x} = {reg:d}  # control/status                 \n".format(reg=self.regset.ctl_sts)+
-            "cfg_str = 0x{reg:x} = {reg:d}  # mask start                     \n".format(reg=self.regset.cfg_str)+
-            "cfg_stp = 0x{reg:x} = {reg:d}  # mask stop                      \n".format(reg=self.regset.cfg_stp)+
-            "cfg_trg = 0x{reg:x} = {reg:d}  # mask trigger                   \n".format(reg=self.regset.cfg_trg)+
-            "cfg_trg = 0x{reg:x} = {reg:d}  # trigger mask              \n".format(reg=self.regset.cfg_trg)+
-            "cfg_pre = 0x{reg:x} = {reg:d}  # configuration pre  trigger\n".format(reg=self.regset.cfg_pre)+
-            "cfg_pst = 0x{reg:x} = {reg:d}  # configuration post trigger\n".format(reg=self.regset.cfg_pst)+
-            "sts_pre = 0x{reg:x} = {reg:d}  # status pre  trigger       \n".format(reg=self.regset.sts_pre)+
-            "sts_pst = 0x{reg:x} = {reg:d}  # status post trigger       \n".format(reg=self.regset.sts_pst)+
-            "cfg_pos = 0x{reg:x} = {reg:d}  # positive level            \n".format(reg=self.regset.cfg_pos)+
-            "cfg_neg = 0x{reg:x} = {reg:d}  # negative level            \n".format(reg=self.regset.cfg_neg)+
-            "cfg_edg = 0x{reg:x} = {reg:d}  # edge (0-pos, 1-neg)       \n".format(reg=self.regset.cfg_edg)+
-            "cfg_rng = 0x{reg:x} = {reg:d}  # range (not used by HW)    \n".format(reg=self.regset.cfg_rng)+
-            "cfg_dec = 0x{reg:x} = {reg:d}  # decimation factor         \n".format(reg=self.regset.cfg_dec)+
-            "cfg_shr = 0x{reg:x} = {reg:d}  # shift right               \n".format(reg=self.regset.cfg_shr)+
-            "cfg_avg = 0x{reg:x} = {reg:d}  # average enable            \n".format(reg=self.regset.cfg_avg)+
-            "cfg_byp = 0x{reg:x} = {reg:d}  # bypass                    \n".format(reg=self.regset.cfg_byp)+
-            "cfg_faa = 0x{reg:x} = {reg:d}  # AA coeficient             \n".format(reg=self.regset.cfg_faa)+
-            "cfg_fbb = 0x{reg:x} = {reg:d}  # BB coeficient             \n".format(reg=self.regset.cfg_fbb)+
-            "cfg_fkk = 0x{reg:x} = {reg:d}  # KK coeficient             \n".format(reg=self.regset.cfg_fkk)+
-            "cfg_fpp = 0x{reg:x} = {reg:d}  # PP coeficient             \n".format(reg=self.regset.cfg_fpp)
+            "ctl_sts = 0x{reg:08x} = {reg:10d}  # control/status            \n".format(reg=self.regset.ctl_sts)+
+            "cfg_str = 0x{reg:08x} = {reg:10d}  # mask start                \n".format(reg=self.regset.cfg_str)+
+            "cfg_stp = 0x{reg:08x} = {reg:10d}  # mask stop                 \n".format(reg=self.regset.cfg_stp)+
+            "cfg_trg = 0x{reg:08x} = {reg:10d}  # mask trigger              \n".format(reg=self.regset.cfg_trg)+
+            "cfg_pre = 0x{reg:08x} = {reg:10d}  # configuration pre  trigger\n".format(reg=self.regset.cfg_pre)+
+            "cfg_pst = 0x{reg:08x} = {reg:10d}  # configuration post trigger\n".format(reg=self.regset.cfg_pst)+
+            "sts_pre = 0x{reg:08x} = {reg:10d}  # status pre  trigger       \n".format(reg=self.regset.sts_pre)+
+            "sts_pst = 0x{reg:08x} = {reg:10d}  # status post trigger       \n".format(reg=self.regset.sts_pst)+
+            "cfg_pos = 0x{reg:08x} = {reg:10d}  # positive level            \n".format(reg=self.regset.cfg_pos)+
+            "cfg_neg = 0x{reg:08x} = {reg:10d}  # negative level            \n".format(reg=self.regset.cfg_neg)+
+            "cfg_edg = 0x{reg:08x} = {reg:10d}  # edge (0-pos, 1-neg)       \n".format(reg=self.regset.cfg_edg)+
+            "cfg_rng = 0x{reg:08x} = {reg:10d}  # range (not used by HW)    \n".format(reg=self.regset.cfg_rng)+
+            "cfg_dec = 0x{reg:08x} = {reg:10d}  # decimation factor         \n".format(reg=self.regset.cfg_dec)+
+            "cfg_shr = 0x{reg:08x} = {reg:10d}  # shift right               \n".format(reg=self.regset.cfg_shr)+
+            "cfg_avg = 0x{reg:08x} = {reg:10d}  # average enable            \n".format(reg=self.regset.cfg_avg)+
+            "cfg_byp = 0x{reg:08x} = {reg:10d}  # bypass                    \n".format(reg=self.regset.cfg_byp)+
+            "cfg_faa = 0x{reg:08x} = {reg:10d}  # AA coeficient             \n".format(reg=self.regset.cfg_faa)+
+            "cfg_fbb = 0x{reg:08x} = {reg:10d}  # BB coeficient             \n".format(reg=self.regset.cfg_fbb)+
+            "cfg_fkk = 0x{reg:08x} = {reg:10d}  # KK coeficient             \n".format(reg=self.regset.cfg_fkk)+
+            "cfg_fpp = 0x{reg:08x} = {reg:10d}  # PP coeficient             \n".format(reg=self.regset.cfg_fpp)
         )
 
     @property

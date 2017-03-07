@@ -37,7 +37,7 @@ class asg (object):
         # buffer configuration
         ('cfg_siz', 'uint32'),  # size
         ('cfg_off', 'uint32'),  # offset
-        ('cfg_stp', 'uint32'),  # step
+        ('cfg_ste', 'uint32'),  # step
         ('rsv2'   , 'uint32', 1),
         # burst mode
         ('cfg_bmd', 'uint32'),  # mode [1:0] = [inf, ben]
@@ -103,21 +103,21 @@ class asg (object):
 
     def show_regset (self):
         print (
-            "ctl_sts = 0x{reg:x} = {reg:d}  # control/status                 \n".format(reg=self.regset.ctl_sts)+
-            "cfg_str = 0x{reg:x} = {reg:d}  # mask start                     \n".format(reg=self.regset.cfg_str)+
-            "cfg_stp = 0x{reg:x} = {reg:d}  # mask stop                      \n".format(reg=self.regset.cfg_stp)+
-            "cfg_trg = 0x{reg:x} = {reg:d}  # mask trigger                   \n".format(reg=self.regset.cfg_trg)+
-            "cfg_siz = 0x{reg:x} = {reg:d}  # table size                     \n".format(reg=self.regset.cfg_siz)+
-            "cfg_off = 0x{reg:x} = {reg:d}  # table offset                   \n".format(reg=self.regset.cfg_off)+
-            "cfg_stp = 0x{reg:x} = {reg:d}  # table step                     \n".format(reg=self.regset.cfg_stp)+
-            "cfg_bmd = 0x{reg:x} = {reg:d}  # burst mode [1:0] = [inf, ben]  \n".format(reg=self.regset.cfg_bmd)+
-            "cfg_bdl = 0x{reg:x} = {reg:d}  # burst data length              \n".format(reg=self.regset.cfg_bdl)+
-            "cfg_bln = 0x{reg:x} = {reg:d}  # burst length (data+pause)      \n".format(reg=self.regset.cfg_bln)+
-            "cfg_bnm = 0x{reg:x} = {reg:d}  # burst number of bursts pulses  \n".format(reg=self.regset.cfg_bnm)+
-            "sts_bln = 0x{reg:x} = {reg:d}  # burst length (current position)\n".format(reg=self.regset.sts_bln)+
-            "sts_bnm = 0x{reg:x} = {reg:d}  # burst number (current counter) \n".format(reg=self.regset.sts_bnm)+
-            "cfg_mul = 0x{reg:x} = {reg:d}  # multiplier (amplitude)         \n".format(reg=self.regset.cfg_mul)+
-            "cfg_sum = 0x{reg:x} = {reg:d}  # addedr (offset)                \n".format(reg=self.regset.cfg_sum)
+            "ctl_sts = 0x{reg:08x} = {reg:10d}  # control/status                 \n".format(reg=self.regset.ctl_sts)+
+            "cfg_str = 0x{reg:08x} = {reg:10d}  # mask start                     \n".format(reg=self.regset.cfg_str)+
+            "cfg_stp = 0x{reg:08x} = {reg:10d}  # mask stop                      \n".format(reg=self.regset.cfg_stp)+
+            "cfg_trg = 0x{reg:08x} = {reg:10d}  # mask trigger                   \n".format(reg=self.regset.cfg_trg)+
+            "cfg_siz = 0x{reg:08x} = {reg:10d}  # table size                     \n".format(reg=self.regset.cfg_siz)+
+            "cfg_off = 0x{reg:08x} = {reg:10d}  # table offset                   \n".format(reg=self.regset.cfg_off)+
+            "cfg_ste = 0x{reg:08x} = {reg:10d}  # table step                     \n".format(reg=self.regset.cfg_ste)+
+            "cfg_bmd = 0x{reg:08x} = {reg:10d}  # burst mode [1:0] = [inf, ben]  \n".format(reg=self.regset.cfg_bmd)+
+            "cfg_bdl = 0x{reg:08x} = {reg:10d}  # burst data length              \n".format(reg=self.regset.cfg_bdl)+
+            "cfg_bln = 0x{reg:08x} = {reg:10d}  # burst length (data+pause)      \n".format(reg=self.regset.cfg_bln)+
+            "cfg_bnm = 0x{reg:08x} = {reg:10d}  # burst number of bursts pulses  \n".format(reg=self.regset.cfg_bnm)+
+            "sts_bln = 0x{reg:08x} = {reg:10d}  # burst length (current position)\n".format(reg=self.regset.sts_bln)+
+            "sts_bnm = 0x{reg:08x} = {reg:10d}  # burst number (current counter) \n".format(reg=self.regset.sts_bnm)+
+            "cfg_mul = 0x{reg:08x} = {reg:10d}  # multiplier (amplitude)         \n".format(reg=self.regset.cfg_mul)+
+            "cfg_sum = 0x{reg:08x} = {reg:10d}  # addedr (offset)                \n".format(reg=self.regset.cfg_sum)
         )
 
     def reset (self):
@@ -187,7 +187,7 @@ class asg (object):
     def frequency (self) -> float:
         """Frequency in Hz"""
         siz = self.regset.cfg_siz + 1
-        stp = self.regset.cfg_stp + 1
+        stp = self.regset.cfg_ste + 1
         return (stp / siz * self.FS)
 
     @frequency.setter
@@ -195,7 +195,7 @@ class asg (object):
         """Frequency in Hz"""
         if (value < self.FS/2):
             siz = self.regset.cfg_siz + 1
-            self.regset.cfg_stp = int(siz * (value / self.FS)) - 1
+            self.regset.cfg_ste = int(siz * (value / self.FS)) - 1
         else:
             raise ValueError("Frequency should be less then half the sample rate. f < FS/2 = {}".format(self.FS/2))
 
