@@ -9,7 +9,7 @@ module acq #(
   int unsigned DN = 1,   // data number
   type DT = logic [8-1:0],
   // timer/counter
-  int unsigned CW = 32   // counter width
+  int unsigned CW = 32-1   // counter width
 )(
   // stream input/output
   axi4_stream_if.d  sti,
@@ -27,12 +27,14 @@ module acq #(
   // control/status trigger
   input  logic          ctl_trg,
   output logic          sts_trg,
-  // configuration/status pre trigger
+  // configuration/status/overflow pre trigger
   input  logic [CW-1:0] cfg_pre,
   output logic [CW-1:0] sts_pre,
-  // configuration/status post trigger
+  output logic          sts_pro,
+  // configuration/status/overflow post trigger
   input  logic [CW-1:0] cfg_pst,
-  output logic [CW-1:0] sts_pst
+  output logic [CW-1:0] sts_pst,
+  output logic          sts_pso
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +42,6 @@ module acq #(
 ////////////////////////////////////////////////////////////////////////////////
 
 logic ena_pre;
-logic sts_acq;
 logic sts_lst;
 logic trg;
 
@@ -54,12 +55,11 @@ logic end_pst;
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-// start/stop status
-assign sts_str =  sts_acq;
-assign sts_stp = ~sts_acq;
+// start/trigger/stop status
+assign sts_stp = ~sts_str;
 
 // stop event
-assign sts_lst = sts_acq & (ctl_stp
+assign sts_lst = sts_str & (ctl_stp
                | (sts_trg & end_pst)
                | (sti.transf & sti.TLAST) );
 
@@ -71,15 +71,19 @@ end else begin
   evn_lst <= sts_lst;
 end
 
-assign trg = ctl_trg & sts_acq & ena_pre & ~sts_trg;
+assign trg = ctl_trg & sts_str & ena_pre & ~sts_trg;
 
 always @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   // status pre/post trigger
   ena_pre <= 1'b0;
+  // status counter/overflow pre/post trigger
   sts_pre <= '0;
   sts_pst <= '0;
-  sts_acq <= 1'b0;
+  sts_pro <= 1'b0;
+  sts_pso <= 1'b0;
+  // start/trigger/stop status
+  sts_str <= 1'b0;
   sts_trg <= 1'b0;
 end else begin
   if (ctl_rst) begin
@@ -87,18 +91,22 @@ end else begin
     ena_pre <= 1'b0;
     sts_pre <= '0;
     sts_pst <= '0;
-    sts_acq <= 1'b0;
+    sts_pro <= 1'b0;
+    sts_pso <= 1'b0;
+    sts_str <= 1'b0;
     sts_trg <= 1'b0;
   end else begin
     // acquire stop/start
-    if (sts_lst) begin
-      sts_acq <= 1'b0;
+    if          (sts_lst) begin
+      sts_str <= 1'b0;
     end else if (ctl_str) begin
-      sts_acq <= 1'b1;
+      sts_str <= 1'b1;
       sts_trg <= ctl_trg;
       ena_pre <= ~|cfg_pre;
       sts_pre <= '0;
       sts_pst <= '0;
+      sts_pro <= 1'b0;
+      sts_pso <= 1'b0;
     end
     // pre counter trigger enable
     if (end_pre)
@@ -107,9 +115,9 @@ end else begin
     if (trg)
       sts_trg <= 1'b1;
     // pre and post trigger counters
-    if (sts_acq & sti.transf) begin
-      if (~sts_trg | trg)  sts_pre <= nxt_pre; // TODO: add out of range
-      if ( sts_trg | trg)  sts_pst <= nxt_pst; // TODO: add out of range
+    if (sts_str & sti.transf) begin
+      if (~(sts_trg | trg))  begin sts_pre <= nxt_pre; sts_pro <= &sts_pre; end
+      if ( (sts_trg | trg))  begin sts_pst <= nxt_pst; sts_pso <= &sts_pst; end
     end
   end
 end
@@ -137,12 +145,12 @@ always @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   sto.TVALID <= 1'b0;
 end else begin
-  sto.TVALID <= sts_acq & sto_algn.TVALID;
+  sto.TVALID <= sts_str & sto_algn.TVALID;
 end
 
 // output data
 always @(posedge sti.ACLK)
-if (sts_acq & sto_algn.transf) begin
+if (sts_str & sto_algn.transf) begin
   sto.TDATA <= sto_algn.TDATA;
   sto.TKEEP <= sto_algn.TKEEP; // TODO
   sto.TLAST <= sto_algn.TLAST | sts_lst;

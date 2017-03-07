@@ -7,6 +7,8 @@ module str2mm #(
   int unsigned DN = 1,
   int unsigned DL = 1<<14
 )(
+  // control
+  input  logic     ctl_rst,
   // stream input
   axi4_stream_if.d str,
   // System bus
@@ -32,9 +34,13 @@ assign str.TREADY = 1;
 always @(posedge str.ACLK)
 if (~str.ARESETn) begin
   buf_wad <= '0;
-end else if (buf_wen) begin
-  if (str.TLAST)  buf_wad <= '0;
-  else            buf_wad <= buf_wad + 1;
+end else begin
+  if (ctl_rst) begin
+    buf_wad <= '0;
+  end else if (buf_wen) begin
+    if (str.TLAST)  buf_wad <= '0;
+    else            buf_wad <= buf_wad + 1;
+  end
 end
 
 always @(posedge str.ACLK)

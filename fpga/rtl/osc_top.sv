@@ -13,7 +13,7 @@ module osc_top #(
   int unsigned DCW = 17,  // data width for counter
   int unsigned DSW =  4,  // data width for shifter
   // aquisition parameters
-  int unsigned CW  = 32,  // counter width
+  int unsigned CW  = 32-1,  // counter width
   // event parameters
   int unsigned EW  =  5   // external trigger array  width
 )(
@@ -28,6 +28,8 @@ module osc_top #(
   output logic           evn_trg,  // software trigger
   output logic           evn_lvl,  // level/edge
   output logic           evn_lst,  // last
+  // reset output
+  output logic           ctl_rst,
   // System bus
   sys_bus_if.s           bus
 );
@@ -49,7 +51,7 @@ logic  [EW-1:0] cfg_stp;  // stop
 logic  [EW-1:0] cfg_trg;  // trigger
 
 // control
-logic           ctl_rst;
+//logic           ctl_rst;
 // control/status start
 logic           ctl_str;
 logic           sts_str;
@@ -60,12 +62,14 @@ logic           sts_stp;
 logic           ctl_trg;
 logic           sts_trg;
 
-// configuration/status pre trigger
+// configuration/status/overflow pre trigger
 logic  [CW-1:0] cfg_pre;
 logic  [CW-1:0] sts_pre;
-// configuration/status post trigger
+logic           sts_pro;
+// configuration/status/overflow post trigger
 logic  [CW-1:0] cfg_pst;
 logic  [CW-1:0] sts_pst;
+logic           sts_pso;
 
 // edge detection configuration
 DT              cfg_pos;  // positive level
@@ -181,8 +185,8 @@ casez (bus.addr[BAW-1:0])
   // trigger pre/post time
   'h10 : bus.rdata <=              32'(cfg_pre);
   'h14 : bus.rdata <=              32'(cfg_pst);
-  'h18 : bus.rdata <=              32'(sts_pre);
-  'h1c : bus.rdata <=              32'(sts_pst);
+  'h18 : bus.rdata <=    {sts_pro, 31'(sts_pre)};
+  'h1c : bus.rdata <=    {sts_pso, 31'(sts_pst)};
   // edge detection
   'h20 : bus.rdata <=                  cfg_pos ;
   'h24 : bus.rdata <=                  cfg_neg ;
@@ -317,9 +321,11 @@ acq #(
   // configuration/status pre trigger
   .cfg_pre  (cfg_pre),
   .sts_pre  (sts_pre),
+  .sts_pro  (sts_pro),
   // configuration/status post trigger
   .cfg_pst  (cfg_pst),
-  .sts_pst  (sts_pst)
+  .sts_pst  (sts_pst),
+  .sts_pso  (sts_pso)
 );
 
 endmodule: osc_top

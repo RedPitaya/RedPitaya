@@ -45,7 +45,8 @@ TGT=$(RTL:.sv=)
 CFG  = -postsimdataflow
 
 # simulation script
-TCL  = set WildcardFilter [lsearch -not -all -inline $$WildcardFilter Memory];
+#TCL  = set WildcardFilter [lsearch -not -all -inline $$WildcardFilter Memory];
+TCL  = lappend WildcardFilter Memory;
 TCL += log -r /*;
 TCL += run -all; quit;
 

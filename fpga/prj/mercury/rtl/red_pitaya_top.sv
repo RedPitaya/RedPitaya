@@ -392,6 +392,8 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
 
   axi4_stream_if #(.DT (SBA_T)) str (.ACLK (str_adc[i].ACLK), .ARESETn (str_adc[i].ARESETn));
 
+  logic ctl_rst;
+
   osc_top #(
     .DN (1),
     .DT (SBA_T),
@@ -407,14 +409,17 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
     .evn_trg  (evn.acq[i].trg),
     .evn_lvl  (evn.acq[i].lvl),
     .evn_lst  (evn.acq[i].lst),
+    // reset output
+    .ctl_rst  (ctl_rst),
     // System bus
     .bus      (sys[4+2*i+0])
   );
 
   str2mm #(
   ) str2mm (
-    .str  (str),
-    .bus  (sys[4+2*i+1])
+    .ctl_rst  (ctl_rst),
+    .str      (str),
+    .bus      (sys[4+2*i+1])
   );
 
 end: for_osc
