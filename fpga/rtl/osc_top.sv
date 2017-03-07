@@ -152,16 +152,16 @@ end else begin
     if (bus.addr[BAW-1:0]=='h30)  cfg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h34)  cfg_neg <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h38)  cfg_hld <= bus.wdata[ CW-1:0];
+    if (bus.addr[BAW-1:0]=='h3c)  cfg_hld <= bus.wdata[ CW-1:0];
     // dacimation/filter
-    if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata[DCW-1:0];
-    if (bus.addr[BAW-1:0]=='h34)  cfg_shr <= bus.wdata[DSW-1:0];
-    if (bus.addr[BAW-1:0]=='h38)  cfg_avg <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h3c)  cfg_byp <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h40)  cfg_faa <= bus.wdata[ 18-1:0];
-    if (bus.addr[BAW-1:0]=='h44)  cfg_fbb <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h48)  cfg_fkk <= bus.wdata[ 25-1:0];
-    if (bus.addr[BAW-1:0]=='h4c)  cfg_fpp <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h40)  cfg_dec <= bus.wdata[DCW-1:0];
+    if (bus.addr[BAW-1:0]=='h44)  cfg_shr <= bus.wdata[DSW-1:0];
+    if (bus.addr[BAW-1:0]=='h48)  cfg_avg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h4c)  cfg_byp <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h50)  cfg_faa <= bus.wdata[ 18-1:0];
+    if (bus.addr[BAW-1:0]=='h54)  cfg_fbb <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h58)  cfg_fkk <= bus.wdata[ 25-1:0];
+    if (bus.addr[BAW-1:0]=='h5c)  cfg_fpp <= bus.wdata[ 25-1:0];
   end
 end
 
