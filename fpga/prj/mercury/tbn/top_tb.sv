@@ -150,11 +150,11 @@ task test_acq_automatic (
   axi_write(regset+'h08, 'b00010<<10);  // stop
   axi_write(regset+'h0c, 'b00100<<10);  // trigger
   // bypass input filter
-  axi_write(regset+'h3c, 'h1);
+  axi_write(regset+'h4c, 'h1);
 
   // configure trigger
-  axi_write(regset+'h10, 'd0);  // cfg_pre
-  axi_write(regset+'h14, 'd4);  // cfg_pst
+  axi_write(regset+'h20, 'd0);  // cfg_pre
+  axi_write(regset+'h24, 'd4);  // cfg_pst
   // start/trigger acquire
   axi_write(regset+'h00, 4'b0010);  // start
   axi_write(regset+'h00, 4'b0100);  // stop
@@ -169,10 +169,6 @@ task test_asg (
 );
   logic signed [ 32-1: 0] rdata_blk [];
   repeat(10) @(posedge clk);
-
-  // configure amplitude and DC offset
-  axi_write(regset+'h38, 1 << (DWM-2));  // amplitude
-  axi_write(regset+'h3c, 0);             // DC offset
 
   // write table
   for (int i=0; i<buf_len; i++) begin
@@ -190,13 +186,17 @@ task test_asg (
 //    axi_read(buffer + (i*4), rdata_blk [i]);  // read table
 //  end
 
+  // configure amplitude and DC offset
+  axi_write(regset+'h48, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h4c, 0);             // DC offset
+
   // configure frequency and phase
-  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-  axi_write(regset+'h18, 2**CWF);  // step
+  axi_write(regset+'h20,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(regset+'h24, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+  axi_write(regset+'h28, 2**CWF);  // step
 //  axi_write(regset+'h28, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
   // configure burst mode
-  axi_write(regset+'h20, 2'b00);  // burst disable
+  axi_write(regset+'h30, 2'b00);  // burst disable
   // start/stop/trigger masks
   axi_write(regset+'h04, 'b00001);  // start
   axi_write(regset+'h08, 'b00010);  // stop
@@ -210,10 +210,10 @@ task test_asg (
   repeat(20) @(posedge clk);
 
 //  // burst mode
-//  axi_write(regset+'h24, buf_len - 1);  // burst data length
-//  axi_write(regset+'h28, buf_len - 1);  // burst idle length
-//  axi_write(regset+'h2c, 100);  // repetitions
-//  axi_write(regset+'h20, 'b11);  // enable burst mode and infinite repetitions
+//  axi_write(regset+'h34, buf_len - 1);  // burst data length
+//  axi_write(regset+'h38, buf_len - 1);  // burst idle length
+//  axi_write(regset+'h3c, 100);  // repetitions
+//  axi_write(regset+'h30, 'b11);  // enable burst mode and infinite repetitions
 //  // start
 //  axi_write(regset+'h00, 2'b10);
 //  repeat(100) @(posedge clk);
