@@ -156,8 +156,9 @@ task test_acq_automatic (
   axi_write(regset+'h10, 'd0);  // cfg_pre
   axi_write(regset+'h14, 'd4);  // cfg_pst
   // start/trigger acquire
-  axi_write(regset+'h00, 4'b0010);
-  axi_write(regset+'h00, 4'b1000);
+  axi_write(regset+'h00, 4'b0010);  // start
+  axi_write(regset+'h00, 4'b0100);  // stop
+  //axi_write(regset+'h00, 4'b1000);  // trigger
   repeat(1000) @(posedge clk);
 endtask: test_acq_automatic
 

@@ -7,19 +7,22 @@
 module scope_edge #(
   // stream parameters
   int unsigned DN = 1, // TODO: for now only value 1 is permitted
-  type DT = logic signed [16-1:0]
+  type DT = logic signed [16-1:0],
+  // configuration parameters
+  int unsigned CW = 32  // hold off counter width
 )(
   // control
-  input  logic      ctl_rst,  // synchronous reset
+  input  logic          ctl_rst,  // synchronous reset
   // configuration
-  input  logic      cfg_edg,  // edge select (0-rising, 1-falling)
-  input  DT         cfg_pos,  // positive level
-  input  DT         cfg_neg,  // negative level
+  input  logic          cfg_edg,  // edge select (0-rising, 1-falling)
+  input  DT             cfg_pos,  // positive level
+  input  DT             cfg_neg,  // negative level
+  input  logic [CW-1:0] cfg_hld,  // hold off time
   // output triggers
-  output logic      sts_trg,
+  output logic          sts_trg,
   // stream
-  axi4_stream_if.d  sti,
-  axi4_stream_if.s  sto
+  axi4_stream_if.d      sti,
+  axi4_stream_if.s      sto
 );
 
 // position of the sign bit
@@ -28,6 +31,9 @@ localparam int unsigned SGN = $bits(DT);
 // subtraction from pos/neg levels
 logic signed [SGN:0] sub_pos;
 logic signed [SGN:0] sub_neg;
+
+// hold off counter
+logic       [CW-1:0] sts_hld;
 
 // level status signal and registered version
 logic sts_lvl, sts_reg;
@@ -60,15 +66,20 @@ always @(posedge sts.ACLK)
 if (~sts.ARESETn) begin
   sts_reg <= 1'b0;
   sts_trg <= 1'b0;
+  sts_hld <= '0;
 end else begin
   if (ctl_rst) begin
     sts_reg <= 1'b0;
     sts_trg <= 1'b0;
+    sts_hld <= '0;
   end else if (sts.transf) begin
     // store previous level status
     sts_reg <= sts_lvl;
     // trigger pulse if level status changes to active
-    sts_trg <= sts_lvl & ~sts_reg;
+    sts_trg <= sts_lvl & ~sts_reg & ~|sts_hld;
+    // hold off counter
+    if (sts_trg) sts_hld <= cfg_hld;
+    else         sts_hld <= sts_hld - |sts_hld;
   end
 end
 

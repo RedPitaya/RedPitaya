@@ -30,7 +30,9 @@ module osc_top #(
   output logic           evn_lst,  // last
   // reset output
   output logic           ctl_rst,
-  // System bus
+  // interrupt
+  output logic           irq,
+  // system bus
   sys_bus_if.s           bus
 );
 
@@ -49,6 +51,11 @@ axi4_stream_if #(.DT (DT)) ste (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // f
 logic  [EW-1:0] cfg_str;  // start
 logic  [EW-1:0] cfg_stp;  // stop
 logic  [EW-1:0] cfg_trg;  // trigger
+
+// interrupt enable/status/clear
+logic   [3-1:0] irq_ena;  // enable
+logic   [3-1:0] irq_sts;  // status
+logic   [3-1:0] irq_clr;  // clear
 
 // control
 //logic           ctl_rst;
@@ -75,6 +82,7 @@ logic           sts_pso;
 DT              cfg_pos;  // positive level
 DT              cfg_neg;  // negative level
 logic           cfg_edg;  // edge (0-pos, 1-neg)
+logic  [CW-1:0] cfg_hld;  // hold off time
 
 // decimation configuration
 logic           cfg_avg;  // averaging enable
@@ -110,6 +118,8 @@ if (~bus.rstn) begin
   cfg_str <= '0;
   cfg_stp <= '0;
   cfg_trg <= '0;
+  // interrupt enable
+  irq_ena <= '0;
   // configuration
   cfg_pre <= '0;
   cfg_pst <= '0;
@@ -117,6 +127,7 @@ if (~bus.rstn) begin
   cfg_pos <= '0;
   cfg_neg <= '0;
   cfg_edg <= '0;
+  cfg_hld <= '0;
   // filter/dacimation
   cfg_byp <= '0;
   cfg_avg <= '0;
@@ -132,18 +143,20 @@ end else begin
     if (bus.addr[BAW-1:0]=='h04)  cfg_str <= bus.wdata[ EW-1:0];
     if (bus.addr[BAW-1:0]=='h08)  cfg_stp <= bus.wdata[ EW-1:0];
     if (bus.addr[BAW-1:0]=='h0c)  cfg_trg <= bus.wdata[ EW-1:0];
+    // interrupt enable (status/clear are elsewhere)
+    if (bus.addr[BAW-1:0]=='h10)  irq_ena <= bus.wdata[  3-1:0];
     // trigger pre/post time
-    if (bus.addr[BAW-1:0]=='h10)  cfg_pre <= bus.wdata[ CW-1:0];
-    if (bus.addr[BAW-1:0]=='h14)  cfg_pst <= bus.wdata[ CW-1:0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata[ CW-1:0];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata[ CW-1:0];
     // edge detection
-    if (bus.addr[BAW-1:0]=='h20)  cfg_pos <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h24)  cfg_neg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h28)  cfg_edg <= bus.wdata[      0];
-    // dacimation
+    if (bus.addr[BAW-1:0]=='h30)  cfg_pos <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h34)  cfg_neg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h38)  cfg_hld <= bus.wdata[ CW-1:0];
+    // dacimation/filter
     if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata[DCW-1:0];
     if (bus.addr[BAW-1:0]=='h34)  cfg_shr <= bus.wdata[DSW-1:0];
     if (bus.addr[BAW-1:0]=='h38)  cfg_avg <= bus.wdata[      0];
-    // filter
     if (bus.addr[BAW-1:0]=='h3c)  cfg_byp <= bus.wdata[      0];
     if (bus.addr[BAW-1:0]=='h40)  cfg_faa <= bus.wdata[ 18-1:0];
     if (bus.addr[BAW-1:0]=='h44)  cfg_fbb <= bus.wdata[ 25-1:0];
@@ -177,32 +190,59 @@ end
 always_ff @(posedge bus.clk)
 casez (bus.addr[BAW-1:0])
   // control
-  'h00 : bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
+  'h00: bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
   // event masks
-  'h04 : bus.rdata <= {{32- EW{1'b0}}, cfg_str};
-  'h08 : bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
-  'h0c : bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
+  'h04: bus.rdata <= {{32- EW{1'b0}}, cfg_str};
+  'h08: bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
+  'h0c: bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
+  // interrupts enable/status/clear
+  'h10: bus.rdata <=                  irq_ena;
+  'h14: bus.rdata <=                  irq_sts;
   // trigger pre/post time
-  'h10 : bus.rdata <=              32'(cfg_pre);
-  'h14 : bus.rdata <=              32'(cfg_pst);
-  'h18 : bus.rdata <=    {sts_pro, 31'(sts_pre)};
-  'h1c : bus.rdata <=    {sts_pso, 31'(sts_pst)};
+  'h20: bus.rdata <=              32'(cfg_pre);
+  'h24: bus.rdata <=              32'(cfg_pst);
+  'h28: bus.rdata <=    {sts_pro, 31'(sts_pre)};
+  'h2c: bus.rdata <=    {sts_pso, 31'(sts_pst)};
   // edge detection
-  'h20 : bus.rdata <=                  cfg_pos ;
-  'h24 : bus.rdata <=                  cfg_neg ;
-  'h28 : bus.rdata <=              32'(cfg_edg);
-  // decimation
-  'h30 : bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
-  'h34 : bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
-  'h38 : bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
-  // filter
-  'h3c : bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
-  'h40 : bus.rdata <=                  cfg_faa ;
-  'h44 : bus.rdata <=                  cfg_fbb ;
-  'h48 : bus.rdata <=                  cfg_fkk ;
-  'h4c : bus.rdata <=                  cfg_fpp ;
-  default : bus.rdata <= 'x;
+  'h30: bus.rdata <=                  cfg_pos ;
+  'h34: bus.rdata <=                  cfg_neg ;
+  'h38: bus.rdata <=              32'(cfg_edg);
+  'h3c: bus.rdata <=              32'(cfg_hld);
+  // decimation/filter
+  'h40: bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+  'h44: bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
+  'h48: bus.rdata <= {{32-  1{1'b0}}, cfg_avg};
+  'h4c: bus.rdata <= {{32-  1{1'b0}}, cfg_byp};
+  'h50: bus.rdata <=                  cfg_faa ;
+  'h54: bus.rdata <=                  cfg_fbb ;
+  'h58: bus.rdata <=                  cfg_fkk ;
+  'h5c: bus.rdata <=                  cfg_fpp ;
+  default: bus.rdata <= 'x;
 endcase
+
+// interrupt status/clear
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  irq_sts <= '0;
+end else begin
+  if (ctl_rst) begin
+    irq_sts <= '0;
+  end else if (bus.wen & (bus.addr[BAW-1:0]=='h14)) begin
+    // interrupt clear
+    irq_sts <= irq_sts & ~bus.wdata[3-1:0];
+  end else begin
+    // interrupt set
+    irq_sts <= irq_sts | {ctl_trg, ctl_stp, ctl_str};
+  end
+end
+
+// interrupt output
+always_ff @(posedge bus.clk)
+if (~bus.rstn) begin
+  irq <= '0;
+end else begin
+  irq <= |(irq_sts & irq_ena);
+end
 
 ////////////////////////////////////////////////////////////////////////////////
 // correction filter
@@ -274,7 +314,8 @@ scope_dec_avg #(
 
 scope_edge #(
   // stream parameters
-  .DT (DT)
+  .DT (DT),
+  .CW (CW)
 ) edge_i (
   // control
   .ctl_rst  (ctl_rst),
@@ -282,6 +323,7 @@ scope_edge #(
   .cfg_edg  (cfg_edg),
   .cfg_pos  (cfg_pos),
   .cfg_neg  (cfg_neg),
+  .cfg_hld  (cfg_hld),
   // output triggers
   .sts_trg  (evn_lvl),
   // stream monitor

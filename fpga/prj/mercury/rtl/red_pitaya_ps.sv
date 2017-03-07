@@ -53,10 +53,12 @@ module red_pitaya_ps (
   output logic [  4-1:0] fclk_clk_o         ,
   output logic [  4-1:0] fclk_rstn_o        ,
   // XADC
-  input  logic  [ 5-1:0] vinp_i             ,  // voltages p
-  input  logic  [ 5-1:0] vinn_i             ,  // voltages n
+  input  logic [  5-1:0] vinp_i             ,  // voltages p
+  input  logic [  5-1:0] vinn_i             ,  // voltages n
   // GPIO
   gpio_if.m              gpio,
+  // interrupt
+  input  logic [  4-1:0] irq,
   // system read/write channel
   sys_bus_if.m           bus
 );

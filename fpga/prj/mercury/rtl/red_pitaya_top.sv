@@ -237,7 +237,7 @@ typedef struct packed {
   logic trg;  // software trigger
   logic stp;  // software stop
   logic str;  // software start
-} evn_acq_t;
+} evn_osc_t;
 
 // generator events
 typedef struct packed {
@@ -246,15 +246,23 @@ typedef struct packed {
   logic trg;  // software trigger
   logic stp;  // software stop
   logic str;  // software start
-} evn_asg_t;
+} evn_gen_t;
 
 // all events
 typedef struct packed {
-  evn_acq_t [MNA-1:0] acq;  // acquire
-  evn_asg_t [MNG-1:0] gen;  // generate
+  evn_osc_t [MNA-1:0] osc;  // acquire
+  evn_gen_t [MNG-1:0] gen;  // generate
 } evn_top_t;
 
 evn_top_t evn;
+
+// interrupts
+typedef struct packed {
+  logic [MNA-1:0] osc;  // acquire
+  logic [MNG-1:0] gen;  // generate
+} irq_top_t;
+
+irq_top_t irq;
 
 // configuration
 logic                    digital_loop;
@@ -301,6 +309,8 @@ red_pitaya_ps ps (
   .vinn_i        (vinn_i      ),
   // GPIO
   .gpio          (gpio),
+  // interrupt
+  .irq           (irq),
   // system read/write channel
   .bus           (ps_sys      )
 );
@@ -404,13 +414,15 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
     .sto      (str),
     // events
     .evn_ext  (evn),
-    .evn_str  (evn.acq[i].str),
-    .evn_stp  (evn.acq[i].stp),
-    .evn_trg  (evn.acq[i].trg),
-    .evn_lvl  (evn.acq[i].lvl),
-    .evn_lst  (evn.acq[i].lst),
+    .evn_str  (evn.osc[i].str),
+    .evn_stp  (evn.osc[i].stp),
+    .evn_trg  (evn.osc[i].trg),
+    .evn_lvl  (evn.osc[i].lvl),
+    .evn_lst  (evn.osc[i].lst),
     // reset output
     .ctl_rst  (ctl_rst),
+    // interrupts
+    .irq      (irq.osc[i]),
     // System bus
     .bus      (sys[4+2*i+0])
   );
@@ -445,6 +457,8 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
     .evn_trg  (evn.gen[i].trg),
     .evn_per  (evn.gen[i].per),
     .evn_lst  (evn.gen[i].lst),
+    // interrupts
+    .irq      (irq.gen[i]),
     // System bus
     .bus      (sys[8+2*i+0]),
     .bus_tbl  (sys[8+2*i+1])
