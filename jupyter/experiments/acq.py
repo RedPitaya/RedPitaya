@@ -36,6 +36,10 @@ class acq (object):
         ('cfg_str', 'uint32'),  # start
         ('cfg_stp', 'uint32'),  # stop
         ('cfg_trg', 'uint32'),  # trigger
+        # interrupt enable/status
+        ('irq_ena', 'uint32'),  # enable
+        ('irq_sts', 'uint32'),  # status/clear
+        ('rsv_001', 'uint32', 2),  # reserved
         # pre/post trigger counters
         ('cfg_pre', 'uint32'),  # configuration pre  trigger
         ('cfg_pst', 'uint32'),  # configuration post trigger
@@ -45,7 +49,7 @@ class acq (object):
         ('cfg_pos', 'uint32'),  # positive level
         ('cfg_neg', 'uint32'),  # negative level
         ('cfg_edg', 'uint32'),  # edge (0-pos, 1-neg)
-        ('cfg_rng', 'uint32'),  # range (not used by HW)
+        ('cfg_hld', 'uint32'),  # hold off time
         # decimation
         ('cfg_dec', 'uint32'),  # decimation factor
         ('cfg_shr', 'uint32'),  # shift right
@@ -116,6 +120,8 @@ class acq (object):
             "cfg_str = 0x{reg:08x} = {reg:10d}  # mask start                \n".format(reg=self.regset.cfg_str)+
             "cfg_stp = 0x{reg:08x} = {reg:10d}  # mask stop                 \n".format(reg=self.regset.cfg_stp)+
             "cfg_trg = 0x{reg:08x} = {reg:10d}  # mask trigger              \n".format(reg=self.regset.cfg_trg)+
+            "irq_ena = 0x{reg:08x} = {reg:10d}  # interrupt enable          \n".format(reg=self.regset.irq_ena)+
+            "irq_sts = 0x{reg:08x} = {reg:10d}  # interrupt status          \n".format(reg=self.regset.irq_sts)+
             "cfg_pre = 0x{reg:08x} = {reg:10d}  # configuration pre  trigger\n".format(reg=self.regset.cfg_pre)+
             "cfg_pst = 0x{reg:08x} = {reg:10d}  # configuration post trigger\n".format(reg=self.regset.cfg_pst)+
             "sts_pre = 0x{reg:08x} = {reg:10d}  # status pre  trigger       \n".format(reg=self.regset.sts_pre)+
@@ -123,7 +129,7 @@ class acq (object):
             "cfg_pos = 0x{reg:08x} = {reg:10d}  # positive level            \n".format(reg=self.regset.cfg_pos)+
             "cfg_neg = 0x{reg:08x} = {reg:10d}  # negative level            \n".format(reg=self.regset.cfg_neg)+
             "cfg_edg = 0x{reg:08x} = {reg:10d}  # edge (0-pos, 1-neg)       \n".format(reg=self.regset.cfg_edg)+
-            "cfg_rng = 0x{reg:08x} = {reg:10d}  # range (not used by HW)    \n".format(reg=self.regset.cfg_rng)+
+            "cfg_hld = 0x{reg:08x} = {reg:10d}  # hold off time             \n".format(reg=self.regset.cfg_hld)+
             "cfg_dec = 0x{reg:08x} = {reg:10d}  # decimation factor         \n".format(reg=self.regset.cfg_dec)+
             "cfg_shr = 0x{reg:08x} = {reg:10d}  # shift right               \n".format(reg=self.regset.cfg_shr)+
             "cfg_avg = 0x{reg:08x} = {reg:10d}  # average enable            \n".format(reg=self.regset.cfg_avg)+
@@ -244,6 +250,17 @@ class acq (object):
             raise ValueError("Trigger edge should be obe of {}".format(list(self.edges.keys())))
 
     @property
+    def holdoff (self) -> int:
+        """Trigger hold off time in clock periods"""
+        return self.regset.cfg_hld
+
+    @holdoff.setter
+    def holdoff (self, value: int):
+        """Trigger hold off time in clock periods"""
+        # TODO: check range
+        self.regset.cfg_hld = value
+
+    @property
     def decimation (self) -> int:
         return (self.regset.cfg_dec + 1)
 
@@ -288,8 +305,17 @@ class acq (object):
         self.regset.cfg_fkk = value[2]
         self.regset.cfg_fpp = value[3]
 
+    @property
+    def pointer (self):
+        # mask out overflow bit and sum pre and post trigger counters
+        cnt = self.trigger_pre_status  & 0x7fffffff \
+            + self.trigger_post_status & 0x7fffffff
+        adr = cnt % self.N
+        return adr
+
     def data(self):
         """Data containing normalized values in the range [-1,1]"""
         siz = self.N
-        # TODO: nparray
-        return [self.table[i] / self.DWr * self.__input_range for i in range(siz)]
+        adr = self.pointer
+        # TODO: nparray, use memcopy from ctypes
+        return [self.table[(adr+i)%self.N] / self.DWr * self.__input_range for i in range(siz)]

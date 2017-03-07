@@ -34,6 +34,10 @@ class asg (object):
         ('cfg_str', 'uint32'),  # start
         ('cfg_stp', 'uint32'),  # stop
         ('cfg_trg', 'uint32'),  # trigger
+        # interrupt enable/status
+        ('irq_ena', 'uint32'),  # enable
+        ('irq_sts', 'uint32'),  # status/clear
+        ('rsv_001', 'uint32', 2),  # reserved
         # buffer configuration
         ('cfg_siz', 'uint32'),  # size
         ('cfg_off', 'uint32'),  # offset
@@ -107,6 +111,8 @@ class asg (object):
             "cfg_str = 0x{reg:08x} = {reg:10d}  # mask start                     \n".format(reg=self.regset.cfg_str)+
             "cfg_stp = 0x{reg:08x} = {reg:10d}  # mask stop                      \n".format(reg=self.regset.cfg_stp)+
             "cfg_trg = 0x{reg:08x} = {reg:10d}  # mask trigger                   \n".format(reg=self.regset.cfg_trg)+
+            "irq_ena = 0x{reg:08x} = {reg:10d}  # interrupt enable               \n".format(reg=self.regset.irq_ena)+
+            "irq_sts = 0x{reg:08x} = {reg:10d}  # interrupt status               \n".format(reg=self.regset.irq_sts)+
             "cfg_siz = 0x{reg:08x} = {reg:10d}  # table size                     \n".format(reg=self.regset.cfg_siz)+
             "cfg_off = 0x{reg:08x} = {reg:10d}  # table offset                   \n".format(reg=self.regset.cfg_off)+
             "cfg_ste = 0x{reg:08x} = {reg:10d}  # table step                     \n".format(reg=self.regset.cfg_ste)+
