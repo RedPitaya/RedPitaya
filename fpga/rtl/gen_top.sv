@@ -195,21 +195,21 @@ casez (bus.addr[BAW-1:0])
   'h10: bus.rdata <=                  irq_ena;
   'h14: bus.rdata <=                  irq_sts;
   // buffer configuration
-  'h10: bus.rdata <= {{32- CW{1'b0}}, cfg_siz};
-  'h14: bus.rdata <= {{32- CW{1'b0}}, cfg_off};
-  'h18: bus.rdata <= {{32- CW{1'b0}}, cfg_ste};
+  'h20: bus.rdata <= {{32- CW{1'b0}}, cfg_siz};
+  'h24: bus.rdata <= {{32- CW{1'b0}}, cfg_off};
+  'h28: bus.rdata <= {{32- CW{1'b0}}, cfg_ste};
   // burst mode
-  'h20: bus.rdata <= {{32-  2{1'b0}}, cfg_inf
-                                     , cfg_ben};
-  'h24: bus.rdata <= {{32-CWM{1'b0}}, cfg_bdl};
-  'h28: bus.rdata <=                  cfg_bln ;
-  'h2c: bus.rdata <= {{32- 16{1'b0}}, cfg_bnm};
+  'h30: bus.rdata <= {{32-  2{1'b0}}, cfg_inf
+                                    , cfg_ben};
+  'h34: bus.rdata <= {{32-CWM{1'b0}}, cfg_bdl};
+  'h38: bus.rdata <=                  cfg_bln ;
+  'h3c: bus.rdata <= {{32- 16{1'b0}}, cfg_bnm};
   // status
-  'h30: bus.rdata <= 32'(sts_bln);
-  'h34: bus.rdata <= 32'(sts_bnm);
+  'h40: bus.rdata <= 32'(sts_bln);
+  'h44: bus.rdata <= 32'(sts_bnm);
   // linear transformation (should be properly sign extended)
-  'h38: bus.rdata <= cfg_mul;
-  'h3c: bus.rdata <= cfg_sum;
+  'h48: bus.rdata <= cfg_mul;
+  'h4c: bus.rdata <= cfg_sum;
   // default is 'x for better optimization
   default: bus.rdata <= 'x;
 endcase
