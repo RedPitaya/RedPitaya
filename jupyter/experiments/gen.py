@@ -6,7 +6,7 @@ import ctypes
 import numpy as np
 from enum import Enum
 
-class asg (object):
+class gen (object):
     # sampling frequency
     FS = 125000000.0
     # linear addition multiplication register width
@@ -56,7 +56,7 @@ class asg (object):
         ('cfg_sum',  'int32')   # addedr (offset)
     ])
 
-    def __init__ (self, index:int, uio:str = '/dev/uio/asg'):
+    def __init__ (self, index:int, uio:str = '/dev/uio/gen'):
         """Module instance index should be provided"""
 
         # use index

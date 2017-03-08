@@ -4,7 +4,7 @@ import mmap
 
 import numpy as np
 
-class acq (object):
+class osc (object):
     # sampling frequency
     FS = 125000000.0
     # linear addition multiplication register width
@@ -62,7 +62,7 @@ class acq (object):
         ('cfg_fpp', 'uint32')   # PP coeficient
     ])
 
-    def __init__ (self, index:int, input_range:float, uio:str = '/dev/uio/acq'):
+    def __init__ (self, index:int, input_range:float, uio:str = '/dev/uio/osc'):
         """Module instance index should be provided"""
 
         # use index
