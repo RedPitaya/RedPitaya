@@ -122,12 +122,12 @@ class osc (object):
             "cfg_trg = 0x{reg:08x} = {reg:10d}  # mask trigger              \n".format(reg=self.regset.cfg_trg)+
             "irq_ena = 0x{reg:08x} = {reg:10d}  # interrupt enable          \n".format(reg=self.regset.irq_ena)+
             "irq_sts = 0x{reg:08x} = {reg:10d}  # interrupt status          \n".format(reg=self.regset.irq_sts)+
-            "cfg_pre = 0x{reg:08x} = {reg:10d}  # configuration pre  trigger\n".format(reg=self.regset.cfg_pre)+
-            "cfg_pst = 0x{reg:08x} = {reg:10d}  # configuration post trigger\n".format(reg=self.regset.cfg_pst)+
+            "cfg_pre = 0x{reg:08x} = {reg:10d}  # delay pre  trigger        \n".format(reg=self.regset.cfg_pre)+
+            "cfg_pst = 0x{reg:08x} = {reg:10d}  # delay post trigger        \n".format(reg=self.regset.cfg_pst)+
             "sts_pre = 0x{reg:08x} = {reg:10d}  # status pre  trigger       \n".format(reg=self.regset.sts_pre)+
             "sts_pst = 0x{reg:08x} = {reg:10d}  # status post trigger       \n".format(reg=self.regset.sts_pst)+
-            "cfg_pos = 0x{reg:08x} = {reg:10d}  # positive level            \n".format(reg=self.regset.cfg_pos)+
             "cfg_neg = 0x{reg:08x} = {reg:10d}  # negative level            \n".format(reg=self.regset.cfg_neg)+
+            "cfg_pos = 0x{reg:08x} = {reg:10d}  # positive level            \n".format(reg=self.regset.cfg_pos)+
             "cfg_edg = 0x{reg:08x} = {reg:10d}  # edge (0-pos, 1-neg)       \n".format(reg=self.regset.cfg_edg)+
             "cfg_hld = 0x{reg:08x} = {reg:10d}  # hold off time             \n".format(reg=self.regset.cfg_hld)+
             "cfg_dec = 0x{reg:08x} = {reg:10d}  # decimation factor         \n".format(reg=self.regset.cfg_dec)+
@@ -168,10 +168,13 @@ class osc (object):
         """activate SW trigger"""
         self.regset.ctl_sts = self.CTL_TRG_MASK
 
-    def status (self) -> int:
-        """[start, trigger] status"""
-        return (bool(self.regset.ctl_sts & self.CTL_STR_MASK),
-                bool(self.regset.ctl_sts & self.CTL_TRG_MASK))
+    def status_run (self) -> bool:
+        """Run status"""
+        return (bool(self.regset.ctl_sts & self.CTL_STR_MASK))
+
+    def status_trigger (self) -> bool:
+        """Trigger status"""
+        return (bool(self.regset.ctl_sts & self.CTL_TRG_MASK))
 
     @property
     def mask (self) -> tuple:
@@ -308,13 +311,15 @@ class osc (object):
     @property
     def pointer (self):
         # mask out overflow bit and sum pre and post trigger counters
-        cnt = self.trigger_pre_status  & 0x7fffffff \
-            + self.trigger_post_status & 0x7fffffff
+        cnt = ( (self.trigger_pre_status  & 0x7fffffff)
+              + (self.trigger_post_status & 0x7fffffff) )
         adr = cnt % self.N
         return adr
 
-    def data(self, siz = N):
+    def data(self, siz = N, ptr = None):
         """Data containing normalized values in the range [-1,1]"""
-        adr = (self.N + self.pointer - siz) % self.N
+        if ptr is None:
+            ptr = self.pointer
+        adr = (self.N + ptr - siz) % self.N
         # TODO: nparray, use memcopy from ctypes
         return [self.table[(adr+i)%self.N] / self.DWr * self.__input_range for i in range(siz)]
