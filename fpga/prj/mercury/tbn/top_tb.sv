@@ -62,10 +62,10 @@ end
 
 initial begin
   repeat(100) @(posedge clk);
-  //test_id            (32'h40000000);
-  test_asg           (32'h40080000, 32'h40090000);
+  //test_id  (32'h40000000);
+  test_asg (32'h40080000, 32'h40090000);
   repeat(16) @(posedge clk);
-  test_acq_automatic (32'h40040000, 32'h40050000);
+  test_acq (32'h40040000, 32'h40050000);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
   repeat(16) @(posedge clk);
@@ -140,7 +140,7 @@ int buf_len = 'hff+1;
 real freq  = 10_000; // 10kHz
 real phase = 0; // DEG
 
-task test_acq_automatic (
+task test_acq (
   int unsigned regset,
   int unsigned buffer
 );
@@ -148,19 +148,26 @@ task test_acq_automatic (
   // start/stop/trigger masks
   axi_write(regset+'h04, 'b00001<<10);  // start
   axi_write(regset+'h08, 'b00010<<10);  // stop
-  axi_write(regset+'h0c, 'b00100<<10);  // trigger
+  axi_write(regset+'h0c, 'b01100<<10);  // trigger
   // bypass input filter
   axi_write(regset+'h4c, 'h1);
 
-  // configure trigger
-  axi_write(regset+'h20, 'd0);  // cfg_pre
-  axi_write(regset+'h24, 'd4);  // cfg_pst
+  // configure trigger level
+  axi_write(regset+'h30, -'d4);  // level neg
+  axi_write(regset+'h34, +'d4);  // level pos
+  axi_write(regset+'h38,  'h0);  // edge positive
+  axi_write(regset+'h3c,  'h8);  // holdoff
+
+  // configure trigger timing
+  axi_write(regset+'h20, 'd08);  // cfg_pre
+  axi_write(regset+'h24, 'd24);  // cfg_pst
+
   // start/trigger acquire
   axi_write(regset+'h00, 4'b0010);  // start
-  axi_write(regset+'h00, 4'b0100);  // stop
+  //axi_write(regset+'h00, 4'b0100);  // stop
   //axi_write(regset+'h00, 4'b1000);  // trigger
   repeat(1000) @(posedge clk);
-endtask: test_acq_automatic
+endtask: test_acq
 
 
 task test_asg (
@@ -439,9 +446,23 @@ red_pitaya_top #(
   .led_o          (led)
 );
 
+////////////////////////////////////////////////////////////////////////////////
+// simulated inputs
+////////////////////////////////////////////////////////////////////////////////
+
+bit [16-1:0] dat_ref [16];
+
+initial begin
+  logic signed [16-1:0] dat;
+  for (int unsigned i=0; i<16; i++) begin
+      dat = -8+i;
+      dat_ref[i] = {dat[16-1], ~dat[16-2:0]};
+  end
+end
+
 // ADC
-assign adc_dat[0] = cyc;
-assign adc_dat[1] = cyc;
+assign adc_dat[0] = dat_ref[cyc % 16];
+assign adc_dat[1] = dat_ref[cyc % 16];
 assign adc_clk[1] =  clk;
 assign adc_clk[0] = ~clk;
 // adc_clk_o
