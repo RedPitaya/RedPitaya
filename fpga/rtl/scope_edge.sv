@@ -15,8 +15,8 @@ module scope_edge #(
   input  logic          ctl_rst,  // synchronous reset
   // configuration
   input  logic          cfg_edg,  // edge select (0-rising, 1-falling)
-  input  DT             cfg_pos,  // positive level
   input  DT             cfg_neg,  // negative level
+  input  DT             cfg_pos,  // positive level
   input  logic [CW-1:0] cfg_hld,  // hold off time
   // output triggers
   output logic          sts_trg,
@@ -48,8 +48,8 @@ axi4_stream_if #(.DN (DN), .DT (DT)) sts (.ACLK (sti.ACLK), .ARESETn (sti.ARESET
 // subtraction
 always @(posedge sti.ACLK)
 if (sti.transf) begin
-  sub_pos <= cfg_pos - sti.TDATA[0];
   sub_neg <= sti.TDATA[0] - cfg_neg;
+  sub_pos <= cfg_pos - sti.TDATA[0];
 end
 
 // add to the stream the delay caused by subtraction stage

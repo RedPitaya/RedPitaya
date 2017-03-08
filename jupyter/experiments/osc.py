@@ -46,8 +46,8 @@ class osc (object):
         ('sts_pre', 'uint32'),  # status pre  trigger
         ('sts_pst', 'uint32'),  # status post trigger
         # edge detection
-        ('cfg_pos', 'uint32'),  # positive level
         ('cfg_neg', 'uint32'),  # negative level
+        ('cfg_pos', 'uint32'),  # positive level
         ('cfg_edg', 'uint32'),  # edge (0-pos, 1-neg)
         ('cfg_hld', 'uint32'),  # hold off time
         # decimation
@@ -221,20 +221,20 @@ class osc (object):
 
     @property
     def level (self) -> float:
-        """Trigger level in vols"""
-        return ([self.regset.cfg_pos, self.regset.cfg_neg] / self.DWMr * self.__input_range)
+        """Trigger level in vols [neg, pos]"""
+        return ([self.regset.cfg_neg, self.regset.cfg_pos] / self.DWMr * self.__input_range)
 
     @level.setter
     def level (self, value: tuple):
-        """Trigger level in vols"""
+        """Trigger level in vols [neg, pos]"""
         if (-1.0 <= value[0] <= 1.0):
-            self.regset.cfg_pos = value[0] / self.__input_range * self.DWr
-        else:
-            raise ValueError("Trigger positive level should be inside [{},{}]".format(self.__input_range))
-        if (-1.0 <= value[1] <= 1.0):
             self.regset.cfg_neg = value[0] / self.__input_range * self.DWr
         else:
             raise ValueError("Trigger negative level should be inside [{},{}]".format(self.__input_range))
+        if (-1.0 <= value[1] <= 1.0):
+            self.regset.cfg_pos = value[1] / self.__input_range * self.DWr
+        else:
+            raise ValueError("Trigger positive level should be inside [{},{}]".format(self.__input_range))
 
     @property
     def edge (self) -> str:

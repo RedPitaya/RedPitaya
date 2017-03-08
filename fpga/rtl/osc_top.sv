@@ -79,8 +79,8 @@ logic  [CW-1:0] sts_pst;
 logic           sts_pso;
 
 // edge detection configuration
-DT              cfg_pos;  // positive level
 DT              cfg_neg;  // negative level
+DT              cfg_pos;  // positive level
 logic           cfg_edg;  // edge (0-pos, 1-neg)
 logic  [CW-1:0] cfg_hld;  // hold off time
 
@@ -124,8 +124,8 @@ if (~bus.rstn) begin
   cfg_pre <= '0;
   cfg_pst <= '0;
   // edge detection
-  cfg_pos <= '0;
   cfg_neg <= '0;
+  cfg_pos <= '0;
   cfg_edg <= '0;
   cfg_hld <= '0;
   // filter/dacimation
@@ -149,8 +149,8 @@ end else begin
     if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata[ CW-1:0];
     if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata[ CW-1:0];
     // edge detection
-    if (bus.addr[BAW-1:0]=='h30)  cfg_pos <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h34)  cfg_neg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h30)  cfg_neg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h34)  cfg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h38)  cfg_edg <= bus.wdata[      0];
     if (bus.addr[BAW-1:0]=='h3c)  cfg_hld <= bus.wdata[ CW-1:0];
     // dacimation/filter
@@ -204,8 +204,8 @@ casez (bus.addr[BAW-1:0])
   'h28: bus.rdata <=    {sts_pro, 31'(sts_pre)};
   'h2c: bus.rdata <=    {sts_pso, 31'(sts_pst)};
   // edge detection
-  'h30: bus.rdata <=                  cfg_pos ;
-  'h34: bus.rdata <=                  cfg_neg ;
+  'h30: bus.rdata <=                  cfg_neg ;
+  'h34: bus.rdata <=                  cfg_pos ;
   'h38: bus.rdata <=              32'(cfg_edg);
   'h3c: bus.rdata <=              32'(cfg_hld);
   // decimation/filter
@@ -321,8 +321,8 @@ scope_edge #(
   .ctl_rst  (ctl_rst),
   // configuration
   .cfg_edg  (cfg_edg),
-  .cfg_pos  (cfg_pos),
   .cfg_neg  (cfg_neg),
+  .cfg_pos  (cfg_pos),
   .cfg_hld  (cfg_hld),
   // output triggers
   .sts_trg  (evn_lvl),
