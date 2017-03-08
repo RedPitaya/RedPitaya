@@ -313,9 +313,8 @@ class acq (object):
         adr = cnt % self.N
         return adr
 
-    def data(self):
+    def data(self, siz = N):
         """Data containing normalized values in the range [-1,1]"""
-        siz = self.N
-        adr = self.pointer
+        adr = (self.N + self.pointer - siz) % self.N
         # TODO: nparray, use memcopy from ctypes
         return [self.table[(adr+i)%self.N] / self.DWr * self.__input_range for i in range(siz)]
