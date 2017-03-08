@@ -230,7 +230,7 @@ assign daisy_n_o = 1'bz;
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-// acquire events
+// oscilloscope events
 typedef struct packed {
   logic lst;  // last
   logic lvl;  // level/edge
