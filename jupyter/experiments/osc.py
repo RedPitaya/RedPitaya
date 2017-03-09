@@ -319,7 +319,8 @@ class osc (object):
     def data(self, siz = N, ptr = None):
         """Data containing normalized values in the range [-1,1]"""
         if ptr is None:
-            ptr = self.pointer
+            ptr = int(self.pointer)
         adr = (self.N + ptr - siz) % self.N
-        # TODO: nparray, use memcopy from ctypes
-        return [self.table[(adr+i)%self.N] / self.DWr * self.__input_range for i in range(siz)]
+        # TODO: avoid making copy of entire array
+        table = np.roll(self.table, -ptr)
+        return table.astype('float32')[-siz:] * (self.__input_range / self.DWr)
