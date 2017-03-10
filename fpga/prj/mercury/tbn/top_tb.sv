@@ -63,9 +63,10 @@ end
 initial begin
   repeat(100) @(posedge clk);
   //test_id  (32'h40000000);
-  test_asg (32'h40080000, 32'h40090000);
+  test_asg (32'h40080000, 32'h40090000, 0*5);
+  test_asg (32'h400a0000, 32'h400b0000, 1*5);
   repeat(16) @(posedge clk);
-  test_acq (32'h40040000, 32'h40050000);
+  test_acq (32'h40040000, 32'h40050000, 2*5);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
   repeat(16) @(posedge clk);
@@ -142,13 +143,14 @@ real phase = 0; // DEG
 
 task test_acq (
   int unsigned regset,
-  int unsigned buffer
+  int unsigned buffer,
+  int unsigned sh = 0
 );
   repeat(10) @(posedge clk);
   // start/stop/trigger masks
-  axi_write(regset+'h04, 'b00001<<10);  // start
-  axi_write(regset+'h08, 'b00010<<10);  // stop
-  axi_write(regset+'h0c, 'b01100<<10);  // trigger
+  axi_write(regset+'h04, 'b00001<<sh);  // start
+  axi_write(regset+'h08, 'b00010<<sh);  // stop
+  axi_write(regset+'h0c, 'b01100<<sh);  // trigger
   // bypass input filter
   axi_write(regset+'h4c, 'h1);
 
@@ -172,7 +174,8 @@ endtask: test_acq
 
 task test_asg (
   int unsigned regset,
-  int unsigned buffer
+  int unsigned buffer,
+  int unsigned sh = 0
 );
   logic signed [ 32-1: 0] rdata_blk [];
   repeat(10) @(posedge clk);
@@ -205,9 +208,9 @@ task test_asg (
   // configure burst mode
   axi_write(regset+'h30, 2'b00);  // burst disable
   // start/stop/trigger masks
-  axi_write(regset+'h04, 'b00001);  // start
-  axi_write(regset+'h08, 'b00010);  // stop
-  axi_write(regset+'h0c, 'b00100);  // trigger
+  axi_write(regset+'h04, 'b00001<<sh);  // start
+  axi_write(regset+'h08, 'b00010<<sh);  // stop
+  axi_write(regset+'h0c, 'b00100<<sh);  // trigger
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
