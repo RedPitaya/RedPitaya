@@ -194,7 +194,7 @@ assign adc_cdcs_o = 1'b1;
 // DAC AXI4-Stream interface
 axi4_stream_if #(.DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
-SBG_T [MNG-1:0] dac_raw;
+logic [MNG-1:0] [14-1:0] dac_raw;
 
 generate
 for (genvar i=0; i<MNG; i++) begin: for_dac
