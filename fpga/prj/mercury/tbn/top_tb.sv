@@ -450,19 +450,21 @@ red_pitaya_top #(
 // simulated inputs
 ////////////////////////////////////////////////////////////////////////////////
 
-bit [16-1:0] dat_ref [16];
+localparam int unsigned SIZ_REF = 64;
+
+bit [16-1:0] dat_ref [SIZ_REF];
 
 initial begin
   logic signed [16-1:0] dat;
-  for (int unsigned i=0; i<16; i++) begin
-      dat = -8+i;
+  for (int unsigned i=0; i<SIZ_REF; i++) begin
+      dat = -SIZ_REF/2+i;
       dat_ref[i] = {dat[16-1], ~dat[16-2:0]};
   end
 end
 
 // ADC
-assign adc_dat[0] = dat_ref[cyc % 16];
-assign adc_dat[1] = dat_ref[cyc % 16];
+assign adc_dat[0] = dat_ref[cyc % SIZ_REF];
+assign adc_dat[1] = dat_ref[cyc % SIZ_REF];
 assign adc_clk[1] =  clk;
 assign adc_clk[0] = ~clk;
 // adc_clk_o
