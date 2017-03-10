@@ -46,8 +46,8 @@ class osc (object):
         ('sts_pre', 'uint32'),  # status pre  trigger
         ('sts_pst', 'uint32'),  # status post trigger
         # edge detection
-        ('cfg_neg', 'uint32'),  # negative level
-        ('cfg_pos', 'uint32'),  # positive level
+        ('cfg_neg',  'int32'),  # negative level
+        ('cfg_pos',  'int32'),  # positive level
         ('cfg_edg', 'uint32'),  # edge (0-pos, 1-neg)
         ('cfg_hld', 'uint32'),  # hold off time
         # decimation
@@ -56,10 +56,10 @@ class osc (object):
         ('cfg_avg', 'uint32'),  # average enable
         # filter
         ('cfg_byp', 'uint32'),  # bypass
-        ('cfg_faa', 'uint32'),  # AA coeficient
-        ('cfg_fbb', 'uint32'),  # BB coeficient
-        ('cfg_fkk', 'uint32'),  # KK coeficient
-        ('cfg_fpp', 'uint32')   # PP coeficient
+        ('cfg_faa',  'int32'),  # AA coeficient
+        ('cfg_fbb',  'int32'),  # BB coeficient
+        ('cfg_fkk',  'int32'),  # KK coeficient
+        ('cfg_fpp',  'int32')   # PP coeficient
     ])
 
     def __init__ (self, index:int, input_range:float, uio:str = '/dev/uio/osc'):
@@ -225,17 +225,19 @@ class osc (object):
     @property
     def level (self) -> float:
         """Trigger level in vols [neg, pos]"""
-        return ([self.regset.cfg_neg, self.regset.cfg_pos] / self.DWMr * self.__input_range)
+        scale = self.__input_range / self.DWr
+        return ([self.regset.cfg_neg * scale, self.regset.cfg_pos * scale])
 
     @level.setter
     def level (self, value: tuple):
         """Trigger level in vols [neg, pos]"""
+        scale = self.DWr / self.__input_range
         if (-1.0 <= value[0] <= 1.0):
-            self.regset.cfg_neg = value[0] / self.__input_range * self.DWr
+            self.regset.cfg_neg = value[0] * scale
         else:
             raise ValueError("Trigger negative level should be inside [{},{}]".format(self.__input_range))
         if (-1.0 <= value[1] <= 1.0):
-            self.regset.cfg_pos = value[1] / self.__input_range * self.DWr
+            self.regset.cfg_pos = value[1] * scale
         else:
             raise ValueError("Trigger positive level should be inside [{},{}]".format(self.__input_range))
 
@@ -271,6 +273,14 @@ class osc (object):
     def decimation (self, value: int):
         # TODO check range
         self.regset.cfg_dec = value - 1
+
+    @property
+    def sample_rate (self) -> float:
+        return (self.FS / self.decimation)
+
+    @property
+    def sample_period (self) -> float:
+        return (1 / self.sample_rate)
 
     @property
     def average (self) -> bool:

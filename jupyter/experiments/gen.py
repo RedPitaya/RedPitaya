@@ -3,7 +3,10 @@ import fcntl
 import mmap
 
 import ctypes
+import math
 import numpy as np
+from scipy import signal
+
 from enum import Enum
 
 class gen (object):
@@ -26,6 +29,29 @@ class gen (object):
     CTL_STP_MASK = np.uint32(1<<2) # 1 - stop/abort; returns 1 when stopped
     CTL_STR_MASK = np.uint32(1<<1) # 1 - start
     CTL_RST_MASK = np.uint32(1<<0) # 1 - reset state machine so that it is in known state
+
+    # logaritmic scale from 0.116Hz to 62.5Mhz
+    f_min = FS / 2**(CWM+CWF)
+    f_max = FS / 2
+    f_one = FS / 2**(CWM)
+    fl_min = math.log10(f_min)
+    fl_max = math.log10(f_max)
+    fl_one = math.log10(f_one)
+
+    # create waveforms
+    t = np.linspace(0, 2*np.pi, N, endpoint=False)
+
+    def sine (self, t = None):
+        if t is None: t = self.t
+        return np.sin(t)
+
+    def square (self, duty = 0.5, t = None):
+        if t is None: t = self.t
+        return signal.square(t, duty)
+
+    def sawtooth (self, width = 0.5, t = None):
+        if t is None: t = self.t
+        return signal.sawtooth(t, width)
 
     regset_dtype = np.dtype([
         # control/status
@@ -53,7 +79,7 @@ class gen (object):
         ('sts_bnm', 'uint32'),  # number (current burst counter)
         # linear transformation
         ('cfg_mul',  'int32'),  # multiplier (amplitude)
-        ('cfg_sum',  'int32')   # addedr (offset)
+        ('cfg_sum',  'int32')   # adder (offset)
     ])
 
     def __init__ (self, index:int, uio:str = '/dev/uio/gen'):
@@ -123,7 +149,7 @@ class gen (object):
             "sts_bln = 0x{reg:08x} = {reg:10d}  # burst length (current position)\n".format(reg=self.regset.sts_bln)+
             "sts_bnm = 0x{reg:08x} = {reg:10d}  # burst number (current counter) \n".format(reg=self.regset.sts_bnm)+
             "cfg_mul = 0x{reg:08x} = {reg:10d}  # multiplier (amplitude)         \n".format(reg=self.regset.cfg_mul)+
-            "cfg_sum = 0x{reg:08x} = {reg:10d}  # addedr (offset)                \n".format(reg=self.regset.cfg_sum)
+            "cfg_sum = 0x{reg:08x} = {reg:10d}  # adder (offset)                 \n".format(reg=self.regset.cfg_sum)
         )
 
     def reset (self):
