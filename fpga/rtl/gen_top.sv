@@ -99,6 +99,7 @@ logic [CWN-1:0] sts_bnm;  // burst number counter
 // linear offset and gain
 DTM             cfg_mul;
 DTS             cfg_sum;
+logic           cfg_ena;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -155,9 +156,10 @@ end else begin
     if (bus.addr[BAW-1:0]=='h34)  cfg_bdl <= bus.wdata[CWM-1:0];
     if (bus.addr[BAW-1:0]=='h38)  cfg_bln <= bus.wdata[ 32-1:0];
     if (bus.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus.wdata[ 16-1:0];
-    // linear transformation
-    if (bus.addr[BAW-1:0]=='h48)  cfg_mul <= DTM'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h4c)  cfg_sum <= DTS'(bus.wdata);
+    // linear transformation and enable
+    if (bus.addr[BAW-1:0]=='h50)  cfg_mul <= DTM'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h54)  cfg_sum <= DTS'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h58)  cfg_ena <= bus.wdata[      0];
   end
 end
 
@@ -207,9 +209,10 @@ casez (bus.addr[BAW-1:0])
   // status
   'h40: bus.rdata <= 32'(sts_bln);
   'h44: bus.rdata <= 32'(sts_bnm);
-  // linear transformation (should be properly sign extended)
-  'h48: bus.rdata <= cfg_mul;
-  'h4c: bus.rdata <= cfg_sum;
+  // linear transformation and enable
+  'h50: bus.rdata <= cfg_mul;
+  'h54: bus.rdata <= cfg_sum;
+  'h58: bus.rdata <= cfg_ena;
   // default is 'x for better optimization
   default: bus.rdata <= 'x;
 endcase
@@ -294,7 +297,8 @@ asg #(
 
 // TODO: this will be a continuous stream, data stream control needs rethinking
 
-axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (DT)) stm (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (DT)) sta (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
 
 lin_mul #(
   .DN  (DN),
@@ -304,7 +308,7 @@ lin_mul #(
 ) lin_mul (
   // stream input/output
   .sti       (stg),
-  .sto       (str),
+  .sto       (stm),
   // configuration
   .cfg_mul   (cfg_mul)
 );
@@ -316,10 +320,22 @@ lin_add #(
   .DTS (DTS)
 ) lin_add (
   // stream input/output
-  .sti       (str),
-  .sto       (sto),
+  .sti       (stm),
+  .sto       (sta),
   // configuration
   .cfg_sum   (cfg_sum)
 );
 
+bin_and #(
+  .DN  (DN),
+  .DTI (DT),
+  .DTO (DT),
+  .DTA (DT)
+) bin_and (
+  // stream input/output
+  .sti       (sta),
+  .sto       (sto),
+  // configuration
+  .cfg_mul   (DT'{cfg_ena})
+);
 endmodule: gen_top

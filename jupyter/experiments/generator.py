@@ -102,19 +102,7 @@ class generator (object):
             self.w_phase.observe    (self.clb_phase    , names='value')
             
         def clb_enable (self, change):
-            # enable
-            if change['new']:
-                self.amplitude = self.bkp_amplitude
-                self.offset    = self.bkp_offset
-                # disable
-            else:
-                self.bkp_amplitude = self.amplitude
-                self.bkp_offset    = self.offset
-                self.amplitude = 0
-                self.offset    = 0
-            # set amplitude and offset widgets
-            self.w_amplitude.value = self.amplitude
-            self.w_offset.value    = self.offset
+            self.enable = change['new']
 
         def clb_waveform (self, change):
             self.form = change['new']

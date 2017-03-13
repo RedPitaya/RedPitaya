@@ -68,7 +68,7 @@ class gen (object):
         ('cfg_siz', 'uint32'),  # size
         ('cfg_off', 'uint32'),  # offset
         ('cfg_ste', 'uint32'),  # step
-        ('rsv2'   , 'uint32', 1),
+        ('rsv_002', 'uint32', 1),
         # burst mode
         ('cfg_bmd', 'uint32'),  # mode [1:0] = [inf, ben]
         ('cfg_bdl', 'uint32'),  # data length
@@ -77,9 +77,11 @@ class gen (object):
         # burst status
         ('sts_bln', 'uint32'),  # length (current position inside burst length)
         ('sts_bnm', 'uint32'),  # number (current burst counter)
+        ('rsv_003', 'uint32', 2),
         # linear transformation
         ('cfg_mul',  'int32'),  # multiplier (amplitude)
         ('cfg_sum',  'int32')   # adder (offset)
+        ('cfg_ena',  'int32')   # output enable
     ])
 
     def __init__ (self, index:int, uio:str = '/dev/uio/gen'):
@@ -149,7 +151,8 @@ class gen (object):
             "sts_bln = 0x{reg:08x} = {reg:10d}  # burst length (current position)\n".format(reg=self.regset.sts_bln)+
             "sts_bnm = 0x{reg:08x} = {reg:10d}  # burst number (current counter) \n".format(reg=self.regset.sts_bnm)+
             "cfg_mul = 0x{reg:08x} = {reg:10d}  # multiplier (amplitude)         \n".format(reg=self.regset.cfg_mul)+
-            "cfg_sum = 0x{reg:08x} = {reg:10d}  # adder (offset)                 \n".format(reg=self.regset.cfg_sum)
+            "cfg_sum = 0x{reg:08x} = {reg:10d}  # adder (offset)                 \n".format(reg=self.regset.cfg_sum)+
+            "cfg_ena = 0x{reg:08x} = {reg:10d}  # output enable                  \n".format(reg=self.regset.cfg_ena)
         )
 
     def reset (self):
@@ -200,6 +203,16 @@ class gen (object):
             self.regset.cfg_mul = value * self.DWMr
         else:
             raise ValueError("Output amplitude should be inside [-1,1]")
+
+    @property
+    def enable (self) -> bool:
+        """Output enable"""
+        return (bool(self.regset.cfg_ena))
+
+    @amplitude.setter
+    def amplitude (self, value: float):
+        """Output enable"""
+        self.regset.cfg_ena = int(value)
 
     @property
     def offset (self) -> float:
