@@ -22,9 +22,6 @@ module top_tb #(
 logic               clk ;
 logic               rstn;
 
-logic [DAC_DW-1: 0] dac_a;
-logic [DAC_DW-1: 0] dac_b;
-
 logic               trig;
 
 // DAC clock

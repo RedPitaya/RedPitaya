@@ -29,6 +29,7 @@ RTL =$(wildcard $(PATH_RTL)/*.sv)
 RTL+=$(wildcard $(PATH_RTL)/*.v)
 RTL+=$(wildcard ../../../rtl/*.sv)
 RTL+=$(wildcard ../../../rtl/*/*.sv)
+RTL+=$(wildcard ../../../rtl/*/*.v)
 
 # testbench files
 TBN =$(wildcard $(PATH_TBN)/*.sv)

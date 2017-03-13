@@ -97,7 +97,7 @@ logic            sys_ack  ;
 
 logic        [ 32-1: 0] rdata;
 logic signed [ 32-1: 0] rdata_blk [];
-bit   signed [ 32-1: 0] rdata_ref [];
+logic signed [ 32-1: 0] rdata_ref [];
 int unsigned            rdata_trg [$];
 int unsigned            blk_size;
 
