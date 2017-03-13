@@ -137,10 +137,21 @@ class generator (object):
             self.phase = change['new']
 
         def display (self):
-            display (self.w_enable,
-                     self.w_waveform,
-                     self.w_duty,
-                     self.w_amplitude,
-                     self.w_offset,
-                     self.w_frequency,
-                     self.w_phase)
+            layout = ipw.Layout(border='solid 2px', margin='2px 2px 2px 2px')
+            self.lbl_waveform  = ipw.Label(value="waveform shapes"               , layout = ipw.Layout(width='100%'))
+            self.lbl_output    = ipw.Label(value="amplitude [V] and offset [V]"  , layout = ipw.Layout(width='100%'))
+            self.lbl_frequency = ipw.Label(value="frequency [Hz] and phase [DEG]", layout = ipw.Layout(width='100%'))
+            self.lbl_channel   = ipw.Label(value="generator"                     , layout = ipw.Layout(width='100%'))
+            self.box_enable    = ipw.VBox([self.w_enable], layout = ipw.Layout(margin='2px 2px 2px 2px'))
+            self.box_waveform  = ipw.VBox([self.lbl_waveform,  self.w_waveform, self.w_duty]   , layout = layout)
+            self.box_output    = ipw.VBox([self.lbl_output,    self.w_amplitude, self.w_offset], layout = layout)
+            self.box_frequency = ipw.VBox([self.lbl_frequency, self.w_frequency, self.w_phase] , layout = layout)
+            self.box_channel = ipw.VBox([self.lbl_channel,
+                                         self.box_enable,
+                                         self.box_waveform,
+                                         self.box_output,
+                                         self.box_frequency],
+                                        layout = ipw.Layout(border='solid 2px',
+                                                            padding='2px 2px 2px 2px',
+                                                            margin='4px 0px 4px 0px') )
+            display (self.box_channel)
