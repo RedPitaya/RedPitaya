@@ -40,7 +40,7 @@ PLLE2_ADV #(
    .CLKOUT1_PHASE        ( 0.000     ),
    .CLKOUT1_DUTY_CYCLE   ( 0.5       ),
    .CLKOUT2_DIVIDE       ( 4         ),
-   .CLKOUT2_PHASE        ( 0.000     ),
+   .CLKOUT2_PHASE        ( 30.000    ),
    .CLKOUT2_DUTY_CYCLE   ( 0.5       ),
    .CLKOUT3_DIVIDE       ( 4         ),
    .CLKOUT3_PHASE        (-45.000    ),

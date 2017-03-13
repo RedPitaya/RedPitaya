@@ -83,17 +83,7 @@ logic [4-1:0] frstn;
 // PLL signals
 logic adc_clk_in;
 logic pll_adc_clk;
-logic pll_dac_clk_1x;
-logic pll_dac_clk_2x;
-logic pll_dac_clk_2p;
-logic pll_ser_clk;
-logic pll_pdm_clk;
 logic pll_locked;
-// fast serial signals
-logic ser_clk;
-// PDM clock and reset
-logic pdm_clk ;
-logic pdm_rstn;
 
 // ADC clock/reset
 logic adc_clk;
@@ -117,22 +107,17 @@ red_pitaya_pll pll (
   .clk         (adc_clk_in),  // clock
   .rstn        (frstn[0]  ),  // reset - active low
   // output clocks
-  .clk_adc     (pll_adc_clk   ),  // ADC clock
-  .clk_dac_1x  (pll_dac_clk_1x),  // DAC clock 125MHz
-  .clk_dac_2x  (pll_dac_clk_2x),  // DAC clock 250MHz
-  .clk_dac_2p  (pll_dac_clk_2p),  // DAC clock 250MHz -45DGR
-  .clk_ser     (pll_ser_clk   ),  // fast serial clock
-  .clk_pdm     (pll_pdm_clk   ),  // PDM clock
+  .clk_adc     (pll_adc_clk),  // ADC clock
+  .clk_dac_1x  (dac_clk_1x ),  // DAC clock 125MHz
+  .clk_dac_2x  (dac_clk_2x ),  // DAC clock 250MHz
+  .clk_dac_2p  (dac_clk_2p ),  // DAC clock 250MHz -45DGR
+  .clk_ser     (           ),  // fast serial clock
+  .clk_pdm     (           ),  // PDM clock
   // status outputs
   .pll_locked  (pll_locked)
 );
 
 BUFG bufg_adc_clk    (.O (adc_clk   ), .I (pll_adc_clk   ));
-BUFG bufg_dac_clk_1x (.O (dac_clk_1x), .I (pll_dac_clk_1x));
-BUFG bufg_dac_clk_2x (.O (dac_clk_2x), .I (pll_dac_clk_2x));
-BUFG bufg_dac_clk_2p (.O (dac_clk_2p), .I (pll_dac_clk_2p));
-BUFG bufg_ser_clk    (.O (ser_clk   ), .I (pll_ser_clk   ));
-BUFG bufg_pdm_clk    (.O (pdm_clk   ), .I (pll_pdm_clk   ));
 
 // TODO: reset is a mess
 logic top_rst;
@@ -147,11 +132,6 @@ else         adc_rstn <= ~top_rst;
 always_ff @(posedge dac_clk_1x, posedge top_rst)
 if (top_rst) dac_rst  <= 1'b1;
 else         dac_rst  <= top_rst;
-
-// PDM reset (active low)
-always_ff @(posedge pdm_clk, posedge top_rst)
-if (top_rst) pdm_rstn <= 1'b0;
-else         pdm_rstn <= ~top_rst;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ADC IO
@@ -379,8 +359,8 @@ pdm #(
   .CHN (PDM_CHN)
 ) pdm (
   // system signals
-  .clk      (pdm_clk ),
-  .rstn     (pdm_rstn),
+  .clk      (adc_clk ),
+  .rstn     (adc_rstn),
   .cke      (1'b1),
   // configuration
   .ena      (1'b1),
