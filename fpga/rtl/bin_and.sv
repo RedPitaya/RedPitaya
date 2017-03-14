@@ -25,13 +25,13 @@
 
 module bin_and #(
   int unsigned DN = 1,
-  type DT = logic signed [8-1:0], // data type for input
+  type DT = logic signed [8-1:0]  // data type for input
 )(
   // input stream input/output
   axi4_stream_if.d sti,  // input
   axi4_stream_if.s sto,  // output
   // configuration
-  input DTM    cfg_and   // mask
+  input DT     cfg_and   // mask
 );
 
 ////////////////////////////////////////////////////////////////////////////////

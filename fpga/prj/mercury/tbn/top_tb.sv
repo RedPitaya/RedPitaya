@@ -194,8 +194,9 @@ task test_asg (
 //  end
 
   // configure amplitude and DC offset
-  axi_write(regset+'h48, 1 << (DWM-2));  // amplitude
-  axi_write(regset+'h4c, 0);             // DC offset
+  axi_write(regset+'h50, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h54, 0);             // DC offset
+  axi_write(regset+'h58, 1);             // output enable
 
   // configure frequency and phase
   axi_write(regset+'h20,  buf_len                    * 2**CWF - 1);  // table size

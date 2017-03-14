@@ -327,15 +327,13 @@ lin_add #(
 );
 
 bin_and #(
-  .DN  (DN),
-  .DTI (DT),
-  .DTO (DT),
-  .DTA (DT)
+  .DN (DN),
+  .DT (DT)
 ) bin_and (
   // stream input/output
   .sti       (sta),
   .sto       (sto),
   // configuration
-  .cfg_mul   (DT'{cfg_ena})
+  .cfg_and   (DT'{cfg_ena})
 );
 endmodule: gen_top
