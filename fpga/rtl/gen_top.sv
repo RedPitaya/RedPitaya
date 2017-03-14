@@ -334,6 +334,6 @@ bin_and #(
   .sti       (sta),
   .sto       (sto),
   // configuration
-  .cfg_and   (DT'{cfg_ena})
+  .cfg_and   ({$bits(DT){cfg_ena}})
 );
 endmodule: gen_top
