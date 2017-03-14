@@ -191,36 +191,32 @@ class osc (object):
         self.regset.cfg_trg = value [2]
 
     @property
-    def trigger_pre_delay (self) -> int:
-        # TODO units should be secconds
-        return (self.regset.cfg_pre)
+    def trigger_pre (self) -> float:
+        return (self.regset.cfg_pre * self.sample_period)
 
-    @trigger_pre_delay.setter
-    def trigger_pre_delay (self, value: int):
-        # TODO units should be secconds
+    @trigger_pre.setter
+    def trigger_pre (self, value: float):
+        cnt = int(value / self.sample_period)
         # TODO check range
-        self.regset.cfg_pre = value
+        self.regset.cfg_pre = cnt
 
     @property
-    def trigger_post_delay (self) -> int:
-        # TODO units should be secconds
-        return (self.regset.cfg_pst)
+    def trigger_post (self) -> float:
+        return (self.regset.cfg_pst * self.sample_period)
 
-    @trigger_post_delay.setter
-    def trigger_post_delay (self, value: int):
-        # TODO units should be secconds
+    @trigger_post.setter
+    def trigger_post (self, value: float):
+        cnt = int(value / self.sample_period)
         # TODO check range
-        self.regset.cfg_pst = value
+        self.regset.cfg_pst = cnt
 
     @property
-    def trigger_pre_status (self) -> int:
-        # TODO units should be secconds
-        return (self.regset.sts_pre)
+    def trigger_pre_status (self) -> float:
+        return (self.regset.sts_pre * self.sample_period)
 
     @property
-    def trigger_post_status (self) -> int:
-        # TODO units should be secconds
-        return (self.regset.sts_pst)
+    def trigger_post_status (self) -> float:
+        return (self.regset.sts_pst * self.sample_period)
 
     @property
     def level (self) -> float:
