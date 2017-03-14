@@ -19,9 +19,9 @@ import ipywidgets as ipw
 
 class generator (object):
     def __init__ (self, channels = [0, 1]):
-        """Oscilloscope application"""
+        """Generator application"""
 
-        # instantiate both oscilloscopes
+        # instantiate both generators
         self.channels = channels
 
         # this will load the FPGA
