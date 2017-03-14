@@ -28,7 +28,7 @@ class generator (object):
         try:
             self.ovl = fpga.overlay("mercury")
         except ResourceWarning:
-            print ("FPGA bitsrream is already loaded")
+            print ("FPGA bitstream is already loaded")
         # wait a bit for the overlay to be properly applied
         # TODO it should be automated in the library
         time.sleep(0.5)
@@ -41,14 +41,15 @@ class generator (object):
             self.gen[ch].display()
 
     def __del__ (self):
+        # close widgets
+        for ch in self.channels:
+            self.gen[ch].close()
+        # delete generator and overlay objects
         del (self.gen)
+        # TODO: overlay should not be removed if a different app added it
         del (self.ovl)
 
     class channel (fpga.gen):
-
-        # output amplitude/offset defaults
-        bkp_amplitude = 0.0
-        bkp_offset    = 0.0
         # waveform defaults
         form = 'sine'
         duty = 0.5
@@ -71,8 +72,9 @@ class generator (object):
             self.mask = [0x1 << sh, 0x2 << sh, 0x4 << sh]
             self.amplitude = 0
             self.offset    = 0
-            self.duty = 0.5
             self.set_waveform()
+            self.frequency = self.f_one
+            self.phase     = 0
             self.start()
             self.trigger()
 
@@ -126,10 +128,12 @@ class generator (object):
 
         def display (self):
             layout = ipw.Layout(border='solid 2px', margin='2px 2px 2px 2px')
+            # labels
             self.lbl_waveform  = ipw.Label(value="waveform shapes"               , layout = ipw.Layout(width='100%'))
             self.lbl_output    = ipw.Label(value="amplitude [V] and offset [V]"  , layout = ipw.Layout(width='100%'))
             self.lbl_frequency = ipw.Label(value="frequency [Hz] and phase [DEG]", layout = ipw.Layout(width='100%'))
             self.lbl_channel   = ipw.Label(value="generator"                     , layout = ipw.Layout(width='100%'))
+            # boxes
             self.box_enable    = ipw.VBox([self.w_enable], layout = ipw.Layout(margin='2px 2px 2px 2px'))
             self.box_waveform  = ipw.VBox([self.lbl_waveform,  self.w_waveform, self.w_duty]   , layout = layout)
             self.box_output    = ipw.VBox([self.lbl_output,    self.w_amplitude, self.w_offset], layout = layout)
@@ -143,3 +147,25 @@ class generator (object):
                                                             padding='2px 2px 2px 2px',
                                                             margin='4px 0px 4px 0px') )
             display (self.box_channel)
+
+        def close(self):
+            # boxes
+            self.box_channel.close()
+            self.box_enable.close()
+            self.box_waveform.close()
+            self.box_output.close()
+            self.box_frequency.close()
+            # labels
+            self.lbl_waveform.close()
+            self.lbl_output.close()
+            self.lbl_frequency.close()
+            self.lbl_channel.close()
+            # widgets
+            self.w_enable.close()
+            self.w_waveform.close()
+            self.w_duty.close()
+            self.w_amplitude.close()
+            self.w_offset.close()
+            self.w_frequency.close()
+            self.w_phase.close()
+

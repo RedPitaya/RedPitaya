@@ -126,8 +126,14 @@ class gen (object):
         self.table = np.frombuffer(self.uio_tbl, 'int32')
 
     def __del__ (self):
+        # disable output
+        self.enable = False
+        # make sure state machine is not running
+        self.reset()
+        # munmap
         self.uio_tbl.close()
         self.uio_reg.close()
+        # close UIO device
         try:
             os.close(self.uio_dev)
         except OSError as e:
