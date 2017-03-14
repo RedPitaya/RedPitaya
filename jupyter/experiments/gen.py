@@ -80,8 +80,8 @@ class gen (object):
         ('rsv_003', 'uint32', 2),
         # linear transformation
         ('cfg_mul',  'int32'),  # multiplier (amplitude)
-        ('cfg_sum',  'int32')   # adder (offset)
-        ('cfg_ena',  'int32')   # output enable
+        ('cfg_sum',  'int32'),  # adder (offset)
+        ('cfg_ena', 'uint32')   # output enable
     ])
 
     def __init__ (self, index:int, uio:str = '/dev/uio/gen'):
@@ -205,16 +205,6 @@ class gen (object):
             raise ValueError("Output amplitude should be inside [-1,1]")
 
     @property
-    def enable (self) -> bool:
-        """Output enable"""
-        return (bool(self.regset.cfg_ena))
-
-    @amplitude.setter
-    def amplitude (self, value: float):
-        """Output enable"""
-        self.regset.cfg_ena = int(value)
-
-    @property
     def offset (self) -> float:
         """Output offset in vols"""
         return (self.regset.cfg_sum / self.DWSr)
@@ -227,6 +217,16 @@ class gen (object):
             self.regset.cfg_sum = value * self.DWSr
         else:
             raise ValueError("Output offset should be inside [-1,1]")
+
+    @property
+    def enable (self) -> bool:
+        """Output enable"""
+        return (bool(self.regset.cfg_ena))
+
+    @enable.setter
+    def enable (self, value: float):
+        """Output enable"""
+        self.regset.cfg_ena = int(value)
 
     @property
     def frequency (self) -> float:
