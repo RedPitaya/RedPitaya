@@ -57,9 +57,9 @@ class oscilloscope (object):
             self.osc[ch].holdoff = 0
 
             # trigger source mask
-            sh = 5*ch
-            self.osc[ch].mask = [0x1 << sh, 0x2 << sh, 0x4 << sh]
-            self.osc[ch].mask[2] |= 0x8<<10
+            #sh = 5*(ch+2)
+            sh = 5*(0+2)
+            self.osc[ch].mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh) | (0x8<<10)]
 
     def __del__ (self):
         # close widgets
@@ -149,14 +149,14 @@ class oscilloscope (object):
             i=0
 
     def clb_t_position (self, change):
-        self.level = change['new']
+        self.osc[0].level = change['new']
         self.h_trigger_a[0].data_source.data['y']      = [change['new'][1]]*2
         self.h_trigger_a[1].data_source.data['bottom'] = [change['new'][0]]
         self.h_trigger_a[1].data_source.data['top']    = [change['new'][1]]
         push_notebook(handle=self.target)
 
     def clb_t_holdoff (self, change):
-        self.holdoff = change['new']
+        self.osc[0].holdoff = change['new']
         self.h_trigger_t[0].data_source.data['x']     = [change['new']]*2
         self.h_trigger_t[1].data_source.data['right'] = [change['new']]
         push_notebook(handle=self.target)
