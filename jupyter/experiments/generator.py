@@ -169,3 +169,14 @@ class generator (object):
             self.w_frequency.close()
             self.w_phase.close()
 
+        def __del__ (self):
+            # widgets
+            del(w_enable)
+            del(w_waveform)
+            del(w_duty)
+            del(w_amplitude)
+            del(w_offset)
+            del(w_frequency)
+            del(w_phase)
+            # calling super class
+            super().__del__()
