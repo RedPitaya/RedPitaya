@@ -1,20 +1,32 @@
-from mercury import overlay, osc
+# FPGA configuration and API
+import mercury as fpga
 
+# system and mathematics libraries
 import time
+import math
 import numpy as np
 
+# visualization
 from bokeh.io import push_notebook, show, output_notebook
 from bokeh.models import HoverTool, Range1d
 from bokeh.plotting import figure
 from bokeh.layouts import widgetbox
-from bokeh.resources import INLINE 
+from bokeh.resources import INLINE
+
+# widgets
+from IPython.display import display
+import ipywidgets as ipw
 
 class oscilloscope (object):
-    def __init__ (self, channels = [0, 1]):
+
+    size = 1024
+
+    def __init__ (self, channels = [0, 1], input_range = [1.0, 1.0]):
         """Oscilloscope application"""
 
         # instantiate both oscilloscopes
         self.channels = channels
+        self.input_range = input_range
 
         # this will load the FPGA
         try:
@@ -25,12 +37,29 @@ class oscilloscope (object):
         # TODO it should be automated in the library
         time.sleep(0.5)
 
-        # generators
-        self.osc = [self.channel(ch) for ch in self.channels]
+        # ocsilloscope channels
+        self.osc = [fpga.osc(ch, self.input_range[ch]) for ch in self.channels]
 
-        # display widgets
         for ch in self.channels:
-            self.osc[ch].display()
+            self.osc[ch].reset()
+            # TODO: for now bypass input filter
+            self.osc[ch].filter_bypass = True
+            # decimation rate
+            self.osc[ch].decimation = 1
+
+            # trigger timing is in the middle of the screen
+            self.osc[ch].regset.cfg_pre = self.size/2
+            self.osc[ch].regset.cfg_pst = self.size/2
+
+            # trigger level [V], edge and holdoff [periods]
+            self.osc[ch].level = [-0.1, +0.1]
+            self.osc[ch].edg = 'pos'
+            self.osc[ch].holdoff = 0
+
+            # trigger source mask
+            sh = 5*ch
+            self.osc[ch].mask = [0x1 << sh, 0x2 << sh, 0x4 << sh]
+            self.osc[ch].mask[2] |= 0x8<<10
 
     def __del__ (self):
         # close widgets
@@ -41,111 +70,104 @@ class oscilloscope (object):
         # TODO: overlay should not be removed if a different app added it
         del (self.ovl)
 
-    class channel (fpga.gen):
+    def display (self):
+        ch = 0
+        self.x = (np.arange(self.size) - self.osc[ch].regset.cfg_pre) / fpga.osc.FS
+        buff = [np.zeros(self.size) for ch in self.channels]
 
-        def __init__ (self, ch):
+        #output_notebook(resources=INLINE)
+        output_notebook()
 
-            super().__init__(ch)
+        colors = ('red', 'blue')
+        tools = "pan,wheel_zoom,box_zoom,reset,crosshair"
+        p = figure(plot_height=500, plot_width=900, title="oscilloscope", toolbar_location="above", tools=(tools))
+        p.xaxis.axis_label='time [s]'
+        p.yaxis.axis_label='voltage [V]'
+        p.y_range=Range1d(-1.2, +1.2)
+        self.r = [p.line(self.x, buff[ch], line_width=1, line_alpha=0.7, color=colors[ch]) for ch in self.channels]
 
-            self.reset()
-            # TODO: separate masks
-            sh = 5*ch
-            self.mask = [0x1 << sh, 0x2 << sh, 0x4 << sh]
-            self.amplitude = 0
-            self.offset    = 0
-            self.set_waveform()
-            self.frequency = self.f_one
-            self.phase     = 0
-            self.start()
-            self.trigger()
+        # trigger time/amplitude
+        ch = 0
+        if self.osc[ch].edg is 'pos': level = self.osc[ch].level[1]
+        else                        : level = self.osc[ch].level[0]
+        self.h_trigger_t = [p.line ([0,0], [-1.2, +1.2], color="black", line_width=1, line_alpha=0.75),
+                            p.quad(left=[0], right=[self.osc[ch].holdoff],
+                                   bottom=[-1.2], top=[+1.2], color="grey", alpha=0.25)]
+        self.h_trigger_a = [p.line ([self.x[0], self.x[-1]], [level]*2, color="black", line_width=1, line_alpha=0.75),
+                            p.quad(bottom=[self.osc[ch].level[0]], top=[self.osc[ch].level[1]],
+                                   left=[self.x[0]], right=[self.x[-1]], color="grey", alpha=0.25)]
 
-            # create widgets
-            self.w_enable     = ipw.ToggleButton     (value=False, description='input enable')
-            self.w_x_scale    = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='X scale')
-            self.w_x_position = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='X position')
-            self.w_y_scale    = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='Y scale')
-            self.w_y_position = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='Y position')
-            self.w_t_position = ipw.FloatRangeSlider (value=[0, 0], min=-1.0, max=+1.0, step=0.02, description='T position')
-            self.w_t_holdoff  = ipw.FloatSlider      (value=0,      min=0,    max=1,    step=0.1,  description='T hold off')
-            self.w_t_edge     = ipw.RadioButtons     (value='pos', options=['pos', 'neg'],         description='T edge')
-            
-            # style widgets
-            self.w_enable.layout     = ipw.Layout(width='100%')
-            self.w_x_scale.layout    = ipw.Layout(width='100%')
-            self.w_x_position.layout = ipw.Layout(width='100%')
-            self.w_y_scale.layout    = ipw.Layout(width='100%')
-            self.w_y_position.layout = ipw.Layout(width='100%')
-            self.w_t_position.layout = ipw.Layout(width='100%')
-            self.w_t_holdoff.layout  = ipw.Layout(width='100%')
+        # configure hover tool
+        hover = HoverTool(mode = 'vline', tooltips=[("T", "@x"), ("V", "@y")], renderers=self.r)
+        p.add_tools(hover)
 
-            self.w_enable.observe     (self.clb_enable    , names='value')
-            self.w_x_scale.observe    (self.clb_x_scale   , names='value')
-            self.w_x_position.observe (self.clb_x_position, names='value')
-            self.w_y_scale.observe    (self.clb_y_scale   , names='value')
-            self.w_y_position.observe (self.clb_y_position, names='value')
-            self.w_t_position.observe (self.clb_t_position, names='value')
-            self.w_t_holdoff.observe  (self.clb_t_holdoff , names='value')
+        # get an explicit handle to update the next show cell with
+        self.target = show(p, notebook_handle=True)
 
-        def clb_enable (self, change):
+        # create widgets
+        self.w_enable     = ipw.ToggleButton     (value=False, description='input enable')
+        self.w_x_scale    = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='X scale')
+        self.w_x_position = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='X position')
+        self.w_y_scale    = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='Y scale')
+        self.w_y_position = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='Y position')
+        self.w_t_position = ipw.FloatRangeSlider (value=[0, 0], min=-1.0, max=+1.0, step=0.02, description='T position')
+        self.w_t_holdoff  = ipw.FloatSlider      (value=0,      min=0,    max=1,    step=0.1,  description='T hold off')
+        self.w_t_edge     = ipw.RadioButtons     (value='pos', options=['pos', 'neg'],         description='T edge')
+
+        # style widgets
+        self.w_enable.layout     = ipw.Layout(width='100%')
+        self.w_x_scale.layout    = ipw.Layout(width='100%')
+        self.w_x_position.layout = ipw.Layout(width='100%')
+        self.w_y_scale.layout    = ipw.Layout(width='100%')
+        self.w_y_position.layout = ipw.Layout(width='100%')
+        self.w_t_position.layout = ipw.Layout(width='100%')
+        self.w_t_holdoff.layout  = ipw.Layout(width='100%')
+
+        self.w_enable.observe     (self.clb_enable    , names='value')
+        self.w_x_scale.observe    (self.clb_x_scale   , names='value')
+        self.w_x_position.observe (self.clb_x_position, names='value')
+        self.w_y_scale.observe    (self.clb_y_scale   , names='value')
+        self.w_y_position.observe (self.clb_y_position, names='value')
+        self.w_t_position.observe (self.clb_t_position, names='value')
+        self.w_t_holdoff.observe  (self.clb_t_holdoff , names='value')
+
+    def clb_enable (self, change):
             i=0
 
-        def clb_x_scale (self, change):
+    def clb_x_scale (self, change):
             i=0
 
-        def clb_x_position (self, change):
+    def clb_x_position (self, change):
             i=0
 
-        def clb_y_scale (self, change):
+    def clb_y_scale (self, change):
             i=0
 
-        def clb_y_position (self, change):
+    def clb_y_position (self, change):
             i=0
 
-        def clb_t_position (self, change):
-            self.level = change['new']
+    def clb_t_position (self, change):
+        self.level = change['new']
+        self.h_trigger_a[0].data_source.data['y']      = [change['new'][1]]*2
+        self.h_trigger_a[1].data_source.data['bottom'] = [change['new'][0]]
+        self.h_trigger_a[1].data_source.data['top']    = [change['new'][1]]
+        push_notebook(handle=self.target)
 
-        def clb_t_holdoff (self, change):
-            self.holdoff = change['new']
+    def clb_t_holdoff (self, change):
+        self.holdoff = change['new']
+        self.h_trigger_t[0].data_source.data['x']     = [change['new']]*2
+        self.h_trigger_t[1].data_source.data['right'] = [change['new']]
+        push_notebook(handle=self.target)
 
-        def display (self):
-            layout = ipw.Layout(border='solid 2px', margin='2px 2px 2px 2px')
-            # labels
-            self.lbl_waveform  = ipw.Label(value="waveform shapes"               , layout = ipw.Layout(width='100%'))
-            self.lbl_output    = ipw.Label(value="amplitude [V] and offset [V]"  , layout = ipw.Layout(width='100%'))
-            self.lbl_frequency = ipw.Label(value="frequency [Hz] and phase [DEG]", layout = ipw.Layout(width='100%'))
-            self.lbl_channel   = ipw.Label(value="generator"                     , layout = ipw.Layout(width='100%'))
-            # boxes
-            self.box_enable    = ipw.VBox([self.w_enable], layout = ipw.Layout(margin='2px 2px 2px 2px'))
-            self.box_waveform  = ipw.VBox([self.lbl_waveform,  self.w_waveform, self.w_duty]   , layout = layout)
-            self.box_output    = ipw.VBox([self.lbl_output,    self.w_amplitude, self.w_offset], layout = layout)
-            self.box_frequency = ipw.VBox([self.lbl_frequency, self.w_frequency, self.w_phase] , layout = layout)
-            self.box_channel = ipw.VBox([self.lbl_channel,
-                                         self.box_enable,
-                                         self.box_waveform,
-                                         self.box_output,
-                                         self.box_frequency],
-                                        layout = ipw.Layout(border='solid 2px',
-                                                            padding='2px 2px 2px 2px',
-                                                            margin='4px 0px 4px 0px') )
-            display (self.box_channel)
-
-        def close(self):
-            # boxes
-            self.box_channel.close()
-            self.box_enable.close()
-            self.box_waveform.close()
-            self.box_output.close()
-            self.box_frequency.close()
-            # labels
-            self.lbl_waveform.close()
-            self.lbl_output.close()
-            self.lbl_frequency.close()
-            self.lbl_channel.close()
-            # widgets
-            self.w_enable.close()
-            self.w_waveform.close()
-            self.w_duty.close()
-            self.w_amplitude.close()
-            self.w_offset.close()
-            self.w_frequency.close()
-            self.w_phase.close()
+    def run (self):
+        ch = 0
+        while True:
+            self.osc[ch].reset()
+            self.osc[ch].start()
+            while self.osc[ch].status_run(): pass
+            #buff = np.absolute(np.fft.fft(buff))
+            for ch in self.channels:
+                self.r[ch].data_source.data['y'] = self.osc[ch].data(self.size)
+            # push updates to the plot continuously using the handle (intererrupt the notebook kernel to stop)
+            push_notebook(handle=self.target)
+            #time.sleep(0.05)
