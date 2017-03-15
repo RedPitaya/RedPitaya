@@ -131,6 +131,8 @@ class oscilloscope (object):
         self.w_t_position.observe (self.clb_t_position, names='value')
         self.w_t_holdoff.observe  (self.clb_t_holdoff , names='value')
 
+        display(self.w_t_position, self.w_t_holdoff)
+
     def clb_enable (self, change):
             i=0
 
@@ -160,8 +162,8 @@ class oscilloscope (object):
         push_notebook(handle=self.target)
 
     def run (self):
-        ch = 0
         while True:
+            ch = 0
             self.osc[ch].reset()
             self.osc[ch].start()
             while self.osc[ch].status_run(): pass

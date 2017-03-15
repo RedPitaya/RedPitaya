@@ -317,8 +317,8 @@ class osc (object):
     @property
     def pointer (self):
         # mask out overflow bit and sum pre and post trigger counters
-        cnt = ( (self.trigger_pre_status  & 0x7fffffff)
-              + (self.trigger_post_status & 0x7fffffff) )
+        cnt = ( (self.regset.sts_pre & 0x7fffffff)
+              + (self.regset.sts_pst & 0x7fffffff) )
         adr = cnt % self.N
         return adr
 
