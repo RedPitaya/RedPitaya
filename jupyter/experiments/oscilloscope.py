@@ -38,28 +38,13 @@ class oscilloscope (object):
         time.sleep(0.5)
 
         # ocsilloscope channels
-        self.osc = [fpga.osc(ch, self.input_range[ch]) for ch in self.channels]
-
-        for ch in self.channels:
-            self.osc[ch].reset()
-            # TODO: for now bypass input filter
-            self.osc[ch].filter_bypass = True
-            # decimation rate
-            self.osc[ch].decimation = 1
-
+        self.osc = [self.channel(ch, self.input_range[ch]) for ch in self.channels]
+        
+        # set parameters common to all channels
+        for ch in channels:
             # trigger timing is in the middle of the screen
             self.osc[ch].regset.cfg_pre = self.size/2
             self.osc[ch].regset.cfg_pst = self.size/2
-
-            # trigger level [V], edge and holdoff [periods]
-            self.osc[ch].level = [-0.1, +0.1]
-            self.osc[ch].edg = 'pos'
-            self.osc[ch].holdoff = 0
-
-            # trigger source mask
-            #sh = 5*(ch+2)
-            sh = 5*(0+2)
-            self.osc[ch].mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh) | (0x8<<10)]
 
     def __del__ (self):
         # close widgets
@@ -110,9 +95,11 @@ class oscilloscope (object):
         self.w_x_position = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='X position')
         self.w_y_scale    = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='Y scale')
         self.w_y_position = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='Y position')
-        self.w_t_position = ipw.FloatRangeSlider (value=[0, 0], min=-1.0, max=+1.0, step=0.02, description='T position')
+
+        self.w_t_source   = ipw.RadioButtons     (value=0, options=[0, 1], description='T source')
+        self.w_t_edge     = ipw.RadioButtons     (value='pos', options=['pos', 'neg'], description='T edge')
+        self.w_t_position = ipw.FloatRangeSlider (value=self.osc[ch].level, min=-1.0, max=+1.0, step=0.02, description='T position')
         self.w_t_holdoff  = ipw.FloatSlider      (value=0,      min=0,    max=1,    step=0.1,  description='T hold off')
-        self.w_t_edge     = ipw.RadioButtons     (value='pos', options=['pos', 'neg'],         description='T edge')
 
         # style widgets
         self.w_enable.layout     = ipw.Layout(width='100%')
@@ -128,10 +115,12 @@ class oscilloscope (object):
         self.w_x_position.observe (self.clb_x_position, names='value')
         self.w_y_scale.observe    (self.clb_y_scale   , names='value')
         self.w_y_position.observe (self.clb_y_position, names='value')
+
+        self.w_t_edge.observe     (self.clb_t_edge    , names='value')
         self.w_t_position.observe (self.clb_t_position, names='value')
         self.w_t_holdoff.observe  (self.clb_t_holdoff , names='value')
 
-        display(self.w_t_position, self.w_t_holdoff)
+        display(self.w_t_source, self.w_t_edge, self.w_t_position, self.w_t_holdoff, )
 
     def clb_enable (self, change):
             i=0
@@ -147,6 +136,14 @@ class oscilloscope (object):
 
     def clb_y_position (self, change):
             i=0
+
+    def clb_t_edge (self, change):
+        self.osc[0].edge = change['new']
+        if   (change['new'] == 'pos'):
+            self.h_trigger_a[0].data_source.data['y'] = [self.osc[0].level[1]]*2
+        elif (change['new'] == 'neg'):
+            self.h_trigger_a[0].data_source.data['y'] = [self.osc[0].level[0]]*2
+        push_notebook(handle=self.target)
 
     def clb_t_position (self, change):
         self.osc[0].level = change['new']
@@ -173,3 +170,25 @@ class oscilloscope (object):
             # push updates to the plot continuously using the handle (intererrupt the notebook kernel to stop)
             push_notebook(handle=self.target)
             #time.sleep(0.05)
+
+    class channel (fpga.osc):
+
+        def __init__ (self, ch, input_range = 1.0):
+
+            super().__init__(ch, input_range)
+
+            self.reset()
+            # TODO: for now bypass input filter
+            self.filter_bypass = True
+            # decimation rate
+            self.decimation = 1
+
+            # trigger level [V], edge and holdoff [periods]
+            self.level = [-0.1, +0.1]
+            self.edg = 'pos'
+            self.holdoff = 0
+
+            # trigger source mask
+            #sh = 5*(ch+2)
+            sh = 5*(0+2)
+            self.mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh) | (0x8<<10)]
