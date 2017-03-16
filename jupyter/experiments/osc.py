@@ -240,7 +240,7 @@ class osc (object):
     @property
     def edge (self) -> str:
         """Trigger edge as a string 'pos'/'neg'"""
-        return (bool(self.regset.cfg_mod & MOD_CON_MASK))
+        return (['pos', 'neg'][self.regset.cfg_edg])
 
     @edge.setter
     def edge (self, value: str):
@@ -248,7 +248,7 @@ class osc (object):
         if (value in self.edges):
             self.regset.cfg_edg = self.edges[value]
         else:
-            raise ValueError("Trigger edge should be obe of {}".format(list(self.edges.keys())))
+            raise ValueError("Trigger edge should be one of {}".format(list(self.edges.keys())))
 
     @property
     def holdoff (self) -> int:
