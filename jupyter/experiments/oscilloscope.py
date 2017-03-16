@@ -8,7 +8,7 @@ import numpy as np
 
 # visualization
 from bokeh.io import push_notebook, show, output_notebook
-from bokeh.models import HoverTool, Range1d
+from bokeh.models import HoverTool, Range1d, LinearAxis
 from bokeh.plotting import figure
 from bokeh.layouts import widgetbox
 from bokeh.resources import INLINE
@@ -69,9 +69,12 @@ class oscilloscope (object):
         tools = "pan,wheel_zoom,box_zoom,reset,crosshair"
         self.p = figure(plot_height=500, plot_width=900, title="oscilloscope", toolbar_location="above", tools=(tools))
         self.p.xaxis.axis_label = 'time [s]'
-        self.p.yaxis.axis_label = 'voltage [V]'
-        self.p.y_range = Range1d(-1.2, +1.2)
-        self.r = [self.p.line(self.x, buff[ch], line_width=1, line_alpha=0.7, color=colors[ch]) for ch in self.channels]
+        #self.p.yaxis.axis_label = 'voltage [V]'
+        #self.p.y_range = Range1d(-1.2, +1.2)
+        self.p.extra_y_ranges = {str(ch): Range1d(-1, +1) for ch in self.channels}
+        for ch in self.channels:
+            self.p.add_layout(LinearAxis(y_range_name=str(ch).format(ch), axis_label = 'CH {} voltage [V]'.format(ch)), 'left')
+        self.r = [self.p.line(self.x, buff[ch], line_width=1, line_alpha=0.7, color=colors[ch], y_range_name=str(ch)) for ch in self.channels]
 
         # trigger time/amplitude
         ch = 0
@@ -167,6 +170,7 @@ class oscilloscope (object):
 
             super().__init__(ch, input_range)
             self.top = top
+            self.ch = ch
 
             self.reset()
             # TODO: for now bypass input filter
@@ -228,6 +232,8 @@ class oscilloscope (object):
             # this does not work, probably a bug in bokeh
             # https://github.com/bokeh/bokeh/issues/4014#issuecomment-199147242
             #app.p.y_range = Range1d(-0.2, +0.2)
+            self.top.p.extra_y_ranges[str(self.ch)].start = self.y_position - self.y_scale
+            self.top.p.extra_y_ranges[str(self.ch)].end   = self.y_position + self.y_scale
             self.top.p.y_range.start = self.y_position - self.y_scale
             self.top.p.y_range.end   = self.y_position + self.y_scale
 
