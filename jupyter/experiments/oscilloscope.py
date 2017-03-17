@@ -132,11 +132,11 @@ class oscilloscope (object):
 
     def clb_t_source (self, change):
         self.t_source = change['new']
-        sh   = 5*(0+2)
-        sh_t = 5*(self.t_source+2)
+        sh   = 6*(0+2)
+        sh_t = 6*(self.t_source+2)
         # TODO: handle trigger masks
         for ch in self.channels:
-            self.osc[ch].mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh) | (0x8<<sh_t)]
+            self.osc[ch].mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh), (0x8<<sh) | (0x10<<sh_t)]
         self.clb_t_update()
 
     def clb_t_update (self):

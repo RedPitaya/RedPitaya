@@ -56,14 +56,15 @@ class gen (object):
     regset_dtype = np.dtype([
         # control/status
         ('ctl_sts', 'uint32'),
-        # start/stop/trigger masks
-        ('cfg_str', 'uint32'),  # start
-        ('cfg_stp', 'uint32'),  # stop
-        ('cfg_trg', 'uint32'),  # trigger
+        ('rsv_001', 'uint32', 1),  # reserved
         # interrupt enable/status
         ('irq_ena', 'uint32'),  # enable
         ('irq_sts', 'uint32'),  # status/clear
-        ('rsv_001', 'uint32', 2),  # reserved
+        # reset/start/stop/trigger masks
+        ('cfg_rst', 'uint32'),  # reset
+        ('cfg_str', 'uint32'),  # start
+        ('cfg_stp', 'uint32'),  # stop
+        ('cfg_trg', 'uint32'),  # trigger
         # buffer configuration
         ('cfg_siz', 'uint32'),  # size
         ('cfg_off', 'uint32'),  # offset
@@ -142,11 +143,12 @@ class gen (object):
     def show_regset (self):
         print (
             "ctl_sts = 0x{reg:08x} = {reg:10d}  # control/status                 \n".format(reg=self.regset.ctl_sts)+
+            "irq_ena = 0x{reg:08x} = {reg:10d}  # interrupt enable               \n".format(reg=self.regset.irq_ena)+
+            "irq_sts = 0x{reg:08x} = {reg:10d}  # interrupt status               \n".format(reg=self.regset.irq_sts)+
+            "cfg_rst = 0x{reg:08x} = {reg:10d}  # mask reset                     \n".format(reg=self.regset.cfg_rst)+
             "cfg_str = 0x{reg:08x} = {reg:10d}  # mask start                     \n".format(reg=self.regset.cfg_str)+
             "cfg_stp = 0x{reg:08x} = {reg:10d}  # mask stop                      \n".format(reg=self.regset.cfg_stp)+
             "cfg_trg = 0x{reg:08x} = {reg:10d}  # mask trigger                   \n".format(reg=self.regset.cfg_trg)+
-            "irq_ena = 0x{reg:08x} = {reg:10d}  # interrupt enable               \n".format(reg=self.regset.irq_ena)+
-            "irq_sts = 0x{reg:08x} = {reg:10d}  # interrupt status               \n".format(reg=self.regset.irq_sts)+
             "cfg_siz = 0x{reg:08x} = {reg:10d}  # table size                     \n".format(reg=self.regset.cfg_siz)+
             "cfg_off = 0x{reg:08x} = {reg:10d}  # table offset                   \n".format(reg=self.regset.cfg_off)+
             "cfg_ste = 0x{reg:08x} = {reg:10d}  # table step                     \n".format(reg=self.regset.cfg_ste)+
@@ -184,17 +186,19 @@ class gen (object):
 
     @property
     def mask (self) -> tuple:
-        """Enable masks for [start, stop, trigger] signals"""
-        return ([self.regset.cfg_str,
+        """Enable masks for [reset, start, stop, trigger] signals"""
+        return ([self.regset.cfg_rst
+		 self.regset.cfg_str,
                  self.regset.cfg_stp,
                  self.regset.cfg_trg])
 
     @mask.setter
     def mask (self, value: tuple):
-        """Enable masks for [start, stop, trigger] signals"""
-        self.regset.cfg_str = value [0]
-        self.regset.cfg_stp = value [1]
-        self.regset.cfg_trg = value [2]
+        """Enable masks for [reset, start, stop, trigger] signals"""
+        self.regset.cfg_rst = value [0]
+        self.regset.cfg_str = value [1]
+        self.regset.cfg_stp = value [2]
+        self.regset.cfg_trg = value [3]
 
     @property
     def amplitude (self) -> float:

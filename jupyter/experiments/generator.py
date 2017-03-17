@@ -68,8 +68,8 @@ class generator (object):
 
             self.reset()
             # TODO: separate masks
-            sh = 5*ch
-            self.mask = [0x1 << sh, 0x2 << sh, 0x4 << sh]
+            sh = 6*ch
+            self.mask = [0x1 << sh, 0x2 << sh, 0x4 << sh, 0x8 << sh]
             self.amplitude = 0
             self.offset    = 0
             self.set_waveform()
