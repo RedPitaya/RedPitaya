@@ -20,6 +20,7 @@ import ipywidgets as ipw
 class oscilloscope (object):
 
     size = 1024
+    range_max = 1.2
 
     def __init__ (self, channels = [0, 1], input_range = [1.0, 1.0]):
         """Oscilloscope application"""
@@ -61,6 +62,7 @@ class oscilloscope (object):
         ch = 0
         self.x = (np.arange(self.size) - self.osc[ch].regset.cfg_pre) / fpga.osc.FS
         buff = [np.zeros(self.size) for ch in self.channels]
+        rmax = 1.0
         
         #output_notebook(resources=INLINE)
         output_notebook()
@@ -70,8 +72,8 @@ class oscilloscope (object):
         self.p = figure(plot_height=500, plot_width=900, title="oscilloscope", toolbar_location="above", tools=(tools))
         self.p.xaxis.axis_label = 'time [s]'
         #self.p.yaxis.axis_label = 'voltage [V]'
-        #self.p.y_range = Range1d(-1.2, +1.2)
-        self.p.extra_y_ranges = {str(ch): Range1d(-1, +1) for ch in self.channels}
+        self.p.y_range = Range1d(-rmax, +rmax)
+        self.p.extra_y_ranges = {str(ch): Range1d(-rmax, +rmax) for ch in self.channels}
         for ch in self.channels:
             self.p.add_layout(LinearAxis(y_range_name=str(ch).format(ch), axis_label = 'CH {} voltage [V]'.format(ch)), 'left')
         self.r = [self.p.line(self.x, buff[ch], line_width=1, line_alpha=0.7, color=colors[ch], y_range_name=str(ch)) for ch in self.channels]
@@ -80,9 +82,9 @@ class oscilloscope (object):
         ch = 0
         if self.osc[ch].edg is 'pos': level = self.osc[ch].level[1]
         else                        : level = self.osc[ch].level[0]
-        self.h_trigger_t = [self.p.line ([0,0], [-1.2, +1.2], color="black", line_width=1, line_alpha=0.75),
+        self.h_trigger_t = [self.p.line ([0,0], [-rmax, +rmax], color="black", line_width=1, line_alpha=0.75),
                             self.p.quad(left=[0], right=[self.osc[ch].holdoff],
-                                        bottom=[-1.2], top=[+1.2], color="grey", alpha=0.25)]
+                                        bottom=[-rmax], top=[+rmax], color="grey", alpha=0.25)]
         self.h_trigger_a = [self.p.line ([self.x[0], self.x[-1]], [level]*2, color="black", line_width=1, line_alpha=0.75),
                             self.p.quad(bottom=[self.osc[ch].level[0]], top=[self.osc[ch].level[1]],
                                         left=[self.x[0]], right=[self.x[-1]], color="grey", alpha=0.25)]
@@ -91,13 +93,18 @@ class oscilloscope (object):
         hover = HoverTool(mode = 'vline', tooltips=[("T", "@x"), ("V", "@y")], renderers=self.r)
         self.p.add_tools(hover)
 
+        # style
+        #self.p.yaxis[0].major_tick_line_color = None
+        #self.p.yaxis[0].minor_tick_line_color = None
+        self.p.yaxis[0].visible = False
+
         # get an explicit handle to update the next show cell with
         self.target = show(self.p, notebook_handle=True)
 
         # create widgets
         self.w_enable     = ipw.ToggleButton     (value=False, description='input enable')
-        self.w_x_scale    = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='X scale')
-        self.w_x_position = ipw.FloatSlider      (value=0,      min=-1.0, max=+1.0, step=0.02, description='X position')
+        self.w_x_scale    = ipw.FloatSlider      (value=0,      min=-rmax, max=+rmax, step=0.02, description='X scale')
+        self.w_x_position = ipw.FloatSlider      (value=0,      min=-rmax, max=+rmax, step=0.02, description='X position')
         self.w_t_source   = ipw.ToggleButtons    (value=self.t_source, options=[0, 1], description='T source')
 
         # style widgets
@@ -162,7 +169,7 @@ class oscilloscope (object):
     class channel (fpga.osc):
 
         # wigget related constants
-        y_scales = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1]
+        y_scales = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2]
         y_scale = 1
         y_position = 0
 
