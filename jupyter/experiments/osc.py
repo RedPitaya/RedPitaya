@@ -181,8 +181,8 @@ class osc (object):
     @property
     def mask (self) -> tuple:
         """Enable masks for [reset, start, stop, trigger] signals"""
-        return ([self.regset.cfg_rst
-		 self.regset.cfg_str,
+        return ([self.regset.cfg_rst,
+                 self.regset.cfg_str,
                  self.regset.cfg_stp,
                  self.regset.cfg_trg])
 
