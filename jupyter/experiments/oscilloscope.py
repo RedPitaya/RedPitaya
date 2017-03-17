@@ -19,8 +19,24 @@ import ipywidgets as ipw
 
 class oscilloscope (object):
 
-    size = 1024
+    size = 1250
     range_max = 1.2
+
+    # time per division (10 divisions on screen)
+    x_scales = [  '5s' ,   '2s' ,   '1s' ,
+                '500ms', '200ms', '100ms',
+                 '50ms',  '20ms',  '10ms',
+                  '5ms',   '2ms',   '1ms',
+                '500us', '200us', '100us',
+                 '50us',  '20us',  '10us',
+                  '5us',   '2us',   '1us']
+    x_scales_dict = {  '5s' :   5000000,   '2s' :   2000000,   '1s' :   1000000,
+                     '500ms':    500000, '200ms':    200000, '100ms':    100000,
+                      '50ms':     50000,  '20ms':     20000,  '10ms':     10000,
+                       '5ms':      5000,   '2ms':      2000,   '1ms':      1000,
+                     '500us':       500, '200us':       200, '100us':       100,
+                      '50us':        50,  '20us':        20,  '10us':        10,
+                       '5us':         5,   '2us':         2,   '1us':         1}
 
     def __init__ (self, channels = [0, 1], input_range = [1.0, 1.0]):
         """Oscilloscope application"""
@@ -60,7 +76,7 @@ class oscilloscope (object):
 
     def display (self):
         ch = 0
-        self.x = (np.arange(self.size) - self.osc[ch].regset.cfg_pre) / fpga.osc.FS
+        self.x = (np.arange(self.size) - self.osc[ch].regset.cfg_pre) / self.osc[ch].sample_rate
         buff = [np.zeros(self.size) for ch in self.channels]
         rmax = 1.0
         
@@ -72,6 +88,7 @@ class oscilloscope (object):
         self.p = figure(plot_height=500, plot_width=900, title="oscilloscope", toolbar_location="above", tools=(tools))
         self.p.xaxis.axis_label = 'time [s]'
         #self.p.yaxis.axis_label = 'voltage [V]'
+        self.p.x_range = Range1d(self.x[0], self.x[-1])
         self.p.y_range = Range1d(-rmax, +rmax)
         self.p.extra_y_ranges = {str(ch): Range1d(-rmax, +rmax) for ch in self.channels}
         for ch in self.channels:
@@ -103,8 +120,8 @@ class oscilloscope (object):
 
         # create widgets
         self.w_enable     = ipw.ToggleButton     (value=False, description='input enable')
-        self.w_x_scale    = ipw.FloatSlider      (value=0,      min=-rmax, max=+rmax, step=0.02, description='X scale')
-        self.w_x_position = ipw.FloatSlider      (value=0,      min=-rmax, max=+rmax, step=0.02, description='X position')
+        self.w_x_scale    = ipw.SelectionSlider  (value=self.x_scales[-1], options=self.x_scales, description='X scale')
+        self.w_x_position = ipw.FloatSlider      (value=0, min=-rmax, max=+rmax, step=0.02, description='X position')
         self.w_t_source   = ipw.ToggleButtons    (value=self.t_source, options=[0, 1], description='T source')
 
         # style widgets
@@ -117,7 +134,7 @@ class oscilloscope (object):
         self.w_x_position.observe (self.clb_x_position, names='value')
         self.w_t_source.observe   (self.clb_t_source  , names='value')
         
-        display(self.w_t_source)
+        display(self.w_x_scale, self.w_t_source)
         for ch in self.channels:
             self.osc[ch].display()
 
@@ -125,10 +142,25 @@ class oscilloscope (object):
             i=0
 
     def clb_x_scale (self, change):
-            i=0
+        for ch in self.channels:
+            self.osc[ch].decimation = self.x_scales_dict[change['new']]
+        self.osc[self.channels[0]].reset()
+        self.clb_x_update()
 
     def clb_x_position (self, change):
             i=0
+
+    def clb_x_update (self):
+        self.x = (np.arange(self.size) - self.osc[ch].regset.cfg_pre) / self.osc[ch].sample_rate
+        for ch in self.channels:
+            self.r[ch].data_source.data['x'] = self.x
+        self.p.x_range.start = self.x[ 0]
+        self.p.x_range.end   = self.x[-1]
+        # trigger level and edge
+        self.h_trigger_a[1].data_source.data['left']  = [self.x[ 0]]
+        self.h_trigger_a[1].data_source.data['right'] = [self.x[-1]]
+        self.h_trigger_a[0].data_source.data['x'] = [self.x[0], self.x[-1]]
+        push_notebook(handle=self.target)
 
     def clb_t_source (self, change):
         self.t_source = change['new']
@@ -191,9 +223,10 @@ class oscilloscope (object):
             self.holdoff = 0
 
             # trigger source mask
-            #sh = 5*(ch+2)
-            sh = 5*(0+2)
-            self.mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh) | (0x8<<10)]
+            #sh = 6*(ch+2)
+            sh = 6*(0+2)
+            sh_t = 6*(0+2)
+            self.mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh), (0x8<<sh) | (0x10<<sh_t)]
             
             
             # create widgets
