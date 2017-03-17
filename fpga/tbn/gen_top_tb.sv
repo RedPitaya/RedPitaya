@@ -44,6 +44,7 @@ typedef struct packed {
   logic trg;  // software trigger
   logic stp;  // software stop
   logic str;  // software start
+  logic rst;  // software reset
 } evn_asg_t;
 
 evn_asg_t evn;
@@ -113,9 +114,10 @@ initial begin
   busm.write('h3c, 0);                    // DC offset
 
   // all events are SW driven
-  busm.write('h04, 5'b00001);  // start
-  busm.write('h08, 5'b00010);  // stop
-  busm.write('h0c, 5'b00100);  // trigger
+  busm.write('h10, 5'b000001);  // reset
+  busm.write('h14, 5'b000010);  // start
+  busm.write('h18, 5'b000100);  // stop
+  busm.write('h1c, 5'b001000);  // trigger
 
   // configure frequency and phase
   busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size
@@ -179,6 +181,7 @@ gen_top #(
   // external events
   .evn_ext  (evn),
   // event sources
+  .evn_rst  (evn.rst),
   .evn_str  (evn.str),
   .evn_stp  (evn.stp),
   .evn_trg  (evn.trg),

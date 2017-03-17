@@ -60,10 +60,10 @@ end
 initial begin
   repeat(100) @(posedge clk);
   //test_id  (32'h40000000);
-  test_asg (32'h40080000, 32'h40090000, 0*5);
-  test_asg (32'h400a0000, 32'h400b0000, 1*5);
+  test_asg (32'h40080000, 32'h40090000, 0*6);
+  test_asg (32'h400a0000, 32'h400b0000, 1*6);
   repeat(16) @(posedge clk);
-  test_acq (32'h40040000, 32'h40050000, 2*5);
+  test_acq (32'h40040000, 32'h40050000, 2*6);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
   repeat(16) @(posedge clk);
@@ -145,9 +145,10 @@ task test_acq (
 );
   repeat(10) @(posedge clk);
   // start/stop/trigger masks
-  axi_write(regset+'h04, 'b00001<<sh);  // start
-  axi_write(regset+'h08, 'b00010<<sh);  // stop
-  axi_write(regset+'h0c, 'b01100<<sh);  // trigger
+  axi_write(regset+'h10, 'b000001<<sh);  // reset
+  axi_write(regset+'h14, 'b000010<<sh);  // start
+  axi_write(regset+'h18, 'b000100<<sh);  // stop
+  axi_write(regset+'h1c, 'b011000<<sh);  // trigger
   // bypass input filter
   axi_write(regset+'h4c, 'h1);
 
@@ -206,9 +207,10 @@ task test_asg (
   // configure burst mode
   axi_write(regset+'h30, 2'b00);  // burst disable
   // start/stop/trigger masks
-  axi_write(regset+'h04, 'b00001<<sh);  // start
-  axi_write(regset+'h08, 'b00010<<sh);  // stop
-  axi_write(regset+'h0c, 'b00100<<sh);  // trigger
+  axi_write(regset+'h04, 'b000001<<sh);  // reset
+  axi_write(regset+'h04, 'b000010<<sh);  // start
+  axi_write(regset+'h08, 'b000100<<sh);  // stop
+  axi_write(regset+'h0c, 'b001000<<sh);  // trigger
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);

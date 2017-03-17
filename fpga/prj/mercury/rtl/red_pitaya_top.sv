@@ -217,6 +217,7 @@ typedef struct packed {
   logic trg;  // software trigger
   logic stp;  // software stop
   logic str;  // software start
+  logic rst;  // software reset
 } evn_osc_t;
 
 // generator events
@@ -226,6 +227,7 @@ typedef struct packed {
   logic trg;  // software trigger
   logic stp;  // software stop
   logic str;  // software start
+  logic rst;  // software reset
 } evn_gen_t;
 
 // all events
@@ -394,6 +396,7 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
     .sto      (str),
     // events
     .evn_ext  (evn),
+    .evn_rst  (evn.osc[i].rst),
     .evn_str  (evn.osc[i].str),
     .evn_stp  (evn.osc[i].stp),
     .evn_trg  (evn.osc[i].trg),
@@ -432,6 +435,7 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
     .sto      (str_dac[i]),
     // events
     .evn_ext  (evn),
+    .evn_rst  (evn.gen[i].rst),
     .evn_str  (evn.gen[i].str),
     .evn_stp  (evn.gen[i].stp),
     .evn_trg  (evn.gen[i].trg),

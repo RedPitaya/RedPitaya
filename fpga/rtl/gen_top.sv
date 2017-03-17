@@ -38,13 +38,14 @@ module gen_top #(
   int unsigned CWL = 32,  // counter width length
   int unsigned CWN = 16,  // counter width number
   // event parameters
-  int unsigned EW  =  5   // external trigger array  width
+  int unsigned EW  =  6   // external trigger array  width
 )(
   // stream output
   axi4_stream_if.s       sto,
   // external events
   input  logic  [EW-1:0] evn_ext,
   // event sources
+  output logic           evn_rst,  // software reset
   output logic           evn_str,  // software start
   output logic           evn_stp,  // software stop
   output logic           evn_trg,  // software trigger
@@ -62,14 +63,15 @@ module gen_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // event select masks
+logic  [EW-1:0] cfg_rst;  // reset
 logic  [EW-1:0] cfg_str;  // start
 logic  [EW-1:0] cfg_stp;  // stop
 logic  [EW-1:0] cfg_trg;  // trigger
 
 // interrupt enable/status/clear
-logic   [3-1:0] irq_ena;  // enable
-logic   [3-1:0] irq_sts;  // status
-logic   [3-1:0] irq_clr;  // clear
+logic   [4-1:0] irq_ena;  // enable
+logic   [4-1:0] irq_sts;  // status
+logic   [4-1:0] irq_clr;  // clear
 
 // control
 logic           ctl_rst;
@@ -119,12 +121,13 @@ localparam int unsigned BAW=7;
 // write access
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
+  // interrupt enable
+  irq_ena <= '0;
   // event masks
+  cfg_rst <= '0;
   cfg_str <= '0;
   cfg_stp <= '0;
   cfg_trg <= '0;
-  // interrupt enable
-  irq_ena <= '0;
   // state machine
   cfg_siz <= '0;
   cfg_off <= '0;
@@ -140,12 +143,13 @@ if (~bus.rstn) begin
   cfg_sum <= '0;
 end else begin
   if (bus.wen) begin
-    // event masks
-    if (bus.addr[BAW-1:0]=='h04)  cfg_str <= bus.wdata[ EW-1:0];
-    if (bus.addr[BAW-1:0]=='h08)  cfg_stp <= bus.wdata[ EW-1:0];
-    if (bus.addr[BAW-1:0]=='h0c)  cfg_trg <= bus.wdata[ EW-1:0];
     // interrupt enable (status/clear are elsewhere)
-    if (bus.addr[BAW-1:0]=='h10)  irq_ena <= bus.wdata[  3-1:0];
+    if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[  3-1:0];
+    // event masks
+    if (bus.addr[BAW-1:0]=='h10)  cfg_rst <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h14)  cfg_str <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h1c)  cfg_trg <= bus.wdata[ EW-1:0];
     // buffer configuration
     if (bus.addr[BAW-1:0]=='h20)  cfg_siz <= bus.wdata[ CW-1:0];
     if (bus.addr[BAW-1:0]=='h24)  cfg_off <= bus.wdata[ CW-1:0];
@@ -166,18 +170,18 @@ end
 // control signals
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  ctl_rst <= 1'b0;
+  evn_rst <= 1'b0;
   evn_str <= 1'b0;
   evn_stp <= 1'b0;
   evn_trg <= 1'b0;
 end else begin
   if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
-    ctl_rst <= bus.wdata[0];  // reset
+    evn_rst <= bus.wdata[0];  // reset
     evn_str <= bus.wdata[1];  // start
     evn_stp <= bus.wdata[2];  // stop
     evn_trg <= bus.wdata[3];  // trigger
   end else begin
-    ctl_rst <= 1'b0;
+    evn_rst <= 1'b0;
     evn_str <= 1'b0;
     evn_stp <= 1'b0;
     evn_trg <= 1'b0;
@@ -189,10 +193,14 @@ always_ff @(posedge bus.clk)
 casez (bus.addr[BAW-1:0])
   // control
   'h00: bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
+  // interrupts enable/status/clear
+  'h08: bus.rdata <=                  irq_ena;
+  'h0c: bus.rdata <=                  irq_sts;
   // event masks
-  'h04: bus.rdata <= {{32- EW{1'b0}}, cfg_str};
-  'h08: bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
-  'h0c: bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
+  'h10: bus.rdata <= {{32- EW{1'b0}}, cfg_rst};
+  'h14: bus.rdata <= {{32- EW{1'b0}}, cfg_str};
+  'h18: bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
+  'h1c: bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
   // interrupts enable/status/clear
   'h10: bus.rdata <=                  irq_ena;
   'h14: bus.rdata <=                  irq_sts;
@@ -224,12 +232,12 @@ if (~bus.rstn) begin
 end else begin
   if (ctl_rst) begin
     irq_sts <= '0;
-  end else if (bus.wen & (bus.addr[BAW-1:0]=='h14)) begin
+  end else if (bus.wen & (bus.addr[BAW-1:0]=='h0c)) begin
     // interrupt clear
     irq_sts <= irq_sts & ~bus.wdata[3-1:0];
   end else begin
     // interrupt set
-    irq_sts <= irq_sts | {ctl_trg, ctl_stp, ctl_str};
+    irq_sts <= irq_sts | {ctl_trg, ctl_stp, ctl_str, ctl_rst};
   end
 end
 
@@ -245,6 +253,7 @@ end
 // generator core instance 
 ////////////////////////////////////////////////////////////////////////////////
 
+assign ctl_rst = |(evn_ext & cfg_rst);
 assign ctl_str = |(evn_ext & cfg_str);
 assign ctl_stp = |(evn_ext & cfg_stp);
 assign ctl_trg = |(evn_ext & cfg_trg);
