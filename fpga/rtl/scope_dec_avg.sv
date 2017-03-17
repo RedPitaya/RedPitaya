@@ -44,7 +44,7 @@ end else begin
     // decimation counter
     cnt <= vld ? 0 : cnt + 'd1;
     if (cfg_avg) begin
-      sum <= vld ? sti.TDATA : sum + sti.TDATA;
+      sum <= vld ? sti.TDATA[0] : sum + sti.TDATA[0];
     end
   end
   sto.TVALID <= vld;
