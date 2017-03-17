@@ -261,6 +261,8 @@ assign     sti.TREADY = cfg_byp ? stf.TREADY : tmp_sti.TREADY;
 //localparam int unsigned DWI = $bits(DT);  // data width for input
 //localparam int unsigned DWO = $bits(DT);  // data width for output
 
+// TODO: a proper CIC+FIR filter should be used instead
+/*
 scope_filter #(
   // stream parameters
   .DTI (DT),
@@ -276,8 +278,29 @@ scope_filter #(
   .cfg_kk   (cfg_fkk),
   .cfg_pp   (cfg_fpp),
   // control
-  .ctl_rst  (1'b0)
+  .ctl_rst  (ctl_rst)
 );
+*/
+
+red_pitaya_dfilt1 filter (
+   // ADC
+  .adc_clk_i   (tmp_sti.ACLK),
+  .adc_rstn_i  (tmp_sti.ARESETn),
+  .adc_dat_i   (tmp_sti.TDATA[0][16-1:2]),
+  .adc_dat_o   (tmp_stf.TDATA[0][16-1:2]),
+   // configuration
+  .cfg_aa_i    (cfg_faa),
+  .cfg_bb_i    (cfg_fbb),
+  .cfg_kk_i    (cfg_fkk),
+  .cfg_pp_i    (cfg_fpp)
+);
+
+assign tmp_sti.TREADY = 1'b1;
+
+assign tmp_stf.TVALID = 1'b1;
+assign tmp_stf.TLAST  = 1'b0;
+assign tmp_stf.TKEEP  = '1;
+assign tmp_stf.TDATA[0][1:0] = '0;
 
 assign     stf.TDATA  = cfg_byp ? sti.TDATA  : tmp_stf.TDATA ;
 assign     stf.TLAST  = cfg_byp ? sti.TLAST  : tmp_stf.TLAST ;
