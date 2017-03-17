@@ -40,25 +40,20 @@ end else begin
   if (ctl_rst) begin
     sum <= '0;
     cnt <= '0;
-  end else begin
+  end else if (sti.transf) begin
+    // decimation counter
+    cnt <= vld ? 0 : cnt + 'd1;
     if (cfg_avg) begin
-      if (cnt == cfg_dec) begin
-         cnt <= '0;
-         sum <= sti.TDATA;
-      end else begin
-         cnt <= cnt + 'd1;
-         sum <= sum + sti.TDATA;
-      end
-    end else begin
+      sum <= vld ? sti.TDATA : sum + sti.TDATA;
     end
   end
   sto.TVALID <= vld;
 end
 
-assign vld = ~|cnt;
+assign vld = cnt == cfg_dec;
 
 always_ff @(posedge sti.ACLK)
-if (vld) begin
+if (vld & sti.transf) begin
   if (cfg_avg) sto.TDATA[0] <= sum >>> cfg_shr;
   else         sto.TDATA[0] <= sti.TDATA[0];
 end
