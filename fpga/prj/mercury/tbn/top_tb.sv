@@ -18,7 +18,6 @@ module top_tb #(
 // DAC signal generation
 ////////////////////////////////////////////////////////////////////////////////
 
-
 logic               clk ;
 logic               rstn;
 
@@ -64,6 +63,8 @@ initial begin
   test_asg (32'h400a0000, 32'h400b0000, 1*6);
   repeat(16) @(posedge clk);
   test_acq (32'h40040000, 32'h40050000, 2*6);
+  repeat(16) @(posedge clk);
+  test_clb (32'h40030000);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
   repeat(16) @(posedge clk);
@@ -231,6 +232,25 @@ task test_asg (
 ////axi_write(regset+'h00, 2'b01);
 ////repeat(20) @(posedge clk);
 endtask: test_asg
+
+
+// calibration regset test
+task test_clb (
+  int unsigned regset
+);
+  int dat;
+  repeat(10) @(posedge clk);
+  // write all registers
+  for (int unsigned i=0; i<8; i++) begin
+    axi_write(regset+i*4, i);
+  end
+  // read all registers
+  for (int unsigned i=0; i<8; i++) begin
+    axi_read(regset+i*4, dat);
+    $display ("clb: @%04x = %08x", i*4, dat);
+  end
+  repeat(10) @(posedge clk);
+endtask: test_clb
 
 
 task test_lg (
