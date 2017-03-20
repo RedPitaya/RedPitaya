@@ -4,7 +4,7 @@ import mmap
 
 import numpy as np
 
-class hwid ():
+class hwid (object):
     regset_dtype = np.dtype([
         ('hwid' , 'uint32'),
         ('rsv0' , 'uint32'),  # reserved
