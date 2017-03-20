@@ -7,8 +7,8 @@
 module clb #(
   // stream parameters
   int unsigned DN = 1,  // data number
-  type DTA = logic [16-1:0], // acquire data type
-  type DTG = logic [14-1:0], // generator data type
+  type DTA = logic signed [16-1:0], // acquire data type
+  type DTG = logic signed [14-1:0], // generator data type
   // module numbers
   int unsigned MNA = 2,  // number of acquisition modules
   int unsigned MNG = 2   // number of generator   modules
@@ -115,11 +115,11 @@ endgenerate
 always_ff @(posedge bus.clk)
 if (!bus.rstn) begin
   for (int unsigned i=0; i<MNA; i++) begin
-    cfg_adc_mul[i] <= 1 << ($bits(DTA)-1);
+    cfg_adc_mul[i] <= 1 << ($bits(DTA)-2);
     cfg_adc_sum[i] <= '0;
   end
   for (int unsigned i=0; i<MNG; i++) begin
-    cfg_dac_mul[i] <= 1 << ($bits(DTG)-1);
+    cfg_dac_mul[i] <= 1 << ($bits(DTG)-2);
     cfg_dac_sum[i] <= '0;
   end
 end else begin

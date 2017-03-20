@@ -23,6 +23,10 @@ sys_bus_if   ps_sys    /${top}/top/ps_sys
 
 axi4_stream_if axi_adc_0 /${top}/top/str_adc\[0\]
 axi4_stream_if axi_adc_1 /${top}/top/str_adc\[1\]
+axi4_stream_if axi_osc_0 /${top}/top/str_osc\[0\]
+axi4_stream_if axi_osc_1 /${top}/top/str_osc\[1\]
+axi4_stream_if axi_gen_0 /${top}/top/str_gen\[0\]
+axi4_stream_if axi_gen_1 /${top}/top/str_gen\[1\]
 axi4_stream_if axi_dac_0 /${top}/top/str_dac\[0\]
 axi4_stream_if axi_dac_1 /${top}/top/str_dac\[1\]
 

@@ -208,10 +208,10 @@ task test_asg (
   // configure burst mode
   axi_write(regset+'h30, 2'b00);  // burst disable
   // start/stop/trigger masks
-  axi_write(regset+'h04, 'b000001<<sh);  // reset
-  axi_write(regset+'h04, 'b000010<<sh);  // start
-  axi_write(regset+'h08, 'b000100<<sh);  // stop
-  axi_write(regset+'h0c, 'b001000<<sh);  // trigger
+  axi_write(regset+'h10, 'b000001<<sh);  // reset
+  axi_write(regset+'h14, 'b000010<<sh);  // start
+  axi_write(regset+'h18, 'b000100<<sh);  // stop
+  axi_write(regset+'h1c, 'b001000<<sh);  // trigger
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
