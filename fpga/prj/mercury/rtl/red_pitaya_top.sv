@@ -311,9 +311,9 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=2; i<4; i++) begin: for_sys_2_4
-  sys_bus_stub sys_bus_stub_2_4 (sys[i]);
-end: for_sys_2_4
+for (genvar i=2; i<3; i++) begin: for_sys_2
+  sys_bus_stub sys_bus_stub_2 (sys[i]);
+end: for_sys_2
 endgenerate
 generate
 for (genvar i=12; i<16; i++) begin: for_sys_12_16
@@ -352,8 +352,8 @@ sys_reg_array_o #(
   .RT (PDM_T  ),
   .RN (PDM_CHN)
 ) regset_pdm (
-  .val       (pdm_cfg),
-  .bus       (sys[1])
+  .val      (pdm_cfg),
+  .bus      (sys[1])
 );
 
 pdm #(
@@ -376,13 +376,37 @@ pdm #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// calibration
+////////////////////////////////////////////////////////////////////////////////
+
+// ADC(osc)/DAC(gen) AXI4-Stream interfaces
+axi4_stream_if #(.DT (SBA_T)) str_osc [MNA-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (SBG_T)) str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+
+clb #(
+  .MNA (MNA),
+  .MNG (MNG),
+  .DTA (SBA_T),
+  .DTG (SBG_T)
+) clb (
+  // oscilloscope (ADC) streams
+  .str_adc  (str_adc),
+  .str_osc  (str_osc),
+  // generator (DAC) streams
+  .str_dac  (str_dac),
+  .str_gen  (str_gen),
+  // system bus
+  .bus      (sys[3])
+);
+
+////////////////////////////////////////////////////////////////////////////////
 // oscilloscope
 ////////////////////////////////////////////////////////////////////////////////
 
 generate
 for (genvar i=0; i<MNA; i++) begin: for_osc
 
-  axi4_stream_if #(.DT (SBA_T)) str (.ACLK (str_adc[i].ACLK), .ARESETn (str_adc[i].ARESETn));
+  axi4_stream_if #(.DT (SBA_T)) str (.ACLK (str_osc[i].ACLK), .ARESETn (str_osc[i].ARESETn));
 
   logic ctl_rst;
 
@@ -392,7 +416,7 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
     .EW ($bits(evn_top_t))
   ) osc (
     // streams
-    .sti      (str_adc[i]),
+    .sti      (str_osc[i]),
     .sto      (str),
     // events
     .evn_ext  (evn),
@@ -432,7 +456,7 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
     .EW ($bits(evn_top_t))
   ) gen (
     // stream output
-    .sto      (str_dac[i]),
+    .sto      (str_gen[i]),
     // events
     .evn_ext  (evn),
     .evn_rst  (evn.gen[i].rst),
