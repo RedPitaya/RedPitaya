@@ -17,7 +17,7 @@ module cts #(
 
 // TODO for not this value is limited to 32-bits
 // to achieve 64 or at least 48 bits, pipelining is needed
-always @(posedge clk)
+always_ff @(posedge clk)
 if (~rstn)  cts <= '0;
 else        cts <= 32'(cts + 1);
 

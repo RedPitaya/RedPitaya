@@ -63,7 +63,7 @@ assign sts_lst = sts_str & (ctl_stp
                | (sts_trg & end_pst)
                | (sti.transf & sti.TLAST) );
 
-always @(posedge sti.ACLK)
+always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   evn_lst <= 1'b0;
 end else begin
@@ -73,7 +73,7 @@ end
 
 assign trg = ctl_trg & sts_str & ena_pre & ~sts_trg;
 
-always @(posedge sti.ACLK)
+always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   // status pre/post trigger
   ena_pre <= 1'b0;
@@ -137,7 +137,7 @@ assign end_pst = (nxt_pst == cfg_pst);
 assign sti.TREADY = sto.TREADY | ~sto.TVALID;
 
 // output valid
-always @(posedge sti.ACLK)
+always_ff @(posedge sti.ACLK)
 if (~sti.ARESETn) begin
   sto.TVALID <= 1'b0;
 end else begin
@@ -145,7 +145,7 @@ end else begin
 end
 
 // output data
-always @(posedge sti.ACLK)
+always_ff @(posedge sti.ACLK)
 if (sts_str & sti.transf) begin
   sto.TDATA <= sti.TDATA;
   sto.TKEEP <= sti.TKEEP; // TODO

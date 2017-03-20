@@ -31,7 +31,7 @@ assign buf_wen = str.TVALID & str.TREADY;
 
 assign str.TREADY = 1;
 
-always @(posedge str.ACLK)
+always_ff @(posedge str.ACLK)
 if (~str.ARESETn) begin
   buf_wad <= '0;
 end else begin
@@ -43,7 +43,7 @@ end else begin
   end
 end
 
-always @(posedge str.ACLK)
+always_ff @(posedge str.ACLK)
 if (buf_wen) begin
    buf_dat [buf_wad] <= str.TDATA;
 end
@@ -52,14 +52,14 @@ end
 // read
 ////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 if (bus.ren) begin
   for (int unsigned i=0; i<2; i++) begin
     bus.rdata [16*i+:16] <= buf_dat [{bus.addr>>2,i[0]}];
   end
 end
 
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;

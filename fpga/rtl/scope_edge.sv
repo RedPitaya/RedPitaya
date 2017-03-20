@@ -46,7 +46,7 @@ axi4_stream_if #(.DN (DN), .DT (DT)) sts (.ACLK (sti.ACLK), .ARESETn (sti.ARESET
 ////////////////////////////////////////////////////////////////////////////////
 
 // subtraction
-always @(posedge sti.ACLK)
+always_ff @(posedge sti.ACLK)
 if (sti.transf) begin
   sub_neg <= sti.TDATA[0] - cfg_neg;
   sub_pos <= cfg_pos - sti.TDATA[0];
@@ -62,7 +62,7 @@ axi4_stream_reg reg_sub (.sti (sti), .sto (sts));
 // toggle pos/neg edge, if pos/neg level is passed
 assign sts_lvl = sts_reg ^ ((cfg_edg ^ sts_reg) ? sub_neg[SGN] : sub_pos[SGN]);
 
-always @(posedge sts.ACLK)
+always_ff @(posedge sts.ACLK)
 if (~sts.ARESETn) begin
   sts_reg <= 1'b0;
   sts_trg <= 1'b0;

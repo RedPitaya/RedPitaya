@@ -162,7 +162,7 @@ logic bus_ena;
 assign bus_ena = bus.wen | bus.ren;
 
 // CPU read/write access
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 for (int unsigned i=0; i<2; i++) begin
 // TODO: asymetric bus width is failing synthesis
 //  if (bus_ena) begin
@@ -185,15 +185,15 @@ assign bus.err = 1'b0;
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream read data
-always @(posedge sto.ACLK)
+always_ff @(posedge sto.ACLK)
 if (sts_vld)  buf_rdata <= buf_mem[buf_raddr];
 
 // stream read pointer
-always @(posedge sto.ACLK)
+always_ff @(posedge sto.ACLK)
 if (sts_trg)  buf_raddr <= ptr_cur[CWF+:CWM];
 
 // valid signal used to enable memory read access
-always @(posedge sto.ACLK)
+always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
   sts_vld <= 1'b0;
   sts_lst <= 1'b0;
