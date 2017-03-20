@@ -170,6 +170,7 @@ class oscilloscope (object):
         for ch in self.channels:
             self.osc[ch].mask = [(0x1<<sh), (0x2<<sh), (0x4<<sh), (0x8<<sh) | (0x10<<sh_t)]
         self.clb_t_update()
+        self.clb_y_update()
 
     def clb_t_update (self):
         osc = self.osc[self.t_source]
@@ -184,6 +185,12 @@ class oscilloscope (object):
         #self.h_trigger_t[0].data_source.data['x']     = [osc.holdoff]*2
         self.h_trigger_t[1].data_source.data['right'] = [osc.holdoff]
         push_notebook(handle=self.target)
+
+
+    def clb_y_update (self):
+        osc = self.osc[self.t_source]
+        self.p.y_range.start = osc.y_position - osc.y_scale
+        self.p.y_range.end   = osc.y_position + osc.y_scale
 
     def run (self):
         while True:
@@ -274,8 +281,7 @@ class oscilloscope (object):
             #app.p.y_range = Range1d(-0.2, +0.2)
             self.top.p.extra_y_ranges[str(self.ch)].start = self.y_position - self.y_scale
             self.top.p.extra_y_ranges[str(self.ch)].end   = self.y_position + self.y_scale
-            self.top.p.y_range.start = self.y_position - self.y_scale
-            self.top.p.y_range.end   = self.y_position + self.y_scale
+            self.top.clb_y_update()
 
         def display (self):
             display(self.w_t_edge, self.w_t_position, self.w_t_holdoff, self.w_y_position, self.w_y_scale)
