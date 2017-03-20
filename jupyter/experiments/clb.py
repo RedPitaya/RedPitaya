@@ -4,7 +4,7 @@ import mmap
 
 import numpy as np
 
-class hwid ():
+class clb (object):
     DWA = 16
     DWG = 14
     DWAr = 2**DWA - 1
@@ -12,14 +12,24 @@ class hwid ():
     DWA1 = 2**(DWA-1)
     DWG1 = 2**(DWG-1)
     
-    clb_dtype = np.dtype([
-        ('mul', 'uint32'),  # multiplication
-        ('sum', 'uint32')   # summation
+    regset_channel_dtype = np.dtype([
+        ('mul', 'int32'),  # multiplication
+        ('sum', 'int32')   # summation
     ])
 
     regset_dtype = np.dtype([
-        ('adc', clb_dtype, 2),  # oscilloscope
-        ('dac', clb_dtype, 2),  # generator
+        ('adc', regset_channel_dtype, 2),  # oscilloscope
+        ('dac', regset_channel_dtype, 2),  # generator
+    ])
+
+    clb_channel_dtype = np.dtype([
+        ('mul', 'float32'),  # multiplication
+        ('sum', 'float32')   # summation
+    ])
+
+    clb_dtype = np.dtype([
+        ('adc', clb_channel_dtype, 2),  # oscilloscope
+        ('dac', clb_channel_dtype, 2),  # generator
     ])
 
     def __init__ (self, uio:str = '/dev/uio/clb'):
@@ -46,6 +56,9 @@ class hwid ():
 
         regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_mem)
         self.regset = regset_array[0]
+
+        tmp_array = np.recarray(1, self.clb_dtype)
+        self.rmp = tmp_array[0]
 
     def __del__ (self):
         self.uio_mem.close()
@@ -77,3 +90,6 @@ class hwid ():
 
     def set_dac_amplitude (self, ch: int, amplitude: float):
         self.regset.dac[ch].mul = gain * DWGr
+
+    def eeprom_read (self):
+        pass
