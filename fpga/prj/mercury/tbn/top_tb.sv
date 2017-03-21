@@ -64,7 +64,7 @@ initial begin
   repeat(16) @(posedge clk);
   test_acq (32'h40040000, 32'h40050000, 2*6);
   repeat(16) @(posedge clk);
-  test_clb (32'h40030000);
+  //test_clb (32'h40030000);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
   repeat(16) @(posedge clk);
@@ -181,7 +181,7 @@ task test_asg (
 
   // write table
   for (int i=0; i<buf_len; i++) begin
-    axi_write(buffer + (i*4), i);  // write table
+    axi_write(buffer + (i*4), i<<4);  // write table
   end
 //  for (int i=0; i<buf_len; i+=2) begin
 //    logic [2-1:0] [16-1:0] data;

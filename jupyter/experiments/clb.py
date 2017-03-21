@@ -45,8 +45,8 @@ class clb (object):
 
     # EEPROM structure
     eeprom_dtype = np.dtype([
-        ('adc_hi_gain'  , 'uint32', 2),
         ('adc_lo_gain'  , 'uint32', 2),
+        ('adc_hi_gain'  , 'uint32', 2),
         ('adc_lo_offset',  'int32', 2),
         ('dac_gain'     , 'uint32', 2),
         ('dac_offset'   ,  'int32', 2),
@@ -156,8 +156,8 @@ class clb (object):
 
         # convert EEPROM values into local float values
         for ch in self.channels_adc:
-            self.tmp.adc[ch].lo.gain   = self.FullScaleToVoltage (eeprom_struct.adc_lo_gain[ch]) *  1.0
-            self.tmp.adc[ch].hi.gain   = self.FullScaleToVoltage (eeprom_struct.adc_hi_gain[ch]) * 20.0
+            self.tmp.adc[ch].lo.gain   = self.FullScaleToVoltage (eeprom_struct.adc_lo_gain[ch])
+            self.tmp.adc[ch].hi.gain   = self.FullScaleToVoltage (eeprom_struct.adc_hi_gain[ch])
             self.tmp.adc[ch].lo.offset = eeprom_struct.adc_lo_offset[ch] / self.DWAr
             self.tmp.adc[ch].hi.offset = eeprom_struct.adc_hi_offset[ch] / self.DWAr * 20.0
         for ch in self.channels_dac:
