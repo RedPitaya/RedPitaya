@@ -1,33 +1,37 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Module: Linear transformation (gain, offset and saturation)
+// Module: Linear adder
 // Author: Iztok Jeras
 // (c) Red Pitaya  (redpitaya.com)
 ////////////////////////////////////////////////////////////////////////////////
 
 `timescale 1ns / 1ps
 
-module str_dec_tb #(
+module lin_add_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // stream parameters
-  type DT = logic [8-1:0], // data type for input
-  int unsigned CW = 17  // counter width
+  int unsigned DN = 1,
+  type DTI = logic signed [8-1:0], // data type for input
+  type DTO = logic signed [8-1:0], // data type for output
+  type DTS = DTI                   // data type for configuration
 );
 
-typedef DT DT_A [];
+typedef DTI DTI_A [];
+typedef DTO DTO_A [];
 
 // system signals
 logic clk ;  // clock
 logic rstn;  // reset - active low
 
-// control
-logic          ctl_rst;  // synchronous reset
 // configuration
-logic [CW-1:0] cfg_dec;  // decimation factor
+DTS cfg_sum;
 
 // stream input/output
-axi4_stream_if #(.DT (DT)) sti (.ACLK (clk), .ARESETn (rstn));
-axi4_stream_if #(.DT (DT)) sto (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTI)) sti (.ACLK (clk), .ARESETn (rstn));
+axi4_stream_if #(.DT (DTO)) sto (.ACLK (clk), .ARESETn (rstn));
+
+// calibration
+real offset = -0.95;
 
 int unsigned error = 0;
 
@@ -41,7 +45,6 @@ always #(TP/2) clk = ~clk;
 // clocking 
 default clocking cb @ (posedge clk);
   input  rstn;
-  input  cfg_mul;
   input  cfg_sum;
 endclocking: cb
 
@@ -50,14 +53,13 @@ endclocking: cb
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  DT dti [];
-  DT dto [];
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) cli;
-  axi4_stream_pkg::axi4_stream_class #(.DT (DT)) clo;
+  DTI dti [];
+  DTO dto [];
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTI)) cli;
+  axi4_stream_pkg::axi4_stream_class #(.DT (DTO)) clo;
 
   // for now initialize configuration to an idle value
-  ctl_rst = 1'b0;
-  cfg_dec = 0;
+  cfg_sum = (offset * 2**($bits(DTS)-1));
 
   // initialization
   rstn = 1'b0;
@@ -78,7 +80,6 @@ initial begin
     str_src.run (cli);
     str_drn.run (clo);
   join
-
   // check received data
   error += clo.check (dto);
 
@@ -89,9 +90,9 @@ initial begin
   $finish();
 end
 
-// calculate linear transformation
+// calculate lin_add transformation
 // TODO: implement actual calculation
-function automatic DT_A calc (ref DT_A dat);
+function automatic DTO_A calc (ref DTI_A dat);
   calc = new [dat.size()] (dat);
 endfunction: calc
 
@@ -99,29 +100,29 @@ endfunction: calc
 // module instance
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_src #(.DT (DT)) str_src (.str (sti));
+axi4_stream_src #(.DT (DTI)) str_src (.str (sti));
 
-str_dec #(
-  .CW (CW)
-) str_dec (
-  // control
-  .ctl_rst  (ctl_rst),
-  // configuration
-  .cfg_dec  (cfg_dec),
+lin_add #(
+  .DTI (DTI),
+  .DTO (DTO),
+  .DTS (DTS)
+) lin_add (
   // stream input/output
   .sti      (sti    ),
-  .sto      (sto    )
+  .sto      (sto    ),
+  // configuration
+  .cfg_sum  (cfg_sum)
 );
 
-axi4_stream_drn #(.DT (DT)) str_drn (.str (sto));
+axi4_stream_drn #(.DT (DTO)) str_drn (.str (sto));
 
 ////////////////////////////////////////////////////////////////////////////////
 // waveforms
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  $dumpfile("str_dec_tb.vcd");
-  $dumpvars(0, str_dec_tb);
+  $dumpfile("lin_add_tb.vcd");
+  $dumpvars(0, lin_add_tb);
 end
 
-endmodule: str_dec_tb
+endmodule: lin_add_tb

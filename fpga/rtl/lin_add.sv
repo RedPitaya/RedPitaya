@@ -80,7 +80,7 @@ generate
 for (genvar i=0; i<DN; i++) begin: for_sat
   always_ff @(posedge sti.ACLK)
   if (str.transf) begin
-    sto.TDATA[i] <= ^str.TDATA[i][DWO:DWO-1] ? {str.TDATA[i][DWO], {DWO-1{~str.TDATA[i][DWO-1]}}}
+    sto.TDATA[i] <= ^str.TDATA[i][DWO:DWO-1] ? {str.TDATA[i][DWO], {DWO-1{~str.TDATA[i][DWO]}}}
                                              :  str.TDATA[i][DWO-1:0];
     sto.TKEEP[i] <=  str.TKEEP[i];
   end
