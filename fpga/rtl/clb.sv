@@ -17,8 +17,8 @@ module clb #(
   axi4_stream_if.d str_adc [MNA-1:0],
   axi4_stream_if.s str_osc [MNA-1:0],
   // generator (DAC) streams
-  axi4_stream_if.d str_dac [MNG-1:0],
-  axi4_stream_if.s str_gen [MNG-1:0],
+  axi4_stream_if.s str_dac [MNG-1:0],
+  axi4_stream_if.d str_gen [MNG-1:0],
   // system bus
   sys_bus_if.s     bus
 );
