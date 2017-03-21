@@ -5,6 +5,9 @@ import mmap
 import numpy as np
 
 class clb (object):
+    channels_adc = [0, 1]
+    channels_dac = [0, 1]
+
     DWA = 16
     DWG = 14
     DWAr = 2**DWA - 1
@@ -31,20 +34,24 @@ class clb (object):
         ('gain'  , 'float32'),  # multiplication
         ('offset', 'float32')   # summation
     ])
+    clb_range_dtype = np.dtype([
+        ('lo', clb_channel_dtype),  #  1.0V range
+        ('hi', clb_channel_dtype)   # 20.0V range
+    ])
     clb_dtype = np.dtype([
-        ('adc', clb_channel_dtype, 2),  # oscilloscope
+        ('adc', clb_range_dtype  , 2),  # oscilloscope
         ('dac', clb_channel_dtype, 2),  # generator
     ])
 
     # EEPROM structure
     eeprom_dtype = np.dtype([
-        ('adc_hi_gain', 'uint32', 2),
-        ('adc_lo_gain', 'uint32', 2),
-        ('adc_lo_off' ,  'int32', 2),
-        ('dac_gain'   , 'uint32', 2),
-        ('dac_off'    ,  'int32', 2),
-        ('magic'      , 'uint32'),
-        ('adc_hi_off' ,  'int32', 2)
+        ('adc_hi_gain'  , 'uint32', 2),
+        ('adc_lo_gain'  , 'uint32', 2),
+        ('adc_lo_offset',  'int32', 2),
+        ('dac_gain'     , 'uint32', 2),
+        ('dac_offset'   ,  'int32', 2),
+        ('magic'        , 'uint32'),
+        ('adc_hi_offset',  'int32', 2)
     ])
 
     def __init__ (self, uio:str = '/dev/uio/clb'):
@@ -106,6 +113,15 @@ class clb (object):
     def set_dac_offset (self, ch: int, offset: float):
         self.regset.dac[ch].ctl_mul = int(offset * self.DWGr)
 
+    def FullScaleToVoltage(self, cnt: int) -> float:
+        if cnt == 0:
+            return (1.0)
+        else:
+            return (cnt * 100.0 / (1<<32))
+
+    def FullScaleFromVoltage(self, voltage: float) -> int:
+        return (int(voltage / 100.0 * (1<<32)));
+
     def eeprom_read (self):
         # open EEPROM device
         try:
@@ -133,9 +149,29 @@ class clb (object):
         eeprom_array = np.recarray(1, self.eeprom_dtype, buf=buffer)
         eeprom_struct = eeprom_array[0]
     
+        # missing magic number means a deprecated EEPROM structure was still not updated
         if (eeprom_struct.magic != self.MAGIC):
-            channels = [0, 1]
-            for ch in channels:
+            for ch in self.channels_adc:
                 eeprom_struct.adc_hi_off[ch] = eeprom_struct.adc_lo_off[ch];
 
+        # convert EEPROM values into local float values
+        for ch in self.channels_adc:
+            self.tmp.adc[ch].lo.gain   = self.FullScaleToVoltage (eeprom_struct.adc_lo_gain[ch]) *  1.0
+            self.tmp.adc[ch].hi.gain   = self.FullScaleToVoltage (eeprom_struct.adc_hi_gain[ch]) * 20.0
+            self.tmp.adc[ch].lo.offset = eeprom_struct.adc_lo_offset[ch] / self.DWAr
+            self.tmp.adc[ch].hi.offset = eeprom_struct.adc_hi_offset[ch] / self.DWAr * 20.0
+        for ch in self.channels_dac:
+            self.tmp.dac[ch].gain   = self.FullScaleToVoltage (eeprom_struct.dac_gain  [ch])
+            self.tmp.dac[ch].offset = eeprom_struct.dac_offset[ch] / self.DWGr
+
         self.eeprom_struct = eeprom_struct
+
+    def show_float (self):
+        for ch in self.channels_adc:
+            print('adc[{}].lo.gain   = {}'.format(ch, self.tmp.adc[ch].lo.gain))
+            print('adc[{}].hi.gain   = {}'.format(ch, self.tmp.adc[ch].hi.gain))
+            print('adc[{}].lo.offset = {}'.format(ch, self.tmp.adc[ch].lo.offset))
+            print('adc[{}].hi.offset = {}'.format(ch, self.tmp.adc[ch].hi.offset))
+        for ch in self.channels_dac:
+            print('dac[{}].gain   = {}'.format(ch, self.tmp.dac[ch].gain))
+            print('dac[{}].offset = {}'.format(ch, self.tmp.dac[ch].offset))
