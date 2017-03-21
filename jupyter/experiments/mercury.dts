@@ -24,7 +24,7 @@
 				compatible = "generic-uio";
 				reg = <0x40010000 0x1000>;
 			};
-			clb: clb@40000000 {
+			clb: clb@40030000 {
 				compatible = "generic-uio";
 				reg = <0x40030000 0x1000>;
 			};
