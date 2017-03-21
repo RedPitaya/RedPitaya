@@ -9,12 +9,12 @@ class clb (object):
     DWG = 14
     DWAr = 2**DWA - 1
     DWGr = 2**DWG - 1
-    DWA1 = 2**(DWA-1)
-    DWG1 = 2**(DWG-1)
+    DWA1 = 2**(DWA-2)
+    DWG1 = 2**(DWG-2)
     
     regset_channel_dtype = np.dtype([
-        ('mul', 'int32'),  # multiplication
-        ('sum', 'int32')   # summation
+        ('ctl_mul', 'int32'),  # multiplication
+        ('ctl_sum', 'int32')   # summation
     ])
 
     regset_dtype = np.dtype([
@@ -23,8 +23,8 @@ class clb (object):
     ])
 
     clb_channel_dtype = np.dtype([
-        ('mul', 'float32'),  # multiplication
-        ('sum', 'float32')   # summation
+        ('gain'  , 'float32'),  # multiplication
+        ('offset', 'float32')   # summation
     ])
 
     clb_dtype = np.dtype([
@@ -58,7 +58,7 @@ class clb (object):
         self.regset = regset_array[0]
 
         tmp_array = np.recarray(1, self.clb_dtype)
-        self.rmp = tmp_array[0]
+        self.tmp = tmp_array[0]
 
     def __del__ (self):
         self.uio_mem.close()
@@ -68,28 +68,28 @@ class clb (object):
             raise IOError(e.errno, "Closing {}: {}".format(uio, e.strerror))
 
     def get_adc_gain (self, ch: int) -> float:
-        return (self.regset.adc[ch].mul / DWA1)
+        return (self.regset.adc[ch].ctl_mul / self.DWA1)
 
     def set_adc_gain (self, ch: int, gain: float):
-        self.regset.adc[ch].mul = gain * DWA1
+        self.regset.adc[ch].ctl_mul = int(gain * self.DWA1)
 
-    def get_adc_amplitude (self, ch: int) -> float:
-        return (self.regset.adc[ch].sum / DWAr)
+    def get_adc_offset (self, ch: int) -> float:
+        return (self.regset.adc[ch].ctl_sum / self.DWAr)
 
-    def set_adc_amplitude (self, ch: int, amplitude: float):
-        self.regset.adc[ch].mul = gain * DWAr
+    def set_adc_offset (self, ch: int, offset: float):
+        self.regset.adc[ch].ctl_mul = int(offset * self.DWAr)
 
     def get_dac_gain (self, ch: int) -> float:
-        return (self.regset.dac[ch].mul / DWG1)
+        return (self.regset.dac[ch].ctl_mul / self.DWG1)
 
     def set_dac_gain (self, ch: int, gain: float):
-        self.regset.dac[ch].mul = gain * DWG1
+        self.regset.dac[ch].ctl_mul = int(gain * self.DWG1)
 
-    def get_dac_amplitude (self, ch: int) -> float:
-        return (self.regset.dac[ch].sum / DWGr)
+    def get_dac_offset (self, ch: int) -> float:
+        return (self.regset.dac[ch].ctl_sum / self.DWGr)
 
-    def set_dac_amplitude (self, ch: int, amplitude: float):
-        self.regset.dac[ch].mul = gain * DWGr
+    def set_dac_offset (self, ch: int, offset: float):
+        self.regset.dac[ch].ctl_mul = int(offset * self.DWGr)
 
     def eeprom_read (self):
         pass
