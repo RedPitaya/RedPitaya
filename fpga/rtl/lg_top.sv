@@ -186,7 +186,7 @@ end
 // stream from generator
 axi4_stream_if #(.DN (DN), .DT (DT)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
 
-asg #(
+lg_asg #(
   .TN (TN),
   .DN (DN),
   .DT (DT),
