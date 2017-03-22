@@ -45,8 +45,8 @@ class clb (object):
 
     # EEPROM structure
     eeprom_dtype = np.dtype([
-        ('adc_lo_gain'  , 'uint32', 2),
         ('adc_hi_gain'  , 'uint32', 2),
+        ('adc_lo_gain'  , 'uint32', 2),
         ('adc_lo_offset',  'int32', 2),
         ('dac_gain'     , 'uint32', 2),
         ('dac_offset'   ,  'int32', 2),
@@ -70,20 +70,20 @@ class clb (object):
 
         # map regset
         try:
-            self.uio_reg = mmap.mmap(
+            self.uio_mem = mmap.mmap(
                 fileno=self.uio_dev, length=mmap.PAGESIZE, offset=0x0,
                 flags=mmap.MAP_SHARED, prot=(mmap.PROT_READ | mmap.PROT_WRITE))
         except OSError as e:
-            raise IOError(e.errno, "Mapping (regset) {}: {}".format(uio, e.strerror))
+            raise IOError(e.errno, "Mapping {}: {}".format(uio, e.strerror))
 
-        regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_reg)
+        regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_mem)
         self.regset = regset_array[0]
 
         tmp_array = np.recarray(1, self.clb_dtype)
         self.tmp = tmp_array[0]
 
     def __del__ (self):
-        self.uio_reg.close()
+        self.uio_mem.close()
         try:
             os.close(self.uio_dev)
         except OSError as e:
@@ -156,13 +156,13 @@ class clb (object):
 
         # convert EEPROM values into local float values
         for ch in self.channels_adc:
-            self.tmp.adc[ch].lo.gain   = self.FullScaleToVoltage (eeprom_struct.adc_lo_gain[ch])
+            self.tmp.adc[ch].lo.gain   = self.FullScaleToVoltage (eeprom_struct.adc_lo_gain[ch]) / 20.0
             self.tmp.adc[ch].hi.gain   = self.FullScaleToVoltage (eeprom_struct.adc_hi_gain[ch])
-            self.tmp.adc[ch].lo.offset = eeprom_struct.adc_lo_offset[ch] / self.DWAr
-            self.tmp.adc[ch].hi.offset = eeprom_struct.adc_hi_offset[ch] / self.DWAr * 20.0
+            self.tmp.adc[ch].lo.offset = eeprom_struct.adc_lo_offset[ch] / (2**13-1)
+            self.tmp.adc[ch].hi.offset = eeprom_struct.adc_hi_offset[ch] / (2**13-1) * 20.0
         for ch in self.channels_dac:
             self.tmp.dac[ch].gain   = self.FullScaleToVoltage (eeprom_struct.dac_gain  [ch])
-            self.tmp.dac[ch].offset = eeprom_struct.dac_offset[ch] / self.DWGr
+            self.tmp.dac[ch].offset = eeprom_struct.dac_offset[ch] / (2**13-1)
 
         self.eeprom_struct = eeprom_struct
 
