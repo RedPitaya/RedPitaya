@@ -90,7 +90,7 @@ on the first Red Pitaya release.
 |                   |    Linux kernel features for GPIO (IRQ, SPI, I2C, 1-wire) and    |
 |                   |    LED (triggers).                                               |
 +-------------------+------------------------------------------------------------------+
-| logic_orig        | This image is used by the logic analyzer, it is using DMA to     |
+| logic             | This image is used by the logic analyzer, it is using DMA to     |
 |                   | transfer data to man DDR3 RAM. ADC and DAS code is unfinished.   |
 +-------------------+------------------------------------------------------------------+
 | axi4lite          | Image intended for testing various AXI4 bus implementations.     |

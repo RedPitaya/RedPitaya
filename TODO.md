@@ -6,7 +6,6 @@ Jupyter:
 - there is this error in the log:
   `404 GET /jupyter/nbextensions/widgets/notebook/js/extension.js`
   so some widgets are not working
-- use generator/acquire from logic_orig
 - rethink start/trigger/stop synchronization
 - each channel should have own UIO DT node and driver,
   so they could be used by separate applications
