@@ -70,20 +70,20 @@ class clb (object):
 
         # map regset
         try:
-            self.uio_mem = mmap.mmap(
+            self.uio_reg = mmap.mmap(
                 fileno=self.uio_dev, length=mmap.PAGESIZE, offset=0x0,
                 flags=mmap.MAP_SHARED, prot=(mmap.PROT_READ | mmap.PROT_WRITE))
         except OSError as e:
-            raise IOError(e.errno, "Mapping {}: {}".format(uio, e.strerror))
+            raise IOError(e.errno, "Mapping (regset) {}: {}".format(uio, e.strerror))
 
-        regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_mem)
+        regset_array = np.recarray(1, self.regset_dtype, buf=self.uio_reg)
         self.regset = regset_array[0]
 
         tmp_array = np.recarray(1, self.clb_dtype)
         self.tmp = tmp_array[0]
 
     def __del__ (self):
-        self.uio_mem.close()
+        self.uio_reg.close()
         try:
             os.close(self.uio_dev)
         except OSError as e:
