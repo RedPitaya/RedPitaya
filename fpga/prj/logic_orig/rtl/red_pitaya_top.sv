@@ -100,11 +100,6 @@ localparam type SBA_T = logic signed [ 14-1:0];  // acquire
 localparam type SBG_T = logic signed [ 14-1:0];  // generate
 localparam type SBL_T = logic        [GDW-1:0];  // logic ananlyzer/generator
 
-// analog input streams
-axi4_stream_if #(         .DT (SBA_T)) str_adc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ADC
-// analog output streams
-axi4_stream_if #(         .DT (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
-axi4_stream_if #(         .DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
 // digital input streams
 axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
 
@@ -310,7 +305,9 @@ for (genvar i=13; i<16; i++) begin: for_sys
 end: for_sys
 endgenerate
 
-sys_bus_stub sys_bus_stub_2 (sys[2]);
+sys_bus_stub sys_bus_stub_2  (sys[2]);
+sys_bus_stub sys_bus_stub_9  (sys[9]);
+sys_bus_stub sys_bus_stub_10 (sys[10]);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Current time stamp
@@ -523,22 +520,14 @@ assign adc_clk_o = 2'b10;
 // ADC clock duty cycle stabilizer is enabled
 assign adc_cdcs_o = 1'b1 ;
 
+// silence the streaming interface
 generate
 for (genvar i=0; i<MNA; i++) begin: for_adc
 
-  // local variables
-  logic signed [14-1:0] adc_dat_raw;
-
-  // IO block registers should be used here
-  // lowest 2 bits reserved for 16bit ADC
-  always_ff @(posedge adc_clk)
-  adc_dat_raw <= {adc_dat_i[i][16-1], ~adc_dat_i[i][16-2:2]};
-
-  // digital loopback multiplexer
-  assign str_adc[i].TVALID = 1'b1;
-  assign str_adc[i].TDATA  = mux_loop[i] ? str_dac[i].TDATA : adc_dat_raw;
-  assign str_adc[i].TKEEP  = mux_loop[i] ? str_dac[i].TKEEP : '1;
-  assign str_adc[i].TLAST  = mux_loop[i] ? str_dac[i].TLAST : 1'b0;
+  assign str_drx[i].TKEEP  = '0;
+  assign str_drx[i].TDATA  = '0;
+  assign str_drx[i].TLAST  = '0;
+  assign str_drx[i].TVALID = '0;
 
 end: for_adc
 endgenerate
@@ -550,37 +539,10 @@ endgenerate
 generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
-  axi4_stream_if #(.DN (1), .DT (SBG_T)) str_gen [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
-
-  axi4_stream_pas pas_0 (
-    .ena (1'b1),
-    .sti (str_asg[i]),
-    .sto (str_gen[0])
-  );
-
-`ifdef ENABLE_GEN_DMA
-  // TODO this conversion is not actually implemented yet
-  axi4_stream_pas #(.DNI (2), .DNO (1)) pas_1 (
-    .ena (1'b1),
-    .sti (axi_dtx[0+i]),
-    .sto (str_gen[1])
-  );
-`else
+  // output registers + signed to unsigned (also to negative slope)
+  assign dac_dat[i] = {1'b0, 13'h1fff);
   // toward DMA
   assign axi_dtx[0+i].TREADY = 1'b0;
-  // toward DAC
-  assign str_gen[1].TVALID = 1'b0;
-`endif
-
-  axi4_stream_mux #(.DN (1), .DT (SBG_T)) mux_gen (
-    .sel (mux_gen[i]),
-    .sti (str_gen),
-    .sto (str_dac[i])
-  );
-
-  // output registers + signed to unsigned (also to negative slope)
-  assign dac_dat[i] = {str_dac[i].TDATA[0][14-1], ~str_dac[i].TDATA[0][14-2:0]};
-  assign str_dac[i].TREADY = 1'b1;
 
 end: for_dac
 endgenerate
@@ -594,69 +556,10 @@ ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst   ), .D2(dac_rst   ), .C(
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat[0]), .D2(dac_dat[1]), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
 ////////////////////////////////////////////////////////////////////////////////
-// ASG (arbitrary signal generators)
-////////////////////////////////////////////////////////////////////////////////
-
-generate
-for (genvar i=0; i<MNG; i++) begin: for_gen
-
-asg_top #(
-  .DT  (SBG_T),
-  .DTM (logic signed [$bits(SBG_T)+2-1:0]),
-  .DTS (SBG_T),
-  .TN ($bits(trg))
-) asg (
-  // stream output
-  .sto       (str_asg[i]),
-  // triggers
-  .trg_ext   (trg),
-  .trg_swo   (trg.gen_swo[i]),
-  .trg_out   (trg.gen_out[i]),
-  // interrupts
-  .irq_trg   (irq.gen_trg[i]),
-  .irq_stp   (irq.gen_stp[i]),
-  // System bus
-  .bus       (sys[7+i])
-);
-
-end: for_gen
-endgenerate
-
-////////////////////////////////////////////////////////////////////////////////
-// oscilloscope
-////////////////////////////////////////////////////////////////////////////////
-
-generate
-for (genvar i=0; i<MNA; i++) begin: for_acq
-
-scope_top #(
-  .TN ($bits(trg)),
-  .CW (32)
-) scope (
-  // streams
-  .sti       (str_adc[0+i]),
-  .sto       (str_drx[0+i]),
-  // current time stamp
-  .cts       (cts),
-  // triggers
-  .trg_ext   (trg),
-  .trg_swo   (trg.acq_swo[i]),
-  .trg_out   (trg.acq_out[i]),
-  // interrupts
-  .irq_trg   (irq.acq_trg[i]),
-  .irq_stp   (irq.acq_stp[i]),
-  // System bus
-  .bus       (sys[9+i])
-);
-
-end: for_acq
-endgenerate
-
-////////////////////////////////////////////////////////////////////////////////
 // LG (logic generator)
 ////////////////////////////////////////////////////////////////////////////////
 
-asg_top #(
+lg_top #(
   .EN_LIN (0),
   .DT (SBL_T),
   .TN ($bits(trg))
