@@ -37,25 +37,20 @@ logic          dna_done ;
 
 always_ff @(posedge bus.clk)
 if (!bus.rstn) begin
-  dna_clk   <= '0;
-  dna_read  <= '0;
-  dna_shift <= '0;
+  dna_clk   <= 1'b0;
+  dna_read  <= 1'b1;
+  dna_shift <= 1'b0;
+  dna_done  <= 1'b0;
   dna_cnt   <= '0;
   dna_value <= '0;
-  dna_done  <= '0;
 end else begin
-  if (!dna_done)
-    dna_cnt <= dna_cnt + 1'd1;
-
-  dna_clk   <= dna_cnt[2] ;
-  dna_read  <= (dna_cnt < 9'd10);
-  dna_shift <= (dna_cnt > 9'd18);
-
-  if ((dna_cnt[2:0]==3'h0) && !dna_done)
+  dna_clk <= dna_cnt[2] ;
+  if (dna_cnt == 9'd010) dna_read  <= 1'b0;
+  if (dna_cnt == 9'd019) dna_shift <= 1'b1;
+  if (dna_cnt == 9'd466) dna_done  <= 1'b1;
+  if (!dna_done)         dna_cnt   <= dna_cnt + 'd1;
+  if (~|dna_cnt[2:0] & ~dna_done)
     dna_value <= {dna_value[57-2:0], dna_dout};
-
-  if (dna_cnt > 9'd465)
-    dna_done <= 1'b1;
 end
 
 // parameter specifies a sample 57-bit DNA value for simulation
@@ -101,15 +96,11 @@ end else begin
   casez (bus.addr[BDW-1:0])
     // ID
     'h00:  bus.rdata <= ID;
-// TODO: this is compatible with older releases, but not properly 64bit alligned
-    'h04:  bus.rdata <= {                            dna_value[32-1: 0]};
-    'h08:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
-    'h10:  bus.rdata <= efuse;
-//    // EFUSE
-//    'h08:  bus.rdata <= efuse;
-//    // DNA
-//    'h10:  bus.rdata <= {                            dna_value[32-1: 0]};
-//    'h14:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
+    // EFUSE
+    'h08:  bus.rdata <= efuse;
+    // DNA
+    'h10:  bus.rdata <= {                            dna_value[32-1: 0]};
+    'h14:  bus.rdata <= {~dna_done, {64-57-1{1'b0}}, dna_value[57-1:32]};
     // GITH
     'h20:  bus.rdata <= GITH[32*0+:32];
     'h24:  bus.rdata <= GITH[32*1+:32];
