@@ -102,7 +102,6 @@ localparam type SBL_T = logic        [GDW-1:0];  // logic ananlyzer/generator
 
 // analog input streams
 axi4_stream_if #(         .DT (SBA_T)) str_adc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ADC
-axi4_stream_if #(         .DT (SBA_T)) str_osc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LA
 // analog output streams
 axi4_stream_if #(         .DT (SBG_T)) str_asg [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 axi4_stream_if #(         .DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // DAC
@@ -128,20 +127,10 @@ logic                    dac_clk_2p;
 logic                    dac_rst;
 logic [MNG-1:0] [14-1:0] dac_dat;
 
-// calibration mul/sum type
-localparam type CLM_T = logic signed [16-1:0];
-localparam type CLS_T = logic signed [14-1:0];
-
 // multiplexer configuration
 logic [MNG-1:0] mux_loop;
 logic [MNG-1:0] mux_gen ;
 logic           mux_lg  ;
-// ADC calibration
-CLM_T [MNA-1:0] adc_cfg_mul;  // gain
-CLS_T [MNA-1:0] adc_cfg_sum;  // offset
-// DAC calibration
-CLM_T [MNG-1:0] dac_cfg_mul;  // gain
-CLS_T [MNG-1:0] dac_cfg_sum;  // offset
 
 // triggers
 typedef struct packed {
@@ -436,21 +425,6 @@ assign exp_exi.TLAST  = 1'b0;
 //IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
 
 ////////////////////////////////////////////////////////////////////////////////
-// Calibration
-////////////////////////////////////////////////////////////////////////////////
-
-red_pitaya_calib calib (
-  // ADC calibration
-  .adc_cfg_mul   (adc_cfg_mul),
-  .adc_cfg_sum   (adc_cfg_sum),
-  // DAC calibration
-  .dac_cfg_mul   (dac_cfg_mul),
-  .dac_cfg_sum   (dac_cfg_sum),
-  // System bus
-  .bus           (sys[4])
-);
-
-////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -566,19 +540,6 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   assign str_adc[i].TKEEP  = mux_loop[i] ? str_dac[i].TKEEP : '1;
   assign str_adc[i].TLAST  = mux_loop[i] ? str_dac[i].TLAST : 1'b0;
 
-  linear #(
-    .DTI  (SBA_T),
-    .DTO  (SBA_T),
-    .DWM  (16)
-  ) linear_adc (
-    // stream input/output
-    .sti      (str_adc[i]),
-    .sto      (str_osc[0+i]),
-    // configuration
-    .cfg_mul  (adc_cfg_mul[i]),
-    .cfg_sum  (adc_cfg_sum[i])
-  );
-
 end: for_adc
 endgenerate
 
@@ -590,7 +551,6 @@ generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
   axi4_stream_if #(.DN (1), .DT (SBG_T)) str_gen [2-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
-  axi4_stream_if #(.DN (1), .DT (SBG_T)) str_lin         (.ACLK (adc_clk), .ARESETn (adc_rstn));  // ASG
 
   axi4_stream_pas pas_0 (
     .ena (1'b1),
@@ -615,21 +575,7 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
   axi4_stream_mux #(.DN (1), .DT (SBG_T)) mux_gen (
     .sel (mux_gen[i]),
     .sti (str_gen),
-    .sto (str_lin)
-  );
-
-  linear #(
-    .DN   (1),
-    .DTI  (SBG_T),
-    .DTO  (SBG_T),
-    .DWM  (16)
-  ) linear_dac (
-    // stream input/output
-    .sti      (str_lin   ),
-    .sto      (str_dac[i]),
-    // configuration
-    .cfg_mul  (dac_cfg_mul[i]),
-    .cfg_sum  (dac_cfg_sum[i])
+    .sto (str_dac[i])
   );
 
   // output registers + signed to unsigned (also to negative slope)
@@ -688,7 +634,7 @@ scope_top #(
   .CW (32)
 ) scope (
   // streams
-  .sti       (str_osc[0+i]),
+  .sti       (str_adc[0+i]),
   .sto       (str_drx[0+i]),
   // current time stamp
   .cts       (cts),
