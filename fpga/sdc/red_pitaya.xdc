@@ -19,8 +19,8 @@ set_property IOSTANDARD LVCMOS18 [get_ports {adc_dat_i[*][*]}]
 set_property IOB        TRUE     [get_ports {adc_dat_i[*][*]}]
 
 # ADC 0 data
-#set_property PACKAGE_PIN V17     [get_ports {adc_dat_i[0][0]}]
-#set_property PACKAGE_PIN U17     [get_ports {adc_dat_i[0][1]}]
+set_property PACKAGE_PIN V17     [get_ports {adc_dat_i[0][0]}]
+set_property PACKAGE_PIN U17     [get_ports {adc_dat_i[0][1]}]
 set_property PACKAGE_PIN Y17     [get_ports {adc_dat_i[0][2]}]
 set_property PACKAGE_PIN W16     [get_ports {adc_dat_i[0][3]}]
 set_property PACKAGE_PIN Y16     [get_ports {adc_dat_i[0][4]}]
@@ -37,8 +37,8 @@ set_property PACKAGE_PIN T16     [get_ports {adc_dat_i[0][14]}]
 set_property PACKAGE_PIN V16     [get_ports {adc_dat_i[0][15]}]
 
 # ADC 1 data
-#set_property PACKAGE_PIN T17     [get_ports {adc_dat_i[1][0]}]
-#set_property PACKAGE_PIN R16     [get_ports {adc_dat_i[1][1]}]
+set_property PACKAGE_PIN T17     [get_ports {adc_dat_i[1][0]}]
+set_property PACKAGE_PIN R16     [get_ports {adc_dat_i[1][1]}]
 set_property PACKAGE_PIN R18     [get_ports {adc_dat_i[1][2]}]
 set_property PACKAGE_PIN P16     [get_ports {adc_dat_i[1][3]}]
 set_property PACKAGE_PIN P18     [get_ports {adc_dat_i[1][4]}]

@@ -276,7 +276,7 @@ wire           DDR_reset_n;
 wire           DDR_we_n   ;
 
 // ADC
-logic [2-1:0] [16-1:2] adc_dat;
+logic [2-1:0] [16-1:0] adc_dat;
 logic         [ 2-1:0] adc_clk;
 logic         [ 2-1:0] adc_clk_o;   // optional ADC clock source
 logic                  adc_cdcs;    // ADC clock duty cycle stabilizer
