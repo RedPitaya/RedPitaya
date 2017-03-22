@@ -4,8 +4,8 @@ source "axi4_stream_if.tcl"
 source "sys_bus_if.tcl"
 
 # set top hierarcy name
-set top gen_top_tb
-set dut gen_top
+set top gen_tb
+set dut gen
 
 onerror {resume}
 quietly WaveActivateNextPane {} 0

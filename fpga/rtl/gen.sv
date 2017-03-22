@@ -23,7 +23,7 @@
  * with other applications (scope) is also available. Both channels are independant.
  */
 
-module gen_top #(
+module gen #(
   // stream parameters
   int unsigned DN = 1,  // data number
   type DT = logic [8-1:0],
@@ -345,4 +345,4 @@ bin_and #(
   // configuration
   .cfg_and   ({$bits(DT){cfg_ena}})
 );
-endmodule: gen_top
+endmodule: gen

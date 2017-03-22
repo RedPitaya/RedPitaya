@@ -5,7 +5,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module osc_top #(
+module osc #(
   // stream parameters
   int unsigned DN = 1,  // data number
   type DT = logic signed [16-1:0],
@@ -399,4 +399,4 @@ acq #(
   .sts_pso  (sts_pso)
 );
 
-endmodule: osc_top
+endmodule: osc

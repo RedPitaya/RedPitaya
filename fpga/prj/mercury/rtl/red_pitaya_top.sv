@@ -410,7 +410,7 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
 
   logic ctl_rst;
 
-  osc_top #(
+  osc #(
     .DN (1),
     .DT (SBA_T),
     .EW ($bits(evn_top_t))
@@ -451,7 +451,7 @@ endgenerate
 generate
 for (genvar i=0; i<MNG; i++) begin: for_gen
 
-  gen_top #(
+  gen #(
     .DT (SBG_T),
     .EW ($bits(evn_top_t))
   ) gen (

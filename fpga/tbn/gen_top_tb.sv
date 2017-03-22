@@ -6,7 +6,7 @@
 
 `timescale 1ns / 1ps
 
-module gen_top_tb #(
+module gen_tb #(
   // time period
   realtime  TP = 8.0ns,  // 125MHz
   // types
@@ -170,12 +170,12 @@ sys_bus_if bus_tbl (.clk (clk), .rstn (rstn));
 sys_bus_model busm     (.bus (bus    ));
 sys_bus_model busm_tbl (.bus (bus_tbl));
 
-gen_top #(
+gen #(
   .DT  (DT),
   .DTM (DTM),
   .DTS (DTS),
   .EW  (EW)
-) gen_top (
+) gen (
   // stream output
   .sto      (str),
   // external events
@@ -200,8 +200,8 @@ assign str.TREADY = 1'b1;
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  $dumpfile("gen_top_tb.vcd");
-  $dumpvars(0, gen_top_tb);
+  $dumpfile("gen_tb.vcd");
+  $dumpvars(0, gen_tb);
 end
 
-endmodule: gen_top_tb
+endmodule: gen_tb
