@@ -4,7 +4,7 @@ Name=wlan0*
 [Network]
 Description = Wireless IP interface
 LinkLocalAddressing=ipv4
-DHCPServer=ipv4
+DHCPServer=yes
 
 [Address]
 Address   = 192.168.128.1/24
