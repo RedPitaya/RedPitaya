@@ -41,8 +41,7 @@ always #(TP/2) clk = ~clk;
 // clocking 
 default clocking cb @ (posedge clk);
   input  rstn;
-  input  cfg_mul;
-  input  cfg_sum;
+  input  cfg_dec;
 endclocking: cb
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +82,7 @@ initial begin
   error += clo.check (dto);
 
   // end simulation
-  repeat(4) @(posedge clk);
+  ##4;
   if (error)  $display("FAILURE");
   else        $display("SUCCESS");
   $finish();
