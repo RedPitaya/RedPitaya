@@ -17,6 +17,9 @@ from bokeh.resources import INLINE
 from IPython.display import display
 import ipywidgets as ipw
 
+# threads
+from IPython.lib import backgroundjobs as bg
+
 class oscilloscope (object):
 
     size = 1250
@@ -65,6 +68,14 @@ class oscilloscope (object):
 
         # default trigger source
         self.t_source = 0
+
+        # display widgets
+        self.display()
+
+        # threads
+        jobs = bg.BackgroundJobManager()
+        jobs.new('app.run()')
+
 #    def __del__ (self):
 #        # close widgets
 #        for ch in self.channels:
