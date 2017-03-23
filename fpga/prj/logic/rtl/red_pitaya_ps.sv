@@ -58,7 +58,7 @@ module red_pitaya_ps (
   // GPIO
   gpio_if.m              gpio,
   // interrupts
-  input  logic  [13-1:0] irq,
+  input  logic   [4-1:0] irq,
   // system read/write channel
   sys_bus_if.m           bus,
   // stream input

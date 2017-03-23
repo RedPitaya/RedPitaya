@@ -147,12 +147,6 @@ trg_t trg;
 
 // interrupts
 typedef struct packed {
-  // analog generator
-  logic [MNG-1:0] gen_trg;  // event    triggers
-  logic [MNG-1:0] gen_stp;  // software triggers
-  // analog acquire
-  logic [MNA-1:0] acq_trg;  // trigger
-  logic [MNA-1:0] acq_stp;  // stop
   // logic generator
   logic           lg_trg;
   logic           lg_stp;
@@ -540,7 +534,7 @@ generate
 for (genvar i=0; i<MNA; i++) begin: for_dac
 
   // output registers + signed to unsigned (also to negative slope)
-  assign dac_dat[i] = {1'b0, 13'h1fff);
+  assign dac_dat[i] = {1'b0, 13'h1fff};
   // toward DMA
   assign axi_dtx[0+i].TREADY = 1'b0;
 
