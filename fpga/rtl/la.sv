@@ -80,11 +80,6 @@ logic  [CW-1:0] cfg_pst;
 logic  [CW-1:0] sts_pst;
 logic           sts_pso;
 
-// event select masks
-logic  [EW-1:0] cfg_str;  // start
-logic  [EW-1:0] cfg_stp;  // stop
-logic  [EW-1:0] cfg_trg;  // trigger
-
 // trigger source configuration
 DT              cfg_cmp_msk;  // comparator mask
 DT              cfg_cmp_val;  // comparator value
