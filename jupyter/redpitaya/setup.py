@@ -50,7 +50,7 @@ setup(
     ],
 
     keywords='oscilloscope generator',
-    packages=['drivers', 'applications'],
+    packages=['drv', 'app'],
     install_requires=['os', 'fcntl', 'mmap', 'ctypes', 'enum', 'math', 'time',
                       'numpy', 'scipy', 'bokeh', 'IPython', 'ipywidgets'],
     package_data={
