@@ -47,7 +47,7 @@ setup(
     ],
 
     keywords='oscilloscope generator',
-    packages=['drv', 'app'],
+    packages=['redpitaya'],
     install_requires=['numpy', 'scipy', 'bokeh', 'IPython', 'ipywidgets'],
     package_data={
         'sample': ['drv/mercury.dts'],
