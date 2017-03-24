@@ -43,16 +43,12 @@ setup(
 
         'License :: OSI Approved :: MIT License',
 
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
 
     keywords='oscilloscope generator',
     packages=['drv', 'app'],
-    install_requires=['os', 'fcntl', 'mmap', 'ctypes', 'enum', 'math', 'time',
-                      'numpy', 'scipy', 'bokeh', 'IPython', 'ipywidgets'],
+    install_requires=['numpy', 'scipy', 'bokeh', 'IPython', 'ipywidgets'],
     package_data={
         'sample': ['drv/mercury.dts'],
     },
