@@ -50,6 +50,6 @@ setup(
     packages=['redpitaya'],
     install_requires=['numpy', 'scipy', 'bokeh', 'IPython', 'ipywidgets'],
     package_data={
-        'sample': ['drv/mercury.dts'],
+        'redpitaya': ['drv/mercury.dts'],
     },
 )
