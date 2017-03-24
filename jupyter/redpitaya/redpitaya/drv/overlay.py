@@ -4,11 +4,12 @@ class overlay (object):
     overlays = "/sys/kernel/config/device-tree/overlays"
 
     def __init__ (self, overlay:str):
+        self.overlay = overlay
+
         if not isinstance(overlay, str):
             raise TypeError("Bitstream name has to be a string.")
 
         if os.path.isfile("{}.dts".format(overlay)):
-            self.overlay = overlay
             self.syspath = "{}/{}".format(self.overlays, self.overlay)
         else:
             raise IOError('Device tree overlay source {}.dts does not exist.'.format(self.overlay))
