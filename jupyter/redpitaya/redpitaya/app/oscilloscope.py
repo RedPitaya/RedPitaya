@@ -1,5 +1,5 @@
 # FPGA configuration and API
-import mercury as fpga
+from redpitaya.drv import mercury as fpga
 
 # system and mathematics libraries
 import time
@@ -73,8 +73,8 @@ class oscilloscope (object):
         self.display()
 
         # threads
-        jobs = bg.BackgroundJobManager()
-        jobs.new('app.run()')
+        self.jobs = bg.BackgroundJobManager()
+        self.jobs.new('self.run()')
 
 #    def __del__ (self):
 #        # close widgets
@@ -162,6 +162,7 @@ class oscilloscope (object):
             i=0
 
     def clb_x_update (self):
+        ch = 0
         self.x = (np.arange(self.size) - self.osc[ch].regset.cfg_pre) / self.osc[ch].sample_rate
         for ch in self.channels:
             self.r[ch].data_source.data['x'] = self.x

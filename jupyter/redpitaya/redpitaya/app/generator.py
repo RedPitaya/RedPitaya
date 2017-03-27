@@ -1,5 +1,5 @@
 # FPGA configuration and API
-import mercury as fpga
+from redpitaya.drv import mercury as fpga
 
 # system and mathematics libraries
 import time
