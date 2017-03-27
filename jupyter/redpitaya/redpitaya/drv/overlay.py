@@ -2,17 +2,20 @@ import os
 
 class overlay (object):
     overlays = "/sys/kernel/config/device-tree/overlays"
+    fpgapath = "/opt/redpitaya/fpga"
 
     def __init__ (self, overlay:str):
-        self.overlay = overlay
-
         if not isinstance(overlay, str):
             raise TypeError("Bitstream name has to be a string.")
 
-        if os.path.isfile("{}.dts".format(overlay)):
+        dtbo = "{}/{}/fpga.dtbo".format(self.fpgapath, overlay)
+        bit  = "{}/{}/fpga.bit".format(self.fpgapath, overlay)
+        
+        if os.path.isfile(dtbo):
+            self.overlay = overlay
             self.syspath = "{}/{}".format(self.overlays, self.overlay)
         else:
-            raise IOError('Device tree overlay source {}.dts does not exist.'.format(self.overlay))
+            raise IOError('Device tree overlay source {} does not exist.'.format(dtbo))
 
         # if it does not exists create overlay directory
         if not os.path.isdir(self.syspath):
@@ -25,10 +28,10 @@ class overlay (object):
             # and the overlay is removed, which is not the intention
             #raise ResourceWarning('Requested overlay is already loaded.')
         else:
-            os.system("dtc -I dts -O dtb -o {0}.dtbo -@ {0}.dts".format(self.overlay))
+            #os.system("dtc -I dts -O dtb -o {0}.dtbo -@ {0}.dts".format(self.overlay))
             # TODO: loading FPGA should be handled by device tree overlay
-            os.system('cat /opt/redpitaya/fpga/{}/fpga.bit > /dev/xdevcfg'.format(self.overlay))
-            os.system("cat {}.dtbo > {}/dtbo".format(self.overlay, self.syspath))
+            os.system("cat {} > /dev/xdevcfg".format(bit))
+            os.system("cat {} > {}/dtbo".format(dtbo, self.syspath))
 
     def __del__ (self):
         print ('Overlay __del__ was activated.')
