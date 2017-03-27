@@ -1,5 +1,6 @@
 /dts-v1/;
 /plugin/;
+/include/ "led-user.dtso"
 / {
 //	fragment@0 {
 //		target = <&fpga_region0>;
