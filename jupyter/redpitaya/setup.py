@@ -49,7 +49,4 @@ setup(
     keywords='oscilloscope generator',
     packages=['redpitaya'],
     install_requires=['numpy', 'scipy', 'bokeh', 'IPython', 'ipywidgets'],
-    package_data={
-        'redpitaya': ['drv/mercury.dts'],
-    },
 )
