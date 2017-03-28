@@ -36,7 +36,7 @@ module system #(
   inout  logic        FIXED_IO_ps_srstb,
 
   input  logic        M_AXI_GP0_ACLK   ,
-//input  logic        M_AXI_GP0_ARESETn,
+  input  logic        M_AXI_GP0_ARESETn,
   output logic [31:0] M_AXI_GP0_araddr ,
   output logic  [1:0] M_AXI_GP0_arburst,
   output logic  [3:0] M_AXI_GP0_arcache,
@@ -75,46 +75,34 @@ module system #(
   input  logic        M_AXI_GP0_wready ,
   output logic  [3:0] M_AXI_GP0_wstrb  ,
   output logic        M_AXI_GP0_wvalid ,
-
-//  // IRQ
-//  input  logic        IRQ_GPIO,
-//  input  logic        IRQ_LG  ,
-//  input  logic        IRQ_LA  ,
-//  input  logic        IRQ_GEN0,
-//  input  logic        IRQ_GEN1,
-//  input  logic        IRQ_SCP0,
-//  input  logic        IRQ_SCP1,
-
+  // AXI-4 streaming interfaces RX
+  input  logic               S_AXI_OSC0_aclk  , S_AXI_OSC1_aclk  , S_AXI_LA_aclk  ,
+  input  logic               S_AXI_OSC0_arstn , S_AXI_OSC1_arstn , S_AXI_LA_arstn ,
+  input  logic [0:0][16-1:0] S_AXI_OSC0_tdata , S_AXI_OSC1_tdata , S_AXI_LA_tdata ,
+  input  logic [0:0]         S_AXI_OSC0_tkeep , S_AXI_OSC1_tkeep , S_AXI_LA_tkeep ,
+  input  logic               S_AXI_OSC0_tlast , S_AXI_OSC1_tlast , S_AXI_LA_tlast ,
+  output logic               S_AXI_OSC0_tready, S_AXI_OSC1_tready, S_AXI_LA_tready,
+  input  logic               S_AXI_OSC0_tvalid, S_AXI_OSC1_tvalid, S_AXI_LA_tvalid,
+  // IRQ
+  input  logic          IRQ_LA ,
+  input  logic          IRQ_LG ,
+  input  logic  [2-1:0] IRQ_OSC,
+  input  logic  [2-1:0] IRQ_GEN,
   // XADC
-  input  logic        Vaux0_v_n,
-  input  logic        Vaux0_v_p,
-  input  logic        Vaux1_v_n,
-  input  logic        Vaux1_v_p,
-  input  logic        Vaux8_v_n,
-  input  logic        Vaux8_v_p,
-  input  logic        Vaux9_v_n,
-  input  logic        Vaux9_v_p,
-  input  logic        Vp_Vn_v_n,
-  input  logic        Vp_Vn_v_p,
+  input  logic          Vaux0_v_n,
+  input  logic          Vaux0_v_p,
+  input  logic          Vaux1_v_n,
+  input  logic          Vaux1_v_p,
+  input  logic          Vaux8_v_n,
+  input  logic          Vaux8_v_p,
+  input  logic          Vaux9_v_n,
+  input  logic          Vaux9_v_p,
+  input  logic          Vp_Vn_v_n,
+  input  logic          Vp_Vn_v_p,
   // GPIO
   input  logic [24-1:0] GPIO_tri_i,
   output logic [24-1:0] GPIO_tri_o,
-  output logic [24-1:0] GPIO_tri_t,
-  // SPI
-  input  logic SPI0_io0_i,
-  output logic SPI0_io0_o,
-  output logic SPI0_io0_t,
-  input  logic SPI0_io1_i,
-  output logic SPI0_io1_o,
-  output logic SPI0_io1_t,
-  input  logic SPI0_sck_i,
-  output logic SPI0_sck_o,
-  output logic SPI0_sck_t,
-  output logic SPI0_ss1_o,
-  output logic SPI0_ss2_o,
-  input  logic SPI0_ss_i ,
-  output logic SPI0_ss_o ,
-  output logic SPI0_ss_t
+  output logic [24-1:0] GPIO_tri_t
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,8 +220,8 @@ axi_bus_model #(.AW (32), .DW (32), .IW (12), .LW ( 4)) axi_bus_model (axi_gp);
 // data streams
 ////////////////////////////////////////////////////////////////////////////////
 
-assign {S_AXI_STR_RX3_tready, S_AXI_STR_RX2_tready, S_AXI_STR_RX1_tready, S_AXI_STR_RX0_tready} = '1;
-assign {M_AXI_STR_TX3_tvalid, M_AXI_STR_TX2_tvalid, M_AXI_STR_TX1_tvalid, M_AXI_STR_TX0_tvalid} = '0;
+assign {S_AXI_OSC0_tready, S_AXI_OSC1_tready, S_AXI_LA_tready} = '1;
+//assign {S_AXI_GEN0_tvalid, S_AXI_GEN1_tvalid, S_AXI_LG_tvalid} = '0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // analog inputs
@@ -257,25 +245,5 @@ assign {M_AXI_STR_TX3_tvalid, M_AXI_STR_TX2_tvalid, M_AXI_STR_TX1_tvalid, M_AXI_
 // GPIO_tri_i
 assign GPIO_tri_o = '0;
 assign GPIO_tri_t = '1;  // output disabled
-
-////////////////////////////////////////////////////////////////////////////////
-// SPI
-////////////////////////////////////////////////////////////////////////////////
-
-//  input  logic SPI0_io0_i,
-//  input  logic SPI0_io1_i,
-//  input  logic SPI0_sck_i,
-//  input  logic SPI0_ss_i ,
-
-assign SPI0_io0_o = 1'b0;
-assign SPI0_io0_t = 1'b1;
-assign SPI0_io1_o = 1'b0;
-assign SPI0_io1_t = 1'b1;
-assign SPI0_sck_o = 1'b0;
-assign SPI0_sck_t = 1'b1;
-assign SPI0_ss1_o = 1'b0;
-assign SPI0_ss2_o = 1'b0;
-assign SPI0_ss_o  = 1'b0;
-assign SPI0_ss_t  = 1'b1;
 
 endmodule: system

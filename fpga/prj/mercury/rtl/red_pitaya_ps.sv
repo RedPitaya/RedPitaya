@@ -58,7 +58,10 @@ module red_pitaya_ps (
   // GPIO
   gpio_if.m              gpio,
   // interrupt
-  input  logic [  4-1:0] irq,
+  top_pkg::irq_t         irq,
+  // DMA stream input
+  axi4_stream_if.d       srx_osc [2-1:0],
+  axi4_stream_if.d       srx_la         ,
   // system read/write channel
   sys_bus_if.m           bus
 );
@@ -132,7 +135,7 @@ system system_i (
   .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
   // GP0
   .M_AXI_GP0_ACLK    (axi_gp.ACLK   ),
-//  .M_AXI_GP0_ARESETn (axi_gp.ARESETn),
+  .M_AXI_GP0_ARESETn (axi_gp.ARESETn),
   .M_AXI_GP0_arvalid (axi_gp.ARVALID),
   .M_AXI_GP0_awvalid (axi_gp.AWVALID),
   .M_AXI_GP0_bready  (axi_gp.BREADY ),
@@ -171,25 +174,23 @@ system system_i (
   .M_AXI_GP0_bresp   (axi_gp.BRESP  ),
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
   .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
+  // AXI-4 streaming interfaces RX
+  .S_AXI_OSC0_aclk    (srx_osc[0].ACLK   ),  .S_AXI_OSC1_aclk    (srx_osc[1].ACLK   ),  .S_AXI_LA_aclk    (srx_la.ACLK   ), 
+  .S_AXI_OSC0_arstn   (srx_osc[0].ARESETn),  .S_AXI_OSC1_arstn   (srx_osc[1].ARESETn),  .S_AXI_LA_arstn   (srx_la.ARESETn), 
+  .S_AXI_OSC0_tdata   (srx_osc[0].TDATA  ),  .S_AXI_OSC1_tdata   (srx_osc[1].TDATA  ),  .S_AXI_LA_tdata   (srx_la.TDATA  ), 
+  .S_AXI_OSC0_tkeep   (srx_osc[0].TKEEP  ),  .S_AXI_OSC1_tkeep   (srx_osc[1].TKEEP  ),  .S_AXI_LA_tkeep   (srx_la.TKEEP  ), 
+  .S_AXI_OSC0_tlast   (srx_osc[0].TLAST  ),  .S_AXI_OSC1_tlast   (srx_osc[1].TLAST  ),  .S_AXI_LA_tlast   (srx_la.TLAST  ), 
+  .S_AXI_OSC0_tready  (srx_osc[0].TREADY ),  .S_AXI_OSC1_tready  (srx_osc[1].TREADY ),  .S_AXI_LA_tready  (srx_la.TREADY ), 
+  .S_AXI_OSC0_tvalid  (srx_osc[0].TVALID ),  .S_AXI_OSC1_tvalid  (srx_osc[1].TVALID ),  .S_AXI_LA_tvalid  (srx_la.TVALID ), 
   // GPIO
   .GPIO_tri_i (gpio.i),
   .GPIO_tri_o (gpio.o),
   .GPIO_tri_t (gpio.t),
-  // SPI
-  .SPI0_io0_i (1'b0),
-  .SPI0_io0_o (),
-  .SPI0_io0_t (),
-  .SPI0_io1_i (1'b0),
-  .SPI0_io1_o (),
-  .SPI0_io1_t (),
-  .SPI0_sck_i (1'b0),
-  .SPI0_sck_o (),
-  .SPI0_sck_t (),
-  .SPI0_ss1_o (),
-  .SPI0_ss2_o (),
-  .SPI0_ss_i  (1'b0),
-  .SPI0_ss_o  (),
-  .SPI0_ss_t  ()
+  // IRQ
+  .IRQ_GEN  (irq.gen),
+  .IRQ_OSC  (irq.osc),
+  .IRQ_LG   (irq.lg ),
+  .IRQ_LA   (irq.la )
 );
 
 // since the PS GP0 port is AXI3 and the local bus is AXI4

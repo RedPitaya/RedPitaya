@@ -5,6 +5,21 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
+package osc_pkg;
+
+// oscilloscope events
+typedef struct packed {
+  logic lst;  // last
+  logic lvl;  // level/edge
+  logic trg;  // software trigger
+  logic stp;  // software stop
+  logic str;  // software start
+  logic rst;  // software reset
+} evn_t;
+
+endpackage: osc_pkg
+
+
 module osc #(
   // stream parameters
   int unsigned DN = 1,  // data number
@@ -21,14 +36,9 @@ module osc #(
   axi4_stream_if.d       sti,      // input
   axi4_stream_if.s       sto,      // output
   // external events
-  input  logic  [EW-1:0] evn_ext,
+  input  top_pkg::evn_t  evn_ext,
   // event sources
-  output logic           evn_rst,  // software reset
-  output logic           evn_str,  // software start
-  output logic           evn_stp,  // software stop
-  output logic           evn_trg,  // software trigger
-  output logic           evn_lvl,  // level/edge
-  output logic           evn_lst,  // last
+  output osc_pkg::evn_t  evn,
   // reset output
   output logic           ctl_rst,
   // interrupt
@@ -172,21 +182,21 @@ end
 // control signals
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  evn_rst <= 1'b0;
-  evn_str <= 1'b0;
-  evn_stp <= 1'b0;
-  evn_trg <= 1'b0;
+  evn.rst <= 1'b0;
+  evn.str <= 1'b0;
+  evn.stp <= 1'b0;
+  evn.trg <= 1'b0;
 end else begin
   if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
-    evn_rst <= bus.wdata[0];  // reset
-    evn_str <= bus.wdata[1];  // start
-    evn_stp <= bus.wdata[2];  // stop
-    evn_trg <= bus.wdata[3];  // trigger
+    evn.rst <= bus.wdata[0];  // reset
+    evn.str <= bus.wdata[1];  // start
+    evn.stp <= bus.wdata[2];  // stop
+    evn.trg <= bus.wdata[3];  // trigger
   end else begin
-    evn_rst <= 1'b0;
-    evn_str <= 1'b0;
-    evn_stp <= 1'b0;
-    evn_trg <= 1'b0;
+    evn.rst <= 1'b0;
+    evn.str <= 1'b0;
+    evn.stp <= 1'b0;
+    evn.trg <= 1'b0;
   end
 end
 
@@ -353,7 +363,7 @@ scope_edge #(
   .cfg_pos  (cfg_pos),
   .cfg_hld  (cfg_hld),
   // output triggers
-  .sts_trg  (evn_lvl),
+  .sts_trg  (evn.lvl),
   // stream monitor
   .sti      (std),
   .sto      (ste)
@@ -388,7 +398,7 @@ acq #(
   .ctl_trg  (ctl_trg),
   .sts_trg  (sts_trg),
   // events
-  .evn_lst  (evn_lst),
+  .evn_lst  (evn.lst),
   // configuration/status pre trigger
   .cfg_pre  (cfg_pre),
   .sts_pre  (sts_pre),

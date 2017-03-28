@@ -5,6 +5,29 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
+package top_pkg;
+
+// module numbers
+localparam int unsigned MNO = 2;  // number of oscilloscope modules
+localparam int unsigned MNG = 2;  // number of generator    modules
+
+// all events
+typedef struct packed {
+  osc_pkg::evn_t [MNO-1:0] osc;  // oscilloscope
+  gen_pkg::evn_t [MNG-1:0] gen;  // generate
+} evn_t;
+
+// interrupts
+typedef struct packed {
+  logic           lg;   // logic generator
+  logic           la;   // logic analyzer
+  logic [MNO-1:0] osc;  // oscilloscope
+  logic [MNG-1:0] gen;  // generate
+} irq_t;
+
+endpackage: top_pkg
+
+
 module red_pitaya_top #(
   // identification
   bit [0:5*32-1] GITH = '0,
@@ -71,8 +94,9 @@ module red_pitaya_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream bus type
-localparam type DTO = logic signed [16-1:0];  // acquire
 localparam type DTG = logic signed [14-1:0];  // generate
+localparam type DTO = logic signed [16-1:0];  // acquire
+localparam type DTL = logic signed [16-1:0];  // logic (generator/analyzer)
 
 // GPIO parameter
 localparam int unsigned GDW = 8+8;
@@ -210,41 +234,11 @@ assign daisy_n_o = 1'bz;
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-// oscilloscope events
-typedef struct packed {
-  logic lst;  // last
-  logic lvl;  // level/edge
-  logic trg;  // software trigger
-  logic stp;  // software stop
-  logic str;  // software start
-  logic rst;  // software reset
-} evn_osc_t;
-
-// generator events
-typedef struct packed {
-  logic lst;  // last
-  logic per;  // period
-  logic trg;  // software trigger
-  logic stp;  // software stop
-  logic str;  // software start
-  logic rst;  // software reset
-} evn_gen_t;
-
-// all events
-typedef struct packed {
-  evn_osc_t [MNO-1:0] osc;  // acquire
-  evn_gen_t [MNG-1:0] gen;  // generate
-} evn_top_t;
-
-evn_top_t evn;
+// reset/start/stop/trigger events
+top_pkg::evn_t evn;
 
 // interrupts
-typedef struct packed {
-  logic [MNO-1:0] osc;  // acquire
-  logic [MNG-1:0] gen;  // generate
-} irq_top_t;
-
-irq_top_t irq;
+top_pkg::irq_t irq;
 
 // configuration
 logic                    digital_loop;
@@ -255,6 +249,10 @@ sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
+
+// RX DMA streaming interfaces
+axi4_stream_if #(.DT (DTO)) srx_osc [MNO-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DT (DTL)) srx_la            (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Connections to PS
@@ -293,6 +291,9 @@ red_pitaya_ps ps (
   .gpio          (gpio),
   // interrupt
   .irq           (irq),
+  // DMA stream input
+  .srx_osc       (srx_osc),
+  .srx_la        (srx_la ),
   // system read/write channel
   .bus           (ps_sys      )
 );
@@ -408,18 +409,13 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
 
   gen #(
     .DT (DTG),
-    .EW ($bits(evn_top_t))
+    .EW ($bits(evn))
   ) gen (
     // stream output
     .sto      (str_gen[i]),
     // events
     .evn_ext  (evn),
-    .evn_rst  (evn.gen[i].rst),
-    .evn_str  (evn.gen[i].str),
-    .evn_stp  (evn.gen[i].stp),
-    .evn_trg  (evn.gen[i].trg),
-    .evn_per  (evn.gen[i].per),
-    .evn_lst  (evn.gen[i].lst),
+    .evn      (evn.gen[i]),
     // interrupts
     .irq      (irq.gen[i]),
     // System bus
@@ -444,19 +440,14 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
   osc #(
     .DN (1),
     .DT (DTO),
-    .EW ($bits(evn_top_t))
+    .EW ($bits(evn))
   ) osc (
     // streams
     .sti      (str_osc[i]),
     .sto      (str),
     // events
     .evn_ext  (evn),
-    .evn_rst  (evn.osc[i].rst),
-    .evn_str  (evn.osc[i].str),
-    .evn_stp  (evn.osc[i].stp),
-    .evn_trg  (evn.osc[i].trg),
-    .evn_lvl  (evn.osc[i].lvl),
-    .evn_lst  (evn.osc[i].lst),
+    .evn      (evn.osc[i]),
     // reset output
     .ctl_rst  (ctl_rst),
     // interrupts
@@ -465,6 +456,7 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
     .bus      (sys[8+2*i+0])
   );
 
+  // TODO: when DMA starts functioning properly, this module should be removed
   str2mm #(
   ) str2mm (
     .ctl_rst  (ctl_rst),
@@ -472,7 +464,31 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
     .bus      (sys[8+2*i+1])
   );
 
+  assign srx_osc[i].TLAST  = str.TLAST ;
+  assign srx_osc[i].TKEEP  = str.TKEEP ;
+  assign srx_osc[i].TDATA  = str.TDATA ;
+  assign srx_osc[i].TVALID = str.TVALID;
+  // TREADY is ignored
+
 end: for_osc
 endgenerate
+
+////////////////////////////////////////////////////////////////////////////////
+// logic generator
+////////////////////////////////////////////////////////////////////////////////
+
+assign irq.lg = 1'b0;
+
+////////////////////////////////////////////////////////////////////////////////
+// logic analyzer
+////////////////////////////////////////////////////////////////////////////////
+
+assign irq.la = 1'b0;
+
+assign srx_la.TLAST  = '0;
+assign srx_la.TKEEP  = '0;
+assign srx_la.TDATA  = '0;
+assign srx_la.TVALID = '0;
+// TREADY is ignored
 
 endmodule: red_pitaya_top
