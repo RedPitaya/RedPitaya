@@ -59,10 +59,10 @@ end
 initial begin
   repeat(100) @(posedge clk);
   //test_id  (32'h40000000);
-  test_asg (32'h40080000, 32'h40090000, 0*6);
-  test_asg (32'h400a0000, 32'h400b0000, 1*6);
+  test_gen (32'h40040000, 32'h40050000, 0*6);
+  test_gen (32'h40060000, 32'h40070000, 1*6);
   repeat(16) @(posedge clk);
-  test_acq (32'h40040000, 32'h40050000, 2*6);
+  test_osc (32'h40080000, 32'h40090000, 2*6);
   repeat(16) @(posedge clk);
   //test_clb (32'h40030000);
   //test_la (32'h40300000);
@@ -139,7 +139,7 @@ int buf_len = 'hff+1;
 real freq  = 10_000; // 10kHz
 real phase = 0; // DEG
 
-task test_acq (
+task test_osc (
   int unsigned regset,
   int unsigned buffer,
   int unsigned sh = 0
@@ -164,14 +164,15 @@ task test_acq (
   axi_write(regset+'h24, 'd24);  // cfg_pst
 
   // start/trigger acquire
+  axi_write(regset+'h00, 4'b0001);  // reset
   axi_write(regset+'h00, 4'b0010);  // start
   //axi_write(regset+'h00, 4'b0100);  // stop
   //axi_write(regset+'h00, 4'b1000);  // trigger
   repeat(1000) @(posedge clk);
-endtask: test_acq
+endtask: test_osc
 
 
-task test_asg (
+task test_gen (
   int unsigned regset,
   int unsigned buffer,
   int unsigned sh = 0
@@ -231,7 +232,7 @@ task test_asg (
 //  // stop (reset)
 ////axi_write(regset+'h00, 2'b01);
 ////repeat(20) @(posedge clk);
-endtask: test_asg
+endtask: test_gen
 
 
 // calibration regset test

@@ -9,9 +9,9 @@
  *
  * Arbitrary signal generator takes data stored in buffer and sends them to DAC.
  *
- *                /-----\         /--------\
- *   SW --------> | BUF | ------> | kx + o | ---> DAC CHB
- *                \-----/         \--------/ 
+ *           /-----\      /--------\
+ *   SW ---> | BUF | ---> | kx + o | ---> DAC
+ *           \-----/      \--------/ 
  *
  * Buffers are filed with SW. It also sets finite state machine which take control
  * over read pointer. All registers regarding reading from buffer has additional 
@@ -22,6 +22,21 @@
  * Starting trigger can come from outside, notification trigger used to synchronize
  * with other applications (scope) is also available. Both channels are independant.
  */
+
+package gen_pkg;
+
+// generator events
+typedef struct packed {
+  logic lst;  // last
+  logic per;  // period
+  logic trg;  // software trigger
+  logic stp;  // software stop
+  logic str;  // software start
+  logic rst;  // software reset
+} evn_t;
+
+endpackage: gen_pkg
+
 
 module gen #(
   // stream parameters
@@ -43,14 +58,9 @@ module gen #(
   // stream output
   axi4_stream_if.s       sto,
   // external events
-  input  logic  [EW-1:0] evn_ext,
+  input  top_pkg::evn_t  evn_ext,
   // event sources
-  output logic           evn_rst,  // software reset
-  output logic           evn_str,  // software start
-  output logic           evn_stp,  // software stop
-  output logic           evn_trg,  // software trigger
-  output logic           evn_per,  // period
-  output logic           evn_lst,  // last
+  output gen_pkg::evn_t  evn,
   // interrupt
   output logic           irq,
   // system bus
@@ -170,21 +180,21 @@ end
 // control signals
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  evn_rst <= 1'b0;
-  evn_str <= 1'b0;
-  evn_stp <= 1'b0;
-  evn_trg <= 1'b0;
+  evn.rst <= 1'b0;
+  evn.str <= 1'b0;
+  evn.stp <= 1'b0;
+  evn.trg <= 1'b0;
 end else begin
   if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
-    evn_rst <= bus.wdata[0];  // reset
-    evn_str <= bus.wdata[1];  // start
-    evn_stp <= bus.wdata[2];  // stop
-    evn_trg <= bus.wdata[3];  // trigger
+    evn.rst <= bus.wdata[0];  // reset
+    evn.str <= bus.wdata[1];  // start
+    evn.stp <= bus.wdata[2];  // stop
+    evn.trg <= bus.wdata[3];  // trigger
   end else begin
-    evn_rst <= 1'b0;
-    evn_str <= 1'b0;
-    evn_stp <= 1'b0;
-    evn_trg <= 1'b0;
+    evn.rst <= 1'b0;
+    evn.str <= 1'b0;
+    evn.stp <= 1'b0;
+    evn.trg <= 1'b0;
   end
 end
 
@@ -285,8 +295,8 @@ asg #(
   .ctl_trg  (ctl_trg),
   .sts_trg  (sts_trg),
   // events
-  .evn_per  (evn_per),
-  .evn_lst  (evn_lst),
+  .evn_per  (evn.per),
+  .evn_lst  (evn.lst),
   // configuration
   .cfg_siz  (cfg_siz),
   .cfg_off  (cfg_off),
