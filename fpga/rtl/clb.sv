@@ -7,15 +7,15 @@
 module clb #(
   // stream parameters
   int unsigned DN = 1,  // data number
-  type DTA = logic signed [16-1:0], // acquire data type
-  type DTG = logic signed [14-1:0], // generator data type
+  type DTO = logic signed [16-1:0], // oscilloscope data type
+  type DTG = logic signed [14-1:0], // generator    data type
   // module numbers
-  int unsigned MNA = 2,  // number of acquisition modules
-  int unsigned MNG = 2   // number of generator   modules
+  int unsigned MNO = 2,  // number of oscilloscope modules
+  int unsigned MNG = 2   // number of generator    modules
 )(
   // oscilloscope (ADC) streams
-  axi4_stream_if.d str_adc [MNA-1:0],
-  axi4_stream_if.s str_osc [MNA-1:0],
+  axi4_stream_if.d str_adc [MNO-1:0],
+  axi4_stream_if.s str_osc [MNO-1:0],
   // generator (DAC) streams
   axi4_stream_if.s str_dac [MNG-1:0],
   axi4_stream_if.d str_gen [MNG-1:0],
@@ -23,15 +23,15 @@ module clb #(
   sys_bus_if.s     bus
 );
 
-localparam int unsigned AW = $clog2((MNA+MNG)*2)+2;
+localparam int unsigned AW = $clog2((MNO+MNG)*2)+2;
 
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
 // linear offset and gain
-DTA [MNA-1:0] cfg_adc_mul;
-DTA [MNA-1:0] cfg_adc_sum;
+DTO [MNO-1:0] cfg_adc_mul;
+DTO [MNO-1:0] cfg_adc_sum;
 DTG [MNG-1:0] cfg_dac_mul;
 DTG [MNG-1:0] cfg_dac_sum;
 
@@ -40,15 +40,15 @@ DTG [MNG-1:0] cfg_dac_sum;
 ////////////////////////////////////////////////////////////////////////////////
 
 generate
-for (genvar i=0; i<MNA; i++) begin: for_osc
+for (genvar i=0; i<MNO; i++) begin: for_osc
 
-  axi4_stream_if #(.DN (DN), .DT (DTA)) str_tmp (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+  axi4_stream_if #(.DN (DN), .DT (DTO)) str_tmp (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
 
   lin_add #(
     .DN  (DN),
-    .DTI (DTA),
-    .DTO (DTA),
-    .DTS (DTA)
+    .DTI (DTO),
+    .DTO (DTO),
+    .DTS (DTO)
   ) lin_add (
     // stream input/output
     .sti       (str_adc[i]),
@@ -59,9 +59,9 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
 
   lin_mul #(
     .DN  (DN),
-    .DTI (DTA),
-    .DTO (DTA),
-    .DTM (DTA)
+    .DTI (DTO),
+    .DTO (DTO),
+    .DTM (DTO)
   ) lin_mul (
     // stream input/output
     .sti       (str_tmp),
@@ -74,7 +74,7 @@ end: for_osc
 endgenerate
 
 generate
-for (genvar i=0; i<MNA; i++) begin: for_gen
+for (genvar i=0; i<MNO; i++) begin: for_gen
 
   axi4_stream_if #(.DN (DN), .DT (DTG)) str_tmp (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
 
@@ -114,8 +114,8 @@ endgenerate
 // write access
 always_ff @(posedge bus.clk)
 if (!bus.rstn) begin
-  for (int unsigned i=0; i<MNA; i++) begin
-    cfg_adc_mul[i] <= 1 << ($bits(DTA)-2);
+  for (int unsigned i=0; i<MNO; i++) begin
+    cfg_adc_mul[i] <= 1 << ($bits(DTO)-2);
     cfg_adc_sum[i] <= '0;
   end
   for (int unsigned i=0; i<MNG; i++) begin
@@ -124,7 +124,7 @@ if (!bus.rstn) begin
   end
 end else begin
   if (bus.wen) begin
-    for (int unsigned i=0; i<MNA; i++) begin
+    for (int unsigned i=0; i<MNO; i++) begin
       if (bus.addr[AW-1:2]==      (2*i+0))  cfg_adc_mul[i] <= bus.wdata;
       if (bus.addr[AW-1:2]==      (2*i+1))  cfg_adc_sum[i] <= bus.wdata;
     end

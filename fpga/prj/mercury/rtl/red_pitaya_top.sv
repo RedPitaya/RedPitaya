@@ -9,8 +9,8 @@ module red_pitaya_top #(
   // identification
   bit [0:5*32-1] GITH = '0,
   // module numbers
-  int unsigned MNA = 2,  // number of acquisition modules
-  int unsigned MNG = 2   // number of generator   modules
+  int unsigned MNO = 2,  // number of oscilloscope modules
+  int unsigned MNG = 2   // number of generator    modules
 )(
   // PS connections
   inout  logic [54-1:0] FIXED_IO_mio     ,
@@ -39,7 +39,7 @@ module red_pitaya_top #(
   // Red Pitaya periphery
 
   // ADC
-  input  logic [MNA-1:0] [16-1:0] adc_dat_i,  // ADC data
+  input  logic [MNO-1:0] [16-1:0] adc_dat_i,  // ADC data
   input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
   output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
   output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
@@ -71,8 +71,8 @@ module red_pitaya_top #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // stream bus type
-localparam type SBA_T = logic signed [16-1:0];  // acquire
-localparam type SBG_T = logic signed [14-1:0];  // generate
+localparam type DTO = logic signed [16-1:0];  // acquire
+localparam type DTG = logic signed [14-1:0];  // generate
 
 // GPIO parameter
 localparam int unsigned GDW = 8+8;
@@ -138,11 +138,11 @@ else         dac_rst  <= top_rst;
 ////////////////////////////////////////////////////////////////////////////////
 
 // ADC AXI4-Stream interface
-axi4_stream_if #(.DT (SBA_T)) str_adc [MNA-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DT (DTO)) str_adc [MNO-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 generate
-for (genvar i=0; i<MNA; i++) begin: for_adc
-  SBA_T adc_raw;
+for (genvar i=0; i<MNO; i++) begin: for_adc
+  DTO adc_raw;
 
   // IO block registers should be used here
   // lowest 2 bits reserved for 16bit ADC
@@ -150,7 +150,7 @@ for (genvar i=0; i<MNA; i++) begin: for_adc
   adc_raw <= adc_dat_i[i];
 
   // transform into 2's complement (negative slope)
-  assign str_adc[i].TDATA  = {adc_raw[$bits(SBA_T)-1], ~adc_raw[$bits(SBA_T)-2:0]};
+  assign str_adc[i].TDATA  = {adc_raw[$bits(DTO)-1], ~adc_raw[$bits(DTO)-2:0]};
   assign str_adc[i].TKEEP  = '1;
   assign str_adc[i].TLAST  = 1'b0;
   // TVALID is always active
@@ -172,7 +172,7 @@ assign adc_cdcs_o = 1'b1;
 ////////////////////////////////////////////////////////////////////////////////
 
 // DAC AXI4-Stream interface
-axi4_stream_if #(.DT (SBG_T)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DT (DTG)) str_dac [MNG-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 logic [MNG-1:0] [14-1:0] dac_raw;
 
@@ -181,9 +181,9 @@ for (genvar i=0; i<MNG; i++) begin: for_dac
   // output registers + signed to unsigned (also to negative slope)
   always @(posedge str_dac[i].ACLK)
   if (~str_dac[i].ARESETn) begin
-      dac_raw[i] = (1<<($bits(SBG_T)-1))-1;
+      dac_raw[i] = (1<<($bits(DTG)-1))-1;
   end else if (str_dac[i].TVALID & str_dac[i].TREADY & str_dac[i].TKEEP) begin
-      dac_raw[i] = {str_dac[i].TDATA[0][$bits(SBG_T)-1], ~str_dac[i].TDATA[0][$bits(SBG_T)-2:0]};
+      dac_raw[i] = {str_dac[i].TDATA[0][$bits(DTG)-1], ~str_dac[i].TDATA[0][$bits(DTG)-2:0]};
   end
 
   // TREADY is always active
@@ -232,7 +232,7 @@ typedef struct packed {
 
 // all events
 typedef struct packed {
-  evn_osc_t [MNA-1:0] osc;  // acquire
+  evn_osc_t [MNO-1:0] osc;  // acquire
   evn_gen_t [MNG-1:0] gen;  // generate
 } evn_top_t;
 
@@ -240,7 +240,7 @@ evn_top_t evn;
 
 // interrupts
 typedef struct packed {
-  logic [MNA-1:0] osc;  // acquire
+  logic [MNO-1:0] osc;  // acquire
   logic [MNG-1:0] gen;  // generate
 } irq_top_t;
 
@@ -380,14 +380,14 @@ pdm #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // ADC(osc)/DAC(gen) AXI4-Stream interfaces
-axi4_stream_if #(.DT (SBA_T)) str_osc [MNA-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
-axi4_stream_if #(.DT (SBG_T)) str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTO)) str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTG)) str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
 
 clb #(
-  .MNA (MNA),
+  .MNO (MNO),
   .MNG (MNG),
-  .DTA (SBA_T),
-  .DTG (SBG_T)
+  .DTO (DTO),
+  .DTG (DTG)
 ) clb (
   // oscilloscope (ADC) streams
   .str_adc  (str_adc),
@@ -400,19 +400,50 @@ clb #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+//  DAC arbitrary signal generator
+////////////////////////////////////////////////////////////////////////////////
+
+generate
+for (genvar i=0; i<MNG; i++) begin: for_gen
+
+  gen #(
+    .DT (DTG),
+    .EW ($bits(evn_top_t))
+  ) gen (
+    // stream output
+    .sto      (str_gen[i]),
+    // events
+    .evn_ext  (evn),
+    .evn_rst  (evn.gen[i].rst),
+    .evn_str  (evn.gen[i].str),
+    .evn_stp  (evn.gen[i].stp),
+    .evn_trg  (evn.gen[i].trg),
+    .evn_per  (evn.gen[i].per),
+    .evn_lst  (evn.gen[i].lst),
+    // interrupts
+    .irq      (irq.gen[i]),
+    // System bus
+    .bus      (sys[4+2*i+0]),
+    .bus_tbl  (sys[4+2*i+1])
+  );
+
+end: for_gen
+endgenerate
+
+////////////////////////////////////////////////////////////////////////////////
 // oscilloscope
 ////////////////////////////////////////////////////////////////////////////////
 
 generate
-for (genvar i=0; i<MNA; i++) begin: for_osc
+for (genvar i=0; i<MNO; i++) begin: for_osc
 
-  axi4_stream_if #(.DT (SBA_T)) str (.ACLK (str_osc[i].ACLK), .ARESETn (str_osc[i].ARESETn));
+  axi4_stream_if #(.DT (DTO)) str (.ACLK (str_osc[i].ACLK), .ARESETn (str_osc[i].ARESETn));
 
   logic ctl_rst;
 
   osc #(
     .DN (1),
-    .DT (SBA_T),
+    .DT (DTO),
     .EW ($bits(evn_top_t))
   ) osc (
     // streams
@@ -431,48 +462,17 @@ for (genvar i=0; i<MNA; i++) begin: for_osc
     // interrupts
     .irq      (irq.osc[i]),
     // System bus
-    .bus      (sys[4+2*i+0])
+    .bus      (sys[8+2*i+0])
   );
 
   str2mm #(
   ) str2mm (
     .ctl_rst  (ctl_rst),
     .str      (str),
-    .bus      (sys[4+2*i+1])
+    .bus      (sys[8+2*i+1])
   );
 
 end: for_osc
-endgenerate
-
-////////////////////////////////////////////////////////////////////////////////
-//  DAC arbitrary signal generator
-////////////////////////////////////////////////////////////////////////////////
-
-generate
-for (genvar i=0; i<MNG; i++) begin: for_gen
-
-  gen #(
-    .DT (SBG_T),
-    .EW ($bits(evn_top_t))
-  ) gen (
-    // stream output
-    .sto      (str_gen[i]),
-    // events
-    .evn_ext  (evn),
-    .evn_rst  (evn.gen[i].rst),
-    .evn_str  (evn.gen[i].str),
-    .evn_stp  (evn.gen[i].stp),
-    .evn_trg  (evn.gen[i].trg),
-    .evn_per  (evn.gen[i].per),
-    .evn_lst  (evn.gen[i].lst),
-    // interrupts
-    .irq      (irq.gen[i]),
-    // System bus
-    .bus      (sys[8+2*i+0]),
-    .bus_tbl  (sys[8+2*i+1])
-  );
-
-end: for_gen
 endgenerate
 
 endmodule: red_pitaya_top
