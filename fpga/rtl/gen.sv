@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya arbitrary signal generator (ASG).
-// Authors: Matej Oblak, Iztok Jeras
+// Module: Red Pitaya generator.
+// Authors: Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22,21 +22,6 @@
  * Starting trigger can come from outside, notification trigger used to synchronize
  * with other applications (scope) is also available. Both channels are independant.
  */
-
-package gen_pkg;
-
-// generator events
-typedef struct packed {
-  logic lst;  // last
-  logic per;  // period
-  logic trg;  // software trigger
-  logic stp;  // software stop
-  logic str;  // software start
-  logic rst;  // software reset
-} evn_t;
-
-endpackage: gen_pkg
-
 
 module gen #(
   // stream parameters

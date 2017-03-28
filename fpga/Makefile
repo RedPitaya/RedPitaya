@@ -28,6 +28,7 @@ HSI    = hsi    -nolog -nojournal -mode batch
 
 all: $(FPGA_BIT) $(FSBL_ELF) $(DEVICE_TREE)
 
+# TODO: clean should go into each project
 clean:
 	rm -rf out .Xil .srcs sdk project
 

@@ -1,24 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya oscilloscope application, used for capturing ADC data into BRAMs,
-// which can be later read by SW.
-// Authors: Matej Oblak, Iztok Jeras
+// Module: Red Pitaya oscilloscope.
+// Authors: Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
-
-package osc_pkg;
-
-// oscilloscope events
-typedef struct packed {
-  logic lst;  // last
-  logic lvl;  // level/edge
-  logic trg;  // software trigger
-  logic stp;  // software stop
-  logic str;  // software start
-  logic rst;  // software reset
-} evn_t;
-
-endpackage: osc_pkg
-
 
 module osc #(
   // stream parameters
