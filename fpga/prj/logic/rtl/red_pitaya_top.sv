@@ -107,9 +107,8 @@ axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARES
 axi4_stream_if #(         .DT (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 
 
-// AXI4-Stream DMA RX/TX
-axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
-axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_dtx [4-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // TX
+// AXI4-Stream DMA RX
+axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
 axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
@@ -144,18 +143,6 @@ typedef struct packed {
 } trg_t;
 
 trg_t trg;
-
-// interrupts
-typedef struct packed {
-  // logic generator
-  logic           lg_trg;
-  logic           lg_stp;
-  // logic analyzer
-  logic           la_trg;
-  logic           la_stp;
-} irq_t;
-
-irq_t irq;
 
 // system bus
 sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
@@ -251,13 +238,10 @@ red_pitaya_ps ps (
   .vinn_i        (vinn_i      ),
   // GPIO
   .gpio          (gpio),
-  // interrupts
-  .irq           (irq         ),
   // system read/write channel
   .bus           (ps_sys      ),
   // AXI streams
-  .srx           (axi_drx     ),
-  .stx           (axi_dtx     )
+  .srx           (axi_drx     )
 );
 
 generate
@@ -293,15 +277,22 @@ sys_bus_interconnect #(
 );
 
 // silence unused busses
-generate
-for (genvar i=13; i<16; i++) begin: for_sys
-  sys_bus_stub sys_bus_stub_13_16 (sys[i]);
-end: for_sys
-endgenerate
-
-sys_bus_stub sys_bus_stub_2  (sys[2]);
-sys_bus_stub sys_bus_stub_9  (sys[9]);
+//sys_bus_stub sys_bus_stub_0  (sys[ 0]);
+//sys_bus_stub sys_bus_stub_1  (sys[ 1]);
+sys_bus_stub sys_bus_stub_2  (sys[ 2]);
+sys_bus_stub sys_bus_stub_3  (sys[ 3]);
+sys_bus_stub sys_bus_stub_4  (sys[ 4]);
+sys_bus_stub sys_bus_stub_5  (sys[ 5]);
+//sys_bus_stub sys_bus_stub_6  (sys[ 6]);
+sys_bus_stub sys_bus_stub_7  (sys[ 7]);
+sys_bus_stub sys_bus_stub_8  (sys[ 8]);
+sys_bus_stub sys_bus_stub_9  (sys[ 9]);
 sys_bus_stub sys_bus_stub_10 (sys[10]);
+//sys_bus_stub sys_bus_stub_11 (sys[11]);
+//sys_bus_stub sys_bus_stub_12 (sys[12]);
+sys_bus_stub sys_bus_stub_13 (sys[13]);
+sys_bus_stub sys_bus_stub_14 (sys[14]);
+sys_bus_stub sys_bus_stub_15 (sys[15]);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Current time stamp
@@ -416,43 +407,6 @@ assign exp_exi.TLAST  = 1'b0;
 //IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
 
 ////////////////////////////////////////////////////////////////////////////////
-// Analog mixed signals (PDM analog outputs)
-////////////////////////////////////////////////////////////////////////////////
-
-localparam int unsigned PDM_CHN = 4;
-localparam int unsigned PDM_DWC = 8;
-localparam type PDM_T = logic [PDM_DWC-1:0];
-
-PDM_T [PDM_CHN-1:0]  pdm_cfg;
-
-sys_reg_array_o #(
-  .RT (PDM_T  ),
-  .RN (PDM_CHN)
-) regset_pdm (
-  .val       (pdm_cfg),
-  .bus       (sys[5])
-);
-
-pdm #(
-  .DWC (PDM_DWC),
-  .CHN (PDM_CHN)
-) pdm (
-  // system signals
-  .clk      (pdm_clk ),
-  .rstn     (pdm_rstn),
-  .cke      (1'b1),
-  // configuration
-  .ena      (1'b1),
-  .rng      (8'd255),
-  // input stream
-  .str_dat  (pdm_cfg),
-  .str_vld  (1'b1   ),
-  .str_rdy  (       ),
-  // PWM outputs
-  .pdm      (dac_pwm_o)
-);
-
-////////////////////////////////////////////////////////////////////////////////
 // PWM
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -535,8 +489,6 @@ for (genvar i=0; i<MNA; i++) begin: for_dac
 
   // output registers + signed to unsigned (also to negative slope)
   assign dac_dat[i] = {1'b0, 13'h1fff};
-  // toward DMA
-  assign axi_dtx[0+i].TREADY = 1'b0;
 
 end: for_dac
 endgenerate
@@ -565,8 +517,8 @@ lg_top #(
   .trg_swo   (trg.lg_swo),
   .trg_out   (trg.lg_out),
   // interrupts
-  .irq_trg   (irq.lg_trg),
-  .irq_stp   (irq.lg_stp),
+  .irq_trg   (),
+  .irq_stp   (),
   // System bus
   .bus       (sys[11])
 );
@@ -582,11 +534,6 @@ assign exp_exo.TLAST  =    str_lgo.TLAST   ;
 assign exp_exo.TVALID =    str_lgo.TVALID  ;
 
 assign str_lgo.TREADY = exp_exo.TREADY;
-
-// TODO: for now just a loopback
-// this is an attempt to minimize the related DMA
-
-assign axi_dtx[2].TREADY = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // LA (logic analyzer)
@@ -607,20 +554,10 @@ la_top #(
   .trg_swo   (trg.la_swo),
   .trg_out   (trg.la_out),
   // interrupts
-  .irq_trg   (irq.la_trg),
-  .irq_stp   (irq.la_stp),
+  .irq_trg   (),
+  .irq_stp   (),
   // System bus
   .bus       (sys[12])
-);
-
-////////////////////////////////////////////////////////////////////////////////
-// on demand HW processor
-////////////////////////////////////////////////////////////////////////////////
-
-axi4_stream_pas loopback (
-  .ena (1'b1),
-  .sti (axi_dtx[3]),
-  .sto (axi_drx[3])
 );
 
 endmodule: red_pitaya_top
