@@ -175,8 +175,8 @@ system system_i (
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
   .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
   // AXI-4 streaming interfaces RX
-  .S_AXI_OSC0_aclk    (srx_osc[0].ACLK   ),  .S_AXI_OSC1_aclk    (srx_osc[1].ACLK   ),  .S_AXI_LA_aclk    (srx_la.ACLK   ), 
-  .S_AXI_OSC0_arstn   (srx_osc[0].ARESETn),  .S_AXI_OSC1_arstn   (srx_osc[1].ARESETn),  .S_AXI_LA_arstn   (srx_la.ARESETn), 
+//.S_AXI_OSC0_aclk    (srx_osc[0].ACLK   ),  .S_AXI_OSC1_aclk    (srx_osc[1].ACLK   ),  .S_AXI_LA_aclk    (srx_la.ACLK   ), 
+//.S_AXI_OSC0_arstn   (srx_osc[0].ARESETn),  .S_AXI_OSC1_arstn   (srx_osc[1].ARESETn),  .S_AXI_LA_arstn   (srx_la.ARESETn), 
   .S_AXI_OSC0_tdata   (srx_osc[0].TDATA  ),  .S_AXI_OSC1_tdata   (srx_osc[1].TDATA  ),  .S_AXI_LA_tdata   (srx_la.TDATA  ), 
   .S_AXI_OSC0_tkeep   (srx_osc[0].TKEEP  ),  .S_AXI_OSC1_tkeep   (srx_osc[1].TKEEP  ),  .S_AXI_LA_tkeep   (srx_la.TKEEP  ), 
   .S_AXI_OSC0_tlast   (srx_osc[0].TLAST  ),  .S_AXI_OSC1_tlast   (srx_osc[1].TLAST  ),  .S_AXI_LA_tlast   (srx_la.TLAST  ), 
