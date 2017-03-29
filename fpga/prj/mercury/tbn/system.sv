@@ -76,8 +76,8 @@ module system #(
   output logic  [3:0] M_AXI_GP0_wstrb  ,
   output logic        M_AXI_GP0_wvalid ,
   // AXI-4 streaming interfaces RX
-  input  logic               S_AXI_OSC0_aclk  , S_AXI_OSC1_aclk  , S_AXI_LA_aclk  ,
-  input  logic               S_AXI_OSC0_arstn , S_AXI_OSC1_arstn , S_AXI_LA_arstn ,
+//input  logic               S_AXI_OSC0_aclk  , S_AXI_OSC1_aclk  , S_AXI_LA_aclk  ,
+//input  logic               S_AXI_OSC0_arstn , S_AXI_OSC1_arstn , S_AXI_LA_arstn ,
   input  logic [0:0][16-1:0] S_AXI_OSC0_tdata , S_AXI_OSC1_tdata , S_AXI_LA_tdata ,
   input  logic [0:0]         S_AXI_OSC0_tkeep , S_AXI_OSC1_tkeep , S_AXI_LA_tkeep ,
   input  logic               S_AXI_OSC0_tlast , S_AXI_OSC1_tlast , S_AXI_LA_tlast ,
