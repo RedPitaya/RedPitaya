@@ -60,7 +60,7 @@ module red_pitaya_ps (
   // system read/write channel
   sys_bus_if.m           bus,
   // stream input
-  axi4_stream_if.d       srx,
+  axi4_stream_if.d       srx
 );
 
 ////////////////////////////////////////////////////////////////////////////////
