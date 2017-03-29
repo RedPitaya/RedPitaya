@@ -57,13 +57,10 @@ module red_pitaya_ps (
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // GPIO
   gpio_if.m              gpio,
-  // interrupts
-  input  logic   [4-1:0] irq,
   // system read/write channel
   sys_bus_if.m           bus,
   // stream input
-  axi4_stream_if.d       srx [4-1:0],
-  axi4_stream_if.s       stx [4-1:0]
+  axi4_stream_if.d       srx,
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,39 +172,18 @@ system system_i (
   .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
   .M_AXI_GP0_rdata   (axi_gp.RDATA  ),
   // AXI-4 streaming interfaces RX
-  .S_AXI_STR_RX3_aclk    (srx[3].ACLK   ),  .S_AXI_STR_RX2_aclk    (srx[2].ACLK   ),  .S_AXI_STR_RX1_aclk    (srx[1].ACLK   ),  .S_AXI_STR_RX0_aclk    (srx[0].ACLK   ),
-  .S_AXI_STR_RX3_arstn   (srx[3].ARESETn),  .S_AXI_STR_RX2_arstn   (srx[2].ARESETn),  .S_AXI_STR_RX1_arstn   (srx[1].ARESETn),  .S_AXI_STR_RX0_arstn   (srx[0].ARESETn),
-  .S_AXI_STR_RX3_tdata   (srx[3].TDATA  ),  .S_AXI_STR_RX2_tdata   (srx[2].TDATA  ), // .S_AXI_STR_RX1_tdata   (srx[1].TDATA  ),  .S_AXI_STR_RX0_tdata   (srx[0].TDATA  ),
-  .S_AXI_STR_RX3_tkeep   (srx[3].TKEEP  ),  .S_AXI_STR_RX2_tkeep   (srx[2].TKEEP  ), // .S_AXI_STR_RX1_tkeep   (srx[1].TKEEP  ),  .S_AXI_STR_RX0_tkeep   (srx[0].TKEEP  ),
-  .S_AXI_STR_RX3_tlast   (srx[3].TLAST  ),  .S_AXI_STR_RX2_tlast   (srx[2].TLAST  ), // .S_AXI_STR_RX1_tlast   (srx[1].TLAST  ),  .S_AXI_STR_RX0_tlast   (srx[0].TLAST  ),
-  .S_AXI_STR_RX3_tready  (srx[3].TREADY ),  .S_AXI_STR_RX2_tready  (srx[2].TREADY ), // .S_AXI_STR_RX1_tready  (srx[1].TREADY ),  .S_AXI_STR_RX0_tready  (srx[0].TREADY ),
-  .S_AXI_STR_RX3_tvalid  (srx[3].TVALID ),  .S_AXI_STR_RX2_tvalid  (srx[2].TVALID ), // .S_AXI_STR_RX1_tvalid  (srx[1].TVALID ),  .S_AXI_STR_RX0_tvalid  (srx[0].TVALID ),
-  // AXI-4 streaming interfaces TX
-  .M_AXI_STR_TX3_aclk    (stx[3].ACLK   ),  .M_AXI_STR_TX2_aclk    (stx[2].ACLK   ),  .M_AXI_STR_TX1_aclk    (stx[1].ACLK   ),  .M_AXI_STR_TX0_aclk    (stx[0].ACLK   ),
-  .M_AXI_STR_TX3_arstn   (stx[3].ARESETn),  .M_AXI_STR_TX2_arstn   (stx[2].ARESETn),  .M_AXI_STR_TX1_arstn   (stx[1].ARESETn),  .M_AXI_STR_TX0_arstn   (stx[0].ARESETn),
-  .M_AXI_STR_TX3_tdata   (stx[3].TDATA  ),  .M_AXI_STR_TX2_tdata   (stx[2].TDATA  ), // .M_AXI_STR_TX1_tdata   (stx[1].TDATA  ),  .M_AXI_STR_TX0_tdata   (stx[0].TDATA  ),
-  .M_AXI_STR_TX3_tkeep   (stx[3].TKEEP  ),  .M_AXI_STR_TX2_tkeep   (stx[2].TKEEP  ), // .M_AXI_STR_TX1_tkeep   (stx[1].TKEEP  ),  .M_AXI_STR_TX0_tkeep   (stx[0].TKEEP  ),
-  .M_AXI_STR_TX3_tlast   (stx[3].TLAST  ),  .M_AXI_STR_TX2_tlast   (stx[2].TLAST  ), // .M_AXI_STR_TX1_tlast   (stx[1].TLAST  ),  .M_AXI_STR_TX0_tlast   (stx[0].TLAST  ),
-  .M_AXI_STR_TX3_tready  (stx[3].TREADY ),  .M_AXI_STR_TX2_tready  (stx[2].TREADY ), // .M_AXI_STR_TX1_tready  (stx[1].TREADY ),  .M_AXI_STR_TX0_tready  (stx[0].TREADY ),
-  .M_AXI_STR_TX3_tvalid  (stx[3].TVALID ),  .M_AXI_STR_TX2_tvalid  (stx[2].TVALID ), // .M_AXI_STR_TX1_tvalid  (stx[1].TVALID ),  .M_AXI_STR_TX0_tvalid  (stx[0].TVALID ),
+  .S_AXI_STR_RX_aclk    (srx.ACLK   ),
+  .S_AXI_STR_RX_arstn   (srx.ARESETn),
+  .S_AXI_STR_RX_tdata   (srx.TDATA  ),
+  .S_AXI_STR_RX_tkeep   (srx.TKEEP  ),
+  .S_AXI_STR_RX_tlast   (srx.TLAST  ),
+  .S_AXI_STR_RX_tready  (srx.TREADY ),
+  .S_AXI_STR_RX_tvalid  (srx.TVALID ),
   // GPIO
   .GPIO_tri_i (gpio.i),
   .GPIO_tri_o (gpio.o),
-  .GPIO_tri_t (gpio.t),
-  // IRQ
-  // TODO: actual interrupts should be connnected
-  .IRQ_LG   (1'b0),
-  .IRQ_LA   (1'b0),
-  .IRQ_GEN0 (1'b0),
-  .IRQ_GEN1 (1'b0),
-  .IRQ_SCP0 (1'b0),
-  .IRQ_SCP1 (1'b0)
+  .GPIO_tri_t (gpio.t)
 );
-
-assign srx[0].TREADY = 1'b1;
-assign srx[1].TREADY = 1'b1;
-assign stx[0].TVALID = 1'b0;
-assign stx[1].TVALID = 1'b0;
 
 // since the PS GP0 port is AXI3 and the local bus is AXI4
 assign axi_gp.AWREGION = '0;
