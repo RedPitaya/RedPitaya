@@ -34,24 +34,48 @@
 				reg = <0x40040000 0x01000>,
 				      <0x40050000 0x10000>;
 				reg-names = "ctl", "mem";
+				interrupt-parent = <&intc>;
+				interrupts = <0 30 4>;
 			};
 			gen1: gen1@40060000 {
 				compatible = "generic-uio";
 				reg = <0x40060000 0x01000>,
 				      <0x40070000 0x10000>;
 				reg-names = "ctl", "mem";
+				interrupt-parent = <&intc>;
+				interrupts = <0 31 4>;
 			};
 			osc0: osc0@40080000 {
 				compatible = "generic-uio";
 				reg = <0x40080000 0x01000>,
 				      <0x40090000 0x10000>;
 				reg-names = "ctl", "mem";
+				interrupt-parent = <&intc>;
+				interrupts = <0 32 4>;
 			};
 			osc1: osc1@400a0000 {
 				compatible = "generic-uio";
 				reg = <0x400a0000 0x01000>,
 				      <0x400b0000 0x10000>;
 				reg-names = "ctl", "mem";
+				interrupt-parent = <&intc>;
+				interrupts = <0 33 4>;
+			};
+			lg: gen@400c0000 {
+				compatible = "generic-uio";
+				reg = <0x400c0000 0x01000>,
+				      <0x400d0000 0x10000>;
+				reg-names = "ctl", "mem";
+				interrupt-parent = <&intc>;
+				interrupts = <0 34 4>;
+			};
+			la: la@400e0000 {
+				compatible = "generic-uio";
+				reg = <0x400e0000 0x01000>,
+				      <0x400f0000 0x10000>;
+				reg-names = "ctl", "mem";
+				interrupt-parent = <&intc>;
+				interrupts = <0 35 4>;
 			};
 		};
 	};
