@@ -454,7 +454,21 @@ endgenerate
 // logic generator
 ////////////////////////////////////////////////////////////////////////////////
 
-assign irq.lg = 1'b0;
+lg #(
+  .DT (DTL),
+  .EW ($bits(evn))
+) lg (
+  // stream output
+  .sto      (str_lg),
+  // events
+  .evn_ext  (evn),
+  .evn      (evn.lg),
+  // interrupts
+  .irq      (irq.lg),
+  // System bus
+  .bus      (sys[10+0]),
+  .bus_tbl  (sys[10+1])
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // logic analyzer
