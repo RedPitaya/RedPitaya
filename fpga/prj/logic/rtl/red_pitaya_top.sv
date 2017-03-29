@@ -101,18 +101,14 @@ localparam type SBG_T = logic signed [ 14-1:0];  // generate
 localparam type SBL_T = logic        [GDW-1:0];  // logic ananlyzer/generator
 
 // digital input streams
-axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo           (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
+axi4_stream_if #(.DN (2), .DT (SBL_T)) str_lgo (.ACLK (adc_clk), .ARESETn (adc_rstn));  // LG
 
 // DMA sterams RX/TX
-axi4_stream_if #(         .DT (SBL_T)) str_drx   [3-1:0] (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
+axi4_stream_if #(         .DT (SBL_T)) str_drx (.ACLK (adc_clk), .ARESETn (adc_rstn));  // RX
 
-
-// AXI4-Stream DMA RX
-axi4_stream_if #(.DN (2), .DT (logic [8-1:0])) axi_drx         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exe         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exo         (.ACLK (adc_clk), .ARESETn (adc_rstn));
-axi4_stream_if #(.DN (2), .DT (SBL_T))         exp_exi         (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T)) exp_exe (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T)) exp_exo (.ACLK (adc_clk), .ARESETn (adc_rstn));
+axi4_stream_if #(.DN (2), .DT (SBL_T)) exp_exi (.ACLK (adc_clk), .ARESETn (adc_rstn));
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -241,28 +237,8 @@ red_pitaya_ps ps (
   // system read/write channel
   .bus           (ps_sys      ),
   // AXI streams
-  .srx           (axi_drx     )
+  .srx           (str_drx     )
 );
-
-generate
-for (genvar i=0; i<3; i++) begin: for_str
-
-  // RX
-//  for (genvar b=0; b<DN; b==b+DN) begin: for_byte_i
-//  assign sai[i].TKEEP[DN*b+:DN] = {DN{sti[i].kep}};
-//  end: for_byte_i
-  assign axi_drx[i].TKEEP           = {2{str_drx[i].TKEEP}};
-  assign axi_drx[i].TDATA           =    str_drx[i].TDATA  ;
-  assign axi_drx[i].TLAST           =    str_drx[i].TLAST  ;
-  assign axi_drx[i].TVALID          =    str_drx[i].TVALID ;
-  // TODO: fix this timing issue somewhere else
-  if (i==2)
-  assign str_drx[i].TREADY          = 1'b1;
-  else
-  assign str_drx[i].TREADY          =    axi_drx[i].TREADY;
-
-end: for_str
-endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
@@ -468,18 +444,6 @@ assign adc_clk_o = 2'b10;
 // ADC clock duty cycle stabilizer is enabled
 assign adc_cdcs_o = 1'b1 ;
 
-// silence the streaming interface
-generate
-for (genvar i=0; i<MNA; i++) begin: for_adc
-
-  assign str_drx[i].TKEEP  = '0;
-  assign str_drx[i].TDATA  = '0;
-  assign str_drx[i].TLAST  = '0;
-  assign str_drx[i].TVALID = '0;
-
-end: for_adc
-endgenerate
-
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,7 +510,7 @@ la_top #(
 ) la (
   // streams
   .sti       (exp_exi),
-  .sto       (str_drx[2]),
+  .sto       (str_drx),
   // current time stamp
   .cts       (cts),
   // triggers
