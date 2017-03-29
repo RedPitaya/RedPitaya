@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Red Pitaya arbitrary signal generator (ASG).
-// Authors: Matej Oblak, Iztok Jeras
+// Module: Red Pitaya logic generator.
+// Authors: Iztok Jeras
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -9,9 +9,9 @@
  *
  * Arbitrary signal generator takes data stored in buffer and sends them to DAC.
  *
- *                /-----\         /--------\
- *   SW --------> | BUF | ------> | kx + o | ---> DAC CHB
- *                \-----/         \--------/ 
+ *           /-----\      /------\
+ *   SW ---> | BUF | ---> | mask | ---> DAC
+ *           \-----/      \------/ 
  *
  * Buffers are filed with SW. It also sets finite state machine which take control
  * over read pointer. All registers regarding reading from buffer has additional 
@@ -24,11 +24,9 @@
  */
 
 module lg_top #(
-  // functionality enable
-  bit EN_LIN = 1,
-  // data path
-  int unsigned DN = 1,
-  type DT = logic [8-1:0],
+  // stream parameters
+  int unsigned DN = 1,      // data number
+  type DT = logic [8-1:0],  // data type
   // configuration parameters
   type DTM = DT,  // data type for multiplication
   type DTS = DT,  // data type for summation
@@ -133,11 +131,11 @@ end else begin
     if (bus.addr[BAW-1:0]=='h14)  cfg_off <= bus.wdata[CWM+CWF-1:0];
     if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata[CWM+CWF-1:0];
     // burst mode
-    if (bus.addr[BAW-1:0]=='h20)  cfg_ben <= bus.wdata[          0];
-    if (bus.addr[BAW-1:0]=='h20)  cfg_inf <= bus.wdata[          1];
-    if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata[    CWM-1:0];
-    if (bus.addr[BAW-1:0]=='h28)  cfg_bln <= bus.wdata[     32-1:0];
-    if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[     16-1:0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_ben <= bus.wdata[      0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_inf <= bus.wdata[      1];
+    if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata[CWM-1:0];
+    if (bus.addr[BAW-1:0]=='h28)  cfg_bln <= bus.wdata[ 32-1:0];
+    if (bus.addr[BAW-1:0]=='h2c)  cfg_bnm <= bus.wdata[ 16-1:0];
     // linear transformation
     if (bus.addr[BAW-1:0]=='h38)  cfg_mul <= DTM'(bus.wdata);
     if (bus.addr[BAW-1:0]=='h3c)  cfg_sum <= DTS'(bus.wdata);
@@ -228,48 +226,12 @@ lg_asg #(
 
 // TODO: this will be a continuous stream, data stream control needs rethinking
 
-generate
-if (EN_LIN) begin: en_lin
+assign sto.TVALID = stg.TVALID;
+assign sto.TKEEP  = stg.TKEEP ;
+assign sto.TLAST  = stg.TLAST ;
+assign stg.TREADY = sto.TREADY;
 
-  axi4_stream_if #(.DN (DN), .DT (DT)) str (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
-
-  lin_mul #(
-    .DN  (DN),
-    .DTI (DT),
-    .DTO (DT),
-    .DTM (logic signed [16-1:0])
-  ) lin_mul (
-    // stream input/output
-    .sti       (stg),
-    .sto       (str),
-    // configuration
-    .cfg_mul   (cfg_mul)
-  );
-
-  lin_add #(
-    .DN  (DN),
-    .DTI (DT),
-    .DTO (DT),
-    .DTS (DT)
-  ) lin_add (
-    // stream input/output
-    .sti       (str),
-    .sto       (sto),
-    // configuration
-    .cfg_sum   (cfg_sum)
-  );
-
-end else begin
-
-  assign sto.TVALID = stg.TVALID;
-  assign sto.TKEEP  = stg.TKEEP ;
-  assign sto.TLAST  = stg.TLAST ;
-  assign stg.TREADY = sto.TREADY;
-
-  assign sto.TDATA  = '{cfg_mul & (~cfg_sum | cfg_sum & ~stg.TDATA),  // output enable (optional open colector)
-                                                         stg.TDATA};  // output
-
-end
-endgenerate
+assign sto.TDATA  = '{cfg_mul & (~cfg_sum | cfg_sum & ~stg.TDATA),  // output enable (optional open colector)
+                                                       stg.TDATA};  // output
 
 endmodule: lg_top
