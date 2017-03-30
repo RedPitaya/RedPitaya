@@ -120,7 +120,7 @@ if (~bus.rstn) begin
   cfg_bnm <= '0;
   cfg_bln <= '0;
   // linear transform or logic analyzer output enable
-  cfg_mul <= EN_LIN ? 1 << ($bits(DTM)-2) : '0;
+  cfg_mul <= '0;
   cfg_sum <= '0;
 end else begin
   if (bus.wen & ~bus.addr[CWM+2]) begin
@@ -173,8 +173,7 @@ if (~bus.addr[CWM+2]) begin
     default : bus.rdata <= '0;
   endcase
 end else begin
-    if (EN_LIN)  bus.rdata <= $signed(bus_buf.rdata);
-    else         bus.rdata <=         bus_buf.rdata ;
+    bus.rdata <= bus_buf.rdata;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
