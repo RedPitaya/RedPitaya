@@ -25,8 +25,8 @@
 
 module gen #(
   // stream parameters
-  int unsigned DN = 1,  // data number
-  type DT = logic [8-1:0],
+  int unsigned DN = 1,      // data number
+  type DT = logic [8-1:0],  // data type
   // configuration parameters
   type DTM = DT,  // data type for multiplication
   type DTS = DT,  // data type for summation
@@ -36,21 +36,18 @@ module gen #(
   int unsigned CW  = CWM+CWF,
   // burst counter parameters
   int unsigned CWL = 32,  // counter width length
-  int unsigned CWN = 16,  // counter width number
-  // event parameters
-  int unsigned EW  =  6   // external trigger array  width
+  int unsigned CWN = 16   // counter width number
 )(
   // stream output
-  axi4_stream_if.s       sto,
-  // external events
-  input  top_pkg::evn_t  evn_ext,
-  // event sources
-  output gen_pkg::evn_t  evn,
+  axi4_stream_if.s      sto,
+  // events input/output
+  input  top_pkg::evi_t evi,  // input
+  output top_pkg::evo_t evo,  // output
   // interrupt
-  output logic           irq,
+  output logic          irq,
   // system bus
-  sys_bus_if.s           bus    ,  // CPU access to memory mapped registers
-  sys_bus_if.s           bus_tbl   // CPU access to waveform table
+  sys_bus_if.s          bus    ,  // CPU access to memory mapped registers
+  sys_bus_if.s          bus_tbl   // CPU access to waveform table
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,10 +55,10 @@ module gen #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // event select masks
-logic  [EW-1:0] cfg_rst;  // reset
-logic  [EW-1:0] cfg_str;  // start
-logic  [EW-1:0] cfg_stp;  // stop
-logic  [EW-1:0] cfg_trg;  // trigger
+logic [$bits(evi.rst)-1:0] cfg_rst;  // reset
+logic [$bits(evi.str)-1:0] cfg_str;  // start
+logic [$bits(evi.stp)-1:0] cfg_stp;  // stop
+logic [$bits(evi.trg)-1:0] cfg_trg;  // trigger
 
 // interrupt enable/status/clear
 logic   [4-1:0] irq_ena;  // enable
@@ -141,10 +138,10 @@ end else begin
     // interrupt enable (status/clear are elsewhere)
     if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[  3-1:0];
     // event masks
-    if (bus.addr[BAW-1:0]=='h10)  cfg_rst <= bus.wdata[ EW-1:0];
-    if (bus.addr[BAW-1:0]=='h14)  cfg_str <= bus.wdata[ EW-1:0];
-    if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata[ EW-1:0];
-    if (bus.addr[BAW-1:0]=='h1c)  cfg_trg <= bus.wdata[ EW-1:0];
+    if (bus.addr[BAW-1:0]=='h10)  cfg_rst <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h14)  cfg_str <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h1c)  cfg_trg <= bus.wdata;
     // buffer configuration
     if (bus.addr[BAW-1:0]=='h20)  cfg_siz <= bus.wdata[ CW-1:0];
     if (bus.addr[BAW-1:0]=='h24)  cfg_off <= bus.wdata[ CW-1:0];
@@ -165,21 +162,21 @@ end
 // control signals
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  evn.rst <= 1'b0;
-  evn.str <= 1'b0;
-  evn.stp <= 1'b0;
-  evn.trg <= 1'b0;
+  evo.rst <= 1'b0;
+  evo.str <= 1'b0;
+  evo.stp <= 1'b0;
+  evo.swt <= 1'b0;
 end else begin
   if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
-    evn.rst <= bus.wdata[0];  // reset
-    evn.str <= bus.wdata[1];  // start
-    evn.stp <= bus.wdata[2];  // stop
-    evn.trg <= bus.wdata[3];  // trigger
+    evo.rst <= bus.wdata[0];  // reset
+    evo.str <= bus.wdata[1];  // start
+    evo.stp <= bus.wdata[2];  // stop
+    evo.swt <= bus.wdata[3];  // trigger
   end else begin
-    evn.rst <= 1'b0;
-    evn.str <= 1'b0;
-    evn.stp <= 1'b0;
-    evn.trg <= 1'b0;
+    evo.rst <= 1'b0;
+    evo.str <= 1'b0;
+    evo.stp <= 1'b0;
+    evo.swt <= 1'b0;
   end
 end
 
@@ -187,18 +184,15 @@ end
 always_ff @(posedge bus.clk)
 casez (bus.addr[BAW-1:0])
   // control
-  'h00: bus.rdata <= {{32-  4{1'b0}}, sts_trg, sts_stp, sts_str, 1'b0};
+  'h00: bus.rdata <= {sts_trg, sts_stp, sts_str, 1'b0};
   // interrupts enable/status/clear
-  'h08: bus.rdata <=                  irq_ena;
-  'h0c: bus.rdata <=                  irq_sts;
+  'h08: bus.rdata <= irq_ena;
+  'h0c: bus.rdata <= irq_sts;
   // event masks
-  'h10: bus.rdata <= {{32- EW{1'b0}}, cfg_rst};
-  'h14: bus.rdata <= {{32- EW{1'b0}}, cfg_str};
-  'h18: bus.rdata <= {{32- EW{1'b0}}, cfg_stp};
-  'h1c: bus.rdata <= {{32- EW{1'b0}}, cfg_trg};
-  // interrupts enable/status/clear
-  'h10: bus.rdata <=                  irq_ena;
-  'h14: bus.rdata <=                  irq_sts;
+  'h10: bus.rdata <= cfg_rst;
+  'h14: bus.rdata <= cfg_str;
+  'h18: bus.rdata <= cfg_stp;
+  'h1c: bus.rdata <= cfg_trg;
   // buffer configuration
   'h20: bus.rdata <= {{32- CW{1'b0}}, cfg_siz};
   'h24: bus.rdata <= {{32- CW{1'b0}}, cfg_off};
@@ -248,10 +242,10 @@ end
 // generator core instance 
 ////////////////////////////////////////////////////////////////////////////////
 
-assign ctl_rst = |(evn_ext & cfg_rst);
-assign ctl_str = |(evn_ext & cfg_str);
-assign ctl_stp = |(evn_ext & cfg_stp);
-assign ctl_trg = |(evn_ext & cfg_trg);
+assign ctl_rst = |(evi.rst & cfg_rst);
+assign ctl_str = |(evi.str & cfg_str);
+assign ctl_stp = |(evi.stp & cfg_stp);
+assign ctl_trg = |(evi.trg & cfg_trg);
 
 // stream from generator
 axi4_stream_if #(.DN (DN), .DT (DT)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
@@ -280,8 +274,8 @@ asg #(
   .ctl_trg  (ctl_trg),
   .sts_trg  (sts_trg),
   // events
-  .evn_per  (evn.per),
-  .evn_lst  (evn.lst),
+  .evn_per  (evo.trg),
+  .evn_lst  (evo.lst),
   // configuration
   .cfg_siz  (cfg_siz),
   .cfg_off  (cfg_off),
