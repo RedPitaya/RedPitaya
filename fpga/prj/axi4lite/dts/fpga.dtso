@@ -1,0 +1,26 @@
+/dts-v1/;
+/plugin/;
+/include/ "led-user.dtso"
+/ {
+//	fragment@0 {
+//		target = <&fpga_region0>;
+//		#address-cells = <1>;
+//		#size-cells = <1>;
+//		__overlay__ {
+//			#address-cells = <1>;
+//			#size-cells = <1>;
+//			firmware-name = "redpitaya/mercury.bin";
+//		};
+//	};
+	fragment@1 {
+		target = <&amba_pl>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		__overlay__ {
+			gpio: pdm@40000000 {
+				compatible = "generic-uio";
+				reg = <0x40000000 0x1000>;
+			};
+		};
+	};
+};
