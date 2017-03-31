@@ -212,7 +212,12 @@ assign daisy_n_o = 1'bz;
 ////////////////////////////////////////////////////////////////////////////////
 
 // reset/start/stop/trigger events
-top_pkg::evn_t evn;
+top_pkg::evs_t evs;
+top_pkg::evi_t evi;
+
+// remap from source ordering to functional ordering
+// TODO: add external trigger
+assign evi = top_pkg::evn_f(evs, 1'b0);
 
 // interrupts
 top_pkg::irq_t irq;
@@ -293,11 +298,6 @@ for (genvar i=2; i<3; i++) begin: for_sys_2
   sys_bus_stub sys_bus_stub_2 (sys[i]);
 end: for_sys_2
 endgenerate
-generate
-for (genvar i=12; i<16; i++) begin: for_sys_12_16
-  sys_bus_stub sys_bus_stub_12_16 (sys[i]);
-end: for_sys_12_16
-endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // LED and GPIO
@@ -306,6 +306,10 @@ endgenerate
 IOBUF iobuf_led   [8-1:0] (.O(gpio.i[ 7: 0]), .IO(led_o)   , .I(gpio.o[ 7: 0]), .T(gpio.t[ 7: 0]));
 IOBUF iobuf_exp_p [8-1:0] (.O(gpio.i[15: 8]), .IO(exp_p_io), .I(gpio.o[15: 8]), .T(gpio.t[15: 8]));
 IOBUF iobuf_exp_n [8-1:0] (.O(gpio.i[23:16]), .IO(exp_n_io), .I(gpio.o[23:16]), .T(gpio.t[23:16]));
+
+// TODO use DDR IO
+// TODO connect logic generator and analyzer
+assign str_lg.TREADY = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // identification
@@ -358,6 +362,8 @@ pdm #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // ADC(osc)/DAC(gen) AXI4-Stream interfaces
+axi4_stream_if #(.DT (DTO)) str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
 axi4_stream_if #(.DT (DTO)) str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
 axi4_stream_if #(.DT (DTG)) str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
 
@@ -385,14 +391,13 @@ generate
 for (genvar i=0; i<MNG; i++) begin: for_gen
 
   gen #(
-    .DT (DTG),
-    .EW ($bits(evn))
+    .DT (DTG)
   ) gen (
     // stream output
     .sto      (str_gen[i]),
     // events
-    .evn_ext  (evn),
-    .evn      (evn.gen[i]),
+    .evi      (evi),
+    .evo      (evs.gen[i]),
     // interrupts
     .irq      (irq.gen[i]),
     // System bus
@@ -416,15 +421,14 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
 
   osc #(
     .DN (1),
-    .DT (DTO),
-    .EW ($bits(evn))
+    .DT (DTO)
   ) osc (
     // streams
     .sti      (str_osc[i]),
     .sto      (str),
     // events
-    .evn_ext  (evn),
-    .evn      (evn.osc[i]),
+    .evi      (evi),
+    .evo      (evs.osc[i]),
     // reset output
     .ctl_rst  (ctl_rst),
     // interrupts
@@ -455,31 +459,58 @@ endgenerate
 ////////////////////////////////////////////////////////////////////////////////
 
 lg #(
-  .DT (DTL),
-  .EW ($bits(evn))
+  .DT (DTL)
 ) lg (
   // stream output
   .sto      (str_lg),
   // events
-  .evn_ext  (evn),
-  .evn      (evn.lg),
+  .evi      (evi),
+  .evo      (evs.lg),
   // interrupts
   .irq      (irq.lg),
   // System bus
-  .bus      (sys[10+0]),
-  .bus_tbl  (sys[10+1])
+  .bus      (sys[12+0]),
+  .bus_tbl  (sys[12+1])
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 // logic analyzer
 ////////////////////////////////////////////////////////////////////////////////
 
-assign irq.la = 1'b0;
+axi4_stream_if #(.DT (DTO)) str_tmp (.ACLK (str_la.ACLK), .ARESETn (str_la.ARESETn));
 
-assign srx_la.TLAST  = '0;
-assign srx_la.TKEEP  = '0;
-assign srx_la.TDATA  = '0;
-assign srx_la.TVALID = '0;
+logic ctl_rst;
+
+osc #(
+  .DN (1),
+  .DT (DTO)
+) osc (
+  // streams
+  .sti      (str_la),
+  .sto      (str_tmp),
+  // events
+  .evi      (evi),
+  .evo      (evs.la),
+  // reset output
+  .ctl_rst  (ctl_rst),
+  // interrupts
+  .irq      (irq.la),
+  // System bus
+  .bus      (sys[14+0])
+);
+
+// TODO: when DMA starts functioning properly, this module should be removed
+str2mm #(
+) str2mm (
+  .ctl_rst  (ctl_rst),
+  .str      (str_tmp),
+  .bus      (sys[14+1])
+);
+
+assign srx_la.TLAST  = str_tmp.TLAST ;
+assign srx_la.TKEEP  = str_tmp.TKEEP ;
+assign srx_la.TDATA  = str_tmp.TDATA ;
+assign srx_la.TVALID = str_tmp.TVALID;
 // TREADY is ignored
 
 endmodule: red_pitaya_top
