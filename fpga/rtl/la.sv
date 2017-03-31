@@ -13,14 +13,16 @@ module la #(
   // aquisition parameters
   int unsigned CW  = 32-1,  // counter width
   // event parameters
-  int unsigned EW  =  6   // external trigger array  width
+  type DTL = logic,
+  type DTT = evn_pkg::evt_t,
+  type DTE = evn_pkg::evd_t
 )(
   // streams
   axi4_stream_if.d      sti,  // input
   axi4_stream_if.s      sto,  // output
   // events input/output
-  input  top_pkg::evi_t evi,  // input
-  output top_pkg::evo_t evo,  // output
+  input  DTE            evi,  // input
+  output evn_pkg::evs_t evo,  // output
   // reset output
   output logic          ctl_rst,
   // interrupt
@@ -40,13 +42,11 @@ axi4_stream_if #(.DN (DN), .DT (DT)) stt            (.ACLK (sti.ACLK), .ARESETn 
 axi4_stream_if #(.DN (DN), .DT (DT)) sta_str        (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 axi4_stream_if #(.DN (DN), .DT (logic [8-1:0])) sta (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 
-// acquire regset
-
 // event select masks
-logic [$bits(evi.rst)-1:0] cfg_rst;  // reset
-logic [$bits(evi.str)-1:0] cfg_str;  // start
-logic [$bits(evi.stp)-1:0] cfg_stp;  // stop
-logic [$bits(evi.trg)-1:0] cfg_trg;  // trigger
+DTL             cfg_rst;  // reset
+DTL             cfg_str;  // start
+DTL             cfg_stp;  // stop
+DTT             cfg_trg;  // trigger
 
 // interrupt enable/status/clear
 logic   [4-1:0] irq_ena;  // enable

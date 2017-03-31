@@ -36,13 +36,17 @@ module gen #(
   int unsigned CW  = CWM+CWF,
   // burst counter parameters
   int unsigned CWL = 32,  // counter width length
-  int unsigned CWN = 16   // counter width number
+  int unsigned CWN = 16,  // counter width number
+  // event parameters
+  type DTL = logic,
+  type DTT = evn_pkg::evt_t,
+  type DTE = evn_pkg::evd_t
 )(
   // stream output
   axi4_stream_if.s      sto,
   // events input/output
-  input  top_pkg::evi_t evi,  // input
-  output top_pkg::evo_t evo,  // output
+  input  DTE            evi,  // input
+  output evn_pkg::evs_t evo,  // output
   // interrupt
   output logic          irq,
   // system bus
@@ -55,10 +59,10 @@ module gen #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // event select masks
-logic [$bits(evi.rst)-1:0] cfg_rst;  // reset
-logic [$bits(evi.str)-1:0] cfg_str;  // start
-logic [$bits(evi.stp)-1:0] cfg_stp;  // stop
-logic [$bits(evi.trg)-1:0] cfg_trg;  // trigger
+DTL             cfg_rst;  // reset
+DTL             cfg_str;  // start
+DTL             cfg_stp;  // stop
+DTT             cfg_trg;  // trigger
 
 // interrupt enable/status/clear
 logic   [4-1:0] irq_ena;  // enable
