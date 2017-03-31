@@ -27,30 +27,18 @@ module gen_tb #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // syste signals
-logic                  clk ;
-logic                  rstn;
+logic clk ;
+logic rstn;
 
-// interrupts
-logic           irq_trg;  // trigger
-logic           irq_stp;  // stop
+// interrupt
+logic irq;
 
 // stream
 axi4_stream_if #(.DN (1), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
-// events
-typedef struct packed {
-  logic lst;  // last
-  logic per;  // period
-  logic trg;  // software trigger
-  logic stp;  // software stop
-  logic str;  // software start
-  logic rst;  // software reset
-} evn_asg_t;
-
-evn_asg_t evn;
-
-// event parameters
-localparam int unsigned EW = $bits(evn_asg_t);  // event array width
+// events input/output
+top_pkg::evi_t evi;  // input
+top_pkg::evo_t evo;  // output
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock
@@ -173,20 +161,15 @@ sys_bus_model busm_tbl (.bus (bus_tbl));
 gen #(
   .DT  (DT),
   .DTM (DTM),
-  .DTS (DTS),
-  .EW  (EW)
+  .DTS (DTS)
 ) gen (
   // stream output
   .sto      (str),
-  // external events
-  .evn_ext  (evn),
-  // event sources
-  .evn_rst  (evn.rst),
-  .evn_str  (evn.str),
-  .evn_stp  (evn.stp),
-  .evn_trg  (evn.trg),
-  .evn_per  (evn.per),
-  .evn_lst  (evn.lst),
+  // events input/output
+  .evi      (evi),
+  .evo      (evo),
+  // interrupt
+  .irq      (irq),
   // system bus
   .bus      (bus),
   .bus_tbl  (bus_tbl)
