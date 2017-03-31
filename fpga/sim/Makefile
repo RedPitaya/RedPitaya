@@ -26,13 +26,20 @@ SIP=$(PATH_SIP)/oserdese2/oserdese2_002.vp \
     $(PATH_SIP)/iserdese2/iserdese2_002.vp
 
 # RTL files
-RTL =$(wildcard $(PATH_RTL)/*.sv)
-RTL+=$(wildcard $(PATH_RTL)/*.v)
-RTL+=$(wildcard $(PATH_RTL)/*/*.sv)
-RTL+=$(wildcard $(PATH_RTL)/*/*.v)
+RTL_PKG =$(wildcard $(PATH_RTL)/*_pkg.sv)
+RTL_PKG+=$(wildcard $(PATH_RTL)/*/*_pkg.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*.v)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*/*.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*/*.v)
+RTL_DIF =$(filter-out $(RTL_PKG),$(RTL_SRC))
+RTL = $(RTL_PKG) $(RTL_DIF)
 
 # testbench files
-TBN=$(wildcard $(PATH_TBN)/*.sv)
+TBN_PKG =$(wildcard $(PATH_TBN)/*_pkg.sv)
+TBN_SRC =$(wildcard $(PATH_TBN)/*.sv)
+TBN_DIF =$(filter-out $(TBN_PKG),$(TBN_SRC))
+TBN = $(TBN_PKG) $(TBN_DIF)
 
 # targets
 TGT=$(RTL:.sv=)
