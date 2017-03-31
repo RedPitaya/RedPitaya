@@ -56,6 +56,7 @@ write_hwdef -force       -file    $path_sdk/red_pitaya.hwdef
 ################################################################################
 
 add_files                         [glob ../../$path_rtl/*_pkg.sv]
+add_files                         [glob       $path_rtl/*_pkg.sv]
 add_files                         ../../$path_rtl
 add_files                               $path_rtl
 
