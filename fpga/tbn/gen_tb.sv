@@ -37,8 +37,10 @@ logic irq;
 axi4_stream_if #(.DN (1), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 // events input/output
-top_pkg::evi_t evi;  // input
-top_pkg::evo_t evo;  // output
+evn_pkg::evd_t evd;  // input
+evn_pkg::evs_t evs;  // output
+
+assign evd = evn_pkg::evn_f(evs, 1'b0);
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock
@@ -102,10 +104,10 @@ initial begin
   busm.write('h3c, 0);                    // DC offset
 
   // all events are SW driven
-  busm.write('h10, 5'b000001);  // reset
-  busm.write('h14, 5'b000010);  // start
-  busm.write('h18, 5'b000100);  // stop
-  busm.write('h1c, 5'b001000);  // trigger
+  busm.write('h10, 1'b1);  // reset
+  busm.write('h14, 1'b1);  // start
+  busm.write('h18, 1'b1);  // stop
+  busm.write('h1c, 1'b1);  // trigger
 
   // configure frequency and phase
   busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size
@@ -161,13 +163,16 @@ sys_bus_model busm_tbl (.bus (bus_tbl));
 gen #(
   .DT  (DT),
   .DTM (DTM),
-  .DTS (DTS)
+  .DTS (DTS),
+  .DTL (logic),
+  .DTT (evn_pkg::evt_t),
+  .DTE (evn_pkg::evd_t)
 ) gen (
   // stream output
   .sto      (str),
   // events input/output
-  .evi      (evi),
-  .evo      (evo),
+  .evi      (evd),
+  .evo      (evs),
   // interrupt
   .irq      (irq),
   // system bus

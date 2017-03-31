@@ -213,11 +213,11 @@ assign daisy_n_o = 1'bz;
 
 // reset/start/stop/trigger events
 top_pkg::evs_t evs;
-top_pkg::evi_t evi;
+top_pkg::evd_t evd;
 
 // remap from source ordering to functional ordering
 // TODO: add external trigger
-assign evi = top_pkg::evn_f(evs, 1'b0);
+assign evd = top_pkg::evn_f(evs, 1'b0);
 
 // interrupts
 top_pkg::irq_t irq;
@@ -391,12 +391,16 @@ generate
 for (genvar i=0; i<MNG; i++) begin: for_gen
 
   gen #(
-    .DT (DTG)
+    .DN  (1),
+    .DT  (DTG),
+    .DTL (top_pkg::evl_t),
+    .DTT (top_pkg::evt_t),
+    .DTE (top_pkg::evd_t)
   ) gen (
     // stream output
     .sto      (str_gen[i]),
     // events
-    .evi      (evi),
+    .evi      (evd),
     .evo      (evs.gen[i]),
     // interrupts
     .irq      (irq.gen[i]),
@@ -420,14 +424,17 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
   logic ctl_rst;
 
   osc #(
-    .DN (1),
-    .DT (DTO)
+    .DN  (1),
+    .DT  (DTO),
+    .DTL (top_pkg::evl_t),
+    .DTT (top_pkg::evt_t),
+    .DTE (top_pkg::evd_t)
   ) osc (
     // streams
     .sti      (str_osc[i]),
     .sto      (str),
     // events
-    .evi      (evi),
+    .evi      (evd),
     .evo      (evs.osc[i]),
     // reset output
     .ctl_rst  (ctl_rst),
@@ -459,12 +466,15 @@ endgenerate
 ////////////////////////////////////////////////////////////////////////////////
 
 lg #(
-  .DT (DTL)
+  .DT  (DTL),
+  .DTL (top_pkg::evl_t),
+  .DTT (top_pkg::evt_t),
+  .DTE (top_pkg::evd_t)
 ) lg (
   // stream output
   .sto      (str_lg),
   // events
-  .evi      (evi),
+  .evi      (evd),
   .evo      (evs.lg),
   // interrupts
   .irq      (irq.lg),
@@ -481,15 +491,18 @@ axi4_stream_if #(.DT (DTO)) str_tmp (.ACLK (str_la.ACLK), .ARESETn (str_la.ARESE
 
 logic ctl_rst;
 
-osc #(
-  .DN (1),
-  .DT (DTO)
-) osc (
+la #(
+  .DN  (1),
+  .DT  (DTL),
+  .DTL (top_pkg::evl_t),
+  .DTT (top_pkg::evt_t),
+  .DTE (top_pkg::evd_t)
+) la (
   // streams
   .sti      (str_la),
   .sto      (str_tmp),
   // events
-  .evi      (evi),
+  .evi      (evd),
   .evo      (evs.la),
   // reset output
   .ctl_rst  (ctl_rst),
