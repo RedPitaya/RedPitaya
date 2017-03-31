@@ -465,65 +465,102 @@ endgenerate
 // logic generator
 ////////////////////////////////////////////////////////////////////////////////
 
-lg #(
-  .DT  (DTL),
-  .DTL (top_pkg::evl_t),
-  .DTT (top_pkg::evt_t),
-  .DTE (top_pkg::evd_t)
-) lg (
-  // stream output
-  .sto      (str_lg),
-  // events
-  .evi      (evd),
-  .evo      (evs.lg),
-  // interrupts
-  .irq      (irq.lg),
-  // System bus
-  .bus      (sys[12+0]),
-  .bus_tbl  (sys[12+1])
-);
+localparam EN_LG = 0;
+
+generate
+if (EN_LG) begin: if_lg
+
+  lg #(
+    .DT  (DTL),
+    .DTL (top_pkg::evl_t),
+    .DTT (top_pkg::evt_t),
+    .DTE (top_pkg::evd_t)
+  ) lg (
+    // stream output
+    .sto      (str_lg),
+    // events
+    .evi      (evd),
+    .evo      (evs.lg),
+    // interrupts
+    .irq      (irq.lg),
+    // System bus
+    .bus      (sys[12+0]),
+    .bus_tbl  (sys[12+1])
+  );
+
+end else begin
+
+  sys_bus_stub sys_bus_stub_12 (sys[12]);
+  sys_bus_stub sys_bus_stub_13 (sys[13]);
+
+  assign evs.lg = '0;
+  assign irq.lg = 1'b0;
+
+end
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // logic analyzer
 ////////////////////////////////////////////////////////////////////////////////
 
-axi4_stream_if #(.DT (DTO)) str_tmp (.ACLK (str_la.ACLK), .ARESETn (str_la.ARESETn));
+localparam EN_LA = 0;
 
-logic ctl_rst;
+generate
+if (EN_LA) begin: if_la
 
-la #(
-  .DN  (1),
-  .DT  (DTL),
-  .DTL (top_pkg::evl_t),
-  .DTT (top_pkg::evt_t),
-  .DTE (top_pkg::evd_t)
-) la (
-  // streams
-  .sti      (str_la),
-  .sto      (str_tmp),
-  // events
-  .evi      (evd),
-  .evo      (evs.la),
-  // reset output
-  .ctl_rst  (ctl_rst),
-  // interrupts
-  .irq      (irq.la),
-  // System bus
-  .bus      (sys[14+0])
-);
+  axi4_stream_if #(.DT (DTO)) str_tmp (.ACLK (str_la.ACLK), .ARESETn (str_la.ARESETn));
 
-// TODO: when DMA starts functioning properly, this module should be removed
-str2mm #(
-) str2mm (
-  .ctl_rst  (ctl_rst),
-  .str      (str_tmp),
-  .bus      (sys[14+1])
-);
+  logic ctl_rst;
 
-assign srx_la.TLAST  = str_tmp.TLAST ;
-assign srx_la.TKEEP  = str_tmp.TKEEP ;
-assign srx_la.TDATA  = str_tmp.TDATA ;
-assign srx_la.TVALID = str_tmp.TVALID;
-// TREADY is ignored
+  la #(
+    .DN  (1),
+    .DT  (DTL),
+    .DTL (top_pkg::evl_t),
+    .DTT (top_pkg::evt_t),
+    .DTE (top_pkg::evd_t)
+  ) la (
+    // streams
+    .sti      (str_la),
+    .sto      (str_tmp),
+    // events
+    .evi      (evd),
+    .evo      (evs.la),
+    // reset output
+    .ctl_rst  (ctl_rst),
+    // interrupts
+    .irq      (irq.la),
+    // System bus
+    .bus      (sys[14+0])
+  );
+
+  // TODO: when DMA starts functioning properly, this module should be removed
+  str2mm #() str2mm (
+    .ctl_rst  (ctl_rst),
+    .str      (str_tmp),
+    .bus      (sys[14+1])
+  );
+
+  assign srx_la.TLAST  = str_tmp.TLAST ;
+  assign srx_la.TKEEP  = str_tmp.TKEEP ;
+  assign srx_la.TDATA  = str_tmp.TDATA ;
+  assign srx_la.TVALID = str_tmp.TVALID;
+  // TREADY is ignored
+
+end else begin
+
+  sys_bus_stub sys_bus_stub_14 (sys[14]);
+  sys_bus_stub sys_bus_stub_15 (sys[15]);
+
+  assign srx_la.TLAST  = '0;
+  assign srx_la.TKEEP  = '0;
+  assign srx_la.TDATA  = '0;
+  assign srx_la.TVALID = '0;
+  // TREADY is ignored
+
+  assign evs.la = '0;
+  assign irq.la = 1'b0;
+
+end
+endgenerate
 
 endmodule: red_pitaya_top
