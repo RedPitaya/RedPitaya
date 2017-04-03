@@ -80,7 +80,12 @@ EOF_CHROOT
 # copy/link notebook examples
 ###############################################################################
 
+mkdir $ROOT_DIR/home/jupyter/RedPitaya
+git clone https://github.com/redpitaya/jupyter.git $ROOT_DIR/home/jupyter/RedPitaya
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+pip3 install -e /home/jupyter/redpitaya/redpitaya/
+EOF_CHROOT
+
 mkdir $ROOT_DIR/home/jupyter/WhirlwindTourOfPython
 git clone https://github.com/jakevdp/WhirlwindTourOfPython.git $ROOT_DIR/home/jupyter/WhirlwindTourOfPython
-
-ln -s /opt/redpitaya/jupyter/welcome.ipynb $ROOT_DIR/home/jupyter/welcome.ipynb
