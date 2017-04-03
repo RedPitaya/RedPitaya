@@ -381,23 +381,23 @@ pdm #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // ADC(osc)/DAC(gen) AXI4-Stream interfaces
-axi4_stream_if #(.DT (DTO)) str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
-axi4_stream_if #(.DT (DTG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
-axi4_stream_if #(.DT (DTO)) str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
 axi4_stream_if #(.DT (DTG)) str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTO)) str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTO)) str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
 
 clb #(
-  .MNO (MNO),
   .MNG (MNG),
-  .DTO (DTO),
-  .DTG (DTG)
+  .MNO (MNO),
+  .DTG (DTG),
+  .DTO (DTO)
 ) clb (
-  // oscilloscope (ADC) streams
-  .str_adc  (str_adc),
-  .str_osc  (str_osc),
   // generator (DAC) streams
   .str_dac  (str_dac),
   .str_gen  (str_gen),
+  // oscilloscope (ADC) streams
+  .str_adc  (str_adc),
+  .str_osc  (str_osc),
   // system bus
   .bus      (sys[3])
 );

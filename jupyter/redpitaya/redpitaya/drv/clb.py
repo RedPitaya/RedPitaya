@@ -25,8 +25,8 @@ class clb (object):
         ('ctl_sum', 'int32')   # summation
     ])
     regset_dtype = np.dtype([
-        ('adc', regset_channel_dtype, 2),  # oscilloscope
         ('dac', regset_channel_dtype, 2),  # generator
+        ('adc', regset_channel_dtype, 2),  # oscilloscope
     ])
 
     # floating point structure
