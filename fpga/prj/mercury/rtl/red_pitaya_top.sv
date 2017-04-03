@@ -446,6 +446,8 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
 
   // TODO: when DMA starts functioning properly, this module should be removed
   str2mm #(
+    .DT  (DTO),
+    .DL  (1<<14)
   ) str2mm (
     .ctl_rst  (ctl_rst),
     .str      (str),
@@ -503,7 +505,7 @@ endgenerate
 // logic analyzer
 ////////////////////////////////////////////////////////////////////////////////
 
-localparam EN_LA = 0;
+localparam EN_LA = 1;
 
 generate
 if (EN_LA) begin: if_la
@@ -534,7 +536,10 @@ if (EN_LA) begin: if_la
   );
 
   // TODO: when DMA starts functioning properly, this module should be removed
-  str2mm #() str2mm (
+  str2mm #(
+    .DT  (DTL),
+    .DL  (1<<12)
+  ) str2mm (
     .ctl_rst  (ctl_rst),
     .str      (str_tmp),
     .bus      (sys[14+1])
