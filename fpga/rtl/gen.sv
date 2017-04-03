@@ -35,8 +35,8 @@ module gen #(
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
   int unsigned CW  = CWM+CWF,
   // burst counter parameters
-  int unsigned CWL = 32,  // counter width length
-  int unsigned CWN = 16,  // counter width number
+  int unsigned CWL = 32,  // counter width for burst length
+  int unsigned CWN = 16,  // counter width for burst number
   // event parameters
   type DTL = logic,
   type DTT = evn_pkg::evt_t,
