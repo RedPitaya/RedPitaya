@@ -300,16 +300,35 @@ end: for_sys_2
 endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
-// LED and GPIO
+// LED
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF iobuf_led   [8-1:0] (.O(gpio.i[ 7: 0]), .IO(led_o)   , .I(gpio.o[ 7: 0]), .T(gpio.t[ 7: 0]));
-IOBUF iobuf_exp_p [8-1:0] (.O(gpio.i[15: 8]), .IO(exp_p_io), .I(gpio.o[15: 8]), .T(gpio.t[15: 8]));
-IOBUF iobuf_exp_n [8-1:0] (.O(gpio.i[23:16]), .IO(exp_n_io), .I(gpio.o[23:16]), .T(gpio.t[23:16]));
+IOBUF iobuf_led [8-1:0] (.O(gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
+//IOBUF iobuf_exp_p [16-1:0] (.O(gpio.i[23:8]), .IO({exp_n_io, exp_p_io}), .I(gpio.o[23:8]), .T(gpio.t[23:8]));
+
+////////////////////////////////////////////////////////////////////////////////
+// GPIO
+////////////////////////////////////////////////////////////////////////////////
+
+DTL exp_i;
+DTL exp_o;
+DTL exp_t;
 
 // TODO use DDR IO
-// TODO connect logic generator and analyzer
+IOBUF iobuf_exp_p [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
+
+// multiplexing GPIO signals from PS with logic generator
+assign exp_o = gpio.o[23:8];
+assign exp_t = gpio.t[23:8];
+
+// TODO connect logic generator
 assign str_lg.TREADY = 1'b1;
+
+// logic analyzer
+assign str_la.TLAST  = 1'b0;
+assign str_la.TKEEP  = '1;
+assign str_la.TDATA  = exp_i;
+assign str_la.TVALID = 1'b1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // identification
@@ -467,7 +486,7 @@ endgenerate
 // logic generator
 ////////////////////////////////////////////////////////////////////////////////
 
-localparam EN_LG = 0;
+localparam EN_LG = 1;
 
 generate
 if (EN_LG) begin: if_lg
@@ -494,6 +513,12 @@ end else begin
 
   sys_bus_stub sys_bus_stub_12 (sys[12]);
   sys_bus_stub sys_bus_stub_13 (sys[13]);
+
+  assign str_lg.TLAST  = '0;
+  assign str_lg.TKEEP  = '0;
+  assign str_lg.TDATA  = '0;
+  assign str_lg.TVALID = '0;
+  // TREADY is ignored
 
   assign evs.lg = '0;
   assign irq.lg = 1'b0;
