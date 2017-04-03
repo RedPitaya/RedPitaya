@@ -65,9 +65,8 @@ DTL             cfg_stp;  // stop
 DTT             cfg_trg;  // trigger
 
 // interrupt enable/status/clear
-logic   [4-1:0] irq_ena;  // enable
-logic   [4-1:0] irq_sts;  // status
-logic   [4-1:0] irq_clr;  // clear
+logic   [2-1:0] irq_ena;  // enable
+logic   [2-1:0] irq_sts;  // status
 
 // control
 logic           ctl_rst;
@@ -140,7 +139,7 @@ if (~bus.rstn) begin
 end else begin
   if (bus.wen) begin
     // interrupt enable (status/clear are elsewhere)
-    if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[  3-1:0];
+    if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[  2-1:0];
     // event masks
     if (bus.addr[BAW-1:0]=='h10)  cfg_rst <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h14)  cfg_str <= bus.wdata;
@@ -230,17 +229,14 @@ end else begin
     irq_sts <= irq_sts & ~bus.wdata[3-1:0];
   end else begin
     // interrupt set
-    irq_sts <= irq_sts | {ctl_trg, ctl_stp, ctl_str, ctl_rst};
+    irq_sts <= irq_sts | {evo.lst, evo.trg} & irq_ena;
   end
 end
 
 // interrupt output
 always_ff @(posedge bus.clk)
-if (~bus.rstn) begin
-  irq <= '0;
-end else begin
-  irq <= |(irq_sts & irq_ena);
-end
+if (~bus.rstn)  irq <= '0;
+else            irq <= |irq_sts;
 
 ////////////////////////////////////////////////////////////////////////////////
 // generator core instance 
