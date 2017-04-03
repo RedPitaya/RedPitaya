@@ -7,37 +7,39 @@ source "${path_inf}/sys_bus_if.tcl"
 
 # set top hierarcy name
 set top top_tb
+set dut top_tb/top
 
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-# signals
+# IO signals
 add wave -noupdate /${top}/clk
 add wave -noupdate /${top}/rstn
 add wave -noupdate /${top}/led
 add wave -noupdate /${top}/exp_p_io
 add wave -noupdate /${top}/exp_n_io
 # busses
-#axi4_lite_if axi4_lite /${top}/top/ps/axi4_lite
-axi4_if      axi_gp    /${top}/top/ps/axi_gp
-sys_bus_if   ps_sys    /${top}/top/ps_sys
+#axi4_lite_if axi4_lite /${dut}/ps/axi4_lite
+axi4_if      axi_gp    /${dut}/ps/axi_gp
+sys_bus_if   ps_sys    /${dut}/ps_sys
 
-axi4_stream_if axi_adc_0 /${top}/top/str_adc\[0\]
-axi4_stream_if axi_adc_1 /${top}/top/str_adc\[1\]
-axi4_stream_if axi_osc_0 /${top}/top/str_osc\[0\]
-axi4_stream_if axi_osc_1 /${top}/top/str_osc\[1\]
-axi4_stream_if axi_gen_0 /${top}/top/str_gen\[0\]
-axi4_stream_if axi_gen_1 /${top}/top/str_gen\[1\]
-axi4_stream_if axi_dac_0 /${top}/top/str_dac\[0\]
-axi4_stream_if axi_dac_1 /${top}/top/str_dac\[1\]
+# streams
+axi4_stream_if axi_adc_0 /${dut}/str_adc\[0\]
+axi4_stream_if axi_adc_1 /${dut}/str_adc\[1\]
+axi4_stream_if axi_osc_0 /${dut}/str_osc\[0\]
+axi4_stream_if axi_osc_1 /${dut}/str_osc\[1\]
+axi4_stream_if axi_gen_0 /${dut}/str_gen\[0\]
+axi4_stream_if axi_gen_1 /${dut}/str_gen\[1\]
+axi4_stream_if axi_dac_0 /${dut}/str_dac\[0\]
+axi4_stream_if axi_dac_1 /${dut}/str_dac\[1\]
 
-# OSC debug
-axi4_stream_if osc0_stf /${top}/top/for_osc\[0\]/osc/stf
-axi4_stream_if osc0_std /${top}/top/for_osc\[0\]/osc/std
-axi4_stream_if osc0_sto /${top}/top/for_osc\[0\]/osc/sto
+# interrupts and events
+add wave -noupdate /${dut}/irq
+add wave -noupdate /${dut}/evs
+add wave -noupdate /${dut}/evd
 
 # LG/LA
-#add wave -noupdate -group LG /${top}/top/lg/*
-#add wave -noupdate -group LA /${top}/top/la/*
+#add wave -noupdate -group LG /${dut}/lg/*
+#add wave -noupdate -group LA /${dut}/la/*
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ps} 0}

@@ -146,10 +146,10 @@ task test_osc (
 );
   repeat(10) @(posedge clk);
   // start/stop/trigger masks
-  axi_write(regset+'h10, 'b000001<<sh);  // reset
-  axi_write(regset+'h14, 'b000010<<sh);  // start
-  axi_write(regset+'h18, 'b000100<<sh);  // stop
-  axi_write(regset+'h1c, 'b011000<<sh);  // trigger
+  axi_write(regset+'h10, '1);  // reset
+  axi_write(regset+'h14, '1);  // start
+  axi_write(regset+'h18, '1);  // stop
+  axi_write(regset+'h1c, '1);  // trigger
   // bypass input filter
   axi_write(regset+'h4c, 'h1);
 
@@ -209,10 +209,10 @@ task test_gen (
   // configure burst mode
   axi_write(regset+'h30, 2'b00);  // burst disable
   // start/stop/trigger masks
-  axi_write(regset+'h10, 'b000001<<sh);  // reset
-  axi_write(regset+'h14, 'b000010<<sh);  // start
-  axi_write(regset+'h18, 'b000100<<sh);  // stop
-  axi_write(regset+'h1c, 'b001000<<sh);  // trigger
+  axi_write(regset+'h10, '1);  // reset
+  axi_write(regset+'h14, '1);  // start
+  axi_write(regset+'h18, '1);  // stop
+  axi_write(regset+'h1c, '1);  // trigger
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
@@ -393,7 +393,7 @@ wire           DDR_we_n   ;
 logic [2-1:0] [16-1:0] adc_dat;
 logic         [ 2-1:0] adc_clk;
 logic         [ 2-1:0] adc_clk_o;   // optional ADC clock source
-logic                  adc_cdcs;    // ADC clock duty cycle stabilizer
+logic                  adc_cdcs_o;  // ADC clock duty cycle stabilizer
 // DAC
 logic         [14-1:0] dac_dat;     // DAC combined data
 logic                  dac_wrt;     // DAC write
@@ -492,7 +492,6 @@ assign adc_dat[1] = dat_ref[cyc % SIZ_REF];
 assign adc_clk[1] =  clk;
 assign adc_clk[0] = ~clk;
 // adc_clk_o
-// adc_cdcs
 
 // XADC
 assign vinp = '0;
