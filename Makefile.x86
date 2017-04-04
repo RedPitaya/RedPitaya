@@ -34,7 +34,7 @@ export GREET_MSG
 
 all: fpga devicetree u-boot linux boot
 
-install: linux-install devicetree-install boot jupyter-install
+install: linux-install devicetree-install boot
 
 ################################################################################
 #
