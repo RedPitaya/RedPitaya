@@ -145,7 +145,9 @@ task test_osc (
   int unsigned sh = 0
 );
   repeat(10) @(posedge clk);
-  // start/stop/trigger masks
+  // hardware event (trigger) mask
+  axi_write(regset+'h04, '1);
+  // software event (reset/start/stop/trigger) masks
   axi_write(regset+'h10, '1);  // reset
   axi_write(regset+'h14, '1);  // start
   axi_write(regset+'h18, '1);  // stop
@@ -208,7 +210,9 @@ task test_gen (
 //  axi_write(regset+'h28, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
   // configure burst mode
   axi_write(regset+'h30, 2'b00);  // burst disable
-  // start/stop/trigger masks
+  // hardware event (trigger) mask
+  axi_write(regset+'h04, '1);
+  // software event (reset/start/stop/trigger) masks
   axi_write(regset+'h10, '1);  // reset
   axi_write(regset+'h14, '1);  // start
   axi_write(regset+'h18, '1);  // stop

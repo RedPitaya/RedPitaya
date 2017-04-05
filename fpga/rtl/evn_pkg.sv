@@ -8,7 +8,7 @@ package evn_pkg;
 
 // source events
 typedef struct packed {
-  // signal and hardware events
+  // hardware events
   logic lst;  // last
   logic trg;  // trigger
   // software events
@@ -25,13 +25,12 @@ typedef struct packed {
   // module events
   logic lst;  // module last
   logic trg;  // module trigger
-  // software events
-  logic swt;  // software trigger
 } evt_t;
 
 // drain events
 typedef struct packed {
-  evt_t trg;  // triggers
+  evt_t trg;  // hardware triggers
+  logic swt;  // software trigger
   logic stp;  // software stop
   logic str;  // software start
   logic rst;  // software reset
@@ -49,7 +48,7 @@ function evd_t evn_f (
   evd.trg.lst = evs.lst;
   evd.trg.trg = evs.trg;
   // software events
-  evd.trg.swt = evs.swt;
+  evd.swt     = evs.swt;
   evd.stp     = evs.stp;
   evd.str     = evs.str;
   evd.rst     = evs.rst;

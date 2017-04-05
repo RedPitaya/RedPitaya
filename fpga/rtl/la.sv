@@ -13,7 +13,7 @@ module la #(
   // aquisition parameters
   int unsigned CW  = 32-1,  // counter width
   // event parameters
-  type DTL = logic,
+  type DTC = logic,
   type DTT = evn_pkg::evt_t,
   type DTE = evn_pkg::evd_t
 )(
@@ -43,9 +43,10 @@ axi4_stream_if #(.DN (DN), .DT (DT)) sta_str        (.ACLK (sti.ACLK), .ARESETn 
 axi4_stream_if #(.DN (DN), .DT (logic [8-1:0])) sta (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 
 // event select masks
-DTL             cfg_rst;  // reset
-DTL             cfg_str;  // start
-DTL             cfg_stp;  // stop
+DTC             cfg_rst;  // software reset
+DTC             cfg_str;  // software start
+DTC             cfg_stp;  // software stop
+DTC             cfg_swt;  // software trigger
 DTT             cfg_trg;  // trigger
 
 // interrupt enable/status/clear
@@ -113,10 +114,11 @@ if (~bus.rstn) begin
   // interrupt enable
   irq_ena <= '0;
   // event masks
+  cfg_trg <= '0;
   cfg_rst <= '0;
   cfg_str <= '0;
   cfg_stp <= '0;
-  cfg_trg <= '0;
+  cfg_swt <= '0;
   // configuration
   cfg_pre <= '0;
   cfg_pst <= '0;
@@ -134,12 +136,13 @@ if (~bus.rstn) begin
 end else begin
   if (bus.wen) begin
     // interrupt enable (status/clear are elsewhere)
+    if (bus.addr[BAW-1:0]=='h04)  cfg_trg <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[  2-1:0];
     // event masks
     if (bus.addr[BAW-1:0]=='h10)  cfg_rst <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h14)  cfg_str <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h1c)  cfg_trg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h1c)  cfg_swt <= bus.wdata;
     // trigger pre/post time
     if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata;
@@ -183,6 +186,7 @@ always_ff @(posedge bus.clk)
 casez (bus.addr[BAW-1:0])
   // control
   'h00: bus.rdata <= {sts_trg, sts_stp, sts_str, 1'b0};
+  'h04: bus.rdata <= cfg_trg;
   // interrupts enable/status/clear
   'h08: bus.rdata <= irq_ena;
   'h0c: bus.rdata <= irq_sts;
@@ -190,7 +194,7 @@ casez (bus.addr[BAW-1:0])
   'h10: bus.rdata <= cfg_rst;
   'h14: bus.rdata <= cfg_str;
   'h18: bus.rdata <= cfg_stp;
-  'h1c: bus.rdata <= cfg_trg;
+  'h1c: bus.rdata <= cfg_swt;
   // trigger pre/post time
   'h20: bus.rdata <=              32'(cfg_pre);
   'h24: bus.rdata <=              32'(cfg_pst);
@@ -290,7 +294,8 @@ la_trigger #(
 assign ctl_rst = |(evi.rst & cfg_rst);
 assign ctl_str = |(evi.str & cfg_str);
 assign ctl_stp = |(evi.stp & cfg_stp);
-assign ctl_trg = |(evi.trg & cfg_trg);
+assign ctl_trg = |(evi.swt & cfg_swt)
+               | |(evi.trg & cfg_trg);
 
 acq #(
   .DN (DN),

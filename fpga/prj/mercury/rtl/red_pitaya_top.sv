@@ -412,7 +412,7 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
   gen #(
     .DN  (1),
     .DT  (DTG),
-    .DTL (top_pkg::evl_t),
+    .DTC (top_pkg::evl_t),
     .DTT (top_pkg::evt_t),
     .DTE (top_pkg::evd_t)
   ) gen (
@@ -445,7 +445,7 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
   osc #(
     .DN  (1),
     .DT  (DTO),
-    .DTL (top_pkg::evl_t),
+    .DTC (top_pkg::evl_t),
     .DTT (top_pkg::evt_t),
     .DTE (top_pkg::evd_t)
   ) osc (
@@ -493,7 +493,7 @@ if (EN_LG) begin: if_lg
 
   lg #(
     .DT  (DTL),
-    .DTL (top_pkg::evl_t),
+    .DTC (top_pkg::evl_t),
     .DTT (top_pkg::evt_t),
     .DTE (top_pkg::evd_t)
   ) lg (
@@ -542,7 +542,7 @@ if (EN_LA) begin: if_la
   la #(
     .DN  (1),
     .DT  (DTL),
-    .DTL (top_pkg::evl_t),
+    .DTC (top_pkg::evl_t),
     .DTT (top_pkg::evt_t),
     .DTE (top_pkg::evd_t)
   ) la (
