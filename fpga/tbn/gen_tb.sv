@@ -103,11 +103,12 @@ initial begin
   busm.write('h38, 1 << ($bits(DTM)-2));  // amplitude
   busm.write('h3c, 0);                    // DC offset
 
-  // all events are SW driven
-  busm.write('h10, 1'b1);  // reset
-  busm.write('h14, 1'b1);  // start
-  busm.write('h18, 1'b1);  // stop
-  busm.write('h1c, 1'b1);  // trigger
+  // event masks
+  busm.write('h04, 1'b1);  // hardware trigger
+  busm.write('h10, 1'b1);  // software reset
+  busm.write('h14, 1'b1);  // software start
+  busm.write('h18, 1'b1);  // software stop
+  busm.write('h1c, 1'b1);  // software trigger
 
   // configure frequency and phase
   busm.write('h10,  buf_len                    * 2**CWF - 1);  // table size
@@ -164,7 +165,7 @@ gen #(
   .DT  (DT),
   .DTM (DTM),
   .DTS (DTS),
-  .DTL (logic),
+  .DTC (logic),
   .DTT (evn_pkg::evt_t),
   .DTE (evn_pkg::evd_t)
 ) gen (

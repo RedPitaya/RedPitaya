@@ -34,13 +34,12 @@ typedef struct packed {
   // module events
   evl_t           lst;  // module last
   evl_t           trg;  // module trigger
-  // software events
-  evl_t           swt;  // software trigger
 } evt_t;
 
 // input events events
 typedef struct packed {
-  evt_t           trg;  // triggers
+  evt_t           trg;  // hardware triggers
+  evl_t           swt;  // software trigger
   evl_t           stp;  // software stop
   evl_t           str;  // software start
   evl_t           rst;  // software reset
@@ -58,7 +57,7 @@ function evd_t evn_f (
   evd.trg.lst = '{la: evs.la.lst, lg: evs.lg.lst, osc: '{evs.osc[1].lst, evs.osc[0].lst}, gen: '{evs.gen[1].lst, evs.gen[0].lst}};
   evd.trg.trg = '{la: evs.la.trg, lg: evs.lg.trg, osc: '{evs.osc[1].trg, evs.osc[0].trg}, gen: '{evs.gen[1].trg, evs.gen[0].trg}};
   // software events
-  evd.trg.swt = '{la: evs.la.swt, lg: evs.lg.swt, osc: '{evs.osc[1].swt, evs.osc[0].swt}, gen: '{evs.gen[1].swt, evs.gen[0].swt}};
+  evd.swt     = '{la: evs.la.swt, lg: evs.lg.swt, osc: '{evs.osc[1].swt, evs.osc[0].swt}, gen: '{evs.gen[1].swt, evs.gen[0].swt}};
   evd.stp     = '{la: evs.la.stp, lg: evs.lg.stp, osc: '{evs.osc[1].stp, evs.osc[0].stp}, gen: '{evs.gen[1].stp, evs.gen[0].stp}};
   evd.str     = '{la: evs.la.str, lg: evs.lg.str, osc: '{evs.osc[1].str, evs.osc[0].str}, gen: '{evs.gen[1].str, evs.gen[0].str}};
   evd.rst     = '{la: evs.la.rst, lg: evs.lg.rst, osc: '{evs.osc[1].rst, evs.osc[0].rst}, gen: '{evs.gen[1].rst, evs.gen[0].rst}};
