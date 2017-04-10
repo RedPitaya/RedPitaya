@@ -30,7 +30,7 @@ if (!bus.rstn) begin
   val[i] <= '0;
 end else begin
   if (bus.wen) begin
-    if (bus.addr[RL-1:0]==i)  val[i] <= bus.wdata[DW-1:0];
+    if (bus.addr[2+:RL]==i)  val[i] <= bus.wdata[DW-1:0];
   end
 end
 
@@ -53,7 +53,7 @@ end
 // read access
 always_ff @(posedge bus.clk)
 if (bus.ren) begin
-  bus.rdata <= {{32-DW{1'b0}}, val[bus.addr[RL-1:0]]};
+  bus.rdata <= {{32-DW{1'b0}}, val[bus.addr[2+:RL]]};
 end
 
 endmodule: sys_reg_array_o
