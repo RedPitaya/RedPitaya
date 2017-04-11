@@ -14,9 +14,8 @@
 &amba_pl {
 	rprx_0: rprx@0 {
 		compatible ="redpitaya,rprx";
-		dmas = <&axi_dma_0 0
-		        &axi_dma_0 1>;
-		dma-names = "axidma0", "axidma1";
+		dmas = <&axi_dma_0 0>;
+		dma-names = "axidma1";
 		memory-region = <&rprx_reserverd>;
 		status = "disabled";
 	};
