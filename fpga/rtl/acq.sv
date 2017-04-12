@@ -45,9 +45,11 @@ logic ena_pre;
 logic sts_lst;
 logic trg;
 
+// incremented values of pre/post trigger counters
 logic [CW-1:0] nxt_pre;
 logic [CW-1:0] nxt_pst;
-
+// combinatorial signal indicating in the next cycle
+// pre/post trigger counters will reach their target number
 logic end_pre;
 logic end_pst;
 
