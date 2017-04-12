@@ -25,7 +25,7 @@ add wave -noupdate           /${top}/${dut}/ctl_stp
 add wave -noupdate           /${top}/${dut}/sts_stp
 add wave -noupdate           /${top}/${dut}/ctl_trg
 add wave -noupdate           /${top}/${dut}/sts_trg
-# event control/configuration
+# event masks
 add wave -noupdate -bin      /${top}/${dut}/cfg_rst
 add wave -noupdate -bin      /${top}/${dut}/cfg_str
 add wave -noupdate -bin      /${top}/${dut}/cfg_stp
