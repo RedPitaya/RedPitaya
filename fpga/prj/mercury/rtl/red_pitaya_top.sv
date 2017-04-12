@@ -318,6 +318,7 @@ DTL exp_t;
 IOBUF iobuf_exp_p [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
 
 // multiplexing GPIO signals from PS with logic generator
+assign gpio.i[23:8] = exp_i;
 assign exp_o = gpio.o[23:8];
 assign exp_t = gpio.t[23:8];
 
