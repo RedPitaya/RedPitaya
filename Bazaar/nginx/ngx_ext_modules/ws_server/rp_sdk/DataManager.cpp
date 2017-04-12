@@ -244,6 +244,12 @@ std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
 	for (auto n : arr) 
 		res[n.begin()->as_string()] = true;
 #endif
+
+#ifdef ALWAYS_PURCHASED
+	res["app"] = true;
+	res["stem14"] = true;
+#endif
+
 	return res;
 }
 
