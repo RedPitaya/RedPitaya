@@ -8,5 +8,4 @@ Applications and Features
    
    apps-featured/apps-featured
    newtworkManager
-   visualProgramming/visualProgramming
    remoteControl/remoteControl

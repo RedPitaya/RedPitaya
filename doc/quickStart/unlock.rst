@@ -7,8 +7,6 @@ Unlocking apps or extending the license
     #. If your Red Pitaya is not listed yet, click **Add new board** and follow the instructions.
     #. Click on **MY RP** button.
     #. To unlock application: Click the **UNLOCK APP** button and enter unlock key to pop-up window then click OK.
-       To extend visual programming license: Click the **EXTEND LICENSE** button
-       and enter unlock key into the pop-up window then click OK.
     #. Connect to your Red Pitaya and start the app.
 
 .. note::

@@ -42,5 +42,4 @@ Additional Required Items not supplied with the STEM kits:
 
    * upgrading Red Pitaya OS,
    * installing applications from the marketplace,
-   * unlocking applications,
-   * and using visual programming.
+   * unlocking applications.
