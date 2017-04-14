@@ -134,8 +134,8 @@ initial begin
   busm.write('h28, 1 * 2**CWF - 1);  // step
   // configure burst mode
   busm.write('h30, 2'b01);  // burst enable
-  busm.write('h34, 4-1);  // burst data length
-  busm.write('h38, 8-1);  // burst      length
+  busm.write('h34, 4-1);  // burst data   length
+  busm.write('h38, 8-1);  // burst period length
   busm.write('h3c, 4-1);  // burst number of repetitions
   // start/trigger
   busm.write('h00, CTL_STR);
