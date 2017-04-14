@@ -49,7 +49,7 @@ add wave -noupdate -unsigned /${top}/${dut}/cfg_sum
 
 # counter end status
 add wave -noupdate           /${top}/${dut}/asg/end_bdl
-add wave -noupdate           /${top}/${dut}/asg/end_bln
+add wave -noupdate           /${top}/${dut}/asg/end_bpl
 add wave -noupdate           /${top}/${dut}/asg/end_bnm
 # status
 add wave -noupdate           /${top}/${dut}/asg/sts_adr

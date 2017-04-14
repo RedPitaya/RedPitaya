@@ -105,7 +105,7 @@ initial begin
   busm.write('h58, 1);                    // enable output
 
   // event masks
-  busm.write('h04, 1'b1);  // hardware trigger
+  busm.write('h04, 1'b0);  // hardware trigger
   busm.write('h10, 1'b1);  // software reset
   busm.write('h14, 1'b1);  // software start
   busm.write('h18, 1'b1);  // software stop

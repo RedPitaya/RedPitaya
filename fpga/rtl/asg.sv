@@ -141,8 +141,8 @@ logic [CWM+CWF-0:0] ptr_nxt; // next
 logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
 // counter end status
-logic               end_bdl;  // burst data length
-logic               end_bln;  // burst      length
+logic               end_bdl;  // burst data   length
+logic               end_bpl;  // burst period length
 logic               end_bnm;  // burst repetitions
 // status
 logic               sts_adr;  // address enable
@@ -233,7 +233,7 @@ assign sts_stp = ~sts_str;
 assign ctl_run = ctl_trg & (sts_str | ctl_str);
 assign ctl_end = ctl_stp | (ctl_rpt & end_bnm); 
 // burst repeat event
-assign ctl_rpt = cfg_ben & sts_trg & end_bln;
+assign ctl_rpt = cfg_ben & sts_trg & end_bpl;
 
 
 // state machine
@@ -264,7 +264,7 @@ end else begin
     end else if (ctl_run) begin
       sts_adr <= 1'b1;
     end else if (cfg_ben)
-      if          (ctl_rpt & ~end_bnm) begin
+      if (ctl_rpt & ~end_bnm) begin
         sts_adr <= 1'b1;
       end else if (end_bdl) begin
         sts_adr <= 1'b0;
@@ -282,7 +282,7 @@ end
 
 // counter end status
 assign end_bnm = (sts_bnm == cfg_bnm) & ~cfg_inf;
-assign end_bln = (sts_bln == cfg_bln);
+assign end_bpl = (sts_bln == cfg_bln);
 assign end_bdl = (sts_bln == cfg_bdl);
 
 // events
@@ -309,6 +309,9 @@ end else begin
   end else if (sts_rdy) begin
     // start on trigger, new triggers are ignored while ASG is running
     if (ctl_run) begin
+      ptr_cur <= cfg_off;
+    // reset pointer in burst mode
+    end else if (ctl_rpt) begin
       ptr_cur <= cfg_off;
     // modulo (proper wrapping) increment pointer
     end else if (sts_adr) begin
