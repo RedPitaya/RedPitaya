@@ -77,7 +77,7 @@
 //
 // DDDDDDDDIIIIIIIIDDDDDDDDIIIIIIIIDDDDDDDDIIIIIIII...
 // |<---->|        |<---->|        |<---->|            cfg_bdl+1 data length
-// |<------------>||<------------>||<------------>|    cfg_bln+1 leriod length
+// |<------------>||<------------>||<------------>|    cfg_bpl+1 leriod length
 //                                                     cfg_bnm+1 repetitions 
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +116,8 @@ module asg #(
   // configuration (burst mode)
   input  logic               cfg_ben,  // burst enable
   input  logic               cfg_inf,  // infinite
-  input  logic     [CWM-1:0] cfg_bdl,  // burst data length
-  input  logic     [CWL-1:0] cfg_bln,  // burst      length
+  input  logic     [CWM-1:0] cfg_bdl,  // burst data   length
+  input  logic     [CWL-1:0] cfg_bpl,  // burst period length
   input  logic     [CWN-1:0] cfg_bnm,  // burst number of repetitions
   // status
   output logic     [CWL-1:0] sts_bln,  // burst length counter
@@ -282,7 +282,7 @@ end
 
 // counter end status
 assign end_bnm = (sts_bnm == cfg_bnm) & ~cfg_inf;
-assign end_bpl = (sts_bln == cfg_bln);
+assign end_bpl = (sts_bln == cfg_bpl);
 assign end_bdl = (sts_bln == cfg_bdl);
 
 // events

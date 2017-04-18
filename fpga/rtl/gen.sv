@@ -88,8 +88,8 @@ logic  [CW-1:0] cfg_ste;  // address increment step (frequency)
 // burst mode configuration
 logic           cfg_ben;  // burst enable
 logic           cfg_inf;  // infinite burst
-logic [CWM-1:0] cfg_bdl;  // burst data length
-logic [ 32-1:0] cfg_bln;  // burst idle length
+logic [CWM-1:0] cfg_bdl;  // burst data   length
+logic [ 32-1:0] cfg_bpl;  // burst period length
 logic [ 16-1:0] cfg_bnm;  // burst repetitions
 // status
 logic [CWL-1:0] sts_bln;  // burst length counter
@@ -134,7 +134,7 @@ if (~bus.rstn) begin
   cfg_inf <= '0;
   cfg_bdl <= '0;
   cfg_bnm <= '0;
-  cfg_bln <= '0;
+  cfg_bpl <= '0;
   // linear transform or logic analyzer output enable
   cfg_mul <= '0;
   cfg_sum <= '0;
@@ -156,7 +156,7 @@ end else begin
     if (bus.addr[BAW-1:0]=='h30)  cfg_ben <= bus.wdata[      0];
     if (bus.addr[BAW-1:0]=='h30)  cfg_inf <= bus.wdata[      1];
     if (bus.addr[BAW-1:0]=='h34)  cfg_bdl <= bus.wdata[CWM-1:0];
-    if (bus.addr[BAW-1:0]=='h38)  cfg_bln <= bus.wdata[ 32-1:0];
+    if (bus.addr[BAW-1:0]=='h38)  cfg_bpl <= bus.wdata[ 32-1:0];
     if (bus.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus.wdata[ 16-1:0];
     // linear transformation and enable
     if (bus.addr[BAW-1:0]=='h50)  cfg_mul <= DTM'(bus.wdata);
@@ -208,7 +208,7 @@ casez (bus.addr[BAW-1:0])
   'h30: bus.rdata <= {{32-  2{1'b0}}, cfg_inf
                                     , cfg_ben};
   'h34: bus.rdata <= {{32-CWM{1'b0}}, cfg_bdl};
-  'h38: bus.rdata <=                  cfg_bln ;
+  'h38: bus.rdata <=                  cfg_bpl ;
   'h3c: bus.rdata <= {{32- 16{1'b0}}, cfg_bnm};
   // status
   'h40: bus.rdata <= 32'(sts_bln);
@@ -289,7 +289,7 @@ asg #(
   .cfg_ben  (cfg_ben),
   .cfg_inf  (cfg_inf),
   .cfg_bdl  (cfg_bdl),
-  .cfg_bln  (cfg_bln),
+  .cfg_bpl  (cfg_bpl),
   .cfg_bnm  (cfg_bnm),
   // status
   .sts_bln  (sts_bln),
