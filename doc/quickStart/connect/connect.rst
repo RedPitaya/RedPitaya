@@ -69,27 +69,33 @@ a possibility to directly connect to your STEMLab board.
 were necessary in order to set connection correctly. 
 This step has been eliminated with the NEW OS 0.97 (and newer) and the only step needed is to plug the ethernet cable from your PC to the STEMlab board. 
 
-**Here is the procedure for Direct Ethernet Connection.**
+Here is the procedure for Direct Ethernet Connection
 
 **Windows 7,8,10** (the Bonjour service must be installed for Win 7/8)
+
 1. Connect the ethernet cable and wait 30 sec
 2. Open the web browser and type **rp-xxxxxx.local/** in the URL field
    
 
 **Linux / Ubuntu**
+
 1. Open Network settings, Edit Connection and for LAN network under IPv4 Settings select Method **Share to other computers**
 2. Connect the ethernet cable and wait 30 sec
 3. Open the web browser and type **rp-xxxxxx.local/** in the URL field
    
     
 **MAC**
+
 1. Connect the ethernet cable and wait 30 sec
 2. Open the web browser and type **rp-xxxxxx.local/** in the URL field
    
+
 .. note::
+
      xxxxxx - last 6 chracters from the MAC address (on the ethernet connector)
 
 .. warning::
+
       If direct connection described above is not working you may try **static IP configuration**.
 
 
