@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all: api api1 nginx scpi examples rp_communication apps-tools apps-pro
+all:  sdr api api1 nginx scpi examples rp_communication apps-tools apps-pro
 
 $(DL):
 	mkdir -p $@
@@ -213,6 +213,20 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+################################################################################
+# SDR
+################################################################################
+
+.PHONY: sdr
+
+SDR_ZIP = sdr_transceiver_hpsdr-0.94-1630.zip
+SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
+
+sdr: | $(DL)
+	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
+	mkdir -p $(INSTALL_DIR)/www/apps
+	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 
 ################################################################################
 # Red Pitaya tools
