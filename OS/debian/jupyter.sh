@@ -81,7 +81,7 @@ EOF_CHROOT
 ###############################################################################
 
 mkdir $ROOT_DIR/home/jupyter/RedPitaya
-git clone https://github.com/redpitaya/jupyter.git $ROOT_DIR/home/jupyter/RedPitaya -b mercury
+git clone https://github.com/redpitaya/jupyter.git $ROOT_DIR/home/jupyter/RedPitaya
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 pip3 install -e /home/jupyter/RedPitaya/redpitaya/
