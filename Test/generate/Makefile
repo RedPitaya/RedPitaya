@@ -76,6 +76,3 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	cp $(TARGET) $(INSTALL_DIR)/bin
-	mkdir -p $(INSTALL_DIR)/src/utils/$(TARGET)
-	-rm -f $(TARGET) *.o
-	cp -r * $(INSTALL_DIR)/src/utils/$(TARGET)/
