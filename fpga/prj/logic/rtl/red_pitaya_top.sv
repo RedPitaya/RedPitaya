@@ -259,7 +259,7 @@ sys_bus_stub sys_bus_stub_2  (sys[ 2]);
 sys_bus_stub sys_bus_stub_3  (sys[ 3]);
 sys_bus_stub sys_bus_stub_4  (sys[ 4]);
 sys_bus_stub sys_bus_stub_5  (sys[ 5]);
-//sys_bus_stub sys_bus_stub_6  (sys[ 6]);
+sys_bus_stub sys_bus_stub_6  (sys[ 6]);
 sys_bus_stub sys_bus_stub_7  (sys[ 7]);
 sys_bus_stub sys_bus_stub_8  (sys[ 8]);
 sys_bus_stub sys_bus_stub_9  (sys[ 9]);
@@ -381,51 +381,6 @@ assign exp_exi.TLAST  = 1'b0;
 // TODO: this is hardcoded, since it somehow did not work before, simulation was fine, but synthesis might have a problem
 // IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T({8'h00, 8'hff}));
 //IOBUF iobuf_exp [GDW-1:0] (.O (exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_e));
-
-////////////////////////////////////////////////////////////////////////////////
-// PWM
-////////////////////////////////////////////////////////////////////////////////
-
-`ifdef ENABLE_PWM
-
-localparam int unsigned PWM_CHN = 4;
-localparam int unsigned PWM_DWC = 8;
-localparam type PWM_T = logic [PWM_DWC-1:0];
-
-PWM_T [PWM_CHN-1:0] pwm_cfg;
-
-sys_reg_array_o #(
-  .RT (PWM_T  ),
-  .RN (PWM_CHN)
-) regset_pwm (
-  .val       (pwm_cfg),
-  .bus       (sys[6])
-);
-
-pwm #(
-  .DWC (PWM_DWC),
-  .CHN (PWM_CHN)
-) pwm (
-  // system signals
-  .clk      (pdm_clk ),
-  .rstn     (pdm_rstn),
-  .cke      (1'b1),
-  // configuration
-  .ena      (1'b1),
-  .rng      (8'd255),
-  // input stream
-  .str_dat  (pwm_cfg),
-  .str_vld  (1'b1   ),
-  .str_rdy  (       ),
-  // PWM outputs
-  .pwm      ()
-);
-
-`else
-
-sys_bus_stub sys_bus_stub_6 (sys[6]);
-
-`endif // ENABLE_PWM
 
 ////////////////////////////////////////////////////////////////////////////////
 // Daisy dummy code
