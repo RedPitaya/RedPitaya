@@ -65,11 +65,12 @@ If there are some restrictions for the user to have STEMlab boards
 on the DHCP LAN network **permanently** there is
 a possibility to directly connect to your STEMLab board.
 
-**Direct Ethernet Connection** connection was enabled from the start but until now some additional settings on the user's PC (**static IP configuration**) 
+**Direct Ethernet Connection** was enabled from the start but until now some additional settings on the user's PC (**static IP configuration**) 
 were necessary in order to set connection correctly. 
 This step has been eliminated with the NEW OS 0.97 (and newer) and the only step needed is to plug the ethernet cable from your PC to the STEMlab board. 
 
 Here is the procedure for Direct Ethernet Connection
+-----------------------------------------------------
 
 **Windows 7,8,10** (the Bonjour service must be installed for Win 7/8)
 
@@ -96,7 +97,8 @@ Here is the procedure for Direct Ethernet Connection
 
 .. warning::
 
-      If direct connection described above is not working you may try **static IP configuration**.
+      **If you experience some problem when using Direct Ethernet Connection described above, try to *disable WiFi* connection on *your 
+      PC* (if it has been enabled) and *reset the STEMlab* board(power off/on). If the problem still persist you can try STATIC IP configuration described below.**
 
 
 Static IP configuration
