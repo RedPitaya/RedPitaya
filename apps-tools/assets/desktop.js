@@ -213,7 +213,7 @@
         { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Active Learning", description: "Active Learning with Red Pitaya", url: "http://red-pitaya-active-learning.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "jupyter", name: "Jupyter server", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "jupyter", name: "Jupyter server", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
     var backButton = {
