@@ -75,17 +75,20 @@ Here is the procedure for Direct Ethernet Connection
 -----------------------------------------------------
 
 **Windows 7,8,10** (the Bonjour service must be installed for Win 7/8)
+
 1. Connect the ethernet cable and wait 30 sec
 2. Open the web browser and type **rp-xxxxxx.local/** in the URL field
    
 
 **Linux / Ubuntu**
+
 1. Open Network settings, Edit Connection and for LAN network under IPv4 Settings select Method **Share to other computers**
 2. Connect the ethernet cable and wait 30 sec
 3. Open the web browser and type **rp-xxxxxx.local/** in the URL field
    
     
 **MAC**
+
 1. Connect the ethernet cable and wait 30 sec
 2. Open the web browser and type **rp-xxxxxx.local/** in the URL field
    
