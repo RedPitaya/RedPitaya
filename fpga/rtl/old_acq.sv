@@ -4,7 +4,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module la_acq #(
+module old_acq #(
   // data stream
   int unsigned DN = 1,   // data number
   type DT = logic [8-1:0],
@@ -168,4 +168,4 @@ if (sts_acq & sto_algn.transf) begin
   sto.TLAST <= sto_algn.TLAST | sts_stp;
 end    
 
-endmodule: la_acq
+endmodule: old_acq

@@ -17,18 +17,24 @@
 //				};
 //		};
 		
-                fragment@1 {
-	                target = <&axi_dma_0>;
-                        __overlay__ {
-                                status = "okay";
-                        };
-                };
-//                fragment@2 {
-//        	        target-path = "/amba_pl/dma\@80400000/dma-channel@80400030";
-//                        __overlay__ {
-//                                status = "okay";
-//                        };
-//                };
+		fragment@1 {
+		target-path = "/amba_pl/dma\@80420000";
+			__overlay__ {
+						status = "okay";
+				};
+		};
+		fragment@2 {
+		target-path = "/amba_pl/dma\@80420000/dma-channel@80420000";
+			__overlay__ {
+						status = "okay";
+				};
+		};
+		fragment@3 {
+		target-path = "/amba_pl/dma\@80420000/dma-channel@80420030";
+			__overlay__ {
+						status = "okay";
+				};
+		};
 		fragment@4{
 			target-path="/amba_pl/id@40000000";
 			__overlay__ {
@@ -96,7 +102,7 @@
 			};
 		};
 		fragment@11{
-			 target-path="/amba_pl/rprx@0";
+			 target-path="/amba_pl/rprx@2";
 			__overlay__ {
 					status = "okay";
 			};

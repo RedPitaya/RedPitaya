@@ -4,7 +4,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module la_top #(
+module old_la_top #(
   // stream parameters
   int unsigned DN = 1,
   type DT = logic [8-1:0],
@@ -260,7 +260,7 @@ la_trigger #(
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-la_acq #(
+old_acq #(
   .DN (DN),
   .TN (TN),
   .TW (TW),
@@ -334,4 +334,4 @@ axi4_stream_cnt #(
   .str      (sto)
 );
 
-endmodule: la_top
+endmodule: old_la_top

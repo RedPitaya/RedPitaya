@@ -6,16 +6,26 @@
 &axi_dma_0 {
 	status = "disabled";
 };
+&axi_dma_1 {
+	status = "disabled";
+};
+&axi_dma_2 {
+	status = "disabled";
+};
+&axi_dma_3 {
+	status = "disabled";
+};
 
 /*
  * Add Red Pitaya custom DMA consumer
  */
 
 &amba_pl {
-	rprx_0: rprx@0 {
+	rprx_2: rprx@2 {
 		compatible ="redpitaya,rprx";
-		dmas = <&axi_dma_0 0>;
-		dma-names = "axidma1";
+		dmas = <&axi_dma_2 0
+		        &axi_dma_2 1>;
+		dma-names = "axidma0", "axidma1";
 		memory-region = <&rprx_reserverd>;
 		status = "disabled";
 	};
