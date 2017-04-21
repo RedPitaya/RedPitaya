@@ -76,13 +76,28 @@ module system #(
   output logic  [3:0] M_AXI_GP0_wstrb  ,
   output logic        M_AXI_GP0_wvalid ,
   // AXI-4 streaming interfaces RX
-  input  logic                S_AXI_STR_RX_aclk  ,
-  input  logic                S_AXI_STR_RX_arstn ,
-  input  logic [2-1:0][8-1:0] S_AXI_STR_RX_tdata ,
-  input  logic [2-1:0]        S_AXI_STR_RX_tkeep ,
-  input  logic                S_AXI_STR_RX_tlast ,
-  output logic                S_AXI_STR_RX_tready,
-  input  logic                S_AXI_STR_RX_tvalid,
+  input  logic                S_AXI_STR_RX3_aclk  ,  S_AXI_STR_RX2_aclk  , S_AXI_STR_RX1_aclk  , S_AXI_STR_RX0_aclk  ,
+  input  logic                S_AXI_STR_RX3_arstn ,  S_AXI_STR_RX2_arstn , S_AXI_STR_RX1_arstn , S_AXI_STR_RX0_arstn ,
+  input  logic [2-1:0][8-1:0] S_AXI_STR_RX3_tdata ,  S_AXI_STR_RX2_tdata , //S_AXI_STR_RX1_tdata , S_AXI_STR_RX0_tdata ,
+  input  logic [2-1:0]        S_AXI_STR_RX3_tkeep ,  S_AXI_STR_RX2_tkeep , //S_AXI_STR_RX1_tkeep , S_AXI_STR_RX0_tkeep ,
+  input  logic                S_AXI_STR_RX3_tlast ,  S_AXI_STR_RX2_tlast , //S_AXI_STR_RX1_tlast , S_AXI_STR_RX0_tlast ,
+  output logic                S_AXI_STR_RX3_tready,  S_AXI_STR_RX2_tready, //S_AXI_STR_RX1_tready, S_AXI_STR_RX0_tready,
+  input  logic                S_AXI_STR_RX3_tvalid,  S_AXI_STR_RX2_tvalid, //S_AXI_STR_RX1_tvalid, S_AXI_STR_RX0_tvalid,
+  // AXI-4 streaming interfaces TX
+  output logic                M_AXI_STR_TX3_aclk  ,  M_AXI_STR_TX2_aclk  , M_AXI_STR_TX1_aclk  , M_AXI_STR_TX0_aclk  ,
+  output logic                M_AXI_STR_TX3_arstn ,  M_AXI_STR_TX2_arstn , M_AXI_STR_TX1_arstn , M_AXI_STR_TX0_arstn ,
+  output logic [2-1:0][8-1:0] M_AXI_STR_TX3_tdata ,  M_AXI_STR_TX2_tdata , //M_AXI_STR_TX1_tdata , M_AXI_STR_TX0_tdata ,
+  output logic [2-1:0]        M_AXI_STR_TX3_tkeep ,  M_AXI_STR_TX2_tkeep , //M_AXI_STR_TX1_tkeep , M_AXI_STR_TX0_tkeep ,
+  output logic                M_AXI_STR_TX3_tlast ,  M_AXI_STR_TX2_tlast , //M_AXI_STR_TX1_tlast , M_AXI_STR_TX0_tlast ,
+  input  logic                M_AXI_STR_TX3_tready,  M_AXI_STR_TX2_tready, //M_AXI_STR_TX1_tready, M_AXI_STR_TX0_tready,
+  output logic                M_AXI_STR_TX3_tvalid,  M_AXI_STR_TX2_tvalid, //M_AXI_STR_TX1_tvalid, M_AXI_STR_TX0_tvalid,
+  // TODO: actual interrupts should be connnected
+  input  logic IRQ_LG  ,
+  input  logic IRQ_LA  ,
+  input  logic IRQ_GEN0,
+  input  logic IRQ_GEN1,
+  input  logic IRQ_SCP0,
+  input  logic IRQ_SCP1,
   // XADC
   input  logic        Vaux0_v_n,
   input  logic        Vaux0_v_p,
@@ -215,7 +230,15 @@ axi_bus_model #(.AW (32), .DW (32), .IW (12), .LW ( 4)) axi_bus_model (axi_gp);
 // data streams
 ////////////////////////////////////////////////////////////////////////////////
 
-assign S_AXI_STR_RX_tready = '1;
+assign S_AXI_STR_RX3_tready = '1;
+assign S_AXI_STR_RX2_tready = '1;
+//assign S_AXI_STR_RX1_tready = '1;
+//assign S_AXI_STR_RX0_tready = '1;
+
+assign M_AXI_STR_TX3_tvalid = '0;
+assign M_AXI_STR_TX2_tvalid = '0;
+//assign M_AXI_STR_TX1_tvalid = '0;
+//assign M_AXI_STR_TX0_tvalid = '0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // analog inputs
