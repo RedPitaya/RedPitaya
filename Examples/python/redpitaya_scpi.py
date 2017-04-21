@@ -26,7 +26,7 @@ class scpi (object):
             self._socket.connect((host, port))
 
         except socket.error as e:
-            print('SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e))
+            print('SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, str(e)))
 
     def rx_txt(self, chunksize = 4096):
         """Receive text string and return it after removing the delimiter."""
