@@ -101,8 +101,8 @@ Here is the procedure for Direct Ethernet Connection
       PC* (if it has been enabled) and *reset the STEMlab* board(power off/on). If the problem still persist you can try STATIC IP configuration described below.**
 
 
-Static IP configuration
---------------------------
+**Static IP configuration**
+
 
 This type of connection requires additional settings on your PC and STEMLab board. 
 
