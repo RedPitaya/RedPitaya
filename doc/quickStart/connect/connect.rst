@@ -71,8 +71,8 @@ This step has been eliminated with the NEW OS 0.97 (and newer) and the only step
 
 .. image:: connect-10.png
 
-Here is the procedure for Direct Ethernet Connection
------------------------------------------------------
+**Here is the procedure for Direct Ethernet Connection**
+
 
 **Windows 7,8,10** (the Bonjour service must be installed for Win 7/8)
 
