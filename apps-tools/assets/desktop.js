@@ -17,7 +17,7 @@
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
         image: "../assets/images/development.png",
-        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github","activelearning, fpgaexamples"]
+        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github","activelearning", "fpgaexamples"]
     }];
     var currentGroup = undefined;
 
