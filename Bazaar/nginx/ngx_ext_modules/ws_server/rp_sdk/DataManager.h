@@ -47,6 +47,8 @@ public:
 	void SetSignalInterval(int _interval);
 
 	void SendAllParams();
+
+	// DEPRECATED
 	std::map<std::string, bool> GetFeatures(const std::string& app_id);
 };
 

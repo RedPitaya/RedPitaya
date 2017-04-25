@@ -232,8 +232,10 @@ void CDataManager::SendAllParams()
 	m_send_all_params = true;
 }
 
+// DEPRECATED
 std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
 {
+	assert(0 && "deprecated");
 	std::map<std::string, bool> res;
 #ifdef ENABLE_LICENSING
 	const char* data = get_app_features(app_id.c_str());
