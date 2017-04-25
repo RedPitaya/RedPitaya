@@ -50,17 +50,6 @@
                 $('body').addClass('loaded');
             }, 666);
 
-            if (window.Worker) {
-            	var worker = new Worker("../assets/licVerifyWorker.js");
-            	worker.postMessage(null);
-            	worker.onmessage = function(e) {
-            		console.log(e.data);
-				};
-				worker.onerror = function(e) {
-            		console.log(e.message);
-				};
-			}
-
         }).fail(function(msg) { getListOfApps(); });
     }
 

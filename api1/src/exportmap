@@ -1,4 +1,0 @@
-{
-global: rp_*;RP_*;spectr_*;
-local: *;
-};

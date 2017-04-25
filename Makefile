@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all:  sdr api api1 nginx scpi examples rp_communication apps-tools apps-pro
+all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro
 
 $(DL):
 	mkdir -p $@
@@ -32,13 +32,12 @@ $(INSTALL_DIR):
 ################################################################################
 
 LIBRP_DIR       = api/rpbase
-LIBRP1_DIR      = api1
 LIBRP2_DIR      = api2
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
-.PHONY: api api1 api2 librp librp1
+.PHONY: api api2 librp librp1
 .PHONY: librpapp liblcr_meter
 
 librp:
@@ -76,8 +75,6 @@ else
 api: librp
 
 endif
-
-api1: librp1
 
 api2: librp2
 
