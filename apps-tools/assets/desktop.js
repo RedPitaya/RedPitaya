@@ -214,7 +214,7 @@
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Circuits and electronics", description: "Active Learning with Red Pitaya", url: "http://red-pitaya-active-learning.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "fpgaexamples", name: "FPGA", description: "Red Pitaya FPGA examples", url: "http://red-pitaya-fpga-examples.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "jupyter", name: "Jupyter server", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
     var backButton = {
