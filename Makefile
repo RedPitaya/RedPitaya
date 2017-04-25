@@ -220,7 +220,9 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 .PHONY: sdr
 
-SDR_ZIP = sdr_transceiver_hpsdr-0.94-1632.zip
+# git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
+# ZIP file name should be updated for each new build
+SDR_ZIP = sdr_transceiver_hpsdr-0.94-1633.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
