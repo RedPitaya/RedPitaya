@@ -44,7 +44,7 @@ Connecting the cables
 
 .. note::
 	
-	Charly25ac should be powered by DC 13.8V Power Supply that can provide at least 4 A of constant power. 
+	STEMlab SDR transceiver module should be powered by DC 13.8V Power Supply that can provide at least 4 A of constant power. 
 	Make sure that is turned off and then use DC power cord with Anderson Power Pole™ connector **(1)** to connect it with module. 
 	RED wire is positive (+) while BLACK wire is negative (-), double check to not mix the colours or polarity! 
 	Don’t turn on the power supply yet.
