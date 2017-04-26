@@ -318,12 +318,6 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
     while((ep = readdir (dp))) {
         const char *app_id = ep->d_name;
         cJSON *info = NULL;
-
-        if (!strcmp("lcr_meter", app_id)) {
-			lcr_meter_found = 1;
-			continue;
-		}
-
         /* check if structure is correct, we need:
          *  <app_id>/info/info.json
          *  <app_id>/info/icon.png
@@ -368,40 +362,6 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
     }
 
     closedir(dp);
-
-	// lcr_meter
-    if (lcr_meter_found) {
-        cJSON *info = NULL;
-
-        if (!is_readable(dir, "lcr_meter", "info/icon.png"))
-            return 0;
-        if (!is_readable(dir, "lcr_meter", "fpga.conf"))
-            return 0;
-        if (!is_controller_ok(dir, "lcr_meter", "controllerhf.so"))
-            return 0;
-        if (!get_info(&info, dir, "lcr_meter", pool))
-            return 0;
-        if (info == NULL)
-            return 0;
-
-        if (verbose) {
-            cJSON_AddItemToObject(info, "type", cJSON_CreateString("run", pool), pool);
-            cJSON_AddItemToObject(*json_root, "lcr_meter", info, pool);
-        } else {
-            cJSON *j_ver = cJSON_GetObjectItem(info, "version");
-            if(j_ver == NULL) {
-                fprintf(stderr, "Cannot get version from info JSON.\n");
-                cJSON_Delete(info, pool);
-                return 0;
-            } else {
-				cJSON_AddItemToObject(*json_root, "lcr_meter", cJSON_CreateString(j_ver->valuestring, pool), pool);
-				cJSON_AddItemToObject(*json_root, "type", cJSON_CreateString("run", pool), pool);
-				cJSON_Delete(j_ver, pool);
-				cJSON_Delete(info, pool);
-			}
-        }
-	}
-
     return 0;
 }
 
