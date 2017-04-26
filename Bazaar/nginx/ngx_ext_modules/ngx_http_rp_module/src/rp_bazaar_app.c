@@ -314,7 +314,6 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         return rp_module_cmd_error(json_root, "Can not open apps directory",
                                    strerror(errno), pool);
 
-    int lcr_meter_found = 0;
     while((ep = readdir (dp))) {
         const char *app_id = ep->d_name;
         cJSON *info = NULL;
