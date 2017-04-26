@@ -5,10 +5,6 @@
 #include "CustomParameters.h"
 #include "misc.h"
 
-#ifdef ENABLE_LICENSING
-#include "LicenseVerificator.h"
-#endif
-
 #include "gziping.h"
 
 CStringParameter InCommandParam("in_command", CBaseParameter::WO, "", 1);
@@ -235,24 +231,10 @@ void CDataManager::SendAllParams()
 // DEPRECATED
 std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id)
 {
-	assert(0 && "deprecated");
 	std::map<std::string, bool> res;
-#ifdef ENABLE_LICENSING
-	const char* data = get_app_features(app_id.c_str());
-	if (!data || strlen(data) < 5)
-		return res;
-
-	JSONNode arr = libjson::parse(data);
-	for (auto n : arr) 
-		res[n.begin()->as_string()] = true;
-#endif
-
-#ifdef ALWAYS_PURCHASED
 	res["app"] = true;
 	res["pro"] = true;
 	res["stem14"] = true;
-#endif
-
 	return res;
 }
 
@@ -348,15 +330,6 @@ extern "C" int ws_get_signals_interval(void)
 		return res;
 	}
 	return 0;
-}
-
-extern "C" int verify_app_license(const char* app_id)
-{
-#ifdef ENABLE_LICENSING
-	return verify_app_license_impl(app_id);
-#else
-	return 0;
-#endif
 }
 
 extern "C" void ws_gzip(const char* _in, void* _out, size_t* _size)

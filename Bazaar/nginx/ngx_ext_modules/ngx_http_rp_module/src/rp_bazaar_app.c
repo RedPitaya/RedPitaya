@@ -47,7 +47,6 @@ const char *c_ws_set_params_str   = "ws_set_params";
 const char *c_ws_get_params_str   = "ws_get_params";
 const char *c_ws_set_signals_str  = "ws_set_signals";
 const char *c_ws_get_signals_str  = "ws_get_signals";
-const char *c_verify_app_license_str  = "verify_app_license";
 const char* c_ws_gzip_str = "ws_gzip";
 // end web socket function str
 
@@ -499,13 +498,6 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     {
        	app->ws_api_supported = 0;
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_signals_str);
-    }
-
-    app->verify_app_license_func = dlsym(app->handle, c_verify_app_license_str);
-    if(!app->verify_app_license_func)
-    {
-       	app->ws_api_supported = 0;
-        fprintf(stderr, "Cannot resolve '%s' function.\n", c_verify_app_license_str);
     }
 
     app->ws_gzip_func = dlsym(app->handle, c_ws_gzip_str);

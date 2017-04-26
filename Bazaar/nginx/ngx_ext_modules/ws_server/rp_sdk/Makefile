@@ -25,19 +25,6 @@ DECODERS_DIR=../../../../../Applications/la_pro/src/
 CXX=$(CROSS_COMPILE)g++
 CXXFLAGS=-c -s -Wall -Os -static -std=c++11 -fPIC -I$(LIBJSON_DIR) -DNDEBUG -I../../../../tools -I$(DECODERS_DIR) -I.
 
-ifeq ($(ALWAYS_PURCHASED),true)
-CXXFLAGS+=-DALWAYS_PURCHASED
-endif
-
-ifeq ($(ENABLE_LICENSING),true)
-PRO_DIR=../../../../../Applications
-SOURCES+= $(PRO_DIR)/licverify/LicenseVerificator.cpp \
-          $(PRO_DIR)/licverify/encoder/encoder.cpp \
-          $(PRO_DIR)/licverify/encoder/pubkey.cpp \
-          $(PRO_DIR)/licverify/encoder/privkey.cpp
-CXXFLAGS+=-I$(PRO_DIR)/licverify -I. -DENABLE_LICENSING
-endif
-
 ifeq ($(DIGITAL_LOOP),true)
 CXXFLAGS+=-DIGITAL_LOOP
 endif
