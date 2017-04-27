@@ -8,4 +8,5 @@ Applications and Features
    
    apps-featured/apps-featured
    newtworkManager
+   jupyter/Jupyter.rst
    remoteControl/remoteControl
