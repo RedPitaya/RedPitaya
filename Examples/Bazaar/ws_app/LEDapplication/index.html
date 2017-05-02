@@ -1,0 +1,512 @@
+<!-- $Id$
+ *
+ * Red Pitaya LED application example.
+ *
+ * Author: JamesW 
+ *         Dakus <info@eskala.eu> (Red Pitaya Generator & Oscilloscope client.)
+ *         
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * This part of code is written in Javascript & HTML.
+ * Please visit http://en.wikipedia.org/wiki/JavaScript
+ *              http://en.wikipedia.org/wiki/HTML
+ * for more details on the languages used herein.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LED application</title>
+  <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+  <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+  <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+  <script src="../assets/flot/jquery.flot.min.js"></script>
+  <script src="../assets/flot/jquery.flot.selection.min.js"></script>
+  <script src="../assets/flot/jquery.flot.navigate.js"></script>
+  <script src="../assets/flot/jquery.flot.resize.min.js"></script>
+  <script src="../assets/flot/jquery.flot.touch.js?2"></script>
+  <script type="text/javascript">
+          
+  var plot = null;
+  
+  // On page loaded
+  $(function() {
+       
+    // Show different buttons on touch screens    
+    if(window.ontouchstart === undefined) {
+      $('.btn-lg').removeClass('btn-lg');
+      $('#accordion .btn, .modal .btn').addClass('btn-sm');
+    }
+           
+    // Disable all controls until the params state is loaded for the first time 
+    $('input, select, button', '.container').prop('disabled', true);
+    
+    // Event bindings
+    $('input,select', '#accordion').on('focus', function() {
+      LED.state.editing = true;
+    });
+          
+    $('#time_delay')
+      .on('focus paste', function() {
+        $(this).parent().addClass('input-group');
+        $('#apply_time_delay').show();
+      })
+      .on('blur', function() {
+        $('#apply_time_delay').hide();
+        $(this).parent().removeClass('input-group');
+        
+        var val = parseLocalFloat($(this).val());
+        if(! isNaN(val)) {
+          LED.params.local['time_delay']={value: val };
+          LED.sendParams();
+        }
+        else {
+          $(this).val(LED.params.orig['time_delay'].value)
+        }
+        LED.state.editing = false;
+      })
+      .on('change', function() {
+        $(this).blur();
+      })
+      .on('keypress', function(e) {
+        if(e.keyCode == 13) {
+          $(this).blur();
+        }
+      });
+           
+    $('.btn').on('click', function() {
+      var btn = $(this);
+      setTimeout(function() { btn.blur(); }, 10);
+    });
+    
+    $('#btn_toolbar .btn').on('blur', function() {
+      $(this).removeClass('active');
+    });
+    
+    $(document).on('click', '#accordion > .panel > .panel-heading', function(event) {
+      $(this).next('.panel-collapse').collapse('toggle');
+      event.stopImmediatePropagation();
+    });
+      
+    // Stop the application when page is unloaded
+    $(window).on('beforeunload', function() {
+        LED.ws.onclose = function() {}; // disable onclose handler first
+        LED.ws.close();
+        $.ajax({
+            url: LED.config.stop_app_url,
+            async: false
+        });
+        LED.unexpectedClose = false;
+    });
+    // Everything prepared, start application
+    LED.startApp();               
+  });
+
+
+  (function(LED, $, undefined) {
+
+    // App configuration
+    LED.param_callbacks = {};
+    LED.config = {};
+    LED.config.app_id = 'LEDapplication';
+    LED.config.server_ip = ''; // Leave empty on production, it is used for testing only
+    LED.config.start_app_url = (LED.config.server_ip.length ? 'http://' + LED.config.server_ip : '') + '/bazaar?start=' + LED.config.app_id + '?' + location.search.substr(1);
+    LED.config.stop_app_url = (LED.config.server_ip.length ? 'http://' + LED.config.server_ip : '') + '/bazaar?stop=' + LED.config.app_id;
+    LED.config.socket_url = 'ws://' + (LED.config.server_ip.length ? LED.config.server_ip : window.location.hostname) + ':9002'; // WebSocket server URI
+            
+    // App state
+    LED.state = {
+        socket_opened: false,
+        processing: false,
+        editing: false,
+    };
+
+    // Params cache
+    LED.params = {
+        orig: {},
+        old: {},
+        local: {}
+    };
+
+    // Other global variables
+    LED.ws = null;
+    LED.unexpectedClose = false;
+
+    LED.parameterStack = [];
+    LED.signalStack = [];
+
+    //Statistic
+    LED.received_data = 0;
+        
+    // Starts application on server
+    LED.startApp = function() {
+        $.get(
+                LED.config.start_app_url
+            )
+            .done(function(dresult) {
+                if (dresult.status == 'OK') {
+                    try {
+                        LED.connectWebSocket();
+                    } catch (e) {
+                        LED.startApp();
+                    }
+                } else if (dresult.status == 'ERROR') {
+                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
+                    LED.startApp();
+                } else {
+                    console.log('Could not start the application (ERR2)');
+                    LED.startApp();
+                }
+            })
+            .fail(function() {
+                console.log('Could not start the application (ERR3)');
+                LED.startApp();
+            });
+    };
+    
+    var signalsHandler = function() {
+        if (LED.signalStack.length > 0) {
+            LED.processSignals(LED.signalStack[0]);
+            LED.signalStack.splice(0, 1);
+        }
+        if (LED.signalStack.length > 2){
+            LED.signalStack.length = [];
+        }
+    }
+
+    var parametersHandler = function() {
+        if (LED.parameterStack.length > 0) {
+            LED.processParameters(LED.parameterStack[0]);
+            //console.log(LED.parameterStack);
+            LED.parameterStack.splice(0, 2); 
+        }
+    }
+
+    var parameterShowHandler = function() {
+        //Stat - local
+        $('#info_received').text(floatToLocalString((LED.received_data / 1024).toFixed(2)));
+        LED.received_data = 0; // update once per second
+
+        //Stats - parameters
+        $('#info_cpu').text(floatToLocalString(shortenFloat(LED.params.orig['CPU_LOAD'].value)));
+        $('#info_ram').text(floatToLocalString(shortenFloat(LED.params.orig['FREE_RAM'].value/(1024*1024))));
+        $('#info_counter').text(LED.params.orig['COUNTER'].value);
+        $('#info_text').text(LED.params.orig['TEXT'].value);
+        $('#info_period').text(LED.params.orig['PERIOD'].value);
+                
+        // Do not change fields from dialogs when user is editing something
+        if(! LED.state.editing) {
+            $('#time_delay').val(LED.params.orig['time_delay'].value);
+        }
+    }
+
+    var loadParams = function() {
+        //pošle základní nastavení po startu, asi vhodné po aktualizaci stránky v prohlížeči
+        LED.params.local = {};
+        LED.params.local['PERIOD'] = { value: 100 }; //RO
+        LED.ws.send(JSON.stringify({ parameters: LED.params.local }));
+        LED.params.local = {};
+
+        // Manage the state components
+        $('#accordion').find('input,select').prop('disabled', false);
+        $('.btn').prop('disabled', false);
+        $('#ytitle').show();
+    }
+   
+    setInterval(parameterShowHandler, 1000); //user should have time to read values (1 s)
+    setInterval(signalsHandler, 50);
+    setInterval(parametersHandler, 1);
+        
+    // Creates a WebSocket connection with the web server
+    LED.connectWebSocket = function() {
+        if (window.WebSocket) {
+            LED.ws = new WebSocket(LED.config.socket_url);
+            LED.ws.binaryType = "arraybuffer";
+        } else if (window.MozWebSocket) {
+            LED.ws = new MozWebSocket(LED.config.socket_url);
+            LED.ws.binaryType = "arraybuffer";
+        } else {
+            console.log('Browser does not support WebSocket');
+        }
+
+        // Define WebSocket event listeners
+        if (LED.ws) {
+            LED.ws.onopen = function() {
+                console.log('Socket opened');
+                LED.state.socket_opened = true;
+                LED.params.local['in_command'] = { value: 'send_all_params' };
+                LED.ws.send(JSON.stringify({ parameters: LED.params.local }));
+                LED.params.local = {};
+                setTimeout(loadParams, 20);
+                LED.unexpectedClose = true;
+            };
+
+            LED.ws.onclose = function() {
+                LED.state.socket_opened = false;
+                console.log('Socket closed');
+                if (LED.unexpectedClose == true){console.log('Unexpected close');}
+            };
+
+            LED.ws.onerror = function(ev) {
+                if (!LED.state.socket_opened)
+                    LED.startApp();
+                console.log('Websocket error: ', ev);
+            };
+
+            LED.ws.onmessage = function(ev) {
+                if (LED.state.processing) {
+                    return;
+                }
+                LED.state.processing = true;
+
+                try {
+                    var data = new Uint8Array(ev.data);
+                    LED.received_data += data.length;
+                    //no compression
+                    var text = String.fromCharCode.apply(null, new Uint8Array(data));
+                    var receive = JSON.parse(text);
+                    
+                    if (receive.parameters) {
+                        LED.parameterStack.push(receive.parameters);
+                        if ((Object.keys(LED.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
+                            LED.params.local['in_command'] = { value: 'send_all_params' };
+                            LED.ws.send(JSON.stringify({ parameters: LED.params.local }));
+                            LED.params.local = {};
+                        } else {
+                            LED.parameterStack.push(receive.parameters);
+                        }
+                    }
+
+                    if (receive.signals) {
+                        LED.signalStack.push(receive.signals);
+                    }
+                    LED.state.processing = false;
+                } catch (e) {
+                    LED.state.processing = false;
+                    console.log(e);
+                } finally {
+                    LED.state.processing = false;
+                }
+            };
+        }
+    };
+   
+    // Processes newly received values for parameters
+    LED.processParameters = function(new_params) {
+        LED.params.old = $.extend(true, {}, LED.params.orig);
+        var old_params = LED.params.old;
+
+        for (var param_name in new_params) {
+            // Save new parameter value
+            LED.params.orig[param_name] = new_params[param_name];
+ 
+            if (LED.param_callbacks[param_name] !== undefined){
+                LED.param_callbacks[param_name](new_params);
+            }
+        }     
+    };
+
+    // Processes newly received data for signals
+    LED.processSignals = function(new_signals) {
+
+        // Do nothing if no parameters received yet
+        if ($.isEmptyObject(LED.params.orig)) {
+            return;
+        }
+
+        // (Re)Draw signal
+        var Signal=[];
+        if ('signal' in new_signals){
+            for (var i = 0; i < new_signals['signal'].size; i++) {
+                Signal.push([i, new_signals['signal'].value[i]]);
+            }    
+          
+            if (!plot){
+                var plot_options = {
+                    colors: ['#009900'],
+                    lines: { lineWidth: 1 },
+                    zoom: { interactive: false }, 
+                    grid: { borderWidth: 0 },
+                    legend: { noColumns: 1, margin: [0, 0], backgroundColor: 'transparent' },
+                    touch: { autoWidth: false, autoHeight: false },
+                    xaxis: { min: null, max: null },
+                    yaxis: { min: null, max: null }
+                };
+                var d = [[0.5, 0.25], [1, 0.25], [1.5, -0.75], [2, 0.75], [19.5, 0.75]];
+                plot = $.plot("#plot_holder", [ { label: "Signal", data: d }], plot_options);
+
+            } else {
+                plot.setData([Signal]);
+                plot.setupGrid();
+                plot.draw();
+            }
+        }
+
+    };
+
+    // Sends to server modified parameters
+    LED.sendParams = function() {
+        if ($.isEmptyObject(LED.params.local)) {
+            return false;
+        }
+
+        if (!LED.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+
+        LED.params.local['in_command'] = { value: 'send_all_params' };
+        LED.ws.send(JSON.stringify({ parameters: LED.params.local }));
+        LED.params.local = {};
+        return true;
+    };
+
+}(window.LED = window.LED || {}, jQuery));
+  
+    
+  function onToogleButton(btn) {
+    var button = $(btn);
+    var checked = !button.data('checked');
+    LED.params.local = {};
+    if(btn.id == 'btn_led0'){
+       if (!LED.params.orig['led0'].value){LED.params.local['led0']={value: true };} else {LED.params.local['led0']={value: false };}    
+    }
+    if(btn.id == 'btn_led1'){
+       if (!LED.params.orig['led1'].value){LED.params.local['led1']={value: true };} else {LED.params.local['led1']={value: false };}
+    }
+    if(btn.id == 'btn_led2'){
+       if (!LED.params.orig['led2'].value){LED.params.local['led2']={value: true };} else {LED.params.local['led2']={value: false };}
+    }
+    if(btn.id == 'btn_led3'){
+       if (!LED.params.orig['led3'].value){LED.params.local['led3']={value: true };} else {LED.params.local['led3']={value: false };}
+    }
+    if(btn.id == 'btn_led4'){
+       if (!LED.params.orig['led4'].value){LED.params.local['led4']={value: true };} else {LED.params.local['led4']={value: false };}
+    }
+    if(btn.id == 'btn_led5'){
+       if (!LED.params.orig['led5'].value){LED.params.local['led5']={value: true };} else {LED.params.local['led5']={value: false };}
+    }
+    if(btn.id == 'btn_led6'){
+       if (!LED.params.orig['led6'].value){LED.params.local['led6']={value: true };} else {LED.params.local['led6']={value: false };}
+    }
+    if(btn.id == 'btn_led7'){
+       if (!LED.params.orig['led7'].value){LED.params.local['led7']={value: true };} else {LED.params.local['led7']={value: false };}
+    }
+    //console.log(LED.params);
+    LED.sendParams();
+    button.data('checked', checked).toggleClass('btn-default btn-primary');    
+  }
+  
+  function onButton(btn) {
+    //alert(btn.id);
+    LED.params.local = {};
+    LED.params.local['KITT']={value: true };
+    LED.sendParams();
+  }
+       
+  function getLocalDecimalSeparator() {
+    var n = 1.1;
+    return n.toLocaleString().substring(1,2);
+  }
+  
+  function parseLocalFloat(num) {
+    return +(num.replace(getLocalDecimalSeparator(), '.'));
+  }
+  
+  function floatToLocalString(num) {
+    // Workaround for a bug in Safari 6 (reference: https://github.com/mleibman/SlickGrid/pull/472)
+    //return num.toString().replace('.', getLocalDecimalSeparator());
+    return (num + '').replace('.', getLocalDecimalSeparator());
+  }
+  
+  function shortenFloat(value) {
+    return value.toFixed(Math.abs(value) >= 10 ? 1 : 2);
+  }
+
+  </script> 
+  <script src="html/redpitaya.custom.js"></script>
+</head>
+
+<body>
+  <div class="header">
+    <div class="container">
+      <a id="btn_exit" class="pull-left" href="/index.html"><span class="glyphicon glyphicon-chevron-left" title="Exit" alt="Exit"></span></a>
+      <img class="logo pull-left" src="../assets/images/logo_white.png">
+      <h2 class="page-title">LED application</h2>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div class="panel-group col-xs-12 col-sm-12 col-md-6" id="accordion">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#stats">
+                Stats
+              </a>
+            </h4>
+          </div>
+          <div id="stats" class="panel-collapse collapse in">
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-xs-3 txt-right">D<sub>c</sub>:</div>
+                <div class="col-xs-3"><span id="info_received">-</span><span class="unit"> kB/s</span></div>
+                <div class="col-xs-3 txt-right">Period:</div>
+                <div class="col-xs-3"><span id="info_period">-</span><span class="unit"></span></div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right">CPU:</div>
+                <div class="col-xs-3"><span id="info_cpu">-</span><span class="unit"> %</span></div>
+                <div class="col-xs-3 txt-right">RAM:</div>
+                <div class="col-xs-3"><span id="info_ram">-</span><span class="unit"> MB</span></div>
+              </div>
+              <div class="row">
+                <div class="col-xs-3 txt-right">Counter:</div>
+                <div class="col-xs-3"><span id="info_counter">-</span><span class="unit"></span></div>
+                <div class="col-xs-3 txt-right">Text:</div>
+                <div class="col-xs-3"><span id="info_text">-</span><span class="unit"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="btn_toolbar">
+          <button id="btn_led0" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 0</button>
+          <button id="btn_led1" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 1</button>
+          <button id="btn_led2" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 2</button>
+          <button id="btn_led3" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 3</button>
+          <button id="btn_led4" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 4</button>
+          <button id="btn_led5" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 5</button>
+          <button id="btn_led6" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 6</button>
+          <button id="btn_led7" class="btn btn-primary btn-lg" data-checked="false" onclick="onToogleButton(this)">LED 7</button>
+          <button id="btn_KITT" class="btn btn-primary btn-lg" onclick="onButton(this)">KITT</button>
+        </div>
+        <form class="form-horizontal" role="form" onsubmit="return false;">
+          <div class="form-group">
+            <label for="time_delay" class="col-xs-4 control-label">Time delay:</label>
+            <div class="col-xs-4 col-sm-5">
+              <input type="text" autocomplete="off" class="form-control" value="0" id="time_delay">
+              <span style="display: none;" class="input-group-btn" id="apply_time_delay">
+                <button type="button" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-ok-circle"></span></button>
+              </span>
+            </div>
+            <div style="padding: 7px 0 0;" class="col-xs-2" id="time_units">μs</div>
+          </div>
+        </form>
+      </div>
+      <div class="col-xs-12 col-sm-12 col-md-6">
+        <div class="graph-holder well well-small">
+          <div id="ytitle">On / Off</div>
+          <div id="plot_holder"></div>
+          <div id="xtitle">LED number</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer clearfix">
+      <p class="pull-right" style="margin: 4px 0 0">LED example application</p>
+    </div>
+  </div>
+</body>
+</html>
