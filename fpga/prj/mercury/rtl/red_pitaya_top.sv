@@ -180,11 +180,11 @@ logic [MNG-1:0] [14-1:0] dac_raw;
 generate
 for (genvar i=0; i<MNG; i++) begin: for_dac
   // output registers + signed to unsigned (also to negative slope)
-  always @(posedge str_dac[i].ACLK)
+  always_ff @(posedge str_dac[i].ACLK)
   if (~str_dac[i].ARESETn) begin
-      dac_raw[i] = (1<<($bits(DTG)-1))-1;
+      dac_raw[i] <= (1<<($bits(DTG)-1))-1;
   end else if (str_dac[i].TVALID & str_dac[i].TREADY & str_dac[i].TKEEP) begin
-      dac_raw[i] = {str_dac[i].TDATA[0][$bits(DTG)-1], ~str_dac[i].TDATA[0][$bits(DTG)-2:0]};
+      dac_raw[i] <= {str_dac[i].TDATA[0][$bits(DTG)-1], ~str_dac[i].TDATA[0][$bits(DTG)-2:0]};
   end
 
   // TREADY is always active
