@@ -22,7 +22,7 @@ module red_pitaya_calib #(
 //  System bus connection
 ////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 if (!bus.rstn) begin
   // ADC calibration
   adc_cfg_mul[0] <= 1'b1 <<< (DWM-2);
@@ -47,14 +47,14 @@ end else if (bus.wen) begin
   if (bus.addr[19:0]==20'h5C)   dac_cfg_sum[1] <= bus.wdata[DWS-1:0];
 end
 
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 if (!bus.rstn)  bus.err <= 1'b1;
 else            bus.err <= 1'b0;
 
 wire sys_en;
 assign sys_en = bus.wen | bus.ren;
 
-always @(posedge bus.clk)
+always_ff @(posedge bus.clk)
 if (!bus.rstn) begin
   bus.ack <= 1'b0;
 end else begin

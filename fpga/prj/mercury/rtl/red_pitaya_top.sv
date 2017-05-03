@@ -147,7 +147,7 @@ for (genvar i=0; i<MNO; i++) begin: for_adc
 
   // IO block registers should be used here
   // lowest 2 bits reserved for 16bit ADC
-  always @(posedge adc_clk)
+  always_ff @(posedge adc_clk)
   adc_raw <= adc_dat_i[i];
 
   // transform into 2's complement (negative slope)

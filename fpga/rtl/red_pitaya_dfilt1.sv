@@ -45,7 +45,7 @@ logic signed [28-1:0] r02_reg;
 assign bb_mult = adc_dat_i * cfg_bb_i;
 assign r2_sum  = r01_reg + r1_reg;
 
-always @(posedge adc_clk_i)
+always_ff @(posedge adc_clk_i)
 if (~adc_rstn_i) begin
    r1_reg  <= '0;
    r2_reg  <= '0;
@@ -68,7 +68,7 @@ logic signed [49-1:0] r3_sum ; //24 + 25
 assign aa_mult = r3_reg * cfg_aa_i;
 assign r3_sum  = (r2_reg <<< 25) + (r3_reg <<< 25) - aa_mult;
 
-always @(posedge adc_clk_i)
+always_ff @(posedge adc_clk_i)
 if (~adc_rstn_i) begin
    r3_reg <= '0;
 end else begin
@@ -86,7 +86,7 @@ logic signed [15-1:0] r3_shr ;
 assign pp_mult = r4_reg * cfg_pp_i;
 assign r4_sum  = r3_shr + (pp_mult >>> 16);
 
-always @(posedge adc_clk_i)
+always_ff @(posedge adc_clk_i)
 if (~adc_rstn_i) begin
    r3_shr <= '0;
    r4_reg <= '0;
@@ -105,7 +105,7 @@ logic signed [14-1:0] r5_reg   ;
 
 assign kk_mult = r4_reg * cfg_kk_i;
 
-always @(posedge adc_clk_i)
+always_ff @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
    r5_reg    <= '0;
 end else begin
