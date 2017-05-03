@@ -234,11 +234,11 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     }
 
     // Return back string result
-    char samplingRateString;
-    sprintf(&samplingRateString, "%.0f Hz", samplingRate);
+    char samplingRateString[13];
+    sprintf(samplingRateString, "%9.0f Hz", samplingRate);
 
     //Return string in form "<Value> Hz"
-    SCPI_ResultMnemonic(context, &samplingRateString);
+    SCPI_ResultMnemonic(context, samplingRateString);
 
     RP_LOG(LOG_INFO, "*ACQ:SRA:HZ? Successfully returned sampling rate in Hz.\n");
 
