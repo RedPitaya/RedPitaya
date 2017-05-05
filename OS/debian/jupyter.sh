@@ -22,10 +22,23 @@ apt-get -y install python3-dev python3-cffi python3-wheel python3-setuptools pyt
 apt-get -y install python3-numpy python3-scipy python3-pandas
 apt-get -y install python3-matplotlib
 
+# Jupyter and ipywidgets
 pip3 install --upgrade pip
 pip3 install jupyter
 pip3 install ipywidgets
 jupyter nbextension enable --system --py widgetsnbextension
+
+# Jupyter dashboards
+pip3 install jupyter_dashboards
+jupyter dashboards quick-setup --sys-prefix
+# TODO: not sure this step is needed
+jupyter nbextension enable --system --py jupyter_dashboards
+
+# Jupyter declarative widgets
+pip3 install jupyter_declarativewidgets
+#jupyter declarativewidgets quick-setup --sys-prefix
+jupyter declarativewidgets install
+jupyter nbextension enable --system --py declarativewidgets
 
 # https://plot.ly/python/ for interactive graphs
 pip3 install plotly
