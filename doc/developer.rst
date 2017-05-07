@@ -68,7 +68,7 @@ You will need the following to build the Red Pitaya components:
       # 32 bit libraries
       sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
 
-2. Xilinx `Vivado 2016.4 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
+2. Xilinx `Vivado 2017.1 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
 
