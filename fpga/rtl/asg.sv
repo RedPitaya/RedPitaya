@@ -287,11 +287,8 @@ assign end_bdl = (sts_bln == cfg_bdl);
 
 // events
 always_ff @(posedge sto.ACLK)
-if (~sto.ARESETn) begin
-  evn_per <= 1'b0;
-end else begin
-  evn_per <= ctl_rpt;
-end
+if (~sto.ARESETn)  evn_per <= 1'b0;
+else               evn_per <= ctl_rpt;
 
 assign evn_lst = sts_lst;
 
