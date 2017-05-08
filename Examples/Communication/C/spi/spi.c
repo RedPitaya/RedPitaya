@@ -177,7 +177,7 @@ static int read_flash_id(int fd){
 /* Write data to the SPI bus */
 static int write_spi(char *write_buffer, int size){
 
-	int write_spi = write(spi_fd, write_buffer, strlen(write_buffer));
+	int write_spi = write(spi_fd, write_buffer, size);
 
 	if(write_spi < 0){
 		printf("Failed to write to SPI. Error: %s\n", strerror(errno));
