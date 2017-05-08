@@ -163,15 +163,17 @@ assign bus_ena = bus.wen | bus.ren;
 
 // CPU read/write access
 always_ff @(posedge bus.clk)
-for (int unsigned i=0; i<2; i++) begin
+begin
+  if (bus.ren)  bus.rdata <= buf_mem [bus.addr[2+:CWM]];
+  if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
+end
 // TODO: asymetric bus width is failing synthesis
+//for (int unsigned i=0; i<2; i++) begin
 //  if (bus_ena) begin
 //                  bus.rdata [16*i+:16] <= buf_mem [{bus.addr[2+:CWM-1],i[0]}];
 //    if (bus.wen)  buf_mem [{bus.addr[2+:CWM-1],i[0]}] <= bus.wdata [16*i+:16];
 //  end
-  if (bus.ren)  bus.rdata <= buf_mem [bus.addr[2+:CWM]];
-  if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
-end
+//end
 
 // CPU control signals
 always_ff @(posedge bus.clk)
