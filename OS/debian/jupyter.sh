@@ -28,17 +28,28 @@ pip3 install jupyter
 pip3 install ipywidgets
 jupyter nbextension enable --system --py widgetsnbextension
 
-# Jupyter dashboards
-pip3 install jupyter_dashboards
-jupyter dashboards quick-setup --sys-prefix
-# TODO: not sure this step is needed
-jupyter nbextension enable --system --py jupyter_dashboards
-
 # Jupyter declarative widgets
 pip3 install jupyter_declarativewidgets
 #jupyter declarativewidgets quick-setup --sys-prefix
 jupyter declarativewidgets install
-jupyter nbextension enable --system --py declarativewidgets
+jupyter nbextension enable --sys-prefix --py --system declarativewidgets
+
+# Jupyter dashboards
+pip3 install jupyter_dashboards
+jupyter dashboards quick-setup --sys-prefix
+# TODO: not sure this step is needed
+jupyter nbextension enable --sys-prefix --py --system jupyter_dashboards
+
+# Jupyter dashboards dundlers
+pip3 install jupyter_dashboards_bundlers
+jupyter bundlerextension enable --sys-prefix --py --system dashboards_bundlers
+
+# Jupyter dashboards server
+# TODO: this is a rather large install mostly due to Node.js
+# https://github.com/jupyter-incubator/dashboards_server
+# TODO: this is disabled for now
+#apt-get -y install npm
+#npm install -g jupyter-dashboards-server
 
 # https://plot.ly/python/ for interactive graphs
 pip3 install plotly
