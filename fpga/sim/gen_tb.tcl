@@ -61,7 +61,6 @@ add wave -noupdate -group common           /${top}/${dut}/asg/ctl_run
 add wave -noupdate -group common           /${top}/${dut}/asg/ctl_end
 
 # continuous/periodic engine signals
-add wave -noupdate -group period           /${top}/${dut}/asg/sts_trg_per
 add wave -noupdate -group period           /${top}/${dut}/asg/sts_adr_per
 add wave -noupdate -group period           /${top}/${dut}/asg/ctl_end_per
 add wave -noupdate -group period -hex      /${top}/${dut}/asg/ptr_cur

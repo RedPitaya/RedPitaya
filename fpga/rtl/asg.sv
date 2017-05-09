@@ -148,8 +148,6 @@ logic               end_bdl;  // burst data   length
 logic               end_bpl;  // burst period length
 logic               end_bnm;  // burst repetitions
 // status
-logic               sts_trg_per;  // trigger status periodic engine
-logic               sts_trg_bst;  // trigger status burst    engine
 logic               sts_adr;      // address enable
 logic               sts_adr_per;  // address enable periodic engine
 logic               sts_adr_bst;  // address enable burst    engine
@@ -244,36 +242,37 @@ end
 // stop status
 assign sts_stp = ~sts_str;
 
-// trigger status depends on burst mode
-assign sts_trg = cfg_ben ? sts_trg_bst : sts_trg_per;
-
 // control run (trigger while started or simultaneous trigger and start)
 assign ctl_run = ctl_trg & (sts_str | ctl_str);
 
 // control end depends on burst mode
 assign ctl_end = cfg_ben ? ctl_end_bst : ctl_end_per;
 
+// trigger status
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
+  sts_trg <= 1'b0;
+end else begin
+  // synchronous clear
+  if (ctl_rst) begin
+    sts_trg <= 1'b0;
+  end else begin
+    if      (ctl_end)  sts_trg <= 1'b0;
+    else if (ctl_run)  sts_trg <= 1'b1;
+  end
+end
+
 ////////////////////////////////////////////////////////////////////////////////
 // continuous/periodic mode state machine
 ////////////////////////////////////////////////////////////////////////////////
 
-// state machine
-always_ff @(posedge sto.ACLK)
-if (~sto.ARESETn) begin
-  sts_trg_per <= 1'b0;
-end else begin
-  // synchronous clear
-  if (ctl_rst) begin
-    sts_trg_per <= 1'b0;
-  end else if (sts_rdy) begin
-    // periodic (run) status
-    if      (ctl_stp)  sts_trg_per <= 1'b0;
-    else if (ctl_run)  sts_trg_per <= 1'b1;
-  end
-end
+// control end event
+// the only way to stop continuous/periodic mode is with a stop event
+assign ctl_end_per = ctl_stp;
 
 // TODO: it might not be necessary to read data all the time
-assign sts_adr_per = sts_trg_per;
+// optimizing it would slightly reduce power consumption
+assign sts_adr_per = sts_trg;
 
 // address pointer counter
 always_ff @(posedge sto.ACLK)
@@ -285,9 +284,9 @@ end else begin
     ptr_cur <= '0;
   end else if (~cfg_ben) begin
     // start on trigger, new triggers are ignored while ASG is running
-    if      (ctl_run)  ptr_cur <= cfg_off;
+    if                (ctl_run)  ptr_cur <= cfg_off;
     // modulo (proper wrapping) increment pointer
-    else if (sts_rdy) ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
+    else if (sts_trg & sts_rdy)  ptr_cur <= ~ptr_nxt_sub_neg ? ptr_nxt_sub : ptr_nxt;
   end
 end
 
@@ -296,36 +295,28 @@ assign ptr_nxt     = ptr_cur + (cfg_ste + 1);
 assign ptr_nxt_sub = ptr_nxt - (cfg_siz + 1);
 assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+CWF];
 
-// the only way to stop continuous/periodic mode is with a stop event
-assign ctl_end_per = ctl_stp;
-
 ////////////////////////////////////////////////////////////////////////////////
 // burst mode state machine
 ////////////////////////////////////////////////////////////////////////////////
 
-// control run start/end events
+// control end event
 assign ctl_end_bst = ctl_stp | (end_bpl & end_bnm); 
 
 // state machine
 always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
-  sts_trg_bst <= 1'b0;
   sts_adr_bst <= 1'b0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
-    sts_trg_bst <= 1'b0;
     sts_adr_bst <= 1'b0;
-  end else if (sts_rdy) begin
-    // triger (run) status
-    if      (ctl_end)  sts_trg_bst <= 1'b0;
-    else if (ctl_run)  sts_trg_bst <= 1'b1;
+  end else if (cfg_ben) begin
     // address enable status
     if      (ctl_end)  sts_adr_bst <= 1'b0;
     else if (ctl_run)  sts_adr_bst <= 1'b1;
-    else if (cfg_ben) begin
-      if (end_bpl & ~end_bnm)  sts_adr_bst <= 1'b1;
-      else if (end_bdl)        sts_adr_bst <= 1'b0;
+    else if (sts_trg & sts_rdy) begin
+      if      (end_bpl)  sts_adr_bst <= 1'b1;
+      else if (end_bdl)  sts_adr_bst <= 1'b0;
     end
   end
 end
@@ -344,7 +335,7 @@ end else begin
     if (ctl_run) begin
       sts_bnm <= '0;
       sts_bln <= '0;
-    end else if (sts_trg_bst & sts_rdy) begin
+    end else if (sts_trg & sts_rdy) begin
       sts_bnm <= sts_bnm + end_bpl;
       sts_bln <= end_bpl ? '0 : sts_bln + 1; 
     end
