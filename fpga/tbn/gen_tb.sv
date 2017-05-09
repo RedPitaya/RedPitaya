@@ -110,13 +110,13 @@ initial begin
   busm.write('h18, 1'b1);  // software stop
   busm.write('h1c, 1'b1);  // software trigger
 
+  // enable continuous/periodic mode
+  busm.write('h20, 2'b00);  // burst disable
   // configure frequency and phase
-  busm.write('h20,  buf_len                    * 2**CWF - 1);  // table size
-  busm.write('h24, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//busm.write('h28, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
-  busm.write('h28, 1                           * 2**CWF - 1);  // step
-  // configure burst mode
-  busm.write('h30, 2'b00);  // burst disable
+  busm.write('h24,  buf_len                    * 2**CWF - 1);  // table size
+  busm.write('h28, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//busm.write('h2c, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  busm.write('h2c, 1                           * 2**CWF - 1);  // step
   // start/trigger
   busm.write('h00, CTL_STR);
   busm.write('h00, CTL_TRG);
@@ -128,14 +128,13 @@ initial begin
   busm.write('h00, CTL_RST);
   ##20;
 
-  // configure frequency and phase
-  busm.write('h24, 0 * 2**CWF    );  // offset
-  busm.write('h28, 1 * 2**CWF - 1);  // step
-  // configure burst mode
+  // enable burst mode
   busm.write('h30, 2'b01);  // burst enable
+  // burst configuration
+  busm.write('h30, 3-1);  // burst data   repetitions
   busm.write('h34, 4-1);  // burst data   length
   busm.write('h38, 8-1);  // burst period length
-  busm.write('h3c, 4-1);  // burst number of repetitions
+  busm.write('h3c, 4-1);  // burst period number
   // start/trigger
   busm.write('h00, CTL_STR);
   busm.write('h00, CTL_TRG);

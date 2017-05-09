@@ -35,6 +35,7 @@ module lg #(
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
   int unsigned CW  = CWM+CWF,
   // burst counter parameters
+  int unsigned CWR = 14,  // counter width for burst data repeat
   int unsigned CWL = 32,  // counter width for burst length
   int unsigned CWN = 16,  // counter width for burst number
   // event parameters
@@ -81,19 +82,21 @@ logic           sts_stp;
 logic           ctl_trg;
 logic           sts_trg;
 
-// configuration
+// generator mode
+logic           cfg_ben;  // burst enable
+logic           cfg_inf;  // infinite burst
+// continuous/periodic configuration
 logic  [CW-1:0] cfg_siz;  // table size
 logic  [CW-1:0] cfg_off;  // address initial offset (phase)
 logic  [CW-1:0] cfg_ste;  // address increment step (frequency)
-// burst mode configuration
-logic           cfg_ben;  // burst enable
-logic           cfg_inf;  // infinite burst
+// burst configuration
+logic [CWR-1:0] cfg_bdr;  // burst data   repetitions
 logic [CWM-1:0] cfg_bdl;  // burst data   length
-logic [ 32-1:0] cfg_bpl;  // burst period length
-logic [ 16-1:0] cfg_bnm;  // burst repetitions
+logic [CWL-1:0] cfg_bpl;  // burst period length
+logic [CWN-1:0] cfg_bnm;  // burst period number
 // status
-logic [CWL-1:0] sts_bln;  // burst length counter
-logic [CWN-1:0] sts_bnm;  // burst number counter
+logic [CWL-1:0] sts_bln;  // burst period length counter
+logic [CWN-1:0] sts_bnm;  // burst period number counter
 //select masks and values
 DTM             cfg_msk;
 DTS             cfg_val;
@@ -139,24 +142,27 @@ if (~bus.rstn) begin
   cfg_val <= '0;
 end else begin
   if (bus.wen) begin
-    // interrupt enable (status/clear are elsewhere)
+    // trigger mask
     if (bus.addr[BAW-1:0]=='h04)  cfg_trg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[  2-1:0];
+    // interrupt enable (status/clear are elsewhere)
+    if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[2-1:0];
     // event masks
     if (bus.addr[BAW-1:0]=='h10)  cfg_rst <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h14)  cfg_str <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h1c)  cfg_swt <= bus.wdata;
-    // buffer configuration
-    if (bus.addr[BAW-1:0]=='h20)  cfg_siz <= bus.wdata[ CW-1:0];
-    if (bus.addr[BAW-1:0]=='h24)  cfg_off <= bus.wdata[ CW-1:0];
-    if (bus.addr[BAW-1:0]=='h28)  cfg_ste <= bus.wdata[ CW-1:0];
-    // burst mode
-    if (bus.addr[BAW-1:0]=='h30)  cfg_ben <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h30)  cfg_inf <= bus.wdata[      1];
-    if (bus.addr[BAW-1:0]=='h34)  cfg_bdl <= bus.wdata[CWM-1:0];
-    if (bus.addr[BAW-1:0]=='h38)  cfg_bpl <= bus.wdata[ 32-1:0];
-    if (bus.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus.wdata[ 16-1:0];
+    // generator mode
+    if (bus.addr[BAW-1:0]=='h20)  cfg_ben <= bus.wdata[0];
+    if (bus.addr[BAW-1:0]=='h20)  cfg_inf <= bus.wdata[1];
+    // continuous/periodic configuration
+    if (bus.addr[BAW-1:0]=='h24)  cfg_siz <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h28)  cfg_off <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h2c)  cfg_ste <= bus.wdata;
+    // burst configuration
+    if (bus.addr[BAW-1:0]=='h30)  cfg_bdr <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h34)  cfg_bdl <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h38)  cfg_bpl <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus.wdata;
     // select masks and values
     if (bus.addr[BAW-1:0]=='h50)  cfg_msk <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h54)  cfg_val <= bus.wdata;
@@ -198,19 +204,20 @@ casez (bus.addr[BAW-1:0])
   'h14: bus.rdata <= cfg_str;
   'h18: bus.rdata <= cfg_stp;
   'h1c: bus.rdata <= cfg_swt;
-  // buffer configuration
-  'h20: bus.rdata <= {{32- CW{1'b0}}, cfg_siz};
-  'h24: bus.rdata <= {{32- CW{1'b0}}, cfg_off};
-  'h28: bus.rdata <= {{32- CW{1'b0}}, cfg_ste};
-  // burst mode
-  'h30: bus.rdata <= {{32-  2{1'b0}}, cfg_inf
-                                    , cfg_ben};
-  'h34: bus.rdata <= {{32-CWM{1'b0}}, cfg_bdl};
-  'h38: bus.rdata <=                  cfg_bpl ;
-  'h3c: bus.rdata <= {{32- 16{1'b0}}, cfg_bnm};
-  // status
-  'h40: bus.rdata <= 32'(sts_bln);
-  'h44: bus.rdata <= 32'(sts_bnm);
+  // generator mode
+  'h20: bus.rdata <= {cfg_inf, cfg_ben};
+  // continuous/periodic configuration
+  'h24: bus.rdata <= cfg_siz;
+  'h28: bus.rdata <= cfg_off;
+  'h2c: bus.rdata <= cfg_ste;
+  // burst configuration
+  'h30: bus.rdata <= cfg_bdr;
+  'h34: bus.rdata <= cfg_bdl;
+  'h38: bus.rdata <= cfg_bpl;
+  'h3c: bus.rdata <= cfg_bnm;
+  // burst status
+  'h40: bus.rdata <= sts_bln;
+  'h44: bus.rdata <= sts_bnm;
   // select masks and values
   'h50: bus.rdata <= cfg_msk;
   'h54: bus.rdata <= cfg_val;
@@ -259,6 +266,7 @@ asg #(
   .CWM (CWM),
   .CWF (CWF),
   // burst counters
+  .CWR (CWR),
   .CWL (CWL),
   .CWN (CWN)
 ) asg (
@@ -278,13 +286,15 @@ asg #(
   // events
   .evn_per  (evo.trg),
   .evn_lst  (evo.lst),
-  // configuration
+  // generator mode
+  .cfg_ben  (cfg_ben),
+  .cfg_inf  (cfg_inf),
+  // continuous/periodic configuration
   .cfg_siz  (cfg_siz),
   .cfg_off  (cfg_off),
   .cfg_ste  (cfg_ste),
-  // configuration (burst mode)
-  .cfg_ben  (cfg_ben),
-  .cfg_inf  (cfg_inf),
+  // burst configuration
+  .cfg_bdr  (cfg_bdr),
   .cfg_bdl  (cfg_bdl),
   .cfg_bpl  (cfg_bpl),
   .cfg_bnm  (cfg_bnm),

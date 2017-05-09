@@ -86,10 +86,11 @@ module asg #(
   // data bus
   int unsigned DN = 1,
   type DT = logic [8-1:0],
-  // buffer parameters
+  // continuous/periodic buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
   // burst counter parameters
+  int unsigned CWR = 14,  // counter width repetitions
   int unsigned CWL = 32,  // counter width length
   int unsigned CWN = 16   // counter width number
 )(
@@ -109,19 +110,21 @@ module asg #(
   // events
   output logic               evn_per,  // period
   output logic               evn_lst,  // last
-  // configuration (periodic mode)
+  // generator mode
+  input  logic               cfg_ben,  // burst enable
+  input  logic               cfg_inf,  // infinite
+  // continuous/periodic configuration
   input  logic [CWM+CWF-1:0] cfg_siz,  // data table size
   input  logic [CWM+CWF-1:0] cfg_ste,  // pointer step    size
   input  logic [CWM+CWF-1:0] cfg_off,  // pointer initial offset (used to define phase)
-  // configuration (burst mode)
-  input  logic               cfg_ben,  // burst enable
-  input  logic               cfg_inf,  // infinite
+  // burst configuration (burst mode)
+  input  logic     [CWR-1:0] cfg_bdr,  // burst data   repetitions
   input  logic     [CWM-1:0] cfg_bdl,  // burst data   length
   input  logic     [CWL-1:0] cfg_bpl,  // burst period length
-  input  logic     [CWN-1:0] cfg_bnm,  // burst number of repetitions
+  input  logic     [CWN-1:0] cfg_bnm,  // burst period number
   // status
-  output logic     [CWL-1:0] sts_bln,  // burst length counter
-  output logic     [CWN-1:0] sts_bnm,  // burst number counter
+  output logic     [CWL-1:0] sts_bln,  // burst period length counter
+  output logic     [CWN-1:0] sts_bnm,  // burst period number counter
   // System bus
   sys_bus_if.s               bus
 );
