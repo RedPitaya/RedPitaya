@@ -34,15 +34,17 @@ add wave -noupdate -bin      /${top}/${dut}/cfg_trg
 add wave -noupdate -hex      /${top}/${dut}/cfg_siz
 add wave -noupdate -hex      /${top}/${dut}/cfg_off
 add wave -noupdate -hex      /${top}/${dut}/cfg_ste
-# burst configuration
+# generator mode
 add wave -noupdate           /${top}/${dut}/cfg_ben
 add wave -noupdate           /${top}/${dut}/cfg_inf
+# burst configuration
+add wave -noupdate -unsigned /${top}/${dut}/cfg_bdr
 add wave -noupdate -unsigned /${top}/${dut}/cfg_bdl
 add wave -noupdate -unsigned /${top}/${dut}/cfg_bpl
-add wave -noupdate -unsigned /${top}/${dut}/cfg_bnm
+add wave -noupdate -unsigned /${top}/${dut}/cfg_bpn
 # burst status
-add wave -noupdate -unsigned /${top}/${dut}/sts_bln
-add wave -noupdate -unsigned /${top}/${dut}/sts_bnm
+add wave -noupdate -unsigned /${top}/${dut}/sts_bpl
+add wave -noupdate -unsigned /${top}/${dut}/sts_bpn
 # offset and amplitude
 add wave -noupdate -unsigned /${top}/${dut}/cfg_mul
 add wave -noupdate -unsigned /${top}/${dut}/cfg_sum
@@ -69,9 +71,16 @@ add wave -noupdate -group period -hex      /${top}/${dut}/asg/ptr_nxt_sub
 add wave -noupdate -group period           /${top}/${dut}/asg/ptr_nxt_sub_neg
 
 # burst engine signals
+add wave -noupdate -group burst            /${top}/${dut}/asg/sts_adr_bst
+add wave -noupdate -group burst            /${top}/${dut}/asg/ctl_end_bst
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bdr
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bdl
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bpl
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bpn
+add wave -noupdate -group burst            /${top}/${dut}/asg/end_bdr
 add wave -noupdate -group burst            /${top}/${dut}/asg/end_bdl
 add wave -noupdate -group burst            /${top}/${dut}/asg/end_bpl
-add wave -noupdate -group burst            /${top}/${dut}/asg/end_bnm
+add wave -noupdate -group burst            /${top}/${dut}/asg/end_bpn
 
 # busses
 axi4_stream_if stg     /${top}/${dut}/stg

@@ -73,12 +73,14 @@
 // Burst mode is enabled using the cfg_ben signal.
 // In the next diagram 'D' is date read from the buffer, while I is idle data
 // (repetition of last value read from the buffer). The D*I* sequence can be
-// repeated.
+// repeated. Each sample from the table is repeated (cfg_bdr+1) times.
+// (cfg_bdl+1) samples are read from the table.
 //
 // DDDDDDDDIIIIIIIIDDDDDDDDIIIIIIIIDDDDDDDDIIIIIIII...
+//                                                     cfg_bdr+1 data repetitions
 // |<---->|        |<---->|        |<---->|            cfg_bdl+1 data length
-// |<------------>||<------------>||<------------>|    cfg_bpl+1 leriod length
-//                                                     cfg_bnm+1 repetitions 
+// |<------------>||<------------>||<------------>|    cfg_bpl+1 period length
+//                                                     cfg_bpn+1 period number
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,10 +123,10 @@ module asg #(
   input  logic     [CWR-1:0] cfg_bdr,  // burst data   repetitions
   input  logic     [CWM-1:0] cfg_bdl,  // burst data   length
   input  logic     [CWL-1:0] cfg_bpl,  // burst period length
-  input  logic     [CWN-1:0] cfg_bnm,  // burst period number
+  input  logic     [CWN-1:0] cfg_bpn,  // burst period number
   // status
-  output logic     [CWL-1:0] sts_bln,  // burst period length counter
-  output logic     [CWN-1:0] sts_bnm,  // burst period number counter
+  output logic     [CWL-1:0] sts_bpl,  // burst period length counter
+  output logic     [CWN-1:0] sts_bpn,  // burst period number counter
   // System bus
   sys_bus_if.s               bus
 );
@@ -141,20 +143,23 @@ logic [CWM    -1:0] buf_ptr;    // read pointer
 logic               buf_adr_vld;  // valid (read data enable)
 logic               buf_adr_lst;  // last
 
-// pointers
+// continuous/periodic pointers
 logic [CWM+CWF-1:0] ptr_cur; // current
 logic [CWM+CWF-0:0] ptr_nxt; // next
 logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
-// counter end status
+// burst counters/status
+logic               sts_bdr;  // burst data   repetitions
+logic               sts_bdl;  // burst data   length
+logic               end_bdr;  // burst data   repetitions
 logic               end_bdl;  // burst data   length
 logic               end_bpl;  // burst period length
-logic               end_bnm;  // burst repetitions
-// status
+logic               end_bpn;  // burst period number
+// address enable
 logic               sts_adr;      // address enable
 logic               sts_adr_per;  // address enable periodic engine
 logic               sts_adr_bst;  // address enable burst    engine
-
+// backpressure (TODO: it is not implemented properly)
 logic               sts_rdy;      // ready
 // events
 logic               ctl_run;      // run start event
@@ -221,7 +226,7 @@ end
 assign sts_adr = cfg_ben ? sts_adr_bst : sts_adr_per;
 
 // buffer pointer depends on burst mode
-assign buf_ptr = cfg_ben ? sts_bln : ptr_cur[CWF+:CWM];
+assign buf_ptr = cfg_ben ? sts_bpl : ptr_cur[CWF+:CWM];
 
 ////////////////////////////////////////////////////////////////////////////////
 // start/stop status
@@ -303,7 +308,7 @@ assign ptr_nxt_sub_neg = ptr_nxt_sub[CWM+CWF];
 ////////////////////////////////////////////////////////////////////////////////
 
 // control end event
-assign ctl_end_bst = ctl_stp | (end_bpl & end_bnm); 
+assign ctl_end_bst = ctl_stp | (end_bpl & end_bpn); 
 
 // state machine
 always_ff @(posedge sto.ACLK)
@@ -327,28 +332,37 @@ end
 // address pointer counter
 always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
-  sts_bln <= '0;
-  sts_bnm <= '0;
+  sts_bdr <= '0;
+  sts_bdl <= '0;
+  sts_bpl <= '0;
+  sts_bpn <= '0;
 end else begin
   // synchronous clear
   if (ctl_rst) begin
-    sts_bln <= '0;
-    sts_bnm <= '0;
+    sts_bdr <= '0;
+    sts_bdl <= '0;
+    sts_bpl <= '0;
+    sts_bpn <= '0;
   end else if (cfg_ben) begin
     if (ctl_run) begin
-      sts_bnm <= '0;
-      sts_bln <= '0;
+      sts_bdr <= '0;
+      sts_bdl <= '0;
+      sts_bpl <= '0;
+      sts_bpn <= '0;
     end else if (sts_trg & sts_rdy) begin
-      sts_bnm <= sts_bnm + end_bpl;
-      sts_bln <= end_bpl ? '0 : sts_bln + 1; 
+      sts_bdr <= end_bdr ? 0 : sts_bdr + 1;
+      sts_bdr <= end_bdr ? 0 : sts_bdr + end_bdr;
+      sts_bpl <= end_bpl ? 0 : sts_bpl + 1; 
+      sts_bpn <=               sts_bpn + end_bpl;
     end
   end
 end
 
 // counter end status
-assign end_bnm = (sts_bnm == cfg_bnm) & ~cfg_inf;
-assign end_bpl = (sts_bln == cfg_bpl);
-assign end_bdl = (sts_bln == cfg_bdl);
+assign end_bdr = (sts_bdr == cfg_bdr);
+assign end_bdl = (sts_bdl == cfg_bdl);
+assign end_bpl = (sts_bpl == cfg_bpl);
+assign end_bpn = (sts_bpn == cfg_bpn) & ~cfg_inf;
 
 // events
 always_ff @(posedge sto.ACLK)

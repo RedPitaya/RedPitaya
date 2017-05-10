@@ -93,10 +93,10 @@ logic  [CW-1:0] cfg_ste;  // address increment step (frequency)
 logic [CWR-1:0] cfg_bdr;  // burst data   repetitions
 logic [CWM-1:0] cfg_bdl;  // burst data   length
 logic [CWL-1:0] cfg_bpl;  // burst period length
-logic [CWN-1:0] cfg_bnm;  // burst period number
+logic [CWN-1:0] cfg_bpn;  // burst period number
 // status
-logic [CWL-1:0] sts_bln;  // burst period length counter
-logic [CWN-1:0] sts_bnm;  // burst period number counter
+logic [CWL-1:0] sts_bpl;  // burst period length counter
+logic [CWN-1:0] sts_bpn;  // burst period number counter
 // linear offset and gain
 DTM             cfg_mul;
 DTS             cfg_sum;
@@ -136,7 +136,7 @@ if (~bus.rstn) begin
   cfg_ben <= '0;
   cfg_inf <= '0;
   cfg_bdl <= '0;
-  cfg_bnm <= '0;
+  cfg_bpn <= '0;
   cfg_bpl <= '0;
   // linear transform or logic analyzer output enable
   cfg_mul <= '0;
@@ -163,7 +163,7 @@ end else begin
     if (bus.addr[BAW-1:0]=='h30)  cfg_bdr <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h34)  cfg_bdl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h38)  cfg_bpl <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h3c)  cfg_bnm <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h3c)  cfg_bpn <= bus.wdata;
     // linear transformation and enable
     if (bus.addr[BAW-1:0]=='h50)  cfg_mul <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h54)  cfg_sum <= bus.wdata;
@@ -216,10 +216,10 @@ casez (bus.addr[BAW-1:0])
   'h30: bus.rdata <= cfg_bdr;
   'h34: bus.rdata <= cfg_bdl;
   'h38: bus.rdata <= cfg_bpl;
-  'h3c: bus.rdata <= cfg_bnm;
+  'h3c: bus.rdata <= cfg_bpn;
   // burst status
-  'h40: bus.rdata <= sts_bln;
-  'h44: bus.rdata <= sts_bnm;
+  'h40: bus.rdata <= sts_bpl;
+  'h44: bus.rdata <= sts_bpn;
   // linear transformation and enable
   'h50: bus.rdata <= cfg_mul;
   'h54: bus.rdata <= cfg_sum;
@@ -300,10 +300,10 @@ asg #(
   .cfg_bdr  (cfg_bdr),
   .cfg_bdl  (cfg_bdl),
   .cfg_bpl  (cfg_bpl),
-  .cfg_bnm  (cfg_bnm),
+  .cfg_bpn  (cfg_bpn),
   // status
-  .sts_bln  (sts_bln),
-  .sts_bnm  (sts_bnm),
+  .sts_bpl  (sts_bpl),
+  .sts_bpn  (sts_bpn),
   // CPU buffer access
   .bus      (bus_tbl)
 );
