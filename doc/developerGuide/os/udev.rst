@@ -7,8 +7,8 @@ UDEV rules
 The documentation for writing UDEV rules can be found here:
 https://www.freedesktop.org/software/systemd/man/udev.html
 
-.. |10-redpitaya.rule| replace:: ``/etc/udev/rules.d/10-redpitaya.rule``
-.. _10-redpitaya.rule: ../../../OS/debian/overlay/etc/udev/rules.d/10-redpitaya.rule
+.. |10-redpitaya.rule| replace:: ``/etc/udev/rules.d/10-redpitaya.rules``
+.. _10-redpitaya.rule: ../../../OS/debian/overlay/etc/udev/rules.d/10-redpitaya.rules
 
 .. |uio-api.dtsi| replace:: ``uio-api.dtsi``
 .. _uio-api.dtsi: ../../../fpga/dts/uio-api.dtsi
