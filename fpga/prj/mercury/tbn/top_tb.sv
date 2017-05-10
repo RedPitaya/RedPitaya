@@ -27,10 +27,15 @@ logic               trig;
 initial        clk = 1'b0;
 always #(TP/2) clk = ~clk;
 
+// clocking 
+default clocking cb @ (posedge clk);
+  input  rstn;
+endclocking: cb
+
 // DAC reset
 initial begin
   rstn = 1'b0;
-  repeat(4) @(posedge clk);
+  ##4;
   rstn = 1'b1;
 end
 
@@ -41,9 +46,9 @@ cyc <= cyc+1;
 
 always begin
   trig <= 1'b0;
-  repeat(100000) @(posedge clk);
+  ##100000;
   trig <= 1'b1;
-  repeat(1200) @(posedge clk);
+  ##1200;
   trig <= 1'b0;
 end
 
@@ -52,22 +57,23 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  repeat(10000) @(posedge clk);
+  ##10000;
   $finish();
 end
 
 initial begin
-  repeat(100) @(posedge clk);
+  ##100;
   //test_id  (32'h40000000);
-  test_gen (32'h40040000, 32'h40050000, 0*6);
-  test_gen (32'h40060000, 32'h40070000, 1*6);
-  repeat(16) @(posedge clk);
-  test_osc (32'h40080000, 32'h40090000, 2*6);
-  repeat(16) @(posedge clk);
+  test_gen_burst (32'h40040000, 32'h40050000, 0*6);
+//  test_gen (32'h40040000, 32'h40050000, 0*6);
+//  test_gen (32'h40060000, 32'h40070000, 1*6);
+//  ##16;
+//  test_osc (32'h40080000, 32'h40090000, 2*6);
+//  ##16;
   //test_clb (32'h40030000);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
-  repeat(16) @(posedge clk);
+  ##16;
   $finish();
 end
 
@@ -144,7 +150,7 @@ task test_osc (
   int unsigned buffer,
   int unsigned sh = 0
 );
-  repeat(10) @(posedge clk);
+  ##10;
   // hardware event (trigger) mask
   axi_write(regset+'h04, '1);
   // software event (reset/start/stop/trigger) masks
@@ -170,7 +176,7 @@ task test_osc (
   axi_write(regset+'h00, 4'b0010);  // start
   //axi_write(regset+'h00, 4'b0100);  // stop
   //axi_write(regset+'h00, 4'b1000);  // trigger
-  repeat(1000) @(posedge clk);
+  ##1000;
 endtask: test_osc
 
 
@@ -180,7 +186,7 @@ task test_gen (
   int unsigned sh = 0
 );
   logic signed [ 32-1: 0] rdata_blk [];
-  repeat(10) @(posedge clk);
+  ##10;
 
   // write table
   for (int i=0; i<buf_len; i++) begin
@@ -220,10 +226,10 @@ task test_gen (
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
-  repeat(22) @(posedge clk);
+  ##22;
   // stop (reset)
 //  axi_write(regset+'h00, 2'b01);
-  repeat(20) @(posedge clk);
+  ##20;
 
 //  // burst mode
 //  axi_write(regset+'h34, buf_len - 1);  // burst data length
@@ -232,19 +238,56 @@ task test_gen (
 //  axi_write(regset+'h30, 'b11);  // enable burst mode and infinite repetitions
 //  // start
 //  axi_write(regset+'h00, 2'b10);
-//  repeat(100) @(posedge clk);
+//  ##100;
 //  // stop (reset)
 ////axi_write(regset+'h00, 2'b01);
-////repeat(20) @(posedge clk);
+////##20;
 endtask: test_gen
 
+task test_gen_burst (
+  int unsigned regset,
+  int unsigned buffer,
+  int unsigned sh = 0
+);
+  // write table
+  for (int i=0; i<8; i++) begin
+    axi_write(buffer + (i*4), i);  // write table
+  end
+
+  // configure amplitude and DC offset
+  axi_write(regset+'h50, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h54, 0);             // DC offset
+  axi_write(regset+'h58, 1);             // output enable
+
+  // configure burst mode
+  axi_write(regset+'h20, 2'b11);  // burst disable
+  // burst mode
+  axi_write(regset+'h30,  1 - 1);  // burst data repetitions
+  axi_write(regset+'h34,  2 - 1);  // burst data length
+  axi_write(regset+'h38, 16 - 1);  // burst period length
+  axi_write(regset+'h3c,  4 - 1);  // burst period number
+  // hardware event (trigger) mask
+  axi_write(regset+'h04, '1);
+  // software event (reset/start/stop/trigger) masks
+  axi_write(regset+'h10, '1);  // reset
+  axi_write(regset+'h14, '1);  // start
+  axi_write(regset+'h18, '1);  // stop
+  axi_write(regset+'h1c, '1);  // trigger
+  // start, trigger
+  axi_write(regset+'h00, 4'b0010);
+  axi_write(regset+'h00, 4'b1000);
+  ##22;
+  // stop (reset)
+//  axi_write(regset+'h00, 2'b01);
+  ##20;
+endtask: test_gen_burst
 
 // calibration regset test
 task test_clb (
   int unsigned regset
 );
   int dat;
-  repeat(10) @(posedge clk);
+  ##10;
   // write all registers
   for (int unsigned i=0; i<8; i++) begin
     axi_write(regset+i*4, i);
@@ -254,7 +297,7 @@ task test_clb (
     axi_read(regset+i*4, dat);
     $display ("clb: @%04x = %08x", i*4, dat);
   end
-  repeat(10) @(posedge clk);
+  ##10;
 endtask: test_clb
 
 
@@ -263,7 +306,7 @@ task test_lg (
   int unsigned buffer
 );
   logic signed [ 32-1: 0] rdata_blk [];
-  repeat(10) @(posedge clk);
+  ##10;
 
 //  // configure amplitude and DC offset
 //  axi_write(regset+'h38, 1 << (DWM-2));  // amplitude
@@ -295,10 +338,10 @@ task test_lg (
   axi_write(regset+'h04, 'b100);
   // start
   axi_write(regset+'h00, 2'b10);
-  repeat(22) @(posedge clk);
+  ##22;
   // stop (reset)
   axi_write(regset+'h00, 2'b01);
-  repeat(20) @(posedge clk);
+  ##20;
 
   // burst mode
   axi_write(regset+'h24, buf_len - 1);  // burst data length
@@ -307,17 +350,17 @@ task test_lg (
   axi_write(regset+'h20, 'b11);  // enable burst mode and infinite repetitions
   // start
   axi_write(regset+'h00, 2'b10);
-  repeat(100) @(posedge clk);
+  ##100;
   // stop (reset)
 //axi_write(regset+'h00, 2'b01);
-//repeat(20) @(posedge clk);
+//##20;
 endtask: test_lg
 
 
 task test_la (
   int unsigned regset
 );
-  repeat(10) @(posedge clk);
+  ##10;
 
   // configure trigger
   axi_write(regset+'h40, 16'h0000);  // cfg_cmp_msk
@@ -331,14 +374,14 @@ task test_la (
   axi_write(regset+'h08, 'b0010);
   // start acquire
   axi_write(regset+'h00, 4'b0100);
-  repeat(1000) @(posedge clk);
+  ##1000;
 endtask: test_la
 
 
 task test_la_automatic (
   int unsigned regset
 );
-  repeat(10) @(posedge clk);
+  ##10;
 
   // enable automatic mode
   axi_write(regset+'h04, 'h2);  // cfg_aut <= 1
@@ -349,7 +392,7 @@ task test_la_automatic (
   axi_write(regset+'h08, 'b0000);
   // start acquire
   axi_write(regset+'h00, 4'b0100);
-  repeat(1000) @(posedge clk);
+  ##1000;
 endtask: test_la_automatic
 
 

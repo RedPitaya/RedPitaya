@@ -367,7 +367,7 @@ assign end_bpn = (sts_bpn == cfg_bpn) & ~cfg_inf;
 // events
 always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn)  evn_per <= 1'b0;
-else               evn_per <= end_bpl;
+else               evn_per <= cfg_ben & sts_trg & end_bpl;
 
 assign evn_lst = buf_adr_lst;
 
