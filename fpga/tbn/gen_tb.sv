@@ -129,12 +129,12 @@ initial begin
   ##20;
 
   // enable burst mode
-  busm.write('h30, 2'b01);  // burst enable
+  busm.write('h20, 2'b01);  // burst enable
   // burst configuration
-  busm.write('h30, 3-1);  // burst data   repetitions
-  busm.write('h34, 4-1);  // burst data   length
+  busm.write('h30, 2-1);  // burst data   repetitions
+  busm.write('h34, 3-1);  // burst data   length
   busm.write('h38, 8-1);  // burst period length
-  busm.write('h3c, 4-1);  // burst period number
+  busm.write('h3c, 2-1);  // burst period number
   // start/trigger
   busm.write('h00, CTL_STR);
   busm.write('h00, CTL_TRG);

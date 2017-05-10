@@ -149,8 +149,8 @@ logic [CWM+CWF-0:0] ptr_nxt; // next
 logic [CWM+CWF-0:0] ptr_nxt_sub ;
 logic               ptr_nxt_sub_neg;
 // burst counters/status
-logic               sts_bdr;  // burst data   repetitions
-logic               sts_bdl;  // burst data   length
+logic     [CWR-1:0] sts_bdr;  // burst data   repetitions
+logic     [CWM-1:0] sts_bdl;  // burst data   length
 logic               end_bdr;  // burst data   repetitions
 logic               end_bdl;  // burst data   length
 logic               end_bpl;  // burst period length
@@ -226,7 +226,7 @@ end
 assign sts_adr = cfg_ben ? sts_adr_bst : sts_adr_per;
 
 // buffer pointer depends on burst mode
-assign buf_ptr = cfg_ben ? sts_bpl : ptr_cur[CWF+:CWM];
+assign buf_ptr = cfg_ben ? sts_bdl : ptr_cur[CWF+:CWM];
 
 ////////////////////////////////////////////////////////////////////////////////
 // start/stop status
@@ -350,17 +350,17 @@ end else begin
       sts_bpl <= '0;
       sts_bpn <= '0;
     end else if (sts_trg & sts_rdy) begin
-      sts_bdr <= end_bdr ? 0 : sts_bdr + 1;
-      sts_bdr <= end_bdr ? 0 : sts_bdr + end_bdr;
-      sts_bpl <= end_bpl ? 0 : sts_bpl + 1; 
-      sts_bpn <=               sts_bpn + end_bpl;
+      sts_bdr <= end_bdr ? 0 : sts_bdr + !end_bdl;
+      sts_bdl <= end_bpl ? 0 : sts_bdl +  end_bdr;
+      sts_bpl <= end_bpl ? 0 : sts_bpl +        1; 
+      sts_bpn <=               sts_bpn +  end_bpl;
     end
   end
 end
 
 // counter end status
 assign end_bdr = (sts_bdr == cfg_bdr);
-assign end_bdl = (sts_bdl == cfg_bdl);
+assign end_bdl = (sts_bdl == cfg_bdl) & end_bdr;
 assign end_bpl = (sts_bpl == cfg_bpl);
 assign end_bpn = (sts_bpn == cfg_bpn) & ~cfg_inf;
 
