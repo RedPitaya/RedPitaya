@@ -13,6 +13,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wireless-mode-ap.servic
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.service         $ROOT_DIR/etc/systemd/system/wpa_supplicant@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.service    $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostapd@.service                $ROOT_DIR/etc/systemd/system/hostapd@.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostapd_wext@.service           $ROOT_DIR/etc/systemd/system/hostapd_wext@.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/iptables.service                $ROOT_DIR/etc/systemd/system/iptables.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant@.path            $ROOT_DIR/etc/systemd/system/wpa_supplicant@.path
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/wpa_supplicant_wext@.path       $ROOT_DIR/etc/systemd/system/wpa_supplicant_wext@.path
@@ -52,11 +53,11 @@ apt-get -y install wpasupplicant iw
 apt-get -y install wireless-tools
 
 # WiFi tools (AP)
-apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config libssl-dev
-mkdir -p /etc/hostapd/
+apt-get -y install hostapd
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
-# compile hostapd
+# compile hostapd for wext
+apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config libssl-dev
 apt-get -y install iptables
 apt-get -y install build-essential gcc 
 curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/${HAPATCH_VER}.tar.gz -o hostapd-rtl871xdrv-${HAPATCH_VER}.tar.gz
@@ -70,7 +71,8 @@ cp defconfig .config
 echo CONFIG_DRIVER_RTW=y >> .config
 echo CONFIG_LIBNL32=y    >> .config
 make
-make install
+mkdir /root/hostapd_wext
+BINDIR=/root/hostapd_wext make install
 cd ../../
 rm -rf hostapd*
 
@@ -99,7 +101,7 @@ systemctl enable wireless_adapter_up@wlan0wext.service
 systemctl enable wpa_supplicant@wlan0.service
 systemctl enable wpa_supplicant_wext@wlan0wext.service
 systemctl enable hostapd@wlan0.service
-systemctl enable hostapd@wlan0wext.service
+systemctl enable hostapd_wext@wlan0wext.service
 systemctl enable wireless-mode-client.service
 systemctl enable wireless-mode-ap.service
 systemctl enable iptables.service
