@@ -6,8 +6,11 @@ apt-get -y install fake-hwclock \
   xserver-xorg xinit xserver-xorg-video-fbdev
 apt-get -y install xinput evtest
 
+# This is just a placeholder, audio is not available
 #echo te-audio-codec >> $root_dir/etc/modules
 
+# install QT5
+apt-get -y install qt5-default
 EOF_CHROOT
 
 install -v -m 664 -o root -D $OVERLAY/usr/share/X11/xorg.conf.d/99-fbdev.conf $ROOT_DIR/usr/share/X11/xorg.conf.d/99-fbdev.conf
