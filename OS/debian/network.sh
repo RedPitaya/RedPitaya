@@ -52,11 +52,11 @@ apt-get -y install wpasupplicant iw
 apt-get -y install wireless-tools
 
 # WiFi tools (AP)
-apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config libssl-dev
-mkdir -p /etc/hostapd/
+apt-get -y install hostapd
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
-# compile hostapd
+# compile hostapd for wext
+apt-get -y install libnl-3-dev libnl-genl-3-dev pkg-config libssl-dev
 apt-get -y install iptables
 apt-get -y install build-essential gcc 
 curl -L https://github.com/pritambaral/hostapd-rtl871xdrv/archive/${HAPATCH_VER}.tar.gz -o hostapd-rtl871xdrv-${HAPATCH_VER}.tar.gz
@@ -100,7 +100,7 @@ systemctl enable wireless_adapter_up@wlan0wext.service
 systemctl enable wpa_supplicant@wlan0.service
 systemctl enable wpa_supplicant_wext@wlan0wext.service
 systemctl enable hostapd@wlan0.service
-systemctl enable hostapd@wlan0wext.service
+systemctl enable hostapd_wext@wlan0wext.service
 systemctl enable wireless-mode-client.service
 systemctl enable wireless-mode-ap.service
 systemctl enable iptables.service
