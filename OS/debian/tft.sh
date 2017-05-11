@@ -1,9 +1,18 @@
 chroot $ROOT_DIR <<- EOF_CHROOT
-apt-get -y install fake-hwclock \
-  python3 python3-numpy build-essential libfftw3-dev python3-scipy \
+# development tools
+apt-get -y install build-essential libfftw3-dev
+
+# Python
+apt-get -y install python3 python3-numpy python3-scipy
+
+# X server and xfce
+apt-get -y install \
+  build-essential libfftw3-dev \
   xfonts-base tightvncserver xfce4-panel xfce4-session xfwm4 xfdesktop4 \
   xfce4-terminal thunar gnome-icon-theme \
   xserver-xorg xinit xserver-xorg-video-fbdev
+
+# touch screen debug tools
 apt-get -y install xinput evtest
 
 # This is just a placeholder, audio is not available
