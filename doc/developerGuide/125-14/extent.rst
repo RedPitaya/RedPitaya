@@ -10,7 +10,7 @@ Extension connector
     - Power supply: 
     - Available voltages: +5V, +3.3V, 3.3V 
     - Current limitations: 500 mA for +5V and +3.3V (to be shared between extension module and USB devices), 50 mA 
-      for 3.3V supply. 
+      for -3.3V supply. 
 
 .. _E1:
     
@@ -52,7 +52,7 @@ Pin  Description FPGA pin number FPGA pin description     Voltage levels
 26   GND
 ===  =========== =============== ======================== ==============
 
-All DIOx_y pins are LVCMOS33. abs. max. ratings are: min. –0.40V max. 3.3V + 0.55V    
+All DIOx_y pins are LVCMOS33. abs. max. ratings are: min. –0.40V max. 3.3V + 0.55V <8 mA drive strength    
 
 .. _E2:
 
