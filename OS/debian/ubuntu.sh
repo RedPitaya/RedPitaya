@@ -148,7 +148,7 @@ EOF_CHROOT
 . OS/debian/zynq.sh
 . OS/debian/redpitaya.sh
 . OS/debian/jupyter.sh
-#. OS/debian/tft.sh
+. OS/debian/tft.sh
 
 ################################################################################
 # handle users
