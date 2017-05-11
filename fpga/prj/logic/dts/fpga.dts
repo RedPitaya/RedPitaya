@@ -2,3 +2,5 @@
 /include/ "led-user.dtsi"
 /include/ "dma.dtsi"
 /include/ "uio.dtsi"
+/include/ "tft/tft-hx8357d-stmpe601.dtsi"
+/include/ "qspi.dtsi"
