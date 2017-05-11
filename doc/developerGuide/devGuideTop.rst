@@ -7,5 +7,5 @@ Developers guide
 
     hardware
     software
-    
+    examples
     
