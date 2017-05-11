@@ -70,7 +70,8 @@ cp defconfig .config
 echo CONFIG_DRIVER_RTW=y >> .config
 echo CONFIG_LIBNL32=y    >> .config
 make
-make install
+mkdir /root/hostapd_wext
+BINDIR=/root/hostapd_wext make install
 cd ../../
 rm -rf hostapd*
 
