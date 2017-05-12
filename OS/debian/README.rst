@@ -204,8 +204,6 @@ Service files are located in ``OS/debian/overlay/etc/systemd/system/*.service``.
 +-------------------------+----------------------------------------------------------------------------------------------------+
 | ``redpitaya_scpi``      | SCPI server, is disabled by default, since it conflicts with WEB applications                      |
 +-------------------------+----------------------------------------------------------------------------------------------------+
-| ``redpitaya_discovery`` | Device discovery, is run once after boot to send Ethernet MAC and IP address to a discovery server |
-+-------------------------+----------------------------------------------------------------------------------------------------+
 | ``redpitaya_nginx``     | Nginx based server, serving WEB based applications                                                 |
 +-------------------------+----------------------------------------------------------------------------------------------------+
 
