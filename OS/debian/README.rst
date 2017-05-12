@@ -69,7 +69,9 @@ Run the next command inside the project root directory. Root or ``sudo`` privile
 
 .. code-block:: shell-session
 
-   $ sudo OS/debian/image.sh
+   $ sudo bash
+   $ OS/debian/image.sh
+   $ exit
 
 This will create an image with a name containing the current date and time.
 Two scripts ``debian.sh`` and ``redpitaya.sh`` will also be called from ``image.sh``.

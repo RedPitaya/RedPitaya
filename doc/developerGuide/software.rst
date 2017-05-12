@@ -9,9 +9,8 @@ Software
    software/webApps
    software/clt
    ../../OS/debian/README.rst
-   ssh/ssh
-   console/console
-   software/network
+   os/ssh/ssh
+   os/console/console
+   os/network
    ../../fpga/fpga
    comC
-   
