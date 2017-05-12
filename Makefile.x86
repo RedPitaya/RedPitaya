@@ -82,7 +82,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_PRJ_LST = classic logic v0.94 axi4lite mercury
+FPGA_PRJ_LST = classic logic v0.94 axi4lite mercury tft
 FPGA_PRJ_LST = classic logic v0.94 mercury
 FPGA_PRJ = logic
 
