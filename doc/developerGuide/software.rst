@@ -4,7 +4,7 @@ Software
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   
    
    software/webApps
    software/clt

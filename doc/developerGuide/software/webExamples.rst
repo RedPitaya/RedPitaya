@@ -4,7 +4,7 @@ Examples
 
 .. toctree::
    :maxdepth: 2
-   :numbered: 
+    
    
    webexamples/addLEDbut
    webexamples/Ravoltagesi

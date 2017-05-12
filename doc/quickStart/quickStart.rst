@@ -4,7 +4,7 @@ Quick start
 
 .. toctree::
    :maxdepth: 1
-   :numbered:
+   
    
    needs
    first
