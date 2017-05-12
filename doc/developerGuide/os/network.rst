@@ -15,28 +15,55 @@ Quick setup
     In order to set wireless or direct Ethernet connection you need to access Red Pitaya STEMlab 
     :ref:`Console interface <console>`.
 
-===========
-WiFi client
-===========
+==============================
+WiFi client (Edimax EW-7811Un)
+==============================
 
 List wireless access pints:
 
 .. code-block:: shell-session
 
-   # iwlist scan
+   # iwlist scan | grep SSID
 
-Write a ``wpa_supplicant.conf`` configuration file to the FAT partition:
+Write a ``wpa_supplicant.conf`` configuration file to the FAT partition.
+*ssid* and *passphrase* can/should be inside parentheses.
 
 .. code-block:: shell-session
 
    # rw
    $ wpa_passphrase <ssid> [passphrase] > /opt/redpitaya/wpa_supplicant.conf
 
-Restart wpa supplicant:
+Restart WPA supplicant:
 
 .. code-block:: shell-session
 
     # systemctl restart wpa_supplicant_wext@wlan0wext.service
+
+========================================
+WiFi client (BCM43143 based and similar)
+========================================
+
+`Recommended device for Raspberry PI <https://www.raspberrypi.org/products/usb-wifi-dongle/>`_ can be used.
+
+List wireless access pints:
+
+.. code-block:: shell-session
+
+   # iw wlan0 scan | grep SSID
+
+Write a ``wpa_supplicant.conf`` configuration file to the FAT partition.
+*ssid* and *passphrase* can/should be inside parentheses.
+
+.. code-block:: shell-session
+
+   # rw
+   $ wpa_passphrase <ssid> [passphrase] > /opt/redpitaya/wpa_supplicant.conf
+
+Restart WPA supplicant:
+
+.. code-block:: shell-session
+
+    # systemctl restart wpa_supplicant@wlan0.service
 
 =================
 WiFi access point
