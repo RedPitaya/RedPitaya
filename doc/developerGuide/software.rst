@@ -11,7 +11,6 @@ Software
    ../../OS/debian/README.rst
    ssh/ssh
    console/console
-   software/network
+   os/network
    ../../fpga/fpga
    comC
-   
