@@ -20,7 +20,7 @@ apt-get -y install xinput evtest
 #echo te-audio-codec >> $root_dir/etc/modules
 
 # install QT5
-apt-get -y install qt5-default
+apt-get -y install qt5-default libqt5script5 libqt5scripttools5
 EOF_CHROOT
 
 install -v -m 664 -o root -D $OVERLAY/usr/share/X11/xorg.conf.d/99-fbdev.conf $ROOT_DIR/usr/share/X11/xorg.conf.d/99-fbdev.conf
