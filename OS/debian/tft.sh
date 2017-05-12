@@ -1,4 +1,7 @@
 chroot $ROOT_DIR <<- EOF_CHROOT
+# install sshfs
+apt-get -y install sshfs
+
 # development tools
 apt-get -y install build-essential libfftw3-dev
 
@@ -21,6 +24,11 @@ apt-get -y install xinput evtest
 
 # install QT5
 apt-get -y install qt5-default libqt5script5 libqt5scripttools5
+
+# install X2Go
+sudo add-apt-repository ppa:x2go/stable
+sudo apt-get update
+apt-get -y install x2goserver
 EOF_CHROOT
 
 install -v -m 664 -o root -D $OVERLAY/usr/share/X11/xorg.conf.d/99-fbdev.conf $ROOT_DIR/usr/share/X11/xorg.conf.d/99-fbdev.conf
