@@ -9,7 +9,7 @@ Software
    software/webApps
    software/clt
    ../../OS/debian/README.rst
-   ssh/ssh
+   os/ssh/ssh
    console/console
    os/network
    ../../fpga/fpga
