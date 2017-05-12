@@ -10,7 +10,7 @@ Software
    software/clt
    ../../OS/debian/README.rst
    os/ssh/ssh
-   console/console
+   os/console/console
    os/network
    ../../fpga/fpga
    comC
