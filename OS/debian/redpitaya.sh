@@ -107,14 +107,12 @@ EOF_CHROOT
 ################################################################################
 
 install -v -m 664 -o root -d                                                         $ROOT_DIR/var/log/redpitaya_nginx
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_discovery.service $ROOT_DIR/etc/systemd/system/redpitaya_discovery.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service     $ROOT_DIR/etc/systemd/system/redpitaya_nginx.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/sockproc.service            $ROOT_DIR/etc/systemd/system/sockproc.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_scpi.service      $ROOT_DIR/etc/systemd/system/redpitaya_scpi.service
 install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-systemctl enable redpitaya_discovery
 systemctl enable redpitaya_nginx
 systemctl enable sockproc
 #systemctl enable redpitaya_scpi
