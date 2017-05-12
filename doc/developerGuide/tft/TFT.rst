@@ -4,13 +4,13 @@ Interfacing SPI TFT displays with touch
 
 This document describes how to connect a
 SPI interface based TFT display with touch support
-to the E2 connector, without the need for specific FPGA code.
+to the :ref:`E2 <E2>` connector, without the need for specific FPGA code.
 The given setup has advantages and drawbacks.
 
 **PROS:**
 
 * It uses only ``MIO`` signals so it can be used with any FPGA image.
-* Only extension connector **E2** is used.
+* Only extension connector :ref:`E2 <E2>` is used.
 * SPI is not wired through the FPGA so maximum clock speeds can be used.
 
 **CONS:**
@@ -28,7 +28,7 @@ Hardware setup
 
 It is possible to reconfigure **Zynq** MIO signals using the ``pinctrl`` kernel driver.
 This TFT display setup takes advantage of this by repurposing SPI, I2C and UART signals
-on the E2 connector as SPI and GPIO signals which are required by the TFT display interface.
+on the :ref:`E2 <E2>` connector as SPI and GPIO signals which are required by the TFT display interface.
 
 .. |tft-E2| replace:: ``tft-E2.dtsi``
 .. _tft-E2: dts/tft/tft-E2.dtsi
@@ -171,7 +171,7 @@ Connector pinout based on the |MI0283QT-2|_
 | GND               | GND       |  ``2`` |  ``1`` | GND       |                   |
 +-------------------+-----------+--------+--------+-----------+-------------------+
 
-Backlight control is not available on the E2 connector.
+Backlight control is not available on the :ref:`E2 <E2>` connector.
 A simple solution is to connect the **LCD_LED** signal
 to +5V VCC, this can be done with a simple jumper
 between the two display connector pins.
@@ -252,13 +252,18 @@ A calibration file should be added to the system |99-calibration.conf|_:
 
 .. literalinclude:: ../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
+------------------------
+Graphical representation
+------------------------
+
 .. figure:: img/TFT_connection.svg
   
-    Graphical representation of connection.
+    Graphical representation of how to connect Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5".
 
 .. figure:: img/TFT_connection-table.svg
   
-    Simplified graphical representation of connection.
+    Simplified graphical representation of Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5". For pin
+    locations please look at the top picture.
 
 *************************
 Debugging/Troubleshooting
