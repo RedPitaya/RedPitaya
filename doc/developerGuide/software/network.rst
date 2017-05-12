@@ -64,7 +64,7 @@ Network configuration
 The current network configuration is using 
 `systemd-networkd <https://www.freedesktop.org/software/systemd/man/systemd.network.html>`_ as the base. Almost all
 network configuration details are done by the bash script 
-`network.sh <https://github.com/RedPitaya/RedPitaya/blob/master/OS/debian/network.sh>`_ during the creation of the 
+`network.sh <../../../OS/debian/network.sh>`_ during the creation of the 
 Debian/Ubuntu SD card image. The script installs networking related packages and copies network configuration files 
 from the Git repository.
 
@@ -117,13 +117,13 @@ For user space tools to be able to distinguish between adapters using old and ne
 adapeter interfaces using the ``rtl8192cu`` are renamed into ``wlan0wext`` while adapter
 interfaces using other drivers keep the default name ``wlan0``. This is achieved using
 `systemd.link  <https://www.freedesktop.org/software/systemd/man/systemd.link.html>`_ file
-`/etc/systemd/network/10-wireless.link <../OS/debian/overlay/etc/systemd/network/10-wireless.link>`_.
+`/etc/systemd/network/10-wireless.link <../../../OS/debian/overlay/etc/systemd/network/10-wireless.link>`_.
 
 ===========
 Wired setup
 ===========
 
-The wired interface ``eth0`` configuration file `/etc/systemd/network/wired.network <../OS/debian/overlay/etc/systemd/network/wired.network>`_
+The wired interface ``eth0`` configuration file `/etc/systemd/network/wired.network <../../../OS/debian/overlay/etc/systemd/network/wired.network>`_
 configures it to use DHCP.
 
 In previous releases, where a `different DHCP client was used <http://linux.die.net/man/8/dhclient>`_,
@@ -148,19 +148,19 @@ A fixed IP address can be configured by adding the next lines to
 Wireless setup
 ==============
 
-The wireless interface ``wlan0`` configuration file is `/etc/systemd/network/wireless.network <../OS/debian/overlay/etc/systemd/network/wireless.network>`_.
+The wireless interface ``wlan0`` configuration file is `/etc/systemd/network/wireless.network <../../../OS/debian/overlay/etc/systemd/network/wireless.network>`_.
 
 To support two modes this file must be linked to either the client mode configuration
-`/etc/systemd/network/wireless.network.client <../OS/debian/overlay/etc/systemd/network/wireless.network.client>`_
+`/etc/systemd/network/wireless.network.client <../../../OS/debian/overlay/etc/systemd/network/wireless.network.client>`_
 or the access point configuration
-`/etc/systemd/network/wireless.network.ap <../OS/debian/overlay/etc/systemd/network/wireless.network.ap>`_.
+`/etc/systemd/network/wireless.network.ap <../../../OS/debian/overlay/etc/systemd/network/wireless.network.ap>`_.
 Switching between the two option is implemented by
-`/etc/systemd/system/wireless-mode-ap.service <../OS/debian/overlay/etc/systemd/system/wireless-mode-ap.service>`_
+`/etc/systemd/system/wireless-mode-ap.service <../../../OS/debian/overlay/etc/systemd/system/wireless-mode-ap.service>`_
 and
-`/etc/systemd/system/wireless-mode-client.service <OS/debian/overlay/etc/systemd/system/wireless-mode-client.service>`_
+`/etc/systemd/system/wireless-mode-client.service <../../../OS/debian/overlay/etc/systemd/system/wireless-mode-client.service>`_
 which must be run early at boot before most other network related services are run.
 If no wireless configuration file is available, then a third service
-`/etc/systemd/system/wireless_adapter_up@.service <OS/debian/overlay/etc/systemd/system/wireless_adapter_up@.service>`_
+`/etc/systemd/system/wireless_adapter_up@.service <../../../OS/debian/overlay/etc/systemd/system/wireless_adapter_up@.service>`_
 will link ``wireless.network`` to client mode, and it will power up the adapter so that ``iwlist`` will work.
 
 The choice of the interface is driven by the availability of access point ``/opt/redpitaya/hostapd.conf``
@@ -191,7 +191,7 @@ is `NetworkManager  <https://wiki.gnome.org/Projects/NetworkManager>`_.
 Sometimes it conflicts with the default ``systemd-networkd`` install, this seems to be one
 of those cases. On `Debian <https://packages.debian.org/jessie/armhf/wpasupplicant/filelist>`_ / Ubuntu
 a device `specific @.service <https://w1.fi/cgit/hostap/tree/wpa_supplicant/systemd/wpa_supplicant.service.arg.in>`_
-service is missing, so we made a copy `copy of wpa_supplicant@.service <OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
+service is missing, so we made a copy `copy of wpa_supplicant@.service <../../../OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
 in our Git repository.
 
 By default the service is installed as a dependency for ``multi-user.target``
@@ -208,9 +208,9 @@ Red Pitaya. The next change fixes both.
 
 Since WiFi drivers using two different APIs are allowed, and each API requires
 a slightly different ``wpa_supplicant`` configuration, there are also two different services:
-`wpa_supplicant@.service <../OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
+`wpa_supplicant@.service <../../../OS/debian/overlay/etc/systemd/system/wpa_supplicant@.service>`_
 triggered by the presence of network interface ``wlan0`` and
-`wpa_supplicant_wext@.service <../OS/debian/overlay/etc/systemd/system/wpa_supplicant_wext@.service>`_
+`wpa_supplicant_wext@.service <../../../OS/debian/overlay/etc/systemd/system/wpa_supplicant_wext@.service>`_
 triggered by the presence of network interface ``wlan0wext``.
 
 The encryption/authentication configuration file is linked to the FAT partition
@@ -235,7 +235,7 @@ WiFi access point functionality is provided by the `hostapd <https://w1.fi/hosta
 Since the upstream version does not support the ``wireless extensions`` API, the application is not
 installed as a Debian package, and is instead downloaded, patched, recompiled and installed.
 
-The `hostapd@.service <../OS/debian/overlay/etc/systemd/system/hostapd@.service>`_
+The `hostapd@.service <../../../OS/debian/overlay/etc/systemd/system/hostapd@.service>`_
 is handling the start of the daemon. Hotplugging is achieved the same way as with
 ``wpa_supplicant@.service``.
 
@@ -291,7 +291,7 @@ Wireless router
 In access point mode Red Pitaya behaves as a wireless router,
 if the wired interface is connected to the local network.
 
-In the wired network configuration file `/etc/systemd/network/wired.network <../OS/debian/overlay/etc/systemd/network/wired.network>`_
+In the wired network configuration file `/etc/systemd/network/wired.network <../../../OS/debian/overlay/etc/systemd/network/wired.network>`_
 there are two lines to enable IP forwarding and masquerading.
 
 .. code-block:: none
@@ -299,8 +299,8 @@ there are two lines to enable IP forwarding and masquerading.
    IPForward=yes
    IPMasquerade=yes
 
-An iptables configuration `/etc/iptables/iptables.rules <../OS/debian/overlay/etc/iptables/iptables.rules>`_
-is enbled by the iptables service `/etc/systemd/system/iptables.service <../OS/debian/overlay/etc/systemd/system/iptables.service>`_.
+An iptables configuration `/etc/iptables/iptables.rules <../../../OS/debian/overlay/etc/iptables/iptables.rules>`_
+is enbled by the iptables service `/etc/systemd/system/iptables.service <../../../OS/debian/overlay/etc/systemd/system/iptables.service>`_.
 
 .. note:: This functionality combined with default passwords can be a serious security issue.
    And since it is not needed to provide advertized functionality, we might remove it in the future.
@@ -368,7 +368,7 @@ SSH server
 The Open SSH server is installed and access to the root user is enabled.
 
 At the end of the SD card Debian/Ubuntu image creation encryption certificates are removed.
-They are again created on the first boot by `/etc/systemd/system/ssh-reconfigure.service <../OS/debian/overlay/etc/systemd/system/ssh-reconfigure.service>`_.
+They are again created on the first boot by `/etc/systemd/system/ssh-reconfigure.service <../../../OS/debian/overlay/etc/systemd/system/ssh-reconfigure.service>`_.
 Due to this the first boot takes a bit longer.
 This way the SSH encryption certificates are unique on each board.
 
@@ -396,7 +396,7 @@ The last three segments of the Ethernet MAC number without semicolons
 to generate the hostname, which is then used to generate a link name.
 For example if the MAC address is ``00:26:32:f0:f1:f2`` then the shortened string ``shortMAC`` is ``f0f1f2``.
 
-Hostname generation is done by `/etc/systemd/system/hostname-mac.service <../OS/debian/overlay/etc/systemd/system/hostname-mac.service>`_
+Hostname generation is done by `/etc/systemd/system/hostname-mac.service <../../../OS/debian/overlay/etc/systemd/system/hostname-mac.service>`_
 which must run early during the boot process.
 
 Each device can now be accessed using the URL ``http://rp-<shortMAC>.local``.
@@ -412,9 +412,9 @@ This service is a good alternative for our *Discovery* service provided on redpi
 `Avahi daemon <http://www.avahi.org>`_ is used to advertise specific services.
 Three configuration files are provided.
 
-* HTTP `/etc/avahi/services/bazaar.service <../OS/debian/overlay/etc/avahi/services/bazaar.service>`_
-* SSH  `/etc/avahi/services/ssh.service    <../OS/debian/overlay/etc/avahi/services/ssh.service>`_
-* SCPI `/etc/avahi/services/scpi.service   <../OS/debian/overlay/etc/avahi/services/scpi.service>`_
+* HTTP `/etc/avahi/services/bazaar.service <../../../OS/debian/overlay/etc/avahi/services/bazaar.service>`_
+* SSH  `/etc/avahi/services/ssh.service    <../../../OS/debian/overlay/etc/avahi/services/ssh.service>`_
+* SCPI `/etc/avahi/services/scpi.service   <../../../OS/debian/overlay/etc/avahi/services/scpi.service>`_
 
 .. note:: This services were enabled just recently, so full extent of their usefulness is still unknown.
 
@@ -469,7 +469,7 @@ for seeing up an access point using an USB adapter. Most of the documentation is
 
 We would like to get rid of this driver, since it requires maintaining a patch,
 and it requires deprecated user space tools ``wireless extensions`` and a
-`patched hostapd <../OS/debian/network.sh>`_.
+`patched hostapd <../../../OS/debian/network.sh>`_.
 
 =====================
 Proposed future setup

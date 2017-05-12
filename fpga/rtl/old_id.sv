@@ -13,7 +13,7 @@
 // ID register which user can define at compile time.
 ////////////////////////////////////////////////////////////////////////////////
 
-module id #(
+module old_id #(
   bit [0:5*32-1] GITH = '0,  // GIT hash full length
   bit   [57-1:0] DNA = 57'h0823456789ABCDE,
   bit   [32-1:0] EFUSE = 32'h01234567,
@@ -120,4 +120,4 @@ end else begin
   endcase
 end
 
-endmodule: id
+endmodule: old_id
