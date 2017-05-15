@@ -45,6 +45,9 @@ EOF_CHROOT
 ################################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
+# this is needed by systemd services 'keyboard-setup.service' and 'console-setup.service'
+apt-get -y install console-setup
+
 # setup locale
 apt-get -y install locales
 sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
