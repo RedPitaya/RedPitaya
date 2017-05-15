@@ -1,3 +1,20 @@
+# Release 0.97-RC7
+
+Linux kernel:
+- added support for BCM43143 USB Wi-Fi chipset
+
+FPGA:
+- recoded burst mode for asg/generator, Python API changes were also needed
+- CPU and SPI clock updates
+
+OS:
+- added some TFT SPI display support code
+- installed `console-setup` to fix some keyboard/console related systemd issues
+- removed discovery
+
+# Release 0.97-RC6
+
+
 # Release 0.97
 
 U-Boot:
