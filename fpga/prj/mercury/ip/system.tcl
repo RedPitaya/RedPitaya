@@ -241,7 +241,6 @@ CONFIG.POLARITY {ACTIVE_LOW} \
   set axi_dma_la [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_la ]
   set_property -dict [ list \
 CONFIG.c_include_mm2s {0} \
-CONFIG.c_m_axi_s2mm_data_width {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
 CONFIG.c_sg_length_width {23} \
  ] $axi_dma_la
@@ -250,7 +249,6 @@ CONFIG.c_sg_length_width {23} \
   set axi_dma_osc0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_osc0 ]
   set_property -dict [ list \
 CONFIG.c_include_mm2s {0} \
-CONFIG.c_m_axi_s2mm_data_width {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
 CONFIG.c_sg_length_width {23} \
  ] $axi_dma_osc0
@@ -259,7 +257,6 @@ CONFIG.c_sg_length_width {23} \
   set axi_dma_osc1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_osc1 ]
   set_property -dict [ list \
 CONFIG.c_include_mm2s {0} \
-CONFIG.c_m_axi_s2mm_data_width {64} \
 CONFIG.c_sg_include_stscntrl_strm {0} \
 CONFIG.c_sg_length_width {23} \
  ] $axi_dma_osc1
@@ -276,15 +273,6 @@ CONFIG.NUM_SI {3} \
   set_property -dict [ list \
 CONFIG.NUM_MI {4} \
  ] $axi_interconnect_sys
-
-  # Create instance: axi_protocol_converter_la, and set properties
-  set axi_protocol_converter_la [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_protocol_converter:2.1 axi_protocol_converter_la ]
-
-  # Create instance: axi_protocol_converter_osc0, and set properties
-  set axi_protocol_converter_osc0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_protocol_converter:2.1 axi_protocol_converter_osc0 ]
-
-  # Create instance: axi_protocol_converter_osc1, and set properties
-  set axi_protocol_converter_osc1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_protocol_converter:2.1 axi_protocol_converter_osc1 ]
 
   # Create instance: axis_clock_converter_la, and set properties
   set axis_clock_converter_la [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_clock_converter:1.1 axis_clock_converter_la ]
@@ -562,6 +550,24 @@ CONFIG.PCW_USE_S_AXI_HP1 {1} \
 CONFIG.PCW_USE_S_AXI_HP2 {1} \
  ] $processing_system7
 
+  # Create instance: smartconnect_1, and set properties
+  set smartconnect_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_1 ]
+  set_property -dict [ list \
+CONFIG.NUM_SI {1} \
+ ] $smartconnect_1
+
+  # Create instance: smartconnect_2, and set properties
+  set smartconnect_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_2 ]
+  set_property -dict [ list \
+CONFIG.NUM_SI {1} \
+ ] $smartconnect_2
+
+  # Create instance: smartconnect_3, and set properties
+  set smartconnect_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_3 ]
+  set_property -dict [ list \
+CONFIG.NUM_SI {1} \
+ ] $smartconnect_3
+
   # Create instance: xadc, and set properties
   set xadc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.3 xadc ]
   set_property -dict [ list \
@@ -603,19 +609,16 @@ CONFIG.NUM_PORTS {8} \
   connect_bd_intf_net -intf_net Vaux8_1 [get_bd_intf_ports Vaux8] [get_bd_intf_pins xadc/Vaux8]
   connect_bd_intf_net -intf_net Vaux9_1 [get_bd_intf_ports Vaux9] [get_bd_intf_pins xadc/Vaux9]
   connect_bd_intf_net -intf_net Vp_Vn_1 [get_bd_intf_ports Vp_Vn] [get_bd_intf_pins xadc/Vp_Vn]
-  connect_bd_intf_net -intf_net axi_dma_1_M_AXI_S2MM [get_bd_intf_pins axi_dma_osc1/M_AXI_S2MM] [get_bd_intf_pins axi_protocol_converter_osc1/S_AXI]
   connect_bd_intf_net -intf_net axi_dma_1_M_AXI_SG [get_bd_intf_pins axi_dma_osc1/M_AXI_SG] [get_bd_intf_pins axi_interconnect_dma_sg/S01_AXI]
   connect_bd_intf_net -intf_net axi_dma_2_M_AXI_SG [get_bd_intf_pins axi_dma_la/M_AXI_SG] [get_bd_intf_pins axi_interconnect_dma_sg/S02_AXI]
-  connect_bd_intf_net -intf_net axi_dma_3_M_AXI_S2MM [get_bd_intf_pins axi_dma_osc0/M_AXI_S2MM] [get_bd_intf_pins axi_protocol_converter_osc0/S_AXI]
-  connect_bd_intf_net -intf_net axi_dma_la_M_AXI_S2MM [get_bd_intf_pins axi_dma_la/M_AXI_S2MM] [get_bd_intf_pins axi_protocol_converter_la/S_AXI]
+  connect_bd_intf_net -intf_net axi_dma_la_M_AXI_S2MM [get_bd_intf_pins axi_dma_la/M_AXI_S2MM] [get_bd_intf_pins smartconnect_3/S00_AXI]
+  connect_bd_intf_net -intf_net axi_dma_osc0_M_AXI_S2MM [get_bd_intf_pins axi_dma_osc0/M_AXI_S2MM] [get_bd_intf_pins smartconnect_2/S00_AXI]
+  connect_bd_intf_net -intf_net axi_dma_osc1_M_AXI_S2MM [get_bd_intf_pins axi_dma_osc1/M_AXI_S2MM] [get_bd_intf_pins smartconnect_1/S00_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins axi_interconnect_sys/M00_AXI] [get_bd_intf_pins xadc/s_axi_lite]
   connect_bd_intf_net -intf_net axi_interconnect_0_M01_AXI [get_bd_intf_pins axi_dma_osc0/S_AXI_LITE] [get_bd_intf_pins axi_interconnect_sys/M01_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M02_AXI [get_bd_intf_pins axi_dma_osc1/S_AXI_LITE] [get_bd_intf_pins axi_interconnect_sys/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M03_AXI [get_bd_intf_pins axi_dma_la/S_AXI_LITE] [get_bd_intf_pins axi_interconnect_sys/M03_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_1_M00_AXI [get_bd_intf_pins axi_interconnect_dma_sg/M00_AXI] [get_bd_intf_pins processing_system7/S_AXI_GP0]
-  connect_bd_intf_net -intf_net axi_protocol_converter_0_M_AXI [get_bd_intf_pins axi_protocol_converter_osc0/M_AXI] [get_bd_intf_pins processing_system7/S_AXI_HP0]
-  connect_bd_intf_net -intf_net axi_protocol_converter_1_M_AXI [get_bd_intf_pins axi_protocol_converter_osc1/M_AXI] [get_bd_intf_pins processing_system7/S_AXI_HP1]
-  connect_bd_intf_net -intf_net axi_protocol_converter_la_M_AXI [get_bd_intf_pins axi_protocol_converter_la/M_AXI] [get_bd_intf_pins processing_system7/S_AXI_HP2]
   connect_bd_intf_net -intf_net axis_clock_converter_0_M_AXIS [get_bd_intf_pins axi_dma_osc0/S_AXIS_S2MM] [get_bd_intf_pins axis_clock_converter_osc0/M_AXIS]
   connect_bd_intf_net -intf_net axis_clock_converter_1_M_AXIS [get_bd_intf_pins axi_dma_osc1/S_AXIS_S2MM] [get_bd_intf_pins axis_clock_converter_osc1/M_AXIS]
   connect_bd_intf_net -intf_net axis_clock_converter_2_M_AXIS [get_bd_intf_pins axi_dma_la/S_AXIS_S2MM] [get_bd_intf_pins axis_clock_converter_la/M_AXIS]
@@ -624,6 +627,9 @@ CONFIG.NUM_PORTS {8} \
   connect_bd_intf_net -intf_net processing_system7_0_fixed_io [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7/FIXED_IO]
   connect_bd_intf_net -intf_net processing_system7_GPIO_0 [get_bd_intf_ports GPIO] [get_bd_intf_pins processing_system7/GPIO_0]
   connect_bd_intf_net -intf_net processing_system7_M_AXI_GP1 [get_bd_intf_pins axi_interconnect_sys/S00_AXI] [get_bd_intf_pins processing_system7/M_AXI_GP1]
+  connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins processing_system7/S_AXI_HP1] [get_bd_intf_pins smartconnect_1/M00_AXI]
+  connect_bd_intf_net -intf_net smartconnect_2_M00_AXI [get_bd_intf_pins processing_system7/S_AXI_HP0] [get_bd_intf_pins smartconnect_2/M00_AXI]
+  connect_bd_intf_net -intf_net smartconnect_3_M00_AXI [get_bd_intf_pins processing_system7/S_AXI_HP2] [get_bd_intf_pins smartconnect_3/M00_AXI]
 
   # Create port connections
   connect_bd_net -net IRQ_GEN_1 [get_bd_ports IRQ_GEN] [get_bd_pins xlconcat_0/In1]
@@ -636,9 +642,9 @@ CONFIG.NUM_PORTS {8} \
   connect_bd_net -net axi_dma_2_s2mm_introut [get_bd_pins axi_dma_la/s2mm_introut] [get_bd_pins xlconcat_0/In7]
   connect_bd_net -net axi_dma_3_s2mm_introut [get_bd_pins axi_dma_osc0/s2mm_introut] [get_bd_pins xlconcat_0/In5]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_dma_la/axi_resetn] [get_bd_pins axi_dma_osc0/axi_resetn] [get_bd_pins axi_dma_osc1/axi_resetn] [get_bd_pins axis_clock_converter_la/m_axis_aresetn] [get_bd_pins axis_clock_converter_osc0/m_axis_aresetn] [get_bd_pins axis_clock_converter_osc1/m_axis_aresetn] [get_bd_pins proc_sys_reset/peripheral_aresetn] [get_bd_pins xadc/s_axi_aresetn]
-  connect_bd_net -net proc_sys_reset_interconnect_aresetn [get_bd_pins axi_interconnect_dma_sg/ARESETN] [get_bd_pins axi_interconnect_dma_sg/M00_ARESETN] [get_bd_pins axi_interconnect_dma_sg/S00_ARESETN] [get_bd_pins axi_interconnect_dma_sg/S01_ARESETN] [get_bd_pins axi_interconnect_dma_sg/S02_ARESETN] [get_bd_pins axi_interconnect_sys/ARESETN] [get_bd_pins axi_interconnect_sys/M00_ARESETN] [get_bd_pins axi_interconnect_sys/M01_ARESETN] [get_bd_pins axi_interconnect_sys/M02_ARESETN] [get_bd_pins axi_interconnect_sys/M03_ARESETN] [get_bd_pins axi_interconnect_sys/S00_ARESETN] [get_bd_pins axi_protocol_converter_la/aresetn] [get_bd_pins axi_protocol_converter_osc0/aresetn] [get_bd_pins axi_protocol_converter_osc1/aresetn] [get_bd_pins proc_sys_reset/interconnect_aresetn]
+  connect_bd_net -net proc_sys_reset_interconnect_aresetn [get_bd_pins axi_interconnect_dma_sg/ARESETN] [get_bd_pins axi_interconnect_dma_sg/M00_ARESETN] [get_bd_pins axi_interconnect_dma_sg/S00_ARESETN] [get_bd_pins axi_interconnect_dma_sg/S01_ARESETN] [get_bd_pins axi_interconnect_dma_sg/S02_ARESETN] [get_bd_pins axi_interconnect_sys/ARESETN] [get_bd_pins axi_interconnect_sys/M00_ARESETN] [get_bd_pins axi_interconnect_sys/M01_ARESETN] [get_bd_pins axi_interconnect_sys/M02_ARESETN] [get_bd_pins axi_interconnect_sys/M03_ARESETN] [get_bd_pins axi_interconnect_sys/S00_ARESETN] [get_bd_pins proc_sys_reset/interconnect_aresetn] [get_bd_pins smartconnect_1/aresetn] [get_bd_pins smartconnect_2/aresetn] [get_bd_pins smartconnect_3/aresetn]
   connect_bd_net -net processing_system7_0_fclk_clk0 [get_bd_ports FCLK_CLK0] [get_bd_pins processing_system7/FCLK_CLK0]
-  connect_bd_net -net processing_system7_0_fclk_clk1 [get_bd_ports FCLK_CLK1] [get_bd_pins axi_dma_la/m_axi_s2mm_aclk] [get_bd_pins axi_dma_la/m_axi_sg_aclk] [get_bd_pins axi_dma_la/s_axi_lite_aclk] [get_bd_pins axi_dma_osc0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_osc0/m_axi_sg_aclk] [get_bd_pins axi_dma_osc0/s_axi_lite_aclk] [get_bd_pins axi_dma_osc1/m_axi_s2mm_aclk] [get_bd_pins axi_dma_osc1/m_axi_sg_aclk] [get_bd_pins axi_dma_osc1/s_axi_lite_aclk] [get_bd_pins axi_interconnect_dma_sg/ACLK] [get_bd_pins axi_interconnect_dma_sg/M00_ACLK] [get_bd_pins axi_interconnect_dma_sg/S00_ACLK] [get_bd_pins axi_interconnect_dma_sg/S01_ACLK] [get_bd_pins axi_interconnect_dma_sg/S02_ACLK] [get_bd_pins axi_interconnect_sys/ACLK] [get_bd_pins axi_interconnect_sys/M00_ACLK] [get_bd_pins axi_interconnect_sys/M01_ACLK] [get_bd_pins axi_interconnect_sys/M02_ACLK] [get_bd_pins axi_interconnect_sys/M03_ACLK] [get_bd_pins axi_interconnect_sys/S00_ACLK] [get_bd_pins axi_protocol_converter_la/aclk] [get_bd_pins axi_protocol_converter_osc0/aclk] [get_bd_pins axi_protocol_converter_osc1/aclk] [get_bd_pins axis_clock_converter_la/m_axis_aclk] [get_bd_pins axis_clock_converter_osc0/m_axis_aclk] [get_bd_pins axis_clock_converter_osc1/m_axis_aclk] [get_bd_pins proc_sys_reset/slowest_sync_clk] [get_bd_pins processing_system7/FCLK_CLK1] [get_bd_pins processing_system7/M_AXI_GP1_ACLK] [get_bd_pins processing_system7/S_AXI_GP0_ACLK] [get_bd_pins processing_system7/S_AXI_HP0_ACLK] [get_bd_pins processing_system7/S_AXI_HP1_ACLK] [get_bd_pins processing_system7/S_AXI_HP2_ACLK] [get_bd_pins xadc/s_axi_aclk]
+  connect_bd_net -net processing_system7_0_fclk_clk1 [get_bd_ports FCLK_CLK1] [get_bd_pins axi_dma_la/m_axi_s2mm_aclk] [get_bd_pins axi_dma_la/m_axi_sg_aclk] [get_bd_pins axi_dma_la/s_axi_lite_aclk] [get_bd_pins axi_dma_osc0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_osc0/m_axi_sg_aclk] [get_bd_pins axi_dma_osc0/s_axi_lite_aclk] [get_bd_pins axi_dma_osc1/m_axi_s2mm_aclk] [get_bd_pins axi_dma_osc1/m_axi_sg_aclk] [get_bd_pins axi_dma_osc1/s_axi_lite_aclk] [get_bd_pins axi_interconnect_dma_sg/ACLK] [get_bd_pins axi_interconnect_dma_sg/M00_ACLK] [get_bd_pins axi_interconnect_dma_sg/S00_ACLK] [get_bd_pins axi_interconnect_dma_sg/S01_ACLK] [get_bd_pins axi_interconnect_dma_sg/S02_ACLK] [get_bd_pins axi_interconnect_sys/ACLK] [get_bd_pins axi_interconnect_sys/M00_ACLK] [get_bd_pins axi_interconnect_sys/M01_ACLK] [get_bd_pins axi_interconnect_sys/M02_ACLK] [get_bd_pins axi_interconnect_sys/M03_ACLK] [get_bd_pins axi_interconnect_sys/S00_ACLK] [get_bd_pins axis_clock_converter_la/m_axis_aclk] [get_bd_pins axis_clock_converter_osc0/m_axis_aclk] [get_bd_pins axis_clock_converter_osc1/m_axis_aclk] [get_bd_pins proc_sys_reset/slowest_sync_clk] [get_bd_pins processing_system7/FCLK_CLK1] [get_bd_pins processing_system7/M_AXI_GP1_ACLK] [get_bd_pins processing_system7/S_AXI_GP0_ACLK] [get_bd_pins processing_system7/S_AXI_HP0_ACLK] [get_bd_pins processing_system7/S_AXI_HP1_ACLK] [get_bd_pins processing_system7/S_AXI_HP2_ACLK] [get_bd_pins smartconnect_1/aclk] [get_bd_pins smartconnect_2/aclk] [get_bd_pins smartconnect_3/aclk] [get_bd_pins xadc/s_axi_aclk]
   connect_bd_net -net processing_system7_0_fclk_clk2 [get_bd_ports FCLK_CLK2] [get_bd_pins processing_system7/FCLK_CLK2]
   connect_bd_net -net processing_system7_0_fclk_reset0_n [get_bd_ports FCLK_RESET0_N] [get_bd_pins processing_system7/FCLK_RESET0_N]
   connect_bd_net -net processing_system7_0_fclk_reset1_n [get_bd_ports FCLK_RESET1_N] [get_bd_pins processing_system7/FCLK_RESET1_N]
