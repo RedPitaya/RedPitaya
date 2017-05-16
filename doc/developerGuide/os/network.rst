@@ -397,16 +397,12 @@ Services handling the described configuration are enabled with.
    systemctl enable systemd-resolved
    systemctl enable systemd-timesyncd
    systemctl enable wpa_supplicant@wlan0.service
-   systemctl enable wpa_supplicant_wext@wlan0wext.service
    systemctl enable hostapd@wlan0.service
-   systemctl enable hostapd@wlan0wext.service
    systemctl enable wireless-mode-client.service
    systemctl enable wireless-mode-ap.service
    systemctl enable iptables.service
    #systemctl enable wpa_supplicant@wlan0.path
-   #systemctl enable wpa_supplicant_wext@wlan0wext.path
    #systemctl enable hostapd@wlan0.path
-   #systemctl enable hostapd@wlan0wext.path
    systemctl enable hostname-mac.service
    systemctl enable avahi-daemon.service
    
