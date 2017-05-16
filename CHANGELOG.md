@@ -2,6 +2,8 @@
 
 Linux kernel:
 - added support for BCM43143 USB Wi-Fi chipset
+- updated 8192cu driver to switch from 'wext' to 'cfg80211'
+  https://github.com/raspberrypi/linux/pull/1489
 
 FPGA:
 - recoded burst mode for asg/generator, Python API changes were also needed
@@ -11,6 +13,7 @@ OS:
 - added some TFT SPI display support code
 - installed `console-setup` to fix some keyboard/console related systemd issues
 - removed discovery
+- removed wireless extensions related code
 
 # Release 0.97-RC6
 
