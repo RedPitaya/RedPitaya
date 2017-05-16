@@ -26,6 +26,10 @@ The given setup has advantages and drawbacks.
 Hardware setup
 **************
 
+=======
+pinctrl
+=======
+
 It is possible to reconfigure **Zynq** MIO signals using the ``pinctrl`` kernel driver.
 This TFT display setup takes advantage of this by repurposing SPI, I2C and UART signals
 on the :ref:`E2 <E2>` connector as SPI and GPIO signals which are required by the TFT display interface.
@@ -80,6 +84,29 @@ using the I2C EEPROM, for example calibration access from Osciloscope app.
 
 There is no MIO pin left for backlight control,
 the easiest solution is to hardwire the display backlight pin to VCC.
+
+===============
+SPI clock speed
+===============
+
+Only a limited set of SPI clock speeds can be set depending on
+the clock driving the SPI controller.
+The SPI controller itself provides only power of 2 clock divider options.
+See the `Zynq TRM <https://www.xilinx.com/support/documentation/user_guides/ug585-Zynq-7000-TRM.pdf>`_
+(section *B.30 SPI Controller (SPI)* register ``BAUD_RATE_DIV``) for details.
+
+The next table provides available frequencies for two SPI controller clock settings.
+The maximum clock speed for this SPI controller is 50MHz.
+
++----------------------+------+------+------+------+-------+-------+-------+
+| SPI controller clock | f/4  | f/8  | f/16 | f/32 | f/64  | f/128 | f/256 |
++======================+======+======+======+======+=======+=======+=======+
+|             166.6MHz | 41.6 | 20.8 | 10.4 | 5.21 | 2.60  | 1.30  | 0.63  |
++----------------------+------+------+------+------+-------+-------+-------+
+|             166.6MHz | 41.6 | 20.8 | 10.4 | 5.21 | 2.60  | 1.30  | 0.63  |
++----------------------+------+------+------+------+-------+-------+-------+
+|             200.0MHz | 50.0 | 25.0 | 12.5 | 6.25 | 3.125 | 1.56  | 0.781 |
++----------------------+------+------+------+------+-------+-------+-------+
 
 **************
 Software setup
