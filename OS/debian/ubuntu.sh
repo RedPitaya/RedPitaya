@@ -46,18 +46,23 @@ EOF_CHROOT
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # this is needed by systemd services 'keyboard-setup.service' and 'console-setup.service'
+DEBIAN_FRONTEND=noninteractive \
 apt-get -y install console-setup
 
 # setup locale
 apt-get -y install locales
-sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" /etc/locale.gen
-locale-gen
+locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
 
-# setup locale/keyboard
-#apt-get -y install locales console-data keyboard-configuration
-#dpkg-reconfigure keyboard-configuration
-#localectl   set-locale   LANG="en_US.utf8"
+# TODO seems sytemd is not running without /proc/cmdline or something
+#localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
+#localectl set-keymap us
+
+# Debug log
+locale -a
+locale
+cat /etc/default/locale
+cat /etc/default/keyboard
 EOF_CHROOT
 
 ################################################################################
@@ -66,10 +71,10 @@ EOF_CHROOT
 # which changes the hostname on boot, to an unique value
 ################################################################################
 
-chroot $ROOT_DIR <<- EOF_CHROOT
+#chroot $ROOT_DIR <<- EOF_CHROOT
 # TODO seems sytemd is not running without /proc/cmdline or something
 #hostnamectl set-hostname redpitaya
-EOF_CHROOT
+#EOF_CHROOT
 
 install -v -m 664 -o root -D $OVERLAY/etc/hostname  $ROOT_DIR/etc/hostname
 
