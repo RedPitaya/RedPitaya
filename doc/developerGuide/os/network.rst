@@ -23,7 +23,7 @@ List wireless access pints:
 
 .. code-block:: shell-session
 
-   # iwlist scan | grep SSID
+   # iw list scan | grep SSID
 
 Write a ``wpa_supplicant.conf`` configuration file to the FAT partition.
 *ssid* and *passphrase* can/should be inside parentheses.
