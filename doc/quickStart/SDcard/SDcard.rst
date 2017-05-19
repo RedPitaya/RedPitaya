@@ -317,7 +317,7 @@ older, newer or custom ecosystem zip files.
 
 #. Extract the ecosystem zip file contents onto the now empty partition.
 
-If you wish too keep wireless settings skip deleting the next files:
+If you wish to keep wireless settings skip deleting the next files:
 
 * ``wpa_supplicant.conf``
 * ``hostapd.conf``
