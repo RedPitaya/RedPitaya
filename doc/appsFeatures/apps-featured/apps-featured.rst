@@ -4,7 +4,7 @@ Applications
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   
    
    ./oscSigGen/osc.rst
    ./spectrum/spectrum.rst

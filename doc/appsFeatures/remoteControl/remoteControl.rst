@@ -203,7 +203,7 @@ You can edit and change them according to your needs and develop customized prog
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   
 
    ../examples/digital
    ../examples/analog

@@ -21,7 +21,7 @@ DEVICE_TREE = prj/$(PRJ)/sdk/dts/system.dts
 # Vivado from Xilinx provides IP handling, FPGA compilation
 # hsi (hardware software interface) provides software integration
 # both tools are run in batch mode with an option to avoid log/journal files
-VIVADO = vivado -nolog -nojournal -mode batch
+VIVADO = vivado -nojournal -mode batch
 HSI    = hsi    -nolog -nojournal -mode batch
 
 .PHONY: all clean project
@@ -37,6 +37,7 @@ project:
 
 $(FPGA_BIT):
 	$(VIVADO) -source red_pitaya_vivado.tcl -tclargs $(PRJ)
+	./synCheck.sh
 
 $(FSBL_ELF): $(FPGA_BIT)
 	$(HSI) -source red_pitaya_hsi_fsbl.tcl -tclargs $(PRJ)

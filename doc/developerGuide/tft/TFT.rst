@@ -4,13 +4,13 @@ Interfacing SPI TFT displays with touch
 
 This document describes how to connect a
 SPI interface based TFT display with touch support
-to the E2 connector, without the need for specific FPGA code.
+to the :ref:`E2 <E2>` connector, without the need for specific FPGA code.
 The given setup has advantages and drawbacks.
 
 **PROS:**
 
 * It uses only ``MIO`` signals so it can be used with any FPGA image.
-* Only extension connector **E2** is used.
+* Only extension connector :ref:`E2 <E2>` is used.
 * SPI is not wired through the FPGA so maximum clock speeds can be used.
 
 **CONS:**
@@ -26,9 +26,13 @@ The given setup has advantages and drawbacks.
 Hardware setup
 **************
 
+=======
+pinctrl
+=======
+
 It is possible to reconfigure **Zynq** MIO signals using the ``pinctrl`` kernel driver.
 This TFT display setup takes advantage of this by repurposing SPI, I2C and UART signals
-on the E2 connector as SPI and GPIO signals which are required by the TFT display interface.
+on the :ref:`E2 <E2>` connector as SPI and GPIO signals which are required by the TFT display interface.
 
 .. |tft-E2| replace:: ``tft-E2.dtsi``
 .. _tft-E2: dts/tft/tft-E2.dtsi
@@ -80,6 +84,29 @@ using the I2C EEPROM, for example calibration access from Osciloscope app.
 
 There is no MIO pin left for backlight control,
 the easiest solution is to hardwire the display backlight pin to VCC.
+
+===============
+SPI clock speed
+===============
+
+Only a limited set of SPI clock speeds can be set depending on
+the clock driving the SPI controller.
+The SPI controller itself provides only power of 2 clock divider options.
+See the `Zynq TRM <https://www.xilinx.com/support/documentation/user_guides/ug585-Zynq-7000-TRM.pdf>`_
+(section *B.30 SPI Controller (SPI)* register ``BAUD_RATE_DIV``) for details.
+
+The next table provides available frequencies for two SPI controller clock settings.
+The maximum clock speed for this SPI controller is 50MHz.
+
++----------------------+------+------+------+------+-------+-------+-------+
+| SPI controller clock | f/4  | f/8  | f/16 | f/32 | f/64  | f/128 | f/256 |
++======================+======+======+======+======+=======+=======+=======+
+|             166.6MHz | 41.6 | 20.8 | 10.4 | 5.21 | 2.60  | 1.30  | 0.63  |
++----------------------+------+------+------+------+-------+-------+-------+
+|             166.6MHz | 41.6 | 20.8 | 10.4 | 5.21 | 2.60  | 1.30  | 0.63  |
++----------------------+------+------+------+------+-------+-------+-------+
+|             200.0MHz | 50.0 | 25.0 | 12.5 | 6.25 | 3.125 | 1.56  | 0.781 |
++----------------------+------+------+------+------+-------+-------+-------+
 
 **************
 Software setup
@@ -171,7 +198,7 @@ Connector pinout based on the |MI0283QT-2|_
 | GND               | GND       |  ``2`` |  ``1`` | GND       |                   |
 +-------------------+-----------+--------+--------+-----------+-------------------+
 
-Backlight control is not available on the E2 connector.
+Backlight control is not available on the :ref:`E2 <E2>` connector.
 A simple solution is to connect the **LCD_LED** signal
 to +5V VCC, this can be done with a simple jumper
 between the two display connector pins.
@@ -252,13 +279,18 @@ A calibration file should be added to the system |99-calibration.conf|_:
 
 .. literalinclude:: ../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
+------------------------
+Graphical representation
+------------------------
+
 .. figure:: img/TFT_connection.svg
   
-    Graphical representation of connection.
+    Graphical representation of how to connect Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5".
 
 .. figure:: img/TFT_connection-table.svg
   
-    Simplified graphical representation of connection.
+    Simplified graphical representation of Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5". For pin
+    locations please look at the top picture.
 
 *************************
 Debugging/Troubleshooting

@@ -12,7 +12,7 @@ ConditionPathExists=!/opt/redpitaya/wpa_supplicant.conf
 [Service]
 Type=forking
 PIDFile=/run/hostapd.pid
-ExecStart=/usr/local/bin/hostapd /etc/hostapd/hostapd.conf -P /run/hostapd.pid -B
+ExecStart=/usr/sbin/hostapd /etc/hostapd/hostapd.conf -P /run/hostapd.pid -B
 
 [Install]
 WantedBy=sys-subsystem-net-devices-%i.device

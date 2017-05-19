@@ -9,7 +9,6 @@ apt-get -y install build-essential libfftw3-dev
 apt-get -y install python3 python3-numpy python3-scipy
 
 # X server and xfce
-DEBIAN_FRONTEND=noninteractive \
 apt-get -y install \
   build-essential libfftw3-dev \
   xfonts-base tightvncserver xfce4-panel xfce4-session xfwm4 xfdesktop4 \

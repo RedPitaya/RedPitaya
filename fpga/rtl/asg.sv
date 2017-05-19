@@ -137,11 +137,16 @@ module asg #(
 
 // buffer
 DT                  buf_mem [0:2**CWM-1];
-DT                  buf_rdata;  // read data
-logic [CWM    -1:0] buf_raddr;  // read address
-logic [CWM    -1:0] buf_ptr;    // read pointer
-logic               buf_adr_vld;  // valid (read data enable)
-logic               buf_adr_lst;  // last
+DT                  buf_rdata[0:2-1];     // read data
+logic [CWM    -1:0] buf_raddr;            // read address
+logic [CWM    -1:0] buf_ptr;              // read pointer
+logic [2      -1:0] buf_adr_vld;          // valid (read data enable)
+logic [2      -1:0] buf_adr_lst;          // last
+
+// bus
+// additional register added to optimize timing
+DT                  bus_rdata;   // read data
+logic               bus_ren;     // read enable 
 
 // continuous/periodic pointers
 logic [CWM+CWF-1:0] ptr_cur; // current
@@ -172,12 +177,13 @@ logic               ctl_end_bst;  // run end event burst    engine
 ////////////////////////////////////////////////////////////////////////////////
 
 logic bus_ena;
-assign bus_ena = bus.wen | bus.ren;
+assign bus_ena = bus.wen | bus_ren;
 
 // CPU read/write access
 always_ff @(posedge bus.clk)
 begin
-  if (bus.ren)  bus.rdata <= buf_mem [bus.addr[2+:CWM]];
+  if (bus.ren)  bus_rdata <= buf_mem [bus.addr[2+:CWM]];
+  bus.rdata <= bus_rdata ;
   if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
 end
 // TODO: asymetric bus width is failing synthesis
@@ -187,6 +193,9 @@ end
 //    if (bus.wen)  buf_mem [{bus.addr[2+:CWM-1],i[0]}] <= bus.wdata [16*i+:16];
 //  end
 //end
+
+always_ff @(posedge bus.clk)
+  bus_ren <= bus.ren ;
 
 // CPU control signals
 always_ff @(posedge bus.clk)
@@ -201,7 +210,10 @@ assign bus.err = 1'b0;
 
 // stream read data
 always_ff @(posedge sto.ACLK)
-if (buf_adr_vld)  buf_rdata <= buf_mem[buf_raddr];
+begin
+  if (buf_adr_vld[0]) buf_rdata[0] <= buf_mem[buf_raddr];
+  buf_rdata[1] <= buf_rdata[0] ;
+end
 
 // stream read pointer
 always_ff @(posedge sto.ACLK)
@@ -210,16 +222,18 @@ if (sts_adr)  buf_raddr <= buf_ptr;
 // valid signal used to enable memory read access
 always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn) begin
-  buf_adr_vld <= 1'b0;
-  buf_adr_lst <= 1'b0;
+  buf_adr_vld <= 2'b0;
+  buf_adr_lst <= 2'b0;
 end else begin
   if (ctl_rst) begin
-    buf_adr_vld <= 1'b0;
-    buf_adr_lst <= 1'b0;
+    buf_adr_vld <= 2'b0;
+    buf_adr_lst <= 2'b0;
   end else if (sts_rdy) begin
-    buf_adr_vld <= sts_trg; 
-    buf_adr_lst <= ctl_end;
+    buf_adr_vld[0] <= sts_trg; 
+    buf_adr_lst[0] <= sts_trg && ctl_end;
   end
+  buf_adr_vld[1] <= buf_adr_vld[0];
+  buf_adr_lst[1] <= buf_adr_lst[0];
 end
 
 // address status depends on burst mode
@@ -369,20 +383,20 @@ always_ff @(posedge sto.ACLK)
 if (~sto.ARESETn)  evn_per <= 1'b0;
 else               evn_per <= cfg_ben & sts_trg & end_bpl;
 
-assign evn_lst = buf_adr_lst;
+assign evn_lst = buf_adr_lst[1];
 
 ////////////////////////////////////////////////////////////////////////////////
 // output stream
 ////////////////////////////////////////////////////////////////////////////////
 
 // output data
-assign sto.TDATA = buf_rdata;
+assign sto.TDATA = buf_rdata[1];
 
 // output keep/last
 always_ff @(posedge sto.ACLK)
 if (sts_rdy) begin
   sto.TKEEP <= '1;
-  sto.TLAST <= buf_adr_lst;
+  sto.TLAST <= buf_adr_lst[1];
 end
 
 // output valid
@@ -394,7 +408,7 @@ end else begin
   if (ctl_rst) begin
     sto.TVALID <= 1'b0;
   end else if (sts_rdy) begin
-    sto.TVALID <= buf_adr_vld;
+    sto.TVALID <= buf_adr_vld[1];
   end
 end
 
