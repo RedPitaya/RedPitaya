@@ -39,37 +39,22 @@
     }
 
     WIZARD.getScanResult = function(iwlistResult) {
-        if (iwlistResult == undefined || iwlistResult == "")
-            return;
 
         WIZARD.isInReboot = false;
         $('body').addClass('loaded');
 
-        var ssids = iwlistResult.match(/SSID:(".*?")/g);
-        var encryptions = iwlistResult.match(/Encryption key:((?:[a-z][a-z]+))/g);
-        var sigLevel = iwlistResult.match(/Signal level\=(\d+)/g);
-        if (ssids == null)
-            return;
-
         var htmlList = "";
-
-        for (var i = 0; i < ssids.length; i++) {
-            var ssid = ssids[i].substr(7, ssids[i].length - 8);
-            var encryption = (encryptions[i].substr(15) == "on") ? true : false;
-            var level = parseInt(sigLevel[i].substr(13)) * 1;
+        for (i in iwlistResult.scan) {
+            var ssid       =  iwlistResult.scan[i].SSID;
+            var encryption = (iwlistResult.scan[i].enc == "Open") ? false : true;
+            var level      =  iwlistResult.scan[i].sig
 
             htmlList += "<div>";
-
-            var icon = "";
             var lock = (encryption) ? "<img src='img/wifi-icons/lock.png' width=15>" : "";
-            if (level < 25)
-                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_0.png' width=25>" + lock + "</div>";
-            else if (level < 50)
-                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_1.png' width=25>" + lock + "</div>";
-            else if (level < 75)
-                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_2.png' width=25>" + lock + "</div>";
-            else
-                icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_3.png' width=25>" + lock + "</div>";
+            if      (level < -81)  icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_0.png' width=25>" + lock + "</div>";
+            else if (level < -71)  icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_1.png' width=25>" + lock + "</div>";
+            else if (level < -53)  icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_2.png' width=25>" + lock + "</div>";
+            else                   icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_3.png' width=25>" + lock + "</div>";
 
             htmlList += icon + "<div key='" + ssid + "' class='btn-wifi-item btn'>" + ssid + "&nbsp;</div>";
             htmlList += "</div>";
@@ -102,8 +87,8 @@
                 url: '/get_wnet_list',
                 type: 'GET',
             })
-            .fail(function(msg) {
-                WIZARD.getScanResult(msg.responseText);
+            .done(function(msg) {
+                WIZARD.getScanResult(msg);
             });
     }
 
@@ -123,12 +108,12 @@
                 WIZARD.WIFIConnected = true;
                 $('body').addClass('loaded');
 
-                var ssids = msg.responseText.match(/SSID:(".*?")/g);
+                var ssids = msg.responseText.match(/SSID:(.*)/g);
                 if (ssids == null) {
                     $("#wlan0_ssid_label").text("None");
                     return;
                 }
-                var ssid = ssids[0].substr(7, ssids[0].length - 8);
+                var ssid = ssids[0].substr(6, ssids[0].length - 6);
                 if (ssid == "Red Pitaya AP")
                     return;
                 else {
@@ -193,11 +178,15 @@
             url: '/get_ap_status',
             type: 'GET',
         }).fail(function(msg) {
-            if (msg.responseText == "OK\n") {
+            console.log("test")
+            console.log(msg.responseText)
+            if (msg.responseTextncludes("AP")) {
+                console.log("test AP")
                 $('#access_point_create').text("Remove");
                 $('#wlan0_mode_label').text("Access Point");
                 // $('#wlan0_address_label').text("192.168.128.1");
             } else {
+                console.log("test non AP")
                 $('#access_point_create').text("Create");
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
             }        	

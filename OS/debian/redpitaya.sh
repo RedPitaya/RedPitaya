@@ -15,7 +15,7 @@ unzip ecosystem*.zip -d $BOOT_DIR
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # applications used by Bazaar
-apt-get -y install wget
+apt-get -y install wget gawk
 
 # libraries used by Bazaar
 apt-get -y install libluajit-5.1-2 libpcre3 zlib1g lua-cjson unzip
