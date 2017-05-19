@@ -178,15 +178,11 @@
             url: '/get_ap_status',
             type: 'GET',
         }).fail(function(msg) {
-            console.log("test")
-            console.log(msg.responseText)
             if (msg.responseTextncludes("AP")) {
-                console.log("test AP")
                 $('#access_point_create').text("Remove");
                 $('#wlan0_mode_label').text("Access Point");
                 // $('#wlan0_address_label').text("192.168.128.1");
             } else {
-                console.log("test non AP")
                 $('#access_point_create').text("Create");
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
             }        	
