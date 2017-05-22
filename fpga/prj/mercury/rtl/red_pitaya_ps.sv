@@ -187,10 +187,7 @@ system system_i (
   .GPIO_tri_o (gpio.o),
   .GPIO_tri_t (gpio.t),
   // IRQ
-  .IRQ_GEN  (irq.gen),
-  .IRQ_OSC  (irq.osc),
-  .IRQ_LG   (irq.lg ),
-  .IRQ_LA   (irq.la )
+  .IRQ        (irq)
 );
 
 // since the PS GP0 port is AXI3 and the local bus is AXI4
