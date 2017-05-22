@@ -18,17 +18,11 @@ add wave -noupdate /${top}/rstn
 add wave -noupdate           /${top}/${dut}/evi
 add wave -noupdate           /${top}/${dut}/evo
 # control/status
-add wave -noupdate           /${top}/${dut}/ctl_rst
-add wave -noupdate           /${top}/${dut}/ctl_str
-add wave -noupdate           /${top}/${dut}/sts_str
-add wave -noupdate           /${top}/${dut}/ctl_stp
-add wave -noupdate           /${top}/${dut}/sts_stp
+add wave -noupdate           /${top}/${dut}/trg
+add wave -noupdate           /${top}/${dut}/tro
 add wave -noupdate           /${top}/${dut}/ctl_trg
-add wave -noupdate           /${top}/${dut}/sts_trg
-# event masks
-add wave -noupdate -bin      /${top}/${dut}/cfg_rst
-add wave -noupdate -bin      /${top}/${dut}/cfg_str
-add wave -noupdate -bin      /${top}/${dut}/cfg_stp
+# events configuration
+add wave -noupdate -bin      /${top}/${dut}/cfg_evn
 add wave -noupdate -bin      /${top}/${dut}/cfg_trg
 # frequency/phase
 add wave -noupdate -hex      /${top}/${dut}/cfg_siz

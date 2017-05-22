@@ -13,22 +13,26 @@ module la #(
   // aquisition parameters
   int unsigned CW  = 32-1,  // counter width
   // event parameters
-  type DTC = logic,
-  type DTT = evn_pkg::evt_t,
-  type DTE = evn_pkg::evd_t
+  int unsigned EN  = 1,   // event number
+  int unsigned EL  = $clog2(TN),
+  // trigger parameters
+  int unsigned TN  = 1    // trigger number
 )(
   // streams
-  axi4_stream_if.d      sti,  // input
-  axi4_stream_if.s      sto,  // output
+  axi4_stream_if.d               sti,  // input
+  axi4_stream_if.s               sto,  // output
   // events input/output
-  input  DTE            evi,  // input
-  output evn_pkg::evs_t evo,  // output
+  input  evn_pkg::evn_t [EN-1:0] evi,  // input
+  output evn_pkg::evn_t          evo,  // output
+  // triggers input/output
+  input                 [TN-1:0] trg,  // input
+  output evn_pkg::trg_t          tro,  // output
   // reset output
-  output logic          ctl_rst,
+  output logic                   ctl_rst,
   // interrupt
-  output logic          irq,
+  output logic                   irq,
   // system bus
-  sys_bus_if.s          bus
+  sys_bus_if.s                   bus
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,26 +46,16 @@ axi4_stream_if #(.DN (DN), .DT (DT)) stt            (.ACLK (sti.ACLK), .ARESETn 
 axi4_stream_if #(.DN (DN), .DT (DT)) sta_str        (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 axi4_stream_if #(.DN (DN), .DT (logic [8-1:0])) sta (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));  // from acquire
 
-// event select masks
-DTC             cfg_rst;  // software reset
-DTC             cfg_str;  // software start
-DTC             cfg_stp;  // software stop
-DTC             cfg_swt;  // software trigger
-DTT             cfg_trg;  // trigger
+// event select
+logic  [EL-1:0] cfg_evn;
+// trigger mask
+logic  [TN-1:0] cfg_trg;
 
-// interrupt enable/status/clear
-logic   [2-1:0] irq_ena;  // enable
-logic   [2-1:0] irq_sts;  // status
+// software events
+evn_pkg::evn_t  evn;  // multiplexed input
+evn_pkg::evn_t  evs;  // status
 
-// control
-//logic           ctl_rst;
-// control/status start
-logic           ctl_str;
-logic           sts_str;
-// control/status stop
-logic           ctl_stp;
-logic           sts_stp;
-// control/status trigger
+// trigger
 logic           ctl_trg;
 logic           sts_trg;
 
@@ -111,14 +105,10 @@ localparam int unsigned BAW=7;
 // write access
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
-  // interrupt enable
-  irq_ena <= '0;
-  // event masks
+  // event select
+  cfg_evn <= '0;
+  // trigger mask
   cfg_trg <= '0;
-  cfg_rst <= '0;
-  cfg_str <= '0;
-  cfg_stp <= '0;
-  cfg_swt <= '0;
   // configuration
   cfg_pre <= '0;
   cfg_pst <= '0;
@@ -135,108 +125,67 @@ if (~bus.rstn) begin
   cfg_pol <= '0;
 end else begin
   if (bus.wen) begin
-    // interrupt enable (status/clear are elsewhere)
-    if (bus.addr[BAW-1:0]=='h04)  cfg_trg <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h08)  irq_ena <= bus.wdata[  2-1:0];
-    // event masks
-    if (bus.addr[BAW-1:0]=='h10)  cfg_rst <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h14)  cfg_str <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h18)  cfg_stp <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h1c)  cfg_swt <= bus.wdata;
+    // event select
+    if (bus.addr[BAW-1:0]=='h04)  cfg_evn <= bus.wdata;
+    // triger mask
+    if (bus.addr[BAW-1:0]=='h08)  cfg_trg <= bus.wdata;
     // trigger pre/post time
-    if (bus.addr[BAW-1:0]=='h20)  cfg_pre <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h24)  cfg_pst <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h10)  cfg_pre <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h14)  cfg_pst <= bus.wdata;
     // trigger detection
-    if (bus.addr[BAW-1:0]=='h30)  cfg_cmp_msk <= DT'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h34)  cfg_cmp_val <= DT'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h38)  cfg_edg_pos <= DT'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h3c)  cfg_edg_neg <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h20)  cfg_cmp_msk <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h24)  cfg_cmp_val <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h28)  cfg_edg_pos <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h2c)  cfg_edg_neg <= DT'(bus.wdata);
     // dacimation
-    if (bus.addr[BAW-1:0]=='h40)  cfg_dec <= bus.wdata[DCW-1:0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata[DCW-1:0];
     // RLE
-    if (bus.addr[BAW-1:0]=='h44)  cfg_rle <= bus.wdata[0];
+    if (bus.addr[BAW-1:0]=='h34)  cfg_rle <= bus.wdata[0];
     // bitwise input polarity
-    if (bus.addr[BAW-1:0]=='h50)  cfg_pol <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h40)  cfg_pol <= DT'(bus.wdata);
   end
 end
 
-// control signals
+// event outputs
 always_ff @(posedge bus.clk)
-if (~bus.rstn) begin
-  evo.rst <= 1'b0;
-  evo.str <= 1'b0;
-  evo.stp <= 1'b0;
-  evo.swt <= 1'b0;
-end else begin
-  if (bus.wen & (bus.addr[BAW-1:0]=='h00)) begin
-    evo.rst <= bus.wdata[0];  // reset
-    evo.str <= bus.wdata[1];  // start
-    evo.stp <= bus.wdata[2];  // stop
-    evo.swt <= bus.wdata[3];  // trigger
-  end else begin
-    evo.rst <= 1'b0;
-    evo.str <= 1'b0;
-    evo.stp <= 1'b0;
-    evo.swt <= 1'b0;
-  end
-end
+if (~bus.rstn)  evo <= '0;
+else            evo <= (bus.wen & (bus.addr[BAW-1:0]=='h00)) ? bus.wdata : '0;
 
 // read access
 always_ff @(posedge bus.clk)
 casez (bus.addr[BAW-1:0])
   // control
-  'h00: bus.rdata <= {sts_trg, sts_stp, sts_str, 1'b0};
-  'h04: bus.rdata <= cfg_trg;
-  // interrupts enable/status/clear
-  'h08: bus.rdata <= irq_ena;
-  'h0c: bus.rdata <= irq_sts;
-  // event masks
-  'h10: bus.rdata <= cfg_rst;
-  'h14: bus.rdata <= cfg_str;
-  'h18: bus.rdata <= cfg_stp;
-  'h1c: bus.rdata <= cfg_swt;
+  'h00: bus.rdata <= evs;
+  // event select
+  'h04: bus.rdata <= cfg_evn;
+  // trigger mask
+  'h08: bus.rdata <= cfg_trg;
   // trigger pre/post time
-  'h20: bus.rdata <=              32'(cfg_pre);
-  'h24: bus.rdata <=              32'(cfg_pst);
-  'h28: bus.rdata <=    {sts_pro, 31'(sts_pre)};
-  'h2c: bus.rdata <=    {sts_pso, 31'(sts_pst)};
+  'h10: bus.rdata <=              32'(cfg_pre);
+  'h14: bus.rdata <=              32'(cfg_pst);
+  'h18: bus.rdata <=    {sts_pro, 31'(sts_pre)};
+  'h1c: bus.rdata <=    {sts_pso, 31'(sts_pst)};
   // trigger detection
-  'h30: bus.rdata <=                  cfg_cmp_msk;
-  'h34: bus.rdata <=                  cfg_cmp_val;
-  'h38: bus.rdata <=                  cfg_edg_pos;
-  'h3c: bus.rdata <=                  cfg_edg_neg;
+  'h20: bus.rdata <=                  cfg_cmp_msk;
+  'h24: bus.rdata <=                  cfg_cmp_val;
+  'h28: bus.rdata <=                  cfg_edg_pos;
+  'h2c: bus.rdata <=                  cfg_edg_neg;
   // decimation
-  'h40: bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+  'h30: bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
   // RLE configuration
-  'h44: bus.rdata <= {{32-  1{1'b0}}, cfg_rle};
+  'h34: bus.rdata <= {{32-  1{1'b0}}, cfg_rle};
   // stream counter status
-  'h48: bus.rdata <=              32'(sts_cur);
-  'h4c: bus.rdata <=              32'(sts_lst);
+  'h38: bus.rdata <=              32'(sts_cur);
+  'h3c: bus.rdata <=              32'(sts_lst);
   // bitwise input polarity
-  'h50: bus.rdata <=              32'(cfg_pol);
+  'h40: bus.rdata <=              32'(cfg_pol);
   default: bus.rdata <= 'x;
 endcase
-
-// interrupt status/clear
-always_ff @(posedge bus.clk)
-if (~bus.rstn) begin
-  irq_sts <= '0;
-end else begin
-  if (ctl_rst) begin
-    irq_sts <= '0;
-  end else if (bus.wen & (bus.addr[BAW-1:0]=='h0c)) begin
-    // interrupt clear
-    irq_sts <= irq_sts & ~bus.wdata[3-1:0];
-  end else begin
-    // interrupt set
-    irq_sts <= irq_sts | {evo.lst, evo.trg} & irq_ena;
-  end
-end
 
 // interrupt output
 always_ff @(posedge bus.clk)
 if (~bus.rstn)  irq <= '0;
-else            irq <= |irq_sts;
+else            irq <= tro.lst;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Decimation
@@ -274,14 +223,14 @@ la_trigger #(
   .DT (DT)
 ) trigger (
   // control
-  .ctl_rst  (ctl_rst),
+  .ctl_rst  (evn.rst),
   // configuration
   .cfg_cmp_msk (cfg_cmp_msk),
   .cfg_cmp_val (cfg_cmp_val),
   .cfg_edg_pos (cfg_edg_pos),
   .cfg_edg_neg (cfg_edg_neg),
   // output triggers
-  .sts_trg  (evo.trg),
+  .sts_trg  (tro.trg),
   // stream monitor
   .sti      (stn),
   .sto      (stt)
@@ -291,11 +240,14 @@ la_trigger #(
 // aquire and trigger status handler
 ////////////////////////////////////////////////////////////////////////////////
 
-assign ctl_rst = |(evi.rst & cfg_rst);
-assign ctl_str = |(evi.str & cfg_str);
-assign ctl_stp = |(evi.stp & cfg_stp);
-assign ctl_trg = |(evi.swt & cfg_swt)
-               | |(evi.trg & cfg_trg);
+always_ff @(posedge bus.clk)
+if (~bus.rstn)  evn <= '0;
+else            evn <= evi[cfg_evn];
+
+assign ctl_rst = evn.rst;
+assign evs.rst = 1'b0;
+
+assign ctl_trg = evn.swt | |(trg & cfg_trg);
 
 acq #(
   .DN (DN),
@@ -306,18 +258,18 @@ acq #(
   .sti      (stt),
   .sto      (sta_str),
   // control
-  .ctl_rst  (ctl_rst),
+  .ctl_rst  (evn.rst),
   // control/status start
-  .ctl_str  (ctl_str),
-  .sts_str  (sts_str),
+  .ctl_str  (evn.str),
+  .sts_str  (evs.str),
   // control/status stop
-  .ctl_stp  (ctl_stp),
-  .sts_stp  (sts_stp),
+  .ctl_stp  (evn.stp),
+  .sts_stp  (evs.stp),
   // control/status trigger
   .ctl_trg  (ctl_trg),
-  .sts_trg  (sts_trg),
+  .sts_trg  (evs.swt),
   // events
-  .evn_lst  (evo.lst),
+  .evn_lst  (tro.lst),
   // configuration/status pre trigger
   .cfg_pre  (cfg_pre),
   .sts_pre  (sts_pre),

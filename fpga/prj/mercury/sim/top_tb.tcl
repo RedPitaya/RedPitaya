@@ -34,8 +34,8 @@ axi4_stream_if axi_dac_1 /${dut}/str_dac\[1\]
 
 # interrupts and events
 add wave -noupdate /${dut}/irq
-add wave -noupdate /${dut}/evs
-add wave -noupdate /${dut}/evd
+add wave -noupdate /${dut}/evn
+add wave -noupdate /${dut}/trg
 
 # LG/LA
 #add wave -noupdate -group LG /${dut}/lg/*

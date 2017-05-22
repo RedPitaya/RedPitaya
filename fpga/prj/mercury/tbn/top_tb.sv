@@ -151,25 +151,21 @@ task test_osc (
   int unsigned sh = 0
 );
   ##10;
-  // hardware event (trigger) mask
-  axi_write(regset+'h04, '1);
-  // software event (reset/start/stop/trigger) masks
-  axi_write(regset+'h10, '1);  // reset
-  axi_write(regset+'h14, '1);  // start
-  axi_write(regset+'h18, '1);  // stop
-  axi_write(regset+'h1c, '1);  // trigger
+  // events
+  axi_write(regset+'h04,  2);  // SW event select
+  axi_write(regset+'h08, '1);  // trigger mask
   // bypass input filter
-  axi_write(regset+'h4c, 'h1);
+  axi_write(regset+'h3c, 'h1);
 
   // configure trigger level
-  axi_write(regset+'h30, -'d4);  // level neg
-  axi_write(regset+'h34, +'d4);  // level pos
-  axi_write(regset+'h38,  'h0);  // edge positive
-  axi_write(regset+'h3c,  'h8);  // holdoff
+  axi_write(regset+'h20, -'d4);  // level neg
+  axi_write(regset+'h24, +'d4);  // level pos
+  axi_write(regset+'h28,  'h0);  // edge positive
+  axi_write(regset+'h2c,  'h8);  // holdoff
 
   // configure trigger timing
-  axi_write(regset+'h20, 'd08);  // cfg_pre
-  axi_write(regset+'h24, 'd24);  // cfg_pst
+  axi_write(regset+'h10, 'd08);  // cfg_pre
+  axi_write(regset+'h14, 'd24);  // cfg_pst
 
   // start/trigger acquire
   axi_write(regset+'h00, 4'b0001);  // reset
@@ -205,24 +201,20 @@ task test_gen (
 //  end
 
   // configure amplitude and DC offset
-  axi_write(regset+'h50, 1 << (DWM-2));  // amplitude
-  axi_write(regset+'h54, 0);             // DC offset
-  axi_write(regset+'h58, 1);             // output enable
+  axi_write(regset+'h40, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h44, 0);             // DC offset
+  axi_write(regset+'h48, 1);             // output enable
 
   // configure frequency and phase
-  axi_write(regset+'h20,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(regset+'h24, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-  axi_write(regset+'h28, 2**CWF);  // step
-//  axi_write(regset+'h28, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+  axi_write(regset+'h18, 2**CWF);  // step
+//axi_write(regset+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
   // configure burst mode
-  axi_write(regset+'h30, 2'b00);  // burst disable
-  // hardware event (trigger) mask
-  axi_write(regset+'h04, '1);
-  // software event (reset/start/stop/trigger) masks
-  axi_write(regset+'h10, '1);  // reset
-  axi_write(regset+'h14, '1);  // start
-  axi_write(regset+'h18, '1);  // stop
-  axi_write(regset+'h1c, '1);  // trigger
+  axi_write(regset+'h20, 2'b00);  // burst disable
+  // events
+  axi_write(regset+'h04,  0);  // SW event select
+  axi_write(regset+'h08, '1);  // trigger mask
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
@@ -266,13 +258,9 @@ task test_gen_burst (
   axi_write(regset+'h34,  2 - 1);  // burst data length
   axi_write(regset+'h38, 16 - 1);  // burst period length
   axi_write(regset+'h3c,  4 - 1);  // burst period number
-  // hardware event (trigger) mask
-  axi_write(regset+'h04, '1);
-  // software event (reset/start/stop/trigger) masks
-  axi_write(regset+'h10, '1);  // reset
-  axi_write(regset+'h14, '1);  // start
-  axi_write(regset+'h18, '1);  // stop
-  axi_write(regset+'h1c, '1);  // trigger
+  // events
+  axi_write(regset+'h04,  0);  // SW event select
+  axi_write(regset+'h08, '1);  // trigger mask
   // start, trigger
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
@@ -309,8 +297,8 @@ task test_lg (
   ##10;
 
 //  // configure amplitude and DC offset
-//  axi_write(regset+'h38, 1 << (DWM-2));  // amplitude
-//  axi_write(regset+'h3c, 0);             // DC offset
+//  axi_write(regset+'h28, 1 << (DWM-2));  // amplitude
+//  axi_write(regset+'h2c, 0);             // DC offset
 
   // write table
   for (int i=0; i<buf_len; i++) begin
@@ -323,9 +311,9 @@ task test_lg (
 //  end
 
   // configure LG output enable
-  axi_write(regset+'h38, '1);  // output ebable
-  axi_write(regset+'h3c, '0);  // open drain
-//axi_write(regset+'h3c, 2);  // open drain
+  axi_write(regset+'h28, '1);  // output ebable
+  axi_write(regset+'h2c, '0);  // open drain
+//axi_write(regset+'h2c, 2);  // open drain
 
   // configure frequency and phase
   axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
