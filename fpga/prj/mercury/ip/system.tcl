@@ -161,6 +161,9 @@ proc create_root_design { parentCell } {
 CONFIG.ADDR_WIDTH {32} \
 CONFIG.DATA_WIDTH {32} \
 CONFIG.FREQ_HZ {125000000} \
+CONFIG.HAS_REGION {0} \
+CONFIG.NUM_READ_OUTSTANDING {8} \
+CONFIG.NUM_WRITE_OUTSTANDING {8} \
 CONFIG.PROTOCOL {AXI3} \
  ] $M_AXI_GP0
   set S_AXI_LA [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXI_LA ]
@@ -622,10 +625,10 @@ CONFIG.NUM_PORTS {8} \
   connect_bd_intf_net -intf_net axis_clock_converter_0_M_AXIS [get_bd_intf_pins axi_dma_osc0/S_AXIS_S2MM] [get_bd_intf_pins axis_clock_converter_osc0/M_AXIS]
   connect_bd_intf_net -intf_net axis_clock_converter_1_M_AXIS [get_bd_intf_pins axi_dma_osc1/S_AXIS_S2MM] [get_bd_intf_pins axis_clock_converter_osc1/M_AXIS]
   connect_bd_intf_net -intf_net axis_clock_converter_2_M_AXIS [get_bd_intf_pins axi_dma_la/S_AXIS_S2MM] [get_bd_intf_pins axis_clock_converter_la/M_AXIS]
-  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_ports M_AXI_GP0] [get_bd_intf_pins processing_system7/M_AXI_GP0]
   connect_bd_intf_net -intf_net processing_system7_0_ddr [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_fixed_io [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7/FIXED_IO]
   connect_bd_intf_net -intf_net processing_system7_GPIO_0 [get_bd_intf_ports GPIO] [get_bd_intf_pins processing_system7/GPIO_0]
+  connect_bd_intf_net -intf_net processing_system7_M_AXI_GP0 [get_bd_intf_ports M_AXI_GP0] [get_bd_intf_pins processing_system7/M_AXI_GP0]
   connect_bd_intf_net -intf_net processing_system7_M_AXI_GP1 [get_bd_intf_pins axi_interconnect_sys/S00_AXI] [get_bd_intf_pins processing_system7/M_AXI_GP1]
   connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins processing_system7/S_AXI_HP1] [get_bd_intf_pins smartconnect_1/M00_AXI]
   connect_bd_intf_net -intf_net smartconnect_2_M00_AXI [get_bd_intf_pins processing_system7/S_AXI_HP0] [get_bd_intf_pins smartconnect_2/M00_AXI]
@@ -665,10 +668,10 @@ CONFIG.NUM_PORTS {8} \
   create_bd_addr_seg -range 0x20000000 -offset 0x00000000 [get_bd_addr_spaces axi_dma_osc1/Data_SG] [get_bd_addr_segs processing_system7/S_AXI_GP0/GP0_DDR_LOWOCM] SEG_processing_system7_GP0_DDR_LOWOCM
   create_bd_addr_seg -range 0x01000000 -offset 0xFC000000 [get_bd_addr_spaces axi_dma_osc1/Data_SG] [get_bd_addr_segs processing_system7/S_AXI_GP0/GP0_QSPI_LINEAR] SEG_processing_system7_GP0_QSPI_LINEAR
   create_bd_addr_seg -range 0x20000000 -offset 0x00000000 [get_bd_addr_spaces axi_dma_osc1/Data_S2MM] [get_bd_addr_segs processing_system7/S_AXI_HP1/HP1_DDR_LOWOCM] SEG_processing_system7_HP1_DDR_LOWOCM
+  create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs M_AXI_GP0/Reg] SEG_M_AXI_GP0_Reg
   create_bd_addr_seg -range 0x00010000 -offset 0x80410000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs axi_dma_osc1/S_AXI_LITE/Reg] SEG_axi_dma_1_Reg
   create_bd_addr_seg -range 0x00010000 -offset 0x80420000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs axi_dma_la/S_AXI_LITE/Reg] SEG_axi_dma_2_Reg
   create_bd_addr_seg -range 0x00010000 -offset 0x80400000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs axi_dma_osc0/S_AXI_LITE/Reg] SEG_axi_dma_3_Reg
-  create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs M_AXI_GP0/Reg] SEG_system_Reg
   create_bd_addr_seg -range 0x00010000 -offset 0x83C00000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs xadc/s_axi_lite/Reg] SEG_xadc_Reg
 
   # Exclude Address Segments
