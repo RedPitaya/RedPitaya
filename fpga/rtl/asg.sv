@@ -137,7 +137,7 @@ module asg #(
 
 // buffer
 DT                  buf_mem [0:2**CWM-1];
-DT                  buf_rdata[0:2-1];     // read data
+DT    [2      -1:0] buf_rdata;            // read data
 logic [CWM    -1:0] buf_raddr;            // read address
 logic [CWM    -1:0] buf_ptr;              // read pointer
 logic [2      -1:0] buf_adr_vld;          // valid (read data enable)
@@ -195,7 +195,7 @@ end
 //end
 
 always_ff @(posedge bus.clk)
-  bus_ren <= bus.ren ;
+bus_ren <= bus.ren;
 
 // CPU control signals
 always_ff @(posedge bus.clk)
