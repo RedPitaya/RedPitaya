@@ -228,12 +228,14 @@ end else begin
   if (ctl_rst) begin
     buf_adr_vld <= 2'b0;
     buf_adr_lst <= 2'b0;
-  end else if (sts_rdy) begin
-    buf_adr_vld[0] <= sts_trg; 
-    buf_adr_lst[0] <= sts_trg && ctl_end;
+  end else begin
+    buf_adr_vld[1] <= buf_adr_vld[0];
+    buf_adr_lst[1] <= buf_adr_lst[0];
+    if (sts_rdy) begin
+      buf_adr_vld[0] <= sts_trg;
+      buf_adr_lst[0] <= sts_trg && ctl_end;
+    end
   end
-  buf_adr_vld[1] <= buf_adr_vld[0];
-  buf_adr_lst[1] <= buf_adr_lst[0];
 end
 
 // address status depends on burst mode
