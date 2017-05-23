@@ -182,8 +182,8 @@ assign bus_ena = bus.wen | bus_ren;
 // CPU read/write access
 always_ff @(posedge bus.clk)
 begin
-  if (bus.ren)  bus_rdata <= buf_mem [bus.addr[2+:CWM]];
-  bus.rdata <= bus_rdata ;
+  bus_rdata <= buf_mem [bus.addr[2+:CWM]];
+  if (bus_ren) bus.rdata <= bus_rdata ;
   if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
 end
 // TODO: asymetric bus width is failing synthesis
@@ -211,8 +211,8 @@ assign bus.err = 1'b0;
 // stream read data
 always_ff @(posedge sto.ACLK)
 begin
-  if (buf_adr_vld[0]) buf_rdata[0] <= buf_mem[buf_raddr];
-  buf_rdata[1] <= buf_rdata[0] ;
+   buf_rdata[0] <= buf_mem[buf_raddr];
+  if (buf_adr_vld[1]) buf_rdata[1] <= buf_rdata[0] ;
 end
 
 // stream read pointer
