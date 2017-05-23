@@ -212,7 +212,7 @@ task test_gen_periodic (
   axi_write(regset+'h10, 2'b00);  // burst disable
   // events
   axi_write(regset+'h04, sh);  // SW event select
-  axi_write(regset+'h08, '1);  // trigger mask
+  axi_write(regset+'h08, '0);  // trigger mask
   // reset, start, trigger
   axi_write(regset+'h00, 4'b0001);
   axi_write(regset+'h00, 4'b0010);
@@ -247,7 +247,7 @@ task test_gen_burst (
   axi_write(regset+'h2c,  4 - 1);  // burst period number
   // events
   axi_write(regset+'h04, sh);  // SW event select
-  axi_write(regset+'h08, '1);  // trigger mask
+  axi_write(regset+'h08, '0);  // trigger mask
   // reset, start, trigger
   axi_write(regset+'h00, 4'b0001);
   axi_write(regset+'h00, 4'b0010);

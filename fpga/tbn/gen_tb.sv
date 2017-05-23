@@ -103,8 +103,8 @@ initial begin
   busm.write('h48, 1);                    // enable output
 
   // events
-  busm.write('h04, 1'b0);  // software event select
-  busm.write('h08, 1'b1);  // hardware trigger mask
+  busm.write('h04, 0);      // software event select
+  busm.write('h08, 2'b00);  // hardware trigger mask
 
   // enable continuous/periodic mode
   busm.write('h10, 2'b00);  // burst disable
