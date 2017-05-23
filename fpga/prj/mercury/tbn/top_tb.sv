@@ -64,12 +64,10 @@ end
 initial begin
   ##100;
   //test_id  (32'h40000000);
-  test_gen_burst (32'h40040000, 32'h40050000, 0);
-//  test_gen (32'h40040000, 32'h40050000, 0);
-//  test_gen (32'h40060000, 32'h40070000, 1);
+  test_gen_periodic (32'h40040000, 32'h40050000, 0);
+//test_gen_burst    (32'h40040000, 32'h40050000, 0);
 //  ##16;
-//  test_osc (32'h40080000, 32'h40090000, 2);
-//  ##16;
+//test_osc          (32'h40040000, 32'h40050000, 2);
   //test_clb (32'h40030000);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
@@ -152,7 +150,7 @@ task test_osc (
 );
   ##10;
   // events
-  axi_write(regset+'h04,  2);  // SW event select
+  axi_write(regset+'h04, sh);  // SW event select
   axi_write(regset+'h08, '1);  // trigger mask
   // bypass input filter
   axi_write(regset+'h3c, 'h1);
@@ -167,7 +165,7 @@ task test_osc (
   axi_write(regset+'h10, 'd08);  // cfg_pre
   axi_write(regset+'h14, 'd24);  // cfg_pst
 
-  // start/trigger acquire
+  // reset, start/trigger acquire
   axi_write(regset+'h00, 4'b0001);  // reset
   axi_write(regset+'h00, 4'b0010);  // start
   //axi_write(regset+'h00, 4'b0100);  // stop
@@ -176,7 +174,7 @@ task test_osc (
 endtask: test_osc
 
 
-task test_gen (
+task test_gen_periodic (
   int unsigned regset,
   int unsigned buffer,
   int unsigned sh = 0
@@ -206,35 +204,24 @@ task test_gen (
   axi_write(regset+'h48, 1);             // output enable
 
   // configure frequency and phase
-  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-  axi_write(regset+'h18, 2**CWF);  // step
-//axi_write(regset+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  axi_write(regset+'h14,  buf_len                    * 2**CWF - 1);  // table size
+  axi_write(regset+'h18, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+  axi_write(regset+'h1c, 2**CWF);  // step
+//axi_write(regset+'h1c, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
   // configure burst mode
-  axi_write(regset+'h20, 2'b00);  // burst disable
+  axi_write(regset+'h10, 2'b00);  // burst disable
   // events
-  axi_write(regset+'h04,  0);  // SW event select
+  axi_write(regset+'h04, sh);  // SW event select
   axi_write(regset+'h08, '1);  // trigger mask
-  // start, trigger
+  // reset, start, trigger
+  axi_write(regset+'h00, 4'b0001);
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
   ##22;
   // stop (reset)
 //  axi_write(regset+'h00, 2'b01);
   ##20;
-
-//  // burst mode
-//  axi_write(regset+'h34, buf_len - 1);  // burst data length
-//  axi_write(regset+'h38, buf_len - 1);  // burst idle length
-//  axi_write(regset+'h3c, 100);  // repetitions
-//  axi_write(regset+'h30, 'b11);  // enable burst mode and infinite repetitions
-//  // start
-//  axi_write(regset+'h00, 2'b10);
-//  ##100;
-//  // stop (reset)
-////axi_write(regset+'h00, 2'b01);
-////##20;
-endtask: test_gen
+endtask: test_gen_periodic
 
 task test_gen_burst (
   int unsigned regset,
