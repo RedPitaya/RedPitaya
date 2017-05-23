@@ -64,11 +64,11 @@ end
 initial begin
   ##100;
   //test_id  (32'h40000000);
-  test_gen_burst (32'h40040000, 32'h40050000, 0*6);
-//  test_gen (32'h40040000, 32'h40050000, 0*6);
-//  test_gen (32'h40060000, 32'h40070000, 1*6);
+  test_gen_burst (32'h40040000, 32'h40050000, 0);
+//  test_gen (32'h40040000, 32'h40050000, 0);
+//  test_gen (32'h40060000, 32'h40070000, 1);
 //  ##16;
-//  test_osc (32'h40080000, 32'h40090000, 2*6);
+//  test_osc (32'h40080000, 32'h40090000, 2);
 //  ##16;
   //test_clb (32'h40030000);
   //test_la (32'h40300000);
@@ -247,21 +247,22 @@ task test_gen_burst (
   end
 
   // configure amplitude and DC offset
-  axi_write(regset+'h50, 1 << (DWM-2));  // amplitude
-  axi_write(regset+'h54, 0);             // DC offset
-  axi_write(regset+'h58, 1);             // output enable
+  axi_write(regset+'h40, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h44, 0);             // DC offset
+  axi_write(regset+'h48, 1);             // output enable
 
   // configure burst mode
-  axi_write(regset+'h20, 2'b11);  // burst disable
+  axi_write(regset+'h10, 2'b11);  // burst disable
   // burst mode
-  axi_write(regset+'h30,  1 - 1);  // burst data repetitions
-  axi_write(regset+'h34,  2 - 1);  // burst data length
-  axi_write(regset+'h38, 16 - 1);  // burst period length
-  axi_write(regset+'h3c,  4 - 1);  // burst period number
+  axi_write(regset+'h20,  1 - 1);  // burst data repetitions
+  axi_write(regset+'h24,  2 - 1);  // burst data length
+  axi_write(regset+'h28, 16 - 1);  // burst period length
+  axi_write(regset+'h2c,  4 - 1);  // burst period number
   // events
-  axi_write(regset+'h04,  0);  // SW event select
+  axi_write(regset+'h04, sh);  // SW event select
   axi_write(regset+'h08, '1);  // trigger mask
-  // start, trigger
+  // reset, start, trigger
+  axi_write(regset+'h00, 4'b0001);
   axi_write(regset+'h00, 4'b0010);
   axi_write(regset+'h00, 4'b1000);
   ##22;
