@@ -125,6 +125,7 @@ if (~bus.rstn) begin
   // burst mode
   cfg_ben <= '0;
   cfg_inf <= '0;
+  cfg_bdr <= '0;
   cfg_bdl <= '0;
   cfg_bpn <= '0;
   cfg_bpl <= '0;
