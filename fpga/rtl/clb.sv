@@ -127,12 +127,12 @@ if (!bus.rstn) begin
 end else begin
   if (bus.wen) begin
     for (int unsigned i=0; i<MNG; i++) begin
-      if (bus.addr[AW-1:2]==2*MNG+(2*i+0))  cfg_dac_mul[i] <= bus.wdata;
-      if (bus.addr[AW-1:2]==2*MNG+(2*i+1))  cfg_dac_sum[i] <= bus.wdata;
+      if (bus.addr[AW-1:2]==      (2*i+0))  cfg_dac_mul[i] <= bus.wdata;
+      if (bus.addr[AW-1:2]==      (2*i+1))  cfg_dac_sum[i] <= bus.wdata;
     end
     for (int unsigned i=0; i<MNO; i++) begin
-      if (bus.addr[AW-1:2]==      (2*i+0))  cfg_adc_mul[i] <= bus.wdata;
-      if (bus.addr[AW-1:2]==      (2*i+1))  cfg_adc_sum[i] <= bus.wdata;
+      if (bus.addr[AW-1:2]==2*MNG+(2*i+0))  cfg_adc_mul[i] <= bus.wdata;
+      if (bus.addr[AW-1:2]==2*MNG+(2*i+1))  cfg_adc_sum[i] <= bus.wdata;
     end
   end
 end
