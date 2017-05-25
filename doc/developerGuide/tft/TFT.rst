@@ -131,6 +131,13 @@ A set of Ubuntu/Debian packages should be installed:
 .. _99-fbdev.conf: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 An X11 configuration file should be added to the system :source:|99-fbdev.conf|_:
+An X11 configuration file should be added to the system :doc:|99-fbdev.conf|_:
+An X11 configuration file should be added to the system :download:|99-fbdev.conf|_:
+
+Test :source:`/OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf`.
+Test :doc:`/OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf`.
+Test :download:`/OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf`.
+
 
 .. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
