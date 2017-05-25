@@ -1,0 +1,13 @@
+[Unit]
+Description=X server for TFT
+After=multi-user.target
+
+[Service]
+Type=simple
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=tftx
+ExecStart=/usr/bin/startx
+
+[Install]
+WantedBy=graphical.target
