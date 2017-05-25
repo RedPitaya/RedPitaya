@@ -35,7 +35,7 @@ This TFT display setup takes advantage of this by repurposing SPI, I2C and UART 
 on the :ref:`E2 <E2>` connector as SPI and GPIO signals which are required by the TFT display interface.
 
 .. |tft-E2| replace:: ``tft-E2.dtsi``
-.. _tft-E2: dts/tft/tft-E2.dtsi
+.. _tft-E2: /fpga/dts/tft/tft-E2.dtsi
 
 The reconfiguration is performed by including the |tft-E2|_ device tree.
 
@@ -125,11 +125,11 @@ A set of Ubuntu/Debian packages should be installed:
      xserver-xorg xinit xserver-xorg-video-fbdev
 
 .. |99-fbdev.conf| replace:: ``/usr/share/X11/xorg.conf.d/99-fbdev.conf``
-.. _99-fbdev.conf: ../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+.. _99-fbdev.conf: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 An X11 configuration file should be added to the system |99-fbdev.conf|_:
 
-.. literalinclude:: ../../../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
 Over SSH start the X server:
 
@@ -169,7 +169,7 @@ MI0283QT Adapter Rev 1.5
 .. _ADS7846: http://www.ti.com/lit/ds/symlink/ads7846.pdf
 
 .. |tft-ili9341-ads7846| replace:: ``tft-ili9341-ads7846.dtsi``
-.. _tft-ili9341-ads7846: dts/tft/tft-ili9341-ads7846.dtsi
+.. _tft-ili9341-ads7846: /fpga/dts/tft/tft-ili9341-ads7846.dtsi
 
 The device is powered by **+5V**,
 and it generates 3.3V using an onboard LDO.
@@ -205,11 +205,11 @@ between the two display connector pins.
 Otherwise it would be possible to repurpose a LED on Red Pitaya.
 
 .. |95-ads7846.rules| replace:: ``/etc/udev/rules.d/95-ads7846.rules``
-.. _95-ads7846.rules: ../../../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+.. _95-ads7846.rules: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
 The |95-ads7846.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
 
-.. literalinclude:: ../../../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
 ==============================
 Adafruit PiTFT 3.5" (original)
@@ -225,7 +225,7 @@ Adafruit PiTFT 3.5" (original)
 .. _STMPE610: https://cdn-shop.adafruit.com/datasheets/STMPE610.pdf
 
 .. |tft-hx8357d-stmpe601| replace:: ``tft-hx8357d-stmpe601.dtsi``
-.. _tft-hx8357d-stmpe601: dts/tft/tft-hx8357d-stmpe601.dtsi
+.. _tft-hx8357d-stmpe601: /fpga/dts/tft/tft-hx8357d-stmpe601.dtsi
 
 The device is powered by **+5V**,
 and it generates 3.3V using an onboard LDO.
@@ -265,19 +265,19 @@ Male connector pinout based on the |PiTFT-35|_
 +-------------------+--------+--------+-------------------+
 
 .. |95-stmpe.rules| replace:: ``/etc/udev/rules.d/95-stmpe.rules``
-.. _95-stmpe.rules: ../../../OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
+.. _95-stmpe.rules: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
 
 The |95-stmpe.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
 
-.. literalinclude:: ../../../OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
+.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
 
 
 .. |99-calibration.conf| replace:: ``/etc/X11/xorg.conf.d/99-calibration.conf``
-.. _99-calibration.conf: ../../../OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
+.. _99-calibration.conf: /OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
 
 A calibration file should be added to the system |99-calibration.conf|_:
 
-.. literalinclude:: ../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+.. literalinclude:: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 ------------------------
 Graphical representation
