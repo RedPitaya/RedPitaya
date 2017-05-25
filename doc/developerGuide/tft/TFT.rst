@@ -306,11 +306,11 @@ The SPI MISO pin is not affected by ``pinctrl`` changes.
 According to the document the configuration is read during power-up reset.
 There appears to be a race condition between:
 
-    1. the configuration read event timed by the STMPE610 power
-       coming directly from the 5V USB power connector
-    2. and waking up of the 3.3V power supply on Red Pitaya,
-       which powers the pull up resistors on the I2C pins
-       and FPGA pull-ups for the SPI MISO pin on the E2 connector
+1. the configuration read event timed by the STMPE610 power
+   coming directly from the 5V USB power connector
+2. and waking up of the 3.3V power supply on Red Pitaya,
+   which powers the pull up resistors on the I2C pins
+   and FPGA pull-ups for the SPI MISO pin on the E2 connector
 
 Since during tests STMPE610 SPI woke up with ``CPOL==1`` the SPI controller
 on Red Pitaya also had to be reconfigured.
