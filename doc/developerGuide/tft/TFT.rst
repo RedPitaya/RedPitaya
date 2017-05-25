@@ -89,10 +89,13 @@ the easiest solution is to hardwire the display backlight pin to VCC.
 SPI clock speed
 ===============
 
+.. |ug585-Zynq-7000-TRM.pdf| replace:: Zynq TRM
+.. _ug585-Zynq-7000-TRM.pdf: https://www.xilinx.com/support/documentation/user_guides/ug585-Zynq-7000-TRM.pdf
+
 Only a limited set of SPI clock speeds can be set depending on
 the clock driving the SPI controller.
 The SPI controller itself provides only power of 2 clock divider options.
-See the `Zynq TRM <https://www.xilinx.com/support/documentation/user_guides/ug585-Zynq-7000-TRM.pdf>`_
+See the `Zynq TRM <ug585-Zynq-7000-TRM.pdf_>`_
 (section *B.30 SPI Controller (SPI)* register ``BAUD_RATE_DIV``) for details.
 
 The next table provides available frequencies for two SPI controller clock settings.
@@ -124,8 +127,10 @@ A set of Ubuntu/Debian packages should be installed:
      xfce4-terminal thunar gnome-icon-theme \
      xserver-xorg xinit xserver-xorg-video-fbdev
 
+.. |GitHubMaster| replace:: https://github.com/RedPitaya/RedPitaya/blob/master
+
 .. |99-fbdev.conf| replace:: ``/usr/share/X11/xorg.conf.d/99-fbdev.conf``
-.. _99-fbdev.conf: ../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+.. _99-fbdev.conf: |GitHubMaster|/OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 An X11 configuration file should be added to the system |99-fbdev.conf|_:
 
