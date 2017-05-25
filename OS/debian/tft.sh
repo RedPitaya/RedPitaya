@@ -38,3 +38,10 @@ install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/95-ads7846.rules       $R
 install -v -m 664 -o root -D $OVERLAY/etc/udev/rules.d/95-stmpe.rules         $ROOT_DIR/etc/udev/rules.d/95-stmpe.rules
 
 install -v -m 664 -o root -D $OVERLAY/etc/X11/xorg.conf.d/99-calibration.conf $ROOT_DIR/etc/X11/xorg.conf.d/99-calibration.conf
+
+# automatic start of X
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/tftx.service         $ROOT_DIR/etc/systemd/system/tftx.service
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+systemctl enable tftx.service
+EOF_CHROOT
