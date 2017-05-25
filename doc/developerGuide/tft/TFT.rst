@@ -279,6 +279,51 @@ A calibration file should be added to the system |99-calibration.conf|_:
 
 .. literalinclude:: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
+---------------------------------------
+Touch chip SPI boot configuration issue
+---------------------------------------
+
+The |STMPE610|_ datasheet (section 5.2) describes how CPOL/CPHA
+SPI configuration options depend on the power up state
+of a pair configuration pins.
+
++-----------------------------+------+---------------------------------+------+
+| POL_N (I2C data/SPI CS pin) | CPOL | CPHA (I2C address/SPI MISO pin) | Mode |
++=============================+======+=================================+======+
+| 1                           | 0    | 0                               | 0    |
++-----------------------------+------+---------------------------------+------+
+| 1                           | 0    | 1                               | 1    |
++-----------------------------+------+---------------------------------+------+
+| 0                           | 1    | 0                               | 2    |
++-----------------------------+------+---------------------------------+------+
+| 0                           | 1    | 1                               | 3    |
++-----------------------------+------+---------------------------------+------+
+
+On the original setup (before ``pinctrl`` device tree is applied)
+for the E2 connector the touch chip SPI CS signal is used as I2C_SCK.
+The SPI MISO pin is not affected by ``pinctrl`` changes.
+
+According to the document the configuration is read during power-up reset.
+There appears to be a race condition between:
+
+    1. the configuration read event timed by the STMPE610 power
+       coming directly from the 5V USB power connector
+    2. and waking up of the 3.3V power supply on Red Pitaya,
+       which powers the pull up resistors on the I2C pins
+       and FPGA pull-ups for the SPI MISO pin on the E2 connector
+
+Since during tests STMPE610 SPI woke up with ``CPOL==1`` the SPI controller
+on Red Pitaya also had to be reconfigured.
+This is done with the ``spi-cpol`` attribute in the `device tree
+</fpga/dts/tft/tft-hx8357d-stmpe601.dtsi#L31>`_.
+
+It is not yet confirmed the power supply race condition is responsible
+for touch not working in certain setups, and there has been no method
+devised yet for making the SPI configuration signals stable
+during the power up process.
+
+The poser supply sequence should be properly analyzed in the future.
+
 ------------------------
 Graphical representation
 ------------------------
