@@ -130,7 +130,7 @@ A set of Ubuntu/Debian packages should be installed:
 .. |GitHubMaster| replace:: https://github.com/RedPitaya/RedPitaya/blob/master
 
 .. |99-fbdev.conf| replace:: ``/usr/share/X11/xorg.conf.d/99-fbdev.conf``
-.. _99-fbdev.conf: |GitHubMaster|/OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+.. _99-fbdev.conf: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 An X11 configuration file should be added to the system |99-fbdev.conf|_:
 
