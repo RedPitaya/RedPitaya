@@ -218,11 +218,13 @@ Adafruit PiTFT 3.5"
 .. |PiTFT-35| replace:: Adafruit PiTFT 3.5" Touch Screen for Raspberry Pi
 .. _PiTFT-35: https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi
 
-.. |PiTFTp-35| replace:: PiTFT Plus 480x320 3.5" TFT+Touchscreen for Raspberry Pi
-.. _PiTFTp-35: https://www.adafruit.com/product/2441
-
 .. |PiTFTa-35| replace:: PiTFT - Assembled 480x320 3.5" TFT+Touchscreen for Raspberry Pi
 .. _PiTFTa-35: https://www.adafruit.com/product/2097
+.. _PiTFTa-35-img: https://cdn-learn.adafruit.com/assets/assets/000/019/744/original/adafruit_products_2097_quarter_ORIG.jpg
+
+.. |PiTFTp-35| replace:: PiTFT Plus 480x320 3.5" TFT+Touchscreen for Raspberry Pi
+.. _PiTFTp-35: https://www.adafruit.com/product/2441
+.. _PiTFTp-35-img: https://cdn-shop.adafruit.com/970x728/2441-11.jpg
 
 .. |HX8357D| replace:: HX8357D
 .. _HX8357D: https://cdn-shop.adafruit.com/datasheets/HX8357-D_DS_April2012.pdf
@@ -233,8 +235,19 @@ Adafruit PiTFT 3.5"
 .. |tft-hx8357d-stmpe601| replace:: ``tft-hx8357d-stmpe601.dtsi``
 .. _tft-hx8357d-stmpe601: /fpga/dts/tft/tft-hx8357d-stmpe601.dtsi
 
-The device is powered by **+5V**,
-and it generates 3.3V using an onboard LDO.
+There are two versions of this display the older **Assembled**
+(sometimes called **Original** and the newer **Plus**.
+
+* |PiTFTa-35|_ (`high resolution image image <PiTFTa-35-img_>`_)
+* |PiTFTp-35|_ (`high resolution image image <>`_)
+
+While the newer **Plus** version can be used out of the box,
+The older **Assembled** requires hardware modifications,
+for details `see below <assembled_hw_mods>`.
+
+The device is powered by **+5V** (for backlight LED)
+and **+3.3V** for TFT and touch controllers
+(should be taken from the E1 connector on Red Pitaya).
 Therefore all IO are 3.3V, so there are no conflicts.
 
 Male connector pinout based on the |PiTFT-35|_
@@ -267,7 +280,7 @@ Male connector pinout based on the |PiTFT-35|_
 +-------------------+--------+--------+-------------------+
 |                   |  ``4`` |  ``3`` |                   |
 +-------------------+--------+--------+-------------------+
-| +5V               |  ``2`` |  ``1`` |                   |
+| +5V               |  ``2`` |  ``1`` | +3.3V             |
 +-------------------+--------+--------+-------------------+
 
 .. |95-stmpe.rules| replace:: ``/etc/udev/rules.d/95-stmpe.rules``
@@ -277,7 +290,6 @@ The |95-stmpe.rules|_ UDEV rule will create a symbolic link ``/dev/input/touchsc
 
 .. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
 
-
 .. |99-calibration.conf| replace:: ``/etc/X11/xorg.conf.d/99-calibration.conf``
 .. _99-calibration.conf: /OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
 
@@ -285,63 +297,95 @@ A calibration file should be added to the system |99-calibration.conf|_:
 
 .. literalinclude:: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
----------------------------------------
-Touch chip SPI boot configuration issue
----------------------------------------
+-------------
+Block diagram
+-------------
 
-The |STMPE610|_ datasheet (section 5.2) describes how CPOL/CPHA
-SPI configuration options depend on the power up state
-of a pair configuration pins.
+.. figure:: img/TFT_connection.svg
 
-+-----------------------------+------+---------------------------------+------+
-| POL_N (I2C data/SPI CS pin) | CPOL | CPHA (I2C address/SPI MISO pin) | Mode |
-+=============================+======+=================================+======+
-| 1                           | 0    | 0                               | 0    |
-+-----------------------------+------+---------------------------------+------+
-| 1                           | 0    | 1                               | 1    |
-+-----------------------------+------+---------------------------------+------+
-| 0                           | 1    | 0                               | 2    |
-+-----------------------------+------+---------------------------------+------+
-| 0                           | 1    | 1                               | 3    |
-+-----------------------------+------+---------------------------------+------+
+    Graphical representation of how to connect Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5".
+
+.. figure:: img/TFT_connection-table.svg
+
+    Simplified graphical representation of Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5". For pin
+    locations please look at the top picture.
+
+.. _assembled_hw_mods
+
+----------------------------------------
+Assembled version hardware modifications
+----------------------------------------
+
+~~~~~~~~~~~
+Explanation
+~~~~~~~~~~~
+
+The device is powered by a single **+5V** supply,
+and it generates 3.3V using an on board LDO.
+So 3.3V interfaces between Red Pitaya and the display
+have a different power source on each side.
+Since the two power sources do not wake up at the same time
+there is a race condition affecting touch controller
+SPI interface configuration during power-up reset.
+The LDO on the TFT board is faster then the switcher on Red Pitaya.
+
+The |STMPE610|_ touch controller datasheet (section 5.2)
+describes how CPOL/CPHA SPI configuration options depend
+on the power up reset state of a pair configuration pins.
+
++------------------------------+------+---------------------------------+------+
+| CPOL_N (I2C data/SPI CS pin) | CPOL | CPHA (I2C address/SPI MISO pin) | Mode |
++==============================+======+=================================+======+
+| 1                            | 0    | 0                               | 0    |
++------------------------------+------+---------------------------------+------+
+| 1                            | 0    | 1                               | 1    |
++------------------------------+------+---------------------------------+------+
+| 0                            | 1    | 0                               | 2    |
++------------------------------+------+---------------------------------+------+
+| 0                            | 1    | 1                               | 3    |
++------------------------------+------+---------------------------------+------+
 
 On the original setup (before ``pinctrl`` device tree is applied)
 for the E2 connector the touch chip SPI CS signal is used as I2C_SCK.
 The SPI MISO pin is not affected by ``pinctrl`` changes.
 
-According to the document the configuration is read during power-up reset.
 There appears to be a race condition between:
 
 1. the configuration read event timed by the STMPE610 power
-   coming directly from the 5V USB power connector
+   coming directly from the +3.3V LDO (5V USB power connector)
 2. and waking up of the 3.3V power supply on Red Pitaya,
    which powers the pull up resistors on the I2C pins
    and FPGA pull-ups for the SPI MISO pin on the E2 connector
 
-Since during tests STMPE610 SPI woke up with ``CPOL==1`` the SPI controller
-on Red Pitaya also had to be reconfigured.
-This is done with the ``spi-cpol`` attribute in the `device tree
-</fpga/dts/tft/tft-hx8357d-stmpe601.dtsi#L31>`_.
+In most cases the LDO on the TFT board would wake
+before the switcher on Red Pitaya, so the ``CPOL_N``
+would be detected as ``0``, which inverts the SPI clock polarity.
+As an unreliable fix, the ``spi-cpol`` attribute can be provided
+in the `device tree </fpga/dts/tft/tft-hx8357d-stmpe601.dtsi#L31>`_.
 
-It is not yet confirmed the power supply race condition is responsible
-for touch not working in certain setups, and there has been no method
-devised yet for making the SPI configuration signals stable
-during the power up process.
+.. note::
 
-The poser supply sequence should be properly analyzed in the future.
+   It is not yet confirmed the power supply race condition is responsible
+   for touch not working in certain setups, more testing might be necessary.
 
-------------------------
-Graphical representation
-------------------------
+~~~~~~~~~~~~~
+Modifications
+~~~~~~~~~~~~~
 
-.. figure:: img/TFT_connection.svg
-  
-    Graphical representation of how to connect Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5".
+To avoid the power supply race condition,
+the LDO on the **Assembled** TFT board can be disabled,
+and instead +3.3V from Red Pitaya is used.
+This makes the **Assembled** power supply similar to the **Plus** version.
 
-.. figure:: img/TFT_connection-table.svg
-  
-    Simplified graphical representation of Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5". For pin
-    locations please look at the top picture.
+The next modifications have to be done:
+
+1. Remove the +3.3V LDO, or at least rise the power output pin off the board.
+2. Connect pin 1 on the JP1 connector to a +3.3V power line.
+
+The next image shows a TFT board with a rised LDO power output
+and pin 1 on the JP1 connector connected to an unmounted resistor pad.
+
+.. figure:: img/assembled_hw_mod.jpg
 
 *************************
 Debugging/Troubleshooting
