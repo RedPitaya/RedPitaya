@@ -63,16 +63,22 @@ end
 
 logic signed [41-1:0] aa_mult;
 logic signed [49-1:0] r3_sum ; //24 + 25
-(* use_dsp48="yes" *) logic signed [23-1:0] r3_reg;
+(* use_dsp="yes" *) logic signed [23-1:0] r3_reg_dsp1;
+(* use_dsp="yes" *) logic signed [23-1:0] r3_reg_dsp2;
+logic signed [23-1:0] r3_reg_dsp3;
 
-assign aa_mult = r3_reg * cfg_aa_i;
-assign r3_sum  = (r2_reg <<< 25) + (r3_reg <<< 25) - aa_mult;
+assign aa_mult = r3_reg_dsp1 * cfg_aa_i;
+assign r3_sum  = (r2_reg <<< 25) + (r3_reg_dsp2 <<< 25) - aa_mult;
 
 always_ff @(posedge adc_clk_i)
 if (~adc_rstn_i) begin
-   r3_reg <= '0;
+   r3_reg_dsp1 <= '0;
+   r3_reg_dsp2 <= '0;
+   r3_reg_dsp3 <= '0;
 end else begin
-   r3_reg <= r3_sum >>> 25;
+   r3_reg_dsp1 <= r3_sum >>> 25;
+   r3_reg_dsp2 <= r3_sum >>> 25;
+   r3_reg_dsp3 <= r3_sum >>> 33;
 end
 
 //---------------------------------------------------------------------------------
@@ -91,7 +97,7 @@ if (~adc_rstn_i) begin
    r3_shr <= '0;
    r4_reg <= '0;
 end else begin
-   r3_shr <= r3_reg >>> 8;
+   r3_shr <= r3_reg_dsp3;
    r4_reg <= r4_sum;
 end
 
