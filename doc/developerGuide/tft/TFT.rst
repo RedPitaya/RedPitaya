@@ -70,20 +70,20 @@ The reconfiguration is performed by including the |tft-E2|_ device tree.
 +-----------------+-----+----------+--------+--------+----------+-----+-------------------+
 
 Since some of the signals share the I2C bus which already contains an EEPROM,
-there is a posibility there will be functional conflicts.
+there is a possibility there will be functional conflicts.
 Although the probability of the I2C EEPROM going into an active state are low.
 I2C devices only react after an I2C start condition is present on the bus.
 The start condition requires both SDA and SCL signals to be low at the same time.
 Here it is assumed TFT display RESETn (active low) will not be active
 at the same time as the touch controller SPI SSn (active low) signal.
 
-Attempst to access the I2C EEPROM will not interfere with the display,
+Attempts to access the I2C EEPROM will not interfere with the display,
 but they will return a timeout.
 This might (probably will) cause issues with applications
-using the I2C EEPROM, for example calibration access from Osciloscope app.
+using the I2C EEPROM, for example calibration access from *Oscilloscope* app.
 
 There is no MIO pin left for backlight control,
-the easiest solution is to hardwire the display backlight pin to VCC.
+the easiest solution is to hard wire the display backlight pin to VCC.
 
 ===============
 SPI clock speed
@@ -142,11 +142,11 @@ Tested/Supported devices
 ************************
 
 The next table lists supported devices
-and coresponding of device tree files
+and corresponding of device tree files
 each supporting a set of displays depending on the used TFT and touch drivers.
 
 +---------------+-------------------------------+-----------------------------------+-------------------------+
-|               | specifications                | technical details                 | devicetree              |
+|               | specifications                | technical details                 | device tree             |
 |               +------+------------+-----------+----------------+------------------+                         |
 | screen name   | size | resolution | touch     | TFT controller | touch controller |                         |
 +===============+======+============+===========+================+==================+=========================+
@@ -172,7 +172,7 @@ MI0283QT Adapter Rev 1.5
 .. _tft-ili9341-ads7846: /fpga/dts/tft/tft-ili9341-ads7846.dtsi
 
 The device is powered by **+5V**,
-and it generates 3.3V using an onboard LDO.
+and it generates 3.3V using an on board LDO.
 Therefore all IO are 3.3V, so there are no conflicts.
 
 Connector pinout based on the |MI0283QT-2|_
@@ -211,12 +211,18 @@ The |95-ads7846.rules|_ UDEV rule will create a symbolik link ``/dev/input/touch
 
 .. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
-==============================
-Adafruit PiTFT 3.5" (original)
-==============================
+===================
+Adafruit PiTFT 3.5"
+===================
 
 .. |PiTFT-35| replace:: Adafruit PiTFT 3.5" Touch Screen for Raspberry Pi
 .. _PiTFT-35: https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi
+
+.. |PiTFTp-35| replace:: PiTFT Plus 480x320 3.5" TFT+Touchscreen for Raspberry Pi
+.. _PiTFTp-35: https://www.adafruit.com/product/2441
+
+.. |PiTFTa-35| replace:: PiTFT - Assembled 480x320 3.5" TFT+Touchscreen for Raspberry Pi
+.. _PiTFTa-35: https://www.adafruit.com/product/2097
 
 .. |HX8357D| replace:: HX8357D
 .. _HX8357D: https://cdn-shop.adafruit.com/datasheets/HX8357-D_DS_April2012.pdf
@@ -267,7 +273,7 @@ Male connector pinout based on the |PiTFT-35|_
 .. |95-stmpe.rules| replace:: ``/etc/udev/rules.d/95-stmpe.rules``
 .. _95-stmpe.rules: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
 
-The |95-stmpe.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
+The |95-stmpe.rules|_ UDEV rule will create a symbolic link ``/dev/input/touchscreen``.
 
 .. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
 
@@ -367,7 +373,7 @@ To see the status of interrupts try:
 Touch
 =====
 
-``evtest`` can be used to see lowlevel touch events (and keyboard/mouse):
+``evtest`` can be used to see low level touch events (and keyboard/mouse):
 
 .. code-block:: shell-session
 
