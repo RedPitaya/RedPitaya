@@ -26,7 +26,8 @@ HSI    = hsi    -nolog -nojournal -mode batch
 
 .PHONY: all clean project
 
-all: $(FPGA_BIT) $(FSBL_ELF) $(DEVICE_TREE)
+all: $(FPGA_BIT) 
+# $(FSBL_ELF) $(DEVICE_TREE)
 
 # TODO: clean should go into each project
 clean:
