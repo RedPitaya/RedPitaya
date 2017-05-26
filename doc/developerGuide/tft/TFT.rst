@@ -244,7 +244,7 @@ There are two versions of this display the older **Assembled**
 (sometimes called **Original** and the newer **Plus**.
 
 * |PiTFTa-35|_ (`high resolution image image <PiTFTa-35-img_>`_)
-* |PiTFTp-35|_ (`high resolution image image <>`_)
+* |PiTFTp-35|_ (`high resolution image image <PiTFTp-35-img_>`_)
 
 While the newer **Plus** version can be used out of the box,
 The older **Assembled** requires hardware modifications,
