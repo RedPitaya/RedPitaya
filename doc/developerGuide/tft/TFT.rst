@@ -112,7 +112,12 @@ The maximum clock speed for this SPI controller is 50MHz.
 Software setup
 **************
 
+.. |tft.sh| replace:: ``tft.sh``
+.. _tft.sh: /OS/debian/tft.sh
+
 Instructions for starting XFCE on the TFT display.
+A script which can be used to generate an image with full support
+is available on GitHub |tft.sh|_.
 
 A set of Ubuntu/Debian packages should be installed:
 
