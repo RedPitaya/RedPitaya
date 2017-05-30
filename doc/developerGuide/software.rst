@@ -7,6 +7,7 @@ Software
 
    software/webApps
    software/clt
+   ecosystem/ecosystem
    os/debian
    os/release
    os/ssh/ssh

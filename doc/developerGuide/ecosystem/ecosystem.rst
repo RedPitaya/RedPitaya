@@ -1,12 +1,12 @@
-.. Developer guide
+.. ecosystem
 
 ###############
-Developer Guide
+Ecosystem Guide
 ###############
 
-=======================================
- Red Pitaya ecosystem and applications
-=======================================
+=====================================
+Red Pitaya ecosystem and applications
+=====================================
 
 Here you will find the sources of various software components of the
 Red Pitaya system. The components are mainly contained in dedicated
@@ -45,7 +45,8 @@ different places one would expect.
 Supported platforms
 -------------------
 
-Red Pitaya is developed on Linux, so Linux (preferably 64bit Ubuntu) is also the only platform we support.
+Red Pitaya is developed on Linux (64bit Ubuntu 16.04),
+so Linux is also the only platform we support.
 
 ---------------------
 Software requirements
@@ -85,6 +86,7 @@ Build process
 =============
 
 Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
+The choice of specific branches or tags is up to the user.
 
 .. code-block:: shell-session
 
@@ -108,7 +110,7 @@ There is a default cache path defined in the ``settings.sh`` script, you can edi
    export DL=$PWD/dl
 
 Download the ARM Ubuntu root environment (usually the latest) from Red Pitaya download servers.
-You can also create your own root environment following instructions in `<OS/debian/README.md>`.
+You can also create your own root environment following instructions in :ref:`OS image build instructions <os>`.
 Correct file permissions are required for ``schroot`` to work properly.
 
 .. code-block:: shell-session
