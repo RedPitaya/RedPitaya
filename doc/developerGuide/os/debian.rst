@@ -34,6 +34,12 @@ Ubuntu bootstrap
 .. |image.sh| replace:: ``image.sh``
 .. _image.sh: /OS/debian/image.sh
 
+.. |image-update.sh| replace:: ``image-update.sh``
+.. _image-update.sh: /OS/debian/image-update.sh
+
+.. |image-fsck.sh| replace:: ``image-fsck.sh``
+.. _image-fsck.sh: /OS/debian/image-fsck.sh
+
 .. |ubuntu.sh| replace:: ``ubuntu.sh``
 .. _ubuntu.sh: /OS/debian/ubuntu.sh
 
@@ -97,11 +103,8 @@ it can be extracted later to the FAT partition (128MB) of the SD card.
 In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image (containing FPGA code),
 a boot script (``u-boot.scr``) and the Linux kernel.
 
-A script is provided for updating an existing image to a newer ecosystem zippfile
-without making modifications to the ``ext4`` partition.
-
-.. literalinclude:: image-update.sh
-   :lines: 9-
+A script |image-update.sh|_ is provided for updating an existing image
+to a newer ecosystem zippfile without making modifications to the ``ext4`` partition.
 
 The script should be run with the image and ecosystem files as arguments:
 
@@ -116,10 +119,7 @@ File system check
 If the image creation involved multiple steps performed by the user,
 for example some installation/setup procedure performed on a live Red Pitaya,
 there is a possibility a file system might be corrupted.
-The next procedure performs a file system check without changing anything.
-
-.. literalinclude:: image-fsck.sh
-   :lines: 9-
+The |image-fsck.sh|_ script performs a file system check without changing anything.
 
 Use this script on an image before releasing it.
 
