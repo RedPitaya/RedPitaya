@@ -19,8 +19,6 @@
 
 #include "api_cmd.h"
 #include "common.h"
-#include "dpin.h"
-#include "apin.h"
 #include "acquire.h"
 #include "generate.h"
 #include "scpi/error.h"
@@ -129,16 +127,6 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "RP:RELease", .callback                 = RP_ReleaseAll,},
     {.pattern = "RP:FPGABITREAM", .callback             = RP_FpgaBitStream,},
     {.pattern = "RP:DIg[:loop]", .callback              = RP_EnableDigLoop,},
-
-    {.pattern = "DIG:RST", .callback                    = RP_DigitalPinReset,},
-    {.pattern = "DIG:PIN", .callback                    = RP_DigitalPinState,},
-    {.pattern = "DIG:PIN?", .callback                   = RP_DigitalPinStateQ,},
-    {.pattern = "DIG:PIN:DIR", .callback                = RP_DigitalPinDirection,},
-    {.pattern = "DIG:PIN:DIR?", .callback               = RP_DigitalPinDirectionQ,},
-
-    {.pattern = "ANALOG:RST", .callback                 = RP_AnalogPinReset,},
-    {.pattern = "ANALOG:PIN", .callback                 = RP_AnalogPinValue,},
-    {.pattern = "ANALOG:PIN?", .callback                = RP_AnalogPinValueQ,},
 
     /* Acquire */
     {.pattern = "ACQ:START", .callback                  = RP_AcqStart,},

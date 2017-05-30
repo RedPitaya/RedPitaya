@@ -35,8 +35,6 @@ TARGET=$(OUTPUT_DIR)/scpi-server
 OBJECTS =	scpi-commands.o \
 		scpi-server.o \
 		api_cmd.o \
-		dpin.o \
-		apin.o \
 		acquire.o \
 		generate.o \
 		common.o

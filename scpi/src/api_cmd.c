@@ -1,7 +1,7 @@
 /**
  * $Id: $
  *
- * @brief Red Pitaya Scpi server apin SCPI commands implementation
+ * @brief Red Pitaya Scpi server API commands implementation
  *
  * @Author Red Pitaya
  *
