@@ -373,6 +373,18 @@ in the `device tree </fpga/dts/tft/tft-hx8357d-stmpe601.dtsi#L31>`_.
    It is not yet confirmed the power supply race condition is responsible
    for touch not working in certain setups, more testing might be necessary.
 
+The provided oscilloscope image shows a 3.3V power up sequence
+and its relation to SPI configuration signals.
+It is evident configuration signals are stable.
+
+Channels:
+
+1. `CPHA` (the signal is low during power-up)
+2. `CPOL_N` (the signal is linked to 3.3V with a pull-up and rising simultaneously)
+2. 3.3V (it takes about 1.5ms to ramp up from 0V to 3.3V)
+
+.. figure:: img/POR_SPI_config.png
+
 ~~~~~~~~~~~~~
 Modifications
 ~~~~~~~~~~~~~
