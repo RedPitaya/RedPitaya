@@ -379,9 +379,9 @@ It is evident configuration signals are stable.
 
 Channels:
 
-1. `CPHA` (the signal is low during power-up)
-2. `CPOL_N` (the signal is linked to 3.3V with a pull-up and rising simultaneously)
-2. 3.3V (it takes about 1.5ms to ramp up from 0V to 3.3V)
+1. `CPHA` (the signal is low during power-up),
+2. `CPOL_N` (the signal is linked to 3.3V with a pull-up and rising simultaneously),
+3. 3.3V (it takes about 1.5ms to ramp up from 0V to 3.3V).
 
 .. figure:: img/POR_SPI_config.png
 
