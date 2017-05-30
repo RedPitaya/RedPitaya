@@ -37,10 +37,9 @@ logic irq;
 axi4_stream_if #(.DN (1), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 
 // events input/output
-evn_pkg::evd_t evd;  // input
-evn_pkg::evs_t evs;  // output
-
-assign evd = evn_pkg::evn_f(evs, 1'b0);
+evn_pkg::evn_t evn;
+// triggers input/output
+evn_pkg::trg_t trg;
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock
@@ -99,24 +98,21 @@ initial begin
     busm_tbl.read((i*4), rdata_blk [i]);  // read table
   end
   // configure amplitude and DC offset
-  busm.write('h50, 1 << ($bits(DTM)-2));  // amplitude
-  busm.write('h54, 0);                    // DC offset
-  busm.write('h58, 1);                    // enable output
+  busm.write('h40, 1 << ($bits(DTM)-2));  // amplitude
+  busm.write('h44, 0);                    // DC offset
+  busm.write('h48, 1);                    // enable output
 
-  // event masks
-  busm.write('h04, 1'b0);  // hardware trigger
-  busm.write('h10, 1'b1);  // software reset
-  busm.write('h14, 1'b1);  // software start
-  busm.write('h18, 1'b1);  // software stop
-  busm.write('h1c, 1'b1);  // software trigger
+  // events
+  busm.write('h04, 0);      // software event select
+  busm.write('h08, 2'b00);  // hardware trigger mask
 
   // enable continuous/periodic mode
-  busm.write('h20, 2'b00);  // burst disable
+  busm.write('h10, 2'b00);  // burst disable
   // configure frequency and phase
-  busm.write('h24,  buf_len                    * 2**CWF - 1);  // table size
-  busm.write('h28, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//busm.write('h2c, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
-  busm.write('h2c, 1                           * 2**CWF - 1);  // step
+  busm.write('h14,  buf_len                    * 2**CWF - 1);  // table size
+  busm.write('h18, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
+//busm.write('h1c, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
+  busm.write('h1c, 1                           * 2**CWF - 1);  // step
   // start/trigger
   busm.write('h00, CTL_STR);
   busm.write('h00, CTL_TRG);
@@ -129,12 +125,12 @@ initial begin
   ##20;
 
   // enable burst mode
-  busm.write('h20, 2'b01);  // burst enable
+  busm.write('h10, 2'b01);  // burst enable
   // burst configuration
-  busm.write('h30, 2-1);  // burst data   repetitions
-  busm.write('h34, 3-1);  // burst data   length
-  busm.write('h38, 8-1);  // burst period length
-  busm.write('h3c, 2-1);  // burst period number
+  busm.write('h20, 2-1);  // burst data   repetitions
+  busm.write('h24, 3-1);  // burst data   length
+  busm.write('h28, 8-1);  // burst period length
+  busm.write('h2c, 2-1);  // burst period number
   // start/trigger
   busm.write('h00, CTL_STR);
   busm.write('h00, CTL_TRG);
@@ -164,15 +160,17 @@ gen #(
   .DT  (DT),
   .DTM (DTM),
   .DTS (DTS),
-  .DTC (logic),
-  .DTT (evn_pkg::evt_t),
-  .DTE (evn_pkg::evd_t)
+  .EN  (1),
+  .TN  ($bits(trg))
 ) gen (
   // stream output
   .sto      (str),
   // events input/output
-  .evi      (evd),
-  .evo      (evs),
+  .evi      (evn),
+  .evo      (evn),
+  // triggers input/output
+  .trg      (trg),
+  .tro      (trg),
   // interrupt
   .irq      (irq),
   // system bus

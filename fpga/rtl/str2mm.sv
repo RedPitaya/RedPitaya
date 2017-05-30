@@ -19,6 +19,7 @@ localparam int unsigned AW = $clog2(DL);
 
 // memory
 DT             buf_dat [0:DL-1];
+DT   [  2-1:0] buf_rdat;
 // write port
 logic          buf_wen;
 logic [AW-1:0] buf_wad;
@@ -51,11 +52,20 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 // read
 ////////////////////////////////////////////////////////////////////////////////
+logic          buf_ren;
 
 always_ff @(posedge bus.clk)
-if (bus.ren) begin
-  for (int unsigned i=0; i<2; i++) begin
-    bus.rdata [16*i+:16] <= buf_dat [{bus.addr>>2,i[0]}];
+buf_ren <= bus.ren;
+
+always_ff @(posedge bus.clk)
+for (int unsigned i=0; i<2; i++) begin
+  buf_rdat [i] <= buf_dat [{bus.addr>>2,i[0]}];
+end
+
+always_ff @(posedge bus.clk)
+for (int unsigned i=0; i<2; i++) begin
+  if (buf_ren) begin
+    bus.rdata [16*i+:16]<= buf_rdat[i];
   end
 end
 
@@ -63,7 +73,7 @@ always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;
-end else if (bus.wen | bus.ren) begin
+end else if (bus.wen | buf_ren) begin
   bus.ack <= 1'b1;
 end
 

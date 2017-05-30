@@ -27,8 +27,6 @@
 		#size-cells = <0>;
 		compatible = "st,stmpe610";
 		reg = <1>;
-		/* power up state on stmpe610 SPI_SSn (SDAT) is changing SPI mode */
-		spi-cpol;
 
 		spi-max-frequency = <1000000>;
 		irq-gpio = <&gpio0 9 0x2>; /* IRQF_TRIGGER_FALLING */

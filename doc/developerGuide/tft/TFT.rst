@@ -35,7 +35,7 @@ This TFT display setup takes advantage of this by repurposing SPI, I2C and UART 
 on the :ref:`E2 <E2>` connector as SPI and GPIO signals which are required by the TFT display interface.
 
 .. |tft-E2| replace:: ``tft-E2.dtsi``
-.. _tft-E2: dts/tft/tft-E2.dtsi
+.. _tft-E2: /fpga/dts/tft/tft-E2.dtsi
 
 The reconfiguration is performed by including the |tft-E2|_ device tree.
 
@@ -70,20 +70,20 @@ The reconfiguration is performed by including the |tft-E2|_ device tree.
 +-----------------+-----+----------+--------+--------+----------+-----+-------------------+
 
 Since some of the signals share the I2C bus which already contains an EEPROM,
-there is a posibility there will be functional conflicts.
+there is a possibility there will be functional conflicts.
 Although the probability of the I2C EEPROM going into an active state are low.
 I2C devices only react after an I2C start condition is present on the bus.
 The start condition requires both SDA and SCL signals to be low at the same time.
 Here it is assumed TFT display RESETn (active low) will not be active
 at the same time as the touch controller SPI SSn (active low) signal.
 
-Attempst to access the I2C EEPROM will not interfere with the display,
+Attempts to access the I2C EEPROM will not interfere with the display,
 but they will return a timeout.
 This might (probably will) cause issues with applications
-using the I2C EEPROM, for example calibration access from Osciloscope app.
+using the I2C EEPROM, for example calibration access from *Oscilloscope* app.
 
 There is no MIO pin left for backlight control,
-the easiest solution is to hardwire the display backlight pin to VCC.
+the easiest solution is to hard wire the display backlight pin to VCC.
 
 ===============
 SPI clock speed
@@ -112,7 +112,12 @@ The maximum clock speed for this SPI controller is 50MHz.
 Software setup
 **************
 
+.. |tft.sh| replace:: ``tft.sh``
+.. _tft.sh: /OS/debian/tft.sh
+
 Instructions for starting XFCE on the TFT display.
+A script which can be used to generate an image with full support
+is available on GitHub |tft.sh|_.
 
 A set of Ubuntu/Debian packages should be installed:
 
@@ -125,11 +130,11 @@ A set of Ubuntu/Debian packages should be installed:
      xserver-xorg xinit xserver-xorg-video-fbdev
 
 .. |99-fbdev.conf| replace:: ``/usr/share/X11/xorg.conf.d/99-fbdev.conf``
-.. _99-fbdev.conf: ../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+.. _99-fbdev.conf: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 An X11 configuration file should be added to the system |99-fbdev.conf|_:
 
-.. literalinclude:: ../../../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
 Over SSH start the X server:
 
@@ -142,11 +147,11 @@ Tested/Supported devices
 ************************
 
 The next table lists supported devices
-and coresponding of device tree files
+and corresponding of device tree files
 each supporting a set of displays depending on the used TFT and touch drivers.
 
 +---------------+-------------------------------+-----------------------------------+-------------------------+
-|               | specifications                | technical details                 | devicetree              |
+|               | specifications                | technical details                 | device tree             |
 |               +------+------------+-----------+----------------+------------------+                         |
 | screen name   | size | resolution | touch     | TFT controller | touch controller |                         |
 +===============+======+============+===========+================+==================+=========================+
@@ -169,10 +174,10 @@ MI0283QT Adapter Rev 1.5
 .. _ADS7846: http://www.ti.com/lit/ds/symlink/ads7846.pdf
 
 .. |tft-ili9341-ads7846| replace:: ``tft-ili9341-ads7846.dtsi``
-.. _tft-ili9341-ads7846: dts/tft/tft-ili9341-ads7846.dtsi
+.. _tft-ili9341-ads7846: /fpga/dts/tft/tft-ili9341-ads7846.dtsi
 
 The device is powered by **+5V**,
-and it generates 3.3V using an onboard LDO.
+and it generates 3.3V using an on board LDO.
 Therefore all IO are 3.3V, so there are no conflicts.
 
 Connector pinout based on the |MI0283QT-2|_
@@ -205,18 +210,26 @@ between the two display connector pins.
 Otherwise it would be possible to repurpose a LED on Red Pitaya.
 
 .. |95-ads7846.rules| replace:: ``/etc/udev/rules.d/95-ads7846.rules``
-.. _95-ads7846.rules: ../../../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+.. _95-ads7846.rules: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
 The |95-ads7846.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
 
-.. literalinclude:: ../../../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
-==============================
-Adafruit PiTFT 3.5" (original)
-==============================
+===================
+Adafruit PiTFT 3.5"
+===================
 
 .. |PiTFT-35| replace:: Adafruit PiTFT 3.5" Touch Screen for Raspberry Pi
 .. _PiTFT-35: https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi
+
+.. |PiTFTa-35| replace:: PiTFT - Assembled 480x320 3.5" TFT+Touchscreen for Raspberry Pi
+.. _PiTFTa-35: https://www.adafruit.com/product/2097
+.. _PiTFTa-35-img: https://cdn-learn.adafruit.com/assets/assets/000/019/744/original/adafruit_products_2097_quarter_ORIG.jpg
+
+.. |PiTFTp-35| replace:: PiTFT Plus 480x320 3.5" TFT+Touchscreen for Raspberry Pi
+.. _PiTFTp-35: https://www.adafruit.com/product/2441
+.. _PiTFTp-35-img: https://cdn-shop.adafruit.com/970x728/2441-11.jpg
 
 .. |HX8357D| replace:: HX8357D
 .. _HX8357D: https://cdn-shop.adafruit.com/datasheets/HX8357-D_DS_April2012.pdf
@@ -225,10 +238,21 @@ Adafruit PiTFT 3.5" (original)
 .. _STMPE610: https://cdn-shop.adafruit.com/datasheets/STMPE610.pdf
 
 .. |tft-hx8357d-stmpe601| replace:: ``tft-hx8357d-stmpe601.dtsi``
-.. _tft-hx8357d-stmpe601: dts/tft/tft-hx8357d-stmpe601.dtsi
+.. _tft-hx8357d-stmpe601: /fpga/dts/tft/tft-hx8357d-stmpe601.dtsi
 
-The device is powered by **+5V**,
-and it generates 3.3V using an onboard LDO.
+There are two versions of this display the older **Assembled**
+(sometimes called **Original** and the newer **Plus**.
+
+* |PiTFTa-35|_ (`high resolution image <PiTFTa-35-img_>`_)
+* |PiTFTp-35|_ (`high resolution image <PiTFTp-35-img_>`_)
+
+While the newer **Plus** version can be used out of the box,
+The older **Assembled** requires hardware modifications,
+for details `see below <assembled_hw_mods>`.
+
+The device is powered by **+5V** (for backlight LED)
+and **+3.3V** for TFT and touch controllers
+(should be taken from the E1 connector on Red Pitaya).
 Therefore all IO are 3.3V, so there are no conflicts.
 
 Male connector pinout based on the |PiTFT-35|_
@@ -261,36 +285,112 @@ Male connector pinout based on the |PiTFT-35|_
 +-------------------+--------+--------+-------------------+
 |                   |  ``4`` |  ``3`` |                   |
 +-------------------+--------+--------+-------------------+
-| +5V               |  ``2`` |  ``1`` |                   |
+| +5V               |  ``2`` |  ``1`` | +3.3V             |
 +-------------------+--------+--------+-------------------+
 
 .. |95-stmpe.rules| replace:: ``/etc/udev/rules.d/95-stmpe.rules``
-.. _95-stmpe.rules: ../../../OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
+.. _95-stmpe.rules: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
 
-The |95-stmpe.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
+The |95-stmpe.rules|_ UDEV rule will create a symbolic link ``/dev/input/touchscreen``.
 
-.. literalinclude:: ../../../OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
-
+.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
 
 .. |99-calibration.conf| replace:: ``/etc/X11/xorg.conf.d/99-calibration.conf``
-.. _99-calibration.conf: ../../../OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
+.. _99-calibration.conf: /OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
 
 A calibration file should be added to the system |99-calibration.conf|_:
 
-.. literalinclude:: ../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+.. literalinclude:: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
-------------------------
-Graphical representation
-------------------------
+-------------
+Block diagram
+-------------
 
 .. figure:: img/TFT_connection.svg
-  
+
     Graphical representation of how to connect Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5".
 
 .. figure:: img/TFT_connection-table.svg
-  
+
     Simplified graphical representation of Red Pitayas :ref:`E2 <E2>` connetor to the Adafruit PiTFT 3.5". For pin
     locations please look at the top picture.
+
+.. _assembled_hw_mods:
+
+----------------------------------------
+Assembled version hardware modifications
+----------------------------------------
+
+~~~~~~~~~~~
+Explanation
+~~~~~~~~~~~
+
+The device is powered by a single **+5V** supply,
+and it generates 3.3V using an on board LDO.
+So 3.3V interfaces between Red Pitaya and the display
+have a different power source on each side.
+Since the two power sources do not wake up at the same time
+there is a race condition affecting touch controller
+SPI interface configuration during power-up reset.
+The LDO on the TFT board is faster then the switcher on Red Pitaya.
+
+The |STMPE610|_ touch controller datasheet (section 5.2)
+describes how CPOL/CPHA SPI configuration options depend
+on the power up reset state of a pair configuration pins.
+
++------------------------------+------+---------------------------------+------+
+| CPOL_N (I2C data/SPI CS pin) | CPOL | CPHA (I2C address/SPI MISO pin) | Mode |
++==============================+======+=================================+======+
+| 1                            | 0    | 0                               | 0    |
++------------------------------+------+---------------------------------+------+
+| 1                            | 0    | 1                               | 1    |
++------------------------------+------+---------------------------------+------+
+| 0                            | 1    | 0                               | 2    |
++------------------------------+------+---------------------------------+------+
+| 0                            | 1    | 1                               | 3    |
++------------------------------+------+---------------------------------+------+
+
+On the original setup (before ``pinctrl`` device tree is applied)
+for the E2 connector the touch chip SPI CS signal is used as I2C_SCK.
+The SPI MISO pin is not affected by ``pinctrl`` changes.
+
+There appears to be a race condition between:
+
+1. the configuration read event timed by the STMPE610 power
+   coming directly from the +3.3V LDO (5V USB power connector)
+2. and waking up of the 3.3V power supply on Red Pitaya,
+   which powers the pull up resistors on the I2C pins
+   and FPGA pull-ups for the SPI MISO pin on the E2 connector
+
+In most cases the LDO on the TFT board would wake
+before the switcher on Red Pitaya, so the ``CPOL_N``
+would be detected as ``0``, which inverts the SPI clock polarity.
+As an unreliable fix, the ``spi-cpol`` attribute can be provided
+in the `device tree </fpga/dts/tft/tft-hx8357d-stmpe601.dtsi#L31>`_.
+
+.. note::
+
+   It is not yet confirmed the power supply race condition is responsible
+   for touch not working in certain setups, more testing might be necessary.
+
+~~~~~~~~~~~~~
+Modifications
+~~~~~~~~~~~~~
+
+To avoid the power supply race condition,
+the LDO on the **Assembled** TFT board can be disabled,
+and instead +3.3V from Red Pitaya is used.
+This makes the **Assembled** power supply similar to the **Plus** version.
+
+The next modifications have to be done:
+
+1. Remove the +3.3V LDO, or at least rise the power output pin off the board.
+2. Connect pin 1 on the JP1 connector to a +3.3V power line.
+
+The next image shows a TFT board with a rised LDO power output
+and pin 1 on the JP1 connector connected to an unmounted resistor pad.
+
+.. figure:: img/assembled_hw_mod.jpg
 
 *************************
 Debugging/Troubleshooting
@@ -322,7 +422,7 @@ To see the status of interrupts try:
 Touch
 =====
 
-``evtest`` can be used to see lowlevel touch events (and keyboard/mouse):
+``evtest`` can be used to see low level touch events (and keyboard/mouse):
 
 .. code-block:: shell-session
 

@@ -1,8 +1,10 @@
-#MODELSIM_BIN=$(HOME)/altera/16.0/modelsim_ase/bin
-MODELSIM_BIN=$(HOME)/intelFPGA/16.1/modelsim_ase/bin
+ALTERA_PATH=$(HOME)/intelFPGA
+XILINX_PATH=/opt/Xilinx
 
-PATH_LIB=/opt/Xilinx/Vivado/2017.1/data/verilog/src
-PATH_SIP=/opt/Xilinx/Vivado/2017.1/data/secureip
+MODELSIM_BIN=$(ALTERA_PATH)/16.1/modelsim_ase/bin
+
+PATH_LIB=$(XILINX_PATH)/Vivado/2017.1/data/verilog/src
+PATH_SIP=$(XILINX_PATH)/Vivado/2017.1/data/secureip
 PATH_RTL=../rtl
 PATH_TBN=../tbn
 

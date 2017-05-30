@@ -84,10 +84,7 @@ module system #(
   output logic                S_AXI_OSC0_tready, S_AXI_OSC1_tready, S_AXI_LA_tready,
   input  logic                S_AXI_OSC0_tvalid, S_AXI_OSC1_tvalid, S_AXI_LA_tvalid,
   // IRQ
-  input  logic          IRQ_LA ,
-  input  logic          IRQ_LG ,
-  input  logic  [2-1:0] IRQ_OSC,
-  input  logic  [2-1:0] IRQ_GEN,
+  input  top_pkg::irq_t IRQ,
   // XADC
   input  logic          Vaux0_v_n,
   input  logic          Vaux0_v_p,

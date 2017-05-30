@@ -211,14 +211,10 @@ assign daisy_n_o = 1'bz;
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
-// reset/start/stop/trigger events
-top_pkg::evs_t evs;
-top_pkg::evd_t evd;
-
-// remap from source ordering to functional ordering
-// TODO: add external trigger
-assign evd = top_pkg::evn_f(evs, 1'b0);
-
+// software events
+top_pkg::evn_t evn;
+// trigger events
+top_pkg::trg_t trg;
 // interrupts
 top_pkg::irq_t irq;
 
@@ -413,15 +409,17 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
   gen #(
     .DN  (1),
     .DT  (DTG),
-    .DTC (top_pkg::evl_t),
-    .DTT (top_pkg::evt_t),
-    .DTE (top_pkg::evd_t)
+    .EN  (top_pkg::MNS),
+    .TN  ($bits(trg))
   ) gen (
     // stream output
     .sto      (str_gen[i]),
-    // events
-    .evi      (evd),
-    .evo      (evs.gen[i]),
+    // software events
+    .evi      (evn),
+    .evo      (evn.gen[i]),
+    // trigger events
+    .trg      (trg),
+    .tro      (trg.gen[i]),
     // interrupts
     .irq      (irq.gen[i]),
     // System bus
@@ -446,16 +444,18 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
   osc #(
     .DN  (1),
     .DT  (DTO),
-    .DTC (top_pkg::evl_t),
-    .DTT (top_pkg::evt_t),
-    .DTE (top_pkg::evd_t)
+    .EN  (top_pkg::MNS),
+    .TN  ($bits(trg))
   ) osc (
     // streams
     .sti      (str_osc[i]),
     .sto      (str),
-    // events
-    .evi      (evd),
-    .evo      (evs.osc[i]),
+    // software events
+    .evi      (evn),
+    .evo      (evn.osc[i]),
+    // trigger events
+    .trg      (trg),
+    .tro      (trg.osc[i]),
     // reset output
     .ctl_rst  (ctl_rst),
     // interrupts
@@ -494,15 +494,17 @@ if (EN_LG) begin: if_lg
 
   lg #(
     .DT  (DTL),
-    .DTC (top_pkg::evl_t),
-    .DTT (top_pkg::evt_t),
-    .DTE (top_pkg::evd_t)
+    .EN  (top_pkg::MNS),
+    .TN  ($bits(trg))
   ) lg (
     // stream output
     .sto      (str_lg),
-    // events
-    .evi      (evd),
-    .evo      (evs.lg),
+    // software events
+    .evi      (evn),
+    .evo      (evn.lg),
+    // trigger events
+    .trg      (trg),
+    .tro      (trg.lg),
     // interrupts
     .irq      (irq.lg),
     // System bus
@@ -521,7 +523,7 @@ end else begin
   assign str_lg.TVALID = '0;
   // TREADY is ignored
 
-  assign evs.lg = '0;
+  assign evn.lg = '0;
   assign irq.lg = 1'b0;
 
 end
@@ -543,20 +545,22 @@ if (EN_LA) begin: if_la
   la #(
     .DN  (1),
     .DT  (DTL),
-    .DTC (top_pkg::evl_t),
-    .DTT (top_pkg::evt_t),
-    .DTE (top_pkg::evd_t)
+    .EN  (top_pkg::MNS),
+    .TN  ($bits(trg))
   ) la (
     // streams
     .sti      (str_la),
     .sto      (str_tmp),
-    // events
-    .evi      (evd),
-    .evo      (evs.la),
-    // reset output
-    .ctl_rst  (ctl_rst),
+    // software events
+    .evi      (evn),
+    .evo      (evn.la),
+    // trigger events
+    .trg      (trg),
+    .tro      (trg.la),
     // interrupts
     .irq      (irq.la),
+    // reset output
+    .ctl_rst  (ctl_rst),
     // System bus
     .bus      (sys[14+0])
   );
@@ -588,7 +592,7 @@ end else begin
   assign srx_la.TVALID = '0;
   // TREADY is ignored
 
-  assign evs.la = '0;
+  assign evn.la = '0;
   assign irq.la = 1'b0;
 
 end

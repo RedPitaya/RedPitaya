@@ -137,7 +137,7 @@ module asg #(
 
 // buffer
 DT                  buf_mem [0:2**CWM-1];
-DT                  buf_rdata[0:2-1];     // read data
+DT    [2      -1:0] buf_rdata;            // read data
 logic [CWM    -1:0] buf_raddr;            // read address
 logic [CWM    -1:0] buf_ptr;              // read pointer
 logic [2      -1:0] buf_adr_vld;          // valid (read data enable)
@@ -182,8 +182,8 @@ assign bus_ena = bus.wen | bus_ren;
 // CPU read/write access
 always_ff @(posedge bus.clk)
 begin
-  if (bus.ren)  bus_rdata <= buf_mem [bus.addr[2+:CWM]];
-  bus.rdata <= bus_rdata ;
+  bus_rdata <= buf_mem [bus.addr[2+:CWM]];
+  if (bus_ren) bus.rdata <= bus_rdata ;
   if (bus.wen)  buf_mem [bus.addr[2+:CWM]] <= bus.wdata;
 end
 // TODO: asymetric bus width is failing synthesis
@@ -195,7 +195,7 @@ end
 //end
 
 always_ff @(posedge bus.clk)
-  bus_ren <= bus.ren ;
+bus_ren <= bus.ren;
 
 // CPU control signals
 always_ff @(posedge bus.clk)
@@ -211,8 +211,8 @@ assign bus.err = 1'b0;
 // stream read data
 always_ff @(posedge sto.ACLK)
 begin
-  if (buf_adr_vld[0]) buf_rdata[0] <= buf_mem[buf_raddr];
-  buf_rdata[1] <= buf_rdata[0] ;
+   buf_rdata[0] <= buf_mem[buf_raddr];
+  if (buf_adr_vld[1]) buf_rdata[1] <= buf_rdata[0] ;
 end
 
 // stream read pointer
@@ -228,12 +228,14 @@ end else begin
   if (ctl_rst) begin
     buf_adr_vld <= 2'b0;
     buf_adr_lst <= 2'b0;
-  end else if (sts_rdy) begin
-    buf_adr_vld[0] <= sts_trg; 
-    buf_adr_lst[0] <= sts_trg && ctl_end;
+  end else begin
+    buf_adr_vld[1] <= buf_adr_vld[0];
+    buf_adr_lst[1] <= buf_adr_lst[0];
+    if (sts_rdy) begin
+      buf_adr_vld[0] <= sts_trg;
+      buf_adr_lst[0] <= sts_trg && ctl_end;
+    end
   end
-  buf_adr_vld[1] <= buf_adr_vld[0];
-  buf_adr_lst[1] <= buf_adr_lst[0];
 end
 
 // address status depends on burst mode

@@ -61,15 +61,15 @@ echo ""                                   >> $REPORT
 if [ -f "vivado.log" ]; then 
 
   GREP='grep -i "sub-optimal" vivado.log | sort | uniq'
-  SUBN=$(eval "$GREP | grep -i "sub-optimal" -c")
+  SUBN=$(eval "$GREP | grep -i 'sub-optimal' -c")
 
   if [[ $SUBN != 0 ]]; then
     # user notification
-    echo "${RPT} WRNING: $SUBN sub-optimal timings detected!"
+    echo "${RPT} WARNING: $SUBN sub-optimal timings detected!"
     
     # to report file
     startRprt "SUB-OPTIMAL TIMING"
-    echo "WRNING: $SUBN sub-optimal timings detected:">> $REPORT
+    echo "WARNING: $SUBN sub-optimal timings detected:">> $REPORT
     echo "$(eval ${GREP})" >> $REPORT
     endRprt
   else
@@ -84,7 +84,36 @@ else
 fi
 
 # # # # # # # # # # # # # # # # # # # # # # # 
-# displaies violated timings in report FILE #
+# displays CRITICAL WARNING in report FILE  #
+# # # # # # # # # # # # # # # # # # # # # # # 
+
+if [ -f "vivado.log" ]; then 
+
+  GREP='grep -i "CRITICAL WARNING:" vivado.log | sort | uniq'
+  SUBN=$(eval "$GREP | grep -i 'CRITICAL WARNING:' -c")
+
+  if [[ $SUBN != 0 ]]; then
+    # user notification
+    echo "${RPT} WARNING: $SUBN CRITICAL WARNING: timings detected!"
+    
+    # to report file
+    startRprt "CRITICAL WARNINGs"
+    echo "WARNING: $SUBN CRITICAL WARNING timings detected:">> $REPORT
+    echo "$(eval ${GREP})" >> $REPORT
+    endRprt
+  else
+    # user notification
+    echo "CRITICAL WARNING timing test - PASSED"
+    
+    # to report file
+    passed 
+  fi
+else
+  fileMiss "vivado.log"
+fi
+
+# # # # # # # # # # # # # # # # # # # # # # # 
+# displays violated timings in report FILE  #
 # # # # # # # # # # # # # # # # # # # # # # # 
 
 function grepTiming {
@@ -93,7 +122,7 @@ function grepTiming {
   if [ -f ${FILE} ]; then
 
     GREP='grep -i "violated" ${FILE}'
-    SUBN=$(eval "$GREP | grep -i "violated" -c")
+    SUBN=$(eval "$GREP | grep -i 'violated' -c")
   
     startRprt "${FILE} timing violation test"
     if [[ $SUBN != 0 ]]; then
@@ -116,9 +145,45 @@ function grepTiming {
 }
 
 # define report directory
-FILEPATH="prj/logic/out/"
+FILEPATH="prj/mercury/out/"
 
 # check timing in synthesis, placement, route timing reports
 grepTiming ${FILEPATH}post_synth_timing_summary.rpt
 grepTiming ${FILEPATH}post_place_timing_summary.rpt 
 grepTiming ${FILEPATH}post_route_timing_summary.rpt
+
+# # # # # # # # # # # #
+# displays all errors #
+# # # # # # # # # # # #
+if [ -f "vivado.log" ]; then 
+
+  GREP='grep -i "error:" vivado.log | sort | uniq'
+  SUBN=$(eval "$GREP | grep -i 'error:' -c")
+
+  if [[ $SUBN != 0 ]]; then
+    # user notification
+    echo "${RPT} ERROR: $SUBN errors detected!"
+    
+    # to report file
+    startRprt "ERROR:"
+    echo "ERROR: $SUBN errors detected:">> $REPORT
+    echo "$(eval ${GREP})" >> $REPORT
+    endRprt
+  else
+    # user notification
+    echo "No other errors detected."
+    
+    # to report file
+    passed 
+  fi
+else
+  fileMiss "vivado.log"
+fi
+
+# create backup file
+n=0; 
+while [ -f ${REPORT}-$n ]; do 
+    ((++n)); 
+done; 
+
+mv ${REPORT} ${REPORT}-$n
