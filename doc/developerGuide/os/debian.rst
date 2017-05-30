@@ -44,7 +44,7 @@ Ubuntu bootstrap
 .. _redpitaya.sh: /OS/debian/redpitaya.sh
 
 .. |jupyter.sh| replace:: ``jupyter.sh``
-.. _jupyter.sh.sh: /OS/debian/jupyter.sh
+.. _jupyter.sh: /OS/debian/jupyter.sh
 
 .. |tft.sh| replace:: ``tft.sh``
 .. _tft.sh: /OS/debian/tft.sh
