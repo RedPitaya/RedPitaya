@@ -110,7 +110,7 @@ active bits will cause a trigger event. Both the comparator and edge
 conditions must be met for a trigger. Both have a default state, so that
 only one of them can be used for the trigger condition.
 
-.. code-block:: Verilog
+.. code-block:: verilog
 
    trg_cmp = (data & trg_cmp_msk) == (trg_cmp_val & trg_cmp_msk);
    trg_edg = |(trg_edg_pos & (~data_old &  data)
