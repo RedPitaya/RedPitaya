@@ -122,7 +122,8 @@ report_io                -file    $path_out/post_imp_io.rpt
 
 set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
 
-write_bitstream -force $path_out/red_pitaya.bit
+write_bitstream -force            $path_out/red_pitaya.bit
+write_bitstream -force -bin_file  $path_out/red_pitaya.bin
 
 ################################################################################
 # generate system definition
