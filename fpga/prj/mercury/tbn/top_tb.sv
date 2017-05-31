@@ -15,6 +15,61 @@ module top_tb #(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// IO port signals
+////////////////////////////////////////////////////////////////////////////////
+
+// PS connections
+wire  [54-1:0] FIXED_IO_mio     ;
+wire           FIXED_IO_ps_clk  ;
+wire           FIXED_IO_ps_porb ;
+wire           FIXED_IO_ps_srstb;
+wire           FIXED_IO_ddr_vrn ;
+wire           FIXED_IO_ddr_vrp ;
+// DDR
+wire  [15-1:0] DDR_addr   ;
+wire  [ 3-1:0] DDR_ba     ;
+wire           DDR_cas_n  ;
+wire           DDR_ck_n   ;
+wire           DDR_ck_p   ;
+wire           DDR_cke    ;
+wire           DDR_cs_n   ;
+wire  [ 4-1:0] DDR_dm     ;
+wire  [32-1:0] DDR_dq     ;
+wire  [ 4-1:0] DDR_dqs_n  ;
+wire  [ 4-1:0] DDR_dqs_p  ;
+wire           DDR_odt    ;
+wire           DDR_ras_n  ;
+wire           DDR_reset_n;
+wire           DDR_we_n   ;
+
+// ADC
+logic [2-1:0] [16-1:0] adc_dat;
+logic         [ 2-1:0] adc_clk;
+logic         [ 2-1:0] adc_clk_o;   // optional ADC clock source
+logic                  adc_cdcs_o;  // ADC clock duty cycle stabilizer
+// DAC
+logic         [14-1:0] dac_dat;     // DAC combined data
+logic                  dac_wrt;     // DAC write
+logic                  dac_sel;     // DAC channel select
+logic                  dac_clk;     // DAC clock
+logic                  dac_rst;     // DAC reset
+// PDM DAC
+logic         [ 4-1:0] dac_pwm;     // 1-bit PDM DAC
+// XADC
+logic         [ 5-1:0] vinp;        // voltages p
+logic         [ 5-1:0] vinn;        // voltages n
+// Expansion connector
+wire          [ 8-1:0] exp_p_io;
+wire          [ 8-1:0] exp_n_io;
+// Expansion output data/enable
+logic         [ 8-1:0] exp_p_od, exp_p_oe;
+logic         [ 8-1:0] exp_n_od, exp_n_oe;
+// LED
+wire          [ 8-1:0] led;
+
+glbl glbl();
+
+////////////////////////////////////////////////////////////////////////////////
 // DAC signal generation
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,6 +121,7 @@ initial begin
   //test_id  (32'h40000000);
   test_gen_periodic (32'h40040000, 32'h40050000, 0);
 //test_gen_burst    (32'h40040000, 32'h40050000, 0);
+  test_la_trigger   (32'h400e0000, 32'h400f0000, 0);
 //  ##16;
 //test_osc          (32'h40040000, 32'h40050000, 2);
   //test_clb (32'h40030000);
@@ -333,16 +389,42 @@ task test_lg (
 endtask: test_lg
 
 
+task test_la_trigger (
+  int unsigned regset,
+  int unsigned buffer,
+  int unsigned sh = 0
+);
+  // set GPIO into neutral state
+  exp_p_od = '0;
+  exp_n_od = '0;
+  exp_p_oe = '1;
+  exp_n_oe = '1;
+  ##10;
+  // configure trigger
+  axi_write(regset+'h20, 16'h0000);  // cfg_cmp_msk
+  axi_write(regset+'h24, 16'h0000);  // cfg_cmp_val
+  axi_write(regset+'h28, 16'h0001);  // cfg_edg_pos
+  axi_write(regset+'h2c, 16'h0000);  // cfg_edg_neg
+  ##10;
+  // send trigger pulse on GPIO
+  exp_p_od[0] = 1'b1;
+  ##10;
+  // set GPIO into neutral state
+  exp_p_od[0] = 1'b0;
+  ##10;
+endtask: test_la_trigger
+
 task test_la (
-  int unsigned regset
+  int unsigned regset,
+  int unsigned buffer,
+  int unsigned sh = 0
 );
   ##10;
-
   // configure trigger
-  axi_write(regset+'h40, 16'h0000);  // cfg_cmp_msk
-  axi_write(regset+'h44, 16'h0000);  // cfg_cmp_val
-  axi_write(regset+'h48, 16'h0001);  // cfg_edg_pos
-  axi_write(regset+'h4c, 16'h0000);  // cfg_edg_neg
+  axi_write(regset+'h20, 16'h0000);  // cfg_cmp_msk
+  axi_write(regset+'h24, 16'h0000);  // cfg_cmp_val
+  axi_write(regset+'h28, 16'h0001);  // cfg_edg_pos
+  axi_write(regset+'h2c, 16'h0000);  // cfg_edg_neg
 
   axi_write(regset+'h10, 'd8 );  // cfg_pre
   axi_write(regset+'h14, 'd16);  // cfg_pst
@@ -355,7 +437,9 @@ endtask: test_la
 
 
 task test_la_automatic (
-  int unsigned regset
+  int unsigned regset,
+  int unsigned buffer,
+  int unsigned sh = 0
 );
   ##10;
 
@@ -387,54 +471,6 @@ endtask: test_id
 ////////////////////////////////////////////////////////////////////////////////
 // module instances
 ////////////////////////////////////////////////////////////////////////////////
-
-// PS connections
-wire  [54-1:0] FIXED_IO_mio     ;
-wire           FIXED_IO_ps_clk  ;
-wire           FIXED_IO_ps_porb ;
-wire           FIXED_IO_ps_srstb;
-wire           FIXED_IO_ddr_vrn ;
-wire           FIXED_IO_ddr_vrp ;
-// DDR
-wire  [15-1:0] DDR_addr   ;
-wire  [ 3-1:0] DDR_ba     ;
-wire           DDR_cas_n  ;
-wire           DDR_ck_n   ;
-wire           DDR_ck_p   ;
-wire           DDR_cke    ;
-wire           DDR_cs_n   ;
-wire  [ 4-1:0] DDR_dm     ;
-wire  [32-1:0] DDR_dq     ;
-wire  [ 4-1:0] DDR_dqs_n  ;
-wire  [ 4-1:0] DDR_dqs_p  ;
-wire           DDR_odt    ;
-wire           DDR_ras_n  ;
-wire           DDR_reset_n;
-wire           DDR_we_n   ;
-
-// ADC
-logic [2-1:0] [16-1:0] adc_dat;
-logic         [ 2-1:0] adc_clk;
-logic         [ 2-1:0] adc_clk_o;   // optional ADC clock source
-logic                  adc_cdcs_o;  // ADC clock duty cycle stabilizer
-// DAC
-logic         [14-1:0] dac_dat;     // DAC combined data
-logic                  dac_wrt;     // DAC write
-logic                  dac_sel;     // DAC channel select
-logic                  dac_clk;     // DAC clock
-logic                  dac_rst;     // DAC reset
-// PDM DAC
-logic         [ 4-1:0] dac_pwm;     // 1-bit PDM DAC
-// XADC
-logic         [ 5-1:0] vinp;        // voltages p
-logic         [ 5-1:0] vinn;        // voltages n
-// Expansion connector
-wire          [ 8-1:0] exp_p_io;
-wire          [ 8-1:0] exp_n_io;
-// LED
-wire          [ 8-1:0] led;
-
-glbl glbl();
 
 red_pitaya_top #(
   .GITH (160'ha0a1a2a3b0b1b2b3c0c1c2c3d0d1d2d3e0e1e2e3)
@@ -492,6 +528,9 @@ red_pitaya_top #(
   // LED
   .led_o          (led)
 );
+
+bufif1 bufif_exp_p_io [8-1:0] (exp_p_io, exp_p_od, exp_p_oe);
+bufif1 bufif_exp_n_io [8-1:0] (exp_n_io, exp_n_od, exp_n_oe);
 
 ////////////////////////////////////////////////////////////////////////////////
 // simulated inputs

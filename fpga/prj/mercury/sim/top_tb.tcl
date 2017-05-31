@@ -23,14 +23,16 @@ axi4_if      axi_gp    /${dut}/ps/axi_gp
 sys_bus_if   ps_sys    /${dut}/ps_sys
 
 # streams
-axi4_stream_if axi_adc_0 /${dut}/str_adc\[0\]
-axi4_stream_if axi_adc_1 /${dut}/str_adc\[1\]
-axi4_stream_if axi_osc_0 /${dut}/str_osc\[0\]
-axi4_stream_if axi_osc_1 /${dut}/str_osc\[1\]
-axi4_stream_if axi_gen_0 /${dut}/str_gen\[0\]
-axi4_stream_if axi_gen_1 /${dut}/str_gen\[1\]
 axi4_stream_if axi_dac_0 /${dut}/str_dac\[0\]
 axi4_stream_if axi_dac_1 /${dut}/str_dac\[1\]
+axi4_stream_if axi_gen_0 /${dut}/str_gen\[0\]
+axi4_stream_if axi_gen_1 /${dut}/str_gen\[1\]
+axi4_stream_if axi_osc_0 /${dut}/str_osc\[0\]
+axi4_stream_if axi_osc_1 /${dut}/str_osc\[1\]
+axi4_stream_if axi_adc_0 /${dut}/str_adc\[0\]
+axi4_stream_if axi_adc_1 /${dut}/str_adc\[1\]
+axi4_stream_if axi_lg    /${dut}/str_lg
+axi4_stream_if axi_la    /${dut}/str_la
 
 # interrupts and events
 add wave -noupdate /${dut}/irq
