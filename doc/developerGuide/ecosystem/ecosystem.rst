@@ -79,7 +79,7 @@ You will need the following to build the Red Pitaya components:
 
    .. code-block:: shell-session
 
-      sudo ln -s /usr/bin/make /usr/bin/gmake
+      $ sudo ln -s /usr/bin/make /usr/bin/gmake
 
 =============
 Build process
