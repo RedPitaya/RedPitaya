@@ -265,6 +265,13 @@ assign sto.TKEEP  = stg.TKEEP ;
 assign sto.TLAST  = stg.TLAST ;
 assign stg.TREADY = sto.TREADY;
 
-assign sto.TDATA  = cfg_pol ^ (~cfg_msk & cfg_val | cfg_msk & stg.TDATA);
+generate
+for (genvar i=0; i<DN; i++) begin: for_dn
+
+assign sto.TDATA[i].o = cfg_pol ^ (~cfg_msk & cfg_val | cfg_msk & stg.TDATA[i]);
+assign sto.TDATA[i].e = cfg_oen;
+
+end: for_dn
+endgenerate
 
 endmodule: lg

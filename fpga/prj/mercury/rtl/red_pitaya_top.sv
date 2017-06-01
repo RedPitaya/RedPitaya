@@ -70,10 +70,19 @@ module red_pitaya_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+
 // stream bus type
 localparam type DTG = logic signed [14-1:0];  // generate
 localparam type DTO = logic signed [16-1:0];  // acquire
 localparam type DTL = logic signed [16-1:0];  // logic (generator/analyzer)
+localparam type DTLG = struct packed {DTL e, o;};
+
+//typedef struct packed {
+//  DTL e;
+//  DTL o;
+//} dtlg_t;
+
+//localparam type DTLG = dtlg_t;
 
 // GPIO parameter
 localparam int unsigned GDW = 8+8;
@@ -338,8 +347,9 @@ IOBUF iobuf_exp_p [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(
 
 // multiplexing GPIO signals from PS with logic generator
 assign gpio.i[23:8] = exp_i;
-assign exp_o = gpio.o[23:8];
-assign exp_t = gpio.t[23:8];
+// GPIO mode is multiplexing between (0 - PS GPIO, 1 - LG)
+assign exp_o = ~exp_iom & gpio.o[23:8] | exp_iom &  str_lg.TDATA[0].o;
+assign exp_t = ~exp_iom & gpio.t[23:8] | exp_iom & ~str_lg.TDATA[0].e;
 
 // TODO connect logic generator
 assign str_lg.TREADY = 1'b1;
@@ -392,10 +402,10 @@ pdm #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // ADC(osc)/DAC(gen) AXI4-Stream interfaces
-axi4_stream_if #(.DT (DTG)) str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
-axi4_stream_if #(.DT (DTO)) str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
-axi4_stream_if #(.DT (DTG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
-axi4_stream_if #(.DT (DTO)) str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTG))  str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTO))  str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTLG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTL))  str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
 
 clb #(
   .MNG (MNG),
