@@ -51,9 +51,6 @@ jupyter bundlerextension enable --sys-prefix --py --system dashboards_bundlers
 #apt-get -y install npm
 #npm install -g jupyter-dashboards-server
 
-# https://plot.ly/python/ for interactive graphs
-pip3 install plotly
-
 # http://bokeh.pydata.org/ interactive visualization library
 pip3 install bokeh
 
