@@ -27,9 +27,6 @@ module lg #(
   // stream parameters
   int unsigned DN = 1,      // data number
   type DT = logic [8-1:0],  // data type
-  // configuration parameters
-  type DTM = DT,  // data type for multiplication
-  type DTS = DT,  // data type for summation
   // buffer parameters
   int unsigned CWM = 14,  // counter width magnitude (fixed point integer)
   int unsigned CWF = 16,  // counter width fraction  (fixed point fraction)
@@ -91,9 +88,11 @@ logic [CWN-1:0] cfg_bpn;  // burst period number
 // status
 logic [CWL-1:0] sts_bpl;  // burst period length counter
 logic [CWN-1:0] sts_bpn;  // burst period number counter
-//select masks and values
-DTM             cfg_msk;
-DTS             cfg_val;
+// output configuration
+DT              cfg_oen;  // output enable
+DT              cfg_msk;  // bit mask
+DT              cfg_val;  // bit value
+DT              cfg_pol;  // polarity inversion
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -127,9 +126,11 @@ if (~bus.rstn) begin
   cfg_bdl <= '0;
   cfg_bpn <= '0;
   cfg_bpl <= '0;
-  // select masks and values
+  // output configuration
+  cfg_oen <= '0;
   cfg_msk <= '0;
   cfg_val <= '0;
+  cfg_pol <= '0;
 end else begin
   if (bus.wen) begin
     // event select
@@ -148,9 +149,11 @@ end else begin
     if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h28)  cfg_bpl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bpn <= bus.wdata;
-    // select masks and values
-    if (bus.addr[BAW-1:0]=='h40)  cfg_msk <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h44)  cfg_val <= bus.wdata;
+    // output configuration
+    if (bus.addr[BAW-1:0]=='h40)  cfg_oen <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h44)  cfg_msk <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h48)  cfg_val <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h4c)  cfg_pol <= bus.wdata;
   end
 end
 
@@ -182,9 +185,11 @@ casez (bus.addr[BAW-1:0])
   // burst status
   'h30: bus.rdata <= sts_bpl;
   'h34: bus.rdata <= sts_bpn;
-  // select masks and values
-  'h40: bus.rdata <= cfg_msk;
-  'h44: bus.rdata <= cfg_val;
+  // output configuration
+  'h40: bus.rdata <= cfg_oen;
+  'h44: bus.rdata <= cfg_msk;
+  'h48: bus.rdata <= cfg_val;
+  'h4c: bus.rdata <= cfg_pol;
   // default is 'x for better optimization
   default: bus.rdata <= 'x;
 endcase
@@ -260,6 +265,6 @@ assign sto.TKEEP  = stg.TKEEP ;
 assign sto.TLAST  = stg.TLAST ;
 assign stg.TREADY = sto.TREADY;
 
-assign sto.TDATA  = ~cfg_msk & cfg_val | cfg_msk & stg.TDATA;
+assign sto.TDATA  = cfg_pol ^ (~cfg_msk & cfg_val | cfg_msk & stg.TDATA);
 
 endmodule: lg
