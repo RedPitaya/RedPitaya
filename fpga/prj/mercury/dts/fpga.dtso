@@ -21,9 +21,13 @@
 				compatible = "generic-uio";
 				reg = <0x40000000 0x1000>;
 			};
-			pdm: pdm@40010000 {
+			mgmt: mgmt@40010000 {
 				compatible = "generic-uio";
 				reg = <0x40010000 0x1000>;
+			};
+			pdm: pdm@40020000 {
+				compatible = "generic-uio";
+				reg = <0x40020000 0x1000>;
 			};
 			clb: clb@40030000 {
 				compatible = "generic-uio";
