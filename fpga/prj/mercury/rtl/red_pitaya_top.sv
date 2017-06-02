@@ -332,7 +332,7 @@ mgmt #(.GW ($bits(DTL))) mgmt (
 ////////////////////////////////////////////////////////////////////////////////
 
 IOBUF iobuf_led [8-1:0] (.O(gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
-//IOBUF iobuf_exp_p [16-1:0] (.O(gpio.i[23:8]), .IO({exp_n_io, exp_p_io}), .I(gpio.o[23:8]), .T(gpio.t[23:8]));
+//IOBUF iobuf_exp [16-1:0] (.O(gpio.i[23:8]), .IO({exp_n_io, exp_p_io}), .I(gpio.o[23:8]), .T(gpio.t[23:8]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO
@@ -343,7 +343,7 @@ DTL exp_o;
 DTL exp_t;
 
 // TODO use DDR IO
-IOBUF iobuf_exp_p [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
+IOBUF iobuf_exp [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
 
 // multiplexing GPIO signals from PS with logic generator
 assign gpio.i[23:8] = exp_i;
