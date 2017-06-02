@@ -252,7 +252,7 @@ assign stg.TREADY = sto.TREADY;
 generate
 for (genvar i=0; i<DN; i++) begin: for_dn
 
-assign sto.TDATA[i].o = cfg_val ^ (cfg_msk & stg.TDATA[i]);
+assign sto.TDATA[i].o = cfg_val ^ (~cfg_msk & stg.TDATA[i]);
 assign sto.TDATA[i].e = cfg_oe0 & ~sto.TDATA[i].o | cfg_oe1 & sto.TDATA[i].o;
 
 end: for_dn
