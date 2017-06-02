@@ -65,7 +65,7 @@
 				interrupt-parent = <&intc>;
 				interrupts = <0 33 4>;
 			};
-			lg: gen@400c0000 {
+			lg: lg@400c0000 {
 				compatible = "generic-uio";
 				reg = <0x400c0000 0x01000>,
 				      <0x400d0000 0x10000>;
