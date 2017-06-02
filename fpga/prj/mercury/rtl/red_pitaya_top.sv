@@ -72,9 +72,9 @@ module red_pitaya_top #(
 
 
 // stream bus type
-localparam type DTG = logic signed [14-1:0];  // generate
-localparam type DTO = logic signed [16-1:0];  // acquire
-localparam type DTL = logic signed [16-1:0];  // logic (generator/analyzer)
+localparam type DTG = logic   signed [14-1:0];  // generate
+localparam type DTO = logic   signed [16-1:0];  // acquire
+localparam type DTL = logic unsigned [16-1:0];  // logic (generator/analyzer)
 localparam type DTLG = struct packed {DTL e, o;};
 
 //typedef struct packed {
@@ -348,8 +348,8 @@ IOBUF iobuf_exp [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(ex
 // multiplexing GPIO signals from PS with logic generator
 assign gpio.i[23:8] = exp_i;
 // GPIO mode is multiplexing between (0 - PS GPIO, 1 - LG)
-assign exp_o = ~exp_iom & gpio.o[23:8] | exp_iom &  str_lg.TDATA[0].o;
-assign exp_t = ~exp_iom & gpio.t[23:8] | exp_iom & ~str_lg.TDATA[0].e;
+assign exp_o =   ~exp_iom &  gpio.o[23:8] | exp_iom & str_lg.TDATA[0].o ;
+assign exp_t = ~(~exp_iom & ~gpio.t[23:8] | exp_iom & str_lg.TDATA[0].e);
 
 // TODO connect logic generator
 assign str_lg.TREADY = 1'b1;
@@ -517,6 +517,7 @@ generate
 if (EN_LG) begin: if_lg
 
   lg #(
+    .DN  (1),
     .DT  (DTL),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))

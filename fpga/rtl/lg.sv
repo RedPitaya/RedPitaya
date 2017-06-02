@@ -37,7 +37,7 @@ module lg #(
   int unsigned CWN = 16,  // counter width for burst number
   // event parameters
   int unsigned EN  = 1,   // event number
-  int unsigned EL  = $clog2(TN),
+  int unsigned EL  = $clog2(EN),
   // trigger parameters
   int unsigned TN  = 1    // trigger number
 )(
@@ -76,10 +76,6 @@ logic           sts_trg;
 // generator mode
 logic           cfg_ben;  // burst enable
 logic           cfg_inf;  // infinite burst
-// continuous/periodic configuration
-logic  [CW-1:0] cfg_siz;  // table size
-logic  [CW-1:0] cfg_off;  // address initial offset (phase)
-logic  [CW-1:0] cfg_ste;  // address increment step (frequency)
 // burst configuration
 logic [CWR-1:0] cfg_bdr;  // burst data   repetitions
 logic [CWM-1:0] cfg_bdl;  // burst data   length
@@ -116,10 +112,6 @@ if (~bus.rstn) begin
   cfg_evn <= '0;
   // trigger mask
   cfg_trg <= '0;
-  // state machine
-  cfg_siz <= '0;
-  cfg_off <= '0;
-  cfg_ste <= '0;
   // burst mode
   cfg_ben <= '0;
   cfg_inf <= '0;
@@ -140,10 +132,6 @@ end else begin
     // generator mode
     if (bus.addr[BAW-1:0]=='h10)  cfg_ben <= bus.wdata[0];
     if (bus.addr[BAW-1:0]=='h10)  cfg_inf <= bus.wdata[1];
-    // continuous/periodic configuration
-    if (bus.addr[BAW-1:0]=='h14)  cfg_siz <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h18)  cfg_off <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h1c)  cfg_ste <= bus.wdata;
     // burst configuration
     if (bus.addr[BAW-1:0]=='h20)  cfg_bdr <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata;
@@ -173,10 +161,6 @@ casez (bus.addr[BAW-1:0])
   'h08: bus.rdata <= cfg_trg;
   // generator mode
   'h10: bus.rdata <= {cfg_inf, cfg_ben};
-  // continuous/periodic configuration
-  'h14: bus.rdata <= cfg_siz;
-  'h18: bus.rdata <= cfg_off;
-  'h1c: bus.rdata <= cfg_ste;
   // burst configuration
   'h20: bus.rdata <= cfg_bdr;
   'h24: bus.rdata <= cfg_bdl;
@@ -245,9 +229,9 @@ asg #(
   .cfg_ben  (cfg_ben),
   .cfg_inf  (cfg_inf),
   // continuous/periodic configuration
-  .cfg_siz  (cfg_siz),
-  .cfg_off  (cfg_off),
-  .cfg_ste  (cfg_ste),
+  .cfg_siz  ('0),
+  .cfg_off  ('0),
+  .cfg_ste  ('0),
   // burst configuration
   .cfg_bdr  (cfg_bdr),
   .cfg_bdl  (cfg_bdl),
