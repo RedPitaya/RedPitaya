@@ -121,6 +121,7 @@ initial begin
   //test_id  (32'h40000000);
   test_gen_periodic (32'h40040000, 32'h40050000, 0);
 //test_gen_burst    (32'h40040000, 32'h40050000, 0);
+  test_lg_burst     (32'h400e0000, 32'h400f0000, 0);
   test_la_trigger   (32'h400e0000, 32'h400f0000, 0);
 //  ##16;
 //test_osc          (32'h40040000, 32'h40050000, 2);
@@ -333,27 +334,17 @@ task test_clb (
 endtask: test_clb
 
 
-task test_lg (
+task test_lg_burst (
   int unsigned regset,
-  int unsigned buffer
+  int unsigned buffer,
+  int unsigned sh = 0
 );
   logic signed [ 32-1: 0] rdata_blk [];
   ##10;
-
-//  // configure amplitude and DC offset
-//  axi_write(regset+'h28, 1 << (DWM-2));  // amplitude
-//  axi_write(regset+'h2c, 0);             // DC offset
-
   // write table
   for (int i=0; i<buf_len; i++) begin
     axi_write(buffer + (i*4), i);  // write table
   end
-//  // read table
-//  rdata_blk = new [80];
-//  for (int i=0; i<buf_len; i++) begin
-//    axi_read(buffer + (i*4), rdata_blk [i]);  // read table
-//  end
-
   // configure LG output enable
   axi_write(regset+'h28, '1);  // output ebable
   axi_write(regset+'h2c, '0);  // open drain
@@ -386,7 +377,7 @@ task test_lg (
   // stop (reset)
 //axi_write(regset+'h00, 2'b01);
 //##20;
-endtask: test_lg
+endtask: test_lg_burst
 
 
 task test_la_trigger (

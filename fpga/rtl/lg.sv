@@ -89,10 +89,10 @@ logic [CWN-1:0] cfg_bpn;  // burst period number
 logic [CWL-1:0] sts_bpl;  // burst period length counter
 logic [CWN-1:0] sts_bpn;  // burst period number counter
 // output configuration
-DT              cfg_oen;  // output enable
-DT              cfg_msk;  // bit mask
-DT              cfg_val;  // bit value
-DT              cfg_pol;  // polarity inversion
+DT              cfg_oe1;  // output enable 0
+DT              cfg_oe0;  // output enable 1
+DT              cfg_msk;  // mask
+DT              cfg_val;  // value/polarity
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -127,10 +127,10 @@ if (~bus.rstn) begin
   cfg_bpn <= '0;
   cfg_bpl <= '0;
   // output configuration
-  cfg_oen <= '0;
+  cfg_oe0 <= '0;
+  cfg_oe1 <= '0;
   cfg_msk <= '0;
   cfg_val <= '0;
-  cfg_pol <= '0;
 end else begin
   if (bus.wen) begin
     // event select
@@ -150,10 +150,10 @@ end else begin
     if (bus.addr[BAW-1:0]=='h28)  cfg_bpl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bpn <= bus.wdata;
     // output configuration
-    if (bus.addr[BAW-1:0]=='h40)  cfg_oen <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h44)  cfg_msk <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h48)  cfg_val <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h4c)  cfg_pol <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h40)  cfg_oe0 <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h44)  cfg_oe1 <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h48)  cfg_msk <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h4c)  cfg_val <= bus.wdata;
   end
 end
 
@@ -186,10 +186,10 @@ casez (bus.addr[BAW-1:0])
   'h30: bus.rdata <= sts_bpl;
   'h34: bus.rdata <= sts_bpn;
   // output configuration
-  'h40: bus.rdata <= cfg_oen;
-  'h44: bus.rdata <= cfg_msk;
-  'h48: bus.rdata <= cfg_val;
-  'h4c: bus.rdata <= cfg_pol;
+  'h40: bus.rdata <= cfg_oe0;
+  'h44: bus.rdata <= cfg_oe1;
+  'h48: bus.rdata <= cfg_msk;
+  'h4c: bus.rdata <= cfg_val;
   // default is 'x for better optimization
   default: bus.rdata <= 'x;
 endcase
@@ -268,8 +268,8 @@ assign stg.TREADY = sto.TREADY;
 generate
 for (genvar i=0; i<DN; i++) begin: for_dn
 
-assign sto.TDATA[i].o = cfg_pol ^ (~cfg_msk & cfg_val | cfg_msk & stg.TDATA[i]);
-assign sto.TDATA[i].e = cfg_oen;
+assign sto.TDATA[i].o = cfg_val ^ (cfg_msk & stg.TDATA[i]);
+assign sto.TDATA[i].e = cfg_oe0 & ~sto.TDATA[i].o | cfg_oe1 & sto.TDATA[i].o;
 
 end: for_dn
 endgenerate
