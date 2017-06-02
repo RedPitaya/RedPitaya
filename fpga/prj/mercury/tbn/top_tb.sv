@@ -119,10 +119,11 @@ end
 initial begin
   ##100;
   //test_id  (32'h40000000);
-  test_gen_periodic (32'h40040000, 32'h40050000, 0);
+//test_gen_periodic (32'h40040000, 32'h40050000, 0);
 //test_gen_burst    (32'h40040000, 32'h40050000, 0);
-  test_lg_burst     (32'h400e0000, 32'h400f0000, 0);
-  test_la_trigger   (32'h400e0000, 32'h400f0000, 0);
+  test_mgmt         (32'h40010000, '1);
+  test_lg_burst     (32'h400c0000, 32'h400d0000, 4);
+  test_la_trigger   (32'h400e0000, 32'h400f0000, 5);
 //  ##16;
 //test_osc          (32'h40040000, 32'h40050000, 2);
   //test_clb (32'h40030000);
@@ -334,49 +335,49 @@ task test_clb (
 endtask: test_clb
 
 
+task test_mgmt (
+  int unsigned regset,
+  int unsigned value = 0
+);
+  axi_write(regset+'h00, value);
+endtask: test_mgmt
+
 task test_lg_burst (
   int unsigned regset,
   int unsigned buffer,
   int unsigned sh = 0
 );
-  logic signed [ 32-1: 0] rdata_blk [];
   ##10;
   // write table
   for (int i=0; i<buf_len; i++) begin
     axi_write(buffer + (i*4), i);  // write table
   end
   // configure LG output enable
-  axi_write(regset+'h28, '1);  // output ebable
-  axi_write(regset+'h2c, '0);  // open drain
-//axi_write(regset+'h2c, 2);  // open drain
+  axi_write(regset+'h40, '1);  // output enable 0
+  axi_write(regset+'h44, '1);  // output enable 1
+  axi_write(regset+'h48, '0);  // mask
+  axi_write(regset+'h4c, '0);  // value/polarity
 
-  // configure frequency and phase
-  axi_write(regset+'h10,  buf_len                    * 2**CWF - 1);  // table size
-  axi_write(regset+'h14, (buf_len * (phase/360.0)  ) * 2**CWF    );  // offset
-//axi_write(regset+'h18, (buf_len * (freq*TP/10**6)) * 2**CWF - 1);  // step
-  axi_write(regset+'h18, 1                           * 2**CWF - 1);  // step
+  ##4;
   // configure burst mode
-  axi_write(regset+'h20, 2'b00);  // burst disable
-  // enable SW trigger
-  axi_write(regset+'h04, 'b100);
-  // start
-  axi_write(regset+'h00, 2'b10);
-  ##22;
-  // stop (reset)
-  axi_write(regset+'h00, 2'b01);
-  ##20;
-
+  axi_write(regset+'h10, 2'b11);  // burst disable
   // burst mode
   axi_write(regset+'h24, buf_len - 1);  // burst data length
   axi_write(regset+'h28, buf_len - 1);  // burst idle length
   axi_write(regset+'h2c, 100);  // repetitions
   axi_write(regset+'h20, 'b11);  // enable burst mode and infinite repetitions
-  // start
-  axi_write(regset+'h00, 2'b10);
+
+  // events
+  ##4;
+  axi_write(regset+'h04, sh);  // SW event select
+  axi_write(regset+'h08, '0);  // trigger mask
+  // reset/start/trigger
+  ##4;
+  axi_write(regset+'h00, 4'b0001); 
+  axi_write(regset+'h00, 4'b0010);
+  axi_write(regset+'h00, 4'b1000);
   ##100;
   // stop (reset)
-//axi_write(regset+'h00, 2'b01);
-//##20;
 endtask: test_lg_burst
 
 
