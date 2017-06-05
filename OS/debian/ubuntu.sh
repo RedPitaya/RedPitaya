@@ -120,7 +120,7 @@ install -v -m 664 -o root -D $OVERLAY/etc/fstab  $ROOT_DIR/etc/fstab
 . OS/debian/tools.sh
 . OS/debian/network.sh
 . OS/debian/zynq.sh
-. OS/debian/redpitaya.sh
+#. OS/debian/redpitaya.sh
 #. OS/debian/jupyter.sh
 . OS/debian/tft.sh
 
