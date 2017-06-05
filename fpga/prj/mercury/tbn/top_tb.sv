@@ -85,6 +85,8 @@ always #(TP/2) clk = ~clk;
 // clocking 
 default clocking cb @ (posedge clk);
   input  rstn;
+  input  exp_p_od, exp_p_oe;
+  input  exp_n_od, exp_n_oe;
 endclocking: cb
 
 // DAC reset
@@ -105,6 +107,17 @@ always begin
   trig <= 1'b1;
   ##1200;
   trig <= 1'b0;
+end
+
+////////////////////////////////////////////////////////////////////////////////
+// initializtion
+////////////////////////////////////////////////////////////////////////////////
+
+initial begin
+  exp_p_od = 1'b0;
+  exp_n_od = 1'b0;
+  exp_p_oe = 1'b0;
+  exp_n_oe = 1'b0;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -389,8 +402,8 @@ task test_la_trigger (
   // set GPIO into neutral state
   exp_p_od = '0;
   exp_n_od = '0;
-  exp_p_oe = '1;
-  exp_n_oe = '1;
+  exp_p_oe = '0;
+  exp_n_oe = '0;
   ##10;
   // configure trigger
   axi_write(regset+'h20, 16'h0000);  // cfg_cmp_msk
