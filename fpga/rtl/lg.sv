@@ -113,7 +113,6 @@ if (~bus.rstn) begin
   // trigger mask
   cfg_trg <= '0;
   // burst mode
-  cfg_ben <= '0;
   cfg_inf <= '0;
   cfg_bdl <= '0;
   cfg_bpn <= '0;
@@ -130,7 +129,6 @@ end else begin
     // triger mask
     if (bus.addr[BAW-1:0]=='h08)  cfg_trg <= bus.wdata;
     // generator mode
-    if (bus.addr[BAW-1:0]=='h10)  cfg_ben <= bus.wdata[0];
     if (bus.addr[BAW-1:0]=='h10)  cfg_inf <= bus.wdata[1];
     // burst configuration
     if (bus.addr[BAW-1:0]=='h20)  cfg_bdr <= bus.wdata;
@@ -144,6 +142,9 @@ end else begin
     if (bus.addr[BAW-1:0]=='h4c)  cfg_val <= bus.wdata;
   end
 end
+
+// burst enable is hardcoded
+assign cfg_ben = 1'b1;
 
 // event outputs
 always_ff @(posedge bus.clk)
