@@ -96,5 +96,8 @@ EOF_CHROOT
 # configuring shell
 ###############################################################################
 
+# profile for PATH variables, ...
+install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $ROOT_DIR/etc/profile.d/redpitaya.sh
+
 # MOTD (the static part) is a link to Red Pitaya version.txt
 ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd

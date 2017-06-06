@@ -81,12 +81,3 @@ usermod -a -G kmem redpitaya
 usermod -a -G kmem redpitaya_nginx
 usermod -a -G kmem scpi
 EOF_CHROOT
-
-###############################################################################
-# configuring shell
-###############################################################################
-
-# profile for PATH variables, ...
-install -v -m 664 -o root -D $OVERLAY/etc/profile.d/profile.sh   $ROOT_DIR/etc/profile.d/profile.sh
-install -v -m 664 -o root -D $OVERLAY/etc/profile.d/alias.sh     $ROOT_DIR/etc/profile.d/alias.sh
-install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $ROOT_DIR/etc/profile.d/redpitaya.sh
