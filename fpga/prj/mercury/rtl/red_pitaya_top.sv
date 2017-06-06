@@ -70,10 +70,19 @@ module red_pitaya_top #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+
 // stream bus type
-localparam type DTG = logic signed [14-1:0];  // generate
-localparam type DTO = logic signed [16-1:0];  // acquire
-localparam type DTL = logic signed [16-1:0];  // logic (generator/analyzer)
+localparam type DTG = logic   signed [14-1:0];  // generate
+localparam type DTO = logic   signed [16-1:0];  // acquire
+localparam type DTL = logic unsigned [16-1:0];  // logic (generator/analyzer)
+localparam type DTLG = struct packed {DTL e, o;};
+
+//typedef struct packed {
+//  DTL e;
+//  DTL o;
+//} dtlg_t;
+
+//localparam type DTLG = dtlg_t;
 
 // GPIO parameter
 localparam int unsigned GDW = 8+8;
@@ -288,19 +297,42 @@ sys_bus_interconnect #(
   .bus_s (sys)
 );
 
-// silence unused busses
-generate
-for (genvar i=2; i<3; i++) begin: for_sys_2
-  sys_bus_stub sys_bus_stub_2 (sys[i]);
-end: for_sys_2
-endgenerate
+//// silence unused busses
+//generate
+//for (genvar i=2; i<3; i++) begin: for_sys_2
+//  sys_bus_stub sys_bus_stub_2 (sys[i]);
+//end: for_sys_2
+//endgenerate
+
+////////////////////////////////////////////////////////////////////////////////
+// identification
+////////////////////////////////////////////////////////////////////////////////
+
+id #(.GITH (GITH)) id (
+  // System bus
+  .bus (sys[0])
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// management
+////////////////////////////////////////////////////////////////////////////////
+
+// GPIO mode
+DTL exp_iom;
+
+mgmt #(.GW ($bits(DTL))) mgmt (
+  // GPIO mode
+  .cfg_iom  (exp_iom),
+  // System bus
+  .bus      (sys[1])
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
 IOBUF iobuf_led [8-1:0] (.O(gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
-//IOBUF iobuf_exp_p [16-1:0] (.O(gpio.i[23:8]), .IO({exp_n_io, exp_p_io}), .I(gpio.o[23:8]), .T(gpio.t[23:8]));
+//IOBUF iobuf_exp [16-1:0] (.O(gpio.i[23:8]), .IO({exp_n_io, exp_p_io}), .I(gpio.o[23:8]), .T(gpio.t[23:8]));
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO
@@ -311,12 +343,13 @@ DTL exp_o;
 DTL exp_t;
 
 // TODO use DDR IO
-IOBUF iobuf_exp_p [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
+IOBUF iobuf_exp [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
 
 // multiplexing GPIO signals from PS with logic generator
 assign gpio.i[23:8] = exp_i;
-assign exp_o = gpio.o[23:8];
-assign exp_t = gpio.t[23:8];
+// GPIO mode is multiplexing between (0 - PS GPIO, 1 - LG)
+assign exp_o =   ~exp_iom &  gpio.o[23:8] | exp_iom & str_lg.TDATA[0].o ;
+assign exp_t = ~(~exp_iom & ~gpio.t[23:8] | exp_iom & str_lg.TDATA[0].e);
 
 // TODO connect logic generator
 assign str_lg.TREADY = 1'b1;
@@ -326,15 +359,6 @@ assign str_la.TLAST  = 1'b0;
 assign str_la.TKEEP  = '1;
 assign str_la.TDATA  = exp_i;
 assign str_la.TVALID = 1'b1;
-
-////////////////////////////////////////////////////////////////////////////////
-// identification
-////////////////////////////////////////////////////////////////////////////////
-
-id #(.GITH (GITH)) id (
-  // System bus
-  .bus (sys[0])
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
@@ -351,7 +375,7 @@ sys_reg_array_o #(
   .RN (PDM_CHN)
 ) regset_pdm (
   .val      (pdm_cfg),
-  .bus      (sys[1])
+  .bus      (sys[2])
 );
 
 pdm #(
@@ -378,10 +402,10 @@ pdm #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // ADC(osc)/DAC(gen) AXI4-Stream interfaces
-axi4_stream_if #(.DT (DTG)) str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
-axi4_stream_if #(.DT (DTO)) str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
-axi4_stream_if #(.DT (DTG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
-axi4_stream_if #(.DT (DTO)) str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTG))  str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTO))  str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTLG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTL))  str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
 
 clb #(
   .MNG (MNG),
@@ -493,6 +517,7 @@ generate
 if (EN_LG) begin: if_lg
 
   lg #(
+    .DN  (1),
     .DT  (DTL),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))

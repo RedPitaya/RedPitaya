@@ -145,7 +145,8 @@ EOF_CHROOT
 ################################################################################
 
 . OS/debian/network.sh
-. OS/debian/redpitaya.sh
+. OS/debian/zynq.sh
+#. OS/debian/redpitaya.sh
 #. OS/debian/jupyter.sh
 . OS/debian/tft.sh
 

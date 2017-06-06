@@ -14,7 +14,7 @@ module la #(
   int unsigned CW  = 32-1,  // counter width
   // event parameters
   int unsigned EN  = 1,   // event number
-  int unsigned EL  = $clog2(TN),
+  int unsigned EL  = $clog2(EN),
   // trigger parameters
   int unsigned TN  = 1    // trigger number
 )(
@@ -84,8 +84,9 @@ logic           cfg_rle;  // RLE enable
 logic  [CW-1:0] sts_cur;  // current     counter status
 logic  [CW-1:0] sts_lst;  // last packet counter status
 
-// bitwise input polarity
-DT              cfg_pol;
+// input configuration
+DT              cfg_msk;  // bitwise mask
+DT              cfg_pol;  // bitwise polarity
 
 ////////////////////////////////////////////////////////////////////////////////
 //  System bus connection
@@ -122,6 +123,7 @@ if (~bus.rstn) begin
   // RLE
   cfg_rle <= 1'b0;
   // bitwise input polarity
+  cfg_msk <= '0;
   cfg_pol <= '0;
 end else begin
   if (bus.wen) begin
@@ -133,16 +135,17 @@ end else begin
     if (bus.addr[BAW-1:0]=='h10)  cfg_pre <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h14)  cfg_pst <= bus.wdata;
     // trigger detection
-    if (bus.addr[BAW-1:0]=='h20)  cfg_cmp_msk <= DT'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h24)  cfg_cmp_val <= DT'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h28)  cfg_edg_pos <= DT'(bus.wdata);
-    if (bus.addr[BAW-1:0]=='h2c)  cfg_edg_neg <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h20)  cfg_cmp_msk <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h24)  cfg_cmp_val <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h28)  cfg_edg_pos <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h2c)  cfg_edg_neg <= bus.wdata;
     // dacimation
-    if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata[DCW-1:0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata;
     // RLE
     if (bus.addr[BAW-1:0]=='h34)  cfg_rle <= bus.wdata[0];
     // bitwise input polarity
-    if (bus.addr[BAW-1:0]=='h40)  cfg_pol <= DT'(bus.wdata);
+    if (bus.addr[BAW-1:0]=='h40)  cfg_msk <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h44)  cfg_pol <= bus.wdata;
   end
 end
 
@@ -161,24 +164,25 @@ casez (bus.addr[BAW-1:0])
   // trigger mask
   'h08: bus.rdata <= cfg_trg;
   // trigger pre/post time
-  'h10: bus.rdata <=              32'(cfg_pre);
-  'h14: bus.rdata <=              32'(cfg_pst);
-  'h18: bus.rdata <=    {sts_pro, 31'(sts_pre)};
-  'h1c: bus.rdata <=    {sts_pso, 31'(sts_pst)};
+  'h10: bus.rdata <=           32'(cfg_pre);
+  'h14: bus.rdata <=           32'(cfg_pst);
+  'h18: bus.rdata <= {sts_pro, 31'(sts_pre)};
+  'h1c: bus.rdata <= {sts_pso, 31'(sts_pst)};
   // trigger detection
-  'h20: bus.rdata <=                  cfg_cmp_msk;
-  'h24: bus.rdata <=                  cfg_cmp_val;
-  'h28: bus.rdata <=                  cfg_edg_pos;
-  'h2c: bus.rdata <=                  cfg_edg_neg;
+  'h20: bus.rdata <= cfg_cmp_msk;
+  'h24: bus.rdata <= cfg_cmp_val;
+  'h28: bus.rdata <= cfg_edg_pos;
+  'h2c: bus.rdata <= cfg_edg_neg;
   // decimation
-  'h30: bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
+  'h30: bus.rdata <= cfg_dec;
   // RLE configuration
-  'h34: bus.rdata <= {{32-  1{1'b0}}, cfg_rle};
+  'h34: bus.rdata <= cfg_rle;
   // stream counter status
-  'h38: bus.rdata <=              32'(sts_cur);
-  'h3c: bus.rdata <=              32'(sts_lst);
+  'h38: bus.rdata <= sts_cur;
+  'h3c: bus.rdata <= sts_lst;
   // bitwise input polarity
-  'h40: bus.rdata <=              32'(cfg_pol);
+  'h40: bus.rdata <= cfg_msk;
+  'h44: bus.rdata <= cfg_pol;
   default: bus.rdata <= 'x;
 endcase
 
@@ -208,10 +212,10 @@ str_dec #(
 // bitwise input polarity
 ////////////////////////////////////////////////////////////////////////////////
 
-assign stn.TDATA  = std.TDATA ^ cfg_pol;
-assign stn.TKEEP  = std.TKEEP ;
-assign stn.TLAST  = std.TLAST ;
-assign stn.TVALID = std.TVALID;
+assign stn.TDATA  = (std.TDATA & cfg_msk) ^ cfg_pol;
+assign stn.TKEEP  =  std.TKEEP ;
+assign stn.TLAST  =  std.TLAST ;
+assign stn.TVALID =  std.TVALID;
 
 assign std.TREADY = stn.TREADY;
 

@@ -15,7 +15,7 @@ module osc #(
   int unsigned CW  = 32-1,  // counter width
   // event parameters
   int unsigned EN  = 1,   // event number
-  int unsigned EL  = $clog2(TN),
+  int unsigned EL  = $clog2(EN),
   // trigger parameters
   int unsigned TN  = 1    // trigger number
 )(

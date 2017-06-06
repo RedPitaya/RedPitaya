@@ -51,9 +51,6 @@ jupyter bundlerextension enable --sys-prefix --py --system dashboards_bundlers
 #apt-get -y install npm
 #npm install -g jupyter-dashboards-server
 
-# https://plot.ly/python/ for interactive graphs
-pip3 install plotly
-
 # http://bokeh.pydata.org/ interactive visualization library
 pip3 install bokeh
 
@@ -62,6 +59,9 @@ pip3 install bokeh
 pip3 install python-periphery
 pip3 install smbus2
 pip3 install i2cdev
+
+# support for VCD files
+pip3 install pyvcd
 
 # UDEV support can be used to search for peripherals loaded using DT overlays
 # https://pypi.python.org/pypi/pyudev

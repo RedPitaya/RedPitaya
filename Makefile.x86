@@ -82,30 +82,17 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_TAR = fpga.zip
-
 FPGA_PRJ_LST = classic logic v0.94 axi4lite mercury tft
-FPGA_PRJ_LST = classic logic v0.94
-FPGA_PRJ = logic
+FPGA_PRJ_LST = classic
+FPGA_PRJ = classic
 
-.PHONY: fpga fpga_all
+.PHONY: fpga
 
 fpga: $(INSTALL_DIR)/fpga
 
-$(INSTALL_DIR)/fpga: | $(FPGA_TAR)
+$(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
-	# extract FPGA bitstream images
-	unzip $(FPGA_TAR) -d $(INSTALL_DIR)/fpga
-	# copy archived FPGA bitstream images and decompress them
-	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
-	# backward compatibility, TODO, should be removed at next OS release
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_la.bit
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit       $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	cp $(INSTALL_DIR)/fpga/classic/fpga.bit     $(INSTALL_DIR)/fpga/fpga_classic.bit
-
-fpga_all: $(DTREE_DIR)
-	mkdir -p $(INSTALL_DIR)/fpga
+	# compile FPGA projects
 	for ITM in $(FPGA_PRJ_LST); do \
 	    make -C fpga PRJ=$$ITM; \
 	    mkdir -p $(INSTALL_DIR)/fpga/$$ITM; \
@@ -115,8 +102,8 @@ fpga_all: $(DTREE_DIR)
 	    cp    fpga/prj/$$ITM/dts/*                    $(INSTALL_DIR)/fpga/$$ITM/dts/    ; \
 	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
 	done
-	cd $(INSTALL_DIR)/fpga; zip -r ../../fpga.zip *
-	rm -rf $(INSTALL_DIR)/fpga
+	# backward compatibility, TODO, should be removed at next OS release
+	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
