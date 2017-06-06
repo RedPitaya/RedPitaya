@@ -8,6 +8,12 @@
 cd prj/$::argv
 
 ################################################################################
+# install UltraFast Design Methodology from TCL Store
+################################################################################
+
+tclapp::install -quiet ultrafast
+
+################################################################################
 # define paths
 ################################################################################
 
@@ -115,6 +121,8 @@ report_drc               -file    $path_out/post_imp_drc.rpt
 report_io                -file    $path_out/post_imp_io.rpt
 #write_verilog            -force   $path_out/bft_impl_netlist.v
 #write_xdc -no_fixed_only -force   $path_out/bft_impl.xdc
+
+xilinx::ultrafast::report_io_reg -verbose -file $path_out/post_route_iob.rpt
 
 ################################################################################
 # generate a bitstream
