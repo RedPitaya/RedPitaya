@@ -6,9 +6,6 @@
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
-# Copy files to the boot file system
-unzip ecosystem*.zip -d $BOOT_DIR
-
 ################################################################################
 # install various packages
 ################################################################################
