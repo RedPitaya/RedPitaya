@@ -397,8 +397,8 @@ ODDR #(
 IDDR #(
   .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED")
 ) iddr_exp_i [GDW-1:0] (
-  .Q1 ( exp_i          ),  //exp_exi.TDATA[0]
-  .Q2 (                ),  //exp_exi.TDATA[1]
+  .Q1 (                ),  //exp_exi.TDATA[0]
+  .Q2 ( exp_i          ),  //exp_exi.TDATA[1]
   .C  ( str_lg.ACLK    ),
   .CE ( 1'b1           ),
   .R  (~str_lg.ARESETn ),
