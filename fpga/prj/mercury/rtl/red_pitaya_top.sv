@@ -335,15 +335,12 @@ IOBUF iobuf_led [8-1:0] (.O(gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t
 //IOBUF iobuf_exp [16-1:0] (.O(gpio.i[23:8]), .IO({exp_n_io, exp_p_io}), .I(gpio.o[23:8]), .T(gpio.t[23:8]));
 
 ////////////////////////////////////////////////////////////////////////////////
-// GPIO
+// GPIO mux
 ////////////////////////////////////////////////////////////////////////////////
 
 DTL exp_i;
 DTL exp_o;
 DTL exp_t;
-
-// TODO use DDR IO
-IOBUF iobuf_exp [16-1:0] (.O(exp_i), .IO({exp_n_io, exp_p_io}), .I(exp_o), .T(exp_t));
 
 // multiplexing GPIO signals from PS with logic generator
 assign gpio.i[23:8] = exp_i;
@@ -359,6 +356,62 @@ assign str_la.TLAST  = 1'b0;
 assign str_la.TKEEP  = '1;
 assign str_la.TDATA  = exp_i;
 assign str_la.TVALID = 1'b1;
+
+////////////////////////////////////////////////////////////////////////////////
+// GPIO DDR
+////////////////////////////////////////////////////////////////////////////////
+
+DTL exp_ddr_i;
+DTL exp_ddr_o;
+DTL exp_ddr_t;
+
+// output enable DDR
+ODDR #(
+//  .IS_D1_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
+//  .IS_D2_INVERTED (1'b1), // IOBUF T input is buffer disable, so negation is needed somewhere
+  .DDR_CLK_EDGE ("SAME_EDGE")
+) oddr_exp_t [GDW-1:0] (
+  .Q  (exp_ddr_t       ),
+  .C  (str_lg.ACLK     ),
+  .CE (1'b1            ),
+  .D1 ( exp_t          ),  // exp_exo.TDATA[0]
+  .D2 ( exp_t          ),  // exp_exo.TDATA[1]
+  .R  (~str_lg.ARESETn ),
+  .S  (1'b0)
+);
+
+// output DDR
+ODDR #(
+  .DDR_CLK_EDGE ("SAME_EDGE")
+) oddr_exp_o [GDW-1:0] (
+  .Q  ( exp_ddr_o      ),
+  .C  ( str_lg.ACLK    ),
+  .CE (1'b1            ),
+  .D1 ( exp_o          ),  // exp_exo.TDATA[0]
+  .D2 ( exp_o          ),  // exp_exo.TDATA[1]
+  .R  (~str_lg.ARESETn ),
+  .S  (1'b0            )
+);
+
+// input DDR
+IDDR #(
+  .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED")
+) iddr_exp_i [GDW-1:0] (
+  .Q1 ( exp_i          ),  //exp_exi.TDATA[0]
+  .Q2 (                ),  //exp_exi.TDATA[1]
+  .C  ( str_lg.ACLK    ),
+  .CE ( 1'b1           ),
+  .R  (~str_lg.ARESETn ),
+  .S  (1'b0            ),
+  .D  (exp_ddr_i       )
+);
+
+IOBUF iobuf_exp [16-1:0] (
+  .O  (exp_ddr_i),
+  .IO ({exp_n_io, exp_p_io}),
+  .I  (exp_ddr_o),
+  .T  (exp_ddr_t)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
