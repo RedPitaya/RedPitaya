@@ -4,7 +4,7 @@ SUBSYSTEM=="xdevcfg", GROUP="xdevcfg"
 
 # UIO devices
 # rename devices and give group access rights
-SUBSYSTEM=="uio", SYMLINK+="uio/%s{name}" GROUP="uio"
+SUBSYSTEM=="uio", SYMLINK+="uio/%s{name}", GROUP="uio"
 
 # LEDs
 # give group access rights
@@ -41,4 +41,4 @@ SUBSYSTEM=="iio", ATTR{name}=="xadc", GROUP="xadc"
 # Red Pitaya DMA
 # give group access rights
 # TODO: current driver has an empty DRIVER property, this should be updated
-SUBSYSTEM=="chardrv", KERNEL=="rprx*", GROUP="dma"
+SUBSYSTEM=="chardrv", KERNEL=="rprx*", SYMLINK+="uio/%s{name}", GROUP="dma"

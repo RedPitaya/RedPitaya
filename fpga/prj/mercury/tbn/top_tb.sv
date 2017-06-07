@@ -400,22 +400,12 @@ task test_la_trigger (
   int unsigned sh = 0
 );
   // set GPIO into neutral state
-  exp_p_od = '0;
-  exp_n_od = '0;
-  exp_p_oe = '0;
-  exp_n_oe = '0;
   ##10;
   // configure trigger
   axi_write(regset+'h20, 16'h0000);  // cfg_cmp_msk
   axi_write(regset+'h24, 16'h0000);  // cfg_cmp_val
   axi_write(regset+'h28, 16'h0001);  // cfg_edg_pos
   axi_write(regset+'h2c, 16'h0000);  // cfg_edg_neg
-  ##10;
-  // send trigger pulse on GPIO
-  exp_p_od[0] = 1'b1;
-  ##10;
-  // set GPIO into neutral state
-  exp_p_od[0] = 1'b0;
   ##10;
 endtask: test_la_trigger
 
