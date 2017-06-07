@@ -513,9 +513,11 @@ for (genvar i=0; i<MNG; i++) begin: for_gen_osc_loop
   // bit shift for from 14bit gen to 16bit osc
   assign str_gen_mux[1].TREADY = str_osc_mux[1].TREADY;
   assign str_osc_mux[1].TVALID = str_gen_mux[1].TVALID;
-  assign str_osc_mux[1].TDATA  = str_gen_mux[1].TDATA ;
   assign str_osc_mux[1].TKEEP  = str_gen_mux[1].TKEEP ;
   assign str_osc_mux[1].TLAST  = str_gen_mux[1].TLAST ;
+  for (genvar j=0; j<1; j++) begin: for_gen_osc_loop_dat
+  assign str_osc_mux[1].TDATA[j]  = str_gen_mux[1].TDATA[j] << 2;
+  end: for_gen_osc_loop_dat
 
   axi4_stream_pas pas_osc (
     // control
