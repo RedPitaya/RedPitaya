@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro
+all: librp
 
 $(DL):
 	mkdir -p $@
