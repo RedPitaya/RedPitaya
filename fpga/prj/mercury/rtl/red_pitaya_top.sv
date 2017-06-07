@@ -227,9 +227,6 @@ top_pkg::trg_t trg;
 // interrupts
 top_pkg::irq_t irq;
 
-// configuration
-logic                    digital_loop;
-
 // system bus
 sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
 sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
@@ -319,10 +316,13 @@ id #(.GITH (GITH)) id (
 
 // GPIO mode
 DTL exp_iom;
+logic [3-1:0] mgmt_loop;
 
 mgmt #(.GW ($bits(DTL))) mgmt (
   // GPIO mode
   .cfg_iom  (exp_iom),
+  // loop mux control
+  .cfg_loop (mgmt_loop),
   // System bus
   .bus      (sys[1])
 );
@@ -455,10 +455,14 @@ pdm #(
 ////////////////////////////////////////////////////////////////////////////////
 
 // ADC(osc)/DAC(gen) AXI4-Stream interfaces
-axi4_stream_if #(.DT (DTG))  str_gen [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
-axi4_stream_if #(.DT (DTO))  str_osc [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
-axi4_stream_if #(.DT (DTLG)) str_lg            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
-axi4_stream_if #(.DT (DTL))  str_la            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTG))  str_gen_clb [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTG))  str_gen     [MNG-1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTO))  str_osc     [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTO))  str_osc_clb [MNO-1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTLG)) str_lg_mux            (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTLG)) str_lg                (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+axi4_stream_if #(.DT (DTL))  str_la                (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+axi4_stream_if #(.DT (DTL))  str_la_mux            (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
 
 clb #(
   .MNG (MNG),
@@ -468,13 +472,73 @@ clb #(
 ) clb (
   // generator (DAC) streams
   .str_dac  (str_dac),
-  .str_gen  (str_gen),
+  .str_gen  (str_gen_clb),
   // oscilloscope (ADC) streams
   .str_adc  (str_adc),
-  .str_osc  (str_osc),
+  .str_osc  (str_osc_clb),
   // system bus
   .bus      (sys[3])
 );
+
+////////////////////////////////////////////////////////////////////////////////
+// DAC -> ADC loop
+////////////////////////////////////////////////////////////////////////////////
+
+generate
+for (genvar i=0; i<MNG; i++) begin: for_gen_osc_loop
+
+  axi4_stream_if #(.DT (DTG))  str_gen_mux [1:0] (.ACLK (str_dac[0].ACLK), .ARESETn (str_dac[0].ARESETn));
+  axi4_stream_if #(.DT (DTO))  str_osc_mux [1:0] (.ACLK (str_adc[0].ACLK), .ARESETn (str_adc[0].ARESETn));
+
+  // generator demultiplexer
+  axi4_stream_demux #(
+    .SN (2),
+    .DT (DTG)
+  ) mux_gen (
+    // control
+    .sel  (mgmt_loop[i]),
+    // streams
+    .sti  (str_gen[i] ),
+    .sto  (str_gen_mux)
+  );
+
+  axi4_stream_pas pas_gen (
+    // control
+    .ena  (1'b1),
+    // streams
+    .sti  (str_gen_mux[0]),
+    .sto  (str_gen_clb[i])
+  );
+
+  // bit shift for from 14bit gen to 16bit osc
+  assign str_gen_mux[1].TREADY = str_osc_mux[1].TREADY;
+  assign str_osc_mux[1].TVALID = str_gen_mux[1].TVALID;
+  assign str_osc_mux[1].TDATA  = str_gen_mux[1].TDATA ;
+  assign str_osc_mux[1].TKEEP  = str_gen_mux[1].TKEEP ;
+  assign str_osc_mux[1].TLAST  = str_gen_mux[1].TLAST ;
+
+  axi4_stream_pas pas_osc (
+    // control
+    .ena  (1'b1),
+    // streams
+    .sti  (str_osc_clb[i]),
+    .sto  (str_osc_mux[0])
+  );
+
+  // oscilloscope multiplexer
+  axi4_stream_mux #(
+    .SN (2),
+    .DT (DTO)
+  ) mux_osc (
+    // control
+    .sel  (mgmt_loop[i]),
+    // streams
+    .sti  (str_osc_mux),
+    .sto  (str_osc[i] )
+  );
+
+end: for_gen_osc_loop
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 //  DAC arbitrary signal generator

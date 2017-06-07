@@ -132,11 +132,11 @@ end
 initial begin
   ##100;
   //test_id  (32'h40000000);
+  test_mgmt         (32'h40010000, '1, '1);
 //test_gen_periodic (32'h40040000, 32'h40050000, 0);
-//test_gen_burst    (32'h40040000, 32'h40050000, 0);
-  test_mgmt         (32'h40010000, '1);
-  test_lg_burst     (32'h400c0000, 32'h400d0000, 4);
-  test_la_trigger   (32'h400e0000, 32'h400f0000, 5);
+  test_gen_burst    (32'h40040000, 32'h40050000, 0);
+//test_lg_burst     (32'h400c0000, 32'h400d0000, 4);
+//test_la_trigger   (32'h400e0000, 32'h400f0000, 5);
 //  ##16;
 //test_osc          (32'h40040000, 32'h40050000, 2);
   //test_clb (32'h40030000);
@@ -350,9 +350,11 @@ endtask: test_clb
 
 task test_mgmt (
   int unsigned regset,
-  int unsigned value = 0
+  int unsigned cfg_iom = '0,
+  int unsigned cfg_loop = '0
 );
-  axi_write(regset+'h00, value);
+  axi_write(regset+'h00, cfg_iom);
+  axi_write(regset+'h04, cfg_loop);
 endtask: test_mgmt
 
 task test_lg_burst (
