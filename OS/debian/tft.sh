@@ -22,7 +22,7 @@ apt-get -y install xinput evtest
 #echo te-audio-codec >> $root_dir/etc/modules
 
 # install QT5
-apt-get -y install qt5-default libqt5script5 libqt5scripttools5
+apt-get -y install qt5-default libqt5script5 libqt5scripttools5 libqt5serialport5
 
 # install X2Go
 sudo add-apt-repository ppa:x2go/stable
