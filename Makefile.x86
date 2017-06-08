@@ -83,8 +83,8 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 ################################################################################
 
 FPGA_PRJ_LST = classic logic v0.94 axi4lite mercury
-FPGA_PRJ_LST = mercury
-FPGA_PRJ = mercury
+FPGA_PRJ_LST = classic logic v0.94 mercury
+FPGA_PRJ = logic
 
 .PHONY: fpga
 
@@ -102,13 +102,13 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	    cp    fpga/prj/$$ITM/dts/*                    $(INSTALL_DIR)/fpga/$$ITM/dts/    ; \
 	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
 	done
-#	# copy archived FPGA bitstream images and decompress them
-#	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-#	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
-#	# backward compatibility, TODO, should be removed at next OS release
-#	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-#	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-#	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+	# copy archived FPGA bitstream images and decompress them
+	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
+	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
+	# backward compatibility, TODO, should be removed at next OS release
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
