@@ -1,0 +1,49 @@
+PATH_LIB=$(XILINX_VIVADO)/data/verilog/src
+PATH_RTL=../rtl
+PATH_TBN=../tbn
+
+# secure IP
+#LIB=$(PATH_LIB)/glbl.v
+
+# RTL files
+RTL_PKG =$(wildcard $(PATH_RTL)/*_pkg.sv)
+RTL_PKG+=$(wildcard $(PATH_RTL)/*/*_pkg.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*.v)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*/*.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*/*.v)
+RTL_DIF =$(filter-out $(RTL_PKG),$(RTL_SRC))
+RTL = $(RTL_PKG) $(RTL_DIF)
+
+# testbench files
+TBN_PKG =$(wildcard $(PATH_TBN)/*_pkg.sv)
+TBN_SRC =$(wildcard $(PATH_TBN)/*.sv)
+TBN_DIF =$(filter-out $(TBN_PKG),$(TBN_SRC))
+TBN = $(TBN_PKG) $(TBN_DIF)
+
+# targets
+TGT=$(RTL:.sv=)
+
+.PHONY: compile elborate
+
+all: $(TGT)
+
+compile: $(LIB) $(RTL) $(TBN)
+	$(foreach file,$(RTL),xvlog --sv --work xil_defaultlib $(file);)
+	$(foreach file,$(TBN),xvlog --sv --work xil_defaultlib $(file);)
+
+elaborate: compile
+
+%_tb: elaborate
+	xelab --debug typical --relax \
+	-L unisims_ver -L unimacro_ver -L secureip \
+	--snapshot $@ xil_defaultlib.$@
+	xsim $@ -gui -wdb simulate_xsim.wdb
+
+#	$(MODELSIM_BIN)/vsim $(CFG) -c -do '$(TCL)' $@
+#ifdef WAV
+#	$(MODELSIM_BIN)/vsim -do 'dataset open vsim.wlf; do $@.tcl'
+#endif
+
+clean:
+	rm -rf work *.vcd
