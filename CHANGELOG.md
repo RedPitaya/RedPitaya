@@ -5,15 +5,24 @@ Linux kernel:
 - updated 8192cu driver to switch from 'wext' to 'cfg80211'
   https://github.com/raspberrypi/linux/pull/1489
 
-FPGA:
+FPGA (mercury):
 - recoded burst mode for asg/generator, Python API changes were also needed
 - CPU and SPI clock updates
+- using old DNA regset in `logic` FPGA project to avoid Bazaar issues
 
 OS:
 - added some TFT SPI display support code
 - installed `console-setup` to fix some keyboard/console related systemd issues
 - removed discovery
 - removed wireless extensions related code
+- updated `libiio` to version `0.10`
+
+Jupyter:
+- updated for latest mercury FPGA code
+- recoded regset in `ctypes`
+- reorginized part of the code into smaller reusable blocks
+- updated calibration
+- added LG/LA driver and examples
 
 # Release 0.97-RC6
 
