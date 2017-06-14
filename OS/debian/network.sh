@@ -29,9 +29,6 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools
 apt-get -y install iproute2 iputils-ping curl
 
-# WiFi AP configuration and DHCP server
-#apt-get -y install isc-dhcp-server
-
 # SSH access
 # TODO: check cert generation, should it be moved to first boot?
 apt-get -y install openssh-server ca-certificates
@@ -46,7 +43,7 @@ apt-get -y install linux-firmware
 apt-get -y install wpasupplicant iw
 
 # WiFi tools (AP)
-apt-get -y install hostapd
+apt-get -y install hostapd iptables
 ln -sf /opt/redpitaya/hostapd.conf /etc/hostapd/hostapd.conf
 
 # this enables placing the WiFi WPA configuration into the FAT partition
