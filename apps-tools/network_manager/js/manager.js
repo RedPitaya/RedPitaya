@@ -178,7 +178,7 @@
             url: '/get_ap_status',
             type: 'GET',
         }).fail(function(msg) {
-            if (msg.responseTextncludes("AP")) {
+            if (msg.responseText.includes("AP")) {
                 $('#access_point_create').text("Remove");
                 $('#wlan0_mode_label').text("Access Point");
                 // $('#wlan0_address_label').text("192.168.128.1");
