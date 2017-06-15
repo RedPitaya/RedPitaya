@@ -20,7 +20,7 @@ STATIC_LIB=$(OUTPUT_DIR)/librp1.a
 TARGET=$(SHARED_LIB) $(STATIC_LIB)
 
 # List of compiled object files
-OBJECTS =	uio.o
+OBJECTS = uio.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
@@ -72,3 +72,7 @@ install:
 	cp  $(TARGET) $(INSTALL_DIR)/lib
 	cp -r ../include/* $(INSTALL_DIR)/include
 	cp -r *.h $(INSTALL_DIR)/include/api1
+
+# TODO: should be removed later
+main: $(TARGET) main.c
+	$(CC) -o $@ main.c -lrp1 -L../lib

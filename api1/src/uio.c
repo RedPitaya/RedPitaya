@@ -54,8 +54,11 @@ int rp_uio_init (rp_uio_t *handle, char *path) {
         fprintf( stderr, "UIO: failed to obtain lock on device node path '%s'.\n", handle->path);
         return (-1);
     }
+
     // get UDEV device structure
     udev = rp_uio_udev(path);
+
+    printf("udev_device_get_syspath: %s", udev_device_get_syspath(udev));
     
     return 0;
 }

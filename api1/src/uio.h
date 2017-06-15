@@ -15,3 +15,6 @@ typedef struct {
     struct flock       lock;
 } rp_uio_t;
 
+int rp_uio_init    (rp_uio_t *handle, char *path);
+int rp_uio_release (rp_uio_t *handle);
+
