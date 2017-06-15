@@ -31,7 +31,9 @@ int rp_uio_init (rp_uio_t *handle, char *path) {
     struct udev_device *udev;
 
     // store UIO device node path
-    handle->path = malloc(strlen(path)+1);
+    size_t len = strlen(path)+1;
+    handle->path = malloc(len);
+    strncpy(handle->path, path, len);
     if (!handle->path) {
         fprintf(stderr, "UIO: failed to allocate memory for device node path string '%s'.\n", path);
         return (-1);
@@ -58,7 +60,8 @@ int rp_uio_init (rp_uio_t *handle, char *path) {
     // get UDEV device structure
     udev = rp_uio_udev(path);
 
-    printf("udev_device_get_syspath: %s", udev_device_get_syspath(udev));
+    printf("udev_device_get_syspath: %s\n", udev_device_get_syspath(udev));
+    printf("udev_device_get_sysattr_value: %s\n", udev_device_get_sysattr_value(udev, "name"));
     
     return 0;
 }

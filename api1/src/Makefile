@@ -26,7 +26,7 @@ OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
 CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -O3 -s
-CFLAGS  = -std=gnu99 -Wall -fPIC -O3 -s
+CFLAGS  = -std=gnu99 -Wall -fPIC -O0 -g
 CFLAGS += -I../include
 LDFLAGS=-shared
 
@@ -75,4 +75,4 @@ install:
 
 # TODO: should be removed later
 main: $(TARGET) main.c
-	$(CC) -o $@ main.c -lrp1 -L../lib
+	$(CC) -g -o $@ main.c -lrp1 -L../lib
