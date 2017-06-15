@@ -21,7 +21,7 @@ apt-get install -y libi2c-dev i2c-tools
 apt-get -y install git
 
 # Device tree compiler can be used to compile custom overlays
-apt-get -y install libudev
+apt-get -y install libudev-dev
 EOF_CHROOT
 
 # NOTE: we have to compile a custom device tree compiler with overlay support
