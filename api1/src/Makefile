@@ -20,7 +20,7 @@ STATIC_LIB=$(OUTPUT_DIR)/librp1.a
 TARGET=$(SHARED_LIB) $(STATIC_LIB)
 
 # List of compiled object files
-OBJECTS = uio.o
+OBJECTS = uio.o hwid.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
@@ -32,7 +32,7 @@ LDFLAGS=-shared
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -lpthread -ludev
+LIBS=-lm -ludev
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc

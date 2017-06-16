@@ -1,3 +1,6 @@
+#ifndef __RP_UIO_H__
+#define __RP_UIO_H__
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <libudev.h>
@@ -25,4 +28,6 @@ int rp_uio_release (rp_uio_t *handle);
 int rp_uio_irq_enable  (rp_uio_t *handle);
 int rp_uio_irq_disable (rp_uio_t *handle);
 int rp_uio_irq_wait    (rp_uio_t *handle);
+
+#endif
 
