@@ -20,7 +20,7 @@ int rp_hwid_release (rp_hwid_t *handle) {
 
     return(0);
 }
-    
+
 uint32_t rp_hwid_get_hwid (rp_hwid_t *handle) {
     return (handle->regset->hwid);
 }
