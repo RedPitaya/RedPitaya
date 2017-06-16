@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <libudev.h>
+#include <dirent.h>
 
 #include "uio.h"
 
@@ -53,7 +54,7 @@ int rp_uio_init (rp_uio_t *handle, char *path) {
     handle->lock.l_pid    = getpid();
     int status = fcntl(handle->dev, F_SETLK, &handle->lock);
     if (status == -1) {
-        fprintf( stderr, "UIO: failed to obtain lock on device node path '%s'.\n", handle->path);
+        fprintf(stderr, "UIO: failed to obtain lock on device node path '%s'.\n", handle->path);
         return (-1);
     }
 
@@ -62,7 +63,19 @@ int rp_uio_init (rp_uio_t *handle, char *path) {
 
     printf("udev_device_get_syspath: %s\n", udev_device_get_syspath(udev));
     printf("udev_device_get_sysattr_value: %s\n", udev_device_get_sysattr_value(udev, "name"));
-    
+
+    DIR *dir;
+    struct dirent *entry;
+
+    if ((dir = opendir(udev_device_get_syspath(udev))) == NULL)
+        fprintf(stderr, "UIO: failed to open 'maps' directory.\n");
+        return (-1);
+    else {
+        while ((entry = readdir(dir)) != NULL)
+            printf("  %s\n", entry->d_name);
+        closedir(dir);
+    }
+
     return 0;
 }
 
