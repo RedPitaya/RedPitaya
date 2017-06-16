@@ -20,7 +20,7 @@ STATIC_LIB=$(OUTPUT_DIR)/librp1.a
 TARGET=$(SHARED_LIB) $(STATIC_LIB)
 
 # List of compiled object files
-OBJECTS = uio.o hwid.o
+OBJECTS = uio.o hwid.o evn.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
