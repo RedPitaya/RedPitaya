@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "uio.h"
 #include "hwid.h"
@@ -14,7 +15,8 @@ int main () {
 
     rp_hwid_t handle_hwid;
     rp_hwid_init    (&handle_hwid);
-    printf ("HWID = %0x\n", rp_hwid_get_hwid(&handle_hwid));
+    printf ("HWID = 0x%0x\n", rp_hwid_get_hwid(&handle_hwid));
+    printf ("DNA  = 0x%016" PRIx64 "\n", rp_hwid_get_dna(&handle_hwid));
     rp_hwid_release (&handle_hwid);
 
     printf ("DEBUG: end\n");

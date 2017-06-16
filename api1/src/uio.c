@@ -129,9 +129,9 @@ int rp_uio_init (rp_uio_t *handle, char *path) {
     }
 
     // memory map
-    for (int unsigned i; i<handle->mapn; i++) {
+    for (int unsigned i=0; i<handle->mapn; i++) {
         handle->map[i].mem = mmap(NULL, handle->map[i].size, PROT_READ | PROT_WRITE, MAP_SHARED, handle->dev, i*sysconf(_SC_PAGESIZE));
-        if (handle->map[i].mem == (void *) -1) {
+        if (handle->map[i].mem == MAP_FAILED) {
             fprintf(stderr, "UIO: failed to perform mmap.\n");
             return (-1);
         }
