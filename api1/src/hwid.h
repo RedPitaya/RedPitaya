@@ -5,7 +5,7 @@
 
 #include "uio.h"
 
-typedef struct {
+typedef volatile struct {
     uint32_t hwid    ;
     uint32_t rsv0    ;  // reserved
     uint32_t efuse   ;
