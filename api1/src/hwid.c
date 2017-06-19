@@ -1,7 +1,7 @@
 #include "hwid.h"
 
 int rp_hwid_init (rp_hwid_t *handle) {
-    char path [] = "/dev/uio/hwid";
+    const char path [] = "/dev/uio/hwid";
     
     int status = rp_uio_init (&handle->uio, path);
     if (status) {

@@ -30,18 +30,18 @@ static struct udev_device * rp_uio_udev (const char *path) {
     return udev_device_new_from_devnum(udev, 'c', statbuf.st_rdev);
 }
 
-int rp_uio_init (rp_uio_t *handle, char *path) {
+int rp_uio_init (rp_uio_t *handle, const char *path) {
     struct udev_device *udev;
+    size_t len;
 
     // store UIO device node path
-    size_t len = strlen(path)+1;
+    len = strlen(path)+1;
     handle->path = malloc(len);
     strncpy(handle->path, path, len);
     if (!handle->path) {
         fprintf(stderr, "UIO: failed to allocate memory for device node path string '%s'.\n", path);
         return (-1);
     }
-    strcpy(path, handle->path);
     // open device node file
     handle->dev = open(handle->path, O_RDWR);
     if (!handle->dev) {
@@ -69,8 +69,9 @@ int rp_uio_init (rp_uio_t *handle, char *path) {
         fprintf(stderr, "UIO: failed to obtainsysfs path from device node path.\n");
         return (-1);
     }
-    handle->name = malloc(strlen(udev_device_get_sysattr_value(udev, "name"))+1);
-    strcpy(handle->name, udev_device_get_sysattr_value(udev, "name"));
+    len = strlen(udev_device_get_sysattr_value(udev, "name"))+1;
+    handle->name = malloc(len);
+    strncpy(handle->name, udev_device_get_sysattr_value(udev, "name"), len);
 
     const char path_maps[] = "/maps";
     int unsigned len_maps = strlen(path_sys);

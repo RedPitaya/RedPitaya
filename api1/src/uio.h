@@ -22,7 +22,7 @@ typedef struct {
     rp_uio_map_t *map;
 } rp_uio_t;
 
-int rp_uio_init    (rp_uio_t *handle, char *path);
+int rp_uio_init    (rp_uio_t *handle, const char *path);
 int rp_uio_release (rp_uio_t *handle);
 
 int rp_uio_irq_enable  (rp_uio_t *handle);
