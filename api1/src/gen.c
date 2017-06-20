@@ -2,7 +2,6 @@
 #include "util.h"
 
 #include "gen.h"
-#include "hwid.h"
 
 int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     static char path_gen [] = "/dev/uio/gen";
