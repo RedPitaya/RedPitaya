@@ -1,9 +1,31 @@
-#include "gen.h"
+#include <string.h>
+#include "util.h"
 
-int rp_gen_init (rp_gen_t *handle, int unsigned index) {
+#include "gen.h"
+#include "hwid.h"
+
+int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     static char path_gen [] = "/dev/uio/gen";
     size_t len = strlen(path_gen)+1+1;
     char path[len];
+
+    // initialize constants
+    // sampling frequency
+    handle->FS = 125000000.0;
+    // linear addition multiplication register width
+    handle->DW  = 14;
+    handle->DWM = 14;
+    handle->DWS = 14;
+    // buffer parameters (fixed point number uM.F)
+    handle->CWM = 14;
+    handle->CWF = 16;
+    handle->CW  = handle->CWM + handle->CWF;
+    // buffer counter ranges
+    handle->buffer_size = fixp_num(handle->CWM);
+    // burst counter parameters
+    handle->CWR = 14;
+    handle->CWL = 32;
+    handle->CWN = 16;
 
     // a single character is reserved for the index
     // so indexes above 9 are an error
