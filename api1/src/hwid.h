@@ -5,7 +5,7 @@
 
 #include "uio.h"
 
-typedef volatile struct {
+typedef struct {
     uint32_t hwid    ;
     uint32_t rsv0    ;  // reserved
     uint32_t efuse   ;
@@ -17,9 +17,8 @@ typedef volatile struct {
 
 typedef struct {
     rp_uio_t uio;
-    rp_hwid_regset_t *regset;
+    volatile rp_hwid_regset_t *regset;
 } rp_hwid_t;
-
 
 int rp_hwid_init    (rp_hwid_t *handle);
 int rp_hwid_release (rp_hwid_t *handle);
