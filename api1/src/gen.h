@@ -1,5 +1,5 @@
-#ifndef __RP_GEN_H__
-#define __RP_GEN_H__
+#ifndef GEN_H
+#define GEN_H
 
 #include <stdint.h>
 
@@ -41,5 +41,12 @@ typedef struct {
 int rp_gen_init    (rp_gen_t *handle, const int unsigned index);
 int rp_gen_release (rp_gen_t *handle);
     
+void rp_gen_reset   (rp_gen_t *handle);
+void rp_gen_start   (rp_gen_t *handle);
+void rp_gen_stop    (rp_gen_t *handle);
+void rp_gen_trigger (rp_gen_t *handle);
+
+int rp_gen_set_enable(rp_gen_t *handle, bool value);
+
 #endif
 

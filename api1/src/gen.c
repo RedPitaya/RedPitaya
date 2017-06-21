@@ -1,6 +1,11 @@
 #include <string.h>
-#include "util.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
+#include "util.h"
+#include "uio.h"
+#include "evn.h"
 #include "gen.h"
 
 int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
@@ -32,7 +37,7 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
         fprintf(stderr, "GEN: failed device index decimal representation is limited to 1 digit.\n");
         return (-1);
     }
-    snprintf(path, "%s%u", len, path_gen, index);
+    snprintf(path, len, "%s%u", path_gen, index);
     
     int status = rp_uio_init (&handle->uio, path);
     if (status) {
@@ -41,16 +46,16 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     // map regset
     handle->regset = (rp_gen_regset_t *) handle->uio.map[0].mem;
     // map table
-    handle->table = (rp_gen_regset_t *) handle->uio.map[0].mem;
+    handle->table = (int16_t *) handle->uio.map[0].mem;
 
     return(0);
 }
 
 int rp_gen_release (rp_gen_t *handle) {
     // disable output
-    rp_gen_set_enable(0);
+    rp_gen_set_enable(handle, false);
     // reset hardware
-    rp_gen_reset();
+    rp_gen_reset(handle);
 
     int status = rp_uio_release (&(handle->uio));
     if (status) {
@@ -60,7 +65,16 @@ int rp_gen_release (rp_gen_t *handle) {
     return(0);
 }
 
+// event function wrappers
+void rp_gen_reset   (rp_gen_t *handle)  {rp_evn_reset  (&handle->regset->evn);}
+void rp_gen_start   (rp_gen_t *handle)  {rp_evn_start  (&handle->regset->evn);}
+void rp_gen_stop    (rp_gen_t *handle)  {rp_evn_stop   (&handle->regset->evn);}
+void rp_gen_trigger (rp_gen_t *handle)  {rp_evn_trigger(&handle->regset->evn);}
 
+
+int rp_gen_set_enable(rp_gen_t *handle, bool value) {
+    return(0);
+}
 
 
 //    @property

@@ -1,5 +1,5 @@
-#ifndef __RP_HWID_H__
-#define __RP_HWID_H__
+#ifndef HWID_H
+#define HWID_H
 
 #include <stdint.h>
 
@@ -20,8 +20,8 @@ typedef struct {
     volatile rp_hwid_regset_t *regset;
 } rp_hwid_t;
 
-int rp_hwid_init    (rp_hwid_t *handle);
-int rp_hwid_release (rp_hwid_t *handle);
+int      rp_hwid_init      (rp_hwid_t *handle);
+int      rp_hwid_release   (rp_hwid_t *handle);
     
 uint32_t rp_hwid_get_hwid  (rp_hwid_t *handle);
 uint32_t rp_hwid_get_efuse (rp_hwid_t *handle);
