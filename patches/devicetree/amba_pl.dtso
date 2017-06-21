@@ -32,75 +32,128 @@
 				};
 		};
 		fragment@4{
-			target-path="/amba_pl/id@40000000";
+			target = <&amba_pl>;
 			__overlay__ {
+				id: id@40000000 {
+					compatible = "generic-uio";
+					reg = <0x40000000 0x10000>;
 					status = "okay";
+					};
 			};
 		};
 		fragment@5{
-			target-path="/amba_pl/muxctl@40040000";
+			target = <&amba_pl>;
 			__overlay__ {
-					status = "okay";
+			muxctl: muxctl@40040000 {
+				compatible = "generic-uio";
+				reg = <0x40040000 0x10000>;
+				status = "okay";
+				};
 			};
 		};
 		fragment@8{
-			target-path="/amba_pl/calib@40100000";
+			target = <&amba_pl>;
 			__overlay__ {
+				calib: calib@40100000 {
+					compatible = "generic-uio";
+					reg = <0x40100000 0x10000>;
 					status = "okay";
+				};
 			};
 		};
 		fragment@9{
-			target-path="/amba_pl/pdm@40140000";
+			target = <&amba_pl>;
 			__overlay__ {
+				pdm: pdm@40140000 {
+					compatible = "generic-uio";
+					reg = <0x40140000 0x10000>;
 					status = "okay";
+				};
 			};
 		};
 		fragment@a{
-			target-path="/amba_pl/pwm@40180000";
+			target = <&amba_pl>;
 			__overlay__ {
+				pwm: pwm@40180000 {
+					compatible = "generic-uio";
+					reg = <0x40180000 0x10000>;
 					status = "okay";
+					};
+
 				};
 		};
 		fragment@b{
-			target-path="/amba_pl/asg0@401c0000";
+			target = <&amba_pl>;
 			__overlay__ {
+				asg0: asg0@401c0000 {
+					compatible = "generic-uio";
+					reg = <0x401c0000 0x40000>;
 					status = "okay";
+				};
 			};
 		};
 		fragment@c{
-			target-path="/amba_pl/asg1@40200000";
+			target = <&amba_pl>;
 			__overlay__ {
-					status = "okay";
+			
+				asg1: asg1@40200000 {
+						compatible = "generic-uio";
+						reg = <0x40200000 0x40000>;
+						status = "okay";
+					};
 				};
 		};
 		fragment@d{
-			target-path="/amba_pl/scope0@40240000";
+			target = <&amba_pl>;
 			__overlay__ {
+				scope0: scope0@40240000 {
+					compatible = "generic-uio";
+					reg = <0x40240000 0x10000>;
 					status = "okay";
+				};
 			};
 		};
 		fragment@e{
-			target-path="/amba_pl/scope1@40280000";
+			target = <&amba_pl>;
 			__overlay__ {
+				scope1: scope1@40280000 {
+					compatible = "generic-uio";
+					reg = <0x40280000 0x10000>;
 					status = "okay";
+				};
 			};
 		};
 		fragment@f{
-			target-path="/amba_pl/lg@402c0000";
+			target = <&amba_pl>;
 			__overlay__ {
+				lg: lg@402c0000 {
+					compatible = "generic-uio";
+					reg = <0x402c0000 0x40000>;
 					status = "okay";
+				};
 			};
 		};
 		fragment@10{
-			target-path="/amba_pl/la@40300000";
+			target = <&amba_pl>;
 			__overlay__ {
+				la: la@40300000 {
+					compatible = "generic-uio";
+					reg = <0x40300000 0x10000>;
 					status = "okay";
+				};
 			};
 		};
 		fragment@11{
-			 target-path="/amba_pl/rprx@2";
+			target = <&amba_pl>;
 			__overlay__ {
-					status = "okay";
+			rprx_2: rprx@2 {
+				compatible ="redpitaya,rprx";
+				dmas = <&axi_dma_2 0
+						&axi_dma_2 1>;
+				dma-names = "axidma0", "axidma1";
+				memory-region = <&rprx_reserverd>;
+				status = "okay";
+			};
 			};
 		};
 };
