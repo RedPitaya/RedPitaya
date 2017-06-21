@@ -66,10 +66,16 @@ int rp_gen_release (rp_gen_t *handle) {
 }
 
 // event function wrappers
-void rp_gen_reset   (rp_gen_t *handle)  {rp_evn_reset  (&handle->regset->evn);}
-void rp_gen_start   (rp_gen_t *handle)  {rp_evn_start  (&handle->regset->evn);}
-void rp_gen_stop    (rp_gen_t *handle)  {rp_evn_stop   (&handle->regset->evn);}
-void rp_gen_trigger (rp_gen_t *handle)  {rp_evn_trigger(&handle->regset->evn);}
+void     rp_gen_reset         (rp_gen_t *handle)                  {       rp_evn_reset         (&handle->regset->evn) ;}
+void     rp_gen_start         (rp_gen_t *handle)                  {       rp_evn_start         (&handle->regset->evn) ;}
+void     rp_gen_stop          (rp_gen_t *handle)                  {       rp_evn_stop          (&handle->regset->evn) ;}
+void     rp_gen_trigger       (rp_gen_t *handle)                  {       rp_evn_trigger       (&handle->regset->evn) ;}
+bool     rp_gen_status_run    (rp_gen_t *handle)                  {return(rp_evn_status_run    (&handle->regset->evn));}
+bool     rp_gen_status_trigger(rp_gen_t *handle)                  {return(rp_evn_status_trigger(&handle->regset->evn));}
+uint32_t rp_gen_get_sync_src  (rp_gen_t *handle)                  {return(rp_evn_get_sync_src  (&handle->regset->evn));}
+void     rp_gen_set_sync_src  (rp_gen_t *handle, uint32_t value)  {       rp_evn_set_sync_src  (&handle->regset->evn, value);}
+uint32_t rp_gen_get_trig_src  (rp_gen_t *handle)                  {return(rp_evn_get_trig_src  (&handle->regset->evn));}
+void     rp_gen_set_trig_src  (rp_gen_t *handle, uint32_t value)  {       rp_evn_set_trig_src  (&handle->regset->evn, value);}
 
 
 int rp_gen_set_enable(rp_gen_t *handle, bool value) {

@@ -38,13 +38,22 @@ typedef struct {
     int unsigned CWN;  // counter width - burst period number
 } rp_gen_t;
 
-int rp_gen_init    (rp_gen_t *handle, const int unsigned index);
-int rp_gen_release (rp_gen_t *handle);
-    
-void rp_gen_reset   (rp_gen_t *handle);
-void rp_gen_start   (rp_gen_t *handle);
-void rp_gen_stop    (rp_gen_t *handle);
-void rp_gen_trigger (rp_gen_t *handle);
+int      rp_gen_init           (rp_gen_t *handle, const int unsigned index);
+int      rp_gen_release        (rp_gen_t *handle);
+
+void     rp_gen_reset          (rp_gen_t *handle);
+void     rp_gen_start          (rp_gen_t *handle);
+void     rp_gen_stop           (rp_gen_t *handle);
+void     rp_gen_trigger        (rp_gen_t *handle);
+
+bool     rp_gen_status_run     (rp_gen_t *regset);
+bool     rp_gen_status_trigger (rp_gen_t *regset);
+
+uint32_t rp_gen_get_sync_src   (rp_gen_t *regset);
+void     rp_gen_set_sync_src   (rp_gen_t *regset, uint32_t value);
+
+uint32_t rp_gen_get_trig_src   (rp_gen_t *regset);
+void     rp_gen_set_trig_src   (rp_gen_t *regset, uint32_t value);
 
 int rp_gen_set_enable(rp_gen_t *handle, bool value);
 
