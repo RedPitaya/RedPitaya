@@ -20,10 +20,6 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     handle->DW  = 14;
     handle->DWM = 14;
     handle->DWS = 14;
-    // buffer parameters (fixed point number uM.F)
-    handle->CWM = 14;
-    handle->CWF = 16;
-    handle->CW  = handle->CWM + handle->CWF;
     // buffer counter ranges
     handle->buffer_size = fixp_num(handle->CWM);
     // burst counter parameters

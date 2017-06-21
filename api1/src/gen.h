@@ -26,10 +26,6 @@ typedef struct {
     int unsigned DW ;  // data width - streaming sample
     int unsigned DWM;  // data width - linear gain multiplier
     int unsigned DWS;  // data width - linear offset summand
-    // buffer parameters (fixed point number uM.F)
-    int unsigned CWM;  // counter width - magnitude (fixed point integer)
-    int unsigned CWF;  // counter width - fraction  (fixed point fraction)
-    int unsigned CW ;
     // buffer counter ranges
     int unsigned buffer_size; // table size
     // burst counter parameters
