@@ -1,6 +1,9 @@
 project('Red Pitaya shared library', 'c', default_options : ['c_std=c99'])
 
-dep = dependency('libudev')
+cc = meson.get_compiler('c')
+depm = cc.find_library('m', required : false)
+
+dep = [dependency('libudev'), depm]
 src = ['src/uio.c', 'src/evn.c', 'src/hwid.c', 'src/gen.c', 'src/asg_per.c', 'src/asg_bst.c']
 inc = include_directories(['include', 'src'])
 
