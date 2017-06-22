@@ -298,7 +298,7 @@ rp_communication:
 	make -C $(COMM_DIR)
 
 ################################################################################
-# Red Pitaya ecosystem and free applications
+# Red Pitaya ecosystem and tools
 ################################################################################
 
 #LIB_BOOTSTRAP_TAG = 3.3.6
