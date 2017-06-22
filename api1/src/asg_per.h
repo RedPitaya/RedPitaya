@@ -1,4 +1,3 @@
-    // buffer parameters (fixed point number uM.F)
 #ifndef ASG_PER_H
 #define ASG_PER_H
 
@@ -11,13 +10,16 @@ typedef struct {
 } rp_asg_per_regset_t;
 
 typedef struct {
-    rp_uio_t uio;
     volatile rp_asg_per_regset_t *regset;
+    double FS;
+    int unsigned buffer_size;
     // buffer parameters (fixed point number uM.F)
     int unsigned CWM;  // counter width - magnitude (fixed point integer)
     int unsigned CWF;  // counter width - fraction  (fixed point fraction)
     int unsigned CW ;
 } rp_asg_per_t;
+
+void rp_asg_per_init (rp_asg_per_t *handle, volatile rp_asg_per_regset_t *regset, double FS, int unsigned buffer_size, int unsigned CWM, int unsigned CWF);
 
 #endif
 

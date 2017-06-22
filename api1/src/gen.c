@@ -7,6 +7,8 @@
 #include "uio.h"
 #include "evn.h"
 #include "gen.h"
+#include "asg_per.h"
+#include "asg_bst.h"
 
 int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     static char path_gen [] = "/dev/uio/gen";
@@ -14,18 +16,12 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     char path[len];
 
     // initialize constants
-    // sampling frequency
-    handle->FS = 125000000.0;
+    handle->FS = 125000000.0;  // sampling frequency
+    handle->buffer_size = 1<<14;
     // linear addition multiplication register width
     handle->DW  = 14;
     handle->DWM = 14;
     handle->DWS = 14;
-    // buffer counter ranges
-    handle->buffer_size = fixp_num(handle->CWM);
-    // burst counter parameters
-    handle->CWR = 14;
-    handle->CWL = 32;
-    handle->CWN = 16;
 
     // a single character is reserved for the index
     // so indexes above 9 are an error
@@ -44,6 +40,13 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     // map table
     handle->table = (int16_t *) handle->uio.map[0].mem;
 
+    // events
+    rp_evn_init(&handle->evn, &handle->regset->evn);
+    // continuous/periodic mode
+    rp_asg_per_init(&handle->per, &handle->regset->per, handle->FS, handle->buffer_size, 14, 16);
+    // burst mode
+    rp_asg_bst_init(&handle->bst, &handle->regset->bst, handle->FS, handle->buffer_size, 14, 32, 16);
+
     return(0);
 }
 
@@ -51,7 +54,7 @@ int rp_gen_release (rp_gen_t *handle) {
     // disable output
     rp_gen_set_enable(handle, false);
     // reset hardware
-    rp_gen_reset(handle);
+    rp_evn_reset(&handle->evn);
 
     int status = rp_uio_release (&(handle->uio));
     if (status) {
@@ -60,19 +63,6 @@ int rp_gen_release (rp_gen_t *handle) {
 
     return(0);
 }
-
-// event function wrappers
-void     rp_gen_reset         (rp_gen_t *handle)                  {       rp_evn_reset         (&handle->regset->evn) ;}
-void     rp_gen_start         (rp_gen_t *handle)                  {       rp_evn_start         (&handle->regset->evn) ;}
-void     rp_gen_stop          (rp_gen_t *handle)                  {       rp_evn_stop          (&handle->regset->evn) ;}
-void     rp_gen_trigger       (rp_gen_t *handle)                  {       rp_evn_trigger       (&handle->regset->evn) ;}
-bool     rp_gen_status_run    (rp_gen_t *handle)                  {return(rp_evn_status_run    (&handle->regset->evn));}
-bool     rp_gen_status_trigger(rp_gen_t *handle)                  {return(rp_evn_status_trigger(&handle->regset->evn));}
-uint32_t rp_gen_get_sync_src  (rp_gen_t *handle)                  {return(rp_evn_get_sync_src  (&handle->regset->evn));}
-void     rp_gen_set_sync_src  (rp_gen_t *handle, uint32_t value)  {       rp_evn_set_sync_src  (&handle->regset->evn, value);}
-uint32_t rp_gen_get_trig_src  (rp_gen_t *handle)                  {return(rp_evn_get_trig_src  (&handle->regset->evn));}
-void     rp_gen_set_trig_src  (rp_gen_t *handle, uint32_t value)  {       rp_evn_set_trig_src  (&handle->regset->evn, value);}
-
 
 int rp_gen_set_enable(rp_gen_t *handle, bool value) {
     return(0);
