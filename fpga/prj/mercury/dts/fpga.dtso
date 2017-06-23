@@ -12,11 +12,84 @@
 //			firmware-name = "redpitaya/mercury.bin";
 //		};
 //	};
+
 	fragment@1 {
 		target = <&amba_pl>;
 		#address-cells = <1>;
 		#size-cells = <1>;
 		__overlay__ {
+			axi_dma_la: dma@80420000 {
+				#dma-cells = <1>;
+				clock-names = "s_axi_lite_aclk", "m_axi_sg_aclk", "m_axi_s2mm_aclk";
+				clocks = <&clkc 15>, <&clkc 15>, <&clkc 15>;
+				compatible = "xlnx,axi-dma-1.00.a";
+				interrupt-parent = <&intc>;
+				interrupts = <0 32 4>;
+				reg = <0x80420000 0x10000>;
+				xlnx,addrwidth = <0x20>;
+				xlnx,include-sg ;
+				dma-channel@80420030 {
+					compatible = "xlnx,axi-dma-s2mm-channel";
+					dma-channels = <0x1>;
+					interrupts = <0 32 4>;
+					xlnx,datawidth = <0x10>;
+					xlnx,device-id = <0x0>;
+				};
+			};
+			axi_dma_osc0: dma@80400000 {
+				#dma-cells = <1>;
+				clock-names = "s_axi_lite_aclk", "m_axi_sg_aclk", "m_axi_s2mm_aclk";
+				clocks = <&clkc 15>, <&clkc 15>, <&clkc 15>;
+				compatible = "xlnx,axi-dma-1.00.a";
+				interrupt-parent = <&intc>;
+				interrupts = <0 30 4>;
+				reg = <0x80400000 0x10000>;
+				xlnx,addrwidth = <0x20>;
+				xlnx,include-sg ;
+				dma-channel@80400030 {
+					compatible = "xlnx,axi-dma-s2mm-channel";
+					dma-channels = <0x1>;
+					interrupts = <0 30 4>;
+					xlnx,datawidth = <0x10>;
+					xlnx,device-id = <0x1>;
+				};
+			};
+			axi_dma_osc1: dma@80410000 {
+				#dma-cells = <1>;
+				clock-names = "s_axi_lite_aclk", "m_axi_sg_aclk", "m_axi_s2mm_aclk";
+				clocks = <&clkc 15>, <&clkc 15>, <&clkc 15>;
+				compatible = "xlnx,axi-dma-1.00.a";
+				interrupt-parent = <&intc>;
+				interrupts = <0 31 4>;
+				reg = <0x80410000 0x10000>;
+				xlnx,addrwidth = <0x20>;
+				xlnx,include-sg ;
+				dma-channel@80410030 {
+					compatible = "xlnx,axi-dma-s2mm-channel";
+					dma-channels = <0x1>;
+					interrupts = <0 31 4>;
+					xlnx,datawidth = <0x10>;
+					xlnx,device-id = <0x2>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&amba_pl>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		__overlay__ {
+			axi_intc_0: interrupt-controller@81800000 {
+				#interrupt-cells = <2>;
+				compatible = "xlnx,xps-intc-1.00.a";
+				interrupt-controller ;
+				interrupt-parent = <&intc>;
+				interrupts = <0 33 4>;
+				reg = <0x81800000 0x10000>;
+				xlnx,kind-of-intr = <0x3f>;
+				xlnx,num-intr-inputs = <0x6>;
+			};
 			hwid: hwid@40000000 {
 				compatible = "generic-uio";
 				reg = <0x40000000 0x1000>;
@@ -42,48 +115,48 @@
 				reg = <0x40040000 0x01000>,
 				      <0x40050000 0x10000>;
 				reg-names = "regset", "mem";
-//				interrupt-parent = <&axi_intc_0>;
-//				interrupts = <0 1>;
+				interrupt-parent = <&axi_intc_0>;
+				interrupts = <0 1>;
 			};
 			gen1: gen1@40060000 {
 				compatible = "generic-uio";
 				reg = <0x40060000 0x01000>,
 				      <0x40070000 0x10000>;
 				reg-names = "regset", "mem";
-//				interrupt-parent = <&axi_intc_0>;
-//				interrupts = <1 1>;
+				interrupt-parent = <&axi_intc_0>;
+				interrupts = <1 1>;
 			};
 			osc0: osc0@40080000 {
 				compatible = "generic-uio";
 				reg = <0x40080000 0x01000>,
 				      <0x40090000 0x10000>;
 				reg-names = "regset", "mem";
-//				interrupt-parent = <&axi_intc_0>;
-//				interrupts = <2 1>;
+				interrupt-parent = <&axi_intc_0>;
+				interrupts = <2 1>;
 			};
 			osc1: osc1@400a0000 {
 				compatible = "generic-uio";
 				reg = <0x400a0000 0x01000>,
 				      <0x400b0000 0x10000>;
 				reg-names = "regset", "mem";
-//				interrupt-parent = <&axi_intc_0>;
-//				interrupts = <3 1>;
+				interrupt-parent = <&axi_intc_0>;
+				interrupts = <3 1>;
 			};
 			lg: lg@400c0000 {
 				compatible = "generic-uio";
 				reg = <0x400c0000 0x01000>,
 				      <0x400d0000 0x10000>;
 				reg-names = "regset", "mem";
-//				interrupt-parent = <&axi_intc_0>;
-//				interrupts = <4 1>;
+				interrupt-parent = <&axi_intc_0>;
+				interrupts = <4 1>;
 			};
 			la: la@400e0000 {
 				compatible = "generic-uio";
 				reg = <0x400e0000 0x01000>,
 				      <0x400f0000 0x10000>;
 				reg-names = "regset", "mem";
-//				interrupt-parent = <&axi_intc_0>;
-//				interrupts = <5 1>;
+				interrupt-parent = <&axi_intc_0>;
+				interrupts = <5 1>;
 			};
 		};
 	};
