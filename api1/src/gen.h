@@ -13,6 +13,12 @@
 
 #define DW 14
 
+typedef enum rp_gen_mode_t {
+    CONTINUOUS = 0x0,
+    FINITE     = 0x1,
+    INFINITE   = 0x3
+} rp_gen_mode_t;
+
 typedef struct {
     rp_evn_regset_t     evn;
     uint32_t            rsv0;     // reserved
@@ -39,8 +45,13 @@ typedef struct {
     fixp_t dat_t;
 } rp_gen_t;
 
-int      rp_gen_init           (rp_gen_t *handle, const int unsigned index);
-int      rp_gen_release        (rp_gen_t *handle);
+int           rp_gen_init        (rp_gen_t *handle, const int unsigned index);
+int           rp_gen_release     (rp_gen_t *handle);
+
+int           rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len);
+int           rp_gen_set_waveform(rp_gen_t *handle, float *waveform, int unsigned  len);
+rp_gen_mode_t rp_gen_get_mode    (rp_gen_t *handle);
+void          rp_gen_set_mode    (rp_gen_t *handle, rp_gen_mode_t value);
 
 #endif
 

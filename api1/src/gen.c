@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "util.h"
 #include "uio.h"
@@ -70,45 +71,46 @@ int rp_gen_release (rp_gen_t *handle) {
     return(0);
 }
 
-//    @property
-//    def waveform (self):
-//        """Waveworm array containing normalized values in the range [-1,1].
-//
-//        Array can be up to `buffer_size` samples in length.
-//        """
-//        siz = self.table_size
-//        # TODO: nparray
-//        return [self.table[i] / self._DWr for i in range(siz)]
-//
-//    @waveform.setter
-//    def waveform (self, value):
-//        siz = len(value)
-//        if (siz <= self.buffer_size):
-//            for i in range(siz):
-//                # TODO add saturation
-//                self.table[i] = int(value[i] * self._DWr)
-//            self.table_size = siz
-//        else:
-//            raise ValueError("Waveform table size should not excede buffer size. buffer_size = {}".format(self.buffer_size))
-//
-//    class modes(Enum):
-//        CONTINUOUS = 0x0
-//        FINITE     = 0x1
-//        INFINITE   = 0x3
-//
-//    @property
-//    def mode (self) -> str:
-//        """Generator mode:
-//
-//        * 'CONTINUOUS' - non burst mode for continuous/periodic signals
-//        * 'FINITE'     - finite    length bursts
-//        * 'INFINITE'   - inifinite length bursts
-//        """
-//        return (self.modes(self.regset.cfg_bmd))
-//
-//    @mode.setter
-//    def mode (self, value: str):
-//        if isinstance(value, str):
-//            self.regset.cfg_bmd = self.modes[value].value
-//        else:
-//            raise ValueError("Generator supports modes ['CONTINUOUS', 'FINITE', 'INFINITE'].")
+static inline int unsigned rp_gen_get_length(rp_gen_t *handle) {
+    if (rp_gen_get_mode(handle) == CONTINUOUS) {
+        return(rp_asg_per_get_table_size(&handle->per));
+    } else {
+        return(rp_asg_bst_get_data_length(&handle->bst));
+    }
+    return(0);
+}
+
+int rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len) {
+    if (len == 0) {
+        *len = rp_gen_get_length(handle);
+    }
+    if (*len <= handle->buffer_size) {
+        waveform = malloc(*len * sizeof(float));
+        for (int unsigned i=0; i<*len; i++) {
+            waveform [i] = (float) handle->table [i] / (float) fixp_unit(handle->dat_t);
+        }
+        return(0);
+    } else {
+        return(-1);
+    }
+}
+
+int rp_gen_set_waveform(rp_gen_t *handle, float *waveform, int unsigned len) {
+    if (len <= handle->buffer_size) {
+        for (int unsigned i=0; i<len; i++) {
+            handle->table [i] = (uint16_t) (waveform [i] * (float) fixp_unit(handle->dat_t));
+        }
+        return(0);
+    } else {
+        return(-1);
+    }
+}
+
+rp_gen_mode_t rp_gen_get_mode(rp_gen_t *handle) {
+    return((rp_gen_mode_t) handle->regset->cfg_bmd);
+}
+
+void rp_gen_set_mode(rp_gen_t *handle, rp_gen_mode_t value) {
+    handle->regset->cfg_bmd = (uint32_t) value;
+}
+
