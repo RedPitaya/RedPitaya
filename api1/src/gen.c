@@ -9,6 +9,7 @@
 #include "gen.h"
 #include "asg_per.h"
 #include "asg_bst.h"
+#include "gen_out.h"
 
 int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     static char path_gen [] = "/dev/uio/gen";
@@ -18,10 +19,7 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     // initialize constants
     handle->FS = 125000000.0;  // sampling frequency
     handle->buffer_size = 1<<14;
-    // linear addition multiplication register width
-    handle->DW  = 14;
-    handle->DWM = 14;
-    handle->DWS = 14;
+    handle->dat_t = (fixp_t) {.s = 1, .m = 0, .f = DW-1};
 
     // a single character is reserved for the index
     // so indexes above 9 are an error
@@ -43,31 +41,34 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     // events
     rp_evn_init(&handle->evn, &handle->regset->evn);
     // continuous/periodic mode
-    rp_asg_per_init(&handle->per, &handle->regset->per, handle->FS, handle->buffer_size, 14, 16);
+    const fixp_t cnt_t = {.s = 0, .m = CWM, .f = CWF};
+    rp_asg_per_init(&handle->per, &handle->regset->per, handle->FS, handle->buffer_size, cnt_t);
     // burst mode
-    rp_asg_bst_init(&handle->bst, &handle->regset->bst, handle->FS, handle->buffer_size, 14, 32, 16);
+    const fixp_t bdr_t = {.s = 0, .m = CWR, .f = 0};
+    const fixp_t bpl_t = {.s = 0, .m = CWL, .f = 0};
+    const fixp_t bpn_t = {.s = 0, .m = CWN, .f = 0};
+    rp_asg_bst_init(&handle->bst, &handle->regset->bst, handle->FS, handle->buffer_size, bdr_t, bpl_t, bpn_t);
+    // output configuration
+    const fixp_t mul_t = {.s = 1, .m = 1, .f = DWM-2};
+    const fixp_t sum_t = {.s = 1, .m = 0, .f = DWS-1};
+    rp_gen_out_init(&handle->out, &handle->regset->out, mul_t, sum_t);
 
     return(0);
 }
 
 int rp_gen_release (rp_gen_t *handle) {
     // disable output
-    rp_gen_set_enable(handle, false);
+    rp_gen_out_set_enable(&handle->out, false);
     // reset hardware
     rp_evn_reset(&handle->evn);
 
-    int status = rp_uio_release (&(handle->uio));
+    int status = rp_uio_release (&handle->uio);
     if (status) {
         return (-1);
     }
 
     return(0);
 }
-
-int rp_gen_set_enable(rp_gen_t *handle, bool value) {
-    return(0);
-}
-
 
 //    @property
 //    def waveform (self):

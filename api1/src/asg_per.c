@@ -1,23 +1,22 @@
 #include <math.h>
 
+#include "util.h"
 #include "asg_per.h"
 
-void rp_asg_per_init (rp_asg_per_t *handle, volatile rp_asg_per_regset_t *regset, double FS, int unsigned buffer_size, int unsigned CWM, int unsigned CWF) {
+void rp_asg_per_init (rp_asg_per_t *handle, volatile rp_asg_per_regset_t *regset, double FS, int unsigned buffer_size, const fixp_t cnt_t) {
     handle->regset = regset;
     handle->FS = FS;
     handle->buffer_size = buffer_size;
-    handle->CWM = CWM;
-    handle->CWF = CWF;
-    handle->CW  = CWM+CWF;
+    handle->cnt_t = cnt_t;
 }
 
 uint32_t rp_asg_per_get_table_size(rp_asg_per_t *handle) {
-    return((handle->regset->cfg_siz + 1) >> handle->CWF);
+    return((handle->regset->cfg_siz + 1) >> handle->cnt_t.f);
 }
 
 int rp_asg_per_set_table_size(rp_asg_per_t *handle, uint32_t value) {
     if (value <= handle->buffer_size) {
-        handle->regset->cfg_siz = (value << handle->CWF) - 1;
+        handle->regset->cfg_siz = (value << handle->cnt_t.f) - 1;
         return(0);
     } else {
 //        raise ValueError("Waveform table size should not excede buffer size. buffer_size = {}".format(self.buffer_size))

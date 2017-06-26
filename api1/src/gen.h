@@ -2,11 +2,16 @@
 #define GEN_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
+#include "util.h"
 #include "uio.h"
 #include "evn.h"
 #include "asg_per.h"
 #include "asg_bst.h"
+#include "gen_out.h"
+
+#define DW 14
 
 typedef struct {
     rp_evn_regset_t     evn;
@@ -15,7 +20,7 @@ typedef struct {
     rp_asg_per_regset_t per;
     rp_asg_bst_regset_t bst;
     uint32_t            rsv1[2];  // reserved
-//    rp_gen_out_regset_t out;
+    rp_gen_out_regset_t out;
 } rp_gen_regset_t;
 
 typedef struct {
@@ -25,20 +30,17 @@ typedef struct {
     rp_evn_t     evn;
     rp_asg_per_t per;
     rp_asg_bst_t bst;
+    rp_gen_out_t out;
     // sampling frequency
     double       FS;
     // table size
     int unsigned buffer_size;
-    // linear addition multiplication register width
-    int unsigned DW ;  // data width - streaming sample
-    int unsigned DWM;  // data width - linear gain multiplier
-    int unsigned DWS;  // data width - linear offset summand
+    // data fixed point size
+    fixp_t dat_t;
 } rp_gen_t;
 
 int      rp_gen_init           (rp_gen_t *handle, const int unsigned index);
 int      rp_gen_release        (rp_gen_t *handle);
-
-int rp_gen_set_enable(rp_gen_t *handle, bool value);
 
 #endif
 
