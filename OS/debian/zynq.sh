@@ -27,7 +27,8 @@ EOF_CHROOT
 # NOTE: we have to compile a custom device tree compiler with overlay support
 chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get -y install build-essential gcc bison flex
-curl -L https://github.com/pantoniou/dtc/archive/overlays.tar.gz -o dtc.tar.gz
+#curl -L https://github.com/pantoniou/dtc/archive/overlays.tar.gz -o dtc.tar.gz
+curl -L https://github.com/RedPitaya/dtc/archive/overlays.tar.gz -o dtc.tar.gz
 tar zxvf dtc.tar.gz
 cd dtc-overlays
 make
