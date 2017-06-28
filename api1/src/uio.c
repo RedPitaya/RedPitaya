@@ -70,7 +70,7 @@ int rp_uio_init (rp_uio_t *handle, const char *path) {
         return (-1);
     }
     len = strlen(udev_device_get_sysattr_value(udev, "name"))+1;
-    handle->name = malloc(len);
+    handle->name = malloc(len * sizeof(char));
     strncpy(handle->name, udev_device_get_sysattr_value(udev, "name"), len);
 
     const char path_maps[] = "/maps";
@@ -94,7 +94,7 @@ int rp_uio_init (rp_uio_t *handle, const char *path) {
             }
         }
         rewinddir(dir);
-        handle->map = malloc(handle->mapn * sizeof(handle->map));
+        handle->map = malloc(handle->mapn * sizeof(rp_uio_map_t));
 
         while ((entry = readdir(dir)) != NULL) {
             if (!strncmp(entry->d_name, "map", 3)) {
@@ -107,7 +107,8 @@ int rp_uio_init (rp_uio_t *handle, const char *path) {
                 char path_map_name [strlen(path_map)+strlen("/name")+1];
                 strcpy(path_map_name, path_map);
                 strcat(path_map_name, "/name");
-                handle->map[i].name = malloc(strlen(udev_device_get_sysattr_value(udev, path_map_name))+1);
+                len = strlen(udev_device_get_sysattr_value(udev, path_map_name))+1;
+                handle->map[i].name = malloc(len * sizeof(char));
                 strcpy(handle->map[i].name, udev_device_get_sysattr_value(udev, path_map_name));
 
                 char path_map_addr [strlen(path_map)+strlen("/addr")+1];
@@ -148,6 +149,7 @@ int rp_uio_release (rp_uio_t *handle) {
         free(handle->map[i].name);
     }
     free(handle->map);
+    free(handle->name);
     // close device file
     close(handle->dev);
     // free UIO device node path
