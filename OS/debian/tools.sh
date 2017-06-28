@@ -11,4 +11,8 @@ apt-get -y install parted dosfstools
 
 # install file system tools
 apt-get -y install mtd-utils
+
+# DSP library for C language
+# TODO: the package does not exist yet in Ubuntu 16.04
+#apt-get -y install libliquid-dev
 EOF_CHROOT
