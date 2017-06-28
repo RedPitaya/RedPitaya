@@ -114,36 +114,10 @@ echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
 install -v -m 664 -o root -D $OVERLAY/etc/fstab  $ROOT_DIR/etc/fstab
 
 ################################################################################
-# U-Boot environment EEPROM memory map
-################################################################################
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-# development tools
-apt-get -y install u-boot-tools
-EOF_CHROOT
-
-# copy U-Boot environment tools
-install -v -m 664 -o root -D patches/fw_env.config  $ROOT_DIR/etc/fw_env.config
-
-################################################################################
-# miscelaneous tools
-################################################################################
-
-chroot $ROOT_DIR <<- EOF_CHROOT
-apt-get -y install dbus udev
-
-# development tools
-apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
-apt-get -y install parted dosfstools
-
-# install file system tools
-apt-get -y install mtd-utils
-EOF_CHROOT
-
-################################################################################
 # run other scripts
 ################################################################################
 
+. OS/debian/tools.sh
 . OS/debian/network.sh
 . OS/debian/zynq.sh
 . OS/debian/redpitaya.sh

@@ -10,6 +10,18 @@
 unzip ecosystem*.zip -d $BOOT_DIR
 
 ################################################################################
+# U-Boot environment EEPROM memory map
+################################################################################
+
+chroot $ROOT_DIR <<- EOF_CHROOT
+# development tools
+apt-get -y install u-boot-tools
+EOF_CHROOT
+
+# copy U-Boot environment tools
+install -v -m 664 -o root -D patches/fw_env.config  $ROOT_DIR/etc/fw_env.config
+
+################################################################################
 # install various packages
 ################################################################################
 
