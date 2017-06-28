@@ -20,7 +20,8 @@ typedef struct {
     fixp_t cnt_t;
 } rp_asg_per_t;
 
-void     rp_asg_per_init (rp_asg_per_t *handle, volatile rp_asg_per_regset_t *regset, double FS, int unsigned buffer_size, const fixp_t cnt_t);
+void     rp_asg_per_init          (rp_asg_per_t *handle, volatile rp_asg_per_regset_t *regset, double FS, int unsigned buffer_size, const fixp_t cnt_t);
+void     rp_asg_per_default       (rp_asg_per_t *handle);
 
 uint32_t rp_asg_per_get_table_size(rp_asg_per_t *handle);
 int      rp_asg_per_set_table_size(rp_asg_per_t *handle, uint32_t value);

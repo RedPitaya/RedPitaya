@@ -10,6 +10,12 @@ void rp_asg_per_init (rp_asg_per_t *handle, volatile rp_asg_per_regset_t *regset
     handle->cnt_t = cnt_t;
 }
 
+void rp_asg_per_default (rp_asg_per_t *handle) {
+    handle->regset->cfg_siz = 0;
+    handle->regset->cfg_ste = 0;
+    handle->regset->cfg_off = 0;
+}
+
 uint32_t rp_asg_per_get_table_size(rp_asg_per_t *handle) {
     return((handle->regset->cfg_siz + 1) >> handle->cnt_t.f);
 }

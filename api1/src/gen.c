@@ -71,6 +71,22 @@ int rp_gen_release (rp_gen_t *handle) {
     return(0);
 }
 
+int rp_gen_default (rp_gen_t *handle) {
+    // reset hardware
+    rp_evn_reset(&handle->evn);
+    // set mode to continuous
+    rp_gen_set_mode(handle, CONTINUOUS);
+    // the waveform table is not cleared
+    // set continuous/periodic mode defaults
+    rp_asg_per_default(&handle->per);
+    // set burst mode defaults
+    rp_asg_bst_default(&handle->bst);
+    // set output defaults
+    rp_gen_out_default(&handle->out);
+
+    return(0);
+}
+
 static inline int unsigned rp_gen_get_length(rp_gen_t *handle) {
     if (rp_gen_get_mode(handle) == CONTINUOUS) {
         return(rp_asg_per_get_table_size(&handle->per));

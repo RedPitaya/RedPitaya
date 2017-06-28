@@ -4,10 +4,16 @@
 #include "util.h"
 #include "gen_out.h"
 
-void rp_gen_out_init (rp_gen_out_t *handle, volatile rp_gen_out_regset_t *regset, const fixp_t mul_t, const fixp_t sum_t) {
+void rp_gen_out_init(rp_gen_out_t *handle, volatile rp_gen_out_regset_t *regset, const fixp_t mul_t, const fixp_t sum_t) {
     handle->regset = regset;
     handle->mul_t = mul_t;
     handle->sum_t = sum_t;
+}
+
+void rp_gen_out_default(rp_gen_out_t *handle) {
+    handle->regset->cfg_mul = fixp_unit(handle->mul_t);
+    handle->regset->cfg_sum = 0;
+    handle->regset->cfg_ena = 0;
 }
 
 float rp_gen_out_get_amplitude(rp_gen_out_t *handle) {

@@ -21,7 +21,8 @@ typedef struct {
     fixp_t sum_t;  // linear offset summand
 } rp_gen_out_t;
 
-void     rp_gen_out_init (rp_gen_out_t *handle, volatile rp_gen_out_regset_t *regset, const fixp_t mul_t, const fixp_t sum_t);
+void     rp_gen_out_init         (rp_gen_out_t *handle, volatile rp_gen_out_regset_t *regset, const fixp_t mul_t, const fixp_t sum_t);
+void     rp_gen_out_default      (rp_gen_out_t *handle);
 
 float    rp_gen_out_get_amplitude(rp_gen_out_t *handle);
 int      rp_gen_out_set_amplitude(rp_gen_out_t *handle, float value);

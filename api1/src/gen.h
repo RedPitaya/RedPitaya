@@ -47,6 +47,7 @@ typedef struct {
 
 int           rp_gen_init        (rp_gen_t *handle, const int unsigned index);
 int           rp_gen_release     (rp_gen_t *handle);
+int           rp_gen_default     (rp_gen_t *handle);
 
 int           rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len);
 int           rp_gen_set_waveform(rp_gen_t *handle, float *waveform, int unsigned  len);

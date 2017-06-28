@@ -10,6 +10,13 @@ void rp_asg_bst_init (rp_asg_bst_t *handle, volatile rp_asg_bst_regset_t *regset
     handle->bpn_t = bpn_t;
 }
 
+void rp_asg_bst_default (rp_asg_bst_t *handle) {
+    handle->regset->cfg_bdr = 0;
+    handle->regset->cfg_bdl = 0;
+    handle->regset->cfg_bpl = 0;
+    handle->regset->cfg_bpn = 0;
+}
+
 uint32_t rp_asg_bst_get_data_repetitions (rp_asg_bst_t *handle) {
     return(handle->regset->cfg_bdr + 1);
 }

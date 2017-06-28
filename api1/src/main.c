@@ -15,8 +15,10 @@ int main () {
 
     rp_gen_t gen0;
     rp_gen_init (&gen0, 0);
+
+    rp_gen_default(&gen0);
     
-//    rp_gen_release (&gen0);
+    rp_gen_release (&gen0);
 
     printf ("DEBUG: end\n");
     return(0);
