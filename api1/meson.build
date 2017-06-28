@@ -8,4 +8,4 @@ src = ['src/uio.c', 'src/evn.c', 'src/hwid.c', 'src/gen.c', 'src/asg_per.c', 'sr
 inc = include_directories(['include', 'src'])
 
 lib = shared_library('rp', src, dependencies : dep, include_directories : inc, version : '1.2.3', soversion : '0')
-executable('demo', 'src/main.c', link_with : lib)
+executable('demo', 'src/main.c', dependencies : depm, link_with : lib)
