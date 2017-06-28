@@ -37,7 +37,7 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     // map regset
     handle->regset = (rp_gen_regset_t *) handle->uio.map[0].mem;
     // map table
-    handle->table = (int16_t *) handle->uio.map[0].mem;
+    handle->table = (int16_t *) handle->uio.map[1].mem;
 
     // events
     rp_evn_init(&handle->evn, &handle->regset->evn);
@@ -114,7 +114,7 @@ int rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len) {
 int rp_gen_set_waveform(rp_gen_t *handle, float *waveform, int unsigned len) {
     if (len <= handle->buffer_size) {
         for (int unsigned i=0; i<len; i++) {
-            handle->table [i] = (uint16_t) (waveform [i] * (float) fixp_unit(handle->dat_t));
+            handle->table [i] = (int16_t) (waveform [i] * (float) fixp_unit(handle->dat_t));
         }
         return(0);
     } else {
