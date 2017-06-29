@@ -9,6 +9,14 @@ apt-get -y install dbus udev
 apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
 apt-get -y install parted dosfstools
 
+# Python 3
+apt-get -y install python3 python3-pip
+pip3 install --upgrade pip
+
+# Meson+ninja build system
+pip3 install meson
+apt-get -y install ninja-build
+
 # install file system tools
 apt-get -y install mtd-utils
 
