@@ -516,7 +516,7 @@ for (genvar i=0; i<MNG; i++) begin: for_gen_osc_loop
   assign str_osc_mux[1].TKEEP  = str_gen_mux[1].TKEEP ;
   assign str_osc_mux[1].TLAST  = str_gen_mux[1].TLAST ;
   for (genvar j=0; j<1; j++) begin: for_gen_osc_loop_dat
-  assign str_osc_mux[1].TDATA[j]  = {str_gen_mux[1].TDATA[j], 2'b00};
+  assign str_osc_mux[1].TDATA[j] = str_gen_mux[1].TDATA[j] <<< 1;
   end: for_gen_osc_loop_dat
 
   axi4_stream_pas pas_osc (
