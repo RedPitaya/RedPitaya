@@ -206,9 +206,6 @@ assign tmp_sti.TKEEP  = cfg_byp ? '0         :     sti.TKEEP ;
 assign tmp_sti.TVALID = cfg_byp ? '0         :     sti.TVALID;
 assign     sti.TREADY = cfg_byp ? stf.TREADY : tmp_sti.TREADY;
 
-//localparam int unsigned DWI = $bits(DT);  // data width for input
-//localparam int unsigned DWO = $bits(DT);  // data width for output
-
 // TODO: a proper CIC+FIR filter should be used instead
 /*
 scope_filter #(
