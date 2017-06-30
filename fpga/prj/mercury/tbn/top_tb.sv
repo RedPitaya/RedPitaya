@@ -132,13 +132,13 @@ end
 initial begin
   ##100;
   //test_id  (32'h40000000);
-  test_mgmt         (32'h40010000, '1, '1);
+//test_mgmt         (32'h40010000, '1, '0);
 //test_gen_periodic (32'h40040000, 32'h40050000, 0);
 //test_gen_burst    (32'h40040000, 32'h40050000, 0);
-  test_lg_burst     (32'h400c0000, 32'h400d0000, 4);
-  test_la_trigger   (32'h400e0000, 32'h400f0000, 5);
+//test_lg_burst     (32'h400c0000, 32'h400d0000, 4);
+//test_la_trigger   (32'h400e0000, 32'h400f0000, 5);
 //  ##16;
-//test_osc          (32'h40040000, 32'h40050000, 2);
+  test_osc          (32'h40080000, 32'h40090000, 2);
   //test_clb (32'h40030000);
   //test_la (32'h40300000);
   //test_la_automatic (32'h40300000);
@@ -220,6 +220,9 @@ task test_osc (
   int unsigned sh = 0
 );
   ##10;
+  // bypass filter
+  axi_write(regset+'h3c, 1'b1);
+
   // events
   axi_write(regset+'h04, sh);  // SW event select
   axi_write(regset+'h08, '1);  // trigger mask
