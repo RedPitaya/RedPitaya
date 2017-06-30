@@ -471,8 +471,8 @@ clb #(
   .DTO (DTO)
 ) clb (
   // generator (DAC) streams
-  .str_dac  (str_dac),
   .str_gen  (str_gen_clb),
+  .str_dac  (str_dac),
   // oscilloscope (ADC) streams
   .str_adc  (str_adc),
   .str_osc  (str_osc_clb),

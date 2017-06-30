@@ -65,7 +65,7 @@ end
 always_ff @(posedge bus.clk)
 for (int unsigned i=0; i<2; i++) begin
   if (buf_ren) begin
-    bus.rdata [16*i+:16]<= buf_rdat[i];
+    bus.rdata [16*i+:16] <= buf_rdat[i];
   end
 end
 

@@ -14,8 +14,8 @@ module clb #(
   int unsigned MNO = 2   // number of oscilloscope modules
 )(
   // generator (DAC) streams
-  axi4_stream_if.s str_dac [MNG-1:0],
   axi4_stream_if.d str_gen [MNG-1:0],
+  axi4_stream_if.s str_dac [MNG-1:0],
   // oscilloscope (ADC) streams
   axi4_stream_if.d str_adc [MNO-1:0],
   axi4_stream_if.s str_osc [MNO-1:0],
