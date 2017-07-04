@@ -516,16 +516,23 @@ for (genvar i=0; i<MNG; i++) begin: for_gen_osc_loop
   assign str_osc_mux[1].TKEEP  = str_gen_mux[1].TKEEP ;
   assign str_osc_mux[1].TLAST  = str_gen_mux[1].TLAST ;
   for (genvar j=0; j<1; j++) begin: for_gen_osc_loop_dat
-  assign str_osc_mux[1].TDATA[j] = str_gen_mux[1].TDATA[j] <<< 1;
+  assign str_osc_mux[1].TDATA[j] = str_gen_mux[1].TDATA[j] <<< 2;
   end: for_gen_osc_loop_dat
 
-  axi4_stream_pas pas_osc (
-    // control
-    .ena  (1'b1),
-    // streams
-    .sti  (str_osc_clb[i]),
-    .sto  (str_osc_mux[0])
-  );
+//  axi4_stream_pas pas_osc (
+//    // control
+//    .ena  (1'b1),
+//    // streams
+//    .sti  (str_osc_clb[i]),
+//    .sto  (str_osc_mux[0])
+//  );
+
+  // bit shift for from 14bit gen to 16bit osc
+  assign str_osc_clb[i].TREADY = str_osc_mux[0].TREADY;
+  assign str_osc_mux[0].TVALID = str_osc_clb[i].TVALID;
+  assign str_osc_mux[0].TKEEP  = str_osc_clb[i].TKEEP ;
+  assign str_osc_mux[0].TLAST  = str_osc_clb[i].TLAST ;
+  assign str_osc_mux[0].TDATA  = str_osc_clb[i].TDATA ;
 
   // oscilloscope multiplexer
   axi4_stream_mux #(
