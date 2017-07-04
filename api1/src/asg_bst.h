@@ -29,6 +29,7 @@ typedef struct {
 
 void     rp_asg_bst_init                 (rp_asg_bst_t *handle, volatile rp_asg_bst_regset_t *regset, double FS, int unsigned buffer_size, const fixp_t bdr_t, const fixp_t bpl_t, const fixp_t bpn_t);
 void     rp_asg_bst_default              (rp_asg_bst_t *handle);
+void     rp_asg_bst_print                (rp_asg_bst_t *handle);
 
 uint32_t rp_asg_bst_get_data_repetitions (rp_asg_bst_t *handle);
 int      rp_asg_bst_set_data_repetitions (rp_asg_bst_t *handle, uint32_t value);

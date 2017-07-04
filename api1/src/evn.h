@@ -21,6 +21,7 @@ typedef struct {
 } rp_evn_t;
 
 void     rp_evn_init           (rp_evn_t *handle, volatile rp_evn_regset_t *regset);
+void     rp_evn_print          (rp_evn_t *handle);
 
 void     rp_evn_reset          (rp_evn_t *handle);
 void     rp_evn_start          (rp_evn_t *handle);

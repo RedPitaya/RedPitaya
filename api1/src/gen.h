@@ -32,7 +32,9 @@ typedef struct {
 typedef struct {
     rp_uio_t uio;
     volatile rp_gen_regset_t *regset;
-    volatile int16_t         *table;
+    // TODO recode RTL for 16 memory access
+    //volatile int16_t         *table;
+    volatile int32_t         *table;
     rp_evn_t     evn;
     rp_asg_per_t per;
     rp_asg_bst_t bst;
@@ -48,6 +50,7 @@ typedef struct {
 int           rp_gen_init        (rp_gen_t *handle, const int unsigned index);
 int           rp_gen_release     (rp_gen_t *handle);
 int           rp_gen_default     (rp_gen_t *handle);
+void          rp_gen_print       (rp_gen_t *handle);
 
 int           rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len);
 int           rp_gen_set_waveform(rp_gen_t *handle, float *waveform, int unsigned  len);

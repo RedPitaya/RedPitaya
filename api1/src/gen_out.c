@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
 
@@ -14,6 +15,14 @@ void rp_gen_out_default(rp_gen_out_t *handle) {
     handle->regset->cfg_mul = fixp_unit(handle->mul_t);
     handle->regset->cfg_sum = 0;
     handle->regset->cfg_ena = 0;
+}
+
+void rp_gen_out_print(rp_gen_out_t *handle) {
+    printf("mul_t = %s\n", rp_util_fixp_print(handle->mul_t));
+    printf("sum_t = %s\n", rp_util_fixp_print(handle->sum_t));
+    printf("gen_out.cfg_mul = %08x\n", handle->regset->cfg_mul);
+    printf("gen_out.cfg_sum = %08x\n", handle->regset->cfg_sum);
+    printf("gen_out.cfg_ena = %08x\n", handle->regset->cfg_ena);
 }
 
 float rp_gen_out_get_amplitude(rp_gen_out_t *handle) {

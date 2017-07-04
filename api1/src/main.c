@@ -34,10 +34,19 @@ int main () {
     rp_asg_gen_set_frequency (&gen0.per, 1000);
     rp_asg_gen_set_phase     (&gen0.per, 0);
     // enable generator output
+    rp_gen_out_set_amplitude (&gen0.out, 0.5);
+    rp_gen_out_set_offset    (&gen0.out, 0);
     rp_gen_out_set_enable    (&gen0.out, true);
+    // start generator
+    rp_evn_reset             (&gen0.evn);
+    rp_evn_start             (&gen0.evn);
+    rp_evn_trigger           (&gen0.evn);
+
+    // print regset for debug purposes
+    rp_gen_print             (&gen0);
+    getchar();
 
     rp_gen_release (&gen0);
-
     printf ("DEBUG: end\n");
     return(0);
 }

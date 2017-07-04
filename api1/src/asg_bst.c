@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "util.h"
 #include "asg_bst.h"
 
@@ -15,6 +17,16 @@ void rp_asg_bst_default (rp_asg_bst_t *handle) {
     handle->regset->cfg_bdl = 0;
     handle->regset->cfg_bpl = 0;
     handle->regset->cfg_bpn = 0;
+}
+
+void rp_asg_bst_print (rp_asg_bst_t *handle) {
+    printf("asg_per.bdr_t = %s\n", rp_util_fixp_print(handle->bdr_t));
+    printf("asg_per.bpl_t = %s\n", rp_util_fixp_print(handle->bpl_t));
+    printf("asg_per.bpn_t = %s\n", rp_util_fixp_print(handle->bpn_t));
+    printf("asg_per.cfg_bdr = %08x\n", handle->regset->cfg_bdr);
+    printf("asg_per.cfg_bdl = %08x\n", handle->regset->cfg_bdl);
+    printf("asg_per.cfg_bpl = %08x\n", handle->regset->cfg_bpl);
+    printf("asg_per.cfg_bpn = %08x\n", handle->regset->cfg_bpn);
 }
 
 uint32_t rp_asg_bst_get_data_repetitions (rp_asg_bst_t *handle) {

@@ -37,7 +37,9 @@ int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     // map regset
     handle->regset = (rp_gen_regset_t *) handle->uio.map[0].mem;
     // map table
-    handle->table = (int16_t *) handle->uio.map[1].mem;
+    // TODO recode RTL for 16 memory access
+    //handle->table = (int16_t *) handle->uio.map[1].mem;
+    handle->table = (int32_t *) handle->uio.map[1].mem;
 
     // events
     rp_evn_init(&handle->evn, &handle->regset->evn);
@@ -87,6 +89,17 @@ int rp_gen_default (rp_gen_t *handle) {
     return(0);
 }
 
+void rp_gen_print (rp_gen_t *handle) {
+    printf("gen.FS = %f\n", handle->FS);
+    printf("gen.buffer_size = %u\n", handle->buffer_size);
+    printf("gen.dat_t = %s\n", rp_util_fixp_print(handle->dat_t));
+    rp_evn_print(&handle->evn);
+    printf("gen.cfg_bmd = %08x\n", handle->regset->cfg_bmd);
+    rp_asg_per_print(&handle->per);
+    rp_asg_bst_print(&handle->bst);
+    rp_gen_out_print(&handle->out);
+}
+
 static inline int unsigned rp_gen_get_length(rp_gen_t *handle) {
     if (rp_gen_get_mode(handle) == CONTINUOUS) {
         return(rp_asg_per_get_table_size(&handle->per));
@@ -102,8 +115,9 @@ int rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len) {
     }
     if (*len <= handle->buffer_size) {
         waveform = malloc(*len * sizeof(float));
+        float range = (float) fixp_max(handle->dat_t);
         for (int unsigned i=0; i<*len; i++) {
-            waveform [i] = (float) handle->table [i] / (float) fixp_unit(handle->dat_t);
+            waveform [i] = (float) handle->table [i] / range;
         }
         return(0);
     } else {
@@ -111,10 +125,13 @@ int rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len) {
     }
 }
 
-int rp_gen_set_waveform(rp_gen_t *handle, float *waveform, int unsigned len) {
+int rp_gen_set_waveform(rp_gen_t *handle, float *waveform, const int unsigned len) {
     if (len <= handle->buffer_size) {
+        float range = (float) fixp_max(handle->dat_t);
         for (int unsigned i=0; i<len; i++) {
-            handle->table [i] = (int16_t) (waveform [i] * (float) fixp_unit(handle->dat_t));
+            // TODO recode RTL for 16 memory access
+            //handle->table [i] = (int16_t) (waveform [i] * range);
+            handle->table [i] = (int32_t) (waveform [i] * range);
         }
         return(0);
     } else {

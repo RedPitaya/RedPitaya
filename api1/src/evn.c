@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -5,6 +6,12 @@
 
 void rp_evn_init (rp_evn_t *handle, volatile rp_evn_regset_t *regset) {
     handle->regset = regset;
+}
+
+void rp_evn_print (rp_evn_t *handle) {
+    printf ("evn.ctl_sts = %08x\n", handle->regset->ctl_sts);
+    printf ("evn.cfg_evn = %08x\n", handle->regset->cfg_evn);
+    printf ("evn.cfg_trg = %08x\n", handle->regset->cfg_trg);
 }
 
 void rp_evn_reset (rp_evn_t *handle) {

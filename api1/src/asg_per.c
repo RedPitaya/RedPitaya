@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <math.h>
 
 #include "util.h"
@@ -14,6 +15,13 @@ void rp_asg_per_default (rp_asg_per_t *handle) {
     handle->regset->cfg_siz = 0;
     handle->regset->cfg_ste = 0;
     handle->regset->cfg_off = 0;
+}
+
+void rp_asg_per_print (rp_asg_per_t *handle) {
+    printf("asg_per.cnt_t = %s\n", rp_util_fixp_print(handle->cnt_t));
+    printf("asg_per.cfg_siz = %08x\n", handle->regset->cfg_siz);
+    printf("asg_per.cfg_ste = %08x\n", handle->regset->cfg_ste);
+    printf("asg_per.cfg_off = %08x\n", handle->regset->cfg_off);
 }
 
 uint32_t rp_asg_per_get_table_size(rp_asg_per_t *handle) {

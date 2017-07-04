@@ -14,5 +14,7 @@ typedef struct {uint8_t s; uint8_t m; uint8_t f;} fixp_t;
 #define fixp_unit(v)         (1<<(        v.f))
 #define fixp_bits(v)             (v.s+v.m+v.f)
 
+char * rp_util_fixp_print (fixp_t value);
+
 #endif
 
