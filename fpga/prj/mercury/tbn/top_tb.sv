@@ -549,8 +549,8 @@ initial begin
 end
 
 // ADC
-assign adc_dat[0] = dat_ref[cyc % SIZ_REF];
-assign adc_dat[1] = dat_ref[cyc % SIZ_REF];
+assign adc_dat[0] = dat_ref[cyc % $size(dat_ref)];
+assign adc_dat[1] = dat_ref[cyc % $size(dat_ref)];
 assign adc_clk[1] =  clk;
 assign adc_clk[0] = ~clk;
 // adc_clk_o
