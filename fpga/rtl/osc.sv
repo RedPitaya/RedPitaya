@@ -71,7 +71,6 @@ logic           sts_pso;
 DT              cfg_neg;  // negative level
 DT              cfg_pos;  // positive level
 logic           cfg_edg;  // edge (0-pos, 1-neg)
-logic  [CW-1:0] cfg_hld;  // hold off time
 
 // decimation configuration
 logic           cfg_avg;  // averaging enable
@@ -114,7 +113,6 @@ if (~bus.rstn) begin
   cfg_neg <= '0;
   cfg_pos <= '0;
   cfg_edg <= '0;
-  cfg_hld <= '0;
   // filter/dacimation
   cfg_byp <= '0;
   cfg_avg <= '0;
@@ -137,7 +135,6 @@ end else begin
     if (bus.addr[BAW-1:0]=='h20)  cfg_neg <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h24)  cfg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h28)  cfg_edg <= bus.wdata[      0];
-    if (bus.addr[BAW-1:0]=='h2c)  cfg_hld <= bus.wdata[ CW-1:0];
     // dacimation/filter
     if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata[DCW-1:0];
     if (bus.addr[BAW-1:0]=='h34)  cfg_shr <= bus.wdata[DSW-1:0];
@@ -173,7 +170,6 @@ casez (bus.addr[BAW-1:0])
   'h20: bus.rdata <=                  cfg_neg ;
   'h24: bus.rdata <=                  cfg_pos ;
   'h28: bus.rdata <=              32'(cfg_edg);
-  'h2c: bus.rdata <=              32'(cfg_hld);
   // decimation/filter
   'h30: bus.rdata <= {{32-DCW{1'b0}}, cfg_dec};
   'h34: bus.rdata <= {{32-DSW{1'b0}}, cfg_shr};
@@ -283,7 +279,6 @@ scope_dec_avg #(
 scope_edge #(
   // stream parameters
   .DT (DT),
-  .CW (CW)
 ) edge_i (
   // control
   .ctl_rst  (evn.rst),
@@ -291,7 +286,6 @@ scope_edge #(
   .cfg_edg  (cfg_edg),
   .cfg_neg  (cfg_neg),
   .cfg_pos  (cfg_pos),
-  .cfg_hld  (cfg_hld),
   // output triggers
   .sts_trg  (tro.trg),
   // stream monitor
