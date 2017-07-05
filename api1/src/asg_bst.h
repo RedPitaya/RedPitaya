@@ -1,4 +1,3 @@
-    // buffer parameters (fixed point number uM.F)
 #ifndef ASG_BST_H
 #define ASG_BST_H
 
