@@ -23,7 +23,6 @@ DT    [SN-1:0] [DN-1:0] tdata ;
 logic [SN-1:0]          tkeep ;
 logic [SN-1:0]          tlast ;
 logic [SN-1:0]          tvalid;
-logic [SN-1:0]          tready;
 
 generate
 for (genvar i=0; i<SN; i++) begin: for_str
@@ -33,7 +32,7 @@ assign tdata [i] = sti[i].TDATA ;
 assign tkeep [i] = sti[i].TKEEP ;
 assign tlast [i] = sti[i].TLAST ;
 
-assign sti[i].TREADY = tready[i];
+assign sti[i].TREADY = (sel == i[SW-1:0]) ? sto.TREADY : 1'b0;
 
 end: for_str
 endgenerate
@@ -42,7 +41,5 @@ assign sto.TVALID = tvalid[sel];
 assign sto.TDATA  = tdata [sel];
 assign sto.TKEEP  = tkeep [sel];
 assign sto.TLAST  = tlast [sel];
-
-assign tready = SN'(sto.TREADY) << sel;
 
 endmodule: axi4_stream_mux

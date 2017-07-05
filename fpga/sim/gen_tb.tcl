@@ -44,39 +44,34 @@ add wave -noupdate -unsigned /${top}/${dut}/cfg_mul
 add wave -noupdate -unsigned /${top}/${dut}/cfg_sum
 
 # buffer signals
+add wave -noupdate -group buffer           /${top}/${dut}/asg/evs
 add wave -noupdate -group buffer -hex      /${top}/${dut}/asg/buf_rdata
 add wave -noupdate -group buffer -hex      /${top}/${dut}/asg/buf_raddr
-add wave -noupdate -group buffer -hex      /${top}/${dut}/asg/buf_ptr
 add wave -noupdate -group buffer           /${top}/${dut}/asg/buf_adr_vld
 add wave -noupdate -group buffer           /${top}/${dut}/asg/buf_adr_lst
-add wave -noupdate -group buffer           /${top}/${dut}/asg/sts_adr
-add wave -noupdate -group buffer           /${top}/${dut}/asg/sts_rdy
-
-# common signals
-add wave -noupdate -group common           /${top}/${dut}/asg/ctl_run
-add wave -noupdate -group common           /${top}/${dut}/asg/ctl_end
 
 # continuous/periodic engine signals
-add wave -noupdate -group period           /${top}/${dut}/asg/sts_adr_per
-add wave -noupdate -group period           /${top}/${dut}/asg/ctl_end_per
-add wave -noupdate -group period -hex      /${top}/${dut}/asg/ptr_cur
-add wave -noupdate -group period -hex      /${top}/${dut}/asg/ptr_nxt
-add wave -noupdate -group period -hex      /${top}/${dut}/asg/ptr_nxt_sub
-add wave -noupdate -group period           /${top}/${dut}/asg/ptr_nxt_sub_neg
+add wave -noupdate -group period -hex      /${top}/${dut}/asg/asg_per/ptr_cur
+add wave -noupdate -group period -hex      /${top}/${dut}/asg/asg_per/ptr_nxt
+add wave -noupdate -group period -hex      /${top}/${dut}/asg/asg_per/ptr_nxt_sub
+add wave -noupdate -group period           /${top}/${dut}/asg/asg_per/ptr_nxt_sub_neg
+add wave -noupdate -group period           /${top}/${dut}/asg/asg_per/ctl_run
+add wave -noupdate -group period           /${top}/${dut}/asg/asg_per/ctl_end
 
 # burst engine signals
-add wave -noupdate -group burst            /${top}/${dut}/asg/sts_adr_bst
-add wave -noupdate -group burst            /${top}/${dut}/asg/ctl_end_bst
-add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bdr
-add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bdl
-add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bpl
-add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/sts_bpn
-add wave -noupdate -group burst            /${top}/${dut}/asg/end_bdr
-add wave -noupdate -group burst            /${top}/${dut}/asg/end_bdl
-add wave -noupdate -group burst            /${top}/${dut}/asg/end_bpl
-add wave -noupdate -group burst            /${top}/${dut}/asg/end_bpn
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/asg_bst/sts_bdr
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/asg_bst/sts_bdl
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/asg_bst/sts_bpl
+add wave -noupdate -group burst  -hex      /${top}/${dut}/asg/asg_bst/sts_bpn
+add wave -noupdate -group burst            /${top}/${dut}/asg/asg_bst/end_bdr
+add wave -noupdate -group burst            /${top}/${dut}/asg/asg_bst/end_bdl
+add wave -noupdate -group burst            /${top}/${dut}/asg/asg_bst/end_bpl
+add wave -noupdate -group burst            /${top}/${dut}/asg/asg_bst/end_bpn
+add wave -noupdate -group burst            /${top}/${dut}/asg/asg_bst/ctl_run
+add wave -noupdate -group burst            /${top}/${dut}/asg/asg_bst/ctl_end
 
 # busses
+axi4_stream_if adr     /${top}/${dut}/asg/str_adr
 axi4_stream_if stg     /${top}/${dut}/stg
 axi4_stream_if str     /${top}/str
 sys_bus_if     bus     /${top}/bus

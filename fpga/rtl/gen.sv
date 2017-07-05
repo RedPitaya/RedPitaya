@@ -206,8 +206,6 @@ always_ff @(posedge bus.clk)
 if (~bus.rstn)  evn <= '0;
 else            evn <= evi[cfg_evn];
 
-assign evs.rst = 1'b0;
-
 assign ctl_trg = evn.swt | |(trg & cfg_trg);
 
 // stream from generator
@@ -226,20 +224,14 @@ asg #(
 ) asg (
   // stream output
   .sto      (stg),
-  // control
-  .ctl_rst  (evn.rst),
-  // control/status start
-  .ctl_str  (evn.str),
-  .sts_str  (evs.str),
-  // control/status stop
-  .ctl_stp  (evn.stp),
-  .sts_stp  (evs.stp),
-  // control/status trigger
+  // event control/status
+  .evn      (evn),
+  .evs      (evs),
+  // trigger
   .ctl_trg  (ctl_trg),
-  .sts_trg  (evs.swt),
   // events
-  .evn_per  (tro.trg),
-  .evn_lst  (tro.lst),
+  .evo_per  (tro.trg),
+  .evo_lst  (tro.lst),
   // generator mode
   .cfg_ben  (cfg_ben),
   .cfg_inf  (cfg_inf),
