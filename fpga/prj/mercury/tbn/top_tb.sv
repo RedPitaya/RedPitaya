@@ -536,15 +536,24 @@ bufif1 bufif_exp_n_io [8-1:0] (exp_n_io, exp_n_od, exp_n_oe);
 // simulated inputs
 ////////////////////////////////////////////////////////////////////////////////
 
-localparam int unsigned SIZ_REF = 64;
+//localparam int unsigned SIZ_REF = 64;
+//
+//bit [16-1:0] dat_ref [SIZ_REF];
+//
+//initial begin
+//  logic signed [16-1:0] dat;
+//  for (int unsigned i=0; i<SIZ_REF; i++) begin
+//      dat = -SIZ_REF/2+i;
+//      dat_ref[i] = {dat[16-1], ~dat[16-2:0]};
+//  end
+//end
 
-bit [16-1:0] dat_ref [SIZ_REF];
+bit [16-1:0] dat_ref [2*15];
 
 initial begin
-  logic signed [16-1:0] dat;
-  for (int unsigned i=0; i<SIZ_REF; i++) begin
-      dat = -SIZ_REF/2+i;
-      dat_ref[i] = {dat[16-1], ~dat[16-2:0]};
+  for (int unsigned i=0; i<15; i++) begin
+    dat_ref [16-1-i] = {1'b1, 15'(1<<i)};
+    dat_ref [16  +i] = {1'b0, 15'(1<<i)};
   end
 end
 
