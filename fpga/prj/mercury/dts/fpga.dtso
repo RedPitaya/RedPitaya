@@ -2,17 +2,7 @@
 /plugin/;
 /include/ "led-user.dtso"
 / {
-//	fragment@0 {
-//		target = <&fpga_region0>;
-//		#address-cells = <1>;
-//		#size-cells = <1>;
-//		__overlay__ {
-//			#address-cells = <1>;
-//			#size-cells = <1>;
-//			firmware-name = "redpitaya/mercury.bin";
-//		};
-//	};
-	fragment@1 {
+	fragment@uio {
 		target = <&amba_pl>;
 		#address-cells = <1>;
 		#size-cells = <1>;
