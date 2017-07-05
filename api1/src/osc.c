@@ -71,95 +71,71 @@ class osc (evn, acq, osc_trg, osc_fil, uio):
         )
         osc_fil.show_regset(self)
 
-int unsigned  rp_osc_get_decimation   (rp_osc_t *handle);
-void          rp_osc_set_decimation   (rp_osc_t *handle, int unsigned value);
-float         rp_osc_get_sample_rate  (rp_osc_t *handle);
-float         rp_osc_get_sample_period(rp_osc_t *handle);
-bool          rp_osc_get_average      (rp_osc_t *handle);
-void          rp_osc_set_average      (rp_osc_t *handle, bool value);
-size_t        rp_osc_get_pointer      (rp_osc_t *handle);
-size_t        rp_osc_get_data         (rp_osc_t *handle, float *data, int size_t len);
-
-
 float rp_osc_get_input_range(rp_osc_t *handle) {
     return (handle->input_range);
 }
 
 void rp_osc_set_input_range(rp_osc_t *handle, float value) {
     bool match = false;
+    int unsigned index = 0;
     for (int unsigned i=0; i<handle->input_ranges_num; i++) {
-        if (handle->input_ranges[i] == value)  match = true;
+        if (handle->input_ranges[i] == value) {
+            match = true;
+            index = i;
+        }
     }
-    if (match)
+    if (match) {
         handle->input_range = value;
-    else
-         in self.ranges:
-            self.__input_range = value
-            self.filter_coeficients = self._filters[value]
-        else:
-            raise ValueError("Input range can be one of {} volts.".format(self.ranges))
+        rp_osc_fil_set_filter_coeficients(rp_filter_coeficients[index]);
+        self.filter_coeficients = self._filters[value]
+    } else {
+//        raise ValueError("Input range can be one of {} volts.".format(self.ranges))
+    }
+}
 
-    @property
-    def decimation (self) -> int:
-        """Decimation factor."""
-        return (self.regset.cfg_dec + 1)
 
-    @decimation.setter
-    def decimation (self, value: int):
-        # TODO check range
-        self.regset.cfg_dec = value - 1
+int unsigned rp_osc_get_decimation(rp_osc_t *handle) {
+    return(handle->regset->cfg_dec + 1);
+}
 
-    @property
-    def sample_rate (self) -> float:
-        """Sample rate depending on decimation factor."""
-        return (self.FS / self.decimation)
+void rp_osc_set_decimation (rp_osc_t *handle, int unsigned value) {
+    // TODO check range
+    handle->regset->cfg_dec = value - 1;
+}
 
-    @property
-    def sample_period (self) -> float:
-        """Sample period depending on decimation factor."""
-        return (1 / self.sample_rate)
+double rp_osc_get_sample_rate(rp_osc_t *handle) {
+    return(handle->FS / (double) self.decimation)
+}
 
-    @property
-    def average (self) -> bool:
-        # TODO units should be secconds
-        return (bool(self.regset.cfg_avg))
+double rp_osc_get_sample_period(rp_osc_t *handle) {
+    return((double) self.decimation / handle->FS)
+}
 
-    @average.setter
-    def average (self, value: bool):
-        # TODO check range, for non 2**n decimation factors,
-        # scaling should be applied in addition to shift
-        self.regset.cfg_avg = int(value)
-        self.regset.cfg_shr = math.ceil(math.log2(self.decimation))
+bool rp_osc_get_average (rp_osc_t *handle) {
+    return((bool) handle->regset->cfg_avg);
+}
 
-    @property
-    def pointer (self):
-        # mask out overflow bit and sum pre and post trigger counters
-        cnt = self.trigger_pre_status + self.trigger_post_status
-        adr = cnt % self.buffer_size
-        return adr
+void rp_osc_set_average (rp_osc_t *handle, bool value) {
+    // TODO check range, for non 2**n decimation factors,
+    // scaling should be applied in addition to shift
+    handle->regset->cfg_avg = (uint32_t) value;
+    handle->regset->cfg_shr = math.ceil(math.log2(self.decimation));
+}
 
-    def data(self, siz: int = buffer_size, ptr: int = None) -> np.array:
-        """Data.
 
-        Parameters
-        ----------
-        siz : int, optional
-            Number of data samples to be read from the FPGA buffer.
-        ptr : int, optional
-            End of data pointer, only use if you understand
-            the source code.
+size_t rp_osc_get_pointer (rp_osc_t *handle);
+    // mask out overflow bit and sum pre and post trigger counters
+    size_t cnt = rp_acq_get_trigger_pre_status (&handle->acq);
+               + rp_acq_get_trigger_post_status(&handle->acq);
+    size_t adr = cnt % handle->buffer_size;
+    return(adr);
 
-        Returns
-        -------
-        array
-            Array containing float samples scaled
-            to the selected analog range.
-            The data is alligned at the end to the last sample
-            stored into the buffer.
-        """
-        if ptr is None:
+size_t rp_osc_get_data (rp_osc_t *handle, float *data, size_t siz, size_t ptr);
+        if (ptr == None) {
             ptr = int(self.pointer)
-        adr = (self.buffer_size + ptr - siz) % self.buffer_size
-        # TODO: avoid making copy of entire array
+        }
+        size_t adr = (handle->buffer_size + ptr - siz) % handle->buffer_size
+        // TODO add loop
+        // TODO: avoid making copy of entire array
         table = np.roll(self.table, -ptr)
-        return table.astype('float32')[-siz:] * (self.__input_range / self._DWr)
+        return (float) [-siz:] * (self.__input_range / self._DWr)

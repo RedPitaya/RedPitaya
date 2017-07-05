@@ -52,12 +52,12 @@ float         rp_osc_get_input_range  (rp_osc_t *handle);
 void          rp_osc_set_input_range  (rp_osc_t *handle, float value);
 int unsigned  rp_osc_get_decimation   (rp_osc_t *handle);
 void          rp_osc_set_decimation   (rp_osc_t *handle, int unsigned value);
-float         rp_osc_get_sample_rate  (rp_osc_t *handle);
-float         rp_osc_get_sample_period(rp_osc_t *handle);
+double        rp_osc_get_sample_rate  (rp_osc_t *handle);
+double        rp_osc_get_sample_period(rp_osc_t *handle);
 bool          rp_osc_get_average      (rp_osc_t *handle);
 void          rp_osc_set_average      (rp_osc_t *handle, bool value);
 size_t        rp_osc_get_pointer      (rp_osc_t *handle);
-size_t        rp_osc_get_data         (rp_osc_t *handle, float *data, int size_t len);
+size_t        rp_osc_get_data         (rp_osc_t *handle, float *data, size_t len);
 
 #endif
 
