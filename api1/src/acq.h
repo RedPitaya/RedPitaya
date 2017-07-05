@@ -1,67 +1,34 @@
-from ctypes import *
-import numpy as np
-import math
+#ifndef ACQ_H
+#define ACQ_H
 
-class acq (object):
-    CW = 31 #: counter size
-    _CWr = 2**CW
+#include <stdint.h>
 
-    class _regset_t (Structure):
-        _fields_ = [('cfg_pre', c_uint32),  # configuration pre  trigger
-                    ('cfg_pst', c_uint32),  # configuration post trigger
-                    ('sts_pre', c_uint32),  # status pre  trigger
-                    ('sts_pst', c_uint32)]  # status post trigger
+#define CW 31
 
-    def show_regset (self):
-        """Print FPGA module register set for debugging purposes."""
-        print (
-            "cfg_pre = 0x{reg:08x} = {reg:10d}  # delay pre  trigger        \n".format(reg=self.regset.acq.cfg_pre)+
-            "cfg_pst = 0x{reg:08x} = {reg:10d}  # delay post trigger        \n".format(reg=self.regset.acq.cfg_pst)+
-            "sts_pre = 0x{reg:08x} = {reg:10d}  # status pre  trigger       \n".format(reg=self.regset.acq.sts_pre)+
-            "sts_pst = 0x{reg:08x} = {reg:10d}  # status post trigger       \n".format(reg=self.regset.acq.sts_pst)
-        )
+typedef struct {
+    uint32_t cfg_pre;  // configuration pre  trigger
+    uint32_t cfg_pst;  // configuration post trigger
+    uint32_t sts_pre;  // status pre  trigger
+    uint32_t sts_pst;  // status post trigger
+} rp_acq_regset_t;
 
-    @property
-    def trigger_pre (self) -> int:
-        """Pre trigger delay.
+typedef struct {
+    volatile rp_acq_regset_t *regset;
+    double FS;
+    int unsigned buffer_size;
+    fixp_t cnt_t;
+} rp_acq_t;
 
-        Number of samples stored into the buffer
-        after start() before a trigger event is accepted.
-        It makes sense for this number to be up to buffer size.
-        """
-        return (self.regset.acq.cfg_pre)
+void     rp_acq_init                   (rp_acq_t *handle, volatile rp_acq_regset_t *regset, const fixp_t bdr_t, const fixp_t bpl_t, const fixp_t bpn_t);
+void     rp_acq_default                (rp_acq_t *handle);
+void     rp_acq_print                  (rp_acq_t *handle);
 
-    @trigger_pre.setter
-    def trigger_pre (self, value: int):
-        if (value < self._CWr):
-            self.regset.acq.cfg_pre = value
-        else:
-            raise ValueError("Pre trigger delay should be less or equal to {}.".format(self._CWr))
+uint32_t rp_acq_get_trigger_pre        (rp_acq_t *handle);
+int      rp_acq_set_trigger_pre        (rp_acq_t *handle, uint32_t value);
+uint32_t rp_acq_get_trigger_post       (rp_acq_t *handle);
+int      rp_acq_set_trigger_post       (rp_acq_t *handle, uint32_t value);
+uint32_t rp_acq_get_trigger_pre_status (rp_acq_t *handle);
+uint32_t rp_acq_get_trigger_post_status(rp_acq_t *handle);
 
-    @property
-    def trigger_post (self) -> int:
-        """Post trigger delay.
+#endif
 
-        Number of samples stored into the buffer
-        after a trigger, before writing stops automatically.
-        It makes sense for this number to be up to buffer size.
-        """
-        return (self.regset.acq.cfg_pst)
-
-    @trigger_post.setter
-    def trigger_post (self, value: int):
-        if (value < self._CWr):
-            self.regset.acq.cfg_pst = value
-        else:
-            raise ValueError("Post trigger delay should be less or equal to {}.".format(self._CWr))
-        # TODO check range
-
-    @property
-    def trigger_pre_status (self) -> int:
-        """Pre trigger sample counter status."""
-        return (self.regset.acq.sts_pre & 0x7fffffff)
-
-    @property
-    def trigger_post_status (self) -> int:
-        """Post trigger sample counter status."""
-        return (self.regset.acq.sts_pst & 0x7fffffff)
