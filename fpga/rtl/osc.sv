@@ -278,7 +278,7 @@ scope_dec_avg #(
 
 scope_edge #(
   // stream parameters
-  .DT (DT),
+  .DT (DT)
 ) edge_i (
   // control
   .ctl_rst  (evn.rst),
