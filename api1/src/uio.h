@@ -5,21 +5,23 @@
 #include <fcntl.h>
 #include <libudev.h>
 
+//! UIO memory mapped region details.
 typedef struct {
-    char   *name;
-    size_t  addr;
-    size_t  offset;
-    size_t  size;
-    void   *mem;
+    char   *name;    //!< name
+    size_t  addr;    //!< address
+    size_t  offset;  //!< offset
+    size_t  size;    //!< size
+    void   *mem;     //!< mmap
 } rp_uio_map_t;
 
+//! UIO handle.
 typedef struct {
-    char         *path;
-    int           dev;
-    struct flock  lock;
-    char         *name;
-    int unsigned  mapn;
-    rp_uio_map_t *map;
+    char         *path;  //!< device path
+    int           dev;   //!< device file descriptor
+    struct flock  lock;  //!< device file exclusive lock
+    char         *name;  //!< device tree node name
+    int unsigned  mapn;  //!< number of mamory map regions
+    rp_uio_map_t *map;   //!< array of mamory map regions
 } rp_uio_t;
 
 int rp_uio_init        (rp_uio_t *handle, const char *path);

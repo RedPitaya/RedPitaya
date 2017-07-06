@@ -1,3 +1,13 @@
+/**
+ * @file uio.c 
+ * @author Iztok Jeras
+ * @brief User space access to UIO devices.
+ * 
+ * Functions are provided for initializing and releasing UIO devices.
+ * Initialization uses UDEV tools to read details from UIO device tree nodes.
+ * Additionaly functions for handling interrupts are provided.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -29,6 +39,25 @@ static struct udev_device * rp_uio_udev (const char *path) {
     // get character device ('c') with device number 'st_rdev'
     return udev_device_new_from_devnum(udev, 'c', statbuf.st_rdev);
 }
+
+/**
+ * @brief UIO device initialization.
+ * 
+ * Steps for initilizing an UIO device:
+ * 
+ * 1. The provided UIO device file is first opened.
+ * 2. An attempt is made to exclusively lock the device file.
+ *    If another process has already locked this file
+ *    an error will be rised. This prevents multiple
+ *    applications from accessing the same HW module.
+ * 3. If locking is sucessfull sysfs arguments will be read
+ *    to determine the maps listed in the device tree.
+ *    All maps will be `mmap`ed into memory and provided
+ *    as a an array of structures.
+ * 
+ * @param[in,out] handle Handle structure describing an UIO device.
+ * @param[in] Full UIO device file system path.
+ */
 
 int rp_uio_init (rp_uio_t *handle, const char *path) {
     struct udev_device *udev;
@@ -142,6 +171,17 @@ int rp_uio_init (rp_uio_t *handle, const char *path) {
     return 0;
 }
 
+/**
+ * @brief UIO device release.
+ * 
+ * Steps for releasing an UIO device:
+ * 
+ * 1. Close all memory mappings.
+ * 2. Close the UIO device file, which also releases the exclusive lock.
+ * 
+ * @param[in,out] handle Handle structure describing an UIO device.
+ */
+
 int rp_uio_release (rp_uio_t *handle) {
 
     // destroy array of UIO map structures
@@ -158,6 +198,12 @@ int rp_uio_release (rp_uio_t *handle) {
     return (0);
 }
 
+/**
+ * @brief Enable UIO interrupt.
+ * 
+ * @param[in] handle Handle structure describing an UIO device.
+ */
+
 int rp_uio_irq_enable (rp_uio_t *handle) {
     uint32_t cnt = 1;
 
@@ -170,6 +216,12 @@ int rp_uio_irq_enable (rp_uio_t *handle) {
     return (0);
 }
 
+/**
+ * @brief Disable UIO interrupt.
+ * 
+ * @param[in] handle Handle structure describing an UIO device.
+ */
+
 int rp_uio_irq_disable (rp_uio_t *handle) {
     uint32_t cnt = 0;
 
@@ -181,6 +233,12 @@ int rp_uio_irq_disable (rp_uio_t *handle) {
 
     return (0);
 }
+
+/**
+ * @brief Wait for UIO interrupt.
+ * 
+ * @param[in] handle Handle structure describing an UIO device.
+ */
 
 int rp_uio_irq_wait (rp_uio_t *handle) {
     uint32_t cnt;
