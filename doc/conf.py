@@ -19,7 +19,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../redpitaya'))
+sys.path.insert(0, os.path.abspath('.') + '/_extensions')
 
 # -- General configuration ------------------------------------------------
 
@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.todo',
     'sphinxcontrib.wavedrom',
+    'github',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -111,37 +112,6 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 
-# -- Add custom role ------------------------------------------------------
-
-# based on http://protips.readthedocs.io/link-roles.html
-# and https://github.com/rtfd/readthedocs.org/issues/2926#issuecomment-309671915
-# and https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
-
-from docutils import nodes
-#from repo_util import run_cmd_get_output
-
-#def get_github_rev():
-#    path = run_cmd_get_output('git rev-parse --short HEAD')
-#    tag  = run_cmd_get_output('git describe --exact-match')
-#    print 'Git commit ID: ', path
-#    if len(tag):
-#        print 'Git tag: ', tag
-#        path = tag
-#    return path
-
-def setup(app):
-    baseurl = 'https://github.com/RedPitaya/RedPitaya'
-    #rev = get_github_rev()
-    rev = 'master'
-    app.add_role('source', autolink('{}/blob/{}/%s'.format(baseurl, rev)))
-
-def autolink(pattern):
-    def role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-        url = pattern % (text,)
-        node = nodes.reference(rawtext, text, refuri=url, **options)
-        return [node], []
-    return role
-
 # -- Options for HTML output ----------------------------------------------
 
 import sphinx_rtd_theme
@@ -167,12 +137,12 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "doc/img/logo_stemlab.svg"
+html_logo = "img/logo_stemlab.svg"
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "doc/img/favicon.ico"
+html_favicon = "img/favicon.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -268,7 +238,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "doc/img/logo_stemlab.svg"
+latex_logo = "img/logo_stemlab.svg"
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
