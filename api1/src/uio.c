@@ -56,7 +56,7 @@ static struct udev_device * rp_uio_udev (const char *path) {
  *    as a an array of structures.
  * 
  * @param[in,out] handle Handle structure describing an UIO device.
- * @param[in] Full UIO device file system path.
+ * @param[in] path Full UIO device file system path.
  */
 
 int rp_uio_init (rp_uio_t *handle, const char *path) {
