@@ -18,12 +18,16 @@ apt-get -y install libsigrok libsigrokdecode sigrok-cli
 
 # Python package manager, Jupyter dependencies
 apt-get -y install python3-dev python3-cffi python3-wheel python3-setuptools python3-pip python3-zmq python3-jinja2 python3-pygments python3-six python3-html5lib python3-terminado python3-decorator python3-ptyprocess python3-pexpect python3-simplegeneric python3-wcwidth python3-pickleshare python3-bleach python3-mistune python3-jsonschema
+# update PIP
+pip3 install --upgrade pip
+
 # Python numerical processing and plotting
-apt-get -y install python3-numpy python3-scipy python3-pandas
-apt-get -y install python3-matplotlib
+#apt-get -y install python3-numpy python3-scipy python3-pandas
+#apt-get -y install python3-matplotlib
+pip3 install matplotlib
+pip3 install numpy scipy pandas
 
 # Jupyter and ipywidgets
-pip3 install --upgrade pip
 pip3 install jupyter
 pip3 install ipywidgets
 jupyter nbextension enable --system --py widgetsnbextension
@@ -34,15 +38,14 @@ pip3 install jupyter_declarativewidgets
 jupyter declarativewidgets install
 jupyter nbextension enable --sys-prefix --py --system declarativewidgets
 
-# Jupyter dashboards
-pip3 install jupyter_dashboards
-jupyter dashboards quick-setup --sys-prefix
-# TODO: not sure this step is needed
-jupyter nbextension enable --sys-prefix --py --system jupyter_dashboards
-
-# Jupyter dashboards dundlers
-pip3 install jupyter_dashboards_bundlers
-jupyter bundlerextension enable --sys-prefix --py --system dashboards_bundlers
+# # Jupyter dashboards
+# pip3 install jupyter_dashboards
+# jupyter dashboards quick-setup --sys-prefix
+# # TODO: not sure this step is needed
+# jupyter nbextension enable --sys-prefix --py --system jupyter_dashboards
+# # Jupyter dashboards dundlers
+# pip3 install jupyter_dashboards_bundlers
+# jupyter bundlerextension enable --sys-prefix --py --system dashboards_bundlers
 
 # Jupyter dashboards server
 # TODO: this is a rather large install mostly due to Node.js
