@@ -57,7 +57,7 @@ You will need the following to build the Red Pitaya components:
 1. Various development packages.
 
    .. code-block:: shell-session
-   
+
       # generic dependencies
       sudo apt-get install make curl xz-utils
       # U-Boot build dependencies
@@ -69,7 +69,17 @@ You will need the following to build the Red Pitaya components:
       # 32 bit libraries
       sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
 
-2. Xilinx `Vivado 2017.1 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
+2. Meson Build system (depends on Python 3) is used for some new code.
+   It is not required but can be used during development on x86 PC.
+
+   .. code-block:: shell-session
+
+      sudo apt-get install python3 python3-pip
+      sudo pip3 install --upgrade pip
+      sudo pip3 install meson
+      sudo apt-get install ninja-build
+
+3. Xilinx `Vivado 2017.1 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
 
