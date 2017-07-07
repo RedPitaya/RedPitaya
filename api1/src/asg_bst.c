@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "util.h"
-#include "asg_bst.h"
+#include "redpitaya/util.h"
+#include "redpitaya/asg_bst.h"
 
 void rp_asg_bst_init (rp_asg_bst_t *handle, volatile rp_asg_bst_regset_t *regset, double FS, int unsigned buffer_size, const fixp_t bdr_t, const fixp_t bpl_t, const fixp_t bpn_t) {
     handle->regset = regset;

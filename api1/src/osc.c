@@ -130,7 +130,7 @@ size_t rp_osc_get_pointer (rp_osc_t *handle);
     size_t adr = cnt % handle->buffer_size;
     return(adr);
 
-size_t rp_osc_get_data (rp_osc_t *handle, float *data, size_t siz, size_t ptr);
+size_t rp_osc_get_data (rp_osc_t *handle, float *data, size_t siz, size_t ptr) {
         if (ptr == None) {
             ptr = int(self.pointer)
         }
@@ -139,3 +139,4 @@ size_t rp_osc_get_data (rp_osc_t *handle, float *data, size_t siz, size_t ptr);
         // TODO: avoid making copy of entire array
         table = np.roll(self.table, -ptr)
         return (float) [-siz:] * (self.__input_range / self._DWr)
+}

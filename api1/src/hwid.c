@@ -1,4 +1,4 @@
-#include "hwid.h"
+#include "redpitaya/hwid.h"
 
 int rp_hwid_init (rp_hwid_t *handle) {
     const char path [] = "/dev/uio/hwid";

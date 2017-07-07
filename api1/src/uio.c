@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 
-#include "uio.h"
+#include "redpitaya/uio.h"
 
 static struct udev_device * rp_uio_udev (const char *path) {
     struct udev *udev;

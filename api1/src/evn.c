@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "evn.h"
+#include "redpitaya/evn.h"
 
 void rp_evn_init (rp_evn_t *handle, volatile rp_evn_regset_t *regset) {
     handle->regset = regset;

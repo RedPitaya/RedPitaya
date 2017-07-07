@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "redpitaya/util.h"
+
 #define CW 31
 
 typedef struct {

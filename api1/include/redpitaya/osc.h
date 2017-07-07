@@ -4,12 +4,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "util.h"
-#include "uio.h"
-#include "evn.h"
-#include "acq.h"
-#include "osc_trg.h"
-#include "osc_fil.h"
+#include "redpitaya/util.h"
+#include "redpitaya/uio.h"
+#include "redpitaya/evn.h"
+#include "redpitaya/acq.h"
+#include "redpitaya/osc_trg.h"
+#include "redpitaya/osc_fil.h"
 
 int unsigned input_rangen = 2;
 float        input_ranges [input_rangen] = {1.0, 20.0};

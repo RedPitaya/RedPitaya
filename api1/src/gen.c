@@ -4,13 +4,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "util.h"
-#include "uio.h"
-#include "evn.h"
-#include "gen.h"
-#include "asg_per.h"
-#include "asg_bst.h"
-#include "gen_out.h"
+#include "redpitaya/util.h"
+#include "redpitaya/uio.h"
+#include "redpitaya/evn.h"
+#include "redpitaya/gen.h"
+#include "redpitaya/asg_per.h"
+#include "redpitaya/asg_bst.h"
+#include "redpitaya/gen_out.h"
 
 int rp_gen_init (rp_gen_t *handle, const int unsigned index) {
     static char path_gen [] = "/dev/uio/gen";

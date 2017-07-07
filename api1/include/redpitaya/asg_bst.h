@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "redpitaya/util.h"
+
 #define CWR 14
 #define CWL 32
 #define CWN 16

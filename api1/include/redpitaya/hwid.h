@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "uio.h"
+#include "redpitaya/uio.h"
 
 typedef struct {
     uint32_t hwid    ;

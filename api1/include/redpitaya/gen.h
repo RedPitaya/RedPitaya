@@ -4,12 +4,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "util.h"
-#include "uio.h"
-#include "evn.h"
-#include "asg_per.h"
-#include "asg_bst.h"
-#include "gen_out.h"
+#include "redpitaya/util.h"
+#include "redpitaya/uio.h"
+#include "redpitaya/evn.h"
+#include "redpitaya/asg_per.h"
+#include "redpitaya/asg_bst.h"
+#include "redpitaya/gen_out.h"
 
 #define DW 14
 

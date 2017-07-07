@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "util.h"
-#include "acq.h"
+#include "redpitaya/util.h"
+#include "redpitaya/acq.h"
 
 void rp_acq_init (rp_acq_t *handle, volatile rp_acq_regset_t *regset, const fixp_t cnt_t) {
     handle->regset = regset;

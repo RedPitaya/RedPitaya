@@ -3,8 +3,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include "hwid.h"
-#include "gen.h"
+#include "redpitaya/rp1.h"
 
 #define M_PI 3.14159265358979323846
 

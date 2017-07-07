@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "util.h"
+#include "redpitaya/util.h"
 
 #define DWM 14
 #define DWS 14
