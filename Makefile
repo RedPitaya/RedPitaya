@@ -189,7 +189,7 @@ nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = fb6979d1926bb6813898012de934eca366d93ff8
+SCPI_PARSER_TAG = redpitaya-2017
 #SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz

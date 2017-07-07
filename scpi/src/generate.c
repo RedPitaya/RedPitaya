@@ -135,7 +135,7 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenFreq(channel, frequency.value);
+    result = rp_GenFreq(channel, frequency.content.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Failed to set frequency: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -239,7 +239,7 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenAmp(channel, amplitude.value);
+    result = rp_GenAmp(channel, amplitude.content.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set amplitude: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -286,7 +286,7 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenOffset(channel, offset.value);
+    result = rp_GenOffset(channel, offset.content.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set offset: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -334,7 +334,7 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenPhase(channel, phase.value/(2*M_PI)*360);
+    result = rp_GenPhase(channel, phase.content.value/(2*M_PI)*360);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:PHAS Failed to set generate "
             "phase: %s\n", rp_GetError(result));

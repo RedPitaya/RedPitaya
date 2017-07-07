@@ -17,6 +17,7 @@
 #include <string.h>
 #include <syslog.h>
 
+#include "scpi-commands.h"
 #include "api_cmd.h"
 #include "common.h"
 #include "acquire.h"
@@ -91,7 +92,7 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
  * SCPI Configuration
  */
 
-static const scpi_command_t scpi_commands[] = {
+const scpi_command_t scpi_commands[] = {
     /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
     { .pattern = "*CLS" , .callback = SCPI_CoreCls,},
     { .pattern = "*ESE" , .callback = SCPI_CoreEse,},
@@ -194,29 +195,16 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD_LIST_END
 };
 
-static scpi_interface_t scpi_interface = {
-    .error   = SCPI_Error,
-    .write   = SCPI_Write,
+scpi_interface_t scpi_interface = {
+    .error = SCPI_Error,
+    .write = SCPI_Write,
     .control = SCPI_Control,
-    .flush   = SCPI_Flush,
-    .reset   = SCPI_Reset,
+    .flush = SCPI_Flush,
+    .reset = SCPI_Reset,
 };
 
-#define SCPI_INPUT_BUFFER_LENGTH 538688
-static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
+char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
+scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
 
-static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];
-
-
-scpi_t scpi_context = {
-    .cmdlist = scpi_commands,
-    .buffer = {
-        .length = SCPI_INPUT_BUFFER_LENGTH,
-        .data = scpi_input_buffer,
-    },
-    .interface = &scpi_interface,
-    .registers = scpi_regs,
-    .units = scpi_units_def,
-    .idn = {"REDPITAYA", "INSTR2014", NULL, "01-02"},
-};
+scpi_t scpi_context;
 

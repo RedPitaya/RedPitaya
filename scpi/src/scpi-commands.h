@@ -17,7 +17,17 @@
 
 #include "scpi/scpi.h"
 
-extern scpi_t scpi_context;
+#define SCPI_INPUT_BUFFER_LENGTH 538688
+#define SCPI_ERROR_QUEUE_SIZE 17
+#define SCPI_IDN1 "REDPITAYA"
+#define SCPI_IDN2 "INSTR2017"
+#define SCPI_IDN3 NULL
+#define SCPI_IDN4 "01-02"
 
+extern const scpi_command_t scpi_commands[];
+extern scpi_interface_t scpi_interface;
+extern char scpi_input_buffer[];
+extern scpi_error_t scpi_error_queue_data[];
+extern scpi_t scpi_context;
 
 #endif /* SCPI_COMMANDS_H_ */
