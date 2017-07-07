@@ -204,7 +204,6 @@ $(SCPI_PARSER_TAR): | $(DL)
 $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-#	patch -d $@ -p1 < patches/scpi-parser-$(SCPI_PARSER_TAG).patch
 
 scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
