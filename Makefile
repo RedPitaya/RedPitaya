@@ -31,7 +31,7 @@ $(INSTALL_DIR):
 # API libraries
 ################################################################################
 
-LIBRP_DIR       = api/rpbase
+LIBRP_DIR       = api
 LIBRP2_DIR      = api2
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications

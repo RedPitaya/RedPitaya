@@ -26,7 +26,7 @@ OBJEXT   = .o
 OBJECTS_DIR = ../obj
 INSTALL_DIR ?= .
 SOURCE_DIR  = .
-OUTPUT_DIR  = ../../lib
+OUTPUT_DIR  = ../lib
 
 SHARED_LIB=$(OUTPUT_DIR)/librp.so
 STATIC_LIB=$(OUTPUT_DIR)/librp.a
@@ -52,7 +52,7 @@ OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 # GCC compiling & linking flags
 CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-CFLAGS += -I../../include
+CFLAGS += -I../include
 LDFLAGS=-shared -Wl,--version-script=exportmap
 
 # Additional libraries which needs to be dynamically linked to the executable
@@ -96,4 +96,4 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
-	cp -r ../../include/redpitaya $(INSTALL_DIR)/include
+	cp -r ../include/redpitaya $(INSTALL_DIR)/include

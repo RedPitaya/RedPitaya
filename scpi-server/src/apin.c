@@ -18,7 +18,7 @@
 #include "common.h"
 #include "apin.h"
 #include "scpi/parser.h"
-#include "../../api/rpbase/src/common.h"
+#include "../../api/src/common.h"
 
 /* Apin choice def */
 const scpi_choice_def_t scpi_RpApin[] = {

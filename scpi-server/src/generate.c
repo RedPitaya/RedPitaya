@@ -18,7 +18,7 @@
 #include <math.h>
 
 #include "generate.h"
-#include "../../api/rpbase/src/generate.h"
+#include "../../api/src/generate.h"
 
 #include "common.h"
 #include "scpi/parser.h"
