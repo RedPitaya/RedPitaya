@@ -58,7 +58,7 @@ Linux
 -----
 
 There is broad support for USB to serial converters in the Linux kernel,
-so in most cases the converter will be detested soon after connecting it.
+so in most cases the converter will be detected soon after connecting it.
 
 You can see the driver output in the kernel log using ``dmesg``:
 
