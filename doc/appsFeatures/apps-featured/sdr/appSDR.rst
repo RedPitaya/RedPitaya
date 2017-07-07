@@ -52,7 +52,7 @@ Connecting the cables
 9. Put STEMlab in SDR mode:
 
 	* Make sure your computer is connected to same local area network as STEMlab 
-	* Open your WEB browser and connect to your STEMlab (http://redpitaya.readthedocs.io/en/latest/doc/quickStart/first.html)
+	* Open your WEB browser and connect to your STEMlab (http://redpitaya.readthedocs.io/en/latest/quickStart/first.html)
 	* Start SDR HPSDR web application first. 
 
 .. image :: hpsdr_icon.png
