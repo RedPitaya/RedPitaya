@@ -60,9 +60,6 @@ scpi_result_t SCPI_Flush(scpi_t * context) {
 }
 
 int SCPI_Error(scpi_t * context, int_fast16_t err) {
-    const char error[] = "ERR!";
-    syslog(LOG_ERR, "**ERROR: %d, \"%s\"", (int32_t) err, SCPI_ErrorTranslate(err));
-    SCPI_Write(context, error, strlen(error));
     return 0;
 }
 
@@ -181,8 +178,8 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "[SOURce#]:FUNCtion[:SQUare]:DCYCle?",        .callback = RP_GenDutyCycleQ,},
     {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle",       .callback = RP_GenDutyCycle,},
     {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle?",      .callback = RP_GenDutyCycleQ,},
-    {.pattern = "SOURce#:TRAC:DATA:DATA",                     .callback = RP_GenArbitraryWaveForm,},
-    {.pattern = "SOURce#:TRAC:DATA:DATA?",                    .callback = RP_GenArbitraryWaveFormQ,},
+    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]",                .callback = RP_GenArbitraryWaveForm,},
+    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]?",               .callback = RP_GenArbitraryWaveFormQ,},
     {.pattern = "[SOURce#]:BURSt[:STATe]",                    .callback = RP_GenGenerateMode,},
     {.pattern = "[SOURce#]:BURSt[:STATe]?",                   .callback = RP_GenGenerateModeQ,},
     {.pattern = "[SOURce#]:BURSt:NCYC", .callback          = RP_GenBurstCount,},
