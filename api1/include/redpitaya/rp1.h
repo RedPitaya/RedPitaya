@@ -11,6 +11,7 @@
 #include "redpitaya/asg_per.h"
 #include "redpitaya/gen_out.h"
 #include "redpitaya/gen.h"
+#include "redpitaya/wave.h"
 
 //#include "redpitaya/acq.h"
 //#include "redpitaya/osc.h"

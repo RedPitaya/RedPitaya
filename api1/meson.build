@@ -11,7 +11,8 @@ src = ['src/util.c',
        'src/gen.c',
        'src/asg_per.c',
        'src/asg_bst.c',
-       'src/gen_out.c']
+       'src/gen_out.c',
+       'src/wave.c']
 inc = include_directories(['include', 'src'])
 
 lib = shared_library('rp', src,

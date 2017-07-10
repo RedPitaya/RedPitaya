@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <inttypes.h>
-#include <math.h>
 #include <stdbool.h>
 
 #include "redpitaya/rp1.h"
-
-#define M_PI 3.14159265358979323846
 
 int main () {
     printf ("DEBUG: start\n");
@@ -22,10 +19,7 @@ int main () {
     rp_gen_default(&gen0);
     // generate and program sinusoidal waveform
     float waveform [gen0.buffer_size];
-    const float step = 2 * M_PI / gen0.buffer_size;
-    for (int unsigned i=0; i<gen0.buffer_size; i++) {
-        waveform[i] = sinf(step * (float) i);
-    }
+    rp_wave_sin(waveform, gen0.buffer_size);
     rp_gen_set_waveform(&gen0, waveform, gen0.buffer_size);
     // set continuous/periodic mode
     rp_gen_set_mode(&gen0, CONTINUOUS);
