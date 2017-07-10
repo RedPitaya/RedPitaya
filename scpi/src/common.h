@@ -29,8 +29,7 @@
 #define SCPI_CMD_NUM 	1
 
 #ifdef SCPI_DEBUG
-#define RP_LOG(...) \
-syslog(__VA_ARGS__);
+#define RP_LOG(...) syslog(__VA_ARGS__);
 #else
 #define RP_LOG(...)
 #endif
