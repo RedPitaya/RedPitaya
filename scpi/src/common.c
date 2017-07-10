@@ -17,7 +17,7 @@
 #include "common.h"
 
 /* Parse channel */
-int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel){
+int RP_ParseChArgv(scpi_t *context, int unsigned *channel){
 
     int32_t ch_usr[1];
     SCPI_CommandNumbers(context, ch_usr, 1, SCPI_CMD_NUM);
