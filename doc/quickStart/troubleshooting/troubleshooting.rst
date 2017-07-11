@@ -41,7 +41,8 @@ Problems connecting to Red Pitaya
 Problems obtaining the license
 ******************************
 
-1. Reload you
+1. Disable all ad blockers in you browser.
+#. Force refresh of the Red Pitaya application page. `How <http://www.wikihow.com/Force-Refresh-in-Your-Internet-Browser>`_?
 
 ****************************************************************************
 Problems with upgrading OS, accessing market place or unlocking applications 
