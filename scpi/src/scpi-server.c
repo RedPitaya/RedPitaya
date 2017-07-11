@@ -42,25 +42,22 @@ static bool app_exit = false;
 static char delimiter[] = "\r\n";
 
 
-static void handleCloseChildEvents()
-{
+static void handleCloseChildEvents() {
     struct sigaction sigchld_action = {
-            .sa_handler = SIG_DFL,
-            .sa_flags = SA_NOCLDWAIT
+        .sa_handler = SIG_DFL,
+        .sa_flags = SA_NOCLDWAIT
     };
     sigaction(SIGCHLD, &sigchld_action, NULL);
 }
 
 
-static void termSignalHandler(int signum)
-{
+static void termSignalHandler(int signum) {
     app_exit = true;
     syslog (LOG_NOTICE, "Received terminate signal. Exiting...");
 }
 
 
-static void installTermSignalHandler()
-{
+static void installTermSignalHandler() {
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = termSignalHandler;
@@ -74,8 +71,7 @@ static void installTermSignalHandler()
  * @param bufferLen  Input buffer length
  * @return Position of next command within buffer, or -1 if not found.
  */
-static size_t getNextCommand(const char* buffer, size_t bufferLen)
-{
+static size_t getNextCommand(const char* buffer, size_t bufferLen) {
     size_t delimiterLen = sizeof(delimiter) - 1; // dont count last null char.
     size_t i = 0;
     for (i = 0; i < bufferLen; i++) {
@@ -133,8 +129,7 @@ static int handleConnection(int connfd) {
     RP_LOG(LOG_INFO, "Waiting for first client request.");
 
     //Receive a message from client
-    while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
-    {
+    while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 ) {
         if (app_exit) {
             break;
         }
@@ -153,7 +148,6 @@ static int handleConnection(int connfd) {
         char *m = message_buff;
         size_t pos = -1;
         while ((pos = getNextCommand(m, msg_end)) != -1) {
-
             // Log out message
             LogMessage(m, pos);
 
@@ -175,13 +169,10 @@ static int handleConnection(int connfd) {
 
     RP_LOG(LOG_INFO, "Closing client connection...");
 
-    if(read_size == 0)
-    {
+    if(read_size == 0) {
         RP_LOG(LOG_INFO, "Client is disconnected");
         return 0;
-    }
-    else if(read_size == -1)
-    {
+    } else if(read_size == -1) {
         RP_LOG(LOG_ERR, "Receive message failed (%s)", strerror(errno));
         perror("Receive message failed");
         return 1;
@@ -198,9 +189,7 @@ static int handleConnection(int connfd) {
  * @param argv  not used
  * @return
  */
-int main(int argc, char *argv[])
-{
-
+int main(int argc, char *argv[]) {
     // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
     setlogmask (LOG_UPTO (LOG_INFO));
     openlog ("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
@@ -240,11 +229,9 @@ int main(int argc, char *argv[])
             scpi_input_buffer, SCPI_INPUT_BUFFER_LENGTH,
             scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
 
-
     // Create a socket
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenfd == -1)
-    {
+    if (listenfd == -1) {
         RP_LOG(LOG_ERR, "Failed to create a socket (%s)", strerror(errno));
         perror("Failed to create a socket");
         return (EXIT_FAILURE);
@@ -256,15 +243,13 @@ int main(int argc, char *argv[])
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_addr.sin_port = htons(LISTEN_PORT);
 
-    if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
-    {
+    if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1) {
         RP_LOG(LOG_ERR, "Failed to bind the socket (%s)", strerror(errno));
         perror("Failed to bind the socket");
         return (EXIT_FAILURE);
     }
 
-    if (listen(listenfd, LISTEN_BACKLOG) == -1)
-    {
+    if (listen(listenfd, LISTEN_BACKLOG) == -1) {
         RP_LOG(LOG_ERR, "Failed to listen on the socket (%s)", strerror(errno));
         perror("Failed to listen on the socket");
         return (EXIT_FAILURE);
@@ -273,8 +258,7 @@ int main(int argc, char *argv[])
     RP_LOG(LOG_INFO, "Server is listening on port %d\n", LISTEN_PORT);
 
     // Socket is opened and listening on port. Now we can accept connections
-    while(1)
-    {
+    while (1) {
         struct sockaddr_in cliaddr;
         socklen_t clilen;
         clilen = sizeof(cliaddr);
@@ -309,8 +293,7 @@ int main(int argc, char *argv[])
 
             if (result == 0) {
                 return(EXIT_SUCCESS);
-            }
-            else {
+            } else {
                 return(EXIT_FAILURE);
             }
         }
@@ -325,10 +308,10 @@ int main(int argc, char *argv[])
         RP_LOG(LOG_ERR, "Failed to release RP App library: %s", rp_GetError(result));
     }
 
-
     RP_LOG(LOG_INFO, "scpi-server stopped.");
 
     closelog ();
 
     return (EXIT_SUCCESS);
 }
+
