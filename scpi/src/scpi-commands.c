@@ -17,16 +17,18 @@
 #include <string.h>
 #include <syslog.h>
 
-#include "scpi-commands.h"
-#include "api_cmd.h"
-#include "common.h"
-#include "acquire.h"
-#include "generate.h"
 #include "scpi/error.h"
 #include "scpi/ieee488.h"
 #include "scpi/minimal.h"
 #include "scpi/units.h"
 #include "scpi/parser.h"
+
+#include "redpitaya/rp1.h"
+
+#include "scpi-commands.h"
+#include "api_cmd.h"
+#include "common.h"
+#include "scpi_gen.h"
 
 bool RST_executed = FALSE;
 
@@ -34,13 +36,13 @@ bool RST_executed = FALSE;
  * Interface general commands
  */
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
-
     size_t total = 0;
+    rpscpi_context_t *rp = (rpscpi_context_t *) context->user_context;
+    //rpscpi_context_t rp = context->user_context;
 
-    if (context->user_context != NULL) {
-        int fd = *(int *)(context->user_context);
+    if (rp->connfd != 0) {
         while (len > 0) {
-            size_t written =  write(fd, data, len);
+            size_t written =  write(rp->connfd, data, len);
             if (written < 0) {
                 syslog(LOG_ERR,
                     "Failed to write into the socket. Should send %zu bytes. Could send only %zu bytes",
@@ -160,37 +162,37 @@ const scpi_command_t scpi_commands[] = {
 //    {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
     /* Generate */
-    {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
-    {.pattern = "OUTPUT#[:STATe]",                            .callback = RP_GenState,},
-    {.pattern = "OUTPUT#[:STATe]?",                           .callback = RP_GenStateQ,},
-    {.pattern = "[SOURce#]:FREQuency[:FIXed]",                .callback = RP_GenFrequency,},
-    {.pattern = "[SOURce#]:FREQuency[:FIXed]?",               .callback = RP_GenFrequencyQ,},
-    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]",                 .callback = RP_GenWaveForm,},
-    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]?",                .callback = RP_GenWaveFormQ,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = RP_GenAmplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = RP_GenAmplitudeQ,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = RP_GenOffset,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = RP_GenOffsetQ,},
-    {.pattern = "[SOURce#]:PHASe[:ADJust]",                   .callback = RP_GenPhase,},
-    {.pattern = "[SOURce#]:PHASe[:ADJust]?",                  .callback = RP_GenPhaseQ,},
+    {.pattern = "GEN:RST", .callback                    = rpscpi_gen_reset,},
+    {.pattern = "OUTPUT#[:STATe]",                            .callback = rpscpi_gen_set_enable,},
+    {.pattern = "OUTPUT#[:STATe]?",                           .callback = rpscpi_gen_get_enable,},
+    {.pattern = "[SOURce#]:FREQuency[:FIXed]",                .callback = rpscpi_gen_set_frequency,},
+    {.pattern = "[SOURce#]:FREQuency[:FIXed]?",               .callback = rpscpi_gen_get_frequency,},
+    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]",                 .callback = rpscpi_gen_set_waveform_tag,},
+    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]?",                .callback = rpscpi_gen_get_waveform_tag,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},
+    {.pattern = "[SOURce#]:PHASe[:ADJust]",                   .callback = rpscpi_gen_set_phase,},
+    {.pattern = "[SOURce#]:PHASe[:ADJust]?",                  .callback = rpscpi_gen_get_phase,},
 //  {.pattern = "[SOURce#]:PHASe:INITiate",                   .callback = RP_GenPhaseInit,},
-    {.pattern = "[SOURce#]:FUNCtion[:SQUare]:DCYCle",         .callback = RP_GenDutyCycle,},
-    {.pattern = "[SOURce#]:FUNCtion[:SQUare]:DCYCle?",        .callback = RP_GenDutyCycleQ,},
-    {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle",       .callback = RP_GenDutyCycle,},
-    {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle?",      .callback = RP_GenDutyCycleQ,},
-    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]",                .callback = RP_GenArbitraryWaveForm,},
-    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]?",               .callback = RP_GenArbitraryWaveFormQ,},
-    {.pattern = "[SOURce#]:BURSt[:STATe]",                    .callback = RP_GenGenerateMode,},
-    {.pattern = "[SOURce#]:BURSt[:STATe]?",                   .callback = RP_GenGenerateModeQ,},
-    {.pattern = "[SOURce#]:BURSt:NCYC", .callback          = RP_GenBurstCount,},
-    {.pattern = "[SOURce#]:BURSt:NCYC?", .callback         = RP_GenBurstCountQ,},
-    {.pattern = "[SOURce#]:BURSt:NOR", .callback           = RP_GenBurstRepetitions,},
-    {.pattern = "[SOURce#]:BURSt:NOR?", .callback          = RP_GenBurstRepetitionsQ,},
-    {.pattern = "[SOURce#]:BURSt:INTernal:PERiod", .callback       = RP_GenBurstPeriod,},
-    {.pattern = "[SOURce#]:BURSt:INTernal:PERiod?", .callback      = RP_GenBurstPeriodQ,},
-    {.pattern = "SOURce#:TRIGger:SOUR", .callback       = RP_GenTriggerSource,},
-    {.pattern = "SOURce#:TRIGger:SOUR?", .callback      = RP_GenTriggerSourceQ,},
-    {.pattern = "SOURce#:TRIGger:IMM", .callback        = RP_GenTrigger,},
+//    {.pattern = "[SOURce#]:FUNCtion[:SQUare]:DCYCle",         .callback = RP_GenDutyCycle,},
+//    {.pattern = "[SOURce#]:FUNCtion[:SQUare]:DCYCle?",        .callback = RP_GenDutyCycleQ,},
+//    {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle",       .callback = RP_GenDutyCycle,},
+//    {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle?",      .callback = RP_GenDutyCycleQ,},
+//    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]",                .callback = RP_GenArbitraryWaveForm,},
+//    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]?",               .callback = RP_GenArbitraryWaveFormQ,},
+//    {.pattern = "[SOURce#]:BURSt[:STATe]",                    .callback = RP_GenGenerateMode,},
+//    {.pattern = "[SOURce#]:BURSt[:STATe]?",                   .callback = RP_GenGenerateModeQ,},
+//    {.pattern = "[SOURce#]:BURSt:NCYC", .callback          = RP_GenBurstCount,},
+//    {.pattern = "[SOURce#]:BURSt:NCYC?", .callback         = RP_GenBurstCountQ,},
+//    {.pattern = "[SOURce#]:BURSt:NOR", .callback           = RP_GenBurstRepetitions,},
+//    {.pattern = "[SOURce#]:BURSt:NOR?", .callback          = RP_GenBurstRepetitionsQ,},
+//    {.pattern = "[SOURce#]:BURSt:INTernal:PERiod", .callback       = RP_GenBurstPeriod,},
+//    {.pattern = "[SOURce#]:BURSt:INTernal:PERiod?", .callback      = RP_GenBurstPeriodQ,},
+//    {.pattern = "SOURce#:TRIGger:SOUR", .callback       = RP_GenTriggerSource,},
+//    {.pattern = "SOURce#:TRIGger:SOUR?", .callback      = RP_GenTriggerSourceQ,},
+//    {.pattern = "SOURce#:TRIGger:IMM", .callback        = RP_GenTrigger,},
 
     SCPI_CMD_LIST_END
 };

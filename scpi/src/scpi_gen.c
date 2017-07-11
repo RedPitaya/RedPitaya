@@ -15,34 +15,21 @@
 #include "common.h"
 #include "scpi/parser.h"
 #include "scpi/units.h"
+#include "scpi/error.h"
 
-/* These structures are a direct API mirror 
-and should not be altered! */
-const scpi_choice_def_t scpi_RpWForm[] = {
-    {"SINusoid", 0},
-    {"SQUare",   1},
-    {"TRIangle", 2},
-    {"USER",     7},
-    SCPI_CHOICE_LIST_END
-};
+static scpi_bool_t spcspi_gen_channels(scpi_t *context, int unsigned *channel) {
+    int32_t num[1];
+    SCPI_CommandNumbers(context, num, 1, RPSCPI_CMD_NUM);
+    if (!((num[0] > 0) && (num[0] <= RPSCPI_GEN_NUM))) {
+        SCPI_ErrorPush(context, SCPI_ERROR_HEADER_SUFFIX_OUTOFRANGE);
+        return FALSE;
+    }
+    *channel = num[0] - 1;
+    return TRUE;
+}
 
-const scpi_choice_def_t scpi_RpGenTrig[] = {
-    {"INT",     1},
-    {"EXT_PE",  2},
-    {"EXT_NE",  3},
-    {"GATED",   4},
-    SCPI_CHOICE_LIST_END
-};
-
-const scpi_choice_def_t scpi_RpGenMode[] = {
-    {"CONTINUOUS",  0},
-    {"BURST",       1},
-    {"STREAM",      2},
-    SCPI_CHOICE_LIST_END
-};
-
-scpi_result_t RP_GenReset(scpi_t *context) {
-    if (rp_GenReset() != 0) {
+scpi_result_t rpscpi_gen_reset(scpi_t *context) {
+    if (rp_gen_reset(&gen[channel]) != 0) {
         return SCPI_RES_ERR;
     }
     return SCPI_RES_OK;
@@ -52,7 +39,7 @@ scpi_result_t rpscpi_gen_set_enable(scpi_t *context) {
     int unsigned channel;
     bool value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     if(!SCPI_ParamBool(context, &value, true)){
@@ -62,11 +49,11 @@ scpi_result_t rpscpi_gen_set_enable(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t rpscpi_gen_get_enable(scpi_t *context){
+scpi_result_t rpscpi_gen_get_enable(scpi_t *context) {
     int unsigned channel;
     bool value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     value = rp_gen_out_set_enable(&gen[channel].out);
@@ -78,13 +65,18 @@ scpi_result_t rpscpi_gen_set_frequency(scpi_t *context) {
     int unsigned channel;
     scpi_number_t value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
         return SCPI_RES_ERR;
     }
-    if (rp_asg_gen_set_frequency(&gen[channel].per, value.content.value) != 0) {
+    if (value.special) {
+        // special values are not allowed
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
+    } else if (rp_asg_gen_set_frequency(&gen[channel].per, value.content.value) != 0) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }
     return SCPI_RES_OK;
@@ -94,7 +86,7 @@ scpi_result_t rpscpi_gen_get_frequency(scpi_t *context) {
     int unsigned channel;
     double value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     value = rp_asg_gen_get_frequency(&gen[channel].per);
@@ -106,13 +98,18 @@ scpi_result_t rpscpi_gen_set_phase(scpi_t *context) {
     int unsigned channel;
     scpi_number_t value;
     
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
         return SCPI_RES_ERR;
     }
-    if (rp_asg_gen_set_phase(&gen[channel].per, value.content.value) != 0) {
+    if (value.special) {
+        // special values are not allowed
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
+    } else if (rp_asg_gen_set_phase(&gen[channel].per, value.content.value) != 0) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }
     return SCPI_RES_OK;
@@ -122,7 +119,7 @@ scpi_result_t rpscpi_gen_get_phase(scpi_t *context) {
     int unsigned channel;
     double value;
     
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     value = rpscpi_gen_get_phase(&gen[channel].per);
@@ -134,19 +131,19 @@ scpi_result_t rpscpi_gen_set_amplitude(scpi_t *context) {
     int unsigned channel;
     scpi_number_t value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
         return SCPI_RES_ERR;
     }
-    // special values are not allowed
     if (value.special) {
+        // special values are not allowed
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
-    } else {
-        if (rp_gen_out_set_amplitude(&gen[channel].out, (float) value.content.value)) {
-            return SCPI_RES_ERR;
-        }
+    } else if (rp_gen_out_set_amplitude(&gen[channel].out, (float) value.content.value)) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
     }
     return SCPI_RES_OK;
 }
@@ -155,7 +152,7 @@ scpi_result_t rpscpi_gen_get_amplitude(scpi_t *context) {
     int unsigned channel;
     float value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     value rp_gen_out_get_amplitude(&gen[channel].out);
@@ -167,19 +164,19 @@ scpi_result_t rpscpi_gen_set_offset(scpi_t *context) {
     int unsigned channel;
     scpi_number_t value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
         return SCPI_RES_ERR;
     }
-    // special values are not allowed
     if (value.special) {
+        // special values are not allowed
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
-    } else {
-        if (rp_gen_out_set_offset(&gen[channel].out, (float) value.content.value)) {
-            return SCPI_RES_ERR;
-        }
+    } else if (rp_gen_out_set_offset(&gen[channel].out, (float) value.content.value)) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
     }
     return SCPI_RES_OK;
 }
@@ -188,7 +185,7 @@ scpi_result_t rpscpi_gen_get_offset(scpi_t *context) {
     int unsigned channel;
     float value;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     value rp_gen_out_get_offset(&gen[channel].out);
@@ -196,59 +193,61 @@ scpi_result_t rpscpi_gen_get_offset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenWaveForm(scpi_t *context) {
-    
-    rp_channel_t channel;
-    int32_t wave_form;
-    int result;
+scpi_result_t rpscpi_gen_set_waveform_tag(scpi_t *context) {
+    int unsigned channel;
+    int32_t waveform_tag;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
-
-    /* Read WAVEFORM parameter */
-    if(!SCPI_ParamChoice(context, scpi_RpWForm, &wave_form, true)){
-        RP_LOG(LOG_ERR, "*SOUR#:FUNC Missing first parameter.\n");
+    if(!SCPI_ParamChoice(context, rpscpi_waveform_names, &waveform_tag, true)){
+        SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
         return SCPI_RES_ERR;
     }    
 
-    rp_waveform_t wf = wave_form;
-    result = rp_GenWaveform(channel, wf);
-
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:FUNC Failed to set generate wave form: %s\n", rp_GetError(result));
+    {"SINusoid", 0},
+    {"SQUare",   1},
+    {"TRIangle", 2},
+    {"USER",     7},
+    switch(waveform_tag) {
+        case 0:
+            int rp_wave_sin (waveform, gen[channel].buffer_size);
+            break;
+        case 1:
+            int rp_wave_sin (waveform, gen[channel].buffer_size);
+            break;
+        case 2:
+            int rp_wave_sin (waveform, gen[channel].buffer_size);
+            break;
+        default:
+            break;
+    }
+    if(rp_gen_set_waveform(&gen[channel], waveform, gen[channel].buffer_size)) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(LOG_INFO, "*SOUR#:FUNC Successfully set generate waveform.\n");
     return SCPI_RES_OK;
 }
 
-
-scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
-    
+scpi_result_t rpscpi_gen_get_waveform_tag(scpi_t *context) {
+    int unsigned channel;
     const char *wf_name; 
-    rp_channel_t channel;
     rp_waveform_t wave_form;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
-
     if (rp_GenGetWaveform(channel, &wave_form) != RP_OK){
         return SCPI_RES_ERR;
     }
     int32_t wf = wave_form;
 
-    if(!SCPI_ChoiceToName(scpi_RpWForm, wf, &wf_name)){
-        RP_LOG(LOG_ERR, "*SOUR#:FUNC? Failed to get wave form.\n");
+    if(!SCPI_ChoiceToName(rpscpi_waveform_names, wf, &wf_name)){
         return SCPI_RES_ERR;
     }
 
     /* Return result to client */
     SCPI_ResultMnemonic(context, wf_name);
-
-    RP_LOG(LOG_INFO, "*SOUR#:FUNC? Successfully returned generate wave form to client.\n");
     return SCPI_RES_OK;
 }
 
@@ -259,7 +258,7 @@ scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
     uint32_t size;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -287,7 +286,7 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
     uint32_t size;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -311,7 +310,7 @@ scpi_result_t RP_GenGenerateMode(scpi_t *context) {
     int32_t usr_mode;
     int result;
     
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -339,7 +338,7 @@ scpi_result_t RP_GenGenerateModeQ(scpi_t *context) {
     const char *gen_mode;
     rp_gen_mode_t mode;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -369,7 +368,7 @@ scpi_result_t RP_GenBurstCount(scpi_t *context) {
     rp_channel_t channel;
     int result, count;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -395,7 +394,7 @@ scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
     rp_channel_t channel;
     int result, count;
     
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -418,7 +417,7 @@ scpi_result_t RP_GenBurstRepetitions(scpi_t *context) {
     rp_channel_t channel;
     int result, repetitions;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -444,7 +443,7 @@ scpi_result_t RP_GenBurstRepetitionsQ(scpi_t *context) {
     rp_channel_t channel;
     int result, repetitions;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -469,7 +468,7 @@ scpi_result_t RP_GenBurstPeriod(scpi_t *context) {
     int result;
     uint32_t period;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -496,7 +495,7 @@ scpi_result_t RP_GenBurstPeriodQ(scpi_t *context) {
     int result;
     uint32_t period;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -520,7 +519,7 @@ scpi_result_t RP_GenTriggerSource(scpi_t *context) {
     int32_t trig_choice;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -547,7 +546,7 @@ scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
     rp_channel_t channel;
     const char *trig_name;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 
@@ -576,7 +575,7 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     rp_channel_t channel;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (!spcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
 

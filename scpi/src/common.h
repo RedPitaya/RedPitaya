@@ -1,15 +1,7 @@
 /**
- * $Id: $
- *
  * @brief Red Pitaya Scpi server utils module interface
- *
  * @Author Red Pitaya
- *
  * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 #ifndef COMMON_H_
@@ -18,15 +10,13 @@
 #include <syslog.h>
 
 #include "scpi/parser.h"
-#include "redpitaya/rp.h"
+#include "redpitaya/rp1.h"
 
 #define SET_OK(cont) \
     	SCPI_ResultString(cont, "OK"); \
     	return SCPI_RES_OK;
 
-#define CH_NUM		4
-
-#define SCPI_CMD_NUM 	1
+#define RPSCPI_CMD_NUM 	1
 
 #ifdef SCPI_DEBUG
 #define RP_LOG(...) syslog(__VA_ARGS__);
@@ -34,6 +24,17 @@
 #define RP_LOG(...)
 #endif
 
-int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
+// Red Pitaya specific contct inside SCPI context
+typedef struct {
+    int connfd;
+    bool binary_output;
+    // API
+    int unsigned gen_num;
+    int unsigned osc_num;
+    float *gen_waveform;
+//    rp_clb_t *clb;
+    rp_gen_t *gen;
+//    rp_osc_t *osc;
+} rpscpi_context_t;
 
 #endif /* COMMON_H_ */
