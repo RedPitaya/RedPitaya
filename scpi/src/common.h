@@ -32,7 +32,7 @@ typedef struct {
     int unsigned gen_num;
     int unsigned osc_num;
     float *gen_waveform;
-//    rp_clb_t *clb;
+//    rp_clb_t clb;
     rp_gen_t *gen;
 //    rp_osc_t *osc;
 } rpscpi_context_t;

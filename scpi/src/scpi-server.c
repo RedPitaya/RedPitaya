@@ -193,42 +193,42 @@ int main(int argc, char *argv[]) {
 
     // prepare redpitaya specific context
     scpi_context.user_context = malloc(1 * sizeof(rpscpi_context_t));
-    rpscpi_context_t rp = (rpscpi_context_t) scpi_context.user_context;
+    rpscpi_context_t *rp = (rpscpi_context_t *) scpi_context.user_context;
     // initialize API
-    rp.gen_num = 2;
-    rp.osc_num = 2;
-    rp.gen = malloc(rp.gen_num * sizeof(void *));
-    if (!rp.gen) {
+    rp->gen_num = 2;
+    rp->osc_num = 2;
+    rp->gen = malloc(rp->gen_num * sizeof(rp_gen_t));
+    if (!rp->gen) {
         syslog(LOG_ERR, "Failed to allocate memory for rp_gen_t pointer.");
         return (EXIT_FAILURE);
     }
-    for (int unsigned i=0; i<rp.gen_num; i++) {
-        rp.gen[i] = malloc(sizeof(rp_gen_t));
-        if (!rp.gen[i]) {
-            syslog(LOG_ERR, "Failed to allocate memory for rp_gen_t structure.");
-            return (EXIT_FAILURE);
-        }
-        if (rp_gen_init(rp.gen[i], i) !=0) {
+    for (int unsigned i=0; i<rp->gen_num; i++) {
+//        rp->gen[i] = malloc(sizeof(rp_gen_t));
+//        if (!rp->gen[i]) {
+//            syslog(LOG_ERR, "Failed to allocate memory for rp_gen_t structure.");
+//            return (EXIT_FAILURE);
+//        }
+        if (rp_gen_init(&rp->gen[i], i) !=0) {
             syslog(LOG_ERR, "Failed to initialize generator %u.", i);
             return (EXIT_FAILURE);
         }
     }
-//    rp.osc = malloc(rp.osc_num * sizeof(void *));
-//    if (!rp.osc) {
+//    rp->osc = malloc(rp->osc_num * sizeof(void *));
+//    if (!rp->osc) {
 //        syslog(LOG_ERR, "Failed to allocate memory for rp_osc_t pointer.");
 //    }
-//    for (int unsigned i=0; i<rp.osc_num; i++) {
-//        rp.osc[i] = malloc(sizeof(rp_osc_t));
-//        if (!rp.osc[i]) {
+//    for (int unsigned i=0; i<rp->osc_num; i++) {
+//        rp->osc[i] = malloc(sizeof(rp_osc_t));
+//        if (!rp->osc[i]) {
 //            syslog(LOG_ERR, "Failed to allocate memory for rp_osc_t structure.");
 //            return (EXIT_FAILURE);
 //        }
-//        if (rp_osc_init(rp.osc[i], i) !=0) {
+//        if (rp_osc_init(rp->osc[i], i) !=0) {
 //            syslog(LOG_ERR, "Failed to initialize oscilloscope %u.", i);
 //            return (EXIT_FAILURE);
 //        }
 //    }
-    rp.binary_output = false;
+    rp->binary_output = false;
 
     SCPI_Init(&scpi_context,
             scpi_commands,
@@ -267,19 +267,19 @@ int main(int argc, char *argv[]) {
     syslog(LOG_INFO, "Server is listening on port %d\n", LISTEN_PORT);
 
     // Socket is opened and listening on port. Now we can accept connections
-    rp.connfd = 0;
+    rp->connfd = 0;
     while (1) {
         struct sockaddr_in cliaddr;
         socklen_t clilen;
         clilen = sizeof(cliaddr);
 
-        rp.connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
+        rp->connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
 
         if (app_exit == true) {
             break;
         }
 
-        if (rp.connfd == -1) {
+        if (rp->connfd == -1) {
             syslog(LOG_ERR, "Failed to accept connection (%s)", strerror(errno));
             perror("Failed to accept connection\n");
             return (EXIT_FAILURE);
@@ -292,9 +292,9 @@ int main(int argc, char *argv[]) {
             // this is the child process
             close(listenfd); // child doesn't need the listener
 
-            result = handleConnection(rp.connfd);
+            int result = handleConnection(rp->connfd);
 
-            close(rp.connfd);
+            close(rp->connfd);
             syslog(LOG_INFO, "Closing connection with client ip %s.", inet_ntoa(cliaddr.sin_addr));
 
             if (result == 0) {
@@ -303,28 +303,28 @@ int main(int argc, char *argv[]) {
                 return(EXIT_FAILURE);
             }
         }
-        close(rf.connfd);
+        close(rp->connfd);
     }
     close(listenfd);
 
     // closing API and freeing memory
-    for (int unsigned i=0; i<rp.gen_num; i++) {
-        rp.gen[i] = free();
-        if (rp_gen_release(rp.gen[i]) !=0) {
+    for (int unsigned i=0; i<rp->gen_num; i++) {
+//        free(rp->gen[i]);
+        if (rp_gen_release(&rp->gen[i]) !=0) {
             syslog(LOG_ERR, "Failed to release generator %u.", i);
             return (EXIT_FAILURE);
         }
     }
-//    for (int unsigned i=0; i<rp.osc_num; i++) {
-//        rp.osc[i] = free();
-//        if (rp_gen_release(rp.osc[i]) !=0) {
+    free(rp->gen);
+//    for (int unsigned i=0; i<rp->osc_num; i++) {
+//        rp->osc[i] = free();
+//        if (rp_gen_release(rp->osc[i]) !=0) {
 //            syslog(LOG_ERR, "Failed to release oscilloscope %u.", i);
 //            return (EXIT_FAILURE);
 //        }
 //    }
-    rp.gen = free();
-    rp.osc = free();
-    scpi_context.user_context = free();
+//    free(rp->osc);
+    free(scpi_context.user_context);
 
     syslog(LOG_INFO, "scpi-server stopped.");
     closelog();

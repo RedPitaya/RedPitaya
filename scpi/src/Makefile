@@ -34,20 +34,17 @@ TARGET=$(OUTPUT_DIR)/scpi-server
 # List of compiled object files
 OBJECTS =	scpi-commands.o \
 		scpi-server.o \
-		api_cmd.o \
-		scpi_gen.o \
-		common.o
+		scpi_gen.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
 CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC
-CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 LDFLAGS=
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBPATH= -L ../scpi-parser/libscpi/dist -L ../../api1/lib
+LIBPATH= -L ../scpi-parser/libscpi/dist -L ../../api1/builddir
 LIBS= -lm -lpthread -lrp1 -lscpi
 
 INC= -I../scpi-parser/libscpi/inc -I../../api1/include
