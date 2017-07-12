@@ -1,0 +1,4 @@
+[wrap-git]
+directory=scpi-parser
+url=https://github.com/RedPitaya/scpi-parser.git
+revision=redpitaya-2017
