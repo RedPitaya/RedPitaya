@@ -189,26 +189,13 @@ nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = redpitaya-2017
-#SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
-SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
-SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
-SCPI_SERVER_DIR = scpi-server
-SCPI_PARSER_DIR = $(SCPI_SERVER_DIR)/scpi-parser
-
 .PHONY: scpi
 
-$(SCPI_PARSER_TAR): | $(DL)
-	curl -L $(SCPI_PARSER_URL) -o $@
-
-$(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
-	mkdir -p $@
-	tar -xzf $< --strip-components=1 --directory=$@
-
-scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
-	$(MAKE) -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR)
-	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+scpi:
+	meson builddir
+	cd builddir && ninja
+	cd builddir && DESTDIR="." ninja install
+	cp -r builddir/usr/local/* build/
 
 ################################################################################
 # SDR

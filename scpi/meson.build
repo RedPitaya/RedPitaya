@@ -14,5 +14,5 @@ src = ['src/scpi-commands.c',
 
 inc = include_directories('src') 
 
-executable('scpi_server', src, dependencies : dep, include_directories : inc)
+executable('scpi_server', src, dependencies : dep, include_directories : inc, install : true)
 #executable('scpi-server', scpi_src)
