@@ -31,10 +31,12 @@ typedef struct {
     // API
     int unsigned gen_num;
     int unsigned osc_num;
-    float *gen_waveform;
 //    rp_clb_t clb;
     rp_gen_t *gen;
 //    rp_osc_t *osc;
+    // generator
+    int32_t gen_waveform_tag;
+    float  *gen_waveform;
 } rpscpi_context_t;
 
 #endif /* COMMON_H_ */
