@@ -10,7 +10,7 @@ apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
 apt-get -y install parted dosfstools
 
 # Python 3
-apt-get -y install python3 python3-pip
+apt-get -y install python3 python3-pip python3-setuptools
 pip3 install --upgrade pip
 
 # Meson+ninja build system
