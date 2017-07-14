@@ -5,7 +5,8 @@ import visa
 
 rm = visa.ResourceManager('@py')
 #rm.list_resources()
-rp = rm.open_resource('TCPIP::rp-f0508c.local::5000::SOCKET', read_termination = '\r\n')
+#rp = rm.open_resource('TCPIP::rp-f0508c.local::5000::SOCKET', read_termination = '\r\n')
+rp = rm.open_resource('TCPIP::rp-f0508c.local::5000::SOCKET', read_termination = '\r')
 
 
 print(rp.query("*IDN?"))

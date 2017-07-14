@@ -1,15 +1,7 @@
 /**
- * $Id: $
- *
  * @brief Red Pitaya Scpi server SCPI configuration and general command interface
- *
  * @Author Red Pitaya
- *
  * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 #ifndef SCPI_COMMANDS_H_
@@ -30,4 +22,13 @@ extern char scpi_input_buffer[];
 extern scpi_error_t scpi_error_queue_data[];
 extern scpi_t scpi_context;
 
+size_t SCPI_Write(scpi_t * context, const char * data, size_t len);
+int SCPI_Error(scpi_t * context, int_fast16_t err);
+scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val);
+scpi_result_t SCPI_Reset(scpi_t * context);
+scpi_result_t SCPI_Flush(scpi_t * context);
+
+scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context);
+
 #endif /* SCPI_COMMANDS_H_ */
+
