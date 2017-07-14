@@ -30,62 +30,6 @@
 #include "common.h"
 #include "scpi_gen.h"
 
-bool RST_executed = FALSE;
-
-/**
- * Interface general commands
- */
-size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
-    size_t total = 0;
-    rpscpi_context_t *rp = (rpscpi_context_t *) context->user_context;
-
-    if (rp->connfd != 0) {
-        while (len > 0) {
-            size_t written =  write(rp->connfd, data, len);
-            if (written < 0) {
-                syslog(LOG_ERR,
-                    "Failed to write into the socket. Should send %zu bytes. Could send only %zu bytes",
-                    len, written);
-                return total;
-            }
-            len -= written;
-            data += written;
-            total += written;
-        }
-    }
-    return total;
-}
-
-scpi_result_t SCPI_Flush(scpi_t * context) {
-    return SCPI_RES_OK;
-}
-
-int SCPI_Error(scpi_t * context, int_fast16_t err) {
-    return 0;
-}
-
-scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val) {
-    if (SCPI_CTRL_SRQ == ctrl) {
-        syslog(LOG_ERR, "**SRQ not implemented");
-    } else {
-         syslog(LOG_ERR, "**CTRL not implemented");
-    }
-
-    return SCPI_RES_ERR;
-}
-
-scpi_result_t SCPI_Reset(scpi_t * context) {
-    /* Terminating all scpi operations */
-    (void) context;
-    RP_LOG(LOG_INFO, "*RST Sucsessfuly reset scpi server.");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
-    syslog(LOG_ERR, "**SCPI_SystemCommTcpipControlQ not implemented");
-    return SCPI_RES_ERR;
-}
-
 /**
  * SCPI Configuration
  */

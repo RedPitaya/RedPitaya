@@ -45,7 +45,7 @@ scpi_result_t SCPI_Flush(scpi_t * context) {
 int SCPI_Error(scpi_t * context, int_fast16_t err) {
     (void) context;
     /* BEEP */
-    fprintf(stderr, "**ERROR: %d, \"%s\"\r\n", (int16_t) err, SCPI_ErrorTranslate(err));
+    syslog(LOG_ERR, "**ERROR: %d, \"%s\".", (int16_t) err, SCPI_ErrorTranslate(err));
     return 0;
 }
 
@@ -53,9 +53,9 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
     (void) context;
 
     if (SCPI_CTRL_SRQ == ctrl) {
-        fprintf(stderr, "**SRQ: 0x%X (%d)\r\n", val, val);
+        syslog(LOG_ERR, "**SRQ: 0x%X (%d).", val, val);
     } else {
-        fprintf(stderr, "**CTRL %02x: 0x%X (%d)\r\n", ctrl, val, val);
+        syslog(LOG_ERR, "**CTRL %02x: 0x%X (%d).", ctrl, val, val);
     }
     return SCPI_RES_OK;
 }
@@ -63,7 +63,7 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
 scpi_result_t SCPI_Reset(scpi_t * context) {
     (void) context;
 
-    fprintf(stderr, "**Reset\r\n");
+    syslog(LOG_ERR, "**Reset.");
     return SCPI_RES_OK;
 }
 
