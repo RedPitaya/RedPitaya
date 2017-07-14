@@ -125,9 +125,9 @@ Correct file permissions are required for ``schroot`` to work properly.
 
 .. code-block:: shell-session
 
-   wget http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_12-48-45_22-maj-2017.tar.gz
-   sudo chown root:root redpitaya_ubuntu_12-48-45_22-maj-2017.tar.gz
-   sudo chmod 664 redpitaya_ubuntu_12-48-45_22-maj-2017.tar.gz
+   wget http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_15-13-08_13-jul-2017.tar.gz
+   sudo chown root:root redpitaya_ubuntu_15-13-08_13-jul-2017.tar.gz
+   sudo chmod 664 redpitaya_ubuntu_15-13-08_13-jul-2017.tar.gz
 
 Create schroot configuration file ``/etc/schroot/chroot.d/red-pitaya-ubuntu.conf``.
 Replace the tarball path stub with the absolute path of the previously downloaded image.
