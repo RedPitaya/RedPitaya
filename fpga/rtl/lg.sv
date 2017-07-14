@@ -47,8 +47,8 @@ module lg #(
   input  evn_pkg::evn_t [EN-1:0] evi,  // input
   output evn_pkg::evn_t          evo,  // output
   // triggers input/output
-  input                 [TN-1:0] trg,  // input
-  output evn_pkg::trg_t          tro,  // output
+  input  logic          [TN-1:0] trg,  // input
+  output logic                   tro,  // output
   // interrupt
   output logic                   irq,
   // system bus
@@ -179,11 +179,6 @@ casez (bus.addr[BAW-1:0])
   default: bus.rdata <= 'x;
 endcase
 
-// interrupt output
-always_ff @(posedge bus.clk)
-if (~bus.rstn)  irq <= '0;
-else            irq <= tro.lst;
-
 ////////////////////////////////////////////////////////////////////////////////
 // generator core instance 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,8 +211,8 @@ asg #(
   // trigger
   .ctl_trg  (ctl_trg),
   // events
-  .evo_per  (tro.trg),
-  .evo_lst  (tro.lst),
+  .evo_per  (tro),
+  .evo_lst  (irq),
   // generator mode
   .cfg_ben  (cfg_ben),
   .cfg_inf  (cfg_inf),

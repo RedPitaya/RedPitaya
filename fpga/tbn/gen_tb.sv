@@ -39,7 +39,7 @@ axi4_stream_if #(.DN (1), .DT (DT)) str (.ACLK (clk), .ARESETn (rstn));
 // events input/output
 evn_pkg::evn_t evn;
 // triggers input/output
-evn_pkg::trg_t trg;
+logic trg;
 
 ////////////////////////////////////////////////////////////////////////////////
 // clock
