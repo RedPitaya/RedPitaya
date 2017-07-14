@@ -1,4 +1,6 @@
-[wrap-git]
-directory=scpi-parser
-url=https://github.com/RedPitaya/scpi-parser.git
-revision=redpitaya-2017
+[wrap-file]
+directory = scpi-parser-redpitaya-2017
+
+source_url = https://github.com/RedPitaya/scpi-parser/archive/redpitaya-2017.tar.gz
+source_filename = redpitaya-2017.tar.gz
+source_hash = f27477905ed350fcf2f0157bf4851d82171e2a2add100f8113b5f354ceea435b
