@@ -9,7 +9,8 @@ StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=jupyter
 Environment=PATH_REDPITAYA=/opt/redpitaya
-Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib
+Environment=PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
 ExecStart=/usr/local/bin/jupyter notebook --no-browser --allow-root
 ExecStop=/bin/kill $MAINPID
 PIDFile=/var/run/jupyter.pid
