@@ -57,12 +57,11 @@ static void installTermSignalHandler() {
  */
 
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
-    (void) context;
-    rpscpi_context_t *rp = (rpscpi_context_t *) scpi_context.user_context;
-
-    if (rp->connfd != 0) {
-        int fd = *(int *) (context->user_context);
-        return write(fd, data, len);
+    if (context->user_context != NULL) {
+        rpscpi_context_t *rp = (rpscpi_context_t *) context->user_context;
+        if (rp->connfd != 0) {
+            return write(rp->connfd, data, len);
+        }
     }
     return 0;
 }
