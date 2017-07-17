@@ -57,13 +57,14 @@ static void installTermSignalHandler() {
  */
 
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
-    if (context->user_context != NULL) {
-        rpscpi_context_t *rp = (rpscpi_context_t *) context->user_context;
-        if (rp->connfd != 0) {
-            return write(rp->connfd, data, len);
-        }
+    if (context->user_context == NULL) {
+        return SCPI_RES_ERR;
     }
-    return 0;
+    rpscpi_context_t *rp = (rpscpi_context_t *) context->user_context;
+    if (rp->connfd != 0) {
+        return write(rp->connfd, data, len);
+    }
+    return SCPI_RES_OK;
 }
 
 scpi_result_t SCPI_Flush(scpi_t * context) {
@@ -184,6 +185,15 @@ int main(int argc, char *argv[]) {
     openlog("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
     syslog(LOG_NOTICE, "scpi-server started");
 
+    SCPI_Init(&scpi_context,
+            scpi_commands,
+            &scpi_interface,
+            scpi_units_def,
+            SCPI_IDN1, SCPI_IDN2, SCPI_IDN3, SCPI_IDN4,
+            scpi_input_buffer, SCPI_INPUT_BUFFER_LENGTH,
+            scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
+    syslog(LOG_NOTICE, "scpi-parser initialized");
+
     // prepare redpitaya specific context
     scpi_context.user_context = malloc(1 * sizeof(rpscpi_context_t));
     rpscpi_context_t *rp = (rpscpi_context_t *) scpi_context.user_context;
@@ -222,17 +232,8 @@ int main(int argc, char *argv[]) {
 //            return (EXIT_FAILURE);
 //        }
 //    }
-    rp->binary_output = false;
 
     rp->connfd = 0;
-
-    SCPI_Init(&scpi_context,
-            scpi_commands,
-            &scpi_interface,
-            scpi_units_def,
-            SCPI_IDN1, SCPI_IDN2, SCPI_IDN3, SCPI_IDN4,
-            scpi_input_buffer, SCPI_INPUT_BUFFER_LENGTH,
-            scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
 
     int listenfd = createServer(LISTEN_PORT);
 
@@ -245,20 +246,16 @@ int main(int argc, char *argv[]) {
 
         struct sockaddr_in cliaddr;
         socklen_t clilen = sizeof(cliaddr);
-        int clifd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);
+        rp->connfd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);
 
-        if (clifd == -1) {
+        if (rp->connfd == -1) {
             syslog(LOG_ERR, "Failed to accept connection (%s)", strerror(errno));
             return (EXIT_FAILURE);
         }
 
-        syslog(LOG_INFO, "Connection established %s.", inet_ntoa(cliaddr.sin_addr));
-
-        rp->connfd = clifd;
-
         while (1) {
-            char smbuffer[10];
-            int rc = waitServer(clifd);
+            char smbuffer[1024];
+            int rc = waitServer(rp->connfd);
             if (rc < 0) { /* failed */
                 perror("  recv() failed");
                 break;
@@ -267,7 +264,7 @@ int main(int argc, char *argv[]) {
                 SCPI_Input(&scpi_context, NULL, 0);
             }
             if (rc > 0) { /* something to read */
-                rc = recv(clifd, smbuffer, sizeof (smbuffer), 0);
+                rc = recv(rp->connfd, smbuffer, sizeof (smbuffer), 0);
                 if (rc < 0) {
                     if (errno != EWOULDBLOCK) {
                         perror("  recv() failed");
@@ -282,7 +279,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        close(clifd);
+        close(rp->connfd);
     }
     close(listenfd);
 

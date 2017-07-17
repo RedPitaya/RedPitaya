@@ -27,7 +27,6 @@
 // Red Pitaya specific contct inside SCPI context
 typedef struct {
     int connfd;
-    bool binary_output;
     // API
     int unsigned gen_num;
     int unsigned osc_num;
