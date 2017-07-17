@@ -25,6 +25,37 @@
 #include "scpi/parser.h"
 #include "redpitaya/rp1.h"
 
+/**
+ * process signal handlers
+ */
+
+static bool app_exit = false;
+
+static void handleCloseChildEvents() {
+    struct sigaction sigchld_action = {
+            .sa_handler = SIG_DFL,
+            .sa_flags = SA_NOCLDWAIT
+    };
+    sigaction(SIGCHLD, &sigchld_action, NULL);
+}
+
+static void termSignalHandler(int signum) {
+    app_exit = true;
+    syslog (LOG_NOTICE, "Received terminate signal: %i. Exiting...", signum);
+}
+
+static void installTermSignalHandler() {
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = termSignalHandler;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+}
+
+/**
+ *
+ */
+
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
     (void) context;
     rpscpi_context_t *rp = (rpscpi_context_t *) scpi_context.user_context;
@@ -161,7 +192,10 @@ static int waitServer(int fd) {
 int main(int argc, char *argv[]) {
     (void) argc;
     (void) argv;
-    int rc;
+
+    // register process signal handlers
+    installTermSignalHandler();
+    handleCloseChildEvents();
 
     // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
     setlogmask (LOG_UPTO (LOG_INFO));
@@ -218,21 +252,18 @@ int main(int argc, char *argv[]) {
             scpi_input_buffer, SCPI_INPUT_BUFFER_LENGTH,
             scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
 
-    int listenfd;
-    char smbuffer[10];
-
-    listenfd = createServer(LISTEN_PORT);
+    int listenfd = createServer(LISTEN_PORT);
 
     syslog(LOG_INFO, "Server is listening on port %d\n", LISTEN_PORT);
 
     // Socket is opened and listening on port. Now we can accept connections
     while (1) {
-        int clifd;
-        struct sockaddr_in cliaddr;
-        socklen_t clilen;
+        if (app_exit == true)
+            break;
 
-        clilen = sizeof(cliaddr);
-        clifd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);
+        struct sockaddr_in cliaddr;
+        socklen_t clilen = sizeof(cliaddr);
+        int clifd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);
 
         if (clifd == -1) {
             syslog(LOG_ERR, "Failed to accept connection (%s)", strerror(errno));
@@ -245,7 +276,8 @@ int main(int argc, char *argv[]) {
         rp->connfd = clifd;
 
         while (1) {
-            rc = waitServer(clifd);
+            char smbuffer[10];
+            int rc = waitServer(clifd);
             if (rc < 0) { /* failed */
                 perror("  recv() failed");
                 break;
