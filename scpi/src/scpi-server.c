@@ -107,7 +107,6 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
 static int createServer(int port) {
     int fd;
     int rc;
-    int on = 1;
     struct sockaddr_in servaddr;
 
     /* Configure TCP Server */
@@ -120,22 +119,6 @@ static int createServer(int port) {
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         perror("socket() failed");
-        exit(-1);
-    }
-
-    /* Set address reuse enable */
-    rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof (on));
-    if (rc < 0) {
-        perror("setsockopt() failed");
-        close(fd);
-        exit(-1);
-    }
-
-    /* Set non blocking */
-    rc = ioctl(fd, FIONBIO, (char *) &on);
-    if (rc < 0) {
-        perror("ioctl() failed");
-        close(fd);
         exit(-1);
     }
 
@@ -267,7 +250,6 @@ int main(int argc, char *argv[]) {
 
         if (clifd == -1) {
             syslog(LOG_ERR, "Failed to accept connection (%s)", strerror(errno));
-            perror("Failed to accept connection\n");
             return (EXIT_FAILURE);
         }
 
