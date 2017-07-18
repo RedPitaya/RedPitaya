@@ -10,7 +10,8 @@ src = ['src/util.c',
        'src/asg_per.c',
        'src/asg_bst.c',
        'src/gen_out.c',
-       'src/wave.c']
+       'src/wave.c',
+       'src/osc_trg.c']
 inc = include_directories(['include', 'src'])
 
 librp1_shared = shared_library('rp1', src, dependencies : dep, include_directories : inc,
@@ -22,15 +23,16 @@ librp1_static = static_library('rp1', src, dependencies : dep, include_directori
 librp1_header = ['include/redpitaya/rp1.h',
                  'include/redpitaya/util.h',
                  'include/redpitaya/uio.h',
-                 'include/redpitaya/osc.h',
-                 'include/redpitaya/hwid.h',
-                 'include/redpitaya/gen_out.h',
-                 'include/redpitaya/gen.h',
                  'include/redpitaya/evn.h',
+                 'include/redpitaya/hwid.h',
+                 'include/redpitaya/gen.h',
                  'include/redpitaya/asg_per.h',
                  'include/redpitaya/asg_bst.h',
+                 'include/redpitaya/gen_out.h',
+                 'include/redpitaya/wave.h',
+                 'include/redpitaya/osc.h',
                  'include/redpitaya/acq.h',
-                 'include/redpitaya/wave.h']
+                 'include/redpitaya/osc_trg.h']
 install_headers(librp1_header, subdir : 'redpitaya')
 
 executable('demo', 'src/main.c', dependencies : depm, include_directories : inc, link_with : librp1_shared)
