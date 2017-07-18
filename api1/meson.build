@@ -11,6 +11,7 @@ src = ['src/util.c',
        'src/asg_bst.c',
        'src/gen_out.c',
        'src/wave.c',
+       'src/acq.c',
        'src/osc_trg.c']
 inc = include_directories(['include', 'src'])
 

@@ -5,8 +5,6 @@
 
 void rp_acq_init (rp_acq_t *handle, volatile rp_acq_regset_t *regset, const fixp_t cnt_t) {
     handle->regset = regset;
-    handle->FS = FS;
-    handle->buffer_size = buffer_size;
     handle->cnt_t = cnt_t;
 }
 
@@ -32,7 +30,7 @@ int rp_acq_set_trigger_pre (rp_acq_t *handle, uint32_t value) {
         handle->regset->cfg_pre = value;
         return(0);
     } else {
-//      raise ValueError("Pre trigger delay should be less or equal to {}.".format(self._CWr))
+//      raise ValueError("Pre trigger delay should be positive and less or equal to {}.".format(self._CWr))
         return(-1);
     }
 }
@@ -46,16 +44,16 @@ int rp_acq_set_trigger_post (rp_acq_t *handle, uint32_t value) {
         handle->regset->cfg_pst = value;
         return(0);
     } else {
-//      raise ValueError("Post trigger delay should be less or equal to {}.".format(self._CWr))
+//      raise ValueError("Post trigger delay should be positive and less or equal to {}.".format(self._CWr))
         return(-1);
     }
 }
 
-uint32_t rp_acq_get_trigger_pre_status (rp_acq_t *handle);
-    return(handle->regset->sts_pre & 0x7fffffff);
+uint32_t rp_acq_get_trigger_pre_status (rp_acq_t *handle) {
+    return(handle->regset->sts_pre & fixp_mask(handle->cnt_t));
 }
 
-uint32_t rp_acq_get_trigger_post_status (rp_acq_t *handle);
-    return(handle->regset->sts_pst & 0x7fffffff);
+uint32_t rp_acq_get_trigger_post_status (rp_acq_t *handle) {
+    return(handle->regset->sts_pst & fixp_mask(handle->cnt_t));
 }
 
