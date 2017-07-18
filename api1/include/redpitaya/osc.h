@@ -40,6 +40,7 @@ typedef struct {
     size_t       buffer_size;
     // data fixed point size
     fixp_t       dat_t;
+    // input range
     float        input_rangen;
     float       *input_ranges;
     float        input_range;

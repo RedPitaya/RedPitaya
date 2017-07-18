@@ -14,7 +14,9 @@ src = ['src/util.c',
        'src/osc.c',
        'src/acq.c',
        'src/osc_trg.c',
-       'src/osc_fil.c']
+       'src/osc_fil.c',
+       'src/la.c',
+       'src/la_trg.c']
 inc = include_directories(['include', 'src'])
 
 librp1_shared = shared_library('rp1', src, dependencies : dep, include_directories : inc,
@@ -36,7 +38,9 @@ librp1_header = ['include/redpitaya/rp1.h',
                  'include/redpitaya/osc.h',
                  'include/redpitaya/acq.h',
                  'include/redpitaya/osc_trg.h',
-                 'include/redpitaya/osc_fil.h']
+                 'include/redpitaya/osc_fil.h',
+                 'include/redpitaya/la.h',
+                 'include/redpitaya/la_trg.h']
 install_headers(librp1_header, subdir : 'redpitaya')
 
 executable('demo', 'src/main.c', dependencies : depm, include_directories : inc, link_with : librp1_shared)

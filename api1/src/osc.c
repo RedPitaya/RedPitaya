@@ -10,6 +10,7 @@
 #include "redpitaya/evn.h"
 #include "redpitaya/osc.h"
 #include "redpitaya/osc_trg.h"
+#include "redpitaya/osc_fil.h"
 
 int rp_osc_init (rp_osc_t *handle, const int unsigned index) {
     static char path_osc [] = "/dev/uio/osc";
