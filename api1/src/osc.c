@@ -1,75 +1,104 @@
-from ctypes import *
-import numpy as np
-import math
+#include <string.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <math.h>
 
-import mmap
+#include "redpitaya/util.h"
+#include "redpitaya/uio.h"
+#include "redpitaya/evn.h"
+#include "redpitaya/osc.h"
+#include "redpitaya/osc_trg.h"
 
-from .evn     import evn
-from .acq     import acq
-from .osc_trg import osc_trg
-from .osc_fil import osc_fil
-from .uio     import uio
+int rp_osc_init (rp_osc_t *handle, const int unsigned index) {
+    static char path_osc [] = "/dev/uio/osc";
+    size_t len = strlen(path_osc)+1+1;
+    char path[len];
 
-class osc (evn, acq, osc_trg, osc_fil, uio):
-    #: sampling frequency
-    FS = 125000000.0
-    #: register width - linear addition multiplication
-    DW = 16
-    # fixed point range
-    _DWr  = (1 << (DW-1)) - 1
-    # buffer parameters
-    buffer_size = 2**14 #: buffer size
-    CW = 31 #: counter size
-    _CWr = 2**CW
+    // initialize constants
+    handle->FS = 125000000.0;  // sampling frequency
+    handle->buffer_size = 1<<14;
+    handle->dat_t = (fixp_t) {.s = 1, .m = 0, .f = DWO-1};
 
-    #: analog stage range voltages
-    ranges = (1.0, 20.0)
+    // TODO: generalize this code
+    handle->input_rangen = 2;
+    handle->input_ranges = malloc(handle->input_rangen * sizeof(float));
+    handle->input_ranges [0] =  1.0;
+    handle->input_ranges [1] = 20.0;
 
-    class _regset_t (Structure):
-        _fields_ = [('evn', evn._regset_t),
-                    ('rsv_000', c_uint32),
-                    ('acq', acq._regset_t),  # pre/post trigger counters
-                    # edge detection
-                    ('trg', osc_trg._regset_t),
-                    # decimation
-                    ('cfg_dec', c_uint32),  # decimation factor
-                    ('cfg_shr', c_uint32),  # shift right
-                    ('cfg_avg', c_uint32),  # average enable
-                    # filter
-                    ('fil', osc_fil._regset_t)]
+    // a single character is reserved for the index
+    // so indexes above 9 are an error
+    if (index>9) {
+        fprintf(stderr, "OSC: failed device index decimal representation is limited to 1 digit.\n");
+        return (-1);
+    }
+    snprintf(path, len, "%s%u", path_osc, index);
+    
+    int status = rp_uio_init (&handle->uio, path);
+    if (status) {
+        return (-1);
+    }
+    // map regset
+    handle->regset = (rp_osc_regset_t *) handle->uio.map[0].mem;
+    // map buffer
+    handle->buffer = (int16_t *) handle->uio.map[1].mem;
 
-    def __init__ (self, index:int, input_range:float, uio:str = '/dev/uio/osc'):
-        """Module instance index should be provided"""
+    // events
+    rp_evn_init(&handle->evn, &handle->regset->evn);
+    // acquire
+    const fixp_t cnt_t = {.s = 0, .m = CW-1, .f = 0};
+    rp_acq_init(&handle->acq, &handle->regset->acq, cnt_t);
+    // trigger configuration
+    rp_osc_trg_init(&handle->trg, &handle->regset->trg, handle->dat_t);
+    // filter configuration
+    rp_osc_fil_init(&handle->fil, &handle->regset->fil);
 
-        # use index
-        uio = uio+str(index)
+    return(0);
+}
 
-        # call parent class init to open UIO device and map regset
-        super().__init__(uio)
+int rp_osc_release (rp_osc_t *handle) {
+    free(handle->input_ranges);
+    // reset hardware
+    rp_evn_reset(&handle->evn);
 
-        # map regset
-        self.regset = self._regset_t.from_buffer(self.uio_mmaps[0])
-        # map buffer table
-        self.table = np.frombuffer(self.uio_mmaps[1], 'int16')
+    int status = rp_uio_release (&handle->uio);
+    if (status) {
+        return (-1);
+    }
 
-        # set input range (there is no default)
-        self.input_range = input_range
+    return(0);
+}
 
-    def __del__ (self):
-        # call parent class init to unmap maps and close UIO device
-        super().__del__()
+int rp_osc_default (rp_osc_t *handle) {
+    // reset hardware
+    rp_evn_reset(&handle->evn);
+    // set acquire defaults
+    rp_acq_default(&handle->acq);
+    // set trigger defaults
+    rp_osc_trg_default(&handle->trg);
+    // decimation
+    handle->regset->cfg_dec = 0;
+    handle->regset->cfg_shr = 0;
+    handle->regset->cfg_avg = 0;
+    // set filter defaults
+    rp_osc_fil_default(&handle->fil);
 
-    def show_regset (self):
-        """Print FPGA module register set for debugging purposes."""
-        evn.show_regset(self)
-        acq.show_regset(self)
-        osc_trg.show_regset(self)
-        print (
-            "cfg_dec = 0x{reg:08x} = {reg:10d}  # decimation factor         \n".format(reg=self.regset.cfg_dec)+
-            "cfg_shr = 0x{reg:08x} = {reg:10d}  # shift right               \n".format(reg=self.regset.cfg_shr)+
-            "cfg_avg = 0x{reg:08x} = {reg:10d}  # average enable            \n".format(reg=self.regset.cfg_avg)
-        )
-        osc_fil.show_regset(self)
+    return(0);
+}
+
+void rp_osc_print (rp_osc_t *handle) {
+    printf("osc.FS = %f\n", handle->FS);
+    printf("osc.buffer_size = %lu\n", handle->buffer_size);
+    printf("osc.dat_t = %s\n", rp_util_fixp_print(handle->dat_t));
+    rp_evn_print(&handle->evn);
+    rp_acq_print(&handle->acq);
+    rp_osc_trg_print(&handle->trg);
+    printf("osc.cfg_dec = %08x\n", handle->regset->cfg_dec);
+    printf("osc.cfg_shr = %08x\n", handle->regset->cfg_shr);
+    printf("osc.cfg_avg = %08x\n", handle->regset->cfg_avg);
+    rp_osc_fil_print(&handle->fil);
+}
 
 float rp_osc_get_input_range(rp_osc_t *handle) {
     return (handle->input_range);
@@ -78,7 +107,7 @@ float rp_osc_get_input_range(rp_osc_t *handle) {
 void rp_osc_set_input_range(rp_osc_t *handle, float value) {
     bool match = false;
     int unsigned index = 0;
-    for (int unsigned i=0; i<handle->input_ranges_num; i++) {
+    for (int unsigned i=0; i<handle->input_rangen; i++) {
         if (handle->input_ranges[i] == value) {
             match = true;
             index = i;
@@ -86,13 +115,11 @@ void rp_osc_set_input_range(rp_osc_t *handle, float value) {
     }
     if (match) {
         handle->input_range = value;
-        rp_osc_fil_set_filter_coeficients(rp_filter_coeficients[index]);
-        self.filter_coeficients = self._filters[value]
+        rp_osc_fil_set_filter_coeficients(&handle->fil, &handle->fil.filters[index]);
     } else {
 //        raise ValueError("Input range can be one of {} volts.".format(self.ranges))
     }
 }
-
 
 int unsigned rp_osc_get_decimation(rp_osc_t *handle) {
     return(handle->regset->cfg_dec + 1);
@@ -104,11 +131,11 @@ void rp_osc_set_decimation (rp_osc_t *handle, int unsigned value) {
 }
 
 double rp_osc_get_sample_rate(rp_osc_t *handle) {
-    return(handle->FS / (double) self.decimation)
+    return(handle->FS / (double) rp_osc_get_decimation(handle));
 }
 
 double rp_osc_get_sample_period(rp_osc_t *handle) {
-    return((double) self.decimation / handle->FS)
+    return((double) rp_osc_get_decimation(handle) / handle->FS);
 }
 
 bool rp_osc_get_average (rp_osc_t *handle) {
@@ -119,24 +146,26 @@ void rp_osc_set_average (rp_osc_t *handle, bool value) {
     // TODO check range, for non 2**n decimation factors,
     // scaling should be applied in addition to shift
     handle->regset->cfg_avg = (uint32_t) value;
-    handle->regset->cfg_shr = math.ceil(math.log2(self.decimation));
+    handle->regset->cfg_shr = ceil(log2(rp_osc_get_decimation(handle)));
 }
 
-
-size_t rp_osc_get_pointer (rp_osc_t *handle);
+size_t rp_osc_get_pointer (rp_osc_t *handle) {
     // mask out overflow bit and sum pre and post trigger counters
-    size_t cnt = rp_acq_get_trigger_pre_status (&handle->acq);
+    size_t cnt = rp_acq_get_trigger_pre_status (&handle->acq)
                + rp_acq_get_trigger_post_status(&handle->acq);
     size_t adr = cnt % handle->buffer_size;
     return(adr);
+}
 
 size_t rp_osc_get_data (rp_osc_t *handle, float *data, size_t siz, size_t ptr) {
-        if (ptr == None) {
-            ptr = int(self.pointer)
+        // TODO
+        if (ptr == 0) {
+            ptr = rp_osc_get_pointer(handle);
         }
-        size_t adr = (handle->buffer_size + ptr - siz) % handle->buffer_size
+//        size_t adr = (handle->buffer_size + ptr - siz) % handle->buffer_size;
         // TODO add loop
         // TODO: avoid making copy of entire array
-        table = np.roll(self.table, -ptr)
-        return (float) [-siz:] * (self.__input_range / self._DWr)
+//        table = np.roll(self.table, -ptr)
+//        return (float) [-siz:] * (self.__input_range / self._DWr)
+        return (0);
 }
