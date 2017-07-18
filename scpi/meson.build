@@ -8,10 +8,10 @@ depscpi_shared = scpi_parser.get_variable('depscpi_shared')
 
 dep = [deprp1_shared, depscpi_shared, depm]
 
-src = ['src/scpi-commands.c',
-       'src/scpi-server.c',
-       'src/scpi_gen.c']
+src = ['scpi-commands.c',
+       'scpi-server.c',
+       'scpi_gen.c']
 
-inc = include_directories('src') 
+inc = include_directories('') 
 
 executable('scpi', src, dependencies : dep, include_directories : inc, install : true)
