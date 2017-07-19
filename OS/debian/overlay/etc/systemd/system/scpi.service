@@ -1,0 +1,24 @@
+[Unit]
+Description=SCPI server for Red Pitaya
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=scpi
+#PIDFile=/var/run/redpitaya_scpi.pid
+# TODO: it should be possible to use EnvironmentFile, but it is not working properly
+# complains about failing library path, or something else
+#EnvironmentFile=/etc/sysconfig/redpitaya
+Environment=PATH_REDPITAYA=/opt/redpitaya
+Environment=PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib/arm-linux-gnueabihf
+ExecStartPre=/opt/redpitaya/sbin/overlay.sh mercury
+ExecStart =/opt/redpitaya/bin/scpi
+#ExecReload=
+ExecStop  =/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target

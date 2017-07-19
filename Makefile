@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro
+all:  sdr api nginx scpi-new scpi examples rp_communication apps-tools apps-pro
 
 $(DL):
 	mkdir -p $@
@@ -209,6 +209,18 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+################################################################################
+# SCPI server
+################################################################################
+
+.PHONY: scpi-new
+
+scpi-new:
+	meson builddir # --buildtype {plain,debug,debugoptimized,release,minsize}
+	cd builddir && ninja
+	cd builddir && DESTDIR="." ninja install
+	cp -r builddir/usr/local/* build/
 
 ################################################################################
 # SDR

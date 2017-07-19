@@ -21,10 +21,10 @@ typedef struct packed {
 
 // trigger events
 typedef struct packed {
-  evn_pkg::trg_t           la;   // logic analyzer
-  evn_pkg::trg_t           lg;   // logic generator
-  evn_pkg::trg_t [MNO-1:0] osc;  // oscilloscope
-  evn_pkg::trg_t [MNG-1:0] gen;  // generator
+  logic           la;   // logic analyzer
+  logic           lg;   // logic generator
+  logic [MNO-1:0] osc;  // oscilloscope
+  logic [MNG-1:0] gen;  // generator
 } trg_t;
 
 // interrupts

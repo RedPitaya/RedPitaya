@@ -25,8 +25,8 @@ module la #(
   input  evn_pkg::evn_t [EN-1:0] evi,  // input
   output evn_pkg::evn_t          evo,  // output
   // triggers input/output
-  input                 [TN-1:0] trg,  // input
-  output evn_pkg::trg_t          tro,  // output
+  input  logic          [TN-1:0] trg,  // input
+  output logic                   tro,  // output
   // reset output
   output logic                   ctl_rst,
   // interrupt
@@ -186,11 +186,6 @@ casez (bus.addr[BAW-1:0])
   default: bus.rdata <= 'x;
 endcase
 
-// interrupt output
-always_ff @(posedge bus.clk)
-if (~bus.rstn)  irq <= '0;
-else            irq <= tro.lst;
-
 ////////////////////////////////////////////////////////////////////////////////
 // Decimation
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +229,7 @@ la_trigger #(
   .cfg_edg_pos (cfg_edg_pos),
   .cfg_edg_neg (cfg_edg_neg),
   // output triggers
-  .sts_trg  (tro.trg),
+  .sts_trg  (tro),
   // stream monitor
   .sti      (stn),
   .sto      (stt)
@@ -273,7 +268,7 @@ acq #(
   .ctl_trg  (ctl_trg),
   .sts_trg  (evs.swt),
   // events
-  .evn_lst  (tro.lst),
+  .evn_lst  (irq),
   // configuration/status pre trigger
   .cfg_pre  (cfg_pre),
   .sts_pre  (sts_pre),

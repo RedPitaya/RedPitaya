@@ -14,10 +14,4 @@ typedef struct packed {
   logic rst;  // software reset
 } evn_t;
 
-// trigger events
-typedef struct packed {
-  logic lst;  // module last
-  logic trg;  // module trigger
-} trg_t;
-
 endpackage: evn_pkg

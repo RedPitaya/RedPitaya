@@ -80,6 +80,14 @@ More examples about how to control STEMlab from MATLAB can be find :ref:`here <e
 Python
 ======
 
+The `PyVISA <http://pyvisa.readthedocs.io/en/stable/index.html>`_ library in combination with
+the `PyVISA-py <http://pyvisa-py.readthedocs.io/en/latest/>`_ backend are used.
+To install them do:
+
+   .. code-block:: shell-session
+
+   $ sudo pip3 install pyvisa pyvisa-py
+
 #. Open the :ref:`blink <blink>` tutorial and copy the code to your favorite text editor
 #. Save the file as ``blink.py`` to your working folder → for example ``examples_py``
 #. Copy and save the 
