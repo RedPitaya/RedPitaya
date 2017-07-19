@@ -6,7 +6,7 @@ import visa
 # connect to the instrument
 rm = visa.ResourceManager('@py')
 #rm.list_resources()
-rp = rm.open_resource('TCPIP::rp-f0508c.local::5000::SOCKET')
+rp = rm.open_resource('TCPIP::rp-f0508c.local::5000::SOCKET', read_termination = '\r\n')
 
 
 # read identification string
