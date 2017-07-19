@@ -90,7 +90,7 @@ int rp_osc_default (rp_osc_t *handle) {
 
 void rp_osc_print (rp_osc_t *handle) {
     printf("osc.FS = %f\n", handle->FS);
-    printf("osc.buffer_size = %lu\n", handle->buffer_size);
+    printf("osc.buffer_size = %zu\n", handle->buffer_size);
     printf("osc.dat_t = %s\n", rp_util_fixp_print(handle->dat_t));
     rp_evn_print(&handle->evn);
     rp_acq_print(&handle->acq);

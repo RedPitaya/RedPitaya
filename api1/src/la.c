@@ -65,7 +65,7 @@ int rp_la_default (rp_la_t *handle) {
 
 void rp_la_print (rp_la_t *handle) {
     printf("la.FS = %f\n", handle->FS);
-    printf("la.buffer_size = %lu\n", handle->buffer_size);
+    printf("la.buffer_size = %zu\n", handle->buffer_size);
     rp_evn_print(&handle->evn);
     rp_acq_print(&handle->acq);
     rp_la_trg_print(&handle->trg);
