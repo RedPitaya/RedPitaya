@@ -60,7 +60,7 @@ buf_ren <= bus.ren;
 
 always_ff @(posedge bus.clk)
 for (int unsigned i=0; i<2; i++) begin
-  buf_rdat [i] <= buf_dat [{bus.addr>>2,i[0]}];
+  buf_rdat [i] <= buf_dat [{bus.addr[14:2],i[0]}];
 end
 
 always_ff @(posedge bus.clk)
@@ -74,8 +74,9 @@ always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   bus.err <= 1'b0;
   bus.ack <= 1'b0;
-end else if (bus.wen | buf_ren) begin
-  bus.ack <= 1'b1;
+end else begin
+  bus.ack <= (bus.wen | buf_ren);
+
 end
 
 endmodule: str2mm
