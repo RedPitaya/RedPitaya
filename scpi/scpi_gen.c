@@ -344,31 +344,58 @@ scpi_result_t rpscpi_gen_get_offset(scpi_t *context) {
 
 scpi_result_t rpscpi_gen_set_waveform_tag(scpi_t *context) {
     int unsigned channel;
+    scpi_number_t value;
+    int32_t *waveform_tag;
+    float   *waveform_opt;
     rpscpi_context_t *user_context = (rpscpi_context_t *) context->user_context;
     rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
-    float   *waveform     =  user_context->gen_waveform;
-    int32_t *waveform_tag = &user_context->gen_waveform_tag;
 
     if (!rpcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
+    waveform_tag = &user_context->gen_waveform_tag[channel];
+    waveform_opt = &user_context->gen_waveform_opt[channel];
+    // read waveform tag
     if(!SCPI_ParamChoice(context, rpscpi_gen_waveform_names, waveform_tag, true)){
         SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
         return SCPI_RES_ERR;
     }
+    // read optional waveform parameter
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, false)) {
+        // default in case parameter is not given
+        *waveform_opt = 0.5;
+    } else {
+        if (value.special) {
+            // special values are not allowed
+            // TODO add support for MAX, MIN, MID?
+            SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+            return SCPI_RES_ERR;
+        } else {
+            // TODO add support for percentile values
+            if ( (0 >= value.content.value) && (value.content.value <= 1) ) {
+                *waveform_opt = value.content.value;
+            } else {
+                SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+                return SCPI_RES_ERR;
+            }
+        }
+    }
+    // construct the waveform
+    float waveform[gen[channel].buffer_size];
     switch(*waveform_tag) {
         case 0:
             rp_wave_sin (waveform, gen[channel].buffer_size);
             break;
         case 1:
-            rp_wave_squ (waveform, gen[channel].buffer_size, 0.5); // TODO 
+            rp_wave_squ (waveform, gen[channel].buffer_size, *waveform_opt); // TODO 
             break;
         case 2:
-            rp_wave_tri (waveform, gen[channel].buffer_size, 0.5); // TODO
+            rp_wave_tri (waveform, gen[channel].buffer_size, *waveform_opt); // TODO
             break;
         default:
             break;
     }
+    // write waveform into buffer
     if(rp_gen_set_waveform(&gen[channel], waveform, gen[channel].buffer_size)) {
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
@@ -381,11 +408,12 @@ scpi_result_t rpscpi_gen_get_waveform_tag(scpi_t *context) {
     rpscpi_context_t *user_context = (rpscpi_context_t *) context->user_context;
 //    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
 //    float   *waveform     =  user_context->gen_waveform;
-    int32_t *waveform_tag = &user_context->gen_waveform_tag;
+    int32_t *waveform_tag;
 
     if (!rpcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
+    waveform_tag = &user_context->gen_waveform_tag[channel];
     const char * text;
     if(!SCPI_ChoiceToName(rpscpi_gen_waveform_names, *waveform_tag, &text)){
         return SCPI_RES_ERR;
