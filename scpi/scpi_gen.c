@@ -395,6 +395,9 @@ scpi_result_t rpscpi_gen_set_waveform_tag(scpi_t *context) {
         default:
             break;
     }
+    // set waveform size
+    // TODO: rethink it after custom waveform support is added
+    rp_asg_per_set_table_size(&gen[channel].per, gen[channel].buffer_size);
     // write waveform into buffer
     if(rp_gen_set_waveform(&gen[channel], waveform, gen[channel].buffer_size)) {
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
