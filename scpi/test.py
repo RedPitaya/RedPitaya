@@ -15,7 +15,6 @@ rm = visa.ResourceManager('@py')
 #rm.list_resources()
 rp = rm.open_resource('TCPIP::{}::{}::SOCKET'.format(args.adr, args.port), read_termination = '\r\n')
 
-
 ###############################################################################
 # SCPI core
 ###############################################################################
@@ -40,7 +39,7 @@ rp.write(":SOURce1:MODE BURST")
 print(rp.query(":SOURce1:MODE?"))
 
 rp.write(":SOURce1:FUNCtion:SHAPe SINusoid")
-rp.write(":SOURce2:FUNCtion:SHAPe TRIangle 0.2")
+rp.write(":SOURce2:FUNCtion:SHAPe TRIangle,0.2")
 print(rp.query(":SOURce1:FUNCtion:SHAPe?"))
 print(rp.query(":SOURce2:FUNCtion:SHAPe?"))
 
@@ -48,6 +47,25 @@ print(rp.query(":SOURce1:FREQuency:FIXed?"))
 print(rp.query(":SOURce2:FREQuency:FIXed?"))
 rp.write(":SOURce2:FREQuency:FIXed 1000")
 print(rp.query(":SOURce2:FREQuency:FIXed?"))
+
+print(rp.query(":SOURce1:VOLTage:IMMediate:AMPlitude?"))
+print(rp.query(":SOURce2:VOLTage:IMMediate:AMPlitude?"))
+rp.write(":SOURce1:VOLTage:IMMediate:AMPlitude 0.2")
+rp.write(":SOURce2:VOLTage:IMMediate:AMPlitude 600 mV")
+print(rp.query(":SOURce1:VOLTage:IMMediate:AMPlitude?"))
+print(rp.query(":SOURce2:VOLTage:IMMediate:AMPlitude?"))
+
+print(rp.query(":SOURce1:VOLTage:IMMediate:OFFSet?"))
+print(rp.query(":SOURce2:VOLTage:IMMediate:OFFSet?"))
+rp.write(":SOURce1:VOLTage:IMMediate:OFFSet -0.5")
+rp.write(":SOURce2:VOLTage:IMMediate:OFFSet +0.5")
+print(rp.query(":SOURce1:VOLTage:IMMediate:OFFSet?"))
+print(rp.query(":SOURce2:VOLTage:IMMediate:OFFSet?"))
+
+
+err = int(rp.query(":SYSTem:ERRor:COUNt?"))
+for i in range(err):
+    print(rp.query(":SYSTem:ERRor:NEXT?"))
 
 # close instrument connection
 rp.close()

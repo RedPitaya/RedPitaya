@@ -21,9 +21,23 @@ rp = rm.open_resource('TCPIP::{}::{}::SOCKET'.format(args.adr, args.port), read_
 # SCPI exchange
 ###############################################################################
 
-# read identification string
-print(rp.query("*IDN?"))
-# read SCPI standard version
-print(rp.query("SYSTem:VERSion?"))
+# set output amplitude and offset
+rp.write(":SOURce1:VOLTage:IMMediate:AMPlitude 1")
+rp.write(":SOURce1:VOLTage:IMMediate:OFFSet 0")
+
+# specify peridic mode, sinusoidal waveform and 1kHZ frequency
+rp.write(":SOURce1:MODE PERiodic")
+rp.write(":SOURce1:FUNCtion:SHAPe SINusoid")
+rp.write(":SOURce1:FREQuency:FIXed 1000")
+
+# reset and start state machine
+rp.write(":SOURce1:RESET")
+rp.write(":SOURce1:START")
+
+# enable output
+rp.write(":OUTPUT1:STATe ON")
+
+# trigger state machine
+rp.write(":SOURce1:TRIGger")
 
 rp.close()

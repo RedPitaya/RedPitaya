@@ -22,8 +22,8 @@ rp = rm.open_resource('TCPIP::{}::{}::SOCKET'.format(args.adr, args.port), read_
 ###############################################################################
 
 # read identification string
-print(rp.query("*IDN?"))
+print("Red Pitaya SCPI server ID = " + rp.query("*IDN?"))
 # read SCPI standard version
-print(rp.query("SYSTem:VERSion?"))
+print("SCPI standard version = " + rp.query("SYSTem:VERSion?"))
 
 rp.close()
