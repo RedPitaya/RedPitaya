@@ -416,7 +416,7 @@ scpi_result_t rpscpi_gen_set_waveform_tag(scpi_t *context) {
             return SCPI_RES_ERR;
         } else {
             // TODO add support for percentile values
-            if ( (0 >= value.content.value) && (value.content.value <= 1) ) {
+            if ( (0 <= value.content.value) && (value.content.value <= 1) ) {
                 *waveform_opt = value.content.value;
             } else {
                 SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
