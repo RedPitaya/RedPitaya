@@ -456,16 +456,23 @@ scpi_result_t rpscpi_gen_get_waveform_tag(scpi_t *context) {
 //    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
 //    float   *waveform     =  user_context->gen_waveform;
     int32_t *waveform_tag;
+    float   *waveform_opt;
 
     if (!rpcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
+    // send waveform tag
     waveform_tag = &user_context->gen_waveform_tag[channel];
     const char * text;
     if(!SCPI_ChoiceToName(rpscpi_gen_waveform_names, *waveform_tag, &text)){
         return SCPI_RES_ERR;
     }
     SCPI_ResultMnemonic(context, text);
+    // send coma delimiter
+    SCPI_ResultCharacters(context, ", ", 2);
+    // send waveform tag
+    waveform_opt = &user_context->gen_waveform_opt[channel];
+    SCPI_ResultFloat(context, *waveform_opt);
     return SCPI_RES_OK;
 }
 
