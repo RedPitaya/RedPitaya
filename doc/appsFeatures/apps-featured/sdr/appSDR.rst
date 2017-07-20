@@ -88,7 +88,7 @@ Click here_ to download Power SDR installation package.
 1. Start the installation by double clicking on the Setup_PowerSDR_STEMlab_HAMlab_Edition.exe file.
 
 	.. image :: PowerSDRinstallation1.PNG
-   	:align: center
+		:align: center
 
 2. If you are asked for extended user access rights during the installation click Yes! Running installer with administration rights will work as well. 
 	
