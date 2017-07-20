@@ -468,8 +468,6 @@ scpi_result_t rpscpi_gen_get_waveform_tag(scpi_t *context) {
         return SCPI_RES_ERR;
     }
     SCPI_ResultMnemonic(context, text);
-    // send coma delimiter
-    SCPI_ResultCharacters(context, ", ", 2);
     // send waveform tag
     waveform_opt = &user_context->gen_waveform_opt[channel];
     SCPI_ResultFloat(context, *waveform_opt);
