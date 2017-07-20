@@ -11,14 +11,14 @@
 #include "redpitaya/osc_trg.h"
 #include "redpitaya/osc_fil.h"
 
-int unsigned input_rangen = 2;
-float        input_ranges [input_rangen] = {1.0, 20.0};
+#define DWO 16
 
 typedef struct {
     rp_evn_regset_t     evn;
     uint32_t            rsv0;     // reserved
     rp_acq_regset_t     acq;
     rp_osc_trg_regset_t trg;
+    uint32_t            rsv1;     // reserved
     // decimation
     uint32_t            cfg_dec;  // decimation factor
     uint32_t            cfg_shr;  // shift right
@@ -40,6 +40,9 @@ typedef struct {
     size_t       buffer_size;
     // data fixed point size
     fixp_t       dat_t;
+    // input range
+    float        input_rangen;
+    float       *input_ranges;
     float        input_range;
 } rp_osc_t;
 
@@ -57,7 +60,7 @@ double        rp_osc_get_sample_period(rp_osc_t *handle);
 bool          rp_osc_get_average      (rp_osc_t *handle);
 void          rp_osc_set_average      (rp_osc_t *handle, bool value);
 size_t        rp_osc_get_pointer      (rp_osc_t *handle);
-size_t        rp_osc_get_data         (rp_osc_t *handle, float *data, size_t len);
+size_t        rp_osc_get_data         (rp_osc_t *handle, float *data, size_t siz, size_t ptr);
 
 #endif
 

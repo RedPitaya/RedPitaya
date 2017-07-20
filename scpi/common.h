@@ -34,8 +34,8 @@ typedef struct {
     rp_gen_t *gen;
 //    rp_osc_t *osc;
     // generator
-    int32_t gen_waveform_tag;
-    float  *gen_waveform;
+    int32_t gen_waveform_tag[2];
+    float   gen_waveform_opt[2];
 } rpscpi_context_t;
 
 #endif /* COMMON_H_ */
