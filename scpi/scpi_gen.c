@@ -65,6 +65,11 @@ scpi_result_t rpscpi_gen_init(rpscpi_context_t *rp, int unsigned channels) {
             return(SCPI_RES_ERR);
         }
     }
+    // initialize context
+    for (int unsigned i=0; i<rp->gen_num; i++) {
+        rp->gen_waveform_tag[i] = 0;
+        rp->gen_waveform_opt[i] = 0.5;
+    }
     return(SCPI_RES_OK);
 }
 
