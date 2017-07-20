@@ -30,8 +30,10 @@ scpi_result_t rpscpi_gen_get_amplitude        (scpi_t *context);
 scpi_result_t rpscpi_gen_set_offset           (scpi_t *context);
 scpi_result_t rpscpi_gen_get_offset           (scpi_t *context);
 // wave
-scpi_result_t rpscpi_gen_set_waveform_tag     (scpi_t *context);
-scpi_result_t rpscpi_gen_get_waveform_tag     (scpi_t *context);
+scpi_result_t rpscpi_gen_set_waveform_shape   (scpi_t *context);
+scpi_result_t rpscpi_gen_get_waveform_shape   (scpi_t *context);
+scpi_result_t rpscpi_gen_set_waveform_data    (scpi_t *context);
+scpi_result_t rpscpi_gen_get_waveform_data    (scpi_t *context);
 // asg_per
 scpi_result_t rpscpi_gen_set_frequency        (scpi_t *context);
 scpi_result_t rpscpi_gen_get_frequency        (scpi_t *context);

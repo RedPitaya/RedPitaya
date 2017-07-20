@@ -105,8 +105,6 @@ const scpi_command_t scpi_commands[] = {
 //    {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
     /* Generate */
-    {.pattern = "OUTPUT#[:STATe]",                            .callback = rpscpi_gen_set_enable,},
-    {.pattern = "OUTPUT#[:STATe]?",                           .callback = rpscpi_gen_get_enable,},
     {.pattern = "SOURce#:RESET",                              .callback = rpscpi_gen_reset,},
     {.pattern = "SOURce#:START",                              .callback = rpscpi_gen_start,},
     {.pattern = "SOURce#:STOP",                               .callback = rpscpi_gen_stop,},
@@ -115,20 +113,12 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "[SOURce#]:MODE?",                            .callback = rpscpi_gen_get_mode,},
     {.pattern = "[SOURce#]:FREQuency[:FIXed]",                .callback = rpscpi_gen_set_frequency,},
     {.pattern = "[SOURce#]:FREQuency[:FIXed]?",               .callback = rpscpi_gen_get_frequency,},
-    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]",                 .callback = rpscpi_gen_set_waveform_tag,},
-    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]?",                .callback = rpscpi_gen_get_waveform_tag,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},
+    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]",                 .callback = rpscpi_gen_set_waveform_shape,},
+    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]?",                .callback = rpscpi_gen_get_waveform_shape,},
     {.pattern = "[SOURce#]:PHASe[:ADJust]",                   .callback = rpscpi_gen_set_phase,},
     {.pattern = "[SOURce#]:PHASe[:ADJust]?",                  .callback = rpscpi_gen_get_phase,},
-//  {.pattern = "[SOURce#]:PHASe:INITiate",                   .callback = RP_GenPhaseInit,},
-//    {.pattern = "[SOURce#]:FUNCtion[:SQUare]:DCYCle",         .callback = RP_GenDutyCycle,},
-//    {.pattern = "[SOURce#]:FUNCtion[:SQUare]:DCYCle?",        .callback = RP_GenDutyCycleQ,},
-//    {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle",       .callback = RP_GenDutyCycle,},
-//    {.pattern = "[SOURce#]:FUNCtion[:TRIangle]:DCYCle?",      .callback = RP_GenDutyCycleQ,},
-//    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]",                .callback = RP_GenArbitraryWaveForm,},
+//  {.pattern = "[SOURce#]:PHASe:INITiate",                   .callback = RP_GenPhaseInit,},  // use software trigger instead
+    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]",                .callback = rpscpi_gen_set_waveform_data,},
 //    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]?",               .callback = RP_GenArbitraryWaveFormQ,},
     {.pattern = "[SOURce#]:BURSt[:MODE]",                     .callback = rpscpi_gen_set_burst_mode,},
     {.pattern = "[SOURce#]:BURSt[:MODE]?",                    .callback = rpscpi_gen_get_burst_mode,},
@@ -143,6 +133,12 @@ const scpi_command_t scpi_commands[] = {
 //    {.pattern = "SOURce#:TRIGger:SOUR", .callback       = RP_GenTriggerSource,},
 //    {.pattern = "SOURce#:TRIGger:SOUR?", .callback      = RP_GenTriggerSourceQ,},
 //    {.pattern = "SOURce#:TRIGger:IMM", .callback        = RP_GenTrigger,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},
+    {.pattern = "OUTPUT#[:STATe]",                            .callback = rpscpi_gen_set_enable,},
+    {.pattern = "OUTPUT#[:STATe]?",                           .callback = rpscpi_gen_get_enable,},
 
     SCPI_CMD_LIST_END
 };

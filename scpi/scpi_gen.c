@@ -386,7 +386,7 @@ scpi_result_t rpscpi_gen_get_offset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t rpscpi_gen_set_waveform_tag(scpi_t *context) {
+scpi_result_t rpscpi_gen_set_waveform_shape(scpi_t *context) {
     int unsigned channel;
     scpi_number_t value;
     int32_t *waveform_tag;
@@ -439,18 +439,17 @@ scpi_result_t rpscpi_gen_set_waveform_tag(scpi_t *context) {
         default:
             break;
     }
-    // set waveform size
-    // TODO: rethink it after custom waveform support is added
-    rp_asg_per_set_table_size(&gen[channel].per, gen[channel].buffer_size);
     // write waveform into buffer
     if(rp_gen_set_waveform(&gen[channel], waveform, gen[channel].buffer_size)) {
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }
+    // set waveform size
+    rp_asg_per_set_table_size(&gen[channel].per, gen[channel].buffer_size);
     return SCPI_RES_OK;
 }
 
-scpi_result_t rpscpi_gen_get_waveform_tag(scpi_t *context) {
+scpi_result_t rpscpi_gen_get_waveform_shape(scpi_t *context) {
     int unsigned channel;
     rpscpi_context_t *user_context = (rpscpi_context_t *) context->user_context;
 //    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
@@ -474,33 +473,39 @@ scpi_result_t rpscpi_gen_get_waveform_tag(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-//scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
-//    
-//    rp_channel_t channel;
-//    float buffer[BUFFER_LENGTH];
-//    uint32_t size;
-//    int result;
-//
-//    if (!rpcspi_gen_channels(context, &channel)) {
-//        return SCPI_RES_ERR;
-//    }
-//
-//    if(!SCPI_ParamBufferFloat(context, buffer, &size, true)){
-//        RP_LOG(LOG_ERR, "*SOUR#:TRAC:DATA:DATA Failed to "
-//            "arbitrary waveform data parameter.\n");
-//        return SCPI_RES_ERR;
-//    }
-//
-//    result = rp_GenArbWaveform(channel, buffer, size);
-//    if(result != RP_OK){
-//        RP_LOG(LOG_ERR, "*SOUR#:TRAC:DATA:DATA Failed to "
-//            "set arbitrary waveform data: %s\n", rp_GetError(result));
-//        return SCPI_RES_ERR;
-//    }
-//
-//    RP_LOG(LOG_INFO, "*SOUR#:TRAC:DATA:DATA Successfully set arbitrary waveform data.\n");
-//    return SCPI_RES_OK;
-//}
+scpi_result_t rpscpi_gen_set_waveform_data(scpi_t *context) {
+    int unsigned channel;
+    scpi_number_t value;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+    }
+    // read data length
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
+        return SCPI_RES_ERR;
+    }
+    size_t len = (size_t) value.content.value;
+    // check is data will fit into buffer
+    if (!( (0 < len) && (len <= gen[channel].buffer_size) )) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
+    }
+    // store float values into a temporary waveform
+    float waveform[len];
+    for (size_t i=0; i<len; i++) {
+        if (!SCPI_ParamFloat(context, &waveform[i], true)) {
+            return SCPI_RES_ERR;
+        }
+    }
+    // write waveform into buffer
+    if(rp_gen_set_waveform(&gen[channel], waveform, len)) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
+    }
+    // set waveform size
+    rp_asg_per_set_table_size(&gen[channel].per, gen[channel].buffer_size);
+    return SCPI_RES_OK;
+}
 
 //scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
 //    
