@@ -1,5 +1,5 @@
 /**
- * @brief Red Pitaya Scpi server generate SCPI commands interface
+ * @brief Red Pitaya SCPI server, generator commands implementation
  * @Author Red Pitaya
  * (c) Red Pitaya  http://www.redpitaya.com
  */
@@ -8,6 +8,12 @@
 #define SCPI_GEN_H_
 
 #include "scpi/types.h"
+
+#include "common.h"
+
+// API init/release
+scpi_result_t rpscpi_gen_init    (rpscpi_context_t *rp, int unsigned channels);
+scpi_result_t rpscpi_gen_release (rpscpi_context_t *rp);
 
 // evn
 scpi_result_t rpscpi_gen_reset                (scpi_t *context);

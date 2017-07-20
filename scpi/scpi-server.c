@@ -19,8 +19,10 @@
 #include <signal.h>
 #include <syslog.h>
 
-#include "scpi-commands.h"
 #include "common.h"
+#include "scpi-commands.h"
+#include "scpi_gen.h"
+//#include "scpi_osc.h"
 
 #include "scpi/parser.h"
 #include "redpitaya/rp1.h"
@@ -53,7 +55,7 @@ static void installTermSignalHandler() {
 }
 
 /**
- *
+ * interface specific functions used by SCPI server
  */
 
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
@@ -199,39 +201,8 @@ int main(int argc, char *argv[]) {
     rpscpi_context_t *rp = (rpscpi_context_t *) scpi_context.user_context;
 
     // initialize API
-    rp->gen_num = 2;
-    rp->osc_num = 2;
-    rp->gen = malloc(rp->gen_num * sizeof(rp_gen_t));
-    if (!rp->gen) {
-        syslog(LOG_ERR, "Failed to allocate memory for rp_gen_t pointer.");
-        return (EXIT_FAILURE);
-    }
-    for (int unsigned i=0; i<rp->gen_num; i++) {
-//        rp->gen[i] = malloc(sizeof(rp_gen_t));
-//        if (!rp->gen[i]) {
-//            syslog(LOG_ERR, "Failed to allocate memory for rp_gen_t structure.");
-//            return (EXIT_FAILURE);
-//        }
-        if (rp_gen_init(&rp->gen[i], i) !=0) {
-            syslog(LOG_ERR, "Failed to initialize generator %u.", i);
-            return (EXIT_FAILURE);
-        }
-    }
-//    rp->osc = malloc(rp->osc_num * sizeof(void *));
-//    if (!rp->osc) {
-//        syslog(LOG_ERR, "Failed to allocate memory for rp_osc_t pointer.");
-//    }
-//    for (int unsigned i=0; i<rp->osc_num; i++) {
-//        rp->osc[i] = malloc(sizeof(rp_osc_t));
-//        if (!rp->osc[i]) {
-//            syslog(LOG_ERR, "Failed to allocate memory for rp_osc_t structure.");
-//            return (EXIT_FAILURE);
-//        }
-//        if (rp_osc_init(rp->osc[i], i) !=0) {
-//            syslog(LOG_ERR, "Failed to initialize oscilloscope %u.", i);
-//            return (EXIT_FAILURE);
-//        }
-//    }
+    if (!rpscpi_gen_init(rp, 2))  return (EXIT_FAILURE);
+//  if (!rpscpi_osc_init(rp, 2))  return (EXIT_FAILURE);
 
     rp->connfd = 0;
 
@@ -283,23 +254,10 @@ int main(int argc, char *argv[]) {
     }
     close(listenfd);
 
-    // closing API and freeing memory
-    for (int unsigned i=0; i<rp->gen_num; i++) {
-//        free(rp->gen[i]);
-        if (rp_gen_release(&rp->gen[i]) !=0) {
-            syslog(LOG_ERR, "Failed to release generator %u.", i);
-            return (EXIT_FAILURE);
-        }
-    }
-    free(rp->gen);
-//    for (int unsigned i=0; i<rp->osc_num; i++) {
-//        rp->osc[i] = free();
-//        if (rp_gen_release(rp->osc[i]) !=0) {
-//            syslog(LOG_ERR, "Failed to release oscilloscope %u.", i);
-//            return (EXIT_FAILURE);
-//        }
-//    }
-//    free(rp->osc);
+    // release API
+    if (!rpscpi_gen_release(rp))  return (EXIT_FAILURE);
+//  if (!rpscpi_osc_release(rp))  return (EXIT_FAILURE);
+    // free user context
     free(scpi_context.user_context);
 
     syslog(LOG_INFO, "scpi-server stopped.");

@@ -1,5 +1,5 @@
 /**
- * @brief Red Pitaya Scpi server generate SCPI commands implementation
+ * @brief Red Pitaya SCPI server, generator commands implementation
  * @Author Red Pitaya
  * (c) Red Pitaya  http://www.redpitaya.com
  */
@@ -46,6 +46,45 @@ const scpi_choice_def_t rpscpi_gen_burst_modes[] = {
 //    SCPI_CHOICE_LIST_END
 //};
 
+/**
+ * initialization of context and API
+ */
+scpi_result_t rpscpi_gen_init(rpscpi_context_t *rp, int unsigned channels) {
+    // specify number of channels
+    rp->gen_num = channels;
+    // allocate memory for channels
+    rp->gen = malloc(rp->gen_num * sizeof(rp_gen_t));
+    if (!rp->gen) {
+        syslog(LOG_ERR, "Failed to allocate memory for rp_gen_t pointer.");
+        return(SCPI_RES_ERR);
+    }
+    // run API initialization
+    for (int unsigned i=0; i<rp->gen_num; i++) {
+        if (rp_gen_init(&rp->gen[i], i) !=0) {
+            syslog(LOG_ERR, "Failed to initialize generator %u.", i);
+            return(SCPI_RES_ERR);
+        }
+    }
+    return(SCPI_RES_OK);
+}
+
+/**
+ * release of context and API
+ */
+scpi_result_t rpscpi_gen_release(rpscpi_context_t *rp) {
+    for (int unsigned i=0; i<rp->gen_num; i++) {
+        if (rp_gen_release(&rp->gen[i]) !=0) {
+            syslog(LOG_ERR, "Failed to release generator %u.", i);
+            return (SCPI_RES_OK);
+        }
+    }
+    free(rp->gen);
+    return(SCPI_RES_OK);
+}
+
+/**
+ * helper function for detecting selected channel
+ */
 static scpi_bool_t rpcspi_gen_channels(scpi_t *context, int unsigned *channel) {
     int32_t num[1];
     rpscpi_context_t *rp = (rpscpi_context_t *) context->user_context;
