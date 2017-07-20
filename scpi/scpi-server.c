@@ -120,24 +120,24 @@ static int createServer(int port) {
     /* Create socket */
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-        perror("socket() failed");
-        exit(-1);
+        syslog(LOG_ERR, "socket() failed");
+        exit(EXIT_FAILURE);
     }
 
     /* Bind to socket */
     rc = bind(fd, (struct sockaddr *) &servaddr, sizeof (servaddr));
     if (rc < 0) {
-        perror("bind() failed");
+        syslog(LOG_ERR, "bind() failed");
         close(fd);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     /* Listen on socket */
     listen(fd, 1);
     if (rc < 0) {
-        perror("listen() failed");
+        syslog(LOG_ERR, "listen() failed");
         close(fd);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     return fd;
