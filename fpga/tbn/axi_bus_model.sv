@@ -166,11 +166,14 @@ endtask: BTransfer
 task ReadTransaction (
   input  int unsigned ARDelay,
   input  ABeat        ar,
-  input  int unsigned  RDelay,
-  output RBeat         r
+  input  int unsigned RDelay,
+  output [32-1:0]     rdat
 );
+  RBeat         r;
+  
   ARTransfer(ARDelay, ar);
-   RTransfer( RDelay,  r);
+  RTransfer( RDelay,  r);
+  rdat = r.data ;
 endtask: ReadTransaction
 
 task WriteTransaction (
