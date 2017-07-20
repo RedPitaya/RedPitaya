@@ -60,7 +60,7 @@ buf_ren <= bus.ren;
 
 always_ff @(posedge bus.clk)
 for (int unsigned i=0; i<2; i++) begin
-  buf_rdat [i] <= buf_dat [{bus.addr[14:2],i[0]}];
+  buf_rdat [i] <= buf_dat [{bus.addr[AW-1:2],i[0]}];
 end
 
 always_ff @(posedge bus.clk)
