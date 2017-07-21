@@ -62,6 +62,11 @@ rp.write(":SOURce2:VOLTage:IMMediate:OFFSet +0.5")
 print(rp.query(":SOURce1:VOLTage:IMMediate:OFFSet?"))
 print(rp.query(":SOURce2:VOLTage:IMMediate:OFFSet?"))
 
+print(rp.query("SOURce1:TRACe:DATA:DATA? 16"))
+print(rp.query("SOURce2:TRACe:DATA:DATA? 16"))
+rp.write("SOURce1:TRACe:DATA:DATA 0.1, 0.2, 0.3, 0.4")
+print(rp.query("SOURce1:TRACe:DATA:DATA? 16"))
+print(rp.query("SOURce2:TRACe:DATA:DATA? 16"))
 
 err = int(rp.query(":SYSTem:ERRor:COUNt?"))
 for i in range(err):
