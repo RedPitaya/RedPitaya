@@ -238,11 +238,7 @@ scpi_result_t rpscpi_gen_get_enable(scpi_t *context) {
         return SCPI_RES_ERR;
     }
     value = rp_gen_out_get_enable(&gen[channel].out);
-    const char * text;
-    if(!SCPI_ChoiceToName(scpi_bool_def, value, &text)){
-        return SCPI_RES_ERR;
-    }
-    SCPI_ResultMnemonic(context, text);
+    SCPI_ResultBool(context, value);
     return SCPI_RES_OK;
 }
 
