@@ -4,9 +4,9 @@ SDR transceiver
 What is in the box 
 ******************
 
-The following accessories and materials are included with your STEMlab SDR transceiver kit.
+The following accessories and materials are included with your STEMlab SDR transceiver module.
 
-	* C25 160-10 10W module
+	* SDR transceiver 160-10 10W module
 	* DC power cord with Anderson Power Pole™ connector
 	* 4 x SMA cable for connecting C25 module with STEMlab 125-14 and antenna   
 	* impedance adapter
@@ -21,7 +21,6 @@ In addition to the supplied accessories, software and cables supplied with STEMl
 	* An **HF-Antenna** or dummy load with BNC
 	* good RF **ground**	
 	* A stabilized DC 13.8 VDC, 3A **Power Supply**
-	* DJControl Instinct S Series available from Hercules_ or other midi controller.
 
 SDR application requirements:
 
@@ -48,13 +47,11 @@ identify pin with arrow and connect the cable as on the image bellow.
    :align: center
    
 4. Make sure jumper is set as shown on image above.
-5. Make sure your SD card is inserted and was preinstalled with latest Red Pitaya OS
+5. Connect ethernet cable
+6. Connect Red Pitaya to power supply 5V 2A
+7. Connect antenna
 
-   - `Red Pitaya OS <http://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html>`_
-
-6. Connect ethernet cable
-7. Connect Red Pitaya to power supply 5V 2A
-8. Connect antenna
+8. Connect SDR transceiver to 13.8V 3A power supply
 
 .. note::
 	
@@ -62,20 +59,16 @@ identify pin with arrow and connect the cable as on the image bellow.
 	Make sure that is turned off and then use DC power cord with Anderson Power Pole™ connector **(9)** to connect it with module. 
 	RED wire is positive (+) while BLACK wire is negative (-), double check to not mix the colours or polarity! 
 	Don’t turn on the power supply yet.
+	
+9. Turn on power supply
 
-9. Connect SDR transceiver to 13.8V 3A power supply
-
-10. Turn on power supply
-
-11. Put STEMlab in SDR mode:
+10. Put STEMlab in SDR mode:
 
 	* Make sure your computer is connected to same local area network as STEMlab 
 	* Open your WEB browser and connect to your STEMlab (http://redpitaya.readthedocs.io/en/latest/quickStart/first.html)
 
 STEMlab is now ready to connet with Power SDR.
 
-.. tip::
-	Optionaly you can connect MIDI controller to your PC. MIDI controller can be used to control radio software parameters like frequency with physical knobs.
 
 
 Power SDR installation and SDR configuration
