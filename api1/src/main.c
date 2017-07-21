@@ -18,12 +18,13 @@ int main () {
 
     rp_gen_default(&gen0);
     // generate and program sinusoidal waveform
-    float waveform [gen0.buffer_size];
-    rp_wave_sin(waveform, gen0.buffer_size);
-    rp_gen_set_waveform(&gen0, waveform, gen0.buffer_size);
+    int unsigned len = gen0.buffer_size;
+    float waveform [len];
+    rp_wave_sin(waveform, len);
+    rp_gen_set_waveform(&gen0, waveform, len);
     // set continuous/periodic mode
     rp_gen_set_mode(&gen0, CONTINUOUS);
-    rp_asg_per_set_table_size(&gen0.per, gen0.buffer_size);
+    rp_asg_per_set_table_size(&gen0.per, len);
     rp_asg_gen_set_frequency (&gen0.per, 1000);
     rp_asg_gen_set_phase     (&gen0.per, 0);
     // enable generator output
@@ -37,6 +38,11 @@ int main () {
 
     // print regset for debug purposes
     rp_gen_print             (&gen0);
+    // print a few values from table
+    rp_gen_get_waveform(&gen0, waveform, &len);
+    for (int unsigned i=0; i<8; i++) {
+        printf ("waveform[%u] = %f\n", i, waveform[i]);
+    }
     getchar();
 
     rp_gen_release (&gen0);
