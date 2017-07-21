@@ -114,7 +114,6 @@ int rp_gen_get_waveform(rp_gen_t *handle, float *waveform, int unsigned *len) {
         *len = rp_gen_get_length(handle);
     }
     if (*len <= handle->buffer_size) {
-        waveform = malloc(*len * sizeof(float));
         float range = (float) fixp_max(handle->dat_t);
         for (int unsigned i=0; i<*len; i++) {
             waveform [i] = (float) handle->table [i] / range;
