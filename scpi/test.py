@@ -45,7 +45,9 @@ print(rp.query(":SOURce2:FUNCtion:SHAPe?"))
 
 print(rp.query(":SOURce1:FREQuency:FIXed?"))
 print(rp.query(":SOURce2:FREQuency:FIXed?"))
-rp.write(":SOURce2:FREQuency:FIXed 1000")
+rp.write(":SOURce1:FREQuency:FIXed 1000")
+rp.write(":SOURce2:FREQuency:FIXed 2kHz")
+print(rp.query(":SOURce1:FREQuency:FIXed?"))
 print(rp.query(":SOURce2:FREQuency:FIXed?"))
 
 print(rp.query(":SOURce1:VOLTage:IMMediate:AMPlitude?"))
