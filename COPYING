@@ -3,14 +3,11 @@ Red Pitaya software is released under BSD license.
 Explicitly, "Red Pitaya software", affected by this license, includes files
 in the following directories recursively:
 - Applications
-- OS/buildroot
-- OS/discovery
+- OS/tools
 - OS/filesystem
 - Bazaar/nginx/ngx_ext_modules/ngx_http_rp_module
-- FPGA
+- fpga
 - Test
-- shared/include
-- shared/libredpitaya
 
 
 Copyright (c) 2014, Red Pitaya, d.o.o.

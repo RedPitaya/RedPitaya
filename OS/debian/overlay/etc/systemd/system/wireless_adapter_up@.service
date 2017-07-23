@@ -1,0 +1,18 @@
+[Unit]
+Description=Wireless USB adapter wakeup
+Requires=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
+Before=network.target
+Wants=network.target
+
+# check existence of configuration files
+ConditionPathExists=!/opt/redpitaya/wpa_supplicant.conf
+ConditionPathExists=!/opt/redpitaya/hostapd.conf
+
+[Service]
+Type=oneshot
+ExecStart=/bin/ln -sf wireless.network.client /etc/systemd/network/wireless.network
+ExecStart=/sbin/ip link set dev %I up
+
+[Install]
+WantedBy=sys-subsystem-net-devices-%i.device

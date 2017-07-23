@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# User startup script
-
-# Uncomment the following and set a proper <DNS_IP> if your
-# network configuration is static.
-# echo "nameserver <DNS_IP>" > /tmp/resolv.conf
-
-echo "Feel free to add custom initialization commands here."

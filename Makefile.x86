@@ -1,0 +1,238 @@
+################################################################################
+# versioning system
+################################################################################
+
+VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
+BUILD_NUMBER ?= 0
+REVISION ?= $(shell git rev-parse --short HEAD)
+VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+export BUILD_NUMBER
+export REVISION
+export VERSION
+
+SUBMODULE_UBT = "redpitaya-v2016.4"
+SUBMODULE_LIN = "redpitaya-v2016.2-RP3"
+SUBMODULE_APP = $(shell git submodule status Applications)
+
+define GREET_MSG
+##############################################################################
+# Red Pitaya GNU/Linux Ecosystem
+# Version: $(VER)
+# Build: $(BUILD_NUMBER)
+# Branch: $(GIT_LOCAL_BRANCH)
+# Commit: $(GIT_COMMIT)
+# U-Boot: $(SUBMODULE_UBT)
+# Linux Kernel: $(SUBMODULE_LIN)
+# Pro Applications: $(SUBMODULE_APP)
+##############################################################################
+endef
+export GREET_MSG
+
+################################################################################
+# targets
+################################################################################
+
+all: fpga devicetree u-boot linux boot
+
+install: linux-install devicetree-install boot
+
+################################################################################
+#
+################################################################################
+
+# check if download cache directory is available
+DL          ?= dl
+TMP          = tmp
+INSTALL_DIR  = build
+
+$(DL):
+	mkdir -p $@
+
+$(TMP):
+	mkdir -p $@
+
+$(INSTALL_DIR):
+	mkdir -p $@
+
+################################################################################
+# X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
+################################################################################
+
+UBOOT_TAG     = redpitaya-v2016.4
+LINUX_TAG     = redpitaya-v2016.2-RP4
+DTREE_TAG     = xilinx-v2016.4
+
+UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
+LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
+DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
+
+UBOOT_TAR     = $(DL)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
+LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
+DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
+
+# it is possible to use an alternative download location (local) by setting environment variables
+UBOOT_URL     ?= https://github.com/RedPitaya/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
+LINUX_URL     ?= https://github.com/RedPitaya/linux-xlnx/archive/$(LINUX_TAG).tar.gz
+DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
+
+LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+
+################################################################################
+# FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
+################################################################################
+
+FPGA_PRJ_LST = classic logic v0.94 axi4lite mercury
+FPGA_PRJ_LST = classic logic v0.94 mercury
+FPGA_PRJ = logic
+
+.PHONY: fpga
+
+fpga: $(INSTALL_DIR)/fpga
+
+$(INSTALL_DIR)/fpga: $(DTREE_DIR)
+	mkdir -p $(INSTALL_DIR)/fpga
+	# compile FPGA projects
+	for ITM in $(FPGA_PRJ_LST); do \
+	    make -C fpga PRJ=$$ITM; \
+	    mkdir -p $(INSTALL_DIR)/fpga/$$ITM; \
+	    cp    fpga/prj/$$ITM/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$$ITM/fpga.bit; \
+	    cp    fpga/prj/$$ITM/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$$ITM/fsbl.elf; \
+	    cp -r fpga/prj/$$ITM/sdk/dts                  $(INSTALL_DIR)/fpga/$$ITM         ; \
+	    cp    fpga/prj/$$ITM/dts/*                    $(INSTALL_DIR)/fpga/$$ITM/dts/    ; \
+	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
+	done
+	# copy archived FPGA bitstream images and decompress them
+	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
+	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
+	# backward compatibility, TODO, should be removed at next OS release
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+
+################################################################################
+# U-Boot build provides: $(UBOOT)
+################################################################################
+
+UBOOT           = $(TMP)/u-boot.elf
+
+UBOOT_SCRIPT    = $(INSTALL_DIR)/u-boot.scr
+
+.PHONY: u-boot
+
+u-boot: $(UBOOT) $(UBOOT_SCRIPT)
+
+$(UBOOT_TAR): | $(DL)
+	curl -L $(UBOOT_URL) -o $@
+
+$(UBOOT_DIR): $(UBOOT_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+
+$(UBOOT): $(UBOOT_DIR) $(TMP)
+	make -C $< arch=ARM zynq_red_pitaya_defconfig
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS)
+	cp $(UBOOT_DIR)/u-boot $@
+
+$(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
+	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
+
+################################################################################
+# Linux build provides: $(LINUX)
+################################################################################
+
+LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
+
+.PHONY: linux linux-install
+
+linux: $(LINUX)
+
+$(LINUX_TAR): | $(DL)
+	curl -L $(LINUX_URL) -o $@
+
+$(LINUX_DIR): $(LINUX_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+
+$(LINUX): $(LINUX_DIR)
+	make -C $< mrproper
+	make -C $< ARCH=arm xilinx_zynq_defconfig
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+
+linux-install: linux $(INSTALL_DIR)
+	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
+
+################################################################################
+# device tree processing
+################################################################################
+
+DEVICETREE = $(TMP)/dts/devicetree.dtb
+
+.PHONY: devicetree devicetree-install
+
+devicetree: $(DEVICETREE)
+
+$(DTREE_TAR): | $(DL)
+	curl -L $(DTREE_URL) -o $@
+
+$(DTREE_DIR): $(DTREE_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+
+$(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
+	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
+	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system.dts
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system.dts
+	tools/dtc/dtc -@ -I dts -O dtb -o $(TMP)/dts/amba_pl.dtbo patches/devicetree/amba_pl.dts
+	# create device tree source from binary for reference
+	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
+
+devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
+	cp $(DEVICETREE)                   $(INSTALL_DIR)
+	cp $(TMP)/dts/dtraw.dts            $(INSTALL_DIR)
+	cp $(TMP)/dts/amba_pl.dtbo         $(INSTALL_DIR)
+	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
+	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
+
+################################################################################
+# boot file generator
+################################################################################
+
+BOOT = $(INSTALL_DIR)/boot.bin
+
+.PHONY: boot
+
+boot: $(BOOT)
+
+FPGA = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fpga.bit
+FSBL = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fsbl.elf
+
+$(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
+	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
+	bootgen -image boot_uboot.bif -w -o $@
+
+################################################################################
+# tarball
+################################################################################
+
+ZIPFILE=ecosystem-$(VERSION).zip
+
+zip: $(ZIPFILE)
+
+$(ZIPFILE): install
+	cp -r OS/filesystem/*  $(INSTALL_DIR)
+	# create version file
+	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
+	# build zip file
+	cd $(INSTALL_DIR); zip -r ../$(ZIPFILE) *
+
+################################################################################
+#
+################################################################################
+
+clean:
+	-make -C $(LINUX_DIR) clean
+	make -C fpga clean
+	-make -C $(UBOOT_DIR) clean
+	# todo, remove downloaded libraries and symlinks
+	$(RM) $(INSTALL_DIR) -rf

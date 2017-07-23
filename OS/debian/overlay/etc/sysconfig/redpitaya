@@ -1,0 +1,4 @@
+PATH_REDPITAYA=/opt/redpitaya
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+PATH=${PATH}:${PATH_REDPITAYA}/sbin:${PATH_REDPITAYA}/bin
+LD_LIBRARY_PATH=${PATH_REDPITAYA}/lib

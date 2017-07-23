@@ -1,0 +1,72 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Tue Oct 27 13:59:34 2015
+[*]
+[dumpfile] "/home/izi/Workplace/redpitaya-pwm/fpga/sim/pwm_tb.vcd"
+[dumpfile_mtime] "Tue Oct 27 13:58:17 2015"
+[dumpfile_size] 78080
+[savefile] "/home/izi/Workplace/redpitaya-pwm/fpga/sim/pwm_tb.gtkw"
+[timestart] 0
+[size] 1535 1176
+[pos] -1 -1
+*-17.612383 74000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] pwm_tb.
+[treeopen] pwm_tb.dut_pwm.
+[sst_width] 223
+[signals_width] 222
+[sst_expanded] 1
+[sst_vpaned_height] 362
+@24
+pwm_tb.CCE
+@28
+pwm_tb.TP
+pwm_tb.clk
+pwm_tb.rstn
+@29
+pwm_tb.cke
+@800200
+-config
+@28
+pwm_tb.ena
+@22
+pwm_tb.rng[3:0]
+@1000200
+-config
+@800200
+-stream
+@22
+pwm_tb.str_dat[15:0]
+@28
+pwm_tb.str_vld
+pwm_tb.str_rdy
+@1000200
+-stream
+@800200
+-PWM
+@22
+pwm_tb.dut_pwm.nxt[3:0]
+pwm_tb.dut_pwm.cnt[3:0]
+pwm_tb.dut_pwm.pwm[3:0]
+@1000200
+-PWM
+@800200
+-PDM
+@22
+pwm_tb.dut_pdm.cnt[3:0]
+pwm_tb.dut_pdm.nxt[3:0]
+pwm_tb.dut_pdm.acu[15:0]
+pwm_tb.dut_pdm.sum[19:0]
+pwm_tb.dut_pdm.sub[19:0]
+@800022
+pwm_tb.dut_pdm.pdm[3:0]
+@28
+(0)pwm_tb.dut_pdm.pdm[3:0]
+(1)pwm_tb.dut_pdm.pdm[3:0]
+(2)pwm_tb.dut_pdm.pdm[3:0]
+(3)pwm_tb.dut_pdm.pdm[3:0]
+@1001200
+-group_end
+@1000200
+-PDM
+[pattern_trace] 1
+[pattern_trace] 0

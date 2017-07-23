@@ -1,0 +1,6 @@
+{
+    "name": "Jupyter notebook",
+    "version": "0.96-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "Jupyter notebook server for running Python applications in a browser tab"
+}

@@ -1,10 +1,10 @@
-%% Define Red Pitaya as TCP/IP object
+%%Define Red Pitaya as TCP/IP object
 clc
 clear all
 close all
 IP= '192.168.178.56';           % Input IP of your Red Pitaya...
-port = 5000;                    % If you are using WiFi then IP is:              
-tcpipObj=tcpip(IP, port);       % 192.168.128.1
+port = 5000;
+tcpipObj=tcpip(IP, port);
 tcpipObj.InputBufferSize = 16384*64;
 tcpipObj.OutputBufferSize = 16384*64;
 flushinput(tcpipObj)
@@ -34,13 +34,12 @@ waveform_ch_1 =waveform_ch_1_0(1,1:length(waveform_ch_1_0)-1);
 waveform_ch_2 =waveform_ch_2_0(1,1:length(waveform_ch_2_0)-1);
 
 %%
-
 fprintf(tcpipObj,'GEN:RST')                     % Reset to default settings
 
-fprintf(tcpipObj,'SOUR1:FUNC ARBITRARY');       % Set function of output signal     
+fprintf(tcpipObj,'SOUR1:FUNC ARBITRARY');       % Set function of output signal
 fprintf(tcpipObj,'SOUR2:FUNC ARBITRARY');       % {sine, square, triangle,sawu,sawd,pwm}
 
-fprintf(tcpipObj,['SOUR1:TRAC:DATA:DATA ' waveform_ch_1]) 
+fprintf(tcpipObj,['SOUR1:TRAC:DATA:DATA ' waveform_ch_1])
 fprintf(tcpipObj,['SOUR2:TRAC:DATA:DATA ' waveform_ch_2])
 
 fprintf(tcpipObj,'SOUR1:VOLT 1');               % Set amplitude of output signal
@@ -49,8 +48,8 @@ fprintf(tcpipObj,'SOUR2:VOLT 1');
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 5000');        % Set frequency of output signal
 fprintf(tcpipObj,'SOUR2:FREQ:FIX 5000');
 
-fprintf(tcpipObj,'OUTPUT1:STATE ON'); 
+fprintf(tcpipObj,'OUTPUT1:STATE ON');
 fprintf(tcpipObj,'OUTPUT2:STATE ON');
 
-fclose(tcpipObj);
 
+fclose(tcpipObj);

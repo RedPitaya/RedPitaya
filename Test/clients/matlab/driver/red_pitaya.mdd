@@ -1,0 +1,1386 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MATLABInstrumentDriver>
+   <FileVersion>1.0</FileVersion>
+   <DriverName>D:\A\matlab\matlab\toolbox\instrument\instrument\drivers\agilent_33120a.mdd</DriverName>
+   <DriverType>MATLAB interface object</DriverType>
+   <InstrumentType>Function Generator</InstrumentType>
+   <InstrumentManufacturer>red_pitaya</InstrumentManufacturer>
+   <InstrumentModel>1_1</InstrumentModel>
+   <InstrumentVersion>1.0</InstrumentVersion>
+   <Identify/>
+   <Reset/>
+   <Selftest/>
+   <Error/>
+   <CreateInitCode>
+      <Code>function init(obj)
+% This method is called after the object is created.
+% OBJ is the device object.
+% End of function definition - DO NOT EDIT
+</Code>
+   </CreateInitCode>
+   <ConnectInitCode>
+      <Type>MCode</Type>
+      <Code>function init(obj)
+% This method is called after the object is connected.
+% OBJ is the device object.
+% End of function definition - DO NOT EDIT
+
+%fopen(obj);
+</Code>
+   </ConnectInitCode>
+   <CleanupCode>
+      <Type>InstrumentCommand</Type>
+   </CleanupCode>
+   <GroupInfo>
+      <Group>
+         <Name>parent</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="parent1" Index="1"/>
+         </Mappings>
+         <PropertyInfo/>
+         <MethodInfo/>
+      </Group>
+      <Group>
+         <Name>arbitrarywaveformch1</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="ArbitrarywaveformCH11" Index="1"/>
+         </Mappings>
+         <PropertyInfo>
+            <Property>
+               <Name>state</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(propertyValue)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['OUTPUT1:STATE' propertyValue '']);
+propertyName = 1;</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue/>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+         </PropertyInfo>
+         <MethodInfo>
+            <Method>
+               <Name>Amplitude</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Amplitude(obj, gain)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(gain)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:VOLT ' gain '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>customForm</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function DustomForm(obj, data1)
+parent = get(obj,'parent');
+interface = get(parent,'interface');
+
+fprintf(interface,['SOUR1:TRAC:DATA:DATA ' data1 '' ]);
+</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>DutyCycle</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function DutyCycle(obj,dutycycle)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(dutycycle)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:DCYC ' dutycycle '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>enable</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Enable(obj,state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(state)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['OUTPUT1:STATE ' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>frequency</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Frequency(obj, frequency)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(frequency)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:FREQ:FIX ' frequency '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>offset</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function offset(obj, off)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(off)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:VOLT:OFFS ' off '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>phase</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function phase(obj, phase)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(phase)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:PHAS ' phase '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>waveform</Name>
+               <Location>arbitrarywaveformch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function waveform(obj, waveform)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(waveform)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:FUNC ' waveform '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+      <Group>
+         <Name>arbitrarywaveformch2</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="ArbitrarywaveformCH21" Index="1"/>
+         </Mappings>
+         <PropertyInfo/>
+         <MethodInfo>
+            <Method>
+               <Name>Amplitude</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Amplitude(obj, gain)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(gain)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:VOLT ' gain '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>CustomForm</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function DustomForm(obj, data1)
+parent = get(obj,'parent');
+interface = get(parent,'interface');
+fprintf(interface,['SOUR2:TRAC:DATA:DATA ' data1 '' ]);
+</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>DutyCycle</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function DutyCycle(obj,dutycycle)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(dutycycle)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:DCYC ' dutycycle '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Enable</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Enable(obj,state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(state)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['OUTPUT2:STATE ' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Frequency</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Frequency(obj, frequency)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(frequency)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:FREQ:FIX ' frequency '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Offset</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Offset(obj, off)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(off)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:VOLT:OFFS ' off '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Phase</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Phase(obj, phase)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(phase)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:PHAS ' phase '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Waveform</Name>
+               <Location>arbitrarywaveformch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Waveform(obj, waveform)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(waveform)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:FUNC ' waveform '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+      <Group>
+         <Name>burstmodch1</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="BurstCH11" Index="1"/>
+         </Mappings>
+         <PropertyInfo/>
+         <MethodInfo>
+            <Method>
+               <Name>BurstCount</Name>
+               <Location>burstmodch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function BurstCount(obj, val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:BURS:NOR ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Cycles</Name>
+               <Location>burstmodch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Cycles(obj, val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:BURS:NCYC ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Enabled</Name>
+               <Location>burstmodch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Cycles(obj, val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:BURS:STAT ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>InternalPeriod</Name>
+               <Location>burstmodch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function InternalPeriod(obj,val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR1:BURS:INT:PER ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+      <Group>
+         <Name>burstmodch2</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="Burstmodch21" Index="1"/>
+         </Mappings>
+         <PropertyInfo/>
+         <MethodInfo>
+            <Method>
+               <Name>BurstCount</Name>
+               <Location>burstmodch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function BurstCount(obj, val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:BURS:NOR ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Cycles</Name>
+               <Location>burstmodch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Cycles(obj, val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:BURS:NCYC ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Enabled</Name>
+               <Location>burstmodch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Cycles(obj, val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:BURS:STAT ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>InternalPeriod</Name>
+               <Location>burstmodch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function IntrnalPeriod(obj,val)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(val)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['SOUR2:BURS:INT:PER ' val '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+      <Group>
+         <Name>ledcontrol</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="RP1" Index="1"/>
+         </Mappings>
+         <PropertyInfo>
+            <Property>
+               <Name>LED1</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+propertyValue=str2num(query(interface,'DIG:PIN? LED1'));</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+% Error checking.
+if ~ischar(propertyValue)
+    error('property must be a string!');
+end
+fprintf(interface, ['DIG:PIN LED1,'propertyValue'']);</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue/>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+            <Property>
+               <Name>LED2</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+propertyValue=str2num(query(interface,'DIG:PIN? LED2'));</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+% Error checking.
+if ~ischar(propertyValue)
+    error('property must be a string!');
+end
+fprintf(interface, ['DIG:PIN LED2,'propertyValue'']);</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue>0</DefaultValue>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+            <Property>
+               <Name>LED3</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+propertyValue=str2num(query(interface,'DIG:PIN? LED3'));</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+% Error checking.
+if ~ischar(propertyValue)
+    error('property must be a string!');
+end
+fprintf(interface, ['DIG:PIN LED3,'propertyValue'']);</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue>0</DefaultValue>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+            <Property>
+               <Name>LED4</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+propertyValue=str2num(query(interface,'DIG:PIN? LED4'));</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+% Error checking.
+if ~ischar(propertyValue)
+    error('property must be a string!');
+end
+fprintf(interface, ['DIG:PIN LED4,'propertyValue'']);</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue>0</DefaultValue>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+            <Property>
+               <Name>LED5</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+propertyValue=str2num(query(interface,'DIG:PIN? LED5'));</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+% Error checking.
+if ~ischar(propertyValue)
+    error('property must be a string!');
+end
+fprintf(interface, ['DIG:PIN LED5,'propertyValue'']);
+propertyName = 1;</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue>0</DefaultValue>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+            <Property>
+               <Name>LED6</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+propertyValue=str2num(query(interface,'DIG:PIN? LED6'));</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+% Error checking.
+if ~ischar(propertyValue)
+    error('property must be a string!');
+end
+fprintf(interface, ['DIG:PIN LED6,'propertyValue'']);</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue>0</DefaultValue>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+            <Property>
+               <Name>LED7</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+propertyValue=str2num(query(interface,'DIG:PIN? LED7'));</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+%Get interface
+interface = get(parent,'interface');
+% Error checking.
+if ~ischar(propertyValue)
+    error('property must be a string!');
+end
+fprintf(interface, ['DIG:PIN LED7,'propertyValue'']);</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue>0</DefaultValue>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+         </PropertyInfo>
+         <MethodInfo>
+            <Method>
+               <Name>LED1</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function LED1(obj, state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+
+
+% Error checking.
+if ~ischar(state)
+    state = int2str(state);
+end
+if strcmp(state,'ON')
+    state = '1';
+elseif strcmp(state, 'OFF')
+    state = '0';
+end
+
+fprintf(interface, ['DIG:PIN LED1,' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>LED2</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function LED2(obj, state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+
+
+% Error checking.
+if ~ischar(state)
+    state = int2str(state);
+end
+if strcmp(state,'ON')
+    state = '1';
+elseif strcmp(state, 'OFF')
+    state = '0';
+end
+
+fprintf(interface, ['DIG:PIN LED2,' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>LED3</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function LED3(obj, state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+
+
+% Error checking.
+if ~ischar(state)
+    state = int2str(state);
+end
+if strcmp(state,'ON')
+    state = '1';
+elseif strcmp(state, 'OFF')
+    state = '0';
+end
+
+fprintf(interface, ['DIG:PIN LED3,' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>LED4</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function LED4(obj, state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+
+
+% Error checking.
+if ~ischar(state)
+    state = int2str(state);
+end
+if strcmp(state,'ON')
+    state = '1';
+elseif strcmp(state, 'OFF')
+    state = '0';
+end
+
+fprintf(interface, ['DIG:PIN LED4,' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>LED5</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function LED5(obj, state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+
+
+% Error checking.
+if ~ischar(state)
+    state = int2str(state);
+end
+if strcmp(state,'ON')
+    state = '1';
+elseif strcmp(state, 'OFF')
+    state = '0';
+end
+
+fprintf(interface, ['DIG:PIN LED5,' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>LED6</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function LED6(obj, state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+
+
+% Error checking.
+if ~ischar(state)
+    state = int2str(state);
+end
+if strcmp(state,'ON')
+    state = '1';
+elseif strcmp(state, 'OFF')
+    state = '0';
+end
+
+fprintf(interface, ['DIG:PIN LED6,' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>LED7</Name>
+               <Location>ledcontrol</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function LED7(obj, state)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+
+
+% Error checking.
+if ~ischar(state)
+    state = int2str(state);
+end
+if strcmp(state,'ON')
+    state = '1';
+elseif strcmp(state, 'OFF')
+    state = '0';
+end
+
+fprintf(interface, ['DIG:PIN LED7,' state '']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+      <Group>
+         <Name>system</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="System1" Index="1"/>
+         </Mappings>
+         <PropertyInfo/>
+         <MethodInfo>
+            <Method>
+               <Name>ResetGenerator</Name>
+               <Location>system</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function ResetGenerator(obj)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+%get parent
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+fprintf(interface, ['GEN:RST ']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+      <Group>
+         <Name>triggerch1</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="TriggerCH11" Index="1"/>
+         </Mappings>
+         <PropertyInfo>
+            <Property>
+               <Name>source</Name>
+               <Location>triggerch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <GetMCode>function propertyValue = getProperty(obj, propertyName)
+% Return a property value.
+%   This function is called to return the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+</GetMCode>
+                  <SetMCode>function set(obj, propertyName, propertyValue)
+% Set a property value.
+%   This function is called to set the device or group object property
+%   value. If the property is a group property, OBJ is the group object. If
+%   the property is a base device property, OBJ is the device object.
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+% Error checking.
+if ~ischar(dutycycle)
+    error('state must be a string.');
+end
+
+fprintf(interface, ['OUTPUT1:DCYC' propertyValue '']);
+
+propertyName = 1;</SetMCode>
+               </Code>
+               <PermissibleType>
+                  <Type>String</Type>
+                  <Constraint>none</Constraint>
+               </PermissibleType>
+               <DefaultValue/>
+               <ReadOnly>never</ReadOnly>
+               <Description/>
+            </Property>
+         </PropertyInfo>
+         <MethodInfo>
+            <Method>
+               <Name>ImmediateTgigger</Name>
+               <Location>triggerch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function ImmediateTgigger(obj)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+fprintf(interface, ['OUTPUT1:TRIG:IMM']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Source</Name>
+               <Location>triggerch1</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Source(obj,source)
+
+
+
+parent = get(obj,'parent');
+
+interface= get(parent,'interface');
+
+if ~ischar(source)
+    error('input must be a string');
+end
+
+fprintf(interface, ['SOUR1:TRIG:SOUR ' source '']);
+
+</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+      <Group>
+         <Name>triggerch2</Name>
+         <Description/>
+         <Command/>
+         <Size>1</Size>
+         <Mappings>
+            <ChannelMap Command="TriggerCH21" Index="1"/>
+         </Mappings>
+         <PropertyInfo/>
+         <MethodInfo>
+            <Method>
+               <Name>ImmediateTrigger</Name>
+               <Location>triggerch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function ImmediateTgigger(obj)
+% For group functions, OBJ is the group object. For
+% base device functions, OBJ is the device object.
+parent = get(obj,'parent');
+
+%Get interface
+interface = get(parent,'interface');
+
+fprintf(interface, ['OUTPUT2:TRIG:IMM']);</MCode>
+               </Code>
+               <Description/>
+            </Method>
+            <Method>
+               <Name>Source</Name>
+               <Location>triggerch2</Location>
+               <CapabilityGroup>Base</CapabilityGroup>
+               <Type>MCode</Type>
+               <Code>
+                  <MCode>function Source(obj,source)
+
+parent = get(obj,'parent');
+
+interface= get(parent,'interface');
+
+if ~ischar(source)
+    error('input must be a string');
+end
+
+fprintf(interface, ['SOUR2:TRIG:SOUR ' source '']);
+
+</MCode>
+               </Code>
+               <Description/>
+            </Method>
+         </MethodInfo>
+      </Group>
+   </GroupInfo>
+</MATLABInstrumentDriver>

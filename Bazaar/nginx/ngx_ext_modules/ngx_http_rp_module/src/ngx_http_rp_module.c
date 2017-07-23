@@ -22,6 +22,7 @@
 
 /* Be careful not to include system headers before Nginx ones!!! */
 #include <ctype.h>
+#include <unistd.h>
 
 #define XSTR(s) STR(s)
 #define STR(s) #s
@@ -40,8 +41,8 @@
 
 /* constants */
 const char *json_content_str = "application/json";
-const char *c_bazaar_dir     = "/opt/www/apps";
-const char *c_bazaar_server  = "http://bazaar.redpitaya.com";
+const char *c_bazaar_dir     = "/opt/redpitaya/www/apps";
+const char *c_bazaar_server  = "http://bazaar.redpitaya.com/";
 const char *c_tmp_dir        = "/tmp";
 
 const char *c_bazaar_uri = "/bazaar";
@@ -52,7 +53,7 @@ ngx_http_rp_module_ctx_t rp_module_ctx;
 /* internal callbacks */
 ngx_int_t ngx_http_rp_init_module(ngx_cycle_t *cycle);
 void     *ngx_http_rp_create_loc_conf(ngx_conf_t *cf);
-char     *ngx_http_rp_merge_loc_conf(ngx_conf_t *cf, void *parent, 
+char     *ngx_http_rp_merge_loc_conf(ngx_conf_t *cf, void *parent,
                                      void *child);
 ngx_int_t ngx_http_rp_init_process(ngx_cycle_t *cycle);
 void      ngx_http_rp_exit_process(ngx_cycle_t *cycle);
@@ -93,13 +94,13 @@ ngx_command_t ngx_http_rp_commands[] = {
 ngx_http_module_t ngx_http_rp_ctx = {
     NULL,                          /* preconfiguration */
     NULL,                          /* postconfiguration */
- 
+
     NULL,                          /* create main configuration */
     NULL,                          /* init main configuration */
- 
+
     NULL,                          /* create server configuration */
     NULL,                          /* merge server configuration */
- 
+
     ngx_http_rp_create_loc_conf,   /* create location configuration */
     ngx_http_rp_merge_loc_conf     /* merge location configuration */
 };
@@ -126,7 +127,7 @@ ngx_int_t ngx_http_rp_init_module(ngx_cycle_t *cycle)
     rp_notice(cycle->log, "Initialized ngx_http_rp_module version %s-%s",
         VERSION_STR, REVISION_STR);
     ngx_memset(&rp_module_ctx, 0, sizeof(ngx_http_rp_module_ctx_t));
-    
+
     rp_module_ctx.log = cycle->log;
 
     return NGX_OK;
@@ -156,11 +157,37 @@ char *ngx_http_rp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_rp_loc_conf_t *conf = child;
     struct stat stat_buf;
 
-    ngx_conf_merge_str_value(conf->bazaar_dir, prev->bazaar_dir, 
-                             c_bazaar_dir);
-    ngx_conf_merge_str_value(conf->bazaar_server, prev->bazaar_server, 
-                             c_bazaar_server);
-    ngx_conf_merge_str_value(conf->tmp_dir, prev->tmp_dir, 
+    ngx_conf_merge_str_value(conf->bazaar_dir, prev->bazaar_dir, c_bazaar_dir);
+    if ( !access ("/opt/redpitaya/www/conf/testbazaar", 0) )
+    {
+        FILE * fp;
+        fp = fopen("/opt/redpitaya/version.txt", "r");
+        if (fp == NULL)
+        {
+            ngx_conf_merge_str_value(conf->bazaar_server, prev->bazaar_server, c_bazaar_server);
+        }
+        else
+        {
+            char * line = NULL;
+            size_t len = 0;
+            ssize_t read;
+            if((read = getline(&line, &len, fp)) != -1)
+            {
+                rp_error(cf->log, "Custom URL of bazaar was called!");
+                ngx_conf_merge_str_value(conf->bazaar_server, prev->bazaar_server, line);
+            }
+            else
+            {
+                ngx_conf_merge_str_value(conf->bazaar_server, prev->bazaar_server, c_bazaar_server);
+            }
+            fclose(fp);
+        }
+    } else
+    {
+        ngx_conf_merge_str_value(conf->bazaar_server, prev->bazaar_server, c_bazaar_server);
+    }
+
+    ngx_conf_merge_str_value(conf->tmp_dir, prev->tmp_dir,
                              c_tmp_dir);
 
     if(stat((const char *)conf->bazaar_dir.data, &stat_buf) < 0) {
@@ -233,7 +260,7 @@ int rp_module_cmd_parse_args(const char *args, int len, char ***argv)
     char *s;
     int i = 0;
     int j = 0;
-    
+
     while(isblank(args[i++]));
     i--;
 
@@ -270,10 +297,10 @@ int rp_module_cmd_parse_args(const char *args, int len, char ***argv)
 
 
 /*----------------------------------------------------------------------------*/
-int rp_module_cmd_error(cJSON **json_root, const char *reason, 
+int rp_module_cmd_error(cJSON **json_root, const char *reason,
                         const char *stderror, ngx_pool_t *pool)
 {
-    cJSON_AddItemToObject(*json_root, "status", 
+    cJSON_AddItemToObject(*json_root, "status",
                           cJSON_CreateString("ERROR", pool), pool);
     cJSON_AddItemToObject(*json_root, "reason",
                           cJSON_CreateString(reason, pool), pool);
@@ -288,7 +315,7 @@ int rp_module_cmd_error(cJSON **json_root, const char *reason,
 /*----------------------------------------------------------------------------*/
 int rp_module_cmd_ok(cJSON **json_root, ngx_pool_t *pool)
 {
-    cJSON_AddItemToObject(*json_root, "status", 
+    cJSON_AddItemToObject(*json_root, "status",
                           cJSON_CreateString("OK", pool), pool);
     return 0;
 }
@@ -297,7 +324,7 @@ int rp_module_cmd_ok(cJSON **json_root, ngx_pool_t *pool)
 /*----------------------------------------------------------------------------*/
 int rp_module_cmd_again(cJSON **json_root, ngx_pool_t *pool)
 {
-    cJSON_AddItemToObject(*json_root, "status", 
+    cJSON_AddItemToObject(*json_root, "status",
                           cJSON_CreateString("AGAIN", pool), pool);
     return 0;
 }
@@ -357,7 +384,7 @@ ngx_int_t rp_module_send_response(ngx_http_request_t *r, cJSON **json_root)
     out_buffer_len = strlen(out_buffer);
 
     b->pos = (u_char *)out_buffer;
-    b->last = 
+    b->last =
         (u_char *)out_buffer + out_buffer_len;
     b->memory   = 1;
     b->last_buf = b->last_in_chain = 1;
@@ -380,23 +407,23 @@ ngx_int_t rp_module_send_response(ngx_http_request_t *r, cJSON **json_root)
     }
     j_status = cJSON_GetObjectItem(*json_root, "status");
     //if(j_status != NULL) {
-    //    rp_debug(r->connection->log, "Output status (req :%d): %s", r->method, 
+    //    rp_debug(r->connection->log, "Output status (req :%d): %s", r->method,
     //             j_status->valuestring);
     //}
 
     cJSON_Delete(*json_root, r->pool);
-    
+
     rc = ngx_http_send_header(r);
 
     /* If error while sending OK output we re-send it */
-    if((rc == NGX_ERROR) && (r->method == NGX_HTTP_GET) && j_status && 
+    if((rc == NGX_ERROR) && (r->method == NGX_HTTP_GET) && j_status &&
        (j_status->valuestring[0] = 'O') && (j_status->valuestring[1] == 'K')) {
         rp_data_clear_signals_dirty();
     }
     if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
         return rc;
     }
-         
+
     /* TODO: Be sure that outputting is always flushed! Had some problems
      * at this part.
      */
@@ -407,7 +434,7 @@ ngx_int_t rp_module_send_response(ngx_http_request_t *r, cJSON **json_root)
     rc = ngx_http_output_filter(r, &out);
     while(rc == NGX_AGAIN) {
         r->connection->write->ready = 1;
-        rc = ngx_http_output_filter(r, &out);        
+        rc = ngx_http_output_filter(r, &out);
         if(rc == NGX_ERROR)
             break;
     }

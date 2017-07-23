@@ -1,0 +1,53 @@
+[*]
+[*] GTKWave Analyzer v3.3.65 (w)1999-2015 BSI
+[*] Fri Oct  9 11:10:55 2015
+[*]
+[dumpfile] "debounce_tb.vcd"
+[dumpfile_mtime] "Fri Oct  9 11:01:01 2015"
+[dumpfile_size] 6623174
+[savefile] "debounce_tb.gtkw"
+[timestart] 0
+[size] 1535 1176
+[pos] -1 -1
+*-33.442207 24680000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 223
+[signals_width] 205
+[sst_expanded] 1
+[sst_vpaned_height] 363
+@22
+debounce_tb.CN
+@28
+debounce_tb.CP
+@22
+debounce_tb.CW
+debounce_tb.DW
+@28
+debounce_tb.clk
+debounce_tb.rstn
+@23
+debounce_tb.seed
+@c00028
+debounce_tb.d_i[1:0]
+@28
+(0)debounce_tb.d_i[1:0]
+(1)debounce_tb.d_i[1:0]
+@1401200
+-group_end
+@28
+debounce_tb.d_o[1:0]
+@c00028
+debounce_tb.d_n[1:0]
+@28
+(0)debounce_tb.d_n[1:0]
+(1)debounce_tb.d_n[1:0]
+@1401200
+-group_end
+@c00028
+debounce_tb.d_p[1:0]
+@28
+(0)debounce_tb.d_p[1:0]
+(1)debounce_tb.d_p[1:0]
+@1401200
+-group_end
+[pattern_trace] 1
+[pattern_trace] 0

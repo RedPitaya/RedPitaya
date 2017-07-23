@@ -1,0 +1,6 @@
+{
+    "name": "LTI DSP Workbench",
+    "version": "0.94-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "Do-It-Digitally: Just dial the coefficients and your Pitaya will behave like any physical system. (byDashPI)"
+}

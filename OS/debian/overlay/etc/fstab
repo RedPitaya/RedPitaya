@@ -1,0 +1,5 @@
+# /etc/fstab: static file system information.
+# <file system> <mount point>   <type>  <options>              <dump>  <pass>
+/dev/mmcblk0p2  /               ext4    errors=remount-ro      0       1
+/dev/mmcblk0p1  /boot           vfat    defaults,ro            0       0
+/dev/mmcblk0p1  /opt/redpitaya  vfat    defaults,ro            0       2

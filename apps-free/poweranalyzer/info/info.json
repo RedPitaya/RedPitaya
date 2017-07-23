@@ -1,0 +1,6 @@
+{
+    "name": "Power Analyzer",
+    "version": "0.94-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "Single phase power analyzer based on oscilloscope app."
+}

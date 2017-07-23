@@ -1,0 +1,6 @@
+{
+    "name": "Teslameter",
+    "version": "0.94-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "A two channel time domain signal visualization system."
+}

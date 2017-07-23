@@ -1,0 +1,8 @@
+[Match]
+Name=eth0
+
+[Network]
+LinkLocalAddressing=ipv4
+DHCP=ipv4
+IPForward=yes
+IPMasquerade=yes

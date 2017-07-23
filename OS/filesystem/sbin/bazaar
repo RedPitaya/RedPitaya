@@ -1,0 +1,193 @@
+#!/bin/sh
+#
+# Bazaar install/remove script
+#
+# Author Ales Bardorfer <ales.bardorfer@redpitaya.com>
+# 
+# (c) Red Pitaya  http://www.redpitaya.com
+#
+# This part of code is written in BASH/SH scripting language.
+# Please visit http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO.html
+#              http://tldp.org/LDP/abs/html/
+# for more details on the language used herein.
+#
+
+# Error codes
+# 0  OK
+# 1  Wrong use (parameters)
+# 2  Network related error
+# 3  Data integrity error
+# 4  System error
+
+
+# Ecosystem special application ID.
+OS=ecosystem
+
+# Default target directory for applications
+TARGET=${PATH_REDPITAYA}/www/apps/
+
+# Get parameters or print usage if they are wrong
+[ $# -lt 2 ] && {
+    echo  "`basename $0`"
+    echo ""
+    echo "Usage: `basename $0`  action app [url] [md5sum]" 1>&2
+    echo "       action:     Action to perform [install, remove, idgen, lic]." 1>&2
+    echo "       app:        Application ID, pass '0' for idgen and lic ." 1>&2
+    echo "       url:        Application archive URL (for install only)." 1>&2
+    echo "       md5sum:     The MD5 sum of the archive (for install only)." 1>&2
+    exit 1;
+}
+
+ACTION=$1
+APP=$2
+URL=$3
+MD5=$4
+
+# Install action
+[ "x${ACTION}" = "xinstall" ] && {
+
+    if [ "x${MD5}" = "x" ]; then
+        echo "Required md5sum parameter missing." 1>&2
+        exit 1;
+    fi
+
+    if [ "x${URL}" = "x" ]; then
+        echo "Required url parameter missing." 1>&2
+        exit 1;
+    fi
+
+    # Ecosystem special case
+    if [ "x${APP}" = "x${OS}" ]; then
+        TARGET=${PATH_REDPITAYA}
+    fi
+
+
+    wget -q -O /tmp/app.zip ${URL}
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error retrieving archive from ${URL}" 1>&2
+        exit 2;
+    }
+
+    MD5_LOCAL=`md5sum /tmp/app.zip | sed -e 's/\ .*//'`;
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error calculating MD5 sum." 1>&2
+        rm -f /tmp/app.zip
+        exit 3;
+    }
+
+    [ "x${MD5_LOCAL}" != "x${MD5}" ] && {
+        echo "Invalid MD5 sum." 1>&2
+        rm -f /tmp/app.zip
+        exit 3;
+    }
+
+    mount -o rw,remount ${PATH_REDPITAYA}
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error mounting SD card RW." 1>&2
+        rm -f /tmp/app.zip
+        exit 4;
+    }
+
+    unzip -o -q /tmp/app.zip -d ${TARGET}
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error extracting archive." 1>&2
+        rm -f /tmp/app.zip
+        mount -o ro,remount ${PATH_REDPITAYA}
+        exit 4;
+    }
+
+    rm -f /tmp/app.zip
+
+    mount -o ro,remount ${PATH_REDPITAYA}
+
+    # Ecosystem special case - schedule a reboot
+    if [ "x${APP}" = "x${OS}" ]; then
+        /bin/sh -c "sleep 5; reboot" &
+    fi
+
+    exit 0;
+}
+
+# Remove (uninstall) action
+[ "x${ACTION}" = "xremove" ] && {
+
+    # Ecosystem special case
+    if [ "x${APP}" = "x${OS}" ]; then
+        echo "Cowardly refusing to remove the (eco)system." 1>&2
+        exit 1;
+    fi
+
+    # Applications
+    [ -d ${PATH_REDPITAYA}/www/apps/${APP} ] || {
+        echo "Trying to remove non-existent ${PATH_REDPITAYA}/www/apps/${APP}." 1>&2
+        exit 0;
+    }
+
+    mount -o rw,remount ${PATH_REDPITAYA}
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error mounting SD card RW." 1>&2
+        exit 4;
+    }
+
+    rm -rf ${PATH_REDPITAYA}/www/apps/${APP}
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error rmoving ${PATH_REDPITAYA}/www/apps/${APP}" 1>&2
+        exit 4;
+    }
+
+    mount -o ro,remount ${PATH_REDPITAYA}
+
+    exit 0;
+}
+
+[ "x${ACTION}" = "xidgen" ] && {
+
+    mount -o rw,remount ${PATH_REDPITAYA}
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error mounting SD card RW." 1>&2
+        exit 4;
+    }
+
+	${PATH_REDPITAYA}/sbin/idgen -o ${TARGET}/idfile.id
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error creating ID-file" 1>&2
+        exit 4;
+    }
+
+    mount -o ro,remount ${PATH_REDPITAYA}
+
+    exit 0;
+}
+
+[ "x${ACTION}" = "xlic" ] && {
+
+    mount -o rw,remount ${PATH_REDPITAYA}
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error mounting SD card RW." 1>&2
+        exit 4;
+    }
+
+	mv -f /tmp/lic.lic ${TARGET}/lic.lic
+    status=$?
+    [ $status -ne 0 ] && {
+        echo "Error installing License-file" 1>&2
+        exit 4;
+    }
+
+    mount -o ro,remount ${PATH_REDPITAYA}
+
+    exit 0;
+}
+
+echo "Unknown action: ${ACTION}" 1>&2
+
+exit 1;

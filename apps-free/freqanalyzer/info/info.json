@@ -1,0 +1,6 @@
+{
+    "name": "Frequency Response Analyzer",
+    "version": "0.94-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "Characterization of the system dynamics by measuring the magnitude of the output as a function of frequency, in comparison to the input."
+}

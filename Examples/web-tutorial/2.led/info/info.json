@@ -1,0 +1,6 @@
+{
+    "name": "LED control",
+    "version": "0.94-31",
+    "revision": "ca8ae99",
+    "description": "Control LED on the Red Pitaya"
+}

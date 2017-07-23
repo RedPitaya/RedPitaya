@@ -1,0 +1,20 @@
+[Match]
+Name=wlan0*
+
+[Network]
+Description = Wireless IP interface
+LinkLocalAddressing=ipv4
+DHCPServer=yes
+
+[Address]
+Address   = 192.168.128.1/24
+Broadcast = 192.168.128.255
+
+[DHCPServer]
+PoolOffset          = 10
+PoolSize            = 40
+EmitDNS             = yes
+DNS                 = 8.8.8.8
+DNS                 = 8.8.4.4
+DefaultLeaseTimeSec = 600
+MaxLeaseTimeSec     = 7200

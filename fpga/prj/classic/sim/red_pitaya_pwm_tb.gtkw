@@ -1,0 +1,65 @@
+[*]
+[*] GTKWave Analyzer v3.3.64 (w)1999-2014 BSI
+[*] Fri Apr 24 13:10:53 2015
+[*]
+[dumpfile] "/home/izi/Workplace/redpitaya-no-cdc/FPGA/release1/fpga/code/sim/red_pitaya_pwm_tb.vcd"
+[dumpfile_mtime] "Fri Apr 24 13:09:18 2015"
+[dumpfile_size] 10101195
+[savefile] "/home/izi/Workplace/redpitaya-no-cdc/FPGA/release1/fpga/code/sim/red_pitaya_pwm_tb.gtkw"
+[timestart] 553080000
+[size] 1301 744
+[pos] -1 -1
+*-23.000000 399394000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] red_pitaya_pwm_tb.
+[sst_width] 43
+[signals_width] 177
+[sst_expanded] 0
+[sst_vpaned_height] 211
+@c00024
+red_pitaya_pwm_tb.CCW[31:0]
+@28
+(0)red_pitaya_pwm_tb.CCW[31:0]
+(1)red_pitaya_pwm_tb.CCW[31:0]
+(2)red_pitaya_pwm_tb.CCW[31:0]
+(3)red_pitaya_pwm_tb.CCW[31:0]
+(4)red_pitaya_pwm_tb.CCW[31:0]
+(5)red_pitaya_pwm_tb.CCW[31:0]
+(6)red_pitaya_pwm_tb.CCW[31:0]
+(7)red_pitaya_pwm_tb.CCW[31:0]
+(8)red_pitaya_pwm_tb.CCW[31:0]
+(9)red_pitaya_pwm_tb.CCW[31:0]
+(10)red_pitaya_pwm_tb.CCW[31:0]
+(11)red_pitaya_pwm_tb.CCW[31:0]
+(12)red_pitaya_pwm_tb.CCW[31:0]
+(13)red_pitaya_pwm_tb.CCW[31:0]
+(14)red_pitaya_pwm_tb.CCW[31:0]
+(15)red_pitaya_pwm_tb.CCW[31:0]
+(16)red_pitaya_pwm_tb.CCW[31:0]
+(17)red_pitaya_pwm_tb.CCW[31:0]
+(18)red_pitaya_pwm_tb.CCW[31:0]
+(19)red_pitaya_pwm_tb.CCW[31:0]
+(20)red_pitaya_pwm_tb.CCW[31:0]
+(21)red_pitaya_pwm_tb.CCW[31:0]
+(22)red_pitaya_pwm_tb.CCW[31:0]
+(23)red_pitaya_pwm_tb.CCW[31:0]
+(24)red_pitaya_pwm_tb.CCW[31:0]
+(25)red_pitaya_pwm_tb.CCW[31:0]
+(26)red_pitaya_pwm_tb.CCW[31:0]
+(27)red_pitaya_pwm_tb.CCW[31:0]
+(28)red_pitaya_pwm_tb.CCW[31:0]
+(29)red_pitaya_pwm_tb.CCW[31:0]
+(30)red_pitaya_pwm_tb.CCW[31:0]
+(31)red_pitaya_pwm_tb.CCW[31:0]
+@1401200
+-group_end
+@28
+red_pitaya_pwm_tb.TP
+red_pitaya_pwm_tb.clk
+red_pitaya_pwm_tb.rstn
+@22
+red_pitaya_pwm_tb.cfg[23:0]
+@28
+red_pitaya_pwm_tb.pwm_o
+red_pitaya_pwm_tb.pwm_s
+[pattern_trace] 1
+[pattern_trace] 0

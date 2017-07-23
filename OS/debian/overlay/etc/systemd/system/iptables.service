@@ -1,0 +1,18 @@
+[Unit]
+Description=Packet Filtering Framework
+Before=network-pre.target
+Wants=network-pre.target
+
+# check existence of configuration file
+ConditionPathExists= /opt/redpitaya/hostapd.conf
+ConditionPathExists=!/opt/redpitaya/wpa_supplicant.conf
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/iptables-restore /etc/iptables/iptables.rules
+ExecReload=/sbin/iptables-restore /etc/iptables/iptables.rules
+ExecStop=/usr/lib/systemd/scripts/iptables-flush
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+[Match]
+Name=wlan*
+
+[Network]
+LinkLocalAddressing=ipv4
+DHCP=ipv4

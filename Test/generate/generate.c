@@ -19,7 +19,7 @@
 #include <string.h>
 
 #include "fpga_awg.h"
-#include "version.h"
+#include "redpitaya/version.h"
 
 /**
  * GENERAL DESCRIPTION:
@@ -211,7 +211,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
-    awg->wrap = round(65536 * (n-1));
+    awg->wrap = round(65536 * n - 1);
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
     uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */

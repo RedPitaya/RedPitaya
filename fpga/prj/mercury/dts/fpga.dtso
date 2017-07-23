@@ -1,0 +1,80 @@
+/dts-v1/;
+/plugin/;
+/include/ "led-user.dtso"
+/ {
+	fragment@uio {
+		target = <&amba_pl>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		__overlay__ {
+			hwid: hwid@40000000 {
+				compatible = "generic-uio";
+				reg = <0x40000000 0x1000>;
+		                reg-names = "regset";
+			};
+			mgmt: mgmt@40010000 {
+				compatible = "generic-uio";
+				reg = <0x40010000 0x1000>;
+		                reg-names = "regset";
+			};
+			pdm: pdm@40020000 {
+				compatible = "generic-uio";
+				reg = <0x40020000 0x1000>;
+		                reg-names = "regset";
+			};
+			clb: clb@40030000 {
+				compatible = "generic-uio";
+				reg = <0x40030000 0x1000>;
+		                reg-names = "regset";
+			};
+			gen0: gen0@40040000 {
+				compatible = "generic-uio";
+				reg = <0x40040000 0x01000>,
+				      <0x40050000 0x10000>;
+				reg-names = "regset", "mem";
+//				interrupt-parent = <&axi_intc_0>;
+//				interrupts = <0 1>;
+			};
+			gen1: gen1@40060000 {
+				compatible = "generic-uio";
+				reg = <0x40060000 0x01000>,
+				      <0x40070000 0x10000>;
+				reg-names = "regset", "mem";
+//				interrupt-parent = <&axi_intc_0>;
+//				interrupts = <1 1>;
+			};
+			osc0: osc0@40080000 {
+				compatible = "generic-uio";
+				reg = <0x40080000 0x01000>,
+				      <0x40090000 0x10000>;
+				reg-names = "regset", "mem";
+//				interrupt-parent = <&axi_intc_0>;
+//				interrupts = <2 1>;
+			};
+			osc1: osc1@400a0000 {
+				compatible = "generic-uio";
+				reg = <0x400a0000 0x01000>,
+				      <0x400b0000 0x10000>;
+				reg-names = "regset", "mem";
+//				interrupt-parent = <&axi_intc_0>;
+//				interrupts = <3 1>;
+			};
+			lg: lg@400c0000 {
+				compatible = "generic-uio";
+				reg = <0x400c0000 0x01000>,
+				      <0x400d0000 0x10000>;
+				reg-names = "regset", "mem";
+//				interrupt-parent = <&axi_intc_0>;
+//				interrupts = <4 1>;
+			};
+			la: la@400e0000 {
+				compatible = "generic-uio";
+				reg = <0x400e0000 0x01000>,
+				      <0x400f0000 0x10000>;
+				reg-names = "regset", "mem";
+//				interrupt-parent = <&axi_intc_0>;
+//				interrupts = <5 1>;
+			};
+		};
+	};
+};

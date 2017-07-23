@@ -1,0 +1,18 @@
+[Unit]
+Description=Customized Nginx web server for Red Pitaya applications
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/redpitaya_nginx.pid
+# TODO: it should be possible to use EnvironmentFile, but it is not working properly
+# complains about failing library path, or something else
+#EnvironmentFile=/etc/sysconfig/redpitaya
+Environment=PATH_REDPITAYA=/opt/redpitaya
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+ExecStart =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www
+ExecReload=/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s reload
+ExecStop  =/opt/redpitaya/sbin/nginx -p ${PATH_REDPITAYA}/www -s quit
+
+[Install]
+WantedBy=multi-user.target

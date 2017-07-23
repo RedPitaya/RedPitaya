@@ -1,0 +1,169 @@
+<!-- $Id$
+ *
+ * Red Pitaya SCPI service manager
+ *
+ * Author: Dakus <info@eskala.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Red Pitaya</title>
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/popupstack.css" type="text/css" />
+    <link rel="stylesheet" href="../assets/help-system/help-system.css" type="text/css" />
+    <link rel="stylesheet" href="css/style.css?2">
+    <script src="../assets/jquery/jquery-2.1.3.min.js"></script>
+    <script src="../assets/jquery/jquery-ui.min.js"></script>
+    <script src="../assets/jquery/jquery.ui.touch-punch.min.js"></script>
+    <script src="../assets/jquery/jquery.cookie.js?3"></script>
+    <script src="../assets/jquery/jquery.browser.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/browsercheck.js?1"></script>
+    <script src="../assets/analytics-core.js"></script>
+    <script src="../assets/popupstack.js?1"></script>
+    <script src="../assets/help-system/help-system.js"></script>
+    <script src="js/help-scpi.js"></script>
+    <script src="js/manager.js?3"></script>
+    <script src="js/analytics-main.js?1"></script>
+    
+</head>
+
+<body>
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+    </div>
+    <div id="header">
+        <div id="description">&nbsp;</div>
+    </div>
+    <div class="full-content">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">T</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">
+                            <img class="back-btn" src="../assets/images/navigation_arrow_left.png">
+                        </a>
+                        <img class="logo" width=110 src="../assets/images/navigation_logo.png">
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div id="global_container" style="position: relative;">
+                <div id="main">
+                    <div class="left-scpi">
+                        <div class="left-content-scpi" style="font-size: 18pt; color: gray;">
+                            <p>SCPI server application</p>
+                            <ul>
+                                <li>Enables remote control of Red Pitaya using MATLAB/Python/LabVIEW/Scilab</li>
+                                <li>Provides comlete access to Red Pitaya hardware functionalities
+                                    <br/> &nbsp;&nbsp;&nbsp;(GPIO, slow and fast DACs and ADCs, I2C, SPI, UART)</li>
+                                <li>Supports WIFI or LAN remote interface</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="right-scpi">
+                        <br>
+                        <br>
+                        <br>
+                        <img src="img/apps.png" width="200%">
+                    </div>
+                    <div>
+                        <div id="label-is-runnung" align=center style="font-size: 16pt; color: red;">
+                            SCPI server is not running, press RUN button to start it
+                        </div>
+                        <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: green; display: none;">
+                            SCPI server is running... (IP="<span id="ip-addr">127.0.0.1</span>", port="5000")
+                        </div>
+                        <div align="center">
+                            <ul class="">
+                                <li class="run_buttons" id="SCPI_RUN">
+                                    <a href="#" id="a_run" style="">RUN</a>
+                                </li>
+                                <li class="run_buttons" id="SCPI_STOP" style="display:none;">
+                                    <a href="#" id="a_stop">STOP</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div align=center>
+                            Example about how to Control your Red Pitaya using MATLAB/Python/LabVIEW/Scilab.
+							Are available on link below
+                         <div align="center">
+                            <ul class="">
+                                <li class="example_button" id="SCPI_EXAMPLES">
+                                    <span>Examples</span>
+                                </li>
+                            </ul>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        </div>
+    </div>
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p>Please send us the report and help us to fix this issue</p>
+                    <p>Thank you!</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Diagnostic & Usage</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

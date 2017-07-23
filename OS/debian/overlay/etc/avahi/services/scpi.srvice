@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone='no'?><!--*-nxml-*-->
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+<name replace-wildcards="yes">%h SCPI</name>
+<service>
+<type>_scpi-raw._tcp</type>
+<port>5000</port>
+</service>
+</service-group>

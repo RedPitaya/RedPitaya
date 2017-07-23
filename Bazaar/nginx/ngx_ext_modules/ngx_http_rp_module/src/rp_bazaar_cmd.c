@@ -18,38 +18,39 @@
 #include <ngx_http.h>
 #include <ngx_log.h>
 
-#include "redpitaya/http.h"
+#include "http.h"
 #include "ngx_http_rp_module.h"
 #include "rp_bazaar_cmd.h"
 #include "rp_bazaar_app.h"
 #include "cJSON.h"
-
+#include <ws_server.h>
 #include <stdlib.h>
-
+#include <stdio.h>
+#include <sys/stat.h>
 
 /** The list of available Bazaar commands */
 rp_module_cmd_t bazaar_cmds[] = {
-    { "arg_help", "", 
+    { "arg_help", "",
       "Returns the command descriptions.",
-      &rp_bazaar_help }, 
+      &rp_bazaar_help },
     { "arg_apps", "",
-      "Returns the list of installed applications.", 
+      "Returns the list of installed applications.",
       &rp_bazaar_apps },
-    { "arg_start", "<app_name>", 
+    { "arg_start", "<app_name>",
       "Starts the application defined by <app_name>.",
       &rp_bazaar_start },
     { "arg_stop", "",
-      "Stops the currently running application.", 
+      "Stops the currently running application.",
       &rp_bazaar_stop },
     { "arg_install", "<app_name>",
       "Installs the application <app_name> from Bazaar.",
       NULL },
-    { "arg_remove", "<app_name>", 
+    { "arg_remove", "<app_name>",
       "Removes the application <app_name>.",
       NULL },
 
     /* Must be last*/
-    { NULL, NULL, NULL, NULL } 
+    { NULL, NULL, NULL, NULL }
 }; /* bazaar_cmds */
 
 /** Bazaar actions mapping */
@@ -66,7 +67,6 @@ bazaar_acts_t bazaar_acts[] = {
 /** Bazaar token string */
 #define c_token_len    256
 char g_token[c_token_len];
-
 
 /*----------------------------------------------------------------------------*/
 /* request private context, used to share data between different callback functions
@@ -107,22 +107,23 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     lc = ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
 
     /* Just test local directory here - we would need to check it for almost
-     * all calls anyway 
+     * all calls anyway
      */
     if(lc->bazaar_dir.data == NULL) {
-        rp_error(r->connection->log, "Bazaar local directory not found");
+        fprintf(stderr, "Bazaar local directory not found\n");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
     ctx->json_root = cJSON_CreateObject(r->pool);
     if(ctx->json_root == NULL) {
-        rp_error(r->connection->log, "Cannot allocate cJSON object");
+        fprintf(stderr, "Cannot allocate cJSON object\n");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
     /* Bazaar commands */
     for(i = 0; bazaar_cmds[i].name != NULL; i++) {
-        ngx_str_t arg_name = { strlen(bazaar_cmds[i].name), 
+
+        ngx_str_t arg_name = { strlen(bazaar_cmds[i].name),
                                (u_char *)bazaar_cmds[i].name };
         ngx_uint_t arg_key = ngx_hash_key(arg_name.data, arg_name.len);
         ngx_http_variable_value_t *arg_val = NULL;
@@ -147,7 +148,7 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
                                             arg_val->len,
                                             &arg_argv);
 
-        rp_debug(r->connection->log, "Calling application: %s\n", &bazaar_cmds[i].name[4]);
+        fprintf(stderr, "Calling application: %s\n", &bazaar_cmds[i].name[4]);
 
         /* Install/Remove special case */
         if ( !strncmp(&bazaar_cmds[i].name[4], "install", 7) ||
@@ -166,8 +167,8 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
 
         if((rc = bazaar_cmds[i].func(r, &ctx->json_root, arg_argc, arg_argv)) < 0) {
             /* error - fill the output buffer and send it back */
-            rp_error(r->connection->log, "Application %s failed: %d\n", 
-                     bazaar_cmds[i].name, rc);            
+            fprintf(stderr, "Application %s failed: %d\n",
+                     bazaar_cmds[i].name, rc);
         }
 
         if(arg_argv) {
@@ -199,12 +200,15 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     char mac[18];
     sprintf(mac, "00:00:00:00:00:00");
     if (rp_bazaar_get_mac("/sys/class/net/eth0/address", mac)) {
-        rp_error(r->connection->log, "Cannot obtain MAC address.");
+        fprintf(stderr, "Cannot obtain MAC address.\n");
     }
-    unsigned long long dna = 0;
-    if (rp_bazaar_get_dna(&dna)) {
-        rp_error(r->connection->log, "Cannot obtain DNA number.");
-    }
+
+    static unsigned long long dna = 0;
+    if (!dna || dna == 1) {
+		if (rp_bazaar_get_dna(&dna)) {
+			fprintf(stderr, "Cannot obtain DNA number.\n");
+		}
+	}
     char dna_s[64];
     sprintf(dna_s, "%016llx", dna);
 
@@ -214,13 +218,13 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     cJSON *ecoinfo = NULL;
     if (!get_info(&ecoinfo, (const char *)lc->bazaar_dir.data,
                   "", r->pool)) {
-        rp_error(r->connection->log, "Cannot obtain Ecosystem version.");
+        fprintf(stderr, "Cannot obtain Ecosystem version.\n");
     } else {
         if (ecoinfo != NULL) {
 
             cJSON *j_ver = cJSON_GetObjectItem(ecoinfo, "version");
             if(j_ver == NULL) {
-                rp_error(r->connection->log, "Cannot get version from ecoinfo JSON.\n");
+                fprintf(stderr, "Cannot get version from ecoinfo JSON.\n");
             } else {
                 strncpy(ecoversion, j_ver->valuestring, sizeof ecoversion);
                 cJSON_Delete(j_ver, r->pool);
@@ -229,7 +233,7 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
             cJSON_Delete(ecoinfo, r->pool);
         }
     }
-    
+
     /* Populate JSON */
     cJSON_AddItemToObject(ctx->json_root, "version",
                           cJSON_CreateString(ecoversion, r->pool),
@@ -251,19 +255,21 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     cJSON_AddItemToObject(ctx->json_root, "apps",
                           apps_root=cJSON_CreateObject(r->pool), r->pool);
     if(apps_root == NULL) {
-        rp_error(r->connection->log, "Can not allocate cJSON object");
+        fprintf(stderr, "Can not allocate cJSON object\n");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
+    fprintf(stderr, "Making list of apps\n");
+
     /* Add the non-verbose list of apps */
-    rp_bazaar_app_get_local_list((const char *)lc->bazaar_dir.data, 
+    rp_bazaar_app_get_local_list((const char *)lc->bazaar_dir.data,
                                  &apps_root, r->pool, 0);
 
     /* Issue a POST with JSON defined above to Bazaar server */
     char *js = cJSON_Print(ctx->json_root, r->pool);
     cJSON_Minify(js);
 
-    rp_debug(r->connection->log, "Bazaar handshake:\n%s", js);
+    fprintf(stderr, "Bazaar handshake:\n%s", js);
 
     char *jse = NULL;
     char *jsp = NULL;
@@ -275,7 +281,7 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
 
     jsp = malloc(strlen(jse) + strlen(c_payload) + 1);
     if (!jsp) {
-        rp_error(r->connection->log, "Cannot malloc() payload.");
+        fprintf(stderr, "Cannot malloc() payload.\n");
         ret = NGX_HTTP_INTERNAL_SERVER_ERROR;
         goto out;
     }
@@ -284,17 +290,18 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     bazaar_dv = (char *)malloc(strlen((char *)lc->bazaar_server.data) +
                                strlen(c_device) + 1);
     if (!bazaar_dv) {
-        rp_error(r->connection->log, "Cannot malloc() device.");
+        fprintf(stderr, "Cannot malloc() device.\n");
         ret = NGX_HTTP_INTERNAL_SERVER_ERROR;
         goto out;
     }
     sprintf(bazaar_dv, "%s%s", lc->bazaar_server.data, c_device);
+    fprintf(stderr, "post bazaar_dv %s\n", bazaar_dv);
 
     post_resp_t resp = { NULL, 0 };
     if (post(jsp, bazaar_dv, &resp)) {
         if (resp.data) free(resp.data);
         /* Redirect to Bazaar access error */
-        rp_error(r->connection->log, "Cannot access %s.\n", bazaar_dv);
+        fprintf(stderr, "Cannot access %s.\n", bazaar_dv);
         snprintf(ctx->redirect, c_redirect_len,
                  "http://%s/error_bazaar_access.html", host);
         goto out;
@@ -303,13 +310,12 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     /* Get token from POST response */
     if (resp.data) {
 
-        rp_debug(r->connection->log,"Bazaar handshake response:\n%s", resp.data);
+        fprintf(stderr,"Bazaar handshake response:\n%s", resp.data);
 
         json_tok = cJSON_Parse(resp.data, r->pool);
         if (!json_tok) {
             /* Redirect to Bazaar protocol error */
-            rp_error(r->connection->log, "Bazaar protocol error: ",
-                     "No JSON found in the following response:\n\"%s\"\n", resp.data);
+            fprintf(stderr,"No JSON found in the following response:\n\"%s\"\n", resp.data);
             snprintf(ctx->redirect, c_redirect_len,
                      "http://%s/error_bazaar_proto.html", host);
         } else {
@@ -318,8 +324,7 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
 
             if (!jtok) {
                 /* Redirect to Bazaar protocol error */
-                rp_error(r->connection->log, "Bazaar protocol error: ",
-                         "No token found in the following JSON:\n\"%s\"\n", resp.data);
+                fprintf(stderr, "No token found in the following JSON:\n\"%s\"\n", resp.data);
                 snprintf(ctx->redirect, c_redirect_len,
                          "http://%s/error_bazaar_proto.html", host);
             } else {
@@ -339,19 +344,19 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     if (jsp) free(jsp);
     if (jse) free(jse);
     if (bazaar_dv) free(bazaar_dv);
-    //TODO: Is ctx->json_root handled by the pool deallocator? 
+    //TODO: Is ctx->json_root handled by the pool deallocator?
     //if (ctx->json_root) cJSON_Delete(ctx->json_root, r->pool);
     if (json_tok) cJSON_Delete(json_tok, r->pool);
 
     if (ret) return ret;
 
-    rp_debug(r->connection->log, "Redirecting to: %s", ctx->redirect);
+    fprintf(stderr, "Redirecting to: %s\n", ctx->redirect);
     return rp_module_redirect(r, ctx->redirect);
 }
 
 
 /*----------------------------------------------------------------------------*/
-int rp_bazaar_help(ngx_http_request_t *r, cJSON **json_root, 
+int rp_bazaar_help(ngx_http_request_t *r, cJSON **json_root,
                    int argc, char **argv)
 {
     cJSON *root = *json_root;
@@ -364,13 +369,13 @@ int rp_bazaar_help(ngx_http_request_t *r, cJSON **json_root,
     }
 
     for(i = 0; bazaar_cmds[i].name != NULL; i++) {
-        /* omit arg_ in the name */ 
-        const char *strings[] = { (const char *)&bazaar_cmds[i].name[4], 
-                                  (const char *)bazaar_cmds[i].params, 
+        /* omit arg_ in the name */
+        const char *strings[] = { (const char *)&bazaar_cmds[i].name[4],
+                                  (const char *)bazaar_cmds[i].params,
                                   (const char *)bazaar_cmds[i].desc };
 
-        cJSON_AddItemToObject(root, "command", 
-                              cJSON_CreateStringArray((const char **)strings, 
+        cJSON_AddItemToObject(root, "command",
+                              cJSON_CreateStringArray((const char **)strings,
                                                       3, r->pool),
                               r->pool);
     }
@@ -382,22 +387,32 @@ int rp_bazaar_help(ngx_http_request_t *r, cJSON **json_root,
 int rp_bazaar_apps(ngx_http_request_t *r,
                              cJSON **json_root, int argc, char **argv)
 {
-    ngx_http_rp_loc_conf_t *lc = 
+    ngx_http_rp_loc_conf_t *lc =
         ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
 
     /* Get the verbose list of apps */
-    return rp_bazaar_app_get_local_list((const char *)lc->bazaar_dir.data, 
+    return rp_bazaar_app_get_local_list((const char *)lc->bazaar_dir.data,
                                         json_root, r->pool, 1);
 }
 
 /*----------------------------------------------------------------------------*/
-int rp_bazaar_start(ngx_http_request_t *r, 
+int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
-    char *app_name  = NULL;
-    char *fpga_name = NULL;
-    int   app_id_len, app_name_len, fpga_name_len;
-    ngx_http_rp_loc_conf_t *lc = 
+    char* url = strstr(argv[0], "?type=demo");
+    if (url)
+    {
+        *url = '\0';
+    }
+    else
+    {
+       url = strstr(argv[0], "?type=run");
+       if(url)
+            *url = '\0';
+    }
+
+    int unsigned len;
+    ngx_http_rp_loc_conf_t *lc =
         ngx_http_get_module_loc_conf(r, ngx_http_rp_module);
 
     if(argc != 1) {
@@ -409,120 +424,136 @@ int rp_bazaar_start(ngx_http_request_t *r,
     /* Check if application is already running and unload it if so. */
     if(rp_module_ctx.app.handle != NULL) {
         if(rp_bazaar_app_unload_module(&rp_module_ctx.app)) {
-            return rp_module_cmd_error(json_root, 
-                                       "Can not unload existing application.", 
+            return rp_module_cmd_error(json_root,
+                                       "Can not unload existing application.",
                                        NULL, r->pool);
         }
     }
 
-    /* Assemble the application and FPGA filename:
-     *   <app_dir>/<app_id>/fpga.bit
-     *   <app_dir>/<app_id>/controller.so 
-     */
-    app_id_len = strlen(argv[0]) + 1;
-    app_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
-        strlen("/controller.so") + 2;
-    fpga_name_len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) +
-        strlen("/fpga.bit") + 2;
-
-    app_name = (char *)malloc(app_name_len);
-    if(app_name == NULL) {
-        return rp_module_cmd_error(json_root, "Can not allocate memory",
-                                   strerror(errno), r->pool);
-    }
-
-    fpga_name = (char *)malloc(fpga_name_len);
-    if(fpga_name == NULL) {
-        free(app_name);
-        return rp_module_cmd_error(json_root, "Can not allocate memory",
-                                   strerror(errno), r->pool);
-    }
-
     /* Application id string */
-    rp_module_ctx.app.id = (char *)malloc(app_id_len);
+    len = strlen(argv[0]) + 1;
+    rp_module_ctx.app.id = (char *)malloc(len);
     if(rp_module_ctx.app.id == NULL) {
-        free(fpga_name);
-        free(app_name);
         return rp_module_cmd_error(json_root, "Can not allocate memory",
                                    strerror(errno), r->pool);
     }
     strcpy(rp_module_ctx.app.id, argv[0]);
 
-    sprintf(app_name, "%s/%s/controller.so", 
-            lc->bazaar_dir.data, argv[0]);
-    app_name[app_name_len-1]='\0';
-    sprintf(fpga_name, "%s/%s/fpga.bit", lc->bazaar_dir.data, argv[0]);
-    fpga_name[fpga_name_len-1]='\0';
-    
+    /* Assemble the application and FPGA filename: <app_dir>/<app_id>/controllerhf.so */
+    len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/controllerhf.so") + 2;
+    char app_name[len];
+    sprintf(app_name, "%s/%s/controllerhf.so", lc->bazaar_dir.data, argv[0]);
+    app_name[len-1]='\0';
 
-    /* Load FPGA */
-    // FPGA loading disabled.
-    // Nginx seems to have the /dev/xdevcfg device file already opened
-    // and rp_bazaar_app_load_fpga() always fails.
-    // The correct FPGA is already loaded at boot time for T&M apps.
-#if 0
-    /* Here we do not have application running anymore - load new FPGA */
-    rp_debug(r->connection->log, "Loading FPGA from file: '%s'\n", fpga_name);
-    if(rp_bazaar_app_load_fpga(fpga_name) < 0) {
-        if(app_name)
-            free(app_name);
-        if(fpga_name)
-            free(fpga_name);
-        return rp_module_cmd_error(json_root, "Can not load FPGA.", 
-                                   NULL, r->pool);
+    /* Unload existing application before, new fpga load */
+    if(rp_module_ctx.app.handle != NULL){
+        if(rp_bazaar_app_unload_module(&rp_module_ctx.app)){
+            return rp_module_cmd_error(json_root,
+                                       "Cannot unload existing application.",
+                                       NULL, r->pool);
+        }
     }
-#endif
+
+    /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf */
+    char *fpga_name = NULL;
+    if (system("/opt/redpitaya/rmamba_pl.sh"))
+        fprintf(stderr, "Problem running /opt/redpitaya/rmamba_pl.sh\n");
+    if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0) { // FIXME !!!
+        /* Here we do not have application running anymore - load new FPGA */
+        fprintf(stderr, "Loading specific FPGA from: '%s'\n", fpga_name);
+        /* Try loading FPGA code
+         *    - Test if fpga loaded correctly
+         *    - Read/write permissions
+         *    - File exists/not exists */
+        switch (rp_bazaar_app_load_fpga(fpga_name)) {
+            case FPGA_FIND_ERR:
+                if (fpga_name)  free(fpga_name);
+                return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
+            case FPGA_READ_ERR:
+                if (fpga_name)  free(fpga_name);
+                return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
+            case FPGA_WRITE_ERR:
+                if (fpga_name)  free(fpga_name);
+                return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
+            /* App is a new app and doesn't need custom fpga.bit */
+            case FPGA_NOT_REQ:
+                if (fpga_name)  free(fpga_name);
+                break;
+            case FPGA_OK:
+            {
+                if (fpga_name)  free(fpga_name);
+                len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
+                char dmaDrv[len];
+                sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
+                if (system(dmaDrv))
+                    fprintf(stderr, "Problem running %s\n", dmaDrv);
+                break;
+            }
+            default:
+                if (fpga_name)  free(fpga_name);
+                return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool);
+        }
+    } else {
+        fprintf(stderr, "Not loading specific FPGA, since no fpga.conf file was found.\n");
+    }
 
     /* Load new application. */
-    rp_debug(r->connection->log, "Loading application: '%s'\n", app_name);
-    if(rp_bazaar_app_load_module(app_name, &rp_module_ctx.app) < 0) {
+    fprintf(stderr, "Loading application: '%s'\n", app_name);
+    if(rp_bazaar_app_load_module(&app_name[0], &rp_module_ctx.app) < 0) {
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
-        if(app_name)
-            free(app_name);
-        if(fpga_name)
-            free(fpga_name);
-        return rp_module_cmd_error(json_root, "Can not load application.", 
+        return rp_module_cmd_error(json_root, "Can not load application.",
                                    NULL, r->pool);
     }
-    
+
     if(rp_module_ctx.app.init_func() < 0) {
-        rp_module_cmd_error(json_root, 
-                            "Application init failed, aborting", 
+        rp_module_cmd_error(json_root,
+                            "Application init failed, aborting",
                             NULL, r->pool);
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
-        if(app_name)
-            free(app_name);
-        if(fpga_name)
-            free(fpga_name);
         return -1;
     }
     rp_module_ctx.app.initialized=1;
-    rp_debug(r->connection->log, "Application %s loaded succesfully!");
+    fprintf(stderr, "Application loaded succesfully!\n");
 
-    if(fpga_name)
-        free(fpga_name);
-    if(app_name)
-        free(app_name);
+    //start web socket server
+    if(rp_module_ctx.app.ws_api_supported)
+    {
+        struct server_parameters params;
+        ngx_memset(&params, 0, sizeof(struct server_parameters));
+
+        params.set_params_interval_func = rp_module_ctx.app.ws_set_params_interval_func;
+        params.set_signals_interval_func = rp_module_ctx.app.ws_set_signals_interval_func;
+        params.get_params_interval_func = rp_module_ctx.app.ws_get_params_interval_func;
+        params.get_signals_interval_func = rp_module_ctx.app.ws_get_signals_interval_func;
+        params.get_params_func = rp_module_ctx.app.ws_get_params_func;
+        params.set_params_func = rp_module_ctx.app.ws_set_params_func;
+        params.get_signals_func = rp_module_ctx.app.ws_get_signals_func;
+        params.set_signals_func = rp_module_ctx.app.ws_set_signals_func;
+        params.gzip_func = rp_module_ctx.app.ws_gzip_func;
+        fprintf(stderr, "Starting WS-server\n");
+
+        start_ws_server(&params);
+    }
 
     return rp_module_cmd_ok(json_root, r->pool);
 }
 
 /*----------------------------------------------------------------------------*/
-int rp_bazaar_stop(ngx_http_request_t *r, 
+int rp_bazaar_stop(ngx_http_request_t *r,
                    cJSON **json_root, int argc, char **argv)
 {
-    if(argc != 0) {
-        return rp_module_cmd_error(json_root, 
+/*    if(argc != 0) {
+        return rp_module_cmd_error(json_root,
                                 "Incorrect number of arguments (should be 0)",
                                    NULL, r->pool);
-    }
+    }*/
 
     if(rp_module_ctx.app.handle == NULL) {
         /* Ignore requests to unload the application controller, if none is loaded. */
         return rp_module_cmd_ok(json_root, r->pool);
     }
     if(rp_bazaar_app_unload_module(&rp_module_ctx.app) < 0) {
-        return rp_module_cmd_error(json_root, 
+        return rp_module_cmd_error(json_root,
                                    "Can not unload application.", NULL, r->pool);
     }
 
@@ -534,11 +565,11 @@ int rp_bazaar_stop(ngx_http_request_t *r,
 int rp_bazaar_install(ngx_http_request_t *r)
 {
     rp_bazaar_ctx_t *ctx;
-    
+
     ctx = ngx_http_get_module_ctx(r, ngx_http_rp_module);
     if(ctx == NULL) {
-        rp_error(r->connection->log, 
-                 "%s: Cannot get request context",
+        fprintf(stderr,
+                 "%s: Cannot get request context\n",
                  __FUNCTION__);
         return NGX_ERROR;
     }
@@ -577,13 +608,13 @@ void rp_bazaar_post_read(ngx_http_request_t *r)
     char *msg_pos;
     ngx_chain_t *chain_link;
     rp_bazaar_ctx_t *ctx;
-    
-    rp_debug(r->connection->log, "%s", __FUNCTION__);
+
+    fprintf(stderr, "%s\n", __FUNCTION__);
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_rp_module);
     if(ctx == NULL) {
-        rp_error(r->connection->log, 
-                 "%s: Cannot get request context",
+        fprintf(stderr,
+                 "%s: Cannot get request context\n",
                  __FUNCTION__);
         goto done;
     }
@@ -591,41 +622,36 @@ void rp_bazaar_post_read(ngx_http_request_t *r)
     ctx->in_buffer_len = 0;
 
     if((r->request_body == NULL) || (r->request_body->bufs == NULL)) {
-        rp_error(r->connection->log, 
-                 "%s: body is empty",
+        fprintf(stderr,
+                 "%s: body is empty\n",
                  __FUNCTION__);
         ctx->in_status = -1;
         goto done;
     }
-    
+
     if(r->request_body->temp_file) {
-        rp_error(r->connection->log, "%s: data in temp file "
-                 "(not supported - check client_body_buffer_size parameter",
+        fprintf(stderr, "%s: data in temp file (not supported - check client_body_buffer_size parameter\n",
                  __FUNCTION__);
         ctx->in_status = -1;
         goto done;
     }
 
     /* check the size of the body */
-    for(chain_link = r->request_body->bufs; chain_link != NULL; 
+    for(chain_link = r->request_body->bufs; chain_link != NULL;
         chain_link = chain_link->next) {
         len += chain_link->buf->last - chain_link->buf->pos;
         buffers++;
         if(chain_link->buf->in_file) {
-            rp_error(r->connection->log, "%s: data in "
-                     "file (not supported - check client_body_buffer_size"
-                     "parameter",
-                     __FUNCTION__);
             ctx->in_status = -1;
             goto done;
         }
     }
-    
+
     /* allocate memory for the buffer of the body */
     ctx->in_buffer = (char *)ngx_palloc(r->pool, (len + 1)*sizeof(char));
     ctx->in_buffer_len = (len+1);
     if(ctx->in_buffer == NULL) {
-        rp_error(r->connection->log, "%s: can not allocate memory",
+        fprintf(stderr, "%s: can not allocate memory\n",
                  __FUNCTION__);
         ctx->in_status = -1;
         goto done;
@@ -636,7 +662,7 @@ void rp_bazaar_post_read(ngx_http_request_t *r)
     for(chain_link = r->request_body->bufs; chain_link != NULL;
         chain_link = chain_link->next) {
         ngx_buf_t *buf = chain_link->buf;
-        msg_pos = 
+        msg_pos =
             (char *)ngx_copy(msg_pos, (char *)buf->pos, buf->last - buf->pos);
     }
     ctx->in_buffer[len] = '\0';
@@ -647,7 +673,7 @@ void rp_bazaar_post_read(ngx_http_request_t *r)
     if(ret != 0) {
 
         /* Redirect to Bazaar installation error */
-        rp_error(r->connection->log, "Bazaar %s failed (ret: %d)",
+        fprintf(stderr, "Bazaar %s failed (ret: %d)\n",
                  bazaar_acts[act].name, ret);
         snprintf(ctx->redirect, c_redirect_len,
                  "http://%s/error_bazaar_install.html", host);
@@ -695,14 +721,14 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     int ret = 0;
 
 
-    rp_debug(r->connection->log, "%s", __FUNCTION__);
+    fprintf(stderr, "%s\n", __FUNCTION__);
 
     *act = eUnknown;
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_rp_module);
     if(ctx == NULL) {
-        rp_error(r->connection->log, 
-                 "%s: Cannot get request context",
+        fprintf(stderr,
+                 "%s: Cannot get request context\n",
                  __FUNCTION__);
         return -1;
     }
@@ -714,28 +740,28 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     }
 
     /* check for payload buffers */
-    if((ctx->in_buffer_len == 0) || 
+    if((ctx->in_buffer_len == 0) ||
        (ctx->in_buffer == NULL) ||
        (ctx->in_status != 0)) {
-        rp_error(r->connection->log, "Body is empty, unknown error");
+        fprintf(stderr, "Body is empty, unknown error\n");
         return -1;
     }
 
     /* parse incoming body to cJSON and search for 'params' */
-    rp_debug(r->connection->log, "Bazaar install/remove: Received body: %s",
+    fprintf(stderr, "Bazaar install/remove: Received body: %s\n",
              ctx->in_buffer);
 
     urld = url_decode(ctx->in_buffer);
     cJSON_Minify(urld);
 
-    /* Get rid of "payload=" header */    
+    /* Get rid of "payload=" header */
     char *urld_strip = memchr(urld, '{', 10);
 
     req_body = cJSON_Parse(urld_strip, r->pool);
     if (urld) free (urld);
 
     if(req_body == NULL) {
-        rp_error(r->connection->log, "Can not parse incoming body to JSON");
+        fprintf(stderr, "Can not parse incoming body to JSON\n");
         return -1;
     }
 
@@ -744,7 +770,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     j_cmd = cJSON_GetObjectItem(req_body, "command");
     if(j_cmd == NULL) {
         cJSON_Delete(req_body, r->pool);
-        rp_error(r->connection->log, "Can not find 'command' in req body");
+        fprintf(stderr, "Can not find 'command' in req body\n");
         return -1;
     }
 
@@ -764,7 +790,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
         j_url = cJSON_GetObjectItem(req_body, "archive");
         if(j_url == NULL) {
             cJSON_Delete(req_body, r->pool);
-            rp_error(r->connection->log, "Can not find 'archive' in req body");
+            fprintf(stderr, "Can not find 'archive' in req body\n");
             return -1;
         }
 
@@ -772,7 +798,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
         j_md5 = cJSON_GetObjectItem(req_body, "md5");
         if(j_md5 == NULL) {
             cJSON_Delete(req_body, r->pool);
-            rp_error(r->connection->log, "Can not find 'md5' in req body");
+            fprintf(stderr, "Can not find 'md5' in req body\n");
             return -1;
         }
     }
@@ -786,7 +812,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     /* Unknown action */
     if (!action) {
         cJSON_Delete(req_body, r->pool);
-        rp_error(r->connection->log, "Unknown action: %s",
+        fprintf(stderr, "Unknown action: %s\n",
                  j_cmd->valuestring);
         return -1;
     }
@@ -795,7 +821,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     j_app = cJSON_GetObjectItem(req_body, "app_id");
     if(j_app == NULL) {
         cJSON_Delete(req_body, r->pool);
-        rp_error(r->connection->log, "Can not find 'app_id' in req body");
+        fprintf(stderr, "Can not find 'app_id' in req body\n");
         return -1;
     }
 
@@ -803,12 +829,12 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     j_tok = cJSON_GetObjectItem(req_body, "token");
     if(j_tok == NULL) {
         cJSON_Delete(req_body, r->pool);
-        rp_error(r->connection->log, "Can not find 'token' in req body");
+        fprintf(stderr, "Can not find 'token' in req body\n");
         return -1;
     }
     if (strncmp(j_tok->valuestring, g_token, c_token_len)) {
         cJSON_Delete(req_body, r->pool);
-        rp_error(r->connection->log, "Unauthorized Bazaar %s request", action);
+        fprintf(stderr, "Unauthorized Bazaar %s request\n", action);
         return -1;
     }
 
@@ -817,7 +843,7 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
     switch (*act) {
     case eInstall:
     case eUpgrade:
-        rp_debug(r->connection->log, "Installing: %s", j_url->valuestring);
+        fprintf(stderr, "Installing: %s\n", j_url->valuestring);
         sprintf(cmd, "bazaar install %s %s %s",
                 j_app->valuestring,
                 j_url->valuestring,
@@ -825,17 +851,17 @@ int rp_bazaar_interpret(ngx_http_request_t *r, action_e *act)
         break;
 
     case eRemove:
-        rp_debug(r->connection->log, "Removing: %s", j_app->valuestring);
+        fprintf(stderr, "Removing: %s\n", j_app->valuestring);
         sprintf(cmd, "bazaar remove %s",
                 j_app->valuestring);
         break;
 
     default:
-        rp_error(r->connection->log, "Unknown Bazaar action: %s",
+        fprintf(stderr, "Unknown Bazaar action: %s\n",
                  j_cmd->valuestring);
         ret = -1;
         goto out;
-        
+
     }
 
     ret = system(cmd);

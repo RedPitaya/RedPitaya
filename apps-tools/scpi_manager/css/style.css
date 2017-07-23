@@ -1,0 +1,278 @@
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  color: #cdcccc;
+  overflow: auto;
+  padding-right: 0 !important;
+}
+
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.clear:before, .clear:after {
+  content: "";
+  display: table;
+}
+
+.clear:after  {
+  clear: both;
+}
+
+.modal {
+
+}
+
+.left-content-scpi > p {
+    color: #48b3d2;
+}
+
+.left-content-scpi > ul > li {
+    list-style-type: none;
+    color: #cccccc;
+   }
+
+
+.left-content-scpi > ul > li:before
+{
+  content: "- ";
+}
+
+input, #info div, #info span, .selectable {
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+input {
+    -webkit-user-modify: read-write-plaintext-only;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus, button:active, select:focus, input:focus, option:focus {
+  outline: 0 !important;
+  -webkit-appearance: none !important;
+}
+
+area:hover {
+  cursor: pointer;
+}
+
+.full-content {
+  /*min-width: 1024px;*/
+  margin: 0 auto;
+  position: relative;
+}
+
+.container-fluid {
+  margin-top: 20px;
+}
+
+.container {
+  width: 100%;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.navbar-collapse {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.navbar-collapse {
+  float: right;
+}
+
+.navbar-nav li {
+  width: 131px;
+  text-align: center;
+}
+
+.nav > li > a {
+  position: relative;
+  display: block;
+  padding: 10px 30px;
+  border-left: 1px solid #999;
+
+}
+
+.navbar-inverse .navbar-nav > li > a  {
+ color: #cdcccc;
+ outline: none;
+}
+
+.nav > li > a:hover {
+  background-color: #444 !important;
+  color: #E5D5D5;
+}
+
+.navbar {
+  border-radius: 0px;
+  background-color: #343433;
+  background-image: linear-gradient(to bottom, #343433 0, #343433 100%);
+  border: 1px solid #999;
+  min-height: 42px;
+  border-left: 1px solid #999;
+}
+
+.back-btn {
+  height: 22px;
+  float: left;
+  margin: -6px 0px 0px 11px;
+}
+
+.logo {
+  margin: 5px 0px 0px 15px;
+  float: left;
+}
+
+.navbar-collapse collapse in {
+  width: 100%;
+  overflow: hidden;
+}
+
+.navbar-brand {
+  height: 40px;
+}
+
+.close {
+  color: #CAB7B7;
+  opacity: 1;
+  text-shadow: 0 0 0 !important;
+}
+
+.modal-content {
+  background-color: #343433;
+  border: 1px solid #999;
+  border-radius: 0px;
+  outline: 0;
+}
+
+#main {
+  margin-right: 188px;
+}
+
+.dialog {
+  margin-right: 0px;
+  display: none;
+}
+
+.close:hover, .close:focus {
+  color: #fff !important;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.btn {
+  background-image: none;
+  border: 0 solid transparent;
+  white-space: nowrap;
+  padding: 6px 12px;
+  line-height: 1.42857143;
+  border-radius: 0;
+  width: 100%;
+  background-color: transparent;
+  text-shadow: 0px 0px;
+ /*  box-shadow: 0 0 0 1px #777; */
+  color:#cdcccc !important;
+}
+
+.btn:hover, btn:active {
+  color: #fff !important;
+  background-image: none;
+}
+
+.btn.focus {
+  color: #777;
+  border: 0px solid transparent;
+}
+
+.btn:active, .btn.active {
+  background-image: none;
+  background-color: #999;
+  color: #111 !important;
+}
+
+.left-scpi {
+    float:left;
+    width:100%;
+}
+
+.left-content-scpi {
+    margin-right:120px;
+}
+
+.right-scpi {
+    float:right;
+    width: 120px;
+    margin-left: -120px;
+}
+
+#header {
+    background-color: black;
+    color: #CCC;
+    text-align: center;
+    padding: 6px;
+    overflow: hidden;
+    height: 30px;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.example_button
+{
+  margin-top: 20px;
+  width: 131px;
+  text-align: center;
+  list-style: none;
+  height: 40px;
+  padding-top:10px;
+  border: 1px solid;
+}
+
+.example_button:hover
+{
+  background: gray;
+  cursor: pointer;
+}
+
+.example_button span {
+  color: #337ab7;
+}
+
+.run_buttons {
+    display: inline-block;
+    text-align: center;
+    border: 1px solid;
+    border-color: #cccccc;;
+    background-color: #47b2d1;
+    color: #000000;
+    margin: 0 auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-size: 16pt;
+    padding: 6px 20px 6px 20px;
+    width: 120px;
+}
+
+.run_buttons:hover {
+    background-color: #69d4d1;
+    cursor: pointer;
+}
+
+.run_buttons a {
+    color: #000000;
+    text-decoration: none;
+}

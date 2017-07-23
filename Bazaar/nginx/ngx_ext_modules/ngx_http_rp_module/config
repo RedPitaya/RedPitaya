@@ -4,9 +4,11 @@ HTTP_MODULES="$HTTP_MODULES ngx_http_rp_module"
 rp_src_dir=$ngx_addon_dir/src
 rp_include_dir=$ngx_addon_dir/include
 
+shared_path=../../../shared
 
 NGX_ADDON_DEPS="$NGX_ADDON_DEPS                               \
                $rp_include_dir/ngx_http_rp_module.h           \
+               $rp_include_dir/http.h                         \
                $rp_include_dir/rp_bazaar_cmd.h                \
                $rp_include_dir/rp_bazaar_app.h                \
                $rp_include_dir/rp_data_cmd.h                  \
@@ -14,12 +16,13 @@ NGX_ADDON_DEPS="$NGX_ADDON_DEPS                               \
 
 NGX_ADDON_SRCS="$NGX_ADDON_SRCS                               \
                 $rp_src_dir/ngx_http_rp_module.c              \
+                $rp_src_dir/http.c                            \
                 $rp_src_dir/rp_bazaar_cmd.c                   \
                 $rp_src_dir/rp_bazaar_app.c                   \
                 $rp_src_dir/rp_data_cmd.c                    \
                 $rp_src_dir/cJSON.c"
 
-CORE_LIBS="$CORE_LIBS -lm -ldl -lcurl -lredpitaya -L../build/lib/"
-CFLAGS="$CFLAGS -I $rp_include_dir -I../../../shared/include/"
+CORE_LIBS="$CORE_LIBS -Wl,--no-as-needed -L$ngx_addon_dir/../ws_server -lws_server -lm -ldl -lssl -lcryptopp -lcurl -lboost_system -lboost_regex -lboost_thread"
+CFLAGS="$CFLAGS -I $rp_include_dir -I$ngx_addon_dir/../ws_server"
 CFLAGS="$CFLAGS -DVERSION=$VERSION -DREVISION=$REVISION"
 

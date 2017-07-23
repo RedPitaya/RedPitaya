@@ -1,5 +1,0 @@
-#!/bin/sh
-
-echo 0 > /sys/devices/system/cpu/cpu1/online
-sleep 0.3
-/bin/umount -a -r

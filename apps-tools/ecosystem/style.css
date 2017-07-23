@@ -1,0 +1,271 @@
+@font-face {
+    font-family: 'myriadpro';
+    src: url('fonts/MyriadPro-Regular.otf'),
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    color: #CCC;
+    margin: 0;
+    background: #000;
+    background: url('../assets/images/backgr-01.png') fixed center no-repeat, linear-gradient(#333, #000);
+    /* Standard syntax */
+}
+
+a {
+    color: #CCC;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #CCC;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #CCC;
+    text-decoration: none;
+}
+
+#header {
+    background-color: black;
+    color: #CCC;
+    text-align: center;
+    padding: 2px;
+    overflow: hidden;
+    height: 30px;
+    width: 100%;
+    white-space: nowrap;
+}
+
+#reboot {
+    float: right;
+    width: 5%;
+    text-align: right;
+    cursor: pointer;
+}
+
+#description {
+    padding-top: 4px;
+    overflow: hidden;
+    width: 95%;
+    height: 30px;
+    white-space: nowrap;
+    margin-left: auto;
+    display: inline-block;
+    position: relative;
+    float: left;
+}
+
+#description:after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    width: 100px;
+    height: 100%;
+    top: 0;
+    right: 0;
+    background-image: -webkit-linear-gradient(right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+    background-image: -moz-linear-gradient(right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+    background-image: -ms-linear-gradient(right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+    background-image: -o-linear-gradient(right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+    background-image: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
+#footer {
+    position: fixed;
+    bottom: 0%;
+    width: 100%;
+    opacity: 1;
+    background-color: black;
+    color: #666;
+    clear: both;
+    text-align: right;
+    padding: 6px;
+}
+
+#main-container {
+    margin: 10px 20%;
+    height: 90%;
+}
+
+.app-item {
+    width: 120px;
+    height: 160px;
+    padding: 10px;
+    /*background-color: #F00;*/
+    display: inline-block;
+    margin: 7px;
+    text-align: center;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+    -webkit-filter: drop-shadow(5px 5px 5px #222);
+    filter: drop-shadow(5px 5px 5px #222);
+}
+
+.app-item:hover {
+    opacity: 0.5;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.img-container {
+    display: table-cell;
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.app-icon {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.app-name {
+    display: table-row;
+    font-size: 15px;
+    width: 100px;
+    height: 60px;
+}
+
+.paging {
+    margin-bottom: 0px;
+    padding: 5px;
+}
+
+.simplePagerNav {
+    padding: 0px;
+    position: fixed;
+    text-align: center;
+    bottom: 30px;
+    width: 60%;
+    /* It's connected with #main-container width*/
+}
+
+.simplePagerContainer {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.simplePagerNav > li {
+    list-style: none;
+    display: inline-block;
+}
+
+.active-dot {
+    margin: 5px;
+    border-radius: 50%;
+    width: 15px;
+    height: auto;
+    padding-top: 15px;
+    background: #ccc;
+}
+
+.dot {
+    margin: 5px;
+    border-radius: 50%;
+    width: 15px;
+    height: auto;
+    padding-top: 15px;
+    background: #666;
+}
+
+
+/**** RESPONSIVE *****/
+
+@media only screen and (max-width: 1024px) {
+    #main-container {
+        margin: 10px 15%;
+    }
+    .simplePagerNav {
+        width: 70%;
+        /* It's connected with #main-container width*/
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    #main-container {
+        margin: 10px 10%;
+    }
+    .simplePagerNav {
+        width: 80%;
+        /* It's connected with #main-container width*/
+    }
+}
+
+@media only screen and (max-width: 512px) {
+    #main-container {
+        margin: 10px auto;
+    }
+    .simplePagerNav {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-height: 1080px) {
+    #main-container {
+        height: 90%;
+    }
+}
+
+@media only screen and (max-height: 768px) {
+    #main-container {
+        height: 85%;
+    }
+}
+
+@media only screen and (max-height: 512px) {
+    #main-container {
+        height: 80%;
+    }
+}
+
+.instruct_text {
+    text-shadow: 2px 2px 8px #000;
+    font-size: 29px;
+    color: #FCFCFC;
+    padding-bottom: 20px;
+}
+
+.modal-body {
+    font-size: 18px;
+    text-align: center;
+}
+
+.modal-content {
+    background-color: #343433;
+    border: 1px solid #999;
+    border-radius: 0px;
+    outline: 0;
+    color: silver;
+}
+
+.list-group-item {
+    background-color: #323232;
+    font-family: sans-serif;
+    color: blue;
+}
+
+a.list-group-item {
+    color: silver;
+    #555555;
+}
+
+a.list-group-item:hover:visited {
+    color: black;
+}
+
+.list-group-item.more {
+    font-size: 18px;
+}
+
+.list-group-item.btn {
+    font-weight: bold;
+}

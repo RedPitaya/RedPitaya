@@ -1,0 +1,22 @@
+[Unit]
+Description=SSH certificates are rebuilt on first boot
+Wants=systemd-remount-fs.service
+After=systemd-remount-fs.service
+#Before=ssh.service
+#ConditionFirstBoot=yes
+ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key.pub
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/dpkg-reconfigure openssh-server
+
+[Install]
+WantedBy=multi-user.target
+#WantedBy=ssh.service

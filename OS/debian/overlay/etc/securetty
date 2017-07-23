@@ -1,0 +1,4 @@
+# Serial Console for Xilinx Zynq-7000 (UART over USB micro connector)
+ttyPS0
+# console available on the TFT display
+tty1

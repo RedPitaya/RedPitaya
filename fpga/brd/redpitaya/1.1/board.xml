@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<board schema_version="2.1" vendor="redpitaya.com" name="redpitaya" display_name="Red Pitaya STEMLab-14" url="http://redpitaya.com" preset_file="preset.xml" board_image="redpitaya.jpg">
+  <file_version>1.1</file_version>
+  <description>Red Pitaya STEMLab-14</description>
+
+  <compatible_board_revisions>
+    <revision id="0">1.0</revision>
+    <revision id="0">1.1</revision>
+  </compatible_board_revisions>
+
+  <jumpers>
+    <jumper name="IN1" default_value="LV">
+      <description>Switcing between LV and HV ranges</description>
+    </jumper>
+    <jumper name="IN2" default_value="LV">
+      <description>Switcing between LV and HV ranges</description>
+    </jumper>
+  </jumpers>
+
+  <components>
+
+    <component name="part0" display_name="Zynq 7010" type="fpga" part_name="xc7z010clg400-1" pin_map_file="part0_pins.xml" vendor="xilinx" spec_url="http://redpitaya.com">
+      <description>FPGA part on the board</description>
+
+      <interfaces>
+
+        <interface mode="master" name="ps7_fixedio" type="xilinx.com:display_processing_system7:fixedio_rtl:1.0" of_component="ps7_fixedio" preset_proc="ps7_preset">
+          <preferred_ips>
+            <preferred_ip vendor="xilinx.com" library="ip" name="processing_system7" order="0"/>
+          </preferred_ips>
+        </interface>
+
+        <interface mode="master" name="led_8bit" type="xilinx.com:interface:gpio_rtl:1.0" of_component="led_8bit" preset_proc="led_8bit_preset">
+          <description>LED[7:0] Yellow</description>
+          <parameters></parameters>
+          <preferred_ips>
+            <preferred_ip vendor="xilinx.com" library="ip" name="axi_gpio" order="0"/>
+          </preferred_ips>
+          <port_maps>
+            <port_map logical_port="TRI_O" physical_port="LED_O" dir="out" left="7" right="0">
+              <pin_maps>
+                <pin_map port_index="0" component_pin="led_o[0]"/>
+                <pin_map port_index="1" component_pin="led_o[1]"/>
+                <pin_map port_index="2" component_pin="led_o[2]"/>
+                <pin_map port_index="3" component_pin="led_o[3]"/>
+                <pin_map port_index="4" component_pin="led_o[4]"/>
+                <pin_map port_index="5" component_pin="led_o[5]"/>
+                <pin_map port_index="6" component_pin="led_o[6]"/>
+                <pin_map port_index="7" component_pin="led_o[7]"/>
+              </pin_maps>
+            </port_map>
+          </port_maps>
+        </interface>
+
+        <interface mode="master" name="gpio_16bit" type="xilinx.com:interface:gpio_rtl:1.0" of_component="gpio_16bit" preset_proc="gpio_16bit_preset">
+          <description>E2 connector GPIO[15:0] = {ext_n[7:0],ext_p[7:0]} </description>
+          <parameters></parameters>
+          <preferred_ips>
+            <preferred_ip vendor="xilinx.com" library="ip" name="axi_gpio" order="0"/>
+          </preferred_ips>
+          <port_maps>
+            <port_map logical_port="TRI_I" physical_port="GPIO_I" dir="in" left="15" right="0">
+              <pin_maps>
+                <pin_map port_index="0"  component_pin="exp_p_io[0]"/>
+                <pin_map port_index="1"  component_pin="exp_p_io[1]"/>
+                <pin_map port_index="2"  component_pin="exp_p_io[2]"/>
+                <pin_map port_index="3"  component_pin="exp_p_io[3]"/>
+                <pin_map port_index="4"  component_pin="exp_p_io[4]"/>
+                <pin_map port_index="5"  component_pin="exp_p_io[5]"/>
+                <pin_map port_index="6"  component_pin="exp_p_io[6]"/>
+                <pin_map port_index="7"  component_pin="exp_p_io[7]"/>
+                <pin_map port_index="8"  component_pin="exp_n_io[0]"/>
+                <pin_map port_index="9"  component_pin="exp_n_io[1]"/>
+                <pin_map port_index="10" component_pin="exp_n_io[2]"/>
+                <pin_map port_index="11" component_pin="exp_n_io[3]"/>
+                <pin_map port_index="12" component_pin="exp_n_io[4]"/>
+                <pin_map port_index="13" component_pin="exp_n_io[5]"/>
+                <pin_map port_index="14" component_pin="exp_n_io[6]"/>
+                <pin_map port_index="15" component_pin="exp_n_io[7]"/>
+              </pin_maps>
+            </port_map>
+            <port_map logical_port="TRI_O" physical_port="GPIO_O" dir="out" left="15" right="0">
+              <pin_maps>
+                <pin_map port_index="0"  component_pin="exp_p_io[0]"/>
+                <pin_map port_index="1"  component_pin="exp_p_io[1]"/>
+                <pin_map port_index="2"  component_pin="exp_p_io[2]"/>
+                <pin_map port_index="3"  component_pin="exp_p_io[3]"/>
+                <pin_map port_index="4"  component_pin="exp_p_io[4]"/>
+                <pin_map port_index="5"  component_pin="exp_p_io[5]"/>
+                <pin_map port_index="6"  component_pin="exp_p_io[6]"/>
+                <pin_map port_index="7"  component_pin="exp_p_io[7]"/>
+                <pin_map port_index="8"  component_pin="exp_n_io[0]"/>
+                <pin_map port_index="9"  component_pin="exp_n_io[1]"/>
+                <pin_map port_index="10" component_pin="exp_n_io[2]"/>
+                <pin_map port_index="11" component_pin="exp_n_io[3]"/>
+                <pin_map port_index="12" component_pin="exp_n_io[4]"/>
+                <pin_map port_index="13" component_pin="exp_n_io[5]"/>
+                <pin_map port_index="14" component_pin="exp_n_io[6]"/>
+                <pin_map port_index="15" component_pin="exp_n_io[7]"/>
+              </pin_maps>
+            </port_map>
+            <port_map logical_port="TRI_T" physical_port="GPIO_T" dir="out" left="15" right="0">
+              <pin_maps>
+                <pin_map port_index="0"  component_pin="exp_p_io[0]"/>
+                <pin_map port_index="1"  component_pin="exp_p_io[1]"/>
+                <pin_map port_index="2"  component_pin="exp_p_io[2]"/>
+                <pin_map port_index="3"  component_pin="exp_p_io[3]"/>
+                <pin_map port_index="4"  component_pin="exp_p_io[4]"/>
+                <pin_map port_index="5"  component_pin="exp_p_io[5]"/>
+                <pin_map port_index="6"  component_pin="exp_p_io[6]"/>
+                <pin_map port_index="7"  component_pin="exp_p_io[7]"/>
+                <pin_map port_index="8"  component_pin="exp_n_io[0]"/>
+                <pin_map port_index="9"  component_pin="exp_n_io[1]"/>
+                <pin_map port_index="10" component_pin="exp_n_io[2]"/>
+                <pin_map port_index="11" component_pin="exp_n_io[3]"/>
+                <pin_map port_index="12" component_pin="exp_n_io[4]"/>
+                <pin_map port_index="13" component_pin="exp_n_io[5]"/>
+                <pin_map port_index="14" component_pin="exp_n_io[6]"/>
+                <pin_map port_index="15" component_pin="exp_n_io[7]"/>
+              </pin_maps>
+            </port_map>
+          </port_maps>
+        </interface>
+
+        <interface mode="master" name="daisy_i" type="xilinx.com:interface:gpio_rtl:1.0" of_component="daisy_i_2bit">
+          <description>DAISY (I) SATA connectors</description>
+          <parameters></parameters>
+          <preferred_ips>
+            <preferred_ip vendor="xilinx.com" library="ip" name="axi_gpio" order="0"/>
+          </preferred_ips>
+          <port_maps>
+            <port_map logical_port="TRI_I" physical_port="DAISY_I_I" dir="in" left="3" right="0">
+              <pin_maps>
+                <pin_map port_index="0"  component_pin="daisy_p_i[0]"/>
+                <pin_map port_index="1"  component_pin="daisy_n_i[0]"/>
+                <pin_map port_index="2"  component_pin="daisy_p_i[1]"/>
+                <pin_map port_index="3"  component_pin="daisy_n_i[1]"/>
+              </pin_maps>
+            </port_map>
+            <port_map logical_port="TRI_O" physical_port="DAISY_I_O" dir="out" left="3" right="0">
+              <pin_maps>
+                <pin_map port_index="0"  component_pin="daisy_p_i[0]"/>
+                <pin_map port_index="1"  component_pin="daisy_n_i[0]"/>
+                <pin_map port_index="2"  component_pin="daisy_p_i[1]"/>
+                <pin_map port_index="3"  component_pin="daisy_n_i[1]"/>
+              </pin_maps>
+            </port_map>
+            <port_map logical_port="TRI_T" physical_port="DAISY_I_T" dir="out" left="3" right="0">
+              <pin_maps>
+                <pin_map port_index="0"  component_pin="daisy_p_i[0]"/>
+                <pin_map port_index="1"  component_pin="daisy_n_i[0]"/>
+                <pin_map port_index="2"  component_pin="daisy_p_i[1]"/>
+                <pin_map port_index="3"  component_pin="daisy_n_i[1]"/>
+              </pin_maps>
+            </port_map>
+          </port_maps>
+        </interface>
+
+        <interface mode="master" name="daisy_o" type="xilinx.com:interface:gpio_rtl:1.0" of_component="daisy_o_2bit">
+          <description>DAISY (O) SATA connectors</description>
+          <parameters></parameters>
+          <preferred_ips>
+            <preferred_ip vendor="xilinx.com" library="ip" name="axi_gpio" order="0"/>
+          </preferred_ips>
+          <port_maps>
+            <port_map logical_port="TRI_I" physical_port="DAISY_O_I" dir="in" left="3" right="0">
+              <pin_maps>
+                <pin_map port_index="4"  component_pin="daisy_p_o[0]"/>
+                <pin_map port_index="5"  component_pin="daisy_n_o[0]"/>
+                <pin_map port_index="6"  component_pin="daisy_p_o[1]"/>
+                <pin_map port_index="7"  component_pin="daisy_n_o[1]"/>
+              </pin_maps>
+            </port_map>
+            <port_map logical_port="TRI_O" physical_port="DAISY_O_O" dir="out" left="3" right="0">
+              <pin_maps>
+                <pin_map port_index="4"  component_pin="daisy_p_o[0]"/>
+                <pin_map port_index="5"  component_pin="daisy_n_o[0]"/>
+                <pin_map port_index="6"  component_pin="daisy_p_o[1]"/>
+                <pin_map port_index="7"  component_pin="daisy_n_o[1]"/>
+              </pin_maps>
+            </port_map>
+            <port_map logical_port="TRI_T" physical_port="DAISY_O_T" dir="out" left="3" right="0">
+              <pin_maps>
+                <pin_map port_index="4"  component_pin="daisy_p_o[0]"/>
+                <pin_map port_index="5"  component_pin="daisy_n_o[0]"/>
+                <pin_map port_index="6"  component_pin="daisy_p_o[1]"/>
+                <pin_map port_index="7"  component_pin="daisy_n_o[1]"/>
+              </pin_maps>
+            </port_map>
+          </port_maps>
+        </interface>
+
+
+        <interface mode="master" name="ps7_fixedio" type="xilinx.com:display_processing_system7:fixedio_rtl:1.0" of_component="ps7_fixedio" preset_proc="ps7_preset">
+        </interface>
+
+        <interface mode="slave" name="adc_clock_in" type="xilinx.com:interface:diff_clock:1.0" of_component="adc_clock_in" preset_proc="adc_clock_in_preset">
+          <preferred_ips>
+            <preferred_ip vendor="xilinx.com" library="ip" name="clk_wiz" order="0"/>
+          </preferred_ips>
+          <port_maps>
+            <port_map logical_port="CLK_P" physical_port="ADC_CLK_I_P" dir="in">
+              <pin_maps>
+                <pin_map port_index="0" component_pin="adc_clk_i[1]"/>
+              </pin_maps>
+            </port_map>
+            <port_map logical_port="CLK_N" physical_port="ADC_CLK_I_N" dir="in">
+              <pin_maps>
+                <pin_map port_index="0" component_pin="adc_clk_i[0]"/>
+              </pin_maps>
+            </port_map>
+          </port_maps>
+          <parameters>
+            <parameter name="frequency" value="125000000"/>
+          </parameters>
+        </interface>
+
+      </interfaces>
+
+    </component>
+
+    <component name="ddr3_sdram" display_name="DDR3 SDRAM" type="chip" sub_type="ddr" major_group="External Memory" part_name="MT41J256M16HA-125:E" vendor="Micron" spec_url="https://www.micron.com/parts/dram/ddr3-sdram/mt41j256m16ha-125">
+      <description>512 MB DDR3 memory</description>
+      <parameters>
+        <parameter name="ddr_type" value="ddr3"/>
+        <parameter name="size" value="512MB"/>
+      </parameters>
+    </component>
+
+    <component name="ps7_fixedio" display_name="PS7 fixed IO" type="chip" sub_type="fixed_io" major_group=""/>
+
+    <component name="led_8bit" display_name="LED" type="chip" sub_type="led" major_group="General Purpose Input or Output" part_name="150060YS75000" vendor="http://www.we-online.com/" spec_url="http://katalog.we-online.com/led/datasheet/150060YS75000.pdf">
+      <description>LED, 7 to 0, Active High</description>
+    </component>
+
+    <component name="gpio_16bit" display_name="GPIO" type="connector" sub_type="led" major_group="General Purpose Input or Output">
+      <description>GPIO, 15 to 0</description>
+    </component>
+
+    <component name="daisy_i_2bit" display_name="DAISY_I" type="connector" sub_type="led" major_group="General Purpose Input or Output">
+      <description>DAISY (I) SATA connectors (undocumented)</description>
+    </component>
+
+    <component name="daisy_o_2bit" display_name="DAISY_O" type="connector" sub_type="led" major_group="General Purpose Input or Output">
+      <description>DAISY (O) SATA connectors (undocumented)</description>
+    </component>
+
+    <component name="adc_clock_in" display_name="ADC clock input" type="chip" sub_type="system_clock" major_group="Clock Sources">
+      <description>ADC Clock, 125 MHz</description>
+    </component>
+
+  </components>
+
+  <jtag_chains>
+    <jtag_chain name="chain1">
+      <position name="0" component="part0"/>
+    </jtag_chain>
+  </jtag_chains>
+
+  <connections>
+    <connection name="part0_led_8bit" component1="part0" component2="led_8bit">
+      <connection_map name="part0_led_8bit_1" c1_st_index="0" c1_end_index="7" c2_st_index="0" c2_end_index="7"/>
+    </connection>
+
+    <connection name="part0_gpio_16bit" component1="part0" component2="gpio_16bit">
+      <connection_map name="part0_gpio_16bit_1" c1_st_index="8" c1_end_index="23" c2_st_index="0" c2_end_index="15"/>
+    </connection>
+
+    <connection name="part0_daisy_i_2bit" component1="part0" component2="daisy_i_2bit">
+      <connection_map name="part0_daisy_i_2bit_1" c1_st_index="24" c1_end_index="27" c2_st_index="0" c2_end_index="3"/>
+    </connection>
+
+    <connection name="part0_daisy_o_2bit" component1="part0" component2="daisy_o_2bit">
+      <connection_map name="part0_daisy_o_2bit_1" c1_st_index="28" c1_end_index="31" c2_st_index="0" c2_end_index="3"/>
+    </connection>
+
+    <connection name="part0_adc_clock_in" component1="part0" component2="adc_clock">
+      <connection_map name="part0_adc_clock_1" c1_st_index="32" c1_end_index="33" c2_st_index="0" c2_end_index="1"/>
+    </connection>
+  </connections>
+
+</board>

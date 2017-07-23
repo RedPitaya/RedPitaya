@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<ip_presets schema="1.0">
+  <ip_preset preset_proc_name="ps7_preset">
+    <ip vendor="xilinx.com" library="ip" name="processing_system7" version="*">
+      <user_parameters>
+        <user_parameter name="CONFIG.PCW_UIPARAM_DDR_ENABLE" value="1"/>
+        <user_parameter name="CONFIG.PCW_UIPARAM_DDR_FREQ_MHZ" value="533.333333"/>
+        <user_parameter name="CONFIG.PCW_UIPARAM_DDR_MEMORY_TYPE" value="DDR 3 (Low Voltage)"/>
+        <user_parameter name="CONFIG.PCW_UIPARAM_DDR_PARTNO" value="MT41K256M16 RE-125"/>
+      </user_parameters>
+    </ip>
+  </ip_preset>
+
+  <ip_preset preset_proc_name="led_8bit_preset">
+    <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO">
+      <user_parameters>
+        <user_parameter name="CONFIG.C_GPIO_WIDTH" value="8"/>
+        <user_parameter name="CONFIG.C_ALL_OUTPUTS" value="1"/>
+        <user_parameter name="CONFIG.C_ALL_INPUTS" value="0"/>
+      </user_parameters>
+    </ip>
+    <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO2">
+      <user_parameters>
+        <user_parameter name="CONFIG.C_IS_DUAL" value="1"/>
+        <user_parameter name="CONFIG.C_GPIO2_WIDTH" value="8"/>
+        <user_parameter name="CONFIG.C_ALL_OUTPUTS_2" value="1"/>
+        <user_parameter name="CONFIG.C_ALL_INPUTS_2" value="0"/>
+      </user_parameters>
+    </ip>
+  </ip_preset>
+
+  <ip_preset preset_proc_name="gpio_16bit_preset">
+    <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO">
+      <user_parameters>
+        <user_parameter name="CONFIG.C_GPIO_WIDTH" value="16"/>
+        <user_parameter name="CONFIG.C_ALL_OUTPUTS" value="1"/>
+        <user_parameter name="CONFIG.C_ALL_INPUTS" value="1"/>
+      </user_parameters>
+    </ip>
+    <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO2">
+      <user_parameters>
+        <user_parameter name="CONFIG.C_IS_DUAL" value="1"/>
+        <user_parameter name="CONFIG.C_GPIO2_WIDTH" value="16"/>
+        <user_parameter name="CONFIG.C_ALL_OUTPUTS_2" value="1"/>
+        <user_parameter name="CONFIG.C_ALL_INPUTS_2" value="1"/>
+      </user_parameters>
+    </ip>
+  </ip_preset>
+
+  <ip_preset preset_proc_name="adc_clock_in_preset">
+    <ip vendor="xilinx.com" library="ip" name="clk_wiz" ip_interface="clk_in1">
+      <user_parameters>
+        <user_parameter name="CONFIG.PRIM_IN_FREQ" value="125"/>
+        <user_parameter name="CONFIG.PRIM_SOURCE" value="Differential_clock_capable_pin"/>
+      </user_parameters>
+    </ip>
+    <ip vendor="xilinx.com" library="ip" name="clk_wiz" ip_interface="clk_in2">
+      <user_parameters>
+        <user_parameter name="CONFIG.USE_INCLK_SWITCHOVER" value="true"/>
+        <user_parameter name="CONFIG.SECONDARY_IN_FREQ" value="125"/>
+        <user_parameter name="CONFIG.SECONDARY_SOURCE" value="Differential_clock_capable_pin"/>
+      </user_parameters>
+    </ip>
+  </ip_preset>
+</ip_presets>

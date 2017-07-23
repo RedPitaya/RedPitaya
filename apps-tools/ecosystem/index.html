@@ -1,0 +1,91 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
+    <link href="./style.css" rel="stylesheet" type="text/css" />
+    <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+    <script src="../assets/offline.min.js?1"></script>
+    <script src="../assets/onlinecheck.js?1"></script>
+    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+    <script src="../assets/jquery.cookie.js"></script>
+    <script src="../assets/quickpager.jquery.js"></script>
+    <script src="../assets/hammer.js"></script>
+    <script src="../assets/desktop.js?1"></script>
+    <script src="../assets/browsercheck.js?1"></script>
+    <script src="../assets/ecosystem.js?1"></script>
+    <script src="../assets/popupstack.js?1"></script>
+    <script src="../assets/jquery.browser.js"></script>
+    <link href="./assets/popupstack.css" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>My Red Pitaya</title>
+</head>
+
+<body class="demo">
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+        <div id="loader-desc">Getting the list of applications</div>
+    </div>
+    <div id="main_content">
+        <div id="header">
+            <div id="description"></div>
+            <div id="reboot"><img src="../assets/images/power.png"></div>
+        </div>
+        <div class="" id="main-container">
+            <ul class="paging" id="list-container">
+            </ul>
+        </div>
+        <div id="footer">&nbsp;</div>
+    </div>
+    <div class="modal fade" id="ic_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="lic_failed">Licence verification failed! </p>
+                    <p>RedPitaya is offline and cannot access the server! </p> Please follow <a style="color: #dd0020" href="http://redpitaya.com/quick-start/" target="_blank">quick start instructions</a> to put it online.
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="http://redpitaya.com/quick-start/" target="_blank" id="quick_start" class="list-group-item btn">Open instructions</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a id="ignore_link" href="#" data-dismiss="modal" class="list-group-item btn">Ignore</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="reboot_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Reboot</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to reboot your Red Pitaya?</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="reboot_confirm" class="list-group-item btn">Yes</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/analytics-core.js?1"></script>
+    <script src="../assets/analytics-main.js?1"></script>
+</body>
+
+</html>

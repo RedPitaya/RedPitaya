@@ -1,0 +1,1 @@
+red_pitaya.mdd belongs to the drivers' folder: C:\Program Files\User\R2014a\toolbox\instrument\instrument\drivers

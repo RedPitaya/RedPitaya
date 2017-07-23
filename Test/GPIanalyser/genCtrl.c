@@ -43,7 +43,7 @@ int setSignal(double frq1, double frq2){
   awg.offsgain = (dcoffs << 16) + 0x1fff;
   //frq=150e3 ;
   awg.step = round(65536 * frq1/c_awg_smpl_freq * nSamples)-0; 
-  awg.wrap = round(65536 * (nSamples-1));
+  awg.wrap = round(65536 * nSamples - 1);
   for(i = 0; i < nSamples; i++) {
     data[i] =  round(amp * cos(2*M_PI*(double)i/(double)nSamples));
     }
@@ -55,7 +55,7 @@ int setSignal(double frq1, double frq2){
   awg.offsgain = (dcoffs << 16) + 0x1fff;
  // frq=200e3 ;
   awg.step = round(65536 * frq2/c_awg_smpl_freq * nSamples)-0; 
-  awg.wrap = round(65536 * (nSamples-1));
+  awg.wrap = round(65536 * nSamples - 1);
   for(i = 0; i < nSamples; i++) {
     data[i] = round(amp * cos(2*M_PI*(double)i/(double)nSamples));
     }

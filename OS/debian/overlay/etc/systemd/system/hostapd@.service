@@ -1,0 +1,18 @@
+[Unit]
+Description=Hostapd IEEE 802.11 AP, IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
+BindsTo=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
+Before=network.target
+Wants=network.target
+
+# check existence of configuration file
+ConditionPathExists= /opt/redpitaya/hostapd.conf
+ConditionPathExists=!/opt/redpitaya/wpa_supplicant.conf
+
+[Service]
+Type=forking
+PIDFile=/run/hostapd.pid
+ExecStart=/usr/sbin/hostapd /etc/hostapd/hostapd.conf -P /run/hostapd.pid -B
+
+[Install]
+WantedBy=sys-subsystem-net-devices-%i.device

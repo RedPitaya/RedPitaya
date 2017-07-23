@@ -26,11 +26,9 @@ SRCS = $(subst .o,.c, $(OBJS)))
 TARGET=acquire
 
 # GCC compiling & linking flags
-CFLAGS=-g -std=gnu99 -Wall -Werror
+CFLAGS  = -g -std=gnu99 -Wall -Werror
+CFLAGS += -I../../api/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-
-# Red Pitaya common SW directory
-SHARED=../../shared/
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
@@ -61,17 +59,13 @@ all: $(TARGET)
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
-%.o: %.c version.h
+%.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-
-# Version header for traceability
-version.h:
-	cp $(SHARED)/include/redpitaya/version.h . 
 
 # Clean target - when called it cleans all object files and executables.
 clean:
@@ -82,7 +76,3 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	cp $(TARGET) $(INSTALL_DIR)/bin
-	mkdir -p $(INSTALL_DIR)/src/utils/$(TARGET)
-	-rm -f $(TARGET) *.o
-	cp -r * $(INSTALL_DIR)/src/utils/$(TARGET)/
-	-rm `find $(INSTALL_DIR)/src/tools/$(TARGET)/ -iname .svn` -rf

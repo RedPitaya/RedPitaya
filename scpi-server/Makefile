@@ -1,46 +1,38 @@
-##
-# $Id: Makefile 1249 2014-02-22 20:21:40Z
 #
-# (c) Red Pitaya  http://www.redpitaya.com
+# $Id: $
 #
-# scpi-server project file.
+# Red Pitaya library librp and test app Makefile.
 #
-# This project file is written for GNU/Make software. For more details please 
-# visit: http://www.gnu.org/software/make/manual/make.html
-# GNU Compiler Collection (GCC) tools are used for the compilation and linkage. 
-# For the details about the usage and building please visit:
-# http://gcc.gnu.org/onlinedocs/gcc/
-#
+
+APP=$(notdir $(CURDIR:%/=%))
 
 # Versioning system
-VERSION ?= 0.00-0000
-REVISION ?= devbuild
+# BUILD_NUMBER ?= 0
+# REVISION ?= devbuild
+# VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-# Executable name
-TARGET=scpi-server
-
-# Installation directory
+# Installation directory. It is changed when using the main Makefile++++++
 INSTALL_DIR ?= .
 
-# Makefile is composed of so called 'targets'. They give basic structure what 
-# needs to be execued during various stages of the building/removing/installing
-# of software package.
-# Simple Makefile targets have the following structure:
-# <name>: <dependencies>
-#	<command1>
-#       <command2>
-#       ...
-# The target <name> is completed in the following order:
-#   - list od <dependencies> finished
-#   - all <commands> in the body of targets are executed succsesfully
+LIBSCPI=scpi-parser/libscpi/dist/libscpi.so.2.1.0
+SCPISRV=scpi-server
+ARTIFACTS= $(LIBSCPI) $(SCPISRV)
 
-all:
+all: $(LIBSCPI) $(SCPISRV)
 
-# Clean target - when called it cleans all object files and executables.
-clean:
+$(SCPISRV):
+	$(MAKE) -C src
 
-# Install target - creates 'bin/' sub-directory in $(INSTALL_DIR) and copies all
-# executables to that location.
+$(LIBSCPI):
+	$(MAKE) -C scpi-parser CC=$(CROSS_COMPILE)gcc USER_FULL_ERROR_LIST=1
+
 install:
 	mkdir -p $(INSTALL_DIR)/bin
-	cp $(TARGET) $(INSTALL_DIR)/bin
+	mkdir -p $(INSTALL_DIR)/lib
+	cp $(SCPISRV) $(INSTALL_DIR)/bin
+	$(MAKE) -C scpi-parser install PREFIX=$(INSTALL_DIR)
+	ln -sf libscpi.so.2.1.0 $(INSTALL_DIR)/lib/libscpi.so
+
+clean:
+	$(MAKE) -C src clean
+	$(MAKE) -C scpi-parser clean
