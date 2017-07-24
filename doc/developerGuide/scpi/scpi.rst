@@ -2,17 +2,48 @@
 SCPI
 ####
 
-SCPI standard is defined here.
+This is a new SCPI server based on API1.
+
+TODO:
+- link to the standard, 
 
 ********************
 Install dependencies
 ********************
 
-Python
+For running SCPI client examples written in ``Python``
+the next dependencies have to be installed:
+
+.. code-block:: shell-session
+
+   sudo apt install pyton3-pip
+   pip3 install --upgrade pip
+   sudo pip3 install pyvisa
+   sudo pip3 install pyvisa-py
+
+
+******************
+Running the server
+******************
+
+The SCPI server can be started as a ``systemd`` service.
+
+.. code-block:: shell-session
+
+   systemctl start scpi
+
+To start the server at boot, the service should be enabled.
+
+.. code-block:: shell-session
+
+   systemctl enable scpi
+
 
 **************
 Implementation
 **************
+
+
 
 *************
 SCPI commands

@@ -15,3 +15,4 @@ Software
    os/network
    ../../fpga/fpga
    comC
+   scpi/scpi
