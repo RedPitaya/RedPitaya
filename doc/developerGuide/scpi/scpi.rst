@@ -54,8 +54,8 @@ The next subsystems are available:
 Oscilloscope:
 
 Generator:
-``:OUTPUT[<n>]``
 ``:SOURCE[<n>]``
+``:OUTPUT[<n>]``
 
 The value of ``n`` selects one of the ``N`` oscilloscope channels.
 The indexing starts at ``1`` and ends at ``N``.
@@ -228,16 +228,88 @@ The unit (degree symbol) should not be provided,
 other units are not supported yet.
 Negative values and values greater then 360° are properly wrapped.
 
+===============================
+``[:SOURce#]:FUNCtion[:SHAPe]``
+===============================
 
-    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]",                 .callback = rpscpi_gen_set_waveform_tag,},
-    {.pattern = "[SOURce#]:FUNCtion[:SHAPe]?",                .callback = rpscpi_gen_get_waveform_tag,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},
-//  {.pattern = "[SOURce#]:PHASe:INITiate",                   .callback = RP_GenPhaseInit,},
-//    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]",                .callback = RP_GenArbitraryWaveForm,},
-//    {.pattern = "[SOURce#]:TRACe:DATA[:DATA]?",               .callback = RP_GenArbitraryWaveFormQ,},
+-------
+Syntax:
+-------
+
+``[:SOURce#]:FUNCtion[:SHAPe] SINusoid|SQUare|TRIangle|USER, [<duty_cycle>]``
+``[:SOURce#]:FUNCtion[:SHAPe]?``
+
+-----------
+Description
+-----------
+
+Specify the shape to be loaded into the waveform table.
+The ``USER`` shape is ignored, since an arbitrary waveform can be loaded
+regardless of the current shape setting.
+
+The ``SQUare`` and the ``TRIangle`` shapes support the ``<duty_cycle>`` parameter.
+The ``<duty_cycle>`` parameter is unitless in the range from 0 to 1 by default.
+Optional units are ``PCT`` (%) and ``PPM`` (parts per milion).
+
+For ``SQUare`` the waveform is ``1`` for ``<duty_cycle>``\*period
+and ``-1`` for the rest.
+For ``TRIangle`` the waveform is rising from ``-1`` to ``+1`` for
+``<duty_cycle>``\*period and falling toward ``-1`` for the rest.
+
+Query returns waveform shape in the same format as the parameters.
+
+----------
+Parameters
+----------
+
++--------------+----------+----------------------------------+----------+--------------+
+| Name         | Type     | Range                            | Default  | Default unit |
++==============+==========+==================================+==========+==============+
+|              | mnemonic | SINusoid\|SQUare\|TRIangle\|USER |          |              |
++--------------+----------+----------------------------------+----------+--------------+
+| <duty_cycle> | float    | 0 to 1 *or* 0PCT to 100PCT       | 0.5      | none         |
++--------------+----------+----------------------------------+----------+--------------+
+
+============================
+[:SOURce#]:TRACe:DATA[:DATA]
+============================
+
+-------
+Syntax:
+-------
+
+``[:SOURce#]:TRACe:DATA[:DATA] <data>``
+``[:SOURce#]:TRACe:DATA[:DATA]? [<len>]``
+
+-----------
+Description
+-----------
+
+Specify the the arbitrary waveform table.
+An arbitrary number (between 1 and table size) of data points
+in the normalized range [-1,+1] can be provided.
+The number of data points will also initilalize in internal
+periodic mode table size register.
+For burst mode data length needs to be set separately.
+
+An arbitrary number ``<len>`` (between 1 and table size) of data points
+can be requested. If the ``<len>`` parameter is absent,
+the entire table will b returned.
+
+----------
+Parameters
+----------
+
++--------+-------------+------------+---------+--------------+
+| Name   | Type        | Range      | Default | Default unit |
++========+=============+============+=========+==============+
+| <data> | float array | -1 to +1   |         | V            |
++--------+-------------+------------+---------+--------------+
+| <len>  | integer     | 1 to 16384 | 16384   |              |
++--------+-------------+------------+---------+--------------+
+
+
+
     {.pattern = "[SOURce#]:BURSt[:MODE]",                     .callback = rpscpi_gen_set_burst_mode,},
     {.pattern = "[SOURce#]:BURSt[:MODE]?",                    .callback = rpscpi_gen_get_burst_mode,},
     {.pattern = "[SOURce#]:BURSt:DATA:REPetitions",           .callback = rpscpi_gen_set_data_repetitions,},
@@ -248,3 +320,7 @@ Negative values and values greater then 360° are properly wrapped.
     {.pattern = "[SOURce#]:BURSt:PERiod:LENgth?",             .callback = rpscpi_gen_get_period_length,},
     {.pattern = "[SOURce#]:BURSt:PERiod:NUMber",              .callback = rpscpi_gen_set_period_number,},
     {.pattern = "[SOURce#]:BURSt:PERiod:NUMber?",             .callback = rpscpi_gen_get_period_number,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
+    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},
