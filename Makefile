@@ -217,10 +217,8 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 .PHONY: scpi-new
 
 scpi-new:
-	meson builddir # --buildtype {plain,debug,debugoptimized,release,minsize}
-	cd builddir && ninja
-	cd builddir && DESTDIR="." ninja install
-	cp -r builddir/usr/local/* build/
+	meson builddir --libdir lib --prefix $(abspath $(INSTALL_DIR)) --buildtype release
+	cd builddir && ninja install
 
 ################################################################################
 # SDR
