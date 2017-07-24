@@ -29,6 +29,43 @@ void rp_asg_bst_print (rp_asg_bst_t *handle) {
     printf("asg_per.cfg_bpn = %08x\n", handle->regset->cfg_bpn);
 }
 
+int rp_asg_bst_simulate (rp_asg_bst_t *handle, size_t size, uint32_t *data) {
+    int unsigned i;
+    int unsigned cfg_bdr = handle->regset->cfg_bdr + 1;
+    int unsigned cfg_bdl = handle->regset->cfg_bdl + 1;
+    int unsigned cfg_bpl = handle->regset->cfg_bpl + 1;
+    int unsigned cfg_bpn = handle->regset->cfg_bpn + 1;
+
+    // repeat same period
+    for (int unsigned bpn=0; bpn < cfg_bpn; bpn++) {
+        // data length
+        for (int unsigned bdl=0; bdl < cfg_bdl; bdl++) {
+            // repeat same data sample
+            for (int unsigned bdr=0; bdr < cfg_bdr; bdr++) {
+                // break if position inside period excedes period length
+                if (bdl * cfg_bdr >= cfg_bpl)
+                    break;
+                // break if index exceeds simulation size
+                if (i >= size)
+                    break;
+                // write current address
+                data[i] = bdl;
+                i++;
+            }
+        }
+        // fill the period with the last data
+        for (int bdl=0; bdl < cfg_bpl - cfg_bdl * cfg_bdr; bdl++) {
+            // break if index exceeds simulation size
+            if (i >= size)
+                break;
+            // write current address
+            data[i] = bdl;
+            i++;
+        }
+    }
+    return(0);
+}
+                
 uint32_t rp_asg_bst_get_data_repetitions (rp_asg_bst_t *handle) {
     return(handle->regset->cfg_bdr + 1);
 }
