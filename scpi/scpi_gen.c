@@ -508,17 +508,16 @@ scpi_result_t rpscpi_gen_set_waveform_data(scpi_t *context) {
 
 scpi_result_t rpscpi_gen_get_waveform_data(scpi_t *context) {
     int unsigned channel;
-    scpi_number_t value;
     rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
 
     if (!rpcspi_gen_channels(context, &channel)) {
         return SCPI_RES_ERR;
     }
     // read data length
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
-        return SCPI_RES_ERR;
+    int unsigned len;
+    if (!SCPI_ParamUInt32(context, &len, false)) {
+        len = gen[channel].buffer_size;
     }
-    int unsigned len = (int unsigned) value.content.value;
     // load float values into a temporary waveform
     float waveform[gen[channel].buffer_size];
     if (rp_gen_get_waveform(&gen[channel], waveform, &len)) {
