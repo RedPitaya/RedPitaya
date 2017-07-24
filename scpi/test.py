@@ -38,7 +38,7 @@ print(rp.query(":SOURce2:MODE?"))
 rp.write(":SOURce1:MODE BURST")
 print(rp.query(":SOURce1:MODE?"))
 
-rp.write(":SOURce1:FUNCtion:SHAPe SINusoid")
+rp.write(":SOURce1:FUNCtion:SHAPe SINusoid,30PCT")
 rp.write(":SOURce2:FUNCtion:SHAPe TRIangle,0.2")
 print(rp.query(":SOURce1:FUNCtion:SHAPe?"))
 print(rp.query(":SOURce2:FUNCtion:SHAPe?"))
