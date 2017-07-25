@@ -43,6 +43,10 @@ librp1_header = ['include/redpitaya/rp1.h',
                  'include/redpitaya/la_trg.h']
 install_headers(librp1_header, subdir : 'redpitaya')
 
+# this is only usefull for installing on a FAT partition
+# TODO: it should be removed, if/when possible
+meson.add_install_script('install_vfat.sh')
+
 executable('demo', 'src/main.c', dependencies : depm, include_directories : inc, link_with : librp1_shared)
 
 incrp1 = include_directories(['include'])
