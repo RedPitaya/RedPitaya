@@ -543,12 +543,12 @@ scpi_result_t rpscpi_gen_set_waveform_raw(scpi_t *context) {
         return SCPI_RES_ERR;
     }
     // check block data size proper allignement
-    if (len % sizeof(int16_t)) {
+    if (len % sizeof(*waveform)) {
         SCPI_ErrorPush(context, SCPI_ERROR_INVALID_BLOCK_DATA);
         return SCPI_RES_ERR;
     }
     // calculate number of samples from block size
-    len = len / sizeof(int16_t);
+    len = len / sizeof(*waveform);
     // check if data fits inside buffer
     if (len >= gen[channel].buffer_size) {
         SCPI_ErrorPush(context, SCPI_ERROR_BLOCK_DATA_ERROR);
@@ -582,7 +582,7 @@ scpi_result_t rpscpi_gen_get_waveform_raw(scpi_t *context) {
 	 waveform[i] = gen[channel].table[i];
     }
     // send back the data
-    if (!SCPI_ResultArbitraryBlock(context, &waveform, len * sizeof(int16_t))) {
+    if (!SCPI_ResultArbitraryBlock(context, &waveform, len * sizeof(*waveform))) {
         return SCPI_RES_ERR;
     }
     return SCPI_RES_OK;
