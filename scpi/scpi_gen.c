@@ -529,6 +529,53 @@ scpi_result_t rpscpi_gen_get_waveform_data(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t rpscpi_gen_set_waveform_raw(scpi_t *context) {
+    int unsigned channel;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    // store float values into a temporary waveform
+    int16_t waveform[gen[channel].buffer_size];
+    size_t len=0;
+    if (!SCPI_ParamArbitraryBlock(context, (const char **) &waveform, &len, true)) {
+        return SCPI_RES_ERR;
+    }
+    // write waveform into buffer
+    for (size_t i=0; i<len; i++) {
+	 gen[channel].table[i] = waveform[i];
+    }
+    // set waveform size
+    rp_asg_per_set_table_size(&gen[channel].per, len);
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_gen_get_waveform_raw(scpi_t *context) {
+    int unsigned channel;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    // read data length
+    int unsigned len;
+    if (!SCPI_ParamUInt32(context, &len, false)) {
+        len = gen[channel].buffer_size;
+    }
+    // store float values into a temporary waveform
+    int16_t waveform[gen[channel].buffer_size];
+    // write waveform into buffer
+    for (size_t i=0; i<len; i++) {
+	 waveform[i] = gen[channel].table[i];
+    }
+    // send back the data
+    if (!SCPI_ResultArbitraryBlock(context, &waveform, len)) {
+        return SCPI_RES_ERR;
+    }
+    return SCPI_RES_OK;
+}
+
 scpi_result_t rpscpi_gen_set_data_repetitions(scpi_t *context) {
     int unsigned channel;
     scpi_number_t value;

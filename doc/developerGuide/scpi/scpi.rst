@@ -44,6 +44,22 @@ Implementation
 **************
 
 
+********
+Building
+********
+
+For developers who wish to modify the SCPI server and/or the underlying API,
+the best option is to compile directly on the Red Pitaya board.
+After cloning the Git repository and changing into the directory do:
+
+.. code-block:: shell-session
+
+   meson builddir --libdir lib --prefix /opt/redpitaya
+   cd builddir
+   ninja
+   rw
+   ninja install
+
 
 *************
 SCPI commands
