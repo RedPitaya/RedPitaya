@@ -61,10 +61,10 @@ The value of ``n`` selects one of the ``N`` oscilloscope channels.
 The indexing starts at ``1`` and ends at ``N``.
 The available options for ``n`` are ``1`` or ``2``.
 
-    {.pattern = "SOURce#:RESET",                              .callback = rpscpi_gen_reset,},
-    {.pattern = "SOURce#:START",                              .callback = rpscpi_gen_start,},
-    {.pattern = "SOURce#:STOP",                               .callback = rpscpi_gen_stop,},
-    {.pattern = "SOURce#:TRIGger",                            .callback = rpscpi_gen_trigger,},
+   | {.pattern = "SOURce#:RESET",                              .callback = rpscpi_gen_reset,},
+   | {.pattern = "SOURce#:START",                              .callback = rpscpi_gen_start,},
+   | {.pattern = "SOURce#:STOP",                               .callback = rpscpi_gen_stop,},
+   | {.pattern = "SOURce#:TRIGger",                            .callback = rpscpi_gen_trigger,},
 
 ========================
 ``:OUTPut[<n>][:STATe]``
