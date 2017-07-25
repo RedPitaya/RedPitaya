@@ -120,6 +120,9 @@ const scpi_command_t scpi_commands[] = {
 //  {.pattern = "[:SOURce#]:PHASe:INITiate",                   .callback = RP_GenPhaseInit,},  // use software trigger instead
     {.pattern = "[:SOURce#]:TRACe:DATA[:DATA]",                .callback = rpscpi_gen_set_waveform_data,},
     {.pattern = "[:SOURce#]:TRACe:DATA[:DATA]?",               .callback = rpscpi_gen_get_waveform_data,},
+    {.pattern = "[:SOURce#]:TRACe:DATA:RAW",                   .callback = rpscpi_gen_set_waveform_raw,},
+    {.pattern = "[:SOURce#]:TRACe:DATA:RAW?",                  .callback = rpscpi_gen_get_waveform_raw,},
+    {.pattern = "[:SOURce#]:BURSt[:MODE]",                     .callback = rpscpi_gen_set_burst_mode,},
     {.pattern = "[:SOURce#]:BURSt[:MODE]",                     .callback = rpscpi_gen_set_burst_mode,},
     {.pattern = "[:SOURce#]:BURSt[:MODE]?",                    .callback = rpscpi_gen_get_burst_mode,},
     {.pattern = "[:SOURce#]:BURSt:DATA:REPetitions",           .callback = rpscpi_gen_set_data_repetitions,},
