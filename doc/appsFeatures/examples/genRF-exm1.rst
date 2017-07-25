@@ -85,8 +85,9 @@ Code - C
 
         return 0;
     }
-    view rawgenerate_continuous.c
-    Code - Python
+   
+Code - Python
+*************
 
     #!/usr/bin/python
 
