@@ -54,11 +54,29 @@ After cloning the Git repository and changing into the directory do:
 
 .. code-block:: shell-session
 
-   meson builddir --libdir lib --prefix /opt/redpitaya
+   meson builddir --prefix /opt/redpitaya
    cd builddir
    ninja
+
+The server can be installed using the nect commands:
+
+.. code-block:: shell-session
+
    rw
    ninja install
+
+And run as a systemd service:
+
+.. code-block:: shell-session
+
+   systemctl restart scpi.service
+
+Alternatively the server can be run directly from the build directory:
+
+.. code-block:: shell-session
+
+   /opt/redpitaya/sbin/overlay.sh mercury
+   LD_LIBRARY_PATH=api1:subprojects/scpi-parser-redpitaya-2017/libscpi/ scpi/scpi
 
 
 *************
