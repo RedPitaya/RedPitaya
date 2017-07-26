@@ -147,6 +147,32 @@ scpi_result_t rpscpi_gen_trigger(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t rpscpi_gen_status_run(scpi_t *context) {
+    int unsigned channel;
+    bool value;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    value = rp_evn_status_run(&gen[channel].evn);
+    SCPI_ResultBool(context, value);
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_gen_status_trigger(scpi_t *context) {
+    int unsigned channel;
+    bool value;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    value = rp_evn_status_trigger(&gen[channel].evn);
+    SCPI_ResultBool(context, value);
+    return SCPI_RES_OK;
+}
+
 scpi_result_t rpscpi_gen_set_mode(scpi_t *context) {
     int unsigned channel;
     int32_t value;
