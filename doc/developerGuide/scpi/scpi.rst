@@ -27,7 +27,7 @@ for those follow the installation instructions.
 
 For Debian/Ubuntu based distributions try the next instructions:
 
-1. Download the ISO file and mount it.
+1. Download the `NI-VISA ISO file <http://www.ni.com/download/ni-visa-17.0/6700/en/>`_ and mount it.
 
 .. code-block:: shell-session
 
