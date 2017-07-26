@@ -21,6 +21,23 @@ the next dependencies have to be installed:
    sudo pip3 install pyvisa
    sudo pip3 install pyvisa-py
 
+Since ``PyVISA-py`` is not fully featured and buggy, you might prefer using NI-VISA.
+Only RPM based distributions are supported,
+for those follow the installation instructions.
+
+For Debian/Ubuntu based distributions try the next instructions:
+
+1. Download the ISO file and mount it.
+
+.. code-block:: shell-session
+
+   sudo apt-get install rpm
+   sudo ./INSTALL --accept-license --no-install-labview-support --nodeps
+   sudo updateNIDrivers
+   sudo visaconf
+
+http://forums.ni.com/t5/Linux-Users/Using-NI-VISA-with-Arch-Linux-or-Ubuntu-14-04/gpm-p/3462361#M2287
+
 
 ******************
 Running the server
