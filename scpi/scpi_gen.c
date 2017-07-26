@@ -576,7 +576,7 @@ scpi_result_t rpscpi_gen_get_waveform_raw(scpi_t *context) {
         len = gen[channel].buffer_size;
     }
     // store float values into a temporary waveform
-    int16_t waveform[gen[channel].buffer_size];
+    int16_t waveform[len];
     // write waveform into buffer
     for (size_t i=0; i<len; i++) {
 	 waveform[i] = gen[channel].table[i];
