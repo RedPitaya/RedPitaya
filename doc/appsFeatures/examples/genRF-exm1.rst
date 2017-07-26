@@ -46,8 +46,10 @@ MATLAB editor, save project and press run.
     %% Close connection with Red Pitaya
 
     fclose(tcpipObj);
-    view rawgenerate_continuous.m
-    Code - C
+    
+    
+Code - C
+********
 
     /* Red Pitaya C API example Generating continuous signal  
     * This application generates a specific signal */
@@ -83,8 +85,9 @@ MATLAB editor, save project and press run.
 
         return 0;
     }
-    view rawgenerate_continuous.c
-    Code - Python
+   
+Code - Python
+*************
 
     #!/usr/bin/python
 
