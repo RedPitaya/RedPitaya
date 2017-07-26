@@ -3,8 +3,8 @@
 import argparse
 
 parser = argparse.ArgumentParser(description='SCPI: generate arbitrary signal.')
-parser.add_argument('adr',          type=str,  default='127.0.0.1', help='provide IP address or URL')
-parser.add_argument('-p', '--port', type=int,  default=5000,        help='specify SCPI port (default is 5000)')
+parser.add_argument('adr',          type=str, default='127.0.0.1', help='provide IP address or URL')
+parser.add_argument('-p', '--port', type=int, default=5000,        help='specify SCPI port (default is 5000)')
 parser.add_argument('-b', '--bin',  action="store_true",            help='use binary data transfer instead of the default ASCII')
 args = parser.parse_args()
 

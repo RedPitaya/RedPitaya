@@ -2,9 +2,9 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description='SCPI test.')
-parser.add_argument('adr',                                  help='provide IP address or URL')
-parser.add_argument('-p', '--port', type=int, default=5000, help='specify SCPI port (default is 5000)')
+parser = argparse.ArgumentParser(description='SCPI: read identification.')
+parser.add_argument('adr',          type=str, default='127.0.0.1', help='provide IP address or URL')
+parser.add_argument('-p', '--port', type=int, default=5000,        help='specify SCPI port (default is 5000)')
 args = parser.parse_args()
 
 ###############################################################################
