@@ -109,8 +109,12 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = ":SOURce#:START",                              .callback = rpscpi_gen_start,},
     {.pattern = ":SOURce#:STOP",                               .callback = rpscpi_gen_stop,},
     {.pattern = ":SOURce#:TRIGger",                            .callback = rpscpi_gen_trigger,},
-    {.pattern = ":SOURce#:RUN?",                               .callback = rpscpi_gen_status_run,},  // TODO: use something standard
+    {.pattern = ":SOURce#:RUN?",                               .callback = rpscpi_gen_status_run,},      // TODO: use something standard
     {.pattern = ":SOURce#:TRIGger?",                           .callback = rpscpi_gen_status_trigger,},  // TODO: use something standard
+    {.pattern = ":SOURce#:EVENT:SYNChronization[:SOURce]",     .callback = rpscpi_gen_set_sync_src,},    // TODO: use something standard
+    {.pattern = ":SOURce#:EVENT:SYNChronization[:SOURce]?",    .callback = rpscpi_gen_get_sync_src,},    // TODO: use something standard
+    {.pattern = ":SOURce#:EVENT:TRIGger[:SOURce]",             .callback = rpscpi_gen_set_trig_src,},    // TODO: use something standard
+    {.pattern = ":SOURce#:EVENT:TRIGger[:SOURce]?",            .callback = rpscpi_gen_get_trig_src,},    // TODO: use something standard
     {.pattern = "[:SOURce#]:MODE",                             .callback = rpscpi_gen_set_mode,},
     {.pattern = "[:SOURce#]:MODE?",                            .callback = rpscpi_gen_get_mode,},
     {.pattern = "[:SOURce#]:FREQuency[:FIXed]",                .callback = rpscpi_gen_set_frequency,},

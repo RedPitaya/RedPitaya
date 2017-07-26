@@ -24,6 +24,10 @@ scpi_result_t rpscpi_gen_set_mode             (scpi_t *context);
 scpi_result_t rpscpi_gen_get_mode             (scpi_t *context);
 scpi_result_t rpscpi_gen_status_run           (scpi_t *context);
 scpi_result_t rpscpi_gen_status_trigger       (scpi_t *context);
+scpi_result_t rpscpi_gen_set_sync_src         (scpi_t *context);
+scpi_result_t rpscpi_gen_get_sync_src         (scpi_t *context);
+scpi_result_t rpscpi_gen_set_trig_src         (scpi_t *context);
+scpi_result_t rpscpi_gen_get_trig_src         (scpi_t *context);
 // gen_out
 scpi_result_t rpscpi_gen_set_enable           (scpi_t *context);
 scpi_result_t rpscpi_gen_get_enable           (scpi_t *context);

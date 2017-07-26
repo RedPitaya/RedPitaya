@@ -17,6 +17,17 @@
 #include "scpi/units.h"
 #include "scpi/error.h"
 
+// TODO: move into a common area
+const scpi_choice_def_t rpscpi_evn_sources[] = {
+    {"GEN0", 0},
+    {"GEN1", 1},
+    {"OSC0", 2},
+    {"OSC1", 3},
+    {"LG",   4},
+    {"LA",   5},
+    SCPI_CHOICE_LIST_END
+};
+
 const scpi_choice_def_t rpscpi_gen_waveform_names[] = {
     {"SINusoid", 0},
     {"SQUare",   1},
@@ -170,6 +181,72 @@ scpi_result_t rpscpi_gen_status_trigger(scpi_t *context) {
     }
     value = rp_evn_status_trigger(&gen[channel].evn);
     SCPI_ResultBool(context, value);
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_gen_set_sync_src(scpi_t *context) {
+    int unsigned channel;
+    int32_t value;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    if(!SCPI_ParamChoice(context, rpscpi_evn_sources, &value, true)){
+        SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+        return SCPI_RES_ERR;
+    }
+    rp_evn_set_sync_src(&gen[channel].evn, value);
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_gen_get_sync_src(scpi_t *context) {
+    int unsigned channel;
+    int32_t value;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    value = (rp_evn_get_sync_src(&gen[channel].evn) >> 0) & 0x1;
+    const char * text;
+    if(!SCPI_ChoiceToName(rpscpi_evn_sources, value, &text)){
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, text);
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_gen_set_trig_src(scpi_t *context) {
+    int unsigned channel;
+    int32_t value;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    if(!SCPI_ParamChoice(context, rpscpi_evn_sources, &value, true)){
+        SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+        return SCPI_RES_ERR;
+    }
+    rp_evn_set_trig_src(&gen[channel].evn, value);
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_gen_get_trig_src(scpi_t *context) {
+    int unsigned channel;
+    int32_t value;
+    rp_gen_t *gen = ((rpscpi_context_t *) context->user_context)->gen;
+
+    if (!rpcspi_gen_channels(context, &channel)) {
+        return SCPI_RES_ERR;
+    }
+    value = (rp_evn_get_trig_src(&gen[channel].evn) >> 0) & 0x1;
+    const char * text;
+    if(!SCPI_ChoiceToName(rpscpi_evn_sources, value, &text)){
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, text);
     return SCPI_RES_OK;
 }
 
