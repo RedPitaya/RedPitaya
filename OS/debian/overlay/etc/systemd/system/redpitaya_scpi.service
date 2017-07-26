@@ -10,7 +10,8 @@ Restart=always
 # complains about failing library path, or something else
 #EnvironmentFile=/etc/sysconfig/redpitaya
 Environment=PATH_REDPITAYA=/opt/redpitaya
-Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+Environment=PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib
 ExecStartPre=/bin/sh -c "cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg"
 ExecStart =/opt/redpitaya/bin/scpi-server
 #ExecReload=
