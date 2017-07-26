@@ -30,7 +30,7 @@ void rp_asg_bst_print (rp_asg_bst_t *handle) {
 }
 
 int rp_asg_bst_simulate (rp_asg_bst_t *handle, size_t size, uint32_t *data) {
-    int unsigned i;
+    int unsigned i = 0;
     int unsigned cfg_bdr = handle->regset->cfg_bdr + 1;
     int unsigned cfg_bdl = handle->regset->cfg_bdl + 1;
     int unsigned cfg_bpl = handle->regset->cfg_bpl + 1;
