@@ -14,7 +14,7 @@ SyslogIdentifier=scpi
 #EnvironmentFile=/etc/sysconfig/redpitaya
 Environment=PATH_REDPITAYA=/opt/redpitaya
 Environment=PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
-Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib/arm-linux-gnueabihf
 ExecStartPre=/opt/redpitaya/sbin/overlay.sh mercury
 ExecStart =/opt/redpitaya/bin/scpi
 #ExecReload=
