@@ -161,7 +161,6 @@ static int waitServer(int fd) {
     return rc;
 }
 
-#define LISTEN_BACKLOG 50
 #define LISTEN_PORT 5000
 #define MAX_BUFF_SIZE 1024
 
@@ -225,7 +224,7 @@ int main(int argc, char *argv[]) {
         }
 
         while (1) {
-            char smbuffer[1024];
+            char smbuffer[MAX_BUFF_SIZE];
             int rc = waitServer(rp->connfd);
             if (rc < 0) { /* failed */
                 perror("  recv() failed");
