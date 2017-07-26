@@ -217,7 +217,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 .PHONY: scpi-new
 
 scpi-new:
-	meson builddir --libdir lib --prefix $(abspath $(INSTALL_DIR)) --buildtype release
+	meson builddir --prefix $(abspath $(INSTALL_DIR)) --buildtype release
 	cd builddir && ninja install
 
 ################################################################################
