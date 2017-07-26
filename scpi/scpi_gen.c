@@ -550,7 +550,7 @@ scpi_result_t rpscpi_gen_set_waveform_raw(scpi_t *context) {
     // calculate number of samples from block size
     len = len / sizeof(*waveform);
     // check if data fits inside buffer
-    if (len >= gen[channel].buffer_size) {
+    if (len > gen[channel].buffer_size) {
         SCPI_ErrorPush(context, SCPI_ERROR_BLOCK_DATA_ERROR);
         return SCPI_RES_ERR;
     }
