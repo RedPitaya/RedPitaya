@@ -94,15 +94,13 @@ int rp_asg_bst_set_data_length (rp_asg_bst_t *handle, uint32_t value) {
     }
 }
 
-// NOTE: this function has an overflow issue
-uint32_t rp_asg_bst_get_period_length (rp_asg_bst_t *handle) {
-    return(handle->regset->cfg_bpl + 1);
+uint64_t rp_asg_bst_get_period_length (rp_asg_bst_t *handle) {
+    return((uint64_t) handle->regset->cfg_bpl + 1);
 }
 
-// NOTE: this function has an overflow issue
-int rp_asg_bst_set_period_length (rp_asg_bst_t *handle, uint32_t value) {
+int rp_asg_bst_set_period_length (rp_asg_bst_t *handle, uint64_t value) {
     if (value <= fixp_num(handle->bpl_t)) {
-        handle->regset->cfg_bpl = value - 1;
+        handle->regset->cfg_bpl = (uint32_t) (value - 1);
         return(0);
     } else {
 //      raise ValueError("Burst period length should be less or equal to {}.".format(self._CWLr))

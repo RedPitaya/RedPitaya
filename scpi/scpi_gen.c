@@ -776,7 +776,7 @@ scpi_result_t rpscpi_gen_set_period_length(scpi_t *context) {
         // special values are not allowed
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
-    } else if (rp_asg_bst_set_period_length(&gen[channel].bst, (int) value.content.value)) {
+    } else if (rp_asg_bst_set_period_length(&gen[channel].bst, (uint64_t) value.content.value)) {
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }

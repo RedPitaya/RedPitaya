@@ -37,8 +37,8 @@ uint32_t rp_asg_bst_get_data_repetitions (rp_asg_bst_t *handle);
 int      rp_asg_bst_set_data_repetitions (rp_asg_bst_t *handle, uint32_t value);
 uint32_t rp_asg_bst_get_data_length      (rp_asg_bst_t *handle);
 int      rp_asg_bst_set_data_length      (rp_asg_bst_t *handle, uint32_t value);
-uint32_t rp_asg_bst_get_period_length    (rp_asg_bst_t *handle);
-int      rp_asg_bst_set_period_length    (rp_asg_bst_t *handle, uint32_t value);
+uint64_t rp_asg_bst_get_period_length    (rp_asg_bst_t *handle);
+int      rp_asg_bst_set_period_length    (rp_asg_bst_t *handle, uint64_t value);
 uint32_t rp_asg_bst_get_period_number    (rp_asg_bst_t *handle);
 int      rp_asg_bst_set_period_number    (rp_asg_bst_t *handle, uint32_t value);
 
