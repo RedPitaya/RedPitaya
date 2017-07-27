@@ -26,7 +26,6 @@
 #include "redpitaya/rp1.h"
 
 #include "scpi-commands.h"
-#include "api_cmd.h"
 #include "common.h"
 #include "scpi_gen.h"
 
@@ -104,7 +103,7 @@ const scpi_command_t scpi_commands[] = {
 //    {.pattern = "ACQ:SOURce#:DATA:LAT:N?", .callback    = RP_AcqLatestDataQ,},
 //    {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
-    /* Generate */
+    // Generator
     {.pattern = ":SOURce#:RESET",                              .callback = rpscpi_gen_reset,},
     {.pattern = ":SOURce#:START",                              .callback = rpscpi_gen_start,},
     {.pattern = ":SOURce#:STOP",                               .callback = rpscpi_gen_stop,},
@@ -139,9 +138,6 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "[:SOURce#]:BURSt:PERiod:LENgth?",             .callback = rpscpi_gen_get_period_length,},
     {.pattern = "[:SOURce#]:BURSt:PERiod:NUMber",              .callback = rpscpi_gen_set_period_number,},
     {.pattern = "[:SOURce#]:BURSt:PERiod:NUMber?",             .callback = rpscpi_gen_get_period_number,},
-//    {.pattern = ":SOURce#:TRIGger:SOUR", .callback       = RP_GenTriggerSource,},
-//    {.pattern = ":SOURce#:TRIGger:SOUR?", .callback      = RP_GenTriggerSourceQ,},
-//    {.pattern = ":SOURce#:TRIGger:IMM", .callback        = RP_GenTrigger,},
     {.pattern = "[:SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
     {.pattern = "[:SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
     {.pattern = "[:SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
