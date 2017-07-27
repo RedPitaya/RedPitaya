@@ -10,7 +10,8 @@ dep = [deprp1_shared, depscpi_shared, depm]
 
 src = ['scpi-commands.c',
        'scpi-server.c',
-       'scpi_gen.c']
+       'scpi_gen.c',
+       'scpi_la.c']
 
 inc = include_directories('') 
 

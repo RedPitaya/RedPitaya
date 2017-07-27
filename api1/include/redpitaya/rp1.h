@@ -13,8 +13,11 @@
 #include "redpitaya/gen.h"
 #include "redpitaya/wave.h"
 
-//#include "redpitaya/acq.h"
+#include "redpitaya/acq.h"
 //#include "redpitaya/osc.h"
+
+#include "redpitaya/la_trg.h"
+#include "redpitaya/la.h"
 
 #endif
 

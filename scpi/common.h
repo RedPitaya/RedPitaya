@@ -24,7 +24,7 @@ typedef struct {
     rp_gen_t *gen;
 //    rp_osc_t *osc;
 //    rp_lg_t lg;
-//    rp_la_t la;
+    rp_la_t la;
 } rpscpi_context_t;
 
 #endif /* COMMON_H_ */

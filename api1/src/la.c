@@ -11,7 +11,7 @@
 #include "redpitaya/la.h"
 #include "redpitaya/la_trg.h"
 
-int rp_la_init (rp_la_t *handle, const int unsigned index) {
+int rp_la_init (rp_la_t *handle) {
     static char path [] = "/dev/uio/la";
 
     // initialize constants

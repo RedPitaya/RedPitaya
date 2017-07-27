@@ -35,7 +35,7 @@ typedef struct {
     size_t       buffer_size;
 } rp_la_t;
 
-int           rp_la_init        (rp_la_t *handle, const int unsigned index);
+int           rp_la_init        (rp_la_t *handle);
 int           rp_la_release     (rp_la_t *handle);
 int           rp_la_default     (rp_la_t *handle);
 void          rp_la_print       (rp_la_t *handle);

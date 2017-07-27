@@ -28,6 +28,9 @@
 #include "scpi-commands.h"
 #include "common.h"
 #include "scpi_gen.h"
+//#include "scpi_osc.h"
+//#include "scpi_lg.h"
+#include "scpi_la.h"
 
 /**
  * SCPI Configuration
@@ -144,6 +147,16 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "[:SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},
     {.pattern = ":OUTPUT#[:STATe]",                            .callback = rpscpi_gen_set_enable,},
     {.pattern = ":OUTPUT#[:STATe]?",                           .callback = rpscpi_gen_get_enable,},
+
+    // Logic Analyzer
+    {.pattern = ":LA:TRIGger[:PATTern]:MASK",                  .callback = rpscpi_la_trg_set_mask,},
+    {.pattern = ":LA:TRIGger[:PATTern]:MASK?",                 .callback = rpscpi_la_trg_get_mask,},
+    {.pattern = ":LA:TRIGger[:PATTern]:VALUE",                 .callback = rpscpi_la_trg_set_value,},
+    {.pattern = ":LA:TRIGger[:PATTern]:VALUE?",                .callback = rpscpi_la_trg_get_value,},
+    {.pattern = ":LA:TRIGger[:EDGE]:POSitive",                 .callback = rpscpi_la_trg_set_edge_pos,},
+    {.pattern = ":LA:TRIGger[:EDGE]:POSitive?",                .callback = rpscpi_la_trg_get_edge_pos,},
+    {.pattern = ":LA:TRIGger[:EDGE]:NEGitive",                 .callback = rpscpi_la_trg_set_edge_neg,},
+    {.pattern = ":LA:TRIGger[:EDGE]:NEGitive?",                .callback = rpscpi_la_trg_get_edge_neg,},
 
     SCPI_CMD_LIST_END
 };

@@ -646,7 +646,7 @@ scpi_result_t rpscpi_gen_set_data_repetitions(scpi_t *context) {
         // special values are not allowed
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
-    } else if (rp_asg_bst_set_data_repetitions(&gen.bst, (int) value.content.value)) {
+    } else if (rp_asg_bst_set_data_repetitions(&gen.bst, (uint32_t) value.content.value)) {
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }
@@ -659,7 +659,7 @@ scpi_result_t rpscpi_gen_get_data_repetitions(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    float value = rp_asg_bst_get_data_repetitions(&gen.bst);
+    uint32_t value = rp_asg_bst_get_data_repetitions(&gen.bst);
     SCPI_ResultUInt32(context, value);
     return SCPI_RES_OK;
 }
@@ -678,7 +678,7 @@ scpi_result_t rpscpi_gen_set_data_length(scpi_t *context) {
         // special values are not allowed
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
-    } else if (rp_asg_bst_set_data_length(&gen.bst, (int) value.content.value)) {
+    } else if (rp_asg_bst_set_data_length(&gen.bst, (uint32_t) value.content.value)) {
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }
@@ -691,7 +691,7 @@ scpi_result_t rpscpi_gen_get_data_length(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    float value = rp_asg_bst_get_data_length(&gen.bst);
+    uint32_t value = rp_asg_bst_get_data_length(&gen.bst);
     SCPI_ResultUInt32(context, value);
     return SCPI_RES_OK;
 }
@@ -723,7 +723,7 @@ scpi_result_t rpscpi_gen_get_period_length(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    float value = rp_asg_bst_get_period_length(&gen.bst);
+    uint32_t value = rp_asg_bst_get_period_length(&gen.bst);
     SCPI_ResultUInt32(context, value);
     return SCPI_RES_OK;
 }
@@ -742,7 +742,7 @@ scpi_result_t rpscpi_gen_set_period_number(scpi_t *context) {
         // special values are not allowed
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
-    } else if (rp_asg_bst_set_period_number(&gen.bst, (int) value.content.value)) {
+    } else if (rp_asg_bst_set_period_number(&gen.bst, (uint32_t) value.content.value)) {
         SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
         return SCPI_RES_ERR;
     }
@@ -755,7 +755,7 @@ scpi_result_t rpscpi_gen_get_period_number(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    float value = rp_asg_bst_get_period_number(&gen.bst);
+    uint32_t value = rp_asg_bst_get_period_number(&gen.bst);
     SCPI_ResultUInt32(context, value);
     return SCPI_RES_OK;
 }
