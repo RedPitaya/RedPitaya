@@ -45,6 +45,9 @@ typedef struct {
     int unsigned buffer_size;
     // data fixed point size
     fixp_t dat_t;
+    // waveform status (used by API consumer)
+    int32_t     tag;
+    float       opt;
 } rp_gen_t;
 
 int           rp_gen_init        (rp_gen_t *handle, const int unsigned index);
