@@ -19,12 +19,12 @@
 
 // TODO: move into a common area
 const scpi_choice_def_t rpscpi_evn_sources[] = {
-    {"GEN0", 0},
-    {"GEN1", 1},
-    {"OSC0", 2},
-    {"OSC1", 3},
-    {"LG",   4},
-    {"LA",   5},
+    {"GEN0", 1 << 0},
+    {"GEN1", 1 << 1},
+    {"OSC0", 1 << 2},
+    {"OSC1", 1 << 3},
+    {"LG",   1 << 4},
+    {"LA",   1 << 5},
     SCPI_CHOICE_LIST_END
 };
 
