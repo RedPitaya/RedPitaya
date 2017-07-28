@@ -12,7 +12,7 @@
 #include "common.h"
 
 // API init/release
-scpi_result_t rpscpi_la_init    (rpscpi_context_t *rp, int unsigned channels);
+scpi_result_t rpscpi_la_init    (rpscpi_context_t *rp);
 scpi_result_t rpscpi_la_release (rpscpi_context_t *rp);
 
 // trigger

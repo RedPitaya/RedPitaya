@@ -23,6 +23,8 @@
 #include "scpi-commands.h"
 #include "scpi_gen.h"
 //#include "scpi_osc.h"
+//#include "scpi_lg.h"
+#include "scpi_la.h"
 
 #include "scpi/parser.h"
 #include "redpitaya/rp1.h"
@@ -202,6 +204,8 @@ int main(int argc, char *argv[]) {
     // initialize API
     if (!rpscpi_gen_init(rp, 2))  return (EXIT_FAILURE);
 //  if (!rpscpi_osc_init(rp, 2))  return (EXIT_FAILURE);
+//  if (!rpscpi_lg_init(rp))      return (EXIT_FAILURE);
+    if (!rpscpi_la_init(rp))      return (EXIT_FAILURE);
 
     rp->connfd = 0;
 
@@ -256,6 +260,8 @@ int main(int argc, char *argv[]) {
     // release API
     if (!rpscpi_gen_release(rp))  return (EXIT_FAILURE);
 //  if (!rpscpi_osc_release(rp))  return (EXIT_FAILURE);
+//  if (!rpscpi_lg_release(rp))   return (EXIT_FAILURE);
+    if (!rpscpi_la_release(rp))   return (EXIT_FAILURE);
     // free user context
     free(scpi_context.user_context);
 

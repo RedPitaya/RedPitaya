@@ -20,7 +20,7 @@
 /**
  * initialization of context and API
  */
-scpi_result_t rpscpi_la_init(rpscpi_context_t *rp, int unsigned channels) {
+scpi_result_t rpscpi_la_init(rpscpi_context_t *rp) {
     // run API initialization
     if (rp_la_init(&rp->la) !=0) {
         syslog(LOG_ERR, "Failed to initialize logic analyzer.");
