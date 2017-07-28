@@ -9,6 +9,8 @@
 #include "redpitaya/evn.h"
 #include "redpitaya/acq.h"
 #include "redpitaya/la_trg.h"
+#include "redpitaya/la_rle.h"
+//#include "redpitaya/la_msk.h"
 
 #define DWL 16
 
@@ -17,9 +19,9 @@ typedef struct {
     uint32_t            rsv0;     // reserved
     rp_acq_regset_t     acq;
     rp_la_trg_regset_t  trg;
-    uint32_t            rsv1;     // reserved
-    // decimation
     uint32_t            cfg_dec;  // decimation factor
+    rp_la_rle_regset_t  rle;
+//    rp_la_msk_regset_t  msk;
 } rp_la_regset_t;
 
 typedef struct {
@@ -29,6 +31,8 @@ typedef struct {
     rp_evn_t     evn;
     rp_acq_t     acq;
     rp_la_trg_t  trg;
+    rp_la_rle_t  rle;
+//    rp_la_msk_t  msk;
     // sampling frequency
     double       FS;
     // table size
