@@ -64,6 +64,7 @@ module lg #(
 logic  [EL-1:0] cfg_evn;
 // trigger mask
 logic  [TN-1:0] cfg_trg;
+logic           cfg_tre; // trigger repeat enable
 
 // software events
 evn_pkg::evn_t  evn;  // multiplexed input
@@ -112,6 +113,7 @@ if (~bus.rstn) begin
   cfg_evn <= '0;
   // trigger mask
   cfg_trg <= '0;
+  cfg_tre <= '0;
   // burst mode
   cfg_inf <= '0;
   cfg_bdl <= '0;
@@ -127,7 +129,8 @@ end else begin
     // event select
     if (bus.addr[BAW-1:0]=='h04)  cfg_evn <= bus.wdata;
     // triger mask
-    if (bus.addr[BAW-1:0]=='h08)  cfg_trg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h08)  cfg_trg <= bus.wdata    ;
+    if (bus.addr[BAW-1:0]=='h08)  cfg_tre <= bus.wdata[31];
     // generator mode
     if (bus.addr[BAW-1:0]=='h10)  cfg_inf <= bus.wdata[1];
     // burst configuration
@@ -159,7 +162,7 @@ casez (bus.addr[BAW-1:0])
   // event select
   'h04: bus.rdata <= cfg_evn;
   // trigger mask
-  'h08: bus.rdata <= cfg_trg;
+  'h08: bus.rdata <= (cfg_tre << 31) | cfg_trg;
   // generator mode
   'h10: bus.rdata <= {cfg_inf, cfg_ben};
   // burst configuration
@@ -187,7 +190,7 @@ always_ff @(posedge bus.clk)
 if (~bus.rstn)  evn <= '0;
 else            evn <= evi[cfg_evn];
 
-assign ctl_trg = evn.swt | |(trg & cfg_trg);
+assign ctl_trg = |(trg & cfg_trg);
 
 // stream from generator
 axi4_stream_if #(.DN (DN), .DT (DT)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
@@ -210,7 +213,7 @@ asg #(
   .evs      (evs),
   // trigger
   .ctl_trg  (ctl_trg),
-  .cfg_tre  (1'b0),
+  .cfg_tre  (cfg_tre),
   // events
   .evo_per  (tro),
   .evo_lst  (irq),

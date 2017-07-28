@@ -67,7 +67,7 @@ module gen #(
 logic  [EL-1:0] cfg_evn;
 // trigger mask
 logic  [TN-1:0] cfg_trg;
-logic           cfg_tre; // trigger repeat enable 
+logic           cfg_tre; // trigger repeat enable
 
 // software events
 evn_pkg::evn_t  evn;  // multiplexed input
