@@ -4,6 +4,7 @@ depm = cc.find_library('m', required : false)
 dep = [dependency('libudev'), depm]
 src = ['src/fixp.c',
        'src/uio.c',
+       'src/lin.c',
        'src/evn.c',
        'src/hwid.c',
        'src/gen.c',
@@ -28,6 +29,7 @@ librp1_static = static_library('rp1', src, dependencies : dep, include_directori
 librp1_header = ['include/redpitaya/rp1.h',
                  'include/redpitaya/fixp.h',
                  'include/redpitaya/uio.h',
+                 'include/redpitaya/lin.h',
                  'include/redpitaya/evn.h',
                  'include/redpitaya/hwid.h',
                  'include/redpitaya/gen.h',
