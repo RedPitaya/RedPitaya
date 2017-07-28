@@ -165,3 +165,63 @@ scpi_result_t rpscpi_la_trg_get_edge_neg(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+/**
+ * LA input
+ */
+
+scpi_result_t rpscpi_la_msk_set_input_mask(scpi_t *context) {
+    rp_la_t la;
+    if (!rpcspi_la_channels(context, &la)) {
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t value;
+    if (!SCPI_ParamUInt32(context, &value, true)) {
+        return SCPI_RES_ERR;
+    }
+    if (rp_la_msk_set_input_mask(&la.msk, value)) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
+    }
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_la_msk_get_input_mask(scpi_t *context) {
+    rp_la_t la;
+    if (!rpcspi_la_channels(context, &la)) {
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t value = rp_la_msk_get_input_mask(&la.msk);
+    SCPI_ResultUInt32(context, value);
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_la_msk_set_input_polarity(scpi_t *context) {
+    rp_la_t la;
+    if (!rpcspi_la_channels(context, &la)) {
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t value;
+    if (!SCPI_ParamUInt32(context, &value, true)) {
+        return SCPI_RES_ERR;
+    }
+    if (rp_la_msk_set_input_polarity(&la.msk, value)) {
+        SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+        return SCPI_RES_ERR;
+    }
+    return SCPI_RES_OK;
+}
+
+scpi_result_t rpscpi_la_msk_get_input_polarity(scpi_t *context) {
+    rp_la_t la;
+    if (!rpcspi_la_channels(context, &la)) {
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t value = rp_la_msk_get_input_polarity(&la.msk);
+    SCPI_ResultUInt32(context, value);
+    return SCPI_RES_OK;
+}
+

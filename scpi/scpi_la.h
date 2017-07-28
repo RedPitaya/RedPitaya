@@ -24,5 +24,10 @@ scpi_result_t rpscpi_la_trg_set_edge_pos (scpi_t *context);
 scpi_result_t rpscpi_la_trg_get_edge_pos (scpi_t *context);
 scpi_result_t rpscpi_la_trg_set_edge_neg (scpi_t *context);
 scpi_result_t rpscpi_la_trg_get_edge_neg (scpi_t *context);
+// input
+scpi_result_t rpscpi_la_msk_set_input_mask     (scpi_t *context);
+scpi_result_t rpscpi_la_msk_get_input_mask     (scpi_t *context);
+scpi_result_t rpscpi_la_msk_set_input_polarity (scpi_t *context);
+scpi_result_t rpscpi_la_msk_get_input_polarity (scpi_t *context);
 
 #endif

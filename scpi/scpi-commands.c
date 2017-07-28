@@ -157,6 +157,10 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = ":LA:TRIGger[:EDGE]:POSitive?",                .callback = rpscpi_la_trg_get_edge_pos,},
     {.pattern = ":LA:TRIGger[:EDGE]:NEGative",                 .callback = rpscpi_la_trg_set_edge_neg,},
     {.pattern = ":LA:TRIGger[:EDGE]:NEGative?",                .callback = rpscpi_la_trg_get_edge_neg,},
+    {.pattern = ":LA[:INPut]:MASK",                            .callback = rpscpi_la_msk_set_input_mask,},
+    {.pattern = ":LA[:INPut]:MASK?",                           .callback = rpscpi_la_msk_get_input_mask,},
+    {.pattern = ":LA[:INPut]:POLarity",                        .callback = rpscpi_la_msk_set_input_polarity,},
+    {.pattern = ":LA[:INPut]:POLarity?",                       .callback = rpscpi_la_msk_get_input_polarity,},
 
     SCPI_CMD_LIST_END
 };
