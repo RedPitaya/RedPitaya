@@ -155,8 +155,8 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = ":LA:TRIGger[:PATTern]:VALUE?",                .callback = rpscpi_la_trg_get_value,},
     {.pattern = ":LA:TRIGger[:EDGE]:POSitive",                 .callback = rpscpi_la_trg_set_edge_pos,},
     {.pattern = ":LA:TRIGger[:EDGE]:POSitive?",                .callback = rpscpi_la_trg_get_edge_pos,},
-    {.pattern = ":LA:TRIGger[:EDGE]:NEGitive",                 .callback = rpscpi_la_trg_set_edge_neg,},
-    {.pattern = ":LA:TRIGger[:EDGE]:NEGitive?",                .callback = rpscpi_la_trg_get_edge_neg,},
+    {.pattern = ":LA:TRIGger[:EDGE]:NEGative",                 .callback = rpscpi_la_trg_set_edge_neg,},
+    {.pattern = ":LA:TRIGger[:EDGE]:NEGative?",                .callback = rpscpi_la_trg_get_edge_neg,},
 
     SCPI_CMD_LIST_END
 };
