@@ -72,7 +72,7 @@ rp.write(":OUTPUT1:STATe ON")
 # configure logic analyzer trigger source
 # inputs enabled by given mask will reach on rising edge (positive)
 rp.write(":LA:TRIGger:EDGE:POSitive #Hff")
-rp.write(":LA:TRIGger:EDGE:POSitive #Hff")
+rp.write(":LA:TRIGger:EDGE:NEGative #Hff")
 rp.write(":SOURce1:EVENT:TRIGger:SOURce LA")
 
 # trigger state machine
