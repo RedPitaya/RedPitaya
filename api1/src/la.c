@@ -11,7 +11,7 @@
 #include "redpitaya/la.h"
 #include "redpitaya/la_trg.h"
 #include "redpitaya/la_rle.h"
-//#include "redpitaya/la_msk.h"
+#include "redpitaya/la_msk.h"
 
 int rp_la_init (rp_la_t *handle) {
     static char path [] = "/dev/uio/la";
@@ -37,7 +37,7 @@ int rp_la_init (rp_la_t *handle) {
     // trigger configuration
     rp_la_trg_init(&handle->trg, &handle->regset->trg);
     rp_la_rle_init(&handle->rle, &handle->regset->rle);
-//    rp_la_msk_init(&handle->msk, &handle->regset->msk);
+    rp_la_msk_init(&handle->msk, &handle->regset->msk);
 
     return(0);
 }
@@ -62,7 +62,7 @@ int rp_la_default (rp_la_t *handle) {
     // set trigger defaults
     rp_la_trg_default(&handle->trg);
     rp_la_rle_default(&handle->rle);
-//    rp_la_msk_default(&handle->msk);
+    rp_la_msk_default(&handle->msk);
     // decimation
     handle->regset->cfg_dec = 0;
 
@@ -76,7 +76,7 @@ void rp_la_print (rp_la_t *handle) {
     rp_acq_print(&handle->acq);
     rp_la_trg_print(&handle->trg);
     rp_la_rle_print(&handle->rle);
-//    rp_la_msk_print(&handle->msk);
+    rp_la_msk_print(&handle->msk);
     printf("la.cfg_dec = %08x\n", handle->regset->cfg_dec);
 }
 

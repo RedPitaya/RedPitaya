@@ -19,8 +19,8 @@ src = ['src/fixp.c',
        'src/osc_fil.c',
        'src/la.c',
        'src/la_trg.c',
-       'src/la_rle.c']
-#       'src/la_msk.c']
+       'src/la_rle.c',
+       'src/la_msk.c']
 inc = include_directories(['include', 'src'])
 
 librp1_shared = shared_library('rp1', src, dependencies : dep, include_directories : inc,
@@ -47,8 +47,8 @@ librp1_header = ['include/redpitaya/rp1.h',
                  'include/redpitaya/osc_fil.h',
                  'include/redpitaya/la.h',
                  'include/redpitaya/la_trg.h',
-                 'include/redpitaya/la_rle.h']
-#                 'include/redpitaya/la_msk.h']
+                 'include/redpitaya/la_rle.h',
+                 'include/redpitaya/la_msk.h']
 install_headers(librp1_header, subdir : 'redpitaya')
 
 # this is only usefull for installing on a FAT partition
