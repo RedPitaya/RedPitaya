@@ -114,10 +114,10 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  exp_p_od = 1'b0;
-  exp_n_od = 1'b0;
-  exp_p_oe = 1'b0;
-  exp_n_oe = 1'b0;
+  exp_p_od = '0;
+  exp_n_od = '0;
+  exp_p_oe = '0;
+  exp_n_oe = '0;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,8 +136,8 @@ initial begin
 //   test_mgmt               (32'h40010000, '1, '0);
 //   test_gen_periodic       (32'h40040000, 32'h40050000, 0);
 //   test_gen_burst          (32'h40040000, 32'h40050000, 0);
-//   test_gen_bst_ext_trig (32'h40040000, 32'h40050000, 0);
-  test_gen_per_ext_trig (32'h40040000, 32'h40050000, 0);
+  test_gen_bst_ext_trig (32'h40040000, 32'h40050000, 0);
+//  test_gen_per_ext_trig (32'h40040000, 32'h40050000, 0);
 //   test_lg_burst           (32'h400c0000, 32'h400d0000, 4);
 //   test_la_trigger         (32'h400e0000, 32'h400f0000, 5);
 //   //  ##16;
@@ -506,6 +506,9 @@ task test_gen_bst_ext_trig (
     axi_write(buffer + (i*4), i);  // write table
   end
 
+  // enable GPIO
+  exp_p_oe[0] = 1'b1;
+
   // configure amplitude and DC offset
   axi_write(regset+'h40, 1 << (DWM-2));  // amplitude
   axi_write(regset+'h44, 0);             // DC offset
@@ -530,60 +533,20 @@ task test_gen_bst_ext_trig (
 //   axi_write(regset+'h00, 4'b1000);
 //     ##4;
 //   end
+  // setup LA trigger
+  // enable posedge trigger
+  axi_write('h400e0000+'h28, 16'h0001);
+  // enable input mask
+  axi_write('h400e0000+'h40, 16'h0001);
 
-  // LA trigger
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1
-  release top.trg.la ;
-  ##22;
+  // create a series of pulses on exp_p_io[0]
+  for (int unsigned i=0; i<12; i++) begin
+    exp_p_od[0] = 1'b1;
+    ##1;
+    exp_p_od[0] = 1'b0;
+    ##6; 
+  end
+  
   // stop (reset)
 //  axi_write(regset+'h00, 2'b01);
   ##20;
@@ -598,6 +561,9 @@ task test_gen_per_ext_trig (
   for (int i=0; i<16; i++) begin
     axi_write(buffer + (i*4), i);  // write table
   end
+
+  // enable GPIO
+  exp_p_oe[0] = 1'b1;
 
   // configure amplitude and DC offset
   axi_write(regset+'h40, 1 << (DWM-2));  // amplitude
@@ -622,60 +588,20 @@ task test_gen_per_ext_trig (
 //   axi_write(regset+'h00, 4'b1000);
 //     ##4;
 //   end
+  // setup LA trigger
+  // enable posedge trigger
+  axi_write('h400e0000+'h28, 16'h0001);
+  // enable input mask
+  axi_write('h400e0000+'h40, 16'h0001);
 
-  // LA trigger
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1;
-  force top.trg.la = 1'b0;
-  ##6;
-  force top.trg.la = 1'b1;
-  ##1
-  release top.trg.la ;
-  ##22;
+  // create a series of pulses on exp_p_io[0]
+  for (int unsigned i=0; i<12; i++) begin
+    exp_p_od[0] = 1'b1;
+    ##1;
+    exp_p_od[0] = 1'b0;
+    ##6; 
+  end
+
   // stop (reset)
 //  axi_write(regset+'h00, 2'b01);
   ##20;
