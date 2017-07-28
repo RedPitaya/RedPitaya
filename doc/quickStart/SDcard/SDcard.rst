@@ -13,11 +13,8 @@ The next procedure will create a clean SD card.
 #. Download the Red Pitaya SD card image:
 
    - `Stable <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_
-   - `Beta <http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip>`_.
+   - `Beta (including STEMlab SDR transceiver app) <http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_15-44-45_21-jul-2017.img.zip>`_.
 
-..    Stable: http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip
-   Beta: http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
-    
 .. image:: microSDcard-RP.png
     :width: 10%
 
