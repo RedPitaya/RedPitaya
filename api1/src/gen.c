@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/uio.h"
 #include "redpitaya/evn.h"
 #include "redpitaya/gen.h"

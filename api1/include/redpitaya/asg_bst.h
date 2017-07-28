@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 
 #define CWR 14
 #define CWL 32

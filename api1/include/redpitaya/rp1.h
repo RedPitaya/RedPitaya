@@ -1,7 +1,7 @@
 #ifndef RP1_H
 #define RP1_H
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/uio.h"
 #include "redpitaya/evn.h"
 

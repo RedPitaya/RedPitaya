@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 
 char * rp_util_fixp_print (const fixp_t value) {
     static char str[16];

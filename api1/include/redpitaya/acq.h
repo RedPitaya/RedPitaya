@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 
 #define CW 31
 

@@ -2,7 +2,7 @@ cc = meson.get_compiler('c')
 depm = cc.find_library('m', required : false)
 
 dep = [dependency('libudev'), depm]
-src = ['src/util.c',
+src = ['src/fixp.c',
        'src/uio.c',
        'src/evn.c',
        'src/hwid.c',
@@ -26,7 +26,7 @@ librp1_static = static_library('rp1', src, dependencies : dep, include_directori
                                install : true)
 
 librp1_header = ['include/redpitaya/rp1.h',
-                 'include/redpitaya/util.h',
+                 'include/redpitaya/fixp.h',
                  'include/redpitaya/uio.h',
                  'include/redpitaya/evn.h',
                  'include/redpitaya/hwid.h',

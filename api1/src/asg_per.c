@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/asg_per.h"
 
 void rp_asg_per_init (rp_asg_per_t *handle, volatile rp_asg_per_regset_t *regset, double FS, int unsigned buffer_size, const fixp_t cnt_t) {

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/osc_trg.h"
 
 void rp_osc_trg_init (rp_osc_trg_t *handle, volatile rp_osc_trg_regset_t *regset, const fixp_t dat_t) {

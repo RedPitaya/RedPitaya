@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/osc_fil.h"
 
 void rp_osc_fil_init (rp_osc_fil_t *handle, volatile rp_osc_fil_regset_t *regset) {

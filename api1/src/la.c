@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/uio.h"
 #include "redpitaya/evn.h"
 #include "redpitaya/la.h"

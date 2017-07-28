@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/la_trg.h"
 
 void rp_la_trg_init (rp_la_trg_t *handle, volatile rp_la_trg_regset_t *regset) {

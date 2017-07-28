@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "redpitaya/util.h"
+#include "redpitaya/fixp.h"
 #include "redpitaya/gen_out.h"
 
 void rp_gen_out_init(rp_gen_out_t *handle, volatile rp_gen_out_regset_t *regset, const fixp_t mul_t, const fixp_t sum_t) {
