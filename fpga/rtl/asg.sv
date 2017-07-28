@@ -47,6 +47,7 @@ module asg #(
   output evn_pkg::evn_t  evs    ,  // output
   // control/status trigger
   input  logic           ctl_trg,
+  input  logic           cfg_tre,
   // events
   output logic           evo_per,  // period
   output logic           evo_lst,  // last
@@ -234,6 +235,7 @@ asg_per #(
   .evs      (evs_per),
   // trigger
   .ctl_trg  (ctl_trg),
+  .cfg_tre  (cfg_tre),
   // configuration
   .cfg_siz  (cfg_siz),
   .cfg_off  (cfg_off),
@@ -255,6 +257,7 @@ asg_bst #(
   .evs      (evs_bst),
   // trigger
   .ctl_trg  (ctl_trg),
+  .cfg_tre  (cfg_tre),
   // events
   .evn_per  (evo_per),
   // generator mode

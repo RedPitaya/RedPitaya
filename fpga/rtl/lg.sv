@@ -210,6 +210,7 @@ asg #(
   .evs      (evs),
   // trigger
   .ctl_trg  (ctl_trg),
+  .cfg_tre  (1'b0),
   // events
   .evo_per  (tro),
   .evo_lst  (irq),
