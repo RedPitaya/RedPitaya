@@ -15,8 +15,9 @@ typedef struct {
     fixp_t sum_t;
 } rp_lin_t;
 
-void     rp_lin_default   (rp_lin_t *handle);
-void     rp_lin_print     (rp_lin_t *handle);
+void     rp_lin_init   (rp_lin_t *handle, volatile rp_lin_regset_t *regset, const fixp_t mul_t, const fixp_t sum_t);
+void     rp_lin_default(rp_lin_t *handle);
+void     rp_lin_print  (rp_lin_t *handle);
     
 float    rp_lin_chn_get_gain  (rp_lin_t *handle);
 int      rp_lin_chn_set_gain  (rp_lin_t *handle, float value);
