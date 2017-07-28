@@ -15,10 +15,10 @@ void rp_la_trg_default (rp_la_trg_t *handle) {
 }
 
 void rp_la_trg_print (rp_la_trg_t *handle) {
-    printf("asg_per.cfg_msk = %08x\n", handle->regset->cfg_msk);
-    printf("asg_per.cfg_val = %08x\n", handle->regset->cfg_val);
-    printf("asg_per.cfg_pos = %08x\n", handle->regset->cfg_pos);
-    printf("asg_per.cfg_neg = %08x\n", handle->regset->cfg_neg);
+    printf("la_trg.cfg_msk = %08x\n", handle->regset->cfg_msk);
+    printf("la_trg.cfg_val = %08x\n", handle->regset->cfg_val);
+    printf("la_trg.cfg_pos = %08x\n", handle->regset->cfg_pos);
+    printf("la_trg.cfg_neg = %08x\n", handle->regset->cfg_neg);
 }
 
 uint32_t rp_la_trg_get_mask (rp_la_trg_t *handle) {

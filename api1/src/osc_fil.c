@@ -19,11 +19,11 @@ void rp_osc_fil_default (rp_osc_fil_t *handle) {
 }
 
 void rp_osc_fil_print (rp_osc_fil_t *handle) {
-    printf("asg_per.cfg_byp = %08x\n", handle->regset->cfg_byp);
-    printf("asg_per.cfg_faa = %08x\n", handle->regset->cfg_faa);
-    printf("asg_per.cfg_fbb = %08x\n", handle->regset->cfg_fbb);
-    printf("asg_per.cfg_fkk = %08x\n", handle->regset->cfg_fkk);
-    printf("asg_per.cfg_fpp = %08x\n", handle->regset->cfg_fpp);
+    printf("osc_fil.cfg_byp = %08x\n", handle->regset->cfg_byp);
+    printf("osc_fil.cfg_faa = %08x\n", handle->regset->cfg_faa);
+    printf("osc_fil.cfg_fbb = %08x\n", handle->regset->cfg_fbb);
+    printf("osc_fil.cfg_fkk = %08x\n", handle->regset->cfg_fkk);
+    printf("osc_fil.cfg_fpp = %08x\n", handle->regset->cfg_fpp);
 }
 
 bool rp_osc_fil_get_filter_bypass (rp_osc_fil_t *handle) {

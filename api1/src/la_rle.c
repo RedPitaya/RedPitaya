@@ -12,9 +12,9 @@ void rp_la_rle_default (rp_la_rle_t *handle) {
 }
 
 void rp_la_rle_print (rp_la_rle_t *handle) {
-    printf("asg_per.cfg_rle = %08x\n", handle->regset->cfg_rle);
-    printf("asg_per.sts_cur = %08x\n", handle->regset->sts_cur);
-    printf("asg_per.sts_lst = %08x\n", handle->regset->sts_lst);
+    printf("la_rle.cfg_rle = %08x\n", handle->regset->cfg_rle);
+    printf("la_rle.sts_cur = %08x\n", handle->regset->sts_cur);
+    printf("la_rle.sts_lst = %08x\n", handle->regset->sts_lst);
 }
 
 bool rp_la_rle_get_rle (rp_la_rle_t *handle) {

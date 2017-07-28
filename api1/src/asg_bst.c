@@ -20,13 +20,13 @@ void rp_asg_bst_default (rp_asg_bst_t *handle) {
 }
 
 void rp_asg_bst_print (rp_asg_bst_t *handle) {
-    printf("asg_per.bdr_t = %s\n", rp_util_fixp_print(handle->bdr_t));
-    printf("asg_per.bpl_t = %s\n", rp_util_fixp_print(handle->bpl_t));
-    printf("asg_per.bpn_t = %s\n", rp_util_fixp_print(handle->bpn_t));
-    printf("asg_per.cfg_bdr = %08x\n", handle->regset->cfg_bdr);
-    printf("asg_per.cfg_bdl = %08x\n", handle->regset->cfg_bdl);
-    printf("asg_per.cfg_bpl = %08x\n", handle->regset->cfg_bpl);
-    printf("asg_per.cfg_bpn = %08x\n", handle->regset->cfg_bpn);
+    printf("asg_bst.bdr_t = %s\n", rp_util_fixp_print(handle->bdr_t));
+    printf("asg_bst.bpl_t = %s\n", rp_util_fixp_print(handle->bpl_t));
+    printf("asg_bst.bpn_t = %s\n", rp_util_fixp_print(handle->bpn_t));
+    printf("asg_bst.cfg_bdr = %08x\n", handle->regset->cfg_bdr);
+    printf("asg_bst.cfg_bdl = %08x\n", handle->regset->cfg_bdl);
+    printf("asg_bst.cfg_bpl = %08x\n", handle->regset->cfg_bpl);
+    printf("asg_bst.cfg_bpn = %08x\n", handle->regset->cfg_bpn);
 }
 
 int rp_asg_bst_simulate (rp_asg_bst_t *handle, size_t size, uint32_t *data) {

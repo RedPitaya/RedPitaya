@@ -14,11 +14,11 @@ void rp_acq_default (rp_acq_t *handle) {
 }
 
 void rp_acq_print (rp_acq_t *handle) {
-    printf("asg_per.cnt_t = %s\n", rp_util_fixp_print(handle->cnt_t));
-    printf("asg_per.cfg_pre = %08x\n", handle->regset->cfg_pre);
-    printf("asg_per.cfg_pst = %08x\n", handle->regset->cfg_pst);
-    printf("asg_per.sts_pre = %08x\n", handle->regset->sts_pre);
-    printf("asg_per.sts_pst = %08x\n", handle->regset->sts_pst);
+    printf("acq.cnt_t = %s\n", rp_util_fixp_print(handle->cnt_t));
+    printf("acq.cfg_pre = %08x\n", handle->regset->cfg_pre);
+    printf("acq.cfg_pst = %08x\n", handle->regset->cfg_pst);
+    printf("acq.sts_pre = %08x\n", handle->regset->sts_pre);
+    printf("acq.sts_pst = %08x\n", handle->regset->sts_pst);
 }
 
 uint32_t rp_acq_get_trigger_pre (rp_acq_t *handle) {

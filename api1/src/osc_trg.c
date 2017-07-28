@@ -15,10 +15,10 @@ void rp_osc_trg_default (rp_osc_trg_t *handle) {
 }
 
 void rp_osc_trg_print (rp_osc_trg_t *handle) {
-    printf("asg_per.dat_t = %s\n", rp_util_fixp_print(handle->dat_t));
-    printf("asg_per.cfg_pos = %08x\n", handle->regset->cfg_pos);
-    printf("asg_per.cfg_neg = %08x\n", handle->regset->cfg_neg);
-    printf("asg_per.cfg_edg = %08x\n", handle->regset->cfg_edg);
+    printf("osc_trg.dat_t = %s\n", rp_util_fixp_print(handle->dat_t));
+    printf("osc_trg.cfg_pos = %08x\n", handle->regset->cfg_pos);
+    printf("osc_trg.cfg_neg = %08x\n", handle->regset->cfg_neg);
+    printf("osc_trg.cfg_edg = %08x\n", handle->regset->cfg_edg);
 }
 
 int32_t rp_osc_trg_get_level_pos (rp_osc_trg_t *handle) {
