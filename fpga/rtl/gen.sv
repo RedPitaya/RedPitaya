@@ -78,7 +78,7 @@ logic           ctl_trg;
 logic           sts_trg;
 
 // generator mode
-logic           cfg_ben;  // burst enable
+logic           cfg_mod;  // burst enable
 logic           cfg_inf;  // infinite burst
 // continuous/periodic configuration
 logic  [CW-1:0] cfg_siz;  // table size
@@ -125,12 +125,12 @@ if (~bus.rstn) begin
   cfg_off <= '0;
   cfg_ste <= '0;
   // burst mode
-  cfg_ben <= '0;
+  cfg_mod <= '0;
   cfg_inf <= '0;
   cfg_bdr <= '0;
   cfg_bdl <= '0;
-  cfg_bpn <= '0;
   cfg_bpl <= '0;
+  cfg_bpn <= '0;
   // linear transform or logic analyzer output enable
   cfg_mul <= '0;
   cfg_sum <= '0;
@@ -142,8 +142,7 @@ end else begin
     if (bus.addr[BAW-1:0]=='h08)  cfg_trg <= bus.wdata    ;
     if (bus.addr[BAW-1:0]=='h08)  cfg_tre <= bus.wdata[31];
     // generator mode
-    if (bus.addr[BAW-1:0]=='h10)  cfg_ben <= bus.wdata[0];
-    if (bus.addr[BAW-1:0]=='h10)  cfg_inf <= bus.wdata[1];
+    if (bus.addr[BAW-1:0]=='h10)  cfg_mod <= bus.wdata[0];
     // continuous/periodic configuration
     if (bus.addr[BAW-1:0]=='h14)  cfg_siz <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h18)  cfg_off <= bus.wdata;
@@ -153,6 +152,7 @@ end else begin
     if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h28)  cfg_bpl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bpn <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h2c)  cfg_inf <= bus.wdata[31];
     // linear transformation and enable
     if (bus.addr[BAW-1:0]=='h40)  cfg_mul <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h44)  cfg_sum <= bus.wdata;
@@ -175,7 +175,7 @@ casez (bus.addr[BAW-1:0])
   // trigger mask
   'h08: bus.rdata <= (cfg_tre << 31) | cfg_trg;
   // generator mode
-  'h10: bus.rdata <= {cfg_inf, cfg_ben};
+  'h10: bus.rdata <= cfg_mod;
   // continuous/periodic configuration
   'h14: bus.rdata <= cfg_siz;
   'h18: bus.rdata <= cfg_off;
@@ -184,7 +184,7 @@ casez (bus.addr[BAW-1:0])
   'h20: bus.rdata <= cfg_bdr;
   'h24: bus.rdata <= cfg_bdl;
   'h28: bus.rdata <= cfg_bpl;
-  'h2c: bus.rdata <= cfg_bpn;
+  'h2c: bus.rdata <= (cfg_inf << 31) | cfg_bpn;
   // burst status
   'h30: bus.rdata <= sts_bpl;
   'h34: bus.rdata <= sts_bpn;
@@ -232,8 +232,7 @@ asg #(
   .evo_per  (tro),
   .evo_lst  (irq),
   // generator mode
-  .cfg_ben  (cfg_ben),
-  .cfg_inf  (cfg_inf),
+  .cfg_mod  (cfg_mod),
   // continuous/periodic configuration
   .cfg_siz  (cfg_siz),
   .cfg_off  (cfg_off),
@@ -243,6 +242,7 @@ asg #(
   .cfg_bdl  (cfg_bdl),
   .cfg_bpl  (cfg_bpl),
   .cfg_bpn  (cfg_bpn),
+  .cfg_inf  (cfg_inf),
   // status
   .sts_bpl  (sts_bpl),
   .sts_bpn  (sts_bpn),
