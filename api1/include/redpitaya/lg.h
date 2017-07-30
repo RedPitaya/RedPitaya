@@ -10,8 +10,6 @@
 #include "redpitaya/asg_bst.h"
 #include "redpitaya/lg_out.h"
 
-#define DW 16
-
 typedef struct {
     rp_evn_regset_t     evn;
     uint32_t            rsv0;     // reserved
@@ -46,10 +44,10 @@ int          rp_lg_release     (rp_lg_t *handle);
 int          rp_lg_default     (rp_lg_t *handle);
 void         rp_lg_print       (rp_lg_t *handle);
 
-int          rp_lg_get_waveform(rp_lg_t *handle, uint16_t *waveform, int unsigned *len);
-int          rp_lg_set_waveform(rp_lg_t *handle, uint16_t *waveform, int unsigned  len);
-rp_lg_mode_t rp_lg_get_mode    (rp_lg_t *handle);
-void         rp_lg_set_mode    (rp_lg_t *handle, rp_lg_mode_t value);
+int           rp_lg_get_waveform(rp_lg_t *handle, uint16_t *waveform, int unsigned *len);
+int           rp_lg_set_waveform(rp_lg_t *handle, uint16_t *waveform, int unsigned  len);
+rp_gen_mode_t rp_lg_get_mode(rp_lg_t *handle);
+void          rp_lg_set_mode(rp_lg_t *handle, rp_gen_mode_t value);
 
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef GEN_OUT_H
-#define GEN_OUT_H
+#ifndef LG_OUT_H
+#define LG_OUT_H
 
 #include <stdint.h>
 

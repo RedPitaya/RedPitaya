@@ -7,6 +7,7 @@
 #include "redpitaya/fixp.h"
 #include "redpitaya/uio.h"
 #include "redpitaya/evn.h"
+#include "redpitaya/gen.h" // TODO: remove after mode is properly split
 #include "redpitaya/lg.h"
 #include "redpitaya/asg_per.h"
 #include "redpitaya/asg_bst.h"
@@ -14,12 +15,11 @@
 
 int rp_lg_init (rp_lg_t *handle) {
     static char path [] = "/dev/uio/lg";
-    size_t len = strlen(path_lg)+1+1;
 
     // initialize constants
     handle->FS = 125000000.0;  // sampling frequency
     handle->buffer_size = 1<<14;
-    handle->dat_t = (fixp_t) {.s = 0, .m = 16};
+    handle->dat_t = (fixp_t) {.s = 0, .m = 16, .f = 0};
 
     int status = rp_uio_init (&handle->uio, path);
     if (status) {
@@ -40,9 +40,7 @@ int rp_lg_init (rp_lg_t *handle) {
     const fixp_t bpn_t = {.s = 0, .m = CWN, .f = 0};
     rp_asg_bst_init(&handle->bst, &handle->regset->bst, handle->FS, handle->buffer_size, bdr_t, bpl_t, bpn_t);
     // output configuration
-    const fixp_t mul_t = {.s = 1, .m = 1, .f = DWM-2};
-    const fixp_t sum_t = {.s = 1, .m = 0, .f = DWS-1};
-    rp_lg_out_init(&handle->out, &handle->regset->out, mul_t, sum_t);
+    rp_lg_out_init(&handle->out, &handle->regset->out, handle->dat_t);
 
     return(0);
 }
@@ -86,21 +84,16 @@ void rp_lg_print (rp_lg_t *handle) {
 }
 
 static inline int unsigned rp_lg_get_length(rp_lg_t *handle) {
-    if (rp_lg_get_mode(handle) == CONTINUOUS) {
-        return(rp_asg_per_get_table_size(&handle->per));
-    } else {
-        return(rp_asg_bst_get_data_length(&handle->bst));
-    }
-    return(0);
+    return(rp_asg_bst_get_data_length(&handle->bst));
 }
 
-int rp_lg_get_waveform(rp_lg_t *handle, int16_t *waveform, int unsigned *len) {
+int rp_lg_get_waveform(rp_lg_t *handle, uint16_t *waveform, int unsigned *len) {
     if (len == 0) {
         *len = rp_lg_get_length(handle);
     }
     if (*len <= handle->buffer_size) {
         for (int unsigned i=0; i<*len; i++) {
-            waveform [i] = (int16_t) handle->table [i];
+            waveform [i] = (uint16_t) handle->table [i];
         }
         return(0);
     } else {
@@ -108,12 +101,12 @@ int rp_lg_get_waveform(rp_lg_t *handle, int16_t *waveform, int unsigned *len) {
     }
 }
 
-int rp_lg_set_waveform(rp_lg_t *handle, int16_t *waveform, const int unsigned len) {
+int rp_lg_set_waveform(rp_lg_t *handle, uint16_t *waveform, const int unsigned len) {
     if (len <= handle->buffer_size) {
         for (int unsigned i=0; i<len; i++) {
             // TODO recode RTL for 16 memory access
-            //handle->table [i] = (int16_t) waveform [i];
-            handle->table [i] = (int32_t) waveform [i];
+            //handle->table [i] = (uint16_t) waveform [i];
+            handle->table [i] = (uint32_t) waveform [i];
         }
         return(0);
     } else {
@@ -121,11 +114,11 @@ int rp_lg_set_waveform(rp_lg_t *handle, int16_t *waveform, const int unsigned le
     }
 }
 
-rp_lg_mode_t rp_lg_get_mode(rp_lg_t *handle) {
-    return((rp_lg_mode_t) handle->regset->cfg_bmd);
+rp_gen_mode_t rp_lg_get_mode(rp_lg_t *handle) {
+    return((rp_gen_mode_t) handle->regset->cfg_bmd);
 }
 
-void rp_lg_set_mode(rp_lg_t *handle, rp_lg_mode_t value) {
+void rp_lg_set_mode(rp_lg_t *handle, rp_gen_mode_t value) {
     handle->regset->cfg_bmd = (uint32_t) value;
 }
 
