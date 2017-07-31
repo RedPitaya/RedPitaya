@@ -56,9 +56,10 @@ install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/scpi.service           
 install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-systemctl enable redpitaya_nginx
-systemctl enable sockproc
+#systemctl enable redpitaya_nginx
+#systemctl enable sockproc
 #systemctl enable redpitaya_scpi
+systemctl enable scpi
 EOF_CHROOT
 
 ################################################################################
