@@ -36,8 +36,8 @@ Hardware setup
 
 .. note::
 
-   For STEMLab 125-14 you need additional USB to microUSB cable,
-   for STEMLab 125-10 additional serial to USB adapter.
+   For STEMlab 125-14 you need additional USB to microUSB cable,
+   for STEMlab 125-10 additional serial to USB adapter.
 
 .. image:: console-connector.png
 
