@@ -37,8 +37,9 @@ Connecting the cables
    :align: center
    
 .. note::
-
+	
 	Before connecting Red Pitaya to SDR transceiver module, turn Red Pitaya off, by removing power supply cable.
+	
 
 1. connect Tx of SDR transciver module to Red Pitaya OUT1
 2. connect Rx of SDR ransciver module to Red Pitaya IN1 (notice this cable has a transformer)
@@ -62,7 +63,7 @@ identify pin with arrow and connect the cable as on the image bellow.
 	STEMlab SDR transceiver module should be powered by DC 13.8V Power Supply that can provide at least 3 A of constant power. 
 	Make sure that is turned off and then use DC power cord with Anderson Power Pole™ connector **(9)** to connect it with module. 
 	RED wire is positive (+) while BLACK wire is negative (-), double check to not mix the colours or polarity! 
-	Don’t turn on the power supply yet.
+
 	
 10. Turn on 13.8V power supply
 
