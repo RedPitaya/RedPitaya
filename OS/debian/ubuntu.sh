@@ -7,7 +7,7 @@
 ################################################################################
 
 # Install Ubuntu base system to the root file system
-UBUNTU_BASE_VER=16.04.2
+UBUNTU_BASE_VER=16.04.3
 UBUNTU_BASE_TAR=ubuntu-base-${UBUNTU_BASE_VER}-base-armhf.tar.gz
 UBUNTU_BASE_URL=http://cdimage.ubuntu.com/ubuntu-base/releases/${UBUNTU_BASE_VER}/release/${UBUNTU_BASE_TAR}
 test -f $UBUNTU_BASE_TAR || curl -L $UBUNTU_BASE_URL -o $UBUNTU_BASE_TAR
