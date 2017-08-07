@@ -289,6 +289,7 @@ $(document).ready(function() {
 
     $('#client_connect').click(function(event) {
         var ssid = $('#ssid_input_client').val();
+		var user = $('#user_input_client').val();
         var password = $('#password_input_client').val();
         if (ssid == "") {
             // $('#ssid_input_client').effect("shake");
