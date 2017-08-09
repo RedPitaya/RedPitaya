@@ -15,7 +15,7 @@
 	UPD.isApply = false;
 
     UPD.currentVer = undefined;
-	UPD.type = '0.97';
+	UPD.type = 'stemlab';
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -89,14 +89,13 @@
 
     UPD.checkUpdates = function(type) {
         $('#select_ver').hide();
-        //TODO: remove type; use branch with fixed name
         setTimeout(function() {
             $.ajax({
                     url: '/update_list?type=' + type,
                     type: 'GET',
                 })
-                .fail(function(msg) {
-                    var resp = msg.responseText;
+                .done(function(msg) {
+                    var resp = msg;
                     var arr = resp.split('\n');
 
                     $('#retry').click(function(event) {
@@ -109,6 +108,7 @@
                     // - invalid response format
                     if (arr.length == 0 || arr.length % 2 != 0) {
 /*
+                        TODO: remove before merge to master branch
                         if(UPD.type == "0.97")
                         {
                             $("#ecosystem_type").val("2");
@@ -121,6 +121,9 @@
                             return;
                         }
 */
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        return;
                     }
                     var list = [];
 					UPD.ecosystems = [];
@@ -162,7 +165,7 @@
                         }
                     }
                     let distro_desc = es_distro_vers.vers_as_str + '.' + es_distro_vers.build + '(' + es_distro_size + ')';
-                    $('#select_ver').text += distro_desc;
+                    $('#distro_dsc').text(distro_desc);
                     $('#ecosystem_ver').removeAttr('disabled');
                     $('#select_ver').show();
                     $('#apply').click(function(event) {
@@ -199,8 +202,8 @@
                     $.ajax({
                         url: '/update_check',
                         type: 'GET',
-                    }).fail(function(msg) {
-                        var res = msg.responseText;
+                    }).done(function(msg) {
+                        var res = msg;
                         var s = res.split(" ")[0];
                         var size = parseInt(s) * 1;
                         if (isNaN(size)) {
@@ -232,8 +235,8 @@
                     url: '/update_extract',
                     type: 'GET',
                 })
-                .fail(function(msg) {
-                    var text = msg.responseText;
+                .done(function(msg) {
+                    var text = msg;
                     if (text.startsWith("OK"))
                         UPD.nextStep();
                     else {
@@ -309,13 +312,10 @@ function checkDev() {
     $.ajax({
         url: '/updater/dev',
         type: 'GET',
-    }).fail(function(msg) {
+    }).always(function(msg) {
 		if (msg[0] == 'd')
 			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
-    }).done(function(msg) {
-		if (msg[0] == 'd')
-			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
-    })
+    });
 }
 
 // Page onload event handler
@@ -326,8 +326,10 @@ $(document).ready(function() {
     Help.setState("idle");
     
     UPD.startStep(1);
-    $('body').addClass('loaded');	
-	checkDev();
+    $('body').addClass('loaded');
+    
+    // TODO: is it needed to allow download dev-distros?
+	// checkDev();
 
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
@@ -351,6 +353,8 @@ $(document).ready(function() {
 
     });
 	$('#ecosystem_type').change(function(){
+        /*
+        Reason: exist one branch with fixed name for download distros with latest OS version
 		if ($(this).val() == '1') {
 			$('#warn').hide();
 			UPD.type = '0.97';
@@ -364,7 +368,8 @@ $(document).ready(function() {
 			$('#warn').show();
 			UPD.type = 'dev';
 		}
-		UPD.checkUpdates(UPD.type);
+        */
+        UPD.checkUpdates(UPD.type);
 	});
 
 	$('#ecosystem_ver').change(function() {

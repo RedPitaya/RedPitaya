@@ -101,10 +101,18 @@
                                         </p>
                                         <p id="warn">Warning: Install this versions on your own risk!</p>
 --> 
-                                        <p id="select_ver">Available next distributive:
-                                            <select id="ecosystem_ver" disabled>
-                                            <span id="and_click"> Press button for start installation </span><button id="apply">Apply</button>
-											<a id="" href="#" data-toggle="modal" data-target="#changelog">CHANGELOG</a>
+                                        <p id="select_ver">
+                                            <!-- <select id="ecosystem_ver" disabled> -->
+                                            <table style="width: 100%;">
+                                                <tr>
+                                                    <td>Distributive version:</td>
+                                                    <td id="distro_dsc"></td>
+                                                    <td><span id="and_click"><button id="apply">Apply</button></td>
+                                                </tr>
+											    <tr>
+                                                    <td><a id="" href="https://github.com/RedPitaya/RedPitaya" data-toggle="tab" data-target="#changelog">Owr project on Github</a></td>
+                                                </tr>                
+                                            </table>
                                         </p>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later.<button id="retry">Retry</button></p>
                                     </td>
