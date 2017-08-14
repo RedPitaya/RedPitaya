@@ -24,15 +24,15 @@ pip3 install --upgrade pip
 # Python numerical processing and plotting
 apt-get -y install gfortran libopenblas-dev liblapack-dev python-dev
 # APT
-#apt-get -y install python3-numpy python3-scipy python3-pandas
-#apt-get -y install python3-matplotlib
-# PIP
-pip3 install numpy
-pip3 install scipy
-pip3 install pandas
-apt-get -y install libpng-dev libfreetype6-dev
-#pip3 install pycairo
-pip3 install matplotlib
+apt-get -y install python3-numpy python3-scipy python3-pandas
+apt-get -y install python3-matplotlib
+# # PIP (there appears to be a bug in how new numpy handles FPGA buffer mapping)
+# pip3 install numpy
+# pip3 install scipy
+# pip3 install pandas
+# apt-get -y install libpng-dev libfreetype6-dev
+# #pip3 install pycairo
+# pip3 install matplotlib
 
 # Jupyter and ipywidgets
 pip3 install jupyter
