@@ -4,7 +4,7 @@ Connect to your Red Pitaya
 
 .. TODO preveri slovnico
 
-Red Pitaya STEMLab boards are network attachable devices focused
+Red Pitaya STEMlab boards are network attachable devices focused
 on simple connectivity and quick accessibility.
 Having a graphical user interface for your Oscilloscope,
 Signal Generator, LCR meter and other Red Pitaya applications,
@@ -12,12 +12,12 @@ directly on your PC without any limitations such are limited
 commands or controls or any installation of additional
 software will provide you with a unique working experience.
 
-Red Pitaya STEMLab boards can be connected over:
+Red Pitaya STEMlab boards can be connected over:
 
 #. Local Area Network (LAN) - Requires a DHCP server on your LAN router
-#. Direct Ethernet cable connection - Requires additional setting on users PC and STEMLab board
+#. Direct Ethernet cable connection - Requires additional setting on users PC and STEMlab board
 #. Wireless Network client - Requires an additional WiFi dongle available at Red Pitaya store
-#. Access Point Mode - STEMLab board creates its own WiFi network
+#. Access Point Mode - STEMlab board creates its own WiFi network
 
 .. image:: connect-1.png
 
@@ -31,10 +31,10 @@ Wired
 Local Area Network (LAN)
 ========================
 
-This is the most common and recommended way of connecting and using your Red Pitaya STEMLab boards.
+This is the most common and recommended way of connecting and using your Red Pitaya STEMlab boards.
 Your LAN network needs to have DHCP settings enabled which is the case in majority of the local networks,
 with this, simple *plug and play* approach is enabled.
-Having STEMLab board connected the local network will enable quick access
+Having STEMlab board connected the local network will enable quick access
 to all Red Pitaya applications using only your web browser.
 Simply follow this 3 simple steps:
 
@@ -63,7 +63,7 @@ Direct Ethernet cable connection
 
 If there are some restrictions for the user to have STEMlab boards
 on the DHCP LAN network **permanently** there is
-a possibility to directly connect to your STEMLab board.
+a possibility to directly connect to your STEMlab board.
 
 **Direct Ethernet Connection** was enabled from the start but until now some additional settings on the user's PC (**static IP configuration**) 
 were necessary in order to set connection correctly. 
@@ -104,7 +104,7 @@ This step has been eliminated with the NEW OS 0.97 (and newer) and the only step
 **Static IP configuration**
 
 
-This type of connection requires additional settings on your PC and STEMLab board. 
+This type of connection requires additional settings on your PC and STEMlab board. 
 
 .. note::
 
@@ -169,17 +169,17 @@ Wireless Network Connection
 ===========================
 
 This type of the connection will enable wireless connection
-to the Red Pitaya STEMLab board via your local WiFi network.
-In order to connect your STEMLab board to the same WiFi network
+to the Red Pitaya STEMlab board via your local WiFi network.
+In order to connect your STEMlab board to the same WiFi network
 on which you have connected your PC/Laptop first you need to use LAN connection.
-Access your STEMLab board via web browser and start Network Manager application.
-Trough this application all network settings of the STEMLab board are manageable.
+Access your STEMlab board via web browser and start Network Manager application.
+Trough this application all network settings of the STEMlab board are manageable.
 Simply select the desired WiFi network, input password and select connect.
 Once you have arranged WiFi network you don't need LAN connection anymore and
-after the restart of the STEMLab board it will connect to the preset WiFi network automatically.
+after the restart of the STEMlab board it will connect to the preset WiFi network automatically.
 
 .. note::
-   Connecting the STEMLab via WiFi network the additional WiFi dongle is needed.
+   Connecting the STEMlab via WiFi network the additional WiFi dongle is needed.
    WiFi dongle is available here [Link to RS or similar].    
 
 .. image:: connect-4.png
@@ -221,21 +221,16 @@ still available over the WiFi network i.e WiFi IP address.
 Access Point mode
 =================
 
-This type of the connection is ideal if there is no LAN or WiFi network.
-STEMLab board will simply create its own WiFi network on which users PC/Laptop or Tablet can be connected.
-Access Point mode is arranged via Network Manager application where you give the name to your STEMLab network and enable it.
-Since Access Point mode is enabled via Network Manager application this means that first you need to use LAN network,
-access your STEMLab board and arrange the Access Point mode.
-After this there is no need for LAN network and after restarting the STEMLab the settings are saved.
+When there are no LAN or WiFi networks available, STEMlab can act as an access point.
+This will allow you to connect your PC/Laptop, Tablet or smart phone to the STEMlab directly over WiFi.
 
 .. note::
 
-   Connecting the STEMLab via Access Point mode the additional WiFi dongle is needed.
-   WiFi dongle is available [Link to RS or similar].
+   To use STEMlab as an access point a `Raspberry Pi USB WiFi <https://www.raspberrypi.org/products/raspberry-pi-usb-wifi-dongle/>`_ dongle is needed.
 
 .. image:: connect-8.png
 
-How to create Access Point network and connect to it is describe below.
+Follow the steps bellow to enable Access Point and connect to it.
 
 1. Start your STEMlab web user interface (Use connection described **Local Area Network (LAN) connection**)
 2. Open Network Manager application
@@ -244,6 +239,10 @@ How to create Access Point network and connect to it is describe below.
 4. Connect your PC/Laptop/Tablet/Phone to the network created by STEMlab board.
 5. Input Access Point network IP address to the web browser URL field and press enter.
     
+.. note::
+   When Access Point is enabled on STEMlab, it will continue to boot in Access Point configuration, untill it is disabled 
+   in the Network Manager.
+   
 .. note::
     
    IP address in Access Point mode is always the same: 192.168.128.1

@@ -14,18 +14,18 @@ for development, research or test automation purposes.
 SCPI uses a set of SCPI commands that are recognized by the instruments
 to enable specific actions to be taken
 (e.g.: acquiring data from fast analog inputs, generating signals and
-controlling other periphery of the Red Pitaya STEMLab platform).
+controlling other periphery of the Red Pitaya STEMlab platform).
 The SCPI commands are extremely useful when complex signal analysis
 is required where SW environment such as MATLAB provides powerful data analysis tools
-and SCPI commands simple access to raw data acquired on STEMLab board.
+and SCPI commands simple access to raw data acquired on STEMlab board.
 
 **Features**
 
 - Quickly write control routines and programs using  Matlab, Labview, Scilab or Python
 - Use powerful data analysis tools of Matlab, Labview, Scilab or Python to analyze raw signals
-  acquired by STEMLab board
+  acquired by STEMlab board
 - Write testing scripts and routines
-- Incorporate your STEMLab and Labview  into testing and production lines
+- Incorporate your STEMlab and Labview  into testing and production lines
 - Take quick measurements directly with your PC 
 
 ***********

@@ -300,7 +300,7 @@ The |95-stmpe.rules|_ UDEV rule will create a symbolic link ``/dev/input/touchsc
 
 A calibration file should be added to the system |99-calibration.conf|_:
 
-.. literalinclude:: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+.. literalinclude:: ../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 -------------
 Block diagram

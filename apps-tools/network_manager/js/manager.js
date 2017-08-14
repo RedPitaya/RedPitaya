@@ -17,8 +17,8 @@
                 type: 'GET',
                 timeout: 1500
             })
-            .fail(function(msg) {
-                if (msg.responseText.startsWith("OK")) {
+            .success(function(msg) {
+                if (msg.startsWith("OK")) {
                     var check = false;
 
                     if ($('#wlan0_block_entry').css('display') == 'none')
@@ -97,8 +97,8 @@
                 url: '/get_connected_wlan',
                 type: 'GET',
             })
-            .fail(function(msg) {
-                if (msg.responseText == undefined || msg.responseText == "\n" || msg.responseText == "") {
+            .success(function(msg) {
+                if (msg == undefined || msg == "\n" || msg == "") {
                     WIZARD.WIFIConnected = false;
                     $("#wlan0_ssid_label").text("None");
                     return;
@@ -108,7 +108,7 @@
                 WIZARD.WIFIConnected = true;
                 $('body').addClass('loaded');
 
-                var ssids = msg.responseText.match(/SSID:(.*)/g);
+                var ssids = msg.match(/SSID:(.*)/g);
                 if (ssids == null) {
                     $("#wlan0_ssid_label").text("None");
                     return;
@@ -135,9 +135,8 @@
         $.ajax({
             url: '/get_wlan0_status',
             type: 'GET',
-        }).fail(function(msg) {
-            var res1 = msg.responseText;
-            var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+        }).success(function(msg) {
+            var IPaddr = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
 
             if (IPaddr == null) {
                 if (!WIZARD.WIFIConnected){
@@ -147,7 +146,7 @@
             }
 
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
-            var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            var Mask = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             Mask = Mask[0].split(" ")[1].split("/")[1];
 
             $('#wlan0_address_label').text(IPaddr + " / " + Mask);
@@ -159,12 +158,11 @@
         $.ajax({
             url: '/get_eth0_status',
             type: 'GET',
-        }).fail(function(msg) {
-            var res1 = msg.responseText;
-            var gateway = msg.responseText.split("gateway:")[1].split("\n")[0];
-            var IPaddr = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+        }).success(function(msg) {
+            var gateway = msg.split("gateway:")[1].split("\n")[0];
+            var IPaddr = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
-            var Mask = res1.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            var Mask = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
             Mask = Mask[0].split(" ")[1].split("/")[1];
 
             $('#eth0_address_label').text(IPaddr + " / " + Mask);
@@ -177,15 +175,15 @@
         $.ajax({
             url: '/get_ap_status',
             type: 'GET',
-        }).fail(function(msg) {
-            if (msg.responseText.includes("AP")) {
+        }).success(function(msg) {
+            if (msg.includes("AP")) {
                 $('#access_point_create').text("Remove");
                 $('#wlan0_mode_label').text("Access Point");
                 // $('#wlan0_address_label').text("192.168.128.1");
             } else {
                 $('#access_point_create').text("Create");
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
-            }        	
+            }
         });
     }
 
@@ -227,6 +225,11 @@
     WIZARD.startWaiting = function() {
         WIZARD.isInReboot = true;
         $('body').removeClass('loaded');
+    }
+
+    WIZARD.stopWaiting = function() {
+	WIZARD.isInReboot = false;
+	$('body').addClass('loaded');
     }
 }(window.WIZARD = window.WIZARD || {}, jQuery));
 
@@ -301,6 +304,8 @@ $(document).ready(function() {
                 type: 'GET',
             })
         } else {
+	    let lastSSID = WIZARD.connectedSSID;
+	    WIZARD.startWaiting();
             $.ajax({
                     url: '/disconnect_wifi',
                     type: 'GET',
@@ -308,11 +313,14 @@ $(document).ready(function() {
                 .always(function() {
                     WIZARD.connectedSSID = '';
                 });
-            $('#ssid_input_client').text('Connect');
+            $('#client_connect').text('Connect');
             WIZARD.connectedSSID = "";
             $('#wifi_list').html();
+	        $('.btn-wifi-item[key="' + lastSSID + '"]').css('color', '#cdcccc');
+	        setTimeout(function() {
+		        WIZARD.stopWaiting();
+	        }, 3000);
         }
-
     });
 
     $('#wifi_mode').click(function() {
@@ -347,11 +355,18 @@ $(document).ready(function() {
             var pass_check = checkPassword( $('#password_input').val() );
 
         	if (ssid_check && pass_check){
-	        	WIZARD.startWaiting();
+	            WIZARD.startWaiting();
 	            $.ajax({
 	                url: '/wifi_create_point?ssid=' + $('#ssid_input').val() + '&password=' + $('#password_input').val() + '',
 	                type: 'GET',
-	            });
+	            })
+		    .always(function(){
+			WIZARD.stopWaiting();
+		    })
+		    .success(function(){
+			$('#ssid_input').val("");
+			$('#password_input').val("");
+		    });
         	}
         } else {
             $.ajax({

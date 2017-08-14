@@ -115,6 +115,6 @@ $(function() {
     $('#SCPI_STOP').click(SCPI.StopServer);
 
     $('#SCPI_EXAMPLES').click(function(){
-        window.open('http://redpitaya.com/examples-new/','_blank');
+        window.open('http://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html','_blank');
     });
 });
