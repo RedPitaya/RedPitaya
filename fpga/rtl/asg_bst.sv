@@ -181,7 +181,7 @@ end else begin
 end
 
 // counter end status
-assign end_bdr = (sts_bdr == cfg_bdr);
+assign end_bdr = (sts_bdr == cfg_bdr) | end_bpl;
 assign end_bdl = (sts_bdl == cfg_bdl) & end_bdr;
 assign end_bpl = (sts_bpl == cfg_bpl);
 assign end_bpn = (sts_bpn == cfg_bpn) & ~cfg_inf;

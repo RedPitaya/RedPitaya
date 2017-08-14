@@ -125,7 +125,7 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  ##60000;
+  ##6000;
   $display("ERROR: timeout!");
   $finish();
 end
@@ -136,9 +136,9 @@ initial begin
 //   test_mgmt               (32'h40010000, '1, '0);
 //   test_gen_periodic       (32'h40040000, 32'h40050000, 0);
 //   test_gen_burst          (32'h40040000, 32'h40050000, 0);
-  test_gen_bst_ext_trig (32'h40040000, 32'h40050000, 0);
-//  test_gen_per_ext_trig (32'h40040000, 32'h40050000, 0);
-//   test_lg_burst           (32'h400c0000, 32'h400d0000, 4);
+//   test_gen_bst_ext_trig (32'h40040000, 32'h40050000, 0);
+//   test_gen_per_ext_trig (32'h40040000, 32'h40050000, 0);
+  test_lg_burst           (32'h400c0000, 32'h400d0000, 4);
 //   test_la_trigger         (32'h400e0000, 32'h400f0000, 5);
 //   //  ##16;
 //   test_osc                (32'h40080000, 32'h40090000, 2);
@@ -643,9 +643,11 @@ task test_lg_burst (
 );
   ##10;
   // write table
-  for (int i=0; i<buf_len; i++) begin
-    axi_write(buffer + (i*2), i);  // write table
-  end
+//   for (int i=0; i<buf_len; i++) begin
+    axi_write(buffer + (0), 1);  // write table
+    axi_write(buffer + (4), 0);  // write table
+
+//   end
   // configure LG output enable
   axi_write(regset+'h40, '1);  // output enable 0
   axi_write(regset+'h44, '1);  // output enable 1
@@ -654,12 +656,12 @@ task test_lg_burst (
 
   ##4;
   // configure burst mode
-  axi_write(regset+'h10, 2'b11);  // burst disable
+  axi_write(regset+'h10, 2'b01);  // select burst mode
   // burst mode
-  axi_write(regset+'h24, buf_len - 1);  // burst data length
-  axi_write(regset+'h28, buf_len - 1);  // burst idle length
-  axi_write(regset+'h2c, 100);  // repetitions
-  axi_write(regset+'h20, 'b11);  // enable burst mode and infinite repetitions
+  axi_write(regset+'h20,  7 - 1);  // burst data repetitions
+  axi_write(regset+'h24,  2 - 1);  // burst data length
+  axi_write(regset+'h28, 23 - 1);  // burst period length
+  axi_write(regset+'h2c,  4 - 1);  // burst period number
 
   // events
   ##4;
