@@ -15,7 +15,7 @@
 	UPD.isApply = false;
 
     UPD.currentVer = undefined;
-	UPD.type = '0.97';
+	UPD.type = 'stemlab';
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -94,8 +94,8 @@
                     url: '/update_list?type=' + type,
                     type: 'GET',
                 })
-                .fail(function(msg) {
-                    var resp = msg.responseText;
+                .done(function(msg) {
+                    var resp = msg;
                     var arr = resp.split('\n');
 
                     $('#retry').click(function(event) {
@@ -103,7 +103,12 @@
                         UPD.restartStep();
                     });
 
-                    if (arr.length == 0 || arr.length <= 2 || arr.length % 2 != 0) {
+                    // Request resending. Reasons:
+                    // - no available distributives for selected type
+                    // - invalid response format
+                    if (arr.length == 0 || arr.length % 2 != 0) {
+/*
+                        TODO: remove before merge to master branch
                         if(UPD.type == "0.97")
                         {
                             $("#ecosystem_type").val("2");
@@ -115,10 +120,16 @@
                             $('#step_' + UPD.currentStep).find('.error_msg').show();
                             return;
                         }
+*/
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        return;
                     }
                     var list = [];
 					UPD.ecosystems = [];
                     UPD.ecosystems_sizes = [];
+                    // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
+                    // example - version as array entry: 12933621
                     for (var i = 0; i < arr.length; i += 2) {
                         if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
                             var size = parseInt(arr[i + 1]) * 1;
@@ -128,6 +139,7 @@
                             list.push(arr[i] + "-" + sizeM.toFixed(2) + "M");
                         }
                     }
+
                     if (list.length == 0) {
                         $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
                         $('#step_' + UPD.currentStep).find('.error_msg').show();
@@ -136,17 +148,26 @@
                         $('#step_' + UPD.currentStep).find('.error_msg').hide();
 					}
                     list.sort();
-					$('#ecosystem_ver').empty();
+                    $('#ecosystem_ver').empty();
+                    let es_distro_size = 0;
+                    let es_distro_vers = { vers_as_str:'', build:0 };
+                    // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
                     for (var i = list.length - 1; i >= 0; i--) {
                         var item = list[i].split('-');
                         var ver = item[1];
                         var build = item[2];
                         var size = item[4];
-                        var html = '<option value="' + item[0] + '-' + item[1] + '-' + item[2] + '-' + item[3] + '">' + item[1] + '.' + item[2] + ' (' + item[4] + ')</option>';
-                        $('#ecosystem_ver').append(html);
+                        // select latest version according to common version and build
+                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
+                            es_distro_vers.vers_as_str = ver;
+                            es_distro_vers.build = build;
+                            es_distro_size = size;
+                        }
                     }
+                    let distro_desc = es_distro_vers.vers_as_str + '.' + es_distro_vers.build + '(' + es_distro_size + ')';
+                    $('#distro_dsc').text(distro_desc);
                     $('#ecosystem_ver').removeAttr('disabled');
-                    $('.select_ver').show();
+                    $('#select_ver').show();
                     $('#apply').click(function(event) {
 						if (UPD.isApply)
 							return; // FIXME
@@ -163,9 +184,7 @@
                     });
 					$('#ecosystem_ver').change();
                 });
-
         }, 500);
-
     }
 
     UPD.downloadEcosystem = function() {
@@ -183,8 +202,8 @@
                     $.ajax({
                         url: '/update_check',
                         type: 'GET',
-                    }).fail(function(msg) {
-                        var res = msg.responseText;
+                    }).done(function(msg) {
+                        var res = msg;
                         var s = res.split(" ")[0];
                         var size = parseInt(s) * 1;
                         if (isNaN(size)) {
@@ -216,8 +235,8 @@
                     url: '/update_extract',
                     type: 'GET',
                 })
-                .fail(function(msg) {
-                    var text = msg.responseText;
+                .done(function(msg) {
+                    var text = msg;
                     if (text.startsWith("OK"))
                         UPD.nextStep();
                     else {
@@ -293,13 +312,10 @@ function checkDev() {
     $.ajax({
         url: '/updater/dev',
         type: 'GET',
-    }).fail(function(msg) {
+    }).always(function(msg) {
 		if (msg[0] == 'd')
 			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
-    }).done(function(msg) {
-		if (msg[0] == 'd')
-			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
-    })
+    });
 }
 
 // Page onload event handler
@@ -310,8 +326,10 @@ $(document).ready(function() {
     Help.setState("idle");
     
     UPD.startStep(1);
-    $('body').addClass('loaded');	
-	checkDev();
+    $('body').addClass('loaded');
+    
+    // TODO: is it needed to allow download dev-distros?
+	// checkDev();
 
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
@@ -335,6 +353,8 @@ $(document).ready(function() {
 
     });
 	$('#ecosystem_type').change(function(){
+        /*
+        Reason: exist one branch with fixed name for download distros with latest OS version
 		if ($(this).val() == '1') {
 			$('#warn').hide();
 			UPD.type = '0.97';
@@ -348,7 +368,8 @@ $(document).ready(function() {
 			$('#warn').show();
 			UPD.type = 'dev';
 		}
-		UPD.checkUpdates(UPD.type);
+        */
+        UPD.checkUpdates(UPD.type);
 	});
 
 	$('#ecosystem_ver').change(function() {
