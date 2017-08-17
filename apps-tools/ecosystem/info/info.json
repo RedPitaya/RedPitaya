@@ -1,6 +1,6 @@
 {
     "name": "Ecosystem",
-    "version": "0.97-BUILD_NUMBER",
+    "version": "0.98-BUILD_NUMBER",
     "revision": "REVISION",
     "description": "Red Pitaya GNU/Linux OS & Ecosystem."
 }
