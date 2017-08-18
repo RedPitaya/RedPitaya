@@ -6,7 +6,7 @@
 
 `timescale 1ns / 1ps
 
-module scope_edge_tb #(
+module osc_trg_tb #(
   // clock time periods
   realtime  TP = 8.0ns,  // 125MHz
   // stream parameters
@@ -147,10 +147,10 @@ endtask: test
 
 axi4_stream_src #(.DN (DN), .DT (DT)) str_src (.str (sti));
 
-scope_edge #(
+osc_trg #(
   .DN (DN),
   .DT (DT)
-) scope_edge (
+) osc_trg (
   // stream input/output
   .sti      (sti),
   .sto      (sto),
@@ -171,8 +171,8 @@ axi4_stream_drn #(.DN (DN), .DT (DT)) str_drn (.str (sto));
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  $dumpfile("scope_edge_tb.vcd");
-  $dumpvars(0, scope_edge_tb);
+  $dumpfile("osc_trg_tb.vcd");
+  $dumpvars(0, osc_trg_tb);
 end
 
-endmodule: scope_edge_tb
+endmodule: osc_trg_tb

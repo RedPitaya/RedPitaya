@@ -4,8 +4,8 @@ source "axi4_stream_if.tcl"
 source "sys_bus_if.tcl"
 
 # set top hierarcy name
-set top scope_edge_tb
-set dut scope_edge
+set top osc_trg_tb
+set dut osc_trg
 
 onerror {resume}
 quietly WaveActivateNextPane {} 0

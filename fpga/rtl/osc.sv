@@ -271,10 +271,10 @@ scope_dec_avg #(
 // Edge detection (trigger source)
 ////////////////////////////////////////////////////////////////////////////////
 
-scope_edge #(
+osc_trg #(
   // stream parameters
   .DT (DT)
-) edge_i (
+) osc_trg (
   // control
   .ctl_rst  (evn.rst),
   // configuration

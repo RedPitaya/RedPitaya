@@ -4,7 +4,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module scope_edge #(
+module osc_trg #(
   // stream parameters
   int unsigned DN = 1, // TODO: for now only value 1 is permitted
   type DT = logic signed [16-1:0]
@@ -75,4 +75,4 @@ end
 // add to the stream the delay caused by trigger stage
 axi4_stream_reg reg_trg (.sti (sts), .sto (sto));
 
-endmodule: scope_edge
+endmodule: osc_trg
