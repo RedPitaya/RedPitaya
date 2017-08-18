@@ -19,7 +19,7 @@ localparam int unsigned AW = $clog2(DL);
 
 // memory
 DT             buf_dat [0:DL-1];
-DT   [  2-1:0] buf_rdat;
+DT    [ 2-1:0] buf_rdat;
 // write port
 logic          buf_wen;
 logic [AW-1:0] buf_wad;
@@ -60,7 +60,7 @@ buf_ren <= bus.ren;
 
 always_ff @(posedge bus.clk)
 for (int unsigned i=0; i<2; i++) begin
-  buf_rdat [i] <= buf_dat [{bus.addr[AW-1:2],i[0]}];
+  buf_rdat [i] <= buf_dat [{bus.addr[2+:AW-1],i[0]}];
 end
 
 always_ff @(posedge bus.clk)
