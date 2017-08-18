@@ -6,7 +6,7 @@
 
 `timescale 1ns / 1ps
 
-module la_trigger_tb #(
+module la_trg_tb #(
   // clock time periods
   realtime  TP = 4.0ns,  // 250MHz
   // stream parameters
@@ -81,10 +81,10 @@ end
 axi4_stream_src #(.DN (DN), .DT (DT)) str_src (.str (sti));
 axi4_stream_drn #(.DN (DN), .DT (DT)) str_drn (.str (sto));
 
-la_trigger #(
+la_trg #(
   .DN (DN),
   .DT (DT)
-) la_trigger (
+) la_trg (
   // control
   .ctl_rst  (ctl_rst),
   // configuration
@@ -104,8 +104,8 @@ la_trigger #(
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  $dumpfile("la_trigger_tb.vcd");
-  $dumpvars(0, la_trigger_tb);
+  $dumpfile("la_trg_tb.vcd");
+  $dumpvars(0, la_trg_tb);
 end
 
-endmodule: la_trigger_tb
+endmodule: la_trg_tb

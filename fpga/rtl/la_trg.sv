@@ -4,7 +4,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module la_trigger #(
+module la_trg #(
   int unsigned DN = 1,
   type DT = logic [8-1:0]  // sti.dat type
 )(
@@ -59,4 +59,4 @@ end
 // align data with trigger edge
 axi4_stream_reg align_reg(.sti (sti), .sto (sto));
 
-endmodule: la_trigger
+endmodule: la_trg

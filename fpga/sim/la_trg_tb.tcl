@@ -4,8 +4,8 @@ source "axi4_stream_if.tcl"
 source "sys_bus_if.tcl"
 
 # set top hierarcy name
-set top la_trigger_tb
-set dut la_trigger
+set top la_trg_tb
+set dut la_trg
 
 onerror {resume}
 quietly WaveActivateNextPane {} 0

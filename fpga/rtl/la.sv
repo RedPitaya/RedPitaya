@@ -218,9 +218,9 @@ assign std.TREADY = stn.TREADY;
 // Edge detection (trigger source)
 ////////////////////////////////////////////////////////////////////////////////
 
-la_trigger #(
+la_trg #(
   .DT (DT)
-) trigger (
+) la_trg (
   // control
   .ctl_rst  (evn.rst),
   // configuration

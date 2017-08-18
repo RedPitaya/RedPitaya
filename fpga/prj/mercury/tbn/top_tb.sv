@@ -139,7 +139,7 @@ initial begin
 //   test_gen_bst_ext_trig (32'h40040000, 32'h40050000, 0);
 //   test_gen_per_ext_trig (32'h40040000, 32'h40050000, 0);
   test_lg_burst           (32'h400c0000, 32'h400d0000, 4);
-//   test_la_trigger         (32'h400e0000, 32'h400f0000, 5);
+//   test_la_trg         (32'h400e0000, 32'h400f0000, 5);
 //   //  ##16;
 //   test_osc                (32'h40080000, 32'h40090000, 2);
 //   test_loopback           ();
@@ -677,7 +677,7 @@ task test_lg_burst (
 endtask: test_lg_burst
 
 
-task test_la_trigger (
+task test_la_trg (
   int unsigned regset
 );
   // set GPIO into neutral state
@@ -688,7 +688,7 @@ task test_la_trigger (
   axi_write(regset+'h28, 16'h0001);  // cfg_edg_pos
   axi_write(regset+'h2c, 16'h0000);  // cfg_edg_neg
   ##10;
-endtask: test_la_trigger
+endtask: test_la_trg
 
 task test_la (
   int unsigned regset,
