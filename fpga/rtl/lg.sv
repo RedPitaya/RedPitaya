@@ -75,7 +75,7 @@ logic           ctl_trg;
 logic           sts_trg;
 
 // generator mode
-logic           cfg_mod;  // burst enable
+logic           cfg_mod;  // mode (0 - periodic, 1 - burst)
 logic           cfg_inf;  // infinite burst
 // burst configuration
 logic [CWR-1:0] cfg_bdr;  // burst data   repetitions
