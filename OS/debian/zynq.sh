@@ -67,7 +67,7 @@ make install
 pip3 install bindings/python/
 # cleanup
 cd ../
-rm -rf libiio-0.10
+rm -rf libiio-0.10 libiio.tar.gz
 EOF_CHROOT
 
 ## Ne10 library, the version in launchpad fails to build
