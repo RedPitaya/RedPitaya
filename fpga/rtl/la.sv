@@ -139,13 +139,13 @@ end else begin
     if (bus.addr[BAW-1:0]=='h24)  cfg_cmp_val <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h28)  cfg_edg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h2c)  cfg_edg_neg <= bus.wdata;
-    // dacimation
-    if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata;
     // RLE
-    if (bus.addr[BAW-1:0]=='h34)  cfg_rle <= bus.wdata[0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_rle <= bus.wdata[0];
     // bitwise input polarity
     if (bus.addr[BAW-1:0]=='h40)  cfg_msk <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h44)  cfg_pol <= bus.wdata;
+    // dacimation
+    if (bus.addr[BAW-1:0]=='h48)  cfg_dec <= bus.wdata;
   end
 end
 
@@ -173,16 +173,16 @@ casez (bus.addr[BAW-1:0])
   'h24: bus.rdata <= cfg_cmp_val;
   'h28: bus.rdata <= cfg_edg_pos;
   'h2c: bus.rdata <= cfg_edg_neg;
-  // decimation
-  'h30: bus.rdata <= cfg_dec;
   // RLE configuration
-  'h34: bus.rdata <= cfg_rle;
+  'h30: bus.rdata <= cfg_rle;
   // stream counter status
   'h38: bus.rdata <= sts_cur;
   'h3c: bus.rdata <= sts_lst;
   // bitwise input polarity
   'h40: bus.rdata <= cfg_msk;
   'h44: bus.rdata <= cfg_pol;
+  // decimation
+  'h48: bus.rdata <= cfg_dec;
   default: bus.rdata <= 'x;
 endcase
 
