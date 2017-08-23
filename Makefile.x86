@@ -11,7 +11,7 @@ export REVISION
 export VERSION
 
 SUBMODULE_UBT = "redpitaya-v2016.4"
-SUBMODULE_LIN = "redpitaya-v2016.2-RP3"
+SUBMODULE_LIN = "redpitaya-v2016.2-RP4"
 SUBMODULE_APP = $(shell git submodule status Applications)
 
 define GREET_MSG
