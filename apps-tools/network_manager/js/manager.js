@@ -10,6 +10,7 @@
     WIZARD.isInReboot = false;
     WIZARD.connectedSSID = "";
     WIZARD.WIFIConnected = false;
+    WIZARD.accessPointCreated = false;
 
     WIZARD.checkDongle = function() {
         $.ajax({
@@ -21,7 +22,7 @@
                 if (msg.startsWith("OK")) {
                     var check = false;
 
-                    if ($('#wlan0_block_entry').css('display') == 'none')
+                    if ($('#wlan0_block_entry').css('display') === 'none')
                         check = true;
 
                     $('#wlan0_block_entry').show();
@@ -36,7 +37,7 @@
                     $('#wlan0_block_nodongle').show();
                 }
             })
-    }
+    };
 
     WIZARD.getScanResult = function(iwlistResult) {
 
@@ -65,19 +66,19 @@
             $('#wifi_list').html(htmlList);
 
         // Mark connected SSID
-        if (WIZARD.connectedSSID != "")
+        if (WIZARD.connectedSSID !== "")
             $('.btn-wifi-item[key="' + WIZARD.connectedSSID + '"]').css('color', 'red');
         else
             $('#client_connect').text('Connect');
 
         $('.btn-wifi-item').click(function() {
-            $('#ssid_input_client').val($(this).attr('key'))
-            if ($('#ssid_input_client').val() == WIZARD.connectedSSID)
+            $('#ssid_input_client').val($(this).attr('key'));
+            if ($('#ssid_input_client').val() === WIZARD.connectedSSID)
                 $('#client_connect').text('Disconnect');
             else
                 $('#client_connect').text('Connect');
         });
-    }
+    };
 
     WIZARD.startScan = function() {
         // Show loader gif
@@ -85,17 +86,17 @@
 
         $.ajax({
                 url: '/get_wnet_list',
-                type: 'GET',
+                type: 'GET'
             })
             .done(function(msg) {
                 WIZARD.getScanResult(msg);
             });
-    }
+    };
 
     WIZARD.getConnectedWlan = function() {
         $.ajax({
                 url: '/get_connected_wlan',
-                type: 'GET',
+                type: 'GET'
             })
             .success(function(msg) {
                 if (msg == undefined || msg == "\n" || msg == "") {
@@ -114,13 +115,13 @@
                     return;
                 }
                 var ssid = ssids[0].substr(6, ssids[0].length - 6);
-                if (ssid == "Red Pitaya AP")
+                if (ssid === "Red Pitaya AP")
                     return;
                 else {
                     WIZARD.connectedSSID = ssid;
 
                     // Mark connected SSID
-                    if (WIZARD.connectedSSID != "")
+                    if (WIZARD.connectedSSID !== "")
                         $('.btn-wifi-item[key="' + WIZARD.connectedSSID + '"]').css('color', 'red');
                     else {
                         $('#client_connect').text('Connect');
@@ -129,12 +130,12 @@
                     $("#wlan0_ssid_label").text(WIZARD.connectedSSID);
                 }
             });
-    }
+    };
 
     WIZARD.GetWlan0Status = function() {
         $.ajax({
             url: '/get_wlan0_status',
-            type: 'GET',
+            type: 'GET'
         }).success(function(msg) {
             var IPaddr = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
 
@@ -152,12 +153,12 @@
             $('#wlan0_address_label').text(IPaddr + " / " + Mask);
 
         }).done(function(msg) {});
-    }
+    };
 
     WIZARD.GetEth0Status = function() {
         $.ajax({
             url: '/get_eth0_status',
-            type: 'GET',
+            type: 'GET'
         }).success(function(msg) {
             var gateway = msg.split("gateway:")[1].split("\n")[0];
             var IPaddr = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
@@ -169,12 +170,12 @@
             $('#eth0_gateway_label').text(gateway);
 
         }).done(function(msg) {});
-    }
+    };
 
     WIZARD.checkMasterModeWifi = function() {
         $.ajax({
             url: '/get_ap_status',
-            type: 'GET',
+            type: 'GET'
         }).success(function(msg) {
             if (msg.includes("AP")) {
                 $('#access_point_create').text("Remove");
@@ -185,28 +186,28 @@
                 $('#wlan0_mode_label').text((WIZARD.WIFIConnected ? "Client" : "None"));
             }
         });
-    }
+    };
 
     WIZARD.ManualSetEth0 = function() {
         var IPaddr = $('#ip_address_and_mask_input').val();
         var Gateway = $("#gateway_input").val();
         var DNS = $("#dns_address_input").val();
-        var dhcp_flag = ($("#eth0_mode").val() == "#eth0_dhcp_mode") ? true : false;
+        var dhcp_flag = ($('#eth0_mode').val() === "#eth0_dhcp_mode") ? true : false;
 
         var params = [];
 
-        if (IPaddr != "")
+        if (IPaddr !== "")
             params.push('address=' + IPaddr);
-        if (Gateway != "")
+        if (Gateway !== "")
             params.push('gateway=' + Gateway);
-        if (DNS != "")
+        if (DNS !== "")
             params.push('dns=' + DNS);
-        if (dhcp_flag != false)
+        if (dhcp_flag !== false)
             params.push('dhcp=' + ((dhcp_flag) ? 'yes' : 'no'));
 
         var addr = '/set_eth0';
 
-        if (params.length != 0) {
+        if (params.length !== 0) {
             addr += '?';
             for (var i = 0; i < params.length; i++) {
                 addr += params[i];
@@ -217,24 +218,62 @@
 
         $.ajax({
             url: addr,
-            type: 'GET',
+            type: 'GET'
         });
         //setTimeout(window.open("http://" + $('#ip_address_and_mask_input').val().split("/")[0] + "/network_manager/", "_self"), 10000); // For update this page with new IP eth0 params
-    }
+    };
 
     WIZARD.startWaiting = function() {
         WIZARD.isInReboot = true;
         $('body').removeClass('loaded');
-    }
+    };
+
+    /**
+     * @name dropWirelessConnection
+     * @function
+     * @description Drop active wireless connection
+     */
+
+    WIZARD.dropWirelessConnection = function() {
+        $.ajax({
+            url: '/disconnect_wifi',
+            type: 'GET'
+        })
+            .always(function() {
+                WIZARD.connectedSSID = '';
+                console.log('wireless conn droppped');
+            });
+    };
+
+    /**
+     * @name stopWaiting
+     * @function
+     * @description Put away a time-wait animation
+     */
 
     WIZARD.stopWaiting = function() {
-	WIZARD.isInReboot = false;
-	$('body').addClass('loaded');
-    }
+        WIZARD.isInReboot = false;
+        $('body').addClass('loaded');
+    };
+
+    /**
+     * @name dropAP
+     * @function
+     * @description Drop access point
+     */
+
+    WIZARD.dropAP = function() {
+        $.ajax({
+            url: '/remove_ap',
+            type: 'GET'
+        })
+            .always(function() {
+            WIZARD.accessPointCreated = false;
+            console.log('AP dropped');
+        });
+    };
+
 }(window.WIZARD = window.WIZARD || {}, jQuery));
-
-
-
 
 checkSSID = function(ssid) {
     if (ssid.length > 0) {
@@ -259,9 +298,6 @@ checkPassword = function(pass) {
     return false;
 };
 
-
-
-
 // Page onload event handler
 $(document).ready(function() {
 
@@ -284,43 +320,61 @@ $(document).ready(function() {
     $('#refresh_list_btn').click(WIZARD.startScan);
 
     $('#ssid_input').keyup(function(event) {
-        if ($('#ssid_input_client').val() == WIZARD.connectedSSID)
+        if ($('#ssid_input_client').val() === WIZARD.connectedSSID)
             $('#client_connect').text('Disconnect');
         else
             $('#client_connect').text('Connect');
     });
 
+    /**
+     * @event onclick
+     */
+
     $('#client_connect').click(function(event) {
         var ssid = $('#ssid_input_client').val();
         var password = $('#password_input_client').val();
-        if (ssid == "") {
+        if (ssid === "") {
             // $('#ssid_input_client').effect("shake");
             return;
         }
-        if ($(this).text() == "Connect") {
-            WIZARD.startWaiting();
-            $.ajax({
-                url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
-                type: 'GET',
-            })
-        } else {
-	    let lastSSID = WIZARD.connectedSSID;
-	    WIZARD.startWaiting();
-            $.ajax({
-                    url: '/disconnect_wifi',
-                    type: 'GET',
-                })
-                .always(function() {
-                    WIZARD.connectedSSID = '';
-                });
-            $('#client_connect').text('Connect');
-            WIZARD.connectedSSID = "";
-            $('#wifi_list').html();
-	        $('.btn-wifi-item[key="' + lastSSID + '"]').css('color', '#cdcccc');
-	        setTimeout(function() {
-		        WIZARD.stopWaiting();
-	        }, 3000);
+
+        conn_btn = $('#client_connect');
+
+        // Drop access point, if needed
+        var timeout = 0;
+        if( WIZARD.accessPointCreated === true ) {
+            WIZARD.dropAP();
+            timeout = 3000;
         }
+
+        // If AP was active, we should wait few seconds before execute new request
+        setTimeout(function() {
+            if (conn_btn.text() === "Connect") {
+                WIZARD.startWaiting();
+                $.ajax({
+                    url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
+                    type: 'GET'
+                })
+                    .always(function() {
+                        WIZARD.stopWaiting();
+                    });
+            } else {
+                var lastSSID = WIZARD.connectedSSID;
+                WIZARD.startWaiting();
+                $.ajax({
+                    url: '/disconnect_wifi',
+                    type: 'GET'
+                })
+                    .always(function() {
+                        WIZARD.connectedSSID = '';
+                    });
+                conn_btn.text('Connect');
+                $('.btn-wifi-item[key="' + lastSSID + '"]').css('color', '#cdcccc');
+                setTimeout(function() {
+                    WIZARD.stopWaiting();
+                }, 3000);
+            }
+        }, timeout);
     });
 
     $('#wifi_mode').click(function() {
@@ -334,7 +388,7 @@ $(document).ready(function() {
     });
 
     $('#eth0_mode').change(function() {
-        if ($(this).val() == "#eth0_static_mode") {
+        if ($(this).val() === "#eth0_static_mode") {
             $($(this).val()).show();
         } else {
             $("#eth0_static_mode").hide();
@@ -347,33 +401,52 @@ $(document).ready(function() {
     });
 
     $('#access_point_create').click(function() {
-        if ($('#access_point_create').text() == "Create") {
+        if ($('#access_point_create').text() === "Create") {
         	$('#ssid_check_len').hide();
         	$('#pass_check_len').hide();
             $('#pass_check_sym').hide();
-            var ssid_check = checkSSID( $('#ssid_input').val() );
-            var pass_check = checkPassword( $('#password_input').val() );
+
+            var ssid_input = $('#ssid_input');
+            var pass_input = $('#password_input');
+
+            var ssid_check = checkSSID( ssid_input.val() );
+            var pass_check = checkPassword( pass_input.val() );
 
         	if (ssid_check && pass_check){
 	            WIZARD.startWaiting();
-	            $.ajax({
-	                url: '/wifi_create_point?ssid=' + $('#ssid_input').val() + '&password=' + $('#password_input').val() + '',
-	                type: 'GET',
-	            })
-		    .always(function(){
-			WIZARD.stopWaiting();
-		    })
-		    .success(function(){
-			$('#ssid_input').val("");
-			$('#password_input').val("");
-		    });
+	            // Drop wireless connection if needed
+                var timeout = 0;
+	            if( WIZARD.WIFIConnected === true ) {
+	                var ssid = WIZARD.connectedSSID;
+	                WIZARD.dropWirelessConnection();
+                    $('.btn-wifi-item[key="' + ssid + '"]').css('color', '#cdcccc');
+                    $('#client_connect').text('Connect');
+                    // If wireless connection was active, we should wait few seconds before execute next request
+                    timeout = 3000;
+                    WIZARD.WIFIConnected = false;
+                }
+                // Create access point
+                setTimeout(function() {
+                    console.log('try to connect...');
+                    $.ajax({
+                        url: '/wifi_create_point?ssid=' + ssid_input.val() + '&password=' + pass_input.val() + '',
+                        type: 'GET'
+                    })
+                        .always(function() {
+                            WIZARD.stopWaiting();
+                            console.log('AP not created!');
+                        })
+                        .success(function() {
+                            $('#wlan0_ssid_label').val(ssid_input.val());
+                            //TODO: is it necessary to fill filed for IP address in AP-mode?
+                            ssid_input.val('');
+                            pass_input.val('');
+                            WIZARD.accessPointCreated = true;
+                            console.log('AP created');
+                        });
+                }, timeout );
         	}
-        } else {
-            $.ajax({
-                url: '/remove_ap',
-                type: 'GET',
-            });
-        }
+        } else WIZARD.dropAP();
     });
 
     $('#clear_entry').click(function() {
