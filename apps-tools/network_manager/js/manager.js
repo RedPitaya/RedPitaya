@@ -241,7 +241,6 @@
         })
             .always(function() {
                 WIZARD.connectedSSID = '';
-                console.log('wireless conn droppped');
             });
     };
 
@@ -269,7 +268,6 @@
         })
             .always(function() {
             WIZARD.accessPointCreated = false;
-            console.log('AP dropped');
         });
     };
 
@@ -341,40 +339,35 @@ $(document).ready(function() {
         conn_btn = $('#client_connect');
 
         // Drop access point, if needed
-        var timeout = 0;
         if( WIZARD.accessPointCreated === true ) {
             WIZARD.dropAP();
-            timeout = 3000;
         }
 
-        // If AP was active, we should wait few seconds before execute new request
-        setTimeout(function() {
-            if (conn_btn.text() === "Connect") {
-                WIZARD.startWaiting();
-                $.ajax({
-                    url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
-                    type: 'GET'
-                })
-                    .always(function() {
-                        WIZARD.stopWaiting();
-                    });
-            } else {
-                var lastSSID = WIZARD.connectedSSID;
-                WIZARD.startWaiting();
-                $.ajax({
-                    url: '/disconnect_wifi',
-                    type: 'GET'
-                })
-                    .always(function() {
-                        WIZARD.connectedSSID = '';
-                    });
-                conn_btn.text('Connect');
-                $('.btn-wifi-item[key="' + lastSSID + '"]').css('color', '#cdcccc');
-                setTimeout(function() {
+        if (conn_btn.text() === "Connect") {
+            WIZARD.startWaiting();
+            $.ajax({
+                url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
+                type: 'GET'
+            })
+                .always(function() {
                     WIZARD.stopWaiting();
-                }, 3000);
-            }
-        }, timeout);
+                });
+        } else {
+            var lastSSID = WIZARD.connectedSSID;
+            WIZARD.startWaiting();
+            $.ajax({
+                url: '/disconnect_wifi',
+                type: 'GET'
+            })
+                .always(function() {
+                    WIZARD.connectedSSID = '';
+                });
+            conn_btn.text('Connect');
+            $('.btn-wifi-item[key="' + lastSSID + '"]').css('color', '#cdcccc');
+            setTimeout(function() {
+                WIZARD.stopWaiting();
+            }, 3000);
+        }
     });
 
     $('#wifi_mode').click(function() {
@@ -415,36 +408,28 @@ $(document).ready(function() {
         	if (ssid_check && pass_check){
 	            WIZARD.startWaiting();
 	            // Drop wireless connection if needed
-                var timeout = 0;
 	            if( WIZARD.WIFIConnected === true ) {
 	                var ssid = WIZARD.connectedSSID;
 	                WIZARD.dropWirelessConnection();
                     $('.btn-wifi-item[key="' + ssid + '"]').css('color', '#cdcccc');
                     $('#client_connect').text('Connect');
-                    // If wireless connection was active, we should wait few seconds before execute next request
-                    timeout = 3000;
                     WIZARD.WIFIConnected = false;
                 }
                 // Create access point
-                setTimeout(function() {
-                    console.log('try to connect...');
-                    $.ajax({
-                        url: '/wifi_create_point?ssid=' + ssid_input.val() + '&password=' + pass_input.val() + '',
-                        type: 'GET'
+                $.ajax({
+                    url: '/wifi_create_point?ssid=' + ssid_input.val() + '&password=' + pass_input.val() + '',
+                    type: 'GET'
+                })
+                    .always(function() {
+                        WIZARD.stopWaiting();
                     })
-                        .always(function() {
-                            WIZARD.stopWaiting();
-                            console.log('AP not created!');
-                        })
-                        .success(function() {
-                            $('#wlan0_ssid_label').val(ssid_input.val());
-                            //TODO: is it necessary to fill filed for IP address in AP-mode?
-                            ssid_input.val('');
-                            pass_input.val('');
-                            WIZARD.accessPointCreated = true;
-                            console.log('AP created');
-                        });
-                }, timeout );
+                    .success(function() {
+                        $('#wlan0_ssid_label').val(ssid_input.val());
+                        //TODO: is it necessary to fill filed for IP address in AP-mode?
+                        ssid_input.val('');
+                        pass_input.val('');
+                        WIZARD.accessPointCreated = true;
+                    });
         	}
         } else WIZARD.dropAP();
     });
