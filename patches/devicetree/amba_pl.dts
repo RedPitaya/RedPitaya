@@ -2,7 +2,7 @@
 /plugin/;
 /{
 	fragment@1 {
-	target = <&axi_dma_2>;
+		target = <&axi_dma_2>;
 		__overlay__ {
 			status = "okay";
 		};
@@ -59,12 +59,13 @@
 	fragment@3{
 		target = <&amba_pl>;
 		__overlay__ {
-		rprx_2: rprx@2 {
-			compatible ="redpitaya,rprx";
-			dmas = <&axi_dma_2 0
-				&axi_dma_2 1>;
-			dma-names = "axidma0", "axidma1";
-			memory-region = <&rprx_reserverd>;
+			rprx_2: rprx@2 {
+				compatible ="redpitaya,rprx";
+				dmas = <&axi_dma_2 0
+					&axi_dma_2 1>;
+				dma-names = "axidma0", "axidma1";
+				memory-region = <&rprx_reserverd>;
+			};
 		};
 	};
 };
