@@ -12,10 +12,10 @@
     UPD.ecosystems = [];
     UPD.ecosystems_sizes = [];
     UPD.chosen_eco = -1;
-	UPD.isApply = false;
+    UPD.isApply = false;
 
     UPD.currentVer = undefined;
-	UPD.type = 'stemlab';
+    UPD.type = 'stemlab';
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -58,23 +58,23 @@
     }
 
     UPD.checkConnection = function() {
-		OnlineChecker.checkAsync(function() {
+        OnlineChecker.checkAsync(function() {
             if (OnlineChecker.isOnline()) {
                 UPD.nextStep();
             } else {
                 $('#step_1').find('.step_icon').find('img').attr('src', 'img/fail.png');
-				$('#step_1').find('.error_msg').show();				
-			}
+                $('#step_1').find('.error_msg').show();
+            }
         });
     }
 
     UPD.checkVersion = function() {
         setTimeout(function() {
             $.ajax({
-                    url: '/get_info',
-                    type: 'GET',
-                    timeout: 1500
-                })
+                url: '/get_info',
+                type: 'GET',
+                timeout: 1500
+            })
                 .done(function(msg) {
                     UPD.currentVer = msg['version'];
                     $('#step_2_version').text(msg['version']);
@@ -91,9 +91,9 @@
         $('#select_ver').hide();
         setTimeout(function() {
             $.ajax({
-                    url: '/update_list?type=' + type,
-                    type: 'GET',
-                })
+                url: '/update_list?type=' + type,
+                type: 'GET',
+            })
                 .done(function(msg) {
                     var resp = msg;
                     var arr = resp.split('\n');
@@ -126,7 +126,7 @@
                         return;
                     }
                     var list = [];
-					UPD.ecosystems = [];
+                    UPD.ecosystems = [];
                     UPD.ecosystems_sizes = [];
                     // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
                     // example - version as array entry: 12933621
@@ -146,11 +146,11 @@
                         return;
                     } else {
                         $('#step_' + UPD.currentStep).find('.error_msg').hide();
-					}
+                    }
                     list.sort();
                     $('#ecosystem_ver').empty();
-                    let es_distro_size = 0;
-                    let es_distro_vers = { vers_as_str:'', build:0 };
+                    var es_distro_size = 0;
+                    var es_distro_vers = { vers_as_str:'', build:0, ver_full:'' };
                     // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
                     for (var i = list.length - 1; i >= 0; i--) {
                         var item = list[i].split('-');
@@ -162,18 +162,19 @@
                             es_distro_vers.vers_as_str = ver;
                             es_distro_vers.build = build;
                             es_distro_size = size;
+                            es_distro_vers.ver_full = item.slice(0, 4).join('-');
                         }
                     }
-                    let distro_desc = es_distro_vers.vers_as_str + '.' + es_distro_vers.build + '(' + es_distro_size + ')';
+                    var distro_desc = es_distro_vers.vers_as_str + '.' + es_distro_vers.build + '(' + es_distro_size + ')';
                     $('#distro_dsc').text(distro_desc);
                     $('#ecosystem_ver').removeAttr('disabled');
                     $('#select_ver').show();
                     $('#apply').click(function(event) {
-						if (UPD.isApply)
-							return; // FIXME
+                        if (UPD.isApply)
+                            return; // FIXME
                         $('.select_ver').hide();
-						UPD.isApply = true;
-                        var val = $('#ecosystem_ver').val();
+                        UPD.isApply = true;
+                        var val = es_distro_vers.ver_full;
                         UPD.chosen_eco = UPD.ecosystems.indexOf(val);
                         if (UPD.chosen_eco != -1) {
                             UPD.nextStep();
@@ -182,16 +183,16 @@
                             $('#ecosystem_ver').attr('disabled', 'disabled');
                         }
                     });
-					$('#ecosystem_ver').change();
+                    $('#ecosystem_ver').change();
                 });
         }, 500);
     }
 
     UPD.downloadEcosystem = function() {
-		if (!UPD.isApply) {
-        	--UPD.currentStep; // FIXME
-			return;
-		}
+        if (!UPD.isApply) {
+            --UPD.currentStep; // FIXME
+            return;
+        }
         setTimeout(function() {
             $.ajax({
                 url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
@@ -232,9 +233,9 @@
     UPD.applyChanges = function() {
         setTimeout(function() {
             $.ajax({
-                    url: '/update_extract',
-                    type: 'GET',
-                })
+                url: '/update_extract',
+                type: 'GET',
+            })
                 .done(function(msg) {
                     var text = msg;
                     if (text.startsWith("OK"))
@@ -253,17 +254,17 @@
         setTimeout(function() {
             $('#step_' + UPD.currentStep).find('.warn_msg').show();
             $.ajax({
-                    url: '/update_ecosystem',
-                    type: 'GET',
-                })
+                url: '/update_ecosystem',
+                type: 'GET',
+            })
                 .always(function() {
                     setTimeout(function (){
                         var prepare_check = setInterval(function() {
                             $.ajax({
-                                    url: '/get_info',
-                                    type: 'GET',
-                                    timeout: 1500
-                                })
+                                url: '/get_info',
+                                type: 'GET',
+                                timeout: 1500
+                            })
                                 .done(function(msg) {
                                     if (msg != undefined && msg['version'] !== undefined) {
                                         var eco = UPD.ecosystems[UPD.chosen_eco];
@@ -297,15 +298,15 @@
 }(window.UPD = window.UPD || {}, jQuery));
 
 UPD.getChangelog = function(ecosystem) {
-	$.ajax({
-		url: '/update_changelog?id=' + ecosystem,
-		type: 'GET',
-	})
-	.done(function(msg) {
-		if (msg.length < 3)
-			msg = "Changelog is empty";
-		$('#changelog_text').html(msg);
-	})
+    $.ajax({
+        url: '/update_changelog?id=' + ecosystem,
+        type: 'GET',
+    })
+        .done(function(msg) {
+            if (msg.length < 3)
+                msg = "Changelog is empty";
+            $('#changelog_text').html(msg);
+        })
 }
 
 function checkDev() {
@@ -313,8 +314,8 @@ function checkDev() {
         url: '/updater/dev',
         type: 'GET',
     }).always(function(msg) {
-		if (msg[0] == 'd')
-			$('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
+        if (msg[0] == 'd')
+            $('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
     });
 }
 
@@ -324,12 +325,12 @@ $(document).ready(function() {
     // Init help
     Help.init(helpListUpdater);
     Help.setState("idle");
-    
+
     UPD.startStep(1);
     $('body').addClass('loaded');
-    
+
     // TODO: is it needed to allow download dev-distros?
-	// checkDev();
+    // checkDev();
 
     $('#ecosystem_ver').change(function() {
         $('#step_' + UPD.currentStep).find('.warn_msg').hide();
@@ -352,7 +353,7 @@ $(document).ready(function() {
         }
 
     });
-	$('#ecosystem_type').change(function(){
+    $('#ecosystem_type').change(function(){
         /*
         Reason: exist one branch with fixed name for download distros with latest OS version
 		if ($(this).val() == '1') {
@@ -370,11 +371,11 @@ $(document).ready(function() {
 		}
         */
         UPD.checkUpdates(UPD.type);
-	});
+    });
 
-	$('#ecosystem_ver').change(function() {
-		let cur = $('#ecosystem_ver option:selected').text().split(' ')[0];
-		UPD.getChangelog(UPD.type + '/' + cur + '.changelog');
-	});
+    $('#ecosystem_ver').change(function() {
+        var cur = $('#ecosystem_ver option:selected').text().split(' ')[0];
+        UPD.getChangelog(UPD.type + '/' + cur + '.changelog');
+    });
 })
 
