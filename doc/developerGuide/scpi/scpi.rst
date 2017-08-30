@@ -71,7 +71,7 @@ After cloning the Git repository and changing into the directory do:
 
 .. code-block:: shell-session
 
-   meson builddir --prefix /opt/redpitaya
+   meson builddir --prefix /opt/redpitaya --buildtype release
    cd builddir
    ninja
 
