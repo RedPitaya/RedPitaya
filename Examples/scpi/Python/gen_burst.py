@@ -38,6 +38,7 @@ rp.write(":SOURce1:BURSt:DATA:REPetitions 1")
 rp.write(":SOURce1:BURSt:DATA:LENgth "   + str(1 * buffer_size // 2))
 rp.write(":SOURce1:BURSt:PERiod:LENgth " + str(3 * buffer_size // 4))
 rp.write(":SOURce1:BURSt:PERiod:NUMber 4")
+#rp.write(":SOURce1:BURSt:PERiod:NUMber INFinity")
 
 # reset and start state machine
 rp.write(":SOURce1:RESET")
