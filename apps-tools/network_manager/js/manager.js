@@ -11,6 +11,7 @@
     WIZARD.connectedSSID = "";
     WIZARD.WIFIConnected = false;
     WIZARD.accessPointCreated = false;
+    WIZARD.apSSID = '';
 
     WIZARD.checkDongle = function() {
         $.ajax({
@@ -101,7 +102,7 @@
             .success(function(msg) {
                 if (msg == undefined || msg == "\n" || msg == "") {
                     WIZARD.WIFIConnected = false;
-                    $("#wlan0_ssid_label").text("None");
+                    if(!WIZARD.accessPointCreated) $("#wlan0_ssid_label").text("None");
                     return;
                 }
 
@@ -111,12 +112,15 @@
 
                 var ssids = msg.match(/SSID:(.*)/g);
                 if (ssids == null) {
-                    $("#wlan0_ssid_label").text("None");
+                    if(!WIZARD.accessPointCreated) {
+                        $("#wlan0_ssid_label").text("None");
+                    }
                     return;
                 }
                 var ssid = ssids[0].substr(6, ssids[0].length - 6);
-                if (ssid === "Red Pitaya AP")
+                if (ssid === "Red Pitaya AP") {
                     return;
+                }
                 else {
                     WIZARD.connectedSSID = ssid;
 
@@ -140,7 +144,7 @@
             var IPaddr = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
 
             if (IPaddr == null) {
-                if (!WIZARD.WIFIConnected){
+                if (!WIZARD.WIFIConnected && !WIZARD.accessPointCreated){
                     $('#wlan0_address_label').text("None");
                 }
                 return;
@@ -180,6 +184,7 @@
             if (msg.includes("AP")) {
                 $('#access_point_create').text("Remove");
                 $('#wlan0_mode_label').text("Access Point");
+                // $('#wlan0_ssid_label').text(WIZARD.apSSID);
                 // $('#wlan0_address_label').text("192.168.128.1");
             } else {
                 $('#access_point_create').text("Create");
@@ -268,7 +273,25 @@
         })
             .always(function() {
             WIZARD.accessPointCreated = false;
+            WIZARD.apSSID = '';
         });
+    };
+
+    /**
+     * @name getAccessPointSSID
+     * @description Restore AP SSID from iw output
+     */
+
+    WIZARD.getAccessPointSSID = function() {
+        var ssid = null;
+        $.ajax({
+            url: '/get_ap_ssid',
+            type: 'GET'
+        })
+            .success(function(msg) {
+                ssid = msg;
+            });
+        return ssid;
     };
 
 }(window.WIZARD = window.WIZARD || {}, jQuery));
@@ -302,7 +325,15 @@ $(document).ready(function() {
      // Init help
     Help.init(helpListNM);
     Help.setState("idle");
-    
+
+    var ap_ssid = WIZARD.getAccessPointSSID();
+    if(ap_ssid) {
+        real_ssid = ap_ssid.match(/[^ ]+(?=$)/);
+        WIZARD.accessPointCreated = true;
+        WIZARD.apSSID = real_ssid;
+        $('#wlan0_ssid_label').text(real_ssid);
+    }
+
     WIZARD.startScan();
     // setInterval(WIZARD.startScan, 2500);
     setInterval(WIZARD.GetEth0Status, 1000);
@@ -424,14 +455,16 @@ $(document).ready(function() {
                         WIZARD.stopWaiting();
                     })
                     .success(function() {
-                        $('#wlan0_ssid_label').val(ssid_input.val());
-                        //TODO: is it necessary to fill filed for IP address in AP-mode?
+                        WIZARD.accessPointCreated = true;
+                        WIZARD.apSSID = ssid_input.val();
                         ssid_input.val('');
                         pass_input.val('');
-                        WIZARD.accessPointCreated = true;
                     });
         	}
-        } else WIZARD.dropAP();
+        } else {
+            WIZARD.dropAP();
+            $('#wlan0_address_label').text('');
+        }
     });
 
     $('#clear_entry').click(function() {
