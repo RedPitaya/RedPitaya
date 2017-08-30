@@ -31,8 +31,6 @@ rp.write(":SOURce1:VOLTage:IMMediate:OFFSet 0")
 
 # specify peridic mode, sinusoidal waveform
 rp.write(":SOURce1:MODE BURSt")
-rp.write(":SOURce1:BURSt:MODE FINite")
-#rp.write(":SOURce1:BURSt:MODE INFinite")
 rp.write(":SOURce1:FUNCtion:SHAPe SINusoid")
 
 # burst half the buffer with then idle for quarter buffer, repeat 4 times
