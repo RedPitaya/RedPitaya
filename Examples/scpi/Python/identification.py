@@ -28,4 +28,10 @@ print("Red Pitaya SCPI server ID = " + rp.query("*IDN?"))
 # read SCPI standard version
 print("SCPI standard version = " + rp.query("SYSTem:VERSion?"))
 
+# HWID
+print("Red Pitaya HWID: HWID  = " + rp.query("HWIDentification:HWID?"))
+print("Red Pitaya HWID: EFUSE = " + rp.query("HWIDentification:EFUSE?"))
+print("Red Pitaya HWID: DNA   = " + rp.query("HWIDentification:DNA?"))
+print("Red Pitaya HWID: GITH  = " + rp.query("HWIDentification:GITH?"))
+
 rp.close()
