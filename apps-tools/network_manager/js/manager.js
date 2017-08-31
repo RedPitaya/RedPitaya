@@ -282,16 +282,16 @@
      * @description Restore AP SSID from iw output
      */
 
-    WIZARD.getAccessPointSSID = function() {
-        var ssid = null;
+    WIZARD.restoreAPSSIDIfPossible = function() {
         $.ajax({
             url: '/get_ap_ssid',
             type: 'GET'
         })
             .success(function(msg) {
-                ssid = msg;
+                WIZARD.apSSID = msg.match(/[^ ]+(?=$)/);
+                WIZARD.accessPointCreated = true;
+                $('#wlan0_ssid_label').text(WIZARD.apSSID);
             });
-        return ssid;
     };
 
 }(window.WIZARD = window.WIZARD || {}, jQuery));
@@ -326,14 +326,8 @@ $(document).ready(function() {
     Help.init(helpListNM);
     Help.setState("idle");
 
-    var ap_ssid = WIZARD.getAccessPointSSID();
-    if(ap_ssid) {
-        real_ssid = ap_ssid.match(/[^ ]+(?=$)/);
-        WIZARD.accessPointCreated = true;
-        WIZARD.apSSID = real_ssid;
-        $('#wlan0_ssid_label').text(real_ssid);
-    }
 
+    WIZARD.restoreAPSSIDIfPossible();
     WIZARD.startScan();
     // setInterval(WIZARD.startScan, 2500);
     setInterval(WIZARD.GetEth0Status, 1000);
