@@ -216,6 +216,11 @@ still available over the WiFi network i.e WiFi IP address.
 .. note::
     
    WiFi networks are generally not robust and the full performances of the Red Pitaya application can be affected. 
+   
+.. note::
+
+    When using Raspberry Pi WiFi dongle, an issue of the dongle not being detected can arise. To mitigate, detatch 
+    the power cable from Red Pitaya and wait for about a minute before powering up the Red Pitaya again.
         
 =================
 Access Point mode
