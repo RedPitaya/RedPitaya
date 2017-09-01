@@ -41,19 +41,15 @@ rp.write(":ACQuire1:EVENT:TRIGger:SOURce NONE")
 # synchronization source is the default, which is the module itself
 # reset and start state machine
 rp.write(":ACQuire1:RESET")
-#rp.write(":ACQuire1:START")
-#rp.write(":ACQuire1:TRIGger")
-rp.write(":ACQuire1:STARTTRIGger")
+rp.write(":ACQuire1:START")
+rp.write(":ACQuire1:TRIGger")
+#rp.write(":ACQuire1:STARTTRIGger")
 
 # wait for data
 while (int(rp.query(":ACQuire1:RUN?"))):
     #pass
     print("OSC RUN status = " + rp.query(":ACQuire1:RUN?"))
 print ('triggered')
-
-print("OSC ACQ pre  status = " + rp.query(":ACQuire1:SAMPle:PRE:STATus?"))
-print("OSC ACQ post status = " + rp.query(":ACQuire1:SAMPle:POST:STATus?"))
-rp.write(":ACQuire1:PRINT")
 
 # read back table data
 if args.bin:
