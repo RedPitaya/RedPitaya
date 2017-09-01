@@ -1,4 +1,4 @@
-.. ecosystem
+.. _ecosystem:
 
 ###############
 Ecosystem Guide

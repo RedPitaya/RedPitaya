@@ -1,4 +1,4 @@
-.. os
+.. _os:
 
 #############
 Red Pitaya OS
@@ -64,7 +64,7 @@ Run the next command inside the project root directory. Root or ``sudo`` privile
    # exit
 
 :source:`OS/debian/image.sh` will create an SD card image with a name containing the current date and time.
-Two partitions are created a 128MB FAT32 partition and a alightly less then 4GB Ext4 partition.
+Two partitions are created a 128MB FAT32 partition and a slightly less then 4GB Ext4 partition.
 
 |image.sh|_ will call |ubuntu.sh|_ which installs the base system and some additional packages.
 It also configures APT (Debian packaging system), locales, hostname, timezone,
