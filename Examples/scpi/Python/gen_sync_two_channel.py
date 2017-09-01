@@ -40,8 +40,8 @@ rp.write(":SOURce1:PHASe:ADJust 0")
 rp.write(":SOURce2:PHASe:ADJust 90")
 
 # both generator should be synchronously driven
-rp.write(":SOURce1:EVENT:SYNChronization:SOURce GEN0")
-rp.write(":SOURce2:EVENT:SYNChronization:SOURce GEN0")
+rp.write(":SOURce1:EVENT:SYNChronization:SOURce GEN1")
+rp.write(":SOURce2:EVENT:SYNChronization:SOURce GEN1")
 
 # reset and start state machine
 rp.write(":SOURce:RESET")
