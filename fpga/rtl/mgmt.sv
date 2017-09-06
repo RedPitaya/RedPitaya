@@ -52,7 +52,7 @@ casez (bus.addr[BAW-1:0])
   // GPIO mode
   'h00: bus.rdata <= cfg_iom;
   // stream multiplexers
-  'h00: bus.rdata <= cfg_loop;
+  'h04: bus.rdata <= cfg_loop;
   // default
   default: bus.rdata <= 'x;
 endcase
