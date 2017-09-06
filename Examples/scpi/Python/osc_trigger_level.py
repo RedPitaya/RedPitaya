@@ -32,8 +32,9 @@ rp.write(":ACQuire1:INPut:DECimation 1")
 rp.write(":ACQuire1:SAMPle:PRE "  + str(buffer_size//4 * 1))
 rp.write(":ACQuire1:SAMPle:POST " + str(buffer_size//4 * 3))
 
-# trigger level
+# trigger level and slope
 rp.write(":ACQuire1:TRIGger:LEVel 0.4, 0.5")
+rp.write(":ACQuire1:TRIGger:SLOPe POSitive")
 
 # define event synchronization source
 rp.write(":ACQuire1:EVENT:SYNChronization:SOURce OSC1")

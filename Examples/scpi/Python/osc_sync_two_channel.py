@@ -41,9 +41,11 @@ for dev in range(2):
     # use OSC1 as hardware trigger source
     rp.write(":ACQuire1:EVENT:TRIGger:SOURce OSC1")
 
-# trigger level
+# trigger level and slope
 rp.write(":ACQuire1:TRIGger:LEVel  0.4,  0.5")
+rp.write(":ACQuire1:TRIGger:SLOPe POSitive")
 rp.write(":ACQuire2:TRIGger:LEVel -0.2, -0.15")
+rp.write(":ACQuire2:TRIGger:SLOPe NEGative")
 
 # synchronization source is the default, which is the module itself
 # reset and start state machine
