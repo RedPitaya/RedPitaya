@@ -29,7 +29,7 @@ buffer_size = 2**14
 rp.write(":SOURce1:VOLTage:IMMediate:AMPlitude 1")
 rp.write(":SOURce1:VOLTage:IMMediate:OFFSet 0")
 
-# specify peridic mode, sinusoidal waveform
+# specify burst mode, sinusoidal waveform
 rp.write(":SOURce1:MODE BURSt")
 rp.write(":SOURce1:FUNCtion:SHAPe SINusoid")
 
