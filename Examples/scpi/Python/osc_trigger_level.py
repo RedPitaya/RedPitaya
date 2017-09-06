@@ -37,7 +37,7 @@ rp.write(":ACQuire1:TRIGger:LEVel 0.4, 0.5")
 
 # define event synchronization source
 rp.write(":ACQuire1:EVENT:SYNChronization:SOURce OSC1")
-# disable hardware trigger sources
+# use OSC1 as hardware trigger source
 rp.write(":ACQuire1:EVENT:TRIGger:SOURce OSC1")
 
 # synchronization source is the default, which is the module itself
