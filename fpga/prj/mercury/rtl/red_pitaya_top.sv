@@ -77,13 +77,6 @@ localparam type DTO = logic   signed [16-1:0];  // acquire
 localparam type DTL = logic unsigned [16-1:0];  // logic (generator/analyzer)
 localparam type DTLG = struct packed {DTL e, o;};
 
-//typedef struct packed {
-//  DTL e;
-//  DTL o;
-//} dtlg_t;
-
-//localparam type DTLG = dtlg_t;
-
 // GPIO parameter
 localparam int unsigned GDW = 8+8;
 
@@ -229,7 +222,7 @@ top_pkg::irq_t irq;
 
 // system bus
 sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
-sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [32-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
@@ -283,23 +276,24 @@ red_pitaya_ps ps (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// system bus decoder & multiplexer (it breaks memory addresses into 16 regions)
+// system bus decoder & multiplexer
+// it breaks memory addresses into 32 regions of 64kB each
 ////////////////////////////////////////////////////////////////////////////////
 
 sys_bus_interconnect #(
-  .SN (16),
+  .SN (32),
   .SW (16)
 ) sys_bus_interconnect (
   .bus_m (ps_sys),
   .bus_s (sys)
 );
 
-//// silence unused busses
-//generate
-//for (genvar i=2; i<3; i++) begin: for_sys_2
-//  sys_bus_stub sys_bus_stub_2 (sys[i]);
-//end: for_sys_2
-//endgenerate
+// silence unused busses
+generate
+for (genvar i=16; i<32; i++) begin: for_sys_2
+  sys_bus_stub sys_bus_stub_2 (sys[i]);
+end: for_sys_2
+endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // identification
