@@ -12,9 +12,9 @@ module osc_trg #(
   // control
   input  logic          ctl_rst,  // synchronous reset
   // configuration
+  input  DT             cfg_low,  // negative level
+  input  DT             cfg_upp,  // positive level
   input  logic          cfg_edg,  // edge select (0-rising, 1-falling)
-  input  DT             cfg_neg,  // negative level
-  input  DT             cfg_pos,  // positive level
   // output triggers
   output logic          sts_trg,
   // stream
@@ -25,9 +25,9 @@ module osc_trg #(
 // position of the sign bit
 localparam int unsigned SGN = $bits(DT);
 
-// subtraction from pos/neg levels
-logic signed [SGN:0] sub_pos;
-logic signed [SGN:0] sub_neg;
+// subtraction from lower/upper levels
+logic signed [SGN:0] sub_low;
+logic signed [SGN:0] sub_upp;
 
 // level status signal and registered version
 logic sts_lvl, sts_reg;
@@ -42,8 +42,8 @@ axi4_stream_if #(.DN (DN), .DT (DT)) sts (.ACLK (sti.ACLK), .ARESETn (sti.ARESET
 // subtraction
 always_ff @(posedge sti.ACLK)
 if (sti.transf) begin
-  sub_neg <= sti.TDATA[0] - cfg_neg;
-  sub_pos <= cfg_pos - sti.TDATA[0];
+  sub_low <= sti.TDATA[0] - cfg_low;
+  sub_upp <= cfg_upp - sti.TDATA[0];
 end
 
 // add to the stream the delay caused by subtraction stage
@@ -53,8 +53,8 @@ axi4_stream_reg reg_sub (.sti (sti), .sto (sts));
 // trigger stage
 ////////////////////////////////////////////////////////////////////////////////
 
-// toggle pos/neg edge, if pos/neg level is passed
-assign sts_lvl = sts_reg ^ ((cfg_edg ^ sts_reg) ? sub_neg[SGN] : sub_pos[SGN]);
+// toggle lower/upper edge, if lower/upper level is passed
+assign sts_lvl = sts_reg ^ ((cfg_edg ^ sts_reg) ? sub_low[SGN] : sub_upp[SGN]);
 
 always_ff @(posedge sts.ACLK)
 if (~sts.ARESETn) begin
