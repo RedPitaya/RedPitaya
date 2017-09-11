@@ -29,26 +29,49 @@ class test ():
     tests = 0
     error = 0
 
-    def check_query (self, name: str, query: str, value: str = ""):
+    def check_query (self, name: str, query: str, read: str = "", expect = True):
         # register test
         self.tests = self.tests + 1
         # send query
-        response = rp.query(query)
+        value = rp.query(query)
         # check query response
-        if (response != value):
+        if (value != read):
+            print ("Test \"" + name + "\" ERROR:")
+            print ("    expected: " + read)
+            print ("    response: " + value)
             self.error = self.error + 1
-            print ("Test ERROR: " + name + ":")
-            print ("    expected: " + value)
-            print ("    response: " + response)
         # check SCPI error status
+        self.check_errors(name)
 
-    def check_write_read (self, name: str, write: str, read: str, value: str = ""):
-        pass
+    def check_write_query (self, name: str, write: str, query: str, read: str = "", expect = True):
+        # register test
+        self.tests = self.tests + 1
+        # send write/read
+        rp.write(write)
+        value = rp.query(query)
+        # check read response
+        if (value != read):
+            print ("Test \"" + name + "\" value ERROR:")
+            print ("    expected: " + read)
+            print ("    response: " + value)
+            self.error = self.error + 1
+        # check SCPI error status
+        self.check_errors(name)
+
+    def check_errors (self, name: str):
+        err_cnt = int(rp.query(":SYSTem:ERRor:COUNt?"))
+        if (err_cnt):
+            print ("Test \"" + name + "\" SCPI ERROR (cnt = " + str(err_cnt) + "):")
+        for err in range(err_cnt):
+            value = rp.query(":SYSTem:ERRor:NEXT?")
+            print ("    SCPI ERR " + str(err) + ": " + value)
+            self.error = self.error + 1
 
     def report (self):
         print ("REPORT:")
         print ("    PASSED: " + str(self.tests - self.error))
         print ("    FAILED: " + str(             self.error))
+
 t = test()
 
 ###############################################################################
@@ -68,6 +91,22 @@ t.check_query("HWID",  "HWIDentification:HWID?",  '#H1')
 t.check_query("EFUSE", "HWIDentification:EFUSE?", '#H0')
 t.check_query("DNA",   "HWIDentification:DNA?",   '#H11C0DCE4B59085C')
 t.check_query("GITH",  "HWIDentification:GITH?",  '"3c08fd5a94977f8e0118d002520168ef650fa777"')
+
+###############################################################################
+# MGMT
+###############################################################################
+
+values = [["#H0", True], ["#HFFFF", True], ["#H1FFFF", False]]
+for idx, val in enumerate(values):
+    t.check_write_query("gpio_mode " + str(idx), ":MANAGement:GPIO:MODE " + val[0], ":MANAGement:GPIO:MODE?", val[0], val[1])
+
+#    // Management
+#    {.pattern = ":MANAGement:GPIO[:MODE]",                   .callback = rpscpi_mgmt_set_gpio_mode,              },
+#    {.pattern = ":MANAGement:GPIO[:MODE]?",                  .callback = rpscpi_mgmt_get_gpio_mode,              },
+#    {.pattern = ":MANAGement:LOOP",                          .callback = rpscpi_mgmt_set_loop,                   },
+#    {.pattern = ":MANAGement:LOOP?",                         .callback = rpscpi_mgmt_get_loop,                   },
+#    {.pattern = ":MANAGement:PRINT",                         .callback = rpscpi_mgmt_print,                      },  // debug command
+
 
 ###############################################################################
 # report
