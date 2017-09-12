@@ -79,7 +79,7 @@ You will need the following to build the Red Pitaya components:
       sudo pip3 install meson
       sudo apt-get install ninja-build
 
-3. Xilinx `Vivado 2017.1 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
+3. Xilinx `Vivado 2017.2 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
 

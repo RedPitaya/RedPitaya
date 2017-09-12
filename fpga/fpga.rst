@@ -14,7 +14,7 @@ Install libraries:
 
    # apt-get install libxft2 libxft2:i386 lib32ncurses5
 
-2. *Xilinx Vivado 2017.1 (including SDK)* 
+2. *Xilinx Vivado 2017.2 (including SDK)* 
 
 *******************
 Directory structure
@@ -25,7 +25,7 @@ Common code for all projects is placed directly into the ``fpga`` directory. Com
 Project specific code is placed inside the ``fpga/prj/name/`` directories and is similarly organized as common code.
 
 .. |ug895| replace:: Vivado System-Level Design Entry
-.. _ug895: https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_1/ug895-vivado-system-level-design-entry.pdf
+.. _ug895: https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_2/ug895-vivado-system-level-design-entry.pdf
 
 .. tabularcolumns:: |p{30mm}|p{120mm}|
 
@@ -107,7 +107,7 @@ If Xilinx Vivado is installed at the default location, then the next command wil
 
 .. code-block:: shell-session
 
-   $ . /opt/Xilinx/Vivado/2017.1/settings64.sh
+   $ . /opt/Xilinx/Vivado/2017.2/settings64.sh
 
 The default mode for building the FPGA is to run a TCL script inside Vivado.
 Non project mode is used, to avoid the generation of project files,
@@ -353,8 +353,8 @@ Values for the used macros can be found in the kernel sources.
 
    $ grep ZYNQ_GPIO_NR_GPIOS drivers/gpio/gpio-zynq.c
    #define	ZYNQ_GPIO_NR_GPIOS	118
-   $ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2017.1
-   tmp/linux-xlnx-xilinx-v2017.1/.config:CONFIG_ARCH_NR_GPIO=1024
+   $ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2017.2
+   tmp/linux-xlnx-xilinx-v2017.2/.config:CONFIG_ARCH_NR_GPIO=1024
 
 Another way to find the `gpio_base` index is to check the given name inside `sysfs`.
 
