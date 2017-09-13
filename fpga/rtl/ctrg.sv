@@ -4,7 +4,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module trg #(
+module ctrg #(
   // monitor parameters
   int unsigned CW  = 32,  // counter width
   // event parameters
@@ -138,4 +138,4 @@ end else begin
    end
 end
 
-endmodule: trg
+endmodule: ctrg

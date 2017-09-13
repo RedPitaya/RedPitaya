@@ -13,7 +13,7 @@ localparam int unsigned MNS = MNG+MNO+1+1+1;  // number of event source modules
 
 // software events
 typedef struct packed {
-  evn_pkg::evn_t           trg;  // complex trigger
+  evn_pkg::evn_t           ctrg; // complex trigger
   evn_pkg::evn_t           la;   // logic analyzer
   evn_pkg::evn_t           lg;   // logic generator
   evn_pkg::evn_t [MNO-1:0] osc;  // oscilloscope
@@ -22,7 +22,7 @@ typedef struct packed {
 
 // trigger events
 typedef struct packed {
-  logic           trg;  // complex trigger
+  logic           ctrg; // complex trigger
   logic           la;   // logic analyzer
   logic           lg;   // logic generator
   logic [MNO-1:0] osc;  // oscilloscope

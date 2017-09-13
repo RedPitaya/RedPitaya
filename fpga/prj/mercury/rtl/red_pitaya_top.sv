@@ -747,16 +747,16 @@ endgenerate
 // complex trigger
 ////////////////////////////////////////////////////////////////////////////////
 
-trg #(
+ctrg #(
   .EN  (top_pkg::MNS),
   .TN  ($bits(trg))
-) trg_mod (
+) ctrg (
   // software events
   .evi      (evn),
   .evo      (evn.trg),
   // trigger events
   .trg      (trg),
-  .tro      (trg.trg),
+  .tro      (trg.ctrg),
   // System bus
   .bus      (sys[16])
 );
