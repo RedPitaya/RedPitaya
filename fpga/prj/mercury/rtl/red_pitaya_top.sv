@@ -290,7 +290,7 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=16; i<32; i++) begin: for_sys_2
+for (genvar i=17; i<32; i++) begin: for_sys_2
   sys_bus_stub sys_bus_stub_2 (sys[i]);
 end: for_sys_2
 endgenerate
@@ -742,5 +742,23 @@ end else begin
 
 end
 endgenerate
+
+////////////////////////////////////////////////////////////////////////////////
+// complex trigger
+////////////////////////////////////////////////////////////////////////////////
+
+trg #(
+  .EN  (top_pkg::MNS),
+  .TN  ($bits(trg))
+) trg_mod (
+  // software events
+  .evi      (evn),
+  .evo      (evn.trg),
+  // trigger events
+  .trg      (trg),
+  .tro      (trg.trg),
+  // System bus
+  .bus      (sys[16])
+);
 
 endmodule: red_pitaya_top
