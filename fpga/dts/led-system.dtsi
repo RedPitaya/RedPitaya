@@ -2,7 +2,7 @@
  * stystem LED are given a fixed function
  * yellow LED - SD card access
  * red    LED - CPU heartbeat
-*/
+ */
 
 / {
 	led-system {

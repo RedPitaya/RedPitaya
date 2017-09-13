@@ -1,6 +1,6 @@
 /*
  * PL clock configuration
-*/
+ */
 
 &clkc {
 	fclk-enable = <0xf>;
