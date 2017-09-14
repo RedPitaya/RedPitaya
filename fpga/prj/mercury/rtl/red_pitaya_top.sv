@@ -753,7 +753,7 @@ ctrg #(
 ) ctrg (
   // software events
   .evi      (evn),
-  .evo      (evn.trg),
+  .evo      (evn.ctrg),
   // trigger events
   .trg      (trg),
   .tro      (trg.ctrg),
