@@ -33,7 +33,7 @@ apt-get update
 apt-get -y upgrade
 
 # install HWE kernell
-apt install --install-recommends linux-tools-generic-hwe-16.04 linux-headers-generic-hwe-16.04
+apt-get -y install --install-recommends linux-tools-generic-hwe-16.04 linux-headers-generic-hwe-16.04
 
 # add package containing add-apt-repository
 apt-get -y install software-properties-common
