@@ -96,9 +96,13 @@ t.check_query("GITH",  "HWIDentification:GITH?",  '"3c08fd5a94977f8e0118d0025201
 # MGMT
 ###############################################################################
 
+# GPIO mode
 values = [["#H0", True], ["#HFFFF", True], ["#H1FFFF", False]]
 for idx, val in enumerate(values):
     t.check_write_query("gpio_mode " + str(idx), ":MANAGement:GPIO:MODE " + val[0], ":MANAGement:GPIO:MODE?", val[0], val[1])
+
+# digital loop from generator to oscilloscope
+
 
 #    // Management
 #    {.pattern = ":MANAGement:GPIO[:MODE]",                   .callback = rpscpi_mgmt_set_gpio_mode,              },

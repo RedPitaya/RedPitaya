@@ -1,6 +1,6 @@
 /*
  * user LED
-*/
+ */
 
 / {
 	led-user {

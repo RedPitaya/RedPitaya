@@ -236,34 +236,34 @@ axi4_stream_if #(.DT (DTL)) srx_la            (.ACLK (adc_clk), .ARESETn (adc_rs
 ////////////////////////////////////////////////////////////////////////////////
 
 red_pitaya_ps ps (
-  .FIXED_IO_mio       (  FIXED_IO_mio                ),
-  .FIXED_IO_ps_clk    (  FIXED_IO_ps_clk             ),
-  .FIXED_IO_ps_porb   (  FIXED_IO_ps_porb            ),
-  .FIXED_IO_ps_srstb  (  FIXED_IO_ps_srstb           ),
-  .FIXED_IO_ddr_vrn   (  FIXED_IO_ddr_vrn            ),
-  .FIXED_IO_ddr_vrp   (  FIXED_IO_ddr_vrp            ),
+  .FIXED_IO_mio       (FIXED_IO_mio     ),
+  .FIXED_IO_ps_clk    (FIXED_IO_ps_clk  ),
+  .FIXED_IO_ps_porb   (FIXED_IO_ps_porb ),
+  .FIXED_IO_ps_srstb  (FIXED_IO_ps_srstb),
+  .FIXED_IO_ddr_vrn   (FIXED_IO_ddr_vrn ),
+  .FIXED_IO_ddr_vrp   (FIXED_IO_ddr_vrp ),
   // DDR
-  .DDR_addr      (DDR_addr    ),
-  .DDR_ba        (DDR_ba      ),
-  .DDR_cas_n     (DDR_cas_n   ),
-  .DDR_ck_n      (DDR_ck_n    ),
-  .DDR_ck_p      (DDR_ck_p    ),
-  .DDR_cke       (DDR_cke     ),
-  .DDR_cs_n      (DDR_cs_n    ),
-  .DDR_dm        (DDR_dm      ),
-  .DDR_dq        (DDR_dq      ),
-  .DDR_dqs_n     (DDR_dqs_n   ),
-  .DDR_dqs_p     (DDR_dqs_p   ),
-  .DDR_odt       (DDR_odt     ),
-  .DDR_ras_n     (DDR_ras_n   ),
-  .DDR_reset_n   (DDR_reset_n ),
-  .DDR_we_n      (DDR_we_n    ),
+  .DDR_addr      (DDR_addr   ),
+  .DDR_ba        (DDR_ba     ),
+  .DDR_cas_n     (DDR_cas_n  ),
+  .DDR_ck_n      (DDR_ck_n   ),
+  .DDR_ck_p      (DDR_ck_p   ),
+  .DDR_cke       (DDR_cke    ),
+  .DDR_cs_n      (DDR_cs_n   ),
+  .DDR_dm        (DDR_dm     ),
+  .DDR_dq        (DDR_dq     ),
+  .DDR_dqs_n     (DDR_dqs_n  ),
+  .DDR_dqs_p     (DDR_dqs_p  ),
+  .DDR_odt       (DDR_odt    ),
+  .DDR_ras_n     (DDR_ras_n  ),
+  .DDR_reset_n   (DDR_reset_n),
+  .DDR_we_n      (DDR_we_n   ),
   // system signals
-  .fclk_clk_o    (fclk        ),
-  .fclk_rstn_o   (frstn       ),
+  .fclk_clk_o    (fclk       ),
+  .fclk_rstn_o   (frstn      ),
   // ADC analog inputs
-  .vinp_i        (vinp_i      ),
-  .vinn_i        (vinn_i      ),
+  .vinp_i        (vinp_i     ),
+  .vinn_i        (vinn_i     ),
   // GPIO
   .gpio          (gpio),
   // interrupt
@@ -272,7 +272,7 @@ red_pitaya_ps ps (
   .srx_osc       (srx_osc),
   .srx_la        (srx_la ),
   // system read/write channel
-  .bus           (ps_sys      )
+  .bus           (ps_sys     )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -753,7 +753,7 @@ ctrg #(
 ) ctrg (
   // software events
   .evi      (evn),
-  .evo      (evn.trg),
+  .evo      (evn.ctrg),
   // trigger events
   .trg      (trg),
   .tro      (trg.ctrg),
