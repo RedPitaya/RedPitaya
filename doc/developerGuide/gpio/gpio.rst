@@ -121,6 +121,11 @@ Example for writing to and reading gpio value for EMIO[15: 8] and EMIO[23:16] pi
 Character device access
 ***********************
 
+References:
+
+http://elinux.org/images/9/9b/GPIO_for_Engineers_and_Makers.pdf
+https://www.youtube.com/watch?v=lQRCDl0tFiQ
+
 The Linux kernel contains GPIO utilities in its ``tools`` directory.
 
 https://github.com/torvalds/linux/tree/master/tools/gpio
@@ -128,4 +133,4 @@ https://github.com/torvalds/linux/tree/master/tools/gpio
 We isolated the sources and created a library from ``gpio-utils.c`` and
 executables from other cource files.
 
-
+https://github.com/RedPitaya/gpio-utils
