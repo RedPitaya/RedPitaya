@@ -178,6 +178,7 @@ CONFIG.PROTOCOL {AXI4LITE} \
   set FCLK_RESET1_N [ create_bd_port -dir O -type rst FCLK_RESET1_N ]
   set FCLK_RESET2_N [ create_bd_port -dir O -type rst FCLK_RESET2_N ]
   set FCLK_RESET3_N [ create_bd_port -dir O -type rst FCLK_RESET3_N ]
+  set IRQ [ create_bd_port -dir I -type intr IRQ ]
   set PL_ACLK [ create_bd_port -dir I -type clk PL_ACLK ]
   set_property -dict [ list \
 CONFIG.ASSOCIATED_BUSIF {M_AXI_GP0} \
@@ -470,6 +471,7 @@ CONFIG.PCW_USE_S_AXI_HP3 {0} \
   connect_bd_intf_net -intf_net processing_system7_M_AXI_GP0 [get_bd_intf_pins axi_protocol_converter_0/S_AXI] [get_bd_intf_pins processing_system7/M_AXI_GP0]
 
   # Create port connections
+  connect_bd_net -net IRQ_1 [get_bd_ports IRQ] [get_bd_pins processing_system7/IRQ_F2P]
   connect_bd_net -net PL_ACLK_1 [get_bd_ports PL_ACLK] [get_bd_pins axi_protocol_converter_0/aclk] [get_bd_pins processing_system7/M_AXI_GP0_ACLK]
   connect_bd_net -net PL_ARESETn_1 [get_bd_ports PL_ARESETn] [get_bd_pins axi_protocol_converter_0/aresetn]
   connect_bd_net -net processing_system7_0_fclk_clk2 [get_bd_ports FCLK_CLK2] [get_bd_pins processing_system7/FCLK_CLK2]
