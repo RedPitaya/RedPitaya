@@ -11,7 +11,7 @@
 				reg = <0x40000000 0x01000>,
 				      <0x40010000 0x10000>;
 				reg-names = "regset", "buffer";
-				interrupt-parent = <&interrupt-controller>;
+				interrupt-parent = <&intc>;
 				interrupts = <0x3d 4>;
 			};
 		};
