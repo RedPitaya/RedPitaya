@@ -2,22 +2,9 @@
 General purpose inputs
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: none
-
-                          ----------------0  Vout
-             ----------  |  ----------
-   Vin  0----| 30.0kΩ |-----| 4.99kΩ |----0  GND
-             ----------     ----------
-
-.. math::
-
-   ratio = \frac{4.99 k\Omega}{30.0 k\Omega + 4.99  k\Omega} = 0.143
-
-   range = \frac{1 V}{ratio} = 7.01 V
-
-=============
-GPIO and LEDs
-=============
+==============
+GPIOs and LEDs
+==============
 
 Handling of GPIO and LED signals depends on wether they are connected to
 Zynq-7000 PS (MIO) or PL (EMIO or FPGA) block.
@@ -77,6 +64,10 @@ The default pin assignment for GPIO is described in the next table.
 Linux access to GPIO/LED
 ========================
 
+************
+SYSFS access
+************
+
 This document is used as reference:
 `Linux+GPIO+Driver <http://www.wiki.xilinx.com/Linux+GPIO+Driver>`_
 
@@ -126,3 +117,15 @@ Example for writing to and reading gpio value for EMIO[15: 8] and EMIO[23:16] pi
    #when done with pin you should unexport it with
    $ echo 968 > /sys/class/gpio/unexport
    
+***********************
+Character device access
+***********************
+
+The Linux kernel contains GPIO utilities in its ``tools`` directory.
+
+https://github.com/torvalds/linux/tree/master/tools/gpio
+
+We isolated the sources and created a library from ``gpio-utils.c`` and
+executables from other cource files.
+
+
