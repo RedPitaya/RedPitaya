@@ -19,7 +19,7 @@ Quick setup
 WiFi client
 ===========
 
-A list of `Supported USB Wi-Fi adapters` is provided at the bottom of the page.
+A list of `Supported USB Wi-Fi adapters`_ is provided at the bottom of the page.
 
 List wireless access pints:
 
