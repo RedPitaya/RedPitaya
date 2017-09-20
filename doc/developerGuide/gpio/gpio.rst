@@ -131,6 +131,6 @@ The Linux kernel contains GPIO utilities in its ``tools`` directory.
 https://github.com/torvalds/linux/tree/master/tools/gpio
 
 We isolated the sources and created a library from ``gpio-utils.c`` and
-executables from other cource files.
+executables from other source files.
 
 https://github.com/RedPitaya/gpio-utils
