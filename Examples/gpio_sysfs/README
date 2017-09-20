@@ -1,6 +1,10 @@
 Simple C gpio test application shows how to export/unexport different pins and 
 set direction on exported pins. 
 
+Requierment for using sysfs gpio interface for working with gpios is to load appropriate fpga bitstream
+/opt/redpitaya/fpga/classic/fpga.bit and /opt/redpitaya/mercury/fpga.bit fit that requierments.
+You can load bitstream using "cat /opt/redpitaya/fpga/classic/fpga.bit > /dev/xdevcfg" command. 
+
 Usaly exporting and setting direction to pins is done in external script that sets up all 
 required gpio in this example that is done using "system" call(same can also be achived using calls to functions open read and write).
 
