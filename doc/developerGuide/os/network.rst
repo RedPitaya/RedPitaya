@@ -19,8 +19,7 @@ Quick setup
 WiFi client
 ===========
 
-`Recommended USB Wi-Fi device for Raspberry PI
-<https://www.raspberrypi.org/products/usb-wifi-dongle/>`_ can be used.
+A list of `Supported USB Wi-Fi adapters` is provided at the bottom of the page.
 
 List wireless access pints:
 
@@ -409,38 +408,379 @@ Services handling the described configuration are enabled with.
    # enable service for creating SSH keys on first boot
    systemctl enable ssh-reconfigure
 
-***************
-Wireless driver
-***************
+****************************
+Supported USB Wi-Fi adapters
+****************************
 
-=============
-Current setup
-=============
+Support for a specific Wi-Fi adapter usually depends only on the availability
+of the driver for the chipset used in the adapter.
+Therefore this section focuses on Linux kernel drivers for Wi-Fi adapters.
 
-Currently an `out of tree driver </patches/rtl8192cu/>`_ is used to support devices based on the ``RTL8188CUS`` chip.
-For example.
+Before the switch to kernel 4.9 an out of tree driver was used for the **rtl8192cu** chipset.
+Support for this patch was removed, due to reliability and maintenance issues.
+In practice this means *rtl8192cu* based adapters will only work in client mode.
+At the same time support for the deprecated user space tools ``wireless extensions``
+was removed, instead the ``nl80211`` framework should be used.
+In practice this means ``iw`` should be used instead of ``iwconfig``.
+
+After plugging an USB Wi-Fi adapter use ``dmesg`` and ``lsusb`` to check
+if the adapter was properly recognized by the Linux kernel.
+
+To check what modes (managed, AP, ...) are supported by an adapter use ``iw``.
+
+================
+BCM43143 chipset
+================
+
+Client (``managed``) and access point (``AP``) modes are supported.
+
+---------------------------------------------
+Recommended USB Wi-Fi device for Raspberry PI
+---------------------------------------------
+
+https://www.raspberrypi.org/products/usb-wifi-dongle/
+
+https://web.archive.org/web/20161014035710/https://www.raspberrypi.org/products/usb-wifi-dongle/
+
+.. code-block:: shell-session
+
+   # lsusb
+   Bus 001 Device 004: ID 0a5c:bd1e Broadcom Corp. 
+
+.. code-block:: shell-session
+
+   # dmesg
+   ...
+   usb 1-1: new high-speed USB device number 4 using ci_hdrc
+   brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Apr  3 2014 04:43:32 version 6.10.198.66 (r467479) FWID 01-32bd010e
+   brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code (0x30 0x30)
+   ...
+   usb 1-1: USB disconnect, device number 4
+   brcmfmac: brcmf_usb_send_ctl: usb_submit_urb failed -19
+   brcmfmac: brcmf_usb_tx_ctlpkt: fail -19 bytes: 45
+   brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+   brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+   brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+   brcmfmac: brcmf_cfg80211_get_channel: chanspec failed (-5)
+
+.. code-block:: shell-session
+
+   # iw list
+   Wiphy phy3
+   	max # scan SSIDs: 10
+   	max scan IEs length: 2048 bytes
+   	Retry short limit: 7
+   	Retry long limit: 4
+   	Coverage class: 0 (up to 0m)
+   	Device supports roaming.
+   	Supported Ciphers:
+   		* WEP40 (00-0f-ac:1)
+   		* WEP104 (00-0f-ac:5)
+   		* TKIP (00-0f-ac:2)
+   		* CCMP (00-0f-ac:4)
+   	Available Antennas: TX 0 RX 0
+   	Supported interface modes:
+   		 * IBSS
+   		 * managed
+   		 * AP
+   		 * P2P-client
+   		 * P2P-GO
+   		 * P2P-device
+   	Band 1:
+   		Capabilities: 0x1022
+   			HT20/HT40
+   			Static SM Power Save
+   			RX HT20 SGI
+   			No RX STBC
+   			Max AMSDU length: 3839 bytes
+   			DSSS/CCK HT40
+   		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+   		Minimum RX AMPDU time spacing: 16 usec (0x07)
+   		HT TX/RX MCS rate indexes supported: 0-7
+   		Bitrates (non-HT):
+   			* 1.0 Mbps
+   			* 2.0 Mbps (short preamble supported)
+   			* 5.5 Mbps (short preamble supported)
+   			* 11.0 Mbps (short preamble supported)
+   			* 6.0 Mbps
+   			* 9.0 Mbps
+   			* 12.0 Mbps
+   			* 18.0 Mbps
+   			* 24.0 Mbps
+   			* 36.0 Mbps
+   			* 48.0 Mbps
+   			* 54.0 Mbps
+   		Frequencies:
+   			* 2412 MHz [1] (20.0 dBm)
+   			* 2417 MHz [2] (20.0 dBm)
+   			* 2422 MHz [3] (20.0 dBm)
+   			* 2427 MHz [4] (20.0 dBm)
+   			* 2432 MHz [5] (20.0 dBm)
+   			* 2437 MHz [6] (20.0 dBm)
+   			* 2442 MHz [7] (20.0 dBm)
+   			* 2447 MHz [8] (20.0 dBm)
+   			* 2452 MHz [9] (20.0 dBm)
+   			* 2457 MHz [10] (20.0 dBm)
+   			* 2462 MHz [11] (20.0 dBm)
+   			* 2467 MHz [12] (disabled)
+   			* 2472 MHz [13] (disabled)
+   			* 2484 MHz [14] (disabled)
+   	Supported commands:
+   		 * new_interface
+   		 * set_interface
+   		 * new_key
+   		 * start_ap
+   		 * join_ibss
+   		 * set_pmksa
+   		 * del_pmksa
+   		 * flush_pmksa
+   		 * remain_on_channel
+   		 * frame
+   		 * set_channel
+   		 * start_p2p_device
+   		 * crit_protocol_start
+   		 * crit_protocol_stop
+   		 * connect
+   		 * disconnect
+   	Supported TX frame types:
+   		 * managed: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * P2P-client: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * P2P-GO: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * P2P-device: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   	Supported RX frame types:
+   		 * managed: 0x40 0xd0
+   		 * P2P-client: 0x40 0xd0
+   		 * P2P-GO: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
+   		 * P2P-device: 0x40 0xd0
+   	software interface modes (can always be added):
+   	valid interface combinations:
+   		 * #{ managed } <= 1, #{ P2P-device } <= 1, #{ P2P-client, P2P-GO } <= 1,
+   		   total <= 3, #channels <= 1
+   		 * #{ managed } <= 1, #{ AP } <= 1, #{ P2P-client } <= 1, #{ P2P-device } <= 1,
+   		   total <= 4, #channels <= 1
+   	Device supports scan flush.
+
+=================
+rtl8192cu chipset
+=================
+
+The rtl8192cu chipset is supported by the ``rtl8xxxu`` driver.
+For now this driver only supports client (``managed``) mode.
+
+----------------
+Edimax EW-7811Un
+----------------
+
+http://us.edimax.com/edimax/merchandise/merchandise_detail/data/edimax/us/wireless_adapters_n150/ew-7811un/
+
+.. code-block:: shell-session
+
+   # lsusb
+   Bus 001 Device 002: ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un 802.11n Wireless Adapter [Realtek RTL8188CUS]
+
+.. code-block:: shell-session
+
+   # dmesg
+   ...
+   usb 1-1: new high-speed USB device number 2 using ci_hdrc
+   usb 1-1: Vendor: Realtek
+   usb 1-1: Product: 802.11n WLAN Adapter
+   usb 1-1: rtl8192cu_parse_efuse: dumping efuse (0x80 bytes):
+   usb 1-1: 00: 29 81 00 74 cd 00 00 00
+   usb 1-1: 08: ff 00 92 73 11 78 03 41
+   usb 1-1: 10: 32 00 85 62 9e ad 74 da
+   usb 1-1: 18: 38 7d d0 48 0a 03 52 65
+   usb 1-1: 20: 61 6c 74 65 6b 00 16 03
+   usb 1-1: 28: 38 30 32 2e 31 31 6e 20
+   usb 1-1: 30: 57 4c 41 4e 20 41 64 61
+   usb 1-1: 38: 70 74 65 72 00 00 00 00
+   usb 1-1: 40: 00 00 00 00 00 00 00 00
+   usb 1-1: 48: 00 00 00 00 00 00 00 00
+   usb 1-1: 50: 00 00 00 00 00 00 00 00
+   usb 1-1: 58: 06 00 29 29 29 00 00 00
+   usb 1-1: 60: 2b 2b 2a 00 00 00 00 00
+   usb 1-1: 68: 00 00 00 00 11 11 33 00
+   usb 1-1: 70: 00 00 00 00 00 02 00 00
+   usb 1-1: 78: 10 00 00 00 36 00 00 00
+   usb 1-1: RTL8188CU rev A (TSMC) 1T1R, TX queues 2, WiFi=1, BT=0, GPS=0, HI PA=0
+   usb 1-1: RTL8188CU MAC: 74:da:38:7d:d0:48
+   usb 1-1: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+   usb 1-1: Firmware revision 80.0 (signature 0x88c1)
+   usb 1-1: rtl8xxxu_iqk_path_a: Path A RX IQK failed!
+   usb 1-1: rtl8xxxu_iqk_path_a: Path A RX IQK failed!
+   usb 1-1: rtl8xxxu_iqk_path_a: Path A RX IQK failed!
+   usb 1-1: rtl8xxxu_iqk_path_a: Path A RX IQK failed!
+   ...
+   usb 1-1: USB disconnect, device number 2
+   usb 1-1: rtl8xxxu_active_to_lps: RX poll timed out (0x05f8)
+   usb 1-1: rtl8xxxu_active_to_emu: Disabling MAC timed out
+   usb 1-1: disconnecting
+
+.. code-block:: shell-session
+
+   # iw list
+   Wiphy phy0
+   	max # scan SSIDs: 4
+   	max scan IEs length: 2257 bytes
+   	RTS threshold: 2347
+   	Retry short limit: 7
+   	Retry long limit: 4
+   	Coverage class: 0 (up to 0m)
+   	Supported Ciphers:
+   		* WEP40 (00-0f-ac:1)
+   		* WEP104 (00-0f-ac:5)
+   		* TKIP (00-0f-ac:2)
+   		* CCMP (00-0f-ac:4)
+   		* 00-0f-ac:10
+   		* GCMP (00-0f-ac:8)
+   		* 00-0f-ac:9
+   	Available Antennas: TX 0 RX 0
+   	Supported interface modes:
+   		 * managed
+   		 * monitor
+   	Band 1:
+   		Capabilities: 0x60
+   			HT20
+   			Static SM Power Save
+   			RX HT20 SGI
+   			RX HT40 SGI
+   			No RX STBC
+   			Max AMSDU length: 3839 bytes
+   			No DSSS/CCK HT40
+   		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+   		Minimum RX AMPDU time spacing: 16 usec (0x07)
+   		HT TX/RX MCS rate indexes supported: 0-7, 32
+   		Bitrates (non-HT):
+   			* 1.0 Mbps
+   			* 2.0 Mbps
+   			* 5.5 Mbps
+   			* 11.0 Mbps
+   			* 6.0 Mbps
+   			* 9.0 Mbps
+   			* 12.0 Mbps
+   			* 18.0 Mbps
+   			* 24.0 Mbps
+   			* 36.0 Mbps
+   			* 48.0 Mbps
+   			* 54.0 Mbps
+   		Frequencies:
+   			* 2412 MHz [1] (20.0 dBm)
+   			* 2417 MHz [2] (20.0 dBm)
+   			* 2422 MHz [3] (20.0 dBm)
+   			* 2427 MHz [4] (20.0 dBm)
+   			* 2432 MHz [5] (20.0 dBm)
+   			* 2437 MHz [6] (20.0 dBm)
+   			* 2442 MHz [7] (20.0 dBm)
+   			* 2447 MHz [8] (20.0 dBm)
+   			* 2452 MHz [9] (20.0 dBm)
+   			* 2457 MHz [10] (20.0 dBm)
+   			* 2462 MHz [11] (20.0 dBm)
+   			* 2467 MHz [12] (20.0 dBm) (no IR)
+   			* 2472 MHz [13] (20.0 dBm) (no IR)
+   			* 2484 MHz [14] (20.0 dBm) (no IR)
+   	Supported commands:
+   		 * new_interface
+   		 * set_interface
+   		 * new_key
+   		 * start_ap
+   		 * new_station
+   		 * set_bss
+   		 * authenticate
+   		 * associate
+   		 * deauthenticate
+   		 * disassociate
+   		 * join_ibss
+   		 * set_tx_bitrate_mask
+   		 * frame
+   		 * frame_wait_cancel
+   		 * set_wiphy_netns
+   		 * set_channel
+   		 * set_wds_peer
+   		 * probe_client
+   		 * set_noack_map
+   		 * register_beacons
+   		 * start_p2p_device
+   		 * set_mcast_rate
+   		 * Unknown command (104)
+   		 * connect
+   		 * disconnect
+   	Supported TX frame types:
+   		 * IBSS: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * managed: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * AP: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * AP/VLAN: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * mesh point: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * P2P-client: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * P2P-GO: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   		 * P2P-device: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+   	Supported RX frame types:
+   		 * IBSS: 0x40 0xb0 0xc0 0xd0
+   		 * managed: 0x40 0xd0
+   		 * AP: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
+   		 * AP/VLAN: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
+   		 * mesh point: 0xb0 0xc0 0xd0
+   		 * P2P-client: 0x40 0xd0
+   		 * P2P-GO: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
+   		 * P2P-device: 0x40 0xd0
+   	software interface modes (can always be added):
+   		 * monitor
+   	interface combinations are not supported
+   	HT Capability overrides:
+   		 * MCS: ff ff ff ff ff ff ff ff ff ff
+   		 * maximum A-MSDU length
+   		 * supported channel width
+   		 * short GI for 40 MHz
+   		 * max A-MPDU length exponent
+   		 * min MPDU start spacing
+   	Device supports TX status socket option.
+   	Device supports HT-IBSS.
+   	Device supports SAE with AUTHENTICATE command
+   	Device supports low priority scan.
+   	Device supports scan flush.
+   	Device supports AP scan.
+   	Device supports per-vif TX power setting
+   	Driver supports full state transitions for AP/GO clients
+   	Driver supports a userspace MPM
+
+------------------------------------------------------
+Generic Realtek Semiconductor Corp. RTL8188CUS 802.11n
+------------------------------------------------------
+
+.. code-block:: shell-session
+
+   # dmesg
+   ...
+   usb 1-1: new high-speed USB device number 3 using ci_hdrc
+   usb 1-1: Vendor: Realtek
+   usb 1-1: Product: 802.11n WLAN Adapter
+   usb 1-1: rtl8192cu_parse_efuse: dumping efuse (0x80 bytes):
+   usb 1-1: 00: 29 81 00 74 cd 00 00 00
+   usb 1-1: 08: ff 00 da 0b 76 81 01 41
+   usb 1-1: 10: 32 00 85 62 9e ad 00 13
+   usb 1-1: 18: ef 60 22 15 0a 03 52 65
+   usb 1-1: 20: 61 6c 74 65 6b 00 16 03
+   usb 1-1: 28: 38 30 32 2e 31 31 6e 20
+   usb 1-1: 30: 57 4c 41 4e 20 41 64 61
+   usb 1-1: 38: 70 74 65 72 00 00 00 00
+   usb 1-1: 40: 00 00 00 00 00 00 00 00
+   usb 1-1: 48: 00 00 00 00 00 00 00 00
+   usb 1-1: 50: 00 00 00 00 00 00 00 00
+   usb 1-1: 58: 06 00 28 28 28 00 00 00
+   usb 1-1: 60: 28 28 28 00 00 00 00 00
+   usb 1-1: 68: 00 00 00 00 02 02 02 00
+   usb 1-1: 70: 00 00 00 00 00 02 00 00
+   usb 1-1: 78: 10 00 00 00 36 00 00 00
+   usb 1-1: RTL8188CU rev A (TSMC) 1T1R, TX queues 2, WiFi=1, BT=0, GPS=0, HI PA=0
+   usb 1-1: RTL8188CU MAC: 00:13:ef:60:22:15
+   usb 1-1: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+   usb 1-1: Firmware revision 80.0 (signature 0x88c1)
+   ...
+   usb 1-1: USB disconnect, device number 3
+   usb 1-1: rtl8xxxu_active_to_lps: RX poll timed out (0x05f8)
+   usb 1-1: rtl8xxxu_active_to_emu: Disabling MAC timed out
+   usb 1-1: disconnecting
 
 .. code-block:: shell-session
 
    # lsusb
    Bus 001 Device 003: ID 0bda:8176 Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter
-   Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-
-This driver supports client and access point modes, and is the most documented driver/device combination
-for seeing up an access point using an USB adapter. Most of the documentation is intended for Raspberry Pi.
-
-We would like to get rid of this driver, since it requires maintaining a patch,
-and it requires deprecated user space tools ``wireless extensions`` and a
-`patched hostapd </OS/debian/network.sh>`_.
-
-=====================
-Proposed future setup
-=====================
-
-There is another much newer driver available in the kernel tree, but it currently only supports client mode.
-
-We are following progress on the ``rtl8xxxu`` driver in the
-`authors (Jes Sorensen)  <https://git.kernel.org/cgit/linux/kernel/git/jes/linux.git/>`_ repository
-on `kernel.org <https://git.kernel.org/cgit/>`_.
-
-We already tested this new driver in the past, and it worked well in client mode.
