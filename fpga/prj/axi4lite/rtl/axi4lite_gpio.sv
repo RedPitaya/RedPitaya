@@ -79,6 +79,7 @@ always_ff @(posedge bus.ACLK)
 if (bus.ARESETn == 1'b0) begin
   gpio_o <= '0;
   gpio_t <= '0;
+  irq <= '0;
 end else if (slv_reg_wren) begin
   if (axi_awaddr == 2'h0) begin
     for (int unsigned i=0; i<(DW/8); i++) begin
