@@ -85,6 +85,17 @@ EOF_CHROOT
 #rm -rf Ne10
 #EOF_CHROOT
 
+# GPIO utilities
+chroot $ROOT_DIR <<- EOF_CHROOT
+git clone --depth 1 https://github.com/RedPitaya/gpio-utils.git
+cd gpio-utils
+meson builddir --buildtype release
+cd builddir
+ninja install
+cd ../../
+rm -rf gpio-utils
+EOF_CHROOT
+
 ################################################################################
 # create users and groups
 ################################################################################
