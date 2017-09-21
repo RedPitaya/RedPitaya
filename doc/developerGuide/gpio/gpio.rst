@@ -18,7 +18,12 @@ PINS
 Pins connected to the PL block require FPGA code to function. If the pin signals are wired directly (in the FPGA sources) from PS based EMIO signals to the FPGA pads, 
 then they can be managed using Linux drivers intended for the PS block. This is currently done with two fpga projects: classic and mercury.
 
-Apropriate fpga bitstream can be applied using "cat /opt/redpitaya/fpga/classic/fpga.bit > /dev/xdevcfg" bash command. 
+Apropriate fpga bitstream can be applied using bash command.
+
+.. code-block:: shell-session
+
+    cat /opt/redpitaya/fpga/classic/fpga.bit > /dev/xdevcfg 
+
 
 There are 54+64=118 GPIO provided by ZYNQ PS, MIO provides 54 GPIO,
 and EMIO provide additional 64 GPIO and only 16 out of those are accesible on board. 
