@@ -330,56 +330,6 @@ The default pin assignment for GPIO is described in the next table.
 | ``B9`` | ``E2[10]`` | I2C0_SDA           |  ``MIO[51]``     | ``906+   [51]   = 957``      | requires ``pinctrl`` changes to be active |
 +--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
 
-
-========================
-Linux access to GPIO/LED
-========================
-
-This document is used as reference:
-`Linux+GPIO+Driver <http://www.wiki.xilinx.com/Linux+GPIO+Driver>`_
-
-There are 54+64=118 GPIO provided by ZYNQ PS, MIO provides 54 GPIO,
-and EMIO provide additional 64 GPIO.
-
-The next formula is used to calculate the ``gpio_base`` index.
-
-.. code-block:: none
-
-   base_gpio = ZYNQ_GPIO_NR_GPIOS - ARCH_NR_GPIOS = 1024 - 118 = -906
-
-Values for the used macros can be found in the kernel sources.
-
-.. code-block:: shell-session
-
-   $ grep ZYNQ_GPIO_NR_GPIOS drivers/gpio/gpio-zynq.c
-   #define	ZYNQ_GPIO_NR_GPIOS	118
-   $ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2017.2
-   tmp/linux-xlnx-xilinx-v2017.2/.config:CONFIG_ARCH_NR_GPIO=1024
-
-Another way to find the `gpio_base` index is to check the given name inside `sysfs`.
-
-.. code-block:: shell-session
-
-   # find /sys/class/gpio/ -name gpiochip*
-   /sys/class/gpio/gpiochip906
-
-GPIOs are accessible at the ``sysfs`` index.
-The next example will light up ``LED[0]``, and read back its value.
-
-.. code-block:: shell-session
-
-   $ export INDEX=960
-   $ echo $INDEX > /sys/class/gpio/export
-   $ echo out    > /sys/class/gpio/gpio$INDEX/direction
-   $ echo 1      > /sys/class/gpio/gpio$INDEX/value
-   $ cat           /sys/class/gpio/gpio$INDEX/value
-
-.. note::
-
-   `A new user space ABI for GPIO <https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next>`_
-   is coming in kernel v4.8, ioctl will be used instead of ``sysfs``.
-   The new driver will allow for seting multiple GPIO signals simultaneously.
-
 ===================
 Linux access to LED
 ===================
