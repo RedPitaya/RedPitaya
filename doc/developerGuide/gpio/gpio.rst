@@ -100,6 +100,7 @@ GPIOs are accessible at the ``sysfs`` index.
 
 Example for writing to and reading gpio value for EMIO[15: 8] and EMIO[23:16] pins on exp_n_io and exp_p_io on pins from 968 to 983.
 
+
 .. code-block:: shell-session
 
    #export pin 968
@@ -117,6 +118,11 @@ Example for writing to and reading gpio value for EMIO[15: 8] and EMIO[23:16] pi
    #when done with pin you should unexport it with
    $ echo 968 > /sys/class/gpio/unexport
    
+ 
+
+SYSFS GPIO C example: https://github.com/RedPitaya/RedPitaya/tree/master/Examples/gpio_sysfs
+
+
 ***********************
 Character device access
 ***********************
