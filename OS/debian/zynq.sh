@@ -89,7 +89,7 @@ EOF_CHROOT
 chroot $ROOT_DIR <<- EOF_CHROOT
 git clone --depth 1 https://github.com/RedPitaya/gpio-utils.git
 cd gpio-utils
-meson builddir --buildtype release
+meson builddir --buildtype release --prefix /usr
 cd builddir
 ninja install
 cd ../../
