@@ -14,7 +14,7 @@ APP=$(notdir $(CURDIR:%/=%))
 # Installation directory. It is changed when using the main Makefile++++++
 INSTALL_DIR ?= .
 
-LIBSCPI=scpi-parser/libscpi/dist/libscpi.so.2.1.0
+LIBSCPI=scpi-parser/libscpi/dist/libscpi.a
 SCPISRV=scpi-server
 ARTIFACTS= $(LIBSCPI) $(SCPISRV)
 
@@ -28,10 +28,8 @@ $(LIBSCPI):
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
-	mkdir -p $(INSTALL_DIR)/lib
 	cp $(SCPISRV) $(INSTALL_DIR)/bin
 	$(MAKE) -C scpi-parser install PREFIX=$(INSTALL_DIR)
-	ln -sf libscpi.so.2.1.0 $(INSTALL_DIR)/lib/libscpi.so
 
 clean:
 	$(MAKE) -C src clean
