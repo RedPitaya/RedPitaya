@@ -29,7 +29,6 @@ $(LIBSCPI):
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	cp $(SCPISRV) $(INSTALL_DIR)/bin
-	$(MAKE) -C scpi-parser install PREFIX=$(INSTALL_DIR)
 
 clean:
 	$(MAKE) -C src clean
