@@ -44,6 +44,22 @@ apt-get -y install gdb cgdb libcunit1-ncurses-dev
 apt-get -y install bc
 EOF_CHROOT
 
+
+################################################################################
+# SCPI parser
+################################################################################
+
+# GPIO utilities
+chroot $ROOT_DIR <<- EOF_CHROOT
+git clone --depth 1 https://github.com/RedPitaya/scpi-parser.git --branch meson
+cd scpi-parser
+meson builddir --buildtype release --prefix /usr
+cd builddir
+ninja install
+cd ../../
+rm -rf scpi-parser
+EOF_CHROOT
+
 ################################################################################
 # systemd services
 ################################################################################
