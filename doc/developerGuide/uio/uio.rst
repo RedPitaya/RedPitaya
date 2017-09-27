@@ -69,7 +69,6 @@ can be used to give each device a symbolink link, containing the name specified 
    drwxr-xr-x  2 root root  280 Sep 18 10:28 ./
    drwxr-xr-x 11 root root 3240 Sep 18 10:28 ../
    lrwxrwxrwx  1 root root    7 Sep 14 08:52 api -> ../uio1
-   lrwxrwxrwx  1 root root    7 Sep 14 08:52 ps2pl -> ../uio0
    lrwxrwxrwx  1 root root    7 Sep 18 10:28 gen0 -> ../uio6
    lrwxrwxrwx  1 root root    7 Sep 18 10:28 gen1 -> ../uio7
 
