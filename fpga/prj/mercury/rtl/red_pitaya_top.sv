@@ -553,6 +553,7 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
   gen #(
     .DN  (1),
     .DT  (DTG),
+    .ER  (0+i),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) gen (
@@ -588,6 +589,7 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
   osc #(
     .DN  (1),
     .DT  (DTO),
+    .ER  (2+i),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) osc (
@@ -639,6 +641,7 @@ if (EN_LG) begin: if_lg
   lg #(
     .DN  (1),
     .DT  (DTL),
+    .ER  (4),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) lg (
@@ -690,6 +693,7 @@ if (EN_LA) begin: if_la
   la #(
     .DN  (1),
     .DT  (DTL),
+    .ER  (5),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) la (
@@ -748,6 +752,7 @@ endgenerate
 ////////////////////////////////////////////////////////////////////////////////
 
 ctrg #(
+  .ER  (6),
   .EN  (top_pkg::MNS),
   .TN  ($bits(trg))
 ) ctrg (

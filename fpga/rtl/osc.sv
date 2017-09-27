@@ -14,6 +14,7 @@ module osc #(
   // aquisition parameters
   int unsigned CW  = 32-1,  // counter width
   // event parameters
+  int unsigned ER  = 0,   // event reset
   int unsigned EN  = 1,   // event number
   int unsigned EL  = $clog2(EN),
   // trigger parameters
@@ -103,7 +104,7 @@ localparam int unsigned BAW=7;
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   // event select
-  cfg_evn <= '0;
+  cfg_evn <= ER;
   // trigger mask
   cfg_trg <= '0;
   // configuration
