@@ -168,7 +168,7 @@ rm $ROOT_DIR/usr/bin/qemu-arm-static
 
 # create a tarball (without resolv.conf link, since it causes schroot issues)
 rm $ROOT_DIR/etc/resolv.conf
-tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
+tar -cpzf redpitaya_OS_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 # recreate resolv.conf link
 ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf
 
