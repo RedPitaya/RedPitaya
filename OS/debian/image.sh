@@ -59,8 +59,8 @@ mount $ROOT_DEV $ROOT_DIR
 # install OS
 ################################################################################
 
-. OS/debian/ubuntu.sh 2>&1 | tee $ROOT_DIR/buildlog.txt
-#. OS/debian/debian.sh 2>&1 | tee $ROOT_DIR/buildlog.txt
+#. OS/debian/ubuntu.sh 2>&1 | tee $ROOT_DIR/buildlog.txt
+. OS/debian/debian.sh 2>&1 | tee $ROOT_DIR/buildlog.txt
 
 ################################################################################
 # umount image
