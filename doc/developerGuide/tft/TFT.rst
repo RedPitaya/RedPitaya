@@ -34,10 +34,12 @@ It is possible to reconfigure **Zynq** MIO signals using the ``pinctrl`` kernel 
 This TFT display setup takes advantage of this by repurposing SPI, I2C and UART signals
 on the :ref:`E2 <E2>` connector as SPI and GPIO signals which are required by the TFT display interface.
 
-.. |tft-E2| replace:: ``tft-E2.dtsi``
-.. _tft-E2: /fpga/dts/tft/tft-E2.dtsi
+.. .. |tft-E2| replace:: ``tft-E2.dtsi``
+.. .. _tft-E2: /fpga/dts/tft/tft-E2.dtsi
 
-The reconfiguration is performed by including the |tft-E2|_ device tree.
+.. The reconfiguration is performed by including the |tft-E2|_ device tree.
+
+The reconfiguration is performed by including the :download:`tft-E2 <../../../fpga/dts/tft/tft-E2.dtsi>` device tree.
 
 +-----------------+-----+----------+--------+--------+----------+-----+-------------------+
 | SPI TFT+touch   | MIO | function |    pin |  pin   | function | MIO | SPI TFT+touch     |
