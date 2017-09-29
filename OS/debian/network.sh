@@ -35,7 +35,10 @@ sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # WiFi tools
 # TODO: install was asking about /etc/{protocols,services}
-apt-get -y install linux-firmware
+# for Debian:
+apt-get -y install firmware-linux-free firmware-misc-nonfree
+# for Ubuntu:
+#apt-get -y install linux-firmware
 apt-get -y install wpasupplicant iw
 
 # WiFi tools (AP)
