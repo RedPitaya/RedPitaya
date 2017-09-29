@@ -126,4 +126,5 @@ EOF_CHROOT
 install -v -m 664 -o root -D $OVERLAY/etc/profile.d/redpitaya.sh $ROOT_DIR/etc/profile.d/redpitaya.sh
 
 # MOTD (the static part) is a link to Red Pitaya version.txt
+rm                               $ROOT_DIR/etc/motd
 ln -s /opt/redpitaya/version.txt $ROOT_DIR/etc/motd
