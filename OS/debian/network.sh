@@ -29,7 +29,7 @@ apt-get -y install iproute2 iputils-ping curl
 # TODO: check cert generation, should it be moved to first boot?
 apt-get -y install openssh-server ca-certificates
 # enable SSH access to the root user
-sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 # remove SSH keys, so they can be created at boot by ssh-reconfigure.service
 /bin/rm -v /etc/ssh/ssh_host_*
 
