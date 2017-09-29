@@ -63,7 +63,7 @@ apt-get -y install console-setup
 
 # setup locale
 apt-get -y install locales
-locale-gen en_US.UTF-8
+locale-gen --purge en_US.UTF-8
 update-locale LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
 
 # TODO seems sytemd is not running without /proc/cmdline or something
