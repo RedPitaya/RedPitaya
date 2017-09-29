@@ -21,6 +21,6 @@ apt-get -y install ninja-build
 apt-get -y install mtd-utils
 
 # DSP library for C language
-# TODO: the package does not exist yet in Ubuntu 16.04
-#apt-get -y install libliquid-dev
+# TODO: the package does not exist yet in Ubuntu 16.04, But is available in Debian stretch
+apt-get -y install libliquid-dev
 EOF_CHROOT
