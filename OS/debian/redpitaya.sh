@@ -16,14 +16,14 @@ apt-get -y install wget gawk
 
 # libraries used by Bazaar
 apt-get -y install libluajit-5.1-2 libpcre3 zlib1g lua-cjson unzip
-apt-get -y install libboost-system1.58.0 libboost-regex1.58.0 libboost-thread1.58.0
+apt-get -y install libboost-system1.62.0 libboost-regex1.62.0 libboost-thread1.62.0
 #apt-get -y install libcrypto++6
 #apt-get -y install libcrypto++9v5
-apt-get -y install libssl1.0.0
+apt-get -y install libssl1.1
 
 # libraries used to compile Bazaar
 apt-get -y install libluajit-5.1-dev libpcre3-dev zlib1g-dev
-apt-get -y install libboost-system1.58-dev libboost-regex1.58-dev libboost-thread1.58-dev
+apt-get -y install libboost-system1.62-dev libboost-regex1.62-dev libboost-thread1.62-dev
 apt-get -y install libcrypto++-dev
 apt-get -y install libcurl4-openssl-dev
 apt-get -y install libssl-dev
