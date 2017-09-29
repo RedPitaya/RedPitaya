@@ -11,6 +11,7 @@
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # Sigrok
+# TODO: this packages are not available on Debian
 apt-get -y install libsigrok libsigrokdecode sigrok-cli
 # OWFS 1-wire library
 # NOTE: for now do not install OWFS, and avoid another http/ftp server from running by default
