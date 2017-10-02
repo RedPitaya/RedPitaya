@@ -304,7 +304,7 @@ You can install it on Red Pitaya by copying it there:
 SCPI server
 ~~~~~~~~~~~
 
-Scpi server README can be found `here <scpi-server/README.md>`_.
+Scpi server README can be found :download:`here <../../../scpi-server/README.md>`.
 
 To compile the server run:
 
@@ -323,4 +323,4 @@ You can install it on Red Pitaya by copying it there:
 Free applications
 ~~~~~~~~~~~~~~~~~
 
-To build free applications, follow the instructions given at `<apps-free/README.md>`_ file.
+To build free applications, follow the instructions given :download:`here <../../../apps-free/README.md>`.
