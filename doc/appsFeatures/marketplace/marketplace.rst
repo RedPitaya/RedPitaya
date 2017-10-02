@@ -66,7 +66,7 @@ one of the following types of SDR software such as HDSDR, SDR#, PowerSDR mRX PS,
 
 You can find more about the SDR on the Red Pitaya STEM at the links below:
 
-   http://redpitaya.com/red-pitaya-as-sdr-transceiver/
+   http://blog.redpitaya.com/red-pitaya-and-software-defined-radio/
 
    http://pavel-demin.github.io/red-pitaya-notes/ 
 
