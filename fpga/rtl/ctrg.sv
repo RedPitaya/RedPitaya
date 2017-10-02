@@ -127,9 +127,9 @@ end else begin
    if (evn.rst) begin
        sts_run <= 1'b0;
    end else if (evn.str) begin
-       sts_cnt <= 1'b1;
+       sts_run <= 1'b1;
    end else if (evn.stp) begin
-       sts_cnt <= 1'b0;
+       sts_run <= 1'b0;
    end
    // counter status
    if (evn.rst) begin
