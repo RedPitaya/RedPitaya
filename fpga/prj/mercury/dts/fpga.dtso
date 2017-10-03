@@ -75,6 +75,13 @@
 //				interrupt-parent = <&axi_intc_0>;
 //				interrupts = <5 1>;
 			};
+			ctrg: ctrg@40100000 {
+				compatible = "generic-uio";
+				reg = <0x40100000 0x01000>;
+				reg-names = "regset";
+//				interrupt-parent = <&axi_intc_0>;
+//				interrupts = <6 1>;
+			};
 		};
 	};
 };
