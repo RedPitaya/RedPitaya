@@ -4,6 +4,23 @@
 Ecosystem Guide
 ###############
 
+.. note::
+   
+   | It is recommended that you set ``$LC_ALL`` variable.
+   | To check whether it is set, type the following command into a terminal:
+   
+   .. code-block:: shell-session
+      
+       echo $LC_ALL
+   If it returns an empty line, set it up by typing the following command into the terminal:
+
+   .. code-block:: shell-session
+      
+       export LC_ALL=C
+   
+   This line can also be added to the end of .bashrc and will automatically set the ``$LC_ALL`` variable each time the 
+   terminal is started.
+       
 =====================================
 Red Pitaya ecosystem and applications
 =====================================
