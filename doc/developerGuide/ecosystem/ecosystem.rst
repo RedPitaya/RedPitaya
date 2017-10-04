@@ -84,7 +84,7 @@ You will need the following to build the Red Pitaya components:
       # QEMU
       sudo apt-get install qemu qemu-user qemu-user-static
       # 32 bit libraries
-      sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
+      sudo apt-get install lib32z1 lib32ncurses5 libbz2-1.0:i386 lib32stdc++6
 
 2. Meson Build system (depends on Python 3) is used for some new code.
    It is not required but can be used during development on x86 PC.
