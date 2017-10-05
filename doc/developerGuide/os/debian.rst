@@ -4,8 +4,10 @@
 Red Pitaya OS
 #############
 
-For instructions on how to build the ecosystem, go to :ref:`ecosystem <ecosystem>`.
+.. note::
 
+    To build SD card image :ref:`ecosystem <ecosystem>` is needed.
+    
 ************
 Dependencies
 ************
