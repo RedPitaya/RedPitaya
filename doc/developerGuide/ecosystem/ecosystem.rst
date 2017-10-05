@@ -20,6 +20,12 @@ Ecosystem Guide
    
    This line can also be added to the end of .bashrc and will automatically set the ``$LC_ALL`` variable each time the 
    terminal is started.
+   
+.. note::
+    
+    It is not possible to build an ecosystem on an encrypted home directory, since schroot can not access that 
+    directory. We recommend that you make a separate directory in home directory that is not encrypted e.g. 
+    ``/home/ecosystem_build``
        
 =====================================
 Red Pitaya ecosystem and applications
