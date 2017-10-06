@@ -6,7 +6,7 @@ Red Pitaya OS
 
 .. note::
 
-    To build SD card image :ref:`ecosystem <ecosystem>` is needed.
+    To build an SD card image :ref:`ecosystem <ecosystem>` is needed.
     
 ************
 Dependencies
@@ -33,30 +33,6 @@ Multiple steps are needed to prepare a proper SD card image.
 Ubuntu bootstrap
 ================
 
-.. .. |image.sh| replace:: ``image.sh``
-.. .. _image.sh: /OS/debian/image.sh
-
-.. .. |image-update.sh| replace:: ``image-update.sh``
-.. .. _image-update.sh: /OS/debian/image-update.sh
-
-.. .. |image-fsck.sh| replace:: ``image-fsck.sh``
-.. .. _image-fsck.sh: /OS/debian/
-
-.. .. |ubuntu.sh| replace:: ``ubuntu.sh``
-.. .. _ubuntu.sh: /OS/debian/ubuntu.sh
-
-.. .. |network.sh| replace:: ``network.sh``
-.. .. _network.sh: /OS/debian/network.sh
-
-.. .. |redpitaya.sh| replace:: ``redpitaya.sh``
-.. .. _redpitaya.sh: /OS/debian/redpitaya.sh
-
-.. .. |jupyter.sh| replace:: ``jupyter.sh``
-.. .. _jupyter.sh: /OS/debian/jupyter.sh
-
-.. .. |tft.sh| replace:: ``tft.sh``
-.. .. _tft.sh: /OS/debian/tft.sh
-
 Run the next command inside the project root directory. Root or ``sudo`` privileges are needed.
 
 .. code-block:: shell-session
@@ -65,22 +41,22 @@ Run the next command inside the project root directory. Root or ``sudo`` privile
    # OS/debian/image.sh
    # exit
 
-:download:`image.sh <../../../OS/debian/image.sh`  will create an SD card image with a name containing the current 
+:download:`image.sh <../../../OS/debian/image.sh>`  will create an SD card image with a name containing the current 
 date and time. Two partitions are created a 128MB FAT32 partition and a slightly less then 4GB Ext4 partition.
 
-:download:`image.sh <../../../OS/debian/image.sh` will call :download:`<ubuntu.sh ../../../OS/debian/ubuntu.sh>`
- which installs the base system and some additional packages. It also configures APT (Debian packaging system),
- locales, hostname, timezone, file system table, U-boot and users (access to UART console).
+:download:`image.sh <../../../OS/debian/image.sh>` will call :download:`ubuntu.sh <../../../OS/debian/ubuntu.sh>`
+which installs the base system and some additional packages. It also configures APT (Debian packaging system),
+locales, hostname, timezone, file system table, U-boot and users (access to UART console).
 
-:download:`<ubuntu.sh ../../../OS/debian/ubuntu.sh>` also executes 
-:download:`<network.sh ../../../OS/debian/network.sh>` which creates a
+:download:`ubuntu.sh <../../../OS/debian/ubuntu.sh>` also executes 
+:download:`network.sh <../../../OS/debian/network.sh>` which creates a
 ``systemd-networkd`` based wired and wireless network setup. And it executes
-:download:`redpitaya.sh <../../../OS/debian/redpitaya.sh` which installs additional Debian packages (mostly libraries)
-needed by Red Pitaya applications. :download:`redpitaya.sh <../../../OS/debian/redpitaya.sh` also extracts 
+:download:`redpitaya.sh <../../../OS/debian/redpitaya.sh>` which installs additional Debian packages (mostly libraries)
+needed by Red Pitaya applications. :download:`redpitaya.sh <../../../OS/debian/redpitaya.sh>` also extracts 
 ``ecosystem*.zip`` (if one exists in the current directory) into the FAT partition.
 
-Optionally (code can be commented out) :download:`<ubuntu.sh ../../../OS/debian/ubuntu.sh>` also executes
-:download:`jupyter.sh <../../../OS/debian/jupyter.sh` and :download:`tft.sh <../../../OS/debian/tft.sh` which provide 
+Optionally (code can be commented out) :download:`ubuntu.sh <../../../OS/debian/ubuntu.sh>` also executes
+:download:`jupyter.sh <../../../OS/debian/jupyter.sh>` and :download:`tft.sh <../../../OS/debian/tft.sh>` which provide 
 additional functionality.
 
 The generated image can be written to a SD card
@@ -106,7 +82,7 @@ it can be extracted later to the FAT partition (128MB) of the SD card.
 In addition to Red Pitaya tools, this ecosystem ZIP file contains a boot image (containing FPGA code),
 a boot script (``u-boot.scr``) and the Linux kernel.
 
-A script :download:`<image-update.sh ../../../OS/debian/image-update.sh>` is provided for updating an existing image
+A script :download:`image-update.sh <../../../OS/debian/image-update.sh>` is provided for updating an existing image
 to a newer ecosystem zippfile without making modifications to the ``ext4`` partition.
 
 The script should be run with the image and ecosystem files as arguments:
@@ -122,7 +98,7 @@ File system check
 If the image creation involved multiple steps performed by the user,
 for example some installation/setup procedure performed on a live Red Pitaya,
 there is a possibility a file system might be corrupted.
-The :download:`<image-fsck.sh ../../../OS/debian/image-fsck.sh>` script performs a file system check without changing 
+The :download:`image-fsck.sh <../../../OS/debian/image-fsck.sh>` script performs a file system check without changing 
 anything.
 
 Use this script on an image before releasing it.
