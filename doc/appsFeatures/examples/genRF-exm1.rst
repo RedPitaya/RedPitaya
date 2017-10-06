@@ -51,6 +51,8 @@ MATLAB editor, save project and press run.
 Code - C
 ********
 
+.. code-block:: c
+
     /* Red Pitaya C API example Generating continuous signal  
     * This application generates a specific signal */
 
