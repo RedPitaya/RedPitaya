@@ -14,7 +14,7 @@ Since this driver is actually intended as an example on how to write UIO drivers
 it is missing the ``compatible`` identifiers used by device tree nodes.
 This issues can be solved by providing a compatible string as
 a kernel boot argument ``uio_pdrv_genirq.of_id="generic-uio"``.
-We do this in `patches/u-boot/u-boot.script`_.
+We do this in :download:`u-boot.script <../../../patches/u-boot/u-boot.script>`.
 
 ****************
 Device tree node
@@ -24,7 +24,7 @@ A new UIO device is added by providing a device tree node describing it.
 
 The next example describes an arbitrary signal generator:
 
-.. code-block::
+.. code-block:: c
 
    gen0: gen0@40040000 {
      compatible = "generic-uio";
@@ -58,7 +58,7 @@ Since this names depend on the loading order, and can change if new devices are 
 an `UDEV configuration file </OS/debian/overlay/etc/udev/rules.d/10-redpitaya.rules>`_
 can be used to give each device a symbolink link, containing the name specified in the device tree.
 
-.. code-block::
+.. code-block:: c
 
    SUBSYSTEM=="uio", SYMLINK+="uio/%s{name}", GROUP="uio"
 
