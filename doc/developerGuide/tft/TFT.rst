@@ -114,12 +114,10 @@ The maximum clock speed for this SPI controller is 50MHz.
 Software setup
 **************
 
-.. |tft.sh| replace:: ``tft.sh``
-.. _tft.sh: /OS/debian/tft.sh
 
 Instructions for starting XFCE on the TFT display.
 A script which can be used to generate an image with full support
-is available on GitHub |tft.sh|_.
+is available on GitHub :download:`tft.sh <../../../OS/debian/tft.sh>`.
 
 A set of Ubuntu/Debian packages should be installed:
 
@@ -131,12 +129,8 @@ A set of Ubuntu/Debian packages should be installed:
      xfce4-terminal thunar gnome-icon-theme \
      xserver-xorg xinit xserver-xorg-video-fbdev
 
-.. |99-fbdev.conf| replace:: ``/usr/share/X11/xorg.conf.d/99-fbdev.conf``
-.. _99-fbdev.conf: /OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
-An X11 configuration file should be added to the system |99-fbdev.conf|_:
-
-.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+An X11 configuration file should be added to the system :download:`99-fbdev.conf <../../../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf>`.
 
 Over SSH start the X server:
 
@@ -211,12 +205,9 @@ to +5V VCC, this can be done with a simple jumper
 between the two display connector pins.
 Otherwise it would be possible to repurpose a LED on Red Pitaya.
 
-.. |95-ads7846.rules| replace:: ``/etc/udev/rules.d/95-ads7846.rules``
-.. _95-ads7846.rules: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
 
-The |95-ads7846.rules|_ UDEV rule will create a symbolik link ``/dev/input/touchscreen``.
-
-.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules
+The :download:`95-ads7846.rules <../../../OS/debian/overlay/etc/udev/rules.d/95-ads7846.rules>`> UDEV rule will create a
+symbolik link ``/dev/input/touchscreen``.
 
 ===================
 Adafruit PiTFT 3.5"
@@ -290,19 +281,11 @@ Male connector pinout based on the |PiTFT-35|_
 | +5V               |  ``2`` |  ``1`` | +3.3V             |
 +-------------------+--------+--------+-------------------+
 
-.. |95-stmpe.rules| replace:: ``/etc/udev/rules.d/95-stmpe.rules``
-.. _95-stmpe.rules: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
+The :download:`95-stmpe.rules <../../../OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules>` UDEV rule will create a 
+symbolic link ``/dev/input/touchscreen``.
 
-The |95-stmpe.rules|_ UDEV rule will create a symbolic link ``/dev/input/touchscreen``.
-
-.. literalinclude:: /OS/debian/overlay/etc/udev/rules.d/95-stmpe.rules
-
-.. |99-calibration.conf| replace:: ``/etc/X11/xorg.conf.d/99-calibration.conf``
-.. _99-calibration.conf: /OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf
-
-A calibration file should be added to the system |99-calibration.conf|_:
-
-.. literalinclude:: ../OS/debian/overlay/usr/share/X11/xorg.conf.d/99-fbdev.conf
+A calibration file should be added to the system 
+:download:`99-calibration.conf <../../../OS/debian/overlay/etc/X11/xorg.conf.d/99-calibration.conf>`
 
 -------------
 Block diagram
