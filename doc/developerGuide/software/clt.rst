@@ -76,6 +76,9 @@ Example (2 Vpp square wave signal with 1 MHz on channel 1):
     For correct operation of the generate tool, it is mandatory that the correct FPGA image is loaded. Please note,
     the some application can change the FPGA image loaded.
     To load the FPGA image open a terminal on the RedPitaya and execute the following command:
+    
+    .. code-block:: shell-session
+
        cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
  
     
@@ -129,6 +132,9 @@ Example (acquire 1024 samples with decimation 8):
     For correct operation of the acquire tool, it is mandatory that the correct FPGA image is loaded. Please note,
     the some application can change the FPGA image loaded.
     To load the FPGA image open a terminal on the RedPitaya and execute the following command:
+    
+    .. code-block:: shell-session
+
        cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
  
 ===================
