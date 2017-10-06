@@ -12,6 +12,7 @@ Ecosystem Guide
    .. code-block:: shell-session
       
        echo $LC_ALL
+
    If it returns an empty line, set it up by typing the following command into the terminal:
 
    .. code-block:: shell-session
