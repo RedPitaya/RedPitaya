@@ -9,13 +9,15 @@ ensure that the I/Os are 3-stated at power-on.
 
 The 7 series FPGAs contain a pin called PUDC_B. When PUDC_B is Low, internal pull-up resistors are enabled on each
 SelectIO pin. When PUDC_B is High, internal pull-up resistors are disabled on each SelectIO pin. The state of this pin
- effects the state of the I/O from power-on until configuration completes. Therefore, the I/Os will be 3-stated after
- power-on when PUDC is High.
+effects the state of the I/O from power-on until configuration completes. Therefore, the I/Os will be 3-stated after
+power-on when PUDC is High.
 
 The state of the I/O prior to the rails being powered is not guaranteed.
 
-NOTE: Due to the presence of the clamp diode, if the I/Os are driven before Vcco powered this will reverse bias the
- Vcco rail. For further information, see (Xilinx Answer 45985).
+.. note::
+
+    Due to the presence of the clamp diode, if the I/Os are driven before Vcco powered this will reverse bias the
+    Vcco rail. For further information, see (Xilinx Answer 45985).
 
 SOURCE: https://www.xilinx.com/support/documentation/user_guides/ug865-Zynq-7000-Pkg-Pinout.pdf
 +----------+----------------+-----------+----------------------------------------------------------+
@@ -34,8 +36,10 @@ SOURCE: https://www.xilinx.com/support/documentation/user_guides/ug865-Zynq-7000
 |          |                |           | during configuration.                                    |
 +----------+----------------+-----------+----------------------------------------------------------+
 
-NOTE: On the Red Pitaya board PUDC_B pin is grounded through a capacitor C100. If needed it can be changed, more 
-information can be found at http://redpitaya.readthedocs.io/en/latest/developerGuide/125-14/shem.html.
+.. note::
+
+    On the Red Pitaya board PUDC_B pin is grounded through a capacitor C100. If needed it can be changed, more 
+    information can be found at http://redpitaya.readthedocs.io/en/latest/developerGuide/125-14/shem.html.
 
 ################################
 2. IO Assignments by Package Pin
