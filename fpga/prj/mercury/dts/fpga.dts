@@ -1,3 +1,6 @@
 /include/ "redpitaya.dtsi"
 /include/ "gpio.dtsi"
 /include/ "led-user.dtsi"
+
+// NOTE: Nodes from pl.dtsi are removed
+// /delete-node/ &axi_intc_0;
