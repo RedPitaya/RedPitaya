@@ -46,17 +46,6 @@
 			bias-pull-up;
 			io-standard = <2>;  // LVCMOS25
 		};
-                // TFT D/C (data/control)
-		mux_tft_dc {
-			function = "gpio0";
-			groups = "gpio0_8_grp";
-		};
-		conf_tft_dc {
-			pins = "MIO8";
-			bias-disable;
-			slew-rate = <0>;
-			io-standard = <3>;  // LVCMOS33
-		};
 		// TFT reset
 		mux_tft_reset {
 			function = "gpio0";
@@ -65,17 +54,6 @@
 		conf_tft_reset {
 			pins = "MIO51";
 			bias-pull-up;
-			slew-rate = <0>;
-			io-standard = <3>;  // LVCMOS33
-		};
-		// touch pendown
-		mux_touch_pendow {
-			function = "gpio0";
-			groups = "gpio0_9_grp";
-		};
-		conf_touch_pendow {
-			pins = "MIO9";
-			bias-disable;
 			slew-rate = <0>;
 			io-standard = <3>;  // LVCMOS33
 		};

@@ -18,7 +18,7 @@
 		fps = <25>;
 		bgr;
 		buswidth = <8>;
-		dc-gpios = <&gpio0 8 0>;
+		dc-gpios = <&gpio0 7 0>; /* RED LED - OUT ONLY */
 		debug = <0>;
 	};
 
@@ -29,8 +29,8 @@
 		reg = <1>;
 
 		spi-max-frequency = <1000000>;
-		irq-gpio = <&gpio0 9 0x2>; /* IRQF_TRIGGER_FALLING */
-		interrupts = <9 2>; /* high-to-low edge triggered */
+		irq-gpio = <&gpio0 0 0x2>; /* YELLOW LED - INOUT         */
+		interrupts = <0 2>;        /* HIGH-TO-LOW EDGE TRIGGERED */
 		interrupt-parent = <&gpio0>;
 		interrupt-controller;
 
