@@ -51,12 +51,12 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'doc/index'
+master_doc = 'index'
 
 # General information about the project.
 project = u'Red Pitaya STEMlab'
 title = u'Red Pitaya STEMlab Documentation'
-copyright = u'2016, Red Pitaya d.d.'
+copyright = u'2017, Red Pitaya d.d.'
 author = u'Red Pitaya'
 
 # The version info for the project you're documenting, acts as replacement for
