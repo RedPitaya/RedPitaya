@@ -16,7 +16,7 @@ the next dependencies have to be installed:
 
 .. code-block:: shell-session
 
-   sudo apt install pyton3-pip
+   sudo apt install python3-pip
    pip3 install --upgrade pip
    sudo pip3 install pyvisa
    sudo pip3 install pyvisa-py
