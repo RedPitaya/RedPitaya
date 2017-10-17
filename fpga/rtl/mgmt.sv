@@ -10,7 +10,7 @@ module mgmt #(
   // GPIO mode
   output logic  [GW-1:0] cfg_iom,
   // stream multiplexers
-  output logic   [3-1:0] cfg_loop,
+  output logic   [2-1:0] cfg_loop,
   // system bus
   sys_bus_if.s           bus
 );
