@@ -310,7 +310,7 @@ id #(.GITH (GITH)) id (
 
 // GPIO mode
 DTL exp_iom;
-logic [3-1:0] mgmt_loop;
+logic [2-1:0] mgmt_loop;
 
 mgmt #(.GW ($bits(DTL))) mgmt (
   // GPIO mode
