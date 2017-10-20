@@ -1,3 +1,12 @@
+# Added by DM; 2017/10/17 to check ROOT_DIR setting
+if [ $ROOT_DIR ]; then 
+    echo ROOT_DIR is "$ROOT_DIR"
+else
+    echo Error: ROOT_DIR is not set
+    echo exit with error
+    exit
+fi
+
 # systemd-networkd wired/wireless network configuration (DHCP and WPA supplicant for WiFi)
 mkdir                                                                                    $ROOT_DIR/etc/iptables
 install -v -m 664 -o root -D $OVERLAY/etc/iptables/iptables.rules                        $ROOT_DIR/etc/iptables/iptables.rules

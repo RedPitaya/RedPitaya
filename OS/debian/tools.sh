@@ -2,6 +2,15 @@
 # miscelaneous tools
 ################################################################################
 
+# Added by DM; 2017/10/17 to check ROOT_DIR setting
+if [ $ROOT_DIR ]; then 
+    echo ROOT_DIR is "$ROOT_DIR"
+else
+    echo Error: ROOT_DIR is not set
+    echo exit with error
+    exit
+fi
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get -y install dbus udev
 
