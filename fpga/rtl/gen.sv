@@ -292,4 +292,5 @@ bin_and #(
   // configuration
   .cfg_and   ({$bits(DT){cfg_ena}})
 );
+
 endmodule: gen
