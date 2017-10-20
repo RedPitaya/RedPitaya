@@ -38,9 +38,6 @@ chroot $ROOT_DIR <<- EOF_CHROOT
 # I2C libraries
 apt-get install -y libi2c-dev i2c-tools
 
-# Git can be used to share notebook examples
-apt-get -y install git
-
 # Device tree compiler can be used to compile custom overlays
 apt-get -y install libudev-dev
 EOF_CHROOT

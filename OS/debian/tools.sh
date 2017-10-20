@@ -14,6 +14,9 @@ fi
 chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get -y install dbus udev
 
+# Git can be used to share notebook examples
+apt-get -y install git
+
 # development tools
 apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
 apt-get -y install parted dosfstools
