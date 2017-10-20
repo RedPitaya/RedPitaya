@@ -4,6 +4,8 @@
 Ecosystem Guide
 ###############
 
+Go to redpitaya-public (git) directory.
+
 .. note::
    
    | It is recommended that you set ``$LC_ALL`` variable.
