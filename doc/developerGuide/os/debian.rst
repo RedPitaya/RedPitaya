@@ -8,7 +8,7 @@ Red Pitaya OS
 Overview
 ********
 
-Executable scripts:
+Executable scripts from ``SW/debian`` directory:
 
 +---------------------+------------------------------------------------------------------------------+
 | script              | description                                                                  |
@@ -63,6 +63,7 @@ A short list of SD card image contents:
    - most network configuration files
    - Jupyter work space
 2. Ecosystem (Fat32 partition):
+
    1. Bare metal:
       - ``boot.bin`` file containing FSBL, FPGA bitstream, U-Boot
       - Linux kernel image, device tree files
@@ -121,7 +122,7 @@ The next steps should be executed in the root directory of the Red Pitaya Git re
    $ cd RedPitaya
 
 Run the next command to build the OS image. Root or ``sudo`` privileges are needed.
-The code should be executed as the root user,
+The code should be executed as the ``root`` user,
 otherwise some configuration files will be placed into the wrong users home directory.
 
 .. code-block:: shell-session
