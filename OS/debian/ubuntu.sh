@@ -6,8 +6,17 @@
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
+# Added by DM; 2017/10/17 to check ROOT_DIR setting
+if [ $ROOT_DIR ]; then 
+    echo ROOT_DIR is "$ROOT_DIR"
+else
+    echo Error: ROOT_DIR is not set
+    echo exit with error
+    exit
+fi
+
 # Install Ubuntu base system to the root file system
-UBUNTU_BASE_VER=16.04.2
+UBUNTU_BASE_VER=16.04.3
 UBUNTU_BASE_TAR=ubuntu-base-${UBUNTU_BASE_VER}-base-armhf.tar.gz
 UBUNTU_BASE_URL=http://cdimage.ubuntu.com/ubuntu-base/releases/${UBUNTU_BASE_VER}/release/${UBUNTU_BASE_TAR}
 test -f $UBUNTU_BASE_TAR || curl -L $UBUNTU_BASE_URL -o $UBUNTU_BASE_TAR
@@ -31,6 +40,9 @@ install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DI
 chroot $ROOT_DIR <<- EOF_CHROOT
 apt-get update
 apt-get -y upgrade
+
+# install HWE kernell
+apt-get -y install --install-recommends linux-tools-generic-hwe-16.04 linux-headers-generic-hwe-16.04
 
 # add package containing add-apt-repository
 apt-get -y install software-properties-common
@@ -165,7 +177,7 @@ rm $ROOT_DIR/usr/bin/qemu-arm-static
 
 # create a tarball (without resolv.conf link, since it causes schroot issues)
 rm $ROOT_DIR/etc/resolv.conf
-tar -cpzf redpitaya_ubuntu_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
+tar -cpzf redpitaya_OS_${DATE}.tar.gz --one-file-system -C $ROOT_DIR .
 # recreate resolv.conf link
 ln -sf /run/systemd/resolve/resolv.conf $ROOT_DIR/etc/resolv.conf
 

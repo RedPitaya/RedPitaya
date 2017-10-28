@@ -66,7 +66,7 @@ one of the following types of SDR software such as HDSDR, SDR#, PowerSDR mRX PS,
 
 You can find more about the SDR on the Red Pitaya STEM at the links below:
 
-   http://redpitaya.com/red-pitaya-as-sdr-transceiver/
+   http://blog.redpitaya.com/red-pitaya-and-software-defined-radio/
 
    http://pavel-demin.github.io/red-pitaya-notes/ 
 
@@ -230,21 +230,4 @@ More about this application can be found here:
 
    http://pavel-demin.github.io/red-pitaya-notes/mcpha/
 
-*****************************************************
-Manually downloading and installing free applications
-*****************************************************
 
-If you have problems with installing free applications via
-`marketplace <http://bazaar.redpitaya.com/>`_
-or your Red Pitaya doesn’t have an internet access,
-here are the instructions on how to install free applications manually.
-
-#. Download ``appname.zip`` file of the desired application from
-   `Marketplace archive <http://archives.redpitaya.com/>`_
-#. Unzip application folder
-#. Insert SD card in to your PC, navigate to the ``www/apps`` folder
-#. Copy unziped application folder to the ``apps`` folder
-    
-.. image:: www_folder.png
-.. image:: apps_folder.png
-.. image:: freq_folder.png

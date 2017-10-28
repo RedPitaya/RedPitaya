@@ -29,8 +29,8 @@ Apart from the graph there are five areas in which the surface is divided:
     #. Channel Setting display: Indicates the scale of the Y axis for all channels that are switched.
 
     
-Fatures
-*******
+Features
+********
 
 Oscilloscope & signal generator main features are listed below:
     - Run/stop and auto set functionality

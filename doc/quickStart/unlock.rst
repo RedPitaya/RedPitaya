@@ -1,3 +1,8 @@
+.. admonition:: APPLICATIONS UNLOCKED
+
+    Since release 0.97 all applications are unlocked by default.
+    Users don't need to register or apply unlock keys anymore.
+
 #######################################
 Unlocking apps or extending the license
 #######################################

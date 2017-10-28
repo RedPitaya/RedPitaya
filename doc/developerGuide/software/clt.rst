@@ -70,6 +70,17 @@ Example (2 Vpp square wave signal with 1 MHz on channel 1):
     Signal generator output impedance is 50 Ω. If user wants to connect the output of the signal generator 
     (OUT1, OUT2) to the Red Pitaya input (IN1, IN2), 50 Ω terminations should be connected at the Red Pitaya inputs 
     through the T-type connector.
+
+    
+.. note::
+    For correct operation of the generate tool, it is mandatory that the correct FPGA image is loaded. Please note,
+    the some application can change the FPGA image loaded.
+    To load the FPGA image open a terminal on the RedPitaya and execute the following command:
+    
+    .. code-block:: shell-session
+
+       cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+ 
     
 ==========================
 Signal acquisition utility
@@ -116,6 +127,15 @@ Example (acquire 1024 samples with decimation 8):
     -139     -88
     -134     -82
     ...
+ 
+.. note::
+    For correct operation of the acquire tool, it is mandatory that the correct FPGA image is loaded. Please note,
+    the some application can change the FPGA image loaded.
+    To load the FPGA image open a terminal on the RedPitaya and execute the following command:
+    
+    .. code-block:: shell-session
+
+       cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
  
 ===================
 Saving data buffers

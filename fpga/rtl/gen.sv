@@ -39,6 +39,7 @@ module gen #(
   int unsigned CWL = 32,  // counter width for burst length
   int unsigned CWN = 16,  // counter width for burst number
   // event parameters
+  int unsigned ER  = 0,   // event reset
   int unsigned EN  = 1,   // event number
   int unsigned EL  = $clog2(EN),
   // trigger parameters
@@ -50,8 +51,8 @@ module gen #(
   input  evn_pkg::evn_t [EN-1:0] evi,  // input
   output evn_pkg::evn_t          evo,  // output
   // triggers input/output
-  input                 [TN-1:0] trg,  // input
-  output evn_pkg::trg_t          tro,  // output
+  input  logic          [TN-1:0] trg,  // input
+  output logic                   tro,  // output
   // interrupt
   output logic                   irq,
   // system bus
@@ -67,6 +68,7 @@ module gen #(
 logic  [EL-1:0] cfg_evn;
 // trigger mask
 logic  [TN-1:0] cfg_trg;
+logic           cfg_tre; // trigger repeat enable
 
 // software events
 evn_pkg::evn_t  evn;  // multiplexed input
@@ -77,7 +79,7 @@ logic           ctl_trg;
 logic           sts_trg;
 
 // generator mode
-logic           cfg_ben;  // burst enable
+logic           cfg_mod;  // mode (0 - periodic, 1 - burst)
 logic           cfg_inf;  // infinite burst
 // continuous/periodic configuration
 logic  [CW-1:0] cfg_siz;  // table size
@@ -115,20 +117,21 @@ localparam int unsigned BAW=7;
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   // event select
-  cfg_evn <= '0;
+  cfg_evn <= ER;
   // trigger mask
   cfg_trg <= '0;
+  cfg_tre <= '0;
   // state machine
   cfg_siz <= '0;
   cfg_off <= '0;
   cfg_ste <= '0;
   // burst mode
-  cfg_ben <= '0;
+  cfg_mod <= '0;
   cfg_inf <= '0;
   cfg_bdr <= '0;
   cfg_bdl <= '0;
-  cfg_bpn <= '0;
   cfg_bpl <= '0;
+  cfg_bpn <= '0;
   // linear transform or logic analyzer output enable
   cfg_mul <= '0;
   cfg_sum <= '0;
@@ -137,10 +140,10 @@ end else begin
     // event select
     if (bus.addr[BAW-1:0]=='h04)  cfg_evn <= bus.wdata;
     // triger mask
-    if (bus.addr[BAW-1:0]=='h08)  cfg_trg <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h08)  cfg_trg <= bus.wdata    ;
+    if (bus.addr[BAW-1:0]=='h08)  cfg_tre <= bus.wdata[31];
     // generator mode
-    if (bus.addr[BAW-1:0]=='h10)  cfg_ben <= bus.wdata[0];
-    if (bus.addr[BAW-1:0]=='h10)  cfg_inf <= bus.wdata[1];
+    if (bus.addr[BAW-1:0]=='h10)  cfg_mod <= bus.wdata[0];
     // continuous/periodic configuration
     if (bus.addr[BAW-1:0]=='h14)  cfg_siz <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h18)  cfg_off <= bus.wdata;
@@ -150,6 +153,7 @@ end else begin
     if (bus.addr[BAW-1:0]=='h24)  cfg_bdl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h28)  cfg_bpl <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h2c)  cfg_bpn <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h2c)  cfg_inf <= bus.wdata[31];
     // linear transformation and enable
     if (bus.addr[BAW-1:0]=='h40)  cfg_mul <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h44)  cfg_sum <= bus.wdata;
@@ -170,9 +174,9 @@ casez (bus.addr[BAW-1:0])
   // event select
   'h04: bus.rdata <= cfg_evn;
   // trigger mask
-  'h08: bus.rdata <= cfg_trg;
+  'h08: bus.rdata <= (cfg_tre << 31) | cfg_trg;
   // generator mode
-  'h10: bus.rdata <= {cfg_inf, cfg_ben};
+  'h10: bus.rdata <= cfg_mod;
   // continuous/periodic configuration
   'h14: bus.rdata <= cfg_siz;
   'h18: bus.rdata <= cfg_off;
@@ -181,7 +185,7 @@ casez (bus.addr[BAW-1:0])
   'h20: bus.rdata <= cfg_bdr;
   'h24: bus.rdata <= cfg_bdl;
   'h28: bus.rdata <= cfg_bpl;
-  'h2c: bus.rdata <= cfg_bpn;
+  'h2c: bus.rdata <= (cfg_inf << 31) | cfg_bpn;
   // burst status
   'h30: bus.rdata <= sts_bpl;
   'h34: bus.rdata <= sts_bpn;
@@ -193,11 +197,6 @@ casez (bus.addr[BAW-1:0])
   default: bus.rdata <= 'x;
 endcase
 
-// interrupt output
-always_ff @(posedge bus.clk)
-if (~bus.rstn)  irq <= '0;
-else            irq <= tro.lst;
-
 ////////////////////////////////////////////////////////////////////////////////
 // generator core instance 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +205,7 @@ always_ff @(posedge bus.clk)
 if (~bus.rstn)  evn <= '0;
 else            evn <= evi[cfg_evn];
 
-assign ctl_trg = evn.swt | |(trg & cfg_trg);
+assign ctl_trg = |(trg & cfg_trg);
 
 // stream from generator
 axi4_stream_if #(.DN (DN), .DT (DT)) stg (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
@@ -229,12 +228,12 @@ asg #(
   .evs      (evs),
   // trigger
   .ctl_trg  (ctl_trg),
+  .cfg_tre  (cfg_tre),
   // events
-  .evo_per  (tro.trg),
-  .evo_lst  (tro.lst),
+  .evo_per  (tro),
+  .evo_lst  (irq),
   // generator mode
-  .cfg_ben  (cfg_ben),
-  .cfg_inf  (cfg_inf),
+  .cfg_mod  (cfg_mod),
   // continuous/periodic configuration
   .cfg_siz  (cfg_siz),
   .cfg_off  (cfg_off),
@@ -244,6 +243,7 @@ asg #(
   .cfg_bdl  (cfg_bdl),
   .cfg_bpl  (cfg_bpl),
   .cfg_bpn  (cfg_bpn),
+  .cfg_inf  (cfg_inf),
   // status
   .sts_bpl  (sts_bpl),
   .sts_bpn  (sts_bpn),
@@ -292,4 +292,5 @@ bin_and #(
   // configuration
   .cfg_and   ({$bits(DT){cfg_ena}})
 );
+
 endmodule: gen

@@ -114,10 +114,10 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  exp_p_od = 1'b0;
-  exp_n_od = 1'b0;
-  exp_p_oe = 1'b0;
-  exp_n_oe = 1'b0;
+  exp_p_od = '0;
+  exp_n_od = '0;
+  exp_p_oe = '0;
+  exp_n_oe = '0;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,23 +125,27 @@ end
 ////////////////////////////////////////////////////////////////////////////////
 
 initial begin
-  ##10000;
+  ##6000;
+  $display("ERROR: timeout!");
   $finish();
 end
 
 initial begin
   ##100;
-  //test_id  (32'h40000000);
-//test_mgmt         (32'h40010000, '1, '0);
-//test_gen_periodic (32'h40040000, 32'h40050000, 0);
-//test_gen_burst    (32'h40040000, 32'h40050000, 0);
-//test_lg_burst     (32'h400c0000, 32'h400d0000, 4);
-//test_la_trigger   (32'h400e0000, 32'h400f0000, 5);
-//  ##16;
-  test_osc          (32'h40080000, 32'h40090000, 2);
-  //test_clb (32'h40030000);
-  //test_la (32'h40300000);
-  //test_la_automatic (32'h40300000);
+//   test_id                 (32'h40000000);
+//   test_mgmt               (32'h40010000, '1, '0);
+//   test_gen_periodic       (32'h40040000, 32'h40050000, 0);
+//   test_gen_burst          (32'h40040000, 32'h40050000, 0);
+//   test_gen_bst_ext_trig (32'h40040000, 32'h40050000, 0);
+//   test_gen_per_ext_trig (32'h40040000, 32'h40050000, 0);
+  test_lg_burst           (32'h400c0000, 32'h400d0000, 4);
+//   test_la_trg         (32'h400e0000, 32'h400f0000, 5);
+//   //  ##16;
+//   test_osc                (32'h40080000, 32'h40090000, 2);
+//   test_loopback           ();
+//   test_clb (32'h40030000);
+//   test_la (32'h40300000);
+//   test_la_automatic (32'h40300000);
   ##16;
   $finish();
 end
@@ -154,7 +158,6 @@ task axi_read (
   input  logic [32-1:0] adr,
   output logic [32-1:0] dat
 );
-  int r;
   top_tb.top.ps.system_i.axi_bus_model.ReadTransaction (
     .ARDelay (0),  .ar ('{
                           id    : 0,
@@ -168,9 +171,8 @@ task axi_read (
                           prot  : 0,
                           qos   : 0
                          }),
-     .RDelay (0),   .r (r)
+     .RDelay (0),   .rdat (dat)
   );
-  dat = r;
 endtask: axi_read
 
 task axi_write (
@@ -214,7 +216,168 @@ int buf_len = 'hff+1;
 real freq  = 10_000; // 10kHz
 real phase = 0; // DEG
 
-task test_osc (
+task test_loopback ;
+  logic signed [ 32-1: 0] rdata_blk;
+  logic        [ 32-1: 0] sts_pre;
+  logic        [ 32-1: 0] sts_pst;
+  int                     ptr;
+  static int              siz = 32;  
+ 
+  ##10;
+  // gen
+  axi_write('h40040000+'h04 , 'h00000000 ); // SW event source select
+  // osc
+  axi_write('h40080000+'h40 , 'h00007d93 ); // AA coeficient
+  axi_write('h40080000+'h44 , 'h000437c7 ); // BB coeficient
+  axi_write('h40080000+'h48 , 'h00d9999a ); // KK coeficient
+  axi_write('h40080000+'h4c , 'h00002666 ); // PP coeficient
+  axi_write('h40080000+'h04 , 'h00000002 ); // SW event source select
+  axi_write('h40080000+'h08 , 'h00000004 ); // HW trigger mask
+  // gen data
+  axi_write('h40050000+'h00 , 'h0000A00  ); // DAT0
+  axi_write('h40050000+'h04 , 'h0000A00  ); // DAT1
+  axi_write('h40050000+'h08 , 'h0000A00  ); // DAT2
+  axi_write('h40050000+'h0c , 'h0000A00  ); // DAT3
+  axi_write('h40050000+'h10 , 'h0000A00  ); // DAT4
+  axi_write('h40050000+'h14 , 'h0000A00  ); // DAT5
+  axi_write('h40050000+'h18 , 'h0000A00  ); // DAT6
+  axi_write('h40050000+'h1c , 'h0000A00  ); // DAT7
+  axi_write('h40050000+'h20 , 'h0000000  ); // DAT8
+  // gen
+  axi_write('h40040000+'h14 , 'h0001ffff ); // table size
+  axi_write('h40040000+'h20 , 'h00000000 ); // burst data   repetition
+//   axi_write('h40040000+'h24 , 'h00001fff ); // burst data   length
+  axi_write('h40040000+'h24 , 'h00000008 ); // burst data   length
+  axi_write('h40040000+'h28 , 'h00002fff ); // burst period length
+  axi_write('h40040000+'h2c , 'h00000003 ); // burst period number
+  axi_write('h40040000+'h10 , 'h00000001 ); // Generator mode
+  axi_write('h40040000+'h40 , 'h00001000 ); // multiplier (amplitude)
+  axi_write('h40040000+'h44 , 'h00000000 ); // adder (offset)
+  axi_write('h40040000+'h48 , 'h00000001 ); // output enable
+  // osc
+  axi_write('h40080000+'h30 , 'h00000000 ); // decimation factor
+  axi_write('h40080000+'h3C , 'h00000001 ); // bypass filter
+  axi_write('h40080000+'h10 , 'h00000000 ); // delay pre  trigger
+  axi_write('h40080000+'h14 , siz        ); // delay post trigger
+  axi_write('h40080000+'h04 , 'h00000000 ); // SW event source select
+  axi_write('h40080000+'h08 , 'h00000000 ); // HW trigger mask
+  
+  // ### loop
+  axi_write('h40010000+'h04 , 'h00000003 ); // gen->osc loop
+  ##1000;
+  
+  // loop 1
+  axi_write('h40040000+'h00 , 'h00000001 ); // reset
+  axi_write('h40040000+'h00 , 'h00000002 ); // status
+  axi_write('h40040000+'h00 , 'h00000008 ); // trigger
+  ##40;
+  
+  axi_read('h40080000 + 'h18, sts_pre );  // read table
+  axi_read('h40080000 + 'h1C, sts_pst );  // read table
+  sts_pre = sts_pre & 'h7FFFFFFF;
+  sts_pst = sts_pst & 'h7FFFFFFF;
+  ptr=(sts_pre + sts_pst) % 16384;
+  $display(" pre %d, post %d, ptr %d",sts_pre ,sts_pst,ptr);
+  for (int i=(ptr-siz); i<ptr; i++) begin
+    axi_read('h40090000 + (i*2), rdata_blk );  // read table
+    $display("(%2d) rdata_blk[%H] %H",i-(ptr-siz),'h40090000 + (i*2), i[0] ?  rdata_blk[32-1:18] : rdata_blk[16-1:2] );
+  end
+  ##1000;
+    
+  // loop 2
+  // gen data
+  axi_write('h40050000+'h00 , 'h0000B00  ); // DAT0
+  axi_write('h40050000+'h04 , 'h0000B00  ); // DAT1
+  axi_write('h40050000+'h08 , 'h0000B00  ); // DAT2
+  axi_write('h40050000+'h0c , 'h0000B00  ); // DAT3
+  axi_write('h40050000+'h10 , 'h0000B00  ); // DAT4
+  axi_write('h40050000+'h14 , 'h0000B00  ); // DAT5
+  axi_write('h40050000+'h18 , 'h0000B00  ); // DAT6
+  axi_write('h40050000+'h1c , 'h0000B00  ); // DAT7
+  axi_write('h40050000+'h20 , 'h0000000  ); // DAT8
+  
+  axi_write('h40040000+'h00 , 'h00000001 ); // reset
+  ##30;
+  axi_write('h40040000+'h00 , 'h00000002 ); // status
+  ##30;
+  axi_write('h40040000+'h00 , 'h00000008 ); // trigger
+  ##40;
+  
+  axi_read('h40080000 + 'h18, sts_pre );  // read table
+  axi_read('h40080000 + 'h1C, sts_pst );  // read table
+  sts_pre = sts_pre & 'h7FFFFFFF;
+  sts_pst = sts_pst & 'h7FFFFFFF;
+  ptr=(sts_pre + sts_pst) % 16384;
+  $display(" pre %d, post %d, ptr %d",sts_pre ,sts_pst,ptr);
+  for (int i=(ptr-siz); i<ptr; i++) begin
+    axi_read('h40090000 + (i*2), rdata_blk );  // read table
+    $display("(%2d) rdata_blk[%H] %H",i-(ptr-siz),'h40090000 + (i*2), i[0] ?  rdata_blk[32-1:18] : rdata_blk[16-1:2] );
+  end
+  ##1000;
+  
+  // loop 3
+  axi_write('h40050000+'h00 , 'h0000700  ); // DAT0
+  axi_write('h40050000+'h04 , 'h0000700  ); // DAT1
+  axi_write('h40050000+'h08 , 'h0000700  ); // DAT2
+  axi_write('h40050000+'h0c , 'h0000700  ); // DAT3
+  axi_write('h40050000+'h10 , 'h0000700  ); // DAT4
+  axi_write('h40050000+'h14 , 'h0000700  ); // DAT5
+  axi_write('h40050000+'h18 , 'h0000700  ); // DAT6
+  axi_write('h40050000+'h1c , 'h0000700  ); // DAT7
+  axi_write('h40050000+'h20 , 'h0000000  ); // DAT8
+
+  axi_write('h40040000+'h00 , 'h00000001 ); // reset
+  ##300;
+  axi_write('h40040000+'h00 , 'h00000002 ); // status
+  ##300;
+  axi_write('h40040000+'h00 , 'h00000008 ); // trigger
+  ##40;
+  
+  axi_read('h40080000 + 'h18, sts_pre );  // read table
+  axi_read('h40080000 + 'h1C, sts_pst );  // read table
+  sts_pre = sts_pre & 'h7FFFFFFF;
+  sts_pst = sts_pst & 'h7FFFFFFF;
+  ptr=(sts_pre + sts_pst) % 16384;
+  $display(" pre %d, post %d, ptr %d",sts_pre ,sts_pst,ptr);
+  for (int i=(ptr-siz); i<ptr; i++) begin
+    axi_read('h40090000 + (i*2), rdata_blk );  // read table
+    $display("(%2d) rdata_blk[%H] %H",i-(ptr-siz),'h40090000 + (i*2), i[0] ?  rdata_blk[32-1:18] : rdata_blk[16-1:2] );
+  end
+  ##1000;
+  
+  // loop 4  
+  axi_write('h40050000+'h00 , 'h0000D00  ); // DAT0
+  axi_write('h40050000+'h04 , 'h0000D00  ); // DAT1
+  axi_write('h40050000+'h08 , 'h0000D00  ); // DAT2
+  axi_write('h40050000+'h0c , 'h0000D00  ); // DAT3
+  axi_write('h40050000+'h10 , 'h0000D00  ); // DAT4
+  axi_write('h40050000+'h14 , 'h0000D00  ); // DAT5
+  axi_write('h40050000+'h18 , 'h0000D00  ); // DAT6
+  axi_write('h40050000+'h1c , 'h0000D00  ); // DAT7
+  axi_write('h40050000+'h20 , 'h0000000  ); // DAT8
+  
+  axi_write('h40040000+'h00 , 'h00000001 ); // reset
+  ##17000;
+  axi_write('h40040000+'h00 , 'h00000002 ); // status
+  ##17000;
+  axi_write('h40040000+'h00 , 'h00000008 ); // trigger
+  ##40;
+  
+  axi_read('h40080000 + 'h18, sts_pre );  // read table
+  axi_read('h40080000 + 'h1C, sts_pst );  // read table
+  sts_pre = sts_pre & 'h7FFFFFFF;
+  sts_pst = sts_pst & 'h7FFFFFFF;
+  ptr=(sts_pre + sts_pst) % 16384;
+  $display(" pre %d, post %d, ptr %d",sts_pre ,sts_pst,ptr);
+  for (int i=(ptr-siz); i<ptr; i++) begin
+    axi_read('h40090000 + (i*2), rdata_blk );  // read table
+    $display("(%2d) rdata_blk[%H] %H",i-(ptr-siz),'h40090000 + (i*2), i[0] ?  rdata_blk[32-1:18] : rdata_blk[16-1:2] );
+  end
+  ##1000;
+  
+endtask: test_loopback
+
+task test_osc(
   int unsigned regset,
   int unsigned buffer,
   int unsigned sh = 0
@@ -245,6 +408,7 @@ task test_osc (
   //axi_write(regset+'h00, 4'b0100);  // stop
   //axi_write(regset+'h00, 4'b1000);  // trigger
   ##1000;
+
 endtask: test_osc
 
 
@@ -258,7 +422,7 @@ task test_gen_periodic (
 
   // write table
   for (int i=0; i<buf_len; i++) begin
-    axi_write(buffer + (i*4), i<<4);  // write table
+    axi_write(buffer + (i*2), i<<4);  // write table
   end
 //  for (int i=0; i<buf_len; i+=2) begin
 //    logic [2-1:0] [16-1:0] data;
@@ -269,7 +433,7 @@ task test_gen_periodic (
 //  // read table
 //  rdata_blk = new [80];
 //  for (int i=0; i<buf_len; i++) begin
-//    axi_read(buffer + (i*4), rdata_blk [i]);  // read table
+//    axi_read(buffer + (i*2), rdata_blk [i]);  // read table
 //  end
 
   // configure amplitude and DC offset
@@ -332,6 +496,118 @@ task test_gen_burst (
   ##20;
 endtask: test_gen_burst
 
+task test_gen_bst_ext_trig (
+  int unsigned regset,
+  int unsigned buffer,
+  int unsigned sh = 0
+);
+  // write table
+  for (int i=0; i<8; i++) begin
+    axi_write(buffer + (i*4), i);  // write table
+  end
+
+  // enable GPIO
+  exp_p_oe[0] = 1'b1;
+
+  // configure amplitude and DC offset
+  axi_write(regset+'h40, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h44, 0);             // DC offset
+  axi_write(regset+'h48, 1);             // output enable
+
+  // configure burst mode
+  axi_write(regset+'h10, 2'b01);  // select burst mode
+  // burst mode
+  axi_write(regset+'h20,  1 - 1);  // burst data repetitions
+  axi_write(regset+'h24,  6 - 1);  // burst data length
+  axi_write(regset+'h28, 16 - 1);  // burst period length
+  axi_write(regset+'h2c,  4 - 1);  // burst period number
+  // events
+  axi_write(regset+'h04, sh);  // SW event select
+  axi_write(regset+'h08, 1<<5);  // trigger mask
+  // reset, start, trigger
+  axi_write(regset+'h00, 4'b0001);
+  axi_write(regset+'h00, 4'b0010);
+  
+  // SW triggers
+//   repeat(10) begin
+//   axi_write(regset+'h00, 4'b1000);
+//     ##4;
+//   end
+  // setup LA trigger
+  // enable posedge trigger
+  axi_write('h400e0000+'h28, 16'h0001);
+  // enable input mask
+  axi_write('h400e0000+'h40, 16'h0001);
+
+  // create a series of pulses on exp_p_io[0]
+  for (int unsigned i=0; i<12; i++) begin
+    exp_p_od[0] = 1'b1;
+    ##1;
+    exp_p_od[0] = 1'b0;
+    ##6; 
+  end
+  
+  // stop (reset)
+//  axi_write(regset+'h00, 2'b01);
+  ##20;
+endtask: test_gen_bst_ext_trig
+
+task test_gen_per_ext_trig (
+  int unsigned regset,
+  int unsigned buffer,
+  int unsigned sh = 0
+);
+  // write table
+  for (int i=0; i<16; i++) begin
+    axi_write(buffer + (i*4), i);  // write table
+  end
+
+  // enable GPIO
+  exp_p_oe[0] = 1'b1;
+
+  // configure amplitude and DC offset
+  axi_write(regset+'h40, 1 << (DWM-2));  // amplitude
+  axi_write(regset+'h44, 0);             // DC offset
+  axi_write(regset+'h48, 1);             // output enable
+
+  // configure burst mode
+  axi_write(regset+'h10, 2'b00);  // select burst mode
+  // burst mode
+  axi_write(regset+'h14, 16 << 16 );  // table size
+  axi_write(regset+'h18,  1 << 16 );  // address initial offset (phase)
+  axi_write(regset+'h1c,  1 << 16 );  // address increment step (frequency)
+  // events
+  axi_write(regset+'h04, sh);  // SW event select
+  axi_write(regset+'h08, 1<<5);  // trigger mask
+  // reset, start, trigger
+  axi_write(regset+'h00, 4'b0001);
+  axi_write(regset+'h00, 4'b0010);
+  
+  // SW triggers
+//   repeat(10) begin
+//   axi_write(regset+'h00, 4'b1000);
+//     ##4;
+//   end
+  // setup LA trigger
+  // enable posedge trigger
+  axi_write('h400e0000+'h28, 16'h0001);
+  // enable input mask
+  axi_write('h400e0000+'h40, 16'h0001);
+
+  // create a series of pulses on exp_p_io[0]
+  for (int unsigned i=0; i<12; i++) begin
+    exp_p_od[0] = 1'b1;
+    ##1;
+    exp_p_od[0] = 1'b0;
+    ##6; 
+  end
+
+  // stop (reset)
+//  axi_write(regset+'h00, 2'b01);
+  ##20;
+endtask: test_gen_per_ext_trig
+
+
 // calibration regset test
 task test_clb (
   int unsigned regset
@@ -367,9 +643,11 @@ task test_lg_burst (
 );
   ##10;
   // write table
-  for (int i=0; i<buf_len; i++) begin
-    axi_write(buffer + (i*4), i);  // write table
-  end
+//   for (int i=0; i<buf_len; i++) begin
+    axi_write(buffer + (0), 1);  // write table
+    axi_write(buffer + (4), 0);  // write table
+
+//   end
   // configure LG output enable
   axi_write(regset+'h40, '1);  // output enable 0
   axi_write(regset+'h44, '1);  // output enable 1
@@ -378,12 +656,12 @@ task test_lg_burst (
 
   ##4;
   // configure burst mode
-  axi_write(regset+'h10, 2'b11);  // burst disable
+  axi_write(regset+'h10, 2'b01);  // select burst mode
   // burst mode
-  axi_write(regset+'h24, buf_len - 1);  // burst data length
-  axi_write(regset+'h28, buf_len - 1);  // burst idle length
-  axi_write(regset+'h2c, 100);  // repetitions
-  axi_write(regset+'h20, 'b11);  // enable burst mode and infinite repetitions
+  axi_write(regset+'h20,  7 - 1);  // burst data repetitions
+  axi_write(regset+'h24,  2 - 1);  // burst data length
+  axi_write(regset+'h28, 23 - 1);  // burst period length
+  axi_write(regset+'h2c,  4 - 1);  // burst period number
 
   // events
   ##4;
@@ -399,10 +677,8 @@ task test_lg_burst (
 endtask: test_lg_burst
 
 
-task test_la_trigger (
-  int unsigned regset,
-  int unsigned buffer,
-  int unsigned sh = 0
+task test_la_trg (
+  int unsigned regset
 );
   // set GPIO into neutral state
   ##10;
@@ -412,7 +688,7 @@ task test_la_trigger (
   axi_write(regset+'h28, 16'h0001);  // cfg_edg_pos
   axi_write(regset+'h2c, 16'h0000);  // cfg_edg_neg
   ##10;
-endtask: test_la_trigger
+endtask: test_la_trg
 
 task test_la (
   int unsigned regset,
@@ -437,9 +713,7 @@ endtask: test_la
 
 
 task test_la_automatic (
-  int unsigned regset,
-  int unsigned buffer,
-  int unsigned sh = 0
+  int unsigned regset
 );
   ##10;
 

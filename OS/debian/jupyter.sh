@@ -9,6 +9,15 @@
 # install packages
 ###############################################################################
 
+# Added by DM; 2017/10/17 to check ROOT_DIR setting
+if [ $ROOT_DIR ]; then 
+    echo ROOT_DIR is "$ROOT_DIR"
+else
+    echo Error: ROOT_DIR is not set
+    echo exit with error
+    exit
+fi
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 # Sigrok
 apt-get -y install libsigrok libsigrokdecode sigrok-cli
@@ -22,14 +31,17 @@ apt-get -y install python3-dev python3-cffi python3-wheel python3-setuptools pyt
 pip3 install --upgrade pip
 
 # Python numerical processing and plotting
-#apt-get -y install python3-numpy python3-scipy python3-pandas
-#apt-get -y install python3-matplotlib
 apt-get -y install gfortran libopenblas-dev liblapack-dev python-dev
-pip3 install numpy
-pip3 install scipy
-pip3 install pandas
-apt-get -y install libpng16-16 libfreetype6
-pip3 install pycairo matplotlib
+# APT
+apt-get -y install python3-numpy python3-scipy python3-pandas
+apt-get -y install python3-matplotlib
+# # PIP (there appears to be a bug in how new numpy handles FPGA buffer mapping)
+# pip3 install numpy
+# pip3 install scipy
+# pip3 install pandas
+# apt-get -y install libpng-dev libfreetype6-dev
+# #pip3 install pycairo
+# pip3 install matplotlib
 
 # Jupyter and ipywidgets
 pip3 install jupyter

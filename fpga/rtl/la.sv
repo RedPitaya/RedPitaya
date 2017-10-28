@@ -13,6 +13,7 @@ module la #(
   // aquisition parameters
   int unsigned CW  = 32-1,  // counter width
   // event parameters
+  int unsigned ER  = 0,   // event reset
   int unsigned EN  = 1,   // event number
   int unsigned EL  = $clog2(EN),
   // trigger parameters
@@ -25,8 +26,8 @@ module la #(
   input  evn_pkg::evn_t [EN-1:0] evi,  // input
   output evn_pkg::evn_t          evo,  // output
   // triggers input/output
-  input                 [TN-1:0] trg,  // input
-  output evn_pkg::trg_t          tro,  // output
+  input  logic          [TN-1:0] trg,  // input
+  output logic                   tro,  // output
   // reset output
   output logic                   ctl_rst,
   // interrupt
@@ -107,7 +108,7 @@ localparam int unsigned BAW=7;
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   // event select
-  cfg_evn <= '0;
+  cfg_evn <= ER;
   // trigger mask
   cfg_trg <= '0;
   // configuration
@@ -139,13 +140,13 @@ end else begin
     if (bus.addr[BAW-1:0]=='h24)  cfg_cmp_val <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h28)  cfg_edg_pos <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h2c)  cfg_edg_neg <= bus.wdata;
-    // dacimation
-    if (bus.addr[BAW-1:0]=='h30)  cfg_dec <= bus.wdata;
     // RLE
-    if (bus.addr[BAW-1:0]=='h34)  cfg_rle <= bus.wdata[0];
+    if (bus.addr[BAW-1:0]=='h30)  cfg_rle <= bus.wdata[0];
     // bitwise input polarity
     if (bus.addr[BAW-1:0]=='h40)  cfg_msk <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h44)  cfg_pol <= bus.wdata;
+    // dacimation
+    if (bus.addr[BAW-1:0]=='h48)  cfg_dec <= bus.wdata;
   end
 end
 
@@ -173,23 +174,18 @@ casez (bus.addr[BAW-1:0])
   'h24: bus.rdata <= cfg_cmp_val;
   'h28: bus.rdata <= cfg_edg_pos;
   'h2c: bus.rdata <= cfg_edg_neg;
-  // decimation
-  'h30: bus.rdata <= cfg_dec;
   // RLE configuration
-  'h34: bus.rdata <= cfg_rle;
+  'h30: bus.rdata <= cfg_rle;
   // stream counter status
   'h38: bus.rdata <= sts_cur;
   'h3c: bus.rdata <= sts_lst;
   // bitwise input polarity
   'h40: bus.rdata <= cfg_msk;
   'h44: bus.rdata <= cfg_pol;
+  // decimation
+  'h48: bus.rdata <= cfg_dec;
   default: bus.rdata <= 'x;
 endcase
-
-// interrupt output
-always_ff @(posedge bus.clk)
-if (~bus.rstn)  irq <= '0;
-else            irq <= tro.lst;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Decimation
@@ -223,9 +219,9 @@ assign std.TREADY = stn.TREADY;
 // Edge detection (trigger source)
 ////////////////////////////////////////////////////////////////////////////////
 
-la_trigger #(
+la_trg #(
   .DT (DT)
-) trigger (
+) la_trg (
   // control
   .ctl_rst  (evn.rst),
   // configuration
@@ -234,7 +230,7 @@ la_trigger #(
   .cfg_edg_pos (cfg_edg_pos),
   .cfg_edg_neg (cfg_edg_neg),
   // output triggers
-  .sts_trg  (tro.trg),
+  .sts_trg  (tro),
   // stream monitor
   .sti      (stn),
   .sto      (stt)
@@ -273,7 +269,7 @@ acq #(
   .ctl_trg  (ctl_trg),
   .sts_trg  (evs.swt),
   // events
-  .evn_lst  (tro.lst),
+  .evn_lst  (irq),
   // configuration/status pre trigger
   .cfg_pre  (cfg_pre),
   .sts_pre  (sts_pre),

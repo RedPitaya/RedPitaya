@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Module: AXI4-Stream demux
-// Authors: Iztok Jeras
+// Authors: Iztok Jeras, Miha Cankar
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@ logic [SN-1:0] tready;
 generate
 for (genvar i=0; i<SN; i++) begin: for_str
 
-assign sto[i].TVALID = (i==sel) & sti.TVALID;
+assign sto[i].TVALID = (i==sel)             ; // data from ADC is always valid
 assign sto[i].TDATA  =            sti.TDATA ;
 assign sto[i].TKEEP  =            sti.TKEEP ;
 assign sto[i].TLAST  =            sti.TLAST ;
@@ -34,6 +34,6 @@ assign tready[i] = sto[i].TREADY;
 end: for_str
 endgenerate
 
-assign sti.TREADY = tready[sel];
+assign sti.TREADY = 1'b1;// oscilloscope must handle all data
 
 endmodule: axi4_stream_demux

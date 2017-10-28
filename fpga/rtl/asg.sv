@@ -47,11 +47,12 @@ module asg #(
   output evn_pkg::evn_t  evs    ,  // output
   // control/status trigger
   input  logic           ctl_trg,
+  input  logic           cfg_tre,
   // events
   output logic           evo_per,  // period
   output logic           evo_lst,  // last
   // generator mode
-  input  logic           cfg_ben,  // burst enable
+  input  logic           cfg_mod,  // burst enable
   input  logic           cfg_inf,  // infinite
   // continuous/periodic configuration
   input  CT              cfg_siz,  // data table size
@@ -201,10 +202,10 @@ axi4_stream_if #(.DN (AN), .DT (AT)) str_adr       (.ACLK (sto.ACLK), .ARESETn (
 axi4_stream_if #(.DN (AN), .DT (AT)) str_mux [1:0] (.ACLK (sto.ACLK), .ARESETn (sto.ARESETn));
 
 // event multiplexer
-assign evs = cfg_ben ? evs_bst : evs_per;
+assign evs = cfg_mod ? evs_bst : evs_per;
 
-assign evn_per = ~cfg_ben ? evn : '0;
-assign evn_bst =  cfg_ben ? evn : '0;
+assign evn_per = ~cfg_mod ? evn : '0;
+assign evn_bst =  cfg_mod ? evn : '0;
 
 assign str_adr.TREADY = sts_rdy;
 
@@ -214,7 +215,7 @@ axi4_stream_mux #(
   .DT (AT)
 ) mux_mode (
   // control
-  .sel  (cfg_ben),
+  .sel  (cfg_mod),
   // streams
   .sti  (str_mux),
   .sto  (str_adr)
@@ -234,6 +235,7 @@ asg_per #(
   .evs      (evs_per),
   // trigger
   .ctl_trg  (ctl_trg),
+  .cfg_tre  (cfg_tre),
   // configuration
   .cfg_siz  (cfg_siz),
   .cfg_off  (cfg_off),
@@ -255,6 +257,7 @@ asg_bst #(
   .evs      (evs_bst),
   // trigger
   .ctl_trg  (ctl_trg),
+  .cfg_tre  (cfg_tre),
   // events
   .evn_per  (evo_per),
   // generator mode

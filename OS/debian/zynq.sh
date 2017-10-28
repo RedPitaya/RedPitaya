@@ -6,6 +6,15 @@
 # https://raw.githubusercontent.com/RedPitaya/RedPitaya/master/COPYING
 ################################################################################
 
+# Added by DM; 2017/10/17 to check ROOT_DIR setting
+if [ $ROOT_DIR ]; then 
+    echo ROOT_DIR is "$ROOT_DIR"
+else
+    echo Error: ROOT_DIR is not set
+    echo exit with error
+    exit
+fi
+
 # Copy files to the boot file system
 unzip ecosystem*.zip -d $BOOT_DIR
 
@@ -28,9 +37,6 @@ install -v -m 664 -o root -D patches/fw_env.config  $ROOT_DIR/etc/fw_env.config
 chroot $ROOT_DIR <<- EOF_CHROOT
 # I2C libraries
 apt-get install -y libi2c-dev i2c-tools
-
-# Git can be used to share notebook examples
-apt-get -y install git
 
 # Device tree compiler can be used to compile custom overlays
 apt-get -y install libudev-dev
@@ -67,7 +73,7 @@ make install
 pip3 install bindings/python/
 # cleanup
 cd ../
-rm -rf libiio-0.10
+rm -rf libiio-0.10 libiio.tar.gz
 EOF_CHROOT
 
 ## Ne10 library, the version in launchpad fails to build
@@ -84,6 +90,17 @@ EOF_CHROOT
 #cd ../../
 #rm -rf Ne10
 #EOF_CHROOT
+
+# GPIO utilities
+chroot $ROOT_DIR <<- EOF_CHROOT
+git clone --depth 1 https://github.com/RedPitaya/gpio-utils.git
+cd gpio-utils
+meson builddir --buildtype release --prefix /usr
+cd builddir
+ninja install
+cd ../../
+rm -rf gpio-utils
+EOF_CHROOT
 
 ################################################################################
 # create users and groups

@@ -35,6 +35,11 @@ Connecting the cables
 .. image :: 16_RedPitaya_Combo2.jpg
    :alt: icon
    :align: center
+   
+.. note::
+	
+	Before connecting Red Pitaya to SDR transceiver module, turn Red Pitaya off, by removing power supply cable.
+	
 
 1. connect Tx of SDR transciver module to Red Pitaya OUT1
 2. connect Rx of SDR ransciver module to Red Pitaya IN1 (notice this cable has a transformer)
@@ -47,27 +52,20 @@ identify pin with arrow and connect the cable as on the image bellow.
    :align: center
    
 4. Make sure jumper is set as shown on image above.
-5. Connect ethernet cable
-6. Connect Red Pitaya to power supply 5V 2A
-7. Connect antenna
-
-8. Connect SDR transceiver to 13.8V 3A power supply
+5. Make sure your SD card is still inserted
+6. Make sure your ethernet cable is still plugged in
+7. Connect power supply 5V 2A to turn Red Pitaya back on.
+8. Connect antenna
+9. Connect SDR transceiver to 13.8V 3A power supply
 
 .. note::
 	
 	STEMlab SDR transceiver module should be powered by DC 13.8V Power Supply that can provide at least 3 A of constant power. 
 	Make sure that is turned off and then use DC power cord with Anderson Power Pole™ connector **(9)** to connect it with module. 
 	RED wire is positive (+) while BLACK wire is negative (-), double check to not mix the colours or polarity! 
-	Don’t turn on the power supply yet.
+
 	
-9. Turn on power supply
-
-10. Put STEMlab in SDR mode:
-
-	* Make sure your computer is connected to same local area network as STEMlab 
-	* Open your WEB browser and connect to your STEMlab (http://redpitaya.readthedocs.io/en/latest/quickStart/first.html)
-
-STEMlab is now ready to connet with Power SDR.
+10. Turn on 13.8V power supply
 
 
 

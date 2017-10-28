@@ -20,10 +20,6 @@
 #include "scpi/parser.h"
 #include "redpitaya/rp.h"
 
-#define SET_OK(cont) \
-    	SCPI_ResultString(cont, "OK"); \
-    	return SCPI_RES_OK;
-
 #define CH_NUM		4
 
 #define SCPI_CMD_NUM 	1

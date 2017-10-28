@@ -1,4 +1,4 @@
-STEMLab 125-10 vs. STEMLab 125-14 (originally Red Pitaya v1.1) 
+STEMlab 125-10 vs. STEMlab 125-14 (originally Red Pitaya v1.1) 
 ##############################################################
 
 .. image:: vs_10.jpg
@@ -7,10 +7,10 @@ STEMLab 125-10 vs. STEMLab 125-14 (originally Red Pitaya v1.1)
 .. image:: vs_14.jpg
    :width: 40%
    
-STEMLab is available in two versions and both offer the same functions and features with the difference in technical 
+STEMlab is available in two versions and both offer the same functions and features with the difference in technical 
 specification of high-frequency inputs and outputs, RAM capacity some other differences (find more info in the 
-comparison table bellow). They are addressed to target different groups and / or needs. Where STEMLab 14 has 14bit 
-input / output channels for highly accurate measurement results in professional environment, STEMLab 10 has 10bit 
+comparison table bellow). They are addressed to target different groups and / or needs. Where STEMlab 14 has 14bit 
+input / output channels for highly accurate measurement results in professional environment, STEMlab 10 has 10bit 
 input / output channels and is perfect for universities,students and makers.
 
 .. -> http://redpitaya.com/boards/stemlab-boards/
@@ -52,49 +52,50 @@ input / output channels and is perfect for universities,students and makers.
 | Synchronisation | /                    | Daisy chain connector (up to 500 Mbps)|
 +-----------------+----------------------+---------------------------------------+
     
-+-----------------------------------+-------------------+--------------------+
-| RF inputs                                                                  |
-+-----------------------------------+-------------------+--------------------+
-|                                   | STEMLAB 125-10    | STEMLAB 125-14     |
-+-----------------------------------+-------------------+--------------------+
-| RF input channels                 | 2                 | 2                  |
-+-----------------------------------+-------------------+--------------------+
-| Sample rate                       | 125 MS/s          | 125 MS/s           |
-+-----------------------------------+-------------------+--------------------+
-| ADC resolution                    | 10 bit            | 14 bit             |
-+-----------------------------------+-------------------+--------------------+
-| Input impedance                   | 1MOhm/10pF        | 1MOhm/10pF         |
-+-----------------------------------+-------------------+--------------------+
-| Full scale voltage range          | ±20 V             | ±20 V              |
-+-----------------------------------+-------------------+--------------------+
-| Absolute max. Input voltage range | 30V               | 30V                |
-+-----------------------------------+-------------------+--------------------+
-| Input ESD protection              | Yes               | Yes                |
-+-----------------------------------+-------------------+--------------------+
-| Overload protection               | Protection diodes | Protection diodes  |
-+-----------------------------------+-------------------+--------------------+
++-----------------------------------+------------------------+------------------------+
+| RF inputs                                                                           |
++-----------------------------------+------------------------+------------------------+
+|                                   | STEMLAB 125-10         | STEMLAB 125-14         |
++-----------------------------------+------------------------+------------------------+
+| RF input channels                 | 2                      | 2                      |
++-----------------------------------+------------------------+------------------------+
+| Sample rate                       | 125 MS/s               | 125 MS/s               |
++-----------------------------------+------------------------+------------------------+
+| ADC resolution                    | 10 bit                 | 14 bit                 |
++-----------------------------------+------------------------+------------------------+
+| Input impedance                   | 1MOhm/10pF             | 1MOhm/10pF             |
++-----------------------------------+------------------------+------------------------+
+| Full scale voltage range          | ±1V (LV) and ±20V (HV) | ±1V (LV) and ±20V (HV) |
++-----------------------------------+------------------------+------------------------+
+| Absolute max. Input voltage range | 30V                    | 30V                    |
++-----------------------------------+------------------------+------------------------+
+| Input ESD protection              | Yes                    | Yes                    |
++-----------------------------------+------------------------+------------------------+
+| Overload protection               | Protection diodes      | Protection diodes      |
++-----------------------------------+------------------------+------------------------+
 
- +-------------------------+----------------+----------------+
- | RF outputs                                                |
- +-------------------------+----------------+----------------+
- |                         | STEMLAB 125-10 | STEMLAB 125-14 |
- +-------------------------+----------------+----------------+
- | RF output channels      | 2              | 2              |
- +-------------------------+----------------+----------------+
- | Sample rate             | 125 MS/s       | 125 MS/s       |
- +-------------------------+----------------+----------------+
- | DAC resolution          | 10 bit         | 14 bit         |
- +-------------------------+----------------+----------------+
- | Load impedance          | 50 Ohm         | 50 Ohm         |
- +-------------------------+----------------+----------------+
- | Voltage range           | ±1V            | ±1V            |
- +-------------------------+----------------+----------------+
- | Ouput slew rate         | 200V/us        | 200V/us        |
- +-------------------------+----------------+----------------+
- | Short circut protection | Yes            | Yes            |
- +-------------------------+----------------+----------------+
- | Connector type          | SMA            | SMA            |
- +-------------------------+----------------+----------------+
+
++-------------------------+----------------+----------------+
+| RF outputs                                                |
++-------------------------+----------------+----------------+
+|                         | STEMLAB 125-10 | STEMLAB 125-14 |
++-------------------------+----------------+----------------+
+| RF output channels      | 2              | 2              |
++-------------------------+----------------+----------------+
+| Sample rate             | 125 MS/s       | 125 MS/s       |
++-------------------------+----------------+----------------+
+| DAC resolution          | 10 bit         | 14 bit         |
++-------------------------+----------------+----------------+
+| Load impedance          | 50 Ohm         | 50 Ohm         |
++-------------------------+----------------+----------------+
+| Voltage range           | ±1V            | ±1V            |
++-------------------------+----------------+----------------+
+| Ouput slew rate         | 200V/us        | 200V/us        |
++-------------------------+----------------+----------------+
+| Short circut protection | Yes            | Yes            |
++-------------------------+----------------+----------------+
+| Connector type          | SMA            | SMA            |
++-------------------------+----------------+----------------+
  
 +------------------------------+-------------------+----------------+
 | Extension connector                                               |
@@ -119,4 +120,5 @@ input / output channels and is perfect for universities,students and makers.
 +------------------------------+-------------------+----------------+
 | Available voltages           | +5V,+3,3V,-4V     | +5V,+3,3V,-4V  |
 +------------------------------+-------------------+----------------+
- 
+| external ADC clock           | N/A               |  yes           |
++------------------------------+-------------------+----------------+

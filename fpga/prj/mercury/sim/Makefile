@@ -1,12 +1,10 @@
 ALTERA_PATH=$(HOME)/intelFPGA
 XILINX_PATH=/opt/Xilinx
-ALTERA_PATH=/mnt/cb9307c5-4ab6-49fc-9f92-3018868ee86e/opt/intelFPGA
-XILINX_PATH=/mnt/cb9307c5-4ab6-49fc-9f92-3018868ee86e/opt/Xilinx
 
 MODELSIM_BIN=$(ALTERA_PATH)/16.1/modelsim_ase/bin
 
-PATH_LIB=$(XILINX_PATH)/Vivado/2017.1/data/verilog/src
-PATH_SIP=$(XILINX_PATH)/Vivado/2017.1/data/secureip
+PATH_LIB=$(XILINX_PATH)/Vivado/2017.2/data/verilog/src
+PATH_SIP=$(XILINX_PATH)/Vivado/2017.2/data/secureip
 PATH_RTL=../rtl
 PATH_TBN=../tbn
 

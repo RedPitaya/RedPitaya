@@ -52,7 +52,7 @@ LDFLAGS=
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBPATH= -L ../scpi-parser/libscpi/dist -L ../../api/lib
-LIBS= -lm -lpthread -lrp -lscpi
+LIBS= -lm -lpthread -lrp -l:libscpi.a
 
 INC= -I../scpi-parser/libscpi/inc -I../../api/include
 

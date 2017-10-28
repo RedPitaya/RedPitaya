@@ -10,6 +10,15 @@
 # install various packages
 ################################################################################
 
+# Added by DM; 2017/10/17 to check ROOT_DIR setting
+if [ $ROOT_DIR ]; then 
+    echo ROOT_DIR is "$ROOT_DIR"
+else
+    echo Error: ROOT_DIR is not set
+    echo exit with error
+    exit
+fi
+
 chroot $ROOT_DIR <<- EOF_CHROOT
 # applications used by Bazaar
 apt-get -y install wget gawk
@@ -45,6 +54,21 @@ apt-get -y install bc
 EOF_CHROOT
 
 ################################################################################
+# SCPI parser
+################################################################################
+
+# GPIO utilities
+chroot $ROOT_DIR <<- EOF_CHROOT
+git clone --depth 1 https://github.com/RedPitaya/scpi-parser.git --branch meson
+cd scpi-parser
+meson builddir --buildtype release --prefix /usr
+cd builddir
+ninja install
+cd ../../
+rm -rf scpi-parser
+EOF_CHROOT
+
+################################################################################
 # systemd services
 ################################################################################
 
@@ -52,6 +76,7 @@ install -v -m 664 -o root -d                                                    
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_nginx.service     $ROOT_DIR/etc/systemd/system/redpitaya_nginx.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/sockproc.service            $ROOT_DIR/etc/systemd/system/sockproc.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/redpitaya_scpi.service      $ROOT_DIR/etc/systemd/system/redpitaya_scpi.service
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/scpi.service                $ROOT_DIR/etc/systemd/system/scpi.service
 install -v -m 664 -o root -D $OVERLAY/etc/sysconfig/redpitaya                        $ROOT_DIR/etc/sysconfig/redpitaya
 
 chroot $ROOT_DIR <<- EOF_CHROOT

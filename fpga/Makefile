@@ -31,6 +31,7 @@ all: $(FPGA_BIT) $(FSBL_ELF) $(DEVICE_TREE)
 # TODO: clean should go into each project
 clean:
 	rm -rf out .Xil .srcs sdk project
+	rm -rf prj/$(PRJ)/out prj/$(PRJ)/.Xil prj/$(PRJ)/.srcs prj/$(PRJ)/sdk prj/$(PRJ)/project
 
 project:
 	vivado -source red_pitaya_vivado_project.tcl -tclargs $(PRJ)

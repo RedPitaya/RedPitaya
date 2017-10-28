@@ -1,9 +1,35 @@
-.. ecosystem
+.. _ecosystem:
 
 ###############
 Ecosystem Guide
 ###############
 
+Go to redpitaya-public (git) directory.
+
+.. note::
+   
+   | It is recommended that you set ``$LC_ALL`` variable.
+   | To check whether it is set, type the following command into a terminal:
+   
+   .. code-block:: shell-session
+      
+       echo $LC_ALL
+
+   If it returns an empty line, set it up by typing the following command into the terminal:
+
+   .. code-block:: shell-session
+      
+       export LC_ALL=C
+   
+   This line can also be added to the end of .bashrc and will automatically set the ``$LC_ALL`` variable each time the 
+   terminal is started.
+   
+.. note::
+    
+    It is not possible to build an ecosystem on an encrypted home directory, since schroot can not access that 
+    directory. We recommend that you make a separate directory in home directory that is not encrypted e.g. 
+    ``/home/ecosystem_build``
+       
 =====================================
 Red Pitaya ecosystem and applications
 =====================================
@@ -67,7 +93,7 @@ You will need the following to build the Red Pitaya components:
       # QEMU
       sudo apt-get install qemu qemu-user qemu-user-static
       # 32 bit libraries
-      sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
+      sudo apt-get install lib32z1 lib32ncurses5 libbz2-1.0:i386 lib32stdc++6
 
 2. Meson Build system (depends on Python 3) is used for some new code.
    It is not required but can be used during development on x86 PC.
@@ -79,7 +105,7 @@ You will need the following to build the Red Pitaya components:
       sudo pip3 install meson
       sudo apt-get install ninja-build
 
-3. Xilinx `Vivado 2017.1 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
+3. Xilinx `Vivado 2017.2 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
 
@@ -125,9 +151,9 @@ Correct file permissions are required for ``schroot`` to work properly.
 
 .. code-block:: shell-session
 
-   wget http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_12-48-45_22-maj-2017.tar.gz
-   sudo chown root:root redpitaya_ubuntu_12-48-45_22-maj-2017.tar.gz
-   sudo chmod 664 redpitaya_ubuntu_12-48-45_22-maj-2017.tar.gz
+   wget http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
+   sudo chown root:root redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
+   sudo chmod 664 redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
 
 Create schroot configuration file ``/etc/schroot/chroot.d/red-pitaya-ubuntu.conf``.
 Replace the tarball path stub with the absolute path of the previously downloaded image.
@@ -304,7 +330,7 @@ You can install it on Red Pitaya by copying it there:
 SCPI server
 ~~~~~~~~~~~
 
-Scpi server README can be found `here <scpi-server/README.md>`_.
+Scpi server README can be found :download:`here <../../../scpi-server/README.md>`.
 
 To compile the server run:
 
@@ -323,4 +349,4 @@ You can install it on Red Pitaya by copying it there:
 Free applications
 ~~~~~~~~~~~~~~~~~
 
-To build free applications, follow the instructions given at `<apps-free/README.md>`_ file.
+To build free applications, follow the instructions given :download:`here <../../../apps-free/README.md>`.

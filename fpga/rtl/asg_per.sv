@@ -57,12 +57,13 @@ module asg_per #(
   type CT = logic [CWM-1:-CWF]
 )(
   // stream output
-  axi4_stream_if.s           sto    ,
+  axi4_stream_if.s       sto    ,
   // events input/output
-  input  evn_pkg::evn_t      evn    ,  // input
-  output evn_pkg::evn_t      evs    ,  // output
+  input  evn_pkg::evn_t  evn    ,  // input
+  output evn_pkg::evn_t  evs    ,  // output
   // trigger
-  input  logic               ctl_trg,
+  input  logic           ctl_trg,
+  input  logic           cfg_tre,
   // continuous/periodic configuration
   input  CT              cfg_siz,  // data table size
   input  CT              cfg_ste,  // pointer step    size
@@ -73,6 +74,8 @@ module asg_per #(
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
 
+// trigger control
+logic               trg_msk;  // trigger mask
 // continuous/periodic pointers
 logic [CWM+CWF-1:0] ptr_cur; // current
 logic [CWM+CWF-0:0] ptr_nxt; // next
@@ -115,7 +118,23 @@ assign evs.rst = 1'b0;
 assign evs.stp = ~evs.str;
 
 // control run (trigger while started or simultaneous trigger and start)
-assign ctl_run = ctl_trg & (evs.str | evn.str);
+assign ctl_run = ( evn.swt || (ctl_trg & trg_msk)  ) & (evs.str | evn.str) ;
+
+// if trigger repeat enable is not set
+// mask trigger during active burst
+always_ff @(posedge sto.ACLK)
+if (~sto.ARESETn) begin
+  trg_msk <= 1'b1;
+end else begin
+  // synchronous clear
+  if (evn.rst) begin
+    trg_msk <= 1'b1;
+  end else begin
+    // address enable status
+    if      (ctl_end)  trg_msk <= 1'b1;
+    else if (ctl_run)  trg_msk <= cfg_tre;
+  end
+end
 
 ////////////////////////////////////////////////////////////////////////////////
 // continuous/periodic mode state machine

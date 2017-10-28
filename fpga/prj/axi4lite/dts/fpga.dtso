@@ -1,2 +1,19 @@
 /dts-v1/;
 /plugin/;
+/ {
+	fragment@uio {
+		target = <&amba_pl>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		__overlay__ {
+			slave: slave@40000000 {
+				compatible = "generic-uio";
+				reg = <0x40000000 0x01000>,
+				      <0x40010000 0x10000>;
+				reg-names = "regset", "buffer";
+				interrupt-parent = <&intc>;
+				interrupts = <0x3d 4>;
+			};
+		};
+	};
+};

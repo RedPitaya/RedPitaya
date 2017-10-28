@@ -1,3 +1,25 @@
+# Release 0.98
+
+FPGA (mercury):
+- fixed bugs causing unreliable reads from oscilloscope, logic analyzer buffer
+- moved burst mode finite/infinite control into period repetitions register
+- restructured arbitrary signal generator, so periodic and burst mode are separate modules
+- added digital loopback between generator and oscilloscope (this is for test purposes)
+- added bit controlling if trigger will restart a running burst or not
+- trigger holdoff was removed from oscilloscope, instead it should be placed into
+  a common trigger module accepting various trigger inputs and handling timing,
+  while oscilloscope and logic analyzer triggers only handle values,
+  at least this is the idea
+
+OS:
+- updated to Ubuntu 16.04.3
+
+Jupyter:
+- using `ctypes` array for generator/oscilloscope data buffer
+
+Bazaar:
+- fixed some issues with network manager and update manager
+
 # Release 0.97-RC7
 
 Linux kernel:
@@ -5,10 +27,11 @@ Linux kernel:
 - updated 8192cu driver to switch from 'wext' to 'cfg80211'
   https://github.com/raspberrypi/linux/pull/1489
 
-FPGA (mercury):
-- recoded burst mode for asg/generator, Python API changes were also needed
+FPGA:
 - CPU and SPI clock updates
 - using old DNA regset in `logic` FPGA project to avoid Bazaar issues
+FPGA (mercury):
+- recoded burst mode for asg/generator, Python API changes were also needed
 
 OS:
 - added some TFT SPI display support code
@@ -21,7 +44,7 @@ Jupyter:
 - updated for latest mercury FPGA code
 - recoded regset in `ctypes`
 - reorginized part of the code into smaller reusable blocks
-- updated calibration
+- updated calibration (it is not finished yet and not enabled by default)
 - added LG/LA driver and examples
 
 # Release 0.97-RC6

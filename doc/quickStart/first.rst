@@ -5,11 +5,11 @@ Connect to STEMlab
 ##################
 
 This is the most common and recommended way of
-connecting and using your Red Pitaya STEMLab boards.
+connecting and using your Red Pitaya STEMlab boards.
 Your LAN network needs to have DHCP settings enabled
 which is the case in majority of the local networks.
 With this, simple *plug and play* approach is enabled.
-Having STEMLab board connected the local network
+Having STEMlab board connected the local network
 will enable quick access to all Red Pitaya applications
 using only your web browser.
 Simply follow this 3 simple steps:
