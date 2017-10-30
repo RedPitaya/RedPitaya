@@ -34,8 +34,7 @@ STATIC_LIB=$(OUTPUT_DIR)/librp2.a
 TARGET=$(SHARED_LIB) $(STATIC_LIB)
 
 # List of compiled object files
-OBJECTS =	id.o \
-		la_acq.o \
+OBJECTS =	la_acq.o \
 		rp_api.o \
 		rp_dma.o \
 		common.o
