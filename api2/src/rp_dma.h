@@ -18,13 +18,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum
-{
+typedef enum {
     RP_DMA_SINGLE,
     RP_DMA_CYCLIC,
     RP_DMA_STOP_RX
 } RP_DMA_CTRL;
-
 
 int rp_DmaOpen(const char *dev, rp_handle_uio_t *handle);
 int rp_DmaCtrl(rp_handle_uio_t *handle, RP_DMA_CTRL ctrl);
