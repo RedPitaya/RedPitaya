@@ -3,6 +3,8 @@
  * TODO: it is probably not necessary to also disable each channel
  */
 
+/delete-node/ &axi_intc_0;
+
 &axi_dma_la {
 	status = "disabled";
 };
