@@ -22,7 +22,6 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "generate.h"
 #include "la_acq.h"
 
 #include "rp_dma.h"

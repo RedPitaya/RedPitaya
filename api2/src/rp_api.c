@@ -10,7 +10,6 @@
 #include <sys/mman.h>
 
 #include "common.h"
-#include "generate.h"
 
 #include "la_acq.h"
 
@@ -40,11 +39,6 @@ RP_STATUS rp_OpenUnit(void)
         r=-1;
     }
 
-    //rp_LaAcqFpgaRegDump(&la_acq_handle);
-
-    if(rp_GenOpen("/dev/uio/lg", &sig_gen_handle)!=RP_API_OK){
-        r=-1;
-    }
     return r;
 }
 
@@ -56,10 +50,6 @@ RP_STATUS rp_CloseUnit(void)
     int r=RP_API_OK;
 
     if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
-        r=-1;
-    }
-
-    if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
 
@@ -754,20 +744,6 @@ RP_STATUS rp_Stop(void){
 	//return rp_LaAcqStopAcq(&la_acq_handle);
 }
 
-/** SIGNAL GENERATION  */
-/**
- * This function causes a trigger event, or starts and stops gating.
- * It is used when the signal generator is set to SIGGEN_SOFT_TRIG.
- *
- * @param state, sets the trigger gate high or low when the trigger type is
- * set to either SIGGEN_GATE_HIGH or SIGGEN_GATE_LOW. Ignored for other trigger types.
- */
-
-RP_STATUS rp_SigGenSoftwareControl(int16_t state){
-    rp_GenTrigger(&sig_gen_handle);
-    return RP_API_OK;
-}
-
 /**
  * This function sets up the signal generator to produce a signal from a list of built-in
  * waveforms. If different start and stop frequencies are specified, the device will sweep
@@ -814,10 +790,6 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
                              RP_SIGGEN_TRIG_SOURCE triggerSource,
                              int16_t extInThreshold){
 
-    //rp_GenSetAmp(&sig_gen_handle,1.0);
-    //rp_GenSetOffset(&sig_gen_handle, 1.0);
-
-
     // triggerType
     switch(triggerSource){
         case RP_SIGGEN_NONE:
@@ -856,64 +828,3 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
     return RP_API_OK;
 }
 
-/** DIGITAL SIGNAL GENERATION  */
-
-RP_STATUS rp_DigSigGenOuput(bool enable)
-{
-    if(enable){
-        rp_GenOutputEnable(&sig_gen_handle, RP_GEN_OUT_PORT0_MASK);
-    }
-    else{
-        rp_GenOutputDisable(&sig_gen_handle, RP_GEN_OUT_PORT0_MASK);
-    }
-    return RP_API_OK;
-}
-
-RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
-{
-	return rp_GenTrigger(&sig_gen_handle);
-   // rp_GenFpgaRegDump(&sig_gen_handle,0);
-}
-
-RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                double * sample_rate,
-                                uint32_t shots,
-                                uint32_t delay_between_shots,
-                                uint32_t triggerSourceMask)
-{
-    rp_GenReset(&sig_gen_handle); // TODO: stop not working that's why reset is needed here
-    rp_GenStop(&sig_gen_handle);
-
-    // set burst mode - dig. sig. gen will always operate in this mode!
-    rp_GenSetMode(&sig_gen_handle, RP_GEN_MODE_BURST);
-
-    // set waveform
-    uint32_t len = 256;
-    switch(patternType){
-        case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256:
-            rp_GenSetWaveformUpCountSeq(&sig_gen_handle,len);
-            rp_GenSetBurstModeDataLen(&sig_gen_handle,len);
-            rp_GenSetBurstModePeriodLen(&sig_gen_handle,len);
-            break;
-    }
-
-    // repetitions
-    rp_GenSetBurstModeRepetitions(&sig_gen_handle, shots);
-
-    // no idle
-    // rp_GenSetBurstModeIdle(&sig_gen_handle, delay_between_shots);
-
-    // sample rate
-    rp_GenSetWaveformSampleRate(&sig_gen_handle,sample_rate);
-
-    // trigger
-    rp_GenGlobalTrigSet(&sig_gen_handle, triggerSourceMask);
-
-    rp_GenRun(&sig_gen_handle);
-
-    //rp_GenFpgaRegDump(&sig_gen_handle,len);
-
-    return RP_API_OK;
-}
-
-// TODO: add function that will generate protocol from file

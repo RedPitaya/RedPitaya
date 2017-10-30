@@ -15,8 +15,6 @@
 #ifndef _RP_DMA_H_
 #define _RP_DMA_H_
 
-#include "rp_dma.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 

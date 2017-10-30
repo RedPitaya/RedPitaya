@@ -339,8 +339,6 @@ typedef enum rpTriggerSource {
 
 RP_STATUS rp_SetPolarity(uint32_t reg);
 
-RP_STATUS rp_DigSigGenOuput(bool enable);
-
 RP_STATUS rp_SigGenSoftwareControl(int16_t state);
 
 RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
@@ -363,8 +361,6 @@ RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
 typedef enum patternType{
     RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256, ///< counts 8bit
 } RP_DIG_SIGGEN_PAT_TYPE;
-
-RP_STATUS rp_DigSigGenSoftwareControl(int16_t state);
 
 RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
                                 double * sample_rate,

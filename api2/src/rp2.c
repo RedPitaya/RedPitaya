@@ -16,11 +16,7 @@
 #include <stdint.h>
 
 #include "common.h"
-#include "pdm.h"
 #include "id.h"
-#include "acquire.h"
-#include "calib.h"
-#include "generate.h"
 #include "rp_api.h"
 
 const char* rp_GetError(int errorCode) {
