@@ -109,7 +109,7 @@ You will need the following to build the Red Pitaya components:
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
 
-  3.1. If you want to run Vivado from virtual machine and Vivado is installed on host shared
+    1. If you want to run Vivado from virtual machine and Vivado is installed on host shared
        folder, than we suggest you to use VirtualBox, since VMware has a bug in vmware-tools
        for Ubuntu guest and can not mount vmhgfs shared file system type.
 
