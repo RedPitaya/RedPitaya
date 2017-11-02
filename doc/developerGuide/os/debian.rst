@@ -8,7 +8,7 @@ Red Pitaya OS
 Overview
 ********
 
-Executable scripts from ``SW/debian`` directory:
+Executable scripts from ``OS/debian`` directory:
 
 +---------------------+------------------------------------------------------------------------------+
 | script              | description                                                                  |
@@ -172,7 +172,13 @@ The script should be run with the image and ecosystem files as arguments:
 
 .. code-block:: shell-session
 
-   # ./image-update.sh redpitaya_ubuntu_*.img ecosystem*.zip
+   # ./OS/debian/image-update.sh redpitaya_OS_*.img ecosystem-*.zip
+
+Now you can burn a micro SD card (sized 4GB) e.g.,
+
+.. code-block:: shell-session
+
+   # dd bs=4M if=redpitaya_OS_*.img of=/dev/mmcblk0
 
 =================
 File system check
@@ -188,7 +194,7 @@ Use this script on an image before releasing it.
 
 .. code-block:: shell-session
 
-   # ./image-fsck.sh redpitaya_ubuntu_*.img
+   # ./OS/debian/image-fsck.sh redpitaya_OS_*.img
 
 ===================
 Reducing image size

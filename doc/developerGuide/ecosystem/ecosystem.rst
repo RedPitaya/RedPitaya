@@ -144,6 +144,10 @@ You will need the following to build the Red Pitaya components:
 Build process
 =============
 
+.. note::
+
+   To implement the build process, at least 8GB available space on local machine is required.
+
 Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
 The choice of specific branches or tags is up to the user.
 
