@@ -323,8 +323,6 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         return RP_BLOCK_MODE_FAILED;
     }
 
-   // rp_DmaMemDump(&la_acq_handle);
-
     uint32_t trig_sample;
     uint32_t last_sample;
 

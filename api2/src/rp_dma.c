@@ -61,30 +61,6 @@ int rp_SetSgmntS(rp_handle_uio_t *handle, unsigned long no) {
     return RP_OK;
 }
 
-int rp_DmaMemDump(rp_handle_uio_t *handle) {
-    unsigned char* map=NULL;
-    // allocate data buffer memory
-    map = (unsigned char *) mmap(NULL, handle->dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle->dma_fd, 0);
-    if (map==NULL) {
-        printf("Failed to mmap\n");
-        if (handle->dma_fd) {
-            close(handle->dma_fd);
-        }
-        return -1;
-    }
-    // printout data
-    for (int i=0; i<handle->dma_size; i++) {
-        if ((i%64)==0 ) printf("@%08x: ", i);
-        printf("%02x",(char)map[i]);
-        if ((i%64)==63) printf("\n");
-    }
-    if(munmap (map, handle->dma_size)==-1){
-        printf("Failed to munmap\n");
-        return -1;
-    }
-    return RP_OK;
-}
-
 int rp_DmaRead(rp_handle_uio_t *handle) {
     int s = read(handle->dma_fd, NULL, 1);
     if (s<0) {
