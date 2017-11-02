@@ -125,6 +125,13 @@ Run the next command to build the OS image. Root or ``sudo`` privileges are need
 The code should be executed as the ``root`` user,
 otherwise some configuration files will be placed into the wrong users home directory.
 
+.. note::
+
+   Before you execute next step, the Ecosystem_ must be built.
+
+.. _Ecosystem: http://redpitaya.readthedocs.io/en/latest/developerGuide/ecosystem/ecosystem.html
+
+
 .. code-block:: shell-session
 
    $ sudo bash
