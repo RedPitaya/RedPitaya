@@ -4,7 +4,7 @@
 Ecosystem Guide
 ###############
 
-Go to redpitaya-public (git) directory.
+Go to redpitaya (git) directory.
 
 .. note::
    
@@ -108,6 +108,29 @@ You will need the following to build the Red Pitaya components:
 3. Xilinx `Vivado 2017.2 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
+
+  3.1. If you want to run Vivado from virtual machine and Vivado is installed on host shared
+       folder, than we suggest you to use VirtualBox, since VMware has a bug in vmware-tools
+       for Ubuntu guest and can not mount vmhgfs shared file system type.
+
+       Then install Ubuntu 16.04 in VirtualBox (NOTE: don't use encrypt installation, 
+       since it blocks some RedPitaya build procedures).
+
+       After successfully installation, change settings for Ubuntu virtual machine.
+       Go to Shared Folders menu and choose Xilinx installation directory on the host machine
+       (by default is under /opt/ directory). And choose Auto-mount option (checkbox).
+
+       Then you must install (on Ubuntu guest) a package dkms.
+
+       .. code-block:: shell-session
+
+          $ sudo apt-get install virtualbox.guest-dkms
+
+       After reboot Ubuntu guest, you can access (with superuser/root privileges) Xilinx shared
+       folder under /media/sf_Xilinx subdirectory.
+
+       Now you can manage this system to meet your requirements.
+
 
 4. Missing ``gmake`` path
 
