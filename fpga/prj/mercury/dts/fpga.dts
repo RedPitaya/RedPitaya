@@ -4,3 +4,4 @@
 
 // NOTE: Nodes from pl.dtsi are removed
 /include/ "unpl.dtsi"
+/include/ "memory.dtsi"
