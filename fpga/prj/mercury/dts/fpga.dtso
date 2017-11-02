@@ -127,21 +127,21 @@
 		__overlay__ {
 			rprx_0: rprx@0 {
 				compatible ="redpitaya,rprx";
-				dmas = <&axi_dma_osc0 1>;
+				dmas = <&axi_dma_osc0 0>;
 				dma-names = "axidma1";
 				memory-region = <&osc0buf_reserverd>;
 				status = "okay";
 			};
 			rprx_1: rprx@1 {
 				compatible ="redpitaya,rprx";
-				dmas = <&axi_dma_osc1 1>;
+				dmas = <&axi_dma_osc1 0>;
 				dma-names = "axidma1";
 				memory-region = <&osc1buf_reserverd>;
 				status = "okay";
 			};
 			rprx_2: rprx@2 {
 				compatible ="redpitaya,rprx";
-				dmas = <&axi_dma_la 1>;
+				dmas = <&axi_dma_la 0>;
 				dma-names = "axidma1";
 				memory-region = <&labuf_reserverd>;
 				status = "okay";
