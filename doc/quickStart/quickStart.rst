@@ -8,7 +8,6 @@ Quick start
    
    needs
    first
-   unlock
    SDcard/SDcard
    alucase/alucase
    troubleshooting/troubleshooting
