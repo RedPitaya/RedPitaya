@@ -9,7 +9,9 @@ the host USB connector.
 .. figure:: cooling-powerPin.jpg
     :width: 50%
 
-    Red Pitaya power connector.
+    | Red Pitaya power connector.
+    | Image via [url=https://rroeng.blogspot.com/2014/03/keep-your-red-pitaya-cool.html]blog[/url] (with permission from Jacek Radzikowski)
+
     
 .. note::
  
@@ -28,13 +30,14 @@ Assembly
     
 #.  Attaching the fan to the heat sink using two screws as shown in the picture bellow. 
  
-    .. image:: cooling-screwon.jpg
+    .. figure:: cooling-screwon.jpg
     
+    Image via [url=https://rroeng.blogspot.com/2014/03/keep-your-red-pitaya-cool.html]blog[/url] (with permission from Jacek Radzikowski)
 
 .. figure:: cooling-topdown.jpg 
 
-    Red Pitaya with attached fan.
-
+    | Red Pitaya with attached fan.
+    | Image via [url=https://rroeng.blogspot.com/2014/03/keep-your-red-pitaya-cool.html]blog[/url] (with permission from Jacek Radzikowski)
 
 ************
 Measurements
@@ -42,5 +45,8 @@ Measurements
 
 .. figure:: cooling-result.png
 
-   Temperature measured with the fan turned off and on combined with low and high CPU load.
+   | Temperature measured with the fan turned off and on combined with low and high CPU load.
+   | Image via [url=https://rroeng.blogspot.com/2014/03/keep-your-red-pitaya-cool.html]blog[/url] (with permission from Jacek Radzikowski)
+   
+
     
