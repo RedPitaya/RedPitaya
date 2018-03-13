@@ -204,7 +204,7 @@
 
     var default_applications = [
         { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "applicationstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://store.redpitaya.com/", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "applicationstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://www.redpitaya.com/Catalog", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
         { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://redpitaya.readthedocs.io/en/latest/index.html", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
