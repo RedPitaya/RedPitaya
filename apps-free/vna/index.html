@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Red Pitaya</title>
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/jquery-2.1.4.min.js"></script>
+<script>
+  var app_id = 'vna';
+  var root_url = '';
+  var start_app_url = root_url + '/bazaar?start=' + app_id;
+  var stop_app_url = root_url + '/bazaar?stop=' + app_id;
+  function start_app() {
+    $.ajax({
+      url: start_app_url,
+      async: true
+    });
+  }
+  function stop_app() {
+    $.ajax({
+      url: stop_app_url,
+      async: false
+    });
+  }
+</script>
+</head>
+<body onload="start_app()" onunload="stop_app()">
+<div class="container-fluid">
+<div class="navbar navbar-inverse" role="navigation">
+<div class="container">
+<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+</button>
+<a class="navbar-brand" href="/">
+<img class="back-btn" src="img/arrow_nav_left.png">
+</a>
+<img class="logo" width=110 src="img/logo.png">
+</div>
+</div>
+<div id="main">
+<h1>Vector Network Analyzer</h1>
+<p>The Red Pitaya VNA application is ready.</p>
+<p>Now you can run the control program.</p>
+<p>More details about this application can be found at <a href="http://pavel-demin.github.io/red-pitaya-notes/vna/" target="_blank">this link</a>.
+<h3>Getting started with MS Windows</h3>
+<ul>
+<li>Download and unpack the <a href="https://github.com/pavel-demin/red-pitaya-notes/releases/download/20180305/vna-win32-20180305.zip">control program</a>.</li>
+<li>Run the <code>vna.exe</code> program.</li>
+<li>Type in the IP address of the Red Pitaya board and press Connect button.</li>
+<li>Perform calibration and measurements.</li>
+</ul>
+<h3>Getting started with GNU/Linux</h3>
+<ul>
+<li>Install Python 3 and all the required libraries:</li>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sudo apt-get install python3-dev python3-pip python3-numpy python3-pyqt5 libfreetype6-dev
+sudo pip3 install matplotlib mpldatacursor</code></pre></div>
+<li>Clone the source code repository:</li>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">git clone https://github.com/pavel-demin/red-pitaya-notes</code></pre></div>
+<li>Run the control program:</li>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">cd red-pitaya-notes/projects/vna/client
+python3 vna.py</code></pre></div>
+<li>Type in the IP address of the Red Pitaya board and press Connect button.</li>
+<li>Perform calibration and measurements.</li>
+</ul>
+</div>
+</div>
+</body>
+</html>
