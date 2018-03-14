@@ -10,7 +10,7 @@ APP=$(notdir $(CURDIR:%/=%))
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-VIVADO = /opt/Xilinx/Vivado/2017.2/bin/vivadoO -nolog -nojournal -mode batch
+VIVADO = /opt/Xilinx/Vivado/2017.2/bin/vivado -nolog -nojournal -mode batch
 
 INSTALL_DIR ?= .
 
