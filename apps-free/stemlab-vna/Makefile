@@ -36,7 +36,7 @@ $(SERVER):
 $(ZIP): $(CONTROLLERHF) $(SERVER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLERHF) $(SERVER) fpga.conf info index.html target/$(APP)
+	cp -r $(CONTROLLERHF) $(SERVER) fpga.conf info js css img index.html vna.bit start.sh stop.sh target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *
