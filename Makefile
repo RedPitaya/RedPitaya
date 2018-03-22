@@ -357,7 +357,7 @@ jupyter_manager:
 ################################################################################
 
 APPS_FREE_DIR = apps-free
-VNA_DIR = $(APPS_FREE_DIR)/stemlab-vna
+VNA_DIR = $(APPS_FREE_DIR)/stemlab_vna
 
 .PHONY: apps-free
 
