@@ -1,6 +1,6 @@
 {
-    "name": "Vector Network Analyzer",
+    "name": "STEMLAB Vector Network Analyzer",
     "version": "0.94-BUILD_NUMBER",
     "revision": "REVISION",
-    "description": "Vector Network Analyzer"
+    "description": "Vector Network Analyzer for STEMLAB"
 }
