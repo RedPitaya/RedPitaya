@@ -25,14 +25,14 @@ const char *rp_app_desc()
 int rp_app_init()
 {
   fprintf(stderr, "Starting VNA server.\n");
-  system("/opt/redpitaya/www/apps/stemlab-vna/start.sh");
+  system("/opt/redpitaya/www/apps/stemlab_vna/start.sh");
   return 0;
 }
 
 int rp_app_exit(void)
 {
   fprintf(stderr, "Stopping VNA server.\n");
-  system("/opt/redpitaya/www/apps/stemlab-vna/stop.sh");
+  system("/opt/redpitaya/www/apps/stemlab_vna/stop.sh");
   return 0;
 }
 
