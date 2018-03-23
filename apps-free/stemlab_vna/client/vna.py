@@ -78,7 +78,7 @@ class VNA(QMainWindow, Ui_VNA):
     super(VNA, self).__init__()
     self.setupUi(self)
     # IP address validator
-    rx = QRegExp('^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$')
+    rx = QRegExp('^(((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(rp\-[a-f,0-9][a-f,0-9][a-f,0-9][a-f,0-9][a-f,0-9][a-f,0-9]\.local))$')
     self.addrValue.setValidator(QRegExpValidator(rx, self.addrValue))
     # state variables
     self.idle = True
