@@ -1,1 +1,1 @@
-/opt/redpitaya/www/apps/vna/vna &
+/opt/redpitaya/www/apps/stemlab_vna/vna &
