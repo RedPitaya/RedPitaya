@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro
+all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna
 
 $(DL):
 	mkdir -p $@
@@ -357,6 +357,7 @@ jupyter_manager:
 ################################################################################
 
 APPS_FREE_DIR = apps-free
+VNA_DIR = $(APPS_FREE_DIR)/stemlab_vna
 
 .PHONY: apps-free
 
@@ -364,6 +365,11 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) clean
 	$(MAKE) -C $(APPS_FREE_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+apps-free-vna:
+	$(MAKE) -C $(VNA_DIR) clean
+	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-clean:
 	$(MAKE) -C $(APPS_FREE_DIR) clean

@@ -3,7 +3,7 @@
 #
 
 #List of applications to build
-APPS = scope scope+gen scope+pid spectrum freqanalyzer bode_plotter impedance_analyzer teslameter lti scope+istsensor
+APPS = scope scope+gen scope+pid spectrum freqanalyzer bode_plotter impedance_analyzer teslameter lti scope+istsensor stemlab_vna
 
 all:
 	for APP in $(APPS); do \
