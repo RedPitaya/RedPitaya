@@ -114,7 +114,7 @@ Perform calibration and start measuring
     
 #. ) Select Smith chart tab at the bottom and then click Single button to perform a single measurement of the DUT. Dot in the middle of the Smith chart circle (@ 50ohm) will indicate that VNA is properly measuring reference 50ohm LOAD.
 
-    .. image::  img/4-load\ DUT\ smith\ chart.PNG
+    .. image::  img/4-load_DUT_smith_chart.PNG
 
 #. ) Disconnect LOAD SMA connector and connect whatever DUT you’d like to measure.
 
