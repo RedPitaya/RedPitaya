@@ -133,7 +133,9 @@ Examples:
     SWR is better than 1.5 between start and stop band frequency.
     Filter load is around 50ohm between start and stop band frequency.
 
-.. image::  img/bandpass\ filter\ smith\ chart.png
+.. image::  img/bandpass_filter.png
+
+.. image::  img/bandpass_filter_smith_chart.png
 
 .. admonition:: Credits
 
@@ -142,5 +144,4 @@ Examples:
     
         * https://github.com/RedPitaya/red-pitaya-notes
 
-.. .. image::  img/bandpass\ filter.png
-.. .. image::  img/vna\ bridge\ module\ connections.png
+.. .. image::  img/vna_bridge_module_connections.png
