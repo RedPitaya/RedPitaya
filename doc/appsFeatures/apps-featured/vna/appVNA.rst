@@ -65,9 +65,13 @@ Linux users only
         
             python3 vna.py
 
-===========================================
-Type in the IP address of the STEMlab board
-===========================================
+==================================================
+Type in the IP or URL address of the STEMlab board
+==================================================
+
+-------------------------------
+Connect by entering STEMlab IP:
+-------------------------------
 
 .. image::  img/1_ip.PNG
 
@@ -80,6 +84,12 @@ Address: xxx.xxx.xxx.xxx .
 
 .. image::  img/network_manager_icon.png
    :width:  150px
+
+--------------------------------
+Connect by entering STEMlab URL:   
+--------------------------------
+
+.. image::  img/1_url.PNG
 
 ===================================================
 Run vector network analyzer application on STEMlab.
