@@ -1,7 +1,16 @@
+# Added by DM; 2017/10/17 to check ROOT_DIR setting
+if [ $ROOT_DIR ]; then 
+    echo ROOT_DIR is "$ROOT_DIR"
+else
+    echo Error: ROOT_DIR is not set
+    echo exit with error
+    exit
+fi
+
 # systemd-networkd wired/wireless network configuration (DHCP and WPA supplicant for WiFi)
 mkdir                                                                                    $ROOT_DIR/etc/iptables
 install -v -m 664 -o root -D $OVERLAY/etc/iptables/iptables.rules                        $ROOT_DIR/etc/iptables/iptables.rules
-install -V -m 755 -o root -D $OVERLAY/etc/systemd/system/iptables-flush                  $ROOT_DIR/etc/systemd/system/iptables-flush
+install -v -m 644 -o root -D $OVERLAY/etc/systemd/system/iptables-flush                  $ROOT_DIR/etc/systemd/system/iptables-flush
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wired.network                  $ROOT_DIR/etc/systemd/network/wired.network
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.client        $ROOT_DIR/etc/systemd/network/wireless.network.client
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/network/wireless.network.ap            $ROOT_DIR/etc/systemd/network/wireless.network.ap
@@ -20,10 +29,6 @@ install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/ssh.service            
 install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/bazaar.service                  $ROOT_DIR/etc/avahi/services/bazaar.service
 install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/scpi.service                    $ROOT_DIR/etc/avahi/services/scpi.service
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostname-mac.service            $ROOT_DIR/etc/systemd/system/hostname-mac.service
-
-# hostapd versions
-export HOSTAPD_VER=2.6
-export HAPATCH_VER=hostapd_2_6
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 # network tools

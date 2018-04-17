@@ -1,9 +1,10 @@
 %% Define Red Pitaya as TCP/IP object
 clc
 close all
-IP= '192.168.178.103';          % Input IP of your Red Pitaya...
+% IP= '192.168.101.108';          % IP of your Red Pitaya...
+IP= 'rp-f01b63.local';          % rp-MAC.local MAC are the last 6 characters of your Red Pitaya
 port = 5000;                    % If you are using WiFi then IP is:
-RP=tcpip(IP, port);       % 192.168.128.1
+RP=tcpip(IP, port);      
 
 fopen(RP);
 RP.Terminator = 'CR/LF';

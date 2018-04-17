@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2017.1
+set scripts_vivado_version 2017.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -523,7 +523,7 @@ CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} \
 CONFIG.PCW_GPIO_MIO_GPIO_IO {MIO} \
 CONFIG.PCW_I2C0_I2C0_IO {MIO 50 .. 51} \
 CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} \
-CONFIG.PCW_I2C_PERIPHERAL_FREQMHZ {88.888893} \
+CONFIG.PCW_I2C_PERIPHERAL_FREQMHZ {111.111115} \
 CONFIG.PCW_I2C_RESET_ENABLE {1} \
 CONFIG.PCW_I2C_RESET_SELECT {Share reset pin} \
 CONFIG.PCW_IOPLL_CTRL_FBDIV {30} \
@@ -751,11 +751,6 @@ CONFIG.SEQUENCER_MODE {Off} \
 CONFIG.SINGLE_CHANNEL_SELECTION {TEMPERATURE} \
 CONFIG.XADC_STARUP_SELECTION {independent_adc} \
  ] $xadc
-
-  set_property -dict [ list \
-CONFIG.NUM_READ_OUTSTANDING {1} \
-CONFIG.NUM_WRITE_OUTSTANDING {1} \
- ] [get_bd_intf_pins /xadc/s_axi_lite]
 
   # Create instance: xlconcat_0, and set properties
   set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]

@@ -16,7 +16,7 @@ the next dependencies have to be installed:
 
 .. code-block:: shell-session
 
-   sudo apt install pyton3-pip
+   sudo apt install python3-pip
    pip3 install --upgrade pip
    sudo pip3 install pyvisa
    sudo pip3 install pyvisa-py
@@ -71,7 +71,7 @@ After cloning the Git repository and changing into the directory do:
 
 .. code-block:: shell-session
 
-   meson builddir --prefix /opt/redpitaya
+   meson builddir --prefix /opt/redpitaya --buildtype release
    cd builddir
    ninja
 
@@ -81,6 +81,13 @@ The server can be installed using the nect commands:
 
    rw
    ninja install
+
+Prerequisite for running mercury based scpi server is to apply mercury dtbo.  
+
+.. code-block:: shell-session 
+
+   sh /opt/redpitaya/sbin/overlay.sh mercury
+
 
 And run as a systemd service:
 

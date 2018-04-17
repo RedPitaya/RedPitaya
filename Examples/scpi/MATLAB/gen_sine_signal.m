@@ -1,9 +1,10 @@
 %% Define Red Pitaya as TCP/IP object
 clc
 close all
-IP= '192.168.178.103';          % Input IP of your Red Pitaya...
+% IP= '192.168.101.108';          % IP of your Red Pitaya...
+IP= 'rp-f01b63.local';          % rp-MAC.local MAC are the last 6 characters of your Red Pitaya
 port = 5000;                    % If you are using WiFi then IP is:
-RP=tcpip(IP, port);       % 192.168.128.1
+RP=tcpip(IP, port);       
 
 fopen(RP);
 RP.Terminator = 'CR/LF';
@@ -11,7 +12,7 @@ RP.Terminator = 'CR/LF';
 % specify peridic mode, sinusoidal waveform and 1kHZ frequency
 fprintf(RP,'SOURce1:MODE PERiodic');           % periodic 
 fprintf(RP,'SOURce1:FUNCtion:SHAPe SINusoid'); % select signal shape as sinusoid
-fprintf(RP,'SOURce1:FREQuency:FIXed 1000');    % Set frequency of output signal to 3kHz
+fprintf(RP,'SOURce1:FREQuency:FIXed 10000');    % Set frequency of output signal to 3kHz
 
 % set output amplitude and offset
 fprintf(RP,'SOURce1:VOLTage:IMMediate:AMPlitude 1');  % Set amplitude of the output signal

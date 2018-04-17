@@ -29,10 +29,8 @@ buffer_size = 2**14
 rp.write(":SOURce1:VOLTage:IMMediate:AMPlitude 1")
 rp.write(":SOURce1:VOLTage:IMMediate:OFFSet 0")
 
-# specify peridic mode, sinusoidal waveform
+# specify burst mode, sinusoidal waveform
 rp.write(":SOURce1:MODE BURSt")
-rp.write(":SOURce1:BURSt:MODE FINite")
-#rp.write(":SOURce1:BURSt:MODE INFinite")
 rp.write(":SOURce1:FUNCtion:SHAPe SINusoid")
 
 # burst half the buffer with then idle for quarter buffer, repeat 4 times
@@ -40,6 +38,7 @@ rp.write(":SOURce1:BURSt:DATA:REPetitions 1")
 rp.write(":SOURce1:BURSt:DATA:LENgth "   + str(1 * buffer_size // 2))
 rp.write(":SOURce1:BURSt:PERiod:LENgth " + str(3 * buffer_size // 4))
 rp.write(":SOURce1:BURSt:PERiod:NUMber 4")
+#rp.write(":SOURce1:BURSt:PERiod:NUMber INFinity")
 
 # reset and start state machine
 rp.write(":SOURce1:RESET")

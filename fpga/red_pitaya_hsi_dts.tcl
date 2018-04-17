@@ -11,11 +11,11 @@ set path_sdk sdk
 
 open_hw_design $path_sdk/red_pitaya.sysdef
 
-set_repo_path ../../../tmp/device-tree-xlnx-xilinx-v2016.4/
+set_repo_path ../../../tmp/device-tree-xlnx-xilinx-v2017.2/
 
 create_sw_design device-tree -os device_tree -proc ps7_cortexa9_0
 
-set_property CONFIG.kernel_version {2016.2} [get_os]
+set_property CONFIG.kernel_version {2017.2} [get_os]
 
 generate_target -dir $path_sdk/dts
 

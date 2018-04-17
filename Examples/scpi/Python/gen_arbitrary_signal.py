@@ -64,7 +64,7 @@ rp.write(":SOURce1:TRIGger")
 if args.bin:
     values = rp.query_binary_values(":SOURce1:TRACe:DATA:RAW? {}".format(length), datatype='h')
 else:
-    values = rp.query(":SOURce1:TRACe:DATA:DATA? {}".format(length))
+    values = rp.query_ascii_values(":SOURce1:TRACe:DATA:DATA? {}".format(length))
 print(values)
 
 rp.close()

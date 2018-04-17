@@ -39,6 +39,7 @@ module gen #(
   int unsigned CWL = 32,  // counter width for burst length
   int unsigned CWN = 16,  // counter width for burst number
   // event parameters
+  int unsigned ER  = 0,   // event reset
   int unsigned EN  = 1,   // event number
   int unsigned EL  = $clog2(EN),
   // trigger parameters
@@ -116,7 +117,7 @@ localparam int unsigned BAW=7;
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   // event select
-  cfg_evn <= '0;
+  cfg_evn <= ER;
   // trigger mask
   cfg_trg <= '0;
   cfg_tre <= '0;
@@ -291,4 +292,5 @@ bin_and #(
   // configuration
   .cfg_and   ({$bits(DT){cfg_ena}})
 );
+
 endmodule: gen

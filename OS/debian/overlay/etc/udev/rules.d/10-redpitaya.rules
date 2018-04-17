@@ -13,6 +13,12 @@ SUBSYSTEM=="uio", SYMLINK+="uio/%s{name}", GROUP="uio"
 #SUBSYSTEM=="leds", ACTION=="add",                          RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 #SUBSYSTEM=="leds", ACTION=="change", ENV{TRIGGER}!="none", RUN+="/bin/chgrp -R led /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 
+# GPIO character device
+# rename devices and give group access rights
+# NOTE: this rule does not create a symlink for ZYNQ GPIO controller, since there is no "name" attribute
+#SUBSYSTEM=="gpio", SYMLINK+="gpio/%s{name}", GROUP="gpio"
+SUBSYSTEM=="gpio", GROUP="gpio"
+
 # GPIO
 # give group access rights
 # https://www.raspberrypi.org/forums/viewtopic.php?f=29&t=9667

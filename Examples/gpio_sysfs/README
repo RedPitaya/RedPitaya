@@ -1,0 +1,21 @@
+Simple C gpio test application shows how to export/unexport different pins and 
+set direction on exported pins. 
+
+Requierment for using sysfs gpio interface for working with gpios is to load appropriate fpga bitstream
+/opt/redpitaya/fpga/classic/fpga.bit and /opt/redpitaya/mercury/fpga.bit fit that requierments.
+You can load bitstream using "cat /opt/redpitaya/fpga/classic/fpga.bit > /dev/xdevcfg" command. 
+
+Usaly exporting and setting direction to pins is done in external script that sets up all 
+required gpio in this example that is done using "system" call(same can also be achived using calls to functions open read and write).
+
+Actual read and writes on /sys/class/gpio/gpio_PIN_NO_/value (where _PIN_NO_ represents pin number of 
+exported pin) is done with simple open, read and write comands. 
+
+If you connect pins DIO0_N to DIO0_P using jumper wire, value read from PIN DIO0_P 
+should match value written to POUT DIO0_P. 
+
+Documentation related to numbering of GPIO pins on redpitaya board is available at:
+https://github.com/RedPitaya/RedPitaya/blob/master/doc/developerGuide/gpio/gpio.rst
+
+General documentation related to gpio/sysfs interface is available at:
+https://github.com/RedPitaya/linux-xlnx/blob/master/Documentation/gpio/sysfs.txt

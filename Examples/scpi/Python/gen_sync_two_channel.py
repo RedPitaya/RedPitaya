@@ -34,14 +34,14 @@ rp.write(":SOURce1:MODE PERiodic")
 rp.write(":SOURce2:MODE PERiodic")
 rp.write(":SOURce1:FUNCtion:SHAPe SINusoid")
 rp.write(":SOURce2:FUNCtion:SHAPe SINusoid")
-rp.write(":SOURce1:FREQuency:FIXed 1000")
-rp.write(":SOURce2:FREQuency:FIXed 1000")
+rp.write(":SOURce1:FREQuency:FIXed 10000")
+rp.write(":SOURce2:FREQuency:FIXed 10000")
 rp.write(":SOURce1:PHASe:ADJust 0")
 rp.write(":SOURce2:PHASe:ADJust 90")
 
 # both generator should be synchronously driven
-rp.write(":SOURce1:EVENT:SYNChronization:SOURce GEN0")
-rp.write(":SOURce2:EVENT:SYNChronization:SOURce GEN0")
+rp.write(":SOURce1:EVENT:SYNChronization:SOURce GEN1")
+rp.write(":SOURce2:EVENT:SYNChronization:SOURce GEN1")
 
 # reset and start state machine
 rp.write(":SOURce:RESET")
