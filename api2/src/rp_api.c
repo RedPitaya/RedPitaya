@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 
 #include "common.h"
+#include "generate.h"
 
 #include "la_acq.h"
 
@@ -31,9 +32,17 @@ bool g_acq_running=false;
 /**
  * Open device
  */
-RP_STATUS rp_OpenUnit(void) {
+RP_STATUS rp_OpenUnit(void)
+{
     int r=RP_API_OK;
+
     if(rp_LaAcqOpen("/dev/uio/la", &la_acq_handle)!=RP_API_OK){
+        r=-1;
+    }
+
+    //rp_LaAcqFpgaRegDump(&la_acq_handle);
+
+    if(rp_GenOpen("/dev/uio/lg", &sig_gen_handle)!=RP_API_OK){
         r=-1;
     }
     return r;
@@ -42,13 +51,64 @@ RP_STATUS rp_OpenUnit(void) {
 /**
  * Close device
  */
-RP_STATUS rp_CloseUnit(void) {
+RP_STATUS rp_CloseUnit(void)
+{
     int r=RP_API_OK;
+
     if(rp_LaAcqClose(&la_acq_handle)!=RP_API_OK){
         r=-1;
     }
+
+    if(rp_GenClose(&sig_gen_handle)!=RP_API_OK){
+        r=-1;
+    }
+
     return r;
 }
+
+/**
+ * This function retrieves information about the specified device.
+ * If the device fails to open or no device is opened, only the driver version is available.
+ *
+ * @param string         On exit, the information string selected specified by the info argument.
+ *                         If string is NULL, only requiredSize is returned.
+ * @param stringLength  On entry, the maximum number of int8_t that may be written to string.
+ * @param requiredSize  On exit, the required length of the string array.
+ * @param info            A number specifying what information is required. The possible values are listed in the table below.
+ */
+RP_STATUS rp_GetUnitInfo(int8_t * string,
+                        int16_t stringLength,
+                        int16_t * requiredSize,
+                        RP_INFO info)
+{
+
+
+    return RP_API_OK;
+}
+
+
+/**
+ * Enable digital port
+ *
+ * This function is used to enable the digital port and set the logic level (the voltage at
+ * which the state transitions from 0 to 1).
+ *
+ * @param port          Identifies the port for digital data
+ * @param enabled          Whether or not to enable the channel.
+ * @param logiclevel     The voltage at which the state transitions between 0
+ *                         and 1. Range: –32767 (–5 V) to 32767 (5 V).
+ *
+ */
+RP_STATUS rp_SetDigitalPort(RP_DIGITAL_PORT port,
+                           int16_t enabled,
+                           int16_t logiclevel)
+{
+    // TODO:
+    // RP_DIGITAL_PORT0
+    // RP_DIGITAL_PORT1
+    return RP_API_OK;
+}
+
 
 /**
  * Enable digital port
@@ -221,17 +281,30 @@ RP_STATUS rp_GetTimebase(uint32_t timebase,
  *
  * This function tells the driver where to store the data.
  *
+ * @param channel    The channel you want to use with the buffer.
  * @param buffer     The location of the buffer
  * @param bufferLth  The size of the buffer array (notice that one sample is 16 bits)
  *
  */
-RP_STATUS rp_SetDataBuffer(      int16_t * buffer,
+RP_STATUS rp_SetDataBuffer(RP_CHANNEL channel,
+                                 int16_t * buffer,
                                  int32_t bufferLth,
                                 // uint32_t segmentIndex,
-                                RP_RATIO_MODE mode) {
+                                RP_RATIO_MODE mode)
+{
+    switch(channel){
+        case RP_CH_AIN1:
+        case RP_CH_AIN2:
+        case RP_CH_AIN3:
+        case RP_CH_AIN4:
+            break;
+        case RP_CH_DIN:
             acq_data.buf = buffer;
             acq_data.buf_size = bufferLth;
             return RP_API_OK;
+        break;
+    }
+    return RP_INVALID_PARAMETER;
 }
 
 
@@ -322,6 +395,8 @@ RP_STATUS rp_RunBlock(uint32_t noOfPreTriggerSamples,
         rp_LaAcqStopAcq(&la_acq_handle);
         return RP_BLOCK_MODE_FAILED;
     }
+
+   // rp_DmaMemDump(&la_acq_handle);
 
     uint32_t trig_sample;
     uint32_t last_sample;
@@ -679,3 +754,166 @@ RP_STATUS rp_Stop(void){
 	//return rp_LaAcqStopAcq(&la_acq_handle);
 }
 
+/** SIGNAL GENERATION  */
+/**
+ * This function causes a trigger event, or starts and stops gating.
+ * It is used when the signal generator is set to SIGGEN_SOFT_TRIG.
+ *
+ * @param state, sets the trigger gate high or low when the trigger type is
+ * set to either SIGGEN_GATE_HIGH or SIGGEN_GATE_LOW. Ignored for other trigger types.
+ */
+
+RP_STATUS rp_SigGenSoftwareControl(int16_t state){
+    rp_GenTrigger(&sig_gen_handle);
+    return RP_API_OK;
+}
+
+/**
+ * This function sets up the signal generator to produce a signal from a list of built-in
+ * waveforms. If different start and stop frequencies are specified, the device will sweep
+ * either up, down or up and down.
+ *
+ * @param offsetVoltage     The voltage offset, in microvolts, to be applied to the waveform
+ * @param pkToPk             The peak-to-peak voltage, in microvolts, of the waveform signal.
+ *                             Note that if the signal voltages described by the combination of offsetVoltage and pkToPk
+ *                             extend outside the voltage range of the signal generator, the output waveform will be clipped.
+ * @param waveType            The type of waveform to be generated.
+ * @param startFrequency    The frequency that the signal generator will initially produce.
+ *                             For allowable values see RP_SINE_MAX_FREQUENCY and related values.
+ * @param stopFrequency        The frequency at which the sweep reverses direction or returns to the initial frequency.
+ * @param increment            The amount of frequency increase or decrease in sweep mode.
+ * @param dwellTime            The time for which the sweep stays at each frequency in seconds.
+ * @param sweepType         Whether the frequency will sweep from startFrequency to stopFrequency, or in the opposite direction,
+ *                             or repeatedly reverse direction.
+ * @param operation            The type of extra waveform to be produced.
+ * @param shots                0: Sweep the frequency as specified by sweeps
+ *                             1...RP_MAX_SWEEPS_SHOTS: the number of cycles of the waveform to be produced after a trigger event.
+ *                             Sweeps must be zero.
+ *                             RP_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN: start and run continuously after trigger occurs
+ * @param sweeps            0: produce number of cycles specified by shots
+ *                             1..RP_MAX_SWEEPS_SHOTS: the number of times to sweep the frequency after a trigger event, according to sweepType.
+ *                             shots must be zero.
+ *                             RP_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN: start a sweep and continue after trigger occurs.
+ * @param triggerType        The type of trigger that will be applied to the signal generator.
+ * @param triggerSource        The source that will trigger the signal generator
+ * @param extInThreshold    Used to set trigger level for external trigger.
+ */
+
+RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
+                             uint32_t pkToPk,
+                             RP_WAVE_TYPE waveType,
+                             float startFrequency,
+                             float stopFrequency,
+                             float increment,
+                             float dwellTime,
+                             RP_SWEEP_TYPE sweepType,
+                             RP_EXTRA_OPERATIONS operation,
+                             uint32_t shots,
+                             uint32_t sweeps,
+                             RP_SIGGEN_TRIG_TYPE triggerType,
+                             RP_SIGGEN_TRIG_SOURCE triggerSource,
+                             int16_t extInThreshold){
+
+    //rp_GenSetAmp(&sig_gen_handle,1.0);
+    //rp_GenSetOffset(&sig_gen_handle, 1.0);
+
+
+    // triggerType
+    switch(triggerSource){
+        case RP_SIGGEN_NONE:
+            break;
+        case RP_SIGGEN_SCOPE_TRIG:
+            break;
+        case RP_SIGGEN_EXT_IN:
+            break;
+        case RP_SIGGEN_SOFT_TRIG:
+            break;
+        case RP_SIGGEN_TRIGGER_RAW:
+            break;
+    }
+
+    switch(waveType){
+        case RP_SG_SINE:
+            break;
+        case RP_SG_SQUARE:
+            break;
+        case RP_SG_TRIANGLE:
+            break;
+        case RP_SG_DC_VOLTAGE:
+            break;
+        case RP_SG_RAMP_UP:
+            break;
+        case RP_SG_RAMP_DOWN:
+            break;
+        case RP_SG_SINC:
+            break;
+        case RP_SG_GAUSSIAN:
+            break;
+        case PR_SG_HALF_SINE:
+            break;
+    }
+
+    return RP_API_OK;
+}
+
+/** DIGITAL SIGNAL GENERATION  */
+
+RP_STATUS rp_DigSigGenOuput(bool enable)
+{
+    if(enable){
+        rp_GenOutputEnable(&sig_gen_handle, RP_GEN_OUT_PORT0_MASK);
+    }
+    else{
+        rp_GenOutputDisable(&sig_gen_handle, RP_GEN_OUT_PORT0_MASK);
+    }
+    return RP_API_OK;
+}
+
+RP_STATUS rp_DigSigGenSoftwareControl(int16_t state)
+{
+	return rp_GenTrigger(&sig_gen_handle);
+   // rp_GenFpgaRegDump(&sig_gen_handle,0);
+}
+
+RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
+                                double * sample_rate,
+                                uint32_t shots,
+                                uint32_t delay_between_shots,
+                                uint32_t triggerSourceMask)
+{
+    rp_GenReset(&sig_gen_handle); // TODO: stop not working that's why reset is needed here
+    rp_GenStop(&sig_gen_handle);
+
+    // set burst mode - dig. sig. gen will always operate in this mode!
+    rp_GenSetMode(&sig_gen_handle, RP_GEN_MODE_BURST);
+
+    // set waveform
+    uint32_t len = 256;
+    switch(patternType){
+        case RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256:
+            rp_GenSetWaveformUpCountSeq(&sig_gen_handle,len);
+            rp_GenSetBurstModeDataLen(&sig_gen_handle,len);
+            rp_GenSetBurstModePeriodLen(&sig_gen_handle,len);
+            break;
+    }
+
+    // repetitions
+    rp_GenSetBurstModeRepetitions(&sig_gen_handle, shots);
+
+    // no idle
+    // rp_GenSetBurstModeIdle(&sig_gen_handle, delay_between_shots);
+
+    // sample rate
+    rp_GenSetWaveformSampleRate(&sig_gen_handle,sample_rate);
+
+    // trigger
+    rp_GenGlobalTrigSet(&sig_gen_handle, triggerSourceMask);
+
+    rp_GenRun(&sig_gen_handle);
+
+    //rp_GenFpgaRegDump(&sig_gen_handle,len);
+
+    return RP_API_OK;
+}
+
+// TODO: add function that will generate protocol from file

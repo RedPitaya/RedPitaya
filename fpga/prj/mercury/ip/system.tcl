@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2017.2
+set scripts_vivado_version 2017.1
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -594,6 +594,11 @@ CONFIG.SEQUENCER_MODE {Off} \
 CONFIG.SINGLE_CHANNEL_SELECTION {TEMPERATURE} \
 CONFIG.XADC_STARUP_SELECTION {independent_adc} \
  ] $xadc
+
+  set_property -dict [ list \
+CONFIG.NUM_READ_OUTSTANDING {1} \
+CONFIG.NUM_WRITE_OUTSTANDING {1} \
+ ] [get_bd_intf_pins /xadc/s_axi_lite]
 
   # Create instance: xlconcat_0, and set properties
   set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]

@@ -14,7 +14,3 @@ rmdir $OVERLAYS/*
 cat $FPGAS/$OVERLAY/fpga.bit > /dev/xdevcfg
 mkdir $OVERLAYS/$OVERLAY
 cat $FPGAS/$OVERLAY/fpga.dtbo > $OVERLAYS/$OVERLAY/dtbo
-
-# wait a bit for the kernel to process the overlay,
-# before attempts are made to use the new drivers
-sleep 0.5s

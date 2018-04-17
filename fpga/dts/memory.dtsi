@@ -1,6 +1,6 @@
 /*
  * define memory for DMA pool
- */
+*/
 
 / {
 	reserved-memory {

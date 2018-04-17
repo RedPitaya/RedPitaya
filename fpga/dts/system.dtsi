@@ -10,4 +10,5 @@
 /include/ "clkc.dtsi"
 /include/ "xadc.dtsi"
 /include/ "led-system.dtsi"
+/include/ "uio-ps2pl.dtsi"
 /include/ "uio-api.dtsi"

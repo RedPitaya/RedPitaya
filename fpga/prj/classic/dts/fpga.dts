@@ -1,2 +1,2 @@
-/include/ "redpitaya.dtsi"
+/include/ "system.dtsi"
 /include/ "led-user.dtsi"

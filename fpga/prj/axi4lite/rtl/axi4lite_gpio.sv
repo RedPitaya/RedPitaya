@@ -8,8 +8,6 @@ module axi4lite_gpio #(
   output logic [DW-1:0] gpio_o,
   output logic [DW-1:0] gpio_t,
   input  logic [DW-1:0] gpio_i,
-  // interrupt
-  output logic          irq,
   // User ports ends
   axi4_lite_if.s        bus
 );
@@ -79,7 +77,6 @@ always_ff @(posedge bus.ACLK)
 if (bus.ARESETn == 1'b0) begin
   gpio_o <= '0;
   gpio_t <= '0;
-  irq <= '0;
 end else if (slv_reg_wren) begin
   if (axi_awaddr == 2'h0) begin
     for (int unsigned i=0; i<(DW/8); i++) begin
@@ -90,9 +87,6 @@ end else if (slv_reg_wren) begin
     for (int unsigned i=0; i<(DW/8); i++) begin
       if (bus.WSTRB[i])  gpio_t[(i*8)+:8] <= bus.WDATA[(i*8)+:8];
     end
-  end
-  if (axi_awaddr == 2'h3) begin
-    irq <= bus.WDATA[0];
   end
 end
 
@@ -180,7 +174,6 @@ if (slv_reg_rden) begin
     2'h0: bus.RDATA <= gpio_o;
     2'h1: bus.RDATA <= gpio_t;
     2'h2: bus.RDATA <= gpio_i;
-    2'h3: bus.RDATA <= irq;
     // NOTE: a default is not really needed, values at address 2'h3 are undefined
     // default: bus.RDATA <= '0;
   endcase

@@ -103,6 +103,13 @@ typedef struct {
 
 ///@}
 
+/**
+ * Returns textual representation of error code.
+ * @param errorCode Error code returned from API.
+ * @return Textual representation of error given error code.
+ */
+const char* rp_GetError(int errorCode);
+
 #ifdef __cplusplus
 }
 #endif

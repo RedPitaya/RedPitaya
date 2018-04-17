@@ -11,7 +11,7 @@ export REVISION
 export VERSION
 
 SUBMODULE_UBT = "redpitaya-v2016.4"
-SUBMODULE_LIN = "branch-redpitaya-v2017.2"
+SUBMODULE_LIN = "redpitaya-v2016.2-RP4"
 SUBMODULE_APP = $(shell git submodule status Applications)
 
 define GREET_MSG
@@ -59,8 +59,8 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG     = redpitaya-v2016.4
-LINUX_TAG     = branch-redpitaya-v2017.2
-DTREE_TAG     = xilinx-v2017.2
+LINUX_TAG     = redpitaya-v2016.2-RP4
+DTREE_TAG     = xilinx-v2016.4
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
@@ -82,8 +82,8 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite
-#FPGA_PRJ_LST = classic logic v0.94 mercury
+FPGA_PRJ_LST = classic logic v0.94 axi4lite mercury
+FPGA_PRJ_LST = classic logic v0.94 mercury
 FPGA_PRJ = logic
 
 .PHONY: fpga
@@ -181,14 +181,18 @@ $(DTREE_DIR): $(DTREE_TAR)
 
 $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
-	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system-top.dts
+	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system.dts
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system.dts
+	tools/dtc/dtc -@ -I dts -O dtb -o $(TMP)/dts/amba_pl.dtbo patches/devicetree/amba_pl.dts
 	# create device tree source from binary for reference
 	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
 	cp $(DEVICETREE)                   $(INSTALL_DIR)
 	cp $(TMP)/dts/dtraw.dts            $(INSTALL_DIR)
+	cp $(TMP)/dts/amba_pl.dtbo         $(INSTALL_DIR)
+	cp patches/devicetree/amba_pl.sh   $(INSTALL_DIR)
+	cp patches/devicetree/rmamba_pl.sh $(INSTALL_DIR)
 
 ################################################################################
 # boot file generator

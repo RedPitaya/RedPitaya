@@ -36,7 +36,6 @@ module lg #(
   int unsigned CWL = 32,  // counter width for burst length
   int unsigned CWN = 16,  // counter width for burst number
   // event parameters
-  int unsigned ER  = 0,   // event reset
   int unsigned EN  = 1,   // event number
   int unsigned EL  = $clog2(EN),
   // trigger parameters
@@ -88,7 +87,7 @@ logic [CWL-1:0] sts_bpl;  // burst period length counter
 logic [CWN-1:0] sts_bpn;  // burst period number counter
 // output configuration
 DT      [2-1:0] cfg_oen;  // output enable [1:0]
-DT              cfg_omd;  // output mode (0 - fixed value, 1 - from ASG)
+DT              cfg_msk;  // mask
 DT              cfg_val;  // value/polarity
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +109,7 @@ localparam int unsigned BAW=7;
 always_ff @(posedge bus.clk)
 if (~bus.rstn) begin
   // event select
-  cfg_evn <= ER;
+  cfg_evn <= '0;
   // trigger mask
   cfg_trg <= '0;
   cfg_tre <= '0;
@@ -121,7 +120,7 @@ if (~bus.rstn) begin
   cfg_bpn <= '0;
   // output configuration
   cfg_oen <= '0;
-  cfg_omd <= '0;
+  cfg_msk <= '0;
   cfg_val <= '0;
 end else begin
   if (bus.wen) begin
@@ -140,7 +139,7 @@ end else begin
     // output configuration
     if (bus.addr[BAW-1:0]=='h40)  cfg_oen[0] <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h44)  cfg_oen[1] <= bus.wdata;
-    if (bus.addr[BAW-1:0]=='h48)  cfg_omd <= bus.wdata;
+    if (bus.addr[BAW-1:0]=='h48)  cfg_msk <= bus.wdata;
     if (bus.addr[BAW-1:0]=='h4c)  cfg_val <= bus.wdata;
   end
 end
@@ -175,7 +174,7 @@ casez (bus.addr[BAW-1:0])
   // output configuration
   'h40: bus.rdata <= cfg_oen[0];
   'h44: bus.rdata <= cfg_oen[1];
-  'h48: bus.rdata <= cfg_omd;
+  'h48: bus.rdata <= cfg_msk;
   'h4c: bus.rdata <= cfg_val;
   // default is 'x for better optimization
   default: bus.rdata <= 'x;
@@ -243,7 +242,7 @@ assign stg.TREADY = sto.TREADY;
 generate
 for (genvar i=0; i<DN; i++) begin: for_dn
 
-assign sto.TDATA[i].o = cfg_val ^ (~cfg_omd & stg.TDATA[i]);
+assign sto.TDATA[i].o = cfg_val ^ (~cfg_msk & stg.TDATA[i]);
 assign sto.TDATA[i].e = cfg_oen[0] & ~sto.TDATA[i].o
                       | cfg_oen[1] &  sto.TDATA[i].o;
 

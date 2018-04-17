@@ -22,6 +22,7 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "generate.h"
 #include "la_acq.h"
 
 #include "rp_dma.h"
@@ -48,7 +49,7 @@ int rp_LaAcqOpen(const char *dev, rp_handle_uio_t *handle) {
         return status;
     }
 
-    status = rp_DmaOpen("/dev/amba_pl:rprx@2", handle);
+    status = rp_DmaOpen("/dev/rprx", handle);
     if (status != RP_OK) {
         return status;
     }

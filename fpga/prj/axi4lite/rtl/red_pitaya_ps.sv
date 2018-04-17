@@ -36,8 +36,6 @@ module red_pitaya_ps (
   input  logic  [5-1:0] vinn_i,  // slow analog voltages n
   // GPIO
   gpio_if.m              gpio,
-  // interrupt
-  input logic            irq,
   // system read/write channel
   axi4_lite_if.m         bus
 );
@@ -122,9 +120,7 @@ system system (
   // GPIO
   .GPIO_tri_i (gpio.i),
   .GPIO_tri_o (gpio.o),
-  .GPIO_tri_t (gpio.t),
-  // IRQ
-  .IRQ        (irq)
+  .GPIO_tri_t (gpio.t)
 );
 
-endmodule: red_pitaya_ps
+endmodule

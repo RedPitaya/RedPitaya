@@ -77,6 +77,13 @@ localparam type DTO = logic   signed [16-1:0];  // acquire
 localparam type DTL = logic unsigned [16-1:0];  // logic (generator/analyzer)
 localparam type DTLG = struct packed {DTL e, o;};
 
+//typedef struct packed {
+//  DTL e;
+//  DTL o;
+//} dtlg_t;
+
+//localparam type DTLG = dtlg_t;
+
 // GPIO parameter
 localparam int unsigned GDW = 8+8;
 
@@ -222,7 +229,7 @@ top_pkg::irq_t irq;
 
 // system bus
 sys_bus_if   ps_sys       (.clk (adc_clk), .rstn (adc_rstn));
-sys_bus_if   sys [32-1:0] (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [16-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
@@ -236,34 +243,34 @@ axi4_stream_if #(.DT (DTL)) srx_la            (.ACLK (adc_clk), .ARESETn (adc_rs
 ////////////////////////////////////////////////////////////////////////////////
 
 red_pitaya_ps ps (
-  .FIXED_IO_mio       (FIXED_IO_mio     ),
-  .FIXED_IO_ps_clk    (FIXED_IO_ps_clk  ),
-  .FIXED_IO_ps_porb   (FIXED_IO_ps_porb ),
-  .FIXED_IO_ps_srstb  (FIXED_IO_ps_srstb),
-  .FIXED_IO_ddr_vrn   (FIXED_IO_ddr_vrn ),
-  .FIXED_IO_ddr_vrp   (FIXED_IO_ddr_vrp ),
+  .FIXED_IO_mio       (  FIXED_IO_mio                ),
+  .FIXED_IO_ps_clk    (  FIXED_IO_ps_clk             ),
+  .FIXED_IO_ps_porb   (  FIXED_IO_ps_porb            ),
+  .FIXED_IO_ps_srstb  (  FIXED_IO_ps_srstb           ),
+  .FIXED_IO_ddr_vrn   (  FIXED_IO_ddr_vrn            ),
+  .FIXED_IO_ddr_vrp   (  FIXED_IO_ddr_vrp            ),
   // DDR
-  .DDR_addr      (DDR_addr   ),
-  .DDR_ba        (DDR_ba     ),
-  .DDR_cas_n     (DDR_cas_n  ),
-  .DDR_ck_n      (DDR_ck_n   ),
-  .DDR_ck_p      (DDR_ck_p   ),
-  .DDR_cke       (DDR_cke    ),
-  .DDR_cs_n      (DDR_cs_n   ),
-  .DDR_dm        (DDR_dm     ),
-  .DDR_dq        (DDR_dq     ),
-  .DDR_dqs_n     (DDR_dqs_n  ),
-  .DDR_dqs_p     (DDR_dqs_p  ),
-  .DDR_odt       (DDR_odt    ),
-  .DDR_ras_n     (DDR_ras_n  ),
-  .DDR_reset_n   (DDR_reset_n),
-  .DDR_we_n      (DDR_we_n   ),
+  .DDR_addr      (DDR_addr    ),
+  .DDR_ba        (DDR_ba      ),
+  .DDR_cas_n     (DDR_cas_n   ),
+  .DDR_ck_n      (DDR_ck_n    ),
+  .DDR_ck_p      (DDR_ck_p    ),
+  .DDR_cke       (DDR_cke     ),
+  .DDR_cs_n      (DDR_cs_n    ),
+  .DDR_dm        (DDR_dm      ),
+  .DDR_dq        (DDR_dq      ),
+  .DDR_dqs_n     (DDR_dqs_n   ),
+  .DDR_dqs_p     (DDR_dqs_p   ),
+  .DDR_odt       (DDR_odt     ),
+  .DDR_ras_n     (DDR_ras_n   ),
+  .DDR_reset_n   (DDR_reset_n ),
+  .DDR_we_n      (DDR_we_n    ),
   // system signals
-  .fclk_clk_o    (fclk       ),
-  .fclk_rstn_o   (frstn      ),
+  .fclk_clk_o    (fclk        ),
+  .fclk_rstn_o   (frstn       ),
   // ADC analog inputs
-  .vinp_i        (vinp_i     ),
-  .vinn_i        (vinn_i     ),
+  .vinp_i        (vinp_i      ),
+  .vinn_i        (vinn_i      ),
   // GPIO
   .gpio          (gpio),
   // interrupt
@@ -272,28 +279,27 @@ red_pitaya_ps ps (
   .srx_osc       (srx_osc),
   .srx_la        (srx_la ),
   // system read/write channel
-  .bus           (ps_sys     )
+  .bus           (ps_sys      )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// system bus decoder & multiplexer
-// it breaks memory addresses into 32 regions of 64kB each
+// system bus decoder & multiplexer (it breaks memory addresses into 16 regions)
 ////////////////////////////////////////////////////////////////////////////////
 
 sys_bus_interconnect #(
-  .SN (32),
+  .SN (16),
   .SW (16)
 ) sys_bus_interconnect (
   .bus_m (ps_sys),
   .bus_s (sys)
 );
 
-// silence unused busses
-generate
-for (genvar i=17; i<32; i++) begin: for_sys_2
-  sys_bus_stub sys_bus_stub_2 (sys[i]);
-end: for_sys_2
-endgenerate
+//// silence unused busses
+//generate
+//for (genvar i=2; i<3; i++) begin: for_sys_2
+//  sys_bus_stub sys_bus_stub_2 (sys[i]);
+//end: for_sys_2
+//endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
 // identification
@@ -310,7 +316,7 @@ id #(.GITH (GITH)) id (
 
 // GPIO mode
 DTL exp_iom;
-logic [2-1:0] mgmt_loop;
+logic [3-1:0] mgmt_loop;
 
 mgmt #(.GW ($bits(DTL))) mgmt (
   // GPIO mode
@@ -553,7 +559,6 @@ for (genvar i=0; i<MNG; i++) begin: for_gen
   gen #(
     .DN  (1),
     .DT  (DTG),
-    .ER  (0+i),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) gen (
@@ -589,7 +594,6 @@ for (genvar i=0; i<MNO; i++) begin: for_osc
   osc #(
     .DN  (1),
     .DT  (DTO),
-    .ER  (2+i),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) osc (
@@ -641,7 +645,6 @@ if (EN_LG) begin: if_lg
   lg #(
     .DN  (1),
     .DT  (DTL),
-    .ER  (4),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) lg (
@@ -693,7 +696,6 @@ if (EN_LA) begin: if_la
   la #(
     .DN  (1),
     .DT  (DTL),
-    .ER  (5),
     .EN  (top_pkg::MNS),
     .TN  ($bits(trg))
   ) la (
@@ -746,24 +748,5 @@ end else begin
 
 end
 endgenerate
-
-////////////////////////////////////////////////////////////////////////////////
-// complex trigger
-////////////////////////////////////////////////////////////////////////////////
-
-ctrg #(
-  .ER  (6),
-  .EN  (top_pkg::MNS),
-  .TN  ($bits(trg))
-) ctrg (
-  // software events
-  .evi      (evn),
-  .evo      (evn.ctrg),
-  // trigger events
-  .trg      (trg),
-  .tro      (trg.ctrg),
-  // System bus
-  .bus      (sys[16])
-);
 
 endmodule: red_pitaya_top
