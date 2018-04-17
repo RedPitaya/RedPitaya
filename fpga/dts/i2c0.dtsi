@@ -1,6 +1,6 @@
 /*
  * list devices on I2C bus
- */
+*/
 
 &i2c0 {
 	eeprom@50 {

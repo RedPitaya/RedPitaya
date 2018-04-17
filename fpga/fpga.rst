@@ -14,7 +14,7 @@ Install libraries:
 
    # apt-get install libxft2 libxft2:i386 lib32ncurses5
 
-2. *Xilinx Vivado 2017.2 (including SDK)* 
+2. *Xilinx Vivado 2017.1 (including SDK)* 
 
 *******************
 Directory structure
@@ -25,7 +25,7 @@ Common code for all projects is placed directly into the ``fpga`` directory. Com
 Project specific code is placed inside the ``fpga/prj/name/`` directories and is similarly organized as common code.
 
 .. |ug895| replace:: Vivado System-Level Design Entry
-.. _ug895: https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_2/ug895-vivado-system-level-design-entry.pdf
+.. _ug895: https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_1/ug895-vivado-system-level-design-entry.pdf
 
 .. tabularcolumns:: |p{30mm}|p{120mm}|
 
@@ -107,7 +107,7 @@ If Xilinx Vivado is installed at the default location, then the next command wil
 
 .. code-block:: shell-session
 
-   $ . /opt/Xilinx/Vivado/2017.2/settings64.sh
+   $ . /opt/Xilinx/Vivado/2017.1/settings64.sh
 
 The default mode for building the FPGA is to run a TCL script inside Vivado.
 Non project mode is used, to avoid the generation of project files,
@@ -329,6 +329,56 @@ The default pin assignment for GPIO is described in the next table.
 +--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
 | ``B9`` | ``E2[10]`` | I2C0_SDA           |  ``MIO[51]``     | ``906+   [51]   = 957``      | requires ``pinctrl`` changes to be active |
 +--------+------------+--------------------+------------------+------------------------------+-------------------------------------------+
+
+
+========================
+Linux access to GPIO/LED
+========================
+
+This document is used as reference:
+`Linux+GPIO+Driver <http://www.wiki.xilinx.com/Linux+GPIO+Driver>`_
+
+There are 54+64=118 GPIO provided by ZYNQ PS, MIO provides 54 GPIO,
+and EMIO provide additional 64 GPIO.
+
+The next formula is used to calculate the ``gpio_base`` index.
+
+.. code-block:: none
+
+   base_gpio = ZYNQ_GPIO_NR_GPIOS - ARCH_NR_GPIOS = 1024 - 118 = -906
+
+Values for the used macros can be found in the kernel sources.
+
+.. code-block:: shell-session
+
+   $ grep ZYNQ_GPIO_NR_GPIOS drivers/gpio/gpio-zynq.c
+   #define	ZYNQ_GPIO_NR_GPIOS	118
+   $ grep -r CONFIG_ARCH_NR_GPIO tmp/linux-xlnx-xilinx-v2017.1
+   tmp/linux-xlnx-xilinx-v2017.1/.config:CONFIG_ARCH_NR_GPIO=1024
+
+Another way to find the `gpio_base` index is to check the given name inside `sysfs`.
+
+.. code-block:: shell-session
+
+   # find /sys/class/gpio/ -name gpiochip*
+   /sys/class/gpio/gpiochip906
+
+GPIOs are accessible at the ``sysfs`` index.
+The next example will light up ``LED[0]``, and read back its value.
+
+.. code-block:: shell-session
+
+   $ export INDEX=960
+   $ echo $INDEX > /sys/class/gpio/export
+   $ echo out    > /sys/class/gpio/gpio$INDEX/direction
+   $ echo 1      > /sys/class/gpio/gpio$INDEX/value
+   $ cat           /sys/class/gpio/gpio$INDEX/value
+
+.. note::
+
+   `A new user space ABI for GPIO <https://git.kernel.org/cgit/linux/kernel/git/linusw/linux-gpio.git/tree/include/uapi/linux/gpio.h?h=for-next>`_
+   is coming in kernel v4.8, ioctl will be used instead of ``sysfs``.
+   The new driver will allow for seting multiple GPIO signals simultaneously.
 
 ===================
 Linux access to LED

@@ -3,8 +3,8 @@ XILINX_PATH=/opt/Xilinx
 
 MODELSIM_BIN=$(ALTERA_PATH)/16.1/modelsim_ase/bin
 
-PATH_LIB=$(XILINX_PATH)/Vivado/2017.2/data/verilog/src
-PATH_SIP=$(XILINX_PATH)/Vivado/2017.2/data/secureip
+PATH_LIB=$(XILINX_PATH)/Vivado/2017.1/data/verilog/src
+PATH_SIP=$(XILINX_PATH)/Vivado/2017.1/data/secureip
 PATH_RTL=../rtl
 PATH_TBN=../tbn
 

@@ -23,7 +23,7 @@ DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 SIZE=3500
 
 #IMAGE=$1
-IMAGE=redpitaya_OS_${DATE}.img
+IMAGE=redpitaya_ubuntu_${DATE}.img
 
 dd if=/dev/zero of=$IMAGE bs=1M count=$SIZE
 
@@ -60,7 +60,6 @@ mount $ROOT_DEV $ROOT_DIR
 ################################################################################
 
 . OS/debian/ubuntu.sh 2>&1 | tee $ROOT_DIR/buildlog.txt
-#. OS/debian/debian.sh 2>&1 | tee $ROOT_DIR/buildlog.txt
 
 ################################################################################
 # umount image

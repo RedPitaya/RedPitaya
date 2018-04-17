@@ -16,6 +16,5 @@ Software
    ../../fpga/fpga
    comC
    scpi/scpi
-   gpio/gpio
    software/manualApps.rst
-
+   

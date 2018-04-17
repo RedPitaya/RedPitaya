@@ -30,7 +30,7 @@ Apart from the graph there are five areas in which the surface is divided:
 
     
 Features
-********
+*******
 
 Oscilloscope & signal generator main features are listed below:
     - Run/stop and auto set functionality

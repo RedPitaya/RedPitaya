@@ -22,7 +22,7 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS                               \
                 $rp_src_dir/rp_data_cmd.c                    \
                 $rp_src_dir/cJSON.c"
 
-CORE_LIBS="$CORE_LIBS -Wl,--no-as-needed -L$ngx_addon_dir/../ws_server -lws_server -lm -ldl -lcryptopp -lcurl -lboost_system -lboost_regex -lboost_thread"
+CORE_LIBS="$CORE_LIBS -Wl,--no-as-needed -L$ngx_addon_dir/../ws_server -lws_server -lm -ldl -lssl -lcryptopp -lcurl -lboost_system -lboost_regex -lboost_thread"
 CFLAGS="$CFLAGS -I $rp_include_dir -I$ngx_addon_dir/../ws_server"
 CFLAGS="$CFLAGS -DVERSION=$VERSION -DREVISION=$REVISION"
 

@@ -7,13 +7,6 @@ Add a button to control LED
 You can control Red Pitaya's peripherals via Web UI. In this tutorial will be shown how to turn on and off LED on Red
 Pitaya using parameters.
 
-.. note::
-
-	Requierment for manipulating leds using api is to first load fpga_0.94.bit fpga bitstream image.
-	That can be done using next command line instruction:
-	"cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg"
-
-
 ******
 Web UI
 ******

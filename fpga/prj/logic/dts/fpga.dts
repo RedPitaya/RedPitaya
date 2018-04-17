@@ -1,3 +1,4 @@
-/include/ "redpitaya.dtsi"
+/include/ "system.dtsi"
 /include/ "led-user.dtsi"
 /include/ "dma.dtsi"
+/include/ "uio.dtsi"
