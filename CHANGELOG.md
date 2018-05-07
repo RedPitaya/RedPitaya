@@ -1,4 +1,4 @@
-# Release 0.98-RC2
+# Beta version (0.98-685)
 
 VNA:
 - added Vector network analyser application to the ecosystem image
@@ -11,7 +11,7 @@ Bode analyser:
 OS
 - Changed links to external resources
 
-# Release 0.98-RC1
+# Stable version (0.98-615)
 
 FPGA (mercury):
 - fixed bugs causing unreliable reads from oscilloscope, logic analyzer buffer
