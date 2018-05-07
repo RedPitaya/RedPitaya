@@ -26,7 +26,7 @@ and SCPI commands simple access to raw data acquired on STEMlab board.
   acquired by STEMlab board
 - Write testing scripts and routines
 - Incorporate your STEMlab and Labview  into testing and production lines
-- Take quick measurements directly with your PC 
+- Take quick measurements directly with your PC
 
 ***********
 Quick start
@@ -34,7 +34,7 @@ Quick start
 
 Start SCPI server, this is done simply by clicking the SCPI server icon and starting the SCPI server.
 When SCPI server is started the IP of your board will be shown.
-This IP you need to input in to your scripts. 
+This IP you need to input in to your scripts.
 Starting SCPI server can be also done manually via Terminal(check bellow).
 
 To run an examples follow instructions bellow:
@@ -52,17 +52,17 @@ To run an examples follow instructions bellow:
 
    .. image:: scpi-app-stop.png
 
-#. Follow the instructions bellow sutable to your environment. 
+#. Follow the instructions bellow sutable to your environment.
 
    .. note::
 
-      It is not possible to run SCPI commands/programs in parallel with web applications. 
- 
+      It is not possible to run SCPI commands/programs in parallel with web applications.
+
 .. contents::
     :local:
     :backlinks: none
-    :depth: 1   
-   
+    :depth: 1
+
 ======
 MATLAB
 ======
@@ -90,9 +90,9 @@ To install them do:
 
 #. Open the :ref:`blink <blink>` tutorial and copy the code to your favorite text editor
 #. Save the file as ``blink.py`` to your working folder → for example ``examples_py``
-#. Copy and save the 
+#. Copy and save the
    `redpitaya_scpi.py <https://github.com/RedPitaya/RedPitaya/blob/master/Examples/python/redpitaya_scpi.py>`_
-   `` script in to the same folder where you have saved ``blink.py`` example (in our case 
+   `` script in to the same folder where you have saved ``blink.py`` example (in our case
    it will be ``examples_py``).
 
    .. note::
@@ -100,7 +100,7 @@ To install them do:
       ``redpitaya_scpi.py`` script is a standard script needed to
       establish the connection between your PC and STEMlab board.
       Without having this script in the same folder as your python script
-      the execution of your script will fail.   
+      the execution of your script will fail.
 
    .. image:: scpi-examples.png
 
@@ -111,7 +111,7 @@ To install them do:
 
    .. code-block:: shell-session
 
-      cd /home/zumy/Desktop/exmples_py 
+      cd /home/zumy/Desktop/exmples_py
       python blink.py 192.168.178.108
 
    .. image:: scpi-example-cli.png
@@ -123,8 +123,8 @@ LabVIEW
 =======
 
 To set up the LabVIEW driver for Red Pitaya,
-download the 
-`Red_Pitaya_LabVIEW_Driver&Examples.zip <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AACv9uCj-E5A6dJLN4YcomaTa/Red_Pitaya_LabVIEW_Driver%26Examples_v0.8.zip>`_ file.
+download the
+`Red_Pitaya_LabVIEW_Driver&Examples.zip <http://downloads.redpitaya.com/downloads/labview/Red_Pitaya_LabVIEW_Driver%26Examples.zip>`_ file.
 Unpack it and copy the RedPitaya folder to your LabVIEW installations ``instr.lib`` folder
 e.g. ``C:/Program Files/National Instruments/LabVIEW 2010/instr.lib``.
 The RedPitaya driver should appear after restarting LabVIEW in
@@ -171,7 +171,7 @@ Different code examples can be found on the `Examples page <http://redpitaya.com
    This is because the same resource is used for both tasks.
 
 More examples about how to control STEMlab from MATLAB can be find :ref:`here <examples>`.
-   
+
 *****************************
 Starting SCPI server manually
 *****************************
@@ -200,18 +200,18 @@ Examples
 ********
 
 In the list bellow you will find examples of remote control and C algorithms. This examples are covering all
-basic STEMlab functionalities such as: 
+basic STEMlab functionalities such as:
 
     - signal generation
     - signal acquisition
     - digital I/O control
-    - communication protocols 
-    
+    - communication protocols
+
 You can edit and change them according to your needs and develop customized programs and routines.
 
 .. toctree::
    :maxdepth: 2
-   
+
 
    ../examples/digital
    ../examples/analog
