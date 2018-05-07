@@ -63,6 +63,8 @@ Assembly
 
 4. Remove the remainder of the thermal paste.
 
+#. Apply the thermal pad to the CPU.
+
 #. Place the Red Pitaya board into the bottom part of casing.
 
 #. Turn the top part of the casing upside down and place the light guiding plastic.

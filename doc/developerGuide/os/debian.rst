@@ -8,7 +8,7 @@ Red Pitaya OS
 Overview
 ********
 
-Executable scripts from ``SW/debian`` directory:
+Executable scripts from ``OS/debian`` directory:
 
 +---------------------+------------------------------------------------------------------------------+
 | script              | description                                                                  |
@@ -125,6 +125,13 @@ Run the next command to build the OS image. Root or ``sudo`` privileges are need
 The code should be executed as the ``root`` user,
 otherwise some configuration files will be placed into the wrong users home directory.
 
+.. note::
+
+   Before you execute next step, the Ecosystem_ must be built.
+
+.. _Ecosystem: http://redpitaya.readthedocs.io/en/latest/developerGuide/ecosystem/ecosystem.html
+
+
 .. code-block:: shell-session
 
    $ sudo bash
@@ -165,7 +172,13 @@ The script should be run with the image and ecosystem files as arguments:
 
 .. code-block:: shell-session
 
-   # ./image-update.sh redpitaya_ubuntu_*.img ecosystem*.zip
+   # ./OS/debian/image-update.sh redpitaya_OS_*.img ecosystem-*.zip
+
+Now you can burn a micro SD card (sized 4GB) e.g.,
+
+.. code-block:: shell-session
+
+   # dd bs=4M if=redpitaya_OS_*.img of=/dev/mmcblk0
 
 =================
 File system check
@@ -181,7 +194,7 @@ Use this script on an image before releasing it.
 
 .. code-block:: shell-session
 
-   # ./image-fsck.sh redpitaya_ubuntu_*.img
+   # ./OS/debian/image-fsck.sh redpitaya_OS_*.img
 
 ===================
 Reducing image size

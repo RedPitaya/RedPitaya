@@ -9,7 +9,7 @@ The following accessories and materials are included with your STEMlab SDR trans
 	* SDR transceiver 160-10 10W module
 	* DC power cord with Anderson Power Pole™ connector
 	* 4 x SMA cable for connecting C25 module with STEMlab 125-14 and antenna   
-	* impedance adapter
+	* impedance transformer board
 
 .. _Hercules: https://www.hercules.com/uk/leisure-controllers/bdd/p/248/djcontrol-instinct-s-series/
 
