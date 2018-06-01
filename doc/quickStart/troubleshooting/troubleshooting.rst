@@ -93,12 +93,12 @@ please check the following:
     For full preformence the wired connection is preffered. 
   
 *********************************
-Rassbary Pi Wi-Fi is not detected
+Raspberry Pi Wi-Fi is not detected
 *********************************  
 
-    In some circumstances a Rassbary Pi Wi-Fi is not detected by Red Pitaya. To mitigate, detatch 
+    In some circumstances a Raspberry Pi Wi-Fi is not detected by Red Pitaya. To mitigate, detatch 
     the power cable from Red Pitaya and wait for about a minute before powering up the Red Pitaya again.
-    On the next boot the Rassbary Pi Wi-Fi should be detected normally.
+    On the next boot the Raspberry Pi Wi-Fi should be detected normally.
     
 ###
 FAQ
