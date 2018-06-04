@@ -139,7 +139,7 @@ Parameter options:
 | | Examples:                          |                            |                                                                          |
 | | ``SOUR1:BURS:NOR 5``               |                            |                                                                          |
 +--------------------------------------+----------------------------+---------------------------+----------------------------------------------+
-| | ``SOUR1:BURS:INT:PER <time>``      | ``rp_GenBurstPeriod``      | Set P total time of one burst in in micro seconds.                       |
+| | ``SOUR1:BURS:INT:PER <time>``      | ``rp_GenBurstPeriod``      | Set P total time of one burst in micro seconds.                       |
 | | Examples:                          |                            | This includes the signal and delay.                                      |
 | | ``SOUR1:BURS:INT:PER 1000000``     |                            |                                                                          |
 +--------------------------------------+----------------------------+--------------------------------------------------------------------------+
