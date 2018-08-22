@@ -1234,12 +1234,12 @@ then
 fi
 
 echo
-echo "          Loading fpga.bit all LEDs 0-7 will go OFF for 2 seconds...."
-echo 
+echo "          Loading fpga_0.94.bit all LEDs 0-7 will go OFF for 2 seconds...."
+echo
 # Use new FPGA image for ADC test and calibration
-cat /opt/redpitaya/fpga/fpga.bit > /dev/xdevcfg
+cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
 sleep 2
-# Restore LED status after fpga.bit replacement
+# Restore LED status after fpga_0.94.bit replacement
 $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
 
 ###############################################################################
