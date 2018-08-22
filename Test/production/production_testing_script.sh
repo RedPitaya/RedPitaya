@@ -15,6 +15,11 @@
 #  2. manufacturing tests suite, print results on log file
 ###############################################################################
 
+hexToDec() {
+    local VALUE
+    read VALUE
+    printf "%d\n" "$VALUE"
+}
 
 # Path variables
 SD_CARD_PATH='/opt/redpitaya'
@@ -118,8 +123,8 @@ MAX_SATA_RATE=$(($EXP_SATA_RATE+$EXP_SATA_RATE*$TOLERANCE_PERC/100))
 # slow ADCs and DACs
 TOLERANCE_PERC=10
 REF_RATIO=2
-MIN_RATIO=$(($REF_RATIO-$REF_RATIO*$TOLERANCE_PERC/100))
-MAX_RATIO=$(($REF_RATIO+$REF_RATIO*$TOLERANCE_PERC/100))
+MIN_RATIO=$(bc -l <<< "$REF_RATIO - $REF_RATIO * $TOLERANCE_PERC / 100")
+MAX_RATIO=$(bc -l <<< "$REF_RATIO + $REF_RATIO * $TOLERANCE_PERC / 100")
 
 # fast ADCs and DACs data acquisitions
 SIG_FREQ=1000
@@ -1133,7 +1138,7 @@ echo
 
 TEST_STATUS=1
 TEST_VALUE=64
-TEST_VALUE_LED=32   
+TEST_VALUE_LED=32
 #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
 #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
 #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
@@ -1154,13 +1159,13 @@ $MONITOR 0x4040002C w $DAC_VALUE
 sleep 0.2
 
 # Get the input level of all four ADCs
-ADC1_A=$($MONITOR 0x40400000)
+ADC1_A=$($MONITOR 0x40400000 | hexToDec)
 sleep 0.2
-ADC2_A=$($MONITOR 0x40400004)
+ADC2_A=$($MONITOR 0x40400004 | hexToDec)
 sleep 0.2
-ADC3_A=$($MONITOR 0x40400008)
+ADC3_A=$($MONITOR 0x40400008 | hexToDec)
 sleep 0.2
-ADC4_A=$($MONITOR 0x4040000C)
+ADC4_A=$($MONITOR 0x4040000C | hexToDec)
 sleep 0.2
 
 echo "    ADC values - first acquisition - are $ADC1_A, $ADC2_A, $ADC3_A, $ADC4_A"
@@ -1177,36 +1182,40 @@ $MONITOR 0x4040002C w $DAC_VALUE
 sleep 0.2
 
 # Get again the input level of all four DACs
-ADC1_B=$($MONITOR 0x40400000)
+ADC1_B=$($MONITOR 0x40400000 | hexToDec)
 sleep 0.2
-ADC2_B=$($MONITOR 0x40400004)
+ADC2_B=$($MONITOR 0x40400004 | hexToDec)
 sleep 0.2
-ADC3_B=$($MONITOR 0x40400008)
+ADC3_B=$($MONITOR 0x40400008 | hexToDec)
 sleep 0.2
-ADC4_B=$($MONITOR 0x4040000C)
+ADC4_B=$($MONITOR 0x4040000C | hexToDec)
 sleep 0.2
 
 echo "    ADC values - second acquisition - are $ADC1_B, $ADC2_B, $ADC3_B, $ADC4_B"
 
 # Evaluate the ratios
-ADC1_R=$(echo | awk -v sb=$ADC1_B -v sa=$ADC1_A '{ printf "%0.f\n", sb/sa }')
-ADC2_R=$(echo | awk -v sb=$ADC2_B -v sa=$ADC2_A '{ printf "%0.f\n", sb/sa }')
-ADC3_R=$(echo | awk -v sb=$ADC3_B -v sa=$ADC3_A '{ printf "%0.f\n", sb/sa }')
-ADC4_R=$(echo | awk -v sb=$ADC4_B -v sa=$ADC4_A '{ printf "%0.f\n", sb/sa }')
+ADC1_R=$(bc -l <<< "$ADC1_B / $ADC1_A")
+ADC2_R=$(bc -l <<< "$ADC2_B / $ADC2_A")
+ADC3_R=$(bc -l <<< "$ADC3_B / $ADC3_A")
+ADC4_R=$(bc -l <<< "$ADC4_B / $ADC4_A")
 
+BC_RESULT=$(bc -l <<< "\
+($ADC1_R >= $MIN_RATIO) && \
+($ADC1_R <= $MAX_RATIO) && \
+($ADC2_R >= $MIN_RATIO) && \
+($ADC2_R <= $MAX_RATIO) && \
+($ADC3_R >= $MIN_RATIO) && \
+($ADC3_R <= $MAX_RATIO) && \
+($ADC4_R >= $MIN_RATIO) && \
+($ADC4_R <= $MAX_RATIO) \
+")
 
-if [ $ADC1_R -lt $MIN_RATIO ] || [ $ADC1_R -gt $MAX_RATIO ] || [ $ADC2_R -lt $MIN_RATIO ] || [ $ADC2_R -gt $MAX_RATIO ]
-then 
+if [[ "$BC_RESULT" = '1' ]]
+then
+    echo "    Measured ratios after two slow ADC acquisitions match expected ratio (2)"
+else
     echo "    Measured ratios after two slow ADC acquisitions ($ADC1_R, $ADC2_R, $ADC3_R, $ADC4_R) don't match expected ratio (2)"
     TEST_STATUS=0
-else
-    if [ $ADC3_R -ge $MIN_RATIO ] && [ $ADC3_R -le $MAX_RATIO ] && [ $ADC4_R -ge $MIN_RATIO ] && [ $ADC4_R -le $MAX_RATIO ] 
-    then
-        echo "    Measured ratios after two slow ADC acquisitions match expected ratio (2)"
-    else
-        echo "    Measured ratios after two slow ADC acquisitions ($ADC1_R, $ADC2_R, $ADC3_R, $ADC4_R) don't match expected ratio (2)"
-        TEST_STATUS=0
-    fi
 fi
 
 sleep $SLEEP_BETWEEN_TESTS
