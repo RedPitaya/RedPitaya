@@ -75,7 +75,8 @@ LED_ADDR=0x40000030
 SLEEP_BETWEEN_TESTS=1
 
 # network
-EXP_LINK_SPEED='(1000/FULL)'
+EXP_LINK_SPEED='1000'
+EXP_DUPLEX='full'
 N_PING_PKG=5
 PKT_SIZE=16000
 PING_IP=$LOCAL_SERVER_IP
@@ -623,12 +624,14 @@ fi
 # Check the link speed
 echo "Verify link speed and ping to host $PING_IP..."
 
-LINK_SPEED=$(dmesg | grep link | awk 'END {print $7}')
+LINK_SPEED=$(cat /sys/class/net/eth0/speed 2> /dev/null)
+DUPLEX=$(cat /sys/class/net/eth0/duplex 2> /dev/null)
 
-if [[ "$LINK_SPEED" != "$EXP_LINK_SPEED" ]] 
-then 
-    echo "    Network link speed $LINK_SPEED is not the expected one $EXP_LINK_SPEED"
-    echo "    Expected link speed is $LINK_SPEED"
+if [[ "$LINK_SPEED" != "$EXP_LINK_SPEED" ]] || [[ "$DUPLEX" != "$EXP_DUPLEX" ]]
+then
+    echo "    Network link speed or duplex are unexpected."
+    echo "    Link speed is \"$LINK_SPEED\" (\"$EXP_LINK_SPEED\" expected)."
+    echo "    Duplex is \"$DUPLEX\" (\"$EXP_DUPLEX\" expected)."
     echo " "
     TEST_STATUS=0
     PREVIOUS_TEST=0
