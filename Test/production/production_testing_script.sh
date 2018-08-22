@@ -62,8 +62,7 @@ FACTORY_CAL="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE
 
 # I2C test configuration
 TEST_LABEL='I2C_test'
-SYM_LINK='/dev/eeprom_test'
-I2C_TEST_CONFIG="$SYM_LINK  0x1800  0x0400  0x0400"
+I2C_TEST_CONFIG='/sys/bus/i2c/devices/0-0051/eeprom 0x1800 0x0400'
 
 ###############################################################################
 # Test variables
@@ -528,9 +527,12 @@ echo
 echo "Reading the test string from external EEPROM..."
 echo
 sleep 0.2
-# READ_LABEL=$( $PRINTENV | grep test_label | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
-READ_LABEL=$( cat /sys/bus/i2c/devices/0-0051/eeprom  | strings | grep "test_label" | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
-sleep 3
+
+# Create config file for EEPROM on the test board
+I2C_TEST_CONFIG_FILE="$(mktemp)"
+echo "$I2C_TEST_CONFIG" > "$I2C_TEST_CONFIG_FILE"
+
+READ_LABEL=$($PRINTENV -c "$I2C_TEST_CONFIG_FILE" test_label 2> /dev/null | grep -Po '(?<=test_label\=).+(?=)')
 if [[ "$READ_LABEL" != "$TEST_LABEL" ]]
 then
     echo "External EEPROM read-back doesn't work. I2C might not work correctly"
@@ -538,9 +540,10 @@ then
     sleep 1
 fi
 
-echo "Test lable is: $TEST_LABEL" 
+echo "Test lable is: $TEST_LABEL"
 echo "Read lable is: $READ_LABEL"
 
+rm "$I2C_TEST_CONFIG_FILE"
 sleep $SLEEP_BETWEEN_TESTS
 
 # TEST 0 - Enviroment parameters test - If was OK, turn LED1 ON, Writte  "1"  in logfile status byte  
