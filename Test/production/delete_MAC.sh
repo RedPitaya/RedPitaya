@@ -13,15 +13,15 @@ SETENV="fw_setenv"
     echo
     echo "Deleting MAC ethernet address in the EEPROM..."
     echo
-    $SETENV ethaddr $MAC_ADDR > /dev/null 2>&1    
-    
+    $SETENV ethaddr $MAC_ADDR > /dev/null 2>&1
+
     echo "Deleting NAV. CODE ethernet address in the EEPROM..."
     echo
     $SETENV nav_code $NAV_CODE > /dev/null 2>&1
     echo "Deleting HW REV. ethernet address in the EEPROM..."
-    echo     
+    echo
     $SETENV hw_rev $HW_REV > /dev/null 2>&1
-    
+
     echo "Deleting SERIAL address in the EEPROM..."
     echo
     $SETENV serial $SERIAL > /dev/null 2>&1
@@ -69,5 +69,5 @@ SETENV="fw_setenv"
         echo "-----------------------------------------------"
         echo
     fi
-    
+
   exit

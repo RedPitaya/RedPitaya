@@ -184,7 +184,7 @@ echo $FACTORY_CAL | $CALIB -wf
         sleep 1
     fi
 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
-echo $FACTORY_CAL | $CALIB -w  
+echo $FACTORY_CAL | $CALIB -w
     sleep 0.2
     if [ $? -ne 0 ]
     then
@@ -202,7 +202,7 @@ echo "Reseting cal parameters to unit gains and zerro DC offset..."
 TEST_STATUS=1                # It is not used in calibration but i have left it in IF checking so it can be used later if needed.
 CALIBRATION_STATUS=1
 TEST_VALUE_LED=128
-#(LED7->TEST_VALUE_LED=128   is used for calibration tests) 
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 # Calibration parameters set during the process
 FE_CH1_FS_G_HI=42949672
@@ -222,8 +222,8 @@ FE_CH2_DC_offs_HI=0
 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
 NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
 echo "Setting the unit gains and zerro DC offset calibration parameters into the user EEPROM space..."
-echo         
-        echo $NEW_CAL_PARAMS | $CALIB -w  
+echo
+        echo $NEW_CAL_PARAMS | $CALIB -w
         sleep 0.1
         if [ $? -ne 0 ]
         then
@@ -231,7 +231,7 @@ echo
         echo "Unit gains and zerro DC offset calibration parameters are NOT correctly written in the user EEPROM space"
         sleep 1
         fi
-echo -ne '\n' | $CALIB -r 
+echo -ne '\n' | $CALIB -r
 sleep 0.4
 
 # MAX/MIN calibration parameters
@@ -268,7 +268,7 @@ echo "Setting relay states...-> Set LV jumper settings... ->Connect IN1&IN2 to t
 # DIO5_N = 0
 # DIO6_N = 0
 # DIO7_N = 1
-$MONITOR 0x4000001C w 0x80 # -> Set N 
+$MONITOR 0x4000001C w 0x80 # -> Set N
 sleep 0.4
 
 #Acquire data with $DECIMATION decimation factor
@@ -285,17 +285,17 @@ ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
 # Print out the measurements
 echo "IN1 LV DC offset value is $ADC_A_MEAN"
 echo "IN2 LV DC offset value is $ADC_B_MEAN"
-echo 
+echo
 
-# Check if the values are within expectations 
-if [[ $ADC_A_MEAN -gt $FE_DC_offs_MAX ]] || [[ $ADC_A_MEAN -lt $FE_DC_offs_MIN ]] 
+# Check if the values are within expectations
+if [[ $ADC_A_MEAN -gt $FE_DC_offs_MAX ]] || [[ $ADC_A_MEAN -lt $FE_DC_offs_MIN ]]
 then
     echo "      Measured IN1 LV DC offset value ($ADC_A_MEAN) is outside expected range (+/- $FE_DC_offs_MAX)"
     TEST_STATUS=0
     CALIBRATION_STATUS=0
 fi
 
-if [[ $ADC_B_MEAN -gt $FE_DC_offs_MAX ]] || [[ $ADC_B_MEAN -lt $FE_DC_offs_MIN ]] 
+if [[ $ADC_B_MEAN -gt $FE_DC_offs_MAX ]] || [[ $ADC_B_MEAN -lt $FE_DC_offs_MIN ]]
 then
     echo "      Measured IN2 LV DC offset value ($ADC_B_MEAN) is outside expected range (+/- $FE_DC_offs_MAX)"
     TEST_STATUS=0
@@ -310,7 +310,7 @@ N2_LV=$ADC_B_MEAN
 # Print out the new cal parameters
 echo "      NEW IN1 LV DC offset cal param >>FE_CH1_DC_offs<< is $FE_CH1_DC_offs"
 echo "      NEW IN2 LV DC offset cal param >>FE_CH2_DC_offs<< is $FE_CH2_DC_offs"
-echo 
+echo
 
 LOG_VAR="$LOG_VAR $FE_CH1_DC_offs $FE_CH2_DC_offs"
 
@@ -333,12 +333,12 @@ sleep 0.4
 # DIO5_N = 1
 # DIO6_N = 1
 # DIO7_N = 1
-$MONITOR 0x4000001C w 0xE0 # -> Set N 
+$MONITOR 0x4000001C w 0xE0 # -> Set N
 sleep 0.4
 
 echo "Connecting reference voltage 0.9V..."
 
-sleep 0.4 
+sleep 0.4
 #Acquire data with $DECIMATION decimation factor
 $ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
 sleep 0.4
@@ -353,7 +353,7 @@ ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
 # Print out the measurements
 echo "IN1 mean value is $ADC_A_MEAN"
 echo "IN2 mean value is $ADC_B_MEAN"
-echo 
+echo
 
 #Gain calibration y=xk+n
 REF_VALUE_LV=7373     #0.9 VOLTS reference voltage in ADC counts
@@ -364,7 +364,7 @@ GAIN2_LV=$(awk -v N2_LV=$N2_LV -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_B_MEAN=$ADC_
 # Print out the measurements
 echo "IN1_LV_Gain is $GAIN1_LV"
 echo "IN2_LV_Gain is $GAIN2_LV"
-echo 
+echo
 
 FE_CH1_FS_G_LO=$(awk -v GAIN1_LV=$GAIN1_LV 'BEGIN { print sprintf("%d", int((858993459*GAIN1_LV))) }')
 FE_CH2_FS_G_LO=$(awk -v GAIN2_LV=$GAIN2_LV 'BEGIN { print sprintf("%d", int((858993459*GAIN2_LV))) }')
@@ -372,17 +372,17 @@ FE_CH2_FS_G_LO=$(awk -v GAIN2_LV=$GAIN2_LV 'BEGIN { print sprintf("%d", int((858
 # Print out the measurements
 echo "      NEW IN1 LV gain cal param >>FE_CH1_FS_G_LO<< is $FE_CH1_FS_G_LO"
 echo "      NEW IN2 LV gain cal param >>FE_CH2_FS_G_LO<< is $FE_CH2_FS_G_LO"
-echo 
+echo
 
-# Check if the values are within expectations 
-if [[ $FE_CH1_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH1_FS_G_LO -lt $FE_FS_G_LO_MIN ]] 
+# Check if the values are within expectations
+if [[ $FE_CH1_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH1_FS_G_LO -lt $FE_FS_G_LO_MIN ]]
 then
     echo "      Measured IN1 LV gain ($FE_CH1_FS_G_LO) is outside expected range ( 858993459 +/- 30 %)"
     TEST_STATUS=0
     CALIBRATION_STATUS=0
 fi
 
-if [[ $FE_CH2_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH2_FS_G_LO -lt $FE_FS_G_LO_MIN ]] 
+if [[ $FE_CH2_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH2_FS_G_LO -lt $FE_FS_G_LO_MIN ]]
 then
     echo "      Measured IN2 LV gain ($FE_CH2_FS_G_LO) is outside expected range ( 858993459 +/- 30 %)"
     TEST_STATUS=0
@@ -391,19 +391,19 @@ fi
 
 LOG_VAR="$LOG_VAR $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO"
 
-                        echo 
+                        echo
                         echo "------------------Printing  Log variables  step 2: Calibration parameters FE_CH1_FS_G_LO, FE_CH2_FS_G_LO -----------------------------------------"
                         echo "$LOG_VAR"
                         echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo 
+                        echo
 
-# COPY NEW CALIBRATION PARAMETERS IN TO USER  EPROM SPACE/PARTITION  
+# COPY NEW CALIBRATION PARAMETERS IN TO USER  EPROM SPACE/PARTITION
 NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
 
 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
 echo "Setting the new calibration parameters into the user EEPROM space..."
-echo         
-        echo $NEW_CAL_PARAMS | $CALIB -w  
+echo
+        echo $NEW_CAL_PARAMS | $CALIB -w
         sleep 0.1
         if [ $? -ne 0 ]
         then
@@ -411,7 +411,7 @@ echo
         echo "New calibration parameters are NOT correctly written in the user EEPROM space"
         sleep 1
         fi
-        echo -ne '\n' | $CALIB -r 
+        echo -ne '\n' | $CALIB -r
 sleep 0.4
 
 # CHECK CALIBRATION
@@ -432,9 +432,9 @@ IN2_ERROR_LV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGI
 # Print out the measurements
 echo "      IN1 LV Error after the claibration is $IN1_ERROR_LV %"
 echo "      IN2 LV Error after the claibration is $IN2_ERROR_LV %"
-echo 
+echo
 
-# HV jumper settings 
+# HV jumper settings
 echo "HV jumper settings DC offset calibration is started..."
 echo "Setting relay states...-> Set HV jumper settings... ->Connect IN1&IN2 to the GND..."
 
@@ -447,7 +447,7 @@ sleep 0.4
 # DIO5_N = 0
 # DIO6_N = 0
 # DIO7_N = 0
-$MONITOR 0x4000001C w 0x00 # -> Set N 
+$MONITOR 0x4000001C w 0x00 # -> Set N
 sleep 0.4
 
 #Acquire data with $DECIMATION decimation factor
@@ -464,17 +464,17 @@ ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
 # Print out the measurements
 echo "IN1 HV DC offset value is $ADC_A_MEAN"
 echo "IN2 HV DC offset value is $ADC_B_MEAN"
-echo 
+echo
 
-# Check if the values are within expectations 
-if [[ $ADC_A_MEAN -gt $FE_DC_offs_HI_MAX ]] || [[ $ADC_A_MEAN -lt $FE_DC_offs_HI_MIN ]] 
+# Check if the values are within expectations
+if [[ $ADC_A_MEAN -gt $FE_DC_offs_HI_MAX ]] || [[ $ADC_A_MEAN -lt $FE_DC_offs_HI_MIN ]]
 then
     echo "      Measured IN1 HV DC offset value ($ADC_A_MEAN) is outside expected range (+/- $FE_DC_offs_HI_MAX)"
     TEST_STATUS=0
     CALIBRATION_STATUS=0
 fi
 
-if [[ $ADC_B_MEAN -gt $FE_DC_offs_HI_MAX ]] || [[ $ADC_B_MEAN -lt $FE_DC_offs_HI_MIN ]] 
+if [[ $ADC_B_MEAN -gt $FE_DC_offs_HI_MAX ]] || [[ $ADC_B_MEAN -lt $FE_DC_offs_HI_MIN ]]
 then
     echo "      Measured IN2 HV DC offset value ($ADC_B_MEAN) is outside expected range (+/- $FE_DC_offs_HI_MAX)"
     TEST_STATUS=0
@@ -489,15 +489,15 @@ N2_HV=$ADC_B_MEAN
 # Print out the new cal parameters
 echo "      NEW IN1 HV DC offset cal param >>FE_CH1_DC_offs_HI<< is $FE_CH1_DC_offs_HI"
 echo "      NEW IN2 HV DC offset cal param >>FE_CH2_DC_offs_HI<< is $FE_CH2_DC_offs_HI"
-echo 
+echo
 
 LOG_VAR="$LOG_VAR $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
 
-                        echo 
+                        echo
                         echo "------------------Printing  Log variables  step 3: Calibration parameters FE_CH1_DC_offs_HI, FE_CH2_DC_offs_HI -----------------------------------------"
                         echo "$LOG_VAR"
                         echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo 
+                        echo
 
 echo "Inputs  HV GAIN calibration is started..."
 echo "Setting relay states...-> Set HV jumper settings... ->Connect IN1&IN2 to the REF_VALUE_HV..."
@@ -512,9 +512,9 @@ $MONITOR 0x40000014 w 0xff   # - N outputs
 sleep 0.4
 # Setting relay states, Set HV jumper setting, connect IN1&IN2 to the REF_VALUE_HV.
 # DIO5_N = 1
-# DIO6_N = 1 
+# DIO6_N = 1
 # DIO7_N = 0
-$MONITOR 0x4000001C w 0x60 # -> Set N 
+$MONITOR 0x4000001C w 0x60 # -> Set N
 sleep 0.4
 
 #Acquire data with $DECIMATION decimation factor
@@ -531,7 +531,7 @@ ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A_MEAN"
 echo "      IN2 mean value is $ADC_B_MEAN"
-echo 
+echo
 
 #Gain calibration y=xk+n
 REF_VALUE_HV=4465 # 10.9 VOLTS reference voltage IN COUNTS
@@ -541,7 +541,7 @@ GAIN2_HV=$(awk -v N2_HV=$N2_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_B_MEAN=$ADC_
 # Print out the measurements
 echo "IN1_HV_Gain is $GAIN1_HV"
 echo "IN2_HV_Gain is $GAIN2_HV"
-echo 
+echo
 
 FE_CH1_FS_G_HI=$(awk -v GAIN1_HV=$GAIN1_HV 'BEGIN { print sprintf("%d", int((42949673*GAIN1_HV))) }')
 FE_CH2_FS_G_HI=$(awk -v GAIN2_HV=$GAIN2_HV 'BEGIN { print sprintf("%d", int((42949673*GAIN2_HV))) }')
@@ -549,17 +549,17 @@ FE_CH2_FS_G_HI=$(awk -v GAIN2_HV=$GAIN2_HV 'BEGIN { print sprintf("%d", int((429
 # Print out the measurements
 echo "      NEW IN1 HV gain cal param >>FE_CH1_FS_G_HI<< is $FE_CH1_FS_G_HI"
 echo "      NEW IN2 HV gain cal param >>FE_CH2_FS_G_HI<< is $FE_CH2_FS_G_HI"
-echo 
+echo
 
-# Check if the values are within expectations 
-if [[ $FE_CH1_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH1_FS_G_HI -lt $FE_FS_G_HI_MIN ]] 
+# Check if the values are within expectations
+if [[ $FE_CH1_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH1_FS_G_HI -lt $FE_FS_G_HI_MIN ]]
 then
     echo "      Measured IN1 HV gain ($FE_CH1_FS_G_HI) is outside expected range ( 42949673 +/- 30 %)"
     TEST_STATUS=0
     CALIBRATION_STATUS=0
 fi
 
-if [[ $FE_CH2_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH2_FS_G_HI -lt $FE_FS_G_HI_MIN ]] 
+if [[ $FE_CH2_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH2_FS_G_HI -lt $FE_FS_G_HI_MIN ]]
 then
     echo "      Measured IN2 HV gain ($FE_CH2_FS_G_HI) is outside expected range ( 42949673 +/- 30 %)"
     TEST_STATUS=0
@@ -568,11 +568,11 @@ fi
 
 LOG_VAR="$LOG_VAR $FE_CH1_FS_G_HI $FE_CH2_FS_G_HI"
 
-                        echo 
+                        echo
                         echo "------------------Printing  Log variables  step 4: Calibration parameters FE_CH1_FS_G_HI,  FE_CH2_FS_G_HI -----------------------------------------"
                         echo "$LOG_VAR"
                         echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo 
+                        echo
 
 
 # COPY NEW CALIBRATION PARAMETERS IN TO USER EPROM SPACE/PARTITION  #
@@ -580,8 +580,8 @@ NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO 
 
 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
 echo "Setting the new calibration parameters into the user EEPROM space..."
-echo         
-        echo $NEW_CAL_PARAMS | $CALIB -w  
+echo
+        echo $NEW_CAL_PARAMS | $CALIB -w
         sleep 0.1
         if [ $? -ne 0 ]
         then
@@ -589,7 +589,7 @@ echo
         echo "New calibration parameters are NOT correctly written in the user EEPROM space"
         sleep 1
         fi
-echo -ne '\n' | $CALIB -r 
+echo -ne '\n' | $CALIB -r
 sleep 0.4
 
 # CHECK CALIBRATION
@@ -614,7 +614,7 @@ echo "      IN2 HV Error after the claibration is $IN2_ERROR_HV %"
 echo " "
 
 
-# OUTPUTS CALIBRATION  
+# OUTPUTS CALIBRATION
 echo
 echo "Outputs DC offset calibration is started..."
 echo "Setting relay states...-> Set LV jumper settings... ->Connect OUT1&OUT2 to the IN1&IN2"
@@ -634,12 +634,12 @@ $MONITOR 0x40000014 w 0xff   # - N outputs
 sleep 0.4
 # Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
 # DIO5_N = 1
-# DIO6_N = 0 
+# DIO6_N = 0
 # DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N 
+$MONITOR 0x4000001C w 0xA0 # -> Set N
 sleep 0.4
 
-#Generate DC output signal with amplitude 
+#Generate DC output signal with amplitude
 $GENERATE 1 0 0 sqr
 $GENERATE 2 0 0 sqr
 sleep 0.4
@@ -657,41 +657,41 @@ ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int((sum/NR)-N2_LV)}' /t
 OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v BE_CH1_DC_offs=$BE_CH1_DC_offs 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs-ADC_A_MEAN))}')
 OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v BE_CH2_DC_offs=$BE_CH2_DC_offs 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs-ADC_B_MEAN))}')
 
-BE_CH1_DC_offs=$OUT1_DC_offs 
+BE_CH1_DC_offs=$OUT1_DC_offs
 BE_CH2_DC_offs=$OUT2_DC_offs
 # Print out the measurements
 echo "      NEW OUT1 DC offset cal param >>BE_CH1_DC_offs<<  is $BE_CH1_DC_offs"
 echo "      NEW OUT2 DC offset cal param >>BE_CH2_DC_offs<<  is $BE_CH2_DC_offs"
 echo
 
-# Check if the values are within expectations 
-if [[ $BE_CH1_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH1_DC_offs -lt $BE_DC_offs_MIN ]] 
+# Check if the values are within expectations
+if [[ $BE_CH1_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH1_DC_offs -lt $BE_DC_offs_MIN ]]
 then
     echo "      OUT1 DC offset calibration parameter ($OUT1_DC_offs) is outside expected range (+/- $BE_DC_offs_MAX)"
     TEST_STATUS=0
     CALIBRATION_STATUS=0
 fi
 
-if [[ $BE_CH2_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH2_DC_offs -lt $BE_DC_offs_MIN ]] 
+if [[ $BE_CH2_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH2_DC_offs -lt $BE_DC_offs_MIN ]]
 then
     echo "      OUT2 DC offset calibration parameter ($OUT2_DC_offs) is outside expected range (+/- $BE_DC_offs_MAX)"
     TEST_STATUS=0
     CALIBRATION_STATUS=0
 fi
 
-sleep 0.4 
+sleep 0.4
 LOG_VAR="$LOG_VAR $BE_CH1_DC_offs $BE_CH2_DC_offs"
-                        echo 
+                        echo
                         echo "------------------Printing  Log variables  step 5: Calibration parameters BE_CH1_DC_offs, BE_CH2_DC_offs -----------------------------------------"
                         echo "$LOG_VAR"
                         echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo 
+                        echo
 
 # COPY NEW CALIBRATION PARAMETERS IN TO USER EPROM SPACE/PARTITION  #
 NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
 echo "Setting the new calibration parameters into the user EEPROM space..."
-echo         
-        echo $NEW_CAL_PARAMS | $CALIB -w  
+echo
+        echo $NEW_CAL_PARAMS | $CALIB -w
         sleep 0.1
         if [ $? -ne 0 ]
         then
@@ -699,10 +699,10 @@ echo
         echo "New calibration parameters are NOT correctly written in the user EEPROM space"
         sleep 1
         fi
-echo -ne '\n' | $CALIB -r 
+echo -ne '\n' | $CALIB -r
 
 
-echo 
+echo
 echo "---Output gain calibration is started---"
 
 # Set Directions of DIO
@@ -712,15 +712,15 @@ $MONITOR 0x40000014 w 0xff   # - N outputs
 sleep 0.4
 # Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
 # DIO5_N = 1
-# DIO6_N = 0 
+# DIO6_N = 0
 # DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N 
+$MONITOR 0x4000001C w 0xA0 # -> Set N
 sleep 0.4
 
-#Generate DC output signal 
+#Generate DC output signal
 LD_LIBRARY_PATH=/opt/redpitaya/lib  generate_DC_LO
 sleep 1
-# Restore LED status Calling generate_DC will reset LEDs. generate_DC.c has rp_Init() inside. 
+# Restore LED status Calling generate_DC will reset LEDs. generate_DC.c has rp_Init() inside.
 $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
 
 # Caling LD_LIBRARY_PATH=/opt/redpitaya/lib  generate_DC_LO RESETS DIO so set it agin
@@ -731,9 +731,9 @@ $MONITOR 0x40000014 w 0xff   # - N outputs
 sleep 0.2
 # Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
 # DIO5_N = 1
-# DIO6_N = 0 
+# DIO6_N = 0
 # DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N 
+$MONITOR 0x4000001C w 0xA0 # -> Set N
 sleep 0.4
 
 #Acquire data with $DECIMATION decimation factor
@@ -752,7 +752,7 @@ OUT2_VOLTAGE_LO=$(awk -v ADC_B_MEAN=$ADC_B_MEAN 'BEGIN { print ((ADC_B_MEAN/8192
 #Print out the measurements
 echo "OUT1_VOLTAGE_LO is $OUT1_VOLTAGE_LO"
 echo "OUT2_VOLTAGE_LO is $OUT2_VOLTAGE_LO"
-echo 
+echo
 
 GAIN1_OUT_LO=$(awk -v BE_CH1_DC_offs=$BE_CH1_DC_offs -v OUT_AMP_LO_cnt=$OUT_AMP_LO_cnt -v ADC_A_MEAN=$ADC_A_MEAN 'BEGIN {print ((ADC_A_MEAN)/OUT_AMP_LO_cnt) }')
 GAIN2_OUT_LO=$(awk -v BE_CH2_DC_offs=$BE_CH2_DC_offs -v OUT_AMP_LO_cnt=$OUT_AMP_LO_cnt -v ADC_B_MEAN=$ADC_B_MEAN 'BEGIN {print ((ADC_B_MEAN)/OUT_AMP_LO_cnt) }')
@@ -765,16 +765,16 @@ $MONITOR 0x40000014 w 0xff   # - N outputs
 sleep 0.2
 # Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
 # DIO5_N = 1
-# DIO6_N = 0 
+# DIO6_N = 0
 # DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N 
+$MONITOR 0x4000001C w 0xA0 # -> Set N
 sleep 0.4
 
 #Generate DC output signal HI
 LD_LIBRARY_PATH=/opt/redpitaya/lib generate_DC
 sleep 1
 
-# Restore LED status Calling generate_DC will reset LEDs. generate_DC.c has rp_Init() inside. 
+# Restore LED status Calling generate_DC will reset LEDs. generate_DC.c has rp_Init() inside.
 $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
 
 # Caling LD_LIBRARY_PATH=/opt/redpitaya/lib  generate_DC_LO RESETS DIO so set it agin
@@ -785,9 +785,9 @@ $MONITOR 0x40000014 w 0xff   # - N outputs
 sleep 0.2
 # Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
 # DIO5_N = 1
-# DIO6_N = 0 
+# DIO6_N = 0
 # DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N 
+$MONITOR 0x4000001C w 0xA0 # -> Set N
 sleep 0.4
 
 #Acquire data with $DECIMATION decimation factor
@@ -807,7 +807,7 @@ OUT2_VOLTAGE_HI=$(awk -v ADC_B_MEAN=$ADC_B_MEAN 'BEGIN { print ((ADC_B_MEAN/8192
 #Print out the measurements
 echo "OUT1_VOLTAGE_HI is $OUT1_VOLTAGE_HI"
 echo "OUT2_VOLTAGE_HI is $OUT2_VOLTAGE_HI"
-echo 
+echo
 
 
 GAIN1_OUT_HI=$(awk -v BE_CH1_DC_offs=$BE_CH1_DC_offs -v OUT_AMP_HI_cnt=$OUT_AMP_HI_cnt -v ADC_A_MEAN=$ADC_A_MEAN 'BEGIN {print ((ADC_A_MEAN)/OUT_AMP_HI_cnt) }')
@@ -826,21 +826,21 @@ BE_CH2_FS=$(awk -v GAIN2_OUT=$GAIN2_OUT 'BEGIN { print sprintf("%d", int((429496
 # Print out the measurements
 echo "      NEW OUT1 gain cal param >>BE_CH1_FS<< is $BE_CH1_FS"
 echo "      NEW OUT2 gain cal param >>BE_CH2_FS<< is $BE_CH2_FS"
-echo 
+echo
 
 # Trun OFF outputs
 $GENERATE 1 0 0 sqr
 $GENERATE 2 0 0 sqr
 
-# Check if the values are within expectations 
-if [[ $BE_CH1_FS -gt $BE_FS_MAX ]] || [[ $BE_CH1_FS -lt $BE_FS_MIN ]] 
+# Check if the values are within expectations
+if [[ $BE_CH1_FS -gt $BE_FS_MAX ]] || [[ $BE_CH1_FS -lt $BE_FS_MIN ]]
 then
     echo "      OUT1 gain calibration parameter ($BE_CH1_FS) is outside expected range (42949673 +/- 30%)"
     TEST_STATUS=0
     CALIBRATION_STATUS=0
 fi
 
-if [[ $BE_CH2_FS -gt $BE_FS_MAX ]] || [[ $BE_CH2_FS -lt $BE_FS_MIN ]] 
+if [[ $BE_CH2_FS -gt $BE_FS_MAX ]] || [[ $BE_CH2_FS -lt $BE_FS_MIN ]]
 then
     echo "      OUT2 gain calibration parameter ($BE_CH2_FS) is outside expected range (42949673 +/- 30%)"
     TEST_STATUS=0
@@ -849,11 +849,11 @@ fi
 
 LOG_VAR="$LOG_VAR $BE_CH1_FS $BE_CH2_FS"
 
-                        echo 
+                        echo
                         echo "------------------Printing  Log variables  step 6: Calibration parameters BE_CH1_FS, BE_CH2_FS --------------------------------------------------"
                         echo "$LOG_VAR"
                         echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo 
+                        echo
 
 
 
@@ -862,8 +862,8 @@ if [[ $CALIBRATION_STATUS -eq 0 ]]
 then
                     echo "*********************************************************************************"
                     echo "*                                                                               *"
-                    echo "*          Calibration has faild...Restoring factory calibration parameters...  *"  
-                    echo "*                                                                               *"  
+                    echo "*          Calibration has faild...Restoring factory calibration parameters...  *"
+                    echo "*                                                                               *"
                     echo "*                                                                               *"
                     echo "*********************************************************************************"
                                 echo $FACTORY_CAL | $CALIB -wf
@@ -875,7 +875,7 @@ then
                                         sleep 1
                                     fi
                                 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
-                                echo $FACTORY_CAL | $CALIB -w  
+                                echo $FACTORY_CAL | $CALIB -w
                                     sleep 0.2
                                     if [ $? -ne 0 ]
                                     then
@@ -891,7 +891,7 @@ else
                     echo "*********************************************************************************"
                     echo "*                                                                               *"
                     echo "*                                                                               *"
-                    echo "                    Calibration was successfull                                 *" 
+                    echo "                    Calibration was successfull                                 *"
                     echo "*                                                                               *"
                     echo "*                                                                               *"
                     echo "*********************************************************************************"
@@ -904,8 +904,8 @@ echo
                     # COPY NEW CALIBRATION PARAMETERS IN TO USER EPROM SPACE/PARTITION  #
                     NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
                     echo "Setting the new calibration parameters into the user EEPROM space..."
-                    echo         
-                            echo $NEW_CAL_PARAMS | $CALIB -w  
+                    echo
+                            echo $NEW_CAL_PARAMS | $CALIB -w
                             sleep 0.1
                             if [ $? -ne 0 ]
                             then
@@ -913,11 +913,11 @@ echo
                             echo "New calibration parameters are NOT correctly written in the user EEPROM space"
                             sleep 1
                             fi
-                    echo -ne '\n' | $CALIB -r 
+                    echo -ne '\n' | $CALIB -r
 
                     echo "Setting the new calibration parameters into the FACTORY EEPROM space..."
-                    echo         
-                            echo $NEW_CAL_PARAMS | $CALIB -wf  
+                    echo
+                            echo $NEW_CAL_PARAMS | $CALIB -wf
                             sleep 0.1
                             if [ $? -ne 0 ]
                             then
@@ -945,6 +945,6 @@ $MONITOR 0x40000010 w 0x00   # - P line inputs
 sleep 0.2
 $MONITOR 0x40000014 w 0xff   # - N outputs
 sleep 0.2
-$MONITOR 0x4000001C w 0xA0   # -> Set N 
+$MONITOR 0x4000001C w 0xA0   # -> Set N
 sleep 0.2
 
