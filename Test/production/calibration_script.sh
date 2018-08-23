@@ -166,7 +166,7 @@ sleep 0.2
 $MONITOR 0x40000014 w 0xFF # -> Set N to outputs
 
 # Use new FPGA image for ADC test and calibration
-cat /opt/redpitaya/fpga/fpga.bit > /dev/xdevcfg
+cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
 sleep 2
 
 
