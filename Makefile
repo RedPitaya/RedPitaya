@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna
+all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
 
 $(DL):
 	mkdir -p $@
@@ -432,6 +432,15 @@ endif
 #
 ################################################################################
 
+PRODUCTION_TEST_DIR = Test/production
+
+.PHONY: production_test
+
+production_test:
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) clean
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 clean:
 	# todo, remove downloaded libraries and symlinks
 	make -C $(NGINX_DIR) clean
@@ -447,4 +456,5 @@ clean:
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(GENERATE_DC_DIR) clean
+	make -C $(PRODUCTION_TEST_DIR) clean
 	apps-free-clean
