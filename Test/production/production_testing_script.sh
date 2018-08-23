@@ -367,6 +367,7 @@ then
     read
     sleep 1
     reboot
+    exit
 
 
  else
