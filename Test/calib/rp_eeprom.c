@@ -21,6 +21,7 @@
 
 #include "rp_eeprom.h"
 
+#define CALIB_MAGIC 0xAABBCCDD
 
 #define EEPROM_DEVICE "/sys/bus/i2c/devices/0-0050/eeprom"
 
@@ -37,7 +38,10 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
     {"BE_CH1_FS"},
     {"BE_CH2_FS"},
     {"BE_CH1_DC_offs"},
-    {"BE_CH2_DC_offs"}
+    {"BE_CH2_DC_offs"},
+    {"Magic"},
+    {"FE_CH1_DC_offs_HI"},
+    {"FE_CH2_DC_offs_HI"}
 };
 
 
@@ -77,6 +81,7 @@ int RpEepromCalDataWrite(eepromWpData_t * eepromData, bool factory)
     /* Fix ID and set reserved data */
     eepromData->dataStructureId = 1;
     eepromData->wpCheck += 1;
+    eepromData->feCalPar[eCalParMagic]=CALIB_MAGIC;
     memset((char*)&eepromData->reserved[0], 0, 6);
 
     /* Open device */

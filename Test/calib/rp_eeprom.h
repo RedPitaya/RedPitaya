@@ -29,6 +29,9 @@ typedef enum {
     eCalPar_BE_CH2_FS,
     eCalPar_BE_CH1_DC_offs,
     eCalPar_BE_CH2_DC_offs,
+    eCalParMagic,
+    eCalPar_FE_CH1_DC_offs_HI,
+    eCalPar_FE_CH2_DC_offs_HI,
     eCalParEnd
 } calPar_t;
 
