@@ -242,11 +242,12 @@ GENERATOR_DIR	= Test/generate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 LA_TEST_DIR     = api2/test
+GENERATE_DC_DIR	= generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest generate_DC
 
-examples: lcr bode monitor monitor_old generator acquire calib
+examples: lcr bode monitor monitor_old generator acquire calib generate_DC
 # calibrate laboardtest
 
 lcr:
@@ -295,6 +296,11 @@ laboardtest: api2
 	cp api2/test/install.sh build/install.sh
 rp_communication:
 	make -C $(COMM_DIR)
+
+generate_DC: api
+	$(MAKE) -C $(GENERATE_DC_DIR)
+	cp $(GENERATE_DC_DIR)/generate_DC $(INSTALL_DIR)/bin/
+	cp $(GENERATE_DC_DIR)/generate_DC_LO $(INSTALL_DIR)/bin/
 
 ################################################################################
 # Red Pitaya ecosystem and tools
@@ -440,4 +446,5 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
+	make -C $(GENERATE_DC_DIR) clean
 	apps-free-clean
