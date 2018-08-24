@@ -596,8 +596,7 @@ PREVIOUS_TEST=1
 # Verify that eth configuration MAC matches the EEPROM MAC
 echo "Verify MAC address consistence with EEPROM..."
 EEPROM_MAC=$($PRINTENV | grep ethaddr= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
-LINUX_MAC=$(ifconfig | grep HWaddr | awk '{print $5}')
-LINUX_MAC=$(echo $LINUX_MAC | awk 'BEGIN {FS="-"}{print $1}' | tr '[:lower:]' '[:upper:]' )
+LINUX_MAC=$(cat '/sys/class/net/eth0/address' | tr '[:lower:]' '[:upper:]')
 
 #Added, check if teh variable is empty > unsucsefull read will return empty variable. in this case set variable to "x".
 if [ -z "$EEPROM_MAC" ]
