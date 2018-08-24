@@ -8,4 +8,10 @@
 		reg = <0x50>;
 		pagesize = <32>;
 	};
+
+	eeprom@51 {
+		compatible = "24c64";
+		reg = <0x51>;
+		pagesize = <32>;
+	};
 };

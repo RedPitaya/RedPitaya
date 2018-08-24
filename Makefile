@@ -19,7 +19,7 @@ export VERSION
 #
 ################################################################################
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna
+all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
 
 $(DL):
 	mkdir -p $@
@@ -242,11 +242,12 @@ GENERATOR_DIR	= Test/generate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 LA_TEST_DIR     = api2/test
+GENERATE_DC_DIR	= generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest generate_DC
 
-examples: lcr bode monitor monitor_old generator acquire calib
+examples: lcr bode monitor monitor_old generator acquire calib generate_DC
 # calibrate laboardtest
 
 lcr:
@@ -295,6 +296,11 @@ laboardtest: api2
 	cp api2/test/install.sh build/install.sh
 rp_communication:
 	make -C $(COMM_DIR)
+
+generate_DC: api
+	$(MAKE) -C $(GENERATE_DC_DIR)
+	cp $(GENERATE_DC_DIR)/generate_DC $(INSTALL_DIR)/bin/
+	cp $(GENERATE_DC_DIR)/generate_DC_LO $(INSTALL_DIR)/bin/
 
 ################################################################################
 # Red Pitaya ecosystem and tools
@@ -426,6 +432,15 @@ endif
 #
 ################################################################################
 
+PRODUCTION_TEST_DIR = Test/production
+
+.PHONY: production_test
+
+production_test:
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) clean
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 clean:
 	# todo, remove downloaded libraries and symlinks
 	make -C $(NGINX_DIR) clean
@@ -440,4 +455,6 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
+	make -C $(GENERATE_DC_DIR) clean
+	make -C $(PRODUCTION_TEST_DIR) clean
 	apps-free-clean
