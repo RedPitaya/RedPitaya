@@ -17,25 +17,9 @@
 
 # Path variables
 SD_CARD_PATH='/opt/redpitaya'
-USB_DEVICE="/dev/sda1"
-USB_MOUNT_FOLDER="/mnt/usb"
-
-# TEST Log variables
-LOG_FILENAME='manuf_test.log'
-
-# Production PC/SERVER variables
-LOCAL_SERVER_IP='192.168.178.100'
-LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
-LOCAL_USER='redpitaya'
-#LOCAL_SERVER_DIR="$LOCAL_SERVER_IP:/home/itech/Desktop/Test_LOGS"
-
-# For loging on the Red Pitaya itself (practicali the same as loging in to SD card it sohuld )
-LOG_MNT_FOLDER='/mnt/log'
 
 # Main commands shortcuts
 MONITOR="$SD_CARD_PATH/bin/monitor_old"
-PRINTENV="fw_printenv"
-SETENV="fw_setenv"
 GENERATE="$SD_CARD_PATH/bin/generate"
 ACQUIRE="$SD_CARD_PATH/bin/acquire"
 CALIB="$SD_CARD_PATH/bin/calib"
@@ -58,106 +42,16 @@ FE_CH2_DC_offs_HI=100          #FE_CHx_DC_offs_HI  are dc offset parameters for 
 #All calibration parameters in one string
 FACTORY_CAL="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
 
-# I2C test configuration
-TEST_LABEL='I2C_test'
-SYM_LINK='/dev/eeprom_test'
-I2C_TEST_CONFIG="$SYM_LINK  0x1800  0x0400  0x0400"
-
 ###############################################################################
 # Test variables
 ###############################################################################
 
 LOG_VAR=''
 TEST_GLOBAL_STATUS=0
-LOGFILE_STATUS=0
 LED_ADDR=0x40000030
-SLEEP_BETWEEN_TESTS=1
-
-# network
-EXP_LINK_SPEED='(1000/FULL)'
-N_PING_PKG=5
-PKT_SIZE=16000
-PING_IP=$LOCAL_SERVER_IP
-MIN_QR_LENGTH=50             # Set to 50 when using QR scanner
-RP_MAC_BEGINNING='00:26:32'
-
-# temperatures & voltages
-MIN_TEMP=20
-MAX_TEMP=85
-
-TOLERANCE_PERC=5
-REF_VCCAUX=1800
-MIN_VCCAUX=$(($REF_VCCAUX-$REF_VCCAUX*$TOLERANCE_PERC/100))
-MAX_VCCAUX=$(($REF_VCCAUX+$REF_VCCAUX*$TOLERANCE_PERC/100))
-
-REF_VCCBRAM=1000
-MIN_VCCBRAM=$(($REF_VCCBRAM-$REF_VCCBRAM*$TOLERANCE_PERC/100))
-MAX_VCCBRAM=$(($REF_VCCBRAM+$REF_VCCBRAM*$TOLERANCE_PERC/100))
-
-REF_VCCINT=1000
-MIN_VCCINT=$(($REF_VCCINT-$REF_VCCINT*$TOLERANCE_PERC/100))
-MAX_VCCINT=$(($REF_VCCINT+$REF_VCCINT*$TOLERANCE_PERC/100))
-
-# USD flash drive test
-USB_FILENAME='usb_device_testfile.txt'
-USB_NEWFILENAME='usb_device_newname.txt'
-
-# SATA BER test
-N_SATA_CYC=5 # Old value was 10
-SEC_PER_CYC=2
-
-# TF rates expressed in W/s (word is 16 bits)
-MAX_SATA_RATE=$((125000000/4))
-EXP_SATA_RATE=$((125000000/32))
-TOLERANCE_PERC=2
-MIN_SATA_RATE=$(($EXP_SATA_RATE-$EXP_SATA_RATE*$TOLERANCE_PERC/100))
-MAX_SATA_RATE=$(($EXP_SATA_RATE+$EXP_SATA_RATE*$TOLERANCE_PERC/100))
-
-# slow ADCs and DACs
-TOLERANCE_PERC=10
-REF_RATIO=2
-MIN_RATIO=$(($REF_RATIO-$REF_RATIO*$TOLERANCE_PERC/100))
-MAX_RATIO=$(($REF_RATIO+$REF_RATIO*$TOLERANCE_PERC/100))
 
 # fast ADCs and DACs data acquisitions
-SIG_FREQ=1000
-SIG_AMPL=2
 ADC_BUFF_SIZE=16384
-
-MAX_ABS_OFFS_HIGH_GAIN=500
-MAX_ABS_OFFS_LOW_GAIN=250
-
-MAX_NOISE_STD=15 # Old value 8 -> Change to 25 because od +15V switching PS on the test board
-MAX_NOISE_STD_NO_DEC=25 # Old value 15 -> Change to 25 because od +15V switching PS on the test board
-MAX_NOISE_P2P=80  # # Old value 60 -> Change to 25 because od +15V switching PS on the test board
-
-MIN_SIG_STD_HIGH_GAIN=4500
-MAX_SIG_STD_HIGH_GAIN=5500
-MIN_SIG_STD_LOW_GAIN=170
-MAX_SIG_STD_LOW_GAIN=230
-
-MIN_SIG_P2P_HIGH_GAIN=12000
-MAX_SIG_P2P_HIGH_GAIN=16000
-MIN_SIG_P2P_LOW_GAIN=450
-MAX_SIG_P2P_LOW_GAIN=650
-
-# fast ADCs bit analysis
-N_SAMPLES=100
-N_ADC_BITS=14
-HALF_ADC_RANGE=8192
-
-ADC_FILENAME="adc.sig"
-ADC_CH_A_FILENAME="adc_a.sig"
-ADC_CH_B_FILENAME="adc_b.sig"
-
-# Calibration parameters LV/HV jumper settings
-MAX_VALUE_LV=8000
-MAX_VALUE_HV=6000
-MAX_OFF_VALUE_LV=300
-MAX_OFF_VALUE_HV=300
-
-#Decimal to binary
-D2B=({0..1}{0..1}{0..1}{0..1}{0..1}{0..1}{0..1}{0..1}{0..1})
 
 # Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
 # During DIO test this will be changed and after DIO test set back to this condition
