@@ -129,6 +129,9 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
+	# Patch
+	patch -t -p0 -i "${PWD}/patches/u-boot/set-extra-env.patch" -d "$@"
+
 $(UBOOT): $(UBOOT_DIR) $(TMP)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig
 	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS)
