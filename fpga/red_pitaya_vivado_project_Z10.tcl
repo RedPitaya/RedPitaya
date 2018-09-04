@@ -2,7 +2,7 @@
 # Vivado tcl script for building RedPitaya FPGA in non project mode
 #
 # Usage:
-# vivado -mode batch -source red_pitaya_vivado_project.tcl -tclargs projectname
+# vivado -mode batch -source red_pitaya_vivado_project_Z10.tcl -tclargs projectname
 ################################################################################
 
 cd prj/$::argv
@@ -34,9 +34,9 @@ create_project -part $part -force redpitaya ./project
 # create PS BD (processing system block design)
 ################################################################################
 
-# file was created from GUI using "write_bd_tcl -force ip/system.tcl"
+# file was created from GUI using "write_bd_tcl -force ip/systemZ10.tcl"
 # create PS BD
-source                            $path_ip/system.tcl
+source                            $path_ip/systemZ10.tcl
 
 # generate SDK files
 generate_target all [get_files    system.bd]
