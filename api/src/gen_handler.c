@@ -123,20 +123,25 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
         return RP_EOOR;
     }
 
+    rp_waveform_t waveform;
     if (channel == RP_CH_1) {
         chA_frequency = frequency;
         gen_setBurstPeriod(channel, chA_burstPeriod);
+        waveform = chA_waveform;
     }
     else if (channel == RP_CH_2) {
         chB_frequency = frequency;
         gen_setBurstPeriod(channel, chB_burstPeriod);
+        waveform = chB_waveform;
     }
     else {
         return RP_EPN;
     }
 
     generate_setFrequency(channel, frequency);
-    synthesize_signal(channel);
+    if (waveform == RP_WAVEFORM_SQUARE) {
+      synthesize_signal(channel);
+    }
     return gen_Synchronise();
 }
 
