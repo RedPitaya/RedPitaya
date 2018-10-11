@@ -266,8 +266,8 @@ FPGA and device tree sources
 
    $ make -f Makefile.x86 fpga
 
-Detailed instructions are provided for `building the FPGA <fpga/README.md#build-process>`_
-including some `device tree details <fpga/README.md#device-tree>`_.
+Detailed instructions are provided for :ref:`building the FPGA <buildprocess>`
+including some :ref:`device tree details <devicetree>`.
 
 --------------------------------------
 Device Tree compiler + overlay patches

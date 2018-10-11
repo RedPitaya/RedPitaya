@@ -99,6 +99,8 @@ on the first Red Pitaya release.
 +-------------------+------------------------------------------------------------------+
 
 
+.. _buildprocess:
+
 ****************
 Building process
 ****************
@@ -177,6 +179,9 @@ which will prepare an organized waveform window.
 .. code-block:: shell-session
 
    $ make top_tb WAV=1
+
+   
+.. _devicetree:   
 
 ***********
 Device tree
