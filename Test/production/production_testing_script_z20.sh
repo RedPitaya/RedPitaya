@@ -2039,82 +2039,7 @@ LOG_VAR="$LOG_VAR $FE_CH1_DC_offs $FE_CH2_DC_offs"
                         echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
                         echo " "
 
-echo "Inputs  LV GAIN calibration is started..."
-echo "Setting relay states...-> Set LV jumper settings... ->Connect IN1&IN2 to the REF_VALUE_LV..."
-
-
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-# Set LV jumper settings Connect IN1&IN2 to the REF VALUE -> Set relay states  DIO6_N, DIO7_N and DIO7_P
-# DIO5_N = 1
-# DIO6_N = 1
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0xE0 # -> Set N
-sleep 0.4
-
-echo "Connecting reference voltage 0.9V..."
-
-sleep 0.4
-#Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-
-# Print out the measurements
-echo "IN1 mean value is $ADC_A_MEAN"
-echo "IN2 mean value is $ADC_B_MEAN"
-echo
-
-#Gain calibration y=xk+n
-REF_VALUE_LV=7373     #0.9 VOLTS reference voltage in ADC counts
-
-GAIN1_LV=$(awk -v N1_LV=$N1_LV -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_A_MEAN=$ADC_A_MEAN 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_A_MEAN-N1_LV ) ) }')
-GAIN2_LV=$(awk -v N2_LV=$N2_LV -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_B_MEAN=$ADC_B_MEAN 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_B_MEAN-N2_LV ) ) }')
-
-# Print out the measurements
-echo "IN1_LV_Gain is $GAIN1_LV"
-echo "IN2_LV_Gain is $GAIN2_LV"
-echo
-
-FE_CH1_FS_G_LO=$(awk -v GAIN1_LV=$GAIN1_LV 'BEGIN { print sprintf("%d", int((858993459*GAIN1_LV))) }')
-FE_CH2_FS_G_LO=$(awk -v GAIN2_LV=$GAIN2_LV 'BEGIN { print sprintf("%d", int((858993459*GAIN2_LV))) }')
-
-# Print out the measurements
-echo "      NEW IN1 LV gain cal param >>FE_CH1_FS_G_LO<< is $FE_CH1_FS_G_LO"
-echo "      NEW IN2 LV gain cal param >>FE_CH2_FS_G_LO<< is $FE_CH2_FS_G_LO"
-echo
-
-# Check if the values are within expectations
-if [[ $FE_CH1_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH1_FS_G_LO -lt $FE_FS_G_LO_MIN ]]
-then
-    echo "      Measured IN1 LV gain ($FE_CH1_FS_G_LO) is outside expected range ( 858993459 +/- 30 %)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-if [[ $FE_CH2_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH2_FS_G_LO -lt $FE_FS_G_LO_MIN ]]
-then
-    echo "      Measured IN2 LV gain ($FE_CH2_FS_G_LO) is outside expected range ( 858993459 +/- 30 %)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
 LOG_VAR="$LOG_VAR $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO"
-
-                        echo
-                        echo "------------------Printing  Log variables  step 8: Calibration parameters FE_CH1_FS_G_LO, FE_CH2_FS_G_LO -----------------------------------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo
 
 # COPY NEW CALIBRATION PARAMETERS IN TO USER  EPROM SPACE/PARTITION
 NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
@@ -2133,6 +2058,18 @@ echo
         echo -ne '\n' | $CALIB -r
 sleep 0.4
 
+# Set Directions of DIO
+$MONITOR 0x40000010 w 0x00   # - P line inputs
+sleep 0.4
+$MONITOR 0x40000014 w 0xff   # - N outputs
+sleep 0.4
+# Set LV jumper settings Connect IN1&IN2 to the REF VALUE -> Set relay states  DIO6_N, DIO7_N and DIO7_P
+# DIO5_N = 1
+# DIO6_N = 1
+# DIO7_N = 1
+$MONITOR 0x4000001C w 0xE0 # -> Set N
+sleep 0.4
+
 # CHECK CALIBRATION
 # Acquire data with $DECIMATION decimation factor
 $ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
@@ -2142,9 +2079,10 @@ cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
 cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 
 # Calculate mean value
-ADC_A_MEAN=$(awk -v N1_LV=$N1_LV -v GAIN1_LV=$GAIN1_LV '{sum+=$1} END { print int( ((sum/NR)*GAIN1_LV)-N1_LV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_LV=$N2_LV -v GAIN2_LV=$GAIN2_LV '{sum+=$1} END { print int( ((sum/NR)*GAIN2_LV)-N2_LV)}' /tmp/adc_b.txt)
+ADC_A_MEAN=$(awk -v N1_LV=$N1_LV '{sum+=$1} END { print int( (sum/NR)-N1_LV)}' /tmp/adc_a.txt)
+ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int( (sum/NR)-N2_LV)}' /tmp/adc_b.txt)
 
+REF_VALUE_LV=7373 # 0.9 VOLTS reference voltage in ADC counts
 IN1_ERROR_LV=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGIN { print (((ADC_A_MEAN-REF_VALUE_LV)/REF_VALUE_LV)*100) }')
 IN2_ERROR_LV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGIN { print (((ADC_B_MEAN-REF_VALUE_LV)/REF_VALUE_LV)*100) }')
 
@@ -2218,81 +2156,7 @@ LOG_VAR="$LOG_VAR $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
                         echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
                         echo
 
-echo "Inputs  HV GAIN calibration is started..."
-echo "Setting relay states...-> Set HV jumper settings... ->Connect IN1&IN2 to the REF_VALUE_HV..."
-echo "Connecting reference voltage 10.9V..."
-
-sleep 0.4
-
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-# Setting relay states, Set HV jumper setting, connect IN1&IN2 to the REF_VALUE_HV.
-# DIO5_N = 1
-# DIO6_N = 1
-# DIO7_N = 0
-$MONITOR 0x4000001C w 0x60 # -> Set N
-sleep 0.4
-
-#Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s -1 hv -2 hv $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s -1 hv -2 hv $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-
-# Print out the measurements
-echo "      IN1 mean value is $ADC_A_MEAN"
-echo "      IN2 mean value is $ADC_B_MEAN"
-echo
-
-#Gain calibration y=xk+n
-REF_VALUE_HV=4465 # 10.9 VOLTS reference voltage IN COUNTS
-GAIN1_HV=$(awk -v N1_HV=$N1_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_A_MEAN=$ADC_A_MEAN 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_A_MEAN-N1_HV ) ) }')
-GAIN2_HV=$(awk -v N2_HV=$N2_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_B_MEAN=$ADC_B_MEAN 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_B_MEAN-N2_HV ) ) }')
-
-# Print out the measurements
-echo "IN1_HV_Gain is $GAIN1_HV"
-echo "IN2_HV_Gain is $GAIN2_HV"
-echo
-
-FE_CH1_FS_G_HI=$(awk -v GAIN1_HV=$GAIN1_HV 'BEGIN { print sprintf("%d", int((42949673*GAIN1_HV))) }')
-FE_CH2_FS_G_HI=$(awk -v GAIN2_HV=$GAIN2_HV 'BEGIN { print sprintf("%d", int((42949673*GAIN2_HV))) }')
-
-# Print out the measurements
-echo "      NEW IN1 HV gain cal param >>FE_CH1_FS_G_HI<< is $FE_CH1_FS_G_HI"
-echo "      NEW IN2 HV gain cal param >>FE_CH2_FS_G_HI<< is $FE_CH2_FS_G_HI"
-echo
-
-# Check if the values are within expectations
-if [[ $FE_CH1_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH1_FS_G_HI -lt $FE_FS_G_HI_MIN ]]
-then
-    echo "      Measured IN1 HV gain ($FE_CH1_FS_G_HI) is outside expected range ( 42949673 +/- 30 %)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-if [[ $FE_CH2_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH2_FS_G_HI -lt $FE_FS_G_HI_MIN ]]
-then
-    echo "      Measured IN2 HV gain ($FE_CH2_FS_G_HI) is outside expected range ( 42949673 +/- 30 %)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
 LOG_VAR="$LOG_VAR $FE_CH1_FS_G_HI $FE_CH2_FS_G_HI"
-
-                        echo
-                        echo "------------------Printing  Log variables  step 9: Calibration parameters FE_CH1_FS_G_HI,  FE_CH2_FS_G_HI -----------------------------------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo
-
 
 # COPY NEW CALIBRATION PARAMETERS IN TO USER EPROM SPACE/PARTITION  #
 NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
@@ -2311,6 +2175,18 @@ echo
 echo -ne '\n' | $CALIB -r
 sleep 0.4
 
+# Set Directions of DIO
+$MONITOR 0x40000010 w 0x00   # - P line inputs
+sleep 0.4
+$MONITOR 0x40000014 w 0xff   # - N outputs
+sleep 0.4
+# Setting relay states, Set HV jumper setting, connect IN1&IN2 to the REF_VALUE_HV.
+# DIO5_N = 1
+# DIO6_N = 1
+# DIO7_N = 0
+$MONITOR 0x4000001C w 0x60 # -> Set N
+sleep 0.4
+
 # CHECK CALIBRATION
 # Acquire data with $DECIMATION decimation factor
 $ACQUIRE -e -s -1 hv -2 hv $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
@@ -2320,9 +2196,10 @@ cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
 cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 
 # Calculate mean value
-ADC_A_MEAN=$(awk -v N1_HV=$N1_HV -v GAIN1_HV=$GAIN1_HV '{sum+=$1} END { print int( ((sum/NR)*GAIN1_HV)-N1_HV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_HV=$N2_HV -v GAIN2_HV=$GAIN2_HV '{sum+=$1} END { print int( ((sum/NR)*GAIN2_HV)-N2_HV)}' /tmp/adc_b.txt)
+ADC_A_MEAN=$(awk -v N1_HV=$N1_HV '{sum+=$1} END { print int( (sum/NR)-N1_HV)}' /tmp/adc_a.txt)
+ADC_B_MEAN=$(awk -v N2_HV=$N2_HV '{sum+=$1} END { print int( (sum/NR)-N2_HV)}' /tmp/adc_b.txt)
 
+REF_VALUE_HV=4465 # 10.9 VOLTS reference voltage IN COUNTS
 IN1_ERROR_HV=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((ADC_A_MEAN-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
 IN2_ERROR_HV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((ADC_B_MEAN-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
 
