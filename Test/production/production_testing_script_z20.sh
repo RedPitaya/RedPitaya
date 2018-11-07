@@ -1165,49 +1165,56 @@ TEST_VALUE_LED=32
 #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
 #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
-# Set the half-scale output level of all four DACs (5M)
-DAC_VALUE=0x4C4B40
-$MONITOR 0x40400020 w $DAC_VALUE
+# Load the Mercury firmware to control the analog inputs and outputs
+cat /opt/redpitaya/fpga/mercury/fpga.bit > /dev/xdevcfg
+sleep 2
+$MONITOR 0x40000010 w 0x00 # -> Set P to inputs
 sleep 0.2
-$MONITOR 0x40400024 w $DAC_VALUE
-sleep 0.2
-$MONITOR 0x40400028 w $DAC_VALUE
-sleep 0.2
-$MONITOR 0x4040002C w $DAC_VALUE
+$MONITOR 0x40000014 w 0x00 # -> Set N to inputs
 sleep 0.2
 
+# Set the half-scale output level of all four DACs (5M)
+DAC_VALUE=0x4C4B40
+$MONITOR 0x40020020 w $DAC_VALUE
+sleep 0.2
+$MONITOR 0x40020024 w $DAC_VALUE
+sleep 0.2
+$MONITOR 0x40020028 w $DAC_VALUE
+sleep 0.2
+$MONITOR 0x4002002C w $DAC_VALUE
+sleep 0.2
+
+getAiValue() {
+    local AI_PATH='/sys/bus/iio/devices/iio:device1'
+    local AI_RAW="$(cat ${AI_PATH}/${1}_raw)"
+    local AI_SCALE="$(cat ${AI_PATH}/${1}_scale)"
+    bc -l <<< "${AI_RAW} * ${AI_SCALE}"
+}
+
 # Get the input level of all four ADCs
-ADC1_A=$($MONITOR 0x40400000 | hexToDec)
-sleep 0.2
-ADC2_A=$($MONITOR 0x40400004 | hexToDec)
-sleep 0.2
-ADC3_A=$($MONITOR 0x40400008 | hexToDec)
-sleep 0.2
-ADC4_A=$($MONITOR 0x4040000C | hexToDec)
-sleep 0.2
+ADC1_A="$(getAiValue in_voltage11_vaux8)"
+ADC2_A="$(getAiValue in_voltage9_vaux0)"
+ADC3_A="$(getAiValue in_voltage10_vaux1)"
+ADC4_A="$(getAiValue in_voltage12_vaux9)"
 
 echo "    ADC values - first acquisition - are $ADC1_A, $ADC2_A, $ADC3_A, $ADC4_A"
 
 # Set almost full-scale output level of all four DACs (2x5M=10M)
 DAC_VALUE=0x989680
-$MONITOR 0x40400020 w $DAC_VALUE
+$MONITOR 0x40020020 w $DAC_VALUE
 sleep 0.2
-$MONITOR 0x40400024 w $DAC_VALUE
+$MONITOR 0x40020024 w $DAC_VALUE
 sleep 0.2
-$MONITOR 0x40400028 w $DAC_VALUE
+$MONITOR 0x40020028 w $DAC_VALUE
 sleep 0.2
-$MONITOR 0x4040002C w $DAC_VALUE
+$MONITOR 0x4002002C w $DAC_VALUE
 sleep 0.2
 
 # Get again the input level of all four DACs
-ADC1_B=$($MONITOR 0x40400000 | hexToDec)
-sleep 0.2
-ADC2_B=$($MONITOR 0x40400004 | hexToDec)
-sleep 0.2
-ADC3_B=$($MONITOR 0x40400008 | hexToDec)
-sleep 0.2
-ADC4_B=$($MONITOR 0x4040000C | hexToDec)
-sleep 0.2
+ADC1_B="$(getAiValue in_voltage11_vaux8)"
+ADC2_B="$(getAiValue in_voltage9_vaux0)"
+ADC3_B="$(getAiValue in_voltage10_vaux1)"
+ADC4_B="$(getAiValue in_voltage12_vaux9)"
 
 echo "    ADC values - second acquisition - are $ADC1_B, $ADC2_B, $ADC3_B, $ADC4_B"
 
@@ -1259,6 +1266,18 @@ then
     #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
     #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+
+# Restore FPGA firmware
+cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+sleep 2
+$MONITOR 0x40000010 w 0x00 # -> Set P to inputs
+sleep 0.2
+$MONITOR 0x40000014 w 0x00 # -> Set N to inputs
+sleep 0.2
+
+# Restore LED state
+$MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
+sleep 0.2
 
 ###############################################################################
 # STEP 7: Fast ADCs and DACs test
