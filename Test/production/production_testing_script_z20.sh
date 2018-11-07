@@ -923,7 +923,9 @@ PREVIOUS_TEST=1
 #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
 #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
-if  [[ "$READ_HWREV" == "STEM_125-10_v1.0" ]] || [[ "$READ_HWREV" == "STEM_10_B_v1.0" ]]
+# This test is disabled for Z020
+# if  [[ "$READ_HWREV" == "STEM_125-10_v1.0" ]] || [[ "$READ_HWREV" == "STEM_10_B_v1.0" ]]
+if true
 then
 
 echo
