@@ -2361,8 +2361,8 @@ cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
 cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 
 # Calculate mean value and correct it using CALIBRATED input gains
-ADC_A_MEAN=$(awk -v N1_LV=$N1_LV -v GAIN1_LV=$GAIN1_LV '{sum+=$1} END { print int(((sum/NR)*GAIN1_LV)-N1_LV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_LV=$N2_LV -v GAIN2_LV=$GAIN1_LV '{sum+=$1} END { print int(((sum/NR)*GAIN2_LV)-N2_LV)}' /tmp/adc_b.txt)
+ADC_A_MEAN=$(awk -v N1_LV=$N1_LV '{sum+=$1} END { print int((sum/NR)-N1_LV)}' /tmp/adc_a.txt)
+ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int((sum/NR)-N2_LV)}' /tmp/adc_b.txt)
 
 OUT1_VOLTAGE_LO=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v HALF_ADC_RANGE=$HALF_ADC_RANGE 'BEGIN { print ((ADC_A_MEAN/HALF_ADC_RANGE))}' )
 OUT2_VOLTAGE_LO=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v HALF_ADC_RANGE=$HALF_ADC_RANGE 'BEGIN { print ((ADC_B_MEAN/HALF_ADC_RANGE))}' )
@@ -2415,8 +2415,8 @@ cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
 cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 
 # Calculate mean value and correct it using CALIBRATED input gains
-ADC_A_MEAN=$(awk -v N1_LV=$N1_LV -v GAIN1_LV=$GAIN1_LV '{sum+=$1} END { print int(((sum/NR)*GAIN1_LV)-N1_LV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_LV=$N2_LV -v GAIN2_LV=$GAIN1_LV '{sum+=$1} END { print int(((sum/NR)*GAIN2_LV)-N2_LV)}' /tmp/adc_b.txt)
+ADC_A_MEAN=$(awk -v N1_LV=$N1_LV '{sum+=$1} END { print int((sum/NR)-N1_LV)}' /tmp/adc_a.txt)
+ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int((sum/NR)-N2_LV)}' /tmp/adc_b.txt)
 
 
 OUT1_VOLTAGE_HI=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v HALF_ADC_RANGE=$HALF_ADC_RANGE 'BEGIN { print ((ADC_A_MEAN/HALF_ADC_RANGE))}' )
