@@ -19,6 +19,9 @@ export VERSION
 #
 ################################################################################
 
+# Production test script
+ENABLE_PRODUCTION_TEST ?= 0
+
 all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
 
 $(DL):
@@ -437,9 +440,11 @@ PRODUCTION_TEST_DIR = Test/production
 .PHONY: production_test
 
 production_test:
+ifeq ($(ENABLE_PRODUCTION_TEST), 1)
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) clean
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+endif
 
 clean:
 	# todo, remove downloaded libraries and symlinks
