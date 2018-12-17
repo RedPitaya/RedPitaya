@@ -1,3 +1,28 @@
+# Release 0.98-RC3
+
+U-Boot
+- The U-Boot uses default environment when EEPROM is empty
+
+SCPI manager:
+- The link-local IP can be displayed (the None value was displayed earlier)
+
+Logic analyzer:
+- The image export was added
+- The CSV export was added
+
+Bode analyser:
+- The image export was added
+- The CSV export was added
+
+Spectrum analyzer:
+- The signal generation support was added
+- The CSV export was fixed for the Mozilla Firefox browser
+
+Oscilloscope:
+- The CSV export was fixed (incorrect time values from -1 to 1)
+- The trigger considers into the signal inversion
+- Restoring of the channels configuration was added
+
 # Beta version (0.98-685)
 
 VNA:
