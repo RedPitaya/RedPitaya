@@ -1,27 +1,16 @@
-# Release 0.98-RC3
-
-U-Boot
-- The U-Boot uses default environment when EEPROM is empty
-
-SCPI manager:
-- The link-local IP can be displayed (the None value was displayed earlier)
-
-Logic analyzer:
-- The image export was added
-- The CSV export was added
-
-Bode analyser:
-- The image export was added
-- The CSV export was added
+# Beta version (0.98-693)
 
 Spectrum analyzer:
-- The signal generation support was added
-- The CSV export was fixed for the Mozilla Firefox browser
+- Signal generator is now available also in Spectrum analyzer app
+
+Logic analyzer, Bode analyser:
+- Logic analyzer & Bode analyzer data can be exported also in raw format
 
 Oscilloscope:
-- The CSV export was fixed (incorrect time values from -1 to 1)
-- The trigger considers into the signal inversion
-- Restoring of the channels configuration was added
+- Oscilloscope app settings are restored at startup
+
+Applications:
+- Several bug fixes & stability improvements
 
 # Beta version (0.98-685)
 
