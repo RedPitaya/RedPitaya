@@ -13,7 +13,7 @@ Software
    os/ssh/ssh
    os/console/console
    os/network
-   ../../fpga/fpga
+   fpga
    comC
    scpi/scpi
    gpio/gpio
