@@ -1,3 +1,6 @@
+SDR Specifications
+##################
+
 What is in the box 
 ******************
 
@@ -612,8 +615,6 @@ Mechanical specifications
 .. 	HAMlab comes with pre installed SD card HAMlab OS. Upgrade can be done using OS upgrade application from the HAMlab application menu and there is no need to remove the SD card. Therefore user should remove the SD card and reinstall SD card software only if system gets corrupted or stops working due to SD card failure reason. In this case only official HAMlab OS should be installed on the SD card for proper operation.
 
 	
-SDR Specifications
-##################
 
 Highlights
 **********
