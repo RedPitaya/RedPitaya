@@ -1,5 +1,5 @@
-SDR Specifications
-##################
+SDR
+###
 
 What is in the box 
 ******************
