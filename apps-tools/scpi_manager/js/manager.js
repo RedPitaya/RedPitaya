@@ -57,7 +57,6 @@
 
             for (var i = 0; i < obj.length; ++i) {
                 address = obj[i].split(" ")[1].split("/")[0];
-                address = obj[i].split(" ")[1].split("/")[0];
 
                 // Link-local address checking.
                 // Do not use it if it is not the only one.
