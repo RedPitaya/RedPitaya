@@ -136,25 +136,56 @@
             });
     };
 
+    WIZARD.GetFirstAddress = function(obj) {
+        var ip = null;
+        var mask = null;
+
+        for (var i = 0; i < obj.length; ++i) {
+            ip = obj[i].split(" ")[1].split("/")[0];
+            mask = obj[i].split(" ")[1].split("/")[1];
+
+            // Link-local address checking.
+            // Do not use it if it is not the only one.
+            if (!ip.startsWith("169.254.")) {
+                // Return the first address.
+                break;
+            }
+        }
+
+        return {ip: ip, mask: mask};
+    };
+
+    WIZARD.ParseAddress = function(text) {
+        // inet ip/mask
+        var infoRegexp = /inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\d+/g;
+        var infoMatch = text.match(infoRegexp);
+        var ip = null;
+        var mask = null;
+
+        if (infoMatch !== null) {
+            var info = WIZARD.GetFirstAddress(infoMatch);
+            ip = info.ip;
+            mask = info.mask;
+        }
+
+        return {ip: ip, mask: mask};
+    };
+
     WIZARD.GetWlan0Status = function() {
         $.ajax({
             url: '/get_wlan0_status',
             type: 'GET'
         }).success(function(msg) {
-            var IPaddr = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
+            var info = WIZARD.ParseAddress(msg);
 
-            if (IPaddr == null) {
+            if ((info.ip === null) || (info.mask === null)) {
                 if (!WIZARD.WIFIConnected && !WIZARD.accessPointCreated){
                     $('#wlan0_address_label').text("None");
                 }
                 return;
             }
 
-            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
-            var Mask = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-            Mask = Mask[0].split(" ")[1].split("/")[1];
-
-            $('#wlan0_address_label').text(IPaddr + " / " + Mask);
+            $('#wlan0_address_label').text("" + info.ip + " / " + info.mask);
 
         }).done(function(msg) {});
     };
@@ -164,13 +195,14 @@
             url: '/get_eth0_status',
             type: 'GET'
         }).success(function(msg) {
+            var info = WIZARD.ParseAddress(msg);
             var gateway = msg.split("gateway:")[1].split("\n")[0];
-            var IPaddr = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-            IPaddr = IPaddr[0].split(" ")[1].split("/")[0];
-            var Mask = msg.match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-            Mask = Mask[0].split(" ")[1].split("/")[1];
 
-            $('#eth0_address_label').text(IPaddr + " / " + Mask);
+            if (!gateway) {
+                gateway = "None";
+            }
+
+            $('#eth0_address_label').text((info.ip !== null && info.mask !== null) ? "" + info.ip + " / " + info.mask : "None");
             $('#eth0_gateway_label').text(gateway);
 
         }).done(function(msg) {});
