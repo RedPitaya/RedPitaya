@@ -1,3 +1,17 @@
+# Beta version (0.98-694)
+
+Bode analyser:
+- The periods number was added: minimum periods number of the generated signal for each step
+
+Spectrum analyzer:
+- The CSV export was fixed (min/max values).
+
+Oscilloscope:
+- Some trigger bugs at the low frequency were fixed
+
+Network manager:
+- The link-local IP displays when no other IP's are available
+
 # Beta version (0.98-693)
 
 Spectrum analyzer:
