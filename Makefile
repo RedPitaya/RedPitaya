@@ -290,9 +290,9 @@ calib:
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrum:
-        $(MAKE) -C $(SPECTRUM_DIR) clean
-        $(MAKE) -C $(SPECTRUM_DIR)
-        $(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(SPECTRUM_DIR) clean
+	$(MAKE) -C $(SPECTRUM_DIR)
+	$(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
