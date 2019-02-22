@@ -243,13 +243,14 @@ ACQUIRE_DIR     = Test/acquire
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
 GENERATOR_DIR	= Test/generate
+SPECTRUM_DIR    = Test/spectrum
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 LA_TEST_DIR     = api2/test
 GENERATE_DC_DIR	= generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest generate_DC
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
 
 examples: lcr bode monitor monitor_old generator acquire calib generate_DC
 # calibrate laboardtest
@@ -287,6 +288,11 @@ calib:
 	$(MAKE) -C $(CALIB_DIR) clean
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+spectrum:
+        $(MAKE) -C $(SPECTRUM_DIR) clean
+        $(MAKE) -C $(SPECTRUM_DIR)
+        $(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean

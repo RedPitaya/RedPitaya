@@ -1,5 +1,5 @@
 INSTALL_DIR ?= .
-BINARY_FILES = calibration_script.sh delete_MAC.sh
+BINARY_FILES = calibration_script.sh delete_MAC.sh spectrum_sfdr_test.py production_testing_script_z20_spectrum.sh
 TEXT_FILES = environment_parameters.txt
 PRODUCTION_TESTING_SCRIPT = production_testing_script.sh
 MODEL ?= Z10
