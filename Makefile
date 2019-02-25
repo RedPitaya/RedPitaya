@@ -252,7 +252,7 @@ GENERATE_DC_DIR	= generate_DC
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
 
-examples: lcr bode monitor monitor_old generator acquire calib generate_DC
+examples: lcr bode monitor monitor_old generator acquire calib generate_DC spectrum
 # calibrate laboardtest
 
 lcr:
