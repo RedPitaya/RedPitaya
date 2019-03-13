@@ -72,6 +72,10 @@ FACTORY_CAL="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE
 TEST_LABEL='I2C_test'
 I2C_TEST_CONFIG='/sys/bus/i2c/devices/0-0051/eeprom 0x1800 0x0400'
 
+
+# ETHERNET_TEST
+ENABLE_ETHERNET_TEST=0
+
 ###############################################################################
 # Test variables
 ###############################################################################
@@ -165,8 +169,7 @@ ADC_FILENAME="adc.sig"
 ADC_CH_A_FILENAME="adc_a.sig"
 ADC_CH_B_FILENAME="adc_b.sig"
 
-# SFDR spectrum test
-export SFDR_TEST_EXTERNAL_GEN=0
+
 
 # Calibration parameters LV/HV jumper settings
 MAX_VALUE_LV=8000
@@ -605,6 +608,9 @@ PREVIOUS_TEST=1
 #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
 #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
+if [ $ENABLE_ETHERNET_TEST -eq 1 ]
+then
+
 # Verify that eth configuration MAC matches the EEPROM MAC
 echo "Verify MAC address consistence with EEPROM..."
 EEPROM_MAC=$($PRINTENV | grep ethaddr= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
@@ -663,6 +669,10 @@ then
     PREVIOUS_TEST=0
 else
     echo "Ping to unit $PING_IP OKAY"
+fi
+
+else
+    echo "Skip ethernet test"
 fi
 
 sleep $SLEEP_BETWEEN_TESTS
@@ -1286,19 +1296,18 @@ $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
 sleep 0.2
 
 ###############################################################################
-# STEP 7: Fast ADCs and DACs test
+# STEP 7: Fast ADCs bit analysis
 ###############################################################################
-
 echo
-echo "--- TEST 7: Fast ADCs and DACs test ---"
-echo
-echo "    Acqusition without DAC signal - ADCs with HIGH gain"
+echo "--- TEST 7: Fast ADCs bit analysis test ---"
 echo
 
+echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo
+
+PREVIOUS_TEST=0
 TEST_STATUS=1
 TEST_VALUE=128
-TEST_VALUE_LED=64
-PREVIOUS_TEST=1
 #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
 #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
 #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
@@ -1306,6 +1315,7 @@ PREVIOUS_TEST=1
 #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
 #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
 #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
 
 # Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
 $MONITOR 0x40000010 w 0x00 # -> Set P to inputs
@@ -1313,492 +1323,12 @@ sleep 0.2
 $MONITOR 0x40000014 w 0xFF # -> Set N to outputs
 sleep 0.2
 
-# Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 1 (lv jumper settings)
-$MONITOR 0x4000001C w 0x00 # -> Set N outputs to zero - > reseet
-sleep 0.2
-$MONITOR 0x4000001C w 0xA0 # -> Set DIO5_N=1 -> Configure the ADC in high-gain mode -> DIO7_N = 1
-sleep 1
-
-# Assure tht DAC signals (ch 1 & 2) are OFF
-$GENERATE 1 0 $SIG_FREQ
-$GENERATE 2 0 $SIG_FREQ
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 4 -> IN1 and IN2 parameters (LV jumper settings) -> OUT1 and OUT2 disabled--------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.A std deviation value with no decimation ($ADC_A_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.B std deviation value with no decimation ($ADC_B_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-# Set DAC value to proper counts / frequency for both channels
-echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
-echo
-
-# Turn the DAC signal generator on on both channels
-$GENERATE 1 $SIG_AMPL $SIG_FREQ
-$GENERATE 2 $SIG_AMPL $SIG_FREQ
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 5 -> IN1 and IN2 parameters (LV jumper settings) -> OUT1 and OUT2 enabled---------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -lt $MIN_SIG_STD_HIGH_GAIN ]] || [[ $ADC_A_STD -gt $MAX_SIG_STD_HIGH_GAIN ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range ($MIN_SIG_STD_HIGH_GAIN-$MAX_SIG_STD_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -lt $MIN_SIG_STD_HIGH_GAIN ]] || [[ $ADC_B_STD -gt $MAX_SIG_STD_HIGH_GAIN ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range ($MIN_SIG_STD_HIGH_GAIN-$MAX_SIG_STD_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -lt $MIN_SIG_P2P_HIGH_GAIN ]] || [[ $ADC_A_PP -gt $MAX_SIG_P2P_HIGH_GAIN ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range ($MIN_SIG_P2P_HIGH_GAIN-$MAX_SIG_P2P_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -lt $MIN_SIG_P2P_HIGH_GAIN ]] || [[ $ADC_B_PP -gt $MAX_SIG_P2P_HIGH_GAIN ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range ($MIN_SIG_P2P_HIGH_GAIN-$MAX_SIG_P2P_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-
-echo
-echo "    Acqusition without DAC signal - ADCs with LOW gain(HV jumper settings)"
-echo
-
-# Turn the DAC signal generator OFF on both channels (ch 1 & 2)
-$GENERATE 1 0 $SIG_FREQ
-$GENERATE 2 0 $SIG_FREQ
-sleep 0.2
-
-# Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 0 (hv jumper settings)
-$MONITOR 0x4000001C w 0x00 # -> Set N outputs to zero - > reseet
-sleep 0.2
-$MONITOR 0x4000001C w 0x20 # -> Set DIO5_N=1 -> Configure the ADC in low-gain mode -> DIO7_N = 0
-sleep 0.2
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 6 -> IN1 and IN2 parameters (HV jumper settings) -> OUT1 and OUT2 disabled--------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.A std deviation value with no decimation ($ADC_A_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.B std deviation value with no decimation ($ADC_B_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-
-echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with LOW gain"
-echo
-
-# Turn the DAC signal generator on on both channels
-$GENERATE 1 $SIG_AMPL $SIG_FREQ
-$GENERATE 2 $SIG_AMPL $SIG_FREQ
-sleep 0.5
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 7 -> IN1 and IN2 parameters (HV jumper settings) -> OUT1 and OUT2 enabled---------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -lt $MIN_SIG_STD_LOW_GAIN ]] || [[ $ADC_A_STD -gt $MAX_SIG_STD_LOW_GAIN ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range ($MIN_SIG_STD_LOW_GAIN-$MAX_SIG_STD_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -lt $MIN_SIG_STD_LOW_GAIN ]] || [[ $ADC_B_STD -gt $MAX_SIG_STD_LOW_GAIN ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range ($MIN_SIG_STD_LOW_GAIN-$MAX_SIG_STD_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -lt $MIN_SIG_P2P_LOW_GAIN ]] || [[ $ADC_A_PP -gt $MAX_SIG_P2P_LOW_GAIN ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range ($MIN_SIG_P2P_LOW_GAIN-$MAX_SIG_P2P_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -lt $MIN_SIG_P2P_LOW_GAIN ]] || [[ $ADC_B_PP -gt $MAX_SIG_P2P_LOW_GAIN ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range ($MIN_SIG_P2P_LOW_GAIN-$MAX_SIG_P2P_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-
-# Set DAC value to 0 for both channels (1 & 2)
-echo
-echo "    Restoring DAC signals and ADC gain to idle conditions"
-$GENERATE 1 0 $SIG_FREQ
-$GENERATE 2 0 $SIG_FREQ
-echo
-
-sleep $SLEEP_BETWEEN_TESTS
-
-
-echo
-echo "--- SFDR spectrum test ---"
-echo
-echo "    Use external generator for test $SFDR_TEST_EXTERNAL_GEN"
-echo
-
-${PWD}/production_testing_script_z20_spectrum.sh
-SFDR_RESULT=$?
-if [ $SFDR_RESULT -eq 0 ]
-then
-    TEST_STATUS=0	
-fi 
-
-sleep $SLEEP_BETWEEN_TESTS
-
-# TEST 7 - Fast ADC/DAC test, if was OK Writte  "1"  in logfile status byte
-if [ $TEST_STATUS -eq 1 ]
-then
-    #TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
-    LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
-    #$MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echojj ghb
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
-fi
-
 # Set Jumper setting back to LV and set OUT1-IN1 , and OUT2-IN2
 # Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 1 (lv jumper settings)
 $MONITOR 0x4000001C w 0x00 # -> Reset N
 sleep 0.2
 $MONITOR 0x4000001C w 0xA0 # -> Set DIO5_N=1 -> Configure the ADC in high-gain mode -> DIO7_N = 1
 sleep 0.2
-
-###############################################################################
-# STEP 8: Fast ADCs bit analysis
-###############################################################################
-echo
-echo "--- TEST 8: Fast ADCs bit analysis test ---"
-echo
-
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
-echo
-
-TEST_STATUS=1
-TEST_VALUE=256
-#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 # Turn the DAC signal generator on on both channels
 $GENERATE 1 $SIG_AMPL $SIG_FREQ
@@ -1916,6 +1446,69 @@ sleep $SLEEP_BETWEEN_TESTS
 if [ $TEST_STATUS -eq 1 ]
 then
     echo "    Bit analysis test was successfull"
+    PREVIOUS_TEST=1
+    TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
+    LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
+    $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
+    echo
+    echo
+    echo "**********************************************************************************"
+    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+    echo "**********************************************************************************"
+    echo
+    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
+fi
+echo "    Restoring DAC signals and ADC gain to idle conditions..."
+$GENERATE 1 0 $SIG_FREQ
+$GENERATE 2 0 $SIG_FREQ
+echo
+sleep $SLEEP_BETWEEN_TESTS
+
+###############################################################################
+# STEP 8: SFDR spectrum test ---
+###############################################################################
+echo
+echo "--- TEST 8: SFDR spectrum test ---"
+echo
+
+echo
+
+TEST_STATUS=1
+TEST_VALUE=256
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
+if [ $PREVIOUS_TEST -eq 1 ]
+then
+${PWD}/production_testing_script_z20_spectrum.sh
+SFDR_RESULT=$?
+if [ $SFDR_RESULT -eq 0 ]
+then
+    TEST_STATUS=0	
+fi 
+else
+echo "SFDR spectrum test skipped"
+TEST_STATUS=0
+fi
+sleep $SLEEP_BETWEEN_TESTS
+
+
+# TEST 8 - Fast ADC/DAC bit analysis test, if was OK Writte  "1"  in logfile status byte set LED6 ON
+if [ $TEST_STATUS -eq 1 ]
+then
+
     if [ $PREVIOUS_TEST -eq 1 ]
     then
     TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
@@ -1937,9 +1530,6 @@ then
     #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 fi
-echo "    Restoring DAC signals and ADC gain to idle conditions..."
-$GENERATE 1 0 $SIG_FREQ
-$GENERATE 2 0 $SIG_FREQ
 echo
 sleep $SLEEP_BETWEEN_TESTS
 
