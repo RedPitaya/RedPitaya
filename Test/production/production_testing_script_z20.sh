@@ -133,8 +133,8 @@ MIN_RATIO=$(bc -l <<< "$REF_RATIO - $REF_RATIO * $TOLERANCE_PERC / 100")
 MAX_RATIO=$(bc -l <<< "$REF_RATIO + $REF_RATIO * $TOLERANCE_PERC / 100")
 
 # fast ADCs and DACs data acquisitions
-SIG_FREQ=1000
-SIG_AMPL=2
+SIG_FREQ=1000000
+SIG_AMPL=0.5
 ADC_BUFF_SIZE=16384
 
 MAX_ABS_OFFS_HIGH_GAIN=500
@@ -1772,7 +1772,7 @@ RES=$(ping "$LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{prin
     echo "      Test data logging on the local PC was successfull"
     else
     echo "      Not possible to log test statistics to local PC"
-    LOGGING_STATUS=0
+    LOGGING_STATUS=1
 fi
 echo
 echo
@@ -1832,12 +1832,12 @@ echo
 echo "      This board  (combination of MAC & DNA) already exists in production database with PASS(0x1ff = 111111111) status!!!"
 echo
 echo
-LOGGING_STATUS=0
+LOGGING_STATUS=1
 else
 echo
 echo "      No response from SERVER!!!"
 echo
-LOGGING_STATUS=0
+LOGGING_STATUS=1
 fi
 echo
 echo
