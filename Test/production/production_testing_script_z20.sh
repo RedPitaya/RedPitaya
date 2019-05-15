@@ -33,7 +33,8 @@ LOG_FILENAME='manuf_test.log'
 
 # Production PC/SERVER variables
 #LOCAL_SERVER_IP='192.168.1.200'
-LOCAL_SERVER_IP='192.168.1.1'
+LOCAL_SERVER_IP='192.168.1.2'
+LOCAL_SERVER_PASS='redpitaya'
 LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 LOCAL_USER='redpitaya'
 #LOCAL_SERVER_DIR="$LOCAL_SERVER_IP:/home/itech/Desktop/Test_LOGS"
@@ -1492,12 +1493,12 @@ TEST_VALUE=256
 
 if [ $PREVIOUS_TEST -eq 1 ]
 then
-${PWD}/production_testing_script_z20_spectrum.sh
-SFDR_RESULT=$?
-if [ $SFDR_RESULT -eq 0 ]
-then
-    TEST_STATUS=0	
-fi 
+	production_testing_script_z20_spectrum.sh
+	SFDR_RESULT=$?
+	if [ $SFDR_RESULT -eq 0 ]
+	then
+    	TEST_STATUS=0	
+	fi 
 else
 echo "SFDR spectrum test skipped"
 TEST_STATUS=0
@@ -1767,7 +1768,7 @@ RES=$(ping "$LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{prin
     echo "----------Logging test statistics to PRODUCTION PC-------------------"
 
     #echo 'sometext' | ssh zumy@192.168.178.123 "cat >> /home/zumy/Desktop/Test_LOGS/manuf_test.log"
-    echo $LOG_VAR_DATE | ssh $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
+    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS" ssh $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     echo
     echo "      Test data logging on the local PC was successfull"
     else
@@ -1820,26 +1821,41 @@ echo
 #echo $URL1
 #curl $URL1
 CURL_RSP="$(curl $URL)"
-if [ `echo $CURL_RSP | grep -c "OK" ` -gt 0 ]
+
+status=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+
+if [ "$status" == 200 ]
 then
 echo
 echo "      Test record was successfully added to production database."
 echo
-elif [ `echo $CURL_RSP | grep -c "FAILED" ` -gt 0 ]
-then
-echo
-echo
-echo "      This board  (combination of MAC & DNA) already exists in production database with PASS(0x1ff = 111111111) status!!!"
-echo
-echo
-LOGGING_STATUS=1
 else
 echo
 echo "      No response from SERVER!!!"
 echo
-LOGGING_STATUS=1
+#LOGGING_STATUS=1
 fi
-echo
+
+#if [ `echo $CURL_RSP | grep -c "OK" ` -gt 0 ]
+#then
+#echo
+#echo "      Test record was successfully added to production database."
+#echo
+#elif [ `echo $CURL_RSP | grep -c "FAILED" ` -gt 0 ]
+#then
+#echo
+#echo
+#echo "      This board  (combination of MAC & DNA) already exists in production database with PASS(0x1ff = 111111111) status!!!"
+#echo
+#echo
+#LOGGING_STATUS=1
+#else
+#echo
+#echo "      No response from SERVER!!!"
+#echo
+#LOGGING_STATUS=1
+#fi
+#echo
 echo
 echo "---------------------------------------------------------------------------------------------------------------------------------------------"
 
