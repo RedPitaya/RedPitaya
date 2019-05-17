@@ -1,157 +1,39 @@
 #######################
-Vector network analyzer
+Streaming
 #######################
 
-******************************
-What do I need before I start?
-******************************
-
-1. VNA application requirements:
-
-    * Personal computer (PC) running Windows or Linux.
-
-2. The following accessories and materials that are available in Red Pitaya store:
-
-    * any kit that includes STEMlab 125-14 or 125-10 board
-    * Vector network analyzer bridge module
+Streaming application enables user to stream data from STEMlab to file stored on STEMlab SD
+card or over ethernet using UDP or TCP protocol. User is able to set sampling frequency,
+number of input channels and resolution.
 
 
 **********************************************
-Start using STEMlab as vector network analyzer
+Start using STEMlab streaming feature
 **********************************************
 
-=================================================
-Connect vector network analyzer bridge to STEMlab
-=================================================
+#. ) Run streaming app from STEMlab WEB interface
 
-    * connect OUT of VNA module to STEMlab IN1
-    * connect IN of VNA module to STEMlab OUT1
-    * set IN1 jumpers on STEMlab to LV position
+    .. image:: img/redpitaya_main_page.png
+    
+    .. image:: img/streaming_main_page.png
 
+#. ) Stream locally to a file
 
-Coming soon: image that shows connections (trenutno vna bridge module connections.png).
+    * Select Local file option and press RUN.
+    * Streaming can be stopped by pressing the STOP button.
+    * To get streaming results click Browse and download streaming data file.
 
-=================================================
-Install & run network vector analyzer control app
-=================================================
+#. ) Stream and transfer data over network
 
-.. contents::
-    :local:
-    :backlinks: none
-    :depth: 1
+    * Select TCP/IP option and press RUN.
+    * Download streaming client to your computer.
 
-------------------
-Windows users only
-------------------
+    `Linux <http://downloads.redpitaya.com/downloads/STEMlab-122-16/ecosystems/streaming/linux-tool.zip>`__.
+    `Windows <http://downloads.redpitaya.com/downloads/STEMlab-122-16/ecosystems/streaming/windows-tool.zip>`__.
 
-    * Download and unpack the `control program <http://downloads.redpitaya.com/downloads/vna/vna-windows-tool.zip>`__.
-    * Run the ``vna.exe`` program.
-
-----------------
-Linux users only
-----------------
-
-    * Install Python 3 and all the required libraries:
-
-        .. code-block:: shell-session
-
-            sudo apt-get install python3-dev python3-pip python3-numpy python3-pyqt5 libfreetype6-dev
-            sudo pip3 install matplotlib mpldatacursor
-
-    * Download and unpack the `control program <http://downloads.redpitaya.com/downloads/vna/vna-windows-tool.zip>`__.
-    * Run the control program:
-
-        .. code-block:: shell-session
-
-            python3 vna.py
-
-==================================================
-Type in the IP or URL address of the STEMlab board
-==================================================
-
--------------------------------
-Connect by entering STEMlab IP:
--------------------------------
-
-.. image::  img/1_ip.PNG
-
-
-To find our IP address of the STEMlab board first connect to STEMlab
-by following this `instructions <http://redpitaya.readthedocs.io/en/latest/quickStart/first.html>`_.
-
-Then go to System->Network manager. IP is written next to label
-Address: xxx.xxx.xxx.xxx .
-
-.. image::  img/network_manager_icon.png
-   :width:  150px
-
---------------------------------
-Connect by entering STEMlab URL:
---------------------------------
-
-.. image::  img/1_url.PNG
-
-===================================================
-Run vector network analyzer application on STEMlab.
-===================================================
-
-.. image::  img/vna_icon.png
-   :width:  150px
-
-=========================================================
-Click Connect inside network vector analyzer control app.
-=========================================================
-
-.. image::  img/2_connect.PNG
-
-***************************************
-Perform calibration and start measuring
-***************************************
-
-    .. image::  img/3_calibrate.PNG
-
-#. ) Connect SMA OPEN calibration connector marked with letter O to DUT SMA connector of the network vector analyzer bridge module. Click button “Open” and wait for calibration procedure to complete.
-
-    .. image:: img/04_Calibration_O.jpg
-
-#. ) Connect SMA SHORT calibration connector marked with letter S to DUT SMA connector of the network vector analyzer bridge module. Click button “Short” and wait for calibration procedure to complete.
-
-    .. image:: img/03_Calibration_S.jpg
-
-#. ) Connect SMA LOAD calibration connector marked with letter L to DUT SMA connector of the network vector analyzer bridge module. Click button “Load” and wait for calibration procedure to complete.
-
-    .. image:: img/05_Calibration_L.jpg
-
-#. ) Select Smith chart tab at the bottom and then click Single button to perform a single measurement of the DUT. Dot in the middle of the Smith chart circle (@ 50ohm) will indicate that VNA is properly measuring reference 50ohm LOAD.
-
-    .. image::  img/4-load_DUT_smith_chart.PNG
-
-#. ) Disconnect LOAD SMA connector and connect whatever DUT you’d like to measure.
-
-    .. image::  img/07_Product_Combo.jpg
-
-=========
-Examples:
-=========
-
-#. ) Measurement of 21m vertical antenna.
-    Antenna is not well tuned (at freq. 14, 21MHz SWR should be <= 1.5)
-
-    .. image::  img/antenna.png
-
-#. ) HAM RADIO 20m band bandpass filter
-    SWR is better than 1.5 between start and stop band frequency.
-    Filter load is around 50ohm between start and stop band frequency.
-
-.. image::  img/bandpass_filter.png
-
-.. image::  img/bandpass_filter_smith_chart.png
-
-.. admonition:: Credits
-
-    | Original developer of the vector network analyzer STEMlab application is Pavel Demin.
-    | Repositories used by our builds:
-
-        * https://github.com/RedPitaya/red-pitaya-notes
-
-.. .. image::  img/vna_bridge_module_connections.png
+    * Run streaming on STEMlab by pressing RUN button
+    * Open console terminal & start streaming client cmd line tool. Make sure to set right STEMlab IP and transfer parameters.
+    * Streaming can be stopped by hitting Ctrl-C.
+    * Two files are created each time streaming is started, one holds streamed data and the other one data transfer report.
+    
+    .. image:: img/win_client.png
