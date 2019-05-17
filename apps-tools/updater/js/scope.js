@@ -353,6 +353,20 @@ $(document).ready(function() {
         }
 
     });
+
+    $.ajax({
+                method: "GET",
+                url: '/get_info'
+            })
+            .done(function(result) {
+                    stem_ver = result['stem_ver'];
+                    if (stem_ver == "STEM 16"){
+                        UPD.type = "STEMlab-122-16/ecosystems";
+                    }else{
+                        UPD.type = "STEMlab-125-1x/ecosystems";
+                    }
+                });
+
     $('#ecosystem_type').change(function(){
         /*
         Reason: exist one branch with fixed name for download distros with latest OS version
