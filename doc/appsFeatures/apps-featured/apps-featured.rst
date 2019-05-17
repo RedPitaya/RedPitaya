@@ -14,3 +14,4 @@ Applications
    ./sdr/appSDR.rst
    ../marketplace/marketplace.rst
    ./vna/appVNA.rst
+   ./streaming/appStreaming.rst
