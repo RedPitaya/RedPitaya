@@ -1,0 +1,16 @@
+all: linux.x86 linux.arm win32
+
+linux.x86:
+	./clean-all.sh
+	./build-linux.sh
+
+linux.arm:
+	./clean-all.sh
+	./build-linux-cross-arm.sh
+
+win32:
+	./clean-all.sh
+	./build-win.sh
+
+clean:
+	./clean-all.sh
