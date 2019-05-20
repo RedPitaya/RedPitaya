@@ -291,7 +291,9 @@ for Scilab sockets. How to set socket is described on Blink example.
     
     SOCKET_close(tcpipObj);
 
+***********
 Code - LabVIEW
+***********
 
 .. image:: On-trigger-signal-acquisition_LV.png
 
