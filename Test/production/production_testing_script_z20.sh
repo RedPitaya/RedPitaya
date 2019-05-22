@@ -75,7 +75,7 @@ I2C_TEST_CONFIG='/sys/bus/i2c/devices/0-0051/eeprom 0x1800 0x0400'
 
 
 # ETHERNET_TEST
-ENABLE_ETHERNET_TEST=0
+ENABLE_ETHERNET_TEST=1
 
 ###############################################################################
 # Test variables
@@ -725,10 +725,10 @@ IN_VOLTAGE1_VCCAUX_SCALE="$(cat '/sys/bus/iio/devices/iio:device0/in_voltage1_vc
 IN_VOLTAGE2_VCCBRAM_RAW="$(cat '/sys/bus/iio/devices/iio:device0/in_voltage2_vccbram_raw')"
 IN_VOLTAGE2_VCCBRAM_SCALE="$(cat '/sys/bus/iio/devices/iio:device0/in_voltage2_vccbram_scale')"
 
-TEMP=$(bc -l <<< "($IN_TEMP0_RAW + $IN_TEMP0_OFFSET) * $IN_TEMP0_SCALE / 1000")
-VCCINT=$(bc -l <<< "$IN_VOLTAGE0_VCCINT_RAW * $IN_VOLTAGE0_VCCINT_SCALE")
-VCCAUX=$(bc -l <<< "$IN_VOLTAGE1_VCCAUX_RAW * $IN_VOLTAGE1_VCCAUX_SCALE")
-VCCBRAM=$(bc -l <<< "$IN_VOLTAGE2_VCCBRAM_RAW * $IN_VOLTAGE2_VCCBRAM_SCALE")
+TEMP=$(bc -l <<< "($IN_TEMP0_RAW + $IN_TEMP0_OFFSET) * $IN_TEMP0_SCALE / 1000" | awk '{ printf "%d\n", $1 }')
+VCCINT=$(bc -l <<< "$IN_VOLTAGE0_VCCINT_RAW * $IN_VOLTAGE0_VCCINT_SCALE" | awk '{ printf "%d\n", $1 }')
+VCCAUX=$(bc -l <<< "$IN_VOLTAGE1_VCCAUX_RAW * $IN_VOLTAGE1_VCCAUX_SCALE" | awk '{ printf "%d\n", $1 }')
+VCCBRAM=$(bc -l <<< "$IN_VOLTAGE2_VCCBRAM_RAW * $IN_VOLTAGE2_VCCBRAM_SCALE" | awk '{ printf "%d\n", $1 }')
 
 #Added, check if teh variable is empty > unsucsefull read will return empty variable. in this case set variable to "x".
 if [ -z "$TEMP" ]
@@ -1534,6 +1534,11 @@ fi
 echo
 sleep $SLEEP_BETWEEN_TESTS
 
+###################################################################################################################################################################################
+# Fast ADCs and DACs test add missing values
+###############################################################################
+
+LOG_VAR="$LOG_VAR 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
 
 
 ###################################################################################################################################################################################
