@@ -112,7 +112,7 @@ test_sfdr() {
     local CH0_LEVEL=$(bc -l <<< "${CH0_PEAK_VALUE} - ${SFDR_LEVEL}")
     local CH1_LEVEL=$(bc -l <<< "${CH1_PEAK_VALUE} - ${SFDR_LEVEL}")
 
-    spectrum_sfdr_test.py \
+    VAR=$(spectrum_sfdr_test.py \
         --ch0-freq-min "${CH0_PEAK_FREQ_MIN}" \
         --ch0-freq-max "${CH0_PEAK_FREQ_MAX}" \
         --ch0-level "${CH0_LEVEL}" \
@@ -120,7 +120,28 @@ test_sfdr() {
         --ch1-freq-max "${CH1_PEAK_FREQ_MAX}" \
         --ch1-level "${CH1_LEVEL}" \
         --ch-mode "${CHANNEL}" \
-        <<< "${SPECTRUM_RESULT}"
+        <<< "${SPECTRUM_RESULT}")
+    echo "$VAR"
+    CH0_VAL=$(gawk 'match($0, /^CH0: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[1]}' <<< "${VAR}")
+    CH0_AVG=$(gawk 'match($0, /^CH0: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[3]}' <<< "${VAR}")
+    CH0_MIN=$(gawk 'match($0, /^CH0: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[4]}' <<< "${VAR}")
+    CH0_MAX=$(gawk 'match($0, /^CH0: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[5]}' <<< "${VAR}")
+    CH1_VAL=$(gawk 'match($0, /^CH1: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[1]}' <<< "${VAR}")
+    CH1_AVG=$(gawk 'match($0, /^CH1: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[3]}' <<< "${VAR}")
+    CH1_MIN=$(gawk 'match($0, /^CH1: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[4]}' <<< "${VAR}")
+    CH1_MAX=$(gawk 'match($0, /^CH1: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[5]}' <<< "${VAR}")
+
+
+#    echo "$CH0_VAL"
+#    echo "$CH0_AVG"
+#    echo "$CH0_MIN"
+#    echo "$CH0_MAX"
+
+#    echo "$CH1_VAL"
+#    echo "$CH1_AVG"
+#    echo "$CH1_MIN"
+#    echo "$CH1_MAX"
+
     return $?
 }
 
@@ -231,6 +252,8 @@ else
     TEST_STATUS=0
 fi
 
+RES_SFDR1="$CH0_VAL $CH0_MIN $CH0_MAX $CH0_AVG $CH1_VAL $CH1_MIN $CH1_MAX $CH1_AVG"
+
 # Enable generator
 disable_generator
 generate 2 0.5 "${GENERATE_CH1_FREQ}" sine
@@ -245,11 +268,13 @@ else
     echo 'Test 3 OUT2 (internal): FAIL'
     TEST_STATUS=0
 fi
-
+RES_SFDR2="$CH0_VAL $CH0_MIN $CH0_MAX $CH0_AVG $CH1_VAL $CH1_MIN $CH1_MAX $CH1_AVG"
+RES_SFDR="$RES_SFDR1 $RES_SFDR2"
+echo "RES_SFDR=$RES_SFDR"
 # monitor 0x4000001C w 0x00 # DIO5_N = 0, DIO6_N = 0 (IN = GND)
 monitor 0x4000001C w 0x80 # DIO5_N = 0, DIO6_N = 0, DIO7_N = 1 (IN = GND, LV)
 sleep 1
 
 disable_generator
 
-exit $TEST_STATUS
+exit "$TEST_STATUS"

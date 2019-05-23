@@ -23,6 +23,10 @@ hexToDec() {
     printf "%d\n" "$VALUE"
 }
 
+function get_rtrn(){
+    echo `echo $1|cut --delimiter=, -f $2`
+}
+
 # Path variables
 SD_CARD_PATH='/opt/redpitaya'
 USB_DEVICE="/dev/sda1"
@@ -1493,14 +1497,19 @@ TEST_VALUE=256
 
 if [ $PREVIOUS_TEST -eq 1 ]
 then
-	production_testing_script_z20_spectrum.sh
-	SFDR_RESULT=$?
-	if [ $SFDR_RESULT -eq 0 ]
-	then
-    	TEST_STATUS=0	
-	fi 
+
+	exec 5>&1
+        SFDR_VAL=$(./production_testing_script_z20_spectrum.sh|tee >(cat - >&5))
+        SFDR_RESULT=$?
+        if [ $SFDR_RESULT -eq 0 ]
+        then
+        TEST_STATUS=0
+        fi
+        SFDR_VAL_RES=$(gawk 'match($0, /^RES_SFDR=\s(.+)/, a) {print a[1]}' <<< "${SFDR_VAL}")
+        LOG_VAR="$LOG_VAR $SFDR_VAL_RES"
 else
 echo "SFDR spectrum test skipped"
+LOG_VAR="$LOG_VAR 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
 TEST_STATUS=0
 fi
 sleep $SLEEP_BETWEEN_TESTS
@@ -1538,7 +1547,7 @@ sleep $SLEEP_BETWEEN_TESTS
 # Fast ADCs and DACs test add missing values
 ###############################################################################
 
-LOG_VAR="$LOG_VAR 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+LOG_VAR="$LOG_VAR 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
 
 
 ###################################################################################################################################################################################
