@@ -29,6 +29,7 @@ configuration  = --add-module=../ngx_ext_modules/ngx_http_rp_module
 configuration += --add-module=../ngx_ext_modules/lua-nginx-module
 configuration += --error-log-path=/var/log/redpitaya_nginx/error.log
 configuration += --with-ipv6
+configuration += --with-http_dav_module
 
 VERSION=$(VER)-$(BUILD_NUMBER)
 
