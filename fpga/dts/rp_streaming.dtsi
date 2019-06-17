@@ -1,0 +1,22 @@
+/include/ "system-conf.dtsi"
+/ {
+   chosen {
+   bootargs = "console=ttyPS0,115200 earlyprintk uio_pdrv_genirq.of_id=generic-uio";
+   stdout-path = "serial0:115200n8";
+  };
+  reserved-memory {
+    #address-cells = <1>;
+    #size-cells = <1>; 
+    ranges;
+  
+    reserved: buffer@0x1000000 {
+     reg = <0x1000000 0x100000>;
+   };
+  };
+};
+
+&rp_oscilloscope {
+ compatible = "generic-uio";
+ reg = <0x43c00000 0x10000>, <0x1000000 0x100000>;
+ reg-names = "regset", "buffer";
+};
