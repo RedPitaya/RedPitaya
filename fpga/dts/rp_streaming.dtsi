@@ -1,4 +1,3 @@
-/include/ "system-conf.dtsi"
 / {
    chosen {
    bootargs = "console=ttyPS0,115200 earlyprintk uio_pdrv_genirq.of_id=generic-uio";
