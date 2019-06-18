@@ -11,3 +11,4 @@
 /include/ "xadc.dtsi"
 /include/ "led-system.dtsi"
 /include/ "uio-api.dtsi"
+/include/ "rp_streaming.dtsi"
