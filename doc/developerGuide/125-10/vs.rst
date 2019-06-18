@@ -1,4 +1,4 @@
-STEMlab 125-10 vs. STEMlab 125-14 (originally Red Pitaya v1.1) 
+STEMlab boards comparison 
 ##############################################################
 
 .. image:: vs_10.jpg
@@ -7,11 +7,11 @@ STEMlab 125-10 vs. STEMlab 125-14 (originally Red Pitaya v1.1)
 .. image:: vs_14.jpg
    :width: 40%
    
-STEMlab is available in two versions and both offer the same functions and features with the difference in technical 
-specification of high-frequency inputs and outputs, RAM capacity some other differences (find more info in the 
-comparison table bellow). They are addressed to target different groups and / or needs. Where STEMlab 14 has 14bit 
-input / output channels for highly accurate measurement results in professional environment, STEMlab 10 has 10bit 
-input / output channels and is perfect for universities,students and makers.
+STEMlab is available in three versions, all offer the same functions and features with the difference in technical specification
+of high-frequency inputs and outputs, RAM capacity some other differences (find more info in the comparison table bellow).
+They are addressed to target different groups and / or needs. Where STEMlab 14 has 14bit input / output channels for
+highly accurate measurement results in professional environment, STEMlab 10 has 10bit input / output channels and is perfect
+for universities,students and makers, STEMlab 122-16 is tailored for SDR applications.
 
 .. -> http://redpitaya.com/boards/stemlab-boards/
 
