@@ -37,7 +37,7 @@ LOG_FILENAME='manuf_test.log'
 
 # Production PC/SERVER variables
 #LOCAL_SERVER_IP='192.168.1.200'
-LOCAL_SERVER_IP='192.168.1.2'
+LOCAL_SERVER_IP='10.0.1.160'
 LOCAL_SERVER_PASS='redpitaya'
 LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 LOCAL_USER='redpitaya'
@@ -1498,10 +1498,10 @@ TEST_VALUE=256
 if [ $PREVIOUS_TEST -eq 1 ]
 then
 
-	exec 5>&1
+        exec 5>&1
         SFDR_VAL=$(./production_testing_script_z20_spectrum.sh|tee >(cat - >&5))
-        SFDR_RESULT=$?
-        if [ $SFDR_RESULT -eq 0 ]
+        SFDR_RESULT=$(gawk 'match($0, /^SFDR_TEST_STATUS=\s(.+)/, a) {print a[1]}' <<< "${SFDR_VAL}")
+        if [[ "$SFDR_RESULT" != "0" ]]
         then
         TEST_STATUS=0
         fi

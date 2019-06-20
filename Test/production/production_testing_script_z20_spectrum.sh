@@ -121,6 +121,7 @@ test_sfdr() {
         --ch1-level "${CH1_LEVEL}" \
         --ch-mode "${CHANNEL}" \
         <<< "${SPECTRUM_RESULT}")
+    local TEST_STATUS=$?
     echo "$VAR"
     CH0_VAL=$(gawk 'match($0, /^CH0: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[1]}' <<< "${VAR}")
     CH0_AVG=$(gawk 'match($0, /^CH0: carrier value:(.+), floor noise:(.+), avg noise:(.+), min noise: (.+), max noise: (.+)$/, a) {print a[3]}' <<< "${VAR}")
@@ -142,7 +143,7 @@ test_sfdr() {
 #    echo "$CH1_MIN"
 #    echo "$CH1_MAX"
 
-    return $?
+    return "$TEST_STATUS"
 }
 
 disable_generator() { 
@@ -175,30 +176,33 @@ sleep 1
 echo "SFDR EXTERNAL TEST"
 
 # Test 1-1: measurement (external signal)
-if test_peak_measurement "CH0"
+test_peak_measurement "CH0"
+if [ $? -eq "0" ]
 then
     echo 'Test 1 (external): SUCCESS'	
 else
     echo 'Test 1 (external): FAIL'
-    TEST_STATUS=0	
+    TEST_STATUS=1
 fi
 
 # Test 1-2: measurement (external signal)
-if test_peak_measurement "CH1"
+test_peak_measurement "CH1"
+if [ $? -eq "0" ]
 then
     echo 'Test 1 (external): SUCCESS'	
 else
     echo 'Test 1 (external): FAIL'
-    TEST_STATUS=0	
+    TEST_STATUS=1
 fi
 
 # Test 2-1: SFDR (external signal)
-if test_sfdr "CH0+1"
+test_sfdr "CH0+1"
+if [ $? -eq "0" ]
 then
     echo 'Test 2 (external): SUCCESS'   
 else
     echo 'Test 2 (external): FAIL'
-    TEST_STATUS=0
+    TEST_STATUS=1
 fi
 
 
@@ -214,12 +218,13 @@ generate 1 0.5 "${GENERATE_CH0_FREQ}" sine
 sleep 1
 
 # Test 3: measurement (output)
-if test_peak_measurement "CH0"
+test_peak_measurement "CH0"
+if [ $? -eq "0" ]
 then
     echo 'Test 1 (internal): SUCCESS'
 else
     echo 'Test 1 (internal): FAIL'
-    TEST_STATUS=0
+    TEST_STATUS=1
 fi
 
 # Enable generator
@@ -228,12 +233,13 @@ generate 2 0.5 "${GENERATE_CH1_FREQ}" sine
 sleep 1
 
 # Test 4: measurement (output)
-if test_peak_measurement "CH1"
+test_peak_measurement "CH1"
+if [ $? -eq "0" ]
 then
     echo 'Test 1 (internal): SUCCESS'
 else
     echo 'Test 1 (internal): FAIL'
-    TEST_STATUS=0
+    TEST_STATUS=1
 fi
 
 
@@ -244,12 +250,13 @@ sleep 1
 
 
 # Test 5: SFDR (output)
-if test_sfdr "CH0+1"
+test_sfdr "CH0+1"
+if [ $? -eq "0" ]
 then
     echo 'Test 2 OUT1 (internal): SUCCESS'
 else
     echo 'Test 2 OUT1 (internal): FAIL'
-    TEST_STATUS=0
+    TEST_STATUS=1
 fi
 
 RES_SFDR1="$CH0_VAL $CH0_MIN $CH0_MAX $CH0_AVG $CH1_VAL $CH1_MIN $CH1_MAX $CH1_AVG"
@@ -261,12 +268,13 @@ sleep 1
 
 
 # Test 6: SFDR (output)
-if test_sfdr "CH0+1"
+test_sfdr "CH0+1"
+if [ $? -eq "0" ]
 then
     echo 'Test 3 OUT2 (internal): SUCCESS'
 else
     echo 'Test 3 OUT2 (internal): FAIL'
-    TEST_STATUS=0
+    TEST_STATUS=1
 fi
 RES_SFDR2="$CH0_VAL $CH0_MIN $CH0_MAX $CH0_AVG $CH1_VAL $CH1_MIN $CH1_MAX $CH1_AVG"
 RES_SFDR="$RES_SFDR1 $RES_SFDR2"
@@ -274,7 +282,7 @@ echo "RES_SFDR=$RES_SFDR"
 # monitor 0x4000001C w 0x00 # DIO5_N = 0, DIO6_N = 0 (IN = GND)
 monitor 0x4000001C w 0x80 # DIO5_N = 0, DIO6_N = 0, DIO7_N = 1 (IN = GND, LV)
 sleep 1
-
+echo "SFDR_TEST_STATUS=$TEST_STATUS"
 disable_generator
 
 exit "$TEST_STATUS"
