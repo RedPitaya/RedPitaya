@@ -2,11 +2,14 @@ STEMlab boards comparison
 ##############################################################
 
 .. image:: vs_10.jpg
-   :width: 40%
+   :width: 30%
    
 .. image:: vs_14.jpg
-   :width: 40%
+   :width: 30%
    
+.. image:: vs_16.jpg
+   :width: 30%
+
 STEMlab is available in three versions, all offer the same functions and features with the difference in technical specification
 of high-frequency inputs and outputs, RAM capacity some other differences (find more info in the comparison table bellow).
 They are addressed to target different groups and / or needs. Where STEMlab 14 has 14bit input / output channels for
