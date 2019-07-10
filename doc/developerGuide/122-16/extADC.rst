@@ -7,30 +7,29 @@ ADC clock can be provided by:
 
 Schematic:
 
-  * Remove: R37, R46
-  * Add: R34 = 0R, R35 = 0R
+* Remove: R37, R46
+* Add: R34 = 0R, R35 = 0R
 
 
-.. image:: External_img1.png
+ .. image:: External_img1.png
     :align: center
 
 
-  * Remove: FB11
+* Remove: FB11
 
-
-.. image:: External_img2.png
+ .. image:: External_img2.png
     :align: center
 
 
-  * Remove: 0R on C64, R24
-  * Add: C64 = 100nF, C63 = 100nF, R36 = 100R
+* Remove: 0R on C64, R24
+* Add: C64 = 100nF, C63 = 100nF, R36 = 100R
 
-
-.. image:: External_img3.png
+ .. image:: External_img3.png
     :align: center
 
 
-.. image:: External_shem.png
-    :scale: 70%
+ .. image:: External_shem.png
+    :width: 50%
     :align: center
+
 
