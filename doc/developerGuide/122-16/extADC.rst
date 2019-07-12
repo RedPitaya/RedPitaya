@@ -5,7 +5,6 @@ ADC clock can be provided by:
   * On board 125MHz XO (default)
   * From external source / through extension connector (instructions provided bellow)
 
-Schematic:
 
 * Remove: R37, R46
 * Add: R34 = 0R, R35 = 0R
