@@ -1499,7 +1499,7 @@ if [ $PREVIOUS_TEST -eq 1 ]
 then
 
         exec 5>&1
-        SFDR_VAL=$(./production_testing_script_z20_spectrum.sh|tee >(cat - >&5))
+        SFDR_VAL=$(/opt/redpitaya/bin/production_testing_script_z20_spectrum.sh|tee >(cat - >&5))
         SFDR_RESULT=$(gawk 'match($0, /^SFDR_TEST_STATUS=\s(.+)/, a) {print a[1]}' <<< "${SFDR_VAL}")
         if [[ "$SFDR_RESULT" != "0" ]]
         then
