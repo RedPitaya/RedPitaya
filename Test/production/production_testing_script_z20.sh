@@ -1782,7 +1782,7 @@ RES=$(ping "$LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{prin
     echo "----------Logging test statistics to PRODUCTION PC-------------------"
 
     #echo 'sometext' | ssh zumy@192.168.178.123 "cat >> /home/zumy/Desktop/Test_LOGS/manuf_test.log"
-    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS" ssh $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
+    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS" ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     echo
     echo "      Test data logging on the local PC was successfull"
     else
