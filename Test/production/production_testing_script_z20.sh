@@ -1501,11 +1501,13 @@ then
         exec 5>&1
         SFDR_VAL=$(/opt/redpitaya/bin/production_testing_script_z20_spectrum.sh|tee >(cat - >&5))
         SFDR_RESULT=$(gawk '{match($0, /SFDR_TEST_STATUS=[0-9]+/, a)}{split(a[0],b,"=")}{print b[2]}' <<< "${SFDR_VAL}")
-        if [[ "$SFDR_RESULT" != "0" ]]
+        if [[ $SFDR_RESULT -eq 1 ]]
         then
         TEST_STATUS=0
         fi
         SFDR_VAL_RES=$(gawk '{match($0, /RES_SFDR=\s(.+);/, a)};{gsub("RES_SFDR=","",a[0])};{gsub(";","",a[0])};{print a[0]}' <<< "${SFDR_VAL}")
+        SFDR_VAL_RES=$(gawk '{$1=$1};1' <<< "${SFDR_VAL_RES}")
+        SFDR_VAL_RES=$(tr -dc '[:print:]' <<< "$SFDR_VAL_RES")
         LOG_VAR="$LOG_VAR $SFDR_VAL_RES"
 else
 echo "SFDR spectrum test skipped"
