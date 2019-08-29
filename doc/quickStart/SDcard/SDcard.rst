@@ -17,7 +17,8 @@ STEMlab 125-14 & STEMlab 125-10
    - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/red_pitaya_OS-beta.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
 
 STEMlab 122-16 SDR
-   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-122-16/redpitaya_OS-beta-Z20_06-jun-2019.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
+   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-122-16/redpitaya_OS-stable-Z20_06-jun-2019.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
+   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-122-16/redpitaya_OS-beta-Z20_29-aug-2019.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
 
 ..    - `Beta (including STEMlab SDR transceiver app) <http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_15-44-45_21-jul-2017.img.zip>`_.
 
