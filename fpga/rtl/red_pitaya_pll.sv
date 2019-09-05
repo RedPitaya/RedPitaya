@@ -16,9 +16,8 @@ module red_pitaya_pll (
   input  logic rstn      ,  // reset - active low
   // output clocks
   output logic clk_adc   ,  // ADC clock
-  output logic clk_dac_1x,  // DAC clock
-  output logic clk_dac_2x,  // DAC clock
-  output logic clk_dac_2p,  // DAC clock
+  output logic clk_adc2d ,  // ADC clock divided
+  output logic clk_10mhz ,  // ADC divided to 10MHz
   output logic clk_ser   ,  // fast serial clock
   output logic clk_pdm   ,  // PDM clock
   // status outputs
@@ -39,7 +38,7 @@ PLLE2_ADV #(
    .CLKOUT1_DIVIDE       ( 8         ),
    .CLKOUT1_PHASE        ( 0.000     ),
    .CLKOUT1_DUTY_CYCLE   ( 0.5       ),
-   .CLKOUT2_DIVIDE       ( 4         ),
+   .CLKOUT2_DIVIDE       ( 100       ),
    .CLKOUT2_PHASE        ( 0.000     ),
    .CLKOUT2_DUTY_CYCLE   ( 0.5       ),
    .CLKOUT3_DIVIDE       ( 4         ),
@@ -57,9 +56,9 @@ PLLE2_ADV #(
    // Output clocks
    .CLKFBOUT     (clk_fb    ),
    .CLKOUT0      (clk_adc   ),
-   .CLKOUT1      (clk_dac_1x),
-   .CLKOUT2      (clk_dac_2x),
-   .CLKOUT3      (clk_dac_2p),
+   .CLKOUT1      (clk_adc2d ),
+   .CLKOUT2      (clk_10mhz ),
+   .CLKOUT3      (          ),
    .CLKOUT4      (clk_ser   ),
    .CLKOUT5      (clk_pdm   ),
    // Input clock control
