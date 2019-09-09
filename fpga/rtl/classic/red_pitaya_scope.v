@@ -536,6 +536,13 @@ wire              ext_trig_p       ;
 wire              ext_trig_n       ;
 wire              asg_trig_p       ;
 wire              asg_trig_n       ;
+wire              adc_trig_clr     ;
+wire              adc_trig_clr2d   ;
+
+assign adc_trig_clr = ((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0));
+
+sync #(.DW(1))i_sync (.sclk_i(adc_clk_i),   .srstn_i(adc_rstn_i), .src_i(adc_trig_clr),
+                      .dclk_i(adc_clk2d_i), .drstn_i(adc_rstn_i), .dst_o(adc_trig_clr2d));
 
 always @(posedge adc_clk2d_i)
 if (adc_rstn_i == 1'b0) begin
@@ -550,7 +557,7 @@ end else begin
 
       if (sys_wen && (sys_addr[19:0]==20'h4))
          set_trig_src <= sys_wdata[3:0] ;
-      else if (((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
+      else if (adc_trig_clr2d || adc_rst_do) //delayed reached or reset
          set_trig_src <= 4'h0 ;
 end
 
