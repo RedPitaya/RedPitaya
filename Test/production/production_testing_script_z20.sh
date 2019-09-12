@@ -37,7 +37,7 @@ LOG_FILENAME='manuf_test.log'
 
 # Production PC/SERVER variables
 #LOCAL_SERVER_IP='192.168.1.200'
-LOCAL_SERVER_IP='10.0.1.160'
+LOCAL_SERVER_IP='192.168.1.2'
 LOCAL_SERVER_PASS='redpitaya'
 LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 LOCAL_USER='redpitaya'
@@ -1506,8 +1506,8 @@ then
         TEST_STATUS=0
         fi
         SFDR_VAL_RES=$(gawk '{match($0, /RES_SFDR=\s(.+);/, a)};{gsub("RES_SFDR=","",a[0])};{gsub(";","",a[0])};{print a[0]}' <<< "${SFDR_VAL}")
-        SFDR_VAL_RES=$(gawk '{$1=$1};1' <<< "${SFDR_VAL_RES}")
-        SFDR_VAL_RES=$(tr -dc '[:print:]' <<< "$SFDR_VAL_RES")
+	SFDR_VAL_RES=$(gawk '{$1=$1};1' <<< "${SFDR_VAL_RES}")
+	SFDR_VAL_RES=$(tr -dc '[:print:]' <<< "$SFDR_VAL_RES")
         LOG_VAR="$LOG_VAR $SFDR_VAL_RES"
 else
 echo "SFDR spectrum test skipped"
@@ -1516,6 +1516,8 @@ TEST_STATUS=0
 fi
 sleep $SLEEP_BETWEEN_TESTS
 
+echo "TEST_STATUS=$TEST_STATUS"
+echo "$SFDR_VAL"
 
 # TEST 8 - Fast ADC/DAC bit analysis test, if was OK Writte  "1"  in logfile status byte set LED6 ON
 if [ $TEST_STATUS -eq 1 ]
@@ -1658,8 +1660,9 @@ else
     fi
 fi
 
-CALIBRATION_LOG_PARAMS="$FE_CH1_DC_offs $FE_CH2_DC_offs $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI $FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $BE_CH1_DC_offs $BE_CH2_DC_offs $BE_C$
-LOG_VAR="$LOG_VAR $CALIBRATION_LOG_PARAMS $CALIBRATION_STATUS"
+CALIBRATION_LOG_PARAMS="$FE_CH1_DC_offs $FE_CH2_DC_offs $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI $FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $BE_CH1_DC_offs $BE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS"
+LOG_VAR="$LOG_VAR $CALIBRATION_LOG_PARAMS $CALIBRATION_STATUS" # If clibraation fail log factory cal data
+
 
 else   # From if [ $LOGFILE_STATUS -eq 511 ] conditon
 echo
@@ -1782,9 +1785,9 @@ RES=$(ping "$LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{prin
  if [[ "$RES" == "$N_PING_PKG" ]]
  then
     echo "----------Logging test statistics to PRODUCTION PC-------------------"
-
+#ssh $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     #echo 'sometext' | ssh zumy@192.168.178.123 "cat >> /home/zumy/Desktop/Test_LOGS/manuf_test.log"
-    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS" ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
+    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS"  ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     echo
     echo "      Test data logging on the local PC was successfull"
     else
