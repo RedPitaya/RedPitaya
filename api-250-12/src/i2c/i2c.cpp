@@ -1,0 +1,262 @@
+#include "i2c.h"
+
+#include <linux/i2c-dev.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <arpa/inet.h>
+#include <iostream>
+#include <fstream>
+#include <unistd.h>
+
+#define MSG_A(args...) fprintf(stderr,args);
+
+int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned char i2c_val_to_write){
+    int i2c_dev_node = 0;
+	int ret_val = 0;
+    __s32 read_value = 0;
+
+	/* Open the device node for the I2C adapter of bus 4 */
+	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
+	if (i2c_dev_node < 0) {
+		MSG_A("[rp_i2c] Unable to open device node.\n");
+		return -1;
+	}
+
+	/* Set I2C_SLAVE for adapter 4 */
+	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
+        close(i2c_dev_node);
+		return -1;
+	}
+
+	/* Read byte from the register of the I2C_SLAVE device */
+	read_value = i2c_smbus_read_byte_data(i2c_dev_node, i2c_dev_reg_addr);
+	if (read_value < 0) {
+        MSG_A("[rp_i2c] I2C Read operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+	ret_val = i2c_smbus_write_byte_data(i2c_dev_node,
+					i2c_dev_reg_addr,
+					i2c_val_to_write);
+
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] I2C Write Operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+    close(i2c_dev_node);                  
+	return 0;
+}
+
+int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned short i2c_val_to_write){
+    int i2c_dev_node = 0;
+	int ret_val = 0;
+    __s32 read_value = 0;
+
+	/* Open the device node for the I2C adapter of bus 4 */
+	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
+	if (i2c_dev_node < 0) {
+		MSG_A("[rp_i2c] Unable to open device node.\n");
+		return -1;
+	}
+
+	/* Set I2C_SLAVE for adapter 4 */
+	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
+        close(i2c_dev_node);
+		return -1;
+	}
+
+	/* Read byte from the register of the I2C_SLAVE device */
+	read_value = i2c_smbus_read_byte_data(i2c_dev_node, i2c_dev_reg_addr);
+	if (read_value < 0) {
+        MSG_A("[rp_i2c] I2C Read operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+
+	ret_val = i2c_smbus_write_word_data(i2c_dev_node,
+					i2c_dev_reg_addr,
+					i2c_val_to_write);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] I2C Write Operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+    close(i2c_dev_node);                  
+	return 0;
+}
+
+int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value){
+    int i2c_dev_node = 0;
+	int ret_val = 0;
+    __s32 read_value = 0;
+
+	/* Open the device node for the I2C adapter of bus 4 */
+	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
+	if (i2c_dev_node < 0) {
+		MSG_A("[rp_i2c] Unable to open device node.\n");
+		return -1;
+	}
+
+	/* Set I2C_SLAVE for adapter 4 */
+	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
+        close(i2c_dev_node);
+		return -1;
+	}
+
+	/* Read byte from the register of the I2C_SLAVE device */
+	read_value = i2c_smbus_read_byte_data(i2c_dev_node, i2c_dev_reg_addr);
+	if (read_value < 0) {
+        MSG_A("[rp_i2c] I2C Read operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+    value = (char)read_value;                    
+	return 0;
+}
+
+int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, char &value){
+    int i2c_dev_node = 0;
+	int ret_val = 0;
+    __s32 read_value = 0;
+
+	/* Open the device node for the I2C adapter of bus 4 */
+	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
+	if (i2c_dev_node < 0) {
+		MSG_A("[rp_i2c] Unable to open device node.\n");
+		return -1;
+	}
+
+	/* Set I2C_SLAVE for adapter 4 */
+	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
+        close(i2c_dev_node);
+		return -1;
+	}
+
+	/* Read byte from the register of the I2C_SLAVE device */
+	read_value = i2c_smbus_read_byte(i2c_dev_node);
+	if (read_value < 0) {
+        MSG_A("[rp_i2c] I2C Read operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+    value = (char)read_value;                    
+	return 0;
+}
+
+
+int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_command){
+    int i2c_dev_node = 0;
+	int ret_val = 0;
+    __s32 read_value = 0;
+
+	/* Open the device node for the I2C adapter of bus 4 */
+	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
+	if (i2c_dev_node < 0) {
+		MSG_A("[rp_i2c] Unable to open device node.\n");
+		return -1;
+	}
+
+	/* Set I2C_SLAVE for adapter 4 */
+	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
+        close(i2c_dev_node);
+		return -1;
+	}
+
+	/* Read byte from the register of the I2C_SLAVE device */
+	read_value = i2c_smbus_read_byte_data(i2c_dev_node, i2c_dev_command);
+	if (read_value < 0) {
+        MSG_A("[rp_i2c] I2C Read operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+	ret_val = i2c_smbus_write_byte(i2c_dev_node,i2c_dev_command);
+
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] I2C Write Operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+    close(i2c_dev_node);                  
+	return 0;
+}
+ 
+int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,const unsigned char *buffer,int len){
+    int i2c_dev_node = 0;
+	int ret_val = 0;
+    __s32 read_value = 0;
+
+	/* Open the device node for the I2C adapter of bus 4 */
+	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
+	if (i2c_dev_node < 0) {
+		MSG_A("[rp_i2c] Unable to open device node.\n");
+		return -1;
+	}
+
+	/* Set I2C_SLAVE for adapter 4 */
+	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
+        close(i2c_dev_node);
+		return -1;
+	}
+
+	/* Read byte from the register of the I2C_SLAVE device */
+	read_value = i2c_smbus_read_byte_data(i2c_dev_node, i2c_dev_reg_addr);
+	if (read_value < 0) {
+        MSG_A("[rp_i2c] I2C Read operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+	ret_val = i2c_smbus_write_block_data(i2c_dev_node,i2c_dev_reg_addr,len,buffer);
+
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] I2C Write Operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+    close(i2c_dev_node);                  
+	return 0;
+}
+
+int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,unsigned char *buffer){
+    int i2c_dev_node = 0;
+	int ret_val = 0;
+    __s32 read_value = 0;
+
+	/* Open the device node for the I2C adapter of bus 4 */
+	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
+	if (i2c_dev_node < 0) {
+		MSG_A("[rp_i2c] Unable to open device node.\n");
+		return -1;
+	}
+
+	/* Set I2C_SLAVE for adapter 4 */
+	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	if (ret_val < 0) {
+        MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
+        close(i2c_dev_node);
+		return -1;
+	}
+
+	/* Read byte from the register of the I2C_SLAVE device */
+	read_value = i2c_smbus_read_i2c_block_data(i2c_dev_node, i2c_dev_reg_addr,6,buffer);
+	if (read_value < 0) {
+        MSG_A("[rp_i2c] I2C Read operation failed.\n");
+        close(i2c_dev_node);
+        return -1;
+	}
+    close(i2c_dev_node);                  
+	return read_value;
+}

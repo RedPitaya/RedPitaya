@@ -1,0 +1,27 @@
+<!--
+    The "write" attribute is used to pass the value on the i2c bus. May take the following values:
+        - value
+        - default
+        - none
+-->
+<configuration>
+    <bus_name>/dev/i2c-0</bus_name>
+    <device_on_bus address="0x20"/>
+    <reg_set>
+        <!--This input register for read only-->
+        <register address="0x00" value="0x00" write="none"  default="0x00" decription="Input port [7:0]"/>
+        <register address="0x01" value="0x00" write="none"  default="0x00" decription="Input port [15:8]"/>
+        <!--Set output value-->
+        <register address="0x02" value="0x00" write="value"  default="0xFF" decription="Output port [7:0]"/>
+        <register address="0x03" value="0x00" write="value"  default="0xFF" decription="Output port [15:8]"/>
+        
+        <register address="0x04" value="0x00" write="value"  default="0x00" decription="Polarity Inversion [7:0]"/>
+        <register address="0x05" value="0x00" write="value"  default="0x00" decription="Polarity Inversion [15:8]"/>
+        
+        <!--Clear bit for set in output mode -->
+        <register address="0x06" value="0x00" write="value"  default="0xFF" decription="Configuration [7:0]"/>
+        <register address="0x07" value="0x00" write="value"  default="0xFF" decription="Configuration [15:8]"/>
+
+        <register address="0x08" value="0x01" write="none"  default="0x01" decription="Timeout"/>
+    </reg_set>
+</configuration>

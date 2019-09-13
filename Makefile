@@ -20,7 +20,7 @@ export VERSION
 ################################################################################
 
 # Production test script
-FPGA_MODEL ?= Z10
+MODEL ?= Z20.250.12
 ENABLE_PRODUCTION_TEST ?= 0
 
 all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
@@ -37,15 +37,16 @@ $(INSTALL_DIR):
 
 LIBRP_DIR       = api
 LIBRP2_DIR      = api2
+LIBRP250_12_DIR = api-250-12
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
-.PHONY: api api2 librp librp1
+.PHONY: api api2 librp librp1 librp250_12
 .PHONY: librpapp liblcr_meter
 
 librp:
-	$(MAKE) -C $(LIBRP_DIR) clean
+#	$(MAKE) -C $(LIBRP_DIR) clean
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -59,10 +60,15 @@ librp2:
 	$(MAKE) -C $(LIBRP2_DIR)
 	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+librp250_12:
+#	$(MAKE) -C $(LIBRP250_12_DIR) clean
+	$(MAKE) -C $(LIBRP250_12_DIR)
+	$(MAKE) -C $(LIBRP250_12_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 
 ifdef ENABLE_LICENSING
 
-api: librp librpapp liblcr_meter
+api: librp librp250_12 librpapp liblcr_meter
 
 librpapp:
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
@@ -76,7 +82,7 @@ liblcr_meter:
 
 else
 
-api: librp
+api: librp librp250_12
 
 endif
 
@@ -226,11 +232,9 @@ SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
-ifeq ($(FPGA_MODEL),Z10)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
-endif
 
 ################################################################################
 # Red Pitaya tools
@@ -277,12 +281,12 @@ monitor_old:
 	$(MAKE) -C $(MONITOR_OLD_DIR)
 	$(MAKE) -C $(MONITOR_OLD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-generator:
-	$(MAKE) -C $(GENERATOR_DIR) clean
-	$(MAKE) -C $(GENERATOR_DIR)
+generator: api
+	$(MAKE) -C $(GENERATOR_DIR) clean 
+	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-acquire:
+acquire: api
 	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -385,11 +389,9 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-vna: api2
-ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(VNA_DIR) clean
 	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
 
 apps-free-clean:
 	$(MAKE) -C $(APPS_FREE_DIR) clean
@@ -421,11 +423,9 @@ spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
-ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
 	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
 
 la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
@@ -433,11 +433,9 @@ la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ba_pro: api $(NGINX)
-ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean
 	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
 
 else
 
@@ -458,7 +456,7 @@ production_test:
 ifeq ($(ENABLE_PRODUCTION_TEST), 1)
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) clean
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 endif
 
 clean:
@@ -469,7 +467,8 @@ clean:
 	make -C $(GENERATE_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(CALIB_DIR) clean
-	-make -C $(SCPI_SERVER_DIR) clean
+	make -C $(SCPI_SERVER_DIR) clean
+	make -C $(LIBRP250_12_DIR)    clean
 	make -C $(LIBRP2_DIR)    clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
