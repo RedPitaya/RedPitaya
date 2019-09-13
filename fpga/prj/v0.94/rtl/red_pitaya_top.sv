@@ -404,10 +404,10 @@ end
 endgenerate
 
 
-logic [7-1:0] idlya_rst, idlyb_rst ;
-logic [7-1:0] idlya_ce,  idlyb_ce  ;
-logic [7-1:0] idlya_inc, idlyb_inc ;
-logic [7-1:0] [5-1:0] idlya_cnt, idlyb_cnt ;
+logic [2*7-1:0] idly_rst ;
+logic [2*7-1:0] idly_ce  ;
+logic [2*7-1:0] idly_inc ;
+logic [2*7-1:0] [5-1:0] idly_cnt ;
 
 
 // delay input ADC signals
@@ -434,16 +434,16 @@ begin:adc_idly
       .SIGNAL_PATTERN("DATA")          // DATA, CLOCK input signal
    )
    i_dlya (
-      .CNTVALUEOUT  ( idlya_cnt[GV]         ),  // 5-bit output: Counter value output
+      .CNTVALUEOUT  ( idly_cnt[GV]          ),  // 5-bit output: Counter value output
       .DATAOUT      ( adc_dat_idly[0][GV]   ),  // 1-bit output: Delayed data output
       .C            ( adc_clk2d             ),  // 1-bit input: Clock input
-      .CE           ( idlya_ce[GV]          ),  // 1-bit input: Active high enable increment/decrement input
+      .CE           ( idly_ce[GV]           ),  // 1-bit input: Active high enable increment/decrement input
       .CINVCTRL     ( 1'b0                  ),  // 1-bit input: Dynamic clock inversion input
       .CNTVALUEIN   ( 5'h0                  ),  // 5-bit input: Counter value input
       .DATAIN       ( 1'b0                  ),  // 1-bit input: Internal delay data input
       .IDATAIN      ( adc_dat_ibuf[0][GV]   ),  // 1-bit input: Data input from the I/O
-      .INC          ( idlya_inc[GV]         ),  // 1-bit input: Increment / Decrement tap delay input
-      .LD           ( idlya_rst[GV]         ),  // 1-bit input: Load IDELAY_VALUE input
+      .INC          ( idly_inc[GV]          ),  // 1-bit input: Increment / Decrement tap delay input
+      .LD           ( idly_rst[GV]          ),  // 1-bit input: Load IDELAY_VALUE input
       .LDPIPEEN     ( 1'b0                  ),  // 1-bit input: Enable PIPELINE register to load data input
       .REGRST       ( 1'b0                  )   // 1-bit input: Active-high reset tap-delay input
    );
@@ -459,16 +459,16 @@ begin:adc_idly
       .SIGNAL_PATTERN("DATA")          // DATA, CLOCK input signal
    )
    i_dlyb (
-      .CNTVALUEOUT  ( idlyb_cnt[GV]         ),  // 5-bit output: Counter value output
+      .CNTVALUEOUT  ( idly_cnt[GV+7]        ),  // 5-bit output: Counter value output
       .DATAOUT      ( adc_dat_idly[1][GV]   ),  // 1-bit output: Delayed data output
       .C            ( adc_clk2d             ),  // 1-bit input: Clock input
-      .CE           ( idlyb_ce[GV]          ),  // 1-bit input: Active high enable increment/decrement input
+      .CE           ( idly_ce[GV+7]         ),  // 1-bit input: Active high enable increment/decrement input
       .CINVCTRL     ( 1'b0                  ),  // 1-bit input: Dynamic clock inversion input
       .CNTVALUEIN   ( 5'h0                  ),  // 5-bit input: Counter value input
       .DATAIN       ( 1'b0                  ),  // 1-bit input: Internal delay data input
       .IDATAIN      ( adc_dat_ibuf[1][GV]   ),  // 1-bit input: Data input from the I/O
-      .INC          ( idlyb_inc[GV]         ),  // 1-bit input: Increment / Decrement tap delay input
-      .LD           ( idlyb_rst[GV]         ),  // 1-bit input: Load IDELAY_VALUE input
+      .INC          ( idly_inc[GV+7]        ),  // 1-bit input: Increment / Decrement tap delay input
+      .LD           ( idly_rst[GV+7]        ),  // 1-bit input: Load IDELAY_VALUE input
       .LDPIPEEN     ( 1'b0                  ),  // 1-bit input: Enable PIPELINE register to load data input
       .REGRST       ( 1'b0                  )   // 1-bit input: Active-high reset tap-delay input
    );
@@ -520,8 +520,7 @@ assign dac_b_sum = asg_dat[1] + pid_dat[1];
 assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
 assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
 
-always @(posedge adc_clk)
-begin
+always @(posedge adc_clk) begin
   dac_dat_a <= dac_a;
   dac_dat_b <= dac_b;
 end
@@ -530,7 +529,8 @@ end
 logic dac_dco_bufg ;
 BUFG bufg_dac_dco    (.O (dac_dco_bufg ), .I(dac_dco_i));
 
-always @(posedge dac_dco_bufg) begin
+//always @(posedge dac_dco_bufg) begin
+always @(posedge adc_clk) begin
   dac_dat_o[0] <= dac_dat_a ;
   dac_dat_o[1] <= dac_dat_b ;
 end
@@ -550,14 +550,10 @@ red_pitaya_hk i_hk (
   // LED
   .led_o           (led_o),  // LED output
   // idelay control
-  .dlya_rst_o      (idlya_rst    ),
-  .dlya_ce_o       (idlya_ce     ),
-  .dlya_inc_o      (idlya_inc    ),
-  .dlya_cnt_i      (idlya_cnt[0] ),
-  .dlyb_rst_o      (idlyb_rst    ),
-  .dlyb_ce_o       (idlyb_ce     ),
-  .dlyb_inc_o      (idlyb_inc    ),
-  .dlyb_cnt_i      (idlyb_cnt[0] ),
+  .idly_rst_o      (idly_rst    ),
+  .idly_ce_o       (idly_ce     ),
+  .idly_inc_o      (idly_inc    ),
+  .idly_cnt_i      ({idly_cnt[7],idly_cnt[0]}),
   // global configuration
   .digital_loop    (digital_loop),
   .pll_sys_i       (adc_10mhz   ),    // system clock
