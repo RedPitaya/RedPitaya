@@ -236,50 +236,40 @@ set_property PACKAGE_PIN H15 [get_ports {led_o[7]}]
 # Clock constraints                                                        #
 ############################################################################
 
-create_clock -period 8.000 -name adc_clkaa [get_ports {adc_clk_i[1]}]
-create_clock -period 8.000 -name dco_clk [get_ports dac_dco_i]
+create_clock -period 4.000 -name adc_clk [get_ports {adc_clk_i[1]}]
+create_clock -period 4.000 -name dco_clk [get_ports dac_dco_i]
 create_clock -period 100.000 -name pll_ref_i -waveform {0.000 50.000} [get_ports pll_ref_i]
 create_clock -period 4.000 -name rx_clk [get_ports {daisy_p_i[1]}]
 
 create_generated_clock -name i_hk/dna_clk -source [get_pins pll/pll/CLKOUT1] -divide_by 8 [get_pins i_hk/dna_clk_reg/Q]
 
 
-#set_false_path -from [get_clocks adc_clkaa]     -to [get_clocks dac_clk_2x]
-#set_false_path -from [get_clocks adc_clkaa]     -to [get_clocks dac_clk_2p]
-set_false_path -from [get_clocks clk_fpga_0] -to [get_clocks adc_clkaa]
-#set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_clk_1x]
-#set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_clk_2x]
-#set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_clk_2p]
-#set_false_path -from [get_clocks dac_clk_o] -to [get_clocks dac_clk_2x]
-#set_false_path -from [get_clocks dac_clk_o] -to [get_clocks dac_clk_2p]
+set_false_path -from [get_clocks clk_fpga_0]    -to [get_clocks pll_adc_clk]
+set_false_path -from [get_clocks pll_adc_clk]   -to [get_clocks clk_fpga_0]
 
 set_false_path -from [get_clocks pll_adc_clk2d] -to [get_clocks pll_adc_clk]
-set_false_path -from [get_clocks pll_adc_clk] -to [get_clocks pll_adc_clk2d]
+set_false_path -from [get_clocks pll_adc_clk]   -to [get_clocks pll_adc_clk2d]
 
 set_false_path -from [get_clocks pll_adc_clk2d] -to [get_clocks pll_pwm_clk]
 set_false_path -from [get_clocks pll_adc_10mhz] -to [get_clocks pll_adc_clk2d]
 
 
-
-
-
-
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_n_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_n_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -min -add_delay -1.000 [get_ports {adc_dat_n_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -max -add_delay -0.400 [get_ports {adc_dat_n_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_n_i[1][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_n_i[1][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -min -add_delay -1.000 [get_ports {adc_dat_n_i[1][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -max -add_delay -0.400 [get_ports {adc_dat_n_i[1][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_p_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_p_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -min -add_delay -1.000 [get_ports {adc_dat_p_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -max -add_delay -0.400 [get_ports {adc_dat_p_i[0][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_p_i[1][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_p_i[1][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -min -add_delay -1.000 [get_ports {adc_dat_p_i[1][*]}]
-set_input_delay -clock [get_clocks adc_clkaa] -max -add_delay -0.400 [get_ports {adc_dat_p_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_n_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_n_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -min -add_delay -1.000 [get_ports {adc_dat_n_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -max -add_delay -0.400 [get_ports {adc_dat_n_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_n_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_n_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -min -add_delay -1.000 [get_ports {adc_dat_n_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -max -add_delay -0.400 [get_ports {adc_dat_n_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_p_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_p_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -min -add_delay -1.000 [get_ports {adc_dat_p_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -max -add_delay -0.400 [get_ports {adc_dat_p_i[0][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_p_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -clock_fall -max -add_delay -0.400 [get_ports {adc_dat_p_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -min -add_delay -1.000 [get_ports {adc_dat_p_i[1][*]}]
+set_input_delay -clock [get_clocks adc_clk] -max -add_delay -0.400 [get_ports {adc_dat_p_i[1][*]}]
 
 
 

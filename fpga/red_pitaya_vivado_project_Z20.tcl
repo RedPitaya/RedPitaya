@@ -26,7 +26,7 @@ set_param board.repoPaths [list $path_brd]
 # setup an in memory project
 ################################################################################
 
-set part xc7z020clg400-1
+set part xc7z020clg400-3
 
 create_project -part $part -force redpitaya ./project
 

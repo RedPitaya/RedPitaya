@@ -37,14 +37,10 @@ module red_pitaya_hk #(
   // LED
   output reg [DWL-1:0] led_o      ,  // LED output
   // idelay control
-  output reg [  7-1:0] dlya_rst_o,
-  output reg [  7-1:0] dlya_ce_o,
-  output reg [  7-1:0] dlya_inc_o,
-  input      [  5-1:0] dlya_cnt_i,
-  output reg [  7-1:0] dlyb_rst_o,
-  output reg [  7-1:0] dlyb_ce_o,
-  output reg [  7-1:0] dlyb_inc_o,
-  input      [  5-1:0] dlyb_cnt_i,
+  output reg [2*7-1:0] idly_rst_o,
+  output reg [2*7-1:0] idly_ce_o,
+  output reg [2*7-1:0] idly_inc_o,
+  input      [2*5-1:0] idly_cnt_i,
   // global configuration
   output reg           digital_loop,
   input                pll_sys_i,    // system clock
@@ -299,13 +295,13 @@ end
 
 always @(posedge clk_i)
 begin
-  dlya_rst_o   <= sys_wdata[ 7-1:0] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
-  dlyb_rst_o   <= sys_wdata[15-1:8] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
+  idly_rst_o[  6: 0] <= sys_wdata[ 7-1: 0] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
+  idly_rst_o[ 13: 7] <= sys_wdata[15-1: 8] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
 
-  dlya_ce_o    <= sys_wdata[ 7-1:0] & {7{ ((sys_addr[19:0]==20'h48) & sys_wen) }};
-  dlya_inc_o   <= sys_wdata[15-1:8] & {7{ ((sys_addr[19:0]==20'h48) & sys_wen) }};
-  dlyb_ce_o    <= sys_wdata[ 7-1:0] & {7{ ((sys_addr[19:0]==20'h4C) & sys_wen) }};
-  dlyb_inc_o   <= sys_wdata[15-1:8] & {7{ ((sys_addr[19:0]==20'h4C) & sys_wen) }};
+  idly_ce_o[   6: 0] <= sys_wdata[ 7-1: 0] & {7{ ((sys_addr[19:0]==20'h48) & sys_wen) }};
+  idly_inc_o[  6: 0] <= sys_wdata[15-1: 8] & {7{ ((sys_addr[19:0]==20'h48) & sys_wen) }};
+  idly_ce_o[  13: 7] <= sys_wdata[23-1:16] & {7{ ((sys_addr[19:0]==20'h4C) & sys_wen) }};
+  idly_inc_o[ 13: 7] <= sys_wdata[31-1:24] & {7{ ((sys_addr[19:0]==20'h4C) & sys_wen) }};
 
   spi_do[0]    <= (sys_addr[19:0]==20'h54) & sys_wen;
   spi_do[1]    <= (sys_addr[19:0]==20'h64) & sys_wen;
@@ -340,8 +336,8 @@ end else begin
 
     20'h00040: begin sys_ack <= sys_en;  sys_rdata <= {                pll_cfg_rd}        ; end
 
-    20'h00048: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, dlya_cnt_i}        ; end
-    20'h0004C: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, dlyb_cnt_i}        ; end
+    20'h00048: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[4:0]}   ; end
+    20'h0004C: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[9:5]}   ; end
 
 
     20'h00050: begin sys_ack <= sys_en;  sys_rdata <= {16'h0,spi_wr_h[0]}                 ; end
