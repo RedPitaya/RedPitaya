@@ -82,10 +82,11 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite
+FPGA_PRJ_LST = v0.94
+#FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite
 #FPGA_PRJ_LST = classic logic v0.94 mercury
-FPGA_PRJ = logic
-FPGA_MODEL ?= Z10
+FPGA_PRJ = v0.94
+FPGA_MODEL ?= Z20
 
 .PHONY: fpga
 
@@ -107,9 +108,9 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
 	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
 	# backward compatibility, TODO, should be removed at next OS release
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+#	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+#	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
