@@ -22,7 +22,9 @@
 
 #include "main_osc.h"
 #include "fpga_osc.h"
+#include "rp-i2c-max7311.h"
 #include "redpitaya/version.h"
+
 
 /**
  * GENERAL DESCRIPTION:
@@ -61,7 +63,43 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #define DEC_MAX 6
 
 /** Decimation translation table */
-static int g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
+static uint32_t g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
+
+int get_attenuator(int *value, const char *str)
+{
+    if  (strncmp(str, "20", 2) == 0) {
+        *value = 20;
+        return 0;
+    }
+    if  (strncmp(str, "1", 1) == 0)  {
+        *value = 1;
+        return 0;
+    }
+
+    fprintf(stderr, "Unknown attenuator value: %s\n", str);
+    return -1;
+}
+
+int get_dc_mode(int *value, const char *str)
+{
+    if  (strncmp(str, "1", 1) == 0) {
+        *value = 1;
+        return 0;
+    }
+
+    if  (strncmp(str, "2", 1) == 0)  {
+        *value = 2;
+        return 0;
+    }
+
+    if  ((strncmp(str, "B", 1) == 0) || (strncmp(str, "b", 1) == 0))  {
+        *value = 3;
+        return 0;
+    }
+
+    fprintf(stderr, "Unknown DC channel value: %s\n", str);
+    return -1;
+}
 
 
 /** Print usage information */
@@ -73,11 +111,12 @@ void usage() {
             "\n"
             "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
             "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
-            "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
-            "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
+            "  --atten1=a      -1 a  Use Channel 1 attenuator setting a [1, 20] (default: 20).\n"
+            "  --atten2=a      -2 a  Use Channel 2 attenuator setting a [1, 20] (default: 20).\n"
+            "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
+            "                        By default, AC mode is turned on.\n"
             "  --version       -v    Print version info.\n"
             "  --help          -h    Print this message.\n"
-            "\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
             "\n";
@@ -90,23 +129,6 @@ void usage() {
              g_dec[4],
              g_dec[5]);
 }
-
-/** Gain string (lv/hv) to number (0/1) transformation */
-int get_gain(int *gain, const char *str)
-{
-    if ( (strncmp(str, "lv", 2) == 0) || (strncmp(str, "LV", 2) == 0) ) {
-        *gain = 0;
-        return 0;
-    }
-    if ( (strncmp(str, "hv", 2) == 0) || (strncmp(str, "HV", 2) == 0) ) {
-        *gain = 1;
-        return 0;
-    }
-
-    fprintf(stderr, "Unknown gain: %s\n", str);
-    return -1;
-}
-
 
 /** Acquire utility main */
 int main(int argc, char *argv[])
@@ -125,13 +147,20 @@ int main(int argc, char *argv[])
             /* These options set a flag. */
             {"equalization", no_argument,       0, 'e'},
             {"shaping",      no_argument,       0, 's'},
-            {"gain1",        required_argument, 0, '1'},
-            {"gain2",        required_argument, 0, '2'},
+            {"atten1",       required_argument, 0, '1'},
+            {"atten2",       required_argument, 0, '2'},
+            {"dc",           required_argument, 0, 'd'},
             {"version",      no_argument,       0, 'v'},
             {"help",         no_argument,       0, 'h'},
             {0, 0, 0, 0}
     };
-    const char *optstring = "es1:2:vh";
+
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_20);
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_20);
+    rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_AC_MODE);
+    rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE);
+
+    const char *optstring = "es1:2:d:vh";
 
     /* getopt_long stores the option index here. */
     int option_index = 0;
@@ -148,27 +177,54 @@ int main(int argc, char *argv[])
             shaping = 1;
             break;
 
-        /* Gain Channel 1 */
+        /* Attenuator Channel 1 */
         case '1':
         {
-            int gain1;
-            if (get_gain(&gain1, optarg) != 0) {
+            int attenuator;
+            if (get_attenuator(&attenuator, optarg) != 0) {
                 usage();
                 return -1;
             }
-            t_params[GAIN1_PARAM] = gain1;
+            if (attenuator == 1) {
+                rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_1);
+            }
+            if (attenuator == 20) {
+                rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_20);
+            }
         }
         break;
 
-        /* Gain Channel 2 */
+        /* Attenuator Channel 2 */
         case '2':
         {
-            int gain2;
-            if (get_gain(&gain2, optarg) != 0) {
+            int attenuator;
+            if (get_attenuator(&attenuator, optarg) != 0) {
                 usage();
                 return -1;
             }
-            t_params[GAIN2_PARAM] = gain2;
+            if (attenuator == 1) {
+                rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_1);
+            }
+            if (attenuator == 20) {
+                rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_20);
+            }
+        }
+        break;
+
+        /* DC mode */
+        case 'd':
+        {
+            int dc_mode;
+            if (get_dc_mode(&dc_mode, optarg) != 0) {
+                usage();
+                return -1;
+            }
+            if (dc_mode == 1 || dc_mode == 3) {
+                rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_DC_MODE);
+            }
+            if (dc_mode == 2 || dc_mode == 3) {
+                rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_DC_MODE);
+            }
         }
         break;
 
@@ -187,6 +243,9 @@ int main(int argc, char *argv[])
             exit( EXIT_FAILURE );
         }
     }
+
+    t_params[GAIN1_PARAM] = 0;
+    t_params[GAIN2_PARAM] = 0;
 
     /* Acquisition size */
     uint32_t size = 0;
@@ -262,7 +321,7 @@ int main(int argc, char *argv[])
                  * s[2][i] - Channel ADC2 raw signal
                  */
 		
-                for(i = 0; i < MIN(size, sig_len); i++) {
+                for(i = 0; i < MIN((int)size, sig_len); i++) {
                     printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
                 }
                 break;

@@ -151,7 +151,7 @@ int osc_fpga_init(void)
     }
 
     /* Set FPGA OSC module pointers to correct values. */
-    g_osc_fpga_reg_mem = page_ptr + page_off;
+    g_osc_fpga_reg_mem = (osc_fpga_reg_mem_t*)((long)page_ptr + page_off);
     g_osc_fpga_cha_mem = (uint32_t *)g_osc_fpga_reg_mem + 
         (OSC_FPGA_CHA_OFFSET / sizeof(uint32_t));
     g_osc_fpga_chb_mem = (uint32_t *)g_osc_fpga_reg_mem + 
