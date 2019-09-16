@@ -3,7 +3,7 @@
 #
 # (c) Red Pitaya  http://www.redpitaya.com
 #
-# Signal generator project file. To build executable for Signal generator run:
+# Acquire utility project file. To build executable for acquire utility run:
 # 'make all'
 #
 # This project file is written for GNU/Make software. For more details please 
@@ -13,26 +13,32 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
+MODEL ?= Z20.250.12
+ADC_SAMPLE_RATE ?= 250e6
+ADC_BITS ?= 12
+
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
-OBJS = fpga_awg.o generate.o
+OBJS = fpga_osc.o main_osc.o worker.o acquire.o
 # List of raw source files (all object files, renamed from .o to .c)
-SRCS = $(subst .o,.c, $(OBJS)))
+SRCS = $(subst .o,.cpp, $(OBJS)))
 
 # Executable name
-TARGET=generate
+TARGET=acquire
 
 # GCC compiling & linking flags
-CFLAGS  = -g -std=gnu99 -Wall -Werror
-CFLAGS += -I../../api/include
-CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+CXXFLAGS  = -Wall -Werror
+CXXFLAGS += -I../../api/include
+CXXFLAGS += -I../../api-250-12/bin/include
+CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+CXXFLAGS += -DADC_SAMPLE_RATE=$(ADC_SAMPLE_RATE) -DADC_BITS=$(ADC_BITS)
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm
+LIBS=-L../../api-250-12/bin/ -lrp-i2c -lm -lpthread  -lstdc++
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
@@ -60,12 +66,12 @@ all: $(TARGET)
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
 %.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CXXFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $@ $^ $(CXXFLAGS) $(LIBS)
 
 # Clean target - when called it cleans all object files and executables.
 clean:

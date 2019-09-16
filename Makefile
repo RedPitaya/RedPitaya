@@ -61,14 +61,13 @@ librp2:
 	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp250_12:
-#	$(MAKE) -C $(LIBRP250_12_DIR) clean
+	$(MAKE) -C $(LIBRP250_12_DIR) clean
 	$(MAKE) -C $(LIBRP250_12_DIR)
 	$(MAKE) -C $(LIBRP250_12_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-
 ifdef ENABLE_LICENSING
 
-api: librp librp250_12 librpapp liblcr_meter
+api: librp librpapp liblcr_meter
 
 librpapp:
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
@@ -82,7 +81,7 @@ liblcr_meter:
 
 else
 
-api: librp librp250_12
+api: librp
 
 endif
 
@@ -240,25 +239,31 @@ sdr: | $(DL)
 # Red Pitaya tools
 ################################################################################
 
-LCR_DIR         = Test/lcr
-BODE_DIR        = Test/bode
-MONITOR_DIR     = Test/monitor
-MONITOR_OLD_DIR = Test/monitor_old
-GENERATE_DIR    = Test/generate
-ACQUIRE_DIR     = Test/acquire
-CALIB_DIR       = Test/calib
-CALIBRATE_DIR   = Test/calibrate
-GENERATOR_DIR	= Test/generate
-SPECTRUM_DIR    = Test/spectrum
-COMM_DIR        = Examples/Communication/C
-XADC_DIR        = Test/xadc
-LA_TEST_DIR     = api2/test
-GENERATE_DC_DIR	= generate_DC
+LCR_DIR          = Test/lcr
+BODE_DIR         = Test/bode
+MONITOR_DIR      = Test/monitor
+MONITOR_OLD_DIR  = Test/monitor_old
+ACQUIRE_DIR      = Test/acquire
+ACQUIRE250_DIR   = Test/acquire250.12
+CALIB_DIR        = Test/calib
+CALIBRATE_DIR    = Test/calibrate
+GENERATOR_DIR	 = Test/generate
+GENERATOR250_DIR = Test/generate250.12
+SPECTRUM_DIR     = Test/spectrum
+COMM_DIR         = Examples/Communication/C
+XADC_DIR         = Test/xadc
+LA_TEST_DIR      = api2/test
+GENERATE_DC_DIR  = generate_DC
 
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
+.PHONY: acquire250.12 generator250.12
 
+ifneq ($(MODEL),Z20.250.12)
 examples: lcr bode monitor monitor_old generator acquire calib generate_DC spectrum
+else
+examples: lcr bode monitor monitor_old generator250.12 acquire250.12 calib generate_DC spectrum
+endif
 # calibrate laboardtest
 
 lcr:
@@ -286,9 +291,18 @@ generator: api
 	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+generator250.12: api
+	$(MAKE) -C $(GENERATOR250_DIR) clean 
+	$(MAKE) -C $(GENERATOR250_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(GENERATOR250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 acquire: api
 	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+acquire250.12: librp250_12 api
+	$(MAKE) -C $(ACQUIRE250_DIR)
+	$(MAKE) -C $(ACQUIRE250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
@@ -464,8 +478,10 @@ clean:
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(MONITOR_OLD_DIR) clean
-	make -C $(GENERATE_DIR) clean
+	make -C $(GENERATOR_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
+	make -C $(GENERATOR250_DIR) clean
+	make -C $(ACQUIRE250_DIR) clean
 	make -C $(CALIB_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP250_12_DIR)    clean
