@@ -291,7 +291,7 @@ generator: api
 	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-generator250.12: api
+generator250.12: librp250_12 api
 	$(MAKE) -C $(GENERATOR250_DIR) clean 
 	$(MAKE) -C $(GENERATOR250_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
