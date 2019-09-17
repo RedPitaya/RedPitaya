@@ -70,9 +70,9 @@ Start using STEMlab streaming feature
     
     #. ) Run streaming app on remote computer (copy IP from the WEB interface and select required file format)
 
-        ```console
-        rpsa_client.exe -h 169.254.43.84 -p TCP -f ./ -t wav
-        ```
+        .. code-block:: console
+
+           rpsa_client.exe -h 169.254.43.84 -p TCP -f ./ -t wav
 
         .. image:: img/tcp_client.png
            :width: 60%
