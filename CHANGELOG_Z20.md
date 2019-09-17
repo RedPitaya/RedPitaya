@@ -1,3 +1,8 @@
+# Beta version (0.98-40)
+
+WEB apps:
+- Streaming app released
+
 # Beta version (0.98-694)
 
 Bode analyser:
