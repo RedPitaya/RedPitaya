@@ -1,15 +1,23 @@
 #include "rp-i2c-max7311.h"
 #include "i2c/i2c.h"
 #include <iostream>
+#include <unistd.h>
 
+unsigned long g_sleep_time = 1000 * 1000;
 
 int max7311::initController(const char *i2c_dev_path,  char address){
     bool state = true;
-    char value = 0x00;
+    char value = 0xAA;
+    // setup reset relay 
+    state = (write_to_i2c(i2c_dev_path , address , 0x02, value) == 0) & state;
+    state = (write_to_i2c(i2c_dev_path , address , 0x03, value) == 0) & state;
+    usleep(g_sleep_time);
+    value = 0x00;
     // setup null level on all out ports
     state = (write_to_i2c(i2c_dev_path , address , 0x02, value) == 0) & state;
     state = (write_to_i2c(i2c_dev_path , address , 0x03, value) == 0) & state;
     // setup all port in outgoing mode
+    value = 0x00;
     state = (write_to_i2c(i2c_dev_path , address , 0x06, value) == 0) & state;
     state = (write_to_i2c(i2c_dev_path , address , 0x07, value) == 0) & state;
 
@@ -54,8 +62,6 @@ int max7311::setPIN_EX(const char *i2c_dev_path,  char address, unsigned short p
     if (write_to_i2c(i2c_dev_path , address , reg_addr, value) == -1) 
         return -1;
     
-    if (read_from_i2c(i2c_dev_path , address , reg_addr, value) == -1)
-        return -1;
     return 0;
 }
    
@@ -74,6 +80,37 @@ int max7311::getPIN_EX(const char *i2c_dev_path,  char address, unsigned short p
     return  (pin & value) > 0;
 }
 
+int max7311::setPIN_GROUP(unsigned short pin_group,int state){
+    return setPIN_GROUP_EX(MAX7311_DEFAULT_DEV, MAX7311_DEFAULT_ADDRESS, pin_group, state);
+}
+
+int max7311::setPIN_GROUP_EX(const char *i2c_dev_path, char address, unsigned short pin_group,int state){
+    char value = 0;
+    char flag = 0;
+    char reg_addr = 0x02;
+    if (pin_group > 0xFF) {
+        reg_addr = 0x03;
+        pin_group = pin_group >> 8;
+    }
+
+    if (read_from_i2c(i2c_dev_path , address , reg_addr, value) == -1)
+        return -1;
+    
+    if (state == 0) flag = 0xAA;
+    if (state == 1) flag = 0x55;
+
+    value = (value  | (pin_group & flag));
+
+    if (write_to_i2c(i2c_dev_path , address , reg_addr, value) == -1) 
+        return -1;
+    
+    return 0;
+}
+
+void max7311::setSleepTime(unsigned long time){
+    g_sleep_time = time * 1000;
+}
+
 
 int  rp_max7311::rp_initController(){
     return max7311::initControllerDefault();
@@ -83,71 +120,52 @@ int  rp_max7311::rp_initController(){
 int  rp_max7311::rp_setAC_DC(char port,char mode){
     switch(port){
         case RP_MAX7311_IN1:
-            if (max7311::setPIN(PIN_0,false) == -1) return -1;
-            if (max7311::setPIN(PIN_1,mode)  == -1) return -1;
+            if (max7311::setPIN_GROUP(PIN_K1,mode) == -1) return -1;
+            usleep(g_sleep_time);
+            if (max7311::setPIN_GROUP(PIN_K1,-1) == -1) return -1; 
             break;
         case RP_MAX7311_IN2:
-            if (max7311::setPIN(PIN_2,false) == -1) return -1;
-            if (max7311::setPIN(PIN_3,mode)  == -1) return -1;
+            if (max7311::setPIN_GROUP(PIN_K2,mode) == -1) return -1;
+            usleep(g_sleep_time);
+            if (max7311::setPIN_GROUP(PIN_K2,-1) == -1) return -1; 
             break;
         default:
             return -1;
     }
     return 0;
 }
-
-
-int  rp_max7311::rp_getAC_DC(char port){
-    switch(port){
-        case RP_MAX7311_IN1:
-            return max7311::getPIN(PIN_1);
-        case RP_MAX7311_IN2:
-            return max7311::getPIN(PIN_3);
-        default:
-            return -1;
-    }
-}
-
 
 
 int  rp_max7311::rp_setAttenuator(char port,char mode){
     switch(port){
         case RP_MAX7311_IN1:
-            if (max7311::setPIN(PIN_4,false) == -1) return -1;
-            if (max7311::setPIN(PIN_5,mode)  == -1) return -1;
+            if (max7311::setPIN_GROUP(PIN_K3,mode) == -1) return -1;
+            usleep(g_sleep_time);
+            if (max7311::setPIN_GROUP(PIN_K3,-1) == -1) return -1; 
             break;
         case RP_MAX7311_IN2:
-            if (max7311::setPIN(PIN_6,false) == -1) return -1;
-            if (max7311::setPIN(PIN_7,mode)  == -1) return -1;
+            if (max7311::setPIN_GROUP(PIN_K4,mode) == -1) return -1;
+            usleep(g_sleep_time);
+            if (max7311::setPIN_GROUP(PIN_K4,-1) == -1) return -1; 
             break;
         default:
             return -1;
     }
     return 0;
-}
-
-
-int  rp_max7311::rp_getAttenuator(char port){
-    switch(port){
-        case RP_MAX7311_IN1:
-            return max7311::getPIN(PIN_5);
-        case RP_MAX7311_IN2:
-            return max7311::getPIN(PIN_7);
-        default:
-            return -1;
-    }
 }
 
 
 int  rp_max7311::rp_setGainOut(char port,char mode){
     switch(port){
         case RP_MAX7311_OUT1:
-            if (max7311::setPIN(PIN_8,false) == -1) return -1;
-            if (max7311::setPIN(PIN_9,mode)  == -1) return -1;
+            if (max7311::setPIN_GROUP(PIN_K5,mode) == -1) return -1;
+            usleep(g_sleep_time);
+            if (max7311::setPIN_GROUP(PIN_K5,-1) == -1) return -1; 
             break;
         case RP_MAX7311_OUT2:
-            if (max7311::setPIN(PIN_10,false) == -1) return -1;
-            if (max7311::setPIN(PIN_11,mode)  == -1) return -1;
+            if (max7311::setPIN_GROUP(PIN_K6,mode) == -1) return -1;
+            usleep(g_sleep_time);
+            if (max7311::setPIN_GROUP(PIN_K6,-1) == -1) return -1; 
             break;
         default:
             return -1;
@@ -155,13 +173,6 @@ int  rp_max7311::rp_setGainOut(char port,char mode){
     return 0;
 }
 
-int  rp_max7311::rp_getGainOut(char port){
-    switch(port){
-        case RP_MAX7311_OUT1:
-            return max7311::getPIN(PIN_9);
-        case RP_MAX7311_OUT2:
-            return max7311::getPIN(PIN_11);
-        default:
-            return -1;
-    }
+void rp_max7311::rp_setSleepTime(unsigned long time){
+    max7311::setSleepTime(time);
 }

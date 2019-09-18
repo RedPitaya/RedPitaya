@@ -31,12 +31,14 @@ int write_to_spi(const char* spi_dev_path,char *buffer_header,int header_length,
 	ret_val = ioctl(spi_dev_node, SPI_IOC_WR_MODE, &mode);
 	if (ret_val < 0) {
 		MSG_A("[rp_spi] Can't set spi mode.\n");
+		close(spi_dev_node);
 		return -1;
 	}
 
 	ret_val = ioctl(spi_dev_node, SPI_IOC_RD_MODE, &mode);
 	if (ret_val < 0) {
 		MSG_A("[rp_spi] Can't get spi mode.\n");
+		close(spi_dev_node);
 		return -1;
 	}
 	
@@ -55,8 +57,10 @@ int write_to_spi(const char* spi_dev_path,char *buffer_header,int header_length,
 
     if (ret_val < 0) {
 		MSG_A("[rp_spi] SPI Write Operation failed.\n");
+		close(spi_dev_node);
 		return -1;
 	}          
+	close(spi_dev_node);
 	return 0;
 }
 
@@ -76,12 +80,14 @@ int read_from_spi(const char* spi_dev_path,char *buffer_header,int header_length
 	ret_val = ioctl(spi_dev_node, SPI_IOC_WR_MODE, &mode);
 	if (ret_val < 0) {
 		MSG_A("[rp_spi] Can't set spi mode.\n");
+		close(spi_dev_node);
 		return -1;
 	}
 
 	ret_val = ioctl(spi_dev_node, SPI_IOC_RD_MODE, &mode);
 	if (ret_val < 0) {
 		MSG_A("[rp_spi] Can't get spi mode.\n");
+		close(spi_dev_node);
 		return -1;
 	}
 	
@@ -100,8 +106,10 @@ int read_from_spi(const char* spi_dev_path,char *buffer_header,int header_length
 
     if (ret_val < 0) {
 		MSG_A("[rp_spi] SPI Read Operation failed.\n");
+		close(spi_dev_node);
 		return -1;
 	}          
+	close(spi_dev_node);
 	return 0;
 }
 

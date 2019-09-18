@@ -16,6 +16,10 @@ CXXSOURCES_SPI=src/spi/spi.cpp src/rp-spi.cpp
 C_OUT_NAME_SPI=$(OUT_DIR)librp-spi.so
 C_OUT_NAME_SPI_A=$(OUT_DIR)librp-spi.a
 
+CXXSOURCES_GPIO=src/gpio/gpio.cpp src/rp-gpio-power.cpp
+C_OUT_NAME_GPIO=$(OUT_DIR)librp-gpio.so
+C_OUT_NAME_GPIO_A=$(OUT_DIR)librp-gpio.a
+
 COMMON_FLAGS+=-Wall -fPIC -Os -s -Wno-sign-compare
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11
 CXXFLAGS += -I$(OUT_DIR)lib/include
@@ -25,10 +29,12 @@ CXXOBJECTS_I2C=$(CXXSOURCES_I2C:.cpp=.o)
 OBJECTS_I2C=$(CXXOBJECTS_I2C)
 CXXOBJECTS_SPI=$(CXXSOURCES_SPI:.cpp=.o)
 OBJECTS_SPI=$(CXXOBJECTS_SPI)
+CXXOBJECTS_GPIO=$(CXXSOURCES_GPIO:.cpp=.o)
+OBJECTS_GPIO=$(CXXOBJECTS_GPIO)
 LIB=-L$(OUT_DIR)lib -lxml -lstdc++
 
 
-all: $(SOURCES) xml make_i2c make_spi
+all: $(SOURCES) xml make_i2c make_spi make_gpio
 
 test: all
 	$(MAKE) -C $(TEST_DIR)
@@ -52,6 +58,12 @@ make_spi: xml $(OBJECTS_SPI)
 	-mkdir -p $(OUT_DIR_INC)
 	$(CXX) -shared  $(OBJECTS_SPI) $(LIB) -o $(C_OUT_NAME_SPI) $(LDFLAGS)
 	ar rcs $(C_OUT_NAME_SPI_A) $(OBJECTS_SPI)
+	-$(CP) src/*.h $(OUT_DIR_INC)
+
+make_gpio: $(OBJECTS_GPIO)
+	-mkdir -p $(OUT_DIR_INC)
+	$(CXX) -shared  $(OBJECTS_GPIO) $(LIB) -o $(C_OUT_NAME_GPIO) $(LDFLAGS)
+	ar rcs $(C_OUT_NAME_GPIO_A) $(OBJECTS_GPIO)
 	-$(CP) src/*.h $(OUT_DIR_INC)
 
 clean:
