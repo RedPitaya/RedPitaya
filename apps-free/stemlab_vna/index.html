@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Red Pitaya</title>
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/jquery-2.1.4.min.js"></script>
+<script>
+  var app_id = 'stemlab_vna';
+  var root_url = '';
+  var start_app_url = root_url + '/bazaar?start=' + app_id;
+  var stop_app_url = root_url + '/bazaar?stop=' + app_id;
+  function start_app() {
+    $.ajax({
+      url: start_app_url,
+      async: true
+    });
+  }
+  function stop_app() {
+    $.ajax({
+      url: stop_app_url,
+      async: false
+    });
+  }
+</script>
+</head>
+<body onload="start_app()" onunload="stop_app()">
+<div class="container-fluid">
+<div class="navbar navbar-inverse" role="navigation">
+<div class="container">
+<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+</button>
+<a class="navbar-brand" href="/">
+<img class="back-btn" src="img/arrow_nav_left.png">
+</a>
+<img class="logo" width=110 src="img/logo.png">
+</div>
+</div>
+<div id="main">
+<h1>Vector Network Analyzer</h1>
+<p>The STEMlab in now running in Vector network analyzer mode.</p>
+<p>To start using it, please follow instructions at <a href="http://redpitaya.readthedocs.io/en/latest/appsFeatures/apps-featured/vna/appVNA.html" target="_blank">this link</a></p>
+</div>
+</div>
+</body>
+</html>

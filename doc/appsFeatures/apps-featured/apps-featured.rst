@@ -13,4 +13,5 @@ Applications
    ./lcr_meter/lcr_meter.rst
    ./sdr/appSDR.rst
    ../marketplace/marketplace.rst
-   
+   ./vna/appVNA.rst
+   ./streaming/appStreaming.rst

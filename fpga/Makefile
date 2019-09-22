@@ -11,6 +11,7 @@
 #   4. Linux device tree source (dts).
 
 PRJ ?= logic
+MODEL ?= Z10
 
 # build artefacts
 FPGA_BIT    = prj/$(PRJ)/out/red_pitaya.bit
@@ -34,10 +35,10 @@ clean:
 	rm -rf prj/$(PRJ)/out prj/$(PRJ)/.Xil prj/$(PRJ)/.srcs prj/$(PRJ)/sdk prj/$(PRJ)/project
 
 project:
-	vivado -source red_pitaya_vivado_project.tcl -tclargs $(PRJ)
+	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ)
 
 $(FPGA_BIT):
-	$(VIVADO) -source red_pitaya_vivado.tcl -tclargs $(PRJ)
+	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ)
 	./synCheck.sh
 
 $(FSBL_ELF): $(FPGA_BIT)

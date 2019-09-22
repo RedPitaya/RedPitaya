@@ -6,18 +6,6 @@
 #include <stdbool.h>
 
 typedef enum {
-    RP_DRIVER_VERSION, ///< Version number of Red Pitaya APIs
-    RP_USB_VERSION, ///< Type of USB connection to device: 1.1, 2.0 or 3.0
-    RP_HARDWARE_VERSION, ///< Hardware version of device
-    RP_VARIANT_INFO, ///<  Variant number of device
-    RP_BATCH_AND_SERIAL, ///< Batch and serial number of device
-    RP_CAL_DATE, ///<  Calibration date of device
-    RP_KERNEL_VERSION, ///<  Version of kernel driver
-    RP_DIGITAL_HARDWARE_VERSION, ///<  Hardware version of the digital section
-    RP_ANALOGUE_HARDWARE_VERSION, ///< Hardware version of the analog section
-} RP_INFO;
-
-typedef enum {
     RP_API_OK, ///< The Red Pitaya is functioning correctly
     RP_MAX_UNITS_OPENED, ///< An attempt has been made to open more than RP_MAX_UNITS.
     RP_MEMORY_FAIL, //< Not enough memory could be allocated on the host machine
@@ -134,23 +122,7 @@ typedef enum {
     RP_USB3_0_DEVICE_NON_USB3_0_PORT, ///< A USB 3.0 device is connected to a non-USB 3.0 port.
 } RP_STATUS;
 
-
-typedef enum rpDigitalPort {
-    RP_DIGITAL_PORT0 = 0x80, // (digital channels 0–7)
-    RP_DIGITAL_PORT1 = 0x81  // (digital channels 8–15)
-} RP_DIGITAL_PORT;
-
-
-typedef enum rpChannel {
-    RP_CH_AIN1=0,
-    RP_CH_AIN2,
-    RP_CH_AIN3,
-    RP_CH_AIN4,
-    RP_CH_DIN
-} RP_CHANNEL;
-
-typedef enum rpDigitalChannel
-{
+typedef enum rpDigitalChannel {
 RP_DIGITAL_CHANNEL_0,
 RP_DIGITAL_CHANNEL_1,
 RP_DIGITAL_CHANNEL_2,
@@ -170,8 +142,7 @@ RP_DIGITAL_CHANNEL_15,
 RP_MAX_DIGITAL_CHANNELS
 } RP_DIGITAL_CHANNEL;
 
-typedef enum rpDigitalDirection
-{
+typedef enum rpDigitalDirection {
     RP_DIGITAL_DONT_CARE,
     RP_DIGITAL_DIRECTION_LOW,
     RP_DIGITAL_DIRECTION_HIGH,
@@ -182,23 +153,20 @@ typedef enum rpDigitalDirection
 } RP_DIGITAL_DIRECTION;
 
 
-typedef struct tPS3000ADigitalChannelDirections
-{
+typedef struct tPS3000ADigitalChannelDirections {
     RP_DIGITAL_CHANNEL channel;
     RP_DIGITAL_DIRECTION direction;
 } RP_DIGITAL_CHANNEL_DIRECTIONS;
 
 
-typedef enum rpRatioMode
-{
+typedef enum rpRatioMode {
     RP_RATIO_MODE_NONE, //(downSampleRatio is ignored)
     RP_RATIO_MODE_AGGREGATE,
     RP_RATIO_MODE_AVERAGE,
     RP_RATIO_MODE_DECIMATE
 } RP_RATIO_MODE;
 
-typedef enum rpTimeUnits
-{
+typedef enum rpTimeUnits {
     RP_FS,
     RP_PS,
     RP_NS,
@@ -223,11 +191,6 @@ RP_STATUS rp_OpenUnit(void);
 
 RP_STATUS rp_CloseUnit(void);
 
-RP_STATUS rp_GetUnitInfo(int8_t * string,
-                        int16_t stringLength,
-                        int16_t * requiredSize,
-                        RP_INFO info);
-
 RP_STATUS rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
                                             int16_t nDirections);
 
@@ -244,8 +207,7 @@ RP_STATUS rp_GetTimebase(uint32_t timebase,
                         //uint32_t segmentIndex
                         );
 
-RP_STATUS rp_SetDataBuffer(RP_CHANNEL channel,
-                          int16_t * buffer,
+RP_STATUS rp_SetDataBuffer(int16_t * buffer,
                           int32_t bufferLth,
                           // uint32_t segmentIndex,
                           RP_RATIO_MODE mode);
@@ -291,84 +253,6 @@ RP_STATUS rp_GetValuesAsync(uint32_t startIndex,
 
 RP_STATUS rp_Stop(void);
 
-
-/** SIGNAL GENERATION  */
-
-typedef enum rpWaveType {
-    RP_SG_SINE, ///< sine wave
-    RP_SG_SQUARE, ///< square wave
-    RP_SG_TRIANGLE, ///< triangle wave
-    RP_SG_DC_VOLTAGE, ///< DC voltage
-    RP_SG_RAMP_UP, ///< rising sawtooth
-    RP_SG_RAMP_DOWN, ///< falling sawtooth
-    RP_SG_SINC, ///< sin (x)/x
-    RP_SG_GAUSSIAN, ///< Gaussian
-    PR_SG_HALF_SINE, ///< half (full-wave rectified) sine
-} RP_WAVE_TYPE;
-
-typedef enum rpSweepType{
-    RP_SWEEP_UP, ///<
-    RP_SWEEP_DOWN, ///<
-    RP_SWEEP_UPDOWN, ///<
-    RP_SWEEP_DOWNUP, ///<
-} RP_SWEEP_TYPE;
-
-
-typedef enum rpExtraOperationType{
-    RP_ES_OFF, ///< normal signal generator operation specified by wavetype.
-    RP_WHITENOISE, ///< the signal generator produces white noise and ignores all settings except pkToPk and offsetVoltage.
-    RP_PRBS, ///< produces a pseudorandom binary sequence with bit rate specified by the start and stop frequencies.
-} RP_EXTRA_OPERATIONS;
-
-
-typedef enum rpTriggerType{
-    RP_SIGGEN_RISING,     ///< trigger on rising edge
-    RP_SIGGEN_FALLING,     ///< trigger on falling edge
-    RP_SIGGEN_GATE_HIGH,///< run while trigger is high
-    RP_SIGGEN_GATE_LOW, ///< run while trigger is low
-} RP_SIGGEN_TRIG_TYPE;
-
-
-typedef enum rpTriggerSource {
-    RP_SIGGEN_NONE, ///< run without waiting for trigger
-    RP_SIGGEN_SCOPE_TRIG, ///< use scope trigger
-    RP_SIGGEN_EXT_IN, ///< use EXT input
-    RP_SIGGEN_SOFT_TRIG, ///< wait for software trigger provided by rpSigGenSoftwareControl()
-    RP_SIGGEN_TRIGGER_RAW // reserved
-} RP_SIGGEN_TRIG_SOURCE;
-
 RP_STATUS rp_SetPolarity(uint32_t reg);
 
-RP_STATUS rp_DigSigGenOuput(bool enable);
-
-RP_STATUS rp_SigGenSoftwareControl(int16_t state);
-
-RP_STATUS rp_SetSigGenBuiltIn(int32_t offsetVoltage,
-                             uint32_t pkToPk,
-                             RP_WAVE_TYPE waveType,
-                             float startFrequency,
-                             float stopFrequency,
-                             float increment,
-                             float dwellTime,
-                             RP_SWEEP_TYPE sweepType,
-                             RP_EXTRA_OPERATIONS operation,
-                             uint32_t shots,
-                             uint32_t sweeps,
-                             RP_SIGGEN_TRIG_TYPE triggerType,
-                             RP_SIGGEN_TRIG_SOURCE triggerSource,
-                             int16_t extInThreshold);
-
-/** DIGITAL SIGNAL GENERATION  */
-
-typedef enum patternType{
-    RP_DIG_SIGGEN_PAT_UP_COUNT_8BIT_SEQ_256, ///< counts 8bit
-} RP_DIG_SIGGEN_PAT_TYPE;
-
-RP_STATUS rp_DigSigGenSoftwareControl(int16_t state);
-
-RP_STATUS rp_SetDigSigGenBuiltIn(RP_DIG_SIGGEN_PAT_TYPE patternType,
-                                double * sample_rate,
-                                uint32_t shots,
-                                uint32_t delay_between_shots,
-                                uint32_t triggerSourceMask);
 #endif // _RP_API_H_

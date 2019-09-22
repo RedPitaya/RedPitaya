@@ -1,0 +1,46 @@
+body {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 3em;
+}
+
+.container-fluid {
+  margin-top: 20px;
+}
+
+.container {
+  width: 100%;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.navbar {
+  border-radius: 0px;
+  background-color: #343433;
+  background-image: linear-gradient(to bottom, #343433 0, #343433 100%);
+  border: 1px solid #999;
+  min-height: 42px;
+  border-left: 1px solid #999;
+}
+
+.back-btn {
+  height: 22px;
+  float: left;
+  margin: -6px 0px 0px 11px;
+}
+
+.logo {
+  margin: 5px 0px 0px 15px;
+  float: left;
+}
+
+.navbar-brand {
+  height: 40px;
+}
+
+#main {
+  background-color: #cdcccc;
+  padding: 1em 1em;
+  border-radius: 0.6em;
+}

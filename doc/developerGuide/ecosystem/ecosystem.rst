@@ -4,7 +4,7 @@
 Ecosystem Guide
 ###############
 
-Go to redpitaya-public (git) directory.
+Go to redpitaya (git) directory.
 
 .. note::
    
@@ -109,6 +109,29 @@ You will need the following to build the Red Pitaya components:
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
 
+    1. If you want to run Vivado from virtual machine and Vivado is installed on host shared
+       folder, than we suggest you to use VirtualBox, since VMware has a bug in vmware-tools
+       for Ubuntu guest and can not mount vmhgfs shared file system type.
+
+       Then install Ubuntu 16.04 in VirtualBox (NOTE: don't use encrypt installation, 
+       since it blocks some RedPitaya build procedures).
+
+       After successfully installation, change settings for Ubuntu virtual machine.
+       Go to Shared Folders menu and choose Xilinx installation directory on the host machine
+       (by default is under /opt/ directory). And choose Auto-mount option (checkbox).
+
+       Then you must install (on Ubuntu guest) a package dkms.
+
+       .. code-block:: shell-session
+
+          $ sudo apt-get install virtualbox.guest-dkms
+
+       After reboot Ubuntu guest, you can access (with superuser/root privileges) Xilinx shared
+       folder under /media/sf_Xilinx subdirectory.
+
+       Now you can manage this system to meet your requirements.
+
+
 4. Missing ``gmake`` path
 
    Vivado requires a ``gmake`` executable which does not exist on Ubuntu. It is necessary to create a symbolic link to the regular ``make`` executable.
@@ -120,6 +143,10 @@ You will need the following to build the Red Pitaya components:
 =============
 Build process
 =============
+
+.. note::
+
+   To implement the build process, at least 8GB available space on local machine is required.
 
 Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
 The choice of specific branches or tags is up to the user.
@@ -239,8 +266,8 @@ FPGA and device tree sources
 
    $ make -f Makefile.x86 fpga
 
-Detailed instructions are provided for `building the FPGA <fpga/README.md#build-process>`_
-including some `device tree details <fpga/README.md#device-tree>`_.
+Detailed instructions are provided for :ref:`building the FPGA <buildprocess>`
+including some :ref:`device tree details <devicetree>`.
 
 --------------------------------------
 Device Tree compiler + overlay patches

@@ -19,7 +19,11 @@ export VERSION
 #
 ################################################################################
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro
+# Production test script
+FPGA_MODEL ?= Z10
+ENABLE_PRODUCTION_TEST ?= 0
+
+all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
 
 $(DL):
 	mkdir -p $@
@@ -242,11 +246,12 @@ GENERATOR_DIR	= Test/generate
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 LA_TEST_DIR     = api2/test
+GENERATE_DC_DIR	= generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest generate_DC
 
-examples: lcr bode monitor monitor_old generator acquire calib
+examples: lcr bode monitor monitor_old generator acquire calib generate_DC
 # calibrate laboardtest
 
 lcr:
@@ -295,6 +300,11 @@ laboardtest: api2
 	cp api2/test/install.sh build/install.sh
 rp_communication:
 	make -C $(COMM_DIR)
+
+generate_DC: api
+	$(MAKE) -C $(GENERATE_DC_DIR)
+	cp $(GENERATE_DC_DIR)/generate_DC $(INSTALL_DIR)/bin/
+	cp $(GENERATE_DC_DIR)/generate_DC_LO $(INSTALL_DIR)/bin/
 
 ################################################################################
 # Red Pitaya ecosystem and tools
@@ -357,6 +367,7 @@ jupyter_manager:
 ################################################################################
 
 APPS_FREE_DIR = apps-free
+VNA_DIR = $(APPS_FREE_DIR)/stemlab_vna
 
 .PHONY: apps-free
 
@@ -364,6 +375,11 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) clean
 	$(MAKE) -C $(APPS_FREE_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+apps-free-vna: api2
+	$(MAKE) -C $(VNA_DIR) clean
+	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-clean:
 	$(MAKE) -C $(APPS_FREE_DIR) clean
@@ -420,6 +436,17 @@ endif
 #
 ################################################################################
 
+PRODUCTION_TEST_DIR = Test/production
+
+.PHONY: production_test
+
+production_test:
+ifeq ($(ENABLE_PRODUCTION_TEST), 1)
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) clean
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
+endif
+
 clean:
 	# todo, remove downloaded libraries and symlinks
 	make -C $(NGINX_DIR) clean
@@ -434,4 +461,6 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
+	make -C $(GENERATE_DC_DIR) clean
+	make -C $(PRODUCTION_TEST_DIR) clean
 	apps-free-clean

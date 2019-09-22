@@ -12,7 +12,7 @@ export VERSION
 
 SUBMODULE_UBT = "redpitaya-v2016.4"
 SUBMODULE_LIN = "branch-redpitaya-v2017.2"
-SUBMODULE_APP = $(shell git submodule status Applications)
+SUBMODULE_APP = ""
 
 define GREET_MSG
 ##############################################################################
@@ -85,6 +85,7 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite
 #FPGA_PRJ_LST = classic logic v0.94 mercury
 FPGA_PRJ = logic
+FPGA_MODEL ?= Z10
 
 .PHONY: fpga
 
@@ -94,7 +95,7 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
 	# compile FPGA projects
 	for ITM in $(FPGA_PRJ_LST); do \
-	    make -C fpga PRJ=$$ITM; \
+	    make -C fpga PRJ=$$ITM MODEL=$(FPGA_MODEL); \
 	    mkdir -p $(INSTALL_DIR)/fpga/$$ITM; \
 	    cp    fpga/prj/$$ITM/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$$ITM/fpga.bit; \
 	    cp    fpga/prj/$$ITM/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$$ITM/fsbl.elf; \
@@ -128,6 +129,9 @@ $(UBOOT_TAR): | $(DL)
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
+
+	# Patch
+	patch -t -p0 -i "${PWD}/patches/u-boot/set-extra-env.patch" -d "$@"
 
 $(UBOOT): $(UBOOT_DIR) $(TMP)
 	make -C $< arch=ARM zynq_red_pitaya_defconfig

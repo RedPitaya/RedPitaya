@@ -1,4 +1,45 @@
-# Release 0.98
+# Beta version (0.98-694)
+
+Bode analyser:
+- The periods number was added: minimum periods number of the generated signal for each step
+
+Spectrum analyzer:
+- The CSV export was fixed (min/max values).
+
+Oscilloscope:
+- Some trigger bugs at the low frequency were fixed
+
+Network manager:
+- The link-local IP displays when no other IP's are available
+
+# Beta version (0.98-693)
+
+Spectrum analyzer:
+- Signal generator is now available also in Spectrum analyzer app
+
+Logic analyzer, Bode analyser:
+- Logic analyzer & Bode analyzer data can be exported also in raw format
+
+Oscilloscope:
+- Oscilloscope app settings are restored at startup
+
+Applications:
+- Several bug fixes & stability improvements
+
+# Beta version (0.98-685)
+
+VNA:
+- added Vector network analyser application to the ecosystem image
+- now it's possible to download windows tool for VNA application here:
+- VNA windows tool and VNA python script support bonjour rp-XXXXXX.local addresses
+
+Bode analyser:
+- Improved phase and amplitude calculations
+
+OS
+- Changed links to external resources
+
+# Stable version (0.98-615)
 
 FPGA (mercury):
 - fixed bugs causing unreliable reads from oscilloscope, logic analyzer buffer
@@ -171,7 +212,7 @@ Application improvements:
 - Oscilloscope:
   - navigation was improved (time offset can now be set by mouse dragging, t/div can be changed by scrolling)
   - user is now able to retrieve signal acquired into ADC buffer even if acquisition is stopped
-  - stability of data transfer was improved together with network performance indication 
+  - stability of data transfer was improved together with network performance indication
   - gain setting is now remembered when quitting app
   - trigger status is now properly updated at high frequencies
   - we fixed few normal trigger issues
@@ -188,7 +229,7 @@ General system improvements:
 - switching between contributed and official applications doesn’t causes problems anymore
 - system crashes reports with debug information can now be sent to Red Pitaya team on user request
 - Feedback app - enables user to send feedback our support with attached information about Red Pitaya OS, computer OS & browser
-- Analytics is sent to Red Pitaya team on user request in order to track system events that can help improve user experience 
+- Analytics is sent to Red Pitaya team on user request in order to track system events that can help improve user experience
 
 Other:
 - access to wiki page was added, but the main news is that we also updated wiki documentation

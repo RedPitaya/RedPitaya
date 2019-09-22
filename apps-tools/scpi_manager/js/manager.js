@@ -52,45 +52,50 @@
     }
 
     SCPI.GetIP = function() {
+        var getFirstAddress = function(obj) {
+            var address = null;
+
+            for (var i = 0; i < obj.length; ++i) {
+                address = obj[i].split(" ")[1].split("/")[0];
+
+                // Link-local address checking.
+                // Do not use it if it is not the only one.
+                if (!address.startsWith("169.254.")) {
+                    // Return the first address.
+                    break;
+                }
+            }
+
+            return address;
+        }
+
+        var parseAddress = function(text) {
+            var res = text.split(";");
+            var addressRegexp = /inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\b/g;
+            var ethIP = res[0].match(addressRegexp);
+            var wlanIP = res[1].match(addressRegexp);
+            var ip = null;
+
+            if (ethIP != null) {
+                ip = getFirstAddress(ethIP);
+            } else if (wlanIP != null) {
+                ip = getFirstAddress(wlanIP);
+            }
+
+            if (ip === null) {
+                ip = "None";
+            }
+
+            return ip;
+        }
+
         $.ajax({
             url: '/get_ip',
             type: 'GET',
         }).fail(function(msg) {
-
-            var res = msg.responseText.split(";");
-
-            var ethIP = res[0].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-            var wlanIP = res[1].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-
-            if (ethIP != null){
-                ethIP = ethIP[0].split(" ")[1].split("/")[0];
-                $('#ip-addr').text(ethIP);
-            }
-            else if (wlanIP != null){
-                wlanIP = wlanIP[0].split(" ")[1].split("/")[0];
-                $('#ip-addr').text(wlanIP);
-            }
-            else $('#ip-addr').text("None");
-
-            
-
+            $('#ip-addr').text(parseAddress(msg.responseText));
         }).done(function(msg) {
-
-            var res = msg.responseText.split(";");
-
-            var ethIP = res[0].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-            var wlanIP = res[1].match(/inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/2[0-90]\b/);
-
-            if (ethIP != null){
-                ethIP = ethIP[0].split(" ")[1].split("/")[0];
-                $('#ip-addr').text(ethIP);
-            }
-            else if (wlanIP != null){
-                wlanIP = wlanIP[0].split(" ")[1].split("/")[0];
-                $('#ip-addr').text(wlanIP);
-            }
-            else $('#ip-addr').text("None");
-
+            $('#ip-addr').text(parseAddress(msg.responseText));
         });
     }
 

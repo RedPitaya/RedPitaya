@@ -1,0 +1,11 @@
+Read data form the external eeprom 
+cat /sys/bus/i2c/devices/0-0051/eeprom
+
+Read data from the externla eeprom and write them to the file.
+
+cat /sys/bus/i2c/devices/0-0051/eeprom > external_eeprom.txt
+
+Write data to the external eeprom.
+Set Jumper J3 on the testing board.
+
+cat external_eeprom.txt > /sys/bus/i2c/devices/0-0051/eeprom

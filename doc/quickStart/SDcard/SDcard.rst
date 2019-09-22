@@ -12,7 +12,13 @@ The next procedure will create a clean SD card.
 
 #. Download the Red Pitaya SD card image:
 
-   - `Latest Stable <http://downloads.redpitaya.com/downloads/red_pitaya_OS-stable.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
+STEMlab 125-14 & STEMlab 125-10
+   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/red_pitaya_OS-stable.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
+   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/red_pitaya_OS-beta.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
+
+STEMlab 122-16 SDR
+   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-122-16/redpitaya_OS-stable-Z20_29-aug-2019.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
+   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-122-16/redpitaya_OS-beta-z20_17-sep-2019.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
 
 ..    - `Beta (including STEMlab SDR transceiver app) <http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_15-44-45_21-jul-2017.img.zip>`_.
 
@@ -108,7 +114,7 @@ Command line
 
 #. Insert SD card into your PC or SD card reader.
 
-   .. image:: SDcard_insert.jpg 
+   .. image:: SDcard_insert.jpg
 
 #. Open the Terminal and check the available disks with ``df -h``.
    Our SD card is 4GB, it is named ``/dev/sdx`` and
@@ -151,7 +157,7 @@ macOS
 -------------------
 Using ApplePi-Baker
 -------------------
-    
+
 #. Insert SD card into your PC or SD card reader.
 
    .. image:: SDcard_insert.jpg
@@ -292,9 +298,9 @@ Users can also check for updates manually.
    .. image:: SDcard_update_manager.png
 
 #. Follow the steps in the OS updater app in order to install new OS.
-   
+
 .. note::
-   
+
    OS upgrade might cause your Red Pitaya desktop to freeze for a few minutes.
 
 **************
