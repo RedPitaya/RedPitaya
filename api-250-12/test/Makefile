@@ -1,4 +1,4 @@
-CXX=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
 RM=rm
 CP=cp
 

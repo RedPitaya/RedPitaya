@@ -19,8 +19,13 @@ export VERSION
 #
 ################################################################################
 
+# MODEL USE FOR determine kind of assembly
+# USED parameters:
+# Z10 - for Redpitaya 125-14
+# Z20 - for Redpitaya 122-16
+# Z20_250_12 - for RepPitaya 250-12
 # Production test script
-MODEL ?= Z20.250.12
+MODEL ?= Z10
 ENABLE_PRODUCTION_TEST ?= 0
 
 all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
@@ -45,8 +50,16 @@ ECOSYSTEM_DIR   = Applications/ecosystem
 .PHONY: api api2 librp librp1 librp250_12
 .PHONY: librpapp liblcr_meter
 
+ifeq ($(MODEL),Z20_250_12)
+api: librp250_12
+endif
+
+api: librp 
+
+api2: librp2
+
 librp:
-#	$(MAKE) -C $(LIBRP_DIR) clean
+	$(MAKE) -C $(LIBRP_DIR) clean
 	$(MAKE) -C $(LIBRP_DIR)
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -67,7 +80,7 @@ librp250_12:
 
 ifdef ENABLE_LICENSING
 
-api: librp librpapp liblcr_meter
+api: librpapp liblcr_meter
 
 librpapp:
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
@@ -78,14 +91,8 @@ liblcr_meter:
 	$(MAKE) -C $(LIBRPLCR_DIR) clean
 	$(MAKE) -C $(LIBRPLCR_DIR)
 	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-else
-
-api: librp
-
 endif
 
-api2: librp2
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -259,10 +266,10 @@ GENERATE_DC_DIR  = generate_DC
 .PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
 .PHONY: acquire250.12 generator250.12
 
-ifneq ($(MODEL),Z20.250.12)
 examples: lcr bode monitor monitor_old generator acquire calib generate_DC spectrum
-else
-examples: lcr bode monitor monitor_old generator250.12 acquire250.12 calib generate_DC spectrum
+
+ifeq ($(MODEL),Z20_250_12)
+examples: generator250.12 acquire250.12
 endif
 # calibrate laboardtest
 
@@ -291,7 +298,7 @@ generator: api
 	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-generator250.12: librp250_12 api
+generator250.12: api
 	$(MAKE) -C $(GENERATOR250_DIR) clean 
 	$(MAKE) -C $(GENERATOR250_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -300,7 +307,7 @@ acquire: api
 	$(MAKE) -C $(ACQUIRE_DIR)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-acquire250.12: librp250_12 api
+acquire250.12: api
 	$(MAKE) -C $(ACQUIRE250_DIR)
 	$(MAKE) -C $(ACQUIRE250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -428,7 +435,7 @@ apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
-	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrumpro: api $(NGINX)

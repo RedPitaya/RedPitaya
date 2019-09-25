@@ -1,4 +1,4 @@
-CXX=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
 RM=rm
 CP=cp
 
@@ -50,20 +50,29 @@ tool: all
 
 make_i2c: xml $(OBJECTS_I2C) 
 	-mkdir -p $(OUT_DIR_INC)
-	$(CXX) -shared  $(OBJECTS_I2C) $(LIB) -o $(C_OUT_NAME_I2C) $(LDFLAGS)
-	ar rcs $(C_OUT_NAME_I2C_A) $(OBJECTS_I2C)
+	rm -f $(OUT_DIR)lib/*.o
+	( cd $(OUT_DIR)lib ; ar -x libxml.a )
+	ar rcs $(C_OUT_NAME_I2C_A)  $(OBJECTS_I2C) $(OUT_DIR)lib/*.o
+	ranlib $(C_OUT_NAME_I2C_A)
+	rm -f $(OUT_DIR)lib/*.o
+	$(CXX) -shared $(CXXFLAGS) $(OBJECTS_I2C) $(LIB) -o $(C_OUT_NAME_I2C) $(LDFLAGS)
 	-$(CP) src/*.h $(OUT_DIR_INC)
 
 make_spi: xml $(OBJECTS_SPI)
 	-mkdir -p $(OUT_DIR_INC)
-	$(CXX) -shared  $(OBJECTS_SPI) $(LIB) -o $(C_OUT_NAME_SPI) $(LDFLAGS)
-	ar rcs $(C_OUT_NAME_SPI_A) $(OBJECTS_SPI)
+	rm -f $(OUT_DIR)lib/*.o
+	( cd $(OUT_DIR)lib ; ar -x libxml.a )
+	ar rcs $(C_OUT_NAME_SPI_A) $(OBJECTS_SPI) $(OUT_DIR)lib/*.o
+	ranlib $(C_OUT_NAME_SPI_A)
+	rm -f $(OUT_DIR)lib/*.o
+	$(CXX) -shared $(CXXFLAGS) $(OBJECTS_SPI) $(LIB) -o $(C_OUT_NAME_SPI) $(LDFLAGS)
 	-$(CP) src/*.h $(OUT_DIR_INC)
 
 make_gpio: $(OBJECTS_GPIO)
 	-mkdir -p $(OUT_DIR_INC)
-	$(CXX) -shared  $(OBJECTS_GPIO) $(LIB) -o $(C_OUT_NAME_GPIO) $(LDFLAGS)
 	ar rcs $(C_OUT_NAME_GPIO_A) $(OBJECTS_GPIO)
+	ranlib $(C_OUT_NAME_GPIO_A)
+	$(CXX) -shared $(CXXFLAGS) $(OBJECTS_GPIO) $(LIB) -o $(C_OUT_NAME_GPIO) $(LDFLAGS)
 	-$(CP) src/*.h $(OUT_DIR_INC)
 
 clean:
@@ -77,6 +86,8 @@ install:
 	mkdir -p $(INSTALL_DIR)/include/api250-12
 	cp  $(C_OUT_NAME_I2C) $(INSTALL_DIR)/lib
 	cp  $(C_OUT_NAME_SPI) $(INSTALL_DIR)/lib
+	cp  $(C_OUT_NAME_GPIO) $(INSTALL_DIR)/lib
 	cp  $(C_OUT_NAME_I2C_A) $(INSTALL_DIR)/lib
 	cp  $(C_OUT_NAME_SPI_A) $(INSTALL_DIR)/lib
+	cp  $(C_OUT_NAME_GPIO_A) $(INSTALL_DIR)/lib
 	cp -r $(OUT_DIR_INC)/*.h $(INSTALL_DIR)/include/api250-12

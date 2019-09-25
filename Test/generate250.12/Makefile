@@ -13,7 +13,7 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
-MODEL ?= Z20.250.12
+MODEL ?= Z10
 ADC_SAMPLE_RATE ?= 250e6
 ADC_BITS ?= 12
 
