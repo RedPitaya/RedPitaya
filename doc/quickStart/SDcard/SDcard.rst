@@ -13,12 +13,12 @@ The next procedure will create a clean SD card.
 #. Download the Red Pitaya SD card image:
 
 STEMlab 125-14 & STEMlab 125-10
-   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/red_pitaya_OS-stable.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
-   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/red_pitaya_OS-beta.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
+   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/STEMlab_125-xx_OS_0.98-696_stable.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
+   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/STEMlab_125-xx_OS_0.99-41_beta.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
 
 STEMlab 122-16 SDR
-   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-122-16/redpitaya_OS-stable-Z20_29-aug-2019.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
-   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-122-16/redpitaya_OS-beta-z20_17-sep-2019.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
+   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-122-16/STEMlab_122-16_OS_0.98-5_stable.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
+   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-122-16/STEMlab_122-16_OS_0.99-43_beta.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
 
 ..    - `Beta (including STEMlab SDR transceiver app) <http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_15-44-45_21-jul-2017.img.zip>`_.
 
