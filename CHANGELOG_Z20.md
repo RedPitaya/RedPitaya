@@ -1,4 +1,4 @@
-Beta version (0.99-43)
+# Beta version (0.99-43)
 
 - Improved stability
 
@@ -7,7 +7,7 @@ Streaming:
 
 Stable version (0.98-5)
 
-SCPI server:
+# SCPI server:
 - Fixed bug with choosing the type of generated signal
 
 # Beta version (0.98-694)
