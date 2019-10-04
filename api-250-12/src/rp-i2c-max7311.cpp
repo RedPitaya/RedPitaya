@@ -1,6 +1,7 @@
 #include "rp-i2c-max7311.h"
 #include "i2c/i2c.h"
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 
 unsigned long g_sleep_time = 1000 * 1000;
@@ -95,15 +96,14 @@ int max7311::setPIN_GROUP_EX(const char *i2c_dev_path, char address, unsigned sh
 
     if (read_from_i2c(i2c_dev_path , address , reg_addr, value) == -1)
         return -1;
-    
+
     if (state == 0) flag = 0xAA;
     if (state == 1) flag = 0x55;
 
-    value = (value  | (pin_group & flag));
+    value = ((value & ~pin_group) | (pin_group & flag));
 
     if (write_to_i2c(i2c_dev_path , address , reg_addr, value) == -1) 
         return -1;
-    
     return 0;
 }
 

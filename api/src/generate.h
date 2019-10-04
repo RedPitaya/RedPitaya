@@ -16,13 +16,31 @@
 
 #include "redpitaya/rp.h"
 
+
+#ifdef Z20_250_12
+ #define RP_MODEL "Z20_250_12"
+ #define DAC_FREQUENCY 250e6
+ #define AMPLITUDE_MAX       1.0 // V
+#else 
+ #define AMPLITUDE_MAX       1.0 // V
+#endif
+
+#ifdef Z10
+#define RP_MODEL "Z10"
+#define DAC_FREQUENCY 125e6
+#endif
+
+#ifdef Z20
+#define RP_MODEL "Z20"
+#define DAC_FREQUENCY 122.880e6
+#endif
+
 #define LEVEL_MAX               1.0         // V
-#define AMPLITUDE_MAX           1.0         // V
 #define ARBITRARY_MIN          -1.0         // V
 #define ARBITRARY_MAX           1.0         // V
 #define OFFSET_MAX              2.0         // V
 #define FREQUENCY_MIN           0           // Hz
-#define FREQUENCY_MAX           62.5e6      // Hz
+#define FREQUENCY_MAX           DAC_FREQUENCY/2.0
 #define PHASE_MIN              -360         // deg
 #define PHASE_MAX               360         // deg
 #define DUTY_CYCLE_MIN          0           // %
@@ -33,7 +51,6 @@
 #define BURST_REPETITIONS_MAX   50000
 #define BURST_PERIOD_MIN        1           // us
 #define BURST_PERIOD_MAX        500000000   // us
-#define DAC_FREQUENCY           125e6       // Hz
 
 #define BUFFER_LENGTH           (16 * 1024)
 #define CHA_DATA_OFFSET         0x10000

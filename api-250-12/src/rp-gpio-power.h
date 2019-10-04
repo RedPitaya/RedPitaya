@@ -8,7 +8,7 @@ extern "C" {
 
 namespace rp_gpio_power{
 
-#define ADC_POWER 969
+#define ADC_POWER 908
 #define DAC_POWER 909
 
 #define POWER_ON  1
