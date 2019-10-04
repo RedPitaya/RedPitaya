@@ -1,3 +1,13 @@
+# Beta version (0.99-41)
+
+Streaming:
+- Added speed limit depending on the choice of data transfer mode
+
+# Stable version (0.98-696)
+
+SCPI server:
+- Fixed bug with choosing the type of generated signal
+
 # Beta version (0.98-694)
 
 Bode analyser:
