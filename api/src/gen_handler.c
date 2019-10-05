@@ -48,8 +48,8 @@ int gen_SetDefaultValues() {
     gen_setWaveform(RP_CH_2, RP_WAVEFORM_SINE);
     gen_setOffset(RP_CH_1, 0);
     gen_setOffset(RP_CH_2, 0);
-    gen_setAmplitude(RP_CH_1, 1);
-    gen_setAmplitude(RP_CH_2, 1);
+    gen_setAmplitude(RP_CH_1, AMPLITUDE_MAX);
+    gen_setAmplitude(RP_CH_2, AMPLITUDE_MAX);
     gen_setDutyCycle(RP_CH_1, 0.5);
     gen_setDutyCycle(RP_CH_2, 0.5);
     gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);

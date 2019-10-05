@@ -20,7 +20,7 @@
 #ifdef Z20_250_12
  #define RP_MODEL "Z20_250_12"
  #define DAC_FREQUENCY 250e6
- #define AMPLITUDE_MAX       1.0 // V
+ #define AMPLITUDE_MAX       2.0 // V
 #else 
  #define AMPLITUDE_MAX       1.0 // V
 #endif
