@@ -4,7 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 
-unsigned long g_sleep_time = 1000 * 1000;
+unsigned long g_sleep_time = 50 * 1000;
 
 int max7311::initController(const char *i2c_dev_path,  char address){
     bool state = true;

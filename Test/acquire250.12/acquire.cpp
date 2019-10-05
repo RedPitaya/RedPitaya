@@ -23,6 +23,7 @@
 #include "main_osc.h"
 #include "fpga_osc.h"
 #include "rp-i2c-max7311.h"
+#include "rp-gpio-power.h"
 #include "redpitaya/version.h"
 
 
@@ -111,8 +112,8 @@ void usage() {
             "\n"
             "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
             "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
-            "  --atten1=a      -1 a  Use Channel 1 attenuator setting a [1, 20] (default: 20).\n"
-            "  --atten2=a      -2 a  Use Channel 2 attenuator setting a [1, 20] (default: 20).\n"
+            "  --atten1=a      -1 a  Use Channel 1 attenuator setting a [1, 20] (default: 1).\n"
+            "  --atten2=a      -2 a  Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
             "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
             "                        By default, AC mode is turned on.\n"
             "  --version       -v    Print version info.\n"
@@ -128,6 +129,16 @@ void usage() {
              g_dec[3],
              g_dec[4],
              g_dec[5]);
+}
+
+void PowerOn(){
+    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
+    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_ON);
+} 
+
+void PowerOff(){
+    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
+    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_OFF);
 }
 
 /** Acquire utility main */
@@ -155,8 +166,11 @@ int main(int argc, char *argv[])
             {0, 0, 0, 0}
     };
 
-    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_20);
-    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_20);
+
+    PowerOn();
+    rp_max7311::rp_initController();
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_1);
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_1);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_AC_MODE);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE);
 
@@ -183,6 +197,7 @@ int main(int argc, char *argv[])
             int attenuator;
             if (get_attenuator(&attenuator, optarg) != 0) {
                 usage();
+                PowerOff();
                 return -1;
             }
             if (attenuator == 1) {
@@ -200,6 +215,7 @@ int main(int argc, char *argv[])
             int attenuator;
             if (get_attenuator(&attenuator, optarg) != 0) {
                 usage();
+                PowerOff();
                 return -1;
             }
             if (attenuator == 1) {
@@ -217,6 +233,7 @@ int main(int argc, char *argv[])
             int dc_mode;
             if (get_dc_mode(&dc_mode, optarg) != 0) {
                 usage();
+                PowerOff();
                 return -1;
             }
             if (dc_mode == 1 || dc_mode == 3) {
@@ -254,11 +271,13 @@ int main(int argc, char *argv[])
         if (size > SIGNAL_LENGTH) {
             fprintf(stderr, "Invalid SIZE: %s\n", argv[optind]);
             usage();
+            PowerOff();
             exit( EXIT_FAILURE );
         }
     } else {
         fprintf(stderr, "SIZE parameter missing\n");
         usage();
+        PowerOff();
         exit( EXIT_FAILURE );
     }
     optind++;
@@ -279,6 +298,7 @@ int main(int argc, char *argv[])
         } else {
             fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
             usage();
+            PowerOff();
             return -1;
         }
     }
@@ -291,12 +311,14 @@ int main(int argc, char *argv[])
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
+        PowerOff();
         return -1;
     }
 
     /* Setting of parameters in Oscilloscope main module */
     if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
         fprintf(stderr, "rp_set_params() failed!\n");
+        PowerOff();
         return -1;
     }
 
@@ -337,8 +359,9 @@ int main(int argc, char *argv[])
 
     if(rp_app_exit() < 0) {
         fprintf(stderr, "rp_app_exit() failed!\n");
+        PowerOff();
         return -1;
     }
-
+    PowerOff();
     return 0;
 }

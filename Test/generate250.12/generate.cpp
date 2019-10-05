@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "rp-i2c-max7311.h"
+#include "rp-gpio-power.h"
 #include "fpga_awg.h"
 #include "redpitaya/version.h"
 
@@ -110,7 +111,7 @@ void usage() {
         "\tchannel     Channel to generate signal on [1, 2].\n"
         "\tamplitude   Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency   Signal frequency in Hz [%2.1f - %2.1e].\n"
-        "\tgain        Gain output value [2V, 10V] (default value 2V).\n"
+        "\tgain        Gain output value [x1, x5] (default value x1).\n"
         "\ttype        Signal type [sine, sqr, tri, sweep].\n"
         "\tend frequency   Sweep-to frequency in Hz [%2.1f - %2.1e].\n"
         "\n";
@@ -119,6 +120,16 @@ void usage() {
              g_argv0, c_max_amplitude, c_min_frequency, c_max_frequency,c_min_frequency, c_max_frequency);
 }
 
+
+void PowerOn(){
+    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
+    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_ON);
+} 
+
+void PowerOff(){
+    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
+    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_OFF);
+}
 
 /** Signal generator main */
 int main(int argc, char *argv[])
@@ -177,9 +188,9 @@ int main(int argc, char *argv[])
     /* Gain argument parsing */
     gain_e gain = v_2;
     if (argc > 5) {
-        if ( strcmp(argv[4], "2V") == 0) {
+        if ( strcmp(argv[4], "x1") == 0) {
             gain = v_2;
-        } else if ( strcmp(argv[4], "10V") == 0) {
+        } else if ( strcmp(argv[4], "x5") == 0) {
             gain = v_10;
         } else {
             fprintf(stderr, "Invalid gain type: %s\n", argv[4]);
@@ -187,6 +198,8 @@ int main(int argc, char *argv[])
             return -1;
         }
     }
+    
+    rp_max7311::rp_initController();
 
     if (gain == v_2) {
         if (ch == 0)
@@ -211,7 +224,7 @@ int main(int argc, char *argv[])
 
     awg_param_t params;
     /* Prepare data buffer (calculate from input arguments) */
-    
+    PowerOn();
     synthesize_signal(ampl, freq, type, endfreq, data, &params);
 
     /* Write the data to the FPGA and set FPGA AWG state machine */

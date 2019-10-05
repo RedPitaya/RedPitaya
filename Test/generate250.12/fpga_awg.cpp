@@ -69,7 +69,7 @@ int g_awg_fd = -1;
 
 /* Constants */
 /** DAC frequency (125 Mspmpls (non-decimated)) */
-const double c_awg_smpl_freq = 125e6;
+const double c_awg_smpl_freq = 250e6;
 
 /**
  * Internal function used to clean up memory.

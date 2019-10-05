@@ -66,15 +66,15 @@ int             g_osc_fpga_mem_fd = -1;
 
 /* Constants */
 /** ADC number of bits */
-const int c_osc_fpga_adc_bits = 14;
+const int c_osc_fpga_adc_bits = 12;
 /** @brief Max and min voltage on ADCs. 
  * Symetrical - Max Voltage = +14, Min voltage = -1 * c_osc_fpga_max_v 
  */
-const float c_osc_fpga_adc_max_v  = +14;
+const float c_osc_fpga_adc_max_v  = +2;
 /** Sampling frequency = 125Mspmpls (non-decimated) */
-const float c_osc_fpga_smpl_freq = 125e6;
+const float c_osc_fpga_smpl_freq = 250e6;
 /** Sampling period (non-decimated) - 8 [ns] */
-const float c_osc_fpga_smpl_period = (1. / 125e6);
+const float c_osc_fpga_smpl_period = (1. / 250e6);
 
 /**
  * @brief Internal function used to clean up memory.

@@ -266,10 +266,12 @@ GENERATE_DC_DIR  = generate_DC
 .PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
 .PHONY: acquire250.12 generator250.12
 
-examples: lcr bode monitor monitor_old generator acquire calib generate_DC spectrum
+examples: lcr bode monitor monitor_old calib generate_DC spectrum
 
 ifeq ($(MODEL),Z20_250_12)
 examples: generator250.12 acquire250.12
+else
+examples: generator acquire
 endif
 # calibrate laboardtest
 
