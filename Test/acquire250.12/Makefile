@@ -45,6 +45,8 @@ CC=$(CROSS_COMPILE)gcc
 # Installation directory
 INSTALL_DIR ?= .
 
+.PHONY: all
+
 # Makefile is composed of so called 'targets'. They give basic structure what 
 # needs to be execued during various stages of the building/removing/installing
 # of software package.

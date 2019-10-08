@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include <iostream>
 
 #include "main_osc.h"
 #include "fpga_osc.h"
@@ -370,21 +371,22 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 
     if(*s == NULL)
         return -1;
-
+    //std::cout << "\trp_get_signals 1\n";
     *sig_num = SIGNALS_NUM;
     *sig_len = SIGNAL_LENGTH;
 
     ret_val = rp_osc_get_signals(s, &sig_idx);
-
+    //std::cout << "\trp_get_signals 2\n";
     /* Not finished signal */
     if((ret_val != -1) && sig_idx != SIGNAL_LENGTH-1) {
         return -2;
     }
+    //std::cout << "\trp_get_signals 3\n";
     /* Old signal */
     if(ret_val < 0) {
         return -1;
     }
-
+    //std::cout << "\trp_get_signals 4\n";
     return 0;
 }
 

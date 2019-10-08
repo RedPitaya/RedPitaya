@@ -1,4 +1,3 @@
-
 #include <XMLDocument.h>
 #include <XMLReader.h>
 #include <XMLNode.h>
@@ -19,15 +18,17 @@
 using namespace std;
 using namespace XML;
 
-XMLString bus_node_name("bus_name");
-XMLString bus_node_header_name("header");
-XMLString bus_node_reg_set_name("reg_set");
-XMLString attr_address_string("address");
-XMLString attr_value_string("value");
-XMLString attr_write_string("write");
-XMLString attr_default_string("default");
-XMLString attr_decription_string("decription");
-XMLString attr_length_string("length");
+namespace rp_spi_fpga{
+
+static XML::XMLString bus_node_name("bus_name");
+static XML::XMLString bus_node_header_name("header");
+static XML::XMLString bus_node_reg_set_name("reg_set");
+static XML::XMLString attr_address_string("address");
+static XML::XMLString attr_value_string("value");
+static XML::XMLString attr_write_string("write");
+static XML::XMLString attr_default_string("default");
+static XML::XMLString attr_decription_string("decription");
+static XML::XMLString attr_length_string("length");
 
 bool g_enable_verbous = false;
 #define MSG(args...) if (g_enable_verbous) fprintf(stderr,args);
@@ -68,7 +69,7 @@ XMLDocument* readFile(const char *configuration_file){
 	return doc;
 }
 
-int readAttributeValue(XMLNode *node,XMLString &name,int &value){
+int readAttributeValue(XML::XMLNode *node,XML::XMLString &name,int &value){
     XMLAttribute *attr = nullptr;
     attr = node->GetAttributesByName(name);
     if (attr == nullptr) {
@@ -111,7 +112,13 @@ int rp_read_from_spi(const char* spi_dev_path,char *buffer_header,int header_len
     return read_from_spi(spi_dev_path,buffer_header,header_length,value);
 }
 
-int read_header_length(XMLDocument *doc,int &header_length, string &bus_name){
+ int rp_write_to_spi_fpga(const char* spi_dev_path,int reg_addr, unsigned char spi_val_to_write){
+     return write_to_fpga_spi(spi_dev_path, reg_addr , spi_val_to_write);
+ }
+
+
+
+int read_header_length(XML::XMLDocument *doc,int &header_length, string &bus_name){
     XMLNode *bus_node = doc->FindFirstNodeByName(bus_node_name);
     if (bus_node == nullptr){
         MSG_A("[rp_spi] Missing node bus_name in configuration file\n");
@@ -355,3 +362,80 @@ int rp_spi_compare(const char *configuration_file){
     return 1;
 }
 
+
+int rp_spi_load_via_fpga(const char *configuration_file){
+    string bus_name = "";
+
+    
+    XMLDocument *doc = readFile(configuration_file);
+    if (doc == nullptr) return -1;
+
+    XMLNode *bus_node = doc->FindFirstNodeByName(bus_node_name);
+    if (bus_node == nullptr){
+        MSG_A("[rp_spi] Missing node bus_name in configuration file\n");
+        return  -1;
+    }
+    bus_name =  XMLString::toString(bus_node->GetInnerText());
+
+    XMLNode *bus_reg_set = doc->FindFirstNodeByName(bus_node_reg_set_name);
+    if (bus_reg_set == nullptr){
+        MSG_A("[rp_spi] Missing node reg_set in configuration file\n");
+        return  -1;
+    }
+
+    XMLAttribute *attr = nullptr;
+    auto reg_set_nodes = bus_reg_set->GetChildNodes();
+    for (auto reg: *reg_set_nodes){
+        int  reg_addr = 0 ;
+        int  reg_value = 0;
+        std::string reg_write_mode;
+        int reg_default = 0;
+        std::string reg_description ;
+
+        if (readAttributeValue(reg,attr_address_string,reg_addr)!=0) return -1;
+    
+        if (readAttributeValue(reg,attr_value_string,reg_value)!=0) return -1;
+
+        if (readAttributeValue(reg,attr_default_string,reg_default)!=0) return -1;   
+
+        attr = reg->GetAttributesByName(attr_write_string);
+        if (attr == nullptr) {
+            MSG_A("[rp_spi] Missing attribute write in register\n");
+            return  -1;
+        }
+        reg_write_mode = attr->ValueString();
+
+        attr = reg->GetAttributesByName(attr_decription_string);
+        if (attr == nullptr) {
+            MSG_A("[rp_spi] Missing attribute write in register\n");
+            return  -1;
+        }
+        reg_description = attr->ValueString();
+
+
+        if ((reg_write_mode == "value") || (reg_write_mode == "default")) {
+            /* Write data to spi */
+            char data = 0;
+            if (reg_write_mode == "value") {
+                data = (char)reg_value;
+            }
+
+            if (reg_write_mode == "default") {
+                data = (char)reg_default;
+            }
+
+            if (rp_spi_fpga::rp_write_to_spi_fpga(bus_name.c_str(), reg_addr , data) != 0) {
+                /* Error process */
+                MSG_A("[rp_spi] ERROR write value of %s to spi\n",reg_description.c_str());
+            }
+            MSG("[rp_spi] Success write %s value 0x%.2X by address 0x%.2X \n",reg_description.c_str(),data,reg_addr);
+        }else{
+            MSG("[rp_spi] Skip write %s to i2c\n",reg_description.c_str());
+        }
+    }
+
+    delete doc;
+    return 0;
+}
+
+}

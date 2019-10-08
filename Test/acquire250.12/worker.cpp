@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <stdlib.h>
+#include <iostream>
 
 #include "worker.h"
 #include "fpga_osc.h"
@@ -247,6 +248,7 @@ int rp_osc_clean_signals(void)
 */
 int rp_osc_get_signals(float ***signals, int *sig_idx)
 {
+    //std::cout << "\trp_osc_get_signals 1\n";
     float **s = *signals;
     pthread_mutex_lock(&rp_osc_sig_mutex);
     if(rp_osc_signals_dirty == 0) {
@@ -254,7 +256,7 @@ int rp_osc_get_signals(float ***signals, int *sig_idx)
         pthread_mutex_unlock(&rp_osc_sig_mutex);
         return -1;
     }
-
+    //std::cout << "\trp_osc_get_signals 2\n";
     memcpy(&s[0][0], &rp_osc_signals[0][0], sizeof(float)*SIGNAL_LENGTH);
     memcpy(&s[1][0], &rp_osc_signals[1][0], sizeof(float)*SIGNAL_LENGTH);
     memcpy(&s[2][0], &rp_osc_signals[2][0], sizeof(float)*SIGNAL_LENGTH);
@@ -263,6 +265,7 @@ int rp_osc_get_signals(float ***signals, int *sig_idx)
 
     rp_osc_signals_dirty = 0;
     pthread_mutex_unlock(&rp_osc_sig_mutex);
+    //std::cout << "\trp_osc_get_signals 3\n";
     return 0;
 }
 
@@ -318,12 +321,13 @@ void *rp_osc_worker_thread(void *args)
     pthread_mutex_lock(&rp_osc_ctrl_mutex);
     old_state = state = rp_osc_ctrl;
     pthread_mutex_unlock(&rp_osc_ctrl_mutex);
-
+    //std::cout << "!rp_osc_worker_thread 1\n";
     /* Continuous thread loop (exited only with 'quit' state) */
     while(1) {
         /* update states - we save also old state to see if we need to reset
          * FPGA 
          */
+        //std::cout << "!rp_osc_worker_thread Start\n";
         old_state = state;
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
@@ -344,7 +348,7 @@ void *rp_osc_worker_thread(void *args)
         if(state == rp_osc_quit_state) {
             return 0;
         }
-
+        //std::cout << "!rp_osc_worker_thread 1\n";
         if(fpga_update) {
             osc_fpga_reset();
             if(osc_fpga_update_params((curr_params[TRIG_MODE_PARAM].value == 0),
@@ -380,7 +384,7 @@ void *rp_osc_worker_thread(void *args)
             usleep(10000);
             continue;
         }
-
+        //std::cout << "!rp_osc_worker_thread 2\n";
         if(time_vect_update) {            
 
             rp_osc_prepare_time_vector((float **)&rp_tmp_signals[0], 
@@ -400,22 +404,23 @@ void *rp_osc_worker_thread(void *args)
         
         /* Start new acquisition only if it is the index 0 (new acquisition) */
       
-            float time_delay = curr_params[TRIG_DLY_PARAM].value;
-            /* Start the writting machine */
-            osc_fpga_arm_trigger();
-        
-            /* Be sure to have enough time to load necessary history - wait */
-            if(time_delay < 0) {
-                /* time delay is always in seconds - convert to [us] and
-                * sleep 
-                */
-                usleep(round(-1 * time_delay * 1e6));
-            } else {
-                usleep(1);
-            }
+        float time_delay = curr_params[TRIG_DLY_PARAM].value;
+        /* Start the writting machine */
+        osc_fpga_arm_trigger();
+    
+        /* Be sure to have enough time to load necessary history - wait */
+        if(time_delay < 0) {
+            /* time delay is always in seconds - convert to [us] and
+            * sleep 
+            */
+            usleep(round(-1 * time_delay * 1e6));
+        } else {
+            usleep(1);
+        }
 
-            /* Start the trigger */
-            osc_fpga_set_trigger(trig_source);
+        //trig_source  = 0;
+        /* Start the trigger */
+        osc_fpga_set_trigger(trig_source);
         
 
         /* start working */
@@ -427,7 +432,7 @@ void *rp_osc_worker_thread(void *args)
         } else if(state == rp_osc_quit_state) {
             break;
         }
-
+        //std::cout << "!rp_osc_worker_thread 3\n";
        
             /* polling until data is ready */
             while(1) {
@@ -439,7 +444,7 @@ void *rp_osc_worker_thread(void *args)
                 if((state != old_state) || params_dirty) {
                     break;
                 }
-                
+                //std::cout << "!rp_osc_worker_thread wait data\n";
                 if(osc_fpga_triggered()) {
                     
                     break;
@@ -453,15 +458,16 @@ void *rp_osc_worker_thread(void *args)
             continue;
         }
      
-
+        //std::cout << "!rp_osc_worker_thread 4\n";
         pthread_mutex_lock(&rp_osc_ctrl_mutex);
         state = rp_osc_ctrl;
         params_dirty = rp_osc_params_dirty;
         pthread_mutex_unlock(&rp_osc_ctrl_mutex);
+        
 
         if((state != old_state) || params_dirty)
             continue;
-
+        //std::cout << "!rp_osc_worker_thread 5\n";
 	
 	
 		

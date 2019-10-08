@@ -264,7 +264,7 @@ int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
 
     /* Pre-trigger - we need to limit after trigger acquisition so we can
      * readout historic (pre-trigger) values */
-    
+    //trig_imm = true;
     if (trig_imm)
       after_trigger=OSC_FPGA_SIG_LEN* c_osc_fpga_smpl_period * fpga_dec_factor;
     else

@@ -9,12 +9,17 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 
 #define MSG_A(args...) fprintf(stderr,args);
 static char mode = SPI_MODE_0;
+
+#define MAP_SIZE 4096UL
+#define FPGA_SPI_ADDR 0x40000000
+#define MAP_MASK (MAP_SIZE - 1)
 
 int write_to_spi(const char* spi_dev_path,char *buffer_header,int header_length, unsigned char spi_val_to_write){
     int spi_dev_node = 0;
@@ -111,5 +116,38 @@ int read_from_spi(const char* spi_dev_path,char *buffer_header,int header_length
 	}          
 	close(spi_dev_node);
 	return 0;
+}
+
+
+int write_to_fpga_spi(const char* _path,char a_addr, unsigned char spi_val_to_write){
+	int fd = -1;
+	int retval = 0;
+	void* map_base = (void*)(-1);
+
+	if((fd = open(_path, O_RDWR | O_SYNC)) == -1) return -1;
+
+	/* Read from command line */
+	unsigned long addr;
+
+
+	/* Map one page */
+	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, FPGA_SPI_ADDR);
+	if(map_base == (void *) -1) retval = -1;
+	void* virt_addr = map_base + (0x0050 & MAP_MASK);
+	*((unsigned long *) virt_addr) = (unsigned long)a_addr;
+	virt_addr = map_base	   + (0x0054 & MAP_MASK);
+	*((unsigned long *) virt_addr) = (unsigned long)spi_val_to_write;
+	if (map_base != (void*)(-1)) {
+		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
+		map_base = (void*)(-1);
+	}
+
+	if (map_base != (void*)(-1)) {
+		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
+	}
+	if (fd != -1) {
+		close(fd);
+	}
+	return retval;
 }
 

@@ -18,7 +18,6 @@ int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2
 
 int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,unsigned char *buffer);
 
-
 #ifdef  __cplusplus
 }
 #endif

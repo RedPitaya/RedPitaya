@@ -19,14 +19,16 @@
 using namespace std;
 using namespace XML;
 
-XMLString bus_node_name("bus_name");
-XMLString bus_node_dev_addr_name("device_on_bus");
-XMLString bus_node_reg_set_name("reg_set");
-XMLString attr_address_string("address");
-XMLString attr_value_string("value");
-XMLString attr_write_string("write");
-XMLString attr_default_string("default");
-XMLString attr_decription_string("decription");
+namespace rp_i2c {
+
+static XML::XMLString bus_node_name("bus_name");
+static XML::XMLString bus_node_dev_addr_name("device_on_bus");
+static XML::XMLString bus_node_reg_set_name("reg_set");
+static XML::XMLString attr_address_string("address");
+static XML::XMLString attr_value_string("value");
+static XML::XMLString attr_write_string("write");
+static XML::XMLString attr_default_string("default");
+static XML::XMLString attr_decription_string("decription");
 
 bool g_enable_verbous = false;
 #define MSG(args...) if (g_enable_verbous) fprintf(stderr,args);
@@ -316,3 +318,4 @@ int rp_i2c_compare(const char *configuration_file){
     return 1;
 }
 
+}

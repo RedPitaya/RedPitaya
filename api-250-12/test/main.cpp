@@ -4,6 +4,7 @@
 #include "rp-i2c.h"
 #include "rp-i2c-mcp47x6.h"
 #include "rp-i2c-max7311.h"
+#include "rp-spi.h"
 #include "rp-gpio-power.h"
 
 #define MSG(X,Y) printf("%s status %d\n",X,Y);
@@ -55,8 +56,10 @@ int main()
     // std::cout << "Compare status = " << rp_i2c_compare("../configs/SI571.xml") << "\n";
 
 
-    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
-    sleep(2);
-    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
+    // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
+    // sleep(2);
+    // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
+    rp_spi_fpga::rp_spi_enable_verbous();
+    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
     return 0;
 }

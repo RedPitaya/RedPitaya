@@ -7,6 +7,7 @@ OUT_DIR_INC=$(OUT_DIR)include/
 XML_DIR=./src/xml
 TEST_DIR=./test
 TOOL_DIR=./src/tool
+CONFIG_DIR=./configs
 
 CXXSOURCES_I2C=src/i2c/i2c.cpp src/rp-i2c.cpp src/rp-i2c-mcp47x6.cpp src/rp-i2c-max7311.cpp
 C_OUT_NAME_I2C=$(OUT_DIR)librp-i2c.so
@@ -91,3 +92,4 @@ install:
 	cp  $(C_OUT_NAME_SPI_A) $(INSTALL_DIR)/lib
 	cp  $(C_OUT_NAME_GPIO_A) $(INSTALL_DIR)/lib
 	cp -r $(OUT_DIR_INC)/*.h $(INSTALL_DIR)/include/api250-12
+	cp -r $(CONFIG_DIR) $(INSTALL_DIR)/lib
