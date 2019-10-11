@@ -17,6 +17,21 @@
 
 #include <stdint.h>
 
+#ifdef Z20_250_12
+#define SPECTR_ADC_SAMPLE_RATE (250e6)
+#define SPECTR_ADC_BITS (12)
+#endif
+
+#ifdef Z10
+#define SPECTR_ADC_SAMPLE_RATE (125e6)
+#define SPECTR_ADC_BITS (14)
+#endif
+
+#ifdef Z20
+#define SPECTR_ADC_SAMPLE_RATE (122.880e6)
+#define SPECTR_ADC_BITS (16)
+#endif
+
 /* Base address */
 #define SPECTR_FPGA_BASE_ADDR 0x00100000
 #define SPECTR_FPGA_BASE_SIZE 0x00030000

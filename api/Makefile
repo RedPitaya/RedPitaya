@@ -9,6 +9,8 @@
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
+MODEL ?= Z10
+
 LIBRP=lib/librp.so
 
 all: $(LIBRP)
