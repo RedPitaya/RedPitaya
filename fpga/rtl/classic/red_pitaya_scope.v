@@ -541,8 +541,10 @@ wire              adc_trig_clr2d   ;
 
 assign adc_trig_clr = ((adc_dly_do || adc_trig) && (adc_dly_cnt == 32'h0));
 
-sync #(.DW(1))i_sync (.sclk_i(adc_clk_i),   .srstn_i(adc_rstn_i), .src_i(adc_trig_clr),
-                      .dclk_i(adc_clk2d_i), .drstn_i(adc_rstn_i), .dst_o(adc_trig_clr2d));
+sync #(.DW(1), .PULSE(1)) i_sync
+   (.sclk_i(adc_clk_i),   .srstn_i(adc_rstn_i), .src_i(adc_trig_clr),
+    .dclk_i(adc_clk2d_i), .drstn_i(adc_rstn_i), .dst_o(adc_trig_clr2d)
+);
 
 always @(posedge adc_clk2d_i)
 if (adc_rstn_i == 1'b0) begin
