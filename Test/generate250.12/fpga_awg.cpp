@@ -116,38 +116,27 @@ int fpga_awg_init(void)
 {
     /* Page variables used to calculate correct mapping addresses */
     void *page_ptr;
-    //long page_addr;
-    //long page_off;
-    //long page_size = sysconf(_SC_PAGESIZE);
+    long page_addr;
+    long page_off;
+    long page_size = sysconf(_SC_PAGESIZE);
 
     /* If module was already initialized, clean all internals */
     if(__awg_cleanup_mem() < 0)
         return -1;
 
     /* Open /dev/mem to access directly system memory */
-    g_awg_fd = open("/dev/uio/api", O_RDWR | O_SYNC);
+    g_awg_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if(g_awg_fd < 0) {
-        fprintf(stderr, "open(/dev/uio/api) failed: %s\n", strerror(errno));
+        fprintf(stderr, "open(/dev/mem) failed: %s\n", strerror(errno));
         return -1;
     }
 
- 
-    // offset = (offset >> 20) * sysconf(_SC_PAGESIZE);
+    page_addr = AWG_BASE_ADDR & (~(page_size-1));
+    page_off  = AWG_BASE_ADDR - page_addr;
 
-    // *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
-
-    /* Calculate correct page address and offset from AWG_BASE_ADDR and
-     * AWG_BASE_SIZE 
-     */
-    //page_addr = (AWG_BASE_ADDR >> 20) * sysconf(_SC_PAGESIZE);
-
-    //page_addr = AWG_BASE_ADDR & (~(page_size-1));
-    //page_off  = AWG_BASE_ADDR - page_addr;
-    size_t offset = GENERATE_BASE_ADDR;
-    offset = (offset >> 20) * sysconf(_SC_PAGESIZE);
     /* Map FPGA memory space to page_ptr. */
     page_ptr = mmap(NULL, AWG_BASE_SIZE, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, g_awg_fd, offset);
+                          MAP_SHARED, g_awg_fd, page_addr);
     if((void *)page_ptr == MAP_FAILED) {
         fprintf(stderr, "mmap() failed: %s\n", strerror(errno));
          __awg_cleanup_mem();
@@ -155,11 +144,12 @@ int fpga_awg_init(void)
     }
 
     /* Set FPGA AWG module pointers to correct values. */
-    g_awg_reg = (awg_reg_t*)((long)page_ptr );
+    g_awg_reg = (awg_reg_t*)((long)page_ptr + page_off);
     g_awg_cha_mem = (uint32_t *)g_awg_reg + 
         (AWG_CHA_OFFSET / sizeof(uint32_t));
     g_awg_chb_mem = (uint32_t *)g_awg_reg + 
         (AWG_CHB_OFFSET / sizeof(uint32_t));
+
 
     return 0;
 }

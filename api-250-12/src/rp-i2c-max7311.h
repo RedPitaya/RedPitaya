@@ -87,8 +87,8 @@ namespace rp_max7311{
 
 
 // Flags for AC DC mode
-#define RP_AC_MODE 0x00
-#define RP_DC_MODE 0x01
+#define RP_AC_MODE 0x01
+#define RP_DC_MODE 0x00
 
 #define RP_ATTENUATOR_1_1  0x01
 #define RP_ATTENUATOR_1_20 0x00
