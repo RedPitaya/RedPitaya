@@ -19,6 +19,20 @@
 #include <stdbool.h>
 #include "redpitaya/rp.h"
 
+#ifdef Z20_250_12
+ #define ADC_SAMPLE_PERIOD_DEF 8
+#endif
+
+#ifdef Z10
+#define ADC_SAMPLE_PERIOD_DEF 8
+#endif
+
+// Need for fix in future
+#ifdef Z20 
+#define ADC_SAMPLE_PERIOD_DEF 8
+#endif
+
+
 int acq_SetArmKeep(bool enable);
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state);
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state);

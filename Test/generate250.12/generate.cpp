@@ -225,8 +225,8 @@ int main(int argc, char *argv[])
     awg_param_t params;
     /* Prepare data buffer (calculate from input arguments) */
     PowerOn();
+   
     synthesize_signal(ampl, freq, type, endfreq, data, &params);
-
     /* Write the data to the FPGA and set FPGA AWG state machine */
     write_data_fpga(ch, data, &params);
 }
@@ -368,13 +368,14 @@ void write_data_fpga(uint32_t ch,
     fpga_awg_init();
 
     if(ch == 0) {
+
         /* Channel A */
         g_awg_reg->state_machine_conf = 0x000041;
         g_awg_reg->cha_scale_off      = awg->offsgain;
         g_awg_reg->cha_count_wrap     = awg->wrap;
         g_awg_reg->cha_count_step     = awg->step;
         g_awg_reg->cha_start_off      = 0;
-
+ 
         for(i = 0; i < n; i++) {
             g_awg_cha_mem[i] = data[i];
         }

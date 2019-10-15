@@ -54,6 +54,9 @@ typedef struct osc_control_s {
      * 5 - ChB negative edge
      * 6 - External trigger 0
      * 7 - External trigger 1
+     Only for 250-12
+     * 8 - Arbitrary wave generator positive edge
+     * 9 - Arbitrary wave generator negative edge
      * bits [31 : 3] -reserved
      */
     uint32_t trig_source;

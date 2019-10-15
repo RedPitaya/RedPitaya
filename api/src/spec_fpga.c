@@ -25,6 +25,21 @@
 
 #include "spec_fpga.h"
 
+#ifdef Z20_250_12
+#define SPECTR_ADC_SAMPLE_RATE (125e6)
+#define SPECTR_ADC_BITS (14)
+#endif
+
+#ifdef Z10
+#define SPECTR_ADC_SAMPLE_RATE (125e6)
+#define SPECTR_ADC_BITS (14)
+#endif
+
+#ifdef Z20
+#define SPECTR_ADC_SAMPLE_RATE (122.880e6)
+#define SPECTR_ADC_BITS (16)
+#endif
+
 /* internals */
 /* The FPGA register structure */
 spectr_fpga_reg_mem_t *g_spectr_fpga_reg_mem = NULL;

@@ -17,8 +17,13 @@
 
 #include <stdint.h>
 
+
+#define GENERATE_BASE_ADDR      0x00200000
+#define GENERATE_BASE_SIZE      0x00030000
+
 /** Base AWG FPGA address */
-#define AWG_BASE_ADDR 0x40200000
+//#define AWG_BASE_ADDR 0x40200000
+#define AWG_BASE_ADDR 0x00200000
 /** Base AWG FPGA core size */
 #define AWG_BASE_SIZE 0x30000
 /** FPGA AWG output signal buffer length */

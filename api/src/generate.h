@@ -18,22 +18,11 @@
 
 
 #ifdef Z20_250_12
- #define RP_MODEL "Z20_250_12"
- #define DAC_FREQUENCY 250e6
  #define AMPLITUDE_MAX       2.0 // V
 #else 
  #define AMPLITUDE_MAX       1.0 // V
 #endif
 
-#ifdef Z10
-#define RP_MODEL "Z10"
-#define DAC_FREQUENCY 125e6
-#endif
-
-#ifdef Z20
-#define RP_MODEL "Z20"
-#define DAC_FREQUENCY 122.880e6
-#endif
 
 #define LEVEL_MAX               1.0         // V
 #define ARBITRARY_MIN          -1.0         // V
@@ -85,7 +74,12 @@ typedef struct generate_control_s {
     unsigned int ASM_reset          :1;
     unsigned int AsetOutputTo0      :1;
     unsigned int AgatedBursts       :1;
-    unsigned int                    :7;
+    // Work only 250-12 else return 0
+    unsigned int AtempProtected     :1;
+    unsigned int AlatchedTempAlarm  :1;
+    unsigned int AruntimeTempAlarm  :1;
+    // 
+    unsigned int                    :4;
 
     unsigned int BtriggerSelector   :4;
     unsigned int BSM_WrapPointer    :1;
@@ -93,7 +87,12 @@ typedef struct generate_control_s {
     unsigned int BSM_reset          :1;
     unsigned int BsetOutputTo0      :1;
     unsigned int BgatedBursts       :1;
-    unsigned int                    :7;
+    // Work only 250-12 else return 0
+    unsigned int BtempProtected     :1;
+    unsigned int BlatchedTempAlarm  :1;
+    unsigned int BruntimeTempAlarm  :1;
+    // 
+    unsigned int                    :4;
 
     ch_properties_t properties_chA;
     ch_properties_t properties_chB;
@@ -121,6 +120,13 @@ int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions);
 int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions);
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
 int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay);
+// Only for 250_12
+int generate_getEnableTempProtection(rp_channel_t channel, bool *enable);
+int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
+int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
+int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
+int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
+//
 
 int generate_simultaneousTrigger();
 int generate_Synchronise();
