@@ -500,8 +500,8 @@ endgenerate
 // data loopback
 always @(posedge adc_clk)
 begin
-  adc_dat_sw[0] <= digital_loop ? dac_a : { {2{adc_dat_in[0][14-1]}},  adc_dat_in[0][14-1:2] };
-  adc_dat_sw[1] <= digital_loop ? dac_b : { {2{adc_dat_in[1][14-1]}},  adc_dat_in[1][14-1:2] };
+  adc_dat_sw[0] <= digital_loop ? dac_a : { adc_dat_in[0][14-1:2] , {2{adc_dat_in[0][2]}} };
+  adc_dat_sw[1] <= digital_loop ? dac_b : { adc_dat_in[1][14-1:2] , {2{adc_dat_in[1][2]}} };
 end
 
 ////////////////////////////////////////////////////////////////////////////////
