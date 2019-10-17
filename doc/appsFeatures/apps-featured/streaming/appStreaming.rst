@@ -58,8 +58,8 @@ Start using STEMlab streaming feature
 
     #. ) Download streaming client to your computer.
 
-         `Linux <http://downloads.redpitaya.com/downloads/STEMlab-122-16/ecosystems/streaming/linux-tool.zip>`__.
-         `Windows <http://downloads.redpitaya.com/downloads/STEMlab-122-16/ecosystems/streaming/windows-tool.zip>`__.
+         `Linux <http://downloads.redpitaya.com/downloads/streaming/linux-tool.zip>`__.
+         `Windows <http://downloads.redpitaya.com/downloads/streaming/windows-tool.zip>`__.
 
     #. ) Set app properties & click RUN
 
