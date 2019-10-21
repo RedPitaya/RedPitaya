@@ -11,7 +11,7 @@
 
 #define MSG_A(args...) fprintf(stderr,args);
 
-int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned char i2c_val_to_write){
+int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned char i2c_val_to_write, bool force){
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -23,8 +23,11 @@ int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_r
 		return -1;
 	}
 
+	unsigned long flag = I2C_SLAVE;
+	if (force) flag = I2C_SLAVE_FORCE;
+
 	/* Set I2C_SLAVE for adapter 4 */
-	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	ret_val = ioctl(i2c_dev_node, flag ,i2c_dev_address);
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
@@ -51,7 +54,7 @@ int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_r
 	return 0;
 }
 
-int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned short i2c_val_to_write){
+int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned short i2c_val_to_write, bool force){
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -63,8 +66,11 @@ int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_
 		return -1;
 	}
 
+	unsigned long flag = I2C_SLAVE;
+	if (force) flag = I2C_SLAVE_FORCE;
+
 	/* Set I2C_SLAVE for adapter 4 */
-	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	ret_val = ioctl(i2c_dev_node, flag ,i2c_dev_address);
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
@@ -91,7 +97,7 @@ int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_
 	return 0;
 }
 
-int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value){
+int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value, bool force){
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -103,8 +109,11 @@ int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_
 		return -1;
 	}
 
+	unsigned long flag = I2C_SLAVE;
+	if (force) flag = I2C_SLAVE_FORCE;
+
 	/* Set I2C_SLAVE for adapter 4 */
-	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	ret_val = ioctl(i2c_dev_node,flag,i2c_dev_address);
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
@@ -122,7 +131,7 @@ int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_
 	return 0;
 }
 
-int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, char &value){
+int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, char &value, bool force){
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -134,8 +143,11 @@ int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, cha
 		return -1;
 	}
 
+	unsigned long flag = I2C_SLAVE;
+	if (force) flag = I2C_SLAVE_FORCE;
+
 	/* Set I2C_SLAVE for adapter 4 */
-	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	ret_val = ioctl(i2c_dev_node,flag,i2c_dev_address);
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
@@ -154,7 +166,7 @@ int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, cha
 }
 
 
-int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_command){
+int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_command, bool force){
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -166,8 +178,11 @@ int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i
 		return -1;
 	}
 
+	unsigned long flag = I2C_SLAVE;
+	if (force) flag = I2C_SLAVE_FORCE;
+
 	/* Set I2C_SLAVE for adapter 4 */
-	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	ret_val = ioctl(i2c_dev_node,flag,i2c_dev_address);
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
@@ -192,7 +207,7 @@ int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i
 	return 0;
 }
  
-int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,const unsigned char *buffer,int len){
+int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,const unsigned char *buffer,int len, bool force){
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -204,8 +219,11 @@ int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2
 		return -1;
 	}
 
+	unsigned long flag = I2C_SLAVE;
+	if (force) flag = I2C_SLAVE_FORCE;
+
 	/* Set I2C_SLAVE for adapter 4 */
-	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	ret_val = ioctl(i2c_dev_node,flag,i2c_dev_address);
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
@@ -230,7 +248,7 @@ int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2
 	return 0;
 }
 
-int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,unsigned char *buffer){
+int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,unsigned char *buffer, bool force){
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -242,8 +260,11 @@ int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c
 		return -1;
 	}
 
+	unsigned long flag = I2C_SLAVE;
+	if (force) flag = I2C_SLAVE_FORCE;
+
 	/* Set I2C_SLAVE for adapter 4 */
-	ret_val = ioctl(i2c_dev_node,I2C_SLAVE,i2c_dev_address);
+	ret_val = ioctl(i2c_dev_node,flag,i2c_dev_address);
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);

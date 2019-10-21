@@ -93,3 +93,6 @@ install:
 	cp  $(C_OUT_NAME_GPIO_A) $(INSTALL_DIR)/lib
 	cp -r $(OUT_DIR_INC)/*.h $(INSTALL_DIR)/include/api250-12
 	cp -r $(CONFIG_DIR) $(INSTALL_DIR)/lib
+	
+install_tool:
+	$(MAKE) -C $(TOOL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))

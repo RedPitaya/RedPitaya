@@ -54,7 +54,7 @@ ifeq ($(MODEL),Z20_250_12)
 api: librp250_12
 endif
 
-api: librp 
+api: librp
 
 api2: librp2
 
@@ -269,11 +269,17 @@ GENERATE_DC_DIR  = generate_DC
 examples: lcr bode monitor monitor_old calib generate_DC spectrum
 
 ifeq ($(MODEL),Z20_250_12)
-examples: generator250.12 acquire250.12
+examples: generator250.12 acquire250.12 rp_i2c_tool
 else
 examples: generator acquire
 endif
 # calibrate laboardtest
+
+
+rp_i2c_tool:
+	$(MAKE) -C $(LIBRP250_12_DIR) clean
+	$(MAKE) -C $(LIBRP250_12_DIR) tool
+	$(MAKE) -C $(LIBRP250_12_DIR) install_tool INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr:
 	$(MAKE) -C $(LCR_DIR) clean

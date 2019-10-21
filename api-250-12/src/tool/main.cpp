@@ -49,21 +49,22 @@ bool is_file_exist(const char *fileName)
 }
 
 void UsingArgs(char const* progName){
-    printf("Usage with file: %s -f FILE_NAME [-L][-P][-C][-V]\n ",progName);
+    printf("Usage with file: %s -f FILE_NAME [-L][-P][-F][-C][-V]\n ",progName);
     printf("\t-L (default enable) Load configuration from xml file.\n");
     printf("\t-P Print i2c register values based on configuration file.\n");
     printf("\t-С Compare register values with configuration file.\n\t   If the values match, then the return result is 0.\n");
-    printf("\nUsage direct read: %s -r I2C_DEVICE ADDRESS REGISTER [-V]\n ",progName);
+    printf("\nUsage direct read: %s -r I2C_DEVICE ADDRESS REGISTER [-V][-F]\n ",progName);
     printf("\tI2C_DEVICE Path to device like '/dev/i2c-0'.\n");
     printf("\tADDRESS address of device on i2c bus.\n");
     printf("\tREGISTER register for read.\n");
-    printf("\nUsage direct write: %s -w I2C_DEVICE ADDRESS REGISTER VALUE [-V]\n ",progName);
+    printf("\nUsage direct write: %s -w I2C_DEVICE ADDRESS REGISTER VALUE [-V][-F]\n ",progName);
     printf("\tI2C_DEVICE Path to device like '/dev/i2c-0'.\n");
     printf("\tADDRESS address of device on i2c bus.\n");
     printf("\tREGISTER register for write.\n");
     printf("\tVALUE register for write.\n");
     printf("\n\tADDRESS, REGISTER, VALUE used in HEX format like 0xff.\n");
     printf("\t-V Enables the mode of outputting the result of work to the console.\n");
+    printf("\t-F Force mode. If device alredy used.\n");
     exit(-1);
 }
 
@@ -72,13 +73,14 @@ int main(int argc, char* argv[])
     bool   use_file     = cmdOptionExists(argv, argv + argc, "-f");
     bool   read_value   = cmdOptionExists(argv, argv + argc, "-r");
     bool   write_value  = cmdOptionExists(argv, argv + argc, "-w");
-    bool   verbouse     = cmdOptionExists(argv, argv + argc, "-V");    
+    bool   verbouse     = cmdOptionExists(argv, argv + argc, "-V"); 
+    bool   force_mode   = cmdOptionExists(argv, argv + argc, "-F");   
 
     if (!(use_file ^ read_value ^ write_value)) {
             UsingArgs(argv[0]);
         }
     
-    if (verbouse) rp_i2c_enable_verbous();
+    if (verbouse) rp_i2c::rp_i2c_enable_verbous();
 
     if (use_file) {
         char *file_name = getCmdOption(argv, argv + argc, "-f");
@@ -88,17 +90,19 @@ int main(int argc, char* argv[])
             UsingArgs(argv[0]);
         }
        
+
         int mode = 0;
         if (cmdOptionExists(argv, argv + argc, "-P")) mode = 1;
         if (cmdOptionExists(argv, argv + argc, "-C")) mode = 2;
+
         switch (mode)
         {
             case 1: 
-                return rp_i2c_print(file_name);
+                return rp_i2c::rp_i2c_print(file_name,force_mode);
             case 2:
-                return  rp_i2c_compare(file_name);
+                return  rp_i2c::rp_i2c_compare(file_name,force_mode);
             default: 
-                return  rp_i2c_load(file_name);
+                return  rp_i2c::rp_i2c_load(file_name,force_mode);
         }
     }
 
@@ -125,7 +129,7 @@ int main(int argc, char* argv[])
             UsingArgs(argv[0]);
         }
         char read_val = 0;
-        if (rp_read_from_i2c(I2C_DEVICE,addr,reg,read_val)){
+        if (rp_i2c::rp_read_from_i2c(I2C_DEVICE,addr,reg,read_val,force_mode)){
             printf("ERROR read i2c from %s addr: 0x%.2x\treg: 0x%.2x\n",I2C_DEVICE,addr,reg);
             return -1;
         }
@@ -166,7 +170,7 @@ int main(int argc, char* argv[])
             UsingArgs(argv[0]);
         }
 
-        if (rp_write_to_i2c(I2C_DEVICE,addr,reg,val)){
+        if (rp_i2c::rp_write_to_i2c(I2C_DEVICE,addr,reg,val,force_mode)){
             printf("ERROR write i2c from %s addr: 0x%.2x\treg: 0x%.2x\n",I2C_DEVICE,addr,reg);
             return -1;
         }

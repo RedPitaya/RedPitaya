@@ -80,12 +80,12 @@ int readAttributeValue(XMLNode *node,XMLString &name,int &value){
     return 0;
 }
 
-int rp_write_to_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned short i2c_val_to_write){
-    return write_to_i2c(i2c_dev_path,i2c_dev_address,i2c_dev_reg_addr,i2c_val_to_write);
+int rp_write_to_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned short i2c_val_to_write, bool force){
+    return write_to_i2c(i2c_dev_path,i2c_dev_address,i2c_dev_reg_addr,i2c_val_to_write , force);
 }
 
-int rp_read_from_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value){
-    return read_from_i2c(i2c_dev_path,i2c_dev_address,i2c_dev_reg_addr,value);
+int rp_read_from_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value, bool force){
+    return read_from_i2c(i2c_dev_path,i2c_dev_address,i2c_dev_reg_addr,value , force);
 }
 
 int read_address(XMLDocument *doc,int &device_addr, string &bus_name){
@@ -113,7 +113,7 @@ int read_address(XMLDocument *doc,int &device_addr, string &bus_name){
     return 0;
 }
 
-int rp_i2c_load(const char *configuration_file){
+int rp_i2c_load(const char *configuration_file, bool force){
     int device_addr = 0;
     string bus_name = "";
 
@@ -172,7 +172,7 @@ int rp_i2c_load(const char *configuration_file){
                 data[0] = (char)reg_default;
             }
 
-            if (rp_write_to_i2c(bus_name.c_str(),device_addr, reg_addr, data[0]) != 0) {
+            if (rp_write_to_i2c(bus_name.c_str(),device_addr, reg_addr, data[0],force) != 0) {
                 /* Error process */
                 MSG_A("[rp_i2c] ERROR write value of %s to i2c\n",reg_description.c_str());
             }
@@ -186,7 +186,7 @@ int rp_i2c_load(const char *configuration_file){
     return 0;
 }
 
-int rp_i2c_print(const char *configuration_file){
+int rp_i2c_print(const char *configuration_file, bool force){
     int device_addr = 0;
     string bus_name = "";
 
@@ -231,7 +231,7 @@ int rp_i2c_print(const char *configuration_file){
         }
         reg_description = attr->ValueString();
         
-        if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data) != 0) {
+        if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data ,force) != 0) {
             /* Error process */
             MSG_A("[rp_i2c] ERROR read value of %s to i2c\n",reg_description.c_str());
         }
@@ -242,7 +242,7 @@ int rp_i2c_print(const char *configuration_file){
     return 0;
 }
 
-int rp_i2c_compare(const char *configuration_file){
+int rp_i2c_compare(const char *configuration_file, bool force){
    int device_addr = 0;
     string bus_name = "";
 
@@ -301,7 +301,7 @@ int rp_i2c_compare(const char *configuration_file){
 
             reg_description = attr->ValueString();
         
-            if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data) != 0) {
+            if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data , force) != 0) {
                 /* Error process */
                 MSG_A("[rp_i2c] ERROR read value of %s to i2c\n",reg_description.c_str());
             }

@@ -14,7 +14,7 @@ CXXFLAGS += -I$(OUT_DIR)include
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 OBJECTS=$(CXXOBJECTS)
-LIB=-L$(OUT_DIR) -lrp-i2c -lstdc++
+LIB=-L$(OUT_DIR) -static -lrp-i2c -lstdc++
 
 
 all: $(SOURCES) make_c_app
@@ -27,3 +27,7 @@ make_c_app: $(OBJECTS)
 	$(CXX) $(OBJECTS) $(LIB) -o $(C_OUT_NAME) $(LDFLAGS)
 clean:
 	-$(RM) -rf $(C_OUT_NAME) $(OBJECTS) $(OUT_DIR)
+
+install:
+	mkdir -p $(INSTALL_DIR)/bin
+	cp $(C_OUT_NAME) $(INSTALL_DIR)/bin
