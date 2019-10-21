@@ -78,7 +78,7 @@ Parameter options:
 * ``<amplitude> = {-1V...1V}`` Default: ``1``
 * ``<offset> = {-1V...1V}`` Default: ``0``
 * ``<phase> = {-360deg ... 360deg}`` Default: ``0``
-* ``<dcyc> = {0%...100%}`` Default: ``50``
+* ``<dcyc> = {0...1}`` Default: ``0.5`` Where 1 corresponds to 100%
 * ``<array> = {value1, ...}`` max. 16k values, floats in the range -1 to 1
 * ``<burst> = {ON,OFF}`` Default: ``OFF``
 * ``<count> = {1...50000, INF}`` ``INF`` = infinity/continuous, Default: ``1``
@@ -119,7 +119,7 @@ Parameter options:
 +--------------------------------------+----------------------------+--------------------------------------------------------------------------+
 | | ``SOUR<n>:DCYC <par>``             | ``rp_GenDutyCycle``        | Set duty cycle of PWM waveform.                                          |
 | | Examples:                          |                            |                                                                          |
-| | ``SOUR1:DCYC 20``                  |                            |                                                                          |
+| | ``SOUR1:DCYC 0.2``                 |                            |                                                                          |
 +--------------------------------------+----------------------------+--------------------------------------------------------------------------+
 | | ``SOUR<n>:TRAC:DATA:DATA <array>`` | ``rp_GenArbWaveform``      | Import data for arbitrary waveform generation.                           |
 | | Examples:                          |                            |                                                                          |
