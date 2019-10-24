@@ -35,7 +35,7 @@ mcp47x6::mcp47x6(mcp47x6_model model, const char* i2c_dev_path, uint8_t address)
 
 bool mcp47x6::readConfig() {
     unsigned char buff[8];
-    int size = read_to_i2c_buffer(m_i2c_dev_path,m_devAddr,0,buff,false);
+    int size = read_to_i2c_buffer(m_i2c_dev_path,m_devAddr,0,buff,true);
     printf("size %d 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x \n",size,buff[0],buff[1],buff[2],buff[3],buff[4],buff[5]);    
     if (m_model == MCP4706){
         m_config = buff[0] & 0x1F;

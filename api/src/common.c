@@ -246,6 +246,11 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
     /* adopt the calculation with calibration scaling */
     ret_val *= (double)calibScale / ((double)FULL_SCALE_NORM/(double)adc_max_v);
 
+    // FILE * pFile;
+    // pFile = fopen ("/tmp/debugout.txt","a+");
+    // fprintf (pFile, "calibScale: %f FULL_SCALE_NORM %f: ret_val %f \n\n",calibScale,FULL_SCALE_NORM,ret_val);
+    // fclose (pFile);
+
     return ret_val;
 }
 
@@ -269,6 +274,12 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
 {
     int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, calib_dc_off);
+
+    // FILE * pFile;
+    // pFile = fopen ("/tmp/debugout.txt","a+");
+    // fprintf (pFile, "field_len: %d cnts %d: adc_max %f: calib_dc_off: %d calib_cnts: %d\n",field_len,cnts ,adc_max_v,calib_dc_off,calib_cnts);
+    // fclose (pFile);
+
     return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off);
 }
 

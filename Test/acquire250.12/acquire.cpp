@@ -63,6 +63,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Max decimation index */
 #define DEC_MAX 6
+#define ADC_FULL_RANGE 0.5
 
 /** Decimation translation table */
 static uint32_t g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
@@ -103,6 +104,54 @@ int get_dc_mode(int *value, const char *str)
     return -1;
 }
 
+int get_trigger(int *value, int *edge, const char *str)
+{
+    if  (strncmp(str, "1P", 2) == 0) {
+        *value = 0;
+        *edge  = 0;
+        return 0;
+    }
+    if  (strncmp(str, "1N", 1) == 0)  {
+        *value = 0;
+        *edge  = 1;
+        return 0;
+    }
+
+    if  (strncmp(str, "2P", 2) == 0) {
+        *value = 1;
+        *edge  = 0;
+        return 0;
+    }
+    if  (strncmp(str, "2N", 1) == 0)  {
+        *value = 1;
+        *edge  = 1;
+        return 0;
+    }
+
+     if (strncmp(str, "EP", 2) == 0) {
+        *value = 2;
+        *edge  = 0;
+        return 0;
+    }
+    if  (strncmp(str, "EN", 1) == 0)  {
+        *value = 2;
+        *edge  = 1;
+        return 0;
+    }
+
+    fprintf(stderr, "Unknown trigger value: %s\n", str);
+    return -1;
+}
+
+int get_trigger_level(float *value, const char *str)
+{
+    if (sscanf (str,"%f",value) != 1){
+        fprintf(stderr, "Unknown trigger value: %s\n", str);
+        return -1;
+    }
+    return 0;
+}
+
 
 /** Print usage information */
 void usage() {
@@ -117,8 +166,13 @@ void usage() {
             "  --atten2=a      -2 a  Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
             "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
             "                        By default, AC mode is turned on.\n"
+            "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
+            "                        P - positive edge, N -negative edge. By default trigger no set\n"
+            "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
             "  --version       -v    Print version info.\n"
             "  --help          -h    Print this message.\n"
+            "  --hex           -x    Print value in hex.\n"
+            "  --volt          -o    Print value in volt.\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
             "\n";
@@ -148,6 +202,8 @@ int main(int argc, char *argv[])
     g_argv0 = argv[0];
     int equal = 0;
     int shaping = 0;
+    int hex_mode = 0;
+    bool cnt_to_vol = false;
 
     if ( argc < MINARGS ) {
         usage();
@@ -162,8 +218,12 @@ int main(int argc, char *argv[])
             {"atten1",       required_argument, 0, '1'},
             {"atten2",       required_argument, 0, '2'},
             {"dc",           required_argument, 0, 'd'},
+            {"tr_ch",        required_argument, 0, 't'},
+            {"tr_level",     required_argument, 0, 'l'},
             {"version",      no_argument,       0, 'v'},
             {"help",         no_argument,       0, 'h'},
+            {"hex",          no_argument,       0, 'x'},
+            {"volt",         no_argument,       0, 'o'},
             {0, 0, 0, 0}
     };
 
@@ -175,7 +235,7 @@ int main(int argc, char *argv[])
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_AC_MODE);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE);
 
-    const char *optstring = "es1:2:d:vh";
+    const char *optstring = "esx1:2:d:vht:l:o";
 
     /* getopt_long stores the option index here. */
     int option_index = 0;
@@ -191,6 +251,43 @@ int main(int argc, char *argv[])
         case 's':
             shaping = 1;
             break;
+
+        case 'x':
+            hex_mode = 1;
+            break;
+
+        case 'o':
+            cnt_to_vol = 1;
+            break;
+
+        /* Trigger */
+        case 't':
+        {
+            int trigger = 0;
+            int edge = -1;
+            if (get_trigger(&trigger, &edge, optarg) != 0) {
+                usage();
+                PowerOff();
+                return -1;
+            }
+            t_params[TRIG_MODE_PARAM] = 1;
+            t_params[TRIG_SRC_PARAM] = trigger;
+            t_params[TRIG_EDGE_PARAM] = edge;
+        }
+        break;
+
+         /* Trigger level */
+        case 'l':
+        {
+            float level_trigger = 0;
+            if (get_trigger_level(&level_trigger, optarg) != 0) {
+                usage();
+                PowerOff();
+                return -1;
+            }
+            t_params[TRIG_LEVEL_PARAM] = level_trigger;
+        }
+        break;
 
         /* Attenuator Channel 1 */
         case '1':
@@ -345,9 +442,15 @@ int main(int argc, char *argv[])
                  * s[1][i] - Channel ADC1 raw signal
                  * s[2][i] - Channel ADC2 raw signal
                  */
-		
+                const char *format_str = (hex_mode == 0) ? "%7d %7d\n" : "0x%08X 0x%08X\n";
+
                 for(i = 0; i < MIN((int)size, sig_len); i++) {
-                    printf("%7d %7d\n", (int)s[1][i], (int)s[2][i]);
+                    
+                    int MAX_CNT = 0x1FFF;
+                    if (cnt_to_vol)
+                        printf("%f\t%f\n", osc_fpga_cnv_cnt_to_v((int)s[1][i]) / MAX_CNT * ADC_FULL_RANGE,  osc_fpga_cnv_cnt_to_v((int)s[2][i])/ MAX_CNT * ADC_FULL_RANGE);
+                    else
+                        printf(format_str, (int)s[1][i] & 0x3FFF, (int)s[2][i] & 0x3FFF);
                 }
                 break;
             }

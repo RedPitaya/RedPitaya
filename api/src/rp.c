@@ -805,3 +805,22 @@ float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32
 	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
 }
 
+int rp_SetEnableTempProtection(rp_channel_t channel, bool enable){
+    return gen_setEnableTempProtection(channel,enable);
+}
+
+int rp_GetEnableTempProtection(rp_channel_t channel, bool *enable){
+    return gen_getEnableTempProtection(channel,enable);
+}
+
+int rp_SetLatchTempAlarm(rp_channel_t channel, bool status){
+    return gen_setLatchTempAlarm(channel,status);
+}
+
+int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status){
+    return gen_getLatchTempAlarm(channel,status);
+}
+
+int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status){
+    return gen_getRuntimeTempAlarm(channel,status);
+}

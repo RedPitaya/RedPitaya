@@ -142,10 +142,6 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state){
     #endif
 }
 
-int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
-int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
-int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
-int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
 
 int generate_setAmplitude(rp_channel_t channel, float amplitude) {
     volatile ch_properties_t *ch_properties;

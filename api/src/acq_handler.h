@@ -20,7 +20,7 @@
 #include "redpitaya/rp.h"
 
 #ifdef Z20_250_12
- #define ADC_SAMPLE_PERIOD_DEF 8
+ #define ADC_SAMPLE_PERIOD_DEF 4
 #endif
 
 #ifdef Z10

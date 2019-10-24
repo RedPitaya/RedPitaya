@@ -66,7 +66,7 @@ int             g_osc_fpga_mem_fd = -1;
 
 /* Constants */
 /** ADC number of bits */
-const int c_osc_fpga_adc_bits = 12;
+const int c_osc_fpga_adc_bits = 14;
 /** @brief Max and min voltage on ADCs. 
  * Symetrical - Max Voltage = +14, Min voltage = -1 * c_osc_fpga_max_v 
  */
@@ -550,11 +550,12 @@ int osc_fpga_cnv_v_to_cnt(float voltage)
  */
 float osc_fpga_cnv_cnt_to_v(int cnts)
 {
+    cnts = cnts & 0x3fff;
     int m;
 
     if(cnts & (1<<(c_osc_fpga_adc_bits-1))) {
         /* negative number */
-        m = -1 *((cnts ^ ((1<<c_osc_fpga_adc_bits)-1)) + 1);
+        m = -1 *((cnts ^ ((1<<c_osc_fpga_adc_bits)-1)) + 1);        
     } else {
         m = cnts;
         /* positive number */
