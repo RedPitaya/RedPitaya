@@ -500,8 +500,8 @@ endgenerate
 // data loopback
 always @(posedge adc_clk)
 begin
-  adc_dat_sw[0] <= digital_loop ? dac_a : { adc_dat_in[0][14-1:2] , {2{adc_dat_in[0][2]}} };
-  adc_dat_sw[1] <= digital_loop ? dac_b : { adc_dat_in[1][14-1:2] , {2{adc_dat_in[1][2]}} };
+  adc_dat_sw[0] <= digital_loop ? dac_a : { adc_dat_in[1][14-1:2] , {2{adc_dat_in[1][2]}} }; // switch adc_b->ch_a
+  adc_dat_sw[1] <= digital_loop ? dac_b : { adc_dat_in[0][14-1:2] , {2{adc_dat_in[0][2]}} }; // switch adc_a->ch_b
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -531,8 +531,8 @@ BUFG bufg_dac_dco    (.O (dac_dco_bufg ), .I(dac_dco_i));
 
 //always @(posedge dac_dco_bufg) begin
 always @(posedge adc_clk) begin
-  dac_dat_o[0] <= dac_dat_a ;
-  dac_dat_o[1] <= dac_dat_b ;
+  dac_dat_o[0] <= dac_dat_b ; // switch ch_b->dac_a
+  dac_dat_o[1] <= dac_dat_a ; // switch ch_a->dac_b
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -542,13 +542,14 @@ end
 logic [  8-1: 0] exp_p_in , exp_n_in ;
 logic [  8-1: 0] exp_p_out, exp_n_out;
 logic [  8-1: 0] exp_p_dir, exp_n_dir;
+logic [  8-1: 0] led_hk;
 
 red_pitaya_hk i_hk (
   // system signals
   .clk_i           (adc_clk2d),  // clock
   .rstn_i          (adc_rstn),  // reset - active low
   // LED
-  .led_o           (led_o),  // LED output
+  .led_o           (led_hk),  // LED output
   // idelay control
   .idly_rst_o      (idly_rst    ),
   .idly_ce_o       (idly_ce     ),
@@ -586,6 +587,9 @@ red_pitaya_hk i_hk (
 ////////////////////////////////////////////////////////////////////////////////
 // LED
 ////////////////////////////////////////////////////////////////////////////////
+
+assign led_o = {led_hk[3:0], led_hk[7:4]}; // switch low and high nibble
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO
