@@ -28,7 +28,13 @@ export VERSION
 MODEL ?= Z10
 ENABLE_PRODUCTION_TEST ?= 0
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
+all: api nginx examples  apps-tools apps-pro  production_test
+
+ifeq ($(MODEL),Z20_250_12)
+all: 
+else
+all: sdr apps-free-vna scpi rp_communication
+endif
 
 $(DL):
 	mkdir -p $@
@@ -383,7 +389,13 @@ APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager
 
-apps-tools: ecosystem updater scpi_manager network_manager jupyter_manager
+apps-tools: ecosystem updater network_manager 
+
+ifeq ($(MODEL),Z20_250_12)
+apps-tools: 
+else
+apps-tools: scpi_manager jupyter_manager
+endif
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
@@ -439,7 +451,12 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
-apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro
+apps-pro: scopegenpro spectrumpro 
+ifeq ($(MODEL),Z20_250_12)
+apps-pro: 
+else
+apps-pro: lcr_meter la_pro ba_pro
+endif
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
