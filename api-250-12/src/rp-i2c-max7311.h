@@ -79,11 +79,11 @@ namespace max7311{
 
 namespace rp_max7311{
 
-#define RP_MAX7311_IN1 0x02
-#define RP_MAX7311_IN2 0x01
+#define RP_MAX7311_IN1 0x01
+#define RP_MAX7311_IN2 0x02
 
-#define RP_MAX7311_OUT1 0x02
-#define RP_MAX7311_OUT2 0x01
+#define RP_MAX7311_OUT1 0x01
+#define RP_MAX7311_OUT2 0x02
 
 
 // Flags for AC DC mode
