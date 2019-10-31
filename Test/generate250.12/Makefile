@@ -39,7 +39,7 @@ CXXFLAGS += -DADC_SAMPLE_RATE=$(ADC_SAMPLE_RATE) -DADC_BITS=$(ADC_BITS)
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -L../../api-250-12/bin/ -static -lrp-i2c -static -lrp-gpio -lstdc++
+LIBS=-lm -L../../api-250-12/bin/ -static -lrp-i2c -static -lrp-gpio -static -lrp-spi -lstdc++
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc

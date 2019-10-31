@@ -5,7 +5,7 @@ int write_to_spi(const char* spi_dev_path,char *buffer_header,int header_length,
 
 int read_from_spi(const char* spi_dev_path,char *buffer_header,int header_length, char &value);
 
-int write_to_fpga_spi(const char* _path,char a_addr, unsigned char spi_val_to_write);
+int write_to_fpga_spi(const char* _path,unsigned short dev_address,char a_addr, unsigned char spi_val_to_write);
 
 
 

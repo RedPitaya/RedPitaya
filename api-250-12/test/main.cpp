@@ -11,23 +11,23 @@
 
 int main()
 {
-    RP_MCP47X6::mcp47x6 chip(RP_MCP47X6::mcp47x6_model::MCP4716,"/dev/i2c-0");
-    printf("MAX Level %x\n",chip.getMaxLevel());
-    chip.readConfig();
-    printf("GAIN %x\n",chip.getGain());
-    printf("GAIN eeprom %x\n",chip.getGainEeprom());
-    printf("POWER %x\n",chip.getPowerDown());
-    printf("POWER eeprom %x\n",chip.getPowerDownEeprom());
-    printf("Vref %x\n",chip.getVReferenc());
-    printf("Vref eeprom %x\n",chip.getVReferencEeprom());
-    printf("Level %x\n",chip.getOutputLevel());
-    printf("Level eeprom %x\n",chip.getOutputLevelEeprom());
+    // RP_MCP47X6::mcp47x6 chip(RP_MCP47X6::mcp47x6_model::MCP4716,"/dev/i2c-0");
+    // printf("MAX Level %x\n",chip.getMaxLevel());
+    // chip.readConfig();
+    // printf("GAIN %x\n",chip.getGain());
+    // printf("GAIN eeprom %x\n",chip.getGainEeprom());
+    // printf("POWER %x\n",chip.getPowerDown());
+    // printf("POWER eeprom %x\n",chip.getPowerDownEeprom());
+    // printf("Vref %x\n",chip.getVReferenc());
+    // printf("Vref eeprom %x\n",chip.getVReferencEeprom());
+    // printf("Level %x\n",chip.getOutputLevel());
+    // printf("Level eeprom %x\n",chip.getOutputLevelEeprom());
 
-    chip.setGain(MCP47X6_GAIN_2X);
-    chip.setPowerDown(MCP47X6_AWAKE);
-    chip.setVReference(MCP47X6_VREF_VDD);
-    chip.setOutputLevel(0);
-    chip.writeConfig();
+    // chip.setGain(MCP47X6_GAIN_2X);
+    // chip.setPowerDown(MCP47X6_AWAKE);
+    // chip.setVReference(MCP47X6_VREF_VDD);
+    // chip.setOutputLevel(0);
+    // chip.writeConfig();
 
     // MSG("Init",rp_max7311::rp_initController());
     // MSG("set AC/DC 1",rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_DC_MODE));
@@ -56,10 +56,11 @@ int main()
     // std::cout << "Compare status = " << rp_i2c_compare("../configs/SI571.xml") << "\n";
 
 
-    // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
-    // sleep(2);
-    // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
-    // rp_spi_fpga::rp_spi_enable_verbous();
-    // rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
+   // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
+    sleep(2);
+   // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
+    rp_spi_fpga::rp_spi_enable_verbous();
+    //rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
+    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
     return 0;
 }

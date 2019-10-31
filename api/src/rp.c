@@ -63,6 +63,7 @@ int rp_Release()
     hk_Release();
     calib_Release();
     cmn_Release();
+
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
 }

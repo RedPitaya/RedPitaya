@@ -6,6 +6,7 @@
 -->
 <configuration>
     <bus_name>/dev/mem</bus_name>
+    <device_on_bus address="0x50"/> <!-- offset in register of fpga (0x40000050) -->
     <reg_set>
         <!-- Chip configuration -->
         <register address="0x00" value="0x18" write="none"  default="0x18" decription="SPI port config"/>
