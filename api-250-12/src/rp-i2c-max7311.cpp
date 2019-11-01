@@ -119,12 +119,12 @@ int  rp_max7311::rp_initController(){
 
 int  rp_max7311::rp_setAC_DC(char port,char mode){
     switch(port){
-        case RP_MAX7311_IN1:
+        case RP_MAX7311_IN2:
             if (max7311::setPIN_GROUP(PIN_K1,mode) == -1) return -1;
             usleep(g_sleep_time);
             if (max7311::setPIN_GROUP(PIN_K1,-1) == -1) return -1; 
             break;
-        case RP_MAX7311_IN2:
+        case RP_MAX7311_IN1:
             if (max7311::setPIN_GROUP(PIN_K2,mode) == -1) return -1;
             usleep(g_sleep_time);
             if (max7311::setPIN_GROUP(PIN_K2,-1) == -1) return -1; 
@@ -138,12 +138,12 @@ int  rp_max7311::rp_setAC_DC(char port,char mode){
 
 int  rp_max7311::rp_setAttenuator(char port,char mode){
     switch(port){
-        case RP_MAX7311_IN1:
+        case RP_MAX7311_IN2:
             if (max7311::setPIN_GROUP(PIN_K3,mode) == -1) return -1;
             usleep(g_sleep_time);
             if (max7311::setPIN_GROUP(PIN_K3,-1) == -1) return -1; 
             break;
-        case RP_MAX7311_IN2:
+        case RP_MAX7311_IN1:
             if (max7311::setPIN_GROUP(PIN_K4,mode) == -1) return -1;
             usleep(g_sleep_time);
             if (max7311::setPIN_GROUP(PIN_K4,-1) == -1) return -1; 
@@ -157,12 +157,12 @@ int  rp_max7311::rp_setAttenuator(char port,char mode){
 
 int  rp_max7311::rp_setGainOut(char port,char mode){
     switch(port){
-        case RP_MAX7311_OUT1:
+        case RP_MAX7311_OUT2:
             if (max7311::setPIN_GROUP(PIN_K5,mode) == -1) return -1;
             usleep(g_sleep_time);
             if (max7311::setPIN_GROUP(PIN_K5,-1) == -1) return -1; 
             break;
-        case RP_MAX7311_OUT2:
+        case RP_MAX7311_OUT1:
             if (max7311::setPIN_GROUP(PIN_K6,mode) == -1) return -1;
             usleep(g_sleep_time);
             if (max7311::setPIN_GROUP(PIN_K6,-1) == -1) return -1; 
