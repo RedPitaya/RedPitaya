@@ -210,9 +210,9 @@ nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 
 startupsh:
 ifeq ($(MODEL),Z20_250_12)
-	cp -f /patches/startup/startup.sh.Z250_12 $(STARTUPSH)
+	cp -f patches/startup/startup.sh.Z250_12 $(STARTUPSH)
 else
-	cp -f /patches/startup/startup.sh $(STARTUPSH)
+	cp -f patches/startup/startup.sh $(STARTUPSH)
 endif
 
 
