@@ -1,0 +1,5 @@
+
+#!/bash/bin
+
+/opt/redpitaya/bin/rp_power_on
+

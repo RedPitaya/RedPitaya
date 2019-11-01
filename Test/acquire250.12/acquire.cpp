@@ -187,17 +187,7 @@ void usage() {
              g_dec[5]);
 }
 
-void PowerOn(){
-    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
-    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_ON);
-    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
-    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
-} 
 
-void PowerOff(){
-    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
-    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_OFF);
-}
 
 /** Acquire utility main */
 int main(int argc, char *argv[])
@@ -231,7 +221,6 @@ int main(int argc, char *argv[])
     };
 
 
-    PowerOn();
     rp_max7311::rp_initController();
     rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_1);
     rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_1);
@@ -270,7 +259,6 @@ int main(int argc, char *argv[])
             int edge = -1;
             if (get_trigger(&trigger, &edge, optarg) != 0) {
                 usage();
-                PowerOff();
                 return -1;
             }
             t_params[TRIG_MODE_PARAM] = 1;
@@ -285,7 +273,6 @@ int main(int argc, char *argv[])
             float level_trigger = 0;
             if (get_trigger_level(&level_trigger, optarg) != 0) {
                 usage();
-                PowerOff();
                 return -1;
             }
             t_params[TRIG_LEVEL_PARAM] = level_trigger;
@@ -298,7 +285,6 @@ int main(int argc, char *argv[])
             int attenuator;
             if (get_attenuator(&attenuator, optarg) != 0) {
                 usage();
-                PowerOff();
                 return -1;
             }
             if (attenuator == 1) {
@@ -316,7 +302,6 @@ int main(int argc, char *argv[])
             int attenuator;
             if (get_attenuator(&attenuator, optarg) != 0) {
                 usage();
-                PowerOff();
                 return -1;
             }
             if (attenuator == 1) {
@@ -334,7 +319,6 @@ int main(int argc, char *argv[])
             int dc_mode;
             if (get_dc_mode(&dc_mode, optarg) != 0) {
                 usage();
-                PowerOff();
                 return -1;
             }
             if (dc_mode == 1 || dc_mode == 3) {
@@ -372,13 +356,11 @@ int main(int argc, char *argv[])
         if (size > SIGNAL_LENGTH) {
             fprintf(stderr, "Invalid SIZE: %s\n", argv[optind]);
             usage();
-            PowerOff();
             exit( EXIT_FAILURE );
         }
     } else {
         fprintf(stderr, "SIZE parameter missing\n");
         usage();
-        PowerOff();
         exit( EXIT_FAILURE );
     }
     optind++;
@@ -399,7 +381,6 @@ int main(int argc, char *argv[])
         } else {
             fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
             usage();
-            PowerOff();
             return -1;
         }
     }
@@ -412,14 +393,12 @@ int main(int argc, char *argv[])
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
         fprintf(stderr, "rp_app_init() failed!\n");
-        PowerOff();
         return -1;
     }
 
     /* Setting of parameters in Oscilloscope main module */
     if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
         fprintf(stderr, "rp_set_params() failed!\n");
-        PowerOff();
         return -1;
     }
 
@@ -468,9 +447,7 @@ int main(int argc, char *argv[])
 
     if(rp_app_exit() < 0) {
         fprintf(stderr, "rp_app_exit() failed!\n");
-        PowerOff();
         return -1;
     }
-    PowerOff();
     return 0;
 }

@@ -122,17 +122,6 @@ void usage() {
 }
 
 
-void PowerOn(){
-    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
-    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_ON);
-    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
-    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
-} 
-
-void PowerOff(){
-    rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
-    rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_OFF);
-}
 
 /** Signal generator main */
 int main(int argc, char *argv[])
@@ -227,7 +216,6 @@ int main(int argc, char *argv[])
 
     awg_param_t params;
     /* Prepare data buffer (calculate from input arguments) */
-    PowerOn();
    
     synthesize_signal(ampl, freq, type, endfreq, data, &params);
     /* Write the data to the FPGA and set FPGA AWG state machine */

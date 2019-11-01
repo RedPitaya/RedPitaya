@@ -28,7 +28,7 @@ export VERSION
 MODEL ?= Z10
 ENABLE_PRODUCTION_TEST ?= 0
 
-all: api nginx examples  apps-tools apps-pro  production_test
+all: api nginx examples  apps-tools apps-pro  production_test startupsh
 
 ifeq ($(MODEL),Z20_250_12)
 all: 
@@ -111,6 +111,7 @@ NGINX_DIR       = Bazaar/nginx
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
+STARTUPSH       = $(INSTALL_DIR)/sbin/startup.sh
 
 WEBSOCKETPP_TAG = 0.7.0
 LUANGINX_TAG    = v0.10.7
@@ -206,6 +207,14 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 	cp $</sockproc $@
 
 nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
+
+startupsh:
+ifeq ($(MODEL),Z20_250_12)
+	cp -f /patches/startup/startup.sh.Z250_12 $(STARTUPSH)
+else
+	cp -f /patches/startup/startup.sh $(STARTUPSH)
+endif
+
 
 ################################################################################
 # SCPI server

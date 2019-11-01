@@ -7,6 +7,7 @@ OUT_DIR_INC=$(OUT_DIR)include/
 XML_DIR=./src/xml
 TEST_DIR=./test
 TOOL_DIR=./src/tool
+POWER_ON_DIR=./src/power_on
 CONFIG_DIR=./configs
 
 CXXSOURCES_I2C=src/i2c/i2c.cpp src/rp-i2c.cpp src/rp-i2c-mcp47x6.cpp src/rp-i2c-max7311.cpp
@@ -45,6 +46,8 @@ xml:
 
 tool: all 
 	$(MAKE) -C $(TOOL_DIR)
+	$(MAKE) -C $(POWER_ON_DIR)
+
 
 .cpp.o:
 	$(CXX) -c $(CXXFLAGS) $< -o $@
@@ -96,3 +99,4 @@ install:
 	
 install_tool:
 	$(MAKE) -C $(TOOL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(POWER_ON_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
