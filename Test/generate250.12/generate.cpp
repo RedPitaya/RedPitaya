@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
         }
     }
     
-    rp_max7311::rp_initController();
+    //rp_max7311::rp_initController();
 
     if (gain == v_2) {
         if (ch == 0)
