@@ -14,7 +14,7 @@ CXXFLAGS += -I$(OUT_DIR)include
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 OBJECTS=$(CXXOBJECTS)
-LIB=-L$(OUT_DIR) -static -lrp-gpio  -static -lrp-spi -lstdc++
+LIB=-L$(OUT_DIR) -static -lrp-gpio  -static -lrp-spi -static -lrp-i2c -lstdc++
 
 
 all: $(SOURCES) make_c_app
