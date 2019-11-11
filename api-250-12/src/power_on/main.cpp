@@ -39,8 +39,8 @@ bool CheckMissing(const char* val,const char* Message)
 
 void UsingArgs(){
     printf("Usage with file: [-P]|[-C]\n");
-    printf("\t-P Power on ADC and DAC.\n");
-    printf("\t-С Load configuration of ADC and DAC. Initialization MAX7311.\n");
+    printf("\t-P Power on ADC and DAC. Initialization MAX7311.\n");
+    printf("\t-С Load configuration of ADC and DAC. \n");
     printf("\tDo not use flags together");
     
     exit(-1);
@@ -59,12 +59,12 @@ int main(int argc, char* argv[])
     if (mode1) {
         rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
         rp_gpio_power::rp_set_power_mode(DAC_POWER,POWER_ON);
+        rp_max7311::rp_initController();
     }
 
     if (mode2) {
         rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
         rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
-        rp_max7311::rp_initController();
     }
     return 0;
 }
