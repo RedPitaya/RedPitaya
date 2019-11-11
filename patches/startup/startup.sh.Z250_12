@@ -3,9 +3,9 @@
 
 # Turns on the power to the ADC and DAC
 /opt/redpitaya/bin/rp_power_on -P
-sleep 1
+sleep 3
 cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
-sleep 1
+sleep 3
 # Loads the ADC and DAC registers through FPGA. Initializes the MAX7133 chip
 /opt/redpitaya/bin/rp_power_on -C 
 
