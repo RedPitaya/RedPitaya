@@ -187,15 +187,9 @@ int acq_GetGain(rp_channel_t channel, rp_pinState_t* state)
  */
 int acq_GetGainV(rp_channel_t channel, float* voltage)
 {
-    #ifdef Z20_250_12
+     #ifdef Z20 
          *voltage = 1;
-    #endif
-
-    #ifdef Z20 
-        *voltage = 1;
-    #endif 
-
-    #ifdef Z10
+     #else 
         rp_pinState_t *gain = NULL;
 
         if (channel == RP_CH_1) {
