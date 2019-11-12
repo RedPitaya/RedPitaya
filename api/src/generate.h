@@ -19,12 +19,14 @@
 
 #ifdef Z20_250_12
  #define AMPLITUDE_MAX       2.0 // V
+ #define LEVEL_MAX           2.0 // V
 #else 
  #define AMPLITUDE_MAX       1.0 // V
+ #define LEVEL_MAX           1.0 // V
 #endif
 
 
-#define LEVEL_MAX               1.0         // V
+
 #define ARBITRARY_MIN          -1.0         // V
 #define ARBITRARY_MAX           1.0         // V
 #define OFFSET_MAX              2.0         // V

@@ -61,7 +61,7 @@ const double c_max_frequency = ADC_SAMPLE_RATE / 2.0;
 const double c_min_frequency = 0;
 
 /** Maximal signal amplitude [Vpp] */
-const double c_max_amplitude = 2.0;
+const double c_max_amplitude = 4.0;
 
 /** AWG buffer length [samples]*/
 #define n (16*1024)
@@ -241,25 +241,47 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
                        awg_param_t *awg) {
 
     uint32_t i;
+    ampl /= 2.0; // Vpp to amplitude
+//     /* Various locally used constants - HW specific parameters */
+//    // const int dcoffs = -155;
+//     const int trans0 = 30;
+//     const int trans1 = 300;
+//     const double tt2 = 0.249;
 
-    /* Various locally used constants - HW specific parameters */
-   // const int dcoffs = -155;
+//     /* This is where frequency is used... */
+//     awg->offsgain =  0x1fff * (ampl / 4.0);
+//     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
+//     awg->wrap = round(65536 * n - 1);
+
+//     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
+//     uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
+//     if (amp > 8191) {
+//         /* Truncate to max value if needed */
+//         amp = 8191;
+//     }
+//     //uint32_t amp = 8191;
+
+//     if (trans <= 10) {
+//         trans = trans0;
+//     }
+
+ /* Various locally used constants - HW specific parameters */
+    const int dcoffs = -155;
     const int trans0 = 30;
     const int trans1 = 300;
     const double tt2 = 0.249;
 
     /* This is where frequency is used... */
-    awg->offsgain =  0x1fff * (ampl / 2.0);
+    awg->offsgain = (dcoffs << 16) + 0x1fff;
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
     awg->wrap = round(65536 * n - 1);
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
-    // uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
+    uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
     // if (amp > 8191) {
     //     /* Truncate to max value if needed */
     //     amp = 8191;
     // }
-    uint32_t amp = 8191;
 
     if (trans <= 10) {
         trans = trans0;

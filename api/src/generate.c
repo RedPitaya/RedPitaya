@@ -309,7 +309,7 @@ int generate_writeData(rp_channel_t channel, float *data, uint32_t start, uint32
     uint32_t amp_max = 0; //channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
 
     for(int i = start; i < start+BUFFER_LENGTH; i++) {
-        dataOut[i % BUFFER_LENGTH] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i-start], AMPLITUDE_MAX, false, amp_max, dc_offs, 0.0);
+        dataOut[i % BUFFER_LENGTH] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i-start] * AMPLITUDE_MAX, AMPLITUDE_MAX, false, amp_max, dc_offs, 0.0);
     }
     return RP_OK;
 }
