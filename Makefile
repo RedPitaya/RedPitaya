@@ -358,7 +358,7 @@ rp_communication:
 	make -C $(COMM_DIR)
 
 generate_DC: api
-	$(MAKE) -C $(GENERATE_DC_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(GENERATE_DC_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp $(GENERATE_DC_DIR)/generate_DC $(INSTALL_DIR)/bin/
 	cp $(GENERATE_DC_DIR)/generate_DC_LO $(INSTALL_DIR)/bin/
 
