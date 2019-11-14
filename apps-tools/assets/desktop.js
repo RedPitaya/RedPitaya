@@ -51,6 +51,8 @@
             			for (i = default_applications.length - 1; i >= 0; i -= 1){
                                 if (default_applications[i]["id"] === 'marketplace' 
                                     || default_applications[i]["id"] === 'fpgaexamples' 
+                                    || default_applications[i]["id"] === 'scpi' 
+                                    || default_applications[i]["id"] === 'jupyter' 
                                     || default_applications[i]["id"] === 'activelearning'){
    							 	        default_applications.splice(i, 1);
    								}
