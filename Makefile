@@ -56,17 +56,17 @@ ECOSYSTEM_DIR   = Applications/ecosystem
 .PHONY: api api2 librp librp1 librp250_12
 .PHONY: librpapp liblcr_meter
 
-ifeq ($(MODEL),Z20_250_12)
-api: librp250_12
-endif
-
 api: librp
 
 api2: librp2
 
+ifeq ($(MODEL),Z20_250_12)
+librp: librp250_12
+else
 librp:
+endif
 	$(MAKE) -C $(LIBRP_DIR) clean
-	$(MAKE) -C $(LIBRP_DIR)
+	$(MAKE) -C $(LIBRP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp1:
@@ -339,9 +339,9 @@ calib:
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-spectrum:
+spectrum: api
 	$(MAKE) -C $(SPECTRUM_DIR) clean
-	$(MAKE) -C $(SPECTRUM_DIR)
+	$(MAKE) -C $(SPECTRUM_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api

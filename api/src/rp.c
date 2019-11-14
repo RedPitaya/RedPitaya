@@ -578,12 +578,12 @@ int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state)
     return acq_SetGain(channel, state);
 }
 
-int rp_AcqGetTriggerLevel(float* voltage)
+int rp_AcqGetTriggerLevel(rp_channel_trigger_t channel, float* voltage)
 {
-    return acq_GetTriggerLevel(voltage);
+    return acq_GetTriggerLevel(channel,voltage);
 }
 
-int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage)
+int rp_AcqSetTriggerLevel(rp_channel_trigger_t channel, float voltage)
 {
     return acq_SetTriggerLevel(channel, voltage);
 }

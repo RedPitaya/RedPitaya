@@ -22,6 +22,10 @@
 #include "oscilloscope.h"
 #include "acq_handler.h"
 
+#ifdef Z20_250_12
+#include "rp-i2c-mcp47x6-c.h"
+#endif
+
 
 // Decimation constants
 static const uint32_t DEC_1     = 1;
@@ -133,7 +137,6 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     if (channel == RP_CH_1) {
         gain = &gain_ch_a;
     }
-
     else {
         gain = &gain_ch_b;
     }
@@ -415,16 +418,46 @@ int acq_GetWritePointerAtTrig(uint32_t* pos)
     return osc_GetWritePointerAtTrig(pos);
 }
 
-int acq_SetTriggerLevel(rp_channel_t channel, float voltage)
+int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage)
 {
-    acq_SetChannelThreshold(channel, voltage);
-    return RP_OK;
+    switch(channel){
+        case RP_T_CH_1: return acq_SetChannelThreshold(RP_CH_1, voltage);
+        case RP_T_CH_2: return acq_SetChannelThreshold(RP_CH_2, voltage);
+        case RP_T_CH_EXT: {
+            #ifdef Z20_250_12
+                int ret = rp_setExtTriggerLevel(voltage);
+                switch(ret){
+                    case RP_I2C_EOOR: return RP_EOOR;
+                    case RP_I2C_EFRB: return RP_EFRB;
+                    case RP_I2C_EFWB: return RP_EFWB;
+                    default:
+                        return RP_OK;
+                }   
+            #endif
+        }
+    }
+    return RP_NOTS;
 }
 
-int acq_GetTriggerLevel(float *voltage)
+int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage)
 {
-    acq_GetChannelThreshold(RP_CH_1, voltage);
-    return RP_OK;
+    switch(channel){
+        case RP_T_CH_1: return acq_GetChannelThreshold(RP_CH_1, voltage);
+        case RP_T_CH_2: return acq_GetChannelThreshold(RP_CH_2, voltage);
+        case RP_T_CH_EXT: {
+            #ifdef Z20_250_12
+                int ret = rp_getExtTriggerLevel(voltage);
+                switch(ret){
+                    case RP_I2C_EOOR: return RP_EOOR;
+                    case RP_I2C_EFRB: return RP_EFRB;
+                    case RP_I2C_EFWB: return RP_EFWB;
+                    default:
+                        return RP_OK;
+                }   
+            #endif
+        }
+    }
+    return RP_NOTS;
 }
 
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage)

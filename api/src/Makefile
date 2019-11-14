@@ -61,6 +61,12 @@ LDFLAGS=-shared -Wl,--version-script=exportmap
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBS=-lm -lpthread
 
+ifeq ($(MODEL),Z20_250_12)
+INCLUDE += -I$(INSTALL_DIR)/include/api250-12
+LDFLAGS += -L$(INSTALL_DIR)/lib 
+LDFLAGS += -lrp-i2c
+endif 
+
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
 
@@ -76,7 +82,7 @@ all: $(TARGET)
 # objects (.o) files.
 $(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
 	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
 
 # Makefile target with rules how to link executable for each target from
 # $(SHARED_LIB) list.

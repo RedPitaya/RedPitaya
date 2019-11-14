@@ -199,9 +199,19 @@ typedef enum {
  * Type representing Input/Output channels.
  */
 typedef enum {
-    RP_CH_1, //!< Channel A
-    RP_CH_2  //!< Channel B
+    RP_CH_1,    //!< Channel A
+    RP_CH_2     //!< Channel B
 } rp_channel_t;
+
+
+/**
+ * Type representing Input/Output channels in trigger.
+ */
+typedef enum {
+    RP_T_CH_1,    //!< Channel A
+    RP_T_CH_2,    //!< Channel B
+    RP_T_CH_EXT,  // External trigger (only for 250-12)
+} rp_channel_trigger_t;
 
 /**
  * Type representing acquire signal sampling rate.
@@ -812,7 +822,7 @@ int rp_AcqGetPreTriggerCounter(uint32_t* value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage);
+int rp_AcqSetTriggerLevel(rp_channel_trigger_t channel, float voltage);
 
 /**
  * Gets currently set trigger threshold value in volts
@@ -820,7 +830,7 @@ int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerLevel(float* voltage);
+int rp_AcqGetTriggerLevel(rp_channel_trigger_t channel, float* voltage);
 
 /**
  * Sets the trigger threshold hysteresis value in volts.

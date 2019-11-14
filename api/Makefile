@@ -16,7 +16,7 @@ LIBRP=lib/librp.so
 all: $(LIBRP)
 
 $(LIBRP):
-	$(MAKE) -C src
+	$(MAKE) -C src INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 clean:
 	$(MAKE) -C src clean

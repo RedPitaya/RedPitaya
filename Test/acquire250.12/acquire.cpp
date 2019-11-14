@@ -24,6 +24,7 @@
 #include "main_osc.h"
 #include "fpga_osc.h"
 #include "rp-i2c-max7311.h"
+#include "rp-i2c-mcp47x6-c.h"
 #include "rp-gpio-power.h"
 #include "rp-spi.h"
 #include "redpitaya/version.h"
@@ -197,7 +198,7 @@ int main(int argc, char *argv[])
     int shaping = 0;
     int hex_mode = 0;
     bool cnt_to_vol = false;
-
+    float level_trigger = 0;
     if ( argc < MINARGS ) {
         usage();
         exit ( EXIT_FAILURE );
@@ -270,7 +271,7 @@ int main(int argc, char *argv[])
          /* Trigger level */
         case 'l':
         {
-            float level_trigger = 0;
+            
             if (get_trigger_level(&level_trigger, optarg) != 0) {
                 usage();
                 return -1;
@@ -389,6 +390,9 @@ int main(int argc, char *argv[])
     t_params[EQUAL_FILT_PARAM] = equal;
     t_params[SHAPE_FILT_PARAM] = shaping;
 
+    if (t_params[TRIG_SRC_PARAM] == 2){
+        rp_setExtTriggerLevel(level_trigger);
+    }
 
     /* Initialization of Oscilloscope application */
     if(rp_app_init() < 0) {
