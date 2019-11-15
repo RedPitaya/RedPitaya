@@ -381,10 +381,18 @@ void write_data_fpga(uint32_t ch,
 
     fpga_awg_init();
 
+    if (g_awg_reg->state_machine_conf & 0x00000400){
+        printf("Channel 1 Overheat Status Detected\n");
+    }
+
+    if (g_awg_reg->state_machine_conf & 0x00400000){
+        printf("Channel 2 Overheat Status Detected\n");
+    }
+
     if(ch == 0) {
 
         /* Channel A */
-        g_awg_reg->state_machine_conf = 0x000041;
+        g_awg_reg->state_machine_conf = 0x00000041;
         g_awg_reg->cha_scale_off      = awg->offsgain;
         g_awg_reg->cha_count_wrap     = awg->wrap;
         g_awg_reg->cha_count_step     = awg->step;
@@ -395,7 +403,7 @@ void write_data_fpga(uint32_t ch,
         }
     } else {
         /* Channel B */
-        g_awg_reg->state_machine_conf = 0x410000;
+        g_awg_reg->state_machine_conf = 0x00410000;
         g_awg_reg->chb_scale_off      = awg->offsgain;
         g_awg_reg->chb_count_wrap     = awg->wrap;
         g_awg_reg->chb_count_step     = awg->step;
@@ -411,7 +419,7 @@ void write_data_fpga(uint32_t ch,
      *       Otherwise, the not-to-be-affected channel is restarted as well
      *       causing unwanted disturbances on that channel.
      */
-    g_awg_reg->state_machine_conf = 0x110011;
+    g_awg_reg->state_machine_conf = 0x02110211;
 
     fpga_awg_exit();
 }
