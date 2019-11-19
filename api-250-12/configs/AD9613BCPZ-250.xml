@@ -25,7 +25,7 @@
         <register address="0x15" value="0x01" write="none"  default="0x01" decription="Output adjust"/>
         <register address="0x16" value="0xA0" write="value" default="0x00" decription="Clock phase control"/>
         <register address="0x17" value="0x00" write="none"  default="0x00" decription="DCO output delay"/>
-        <register address="0x18" value="0x10" write="value"  default="0x00" decription="Input scan select"/>
+        <register address="0x18" value="0x0B" write="value"  default="0x00" decription="Input scan select"/>
         <register address="0x19" value="0x00" write="none"   default="0x00" decription="Test pattern 1 LSB"/>
         <register address="0x1A" value="0x00" write="none"   default="0x00" decription="Test pattern 1 MSB"/>
         <register address="0x1B" value="0x00" write="none"   default="0x00" decription="Test pattern 2 LSB"/>
