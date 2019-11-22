@@ -827,7 +827,7 @@ int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status){
 }
 
 int rp_GetPllControlEnable(bool *enable){
-    return house_GetPllControlEnable(*enable);
+    return house_GetPllControlEnable(enable);
 }
 
 int rp_SetPllControlEnable(bool enable){
