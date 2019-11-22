@@ -17,7 +17,7 @@ int rp_setExtTriggerLevel(float voltage){
     
     chip.setGain(MCP47X6_GAIN_2X);        // VREF is 1.25V, need gain x2 for output max 2.5v 
     chip.setPowerDown(MCP47X6_AWAKE);     // POWER ON
-    chip.setVReference(MCP47X6_VREF_VDD); // SET INPUT DC FROM VREF
+    chip.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED); // SET INPUT DC FROM VREF
     float max_cnt = (float)chip.getMaxLevel();
     short cnt =  (short)((fabsf(voltage) / EXT_TRIGGER_MAX_VOL) * max_cnt); //Volt to cnt
     chip.setOutputLevel(cnt); 
