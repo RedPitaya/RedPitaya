@@ -825,3 +825,15 @@ int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status){
 int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status){
     return gen_getRuntimeTempAlarm(channel,status);
 }
+
+int rp_GetPllControlEnable(bool *enable){
+    return house_GetPllControlEnable(*enable);
+}
+
+int rp_SetPllControlEnable(bool enable){
+    return house_SetPllControlEnable(enable);
+}
+
+int rp_GetPllControlLocked(bool *status){
+    return house_GetPllControlLocked(status);
+}
