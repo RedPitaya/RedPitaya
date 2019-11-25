@@ -3,4 +3,5 @@
 
 # Turns on the power to the ADC and DAC
 /opt/redpitaya/bin/rp_power_on -P
+/opt/redpitaya/bin/rp_power_on -C
 	
