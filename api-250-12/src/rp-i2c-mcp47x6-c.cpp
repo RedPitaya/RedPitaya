@@ -10,14 +10,14 @@ int rp_setExtTriggerLevel(float voltage){
     if (!chip.readConfig()){
         return RP_I2C_EFRB;
     }
-    voltage = voltage / 2.0;  // Convert UI (+/-5V) to (chip) +/-2.5
+    voltage = voltage / 3.0;  // Convert UI (+/-10V) to (chip) +/-3.3
     if (fabsf(voltage) > EXT_TRIGGER_MAX_VOL){
         return RP_I2C_EOOR;
     }
     
     chip.setGain(MCP47X6_GAIN_2X);        // VREF is 1.25V, need gain x2 for output max 2.5v 
     chip.setPowerDown(MCP47X6_AWAKE);     // POWER ON
-    chip.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED); // SET INPUT DC FROM VREF
+    chip.setVReference(MCP47X6_VREF_VDD); // SET INPUT DC FROM VDD
     float max_cnt = (float)chip.getMaxLevel();
     short cnt =  (short)((fabsf(voltage) / EXT_TRIGGER_MAX_VOL) * max_cnt); //Volt to cnt
     chip.setOutputLevel(cnt); 
@@ -38,7 +38,7 @@ int rp_getExtTriggerLevel(float *voltage){
         float max_cnt = (float)chip.getMaxLevel();
         float cnt     = (float)chip.getOutputLevel(); 
         cnt =  ((cnt / max_cnt) * EXT_TRIGGER_MAX_VOL) / gain; //Volt to cnt
-        *voltage = cnt * 2.0; // Convert (chip) +/-2.5 to UI (+/-5V) 
+        *voltage = cnt * 3.0; // Convert (chip) +/-3.3 to UI (+/-10V) 
     }else{
         *voltage = 0;
     }
