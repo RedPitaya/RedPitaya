@@ -517,8 +517,8 @@ assign dac_a_sum = asg_dat[0] + pid_dat[0];
 assign dac_b_sum = asg_dat[1] + pid_dat[1];
 
 // saturation
-assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : { ~dac_a_sum[14-1] , dac_a_sum[14-2:0] };
-assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : { ~dac_b_sum[14-1] , dac_b_sum[14-2:0] };
+assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} :  ~dac_a_sum[14-1:0];
+assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} :  ~dac_b_sum[14-1:0];
 
 always @(posedge adc_clk) begin
   dac_dat_a <= dac_a;
