@@ -56,8 +56,7 @@
                                     || default_applications[i]["id"] === 'activelearning'){
    							 	        default_applications.splice(i, 1);
    								}
-                            }	
-                        groups.splice(1,1);			
+                            }		
             		};
 
             	    applications = [];
