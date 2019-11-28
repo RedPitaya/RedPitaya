@@ -2,7 +2,7 @@
 #include "rp-i2c-mcp47x6-c.h"
 #include "rp-i2c-mcp47x6.h"
 
-#define EXT_TRIGGER_MAX_VOL 2.5
+#define EXT_TRIGGER_MAX_VOL 3.3
 
 int rp_setExtTriggerLevel(float voltage){
 
@@ -10,16 +10,18 @@ int rp_setExtTriggerLevel(float voltage){
     if (!chip.readConfig()){
         return RP_I2C_EFRB;
     }
+
     voltage = voltage / 3.0;  // Convert UI (+/-10V) to (chip) +/-3.3
-    if (fabsf(voltage) > EXT_TRIGGER_MAX_VOL){
-        return RP_I2C_EOOR;
-    }
     
-    chip.setGain(MCP47X6_GAIN_2X);        // VREF is 1.25V, need gain x2 for output max 2.5v 
+    
+    chip.setGain(MCP47X6_GAIN_1X);        
     chip.setPowerDown(MCP47X6_AWAKE);     // POWER ON
     chip.setVReference(MCP47X6_VREF_VDD); // SET INPUT DC FROM VDD
     float max_cnt = (float)chip.getMaxLevel();
-    short cnt =  (short)((fabsf(voltage) / EXT_TRIGGER_MAX_VOL) * max_cnt); //Volt to cnt
+    short cnt =  (short)((fabsf(voltage) / EXT_TRIGGER_MAX_VOL ) * max_cnt); //Volt to cnt
+    if (cnt > chip.getMaxLevel()){
+        cnt = chip.getMaxLevel();
+    }
     chip.setOutputLevel(cnt); 
     if (!chip.writeConfig()){
         return RP_I2C_EFWB;
