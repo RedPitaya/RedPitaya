@@ -65,7 +65,7 @@ float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Max decimation index */
 #define DEC_MAX 6
-#define ADC_FULL_RANGE 0.5
+#define ADC_FULL_RANGE 1
 
 /** Decimation translation table */
 static uint32_t g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
