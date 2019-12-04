@@ -149,13 +149,13 @@ end else begin
   pll_sys_syc <= {pll_sys_syc[3-2:0], pll_ref_cnt[5-1]} ;
 
   if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
-    pll_sys_cnt <= 9'h0;
+    pll_sys_cnt <= 9'h1;
   else if (!pll_sys_cnt[9-1])
     pll_sys_cnt <= pll_sys_cnt + 9'h1;
 
-  // pll_sys_clk must be reseted between 128-255
+  // pll_sys_clk must be around 200
   if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
-    pll_sys_val <= pll_sys_cnt[9-2] ;
+    pll_sys_val <= (pll_sys_cnt > 196) && (pll_sys_cnt < 204) ;
   else if (pll_sys_cnt[9-1])
     pll_sys_val <= 1'b0 ;
 end
@@ -176,12 +176,34 @@ always @(posedge pll_ref_i or negedge pll_ff_rst) begin
   else              pll_ff_ref <= 1'b1 ;
 end
 assign pll_ff_rst = !(pll_ff_sys && pll_ff_ref) ;
+assign pll_ff_lck = (!pll_ff_sys && !pll_ff_ref);
 
 assign pll_lo_o = !pll_ff_sys && ( pll_sys_val &&  pll_cfg_en);
 assign pll_hi_o =  pll_ff_ref || (!pll_sys_val || !pll_cfg_en);
 
-assign pll_ff_lck = (!pll_ff_sys && !pll_ff_ref);
-assign pll_cfg_rd = {{32-12{1'h0}}, 3'h0,pll_ff_lck, 3'h0,pll_sys_val, 3'h0,pll_cfg_en};
+
+// filter out PLL lock status
+reg  [ 9-1:0] pll_lck_cnt  ;
+reg  [ 2-1:0] pll_lck_sts  ;
+
+always @(posedge clk_i) 
+if (rstn_i == 1'b0) begin
+  pll_lck_cnt <=  9'h0 ;
+  pll_lck_sts <=  2'b0 ;
+end else begin
+  if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
+    pll_lck_cnt <= 9'h0;
+  else if (pll_ff_lck)
+    pll_lck_cnt <= pll_lck_cnt + 9'h1;
+
+  // pll_lck_cnt threshold
+  if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
+    pll_lck_sts[0] <= |pll_lck_cnt[8:4];
+
+  pll_lck_sts[0] <= pll_lck_sts[0] && pll_sys_val;
+end
+
+assign pll_cfg_rd = {{32-12{1'h0}}, 3'h0,pll_lck_sts[1], 3'h0,pll_sys_val, 3'h0,pll_cfg_en};
 
 
 

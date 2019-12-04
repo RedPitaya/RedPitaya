@@ -107,8 +107,9 @@ module red_pitaya_top #(
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  inout  logic [ 8-1:0] exp_p_io   ,
-  inout  logic [ 8-1:0] exp_n_io   ,
+  inout  logic          exp_9_io   ,
+  inout  logic [ 9-1:0] exp_p_io   ,
+  inout  logic [ 9-1:0] exp_n_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
@@ -539,12 +540,15 @@ end
 //  House Keeping
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [  8-1: 0] exp_p_in , exp_n_in ;
-logic [  8-1: 0] exp_p_out, exp_n_out;
-logic [  8-1: 0] exp_p_dir, exp_n_dir;
+logic [  9-1: 0] exp_p_in , exp_n_in ;
+logic [  9-1: 0] exp_p_out, exp_n_out;
+logic [  9-1: 0] exp_p_dir, exp_n_dir;
+logic            exp_9_in,  exp_9_out, exp_9_dir;
 logic [  8-1: 0] led_hk;
 
-red_pitaya_hk i_hk (
+red_pitaya_hk #(.DWE(10))
+
+i_hk (
   // system signals
   .clk_i           (adc_clk2d),  // clock
   .rstn_i          (adc_rstn),  // reset - active low
@@ -568,12 +572,12 @@ red_pitaya_hk i_hk (
   .spi_mosi_t      (hk_spi_t    ),
   .spi_mosi_o      (hk_spi_o    ),
   // Expansion connector
-  .exp_p_dat_i     (exp_p_in ),  // input data
-  .exp_p_dat_o     (exp_p_out),  // output data
-  .exp_p_dir_o     (exp_p_dir),  // 1-output enable
-  .exp_n_dat_i     (exp_n_in ),
-  .exp_n_dat_o     (exp_n_out),
-  .exp_n_dir_o     (exp_n_dir),
+  .exp_p_dat_i     ({exp_9_in, exp_p_in }),  // input data
+  .exp_p_dat_o     ({exp_9_out,exp_p_out}),  // output data
+  .exp_p_dir_o     ({exp_9_dir,exp_p_dir}),  // 1-output enable
+  .exp_n_dat_i     ({1'b0,     exp_n_in }),
+  .exp_n_dat_o     (           exp_n_out ),
+  .exp_n_dir_o     (           exp_n_dir ),
    // System bus
   .sys_addr        (sys[0].addr ),
   .sys_wdata       (sys[0].wdata),
@@ -595,11 +599,12 @@ assign led_o = {led_hk[3:0], led_hk[7:4]}; // switch low and high nibble
 // GPIO
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
-IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
+IOBUF i_iobufp [ 9-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
+IOBUF i_iobufn [ 9-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
+IOBUF i_iobuf9          (.O(exp_9_in), .IO(exp_9_io), .I(exp_9_out), .T(~exp_9_dir) );
 
-assign gpio.i[15: 8] = exp_p_in;
-assign gpio.i[23:16] = exp_n_in;
+assign gpio.i[15: 8] = exp_p_in[7:0];
+assign gpio.i[23:16] = exp_n_in[7:0];
 
 ////////////////////////////////////////////////////////////////////////////////
 // oscilloscope
