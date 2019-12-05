@@ -476,7 +476,11 @@ int synthesize_signal(rp_channel_t channel) {
     switch (waveform) {
         case RP_WAVEFORM_SINE     : synthesis_sin      (data);                 break;
         case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data);                 break;
+#ifdef Z20_250_12
+        case RP_WAVEFORM_SQUARE   : synthesis_square_Z20_250(frequency, data); break;
+#else
         case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data);      break;
+#endif
         case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data);                 break;
         case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data);                 break;
         case RP_WAVEFORM_DC       : synthesis_DC       (data);                 break;
@@ -566,6 +570,18 @@ int synthesis_square(float frequency, float *data_out) {
         else if ((i >= BUFFER_LENGTH/2 - trans) && (i <  BUFFER_LENGTH/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (i - (BUFFER_LENGTH/2 - trans));
         else if ((0 <= BUFFER_LENGTH/2        ) && (i <  BUFFER_LENGTH   - trans))  data_out[i] = -1.0f;
         else if ((i >= BUFFER_LENGTH   - trans) && (i <  BUFFER_LENGTH          ))  data_out[i] = -1.0f + (2.0f / trans) * (i - (BUFFER_LENGTH   - trans));
+    }
+
+    return RP_OK;
+}
+
+int synthesis_square_Z20_250(float frequency, float *data_out) {
+
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+        if (i <  BUFFER_LENGTH/2)  
+            data_out[i] =  1.0f;
+        else  
+            data_out[i] = -1.0f;
     }
 
     return RP_OK;

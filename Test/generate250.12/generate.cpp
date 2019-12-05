@@ -269,7 +269,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     const int dcoffs = -155;
     const int trans0 = 30;
     const int trans1 = 300;
-    const double tt2 = 0.249;
+    //const double tt2 = 0.249;
 
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + 0x1fff;
@@ -304,42 +304,42 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
             else 
                 data[i] = -amp;
 
-            /* Soft linear transitions */
-            double mm, qq, xx, xm;
-            double x1, x2, y1, y2;    
+            // /* Soft linear transitions */
+            // double mm, qq, xx, xm;
+            // double x1, x2, y1, y2;    
 
-            xx = i;       
-            xm = n;
-            mm = -2.0*(double)amp/(double)trans; 
-            qq = (double)amp * (2 + xm/(2.0*(double)trans));
+            // xx = i;       
+            // xm = n;
+            // mm = -2.0*(double)amp/(double)trans; 
+            // qq = (double)amp * (2 + xm/(2.0*(double)trans));
             
-            x1 = xm * tt2;
-            x2 = xm * tt2 + (double)trans;
+            // x1 = xm * tt2;
+            // x2 = xm * tt2 + (double)trans;
             
-            if ( (xx > x1) && (xx <= x2) ) {  
+            // if ( (xx > x1) && (xx <= x2) ) {  
                 
-                y1 = (double)amp;
-                y2 = -(double)amp;
+            //     y1 = (double)amp;
+            //     y2 = -(double)amp;
                 
-                mm = (y2 - y1) / (x2 - x1);
-                qq = y1 - mm * x1;
+            //     mm = (y2 - y1) / (x2 - x1);
+            //     qq = y1 - mm * x1;
 
-                data[i] = round(mm * xx + qq); 
-            }
+            //     data[i] = round(mm * xx + qq); 
+            // }
             
-            x1 = xm * 0.75;
-            x2 = xm * 0.75 + trans;
+            // x1 = xm * 0.75;
+            // x2 = xm * 0.75 + trans;
             
-            if ( (xx > x1) && (xx <= x2)) {  
+            // if ( (xx > x1) && (xx <= x2)) {  
                     
-                y1 = -(double)amp;
-                y2 = (double)amp;
+            //     y1 = -(double)amp;
+            //     y2 = (double)amp;
                 
-                mm = (y2 - y1) / (x2 - x1);
-                qq = y1 - mm * x1;
+            //     mm = (y2 - y1) / (x2 - x1);
+            //     qq = y1 - mm * x1;
                 
-                data[i] = round(mm * xx + qq); 
-            }
+            //     data[i] = round(mm * xx + qq); 
+            // }
         }
         
         /* Triangle */

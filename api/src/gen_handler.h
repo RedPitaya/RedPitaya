@@ -61,6 +61,7 @@ int synthesis_sin(float *data_out);
 int synthesis_triangle(float *data_out);
 int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size);
 int synthesis_square(float frequency, float *data_out);
+int synthesis_square_Z20_250(float frequency, float *data_out);
 int synthesis_rampUp(float *data_out);
 int synthesis_rampDown(float *data_out);
 int synthesis_DC(float *data_out);
