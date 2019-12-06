@@ -9,3 +9,4 @@ Applications and Features
    newtworkManager
    jupyter/Jupyter.rst
    remoteControl/remoteControl
+   supportedFeaturesAndApps
