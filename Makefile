@@ -226,9 +226,11 @@ SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
+ifeq ($(FPGA_MODEL),Z10)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
+endif
 
 ################################################################################
 # Red Pitaya tools
@@ -243,15 +245,16 @@ ACQUIRE_DIR     = Test/acquire
 CALIB_DIR       = Test/calib
 CALIBRATE_DIR   = Test/calibrate
 GENERATOR_DIR	= Test/generate
+SPECTRUM_DIR    = Test/spectrum
 COMM_DIR        = Examples/Communication/C
 XADC_DIR        = Test/xadc
 LA_TEST_DIR     = api2/test
 GENERATE_DC_DIR	= generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate laboardtest generate_DC
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
 
-examples: lcr bode monitor monitor_old generator acquire calib generate_DC
+examples: lcr bode monitor monitor_old generator acquire calib generate_DC spectrum
 # calibrate laboardtest
 
 lcr:
@@ -287,6 +290,11 @@ calib:
 	$(MAKE) -C $(CALIB_DIR) clean
 	$(MAKE) -C $(CALIB_DIR)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+spectrum:
+	$(MAKE) -C $(SPECTRUM_DIR) clean
+	$(MAKE) -C $(SPECTRUM_DIR)
+	$(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
@@ -377,9 +385,11 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-vna: api2
+ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(VNA_DIR) clean
 	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+endif
 
 apps-free-clean:
 	$(MAKE) -C $(APPS_FREE_DIR) clean
@@ -411,9 +421,11 @@ spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
+ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
 	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+endif
 
 la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
@@ -421,9 +433,11 @@ la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ba_pro: api $(NGINX)
+ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean
 	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+endif
 
 else
 

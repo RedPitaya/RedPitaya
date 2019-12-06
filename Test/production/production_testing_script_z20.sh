@@ -23,6 +23,10 @@ hexToDec() {
     printf "%d\n" "$VALUE"
 }
 
+function get_rtrn(){
+    echo `echo $1|cut --delimiter=, -f $2`
+}
+
 # Path variables
 SD_CARD_PATH='/opt/redpitaya'
 USB_DEVICE="/dev/sda1"
@@ -33,7 +37,8 @@ LOG_FILENAME='manuf_test.log'
 
 # Production PC/SERVER variables
 #LOCAL_SERVER_IP='192.168.1.200'
-LOCAL_SERVER_IP='192.168.178.121'
+LOCAL_SERVER_IP='192.168.1.2'
+LOCAL_SERVER_PASS='redpitaya'
 LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 LOCAL_USER='redpitaya'
 #LOCAL_SERVER_DIR="$LOCAL_SERVER_IP:/home/itech/Desktop/Test_LOGS"
@@ -51,25 +56,30 @@ CALIB="$SD_CARD_PATH/bin/calib"
 
 
 # Default calibration parameters set during the process
-FE_CH1_FS_G_HI=45870551
-FE_CH2_FS_G_HI=45870551
-FE_CH1_FS_G_LO=1016267064
-FE_CH2_FS_G_LO=1016267064
-FE_CH1_DC_offs=78
-FE_CH2_DC_offs=25
-BE_CH1_FS=42755331
-BE_CH2_FS=42755331
-BE_CH1_DC_offs=-150
-BE_CH2_DC_offs=-150
-SOME_eeprom_value=-1430532899 #SOME_eeprom_value is some value in eeprom which is not used for anything but after Crt added hv offset calib values this value also appeard.
-FE_CH1_DC_offs_HI=100
-FE_CH2_DC_offs_HI=100          #FE_CHx_DC_offs_HI  are dc offset parameters for HV jumper settings
+FE_CH1_FS_G_HI=42949672
+FE_CH2_FS_G_HI=42949672
+FE_CH1_FS_G_LO=858993459
+FE_CH2_FS_G_LO=858993459
+FE_CH1_DC_offs=0
+FE_CH2_DC_offs=0
+BE_CH1_FS=42949672
+BE_CH2_FS=42949672
+BE_CH1_DC_offs=0
+BE_CH2_DC_offs=0
+SOME_eeprom_value=-143053289  #SOME_eeprom_value is some value in eeprom which is not used for anything but after Crt added hv offset calib values this value also appeard.
+FE_CH1_DC_offs_HI=0
+FE_CH2_DC_offs_HI=0
+
 #All calibration parameters in one string
 FACTORY_CAL="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
 
 # I2C test configuration
 TEST_LABEL='I2C_test'
 I2C_TEST_CONFIG='/sys/bus/i2c/devices/0-0051/eeprom 0x1800 0x0400'
+
+
+# ETHERNET_TEST
+ENABLE_ETHERNET_TEST=1
 
 ###############################################################################
 # Test variables
@@ -128,8 +138,8 @@ MIN_RATIO=$(bc -l <<< "$REF_RATIO - $REF_RATIO * $TOLERANCE_PERC / 100")
 MAX_RATIO=$(bc -l <<< "$REF_RATIO + $REF_RATIO * $TOLERANCE_PERC / 100")
 
 # fast ADCs and DACs data acquisitions
-SIG_FREQ=1000
-SIG_AMPL=2
+SIG_FREQ=1000000
+SIG_AMPL=0.5
 ADC_BUFF_SIZE=16384
 
 MAX_ABS_OFFS_HIGH_GAIN=500
@@ -163,6 +173,8 @@ fi
 ADC_FILENAME="adc.sig"
 ADC_CH_A_FILENAME="adc_a.sig"
 ADC_CH_B_FILENAME="adc_b.sig"
+
+
 
 # Calibration parameters LV/HV jumper settings
 MAX_VALUE_LV=8000
@@ -601,6 +613,9 @@ PREVIOUS_TEST=1
 #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
 #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
+if [ $ENABLE_ETHERNET_TEST -eq 1 ]
+then
+
 # Verify that eth configuration MAC matches the EEPROM MAC
 echo "Verify MAC address consistence with EEPROM..."
 EEPROM_MAC=$($PRINTENV | grep ethaddr= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
@@ -661,6 +676,10 @@ else
     echo "Ping to unit $PING_IP OKAY"
 fi
 
+else
+    echo "Skip ethernet test"
+fi
+
 sleep $SLEEP_BETWEEN_TESTS
 
 # TEST 1 - Ethernet test - If was OK Writte  "1"  in logfile status byte
@@ -710,10 +729,10 @@ IN_VOLTAGE1_VCCAUX_SCALE="$(cat '/sys/bus/iio/devices/iio:device0/in_voltage1_vc
 IN_VOLTAGE2_VCCBRAM_RAW="$(cat '/sys/bus/iio/devices/iio:device0/in_voltage2_vccbram_raw')"
 IN_VOLTAGE2_VCCBRAM_SCALE="$(cat '/sys/bus/iio/devices/iio:device0/in_voltage2_vccbram_scale')"
 
-TEMP=$(bc -l <<< "($IN_TEMP0_RAW + $IN_TEMP0_OFFSET) * $IN_TEMP0_SCALE / 1000")
-VCCINT=$(bc -l <<< "$IN_VOLTAGE0_VCCINT_RAW * $IN_VOLTAGE0_VCCINT_SCALE")
-VCCAUX=$(bc -l <<< "$IN_VOLTAGE1_VCCAUX_RAW * $IN_VOLTAGE1_VCCAUX_SCALE")
-VCCBRAM=$(bc -l <<< "$IN_VOLTAGE2_VCCBRAM_RAW * $IN_VOLTAGE2_VCCBRAM_SCALE")
+TEMP=$(bc -l <<< "($IN_TEMP0_RAW + $IN_TEMP0_OFFSET) * $IN_TEMP0_SCALE / 1000" | awk '{ printf "%d\n", $1 }')
+VCCINT=$(bc -l <<< "$IN_VOLTAGE0_VCCINT_RAW * $IN_VOLTAGE0_VCCINT_SCALE" | awk '{ printf "%d\n", $1 }')
+VCCAUX=$(bc -l <<< "$IN_VOLTAGE1_VCCAUX_RAW * $IN_VOLTAGE1_VCCAUX_SCALE" | awk '{ printf "%d\n", $1 }')
+VCCBRAM=$(bc -l <<< "$IN_VOLTAGE2_VCCBRAM_RAW * $IN_VOLTAGE2_VCCBRAM_SCALE" | awk '{ printf "%d\n", $1 }')
 
 #Added, check if teh variable is empty > unsucsefull read will return empty variable. in this case set variable to "x".
 if [ -z "$TEMP" ]
@@ -1282,19 +1301,18 @@ $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
 sleep 0.2
 
 ###############################################################################
-# STEP 7: Fast ADCs and DACs test
+# STEP 7: Fast ADCs bit analysis
 ###############################################################################
-
 echo
-echo "--- TEST 7: Fast ADCs and DACs test ---"
-echo
-echo "    Acqusition without DAC signal - ADCs with HIGH gain"
+echo "--- TEST 7: Fast ADCs bit analysis test ---"
 echo
 
+echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo
+
+PREVIOUS_TEST=0
 TEST_STATUS=1
 TEST_VALUE=128
-TEST_VALUE_LED=64
-PREVIOUS_TEST=1
 #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
 #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
 #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
@@ -1302,6 +1320,7 @@ PREVIOUS_TEST=1
 #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
 #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
 #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
 
 # Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
 $MONITOR 0x40000010 w 0x00 # -> Set P to inputs
@@ -1309,476 +1328,12 @@ sleep 0.2
 $MONITOR 0x40000014 w 0xFF # -> Set N to outputs
 sleep 0.2
 
-# Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 1 (lv jumper settings)
-$MONITOR 0x4000001C w 0x00 # -> Set N outputs to zero - > reseet
-sleep 0.2
-$MONITOR 0x4000001C w 0xA0 # -> Set DIO5_N=1 -> Configure the ADC in high-gain mode -> DIO7_N = 1
-sleep 1
-
-# Assure tht DAC signals (ch 1 & 2) are OFF
-$GENERATE 1 0 $SIG_FREQ
-$GENERATE 2 0 $SIG_FREQ
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 4 -> IN1 and IN2 parameters (LV jumper settings) -> OUT1 and OUT2 disabled--------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.A std deviation value with no decimation ($ADC_A_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.B std deviation value with no decimation ($ADC_B_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-# Set DAC value to proper counts / frequency for both channels
-echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
-echo
-
-# Turn the DAC signal generator on on both channels
-$GENERATE 1 $SIG_AMPL $SIG_FREQ
-$GENERATE 2 $SIG_AMPL $SIG_FREQ
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 5 -> IN1 and IN2 parameters (LV jumper settings) -> OUT1 and OUT2 enabled---------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_HIGH_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_HIGH_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -lt $MIN_SIG_STD_HIGH_GAIN ]] || [[ $ADC_A_STD -gt $MAX_SIG_STD_HIGH_GAIN ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range ($MIN_SIG_STD_HIGH_GAIN-$MAX_SIG_STD_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -lt $MIN_SIG_STD_HIGH_GAIN ]] || [[ $ADC_B_STD -gt $MAX_SIG_STD_HIGH_GAIN ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range ($MIN_SIG_STD_HIGH_GAIN-$MAX_SIG_STD_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -lt $MIN_SIG_P2P_HIGH_GAIN ]] || [[ $ADC_A_PP -gt $MAX_SIG_P2P_HIGH_GAIN ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range ($MIN_SIG_P2P_HIGH_GAIN-$MAX_SIG_P2P_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -lt $MIN_SIG_P2P_HIGH_GAIN ]] || [[ $ADC_B_PP -gt $MAX_SIG_P2P_HIGH_GAIN ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range ($MIN_SIG_P2P_HIGH_GAIN-$MAX_SIG_P2P_HIGH_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-
-echo
-echo "    Acqusition without DAC signal - ADCs with LOW gain(HV jumper settings)"
-echo
-
-# Turn the DAC signal generator OFF on both channels (ch 1 & 2)
-$GENERATE 1 0 $SIG_FREQ
-$GENERATE 2 0 $SIG_FREQ
-sleep 0.2
-
-# Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 0 (hv jumper settings)
-$MONITOR 0x4000001C w 0x00 # -> Set N outputs to zero - > reseet
-sleep 0.2
-$MONITOR 0x4000001C w 0x20 # -> Set DIO5_N=1 -> Configure the ADC in low-gain mode -> DIO7_N = 0
-sleep 0.2
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 6 -> IN1 and IN2 parameters (HV jumper settings) -> OUT1 and OUT2 disabled--------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -gt $MAX_NOISE_STD ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range (0-$MAX_NOISE_STD)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.A std deviation value with no decimation ($ADC_A_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD_NO_DEC -gt $MAX_NOISE_STD_NO_DEC ]]
-then
-    echo "    Measured ch.B std deviation value with no decimation ($ADC_B_STD_NO_DEC) is outside expected range (0-$MAX_NOISE_STD_NO_DEC)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -gt $MAX_NOISE_P2P ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range (0-$MAX_NOISE_P2P)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-
-echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with LOW gain"
-echo
-
-# Turn the DAC signal generator on on both channels
-$GENERATE 1 $SIG_AMPL $SIG_FREQ
-$GENERATE 2 $SIG_AMPL $SIG_FREQ
-sleep 0.5
-
-# Acquire data with 1024 decimation factor
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE $ADC_BUFF_SIZE 1024 > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# NEW Acquire data also with no decimation
-$ACQUIRE $ADC_BUFF_SIZE 1 > /tmp/adc_no_dec.txt
-cat /tmp/adc_no_dec.txt | awk '{print $1}' > /tmp/adc_no_dec_a.txt
-cat /tmp/adc_no_dec.txt | awk '{print $2}' > /tmp/adc_no_dec_b.txt
-
-# Calculate mean value, std deviation and p2p diff value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-ADC_A_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_a.txt)
-ADC_B_STD=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_b.txt)
-ADC_A_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_a.txt)
-ADC_B_PP=$(awk 'BEGIN{max=-1000;min=1000} { if (max < $1){ max = $1 }; if(min > $1){ min = $1 } } END{ print max-min}' /tmp/adc_b.txt)
-ADC_A_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_a.txt)
-ADC_B_STD_NO_DEC=$(awk '{sum+=$1; sumsq+=$1*$1} END {print int(sqrt(sumsq/NR - (sum/NR)*(sum/NR)))}' /tmp/adc_no_dec_b.txt)
-
-# Print out the measurements
-echo "    Measured ADC ch.A mean value is $ADC_A_MEAN"
-echo "    Measured ADC ch.A std.deviation value is $ADC_A_STD"
-echo "    Measured ADC ch.A std.deviation (no decimation) is $ADC_A_STD_NO_DEC"
-echo "    Measured ADC ch.A p2p value is $ADC_A_PP"
-echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
-echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
-echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
-echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
-# Log informations
-LOG_VAR="$LOG_VAR $ADC_A_MEAN $ADC_A_STD $ADC_A_STD_NO_DEC $ADC_A_PP $ADC_B_MEAN $ADC_B_STD $ADC_B_STD_NO_DEC $ADC_B_PP"
-
-                        echo " "
-                        echo "----------------------------Printing  Log variables  step 7 -> IN1 and IN2 parameters (HV jumper settings) -> OUT1 and OUT2 enabled---------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_A_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.A mean value ($ADC_A_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_MEAN -gt $MAX_ABS_OFFS_LOW_GAIN ]] || [[ $ADC_B_MEAN -lt $((-$MAX_ABS_OFFS_LOW_GAIN)) ]]
-then
-    echo "    Measured ch.B mean value ($ADC_B_MEAN) is outside expected range (+/- $MAX_ABS_OFFS_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_STD -lt $MIN_SIG_STD_LOW_GAIN ]] || [[ $ADC_A_STD -gt $MAX_SIG_STD_LOW_GAIN ]]
-then
-    echo "    Measured ch.A std deviation value ($ADC_A_STD) is outside expected range ($MIN_SIG_STD_LOW_GAIN-$MAX_SIG_STD_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_STD -lt $MIN_SIG_STD_LOW_GAIN ]] || [[ $ADC_B_STD -gt $MAX_SIG_STD_LOW_GAIN ]]
-then
-    echo "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range ($MIN_SIG_STD_LOW_GAIN-$MAX_SIG_STD_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_A_PP -lt $MIN_SIG_P2P_LOW_GAIN ]] || [[ $ADC_A_PP -gt $MAX_SIG_P2P_LOW_GAIN ]]
-then
-    echo "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range ($MIN_SIG_P2P_LOW_GAIN-$MAX_SIG_P2P_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-if [[ $ADC_B_PP -lt $MIN_SIG_P2P_LOW_GAIN ]] || [[ $ADC_B_PP -gt $MAX_SIG_P2P_LOW_GAIN ]]
-then
-    echo "    Measured ch.B p2p value ($ADC_B_PP) is outside expected range ($MIN_SIG_P2P_LOW_GAIN-$MAX_SIG_P2P_LOW_GAIN)"
-    TEST_STATUS=0
-    PREVIOUS_TEST=0
-fi
-
-
-# Set DAC value to 0 for both channels (1 & 2)
-echo
-echo "    Restoring DAC signals and ADC gain to idle conditions"
-$GENERATE 1 0 $SIG_FREQ
-$GENERATE 2 0 $SIG_FREQ
-echo
-
-sleep $SLEEP_BETWEEN_TESTS
-
-# TEST 7 - Fast ADC/DAC test, if was OK Writte  "1"  in logfile status byte
-if [ $TEST_STATUS -eq 1 ]
-then
-    #TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
-    LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
-    #$MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
-fi
-
 # Set Jumper setting back to LV and set OUT1-IN1 , and OUT2-IN2
 # Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 1 (lv jumper settings)
 $MONITOR 0x4000001C w 0x00 # -> Reset N
 sleep 0.2
 $MONITOR 0x4000001C w 0xA0 # -> Set DIO5_N=1 -> Configure the ADC in high-gain mode -> DIO7_N = 1
 sleep 0.2
-
-###############################################################################
-# STEP 8: Fast ADCs bit analysis
-###############################################################################
-echo
-echo "--- TEST 8: Fast ADCs bit analysis test ---"
-echo
-
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
-echo
-
-TEST_STATUS=1
-TEST_VALUE=256
-#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 # Turn the DAC signal generator on on both channels
 $GENERATE 1 $SIG_AMPL $SIG_FREQ
@@ -1896,10 +1451,8 @@ sleep $SLEEP_BETWEEN_TESTS
 if [ $TEST_STATUS -eq 1 ]
 then
     echo "    Bit analysis test was successfull"
-    if [ $PREVIOUS_TEST -eq 1 ]
-    then
+    PREVIOUS_TEST=1
     TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
-    fi
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
     echo
@@ -1923,19 +1476,17 @@ $GENERATE 2 0 $SIG_FREQ
 echo
 sleep $SLEEP_BETWEEN_TESTS
 
-###################################################################################################################################################################################
-# STEP 9: Fast ADCs and DACs CALIBRATION
 ###############################################################################
-if [ $LOGFILE_STATUS -eq 511 ]
-then
+# STEP 8: SFDR spectrum test ---
+###############################################################################
 echo
-echo "--- TEST 9: Fast ADCs and DACs CALIBRATION ---"
+echo "--- TEST 8: SFDR spectrum test ---"
 echo
-echo "Reseting cal parameters to unit gains and zerro DC offset..."
 
-TEST_STATUS=1                # It is not used in calibration but i have left it in IF checking so it can be used later if needed.
-CALIBRATION_STATUS=1
-TEST_VALUE_LED=128
+echo
+
+TEST_STATUS=1
+TEST_VALUE=256
 #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
 #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
 #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
@@ -1943,6 +1494,78 @@ TEST_VALUE_LED=128
 #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
 #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
 #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
+if [ $PREVIOUS_TEST -eq 1 ]
+then
+
+        exec 5>&1
+        SFDR_VAL=$(/opt/redpitaya/bin/production_testing_script_z20_spectrum.sh|tee >(cat - >&5))
+        SFDR_RESULT=$(gawk '{match($0, /SFDR_TEST_STATUS=[0-9]+/, a)}{split(a[0],b,"=")}{print b[2]}' <<< "${SFDR_VAL}")
+        if [[ $SFDR_RESULT -eq 1 ]]
+        then
+        TEST_STATUS=0
+        fi
+        SFDR_VAL_RES=$(gawk '{match($0, /RES_SFDR=\s(.+);/, a)};{gsub("RES_SFDR=","",a[0])};{gsub(";","",a[0])};{print a[0]}' <<< "${SFDR_VAL}")
+	SFDR_VAL_RES=$(gawk '{$1=$1};1' <<< "${SFDR_VAL_RES}")
+	SFDR_VAL_RES=$(tr -dc '[:print:]' <<< "$SFDR_VAL_RES")
+        LOG_VAR="$LOG_VAR $SFDR_VAL_RES"
+else
+echo "SFDR spectrum test skipped"
+LOG_VAR="$LOG_VAR 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+TEST_STATUS=0
+fi
+sleep $SLEEP_BETWEEN_TESTS
+
+echo "TEST_STATUS=$TEST_STATUS"
+echo "$SFDR_VAL"
+
+# TEST 8 - Fast ADC/DAC bit analysis test, if was OK Writte  "1"  in logfile status byte set LED6 ON
+if [ $TEST_STATUS -eq 1 ]
+then
+
+    if [ $PREVIOUS_TEST -eq 1 ]
+    then
+    TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
+    fi
+    LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
+    $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
+    echo
+    echo
+    echo "**********************************************************************************"
+    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+    echo "**********************************************************************************"
+    echo
+    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
+fi
+echo
+sleep $SLEEP_BETWEEN_TESTS
+
+###################################################################################################################################################################################
+# Fast ADCs and DACs test add missing values
+###############################################################################
+
+LOG_VAR="$LOG_VAR 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+
+
+###################################################################################################################################################################################
+# STEP 9: Fast ADCs and DACs CALIBRATION
+###############################################################################
+if [ $LOGFILE_STATUS -eq 511 ]
+then
+echo
+echo "--- TEST 9: Reset to default ADCs and DACs CALIBRATION ---"
+echo
+echo "Reseting cal parameters to unit gains and zerro DC offset..."
+
+TEST_STATUS=1                # It is not used in calibration but i have left it in IF checking so it can be used later if needed.
+CALIBRATION_STATUS=1
 
 # Calibration parameters set during the process
 FE_CH1_FS_G_HI=42949672
@@ -1961,584 +1584,84 @@ FE_CH2_DC_offs_HI=0
 
 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
 NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
-echo "Setting the unit gains and zerro DC offset calibration parameters into the user EEPROM space..."
+echo "Setting the gains = 1 and zerro DC offset calibration parameters into the user EEPROM space..."
 echo
-        echo $NEW_CAL_PARAMS | $CALIB -w
-        sleep 0.1
-        if [ $? -ne 0 ]
-        then
+ # Set the CALIBRATION PARAMETERS to the FACTORY -wf EEPROM memory partition (factory parameters)
+    echo
+    echo "Setting the default calibration parameters into the EEPROM..."
+    echo $NEW_CAL_PARAMS | $CALIB -wf
+    sleep 0.2
+    if [ $? -ne 0 ]
+    then
         echo
-        echo "Unit gains and zerro DC offset calibration parameters are NOT correctly written in the user EEPROM space"
+        echo "Default calibration parameters are NOT correctly written in the factory EEPROM space"
+	CALIBRATION_STATUS=0
+	TEST_STATUS=0
         sleep 1
-        fi
-echo -ne '\n' | $CALIB -r
-sleep 0.4
+    fi
 
-# MAX/MIN calibration parameters
-FE_FS_G_HI_MAX=55834573                      # 42949672 + 30 %
-FE_FS_G_LO_MAX=1116691496                    # 858993459 + 30 %
-FE_DC_offs_MAX=300
-BE_FS_MAX=55834573
-BE_DC_offs_MAX=300
-FE_DC_offs_HI_MAX=400
-
-FE_FS_G_HI_MIN=33038209                      # 42949672 - 30 %
-FE_FS_G_LO_MIN=660764199                     # 858993459 - 30 %
-FE_DC_offs_MIN=-300
-BE_FS_MIN=33038209
-BE_DC_offs_MIN=-300
-FE_DC_offs_HI_MIN=-400
-
-DECIMATION=1024
-
-# Assure tht DAC signals (ch 1 & 2) are OFF
-$GENERATE 1 0 0 sqr
-$GENERATE 2 0 0 sqr
-
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-
-echo "LV jumper settings DC offset calibration is started..."
-echo "Setting relay states...-> Set LV jumper settings... ->Connect IN1&IN2 to the GND..."
-
-# Set LV jumper settings Connect IN1&IN2 to the GND, LV jumper settings
-# DIO5_N = 0
-# DIO6_N = 0
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0x80 # -> Set N
-sleep 0.4
-
-#Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-
-# Print out the measurements
-echo "IN1 LV DC offset value is $ADC_A_MEAN"
-echo "IN2 LV DC offset value is $ADC_B_MEAN"
-echo
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $FE_DC_offs_MAX ]] || [[ $ADC_A_MEAN -lt $FE_DC_offs_MIN ]]
-then
-    echo "      Measured IN1 LV DC offset value ($ADC_A_MEAN) is outside expected range (+/- $FE_DC_offs_MAX)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-if [[ $ADC_B_MEAN -gt $FE_DC_offs_MAX ]] || [[ $ADC_B_MEAN -lt $FE_DC_offs_MIN ]]
-then
-    echo "      Measured IN2 LV DC offset value ($ADC_B_MEAN) is outside expected range (+/- $FE_DC_offs_MAX)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-FE_CH1_DC_offs=$(( ADC_A_MEAN ))
-FE_CH2_DC_offs=$(( ADC_B_MEAN ))
-N1_LV=$ADC_A_MEAN
-N2_LV=$ADC_B_MEAN
-
-# Print out the new cal parameters
-echo "      NEW IN1 LV DC offset cal param >>FE_CH1_DC_offs<< is $FE_CH1_DC_offs"
-echo "      NEW IN2 LV DC offset cal param >>FE_CH2_DC_offs<< is $FE_CH2_DC_offs"
-echo
-
-LOG_VAR="$LOG_VAR $FE_CH1_DC_offs $FE_CH2_DC_offs"
-
-                        echo " "
-                        echo "------------------Printing  Log variables  step 7: Calibration parameters FE_CH1_DC_offs, FE_CH2_DC_offs -----------------------------------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo " "
-
-LOG_VAR="$LOG_VAR $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO"
-
-# COPY NEW CALIBRATION PARAMETERS IN TO USER  EPROM SPACE/PARTITION
-NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
-
-# Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
-echo "Setting the new calibration parameters into the user EEPROM space..."
-echo
+    # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
+    echo "Setting the default calibration parameters into the user EEPROM space..."
+    echo " "
         echo $NEW_CAL_PARAMS | $CALIB -w
-        sleep 0.1
+        sleep 0.2
         if [ $? -ne 0 ]
         then
         echo
         echo "New calibration parameters are NOT correctly written in the user EEPROM space"
+	CALIBRATION_STATUS=0
+	TEST_STATUS=0
         sleep 1
         fi
-        echo -ne '\n' | $CALIB -r
+
 sleep 0.4
 
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-# Set LV jumper settings Connect IN1&IN2 to the REF VALUE -> Set relay states  DIO6_N, DIO7_N and DIO7_P
-# DIO5_N = 1
-# DIO6_N = 1
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0xE0 # -> Set N
-sleep 0.4
-
-# CHECK CALIBRATION
-# Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value
-ADC_A_MEAN=$(awk -v N1_LV=$N1_LV '{sum+=$1} END { print int( (sum/NR)-N1_LV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int( (sum/NR)-N2_LV)}' /tmp/adc_b.txt)
-
-REF_VALUE_LV=7373 # 0.9 VOLTS reference voltage in ADC counts
-IN1_ERROR_LV=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGIN { print (((ADC_A_MEAN-REF_VALUE_LV)/REF_VALUE_LV)*100) }')
-IN2_ERROR_LV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGIN { print (((ADC_B_MEAN-REF_VALUE_LV)/REF_VALUE_LV)*100) }')
-
-# Print out the measurements
-echo "      IN1 LV Error after the claibration is $IN1_ERROR_LV %"
-echo "      IN2 LV Error after the claibration is $IN2_ERROR_LV %"
+# Verify the values of the factory calibration parameters
+echo "Verifying the default calibration parameters in the EEPROM..."
 echo
+wr_FE_CH1_FS_G_HI=$($CALIB -rfv | grep FE_CH1_FS_G_HI | awk '{print $3}')
+wr_FE_CH2_FS_G_HI=$($CALIB -rfv | grep FE_CH2_FS_G_HI | awk '{print $3}')
+wr_FE_CH1_FS_G_LO=$($CALIB -rfv | grep FE_CH1_FS_G_LO | awk '{print $3}')
+wr_FE_CH2_FS_G_LO=$($CALIB -rfv | grep FE_CH2_FS_G_LO | awk '{print $3}')
+wr_FE_CH1_DC_offs=$($CALIB -rfv | grep FE_CH1_DC_offs | awk 'FNR == 1 {print $3}')
+wr_FE_CH2_DC_offs=$($CALIB -rfv | grep FE_CH2_DC_offs | awk 'FNR == 1 {print $3}')
+wr_BE_CH1_FS=$($CALIB -rfv | grep BE_CH1_FS | awk '{print $3}')
+wr_BE_CH2_FS=$($CALIB -rfv | grep BE_CH2_FS | awk '{print $3}')
+wr_BE_CH1_DC_offs=$($CALIB -rfv | grep BE_CH1_DC_offs | awk '{print $3}')
+wr_BE_CH2_DC_offs=$($CALIB -rfv | grep BE_CH2_DC_offs | awk '{print $3}')
+wr_SOME_eeprom_value=$($CALIB -rfv | grep Magic | awk '{print $3}')
+# SOME_eeprom_value is some value in eeprom which is not used for anything but after Črt added hv offset calib values this value also appeard.
+wr_FE_CH1_DC_offs_HI=$($CALIB -rfv | grep FE_CH1_DC_offs_HI | awk '{print $3}')
+wr_FE_CH2_DC_offs_HI=$($CALIB -rfv | grep FE_CH2_DC_offs_HI | awk '{print $3}')
 
-# HV jumper settings
-echo "HV jumper settings DC offset calibration is started..."
-echo "Setting relay states...-> Set HV jumper settings... ->Connect IN1&IN2 to the GND..."
 
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-# Setting relay states, Set HV jumper setting,s onnect IN1&IN2 to the GND.
-# DIO5_N = 0
-# DIO6_N = 0
-# DIO7_N = 0
-$MONITOR 0x4000001C w 0x00 # -> Set N
-sleep 0.4
-
-#Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s -1 hv -2 hv $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s -1 hv -2 hv $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value
-ADC_A_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
-
-# Print out the measurements
-echo "IN1 HV DC offset value is $ADC_A_MEAN"
-echo "IN2 HV DC offset value is $ADC_B_MEAN"
-echo
-
-# Check if the values are within expectations
-if [[ $ADC_A_MEAN -gt $FE_DC_offs_HI_MAX ]] || [[ $ADC_A_MEAN -lt $FE_DC_offs_HI_MIN ]]
+if [ "$wr_FE_CH1_FS_G_HI" -ne "$FE_CH1_FS_G_HI" ] || [ "$wr_FE_CH2_FS_G_HI" -ne "$FE_CH2_FS_G_HI" ] || [ "$wr_FE_CH1_FS_G_LO" -ne "$FE_CH1_FS_G_LO" ] || [ "$wr_FE_CH2_FS_G_LO" -ne "$FE_CH2_FS_G_LO" ] || [ "$wr_FE_CH1_DC_offs" -ne "$FE_CH1_DC_offs" ] || [ "$wr_FE_CH2_DC_offs" -ne "$FE_CH2_DC_offs" ] || [ "$wr_BE_CH1_FS" -ne "$BE_CH1_FS" ] || [ "$wr_BE_CH2_FS" -ne "$BE_CH2_FS" ] || [ "$wr_BE_CH1_DC_offs" -ne "$BE_CH1_DC_offs" ] || [ "$wr_BE_CH2_DC_offs" -ne "$BE_CH2_DC_offs" ] || [ "$wr_FE_CH1_DC_offs_HI" -ne "$FE_CH1_DC_offs_HI" ] || [ "$wr_FE_CH2_DC_offs_HI" -ne "$FE_CH2_DC_offs_HI" ]
 then
-    echo "      Measured IN1 HV DC offset value ($ADC_A_MEAN) is outside expected range (+/- $FE_DC_offs_HI_MAX)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-if [[ $ADC_B_MEAN -gt $FE_DC_offs_HI_MAX ]] || [[ $ADC_B_MEAN -lt $FE_DC_offs_HI_MIN ]]
-then
-    echo "      Measured IN2 HV DC offset value ($ADC_B_MEAN) is outside expected range (+/- $FE_DC_offs_HI_MAX)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-FE_CH1_DC_offs_HI=$(( ADC_A_MEAN ))
-FE_CH2_DC_offs_HI=$(( ADC_B_MEAN ))
-N1_HV=$ADC_A_MEAN
-N2_HV=$ADC_B_MEAN
-
-# Print out the new cal parameters
-echo "      NEW IN1 HV DC offset cal param >>FE_CH1_DC_offs_HI<< is $FE_CH1_DC_offs_HI"
-echo "      NEW IN2 HV DC offset cal param >>FE_CH2_DC_offs_HI<< is $FE_CH2_DC_offs_HI"
-echo
-
-LOG_VAR="$LOG_VAR $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
-
-                        echo
-                        echo "------------------Printing  Log variables  step 9: Calibration parameters FE_CH1_DC_offs_HI, FE_CH2_DC_offs_HI -----------------------------------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo
-
-LOG_VAR="$LOG_VAR $FE_CH1_FS_G_HI $FE_CH2_FS_G_HI"
-
-# COPY NEW CALIBRATION PARAMETERS IN TO USER EPROM SPACE/PARTITION  #
-NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
-
-# Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
-echo "Setting the new calibration parameters into the user EEPROM space..."
-echo
-        echo $NEW_CAL_PARAMS | $CALIB -w
-        sleep 0.1
-        if [ $? -ne 0 ]
-        then
-        echo
-        echo "New calibration parameters are NOT correctly written in the user EEPROM space"
-        sleep 1
-        fi
-echo -ne '\n' | $CALIB -r
-sleep 0.4
-
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-# Setting relay states, Set HV jumper setting, connect IN1&IN2 to the REF_VALUE_HV.
-# DIO5_N = 1
-# DIO6_N = 1
-# DIO7_N = 0
-$MONITOR 0x4000001C w 0x60 # -> Set N
-sleep 0.4
-
-# CHECK CALIBRATION
-# Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s -1 hv -2 hv $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s -1 hv -2 hv $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value
-ADC_A_MEAN=$(awk -v N1_HV=$N1_HV '{sum+=$1} END { print int( (sum/NR)-N1_HV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_HV=$N2_HV '{sum+=$1} END { print int( (sum/NR)-N2_HV)}' /tmp/adc_b.txt)
-
-REF_VALUE_HV=4465 # 10.9 VOLTS reference voltage IN COUNTS
-IN1_ERROR_HV=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((ADC_A_MEAN-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
-IN2_ERROR_HV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((ADC_B_MEAN-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
-
-# Print out the measurements
-echo
-echo "      IN1 HV Error after the claibration is $IN1_ERROR_HV %"
-echo "      IN2 HV Error after the claibration is $IN2_ERROR_HV %"
-echo " "
-
-
-# OUTPUTS CALIBRATION
-echo
-echo "Outputs DC offset calibration is started..."
-echo "Setting relay states...-> Set LV jumper settings... ->Connect OUT1&OUT2 to the IN1&IN2"
-
-# Variables
-OUT_AMP_LO_cnt=3686 # 0.45V  VOLTS VPP reference voltage
-OUT_AMP_HI_cnt=7373 # 0.9V  VOLTS VPP reference voltage
-# Old generate.c has hardcoded DC osffset -155 /Test/generate/generate.c line 206 >>dcoffs<<
-BE_CH1_DC_offs=-150
-BE_CH2_DC_offs=-150
-
-
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-# Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
-# DIO5_N = 1
-# DIO6_N = 0
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N
-sleep 0.4
-
-#Generate DC output signal with amplitude
-$GENERATE 1 0 0 sqr
-$GENERATE 2 0 0 sqr
-sleep 0.4
-
-#Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value
-ADC_A_MEAN=$(awk -v N1_LV=$N1_LV '{sum+=$1} END { print int((sum/NR)-N1_LV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int((sum/NR)-N2_LV)}' /tmp/adc_b.txt)
-OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v BE_CH1_DC_offs=$BE_CH1_DC_offs 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs-ADC_A_MEAN))}')
-OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v BE_CH2_DC_offs=$BE_CH2_DC_offs 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs-ADC_B_MEAN))}')
-
-BE_CH1_DC_offs=$OUT1_DC_offs
-BE_CH2_DC_offs=$OUT2_DC_offs
-# Print out the measurements
-echo "      NEW OUT1 DC offset cal param >>BE_CH1_DC_offs<<  is $BE_CH1_DC_offs"
-echo "      NEW OUT2 DC offset cal param >>BE_CH2_DC_offs<<  is $BE_CH2_DC_offs"
-echo
-
-# Check if the values are within expectations
-if [[ $BE_CH1_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH1_DC_offs -lt $BE_DC_offs_MIN ]]
-then
-    echo "      OUT1 DC offset calibration parameter ($OUT1_DC_offs) is outside expected range (+/- $BE_DC_offs_MAX)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-if [[ $BE_CH2_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH2_DC_offs -lt $BE_DC_offs_MIN ]]
-then
-    echo "      OUT2 DC offset calibration parameter ($OUT2_DC_offs) is outside expected range (+/- $BE_DC_offs_MAX)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-sleep 0.4
-LOG_VAR="$LOG_VAR $BE_CH1_DC_offs $BE_CH2_DC_offs"
-                        echo
-                        echo "------------------Printing  Log variables  step 10: Calibration parameters BE_CH1_DC_offs, BE_CH2_DC_offs -----------------------------------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo
-
-# COPY NEW CALIBRATION PARAMETERS IN TO USER EPROM SPACE/PARTITION  #
-NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
-echo "Setting the new calibration parameters into the user EEPROM space..."
-echo
-        echo $NEW_CAL_PARAMS | $CALIB -w
-        sleep 0.1
-        if [ $? -ne 0 ]
-        then
-        echo
-        echo "New calibration parameters are NOT correctly written in the user EEPROM space"
-        sleep 1
-        fi
-echo -ne '\n' | $CALIB -r
-
-
-echo
-echo "---Output gain calibration is started---"
-
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.4
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.4
-# Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
-# DIO5_N = 1
-# DIO6_N = 0
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N
-sleep 0.4
-
-#Generate DC output signal
-LD_LIBRARY_PATH=/opt/redpitaya/lib  generate_DC_LO
-sleep 1
-# Restore LED status Calling generate_DC will reset LEDs. generate_DC.c has rp_Init() inside.
-$MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-
-# Caling LD_LIBRARY_PATH=/opt/redpitaya/lib  generate_DC_LO RESETS DIO so set it agin
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.2
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.2
-# Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
-# DIO5_N = 1
-# DIO6_N = 0
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N
-sleep 0.4
-
-#Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value and correct it using CALIBRATED input gains
-ADC_A_MEAN=$(awk -v N1_LV=$N1_LV '{sum+=$1} END { print int((sum/NR)-N1_LV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int((sum/NR)-N2_LV)}' /tmp/adc_b.txt)
-
-OUT1_VOLTAGE_LO=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v HALF_ADC_RANGE=$HALF_ADC_RANGE 'BEGIN { print ((ADC_A_MEAN/HALF_ADC_RANGE))}' )
-OUT2_VOLTAGE_LO=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v HALF_ADC_RANGE=$HALF_ADC_RANGE 'BEGIN { print ((ADC_B_MEAN/HALF_ADC_RANGE))}' )
-#Print out the measurements
-echo "OUT1_VOLTAGE_LO is $OUT1_VOLTAGE_LO"
-echo "OUT2_VOLTAGE_LO is $OUT2_VOLTAGE_LO"
-echo
-
-GAIN1_OUT_LO=$(awk -v BE_CH1_DC_offs=$BE_CH1_DC_offs -v OUT_AMP_LO_cnt=$OUT_AMP_LO_cnt -v ADC_A_MEAN=$ADC_A_MEAN 'BEGIN {print ((ADC_A_MEAN)/OUT_AMP_LO_cnt) }')
-GAIN2_OUT_LO=$(awk -v BE_CH2_DC_offs=$BE_CH2_DC_offs -v OUT_AMP_LO_cnt=$OUT_AMP_LO_cnt -v ADC_B_MEAN=$ADC_B_MEAN 'BEGIN {print ((ADC_B_MEAN)/OUT_AMP_LO_cnt) }')
-
-# Caling LD_LIBRARY_PATH=/opt/redpitaya/lib  generate_DC_LO RESETS DIO so set it agin
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.2
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.2
-# Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
-# DIO5_N = 1
-# DIO6_N = 0
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N
-sleep 0.4
-
-#Generate DC output signal HI
-LD_LIBRARY_PATH=/opt/redpitaya/lib generate_DC
-sleep 1
-
-# Restore LED status Calling generate_DC will reset LEDs. generate_DC.c has rp_Init() inside.
-$MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-
-# Caling LD_LIBRARY_PATH=/opt/redpitaya/lib  generate_DC_LO RESETS DIO so set it agin
-# Set Directions of DIO
-$MONITOR 0x40000010 w 0x00   # - P line inputs
-sleep 0.2
-$MONITOR 0x40000014 w 0xff   # - N outputs
-sleep 0.2
-# Setting relay states, Set LV jumper settings, Connect OUT1&OUT2 to the IN1&IN2
-# DIO5_N = 1
-# DIO6_N = 0
-# DIO7_N = 1
-$MONITOR 0x4000001C w 0xA0 # -> Set N
-sleep 0.4
-
-#Acquire data with $DECIMATION decimation factor
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-sleep 0.4
-$ACQUIRE -e -s $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
-cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
-cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
-# Calculate mean value and correct it using CALIBRATED input gains
-ADC_A_MEAN=$(awk -v N1_LV=$N1_LV '{sum+=$1} END { print int((sum/NR)-N1_LV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_LV=$N2_LV '{sum+=$1} END { print int((sum/NR)-N2_LV)}' /tmp/adc_b.txt)
-
-
-OUT1_VOLTAGE_HI=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v HALF_ADC_RANGE=$HALF_ADC_RANGE 'BEGIN { print ((ADC_A_MEAN/HALF_ADC_RANGE))}' )
-OUT2_VOLTAGE_HI=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v HALF_ADC_RANGE=$HALF_ADC_RANGE 'BEGIN { print ((ADC_B_MEAN/HALF_ADC_RANGE))}' )
-#Print out the measurements
-echo "OUT1_VOLTAGE_HI is $OUT1_VOLTAGE_HI"
-echo "OUT2_VOLTAGE_HI is $OUT2_VOLTAGE_HI"
-echo
-
-
-GAIN1_OUT_HI=$(awk -v BE_CH1_DC_offs=$BE_CH1_DC_offs -v OUT_AMP_HI_cnt=$OUT_AMP_HI_cnt -v ADC_A_MEAN=$ADC_A_MEAN 'BEGIN {print ((ADC_A_MEAN)/OUT_AMP_HI_cnt) }')
-GAIN2_OUT_HI=$(awk -v BE_CH2_DC_offs=$BE_CH2_DC_offs -v OUT_AMP_HI_cnt=$OUT_AMP_HI_cnt -v ADC_B_MEAN=$ADC_B_MEAN 'BEGIN {print ((ADC_B_MEAN)/OUT_AMP_HI_cnt) }')
-
-GAIN1_OUT=$(awk -v GAIN1_OUT_LO=$GAIN1_OUT_LO  -v GAIN1_OUT_HI=$GAIN1_OUT_HI 'BEGIN { print ((GAIN1_OUT_LO+GAIN1_OUT_HI)/2) }')
-GAIN2_OUT=$(awk -v GAIN2_OUT_LO=$GAIN2_OUT_LO  -v GAIN2_OUT_HI=$GAIN2_OUT_HI 'BEGIN { print ((GAIN2_OUT_LO+GAIN2_OUT_HI)/2) }')
-echo "GAIN1_OUT is $GAIN1_OUT"
-echo "GAIN2_OUT is $GAIN2_OUT"
-echo
-
-
-BE_CH1_FS=$(awk -v GAIN1_OUT=$GAIN1_OUT 'BEGIN { print sprintf("%d", int((42949673*GAIN1_OUT))) }')
-BE_CH2_FS=$(awk -v GAIN2_OUT=$GAIN2_OUT 'BEGIN { print sprintf("%d", int((42949673*GAIN2_OUT))) }')
-
-# Print out the measurements
-echo "      NEW OUT1 gain cal param >>BE_CH1_FS<< is $BE_CH1_FS"
-echo "      NEW OUT2 gain cal param >>BE_CH2_FS<< is $BE_CH2_FS"
-echo
-
-# Trun OFF outputs
-$GENERATE 1 0 0 sqr
-$GENERATE 2 0 0 sqr
-
-# Check if the values are within expectations
-if [[ $BE_CH1_FS -gt $BE_FS_MAX ]] || [[ $BE_CH1_FS -lt $BE_FS_MIN ]]
-then
-    echo "      OUT1 gain calibration parameter ($BE_CH1_FS) is outside expected range (42949673 +/- 30%)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-if [[ $BE_CH2_FS -gt $BE_FS_MAX ]] || [[ $BE_CH2_FS -lt $BE_FS_MIN ]]
-then
-    echo "      OUT2 gain calibration parameter ($BE_CH2_FS) is outside expected range (42949673 +/- 30%)"
-    TEST_STATUS=0
-    CALIBRATION_STATUS=0
-fi
-
-LOG_VAR="$LOG_VAR $BE_CH1_FS $BE_CH2_FS"
-
-                        echo
-                        echo "------------------Printing  Log variables  step 11: Calibration parameters BE_CH1_FS, BE_CH2_FS --------------------------------------------------"
-                        echo "$LOG_VAR"
-                        echo "--------------------------------------------------------------------------------------------------------------------------------------------------"
-                        echo
-
-
-
-
-if [[ $CALIBRATION_STATUS -eq 0 ]]
-then
-
-                    echo
-                    echo "          Calibration has faild...Restoring factory calibration parameters..."
-                    echo
-                    echo
-                                echo $FACTORY_CAL | $CALIB -wf
-                                    sleep 0.2
-                                    if [ $? -ne 0 ]
-                                    then
-                                        echo
-                                        echo "Default calibration parameters are NOT correctly written in the factory EEPROM space"
-                                        sleep 1
-                                    fi
-                                # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
-                                echo $FACTORY_CAL | $CALIB -w
-                                    sleep 0.2
-                                    if [ $? -ne 0 ]
-                                    then
-                                        echo
-                                        echo "Default calibration parameters are NOT correctly written in the user EEPROM space"
-                                        sleep 1
-                                    fi
-                    echo
-                    echo
-
+    echo "Default calibration parameters are NOT correctly set into the EEPROM..."
+        CALIBRATION_STATUS=0
+	TEST_STATUS=0
+    echo
 else
-echo "          Calibration was successfull"
-TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
-$MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-echo
-echo
+    # Verify the values of the written calibration parameters
+    echo "Verifying the user calibration parameters in the EEPROM..."
+    echo
+    $CALIB -rf > /tmp/read_factory_cal.txt
+    sleep 0.2
+    $CALIB -r > /tmp/read_user_cal.txt
+    sleep 0.2
+    PARAM_CMP=$(cmp /tmp/read_factory_cal.txt /tmp/read_user_cal.txt)
 
-                    # COPY NEW CALIBRATION PARAMETERS IN TO USER EPROM SPACE/PARTITION  #
-                    NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $SOME_eeprom_value $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
-                    echo "Setting the new calibration parameters into the user EEPROM space..."
-                    echo
-                            echo $NEW_CAL_PARAMS | $CALIB -w
-                            sleep 0.1
-                            if [ $? -ne 0 ]
-                            then
-                            echo
-                            echo "New calibration parameters are NOT correctly written in the user EEPROM space"
-                            sleep 1
-                            fi
-                    echo -ne '\n' | $CALIB -r
-
-                    echo "Setting the new calibration parameters into the FACTORY EEPROM space..."
-                    echo
-                            echo $NEW_CAL_PARAMS | $CALIB -wf
-                            sleep 0.1
-                            if [ $? -ne 0 ]
-                            then
-                            echo
-                            echo "New calibration parameters are NOT correctly written in the FACTORY EEPROM space"
-                            sleep 1
-                            fi
-                    echo -ne '\n' | $CALIB -rf
-
+    if [ $? != 0 ]
+    then
+        echo "User calibration parameters are NOT correctly set into the EEPROM..."
+        CALIBRATION_STATUS=0
+	TEST_STATUS=0
+        echo
+    fi
 fi
 
-
-LOG_VAR="$LOG_VAR $CALIBRATION_STATUS"
+CALIBRATION_LOG_PARAMS="$FE_CH1_DC_offs $FE_CH2_DC_offs $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI $FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $BE_CH1_DC_offs $BE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS"
+LOG_VAR="$LOG_VAR $CALIBRATION_LOG_PARAMS $CALIBRATION_STATUS" # If clibraation fail log factory cal data
 
 
 else   # From if [ $LOGFILE_STATUS -eq 511 ] conditon
@@ -2662,14 +1785,14 @@ RES=$(ping "$LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{prin
  if [[ "$RES" == "$N_PING_PKG" ]]
  then
     echo "----------Logging test statistics to PRODUCTION PC-------------------"
-
+#ssh $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     #echo 'sometext' | ssh zumy@192.168.178.123 "cat >> /home/zumy/Desktop/Test_LOGS/manuf_test.log"
-    echo $LOG_VAR_DATE | ssh $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
+    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS"  ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     echo
     echo "      Test data logging on the local PC was successfull"
     else
     echo "      Not possible to log test statistics to local PC"
-    LOGGING_STATUS=0
+    LOGGING_STATUS=1
 fi
 echo
 echo
@@ -2717,26 +1840,41 @@ echo
 #echo $URL1
 #curl $URL1
 CURL_RSP="$(curl $URL)"
-if [ `echo $CURL_RSP | grep -c "OK" ` -gt 0 ]
+
+status=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+
+if [ "$status" == 200 ]
 then
 echo
 echo "      Test record was successfully added to production database."
 echo
-elif [ `echo $CURL_RSP | grep -c "FAILED" ` -gt 0 ]
-then
-echo
-echo
-echo "      This board  (combination of MAC & DNA) already exists in production database with PASS(0x1ff = 111111111) status!!!"
-echo
-echo
-LOGGING_STATUS=0
 else
 echo
 echo "      No response from SERVER!!!"
 echo
-LOGGING_STATUS=0
+#LOGGING_STATUS=1
 fi
-echo
+
+#if [ `echo $CURL_RSP | grep -c "OK" ` -gt 0 ]
+#then
+#echo
+#echo "      Test record was successfully added to production database."
+#echo
+#elif [ `echo $CURL_RSP | grep -c "FAILED" ` -gt 0 ]
+#then
+#echo
+#echo
+#echo "      This board  (combination of MAC & DNA) already exists in production database with PASS(0x1ff = 111111111) status!!!"
+#echo
+#echo
+#LOGGING_STATUS=1
+#else
+#echo
+#echo "      No response from SERVER!!!"
+#echo
+#LOGGING_STATUS=1
+#fi
+#echo
 echo
 echo "---------------------------------------------------------------------------------------------------------------------------------------------"
 

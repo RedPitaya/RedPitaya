@@ -33,42 +33,57 @@
     }
 
     Desktop.setApplications = function(listOfapplications) {
-        applications = [];
-        $.extend(true, applications, listOfapplications);
-        var url_arr = window.location.href.split("/");
-        var url = url_arr[0] + '//' + url_arr[2] + '/';
+    	$.ajax({
+                method: "GET",
+                url: '/get_info'
+            })
+            .done(function(result) {
+            		stem_ver = result['stem_ver'];
+            		if (stem_ver == "STEM 16"){
+            			for (i = default_applications.length - 1; i >= 0; i -= 1){
+   							 if (default_applications[i]["id"] === 'marketplace' || default_applications[i]["id"] === 'fpgaexamples' || default_applications[i]["id"] === 'activelearning'){
+   							 	        default_applications.splice(i, 1);
+   								}
+   							}						
+            		};
 
-        for (var i = 0; i < default_applications.length; i++) {
-            if (default_applications[i].id == "marketplace")
-                default_applications[i].url = url + 'bazaar'
-            if (default_applications[i].url[0] == "/")
-                default_applications[i].url = window.location.origin + default_applications[i].url;
-            applications.push(default_applications[i]);
-        }
+            	    applications = [];
+			        $.extend(true, applications, listOfapplications);
+			        var url_arr = window.location.href.split("/");
+			        var url = url_arr[0] + '//' + url_arr[2] + '/';
 
-        for (var i = 0; i < applications.length; i++) {
-            applications[i].group = checkApplicationInGroup(applications[i].id);
-            applications[i].is_group = false;
-        }
+			        for (var i = 0; i < default_applications.length; i++) {
+			            if (default_applications[i].id == "marketplace")
+			                default_applications[i].url = url + 'bazaar'
+			            if (default_applications[i].url[0] == "/")
+			                default_applications[i].url = window.location.origin + default_applications[i].url;
+			            applications.push(default_applications[i]);
+			        }
 
-        for (var i = 0; i < groups.length; i++) {
-            var gr = {
-                id: "",
-                name: groups[i].name,
-                description: groups[i].description,
-                url: "#",
-                image: groups[i].image,
-                check_online: false,
-                licensable: false,
-                callback: openGroup,
-                type: 'run',
-                group: "",
-                is_group: true
-            };
-            applications.push(gr);
-        }
-        applications.unshift(backButton);
-        Desktop.selectGroup();
+			        for (var i = 0; i < applications.length; i++) {
+			            applications[i].group = checkApplicationInGroup(applications[i].id);
+			            applications[i].is_group = false;
+			        }
+
+			        for (var i = 0; i < groups.length; i++) {
+			            var gr = {
+			                id: "",
+			                name: groups[i].name,
+			                description: groups[i].description,
+			                url: "#",
+			                image: groups[i].image,
+			                check_online: false,
+			                licensable: false,
+			                callback: openGroup,
+			                type: 'run',
+			                group: "",
+			                is_group: true
+			            };
+			            applications.push(gr);
+			        }
+			        applications.unshift(backButton);
+			        Desktop.selectGroup();
+            });
     }
 
     var checkApplicationInGroup = function(app_id) {

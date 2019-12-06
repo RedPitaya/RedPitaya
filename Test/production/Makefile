@@ -1,10 +1,11 @@
 INSTALL_DIR ?= .
-BINARY_FILES = calibration_script.sh delete_MAC.sh
+BINARY_FILES = calibration_script.sh delete_MAC.sh spectrum_sfdr_test.py production_testing_script_z20_spectrum.sh production_env_install.sh production_env_gen1_install.sh production_env_gen2_install.sh
+
 TEXT_FILES = environment_parameters.txt
 PRODUCTION_TESTING_SCRIPT = production_testing_script.sh
-MODEL ?= Z10
+FPGA_MODEL ?= Z10
 
-ifeq ($(MODEL), Z20)
+ifeq ($(FPGA_MODEL), Z20)
 PRODUCTION_TESTING_SCRIPT = production_testing_script_z20.sh
 endif
 

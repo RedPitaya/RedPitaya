@@ -209,6 +209,17 @@ To build everything a few ``make`` steps are required.
    EOL_CHROOT
    make -f Makefile.x86 zip
 
+If you want build for RP122-16 based on Z7020 xilinx, you must pass parameter FPGA MODEL=Z20 in makefile
+This parameter defines how to create projects and should be transferred to all makefiles.
+
+.. code-block:: shell-session
+
+   make -f Makefile.x86 FPGA MODEL=Z20
+   schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
+   make FPGA MODEL=Z20
+   EOL_CHROOT
+   make -f Makefile.x86 zip FPGA MODEL=Z20
+
 To get an itteractive ARM shell do.
 
 .. code-block:: shell-session
@@ -220,6 +231,7 @@ Partial rebuild process
 =======================
 
 The next components can be built separately.
+By default, the project is built for RP125-14 (Z7010), if necessary build for the Z7020, use the parameter FPGA_MODEL=Z20
 
 * FPGA + device tree
 * u-Boot
