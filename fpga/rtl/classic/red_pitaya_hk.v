@@ -129,34 +129,34 @@ assign id_value[ 3: 0] =  4'h2; // board type  2 - 250MHz
 //  Simple FF PLL 
 
 // detect RF clock
-reg  [ 5-1:0] pll_ref_cnt = 5'h0;
+reg  [16-1:0] pll_ref_cnt = 16'h0;
 reg  [ 3-1:0] pll_sys_syc  ;
-reg  [ 9-1:0] pll_sys_cnt  ;
+reg  [21-1:0] pll_sys_cnt  ;
 reg           pll_sys_val  ;
 reg           pll_cfg_en   ;
 wire [32-1:0] pll_cfg_rd   ;
 
 always @(posedge pll_ref_i) begin
-  pll_ref_cnt <= pll_ref_cnt + 5'h1;
+  pll_ref_cnt <= pll_ref_cnt + 16'h1;
 end
 
 always @(posedge clk_i) 
 if (rstn_i == 1'b0) begin
-  pll_sys_syc <= 3'h0 ;
-  pll_sys_cnt <= 9'h100;
-  pll_sys_val <= 1'b0 ;
+  pll_sys_syc <=  3'h0 ;
+  pll_sys_cnt <= 21'h100000;
+  pll_sys_val <=  1'b0 ;
 end else begin
-  pll_sys_syc <= {pll_sys_syc[3-2:0], pll_ref_cnt[5-1]} ;
+  pll_sys_syc <= {pll_sys_syc[3-2:0], pll_ref_cnt[14-1]} ;
 
   if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
-    pll_sys_cnt <= 9'h1;
-  else if (!pll_sys_cnt[9-1])
-    pll_sys_cnt <= pll_sys_cnt + 9'h1;
+    pll_sys_cnt <= 21'h1;
+  else if (!pll_sys_cnt[21-1])
+    pll_sys_cnt <= pll_sys_cnt + 21'h1;
 
-  // pll_sys_clk must be around 200
+  // pll_sys_clk must be around 102400 (125000000/(10000000/2^13))
   if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
-    pll_sys_val <= (pll_sys_cnt > 196) && (pll_sys_cnt < 204) ;
-  else if (pll_sys_cnt[9-1])
+    pll_sys_val <= (pll_sys_cnt > 102300) && (pll_sys_cnt < 102500) ;
+  else if (pll_sys_cnt[21-1])
     pll_sys_val <= 1'b0 ;
 end
 
@@ -183,27 +183,39 @@ assign pll_hi_o =  pll_ff_ref || (!pll_sys_val || !pll_cfg_en);
 
 
 // filter out PLL lock status
-reg  [ 9-1:0] pll_lck_cnt  ;
-reg  [ 2-1:0] pll_lck_sts  ;
+reg  [17-1:0] pll_lck_lcnt  ;
+reg  [17-1:0] pll_lck_hcnt  ;
+reg  [ 4-1:0] pll_lck_sts  ;
 
 always @(posedge clk_i) 
 if (rstn_i == 1'b0) begin
-  pll_lck_cnt <=  9'h0 ;
-  pll_lck_sts <=  2'b0 ;
+  pll_lck_lcnt <= 17'h0 ;
+  pll_lck_hcnt <= 17'h0 ;
+  pll_lck_sts <=   2'b0 ;
 end else begin
-  if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
-    pll_lck_cnt <= 9'h0;
-  else if (pll_ff_lck)
-    pll_lck_cnt <= pll_lck_cnt + 9'h1;
 
-  // pll_lck_cnt threshold
   if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
-    pll_lck_sts[0] <= |pll_lck_cnt[8:4];
+    pll_lck_lcnt <= 17'h1;
+  else if (pll_lo_o)
+    pll_lck_lcnt <= pll_lck_lcnt + 17'h1;
 
-  pll_lck_sts[0] <= pll_lck_sts[0] && pll_sys_val;
+  if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
+    pll_lck_hcnt <= 17'h1;
+  else if (!pll_hi_o)
+    pll_lck_hcnt <= pll_lck_hcnt + 17'h1;
+
+
+  // pll_lck_cnt threshold 70% of whole period
+  if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
+    pll_lck_sts[0] <= (pll_lck_lcnt > 17'd70000) && (pll_lck_hcnt > 17'd70000);
+
+  pll_lck_sts[1] <= pll_lck_sts[0] && pll_sys_val;
+
+  if (pll_sys_syc[3-1] ^ pll_sys_syc[3-2])
+    pll_lck_sts[3:2] <= {(pll_lck_lcnt > 17'd70000), (pll_lck_hcnt > 17'd70000)};
 end
 
-assign pll_cfg_rd = {{32-12{1'h0}}, 3'h0,pll_lck_sts[1], 3'h0,pll_sys_val, 3'h0,pll_cfg_en};
+assign pll_cfg_rd = {{32-14{1'h0}}, pll_lck_sts[3:2], 3'h0,pll_lck_sts[1], 3'h0,pll_sys_val, 3'h0,pll_cfg_en};
 
 
 

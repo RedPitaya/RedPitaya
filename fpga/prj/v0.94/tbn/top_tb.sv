@@ -8,8 +8,8 @@
 
 module top_tb #(
   // time period
-  realtime  TP = 8.0ns,  // 125MHz
-  realtime  RP = 99.5ns,  // ~10MHz
+  realtime  TP = 4.0ns,  // 250MHz
+  realtime  RP = 100.1ns,  // ~10MHz
   // DUT configuration
   int unsigned DAC_DW = 14, // ADC data width
   int unsigned RSZ = 14  // RAM size is 2**RSZ
@@ -56,11 +56,14 @@ logic         [ 4-1:0] dac_pwm;     // 1-bit PDM DAC
 logic         [ 5-1:0] vinp;        // voltages p
 logic         [ 5-1:0] vinn;        // voltages n
 // Expansion connector
-wire          [ 8-1:0] exp_p_io;
-wire          [ 8-1:0] exp_n_io;
+wire          [ 9-1:0] exp_p_io;
+wire          [ 9-1:0] exp_n_io;
+wire                   exp_9_io;
 // Expansion output data/enable
-logic         [ 8-1:0] exp_p_od, exp_p_oe;
-logic         [ 8-1:0] exp_n_od, exp_n_oe;
+logic         [ 9-1:0] exp_p_od, exp_p_oe;
+logic         [ 9-1:0] exp_n_od, exp_n_oe;
+logic                  exp_9_od, exp_9_oe;
+
 // LED
 wire          [ 8-1:0] led;
 
@@ -141,7 +144,7 @@ initial begin
 //   top_tc.test_asg                (2<<20, 32'h40090000, 2);
 
 
-  ##16000;
+  ##16000000;
   $finish();
 end
 
@@ -331,6 +334,7 @@ red_pitaya_top #(
   // Expansion connector
   .exp_p_io       (exp_p_io),
   .exp_n_io       (exp_n_io),
+  .exp_9_io       (exp_9_io),
   // SATA connector
   .daisy_p_o      (),
   .daisy_n_o      (),
@@ -340,9 +344,9 @@ red_pitaya_top #(
   .led_o          (led)
 );
 
-bufif1 bufif_exp_p_io [8-1:0] (exp_p_io, exp_p_od, exp_p_oe);
-bufif1 bufif_exp_n_io [8-1:0] (exp_n_io, exp_n_od, exp_n_oe);
-
+bufif1 bufif_exp_p_io [9-1:0] (exp_p_io, exp_p_od, exp_p_oe);
+bufif1 bufif_exp_n_io [9-1:0] (exp_n_io, exp_n_od, exp_n_oe);
+bufif1 bufif_exp_9_io         (exp_9_io, exp_9_od, exp_9_oe);
 // testcases
 top_tc top_tc();
 
