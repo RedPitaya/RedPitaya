@@ -19,8 +19,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/param.h>
-
+#ifdef Z20_250_12
+#include "rp_eeprom_Z20_250.h"
+#else
 #include "rp_eeprom.h"
+#endif
 #include "redpitaya/version.h"
 
 
@@ -94,7 +97,7 @@ int WriteCalib(bool factory)
 {
     eepromWpData_t eepromData;
     const char delimiters[] = " ,:;\t";
-    char buf[255];
+    char buf[512];
     int ret = 0;
 
     /* Read current eeprom data */

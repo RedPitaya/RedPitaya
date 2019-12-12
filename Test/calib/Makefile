@@ -14,12 +14,18 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
+MODEL ?= Z10
+
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
+ifeq ($(MODEL),Z20_250_12)
+OBJS = calib.o rp_eeprom_Z20_250.o
+else
 OBJS = calib.o rp_eeprom.o
+endif
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.c, $(OBJS)))
 
@@ -27,7 +33,7 @@ SRCS = $(subst .o,.c, $(OBJS)))
 TARGET=calib
 
 # GCC compiling & linking flags
-CFLAGS  = -g -std=gnu99 -Wall -Werror
+CFLAGS  = -g -std=gnu99 -Wall -Werror -D$(MODEL) -DDEBUG
 CFLAGS += -I../../api/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
