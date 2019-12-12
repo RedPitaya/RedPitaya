@@ -33,7 +33,7 @@ CXXOBJECTS_SPI=$(CXXSOURCES_SPI:.cpp=.o)
 OBJECTS_SPI=$(CXXOBJECTS_SPI)
 CXXOBJECTS_GPIO=$(CXXSOURCES_GPIO:.cpp=.o)
 OBJECTS_GPIO=$(CXXOBJECTS_GPIO)
-LIB=-L$(OUT_DIR)lib -lxml -lstdc++
+LIB=-L$(OUT_DIR)lib -lxml -lstdc++ -lpthread
 
 
 all: $(SOURCES) xml make_i2c make_spi make_gpio
