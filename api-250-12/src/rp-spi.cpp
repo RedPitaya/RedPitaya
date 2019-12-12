@@ -32,8 +32,8 @@ static XML::XMLString attr_decription_string("decription");
 static XML::XMLString attr_length_string("length");
 
 bool g_enable_verbous = false;
-#define MSG(args...) if (g_enable_verbous) fprintf(stderr,args);
-#define MSG_A(args...) fprintf(stderr,args);
+#define MSG(args...) if (g_enable_verbous) fprintf(stdout,args);
+#define MSG_A(args...) fprintf(stdout,args);
 
 void rp_spi_enable_verbous(){
     g_enable_verbous = true;

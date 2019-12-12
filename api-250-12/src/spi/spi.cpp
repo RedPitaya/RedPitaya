@@ -14,7 +14,7 @@
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 
-#define MSG_A(args...) fprintf(stderr,args);
+#define MSG_A(args...) fprintf(stdout,args);
 static char mode = SPI_MODE_0;
 
 #define MAP_SIZE 4096UL

@@ -7,11 +7,17 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <fstream>
+#include <pthread.h>
 #include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
-#define MSG_A(args...) fprintf(stderr,args);
+#define MSG_A(args...) fprintf(stdout,args);
+
+pthread_mutex_t i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned char i2c_val_to_write, bool force){
+	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -19,7 +25,8 @@ int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_r
 	/* Open the device node for the I2C adapter of bus 4 */
 	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (i2c_dev_node < 0) {
-		MSG_A("[rp_i2c] Unable to open device node.\n");
+		MSG_A("[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -31,6 +38,7 @@ int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_r
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -39,6 +47,7 @@ int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_r
 	if (read_value < 0) {
         MSG_A("[rp_i2c] I2C Read operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
 	ret_val = i2c_smbus_write_byte_data(i2c_dev_node,
@@ -48,13 +57,16 @@ int write_to_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_r
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] I2C Write Operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
-    close(i2c_dev_node);                  
+    close(i2c_dev_node);                 
+	pthread_mutex_unlock(&i2c_mutex); 
 	return 0;
 }
 
 int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned short i2c_val_to_write, bool force){
+	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -62,7 +74,8 @@ int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_
 	/* Open the device node for the I2C adapter of bus 4 */
 	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (i2c_dev_node < 0) {
-		MSG_A("[rp_i2c] Unable to open device node.\n");
+		MSG_A("[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -74,6 +87,7 @@ int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -82,6 +96,7 @@ int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_
 	if (read_value < 0) {
         MSG_A("[rp_i2c] I2C Read operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
 
@@ -91,13 +106,16 @@ int write_to_i2c_word(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] I2C Write Operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
-    close(i2c_dev_node);                  
+    close(i2c_dev_node);      
+	pthread_mutex_unlock(&i2c_mutex);            
 	return 0;
 }
 
 int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value, bool force){
+	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -105,7 +123,8 @@ int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_
 	/* Open the device node for the I2C adapter of bus 4 */
 	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (i2c_dev_node < 0) {
-		MSG_A("[rp_i2c] Unable to open device node.\n");
+		MSG_A("[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -117,6 +136,7 @@ int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -125,13 +145,17 @@ int read_from_i2c(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_
 	if (read_value < 0) {
         MSG_A("[rp_i2c] I2C Read operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
-    value = (char)read_value;                    
+	close(i2c_dev_node);
+    value = (char)read_value;      
+	pthread_mutex_unlock(&i2c_mutex);              
 	return 0;
 }
 
 int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, char &value, bool force){
+	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -139,7 +163,8 @@ int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, cha
 	/* Open the device node for the I2C adapter of bus 4 */
 	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (i2c_dev_node < 0) {
-		MSG_A("[rp_i2c] Unable to open device node.\n");
+		MSG_A("[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -151,6 +176,7 @@ int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, cha
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -159,14 +185,18 @@ int read_from_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address, cha
 	if (read_value < 0) {
         MSG_A("[rp_i2c] I2C Read operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
-    value = (char)read_value;                    
+	close(i2c_dev_node);
+    value = (char)read_value;  
+	pthread_mutex_unlock(&i2c_mutex);                  
 	return 0;
 }
 
 
 int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_command, bool force){
+	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -174,7 +204,8 @@ int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i
 	/* Open the device node for the I2C adapter of bus 4 */
 	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (i2c_dev_node < 0) {
-		MSG_A("[rp_i2c] Unable to open device node.\n");
+		MSG_A("[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -186,6 +217,7 @@ int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -194,6 +226,7 @@ int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i
 	if (read_value < 0) {
         MSG_A("[rp_i2c] I2C Read operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
 	ret_val = i2c_smbus_write_byte(i2c_dev_node,i2c_dev_command);
@@ -201,13 +234,16 @@ int write_to_i2c_command(const char* i2c_dev_node_path,int i2c_dev_address,int i
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] I2C Write Operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
-    close(i2c_dev_node);                  
+    close(i2c_dev_node);     
+	pthread_mutex_unlock(&i2c_mutex);             
 	return 0;
 }
  
 int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,const unsigned char *buffer,int len, bool force){
+	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -215,7 +251,8 @@ int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2
 	/* Open the device node for the I2C adapter of bus 4 */
 	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (i2c_dev_node < 0) {
-		MSG_A("[rp_i2c] Unable to open device node.\n");
+		MSG_A("[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -227,6 +264,7 @@ int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -235,6 +273,7 @@ int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2
 	if (read_value < 0) {
         MSG_A("[rp_i2c] I2C Read operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
 	ret_val = i2c_smbus_write_block_data(i2c_dev_node,i2c_dev_reg_addr,len,buffer);
@@ -242,13 +281,16 @@ int write_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] I2C Write Operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
-    close(i2c_dev_node);                  
+    close(i2c_dev_node);
+	pthread_mutex_unlock(&i2c_mutex);                  
 	return 0;
 }
 
 int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c_dev_reg_addr,unsigned char *buffer, bool force){
+	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
     __s32 read_value = 0;
@@ -256,7 +298,8 @@ int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c
 	/* Open the device node for the I2C adapter of bus 4 */
 	i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (i2c_dev_node < 0) {
-		MSG_A("[rp_i2c] Unable to open device node.\n");
+		MSG_A("[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -268,6 +311,7 @@ int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c
 	if (ret_val < 0) {
         MSG_A("[rp_i2c] Could not set I2C_SLAVE.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
 		return -1;
 	}
 
@@ -276,8 +320,10 @@ int read_to_i2c_buffer(const char* i2c_dev_node_path,int i2c_dev_address,int i2c
 	if (read_value < 0) {
         MSG_A("[rp_i2c] I2C Read operation failed.\n");
         close(i2c_dev_node);
+		pthread_mutex_unlock(&i2c_mutex);
         return -1;
 	}
-    close(i2c_dev_node);                  
+    close(i2c_dev_node);                 
+	pthread_mutex_unlock(&i2c_mutex); 
 	return read_value;
 }

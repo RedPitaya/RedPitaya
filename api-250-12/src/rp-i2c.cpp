@@ -31,8 +31,8 @@ static XML::XMLString attr_default_string("default");
 static XML::XMLString attr_decription_string("decription");
 
 bool g_enable_verbous = false;
-#define MSG(args...) if (g_enable_verbous) fprintf(stderr,args);
-#define MSG_A(args...) fprintf(stderr,args);
+#define MSG(args...) if (g_enable_verbous) fprintf(stdout,args);
+#define MSG_A(args...) fprintf(stdout,args);
 
 void rp_i2c_enable_verbous(){
     g_enable_verbous = true;
