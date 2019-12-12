@@ -13,8 +13,8 @@ CXXFLAGS += -I$(OUT_DIR)include
 
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
-OBJECTS=$(CXXOBJECTS)
-LIB=-L$(OUT_DIR) -static -lrp-i2c -lstdc++
+OBJECTS=$(CXXOBJECTS) 
+LIB=-L$(OUT_DIR) -static -lrp-i2c -lstdc++ -lpthread
 
 
 all: $(SOURCES) make_c_app
