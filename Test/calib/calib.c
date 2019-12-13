@@ -19,11 +19,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/param.h>
-#ifdef Z20_250_12
-#include "rp_eeprom_Z20_250.h"
-#else
+
 #include "rp_eeprom.h"
-#endif
 #include "redpitaya/version.h"
 
 
