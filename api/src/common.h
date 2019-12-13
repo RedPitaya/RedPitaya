@@ -19,7 +19,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "redpitaya/rp.h"
+#include "rp_cross.h"
+
 
 #define ECHECK(x) { \
         int retval = (x); \

@@ -16,7 +16,7 @@
 #define GENERATE_HANDLER_H_
 
 
-#include "redpitaya/rp.h"
+#include "rp_cross.h"
 
 int gen_SetDefaultValues();
 int gen_Disable(rp_channel_t chanel);

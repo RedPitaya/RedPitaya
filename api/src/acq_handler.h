@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "redpitaya/rp.h"
+#include "rp_cross.h"
 
 #ifdef Z20_250_12
  #define ADC_SAMPLE_PERIOD_DEF 4

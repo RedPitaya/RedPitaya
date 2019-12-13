@@ -23,11 +23,13 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define RP_MODEL "Z10"
-#define ADC_SAMPLE_RATE 125e6
+
+#define RP_MODEL "Z20_250_12"
+#define ADC_SAMPLE_RATE 250e6
 #define ADC_BITS 14
 #define ADC_BITS_MASK 0x3FFF
-#define DAC_FREQUENCY 125e6
+#define DAC_FREQUENCY 250e6
+
 
 #define ADC_BUFFER_SIZE             (16*1024)
 

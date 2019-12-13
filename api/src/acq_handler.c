@@ -423,8 +423,8 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage)
     switch(channel){
         case RP_T_CH_1: return acq_SetChannelThreshold(RP_CH_1, voltage);
         case RP_T_CH_2: return acq_SetChannelThreshold(RP_CH_2, voltage);
+        #ifdef Z20_250_12
         case RP_T_CH_EXT: {
-            #ifdef Z20_250_12
                 int ret = rp_setExtTriggerLevel(voltage);
                 switch(ret){
                     case RP_I2C_EOOR: return RP_EOOR;
@@ -433,8 +433,9 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage)
                     default:
                         return RP_OK;
                 }   
-            #endif
         }
+        #endif
+        default:;
     }
     return RP_NOTS;
 }
@@ -444,8 +445,8 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage)
     switch(channel){
         case RP_T_CH_1: return acq_GetChannelThreshold(RP_CH_1, voltage);
         case RP_T_CH_2: return acq_GetChannelThreshold(RP_CH_2, voltage);
+        #ifdef Z20_250_12
         case RP_T_CH_EXT: {
-            #ifdef Z20_250_12
                 int ret = rp_getExtTriggerLevel(voltage);
                 switch(ret){
                     case RP_I2C_EOOR: return RP_EOOR;
@@ -454,8 +455,9 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage)
                     default:
                         return RP_OK;
                 }   
-            #endif
         }
+        #endif
+        default:;
     }
     return RP_NOTS;
 }

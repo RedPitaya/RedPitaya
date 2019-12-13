@@ -104,4 +104,13 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
-	cp -r ../include/redpitaya $(INSTALL_DIR)/include
+	cp ../include/redpitaya/version.h $(INSTALL_DIR)/include/version.h
+ifeq ($(MODEL),Z10)
+	cp ../include/redpitaya/rp.h $(INSTALL_DIR)/include/rp.h
+endif
+ifeq ($(MODEL),Z20)
+	cp ../include/redpitaya/rp_Z20.h $(INSTALL_DIR)/include/rp.h
+endif
+ifeq ($(MODEL),Z20_250_12)
+	cp ../include/redpitaya/rp_Z20_250_12.h $(INSTALL_DIR)/include/rp.h
+endif
