@@ -336,7 +336,7 @@ acquire250.12: api
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
-	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(CALIB_DIR) 
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrum: api

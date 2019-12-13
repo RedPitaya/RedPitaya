@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "rp_cross.h"
+
 
 
 #define ECHECK(x) { \

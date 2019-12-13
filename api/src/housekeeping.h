@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "rp_cross.h"
 // Base Housekeeping address
 static const int HOUSEKEEPING_BASE_ADDR = 0x00000000;
 #ifdef Z20_250_12

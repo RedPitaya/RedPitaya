@@ -17,7 +17,7 @@
 #include <sys/mman.h>
 #include <stdio.h>
 #include <math.h>
-
+#include "rp_cross.h"
 #include "common.h"
 
 static int fd = 0;

@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include "rp_cross.h"
 #include "spec_fpga.h"
 
 #ifdef Z20_250_12

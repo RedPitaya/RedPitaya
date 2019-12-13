@@ -24,6 +24,7 @@
 //#include "spectrometerApp.h"
 #include "spec_fpga.h"
 #include "kiss_fftr.h"
+#include "rp_cross.h"
 
 extern float g_spectr_fpga_adc_max_v;
 extern const int c_spectr_fpga_adc_bits;

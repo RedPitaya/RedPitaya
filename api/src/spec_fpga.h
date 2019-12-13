@@ -16,7 +16,7 @@
 #define __FPGA_H
 
 #include <stdint.h>
-#include "rp_cross.h"
+
 
 /* Base address */
 #define SPECTR_FPGA_BASE_ADDR 0x00100000
