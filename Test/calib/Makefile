@@ -14,7 +14,7 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
-MODEL = Z10
+MODEL ?= Z10
 
 # Versioning system
 VERSION ?= 0.00-0000
@@ -30,7 +30,7 @@ SRCS = $(subst .o,.c, $(OBJS)))
 TARGET=calib
 
 # GCC compiling & linking flags
-CFLAGS  = -g -std=gnu99 -Wall -Werror -D$(MODEL) -DDEBUG
+CFLAGS  = -g -std=gnu99 -Wall -Werror
 CFLAGS += -I../../api/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
