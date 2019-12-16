@@ -14,7 +14,7 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
-MODEL ?= Z10
+MODEL = Z10
 
 # Versioning system
 VERSION ?= 0.00-0000
