@@ -501,8 +501,8 @@ endgenerate
 // data loopback
 always @(posedge adc_clk)
 begin
-  adc_dat_sw[0] <= digital_loop ? dac_a : { adc_dat_in[1][14-1:2] , {2{adc_dat_in[1][2]}} }; // switch adc_b->ch_a
-  adc_dat_sw[1] <= digital_loop ? dac_b : { adc_dat_in[0][14-1:2] , {2{adc_dat_in[0][2]}} }; // switch adc_a->ch_b
+  adc_dat_sw[0] <= digital_loop ? dac_a : { adc_dat_in[1][14-1:2] , 2'h0 }; // switch adc_b->ch_a
+  adc_dat_sw[1] <= digital_loop ? dac_b : { adc_dat_in[0][14-1:2] , 2'h0 }; // switch adc_a->ch_b
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -592,7 +592,7 @@ i_hk (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-assign led_o = {led_hk[3:0], led_hk[7:4]}; // switch low and high nibble
+assign led_o = led_hk[7:0];
 
 
 ////////////////////////////////////////////////////////////////////////////////
