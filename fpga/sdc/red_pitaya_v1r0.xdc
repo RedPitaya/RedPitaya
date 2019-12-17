@@ -22,14 +22,14 @@ set_property IOB TRUE [get_ports {adc_dat_?_i[*][*]}]
 # ADC 0 data
 set_property PACKAGE_PIN W18 [get_ports {adc_dat_p_i[0][0]}] ; # ADAxP
 set_property PACKAGE_PIN W19 [get_ports {adc_dat_n_i[0][0]}] ; # ADAxN
-set_property PACKAGE_PIN Y16 [get_ports {adc_dat_p_i[0][1]}] ; # ADA0P
-set_property PACKAGE_PIN Y17 [get_ports {adc_dat_n_i[0][1]}] ; # ADA0N
-set_property PACKAGE_PIN V12 [get_ports {adc_dat_p_i[0][2]}] ; # ADA2P
-set_property PACKAGE_PIN W13 [get_ports {adc_dat_n_i[0][2]}] ; # ADA2N
-set_property PACKAGE_PIN T11 [get_ports {adc_dat_p_i[0][3]}] ; # ADA4P
-set_property PACKAGE_PIN T10 [get_ports {adc_dat_n_i[0][3]}] ; # ADA4N
-set_property PACKAGE_PIN W14 [get_ports {adc_dat_p_i[0][4]}] ; # ADA6P
-set_property PACKAGE_PIN Y14 [get_ports {adc_dat_n_i[0][4]}] ; # ADA6N
+set_property PACKAGE_PIN U13 [get_ports {adc_dat_p_i[0][1]}] ; # ADA0P
+set_property PACKAGE_PIN V13 [get_ports {adc_dat_n_i[0][1]}] ; # ADA0N
+set_property PACKAGE_PIN Y16 [get_ports {adc_dat_p_i[0][2]}] ; # ADA2P
+set_property PACKAGE_PIN Y17 [get_ports {adc_dat_n_i[0][2]}] ; # ADA2N
+set_property PACKAGE_PIN V12 [get_ports {adc_dat_p_i[0][3]}] ; # ADA4P
+set_property PACKAGE_PIN W13 [get_ports {adc_dat_n_i[0][3]}] ; # ADA4N
+set_property PACKAGE_PIN T11 [get_ports {adc_dat_p_i[0][4]}] ; # ADA6P
+set_property PACKAGE_PIN T10 [get_ports {adc_dat_n_i[0][4]}] ; # ADA6N
 set_property PACKAGE_PIN V16 [get_ports {adc_dat_p_i[0][5]}] ; # ADA8P
 set_property PACKAGE_PIN W16 [get_ports {adc_dat_n_i[0][5]}] ; # ADA8N
 set_property PACKAGE_PIN T20 [get_ports {adc_dat_p_i[0][6]}] ; # ADA10P
@@ -61,9 +61,9 @@ set_property PACKAGE_PIN U19 [get_ports {adc_clk_i[0]}] ; # ADCLKN
 set_property IOSTANDARD LVCMOS18 [get_ports adc_spi_*]
 set_property SLEW SLOW [get_ports adc_spi_*]
 set_property DRIVE 8 [get_ports adc_spi_*]
-set_property PACKAGE_PIN U13 [get_ports adc_spi_csb]
+set_property PACKAGE_PIN Y14 [get_ports adc_spi_csb]
 set_property PACKAGE_PIN V18 [get_ports adc_spi_sdio]
-set_property PACKAGE_PIN V13 [get_ports adc_spi_clk]
+set_property PACKAGE_PIN W14 [get_ports adc_spi_clk]
 
 # ADC SYNC
 set_property IOSTANDARD LVCMOS18 [get_ports adc_sync_o]
@@ -229,15 +229,14 @@ set_property IOSTANDARD LVCMOS33 [get_ports {led_o[*]}]
 set_property SLEW SLOW [get_ports {led_o[*]}]
 set_property DRIVE 4 [get_ports {led_o[*]}]
 
-set_property PACKAGE_PIN K14 [get_ports {led_o[0]}]
+set_property PACKAGE_PIN K14 [get_ports {led_o[0]}] ; # 0-3 -> 4:7
 set_property PACKAGE_PIN J15 [get_ports {led_o[1]}]
 set_property PACKAGE_PIN J14 [get_ports {led_o[2]}]
 set_property PACKAGE_PIN H15 [get_ports {led_o[3]}]
-set_property PACKAGE_PIN L14 [get_ports {led_o[4]}]
+set_property PACKAGE_PIN L14 [get_ports {led_o[4]}] ; # 4-7 -> 0:3
 set_property PACKAGE_PIN M14 [get_ports {led_o[5]}]
 set_property PACKAGE_PIN M15 [get_ports {led_o[6]}]
 set_property PACKAGE_PIN N15 [get_ports {led_o[7]}]
-
 
 ############################################################################
 # Clock constraints                                                        #

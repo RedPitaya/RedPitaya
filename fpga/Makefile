@@ -10,8 +10,9 @@
 #   2. Memtest (stand alone memory test) ELF binary.
 #   4. Linux device tree source (dts).
 
-PRJ ?= logic
-MODEL ?= Z10
+PRJ ?= v0.94
+MODEL ?= Z20
+HWID ?= v1r0
 
 # build artefacts
 FPGA_BIT    = prj/$(PRJ)/out/red_pitaya.bit
@@ -38,7 +39,7 @@ project:
 	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ)
 
 $(FPGA_BIT):
-	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ)
+	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ) $(HWID)
 	./synCheck.sh
 
 $(FSBL_ELF): $(FPGA_BIT)
