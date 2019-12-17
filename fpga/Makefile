@@ -36,10 +36,18 @@ clean:
 	rm -rf prj/$(PRJ)/out prj/$(PRJ)/.Xil prj/$(PRJ)/.srcs prj/$(PRJ)/sdk prj/$(PRJ)/project
 
 project:
+ifdef HWID
+	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ) HWID=$(HWID)
+else
 	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ)
+endif
 
 $(FPGA_BIT):
-	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ) $(HWID)
+ifdef HWID
+	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ) HWID=$(HWID)
+else
+	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ)
+endif
 	./synCheck.sh
 
 $(FSBL_ELF): $(FPGA_BIT)
