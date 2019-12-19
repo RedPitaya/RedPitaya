@@ -24,28 +24,13 @@ export G_LOCAL_USER='redpitaya'
 export G_LOG_MNT_FOLDER='/mnt/log'
 
 # Main commands shortcuts
-export C_MONITOR="$SD_CARD_PATH/bin/monitor"
+export C_MONITOR="$G_SD_CARD_PATH/bin/monitor"
 export C_PRINTENV="fw_printenv"
 export C_SETENV="fw_setenv"
-export C_GENERATE="$SD_CARD_PATH/bin/generate"
-export C_ACQUIRE="$SD_CARD_PATH/bin/acquire"
-export C_CALIB="$SD_CARD_PATH/bin/calib"
-
-###############################################################################
-# define GLOBAL FUNCTIONS
-###############################################################################
-
-hexToDec() {
-    local VALUE
-    read VALUE
-    printf "%d\n" "$VALUE"
-}
-export -f hexToDec
-
-get_rtrn(){
-    echo `echo $1|cut --delimiter=, -f $2`
-}
-export -f get_rtrn
+export C_GENERATE="$G_SD_CARD_PATH/bin/generate"
+export C_ACQUIRE="$G_SD_CARD_PATH/bin/acquire"
+export C_CALIB="$G_SD_CARD_PATH/bin/calib"
+export C_UART_TOOL="$G_SD_CARD_PATH/bin/uart_prod_tool"
 
 # RUN MAIN TEST
 ./main_test.sh

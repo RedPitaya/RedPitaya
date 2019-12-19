@@ -1,5 +1,6 @@
 #include "spi.h"
 
+#include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -127,12 +128,13 @@ int write_to_fpga_spi(const char* _path,unsigned short dev_address, char a_addr,
 	if((fd = open(_path, O_RDWR | O_SYNC)) == -1) return -1;
 
 	/* Read from command line */
-	unsigned long addr;
+	//unsigned long addr;
 
 
 	/* Map one page */
 	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, FPGA_SPI_ADDR);
 	if(map_base == (void *) -1) retval = -1;
+
 	void* virt_addr = map_base + (dev_address & MAP_MASK);
 	*((unsigned long *) virt_addr) = (unsigned long)a_addr;
 	virt_addr = map_base	   + ((dev_address + 0x0004) & MAP_MASK);
@@ -141,13 +143,36 @@ int write_to_fpga_spi(const char* _path,unsigned short dev_address, char a_addr,
 		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
 		map_base = (void*)(-1);
 	}
-
-	if (map_base != (void*)(-1)) {
-		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
-	}
 	if (fd != -1) {
 		close(fd);
 	}
 	return retval;
 }
 
+int read_from_fpga_spi(const char* _path,unsigned short dev_address,char a_addr, char &value){
+		int fd = -1;
+	int retval = 0;
+	void* map_base = (void*)(-1);
+
+	if((fd = open(_path, O_RDWR | O_SYNC)) == -1) return -1;
+
+	/* Map one page */
+	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, FPGA_SPI_ADDR);
+	if(map_base == (void *) -1) retval = -1;
+	void* virt_addr = map_base + (dev_address & MAP_MASK);
+	*((unsigned long *) virt_addr) = (unsigned long)a_addr + 0x8000;
+	virt_addr = map_base	   + ((dev_address + 0x0004) & MAP_MASK);
+	*((unsigned long *) virt_addr) = (unsigned long)0x44;
+	virt_addr = map_base	   + ((dev_address + 0x0008) & MAP_MASK);
+	usleep(100 * 1000);
+	value = (char)(*((uint32_t *) virt_addr));
+	
+	if (map_base != (void*)(-1)) {
+		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
+		map_base = (void*)(-1);
+	}
+	if (fd != -1) {
+		close(fd);
+	}
+	return retval;
+}

@@ -16,7 +16,7 @@ OBJS = main.o
 SRCS = $(subst .o,.cpp, $(OBJS)))
 
 # Executable name
-TARGET=uart_tool
+TARGET=uart_prod_tool
 
 # GCC compiling & linking flags
 CXXFLAGS  = -Wall -Werror

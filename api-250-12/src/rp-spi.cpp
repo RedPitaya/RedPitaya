@@ -114,9 +114,12 @@ int rp_read_from_spi(const char* spi_dev_path,char *buffer_header,int header_len
 }
 
  int rp_write_to_spi_fpga(const char* spi_dev_path,unsigned short dev_address,int reg_addr, unsigned char spi_val_to_write){
-     return write_to_fpga_spi(spi_dev_path,dev_address, reg_addr , spi_val_to_write);
+    return write_to_fpga_spi(spi_dev_path,dev_address, reg_addr , spi_val_to_write);
  }
 
+int rp_read_from_spi_fpga(const char* spi_dev_path,unsigned short dev_address,int reg_addr, char &value){
+    return read_from_fpga_spi(spi_dev_path,dev_address, reg_addr , value);
+}
 
 
 int read_header_length(XML::XMLDocument *doc,int &header_length, string &bus_name){

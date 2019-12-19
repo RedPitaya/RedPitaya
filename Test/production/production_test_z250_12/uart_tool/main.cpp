@@ -99,18 +99,24 @@ int uart_open(const char* port, int baud, int blocking) {
 int main(int argc, char* argv[] ) {
 
     if (argc  < 2){
-        printf("Missing command for test bord\n");
+        printf("Missing command for test board\n");
         return -1;
     } 
-	if(!uart_open(portname, B115200, 0)) 
+
+    bool showresult = !(argc > 2 && strcmp(argv[2], "-s")==0);
+    
+
+	if(!uart_open(portname, B115200, 1)) 
 		return -1;
     char str[255];
     sprintf(str,"%s\r\n",argv[1]);
-	uart_writestr(str);
+    uart_writestr(str);
+    usleep(100 * 1000);    
     char buff[255];
     memset(buff,0,255);
     uart_read(buff,255);
-    printf("%s",buff);
+    if (showresult)
+     printf("%s",buff);
 	
 	return 0;
 }
