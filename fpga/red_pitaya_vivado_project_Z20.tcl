@@ -5,7 +5,11 @@
 # vivado -mode batch -source red_pitaya_vivado_project_Z20.tcl -tclargs projectname
 ################################################################################
 
-cd prj/$::argv
+set prj_name [lindex $argv 0]
+puts "Project name: $prj_name"
+cd prj/$prj_name
+#cd prj/$::argv
+
 
 ################################################################################
 # define paths
@@ -51,8 +55,23 @@ generate_target all [get_files    system.bd]
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
 
-#add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
-add_files -fileset constrs_1      ../../$path_sdc/red_pitaya.xdc
+## search for HWID parameter to select xdc
+foreach item $argv {
+  puts "Input arfguments: $argv"
+  if {[lsearch -all $item "*HWID*"] >= 0} {
+    set hwid [split $item "="]
+    set board [lindex $hwid 1]
+    puts "Special board: $board"
+  }
+}
+
+if {[info exists board]} {
+  puts "Special board: $board"
+  add_files -fileset constrs_1  ../../$path_sdc/red_pitaya_${board}.xdc
+} else {
+  puts "Reading standard board constraints."
+  add_files -fileset constrs_1  ../../$path_sdc/red_pitaya.xdc
+}
 
 ################################################################################
 # start gui
