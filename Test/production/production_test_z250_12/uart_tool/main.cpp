@@ -69,6 +69,7 @@ set_blocking (int fd, int should_block)
 
 /* use omega UART1 */
 const char *portname = "/dev/ttyPS1";
+
 int uartFd = -1; 
 
 void uart_writestr(const char* string) {

@@ -45,7 +45,10 @@ done
 #            Test of EEPROM write                                      #
 #        Setting the default calibration parameters into the EEPROM... # 
 ########################################################################
+if [[ $G_CONSOLE_TEST == 1 ]]
+then
 ./sub_test/test_console_and_mac.sh
+fi
 
 echo
 echo
@@ -56,22 +59,42 @@ echo "Zynq code received $ZYNQ_CODE"
 ###############################################################################
 # I2C and SPI bus functionality test
 ###############################################################################
+if [[ $G_SPI_TEST == 1 ]]
+then
 ./sub_test/i2c_spi_test.sh
+fi
 
 ###############################################################################
 # Ethernet network test
 ###############################################################################
+if [[ $G_ETHERNET_TEST == 1 ]]
+then
 ./sub_test/ethernet_test.sh
+fi
 
 ###############################################################################
 # Temperature and Power supply voltages test
 ###############################################################################
+if [[ $G_POWER_TEST == 1 ]]
+then
 ./sub_test/temperatures_and_power_test.sh
+fi
+
+###############################################################################
+# Test of Test of SATA loopback connection 
+###############################################################################
+if [[ $G_SATA_TEST == 1 ]]
+then
+./sub_test/sata_test.sh
+fi
 
 ###############################################################################
 # Test of GPIO connection 
 ###############################################################################
+if [[ $G_GPIO_TEST == 1 ]]
+then
 ./sub_test/gpio_test.sh
+fi
 
 echo
 echo

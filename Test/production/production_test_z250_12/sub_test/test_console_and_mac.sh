@@ -96,18 +96,18 @@ then
     # Parse also the other QR CODE parameters. HP: they are correct.
     NAV_CODE=$(echo $QR_VAR | awk -F'[=&-]' '{print $5}')
     HW_REV=$(echo $QR_VAR   | awk -F'[=&]' '{print $6}')
-    SERIAL=$(echo $QR_VAR   | awk -F'[=&-]' '{print $0}')
-    #SERIAL='162400000'
+    #SERIAL=$(echo $QR_VAR   | awk -F'[=&-]' '{print $0}')
+    SERIAL='162400000'
 
     # Save the environment variables
     echo "Writing ethaddr $MAC_ADDR to EEPROM..."
-    $SETENV ethaddr $MAC_ADDR > /dev/null 2>&1
+    $C_SETENV ethaddr $MAC_ADDR > /dev/null 2>&1
     echo "Writing navision code $NAV_CODE to EEPROM..."
-    $SETENV nav_code $NAV_CODE > /dev/null 2>&1
+    $C_SETENV nav_code $NAV_CODE > /dev/null 2>&1
     echo "Writing hw_rev $HW_REV to EEPROM..."
-    $SETENV hw_rev $HW_REV > /dev/null 2>&1
+    $C_SETENV hw_rev $HW_REV > /dev/null 2>&1
     echo "Writing serial $SERIAL to EEPROM..."
-    $SETENV serial $SERIAL > /dev/null 2>&1
+    $C_SETENV serial $SERIAL > /dev/null 2>&1
 
 
     # Verify wrote parameters
@@ -120,7 +120,8 @@ then
 
     if [[ "$READ_MAC" != "$MAC_ADDR" ]] || [[ "$READ_NAV" != "$NAV_CODE" ]] || [[ "$READ_HWREV" != "$HW_REV" ]] || [[ "$READ_SERIAL" != "$SERIAL" ]]
     then
-        echo "Parameters are NOT correctly written in the EEPROM"
+        echo -n "Parameters are NOT correctly written in the EEPROM "
+        print_fail
         sleep 1
     else
         echo "Environment variables of this board are SET TO..."

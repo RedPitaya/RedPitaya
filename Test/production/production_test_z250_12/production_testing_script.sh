@@ -32,5 +32,13 @@ export C_ACQUIRE="$G_SD_CARD_PATH/bin/acquire"
 export C_CALIB="$G_SD_CARD_PATH/bin/calib"
 export C_UART_TOOL="$G_SD_CARD_PATH/bin/uart_prod_tool"
 
+#enable tests
+#export G_CONSOLE_TEST=1
+#export G_SPI_TEST=1
+#export G_ETHERNET_TEST=1
+#export G_POWER_TEST=1
+export G_SATA_TEST=1
+#export G_GPIO_TEST=1
+
 # RUN MAIN TEST
 ./main_test.sh
