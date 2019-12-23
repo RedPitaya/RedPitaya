@@ -25,7 +25,21 @@ fi
 ZYNQ_CODE="$DNA_P1 $DNA_P2"
 }
 
+function disableAllDIOPin() {
+    # SET P pins in IN mode
+    $C_MONITOR 0x40000010 w 0x00
+    sleep 0.2
+    # SET N pins in IN mode
+    $C_MONITOR 0x40000014 w 0x00
+    sleep 0.2
 
+    # SET P pins in 0 values
+    $C_MONITOR 0x40000018 0x00
+    sleep 0.2
+    # SET N pins in 0 values
+    $C_MONITOR 0x4000001C 0x00
+    sleep 0.2
+}
 
 function hexToDec() {
     local VALUE
@@ -38,7 +52,6 @@ function hexToDec() {
 function get_rtrn(){
     echo `echo $1|cut --delimiter=, -f $2`
 }
-
 
 function print_test_ok(){
     echo -e "TEST RESULT: \033[92m[OK]\e[0m"
@@ -54,4 +67,19 @@ function print_ok(){
 
 function print_fail(){
     echo -e "\033[91m[FAIL]\e[0m"
+}
+
+
+function load_fpga_0_94(){
+echo "LOAD FPGA 0.94 IMAGE"
+cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+sleep 2
+echo "FPGA LOADED SUCCESSFULLY"
+}
+
+function load_fpga_mercury(){
+echo "LOAD FPGA MERCURY IMAGE"
+cat /opt/redpitaya/fpga/mercury/fpga.bit > /dev/xdevcfg
+sleep 2
+echo "FPGA LOADED SUCCESSFULLY"
 }

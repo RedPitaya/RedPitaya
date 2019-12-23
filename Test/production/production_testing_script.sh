@@ -173,7 +173,7 @@ $MONITOR 0x40000014 w 0xFF # -> Set N to outputs
 
 
 # USE OLD FPGA for all up to TEST 7
-cat /opt/redpitaya/fpga/fpga_0.93.bit > /dev/xdevcfg
+cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
 sleep 2
 ###############################################################################
 # PHASE 1

@@ -4,10 +4,7 @@
 source ./sub_test/common_func.sh
 
 echo "START MAIN TEST"
-echo "LOAD FPGA IMAGE" 
-cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
-sleep 2
-echo "FPGA LOADED SUCCESSFULLY"
+load_fpga_0_94
 
 echo
 echo
@@ -81,7 +78,15 @@ then
 fi
 
 ###############################################################################
-# Test of Test of SATA loopback connection 
+# Test of USB data 
+###############################################################################
+if [[ $G_USB_TEST == 1 ]]
+then
+./sub_test/usb_test.sh
+fi
+
+###############################################################################
+# Test of SATA loopback connection 
 ###############################################################################
 if [[ $G_SATA_TEST == 1 ]]
 then
@@ -94,6 +99,14 @@ fi
 if [[ $G_GPIO_TEST == 1 ]]
 then
 ./sub_test/gpio_test.sh
+fi
+
+###############################################################################
+# Slow ADCs and DACs test 
+###############################################################################
+if [[ $G_SLOW_ADC_DAC_TEST == 1 ]]
+then
+./sub_test/slow_adc_dac_test.sh
 fi
 
 echo

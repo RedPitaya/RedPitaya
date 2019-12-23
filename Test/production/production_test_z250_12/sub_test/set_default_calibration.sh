@@ -51,12 +51,11 @@ FACTORY_CAL="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE
 echo
 echo -n "Setting the default calibration parameters into the EEPROM... "
 echo $FACTORY_CAL | $C_CALIB -wf
-sleep 0.2
 if [ $? -ne 0 ]
 then
     echo
     echo -n "Default calibration parameters are NOT correctly written in the factory EEPROM space "
-    prinf_fail
+    print_fail
     sleep 1
     STATUS=1
     else
@@ -66,12 +65,11 @@ fi
 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
 echo -n "Setting the  default calibration parameters into the user EEPROM space... "
     echo $FACTORY_CAL | $C_CALIB -w
-    sleep 0.2
     if [ $? -ne 0 ]
     then
     echo
     echo - n "New calibration parameters are NOT correctly written in the user EEPROM space"
-    prinf_fail
+    print_fail
     sleep 1
     STATUS=1
     else 
