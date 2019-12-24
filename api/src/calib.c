@@ -159,6 +159,10 @@ void calib_SetToZero() {
     calib.fe_ch1_hi_offs = 0;
     calib.fe_ch2_hi_offs = 0;
 
+//     float coff = 1;
+// #ifdef Z20_250_12 
+//     coff = 1;
+// #endif
 
     calib.be_ch1_fs      = cmn_CalibFullScaleFromVoltage(1);
     calib.be_ch2_fs      = cmn_CalibFullScaleFromVoltage(1);

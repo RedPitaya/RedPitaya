@@ -109,6 +109,22 @@ then
 ./sub_test/slow_adc_dac_test.sh
 fi
 
+###############################################################################
+# Fast ADCs and DACs test 
+###############################################################################
+if [[ $G_FAST_ADC_DAC_TEST == 1 ]]
+then
+./sub_test/fast_adc_test.sh
+fi
+
+###############################################################################
+# Fast ADCs bit analysis
+###############################################################################
+if [[ $G_FAST_ADC_BIT_TEST == 1 ]]
+then
+./sub_test/fast_adc_bit_test.sh
+fi
+
 echo
 echo
 echo "END MAIN TEST"

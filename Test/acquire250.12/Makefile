@@ -15,7 +15,7 @@
 
 MODEL ?= Z10
 ADC_SAMPLE_RATE ?= 250e6
-ADC_BITS ?= 12
+ADC_BITS ?= 14
 
 # Versioning system
 VERSION ?= 0.00-0000

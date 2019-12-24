@@ -436,7 +436,7 @@ int main(int argc, char *argv[])
                     if (cnt_to_vol)
                         printf("%f\t%f\n", osc_fpga_cnv_cnt_to_v((int)s[1][i]) / MAX_CNT * ADC_FULL_RANGE,  osc_fpga_cnv_cnt_to_v((int)s[2][i])/ MAX_CNT * ADC_FULL_RANGE);
                     else
-                        printf(format_str, (int)s[1][i] & 0x3FFF, (int)s[2][i] & 0x3FFF);
+                        printf(format_str, ((int)s[1][i]), ((int)s[2][i]));
                 }
                 break;
             }
