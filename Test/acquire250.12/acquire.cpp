@@ -227,6 +227,9 @@ int main(int argc, char *argv[])
     rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_1);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_AC_MODE);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE);
+    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
+    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
+    usleep(1000);
 
     const char *optstring = "esx1:2:d:vht:l:o";
 

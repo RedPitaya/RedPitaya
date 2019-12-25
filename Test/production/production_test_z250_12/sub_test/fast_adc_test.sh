@@ -35,21 +35,11 @@ echo
 STATUS=0
 
 
-# Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
-$C_MONITOR 0x40000010 w 0x00 # -> Set P to inputs
-sleep 0.2
-$C_MONITOR 0x40000014 w 0xFF # -> Set N to outputs
-sleep 0.2
-
-# Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 1 (lv jumper settings)
-$C_MONITOR 0x4000001C w 0x00 # -> Set N outputs to zero - > reseet
-sleep 0.2
-$C_MONITOR 0x4000001C w 0x80 # ->  Set DIO5_N=1 -> Configure the ADC in high-gain mode -> DIO7_N = 1
+enableK1Pin
 sleep 1
 
 # Assure tht DAC signals (ch 1 & 2) are OFF
-$C_GENERATE 1 0 $SIG_FREQ x1 sine
-$C_GENERATE 2 0 $SIG_FREQ x1 sine
+disableGenerator
 sleep 1
 
 export MAX_DEVIATION=$MAX_NOISE_STD
@@ -96,8 +86,7 @@ echo "    Acqusition without DAC signal - ADCs with attenuator 1:20"
 echo
 
 # Turn the DAC signal generator OFF on both channels (ch 1 & 2)
-$C_GENERATE 1 0 $SIG_FREQ
-$C_GENERATE 2 0 $SIG_FREQ
+disableGenerator
 sleep 0.2
 
 export MAX_DEVIATION=$MAX_NOISE_STD
@@ -145,8 +134,7 @@ echo "    Acqusition without DAC signal - ADCs with HIGH gain"
 echo
 
 # Assure tht DAC signals (ch 1 & 2) are OFF
-$C_GENERATE 1 0 $SIG_FREQ x1 sine
-$C_GENERATE 2 0 $SIG_FREQ x1 sine
+disableGenerator
 sleep 1
 
 export MAX_DEVIATION=$MAX_NOISE_STD
@@ -195,8 +183,7 @@ echo "    Acqusition without DAC signal - ADCs with attenuator 1:20"
 echo
 
 # Turn the DAC signal generator OFF on both channels (ch 1 & 2)
-$C_GENERATE 1 0 $SIG_FREQ
-$C_GENERATE 2 0 $SIG_FREQ
+disableGenerator
 sleep 0.2
 
 export MAX_DEVIATION=$MAX_NOISE_STD
@@ -241,8 +228,7 @@ fi
 # Set DAC value to 0 for both channels (1 & 2)
 echo
 echo "    Restoring DAC signals and ADC gain to idle conditions"
-$C_GENERATE 1 0 $SIG_FREQ
-$C_GENERATE 2 0 $SIG_FREQ
+disableGenerator
 echo
 
 disableAllDIOPin

@@ -8,7 +8,6 @@ DNA_P1=$($C_MONITOR 0x40000004)
 sleep 0.2
 DNA_P2=$($C_MONITOR 0x40000008)
 sleep 0.2
-LOG_VAR=
 
 #Added, check if teh variable is empty > unsucsefull read will return empty variable. in this case set variable to "x".
 if [ -z "$DNA_P1" ]
@@ -27,19 +26,63 @@ ZYNQ_CODE="$DNA_P1 $DNA_P2"
 
 function disableAllDIOPin() {
     # SET P pins in IN mode
-    $C_MONITOR 0x40000010 w 0x00
+    $C_MONITOR 0x40000010 w 0x0FFF
     sleep 0.2
     # SET N pins in IN mode
-    $C_MONITOR 0x40000014 w 0x00
+    $C_MONITOR 0x40000014 w 0x0FFF
     sleep 0.2
 
     # SET P pins in 0 values
-    $C_MONITOR 0x40000018 0x00
+    $C_MONITOR 0x40000018 0x0000
     sleep 0.2
     # SET N pins in 0 values
-    $C_MONITOR 0x4000001C 0x00
+    $C_MONITOR 0x4000001C 0x0000
     sleep 0.2
 }
+
+function enableK1Pin() {
+    disableAllDIOPin
+
+    $C_MONITOR 0x40000014 w 0x0080 # -> Set N to outputs
+    sleep 0.2
+    $C_MONITOR 0x4000001C w 0x0080 # ->  Set DIO7_N = 1
+    sleep 0.2
+}
+
+function enableK2Pin() {
+    disableAllDIOPin
+
+    # Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
+    $C_MONITOR 0x40000010 w 0x0080 # -> Set P to inputs
+    sleep 0.2
+    $C_MONITOR 0x40000018 w 0x0080 # ->  Set DIO7_N = 1
+    sleep 0.2
+}
+
+function enableK3Pin() {
+    disableAllDIOPin
+
+    $C_MONITOR 0x40000014 w 0x0100 # -> Set N to outputs
+    sleep 0.2
+    $C_MONITOR 0x4000001C w 0x0100 # ->  Set DIO7_N = 1
+    sleep 0.2
+}
+
+function enableK4Pin() {
+    disableAllDIOPin
+
+    # Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
+    $C_MONITOR 0x40000010 w 0x0200 # -> Set P to inputs
+    sleep 0.2
+    $C_MONITOR 0x40000018 w 0x0200 # ->  Set DIO7_N = 1
+    sleep 0.2
+}
+
+function disableGenerator(){
+    $C_GENERATE 1 0 0 x1 sine
+    $C_GENERATE 2 0 0 x1 sine
+}
+
 
 function hexToDec() {
     local VALUE
@@ -47,7 +90,15 @@ function hexToDec() {
     printf "%d\n" "$VALUE"
 }
 
+function getLowRefValue(){
+    REF_V=$($C_UART_TOOL 'GET:VREF:LOW')
+    REF_V=$(printf %.$2f $(bc -l <<< "scale=0; 8192 * $REF_V"))
+}
 
+function getHighRefValue(){
+    REF_V=$($C_UART_TOOL 'GET:VREF:HI')
+    REF_V=$(printf %.$2f $(bc -l <<< "scale=0; 8192 * $REF_V / 20"))
+}
 
 function get_rtrn(){
     echo `echo $1|cut --delimiter=, -f $2`

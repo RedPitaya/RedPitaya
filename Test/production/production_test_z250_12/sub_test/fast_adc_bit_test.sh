@@ -23,16 +23,7 @@ STATUS=0
 echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
 echo
 
-# Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
-$C_MONITOR 0x40000010 w 0x00 # -> Set P to inputs
-sleep 0.2
-$C_MONITOR 0x40000014 w 0xFF # -> Set N to output 
-sleep 0.2
-
-# Configure relays  DIO5_N = 1, DIO6_N = 0, DIO7_N = 1 (lv jumper settings)
-$C_MONITOR 0x4000001C w 0x00 # -> Set N outputs to zero - > reseet
-sleep 0.2
-$C_MONITOR 0x4000001C w 0x80 # ->  Set DIO5_N=1 -> Configure the ADC in high-gain mode -> DIO7_N = 1
+enableK1Pin
 sleep 1
 
 # Turn the DAC signal generator on on both channels
@@ -146,8 +137,7 @@ done
 sleep 1
 
 echo "    Restoring DAC signals and ADC gain to idle conditions..."
-$C_GENERATE 1 0 $SIG_FREQ x1 sine
-$C_GENERATE 2 0 $SIG_FREQ x1 sine
+disableGenerator
 echo
 
 disableAllDIOPin

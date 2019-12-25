@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ./sub_test/common_func.sh
+source ./sub_test/default_calibration_values.sh
 
 N_REP=5
 RP_MAC_BEGINNING='00:26:32'
@@ -133,8 +134,9 @@ then
         echo "-----------------------------------------------"
         echo
     fi
-
-    ./sub_test/set_default_calibration.sh
+    getDefCalibValues
+    export FACTORY_CAL
+    ./sub_test/set_calibration.sh
     #In any case, reboot the unit to apply the changes
     echo "Rebooting now to apply Enviroment parameters (MAC address)...."
     echo
@@ -161,8 +163,9 @@ echo
                 # beceause Calibration can/will change calibration parameters and if the board  is set once more troguh testing
                 # then if cal parameter are not set back to deafult testing step bellow will return an error.
                 # Also, when board is set to new testign calibration should be aslo repeated.
-
-./sub_test/set_default_calibration.sh
+getDefCalibValues
+export FACTORY_CAL
+./sub_test/set_calibration.sh
 if [[ "$?" = '1' ]]
 then
     $C_UART_TOOL 'LED:GRN 0 6' -s

@@ -26,6 +26,7 @@ else
     $C_UART_TOOL 'LED:RED 0 1' -s
 fi
 
+
 echo
 echo "LEDs 1-8 will blink for 5 sec - USER: verify"
 echo
@@ -36,6 +37,7 @@ do
     $C_MONITOR 0x40000030 w 0x00
     sleep 0.5
 done
+
 
 ########################################################################
 #            Check the teminal console functionality                   #
@@ -123,6 +125,14 @@ fi
 if [[ $G_FAST_ADC_BIT_TEST == 1 ]]
 then
 ./sub_test/fast_adc_bit_test.sh
+fi
+
+###############################################################################
+# Fast ADCs and DACs CALIBRATION
+###############################################################################
+if [[ $G_CALIBRATION == 1 ]]
+then
+./sub_test/calibration_dc_mode.sh
 fi
 
 echo
