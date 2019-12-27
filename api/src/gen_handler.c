@@ -18,6 +18,10 @@
 #include "generate.h"
 #include "gen_handler.h"
 
+#ifdef Z20_250_12
+#include "rp-i2c-max7311-c.h"
+#endif
+
 // global variables
 // TODO: should be organized into a system status structure
 float         chA_amplitude            = 1, chB_amplitude            = 1;
@@ -34,6 +38,10 @@ uint32_t      chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 
 bool          chA_EnableTempProtection = 0, chB_EnableTempProtection = 0;
 bool          chA_LatchTempAlarm       = 0, chB_LatchTempAlarm       = 0;
+
+#ifdef Z20_250_12
+rp_gen_gain_t chA_gain                    , chB_gain                    ;
+#endif
 
 float chA_arbitraryData[BUFFER_LENGTH];
 float chB_arbitraryData[BUFFER_LENGTH];
@@ -65,6 +73,8 @@ int gen_SetDefaultValues() {
     gen_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
     gen_setPhase(RP_CH_1, 0.0);
     gen_setPhase(RP_CH_2, 0.0);
+    gen_setGainOut(RP_CH_1,RP_GAIN_1X);
+    gen_setGainOut(RP_CH_2,RP_GAIN_1X);
     return RP_OK;
 }
 
@@ -97,11 +107,27 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
     CHANNEL_ACTION(channel,
             chA_amplitude = amplitude,
             chB_amplitude = amplitude)
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_setAmplitude(channel, gain , amplitude);
+#else
     return generate_setAmplitude(channel, amplitude);
+#endif
 }
 
 int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_getAmplitude(channel, gain , amplitude);
+#else
     return generate_getAmplitude(channel, amplitude);
+#endif
 }
 
 int gen_setOffset(rp_channel_t channel, float offset) {
@@ -114,11 +140,27 @@ int gen_setOffset(rp_channel_t channel, float offset) {
     CHANNEL_ACTION(channel,
             chA_offset = offset,
             chB_offset = offset)
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_setDCOffset(channel, gain , offset);
+#else
     return generate_setDCOffset(channel, offset);
+#endif
 }
 
 int gen_getOffset(rp_channel_t channel, float *offset) {
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_getDCOffset(channel, gain , offset);
+#else
     return generate_getDCOffset(channel, offset);
+#endif
 }
 
 int gen_setFrequency(rp_channel_t channel, float frequency) {
@@ -622,3 +664,36 @@ int gen_getLatchTempAlarm(rp_channel_t channel, bool *status) {
 int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status) {
     return generate_getRuntimeTempAlarm(channel, status);
 }
+
+
+#ifdef Z20_250_12
+
+int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
+    rp_gen_gain_t *gain = NULL;
+
+    if (channel == RP_CH_1) {
+        gain = &chA_gain;
+    }
+    else {
+        gain = &chB_gain;
+    }
+
+    int ch = (channel == RP_CH_1 ? RP_MAX7311_OUT1 : RP_MAX7311_OUT2);
+    int status = rp_setGainOut_C(ch,mode  == RP_GAIN_1X ? RP_GAIN_2V : RP_GAIN_10V);
+    if (status == RP_OK){
+        *gain = mode;
+    }
+    return RP_OK;
+}
+
+int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status){
+    if (channel == RP_CH_1) {
+        *status = chA_gain;
+    }
+    else {
+        *status = chB_gain;
+    }
+    return RP_OK;
+}
+
+#endif

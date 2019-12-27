@@ -137,6 +137,8 @@ then
     getDefCalibValues
     export FACTORY_CAL
     ./sub_test/set_calibration.sh
+    ./sub_test/set_calibration_fw.sh
+    print_calib
     #In any case, reboot the unit to apply the changes
     echo "Rebooting now to apply Enviroment parameters (MAC address)...."
     echo
@@ -166,6 +168,8 @@ echo
 getDefCalibValues
 export FACTORY_CAL
 ./sub_test/set_calibration.sh
+./sub_test/set_calibration_fw.sh
+print_calib
 if [[ "$?" = '1' ]]
 then
     $C_UART_TOOL 'LED:GRN 0 6' -s

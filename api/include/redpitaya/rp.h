@@ -198,12 +198,12 @@ typedef enum {
  * Type representing acquire signal sampling rate.
  */
 typedef enum {
-    RP_SMP_125M,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-    RP_SMP_15_625M,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-    RP_SMP_1_953M,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-    RP_SMP_122_070K, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-    RP_SMP_15_258K,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-    RP_SMP_1_907K    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_SMP_125M     = 0,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    RP_SMP_15_625M  = 1,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    RP_SMP_1_953M   = 2,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    RP_SMP_122_070K = 3, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    RP_SMP_15_258K  = 4,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    RP_SMP_1_907K   = 5   //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_sampling_rate_t;
 
 

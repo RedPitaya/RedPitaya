@@ -83,5 +83,9 @@ int acq_GetBufferSize(uint32_t *size);
 
 int acq_SetDefault();
 
+#ifdef Z20_250_12
+int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
+int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+#endif
 
 #endif /* SRC_ACQ_HANDLER_H_ */

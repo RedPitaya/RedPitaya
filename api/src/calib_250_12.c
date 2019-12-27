@@ -19,8 +19,6 @@
 #include "generate.h"
 #include "calib.h"
 
-#define CALIB_MAGIC 0xAABBCCDD
-
 int calib_ReadParams(rp_calib_params_t *calib_params);
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
@@ -92,14 +90,8 @@ int calib_ReadParams(rp_calib_params_t *calib_params)
     }
     fclose(fp);
 
-    if (calib_params->magic != CALIB_MAGIC) {
-		calib_params->fe_ch1_hi_offs = calib_params->fe_ch1_lo_offs;
-		calib_params->fe_ch2_hi_offs = calib_params->fe_ch2_lo_offs;
-	}
-
     return 0;
 }
-
 
 
 /*
@@ -141,7 +133,6 @@ int calib_WriteParams(rp_calib_params_t calib_params) {
     }
 
     /* write data to EEPROM component */
-    calib_params.magic = CALIB_MAGIC;
     size = fwrite(&calib_params, sizeof(char), sizeof(rp_calib_params_t), fp);
     if(size != sizeof(rp_calib_params_t)) {
         fclose(fp);
@@ -153,34 +144,29 @@ int calib_WriteParams(rp_calib_params_t calib_params) {
 }
 
 void calib_SetToZero() {
-    calib.be_ch1_dc_offs = 0;
-    calib.be_ch2_dc_offs = 0;
-    calib.fe_ch1_lo_offs = 0;
-    calib.fe_ch2_lo_offs = 0;
-    calib.fe_ch1_hi_offs = 0;
-    calib.fe_ch2_hi_offs = 0;
+    calib.gen_ch1_off_1 = 0;
+    calib.gen_ch2_off_1 = 0;
+    calib.gen_ch1_off_5 = 0;
+    calib.gen_ch2_off_5 = 0;
+    
+    calib.osc_ch1_off_1_ac = 0;
+    calib.osc_ch2_off_1_ac = 0;
+    calib.osc_ch1_off_1_dc = 0;
+    calib.osc_ch2_off_1_dc = 0;
+    calib.osc_ch1_off_20_ac = 0;
+    calib.osc_ch2_off_20_ac = 0;
+    calib.osc_ch1_off_20_dc = 0;
+    calib.osc_ch2_off_20_dc = 0;
 
-//     float coff = 1;
-// #ifdef Z20_250_12 
-//     coff = 1;
-// #endif
-
-    calib.be_ch1_fs      = cmn_CalibFullScaleFromVoltage(1);
-    calib.be_ch2_fs      = cmn_CalibFullScaleFromVoltage(1);
-    calib.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
-    calib.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1.0  );
-    calib.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
-    calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(1    );
+    calib.gen_ch1_g_1  =  calib.gen_ch1_g_5  = cmn_CalibFullScaleFromVoltage( 1 );
+    calib.gen_ch2_g_1  =  calib.gen_ch2_g_5  = cmn_CalibFullScaleFromVoltage( 1 );
+    calib.osc_ch1_g_20_ac = calib.osc_ch1_g_20_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
+    calib.osc_ch1_g_1_ac = calib.osc_ch1_g_1_dc = cmn_CalibFullScaleFromVoltage( 1.0 );
+    calib.osc_ch2_g_20_ac = calib.osc_ch2_g_20_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
+    calib.osc_ch2_g_1_ac = calib.osc_ch2_g_1_dc = cmn_CalibFullScaleFromVoltage( 1.0 );
 }
 
-uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
-    if (gain == RP_HIGH) {
-        return (channel == RP_CH_1 ? calib.fe_ch1_fs_g_hi : calib.fe_ch2_fs_g_hi);
-    }
-    else {
-        return (channel == RP_CH_1 ? calib.fe_ch1_fs_g_lo : calib.fe_ch2_fs_g_lo);
-    }
-}
+
 
 int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
@@ -190,24 +176,24 @@ int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_p
     /* Reset current calibration parameters*/
     if (gain == RP_LOW) {
 		CHANNEL_ACTION(channel,
-            params.fe_ch1_lo_offs = 0,
-            params.fe_ch2_lo_offs = 0)
+            params.osc_ch1_g_20_dc = 0,
+            params.osc_ch2_g_20_dc = 0)
     } else {
 		CHANNEL_ACTION(channel,
-            params.fe_ch1_hi_offs = 0,
-            params.fe_ch2_hi_offs = 0)
+            params.osc_ch1_g_1_dc = 0,
+            params.osc_ch2_g_1_dc = 0)
 	}
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
 
 	if (gain == RP_LOW) {
 		CHANNEL_ACTION(channel,
-			params.fe_ch1_lo_offs = calib_GetDataMedian(channel, RP_LOW),
-			params.fe_ch2_lo_offs = calib_GetDataMedian(channel, RP_LOW))
+			params.osc_ch1_off_20_dc = calib_GetDataMedian(channel, RP_LOW),
+			params.osc_ch2_off_20_dc = calib_GetDataMedian(channel, RP_LOW))
 	} else {
 		CHANNEL_ACTION(channel,
-			params.fe_ch1_hi_offs = calib_GetDataMedian(channel, RP_HIGH),
-			params.fe_ch2_hi_offs = calib_GetDataMedian(channel, RP_HIGH))
+			params.osc_ch1_off_1_dc = calib_GetDataMedian(channel, RP_HIGH),
+			params.osc_ch2_off_1_dc = calib_GetDataMedian(channel, RP_HIGH))
 	}
 
     /* Set new local parameter */
@@ -215,12 +201,12 @@ int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_p
 		//	*out_params = params;
 		if (gain == RP_LOW) {
 			CHANNEL_ACTION(channel,
-				out_params->fe_ch1_lo_offs = params.fe_ch1_lo_offs,
-				out_params->fe_ch2_lo_offs = params.fe_ch2_lo_offs)
+				out_params->osc_ch1_off_20_dc = params.osc_ch1_off_20_dc,
+				out_params->osc_ch2_off_20_dc = params.osc_ch2_off_20_dc)
 		} else {
 			CHANNEL_ACTION(channel,
-				out_params->fe_ch1_hi_offs = params.fe_ch1_hi_offs,
-				out_params->fe_ch2_hi_offs = params.fe_ch2_hi_offs)
+				out_params->osc_ch1_off_1_dc = params.osc_ch1_off_1_dc,
+				out_params->osc_ch2_off_1_dc = params.osc_ch2_off_1_dc)
 		}
 	}
     else
@@ -235,8 +221,8 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
-            params.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20),
-            params.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20))
+            params.osc_ch1_g_20_dc = cmn_CalibFullScaleFromVoltage(20),
+            params.osc_ch2_g_20_dc = cmn_CalibFullScaleFromVoltage(20))
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
 
@@ -245,15 +231,15 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_
     uint32_t calibValue = cmn_CalibFullScaleFromVoltage(20.f * referentialVoltage / value);
 
     CHANNEL_ACTION(channel,
-            params.fe_ch1_fs_g_lo = calibValue,
-            params.fe_ch2_fs_g_lo = calibValue )
+            params.osc_ch1_g_20_dc = calibValue,
+            params.osc_ch2_g_20_dc = calibValue )
 
     /* Set new local parameter */
     if  (out_params) {
 		//	*out_params = params;
 		CHANNEL_ACTION(channel,
-				out_params->fe_ch1_fs_g_lo = params.fe_ch1_fs_g_lo,
-				out_params->fe_ch2_fs_g_lo = params.fe_ch2_fs_g_lo)
+				out_params->osc_ch1_g_20_dc = params.osc_ch1_g_20_dc,
+				out_params->osc_ch2_g_20_dc = params.osc_ch2_g_20_dc)
 	}
     else
 		calib_WriteParams(params);
@@ -267,8 +253,8 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
-            params.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1),
-            params.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(1))
+            params.osc_ch1_g_1_dc = cmn_CalibFullScaleFromVoltage(1),
+            params.osc_ch2_g_1_dc = cmn_CalibFullScaleFromVoltage(1))
     /* Acquire uses this calibration parameters - reset them */
     calib = params;
 
@@ -277,15 +263,15 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_
     uint32_t calibValue = cmn_CalibFullScaleFromVoltage(referentialVoltage / value);
 
     CHANNEL_ACTION(channel,
-            params.fe_ch1_fs_g_hi = calibValue,
-            params.fe_ch2_fs_g_hi = calibValue )
+            params.osc_ch1_g_1_dc = calibValue,
+            params.osc_ch2_g_1_dc = calibValue )
 
     /* Set new local parameter */
     if  (out_params) {
 		//	*out_params = params;
 		CHANNEL_ACTION(channel,
-				out_params->fe_ch1_fs_g_hi = params.fe_ch1_fs_g_hi,
-				out_params->fe_ch2_fs_g_hi = params.fe_ch2_fs_g_hi)
+				out_params->osc_ch1_g_1_dc = params.osc_ch1_g_1_dc,
+				out_params->osc_ch2_g_1_dc = params.osc_ch2_g_1_dc)
 	}
     else
 		calib_WriteParams(params);
@@ -299,8 +285,8 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
 	failsafa_params = params;
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
-            params.be_ch1_dc_offs = 0,
-            params.be_ch2_dc_offs = 0)
+            params.gen_ch1_off_1 = 0,
+            params.gen_ch2_off_1 = 0)
     /* Generate uses this calibration parameters - reset them */
     calib = params;
 
@@ -312,8 +298,8 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
     rp_GenOutEnable(channel);
 
     CHANNEL_ACTION(channel,
-            params.be_ch1_dc_offs = -calib_GetDataMedian(channel, RP_LOW),
-            params.be_ch2_dc_offs = -calib_GetDataMedian(channel, RP_LOW))
+            params.gen_ch1_off_1 = -calib_GetDataMedian(channel, RP_LOW),
+            params.gen_ch2_off_1 = -calib_GetDataMedian(channel, RP_LOW))
 
     /* Set new local parameter */
 	calib_WriteParams(params);
@@ -327,8 +313,8 @@ int calib_SetBackEndScale(rp_channel_t channel) {
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
-            params.be_ch1_fs = cmn_CalibFullScaleFromVoltage(1),
-            params.be_ch2_fs = cmn_CalibFullScaleFromVoltage(1))
+            params.gen_ch1_g_1 = cmn_CalibFullScaleFromVoltage(1),
+            params.gen_ch2_g_1 = cmn_CalibFullScaleFromVoltage(1))
     /* Generate uses this calibration parameters - reset them */
     calib = params;
 
@@ -345,8 +331,8 @@ int calib_SetBackEndScale(rp_channel_t channel) {
     uint32_t calibValue = cmn_CalibFullScaleFromVoltage((float) (value / CONSTANT_SIGNAL_AMPLITUDE));
 
     CHANNEL_ACTION(channel,
-            params.be_ch1_fs = calibValue,
-            params.be_ch2_fs = calibValue)
+            params.gen_ch1_g_1 = calibValue,
+            params.gen_ch2_g_1 = calibValue)
 
     /* Set new local parameter */
 	calib_WriteParams(params);
@@ -379,12 +365,12 @@ int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) 
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
-            params.be_ch1_fs = cmn_CalibFullScaleFromVoltage(1),
-            params.be_ch2_fs = cmn_CalibFullScaleFromVoltage(1))
+            params.gen_ch1_g_1 = cmn_CalibFullScaleFromVoltage(1),
+            params.gen_ch2_g_1 = cmn_CalibFullScaleFromVoltage(1))
 
     CHANNEL_ACTION(channel,
-            params.be_ch1_dc_offs = 0,
-            params.be_ch2_dc_offs = 0)
+            params.gen_ch1_off_1 = 0,
+            params.gen_ch2_off_1 = 0)
 
     /* Generate uses this calibration parameters - reset them */
     calib = params;
@@ -404,22 +390,22 @@ int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) 
     uint32_t calibValue = cmn_CalibFullScaleFromVoltage(scale);
 
     CHANNEL_ACTION(channel,
-            params.be_ch1_fs = calibValue,
-            params.be_ch2_fs = calibValue)
+            params.gen_ch1_g_1 = calibValue,
+            params.gen_ch2_g_1 = calibValue)
 
     CHANNEL_ACTION(channel,
-            params.be_ch1_dc_offs = offset,
-            params.be_ch2_dc_offs = offset)
+            params.gen_ch1_off_1 = offset,
+            params.gen_ch2_off_1 = offset)
 
     /* Set new local parameter */
     if  (out_params) {
 		//	*out_params = params;
 		CHANNEL_ACTION(channel,
-				out_params->be_ch1_fs = params.be_ch1_fs,
-				out_params->be_ch2_fs = params.be_ch2_fs)
+				out_params->gen_ch1_g_1 = params.gen_ch1_g_1,
+				out_params->gen_ch2_g_1 = params.gen_ch2_g_1)
 		CHANNEL_ACTION(channel,
-				out_params->be_ch1_dc_offs = params.be_ch1_dc_offs,
-				out_params->be_ch2_dc_offs = params.be_ch2_dc_offs)
+				out_params->gen_ch1_off_1 = params.gen_ch1_off_1,
+				out_params->gen_ch2_off_1 = params.gen_ch2_off_1)
 	}
     else
 		calib_WriteParams(params);
@@ -515,19 +501,58 @@ int calib_setCachedParams() {
     return 0;
 }
 
-int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain){
-    if (gain == RP_HIGH) {
-        return (channel == RP_CH_1 ? calib.fe_ch1_hi_offs : calib.fe_ch2_hi_offs);
+
+int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode){
+    if (power_mode == RP_DC){
+        if (gain == RP_HIGH) {
+            return (channel == RP_CH_1 ? calib.osc_ch1_off_1_dc : calib.osc_ch2_off_1_dc);
+        }
+        else {
+            return (channel == RP_CH_1 ? calib.osc_ch1_off_20_dc : calib.osc_ch2_off_20_dc);
+        }
     }
-    else {
-        return (channel == RP_CH_1 ? calib.fe_ch1_lo_offs : calib.fe_ch2_lo_offs);
+    else{
+        if (gain == RP_HIGH) {
+            return (channel == RP_CH_1 ? calib.osc_ch1_off_1_ac : calib.osc_ch2_off_1_ac);
+        }
+        else {
+            return (channel == RP_CH_1 ? calib.osc_ch1_off_20_ac : calib.osc_ch2_off_20_ac);
+        }
     }
 }
 
-int32_t calib_getGenOffset(rp_channel_t channel){
-    return (channel == RP_CH_1 ?  calib.be_ch1_dc_offs: calib.be_ch2_dc_offs);
+uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode) {
+    if (power_mode == RP_DC){
+        if (gain == RP_HIGH) {
+            return (channel == RP_CH_1 ? calib.osc_ch1_g_1_dc : calib.osc_ch2_g_1_dc);
+        }
+        else {
+            return (channel == RP_CH_1 ? calib.osc_ch1_g_20_dc : calib.osc_ch2_g_20_dc);
+        }
+    }
+    else{
+        if (gain == RP_HIGH) {
+            return (channel == RP_CH_1 ? calib.osc_ch1_g_1_ac : calib.osc_ch2_g_1_ac);
+        }
+        else {
+            return (channel == RP_CH_1 ? calib.osc_ch1_g_20_ac : calib.osc_ch2_g_20_ac);
+        }
+    }
 }
 
-uint32_t calib_getGenScale(rp_channel_t channel){
-    return (channel == RP_CH_1 ?  calib.be_ch1_fs: calib.be_ch2_fs);
+int32_t calib_getGenOffset(rp_channel_t channel, rp_gen_gain_t gain){
+    if (gain == RP_GAIN_1X) {
+        return (channel == RP_CH_1 ?  calib.gen_ch1_off_1: calib.gen_ch2_off_1);
+    }else{
+        return (channel == RP_CH_1 ?  calib.gen_ch1_off_5: calib.gen_ch2_off_5);
+    }
 }
+
+uint32_t calib_getGenScale(rp_channel_t channel, rp_gen_gain_t gain){
+    if (gain == RP_GAIN_1X) {
+        return (channel == RP_CH_1 ?  calib.gen_ch1_g_1: calib.gen_ch2_g_1);
+    }else{
+        return (channel == RP_CH_1 ?  calib.gen_ch1_g_5: calib.gen_ch2_g_5);
+    }
+}
+

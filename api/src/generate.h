@@ -105,10 +105,17 @@ int generate_Release();
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
+#ifndef Z20_250_12
 int generate_setAmplitude(rp_channel_t channel, float amplitude);
 int generate_getAmplitude(rp_channel_t channel, float *amplitude);
 int generate_setDCOffset(rp_channel_t channel, float offset);
 int generate_getDCOffset(rp_channel_t channel, float *offset);
+#else
+int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain,  float amplitude);
+int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);
+int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
+int generate_getDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float *offset);
+#endif
 int generate_setFrequency(rp_channel_t channel, float frequency);
 int generate_getFrequency(rp_channel_t channel, float *frequency);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);

@@ -275,10 +275,10 @@ SPECTRUM_DIR     = Test/spectrum
 COMM_DIR         = Examples/Communication/C
 XADC_DIR         = Test/xadc
 LA_TEST_DIR      = api2/test
-GENERATE_DC_DIR  = generate_DC
+GENERATE_DC_DIR  = Test/generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest 
 .PHONY: acquire250.12 generator250.12
 
 examples: lcr bode monitor monitor_old calib generate_DC spectrum
@@ -336,7 +336,7 @@ acquire250.12: api
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
-	$(MAKE) -C $(CALIB_DIR) 
+	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrum: api
@@ -358,9 +358,11 @@ rp_communication:
 	make -C $(COMM_DIR)
 
 generate_DC: api
+ifeq ($(ENABLE_PRODUCTION_TEST), 1)
 	$(MAKE) -C $(GENERATE_DC_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp $(GENERATE_DC_DIR)/generate_DC $(INSTALL_DIR)/bin/
 	cp $(GENERATE_DC_DIR)/generate_DC_LO $(INSTALL_DIR)/bin/
+endif
 
 ################################################################################
 # Red Pitaya ecosystem and tools

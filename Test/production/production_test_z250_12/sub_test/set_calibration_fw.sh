@@ -11,17 +11,18 @@ then
     print_fail
     echo "NO PARAMETERS FOR CALIBRATION!"
 else
-    # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
-    echo -n "Setting the  default calibration parameters into the user EEPROM space... "
-    echo $FACTORY_CAL | $C_CALIB -w
+    # Set the CALIBRATION PARAMETERS to the FACTORY -wf EEPROM memory partition (factory parameters)
+    echo
+    echo -n "Setting the default calibration parameters into the EEPROM... "
+    echo $FACTORY_CAL | $C_CALIB -wf
     if [ $? -ne 0 ]
     then
         echo
-        echo - n "New calibration parameters are NOT correctly written in the user EEPROM space"
+        echo -n "Default calibration parameters are NOT correctly written in the factory EEPROM space "
         print_fail
         sleep 1
         STATUS=1
-    else 
+    else
         print_ok
     fi
 fi

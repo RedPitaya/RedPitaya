@@ -142,13 +142,11 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state){
     #endif
 }
 
+#ifndef Z20_250_12
 
 int generate_setAmplitude(rp_channel_t channel, float amplitude) {
     volatile ch_properties_t *ch_properties;
-
-    rp_calib_params_t calib = calib_GetParams();
-    uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-
+    uint32_t amp_max = calib_getGenScale(channel);
     getChannelPropertiesAddress(&ch_properties, channel);
     ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX, false, amp_max, 0, 0.0);
     return RP_OK;
@@ -156,10 +154,7 @@ int generate_setAmplitude(rp_channel_t channel, float amplitude) {
 
 int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
     volatile ch_properties_t *ch_properties;
-
-    rp_calib_params_t calib = calib_GetParams();
-    uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-
+    uint32_t amp_max = calib_getGenScale(channel);
     getChannelPropertiesAddress(&ch_properties, channel);
     *amplitude = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX, amp_max, 0, 0.0);
     return RP_OK;
@@ -167,11 +162,8 @@ int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
 
 int generate_setDCOffset(rp_channel_t channel, float offset) {
     volatile ch_properties_t *ch_properties;
-
-    rp_calib_params_t calib = calib_GetParams();
-    int dc_offs = channel == RP_CH_1 ? calib.be_ch1_dc_offs: calib.be_ch2_dc_offs;
-    uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
     getChannelPropertiesAddress(&ch_properties, channel);
     ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
     return RP_OK;
@@ -179,15 +171,50 @@ int generate_setDCOffset(rp_channel_t channel, float offset) {
 
 int generate_getDCOffset(rp_channel_t channel, float *offset) {
     volatile ch_properties_t *ch_properties;
-
-    rp_calib_params_t calib = calib_GetParams();
-    int dc_offs = channel == RP_CH_1 ? calib.be_ch1_dc_offs: calib.be_ch2_dc_offs;
-    uint32_t amp_max = channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
     getChannelPropertiesAddress(&ch_properties, channel);
     *offset = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0);
     return RP_OK;
 }
+
+#else
+
+int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitude) {
+    volatile ch_properties_t *ch_properties;
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX, false, amp_max, 0, 0.0);
+    return RP_OK;
+}
+
+int generate_getAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude) {
+    volatile ch_properties_t *ch_properties;
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    *amplitude = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX, amp_max, 0, 0.0);
+    return RP_OK;
+}
+
+int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) {
+    volatile ch_properties_t *ch_properties;
+    int dc_offs = calib_getGenOffset(channel,gain);
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    return RP_OK;
+}
+
+int generate_getDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float *offset) {
+    volatile ch_properties_t *ch_properties;
+    int dc_offs = calib_getGenOffset(channel,gain);
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    *offset = cmn_CnvCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0);
+    return RP_OK;
+}
+
+#endif
 
 int generate_setFrequency(rp_channel_t channel, float frequency) {
     volatile ch_properties_t *ch_properties;

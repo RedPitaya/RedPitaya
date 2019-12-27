@@ -681,6 +681,16 @@ int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
 }
 
+#ifdef Z20_250_12
+int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
+    return acq_SetAC_DC(channel,mode);
+}
+
+int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
+    return acq_GetAC_DC(channel,status);
+}
+#endif
+
 /**
 * Generate methods
 */
@@ -837,3 +847,13 @@ int rp_SetPllControlEnable(bool enable){
 int rp_GetPllControlLocked(bool *status){
     return house_GetPllControlLocked(status);
 }
+
+#ifdef Z20_250_12
+int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode){
+    return gen_setGainOut(channel,mode);
+}
+
+int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
+    return gen_getGainOut(channel,status);
+}
+#endif

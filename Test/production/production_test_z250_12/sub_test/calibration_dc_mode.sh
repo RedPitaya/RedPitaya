@@ -4,9 +4,9 @@ source ./sub_test/default_calibration_values.sh
 
 function acquireData(){
     #Acquire data with $DECIMATION decimation factor
-    $C_ACQUIRE -d B $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
+    $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
     sleep 0.4
-    $C_ACQUIRE -d B $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
+    $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
     cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
     cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 
@@ -15,27 +15,50 @@ function acquireData(){
     ADC_B=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
 }
 
+# arg1 value_a 
+# arg2 value_b 
+# arg3 min value
+# arg4 max value
+function checkValue(){
+        # Check if the values are within expectations
+    if [[ $1 -gt $4 ]] || [[ $1 -lt $3 ]]
+    then
+        echo "      Measured IN1 value ($1) is outside expected range ($3 - $4)"
+        STATUS=1
+        CALIBRATION_STATUS=1
+    fi
+
+    if [[ $2 -gt $4 ]] || [[ $2 -lt $3 ]]
+    then
+        echo "      Measured IN2 value ($2) is outside expected range ($3 - $4)"
+        STATUS=1
+        CALIBRATION_STATUS=1
+    fi
+}
+
 
 
 getDefCalibValues
 # MAX/MIN calibration parameters
-FE_FS_G_HI_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $FE_CH1_FS_G_HI * 1.3")) # default FE_CH1_FS_G_HI + 30 %
-FE_FS_G_LO_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $FE_CH1_FS_G_LO * 1.3")) # default FE_CH1_FS_G_LO + 30 %
+FE_FS_G_HI_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_20_AC * 1.3")) # default FE_CH1_FS_G_HI + 30 %
+FE_FS_G_LO_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_1_AC * 1.3")) # default FE_CH1_FS_G_LO + 30 %
 FE_DC_offs_MAX=300
-BE_FS_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $BE_CH1_FS * 1.3"))
+BE_FS_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_1 * 1.3"))
 BE_DC_offs_MAX=300
 FE_DC_offs_HI_MAX=400
 
-FE_FS_G_HI_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $FE_CH1_FS_G_HI * 0.7")) # default FE_CH1_FS_G_HI - 30 %
-FE_FS_G_LO_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $FE_CH1_FS_G_LO * 0.7")) # default FE_CH1_FS_G_LO - 30 %
+FE_FS_G_HI_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_20_AC * 0.7")) # default FE_CH1_FS_G_HI - 30 %
+FE_FS_G_LO_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_1_AC * 0.7")) # default FE_CH1_FS_G_LO - 30 %
 FE_DC_offs_MIN=-300
-BE_FS_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $BE_CH1_FS * 0.7"))
+BE_FS_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_1 * 0.7"))
 BE_DC_offs_MIN=-300
 FE_DC_offs_HI_MIN=-400
 
 
 DECIMATION=1024
 ADC_BUFF_SIZE=16384
+OUT_AMP_LO_cnt=3686 # 0.45V  VOLTS VPP reference voltage
+OUT_AMP_HI_cnt=7373 # 0.9V  VOLTS VPP reference voltage
 
 echo
 echo -e "\e[94m########################################################################\e[0m"
@@ -47,17 +70,17 @@ STATUS=0
 CALIBRATION_STATUS=0
 
 
-##########################################################################################
-##########################################################################################
-#  Calibrate LV/DC mode
-##########################################################################################
-##########################################################################################
-
 echo "  * Set default calibration"
 export FACTORY_CAL
 ./sub_test/set_calibration.sh
-echo
 
+##########################################################################################
+##########################################################################################
+#  Calibrate DC mode (1:1)
+##########################################################################################
+##########################################################################################
+
+echo
 echo "Calibrate in LV/DC mode"
 echo
 
@@ -75,46 +98,34 @@ print_ok
 
 # get data from adc
 echo -n "  * Get data from ADC "
-ADC_PARAM=""
+ADC_PARAM="-d B"
 acquireData
 print_ok
 # Print out the measurements
-echo "      IN1 LV DC offset value is $ADC_A"
-echo "      IN2 LV DC offset value is $ADC_B"
+echo "      IN1 DC offset value is $ADC_A"
+echo "      IN2 DC offset value is $ADC_B"
 
-# Check if the values are within expectations
-if [[ $ADC_A -gt $FE_DC_offs_MAX ]] || [[ $ADC_A -lt $FE_DC_offs_MIN ]]
-then
-    echo "      Measured IN1 LV DC offset value ($ADC_A) is outside expected range ($FE_DC_offs_MIN - $FE_DC_offs_MAX)"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
+checkValue $ADC_A $ADC_B $FE_DC_offs_MIN $FE_DC_offs_MAX
 
-if [[ $ADC_B -gt $FE_DC_offs_MAX ]] || [[ $ADC_B -lt $FE_DC_offs_MIN ]]
-then
-    echo "      Measured IN2 LV DC offset value ($ADC_B) is outside expected range ($FE_DC_offs_MIN - $FE_DC_offs_MAX)"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
-
-FE_CH1_DC_offs=$(( ADC_A ))
-FE_CH2_DC_offs=$(( ADC_B ))
-N1_LV=$ADC_A
-N2_LV=$ADC_B
+OSC_CH1_OFF_1_DC=$(( ADC_A ))
+OSC_CH2_OFF_1_DC=$(( ADC_B ))
+N1_LV_DC=$ADC_A
+N2_LV_DC=$ADC_B
 
 # Print out the new cal parameters
-echo "      NEW IN1 LV DC offset cal param >>FE_CH1_DC_offs<< is $FE_CH1_DC_offs"
-echo "      NEW IN2 LV DC offset cal param >>FE_CH2_DC_offs<< is $FE_CH2_DC_offs"
+echo "      NEW IN1 LV DC offset cal param >>OSC_CH1_OFF_1_DC<< is $OSC_CH1_OFF_1_DC"
+echo "      NEW IN2 LV DC offset cal param >>OSC_CH2_OFF_1_DC<< is $OSC_CH2_OFF_1_DC"
 echo
 
 
+
 ##########################################################################################
 ##########################################################################################
-#  Calibrate LV/DC (0.45V) mode
+#  Calibrate DC (0.45V) mode (1:1)
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in LV/DC (0.45V) mode"
+echo "Calibrate in DC (0.45V) mode (1:1)"
 
 
 sleep 0.5
@@ -125,7 +136,7 @@ print_ok
 
 # get data from adc
 echo -n "  * Get data from ADC "
-ADC_PARAM=""
+ADC_PARAM="-d B"
 acquireData
 print_ok
 # Print out the measurements
@@ -135,44 +146,56 @@ echo "      IN2 mean value is $ADC_B"
 getLowRefValue
 REF_VALUE_LV=$REF_V
 
-GAIN1_LV=$(awk -v N1_LV=$N1_LV -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_A-N1_LV ) ) }')
-GAIN2_LV=$(awk -v N2_LV=$N2_LV -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_B-N2_LV ) ) }')
+GAIN1_LV_DC=$(awk -v N1_LV=$N1_LV_DC -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_A-N1_LV ) ) }')
+GAIN2_LV_DC=$(awk -v N2_LV=$N2_LV_DC -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_B-N2_LV ) ) }')
 
 # Print out the measurements
-echo "      IN1_LV_Gain is $GAIN1_LV"
-echo "      IN2_LV_Gain is $GAIN2_LV"
+echo "      IN1 Gain is $GAIN1_LV_DC"
+echo "      IN2 Gain is $GAIN2_LV_DC"
 
-FE_CH1_FS_G_LO=$(awk -v GAIN1_LV=$GAIN1_LV -v FE_CH1_FS_G_LO=$FE_CH1_FS_G_LO 'BEGIN { print sprintf("%d", int((FE_CH1_FS_G_LO*GAIN1_LV))) }')
-FE_CH2_FS_G_LO=$(awk -v GAIN2_LV=$GAIN2_LV -v FE_CH2_FS_G_LO=$FE_CH2_FS_G_LO 'BEGIN { print sprintf("%d", int((FE_CH2_FS_G_LO*GAIN2_LV))) }')
+OSC_CH1_G_1_DC=$(awk -v GAIN1_LV=$GAIN1_LV_DC -v X=$OSC_CH1_G_1_DC 'BEGIN { print sprintf("%d", int((X*GAIN1_LV))) }')
+OSC_CH2_G_1_DC=$(awk -v GAIN2_LV=$GAIN2_LV_DC -v X=$OSC_CH2_G_1_DC 'BEGIN { print sprintf("%d", int((X*GAIN2_LV))) }')
 
 # Print out the measurements
-echo "      NEW IN1 LV gain cal param >>FE_CH1_FS_G_LO<< is $FE_CH1_FS_G_LO"
-echo "      NEW IN2 LV gain cal param >>FE_CH2_FS_G_LO<< is $FE_CH2_FS_G_LO"
+echo "      NEW IN1 LV gain cal param >>OSC_CH1_G_1_DC<< is $OSC_CH1_G_1_DC"
+echo "      NEW IN2 LV gain cal param >>OSC_CH2_G_1_DC<< is $OSC_CH2_G_1_DC"
 echo
 
 # Check if the values are within expectations
-if [[ $FE_CH1_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH1_FS_G_LO -lt $FE_FS_G_LO_MIN ]]
-then
-    echo "      Measured IN1 LV gain ($FE_CH1_FS_G_LO) is outside expected range ( $FE_FS_G_LO_MIN - $FE_FS_G_LO_MAX )"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
+checkValue $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $FE_FS_G_LO_MIN $FE_FS_G_LO_MAX
 
-if [[ $FE_CH2_FS_G_LO -gt $FE_FS_G_LO_MAX ]] || [[ $FE_CH2_FS_G_LO -lt $FE_FS_G_LO_MIN ]]
-then
-    echo "      Measured IN2 LV gain ($FE_CH2_FS_G_LO) is outside expected range ( $FE_FS_G_LO_MIN - $FE_FS_G_LO_MAX )"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
+##########################################################################################
+# CHECK CALIBRATION
+##########################################################################################
+
+# Acquire data with $DECIMATION decimation factor
+$C_ACQUIRE -d B $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
+sleep 0.4
+$C_ACQUIRE -d B $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
+cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
+cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
+
+# Calculate mean value
+ADC_A_MEAN=$(awk -v Y=$N1_LV_DC -v X=$GAIN1_LV_DC '{sum+=$1} END { print int( ((sum/NR)*X)-Y)}' /tmp/adc_a.txt)
+ADC_B_MEAN=$(awk -v Y=$N2_LV_DC -v X=$GAIN2_LV_DC '{sum+=$1} END { print int( ((sum/NR)*X)-Y)}' /tmp/adc_b.txt)
+
+IN1_ERROR_LV=$(awk -v X=$ADC_A_MEAN -v Y=$REF_VALUE_LV 'BEGIN { print (((X-Y)/Y)*100) }')
+IN2_ERROR_LV=$(awk -v X=$ADC_B_MEAN -v Y=$REF_VALUE_LV 'BEGIN { print (((X-Y)/Y)*100) }')
+
+# Print out the measurements
+echo
+echo "      IN1 Error after the claibration is $IN1_ERROR_LV %"
+echo "      IN2 Error after the claibration is $IN2_ERROR_LV %"
+echo 
 
 
 ##########################################################################################
 ##########################################################################################
-#  Calibrate HV/DC mode
+#  Calibrate DC mode (1:20)
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in HV/DC mode"
+echo "Calibrate in DC mode (1:20)"
 echo
 
 sleep 0.5
@@ -189,46 +212,35 @@ print_ok
 
 # get data from adc
 echo -n "  * Get data from ADC "
-ADC_PARAM="-1 20 -2 20"
+ADC_PARAM="-d B -1 20 -2 20"
 acquireData
 print_ok
 # Print out the measurements
-echo "      IN1 HV DC offset value is $ADC_A"
-echo "      IN2 HV DC offset value is $ADC_B"
+echo "      IN1 DC offset value is $ADC_A"
+echo "      IN2 DC offset value is $ADC_B"
 
 # Check if the values are within expectations
-if [[ $ADC_A -gt $FE_DC_offs_MAX ]] || [[ $ADC_A -lt $FE_DC_offs_MIN ]]
-then
-    echo "      Measured IN1 HV DC offset value ($ADC_A) is outside expected range ($FE_DC_offs_MIN - $FE_DC_offs_MAX)"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
+checkValue $ADC_A $ADC_B $FE_DC_offs_MIN $FE_DC_offs_MAX
 
-if [[ $ADC_B -gt $FE_DC_offs_MAX ]] || [[ $ADC_B -lt $FE_DC_offs_MIN ]]
-then
-    echo "      Measured IN2 HV DC offset value ($ADC_B) is outside expected range ($FE_DC_offs_MIN - $FE_DC_offs_MAX)"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
-
-FE_CH1_DC_offs_HI=$(( ADC_A ))
-FE_CH2_DC_offs_HI=$(( ADC_B ))
-N1_HV=$ADC_A
-N2_HV=$ADC_B
+OSC_CH1_OFF_20_DC=$(( ADC_A ))
+OSC_CH2_OFF_20_DC=$(( ADC_B ))
+N1_HV_DC=$ADC_A
+N2_HV_DC=$ADC_B
 
 # Print out the new cal parameters
-echo "      NEW IN1 HV DC offset cal param >>FE_CH1_DC_offs_HI<< is $FE_CH1_DC_offs_HI"
-echo "      NEW IN2 HV DC offset cal param >>FE_CH2_DC_offs_HI<< is $FE_CH2_DC_offs_HI"
+echo "      NEW IN1 DC offset cal param >>OSC_CH1_OFF_20_DC<< is $OSC_CH1_OFF_20_DC"
+echo "      NEW IN2 DC offset cal param >>OSC_CH2_OFF_20_DC<< is $OSC_CH2_OFF_20_DC"
 echo
 
 
+
 ##########################################################################################
 ##########################################################################################
-#  Calibrate HV/DC (9V) mode
+#  Calibrate DC (9V) mode (1:20)
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in HV/DC (9V) mode"
+echo "Calibrate in DC (9V) mode (1:20)"
 
 
 sleep 0.5
@@ -239,7 +251,7 @@ print_ok
 
 # get data from adc
 echo -n "  * Get data from ADC "
-ADC_PARAM="-1 20 -2 20"
+ADC_PARAM="-d B -1 20 -2 20"
 acquireData
 print_ok
 # Print out the measurements
@@ -249,47 +261,23 @@ echo "      IN2 mean value is $ADC_B"
 getHighRefValue
 REF_VALUE_HV=$REF_V
 
-GAIN1_HV=$(awk -v N1_HV=$N1_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_A-N1_HV ) ) }')
-GAIN2_HV=$(awk -v N2_HV=$N2_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_B-N2_HV ) ) }')
+GAIN1_HV_DC=$(awk -v N1_HV=$N1_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_A-N1_HV ) ) }')
+GAIN2_HV_DC=$(awk -v N2_HV=$N2_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_B-N2_HV ) ) }')
 
 # Print out the measurements
-echo "      IN1_HV_Gain is $GAIN1_HV"
-echo "      IN2_HV_Gain is $GAIN2_HV"
+echo "      IN1_Gain is $GAIN1_HV_DC"
+echo "      IN2_Gain is $GAIN2_HV_DC"
 
-FE_CH1_FS_G_HI=$(awk -v GAIN1_LV=$GAIN1_LV -v FE_CH1_FS_G_HI=$FE_CH1_FS_G_HI 'BEGIN { print sprintf("%d", int((FE_CH1_FS_G_HI*GAIN1_LV))) }')
-FE_CH2_FS_G_HI=$(awk -v GAIN2_LV=$GAIN2_LV -v FE_CH2_FS_G_HI=$FE_CH2_FS_G_HI 'BEGIN { print sprintf("%d", int((FE_CH2_FS_G_HI*GAIN2_LV))) }')
+OSC_CH1_G_20_DC=$(awk -v X=$GAIN1_HV_DC -v Y=$OSC_CH1_G_20_DC 'BEGIN { print sprintf("%d", int((Y*X))) }')
+OSC_CH2_G_20_DC=$(awk -v X=$GAIN2_HV_DC -v Y=$OSC_CH2_G_20_DC 'BEGIN { print sprintf("%d", int((Y*X))) }')
 
 # Print out the measurements
-echo "      NEW IN1 HV gain cal param >>FE_CH1_FS_G_HI<< is $FE_CH1_FS_G_HI"
-echo "      NEW IN2 HV gain cal param >>FE_CH2_FS_G_HI<< is $FE_CH2_FS_G_HI"
+echo "      NEW IN1 gain cal param >>OSC_CH1_G_20_DC<< is $OSC_CH1_G_20_DC"
+echo "      NEW IN2 gain cal param >>OSC_CH2_G_20_DC<< is $OSC_CH2_G_20_DC"
 echo
 
 # Check if the values are within expectations
-if [[ $FE_CH1_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH1_FS_G_HI -lt $FE_FS_G_HI_MIN ]]
-then
-    echo "      Measured IN1 HV gain ($FE_CH1_FS_G_HI) is outside expected range ( $FE_FS_G_HI_MIN - $FE_FS_G_LO_MAX )"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
-
-if [[ $FE_CH2_FS_G_HI -gt $FE_FS_G_HI_MAX ]] || [[ $FE_CH2_FS_G_HI -lt $FE_FS_G_HI_MIN ]]
-then
-    echo "      Measured IN2 HV gain ($FE_CH2_FS_G_HI) is outside expected range ( $FE_FS_G_HI_MIN - $FE_FS_G_HI_MAX )"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
-
-
-##########################################################################################
-#  Set ADC parameters
-##########################################################################################
-
-echo "  * Set new ADC calibration"
-FACTORY_NEW_CAL="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs $FE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS $BE_CH1_DC_offs $BE_CH2_DC_offs $Magic $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI"
-FACTORY_CAL=$FACTORY_NEW_CAL
-export FACTORY_CAL
-./sub_test/set_calibration.sh
-echo
+checkValue $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $FE_FS_G_HI_MIN $FE_FS_G_HI_MAX
 
 ##########################################################################################
 # CHECK CALIBRATION
@@ -303,17 +291,30 @@ cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
 cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 
 # Calculate mean value
-ADC_A_MEAN=$(awk -v N1_HV=$N1_HV -v GAIN1_HV=$GAIN1_HV '{sum+=$1} END { print int( ((sum/NR)*GAIN1_HV)-N1_HV)}' /tmp/adc_a.txt)
-ADC_B_MEAN=$(awk -v N2_HV=$N2_HV -v GAIN2_HV=$GAIN2_HV '{sum+=$1} END { print int( ((sum/NR)*GAIN2_HV)-N2_HV)}' /tmp/adc_b.txt)
+ADC_A_MEAN=$(awk -v Y=$N1_HV_DC -v X=$GAIN1_HV_DC '{sum+=$1} END { print int( ((sum/NR)*X)-Y)}' /tmp/adc_a.txt)
+ADC_B_MEAN=$(awk -v Y=$N2_HV_DC -v X=$GAIN2_HV_DC '{sum+=$1} END { print int( ((sum/NR)*X)-Y)}' /tmp/adc_b.txt)
 
-IN1_ERROR_HV=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((ADC_A_MEAN-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
-IN2_ERROR_HV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((ADC_B_MEAN-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
+IN1_ERROR_HV=$(awk -v X=$ADC_A_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((X-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
+IN2_ERROR_HV=$(awk -v X=$ADC_B_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print (((X-REF_VALUE_HV)/REF_VALUE_HV)*100) }')
 
 # Print out the measurements
 echo
-echo "      IN1 HV Error after the claibration is $IN1_ERROR_HV %"
-echo "      IN2 HV Error after the claibration is $IN2_ERROR_HV %"
+echo "      IN1 Error after the claibration is $IN1_ERROR_HV %"
+echo "      IN2 Error after the claibration is $IN2_ERROR_HV %"
 echo 
+
+
+
+##########################################################################################
+#  Set ADC parameters
+##########################################################################################
+
+echo "  * Set new ADC calibration"
+FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH1_G_5 $GEN_CH2_G_5 $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $OSC_CH1_OFF_1_AC $OSC_CH2_OFF_1_AC $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $OSC_CH1_OFF_1_DC $OSC_CH2_OFF_1_DC $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $OSC_CH1_OFF_20_AC $OSC_CH2_OFF_20_AC $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $OSC_CH1_OFF_20_DC $OSC_CH2_OFF_20_DC"
+FACTORY_CAL=$FACTORY_NEW_CAL
+export FACTORY_CAL
+./sub_test/set_calibration.sh
+echo
 
 ##########################################################################################
 ##########################################################################################
@@ -339,38 +340,105 @@ print_ok
 
 # get data from adc
 echo -n "  * Get data from ADC "
-ADC_PARAM=""
+ADC_PARAM="-d B"
 acquireData
 print_ok
 
-ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A-($N1_LV)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B-($N2_LV)"))
+ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A-($N1_LV_DC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B-($N2_LV_DC)"))
 
 # Print out the measurements
 echo "      IN1 offset value is $ADC_A"
 echo "      IN2 offset value is $ADC_B"
 
-OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v BE_CH1_DC_offs=$BE_CH1_DC_offs 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs-ADC_A_MEAN))}')
-OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_A -v BE_CH2_DC_offs=$BE_CH2_DC_offs 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs-ADC_B_MEAN))}')
+OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v BE_CH1_DC_offs=$GEN_CH1_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs-ADC_A_MEAN))}')
+OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_A -v BE_CH2_DC_offs=$GEN_CH2_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs-ADC_B_MEAN))}')
 
-BE_CH1_DC_offs=$OUT1_DC_offs
-BE_CH2_DC_offs=$OUT2_DC_offs
+GEN_CH1_OFF_1=$OUT1_DC_offs
+GEN_CH2_OFF_1=$OUT2_DC_offs
 # Print out the measurements
-echo "      NEW OUT1 DC offset cal param >>BE_CH1_DC_offs<<  is $BE_CH1_DC_offs"
-echo "      NEW OUT2 DC offset cal param >>BE_CH2_DC_offs<<  is $BE_CH2_DC_offs"
+echo "      NEW OUT1 DC offset cal param >>BE_CH1_DC_offs<<  is $GEN_CH1_OFF_1"
+echo "      NEW OUT2 DC offset cal param >>BE_CH2_DC_offs<<  is $GEN_CH2_OFF_1"
 echo
 
 # Check if the values are within expectations
-if [[ $BE_CH1_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH1_DC_offs -lt $BE_DC_offs_MIN ]]
-then
-    echo "      OUT1 DC offset calibration parameter ($OUT1_DC_offs) is outside expected range ($BE_DC_offs_MIN-$BE_DC_offs_MAX)"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
+checkValue $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $BE_DC_offs_MIN $BE_DC_offs_MAX
 
-if [[ $BE_CH2_DC_offs -gt $BE_DC_offs_MAX ]] || [[ $BE_CH2_DC_offs -lt $BE_DC_offs_MIN ]]
-then
-    echo "      OUT2 DC offset calibration parameter ($OUT2_DC_offs) is outside expected range ($BE_DC_offs_MIN-$BE_DC_offs_MAX)"
-    STATUS=1
-    CALIBRATION_STATUS=1
-fi
+##########################################################################################
+#  Set ADC parameters
+##########################################################################################
+
+echo "  * Set new Generator offset calibration"
+FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH1_G_5 $GEN_CH2_G_5 $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $OSC_CH1_OFF_1_AC $OSC_CH2_OFF_1_AC $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $OSC_CH1_OFF_1_DC $OSC_CH2_OFF_1_DC $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $OSC_CH1_OFF_20_AC $OSC_CH2_OFF_20_AC $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $OSC_CH1_OFF_20_DC $OSC_CH2_OFF_20_DC"
+FACTORY_CAL=$FACTORY_NEW_CAL
+export FACTORY_CAL
+./sub_test/set_calibration.sh
+echo
+
+
+##########################################################################################
+##########################################################################################
+#  Calibrate Output (0.45V) x1 mode
+##########################################################################################
+##########################################################################################
+
+echo
+echo "Outputs DC gain calibration is started..."
+echo
+echo "Calibrate generator in x1 gain mode"
+
+sleep 0.5
+echo -n "  * Start generator in DC (0.45V)" 
+generate_DC_LO
+print_ok
+
+sleep 0.5
+echo -n "  * Connect IN to OUT "
+# connect in to out 
+enableK1Pin
+print_ok
+
+# get data from adc
+echo -n "  * Get data from ADC "
+ADC_PARAM="-d B"
+acquireData
+print_ok
+
+echo "ADC_A is $ADC_A"
+echo "ADC_B is $ADC_B"
+
+ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A*$GAIN1_LV_DC -($N1_LV_DC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B*$GAIN2_LV_DC -($N2_LV_DC)"))
+
+OUT1_VOLTAGE_LO=$(awk -v ADC_A_MEAN=$ADC_A 'BEGIN { print ((ADC_A_MEAN/8192))}' )
+OUT2_VOLTAGE_LO=$(awk -v ADC_B_MEAN=$ADC_B 'BEGIN { print ((ADC_B_MEAN/8192))}' )
+#Print out the measurements
+echo "OUT1_VOLTAGE_LO is $OUT1_VOLTAGE_LO"
+echo "OUT2_VOLTAGE_LO is $OUT2_VOLTAGE_LO"
+echo
+GAIN1_OUT=$(awk -v Y=$BE_CH1_DC_offs -v X=$OUT_AMP_LO_cnt -v ADC_A_MEAN=$ADC_A 'BEGIN {print ((ADC_A_MEAN)/X) }')
+GAIN2_OUT=$(awk -v Y=$BE_CH2_DC_offs -v X=$OUT_AMP_LO_cnt -v ADC_B_MEAN=$ADC_B 'BEGIN {print ((ADC_B_MEAN)/X) }')
+
+echo "GAIN1_OUT is $GAIN1_OUT"
+echo "GAIN2_OUT is $GAIN2_OUT"
+echo
+
+
+GEN_CH1_G_1=$(awk -v X=$GAIN1_OUT -v Y=$GEN_CH1_G_1 'BEGIN { print sprintf("%d", int((Y*X))) }')
+GEN_CH2_G_1=$(awk -v X=$GAIN2_OUT -v Y=$GEN_CH2_G_1 'BEGIN { print sprintf("%d", int((Y*X))) }')
+
+# Print out the measurements
+echo "      NEW OUT1 gain cal param >>GEN_CH1_G_1<< is $GEN_CH1_G_1"
+echo "      NEW OUT2 gain cal param >>GEN_CH2_G_1<< is $GEN_CH2_G_1"
+echo
+
+##########################################################################################
+#  Set DAC parameters
+##########################################################################################
+
+echo "  * Set new Generator offset calibration"
+FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH1_G_5 $GEN_CH2_G_5 $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $OSC_CH1_OFF_1_AC $OSC_CH2_OFF_1_AC $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $OSC_CH1_OFF_1_DC $OSC_CH2_OFF_1_DC $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $OSC_CH1_OFF_20_AC $OSC_CH2_OFF_20_AC $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $OSC_CH1_OFF_20_DC $OSC_CH2_OFF_20_DC"
+FACTORY_CAL=$FACTORY_NEW_CAL
+export FACTORY_CAL
+./sub_test/set_calibration.sh
+echo

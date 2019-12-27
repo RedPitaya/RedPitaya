@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "redpitaya/rp.h"
+#include "rp.h"
+
 
 int main(int argc, char **argv){
 
@@ -27,11 +28,16 @@ int main(int argc, char **argv){
 	rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
 
 	/* Generating amplitude */
-	rp_GenAmp(RP_CH_1, 0.9);
+	rp_GenAmp(RP_CH_1, 0.45);
 	rp_GenOffset(RP_CH_1, 0);
 
-	rp_GenAmp(RP_CH_2, 0.9);
+	rp_GenAmp(RP_CH_2, 0.45);
 	rp_GenOffset(RP_CH_2, 0);
+
+#ifdef Z20_250_12
+	rp_GenSetGainOut(RP_CH_1,RP_GAIN_1X);
+	rp_GenSetGainOut(RP_CH_2,RP_GAIN_1X);
+#endif
 
 	/* Enable channel */
 	rp_GenOutEnable(RP_CH_1);

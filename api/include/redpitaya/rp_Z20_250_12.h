@@ -178,6 +178,11 @@ typedef enum {
     RP_GEN_TRIG_GATED_BURST     //!< External trigger gated burst
 } rp_trig_src_t;
 
+typedef enum {
+    RP_GAIN_1X = 0,         //!< Set output gain in x1 mode   
+    RP_GAIN_5X = 1          //!< Set output gain in x5 mode
+} rp_gen_gain_t;
+
 /**
  * Type representing Input/Output channels.
  */
@@ -200,12 +205,12 @@ typedef enum {
  * Type representing acquire signal sampling rate.
  */
 typedef enum {
-    RP_SMP_125M,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-    RP_SMP_15_625M,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-    RP_SMP_1_953M,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-    RP_SMP_122_070K, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-    RP_SMP_15_258K,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-    RP_SMP_1_907K    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_SMP_250M     = 0,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    RP_SMP_31_25M   = 1,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    RP_SMP_3_906M   = 2,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    RP_SMP_244_140K = 3, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    RP_SMP_30_517K  = 4,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    RP_SMP_3_814K   = 5   //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_sampling_rate_t;
 
 
@@ -221,6 +226,10 @@ typedef enum {
     RP_DEC_65536  //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_decimation_t;
 
+typedef enum {
+    RP_DC = 0, 
+    RP_AC = 1
+} rp_acq_ac_dc_mode_t;
 
 /**
  * Type representing different trigger sources used at acquiring signal.
@@ -252,21 +261,31 @@ typedef enum {
  * Calibration parameters, stored in the EEPROM device
  */
 typedef struct {
-    uint32_t fe_ch1_fs_g_hi; //!< High gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_hi; //!< High gain front end full scale voltage, channel B
-    uint32_t fe_ch1_fs_g_lo; //!< Low gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_lo; //!< Low gain front end full scale voltage, channel B
-    int32_t  fe_ch1_lo_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_lo_offs; //!< Front end DC offset, channel B
-    uint32_t be_ch1_fs;      //!< Back end full scale voltage, channel A
-    uint32_t be_ch2_fs;      //!< Back end full scale voltage, channel B
-    int32_t  be_ch1_dc_offs; //!< Back end DC offset, channel A
-    int32_t  be_ch2_dc_offs; //!< Back end DC offset, on channel B
-	uint32_t magic;			 //!
-    int32_t  fe_ch1_hi_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_hi_offs; //!< Front end DC offset, channel B
+    uint32_t gen_ch1_g_1;
+    uint32_t gen_ch2_g_1;
+    int32_t  gen_ch1_off_1;
+    int32_t  gen_ch2_off_1;
+    uint32_t gen_ch1_g_5;
+    uint32_t gen_ch2_g_5;
+    int32_t  gen_ch1_off_5;
+    int32_t  gen_ch2_off_5;
+    uint32_t osc_ch1_g_1_ac;
+    uint32_t osc_ch2_g_1_ac;
+    int32_t  osc_ch1_off_1_ac;
+    int32_t  osc_ch2_off_1_ac;
+    uint32_t osc_ch1_g_1_dc; // HIGH
+    uint32_t osc_ch2_g_1_dc;
+    int32_t  osc_ch1_off_1_dc;
+    int32_t  osc_ch2_off_1_dc;
+    uint32_t osc_ch1_g_20_ac; // LOW
+    uint32_t osc_ch2_g_20_ac;
+    int32_t  osc_ch1_off_20_ac;
+    int32_t  osc_ch2_off_20_ac;
+    uint32_t osc_ch1_g_20_dc;
+    uint32_t osc_ch2_g_20_dc;
+    int32_t  osc_ch1_off_20_dc;
+    int32_t  osc_ch2_off_20_dc;
 } rp_calib_params_t;
-
 
 /** @name General
  */
@@ -1362,6 +1381,49 @@ int rp_SetPllControlEnable(bool enable);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GetPllControlLocked(bool *status);
+
+
+
+/**
+* Sets the AC / DC modes for input.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param mode Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
+
+/**
+* Get the AC / DC modes for input.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+
+/**
+* Sets the gain modes for output.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param mode Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode);
+
+/**
+* Get the gain modes for output.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status);
+
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 

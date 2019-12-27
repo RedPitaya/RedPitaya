@@ -122,15 +122,19 @@ function print_fail(){
 
 
 function load_fpga_0_94(){
-echo "LOAD FPGA 0.94 IMAGE"
-cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
-sleep 2
-echo "FPGA LOADED SUCCESSFULLY"
+    echo "LOAD FPGA 0.94 IMAGE"
+    cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+    sleep 2
+    echo "FPGA LOADED SUCCESSFULLY"
 }
 
 function load_fpga_mercury(){
-echo "LOAD FPGA MERCURY IMAGE"
-cat /opt/redpitaya/fpga/mercury/fpga.bit > /dev/xdevcfg
-sleep 2
-echo "FPGA LOADED SUCCESSFULLY"
+    echo "LOAD FPGA MERCURY IMAGE"
+    cat /opt/redpitaya/fpga/mercury/fpga.bit > /dev/xdevcfg
+    sleep 2
+    echo "FPGA LOADED SUCCESSFULLY"
+}
+
+function print_calib(){
+    calib -rv
 }

@@ -67,4 +67,9 @@ int synthesis_rampDown(float *data_out);
 int synthesis_DC(float *data_out);
 int synthesis_PWM(float ratio, float *data_out);
 
+#ifdef Z20_250_12
+int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode);
+int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status);
+#endif
+
 #endif

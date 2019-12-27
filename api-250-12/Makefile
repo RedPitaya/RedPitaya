@@ -10,7 +10,7 @@ TOOL_DIR=./src/tool
 POWER_ON_DIR=./src/power_on
 CONFIG_DIR=./configs
 
-CXXSOURCES_I2C=src/i2c/i2c.cpp src/rp-i2c.cpp src/rp-i2c-mcp47x6.cpp src/rp-i2c-max7311.cpp src/rp-i2c-mcp47x6-c.cpp 
+CXXSOURCES_I2C=src/i2c/i2c.cpp src/rp-i2c.cpp src/rp-i2c-mcp47x6.cpp src/rp-i2c-max7311.cpp src/rp-i2c-mcp47x6-c.cpp src/rp-i2c-max7311-c.cpp 
 C_OUT_NAME_I2C=$(OUT_DIR)librp-i2c.so
 C_OUT_NAME_I2C_A=$(OUT_DIR)librp-i2c.a
 

@@ -44,11 +44,15 @@ OBJECTS =	common.o \
 		acq_handler.o \
 		generate.o \
 		gen_handler.o \
-		calib.o \
 		spec_dsp.o \
 		spec_fpga.o \
 		rp.o
-
+		
+ifeq ($(MODEL),Z20_250_12)
+	OBJECTS += calib_250_12.o
+else
+	OBJECTS += calib.o
+endif
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags

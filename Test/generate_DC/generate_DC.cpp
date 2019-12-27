@@ -6,7 +6,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "redpitaya/rp.h"
+#include "rp.h"
+
+#ifdef Z20_250_12
+#include "rp-spi.h"
+#include "rp-i2c-max7311.h"
+#include "rp-gpio-power.h"
+#endif
+
 
 int main(int argc, char **argv){
 
@@ -14,6 +21,7 @@ int main(int argc, char **argv){
 	if(rp_Init() != RP_OK){
 		fprintf(stderr, "Rp api init failed!\n");
 	}
+	float amp = 0.9;
 
 	/* Generator reset */
 	rp_GenReset();
@@ -26,11 +34,17 @@ int main(int argc, char **argv){
 	rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC);
 	rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
 
+#ifdef Z20_250_12
+	amp = 1.8;
+	rp_GenSetGainOut(RP_CH_1,RP_GAIN_5X);
+	rp_GenSetGainOut(RP_CH_2,RP_GAIN_5X);
+#endif
+
 	/* Generating amplitude */
-	rp_GenAmp(RP_CH_1, 0.45);
+	rp_GenAmp(RP_CH_1, amp);
 	rp_GenOffset(RP_CH_1, 0);
 
-	rp_GenAmp(RP_CH_2, 0.45);
+	rp_GenAmp(RP_CH_2, amp);
 	rp_GenOffset(RP_CH_2, 0);
 
 	/* Enable channel */
