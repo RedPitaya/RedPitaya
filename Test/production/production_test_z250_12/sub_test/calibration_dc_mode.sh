@@ -58,7 +58,7 @@ FE_DC_offs_HI_MIN=-400
 DECIMATION=1024
 ADC_BUFF_SIZE=16384
 OUT_AMP_LO_cnt=3686 # 0.45V  VOLTS VPP reference voltage
-OUT_AMP_HI_cnt=7373 # 0.9V  VOLTS VPP reference voltage
+OUT_AMP_HI_cnt=1638 # 4V  VOLTS VPP reference voltage
 
 echo
 echo -e "\e[94m########################################################################\e[0m"
@@ -93,8 +93,9 @@ print_ok
 sleep 0.5
 echo -n "  * Connect IN to OUT "
 # connect in to out 
-enableK1Pin
+disableAllDIOPin
 print_ok
+sleep 0.5
 
 # get data from adc
 echo -n "  * Get data from ADC "
@@ -133,12 +134,14 @@ echo -n "  * Connect (0.45V) to OUT "
 # connect in to out 
 enableK3Pin
 print_ok
+sleep 0.5
 
 # get data from adc
 echo -n "  * Get data from ADC "
 ADC_PARAM="-d B"
 acquireData
 print_ok
+
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A"
 echo "      IN2 mean value is $ADC_B"
@@ -207,8 +210,9 @@ print_ok
 sleep 0.5
 echo -n "  * Connect IN to OUT "
 # connect in to out 
-enableK1Pin
+disableAllDIOPin
 print_ok
+sleep 0.5
 
 # get data from adc
 echo -n "  * Get data from ADC "
@@ -248,6 +252,7 @@ echo -n "  * Connect (9V) to OUT "
 # connect in to out 
 enableK4Pin
 print_ok
+sleep 0.5
 
 # get data from adc
 echo -n "  * Get data from ADC "
@@ -330,6 +335,7 @@ sleep 0.5
 echo -n "  * Disable generator "
 # turn off generator 
 disableGenerator
+
 print_ok
 
 sleep 0.5
@@ -337,10 +343,12 @@ echo -n "  * Connect IN to OUT "
 # connect in to out 
 enableK1Pin
 print_ok
+sleep 0.5
 
 # get data from adc
-echo -n "  * Get data from ADC "
-ADC_PARAM="-d B"
+echo -n "  * Get data from ADC"
+sleep 0.5
+ADC_PARAM="-d B -r"
 acquireData
 print_ok
 
@@ -351,14 +359,73 @@ ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B-($N2_LV_DC)"))
 echo "      IN1 offset value is $ADC_A"
 echo "      IN2 offset value is $ADC_B"
 
-OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v BE_CH1_DC_offs=$GEN_CH1_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs-ADC_A_MEAN))}')
-OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_A -v BE_CH2_DC_offs=$GEN_CH2_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs-ADC_B_MEAN))}')
+OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v BE_CH1_DC_offs=$GEN_CH1_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs+ADC_A_MEAN))}')
+OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B -v BE_CH2_DC_offs=$GEN_CH2_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs+ADC_B_MEAN))}')
 
 GEN_CH1_OFF_1=$OUT1_DC_offs
 GEN_CH2_OFF_1=$OUT2_DC_offs
 # Print out the measurements
-echo "      NEW OUT1 DC offset cal param >>BE_CH1_DC_offs<<  is $GEN_CH1_OFF_1"
-echo "      NEW OUT2 DC offset cal param >>BE_CH2_DC_offs<<  is $GEN_CH2_OFF_1"
+echo "      NEW OUT1 DC offset cal param >>GEN_CH1_OFF_1<<  is $GEN_CH1_OFF_1"
+echo "      NEW OUT2 DC offset cal param >>GEN_CH2_OFF_1<<  is $GEN_CH2_OFF_1"
+echo
+
+# Check if the values are within expectations
+checkValue $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $BE_DC_offs_MIN $BE_DC_offs_MAX
+
+##########################################################################################
+#  Set ADC parameters
+##########################################################################################
+
+echo "  * Set new Generator offset calibration"
+FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH1_G_5 $GEN_CH2_G_5 $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $OSC_CH1_OFF_1_AC $OSC_CH2_OFF_1_AC $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $OSC_CH1_OFF_1_DC $OSC_CH2_OFF_1_DC $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $OSC_CH1_OFF_20_AC $OSC_CH2_OFF_20_AC $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $OSC_CH1_OFF_20_DC $OSC_CH2_OFF_20_DC"
+FACTORY_CAL=$FACTORY_NEW_CAL
+export FACTORY_CAL
+./sub_test/set_calibration.sh
+echo
+
+##########################################################################################
+#  Calibrate Generator x5 on 0
+##########################################################################################
+
+
+echo
+echo "Calibrate generator in x5 gain mode"
+sleep 0.5
+echo -n "  * Disable generator "
+# turn off generator 
+disableGeneratorX5
+
+print_ok
+
+sleep 0.5
+echo -n "  * Connect IN to OUT "
+# connect in to out 
+enableK1Pin
+print_ok
+sleep 0.5
+
+# get data from adc
+echo -n "  * Get data from ADC"
+sleep 0.5
+ADC_PARAM="-d B -r"
+acquireData
+print_ok
+
+ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A-($N1_HV_DC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B-($N2_HV_DC)"))
+
+# Print out the measurements
+echo "      IN1 offset value is $ADC_A"
+echo "      IN2 offset value is $ADC_B"
+
+OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v BE_CH1_DC_offs=$GEN_CH1_OFF_5 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs+ADC_A_MEAN))}')
+OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B -v BE_CH2_DC_offs=$GEN_CH2_OFF_5 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs+ADC_B_MEAN))}')
+
+GEN_CH1_OFF_5=$OUT1_DC_offs
+GEN_CH2_OFF_5=$OUT2_DC_offs
+# Print out the measurements
+echo "      NEW OUT1 DC offset cal param >>GEN_CH1_OFF_5<<  is $GEN_CH1_OFF_5"
+echo "      NEW OUT2 DC offset cal param >>GEN_CH2_OFF_5<<  is $GEN_CH2_OFF_5"
 echo
 
 # Check if the values are within expectations
@@ -376,69 +443,136 @@ export FACTORY_CAL
 echo
 
 
-##########################################################################################
-##########################################################################################
-#  Calibrate Output (0.45V) x1 mode
-##########################################################################################
-##########################################################################################
 
-echo
-echo "Outputs DC gain calibration is started..."
-echo
-echo "Calibrate generator in x1 gain mode"
-
-sleep 0.5
-echo -n "  * Start generator in DC (0.45V)" 
-generate_DC_LO
-print_ok
-
-sleep 0.5
-echo -n "  * Connect IN to OUT "
-# connect in to out 
-enableK1Pin
-print_ok
-
-# get data from adc
-echo -n "  * Get data from ADC "
-ADC_PARAM="-d B"
-acquireData
-print_ok
-
-echo "ADC_A is $ADC_A"
-echo "ADC_B is $ADC_B"
-
-ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A*$GAIN1_LV_DC -($N1_LV_DC)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B*$GAIN2_LV_DC -($N2_LV_DC)"))
-
-OUT1_VOLTAGE_LO=$(awk -v ADC_A_MEAN=$ADC_A 'BEGIN { print ((ADC_A_MEAN/8192))}' )
-OUT2_VOLTAGE_LO=$(awk -v ADC_B_MEAN=$ADC_B 'BEGIN { print ((ADC_B_MEAN/8192))}' )
-#Print out the measurements
-echo "OUT1_VOLTAGE_LO is $OUT1_VOLTAGE_LO"
-echo "OUT2_VOLTAGE_LO is $OUT2_VOLTAGE_LO"
-echo
-GAIN1_OUT=$(awk -v Y=$BE_CH1_DC_offs -v X=$OUT_AMP_LO_cnt -v ADC_A_MEAN=$ADC_A 'BEGIN {print ((ADC_A_MEAN)/X) }')
-GAIN2_OUT=$(awk -v Y=$BE_CH2_DC_offs -v X=$OUT_AMP_LO_cnt -v ADC_B_MEAN=$ADC_B 'BEGIN {print ((ADC_B_MEAN)/X) }')
-
-echo "GAIN1_OUT is $GAIN1_OUT"
-echo "GAIN2_OUT is $GAIN2_OUT"
-echo
+# ##########################################################################################
+# ##########################################################################################
+# #  Calibrate Output (0.45V) x1 mode
+# ##########################################################################################
+# ##########################################################################################
 
 
-GEN_CH1_G_1=$(awk -v X=$GAIN1_OUT -v Y=$GEN_CH1_G_1 'BEGIN { print sprintf("%d", int((Y*X))) }')
-GEN_CH2_G_1=$(awk -v X=$GAIN2_OUT -v Y=$GEN_CH2_G_1 'BEGIN { print sprintf("%d", int((Y*X))) }')
+# echo
+# echo "Calibrate generator in x1 gain mode"
 
-# Print out the measurements
-echo "      NEW OUT1 gain cal param >>GEN_CH1_G_1<< is $GEN_CH1_G_1"
-echo "      NEW OUT2 gain cal param >>GEN_CH2_G_1<< is $GEN_CH2_G_1"
-echo
+# sleep 0.5
+# echo -n "  * Start generator in DC (0.45V)" 
+# generate_DC_LO
+# print_ok
 
-##########################################################################################
-#  Set DAC parameters
-##########################################################################################
+# sleep 0.5
+# echo -n "  * Connect IN to OUT "
+# # connect in to out 
+# enableK1Pin
+# print_ok
 
-echo "  * Set new Generator offset calibration"
-FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH1_G_5 $GEN_CH2_G_5 $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $OSC_CH1_OFF_1_AC $OSC_CH2_OFF_1_AC $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $OSC_CH1_OFF_1_DC $OSC_CH2_OFF_1_DC $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $OSC_CH1_OFF_20_AC $OSC_CH2_OFF_20_AC $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $OSC_CH1_OFF_20_DC $OSC_CH2_OFF_20_DC"
-FACTORY_CAL=$FACTORY_NEW_CAL
-export FACTORY_CAL
-./sub_test/set_calibration.sh
-echo
+# # get data from adc
+# echo -n "  * Get data from ADC "
+# ADC_PARAM="-d B"
+# acquireData
+# print_ok
+
+# echo "ADC_A is $ADC_A"
+# echo "ADC_B is $ADC_B"
+
+# ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A*$GAIN1_LV_DC -($N1_LV_DC)"))
+# ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B*$GAIN2_LV_DC -($N2_LV_DC)"))
+
+# OUT1_VOLTAGE_LO=$(awk -v ADC_A_MEAN=$ADC_A 'BEGIN { print ((ADC_A_MEAN/8192))}' )
+# OUT2_VOLTAGE_LO=$(awk -v ADC_B_MEAN=$ADC_B 'BEGIN { print ((ADC_B_MEAN/8192))}' )
+# #Print out the measurements
+# echo "OUT1_VOLTAGE_LO is $OUT1_VOLTAGE_LO"
+# echo "OUT2_VOLTAGE_LO is $OUT2_VOLTAGE_LO"
+# echo
+# GAIN1_OUT=$(awk -v  X=$OUT_AMP_LO_cnt -v ADC_A_MEAN=$ADC_A 'BEGIN {print ((ADC_A_MEAN)/X) }')
+# GAIN2_OUT=$(awk -v  X=$OUT_AMP_LO_cnt -v ADC_B_MEAN=$ADC_B 'BEGIN {print ((ADC_B_MEAN)/X) }')
+
+# echo "GAIN1_OUT is $GAIN1_OUT"
+# echo "GAIN2_OUT is $GAIN2_OUT"
+# echo
+
+
+# GEN_CH1_G_1=$(awk -v X=$GAIN1_OUT -v Y=$GEN_CH1_G_1 'BEGIN { print sprintf("%d", int((Y*X))) }')
+# GEN_CH2_G_1=$(awk -v X=$GAIN2_OUT -v Y=$GEN_CH2_G_1 'BEGIN { print sprintf("%d", int((Y*X))) }')
+
+# # Print out the measurements
+# echo "      NEW OUT1 gain cal param >>GEN_CH1_G_1<< is $GEN_CH1_G_1"
+# echo "      NEW OUT2 gain cal param >>GEN_CH2_G_1<< is $GEN_CH2_G_1"
+# echo
+
+# ##########################################################################################
+# #  Set DAC parameters
+# ##########################################################################################
+
+# echo "  * Set new Generator offset calibration"
+# FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH1_G_5 $GEN_CH2_G_5 $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $OSC_CH1_OFF_1_AC $OSC_CH2_OFF_1_AC $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $OSC_CH1_OFF_1_DC $OSC_CH2_OFF_1_DC $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $OSC_CH1_OFF_20_AC $OSC_CH2_OFF_20_AC $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $OSC_CH1_OFF_20_DC $OSC_CH2_OFF_20_DC"
+# FACTORY_CAL=$FACTORY_NEW_CAL
+# export FACTORY_CAL
+# ./sub_test/set_calibration.sh
+# echo
+
+
+# ##########################################################################################
+# ##########################################################################################
+# #  Calibrate Output (4V) x5 mode
+# ##########################################################################################
+# ##########################################################################################
+
+
+# echo
+# echo "Calibrate generator in x5 gain mode"
+
+# sleep 0.5
+# echo -n "  * Start generator in DC (4V)" 
+# generate_DC
+# print_ok
+
+# sleep 0.5
+# echo -n "  * Connect IN to OUT "
+# # connect in to out 
+# enableK1Pin
+# print_ok
+
+# # get data from adc
+# echo -n "  * Get data from ADC "
+# ADC_PARAM="-d B -1 20 -2 20"
+# acquireData
+# print_ok
+
+# echo "ADC_A is $ADC_A"
+# echo "ADC_B is $ADC_B"
+
+# ADC_A=$(printf %.$2f $(bc -l <<< "20 * $ADC_A*$GAIN1_HV_DC -($N1_HV_DC)"))
+# ADC_B=$(printf %.$2f $(bc -l <<< "20 * $ADC_B*$GAIN2_HV_DC -($N2_HV_DC)"))
+
+# OUT1_VOLTAGE_HI=$(awk -v ADC_A_MEAN=$ADC_A 'BEGIN { print ((ADC_A_MEAN/8192))}' )
+# OUT2_VOLTAGE_HI=$(awk -v ADC_B_MEAN=$ADC_B 'BEGIN { print ((ADC_B_MEAN/8192))}' )
+# #Print out the measurements
+# echo "OUT1_VOLTAGE_HI is $OUT1_VOLTAGE_HI"
+# echo "OUT2_VOLTAGE_HI is $OUT2_VOLTAGE_HI"
+# echo
+# GAIN1_OUT=$(awk -v X=$OUT_AMP_HI_cnt -v ADC_A_MEAN=$ADC_A 'BEGIN {print ((ADC_A_MEAN/20)/X) }')
+# GAIN2_OUT=$(awk -v X=$OUT_AMP_HI_cnt -v ADC_B_MEAN=$ADC_B 'BEGIN {print ((ADC_B_MEAN/20)/X) }')
+
+# echo "GAIN1_OUT is $GAIN1_OUT"
+# echo "GAIN2_OUT is $GAIN2_OUT"
+# echo
+
+
+# GEN_CH1_G_5=$(awk -v X=$GAIN1_OUT -v Y=$GEN_CH1_G_5 'BEGIN { print sprintf("%d", int((Y*X))) }')
+# GEN_CH2_G_5=$(awk -v X=$GAIN2_OUT -v Y=$GEN_CH2_G_5 'BEGIN { print sprintf("%d", int((Y*X))) }')
+
+# # Print out the measurements
+# echo "      NEW OUT1 gain cal param >>GEN_CH1_G_5<< is $GEN_CH1_G_5"
+# echo "      NEW OUT2 gain cal param >>GEN_CH2_G_5<< is $GEN_CH2_G_5"
+# echo
+
+# ##########################################################################################
+# #  Set DAC parameters
+# ##########################################################################################
+
+# echo "  * Set new Generator offset calibration"
+# FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH1_G_5 $GEN_CH2_G_5 $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $OSC_CH1_OFF_1_AC $OSC_CH2_OFF_1_AC $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $OSC_CH1_OFF_1_DC $OSC_CH2_OFF_1_DC $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $OSC_CH1_OFF_20_AC $OSC_CH2_OFF_20_AC $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $OSC_CH1_OFF_20_DC $OSC_CH2_OFF_20_DC"
+# FACTORY_CAL=$FACTORY_NEW_CAL
+# export FACTORY_CAL
+# ./sub_test/set_calibration.sh
+# echo

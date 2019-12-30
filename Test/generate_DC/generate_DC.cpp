@@ -35,7 +35,6 @@ int main(int argc, char **argv){
 	rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
 
 #ifdef Z20_250_12
-	amp = 1.8;
 	rp_GenSetGainOut(RP_CH_1,RP_GAIN_5X);
 	rp_GenSetGainOut(RP_CH_2,RP_GAIN_5X);
 #endif

@@ -61,7 +61,7 @@ const double c_max_frequency = ADC_SAMPLE_RATE / 2.0;
 const double c_min_frequency = 0;
 
 /** Maximal signal amplitude [Vpp] */
-const double c_max_amplitude = 4.0;
+const double c_max_amplitude = 2.0;
 
 /** AWG buffer length [samples]*/
 #define n (16*1024)
@@ -277,7 +277,7 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
     awg->wrap = round(65536 * n - 1);
 
     int trans = freq / 1e6 * trans1; /* 300 samples at 1 MHz */
-    uint32_t amp = ampl * 4000.0;    /* 1 Vpp ==> 4000 DAC counts */
+    uint32_t amp = ampl * 8191.0;    /* 1 Vpp ==> 4000 DAC counts */
     // if (amp > 8191) {
     //     /* Truncate to max value if needed */
     //     amp = 8191;

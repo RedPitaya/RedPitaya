@@ -83,6 +83,25 @@ function disableGenerator(){
     $C_GENERATE 2 0 0 x1 sine
 }
 
+function disableGeneratorX5(){
+    $C_GENERATE 1 0 0 x5 sine
+    $C_GENERATE 2 0 0 x5 sine
+}
+
+function disableGeneratorPower() {
+    $C_MONITOR 0x40000060 0x03 
+    sleep 0.2
+    $C_MONITOR 0x40000064 0xFF 
+    sleep 0.2
+}
+
+function enableGeneratorPower() {
+    $C_MONITOR 0x40000060 0x03 
+    sleep 0.2
+    $C_MONITOR 0x40000064 0x00 
+    sleep 0.2
+}
+
 
 function hexToDec() {
     local VALUE

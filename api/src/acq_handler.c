@@ -175,7 +175,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 #ifdef Z20_250_12
     if (status == RP_OK){
         int ch = (channel == RP_CH_1 ? RP_MAX7311_IN1 : RP_MAX7311_IN2);
-        int att = (*gain == RP_LOW ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
+        int att = (*gain == RP_LOW ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
         status = rp_setAttenuator_C(ch,att);
     }
 #endif

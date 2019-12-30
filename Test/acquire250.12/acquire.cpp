@@ -175,6 +175,7 @@ void usage() {
             "  --help          -h    Print this message.\n"
             "  --hex           -x    Print value in hex.\n"
             "  --volt          -o    Print value in volt.\n"
+            "  --no_reg        -r    Disable load registers config for DAC and ADC.\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
             "\n";
@@ -197,6 +198,7 @@ int main(int argc, char *argv[])
     int equal = 0;
     int shaping = 0;
     int hex_mode = 0;
+    int disabled_load_config = 0;
     bool cnt_to_vol = false;
     float level_trigger = 0;
     if ( argc < MINARGS ) {
@@ -218,6 +220,7 @@ int main(int argc, char *argv[])
             {"help",         no_argument,       0, 'h'},
             {"hex",          no_argument,       0, 'x'},
             {"volt",         no_argument,       0, 'o'},
+            {"no_reg",       no_argument,       0, 'r'},
             {0, 0, 0, 0}
     };
 
@@ -227,11 +230,10 @@ int main(int argc, char *argv[])
     rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_1);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_AC_MODE);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE);
-    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
-    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
+
     usleep(1000);
 
-    const char *optstring = "esx1:2:d:vht:l:o";
+    const char *optstring = "esx1:2:d:vht:l:or";
 
     /* getopt_long stores the option index here. */
     int option_index = 0;
@@ -254,6 +256,10 @@ int main(int argc, char *argv[])
 
         case 'o':
             cnt_to_vol = 1;
+            break;
+        
+        case 'r':
+            disabled_load_config = 1;
             break;
 
         /* Trigger */
@@ -348,6 +354,10 @@ int main(int argc, char *argv[])
             usage();
             exit( EXIT_FAILURE );
         }
+    }
+
+    if (!disabled_load_config) {
+        rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
     }
 
     t_params[GAIN1_PARAM] = 0;
