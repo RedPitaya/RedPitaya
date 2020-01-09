@@ -682,8 +682,15 @@ int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
     int status = rp_setGainOut_C(ch,mode  == RP_GAIN_1X ? RP_GAIN_2V : RP_GAIN_10V);
     if (status == RP_OK){
         *gain = mode;
+    }else{
+        return status;
     }
-    return RP_OK;
+
+    float offset;
+    CHANNEL_ACTION(channel,
+            offset = chA_offset,
+            offset = chB_offset)
+    return gen_setOffset(channel,offset);
 }
 
 int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status){

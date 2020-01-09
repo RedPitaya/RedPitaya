@@ -59,7 +59,7 @@ then
     STATUS=1
 fi
 
-if [[ $ADC_A_STD -lt $MIN_DEVIATION ]] || [[ $ADC_A_STD -gt $MAX_DEVIATION ]]
+if [[ $ADC_B_STD -lt $MIN_DEVIATION ]] || [[ $ADC_B_STD -gt $MAX_DEVIATION ]]
 then
     echo -n "    Measured ch.B std deviation value ($ADC_B_STD) is outside expected range ($MIN_DEVIATION-$MAX_DEVIATION) "
     print_fail
@@ -83,7 +83,7 @@ then
 fi
 fi
 
-if [[ $ADC_B_PP -lt $MIN_P2P ]] || [[ $ADC_B_PP -gt $MAX_P2P ]]
+if [[ $ADC_A_PP -lt $MIN_P2P ]] || [[ $ADC_A_PP -gt $MAX_P2P ]]
 then
     echo -n "    Measured ch.A p2p value ($ADC_A_PP) is outside expected range ($MIN_P2P-$MAX_P2P) "
     print_fail

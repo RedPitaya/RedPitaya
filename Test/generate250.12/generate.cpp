@@ -266,13 +266,13 @@ void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
 //     }
 
  /* Various locally used constants - HW specific parameters */
-    const int dcoffs = -155;
+    const int dcoffs = 0;
     const int trans0 = 30;
     const int trans1 = 300;
     //const double tt2 = 0.249;
 
     /* This is where frequency is used... */
-    awg->offsgain = (dcoffs << 16) + 0x1fff;
+    awg->offsgain = (dcoffs << 16) + 0x1fff; // Offset + scale
     awg->step = round(65536 * freq/c_awg_smpl_freq * n);
     awg->wrap = round(65536 * n - 1);
 

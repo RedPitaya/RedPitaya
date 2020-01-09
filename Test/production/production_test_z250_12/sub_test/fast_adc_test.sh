@@ -14,7 +14,7 @@ MAX_NOISE_STD_NO_DEC=25 # Old value 15 -> Change to 25 because od +15V switching
 MAX_NOISE_P2P=80  # # Old value 60 -> Change to 25 because od +15V switching PS on the test board
 
 MIN_SIG_STD_HIGH_GAIN=4200
-MAX_SIG_STD_HIGH_GAIN=5500
+MAX_SIG_STD_HIGH_GAIN=5600
 MIN_SIG_STD_LOW_GAIN=170
 MAX_SIG_STD_LOW_GAIN=350
 
@@ -53,7 +53,7 @@ export MIN_P2P=0
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 # Set DAC value to proper counts / frequency for both channels
@@ -77,7 +77,7 @@ export MIN_P2P=$MIN_SIG_P2P_HIGH_GAIN
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 
@@ -101,7 +101,7 @@ export ACQ_PARAM="-1 20 -2 20"
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 echo
@@ -125,7 +125,7 @@ export ACQ_PARAM="-1 20 -2 20"
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 echo
@@ -149,7 +149,7 @@ export ACQ_PARAM="-d B"
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 # Set DAC value to proper counts / frequency for both channels
@@ -174,7 +174,7 @@ export ACQ_PARAM="-d B"
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 
@@ -198,7 +198,7 @@ export ACQ_PARAM="-1 20 -2 20 -d B"
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 echo
@@ -222,7 +222,7 @@ export ACQ_PARAM="-1 20 -2 20 -d B"
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=$?
+STATUS=1
 fi
 
 # Set DAC value to 0 for both channels (1 & 2)
