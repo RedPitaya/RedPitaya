@@ -132,7 +132,8 @@ fi
 ###############################################################################
 if [[ $G_CALIBRATION == 1 ]]
 then
-./sub_test/calibration_dc_mode.sh
+./sub_test/calibration.sh
+
 fi
 
 echo

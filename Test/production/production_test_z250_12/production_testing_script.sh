@@ -24,6 +24,7 @@ export G_LOCAL_USER='redpitaya'
 export G_LOG_MNT_FOLDER='/mnt/log'
 
 # Main commands shortcuts
+export C_A_SIGNAL="$G_SD_CARD_PATH/bin/analyze_signal"
 export C_MONITOR="$G_SD_CARD_PATH/bin/monitor"
 export C_PRINTENV="fw_printenv"
 export C_SETENV="fw_setenv"
