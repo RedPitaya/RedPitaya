@@ -504,7 +504,7 @@ int calib_setCachedParams() {
 
 int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode){
     if (power_mode == RP_DC){
-        if (gain == RP_HIGH) {
+        if (gain != RP_HIGH) {
             return (channel == RP_CH_1 ? calib.osc_ch1_off_1_dc : calib.osc_ch2_off_1_dc);
         }
         else {
@@ -512,7 +512,7 @@ int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_m
         }
     }
     else{
-        if (gain == RP_HIGH) {
+        if (gain != RP_HIGH) {
             return (channel == RP_CH_1 ? calib.osc_ch1_off_1_ac : calib.osc_ch2_off_1_ac);
         }
         else {
@@ -523,7 +523,7 @@ int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_m
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode) {
     if (power_mode == RP_DC){
-        if (gain == RP_HIGH) {
+        if (gain != RP_HIGH) {
             return (channel == RP_CH_1 ? calib.osc_ch1_g_1_dc : calib.osc_ch2_g_1_dc);
         }
         else {
@@ -531,7 +531,7 @@ uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain, rp_acq
         }
     }
     else{
-        if (gain == RP_HIGH) {
+        if (gain != RP_HIGH) {
             return (channel == RP_CH_1 ? calib.osc_ch1_g_1_ac : calib.osc_ch2_g_1_ac);
         }
         else {

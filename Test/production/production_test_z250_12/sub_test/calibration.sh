@@ -113,7 +113,7 @@ disableGenerator
 print_ok
 
 sleep 0.5
-echo -n "  * Connect IN to OUT "
+echo -n "  * Connect IN to GND "
 # connect in to out 
 disableAllDIOPin
 print_ok
@@ -174,6 +174,7 @@ REF_VALUE_LV=$REF_V
 GAIN1_LV_DC=$(awk -v N1_LV=$N1_LV_DC -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_A-N1_LV ) ) }')
 GAIN2_LV_DC=$(awk -v N2_LV=$N2_LV_DC -v REF_VALUE_LV=$REF_VALUE_LV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_LV) / ( ADC_B-N2_LV ) ) }')
 
+
 # Print out the measurements
 echo "      IN1 Gain is $GAIN1_LV_DC"
 echo "      IN2 Gain is $GAIN2_LV_DC"
@@ -204,6 +205,7 @@ cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 ADC_A_MEAN=$(awk -v Y=$N1_LV_DC -v X=$GAIN1_LV_DC '{sum+=$1} END { print int( ((sum/NR)*X)-Y)}' /tmp/adc_a.txt)
 ADC_B_MEAN=$(awk -v Y=$N2_LV_DC -v X=$GAIN2_LV_DC '{sum+=$1} END { print int( ((sum/NR)*X)-Y)}' /tmp/adc_b.txt)
 
+
 IN1_ERROR_LV=$(awk -v X=$ADC_A_MEAN -v Y=$REF_VALUE_LV 'BEGIN { print (((X-Y)/Y)*100) }')
 IN2_ERROR_LV=$(awk -v X=$ADC_B_MEAN -v Y=$REF_VALUE_LV 'BEGIN { print (((X-Y)/Y)*100) }')
 
@@ -230,7 +232,7 @@ disableGenerator
 print_ok
 
 sleep 0.5
-echo -n "  * Connect IN to OUT "
+echo -n "  * Connect IN to GND "
 # connect in to out 
 disableAllDIOPin
 print_ok
@@ -288,8 +290,8 @@ echo "      IN2 mean value is $ADC_B"
 getHighRefValue
 REF_VALUE_HV=$REF_V
 
-GAIN1_HV_DC=$(awk -v N1_HV=$N1_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_A-N1_HV ) ) }')
-GAIN2_HV_DC=$(awk -v N2_HV=$N2_HV -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_B-N2_HV ) ) }')
+GAIN1_HV_DC=$(awk -v N1_HV=$N1_HV_DC -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_A-N1_HV ) ) }')
+GAIN2_HV_DC=$(awk -v N2_HV=$N2_HV_DC -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_B-N2_HV ) ) }')
 
 # Print out the measurements
 echo "      IN1_Gain is $GAIN1_HV_DC"
@@ -381,8 +383,8 @@ ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B-($N2_LV_DC)"))
 echo "      IN1 offset value is $ADC_A"
 echo "      IN2 offset value is $ADC_B"
 
-OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v BE_CH1_DC_offs=$GEN_CH1_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs+ADC_A_MEAN))}')
-OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B -v BE_CH2_DC_offs=$GEN_CH2_OFF_1 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs+ADC_B_MEAN))}')
+OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v X=$GEN_CH1_OFF_1 'BEGIN { print sprintf("%d", int(X+ADC_A_MEAN))}')
+OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B -v X=$GEN_CH2_OFF_1 'BEGIN { print sprintf("%d", int(X+ADC_B_MEAN))}')
 
 GEN_CH1_OFF_1=$OUT1_DC_offs
 GEN_CH2_OFF_1=$OUT2_DC_offs
@@ -440,8 +442,8 @@ ADC_B=$(printf %.$2f $(bc -l <<< "($ADC_B-$N2_HV_DC)/5"))
 echo "      IN1 offset value is $ADC_A"
 echo "      IN2 offset value is $ADC_B"
 
-OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v BE_CH1_DC_offs=$GEN_CH1_OFF_5 'BEGIN { print sprintf("%d", int(BE_CH1_DC_offs+ADC_A_MEAN))}')
-OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B -v BE_CH2_DC_offs=$GEN_CH2_OFF_5 'BEGIN { print sprintf("%d", int(BE_CH2_DC_offs+ADC_B_MEAN))}')
+OUT1_DC_offs=$(awk -v ADC_A_MEAN=$ADC_A -v X=$GEN_CH1_OFF_5 'BEGIN { print sprintf("%d", int(X+ADC_A_MEAN))}')
+OUT2_DC_offs=$(awk -v ADC_B_MEAN=$ADC_B -v X=$GEN_CH2_OFF_5 'BEGIN { print sprintf("%d", int(X+ADC_B_MEAN))}')
 
 GEN_CH1_OFF_5=$OUT1_DC_offs
 GEN_CH2_OFF_5=$OUT2_DC_offs
@@ -681,8 +683,8 @@ echo "      IN2 value is $CH2_MIN - $CH2_MAX"
 ADC_A=$CH1_MAX
 ADC_B=$CH2_MAX
 
-ADC_A=$(printf %.$2f $(bc -l <<< "2 * ($ADC_A-$N1_LV_AC)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "2 * ($ADC_B-$N2_LV_AC)"))
+ADC_A=$(printf %.$2f $(bc -l <<< "(2 * $ADC_A-$N1_LV_AC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "(2 * $ADC_B-$N2_LV_AC)"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A"
@@ -759,12 +761,12 @@ echo
 
 ##########################################################################################
 ##########################################################################################
-#  Calibrate DC (9V) mode (1:20)
+#  Calibrate AC (9V) mode (1:20)
 ##########################################################################################
 ##########################################################################################
 
 
-echo "Calibrate in DC (4V) mode (1:20)"
+echo "Calibrate in AC (4V) mode (1:20)"
 
 
 sleep 0.5
@@ -787,8 +789,8 @@ echo "      IN2 value is $CH2_MIN - $CH2_MAX"
 ADC_A=$CH1_MAX
 ADC_B=$CH2_MAX
 
-ADC_A=$(printf %.$2f $(bc -l <<< "2 * ($ADC_A-$N1_HV_AC)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "2 * ($ADC_B-$N2_HV_AC)"))
+ADC_A=$(printf %.$2f $(bc -l <<< "(2 * $ADC_A-$N1_HV_AC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "(2 * $ADC_B-$N2_HV_AC)"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A"
@@ -796,8 +798,8 @@ echo "      IN2 mean value is $ADC_B"
 
 REF_VALUE_HV=$OUT_AMP_HI_cnt
 
-GAIN1_HV_AC=$(awk -v X=$N1_HV_DC -v Y=$REF_VALUE_HV -v ADC_A=$ADC_A 'BEGIN { print ( ( Y) / ( ADC_A-X ) ) }')
-GAIN2_HV_AC=$(awk -v X=$N2_HV_DC -v Y=$REF_VALUE_HV -v ADC_B=$ADC_B 'BEGIN { print ( ( Y) / ( ADC_B-X ) ) }')
+GAIN1_HV_AC=$(awk -v X=$N1_HV_AC -v Y=$REF_VALUE_HV -v ADC_A=$ADC_A 'BEGIN { print ( ( Y) / ( ADC_A-X ) ) }')
+GAIN2_HV_AC=$(awk -v X=$N2_HV_AC -v Y=$REF_VALUE_HV -v ADC_B=$ADC_B 'BEGIN { print ( ( Y) / ( ADC_B-X ) ) }')
 
 # Print out the measurements
 echo "      IN1 Gain is $GAIN1_HV_AC"
