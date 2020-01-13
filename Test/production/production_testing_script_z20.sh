@@ -1900,15 +1900,15 @@ then                                                        ## production data b
 else
     echo
     echo
-    echo "                  ********************"
-    echo "                  ********************"
-    echo "                  *                  *"
-    echo "                  *                  *"
-    echo "                  *    BOARD FAILD   *"
-    echo "                  *                  *"
-    echo "                  *                  *"
-    echo "                  ********************"
-    echo "                  ********************"
+    echo "                  *********************"
+    echo "                  *********************"
+    echo "                  *                   *"
+    echo "                  *                   *"
+    echo "                  *    BOARD FAILED   *"
+    echo "                  *                   *"
+    echo "                  *                   *"
+    echo "                  *********************"
+    echo "                  *********************"
     echo
     echo
     echo "                  Test status is: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]} "
