@@ -5,6 +5,10 @@ source ./sub_test/common_func.sh
 
 echo "START MAIN TEST"
 load_fpga_0_94
+sleep 1
+
+echo "Load ADC/DAC configuration"
+$C_POWER_ON_TOOL -C
 
 echo
 echo

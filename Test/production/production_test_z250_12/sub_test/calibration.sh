@@ -370,7 +370,7 @@ print_ok
 sleep 0.5
 
 # get data from adc
-echo -n "  * Get data from ADC"
+echo -n "  * Get data from ADC "
 sleep 0.5
 ADC_PARAM="-d B -r"
 acquireData
@@ -429,7 +429,7 @@ print_ok
 sleep 0.5
 
 # get data from adc
-echo -n "  * Get data from ADC"
+echo -n "  * Get data from ADC "
 sleep 0.5
 ADC_PARAM="-d B -r"
 acquireData
@@ -827,3 +827,6 @@ FACTORY_CAL=$FACTORY_NEW_CAL
 export FACTORY_CAL
 ./sub_test/set_calibration.sh
 echo
+
+# Calibrate capacitors
+./sub_test/calibration_capacitors.sh
