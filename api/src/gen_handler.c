@@ -73,8 +73,10 @@ int gen_SetDefaultValues() {
     gen_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
     gen_setPhase(RP_CH_1, 0.0);
     gen_setPhase(RP_CH_2, 0.0);
+#ifdef Z20_250_12
     gen_setGainOut(RP_CH_1,RP_GAIN_1X);
     gen_setGainOut(RP_CH_2,RP_GAIN_1X);
+#endif
     return RP_OK;
 }
 
