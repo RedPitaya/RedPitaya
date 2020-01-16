@@ -50,7 +50,15 @@ endif
 	./synCheck.sh
 
 $(FSBL_ELF): $(FPGA_BIT)
+ifneq ($(MODEL),"Z20_250_12")
+	$(HSI) -source red_pitaya_hsi_fsbl_Z20_250.tcl -tclargs $(PRJ)
+else
 	$(HSI) -source red_pitaya_hsi_fsbl.tcl -tclargs $(PRJ)
+endif
 
 $(DEVICE_TREE): $(FPGA_BIT)
+ifneq ($(MODEL),"Z20_250_12")
+	$(HSI) -source red_pitaya_hsi_dts_Z20_250.tcl -tclargs $(PRJ)
+else
 	$(HSI) -source red_pitaya_hsi_dts.tcl -tclargs $(PRJ)
+endif
