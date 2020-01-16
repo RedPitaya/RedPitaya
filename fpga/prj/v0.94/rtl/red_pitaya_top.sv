@@ -81,42 +81,33 @@ module red_pitaya_top #(
   inout  logic          DDR_we_n   ,
 
   // Red Pitaya periphery
-  input  logic          trig_i ,
-  input  logic          pll_ref_i,
-  output logic          pll_hi_o,
-  output logic          pll_lo_o,
-  input  logic [ 2-1:0] temp_prot_i ,
+
   // ADC
-  input  logic [MNA-1:0] [ 7-1:0] adc_dat_p_i,  // ADC data
-  input  logic [MNA-1:0] [ 7-1:0] adc_dat_n_i,  // ADC data
+  input  logic [MNA-1:0] [16-1:0] adc_dat_i,  // ADC data
   input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
-  output logic                    adc_spi_csb, // ADC spi CS
-  inout  logic                    adc_spi_sdio, // ADC spi DIO
-  output logic                    adc_spi_clk, // ADC spi CLK
-  output logic                    adc_sync_o, // ADC sync
+  output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
+  output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
   // DAC
-  output logic [1:0][14-1:0] dac_dat_o,  // DAC combined data
-  input  logic               dac_dco_i,  // DAC clock
-  output logic               dac_reset_o,  // DAC reset
-  output logic               dac_spi_csb, // DAC spi CS
-  inout  logic               dac_spi_sdio, // DAC spi DIO
-  output logic               dac_spi_clk, // DAC spi CLK
+  output logic [14-1:0] dac_dat_o  ,  // DAC combined data
+  output logic          dac_wrt_o  ,  // DAC write
+  output logic          dac_sel_o  ,  // DAC channel select
+  output logic          dac_clk_o  ,  // DAC clock
+  output logic          dac_rst_o  ,  // DAC reset
   // PWM DAC
   output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PWM DAC
   // XADC
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  inout  logic          exp_9_io   ,
-  inout  logic [ 9-1:0] exp_p_io   ,
-  inout  logic [ 9-1:0] exp_n_io   ,
+  inout  logic [ 8-1:0] exp_p_io   ,
+  inout  logic [ 8-1:0] exp_n_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
   input  logic [ 2-1:0] daisy_p_i  ,  // line 1 is clock capable
   input  logic [ 2-1:0] daisy_n_i  ,
   // LED
-  output logic [ 8-1:0] led_o
+  inout  logic [ 8-1:0] led_o
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +119,6 @@ localparam int unsigned GDW = 8+8;
 
 logic [4-1:0] fclk ; //[0]-125MHz, [1]-250MHz, [2]-50MHz, [3]-200MHz
 logic [4-1:0] frstn;
-logic         idly_rdy;
 
 // AXI masters
 logic            axi1_clk    , axi0_clk    ;
@@ -145,8 +135,9 @@ logic            axi1_wrdy   , axi0_wrdy   ;
 // PLL signals
 logic                 adc_clk_in;
 logic                 pll_adc_clk;
-logic                 pll_adc_clk2d;
-logic                 pll_adc_10mhz;
+logic                 pll_dac_clk_1x;
+logic                 pll_dac_clk_2x;
+logic                 pll_dac_clk_2p;
 logic                 pll_ser_clk;
 logic                 pll_pwm_clk;
 logic                 pll_locked;
@@ -158,16 +149,20 @@ logic                 pwm_rstn;
 
 // ADC clock/reset
 logic                 adc_clk;
-logic                 adc_clk2d;
-logic                 adc_10mhz;
 logic                 adc_rstn;
 
 // stream bus type
 localparam type SBA_T = logic signed [14-1:0];  // acquire
 localparam type SBG_T = logic signed [14-1:0];  // generate
 
+SBA_T [MNA-1:0]          adc_dat;
 
 // DAC signals
+logic                    dac_clk_1x;
+logic                    dac_clk_2x;
+logic                    dac_clk_2p;
+logic                    dac_rst;
+
 logic        [14-1:0] dac_dat_a, dac_dat_b;
 logic        [14-1:0] dac_a    , dac_b    ;
 logic signed [15-1:0] dac_a_sum, dac_b_sum;
@@ -182,14 +177,11 @@ SBA_T [2-1:0]            pid_dat;
 logic                    digital_loop;
 
 // system bus
-sys_bus_if   ps_sys      (.clk (adc_clk2d), .rstn (adc_rstn));
-sys_bus_if   sys [8-1:0] (.clk (adc_clk2d), .rstn (adc_rstn));
+sys_bus_if   ps_sys      (.clk (adc_clk), .rstn (adc_rstn));
+sys_bus_if   sys [8-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
-
-// SPI0
-spi_if #(.DW (2)) spi0 ();
 
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reset)
@@ -204,8 +196,9 @@ red_pitaya_pll pll (
   .rstn        (frstn[0]  ),  // reset - active low
   // output clocks
   .clk_adc     (pll_adc_clk   ),  // ADC clock
-  .clk_adc2d   (pll_adc_clk2d ),  // ADC clock divided by 2
-  .clk_10mhz   (pll_adc_10mhz ),  // ADC divided to 10MHz
+  .clk_dac_1x  (pll_dac_clk_1x),  // DAC clock 125MHz
+  .clk_dac_2x  (pll_dac_clk_2x),  // DAC clock 250MHz
+  .clk_dac_2p  (pll_dac_clk_2p),  // DAC clock 250MHz -45DGR
   .clk_ser     (pll_ser_clk   ),  // fast serial clock
   .clk_pdm     (pll_pwm_clk   ),  // PWM clock
   // status outputs
@@ -213,18 +206,23 @@ red_pitaya_pll pll (
 );
 
 BUFG bufg_adc_clk    (.O (adc_clk   ), .I (pll_adc_clk   ));
-BUFG bufg_adc_clk2d  (.O (adc_clk2d ), .I (pll_adc_clk2d ));
-BUFG bufg_adc_10MHz  (.O (adc_10mhz ), .I (pll_adc_10mhz ));
+BUFG bufg_dac_clk_1x (.O (dac_clk_1x), .I (pll_dac_clk_1x));
+BUFG bufg_dac_clk_2x (.O (dac_clk_2x), .I (pll_dac_clk_2x));
+BUFG bufg_dac_clk_2p (.O (dac_clk_2p), .I (pll_dac_clk_2p));
 BUFG bufg_ser_clk    (.O (ser_clk   ), .I (pll_ser_clk   ));
 BUFG bufg_pwm_clk    (.O (pwm_clk   ), .I (pll_pwm_clk   ));
 
 // ADC reset (active low)
-always @(posedge adc_clk2d)
-adc_rstn <=  frstn[0] &  pll_locked & idly_rdy;
+always @(posedge adc_clk)
+adc_rstn <=  frstn[0] &  pll_locked;
+
+// DAC reset (active high)
+always @(posedge dac_clk_1x)
+dac_rst  <= ~frstn[0] | ~pll_locked;
 
 // PWM reset (active low)
 always @(posedge pwm_clk)
-pwm_rstn <=  frstn[0] &  pll_locked & idly_rdy;
+pwm_rstn <=  frstn[0] &  pll_locked;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Connections to PS
@@ -261,8 +259,6 @@ red_pitaya_ps ps (
   .vinn_i        (vinn_i      ),
   // GPIO
   .gpio          (gpio),
-  // SPI0
-  .spi0          (spi0),
   // system read/write channel
   .bus           (ps_sys      ),
   // AXI masters
@@ -277,49 +273,6 @@ red_pitaya_ps ps (
   .axi1_werr_o   (axi1_werr   ),  .axi0_werr_o   (axi0_werr   ),  // system write error
   .axi1_wrdy_o   (axi1_wrdy   ),  .axi0_wrdy_o   (axi0_wrdy   )   // system write ready
 );
-
-
-
-assign spi0.sck_i   = 1'b0 ;
-assign spi0.ss_i    = 1'b1 ;
-
-//reg spi0_in ;
-//always @(*) begin
-//  case ({spi0.ss2_o, spi0.ss1_o})
-//    2'b10 : spi0_in = adc_spi_sdio ;
-//    2'b01 : spi0_in = dac_spi_sdio ;
-//   default: spi0_in = 1'b0 ;
-//  endcase
-//end
-
-//assign adc_spi_csb   = spi0.ss1_o;
-//assign adc_spi_clk   = spi0.sck_o;
-//assign adc_spi_sdio  = spi0.io_t[0] ? 1'bz : spi0.io_o[0]; // MOSI <=> IO[0]
-//assign dac_spi_csb   = spi0.ss2_o;
-//assign dac_spi_clk   = spi0.sck_o;
-//assign dac_spi_sdio  = spi0.io_t[0] ? 1'bz : spi0.io_o[0]; // MOSI <=> IO[0]
-
-//assign spi0.io_i[1]  = spi0_in ; // MISO <=> IO[1]
-//assign spi0.io_i[0]  = spi0_in ;
-
-
-wire [2-1:0] hk_spi_cs  ;
-wire [2-1:0] hk_spi_clk ;
-wire [2-1:0] hk_spi_i   ;
-wire [2-1:0] hk_spi_o   ;
-wire [2-1:0] hk_spi_t   ;
-
-assign adc_spi_csb  = hk_spi_cs[0];
-assign adc_spi_clk  = hk_spi_clk[0];
-assign hk_spi_i[0]  = adc_spi_sdio;
-assign adc_spi_sdio = hk_spi_t[0] ? 1'bz : hk_spi_o[0] ;
-
-assign dac_spi_csb  = hk_spi_cs[1];
-assign dac_spi_clk  = hk_spi_clk[1];
-assign hk_spi_i[1]  = dac_spi_sdio;
-assign dac_spi_sdio = hk_spi_t[1] ? 1'bz : hk_spi_o[1] ;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
@@ -348,7 +301,7 @@ logic [4-1:0] [24-1:0] pwm_cfg;
 
 red_pitaya_ams i_ams (
   // power test
-  .clk_i           (adc_clk2d),  // clock
+  .clk_i           (adc_clk ),  // clock
   .rstn_i          (adc_rstn),  // reset - active low
   // PWM configuration
   .dac_a_o         (pwm_cfg[0]),
@@ -387,197 +340,77 @@ assign daisy_n_o = 1'bz;
 // ADC IO
 ////////////////////////////////////////////////////////////////////////////////
 
-// ADC sync is yet to drive
-assign adc_sync_o = 1'bz ;
+// generating ADC clock is disabled
+assign adc_clk_o = 2'b10;
+//ODDR i_adc_clk_p ( .Q(adc_clk_o[0]), .D1(1'b1), .D2(1'b0), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
+//ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(fclk[0]), .CE(1'b1), .R(1'b0), .S(1'b0));
 
-logic [2-1:0] [ 7-1:0] adc_dat_ibuf;
-logic [2-1:0] [ 7-1:0] adc_dat_idly;
-logic [2-1:0] [14-1:0] adc_dat_in;
-logic [2-1:0] [14-1:0] adc_dat_sw;
+// ADC clock duty cycle stabilizer is enabled
+assign adc_cdcs_o = 1'b1 ;
 
-genvar GV;
-generate
-for(GV = 0 ; GV < 7 ; GV = GV +1)
-begin:adc_ipad
-  IBUFDS i_dat0 (.I (adc_dat_p_i[0][GV]), .IB (adc_dat_n_i[0][GV]), .O (adc_dat_ibuf[0][GV]));  // differential data input
-  IBUFDS i_dat1 (.I (adc_dat_p_i[1][GV]), .IB (adc_dat_n_i[1][GV]), .O (adc_dat_ibuf[1][GV]));  // differential data input
-end
-endgenerate
+logic [2-1:0] [14-1:0] adc_dat_raw;
 
-
-logic [2*7-1:0] idly_rst ;
-logic [2*7-1:0] idly_ce  ;
-logic [2*7-1:0] idly_inc ;
-logic [2*7-1:0] [5-1:0] idly_cnt ;
-
-
-// delay input ADC signals
-//(* IODELAY_GROUP = adc_inputs *) // Specifies group name for associated IDELAYs/ODELAYs and IDELAYCTRL
-IDELAYCTRL i_idelayctrl (
-  .RDY(idly_rdy),   // 1-bit output: Ready output
-  .REFCLK(fclk[3]), // 1-bit input: Reference clock input
-  .RST(!frstn[3])   // 1-bit input: Active high reset input
-);
-
-
-generate
-for(GV = 0 ; GV < 7 ; GV = GV +1)
-begin:adc_idly
-
-   //(* IODELAY_GROUP = adc_inputs *)
-   IDELAYE2 #(
-      .DELAY_SRC("IDATAIN"),           // Delay input (IDATAIN, DATAIN)
-      .HIGH_PERFORMANCE_MODE("TRUE"),  // Reduced jitter ("TRUE"), Reduced power ("FALSE")
-      .IDELAY_TYPE("VARIABLE"),        // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
-      .IDELAY_VALUE(0),                // Input delay tap setting (0-31)
-      .PIPE_SEL("FALSE"),              // Select pipelined mode, FALSE, TRUE
-      .REFCLK_FREQUENCY(200.0),        // IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
-      .SIGNAL_PATTERN("DATA")          // DATA, CLOCK input signal
-   )
-   i_dlya (
-      .CNTVALUEOUT  ( idly_cnt[GV]          ),  // 5-bit output: Counter value output
-      .DATAOUT      ( adc_dat_idly[0][GV]   ),  // 1-bit output: Delayed data output
-      .C            ( adc_clk2d             ),  // 1-bit input: Clock input
-      .CE           ( idly_ce[GV]           ),  // 1-bit input: Active high enable increment/decrement input
-      .CINVCTRL     ( 1'b0                  ),  // 1-bit input: Dynamic clock inversion input
-      .CNTVALUEIN   ( 5'h0                  ),  // 5-bit input: Counter value input
-      .DATAIN       ( 1'b0                  ),  // 1-bit input: Internal delay data input
-      .IDATAIN      ( adc_dat_ibuf[0][GV]   ),  // 1-bit input: Data input from the I/O
-      .INC          ( idly_inc[GV]          ),  // 1-bit input: Increment / Decrement tap delay input
-      .LD           ( idly_rst[GV]          ),  // 1-bit input: Load IDELAY_VALUE input
-      .LDPIPEEN     ( 1'b0                  ),  // 1-bit input: Enable PIPELINE register to load data input
-      .REGRST       ( 1'b0                  )   // 1-bit input: Active-high reset tap-delay input
-   );
-
-   //(* IODELAY_GROUP = adc_inputs *)
-   IDELAYE2 #(
-      .DELAY_SRC("IDATAIN"),           // Delay input (IDATAIN, DATAIN)
-      .HIGH_PERFORMANCE_MODE("TRUE"),  // Reduced jitter ("TRUE"), Reduced power ("FALSE")
-      .IDELAY_TYPE("VARIABLE"),        // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
-      .IDELAY_VALUE(0),                // Input delay tap setting (0-31)
-      .PIPE_SEL("FALSE"),              // Select pipelined mode, FALSE, TRUE
-      .REFCLK_FREQUENCY(200.0),        // IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
-      .SIGNAL_PATTERN("DATA")          // DATA, CLOCK input signal
-   )
-   i_dlyb (
-      .CNTVALUEOUT  ( idly_cnt[GV+7]        ),  // 5-bit output: Counter value output
-      .DATAOUT      ( adc_dat_idly[1][GV]   ),  // 1-bit output: Delayed data output
-      .C            ( adc_clk2d             ),  // 1-bit input: Clock input
-      .CE           ( idly_ce[GV+7]         ),  // 1-bit input: Active high enable increment/decrement input
-      .CINVCTRL     ( 1'b0                  ),  // 1-bit input: Dynamic clock inversion input
-      .CNTVALUEIN   ( 5'h0                  ),  // 5-bit input: Counter value input
-      .DATAIN       ( 1'b0                  ),  // 1-bit input: Internal delay data input
-      .IDATAIN      ( adc_dat_ibuf[1][GV]   ),  // 1-bit input: Data input from the I/O
-      .INC          ( idly_inc[GV+7]        ),  // 1-bit input: Increment / Decrement tap delay input
-      .LD           ( idly_rst[GV+7]        ),  // 1-bit input: Load IDELAY_VALUE input
-      .LDPIPEEN     ( 1'b0                  ),  // 1-bit input: Enable PIPELINE register to load data input
-      .REGRST       ( 1'b0                  )   // 1-bit input: Active-high reset tap-delay input
-   );
-end
-endgenerate
-
-
-
-
-
-
-
-
-
-
-generate
-for(GV = 0 ; GV < 14 ; GV = GV +2)
-begin:adc_iddr
-   IDDR #(.DDR_CLK_EDGE("SAME_EDGE_PIPELINED")) 
-     i_ddr0 (.Q1(adc_dat_in[0][GV]), .Q2(adc_dat_in[0][GV+1]), .C(adc_clk), .CE(1'b1), .D(adc_dat_idly[0][GV/2]), .R(1'b0), .S(1'b0) );
-   IDDR #(.DDR_CLK_EDGE("SAME_EDGE_PIPELINED")) 
-     i_ddr1 (.Q1(adc_dat_in[1][GV]), .Q2(adc_dat_in[1][GV+1]), .C(adc_clk), .CE(1'b1), .D(adc_dat_idly[1][GV/2]), .R(1'b0), .S(1'b0) );
-end
-endgenerate
-
-
-
-    
-// data loopback
+// IO block registers should be used here
+// lowest 2 bits reserved for 16bit ADC
 always @(posedge adc_clk)
 begin
-  adc_dat_sw[0] <= digital_loop ? dac_a : { adc_dat_in[1][14-1:2] , 2'h0 }; // switch adc_b->ch_a
-  adc_dat_sw[1] <= digital_loop ? dac_b : { adc_dat_in[0][14-1:2] , 2'h0 }; // switch adc_a->ch_b
+  adc_dat_raw[0] <= adc_dat_i[0][16-1:2];
+  adc_dat_raw[1] <= adc_dat_i[1][16-1:2];
 end
+    
+// transform into 2's complement (negative slope)
+assign adc_dat[0] = digital_loop ? dac_a : {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
+assign adc_dat[1] = digital_loop ? dac_b : {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
-
-// driving DAC reset
-always @(posedge adc_clk)
-  dac_reset_o <= !adc_rstn;
 
 // Sumation of ASG and PID signal perform saturation before sending to DAC 
 assign dac_a_sum = asg_dat[0] + pid_dat[0];
 assign dac_b_sum = asg_dat[1] + pid_dat[1];
 
 // saturation
-assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} :  ~dac_a_sum[14-1:0];
-assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} :  ~dac_b_sum[14-1:0];
+assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
+assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
 
-always @(posedge adc_clk) begin
-  dac_dat_a <= dac_a;
-  dac_dat_b <= dac_b;
+// output registers + signed to unsigned (also to negative slope)
+always @(posedge dac_clk_1x)
+begin
+  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
+  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
 end
 
-// IO outputs
-logic dac_dco_bufg ;
-BUFG bufg_dac_dco    (.O (dac_dco_bufg ), .I(dac_dco_i));
-
-//always @(posedge dac_dco_bufg) begin
-always @(posedge adc_clk) begin
-  dac_dat_o[0] <= dac_dat_b ; // switch ch_b->dac_a
-  dac_dat_o[1] <= dac_dat_a ; // switch ch_a->dac_b
-end
+// DDR outputs
+ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2p), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
 ////////////////////////////////////////////////////////////////////////////////
 //  House Keeping
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [  9-1: 0] exp_p_in , exp_n_in ;
-logic [  9-1: 0] exp_p_out, exp_n_out;
-logic [  9-1: 0] exp_p_dir, exp_n_dir;
-logic            exp_9_in,  exp_9_out, exp_9_dir;
-logic [  8-1: 0] led_hk;
+logic [  8-1: 0] exp_p_in , exp_n_in ;
+logic [  8-1: 0] exp_p_out, exp_n_out;
+logic [  8-1: 0] exp_p_dir, exp_n_dir;
 
-red_pitaya_hk #(.DWE(10))
-
-i_hk (
+red_pitaya_hk i_hk (
   // system signals
-  .clk_i           (adc_clk2d),  // clock
+  .clk_i           (adc_clk ),  // clock
   .rstn_i          (adc_rstn),  // reset - active low
   // LED
-  .led_o           (led_hk),  // LED output
-  // idelay control
-  .idly_rst_o      (idly_rst    ),
-  .idly_ce_o       (idly_ce     ),
-  .idly_inc_o      (idly_inc    ),
-  .idly_cnt_i      ({idly_cnt[7],idly_cnt[0]}),
+  .led_o           (  led_o                      ),  // LED output
   // global configuration
   .digital_loop    (digital_loop),
-  .pll_sys_i       (adc_10mhz   ),    // system clock
-  .pll_ref_i       (pll_ref_i   ),    // reference clock
-  .pll_hi_o        (pll_hi_o    ),    // PLL high
-  .pll_lo_o        (pll_lo_o    ),    // PLL low
-  // SPI
-  .spi_cs_o        (hk_spi_cs   ),
-  .spi_clk_o       (hk_spi_clk  ),
-  .spi_miso_i      (hk_spi_i    ),
-  .spi_mosi_t      (hk_spi_t    ),
-  .spi_mosi_o      (hk_spi_o    ),
   // Expansion connector
-  .exp_p_dat_i     ({exp_9_in, exp_p_in }),  // input data
-  .exp_p_dat_o     ({exp_9_out,exp_p_out}),  // output data
-  .exp_p_dir_o     ({exp_9_dir,exp_p_dir}),  // 1-output enable
-  .exp_n_dat_i     ({1'b0,     exp_n_in }),
-  .exp_n_dat_o     (           exp_n_out ),
-  .exp_n_dir_o     (           exp_n_dir ),
+  .exp_p_dat_i     (exp_p_in ),  // input data
+  .exp_p_dat_o     (exp_p_out),  // output data
+  .exp_p_dir_o     (exp_p_dir),  // 1-output enable
+  .exp_n_dat_i     (exp_n_in ),
+  .exp_n_dat_o     (exp_n_out),
+  .exp_n_dir_o     (exp_n_dir),
    // System bus
   .sys_addr        (sys[0].addr ),
   .sys_wdata       (sys[0].wdata),
@@ -592,19 +425,15 @@ i_hk (
 // LED
 ////////////////////////////////////////////////////////////////////////////////
 
-assign led_o = led_hk[7:0];
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO
 ////////////////////////////////////////////////////////////////////////////////
 
-IOBUF i_iobufp [ 9-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
-IOBUF i_iobufn [ 9-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
-IOBUF i_iobuf9          (.O(exp_9_in), .IO(exp_9_io), .I(exp_9_out), .T(~exp_9_dir) );
+IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
+IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
 
-assign gpio.i[15: 8] = exp_p_in[7:0];
-assign gpio.i[23:16] = exp_n_in[7:0];
+assign gpio.i[15: 8] = exp_p_in;
+assign gpio.i[23:16] = exp_n_in;
 
 ////////////////////////////////////////////////////////////////////////////////
 // oscilloscope
@@ -614,13 +443,12 @@ logic trig_asg_out;
 
 red_pitaya_scope i_scope (
   // ADC
-  .adc_a_i       (adc_dat_sw[0]  ),  // CH 1
-  .adc_b_i       (adc_dat_sw[1]  ),  // CH 2
-  .adc_clk_i     (adc_clk        ),  // clock
-  .adc_clk2d_i   (adc_clk2d      ),  // clock divided
-  .adc_rstn_i    (adc_rstn       ),  // reset - active low
-  .trig_ext_i    (trig_i         ),  // external trigger
-  .trig_asg_i    (trig_asg_out   ),  // ASG trigger
+  .adc_a_i       (adc_dat[0]  ),  // CH 1
+  .adc_b_i       (adc_dat[1]  ),  // CH 2
+  .adc_clk_i     (adc_clk     ),  // clock
+  .adc_rstn_i    (adc_rstn    ),  // reset - active low
+  .trig_ext_i    (gpio.i[8]   ),  // external trigger
+  .trig_asg_i    (trig_asg_out),  // ASG trigger
   // AXI0 master                 // AXI1 master
   .axi0_clk_o    (axi0_clk   ),  .axi1_clk_o    (axi1_clk   ),
   .axi0_rstn_o   (axi0_rstn  ),  .axi1_rstn_o   (axi1_rstn  ),
@@ -653,13 +481,10 @@ red_pitaya_asg i_asg (
   .dac_b_o         (asg_dat[1]  ),  // CH 2
   .dac_clk_i       (adc_clk     ),  // clock
   .dac_rstn_i      (adc_rstn    ),  // reset - active low
-  .trig_a_i        (trig_i      ),
-  .trig_b_i        (trig_i      ),
+  .trig_a_i        (gpio.i[8]   ),
+  .trig_b_i        (gpio.i[8]   ),
   .trig_out_o      (trig_asg_out),
-  .temp_prot_i     (temp_prot_i ),
   // System bus
-  .sys_clk         (adc_clk2d   ),
-  .sys_rstn        (adc_rstn    ), 
   .sys_addr        (sys[2].addr ),
   .sys_wdata       (sys[2].wdata),
   .sys_wen         (sys[2].wen  ),
@@ -673,35 +498,22 @@ red_pitaya_asg i_asg (
 //  MIMO PID controller
 ////////////////////////////////////////////////////////////////////////////////
 
-//red_pitaya_pid i_pid (
-//   // signals
-//  .clk_i           (adc_clk2d ),  // clock
-//  .rstn_i          (adc_rstn  ),  // reset - active low
-//  .dat_a_i         (adc_dat[0]),  // in 1
-//  .dat_b_i         (adc_dat[1]),  // in 2
-//  .dat_a_o         (pid_dat[0]),  // out 1
-//  .dat_b_o         (pid_dat[1]),  // out 2
-//  // System bus
-//  .sys_addr        (sys[3].addr ),
-//  .sys_wdata       (sys[3].wdata),
-//  .sys_wen         (sys[3].wen  ),
-//  .sys_ren         (sys[3].ren  ),
-//  .sys_rdata       (sys[3].rdata),
-//  .sys_err         (sys[3].err  ),
-//  .sys_ack         (sys[3].ack  )
-//);
-
-assign sys[3].ack = 1'b1 ;
-assign sys[3].err = 1'b0 ;
-assign sys[3].rdata = 32'h0 ;
-
-assign pid_dat[0] = 14'h0 ;
-assign pid_dat[1] = 14'h0 ;
-
-
-
-
-
-
+red_pitaya_pid i_pid (
+   // signals
+  .clk_i           (adc_clk   ),  // clock
+  .rstn_i          (adc_rstn  ),  // reset - active low
+  .dat_a_i         (adc_dat[0]),  // in 1
+  .dat_b_i         (adc_dat[1]),  // in 2
+  .dat_a_o         (pid_dat[0]),  // out 1
+  .dat_b_o         (pid_dat[1]),  // out 2
+  // System bus
+  .sys_addr        (sys[3].addr ),
+  .sys_wdata       (sys[3].wdata),
+  .sys_wen         (sys[3].wen  ),
+  .sys_ren         (sys[3].ren  ),
+  .sys_rdata       (sys[3].rdata),
+  .sys_err         (sys[3].err  ),
+  .sys_ack         (sys[3].ack  )
+);
 
 endmodule: red_pitaya_top

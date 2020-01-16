@@ -57,8 +57,6 @@ module red_pitaya_ps (
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
   // GPIO
   gpio_if.m              gpio,
-  // SPI
-  spi_if.m               spi0,
   // system read/write channel
   sys_bus_if.m           bus,
   // AXI masters
@@ -316,12 +314,20 @@ system system_i (
   .GPIO_tri_o (gpio.o),
   .GPIO_tri_t (gpio.t),
   // SPI
-  .SPI0_io1_i (spi0.io_i[1]),  .SPI0_io1_o (spi0.io_o[1]),  .SPI0_io1_t (spi0.io_t[1]),  // MISO <=> IO[1]
-  .SPI0_io0_i (spi0.io_i[0]),  .SPI0_io0_o (spi0.io_o[0]),  .SPI0_io0_t (spi0.io_t[0]),  // MOSI <=> IO[0]
-  .SPI0_sck_i (spi0.sck_i  ),  .SPI0_sck_o (spi0.sck_o  ),  .SPI0_sck_t (spi0.sck_t  ),
-  .SPI0_ss_i  (spi0.ss_i   ),  .SPI0_ss_o  (spi0.ss_o   ),  .SPI0_ss_t  (spi0.ss_t   ),
-                               .SPI0_ss1_o (spi0.ss1_o  ),
-                               .SPI0_ss2_o (spi0.ss2_o  ),
+  .SPI0_io0_i (1'b0),
+  .SPI0_io0_o (),
+  .SPI0_io0_t (),
+  .SPI0_io1_i (1'b0),
+  .SPI0_io1_o (),
+  .SPI0_io1_t (),
+  .SPI0_sck_i (1'b0),
+  .SPI0_sck_o (),
+  .SPI0_sck_t (),
+  .SPI0_ss1_o (),
+  .SPI0_ss2_o (),
+  .SPI0_ss_i  (1'b0),
+  .SPI0_ss_o  (),
+  .SPI0_ss_t  (),
   // HP0                                  // HP1
   .S_AXI_HP0_arready (hp0_saxi_arready),  .S_AXI_HP1_arready (hp1_saxi_arready), // out
   .S_AXI_HP0_awready (hp0_saxi_awready),  .S_AXI_HP1_awready (hp1_saxi_awready), // out

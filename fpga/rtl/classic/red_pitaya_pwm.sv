@@ -26,14 +26,14 @@ module red_pitaya_pwm #(
 
 reg  [ 4-1: 0] bcnt  ;
 reg  [16-1: 0] b     ;
-reg  [ 8-1: 0] vcnt, vcnt_r, vcnt_2r;
-reg  [ 8-1: 0] v   , v_r   , v_2r;
-reg            pwm_r ;
+reg  [ 8-1: 0] vcnt, vcnt_r;
+reg  [ 8-1: 0] v   , v_r   ;
 
 always_ff @(posedge clk)
 if (~rstn) begin
-   vcnt   <=  8'h0 ;
-   bcnt   <=  4'h0 ;
+   vcnt <=  8'h0 ;
+   bcnt <=  4'h0 ;
+   pwm_o    <=  1'b0 ;
 end else begin
    vcnt   <= (vcnt == FULL) ? 8'h1 : (vcnt + 8'd1) ;
    vcnt_r <= vcnt;
@@ -43,17 +43,9 @@ end else begin
       v    <= (bcnt == 4'hF) ? cfg[24-1:16] : v ; // new value on 16*FULL
       b    <= (bcnt == 4'hF) ? cfg[16-1:0] : {1'b0,b[15:1]} ; // shift right
    end
-end
-
-always_ff @(posedge clk)
-begin
-   vcnt_2r <= vcnt_r ;
-   v_2r    <= v_r    ;
    // make PWM duty cycle
-   pwm_r <= (vcnt_2r <= v_2r) ;
-   pwm_o <= pwm_r ;
+   pwm_o <= (vcnt_r <= v_r) ;
 end
-
 
 assign pwm_s = (bcnt == 4'hF) && (vcnt == (FULL-1)) ; // latch one before
 

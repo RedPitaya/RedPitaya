@@ -47,7 +47,6 @@ module red_pitaya_asg_ch #(
    input      [  3-1: 0] trig_src_i      ,  //!< trigger source selector
    output                trig_done_o     ,  //!< trigger event
    // buffer ctrl
-   input                 sys_clk_i       ,  //!< 
    input                 buf_we_i        ,  //!< buffer write enable
    input      [ 14-1: 0] buf_addr_i      ,  //!< buffer address
    input      [ 14-1: 0] buf_wdata_i     ,  //!< buffer write data
@@ -83,9 +82,7 @@ wire  [RSZ+16: 0] dac_npnt  ; // next read pointer
 wire  [RSZ+16: 0] dac_npnt_sub ;
 wire              dac_npnt_sub_neg;
 
-reg   [  15-1: 0] set_amp_r ;
 reg   [  28-1: 0] dac_mult  ;
-reg   [  15-1: 0] dac_msr   ;
 reg   [  15-1: 0] dac_sum   ;
 
 // read
@@ -98,21 +95,18 @@ begin
 end
 
 // write
-always @(posedge sys_clk_i)
+always @(posedge dac_clk_i)
 if (buf_we_i)  dac_buf[buf_addr_i] <= buf_wdata_i[14-1:0] ;
 
 // read-back
-always @(posedge sys_clk_i)
+always @(posedge dac_clk_i)
 buf_rdata_o <= dac_buf[buf_addr_i] ;
 
 // scale and offset
 always @(posedge dac_clk_i)
 begin
-   set_amp_r <= {1'b0,set_amp_i} ;
-
-   dac_mult <= $signed(dac_rdat) * $signed(set_amp_r) ;
-   dac_msr  <= dac_mult[28-1:13] ;
-   dac_sum  <= $signed(dac_msr) + $signed(set_dc_i) ;
+   dac_mult <= $signed(dac_rdat) * $signed({1'b0,set_amp_i}) ;
+   dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
 
    // saturation
    if (set_zero_i)  dac_o <= 14'h0;
@@ -203,10 +197,7 @@ end
 
 assign dac_trig = (!dac_rep && trig_in) || (dac_rep && |rep_cnt && (dly_cnt == 32'h0)) ;
 
-
-reg [RSZ+16: 0] dac_pnt_rem  ; // final step over size
-// dac_npnt_sub = dac_npnt - size - 1  ==  dac_pnt + step - size - 1
-assign dac_npnt_sub = {1'b0,dac_pnt} + dac_pnt_rem ;   // dac_npnt - {1'b0,set_size_i} - 1;
+assign dac_npnt_sub = dac_npnt - {1'b0,set_size_i} - 1;
 assign dac_npnt_sub_neg = dac_npnt_sub[RSZ+16];
 
 // read pointer logic
@@ -214,8 +205,6 @@ always @(posedge dac_clk_i)
 if (dac_rstn_i == 1'b0) begin
    dac_pnt  <= {RSZ+16{1'b0}};
 end else begin
-   dac_pnt_rem <= {1'b0,set_step_i} - {1'b0,set_size_i} - 1 ;
-
    if (set_rst_i || (dac_trig && !dac_do)) // manual reset or start
       dac_pnt <= set_ofs_i;
    else if (dac_do) begin

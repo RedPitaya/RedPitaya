@@ -5,11 +5,7 @@
 # vivado -mode tcl -source red_pitaya_vivado_Z20.tcl -tclargs projectname
 ################################################################################
 
-set prj_name [lindex $argv 0]
-puts "Project name: $prj_name"
-cd prj/$prj_name
-#cd prj/$::argv 0
-
+cd prj/$::argv
 
 ################################################################################
 # install UltraFast Design Methodology from TCL Store
@@ -42,7 +38,7 @@ set_param board.repoPaths [list $path_brd]
 # setup an in memory project
 ################################################################################
 
-set part xc7z020clg400-3
+set part xc7z020clg400-1
 
 create_project -in_memory -part $part
 
@@ -70,26 +66,8 @@ add_files -quiet                  [glob -nocomplain       $path_rtl/*_pkg.sv]
 add_files                         ../../$path_rtl
 add_files                               $path_rtl
 
-
-## search for HWID parameter to select xdc
-foreach item $argv {
-  puts "Input arfguments: $argv"
-  if {[lsearch -all $item "*HWID*"] >= 0} {
-    set hwid [split $item "="]
-    set board [lindex $hwid 1]
-    puts "Special board: $board"
-  }
-}
-
-if {[info exists board]} {
-  puts "Special board: $board"
-  read_xdc  ../../$path_sdc/red_pitaya_${board}.xdc
-} else {
-  puts "Reading standard board constraints."
-  read_xdc  ../../$path_sdc/red_pitaya.xdc
-}
-
-
+#read_xdc                          $path_sdc/red_pitaya.xdc
+read_xdc                          ../../$path_sdc/red_pitaya.xdc
 
 ################################################################################
 # ser parameter containing Git hash

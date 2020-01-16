@@ -1,0 +1,24 @@
+&pinctrl0 {
+	pinctrl_miso2gpio: miso2gpio {
+		mux {
+			function = "gpio0";
+			groups = "gpio0_11_grp";
+		};
+
+		conf {
+			groups = "gpio0_11_grp";
+			slew-rate = <0>;
+			io-standard = <3>;  // LVCMOS33
+		};
+
+		conf-pull-none {
+			pins = "MIO11";
+			bias-disable;
+		};
+	};
+};
+
+&gpio0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_miso2gpio>;
+};

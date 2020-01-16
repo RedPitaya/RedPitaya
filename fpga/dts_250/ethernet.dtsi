@@ -1,0 +1,10 @@
+/*
+ * Lantiq ethernet PHY 
+ */
+
+&gem0 {
+	phy-handle = <&ethernet_0_mdio>;
+	ethernet_0_mdio: ethernet_0_mdio@1 {
+		reg = <1>;
+	};
+};

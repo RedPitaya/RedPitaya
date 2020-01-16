@@ -253,9 +253,11 @@ SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
+ifeq ($(FPGA_MODEL),Z10)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
 	mkdir -p $(INSTALL_DIR)/www/apps
-	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
+	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
+endif
 
 ################################################################################
 # Red Pitaya tools
@@ -397,15 +399,16 @@ APP_SCPIMANAGER_DIR      = apps-tools/scpi_manager
 APP_NETWORKMANAGER_DIR   = apps-tools/network_manager
 APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
+APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
 
 apps-tools: ecosystem updater network_manager 
 
 ifeq ($(MODEL),Z20_250_12)
 apps-tools: 
 else
-apps-tools: scpi_manager jupyter_manager
+apps-tools: scpi_manager jupyter_manager streaming_manager
 endif
 
 ecosystem:
@@ -419,6 +422,12 @@ updater: ecosystem api $(NGINX)
 
 scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+streaming_manager: api $(NGINX)
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
+
 
 network_manager: ecosystem
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -441,12 +450,15 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-vna: api2
+ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(VNA_DIR) clean
 	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+endif
 
 apps-free-clean:
-	$(MAKE) -C $(APPS_FREE_DIR) clean
+	$(MAKE) -i -C $(APPS_FREE_DIR) clean
+	$(MAKE) -i -C $(VNA_DIR) clean
 
 ################################################################################
 # Red Pitaya PRO applications

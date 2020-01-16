@@ -9,7 +9,7 @@
 		compatible = "gpio-leds";
 		led-8-yellow {
 			label = "led8";
-                        gpios = <&gpio0 6 0>;
+			gpios = <&gpio0 0 0>;
 			default-state = "off";
 			linux,default-trigger = "mmc0";
 		};

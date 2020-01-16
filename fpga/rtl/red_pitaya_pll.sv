@@ -16,8 +16,9 @@ module red_pitaya_pll (
   input  logic rstn      ,  // reset - active low
   // output clocks
   output logic clk_adc   ,  // ADC clock
-  output logic clk_adc2d ,  // ADC clock divided
-  output logic clk_10mhz ,  // ADC divided to 10MHz
+  output logic clk_dac_1x,  // DAC clock
+  output logic clk_dac_2x,  // DAC clock
+  output logic clk_dac_2p,  // DAC clock
   output logic clk_ser   ,  // fast serial clock
   output logic clk_pdm   ,  // PDM clock
   // status outputs
@@ -30,15 +31,15 @@ PLLE2_ADV #(
    .BANDWIDTH            ("OPTIMIZED"),
    .COMPENSATION         ("ZHOLD"    ),
    .DIVCLK_DIVIDE        ( 1         ),
-   .CLKFBOUT_MULT        ( 4         ),
+   .CLKFBOUT_MULT        ( 8         ),
    .CLKFBOUT_PHASE       ( 0.000     ),
-   .CLKOUT0_DIVIDE       ( 4         ),
+   .CLKOUT0_DIVIDE       ( 8         ),
    .CLKOUT0_PHASE        ( 0.000     ),
    .CLKOUT0_DUTY_CYCLE   ( 0.5       ),
    .CLKOUT1_DIVIDE       ( 8         ),
    .CLKOUT1_PHASE        ( 0.000     ),
    .CLKOUT1_DUTY_CYCLE   ( 0.5       ),
-   .CLKOUT2_DIVIDE       ( 100       ),
+   .CLKOUT2_DIVIDE       ( 4         ),
    .CLKOUT2_PHASE        ( 0.000     ),
    .CLKOUT2_DUTY_CYCLE   ( 0.5       ),
    .CLKOUT3_DIVIDE       ( 4         ),
@@ -50,15 +51,15 @@ PLLE2_ADV #(
    .CLKOUT5_DIVIDE       ( 4         ),
    .CLKOUT5_PHASE        ( 0.000     ),
    .CLKOUT5_DUTY_CYCLE   ( 0.5       ),
-   .CLKIN1_PERIOD        ( 4.000     ),
+   .CLKIN1_PERIOD        ( 8.000     ),
    .REF_JITTER1          ( 0.010     )
 ) pll (
    // Output clocks
    .CLKFBOUT     (clk_fb    ),
    .CLKOUT0      (clk_adc   ),
-   .CLKOUT1      (clk_adc2d ),
-   .CLKOUT2      (clk_10mhz ),
-   .CLKOUT3      (          ),
+   .CLKOUT1      (clk_dac_1x),
+   .CLKOUT2      (clk_dac_2x),
+   .CLKOUT3      (clk_dac_2p),
    .CLKOUT4      (clk_ser   ),
    .CLKOUT5      (clk_pdm   ),
    // Input clock control

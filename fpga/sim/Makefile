@@ -1,13 +1,12 @@
-#ALTERA_PATH=$(HOME)/intelFPGA
-#XILINX_PATH=/opt/Xilinx
+ALTERA_PATH=$(HOME)/intelFPGA
+XILINX_PATH=/opt/Xilinx
 
-#MODELSIM_BIN=$(ALTERA_PATH)/16.1/modelsim_ase/bin
+MODELSIM_BIN=$(ALTERA_PATH)/16.1/modelsim_ase/bin
 
-PATH_LIB=$(XILINX_VIVADO)/data/verilog/src
-PATH_SIP=$(XILINX_VIVADO)/data/secureip
+PATH_LIB=$(XILINX_PATH)/Vivado/2017.2/data/verilog/src
+PATH_SIP=$(XILINX_PATH)/Vivado/2017.2/data/secureip
 PATH_RTL=../rtl
 PATH_TBN=../tbn
-PATH_PRJ=../prj/v0.94
 
 # secure IP
 LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
@@ -24,8 +23,6 @@ LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
     $(PATH_LIB)/unisims/ISERDESE2.v \
     $(PATH_LIB)/unisims/BUFIO.v \
     $(PATH_LIB)/unisims/BUFR.v \
-    $(PATH_LIB)/unisims/IDELAYCTRL.v \
-    $(PATH_LIB)/unisims/IDELAYE2.v \
     $(PATH_LIB)/glbl.v
 
 SIP=$(PATH_SIP)/oserdese2/oserdese2_002.vp \
@@ -47,10 +44,6 @@ TBN_SRC =$(wildcard $(PATH_TBN)/*.sv)
 TBN_DIF =$(filter-out $(TBN_PKG),$(TBN_SRC))
 TBN = $(TBN_PKG) $(TBN_DIF)
 
-# project files
-PRJ =$(wildcard $(PATH_PRJ)/*/*.sv)
-PRJ+=$(wildcard $(PATH_PRJ)/*/*.v)
-
 # targets
 TGT=$(RTL:.sv=)
 
@@ -58,23 +51,22 @@ TGT=$(RTL:.sv=)
 CFG  = -postsimdataflow
 
 # simulation script
-TCL  = ;
-#TCL  = set WildcardFilter [lsearch -not -all -inline $$WildcardFilter Memory];
-#TCL += log -r /*;
-#TCL += run -all; quit;
+TCL  = set WildcardFilter [lsearch -not -all -inline $$WildcardFilter Memory];
+TCL += log -r /*;
+TCL += run -all; quit;
 
 .PHONY: compile 
 
 all: $(TGT)
 
-compile: $(LIB) $(SIP) $(RTL) $(TBN) $(PRJ)
-	vlib work
-	vlog +acc $(LIB) $(SIP) $(RTL) $(TBN) $(PRJ)
+compile: $(LIB) $(SIP) $(RTL) $(TBN)
+	$(MODELSIM_BIN)/vlib work
+	$(MODELSIM_BIN)/vlog $(LIB) $(SIP) $(RTL) $(TBN)
 
 %_tb: compile
-	vsim $(CFG) -do '$(TCL)' $@
+	$(MODELSIM_BIN)/vsim $(CFG) -c -do '$(TCL)' $@
 ifdef WAV
-	vsim -do 'dataset open vsim.wlf; do $@.tcl'
+	$(MODELSIM_BIN)/vsim -do 'dataset open vsim.wlf; do $@.tcl'
 endif
 
 clean:

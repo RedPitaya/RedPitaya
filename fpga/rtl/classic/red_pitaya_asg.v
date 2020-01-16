@@ -57,10 +57,7 @@ module red_pitaya_asg (
   input                 trig_a_i  ,  // starting trigger CHA
   input                 trig_b_i  ,  // starting trigger CHB
   output                trig_out_o,  // notification trigger
-  input      [  2-1: 0] temp_prot_i, // temperature protection
   // System bus
-  input                 sys_clk   ,  // bus clock
-  input                 sys_rstn  ,  // bus reset
   input      [ 32-1: 0] sys_addr  ,  // bus address
   input      [ 32-1: 0] sys_wdata ,  // bus write data
   input                 sys_wen   ,  // bus write enable
@@ -69,13 +66,6 @@ module red_pitaya_asg (
   output reg            sys_err   ,  // bus error indicator
   output reg            sys_ack      // bus acknowledge signal
 );
-
-wire [2-1:0] temp_prot ;
-
-sync #(.DW(2))i_sync (.sclk_i(sys_clk), .srstn_i(sys_rstn),
-                      .dclk_i(sys_clk), .drstn_i(sys_rstn),
-                      .src_i(temp_prot_i), .dst_o(temp_prot));
-
 
 //---------------------------------------------------------------------------------
 //
@@ -96,8 +86,6 @@ reg   [  16-1: 0] set_a_ncyc   , set_b_ncyc   ;
 reg   [  16-1: 0] set_a_rnum   , set_b_rnum   ;
 reg   [  32-1: 0] set_a_rdly   , set_b_rdly   ;
 reg               set_a_rgate  , set_b_rgate  ;
-reg               set_a_tpen   , set_b_tpen   ;
-reg               set_a_talm   , set_b_talm   ;
 reg               buf_a_we     , buf_b_we     ;
 reg   [ RSZ-1: 0] buf_a_addr   , buf_b_addr   ;
 wire  [  14-1: 0] buf_a_rdata  , buf_b_rdata  ;
@@ -109,38 +97,37 @@ wire              trig_a_done  , trig_b_done  ;
 
 red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
   // DAC
-  .dac_o           ({ dac_b_o                     ,  dac_a_o                      }),  // dac data output
-  .dac_clk_i       ({ dac_clk_i                   ,  dac_clk_i                    }),  // dac clock
-  .dac_rstn_i      ({ dac_rstn_i                  ,  dac_rstn_i                   }),  // dac reset - active low
+  .dac_o           ({dac_b_o          , dac_a_o          }),  // dac data output
+  .dac_clk_i       ({dac_clk_i        , dac_clk_i        }),  // dac clock
+  .dac_rstn_i      ({dac_rstn_i       , dac_rstn_i       }),  // dac reset - active low
   // trigger
-  .trig_sw_i       ({ trig_b_sw                   ,  trig_a_sw                    }),  // software trigger
-  .trig_ext_i      ({ trig_b_i                    ,  trig_a_i                     }),  // external trigger
-  .trig_src_i      ({ trig_b_src                  ,  trig_a_src                   }),  // trigger source selector
-  .trig_done_o     ({ trig_b_done                 ,  trig_a_done                  }),  // trigger event
+  .trig_sw_i       ({trig_b_sw        , trig_a_sw        }),  // software trigger
+  .trig_ext_i      ({trig_b_i         , trig_a_i         }),  // external trigger
+  .trig_src_i      ({trig_b_src       , trig_a_src       }),  // trigger source selector
+  .trig_done_o     ({trig_b_done      , trig_a_done      }),  // trigger event
   // buffer ctrl
-  .sys_clk_i       ({ sys_clk                     ,  sys_clk                      }),  // system clock
-  .buf_we_i        ({ buf_b_we                    ,  buf_a_we                     }),  // buffer buffer write
-  .buf_addr_i      ({ buf_b_addr                  ,  buf_a_addr                   }),  // buffer address
-  .buf_wdata_i     ({ sys_wdata[14-1:0]           ,  sys_wdata[14-1:0]            }),  // buffer write data
-  .buf_rdata_o     ({ buf_b_rdata                 ,  buf_a_rdata                  }),  // buffer read data
-  .buf_rpnt_o      ({ buf_b_rpnt                  ,  buf_a_rpnt                   }),  // buffer current read pointer
+  .buf_we_i        ({buf_b_we         , buf_a_we         }),  // buffer buffer write
+  .buf_addr_i      ({buf_b_addr       , buf_a_addr       }),  // buffer address
+  .buf_wdata_i     ({sys_wdata[14-1:0], sys_wdata[14-1:0]}),  // buffer write data
+  .buf_rdata_o     ({buf_b_rdata      , buf_a_rdata      }),  // buffer read data
+  .buf_rpnt_o      ({buf_b_rpnt       , buf_a_rpnt       }),  // buffer current read pointer
   // configuration
-  .set_size_i      ({ set_b_size                  ,  set_a_size                   }),  // set table data size
-  .set_step_i      ({ set_b_step                  ,  set_a_step                   }),  // set pointer step
-  .set_ofs_i       ({ set_b_ofs                   ,  set_a_ofs                    }),  // set reset offset
-  .set_rst_i       ({ set_b_rst                   ,  set_a_rst                    }),  // set FMS to reset
-  .set_once_i      ({ set_b_once                  ,  set_a_once                   }),  // set only once
-  .set_wrap_i      ({ set_b_wrap                  ,  set_a_wrap                   }),  // set wrap pointer
-  .set_amp_i       ({ set_b_amp                   ,  set_a_amp                    }),  // set amplitude scale
-  .set_dc_i        ({ set_b_dc                    ,  set_a_dc                     }),  // set output offset
-  .set_zero_i      ({(set_b_zero || set_b_talm)   , (set_a_zero || set_a_talm)    }),  // set output to zero
-  .set_ncyc_i      ({ set_b_ncyc                  ,  set_a_ncyc                   }),  // set number of cycle
-  .set_rnum_i      ({ set_b_rnum                  ,  set_a_rnum                   }),  // set number of repetitions
-  .set_rdly_i      ({ set_b_rdly                  ,  set_a_rdly                   }),  // set delay between repetitions
-  .set_rgate_i     ({ set_b_rgate                 ,  set_a_rgate                  })   // set external gated repetition
+  .set_size_i      ({set_b_size       , set_a_size       }),  // set table data size
+  .set_step_i      ({set_b_step       , set_a_step       }),  // set pointer step
+  .set_ofs_i       ({set_b_ofs        , set_a_ofs        }),  // set reset offset
+  .set_rst_i       ({set_b_rst        , set_a_rst        }),  // set FMS to reset
+  .set_once_i      ({set_b_once       , set_a_once       }),  // set only once
+  .set_wrap_i      ({set_b_wrap       , set_a_wrap       }),  // set wrap pointer
+  .set_amp_i       ({set_b_amp        , set_a_amp        }),  // set amplitude scale
+  .set_dc_i        ({set_b_dc         , set_a_dc         }),  // set output offset
+  .set_zero_i      ({set_b_zero       , set_a_zero       }),  // set output to zero
+  .set_ncyc_i      ({set_b_ncyc       , set_a_ncyc       }),  // set number of cycle
+  .set_rnum_i      ({set_b_rnum       , set_a_rnum       }),  // set number of repetitions
+  .set_rdly_i      ({set_b_rdly       , set_a_rdly       }),  // set delay between repetitions
+  .set_rgate_i     ({set_b_rgate      , set_a_rgate      })   // set external gated repetition
 );
 
-always @(posedge sys_clk)
+always @(posedge dac_clk_i)
 begin
    buf_a_we   <= sys_wen && (sys_addr[19:RSZ+2] == 'h1);
    buf_b_we   <= sys_wen && (sys_addr[19:RSZ+2] == 'h2);
@@ -157,8 +144,8 @@ assign trig_out_o = trig_a_done ;
 reg  [3-1: 0] ren_dly ;
 reg           ack_dly ;
 
-always @(posedge sys_clk)
-if (sys_rstn == 1'b0) begin
+always @(posedge dac_clk_i)
+if (dac_rstn_i == 1'b0) begin
    trig_a_sw   <=  1'b0    ;
    trig_a_src  <=  3'h0    ;
    set_a_amp   <= 14'h2000 ;
@@ -174,8 +161,6 @@ if (sys_rstn == 1'b0) begin
    set_a_rnum  <= 16'h0    ;
    set_a_rdly  <= 32'h0    ;
    set_a_rgate <=  1'b0    ;
-   set_a_tpen  <=  1'b0    ;
-   set_a_talm  <=  1'b0    ;
    trig_b_sw   <=  1'b0    ;
    trig_b_src  <=  3'h0    ;
    set_b_amp   <= 14'h2000 ;
@@ -191,8 +176,6 @@ if (sys_rstn == 1'b0) begin
    set_b_rnum  <= 16'h0    ;
    set_b_rdly  <= 32'h0    ;
    set_b_rgate <=  1'b0    ;
-   set_b_tpen  <=  1'b0    ;
-   set_b_talm  <=  1'b0    ;
    ren_dly     <=  3'h0    ;
    ack_dly     <=  1'b0    ;
 end else begin
@@ -204,15 +187,9 @@ end else begin
    if (sys_wen && (sys_addr[19:0]==20'h0))
       trig_b_src <= sys_wdata[19:16] ;
 
-   if (temp_prot[0] && set_a_tpen)                set_a_talm <= 1'b1 ;
-   else if (sys_wen && (sys_addr[19:0]==20'h0))   set_a_talm <= sys_wdata[10] ;
-
-   if (temp_prot[1] && set_b_tpen)                set_b_talm <= 1'b1 ;
-   else if (sys_wen && (sys_addr[19:0]==20'h0))   set_b_talm <= sys_wdata[26] ;
-
    if (sys_wen) begin
-      if (sys_addr[19:0]==20'h0)   {set_a_tpen, set_a_rgate, set_a_zero, set_a_rst, set_a_once, set_a_wrap} <= sys_wdata[ 9: 4] ;
-      if (sys_addr[19:0]==20'h0)   {set_b_tpen, set_b_rgate, set_b_zero, set_b_rst, set_b_once, set_b_wrap} <= sys_wdata[25:20] ;
+      if (sys_addr[19:0]==20'h0)   {set_a_rgate, set_a_zero, set_a_rst, set_a_once, set_a_wrap} <= sys_wdata[ 8: 4] ;
+      if (sys_addr[19:0]==20'h0)   {set_b_rgate, set_b_zero, set_b_rst, set_b_once, set_b_wrap} <= sys_wdata[24:20] ;
 
       if (sys_addr[19:0]==20'h4)   set_a_amp  <= sys_wdata[  0+13: 0] ;
       if (sys_addr[19:0]==20'h4)   set_a_dc   <= sys_wdata[ 16+13:16] ;
@@ -242,14 +219,14 @@ end else begin
    ack_dly <=  ren_dly[3-1] || sys_wen ;
 end
 
-wire [32-1: 0] r0_rd = {4'h0, temp_prot[1],set_b_talm,set_b_tpen,set_b_rgate, set_b_zero,set_b_rst,set_b_once,set_b_wrap, 1'b0,trig_b_src,
-                        4'h0, temp_prot[0],set_a_talm,set_a_tpen,set_a_rgate, set_a_zero,set_a_rst,set_a_once,set_a_wrap, 1'b0,trig_a_src };
+wire [32-1: 0] r0_rd = {7'h0,set_b_rgate, set_b_zero,set_b_rst,set_b_once,set_b_wrap, 1'b0,trig_b_src,
+                        7'h0,set_a_rgate, set_a_zero,set_a_rst,set_a_once,set_a_wrap, 1'b0,trig_a_src };
 
 wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
-always @(posedge sys_clk)
-if (sys_rstn == 1'b0) begin
+always @(posedge dac_clk_i)
+if (dac_rstn_i == 1'b0) begin
    sys_err <= 1'b0 ;
    sys_ack <= 1'b0 ;
 end else begin
