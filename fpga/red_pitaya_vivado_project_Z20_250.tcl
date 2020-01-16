@@ -6,7 +6,6 @@
 ################################################################################
 
 set prj_name [lindex $argv 0]
-append prj_name "_250"
 puts "Project name: $prj_name"
 cd prj/$prj_name
 #cd prj/$::argv

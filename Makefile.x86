@@ -99,8 +99,8 @@ DTS_PATH = dts
 endif
 
 ifeq ($(MODEL),Z20_250_12)
-FPGA_PRJ_LST = v0.94
-FPGA_PRJ = v0.94 # NEED for FSBL fpga image
+FPGA_PRJ_LST = v0.94_250
+FPGA_PRJ = v0.94_250 # NEED for FSBL fpga image
 FPGA_MODEL ?= Z20_250
 HWID ?= v1r0
 DTS_PATH = dts_250
