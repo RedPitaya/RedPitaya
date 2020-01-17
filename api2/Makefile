@@ -11,6 +11,8 @@
 
 LIBRP2=../lib/librp2.so
 
+.PHONY: $(LIBRP2)
+
 all: $(LIBRP2)
 
 $(LIBRP2):

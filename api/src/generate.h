@@ -43,7 +43,6 @@
 #define BURST_PERIOD_MIN        1           // us
 #define BURST_PERIOD_MAX        500000000   // us
 
-#define BUFFER_LENGTH           (16 * 1024)
 #define CHA_DATA_OFFSET         0x10000
 #define CHB_DATA_OFFSET         0x20000
 #define DATA_BIT_LENGTH         14

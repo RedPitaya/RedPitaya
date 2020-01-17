@@ -18,8 +18,9 @@
 #include <math.h>
 
 #include "generate.h"
-#include "../../api/src/generate.h"
+//#include "../../api/src/generate.h"
 
+#include "redpitaya/rp.h"
 #include "common.h"
 #include "scpi/parser.h"
 #include "scpi/units.h"

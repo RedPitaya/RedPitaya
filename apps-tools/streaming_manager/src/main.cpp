@@ -18,24 +18,11 @@
 #include <thread>
 #include <mutex>
 
+#include "rp.h"
 #include "version.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 
-//extern "C" {
-//    #include "rpApp.h"
-//}
-
-
-#ifdef Z10
-#define RP_MODEL "Z10"
-#define MAX_FREQ 125e6
-#endif
-
-#ifdef Z20
-#define RP_MODEL "Z20"
-#define MAX_FREQ 122.880e6
-#endif
 
 void StartServer();
 void StopServer(int x);
@@ -70,7 +57,7 @@ CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
-CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, MAX_FREQ ,0,	0, MAX_FREQ);
+CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
 CStreamingManager::Ptr s_manger;
@@ -102,7 +89,7 @@ int rp_app_init(void)
 	CDataManager::GetInstance()->SetParamInterval(100);
 
 	ss_status.SendValue(0);
-	ss_acd_max.SendValue(MAX_FREQ);
+	ss_acd_max.SendValue(ADC_SAMPLE_RATE);
 	try {
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 	}catch (std::exception& e)

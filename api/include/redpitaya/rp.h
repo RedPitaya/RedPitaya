@@ -29,7 +29,8 @@ extern "C" {
 #define ADC_BITS_MASK 0x3FFF
 #define DAC_FREQUENCY 125e6
 
-#define ADC_BUFFER_SIZE             (16*1024)
+#define ADC_BUFFER_SIZE         (16 * 1024)
+#define BUFFER_LENGTH           (16 * 1024)
 
 /** @name Error codes
  *  Various error codes returned by the API.

@@ -533,7 +533,7 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
 
 scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context) {
     float value;
-    int result = rp_AcqGetTriggerLevel(&value);
+    int result = rp_AcqGetTriggerLevel(RP_CH_1,&value);
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV? Failed to get "
