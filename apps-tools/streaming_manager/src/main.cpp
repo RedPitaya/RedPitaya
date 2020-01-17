@@ -18,7 +18,7 @@
 #include <thread>
 #include <mutex>
 
-#include "redpitaya/version.h"
+#include "version.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 
