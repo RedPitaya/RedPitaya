@@ -748,4 +748,4 @@ axi4_stream_pas loopback (
   .sto (axi_drx[3])
 );
 
-endmodule: red_pitaya_top
+endmodule: red_pitaya_top_Z20
