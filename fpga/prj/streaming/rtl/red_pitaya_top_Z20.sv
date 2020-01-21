@@ -5,7 +5,7 @@
 // (c) Red Pitaya  http://www.redpitaya.com
 ////////////////////////////////////////////////////////////////////////////////
 
-module red_pitaya_top #(
+module red_pitaya_top_Z20 #(
   // identification
   bit [0:5*32-1] GITH = '0,
   // module numbers
