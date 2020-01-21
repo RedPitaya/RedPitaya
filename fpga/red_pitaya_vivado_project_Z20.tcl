@@ -65,4 +65,4 @@ import_files -force
 
 update_compile_order -fileset sources_1
 
-set_property top red_pitaya_top [current_fileset]
+set_property top red_pitaya_top_Z20 [current_fileset]
