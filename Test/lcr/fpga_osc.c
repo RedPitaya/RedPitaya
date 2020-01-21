@@ -53,6 +53,14 @@
  * Nice example how to use this module can be seen in worker.c module.
  */
 
+#ifdef Z20
+#define ADC_SAMPLE_RATE 122.880e6
+#define ADC_BITS 16
+#else
+#define ADC_SAMPLE_RATE 125e6
+#define ADC_BITS 14
+#endif
+
 /* internal structures */
 /** The FPGA register structure (defined in fpga_osc.h) */
 osc_fpga_reg_mem_t *g_osc_fpga_reg_mem = NULL;
@@ -66,15 +74,15 @@ int             g_osc_fpga_mem_fd = -1;
 
 /* Constants */
 /** ADC number of bits */
-const int c_osc_fpga_adc_bits = 14;
+const int c_osc_fpga_adc_bits = ADC_BITS;
 /** @brief Max and min voltage on ADCs. 
  * Symetrical - Max Voltage = +14, Min voltage = -1 * c_osc_fpga_max_v 
  */
 const float c_osc_fpga_adc_max_v  = +14;
 /** Sampling frequency = 125Mspmpls (non-decimated) */
-const float c_osc_fpga_smpl_freq = 125e6;
+const float c_osc_fpga_smpl_freq = ADC_SAMPLE_RATE;
 /** Sampling period (non-decimated) - 8 [ns] */
-const float c_osc_fpga_smpl_period = (1. / 125e6);
+const float c_osc_fpga_smpl_period = (1. / ADC_SAMPLE_RATE);
 
 /**
  * @brief Internal function used to clean up memory.

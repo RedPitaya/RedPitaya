@@ -51,8 +51,15 @@
  *
  */
 
+#ifdef Z20
+#define SAMPLE_RATE 122.880e6
+#else
+#define SAMPLE_RATE 125e6
+#endif
+
+
 /** Maximal signal frequency [Hz] */
-const double c_max_frequency = 62.5e6;
+const double c_max_frequency = SAMPLE_RATE/2.0;
 
 /** Minimal signal frequency [Hz] */
 const double c_min_frequency = 0;

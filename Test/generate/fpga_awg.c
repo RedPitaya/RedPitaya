@@ -50,6 +50,12 @@
  * description.
  */
 
+#ifdef Z20
+#define SAMPLE_RATE 122.880e6
+#else
+#define SAMPLE_RATE 125e6
+#endif
+
 /* Internal structures (registers and 2 times signal buffers) */
 /** The FPGA register structure (defined in fpga_awg.h) */
 awg_reg_t *g_awg_reg     = NULL;
@@ -69,7 +75,7 @@ int g_awg_fd = -1;
 
 /* Constants */
 /** DAC frequency (125 Mspmpls (non-decimated)) */
-const double c_awg_smpl_freq = 125e6;
+const double c_awg_smpl_freq = SAMPLE_RATE;
 
 /**
  * Internal function used to clean up memory.

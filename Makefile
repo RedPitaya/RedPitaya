@@ -300,12 +300,12 @@ rp_i2c_tool:
 
 lcr:
 	$(MAKE) -C $(LCR_DIR) clean
-	$(MAKE) -C $(LCR_DIR)
+	$(MAKE) -C $(LCR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 bode:
 	$(MAKE) -C $(BODE_DIR) clean
-	$(MAKE) -C $(BODE_DIR)
+	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor:
@@ -329,11 +329,11 @@ generator250.12: api
 	$(MAKE) -C $(GENERATOR250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 acquire: api
-	$(MAKE) -C $(ACQUIRE_DIR)
+	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 acquire250.12: api
-	$(MAKE) -C $(ACQUIRE250_DIR)
+	$(MAKE) -C $(ACQUIRE250_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(ACQUIRE250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calib:
