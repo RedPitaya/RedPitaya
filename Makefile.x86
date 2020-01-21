@@ -83,18 +83,18 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 ################################################################################
 
 ifeq ($(MODEL),Z10)
-FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite
+FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite streaming
 # NEED for FSBL fpga image
-FPGA_PRJ = logic
+FPGA_PRJ = streaming
 FPGA_MODEL ?= Z10
 HWID ?=
 DTS_PATH = dts 
 endif
 
 ifeq ($(MODEL),Z20)
-FPGA_PRJ_LST = v0.94
-# NEED for FSBL fpga image
-FPGA_PRJ = v0.94
+FPGA_PRJ_LST = v0.94 streaming
+# NEED for FSBL fpga image 
+FPGA_PRJ = streaming
 FPGA_MODEL ?= Z20
 HWID ?=
 DTS_PATH = dts
