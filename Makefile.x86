@@ -140,7 +140,7 @@ endif
 	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
 	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
 	# backward compatibility, TODO, should be removed at next OS release
-ifneq ($(FPGA_MODEL),Z20_250_12)
+ifneq ($(FPGA_MODEL),Z20_250)
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
 ifeq ($(FPGA_MODEL), Z10)	
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
