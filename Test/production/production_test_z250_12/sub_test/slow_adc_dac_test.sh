@@ -15,8 +15,6 @@ echo
 
 STATUS=0
 
-# Load the Mercury firmware to control the analog inputs and outputs
-# cat /opt/redpitaya/fpga/mercury/fpga.bit > /dev/xdevcfg
 sleep 2
 $C_MONITOR 0x40000010 w 0x00 # -> Set P to inputs
 sleep 0.2
@@ -25,13 +23,13 @@ sleep 0.2
 
 # Set the half-scale output level of all four DACs (5M)
 DAC_VALUE=0x4C4B40
-$C_MONITOR 0x40020020 w $DAC_VALUE
+$C_MONITOR 0x40400020 w $DAC_VALUE
 sleep 0.2
-$C_MONITOR 0x40020024 w $DAC_VALUE
+$C_MONITOR 0x40400024 w $DAC_VALUE
 sleep 0.2
-$C_MONITOR 0x40020028 w $DAC_VALUE
+$C_MONITOR 0x40400028 w $DAC_VALUE
 sleep 0.2
-$C_MONITOR 0x4002002C w $DAC_VALUE
+$C_MONITOR 0x4040002C w $DAC_VALUE
 sleep 0.2
 
 getAiValue() {
@@ -51,13 +49,13 @@ echo "    ADC values - first acquisition - are $ADC1_A, $ADC2_A, $ADC3_A, $ADC4_
 
 # Set almost full-scale output level of all four DACs (2x5M=10M)
 DAC_VALUE=0x989680
-$C_MONITOR 0x40020020 w $DAC_VALUE
+$C_MONITOR 0x40400020 w $DAC_VALUE
 sleep 0.2
-$C_MONITOR 0x40020024 w $DAC_VALUE
+$C_MONITOR 0x40400024 w $DAC_VALUE
 sleep 0.2
-$C_MONITOR 0x40020028 w $DAC_VALUE
+$C_MONITOR 0x40400028 w $DAC_VALUE
 sleep 0.2
-$C_MONITOR 0x4002002C w $DAC_VALUE
+$C_MONITOR 0x4040002C w $DAC_VALUE
 sleep 0.2
 
 # Get again the input level of all four DACs

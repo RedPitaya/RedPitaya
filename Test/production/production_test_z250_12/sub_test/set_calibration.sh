@@ -17,7 +17,7 @@ else
     if [ $? -ne 0 ]
     then
         echo
-        echo - n "New calibration parameters are NOT correctly written in the user EEPROM space"
+        echo -n "New calibration parameters are NOT correctly written in the user EEPROM space"
         print_fail
         sleep 1
         STATUS=1
