@@ -38,8 +38,8 @@ TARGET=$(SHARED_LIB) $(STATIC_LIB)
 
 # List of compiled object files
 OBJECTS =	common.o \
-		kiss_fft/kiss_fft.c \
-		kiss_fft/kiss_fftr.c \
+		kiss_fft/kiss_fft.o \
+		kiss_fft/kiss_fftr.o \
 		oscilloscope.o \
 		acq_handler.o \
 		generate.o \
