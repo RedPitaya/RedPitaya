@@ -38,7 +38,7 @@ READ_HWREV=$( $C_PRINTENV | grep hw_rev= | awk 'BEGIN {FS="="}{print $2}') > /de
 READ_SERIAL=$( $C_PRINTENV | grep serial= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
 MAC_BEGIN=${READ_MAC:0:8}
 
-if [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$READ_NAV" == "" ]] || [[ "$READ_HWREV" == "" ]] || [[ "$READ_SERIAL" == "" ]]
+if [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$READ_NAV" == "" ]] || [[ "$READ_HWREV" != "STEM_250-12" ]] || [[ "$READ_SERIAL" == "" ]]
 then
 
     echo
@@ -77,7 +77,7 @@ then
     read USER_ENTER
 
     # Verify QR CODE length and contained MAC
-    while [ $QR_LENGTH -lt $MIN_QR_LENGTH ] || [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$USER_ENTER" == "N" ]] || [[ "$USER_ENTER" == "n" ]]
+    while [[ $QR_LENGTH -lt $MIN_QR_LENGTH ]] || [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$USER_ENTER" == "N" ]] || [[ "$USER_ENTER" == "n" ]]
     do
         echo "ERROR: QR CODE is NOT valid, enter it again:"
         read QR_VAR

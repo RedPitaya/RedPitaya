@@ -157,7 +157,6 @@ echo -n "  * Connect (0.45V) to OUT "
 enableK3Pin
 print_ok
 sleep 0.5
-
 # get data from adc
 echo -n "  * Get data from ADC "
 ADC_PARAM="-d B"
