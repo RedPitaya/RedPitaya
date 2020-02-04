@@ -375,8 +375,8 @@ ADC_PARAM="-d B -r"
 acquireData
 print_ok
 
-ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A-($N1_LV_DC)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B-($N2_LV_DC)"))
+ADC_A=$(printf %.$2f $(bc -l <<< "$ADC_A - ($N1_LV_DC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "$ADC_B - ($N2_LV_DC)"))
 
 # Print out the measurements
 echo "      IN1 offset value is $ADC_A"
@@ -434,8 +434,8 @@ ADC_PARAM="-d B -r"
 acquireData
 print_ok
 
-ADC_A=$(printf %.$2f $(bc -l <<< "($ADC_A-$N1_HV_DC)/5"))
-ADC_B=$(printf %.$2f $(bc -l <<< "($ADC_B-$N2_HV_DC)/5"))
+ADC_A=$(printf %.$2f $(bc -l <<< "($ADC_A - $N1_HV_DC)/5"))
+ADC_B=$(printf %.$2f $(bc -l <<< "($ADC_B - $N2_HV_DC)/5"))
 
 # Print out the measurements
 echo "      IN1 offset value is $ADC_A"
@@ -562,10 +562,8 @@ echo -n "  * Get data from ADC "
 ADC_PARAM="-d B -1 20 -2 20"
 acquireData
 print_ok
-
-ADC_A=$(printf %.$2f $(bc -l <<< "2 * ($ADC_A*$GAIN1_HV_DC - $N1_HV_DC)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "2 * ($ADC_B*$GAIN2_HV_DC - $N2_HV_DC)"))
-
+ADC_A=$(printf %.$2f $(bc -l <<< "2 * ($ADC_A * $GAIN1_HV_DC - $N1_HV_DC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "2 * ($ADC_B * $GAIN2_HV_DC - $N2_HV_DC)"))
 echo "ADC_A is $ADC_A"
 echo "ADC_B is $ADC_B"
 
@@ -675,15 +673,13 @@ ADC_PARAM=""
 acquireData_AC
 print_ok
 
-
 echo "      IN1 value is $CH1_MIN - $CH1_MAX"
 echo "      IN2 value is $CH2_MIN - $CH2_MAX"
 
 ADC_A=$CH1_MAX
 ADC_B=$CH2_MAX
-
-ADC_A=$(printf %.$2f $(bc -l <<< "(2 * $ADC_A-$N1_LV_AC)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "(2 * $ADC_B-$N2_LV_AC)"))
+ADC_A=$(printf %.$2f $(bc -l <<< "scale=0; (2 * $ADC_A - $N1_LV_AC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "scale=0; (2 * $ADC_B - $N2_LV_AC)"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A"
@@ -788,8 +784,8 @@ echo "      IN2 value is $CH2_MIN - $CH2_MAX"
 ADC_A=$CH1_MAX
 ADC_B=$CH2_MAX
 
-ADC_A=$(printf %.$2f $(bc -l <<< "(2 * $ADC_A-$N1_HV_AC)"))
-ADC_B=$(printf %.$2f $(bc -l <<< "(2 * $ADC_B-$N2_HV_AC)"))
+ADC_A=$(printf %.$2f $(bc -l <<< "(2 * $ADC_A - $N1_HV_AC)"))
+ADC_B=$(printf %.$2f $(bc -l <<< "(2 * $ADC_B - $N2_HV_AC)"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A"

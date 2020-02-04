@@ -45,6 +45,10 @@ int _kbhit() {
     return bytesWaiting;
 }
 
+void flush_kbhit(){
+		tcflush(0, TCIFLUSH); 
+}
+
 char* getCmdOption(char ** begin, char ** end, const std::string & option,int index = 0){
     char ** itr = std::find(begin, end, option);
     while(itr != end && ++itr != end){
@@ -199,7 +203,10 @@ int main(int argc, char **argv){
         			state = RP_TRIG_STATE_TRIGGERED;
 					
 				}
-				if (_kbhit()) break;
+				if (_kbhit()) {
+					flush_kbhit();
+					break;
+				}
 				
         }
 
