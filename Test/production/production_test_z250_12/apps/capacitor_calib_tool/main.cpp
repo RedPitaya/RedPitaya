@@ -165,6 +165,7 @@ int main(int argc, char **argv){
 								count++;
 							}
 					}
+					if (count == 0) count = 1;
 					area_avg = area / count;
 					for(i = 0; i < buff_size; i++){
 							if (buff[i]>0){
