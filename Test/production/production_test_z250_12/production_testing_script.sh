@@ -38,7 +38,7 @@ export C_MEM_TEST_TOOL="memtester"
 
 #enable tests
 export G_CONSOLE_TEST=1
-export G_MEMTEST=1
+#export G_MEM_TEST=1
 export G_SPI_TEST=1
 export G_ETHERNET_TEST=1
 export G_POWER_TEST=1
@@ -49,6 +49,8 @@ export G_SLOW_ADC_DAC_TEST=1
 export G_FAST_ADC_DAC_TEST=1
 export G_FAST_ADC_BIT_TEST=1
 export G_CALIBRATION=1
+export G_PLL_TEST=1
+export G_EXT_TRIGGER_TEST=1
 
 # RUN MAIN TEST
 ./main_test.sh

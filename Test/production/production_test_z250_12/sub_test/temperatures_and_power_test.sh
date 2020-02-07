@@ -47,6 +47,7 @@ then
     STATUS=1
 else
     print_test_ok
+    RPLight8
 fi
 
 sleep 1

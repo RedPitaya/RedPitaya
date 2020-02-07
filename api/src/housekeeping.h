@@ -71,6 +71,7 @@ static volatile housekeeping_control_t *hk = NULL;
 
 static int hk_Init() {
     cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
+    house_SetPllControlEnable(false);
     return RP_OK;
 }
 

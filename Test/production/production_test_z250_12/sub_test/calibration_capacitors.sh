@@ -8,6 +8,7 @@ echo -e "\e[94m#              Calibration capacitor in AC mode                  
 echo -e "\e[94m########################################################################\e[0m"
 echo
 
+LIGHT_STATUS=$($C_MONITOR 0x40000030)
 
 echo "Calibrate 1 channel in 1:1 mode"
 sleep 0.5
@@ -86,6 +87,8 @@ $C_CAPACITOR_CALIB_TOOL -C2 -A20
 
 echo -n "Calibrate "
 print_ok
-
+#recover light on RP
+$C_MONITOR 0x40000030 w $LIGHT_STATUS
+RPLight4
 echo
 echo 

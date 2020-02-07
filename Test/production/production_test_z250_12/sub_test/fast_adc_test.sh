@@ -236,6 +236,7 @@ disableAllDIOPin
 if [[ $STATUS == 0 ]]
 then
     print_test_ok
+    RPLight1
 else
     print_test_fail
 fi

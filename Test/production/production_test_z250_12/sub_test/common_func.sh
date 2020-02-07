@@ -157,3 +157,55 @@ function load_fpga_mercury(){
 function print_calib(){
     calib -rv
 }
+
+function disableRPLight(){
+    $C_MONITOR 0x40000030 w 0x00
+}
+
+function RPLight1(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x10 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function RPLight2(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x20 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function RPLight3(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x40 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function RPLight4(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x80 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function RPLight5(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x01 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function RPLight6(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x02 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function RPLight7(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x04 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function RPLight8(){
+L_CUR_VALUE=$($C_MONITOR 0x40000030)
+L_CUR_VALUE=$(( 0x08 | $L_CUR_VALUE ))
+    $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}

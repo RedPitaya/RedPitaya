@@ -90,7 +90,7 @@ echo
 
 STATUS=0
 CALIBRATION_STATUS=0
-
+LIGHT_STATUS=$($C_MONITOR 0x40000030)
 
 echo "  * Set default calibration"
 export FACTORY_CAL
@@ -823,5 +823,11 @@ export FACTORY_CAL
 ./sub_test/set_calibration.sh
 echo
 
+# set light of calibration complited
+#recover light on RP
+$C_MONITOR 0x40000030 w $LIGHT_STATUS
+RPLight3
+
 # Calibrate capacitors
 ./sub_test/calibration_capacitors.sh
+

@@ -38,12 +38,12 @@ READ_HWREV=$( $C_PRINTENV | grep hw_rev= | awk 'BEGIN {FS="="}{print $2}') > /de
 READ_SERIAL=$( $C_PRINTENV | grep serial= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
 MAC_BEGIN=${READ_MAC:0:8}
 
-if [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$READ_NAV" == "" ]] || [[ "$READ_HWREV" != "STEM_250-12" ]] || [[ "$READ_SERIAL" == "" ]]
+if [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$READ_NAV" == "" ]] || [[ "$READ_HWREV" != "STEM_250-12_v1.0" ]] || [[ "$READ_SERIAL" == "" ]]
 then
 
     echo
     echo "--- PRELIMINARY TEST 1: DEFAULT environment parameters --- "
-    echo
+    echo 
 
 
     # Setting enviroment parameters
