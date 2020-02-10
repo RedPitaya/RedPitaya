@@ -66,6 +66,7 @@ static const uint32_t EX_CI_P_MASK = 0xFF;
 static const uint32_t EX_CI_N_MASK = 0xFF;
 
 int hk_EnableDigitalLoop(bool enable);
+int house_SetPllControlEnable(bool enable);
 
 static volatile housekeeping_control_t *hk = NULL;
 
