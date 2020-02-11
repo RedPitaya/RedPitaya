@@ -73,15 +73,13 @@ do
         # Check if performances are within expectations
         if [ $ERR_DEC -gt 0 ]; then
             echo "$ind:   Error count $ERR_DEC out of specifications"
-            TEST_STATUS=0
-            PREVIOUS_TEST=0
+            STATUS=1
         fi
 
         # IMP: transferred words are stored in a 8bit register. Sometimes negative rate is shown due to register reset
         if [ $TX_RATE -gt $MAX_SATA_RATE ] || [ $TX_RATE -lt $MIN_SATA_RATE ]; then
             echo "$ind:   Tx rate $TX_RATE, between $TX_DEC and $OLD_TX_DEC, out of specification"
-            TEST_STATUS=0
-            PREVIOUS_TEST=0
+            STATUS=1
         fi
 
     else

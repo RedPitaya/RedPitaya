@@ -29,7 +29,7 @@ sleep 0.2
 I2C_TEST_CONFIG_FILE="$(mktemp)"
 echo "$I2C_TEST_CONFIG" > "$I2C_TEST_CONFIG_FILE"
 
-READ_LABEL=$($PRINTENV -c "$I2C_TEST_CONFIG_FILE" test_label 2> /dev/null | grep -Po '(?<=test_label\=).+(?=)')
+READ_LABEL=$($C_PRINTENV -c "$I2C_TEST_CONFIG_FILE" test_label 2> /dev/null | grep -Po '(?<=test_label\=).+(?=)')
 echo "Test lable is: $TEST_LABEL"
 echo "Read lable is: $READ_LABEL"
 
