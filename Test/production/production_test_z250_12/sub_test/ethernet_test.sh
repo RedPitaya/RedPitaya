@@ -65,7 +65,9 @@ fi
 
 # Ping the defined IP
 echo "Ping to unit $PING_IP"
-RES=$(ping "$PING_IP" -c "$N_PING_PKG" -s "$PKT_SIZE" | grep 'transmitted' | awk '{print $4}' ) > /dev/null
+RES=$(ping "$PING_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{print $4}' ) > /dev/null
+
+echo "Transmitted: $N_PING_PKG, received: $RES"
 
 if [[ "$RES" != "$N_PING_PKG" ]]
 then
