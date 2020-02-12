@@ -20,9 +20,9 @@ setenv fdt_high    ${high}
 setenv initrd_high ${high}
 
 # set additional Linux kernel boot parameters, mostly debug options
-#setenv bootargs ${bootargs} loglevel=7 dyndbg="file axidmatest.c +p"
+setenv bootargs ${bootargs} loglevel=7 dyndbg="file axidmatest.c +p"
 # additional systemd logging
-#setenv bootargs ${bootargs} systemd.log_level=debug systemd.log_target=kmsg log_buf_len=1M
+setenv bootargs ${bootargs} systemd.log_level=debug systemd.log_target=kmsg log_buf_len=1M
 
 echo Loading from SD card (FAT file system) to memory
 mmcinfo
