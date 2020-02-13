@@ -40,7 +40,7 @@ export C_MEM_TEST_TOOL="memtester"
 
 #enable tests
 export G_CONSOLE_TEST=1
-#export G_MEM_TEST=1
+# export G_MEM_TEST=1
 export G_SPI_TEST=1
 export G_ETHERNET_TEST=1
 export G_POWER_TEST=1

@@ -34,12 +34,20 @@ RES=$(ping "$G_LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{pr
 if [[ "$RES" == "$N_PING_PKG" ]]
 then
     echo "-------------Logging test statistics to PRODUCTION PC-------------------"
+    echo
     #echo 'sometext' | ssh zumy@192.168.178.123 "cat >> /home/zumy/Desktop/Test_LOGS/manuf_test.log"
     echo $LOG_VAR | sshpass -p "$G_LOCAL_SERVER_PASS" ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $G_LOCAL_USER@$G_LOCAL_SERVER_IP "cat >> $G_LOCAL_SERVER_DIR/$G_LOG_FILENAME"
-    echo
-    echo "      Test data logging on the local PC was successfull"
+    if [[ $? = 255 ]] 
+    then
+      echo -n "      Test data logging on the local PC "
+      print_fail
     else
-    echo "      Not possible to log test statistics to local PC"
+      echo -n "      Test data logging on the local PC "
+      print_ok
+    fi
+    else
+    echo -n "      Not possible to log test statistics to local PC "
+    print_fail
 fi
 echo
 echo
