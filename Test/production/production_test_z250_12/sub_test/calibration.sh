@@ -39,14 +39,20 @@ function checkValue(){
         # Check if the values are within expectations
     if [[ $1 -gt $4 ]] || [[ $1 -lt $3 ]]
     then
-        echo "      Measured IN1 value ($1) is outside expected range ($3 - $4)"
+        echo
+        echo -n "      Measured IN1 value ($1) is outside expected range ($3 - $4)"
+        print_fail
+        echo
         STATUS=1
         CALIBRATION_STATUS=1
     fi
 
     if [[ $2 -gt $4 ]] || [[ $2 -lt $3 ]]
     then
-        echo "      Measured IN2 value ($2) is outside expected range ($3 - $4)"
+        echo
+        echo -n "      Measured IN2 value ($2) is outside expected range ($3 - $4)"
+        print_fail
+        echo
         STATUS=1
         CALIBRATION_STATUS=1
     fi
@@ -59,14 +65,16 @@ getDefCalibValues
 FE_FS_G_HI_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_20_DC * 1.3")) # default FE_CH1_FS_G_HI + 30 %
 FE_FS_G_LO_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_1_DC * 1.3")) # default FE_CH1_FS_G_LO + 30 %
 FE_DC_offs_MAX=300
-BE_FS_MAX=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_1 * 1.3"))
+BE_FS_MAX_1=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_1 * 1.3"))
+BE_FS_MAX_5=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_5 * 1.3"))
 BE_DC_offs_MAX=300
 FE_DC_offs_HI_MAX=400
 
 FE_FS_G_HI_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_20_DC * 0.7")) # default FE_CH1_FS_G_HI - 30 %
 FE_FS_G_LO_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $OSC_CH1_G_1_DC * 0.7")) # default FE_CH1_FS_G_LO - 30 %
 FE_DC_offs_MIN=-300
-BE_FS_MIN=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_1 * 0.7"))
+BE_FS_MIN_1=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_1 * 0.7"))
+BE_FS_MIN_5=$(printf %.$2f $(bc -l <<< "scale=0; $GEN_CH1_G_5 * 0.7"))
 BE_DC_offs_MIN=-300
 FE_DC_offs_HI_MIN=-400
 
@@ -103,7 +111,7 @@ export FACTORY_CAL
 ##########################################################################################
 
 echo
-echo "Calibrate in LV/DC mode"
+echo "INPUT DC offset calibration; (1:1); IN=GND"
 echo
 
 sleep 0.5
@@ -136,8 +144,8 @@ N1_LV_DC=$ADC_A
 N2_LV_DC=$ADC_B
 
 # Print out the new cal parameters
-echo "      NEW IN1 LV DC offset cal param >>OSC_CH1_OFF_1_DC<< is $OSC_CH1_OFF_1_DC"
-echo "      NEW IN2 LV DC offset cal param >>OSC_CH2_OFF_1_DC<< is $OSC_CH2_OFF_1_DC"
+echo "      NEW IN1 1:1 DC offset cal param >>OSC_CH1_OFF_1_DC<< is $OSC_CH1_OFF_1_DC"
+echo "      NEW IN2 1:1 DC offset cal param >>OSC_CH2_OFF_1_DC<< is $OSC_CH2_OFF_1_DC"
 echo
 
 
@@ -148,7 +156,7 @@ echo
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in DC (0.45V) mode (1:1)"
+echo "INPUT DC gain calibration; (1:1); IN=0.45V"
 
 
 sleep 0.5
@@ -182,8 +190,8 @@ OSC_CH1_G_1_DC=$(awk -v GAIN1_LV=$GAIN1_LV_DC -v X=$OSC_CH1_G_1_DC 'BEGIN { prin
 OSC_CH2_G_1_DC=$(awk -v GAIN2_LV=$GAIN2_LV_DC -v X=$OSC_CH2_G_1_DC 'BEGIN { print sprintf("%d", int((X*GAIN2_LV))) }')
 
 # Print out the measurements
-echo "      NEW IN1 LV gain cal param >>OSC_CH1_G_1_DC<< is $OSC_CH1_G_1_DC"
-echo "      NEW IN2 LV gain cal param >>OSC_CH2_G_1_DC<< is $OSC_CH2_G_1_DC"
+echo "      NEW IN1 (1:1) gain cal param >>OSC_CH1_G_1_DC<< is $OSC_CH1_G_1_DC"
+echo "      NEW IN2 (1:1) gain cal param >>OSC_CH2_G_1_DC<< is $OSC_CH2_G_1_DC"
 echo
 
 # Check if the values are within expectations
@@ -210,8 +218,8 @@ IN2_ERROR_LV=$(awk -v X=$ADC_B_MEAN -v Y=$REF_VALUE_LV 'BEGIN { print (((X-Y)/Y)
 
 # Print out the measurements
 echo
-echo "      IN1 Error after the claibration is $IN1_ERROR_LV %"
-echo "      IN2 Error after the claibration is $IN2_ERROR_LV %"
+echo "      IN1 Error after the calibration is $IN1_ERROR_LV %"
+echo "      IN2 Error after the calibration is $IN2_ERROR_LV %"
 echo 
 
 
@@ -221,7 +229,7 @@ echo
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in DC mode (1:20)"
+echo "INPUT DC offset calibration; (1:20); IN=GND"
 echo
 
 sleep 0.5
@@ -255,8 +263,8 @@ N1_HV_DC=$ADC_A
 N2_HV_DC=$ADC_B
 
 # Print out the new cal parameters
-echo "      NEW IN1 DC offset cal param >>OSC_CH1_OFF_20_DC<< is $OSC_CH1_OFF_20_DC"
-echo "      NEW IN2 DC offset cal param >>OSC_CH2_OFF_20_DC<< is $OSC_CH2_OFF_20_DC"
+echo "      NEW IN1 (1:20) DC offset cal param >>OSC_CH1_OFF_20_DC<< is $OSC_CH1_OFF_20_DC"
+echo "      NEW IN2 (1:20) DC offset cal param >>OSC_CH2_OFF_20_DC<< is $OSC_CH2_OFF_20_DC"
 echo
 
 
@@ -267,7 +275,7 @@ echo
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in DC (9V) mode (1:20)"
+echo "INPUT DC gain calibration; (1:20); IN=9V"
 
 
 sleep 0.5
@@ -327,8 +335,8 @@ IN2_ERROR_HV=$(awk -v X=$ADC_B_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGIN { print
 
 # Print out the measurements
 echo
-echo "      IN1 Error after the claibration is $IN1_ERROR_HV %"
-echo "      IN2 Error after the claibration is $IN2_ERROR_HV %"
+echo "      IN1 Error after the calibration is $IN1_ERROR_HV %"
+echo "      IN2 Error after the calibration is $IN2_ERROR_HV %"
 echo 
 
 
@@ -353,7 +361,7 @@ echo
 echo
 echo "Outputs DC offset calibration is started..."
 echo
-echo "Calibrate generator in x1 gain mode"
+echo "OUTPUT DC offset calibration; Gain x1; OUT=0V"
 sleep 0.5
 echo -n "  * Disable generator "
 # turn off generator 
@@ -412,7 +420,7 @@ echo
 
 
 echo
-echo "Calibrate generator in x5 gain mode"
+echo "OUTPUT DC offset calibration; Gain x5; OUT=0V "
 sleep 0.5
 echo -n "  * Disable generator "
 # turn off generator 
@@ -475,10 +483,10 @@ echo
 
 
 echo
-echo "Calibrate generator in x1 gain mode"
+echo "OUTPUT DC gain calibration; Gain x1; OUT=0.45V "
 
 sleep 0.5
-echo -n "  * Start generator in DC (0.45V)" 
+echo -n "  * Start generator in DC (0.45V) " 
 generate_with_api -d1
 print_ok
 
@@ -524,6 +532,9 @@ echo "      NEW OUT1 gain cal param >>GEN_CH1_G_1<< is $GEN_CH1_G_1"
 echo "      NEW OUT2 gain cal param >>GEN_CH2_G_1<< is $GEN_CH2_G_1"
 echo
 
+# Check if the values are within expectations
+checkValue $GEN_CH1_G_1 $GEN_CH2_G_1 $BE_FS_MIN_1 $BE_FS_MAX_1
+
 # ##########################################################################################
 # #  Set DAC parameters
 # ##########################################################################################
@@ -544,10 +555,10 @@ echo
 
 
 echo
-echo "Calibrate generator in x5 gain mode"
+echo "OUTPUT DC gain calibration; Gain x5; OUT=4V "
 
 sleep 0.5
-echo -n "  * Start generator in DC (4V)" 
+echo -n "  * Start generator in DC (4V) " 
 generate_with_api -d2
 print_ok
 
@@ -589,6 +600,9 @@ echo "      NEW OUT1 gain cal param >>GEN_CH1_G_5<< is $GEN_CH1_G_5"
 echo "      NEW OUT2 gain cal param >>GEN_CH2_G_5<< is $GEN_CH2_G_5"
 echo
 
+# Check if the values are within expectations
+checkValue $GEN_CH1_G_5 $GEN_CH2_G_5 $BE_FS_MIN_5 $BE_FS_MAX_5
+
 ##########################################################################################
 #  Set DAC parameters
 ##########################################################################################
@@ -608,12 +622,11 @@ echo
 ##########################################################################################
 
 echo
-echo "Calibrate in LV/AC mode"
+echo "INPUT AC offset calibration; (1:1); IN=0.45V"
 echo
 
 sleep 0.5
-echo -n "  * Enable generator "
-# turn off generator 
+echo -n "  * Enable generator; Signal=Sin; Amp=0.45V "
 generate_with_api -s1
 print_ok
 
@@ -636,8 +649,8 @@ echo "      IN2 value is $CH2_MIN - $CH2_MAX"
 ADC_A=$(printf %.$2f $(bc -l <<< "scale=0; ($CH1_MAX + $CH1_MIN) * 0.5"))
 ADC_B=$(printf %.$2f $(bc -l <<< "scale=0; ($CH2_MAX + $CH2_MIN) * 0.5"))
 
-echo "      IN1 DC offset value is $ADC_A"
-echo "      IN2 DC offset value is $ADC_B"
+echo "      IN1 AC offset value is $ADC_A"
+echo "      IN2 AC offset value is $ADC_B"
 
 checkValue $ADC_A $ADC_B $FE_AC_offs_MIN $FE_AC_offs_MAX
 
@@ -647,8 +660,8 @@ N1_LV_AC=$ADC_A
 N2_LV_AC=$ADC_B
 
 # Print out the new cal parameters
-echo "      NEW IN1 LV DC offset cal param >>OSC_CH1_OFF_1_AC<< is $OSC_CH1_OFF_1_AC"
-echo "      NEW IN2 LV DC offset cal param >>OSC_CH2_OFF_1_AC<< is $OSC_CH2_OFF_1_AC"
+echo "      NEW IN1 (1:1) AC offset cal param >>OSC_CH1_OFF_1_AC<< is $OSC_CH1_OFF_1_AC"
+echo "      NEW IN2 (1:1) AC offset cal param >>OSC_CH2_OFF_1_AC<< is $OSC_CH2_OFF_1_AC"
 echo
 
 ##########################################################################################
@@ -657,8 +670,12 @@ echo
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in AC (0.45V) mode (1:1)"
+echo "INPUT AC gain calibration; (1:1); IN=0.45V"
 
+sleep 0.5
+echo -n "  * Enable generator; Signal=Sin; Amp=0.45V "
+generate_with_api -s1
+print_ok
 
 sleep 0.5
 echo -n "  * Connect IN to OUT "
@@ -698,8 +715,8 @@ OSC_CH1_G_1_AC=$(awk -v GAIN1_LV=$GAIN1_LV_AC -v X=$OSC_CH1_G_1_AC 'BEGIN { prin
 OSC_CH2_G_1_AC=$(awk -v GAIN2_LV=$GAIN2_LV_AC -v X=$OSC_CH2_G_1_AC 'BEGIN { print sprintf("%d", int((X*GAIN2_LV))) }')
 
 # Print out the measurements
-echo "      NEW IN1 LV gain cal param >>OSC_CH1_G_1_AC<< is $OSC_CH1_G_1_AC"
-echo "      NEW IN2 LV gain cal param >>OSC_CH2_G_1_AC<< is $OSC_CH2_G_1_AC"
+echo "      NEW IN1 (1:1) AC gain cal param >>OSC_CH1_G_1_AC<< is $OSC_CH1_G_1_AC"
+echo "      NEW IN2 (1:1) AC gain cal param >>OSC_CH2_G_1_AC<< is $OSC_CH2_G_1_AC"
 echo
 
 # Check if the values are within expectations
@@ -711,11 +728,11 @@ checkValue $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $FE_FS_G_LO_MIN $FE_FS_G_LO_MAX
 ##########################################################################################
 ##########################################################################################
 
-echo "Calibrate in AC mode (1:20)"
+echo "INPUT AC offset calibration; (1:20); IN=4V"
 echo
 
 sleep 0.5
-echo -n "  * Enable generator "
+echo -n "  * Enable generator; Signal=Sin; Amp=4V "
 # turn off generator 
 generate_with_api -s2
 print_ok
@@ -750,8 +767,8 @@ N1_HV_AC=$ADC_A
 N2_HV_AC=$ADC_B
 
 # Print out the new cal parameters
-echo "      NEW IN1 DC offset cal param >>OSC_CH1_OFF_20_AC<< is $OSC_CH1_OFF_20_AC"
-echo "      NEW IN2 DC offset cal param >>OSC_CH2_OFF_20_AC<< is $OSC_CH2_OFF_20_AC"
+echo "      NEW IN1 (1:20) AC offset cal param >>OSC_CH1_OFF_20_AC<< is $OSC_CH1_OFF_20_AC"
+echo "      NEW IN2 (1:20) AC offset cal param >>OSC_CH2_OFF_20_AC<< is $OSC_CH2_OFF_20_AC"
 echo
 
 ##########################################################################################
@@ -761,7 +778,7 @@ echo
 ##########################################################################################
 
 
-echo "Calibrate in AC (4V) mode (1:20)"
+echo "INPUT AC gain calibration; (1:20); IN=4V"
 
 
 sleep 0.5
@@ -804,8 +821,8 @@ OSC_CH1_G_20_AC=$(awk -v GAIN1_LV=$GAIN1_HV_AC -v X=$OSC_CH1_G_20_AC 'BEGIN { pr
 OSC_CH2_G_20_AC=$(awk -v GAIN2_LV=$GAIN2_HV_AC -v X=$OSC_CH2_G_20_AC 'BEGIN { print sprintf("%d", int((X*GAIN2_LV))) }')
 
 # Print out the measurements
-echo "      NEW IN1 gain cal param >>OSC_CH1_G_20_AC<< is $OSC_CH1_G_20_AC"
-echo "      NEW IN2 gain cal param >>OSC_CH2_G_20_AC<< is $OSC_CH2_G_20_AC"
+echo "      NEW IN1 (1:20) AC gain cal param >>OSC_CH1_G_20_AC<< is $OSC_CH1_G_20_AC"
+echo "      NEW IN2 (1:20) AC gain cal param >>OSC_CH2_G_20_AC<< is $OSC_CH2_G_20_AC"
 echo
 
 # Check if the values are within expectations
@@ -831,3 +848,16 @@ RPLight3
 # Calibrate capacitors
 ./sub_test/calibration_capacitors.sh
 
+if [[ $STATUS == 0 ]]
+then
+    SetBitState 0x2000
+else 
+    echo -n "  * Set calibration"
+    print_fail
+     getDefCalibValues
+    export FACTORY_CAL
+    ./sub_test/set_calibration.sh
+    echo    "  * Set default calibration"
+fi
+
+exit $STATUS

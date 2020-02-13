@@ -65,8 +65,8 @@ then
 else
     print_test_ok
     RPLight5
+    SetBitState 0x800
 fi
-
 
 
 exit $STATUS

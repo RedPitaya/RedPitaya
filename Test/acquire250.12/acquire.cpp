@@ -37,7 +37,7 @@
  * channels labeled ADC1 & ADC2.
  * 
  * It utilizes the routines of the Oscilloscope module for:
- *   - Triggered ADC signal acqusition to the FPGA buffers.
+ *   - Triggered ADC signal Acquisition to the FPGA buffers.
  *   - Parameter defined averaging & decimation.
  *   - Data transfer to SW buffers.
  *

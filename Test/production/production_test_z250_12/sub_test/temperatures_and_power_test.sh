@@ -19,11 +19,13 @@ IN_TEMP0_SCALE="$(cat '/sys/bus/iio/devices/iio:device0/in_temp0_scale')"
 TEMP=$(bc -l <<< "($IN_TEMP0_RAW + $IN_TEMP0_OFFSET) * $IN_TEMP0_SCALE / 1000" | awk '{ printf "%d\n", $1 }')
 
 #Added, check if teh variable is empty > unsucsefull read will return empty variable. in this case set variable to "x".
+
 if [ -z "$TEMP" ]
 then
     TEMP="x"
     echo "Unsuccessful readout of TEMP"
     print_test_fail    
+    STATUS=1
 else
 # Check if the values are within expectations
 if [ $TEMP -lt $MIN_TEMP ] || [ $TEMP -gt $MAX_TEMP ]
@@ -48,7 +50,10 @@ then
 else
     print_test_ok
     RPLight8
+    SetBitState 0x10
 fi
+
+PrintToFile "temp_and_power" "$TEMP $V_RESULT $($C_UART_TOOL 'GET:VREF:HI') $($C_UART_TOOL 'GET:VREF:LOW')"
 
 sleep 1
 

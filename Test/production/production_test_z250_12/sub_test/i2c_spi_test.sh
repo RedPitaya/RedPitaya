@@ -43,6 +43,7 @@ then
 else
     print_test_ok
     $C_UART_TOOL 'LED:GRN 0 3' -s
+    SetBitState 0x02
 fi
 
 
@@ -60,11 +61,12 @@ i2c_spi_test_tool
 if [[ $? != 0 ]]
 then
     print_test_fail
-    STATUS=0
+    STATUS=1
     sleep 1
     $C_UART_TOOL 'LED:RED 0 3' -s
 else 
     print_test_ok
+    SetBitState 0x04
 fi
 
 # TEST SPI this test board via external connector 
@@ -76,7 +78,7 @@ spi_ext_test_tool
 if [[ $? != 0 ]]
 then
     print_test_fail
-    STATUS=0
+    STATUS=1
     sleep 1
 else 
     print_test_ok

@@ -781,17 +781,17 @@ int main(int argc, char *argv[]) {
                         size = round( ( min_periodes * 125e6 ) / ( Frequency[ fr ] * g_dec[ f ] ) );
                         if (size > (1<<14)) size = 1<<14;
 
-                        /* Filter parameters for signal Acqusition */
+                        /* Filter parameters for signal Acquisition */
                         t_params[EQUAL_FILT_PARAM] = equal;
                         t_params[SHAPE_FILT_PARAM] = shaping;
 
-                        /* Setting of parameters in Oscilloscope main module for signal Acqusition */
+                        /* Setting of parameters in Oscilloscope main module for signal Acquisition */
                         if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
                             fprintf(stderr, "rp_set_params() failed!\n");
                             return -1;
                         }
 
-                        /* Data acqusition function, data saved to s */
+                        /* Data Acquisition function, data saved to s */
                         if (acquire_data(s, size) < 0) {
                             printf("error acquiring data @ acquire_data\n");
                             return -1;

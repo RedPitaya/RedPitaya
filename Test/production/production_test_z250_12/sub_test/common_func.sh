@@ -139,6 +139,10 @@ function print_fail(){
     echo -e "\033[91m[FAIL]\e[0m"
 }
 
+function print_skip(){
+    echo -e "\033[94m[SKIPPED]\e[0m"
+}
+
 
 function load_fpga_0_94(){
     echo "LOAD FPGA 0.94 IMAGE"
@@ -208,4 +212,53 @@ function RPLight8(){
 L_CUR_VALUE=$($C_MONITOR 0x40000030)
 L_CUR_VALUE=$(( 0x08 | $L_CUR_VALUE ))
     $C_MONITOR 0x40000030 w $L_CUR_VALUE
+}
+
+function InitBitState(){
+    echo "0x0000" > $TEST_TMP_DIR/bit_value
+}
+
+function SetBitState(){
+    local VALUE=$(cat $TEST_TMP_DIR/bit_value)
+    VALUE=$(( $VALUE | $1 ))
+    echo  $(printf "0x%04X\n" $VALUE) > $TEST_TMP_DIR/bit_value
+}
+
+function SetBackLog(){
+    NAME=$1
+    local line='----------------------------------------'
+    echo " *" $(printf "%s %s %s\n" "$NAME" "${line:${#NAME}}" "$2") >> $TEST_TMP_DIR/back_log
+}
+
+function PrintBackLog(){
+    echo
+    echo "Test result (number bits) $(cat $TEST_TMP_DIR/bit_value)"
+    echo
+    cat $TEST_TMP_DIR/back_log
+}
+
+function PrintToFile(){
+    echo -n "$2" >> $TEST_TMP_DIR/$1
+}
+
+function CombineLogVar(){
+    LOG_VAR=$(date)
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/bit_value 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/zynq_code 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/mac_addr 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/temp_and_power 2> /dev/null)"
+    LOG_VAR="$LOG_VAR$(cat $TEST_TMP_DIR/fast_adc 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(calib -r | xargs echo -n)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/capacitors 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/mem_test 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/calib_test 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/hw_rev 2> /dev/null)"
+}
+
+function CheckTestPass(){
+    TEST_RES=$(cat $TEST_TMP_DIR/bit_value)
+    if [[ "$TEST_RES" = "0x7FFF" ]]
+    then
+        $C_UART_TOOL 'LED:GRN 0 7' -s
+    fi
 }

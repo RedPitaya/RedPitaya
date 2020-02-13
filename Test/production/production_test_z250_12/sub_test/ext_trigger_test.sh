@@ -62,6 +62,7 @@ then
 else
     RPLight6
     print_test_ok
+    SetBitState 0x1000
 fi
 
 

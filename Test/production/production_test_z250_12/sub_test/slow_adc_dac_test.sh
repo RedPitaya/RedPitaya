@@ -99,6 +99,7 @@ disableAllDIOPin
 if [[ $STATUS == 0 ]]
 then
     $C_UART_TOOL 'LED:GRN 1 5' -s
+    SetBitState 0x100
     print_test_ok
 else 
     print_test_fail
