@@ -238,7 +238,6 @@ then
     print_test_ok
     RPLight1
     SetBitState 0x200
-    SetBitState 0x4000
 else
     print_test_fail
 fi
