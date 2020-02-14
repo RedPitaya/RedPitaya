@@ -55,7 +55,6 @@ sleep 1
 
 #recover light on RP
 $C_MONITOR 0x40000030 w $LIGHT_STATUS
-
 if [[ $STATUS != 0 ]]
 then
     print_test_fail

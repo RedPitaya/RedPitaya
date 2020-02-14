@@ -40,6 +40,7 @@ DECIMATION=1024
 ADC_BUFF_SIZE=16384
 ERROR_VAL=1
 ERROR_VAL_GAIN=2
+LIGHT_STATUS=$($C_MONITOR 0x40000030)
 
 echo
 echo "TEST DAC with 0.45V on Gain x1"
@@ -153,6 +154,7 @@ echo -n "      IN2 "
 checkError $ERROR_B $ERROR_VAL_GAIN
 echo
 
+$C_MONITOR 0x40000030 w $LIGHT_STATUS
 if [[ $STATUS == 0 ]]
 then
     SetBitState 0x4000

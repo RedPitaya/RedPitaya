@@ -16,7 +16,7 @@ mount -o remount,rw $G_SD_CARD_PATH
 # Log information to the log file
 echo "      Test data logging on the SD card was successfull"
 echo $LOG_VAR >> "$G_SD_CARD_PATH/$G_LOG_FILENAME"
-
+RPLight7
 # Remount the SD card with Read only rigths
 mount -o remount,ro $G_SD_CARD_PATH
 echo

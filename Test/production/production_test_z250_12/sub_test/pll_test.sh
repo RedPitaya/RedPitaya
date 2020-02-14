@@ -12,6 +12,7 @@ echo -e "\e[94m#################################################################
 
 STATUS=0
 LIGHT_STATUS=$($C_MONITOR 0x40000030)
+
 echo
 echo "Start PLL test..."
 echo
