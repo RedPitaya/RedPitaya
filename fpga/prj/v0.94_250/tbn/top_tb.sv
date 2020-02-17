@@ -63,6 +63,9 @@ wire                   exp_9_io;
 logic         [ 9-1:0] exp_p_od, exp_p_oe;
 logic         [ 9-1:0] exp_n_od, exp_n_oe;
 logic                  exp_9_od, exp_9_oe;
+// SATA
+logic         [ 4-1:0] daisy_p;
+logic         [ 4-1:0] daisy_n;
 
 // LED
 wire          [ 8-1:0] led;
@@ -139,6 +142,7 @@ initial begin
   ##100;
 
    top_tc.test_hk                 (0<<20, 32'h55);
+   top_tc.test_sata               (5<<20, 32'h55);
    top_tc.test_osc                (1<<20, 32'h40090000, 2);
 
 //   top_tc.test_asg                (2<<20, 32'h40090000, 2);
@@ -243,6 +247,10 @@ assign vinn = '0;
 // LED
 
 
+assign #0.2 daisy_p[3] = daisy_p[1] ;
+assign #0.2 daisy_n[3] = daisy_n[1] ;
+assign #0.2 daisy_p[2] = daisy_p[0] ;
+assign #0.2 daisy_n[2] = daisy_n[0] ;
 
 
 
@@ -336,10 +344,10 @@ red_pitaya_top #(
   .exp_n_io       (exp_n_io),
   .exp_9_io       (exp_9_io),
   // SATA connector
-  .daisy_p_o      (),
-  .daisy_n_o      (),
-  .daisy_p_i      ('0),
-  .daisy_n_i      ('0),
+  .daisy_p_o       ( daisy_p[1:0]  ),  //!< TX data and clock [1]-clock, [0]-data
+  .daisy_n_o       ( daisy_n[1:0]  ),  //!< TX data and clock [1]-clock, [0]-data
+  .daisy_p_i       ( daisy_p[3:2]  ),  //!< RX data and clock [1]-clock, [0]-data
+  .daisy_n_i       ( daisy_n[3:2]  ),  //!< RX data and clock [1]-clock, [0]-data
   // LED
   .led_o          (led)
 );

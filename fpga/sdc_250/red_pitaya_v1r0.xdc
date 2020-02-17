@@ -210,10 +210,10 @@ set_property PACKAGE_PIN U5  [get_ports {exp_9_io}]
 #set_property PULLUP   TRUE [get_ports {exp_n_io[7]}]
 
 ### SATA connector
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_o[*]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_o[*]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_i[*]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_i[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_o[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_o[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_i[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_i[*]}]
 
 set_property PACKAGE_PIN T12 [get_ports {daisy_p_o[0]}]
 set_property PACKAGE_PIN U12 [get_ports {daisy_n_o[0]}]
@@ -250,14 +250,22 @@ create_clock -period 4.000 -name rx_clk [get_ports {daisy_p_i[1]}]
 create_generated_clock -name i_hk/dna_clk -source [get_pins pll/pll/CLKOUT1] -divide_by 8 [get_pins i_hk/dna_clk_reg/Q]
 
 
-set_false_path -from [get_clocks clk_fpga_0]    -to [get_clocks pll_adc_clk]
-set_false_path -from [get_clocks pll_adc_clk]   -to [get_clocks clk_fpga_0]
+set_clock_groups -asynchronous -group pll_adc_clk -group clk_fpga_0 -group pll_adc_clk2d -group adc_clk
 
-set_false_path -from [get_clocks pll_adc_clk2d] -to [get_clocks pll_adc_clk]
-set_false_path -from [get_clocks pll_adc_clk]   -to [get_clocks pll_adc_clk2d]
+set_clock_groups -asynchronous -group pll_adc_clk2d -group i_hk/dna_clk -group par_clk -group pll_pwm_clk -group pll_ref_i
 
-set_false_path -from [get_clocks pll_adc_clk2d] -to [get_clocks pll_pwm_clk]
-set_false_path -from [get_clocks pll_adc_10mhz] -to [get_clocks pll_adc_clk2d]
+
+
+
+
+#set_false_path -from [get_clocks clk_fpga_0]    -to [get_clocks pll_adc_clk]
+#set_false_path -from [get_clocks pll_adc_clk]   -to [get_clocks clk_fpga_0]
+
+#set_false_path -from [get_clocks pll_adc_clk2d] -to [get_clocks pll_adc_clk]
+#set_false_path -from [get_clocks pll_adc_clk]   -to [get_clocks pll_adc_clk2d]
+
+#set_false_path -from [get_clocks pll_adc_clk2d] -to [get_clocks pll_pwm_clk]
+#set_false_path -from [get_clocks pll_adc_10mhz] -to [get_clocks pll_adc_clk2d]
 
 
 set_input_delay -clock [get_clocks adc_clk] -clock_fall -min -add_delay -1.000 [get_ports {adc_dat_n_i[0][*]}]

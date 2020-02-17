@@ -181,7 +181,33 @@ endtask: test_asg
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Testing SATA
+////////////////////////////////////////////////////////////////////////////////
 
+task test_sata(
+  int unsigned offset,
+  int unsigned sh = 0
+);
+logic        [ 32-1: 0] rdata;
+  ##10;
+
+  // configure
+  ##100; axi_write(offset+'h0, 32'h1      );        // Enable transmitter
+  ##20;  axi_write(offset+'h0, 32'h3      );        // Enable transmitter & receiver
+  ##101; axi_write(offset+'h4, 32'h3      );        // enable TX train
+  ##10;  axi_write(offset+'h8, 32'h1      );        // enable RX train
+  ##1500; axi_read (offset+'hC, rdata      );        // Return read value
+  ##20;  axi_write(offset+'h8, 32'h0      );        // disable RX train
+  ##20;  axi_write(offset+'h4, {16'hF419, 16'h2});  // Custom value
+  ##20;  axi_write(offset+'h4, {16'hF419, 16'h5});  // Random valu
+  ##20;  axi_write(offset+'h10, 32'h1      );       // Clear error counter
+  ##20;  axi_write(offset+'h10, 32'h0      );       // Enable error counter
+  ##404; axi_write(offset+'h4, {16'h0, 16'h4});     // Sent back read value
+
+  ##1000;
+
+endtask: test_sata
 
 
 
