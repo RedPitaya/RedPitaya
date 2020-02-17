@@ -55,6 +55,9 @@ export G_FAST_DAC_TEST=1
 export G_PLL_TEST=1
 export G_EXT_TRIGGER_TEST=1
 
+#enable save result
+#export G_SAVE_TO_PC=1
+
 # make temprary directory
 export TEST_TMP_DIR=$(mktemp -d)
 

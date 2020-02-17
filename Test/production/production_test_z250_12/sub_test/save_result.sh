@@ -14,7 +14,7 @@ echo
 mount -o remount,rw $G_SD_CARD_PATH
 
 # Log information to the log file
-echo "      Test data logging on the SD card was successfull"
+echo "      Test data logging on the SD card was successful"
 echo $LOG_VAR >> "$G_SD_CARD_PATH/$G_LOG_FILENAME"
 RPLight7
 # Remount the SD card with Read only rigths
@@ -31,6 +31,8 @@ echo
 N_PING_PKG=5
 RES=$(ping "$G_LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{print $4}' ) > /dev/null
 
+if [[ $G_SAVE_TO_PC == 1 ]]
+then
 if [[ "$RES" == "$N_PING_PKG" ]]
 then
     echo "-------------Logging test statistics to PRODUCTION PC-------------------"
@@ -54,3 +56,4 @@ echo
 echo "------------------------------------------------------------------------"
 echo
 echo
+fi
