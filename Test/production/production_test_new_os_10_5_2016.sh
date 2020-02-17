@@ -1104,7 +1104,7 @@ echo
 echo "--- TEST 7: Fast ADCs and DACs test ---"
 echo
 
-echo "    Acqusition without DAC signal - ADCs with HIGH gain"
+echo "    Acquisition without DAC signal - ADCs with HIGH gain"
 echo
 
 TEST_STATUS=1
@@ -1222,7 +1222,7 @@ fi
 
 # Set DAC value to proper counts / frequency for both channels
 echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
 echo
 
 # Turn the DAC signal generator on on both channels
@@ -1325,7 +1325,7 @@ fi
 ###############################################################################
 
 echo
-echo "    Acqusition without DAC signal - ADCs with LOW gain"
+echo "    Acquisition without DAC signal - ADCs with LOW gain"
 echo
 
 # Turn the DAC signal generator OFF on both channels (ch 1 & 2)
@@ -1442,7 +1442,7 @@ fi
 ###############################################################################
 
 echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with LOW gain"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with LOW gain"
 echo
 
 # Turn the DAC signal generator on on both channels
@@ -1564,7 +1564,7 @@ echo
 echo "--- TEST 8: Fast ADCs bit analysis test ---"
 echo
 
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
 echo
 
 TEST_STATUS=1
@@ -1927,8 +1927,8 @@ IN1_ERROR_LV=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGI
 IN2_ERROR_LV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGIN { print (((ADC_B_MEAN-REF_VALUE_LV)/REF_VALUE_LV)*100) }')
 
 # Print out the measurements
-echo "      IN1 LV Error after the claibration is $IN1_ERROR_LV %"
-echo "      IN2 LV Error after the claibration is $IN2_ERROR_LV %"
+echo "      IN1 LV Error after the calibration is $IN1_ERROR_LV %"
+echo "      IN2 LV Error after the calibration is $IN2_ERROR_LV %"
 echo 
 
 ####################################################################################################
@@ -2110,8 +2110,8 @@ IN2_ERROR_HV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGI
 
 # Print out the measurements
 echo
-echo "      IN1 HV Error after the claibration is $IN1_ERROR_HV %"
-echo "      IN2 HV Error after the claibration is $IN2_ERROR_HV %"
+echo "      IN1 HV Error after the calibration is $IN1_ERROR_HV %"
+echo "      IN2 HV Error after the calibration is $IN2_ERROR_HV %"
 echo " "
 
 ###############################################

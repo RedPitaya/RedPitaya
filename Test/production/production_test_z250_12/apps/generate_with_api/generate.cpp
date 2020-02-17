@@ -45,11 +45,12 @@ bool CheckMissing(const char* val,const char* Message){
 }
 
 void UsingArgs(char const* progName){
-    printf("Usage with file: %s -d1|-d2|-s1|-s2\n",progName);
+    printf("Usage with file: %s -d1|-d2|-s1|-s2|-g\n",progName);
 	printf("\t-d1 = DC signal 0.45V\n");
 	printf("\t-d2 = DC signal 4.0V\n");
 	printf("\t-s1 = Sine signal 0.45V\n");
 	printf("\t-s2 = Sine signal 4.0V\n");
+	printf("\t-g  = Sine signal 4.5V with gain x5\n");
     exit(-1);
 }
 
@@ -60,7 +61,10 @@ int main(int argc, char **argv){
 
 	bool   ac_045     = cmdOptionExists(argv, argv + argc, "-s1");
 	bool   ac_09      = cmdOptionExists(argv, argv + argc, "-s2");
-	if (!(dc_045 ^ dc_09 ^ ac_045 ^ ac_09)) {
+	
+	bool   dc_g       = cmdOptionExists(argv, argv + argc, "-g");
+
+	if (!(dc_045 ^ dc_09 ^ ac_045 ^ ac_09 ^ dc_g)) {
             UsingArgs(argv[0]);
         }
 
@@ -121,6 +125,18 @@ int main(int argc, char **argv){
 		/* Generating wave form */
 		rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
 		rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
+	}
+
+	if (dc_g){
+		amp = 4.5 / 5.0;
+		rp_GenSetGainOut(RP_CH_1,RP_GAIN_5X);
+		rp_GenSetGainOut(RP_CH_2,RP_GAIN_5X);
+		/* Generating frequency */
+		rp_GenFreq(RP_CH_1, 1000);
+		rp_GenFreq(RP_CH_2, 1000);
+		/* Generating wave form */
+		rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC);
+		rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
 	}
 
 	/* Generating amplitude */

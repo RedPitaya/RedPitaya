@@ -20,7 +20,7 @@ echo
 
 STATUS=0
 
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
 echo
 
 enableK1Pin
@@ -146,6 +146,7 @@ if [[ $STATUS == 0 ]]
 then
     print_test_ok
     RPLight2
+    SetBitState 0x400
 else
     print_test_fail
 fi

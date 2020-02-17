@@ -10,6 +10,7 @@ then
     echo -n "Setting the default calibration parameters into the EEPROM... "
     print_fail
     echo "NO PARAMETERS FOR CALIBRATION!"
+    STATUS=1
 else
     # Set the CALIBRATION PARAMETERS to the FACTORY -wf EEPROM memory partition (factory parameters)
     echo

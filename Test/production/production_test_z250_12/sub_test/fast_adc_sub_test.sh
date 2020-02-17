@@ -35,7 +35,7 @@ echo "    Measured ADC ch.B mean value is $ADC_B_MEAN"
 echo "    Measured ADC ch.B std.deviation value is $ADC_B_STD"
 echo "    Measured ADC ch.B std.deviation (no decimation) is $ADC_B_STD_NO_DEC"
 echo "    Measured ADC ch.B p2p value is $ADC_B_PP"
-
+PrintToFile "fast_adc" " $ADC_A_MEAN $ADC_A_STD $ADC_A_PP $ADC_A_STD_NO_DEC $ADC_B_MEAN $ADC_B_STD $ADC_B_PP $ADC_B_STD_NO_DEC"
 
 # Check if the values are within expectations
 if [[ $ADC_A_MEAN -gt $MAX_OFFSET ]] || [[ $ADC_A_MEAN -lt $((-$MAX_OFFSET)) ]]

@@ -15,13 +15,15 @@ export G_USB_DEVICE="/dev/sda1"
 export G_USB_MOUNT_FOLDER="/mnt/usb"
 
 # Production PC/SERVER variables
-export G_LOCAL_SERVER_IP='10.0.1.160'
+export G_LOCAL_SERVER_IP='192.168.1.1'
 export G_LOCAL_SERVER_PASS='redpitaya'
 export G_LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 export G_LOCAL_USER='redpitaya'
 
+
 # For loging on the Red Pitaya itself (practicali the same as loging in to SD card it sohuld )
 export G_LOG_MNT_FOLDER='/mnt/log'
+export G_LOG_FILENAME='manuf_test.log'
 
 # Main commands shortcuts
 export C_A_SIGNAL="$G_SD_CARD_PATH/bin/analyze_signal"
@@ -49,8 +51,17 @@ export G_SLOW_ADC_DAC_TEST=1
 export G_FAST_ADC_DAC_TEST=1
 export G_FAST_ADC_BIT_TEST=1
 export G_CALIBRATION=1
+export G_FAST_DAC_TEST=1
 export G_PLL_TEST=1
 export G_EXT_TRIGGER_TEST=1
 
+#enable save result
+#export G_SAVE_TO_PC=1
+
+# make temprary directory
+export TEST_TMP_DIR=$(mktemp -d)
+
 # RUN MAIN TEST
 ./main_test.sh
+
+rm -rf $TEST_TMP_DIR

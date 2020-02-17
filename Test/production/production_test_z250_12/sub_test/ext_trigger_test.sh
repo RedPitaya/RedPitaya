@@ -18,10 +18,10 @@ echo
 
 enableK1Pin
 
-echo -n "   * Start generate square 1KHz signal for trigger and input"
+echo -n "   * Start generate square 1KHz signal for trigger and input "
 $C_GENERATE 1 1 1000 x5 sine
 $C_GENERATE 2 1 1000 x5 sine
-print_test_ok
+print_ok
 
 sleep 1
 
@@ -55,13 +55,13 @@ sleep 1
 
 #recover light on RP
 $C_MONITOR 0x40000030 w $LIGHT_STATUS
-
 if [[ $STATUS != 0 ]]
 then
     print_test_fail
 else
     RPLight6
     print_test_ok
+    SetBitState 0x1000
 fi
 
 

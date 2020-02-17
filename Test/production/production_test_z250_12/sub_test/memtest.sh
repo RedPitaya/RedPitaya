@@ -14,8 +14,9 @@ STATUS=0
 echo
 echo "Start memory test..."
 echo
+MEMORY_SIZE=370
 
-$C_MEM_TEST_TOOL 370 1
+$C_MEM_TEST_TOOL $MEMORY_SIZE 1
 
 echo -n "Memory testing completed "
 

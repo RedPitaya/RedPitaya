@@ -88,6 +88,7 @@ sleep 0.2
 if [[ $STATUS == 0 ]]
 then
     $C_UART_TOOL 'LED:GRN 1 4' -s
+    SetBitState 0x80
     print_test_ok
 else
     print_test_fail

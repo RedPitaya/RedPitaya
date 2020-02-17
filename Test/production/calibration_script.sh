@@ -324,8 +324,8 @@ IN1_ERROR_LV=$(awk -v ADC_A_MEAN=$ADC_A_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGI
 IN2_ERROR_LV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_LV=$REF_VALUE_LV 'BEGIN { print (((ADC_B_MEAN-REF_VALUE_LV)/REF_VALUE_LV)*100) }')
 
 # Print out the measurements
-echo "      IN1 LV Error after the claibration is $IN1_ERROR_LV %"
-echo "      IN2 LV Error after the claibration is $IN2_ERROR_LV %"
+echo "      IN1 LV Error after the calibration is $IN1_ERROR_LV %"
+echo "      IN2 LV Error after the calibration is $IN2_ERROR_LV %"
 echo
 
 # HV jumper settings
@@ -503,8 +503,8 @@ IN2_ERROR_HV=$(awk -v ADC_B_MEAN=$ADC_B_MEAN -v REF_VALUE_HV=$REF_VALUE_HV 'BEGI
 
 # Print out the measurements
 echo
-echo "      IN1 HV Error after the claibration is $IN1_ERROR_HV %"
-echo "      IN2 HV Error after the claibration is $IN2_ERROR_HV %"
+echo "      IN1 HV Error after the calibration is $IN1_ERROR_HV %"
+echo "      IN2 HV Error after the calibration is $IN2_ERROR_HV %"
 echo " "
 
 

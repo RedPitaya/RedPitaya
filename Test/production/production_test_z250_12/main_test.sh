@@ -4,6 +4,7 @@
 source ./sub_test/common_func.sh
 
 echo "START MAIN TEST"
+InitBitState
 load_fpga_0_94
 sleep 1
 
@@ -50,7 +51,15 @@ done
 ########################################################################
 if [[ $G_CONSOLE_TEST == 1 ]]
 then
-./sub_test/test_console_and_mac.sh
+    ./sub_test/test_console_and_mac.sh
+    if [[ "$?" = '1' ]]
+    then
+        SetBackLog "Console and EEPROM write" $(print_ok)
+    else 
+        SetBackLog "Console and EEPROM write" $(print_fail)
+    fi
+else
+    SetBackLog "Console and EEPROM write" $(print_skip)    
 fi
 
 echo
@@ -58,13 +67,25 @@ echo
 # Get identificator if zynq
 readZynqCode
 echo "Zynq code received $ZYNQ_CODE"
+PrintToFile "zynq_code" "$ZYNQ_CODE"
 
 ###############################################################################
 # memory test
 ###############################################################################
 if [[ $G_MEM_TEST == 1 ]]
 then
-./sub_test/memtest.sh
+    ./sub_test/memtest.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "Memory check" $(print_ok)
+        PrintToFile "mem_test" "1"
+    else 
+        SetBackLog "Memory check" $(print_fail)
+        PrintToFile "mem_test" "0"
+    fi
+else
+    SetBackLog "Memory check" $(print_skip)   
+    PrintToFile "mem_test" "2" 
 fi
 
 ###############################################################################
@@ -72,7 +93,15 @@ fi
 ###############################################################################
 if [[ $G_SPI_TEST == 1 ]]
 then
-./sub_test/i2c_spi_test.sh
+    ./sub_test/i2c_spi_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "I2C and SPI bus functionality" $(print_ok)
+    else 
+        SetBackLog "I2C and SPI bus functionality" $(print_fail)
+    fi
+else
+    SetBackLog "I2C and SPI bus functionality" $(print_skip)    
 fi
 
 ###############################################################################
@@ -80,7 +109,15 @@ fi
 ###############################################################################
 if [[ $G_ETHERNET_TEST == 1 ]]
 then
-./sub_test/ethernet_test.sh
+    ./sub_test/ethernet_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "Ethernet" $(print_ok)
+    else 
+        SetBackLog "Ethernet" $(print_fail)
+    fi
+else
+    SetBackLog "Ethernet" $(print_skip)    
 fi
 
 ###############################################################################
@@ -88,7 +125,15 @@ fi
 ###############################################################################
 if [[ $G_POWER_TEST == 1 ]]
 then
-./sub_test/temperatures_and_power_test.sh
+    ./sub_test/temperatures_and_power_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "Temperature and Power" $(print_ok)
+    else 
+        SetBackLog "Temperature and Power" $(print_fail)
+    fi
+else
+    SetBackLog "Temperature and Power" $(print_skip)  
 fi
 
 ###############################################################################
@@ -96,7 +141,15 @@ fi
 ###############################################################################
 if [[ $G_USB_TEST == 1 ]]
 then
-./sub_test/usb_test.sh
+    ./sub_test/usb_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "USB" $(print_ok)
+    else 
+        SetBackLog "USB" $(print_fail)
+    fi
+else
+    SetBackLog "USB" $(print_skip)  
 fi
 
 ###############################################################################
@@ -104,7 +157,15 @@ fi
 ###############################################################################
 if [[ $G_SATA_TEST == 1 ]]
 then
-./sub_test/sata_test.sh
+    ./sub_test/sata_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "SATA loopback" $(print_ok)
+    else 
+        SetBackLog "SATA loopback" $(print_fail)
+    fi
+else
+    SetBackLog "SATA loopback" $(print_skip)  
 fi
 
 ###############################################################################
@@ -112,7 +173,15 @@ fi
 ###############################################################################
 if [[ $G_GPIO_TEST == 1 ]]
 then
-./sub_test/gpio_test.sh
+    ./sub_test/gpio_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "GPIO" $(print_ok)
+    else 
+        SetBackLog "GPIO" $(print_fail)
+    fi
+else
+    SetBackLog "GPIO" $(print_skip)  
 fi
 
 ###############################################################################
@@ -120,7 +189,15 @@ fi
 ###############################################################################
 if [[ $G_SLOW_ADC_DAC_TEST == 1 ]]
 then
-./sub_test/slow_adc_dac_test.sh
+    ./sub_test/slow_adc_dac_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "Slow ADC and DAC" $(print_ok)
+    else 
+        SetBackLog "Slow ADC and DAC" $(print_fail)
+    fi
+else
+    SetBackLog "Slow ADC and DAC" $(print_skip)  
 fi
 
 ###############################################################################
@@ -128,7 +205,15 @@ fi
 ###############################################################################
 if [[ $G_FAST_ADC_DAC_TEST == 1 ]]
 then
-./sub_test/fast_adc_test.sh
+    ./sub_test/fast_adc_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "Fast ADC and DAC" $(print_ok)
+    else 
+        SetBackLog "Fast ADC and DAC" $(print_fail)
+    fi
+else
+    SetBackLog "Fast ADC and DAC" $(print_skip)  
 fi
 
 ###############################################################################
@@ -136,7 +221,15 @@ fi
 ###############################################################################
 if [[ $G_FAST_ADC_BIT_TEST == 1 ]]
 then
-./sub_test/fast_adc_bit_test.sh
+    ./sub_test/fast_adc_bit_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "Fast ADC and DAC bit" $(print_ok)
+    else 
+        SetBackLog "Fast ADC and DAC bit" $(print_fail)
+    fi
+else
+    SetBackLog "Fast ADC and DAC bit" $(print_skip)  
 fi
 
 ###############################################################################
@@ -144,7 +237,34 @@ fi
 ###############################################################################
 if [[ $G_CALIBRATION == 1 ]]
 then
-./sub_test/calibration.sh
+    ./sub_test/calibration.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "ADC and DAC calibration" $(print_ok)
+        PrintToFile "calib_test" "1"
+    else 
+        SetBackLog "ADC and DAC calibration" $(print_fail)
+        PrintToFile "calib_test" "0"
+    fi
+else
+    SetBackLog "ADC and DAC calibration" $(print_skip)  
+    PrintToFile "calib_test" "2"
+fi
+
+###############################################################################
+# DAC test
+###############################################################################
+if [[ $G_FAST_DAC_TEST == 1 ]]
+then
+    ./sub_test/fast_dac_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "DAC" $(print_ok)
+    else 
+        SetBackLog "DAC" $(print_fail)
+    fi
+else
+    SetBackLog "DAC" $(print_skip)  
 fi
 
 ###############################################################################
@@ -152,7 +272,15 @@ fi
 ###############################################################################
 if [[ $G_PLL_TEST == 1 ]]
 then
-./sub_test/pll_test.sh
+    ./sub_test/pll_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "PLL" $(print_ok)
+    else 
+        SetBackLog "PLL" $(print_fail)
+    fi
+else
+    SetBackLog "PLL" $(print_skip)  
 fi
 
 ###############################################################################
@@ -160,9 +288,19 @@ fi
 ###############################################################################
 if [[ $G_EXT_TRIGGER_TEST == 1 ]]
 then
-./sub_test/ext_trigger_test.sh
+    ./sub_test/ext_trigger_test.sh
+    if [[ "$?" = '0' ]]
+    then
+        SetBackLog "External trigger" $(print_ok)
+    else 
+        SetBackLog "External trigger" $(print_fail)
+    fi
+else
+    SetBackLog "External trigger" $(print_skip)  
 fi
 
 echo
+./sub_test/print_result.sh
+./sub_test/save_result.sh
 echo
 echo "END MAIN TEST"

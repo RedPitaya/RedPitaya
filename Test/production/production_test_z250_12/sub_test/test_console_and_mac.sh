@@ -5,6 +5,7 @@ source ./sub_test/default_calibration_values.sh
 
 N_REP=5
 RP_MAC_BEGINNING='00:26:32'
+STATUS=1
 
 echo
 echo -e "\e[94m########################################################################\e[0m"
@@ -37,8 +38,10 @@ READ_NAV=$( $C_PRINTENV | grep nav_code= | awk 'BEGIN {FS="="}{print $2}') > /de
 READ_HWREV=$( $C_PRINTENV | grep hw_rev= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
 READ_SERIAL=$( $C_PRINTENV | grep serial= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
 MAC_BEGIN=${READ_MAC:0:8}
+HW_BEGIN=${READ_HWREV:0:14}
+PrintToFile "hw_rev" "$READ_HWREV"
 
-if [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$READ_NAV" == "" ]] || [[ "$READ_HWREV" != "STEM_250-12_v1.0" ]] || [[ "$READ_SERIAL" == "" ]]
+if [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$READ_NAV" == "" ]] || [[ "$HW_BEGIN" != "STEM_250-12_v1" ]] || [[ "$READ_SERIAL" == "" ]]
 then
 
     echo
@@ -169,11 +172,12 @@ getDefCalibValues
 export FACTORY_CAL
 ./sub_test/set_calibration.sh
 ./sub_test/set_calibration_fw.sh
-print_calib
-if [[ "$?" = '1' ]]
+if [[ "$?" = '0' ]]
 then
     $C_UART_TOOL 'LED:GRN 0 6' -s
+    $STATUS=0
+    SetBitState 0x01
 fi
-
+print_calib
 fi
-exit 1
+exit $STATUS

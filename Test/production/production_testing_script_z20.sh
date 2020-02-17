@@ -1307,7 +1307,7 @@ echo
 echo "--- TEST 7: Fast ADCs bit analysis test ---"
 echo
 
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
 echo
 
 PREVIOUS_TEST=0

@@ -18,15 +18,18 @@ enableK1Pin
 print_ok
 sleep 0.5
 
+echo
 echo "  * Begin calibrate"
 echo "    Please turn the knob until you get the minimum value."
 echo "    After calibrate, PRESS ANY KEY TO CONTINUE"
+echo 
 
 $C_CAPACITOR_CALIB_TOOL -C1
-
-echo -n "Calibrate "
+CAL_VALUE=$(cat /tmp/calib_test_result.txt)
+echo
+echo -n "Calibrate value $CAL_VALUE "
 print_ok
-
+PrintToFile "capacitors" "$CAL_VALUE "
 echo
 echo 
 
@@ -38,15 +41,18 @@ enableK1Pin
 print_ok
 sleep 0.5
 
+echo
 echo "  * Begin calibrate"
 echo "    Please turn the knob until you get the minimum value."
 echo "    After calibrate, PRESS ANY KEY TO CONTINUE"
+echo 
 
 $C_CAPACITOR_CALIB_TOOL -C1 -A20
-
-echo -n "Calibrate "
+CAL_VALUE=$(cat /tmp/calib_test_result.txt)
+echo
+echo -n "Calibrate value $CAL_VALUE "
 print_ok
-
+PrintToFile "capacitors" "$CAL_VALUE "
 echo
 echo 
 
@@ -59,15 +65,18 @@ enableK1Pin
 print_ok
 sleep 0.5
 
+echo 
 echo "  * Begin calibrate"
 echo "    Please turn the knob until you get the minimum value."
 echo "    After calibrate, PRESS ANY KEY TO CONTINUE"
+echo 
 
 $C_CAPACITOR_CALIB_TOOL -C2 
-
-echo -n "Calibrate "
+CAL_VALUE=$(cat /tmp/calib_test_result.txt)
+echo
+echo -n "Calibrate value $CAL_VALUE "
 print_ok
-
+PrintToFile "capacitors" "$CAL_VALUE "
 echo
 echo 
 
@@ -79,14 +88,19 @@ enableK1Pin
 print_ok
 sleep 0.5
 
+echo
 echo "  * Begin calibrate"
 echo "    Please turn the knob until you get the minimum value."
 echo "    After calibrate, PRESS ANY KEY TO CONTINUE"
+echo
 
 $C_CAPACITOR_CALIB_TOOL -C2 -A20
-
-echo -n "Calibrate "
+CAL_VALUE=$(cat /tmp/calib_test_result.txt)
+echo
+echo -n "Calibrate value $CAL_VALUE "
 print_ok
+PrintToFile "capacitors" "$CAL_VALUE"
+
 #recover light on RP
 $C_MONITOR 0x40000030 w $LIGHT_STATUS
 RPLight4

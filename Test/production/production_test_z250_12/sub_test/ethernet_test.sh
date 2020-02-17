@@ -2,12 +2,11 @@
 source ./sub_test/common_func.sh
 
 ########## VARIABLES
-LOCAL_SERVER_IP='192.168.1.1'
 EXP_LINK_SPEED='1000'
 EXP_DUPLEX='full'
 N_PING_PKG=5
 PKT_SIZE=16000
-PING_IP=$LOCAL_SERVER_IP
+PING_IP=$G_LOCAL_SERVER_IP
 MIN_QR_LENGTH=50             # Set to 50 when using QR scanner
 RP_MAC_BEGINNING='00:26:32'
 ##########
@@ -43,8 +42,10 @@ if [[ "$EEPROM_MAC" != "$LINUX_MAC" ]]
 then
     echo -n "    MAC address is not applied correctly to the network configuration"
     print_fail
-    STATUS=-1
+    STATUS=1
 fi
+
+PrintToFile "mac_addr" "$EEPROM_MAC"
 
 # Check the link speed
 echo 
@@ -60,17 +61,19 @@ then
     echo "    Duplex is \"$DUPLEX\" (\"$EXP_DUPLEX\" expected)."
     print_test_fail
     echo " "
-    STATUS=-1
+    STATUS=1
 fi
 
 # Ping the defined IP
 echo "Ping to unit $PING_IP"
-RES=$(ping "$PING_IP" -c "$N_PING_PKG" -s "$PKT_SIZE" | grep 'transmitted' | awk '{print $4}' ) > /dev/null
+RES=$(ping "$PING_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{print $4}' ) > /dev/null
+
+echo "Transmitted: $N_PING_PKG, received: $RES"
 
 if [[ "$RES" != "$N_PING_PKG" ]]
 then
     print_test_fail
-    STATUS=-1
+    STATUS=1
 else
     print_test_ok
 fi
@@ -78,6 +81,7 @@ fi
 if [[ $STATUS == 0 ]]
 then
     $C_UART_TOOL 'LED:GRN 0 5' -s
+    SetBitState 0x08
 fi
 
 sleep 1

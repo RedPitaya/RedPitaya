@@ -117,107 +117,112 @@ int main(int argc, char **argv){
 
 		// Need for setup Test board 
 
-		rp_DpinSetDirection(RP_DIO7_N,RP_OUT);
-		rp_DpinSetState(RP_DIO7_N,RP_HIGH);
+	rp_DpinSetDirection(RP_DIO7_N,RP_OUT);
+	rp_DpinSetState(RP_DIO7_N,RP_HIGH);
 
-        rp_GenReset();
-        rp_GenFreq(channel, 1000.0);
-        rp_GenAmp(channel, 1.0);
-        rp_GenWaveform(channel, RP_WAVEFORM_SQUARE);
-        rp_GenOutEnable(channel);
-		
-        uint32_t buff_size = 16384;
-        float *buff = (float *)malloc(buff_size * sizeof(float));
-        rp_AcqReset();
-		rp_AcqSetAC_DC(channel,RP_AC);
-		if (attenuator_flag){
-			rp_AcqSetGain(channel,RP_HIGH);}
-		else{
-			rp_AcqSetGain(channel,RP_LOW);}
-		
-        rp_AcqSetDecimation(RP_DEC_8);
-        rp_AcqSetTriggerLevel((rp_channel_trigger_t)channel,0);
-        rp_AcqStart();
+	rp_GenReset();
+	rp_GenFreq(channel, 1000.0);
+	rp_GenAmp(channel, 1.0);
+	rp_GenWaveform(channel, RP_WAVEFORM_SQUARE);
+	rp_GenOutEnable(channel);
+	
+	uint32_t buff_size = 16384;
+	float *buff = (float *)malloc(buff_size * sizeof(float));
+	rp_AcqReset();
+	rp_AcqSetAC_DC(channel,RP_AC);
+	if (attenuator_flag){
+		rp_AcqSetGain(channel,RP_HIGH);}
+	else{
+		rp_AcqSetGain(channel,RP_LOW);}
+	
+	rp_AcqSetDecimation(RP_DEC_8);
+	rp_AcqSetTriggerLevel((rp_channel_trigger_t)channel,0);
+	rp_AcqStart();
 
 
-        /* After acquisition is started some time delay is needed in order to acquire fresh samples in to buffer*/
-        /* Here we have used time delay of one second but you can calculate exact value taking in to account buffer*/
-        /*length and smaling rate*/
+	/* After acquisition is started some time delay is needed in order to acquire fresh samples in to buffer*/
+	/* Here we have used time delay of one second but you can calculate exact value taking in to account buffer*/
+	/*length and smaling rate*/
 
-        sleep(1);
-        rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
-        rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
-
-        while(1){
-                rp_AcqGetTriggerState(&state);
-                if(state == RP_TRIG_STATE_TRIGGERED){
-                //break;
-					rp_AcqStop();
-					rp_AcqGetOldestDataV(channel, &buff_size, buff);
-					int i;
-					float area  = 0;
-					float area_avg = 0;
-					float count = 0;
-					float deviation = 0;
-					for(i = 0; i < buff_size; i++){
-							if (buff[i]>0){
-								area += buff[i];
-								count++;
-							}
-					}
-					if (count == 0) count = 1;
-					area_avg = area / count;
-					for(i = 0; i < buff_size; i++){
-							if (buff[i]>0){
-								deviation += fabs(area_avg - buff[i]);
-							}
-					}
-					q_area_avg.push(area_avg);
-					q_deviation_avg.push(deviation);
-					float filtred_area = sumQueue(q_area_avg)/q_area_avg.size();
-					float filtred_deviation = sumQueue(q_deviation_avg)/q_deviation_avg.size();
-
-					if (q_area_avg.size() > 100){
-						q_area_avg.pop();
-					}
-
-					if (q_deviation_avg.size() > 100){
-						q_deviation_avg.pop();
-						if (min_deviation > filtred_deviation)
-								min_deviation = filtred_deviation;
-						if (max_deviation < filtred_deviation)
-							max_deviation = filtred_deviation;
-					}
-
-					if (skip_print>10){
-						if (max_deviation != 0)
-							printf("avg of maximum value %6.3f deviation %6.3f (MIN %6.3f) - (MAX %6.3f)\r", filtred_area , filtred_deviation,
-																		min_deviation,max_deviation);
-						else
-							printf("avg of maximum value %6.3f deviation %6.3f\r", filtred_area , filtred_deviation);
-						fflush(stdout);
-						skip_print=0;
-					}
-					skip_print++;
-					rp_AcqStart();
-					rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
-        			state = RP_TRIG_STATE_TRIGGERED;
-					
+	sleep(1);
+	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
+	float filtred_deviation = 0;
+	while(1){
+			rp_AcqGetTriggerState(&state);
+			if(state == RP_TRIG_STATE_TRIGGERED){
+			//break;
+				rp_AcqStop();
+				rp_AcqGetOldestDataV(channel, &buff_size, buff);
+				int i;
+				float area  = 0;
+				float area_avg = 0;
+				float count = 0;
+				float deviation = 0;
+				for(i = 0; i < buff_size; i++){
+						if (buff[i]>0){
+							area += buff[i];
+							count++;
+						}
 				}
-				if (_kbhit()) {
-					flush_kbhit();
-					break;
+				if (count == 0) count = 1;
+				area_avg = area / count;
+				for(i = 0; i < buff_size; i++){
+						if (buff[i]>0){
+							deviation += fabs(area_avg - buff[i]);
+						}
 				}
+				q_area_avg.push(area_avg);
+				q_deviation_avg.push(deviation);
+				float filtred_area = sumQueue(q_area_avg)/q_area_avg.size();
+				filtred_deviation = sumQueue(q_deviation_avg)/q_deviation_avg.size();
+
+				if (q_area_avg.size() > 100){
+					q_area_avg.pop();
+				}
+
+				if (q_deviation_avg.size() > 100){
+					q_deviation_avg.pop();
+					if (min_deviation > filtred_deviation)
+							min_deviation = filtred_deviation;
+					if (max_deviation < filtred_deviation)
+						max_deviation = filtred_deviation;
+				}
+
+				if (skip_print>10){
+					if (max_deviation != 0)
+						printf("avg of maximum value %6.3f deviation %6.3f (MIN %6.3f) - (MAX %6.3f)\r", filtred_area , filtred_deviation,
+																	min_deviation,max_deviation);
+					else
+						printf("avg of maximum value %6.3f deviation %6.3f\r", filtred_area , filtred_deviation);
+					fflush(stdout);
+					skip_print=0;
+				}
+				skip_print++;
+				rp_AcqStart();
+				rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+				state = RP_TRIG_STATE_TRIGGERED;
 				
-        }
+			}
+			if (_kbhit()) {
+				flush_kbhit();
+				break;
+			}
+			
+	}
 
-        
-        /* Releasing resources */
-        free(buff);
+	
+	/* Releasing resources */
+	free(buff);
 
 
 	/* Releasing resources */
 	rp_Release();
+	
+	std::ofstream file;
+  	file.open ("/tmp/calib_test_result.txt");
+  	file << filtred_deviation;
+ 	file.close();
 
 	return 0;
 }

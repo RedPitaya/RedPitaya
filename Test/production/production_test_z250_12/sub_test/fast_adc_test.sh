@@ -28,8 +28,7 @@ echo -e "\e[94m#################################################################
 echo -e "\e[94m#            Fast ADCs and DACs test                                   #\e[0m"
 echo -e "\e[94m########################################################################\e[0m"
 echo
-echo "TEST IN AC MODE"
-echo "    Acqusition without DAC signal - ADCs with HIGH gain"
+echo "    Acquisition without DAC signal - ADC (1:1) DC"
 echo
 
 STATUS=0
@@ -49,16 +48,17 @@ export ENABLE_NOISE_NO_DEC=1
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_NOISE_P2P
 export MIN_P2P=0
+export ACQ_PARAM="-d B"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 # Set DAC value to proper counts / frequency for both channels
 echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADC (1:1) DC"
 echo
 
 # Turn the DAC signal generator on on both channels
@@ -73,16 +73,17 @@ export ENABLE_NOISE_NO_DEC=0
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_SIG_P2P_HIGH_GAIN
 export MIN_P2P=$MIN_SIG_P2P_HIGH_GAIN
+export ACQ_PARAM="-d B"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 
 echo
-echo "    Acqusition without DAC signal - ADCs with attenuator 1:20"
+echo "    Acquisition without DAC signal - ADC (1:20) DC"
 echo
 
 # Turn the DAC signal generator OFF on both channels (ch 1 & 2)
@@ -96,16 +97,16 @@ export ENABLE_NOISE_NO_DEC=1
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_NOISE_P2P
 export MIN_P2P=0
-export ACQ_PARAM="-1 20 -2 20"
+export ACQ_PARAM="-1 20 -2 20 -d B"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with attenuator 1:20"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADC (1:20) DC"
 echo
 
 # Turn the DAC signal generator on on both channels
@@ -120,17 +121,16 @@ export ENABLE_NOISE_NO_DEC=0
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_SIG_P2P_LOW_GAIN
 export MIN_P2P=$MIN_SIG_P2P_LOW_GAIN
-export ACQ_PARAM="-1 20 -2 20"
+export ACQ_PARAM="-1 20 -2 20 -d B"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 echo
-echo "TEST IN DC MODE"
-echo "    Acqusition without DAC signal - ADCs with HIGH gain"
+echo "    Acquisition without DAC signal - ADC (1:1) AC"
 echo
 
 # Assure tht DAC signals (ch 1 & 2) are OFF
@@ -144,17 +144,17 @@ export ENABLE_NOISE_NO_DEC=1
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_NOISE_P2P
 export MIN_P2P=0
-export ACQ_PARAM="-d B"
+export ACQ_PARAM=""
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 # Set DAC value to proper counts / frequency for both channels
 echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with HIGH gain"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADC (1:1) AC"
 echo
 
 # Turn the DAC signal generator on on both channels
@@ -169,17 +169,17 @@ export ENABLE_NOISE_NO_DEC=0
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_SIG_P2P_HIGH_GAIN
 export MIN_P2P=$MIN_SIG_P2P_HIGH_GAIN
-export ACQ_PARAM="-d B"
+export ACQ_PARAM=""
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 
 echo
-echo "    Acqusition without DAC signal - ADCs with attenuator 1:20"
+echo "    Acquisition without DAC signal - ADC (1:20) AC"
 echo
 
 # Turn the DAC signal generator OFF on both channels (ch 1 & 2)
@@ -193,16 +193,16 @@ export ENABLE_NOISE_NO_DEC=1
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_NOISE_P2P
 export MIN_P2P=0
-export ACQ_PARAM="-1 20 -2 20 -d B"
+export ACQ_PARAM="-1 20 -2 20"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 echo
-echo "    Acqusition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADCs with attenuator 1:20"
+echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADC (1:20) AC"
 echo
 
 # Turn the DAC signal generator on on both channels
@@ -217,12 +217,12 @@ export ENABLE_NOISE_NO_DEC=0
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_SIG_P2P_LOW_GAIN
 export MIN_P2P=$MIN_SIG_P2P_LOW_GAIN
-export ACQ_PARAM="-1 20 -2 20 -d B"
+export ACQ_PARAM="-1 20 -2 20"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
 then
-STATUS=1
+    STATUS=1
 fi
 
 # Set DAC value to 0 for both channels (1 & 2)
@@ -237,6 +237,7 @@ if [[ $STATUS == 0 ]]
 then
     print_test_ok
     RPLight1
+    SetBitState 0x200
 else
     print_test_fail
 fi
