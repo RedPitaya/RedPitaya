@@ -18,10 +18,10 @@ echo
 
 enableK1Pin
 
-echo -n "   * Start generate square 1KHz signal for trigger and input"
+echo -n "   * Start generate square 1KHz signal for trigger and input "
 $C_GENERATE 1 1 1000 x5 sine
 $C_GENERATE 2 1 1000 x5 sine
-print_test_ok
+print_ok
 
 sleep 1
 
