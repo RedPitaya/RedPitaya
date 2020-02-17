@@ -5,7 +5,7 @@
 
 PATH_LIB=$(XILINX_VIVADO)/data/verilog/src
 PATH_SIP=$(XILINX_VIVADO)/data/secureip
-PATH_RTL=../rtl
+PATH_RTL=../rtl_250
 PATH_TBN=../tbn
 PATH_PRJ=../prj/v0.94_250
 
@@ -26,6 +26,7 @@ LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
     $(PATH_LIB)/unisims/BUFR.v \
     $(PATH_LIB)/unisims/IDELAYCTRL.v \
     $(PATH_LIB)/unisims/IDELAYE2.v \
+    $(PATH_LIB)/retarget/IBUFGDS.v \
     $(PATH_LIB)/glbl.v
 
 SIP=$(PATH_SIP)/oserdese2/oserdese2_002.vp \

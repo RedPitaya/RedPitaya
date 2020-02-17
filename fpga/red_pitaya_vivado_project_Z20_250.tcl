@@ -77,7 +77,7 @@ if {[info exists board]} {
 # start gui
 ################################################################################
 
-import_files -force
+#import_files -force
 
 update_compile_order -fileset sources_1
 
