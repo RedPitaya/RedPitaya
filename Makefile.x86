@@ -82,12 +82,13 @@ UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
+HWID ?=
+
 ifeq ($(MODEL),Z10)
 FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite streaming
 # NEED for FSBL fpga image
 FPGA_PRJ = streaming
 FPGA_MODEL ?= Z10
-HWID ?=
 DTS_PATH = dts 
 endif
 
@@ -96,7 +97,6 @@ FPGA_PRJ_LST = v0.94 streaming
 # NEED for FSBL fpga image 
 FPGA_PRJ = streaming
 FPGA_MODEL ?= Z20
-HWID ?=
 DTS_PATH = dts
 endif
 
@@ -105,7 +105,6 @@ FPGA_PRJ_LST = v0.94_250
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
 FPGA_MODEL ?= Z20_250
-HWID ?= v1r0
 DTS_PATH = dts_250
 endif
 
