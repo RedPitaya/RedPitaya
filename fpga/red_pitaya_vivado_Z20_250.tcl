@@ -77,7 +77,9 @@ foreach item $argv {
   puts "Input arfguments: $argv"
   if {[lsearch -all $item "*HWID*"] >= 0} {
     set hwid [split $item "="]
-    set board [lindex $hwid 1]
+    if {[llength $hwid] == 2} {
+      set board [lindex $hwid 1]
+    }
     puts "Special board: $board"
   }
 }
