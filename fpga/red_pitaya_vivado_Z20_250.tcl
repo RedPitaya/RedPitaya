@@ -79,8 +79,8 @@ foreach item $argv {
     set hwid [split $item "="]
     if {[lindex $hwid 1] ne ""} {
       set board [lindex $hwid 1]
+      puts "Special board: $board"
     }
-    puts "Special board: $board"
   }
 }
 
