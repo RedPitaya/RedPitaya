@@ -37,7 +37,7 @@ LOG_FILENAME='manuf_test.log'
 
 # Production PC/SERVER variables
 #LOCAL_SERVER_IP='192.168.1.200'
-LOCAL_SERVER_IP='10.0.1.160'
+LOCAL_SERVER_IP='192.168.1.2'
 LOCAL_SERVER_PASS='redpitaya'
 LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 LOCAL_USER='redpitaya'
@@ -578,20 +578,20 @@ then
     TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 ###############################################################################
 # STEP 1: Wired network test
@@ -688,17 +688,17 @@ then
     # TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     # $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 ###############################################################################
 # STEP 2: Temperature and Power supply voltages test
@@ -823,20 +823,20 @@ then
     fi
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 ###############################################################################
 # STEP 3: USB drive test
@@ -910,20 +910,20 @@ then
     TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 
 ###############################################################################
@@ -1039,20 +1039,20 @@ then
     # TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     # $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 ###############################################################################
 # STEP 5: GPIO connection test
@@ -1146,20 +1146,20 @@ then
     fi
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 # DIO test is finished- Configure DIOx_P to inputs and DIOx_N to outputs to prevent Relay misbehaviour
 $MONITOR 0x40000010 w 0x00 # -> Set P to inputs
@@ -1273,20 +1273,20 @@ then
     TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
 
 # Restore FPGA firmware
 cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
@@ -1455,21 +1455,21 @@ then
     TEST_GLOBAL_STATUS=$(($TEST_GLOBAL_STATUS+$TEST_VALUE_LED))
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
-
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
 echo "    Restoring DAC signals and ADC gain to idle conditions..."
 $GENERATE 1 0 $SIG_FREQ
 $GENERATE 2 0 $SIG_FREQ
@@ -1500,12 +1500,14 @@ then
 
         exec 5>&1
         SFDR_VAL=$(/opt/redpitaya/bin/production_testing_script_z20_spectrum.sh|tee >(cat - >&5))
-        SFDR_RESULT=$(gawk 'match($0, /^SFDR_TEST_STATUS=\s(.+)/, a) {print a[1]}' <<< "${SFDR_VAL}")
-        if [[ "$SFDR_RESULT" != "0" ]]
+        SFDR_RESULT=$(gawk '{match($0, /SFDR_TEST_STATUS=[0-9]+/, a)}{split(a[0],b,"=")}{print b[2]}' <<< "${SFDR_VAL}")
+        if [[ $SFDR_RESULT -eq 1 ]]
         then
         TEST_STATUS=0
         fi
-        SFDR_VAL_RES=$(gawk 'match($0, /^RES_SFDR=\s(.+)/, a) {print a[1]}' <<< "${SFDR_VAL}")
+        SFDR_VAL_RES=$(gawk '{match($0, /RES_SFDR=\s(.+);/, a)};{gsub("RES_SFDR=","",a[0])};{gsub(";","",a[0])};{print a[0]}' <<< "${SFDR_VAL}")
+	SFDR_VAL_RES=$(gawk '{$1=$1};1' <<< "${SFDR_VAL_RES}")
+	SFDR_VAL_RES=$(tr -dc '[:print:]' <<< "$SFDR_VAL_RES")
         LOG_VAR="$LOG_VAR $SFDR_VAL_RES"
 else
 echo "SFDR spectrum test skipped"
@@ -1514,6 +1516,8 @@ TEST_STATUS=0
 fi
 sleep $SLEEP_BETWEEN_TESTS
 
+echo "TEST_STATUS=$TEST_STATUS"
+echo "$SFDR_VAL"
 
 # TEST 8 - Fast ADC/DAC bit analysis test, if was OK Writte  "1"  in logfile status byte set LED6 ON
 if [ $TEST_STATUS -eq 1 ]
@@ -1525,21 +1529,21 @@ then
     fi
     LOGFILE_STATUS=$(($LOGFILE_STATUS+$TEST_VALUE))
     $MONITOR $LED_ADDR w "$(printf '0x%02x' $TEST_GLOBAL_STATUS)"
-    echo
-    echo
-    echo "**********************************************************************************"
-    echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
-    echo "**********************************************************************************"
-    echo
-    #(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
-    #(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
-    #(LED3->TEST_VALUE_LED=8     is used for USB drive test)
-    #(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
-    #(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
-    #(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
-    #(LED7->TEST_VALUE_LED=128   is used for calibration tests)
-
 fi
+echo
+echo
+echo "**********************************************************************************"
+echo " Current Tests status of: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]}   "
+echo "**********************************************************************************"
+echo
+#(LED1->TEST_VALUE_LED=2     is used for enviroment parameters test)
+#(LED2->TEST_VALUE_LED=4     is used for ethernet, zyng temperature and voltages test)
+#(LED3->TEST_VALUE_LED=8     is used for USB drive test)
+#(LED4->TEST_VALUE_LED=16    is used for GPIO and SATA tests)
+#(LED5->TEST_VALUE_LED=32    is used for slow ADC and DAC tests)
+#(LED6->TEST_VALUE_LED=64    is used for fast ADC and DAC + bit analysis tests)
+#(LED7->TEST_VALUE_LED=128   is used for calibration tests)
+
 echo
 sleep $SLEEP_BETWEEN_TESTS
 
@@ -1656,7 +1660,8 @@ else
     fi
 fi
 
-LOG_VAR="$LOG_VAR $CALIBRATION_STATUS"
+CALIBRATION_LOG_PARAMS="$FE_CH1_DC_offs $FE_CH2_DC_offs $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO $FE_CH1_DC_offs_HI $FE_CH2_DC_offs_HI $FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $BE_CH1_DC_offs $BE_CH2_DC_offs $BE_CH1_FS $BE_CH2_FS"
+LOG_VAR="$LOG_VAR $CALIBRATION_LOG_PARAMS $CALIBRATION_STATUS" # If clibraation fail log factory cal data
 
 
 else   # From if [ $LOGFILE_STATUS -eq 511 ] conditon
@@ -1780,9 +1785,9 @@ RES=$(ping "$LOCAL_SERVER_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{prin
  if [[ "$RES" == "$N_PING_PKG" ]]
  then
     echo "----------Logging test statistics to PRODUCTION PC-------------------"
-
+#ssh $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     #echo 'sometext' | ssh zumy@192.168.178.123 "cat >> /home/zumy/Desktop/Test_LOGS/manuf_test.log"
-    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS" ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
+    echo $LOG_VAR_DATE | sshpass -p "$LOCAL_SERVER_PASS"  ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $LOCAL_USER@$LOCAL_SERVER_IP "cat >> $LOCAL_SERVER_DIR/$LOG_FILENAME"
     echo
     echo "      Test data logging on the local PC was successfull"
     else
@@ -1895,15 +1900,15 @@ then                                                        ## production data b
 else
     echo
     echo
-    echo "                  ********************"
-    echo "                  ********************"
-    echo "                  *                  *"
-    echo "                  *                  *"
-    echo "                  *    BOARD FAILD   *"
-    echo "                  *                  *"
-    echo "                  *                  *"
-    echo "                  ********************"
-    echo "                  ********************"
+    echo "                  *********************"
+    echo "                  *********************"
+    echo "                  *                   *"
+    echo "                  *                   *"
+    echo "                  *    BOARD FAILED   *"
+    echo "                  *                   *"
+    echo "                  *                   *"
+    echo "                  *********************"
+    echo "                  *********************"
     echo
     echo
     echo "                  Test status is: T8-T7-T6-T5-T4-T3-T2-T1-T0 -> ${D2B[$LOGFILE_STATUS]} "

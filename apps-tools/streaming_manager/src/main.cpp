@@ -56,7 +56,7 @@ CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 1 ,0,	1,3);
 CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
-CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
+CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RWSA, 1 ,0,	0,100);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
@@ -279,8 +279,7 @@ void StartServer(){
 	int resolution_val = (resolution == 1 ? 8 : 16);
 	s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel);
 	ss_status.SendValue(1);
-	sleep(1);
-    s_app->runNonBlock();
+	s_app->runNonBlock();
 
 	}catch (std::exception& e)
 	{
