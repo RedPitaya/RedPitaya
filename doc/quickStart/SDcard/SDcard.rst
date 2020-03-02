@@ -162,8 +162,8 @@ Using ApplePi-Baker
 
    .. image:: SDcard_insert.jpg
 
-#. Download `ApplePi-Baker <https://www.tweaking4all.com/hardware/raspberry-pi/applepi-baker-v2/>`_.
-Direct link:
+#. Download `ApplePi-Baker <https://www.tweaking4all.com/hardware/raspberry-pi/applepi-baker-v2/>`_. Direct link:
+
    - `ApplePi-Baker-v2.2.3.dmg <https://www.tweaking4all.com/downloads/raspberrypi/ApplePi-Baker-v2.2.3.dmg>`_
    - `ApplePi-Baker-1.9.9.dmg <https://www.tweaking4all.com/downloads/raspberrypi/ApplePi-Baker-1.9.9.dmg>`_
 
