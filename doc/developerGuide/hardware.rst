@@ -9,3 +9,4 @@ Hardware
    125-10/top.rst
    125-14/top.rst
    122-16/top.rst
+   sensor_ext.rst

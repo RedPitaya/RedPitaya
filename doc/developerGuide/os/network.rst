@@ -354,7 +354,7 @@ acquire an address in the reserved ``169.254.0.0/16`` address block.
 Zeroconf
 --------
 
-If the computer used to access the device supports zeroconf (Avahi/Bobjour) name resolving is also available.
+If the computer used to access the device supports zeroconf (Avahi/Bonjour) name resolving is also available.
 Since there can be multiple devices on a single network they must be distinguished.
 The last three segments of the Ethernet MAC number without semicolons
 (as printed on the Ethernet connector on each device) is used
@@ -363,6 +363,11 @@ For example if the MAC address is ``00:26:32:f0:f1:f2`` then the shortened strin
 
 Hostname generation is done by `/etc/systemd/system/hostname-mac.service </OS/debian/overlay/etc/systemd/system/hostname-mac.service>`_
 which must run early during the boot process.
+In order to set your own hostname, you need to replace the line in the file hostname-mac.service
+
+.. code-block:: shell-session
+
+	hostnamectl set-hostname / * MY HOST NAME * /
 
 Each device can now be accessed using the URL ``http://rp-<shortMAC>.local``.
 
