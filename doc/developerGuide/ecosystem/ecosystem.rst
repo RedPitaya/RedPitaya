@@ -202,14 +202,14 @@ Replace user names with a comma separated list of users whom should be able to c
 .. note::
    Example of configuration file:
 
-   [red-pitaya-ubuntu]\
-   description= Red pitaya\
-   type=file\
-   file=/home/user/RedPitaya/redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz\
-   users=root\
-   root-users=root\
-   root-groups=root\
-   personality=linux\
+   [red-pitaya-ubuntu]<br/>
+   description= Red pitaya<br/>
+   type=file<br/>
+   file=/home/user/RedPitaya/redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz<br/>
+   users=root<br/>
+   root-users=root<br/>
+   root-groups=root<br/>
+   personality=linux<br/>
    preserve-enviroment=true
 
 
