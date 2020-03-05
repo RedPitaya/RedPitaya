@@ -146,9 +146,9 @@ Build process
 
 .. note::
 
-   To implement the build process, at least 8GB available space on local machine is required.
+   To implement the build process, at least 8GB available space on PC local machine is required.
 
-Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
+**1.** Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
 The choice of specific branches or tags is up to the user.
 
 .. code-block:: shell-session
@@ -156,14 +156,14 @@ The choice of specific branches or tags is up to the user.
    git clone https://github.com/RedPitaya/RedPitaya.git
    cd RedPitaya
 
-An example script ``settings.sh`` is provided for setting all necessary environment variables.
+**2.**  An example script ``settings.sh`` is provided for setting all necessary environment variables.
 The script assumes some default tool install paths, so it might need editing if install paths other than the ones described above were used.
 
 .. code-block:: shell-session
 
-   $ . settings.sh
+   settings.sh
 
-Prepare a download cache for various source tarballs.
+**3.** Prepare a download cache for various source tarballs.
 This is an optional step which will speedup the build process by avoiding downloads for all but the first build.
 There is a default cache path defined in the ``settings.sh`` script, you can edit it and avoid a rebuild the next time.
 
@@ -172,7 +172,7 @@ There is a default cache path defined in the ``settings.sh`` script, you can edi
    mkdir -p dl
    export DL=$PWD/dl
 
-Download the ARM Ubuntu root environment (usually the latest) from Red Pitaya download servers.
+**4.** Download the ARM Ubuntu root environment (usually the latest) from Red Pitaya download servers.
 You can also create your own root environment following instructions in :ref:`OS image build instructions <os>`.
 Correct file permissions are required for ``schroot`` to work properly.
 
@@ -182,9 +182,9 @@ Correct file permissions are required for ``schroot`` to work properly.
    sudo chown root:root redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
    sudo chmod 664 redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
 
-Create schroot configuration file ``/etc/schroot/chroot.d/red-pitaya-ubuntu.conf``.
+**5.** Create schroot configuration file ``/etc/schroot/chroot.d/red-pitaya-ubuntu.conf``.
 Replace the tarball path stub with the absolute path of the previously downloaded image.
-Replace user names with a comma separeted list of users whom should be able to compile Red Pitaya.
+Replace user names with a comma separated list of users whom should be able to compile Red Pitaya.
 
 .. code-block:: none
 
@@ -192,14 +192,28 @@ Replace user names with a comma separeted list of users whom should be able to c
    description=Red Pitaya Debian/Ubuntu OS image
    type=file
    file=absolute-path-to-red-pitaya-ubuntu.tar.gz
-   users=comma-seperated-list-of-users-with-access-permissions
-   root-users=comma-seperated-list-of-users-with-root-access-permissions
+   users=comma-separated-list-of-users-with-access-permissions
+   root-users=comma-separated-list-of-users-with-root-access-permissions
    root-groups=root
    profile=desktop
    personality=linux
    preserve-environment=true
 
-To build everything a few ``make`` steps are required.
+.. note::
+   Example of configuration file:
+
+   [red-pitaya-ubuntu]
+   description= Red pitaya
+   type=file
+   file=/home/user/RedPitaya/redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
+   users=root
+   root-users=root
+   root-groups=root
+   personality=linux
+   preserve-enviroment=true
+
+
+**6.** To build everything a few ``make`` steps are required.
 
 .. code-block:: shell-session
 
@@ -209,7 +223,7 @@ To build everything a few ``make`` steps are required.
    EOL_CHROOT
    make -f Makefile.x86 zip
 
-If you want build for RP122-16 based on Z7020 xilinx, you must pass parameter FPGA MODEL=Z20 in makefile
+**7.** If you want build for RP122-16 based on Z7020 xilinx, you must pass parameter FPGA MODEL=Z20 in makefile
 This parameter defines how to create projects and should be transferred to all makefiles.
 
 .. code-block:: shell-session
@@ -220,7 +234,7 @@ This parameter defines how to create projects and should be transferred to all m
    EOL_CHROOT
    make -f Makefile.x86 zip FPGA MODEL=Z20
 
-To get an itteractive ARM shell do.
+To get an interactive ARM shell do.
 
 .. code-block:: shell-session
 
