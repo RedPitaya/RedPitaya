@@ -119,6 +119,15 @@ function getHighRefValue(){
     REF_V=$(printf %.$2f $(bc -l <<< "scale=0; 8192 * $REF_V / 20"))
 }
 
+function getLowRefVoltage(){
+    REF_V=$($C_UART_TOOL 'GET:VREF:LOW')
+}
+
+function getHighRefVoltage(){
+    REF_V=$($C_UART_TOOL 'GET:VREF:HI')
+
+}
+
 function get_rtrn(){
     echo `echo $1|cut --delimiter=, -f $2`
 }

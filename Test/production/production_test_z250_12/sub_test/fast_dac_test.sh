@@ -58,8 +58,10 @@ ADC_PARAM="-d B"
 acquireData
 print_ok
 
-ADC_A_REF_045=$ADC_A
-ADC_B_REF_045=$ADC_B
+getLowRefVoltage
+
+ADC_A_REF_045=$(printf %f $(bc -l <<< "(0.45 / $REF_V) * $ADC_A")) 
+ADC_B_REF_045=$(printf %f $(bc -l <<< "(0.45 / $REF_V) * $ADC_B"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A_REF_045"
@@ -114,8 +116,10 @@ ADC_PARAM="-d B -1 20 -2 20"
 acquireData
 print_ok
 
-ADC_A_REF_045=$ADC_A
-ADC_B_REF_045=$ADC_B
+getHighRefVoltage
+
+ADC_A_REF_045=$(printf %f $(bc -l <<< "(9 / $REF_V) * $ADC_A"))
+ADC_B_REF_045=$(printf %f $(bc -l <<< "(9 / $REF_V) * $ADC_B"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A_REF_045"

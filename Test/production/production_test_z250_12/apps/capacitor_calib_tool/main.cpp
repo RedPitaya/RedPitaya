@@ -106,8 +106,10 @@ int main(int argc, char **argv){
         }
 
 	rp_channel_t channel = RP_CH_1;
+	rp_acq_trig_src_t trigger_source = RP_TRIG_SRC_CHA_PE;
 	if (ch2_flag) {
 		channel = RP_CH_2;
+		trigger_source = RP_TRIG_SRC_CHB_PE;
 	}
 
 	/* Print error, if rp_Init() function failed */
@@ -144,7 +146,7 @@ int main(int argc, char **argv){
 	/*length and smaling rate*/
 
 	sleep(1);
-	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+	rp_AcqSetTriggerSrc(trigger_source);
 	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
 	float filtred_deviation = 0;
 	float max_buff = 0;
@@ -205,7 +207,7 @@ int main(int argc, char **argv){
 				}
 				skip_print++;
 				rp_AcqStart();
-				rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+				rp_AcqSetTriggerSrc(trigger_source);
 				//state = RP_TRIG_STATE_TRIGGERED;
 				
 			}
