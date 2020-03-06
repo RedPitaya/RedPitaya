@@ -484,6 +484,10 @@ int rp_AcqSetArmKeep(bool enable)
     return acq_SetArmKeep(enable);
 }
 
+int rp_AcqGetArmKeep(bool* state){
+    return acq_GetArmKeep(state);
+}
+
 int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 {
     return acq_SetDecimation(decimation);

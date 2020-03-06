@@ -226,6 +226,7 @@ int osc_GetTriggerSource(uint32_t* source);
 int osc_WriteDataIntoMemory(bool enable);
 int osc_ResetWriteStateMachine();
 int osc_SetArmKeep(bool enable);
+int osc_GetArmKeep(bool *state);
 int osc_GetTriggerState(bool *received);
 int osc_GetPreTriggerCounter(uint32_t *value);
 int osc_SetThresholdChA(uint32_t threshold);

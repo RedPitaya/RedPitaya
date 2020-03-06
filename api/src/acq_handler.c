@@ -132,6 +132,10 @@ int acq_SetArmKeep(bool enable) {
     return osc_SetArmKeep(enable);
 }
 
+int acq_GetArmKeep(bool* state){
+    return osc_GetArmKeep(state);
+}
+
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 {
 
@@ -147,15 +151,23 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     // Read old values which are dependent on the gain...
     rp_pinState_t old_gain;
     float ch_thr, ch_hyst;
+    int status = 0;
     old_gain = *gain;
     acq_GetChannelThreshold(channel, &ch_thr);
     acq_GetChannelThresholdHyst(channel, &ch_hyst);
-
+    
+#ifdef Z20_250_12
+    int ch = (channel == RP_CH_1 ? RP_MAX7311_IN1 : RP_MAX7311_IN2);
+    int att = (state == RP_LOW ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+    status = rp_setAttenuator_C(ch,att);
+    
+#endif
+    if (status == RP_OK) {
     // Now update the gain
-    *gain = state;
-
+        *gain = state;
+    }
     // And recalculate new values...
-    int status = acq_SetChannelThreshold(channel, ch_thr);
+    status = acq_SetChannelThreshold(channel, ch_thr);
     if (status == RP_OK) {
         status = acq_SetChannelThresholdHyst(channel, ch_hyst);
     }
@@ -172,13 +184,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
         status = setEqFilters(channel);
     }
 
-#ifdef Z20_250_12
-    if (status == RP_OK){
-        int ch = (channel == RP_CH_1 ? RP_MAX7311_IN1 : RP_MAX7311_IN2);
-        int att = (*gain == RP_LOW ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
-        status = rp_setAttenuator_C(ch,att);
-    }
-#endif
+
     return status;
 }
 
@@ -384,8 +390,8 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
     else{
         trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
     }
-
     osc_SetTriggerDelay(trig_dly);
+    
     triggerDelayInNs = false;
     return RP_OK;
 }

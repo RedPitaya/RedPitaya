@@ -136,9 +136,8 @@ int main(int argc, char **argv){
 		rp_AcqSetGain(channel,RP_LOW);}
 	
 	rp_AcqSetDecimation(RP_DEC_8);
-	rp_AcqSetTriggerLevel((rp_channel_trigger_t)channel,0);
+	rp_AcqSetTriggerLevel((rp_channel_trigger_t)channel,0.25);
 	rp_AcqStart();
-
 
 	/* After acquisition is started some time delay is needed in order to acquire fresh samples in to buffer*/
 	/* Here we have used time delay of one second but you can calculate exact value taking in to account buffer*/
@@ -148,6 +147,8 @@ int main(int argc, char **argv){
 	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
 	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
 	float filtred_deviation = 0;
+	float max_buff = 0;
+	float min_buff = 0;
 	while(1){
 			rp_AcqGetTriggerState(&state);
 			if(state == RP_TRIG_STATE_TRIGGERED){
@@ -159,12 +160,16 @@ int main(int argc, char **argv){
 				float area_avg = 0;
 				float count = 0;
 				float deviation = 0;
+
 				for(i = 0; i < buff_size; i++){
 						if (buff[i]>0){
 							area += buff[i];
 							count++;
 						}
+						if (max_buff < buff[i]) max_buff = buff[i];
+						if (min_buff > buff[i]) min_buff = buff[i];
 				}
+
 				if (count == 0) count = 1;
 				area_avg = area / count;
 				for(i = 0; i < buff_size; i++){
@@ -175,7 +180,7 @@ int main(int argc, char **argv){
 				q_area_avg.push(area_avg);
 				q_deviation_avg.push(deviation);
 				float filtred_area = sumQueue(q_area_avg)/q_area_avg.size();
-				filtred_deviation = sumQueue(q_deviation_avg)/q_deviation_avg.size();
+				filtred_deviation  = sumQueue(q_deviation_avg)/q_deviation_avg.size();
 
 				if (q_area_avg.size() > 100){
 					q_area_avg.pop();
@@ -184,15 +189,15 @@ int main(int argc, char **argv){
 				if (q_deviation_avg.size() > 100){
 					q_deviation_avg.pop();
 					if (min_deviation > filtred_deviation)
-							min_deviation = filtred_deviation;
+						min_deviation = filtred_deviation;
 					if (max_deviation < filtred_deviation)
 						max_deviation = filtred_deviation;
 				}
 
 				if (skip_print>10){
 					if (max_deviation != 0)
-						printf("avg of maximum value %6.3f deviation %6.3f (MIN %6.3f) - (MAX %6.3f)\r", filtred_area , filtred_deviation,
-																	min_deviation,max_deviation);
+						printf("avg of maximum value %6.3f deviation %6.3f (MIN %6.3f) - (MAX %6.3f) maximum V %6.3f minimum V %6.3f\r", filtred_area , filtred_deviation,
+																	min_deviation,max_deviation,max_buff,min_buff);
 					else
 						printf("avg of maximum value %6.3f deviation %6.3f\r", filtred_area , filtred_deviation);
 					fflush(stdout);
@@ -201,7 +206,7 @@ int main(int argc, char **argv){
 				skip_print++;
 				rp_AcqStart();
 				rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
-				state = RP_TRIG_STATE_TRIGGERED;
+				//state = RP_TRIG_STATE_TRIGGERED;
 				
 			}
 			if (_kbhit()) {
