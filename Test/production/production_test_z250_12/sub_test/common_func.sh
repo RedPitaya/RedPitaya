@@ -111,21 +111,24 @@ function hexToDec() {
 
 function getLowRefValue(){
     REF_V=$($C_UART_TOOL 'GET:VREF:LOW')
-    REF_V=$(printf %.$2f $(bc -l <<< "scale=0; 8192 * $REF_V"))
+#    REF_V=0.444
+    REF_V=$(printf %.2f $(bc -l <<< "scale=0; 8192 * $REF_V"))
 }
 
 function getHighRefValue(){
     REF_V=$($C_UART_TOOL 'GET:VREF:HI')
-    REF_V=$(printf %.$2f $(bc -l <<< "scale=0; 8192 * $REF_V / 20"))
+#    REF_V=9.03
+    REF_V=$(printf %.2f $(bc -l <<< "scale=0; 8192 * $REF_V / 20"))
 }
 
 function getLowRefVoltage(){
     REF_V=$($C_UART_TOOL 'GET:VREF:LOW')
+#    REF_V=0.444
 }
 
 function getHighRefVoltage(){
     REF_V=$($C_UART_TOOL 'GET:VREF:HI')
-
+#    REF_V=9.03
 }
 
 function get_rtrn(){
@@ -269,5 +272,8 @@ function CheckTestPass(){
     if [[ "$TEST_RES" = "0x7FFF" ]]
     then
         $C_UART_TOOL 'LED:GRN 0 7' -s
+        STATUS=1
+    else
+        STATUS=0
     fi
 }
