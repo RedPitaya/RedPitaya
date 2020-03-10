@@ -156,6 +156,18 @@ The choice of specific branches or tags is up to the user.
    git clone https://github.com/RedPitaya/RedPitaya.git
    cd RedPitaya
 
+.. note:: 
+
+   You can run a script that builds the ecosystem from the build_scripts folder
+   
+   .. code-block:: shell-session
+   
+      cd ./RedPitaya/build_scripts
+      ./build_Z10.sh
+
+   or follow the steps of the instructions and build yourself
+   
+
 **2.**  An example script ``settings.sh`` is provided for setting all necessary environment variables.
 The script assumes some default tool install paths, so it might need editing if install paths other than the ones described above were used.
 
@@ -242,6 +254,7 @@ To get an interactive ARM shell do.
 .. code-block:: shell-session
 
    schroot -c red-pitaya-ubuntu
+   
 
 =======================
 Partial rebuild process
