@@ -69,6 +69,84 @@ int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
     return RP_OK;
 }
 
+int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
+    #ifdef Z20_250_12
+        bool value;
+        CHANNEL_ACTION(channel,
+                value = generate->AtempProtected,
+                value = generate->BtempProtected)
+        *enable = value;
+        return RP_OK;
+    #else
+        return RP_NOTS;
+    #endif
+}
+
+int generate_setEnableTempProtection(rp_channel_t channel, bool enable) {
+    #ifdef Z20_250_12
+        if (channel == RP_CH_1) {
+            generate->AtempProtected = enable ? 1 : 0;
+        }
+        else if (channel == RP_CH_2) {
+            generate->BtempProtected = enable ? 1 : 0;
+        }
+        else {
+            return RP_EPN;
+        }
+        return RP_OK;
+    #else
+        return RP_NOTS;
+    #endif
+}
+
+int generate_getLatchTempAlarm(rp_channel_t channel, bool *state){
+    #ifdef Z20_250_12
+        bool value;
+        CHANNEL_ACTION(channel,
+                value = generate->AlatchedTempAlarm,
+                value = generate->BlatchedTempAlarm)
+        *state = value;
+        return RP_OK;
+    #else
+        return RP_NOTS;
+    #endif
+}
+
+int generate_setLatchTempAlarm(rp_channel_t channel, bool state) {
+    #ifdef Z20_250_12
+        if (channel == RP_CH_1) {
+            generate->AlatchedTempAlarm = state ? 1 : 0;
+        }
+        else if (channel == RP_CH_2) {
+            generate->BlatchedTempAlarm = state ? 1 : 0;
+        }
+        else {
+            return RP_EPN;
+        }
+        return RP_OK;
+    #else
+        return RP_NOTS;
+    #endif
+}
+
+int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state){
+    #ifdef Z20_250_12
+        bool value;
+        CHANNEL_ACTION(channel,
+                value = generate->AruntimeTempAlarm,
+                value = generate->BruntimeTempAlarm)
+        *state = value;
+        return RP_OK;
+    #else
+        return RP_NOTS;
+    #endif
+}
+
+int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
+int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
+int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
+int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
+
 int generate_setAmplitude(rp_channel_t channel, float amplitude) {
     volatile ch_properties_t *ch_properties;
 

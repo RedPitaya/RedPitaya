@@ -25,6 +25,21 @@
 
 #include "spec_fpga.h"
 
+#ifdef Z20_250_12
+#define SPECTR_ADC_SAMPLE_RATE (125e6)
+#define SPECTR_ADC_BITS (14)
+#endif
+
+#ifdef Z10
+#define SPECTR_ADC_SAMPLE_RATE (125e6)
+#define SPECTR_ADC_BITS (14)
+#endif
+
+#ifdef Z20
+#define SPECTR_ADC_SAMPLE_RATE (122.880e6)
+#define SPECTR_ADC_BITS (16)
+#endif
+
 /* internals */
 /* The FPGA register structure */
 spectr_fpga_reg_mem_t *g_spectr_fpga_reg_mem = NULL;
@@ -36,15 +51,15 @@ int             g_spectr_fpga_mem_fd = -1;
 
 /* constants */
 /* ADC format = s.13 */
-const int c_spectr_fpga_adc_bits = 14;
+const int c_spectr_fpga_adc_bits = SPECTR_ADC_BITS;
 /* c_osc_fpga_max_v */
 float g_spectr_fpga_adc_max_v;
 const float c_spectr_fpga_adc_max_v_revC= +1.079;
 const float c_spectr_fpga_adc_max_v_revD= +1.027;
 /* Sampling frequency = 125Mspmpls (non-decimated) */
-float spectr_get_fpga_smpl_freq() { return 125e6; }
+float spectr_get_fpga_smpl_freq() { return SPECTR_ADC_SAMPLE_RATE; }
 /* Sampling period (non-decimated) - 8 [ns] */
-const float c_spectr_fpga_smpl_period = (1. / 125e6);
+const float c_spectr_fpga_smpl_period = (1. / SPECTR_ADC_SAMPLE_RATE);
 
 
 double __rp_rand()
@@ -228,7 +243,7 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
             cha_o[out_idx] -= (double)(1<<14);
         if(chb_o[out_idx] > (double)(1<<13))
             chb_o[out_idx] -= (double)(1<<14);
-    }
+    }   
     return 0;
 }
 

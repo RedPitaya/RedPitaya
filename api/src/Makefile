@@ -13,6 +13,8 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
+MODEL ?= Z10
+
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
@@ -50,7 +52,7 @@ OBJECTS =	common.o \
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s
+CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s -D$(MODEL)
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../include
 LDFLAGS=-shared -Wl,--version-script=exportmap

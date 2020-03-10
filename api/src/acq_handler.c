@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "common.h"
@@ -34,13 +35,8 @@ static const uint32_t DEC_65536 = 65536;
 static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE/2;
 
 /* @brief Sampling period (non-decimated) - 8 [ns]. */
-static const uint64_t ADC_SAMPLE_PERIOD = 8;
+static const uint64_t ADC_SAMPLE_PERIOD = ADC_SAMPLE_PERIOD_DEF;
 
-/* @brief Number of ADC acquisition bits. */
-static const int ADC_BITS = 14;
-
-/* @brief ADC acquisition bits mask. */
-static const int ADC_BITS_MAK = 0x3FFF;
 
 /* @brief Currently set Gain state */
 static rp_pinState_t gain_ch_a = RP_LOW;
@@ -309,7 +305,7 @@ int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
 
 int acq_GetSamplingRateHz(float* sampling_rate)
 {
-    float max_rate = 125000000.0f;
+    float max_rate = ADC_SAMPLE_RATE;
 
     rp_acq_decimation_t decimation;
     acq_GetDecimation(&decimation);
@@ -476,7 +472,7 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     int32_t dc_offs = GET_OFFSET(channel, gain, calib);
     uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
 
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts & ADC_BITS_MASK, gainV, calibScale, dc_offs, 0.0);
 
     return RP_OK;
 }
@@ -540,7 +536,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
     int32_t dc_offs = GET_OFFSET(channel, gain, calib);
     uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
 
-    *voltage = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
+    *voltage = cmn_CnvCntToV(ADC_BITS, cnts & ADC_BITS_MASK, gainV, calibScale, dc_offs, 0.0);
 
     return RP_OK;
 }
@@ -606,7 +602,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     int32_t dc_offs = GET_OFFSET(channel, gain, calib);
 
     for (uint32_t i = 0; i < (*size); ++i) {
-        cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
+        cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
 
         buffer[i] = cmn_CalibCnts(ADC_BITS, cnts, dc_offs);
     }
@@ -621,10 +617,10 @@ int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* b
     *size = MIN(*size, ADC_BUFFER_SIZE);
     const volatile uint32_t* raw_buffer = getRawBuffer(RP_CH_1);
     const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
-
+    
     for (uint32_t i = 0; i < (*size); ++i) {
-        buffer[i] = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
-        buffer2[i] = (raw_buffer2[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MAK;
+        buffer[i] =  (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
+        buffer2[i] = (raw_buffer2[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
     }
 
     return RP_OK;
@@ -690,7 +686,7 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
-        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts, gainV, calibScale, dc_offs, 0.0);
+        buffer[i] = cmn_CnvCntToV(ADC_BITS, cnts & ADC_BITS_MASK, gainV, calibScale, dc_offs, 0.0);
     }
 
     return RP_OK;
@@ -732,8 +728,8 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
     ptr2 = cnts2;
 
     for (uint32_t i = 0; i < (*size); ++i) {
-        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++, gainV1, calibScale1, dc_offs1, 0.0);
-        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++, gainV2, calibScale2, dc_offs2, 0.0);
+        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++ & ADC_BITS_MASK, gainV1, calibScale1, dc_offs1, 0.0);
+        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++ & ADC_BITS_MASK, gainV2, calibScale2, dc_offs2, 0.0);
     }
 
     return RP_OK;

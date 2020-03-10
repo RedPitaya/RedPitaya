@@ -50,6 +50,12 @@ int gen_Trigger(uint32_t channel);
 int gen_Synchronise();
 int triggerIfInternal(rp_channel_t channel);
 
+int gen_setEnableTempProtection(rp_channel_t channel, bool enable);
+int gen_getEnableTempProtection(rp_channel_t channel, bool *enable);
+int gen_setLatchTempAlarm(rp_channel_t channel, bool status);
+int gen_getLatchTempAlarm(rp_channel_t channel, bool *status);
+int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status);
+
 int synthesize_signal(rp_channel_t channel);
 int synthesis_sin(float *data_out);
 int synthesis_triangle(float *data_out);

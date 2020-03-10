@@ -32,6 +32,9 @@ rp_waveform_t chA_waveform                , chB_waveform                ;
 uint32_t      chA_size     = BUFFER_LENGTH, chB_size     = BUFFER_LENGTH;
 uint32_t      chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 
+bool          chA_EnableTempProtection = 0, chB_EnableTempProtection = 0;
+bool          chA_LatchTempAlarm       = 0, chB_LatchTempAlarm       = 0;
+
 float chA_arbitraryData[BUFFER_LENGTH];
 float chB_arbitraryData[BUFFER_LENGTH];
 
@@ -48,8 +51,8 @@ int gen_SetDefaultValues() {
     gen_setWaveform(RP_CH_2, RP_WAVEFORM_SINE);
     gen_setOffset(RP_CH_1, 0);
     gen_setOffset(RP_CH_2, 0);
-    gen_setAmplitude(RP_CH_1, 1);
-    gen_setAmplitude(RP_CH_2, 1);
+    gen_setAmplitude(RP_CH_1, AMPLITUDE_MAX);
+    gen_setAmplitude(RP_CH_2, AMPLITUDE_MAX);
     gen_setDutyCycle(RP_CH_1, 0.5);
     gen_setDutyCycle(RP_CH_2, 0.5);
     gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
@@ -575,4 +578,31 @@ int triggerIfInternal(rp_channel_t channel) {
         generate_setTriggerSource(channel, 1);
     }
     return RP_OK;
+}
+
+
+int gen_setEnableTempProtection(rp_channel_t channel, bool enable) {
+    CHANNEL_ACTION(channel,
+            chA_EnableTempProtection = enable,
+            chB_EnableTempProtection = enable)
+    return generate_setEnableTempProtection(channel, enable);
+}
+
+int gen_getEnableTempProtection(rp_channel_t channel, bool *enable) {
+    return generate_getEnableTempProtection(channel, enable);
+}
+
+int gen_setLatchTempAlarm(rp_channel_t channel, bool status) {
+    CHANNEL_ACTION(channel,
+            chA_LatchTempAlarm = status,
+            chB_LatchTempAlarm = status)
+    return generate_setLatchTempAlarm(channel, status);
+}
+
+int gen_getLatchTempAlarm(rp_channel_t channel, bool *status) {
+    return generate_getLatchTempAlarm(channel, status);
+}
+
+int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status) {
+    return generate_getRuntimeTempAlarm(channel, status);
 }

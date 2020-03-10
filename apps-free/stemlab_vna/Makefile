@@ -43,7 +43,7 @@ $(ZIP): $(CONTROLLERHF) $(SERVER)
 	$(RM) target -rf
 
 install: $(ZIP)
-	unzip $(ZIP) -d $(INSTALL_DIR)/www/apps
+	unzip -o $(ZIP) -d $(INSTALL_DIR)/www/apps
 
 clean:
 	$(MAKE) -C src clean

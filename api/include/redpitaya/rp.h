@@ -24,6 +24,30 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef Z20_250_12
+#define RP_MODEL "Z20_250_12"
+#define ADC_SAMPLE_RATE 250e6
+#define ADC_BITS 14
+#define ADC_BITS_MASK 0x3FFF
+#define DAC_FREQUENCY 250e6
+#endif
+
+#ifdef Z10
+#define RP_MODEL "Z10"
+#define ADC_SAMPLE_RATE 125e6
+#define ADC_BITS 14
+#define ADC_BITS_MASK 0x3FFF
+#define DAC_FREQUENCY 125e6
+#endif
+
+#ifdef Z20
+#define RP_MODEL "Z20"
+#define ADC_SAMPLE_RATE 122.880e6
+#define ADC_BITS 16
+#define ADC_BITS_MASK 0x3FFF
+#define DAC_FREQUENCY 122.880e6
+#endif
+
 #define ADC_BUFFER_SIZE             (16*1024)
 
 /** @name Error codes
@@ -79,6 +103,8 @@ extern "C" {
 #define RP_EFWB   22
 /** Extension module not connected */
 #define RP_EMNC   23
+/** Command not supported */
+#define RP_NOTS   24
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
@@ -1273,6 +1299,52 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenTrigger(uint32_t channel);
+
+/**
+* Sets the DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B for witch we want to set protection.
+* @param enable Flag enabling protection mode.total
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetEnableTempProtection(rp_channel_t channel, bool enable);
+
+/**
+* Get status of DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B for witch we want to set protection.
+* @param enable Flag return current status.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetEnableTempProtection(rp_channel_t channel, bool *enable);
+
+/**
+* Resets the flag indicating that the DAC is overheated. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  New status for latch trigger.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetLatchTempAlarm(rp_channel_t channel, bool status);
+
+/**
+* Returns the status that there was an overheat. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  State of latch trigger.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status);
+
+/**
+* Returns the current DAC overheat status in real time. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  Get current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status);
+
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 

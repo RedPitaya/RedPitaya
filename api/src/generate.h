@@ -16,13 +16,20 @@
 
 #include "redpitaya/rp.h"
 
+
+#ifdef Z20_250_12
+ #define AMPLITUDE_MAX       2.0 // V
+#else 
+ #define AMPLITUDE_MAX       1.0 // V
+#endif
+
+
 #define LEVEL_MAX               1.0         // V
-#define AMPLITUDE_MAX           1.0         // V
 #define ARBITRARY_MIN          -1.0         // V
 #define ARBITRARY_MAX           1.0         // V
 #define OFFSET_MAX              2.0         // V
 #define FREQUENCY_MIN           0           // Hz
-#define FREQUENCY_MAX           62.5e6      // Hz
+#define FREQUENCY_MAX           DAC_FREQUENCY/2.0
 #define PHASE_MIN              -360         // deg
 #define PHASE_MAX               360         // deg
 #define DUTY_CYCLE_MIN          0           // %
@@ -33,7 +40,6 @@
 #define BURST_REPETITIONS_MAX   50000
 #define BURST_PERIOD_MIN        1           // us
 #define BURST_PERIOD_MAX        500000000   // us
-#define DAC_FREQUENCY           125e6       // Hz
 
 #define BUFFER_LENGTH           (16 * 1024)
 #define CHA_DATA_OFFSET         0x10000
@@ -68,7 +74,12 @@ typedef struct generate_control_s {
     unsigned int ASM_reset          :1;
     unsigned int AsetOutputTo0      :1;
     unsigned int AgatedBursts       :1;
-    unsigned int                    :7;
+    // Work only 250-12 else return 0
+    unsigned int AtempProtected     :1;
+    unsigned int AlatchedTempAlarm  :1;
+    unsigned int AruntimeTempAlarm  :1;
+    // 
+    unsigned int                    :4;
 
     unsigned int BtriggerSelector   :4;
     unsigned int BSM_WrapPointer    :1;
@@ -76,7 +87,12 @@ typedef struct generate_control_s {
     unsigned int BSM_reset          :1;
     unsigned int BsetOutputTo0      :1;
     unsigned int BgatedBursts       :1;
-    unsigned int                    :7;
+    // Work only 250-12 else return 0
+    unsigned int BtempProtected     :1;
+    unsigned int BlatchedTempAlarm  :1;
+    unsigned int BruntimeTempAlarm  :1;
+    // 
+    unsigned int                    :4;
 
     ch_properties_t properties_chA;
     ch_properties_t properties_chB;
@@ -104,6 +120,13 @@ int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions);
 int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions);
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
 int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay);
+// Only for 250_12
+int generate_getEnableTempProtection(rp_channel_t channel, bool *enable);
+int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
+int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
+int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
+int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
+//
 
 int generate_simultaneousTrigger();
 int generate_Synchronise();

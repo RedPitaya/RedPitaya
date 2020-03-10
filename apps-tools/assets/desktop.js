@@ -17,7 +17,7 @@
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
         image: "../assets/images/development.png",
-        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github","activelearning", "fpgaexamples"]
+        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github", "activelearning", "fpgaexamples"]
     }];
     var currentGroup = undefined;
 
@@ -33,56 +33,56 @@
     }
 
     Desktop.setApplications = function(listOfapplications) {
-    	$.ajax({
+        $.ajax({
                 method: "GET",
                 url: '/get_info'
             })
             .done(function(result) {
-            		stem_ver = result['stem_ver'];
-            		if (stem_ver == "STEM 16"){
-            			for (i = default_applications.length - 1; i >= 0; i -= 1){
-   							 if (default_applications[i]["id"] === 'marketplace' || default_applications[i]["id"] === 'fpgaexamples' || default_applications[i]["id"] === 'activelearning'){
-   							 	        default_applications.splice(i, 1);
-   								}
-   							}						
-            		};
+                stem_ver = result['stem_ver'];
+                if (stem_ver == "STEM 16") {
+                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
+                        if (default_applications[i]["id"] === 'marketplace' || default_applications[i]["id"] === 'fpgaexamples' || default_applications[i]["id"] === 'activelearning') {
+                            default_applications.splice(i, 1);
+                        }
+                    }
+                };
 
-            	    applications = [];
-			        $.extend(true, applications, listOfapplications);
-			        var url_arr = window.location.href.split("/");
-			        var url = url_arr[0] + '//' + url_arr[2] + '/';
+                applications = [];
+                $.extend(true, applications, listOfapplications);
+                var url_arr = window.location.href.split("/");
+                var url = url_arr[0] + '//' + url_arr[2] + '/';
 
-			        for (var i = 0; i < default_applications.length; i++) {
-			            if (default_applications[i].id == "marketplace")
-			                default_applications[i].url = url + 'bazaar'
-			            if (default_applications[i].url[0] == "/")
-			                default_applications[i].url = window.location.origin + default_applications[i].url;
-			            applications.push(default_applications[i]);
-			        }
+                for (var i = 0; i < default_applications.length; i++) {
+                    if (default_applications[i].id == "marketplace")
+                        default_applications[i].url = url + 'bazaar'
+                    if (default_applications[i].url[0] == "/")
+                        default_applications[i].url = window.location.origin + default_applications[i].url;
+                    applications.push(default_applications[i]);
+                }
 
-			        for (var i = 0; i < applications.length; i++) {
-			            applications[i].group = checkApplicationInGroup(applications[i].id);
-			            applications[i].is_group = false;
-			        }
+                for (var i = 0; i < applications.length; i++) {
+                    applications[i].group = checkApplicationInGroup(applications[i].id);
+                    applications[i].is_group = false;
+                }
 
-			        for (var i = 0; i < groups.length; i++) {
-			            var gr = {
-			                id: "",
-			                name: groups[i].name,
-			                description: groups[i].description,
-			                url: "#",
-			                image: groups[i].image,
-			                check_online: false,
-			                licensable: false,
-			                callback: openGroup,
-			                type: 'run',
-			                group: "",
-			                is_group: true
-			            };
-			            applications.push(gr);
-			        }
-			        applications.unshift(backButton);
-			        Desktop.selectGroup();
+                for (var i = 0; i < groups.length; i++) {
+                    var gr = {
+                        id: "",
+                        name: groups[i].name,
+                        description: groups[i].description,
+                        url: "#",
+                        image: groups[i].image,
+                        check_online: false,
+                        licensable: false,
+                        callback: openGroup,
+                        type: 'run',
+                        group: "",
+                        is_group: true
+                    };
+                    applications.push(gr);
+                }
+                applications.unshift(backButton);
+                Desktop.selectGroup();
             });
     }
 
@@ -126,7 +126,7 @@
 
         $('#list-container').empty();
         for (var i = 0; i < applications.length; i++) {
-            if ((currentGroup === undefined && (applications[i].group == "" || applications[i].group === undefined)) || applications[i].group == currentGroup || i==0) {
+            if ((currentGroup === undefined && (applications[i].group == "" || applications[i].group === undefined)) || applications[i].group == currentGroup || i == 0) {
                 var txt = '<li class="app-item" key="' + i + '" group="' + applications[i].group + '" style="display: none;">';
                 txt += '<a href="#" class="app-link"><div class="img-container"><img class="app-icon" src="' + applications[i]['image'] + '"></div><span class="app-name">' + applications[i]['name'] + '</span></a>';
                 txt += '</li>';
@@ -268,7 +268,7 @@
         });
         $("#reboot_confirm").click(function(event) {
             $.get('/reboot');
-            setTimeout(function(){ window.close(); }, 1000);
+            setTimeout(function() { window.close(); }, 1000);
         });
     });
 
