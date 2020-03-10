@@ -96,7 +96,7 @@ done
 
 if [[ $STATUS == 0 ]]
 then
-    $C_UART_TOOL 'LED:GRN 1 4' -s
+    $C_UART_TOOL 'LED:GRN 0 4' -s
     print_test_ok
     SetBitState 0x40
 else
