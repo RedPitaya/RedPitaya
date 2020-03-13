@@ -8,6 +8,6 @@ LED description
             successfully loaded)
     green   power supply status (in normal operation this LED is turned ON indicating that all power supplies on Red 
             Pitaya are working properly)
-    red     hartbeat blinking pattern should show CPU load (in normal operation this LED is blinking)
+    red     heartbeat blinking pattern should show CPU load (in normal operation this LED is blinking)
     orange  SD card access indicator (in normal operation this LED is blinking in slow intervals)   
     ======  ==========================================================================================================

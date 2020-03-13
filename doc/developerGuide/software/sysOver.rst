@@ -9,10 +9,10 @@ the picture below.
 
 Everything that works in your browser and you can see it this is the frontend. This is the part that can visualise 
 data on screen or change some parameters to adjust settings inside your applications. Other things that are connected
-with hardware on Red Pitaya's board are calles backend. You can't see this application directly but this is the most 
+with hardware on Red Pitaya's board are called the backend. You can't see this application directly but this is the most 
 important part of application which can help you to control hardware. Backend has ability to work with Digital PINS, 
 control LEDs on board, load FPGA image, work with fast inputs and outputs and lots of other things.
-Frontend and backend requires communication within each other. This is mostly done with Red Pitaya network APIs which 
+The frontend and backend require communication within each other. This is mostly done with Red Pitaya network APIs which 
 are technically based on extended websocket connection. When you're writing your application you don't need to think 
 about communication and data transfer. Our network APIs take care about data transfer. All you need is simply follow 
 of some rules. You can read about this rules in How to 
@@ -24,16 +24,16 @@ Frontend
 
 .. image:: Frontend-1.png
 
-Frontend is that thing that you can see on your screen. We prefer to use high technologies for creating modern way 
-looking applications with lots of possibilities. It's HTML5 for layout, CSS3 for element styles and JavaScript for
+Frontend is that thing that you can see on your screen. We prefer to use high technologies for creating modern looking 
+applications with lots of possibilities. It's HTML5 for layout, CSS3 for element styles and JavaScript for
 creating fast and reliable web applications. Using all these tools you can create lots of innovative applications.
 
 .. image:: Frontend-2.png
 
-Basic idea of frontend is to visualize data from Red Pitaya. And this should be it! You don't need to do lots of 
+The basic idea of the frontend is to visualize data from Red Pitaya. And this should be it! You don't need to do lots of 
 calculations inside UI. Let your Red Pitaya do this. So here is typical workflow of application:
 
-    - User chanegs some settings in application in Web UI
+    - User changes some settings in application in Web UI
     - Web UI may apply them immediately on the screen or
     - Web UI may send them to controller for some specific calculations on device, for changing device state or for 
       something else
@@ -68,5 +68,5 @@ Here is typical workflow of executing application:
         - It loads controller of your application
         - When controller is loaded it starts WebSocket connection. Also it notifies UI that application was loaded. This means that JavaScript code can establish WebSocket connection
         - During application workflow JavaScript and Controller can send data in JSON format to each other
-        - If controller needs to get some data from perefireal devices it can request this data from RedPitaya APIs
+        - If controller needs to get some data from peripheral devices it can request this data from RedPitaya APIs
         - APIs can manipulate data inside FPGA

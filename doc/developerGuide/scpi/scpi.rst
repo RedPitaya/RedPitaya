@@ -367,18 +367,3 @@ Parameters
 +--------+-------------+------------+---------+--------------+
 
 
-
-    {.pattern = "[SOURce#]:BURSt[:MODE]",                     .callback = rpscpi_gen_set_burst_mode,},
-    {.pattern = "[SOURce#]:BURSt[:MODE]?",                    .callback = rpscpi_gen_get_burst_mode,},
-    {.pattern = "[SOURce#]:BURSt:DATA:REPetitions",           .callback = rpscpi_gen_set_data_repetitions,},
-    {.pattern = "[SOURce#]:BURSt:DATA:REPetitions?",          .callback = rpscpi_gen_get_data_repetitions,},
-    {.pattern = "[SOURce#]:BURSt:DATA:LENgth",                .callback = rpscpi_gen_set_data_length,},
-    {.pattern = "[SOURce#]:BURSt:DATA:LENgth?",               .callback = rpscpi_gen_get_data_length,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:LENgth",              .callback = rpscpi_gen_set_period_length,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:LENgth?",             .callback = rpscpi_gen_get_period_length,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:NUMber",              .callback = rpscpi_gen_set_period_number,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:NUMber?",             .callback = rpscpi_gen_get_period_number,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},
