@@ -1,0 +1,279 @@
+<!-- 
+ *
+ * Red Pitaya Stream service manager
+ *
+ * Author: Nikolay <n.danilyuk@integrasources.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Red Pitaya</title>
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/popupstack.css" type="text/css" />
+    <link rel="stylesheet" href="../assets/help-system/help-system.css" type="text/css" />
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/style.css?2">
+    <script src="../assets/jquery/jquery-2.1.3.min.js"></script>
+    <script src="../assets/jquery/jquery-ui.min.js"></script>
+    <script src="../assets/jquery/jquery.ui.touch-punch.min.js"></script>
+    <script src="../assets/jquery/jquery.cookie.js?3"></script>
+    <script src="../assets/jquery/jquery.browser.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/browsercheck.js?1"></script>
+    <script src="../assets/analytics-core.js"></script>
+    <script src="../assets/popupstack.js?1"></script>
+    <script src="../assets/help-system/help-system.js"></script>
+    <script src="../assets/pako.js"></script>
+    <script src="js/help-sm.js"></script>
+    <script src="js/analytics-main.js?1"></script>
+    <script src="js/guiHandler.js"></script>
+    <script src="js/rate_limitator.js"></script>
+    <script src="js/sm.js"></script>
+</head>
+
+<body>
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+    </div>
+    <div id="header">
+        <div id="description">&nbsp;</div>
+    </div>
+    <div class="full-content">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">T</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">
+                            <img class="back-btn" src="../assets/images/navigation_arrow_left.png">
+                        </a>
+                        <img class="logo" width=110 src="../assets/images/navigation_logo.png">
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div id="">
+                <div id="main">
+                    <div>
+                        <div>
+                            <div align="center" style="font-size: 18pt; color: lightgray;">
+                                <p>Stream server application</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div align="center">
+
+                                <div class="container_inline">
+                                    <div style="width: 50px;text-align: right;">TCP/IP:</div>
+                                    <div style="width: 25px; height: 20px; margin-left: 15px">
+                                        <label class="container-radio">
+                                            <input id="SS_USE_NET" type="radio" class="input-radio" name="type_stream" value="tcp" checked="checked">
+                                            <span class="checkmark-radio"></span>
+                                        </label>
+                                    </div>
+
+                                    <div style="width: 150px;text-align: right;">Local file:</div>
+                                    <div style="width: 25px; height: 20px; margin-left: 15px">
+                                        <label class="container-radio">
+                                                <input id="SS_USE_FILE" type="radio" class="input-radio" name="type_stream" value="file">
+                                                <span class="checkmark-radio"></span>
+                                            </label>
+                                    </div>
+                                </div>
+
+                                <div class="container_inline">
+                                    <div style="width: 50px;text-align: right;">IP:</div>
+                                    <div style="width: 250px;">
+                                        <input id="SS_IP_ADDR" class="ipaddress" type="text" minlength="7" maxlength="15" size="15" placeholder="xxx.xxx.xxx.xxx" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+                                    </div>
+                                </div>
+                                <div class="container_inline">
+                                    <div style="width: 50px;text-align: right;">Port:</div>
+                                    <div>
+                                        <!--    <input id="BA_PERIODS_NUMBER" class="setfield input-number" type="text"> -->
+                                        <input id="SS_PORT_NUMBER" type="text" size="5" style="width: 50px;margin-left: 10px;" value="8900" step="1" min="1" max="65535">
+                                    </div>
+                                    <div style="width: 70px;text-align: right;">Protocol:</div>
+                                    <div>
+                                        <select id="SS_PROTOCOL" class="protocol" name="protocol">
+                                                        <option value="1">TCP</option>
+                                                        <option value="2">UDP</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="container_inline">
+                                    <div style="width: 170px;text-align: right;">Channel:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_CHANNEL" class="protocol" name="channels">
+                                                            <option value="1">1</option>
+                                                            <option value="2">2</option>
+                                                            <option value="3">Both</option>
+                                                </select>
+                                    </div>
+                                </div>
+                                <div class="container_inline">
+                                    <div style="width: 170px;text-align: right;">Resolution:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_RESOLUTION" class="protocol" name="resolution">
+                                                                <option value="1">8 bit</option>
+                                                                <option value="2">16 bit</option>
+                                                    </select>
+                                    </div>
+                                </div>
+                                <div class="container_inline">
+                                    <div style="width: 50px;text-align: right;">Rate:</div>
+                                    <div style="width: 240px;">
+                                        <input id="SS_RATE" type="text" size="5" style="width: 235px;margin-left: 10px;" value="" step="1" min="1" max="65535">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div align="center">
+
+                                <div class="container_inline">
+                                    <div style="width:300px;height: 120px;padding-top: 25px;border: 1px solid #999">
+                                        <label style="position:relative;width: 0px; top:-30px;left:110px;background: black;">FILES</label>
+                                        <div style="display: inline;margin-right: 10px">
+                                            <li class="files_buttons" style="width: 120px;height: 30px">
+                                                <a href="/streaming_manager/upload" style="display: block;" target="_blank">Browse</a>
+                                            </li>
+                                        </div>
+                                        <div style="display: inline;">
+                                            <li class="files_buttons" id="CLEAR_FILES" style="width: 120px;height: 30px">
+                                                <a href="#" style="display: block;">Clear</a>
+                                            </li>
+                                        </div>
+                                        <p></p>
+                                        <div style="width: 125px;text-align: right;margin-top: 5px;">Type of file saved:</div>
+                                        <div style="width: 90px;margin-top: 5px;">
+                                            <select id="SS_FORMAT" class="protocol" name="rate">
+                                                                        <option value="0">wav</option>
+                                                                        <option value="1">tdms</option>                                                                        
+                                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p style="height: 10px;"></p>
+                            <!--
+                            <div id="label-is-runnung" align=center style="font-size: 16pt; color: red;">
+                                Stream server is not running, press RUN button to start it
+                            </div>
+                            <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: green; display: none;">
+                                Stream server is running... (IP="<span id="ip-addr">127.0.0.1</span>", port="5000")
+                                    </div>
+                                    -->
+
+
+                            <div class="container_inline" align=center>
+
+                                <div style="width: 120px;height: 30px; border: 1px solid white;margin-right: 10px">
+
+                                    <li class="run_buttons" id="SM_RUN" style="width: 120px;height: 30px">
+                                        <a href="#" id="a_run" style="display: block;">RUN</a>
+                                    </li>
+                                </div>
+                                <div style="width: 120px;height: 30px; border: 1px solid white">
+                                    <li class="run_buttons" id="SM_STOP" style="width: 120px;height: 30px;">
+                                        <a href="#" id="a_stop" style="display: block;">STOP</a>
+                                    </li>
+                                </div>
+                                <div style="width: 30px;height: 30p;margin-left: 10px">
+                                    <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/apps-featured/streaming/appStreaming.html" target="_blank">
+                                        <img class="help_button" src="./img/help_icon.png" width="30px" height="30px" style="margin-bottom: 10px;">
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div id="svg-is-runnung" class="container_inline" align=center style="display:none;">
+
+                                <div style="height: 30px;margin: 0px;">
+                                    <div>
+                                        <svg width="30px" height="30px">      
+                                                    <svg>
+                                                      <circle cx="14px" cy="14px" r="4px" style="stroke: lightgray; stroke-width:18; fill:transparent"/>
+                                                      <circle cx="14px" cy="14px" r="6px" style="fill:#2c3e50"/>
+                                                      <path style="stroke: #2c3e50; stroke-dasharray:48; stroke-dashoffset:48; stroke-width:4; fill:transparent" d="M14,14 m0,-10 a 10,10 0 0,1 0,20 a 10,10 0 0,1 0,-20">
+                                                        <animate attributeName="stroke-dashoffset" dur="12s" to="-48" repeatCount="indefinite"/>
+                                                      </path>
+                                                    </svg>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div style="font-size: 16pt; color: green;">
+                                    Stream server is running
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
+                FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+                <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+            </div>
+        </div>
+        <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                    </div>
+                    <div class="modal-body" style="text-align: center; font-size: 18px;">
+                        <p>Please send us the report and help us to fix this issue</p>
+                        <p>Thank you!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" style="border: 1px solid; width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        </div>
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" style="border: 1px solid; width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="bazaar_naLabel">Diagnostic & Usage</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
+                        </div>
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>

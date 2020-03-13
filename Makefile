@@ -123,6 +123,7 @@ $(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
+	rm -rf $@
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
@@ -131,6 +132,7 @@ $(SOCKPROC_TAR): | $(DL)
 	curl -L $(SOCKPROC_URL) -o $@
 
 $(SOCKPROC_DIR): $(SOCKPROC_TAR)
+	rm -rf $@
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
@@ -138,6 +140,7 @@ $(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
+	rm -rf $@
 	mkdir -p $@
 	unzip $< -d $(@D)
 	patch -d $@ -p1 < patches/libjson.patch
@@ -153,10 +156,11 @@ $(NGINX_TAR): | $(DL)
 	curl -L $(NGINX_URL) -o $@
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
+	rm -rf $@
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f apps-tools/nginx.conf $@/conf/
-	mkdir $@/conf/lua/
+	mkdir -p $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 
 $(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
@@ -229,7 +233,7 @@ sdr: | $(DL)
 ifeq ($(FPGA_MODEL),Z10)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
 	mkdir -p $(INSTALL_DIR)/www/apps
-	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
+	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 endif
 
 ################################################################################
@@ -347,10 +351,11 @@ APP_SCPIMANAGER_DIR      = apps-tools/scpi_manager
 APP_NETWORKMANAGER_DIR   = apps-tools/network_manager
 APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
+APP_STREAMINGMANAGER_DIR = Applications/streaming_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
 
-apps-tools: ecosystem updater scpi_manager network_manager jupyter_manager
+apps-tools: ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
@@ -369,6 +374,11 @@ network_manager: ecosystem
 
 jupyter_manager:
 	$(MAKE) -C $(APP_JUPYTERMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+streaming_manager: api $(NGINX)
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
 
 ################################################################################
 # Red Pitaya ecosystem and free applications
@@ -392,7 +402,8 @@ ifeq ($(FPGA_MODEL),Z10)
 endif
 
 apps-free-clean:
-	$(MAKE) -C $(APPS_FREE_DIR) clean
+	$(MAKE) -i -C $(APPS_FREE_DIR) clean
+	$(MAKE) -i -C $(VNA_DIR) clean
 
 ################################################################################
 # Red Pitaya PRO applications
@@ -406,38 +417,38 @@ APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
 APP_BA_PRO_DIR 		= Applications/ba_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
-apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro streaming_manager
+
+apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro streaming_manager
 
 scopegenpro: api $(NGINX)
-	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
+	$(MAKE) -i -C $(APP_SCOPEGENPRO_DIR) clean
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrumpro: api $(NGINX)
-	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
+	$(MAKE) -i -C $(APP_SPECTRUMPRO_DIR) clean
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
-ifeq ($(FPGA_MODEL),Z10)
-	$(MAKE) -C $(APP_LCRMETER_DIR) clean
+	$(MAKE) -i -C $(APP_LCRMETER_DIR) clean
 	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
 
 la_pro: api api2 $(NGINX)
-	$(MAKE) -C $(APP_LA_PRO_DIR) clean
+	$(MAKE) -i -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+
 ba_pro: api $(NGINX)
-ifeq ($(FPGA_MODEL),Z10)
-	$(MAKE) -C $(APP_BA_PRO_DIR) clean
+	$(MAKE) -i -C $(APP_BA_PRO_DIR) clean
 	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
+
+
 
 else
 
@@ -452,7 +463,7 @@ endif
 
 PRODUCTION_TEST_DIR = Test/production
 
-.PHONY: production_test
+.PHONY: production_test clean
 
 production_test:
 ifeq ($(ENABLE_PRODUCTION_TEST), 1)
@@ -461,20 +472,19 @@ ifeq ($(ENABLE_PRODUCTION_TEST), 1)
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
 endif
 
-clean:
-	# todo, remove downloaded libraries and symlinks
-	make -C $(NGINX_DIR) clean
-	make -C $(MONITOR_DIR) clean
-	make -C $(MONITOR_OLD_DIR) clean
-	make -C $(GENERATE_DIR) clean
-	make -C $(ACQUIRE_DIR) clean
-	make -C $(CALIB_DIR) clean
-	-make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRP2_DIR)    clean
-	make -C $(LIBRP_DIR)    clean
-	make -C $(LIBRPAPP_DIR) clean
-	make -C $(LIBRPLCR_DIR) clean
-	make -C $(COMM_DIR) clean
-	make -C $(GENERATE_DC_DIR) clean
-	make -C $(PRODUCTION_TEST_DIR) clean
-	apps-free-clean
+clean: 	apps-free-clean
+	rm -rf $(DL)
+	if [ -d $(NGINX_DIR) ]; then make -i -C $(NGINX_DIR) clean; fi
+	if [ -d $(MONITOR_DIR) ]; then make -i -C $(MONITOR_DIR) clean;  fi
+	if [ -d $(MONITOR_OLD_DIR) ]; then make -i -C $(MONITOR_OLD_DIR) clean;  fi
+	if [ -d $(GENERATE_DIR) ]; then make -i -C $(GENERATE_DIR) clean;  fi
+	if [ -d $(ACQUIRE_DIR) ]; then make -i -C $(ACQUIRE_DIR) clean;  fi
+	if [ -d $(CALIB_DIR) ]; then make -i -C $(CALIB_DIR) clean;  fi
+	if [ -d $(SCPI_SERVER_DIR) ]; then make -i -C $(SCPI_SERVER_DIR) clean;  fi
+	if [ -d $(LIBRP2_DIR) ]; then make -i -C $(LIBRP2_DIR)    clean;  fi
+	if [ -d $(LIBRP_DIR) ]; then make -i -C $(LIBRP_DIR)    clean;  fi
+	if [ -d $(LIBRPAPP_DIR) ]; then make -i -C $(LIBRPAPP_DIR) clean;  fi
+	if [ -d $(LIBRPLCR_DIR) ]; then make -i -C $(LIBRPLCR_DIR) clean;  fi
+	if [ -d $(COMM_DIR) ]; then make -i -C $(COMM_DIR) clean;  fi
+	if [ -d $(GENERATE_DC_DIR) ]; then make -i -C $(GENERATE_DC_DIR) clean;  fi
+	if [ -d $(PRODUCTION_TEST_DIR) ]; then make -i -C $(PRODUCTION_TEST_DIR) clean;  fi
