@@ -2,16 +2,17 @@
 source ./sub_test/common_func.sh
 
 function acquireData(){
+    sleep 1
     #Acquire data with $DECIMATION decimation factor
     $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
-    sleep 0.4
+    sleep 1
     $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
     cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
     cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
-
+    sleep 1
     # Calculate mean value
-    ADC_A=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
-    ADC_B=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_b.txt)
+    ADC_A=$(awk '{sum+=$1} END { print (sum/NR)}' /tmp/adc_a.txt)
+    ADC_B=$(awk '{sum+=$1} END { print (sum/NR)}' /tmp/adc_b.txt)
 }
 
 function checkError(){
@@ -25,6 +26,7 @@ else
     print_ok
 fi
 }
+
 
 ###############################################################################
 # DAC functionality test
@@ -41,6 +43,17 @@ ADC_BUFF_SIZE=16384
 ERROR_VAL=1
 ERROR_VAL_GAIN=2
 LIGHT_STATUS=$($C_MONITOR 0x40000030)
+
+# get current calibration 
+GetCalibValue "15"
+OSC_CH1_OFF_1_DC=$CALIB_RET_VALUE
+GetCalibValue "16"
+OSC_CH2_OFF_1_DC=$CALIB_RET_VALUE
+GetCalibValue "23"
+OSC_CH1_OFF_20_DC=$CALIB_RET_VALUE
+GetCalibValue "24"
+OSC_CH2_OFF_20_DC=$CALIB_RET_VALUE
+
 
 echo
 echo "TEST DAC with 0.45V on Gain x1"
@@ -60,8 +73,8 @@ print_ok
 
 getLowRefVoltage
 
-ADC_A_REF_045=$(printf %f $(bc -l <<< "(0.45 / $REF_V) * $ADC_A")) 
-ADC_B_REF_045=$(printf %f $(bc -l <<< "(0.45 / $REF_V) * $ADC_B"))
+ADC_A_REF_045=$(printf %f $(bc -l <<< "(0.225 / $REF_V) * ($ADC_A - $OSC_CH1_OFF_1_DC)")) 
+ADC_B_REF_045=$(printf %f $(bc -l <<< "(0.225 / $REF_V) * ($ADC_B - $OSC_CH2_OFF_1_DC)"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A_REF_045"
@@ -84,8 +97,8 @@ ADC_PARAM="-d B"
 acquireData
 print_ok
 
-ADC_A_DAC_045=$(bc -l <<< "2 * $ADC_A")
-ADC_B_DAC_045=$(bc -l <<< "2 * $ADC_B")
+ADC_A_DAC_045=$(bc -l <<< "$ADC_A - $OSC_CH1_OFF_1_DC")
+ADC_B_DAC_045=$(bc -l <<< "$ADC_B - $OSC_CH2_OFF_1_DC")
 
 echo "      IN1 mean value is $ADC_A_DAC_045"
 echo "      IN2 mean value is $ADC_B_DAC_045"
@@ -117,9 +130,8 @@ acquireData
 print_ok
 
 getHighRefVoltage
-
-ADC_A_REF_045=$(printf %f $(bc -l <<< "(9 / $REF_V) * $ADC_A"))
-ADC_B_REF_045=$(printf %f $(bc -l <<< "(9 / $REF_V) * $ADC_B"))
+ADC_A_REF_045=$(printf %f $(bc -l <<< "(2.25 / $REF_V) * ($ADC_A - $OSC_CH1_OFF_20_DC)"))
+ADC_B_REF_045=$(printf %f $(bc -l <<< "(2.25 / $REF_V) * ($ADC_B - $OSC_CH2_OFF_20_DC)"))
 
 # Print out the measurements
 echo "      IN1 mean value is $ADC_A_REF_045"
@@ -127,7 +139,7 @@ echo "      IN2 mean value is $ADC_B_REF_045"
 
 
 sleep 0.5
-echo -n "  * Start generator in DC (0.9V with gain x5) " 
+echo -n "  * Start generator in DC (4.5V current gain x5) " 
 generate_with_api -g
 print_ok
 
@@ -142,9 +154,10 @@ echo -n "  * Get data from ADC "
 ADC_PARAM="-d B  -1 20 -2 20"
 acquireData
 print_ok
-
-ADC_A_DAC_045=$(bc -l <<< "4 * $ADC_A")
-ADC_B_DAC_045=$(bc -l <<< "4 * $ADC_B")
+echo $ADC_A
+echo $ADC_B
+ADC_A_DAC_045=$(bc -l <<< "$ADC_A - $OSC_CH1_OFF_20_DC")
+ADC_B_DAC_045=$(bc -l <<< "$ADC_B - $OSC_CH2_OFF_20_DC")
 
 echo "      IN1 mean value is $ADC_A_DAC_045"
 echo "      IN2 mean value is $ADC_B_DAC_045"
@@ -166,5 +179,5 @@ then
 else
     print_test_fail
 fi
-
+sleep 2
 exit $STATUS

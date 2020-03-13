@@ -3,7 +3,7 @@ source ./sub_test/common_func.sh
 
 # fast ADCs and DACs data acquisitions
 export SIG_FREQ=1000
-export SIG_AMPL=2 # P-to-P
+export SIG_AMPL=1 # P-to-P
 export ADC_BUFF_SIZE=16384
 
 MAX_ABS_OFFS_HIGH_GAIN=500
@@ -13,15 +13,15 @@ MAX_NOISE_STD=15 # Old value 8 -> Change to 25 because od +15V switching PS on t
 MAX_NOISE_STD_NO_DEC=25 # Old value 15 -> Change to 25 because od +15V switching PS on the test board
 MAX_NOISE_P2P=80  # # Old value 60 -> Change to 25 because od +15V switching PS on the test board
 
-MIN_SIG_STD_HIGH_GAIN=4200
-MAX_SIG_STD_HIGH_GAIN=5600
-MIN_SIG_STD_LOW_GAIN=170
-MAX_SIG_STD_LOW_GAIN=350
+MIN_SIG_STD_HIGH_GAIN=2100
+MAX_SIG_STD_HIGH_GAIN=2800
+MIN_SIG_STD_LOW_GAIN=85
+MAX_SIG_STD_LOW_GAIN=175
 
-MIN_SIG_P2P_HIGH_GAIN=12000
-MAX_SIG_P2P_HIGH_GAIN=16000
-MIN_SIG_P2P_LOW_GAIN=450
-MAX_SIG_P2P_LOW_GAIN=850
+MIN_SIG_P2P_HIGH_GAIN=6000
+MAX_SIG_P2P_HIGH_GAIN=8000
+MIN_SIG_P2P_LOW_GAIN=225
+MAX_SIG_P2P_LOW_GAIN=425
 
 echo
 echo -e "\e[94m########################################################################\e[0m"
@@ -110,8 +110,8 @@ echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADC (1:20
 echo
 
 # Turn the DAC signal generator on on both channels
-$C_GENERATE 1 $SIG_AMPL $SIG_FREQ
-$C_GENERATE 2 $SIG_AMPL $SIG_FREQ
+$C_GENERATE 1 $SIG_AMPL $SIG_FREQ x1 sine
+$C_GENERATE 2 $SIG_AMPL $SIG_FREQ x1 sine
 sleep 0.5
 
 export MAX_DEVIATION=$MAX_SIG_STD_LOW_GAIN
@@ -206,8 +206,8 @@ echo "    Acquisition with DAC signal ($SIG_AMPL Vpp / $SIG_FREQ Hz) - ADC (1:20
 echo
 
 # Turn the DAC signal generator on on both channels
-$C_GENERATE 1 $SIG_AMPL $SIG_FREQ
-$C_GENERATE 2 $SIG_AMPL $SIG_FREQ
+$C_GENERATE 1 $SIG_AMPL $SIG_FREQ x1 sine
+$C_GENERATE 2 $SIG_AMPL $SIG_FREQ x1 sine
 sleep 0.5
 
 export MAX_DEVIATION=$MAX_SIG_STD_LOW_GAIN

@@ -112,13 +112,13 @@ function hexToDec() {
 function getLowRefValue(){
     REF_V=$($C_UART_TOOL 'GET:VREF:LOW')
 #    REF_V=0.444
-    REF_V=$(printf %.2f $(bc -l <<< "scale=0; 8192 * $REF_V"))
+    REF_V=$(printf %f $(bc -l <<< "scale=0; 8192 * $REF_V"))
 }
 
 function getHighRefValue(){
     REF_V=$($C_UART_TOOL 'GET:VREF:HI')
 #    REF_V=9.03
-    REF_V=$(printf %.2f $(bc -l <<< "scale=0; 8192 * $REF_V / 20"))
+    REF_V=$(printf %f $(bc -l <<< "scale=0; 8192 * $REF_V / 20"))
 }
 
 function getLowRefVoltage(){
@@ -259,7 +259,7 @@ function CombineLogVar(){
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/zynq_code 2> /dev/null)"
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/mac_addr 2> /dev/null)"
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/temp_and_power 2> /dev/null)"
-    LOG_VAR="$LOG_VAR$(cat $TEST_TMP_DIR/fast_adc 2> /dev/null)"
+    LOG_VAR="$LOG_VAR$(cat $TEST_TMP_DIR/fast_adc 2> /dev/null)" # don't add space char
     LOG_VAR="$LOG_VAR $(calib -r | xargs echo -n)"
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/capacitors 2> /dev/null)"
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/mem_test 2> /dev/null)"
@@ -276,4 +276,13 @@ function CheckTestPass(){
     else
         STATUS=0
     fi
+}
+
+function GetCalibValue()
+{
+    STR="{print $"
+    STR+=$1
+    STR+="}"
+    calib -r > $TEST_TMP_DIR/calib
+    CALIB_RET_VALUE=$(awk "$STR" $TEST_TMP_DIR/calib)
 }

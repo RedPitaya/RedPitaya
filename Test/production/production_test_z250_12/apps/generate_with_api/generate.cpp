@@ -47,10 +47,10 @@ bool CheckMissing(const char* val,const char* Message){
 void UsingArgs(char const* progName){
     printf("Usage with file: %s -d1|-d2|-s1|-s2|-g\n",progName);
 	printf("\t-d1 = DC signal 0.45V\n");
-	printf("\t-d2 = DC signal 4.0V\n");
+	printf("\t-d2 = DC signal 1.0V\n");
 	printf("\t-s1 = Sine signal 0.45V\n");
 	printf("\t-s2 = Sine signal 4.0V\n");
-	printf("\t-g  = Sine signal 4.5V with gain x5\n");
+	printf("\t-g  = Sine signal 4.5V with gain (x5)\n");
     exit(-1);
 }
 
@@ -92,7 +92,7 @@ int main(int argc, char **argv){
 	}
 
 	if (dc_09){
-		amp = 0.8;
+		amp = 0.2;
 		rp_GenSetGainOut(RP_CH_1,RP_GAIN_5X);
 		rp_GenSetGainOut(RP_CH_2,RP_GAIN_5X);
 		/* Generating frequency */
