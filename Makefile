@@ -351,7 +351,7 @@ APP_SCPIMANAGER_DIR      = apps-tools/scpi_manager
 APP_NETWORKMANAGER_DIR   = apps-tools/network_manager
 APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
-APP_STREAMINGMANAGER_DIR = Applications/streaming_manager
+APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
 
