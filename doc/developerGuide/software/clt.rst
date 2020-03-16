@@ -255,7 +255,7 @@ Example (system register reading):
     14                                                                    AO2(0-1.8V)                                                                    2b0000                                                                    0.496
     15                                                                    AO3(0-1.8V)                                                                    220000                                                                    0.392
 
-You can find some detailed description of the above mentioned pins `here <https://redpitaya.readthedocs.io/en/latest/developerGuide/125-14/extent.html>`.
+You can find some detailed description of the above mentioned pins `here <https://redpitaya.readthedocs.io/en/latest/developerGuide/125-14/extent.html>`_.
 The –ams switch provides access to analog mixed signals including Zynq SoC temperature, auxiliary analog input reading, power supply voltages and configured auxiliary analog output settings. The auxiliary analog outputs can be set through the monitor utility using the –sadc switch:
  
 .. code-block:: shell-session
