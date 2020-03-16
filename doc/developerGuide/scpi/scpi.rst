@@ -110,6 +110,7 @@ SCPI commands
 The next subsystems are available:
 
 Oscilloscope:
+``ACQ:SOURCE[<n>]``
 
 Generator:
 ``:SOURCE[<n>]``
@@ -119,10 +120,6 @@ The value of ``n`` selects one of the ``N`` oscilloscope channels.
 The indexing starts at ``1`` and ends at ``N``.
 The available options for ``n`` are ``1`` or ``2``.
 
-   | {.pattern = "SOURce#:RESET",                              .callback = rpscpi_gen_reset,},
-   | {.pattern = "SOURce#:START",                              .callback = rpscpi_gen_start,},
-   | {.pattern = "SOURce#:STOP",                               .callback = rpscpi_gen_stop,},
-   | {.pattern = "SOURce#:TRIGger",                            .callback = rpscpi_gen_trigger,},
 
 ========================
 ``:OUTPut[<n>][:STATe]``
@@ -199,7 +196,7 @@ Description
 
 Specify signal frequency when generator is in periodic mode.
 Query might return a slightly different value,
-since internaly all values are rounded.
+since internally all values are rounded.
 
 ----------
 Parameters
@@ -232,7 +229,7 @@ Description
 
 Specify signal phase when generator is in periodic mode.
 Query might return a slightly different value,
-since internaly all values are rounded.
+since internally all values are rounded.
 
 A new frequency is applied immediately.
 
@@ -268,7 +265,7 @@ Description
 
 Specify signal phase when generator is in periodic mode.
 Query might return a slightly different value,
-since internaly all values are rounded.
+since internally all values are rounded.
 
 A new phase is only applied after the generator is triggered again.
 
