@@ -231,7 +231,7 @@ Specify signal phase when generator is in periodic mode.
 Query might return a slightly different value,
 since internally all values are rounded.
 
-A new frequency is applied immediately.
+A new phase is only applied after the generator is triggered again.
 
 ----------
 Parameters
@@ -240,48 +240,12 @@ Parameters
 +---------+-------------+------------+---------+--------------+
 | Name    | Type        | Range      | Default | Default unit |
 +=========+=============+============+=========+==============+
-| <phase> | real number | 0° to 360° | 1 kHz   | degree (°)   |
+| <phase> | real number | 0° to 360° |    0°   | degree (°)   |
 +---------+-------------+------------+---------+--------------+
 
 The unit (degree symbol) should not be provided,
 other units are not supported yet.
-Negative values and values greater then 360° are properly wrapped.
-
-
-=================================
-``[:SOURce[<n>]]:PHASe[:ADJust]``
-=================================
-
--------
-Syntax:
--------
-
-``[:SOURce[<n>]]:PHASe[:ADJust] <phase>``
-``[:SOURce[<n>]]:PHASe[:ADJust]?``
-
------------
-Description
------------
-
-Specify signal phase when generator is in periodic mode.
-Query might return a slightly different value,
-since internally all values are rounded.
-
-A new phase is only applied after the generator is triggered again.
-
-----------
-Parameters
-----------
-
-+-------------+----------------------+------------+---------+--------------+
-| Name        | Type                 | Range      | Default | Default unit |
-+=============+======================+============+=========+==============+
-| <frequency> | Positive real number | 0° to 360° | 1 kHz   | degree (°)   |
-+-------------+----------------------+------------+---------+--------------+
-
-The unit (degree symbol) should not be provided,
-other units are not supported yet.
-Negative values and values greater then 360° are properly wrapped.
+Negative values and values greater than 360° are properly wrapped.
 
 ===============================
 ``[:SOURce#]:FUNCtion[:SHAPe]``
