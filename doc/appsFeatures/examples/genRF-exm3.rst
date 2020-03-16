@@ -60,9 +60,12 @@ and press run.
     % on output you will get continuous  signal instead of pulses
 
 
-    fclose(tcpipObj);
-    view rawgenerate_burst_trigger_external.m
-    Code - C
+    fclose(tcpipObj)
+
+Code - C
+********
+
+.. code-block:: c
 
     /* Red Pitaya external trigger pulse generation Example */
 

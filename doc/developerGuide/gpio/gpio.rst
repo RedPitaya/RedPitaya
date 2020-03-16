@@ -6,7 +6,7 @@ General purpose input output
 GPIOs
 =====
 
-This document introduses handling of GPIO signals that are conected to Zynq-7000 PS EMIO block
+This document introduces handling of GPIO signals that are conected to Zynq-7000 PS EMIO block
 and is accesible as general purpose input / output pins on Extension conector E1 with Linux gpio subsystem userspace interfaces.
 
 There are two interfaces legacy sysfs interface and new character device based one.
