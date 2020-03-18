@@ -9,13 +9,18 @@ ADC clock can be provided by:
 Schematic:
 
 .. image:: External_clk.png
+    :width:  150px
 
 Top side:
 
 .. image:: External_clock_top.png
+    :width:  150px
 
 Bottom side:
 
 .. image:: External_clock_bottom.png
+    :width:  150px
+
 
 .. image:: External_clock_bottom_photo.png
+    :width:  150px
