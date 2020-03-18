@@ -17,3 +17,5 @@ Top side:
 Bottom side:
 
 .. image:: External_clock_bottom.png
+
+.. image:: External_clock_bottom_photo.png
