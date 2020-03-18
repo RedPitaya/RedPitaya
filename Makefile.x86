@@ -186,7 +186,7 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 
 LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
 
-.PHONY: linux linux-install
+.PHONY: linux linux-install $(LINUX_DIR)
 
 linux: $(LINUX)
 
@@ -197,6 +197,8 @@ $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -t -p1 -i "${PWD}/patches/zynq-kernel-mempry-reserve-issue.patch" -d "${PWD}/$@"
+	patch -t -p1 -i "${PWD}/patches/zynq-kernel-i2c.patch" -d "${PWD}/$@"
+
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
