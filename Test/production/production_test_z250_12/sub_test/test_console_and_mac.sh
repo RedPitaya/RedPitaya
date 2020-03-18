@@ -175,7 +175,7 @@ export FACTORY_CAL
 if [[ "$?" = '0' ]]
 then
     $C_UART_TOOL 'LED:GRN 0 6' -s
-    $STATUS=0
+    STATUS=0
     SetBitState 0x01
 fi
 print_calib
