@@ -84,7 +84,13 @@ Start using STEMlab streaming feature
         .. image:: img/audacity.png
            :width: 80%
 
+.. note::
 
-    Notice: streaming always creates two files:
+    Streaming always creates two files:
         * first stores streamed data
         * second data transfer report
+
+.. note::
+
+    Streaming app source are available here: `streaming app <https://github.com/RedPitaya/RedPitaya/tree/master/apps-tools/streaming_manager>`__.
+        
