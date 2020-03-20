@@ -20,6 +20,9 @@ STEMlab 122-16 SDR
    - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-122-16/STEMlab_122-16_OS_0.98-5_stable.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
    - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-122-16/STEMlab_122-16_OS_0.99-43_beta.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
 
+STEMlab 250-12
+   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-250-12/STEMlab_250-12_OS_0.99-19_beta.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md>`_
+
 ..    - `Beta (including STEMlab SDR transceiver app) <http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_15-44-45_21-jul-2017.img.zip>`_.
 
 .. image:: microSDcard-RP.png
