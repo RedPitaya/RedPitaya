@@ -163,7 +163,7 @@ The choice of specific branches or tags is up to the user.
    .. code-block:: shell-session
    
       cd ./RedPitaya/build_scripts
-      ./build_Z10.sh
+      sudo ./build_Z10.sh
 
    or follow the steps of the instructions and build yourself
    
