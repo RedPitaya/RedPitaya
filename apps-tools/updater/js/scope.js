@@ -362,11 +362,14 @@ $(document).ready(function() {
                     stem_ver = result['stem_ver'];
                     if (stem_ver == "STEM 16"){
                         UPD.type = "STEMlab-122-16/ecosystems";
+                        $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
                     } else if (stem_ver == "STEM 250 12") {
                         UPD.type = "STEMlab-250-12/ecosystems";
+                        $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
                     }
                     else{
                         UPD.type = "STEMlab-125-1x/ecosystems";
+                        $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
                     }
                 });
 
