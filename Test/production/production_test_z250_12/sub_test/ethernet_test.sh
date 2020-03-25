@@ -4,7 +4,7 @@ source ./sub_test/common_func.sh
 ########## VARIABLES
 EXP_LINK_SPEED='1000'
 EXP_DUPLEX='full'
-N_PING_PKG=5
+N_PING_PKG=10
 PKT_SIZE=16000
 PING_IP=$G_LOCAL_SERVER_IP
 MIN_QR_LENGTH=50             # Set to 50 when using QR scanner
@@ -66,7 +66,7 @@ fi
 
 # Ping the defined IP
 echo "Ping to unit $PING_IP"
-RES=$(ping "$PING_IP" -c "$N_PING_PKG" | grep 'transmitted' | awk '{print $4}' ) > /dev/null
+RES=$(ping "$PING_IP" -c "$N_PING_PKG" -s "$PKT_SIZE" | grep 'transmitted' | awk '{print $4}' ) > /dev/null
 
 echo "Transmitted: $N_PING_PKG, received: $RES"
 

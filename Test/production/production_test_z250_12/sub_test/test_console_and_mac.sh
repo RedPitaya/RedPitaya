@@ -5,7 +5,7 @@ source ./sub_test/default_calibration_values.sh
 
 N_REP=5
 RP_MAC_BEGINNING='00:26:32'
-STATUS=1
+STATUS=0
 
 echo
 echo -e "\e[94m########################################################################\e[0m"
@@ -175,7 +175,7 @@ export FACTORY_CAL
 if [[ "$?" = '0' ]]
 then
     $C_UART_TOOL 'LED:GRN 0 6' -s
-    STATUS=0
+    STATUS=1
     SetBitState 0x01
 fi
 print_calib

@@ -5,7 +5,6 @@ PATH_XILINX_VIVADO=/opt/Xilinx/Vivado/2017.2
 RP_UBUNTU=redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
-
 function print_ok(){
     echo -e "\033[92m[OK]\e[0m"
 }
@@ -161,12 +160,10 @@ export PATH=$PATH:$PATH_XILINX_VIVADO/bin
 export PATH=$PATH:$PATH_XILINX_SDK/bin
 export PATH=$PATH:$PATH_XILINX_SDK/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin/
 ENABLE_PRODUCTION_TEST=0
-MODEL_FPGA=Z10
 GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
 
-
-make -f Makefile.x86 linux FPGA_MODEL=$MODEL_FPGA
-#schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-#make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT FPGA_MODEL=$MODEL_FPGA ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST
-#EOL_CHROOT
-#make -f Makefile.x86 zip FPGA_MODEL=$MODEL
+make -f Makefile.x86  MODEL=$MODEL
+schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
+make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST
+EOL_CHROOT
+make -f Makefile.x86 zip MODEL=$MODEL

@@ -129,8 +129,8 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 #	cp fpga/prj/streaming/prebuilt/* $(INSTALL_DIR)/fpga/
 ifeq ($(FPGA_MODEL), Z10)
 	cp fpga/prj/streaming/prebuilt/fpga_streaming.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif	
-	
+endif
+
 ifeq ($(FPGA_MODEL), Z20)
 	cp fpga/prj/streaming/prebuilt/fpga_streaming_z20.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
 endif
@@ -198,7 +198,9 @@ $(LINUX_DIR): $(LINUX_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 	patch -t -p1 -i "${PWD}/patches/zynq-kernel-mempry-reserve-issue.patch" -d "${PWD}/$@"
 	patch -t -p1 -i "${PWD}/patches/zynq-kernel-i2c.patch" -d "${PWD}/$@"
-
+ifeq ($(MODEL),Z20_250_12)
+	patch -t -p1 -i "${PWD}/patches/zynq-kernel-lantiq_250_12.patch" -d "${PWD}/$@"
+endif
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
