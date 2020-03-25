@@ -1,3 +1,3 @@
 #!/bin/bash
-export MODEL_FPGA=Z250_12
-sudo ./build_OS.sh
+export MODEL=Z20_250_12
+./build_OS.sh

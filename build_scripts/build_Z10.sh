@@ -1,3 +1,3 @@
 #!/bin/bash
-export MODEL_FPGA=Z10
-sudo ./build_OS.sh
+export MODEL=Z10
+./build_OS.sh
