@@ -4,7 +4,7 @@ source ./sub_test/common_func.sh
 ########## VARIABLES
 EXP_LINK_SPEED='1000'
 EXP_DUPLEX='full'
-N_PING_PKG=5
+N_PING_PKG=10
 PKT_SIZE=16000
 PING_IP=$G_LOCAL_SERVER_IP
 MIN_QR_LENGTH=50             # Set to 50 when using QR scanner
