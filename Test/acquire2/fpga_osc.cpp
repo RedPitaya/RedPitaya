@@ -24,6 +24,15 @@
 #include <fcntl.h>
 
 #include "fpga_osc.h"
+#include "rp_cross.h"
+
+#ifdef Z20_250_12
+#include "acquire_250.h"
+#include "rp-i2c-max7311.h"
+#include "rp-i2c-mcp47x6-c.h"
+#include "rp-gpio-power.h"
+#include "rp-spi.h"
+#endif
 
 /**
  * GENERAL DESCRIPTION:
@@ -64,17 +73,19 @@ uint32_t           *g_osc_fpga_chb_mem = NULL;
 /** The memory file descriptor used to mmap() the FPGA space */
 int             g_osc_fpga_mem_fd = -1;
 
+rp_calib_params_t   g_osc_calib_params;
+
 /* Constants */
 /** ADC number of bits */
-const int c_osc_fpga_adc_bits = 14;
+const int c_osc_fpga_adc_bits = ADC_BITS;
 /** @brief Max and min voltage on ADCs. 
  * Symetrical - Max Voltage = +14, Min voltage = -1 * c_osc_fpga_max_v 
  */
-const float c_osc_fpga_adc_max_v  = +2;
+const float c_osc_fpga_adc_max_v  = ADC_MAX_V;
 /** Sampling frequency = 125Mspmpls (non-decimated) */
-const float c_osc_fpga_smpl_freq = 250e6;
+const float c_osc_fpga_smpl_freq = ADC_SAMPLE_RATE;
 /** Sampling period (non-decimated) - 8 [ns] */
-const float c_osc_fpga_smpl_period = (1. / 250e6);
+const float c_osc_fpga_smpl_period = (1. / ADC_SAMPLE_RATE);
 
 /**
  * @brief Internal function used to clean up memory.
@@ -156,7 +167,9 @@ int osc_fpga_init(void)
         (OSC_FPGA_CHA_OFFSET / sizeof(uint32_t));
     g_osc_fpga_chb_mem = (uint32_t *)g_osc_fpga_reg_mem + 
         (OSC_FPGA_CHB_OFFSET / sizeof(uint32_t));
-
+    
+    rp_CalibInit();
+    g_osc_calib_params = rp_GetCalibrationSettings();
     return 0;
 }
 
@@ -550,7 +563,7 @@ int osc_fpga_cnv_v_to_cnt(float voltage)
  */
 float osc_fpga_cnv_cnt_to_v(int cnts)
 {
-    cnts = cnts & 0x3fff;
+    cnts = cnts & ADC_MASK;
     int m;
 
     if(cnts & (1<<(c_osc_fpga_adc_bits-1))) {
@@ -560,6 +573,64 @@ float osc_fpga_cnv_cnt_to_v(int cnts)
         m = cnts;
         /* positive number */
     }
+       // m = m / (ADC_MASK >> 1) * ADC_MAX_V;
     return m;
 }
 
+float osc_fpga_cnv_cnt_to_v2(int cnts)
+{
+    float v = (float)cnts / (ADC_MASK >> 1) * ADC_MAX_V;
+    return v;
+}
+
+#ifdef Z20_250_12
+int osc_calibrate_value(int cnts,int channel,int attenuator,int mode){
+    float voltageScale = 20.0; 
+    if (attenuator == RP_ATTENUATOR_1_20) voltageScale = 1.0;
+    float fullScale = (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
+    int offset = 0;
+    int gain   = 0;
+    if (channel == 0) {
+       if (attenuator == RP_ATTENUATOR_1_1){
+           offset = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch1_off_1_ac : g_osc_calib_params.osc_ch1_off_1_dc;
+           gain   = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch1_g_1_ac : g_osc_calib_params.osc_ch1_g_1_dc;
+       }else{
+           offset = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch1_off_20_ac : g_osc_calib_params.osc_ch1_off_20_dc;
+           gain   = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch1_g_20_ac : g_osc_calib_params.osc_ch1_g_20_dc;
+       }
+    } else {
+         if (attenuator == RP_ATTENUATOR_1_1){
+           offset = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch2_off_1_ac  : g_osc_calib_params.osc_ch2_off_1_dc;
+           gain   = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch2_g_1_ac : g_osc_calib_params.osc_ch2_g_1_dc;
+       }else{
+           offset = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch2_off_20_ac : g_osc_calib_params.osc_ch2_off_20_dc;
+           gain   = mode == RP_AC_MODE ? g_osc_calib_params.osc_ch2_g_20_ac : g_osc_calib_params.osc_ch2_g_20_dc;
+       }
+    }
+
+    cnts -= offset;
+    cnts *= gain/fullScale;
+    return cnts;
+}
+#else
+
+int osc_calibrate_value(int cnts,int channel,int mode){
+    float voltageScale = 1.0; 
+    if (mode == 1) voltageScale = 20.0;
+    float fullScale = (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
+    int offset = 0;
+    int gain   = 0;
+    if (channel == 0) {
+        offset = mode == 1 ? g_osc_calib_params.fe_ch1_hi_offs : g_osc_calib_params.fe_ch1_lo_offs;
+        gain   = mode == 1 ? g_osc_calib_params.fe_ch1_fs_g_hi : g_osc_calib_params.fe_ch1_fs_g_lo;
+    } else {
+        offset = mode == 1 ? g_osc_calib_params.fe_ch2_hi_offs : g_osc_calib_params.fe_ch2_lo_offs;
+        gain   = mode == 1 ? g_osc_calib_params.fe_ch2_fs_g_hi : g_osc_calib_params.fe_ch2_fs_g_lo;    
+    }
+
+    cnts -= offset;
+    cnts *= gain/fullScale;
+    return cnts;
+}
+
+#endif

@@ -268,7 +268,7 @@ BODE_DIR         = Test/bode
 MONITOR_DIR      = Test/monitor
 MONITOR_OLD_DIR  = Test/monitor_old
 ACQUIRE_DIR      = Test/acquire
-ACQUIRE250_DIR   = Test/acquire250.12
+ACQUIRE2_DIR     = Test/acquire2
 CALIB_DIR        = Test/calib
 CALIBRATE_DIR    = Test/calibrate
 GENERATOR_DIR	 = Test/generate
@@ -280,15 +280,15 @@ LA_TEST_DIR      = api2/test
 GENERATE_DC_DIR  = Test/generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest 
-.PHONY: acquire250.12 generator250.12
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest
+.PHONY: acquire2 generator250.12
 
-examples: lcr bode monitor monitor_old calib generate_DC spectrum
+examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2
 
 ifeq ($(MODEL),Z20_250_12)
-examples: generator250.12 acquire250.12 rp_i2c_tool
+examples: generator250.12 rp_i2c_tool
 else
-examples: generator acquire
+examples: generator
 endif
 # calibrate laboardtest
 
@@ -328,13 +328,14 @@ generator250.12: api
 	$(MAKE) -C $(GENERATOR250_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-acquire: api
-	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL)
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+# remove old tool
+#acquire: api
+#	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL)
+#	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-acquire250.12: api
-	$(MAKE) -C $(ACQUIRE250_DIR) MODEL=$(MODEL)
-	$(MAKE) -C $(ACQUIRE250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+acquire2: api
+	$(MAKE) -C $(ACQUIRE2_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(ACQUIRE2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
