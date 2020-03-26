@@ -7,7 +7,7 @@ STATUS=0
 if [[ -z $FACTORY_CAL ]]
 then
     echo
-    echo -n "Setting the default calibration parameters into the EEPROM... "
+    echo -n "Setting the calibration parameters into the EEPROM... "
     print_fail
     echo "NO PARAMETERS FOR CALIBRATION!"
 else

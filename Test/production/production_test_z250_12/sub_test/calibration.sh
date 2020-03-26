@@ -211,15 +211,15 @@ checkValue $OSC_CH1_G_1_DC $OSC_CH2_G_1_DC $FE_FS_G_LO_MIN $FE_FS_G_LO_MAX
 ##########################################################################################
 ##########################################################################################
 
-OSC_CH1_OFF_1_DC=$(bc -l <<< "$N1_LV_DC * $GAIN1_LV_DC")
-OSC_CH2_OFF_1_DC=$(bc -l <<< "$N2_LV_DC * $GAIN2_LV_DC")
-# round value
-OSC_CH1_OFF_1_DC=${OSC_CH1_OFF_1_DC%.*}
-OSC_CH2_OFF_1_DC=${OSC_CH2_OFF_1_DC%.*}
-# Print out the new cal parameters
-echo "      NEW IN1 1:1 DC offset cal param >>OSC_CH1_OFF_1_DC<< is $OSC_CH1_OFF_1_DC"
-echo "      NEW IN2 1:1 DC offset cal param >>OSC_CH2_OFF_1_DC<< is $OSC_CH2_OFF_1_DC"
-echo
+# OSC_CH1_OFF_1_DC=$(bc -l <<< "$N1_LV_DC * $GAIN1_LV_DC")
+# OSC_CH2_OFF_1_DC=$(bc -l <<< "$N2_LV_DC * $GAIN2_LV_DC")
+# # round value
+# OSC_CH1_OFF_1_DC=${OSC_CH1_OFF_1_DC%.*}
+# OSC_CH2_OFF_1_DC=${OSC_CH2_OFF_1_DC%.*}
+# # Print out the new cal parameters
+# echo "      NEW IN1 1:1 DC offset cal param >>OSC_CH1_OFF_1_DC<< is $OSC_CH1_OFF_1_DC"
+# echo "      NEW IN2 1:1 DC offset cal param >>OSC_CH2_OFF_1_DC<< is $OSC_CH2_OFF_1_DC"
+# echo
 
 ##########################################################################################
 # CHECK CALIBRATION
@@ -346,14 +346,14 @@ checkValue $OSC_CH1_G_20_DC $OSC_CH2_G_20_DC $FE_FS_G_HI_MIN $FE_FS_G_HI_MAX
 ##########################################################################################
 ##########################################################################################
 
-OSC_CH1_OFF_20_DC=$(bc -l <<< "$N1_HV_DC * $GAIN1_HV_DC")
-OSC_CH2_OFF_20_DC=$(bc -l <<< "$N2_HV_DC * $GAIN2_HV_DC")
-OSC_CH1_OFF_20_DC=${OSC_CH1_OFF_20_DC%.*}
-OSC_CH2_OFF_20_DC=${OSC_CH2_OFF_20_DC%.*}
-# Print out the new cal parameters
-echo "      NEW IN1 1:1 DC offset cal param >>OSC_CH1_OFF_1_DC<< is $OSC_CH1_OFF_20_DC"
-echo "      NEW IN2 1:1 DC offset cal param >>OSC_CH2_OFF_1_DC<< is $OSC_CH2_OFF_20_DC"
-echo
+# OSC_CH1_OFF_20_DC=$(bc -l <<< "$N1_HV_DC * $GAIN1_HV_DC")
+# OSC_CH2_OFF_20_DC=$(bc -l <<< "$N2_HV_DC * $GAIN2_HV_DC")
+# OSC_CH1_OFF_20_DC=${OSC_CH1_OFF_20_DC%.*}
+# OSC_CH2_OFF_20_DC=${OSC_CH2_OFF_20_DC%.*}
+# # Print out the new cal parameters
+# echo "      NEW IN1 1:1 DC offset cal param >>OSC_CH1_OFF_1_DC<< is $OSC_CH1_OFF_20_DC"
+# echo "      NEW IN2 1:1 DC offset cal param >>OSC_CH2_OFF_1_DC<< is $OSC_CH2_OFF_20_DC"
+# echo
 
 ##########################################################################################
 # CHECK CALIBRATION
@@ -778,15 +778,15 @@ checkValue $OSC_CH1_G_1_AC $OSC_CH2_G_1_AC $FE_FS_G_LO_MIN $FE_FS_G_LO_MAX
 ##########################################################################################
 ##########################################################################################
 
-OSC_CH1_OFF_1_AC=$(bc -l <<< "$N1_LV_AC * $GAIN1_LV_AC")
-OSC_CH2_OFF_1_AC=$(bc -l <<< "$N2_LV_AC * $GAIN2_LV_AC")
-# round value
-OSC_CH1_OFF_1_AC=${OSC_CH1_OFF_1_AC%.*}
-OSC_CH2_OFF_1_AC=${OSC_CH2_OFF_1_AC%.*}
-# Print out the new cal parameters
-echo "      NEW IN1 1:1 AC offset cal param >>OSC_CH1_OFF_1_AC<< is $OSC_CH1_OFF_1_AC"
-echo "      NEW IN2 1:1 AC offset cal param >>OSC_CH2_OFF_1_AC<< is $OSC_CH2_OFF_1_AC"
-echo
+# OSC_CH1_OFF_1_AC=$(bc -l <<< "$N1_LV_AC * $GAIN1_LV_AC")
+# OSC_CH2_OFF_1_AC=$(bc -l <<< "$N2_LV_AC * $GAIN2_LV_AC")
+# # round value
+# OSC_CH1_OFF_1_AC=${OSC_CH1_OFF_1_AC%.*}
+# OSC_CH2_OFF_1_AC=${OSC_CH2_OFF_1_AC%.*}
+# # Print out the new cal parameters
+# echo "      NEW IN1 1:1 AC offset cal param >>OSC_CH1_OFF_1_AC<< is $OSC_CH1_OFF_1_AC"
+# echo "      NEW IN2 1:1 AC offset cal param >>OSC_CH2_OFF_1_AC<< is $OSC_CH2_OFF_1_AC"
+# echo
 
 
 ##########################################################################################
@@ -898,15 +898,15 @@ checkValue $OSC_CH1_G_20_AC $OSC_CH2_G_20_AC $FE_FS_G_HI_MIN $FE_FS_G_HI_MAX
 ##########################################################################################
 ##########################################################################################
 
-OSC_CH1_OFF_20_AC=$(bc -l <<< "$N1_HV_AC * $GAIN1_HV_AC")
-OSC_CH2_OFF_20_AC=$(bc -l <<< "$N2_HV_AC * $GAIN2_HV_AC")
-# round value
-OSC_CH1_OFF_20_AC=${OSC_CH1_OFF_20_AC%.*}
-OSC_CH2_OFF_20_AC=${OSC_CH2_OFF_20_AC%.*}
-# Print out the new cal parameters
-echo "      NEW IN1 1:1  AC offset cal param >>OSC_CH1_OFF_20_AC<< is $OSC_CH1_OFF_20_AC"
-echo "      NEW IN2 1:1  AC offset cal param >>OSC_CH2_OFF_20_AC<< is $OSC_CH2_OFF_20_AC"
-echo
+# OSC_CH1_OFF_20_AC=$(bc -l <<< "$N1_HV_AC * $GAIN1_HV_AC")
+# OSC_CH2_OFF_20_AC=$(bc -l <<< "$N2_HV_AC * $GAIN2_HV_AC")
+# # round value
+# OSC_CH1_OFF_20_AC=${OSC_CH1_OFF_20_AC%.*}
+# OSC_CH2_OFF_20_AC=${OSC_CH2_OFF_20_AC%.*}
+# # Print out the new cal parameters
+# echo "      NEW IN1 1:1  AC offset cal param >>OSC_CH1_OFF_20_AC<< is $OSC_CH1_OFF_20_AC"
+# echo "      NEW IN2 1:1  AC offset cal param >>OSC_CH2_OFF_20_AC<< is $OSC_CH2_OFF_20_AC"
+# echo
 
 
 ##########################################################################################
