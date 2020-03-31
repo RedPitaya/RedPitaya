@@ -33,17 +33,24 @@ static char version[50];
 
 int rp_Init()
 {
+    return rp_InitReset(true);
+}
+
+int rp_InitReset(bool reset)
+{
     cmn_Init();
 
     calib_Init();
-    hk_Init();
+    hk_Init(reset);
     ams_Init();
     generate_Init();
     osc_Init();
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
-    rp_Reset();
+    if (reset){
+        rp_Reset();
+    }
 
     return RP_OK;
 }

@@ -298,7 +298,17 @@ typedef struct {
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
+
 int rp_Init();
+
+/**
+ * Initializes the library. It must be called first, before any other library method.
+ * @param reset Reset to default configuration on api
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+
+int rp_InitReset(bool reset);
 
 int rp_CalibInit();
 

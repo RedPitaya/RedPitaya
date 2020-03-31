@@ -2,7 +2,7 @@
 DL ?= dl
 
 INSTALL_DIR ?= build
-
+ENABLE_LICENSING ?= 0
 ################################################################################
 # versioning system
 ################################################################################
@@ -88,7 +88,7 @@ ifdef ENABLE_LICENSING
 
 api: librpapp liblcr_meter
 
-librpapp:
+librpapp: api
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -263,27 +263,28 @@ endif
 # Red Pitaya tools
 ################################################################################
 
-LCR_DIR          = Test/lcr
-BODE_DIR         = Test/bode
-MONITOR_DIR      = Test/monitor
-MONITOR_OLD_DIR  = Test/monitor_old
-ACQUIRE_DIR      = Test/acquire
-ACQUIRE2_DIR     = Test/acquire2
-CALIB_DIR        = Test/calib
-CALIBRATE_DIR    = Test/calibrate
-GENERATOR_DIR	 = Test/generate
-GENERATOR250_DIR = Test/generate250.12
-SPECTRUM_DIR     = Test/spectrum
-COMM_DIR         = Examples/Communication/C
-XADC_DIR         = Test/xadc
-LA_TEST_DIR      = api2/test
-GENERATE_DC_DIR  = Test/generate_DC
+LCR_DIR            = Test/lcr
+BODE_DIR           = Test/bode
+MONITOR_DIR        = Test/monitor
+MONITOR_OLD_DIR    = Test/monitor_old
+ACQUIRE_DIR        = Test/acquire
+ACQUIRE2_DIR       = Test/acquire2
+CALIB_DIR          = Test/calib
+CALIBRATE_DIR      = Test/calibrate
+GENERATOR_DIR	   = Test/generate
+GENERATOR250_DIR   = Test/generate250.12
+GENERATORCALIB_DIR = Test/generate_calib
+SPECTRUM_DIR       = Test/spectrum
+COMM_DIR           = Examples/Communication/C
+XADC_DIR           = Test/xadc
+LA_TEST_DIR        = api2/test
+GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest
-.PHONY: acquire2 generator250.12
+.PHONY: acquire2 generator250.12 generate_calib
 
-examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2
+examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2 generate_calib
 
 ifeq ($(MODEL),Z20_250_12)
 examples: generator250.12 rp_i2c_tool
@@ -328,6 +329,11 @@ generator250.12: api
 	$(MAKE) -C $(GENERATOR250_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(GENERATOR250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+generate_calib: api
+	$(MAKE) -C $(GENERATORCALIB_DIR) clean 
+	$(MAKE) -C $(GENERATORCALIB_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(GENERATORCALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	
 # remove old tool
 #acquire: api
 #	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL)
