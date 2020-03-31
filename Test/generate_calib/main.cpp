@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "version.h"
+#include "redpitaya/version.h"
 #include "rp.h"
 
 #ifdef Z20_250_12
