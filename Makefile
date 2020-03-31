@@ -331,9 +331,9 @@ generator250.12: api
 
 generate_calib: api
 	$(MAKE) -C $(GENERATORCALIB_DIR) clean 
-	$(MAKE) -C $(GENERATORCALIB_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(GENERATORCALIB_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(GENERATORCALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	
+
 # remove old tool
 #acquire: api
 #	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL)

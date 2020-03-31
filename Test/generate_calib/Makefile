@@ -29,3 +29,8 @@ all: $(OBJS)
 
 clean:
 	$(RM) $(OBJS)
+
+
+install:
+	mkdir -p $(INSTALL_DIR)/bin
+	cp $(APP_NAME) $(INSTALL_DIR)/bin
