@@ -71,7 +71,6 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     }
 
     m_OscThreadRun.test_and_set();
-   // m_SockThreadRun.test_and_set();
 }
 
 CStreamingApplication::~CStreamingApplication()
@@ -105,7 +104,6 @@ void CStreamingApplication::run()
 
     m_isRun = true;
     m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
-   // m_SocketThread = std::thread(&CStreamingApplication::socketWorker, this);
     try {
 
         m_StreamingManager->run();
@@ -138,9 +136,7 @@ void CStreamingApplication::runNonBlock(){
     m_isRun = true;    
     try {
         m_StreamingManager->run(); // MUST BE INIT FIRST for thread logic
-        m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
-    //    m_SocketThread = std::thread(&CStreamingApplication::socketWorker, this);
-        
+        m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);        
     }
     catch (const asio::system_error &e)
     {
@@ -154,8 +150,6 @@ bool CStreamingApplication::stop(){
     if (m_isRun){
         m_OscThreadRun.clear();
         m_OscThread.join();
-      //  m_SockThreadRun.clear();
-      //  m_SocketThread.join();
         m_StreamingManager->stop();
         m_Ios.stop();
         m_Osc_ch->stop();
@@ -192,18 +186,6 @@ try{
 #endif
         oscNotify(m_lostRate[m_bufferIndex], m_oscRate, m_WriteBuffer_ch1[m_bufferIndex], m_size_ch1[m_bufferIndex], m_WriteBuffer_ch2[m_bufferIndex], m_size_ch2[m_bufferIndex]);
         
-	
-    // mtx.lock();
-    //     if (m_was_send[ m_bufferIndex ? 0 : 1 ] == 0) {
-    //         m_was_send[ m_bufferIndex ] = 1;
-    //         m_bufferIndex = (m_bufferIndex == 1) ? 0 : 1;
-            
-    //     } else {
-    //         ++passCounter;
-    //         m_lostRate[m_bufferIndex]++;
-    //     }
-	// mtx.unlock();
-
         ++counter;
 
         timeNow = std::chrono::system_clock::now();
@@ -216,10 +198,6 @@ try{
             counter = 0;
             passCounter = 0;
             timeBegin = value.count();
-//            std::cout <<   m_bufferIndex << " " << m_was_send[ 0 ] <<  " " <<  m_was_send[ 1 ] << "\n";
-//            std::ofstream outfile;
-//            outfile.open("test.txt", std::ios_base::app);
-//            outfile << "Lost rate: " << passCounter << " / " << counter << " (" << (100. * static_cast<double>(passCounter) / counter) << " %)\n";
         }
 
         if (!m_StreamingManager->isFileThreadWork()){
@@ -238,58 +216,6 @@ try{
 
 }
 
-void CStreamingApplication::socketWorker(){
-
-#ifdef  DISABLE_OSC
-    char *buffer_ch1 = new char[osc_buf_size];
-    char *buffer_ch2 = new char[osc_buf_size];
-#endif
-
-try{
-//     while (m_SockThreadRun.test_and_set()) {
-
-// //         mtx.lock();
-// //         auto Index =  m_bufferIndex  ? 0 : 1;
-// //         mtx.unlock();
-
-// //         if (m_was_send[Index] == 1) {
-			
-// // #ifdef  DISABLE_OSC
-// //             for (size_t i = 0; i < osc_buf_size; i++) {
-// //                 ((char *) buffer_ch1)[i] = val;
-// //                 ((char *) buffer_ch2)[i] = val++;
-// //             }
-// //             oscNotify(m_lostRate[Index],m_oscRate, buffer_ch1,  (m_channels == 1 || m_channels == 3) ? osc_buf_size : 0, buffer_ch2,  (m_channels == 2|| m_channels == 3) ? osc_buf_size : 0);
-// // #else
-// //             oscNotify(m_lostRate[Index], m_oscRate, m_WriteBuffer_ch1[Index], m_size_ch1[Index], m_WriteBuffer_ch2[Index], m_size_ch2[Index]);
-// //      //       oscNotify(m_lostRate[Index], m_oscRate, m_WriteBuffer_ch1[Index], m_size_ch1[Index], m_WriteBuffer_ch2[Index], m_size_ch2[Index]);
-// // #endif
-
-// //       		mtx.lock();
-// //             m_lostRate[Index] = 0;
-// //             m_was_send[Index] = 0;
-// //             mtx.unlock();
-// //         }
-
-//         // if (!m_StreamingManager->isFileThreadWork()){
-//         //     if (m_StreamingManager->notifyStop){
-//         //         m_StreamingManager->notifyStop(0);
-//         //         m_StreamingManager->notifyStop = nullptr;                
-//         //     }
-//         // }
-//     }
-}catch (std::exception& e)
-	{
-		fprintf(stderr, "Error: socketWorker() -> %s\n",e.what());
-        PrintDebugInFile( e.what());
-	}
-
-
-#ifdef  DISABLE_OSC
-    delete [] buffer_ch1;
-    delete [] buffer_ch2;
-#endif
-}
 
  bool CStreamingApplication::passCh(int _bufferIndex, size_t &_size1, size_t &_size2){
     
@@ -364,27 +290,27 @@ int CStreamingApplication::oscNotify(uint64_t _lostRate, uint32_t _oscRate,const
     return m_StreamingManager->passBuffers(_lostRate,_oscRate, _buffer_ch1,_size_ch1,_buffer_ch2,_size_ch2,m_Resolution, 0);
 }
 
-void CStreamingApplication::passReadyNotify(int _pass_size)
-{
-//     m_ReadyToPass--;
-//     std::cout << m_ReadyToPass << "\n";
-}
+// void CStreamingApplication::passReadyNotify(int _pass_size)
+// {
+// //     m_ReadyToPass--;
+// //     std::cout << m_ReadyToPass << "\n";
+// }
 
-void CStreamingApplication::passReadyNotifyReset(){
- //   m_ReadyToPass = 0;
-}
+// void CStreamingApplication::passReadyNotifyReset(){
+//  //   m_ReadyToPass = 0;
+// }
 
-void CStreamingApplication::performanceCounterHandler(const asio::error_code &_error)
-{
-    if (!_error)
-    {
-        std::cout << "Bandwidth: " << m_BytesCount / (1024 * 1024 * m_PerformanceCounterPeriod) << " MiB/s\n";
-        m_BytesCount = 0;
+// void CStreamingApplication::performanceCounterHandler(const asio::error_code &_error)
+// {
+//     if (!_error)
+//     {
+//         std::cout << "Bandwidth: " << m_BytesCount / (1024 * 1024 * m_PerformanceCounterPeriod) << " MiB/s\n";
+//         m_BytesCount = 0;
 
-        m_Timer.expires_from_now(std::chrono::seconds(m_PerformanceCounterPeriod));
-        m_Timer.async_wait(std::bind(&CStreamingApplication::performanceCounterHandler, this, std::placeholders::_1));
-    }
-}
+//         m_Timer.expires_from_now(std::chrono::seconds(m_PerformanceCounterPeriod));
+//         m_Timer.async_wait(std::bind(&CStreamingApplication::performanceCounterHandler, this, std::placeholders::_1));
+//     }
+// }
 
 void CStreamingApplication::signalHandler(const asio::error_code &_error, int _signalNumber)
 {
