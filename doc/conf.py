@@ -36,16 +36,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinxcontrib.wavedrom',
     'breathe',
-    'hawkmoth'
     'github',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.coverage',
-    'sphinx.ext.graphviz',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.ifconfig',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
