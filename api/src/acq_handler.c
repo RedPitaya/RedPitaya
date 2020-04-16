@@ -363,9 +363,6 @@ void PrintLogInFile(const char *message){
 
 int acq_SetTriggerSrc(rp_acq_trig_src_t source)
 {
-    char s[50];
-    sprintf(s,"acq_SetTriggerSrc: %d\n",(int)source);
-    PrintLogInFile(s);
     last_trig_src = source;
     return osc_SetTriggerSource(source);
 }

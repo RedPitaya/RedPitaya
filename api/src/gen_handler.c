@@ -516,67 +516,76 @@ int synthesize_signal(rp_channel_t channel) {
     else{
         return RP_EPN;
     }
+    uint16_t buf_size = BUFFER_LENGTH;
+    if (waveform != RP_WAVEFORM_ARBITRARY){
+        uint32_t MAX_WRAPPER = 0x3FFFFFFF; // 65536 * 16384
+        uint32_t step = (uint32_t) round((float)frequency / (float)DAC_FREQUENCY * (float)MAX_WRAPPER);
+        uint32_t x =    (uint32_t) floor((float)MAX_WRAPPER / (float)step);
+        uint16_t buf_size = ((x * step) >> 16)+1;  
+        size = buf_size-1;
+    //    fprintf(stderr,"Buf size %d , %d, %d , %f, %d\n",buf_size , step , x , (float)MAX_WRAPPER / (float)step , 0xFFFF* buf_size / x);
+    }  
 
     switch (waveform) {
-        case RP_WAVEFORM_SINE     : synthesis_sin      (data);                 break;
-        case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data);                 break;
+        case RP_WAVEFORM_SINE     : synthesis_sin      (data,buf_size);                 break;
+        case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data,buf_size);                 break;
 #ifdef Z20_250_12
-        case RP_WAVEFORM_SQUARE   : synthesis_square_Z20_250(frequency, data); break;
+        case RP_WAVEFORM_SQUARE   : synthesis_square_Z20_250(frequency, data,buf_size); break;
 #else
-        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data);      break;
+        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data,buf_size);      break;
 #endif
-        case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data);                 break;
-        case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data);                 break;
-        case RP_WAVEFORM_DC       : synthesis_DC       (data);                 break;
-        case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data);      break;
+        case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data,buf_size);                 break;
+        case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data,buf_size);                 break;
+        case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
+        case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data,buf_size);      break;
         case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size); break;
         default:                    return RP_EIPV;
     }
     return generate_writeData(channel, data, phase, size);
 }
 
-int synthesis_sin(float *data_out) {
+int synthesis_sin(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) BUFFER_LENGTH));
+        data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) buffSize));
     }
     return RP_OK;
 }
 
-int synthesis_triangle(float *data_out) {
+int synthesis_triangle(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI * 2));
+        data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) buffSize)) / M_PI * 2));
     }
     return RP_OK;
 }
 
-int synthesis_rampUp(float *data_out) {
+int synthesis_rampUp(float *data_out,uint16_t buffSize) {
     data_out[BUFFER_LENGTH -1] = 0;
     for(int unsigned i = 0; i < BUFFER_LENGTH-1; i++) {
-        data_out[BUFFER_LENGTH - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI - 1));
+        data_out[BUFFER_LENGTH - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
     }
     return RP_OK;
 }
 
-int synthesis_rampDown(float *data_out) {
+int synthesis_rampDown(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI - 1));
+        data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
     }
     return RP_OK;
 }
 
-int synthesis_DC(float *data_out) {
+int synthesis_DC(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = 1.0;
     }
     return RP_OK;
 }
 
-int synthesis_PWM(float ratio, float *data_out) {
+int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize) {
     // calculate number of samples that need to be high
-    int h = (int) (BUFFER_LENGTH/2 * ratio);
+    int h = (int) (buffSize/2 * ratio);
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if (i < h || i >= BUFFER_LENGTH - h) {
+        if (i < h || i >= buffSize - h) {
             data_out[i] = 1.0;
         }
         else {
@@ -600,7 +609,7 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
     return RP_OK;
 }
 
-int synthesis_square(float frequency, float *data_out) {
+int synthesis_square(float frequency, float *data_out,uint16_t buffSize) {
     // Various locally used constants - HW specific parameters
     const int trans0 = 30;
     const int trans1 = 300;
@@ -610,19 +619,20 @@ int synthesis_square(float frequency, float *data_out) {
     if (trans <= 10)  trans = trans0;
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if      ((0 <= i                      ) && (i <  BUFFER_LENGTH/2 - trans))  data_out[i] =  1.0f;
-        else if ((i >= BUFFER_LENGTH/2 - trans) && (i <  BUFFER_LENGTH/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (i - (BUFFER_LENGTH/2 - trans));
-        else if ((0 <= BUFFER_LENGTH/2        ) && (i <  BUFFER_LENGTH   - trans))  data_out[i] = -1.0f;
-        else if ((i >= BUFFER_LENGTH   - trans) && (i <  BUFFER_LENGTH          ))  data_out[i] = -1.0f + (2.0f / trans) * (i - (BUFFER_LENGTH   - trans));
+        int unsigned x = (i % buffSize);
+        if      ((0 <= x                      ) && (x <  buffSize/2 - trans))  data_out[i] =  1.0f;
+        else if ((x >= buffSize/2 - trans) && (x <  buffSize/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (x - (buffSize/2 - trans));
+        else if ((0 <= buffSize/2        ) && (x <  buffSize   - trans))  data_out[i] = -1.0f;
+        else if ((x >= buffSize   - trans) && (x <  buffSize          ))  data_out[i] = -1.0f + (2.0f / trans) * (x - (buffSize   - trans));
     }
 
     return RP_OK;
 }
 
-int synthesis_square_Z20_250(float frequency, float *data_out) {
+int synthesis_square_Z20_250(float frequency, float *data_out,uint16_t buffSize) {
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if (i <  BUFFER_LENGTH/2)  
+        if ((i % buffSize) <  buffSize/2)  
             data_out[i] =  1.0f;
         else  
             data_out[i] = -1.0f;

@@ -220,7 +220,7 @@ int generate_setFrequency(rp_channel_t channel, float frequency) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
     ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
-    channel == RP_CH_1 ? (generate->ASM_WrapPointer = 1) : (generate->BSM_WrapPointer = 1);
+    channel == RP_CH_1 ? (generate->ASM_WrapPointer = 0) : (generate->BSM_WrapPointer = 0);
     return RP_OK;
 }
 
