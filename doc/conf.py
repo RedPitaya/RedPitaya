@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinxcontrib.wavedrom',
     'breathe',
+    'hawkmoth'
     'github',
     'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
