@@ -1,0 +1,3 @@
+[submodule "doc/ActiveLearning"]
+	path = doc/ActiveLearning
+	url = https://github.com/RedPitaya/ActiveLearning.git
