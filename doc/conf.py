@@ -35,8 +35,9 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.todo',
     'sphinxcontrib.wavedrom',
-    'breathe',
+#    'breathe', # bug in ReadTheDocs
     'github',
+    'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -304,3 +305,7 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+intersphinx_mapping = {
+    'sref': ('https://activelearning.readthedocs.io/en/latest/', None),
+}
