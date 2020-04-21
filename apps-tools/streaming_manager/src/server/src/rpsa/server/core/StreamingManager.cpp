@@ -275,9 +275,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                                                                new_buff_size);
 
                     ++m_ReadyToPass;
-                    if(m_ReadyToPass > 0)
-                        _lostRate = 0; // Send rate only first pack
-
+                    
                     if (!m_asionet->SendData(false, buffer, new_buff_size)) {
                         m_ReadyToPass--;
                     }
