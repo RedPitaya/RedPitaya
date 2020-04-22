@@ -20,7 +20,7 @@ tclapp::install -quiet ultrafast
 # define paths
 ################################################################################
 
-set path_brd brd
+set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
 set path_sdc sdc
