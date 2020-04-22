@@ -106,9 +106,9 @@ var rateFocusOut = function(event) {
 
 var rateFocusOutValue = function() {
     
-    SM.parametersCache["SS_RATE"] = { value: SM.ss_rate * SM.ss_max_rate_devider };
+    SM.parametersCache["SS_RATE"] = { value: SM.ss_rate  };
     SM.sendParameters();
-    console.log("SEND RATE "+SM.ss_rate *  SM.ss_max_rate_devider);
+    console.log("SEND RATE "+SM.ss_rate );
 
     text = "";
     rate_hz = SM.calcRateDecToHz();
