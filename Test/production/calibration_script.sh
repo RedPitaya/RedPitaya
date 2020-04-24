@@ -70,8 +70,9 @@ sleep 2
 
 
 echo $FACTORY_CAL | $CALIB -wf
-    sleep 0.2
-    if [ $? -ne 0 ]
+    status=$?
+	sleep 0.2
+	if [ $status -ne 0 ]
     then
         echo
         echo "Default calibration parameters are NOT correctly written in the factory EEPROM space"
@@ -79,8 +80,9 @@ echo $FACTORY_CAL | $CALIB -wf
     fi
 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
 echo $FACTORY_CAL | $CALIB -w
-    sleep 0.2
-    if [ $? -ne 0 ]
+    status=$?
+	sleep 0.2
+	if [ $status -ne 0 ]
     then
         echo
         echo "Default calibration parameters are NOT correctly written in the user EEPROM space"
@@ -118,8 +120,9 @@ NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO 
 echo "Setting the unit gains and zerro DC offset calibration parameters into the user EEPROM space..."
 echo
         echo $NEW_CAL_PARAMS | $CALIB -w
+		status=$?
         sleep 0.1
-        if [ $? -ne 0 ]
+		if [ $status -ne 0 ]
         then
         echo
         echo "Unit gains and zerro DC offset calibration parameters are NOT correctly written in the user EEPROM space"
@@ -298,8 +301,9 @@ NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO 
 echo "Setting the new calibration parameters into the user EEPROM space..."
 echo
         echo $NEW_CAL_PARAMS | $CALIB -w
-        sleep 0.1
-        if [ $? -ne 0 ]
+        status=$?
+		sleep 0.1
+		if [ $status -ne 0 ]
         then
         echo
         echo "New calibration parameters are NOT correctly written in the user EEPROM space"
@@ -476,8 +480,9 @@ NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO 
 echo "Setting the new calibration parameters into the user EEPROM space..."
 echo
         echo $NEW_CAL_PARAMS | $CALIB -w
-        sleep 0.1
-        if [ $? -ne 0 ]
+        status=$?
+		sleep 0.1
+		if [ $status -ne 0 ]
         then
         echo
         echo "New calibration parameters are NOT correctly written in the user EEPROM space"
@@ -586,8 +591,9 @@ NEW_CAL_PARAMS="$FE_CH1_FS_G_HI $FE_CH2_FS_G_HI $FE_CH1_FS_G_LO $FE_CH2_FS_G_LO 
 echo "Setting the new calibration parameters into the user EEPROM space..."
 echo
         echo $NEW_CAL_PARAMS | $CALIB -w
-        sleep 0.1
-        if [ $? -ne 0 ]
+        status=$?
+		sleep 0.1
+		if [ $status -ne 0 ]
         then
         echo
         echo "New calibration parameters are NOT correctly written in the user EEPROM space"
@@ -761,8 +767,9 @@ then
                     echo "*                                                                               *"
                     echo "*********************************************************************************"
                                 echo $FACTORY_CAL | $CALIB -wf
-                                    sleep 0.2
-                                    if [ $? -ne 0 ]
+                                    status=$?
+									sleep 0.2
+									if [ $status -ne 0 ]
                                     then
                                         echo
                                         echo "Default calibration parameters are NOT correctly written in the factory EEPROM space"
@@ -770,8 +777,9 @@ then
                                     fi
                                 # Copy the NEW CALIBRATION PARAMETERS to the user EEPROM memory partition
                                 echo $FACTORY_CAL | $CALIB -w
-                                    sleep 0.2
-                                    if [ $? -ne 0 ]
+                                    status=$?
+									sleep 0.2
+									if [ $status -ne 0 ]
                                     then
                                         echo
                                         echo "Default calibration parameters are NOT correctly written in the user EEPROM space"
@@ -800,8 +808,9 @@ echo
                     echo "Setting the new calibration parameters into the user EEPROM space..."
                     echo
                             echo $NEW_CAL_PARAMS | $CALIB -w
-                            sleep 0.1
-                            if [ $? -ne 0 ]
+                            status=$?
+							sleep 0.1
+							if [ $status -ne 0 ]
                             then
                             echo
                             echo "New calibration parameters are NOT correctly written in the user EEPROM space"
@@ -812,8 +821,9 @@ echo
                     echo "Setting the new calibration parameters into the FACTORY EEPROM space..."
                     echo
                             echo $NEW_CAL_PARAMS | $CALIB -wf
-                            sleep 0.1
-                            if [ $? -ne 0 ]
+                            status=$?
+							sleep 0.1
+							if [ $status -ne 0 ]
                             then
                             echo
                             echo "New calibration parameters are NOT correctly written in the FACTORY EEPROM space"
