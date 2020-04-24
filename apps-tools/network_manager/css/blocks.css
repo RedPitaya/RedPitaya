@@ -51,7 +51,7 @@
 }
 
 .eth0_apply {
-    width: 100px;
+    width: 130px;
     background-color: #555555;
     margin-top: 15px;
 }
@@ -59,6 +59,11 @@
 #wlan0_block_nodongle {
     max-width: 320px;
     color: #abac0c;
+}
+
+#wlan0_block_fail {
+    max-width: 320px;
+    color: #ac310c;
 }
 
 #wifi_list {

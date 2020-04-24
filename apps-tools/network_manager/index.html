@@ -122,6 +122,10 @@
                     </div>
                     <!-- WLAN0 SETUP -->
                     <div id="wlan0_block" class="net_settings_block" align=center>
+                        <div id="wlan0_block_fail" style="display: none;">
+                            <img src="img/net-icons/fail.png">
+                            <div style="margin-top: 15px;">WIFI SERVICE IS FAILED</div>
+                        </div>
                         <div id="wlan0_block_nodongle" style="display: none;">
                             <img src="img/net-icons/nodongle.png">
                             <div style="margin-top: 15px;">WIFI DONGLE IS NOT CONNECTED</div>
@@ -149,7 +153,7 @@
                                     </div>
                                 </div>
                             </dev>
-                            <select id="wlan0_mode" class="form-control type_select">
+                            <select id="wlan0_mode" class="form-control type_select" style="display: none;">
                                 <option selected value="#wlan0_client_mode">Client Mode</option>
                                 <option value="#wlan0_ap_mode">Access Point Mode</option>
                             </select>
@@ -181,9 +185,10 @@
                                 </div>
                             </div>
                             <!-- WLAN CLIENT SETTINGS -->
-                            <div id="wlan0_client_mode" class="wlan0_entries" style="display: block;">
+                            <div id="wlan0_client_mode" class="wlan0_entries" style="display: none;">
                                 <div id="wifi_list">
-                                    <div style="float: left; width: 100%; text-align: center;"><img src="/assets/images/loader.gif" width="35px"></div>
+                                    <div id="wifi_loader" style="float: left; width: 100%; text-align: center;display: none;"><img src="/assets/images/loader.gif" width="35px"></div>
+                                    <div id="wifi_scan_result"></div>
                                 </div>
                                 <button id="refresh_list_btn" class="form-control btn eth0_apply">Refresh list</button>
                                 <div id="separator_or">
@@ -205,6 +210,22 @@
                                     <div>
                                         <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
                                         <button id="clear_entry" class="form-control btn eth0_apply">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- WLAN CLIENT MODE -->
+                            <div id="wlan0_client_mode_link" class="wlan0_entries" style="display: none;">
+                                <div style="display: block; padding-top: 25px">
+                                    <div>
+                                        <button id="client_disconnect" class="form-control btn eth0_apply">Disconnect</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- WLAN AP MODE -->
+                            <div id="wlan0_ap_mode_work" class="wlan0_entries" style="display: none;">
+                                <div style="display: block; padding-top: 25px">
+                                    <div>
+                                        <button id="ap_mode_stop" class="form-control btn eth0_apply">Stop AP Mode</button>
                                     </div>
                                 </div>
                             </div>
