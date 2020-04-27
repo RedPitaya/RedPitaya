@@ -195,15 +195,23 @@
                                     OR
                                 </div>
                                 <div style="display: block; padding-top: 25px">
-                                    <div id="eth0_inputs_labels" class="status_labels">
-                                        <div style="font-size: 15pt; padding-top: 10px;">SSID:</div>
-                                        <div style="font-size: 15pt; padding-top: 10px;">Password:</div>
+                                    <div id="ssid_check_len_c" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>
+                                    <div id="eth0_inputs_labels" class="status_labels">                
+                                        <div style="font-size: 15pt;">SSID:</div>  
                                     </div>
                                     <div id="eth0_inputs_entry" class="status_entry">
-                                        <div style="padding-top: 6px;">
+                                        <div>
                                             <input id="ssid_input_client" type="text" class="form-control inputs">
                                         </div>
-                                        <div style="padding-top: 6px;">
+                                    </div>
+    
+                                    <div id="pass_check_len_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
+                                    <div id="pass_check_sym_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
+                                    <div id="eth0_inputs_labels" class="status_labels">                
+                                        <div style="font-size: 15pt;">Password:</div>
+                                    </div>
+                                    <div id="eth0_inputs_entry" class="status_entry">          
+                                        <div>
                                             <input id="password_input_client" type="password" class="form-control inputs">
                                         </div>
                                     </div>

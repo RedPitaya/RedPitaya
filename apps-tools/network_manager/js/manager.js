@@ -343,6 +343,14 @@ checkSSID = function(ssid) {
     return false
 };
 
+checkSSID_C = function(ssid) {
+    if (ssid.length > 0) {
+        return true;
+    }
+    $('#ssid_check_len_c').show();
+    return false
+};
+
 checkPassword = function(pass) {
     if (pass.length >= 8) {
         for (var i = 0; i < pass.length; i++){
@@ -355,6 +363,21 @@ checkPassword = function(pass) {
         return true;
     }
     $('#pass_check_len').show();
+    return false;
+};
+
+checkPassword_C = function(pass) {
+    if (pass.length >= 8) {
+        for (var i = 0; i < pass.length; i++){
+            var code = pass.charCodeAt(i);
+            if (code < 32 || code > 126){
+                $('#pass_check_sym_c').show();
+                return false;
+            }
+        }
+        return true;
+    }
+    $('#pass_check_len_c').show();
     return false;
 };
 
@@ -379,23 +402,27 @@ $(document).ready(function() {
      */
 
     $('#client_connect').click(function(event) {
+        $('#ssid_check_len_c').hide();
+        $('#pass_check_len_c').hide();
+        $('#pass_check_sym_c').hide();
         var ssid = $('#ssid_input_client').val();
         var password = $('#password_input_client').val();
-        if (ssid === "") {
-            // $('#ssid_input_client').effect("shake");
-            return;
-        }
 
+        var ssid_check = checkSSID_C( ssid );
+        var pass_check = checkPassword_C( password );
+        if (ssid_check && pass_check) {
         if ( $('#client_connect').text() === "Connect") {
-            WIZARD.state = "to_client";
-            WIZARD.startWaiting();
-            $.ajax({
-                url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
-                type: 'GET'
-            })
-            .always(function() {
+                WIZARD.state = "to_client";
+                WIZARD.startWaiting();
+                setTimeout(WIZARD.stopWaiting, 15000);
+                $.ajax({
+                    url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
+                    type: 'GET'
+                })
+                .always(function() {
 
-            });
+                });
+            }
         }
                 
     });
@@ -452,7 +479,7 @@ $(document).ready(function() {
 
         	if (ssid_check && pass_check){
                 WIZARD.state = "to_ap";
-	            WIZARD.startWaiting();
+                WIZARD.startWaiting();
                 $.ajax({
                     url: '/wifi_create_point?ssid=' + ssid_input.val() + '&password=' + pass_input.val() + '',
                     type: 'GET'
