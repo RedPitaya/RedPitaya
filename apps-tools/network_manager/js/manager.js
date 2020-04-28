@@ -38,10 +38,6 @@
                     $('#wlan0_block_entry').show();
 
                     if (msg.startsWith("Client Mode: Linked")) {
-                        if (WIZARD.state == "to_client") {
-                            WIZARD.stopWaiting();
-                            WIZARD.state = "";
-                        }
                         $('#wlan0_client_mode').hide();
                         $('#wlan0_ap_mode').hide();
                         $('#wlan0_mode').hide();
@@ -53,10 +49,6 @@
                     }
 
                     if (msg.startsWith("AP Mode")) {
-                        if (WIZARD.state == "to_ap") {
-                            WIZARD.stopWaiting();
-                            WIZARD.state = "";
-                        }
                         $('#wlan0_client_mode').hide();
                         $('#wlan0_client_mode_link').hide();
                         $('#wlan0_mode').hide();
@@ -68,10 +60,6 @@
                     }
                     
                     if (msg.startsWith("Normal")) {
-                        if (WIZARD.state == "to_normal") {
-                            WIZARD.stopWaiting();
-                            WIZARD.state = "";
-                        }
                         $('#wlan0_ap_mode').hide();
                         $('#wlan0_client_mode_link').hide();
                         $('#wlan0_ap_mode_work').hide();
@@ -302,15 +290,14 @@
      */
 
     WIZARD.dropAP = function() {
-        WIZARD.state = "to_normal";
         WIZARD.startWaiting(); 
         $.ajax({
             url: '/remove_ap',
             type: 'GET'
         })
-            .always(function() {
+        .always(function() {
             WIZARD.apSSID = '';
-
+            WIZARD.stopWaiting();
         });
     };
 
@@ -414,13 +401,12 @@ $(document).ready(function() {
         if ( $('#client_connect').text() === "Connect") {
                 WIZARD.state = "to_client";
                 WIZARD.startWaiting();
-                setTimeout(WIZARD.stopWaiting, 15000);
                 $.ajax({
                     url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
                     type: 'GET'
                 })
                 .always(function() {
-
+                   WIZARD.stopWaiting();
                 });
             }
         }
@@ -438,7 +424,7 @@ $(document).ready(function() {
         })
         .always(function() {
             WIZARD.connectedSSID = '';
-
+            WIZARD.stopWaiting();
         });      
     });
 
@@ -485,6 +471,7 @@ $(document).ready(function() {
                     type: 'GET'
                 })
                     .always(function() {
+                        WIZARD.stopWaiting();
                     })
                     .success(function() {
                         WIZARD.apSSID = ssid_input.val();
