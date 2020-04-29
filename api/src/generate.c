@@ -221,9 +221,6 @@ int generate_setFrequency(rp_channel_t channel, float frequency) {
     getChannelPropertiesAddress(&ch_properties, channel);
     ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
     uint32_t wrap_flag = 1;
-#ifdef Z20_250_12
-    wrap_flag = 0;
-#endif
     channel == RP_CH_1 ? (generate->ASM_WrapPointer = wrap_flag) : (generate->BSM_WrapPointer = wrap_flag);
     return RP_OK;
 }

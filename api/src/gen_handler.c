@@ -517,16 +517,6 @@ int synthesize_signal(rp_channel_t channel) {
         return RP_EPN;
     }
     uint16_t buf_size = BUFFER_LENGTH;
-#ifdef Z20_250_12
-    if (waveform != RP_WAVEFORM_ARBITRARY){
-        uint32_t MAX_WRAPPER = 0x3FFFFFFF; // 65536 * 16384
-        uint32_t step = (uint32_t) round((float)frequency / (float)DAC_FREQUENCY * (float)MAX_WRAPPER);
-        uint32_t x =    (uint32_t) floor((float)MAX_WRAPPER / (float)step);
-        uint16_t buf_size = ((x * step) >> 16)+1;  
-        size = buf_size;
-    //    fprintf(stderr,"Buf size %d , %d, %d , %f, %d\n",buf_size , step , x , (float)MAX_WRAPPER / (float)step , 0xFFFF* buf_size / x);
-    }  
-#endif
 
     switch (waveform) {
         case RP_WAVEFORM_SINE     : synthesis_sin      (data,buf_size);                 break;
