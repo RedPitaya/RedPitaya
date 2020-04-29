@@ -437,7 +437,15 @@ int acq_GetWritePointer(uint32_t* pos)
 
 int acq_GetWritePointerAtTrig(uint32_t* pos)
 {
-    return osc_GetWritePointerAtTrig(pos);
+    int ret = osc_GetWritePointerAtTrig(pos);
+    // Fix FPGA bug with wrong trigger position at DEC 1
+    rp_acq_decimation_t decimationVal;
+    acq_GetDecimation(&decimationVal);
+    if (decimationVal == RP_DEC_1){
+        *pos = (*pos - 2) % ADC_BUFFER_SIZE;
+    }
+    
+    return ret;
 }
 
 int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage)
