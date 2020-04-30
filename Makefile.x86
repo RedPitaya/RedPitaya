@@ -78,6 +78,8 @@ DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG)
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
+KERNEL_HEADERS = NO
+
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
@@ -207,6 +209,9 @@ $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+ifeq ($(KERNEL_HEADERS),YES)
+	make -C $< headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))
+endif
 
 linux-install: linux $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
