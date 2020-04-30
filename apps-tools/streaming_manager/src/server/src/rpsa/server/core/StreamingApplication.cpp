@@ -34,8 +34,8 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_OscThread(),
     m_ReadyToPass(0),
     m_Ios(),
-    m_WriteBuffer_ch1{nullptr, nullptr},
-    m_WriteBuffer_ch2{nullptr, nullptr},
+    m_WriteBuffer_ch1(nullptr),
+    m_WriteBuffer_ch2(nullptr),
     m_Timer(m_Ios),
     m_BytesCount(0),
     m_Resolution(_resolution),
@@ -47,28 +47,25 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     
     assert(this->m_Resolution == 8 || this->m_Resolution == 16);
 
-    m_size_ch1[0] = m_size_ch1[1]  = 0;
-    m_size_ch2[0] = m_size_ch2[1]  = 0;
-    m_was_send[0] = 0;
-    m_was_send[1] = 0;
+    m_size_ch1 = 0;
+    m_size_ch2 = 0;
+    m_lostRate = 0;
 
-    for (void *&data : m_WriteBuffer_ch1) {
-        data = aligned_alloc(64, osc_buf_size);
+    m_WriteBuffer_ch1 = aligned_alloc(64, osc_buf_size);
 
-        if (!data) {
-            std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
-            std::terminate();
-        }
+    if (!m_WriteBuffer_ch1) {
+        std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
+        std::terminate();
     }
+    
 
-    for (void *&data : m_WriteBuffer_ch2) {
-        data = aligned_alloc(64, osc_buf_size);
+    m_WriteBuffer_ch2 = aligned_alloc(64, osc_buf_size);
 
-        if (!data) {
-            std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
-            std::terminate();
-        }
+    if (!m_WriteBuffer_ch2) {
+        std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
+        std::terminate();
     }
+    
 
     m_OscThreadRun.test_and_set();
 }
@@ -76,32 +73,26 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
 CStreamingApplication::~CStreamingApplication()
 {
     stop();
-    for (void *&data : m_WriteBuffer_ch1) {
-        if (data) {
-            free(data);
-            data = nullptr;
-        }
+  
+    if (m_WriteBuffer_ch1) {
+        free(m_WriteBuffer_ch1);
+        m_WriteBuffer_ch1 = nullptr;
     }
 
-    for (void *&data : m_WriteBuffer_ch2) {
-        if (data) {
-            free(data);
-            data = nullptr;
-        }
+    if (m_WriteBuffer_ch2) {
+        free(m_WriteBuffer_ch2);
+        m_WriteBuffer_ch2 = nullptr;
     }
+    
 
 }
 
 void CStreamingApplication::run()
 {
-    m_size_ch1[0] = m_size_ch1[1]  = 0;
-    m_size_ch2[0] = m_size_ch2[1]  = 0;
-    m_was_send[0] = 0;
-    m_was_send[1] = 0;
-    m_lostRate[0] = 0;
-    m_lostRate[1] = 0;
-    m_bufferIndex = 0;
-
+    m_size_ch1 = 0;
+    m_size_ch2 = 0;
+    m_lostRate = 0;
+  
     m_isRun = true;
     m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
     try {
@@ -126,13 +117,9 @@ void CStreamingApplication::run()
 }
 
 void CStreamingApplication::runNonBlock(){
-    m_size_ch1[0] = m_size_ch1[1]  = 0;
-    m_size_ch2[0] = m_size_ch2[1]  = 0;
-    m_was_send[0] = 0;
-    m_was_send[1] = 0;
-    m_lostRate[0] = 0;
-    m_lostRate[1] = 0;
-    m_bufferIndex = 0;
+    m_size_ch1 = 0;
+    m_size_ch2 = 0;
+    m_lostRate = 0;
     m_isRun = true;    
     try {
         m_StreamingManager->run(); // MUST BE INIT FIRST for thread logic
@@ -170,21 +157,23 @@ void CStreamingApplication::oscWorker()
     long long int timeBegin = value.count();
     uintmax_t counter = 0;
     uintmax_t passCounter = 0;
+    uint8_t   skipBuffs = 3;
     m_Osc_ch->prepare();
 try{
     while (m_OscThreadRun.test_and_set())
     {
 #ifndef DISABLE_OSC
-        m_size_ch1[m_bufferIndex] = 0;
-        m_size_ch2[m_bufferIndex] = 0;
-        bool overFlow = this->passCh(m_bufferIndex,m_size_ch1[m_bufferIndex],m_size_ch2[m_bufferIndex]);
+        m_size_ch1 = 0;
+        m_size_ch2 = 0;
+        bool overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
+        if (skipBuffs > 0) { skipBuffs--; continue; }
         if (overFlow) {
-            m_lostRate[m_bufferIndex]++;
+            m_lostRate++;
             ++passCounter;
         }
 
 #endif
-        oscNotify(m_lostRate[m_bufferIndex], m_oscRate, m_WriteBuffer_ch1[m_bufferIndex], m_size_ch1[m_bufferIndex], m_WriteBuffer_ch2[m_bufferIndex], m_size_ch2[m_bufferIndex]);
+        oscNotify(m_lostRate, m_oscRate, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
         
         ++counter;
 
@@ -242,11 +231,11 @@ try{
         switch (m_Resolution)
         {
             case 8:
-                memcpy_stride_8bit_neon(((void**)m_WriteBuffer_ch1)[_bufferIndex], buffer_ch1, _size1);
+                memcpy_stride_8bit_neon(((void**)m_WriteBuffer_ch1), buffer_ch1, _size1);
                 _size1 /= 2;
                 break;
             case 16:
-                memcpy_neon(((void**)m_WriteBuffer_ch1)[_bufferIndex], buffer_ch1, _size1);
+                memcpy_neon(((void**)m_WriteBuffer_ch1), buffer_ch1, _size1);
                 break;
             default:
                 break;
@@ -260,11 +249,11 @@ try{
         switch (m_Resolution)
         {
             case 8:
-                memcpy_stride_8bit_neon(((void**)m_WriteBuffer_ch2)[_bufferIndex], buffer_ch2, _size2);
+                memcpy_stride_8bit_neon(((void**)m_WriteBuffer_ch2), buffer_ch2, _size2);
                 _size2 /= 2;
                 break;
             case 16:
-                memcpy_neon(((void**)m_WriteBuffer_ch2)[_bufferIndex], buffer_ch2, _size2);
+                memcpy_neon(((void**)m_WriteBuffer_ch2), buffer_ch2, _size2);
                 break;
             default:
                 break;

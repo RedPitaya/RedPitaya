@@ -36,15 +36,14 @@ private:
     asio::io_service m_Ios;
     unsigned short m_Resolution;
 
-    void *m_WriteBuffer_ch1[2];
-    void *m_WriteBuffer_ch2[2];
-    size_t m_size_ch1[2];
-    size_t m_size_ch2[2];
-    std::atomic_int  m_was_send[2];
-    uint64_t         m_lostRate[2];
+    void *m_WriteBuffer_ch1;
+    void *m_WriteBuffer_ch2;
+    size_t m_size_ch1;
+    size_t m_size_ch2;
+     uint64_t        m_lostRate;
     int              m_oscRate;
     int              m_channels;
-    std::atomic_int  m_bufferIndex;
+
 
     uint8_t val;
     asio::steady_timer m_Timer;

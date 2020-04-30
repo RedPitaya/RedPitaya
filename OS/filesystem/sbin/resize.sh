@@ -47,7 +47,6 @@ cat <<\EOF > /etc/init.d/resize2fs_once &&
 case "$1" in
   start)
     log_daemon_msg "Starting resize2fs_once" &&
-    mount -orw,remount /dev/mmcblk0p2 &&
     resize2fs /dev/mmcblk0p2 &&
     update-rc.d -f resize2fs_once remove &&
     log_end_msg $?
