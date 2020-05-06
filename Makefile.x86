@@ -78,7 +78,7 @@ DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG)
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
-KERNEL_HEADERS = NO
+KERNEL_HEADERS ?= YES
 
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
