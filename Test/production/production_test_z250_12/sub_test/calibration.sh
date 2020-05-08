@@ -2,6 +2,7 @@
 source ./sub_test/common_func.sh
 source ./sub_test/default_calibration_values.sh
 
+
 function acquireData(){
     #Acquire data with $DECIMATION decimation factor
     $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
@@ -98,7 +99,7 @@ DECIMATION=1024
 ADC_BUFF_SIZE=16000
 OUT_AMP_LO_cnt=1843 # 0.45V  VOLTS VPP reference voltage
 OUT_AMP_HI_cnt=4096
-OUT_AMP_HI_AC_cnt=819,2 # 4V 
+OUT_AMP_HI_AC_cnt=819 # 4V 
 
 echo
 echo -e "\e[94m########################################################################\e[0m"
@@ -437,11 +438,9 @@ ADC_B=$(printf %.4f $(bc -l <<< "-1 * ($ADC_B - $N2_LV_DC )  * $GAIN2_LV_DC"))
 echo "      IN1 offset value is $ADC_A"
 echo "      IN2 offset value is $ADC_B"
 
-OUT1_DC_offs_x1=$(bc -l <<< "($ADC_A + $GEN_CH1_OFF_1)")
-OUT2_DC_offs_x1=$(bc -l <<< "($ADC_B + $GEN_CH2_OFF_1)")
+GEN_CH1_OFF_1=$(printf %.0f $(bc -l <<< "($ADC_A + $GEN_CH1_OFF_1)"))
+GEN_CH2_OFF_1=$(printf %.0f $(bc -l <<< "($ADC_B + $GEN_CH2_OFF_1)"))
 
-GEN_CH1_OFF_1=${OUT1_DC_offs_x1%.*}
-GEN_CH2_OFF_1=${OUT2_DC_offs_x1%.*}
 # Print out the measurements
 echo "      NEW OUT1 DC offset cal param >>GEN_CH1_OFF_1<<  is $GEN_CH1_OFF_1"
 echo "      NEW OUT2 DC offset cal param >>GEN_CH2_OFF_1<<  is $GEN_CH2_OFF_1"
@@ -498,18 +497,17 @@ ADC_B=$(printf %.4f $(bc -l <<< "-1 * ($ADC_B - $N2_LV_DC )  * $GAIN2_LV_DC / 5.
 echo "      IN1 offset value is $ADC_A"
 echo "      IN2 offset value is $ADC_B"
 
-OUT1_DC_offs_x5=$(bc -l <<< "($ADC_A + $GEN_CH1_OFF_5)")
-OUT2_DC_offs_x5=$(bc -l <<< "($ADC_B + $GEN_CH2_OFF_5)")
+GEN_CH1_OFF_5=$(printf %.0f $(bc -l <<< "($ADC_A + $GEN_CH1_OFF_5)"))
+GEN_CH2_OFF_5=$(printf %.0f $(bc -l <<< "($ADC_B + $GEN_CH2_OFF_5)"))
 
-GEN_CH1_OFF_5=${OUT1_DC_offs_x5%.*}
-GEN_CH2_OFF_5=${OUT2_DC_offs_x5%.*}
+
 # Print out the measurements
 echo "      NEW OUT1 DC offset cal param >>GEN_CH1_OFF_5<<  is $GEN_CH1_OFF_5"
 echo "      NEW OUT2 DC offset cal param >>GEN_CH2_OFF_5<<  is $GEN_CH2_OFF_5"
 echo
 
 # Check if the values are within expectations
-checkValue $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $BE_DC_offs_MIN $BE_DC_offs_MAX
+checkValue $GEN_CH1_OFF_5 $GEN_CH2_OFF_5 $BE_DC_offs_MIN $BE_DC_offs_MAX
 
 ##########################################################################################
 #  Set ADC parameters
@@ -840,7 +838,7 @@ echo
 
 ##########################################################################################
 ##########################################################################################
-#  Calibrate AC (9V) mode (1:20)
+#  Calibrate AC (4V) mode (1:20)
 ##########################################################################################
 ##########################################################################################
 
