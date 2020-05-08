@@ -17,7 +17,7 @@
 #define ACQUIRE_H_
 
 #include "scpi/types.h"
-#include "redpitaya/rp.h"
+#include "rp.h"
 
 typedef enum {
     RP_SCPI_VOLTS,
@@ -59,5 +59,12 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t *context);
 scpi_result_t RP_AcqBufferSizeQ(scpi_t * context);
 
 scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t * context);
+
+#ifdef Z20_250_12
+scpi_result_t RP_AcqAC_DC(scpi_t * context);
+scpi_result_t RP_AcqAC_DCQ(scpi_t * context);
+scpi_result_t RP_AcqExtTriggerLevel(scpi_t *context);
+scpi_result_t RP_AcqExtTriggerLevelQ(scpi_t *context);
+#endif
 
 #endif /* ACQUIRE_H_ */

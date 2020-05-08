@@ -29,7 +29,8 @@
 #include "common.h"
 
 #include "scpi/parser.h"
-#include "redpitaya/rp.h"
+#include "rp.h"
+#include "api_cmd.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -228,10 +229,13 @@ int main(int argc, char *argv[])
         return (EXIT_FAILURE);
     }
 
+
+
     // user_context will be pointer to socket
     scpi_context.user_context = NULL;
     scpi_context.binary_output = false;
     SCPI_Init(&scpi_context);
+    RP_ResetAll(&scpi_context); // need for set default values of scpi
 
     // Create a socket
     listenfd = socket(AF_INET, SOCK_STREAM, 0);

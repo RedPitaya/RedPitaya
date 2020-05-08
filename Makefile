@@ -28,12 +28,12 @@ export VERSION
 MODEL ?= Z10
 ENABLE_PRODUCTION_TEST ?= 0
 
-all: api nginx examples  apps-tools apps-pro  production_test startupsh
+all: api nginx examples  apps-tools apps-pro  production_test startupsh scpi
 
 ifeq ($(MODEL),Z20_250_12)
 all: 
 else
-all: sdr apps-free-vna scpi rp_communication
+all: sdr apps-free-vna rp_communication
 endif
 
 $(DL):
@@ -238,7 +238,7 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 
 scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR)
+	$(MAKE) -C $(SCPI_SERVER_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
@@ -410,12 +410,12 @@ APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
 
-apps-tools: ecosystem updater network_manager 
+apps-tools: ecosystem updater network_manager scpi_manager
 
 ifeq ($(MODEL),Z20_250_12)
 apps-tools: 
 else
-apps-tools: scpi_manager jupyter_manager streaming_manager
+apps-tools: jupyter_manager streaming_manager
 endif
 
 ecosystem:

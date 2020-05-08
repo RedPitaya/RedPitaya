@@ -21,6 +21,10 @@
 #include "common.h"
 #include "api_cmd.h"
 #include "scpi/parser.h"
+#include "acquire.h"
+#include "dpin.h"
+#include "apin.h"
+#include "generate.h"
 
 
 scpi_result_t RP_InitAll(scpi_t *context){
@@ -39,7 +43,31 @@ scpi_result_t RP_InitAll(scpi_t *context){
 
 scpi_result_t RP_ResetAll(scpi_t *context){
 
-    int result = rp_Reset();
+    int result = RP_AcqReset(context);
+
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*RP:RST Failed to reset Red "
+            "Pitaya modules: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = RP_AnalogPinReset(context);
+
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*RP:RST Failed to reset Red "
+            "Pitaya modules: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = RP_DigitalPinReset(context);
+
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*RP:RST Failed to reset Red "
+            "Pitaya modules: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = RP_GenReset(context);
 
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*RP:RST Failed to reset Red "

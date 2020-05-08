@@ -172,6 +172,12 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
     {.pattern = "ACQ:SOUR#:DATA:LAT:N?", .callback      = RP_AcqLatestDataQ,},
     {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
+#ifdef Z20_250_12
+    {.pattern = "ACQ:SOUR#:COUP", .callback             = RP_AcqAC_DC,},
+    {.pattern = "ACQ:SOUR#:COUP?", .callback            = RP_AcqAC_DCQ,},
+    {.pattern = "ACQ:TRIG:EXT:LEV", .callback           = RP_AcqExtTriggerLevel,},
+    {.pattern = "ACQ:TRIG:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
+#endif
 
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
@@ -229,6 +235,6 @@ scpi_t scpi_context = {
     .interface = &scpi_interface,
     .registers = scpi_regs,
     .units = scpi_units_def,
-    .idn = {"REDPITAYA", "INSTR2014", NULL, "01-02"},
+    .idn = {"REDPITAYA", "INSTR2020", NULL, "01-02"},
 };
 

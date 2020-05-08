@@ -18,7 +18,7 @@
 #include <syslog.h>
 
 #include "scpi/parser.h"
-#include "redpitaya/rp.h"
+#include "rp.h"
 
 #define CH_NUM		4
 
