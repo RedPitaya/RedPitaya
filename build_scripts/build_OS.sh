@@ -166,4 +166,5 @@ make -f Makefile.x86  MODEL=$MODEL
 schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
 make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST
 EOL_CHROOT
+make -f Makefile.x86 install MODEL=$MODEL
 make -f Makefile.x86 zip MODEL=$MODEL
