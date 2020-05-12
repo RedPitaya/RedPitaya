@@ -1,4 +1,4 @@
-STEM Sensor extension module
+RedPitaya Sensor extension module
 ############################
 
 Sensor shield schematics are available 

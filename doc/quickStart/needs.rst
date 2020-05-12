@@ -3,13 +3,13 @@ What do I need before I start?
 ##############################
 
 The following essential items needed to start are already included
-in each STEM kits available from our `WEB store <http://redpitaya.com/#products>`_:
+in each RedPitaya kits available from our `WEB store <http://redpitaya.com/#products>`_:
 
 * 5 V / 2 A micro USB power supply,
 * 4GB (up to 32GB) Class 10 micro SD card with pre-loaded Red Pitaya OS,
 * Ethernet cable.
 
-Additional Required Items not supplied with the STEM kits:
+Additional Required Items not supplied with the RedPitaya kits:
 
 * computer with internet browser (Chrome browser recommended),
 * router with DHCP server enabled and access to the internet.
@@ -32,7 +32,7 @@ Additional Required Items not supplied with the STEM kits:
 
 .. note::
 
-   Before STEM kits were introduced all Red Pitaya kits were shipped with a blank SD cards.
+   Before RedPitaya kits were introduced all Red Pitaya kits were shipped with a blank SD cards.
    If you have such a kit, please follow the steps in the :ref:`Prepare SD card <prepareSD>` 
    paragraph to properly load Red Pitaya OS to your SD card.
 

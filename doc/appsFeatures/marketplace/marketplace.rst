@@ -11,7 +11,7 @@ Please note that the contributed applications are not supplied and tested by the
 However, we are constantly in contact with the application developers
 and we strive to make these applications work in the best possible way.
 What do I need to use the Marketplace? To use the Red Pitaya Marketplace
-only one version of the Red Pitaya STEM board is needed (STEM 125-10 or STEM 125-14).
+only one version of the Red Pitaya board is needed (STEM 125-10 or STEM 125-14).
 Some applications may require additional hardware/software.
 For additional guidance and information get in touch with the
 Red Pitaya community via the `forum <http://forum.redpitaya.com/>`_.
@@ -59,12 +59,12 @@ You can find more about the vector network analyzer at this link:
 SDR – Software Defined Radio (by Pavel Demin)
 =============================================
 
-Alongside other instruments, the Red Pitaya STEM board can be used as a SDR platform.
-A simple installation of the SDR Transceiver application will transform your STEM board into a SDR platform.
-To run the SDR on the STEM board you will need to install
+Alongside other instruments, the Red Pitaya board can be used as a SDR platform.
+A simple installation of the SDR Transceiver application will transform your RedPitaya board into a SDR platform.
+To run the SDR on the RedPitaya board you will need to install
 one of the following types of SDR software such as HDSDR, SDR#, PowerSDR mRX PS, GNU Radio or similar.
 
-You can find more about the SDR on the Red Pitaya STEM at the links below:
+You can find more about the SDR on the Red Pitaya at the links below:
 
    http://blog.redpitaya.com/red-pitaya-and-software-defined-radio/
 
@@ -91,10 +91,10 @@ LTI DSP Workbench
 =================
 
 This application will model a physical system,
-turning the Red Pitaya STEM board into almost any linear system
+turning the Red Pitaya board into almost any linear system
 that can be included into a measuring and control circuitry.
 The modeling of the physical system is done by simulating
-the system H(z) transfer function with the Red Pitaya STEM board.
+the system H(z) transfer function with the Red Pitaya board.
 In the application there are some predefined H(z) functions
 which will help you describe/simulate the desired system.
 Changing the parameters of the H(z) transfer function
@@ -223,7 +223,7 @@ The pulse signals are acquired where the number of pulses
 of each height is saved and the histogram plot is given
 where the X axis represents the pulses’ amplitude,
 and the Y axis represents the number of pulses.
-With the Red Pitaya STEM board, you can acquire pulses
+With the Red Pitaya board, you can acquire pulses
 whose period can be in the range from 1us to 1s.
 
 More about this application can be found here:
