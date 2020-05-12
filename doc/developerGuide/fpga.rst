@@ -1,6 +1,14 @@
 ####
 FPGA
 ####
+The following build instructions were tested on Ubuntu 18.04.
+
+Before trying to build the FPGA project, please refer to 3.2.3: Ecosystem Guide; subchapters 3.2.3.1.2. Software requirements and 3.2.3.2: Building process.
+In addition to running settings64.sh, it might be also necessary to add SDK bin folder to ``$PATH`` environment variable.
+
+.. code-block:: shell-session
+
+   # export PATH=name>/Xilinx/SDK/2017.2/bin:$PATH
 
 *************
 Prerequisites
@@ -12,9 +20,11 @@ Install libraries:
 
 .. code-block:: shell-session
 
-   # apt-get install libxft2 libxft2:i386 lib32ncurses5
+   # apt-get install unixodbc unixodbc-dev libncurses-dev libzmq3-dev libxext6 libasound2 libxml2 libx11-6 libxtst6 libedit-dev libxft-dev libxi6 libx11-6:i386 libxau6:i386 libxdmcp6:i386 libxext6:i386 libxft-dev:i386 libxrender-dev:i386 libxt6:i386 libxtst6:i386
 
 2. *Xilinx Vivado 2017.2 (including SDK)* 
+Xilinx SDK is available from Xilinx downloads page - Vitis (SW developer) - SDK/PetaLinux Archive - 2017.2- Software Development Kit Standalone WebInstall Client:
+https://www.xilinx.com/member/forms/download/xef.html?filename=Xilinx_SDK_2017.2_0616_1_Win64.exe
 
 *******************
 Directory structure
@@ -67,6 +77,7 @@ FPGA sub-projects
 
 There are multiple FPGA sub-projects they mostly contain incremental changes
 on the first Red Pitaya release.
+It is reccommended to use 0.94 release as default project.
 
 +-------------------+------------------------------------------------------------------+
 | ``prj/name``      | desctiption                                                      |
@@ -116,7 +127,7 @@ Non project mode is used, to avoid the generation of project files,
 which are too many and difficult to handle.
 This allows us to only place source files and scripts under version control.
 
-The next scripts perform various tasks:
+The following scripts perform various tasks:
 
 .. tabularcolumns:: |p{60mm}|p{60mm}|
 
@@ -138,11 +149,40 @@ To generate a bit file, reports, device tree and FSBL, run (replace ``name`` wit
 
    $ make PRJ=name
 
+If the script returns the following error:
+
+.. code-block:: shell-session
+
+   $ BD_TCL-109" "ERROR" "This script was generated using Vivado 2017.2 ....
+
+open the project GUI(see below), go to menu Reports-> Report IP Status. A new tab opens below the code window.
+If all IPs are not up-to-date, they need to be updated. 
+
+-- image:: IPupdate.png
+
+When IPs are up-to-date, go to the tab Tcl console and run command:
+
+.. code-block:: shell-session
+
+   write_bd_tcl systemZ10.tcl
+
+Of course, the script may also be named systemZ20.tcl, depending on your board.
+
+This generates a new tcl script that replaces the old script in fpga/prj/<name of subproject>/ip
+
 To generate and open a Vivado project using GUI, run:
 
 .. code-block:: shell-session
 
    $ make project PRJ=name
+   
+Building the project from GUI is effectively the same as from CLI, except that the user has to click three buttons on the side of the GUI window:
+
+.. image:: vivadoGUI.png
+
+1. Run Synthesis
+2. Run Implementation
+3. Generate Bitstream
 
 **********
 Simulation
@@ -151,7 +191,7 @@ Simulation
 
 ModelSim as provided for free from Altera is used to run simulations.
 Scripts expect the default install location.
-On Ubuntu the inslall process fails to create an appropriate path to executable files,
+On Ubuntu the install process fails to create an appropriate path to executable files,
 so this path must be created:
 
 .. code-block:: shell-session
@@ -189,7 +229,7 @@ Device tree
 
 Device tree is used by Linux to describe features and address space of memory mapped hardware attached to the CPU.
 
-Running ``make`` inside this directory will create a device tree source and some include files:
+Running ``make`` of a project will create a device tree source and some include files in the directory ``dts``:
 
 +------------------+------------------------------------------------------------------------+
 | device tree file | contents                                                               |
