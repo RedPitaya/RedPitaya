@@ -1,21 +1,21 @@
 .. _ConnectSTEMlab:
 
-##################
-Connect to STEMlab
-##################
+####################
+Connect to RedPitaya
+####################
 
 This is the most common and recommended way of
-connecting and using your Red Pitaya STEMlab boards.
+connecting and using your Red Pitaya boards.
 Your LAN network needs to have DHCP settings enabled
 which is the case in majority of the local networks.
 With this, simple *plug and play* approach is enabled.
-Having STEMlab board connected the local network
+Having RedPitaya board connected the local network
 will enable quick access to all Red Pitaya applications
 using only your web browser.
 Simply follow this 3 simple steps:
 
-#. Connect STEMlab board to the router
-#. Connect power supply to the Red Pitaya STEMlab board
+#. Connect RedPitaya board to the router
+#. Connect power supply to the Red Pitaya board
 #. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
 
 .. note:: 
@@ -25,18 +25,18 @@ Simply follow this 3 simple steps:
        
 .. note::
 
-   ``xxxxxx`` are the last 6 characters from MAC address of your STEMlab board.
+   ``xxxxxx`` are the last 6 characters from MAC address of your RedPitaya board.
    MAC address is written on the Ethernet connector.
     
 .. figure:: connect/connect-2.png
     
-   Figure 1: Connecting your STEMlab board to the LAN network.
+   Figure 1: Connecting your RedPitaya board to the LAN network.
 
-After the **third step** you will get a Red Pitaya STEMlab main page as shown below.
+After the **third step** you will get a Red Pitaya main page as shown below.
 
 .. figure:: connect/connect-3.png
 
-   Figure 2: STEMlab main page user interface.
+   Figure 2: RedPitaya main page user interface.
 
 .. note::
 

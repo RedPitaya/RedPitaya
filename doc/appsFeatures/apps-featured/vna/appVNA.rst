@@ -16,17 +16,17 @@ What do I need before I start?
     * Vector network analyzer bridge module
 
 
-**********************************************
-Start using STEMlab as vector network analyzer
-**********************************************
+************************************************
+Start using RedPitaya as vector network analyzer
+************************************************
 
-=================================================
-Connect vector network analyzer bridge to STEMlab
-=================================================
+===================================================
+Connect vector network analyzer bridge to RedPitaya
+===================================================
 
-    * connect OUT of VNA module to STEMlab IN1
-    * connect IN of VNA module to STEMlab OUT1
-    * set IN1 jumpers on STEMlab to LV position
+    * connect OUT of VNA module to RedPitaya IN1
+    * connect IN of VNA module to RedPitaya OUT1
+    * set IN1 jumpers on RedPitaya to LV position
 
 
 Coming soon: image that shows connections (trenutno vna bridge module connections.png).
@@ -65,18 +65,18 @@ Linux users only
 
             python3 vna.py
 
-==================================================
-Type in the IP or URL address of the STEMlab board
-==================================================
+====================================================
+Type in the IP or URL address of the RedPitaya board
+====================================================
 
--------------------------------
-Connect by entering STEMlab IP:
--------------------------------
+---------------------------------
+Connect by entering RedPitaya IP:
+---------------------------------
 
 .. image::  img/1_ip.PNG
 
 
-To find our IP address of the STEMlab board first connect to STEMlab
+To find our IP address of the RedPitaya board first connect to RedPitaya
 by following this `instructions <http://redpitaya.readthedocs.io/en/latest/quickStart/first.html>`_.
 
 Then go to System->Network manager. IP is written next to label
@@ -85,15 +85,15 @@ Address: xxx.xxx.xxx.xxx .
 .. image::  img/network_manager_icon.png
    :width:  150px
 
---------------------------------
-Connect by entering STEMlab URL:
---------------------------------
+----------------------------------
+Connect by entering RedPitaya URL:
+----------------------------------
 
 .. image::  img/1_url.PNG
 
-===================================================
-Run vector network analyzer application on STEMlab.
-===================================================
+=====================================================
+Run vector network analyzer application on RedPitaya.
+=====================================================
 
 .. image::  img/vna_icon.png
    :width:  150px
@@ -149,7 +149,7 @@ Examples:
 
 .. admonition:: Credits
 
-    | Original developer of the vector network analyzer STEMlab application is Pavel Demin.
+    | Original developer of the vector network analyzer RedPitaya application is Pavel Demin.
     | Repositories used by our builds:
 
         * https://github.com/RedPitaya/red-pitaya-notes

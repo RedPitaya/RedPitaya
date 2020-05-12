@@ -43,7 +43,7 @@ Furthermore, any *.ipynb* notebook document available from a public URL can be s
 Hardware – Extension module
 ***************************
 
-Although the usage of Jupyter notebook does not require any additional hardware except the STEMlab
+Although the usage of Jupyter notebook does not require any additional hardware except the RedPitaya
 board, getting started with electronics is way more fun and interesting when you have loads of sensors that you can
 put to good use straight away. Whether you want to measure temperature, vibration, movement etc. we have 
 an extension module compatible with **Grove** modules from `Seeed® <http://wiki.seeed.cc/Grove_System/>`_.  All you 

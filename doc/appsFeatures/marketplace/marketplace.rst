@@ -10,7 +10,7 @@ The Marketplace contains applications that were developed by the Red Pitaya comm
 Please note that the contributed applications are not supplied and tested by the Red Pitaya team.
 However, we are constantly in contact with the application developers
 and we strive to make these applications work in the best possible way.
-What do I need to use the Marketplace? To use the Red Pitaya STEMlab Marketplace
+What do I need to use the Marketplace? To use the Red Pitaya Marketplace
 only one version of the Red Pitaya STEM board is needed (STEM 125-10 or STEM 125-14).
 Some applications may require additional hardware/software.
 For additional guidance and information get in touch with the
