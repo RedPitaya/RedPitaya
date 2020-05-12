@@ -1,4 +1,4 @@
-RedPitaya extension module
+Extension modules
 ############################
 
 .. toctree::
