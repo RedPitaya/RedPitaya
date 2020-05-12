@@ -158,7 +158,7 @@ If the script returns the following error:
 open the project GUI(see below), go to menu Reports-> Report IP Status. A new tab opens below the code window.
 If all IPs are not up-to-date, they need to be updated. 
 
--- image:: IPupdate.png
+.. image:: IPupdate.png
 
 When IPs are up-to-date, go to the tab Tcl console and run command:
 
