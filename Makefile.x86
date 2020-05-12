@@ -272,7 +272,7 @@ ZIPFILE=ecosystem-$(VERSION).zip
 
 zip: $(ZIPFILE)
 
-$(ZIPFILE)
+$(ZIPFILE):
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
