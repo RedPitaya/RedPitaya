@@ -55,8 +55,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Red Pitaya STEMlab'
-title = u'Red Pitaya STEMlab Documentation'
+project = u'Red Pitaya'
+title = u'Red Pitaya Documentation'
 copyright = u'2017, Red Pitaya d.d.'
 author = u'Red Pitaya'
 
@@ -139,7 +139,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "img/logo_stemlab.svg"
+html_logo = "img/head_logo.png"
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -248,7 +248,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "img/logo_stemlab.svg"
+latex_logo = "img/head_logo.svg"
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
