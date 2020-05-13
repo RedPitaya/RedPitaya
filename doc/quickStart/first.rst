@@ -1,8 +1,8 @@
 .. _ConnectSTEMlab:
 
-####################
-Connect to RedPitaya
-####################
+#####################
+Connect to Red Pitaya
+#####################
 
 This is the most common and recommended way of
 connecting and using your Red Pitaya boards.
