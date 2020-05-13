@@ -2,15 +2,15 @@
 Compiling and running C applications
 ####################################
 
-You can write simple C algorithms, make executables and run them on the RedPitaya board. A list of
-built in functions (APIs) is available providing full control over RedPitaya board (signal generation and
+You can write simple C algorithms, make executables and run them on the Red Pitaya board. A list of
+built in functions (APIs) is available providing full control over Red Pitaya board (signal generation and
 acquisition, digital I/O control, communication: I2C, SPI, UART and other)
 How to compile an C algorithm is shown in the instructions below, while a list of Examples is available
 here [link na Examples for Remote control and C algorithms stran].
 Note: When you copy the source code from our repository(following instructions bellow) you will also
-copy all C examples to your RedPitaya board. After that only the compiling step is needed.
+copy all C examples to your Red Pitaya board. After that only the compiling step is needed.
 
-**Compiling and running on RedPitaya board**
+**Compiling and running on Red Pitaya board**
 
 When compiling on the target no special preparations are needed. A native toolchain is available directly on the
 Debian system.
@@ -49,5 +49,5 @@ a continuous loop, press `CTRL+C` to stop them.
     LD_LIBRARY_PATH=/opt/redpitaya/lib ./digital_led_blink
 
 
-More examples about how to control RedPitaya using APIs can be found :ref:`here <examples>`.
+More examples about how to control Red Pitaya using APIs can be found :ref:`here <examples>`.
     

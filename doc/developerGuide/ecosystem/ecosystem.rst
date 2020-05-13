@@ -4,7 +4,7 @@
 Ecosystem Guide
 ###############
 
-Go to redpitaya (git) directory.
+Go to red pitaya (git) directory.
 
 .. note::
    
@@ -114,7 +114,7 @@ You will need the following to build the Red Pitaya components:
        for Ubuntu guest and can not mount vmhgfs shared file system type.
 
        Then install Ubuntu 16.04 in VirtualBox (NOTE: don't use encrypt installation, 
-       since it blocks some RedPitaya build procedures).
+       since it blocks some Red Pitaya build procedures).
 
        After successfully installation, change settings for Ubuntu virtual machine.
        Go to Shared Folders menu and choose Xilinx installation directory on the host machine

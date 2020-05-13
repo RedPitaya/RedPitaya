@@ -2,9 +2,9 @@
 Streaming
 #######################
 
-Streaming application enables user to stream data from RedPitaya to :
+Streaming application enables user to stream data from Red Pitaya to :
 
-    * Local file stored on RedPitaya SD card
+    * Local file stored on Red Pitaya SD card
     * Over ethernet to remote computer using UDP or TCP protocol
 
 User is able to set:
@@ -25,10 +25,10 @@ Max. streaming speeds are limited to:
 
 
 **********************************************
-Start using RedPitaya streaming feature
+Start using Red Pitaya streaming feature
 **********************************************
 
-#. ) Run streaming app from RedPitaya WEB interface
+#. ) Run streaming app from Red Pitaya WEB interface
 
     .. image:: img/redpitaya_main_page.png
 

@@ -3,7 +3,7 @@ Oscilloscope & Signal Generator
 
 .. image:: 01_iPad_Combo_Oscilloscope.jpg
 
-This application will turn your RedPitaya board into a 2-channel Oscilloscope and 2-channel Signal generator. It is the
+This application will turn your Red Pitaya board into a 2-channel Oscilloscope and 2-channel Signal generator. It is the
 perfect tool for educators, students, makers, hobbyists and professionals seeking affordable, highly functional test 
 and measurement equipment. It enables generating and measuring electrical signals up to 50MHz. The simple and 
 intuitive user interface provides all the necessary tools for signal analysis and measurements. High end 

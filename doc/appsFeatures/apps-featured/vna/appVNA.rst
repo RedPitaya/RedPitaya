@@ -16,17 +16,17 @@ What do I need before I start?
     * Vector network analyzer bridge module
 
 
-************************************************
-Start using RedPitaya as vector network analyzer
-************************************************
+*************************************************
+Start using Red Pitaya as vector network analyzer
+*************************************************
 
-===================================================
-Connect vector network analyzer bridge to RedPitaya
-===================================================
+====================================================
+Connect vector network analyzer bridge to Red Pitaya
+====================================================
 
-    * connect OUT of VNA module to RedPitaya IN1
-    * connect IN of VNA module to RedPitaya OUT1
-    * set IN1 jumpers on RedPitaya to LV position
+    * connect OUT of VNA module to Red Pitaya IN1
+    * connect IN of VNA module to Red Pitaya OUT1
+    * set IN1 jumpers on Red Pitaya to LV position
 
 
 Coming soon: image that shows connections (trenutno vna bridge module connections.png).

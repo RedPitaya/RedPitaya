@@ -75,7 +75,7 @@ Example (2 Vpp square wave signal with 1 MHz on channel 1):
 .. note::
     For correct operation of the generate tool, it is mandatory that the correct FPGA image is loaded. Please note,
     the some application can change the FPGA image loaded.
-    To load the FPGA image open a terminal on the RedPitaya and execute the following command:
+    To load the FPGA image open a terminal on the Red Pitaya and execute the following command:
     
     .. code-block:: shell-session
 
@@ -131,7 +131,7 @@ Example (acquire 1024 samples with decimation 8):
 .. note::
     For correct operation of the acquire tool, it is mandatory that the correct FPGA image is loaded. Please note,
     the some application can change the FPGA image loaded.
-    To load the FPGA image open a terminal on the RedPitaya and execute the following command:
+    To load the FPGA image open a terminal on the Red Pitaya and execute the following command:
     
     .. code-block:: shell-session
 
@@ -269,7 +269,7 @@ Monitor utility for accessing FPGA registers
 Red Pitaya signal processing is based on two computational engines: the FPGA and the dual core processor in order to
 effectively split the tasks. Most of the high data rate signal processing is implemented within the FPGA building 
 blocks. These blocks can be configured parametrically through registers. The FPGA registers are documented in the 
-`RedPitaya HDL memory map <https://redpitaya.readthedocs.io/en/latest/developerGuide/regset.html#red-pitaya-modules>`_
+`Red Pitaya HDL memory map <https://redpitaya.readthedocs.io/en/latest/developerGuide/regset.html#red-pitaya-modules>`_
 document. The registers can be accessed using the described monitor utility. For example, the following sequence of
 monitor commands checks, modifies and verifies the acquisition decimation parameter (at address 0x40100014):
  

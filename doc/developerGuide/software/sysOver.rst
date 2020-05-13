@@ -68,5 +68,5 @@ Here is typical workflow of executing application:
         - It loads controller of your application
         - When controller is loaded it starts WebSocket connection. Also it notifies UI that application was loaded. This means that JavaScript code can establish WebSocket connection
         - During application workflow JavaScript and Controller can send data in JSON format to each other
-        - If controller needs to get some data from peripheral devices it can request this data from RedPitaya APIs
+        - If controller needs to get some data from peripheral devices it can request this data from Red Pitaya APIs
         - APIs can manipulate data inside FPGA
