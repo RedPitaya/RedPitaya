@@ -1,14 +1,7 @@
 #!/bin/sh
 #
-# Taken from http://www.raspberryvi.org/wiki/doku.php/raspi-expand-rootfs
-#
-# Resize the root filesystem of a newly flashed Raspbian image.
-# Directly equivalent to the expand_rootfs section of raspi-config.
-# No claims of originality are made.
-# Mike Ray.  Feb 2013.  No warranty is implied.  Use at your own risk.
-#
 # Run as root.  Expands the root file system.  After running this,
-# reboot and give the resizefs-once script a few minutes to finish expanding the file system.
+# reboot and give the script a few minutes to finish expanding the file system.
 # Check the file system with 'df -h' once it has run and you should see a size
 # close to the known size of your card.
 #
