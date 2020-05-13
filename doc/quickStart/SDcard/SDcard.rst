@@ -333,3 +333,32 @@ If you wish to keep wireless settings skip deleting the next files:
 
 * ``wpa_supplicant.conf``
 * ``hostapd.conf``
+
+
+******************
+Resize file system
+******************
+
+When recording an image to a flash card of any size, we get sections of the file system 4 GB in size.
+In order to increase the available free space you need to execute the script:
+
+      .. code-block:: shell-session
+
+          root@rp-f03dee:~# sudo /opt/redpitaya/sbin/resize.sh
+
+After the script is completed, the system will ask you to restart Red Pitaya.
+If everything is done correctly, start the system with an increased size of space. This can be checked with the command:
+
+      .. code-block:: shell-session
+
+          root@rp-f03dee:~# df -h
+
+
+.. note::
+
+   If the file system size has not changed, you can try to manually run the command:
+
+      .. code-block:: shell-session
+
+         root@rp-f03dee:~# sudo resize2fs /dev/mmcblk0p2
+
