@@ -98,7 +98,7 @@ This step has been eliminated with the NEW OS 0.97 (and newer) and the only step
 
 .. warning::
       **If you experience some problem when using Direct Ethernet Connection described above, try to *disable WiFi* connection on *your 
-      PC* (if it has been enabled) and *reset the RedPitaya* board(power off/on). If the problem still persist you can try STATIC IP configuration described below.**
+      PC* (if it has been enabled) and *reset the Red Pitaya* board(power off/on). If the problem still persist you can try STATIC IP configuration described below.**
 
 
 **Static IP configuration**
@@ -245,7 +245,7 @@ Follow the steps bellow to enable Access Point and connect to it.
 5. Input Access Point network IP address to the web browser URL field and press enter.
     
 .. note::
-   When Access Point is enabled on RedPitaya, it will continue to boot in Access Point configuration, untill it is disabled 
+   When Access Point is enabled on Red Pitaya, it will continue to boot in Access Point configuration, untill it is disabled 
    in the Network Manager.
    
 .. note::
