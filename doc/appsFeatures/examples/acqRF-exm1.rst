@@ -9,7 +9,7 @@ Description
 
 This example shows how to acquire 16k samples of signal on fast analog inputs. Signal will be acquired when the
 internal trigger condition is meet. Time length of the acquired signal depends on the time scale of a buffer that can
-be set with a decimation factor. Decimations and time scales of a buffer you can found :ref:`here <acqRF-samp-and-dec>`. Voltage range 
+be set with a decimation factor. Decimations and time scales of a buffer you can found :ref:`here <s_rate_and_dec>`. Voltage range 
 of fast analog inputs on the Red Pitaya depends on gain setting that can be set by jumpers. HV setting is for input 
 range to ±20V, while LV sets input range to ±1V.
 

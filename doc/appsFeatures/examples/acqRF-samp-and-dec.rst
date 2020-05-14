@@ -1,11 +1,13 @@
 Sampling rate and decimations
 #############################
 
+.. _s_rate_and_dec:
 
 Decimations and time scales of a buffer are given in the tables below.
 
 
 STEMlab 125-14 & STEMlab 125-10:
+
 +-------------+----------------+-------------------------------+--------------------------+--------------------------+
 | Decimation  | Sampling Rate  | Time scale/length of a buffer | Trigger delay in samples | Trigger delay in seconds | 
 +-------------+----------------+-------------------------------+--------------------------+--------------------------+
@@ -24,6 +26,7 @@ STEMlab 125-14 & STEMlab 125-10:
 
 
 SDRlab 122-16:
+
 +-------------+----------------+-------------------------------+--------------------------+--------------------------+
 | Decimation  | Sampling Rate  | Time scale/length of a buffer | Trigger delay in samples | Trigger delay in seconds | 
 +-------------+----------------+-------------------------------+--------------------------+--------------------------+
@@ -42,6 +45,7 @@ SDRlab 122-16:
 
 
 SIGNALlab 250-12:
+
 +-------------+----------------+-------------------------------+--------------------------+--------------------------+
 | Decimation  | Sampling Rate  | Time scale/length of a buffer | Trigger delay in samples | Trigger delay in seconds | 
 +-------------+----------------+-------------------------------+--------------------------+--------------------------+
