@@ -10,9 +10,8 @@ Description
 
 This example shows how to acquire 16k samples of signal on fast analog inputs. Signal will be acquired simultaneously 
 with generated signal. Time length of the acquired signal depends on the time scale of a buffer that can be set with a
-decimation factor. Decimations and time scales of a buffer you can found :ref:`here <s_rate_and_dec>`. Voltage range of fast analog
-inputs on the Red Pitaya depends on gain setting that can be set by jumpers. HV setting is for input range to ±20V,
-while LV sets input range to ±1V.
+decimation factor. Decimations and time scales of a buffer are given in the :ref:`table <s_rate_and_dec>`. Voltage and frequency ranges depends on Red Pitaya model. 
+
 
 +-------------+----------------+-------------------------------+--------------------------+--------------------------+
 | Decimation  | Sampling Rate  | Time scale/length of a buffer | Trigger delay in samples | Trigger delay in seconds | 

@@ -6,9 +6,8 @@ Custom waveform signal generation
 Description
 ***********
 
-This example shows how to program Red Pitaya to generate custom waveform signal. Red Pitaya is able to generate
-signals in range from DC to 50 MHz with output voltage range from -1 to 1 Volt. Generated signal can be observed by an
-Oscilloscope.
+This example shows how to program Red Pitaya to generate custom waveform signal. Voltage and frequency ranges depends on Red Pitaya model.
+
 
 
 Required hardware
