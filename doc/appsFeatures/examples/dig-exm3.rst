@@ -13,11 +13,12 @@ LED will turn ON, when button is pressed.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - Push button
     - Resistor 1K
     - RedPitaya_Push_button
 
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 .. image:: RedPitaya_Push_button.png
     
 Circuit

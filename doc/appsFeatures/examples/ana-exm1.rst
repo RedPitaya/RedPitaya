@@ -12,9 +12,10 @@ inputs on Red Pitaya are rated from 0-3.3 Volts.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - R1 10K potentiometer
 
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 .. image:: Read_analog_voltage_on_Red_Pitaya_analog_input.png
 
 Circuit

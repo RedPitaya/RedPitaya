@@ -1,5 +1,5 @@
-Generating signals at RF outputs (125 MS/s)
-###########################################
+Generating signals at RF outputs
+################################
 
 .. toctree::
    :maxdepth: 6

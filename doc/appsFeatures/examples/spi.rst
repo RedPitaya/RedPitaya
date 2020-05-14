@@ -13,7 +13,7 @@ back writing and then getting the flash ID of red pitaya SPI flash chip operatio
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
 
 .. image:: output_y49qDi.gif
 

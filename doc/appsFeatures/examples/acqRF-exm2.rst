@@ -8,7 +8,7 @@ Description
 
 This example shows how to acquire 16k samples of signal on fast analog inputs. Signal will be acquired when the 
 external trigger condition is meet. Time length of the acquired signal depends on the time scale of a buffer that can 
-be set with a decimation factor. Decimations and time scales of a buffer are given in the table below. Voltage range 
+be set with a decimation factor. Decimations and time scales of a buffer you can found :ref:`here <acqRF-samp-and-dec>`. Voltage range 
 of fast analog inputs on the Red Pitaya depends on gain setting that can be set by jumpers. HV setting is for input 
 range to ±20V, while LV sets input range to ±1V.
 
@@ -31,9 +31,10 @@ range to ±20V, while LV sets input range to ±1V.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - Signal (function) generator
-
+    
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 .. image:: on_given_external_trigger_acquire_signal_on_fast_analog_input.png
 
 Circuit
@@ -74,6 +75,7 @@ Code - MATLAB®
     fprintf(tcpipObj,'ACQ:DEC 1');
     fprintf(tcpipObj,'ACQ:TRIG:LEV 0');
 
+
     % Set trigger delay to 0 samples
     % 0 samples delay set trigger to center of the buffer
     % Signal on your graph will have trigger in the center (symmetrical)
@@ -81,6 +83,10 @@ Code - MATLAB®
     % Samples from center to the right are samples after trigger
 
     fprintf(tcpipObj,'ACQ:TRIG:DLY 0');
+
+    % for SIGNALlab device there is a possiblity to set trigger threshold 
+    % fprintf(tcpipObj,'ACQ:TRIG:EXT:LEV 1')
+
 
     %% Start & Trigg
     % Trigger source setting must be after ACQ:START

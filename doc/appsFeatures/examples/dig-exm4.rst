@@ -13,7 +13,7 @@ that can be set by MATLAB® slider bar.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
 
 .. image:: RP-circuit-e1421258707736-300x212.png
 
