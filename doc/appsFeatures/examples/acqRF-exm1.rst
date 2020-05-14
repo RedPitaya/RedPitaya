@@ -19,6 +19,7 @@ Required hardware
     - Signal (function) generator
     
 Wiring example for STEMlab 125-14 & STEMlab 125-10:
+
 .. image:: on_given_trigger_acquire_signal_on_fast_analog_input.png
 
 Cicuit

@@ -18,7 +18,8 @@ Required hardware
 
     - Red Pitaya device
 
-Wiring example for STEMlab 125-14 & STEMlab 125-10:    
+Wiring example for STEMlab 125-14 & STEMlab 125-10:   
+ 
 .. image:: generate_continous_signal_on_fast_analog_output.png
 
 Circuit
