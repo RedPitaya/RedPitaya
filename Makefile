@@ -318,7 +318,7 @@ monitor_old:
 
 generator: api
 	$(MAKE) -C $(GENERATOR_DIR) clean 
-	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 generate_calib: api
