@@ -24,7 +24,7 @@ typedef struct {
 } awg_param_t;
 
 /* Forward declarations */
-void synthesize_signal(double ampl, double freq, signal_e type, double endfreq,
+void synthesize_signal(config_t &conf,
                        int32_t *data,
                        awg_param_t *params);
 void write_data_fpga(uint32_t ch,

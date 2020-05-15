@@ -272,7 +272,6 @@ ACQUIRE2_DIR       = Test/acquire2
 CALIB_DIR          = Test/calib
 CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
-GENERATOR250_DIR   = Test/generate250.12
 GENERATORCALIB_DIR = Test/generate_calib
 SPECTRUM_DIR       = Test/spectrum
 COMM_DIR           = Examples/Communication/C
@@ -282,14 +281,12 @@ GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest
-.PHONY: acquire2 generator250.12 generate_calib
+.PHONY: acquire2 generate_calib
 
-examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2 generate_calib
+examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2 generate_calib generator
 
 ifeq ($(MODEL),Z20_250_12)
-examples: generator250.12 rp_i2c_tool
-else
-examples: generator
+examples: rp_i2c_tool
 endif
 # calibrate laboardtest
 
@@ -321,13 +318,8 @@ monitor_old:
 
 generator: api
 	$(MAKE) -C $(GENERATOR_DIR) clean 
-	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-generator250.12: api
-	$(MAKE) -C $(GENERATOR250_DIR) clean 
-	$(MAKE) -C $(GENERATOR250_DIR) MODEL=$(MODEL)
-	$(MAKE) -C $(GENERATOR250_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 generate_calib: api
 	$(MAKE) -C $(GENERATORCALIB_DIR) clean 
