@@ -50,9 +50,16 @@
  * description.
  */
 
+
+#ifdef Z20_250_12
+#define SAMPLE_RATE 250e6
+#endif
+
 #ifdef Z20
 #define SAMPLE_RATE 122.880e6
-#else
+#endif
+
+#ifdef Z10
 #define SAMPLE_RATE 125e6
 #endif
 
@@ -151,7 +158,7 @@ int fpga_awg_init(void)
     }
 
     /* Set FPGA AWG module pointers to correct values. */
-    g_awg_reg = page_ptr + page_off;
+    g_awg_reg = (awg_reg_t*)((long)page_ptr + page_off);
     g_awg_cha_mem = (uint32_t *)g_awg_reg + 
         (AWG_CHA_OFFSET / sizeof(uint32_t));
     g_awg_chb_mem = (uint32_t *)g_awg_reg + 
