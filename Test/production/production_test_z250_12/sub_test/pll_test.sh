@@ -20,8 +20,8 @@ echo
 enableK1Pin
 sleep 0.5
 echo
-echo -n "  * start generate ref signal 1Mhz/5V "
-$C_GENERATE 1 1 1000 x5 sine
+echo -n "  * start generate ref signal 1kHz/5V "
+$C_GENERATE 1 2 1000 x5 sine
 print_ok
 echo
 sleep 0.5

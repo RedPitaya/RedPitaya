@@ -3,7 +3,7 @@ source ./sub_test/common_func.sh
 
 # fast ADCs and DACs data acquisitions
 export SIG_FREQ=1000
-export SIG_AMPL=1 # P-to-P
+export SIG_AMPL=2 # P-to-P
 export ADC_BUFF_SIZE=16384
 
 MAX_ABS_OFFS_HIGH_GAIN=500
