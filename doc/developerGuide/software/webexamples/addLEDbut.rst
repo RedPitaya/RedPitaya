@@ -125,6 +125,6 @@ There are two states of a LED - **RP_HIGH** (turned on) and **RP_LOW** (turned o
 
 Don’t forget to init **rpApp** and release it in **rp_app_init()** and **rp_app_exit()**.
 
-More examples about RP APIs use can be found `here <https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html#examples>`_.
+More examples about RP APIs use can be found :ref:`here <examples>`.
 
 Compile the controller, start app and try to push the button.   
