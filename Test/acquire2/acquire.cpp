@@ -191,7 +191,7 @@ void usage() {
             "  --help          -h    Print this message.\n"
             "  --hex           -x    Print value in hex.\n"
             "  --volt          -o    Print value in volt.\n"
-            "  --calib         -c    Use calibration parameters\n"
+            "  --calib         -c    Disable calibration parameters\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
             "\n";
