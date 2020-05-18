@@ -163,7 +163,7 @@ void usage() {
             "  --hex           -x    Print value in hex.\n"
             "  --volt          -o    Print value in volt.\n"
             "  --no_reg        -r    Disable load registers config for DAC and ADC.\n"
-            "  --calib         -c    Use calibration parameters\n"
+            "  --calib         -c    Disable calibration parameters\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
             "\n";
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
     int equal = 0;
     int shaping = 0;
     int hex_mode = 0;
-    int use_calib = 0;
+    int use_calib = 1;
     bool cnt_to_vol = false;
     float level_trigger = 0;
     if ( argc < MINARGS ) {
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'c':
-            use_calib = 1;
+            use_calib = 0;
             break;
 
         case 's':

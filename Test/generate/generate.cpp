@@ -72,10 +72,10 @@ void synthesize_signal(config_t &conf,
         calib_gain = (conf.ch == 1) ? g_osc_calib_params.be_ch1_fs : g_osc_calib_params.be_ch2_fs;
         dcoffs = (conf.ch == 1) ? g_osc_calib_params.be_ch1_dc_offs : g_osc_calib_params.be_ch2_dc_offs;
         float fullScale = (uint32_t) (1.0 / 100.0 * ((uint64_t)1<<32));
-        scale *= (float)calib_gain / fullScale;
+        scale *=   fullScale / (float)calib_gain;
     }
-
-    scale = scale & 0x1fff;
+  
+    scale = scale & 0x3fff;
 
     /* This is where frequency is used... */
     awg->offsgain = (dcoffs << 16) + scale;
