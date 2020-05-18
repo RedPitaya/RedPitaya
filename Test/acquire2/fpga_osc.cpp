@@ -616,7 +616,7 @@ int osc_calibrate_value(int cnts,int channel,int attenuator,int mode){
 
 int osc_calibrate_value(int cnts,int channel,int mode){
     float voltageScale = 1.0; 
-    if (mode == 1) voltageScale = 20.0;
+    if (mode == 0) voltageScale = 20.0;
     float fullScale = (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
     int offset = 0;
     int gain   = 0;
