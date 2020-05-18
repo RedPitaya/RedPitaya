@@ -75,7 +75,7 @@ Parameter options:
 * ``<state> = {ON,OFF}`` Default: ``OFF``
 * ``<frequency> = {0Hz...62.5e6Hz}`` Default: ``1000``
 * ``<func> = {SINE, SQUARE, TRIANGLE, SAWU, SAWD, PWM, ARBITRARY}`` Default: ``SINE``
-* ``<amplitude> = {-1V...1V}`` Default: ``1``
+* ``<amplitude> = {-1V...1V}`` Default: ``1`` for SIGNALlab 250-12 this value {-5V...5V}
 * ``<offset> = {-1V...1V}`` Default: ``0``
 * ``<phase> = {-360deg ... 360deg}`` Default: ``0``
 * ``<dcyc> = {0...1}`` Default: ``0.5`` Where 1 corresponds to 100%
@@ -218,7 +218,8 @@ Parameter options:
 * ``<time> = {value in ns}``
 * ``<counetr> = {value in samples}``
 * ``<gain> = {LV, HV}``
-* ``<level> = {value in mV}``
+* ``<level> = {value in V}``
+* ``<mode> = {AC,DC}``
 
 .. tabularcolumns:: |p{28mm}|p{28mm}|p{28mm}|
 
@@ -249,17 +250,34 @@ Parameter options:
 | | Example:                          |                               |                                                                             |
 | | ``ACQ:TRIG:DLY:NS?`` > ``128ns``  |                               |                                                                             |
 +-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
-| | ``ACQ:SOUR<n>:GAIN <gain>``       | ``rp_AcqSetGain``             | Set gain settings to HIGH or LOW.                                           |
+| | ``ACQ:SOUR<n>:GAIN <gain>``       | ``rp_AcqSetGain``             | Set gain settings to HIGH or LOW                                            |
+| |                                   |                               | (For SIGNALlab 250-12 this is 1:20 and 1:1 attenuator).                     |
 | | Example:                          |                               | This gain is referring to jumper settings on Red Pitaya fast analog inputs. |
 | | ``ACQ:SOUR1:GAIN LV``             |                               |                                                                             |
 +-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
-| | ``ACQ:TRIG:LEV <level>``          | ``rp_AcqSetChannelThreshold`` | Set trigger level in mV.                                                    |
+| | ``ACQ:SOUR<n>:COUP <mode>``       | ``rp_AcqSetAC_DC``            | Sets the AC / DC modes for input.                                           |
+| | Example:                          |                               | (Only SIGNALlab 250-12)                                                     |
+| | ``ACQ:SOUR1:COUP AC``             |                               |                                                                             |
++-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
+| | ``ACQ:SOUR<n>:COUP?`` > ``<mode>``| ``rp_AcqGetAC_DC``            | Get the AC / DC modes for input.                                            |
+| | Example:                          |                               | (Only SIGNALlab 250-12)                                                     |
+| | ``ACQ:SOUR1:COUP?`` > ``AC``      |                               |                                                                             |
++-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
+| | ``ACQ:TRIG:LEV <level>``          | ``rp_AcqSetTriggerLevel``     | Set trigger level in mV.                                                    |
 | | Example:                          |                               |                                                                             |
 | | ``ACQ:TRIG:LEV 125 mV``           |                               |                                                                             |
 +-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
-| | ``ACQ:TRIG:LEV?`` > ``level``     | ``rp_AcqGetChannelThreshold`` | Get trigger level in mV.                                                    |
+| | ``ACQ:TRIG:LEV?`` > ``level``     | ``rp_AcqGetTriggerLevel``     | Get trigger level in mV.                                                    |
 | | Example:                          |                               |                                                                             |
 | | ``ACQ:TRIG:LEV?`` > ``123 mV``    |                               |                                                                             |
++-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
+| | ``ACQ:TRIG:EXT:LEV <level>``      | ``rp_AcqSetTriggerLevel``     | Set trigger external level in V.                                            |
+| | Example:                          |                               | (Only SIGNALlab 250-12)                                                     |
+| | ``ACQ:TRIG:EXT:LEV 1``            |                               |                                                                             |
++-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
+| | ``ACQ:TRIG:EXT:LEV?`` > ``level`` | ``rp_AcqGetTriggerLevel``     | Get trigger external level in V.                                            |
+| | Example:                          |                               | (Only SIGNALlab 250-12)                                                     |
+| | ``ACQ:TRIG:EXT:LEV?`` > ``1``     |                               |                                                                             |
 +-------------------------------------+-------------------------------+-----------------------------------------------------------------------------+
 
 =============

@@ -103,4 +103,4 @@ Code - LabVIEW
 
 .. image:: Synchronised-one-pulse-signal-generation-and-acquisition_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AAD9FDHKJi0SISLJhCFtLyQpa/Synchronised%20one%20pulse%20signal%20generation%20and%20acquisition.vi>`_
+`Download <http://downloads.redpitaya.com/downloads/labview/Synchronised%20one%20pulse%20signal%20generation%20and%20acquisition.vi>`_

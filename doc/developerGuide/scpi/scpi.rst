@@ -82,13 +82,6 @@ The server can be installed using the nect commands:
    rw
    ninja install
 
-Prerequisite for running mercury based scpi server is to apply mercury dtbo.  
-
-.. code-block:: shell-session 
-
-   sh /opt/redpitaya/sbin/overlay.sh mercury
-
-
 And run as a systemd service:
 
 .. code-block:: shell-session
@@ -99,7 +92,6 @@ Alternatively the server can be run directly from the build directory:
 
 .. code-block:: shell-session
 
-   /opt/redpitaya/sbin/overlay.sh mercury
    LD_LIBRARY_PATH=api1:subprojects/scpi-parser-redpitaya-2017/libscpi/ scpi/scpi
 
 

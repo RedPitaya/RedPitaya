@@ -162,5 +162,5 @@ Code - LabVIEW
 .. image:: Blink_LV.png
 
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AADgLWRiGX0c9hspBO3-oyd0a/Blink.vi>`_
+`Download <http://downloads.redpitaya.com/downloads/labview/Blink.vi>`_
 

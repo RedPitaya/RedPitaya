@@ -146,4 +146,4 @@ Code - LabVIEW
 
 .. image:: Custom-wavefrom-signal-generator_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AABC9XVRlgqQCplTPWG9LiXOa/Custom%20waveform%20signal%20generation.vi>`_
+`Download <http://downloads.redpitaya.com/downloads/labview/Custom%20waveform%20signal%20generation.vi>`_

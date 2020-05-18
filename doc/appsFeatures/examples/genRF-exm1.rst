@@ -114,4 +114,4 @@ Code - LabVIEW
 
 .. image:: Generate-continuous-signal_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AAD02Lsn5aXV7kRFFfaPi6eOa/Generate%20continuous%20signal.vi>`_
+`Download <http://downloads.redpitaya.com/downloads/labview/Generate%20continuous%20signal.vi>`_

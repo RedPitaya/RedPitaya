@@ -155,6 +155,12 @@ Code - C
             rp_AcqSetDecimation(1);
             rp_AcqSetTriggerLevel(0.1); //Trig level is set in Volts while in SCPI 
             rp_AcqSetTriggerDelay(0);
+
+            // there is an option to select coupling when using SIGNALlab 250-12 
+            // rp_AcqSetAC_DC(RP_CH_1, RP_AC); // enables AC coupling on channel 1
+
+            // by default LV level gain is selected
+            // rp_AcqSetGain(RP_CH_1, RP_LOW); // user can switch gain using this command
     
             rp_AcqStart();
     
@@ -196,6 +202,12 @@ Code - Python
     import matplotlib.pyplot as plot
 
     rp_s = scpi.scpi(sys.argv[1])
+
+    # there is an option to select coupling when using SIGNALlab 250-12 
+    # rp_s.tx_txt('ACQ:SOUR1:COUP AC') # enables AC coupling on channel 1
+
+    # by default LOW level gain is selected
+    # rp_s.tx_txt('ACQ:SOUR1:GAIN LV') # user can switch gain using this command
 
     rp_s.tx_txt('ACQ:START')
     rp_s.tx_txt('ACQ:TRIG NOW')
@@ -248,6 +260,12 @@ for Scilab sockets. How to set socket is described on Blink example.
     
     SOCKET_write(tcpipObj,'ACQ:TRIG:LEV 0');
     
+    // there is an option to select coupling when using SIGNALlab 250-12 
+    // SOCKET_write(tcpipObj,'ACQ:SOUR1:COUP AC'); // enables AC coupling on channel 1
+
+    // by default LOW level gain is selected
+    // SOCKET_write(tcpipObj,'ACQ:SOUR1:GAIN LV'); // user can switch gain using this command
+
     // Set trigger delay to 0 samples
     // 0 samples delay set trigger to center of the buffer
     // Signal on your graph will have trigger in the center (symmetrical)
@@ -287,4 +305,4 @@ Code - LabVIEW
 
 .. image:: On-trigger-signal-acquisition_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AACA34cIKw3QkUskKoU7ZvTka/On%20trigger%20signal%20acquisition.vi?dl=0>`_
+`Download <http://downloads.redpitaya.com/downloads/labview/On%20trigger%20signal%20acquisition.vi>`_

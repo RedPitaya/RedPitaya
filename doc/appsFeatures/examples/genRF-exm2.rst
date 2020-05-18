@@ -126,4 +126,4 @@ Code - LabVIEW
 
 .. image:: Generate-signal-pulses_LV.png
 
-`Downloads <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AACurlCDsGcxHemxedH453Sra/Generate%20signal%20pulses.vi>`_
+`Downloads <http://downloads.redpitaya.com/downloads/labview/Generate%20signal%20pulses.vi>`_

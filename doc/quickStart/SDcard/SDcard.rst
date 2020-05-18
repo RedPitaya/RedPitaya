@@ -344,7 +344,7 @@ In order to increase the available free space you need to execute the script:
 
       .. code-block:: shell-session
 
-          root@rp-f03dee:~# sudo /opt/redpitaya/sbin/resize.sh
+          root@rp-f03dee:~# /opt/redpitaya/sbin/resize.sh
 
 After the script is completed, the system will ask you to restart Red Pitaya.
 If everything is done correctly, start the system with an increased size of space. This can be checked with the command:

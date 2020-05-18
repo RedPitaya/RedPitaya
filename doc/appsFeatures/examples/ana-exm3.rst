@@ -95,5 +95,5 @@ Code - LabVIEW
 
 .. image:: Interactive-voltage-setting-on-slow-analog-output_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AADBbIo7oTxWxluMoQ0KB0x6a/Interactive%20voltage%20setting%20on%20slow%20analog%20output.vi>`_
+`Download <http://downloads.redpitaya.com/downloads/labview/Interactive%20voltage%20setting%20on%20slow%20analog%20output.vi>`_
 
