@@ -214,12 +214,12 @@ always @(posedge dac_clk_i)
 if (dac_rstn_i == 1'b0) begin
    dac_pnt  <= {RSZ+16{1'b0}};
 end else begin
-   dac_pnt_rem <= {1'b0,set_step_i} - {1'b0,set_size_i} - 1 ;
+   dac_pnt_rem <= {RSZ+16{1'b0}} - {1'b0,set_size_i} - 1 ;
 
    if (set_rst_i || (dac_trig && !dac_do)) // manual reset or start
       dac_pnt <= set_ofs_i;
    else if (dac_do) begin
-      if (~dac_npnt_sub_neg)  dac_pnt <= set_wrap_i ? dac_npnt_sub : set_ofs_i; // wrap or go to start
+      if (~dac_npnt_sub_neg)  dac_pnt <= set_wrap_i ? dac_npnt_sub + 1 : set_ofs_i; // wrap or go to start
       else                    dac_pnt <= dac_npnt[RSZ+15:0]; // normal increase
    end
 end
