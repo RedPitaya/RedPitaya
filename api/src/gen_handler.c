@@ -521,11 +521,7 @@ int synthesize_signal(rp_channel_t channel) {
     switch (waveform) {
         case RP_WAVEFORM_SINE     : synthesis_sin      (data,buf_size);                 break;
         case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data,buf_size);                 break;
-#ifdef Z20_250_12
-        case RP_WAVEFORM_SQUARE   : synthesis_square_Z20_250(frequency, data,buf_size); break;
-#else
         case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data,buf_size);      break;
-#endif
         case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data,buf_size);                 break;
         case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data,buf_size);                 break;
         case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
@@ -603,9 +599,14 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
 
 int synthesis_square(float frequency, float *data_out,uint16_t buffSize) {
     // Various locally used constants - HW specific parameters
-    const int trans0 = 30;
-    const int trans1 = 300;
-
+#ifdef Z20_250_12
+        const int trans0 = 1;
+        const int trans1 = 100;
+#else
+        const int trans0 = 30;
+        const int trans1 = 300;
+#endif
+    
     int trans = (int) (frequency / 1e6 * trans1); // 300 samples at 1 MHz
 
     if (trans <= 10)  trans = trans0;
@@ -624,7 +625,7 @@ int synthesis_square(float frequency, float *data_out,uint16_t buffSize) {
 int synthesis_square_Z20_250(float frequency, float *data_out,uint16_t buffSize) {
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if ((i % buffSize) <  buffSize/2)  
+        if ((i % buffSize) <  buffSize / 2.0)  
             data_out[i] =  1.0f;
         else  
             data_out[i] = -1.0f;
