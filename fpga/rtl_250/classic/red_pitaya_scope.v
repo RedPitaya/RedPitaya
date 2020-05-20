@@ -170,6 +170,10 @@ reg   [  32-1: 0] adc_we_cnt    ;
 reg   [  32-1: 0] adc_we_cnt_rd ;
 reg   [  33-1: 0] adc_dly_cnt   ;
 reg               adc_dly_do    ;
+reg               adc_dly_end   ;
+reg               adc_dly_end_reg;
+reg               adc_trg_rd    ;
+reg               adc_trg_rd_reg;
 reg    [ 20-1: 0] set_deb_len   ; // debouncing length (glitch free time after a posedge)
 
 // Write
@@ -215,6 +219,18 @@ always @(posedge adc_clk_i) begin
          adc_dly_do  <= 1'b1 ;
       else if ((adc_dly_do && (adc_dly_cnt == 32'b0)) || adc_rst_do || adc_arm_do) //delayed reached or reset
          adc_dly_do  <= 1'b0 ;
+
+      adc_dly_end_reg <= adc_dly_do; 
+      if (adc_dly_end_reg && ~adc_dly_do) //check if delay is over
+         adc_dly_end<=1'b1; //register remains 1 until next arm or reset
+      else if (adc_rst_do || adc_arm_do)
+         adc_dly_end<=1'b0;
+
+      adc_trg_rd_reg<=adc_trig;
+      if (~adc_trg_rd_reg && adc_trig) //check if trigger happenned
+         adc_trg_rd<=1'b1; //register remains 1 until next arm or reset
+      else if (adc_rst_do || adc_arm_do)
+         adc_trg_rd<=1'b0;
 
       if (adc_dly_do && adc_we && adc_dv)
          adc_dly_cnt <= adc_dly_cnt - 1;
@@ -772,8 +788,9 @@ end else begin
    sys_err <= 1'b0 ;
 
    casez (sys_addr[19:0])
-     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 4{1'b0}}, adc_we_keep               // do not disarm on 
-                                                                              , adc_dly_do                // trigger status
+     20'h00000 : begin sys_ack <= sys_en;          sys_rdata <= {{32- 5{1'b0}}, adc_dly_end               // acquisition delay is over
+                                                                              , adc_we_keep               // do not disarm on 
+                                                                              , adc_trg_rd                // trigger status
                                                                               , 1'b0                      // reset
                                                                               , adc_we}             ; end // arm
 
