@@ -92,8 +92,8 @@ void synthesize_signal(config_t &conf,
     
  /* Various locally used constants - HW specific parameters */
     int dcoffs = 0;
-    const int trans0 = 30;
-    const int trans1 = 300;
+    const int trans0 = 1;
+    const int trans1 = 100;
     //const double tt2 = 0.249;
 
     uint16_t scale = 0x1FFF  * (ampl / 2.0);
@@ -129,7 +129,6 @@ void synthesize_signal(config_t &conf,
         trans = trans0;
     }
 
-
     /* Fill data[] with appropriate buffer samples */
     for(i = 0; i < n; i++) {
         
@@ -140,11 +139,15 @@ void synthesize_signal(config_t &conf,
  
         /* Square */
         if (type == eSignalSquare) {
-            data[i] = round(amp * cos(2*M_PI*(double)i/(double)n));
-            if (data[i] > 0)
-                data[i] = amp;
-            else 
-                data[i] = -amp;
+            // Various locally used constants - HW specific parameters
+        
+        
+            int x = (i % n);
+            if      ((0 <= x                      ) && (x <  n/2 - trans))  data[i] =  amp * 1.0f;
+            else if ((x >= n/2 - trans) && (x <  n/2        ))  data[i] =  amp *  (1.0f - (2.0f / trans) * (x - (n/2 - trans)));
+            else if ((0 <= n/2        ) && (x <  n   - trans))  data[i] =  amp * -1.0f;
+            else if ((x >= n   - trans) && (x <  n          ))  data[i] =  amp * (-1.0f + (2.0f / trans) * (x - (n   - trans)));
+        
 
             // /* Soft linear transitions */
             // double mm, qq, xx, xm;
