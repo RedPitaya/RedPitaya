@@ -92,8 +92,8 @@ void synthesize_signal(config_t &conf,
     
  /* Various locally used constants - HW specific parameters */
     int dcoffs = 0;
-    const int trans0 = 1;
-    const int trans1 = 100;
+    const int trans0 = 10;
+    const int trans1 = 300;
     //const double tt2 = 0.249;
 
     uint16_t scale = 0x1FFF  * (ampl / 2.0);
@@ -143,7 +143,7 @@ void synthesize_signal(config_t &conf,
         
         
             int x = (i % n);
-            if      ((0 <= x                      ) && (x <  n/2 - trans))  data[i] =  amp * 1.0f;
+            if      ((0 <= x) && (x <  n/2 - trans))  data[i] =  amp * 1.0f;
             else if ((x >= n/2 - trans) && (x <  n/2        ))  data[i] =  amp *  (1.0f - (2.0f / trans) * (x - (n/2 - trans)));
             else if ((0 <= n/2        ) && (x <  n   - trans))  data[i] =  amp * -1.0f;
             else if ((x >= n   - trans) && (x <  n          ))  data[i] =  amp * (-1.0f + (2.0f / trans) * (x - (n   - trans)));
