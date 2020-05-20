@@ -186,6 +186,10 @@ always @(posedge adc_clk_i) begin
       adc_we_cnt  <= 32'h0      ;
       adc_dly_cnt <= 32'h0      ;
       adc_dly_do  <=  1'b0      ;
+      adc_dly_end <=  1'b0      ;
+      adc_dly_end_reg <= 1'b0   ;
+      adc_trg_rd  <=  1'b0      ;
+      adc_trg_rd_reg  <= 1'b0   ;
    end
    else begin
       if (adc_arm_do)
