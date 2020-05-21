@@ -419,4 +419,14 @@ which can be used to modify MIO functionality at runtime.
 |                    | SPI can then only be used for writing (maybe 3-wire) |
 +--------------------+------------------------------------------------------+
 
-.. include:: regset.rst
+.. tabs::
+
+   .. tab:: REGSET FOR 12X-XX
+
+      .. include:: regset.rst
+
+   .. tab:: REGSET FOR 250-12
+
+      .. include:: regset250_12.rst
+
+

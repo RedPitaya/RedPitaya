@@ -2,3 +2,5 @@
 sphinxcontrib-wavedrom
 # http://breathe.readthedocs.io/en/latest/
 breathe
+# userd in fpga.rst
+https://github.com/djungelorm/sphinx-tabs/releases/download/v1.1.13/sphinx-tabs-1.1.13.tar.gz
