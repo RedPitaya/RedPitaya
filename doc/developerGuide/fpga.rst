@@ -422,14 +422,5 @@ which can be used to modify MIO functionality at runtime.
 
 .. include:: regset_common.rst
 
-.. tabs::
-
-   .. tab:: REGSET FOR 12X-XX
-
-      .. include:: regset.rst
-
-   .. tab:: REGSET FOR 250-12
-
-      .. include:: regset250_12.rst
 
 
