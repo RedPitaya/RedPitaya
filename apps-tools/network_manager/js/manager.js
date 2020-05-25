@@ -492,4 +492,18 @@ $(document).ready(function() {
         $('#ssid_input_client').val("");
         $('#password_input_client').val("");
     });
+
+    $('#client_reboot').click(function(event) {
+        
+        WIZARD.startWaiting(); 
+        $.ajax({
+            url: '/reboot',
+            type: 'GET'
+        })
+        .always(function() {
+            setTimeout(function(){
+                window.location.reload(1);
+             }, 30000);
+        });      
+    });
 });
