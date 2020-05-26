@@ -42,4 +42,4 @@ Additional Required Items not supplied with the RedPitaya kits:
    Access to the internet is required only when:
 
    * upgrading Red Pitaya OS,
-   * installing applications from the marketplace,
+   * installing applications from the marketplace.
