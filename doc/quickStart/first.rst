@@ -12,11 +12,39 @@ With this, simple *plug and play* approach is enabled.
 Having Red Pitaya board connected the local network
 will enable quick access to all Red Pitaya applications
 using only your web browser.
+
 Simply follow this 3 simple steps:
 
-#. Connect Red Pitaya board to the router
-#. Connect power supply to the Red Pitaya board
-#. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
+.. tabs::
+
+   .. tab:: 125-10, 125-14, 122-16
+
+      #. Connect Red Pitaya board to the router
+
+         .. image:: connect/125_router.png
+            :width: 30%
+
+      #. Connect power supply to the Red Pitaya board
+      #. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
+
+         .. image:: connect/125_stiker.png
+            :width: 30%
+
+         .. image:: connect/125_stiker_2.png
+            :width: 30%
+
+   .. tab:: 250-12
+
+      #. Connect Red Pitaya board to the router
+
+         .. image:: connect/250_router.png
+            :width: 30%
+
+      #. Connect power supply to the Red Pitaya board
+      #. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
+
+         .. image:: connect/250_stiker.png
+            :width: 30%
 
 .. note:: 
 
@@ -28,15 +56,11 @@ Simply follow this 3 simple steps:
    ``xxxxxx`` are the last 6 characters from MAC address of your Red Pitaya board.
    MAC address is written on the Ethernet connector.
     
-.. figure:: connect/connect-2.png
-    
-   Figure 1: Connecting your Red Pitaya board to the LAN network.
-
 After the **third step** you will get a Red Pitaya main page as shown below.
 
 .. figure:: connect/connect-3.png
 
-   Figure 2: Red Pitaya main page user interface.
+   Figure 1: Red Pitaya main page user interface.
 
 .. note::
 
