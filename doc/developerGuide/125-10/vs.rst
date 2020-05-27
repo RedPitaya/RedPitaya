@@ -106,7 +106,7 @@ for universities,students and makers, SDRlab 122-16 is tailored for SDR applicat
 | Voltage range                 | ±1V            | ±1V            | 1Vpp/ +4 dBm         | +-2V / +-10V (Hi-Z load)     |
 |                               |                |                |                      | (software selectable)        |
 +-------------------------------+----------------+----------------+----------------------+------------------------------+
-| Ouput slew rate               | 200V/us        | 200V/us        | N/A                  |                              |
+| Output slew rate              | 2V/10us        | 2V/10us        | N/A                  | 10V/17ns                     |
 +-------------------------------+----------------+----------------+----------------------+------------------------------+
 | Short circut protection       | Yes            | Yes            | N/A, RF transformer  |                              |
 |                               |                |                | & AC-coupled         | Yes                          |
