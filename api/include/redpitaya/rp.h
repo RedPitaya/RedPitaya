@@ -26,7 +26,9 @@ extern "C" {
 #define RP_MODEL "Z10"
 #define ADC_SAMPLE_RATE 125e6
 #define ADC_BITS 14
+#define ADC_REG_BITS 14  
 #define ADC_BITS_MASK 0x3FFF
+#define ADC_REG_BITS_MASK 0x3FFF
 #define DAC_FREQUENCY 125e6
 
 #define ADC_BUFFER_SIZE         (16 * 1024)

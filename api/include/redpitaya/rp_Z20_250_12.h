@@ -27,7 +27,9 @@ extern "C" {
 #define RP_MODEL "Z20_250_12"
 #define ADC_SAMPLE_RATE 250e6
 #define ADC_BITS 14
+#define ADC_REG_BITS 14
 #define ADC_BITS_MASK 0x3FFF
+#define ADC_REG_BITS_MASK 0x3FFF
 #define DAC_FREQUENCY 250e6
 
 
