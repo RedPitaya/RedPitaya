@@ -95,7 +95,7 @@ DTS_PATH = dts
 endif
 
 ifeq ($(MODEL),Z20)
-FPGA_PRJ_LST = v0.94 streaming logic
+FPGA_PRJ_LST = v0.94 streaming
 # NEED for FSBL fpga image
 FPGA_PRJ = streaming
 FPGA_MODEL ?= Z20
