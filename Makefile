@@ -469,13 +469,13 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 apps-pro: scopegenpro spectrumpro 
 ifeq ($(MODEL),Z20_250_12)
-	apps-pro: 
+apps-pro:
 else
-	ifeq ($(MODEL),Z20)
-		apps-pro:
-	else
-		apps-pro: lcr_meter la_pro ba_pro
-	endif
+ifeq ($(MODEL),Z20)
+apps-pro: la_pro
+else
+apps-pro: lcr_meter la_pro ba_pro
+endif
 endif
 
 scopegenpro: api $(NGINX)
