@@ -211,7 +211,7 @@ static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
 static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
 static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2st bit)
 static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
-static const uint32_t ARM_KEEP_MASK         = 0xF;          // (4 bit)
+static const uint32_t ARM_KEEP_MASK         = 0x8;          // (1 bit)
 
 
 int osc_Init();
