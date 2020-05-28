@@ -91,12 +91,12 @@ FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite streaming
 # NEED for FSBL fpga image
 FPGA_PRJ = streaming
 FPGA_MODEL ?= Z10
-DTS_PATH = dts 
+DTS_PATH = dts
 endif
 
 ifeq ($(MODEL),Z20)
-FPGA_PRJ_LST = v0.94 streaming
-# NEED for FSBL fpga image 
+FPGA_PRJ_LST = v0.94 streaming logic
+# NEED for FSBL fpga image
 FPGA_PRJ = streaming
 FPGA_MODEL ?= Z20
 DTS_PATH = dts
