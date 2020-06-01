@@ -28,18 +28,3 @@ Additional Required Items not supplied with the RedPitaya kits:
 
    Red Pitaya boards should not be powered from a power supply that provides less power than specified or has very thin power wires, since this will reflect abnormal behavior of the device, causing reboots and network disconnections. 
    Same problem might appear if the Red Pitaya board is powered directly from USB on a PC or HUB that cannot provide enough power or when using a bad powering cable.
-
-.. note::
-
-   **Windows 7/8** users should install `Bonjour Print Services <http://redpitaya.com/bonjour>`_,
-   otherwise access to ``*.local`` addresses will not work.
-
-   **Windows 10** already supports mDNS and DNS-SD,
-   so there is no need to install additional software.
-
-.. note::
-
-   Access to the internet is required only when:
-
-   * upgrading Red Pitaya OS,
-   * installing applications from the marketplace.

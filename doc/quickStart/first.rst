@@ -22,34 +22,30 @@ Simply follow this 3 simple steps:
       #. Connect Red Pitaya board to the router
 
          .. image:: connect/125_router.png
-            :width: 30%
+            :width: 50%
 
       #. Connect power supply to the Red Pitaya board
       #. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
 
          .. image:: connect/125_stiker.png
-            :width: 30%
+            :width: 70%
 
          .. image:: connect/125_stiker_2.png
-            :width: 30%
+            :width: 70%
 
    .. tab:: 250-12
 
       #. Connect Red Pitaya board to the router
 
          .. image:: connect/250_router.png
-            :width: 30%
+            :width: 50%
 
       #. Connect power supply to the Red Pitaya board
       #. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
 
          .. image:: connect/250_stiker.png
-            :width: 30%
+            :width: 70%
 
-.. note:: 
-
-    For arranging other types of connections (wireless, direct ethernet connection) use the  
-    :ref:`Network manager application <networkManager>`.
        
 .. note::
 
@@ -67,3 +63,23 @@ After the **third step** you will get a Red Pitaya main page as shown below.
     For any issues during setup, check :ref:`troubleshoots <troubleshooting>`
     or check the `forum <http://forum.redpitaya.com/>`_ for a solution.
     If you cannot find a solution, please post your problem, providing as much detail as possible.
+
+.. note:: 
+
+    For arranging other types of connections (wireless, direct ethernet connection) use the  
+    :ref:`Network manager application <networkManager>`.
+
+.. note::
+
+   **Windows 7/8** users should install `Bonjour Print Services <http://redpitaya.com/bonjour>`_,
+   otherwise access to ``*.local`` addresses will not work.
+
+   **Windows 10** already supports mDNS and DNS-SD,
+   so there is no need to install additional software.
+
+.. note::
+
+   Access to the internet is required only when:
+
+   * upgrading Red Pitaya OS,
+   * installing applications from the marketplace.
