@@ -78,12 +78,12 @@ for universities,students and makers, SDRlab 122-16 is tailored for SDR applicat
 +-----------------------------------+------------------------+------------------------+------------------------+------------------------------------+
 | Input coupling                    | DC                     | DC                     | AC                     | AC / DC (software selectable)      |
 +-----------------------------------+------------------------+------------------------+------------------------+------------------------------------+
-| Absolute max. Input voltage range | 30V                    | 30V                    | DC max 50V (AC-coupled)|                                    |
+| Absolute max. Input voltage range | 30V                    | 30V                    | DC max 50V (AC-coupled)| 30V                                |
 |                                   |                        |                        | 1 Vpp for RF           |                                    |
 +-----------------------------------+------------------------+------------------------+------------------------+------------------------------------+
-| Input ESD protection              | Yes                    | Yes                    | Yes                    |                                    |
+| Input ESD protection              | Yes                    | Yes                    | Yes                    | Yes                                |
 +-----------------------------------+------------------------+------------------------+------------------------+------------------------------------+
-| Overload protection               | Protection diodes      | Protection diodes      | DC voltage protection  |                                    |
+| Overload protection               | Protection diodes      | Protection diodes      | DC voltage protection  | Protection diodes                  |
 +-----------------------------------+------------------------+------------------------+------------------------+------------------------------------+
 | Bandwidth                         | DC-50MHz               | DC-60MHz               | 300 kHz - 550 MHz      | DC - 60MHz                         |
 +-----------------------------------+------------------------+------------------------+------------------------+------------------------------------+
