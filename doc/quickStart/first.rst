@@ -44,7 +44,7 @@ Simply follow this 3 simple steps:
       #. Open your web browser and in the URL filed type ``rp-xxxxxx.local/``
 
          .. image:: connect/250_stiker.png
-            :width: 70%
+            :width: 90%
 
        
 .. note::
