@@ -284,6 +284,10 @@
             $.get('/reboot');
             setTimeout(function(){ window.close(); }, 1000);
         });
+        $("#poweroff_confirm").click(function(event) {
+            $.get('/poweroff');
+            setTimeout(function(){ window.close(); }, 1000);
+        });
     });
 
 })(window.Desktop = window.Desktop || {}, jQuery);
