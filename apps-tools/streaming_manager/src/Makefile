@@ -43,9 +43,12 @@ C_OUT_NAME=$(OUT_DIR)controllerhf.so
 all: make_c_app
 clean: clean_c_app
 
-.PHONY: make_c_app
-make_c_app: $(OBJECTS)
+.PHONY: build_lib
+build_lib:
 	./build.sh libs
+
+.PHONY: make_c_app
+make_c_app: build_lib  $(OBJECTS)
 	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean_c_app:

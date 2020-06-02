@@ -1,4 +1,5 @@
 #!/bin/bash
+unzip ./libs/asio.zip -d ./libs
 cmake CMakeLists.txt
 make
 
