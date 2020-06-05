@@ -10,7 +10,7 @@ constexpr uint32_t osc1_event_id = 3;
 constexpr uint32_t osc0_baseaddr = 0;
 constexpr uint32_t osc1_baseaddr = 256;
 
-constexpr uint32_t osc_buf_size = 65536;
+constexpr uint32_t osc_buf_size = 65536 / 2.0;
 constexpr uint32_t osc_buf_pre_samp = osc_buf_size / 4;
 constexpr uint32_t osc_buf_post_samp = (osc_buf_size / 4) * 3;
 

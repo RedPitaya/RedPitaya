@@ -20,6 +20,7 @@ public:
     void run();
     void runNonBlock();
     bool stop();
+    bool isRun(){return m_isRun;}
 private:
     int m_PerformanceCounterPeriod = 10;
 
@@ -31,6 +32,7 @@ private:
     std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
     std::atomic_int m_ReadyToPass;
     bool            m_isRun;
+    bool            m_isRunNonBloking;
     static_assert(ATOMIC_INT_LOCK_FREE == 2,"this implementation does not guarantee that std::atomic<int> is always lock free.");
 
     asio::io_service m_Ios;
@@ -43,7 +45,7 @@ private:
      uint64_t        m_lostRate;
     int              m_oscRate;
     int              m_channels;
-
+  
 
     uint8_t val;
     asio::steady_timer m_Timer;

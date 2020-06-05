@@ -40,6 +40,7 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_BytesCount(0),
     m_Resolution(_resolution),
     m_isRun(false),
+    m_isRunNonBloking(false),
     m_oscRate(_oscRate),
     m_channels(_channels),
     mtx()
@@ -94,18 +95,21 @@ void CStreamingApplication::run()
     m_lostRate = 0;
   
     m_isRun = true;
-    m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
+    m_isRunNonBloking = false;
+
     try {
 
         m_StreamingManager->run();
-
+        m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
         // OS signal handler
-        asio::signal_set signalSet(m_Ios, SIGINT, SIGTERM);
-        signalSet.async_wait(std::bind(&CStreamingApplication::signalHandler, this, std::placeholders::_1, std::placeholders::_2));
+        // asio::signal_set signalSet(m_Ios, SIGINT, SIGTERM);
+        // signalSet.async_wait(std::bind(&CStreamingApplication::signalHandler, this, std::placeholders::_1, std::placeholders::_2));
 
-        asio::io_service::work idle(m_Ios);
-        m_Ios.run();
-        m_OscThread.join();
+        // asio::io_service::work idle(m_Ios);
+        // m_Ios.run();
+        if (m_OscThread.joinable()){
+            m_OscThread.join();
+        }
 
     }
     catch (const asio::system_error &e)
@@ -120,14 +124,15 @@ void CStreamingApplication::runNonBlock(){
     m_size_ch1 = 0;
     m_size_ch2 = 0;
     m_lostRate = 0;
-    m_isRun = true;    
+    m_isRun = true;
+    m_isRunNonBloking = true;    
     try {
         m_StreamingManager->run(); // MUST BE INIT FIRST for thread logic
         m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);        
     }
     catch (const asio::system_error &e)
     {
-        std::cerr << "Error: CStreamingApplication::run(), " << e.what() << std::endl;
+        std::cerr << "Error: CStreamingApplication::runNonBlock(), " << e.what() << std::endl;
         PrintDebugInFile( e.what());
     }
 };
@@ -136,9 +141,11 @@ bool CStreamingApplication::stop(){
     
     if (m_isRun){
         m_OscThreadRun.clear();
-        m_OscThread.join();
+        if (m_OscThread.joinable()){
+            m_OscThread.join();
+        }
         m_StreamingManager->stop();
-        m_Ios.stop();
+        // m_Ios.stop();
         m_Osc_ch->stop();
 
         m_isRun = false;
@@ -190,8 +197,12 @@ try{
         }
 
         if (!m_StreamingManager->isFileThreadWork()){
+            
             if (m_StreamingManager->notifyStop){
-                m_StreamingManager->notifyStop(0);
+                if (m_StreamingManager->isOutOfSpace())
+                    m_StreamingManager->notifyStop(0);
+                else 
+                    m_StreamingManager->notifyStop(1);
                 m_StreamingManager->notifyStop = nullptr;                
             }
         }
@@ -199,10 +210,9 @@ try{
     
 }catch (std::exception& e)
 	{
-		fprintf(stderr, "Error: oscWorker() -> %s\n",e.what());
+		std::cerr << "Error: oscWorker() -> %s\n" << e.what() << std::endl ;
         PrintDebugInFile( e.what());
 	}
-
 }
 
 
@@ -222,6 +232,12 @@ try{
         std::cerr << "Error: m_Osc->next()" << std::endl;
         return false;
     }
+
+    // for(int i = 0 ;i < 64 ; i++){
+    //     buffer_ch1[i] = 0;
+    //     buffer_ch2[i] = 0;
+    // }
+
     // short *wb2 = (short*)buffer;
     // for(int i = 0 ;i < 40 /2 ;i ++)
     //     std::cout << std::hex <<  (static_cast<int>(wb2[i]) & 0xFFFF)  << " ";
@@ -262,6 +278,8 @@ try{
         _size2 = 0;
     }
 
+
+
     //std::ofstream outfile2;
     //outfile2.open("/tmp/test.txt", std::ios_base::app);  
     // char **wb = (char**)WriteBuffer;
@@ -279,27 +297,6 @@ int CStreamingApplication::oscNotify(uint64_t _lostRate, uint32_t _oscRate,const
     return m_StreamingManager->passBuffers(_lostRate,_oscRate, _buffer_ch1,_size_ch1,_buffer_ch2,_size_ch2,m_Resolution, 0);
 }
 
-// void CStreamingApplication::passReadyNotify(int _pass_size)
-// {
-// //     m_ReadyToPass--;
-// //     std::cout << m_ReadyToPass << "\n";
-// }
-
-// void CStreamingApplication::passReadyNotifyReset(){
-//  //   m_ReadyToPass = 0;
-// }
-
-// void CStreamingApplication::performanceCounterHandler(const asio::error_code &_error)
-// {
-//     if (!_error)
-//     {
-//         std::cout << "Bandwidth: " << m_BytesCount / (1024 * 1024 * m_PerformanceCounterPeriod) << " MiB/s\n";
-//         m_BytesCount = 0;
-
-//         m_Timer.expires_from_now(std::chrono::seconds(m_PerformanceCounterPeriod));
-//         m_Timer.async_wait(std::bind(&CStreamingApplication::performanceCounterHandler, this, std::placeholders::_1));
-//     }
-// }
 
 void CStreamingApplication::signalHandler(const asio::error_code &_error, int _signalNumber)
 {

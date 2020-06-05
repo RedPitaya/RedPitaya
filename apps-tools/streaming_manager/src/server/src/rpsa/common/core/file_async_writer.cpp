@@ -29,6 +29,7 @@ FileQueueManager::FileQueueManager():Queue(){
     m_threadWork = false;
     m_waitAllWrite = false;    
     m_hasErrorWrite = false;
+    m_IsOutOfSpace = false;
 }
 
 FileQueueManager::~FileQueueManager(){
@@ -97,13 +98,13 @@ ulong FileQueueManager::GetFreeSpaceDisk(std::string _filePath){
     ulong m_freeSize = 0;
     if (FileQueueManager::AvailableSpace(_filePath, &m_freeSize) == 0){
 
-        std::time_t result = std::time(nullptr);	
-        std::fstream fs;
-        fs.open ("/tmp/debug_streaming.log", std::fstream::in | std::fstream::out | std::fstream::app);
-        char* date = std::asctime(std::localtime(&result));
-        date[strlen(date) - 1] = '\0';
-        fs << date << " : Free space on drive: " << m_freeSize << "\n";
-        fs.close();
+        // std::time_t result = std::time(nullptr);	
+        // std::fstream fs;
+        // fs.open ("/tmp/debug_streaming.log", std::fstream::in | std::fstream::out | std::fstream::app);
+        // char* date = std::asctime(std::localtime(&result));
+        // date[strlen(date) - 1] = '\0';
+        // fs << date << " : Free space on drive: " << m_freeSize << "\n";
+        // fs.close();
 
         if (m_freeSize < USING_FREE_SPACE){
             m_freeSize = 0;
@@ -152,6 +153,7 @@ void FileQueueManager::StartWrite(Stream_FileType _fileType){
     m_firstSectionWrite = false;
     m_waitAllWrite = true;
     m_hasErrorWrite = false;
+    m_IsOutOfSpace = false;
     th = new std::thread(&FileQueueManager::Task,this);
 }
 
@@ -220,7 +222,7 @@ int FileQueueManager::WriteToFile(){
         }
 
     } else{
-
+        m_IsOutOfSpace = true;
         m_hasErrorWrite = true;
         if (!(m_hasWriteSize < m_freeSize)){
             acout() << "The disc has reached the write limit\n";

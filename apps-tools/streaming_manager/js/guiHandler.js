@@ -16,6 +16,15 @@ function ValidatePort(port) {
     return (false);
 }
 
+function ValidateSamples(port) {
+    if (port == '')
+        return false;
+    if (/^([0-9]{1,15}?)$/.test(port)) {
+        return (true);
+    }
+    return (false);
+}
+
 //Port number changed
 var portNumberChange = function(event) {
     if (ValidatePort($("#SS_PORT_NUMBER").val()) == false) {
@@ -32,6 +41,29 @@ var portNumberChange = function(event) {
     SM.parametersCache["SS_PORT_NUMBER"] = { value: $("#SS_PORT_NUMBER").val() };
     SM.sendParameters();
 }
+
+
+var samplesNumberChange = function(event) {
+    var samples = $("#SS_SAMPLES").val()
+    var max_val = 2000000000;
+    if (samples != "") {
+        if (ValidateSamples(samples) == false) {
+            $("#SS_SAMPLES").val(max_val);
+            $('#SS_SAMPLES').fI();
+            samples = max_val;
+        }
+        if (samples > max_val) {
+            samples = max_val;
+            $("#SS_SAMPLES").val(max_val);
+        }
+        SM.parametersCache["SS_SAMPLES"] = { value: samples };
+    }else{
+        $("#SS_SAMPLES").val("ALL");
+        SM.parametersCache["SS_SAMPLES"] = { value: -1 };
+    }
+    SM.sendParameters(); 
+}
+
 
 //IP address changed
 var ipAddressChange = function(event) {
@@ -50,6 +82,8 @@ var sendByNetChange = function(event) {
     if ($("#SS_USE_NET").prop('checked')) {
         SM.parametersCache["SS_USE_FILE"] = { value: false };
         SM.sendParameters();
+        $(".network").show();
+        $(".file").hide();
         SM.updateLimits();
     }
 }
@@ -58,6 +92,8 @@ var sendToFileChange = function(event) {
     if ($("#SS_USE_FILE").prop('checked')) {
         SM.parametersCache["SS_USE_FILE"] = { value: true };
         SM.sendParameters();
+        $(".network").hide();
+        $(".file").show();
         SM.updateLimits();
     }
 }
@@ -134,6 +170,8 @@ changeCallbacks["SS_PROTOCOL"] = protocolChange;
 changeCallbacks["SS_CHANNEL"] = channelChange;
 changeCallbacks["SS_RESOLUTION"] = resolutionChange;
 changeCallbacks["SS_FORMAT"] = formatСhange;
+changeCallbacks["SS_SAMPLES"] = samplesNumberChange;
+
 
 var clickCallbacks = {}
 
