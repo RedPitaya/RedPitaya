@@ -128,7 +128,6 @@ wire [ 32-1: 0] div_out_a     ;
 reg  [ 32-1: 0] b_dat_div     ;
 wire [ 32-1: 0] div_out_b     ;
 reg             adc_dv_div    ;
-reg             adc_dv_bin    ;
 reg  [ 34-1: 0] sign_sr_a     ;
 reg             sign_curr_a   ;
 reg  [ 34-1: 0] sign_sr_b     ;
@@ -178,6 +177,7 @@ dec_avg_div_b
 always @(posedge adc_clk_i)
 if (adc_rstn_i == 1'b0) begin
    div_go      <= 1'b0;
+   adc_dv_div  <= 1'b0;
    dat_got     <= 1'b0;
    div_dat_got <= 1'b0;
    a_div_uns   <= 32'h0;
@@ -247,9 +247,6 @@ if (adc_rstn_i == 1'b0) begin
    adc_b_sum   <= 32'h0 ;
    adc_dec_cnt <= 17'h0 ;
    adc_dv      <=  1'b0 ;
-   div_go      <=  1'b0 ;
-   adc_dv_div  <=  1'b0 ;
-   adc_dv_bin  <=  1'b0 ;
 end else begin
    if ((adc_dec_cnt >= set_dec) || adc_arm_do) begin // start again or arm
       adc_dec_cnt <= 17'h1    ;              
@@ -261,14 +258,12 @@ end else begin
       adc_b_sum   <= $signed(adc_b_sum) + $signed(adc_b_i) ;
    end
 
-   adc_dv_bin <= (adc_dec_cnt >= set_dec);
-
-   if (set_dec >= 17'd16) begin // 16 or more uses divider
-      adc_dv    <= adc_dv_div;     // which data_valid to use
-      adc_a_dat <= a_dat_div;
-      adc_b_dat <= b_dat_div;
+   if (set_dec  >= 17'd16) begin // 16 or more uses divider
+      adc_dv    <= adc_dv_div;   // which data_valid to use
+      adc_a_dat <= a_dat_div ;
+      adc_b_dat <= b_dat_div ;
    end else begin
-      adc_dv<=adc_dv_bin;
+      adc_dv    <= (adc_dec_cnt >= set_dec);
       case (set_dec & {17{set_avg_en}}) // allowed dec factors: 1,2,4,8; if 16 or greater, use divider
          17'h0     : begin adc_a_dat <= adc_a_i;            adc_b_dat <= adc_b_i;        end
          17'h1     : begin adc_a_dat <= adc_a_sum[15+0 :  0];      adc_b_dat <= adc_b_sum[15+0 :  0];  end
