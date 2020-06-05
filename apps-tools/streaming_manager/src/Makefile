@@ -51,7 +51,7 @@ OUT_DIR=../
 C_OUT_NAME=$(OUT_DIR)controllerhf.so
 C_OUT_NAME_SERVICE=$(OUT_DIR)streaming-server
 
-all: make_c_app
+all: make_c_app service
 clean: clean_c_app
 
 build_lib:
@@ -61,7 +61,7 @@ build_lib:
 make_c_app: build_lib  $(OBJECTS)
 	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LDWFLAGS)
 
-make_service: build_lib $(OBJECTS_SERVICE)
+service: build_lib $(OBJECTS_SERVICE)
 	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CFLAGS) $(LDFLAGS) $(LDSFLAGS)
 
 clean_c_app:

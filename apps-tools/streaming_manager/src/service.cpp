@@ -26,7 +26,6 @@
 #include <unistd.h>
 #include <syslog.h>
 
-
 #include "rp.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
@@ -40,6 +39,38 @@ syslog(__VA_ARGS__);
 #define RP_LOG(...)
 #endif
 
+std::mutex mtx;
+std::condition_variable cv;
+
+char* getCmdOption(char ** begin, char ** end, const std::string & option)
+{
+    char ** itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end)
+    {
+        return *itr;
+    }
+    return 0;
+}
+
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+    return std::find(begin, end, option) != end;
+}
+
+bool CheckMissing(const char* val,const char* Message)
+{
+    if (val == NULL) {
+        std::cout << "Missing parameters: " << Message << std::endl;
+        return true;
+    }
+    return false;
+}
+
+void UsingArgs(char const* progName){
+    std::cout << "Usage: " << progName << "\n";
+    std::cout << "\t-b run service in background\n";
+    std::cout << "\t-c path to config file\n";
+}
 
 CStreamingApplication *s_app = nullptr; 
 void StopNonBlocking(int x);
@@ -73,48 +104,118 @@ static void installTermSignalHandler()
 int main(int argc, char *argv[])
 {
 
-   
-    FILE *fp= NULL;
-    pid_t process_id = 0;
-    pid_t sid = 0;
-    // Create child process
-    process_id = fork();
-    // Indication of fork() failure
-    if (process_id < 0)
-    {
-        printf("fork failed!\n");
-        // Return failure in exit status
+    char  *filepath  = getCmdOption(argv, argv + argc, "-c");
+    bool   is_fork   = cmdOptionExists(argv, argv + argc, "-b");
+    bool checkParameters = false;
+    checkParameters |= CheckMissing(filepath,"Configuration file");
+    if (checkParameters) {
+        UsingArgs(argv[0]);
         exit(1);
     }
-
-    // PARENT PROCESS. Need to kill it.
-    if (process_id > 0)
-    {
-        printf("process_id of child process %d \n", process_id);
-        // return success in exit status
-        exit(0);
-    }
-
-    //unmask the file mode
-    umask(0);
-    //set new session
-    sid = setsid();
-    if(sid < 0)
-    {
-        // Return failure
-        exit(1);
-    }
-
-    // close(STDIN_FILENO);
-    // close(STDOUT_FILENO);
-    // close(STDERR_FILENO);
-
 
      // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
     setlogmask (LOG_UPTO (LOG_INFO));
-
     openlog ("streaming-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 
+    if (is_fork){
+        FILE *fp= NULL;
+        pid_t process_id = 0;
+        pid_t sid = 0;
+        // Create child process
+        process_id = fork();
+        // Indication of fork() failure
+        if (process_id < 0)
+        {
+            fprintf(stderr,"fork failed!\n");
+            // Return failure in exit status
+            exit(1);
+        }
+
+        // PARENT PROCESS. Need to kill it.
+        if (process_id > 0)
+        {
+            //printf("process_id of child process %d \n", process_id);
+            // return success in exit status
+            exit(0);
+        }
+
+        //unmask the file mode
+        umask(0);
+        //set new session
+        sid = setsid();
+        if(sid < 0)
+        {
+            // Return failure
+            exit(1);
+        }
+
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
+    }
+    
+    int resolution = 1;
+    int channel = 3;
+    int protocol = 1;
+    int sock_port = 8900;
+    std::string ip_addr_host = "127.0.0.1";
+    int format = 0;
+    int rate = 1;
+    bool use_file = false;
+    int samples = -1;
+
+    try{
+        ifstream file(filepath);
+        std::string key;
+        std::string value;
+        while (file >> key >> value) {
+            if ("host" == key) {
+                ip_addr_host = value;
+                continue;
+            }
+            if ("port" == key) {
+                sock_port = stoi(value);
+                continue;
+            }
+            if ("protocol" == key) {
+                protocol = stoi(value);
+                continue;
+            }
+            if ("rate" == key) {
+                rate = stoi(value);
+                continue;
+            }
+            if ("resolution" == key) {
+                resolution = stoi(value);
+                continue;
+            }    
+            if ("use_file" == key) {
+                use_file = (bool)stoi(value);
+                continue;
+            }
+            if ("format" == key) {
+                format = stoi(value);
+                continue;
+            } 
+            if ("samples" == key) {
+                samples = stoi(value);
+                continue;
+            }  
+            if ("channels" == key) {
+                channel = stoi(value);
+                continue;
+            }  
+            throw std::exception();         
+        }
+    }catch(std::exception& e)
+    {
+        fprintf(stderr,  "Error loading configuration file\n");
+        RP_LOG (LOG_ERR, "Error loading configuration file");
+        exit(1);
+    }
+
+
+    fprintf(stdout,"streaming-server started\n");
     RP_LOG (LOG_NOTICE, "streaming-server started");
 
     installTermSignalHandler();
@@ -125,18 +226,12 @@ int main(int argc, char *argv[])
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 	}catch (std::exception& e)
 	{
-        RP_LOG(LOG_INFO, "Error: rp_app_init() %s\n",e.what());
+        fprintf(stderr,  "Error: Can't create %s dir %s",FILE_PATH,e.what());
+        RP_LOG (LOG_ERR, "Error: Can't create %s dir %s",FILE_PATH,e.what());
 	}
 
     try{
-        int resolution = 1;
-        int channel = 3;
-        int protocol = 1;
-        int sock_port = 666;
-        std::string ip_addr_host = "127.0.0.1";
-        int format = 0;
-        int rate = 1;
-        bool use_file = false;
+       
    
         std::vector<UioT> uioList = GetUioList();
         // Search oscilloscope
@@ -160,7 +255,7 @@ int main(int argc, char *argv[])
                     std::to_string(sock_port).c_str(),
                     protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
         }else{
-            s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH);
+            s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH , -1);
             s_manger->notifyStop = [](int status)
                                 {
                                     StopNonBlocking(0);
@@ -169,25 +264,25 @@ int main(int argc, char *argv[])
         int resolution_val = (resolution == 1 ? 8 : 16);
         s_app = new CStreamingApplication(s_manger, osc, 16, rate, channel);
         s_app->run();
+        while(s_app->isRun());
         delete s_app;
     }catch (std::exception& e)
     {
-        RP_LOG(LOG_INFO, "Error: StopServer() %s\n",e.what());
-        fprintf(stderr, "Error: StopServer() %s\n",e.what());
+        fprintf(stderr, "Error: main() %s\n",e.what());
+        RP_LOG(LOG_ERR, "Error: main() %s\n",e.what());
     }
-    
+    fprintf(stdout,  "streaming-server stopped.\n");
     RP_LOG(LOG_INFO, "streaming-server stopped.");
-
     closelog ();
-
     return (EXIT_SUCCESS);
 }
 
 void StopServer(int x){
 	try{
-		if (s_app!= nullptr) s_app->stop();
+		if (s_app!= nullptr) s_app->stop(false);
 	}catch (std::exception& e){
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
+        RP_LOG(LOG_ERR, "Error: StopServer() %s\n",e.what());
 	}
 }
 
@@ -196,7 +291,8 @@ void StopNonBlocking(int x){
 		std::thread th(StopServer ,x);
 		th.detach();
 	}catch (std::exception& e){
-		fprintf(stderr, "Error: StopServer() %s\n",e.what());
+		fprintf(stderr, "Error: StopNonBlocking() %s\n",e.what());
+        RP_LOG(LOG_ERR, "Error: StopNonBlocking() %s\n",e.what());
 	}
 }
 

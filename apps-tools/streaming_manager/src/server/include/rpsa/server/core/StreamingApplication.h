@@ -19,7 +19,7 @@ public:
     ~CStreamingApplication();
     void run();
     void runNonBlock();
-    bool stop();
+    bool stop(bool wait = true);
     bool isRun(){return m_isRun;}
 private:
     int m_PerformanceCounterPeriod = 10;

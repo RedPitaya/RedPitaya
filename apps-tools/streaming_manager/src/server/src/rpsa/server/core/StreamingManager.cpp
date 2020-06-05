@@ -294,9 +294,6 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                 if (split_size > buffer_size) {
                     split_size = buffer_size;
                 }                                                                              
-                std::ofstream outfile2;
-                outfile2.open("/tmp/test.txt", std::ios_base::app);  
-                outfile2 << buffer_size  << " " << split_size << "\n";
 
                 size_t full_send_size = 0;
                 buff_ch1 = (uint8_t *) _buffer_ch1;

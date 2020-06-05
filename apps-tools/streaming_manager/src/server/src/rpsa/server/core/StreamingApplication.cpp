@@ -137,21 +137,19 @@ void CStreamingApplication::runNonBlock(){
     }
 };
 
-bool CStreamingApplication::stop(){
-    
+bool CStreamingApplication::stop(bool wait){
+    mtx.lock();   
+    bool state = false;
     if (m_isRun){
         m_OscThreadRun.clear();
-        if (m_OscThread.joinable()){
-            m_OscThread.join();
-        }
+        if (wait) m_OscThread.join();
         m_StreamingManager->stop();
         // m_Ios.stop();
         m_Osc_ch->stop();
-
-        m_isRun = false;
-        return true;
+        state = true;
     }
-    return false;
+    mtx.unlock();
+    return state;
 };
 
 void CStreamingApplication::oscWorker()
@@ -213,6 +211,7 @@ try{
 		std::cerr << "Error: oscWorker() -> %s\n" << e.what() << std::endl ;
         PrintDebugInFile( e.what());
 	}
+    m_isRun = false;
 }
 
 

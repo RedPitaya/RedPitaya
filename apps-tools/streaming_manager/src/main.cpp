@@ -150,13 +150,6 @@ void SaveConfigInFile(){
 	file << "use_file " << ss_use_localfile.Value() << std::endl;
 	file << "format " << ss_format.Value() << std::endl;
 	file << "samples " << ss_samples.Value() << std::endl;
-	 
-	// std::vector<int> values;
-	// std::string key;
-	// std::string value;
-	// while (file >> key >> value) {
-	// values.push_back(value);
-
 }
 
 //Update parameters
