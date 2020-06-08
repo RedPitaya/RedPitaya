@@ -80,13 +80,14 @@ static void handleCloseChildEvents()
     struct sigaction sigchld_action; 
     sigchld_action.sa_handler = SIG_DFL,
     sigchld_action.sa_flags = SA_NOCLDWAIT;
-    
+ 
     sigaction(SIGCHLD, &sigchld_action, NULL);
 }
 
 
 static void termSignalHandler(int signum)
 {
+    fprintf(stdout,"Received terminate signal. Exiting...\n");
     syslog (LOG_NOTICE, "Received terminate signal. Exiting...");
     StopNonBlocking(0);
 }
@@ -153,7 +154,7 @@ int main(int argc, char *argv[])
         close(STDOUT_FILENO);
         close(STDERR_FILENO);
     }
-    
+ 
     int resolution = 1;
     int channel = 3;
     int protocol = 1;
@@ -168,6 +169,9 @@ int main(int argc, char *argv[])
         ifstream file(filepath);
         std::string key;
         std::string value;
+
+	if (!file.good()) throw std::exception();
+
         while (file >> key >> value) {
             if ("host" == key) {
                 ip_addr_host = value;
@@ -188,7 +192,7 @@ int main(int argc, char *argv[])
             if ("resolution" == key) {
                 resolution = stoi(value);
                 continue;
-            }    
+            }
             if ("use_file" == key) {
                 use_file = (bool)stoi(value);
                 continue;
@@ -196,16 +200,16 @@ int main(int argc, char *argv[])
             if ("format" == key) {
                 format = stoi(value);
                 continue;
-            } 
+            }
             if ("samples" == key) {
                 samples = stoi(value);
                 continue;
-            }  
+            }
             if ("channels" == key) {
                 channel = stoi(value);
                 continue;
-            }  
-            throw std::exception();         
+            }
+            throw std::exception();
         }
     }catch(std::exception& e)
     {
@@ -231,8 +235,7 @@ int main(int argc, char *argv[])
 	}
 
     try{
-       
-   
+
         std::vector<UioT> uioList = GetUioList();
         // Search oscilloscope
         COscilloscope::Ptr osc = nullptr;
@@ -248,7 +251,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        
+
         if (use_file == false) {
             s_manger = CStreamingManager::Create(
                     ip_addr_host,
