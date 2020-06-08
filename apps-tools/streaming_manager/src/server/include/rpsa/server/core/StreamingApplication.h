@@ -30,9 +30,9 @@ private:
     std::thread m_SocketThread;
     std::mutex mtx;
     std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
-    std::atomic_int m_ReadyToPass;
-    bool            m_isRun;
-    bool            m_isRunNonBloking;
+    std::atomic_int  m_ReadyToPass;
+    std::atomic_bool m_isRun;
+    std::atomic_bool m_isRunNonBloking;
     static_assert(ATOMIC_INT_LOCK_FREE == 2,"this implementation does not guarantee that std::atomic<int> is always lock free.");
 
     asio::io_service m_Ios;
@@ -42,7 +42,7 @@ private:
     void *m_WriteBuffer_ch2;
     size_t m_size_ch1;
     size_t m_size_ch2;
-     uint64_t        m_lostRate;
+    uint64_t         m_lostRate;
     int              m_oscRate;
     int              m_channels;
   

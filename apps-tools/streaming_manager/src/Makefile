@@ -61,6 +61,7 @@ build_lib:
 make_c_app: build_lib  $(OBJECTS)
 	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LDWFLAGS)
 
+.PHONY: service
 service: build_lib $(OBJECTS_SERVICE)
 	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CFLAGS) $(LDFLAGS) $(LDSFLAGS)
 

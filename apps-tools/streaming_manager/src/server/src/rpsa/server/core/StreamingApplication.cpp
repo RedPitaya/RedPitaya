@@ -142,7 +142,11 @@ bool CStreamingApplication::stop(bool wait){
     bool state = false;
     if (m_isRun){
         m_OscThreadRun.clear();
-        if (wait) m_OscThread.join();
+        if (wait) {
+            m_OscThread.join();
+        }else{
+            while(isRun());
+        }
         m_StreamingManager->stop();
         // m_Ios.stop();
         m_Osc_ch->stop();
@@ -176,7 +180,6 @@ try{
             m_lostRate++;
             ++passCounter;
         }
-
 #endif
         oscNotify(m_lostRate, m_oscRate, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
         

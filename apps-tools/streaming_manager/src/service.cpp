@@ -267,7 +267,6 @@ int main(int argc, char *argv[])
         int resolution_val = (resolution == 1 ? 8 : 16);
         s_app = new CStreamingApplication(s_manger, osc, 16, rate, channel);
         s_app->run();
-        while(s_app->isRun());
         delete s_app;
     }catch (std::exception& e)
     {
@@ -282,7 +281,9 @@ int main(int argc, char *argv[])
 
 void StopServer(int x){
 	try{
-		if (s_app!= nullptr) s_app->stop(false);
+		if (s_app!= nullptr){
+			s_app->stop(false);
+		}
 	}catch (std::exception& e){
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
         RP_LOG(LOG_ERR, "Error: StopServer() %s\n",e.what());
