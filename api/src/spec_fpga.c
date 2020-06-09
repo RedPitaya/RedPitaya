@@ -239,10 +239,10 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
         chb_o[out_idx] = g_spectr_fpga_chb_mem[in_idx];
 
         // convert to signed
-        if(cha_o[out_idx] > (double)(1<<13))
-            cha_o[out_idx] -= (double)(1<<14);
-        if(chb_o[out_idx] > (double)(1<<13))
-            chb_o[out_idx] -= (double)(1<<14);
+        if(cha_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
+            cha_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
+        if(chb_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
+            chb_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
     }   
     return 0;
 }
