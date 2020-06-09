@@ -65,16 +65,24 @@ typedef struct osc_control_s {
     /** @brief Offset 0x08 - Channel A threshold register
      *
      * Channel A threshold register (offset 0x08):
-     * bits [13: 0] - ChA threshold
+     * for 125 and 250
+     * bits [13: 0] - ChB threshold
      * bits [31:14] - reserved
+     * for 122
+     * bits [15: 0] - ChB threshold
+     * bits [31:16] - reserved
      */
     uint32_t cha_thr;
 
     /** @brief Offset 0x0C - Channel B threshold register
      *
      * Channel B threshold register (offset 0x0C):
+     * for 125 and 250
      * bits [13: 0] - ChB threshold
      * bits [31:14] - reserved
+     * for 122
+     * bits [15: 0] - ChB threshold
+     * bits [31:16] - reserved
      */
     uint32_t chb_thr;
 
@@ -114,8 +122,12 @@ typedef struct osc_control_s {
     uint32_t wr_ptr_trigger;
 
     /** @brief ChA & ChB hysteresis - both of the format:
-     * bits [13: 0] - hysteresis threshold
+     * for 125 and 250
+     * bits [13: 0] - ChB threshold
      * bits [31:14] - reserved
+     * for 122
+     * bits [15: 0] - ChB threshold
+     * bits [31:16] - reserved
      */
     uint32_t cha_hystersis;
     uint32_t chb_hystersis;
@@ -203,8 +215,13 @@ static const uint32_t DATA_DEC_MASK         = 0x1FFFF;      // (17 bits)
 static const uint32_t DATA_AVG_MASK         = 0x1;          // (1 bit)
 static const uint32_t TRIG_SRC_MASK         = 0xF;          // (4 bits)
 static const uint32_t START_DATA_WRITE_MASK = 0x1;          // (1 bit)
+#ifdef Z20
+static const uint32_t THRESHOLD_MASK        = 0xFFFF;       // (16 bits)
+static const uint32_t HYSTERESIS_MASK       = 0xFFFF;       // (16 bits)
+#else
 static const uint32_t THRESHOLD_MASK        = 0x3FFF;       // (14 bits)
 static const uint32_t HYSTERESIS_MASK       = 0x3FFF;       // (14 bits)
+#ifdef
 static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
 static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
 static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
