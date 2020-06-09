@@ -116,6 +116,10 @@ int osc_GetArmKeep(bool *state){
     return cmn_AreBitsSet(osc_reg->conf, 0x8 , ARM_KEEP_MASK, state);
 }
 
+int osc_GetBufferFillState(bool *state){
+    return cmn_AreBitsSet(osc_reg->conf, 0x10 , FILL_STATE_MASK, state);
+}
+
 int osc_GetTriggerState(bool *received)
 {
     return cmn_AreBitsSet(osc_reg->conf, (0x1 << 2), TRIG_ST_MCH_MASK, received);
