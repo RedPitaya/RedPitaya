@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
                                 };
         }
         int resolution_val = (resolution == 1 ? 8 : 16);
-        s_app = new CStreamingApplication(s_manger, osc, 16, rate, channel);
+        s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel);
         s_app->run();
         delete s_app;
     }catch (std::exception& e)
