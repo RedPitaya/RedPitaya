@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
                     std::to_string(sock_port).c_str(),
                     protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
         }else{
-            s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH , -1);
+            s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH , samples);
             s_manger->notifyStop = [](int status)
                                 {
                                     StopNonBlocking(0);
