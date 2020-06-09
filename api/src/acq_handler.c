@@ -522,8 +522,10 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 
     uint32_t cnt = cmn_CnvVToCnt(ADC_REG_BITS, voltage, gainV, gain == RP_HIGH ? false : true, calibScale, dc_offs, 0.0);
 
+#ifndef Z20
     // We cut high bits of negative numbers
     cnt = cnt & ((1 << ADC_REG_BITS) - 1);
+#endif
     if (channel == RP_CH_1) {
         return osc_SetThresholdChA(cnt);
     }

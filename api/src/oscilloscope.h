@@ -221,7 +221,7 @@ static const uint32_t HYSTERESIS_MASK       = 0xFFFF;       // (16 bits)
 #else
 static const uint32_t THRESHOLD_MASK        = 0x3FFF;       // (14 bits)
 static const uint32_t HYSTERESIS_MASK       = 0x3FFF;       // (14 bits)
-#ifdef
+#endif
 static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
 static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
 static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
