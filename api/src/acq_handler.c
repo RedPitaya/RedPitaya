@@ -136,6 +136,10 @@ int acq_GetArmKeep(bool* state){
     return osc_GetArmKeep(state);
 }
 
+int acq_GetBufferFillState(bool* state){
+    return osc_GetBufferFillState(state);
+}
+
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 {
 
