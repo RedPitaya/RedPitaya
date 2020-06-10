@@ -160,17 +160,17 @@ void calib_SetToZero() {
     calib.fe_ch1_hi_offs = 0;
     calib.fe_ch2_hi_offs = 0;
 
-//     float coff = 1;
-// #ifdef Z20_250_12 
-//     coff = 1;
-// #endif
+    float coff = 1;
+#ifdef Z20 
+    coff = 0.5;
+#endif
 
     calib.be_ch1_fs      = cmn_CalibFullScaleFromVoltage(1);
     calib.be_ch2_fs      = cmn_CalibFullScaleFromVoltage(1);
     calib.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
-    calib.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1.0  );
+    calib.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(coff );
     calib.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
-    calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(1    );
+    calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(coff );
 }
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {

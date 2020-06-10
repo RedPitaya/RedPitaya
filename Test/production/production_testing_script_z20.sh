@@ -56,8 +56,8 @@ CALIB="$SD_CARD_PATH/bin/calib"
 
 
 # Default calibration parameters set during the process
-FE_CH1_FS_G_HI=42949672
-FE_CH2_FS_G_HI=42949672
+FE_CH1_FS_G_HI=21474836
+FE_CH2_FS_G_HI=21474836
 FE_CH1_FS_G_LO=858993459
 FE_CH2_FS_G_LO=858993459
 FE_CH1_DC_offs=0
