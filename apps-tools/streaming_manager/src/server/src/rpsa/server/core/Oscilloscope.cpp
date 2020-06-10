@@ -90,7 +90,7 @@ COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd
     m_OscMap2(nullptr),
     m_OscBuffer1(nullptr),
     m_OscBuffer2(nullptr),
-    m_OscBufferNumber(0),
+    m_OscBufferNumber(1),
     m_dec_factor(_dec_factor)
 {
     uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset) +  osc0_baseaddr ;
