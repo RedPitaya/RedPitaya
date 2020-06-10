@@ -59,6 +59,7 @@ public:
 
     void prepare();
     bool next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,bool &_overFlow1 , bool &_overFlow2);
+    bool clearBuffer();
     void stop();
 
 private:

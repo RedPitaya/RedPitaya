@@ -280,7 +280,7 @@ try{
         _size2 = 0;
     }
 
-
+    m_Osc_ch->clearBuffer();
 
     //std::ofstream outfile2;
     //outfile2.open("/tmp/test.txt", std::ios_base::app);  
