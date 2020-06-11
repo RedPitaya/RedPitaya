@@ -142,7 +142,6 @@ $(WEBSOCKETPP_TAR): | $(DL)
 	curl -L $(WEBSOCKETPP_URL) -o $@
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
-	rm -rf $@
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
@@ -151,7 +150,6 @@ $(SOCKPROC_TAR): | $(DL)
 	curl -L $(SOCKPROC_URL) -o $@
 
 $(SOCKPROC_DIR): $(SOCKPROC_TAR)
-	rm -rf $@
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
@@ -159,7 +157,6 @@ $(LIBJSON_TAR): | $(DL)
 	curl -L $(LIBJSON_URL) -o $@
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
-	rm -rf $@
 	mkdir -p $@
 	unzip $< -d $(@D)
 	patch -d $@ -p1 < patches/libjson.patch
@@ -175,11 +172,10 @@ $(NGINX_TAR): | $(DL)
 	curl -L $(NGINX_URL) -o $@
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
-	rm -rf $@
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f apps-tools/nginx.conf $@/conf/
-	mkdir -p $@/conf/lua/
+	mkdir $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 
 $(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
@@ -400,9 +396,6 @@ APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
 
-<<<<<<< HEAD
-apps-tools: ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
-=======
 apps-tools: ecosystem updater network_manager scpi_manager
 
 ifeq ($(MODEL),Z20_250_12)
@@ -410,7 +403,6 @@ apps-tools:
 else
 apps-tools: jupyter_manager streaming_manager
 endif
->>>>>>> dev-250-12
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
@@ -425,18 +417,10 @@ scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 streaming_manager: api $(NGINX)
-<<<<<<< HEAD
-ifneq ($(MODEL),Z20_250_12)
-	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
-endif
-=======
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 
->>>>>>> dev-250-12
 
 network_manager: ecosystem
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -480,7 +464,6 @@ APP_SPECTRUMPRO_DIR = Applications/spectrumpro
 APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
 APP_BA_PRO_DIR 		= Applications/ba_pro
-
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
@@ -533,7 +516,7 @@ endif
 
 PRODUCTION_TEST_DIR = Test/production
 
-.PHONY: production_test clean
+.PHONY: production_test
 
 production_test:
 ifeq ($(ENABLE_PRODUCTION_TEST), 1)
@@ -542,24 +525,6 @@ ifeq ($(ENABLE_PRODUCTION_TEST), 1)
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 endif
 
-<<<<<<< HEAD
-clean: 	apps-free-clean
-	rm -rf $(DL)
-	if [ -d $(NGINX_DIR) ]; then make -i -C $(NGINX_DIR) clean; fi
-	if [ -d $(MONITOR_DIR) ]; then make -i -C $(MONITOR_DIR) clean;  fi
-	if [ -d $(MONITOR_OLD_DIR) ]; then make -i -C $(MONITOR_OLD_DIR) clean;  fi
-	if [ -d $(GENERATE_DIR) ]; then make -i -C $(GENERATE_DIR) clean;  fi
-	if [ -d $(ACQUIRE_DIR) ]; then make -i -C $(ACQUIRE_DIR) clean;  fi
-	if [ -d $(CALIB_DIR) ]; then make -i -C $(CALIB_DIR) clean;  fi
-	if [ -d $(SCPI_SERVER_DIR) ]; then make -i -C $(SCPI_SERVER_DIR) clean;  fi
-	if [ -d $(LIBRP2_DIR) ]; then make -i -C $(LIBRP2_DIR)    clean;  fi
-	if [ -d $(LIBRP_DIR) ]; then make -i -C $(LIBRP_DIR)    clean;  fi
-	if [ -d $(LIBRPAPP_DIR) ]; then make -i -C $(LIBRPAPP_DIR) clean;  fi
-	if [ -d $(LIBRPLCR_DIR) ]; then make -i -C $(LIBRPLCR_DIR) clean;  fi
-	if [ -d $(COMM_DIR) ]; then make -i -C $(COMM_DIR) clean;  fi
-	if [ -d $(GENERATE_DC_DIR) ]; then make -i -C $(GENERATE_DC_DIR) clean;  fi
-	if [ -d $(PRODUCTION_TEST_DIR) ]; then make -i -C $(PRODUCTION_TEST_DIR) clean;  fi
-=======
 clean:
 	# todo, remove downloaded libraries and symlinks
 	make -C $(NGINX_DIR) clean
@@ -580,4 +545,3 @@ clean:
 	make -C $(GENERATE_DC_DIR) clean
 	make -C $(PRODUCTION_TEST_DIR) clean
 	apps-free-clean
->>>>>>> dev-250-12
