@@ -17,7 +17,7 @@
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
         image: "../assets/images/development.png",
-        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github","activelearning", "fpgaexamples"]
+        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github","activelearning","jupyter"]
     }];
     var currentGroup = undefined;
 
@@ -38,13 +38,27 @@
                 url: '/get_info'
             })
             .done(function(result) {
-            		stem_ver = result['stem_ver'];
+                    stem_ver = result['stem_ver'];
+                    
             		if (stem_ver == "STEM 16"){
             			for (i = default_applications.length - 1; i >= 0; i -= 1){
-   							 if (default_applications[i]["id"] === 'marketplace' || default_applications[i]["id"] === 'fpgaexamples' || default_applications[i]["id"] === 'activelearning'){
+                                if (default_applications[i]["id"] === 'marketplace' 
+                                || default_applications[i]["id"] === 'fpgaexamples' 
+                                || default_applications[i]["id"] === 'activelearning'){
    							 	        default_applications.splice(i, 1);
    								}
    							}						
+                    };
+                    
+                    if (stem_ver == "STEM 250 12"){
+            			for (i = default_applications.length - 1; i >= 0; i -= 1){
+                                if (default_applications[i]["id"] === 'marketplace' 
+                                    || default_applications[i]["id"] === 'fpgaexamples' 
+                                    || default_applications[i]["id"] === 'jupyter' 
+                                    || default_applications[i]["id"] === 'activelearning'){
+   							 	        default_applications.splice(i, 1);
+   								}
+                            }		
             		};
 
             	    applications = [];
@@ -222,13 +236,13 @@
         { id: "applicationstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "http://www.redpitaya.com/Catalog", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
         { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
-        { id: "instructions", name: "Instructions", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://redpitaya.readthedocs.io/en/latest/index.html", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "instructions", name: "Documentation", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://redpitaya.readthedocs.io/en/latest/index.html", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "tutorials", name: "Create own WEB application", description: "RedPitaya tutorials.", url: "http://redpitaya.readthedocs.io/en/latest/developerGuide/software/webApps.html?highlight=own%20web%20application", image: "../assets/images/tutors.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "activelearning", name: "Circuits and electronics", description: "Active Learning with Red Pitaya", url: "http://red-pitaya-active-learning.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "fpgaexamples", name: "FPGA", description: "Red Pitaya FPGA examples", url: "http://red-pitaya-fpga-examples.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya.readthedocs.io/en/latest/teaching/teaching.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+//        { id: "fpgaexamples", name: "FPGA", description: "Red Pitaya FPGA examples", url: "http://red-pitaya-fpga-examples.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
@@ -268,6 +282,10 @@
         });
         $("#reboot_confirm").click(function(event) {
             $.get('/reboot');
+            setTimeout(function(){ window.close(); }, 1000);
+        });
+        $("#poweroff_confirm").click(function(event) {
+            $.get('/poweroff');
             setTimeout(function(){ window.close(); }, 1000);
         });
     });

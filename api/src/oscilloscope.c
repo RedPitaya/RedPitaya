@@ -14,7 +14,7 @@
 
 #include "common.h"
 #include "oscilloscope.h"
-
+#include "rp_cross.h"
 // The FPGA register structure for oscilloscope
 static volatile osc_control_t *osc_reg = NULL;
 
@@ -110,6 +110,14 @@ int osc_SetArmKeep(bool enable)
         return cmn_SetBits(&osc_reg->conf, 0x8, ARM_KEEP_MASK);
     else
         return cmn_UnsetBits(&osc_reg->conf, 0x8, ARM_KEEP_MASK);
+}
+
+int osc_GetArmKeep(bool *state){
+    return cmn_AreBitsSet(osc_reg->conf, 0x8 , ARM_KEEP_MASK, state);
+}
+
+int osc_GetBufferFillState(bool *state){
+    return cmn_AreBitsSet(osc_reg->conf, 0x10 , FILL_STATE_MASK, state);
 }
 
 int osc_GetTriggerState(bool *received)

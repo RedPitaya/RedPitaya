@@ -1,0 +1,28 @@
+<!--
+    The "write" attribute is used to pass the value on the i2c bus. May take the following values:
+        - value
+        - default
+        - none
+-->
+<configuration>
+    <bus_name>/dev/i2c-0</bus_name>
+    <device_on_bus address="0x55"/>
+    <reg_set>
+        <register address="0x07" value="0xa0" write="none"      default="0xa0" decription="High Speed/N1 Deviders"/>
+        <register address="0x08" value="0xff" write="value"      default="0xc2" decription="Ref freq[37:32]"/>
+        <register address="0x09" value="0xec" write="value"      default="0xec" decription="Ref freq[31:24]"/>
+        <register address="0x0a" value="0xfe" write="value"      default="0xfe" decription="Ref freq[23:16]"/>
+        <register address="0x0b" value="0xb6" write="value"      default="0xb6" decription="Ref freq[15:8]"/>
+        <register address="0x0c" value="0x8c" write="value"      default="0x8c" decription="Ref freq[7:0]"/>
+
+        <register address="0x0d" value="0x07" write="none"      default="0x07" decription="High Speed/N1 Deviders PPM"/>
+        <register address="0x0e" value="0xc2" write="none"      default="0xc2" decription="Ref freq[37:32] PPM"/>
+        <register address="0x0f" value="0xc0" write="none"      default="0xc0" decription="Ref freq[31:24] PPM"/>
+        <register address="0x10" value="0x00" write="none"      default="0x00" decription="Ref freq[23:16] PPM"/>
+        <register address="0x11" value="0x00" write="none"      default="0x00" decription="Ref freq[15:8] PPM"/>
+        <register address="0x12" value="0x00" write="none"      default="0x00" decription="Ref freq[7:0] PPM"/>
+        
+        <register address="0x87" value="0x00" write="none"      default="0x00" decription="Reset/Freeze/Memory Control"/>
+        <register address="0x89" value="0x08" write="none"      default="0x08" decription="Freeze DCO"/>
+    </reg_set>
+</configuration>

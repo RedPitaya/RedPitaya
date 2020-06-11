@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-#include "redpitaya/rp.h"
+#include "rp_cross.h"
 #include "common.h"
 #include "generate.h"
 #include "calib.h"
@@ -101,6 +101,7 @@ int calib_ReadParams(rp_calib_params_t *calib_params)
 }
 
 
+
 /*
  * Initialize calibration parameters to default values.
 
@@ -159,12 +160,17 @@ void calib_SetToZero() {
     calib.fe_ch1_hi_offs = 0;
     calib.fe_ch2_hi_offs = 0;
 
+    float coff = 1;
+#ifdef Z20 
+    coff = 0.5;
+#endif
+
     calib.be_ch1_fs      = cmn_CalibFullScaleFromVoltage(1);
     calib.be_ch2_fs      = cmn_CalibFullScaleFromVoltage(1);
-    calib.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20);
-    calib.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(1);
-    calib.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20);
-    calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(1);
+    calib.fe_ch1_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
+    calib.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(coff );
+    calib.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
+    calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(coff );
 }
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
@@ -507,4 +513,21 @@ int calib_setCachedParams() {
     calib = failsafa_params;
 
     return 0;
+}
+
+int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain){
+    if (gain == RP_HIGH) {
+        return (channel == RP_CH_1 ? calib.fe_ch1_hi_offs : calib.fe_ch2_hi_offs);
+    }
+    else {
+        return (channel == RP_CH_1 ? calib.fe_ch1_lo_offs : calib.fe_ch2_lo_offs);
+    }
+}
+
+int32_t calib_getGenOffset(rp_channel_t channel){
+    return (channel == RP_CH_1 ?  calib.be_ch1_dc_offs: calib.be_ch2_dc_offs);
+}
+
+uint32_t calib_getGenScale(rp_channel_t channel){
+    return (channel == RP_CH_1 ?  calib.be_ch1_fs: calib.be_ch2_fs);
 }

@@ -94,7 +94,7 @@ int WriteCalib(bool factory)
 {
     eepromWpData_t eepromData;
     const char delimiters[] = " ,:;\t";
-    char buf[255];
+    char buf[512];
     int ret = 0;
 
     /* Read current eeprom data */

@@ -1,0 +1,13 @@
+/*
+ * System changes should be common to all FPGA images
+*/
+
+/include/ "memory.dtsi"
+/include/ "ethernet.dtsi"
+/include/ "i2c0.dtsi"
+/include/ "spi1.dtsi"
+/include/ "usb0.dtsi"
+/include/ "clkc.dtsi"
+/include/ "xadc.dtsi"
+/include/ "led-system.dtsi"
+/include/ "uio-api.dtsi"

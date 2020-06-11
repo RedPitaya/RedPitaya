@@ -470,17 +470,17 @@ int main(int argc, char *argv[]) {
             /* calculating num of samples */
             size = round( ( min_periodes * 125e6 ) / ( frequency[fr] * g_dec[f] ) );
 
-            /* Filter parameters for signal Acqusition */
+            /* Filter parameters for signal Acquisition */
             t_params[EQUAL_FILT_PARAM] = equal;
             t_params[SHAPE_FILT_PARAM] = shaping;
 
-            /* Setting of parameters in Oscilloscope main module for signal Acqusition */
+            /* Setting of parameters in Oscilloscope main module for signal Acquisition */
             if(rp_set_params((float *)&t_params, PARAMS_NUM) < 0) {
                 fprintf(stderr, "rp_set_params() failed!\n");
                 return -1;
             }
 
-            /* ADC Data acqusition - saved to s */
+            /* ADC Data Acquisition - saved to s */
             if (acquire_data( s, size ) < 0) {
                 printf("error acquiring data @ acquire_data\n");
                 return -1;

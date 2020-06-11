@@ -20,11 +20,19 @@
 extern "C" {
 #endif
 
-
 #include <stdint.h>
 #include <stdbool.h>
 
-#define ADC_BUFFER_SIZE             (16*1024)
+#define RP_MODEL "Z10"
+#define ADC_SAMPLE_RATE 125e6
+#define ADC_BITS 14
+#define ADC_REG_BITS 14  
+#define ADC_BITS_MASK 0x3FFF
+#define ADC_REG_BITS_MASK 0x3FFF
+#define DAC_FREQUENCY 125e6
+
+#define ADC_BUFFER_SIZE         (16 * 1024)
+#define BUFFER_LENGTH           (16 * 1024)
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -79,6 +87,8 @@ extern "C" {
 #define RP_EFWB   22
 /** Extension module not connected */
 #define RP_EMNC   23
+/** Command not supported */
+#define RP_NOTS   24
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
@@ -173,20 +183,30 @@ typedef enum {
  * Type representing Input/Output channels.
  */
 typedef enum {
-    RP_CH_1, //!< Channel A
-    RP_CH_2  //!< Channel B
+    RP_CH_1,    //!< Channel A
+    RP_CH_2     //!< Channel B
 } rp_channel_t;
+
+
+/**
+ * Type representing Input/Output channels in trigger.
+ */
+typedef enum {
+    RP_T_CH_1,    //!< Channel A
+    RP_T_CH_2,    //!< Channel B
+    RP_T_CH_EXT,  
+} rp_channel_trigger_t;
 
 /**
  * Type representing acquire signal sampling rate.
  */
 typedef enum {
-    RP_SMP_125M,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-    RP_SMP_15_625M,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-    RP_SMP_1_953M,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-    RP_SMP_122_070K, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-    RP_SMP_15_258K,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-    RP_SMP_1_907K    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_SMP_125M     = 0,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    RP_SMP_15_625M  = 1,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    RP_SMP_1_953M   = 2,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    RP_SMP_122_070K = 3, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    RP_SMP_15_258K  = 4,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    RP_SMP_1_907K   = 5   //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_sampling_rate_t;
 
 
@@ -259,7 +279,17 @@ typedef struct {
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_Init();
+
+int rp_Init(void);
+
+/**
+ * Initializes the library. It must be called first, before any other library method.
+ * @param reset Reset to default configuration on api
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+
+int rp_InitReset(bool reset);
 
 int rp_CalibInit();
 
@@ -637,6 +667,22 @@ int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val);
 int rp_AcqSetArmKeep(bool enable);
 
 /**
+ * Gets status of continous acquirement even after trigger has happened.
+ * @param state Returns status
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetArmKeep(bool* state);
+
+/**
+ * Indicates whether the ADC buffer was full of data. The length of the buffer is determined by the delay. By default, the delay is half the buffer.
+ * @param state Returns status
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetBufferFillState(bool* state);
+
+/**
  * Sets the decimation used at acquiring signal. There is only a set of pre-defined decimation
  * values which can be specified. See the #rp_acq_decimation_t enum values.
  * @param decimation Specify one of pre-defined decimation values
@@ -786,7 +832,7 @@ int rp_AcqGetPreTriggerCounter(uint32_t* value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage);
+int rp_AcqSetTriggerLevel(rp_channel_trigger_t channel, float voltage);
 
 /**
  * Gets currently set trigger threshold value in volts
@@ -794,7 +840,7 @@ int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetTriggerLevel(float* voltage);
+int rp_AcqGetTriggerLevel(rp_channel_trigger_t channel, float* voltage);
 
 /**
  * Sets the trigger threshold hysteresis value in volts.
@@ -1273,6 +1319,76 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenTrigger(uint32_t channel);
+
+/**
+* Sets the DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B for witch we want to set protection.
+* @param enable Flag enabling protection mode.total
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetEnableTempProtection(rp_channel_t channel, bool enable);
+
+/**
+* Get status of DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B for witch we want to set protection.
+* @param enable Flag return current status.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetEnableTempProtection(rp_channel_t channel, bool *enable);
+
+/**
+* Resets the flag indicating that the DAC is overheated. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  New status for latch trigger.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetLatchTempAlarm(rp_channel_t channel, bool status);
+
+/**
+* Returns the status that there was an overheat. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  State of latch trigger.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status);
+
+/**
+* Returns the current DAC overheat status in real time. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  Get current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status);
+
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param enable return current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetPllControlEnable(bool *enable);
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param enable Flag enabling PLL control.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetPllControlEnable(bool enable);
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param status Get current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetPllControlLocked(bool *status);
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 

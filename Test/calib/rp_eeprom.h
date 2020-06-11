@@ -18,6 +18,40 @@
 
 #include <stdbool.h>
 
+#ifdef Z20_250_12
+
+#define PACK_ID 2
+typedef enum {
+    eCalPar_GEN_CH1_G_1,
+    eCalPar_GEN_CH2_G_1,
+    eCalPar_GEN_CH1_OFF_1,
+    eCalPar_GEN_CH2_OFF_1,
+    eCalPar_GEN_CH1_G_5,
+    eCalPar_GEN_CH2_G_5,
+    eCalPar_GEN_CH1_OFF_5,
+    eCalPar_GEN_CH2_OFF_5,
+    eCalPar_OSC_CH1_G_1_AC,
+    eCalPar_OSC_CH2_G_1_AC,
+    eCalPar_OSC_CH1_OFF_1_AC,
+    eCalPar_OSC_CH2_OFF_1_AC,
+    eCalPar_OSC_CH1_G_1_DC,
+    eCalPar_OSC_CH2_G_1_DC,
+    eCalPar_OSC_CH1_OFF_1_DC,
+    eCalPar_OSC_CH2_OFF_1_DC,
+    eCalPar_OSC_CH1_G_20_AC,
+    eCalPar_OSC_CH2_G_20_AC,
+    eCalPar_OSC_CH1_OFF_20_AC,
+    eCalPar_OSC_CH2_OFF_20_AC,
+    eCalPar_OSC_CH1_G_20_DC,
+    eCalPar_OSC_CH2_G_20_DC,
+    eCalPar_OSC_CH1_OFF_20_DC,
+    eCalPar_OSC_CH2_OFF_20_DC,
+    eCalParEnd
+} calPar_t;
+
+#else
+
+#define PACK_ID 1
 typedef enum {
     eCalPar_FE_CH1_FS_G_HI,
     eCalPar_FE_CH2_FS_G_HI,
@@ -29,11 +63,15 @@ typedef enum {
     eCalPar_BE_CH2_FS,
     eCalPar_BE_CH1_DC_offs,
     eCalPar_BE_CH2_DC_offs,
-    eCalParMagic,
+    eCalParMagic,   // needed for compatibility with a very old version of calibration parameters
     eCalPar_FE_CH1_DC_offs_HI,
     eCalPar_FE_CH2_DC_offs_HI,
     eCalParEnd
 } calPar_t;
+
+#endif
+
+
 
 typedef struct {
     char dataStructureId;

@@ -13,6 +13,8 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
+MODEL ?= Z10
+
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
@@ -36,21 +38,25 @@ TARGET=$(SHARED_LIB) $(STATIC_LIB)
 
 # List of compiled object files
 OBJECTS =	common.o \
-		kiss_fft/kiss_fft.c \
-		kiss_fft/kiss_fftr.c \
+		kiss_fft/kiss_fft.o \
+		kiss_fft/kiss_fftr.o \
 		oscilloscope.o \
 		acq_handler.o \
 		generate.o \
 		gen_handler.o \
-		calib.o \
 		spec_dsp.o \
 		spec_fpga.o \
 		rp.o
-
+		
+ifeq ($(MODEL),Z20_250_12)
+	OBJECTS += calib_250_12.o
+else
+	OBJECTS += calib.o
+endif
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s
+CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s -D$(MODEL)
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../include
 LDFLAGS=-shared -Wl,--version-script=exportmap
@@ -58,6 +64,12 @@ LDFLAGS=-shared -Wl,--version-script=exportmap
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBS=-lm -lpthread
+
+ifeq ($(MODEL),Z20_250_12)
+INCLUDE += -I$(INSTALL_DIR)/include/api250-12
+LDFLAGS += -L$(INSTALL_DIR)/lib 
+LDFLAGS += -lrp-i2c
+endif 
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
@@ -74,7 +86,7 @@ all: $(TARGET)
 # objects (.o) files.
 $(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
 	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
 
 # Makefile target with rules how to link executable for each target from
 # $(SHARED_LIB) list.
@@ -96,4 +108,13 @@ install:
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/include
 	cp  $(TARGET) $(INSTALL_DIR)/lib
-	cp -r ../include/redpitaya $(INSTALL_DIR)/include
+	cp ../include/redpitaya/version.h $(INSTALL_DIR)/include/version.h
+ifeq ($(MODEL),Z10)
+	cp ../include/redpitaya/rp.h $(INSTALL_DIR)/include/rp.h
+endif
+ifeq ($(MODEL),Z20)
+	cp ../include/redpitaya/rp_Z20.h $(INSTALL_DIR)/include/rp.h
+endif
+ifeq ($(MODEL),Z20_250_12)
+	cp ../include/redpitaya/rp_Z20_250_12.h $(INSTALL_DIR)/include/rp.h
+endif

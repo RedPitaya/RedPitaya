@@ -2,7 +2,7 @@
 DL ?= dl
 
 INSTALL_DIR ?= build
-
+ENABLE_LICENSING ?= 0
 ################################################################################
 # versioning system
 ################################################################################
@@ -19,11 +19,22 @@ export VERSION
 #
 ################################################################################
 
+# MODEL USE FOR determine kind of assembly
+# USED parameters:
+# Z10 - for Redpitaya 125-14
+# Z20 - for Redpitaya 122-16
+# Z20_250_12 - for RepPitaya 250-12
 # Production test script
-FPGA_MODEL ?= Z10
+MODEL ?= Z10
 ENABLE_PRODUCTION_TEST ?= 0
 
-all:  sdr api nginx scpi examples rp_communication apps-tools apps-pro apps-free-vna production_test
+all: api nginx examples  apps-tools apps-pro  production_test startupsh scpi
+
+ifeq ($(MODEL),Z20_250_12)
+all: 
+else
+all: sdr apps-free-vna rp_communication
+endif
 
 $(DL):
 	mkdir -p $@
@@ -37,16 +48,25 @@ $(INSTALL_DIR):
 
 LIBRP_DIR       = api
 LIBRP2_DIR      = api2
+LIBRP250_12_DIR = api-250-12
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
-.PHONY: api api2 librp librp1
+.PHONY: api api2 librp librp1 librp250_12
 .PHONY: librpapp liblcr_meter
 
+api: librp
+
+api2: librp2
+
+ifeq ($(MODEL),Z20_250_12)
+librp: librp250_12
+else
 librp:
+endif
 	$(MAKE) -C $(LIBRP_DIR) clean
-	$(MAKE) -C $(LIBRP_DIR)
+	$(MAKE) -C $(LIBRP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 librp1:
@@ -59,12 +79,16 @@ librp2:
 	$(MAKE) -C $(LIBRP2_DIR)
 	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+librp250_12:
+	$(MAKE) -C $(LIBRP250_12_DIR) clean
+	$(MAKE) -C $(LIBRP250_12_DIR)
+	$(MAKE) -C $(LIBRP250_12_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ifdef ENABLE_LICENSING
 
-api: librp librpapp liblcr_meter
+api: librpapp liblcr_meter
 
-librpapp:
+librpapp: api
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -73,14 +97,8 @@ liblcr_meter:
 	$(MAKE) -C $(LIBRPLCR_DIR) clean
 	$(MAKE) -C $(LIBRPLCR_DIR)
 	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-else
-
-api: librp
-
 endif
 
-api2: librp2
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -93,6 +111,7 @@ NGINX_DIR       = Bazaar/nginx
 NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
+STARTUPSH       = $(INSTALL_DIR)/sbin/startup.sh
 
 WEBSOCKETPP_TAG = 0.7.0
 LUANGINX_TAG    = v0.10.7
@@ -193,6 +212,14 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 
 nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 
+startupsh:
+ifeq ($(MODEL),Z20_250_12)
+	cp -f patches/startup/startup.sh.Z250_12 $(STARTUPSH)
+else
+	cp -f patches/startup/startup.sh $(STARTUPSH)
+endif
+
+
 ################################################################################
 # SCPI server
 ################################################################################
@@ -215,7 +242,7 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 
 scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR)
+	$(MAKE) -C $(SCPI_SERVER_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
@@ -233,42 +260,53 @@ sdr: | $(DL)
 ifeq ($(FPGA_MODEL),Z10)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
 	mkdir -p $(INSTALL_DIR)/www/apps
-	unzip $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
+	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 endif
 
 ################################################################################
 # Red Pitaya tools
 ################################################################################
 
-LCR_DIR         = Test/lcr
-BODE_DIR        = Test/bode
-MONITOR_DIR     = Test/monitor
-MONITOR_OLD_DIR = Test/monitor_old
-GENERATE_DIR    = Test/generate
-ACQUIRE_DIR     = Test/acquire
-CALIB_DIR       = Test/calib
-CALIBRATE_DIR   = Test/calibrate
-GENERATOR_DIR	= Test/generate
-SPECTRUM_DIR    = Test/spectrum
-COMM_DIR        = Examples/Communication/C
-XADC_DIR        = Test/xadc
-LA_TEST_DIR     = api2/test
-GENERATE_DC_DIR	= generate_DC
+LCR_DIR            = Test/lcr
+BODE_DIR           = Test/bode
+MONITOR_DIR        = Test/monitor
+MONITOR_OLD_DIR    = Test/monitor_old
+ACQUIRE_DIR        = Test/acquire
+ACQUIRE2_DIR       = Test/acquire2
+CALIB_DIR          = Test/calib
+CALIBRATE_DIR      = Test/calibrate
+GENERATOR_DIR	   = Test/generate
+SPECTRUM_DIR       = Test/spectrum
+COMM_DIR           = Examples/Communication/C
+XADC_DIR           = Test/xadc
+LA_TEST_DIR        = api2/test
+GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest generate_DC
+.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest
+.PHONY: acquire2 
 
-examples: lcr bode monitor monitor_old generator acquire calib generate_DC spectrum
+examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2 generator
+
+ifeq ($(MODEL),Z20_250_12)
+examples: rp_i2c_tool
+endif
 # calibrate laboardtest
+
+
+rp_i2c_tool:
+	$(MAKE) -C $(LIBRP250_12_DIR) clean
+	$(MAKE) -C $(LIBRP250_12_DIR) tool
+	$(MAKE) -C $(LIBRP250_12_DIR) install_tool INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr:
 	$(MAKE) -C $(LCR_DIR) clean
-	$(MAKE) -C $(LCR_DIR)
+	$(MAKE) -C $(LCR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 bode:
 	$(MAKE) -C $(BODE_DIR) clean
-	$(MAKE) -C $(BODE_DIR)
+	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor:
@@ -281,23 +319,28 @@ monitor_old:
 	$(MAKE) -C $(MONITOR_OLD_DIR)
 	$(MAKE) -C $(MONITOR_OLD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-generator:
-	$(MAKE) -C $(GENERATOR_DIR) clean
-	$(MAKE) -C $(GENERATOR_DIR)
+generator: api
+	$(MAKE) -C $(GENERATOR_DIR) clean 
+	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-acquire:
-	$(MAKE) -C $(ACQUIRE_DIR)
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+# remove old tool
+#acquire: api
+#	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL)
+#	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+acquire2: api
+	$(MAKE) -C $(ACQUIRE2_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(ACQUIRE2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
-	$(MAKE) -C $(CALIB_DIR)
+	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-spectrum:
+spectrum: api
 	$(MAKE) -C $(SPECTRUM_DIR) clean
-	$(MAKE) -C $(SPECTRUM_DIR)
+	$(MAKE) -C $(SPECTRUM_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calibrate: api
@@ -314,9 +357,11 @@ rp_communication:
 	make -C $(COMM_DIR)
 
 generate_DC: api
-	$(MAKE) -C $(GENERATE_DC_DIR)
+ifeq ($(ENABLE_PRODUCTION_TEST), 1)
+	$(MAKE) -C $(GENERATE_DC_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp $(GENERATE_DC_DIR)/generate_DC $(INSTALL_DIR)/bin/
 	cp $(GENERATE_DC_DIR)/generate_DC_LO $(INSTALL_DIR)/bin/
+endif
 
 ################################################################################
 # Red Pitaya ecosystem and tools
@@ -355,7 +400,17 @@ APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
 
+<<<<<<< HEAD
 apps-tools: ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
+=======
+apps-tools: ecosystem updater network_manager scpi_manager
+
+ifeq ($(MODEL),Z20_250_12)
+apps-tools: 
+else
+apps-tools: jupyter_manager streaming_manager
+endif
+>>>>>>> dev-250-12
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
@@ -370,11 +425,18 @@ scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 streaming_manager: api $(NGINX)
+<<<<<<< HEAD
 ifneq ($(MODEL),Z20_250_12)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
 endif
+=======
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+
+>>>>>>> dev-250-12
 
 network_manager: ecosystem
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -422,11 +484,20 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
-apps-pro: scopegenpro spectrumpro lcr_meter la_pro ba_pro
+apps-pro: scopegenpro spectrumpro
+ifeq ($(MODEL),Z20_250_12)
+apps-pro:
+else
+ifeq ($(MODEL),Z20)
+apps-pro:
+else
+apps-pro: lcr_meter la_pro ba_pro
+endif
+endif
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
-	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrumpro: api $(NGINX)
@@ -435,11 +506,9 @@ spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
-ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
 	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
 
 la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
@@ -447,11 +516,9 @@ la_pro: api api2 $(NGINX)
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ba_pro: api $(NGINX)
-ifeq ($(FPGA_MODEL),Z10)
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean
 	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
 
 else
 
@@ -471,10 +538,11 @@ PRODUCTION_TEST_DIR = Test/production
 production_test:
 ifeq ($(ENABLE_PRODUCTION_TEST), 1)
 	$(MAKE) -C $(PRODUCTION_TEST_DIR) clean
-	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(FPGA_MODEL)
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 endif
 
+<<<<<<< HEAD
 clean: 	apps-free-clean
 	rm -rf $(DL)
 	if [ -d $(NGINX_DIR) ]; then make -i -C $(NGINX_DIR) clean; fi
@@ -491,3 +559,25 @@ clean: 	apps-free-clean
 	if [ -d $(COMM_DIR) ]; then make -i -C $(COMM_DIR) clean;  fi
 	if [ -d $(GENERATE_DC_DIR) ]; then make -i -C $(GENERATE_DC_DIR) clean;  fi
 	if [ -d $(PRODUCTION_TEST_DIR) ]; then make -i -C $(PRODUCTION_TEST_DIR) clean;  fi
+=======
+clean:
+	# todo, remove downloaded libraries and symlinks
+	make -C $(NGINX_DIR) clean
+	make -C $(MONITOR_DIR) clean
+	make -C $(MONITOR_OLD_DIR) clean
+	make -C $(GENERATOR_DIR) clean
+	make -C $(ACQUIRE_DIR) clean
+	make -C $(GENERATOR250_DIR) clean
+	make -C $(ACQUIRE250_DIR) clean
+	make -C $(CALIB_DIR) clean
+	make -C $(SCPI_SERVER_DIR) clean
+	make -C $(LIBRP250_12_DIR)    clean
+	make -C $(LIBRP2_DIR)    clean
+	make -C $(LIBRP_DIR)    clean
+	make -C $(LIBRPAPP_DIR) clean
+	make -C $(LIBRPLCR_DIR) clean
+	make -C $(COMM_DIR) clean
+	make -C $(GENERATE_DC_DIR) clean
+	make -C $(PRODUCTION_TEST_DIR) clean
+	apps-free-clean
+>>>>>>> dev-250-12

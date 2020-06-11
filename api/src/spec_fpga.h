@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 
+
 /* Base address */
 #define SPECTR_FPGA_BASE_ADDR 0x00100000
 #define SPECTR_FPGA_BASE_SIZE 0x00030000

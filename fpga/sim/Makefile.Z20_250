@@ -1,0 +1,82 @@
+#ALTERA_PATH=$(HOME)/intelFPGA
+#XILINX_PATH=/opt/Xilinx
+
+#MODELSIM_BIN=$(ALTERA_PATH)/16.1/modelsim_ase/bin
+
+PATH_LIB=$(XILINX_VIVADO)/data/verilog/src
+PATH_SIP=$(XILINX_VIVADO)/data/secureip
+PATH_RTL=../rtl_250
+PATH_TBN=../tbn
+PATH_PRJ=../prj/v0.94_250
+
+# secure IP
+LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
+    $(PATH_LIB)/unisims/EFUSE_USR.v \
+    $(PATH_LIB)/unisims/XADC.v \
+    $(PATH_LIB)/unisims/PLLE2_ADV.v \
+    $(PATH_LIB)/unisims/BUFG.v \
+    $(PATH_LIB)/unisims/IBUFDS.v \
+    $(PATH_LIB)/unisims/OBUFDS.v \
+    $(PATH_LIB)/unisims/IOBUF.v \
+    $(PATH_LIB)/unisims/IDDR.v \
+    $(PATH_LIB)/unisims/ODDR.v \
+    $(PATH_LIB)/unisims/OSERDESE2.v \
+    $(PATH_LIB)/unisims/ISERDESE2.v \
+    $(PATH_LIB)/unisims/BUFIO.v \
+    $(PATH_LIB)/unisims/BUFR.v \
+    $(PATH_LIB)/unisims/IDELAYCTRL.v \
+    $(PATH_LIB)/unisims/IDELAYE2.v \
+    $(PATH_LIB)/retarget/IBUFGDS.v \
+    $(PATH_LIB)/glbl.v
+
+SIP=$(PATH_SIP)/oserdese2/oserdese2_002.vp \
+    $(PATH_SIP)/iserdese2/iserdese2_002.vp
+
+# RTL files
+RTL_PKG =$(wildcard $(PATH_RTL)/*_pkg.sv)
+RTL_PKG+=$(wildcard $(PATH_RTL)/*/*_pkg.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*.v)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*/*.sv)
+RTL_SRC+=$(wildcard $(PATH_RTL)/*/*.v)
+RTL_DIF =$(filter-out $(RTL_PKG),$(RTL_SRC))
+RTL = $(RTL_PKG) $(RTL_DIF)
+
+# testbench files
+TBN_PKG =$(wildcard $(PATH_TBN)/*_pkg.sv)
+TBN_SRC =$(wildcard $(PATH_TBN)/*.sv)
+TBN_DIF =$(filter-out $(TBN_PKG),$(TBN_SRC))
+TBN = $(TBN_PKG) $(TBN_DIF)
+
+# project files
+PRJ =$(wildcard $(PATH_PRJ)/*/*.sv)
+PRJ+=$(wildcard $(PATH_PRJ)/*/*.v)
+
+# targets
+TGT=$(RTL:.sv=)
+
+# simulation configuration
+CFG  = -postsimdataflow
+
+# simulation script
+TCL  = ;
+#TCL  = set WildcardFilter [lsearch -not -all -inline $$WildcardFilter Memory];
+#TCL += log -r /*;
+#TCL += run -all; quit;
+
+.PHONY: compile 
+
+all: $(TGT)
+
+compile: $(LIB) $(SIP) $(RTL) $(TBN) $(PRJ)
+	vlib work
+	vlog +acc $(LIB) $(SIP) $(RTL) $(TBN) $(PRJ)
+
+%_tb: compile
+	vsim $(CFG) -do '$(TCL)' $@
+ifdef WAV
+	vsim -do 'dataset open vsim.wlf; do $@.tcl'
+endif
+
+clean:
+	rm -rf work *.vcd

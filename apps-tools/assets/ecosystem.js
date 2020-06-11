@@ -101,11 +101,25 @@
     	return revision;
     }
 
+
+
     var printRpVersion = function(msg) {
         var info = msg;
         version = info['version'];
         revision = info['revision'];
         stem_ver = info['stem_ver'];
+        if (stem_ver === "STEM 10"){
+            stem_ver = "STEMlab 125-10"            
+        } else if (stem_ver === "STEM 14"){
+            stem_ver = "STEMlab 125-14"
+        } else if (stem_ver === "STEM 16"){
+            stem_ver = "SDRlab 122-16"
+        } else if (stem_ver === "STEM 250 12"){
+            stem_ver = "SIGNALlab 250-12"
+        } else {
+            stem_ver = "unknown"
+        }
+
         $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + "</a>");
 
         BrowserChecker.isOnline(function()

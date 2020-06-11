@@ -1,0 +1,91 @@
+--- a/drivers/i2c/busses/i2c-cadence.c	2017-10-26 13:59:42.000000000 +0700
++++ b/drivers/i2c/busses/i2c-cadence.c	2020-03-18 11:48:38.549403566 +0700
+@@ -611,6 +611,7 @@
+ {
+ 	unsigned int ctrl_reg;
+ 	unsigned int isr_status;
++	unsigned long flags;
+ 
+ 	id->p_recv_buf = id->p_msg->buf;
+ 	id->recv_count = id->p_msg->len;
+@@ -651,15 +652,17 @@
+ 		cdns_i2c_writereg(id->recv_count, CDNS_I2C_XFER_SIZE_OFFSET);
+ 	}
+ 
++	/* Set the slave address in address register - triggers operation */
++	cdns_i2c_writereg(CDNS_I2C_ENABLED_INTR_MASK, CDNS_I2C_IER_OFFSET);
++	local_irq_save(flags);
++	cdns_i2c_writereg(id->p_msg->addr & CDNS_I2C_ADDR_MASK,
++						CDNS_I2C_ADDR_OFFSET);
+ 	/* Clear the bus hold flag if bytes to receive is less than FIFO size */
+ 	if (!id->bus_hold_flag &&
+ 		((id->p_msg->flags & I2C_M_RECV_LEN) != I2C_M_RECV_LEN) &&
+ 		(id->recv_count <= CDNS_I2C_FIFO_DEPTH))
+ 			cdns_i2c_clear_bus_hold(id);
+-	/* Set the slave address in address register - triggers operation */
+-	cdns_i2c_writereg(id->p_msg->addr & CDNS_I2C_ADDR_MASK,
+-						CDNS_I2C_ADDR_OFFSET);
+-	cdns_i2c_writereg(CDNS_I2C_ENABLED_INTR_MASK, CDNS_I2C_IER_OFFSET);
++	local_irq_restore(flags);
+ }
+ 
+ /**
+@@ -719,10 +722,9 @@
+ 	if (!id->bus_hold_flag && !id->send_count)
+ 		cdns_i2c_clear_bus_hold(id);
+ 	/* Set the slave address in address register - triggers operation. */
++	cdns_i2c_writereg(CDNS_I2C_ENABLED_INTR_MASK, CDNS_I2C_IER_OFFSET);
+ 	cdns_i2c_writereg(id->p_msg->addr & CDNS_I2C_ADDR_MASK,
+ 						CDNS_I2C_ADDR_OFFSET);
+-
+-	cdns_i2c_writereg(CDNS_I2C_ENABLED_INTR_MASK, CDNS_I2C_IER_OFFSET);
+ }
+ 
+ /**
+@@ -1187,8 +1189,7 @@
+  */
+ static int __maybe_unused cdns_i2c_runtime_suspend(struct device *dev)
+ {
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct cdns_i2c *xi2c = platform_get_drvdata(pdev);
++	struct cdns_i2c *xi2c = dev_get_drvdata(dev);
+ 
+ 	clk_disable(xi2c->clk);
+ 
+@@ -1225,8 +1226,7 @@
+  */
+ static int __maybe_unused cdns_i2c_runtime_resume(struct device *dev)
+ {
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct cdns_i2c *xi2c = platform_get_drvdata(pdev);
++	struct cdns_i2c *xi2c = dev_get_drvdata(dev);
+ 	int ret;
+ 
+ 	ret = clk_enable(xi2c->clk);
+@@ -1313,9 +1313,6 @@
+ 		return 0;
+ 	}
+ 
+-	dev_dbg(&pdev->dev, "using scl-gpio %d and sda-gpio %d for recovery\n",
+-			rinfo->sda_gpio, rinfo->scl_gpio);
+-
+ 	rinfo->prepare_recovery     = cdns_i2c_prepare_recovery;
+ 	rinfo->unprepare_recovery   = cdns_i2c_unprepare_recovery;
+ 	rinfo->recover_bus          = i2c_generic_gpio_recovery;
+@@ -1442,13 +1439,13 @@
+ 
+ 	cdns_i2c_init(id);
+ 
+-	dev_info(&pdev->dev, "%u kHz mmio %08lx irq %d\n",
+-		 id->i2c_clk / 1000, (unsigned long)r_mem->start, id->irq);
+-
+ 	ret = i2c_add_adapter(&id->adap);
+ 	if (ret < 0)
+ 		goto err_clk_dis;
+ 
++	dev_info(&pdev->dev, "%u kHz mmio %08lx irq %d\n",
++		 id->i2c_clk / 1000, (unsigned long)r_mem->start, id->irq);
++
+ 	return 0;
+ 
+ err_clk_dis:

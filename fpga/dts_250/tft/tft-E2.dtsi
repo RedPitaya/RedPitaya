@@ -1,0 +1,83 @@
+/*
+ * TFT controller pinctrl device tree
+ */
+
+&i2c0 {
+	status = "disabled";
+};
+
+&spi1 {
+	spidev@0 {
+		status = "disabled";
+	};
+};
+
+&pinctrl0 {
+	pinctrl_spi1_tft: spi1_tft {
+                // SPI1 for TFT and touch
+                // SPI1_MOSI - MIO[10]
+                // SPI1_MISO - MIO[11]
+                // SPI1_SCLK - MIO[12]
+                // SPI1_SSn0 - MIO[13]
+                // SPI1_SSN1 - MIO[50]
+		mux_spi {
+			function = "spi1";
+			groups = "spi1_0_grp";
+		};
+                mux_ss {
+			function = "spi1_ss";
+			groups   = "spi1_0_ss0_grp", "spi1_3_ss1_grp";
+                };
+		conf_spi {
+			pins = "MIO10", "MIO11", "MIO12";
+			slew-rate = <1>;
+			bias-disable;
+			io-standard = <3>;  // LVCMOS33
+		};
+		conf_ss0 {
+			pins = "MIO13";
+			slew-rate = <0>;
+			bias-pull-up;
+			io-standard = <3>;  // LVCMOS33
+		};
+		conf_ss {
+			pins = "MIO50";
+			slew-rate = <0>;
+			bias-pull-up;
+			io-standard = <2>;  // LVCMOS25
+		};
+                // TFT D/C (data/control)
+		mux_tft_dc {
+			function = "gpio0";
+			groups = "gpio0_8_grp";
+		};
+		conf_tft_dc {
+			pins = "MIO8";
+			bias-disable;
+			slew-rate = <0>;
+			io-standard = <3>;  // LVCMOS33
+		};
+		// TFT reset
+		mux_tft_reset {
+			function = "gpio0";
+			groups = "gpio0_51_grp";
+		};
+		conf_tft_reset {
+			pins = "MIO51";
+			bias-pull-up;
+			slew-rate = <0>;
+			io-standard = <3>;  // LVCMOS33
+		};
+		// touch pendown
+		mux_touch_pendow {
+			function = "gpio0";
+			groups = "gpio0_9_grp";
+		};
+		conf_touch_pendow {
+			pins = "MIO9";
+			bias-disable;
+			slew-rate = <0>;
+			io-standard = <3>;  // LVCMOS33
+		};
+	};
+};

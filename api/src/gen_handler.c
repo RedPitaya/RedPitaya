@@ -18,6 +18,10 @@
 #include "generate.h"
 #include "gen_handler.h"
 
+#ifdef Z20_250_12
+#include "rp-i2c-max7311-c.h"
+#endif
+
 // global variables
 // TODO: should be organized into a system status structure
 float         chA_amplitude            = 1, chB_amplitude            = 1;
@@ -31,6 +35,13 @@ uint32_t      chA_burstPeriod          = 0, chB_burstPeriod          = 0;
 rp_waveform_t chA_waveform                , chB_waveform                ;
 uint32_t      chA_size     = BUFFER_LENGTH, chB_size     = BUFFER_LENGTH;
 uint32_t      chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
+
+bool          chA_EnableTempProtection = 0, chB_EnableTempProtection = 0;
+bool          chA_LatchTempAlarm       = 0, chB_LatchTempAlarm       = 0;
+
+#ifdef Z20_250_12
+rp_gen_gain_t chA_gain                    , chB_gain                    ;
+#endif
 
 float chA_arbitraryData[BUFFER_LENGTH];
 float chB_arbitraryData[BUFFER_LENGTH];
@@ -48,8 +59,8 @@ int gen_SetDefaultValues() {
     gen_setWaveform(RP_CH_2, RP_WAVEFORM_SINE);
     gen_setOffset(RP_CH_1, 0);
     gen_setOffset(RP_CH_2, 0);
-    gen_setAmplitude(RP_CH_1, 1);
-    gen_setAmplitude(RP_CH_2, 1);
+    gen_setAmplitude(RP_CH_1, AMPLITUDE_MAX);
+    gen_setAmplitude(RP_CH_2, AMPLITUDE_MAX);
     gen_setDutyCycle(RP_CH_1, 0.5);
     gen_setDutyCycle(RP_CH_2, 0.5);
     gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
@@ -62,6 +73,10 @@ int gen_SetDefaultValues() {
     gen_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
     gen_setPhase(RP_CH_1, 0.0);
     gen_setPhase(RP_CH_2, 0.0);
+#ifdef Z20_250_12
+    gen_setGainOut(RP_CH_1,RP_GAIN_1X);
+    gen_setGainOut(RP_CH_2,RP_GAIN_1X);
+#endif
     return RP_OK;
 }
 
@@ -94,11 +109,27 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
     CHANNEL_ACTION(channel,
             chA_amplitude = amplitude,
             chB_amplitude = amplitude)
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_setAmplitude(channel, gain , amplitude);
+#else
     return generate_setAmplitude(channel, amplitude);
+#endif
 }
 
 int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_getAmplitude(channel, gain , amplitude);
+#else
     return generate_getAmplitude(channel, amplitude);
+#endif
 }
 
 int gen_setOffset(rp_channel_t channel, float offset) {
@@ -111,11 +142,27 @@ int gen_setOffset(rp_channel_t channel, float offset) {
     CHANNEL_ACTION(channel,
             chA_offset = offset,
             chB_offset = offset)
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_setDCOffset(channel, gain , offset);
+#else
     return generate_setDCOffset(channel, offset);
+#endif
 }
 
 int gen_getOffset(rp_channel_t channel, float *offset) {
+#ifdef Z20_250_12
+    rp_gen_gain_t gain;
+        CHANNEL_ACTION(channel,
+            gain = chA_gain,
+            gain = chB_gain)
+    return generate_getDCOffset(channel, gain , offset);
+#else
     return generate_getDCOffset(channel, offset);
+#endif
 }
 
 int gen_setFrequency(rp_channel_t channel, float frequency) {
@@ -469,63 +516,64 @@ int synthesize_signal(rp_channel_t channel) {
     else{
         return RP_EPN;
     }
+    uint16_t buf_size = BUFFER_LENGTH;
 
     switch (waveform) {
-        case RP_WAVEFORM_SINE     : synthesis_sin      (data);                 break;
-        case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data);                 break;
-        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data);      break;
-        case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data);                 break;
-        case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data);                 break;
-        case RP_WAVEFORM_DC       : synthesis_DC       (data);                 break;
-        case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data);      break;
+        case RP_WAVEFORM_SINE     : synthesis_sin      (data,buf_size);                 break;
+        case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data,buf_size);                 break;
+        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data,buf_size);      break;
+        case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data,buf_size);                 break;
+        case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data,buf_size);                 break;
+        case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
+        case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data,buf_size);      break;
         case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size); break;
         default:                    return RP_EIPV;
     }
     return generate_writeData(channel, data, phase, size);
 }
 
-int synthesis_sin(float *data_out) {
+int synthesis_sin(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) BUFFER_LENGTH));
+        data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) buffSize));
     }
     return RP_OK;
 }
 
-int synthesis_triangle(float *data_out) {
+int synthesis_triangle(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI * 2));
+        data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) buffSize)) / M_PI * 2));
     }
     return RP_OK;
 }
 
-int synthesis_rampUp(float *data_out) {
+int synthesis_rampUp(float *data_out,uint16_t buffSize) {
     data_out[BUFFER_LENGTH -1] = 0;
     for(int unsigned i = 0; i < BUFFER_LENGTH-1; i++) {
-        data_out[BUFFER_LENGTH - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI - 1));
+        data_out[BUFFER_LENGTH - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
     }
     return RP_OK;
 }
 
-int synthesis_rampDown(float *data_out) {
+int synthesis_rampDown(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) BUFFER_LENGTH)) / M_PI - 1));
+        data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
     }
     return RP_OK;
 }
 
-int synthesis_DC(float *data_out) {
+int synthesis_DC(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = 1.0;
     }
     return RP_OK;
 }
 
-int synthesis_PWM(float ratio, float *data_out) {
+int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize) {
     // calculate number of samples that need to be high
-    int h = (int) (BUFFER_LENGTH/2 * ratio);
+    int h = (int) (buffSize/2 * ratio);
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if (i < h || i >= BUFFER_LENGTH - h) {
+        if (i < h || i >= buffSize - h) {
             data_out[i] = 1.0;
         }
         else {
@@ -549,20 +597,38 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
     return RP_OK;
 }
 
-int synthesis_square(float frequency, float *data_out) {
+int synthesis_square(float frequency, float *data_out,uint16_t buffSize) {
     // Various locally used constants - HW specific parameters
-    const int trans0 = 30;
-    const int trans1 = 300;
-
+#ifdef Z20_250_12
+        const int trans0 = 1;
+        const int trans1 = 100;
+#else
+        const int trans0 = 30;
+        const int trans1 = 300;
+#endif
+    
     int trans = (int) (frequency / 1e6 * trans1); // 300 samples at 1 MHz
 
     if (trans <= 10)  trans = trans0;
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if      ((0 <= i                      ) && (i <  BUFFER_LENGTH/2 - trans))  data_out[i] =  1.0f;
-        else if ((i >= BUFFER_LENGTH/2 - trans) && (i <  BUFFER_LENGTH/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (i - (BUFFER_LENGTH/2 - trans));
-        else if ((0 <= BUFFER_LENGTH/2        ) && (i <  BUFFER_LENGTH   - trans))  data_out[i] = -1.0f;
-        else if ((i >= BUFFER_LENGTH   - trans) && (i <  BUFFER_LENGTH          ))  data_out[i] = -1.0f + (2.0f / trans) * (i - (BUFFER_LENGTH   - trans));
+        int unsigned x = (i % buffSize);
+        if      ((0 <= x                      ) && (x <  buffSize/2 - trans))  data_out[i] =  1.0f;
+        else if ((x >= buffSize/2 - trans) && (x <  buffSize/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (x - (buffSize/2 - trans));
+        else if ((0 <= buffSize/2        ) && (x <  buffSize   - trans))  data_out[i] = -1.0f;
+        else if ((x >= buffSize   - trans) && (x <  buffSize          ))  data_out[i] = -1.0f + (2.0f / trans) * (x - (buffSize   - trans));
+    }
+
+    return RP_OK;
+}
+
+int synthesis_square_Z20_250(float frequency, float *data_out,uint16_t buffSize) {
+
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+        if ((i % buffSize) <  buffSize / 2.0)  
+            data_out[i] =  1.0f;
+        else  
+            data_out[i] = -1.0f;
     }
 
     return RP_OK;
@@ -576,3 +642,70 @@ int triggerIfInternal(rp_channel_t channel) {
     }
     return RP_OK;
 }
+
+
+int gen_setEnableTempProtection(rp_channel_t channel, bool enable) {
+    CHANNEL_ACTION(channel,
+            chA_EnableTempProtection = enable,
+            chB_EnableTempProtection = enable)
+    return generate_setEnableTempProtection(channel, enable);
+}
+
+int gen_getEnableTempProtection(rp_channel_t channel, bool *enable) {
+    return generate_getEnableTempProtection(channel, enable);
+}
+
+int gen_setLatchTempAlarm(rp_channel_t channel, bool status) {
+    CHANNEL_ACTION(channel,
+            chA_LatchTempAlarm = status,
+            chB_LatchTempAlarm = status)
+    return generate_setLatchTempAlarm(channel, status);
+}
+
+int gen_getLatchTempAlarm(rp_channel_t channel, bool *status) {
+    return generate_getLatchTempAlarm(channel, status);
+}
+
+int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status) {
+    return generate_getRuntimeTempAlarm(channel, status);
+}
+
+
+#ifdef Z20_250_12
+
+int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
+    rp_gen_gain_t *gain = NULL;
+
+    if (channel == RP_CH_1) {
+        gain = &chA_gain;
+    }
+    else {
+        gain = &chB_gain;
+    }
+
+    int ch = (channel == RP_CH_1 ? RP_MAX7311_OUT1 : RP_MAX7311_OUT2);
+    int status = rp_setGainOut_C(ch,mode  == RP_GAIN_1X ? RP_GAIN_2V : RP_GAIN_10V);
+    if (status == RP_OK){
+        *gain = mode;
+    }else{
+        return status;
+    }
+
+    float offset;
+    CHANNEL_ACTION(channel,
+            offset = chA_offset,
+            offset = chB_offset)
+    return gen_setOffset(channel,offset);
+}
+
+int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status){
+    if (channel == RP_CH_1) {
+        *status = chA_gain;
+    }
+    else {
+        *status = chB_gain;
+    }
+    return RP_OK;
+}
+
+#endif

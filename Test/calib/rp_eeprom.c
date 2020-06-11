@@ -21,13 +21,40 @@
 
 #include "rp_eeprom.h"
 
-#define CALIB_MAGIC 0xAABBCCDD
-
 #define EEPROM_DEVICE "/sys/bus/i2c/devices/0-0050/eeprom"
 
 const int c_wpCalParAddrOffset =  0x0000;
 const int c_wpFactoryAddrOffset = 0x1c00;
 
+#ifdef Z20_250_12
+const char * c_wpCalParDesc[eCalParEnd][20]={
+    {"GEN_CH1_G_1"},
+    {"GEN_CH2_G_1"},
+    {"GEN_CH1_OFF_1"},
+    {"GEN_CH2_OFF_1"},
+    {"GEN_CH1_G_5"},
+    {"GEN_CH2_G_5"},
+    {"GEN_CH1_OFF_5"},
+    {"GEN_CH2_OFF_5"},
+    {"OSC_CH1_G_1_AC"},
+    {"OSC_CH2_G_1_AC"},
+    {"OSC_CH1_OFF_1_AC"},
+    {"OSC_CH2_OFF_1_AC"},
+    {"OSC_CH1_G_1_DC"},
+    {"OSC_CH2_G_1_DC"},
+    {"OSC_CH1_OFF_1_DC"},
+    {"OSC_CH2_OFF_1_DC"},
+    {"OSC_CH1_G_20_AC"},
+    {"OSC_CH2_G_20_AC"},
+    {"OSC_CH1_OFF_20_AC"},
+    {"OSC_CH2_OFF_20_AC"},
+    {"OSC_CH1_G_20_DC"},
+    {"OSC_CH2_G_20_DC"},
+    {"OSC_CH1_OFF_20_DC"},
+    {"OSC_CH2_OFF_20_DC"}
+};
+#else
+#define CALIB_MAGIC 0xAABBCCDD 
 const char * c_wpCalParDesc[eCalParEnd][20]={
     {"FE_CH1_FS_G_HI"},
     {"FE_CH2_FS_G_HI"},
@@ -41,8 +68,9 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
     {"BE_CH2_DC_offs"},
     {"Magic"},
     {"FE_CH1_DC_offs_HI"},
-    {"FE_CH2_DC_offs_HI"}
+    {"FE_CH2_DC_offs_HI"},
 };
+#endif
 
 
 int RpEepromCalDataRead(eepromWpData_t * eepromData, bool factory)
@@ -79,9 +107,11 @@ int RpEepromCalDataWrite(eepromWpData_t * eepromData, bool factory)
     size_t size;
 
     /* Fix ID and set reserved data */
-    eepromData->dataStructureId = 1;
+    eepromData->dataStructureId = PACK_ID;
     eepromData->wpCheck += 1;
+#ifndef Z20_250_12
     eepromData->feCalPar[eCalParMagic]=CALIB_MAGIC;
+#endif
     memset((char*)&eepromData->reserved[0], 0, 6);
 
     /* Open device */

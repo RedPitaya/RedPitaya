@@ -17,7 +17,7 @@
 #include <sys/mman.h>
 #include <stdio.h>
 #include <math.h>
-
+#include "rp_cross.h"
 #include "common.h"
 
 static int fd = 0;
@@ -236,7 +236,7 @@ int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off)
  * @retval float Signal Value, expressed in user units [V]
  */
 
-float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off)
+float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off,double full_scale_norm)
 {
     /* map ADC counts into user units */
     double ret_val = ((double)calib_cnts * adc_max_v / (double)(1 << (field_len - 1)));
@@ -244,7 +244,7 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
     /* and adopt the calculation with user specified DC offset */
     ret_val += user_dc_off;
     /* adopt the calculation with calibration scaling */
-    ret_val *= (double)calibScale / ((double)FULL_SCALE_NORM/(double)adc_max_v);
+    ret_val *= (double)calibScale / (full_scale_norm/(double)adc_max_v);
 
     return ret_val;
 }
@@ -269,7 +269,14 @@ float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
 {
     int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, calib_dc_off);
-    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off);
+
+    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off,FULL_SCALE_NORM);
+}
+
+float cmn_CnvNormCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off,double full_scale_norm){
+    int32_t calib_cnts = cmn_CalibCnts(field_len, cnts, calib_dc_off);
+
+    return cmn_CnvCalibCntToV(field_len, calib_cnts, adc_max_v, cmn_CalibFullScaleToVoltage(calibScale), user_dc_off,full_scale_norm);
 }
 
 float rp_cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off) {

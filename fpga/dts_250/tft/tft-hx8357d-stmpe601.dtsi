@@ -1,0 +1,75 @@
+/*
+ * TFT controller specific code
+ */
+
+/include/ "tft-E2.dtsi"
+
+&spi1 {
+	num-cs = <2>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_spi1_tft>;
+
+	pitft: pitft@0{
+		compatible = "himax,hx8357d";
+		reg = <0>;
+
+		spi-max-frequency = <32000000>;
+		rotate = <90>;
+		fps = <25>;
+		bgr;
+		buswidth = <8>;
+		dc-gpios = <&gpio0 8 0>;
+		debug = <0>;
+	};
+
+	pitft_ts@1 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "st,stmpe610";
+		reg = <1>;
+
+		spi-max-frequency = <1000000>;
+		irq-gpio = <&gpio0 9 0x2>; /* IRQF_TRIGGER_FALLING */
+		interrupts = <9 2>; /* high-to-low edge triggered */
+		interrupt-parent = <&gpio0>;
+		interrupt-controller;
+
+		stmpe_touchscreen {
+			compatible = "st,stmpe-ts";
+			st,sample-time = <4>;
+			st,mod-12b = <1>;
+			st,ref-sel = <0>;
+			st,adc-freq = <2>;
+			st,ave-ctrl = <3>;
+			st,touch-det-delay = <4>;
+			st,settling = <2>;
+			st,fraction-z = <7>;
+			st,i-drive = <0>;
+		};
+
+		stmpe_gpio: stmpe_gpio {
+			#gpio-cells = <2>;
+			compatible = "st,stmpe-gpio";
+			/*
+			 * only GPIO2 is wired/available
+			 * and it is wired to the backlight
+			 */
+			st,norequest-mask = <0x7b>;
+		};
+	};
+};
+
+/{
+	backlight {
+		compatible = "gpio-backlight";
+		gpios = <&stmpe_gpio 2 0>;
+		default-on;
+	};
+
+	fixedreg33: fixed33@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-supply";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+};

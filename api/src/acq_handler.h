@@ -17,9 +17,25 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "redpitaya/rp.h"
+#include "rp_cross.h"
+
+#ifdef Z20_250_12
+ #define ADC_SAMPLE_PERIOD_DEF 4
+#endif
+
+#ifdef Z10
+#define ADC_SAMPLE_PERIOD_DEF 8
+#endif
+
+// Need for fix in future
+#ifdef Z20 
+#define ADC_SAMPLE_PERIOD_DEF 8
+#endif
+
 
 int acq_SetArmKeep(bool enable);
+int acq_GetArmKeep(bool* state);
+int acq_GetBufferFillState(bool* state);
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state);
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state);
 int acq_GetGainV(rp_channel_t channel, float* voltage);
@@ -38,8 +54,8 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue);
 int acq_GetTriggerDelay(int32_t* decimated_data_num);
 int acq_SetTriggerDelayNs(int64_t time_ns, bool updateMaxValue);
 int acq_GetTriggerDelayNs(int64_t* time_ns);
-int acq_SetTriggerLevel(rp_channel_t channel, float voltage);
-int acq_GetTriggerLevel(float *voltage);
+int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage);
+int acq_GetTriggerLevel(rp_channel_trigger_t channel, float *voltage);
 int acq_GetPreTriggerCounter(uint32_t* value);
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage);
 int acq_GetChannelThreshold(rp_channel_t channel, float* voltage);
@@ -69,5 +85,9 @@ int acq_GetBufferSize(uint32_t *size);
 
 int acq_SetDefault();
 
+#ifdef Z20_250_12
+int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
+int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+#endif
 
 #endif /* SRC_ACQ_HANDLER_H_ */

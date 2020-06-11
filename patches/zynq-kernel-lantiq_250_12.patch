@@ -1,0 +1,13 @@
+--- a/drivers/net/phy/lantiq.c	2017-10-26 13:59:42.000000000 +0700
++++ b/drivers/net/phy/lantiq.c	2020-03-25 11:02:48.431303423 +0700
+@@ -314,6 +314,10 @@
+ 	/* Clear all pending interrupts */
+ 	phy_read(phydev, LANTIQ_MDIO_ISTAT);
+ 
++        err = phy_write(phydev, 0x17, 0xb500);
++	if (err)
++		return err;
++
+ 	phy_write_mmd_indirect(phydev, LANTIQ_MMD_LEDCH, MDIO_MMD_VEND2,
+ 			       LANTIQ_MMD_LEDCH_NACS_NONE |
+ 			       LANTIQ_MMD_LEDCH_SBF_F02HZ |

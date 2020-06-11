@@ -5,7 +5,10 @@
 # vivado -mode tcl -source red_pitaya_vivado_Z20.tcl -tclargs projectname
 ################################################################################
 
-cd prj/$::argv
+set prj_name [lindex $argv 0]
+puts "Project name: $prj_name"
+cd prj/$prj_name
+#cd prj/$::argv 0
 
 ################################################################################
 # install UltraFast Design Methodology from TCL Store
@@ -82,8 +85,8 @@ set_property generic "GITH=160'h$gith" [current_fileset]
 # write checkpoint design
 ################################################################################
 
-#synth_design -top red_pitaya_top
-synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
+#synth_design -top red_pitaya_top_Z20
+synth_design -top red_pitaya_top_Z20 -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
 
 write_checkpoint         -force   $path_out/post_synth
 report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt

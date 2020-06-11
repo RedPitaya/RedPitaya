@@ -1,0 +1,24 @@
+&pinctrl0 {
+	pinctrl_spi2gpio: spi2gpio {
+		mux {
+			function = "gpio0";
+			groups = "gpio0_10_grp", "gpio0_11_grp", "gpio0_12_grp", "gpio0_13_grp";
+		};
+
+		conf {
+			groups = "gpio0_10_grp", "gpio0_11_grp", "gpio0_12_grp", "gpio0_13_grp";
+			slew-rate = <0>;
+			io-standard = <3>;  // LVCMOS33
+		};
+
+		conf-pull-none {
+			pins = "MIO10", "MIO11", "MIO12", "MIO13";
+			bias-disable;
+		};
+	};
+};
+
+&gpio0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_spi2gpio>;
+};

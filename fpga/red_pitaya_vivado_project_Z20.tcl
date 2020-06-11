@@ -5,7 +5,10 @@
 # vivado -mode batch -source red_pitaya_vivado_project_Z20.tcl -tclargs projectname
 ################################################################################
 
-cd prj/$::argv
+set prj_name [lindex $argv 0]
+puts "Project name: $prj_name"
+cd prj/$prj_name
+#cd prj/$::argv 0
 
 ################################################################################
 # define paths
@@ -62,4 +65,4 @@ import_files -force
 
 update_compile_order -fileset sources_1
 
-set_property top red_pitaya_top [current_fileset]
+set_property top red_pitaya_top_Z20 [current_fileset]
