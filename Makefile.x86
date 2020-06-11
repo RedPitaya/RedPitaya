@@ -89,13 +89,13 @@ HWID ?=
 ifeq ($(MODEL),Z10)
 FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite streaming
 # NEED for FSBL fpga image
-FPGA_PRJ = streaming
+FPGA_PRJ = streaming stream_app
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 endif
 
 ifeq ($(MODEL),Z20)
-FPGA_PRJ_LST = v0.94 streaming
+FPGA_PRJ_LST = v0.94 streaming stream_app
 # NEED for FSBL fpga image
 FPGA_PRJ = streaming
 FPGA_MODEL ?= Z20
