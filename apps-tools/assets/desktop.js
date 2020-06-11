@@ -39,26 +39,27 @@
             })
             .done(function(result) {
                     stem_ver = result['stem_ver'];
-                    
+
             		if (stem_ver == "STEM 16"){
             			for (i = default_applications.length - 1; i >= 0; i -= 1){
-                                if (default_applications[i]["id"] === 'marketplace' 
-                                || default_applications[i]["id"] === 'fpgaexamples' 
+                                if (default_applications[i]["id"] === 'marketplace'
+                                || default_applications[i]["id"] === 'fpgaexamples'
+				|| default_applications[i]["id"] === 'jupyter'
                                 || default_applications[i]["id"] === 'activelearning'){
    							 	        default_applications.splice(i, 1);
    								}
-   							}						
+   							}
                     };
-                    
+
                     if (stem_ver == "STEM 250 12"){
             			for (i = default_applications.length - 1; i >= 0; i -= 1){
-                                if (default_applications[i]["id"] === 'marketplace' 
-                                    || default_applications[i]["id"] === 'fpgaexamples' 
-                                    || default_applications[i]["id"] === 'jupyter' 
+                                if (default_applications[i]["id"] === 'marketplace'
+                                    || default_applications[i]["id"] === 'fpgaexamples'
+                                    || default_applications[i]["id"] === 'jupyter'
                                     || default_applications[i]["id"] === 'activelearning'){
    							 	        default_applications.splice(i, 1);
    								}
-                            }		
+                            }
             		};
 
             	    applications = [];
