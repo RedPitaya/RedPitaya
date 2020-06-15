@@ -67,12 +67,9 @@ The available settings by device model:
 .. tabs::
 
    .. tab:: STEMlab 125-10, 125-14
-      
-      .. sidebar::Osc app
-      
-          .. image:: Slika_05_OSC_125.png
-              :height: 280px
-              :align: right
+           
+      .. image:: Slika_05_OSC_125.png
+          :height: 280px
 
       - **SHOW:** Shows or hides the curve associated with the channel.
       - **INVERT:** Reflects the graph on the X axis.
@@ -81,12 +78,9 @@ The available settings by device model:
       - **LV and HV:** Must be selected according to the jumper :ref:`position <anain>` on each channel.
 
    .. tab:: SDRlab 122-16
-
-      .. sidebar::Osc app
-      
-          .. image:: Slika_05_OSC_122.png
-              :height: 280px
-              :align: right
+     
+      .. image:: Slika_05_OSC_122.png
+          :height: 280px
           
       - **SHOW:** Shows or hides the curve associated with the channel.
       - **INVERT:** Reflects the graph on the X axis.
@@ -95,11 +89,8 @@ The available settings by device model:
 
    .. tab:: SIGNALlab 250-12
 
-      .. sidebar::Osc app
-      
-          .. image:: Slika_05_OSC_250.png
-              :height: 280px
-              :align: right
+      .. image:: Slika_05_OSC_250.png
+          :height: 280px
 
       - **SHOW:** Shows or hides the curve associated with the channel.
       - **INVERT:** Reflects the graph on the X axis.
