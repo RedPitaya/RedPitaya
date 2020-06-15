@@ -37,20 +37,12 @@ Problems connecting to Red Pitaya
 
 #. If you are a Windows users make sure you have installed `Bonjour Print Services <http://redpitaya.com/bonjour>`_.
 
-******************************
-Problems obtaining the license
-******************************
-
-1. Disable all ad blockers in you browser.
-#. Force refresh of the Red Pitaya application page. `How <http://www.wikihow.com/Force-Refresh-in-Your-Internet-Browser>`_?
-
-****************************************************************************
-Problems with upgrading OS, accessing market place or unlocking applications 
-****************************************************************************
+**************************************************
+Problems with upgrading OS, accessing market place
+**************************************************
 
 1. Make sure your Red Pitaya has access to the internet. :ref:`How <internetAccess>`?
 #. Force refresh of the Red Pitaya application page. `How <http://www.wikihow.com/Force-Refresh-in-Your-Internet-Browser>`_? 
-
 
 
 ********************
@@ -91,15 +83,7 @@ please check the following:
 .. note::
     
     For full preformence the wired connection is preffered. 
-  
-*********************************
-Rassbary Pi Wi-Fi is not detected
-*********************************  
-
-    In some circumstances a Rassbary Pi Wi-Fi is not detected by Red Pitaya. To mitigate, detatch 
-    the power cable from Red Pitaya and wait for about a minute before powering up the Red Pitaya again.
-    On the next boot the Rassbary Pi Wi-Fi should be detected normally.
-    
+   
 ###
 FAQ
 ###
@@ -201,15 +185,11 @@ Is Red Pitaya connected to my local network?
 
 1. Connect to your Red Pitaya to PC over serial console. How?
 
-2. Type “ifconfig” and hit enter to check the status of your ethernet connection on Red Pitaya
+2. Type “ip a” and hit enter to check the status of your ethernet connection on Red Pitaya
 
-   If you have connected to your Red Pitaya over wireless connection you should check the status of ``wlan0`` interface:
+   a) If you have connected to your Red Pitaya over wireless connection you should check the status of ``wlan0`` interface
 
-   .. image:: Screen-Shot-2015-09-26-at-18.09.15-1024x794.png
-
-   If you have connected to your Red Pitaya over cable connection you should check ``eth0`` interface:
-
-   .. image:: Screen-Shot-2015-09-26-at-18.14.35-1024x546.png
+   b) If you have connected to your Red Pitaya over cable connection you should check ``eth0`` interface
 
 3. Type Red Pitaya IP to your WEB browser to see if you can connect to it
 

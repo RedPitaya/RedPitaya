@@ -58,22 +58,51 @@ the time axis are set so that at least one full period of the signal will fill t
 Inputs
 ======
 
-.. image:: Slika_05_OSC.png
-    :width: 30%
-    :align: right
     
 On the right side of the Oscilloscope&Sig. Generator application interface the IN1 and IN2 channels are listed. By a 
 simple click on the name of a channel (not the gear) the channel gets highlighted and you can simply control all the 
 settings of the respective channel.
+The available settings by device model:
 
-    
-The available settings are the following:
+.. tabs::
 
-    - **SHOW:** Shows or hides the curve associated with the channel.
-    - **INVERT:** Reflects the graph on the X axis.
-    - **Probe attenuation:** (must be selected manually) The division that was set on the probe.
-    - **Vertical offset:** Moves the curve up or down.
-    - **LV and HV:** Must be selected according to the jumper :ref:`position <anain>` on each channel.
+   .. tab:: STEMlab 125-10, 125-14
+
+      .. image:: Slika_05_OSC_125.png
+          :width: 30%
+          :align: right
+          Slika_05_OSC_122.png
+
+      - **SHOW:** Shows or hides the curve associated with the channel.
+      - **INVERT:** Reflects the graph on the X axis.
+      - **Probe attenuation:** (must be selected manually) The division that was set on the probe.
+      - **Vertical offset:** Moves the curve up or down.
+      - **LV and HV:** Must be selected according to the jumper :ref:`position <anain>` on each channel.
+
+   .. tab:: SDRlab 122-16
+
+      .. image:: Slika_05_OSC_122.png
+          :width: 30%
+          :align: right
+          
+      - **SHOW:** Shows or hides the curve associated with the channel.
+      - **INVERT:** Reflects the graph on the X axis.
+      - **Probe attenuation:** (must be selected manually) The division that was set on the probe.
+      - **Vertical offset:** Moves the curve up or down.
+
+   .. tab:: SIGNALlab 250-12
+
+      .. image:: Slika_05_OSC_250.png
+          :width: 30%
+          :align: right
+
+      - **SHOW:** Shows or hides the curve associated with the channel.
+      - **INVERT:** Reflects the graph on the X axis.
+      - **Probe attenuation:** (must be selected manually) The division that was set on the probe.
+      - **Vertical offset:** Moves the curve up or down.
+      - **Input attenuation:** 1:1 (± 1V) / 1:20 (± 20V) is selected automatically when adjusting V/div setting, user can also select range manually through WEB interface settings.
+      - **AC/DC coupling**
+
 
     
 Outputs
@@ -114,8 +143,20 @@ steady fashion. The parameter Source defines the trigger source used for this. T
     - **STOP** Pause triggers.
     - **RUN** Starts/continues triggering.
 
-The Source parameter defines the source used for this purpose. With the IN1 or the IN2 the signal at the respective 
-input is selected; with the EXT you can invoke the trigger from outside through Pin 3 on the header row :ref:`E1 <E1>`.
+The Source parameter defines the source used for this purpose. With the IN1 or the IN2 the signal at the
+respective input is selected; with the EXT you can invoke the trigger from outside through:
+
+.. tabs::
+
+   .. tab:: STEMlab 125-10, 125-14, SDRlab 122-16
+
+      Pin 3 on the header row :ref:`E1 <E1>`.
+
+   .. tab:: SIGNALlab 250-12
+
+      BNC connector available on the front panel
+
+
 
 Math
 =====
