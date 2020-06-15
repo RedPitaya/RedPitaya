@@ -1,6 +1,8 @@
 Red Pitaya boards comparison 
 ##############################################################
 
+.. _rp-board-comp:
+
 .. image:: vs_10.jpg
    :width: 30%
    

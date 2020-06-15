@@ -105,7 +105,7 @@ The available settings by device model:
     
 Outputs
 =======
-
+.. _output-ref:
 
 
 On the right side of the Oscilloscope&Sig. Generator application interface the OUT1 and OUT2 channels are listed. By a 

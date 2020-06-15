@@ -102,7 +102,7 @@ OUTPUTS:
 ========
 
 Spectrum analyzer WEB also includes a signal generator, so users can simultaneously generate signal & observe signal
-spectrum. For the signal generator setting and specifications refer to :ref:`outputs <outputs>`
+spectrum. For the signal generator setting and specifications refer to :ref:`outputs <output-ref>`
 
 External ref. Clock (only SIGNALlab 250-12):
 ============================================

@@ -70,7 +70,7 @@ The Red Pitaya signal generator can be controlled through the
 
 
 Performance of signal generator differs from one Red Pitaya model to another, for more
-information please refer to :ref:`red pitaya boards comparison <red-pitaya-boards-comparison>`
+information please refer to :ref:`red pitaya boards comparison <rp-board-comp>`
 
     
 ==========================
@@ -135,7 +135,7 @@ compensation. Usage instructions (see Table 8 as well):
 
         .. code-block:: shell-session
 
-            root@rp-fffff6:~# acquire 1024 8 -1 20 -o
+            redpitaya> acquire 1024 8 -1 20 -o
                 -0.175803   0.000977
                 0.021975    0.001099
                 -0.075693   0.000977
@@ -150,7 +150,7 @@ compensation. Usage instructions (see Table 8 as well):
                 ...
         
 Performance of acquisition tool differs from one Red Pitaya model to another, for more
-information please refer to :ref:`red pitaya boards comparison <red-pitaya-boards-comparison>`
+information please refer to :ref:`red pitaya boards comparison <rp-board-comp>`
 
 
 ======================================================
