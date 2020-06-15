@@ -10,7 +10,17 @@ Red Pitaya command line utilities
 
 .. Note::
    
-   Command line utilities must not be used in parallel with a WEB application.
+    Command line utilities must not be used in parallel with a WEB application.
+   
+    For correct operation of the acquire tool, it is mandatory that the correct FPGA image is loaded. Please note,
+    the some application can change the FPGA image loaded.
+    To load the FPGA image open a terminal on the Red Pitaya and execute the following command:
+    
+    .. code-block:: shell-session
+
+       cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+
+
 
 .. contents::
     :local:
@@ -22,65 +32,46 @@ Signal generator utility
 ========================
 
 The Red Pitaya signal generator can be controlled through the
-`generate <https://github.com/RedPitaya/RedPitaya/tree/master/Test/generate>`_ command line utility, but be aware it
-interferes with the GUI based Oscilloscope & Generator application. Usage instructions (see Table 7 as well):
- 
-.. code-block:: shell-session
+`generate <https://github.com/RedPitaya/RedPitaya/tree/master/Test/generate>`_ command line utility.
+
+
+.. tabs::
+
+   .. tab:: OS version 0.99 or older
+
+      .. code-block:: shell-session
     
-   redpitaya> generate
-    generate version 0.90-299-1278
+        redpitaya> generate
+        generate version 0.90-299-1278
 
-    Usage: generate   channel amplitude frequency <type>
+        Usage: generate   channel amplitude frequency <type>
 
-        channel     Channel to generate signal on [1, 2].
-        amplitude   Peak-to-peak signal amplitude in Vpp [0.0 - 2.0].
-        frequency   Signal frequency in Hz [0.0 - 6.2e+07].
-        type        Signal type [sine, sqr, tri].
+            channel     Channel to generate signal on [1, 2].
+            amplitude   Peak-to-peak signal amplitude in Vpp [0.0 - 2.0].
+            frequency   Signal frequency in Hz [0.0 - 6.2e+07].
+            type        Signal type [sine, sqr, tri].
 
+   .. tab:: OS version 1.00
 
-+-------------+----------+------------------------------+----------------------------------------------------------------+
-| Parameters of Signal   generator utility                                                                               |
-+-------------+----------+------------------------------+----------------------------------------------------------------+
-| **Name**    | **Type** | **Range**                    | **Description**                                                |
-+-------------+----------+------------------------------+----------------------------------------------------------------+
-| channel     | int      | 1/ 2                         | Output channel selection                                       |
-+-------------+----------+------------------------------+----------------------------------------------------------------+
-| amplitude   | float    | 0 - 2 [V]                    | Maximal output signal is 2 V peak to peak                      |
-+-------------+----------+------------------------------+----------------------------------------------------------------+
-| freq        | float    | 0 - 62000000\ :sup:`1`  [Hz] | Frequency can be generated from 0 Hz (DC signal) on*.          |
-+-------------+----------+------------------------------+----------------------------------------------------------------+
-| <type>      | string   | sine / sqr / tri             | Optional parameter. Signal shape type (sine – sine wave signal,|
-|             |          |                              | sqr – square signal, tri – triangular signal). If omitted, sine|
-|             |          |                              | is used.                                                       |
-+-------------+----------+------------------------------+----------------------------------------------------------------+
-
-\ :sup:`1`  To generate smooth signals, not exceeding Back-End bandwidth, limitations are:
-   - 62 MHz (62000000) for sine wave
-   - 10 MHz (10000000) for square and triangular waves
-   
-The output can be disabled by setting the amplitude parameter to zero.
-
-Example (2 Vpp square wave signal with 1 MHz on channel 1):
- 
-.. code-block:: shell-session
+      .. code-block:: shell-session
     
-   redpitaya> generate 1 2 1000000 sqr
+        redpitaya> generate
+        generate version 1.00-35-25a03ad-25a03ad
 
-.. note::
-    Signal generator output impedance is 50 Ω. If user wants to connect the output of the signal generator 
-    (OUT1, OUT2) to the Red Pitaya input (IN1, IN2), 50 Ω terminations should be connected at the Red Pitaya inputs 
-    through the T-type connector.
+        Usage: generate channel amplitude frequency <gain> <type> <end frequency> <calib>
 
-    
-.. note::
-    For correct operation of the generate tool, it is mandatory that the correct FPGA image is loaded. Please note,
-    the some application can change the FPGA image loaded.
-    To load the FPGA image open a terminal on the Red Pitaya and execute the following command:
-    
-    .. code-block:: shell-session
+            channel Channel to generate signal on [1, 2].
+            amplitude Peak-to-peak signal amplitude in Vpp [0.0 - 2.0].
+            frequency Signal frequency in Hz [0.00 - 1.2e+08].
+            gain Gain output value [x1, x5] (default value x1).
+            type Signal type [sine, sqr, tri, sweep].
+            end frequency Sweep-to frequency in Hz [0.00 - 1.2e+08].
+            calib Disable calibration [-c]. By default calibration enabled
 
-       cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
- 
+
+Performance of signal generator differs from one Red Pitaya model to another, for more
+information please refer to :ref:`red pitaya boards comparison <red-pitaya-boards-comparison>`
+
     
 ==========================
 Signal acquisition utility
@@ -90,129 +81,86 @@ The signal from Red Pitaya can be acquired through the `acquire <https://github.
 command line utility. It will return raw samples from the ADC buffer to standard output, with no calibration
 compensation. Usage instructions (see Table 8 as well):
 
- 
-.. code-block:: shell-session
-    
-   redpitaya> acquire 
-   acquire version 0.90-299-1278
+.. tabs::
 
-   Usage: acquire  size <dec>
+    .. tab:: OS version 0.99 or older
 
-       size     Number of samples to acquire [0 - 16384].
-       dec      Decimation [1,8,64,1024,8192,65536] (default=1).
+        .. code-block:: shell-session
+
+            redpitaya> acquire 
+            acquire version 0.90-299-1278
+
+            Usage: acquire  size <dec>
+
+                size     Number of samples to acquire [0 - 16384].
+                dec      Decimation [1,8,64,1024,8192,65536] (default=1).
         
+
+        Example (acquire 1024 samples with decimation 8):
+    
+        .. code-block:: shell-session
+            
+            redpitaya> acquire 1024 8
+                -148     -81
+                -143     -84
+                -139     -88
+                -134     -82
+                ...
+
+    .. tab:: OS version 1.00
+
+        .. code-block:: shell-session
+
+            redpitaya> acquire 
+
+            Usage: acquire [OPTION]... SIZE <DEC>
+                --equalization -e Use equalization filter in FPGA (default: disabled).
+                --shaping -s Use shaping filter in FPGA (default: disabled).
+                --atten1=a -1 a Use Channel 1 attenuator setting a [1, 20] (default: 1).
+                --atten2=a -2 a Use Channel 2 attenuator setting a [1, 20] (default: 1).
+                --dc=c -d c Enable DC mode. Setting c use for channels [1, 2, B(Both channels)]. By default, AC mode is turned on.
+                --tr_ch=c -t c Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)]. P - positive edge, N -negative edge. By default trigger no set
+                --tr_level=c -l c Set trigger level (default: 0).
+                --version -v Print version info.
+                --help -h Print this message.
+                --hex -x Print value in hex.
+                --volt -o Print value in volt.
+                --no_reg -r Disable load registers config for DAC and ADC.
+                --calib -c Disable calibration parameters
+                SIZE Number of samples to acquire [0 - 16384].
+                DEC Decimation [1,8,64,1024,8192,65536] (default: 1).
+
         
-+----------+----------+-----------------------------+------------------------------------------------------------+
-| Parameters of Signal acquisition utility                                                                       |
-+----------+----------+-----------------------------+------------------------------------------------------------+
-| **Name** | **Type** | **Range**                   | **Description**                                            |
-+----------+----------+-----------------------------+------------------------------------------------------------+
-| size     | int      | 0 - 16384                   | The number of samples to read.                             |
-+----------+----------+-----------------------------+------------------------------------------------------------+
-| dec      | int      | 1, 8, 64, 1024, 8192, 16384 | Optional parameter. It specifies the decimation factor. If |
-|          |          |                             | omitted, 1 is used (no decimation).                        |
-+----------+----------+-----------------------------+------------------------------------------------------------+
+        Example (acquire 1024 samples with decimation 8, ch1 with at 1:20, results displayed in voltage):
 
-Acquire utility will return the requested number of samples with decimation factor for both input channels (column 1 =
-Channel1; column 2 = Channel2).
+        .. code-block:: shell-session
 
-Example (acquire 1024 samples with decimation 8):
+            root@rp-fffff6:~# acquire 1024 8 -1 20 -o
+            -0.175803 0.000977
+            0.021975 0.001099
+            -0.075693 0.000977
+            -0.190453 0.001099
+            0.004883 0.001221
+            -0.046392 0.001099
+            -0.200220 0.000977
+            -0.014650 0.001099
+            -0.019534 0.001099
+            -0.195336 0.000977
+            -0.041509 0.001099
+            ...
+        
+Performance of acquisition tool differs from one Red Pitaya model to another, for more
+information please refer to :ref:`red pitaya boards comparison <red-pitaya-boards-comparison>`
 
- 
-.. code-block:: shell-session
-    
-   redpitaya> acquire 1024 8
-    -148     -81
-    -143     -84
-    -139     -88
-    -134     -82
-    ...
- 
-.. note::
-    For correct operation of the acquire tool, it is mandatory that the correct FPGA image is loaded. Please note,
-    the some application can change the FPGA image loaded.
-    To load the FPGA image open a terminal on the Red Pitaya and execute the following command:
-    
-    .. code-block:: shell-session
 
-       cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
- 
-===================
-Saving data buffers
-===================
+======================================================
+Other useful information related to command line tools
+======================================================
 
-It is recommended to use an NFS share to store any temporary data (e.g. the measured signals using the acquire
-utility). Use a standard mount command to mount your NFS share (example):
- 
-.. code-block:: shell-session
-    
-   redpitaya> mount -o nolock <ip_address>:/<path>  /mnt
-
-The /opt file-system on Red Pitaya, representing the SD card, is mounted read-only. To save the data locally on Red 
-Pitaya redirect the acquisition to a file in the /tmp directory. The /tmp directory resides in RAM and is therefore 
-volatile (clears on reboot).
- 
-.. code-block:: shell-session
-    
-   redpitaya> acquire 1024 8 > /tmp/my_local_file
-
-Alternatively, save the data directly to the NFS mount point:
- 
-.. code-block:: shell-session
-    
-   redpitaya> acquire 1024 8 > /mnt/my_remote_file
-
---------------------------
-Copying data - Linux users
---------------------------
-
-In case NFS share is not available, you can use secure copy:
- 
-.. code-block:: shell-session
-    
-   redpitaya> scp my_local_file <user>@<destination_ip>:/<path_to_directory>/
-
-Alternatively Linux users can use graphical SCP/SFTP clients, such as Nautilus for example (explorer window). To 
-access the address line, type [CTRL + L] and type in the following URL: sftp://root@<ip_address>
-
-.. figure:: Nautilus_address_bar.png
-    
-    Figure: Nautilus URL/address bar.
-    
-Type the Red Pitaya password (next Figure). The default Red Pitaya password for the root account is »root«. For 
-changing the root password, refer to buildroot configuration - a mechanism for building the Red Pitaya root 
-file-system, including the /etc/passwd file hosing the root password.
-
-.. image:: Nautilus_password_window.png
-
-After logging in, the main screen will show the directory content of Red Pitaya’s root filesystem. Navigate to select your stored data and use the intuitive copy-paste and drag & drop principles to manipulate the files on Red Pitaya (see next Figure).
-
-.. image:: Nautilus_root_fs.png
-
-----------------------------
-Copying data - Windows users
-----------------------------
-
-Windows users should use an SCP client such as `WinSCP <http://winscp.net/download/winscp518setup.exe>`_. Download and
-install it, following its installation instructions. To log in to Red Pitaya, see example screen in next Figure.
-
-.. figure:: WinSCP_login_screen.png
-
-    Figure: WinSCP login screen.
-
-After logging in, the main screen will show the content of the Red Pitaya root filesystem. Navigate to select your
-stored data and use the intuitive copy-paste and drag & drop principles to manipulate the files on Red Pitaya (see 
-next Figure).
-
-.. figure:: WinSCP_directory_content.png
-
-    Figure: Directory content on Red Pitaya.
-
-Select the destination (local) directory to save the data file to (see next Figure).
-
-.. figure::  WinSCP_filesave.png
-
-    Figure: Select file copy destination.
+.. toctree::
+   :maxdepth: 6
+   
+   clt_other
 
 ==========================
 Accessing system registers
