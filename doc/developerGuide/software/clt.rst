@@ -37,7 +37,7 @@ The Red Pitaya signal generator can be controlled through the
 
 .. tabs::
 
-   .. tab:: OS version 0.99 or older
+   .. group-tab:: OS version 0.99 or older
 
       .. code-block:: shell-session
     
@@ -51,7 +51,7 @@ The Red Pitaya signal generator can be controlled through the
             frequency   Signal frequency in Hz [0.0 - 6.2e+07].
             type        Signal type [sine, sqr, tri].
 
-   .. tab:: OS version 1.00
+   .. group-tab:: OS version 1.00
 
       .. code-block:: shell-session
     
@@ -60,13 +60,13 @@ The Red Pitaya signal generator can be controlled through the
 
         Usage: generate channel amplitude frequency <gain> <type> <end frequency> <calib>
 
-            channel Channel to generate signal on [1, 2].
-            amplitude Peak-to-peak signal amplitude in Vpp [0.0 - 2.0].
-            frequency Signal frequency in Hz [0.00 - 1.2e+08].
-            gain Gain output value [x1, x5] (default value x1).
-            type Signal type [sine, sqr, tri, sweep].
-            end frequency Sweep-to frequency in Hz [0.00 - 1.2e+08].
-            calib Disable calibration [-c]. By default calibration enabled
+            channel         Channel to generate signal on [1, 2].
+            amplitude       Peak-to-peak signal amplitude in Vpp [0.0 - 2.0].
+            frequency       Signal frequency in Hz [0.00 - 1.2e+08].
+            gain            Gain output value [x1, x5] (default value x1).
+            type            Signal type [sine, sqr, tri, sweep].
+            end frequency   Sweep-to frequency in Hz [0.00 - 1.2e+08].
+            calib           Disable calibration [-c]. By default calibration enabled
 
 
 Performance of signal generator differs from one Red Pitaya model to another, for more
@@ -83,7 +83,7 @@ compensation. Usage instructions (see Table 8 as well):
 
 .. tabs::
 
-    .. tab:: OS version 0.99 or older
+    .. group-tab:: OS version 0.99 or older
 
         .. code-block:: shell-session
 
@@ -107,28 +107,28 @@ compensation. Usage instructions (see Table 8 as well):
                 -134     -82
                 ...
 
-    .. tab:: OS version 1.00
+    .. group-tab:: OS version 1.00
 
         .. code-block:: shell-session
 
             redpitaya> acquire 
 
             Usage: acquire [OPTION]... SIZE <DEC>
-                --equalization -e Use equalization filter in FPGA (default: disabled).
-                --shaping -s Use shaping filter in FPGA (default: disabled).
-                --atten1=a -1 a Use Channel 1 attenuator setting a [1, 20] (default: 1).
-                --atten2=a -2 a Use Channel 2 attenuator setting a [1, 20] (default: 1).
-                --dc=c -d c Enable DC mode. Setting c use for channels [1, 2, B(Both channels)]. By default, AC mode is turned on.
-                --tr_ch=c -t c Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)]. P - positive edge, N -negative edge. By default trigger no set
-                --tr_level=c -l c Set trigger level (default: 0).
-                --version -v Print version info.
-                --help -h Print this message.
-                --hex -x Print value in hex.
-                --volt -o Print value in volt.
-                --no_reg -r Disable load registers config for DAC and ADC.
-                --calib -c Disable calibration parameters
-                SIZE Number of samples to acquire [0 - 16384].
-                DEC Decimation [1,8,64,1024,8192,65536] (default: 1).
+                --equalization  -e      Use equalization filter in FPGA (default: disabled).
+                --shaping       -s      Use shaping filter in FPGA (default: disabled).
+                --atten1=a      -1 a    Use Channel 1 attenuator setting a [1, 20] (default: 1).
+                --atten2=a      -2 a    Use Channel 2 attenuator setting a [1, 20] (default: 1).
+                --dc=c          -d c    Enable DC mode. Setting c use for channels [1, 2, B(Both channels)]. By default, AC mode is turned on.
+                --tr_ch=c       -t c    Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)]. P - positive edge, N -negative edge. By default trigger no set
+                --tr_level=c    -l c    Set trigger level (default: 0).
+                --version       -v      Print version info.
+                --help          -h      Print this message.
+                --hex           -x      Print value in hex.
+                --volt          -o      Print value in volt.
+                --no_reg        -r      Disable load registers config for DAC and ADC.
+                --calib         -c      Disable calibration parameters
+                SIZE                    Number of samples to acquire [0 - 16384].
+                DEC                     Decimation [1,8,64,1024,8192,65536] (default: 1).
 
         
         Example (acquire 1024 samples with decimation 8, ch1 with at 1:20, results displayed in voltage):
@@ -136,18 +136,18 @@ compensation. Usage instructions (see Table 8 as well):
         .. code-block:: shell-session
 
             root@rp-fffff6:~# acquire 1024 8 -1 20 -o
-            -0.175803 0.000977
-            0.021975 0.001099
-            -0.075693 0.000977
-            -0.190453 0.001099
-            0.004883 0.001221
-            -0.046392 0.001099
-            -0.200220 0.000977
-            -0.014650 0.001099
-            -0.019534 0.001099
-            -0.195336 0.000977
-            -0.041509 0.001099
-            ...
+                -0.175803   0.000977
+                0.021975    0.001099
+                -0.075693   0.000977
+                -0.190453   0.001099
+                0.004883    0.001221
+                -0.046392   0.001099
+                -0.200220   0.000977
+                -0.014650   0.001099
+                -0.019534   0.001099
+                -0.195336   0.000977
+                -0.041509   0.001099
+                ...
         
 Performance of acquisition tool differs from one Red Pitaya model to another, for more
 information please refer to :ref:`red pitaya boards comparison <red-pitaya-boards-comparison>`
