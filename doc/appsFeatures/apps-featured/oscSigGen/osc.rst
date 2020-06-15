@@ -5,9 +5,8 @@ Oscilloscope & Signal Generator
 
 This application will turn your Red Pitaya board into a 2-channel Oscilloscope and 2-channel Signal generator. It is the
 perfect tool for educators, students, makers, hobbyists and professionals seeking affordable, highly functional test 
-and measurement equipment. It enables generating and measuring electrical signals up to 50MHz. The simple and 
-intuitive user interface provides all the necessary tools for signal analysis and measurements. High end 
-specifications will satisfy more demanding users looking for powerful tools for their working benches. The application
+and measurement equipment. The simple and intuitive user interface provides all the necessary tools for signal analysis and measurements. 
+High end specifications will satisfy more demanding users looking for powerful tools for their working benches. The application
 is web-based and doesn’t require installation of any native software. Users can access them via any web browser 
 (Google Chrome is recommended) using their smartphone, tablet or a PC running any popular operating system (MAC, 
 Linux, Windows, Android and iOS). The elements on the Oscilloscope&Sig. Generator application are arranged logically 
@@ -66,10 +65,11 @@ The available settings by device model:
 
 .. tabs::
 
-   .. tab:: STEMlab 125-10, 125-14
+  .. group-tab:: STEMlab 125-10, 125-14
            
       .. image:: Slika_05_OSC_125.png
           :height: 280px
+
 
       - **SHOW:** Shows or hides the curve associated with the channel.
       - **INVERT:** Reflects the graph on the X axis.
@@ -77,20 +77,22 @@ The available settings by device model:
       - **Vertical offset:** Moves the curve up or down.
       - **LV and HV:** Must be selected according to the jumper :ref:`position <anain>` on each channel.
 
-   .. tab:: SDRlab 122-16
+  .. group-tab:: SDRlab 122-16
      
       .. image:: Slika_05_OSC_122.png
           :height: 280px
           
+
       - **SHOW:** Shows or hides the curve associated with the channel.
       - **INVERT:** Reflects the graph on the X axis.
       - **Probe attenuation:** (must be selected manually) The division that was set on the probe.
       - **Vertical offset:** Moves the curve up or down.
 
-   .. tab:: SIGNALlab 250-12
+  .. group-tab:: SIGNALlab 250-12
 
       .. image:: Slika_05_OSC_250.png
           :height: 280px
+
 
       - **SHOW:** Shows or hides the curve associated with the channel.
       - **INVERT:** Reflects the graph on the X axis.
@@ -108,11 +110,58 @@ Outputs
 
 On the right side of the Oscilloscope&Sig. Generator application interface the OUT1 and OUT2 channels are listed. By a 
 simple click on the name of a channel (not the gear) the channel gets highlighted and you can simply control all the 
-settings of the respective channel. The available settings are the following: ON, SHOW, Type, Trigger, Frequency, 
-Amplitude, Offset, Phase, and Duty cycle. Various waveforms are available for output: SINE (sinus), SQUARE (rectangle)
-TRIANGLE (triangle), SAWU (rising sawtooth), SAWD (falling sawtooth), DC and PWM (Pulse Width Modulation).
+settings of the respective channel. 
+The available settings are the following: 
 
-.. image:: Slika_06_OSC.png
+.. tabs::
+
+  .. group-tab:: STEMlab 125-10, 125-14
+           
+      .. image:: Slika_06_OSC_125.png
+          :height: 360px
+
+
+      - **ON:** Turns output of generator ON/OFF.
+      - **SHOW:** Shows signal preview (notice that signal is not phase aligned with the input/output signal).
+      - **Type:** Various waveforms are available for output: SINE (sinus), SQUARE (rectangle), TRIANGLE (triangle), SAWU (rising sawtooth), SAWD (falling sawtooth), DC and PWM (Pulse Width Modulation).
+      - **Trigger:** Enables user to select internal or external trigger for the generator.
+      - **Frequency:** Frequency of output signal.
+      - **Amplitude:** Amplitude of output signal.
+      - **Offset:** DC offset.
+      - **Phase:** Phase between both output signals.
+      - **Duty cycle:** PWM signal duty cycle.
+
+  .. group-tab:: SDRlab 122-16
+     
+      .. image:: Slika_06_OSC_122.png
+          :height: 360px
+          
+
+      - **ON:** Turns output of generator ON/OFF.
+      - **SHOW:** Shows signal preview (notice that signal is not phase aligned with the input/output signal).
+      - **Type:** Various waveforms are available for output: SINE (sinus).
+      - **Trigger:** Enables user to select internal or external trigger for the generator.
+      - **Frequency:** Frequency of output signal.
+      - **Amplitude:** Amplitude of output signal.
+      - **Phase:** Phase between both output signals.
+
+  .. group-tab:: SIGNALlab 250-12
+
+      .. image:: Slika_06_OSC_250.png
+          :height: 360px
+
+
+      - **ON:** Turns output of generator ON/OFF.
+      - **SHOW:** Shows signal preview (notice that signal is not phase aligned with the input/output signal).
+      - **Type:** Various waveforms are available for output: SINE (sinus), SQUARE (rectangle), TRIANGLE (triangle), SAWU (rising sawtooth), SAWD (falling sawtooth), DC and PWM (Pulse Width Modulation).
+      - **Trigger:** Enables user to select internal or external trigger for the generator.
+      - **Frequency:** Frequency of output signal.
+      - **Amplitude:** Amplitude of output signal.
+      - **Offset:** DC offset.
+      - **Gain:**  Displays status of the output gain stage.
+      - **Phase:** Phase between both output signals.
+      - **Duty cycle:** PWM signal duty cycle.
+      - **Load:** Output load.
 
 Trigger
 =======
@@ -144,14 +193,24 @@ respective input is selected; with the EXT you can invoke the trigger from outsi
 
 .. tabs::
 
-   .. tab:: STEMlab 125-10, 125-14, SDRlab 122-16
+   .. group-tab:: STEMlab 125-10, 125-14, SDRlab 122-16
 
       Pin 3 on the header row :ref:`E1 <E1>`.
 
-   .. tab:: SIGNALlab 250-12
+   .. group-tab:: SIGNALlab 250-12
 
       BNC connector available on the front panel
 
+
+
+External ref. clock (only SIGNALlab 250-12)
+===========================================
+
+External ref. Clock input can be enabled through the settings menu, once enabled it’s status is displayed
+in the main interface. Green status indicates that the sampling clock is locked to external ref. clock.
+
+.. image:: Silka_EXT_CLOCK.png
+    :width: 70%
 
 
 Math
@@ -211,48 +270,56 @@ Specifications
 Oscilloscope
 ============
 
-+-----------------------------+-------------------------------+------------------------------+
-|                             | STEMlab 125 - 10              | STEMlab 125 - 14             |
-+-----------------------------+-------------------------------+------------------------------+
-| Input channels              | 2                             | 2                            |
-+-----------------------------+-------------------------------+------------------------------+
-| Bandwidth                   | 40MHz                         | 50MHz                        |
-+-----------------------------+-------------------------------+------------------------------+
-| Resolution                  | 10bit                         | 14bit                        |
-+-----------------------------+-------------------------------+------------------------------+
-| Memory depth                | 16k samples                   | 16k samples                  |
-+-----------------------------+-------------------------------+------------------------------+
-| Input range                 | ± 1V (LV) and ± 20V (HV)      | ± 1V (LV) and ± 20V (HV)     |
-+-----------------------------+-------------------------------+------------------------------+
-| Input coupling              | DC                            | DC                           |
-+-----------------------------+-------------------------------+------------------------------+
-| Minimal Voltage Sensitivity | ± 1.95mV / ± 39mV             | ± 0.122mV / ± 2.44mV         |
-+-----------------------------+-------------------------------+------------------------------+
-| External Trigger            | Yes                           | Yes                          |
-+-----------------------------+-------------------------------+------------------------------+
+.. tabularcolumns:: |p{70mm}|p{50mm}|p{50mm}|p{50mm}|p{50mm}|
 
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+|                             | STEMlab 125 - 10              | STEMlab 125 - 14             | SDRlab 122 - 16              | SIGNALlab 250 - 12           |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Input channels              | 2                             | 2                            | 2                            | 2                            |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Bandwidth                   | 40MHz                         | 50MHz                        | 300 kHz - 50 MHz             | 60 MHz                       |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Resolution                  | 10bit                         | 14bit                        | 16bit                        | 12bit                        |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Memory depth                | 16k samples                   | 16k samples                  | 16k samples                  | 16k samples                  |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Input range                 | ± 1V (LV) and ± 20V (HV)*     | ± 1V (LV) and ± 20V (HV)*    | ± 0.25V / -2 dBm             | ± 1V / ± 20V **              |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Input coupling              | DC                            | DC                           | AC                           | AC/DC                        |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Minimal Voltage Sensitivity | ± 1.95mV / ± 39mV             | ± 0.122mV / ± 2.44mV         | ± 7.6uV                      | ± 0.488mV / ± 9.76mV         |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| External Trigger            | through extension connector   | through extension connector  | through extension connector  | through BNC connector        |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+| Input impedance             | 1 MΩ                          | 1 MΩ                         | 50 Ω                         | 1 MΩ                         |
++-----------------------------+-------------------------------+------------------------------+------------------------------+------------------------------+
+
+*jumper selectable
+**software selectable
 
 Signal generator
 ================
 
-+------------------+-------------------+------------------+
-|                  | STEMlab 125 - 10  | STEMlab 125 - 14 |
-+------------------+-------------------+------------------+
-| Output channels  | 2                 | 2                |
-+------------------+-------------------+------------------+
-| Frequency Range  | 0-50MHz           | 0-50MHz          |
-+------------------+-------------------+------------------+
-| Resolution       | 10bit             | 14bit            |
-+------------------+-------------------+------------------+
-| Signal buffer    | 16k samples       | 16k samples      |
-+------------------+-------------------+------------------+
-| Output range     | ± 1V              | ± 1V             |
-+------------------+-------------------+------------------+
-| Input coupling   | DC                | DC               |
-+------------------+-------------------+------------------+
-| External Trigger | Yes               | Yes              |
-+------------------+-------------------+------------------+
-| Output load      | 50 Ω              | 50 Ω             |
-+------------------+-------------------+------------------+
+.. tabularcolumns:: |p{70mm}|p{50mm}|p{50mm}|p{50mm}|p{50mm}|
 
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+|                  | STEMlab 125 - 10     | STEMlab 125 - 14     | SDRlab 122 - 16      | SIGNALlab 250 - 12                   |
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+| Output channels  | 2                    | 2                    | 2                    | 2                                    |
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+| Frequency Range  | 0-50MHz              | 0-50MHz              |                      | 0-60Mhz                              |
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+| Resolution       | 10bit                | 14bit                | 14bit                | 12bit                                |
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+| Signal buffer    | 16k samples          | 16k samples          | 16k samples          | 16k samples                          |
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+| Output range     | ± 1V                 | ± 1V                 | ± 0.5V/ +4dBm        | ± 1V / ± 5V (into 50 ohm load) *     |
+|                  |                      |                      |                      | ± 2V / ± 10V (Hi-Z load) *           | 
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+| Coupling         | DC                   | DC                   | AC                   | DC                                   |
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+| Output load      | 50 Ω                 | 50 Ω                 | 50 Ω                 | 50 Ω                                 |
++------------------+----------------------+----------------------+----------------------+--------------------------------------+
+
+*software selectable
 
