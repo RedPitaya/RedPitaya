@@ -68,7 +68,7 @@ The available settings by device model:
 
    .. tab:: STEMlab 125-10, 125-14
       
-      .. sidebar::
+      .. sidebar::Osc app
       
           .. image:: Slika_05_OSC_125.png
               :height: 280px
@@ -82,7 +82,7 @@ The available settings by device model:
 
    .. tab:: SDRlab 122-16
 
-      .. sidebar::
+      .. sidebar::Osc app
       
           .. image:: Slika_05_OSC_122.png
               :height: 280px
@@ -95,7 +95,7 @@ The available settings by device model:
 
    .. tab:: SIGNALlab 250-12
 
-      .. sidebar::
+      .. sidebar::Osc app
       
           .. image:: Slika_05_OSC_250.png
               :height: 280px
