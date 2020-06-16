@@ -87,9 +87,9 @@ KERNEL_HEADERS ?= YES
 HWID ?=
 
 ifeq ($(MODEL),Z10)
-FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite streaming
+FPGA_PRJ_LST = stream_app streaming classic logic v0.94 mercury axi4lite streaming
 # NEED for FSBL fpga image
-FPGA_PRJ = streaming stream_app
+FPGA_PRJ = streaming
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 endif
