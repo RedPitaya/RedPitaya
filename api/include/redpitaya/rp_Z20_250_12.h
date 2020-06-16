@@ -722,6 +722,15 @@ int rp_AcqSetDecimation(rp_acq_decimation_t decimation);
 int rp_AcqGetDecimation(rp_acq_decimation_t* decimation);
 
 /**
+ * Sets the decimation used at acquiring signal. 
+ * You can specify values in the range (1,2,4,8,16-65536)
+ * @param decimation Decimation values
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetDecimationFactor(uint32_t decimation);
+
+/**
  * Gets the decimation factor used at acquiring signal in a numerical form. Although this method returns an integer
  * value representing the current factor of the decimation, there is only a set of pre-defined decimation
  * factor values which can be returned. See the #rp_acq_decimation_t enum values.

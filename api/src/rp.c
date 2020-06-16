@@ -509,6 +509,11 @@ int rp_AcqGetDecimation(rp_acq_decimation_t* decimation)
     return acq_GetDecimation(decimation);
 }
 
+int rp_AcqSetDecimationFactor(uint32_t decimation)
+{
+    return acq_SetDecimationFactor(decimation);
+}
+
 int rp_AcqGetDecimationFactor(uint32_t* decimation)
 {
     return acq_GetDecimationFactor(decimation);
