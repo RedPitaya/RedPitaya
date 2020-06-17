@@ -5,7 +5,6 @@ General improvements:
 - Client WIFI mode fixed
 - Trigger issues fixed
 - Broken acquired signal issues fixed
-- Jupyter slow analog inputs bug fixed
 - Improved UI of the oscilloscope and spectrum analyzer
 - Shutdown button added to WEB interface
 - Improved console applications. Added calibration support.

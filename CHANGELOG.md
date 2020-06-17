@@ -9,7 +9,6 @@ General improvements:
 - Improved UI of the oscilloscope and spectrum analyzer
 - Improved LCR application
 - LA data zooming bug fix
-- Added CAN decoder in LA
 - Shutdown button added to WEB interface
 - Added console server for streaming application
 - Multiple bug fixes in streaming applications
