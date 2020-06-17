@@ -15,8 +15,9 @@ General improvements:
 - Multiple bug fixes in streaming applications
 - Added functionality limiting the number of samples in streaming application
 - Improved console applications. Added calibration support.
-- Other stability improvements & bug fixes
-- 
+- Other stability improvements & bug fixes.
+
+
 # Beta version (0.99-41)
 
 Streaming:
