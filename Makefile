@@ -84,7 +84,7 @@ librp250_12:
 	$(MAKE) -C $(LIBRP250_12_DIR)
 	$(MAKE) -C $(LIBRP250_12_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-ifdef ENABLE_LICENSING
+ifeq ($(ENABLE_LICENSING),1)
 
 api: librpapp liblcr_meter
 
@@ -185,7 +185,7 @@ $(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NG
 	mkdir -p $(INSTALL_DIR)/www/conf/lua
 	cp -fr $(NGINX_DIR)/nginx/conf/lua/* $(abspath $(INSTALL_DIR))/www/conf/lua
 
-ifdef ENABLE_LICENSING
+ifeq ($(ENABLE_LICENSING),1)
 
 IDGEN_DIR = Applications/idgen
 
@@ -399,7 +399,7 @@ APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 apps-tools: ecosystem updater network_manager scpi_manager
 
 ifeq ($(MODEL),Z20_250_12)
-apps-tools: 
+apps-tools:
 else
 apps-tools: jupyter_manager streaming_manager
 endif
