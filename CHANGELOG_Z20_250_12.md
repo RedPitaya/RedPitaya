@@ -1,4 +1,4 @@
-# Release (1.03-700)
+# Release (1.03-1)
 
 General improvements:
 - Access point working with official WIFI dongle
