@@ -1,3 +1,22 @@
+# Release (1.03-700)
+
+General improvements:
+- Access point working with official WIFI dongle
+- Client WIFI mode fixed
+- Trigger issues fixed
+- Broken acquired signal issues fixed
+- Jupyter slow analog inputs bug fixed
+- Improved UI of the oscilloscope and spectrum analyzer
+- Improved LCR application
+- LA data zooming bug fix
+- Added CAN decoder in LA
+- Shutdown button added to WEB interface
+- Added console server for streaming application
+- Multiple bug fixes in streaming applications
+- Added functionality limiting the number of samples in streaming application
+- Improved console applications. Added calibration support.
+- Other stability improvements & bug fixes
+- 
 # Beta version (0.99-41)
 
 Streaming:
