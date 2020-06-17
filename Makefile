@@ -253,7 +253,7 @@ SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
-ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(MODEL),Z10)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
@@ -443,7 +443,7 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-vna: api2
-ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(MODEL),Z10)
 	$(MAKE) -C $(VNA_DIR) clean
 	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
