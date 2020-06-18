@@ -22,6 +22,11 @@ Measuring Technology exercises - courtesy of Wilfried Dankmeier from Darmstadt U
 #. `Loesungshinweise_zu_Uebungsblatt_5_a.pdf <http://downloads.redpitaya.com/doc/TeachingDocs/Loesungshinweise_zu_Uebungsblatt_5_a%20.pdf>`_
 #. `Loesungshinweise_zu_Uebungsblatt_6_a.pdf <http://downloads.redpitaya.com/doc/TeachingDocs/Loesungshinweise_zu_Uebungsblatt_6_a%20.pdf>`_
 
+******************************
+Red Pitaya - Learn FPGA 
+******************************
+
+   :doc:`Learn FPGA <fpga_teach:index>`
 
 
 **Want to be a contributor or help us with translations?** just write us on <info@redpitaya.com>
