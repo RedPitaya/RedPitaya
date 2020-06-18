@@ -457,7 +457,7 @@ apps-free-clean:
 # Red Pitaya PRO applications
 ################################################################################
 
-ifdef ENABLE_LICENSING
+ifeq ($(ENABLE_LICENSING),1)
 
 APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro
