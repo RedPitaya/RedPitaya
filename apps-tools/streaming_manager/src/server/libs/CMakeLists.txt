@@ -22,8 +22,9 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC  ${CMAKE_SOURCE_DIR}/libs/asio/include
             ${CMAKE_SOURCE_DIR}/common
             ${CMAKE_SOURCE_DIR}/include
-	    ${CMAKE_SOURCE_DIR}/include/rpsa/server/core
-	    ${CMAKE_SOURCE_DIR}/include/rpsa/common/core)
+	        ${CMAKE_SOURCE_DIR}/include/rpsa/server/core
+	        ${CMAKE_SOURCE_DIR}/include/rpsa/common/core
+            ${CMAKE_SOURCE_DIR}/include/rpsa/common/xml)
 
 if (NOT WIN32)
 target_sources(${PROJECT_NAME}

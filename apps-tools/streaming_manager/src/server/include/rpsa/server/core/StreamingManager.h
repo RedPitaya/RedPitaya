@@ -38,8 +38,8 @@ public:
     typedef std::function<void(int)> Callback;
     typedef std::function<void()> CallbackVoid;
 
-    static Ptr Create(Stream_FileType _fileType,std::string _filePath);
-    CStreamingManager(Stream_FileType _fileType,std::string _filePath);
+    static Ptr Create(Stream_FileType _fileType,std::string _filePath, int _samples);
+    CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples);
 
     static Ptr Create(std::string _host, std::string _port, asionet::Protocol _protocol);
     CStreamingManager(std::string _host, std::string _port, asionet::Protocol _protocol);
@@ -52,6 +52,7 @@ public:
     void run();
     void stop();
     bool isFileThreadWork();
+    bool isOutOfSpace();
     int passBuffers(uint64_t _lostRate, uint32_t _oscRate,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
     CStreamingManager::Callback notifyPassData;
     CStreamingManager::Callback notifyStop;
@@ -70,6 +71,8 @@ private:
     asionet::CAsioNet *m_asionet;
     uint64_t          m_index_of_message;
     std::string       m_file_out;
+    int               m_samples;  
+    int               m_passSizeSamples;
 
     bool m_use_local_file;
     Stream_FileType m_fileType;

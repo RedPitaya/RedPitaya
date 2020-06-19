@@ -20,8 +20,7 @@ JOBS=$$(($(NUM_CPU)+1))
 
 LIBJSON_DIR = ../tools/libjson
 
-NGX_EXT_MODULES_DIR=ngx_ext_modules
-WS_SERVER_DIR=$(NGX_EXT_MODULES_DIR)/ws_server
+WS_SERVER_DIR=ngx_ext_modules/ws_server
 WS_SERVER_LIB=$(WS_SERVER_DIR)/libws_server.a
 
 # Remove everything we can.
@@ -67,4 +66,3 @@ install:
 clean:
 	-$(MAKE) -C $(NGINX_DIR) clean
 	-$(MAKE) -C $(WS_SERVER_DIR) clean
-	rm -rf $(NGX_EXT_MODULES_DIR)/tools

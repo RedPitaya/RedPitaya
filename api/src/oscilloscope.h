@@ -35,11 +35,12 @@ typedef struct osc_control_s {
     /** @brief Offset 0x00 - configuration register
      *
      * Configuration register (offset 0x00):
-     * bit [0] - arm_trigger
-     * bit [1] - rst_wr_state_machine
-     * bit [2] - trigger_status
-     * bit [3] - arm_keep
-     * bits [31:4] - reserved
+     * bit [0] - (W) arm_trigger
+     * bit [1] - (W) rst_wr_state_machine
+     * bit [2] - (R) trigger_status
+     * bit [3] - (W) arm_keep
+     * bit [4] - (R) All data written to buffer
+     * bits [31:5] - reserved
      */
     uint32_t conf;
 
@@ -64,16 +65,24 @@ typedef struct osc_control_s {
     /** @brief Offset 0x08 - Channel A threshold register
      *
      * Channel A threshold register (offset 0x08):
-     * bits [13: 0] - ChA threshold
+     * for 125 and 250
+     * bits [13: 0] - ChB threshold
      * bits [31:14] - reserved
+     * for 122
+     * bits [15: 0] - ChB threshold
+     * bits [31:16] - reserved
      */
     uint32_t cha_thr;
 
     /** @brief Offset 0x0C - Channel B threshold register
      *
      * Channel B threshold register (offset 0x0C):
+     * for 125 and 250
      * bits [13: 0] - ChB threshold
      * bits [31:14] - reserved
+     * for 122
+     * bits [15: 0] - ChB threshold
+     * bits [31:16] - reserved
      */
     uint32_t chb_thr;
 
@@ -113,8 +122,12 @@ typedef struct osc_control_s {
     uint32_t wr_ptr_trigger;
 
     /** @brief ChA & ChB hysteresis - both of the format:
-     * bits [13: 0] - hysteresis threshold
+     * for 125 and 250
+     * bits [13: 0] - ChB threshold
      * bits [31:14] - reserved
+     * for 122
+     * bits [15: 0] - ChB threshold
+     * bits [31:16] - reserved
      */
     uint32_t cha_hystersis;
     uint32_t chb_hystersis;
@@ -202,8 +215,13 @@ static const uint32_t DATA_DEC_MASK         = 0x1FFFF;      // (17 bits)
 static const uint32_t DATA_AVG_MASK         = 0x1;          // (1 bit)
 static const uint32_t TRIG_SRC_MASK         = 0xF;          // (4 bits)
 static const uint32_t START_DATA_WRITE_MASK = 0x1;          // (1 bit)
+#ifdef Z20
+static const uint32_t THRESHOLD_MASK        = 0xFFFF;       // (16 bits)
+static const uint32_t HYSTERESIS_MASK       = 0xFFFF;       // (16 bits)
+#else
 static const uint32_t THRESHOLD_MASK        = 0x3FFF;       // (14 bits)
 static const uint32_t HYSTERESIS_MASK       = 0x3FFF;       // (14 bits)
+#endif
 static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
 static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
 static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
@@ -211,8 +229,8 @@ static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
 static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
 static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2st bit)
 static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
-static const uint32_t ARM_KEEP_MASK         = 0xF;          // (4 bit)
-
+static const uint32_t ARM_KEEP_MASK         = 0x8;          // (4 bit)
+static const uint32_t FILL_STATE_MASK       = 0x10;          // (1 bit)
 
 int osc_Init();
 int osc_Release();
@@ -226,6 +244,8 @@ int osc_GetTriggerSource(uint32_t* source);
 int osc_WriteDataIntoMemory(bool enable);
 int osc_ResetWriteStateMachine();
 int osc_SetArmKeep(bool enable);
+int osc_GetArmKeep(bool *state);
+int osc_GetBufferFillState(bool *state);
 int osc_GetTriggerState(bool *received);
 int osc_GetPreTriggerCounter(uint32_t *value);
 int osc_SetThresholdChA(uint32_t threshold);

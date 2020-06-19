@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_rp_osc_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="axi_bram_ctrl_funcs" />
+            <top_module name="glbl" />
+            <top_module name="tb_rp_osc" />
+            <top_module name="vcomponents" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="38745280438fs"></ZoomEndTime>
+      <Cursor1Time time="2056100000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="203"></NameColumnWidth>
+      <ValueColumnWidth column_width="102"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="43" />
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_aclk" type="logic">
+      <obj_property name="ElementShortName">m_axi_aclk</obj_property>
+      <obj_property name="ObjectShortName">m_axi_aclk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/s_axis_aclk" type="logic">
+      <obj_property name="ElementShortName">s_axis_aclk</obj_property>
+      <obj_property name="ObjectShortName">s_axis_aclk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/aresetn" type="logic">
+      <obj_property name="ElementShortName">aresetn</obj_property>
+      <obj_property name="ObjectShortName">aresetn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/busy" type="logic">
+      <obj_property name="ElementShortName">busy</obj_property>
+      <obj_property name="ObjectShortName">busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/intr" type="logic">
+      <obj_property name="ElementShortName">intr</obj_property>
+      <obj_property name="ObjectShortName">intr</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/reg_ctrl" type="array">
+      <obj_property name="ElementShortName">reg_ctrl[31:0]</obj_property>
+      <obj_property name="ObjectShortName">reg_ctrl[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/reg_dst_addr1" type="array">
+      <obj_property name="ElementShortName">reg_dst_addr1[31:0]</obj_property>
+      <obj_property name="ObjectShortName">reg_dst_addr1[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/reg_dst_addr2" type="array">
+      <obj_property name="ElementShortName">reg_dst_addr2[31:0]</obj_property>
+      <obj_property name="ObjectShortName">reg_dst_addr2[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/reg_buf_size" type="array">
+      <obj_property name="ElementShortName">reg_buf_size[31:0]</obj_property>
+      <obj_property name="ObjectShortName">reg_buf_size[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awaddr" type="array">
+      <obj_property name="ElementShortName">m_axi_awaddr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awaddr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awlen" type="array">
+      <obj_property name="ElementShortName">m_axi_awlen[7:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awlen[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awsize" type="array">
+      <obj_property name="ElementShortName">m_axi_awsize[2:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awsize[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awburst" type="array">
+      <obj_property name="ElementShortName">m_axi_awburst[1:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awburst[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awprot" type="array">
+      <obj_property name="ElementShortName">m_axi_awprot[2:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awprot[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awcache" type="array">
+      <obj_property name="ElementShortName">m_axi_awcache[3:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awcache[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awvalid" type="logic">
+      <obj_property name="ElementShortName">m_axi_awvalid</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_awready" type="logic">
+      <obj_property name="ElementShortName">m_axi_awready</obj_property>
+      <obj_property name="ObjectShortName">m_axi_awready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_wdata" type="array">
+      <obj_property name="ElementShortName">m_axi_wdata[63:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_wdata[63:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_wstrb" type="array">
+      <obj_property name="ElementShortName">m_axi_wstrb[7:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_wstrb[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_wlast" type="logic">
+      <obj_property name="ElementShortName">m_axi_wlast</obj_property>
+      <obj_property name="ObjectShortName">m_axi_wlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_wvalid" type="logic">
+      <obj_property name="ElementShortName">m_axi_wvalid</obj_property>
+      <obj_property name="ObjectShortName">m_axi_wvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_wready" type="logic">
+      <obj_property name="ElementShortName">m_axi_wready</obj_property>
+      <obj_property name="ObjectShortName">m_axi_wready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_bresp" type="array">
+      <obj_property name="ElementShortName">m_axi_bresp[1:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axi_bresp[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_bvalid" type="logic">
+      <obj_property name="ElementShortName">m_axi_bvalid</obj_property>
+      <obj_property name="ObjectShortName">m_axi_bvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/m_axi_bready" type="logic">
+      <obj_property name="ElementShortName">m_axi_bready</obj_property>
+      <obj_property name="ObjectShortName">m_axi_bready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/s_axis_tdata" type="array">
+      <obj_property name="ElementShortName">s_axis_tdata[15:0]</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tdata[15:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/s_axis_tvalid" type="logic">
+      <obj_property name="ElementShortName">s_axis_tvalid</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/s_axis_tready" type="logic">
+      <obj_property name="ElementShortName">s_axis_tready</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/s_axis_tlast" type="logic">
+      <obj_property name="ElementShortName">s_axis_tlast</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/fifo_rst" type="logic">
+      <obj_property name="ElementShortName">fifo_rst</obj_property>
+      <obj_property name="ObjectShortName">fifo_rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/fifo_wr_data" type="array">
+      <obj_property name="ElementShortName">fifo_wr_data[63:0]</obj_property>
+      <obj_property name="ObjectShortName">fifo_wr_data[63:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/fifo_wr_we" type="logic">
+      <obj_property name="ElementShortName">fifo_wr_we</obj_property>
+      <obj_property name="ObjectShortName">fifo_wr_we</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/fifo_rd_data" type="array">
+      <obj_property name="ElementShortName">fifo_rd_data[63:0]</obj_property>
+      <obj_property name="ObjectShortName">fifo_rd_data[63:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/fifo_rd_re" type="logic">
+      <obj_property name="ElementShortName">fifo_rd_re</obj_property>
+      <obj_property name="ObjectShortName">fifo_rd_re</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/fifo_empty" type="logic">
+      <obj_property name="ElementShortName">fifo_empty</obj_property>
+      <obj_property name="ObjectShortName">fifo_empty</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/fifo_rd_cnt" type="array">
+      <obj_property name="ElementShortName">fifo_rd_cnt[9:0]</obj_property>
+      <obj_property name="ObjectShortName">fifo_rd_cnt[9:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/req_data" type="array">
+      <obj_property name="ElementShortName">req_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">req_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/req_we" type="logic">
+      <obj_property name="ElementShortName">req_we</obj_property>
+      <obj_property name="ObjectShortName">req_we</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/AXI_ADDR_BITS" type="array">
+      <obj_property name="ElementShortName">AXI_ADDR_BITS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">AXI_ADDR_BITS[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/AXI_DATA_BITS" type="array">
+      <obj_property name="ElementShortName">AXI_DATA_BITS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">AXI_DATA_BITS[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/AXIS_DATA_BITS" type="array">
+      <obj_property name="ElementShortName">AXIS_DATA_BITS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">AXIS_DATA_BITS[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/AXI_BURST_LEN" type="array">
+      <obj_property name="ElementShortName">AXI_BURST_LEN[31:0]</obj_property>
+      <obj_property name="ObjectShortName">AXI_BURST_LEN[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_rp_osc/U_rp_osc/U_osc1/U_dma_s2mm/FIFO_CNT_BITS" type="array">
+      <obj_property name="ElementShortName">FIFO_CNT_BITS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FIFO_CNT_BITS[31:0]</obj_property>
+   </wvobject>
+</wave_config>

@@ -13,10 +13,8 @@
 #ifndef _WIN32
 #include <sys/statvfs.h>
 #include <unistd.h>
-#include <sys/unistd.h>
 #else
 #include <windows.h>
-#include <sys/unistd.h>
 #endif
 
 std::string DirNameOf(const std::string& fname)
@@ -31,6 +29,7 @@ FileQueueManager::FileQueueManager():Queue(){
     m_threadWork = false;
     m_waitAllWrite = false;    
     m_hasErrorWrite = false;
+    m_IsOutOfSpace = false;
 }
 
 FileQueueManager::~FileQueueManager(){
@@ -154,14 +153,7 @@ void FileQueueManager::StartWrite(Stream_FileType _fileType){
     m_firstSectionWrite = false;
     m_waitAllWrite = true;
     m_hasErrorWrite = false;
-    
-    // Clean before start
-    auto bstream_clean = popQueue();
-    while(bstream_clean){
-        delete bstream_clean;
-        bstream_clean = popQueue();
-    }
-
+    m_IsOutOfSpace = false;
     th = new std::thread(&FileQueueManager::Task,this);
 }
 
@@ -181,8 +173,9 @@ void FileQueueManager::StopWrite(bool waitAllWrite){
 }
 
 void FileQueueManager::Task(){
+
     while (m_ThreadRun.test_and_set()){
-        WriteToFile();
+        WriteToFile();        
     }
     m_waitLock.lock();
     if (this->m_waitAllWrite) {
@@ -229,7 +222,7 @@ int FileQueueManager::WriteToFile(){
         }
 
     } else{
-
+        m_IsOutOfSpace = true;
         m_hasErrorWrite = true;
         if (!(m_hasWriteSize < m_freeSize)){
             acout() << "The disc has reached the write limit\n";

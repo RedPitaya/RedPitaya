@@ -33,17 +33,24 @@ static char version[50];
 
 int rp_Init()
 {
+    return rp_InitReset(true);
+}
+
+int rp_InitReset(bool reset)
+{
     cmn_Init();
 
     calib_Init();
-    hk_Init();
+    hk_Init(reset);
     ams_Init();
     generate_Init();
     osc_Init();
     // TODO: Place other module initializations here
 
     // Set default configuration per handler
-    rp_Reset();
+    if (reset){
+        rp_Reset();
+    }
 
     return RP_OK;
 }
@@ -63,6 +70,7 @@ int rp_Release()
     hk_Release();
     calib_Release();
     cmn_Release();
+
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
 }
@@ -483,6 +491,14 @@ int rp_AcqSetArmKeep(bool enable)
     return acq_SetArmKeep(enable);
 }
 
+int rp_AcqGetArmKeep(bool* state){
+    return acq_GetArmKeep(state);
+}
+
+int rp_AcqGetBufferFillState(bool* state){
+    return acq_GetBufferFillState(state);
+}
+
 int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 {
     return acq_SetDecimation(decimation);
@@ -491,6 +507,11 @@ int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 int rp_AcqGetDecimation(rp_acq_decimation_t* decimation)
 {
     return acq_GetDecimation(decimation);
+}
+
+int rp_AcqSetDecimationFactor(uint32_t decimation)
+{
+    return acq_SetDecimationFactor(decimation);
 }
 
 int rp_AcqGetDecimationFactor(uint32_t* decimation)
@@ -577,12 +598,12 @@ int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state)
     return acq_SetGain(channel, state);
 }
 
-int rp_AcqGetTriggerLevel(float* voltage)
+int rp_AcqGetTriggerLevel(rp_channel_trigger_t channel, float* voltage)
 {
-    return acq_GetTriggerLevel(voltage);
+    return acq_GetTriggerLevel(channel,voltage);
 }
 
-int rp_AcqSetTriggerLevel(rp_channel_t channel, float voltage)
+int rp_AcqSetTriggerLevel(rp_channel_trigger_t channel, float voltage)
 {
     return acq_SetTriggerLevel(channel, voltage);
 }
@@ -679,6 +700,16 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
 }
+
+#ifdef Z20_250_12
+int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
+    return acq_SetAC_DC(channel,mode);
+}
+
+int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
+    return acq_GetAC_DC(channel,status);
+}
+#endif
 
 /**
 * Generate methods
@@ -805,3 +836,44 @@ float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32
 	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
 }
 
+int rp_SetEnableTempProtection(rp_channel_t channel, bool enable){
+    return gen_setEnableTempProtection(channel,enable);
+}
+
+int rp_GetEnableTempProtection(rp_channel_t channel, bool *enable){
+    return gen_getEnableTempProtection(channel,enable);
+}
+
+int rp_SetLatchTempAlarm(rp_channel_t channel, bool status){
+    return gen_setLatchTempAlarm(channel,status);
+}
+
+int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status){
+    return gen_getLatchTempAlarm(channel,status);
+}
+
+int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status){
+    return gen_getRuntimeTempAlarm(channel,status);
+}
+
+int rp_GetPllControlEnable(bool *enable){
+    return house_GetPllControlEnable(enable);
+}
+
+int rp_SetPllControlEnable(bool enable){
+    return house_SetPllControlEnable(enable);
+}
+
+int rp_GetPllControlLocked(bool *status){
+    return house_GetPllControlLocked(status);
+}
+
+#ifdef Z20_250_12
+int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode){
+    return gen_setGainOut(channel,mode);
+}
+
+int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
+    return gen_getGainOut(channel,status);
+}
+#endif

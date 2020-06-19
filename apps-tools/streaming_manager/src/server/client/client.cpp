@@ -88,6 +88,22 @@ string ParsePort(string value) noexcept{
     }
 }
 
+int ParseSamples(string value) noexcept{
+    try {
+        int x = std::stoi (value);
+        if ( x <= 0){
+            std::cout << "Error read port number from parameters";
+            return -1;
+        }
+        return x;
+    }
+    catch (std::exception& e)
+    {
+        std::cout << "Error read port number from parameters";
+        return -1;
+    }
+}
+
 
 void UsingArgs(char const* progName){
     std::cout << "Usage: " << progName << "\n";
@@ -95,7 +111,7 @@ void UsingArgs(char const* progName){
     std::cout << "\t-p Protocol (TCP or UDP required value)\n";
     std::cout << "\t-f Path to the directory where to save files\n";
     std::cout << "\t-t Type of file (tdms or wav required value)\n";
-
+    std::cout << "\t-s Sample limit [1-2147483647] (no limit by default)\n";
 
 }
 
@@ -135,17 +151,14 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size){
      uint32_t oscRate = 0;
      uint32_t resolution = 0;
      asionet::CAsioNet::ExtractPack(buff,_size, id, lostRate,oscRate, resolution, ch1, size_ch1, ch2 , size_ch2);
-
      g_packCounter_ch1 += size_ch1 / (resolution == 16 ? 2 : 1);
      g_packCounter_ch2 += size_ch2 / (resolution == 16 ? 2 : 1);
-     g_lostRate += lostRate;
-
+     g_lostRate = lostRate;
+    // std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
      g_manger->passBuffers(lostRate, oscRate, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
 
-
-//     std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
-
+     
      delete [] ch1;
      delete [] ch2;
 
@@ -155,14 +168,23 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size){
 //     std::cout << value.count() << "\n";
 //     std::cout <<  g_timeBegin << "\n";
      if ((value.count() - g_timeBegin) >= 5000) {
+         uint64_t bw = g_BytesCount;
+         std::string pref = " ";
+         if (g_BytesCount  > (1024 * 5)) {
+             bw = g_BytesCount  / (1024 * 5);
+             pref = " ki";
+         }
 
-         std::cout << time_point_to_string(timeNow) << " bandwidth: " << g_BytesCount / (1024 * 1024 * 5) << " MiB/s;\nData count ch1:\t" << g_packCounter_ch1
+         if (g_BytesCount  > (1024 * 1024 * 5)) {
+             bw = g_BytesCount  / (1024 * 1024 * 5);
+             pref = " Mi";
+         }
+         std::cout << time_point_to_string(timeNow) << " bandwidth: " << bw <<  pref <<"B/s;\nData count ch1:\t" << g_packCounter_ch1
                  << " ch2:\t" << g_packCounter_ch2 <<  " Lost: \t"<< g_lostRate << "\n\n";
          g_BytesCount = 0;
          g_lostRate = 0;
          g_timeBegin = value.count();
      }
-
 
 
 }
@@ -198,6 +220,7 @@ int main(int argc, char* argv[])
         char * ip_port   = getCmdOption(argv, argv + argc, "-h");
         char * protocol  = getCmdOption(argv, argv + argc, "-p");
         char * type_file = getCmdOption(argv, argv + argc, "-t");
+        char * samples   = getCmdOption(argv, argv + argc, "-s");
         bool checkParameters = false;
         checkParameters |= CheckMissing(ip_port,"IP address of server");
         checkParameters |= CheckMissing(protocol,"Protocol");
@@ -211,7 +234,7 @@ int main(int argc, char* argv[])
         string port = ParsePort(ip_port);
         if (filepath == nullptr)
             filepath = const_cast<char *>(".");
-
+        int samples_int = samples ? ParseSamples(samples) : -1;
 #ifndef  _WIN32
         auto size =  FileQueueManager::GetFreeSpaceDisk(filepath);
         std::cout << "Free disk space: "<< size / (1024 * 1024) << "Mb \n";
@@ -230,8 +253,8 @@ int main(int argc, char* argv[])
 
 
         g_manger = CStreamingManager::Create((strcmp(type_file,"wav") == 0 ?
-                                              Stream_FileType::WAV_TYPE : Stream_FileType::TDMS_TYPE)  , filepath);
-
+                                              Stream_FileType::WAV_TYPE : Stream_FileType::TDMS_TYPE)  , filepath, samples_int);
+  
         g_manger->run();
 
         g_asionet = asionet::CAsioNet::Create(asionet::Mode::CLIENT, protocol_val ,host , port);

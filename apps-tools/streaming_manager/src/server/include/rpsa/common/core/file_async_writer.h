@@ -45,6 +45,7 @@ class FileQueueManager:public Queue{
     bool m_hasErrorWrite;
     Stream_FileType  m_fileType; // FLAG for file type TDMS/Wav
     bool m_firstSectionWrite; // Need for detect first section of wav file
+    bool m_IsOutOfSpace;
     void Task();
    ulong m_freeSize;
    ulong m_hasWriteSize;   
@@ -55,7 +56,8 @@ public:
     static ulong GetFreeSpaceDisk(std::string _filePath);
     void StartWrite(Stream_FileType _fileType);
     void StopWrite(bool waitAllWrite);
-    bool IsWork() { return  m_threadWork && !m_hasErrorWrite;};
+    bool IsWork() { return  m_threadWork && !m_hasErrorWrite;}
+    bool IsOutOfSpace() {return m_IsOutOfSpace; }
     int  WriteToFile();
     bool AddBufferToWrite(std::iostream *buffer);
     void OpenFile(std::string FileName,bool append);

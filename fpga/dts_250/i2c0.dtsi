@@ -1,0 +1,26 @@
+/*
+ * list devices on I2C bus
+ */
+
+&i2c0 {
+	eeprom@50 {
+		compatible = "24c64";
+		reg = <0x50>;
+		pagesize = <32>;
+	};
+
+	eeprom@51 {
+		compatible = "24c64";
+		reg = <0x51>;
+		pagesize = <32>;
+	};
+
+	osc@55 {
+		#clock-cells = <0>;
+		compatible = "silabs,si570";
+		reg = <0x55>;
+		factory-fout = <100000000>;
+		clock-frequency = <250000000>;
+		temperature-stability = <50>;
+	};
+};

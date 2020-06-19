@@ -1,3 +1,19 @@
+# Release (1.03-6)
+
+General improvements:
+- Access point working with official WIFI dongle
+- Client WIFI mode fixed
+- Trigger issues fixed
+- Broken acquired signal issues fixed
+- Jupyter slow analog inputs bug fixed
+- Improved UI of the oscilloscope and spectrum analyzer
+- Shutdown button added to WEB interface
+- Added console server for streaming application
+- Multiple bug fixes in streaming applications
+- Added functionality limiting the number of samples in streaming application
+- Improved console applications. Added calibration support.
+- Other stability improvements & bug fixes
+  
 # Beta version (0.99-43)
 
 - Improved stability

@@ -12,30 +12,18 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <ctime>
+#include <stdlib.h>
 
 #include <vector>
 #include <algorithm>
 #include <thread>
 #include <mutex>
 
-#include "redpitaya/version.h"
+#include "rp.h"
+#include "version.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 
-//extern "C" {
-//    #include "rpApp.h"
-//}
-
-
-#ifdef Z10
-#define RP_MODEL "Z10"
-#define MAX_FREQ 125e6
-#endif
-
-#ifdef Z20
-#define RP_MODEL "Z20"
-#define MAX_FREQ 122.880e6
-#endif
 
 void StartServer();
 void StopServer(int x);
@@ -65,12 +53,13 @@ CBooleanParameter 	ss_use_localfile(	"SS_USE_FILE", 	        CBaseParameter::RW,
 CIntParameter		ss_port(  			"SS_PORT_NUMBER", 		CBaseParameter::RW, 8900,0,	1,65535);
 CStringParameter    ss_ip_addr(			"SS_IP_ADDR",			CBaseParameter::RW, "",0);
 CIntParameter		ss_protocol(  		"SS_PROTOCOL", 			CBaseParameter::RW, 1 ,0,	1,2);
+CIntParameter		ss_samples(  		"SS_SAMPLES", 			CBaseParameter::RW, 2000000000 ,0,	-1,2000000000);
 CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 1 ,0,	1,3);
 CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
-CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RWSA, 1 ,0,	0,100);
-CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, MAX_FREQ ,0,	0, MAX_FREQ);
+CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
+CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
 CStreamingManager::Ptr s_manger;
@@ -99,10 +88,10 @@ const char *rp_app_desc(void)
 int rp_app_init(void)
 {
 	fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
-	CDataManager::GetInstance()->SetParamInterval(300);
+	CDataManager::GetInstance()->SetParamInterval(100);
 
 	ss_status.SendValue(0);
-	ss_acd_max.SendValue(MAX_FREQ);
+	ss_acd_max.SendValue(ADC_SAMPLE_RATE);
 	try {
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 	}catch (std::exception& e)
@@ -148,7 +137,20 @@ void UpdateSignals(void)
 
 }
 
-
+void SaveConfigInFile(){
+	char pathtofile[255];
+	sprintf(pathtofile,"/root/%s",".streaming_config");
+	ofstream file(pathtofile);
+	file << "host " << ss_ip_addr.Value() << std::endl;
+	file << "port " << ss_port.Value() << std::endl;
+	file << "protocol " << ss_protocol.Value() << std::endl;
+	file << "rate " << ss_rate.Value() << std::endl;
+	file << "channels " << ss_channels.Value() << std::endl;
+	file << "resolution " << ss_resolution.Value() << std::endl;
+	file << "use_file " << ss_use_localfile.Value() << std::endl;
+	file << "format " << ss_format.Value() << std::endl;
+	file << "samples " << ss_samples.Value() << std::endl;
+}
 
 //Update parameters
 void UpdateParams(void)
@@ -157,41 +159,55 @@ void UpdateParams(void)
 	if (ss_port.IsNewValue())
 	{
 		ss_port.Update();
+		SaveConfigInFile();
 	}
 
 	if (ss_ip_addr.IsNewValue())
 	{
 		ss_ip_addr.Update();
+		SaveConfigInFile();		
 	}
 
 	if (ss_use_localfile.IsNewValue())
 	{
 		ss_use_localfile.Update();
+		SaveConfigInFile();
 	}
 
 	if (ss_protocol.IsNewValue())
 	{
 		ss_protocol.Update();
+		SaveConfigInFile();
 	}
 
 	if (ss_channels.IsNewValue())
 	{
 		ss_channels.Update();
+		SaveConfigInFile();
 	}
 
 	if (ss_resolution.IsNewValue())
 	{
 		ss_resolution.Update();
+		SaveConfigInFile();
 	}
 
 	if (ss_rate.IsNewValue())
 	{
 		ss_rate.Update();
+		SaveConfigInFile();
 	}
 
 	if (ss_format.IsNewValue())
 	{
 		ss_format.Update();
+		SaveConfigInFile();
+	}
+
+	if (ss_samples.IsNewValue())
+	{
+		ss_samples.Update();
+		SaveConfigInFile();
 	}
 
 	if (ss_start.IsNewValue())
@@ -244,6 +260,7 @@ void StartServer(){
 	auto channel = ss_channels.Value();
 	auto rate = ss_rate.Value();
 	auto ip_addr_host = ss_ip_addr.Value();
+	auto samples = ss_samples.Value();
 
 	std::vector<UioT> uioList = GetUioList();
 
@@ -277,10 +294,10 @@ void StartServer(){
 				std::to_string(sock_port).c_str(),
 				protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
 	}else{
-		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH);
+		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH, samples);
 		s_manger->notifyStop = [](int status)
 							{
-								StopNonBlocking(2);
+								StopNonBlocking(status == 0 ? 2 : 3);
 							};
 	}
 
@@ -292,8 +309,7 @@ void StartServer(){
 	int resolution_val = (resolution == 1 ? 8 : 16);
 	s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel);
 	ss_status.SendValue(1);
-	PrintLogInFile("ss_status.SendValue(1)");
-    s_app->runNonBlock();
+	s_app->runNonBlock();
 
 	}catch (std::exception& e)
 	{

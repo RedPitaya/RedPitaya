@@ -8,6 +8,8 @@
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
 
+MODEL ?= Z10
+
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
@@ -32,6 +34,11 @@ LIBS = -lrp -pthread -static-libstdc++
 CXX = $(CROSS_COMPILE)g++
 # Installation directory
 INSTALL_DIR ?= .
+
+ifeq ($(MODEL),Z20_250_12)
+LIBS += -L$(INSTALL_DIR)/lib 
+LIBS += -lrp-i2c
+endif 
 
 # Makefile is composed of so called 'targets'. They give basic structure what
 # needs to be execued during various stages of the building/removing/installing

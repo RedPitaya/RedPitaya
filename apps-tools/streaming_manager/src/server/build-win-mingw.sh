@@ -1,4 +1,5 @@
 #!/bin/bash
+unzip -o ./libs/asio.zip -d ./libs
 cmake CMakeLists.txt -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake
 make
 

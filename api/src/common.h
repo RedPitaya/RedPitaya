@@ -19,7 +19,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "redpitaya/rp.h"
+
+
 
 #define ECHECK(x) { \
         int retval = (x); \
@@ -60,6 +61,7 @@ else { \
 
 #define FULL_SCALE_NORM     20.0    // V
 
+
 int cmn_Init();
 int cmn_Release();
 
@@ -82,8 +84,9 @@ float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
 uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale);
 
 int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off);
-float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off);
+float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off,double full_scale_norm);
 float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
+float cmn_CnvNormCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off,double full_scale_norm);
 uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
 
 float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);

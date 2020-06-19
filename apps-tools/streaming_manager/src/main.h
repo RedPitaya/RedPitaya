@@ -6,6 +6,8 @@
 #include <sys/syslog.h> //Add custom RP_LCR LOG system
 
 
+#define CH_SIGNAL_SIZE_DEFAULT      1024
+#define SAMPLING_RATE_DIV_MILLION   125
 
 #define EXEC_CHECK_MUTEX(x, mutex){ \
  		int retval = (x); \

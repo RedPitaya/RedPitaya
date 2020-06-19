@@ -9,12 +9,14 @@
 # REVISION ?= devbuild
 # VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
+MODEL ?= Z10
+
 LIBRP=lib/librp.so
 
 all: $(LIBRP)
 
 $(LIBRP):
-	$(MAKE) -C src
+	$(MAKE) -C src INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 clean:
 	$(MAKE) -C src clean

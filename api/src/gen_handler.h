@@ -16,7 +16,7 @@
 #define GENERATE_HANDLER_H_
 
 
-#include "redpitaya/rp.h"
+#include "rp_cross.h"
 
 int gen_SetDefaultValues();
 int gen_Disable(rp_channel_t chanel);
@@ -57,13 +57,18 @@ int gen_getLatchTempAlarm(rp_channel_t channel, bool *status);
 int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status);
 
 int synthesize_signal(rp_channel_t channel);
-int synthesis_sin(float *data_out);
-int synthesis_triangle(float *data_out);
+int synthesis_sin(float *data_out,uint16_t buffSize);
+int synthesis_triangle(float *data_out,uint16_t buffSize);
 int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size);
-int synthesis_square(float frequency, float *data_out);
-int synthesis_rampUp(float *data_out);
-int synthesis_rampDown(float *data_out);
-int synthesis_DC(float *data_out);
-int synthesis_PWM(float ratio, float *data_out);
+int synthesis_square(float frequency, float *data_out,uint16_t buffSize);
+int synthesis_rampUp(float *data_out,uint16_t buffSize);
+int synthesis_rampDown(float *data_out,uint16_t buffSize);
+int synthesis_DC(float *data_out,uint16_t buffSize);
+int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize);
+
+#ifdef Z20_250_12
+int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode);
+int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status);
+#endif
 
 #endif

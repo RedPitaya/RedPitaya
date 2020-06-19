@@ -78,16 +78,39 @@ DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG)
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
+KERNEL_HEADERS ?= YES
+
 ################################################################################
 # FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
 ################################################################################
 
-FPGA_PRJ_LST = classic logic v0.94 mercury axi4lite
-#FPGA_PRJ_LST = classic logic v0.94 mercury
-FPGA_PRJ = logic
-FPGA_MODEL ?= Z10
+HWID ?=
 
-.PHONY: fpga
+ifeq ($(MODEL),Z10)
+FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite streaming
+# NEED for FSBL fpga image
+FPGA_PRJ = streaming
+FPGA_MODEL ?= Z10
+DTS_PATH = dts
+endif
+
+ifeq ($(MODEL),Z20)
+FPGA_PRJ_LST = v0.94 streaming stream_app
+# NEED for FSBL fpga image
+FPGA_PRJ = streaming
+FPGA_MODEL ?= Z20
+DTS_PATH = dts
+endif
+
+ifeq ($(MODEL),Z20_250_12)
+FPGA_PRJ_LST = v0.94_250
+# NEED for FSBL fpga image
+FPGA_PRJ = v0.94
+FPGA_MODEL ?= Z20_250
+DTS_PATH = dts_250
+endif
+
+.PHONY: fpga $(INSTALL_DIR)/fpga
 
 fpga: $(INSTALL_DIR)/fpga
 
@@ -95,7 +118,7 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
 	# compile FPGA projects
 	for ITM in $(FPGA_PRJ_LST); do \
-	    make -C fpga PRJ=$$ITM MODEL=$(FPGA_MODEL); \
+	    make -C fpga PRJ=$$ITM MODEL=$(FPGA_MODEL) HWID=$(HWID); \
 	    mkdir -p $(INSTALL_DIR)/fpga/$$ITM; \
 	    cp    fpga/prj/$$ITM/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$$ITM/fpga.bit; \
 	    cp    fpga/prj/$$ITM/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$$ITM/fsbl.elf; \
@@ -103,13 +126,31 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	    cp    fpga/prj/$$ITM/dts/*                    $(INSTALL_DIR)/fpga/$$ITM/dts/    ; \
 	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
 	done
+
+# FIXME manually copy prebuilt streaming FPGA bitstream
+#	cp fpga/prj/streaming/prebuilt/* $(INSTALL_DIR)/fpga/
+ifeq ($(FPGA_MODEL), Z10)
+	cp fpga/prj/streaming/prebuilt/fpga_streaming.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
+endif
+
+ifeq ($(FPGA_MODEL), Z20)
+	cp fpga/prj/streaming/prebuilt/fpga_streaming_z20.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
+endif
+
 	# copy archived FPGA bitstream images and decompress them
-	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
+#	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
+#	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
 	# backward compatibility, TODO, should be removed at next OS release
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+ifneq ($(FPGA_MODEL),Z20_250)
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+ifeq ($(FPGA_MODEL), Z10)
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+endif
+else
+	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
+endif
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
@@ -147,7 +188,7 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 
 LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
 
-.PHONY: linux linux-install
+.PHONY: linux linux-install $(LINUX_DIR)
 
 linux: $(LINUX)
 
@@ -157,11 +198,20 @@ $(LINUX_TAR): | $(DL)
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
+	patch -t -p1 -i "${PWD}/patches/zynq-kernel-mempry-reserve-issue.patch" -d "${PWD}/$@"
+	patch -t -p1 -i "${PWD}/patches/zynq-kernel-i2c.patch" -d "${PWD}/$@"
+	patch -t -p1 -i "${PWD}/patches/xilinx_zynq_defconfig.patch" -d "${PWD}/$@" # patch for Wifi AP mode
+ifeq ($(MODEL),Z20_250_12)
+	patch -t -p1 -i "${PWD}/patches/zynq-kernel-lantiq_250_12.patch" -d "${PWD}/$@"
+endif
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+ifeq ($(KERNEL_HEADERS),YES)
+	make -C $< headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))/include/linux
+endif
 
 linux-install: linux $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
@@ -186,7 +236,10 @@ $(DTREE_DIR): $(DTREE_TAR)
 $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/dts $(TMP)/dts/system-top.dts
+ifneq ($(MODEL),Z20_250_12)
+	patch $(TMP)/dts/pl.dtsi < fpga/dts/pl.dtsi.patch
+endif
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(DTS_PATH) $(TMP)/dts/system-top.dts
 	# create device tree source from binary for reference
 	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
@@ -219,7 +272,7 @@ ZIPFILE=ecosystem-$(VERSION).zip
 
 zip: $(ZIPFILE)
 
-$(ZIPFILE): install
+$(ZIPFILE):
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt

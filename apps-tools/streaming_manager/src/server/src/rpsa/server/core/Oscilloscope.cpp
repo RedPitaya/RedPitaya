@@ -7,12 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
-#include <chrono>
-#include <fstream>
-#include <functional>
-#include <cstdlib>
-
 namespace
 {
 //!
@@ -96,7 +90,7 @@ COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd
     m_OscMap2(nullptr),
     m_OscBuffer1(nullptr),
     m_OscBuffer2(nullptr),
-    m_OscBufferNumber(0),
+    m_OscBufferNumber(1),
     m_dec_factor(_dec_factor)
 {
     uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset) +  osc0_baseaddr ;
@@ -179,11 +173,7 @@ void COscilloscope::prepare()
         std::cerr << "Error: COscilloscope::prepare()  can't init first channel" << std::endl;
         exit(-1);
     }
-    
-    m_OscBufferNumber = 0;
-    m_OscMap1->dma_ctrl  = 0xC;
-    m_OscMap2->dma_ctrl  = 0xC;
-    
+
     m_OscMap1->dma_ctrl = UINT32_C(0x00000201);
     m_OscMap2->dma_ctrl = UINT32_C(0x00000201);
 
@@ -209,28 +199,15 @@ bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,bo
            
             // Interrupt ACQ
 
-            if ((m_OscMap1->dma_sts_addr & 0x3) !=  (m_OscMap2->dma_sts_addr & 0x3)) {
-                std::cerr << "Error: COscilloscope::next(): Buffers not synced" << std::endl;
-            } 
-
-            if (m_OscMap1->dma_sts_addr & 0x1){
-                m_OscBufferNumber = 0;
-            }else{
-                m_OscBufferNumber = 1;
-            }
-
             _buffer1 = m_Channel1 ? ( m_OscBuffer1 + osc_buf_size * m_OscBufferNumber) : nullptr;
 
             _buffer2 = m_Channel2 ? ( m_OscBuffer2 + osc_buf_size * m_OscBufferNumber) : nullptr;
             
             _overFlow1 = m_OscMap1->dma_sts_addr & (m_OscBufferNumber == 0 ? 0x4 : 0x8);
             _overFlow2 = m_OscMap2->dma_sts_addr & (m_OscBufferNumber == 0 ? 0x4 : 0x8);
-
             // if (_overFlow1 ) printf("CH1  %x\n",_overFlow1);
             // if (_overFlow2 ) printf("CH2  %x\n",_overFlow2);
-            
-            
-
+       
             if (m_Channel1 || m_Channel2){
                 _size = osc_buf_size;
             }else {
@@ -243,14 +220,16 @@ bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,bo
     return false;
 }
 
-bool COscilloscope::changeBuffers(){
-
+bool COscilloscope::clearBuffer(){
     uint32_t clearFlag = (m_OscBufferNumber == 0 ? 0x00000004 : 0x00000008);
     uint32_t resetFlag = 0x00000002;
 
     m_OscMap1->dma_ctrl |= (resetFlag | clearFlag);
     m_OscMap2->dma_ctrl |= (resetFlag | clearFlag);
 
+    if (m_Channel1 || m_Channel2){
+        m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;
+    }
     return true;
 }
 
@@ -259,12 +238,6 @@ void COscilloscope::stop()
     // Control stop
     if (m_OscMap1 != nullptr){
         m_OscMap1->event_sts = UINT32_C(0x00000004);
-    }else {
-        std::cerr << "Error: COscilloscope::stop()" << std::endl;
-        exit(-1);
-    }
-    if (m_OscMap2 != nullptr){
-        m_OscMap2->event_sts = UINT32_C(0x00000004);
     }else {
         std::cerr << "Error: COscilloscope::stop()" << std::endl;
         exit(-1);

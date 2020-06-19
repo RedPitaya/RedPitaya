@@ -1,0 +1,23 @@
+/*
+ * stystem LED are given a fixed function
+ * yellow LED - SD card access
+ * red    LED - CPU heartbeat
+ */
+
+/ {
+	led-system {
+		compatible = "gpio-leds";
+		led-8-yellow {
+			label = "led8";
+                        gpios = <&gpio0 6 0>;
+			default-state = "off";
+			linux,default-trigger = "mmc0";
+		};
+		led-9-red {
+			label = "led9";
+			gpios = <&gpio0 7 0>;
+			default-state = "off";
+			linux,default-trigger = "heartbeat";
+		};
+	};
+};

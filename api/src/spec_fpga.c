@@ -22,22 +22,22 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include "rp_cross.h"
 #include "spec_fpga.h"
 
 #ifdef Z20_250_12
-#define SPECTR_ADC_SAMPLE_RATE (125e6)
-#define SPECTR_ADC_BITS (14)
+#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
+#define SPECTR_ADC_BITS ADC_BITS
 #endif
 
 #ifdef Z10
-#define SPECTR_ADC_SAMPLE_RATE (125e6)
-#define SPECTR_ADC_BITS (14)
+#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
+#define SPECTR_ADC_BITS ADC_BITS
 #endif
 
 #ifdef Z20
-#define SPECTR_ADC_SAMPLE_RATE (122.880e6)
-#define SPECTR_ADC_BITS (16)
+#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
+#define SPECTR_ADC_BITS ADC_BITS
 #endif
 
 /* internals */
@@ -239,10 +239,10 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
         chb_o[out_idx] = g_spectr_fpga_chb_mem[in_idx];
 
         // convert to signed
-        if(cha_o[out_idx] > (double)(1<<13))
-            cha_o[out_idx] -= (double)(1<<14);
-        if(chb_o[out_idx] > (double)(1<<13))
-            chb_o[out_idx] -= (double)(1<<14);
+        if(cha_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
+            cha_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
+        if(chb_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
+            chb_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
     }   
     return 0;
 }

@@ -195,6 +195,7 @@
                             $("#SS_RATE").val(SM.params.orig["SS_ACD_MAX"].value);
                             rateFocusOut();
                         }
+                        parametersHandler();
                     }
 
                 } catch (e) {
@@ -239,7 +240,7 @@
         $.ajax({
                 url: '/stream_manager_delete_files',
                 type: 'GET',
-                timeout: 1500
+                timeout: 3000
 
             })
             .fail(function(msg) {
@@ -247,9 +248,11 @@
             })
             .done(function(msg) {
                 if (msg.responseText) {
-                    alert("All files removed: " + msg);
+                    $('#info_dialog_label').text("All files removed: " + msg);
+                    $('#info_dialog').modal('show');
                 } else {
-                    alert("All files removed");
+                    $('#info_dialog_label').text("All files removed");
+                    $('#info_dialog').modal('show');
                 }
 
             })
@@ -261,7 +264,18 @@
         if (SM.ss_status_last != ss_status) {
             if (ss_status == 2) {
                 $('#svg-is-runnung').hide();
-                alert("Out of free disk space");
+                $('#info_dialog_label').text("Out of free disk space");
+                $('#info_dialog').modal('show');
+                SM.parametersCache["SS_STATUS"] = { value: 0 };
+                SM.sendParameters();
+            }
+
+            if (ss_status == 3) {
+                $('#svg-is-runnung').hide();
+                $('#info_dialog_label').text("Data recording completed");
+                $('#info_dialog').modal('show');
+                SM.parametersCache["SS_STATUS"] = { value: 0 };
+                SM.sendParameters();
             }
 
             if (ss_status == 1) {
@@ -294,7 +308,6 @@
             SM.params.orig[param_name] = new_params[param_name];
             if (SM.param_callbacks[param_name] !== undefined)
                 SM.param_callbacks[param_name](new_params);
-                
         }
         // Resize double-headed arrows showing the difference between cursors
     };
@@ -304,12 +317,12 @@
             val = 1;
         if (val > SM.ss_max_rate)
             val = SM.ss_max_rate;
-        SM.ss_rate = Math.round( SM.ss_max_rate / val);
+        SM.ss_rate = Math.round( SM.ss_full_rate / val);
         return SM.ss_rate;
     }
 
     SM.calcRateDecToHz = function() {
-        return Math.round(SM.ss_max_rate / SM.ss_rate);
+        return Math.round(SM.ss_full_rate / SM.ss_rate);
     }
 
     var parametersHandler = function() {
@@ -370,7 +383,9 @@
         });
     }
 
-    setInterval(parametersHandler, 10);
+    //Set handlers timers
+    //    setInterval(signalsHandler, 40);
+    //    setInterval(parametersHandler, 50);
 
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
 
@@ -392,19 +407,14 @@ $(function() {
 
     //Run button
     $('#SM_RUN').on('click', function(ev) {
-        //$('#SM_STOP').show();
-        //$('#SM_RUN').hide();
-
         SM.parametersCache["SS_START"] = { value: true };
         SM.sendParameters();
+        SM.ss_status_last = 0;
     });
 
     //Stop button
     $('#SM_STOP').on('click', function(ev) {
         ev.preventDefault();
-        //$('#SM_STOP').hide();
-        //$('#SM_RUN').show();
-
         SM.parametersCache["SS_START"] = { value: false };
         SM.sendParameters();
     });

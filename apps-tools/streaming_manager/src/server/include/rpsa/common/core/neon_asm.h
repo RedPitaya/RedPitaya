@@ -13,7 +13,7 @@ namespace {
 #ifdef ARCH_ARM
         if (n & 63) {
             memcpy((void*)dst,(void*)src,n);
-            std::cout << "Warning: Non-optimal neon copy\n";
+            //std::cout << "Warning: Non-optimal neon copy\n";
             return;
         }
     asm volatile (
@@ -34,7 +34,7 @@ namespace {
 #ifdef ARCH_ARM
         if (n & 63) {
             memcpy((void*)dst,(void*)src,n);
-            std::cout << "Warning: Non-optimal neon copy\n";
+            //std::cout << "Warning: Non-optimal neon copy\n";
         return;
     }
 

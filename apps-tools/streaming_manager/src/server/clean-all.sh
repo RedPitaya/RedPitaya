@@ -8,7 +8,7 @@ rm -f Makefile
 rm -f cmake_install.cmake
 
 cd libs
-find . -not -name "CMakeLists.txt" -maxdepth 1 -type f -exec rm -r "{}" \;
+find . -not -name "CMakeLists.txt" -not -name "asio.zip"  -maxdepth 1 -type f -exec rm -r "{}" \;
 cd ..
 
 

@@ -62,12 +62,12 @@ void CStreamingManager::MakeEmptyDir(std::string _filePath){
 
 
 
-CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath){
+CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath, int _samples){
 
-    return std::make_shared<CStreamingManager>(_fileType, _filePath);
+    return std::make_shared<CStreamingManager>(_fileType, _filePath,_samples);
 }
 
-CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath) :
+CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples) :
     m_use_local_file(true),
     notifyPassData(nullptr),
     m_file_manager(nullptr),
@@ -75,7 +75,8 @@ CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _file
     m_asionet(nullptr),
     m_filePath(_filePath),
     m_index_of_message(0),
-    notifyStop(nullptr)
+    notifyStop(nullptr),
+    m_samples(_samples)
 {
     
     if (m_use_local_file){
@@ -100,7 +101,8 @@ CStreamingManager::CStreamingManager(string _host, string _port, asionet::Protoc
         m_asionet(nullptr),
         m_filePath(""),
         m_index_of_message(0),
-        notifyStop(nullptr)
+        notifyStop(nullptr),
+        m_samples(0)
 {
 
 }
@@ -174,9 +176,19 @@ bool CStreamingManager::isFileThreadWork(){
     return false;
 }
 
+bool CStreamingManager::isOutOfSpace(){
+     if (m_use_local_file) {
+        if (m_file_manager != nullptr) {
+            return m_file_manager->IsOutOfSpace();
+        }
+    }
+    return false;  
+}
+
 void CStreamingManager::run()
 {
     if (m_use_local_file){
+        m_passSizeSamples = 0;
         m_file_out = getNewFileName(m_fileType, m_filePath);      
         m_fileLogger = CFileLogger::Create(m_file_out + ".log"); 
         std::cout << m_file_out << "\n"; 
@@ -205,7 +217,27 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
     uint8_t *buff_ch2 = nullptr;
 
     if (m_use_local_file){
-
+        bool flag = false;
+        if (m_samples != -1) {
+            int devider = (_resolution == 16 ? 2 : 1);
+            m_passSizeSamples += (_size_ch1 > 0 ? _size_ch1  : _size_ch2) / devider;
+            if (m_passSizeSamples >= m_samples) {
+                flag = true;
+                int diff = (m_passSizeSamples - m_samples) * devider;
+                if (_size_ch1 > 0) {
+                    if (diff > _size_ch1)
+                        _size_ch1 = 0;
+                    else
+                        _size_ch1 -= diff;
+                }
+                if (_size_ch2 > 0) {
+                     if (diff > _size_ch2)
+                        _size_ch2 = 0;
+                    else
+                        _size_ch2 -= diff;
+                }
+            }
+        }
         if (_size_ch1>0){ 
             buff_ch1 = new uint8_t[_size_ch1];
             memcpy_neon(buff_ch1, _buffer_ch1, _size_ch1);
@@ -235,19 +267,20 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                 delete [] buff_ch1;
                 delete [] buff_ch2;
             }
-        
-
-        
-            m_fileLogger->AddMetric(CFileLogger::Metric::RECIVE_DATE, _size_ch1 + _size_ch2);      
-            m_fileLogger->AddMetric(CFileLogger::Metric::RECIVE_DATA_CH1,_size_ch1);
-            m_fileLogger->AddMetric(CFileLogger::Metric::RECIVE_DATA_CH2,_size_ch2);            
-            m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE_LOST,_lostRate);        
-            m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE,_oscRate);       
-            m_fileLogger->AddMetricId(_id);         
         }
 
+        
+        m_fileLogger->AddMetric(CFileLogger::Metric::RECIVE_DATE, _size_ch1 + _size_ch2);      
+        m_fileLogger->AddMetric(CFileLogger::Metric::RECIVE_DATA_CH1,_size_ch1);
+        m_fileLogger->AddMetric(CFileLogger::Metric::RECIVE_DATA_CH2,_size_ch2);            
+        m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE_LOST,_lostRate);        
+        m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE,_oscRate);       
+        m_fileLogger->AddMetricId(_id);         
+      
         if (notifyPassData)
             notifyPassData(_size_ch1 + _size_ch2);
+        if (flag) 
+            m_file_manager->StopWrite(true);
         return 1;
     }else{
         if (m_asionet){
@@ -256,7 +289,12 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                 uint32_t frame_offset = 0;
                 uint32_t buffer_size = MAX(_size_ch1, _size_ch2);
                 uint32_t split_size = (m_asionet->GetProtocol() == asionet::Protocol::TCP ? TCP_BUFFER_LIMIT
-                                                                                          : UDP_BUFFER_LIMIT);
+                                                                                          : UDP_BUFFER_LIMIT);        
+
+                if (split_size > buffer_size) {
+                    split_size = buffer_size;
+                }                                                                              
+
                 size_t full_send_size = 0;
                 buff_ch1 = (uint8_t *) _buffer_ch1;
                 buff_ch2 = (uint8_t *) _buffer_ch2;
@@ -275,9 +313,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                                                                new_buff_size);
 
                     ++m_ReadyToPass;
-                    if(m_ReadyToPass > 0)
-                        _lostRate = 0; // Send rate only first pack
-
+                    
                     if (!m_asionet->SendData(false, buffer, new_buff_size)) {
                         m_ReadyToPass--;
                     }

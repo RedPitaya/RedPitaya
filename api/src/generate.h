@@ -14,17 +14,19 @@
 #ifndef __GENERATE_H
 #define __GENERATE_H
 
-#include "redpitaya/rp.h"
+#include "rp_cross.h"
 
 
 #ifdef Z20_250_12
- #define AMPLITUDE_MAX       2.0 // V
+ #define AMPLITUDE_MAX       1.0 // V
+ #define LEVEL_MAX           1.0 // V
 #else 
  #define AMPLITUDE_MAX       1.0 // V
+ #define LEVEL_MAX           1.0 // V
 #endif
 
 
-#define LEVEL_MAX               1.0         // V
+
 #define ARBITRARY_MIN          -1.0         // V
 #define ARBITRARY_MAX           1.0         // V
 #define OFFSET_MAX              2.0         // V
@@ -41,7 +43,6 @@
 #define BURST_PERIOD_MIN        1           // us
 #define BURST_PERIOD_MAX        500000000   // us
 
-#define BUFFER_LENGTH           (16 * 1024)
 #define CHA_DATA_OFFSET         0x10000
 #define CHB_DATA_OFFSET         0x20000
 #define DATA_BIT_LENGTH         14
@@ -103,10 +104,17 @@ int generate_Release();
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
+#ifndef Z20_250_12
 int generate_setAmplitude(rp_channel_t channel, float amplitude);
 int generate_getAmplitude(rp_channel_t channel, float *amplitude);
 int generate_setDCOffset(rp_channel_t channel, float offset);
 int generate_getDCOffset(rp_channel_t channel, float *offset);
+#else
+int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain,  float amplitude);
+int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);
+int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
+int generate_getDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float *offset);
+#endif
 int generate_setFrequency(rp_channel_t channel, float frequency);
 int generate_getFrequency(rp_channel_t channel, float *frequency);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);

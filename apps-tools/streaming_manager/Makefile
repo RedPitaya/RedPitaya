@@ -16,12 +16,14 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 INSTALL_DIR ?= .
 
 CONTROLLER=controllerhf.so
+SERVICE=streaming-server
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 ARTIFACTS=$(CONTROLLER)
 
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
+.PHONY: all
 all: $(CONTROLLER)
 
 $(CONTROLLER):
@@ -31,6 +33,7 @@ $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
 	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html info js target/$(APP)
+	mv $(SERVICE) $(INSTALL_DIR)/bin
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *

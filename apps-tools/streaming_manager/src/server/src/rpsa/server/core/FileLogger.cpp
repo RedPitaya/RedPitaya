@@ -47,7 +47,7 @@ void CFileLogger::AddMetric(CFileLogger::Metric _metric, uint64_t _value){
         break;
 
         case Metric::OSC_RATE_LOST:
-            m_oscLostRate += _value;
+            m_oscLostRate = _value;
         break;
         
         case Metric::UPD_RATE:

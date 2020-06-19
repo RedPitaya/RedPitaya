@@ -15,7 +15,6 @@
 #ifndef __DSP_H
 #define __DSP_H
 
-#include "redpitaya/rp.h"
 
 #define SPECTR_OUT_SIG_LENGTH (8*1024)
 //#define c_dsp_sig_len (SPECTR_OUT_SIG_LENGTH>>1)

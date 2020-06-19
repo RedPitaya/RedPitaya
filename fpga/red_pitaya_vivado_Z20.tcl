@@ -5,7 +5,10 @@
 # vivado -mode tcl -source red_pitaya_vivado_Z20.tcl -tclargs projectname
 ################################################################################
 
-cd prj/$::argv
+set prj_name [lindex $argv 0]
+puts "Project name: $prj_name"
+cd prj/$prj_name
+#cd prj/$::argv 0
 
 ################################################################################
 # install UltraFast Design Methodology from TCL Store
@@ -17,10 +20,10 @@ tclapp::install -quiet ultrafast
 # define paths
 ################################################################################
 
-set path_brd brd
+set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
-set path_sdc sdc
+if {$prj_name eq "stream_app"} {set path_sdc sdc} else {set path_sdc ../../sdc}
 
 set path_out out
 set path_sdk sdk
@@ -67,7 +70,7 @@ add_files                         ../../$path_rtl
 add_files                               $path_rtl
 
 #read_xdc                          $path_sdc/red_pitaya.xdc
-read_xdc                          ../../$path_sdc/red_pitaya.xdc
+read_xdc                          $path_sdc/red_pitaya.xdc
 
 ################################################################################
 # ser parameter containing Git hash
@@ -82,8 +85,8 @@ set_property generic "GITH=160'h$gith" [current_fileset]
 # write checkpoint design
 ################################################################################
 
-#synth_design -top red_pitaya_top
-synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
+#synth_design -top red_pitaya_top_Z20
+synth_design -top red_pitaya_top_Z20 -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
 
 write_checkpoint         -force   $path_out/post_synth
 report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt

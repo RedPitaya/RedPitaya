@@ -97,6 +97,28 @@ public:
 		this->m_Value.value = CheckMinMax(_value);
 	}
 
+	void SetMax(const Type& _max)
+	{
+		this->m_Value.max = _max;
+		this->m_Value.value = CheckMinMax(this->m_Value.value);
+	}
+
+	const Type& GetMax()
+	{
+		return this->m_Value.max;
+	}
+
+	void SetMin(const Type& _min)
+	{
+		this->m_Value.min = _min;
+		this->m_Value.value = CheckMinMax(this->m_Value.value);
+	}
+
+	const Type& GetMin()
+	{
+		return this->m_Value.min;
+	}
+
 	// void SendValue(const Type& _value)
 	// {
 	// 	this->m_Value.value = CheckMinMax(_value);

@@ -1,0 +1,18 @@
+/*
+ * Add UIO peripherals for API access (old API)
+ */
+
+&amba_pl {
+	api: api@40000000 {
+		compatible = "generic-uio";
+		reg = <0x40000000 0x100000>,  // housekeeping (ID)
+		      <0x40100000 0x100000>,  // scope acquire
+		      <0x40200000 0x100000>,  // arbitrary signal generator
+		      <0x40300000 0x100000>,  // PID
+		      <0x40400000 0x100000>,  // analog mixed signals
+		      <0x40500000 0x100000>,  // daisy
+		      <0x40600000 0x100000>,  // -
+		      <0x40700000 0x100000>;  // test
+		reg-names = "hk", "acq", "asg", "pid", "ams", "daisy", "unused", "test";
+	};
+};

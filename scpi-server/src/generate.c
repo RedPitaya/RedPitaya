@@ -18,8 +18,9 @@
 #include <math.h>
 
 #include "generate.h"
-#include "../../api/src/generate.h"
+//#include "../../api/src/generate.h"
 
+#include "rp.h"
 #include "common.h"
 #include "scpi/parser.h"
 #include "scpi/units.h"
@@ -32,8 +33,8 @@ const scpi_choice_def_t scpi_RpWForm[] = {
     {"TRIANGLE",    2},
     {"SAWU",        3},
     {"SAWD",        4},
-    {"PWM",         5},
-    {"DC",          6},
+    {"DC",          5},
+    {"PWM",         6},
     {"ARBITRARY",   7},
     SCPI_CHOICE_LIST_END
 };
@@ -221,101 +222,6 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
     SCPI_ResultMnemonic(context, wf_name);
 
     RP_LOG(LOG_INFO, "*SOUR#:FUNC? Successfully returned generate wave form to client.\n");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_GenAmplitude(scpi_t *context) {
-    
-    rp_channel_t channel;
-    scpi_number_t amplitude;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &amplitude, true)) {
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to parse first parameter.\n");
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenAmp(channel, amplitude.value);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set amplitude: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT Successfully set amplitude.\n");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
-   
-    rp_channel_t channel;
-    float amplitude;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenGetAmp(channel, &amplitude);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT? Failed to set amplitude: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    SCPI_ResultDouble(context, amplitude);
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT? Successfully returned amplitude value to client.\n");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_GenOffset(scpi_t *context) {
-    
-    rp_channel_t channel;
-    scpi_number_t offset;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &offset, true)) {
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to parse parameter.\n");
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenOffset(channel, offset.value);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set offset: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS Successfully set generate offset value.\n");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_GenOffsetQ(scpi_t *context) {
-    
-    rp_channel_t channel;
-    float offset;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenGetOffset(channel, &offset);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Failed to get "
-            "generate offset: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    SCPI_ResultFloat(context, offset);
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS? Successfully returned offset to the client.\n");
     return SCPI_RES_OK;
 }
 
@@ -754,3 +660,284 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     RP_LOG(LOG_INFO, "*SOUR#:TRIG:IMM Successfully set immediate trigger.\n");
     return SCPI_RES_OK;
 }
+
+
+#ifdef Z20_250_12
+scpi_result_t RP_GenAmplitude(scpi_t *context) {
+    
+    rp_channel_t channel;
+    scpi_number_t amplitude;
+    rp_gen_gain_t gain;
+    int result;
+    float offset;
+    float amp;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &amplitude, true)) {
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to parse first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetOffset(channel, &offset);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to get offset: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetGainOut(channel, &gain);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to get gain out: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    if (gain == RP_GAIN_5X) offset *= 5;
+
+    amp = amplitude.value;
+    if (fabs(offset) + fabs(amp) > 1.0) {
+        gain = RP_GAIN_5X;
+    }else{
+        gain = RP_GAIN_1X;
+    }
+    
+    result = rp_GenAmp(channel, amp / (gain == RP_GAIN_5X ? 5.0 : 1.0));
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set amplitude: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenOffset(channel, offset / (gain == RP_GAIN_5X ? 5.0 : 1.0));
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set offset: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenSetGainOut(channel, gain);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set gain out: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT Successfully set amplitude.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
+   
+    rp_channel_t channel;
+    rp_gen_gain_t gain;
+    float amplitude;
+    int result;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetAmp(channel, &amplitude);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT? Failed to set amplitude: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetGainOut(channel, &gain);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT? Failed to get gain out: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    if (gain == RP_GAIN_5X) amplitude *= 5.0;
+
+    
+    SCPI_ResultFloat(context, amplitude);
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT? Successfully returned amplitude value to client.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenOffset(scpi_t *context) {
+    
+    rp_channel_t channel;
+    scpi_number_t offset;
+    rp_gen_gain_t gain;
+    float offs;
+    float amp;
+    int result;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &offset, true)) {
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to parse parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetAmp(channel, &amp);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to get amplitude: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetGainOut(channel, &gain);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to get gain out: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    if (gain == RP_GAIN_5X) amp *= 5;
+
+    offs = offset.value;
+    if (fabs(offs) + fabs(amp) > 1.0) {
+        gain = RP_GAIN_5X;
+    }else{
+        gain = RP_GAIN_1X;
+    }
+
+
+    result = rp_GenAmp(channel, amp / (gain == RP_GAIN_5X ? 5.0 : 1.0));
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set amplitude: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenOffset(channel, offs / (gain == RP_GAIN_5X ? 5.0 : 1.0));
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set offset: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenSetGainOut(channel, gain);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set gain out: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS Successfully set generate offset value.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenOffsetQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    rp_gen_gain_t gain;
+    float offset;
+    int result;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetOffset(channel, &offset);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Failed to get "
+            "generate offset: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetGainOut(channel, &gain);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Failed to get gain out: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    if (gain == RP_GAIN_5X) offset *= 5;
+
+    SCPI_ResultFloat(context, offset);
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS? Successfully returned offset to the client.\n");
+    return SCPI_RES_OK;
+}
+#else
+scpi_result_t RP_GenAmplitude(scpi_t *context) {
+    
+    rp_channel_t channel;
+    scpi_number_t amplitude;
+    int result;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &amplitude, true)) {
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to parse first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenAmp(channel, amplitude.value);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set amplitude: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT Successfully set amplitude.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
+   
+    rp_channel_t channel;
+    float amplitude;
+    int result;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetAmp(channel, &amplitude);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT? Failed to set amplitude: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, amplitude);
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT? Successfully returned amplitude value to client.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenOffset(scpi_t *context) {
+    
+    rp_channel_t channel;
+    scpi_number_t offset;
+    int result;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &offset, true)) {
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to parse parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenOffset(channel, offset.value);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set offset: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS Successfully set generate offset value.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenOffsetQ(scpi_t *context) {
+    
+    rp_channel_t channel;
+    float offset;
+    int result;
+
+    if (RP_ParseChArgv(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetOffset(channel, &offset);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Failed to get "
+            "generate offset: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, offset);
+
+    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS? Successfully returned offset to the client.\n");
+    return SCPI_RES_OK;
+}
+#endif

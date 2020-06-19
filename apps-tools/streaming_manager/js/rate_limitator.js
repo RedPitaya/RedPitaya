@@ -93,14 +93,13 @@
                 }
             }
         }
+        SM.ss_max_rate = rate;
+        SM.ss_max_rate_devider = rate_devider;
         if (SM.ss_rate != -1) {
-            var cur_rate = SM.ss_max_rate / SM.ss_rate;
-            SM.ss_rate = rate / cur_rate;
+            SM.calcRateHz(SM.ss_full_rate/SM.ss_rate);
             if (SM.ss_rate < 1)
                 SM.ss_rate = 1;
         }
-        SM.ss_max_rate = rate;
-        SM.ss_max_rate_devider = rate_devider;
         rateFocusOutValue();
     };
 

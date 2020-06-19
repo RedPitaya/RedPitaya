@@ -1,0 +1,49 @@
+/*
+ * user LED
+ */
+
+/ {
+	led-user {
+		compatible = "gpio-leds";
+		led-0-yellow {
+			label = "led0";
+			gpios = <&gpio0 54 0>;
+			default-state = "off";
+		};
+		led-1-yellow {
+			label = "led1";
+			gpios = <&gpio0 55 0>;
+			default-state = "off";
+		};
+		led-2-yellow {
+			label = "led2";
+			gpios = <&gpio0 56 0>;
+			default-state = "off";
+		};
+		led-3-yellow {
+			label = "led3";
+			gpios = <&gpio0 57 0>;
+			default-state = "off";
+		};
+		led-4-yellow {
+			label = "led4";
+			gpios = <&gpio0 58 0>;
+			default-state = "off";
+		};
+		led-5-yellow {
+			label = "led5";
+			gpios = <&gpio0 59 0>;
+			default-state = "off";
+		};
+		led-6-yellow {
+			label = "led6";
+			gpios = <&gpio0 60 0>;
+			default-state = "off";
+		};
+		led-7-yellow {
+			label = "led7";
+			gpios = <&gpio0 61 0>;
+			default-state = "off";
+		};
+	};
+};

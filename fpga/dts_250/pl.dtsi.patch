@@ -1,0 +1,25 @@
+--- pl.dtsi	2019-07-02 11:27:12.560866070 +0700
++++ pl_new.dtsi	2019-07-02 11:42:41.566745000 +0700
+@@ -17,7 +17,7 @@
+ 			clocks = <&clkc 15>, <&clkc 15>, <&clkc 15>, <&clkc 15>;
+ 			compatible = "xlnx,axi-dma-1.00.a";
+ 			interrupt-parent = <&intc>;
+-			interrupts = <0 30 4 0 29 4>;
++			interrupts = <0 30 4>;
+ 			reg = <0x80400000 0x10000>;
+ 			xlnx,addrwidth = <0x20>;
+ 			xlnx,include-sg ;
+@@ -28,13 +28,6 @@
+ 				xlnx,datawidth = <0x20>;
+ 				xlnx,device-id = <0x0>;
+ 			};
+-			dma-channel@80400030 {
+-				compatible = "xlnx,axi-dma-s2mm-channel";
+-				dma-channels = <0x1>;
+-				interrupts = <0 29 4>;
+-				xlnx,datawidth = <0x20>;
+-				xlnx,device-id = <0x0>;
+-			};
+ 		};
+ 		axi_dma_1: dma@80410000 {
+ 			#dma-cells = <1>;

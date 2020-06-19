@@ -19,7 +19,8 @@ public:
     ~CStreamingApplication();
     void run();
     void runNonBlock();
-    bool stop();
+    bool stop(bool wait = true);
+    bool isRun(){return m_isRun;}
 private:
     int m_PerformanceCounterPeriod = 10;
 
@@ -29,9 +30,9 @@ private:
     std::thread m_SocketThread;
     std::mutex mtx;
     std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
-    std::atomic_flag m_SockThreadRun = ATOMIC_FLAG_INIT;
-    std::atomic_int m_ReadyToPass;
-    bool            m_isRun;
+    std::atomic_int  m_ReadyToPass;
+    std::atomic_bool m_isRun;
+    std::atomic_bool m_isRunNonBloking;
     static_assert(ATOMIC_INT_LOCK_FREE == 2,"this implementation does not guarantee that std::atomic<int> is always lock free.");
 
     asio::io_service m_Ios;
@@ -41,17 +42,17 @@ private:
     void *m_WriteBuffer_ch2;
     size_t m_size_ch1;
     size_t m_size_ch2;
-
     uint64_t         m_lostRate;
     int              m_oscRate;
     int              m_channels;
+  
 
+    uint8_t val;
     asio::steady_timer m_Timer;
     uintmax_t m_BytesCount;
 
     void oscWorker();
-    bool passCh(size_t &_size1,size_t &_size2);
+    bool passCh(int _bufferIndex, size_t &_size1,size_t &_size2);
     int  oscNotify(uint64_t _lostRate, uint32_t _oscRate,const void *_buffer_ch1, size_t _size_ch1,const void *_buffer_ch2, size_t _size_ch2);
-    void performanceCounterHandler(const asio::error_code &_error);
     void signalHandler(const asio::error_code &_error, int _signalNumber);
 };

@@ -95,16 +95,15 @@
                                     </div>
                                 </div>
 
-                                <div class="container_inline">
+                                <div class="container_inline network">
                                     <div style="width: 50px;text-align: right;">IP:</div>
                                     <div style="width: 250px;">
                                         <input id="SS_IP_ADDR" class="ipaddress" type="text" minlength="7" maxlength="15" size="15" placeholder="xxx.xxx.xxx.xxx" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
                                     </div>
                                 </div>
-                                <div class="container_inline">
+                                <div class="container_inline network">
                                     <div style="width: 50px;text-align: right;">Port:</div>
                                     <div>
-                                        <!--    <input id="BA_PERIODS_NUMBER" class="setfield input-number" type="text"> -->
                                         <input id="SS_PORT_NUMBER" type="text" size="5" style="width: 50px;margin-left: 10px;" value="8900" step="1" min="1" max="65535">
                                     </div>
                                     <div style="width: 70px;text-align: right;">Protocol:</div>
@@ -113,6 +112,12 @@
                                                         <option value="1">TCP</option>
                                                         <option value="2">UDP</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="container_inline file" style="display: none;">
+                                    <div style="width: 50px;text-align: right;">Samples:</div>
+                                    <div style="width: 250px;">
+                                        <input id="SS_SAMPLES" style="width: 235px;margin-left: 10px;" type="text" size="15" value="2000000000" step="1" min="1" max="2000000000">
                                     </div>
                                 </div>
                                 <div class="container_inline">
@@ -248,6 +253,24 @@
                         </div>
                         <div class="bazaar-link" style="float: left; width: 50%;">
                             <a href="#" style="border: 1px solid; width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="info_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="oops_label">Streaming Application</h4>
+                    </div>
+                    <div class="modal-body" style="text-align: center; font-size: 18px;">
+                        <p id="info_dialog_label">Out of free disk space</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="bazaar-link" style="float: center; width: 100%;">
+                            <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal" class="list-group-item btn">Ok</a>
                         </div>
                     </div>
                 </div>
