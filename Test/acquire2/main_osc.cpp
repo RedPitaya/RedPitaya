@@ -65,7 +65,7 @@ static rp_osc_params_t rp_main_params[PARAMS_NUM] = {
        *    2 - 64x
        *    3 - 1kx
        *    4 - 8kx
-       *    5 - 65kx   */          0, 1, 0,         0,         5 },
+       *    5 - 65kx   */          0, 1, 0,         0,         65536 },
     { /** time_unit_used:
        *    0 - [us]
        *    1 - [ms]
@@ -186,7 +186,7 @@ int rp_set_params(float *p, int len)
         int time_range = rp_main_params[TIME_RANGE_PARAM].value;
         int time_unit = 2;
         /* Get info from FPGA module about clocks/decimation, ...*/
-        int dec_factor = osc_fpga_cnv_time_range_to_dec(time_range);
+        int dec_factor = (time_range);
         float smpl_period = c_osc_fpga_smpl_period * dec_factor;
         /* t_delay - trigger delay in seconds */
         float t_delay = rp_main_params[TRIG_DLY_PARAM].value;

@@ -259,7 +259,7 @@ int osc_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
 {
     int fpga_trig_source = osc_fpga_cnv_trig_source(trig_imm, trig_source, 
                                                     trig_edge);
-    int fpga_dec_factor = osc_fpga_cnv_time_range_to_dec(time_range);
+    int fpga_dec_factor = (time_range);
     int fpga_delay;
     float after_trigger; /* how much after trigger FPGA should write */
     int fpga_trig_thr = osc_fpga_cnv_v_to_cnt(trig_level);

@@ -41,6 +41,7 @@ int acq_GetGain(rp_channel_t channel, rp_pinState_t* state);
 int acq_GetGainV(rp_channel_t channel, float* voltage);
 int acq_SetDecimation(rp_acq_decimation_t decimation);
 int acq_GetDecimation(rp_acq_decimation_t* decimation);
+int acq_SetDecimationFactor(uint32_t decimation);
 int acq_GetDecimationFactor(uint32_t* decimation);
 int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
 int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);

@@ -14,10 +14,10 @@ cd prj/$prj_name
 # define paths
 ################################################################################
 
-set path_brd brd
+set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
-set path_sdc sdc
+if {$prj_name eq "stream_app"} {set path_sdc sdc} else {set path_sdc ../../sdc}
 
 ################################################################################
 # list board files
@@ -55,7 +55,7 @@ add_files                         ../../$path_rtl
 add_files                         $path_rtl
 
 #add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
-add_files -fileset constrs_1      ../../$path_sdc/red_pitaya.xdc
+add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 
 ################################################################################
 # start gui
