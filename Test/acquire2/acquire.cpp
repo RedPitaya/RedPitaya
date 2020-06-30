@@ -68,11 +68,11 @@ const char *g_argv0 = NULL;
 float t_params[PARAMS_NUM] = { 0, 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** Max decimation index */
-#define DEC_MAX 6
+#define DEC_MAX 5
 
 
 /** Decimation translation table */
-static uint32_t g_dec[DEC_MAX] = { 1,  8,  64,  1024,  8192,  65536 };
+static uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 
 
 
@@ -165,7 +165,7 @@ void usage() {
             "  --no_reg        -r    Disable load registers config for DAC and ADC.\n"
             "  --calib         -c    Disable calibration parameters\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
-            "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
+            "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
             "\n";
 
     fprintf( stderr, format, g_argv0, SIGNAL_LENGTH,
@@ -173,8 +173,7 @@ void usage() {
              g_dec[1],
              g_dec[2],
              g_dec[3],
-             g_dec[4],
-             g_dec[5]);
+             g_dec[4]);
 #else
     const char *format =
             "\n"
@@ -193,7 +192,7 @@ void usage() {
             "  --volt          -o    Print value in volt.\n"
             "  --calib         -c    Disable calibration parameters\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
-            "    DEC                 Decimation [%u,%u,%u,%u,%u,%u] (default: 1).\n"
+            "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
             "\n";
 
     fprintf( stderr, format, g_argv0, SIGNAL_LENGTH,
@@ -201,8 +200,7 @@ void usage() {
              g_dec[1],
              g_dec[2],
              g_dec[3],
-             g_dec[4],
-             g_dec[5]);
+             g_dec[4]);
 #endif
 }
 
@@ -457,16 +455,15 @@ int main(int argc, char *argv[])
     /* Optional decimation */
     if (optind < argc) {
         uint32_t dec = atoi(argv[optind]);
-        uint32_t idx;
+        //uint32_t idx;
 
-        for (idx = 0; idx < DEC_MAX; idx++) {
-            if (dec == g_dec[idx]) {
-                break;
-            }
-        }
-
-        if (idx != DEC_MAX) {
-            t_params[TIME_RANGE_PARAM] = idx;
+        // for (idx = 0; idx < DEC_MAX; idx++) {
+        //     if (dec == g_dec[idx]) {
+        //         break;
+        //     }
+        // }
+        if (dec >= 1 && dec <= 65536) {
+            t_params[TIME_RANGE_PARAM] = dec;
         } else {
             fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
             usage();

@@ -277,22 +277,40 @@ int acq_GetDecimation(rp_acq_decimation_t* decimation)
     return RP_OK;
 }
 
-int acq_GetDecimationFactor(uint32_t* decimation)
+int acq_SetDecimationFactor(uint32_t decimation)
 {
-    rp_acq_decimation_t decimationVal;
-    acq_GetDecimation(&decimationVal);
+    int64_t time_ns = 0;
 
-    switch (decimationVal) {
-    case RP_DEC_1:     *decimation = DEC_1;     break;
-    case RP_DEC_8:     *decimation = DEC_8;     break;
-    case RP_DEC_64:    *decimation = DEC_64;    break;
-    case RP_DEC_1024:  *decimation = DEC_1024;  break;
-    case RP_DEC_8192:  *decimation = DEC_8192;  break;
-    case RP_DEC_65536: *decimation = DEC_65536; break;
-    default:
-        return RP_EOOR;
+    if (triggerDelayInNs) {
+        acq_GetTriggerDelayNs(&time_ns);
     }
 
+    bool check = false;
+    if (decimation == 1)  check = true;
+    if (decimation == 2)  check = true;
+    if (decimation == 4)  check = true;
+    if (decimation == 8)  check = true;
+    if (decimation >= 16 && decimation <= 65536) check = true;
+    
+    if (!check) return RP_EOOR;
+    osc_SetDecimation(decimation); 
+    // Now update trigger delay based on new decimation
+    if (triggerDelayInNs) {
+        acq_SetTriggerDelayNs(time_ns, true);
+    }
+
+    return RP_OK;
+}
+
+int acq_GetDecimation2(uint32_t* decimation)
+{
+    osc_GetDecimation(decimation);
+    return RP_OK;
+}
+
+int acq_GetDecimationFactor(uint32_t* decimation)
+{
+    osc_GetDecimation(decimation);
     return RP_OK;
 }
 
@@ -317,12 +335,12 @@ int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
     acq_GetDecimation(&decimation);
 
     switch (decimation) {
-    case RP_DEC_1:     *sampling_rate = (rp_acq_sampling_rate_t)0;     break;
+    case RP_DEC_1:     *sampling_rate = (rp_acq_sampling_rate_t)0;  break;
     case RP_DEC_8:     *sampling_rate = (rp_acq_sampling_rate_t)1;  break;
-    case RP_DEC_64:    *sampling_rate = (rp_acq_sampling_rate_t)2;   break;
-    case RP_DEC_1024:  *sampling_rate = (rp_acq_sampling_rate_t)3; break;
+    case RP_DEC_64:    *sampling_rate = (rp_acq_sampling_rate_t)2;  break;
+    case RP_DEC_1024:  *sampling_rate = (rp_acq_sampling_rate_t)3;  break;
     case RP_DEC_8192:  *sampling_rate = (rp_acq_sampling_rate_t)4;  break;
-    case RP_DEC_65536: *sampling_rate = (rp_acq_sampling_rate_t)5;   break;
+    case RP_DEC_65536: *sampling_rate = (rp_acq_sampling_rate_t)5;  break;
     default:
         return RP_EOOR;
     }

@@ -84,7 +84,7 @@ librp250_12:
 	$(MAKE) -C $(LIBRP250_12_DIR)
 	$(MAKE) -C $(LIBRP250_12_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-ifdef ENABLE_LICENSING
+ifeq ($(ENABLE_LICENSING),1)
 
 api: librpapp liblcr_meter
 
@@ -185,7 +185,7 @@ $(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NG
 	mkdir -p $(INSTALL_DIR)/www/conf/lua
 	cp -fr $(NGINX_DIR)/nginx/conf/lua/* $(abspath $(INSTALL_DIR))/www/conf/lua
 
-ifdef ENABLE_LICENSING
+ifeq ($(ENABLE_LICENSING),1)
 
 IDGEN_DIR = Applications/idgen
 
@@ -253,7 +253,7 @@ SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
 SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
-ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(MODEL),Z10)
 	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
@@ -399,7 +399,7 @@ APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 apps-tools: ecosystem updater network_manager scpi_manager
 
 ifeq ($(MODEL),Z20_250_12)
-apps-tools: 
+apps-tools:
 else
 apps-tools: jupyter_manager streaming_manager
 endif
@@ -443,7 +443,7 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-vna: api2
-ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(MODEL),Z10)
 	$(MAKE) -C $(VNA_DIR) clean
 	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -457,7 +457,7 @@ apps-free-clean:
 # Red Pitaya PRO applications
 ################################################################################
 
-ifdef ENABLE_LICENSING
+ifeq ($(ENABLE_LICENSING),1)
 
 APP_SCOPEGENPRO_DIR = Applications/scopegenpro
 APP_SPECTRUMPRO_DIR = Applications/spectrumpro

@@ -38,6 +38,8 @@
 int parse_from_argv(int a_argc, char **a_argv, unsigned long* a_addr, int* a_type, unsigned long** a_values, ssize_t* a_len);
 uint32_t read_value(uint32_t a_addr);
 void write_values(unsigned long a_addr, int a_type, unsigned long* a_values, ssize_t a_len);
+void set_DAC(float *values,int count);
+void showAMS();
 
 void* map_base = (void*)(-1);
 
@@ -54,6 +56,32 @@ int main(int argc, char **argv) {
 			"\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n",
                         argv[0], VERSION_STR, REVISION_STR);
 		return EXIT_FAILURE;
+	}
+
+
+	if (strncmp(argv[1], "-sdac", 5) == 0) {
+		
+		float *val = NULL;
+		ssize_t val_count = 0;
+		val = calloc(argc-2,sizeof(float));
+		for (int i = 2; i < argc; ++i, ++val_count) {
+			val[val_count] = strtof(argv[i], 0 );
+		}
+
+		if(val_count > 4){
+			val_count = 4;
+		}
+
+		set_DAC(val,val_count);		
+
+		free(val);
+		return 0;
+	}
+
+
+	if (strncmp(argv[1], "-ams", 4) == 0) {
+		showAMS();
+		return 0;
 	}
 
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
