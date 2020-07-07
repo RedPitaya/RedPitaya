@@ -171,8 +171,8 @@ The system registers can be accessed through the
  
 .. code-block:: shell-session
     
-    redpitaya> monitor 
-    monitor version 0.90-299-1278
+    redpitaya>  monitor
+    monitor version 1.03-0-ab43ad0-ab43ad0
 
     Usage:
         read addr: address
