@@ -279,10 +279,10 @@ LA_TEST_DIR        = api2/test
 GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest
+.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
 .PHONY: acquire2 
 
-examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2 generator
+examples: lcr bode monitor calib generate_DC spectrum acquire2 generator
 
 ifeq ($(MODEL),Z20_250_12)
 examples: rp_i2c_tool

@@ -52,7 +52,8 @@ int main(int argc, char **argv) {
                         "%s version %s-%s\n"
 			"\nUsage:\n"
 			"\tread addr: address\n"
-                        "\twrite addr: address value\n"
+            "\twrite addr: address value\n"
+			"\tread analog mixed signals: -ams\n"
 			"\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n",
                         argv[0], VERSION_STR, REVISION_STR);
 		return EXIT_FAILURE;
