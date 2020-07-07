@@ -19,6 +19,7 @@ export G_LOCAL_SERVER_IP='192.168.1.1'
 export G_LOCAL_SERVER_PASS='redpitaya'
 export G_LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 export G_LOCAL_USER='redpitaya'
+export G_PASS="xBqRnS8r"
 
 
 # For loging on the Red Pitaya itself (practicali the same as loging in to SD card it sohuld )
