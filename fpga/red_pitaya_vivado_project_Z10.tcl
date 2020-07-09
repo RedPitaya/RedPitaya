@@ -42,6 +42,7 @@ create_project -part $part -force redpitaya ./project
 source                            $path_ip/systemZ10.tcl
 
 # generate SDK files
+
 generate_target all [get_files    system.bd]
 
 ################################################################################
@@ -64,5 +65,5 @@ add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 import_files -force
 
 set_property top red_pitaya_top [current_fileset]
-
+if {$prj_name eq "stream_app"} {add_files -norecurse project/redpitaya.srcs/sources_1/bd/system/hdl/system_wrapper.v}
 update_compile_order -fileset sources_1
