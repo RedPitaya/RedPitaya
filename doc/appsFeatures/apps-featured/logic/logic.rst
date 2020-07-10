@@ -17,9 +17,9 @@ smartphone, tablet or a PC running any popular operating system (MAC, Linux, Win
 Logic Analyzer application possibilities:
 
    1. **Logic Analyzer Basic - Logic Analyzer extension module not reacquired** – Using directly the GPIO expansion
-      connector of the Red Pitaya board. **Works only with STEMlab 125-10!**
+      connector of the Red Pitaya board. **For STEMlab 125-10 only!**
    2. **Logic Analyzer PRO - Logic Analyzer extension module reacquired** – Enabling different logic levels, board
-      protection and higher performances. **Works with STEMlab 125-14 **
+      protection and higher performances. **Works with STEMlab 125-14 & SDRlab 122-16**
 
 The graphical user interface of the Logic Analyzer fits well into the overall design of the Red Pitaya applications
 providing the same operating concept. The Logic Analyzer user interface is shown below.
