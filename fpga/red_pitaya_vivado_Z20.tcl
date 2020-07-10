@@ -72,7 +72,7 @@ add_files                               $path_rtl
 #read_xdc                          $path_sdc/red_pitaya.xdc
 read_xdc                          $path_sdc/red_pitaya.xdc
 
-if {$prj_name eq "stream_app"} {add_files -norecurse bd/system/hdl/system_wrapper.v}
+if {$prj_name eq "stream_app"} {add_files -norecurse .srcs/sources_1/bd/system/hdl/system_wrapper.v}
 
 ################################################################################
 # ser parameter containing Git hash
