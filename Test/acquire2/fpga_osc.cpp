@@ -376,7 +376,9 @@ int osc_fpga_set_trigger_delay(uint32_t trig_delay)
  */
 int osc_fpga_triggered(void)
 {
-    return ((g_osc_fpga_reg_mem->trig_source & OSC_FPGA_TRIG_SRC_MASK)==0);
+    
+    return (g_osc_fpga_reg_mem->conf & OSC_FPGA_BUFF_FILL_MASK);
+    //return ((g_osc_fpga_reg_mem->trig_source & OSC_FPGA_TRIG_SRC_MASK)==0);
 }
 
 /** @brief Returns memory pointers for both input signal buffers.
