@@ -421,6 +421,13 @@ int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
 int rp_CalibrationReset();
 
 /**
+* Copy factory calibration values into user eeprom.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrationFactoryReset();
+
+/**
 * Set saved calibration values in case of roll-back calibration.
 * Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
 * @return If the function is successful, the return value is RP_OK.

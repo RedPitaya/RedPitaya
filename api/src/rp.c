@@ -157,12 +157,16 @@ int rp_CalibrationReset() {
     return calib_Reset();
 }
 
+int rp_CalibrationFactoryReset() {
+    return calib_LoadFromFactoryZone();
+}
+
 int rp_CalibrationSetCachedParams() {
     return calib_setCachedParams();
 }
 
 int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
-    return calib_WriteParams(calib_params);
+    return calib_WriteParams(calib_params,false);
 }
 
 /**

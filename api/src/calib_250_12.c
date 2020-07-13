@@ -19,17 +19,18 @@
 #include "generate.h"
 #include "calib.h"
 
-int calib_ReadParams(rp_calib_params_t *calib_params);
+int calib_ReadParams(rp_calib_params_t *calib_params,bool use_factory_zone);
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;
+static const int  eeprom_calib_factory_off = 0x1c08;
 
 // Cached parameter values.
 static rp_calib_params_t calib, failsafa_params;
 
 int calib_Init()
 {
-    calib_ReadParams(&calib);
+    calib_ReadParams(&calib,false);
     return RP_OK;
 }
 
@@ -60,7 +61,7 @@ rp_calib_params_t calib_GetParams()
  * @retval       >0 Failure
  *
  */
-int calib_ReadParams(rp_calib_params_t *calib_params)
+int calib_ReadParams(rp_calib_params_t *calib_params,bool use_factory_zone)
 {
     FILE   *fp;
     size_t  size;
@@ -77,7 +78,8 @@ int calib_ReadParams(rp_calib_params_t *calib_params)
     }
 
     /* ...and seek to the appropriate storage offset */
-    if(fseek(fp, eeprom_calib_off, SEEK_SET) < 0) {
+     int offset = use_factory_zone ? eeprom_calib_factory_off : eeprom_calib_off;
+    if(fseek(fp, offset, SEEK_SET) < 0) {
         fclose(fp);
         return RP_FCA;
     }
@@ -93,30 +95,20 @@ int calib_ReadParams(rp_calib_params_t *calib_params)
     return 0;
 }
 
+int calib_LoadFromFactoryZone(){
+    rp_calib_params_t calib_values;
+    int ret_val = calib_ReadParams(&calib_values,true);
+    if (ret_val != 0)
+        return ret_val;
 
-/*
- * Initialize calibration parameters to default values.
-
-int calib_GetDefaultParams(rp_calib_params_t *calib_params)
-{
-    calib_params->fe_ch1_fs_g_hi = 28101971; // 0.6543 [V]
-    calib_params->fe_ch2_fs_g_hi = 28101971; // 0.6543 [V]
-    calib_params->fe_ch1_fs_g_lo = 625682246; // 14.56 [V]
-    calib_params->fe_ch2_fs_g_lo = 625682246; // 14.56 [V]
-    calib_params->fe_ch1_lo_offs = 585;
-    calib_params->fe_ch2_lo_offs = 585;
-    calib_params->fe_ch1_hi_offs = 585;
-    calib_params->fe_ch2_hi_offs = 585;
-    calib_params->be_ch1_fs = 42949673; // 1 [V]
-    calib_params->be_ch2_fs = 42949673; // 1 [V]
-    calib_params->be_ch1_dc_offs = 0x3eac;
-    calib_params->be_ch2_dc_offs = 0x3eac;
-
-    return 0;
+    ret_val = calib_WriteParams(calib_values,false);
+    if (ret_val != 0)
+        return ret_val;
+        
+    return calib_Init();
 }
- */
 
-int calib_WriteParams(rp_calib_params_t calib_params) {
+int calib_WriteParams(rp_calib_params_t calib_params,bool use_factory_zone) {
     FILE   *fp;
     size_t  size;
 
@@ -127,7 +119,8 @@ int calib_WriteParams(rp_calib_params_t calib_params) {
     }
 
     /* ...and seek to the appropriate storage offset */
-    if(fseek(fp, eeprom_calib_off, SEEK_SET) < 0) {
+     int offset = use_factory_zone ? eeprom_calib_factory_off : eeprom_calib_off;
+    if(fseek(fp, offset, SEEK_SET) < 0) {
         fclose(fp);
         return RP_FCA;
     }
@@ -170,7 +163,7 @@ void calib_SetToZero() {
 
 int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    calib_ReadParams(&params);
+    calib_ReadParams(&params,false);
 	failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -210,13 +203,13 @@ int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_p
 		}
 	}
     else
-		calib_WriteParams(params);
+		calib_WriteParams(params,false);
     return calib_Init();
 }
 
 int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    calib_ReadParams(&params);
+    calib_ReadParams(&params,false);
 	failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -242,13 +235,13 @@ int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_
 				out_params->osc_ch2_g_20_dc = params.osc_ch2_g_20_dc)
 	}
     else
-		calib_WriteParams(params);
+		calib_WriteParams(params,false);
     return calib_Init();
 }
 
 int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    calib_ReadParams(&params);
+    calib_ReadParams(&params,false);
     failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -274,13 +267,13 @@ int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_
 				out_params->osc_ch2_g_1_dc = params.osc_ch2_g_1_dc)
 	}
     else
-		calib_WriteParams(params);
+		calib_WriteParams(params,false);
     return calib_Init();
 }
 
 int calib_SetBackEndOffset(rp_channel_t channel) {
     rp_calib_params_t params;
-    calib_ReadParams(&params);
+    calib_ReadParams(&params,false);
 
 	failsafa_params = params;
     /* Reset current calibration parameters*/
@@ -302,13 +295,13 @@ int calib_SetBackEndOffset(rp_channel_t channel) {
             params.gen_ch2_off_1 = -calib_GetDataMedian(channel, RP_LOW))
 
     /* Set new local parameter */
-	calib_WriteParams(params);
+	calib_WriteParams(params,false);
     return calib_Init();
 }
 
 int calib_SetBackEndScale(rp_channel_t channel) {
     rp_calib_params_t params;
-    calib_ReadParams(&params);
+    calib_ReadParams(&params,false);
 	failsafa_params = params;
 
     /* Reset current calibration parameters*/
@@ -335,7 +328,7 @@ int calib_SetBackEndScale(rp_channel_t channel) {
             params.gen_ch2_g_1 = calibValue)
 
     /* Set new local parameter */
-	calib_WriteParams(params);
+	calib_WriteParams(params,false);
     return calib_Init();
 }
 
@@ -361,7 +354,7 @@ static int getGenDC_int(rp_channel_t channel, float dc) {
 
 int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
     rp_calib_params_t params;
-    calib_ReadParams(&params);
+    calib_ReadParams(&params,false);
 
     /* Reset current calibration parameters*/
     CHANNEL_ACTION(channel,
@@ -408,13 +401,13 @@ int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) 
 				out_params->gen_ch2_off_1 = params.gen_ch2_off_1)
 	}
     else
-		calib_WriteParams(params);
+		calib_WriteParams(params,false);
     return calib_Init();
 }
 
 int calib_Reset() {
     calib_SetToZero();
-    calib_WriteParams(calib);
+    calib_WriteParams(calib,false);
     return calib_Init();
 }
 
@@ -495,7 +488,7 @@ int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* mi
 
 int calib_setCachedParams() {
 	fprintf(stderr, "write FAILSAFE PARAMS\n");
-    calib_WriteParams(failsafa_params);
+    calib_WriteParams(failsafa_params,false);
     calib = failsafa_params;
 
     return 0;
