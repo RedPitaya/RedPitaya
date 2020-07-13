@@ -13,4 +13,5 @@ Examples
    webexamples/genVolt
    webexamples/nginx 
    webexamples/upMarket
+   webexamples/simpleExample
    
