@@ -916,6 +916,7 @@ FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH
 FACTORY_CAL=$FACTORY_NEW_CAL
 export FACTORY_CAL
 ./sub_test/set_calibration.sh
+./sub_test/set_calibration_fw.sh
 echo
 
 # set light of calibration complited
@@ -932,9 +933,10 @@ then
 else 
     echo -n "  * Set calibration"
     print_fail
-     getDefCalibValues
+    getDefCalibValues
     export FACTORY_CAL
     ./sub_test/set_calibration.sh
+    ./sub_test/set_calibration_fw.sh
     echo    "  * Set default calibration"
 fi
 
