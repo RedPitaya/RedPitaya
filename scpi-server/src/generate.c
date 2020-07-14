@@ -36,6 +36,7 @@ const scpi_choice_def_t scpi_RpWForm[] = {
     {"DC",          5},
     {"PWM",         6},
     {"ARBITRARY",   7},
+    {"DC_NEG",      8},
     SCPI_CHOICE_LIST_END
 };
 

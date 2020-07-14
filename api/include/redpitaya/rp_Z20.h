@@ -163,7 +163,8 @@ typedef enum {
     RP_WAVEFORM_RAMP_DOWN,  //!< Wave form reversed sawtooth (|\)
     RP_WAVEFORM_DC,         //!< Wave form dc
     RP_WAVEFORM_PWM,        //!< Wave form pwm
-    RP_WAVEFORM_ARBITRARY   //!< Use defined wave form
+    RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
+    RP_WAVEFORM_DC_NEG      //!< Wave form negative dc 
 } rp_waveform_t;
 
 typedef enum {

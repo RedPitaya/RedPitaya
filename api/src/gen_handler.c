@@ -525,6 +525,7 @@ int synthesize_signal(rp_channel_t channel) {
         case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data,buf_size);                 break;
         case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data,buf_size);                 break;
         case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
+        case RP_WAVEFORM_DC_NEG   : synthesis_DC_NEG   (data,buf_size);                 break; 
         case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data,buf_size);      break;
         case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size); break;
         default:                    return RP_EIPV;
@@ -564,6 +565,13 @@ int synthesis_rampDown(float *data_out,uint16_t buffSize) {
 int synthesis_DC(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = 1.0;
+    }
+    return RP_OK;
+}
+
+int synthesis_DC_NEG(float *data_out,uint16_t buffSize) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+        data_out[i] = -1.0;
     }
     return RP_OK;
 }
