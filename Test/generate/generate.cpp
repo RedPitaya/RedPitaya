@@ -69,8 +69,8 @@ void synthesize_signal(config_t &conf,
     uint16_t scale = 0x1fff * (ampl / 2.0);
     uint32_t calib_gain = 0;
     if (conf.calib == true){
-        calib_gain = (conf.ch == 1) ? g_osc_calib_params.be_ch1_fs : g_osc_calib_params.be_ch2_fs;
-        dcoffs = (conf.ch == 1) ? g_osc_calib_params.be_ch1_dc_offs : g_osc_calib_params.be_ch2_dc_offs;
+        calib_gain = (conf.ch == 0) ? g_osc_calib_params.be_ch1_fs : g_osc_calib_params.be_ch2_fs;
+        dcoffs = (conf.ch == 0) ? g_osc_calib_params.be_ch1_dc_offs : g_osc_calib_params.be_ch2_dc_offs;
         float fullScale = (uint32_t) (1.0 / 100.0 * ((uint64_t)1<<32));
         scale *=   fullScale / (float)calib_gain;
     }
