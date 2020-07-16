@@ -181,6 +181,7 @@ static const scpi_command_t scpi_commands[] = {
 
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
+    {.pattern = "GEN:SYNC", .callback                   = RP_GenSync,},
     {.pattern = "OUTPUT#:STATE", .callback              = RP_GenState,},
     {.pattern = "OUTPUT#:STATE?", .callback             = RP_GenStateQ,},
     {.pattern = "SOUR#:FREQ:FIX", .callback             = RP_GenFrequency,},

@@ -68,6 +68,19 @@ scpi_result_t RP_GenReset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenSync(scpi_t *context) {
+    int result = rp_GenSynchronise();
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*GEN:SYNC Failed to sync Red "
+            "Pitaya generate: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*GEN:SYNC Successfully sync Red "
+        "Pitaya generate module.\n");
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenState(scpi_t *context) {
     
     int result;

@@ -1339,6 +1339,13 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 int rp_GenTrigger(uint32_t channel);
 
 /**
+* The generator is reset on both channels.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSynchronise();
+
+/**
 * Sets the DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
 * @param channel Channel A or B for witch we want to set protection.
 * @param enable Flag enabling protection mode.total
