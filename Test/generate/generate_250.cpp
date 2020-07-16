@@ -264,6 +264,7 @@ void write_data_fpga(uint32_t ch,
      *       Otherwise, the not-to-be-affected channel is restarted as well
      *       causing unwanted disturbances on that channel.
      */
+    g_awg_reg->state_machine_conf = 0x00510051; //need for sync channels     
     g_awg_reg->state_machine_conf = 0x02110211;
 
     fpga_awg_exit();
