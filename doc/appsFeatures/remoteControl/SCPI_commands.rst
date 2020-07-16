@@ -74,7 +74,7 @@ Parameter options:
 * ``<n> = {1,2}`` (set channel OUT1 or OUT2)
 * ``<state> = {ON,OFF}`` Default: ``OFF``
 * ``<frequency> = {0Hz...62.5e6Hz}`` Default: ``1000``
-* ``<func> = {SINE, SQUARE, TRIANGLE, SAWU, SAWD, PWM, ARBITRARY}`` Default: ``SINE``
+* ``<func> = {SINE, SQUARE, TRIANGLE, SAWU, SAWD, PWM, ARBITRARY, DC, DC_NEG}`` Default: ``SINE``
 * ``<amplitude> = {-1V...1V}`` Default: ``1`` for SIGNALlab 250-12 this value {-5V...5V}
 * ``<offset> = {-1V...1V}`` Default: ``0``
 * ``<phase> = {-360deg ... 360deg}`` Default: ``0``
