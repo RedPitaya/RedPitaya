@@ -300,7 +300,7 @@ lcr:
 	$(MAKE) -C $(LCR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-bode:
+bode: api
 	$(MAKE) -C $(BODE_DIR) clean
 	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
