@@ -22,6 +22,7 @@
 #include <cstddef>
 #include "rp.h"
 
+#define BA_CALIB_FILENAME "/tmp/ba_calib.data"
 
 struct rp_ba_buffer_t{
 	std::vector<float> ch1;

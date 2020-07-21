@@ -30,7 +30,7 @@
  		} \
 }
 
-static const char* BA_CALIB_FILENAME = "/tmp/ba_calib.data";
+
 static std::vector<float> calib_data;
 static pthread_mutex_t mutex;
 
@@ -139,7 +139,7 @@ float rp_BaCalibGain(float _freq, float _ampl)
     {
         if (calib_data[i] >= _freq)
         {
-           // fprintf(stderr, "%f %f\n", _ampl, _ampl - l_inter(calib_data[i - 3 + 1], calib_data[i + 1], _ampl));
+            //fprintf(stdout, "%f %f\n", _ampl, _ampl - l_inter(calib_data[i - 3 + 1], calib_data[i + 1], _ampl));
             return _ampl - l_inter(calib_data[i - 3 + 1], calib_data[i + 1], _ampl);
         }
     }

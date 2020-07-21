@@ -55,6 +55,8 @@ void usage() {
                        "[start freq] "
                        "[stop freq] "
                        "[scale type]\n"
+            "or\n"
+            "\t%s -calib\n"
             "\n"
             "\tchannel            Channel to generate signal on [1 / 2].\n"
             "\tamplitude          Signal amplitude in V [0 - 1, which means max 2Vpp].\n"
@@ -65,15 +67,26 @@ void usage() {
             "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
             "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
+            "\t-calib             Starts calibration mode. The calibration values will be saved in:"
+            BA_CALIB_FILENAME
             "\n"
             "Output:\tfrequency [Hz], phase [deg], amplitude [dB]\n";
 
-    fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
+    fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0,g_argv0);
 }
 
 /** Bode analyzer */
 int main(int argc, char *argv[]) {
 	
+    bool calibMode = false;
+    unsigned int ch = 0;
+    double ampl = 1;
+    double DC_bias = 0;
+    unsigned int averaging_num = 1;
+    unsigned int steps = 500;
+    double start_frequency = 100;
+    double end_frequency = ADC_SAMPLE_RATE / 2.0;
+    unsigned int scale_type = 1;
 	/** Set program name */
     g_argv0 = argv[0];
     
@@ -83,83 +96,89 @@ int main(int argc, char *argv[]) {
      * usage() prints its output to stderr, nevertheless main returns
      * zero as calling lcr without any arguments is not an error.
      */
-    if (argc==1) {
-		usage();
-		return 0;
+    if (argc==2) {
+        if (strncmp(argv[1], "-calib", 6) == 0) {
+		    calibMode = true;
+	    }else{
+		    usage();
+		    return 0;
+        }
 	}
-    
-    /** Argument check */
-    if (argc<9) {
-        fprintf(stderr, "Too few arguments!\n\n");
-        usage();
-        return -1;
-    }
-    
-    /** Argument parsing */
-    /// Channel
-    unsigned int ch = atoi(argv[1])-1; // Zero-based internally
-    if (ch > 1) {
-        fprintf(stderr, "Invalid channel value!\n\n");
-        usage();
-        return -1;
-    }
-    /// Amplitude
-    double ampl = strtod(argv[2], NULL);
-    if ( (ampl < 0) || (ampl > c_max_amplitude) ) {
-        fprintf(stderr, "Invalid amplitude value!\n\n");
-        usage();
-        return -1;
-    }
-    /// DC bias
-    double DC_bias = strtod(argv[3], NULL);
-    if ( (DC_bias < 0) || (DC_bias > 1) ) {
-        fprintf(stderr, "Invalid dc bias value!\n\n");
-        usage();
-        return -1;
-    }
-    if ( ampl+DC_bias>1 || ampl+DC_bias<=0 ) {
-        fprintf(stderr, "Invalid ampl+dc value!\n\n");
-        usage();
-        return -1;
-    }
-    /// Averaging
-    unsigned int averaging_num = strtod(argv[4], NULL);
-    if ( averaging_num < 1 ) {
-        fprintf(stderr, "Invalid averaging value!\n\n");
-        usage();
-        return -1;
-    }
-    /// Count/steps
-    unsigned int steps = strtod(argv[5], NULL);
-    if ( steps < 2 ) {
-        fprintf(stderr, "Invalid count/steps value!\n\n");
-        usage();
-        return -1;
-    }
-    /// Frequency
-    double start_frequency = strtod(argv[6], NULL);
-    if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid start freq!\n\n");
-        usage();
-        return -1;
-    }
-    double end_frequency = strtod(argv[7], NULL);
-    if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
-        fprintf(stderr, "Invalid end freq!\n\n");
-        usage();
-        return -1;
-    }
-    if ( end_frequency < start_frequency ) {
-        fprintf(stderr, "End frequency has to be greater than the start frequency!\n\n");
-        usage();
-        return -1;
-    }
-    /// Scale type (0=lin, 1=log)
-    unsigned int scale_type = strtod(argv[8], NULL);
-    if ( scale_type > 1 ) {
-        fprintf(stderr, "Invalid scale type!\n\n");
-        usage();
-        return -1;
+
+    if (!calibMode){
+        /** Argument check */
+        if (argc<9) {
+            fprintf(stderr, "Too few arguments!\n\n");
+            usage();
+            return -1;
+        }
+        
+        /** Argument parsing */
+        /// Channel
+        ch = atoi(argv[1])-1; // Zero-based internally
+        if (ch > 1) {
+            fprintf(stderr, "Invalid channel value!\n\n");
+            usage();
+            return -1;
+        }
+        /// Amplitude
+        ampl = strtod(argv[2], NULL);
+        if ( (ampl < 0) || (ampl > c_max_amplitude) ) {
+            fprintf(stderr, "Invalid amplitude value!\n\n");
+            usage();
+            return -1;
+        }
+        /// DC bias
+        DC_bias = strtod(argv[3], NULL);
+        if ( (DC_bias < 0) || (DC_bias > 1) ) {
+            fprintf(stderr, "Invalid dc bias value!\n\n");
+            usage();
+            return -1;
+        }
+        if ( ampl+DC_bias>1 || ampl+DC_bias<=0 ) {
+            fprintf(stderr, "Invalid ampl+dc value!\n\n");
+            usage();
+            return -1;
+        }
+        /// Averaging
+        averaging_num = strtod(argv[4], NULL);
+        if ( averaging_num < 1 ) {
+            fprintf(stderr, "Invalid averaging value!\n\n");
+            usage();
+            return -1;
+        }
+        /// Count/steps
+        steps = strtod(argv[5], NULL);
+        if ( steps < 2 ) {
+            fprintf(stderr, "Invalid count/steps value!\n\n");
+            usage();
+            return -1;
+        }
+        /// Frequency
+        start_frequency = strtod(argv[6], NULL);
+        if ( (start_frequency < c_min_frequency) || (start_frequency > c_max_frequency) ) {
+            fprintf(stderr, "Invalid start freq!\n\n");
+            usage();
+            return -1;
+        }
+        end_frequency = strtod(argv[7], NULL);
+        if ( (end_frequency < c_min_frequency) || (end_frequency > c_max_frequency) ) {
+            fprintf(stderr, "Invalid end freq!\n\n");
+            usage();
+            return -1;
+        }
+        if ( end_frequency < start_frequency ) {
+            fprintf(stderr, "End frequency has to be greater than the start frequency!\n\n");
+            usage();
+            return -1;
+        }
+        /// Scale type (0=lin, 1=log)
+        scale_type = strtod(argv[8], NULL);
+        if ( scale_type > 1 ) {
+            fprintf(stderr, "Invalid scale type!\n\n");
+            usage();
+            return -1;
+        }
     }
 
     /** Parameters initialization and calculation */
@@ -207,7 +226,12 @@ int main(int argc, char *argv[]) {
     FILE *file_amplitude = fopen("/tmp/bode_data/data_amplitude", "w");
     FILE *file_phase = fopen("/tmp/bode_data/data_phase", "w");
 
-    rp_BaReadCalibration();
+    if (calibMode){
+        rp_BaResetCalibration();
+    }else{
+        rp_BaReadCalibration();
+    }
+
 
     int cur_step = 0;
     float freq_step = 0;
@@ -268,7 +292,11 @@ int main(int argc, char *argv[]) {
         fprintf(file_amplitude, "%.5f\n", calib_ampl);
         fprintf(file_phase,     "%.5f\n", calib_phase);
             
-        
+        if (calibMode) // save data in calibration mode
+        {
+			rp_BaWriteCalib(current_freq,amplitude,phase_out);
+        }
+
         printf("%.2f    %.5f    %.5f\n", current_freq, calib_phase, calib_ampl);
     }
 
