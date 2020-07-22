@@ -12,6 +12,7 @@
     var version = '';
     var revision = '';
     var stem_ver = '';
+    var new_firmware_timer = null;
 
     var getListOfApps = function() {
         $('#loader-desc').html('Getting the list of applications');
@@ -101,7 +102,26 @@
     	return revision;
     }
 
+    RedPitayaOS.compareVersions = function(ver1 , ver2){
+        try {
+            var vararr1 = ver1.replace('.','-');
+            vararr1 = vararr1.split("-");  
+            var vararr2 = ver2.replace('.','-').split("-");
+            if (vararr1.length != vararr2.length) return 0;
+            for (var i = 0; i < vararr1.length; i++) {
+                if (parseInt(vararr1[i]) > parseInt(vararr2[i])) return -1;
+                if (parseInt(vararr1[i]) < parseInt(vararr2[i])) return  1; 
+            }
+        } catch (error) {
+            console.log(error)
+        }
+        return 0;
+    }
 
+    function blink_NewFirmware() {
+        $("#NEW_FIRMWARE_ID").fadeOut(1000);
+        $("#NEW_FIRMWARE_ID").fadeIn(1000);
+    };
 
     var printRpVersion = function(msg) {
         var info = msg;
@@ -120,7 +140,7 @@
             stem_ver = "unknown"
         }
 
-        $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + "</a>");
+        $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + " <img id=\"NEW_FIRMWARE_ID\"src=\"../assets/images/warning.png\" hidden></a>");
 
         BrowserChecker.isOnline(function()
             {
@@ -134,7 +154,69 @@
                 method: "GET",
                 url: '/get_info'
             })
-            .done(printRpVersion)
+            .done(function(msg) {
+                printRpVersion(msg);
+                stem_ver = msg['stem_ver'];
+                var board_type = "";
+                if (stem_ver == "STEM 16"){
+                    board_type = "STEMlab-122-16/ecosystems";
+                } 
+
+                if (stem_ver == "STEM 250 12") {
+                    board_type = "STEMlab-250-12/ecosystems";
+                }
+
+                if (stem_ver == "STEM 14"){
+                    board_type = "STEMlab-125-1x/ecosystems";
+                }
+
+                if (board_type != ""){
+                    $.ajax({
+                        method: "GET",
+                        url: '/update_list?type=' + board_type
+                    })
+                    .done(function(msg) {
+                        var list = [];
+                        var arr = msg.split('\n');
+                        // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
+                        // example - version as array entry: 12933621
+                        for (var i = 0; i < arr.length; i += 2) {
+                            if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
+                                  list.push(arr[i]);
+                            }
+                        }
+
+                        if (list.length == 0) return;
+                        list.sort();
+                        var es_distro_vers = { vers_as_str:'', build:0, ver_full:'' };
+                        // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
+                        for (var i = list.length - 1; i >= 0; i--) {
+                            var item = list[i].split('-');
+                            var ver = item[1];
+                            var build = item[2];
+                             // select latest version according to common version and build
+                            if (RedPitayaOS.compareVersions(ver+"."+build,es_distro_vers.vers_as_str + "."+es_distro_vers.build) === -1 ) {
+                                es_distro_vers.vers_as_str = ver;
+                                es_distro_vers.build = build;
+                                es_distro_vers.ver_full = item.slice(0, 4).join('-');
+                            }
+                        }
+
+                        if(new_firmware_timer != null){
+                            clearInterval(new_firmware_timer);
+                            new_firmware_timer = null;
+                        }
+                        
+                        if (RedPitayaOS.compareVersions(version,es_distro_vers.vers_as_str+"-"+es_distro_vers.build) == 1){
+
+                            $("#NEW_FIRMWARE_ID").attr("hidden",false);
+                            if(new_firmware_timer == null)
+                                new_firmware_timer = setInterval(blink_NewFirmware, 2000);
+                        }
+                    });
+                }
+
+            })
             .fail(printRpVersion);
 
         $('#ignore_link').click(function(event) {

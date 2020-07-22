@@ -87,6 +87,21 @@
         }, 500);
     }
 
+    UPD.compareVersions = function(ver1 , ver2){
+        try {
+            var vararr1 = ver1.split('.').join('-').split("-");
+            var vararr2 = ver2.split('.').join('-').split("-");
+            if (vararr1.length != vararr2.length) return 0;
+            for (var i = 0; i < vararr1.length; i++) {
+                if (parseInt(vararr1[i]) > parseInt(vararr2[i])) return -1;
+                if (parseInt(vararr1[i]) < parseInt(vararr2[i])) return  1; 
+            }
+        } catch (error) {
+            console.log(error)
+        }
+        return 0;
+    }
+
     UPD.checkUpdates = function(type) {
         $('#select_ver').hide();
         setTimeout(function() {
@@ -150,7 +165,7 @@
                     list.sort();
                     $('#ecosystem_ver').empty();
                     var es_distro_size = 0;
-                    var es_distro_vers = { vers_as_str:'', build:0, ver_full:'' };
+                    var es_distro_vers = { vers_as_str:'0.0', build:0, ver_full:'' };
                     // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
                     for (var i = list.length - 1; i >= 0; i--) {
                         var item = list[i].split('-');
@@ -158,7 +173,8 @@
                         var build = item[2];
                         var size = item[4];
                         // select latest version according to common version and build
-                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
+                        if (UPD.compareVersions(ver+"."+build,es_distro_vers.vers_as_str + "."+es_distro_vers.build) === -1 ){
+//                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
                             es_distro_vers.vers_as_str = ver;
                             es_distro_vers.build = build;
                             es_distro_size = size;
