@@ -42,6 +42,10 @@ LIBS +=-static -lrp -lm -lpthread
 CC=$(CROSS_COMPILE)g++
 # Installation directory
 
+ifeq ($(MODEL),Z20_250_12)
+CFLAGS += -I$(INSTALL_DIR)/include/api250-12
+LIBS += -lrp-gpio -lrp-i2c -lrp-spi
+endif 
 
 # Makefile is composed of so called 'targets'. They give basic structure what 
 # needs to be execued during various stages of the building/removing/installing

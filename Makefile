@@ -467,14 +467,14 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
 
-apps-pro: scopegenpro spectrumpro
+apps-pro: scopegenpro spectrumpro ba_pro
 ifeq ($(MODEL),Z20_250_12)
 apps-pro:
 else
 ifeq ($(MODEL),Z20)
 apps-pro:
 else
-apps-pro: lcr_meter la_pro ba_pro
+apps-pro: lcr_meter la_pro
 endif
 endif
 
