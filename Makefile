@@ -11,9 +11,11 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+LINUX_VER=1.0
 export BUILD_NUMBER
 export REVISION
 export VERSION
+export LINUX_VER
 
 ################################################################################
 #
