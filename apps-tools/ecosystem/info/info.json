@@ -3,5 +3,5 @@
     "version": "1.03-BUILD_NUMBER",
     "revision": "REVISION",
     "description": "Red Pitaya GNU/Linux OS & Ecosystem.",
-    "linux_version":"LINUX_VER"
+    "linux_ver":"LINUX_VER"
 }
