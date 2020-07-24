@@ -15,7 +15,10 @@
     UPD.isApply = false;
 
     UPD.currentVer = undefined;
+    UPD.EcosystemLinuxVer = undefined; 
+    UPD.SdLinuxVer = undefined;
     UPD.type = 'stemlab';
+    UPD.path_fw = '';
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -77,6 +80,9 @@
             })
                 .done(function(msg) {
                     UPD.currentVer = msg['version'];
+                    UPD.SdLinuxVer = msg['sd_linux_ver'];
+                    UPD.EcosystemLinuxVer = msg['linux_ver'];
+                    
                     $('#step_2_version').text(msg['version']);
                     UPD.nextStep();
                 })
@@ -181,7 +187,7 @@
                             es_distro_vers.ver_full = item.slice(0, 4).join('-');
                         }
                     }
-                    var distro_desc = es_distro_vers.vers_as_str + '.' + es_distro_vers.build + '(' + es_distro_size + ')';
+                    var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
                     $('#distro_dsc').text(distro_desc);
                     $('#ecosystem_ver').removeAttr('disabled');
                     $('#select_ver').show();
@@ -378,13 +384,16 @@ $(document).ready(function() {
                     stem_ver = result['stem_ver'];
                     if (stem_ver == "STEM 16"){
                         UPD.type = "STEMlab-122-16/ecosystems";
+                        UPD.path_fw = "STEMlab-122-16";
                         $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
                     } else if (stem_ver == "STEM 250 12") {
                         UPD.type = "STEMlab-250-12/ecosystems";
+                        UPD.path_fw = "STEMlab-250-12";
                         $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
                     }
                     else{
                         UPD.type = "STEMlab-125-1x/ecosystems";
+                        UPD.path_fw = "STEMlab-125-1x";
                         $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
                     }
                 });
