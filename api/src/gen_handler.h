@@ -21,6 +21,7 @@
 int gen_SetDefaultValues();
 int gen_Disable(rp_channel_t chanel);
 int gen_Enable(rp_channel_t chanel);
+int gen_EnableSync();
 int gen_IsEnable(rp_channel_t channel, bool *value);
 int gen_setAmplitude(rp_channel_t channel, float amplitude);
 int gen_getAmplitude(rp_channel_t channel, float *amplitude);

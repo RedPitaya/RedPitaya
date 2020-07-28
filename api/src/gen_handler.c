@@ -63,8 +63,6 @@ int gen_SetDefaultValues() {
     gen_setAmplitude(RP_CH_2, AMPLITUDE_MAX);
     gen_setDutyCycle(RP_CH_1, 0.5);
     gen_setDutyCycle(RP_CH_2, 0.5);
-    gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
-    gen_setGenMode(RP_CH_2, RP_GEN_MODE_CONTINUOUS);
     gen_setBurstCount(RP_CH_1, 1);
     gen_setBurstCount(RP_CH_2, 1);
     gen_setBurstPeriod(RP_CH_1, BURST_PERIOD_MIN);
@@ -73,6 +71,8 @@ int gen_SetDefaultValues() {
     gen_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
     gen_setPhase(RP_CH_1, 0.0);
     gen_setPhase(RP_CH_2, 0.0);
+    gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
+    gen_setGenMode(RP_CH_2, RP_GEN_MODE_CONTINUOUS);
 #ifdef Z20_250_12
     gen_setGainOut(RP_CH_1,RP_GAIN_1X);
     gen_setGainOut(RP_CH_2,RP_GAIN_1X);
@@ -86,6 +86,10 @@ int gen_Disable(rp_channel_t channel) {
 
 int gen_Enable(rp_channel_t channel) {
     return generate_setOutputDisable(channel, false);
+}
+
+int gen_EnableSync(){
+    return generate_setOutputEnableSync();
 }
 
 int gen_IsEnable(rp_channel_t channel, bool *value) {
@@ -190,6 +194,8 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
 int gen_getFrequency(rp_channel_t channel, float *frequency) {
     return generate_getFrequency(channel, frequency);
 }
+
+
 
 int gen_setPhase(rp_channel_t channel, float phase) {
     if (phase < PHASE_MIN || phase > PHASE_MAX) {

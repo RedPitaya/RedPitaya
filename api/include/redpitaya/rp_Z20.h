@@ -176,10 +176,11 @@ typedef enum {
 
 typedef enum {
     RP_GEN_TRIG_SRC_INTERNAL = 1,   //!< Internal trigger source
-    RP_GEN_TRIG_SRC_EXT_PE = 2,     //!< External trigger source positive edge
-    RP_GEN_TRIG_SRC_EXT_NE = 3,     //!< External trigger source negative edge
-    RP_GEN_TRIG_GATED_BURST     //!< External trigger gated burst
+    RP_GEN_TRIG_SRC_EXT_PE   = 2,   //!< External trigger source positive edge
+    RP_GEN_TRIG_SRC_EXT_NE   = 3,   //!< External trigger source negative edge
+    RP_GEN_TRIG_GATED_BURST  = 4    //!< External trigger gated burst
 } rp_trig_src_t;
+
 
 /**
  * Type representing Input/Output channels.
@@ -1093,6 +1094,13 @@ int rp_GenReset();
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenOutEnable(rp_channel_t channel);
+
+/**
+* Runs two channels synchronously
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenOutEnableSync();
 
 /**
 * Disables output

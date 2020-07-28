@@ -96,9 +96,11 @@ scpi_result_t RP_GenState(scpi_t *context) {
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
-
-    state_c ? (result = rp_GenOutEnable(channel)) :
-        (result = rp_GenOutDisable(channel));
+    if (channel == 2) {
+        result = rp_GenOutEnableSync();
+    }else{
+        state_c ? (result = rp_GenOutEnable(channel)) : (result = rp_GenOutDisable(channel));
+    }
 
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n", 
@@ -146,17 +148,17 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
 
     /* Parse first, FREQUENCY parameter */
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &frequency, true)) {
-        RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Missing first parameter.\n");
+        RP_LOG(LOG_ERR, "*SOUR#:FREQ:FIX Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
 
     result = rp_GenFreq(channel, frequency.value);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Failed to set frequency: %s\n", rp_GetError(result));
+        RP_LOG(LOG_ERR, "*SOUR#:FREQ:FIX Failed to set frequency: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*OUR#:FREQ:FIX Successfully set frequency.\n");
+    RP_LOG(LOG_INFO, "*SOUR#:FREQ:FIX Successfully set frequency.\n");
     return SCPI_RES_OK;
 }
 
@@ -239,6 +241,8 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+
+
 scpi_result_t RP_GenPhase(scpi_t *context) {
     
     rp_channel_t channel;
@@ -254,7 +258,7 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenPhase(channel, phase.value/(2*M_PI)*360);
+    result = rp_GenPhase(channel, phase.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:PHAS Failed to set generate "
             "phase: %s\n", rp_GetError(result));
