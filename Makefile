@@ -281,7 +281,7 @@ GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
-.PHONY: acquire2 
+.PHONY: acquire2
 
 examples: lcr bode monitor calib generate_DC spectrum acquire2 generator
 
@@ -466,16 +466,16 @@ APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
 APP_BA_PRO_DIR 		= Applications/ba_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-apps-pro: scopegenpro spectrumpro ba_pro
+apps-pro: scopegenpro spectrumpro ba_pro lcr_meter
 ifeq ($(MODEL),Z20_250_12)
 apps-pro:
 else
 ifeq ($(MODEL),Z20)
 apps-pro:
 else
-apps-pro: lcr_meter la_pro
+apps-pro: la_pro
 endif
 endif
 
@@ -486,12 +486,12 @@ scopegenpro: api $(NGINX)
 
 spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
-	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
-	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 la_pro: api api2 $(NGINX)
