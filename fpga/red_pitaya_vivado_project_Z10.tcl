@@ -17,7 +17,6 @@ cd prj/$prj_name
 set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
-set path_bd  bd/system/hdl
 if {$prj_name eq "stream_app"} {set path_sdc sdc} else {set path_sdc ../../sdc}
 
 ################################################################################
@@ -55,8 +54,10 @@ generate_target all [get_files    system.bd]
 
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
-add_files                         $path_bd
+
+#add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
+
 ################################################################################
 # start gui
 ################################################################################
@@ -64,4 +65,5 @@ add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 import_files -force
 
 set_property top red_pitaya_top [current_fileset]
+if {$prj_name eq "stream_app"} {add_files -norecurse bd/system/hdl/system_wrapper.v}
 update_compile_order -fileset sources_1
