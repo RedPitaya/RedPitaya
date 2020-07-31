@@ -23,6 +23,7 @@ tclapp::install -quiet ultrafast
 set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
+set path_bd  bd/system/hdl
 if {$prj_name eq "stream_app"} {set path_sdc sdc} else {set path_sdc ../../sdc}
 
 set path_out out
@@ -68,11 +69,12 @@ add_files -quiet                  [glob -nocomplain ../../$path_rtl/*_pkg.sv]
 add_files -quiet                  [glob -nocomplain       $path_rtl/*_pkg.sv]
 add_files                         ../../$path_rtl
 add_files                               $path_rtl
+if { [file exists $path_bd ] == 1 } {
+    add_files $path_bd
+}
 
 #read_xdc                          $path_sdc/red_pitaya.xdc
 read_xdc                          $path_sdc/red_pitaya.xdc
-
-if {$prj_name eq "stream_app"} {add_files -norecurse bd/system/hdl/system_wrapper.v}
 
 ################################################################################
 # ser parameter containing Git hash

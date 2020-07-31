@@ -19,6 +19,8 @@ set path_brd brd
 set path_rtl rtl_250
 set path_ip  ip
 set path_sdc sdc_250
+set path_bd  bd/system/hdl
+
 
 ################################################################################
 # list board files
@@ -72,12 +74,15 @@ if {[info exists board]} {
   puts "Reading standard board constraints."
   add_files -fileset constrs_1  ../../$path_sdc/red_pitaya.xdc
 }
+if { [file exists $path_bd ] == 1 } {
+    add_files $path_bd
+}
 
 ################################################################################
 # start gui
 ################################################################################
 
-#import_files -force
+import_files -force
 
 update_compile_order -fileset sources_1
 
