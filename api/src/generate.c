@@ -314,10 +314,14 @@ int generate_simultaneousTrigger() {
     return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);
 }
 
-int generate_setOutputEnableSync(){
-    cmn_UnsetBits((uint32_t *) generate, 0x00810081 , 0xFFFFFFFF);
-    generate_Synchronise();
-    return cmn_SetBits((uint32_t *) generate, 0x00110011 , 0xFFFFFFFF);
+int generate_setOutputEnableSync(bool enable){
+    if (enable) {
+        cmn_UnsetBits((uint32_t *) generate, 0x00810081 , 0xFFFFFFFF);
+        generate_Synchronise();
+        return cmn_SetBits((uint32_t *) generate, 0x00110011 , 0xFFFFFFFF);
+    }else{
+        return cmn_SetBits((uint32_t *) generate, 0x00800080 , 0xFFFFFFFF);
+    }
 }
 
 

@@ -88,8 +88,8 @@ int gen_Enable(rp_channel_t channel) {
     return generate_setOutputDisable(channel, false);
 }
 
-int gen_EnableSync(){
-    return generate_setOutputEnableSync();
+int gen_EnableSync(bool enable){
+    return generate_setOutputEnableSync(enable); 
 }
 
 int gen_IsEnable(rp_channel_t channel, bool *value) {

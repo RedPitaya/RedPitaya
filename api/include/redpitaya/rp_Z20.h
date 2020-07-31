@@ -1096,11 +1096,11 @@ int rp_GenReset();
 int rp_GenOutEnable(rp_channel_t channel);
 
 /**
-* Runs two channels synchronously
+* Runs/Stop two channels synchronously
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenOutEnableSync();
+int rp_GenOutEnableSync(bool enable);
 
 /**
 * Disables output

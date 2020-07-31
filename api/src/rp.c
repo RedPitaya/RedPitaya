@@ -839,8 +839,8 @@ int rp_GenSynchronise() {
     return gen_Synchronise();
 }
 
-int rp_GenOutEnableSync(){
-    return gen_EnableSync();
+int rp_GenOutEnableSync(bool enable){
+    return gen_EnableSync(enable);
 }
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)

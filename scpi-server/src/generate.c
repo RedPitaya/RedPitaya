@@ -81,6 +81,30 @@ scpi_result_t RP_GenSync(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenSyncState(scpi_t *context) {
+    
+    int result;
+    bool state_c;
+
+    /* Parse first, STATE argument */
+    if(!SCPI_ParamBool(context, &state_c, true)){
+        RP_LOG(LOG_ERR, "*OUTPUT:STATE Missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenOutEnableSync(state_c);
+    
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*OUTPUT:STATE Failed to enable generate: %s\n", 
+            rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*OUTPUT#:STATE Successfully enabled generate output.\n");
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenState(scpi_t *context) {
     
     int result;
@@ -90,17 +114,13 @@ scpi_result_t RP_GenState(scpi_t *context) {
     if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-
     /* Parse first, STATE argument */
     if(!SCPI_ParamBool(context, &state_c, true)){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
-    if (channel == 2) {
-        result = rp_GenOutEnableSync();
-    }else{
-        state_c ? (result = rp_GenOutEnable(channel)) : (result = rp_GenOutDisable(channel));
-    }
+
+    state_c ? (result = rp_GenOutEnable(channel)) : (result = rp_GenOutDisable(channel));
 
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n", 
@@ -676,6 +696,21 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     }
 
     RP_LOG(LOG_INFO, "*SOUR#:TRIG:IMM Successfully set immediate trigger.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenTriggerBoth(scpi_t *context) {
+    
+    int result;
+
+    result = rp_GenTrigger(3);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR:TRIG:IMM Failed to set immediate "
+            "trigger: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR:TRIG:IMM Successfully set immediate trigger.\n");
     return SCPI_RES_OK;
 }
 
