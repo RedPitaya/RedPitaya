@@ -28,6 +28,8 @@ set path_rtl rtl_250
 set path_ip  ip
 set path_sdc sdc_250
 
+set path_bd  bd/system/hdl
+
 set path_out out
 set path_sdk sdk
 
@@ -92,7 +94,9 @@ if {[info exists board]} {
   add_files -fileset constrs_1  ../../$path_sdc/red_pitaya.xdc
 }
 
-
+if { [file exists $path_bd ] == 1 } {
+    add_files $path_bd
+}
 
 ################################################################################
 # ser parameter containing Git hash
