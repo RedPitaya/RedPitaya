@@ -25,8 +25,9 @@ int calib_Init();
 int calib_Release();
 
 rp_calib_params_t calib_GetParams();
-    int calib_WriteParams(rp_calib_params_t calib_params);
+    int calib_WriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
    void calib_SetToZero();
+    int calib_LoadFromFactoryZone();
 
 
     int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params);

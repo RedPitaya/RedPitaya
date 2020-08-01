@@ -87,6 +87,29 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="firmware_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Warning</h4>
+                </div>
+                <div class="modal-body">
+                    <p>The required version of the Linux image does not match the version for the ecosystem.</p>
+                    <div style="text-align: left;margin-left: 30%;">
+                    <p>Current system version: <a id="CUR_VER">1.0</a></p>
+                    <p>Required version: <a id="REQ_VER">1.0</a></p>
+                    </div>
+                    <p>The new firmware version can be found at this <a href="http://downloads.redpitaya.com/downloads/" target="_blank" id="NEW_FIRMWARE_LINK_ID" style="color: red;">link</a></p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="../assets/analytics-core.js?1"></script>
     <script src="../assets/analytics-main.js?1"></script>
 </body>

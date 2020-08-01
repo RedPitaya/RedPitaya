@@ -5,9 +5,9 @@ source ./sub_test/default_calibration_values.sh
 
 function acquireData(){
     #Acquire data with $DECIMATION decimation factor
-    $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
+    $C_ACQUIRE $ADC_PARAM -c $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
     sleep 0.4
-    $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
+    $C_ACQUIRE $ADC_PARAM -c $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
     cat /tmp/adc.txt | awk '{print $1}' > /tmp/adc_a.txt
     cat /tmp/adc.txt | awk '{print $2}' > /tmp/adc_b.txt
 
@@ -18,9 +18,9 @@ function acquireData(){
 
 function acquireData_AC(){
     #Acquire data with $DECIMATION decimation factor
-    $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
+    $C_ACQUIRE $ADC_PARAM -c $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt   # WORKAROUND: First acquisition is thrown away
     sleep 0.4
-    $C_ACQUIRE $ADC_PARAM $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
+    $C_ACQUIRE $ADC_PARAM -c $ADC_BUFF_SIZE $DECIMATION > /tmp/adc.txt
     VAR=$($C_A_SIGNAL -f /tmp/adc.txt)
     # Calculate mean value
     #ADC_A_MAX=$(awk '{sum+=$1} END { print int(sum/NR)}' /tmp/adc_a.txt)
@@ -916,6 +916,7 @@ FACTORY_NEW_CAL="$GEN_CH1_G_1 $GEN_CH2_G_1 $GEN_CH1_OFF_1 $GEN_CH2_OFF_1 $GEN_CH
 FACTORY_CAL=$FACTORY_NEW_CAL
 export FACTORY_CAL
 ./sub_test/set_calibration.sh
+./sub_test/set_calibration_fw.sh
 echo
 
 # set light of calibration complited
@@ -932,9 +933,10 @@ then
 else 
     echo -n "  * Set calibration"
     print_fail
-     getDefCalibValues
+    getDefCalibValues
     export FACTORY_CAL
     ./sub_test/set_calibration.sh
+    ./sub_test/set_calibration_fw.sh
     echo    "  * Set default calibration"
 fi
 

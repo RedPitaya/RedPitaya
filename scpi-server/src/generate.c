@@ -36,6 +36,7 @@ const scpi_choice_def_t scpi_RpWForm[] = {
     {"DC",          5},
     {"PWM",         6},
     {"ARBITRARY",   7},
+    {"DC_NEG",      8},
     SCPI_CHOICE_LIST_END
 };
 
@@ -67,6 +68,43 @@ scpi_result_t RP_GenReset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenSync(scpi_t *context) {
+    int result = rp_GenSynchronise();
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*GEN:SYNC Failed to sync Red "
+            "Pitaya generate: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*GEN:SYNC Successfully sync Red "
+        "Pitaya generate module.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenSyncState(scpi_t *context) {
+    
+    int result;
+    bool state_c;
+
+    /* Parse first, STATE argument */
+    if(!SCPI_ParamBool(context, &state_c, true)){
+        RP_LOG(LOG_ERR, "*OUTPUT:STATE Missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenOutEnableSync(state_c);
+    
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*OUTPUT:STATE Failed to enable generate: %s\n", 
+            rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*OUTPUT#:STATE Successfully enabled generate output.\n");
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenState(scpi_t *context) {
     
     int result;
@@ -76,15 +114,13 @@ scpi_result_t RP_GenState(scpi_t *context) {
     if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-
     /* Parse first, STATE argument */
     if(!SCPI_ParamBool(context, &state_c, true)){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
 
-    state_c ? (result = rp_GenOutEnable(channel)) :
-        (result = rp_GenOutDisable(channel));
+    state_c ? (result = rp_GenOutEnable(channel)) : (result = rp_GenOutDisable(channel));
 
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n", 
@@ -132,17 +168,17 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
 
     /* Parse first, FREQUENCY parameter */
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &frequency, true)) {
-        RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Missing first parameter.\n");
+        RP_LOG(LOG_ERR, "*SOUR#:FREQ:FIX Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
 
     result = rp_GenFreq(channel, frequency.value);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUR#:FREQ:FIX Failed to set frequency: %s\n", rp_GetError(result));
+        RP_LOG(LOG_ERR, "*SOUR#:FREQ:FIX Failed to set frequency: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*OUR#:FREQ:FIX Successfully set frequency.\n");
+    RP_LOG(LOG_INFO, "*SOUR#:FREQ:FIX Successfully set frequency.\n");
     return SCPI_RES_OK;
 }
 
@@ -225,6 +261,8 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+
+
 scpi_result_t RP_GenPhase(scpi_t *context) {
     
     rp_channel_t channel;
@@ -240,7 +278,7 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenPhase(channel, phase.value/(2*M_PI)*360);
+    result = rp_GenPhase(channel, phase.value);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:PHAS Failed to set generate "
             "phase: %s\n", rp_GetError(result));
@@ -658,6 +696,21 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     }
 
     RP_LOG(LOG_INFO, "*SOUR#:TRIG:IMM Successfully set immediate trigger.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenTriggerBoth(scpi_t *context) {
+    
+    int result;
+
+    result = rp_GenTrigger(3);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR:TRIG:IMM Failed to set immediate "
+            "trigger: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR:TRIG:IMM Successfully set immediate trigger.\n");
     return SCPI_RES_OK;
 }
 

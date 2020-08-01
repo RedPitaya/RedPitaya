@@ -20,12 +20,14 @@ install:
 	cp -r ../assets images info ui *.html favicon.ico style.css $(INSTALL_DIR)/www/apps/
 	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
-
+	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/LINUX_VER/$(LINUX_VER)/'
+	
 zip:
 	mkdir -p target/www/apps/
 	cp -r ../assets images info ui *.html favicon.ico style.css target/www/apps/
 	sed -i target/www/apps/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/www/apps/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
+	sed -i target/www/apps/info/info.json -e 's/LINUX_VER/$(LINUX_VER)/'
 	cd target; zip -r $(INSTALL_DIR)/redpitaya-$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 	rm target -rf
 

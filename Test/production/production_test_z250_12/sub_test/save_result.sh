@@ -57,3 +57,67 @@ echo "------------------------------------------------------------------------"
 echo
 echo
 fi
+
+
+###############################################################################
+# LOGGING TEST RESULTS TO SERVER
+###############################################################################
+echo
+echo "------------Logging test result to the Red Pitaya d.d MAIN server---------"
+echo
+echo "      Checking if board is online and server is available.."
+echo
+CURL_RSP="$(curl -Is http://www.redpitaya.com | head -1)"
+#echo $CURL_RSP
+echo
+if [ `echo $CURL_RSP | grep -c "HTTP/1.1" ` -gt 0 ]
+then
+echo -n "      Board is online & server is available. "
+print_ok
+else
+echo -n "      Board is offline or server is not available. Logging test result to the Red Pitaya d.d MAIN server FAILD!!! "
+print_fail
+#exit
+fi
+echo
+echo "      Sending test record data to server..."
+# Prepare LOG_VAR data
+LOG_VAR="${LOG_VAR// /_}"
+#echo $LOG_VAR
+echo
+MD5IN="$LOG_VAR $G_PASS"
+#echo $MD5IN
+MD5OUT=`echo -n $MD5IN | md5sum | awk '{print $1}'`
+#echo $MD5OUT
+echo
+URL="http://account.redpitaya.com/production.php?test_rec_data=$LOG_VAR"
+URL+="&password=$MD5OUT"
+#echo $URL
+echo
+#URL1="www.redpitaya.com"
+#echo $URL1
+#curl $URL1
+CURL_RSP="$(curl $URL)"
+if [ `echo $CURL_RSP | grep -c "OK" ` -gt 0 ]
+then
+echo
+echo -n "      Test record was successfully added to production database. "
+print_ok
+echo
+elif [ `echo $CURL_RSP | grep -c "FAILED" ` -gt 0 ]
+then
+echo
+echo
+echo -n "      This board  (combination of MAC & DNA) already exists in production database with PASS(0x1ff = 111111111) status!!! "
+print_fail
+echo
+echo
+else
+echo
+echo -n "      No response from SERVER!!! "
+print_fail
+echo
+fi
+echo
+echo
+echo "---------------------------------------------------------------------------------------------------------------------------------------------"

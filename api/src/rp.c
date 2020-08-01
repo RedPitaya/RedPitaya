@@ -157,12 +157,16 @@ int rp_CalibrationReset() {
     return calib_Reset();
 }
 
+int rp_CalibrationFactoryReset() {
+    return calib_LoadFromFactoryZone();
+}
+
 int rp_CalibrationSetCachedParams() {
     return calib_setCachedParams();
 }
 
 int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
-    return calib_WriteParams(calib_params);
+    return calib_WriteParams(calib_params,false);
 }
 
 /**
@@ -829,6 +833,14 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
 
 int rp_GenTrigger(uint32_t channel) {
     return gen_Trigger(channel);
+}
+
+int rp_GenSynchronise() {
+    return gen_Synchronise();
+}
+
+int rp_GenOutEnableSync(bool enable){
+    return gen_EnableSync(enable);
 }
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)

@@ -11,10 +11,11 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+LINUX_VER = 1.0
 export BUILD_NUMBER
 export REVISION
 export VERSION
-
+export LINUX_VER
 ################################################################################
 #
 ################################################################################
@@ -279,10 +280,10 @@ LA_TEST_DIR        = api2/test
 GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest
-.PHONY: acquire2 
+.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
+.PHONY: acquire2
 
-examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2 generator
+examples: lcr bode monitor calib generate_DC spectrum acquire2 generator
 
 ifeq ($(MODEL),Z20_250_12)
 examples: rp_i2c_tool
@@ -300,9 +301,9 @@ lcr:
 	$(MAKE) -C $(LCR_DIR) MODEL=$(MODEL)
 	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-bode:
+bode: api
 	$(MAKE) -C $(BODE_DIR) clean
-	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor:
@@ -465,16 +466,16 @@ APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
 APP_BA_PRO_DIR 		= Applications/ba_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-apps-pro: scopegenpro spectrumpro
+apps-pro: scopegenpro spectrumpro ba_pro lcr_meter
 ifeq ($(MODEL),Z20_250_12)
 apps-pro:
 else
 ifeq ($(MODEL),Z20)
 apps-pro:
 else
-apps-pro: lcr_meter la_pro ba_pro
+apps-pro: la_pro
 endif
 endif
 
@@ -485,12 +486,12 @@ scopegenpro: api $(NGINX)
 
 spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
-	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
-	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 la_pro: api api2 $(NGINX)

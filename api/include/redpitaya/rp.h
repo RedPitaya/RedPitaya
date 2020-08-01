@@ -162,7 +162,8 @@ typedef enum {
     RP_WAVEFORM_RAMP_DOWN,  //!< Wave form reversed sawtooth (|\)
     RP_WAVEFORM_DC,         //!< Wave form dc
     RP_WAVEFORM_PWM,        //!< Wave form pwm
-    RP_WAVEFORM_ARBITRARY   //!< Use defined wave form
+    RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
+    RP_WAVEFORM_DC_NEG      //!< Wave form negative dc 
 } rp_waveform_t;
 
 typedef enum {
@@ -174,9 +175,9 @@ typedef enum {
 
 typedef enum {
     RP_GEN_TRIG_SRC_INTERNAL = 1,   //!< Internal trigger source
-    RP_GEN_TRIG_SRC_EXT_PE = 2,     //!< External trigger source positive edge
-    RP_GEN_TRIG_SRC_EXT_NE = 3,     //!< External trigger source negative edge
-    RP_GEN_TRIG_GATED_BURST     //!< External trigger gated burst
+    RP_GEN_TRIG_SRC_EXT_PE   = 2,   //!< External trigger source positive edge
+    RP_GEN_TRIG_SRC_EXT_NE   = 3,   //!< External trigger source negative edge
+    RP_GEN_TRIG_GATED_BURST  = 4    //!< External trigger gated burst
 } rp_trig_src_t;
 
 /**
@@ -418,6 +419,13 @@ int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_CalibrationReset();
+
+/**
+* Copy factory calibration values into user eeprom.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrationFactoryReset();
 
 /**
 * Set saved calibration values in case of roll-back calibration.
@@ -1086,6 +1094,13 @@ int rp_GenReset();
 int rp_GenOutEnable(rp_channel_t channel);
 
 /**
+* Runs/Stop two channels synchronously
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenOutEnableSync(bool enable);
+
+/**
 * Disables output
 * @param channel Channel A or B which we want to disable
 * @return If the function is successful, the return value is RP_OK.
@@ -1328,6 +1343,13 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenTrigger(uint32_t channel);
+
+/**
+* The generator is reset on both channels.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSynchronise();
 
 /**
 * Sets the DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS

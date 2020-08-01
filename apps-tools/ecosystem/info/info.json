@@ -2,5 +2,6 @@
     "name": "Ecosystem",
     "version": "1.03-BUILD_NUMBER",
     "revision": "REVISION",
-    "description": "Red Pitaya GNU/Linux OS & Ecosystem."
+    "description": "Red Pitaya GNU/Linux OS & Ecosystem.",
+    "linux_ver":"LINUX_VER"
 }
