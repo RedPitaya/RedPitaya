@@ -27,7 +27,10 @@ module rp_dma_s2mm_ctrl
   //
   output reg                        fifo_rst,
   input  wire [7:0]                 req_data,
-  input  wire                       req_we,  
+  input  wire                       req_we, 
+  input  wire                       data_valid,
+  output wire [31:0]                buf1_ms_cnt,
+  output wire [31:0]                buf2_ms_cnt,  
   //
   output wire [(AXI_ADDR_BITS-1):0] m_axi_awaddr,     
   output reg  [7:0]                 m_axi_awlen,      
@@ -89,12 +92,16 @@ reg                       buf1_full;
 reg                       buf2_full;
 reg                       buf1_ovr;
 reg                       buf2_ovr;
+reg                       data_valid_reg;
+reg  [31:0]               buf1_missed_samp;
+reg  [31:0]               buf2_missed_samp;
 reg  [3:0]                fifo_rst_cnt;
 wire [7:0]                fifo_wr_data; 
 wire                      fifo_wr_we;
 wire [7:0]                fifo_rd_data;
 reg                       fifo_rd_re;
 wire                      fifo_empty;
+reg  [1:0]                buf_sel_reg;
 
 assign m_axi_awaddr  = req_addr;
 assign m_axi_awsize  = $clog2(AXI_DATA_BITS/8);   
@@ -102,10 +109,17 @@ assign m_axi_awburst = 2'b01;     // INCR
 assign m_axi_awprot  = 3'b000;
 assign m_axi_awcache = 4'b0011;
 
+assign buf1_ms_cnt = buf1_missed_samp;
+assign buf2_ms_cnt = buf2_missed_samp;
+
 assign req_buf_addr_sel_pedge = req_buf_addr_sel & ~req_buf_addr_sel_p1;
 assign req_buf_addr_sel_nedge = ~req_buf_addr_sel & req_buf_addr_sel_p1;
 
-assign reg_sts = {28'd0, buf2_ovr, buf1_ovr, buf2_full, buf1_full};
+assign reg_sts[31:4] = 28'd0;
+assign reg_sts[STS_BUF1_FULL] = buf1_full;
+assign reg_sts[STS_BUF1_OVF] = buf1_ovr;
+assign reg_sts[STS_BUF2_FULL] = buf2_full;
+assign reg_sts[STS_BUF2_OVF] = buf2_ovr;
 
 ////////////////////////////////////////////////////////////
 // Name : Request FIFO 
@@ -157,6 +171,20 @@ begin
     state_cs <= IDLE;
   end else begin
     state_cs <= state_ns;
+  end
+end
+
+////////////////////////////////////////////////////////////
+// Name : data_valid synchronisation
+// data valid must be delayed by one clock to align with 
+// axi signals
+////////////////////////////////////////////////////////////
+always @(posedge m_axi_aclk)
+begin
+  if (m_axi_aresetn == 0) begin
+    data_valid_reg <= 1'b0;
+  end else begin
+    data_valid_reg <= data_valid;
   end
 end
 
@@ -253,14 +281,14 @@ begin
       end
       
       // Buf 1 ACK
-      if (reg_ctrl[CTRL_BUF1_ACK] == 1) begin
+      if (reg_ctrl[CTRL_BUF1_ACK] && (buf_sel_reg == 2'b01)) begin // reset ACK when buffer changes
         reg_ctrl[CTRL_BUF1_ACK] <= 0;
       end
 
       // Buf 2 ACK
-      if (reg_ctrl[CTRL_BUF2_ACK] == 1) begin
+      if (reg_ctrl[CTRL_BUF2_ACK] && (buf_sel_reg == 2'b10)) begin // reset ACK when buffer changes
         reg_ctrl[CTRL_BUF2_ACK] <= 0;
-      end      
+      end   
       
       // Mode normal
       if (reg_ctrl[CTRL_MODE_NORM] == 1) begin
@@ -327,6 +355,30 @@ begin
 end  
 
 ////////////////////////////////////////////////////////////
+// Name : Buffer 1 number of missed samples
+// Set when buffer 1 is full, but SW has not read out
+// the buffer completely
+////////////////////////////////////////////////////////////
+ 
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    // IDLE - Wait for the DMA start signal
+    IDLE: begin
+      buf1_missed_samp <= 16'b0;  
+    end    
+
+    default: begin
+      // increase counter until SW confirms buffer was read
+        if (buf1_full && data_valid_reg && (~req_buf_addr_sel)) begin // buffer is full, there was a sample, buffer1 is chosen
+          buf1_missed_samp <= buf1_missed_samp+16'd1;  
+        end else if((req_buf_addr_sel) && reg_ctrl[CTRL_BUF2_ACK]) // number of missed samples is reset only when buffer2 is read completely
+          buf1_missed_samp <= 16'b0;
+        end       
+  endcase
+end  
+
+////////////////////////////////////////////////////////////
 // Name : Buffer 1 Overflow
 // Set when buffer 1 is full and another write is started.
 ////////////////////////////////////////////////////////////
@@ -385,7 +437,30 @@ begin
     end
   endcase
 end  
-      
+
+////////////////////////////////////////////////////////////
+// Name : Buffer 2 number of missed samples
+// Set when buffer 2 is full, but SW has not read out
+// the buffer completely
+////////////////////////////////////////////////////////////
+ 
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    // IDLE - Wait for the DMA start signal
+    IDLE: begin
+      buf2_missed_samp <= 16'b0;  
+    end    
+
+    default: begin
+        if (buf2_full && data_valid_reg && req_buf_addr_sel) begin // buffer is full, there was a sample, buffer2 is chosen
+          buf2_missed_samp <= buf2_missed_samp+16'd1;  
+        end else if((~req_buf_addr_sel) && reg_ctrl[CTRL_BUF1_ACK]) begin 
+          buf2_missed_samp <= 16'b0;
+        end   
+      end     
+  endcase
+end     
 ////////////////////////////////////////////////////////////
 // Name : Buffer 2 Overflow
 // Set when buffer 2 is full and another write is started.
@@ -415,7 +490,7 @@ begin
     end
   endcase
 end  
-                  
+            
 ////////////////////////////////////////////////////////////
 // Name : Request Address
 // Holds the address of the buffer in memory where data will
@@ -434,9 +509,10 @@ begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Swap the buffer if we have reached the end of the current one
         if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
-          if (req_buf_addr_sel == 0) begin
+          if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
             req_addr <= reg_dst_addr2;          
-          end else begin
+          end 
+          if ((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
             req_addr <= reg_dst_addr1;
           end        
         end else begin
@@ -464,9 +540,10 @@ begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Reset to the start of the buffer if we have reached the end
         if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
-          if (req_buf_addr_sel == 0) begin
+          if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
             req_buf_addr <= reg_dst_addr2;          
-          end else begin
+          end 
+          if((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
             req_buf_addr <= reg_dst_addr1;
           end   
         end
@@ -482,6 +559,8 @@ end
 
 always @(posedge m_axi_aclk)
 begin
+  buf_sel_reg[0] <= req_buf_addr_sel;
+  buf_sel_reg[1] <= buf_sel_reg[0];
   case (state_cs)
     // IDLE - Wait for the DMA start signal
     IDLE: begin
@@ -491,7 +570,7 @@ begin
     SEND_DMA_REQ: begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Reset to the start of the buffer if we have reached the end
-        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
+        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && (reg_ctrl[CTRL_BUF1_ACK] || reg_ctrl[CTRL_BUF2_ACK])) begin
           req_buf_addr_sel <= ~req_buf_addr_sel;
         end
       end  

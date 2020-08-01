@@ -127,6 +127,9 @@ reg  signed [ADC_DATA_BITS-1:0] adc_data_ch2_signed;
 wire signed [15:0]              s_axis_osc1_tdata;
 wire signed [15:0]              s_axis_osc2_tdata;
 
+wire                            adr_is_setting;
+
+
 always @(posedge clk)
 begin
   adc_data_ch1_signed <= {adc_data_ch1[ADC_DATA_BITS-1], ~adc_data_ch1[ADC_DATA_BITS-2:0]};  
@@ -143,7 +146,10 @@ assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
 
 assign intr = osc1_dma_intr | osc2_dma_intr;
 
-assign reg_wr_we = reg_en & (reg_we == 4'hf);
+assign reg_wr_we = reg_en & (reg_we == 4'h1);
+
+// addresses betwen 4 and 80 (and 96) are settings and are shared to both scope channels. 
+assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] > 8'h4) && (reg_addr[REG_ADDR_BITS-1:0] < 8'h50) && (reg_addr[REG_ADDR_BITS-1:0] != 8'h60);
 
 ////////////////////////////////////////////////////////////
 // Name : Register Control
@@ -287,7 +293,7 @@ always @(*)
 begin
   osc1_reg_wr_we = 0;
   
-  if ((reg_wr_we == 1) && (reg_addr[REG_ADDR_BITS]) == 0) begin
+  if ((reg_wr_we == 1) && ((reg_addr[REG_ADDR_BITS] == 0) || adr_is_setting)) begin
     osc1_reg_wr_we = 1;
   end
 end
@@ -299,7 +305,7 @@ always @(*)
 begin
   osc2_reg_wr_we = 0;
   
-  if ((reg_wr_we == 1) && (reg_addr[REG_ADDR_BITS]) == 1) begin
+  if ((reg_wr_we == 1) && ((reg_addr[REG_ADDR_BITS] == 1) || adr_is_setting)) begin
     osc2_reg_wr_we = 1;
   end
 end

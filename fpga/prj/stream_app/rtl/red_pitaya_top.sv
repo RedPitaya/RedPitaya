@@ -35,6 +35,7 @@ module red_pitaya_top
     adc_clk_p,
     adc_data_ch1,
     adc_data_ch2);
+
   inout [14:0]DDR_addr;
   inout [2:0]DDR_ba;
   inout DDR_cas_n;
@@ -58,8 +59,8 @@ module red_pitaya_top
   inout FIXED_IO_ps_srstb;
   input adc_clk_n;
   input adc_clk_p;
-  input [13:0]adc_data_ch1;
-  input [13:0]adc_data_ch2;
+  input [15:0]adc_data_ch1;
+  input [15:0]adc_data_ch2;
 
   wire [14:0]DDR_addr;
   wire [2:0]DDR_ba;
@@ -84,8 +85,8 @@ module red_pitaya_top
   wire FIXED_IO_ps_srstb;
   wire adc_clk_n;
   wire adc_clk_p;
-  wire [13:0]adc_data_ch1;
-  wire [13:0]adc_data_ch2;
+  wire [15:0]adc_data_ch1;
+  wire [15:0]adc_data_ch2;
 
   system_wrapper system_wrapper_i
        (.DDR_addr(DDR_addr),
@@ -111,6 +112,6 @@ module red_pitaya_top
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
         .adc_clk_n(adc_clk_n),
         .adc_clk_p(adc_clk_p),
-        .adc_data_ch1(adc_data_ch1),
-        .adc_data_ch2(adc_data_ch2));
+        .adc_data_ch1(adc_data_ch1[15:2]),
+        .adc_data_ch2(adc_data_ch2[15:2]));
 endmodule

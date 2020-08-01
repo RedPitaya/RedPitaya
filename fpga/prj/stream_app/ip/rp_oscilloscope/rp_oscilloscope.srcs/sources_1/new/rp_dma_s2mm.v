@@ -23,7 +23,10 @@ module rp_dma_s2mm
   output wire [31:0]                    reg_sts,  
   input  wire [31:0]                    reg_dst_addr1,  
   input  wire [31:0]                    reg_dst_addr2,  
-  input  wire [31:0]                    reg_buf_size,    
+  input  wire [31:0]                    reg_buf_size,
+  //
+  output wire [31:0]                    buf1_ms_cnt,
+  output wire [31:0]                    buf2_ms_cnt,    
   //                                        
   output wire [(AXI_ADDR_BITS-1):0]     m_axi_awaddr,     
   output wire [7:0]                     m_axi_awlen,      
@@ -101,7 +104,10 @@ rp_dma_s2mm_ctrl #(
   .reg_buf_size   (reg_buf_size),    
   .fifo_rst       (fifo_rst),                 
   .req_data       (req_data),
-  .req_we         (req_we),     
+  .req_we         (req_we), 
+  .data_valid     (s_axis_tvalid),
+  .buf1_ms_cnt    (buf1_ms_cnt),
+  .buf2_ms_cnt    (buf2_ms_cnt),
   .m_axi_awaddr   (m_axi_awaddr),       
   .m_axi_awlen    (m_axi_awlen),        
   .m_axi_awsize   (m_axi_awsize),       

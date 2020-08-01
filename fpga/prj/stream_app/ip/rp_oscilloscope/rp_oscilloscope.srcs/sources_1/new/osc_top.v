@@ -7,7 +7,7 @@ module osc_top
     parameter REG_ADDR_BITS     = 12, // Register interface address bits
     parameter DEC_CNT_BITS      = 17, // Decimator counter bits
     parameter DEC_SHIFT_BITS    = 4,  // Decimator shifter bits
-    parameter TRIG_CNT_BITS     = 31, // Trigger counter bits
+    parameter TRIG_CNT_BITS     = 32, // Trigger counter bits
     parameter EVENT_SRC_NUM     = 1,  // Number of event sources
     parameter EVENT_NUM_LOG2    = $clog2(EVENT_SRC_NUM),
     parameter TRIG_SRC_NUM      = 1)( // Number of trigger sources
@@ -61,31 +61,33 @@ module osc_top
 ////////////////////////////////////////////////////////////
 
 // Address map
-localparam EVENT_STS_ADDR       = 0;   // Event status address
-localparam EVENT_SEL_ADDR       = 4;   // Event select address
-localparam TRIG_MASK_ADDR       = 8;   // Trigger mask address
-localparam TRIG_PRE_SAMP_ADDR   = 16;  // Trigger pre samples address
-localparam TRIG_POST_SAMP_ADDR  = 20;  // Trigger post samples address
-localparam TRIG_PRE_CNT_ADDR    = 24;  // Trigger pre count address
-localparam TRIG_POST_CNT_ADDR   = 28;  // Trigger post count address
-localparam TRIG_LOW_LEVEL_ADDR  = 32;  // Trigger low level address
-localparam TRIG_HIGH_LEVEL_ADDR = 36;  // Trigger high level address
-localparam TRIG_EDGE_ADDR       = 40;  // Trigger edge address
-localparam DEC_FACTOR_ADDR      = 48;  // Decimation factor address
-localparam DEC_RSHIFT_ADDR      = 52;  // Decimation right shift address
-localparam AVG_EN_ADDR          = 56;  // Average enable address
-localparam FILT_BYPASS_ADDR     = 60;  // Filter bypass address
-localparam FILT_COEFF_AA_ADDR   = 64;  // Filter coeff AA address
-localparam FILT_COEFF_BB_ADDR   = 68;  // Filter coeff BB address
-localparam FILT_COEFF_KK_ADDR   = 72;  // Filter coeff KK address
-localparam FILT_COEFF_PP_ADDR   = 76;  // Filter coeff PP address
-localparam DMA_CTRL_ADDR        = 80;  // DMA control register
-localparam DMA_STS_ADDR         = 84;  // DMA status register
-localparam DMA_DST_ADDR1_ADDR   = 88;  // DMA destination address 1
-localparam DMA_DST_ADDR2_ADDR   = 92;  // DMA destination address 2
-localparam DMA_BUF_SIZE_ADDR    = 96;  // DMA buffer size
-localparam CALIB_OFFSET_ADDR    = 100; // Calibraton offset
-localparam CALIB_GAIN_ADDR      = 104; // Calibraton gain
+localparam EVENT_STS_ADDR       = 8'h0;   //0 Event status address 
+localparam EVENT_SEL_ADDR       = 8'h4;   //4 Event select address
+localparam TRIG_MASK_ADDR       = 8'h8;   //8 Trigger mask address
+localparam TRIG_PRE_SAMP_ADDR   = 8'h10;  //16 Trigger pre samples address
+localparam TRIG_POST_SAMP_ADDR  = 8'h14;  //20 Trigger post samples address
+localparam TRIG_PRE_CNT_ADDR    = 8'h18;  //24 Trigger pre count address
+localparam TRIG_POST_CNT_ADDR   = 8'h1C;  //28 Trigger post count address
+localparam TRIG_LOW_LEVEL_ADDR  = 8'h20;  //32 Trigger low level address
+localparam TRIG_HIGH_LEVEL_ADDR = 8'h24;  //36 Trigger high level address
+localparam TRIG_EDGE_ADDR       = 8'h28;  //40 Trigger edge address
+localparam DEC_FACTOR_ADDR      = 8'h30;  //48 Decimation factor address
+localparam DEC_RSHIFT_ADDR      = 8'h34;  //52 Decimation right shift address
+localparam AVG_EN_ADDR          = 8'h38;  //56 Average enable address
+localparam FILT_BYPASS_ADDR     = 8'h3C;  //60 Filter bypass address
+localparam FILT_COEFF_AA_ADDR   = 8'h40;  //64 Filter coeff AA address
+localparam FILT_COEFF_BB_ADDR   = 8'h44;  //68 Filter coeff BB address
+localparam FILT_COEFF_KK_ADDR   = 8'h48;  //72 Filter coeff KK address
+localparam FILT_COEFF_PP_ADDR   = 8'h4C;  //76 Filter coeff PP address
+localparam DMA_CTRL_ADDR        = 8'h50;  //80 DMA control register
+localparam DMA_STS_ADDR         = 8'h54;  //84 DMA status register
+localparam DMA_DST_ADDR1_ADDR   = 8'h58;  //88 DMA destination address 1
+localparam DMA_DST_ADDR2_ADDR   = 8'h5C;  //92 DMA destination address 2
+localparam DMA_BUF_SIZE_ADDR    = 8'h60;  //96 DMA buffer size
+localparam CALIB_OFFSET_ADDR    = 8'h64;  //100 Calibraton offset
+localparam CALIB_GAIN_ADDR      = 8'h68;  //104 Calibraton gain,
+localparam BUF1_LOST_SAMP_CNT   = 8'h6C;  //108 Number of lost samples in buffer 1
+localparam BUF2_LOST_SAMP_CNT   = 8'h70;  //112 Number of lost samples in buffer 2
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -149,6 +151,9 @@ wire [S_AXIS_DATA_BITS-1:0] acq_tdata;
 wire                        acq_tvalid;   
 wire                        acq_tready;   
 wire                        acq_tlast;
+
+wire  [15:0]                 buf1_ms_cnt;
+wire  [15:0]                 buf2_ms_cnt;
  
 ////////////////////////////////////////////////////////////
 // Name : Decimation
@@ -255,7 +260,9 @@ rp_dma_s2mm #(
   .reg_sts        (cfg_dma_sts_reg),
   .reg_dst_addr1  (cfg_dma_dst_addr1),
   .reg_dst_addr2  (cfg_dma_dst_addr2),
-  .reg_buf_size   (cfg_dma_buf_size),    
+  .reg_buf_size   (cfg_dma_buf_size),
+  .buf1_ms_cnt    (buf1_ms_cnt),
+  .buf2_ms_cnt    (buf2_ms_cnt),    
   .m_axi_awaddr   (m_axi_awaddr), 
   .m_axi_awlen    (m_axi_awlen),  
   .m_axi_awsize   (m_axi_awsize), 
@@ -675,6 +682,8 @@ begin
     DMA_DST_ADDR1_ADDR:   reg_rd_data <= cfg_dma_dst_addr1; 
     DMA_DST_ADDR2_ADDR:   reg_rd_data <= cfg_dma_dst_addr2; 
     DMA_BUF_SIZE_ADDR:    reg_rd_data <= cfg_dma_buf_size; 
+    BUF1_LOST_SAMP_CNT:   reg_rd_data <= buf1_ms_cnt; 
+    BUF2_LOST_SAMP_CNT:   reg_rd_data <= buf2_ms_cnt; 
     default               reg_rd_data <= 0;                                
   endcase
 end

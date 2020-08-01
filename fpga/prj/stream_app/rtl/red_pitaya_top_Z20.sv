@@ -58,8 +58,8 @@ module red_pitaya_top_Z20
   inout FIXED_IO_ps_srstb;
   input adc_clk_n;
   input adc_clk_p;
-  input [13:0]adc_data_ch1;
-  input [13:0]adc_data_ch2;
+  input [15:0]adc_data_ch1;
+  input [15:0]adc_data_ch2;
 
   wire [14:0]DDR_addr;
   wire [2:0]DDR_ba;
@@ -84,8 +84,8 @@ module red_pitaya_top_Z20
   wire FIXED_IO_ps_srstb;
   wire adc_clk_n;
   wire adc_clk_p;
-  wire [13:0]adc_data_ch1;
-  wire [13:0]adc_data_ch2;
+  wire [15:0]adc_data_ch1;
+  wire [15:0]adc_data_ch2;
 
   system_wrapper system_wrapper_i
        (.DDR_addr(DDR_addr),
