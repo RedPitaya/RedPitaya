@@ -66,5 +66,4 @@ add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 import_files -force
 
 set_property top red_pitaya_top [current_fileset]
-if {$prj_name eq "stream_app"} {add_files -norecurse .srcs/sources_1/bd/system/hdl/system_wrapper.v}
 update_compile_order -fileset sources_1
