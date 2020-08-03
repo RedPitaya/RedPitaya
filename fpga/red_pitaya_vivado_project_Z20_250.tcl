@@ -19,7 +19,7 @@ set path_brd brd
 set path_rtl rtl_250
 set path_ip  ip
 set path_sdc sdc_250
-set path_bd  bd/system/hdl
+set path_bd  .srcs/sources_1/bd/system/hdl
 
 
 ################################################################################
@@ -56,6 +56,7 @@ generate_target all [get_files    system.bd]
 
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
+add_files                         $path_bd
 
 ## search for HWID parameter to select xdc
 foreach item $argv {
@@ -73,9 +74,6 @@ if {[info exists board]} {
 } else {
   puts "Reading standard board constraints."
   add_files -fileset constrs_1  ../../$path_sdc/red_pitaya.xdc
-}
-if { [file exists $path_bd ] == 1 } {
-    add_files $path_bd
 }
 
 ################################################################################

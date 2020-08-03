@@ -23,8 +23,8 @@ tclapp::install -quiet ultrafast
 set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
-set path_bd  bd/system/hdl
-if {$prj_name eq "stream_app"} {set path_sdc sdc} else {set path_sdc ../../sdc}
+set path_bd  .srcs/sources_1/bd/system/hdl
+set path_sdc ../../sdc
 
 set path_out out
 set path_sdk sdk
@@ -69,11 +69,8 @@ add_files -quiet                  [glob -nocomplain ../../$path_rtl/*_pkg.sv]
 add_files -quiet                  [glob -nocomplain       $path_rtl/*_pkg.sv]
 add_files                         ../../$path_rtl
 add_files                               $path_rtl
-if { [file exists $path_bd ] == 1 } {
-    add_files $path_bd
-}
+add_files                               $path_bd
 
-#read_xdc                          $path_sdc/red_pitaya.xdc
 read_xdc                          $path_sdc/red_pitaya.xdc
 
 ################################################################################
