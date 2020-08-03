@@ -51,68 +51,70 @@ if { $list_projs eq "" } {
 variable design_name
 set design_name system
 
-# This script was generated for a remote BD. To create a non-remote design,
-# change the variable <run_remote_bd_flow> to <0>.
+# If you do not already have an existing IP Integrator design open,
+# you can create a design using the following command:
+#    create_bd_design $design_name
 
-set run_remote_bd_flow 1
-if { $run_remote_bd_flow == 1 } {
-  # Set the reference directory for source file relative paths (by default 
-  # the value is script directory path)
-  set origin_dir ./bd
+# Creating design if needed
+set errMsg ""
+set nRet 0
 
-  # Use origin directory path location variable, if specified in the tcl shell
-  if { [info exists ::origin_dir_loc] } {
-     set origin_dir $::origin_dir_loc
-  }
+set cur_design [current_bd_design -quiet]
+set list_cells [get_bd_cells -quiet]
 
-  set str_bd_folder [file normalize ${origin_dir}]
-  set str_bd_filepath ${str_bd_folder}/${design_name}/${design_name}.bd
+if { ${design_name} eq "" } {
+   # USE CASES:
+   #    1) Design_name not set
 
-  # Check if remote design exists on disk
-  if { [file exists $str_bd_filepath ] == 1 } {
-     catch {common::send_msg_id "BD_TCL-110" "ERROR" "The remote BD file path <$str_bd_filepath> already exists!"}
-     common::send_msg_id "BD_TCL-008" "INFO" "To create a non-remote BD, change the variable <run_remote_bd_flow> to <0>."
-     common::send_msg_id "BD_TCL-009" "INFO" "Also make sure there is no design <$design_name> existing in your current project."
+   set errMsg "Please set the variable <design_name> to a non-empty value."
+   set nRet 1
 
-     return 1
-  }
+} elseif { ${cur_design} ne "" && ${list_cells} eq "" } {
+   # USE CASES:
+   #    2): Current design opened AND is empty AND names same.
+   #    3): Current design opened AND is empty AND names diff; design_name NOT in project.
+   #    4): Current design opened AND is empty AND names diff; design_name exists in project.
 
-  # Check if design exists in memory
-  set list_existing_designs [get_bd_designs -quiet $design_name]
-  if { $list_existing_designs ne "" } {
-     catch {common::send_msg_id "BD_TCL-111" "ERROR" "The design <$design_name> already exists in this project! Will not create the remote BD <$design_name> at the folder <$str_bd_folder>."}
+   if { $cur_design ne $design_name } {
+      common::send_gid_msg -ssname BD::TCL -id 2001 -severity "INFO" "Changing value of <design_name> from <$design_name> to <$cur_design> since current design is empty."
+      set design_name [get_property NAME $cur_design]
+   }
+   common::send_gid_msg -ssname BD::TCL -id 2002 -severity "INFO" "Constructing design in IPI design <$cur_design>..."
 
-     common::send_msg_id "BD_TCL-010" "INFO" "To create a non-remote BD, change the variable <run_remote_bd_flow> to <0> or please set a different value to variable <design_name>."
+} elseif { ${cur_design} ne "" && $list_cells ne "" && $cur_design eq $design_name } {
+   # USE CASES:
+   #    5) Current design opened AND has components AND same names.
 
-     return 1
-  }
+   set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
+   set nRet 1
+} elseif { [get_files -quiet ${design_name}.bd] ne "" } {
+   # USE CASES: 
+   #    6) Current opened design, has components, but diff names, design_name exists in project.
+   #    7) No opened design, design_name exists in project.
 
-  # Check if design exists on disk within project
-  set list_existing_designs [get_files -quiet */${design_name}.bd]
-  if { $list_existing_designs ne "" } {
-     catch {common::send_msg_id "BD_TCL-112" "ERROR" "The design <$design_name> already exists in this project at location:
-    $list_existing_designs"}
-     catch {common::send_msg_id "BD_TCL-113" "ERROR" "Will not create the remote BD <$design_name> at the folder <$str_bd_folder>."}
+   set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
+   set nRet 2
 
-     common::send_msg_id "BD_TCL-011" "INFO" "To create a non-remote BD, change the variable <run_remote_bd_flow> to <0> or please set a different value to variable <design_name>."
-
-     return 1
-  }
-
-  # Now can create the remote BD
-  # NOTE - usage of <-dir> will create <$str_bd_folder/$design_name/$design_name.bd>
-  create_bd_design -dir $str_bd_folder $design_name
 } else {
+   # USE CASES:
+   #    8) No opened design, design_name not in project.
+   #    9) Current opened design, has components, but diff names, design_name not in project.
 
-  # Create regular design
-  if { [catch {create_bd_design $design_name} errmsg] } {
-     common::send_msg_id "BD_TCL-012" "INFO" "Please set a different value to variable <design_name>."
+   common::send_gid_msg -ssname BD::TCL -id 2003 -severity "INFO" "Currently there is no design <$design_name> in project, so creating one..."
 
-     return 1
-  }
+   create_bd_design $design_name
+
+   common::send_gid_msg -ssname BD::TCL -id 2004 -severity "INFO" "Making design <$design_name> as current_bd_design."
+   current_bd_design $design_name
+
 }
 
-current_bd_design $design_name
+common::send_gid_msg -ssname BD::TCL -id 2005 -severity "INFO" "Currently the variable <design_name> is equal to \"$design_name\"."
+
+if { $nRet != 0 } {
+   catch {common::send_gid_msg -ssname BD::TCL -id 2006 -severity "ERROR" $errMsg}
+   return $nRet
+}
 
 set bCheckIPsPassed 1
 ##################################################################
