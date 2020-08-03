@@ -17,19 +17,19 @@ hexToDec(){
 X=$(monitor 0x40200000)
 hexToDec $X
 echo "Configuration 0x40200000 : $X ($RET)"
-echo "	- chA trigger selector: $(bitWiseAnd $X 0x3)"
-echo "	- chA SM wrap: $(bitWiseAnd $X 0x8)"
-echo "	- Reserve: $(bitWiseAnd $X 0x10)"
-echo "	- chA SM reset: $(bitWiseAnd $X 0x20)"
-echo "	- chA output: $(bitWiseAnd $X 0x40)"
-echo "	- chA external gated burst: $(bitWiseAnd $X 0x80)"
+echo "	- chA trigger selector: $(bitWiseAnd $X 0xF)"
+echo "	- chA SM wrap: $(bitWiseAnd $X 0x10)"
+echo "	- Reserve: $(bitWiseAnd $X 0x20)"
+echo "	- chA SM reset: $(bitWiseAnd $X 0x40)"
+echo "	- chA output: $(bitWiseAnd $X 0x80)"
+echo "	- chA external gated burst: $(bitWiseAnd $X 0x100)"
 echo
-echo "	- chB trigger selector: $(bitWiseAnd $X 0x30000)"
-echo "	- chB SM wrap: $(bitWiseAnd $X 0x80000)"
-echo "	- Reserve: $(bitWiseAnd $X 0x100000)"
-echo "	- chB SM reset: $(bitWiseAnd $X 0x200000)"
-echo "	- chB output: $(bitWiseAnd $X 0x400000)"
-echo "	- chB external gated burst: $(bitWiseAnd $X 0x800000)"
+echo "	- chB trigger selector: $(bitWiseAnd $X 0xF0000)"
+echo "	- chB SM wrap: $(bitWiseAnd $X 0x100000)"
+echo "	- Reserve: $(bitWiseAnd $X 0x200000)"
+echo "	- chB SM reset: $(bitWiseAnd $X 0x400000)"
+echo "	- chB output: $(bitWiseAnd $X 0x800000)"
+echo "	- chB external gated burst: $(bitWiseAnd $X 0x1000000)"
 echo
 
 X=$(monitor 0x40200004)
