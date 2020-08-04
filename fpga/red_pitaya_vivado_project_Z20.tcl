@@ -17,7 +17,7 @@ cd prj/$prj_name
 set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
-set path_bd  .srcs/sources_1/bd/system/hdl
+set path_bd  project/redpitaya.srcs/sources_1/bd/system/hdl
 set path_sdc ../../sdc
 
 ################################################################################
