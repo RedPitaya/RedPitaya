@@ -22,6 +22,7 @@
 //#include <mutex>
 #include "ba_api.h"
 
+
 #define EXEC_CHECK_MUTEX(x, mutex){ \
  		int retval = (x); \
  		if(retval != RP_OK) { \
@@ -72,7 +73,8 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 					float w_out, // 2*pi*f
 					int decimation,
 					float *gain,
-					float *phase_out) 
+					float *phase_out,
+					float input_threshold) 
 {
 
 	double ang, u_dut_1_ampl, u_dut_1_phase, u_dut_2_ampl, u_dut_2_phase, phase;
@@ -85,10 +87,27 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	double u_dut_2_s[2][size];
 
 	double component_lock_in[2][2];
+	int ret_value = RP_OK;
 
 	for (size_t i = 0; i < size; i++){
 		u_dut_1[i] = buffer.ch2[i];
 		u_dut_2[i] = buffer.ch1[i];
+	}
+
+	if (size > 0){
+		double u1_max = u_dut_1[0];
+		double u1_min = u_dut_1[0];
+		double u2_max = u_dut_2[0];
+		double u2_min = u_dut_2[0];
+		for (size_t i = 1; i < size; i++){
+			if (u1_max < u_dut_1[i]) u1_max = u_dut_1[i];
+			if (u2_max < u_dut_2[i]) u2_max = u_dut_2[i];
+			if (u1_min > u_dut_1[i]) u1_min = u_dut_1[i];
+			if (u2_min > u_dut_2[i]) u2_min = u_dut_2[i];
+		}
+		if ((u1_max - u1_min) < input_threshold) ret_value = RP_EIPV;
+		if ((u2_max - u2_min) < input_threshold) ret_value = RP_EIPV;
+
 	}
 
 	for (size_t i = 0; i < size; i++){
@@ -128,7 +147,7 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	*phase_out = phase * (180.0 / M_PI);
 	*gain = u_dut_1_ampl / u_dut_2_ampl;
 
-	return RP_OK;
+	return ret_value;
 }
 
 
@@ -244,6 +263,7 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, rp_acq_decimation_t _decimat
 	uint32_t acq_u_size = _acq_size;
 	uint32_t acq_delay = acq_u_size > ADC_BUFFER_SIZE / 2.0 ? acq_u_size - ADC_BUFFER_SIZE / 2.0 : 0; 
 	uint64_t sleep_time = static_cast<uint64_t>(_acq_size) * _dec / (ADC_SAMPLE_RATE / 1e6);
+	sleep_time = sleep_time < 1 ? 1 : sleep_time;
 	bool fillState = false;
 	sleep_time += 1;
 
@@ -288,7 +308,7 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, rp_acq_decimation_t _decimat
 }
 
 
-int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq)
+int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
 {
     float gain = 0;
     float phase_out = 0;
@@ -306,16 +326,15 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
     //Generate a sinusoidal wave form
     rp_BaSafeThreadGen(RP_CH_1, _freq, _amplitude_in, _dc_bias);
     acq_size = round((static_cast<float>(_periods_number) * ADC_SAMPLE_RATE) / (_freq * decimation));
-
    //    fprintf(stderr,"Sample_rate %f %d\n",SAMPLE_RATE,acq_size);
     rp_BaSafeThreadAcqData(_buffer, api_decimation, acq_size, decimation,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
-    rp_BaDataAnalysis(_buffer, acq_size, w_out, decimation, &gain, &phase_out);
+    int ret = rp_BaDataAnalysis(_buffer, acq_size, w_out, decimation, &gain, &phase_out,_input_threshold);
 
     *_amplitude = 10.*logf(gain);
     *_phase = phase_out;
     //fprintf(stderr, "freq = %f dbm = %f phase = %f \n", _freq, *_amplitude, phase_out);
-
-    return std::isnan(*_amplitude) || std::isinf(*_amplitude);
+	if (std::isnan(*_amplitude) || std::isinf(*_amplitude)) ret =  RP_EOOR;
+    return ret;
 }
 
