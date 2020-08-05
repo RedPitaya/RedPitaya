@@ -275,7 +275,7 @@ int main(int argc, char *argv[]) {
         {
             float ampl_out = 0;
 
-            if (rp_BaGetAmplPhase(ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq)) // isnan && isinf
+            if (rp_BaGetAmplPhase(ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq,0) ==  RP_EOOR) // isnan && isinf
             {
                 --steps;
                 continue;
