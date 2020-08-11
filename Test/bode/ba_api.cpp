@@ -189,6 +189,7 @@ int rp_BaResetCalibration()
 
 int rp_BaReadCalibration()
 {
+	int ignored __attribute__((unused));
     // if current mode != calibration then load calibration params
     if (calib_data.empty() && access(BA_CALIB_FILENAME, R_OK) == F_OK)
     {
@@ -198,7 +199,7 @@ int rp_BaReadCalibration()
         int size = ftell(calF);
         fseek(calF, 0, SEEK_SET);
         calib_data.resize(size/sizeof(float));
-        fread((void*)calib_data.data(), sizeof(calib_data[0]), size/sizeof(calib_data[0]), calF);
+        ignored = fread((void*)calib_data.data(), sizeof(calib_data[0]), size/sizeof(calib_data[0]), calF);
         fclose(calF);
     }
     else

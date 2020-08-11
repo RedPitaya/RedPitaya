@@ -87,7 +87,9 @@ int main(int argc, char *argv[]) {
     double start_frequency = 100;
     double end_frequency = ADC_SAMPLE_RATE / 2.0;
     unsigned int scale_type = 1;
-	/** Set program name */
+    int ignored __attribute__((unused));
+	
+    /** Set program name */
     g_argv0 = argv[0];
     
     /**
@@ -185,7 +187,7 @@ int main(int argc, char *argv[]) {
     //double frequency_step;
     double a,b,c;
     uint32_t  periods_number  = 8; // max 20
-    
+
     rp_ba_buffer_t buffer(ADC_BUFFER_SIZE);
 
     /* We try to open a data file */
@@ -195,10 +197,10 @@ int main(int argc, char *argv[]) {
     if(try_open == NULL){
 
         int b_number;
-        char command[30];
+        char command[50];
         strcpy(command, "mkdir /tmp/bode_data");
-        system(command);
-
+        ignored = system(command);
+        
         /* We must also create all the files for storing the data */
         for(b_number = 0; b_number < 3; b_number++){
 
@@ -214,11 +216,11 @@ int main(int argc, char *argv[]) {
                     break;
             }
             /* Execute the command */
-            system(command);
+            ignored = system(command);
         }
         /* Change permissions */
         strcpy(command, "chmod -R 777 /tmp/bode_data");
-        system(command);
+        ignored = system(command);
     }
     
     /* Opening files */
