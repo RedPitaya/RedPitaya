@@ -289,7 +289,7 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=5; i<8; i++) begin: for_sys
+for (genvar i=6; i<8; i++) begin: for_sys
   sys_bus_stub sys_bus_stub_5_7 (sys[i]);
 end: for_sys
 endgenerate
@@ -329,13 +329,6 @@ red_pitaya_pwm pwm [4-1:0] (
   .pwm_o (dac_pwm_o),
   .pwm_s ()
 );
-
-////////////////////////////////////////////////////////////////////////////////
-// Daisy dummy code
-////////////////////////////////////////////////////////////////////////////////
-
-assign daisy_p_o = 1'bz;
-assign daisy_n_o = 1'bz;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ADC IO
@@ -516,5 +509,49 @@ red_pitaya_pid i_pid (
   .sys_err         (sys[3].err  ),
   .sys_ack         (sys[3].ack  )
 );
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Daisy test code
+////////////////////////////////////////////////////////////////////////////////
+
+wire daisy_rx_rdy ;
+wire dly_clk = fclk[3]; // 200MHz clock from PS - used for IDELAY (optionaly)
+
+red_pitaya_daisy i_daisy (
+   // SATA connector
+  .daisy_p_o       (  daisy_p_o                  ),  // line 1 is clock capable
+  .daisy_n_o       (  daisy_n_o                  ),
+  .daisy_p_i       (  daisy_p_i                  ),  // line 1 is clock capable
+  .daisy_n_i       (  daisy_n_i                  ),
+   // Data
+  .ser_clk_i       (  ser_clk                    ),  // high speed serial
+  .dly_clk_i       (  dly_clk                    ),  // delay clock
+   // TX
+  .par_clk_i       (  adc_clk                    ),  // data paralel clock
+  .par_rstn_i      (  adc_rstn                   ),  // reset - active low
+  .par_rdy_o       (  daisy_rx_rdy               ),
+  .par_dv_i        (  daisy_rx_rdy               ),
+  .par_dat_i       (  16'h1234                   ),
+   // RX
+  .par_clk_o       (                             ),
+  .par_rstn_o      (                             ),
+  .par_dv_o        (                             ),
+  .par_dat_o       (                             ),
+
+  .debug_o         (/*led_o*/                    ),
+   // System bus
+  .sys_clk_i       (  adc_clk                    ),  // clock
+  .sys_rstn_i      (  adc_rstn                   ),  // reset - active low
+  .sys_addr_i      (  sys[5].addr                ),
+  .sys_sel_i       (                             ),
+  .sys_wdata_i     (  sys[5].wdata               ),
+  .sys_wen_i       (  sys[5].wen                 ),
+  .sys_ren_i       (  sys[5].ren                 ),
+  .sys_rdata_o     (  sys[5].rdata               ),
+  .sys_err_o       (  sys[5].err                 ),
+  .sys_ack_o       (  sys[5].ack                 )
+);
+
 
 endmodule: red_pitaya_top_Z20
