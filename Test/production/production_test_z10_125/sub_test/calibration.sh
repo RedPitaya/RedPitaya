@@ -107,6 +107,7 @@ echo
 
 STATUS=0
 CALIBRATION_STATUS=0
+LIGHT_STATUS=$($C_MONITOR 0x40000030)
 
 echo "  * Set default calibration"
 export FACTORY_CAL
@@ -592,10 +593,11 @@ export FACTORY_CAL
 ./sub_test/set_calibration_fw.sh
 echo
 
+$C_MONITOR 0x40000030 w $LIGHT_STATUS
+
 if [[ $STATUS == 0 ]]
 then
-    SetBitState 0x40
-    RPLight8
+    RPLight7
 else 
     echo -n "  * Set calibration"
     print_fail

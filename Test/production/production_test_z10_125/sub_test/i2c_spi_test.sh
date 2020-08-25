@@ -60,10 +60,4 @@ else
     print_test_ok
 fi
 
-if [[ $STATUS = 0 ]]
-then
-    SetBitState 0x01
-    RPLight2
-fi
-
 exit $STATUS

@@ -76,6 +76,7 @@ then
     STATUS=1
 else
     print_test_ok
+    SetBitState 0x02
 fi
 
 sleep 1

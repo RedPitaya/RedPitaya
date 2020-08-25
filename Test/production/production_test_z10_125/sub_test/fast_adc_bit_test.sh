@@ -156,6 +156,7 @@ disableAllDIOPin
 if [[ $STATUS == 0 ]]
 then
     print_test_ok
+    SetBitState 0x100
 else
     print_test_fail
 fi

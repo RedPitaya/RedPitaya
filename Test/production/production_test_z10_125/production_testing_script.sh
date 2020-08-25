@@ -53,7 +53,7 @@ export G_CALIBRATION=1
 # default value 0.9
 export G_CALIBRATION_REF_LV_VALUE=0.9
 # default value 10.9
-export G_CALIBRATION_REF_HV_VALUE=4.0
+export G_CALIBRATION_REF_HV_VALUE=10.9
 
 #enable save result
 #export G_SAVE_TO_PC=1

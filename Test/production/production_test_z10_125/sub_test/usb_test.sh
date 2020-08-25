@@ -66,8 +66,8 @@ echo
 if [[ $STATUS == 0 ]]
 then
     print_test_ok
-    SetBitState 0x04
-    RPLight4
+    SetBitState 0x08
+    RPLight3
 else
     print_test_fail
 fi

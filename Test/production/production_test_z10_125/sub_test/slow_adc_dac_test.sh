@@ -98,8 +98,8 @@ disableAllDIOPin
 echo
 if [[ $STATUS == 0 ]]
 then
-    RPLight6
-    SetBitState 0x10
+    RPLight5
+    SetBitState 0x40
     print_test_ok
 else 
     print_test_fail

@@ -25,12 +25,14 @@ done
 #            Test of EEPROM write                                      #
 #        Setting the default calibration parameters into the EEPROM... # 
 ########################################################################
+CONSOLE_TEST_RES=0
 if [[ $G_CONSOLE_TEST == 1 ]]
 then
     ./sub_test/test_console_and_mac.sh
     if [[ "$?" = '1' ]]
     then
         SetBackLog "Console and EEPROM write" $(print_ok)
+        CONSOLE_TEST_RES=1
     else 
         SetBackLog "Console and EEPROM write" $(print_fail)
     fi
@@ -67,17 +69,28 @@ fi
 ###############################################################################
 # I2C and SPI bus functionality test
 ###############################################################################
+SPI_TEST_RES=0
 if [[ $G_SPI_TEST == 1 ]]
 then
     ./sub_test/i2c_spi_test.sh
     if [[ "$?" = '0' ]]
     then
         SetBackLog "I2C and SPI bus functionality" $(print_ok)
+        SPI_TEST_RES=1
     else
         SetBackLog "I2C and SPI bus functionality" $(print_fail)
     fi
 else
     SetBackLog "I2C and SPI bus functionality" $(print_skip)
+fi
+
+if [[ $CONSOLE_TEST_RES == 1 ]]
+then
+    if [[ $SPI_TEST_RES == 1 ]]
+    then
+        RPLight1
+        SetBitState 0x01
+    fi
 fi
 
 ###############################################################################
@@ -121,8 +134,7 @@ if [[ $ETHERNET_TEST_RES == 1 ]]
 then
     if [[ $G_POWER_TEST == 1 ]]
     then
-        RPLight3
-        SetBitState 0x02
+        RPLight2
     fi
 fi
 
@@ -182,8 +194,7 @@ if [[ $SATA_TEST_RES == 1 ]]
 then
     if [[ $GPIO_TEST_RES == 1 ]]
     then
-        RPLight5
-        SetBitState 0x08
+        RPLight4
     fi
 fi
 
@@ -244,8 +255,7 @@ if [[ $FAST_ADC_TEST_RES == 1 ]]
 then
     if [[ $FAST_ADC_BIT_TEST_RES == 1 ]]
     then
-        RPLight7
-        SetBitState 0x20
+        RPLight6
     fi
 fi
 
@@ -253,7 +263,8 @@ fi
 ###############################################################################
 # ADCs and DACs CALIBRATION
 ###############################################################################
-if [[ $G_CALIBRATION == 1 ]]
+CheckTestPassForCalib
+if [[ $G_CALIBRATION == 1 ]] && [[ $STATUS == 1 ]]
 then
     ./sub_test/calibration.sh
     if [[ "$?" = '0' ]]

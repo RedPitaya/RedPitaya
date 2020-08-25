@@ -89,6 +89,7 @@ echo
 if [[ $STATUS == 0 ]]
 then
     print_test_ok
+    SetBitState 0x20
 else
     print_test_fail
 fi

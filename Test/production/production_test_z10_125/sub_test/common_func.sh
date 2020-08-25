@@ -261,7 +261,17 @@ function CombineLogVar(){
 
 function CheckTestPass(){
     TEST_RES=$(cat $TEST_TMP_DIR/bit_value)
-    if [[ "$TEST_RES" = "0x7FFF" ]]
+    if [[ "$TEST_RES" = "0x1FF" ]]
+    then
+        STATUS=1
+    else
+        STATUS=0
+    fi
+}
+
+function CheckTestPassForCalib(){
+    TEST_RES=$(cat $TEST_TMP_DIR/bit_value)
+    if [[ "$TEST_RES" = "0xFF" ]]
     then
         STATUS=1
     else

@@ -121,6 +121,7 @@ then
     print_test_fail
 else
     print_test_ok
+    SetBitState 0x04
 fi
 
 PrintToFile "temp_and_power" "$TEMP $VCCAUX $VCCBRAM $VCCINT"
