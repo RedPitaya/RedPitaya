@@ -158,8 +158,11 @@ float rp_BaCalibGain(float _freq, float _ampl)
     {
         if (calib_data[i] >= _freq)
         {
+			float f0 = calib_data[i-3];
+			float f1 = calib_data[i];
+			float t =  (f1 - f0) != 0 ? (_freq - f0)/(f1 - f0) : 0;
             //fprintf(stdout, "%f %f\n", _ampl, _ampl - l_inter(calib_data[i - 3 + 1], calib_data[i + 1], _ampl));
-            return _ampl - l_inter(calib_data[i - 3 + 1], calib_data[i + 1], _ampl);
+            return _ampl - l_inter(calib_data[i - 3 + 1], calib_data[i + 1], t);
         }
     }
 
@@ -172,7 +175,10 @@ float rp_BaCalibPhase(float _freq, float _phase)
     {
         if (calib_data[i] >= _freq)
         {
-            return _phase - l_inter(calib_data[i - 3 + 2], calib_data[i + 2], _phase);
+			float f0 = calib_data[i-3];
+			float f1 = calib_data[i];
+			float t =  (f1 - f0) != 0 ? (_freq - f0)/(f1 - f0) : 0;
+            return _phase - l_inter(calib_data[i - 3 + 2], calib_data[i + 2], t);
         }
     }
 
