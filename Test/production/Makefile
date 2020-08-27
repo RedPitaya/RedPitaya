@@ -45,7 +45,7 @@ ifeq ($(MODEL), Z20_250_12)
 endif
 
 ifeq ($(MODEL), Z10)
-	make -C production_test_z10_125/apps/i2c_spi_tool install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	make -C production_test_z10_125/apps/spi_tool install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	make -C production_test_z10_125/apps/generate_with_api install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp --parents `find production_test_z10_125 -name \*.sh*` $(INSTALL_DIR)/bin
 
