@@ -149,7 +149,7 @@ ifeq ($(FPGA_MODEL), Z10)
 endif
 else
 	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
+	mv $(INSTALL_DIR)/fpga/v0.94_250/ $(INSTALL_DIR)/fpga/v0.94/
 endif
 
 ################################################################################
@@ -188,7 +188,7 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 
 LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
 
-.PHONY: linux linux-install $(LINUX_DIR)
+.PHONY: linux linux-install $(LINUX_DIR) $(LINUX)
 
 linux: $(LINUX)
 
@@ -240,7 +240,8 @@ $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 ifneq ($(MODEL),Z20_250_12)
 	patch $(TMP)/dts/pl.dtsi < fpga/dts/pl.dtsi.patch
 endif
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(DTS_PATH) $(TMP)/dts/system-top.dts
+	gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
 	# create device tree source from binary for reference
 	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 

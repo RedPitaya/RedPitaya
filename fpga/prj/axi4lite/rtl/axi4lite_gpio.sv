@@ -29,6 +29,18 @@ logic [AW-1:ADDR_LSB] axi_araddr;
 logic slv_reg_rden;
 logic slv_reg_wren;
 
+logic AWtransfer;
+logic  Wtransfer;
+logic  Btransfer;
+logic ARtransfer;
+logic  Rtransfer;
+
+assign AWtransfer = bus.AWVALID & bus.AWREADY;
+assign  Wtransfer =  bus.WVALID &  bus.WREADY;
+assign  Btransfer =  bus.BVALID &  bus.BREADY;
+assign ARtransfer = bus.ARVALID & bus.ARREADY;
+assign  Rtransfer =  bus.RVALID &  bus.RREADY;
+
 // Implement AWREADY generation
 // AWREADY is asserted for one ACLK clock cycle when both
 // AWVALID and WVALID are asserted. AWREADY is
@@ -73,7 +85,9 @@ else               bus.WREADY <= ~bus.WREADY & bus.WVALID & bus.AWVALID;
 // These registers are cleared when reset (active low) is applied.
 // Slave register write enable is asserted when valid address and data are available
 // and the slave is ready to accept the write address and write data.
-assign slv_reg_wren = bus.Wtransfer & bus.AWtransfer;
+
+//assign slv_reg_wren = bus.Wtransfer & bus.AWtransfer;
+assign slv_reg_wren = Wtransfer & AWtransfer;
 
 always_ff @(posedge bus.ACLK)
 if (bus.ARESETn == 1'b0) begin
@@ -103,7 +117,8 @@ end
 // write transaction.
 
 always_ff @(posedge bus.ACLK)
-if (bus.AWtransfer & ~bus.BVALID & bus.Wtransfer) begin
+//if (bus.AWtransfer & ~bus.BVALID & bus.Wtransfer) begin
+if (AWtransfer & ~bus.BVALID & Wtransfer) begin
   // indicates a valid write response is available
   bus.BRESP  <= 2'b0; // 'OKAY' response 
   // work error responses in future
@@ -112,7 +127,8 @@ end
 always_ff @(posedge bus.ACLK)
 if (bus.ARESETn == 1'b0)  bus.BVALID  <= 0;
 else begin    
-  if (bus.AWtransfer & ~bus.BVALID & bus.Wtransfer) begin
+  //if (bus.AWtransfer & ~bus.BVALID & bus.Wtransfer) begin
+  if (AWtransfer & ~bus.BVALID & Wtransfer) begin
     // indicates a valid write response is available
     bus.BVALID <= 1'b1;
   end else if (bus.BREADY & bus.BVALID) begin
@@ -159,7 +175,8 @@ end else begin
   if (slv_reg_rden) begin
     // Valid read data is available at the read data bus
     bus.RVALID <= 1'b1;
-  end else if (bus.Rtransfer) begin
+  //end else if (bus.Rtransfer) begin
+  end else if (Rtransfer) begin
     // Read data is accepted by the master
     bus.RVALID <= 1'b0;
   end
@@ -168,7 +185,8 @@ end
 // Implement memory mapped register select and read logic generation
 // Slave register read enable is asserted when valid address is available
 // and the slave is ready to accept the read address.
-assign slv_reg_rden = bus.ARtransfer & ~bus.RVALID;
+//assign slv_reg_rden = bus.ARtransfer & ~bus.RVALID;
+assign slv_reg_rden = ARtransfer & ~bus.RVALID;
 
 // Address decoding for reading registers
 // Output register or memory read data

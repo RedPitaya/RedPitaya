@@ -1,7 +1,7 @@
 #!/bin/bash
 
-PATH_XILINX_SDK=/opt/Xilinx/SDK/2017.2
-PATH_XILINX_VIVADO=/opt/Xilinx/Vivado/2017.2
+PATH_XILINX_SDK=/opt/Xilinx/SDK/2019.1
+PATH_XILINX_VIVADO=/opt/Xilinx/Vivado/2020.1
 RP_UBUNTU=redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
@@ -64,7 +64,7 @@ if [[ -d "$PATH_XILINX_SDK" ]]
 then
     echo -n "$PATH_XILINX_SDK exists on your filesystem. "
     print_ok
-else 
+else
     echo -n "Can't find $PATH_XILINX_SDK on your PC. "
     print_fail
     echo "Check the correct path to Xilinx SDK"
@@ -75,7 +75,7 @@ if [[ -d "$PATH_XILINX_VIVADO" ]]
 then
     echo -n "$PATH_XILINX_VIVADO exists on your filesystem. "
     print_ok
-else 
+else
     echo -n "Can't find $PATH_XILINX_VIVADO on your PC. "
     print_fail
     echo "Check the correct path to Xilinx Vivado"
