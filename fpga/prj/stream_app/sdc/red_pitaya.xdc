@@ -45,3 +45,10 @@ set_property PACKAGE_PIN W19     [get_ports {adc_data_ch2[12]}]
 set_property PACKAGE_PIN Y19     [get_ports {adc_data_ch2[13]}]
 set_property PACKAGE_PIN W18     [get_ports {adc_data_ch2[14]}]
 set_property PACKAGE_PIN Y18     [get_ports {adc_data_ch2[15]}]
+
+
+### SATA connector
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_o[*]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_o[*]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_i[*]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_i[*]}]
