@@ -168,10 +168,10 @@ set_property PACKAGE_PIN M15 [get_ports {exp_n_io[7]}]
 #set_property PULLUP   TRUE [get_ports {exp_n_io[7]}]
 
 ### SATA connector
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_o[*]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_o[*]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_i[*]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_i[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_o[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_o[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_p_i[*]}]
+#set_property IOSTANDARD LVCMOS18 [get_ports {daisy_n_i[*]}]
 
 set_property PACKAGE_PIN T12 [get_ports {daisy_p_o[0]}]
 set_property PACKAGE_PIN U12 [get_ports {daisy_n_o[0]}]
