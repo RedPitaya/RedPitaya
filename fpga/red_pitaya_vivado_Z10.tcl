@@ -71,7 +71,11 @@ add_files                         ../../$path_rtl
 add_files                               $path_rtl
 add_files                               $path_bd
 
-read_xdc                          $path_sdc/red_pitaya.xdc
+if {$prj_name == "stream_app"} {
+    add_files -fileset constrs_1      $path_sdc/red_pitaya_stream_app.xdc
+}else{
+    add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
+}
 
 ################################################################################
 # ser parameter containing Git hash
