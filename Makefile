@@ -139,7 +139,7 @@ SOCKPROC_DIR    = Bazaar/tools/sockproc
 .PHONY: ecosystem nginx
 
 $(WEBSOCKETPP_TAR): | $(DL)
-	curl -L $(WEBSOCKETPP_URL) -o $@
+	wget $(WEBSOCKETPP_URL) -o $@ --show-progress
 
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
@@ -147,14 +147,14 @@ $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
 
 $(SOCKPROC_TAR): | $(DL)
-	curl -L $(SOCKPROC_URL) -o $@
+	wget $(SOCKPROC_URL) -o $@ --show-progress
 
 $(SOCKPROC_DIR): $(SOCKPROC_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
 $(LIBJSON_TAR): | $(DL)
-	curl -L $(LIBJSON_URL) -o $@
+	wget $(LIBJSON_URL) -o $@ --show-progress
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
 	mkdir -p $@
@@ -162,14 +162,14 @@ $(LIBJSON_DIR): $(LIBJSON_TAR)
 	patch -d $@ -p1 < patches/libjson.patch
 
 $(LUANGINX_TAR): | $(DL)
-	curl -L $(LUANGINX_URL) -o $@
+	wget $(LUANGINX_URL) -o $@ --show-progress
 
 $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
 $(NGINX_TAR): | $(DL)
-	curl -L $(NGINX_URL) -o $@
+	wget $(NGINX_URL) -o $@ --show-progress
 
 $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
@@ -230,7 +230,7 @@ SCPI_PARSER_DIR = $(SCPI_SERVER_DIR)/scpi-parser
 .PHONY: scpi
 
 $(SCPI_PARSER_TAR): | $(DL)
-	curl -L $(SCPI_PARSER_URL) -o $@
+	wget $(SCPI_PARSER_URL) -o $@ --show-progress
 
 $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	mkdir -p $@
@@ -254,7 +254,7 @@ SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
 ifeq ($(MODEL),Z10)
-	curl -L $(SDR_URL) -o $(DL)/$(SDR_ZIP)
+	wget $(SDR_URL) -o $(DL)/$(SDR_ZIP) --show-progress
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 endif
