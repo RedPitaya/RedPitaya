@@ -33,9 +33,9 @@ clean:
 	make -C production_test_z250_12/apps/generate_with_api clean
 	make -C production_test_z250_12/apps/capacitor_calib_tool clean
 install:
-	mkdir -p $(INSTALL_DIR)/bin
-	echo "#!/bin/bash" >> $(INSTALL_DIR)/bin/production_testing_script.sh
-	chmod +x $(INSTALL_DIR)/bin/production_testing_script.sh
+        mkdir -p $(INSTALL_DIR)/bin
+        echo "#!/bin/bash" >> $(INSTALL_DIR)/bin/production_testing_script.sh
+        chmod +x $(INSTALL_DIR)/bin/production_testing_script.sh
 ifeq ($(MODEL), Z20_250_12)
 	make -C production_test_z250_12/apps/uart_tool install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	make -C production_test_z250_12/apps/i2c_spi_tool install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -43,8 +43,6 @@ ifeq ($(MODEL), Z20_250_12)
 	make -C production_test_z250_12/apps/generate_with_api install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	make -C production_test_z250_12/apps/capacitor_calib_tool install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp --parents `find production_test_z250_12 -name \*.sh*` $(INSTALL_DIR)/bin
-	echo "cd /opt/redpitaya/bin/production_test_z250_12/" >> $(INSTALL_DIR)/bin/production_testing_script.sh
-	echo "./production_testing_script.sh" >> $(INSTALL_DIR)/bin/production_testing_script.sh
 endif
 
 ifeq ($(MODEL), Z10)
