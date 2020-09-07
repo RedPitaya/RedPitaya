@@ -54,7 +54,7 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
     {"OSC_CH2_OFF_20_DC"}
 };
 #else
-#define CALIB_MAGIC 0xAABBCCDD 
+#define CALIB_MAGIC 0xAABBCCDD
 const char * c_wpCalParDesc[eCalParEnd][20]={
     {"FE_CH1_FS_G_HI"},
     {"FE_CH2_FS_G_HI"},
