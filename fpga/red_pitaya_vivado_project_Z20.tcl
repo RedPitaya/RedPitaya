@@ -19,6 +19,7 @@ set path_rtl rtl
 set path_ip  ip
 set path_bd  project/redpitaya.srcs/sources_1/bd/system/hdl
 set path_sdc ../../sdc
+set path_sdc_prj sdc
 
 ################################################################################
 # list board files
@@ -57,6 +58,7 @@ add_files                         $path_rtl
 add_files                         $path_bd
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
+add_files -fileset constrs_1      $path_sdc_prj/red_pitaya.xdc
 
 ################################################################################
 # start gui
