@@ -25,6 +25,7 @@ set path_rtl rtl
 set path_ip  ip
 set path_bd  .srcs/sources_1/bd/system/hdl
 set path_sdc ../../sdc
+set path_sdc_prj sdc
 
 set path_out out
 set path_sdk sdk
@@ -72,7 +73,7 @@ add_files                               $path_rtl
 add_files                               $path_bd
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
-add_files -fileset constrs_1      sdc/red_pitaya.xdc
+add_files -fileset constrs_1      $path_sdc_prj/red_pitaya.xdc
 
 ################################################################################
 # ser parameter containing Git hash
