@@ -9,8 +9,11 @@
                                 clock-names = "clk", "s_axi_reg_aclk", "m_axi_osc1_aclk", "m_axi_osc2_aclk";
                                 clocks = <0x9 0x9 0x9 0x9>;
                                 compatible = "generic-uio";
+                                interrupt-parent = <&intc>;
+			        interrupts = <0 30 4>;
                                 reg = <0x43c00000 0x10000>,<0x1000000 0x100000>;
                                        reg-names = "regset", "buffer";
+
                         };
                         
                 };
