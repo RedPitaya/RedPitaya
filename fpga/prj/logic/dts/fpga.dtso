@@ -10,7 +10,7 @@
 				clocks = <&clkc 15>, <&clkc 15>, <&clkc 15>, <&clkc 15>;
 				compatible = "xlnx,axi-dma-1.00.a";
 				interrupt-parent = <&intc>;
-				interrupts = <0 30 4 0 29 4>;
+				interrupts = <0 30 4 0 52 4>;
 				reg = <0x80400000 0x10000>;
 				xlnx,addrwidth = <0x20>;
 				xlnx,include-sg ;
@@ -24,7 +24,7 @@
 				dma-channel@80400030 {
 					compatible = "xlnx,axi-dma-s2mm-channel";
 					dma-channels = <0x1>;
-					interrupts = <0 29 4>;
+					interrupts = <0 52 4>;
 					xlnx,datawidth = <0x20>;
 					xlnx,device-id = <0x0>;
 				};
