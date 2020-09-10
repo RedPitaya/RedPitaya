@@ -267,7 +267,7 @@ begin
   if (m_axi_aresetn == 0) begin
     reg_ctrl <= 0;
   end else begin
-    if ((reg_addr == CTRL_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == CTRL_ADDR) && (reg_wr_we == 1)) begin
       reg_ctrl <= reg_wr_data;
     end else begin
       // Start

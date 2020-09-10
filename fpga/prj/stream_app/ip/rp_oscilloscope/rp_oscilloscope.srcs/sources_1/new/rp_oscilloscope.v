@@ -146,7 +146,7 @@ assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
 
 assign intr = osc1_dma_intr | osc2_dma_intr;
 
-assign reg_wr_we = reg_en & (reg_we == 4'h1);
+assign reg_wr_we = reg_en & (reg_we == 4'hF);
 
 // addresses betwen 4 and 80 (and 96) are settings and are shared to both scope channels. 
 assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] > 8'h4) && (reg_addr[REG_ADDR_BITS-1:0] < 8'h50) && (reg_addr[REG_ADDR_BITS-1:0] != 8'h60);

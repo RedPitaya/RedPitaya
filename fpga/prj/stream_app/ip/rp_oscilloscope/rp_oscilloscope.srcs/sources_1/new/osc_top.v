@@ -317,7 +317,7 @@ begin
     event_op_start  <= 0;
     event_op_reset  <= 0;
   end else begin
-    if ((reg_addr == EVENT_STS_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == EVENT_STS_ADDR) && (reg_wr_we == 1)) begin
       event_op_trig   <= reg_wr_data[3];
       event_op_stop   <= reg_wr_data[2];
       event_op_start  <= reg_wr_data[1];
@@ -341,7 +341,7 @@ begin
   if (rst_n == 0) begin
     cfg_event_sel <= 0;
   end else begin
-    if ((reg_addr == EVENT_SEL_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == EVENT_SEL_ADDR) && (reg_wr_we == 1)) begin
       cfg_event_sel <= reg_wr_data;
     end 
   end
@@ -357,7 +357,7 @@ begin
   if (rst_n == 0) begin
     cfg_trig_mask <= 0;
   end else begin
-    if ((reg_addr == TRIG_MASK_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == TRIG_MASK_ADDR) && (reg_wr_we == 1)) begin
       cfg_trig_mask <= reg_wr_data;
     end 
   end
@@ -373,7 +373,7 @@ begin
   if (rst_n == 0) begin
     cfg_trig_pre_samp <= 0;
   end else begin
-    if ((reg_addr == TRIG_PRE_SAMP_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == TRIG_PRE_SAMP_ADDR) && (reg_wr_we == 1)) begin
       cfg_trig_pre_samp <= reg_wr_data;
     end 
   end
@@ -389,7 +389,7 @@ begin
   if (rst_n == 0) begin
     cfg_trig_post_samp <= 0;
   end else begin
-    if ((reg_addr == TRIG_POST_SAMP_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == TRIG_POST_SAMP_ADDR) && (reg_wr_we == 1)) begin
       cfg_trig_post_samp <= reg_wr_data;
     end 
   end
@@ -405,7 +405,7 @@ begin
   if (rst_n == 0) begin
     cfg_trig_low_level <= 0;
   end else begin
-    if ((reg_addr == TRIG_LOW_LEVEL_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == TRIG_LOW_LEVEL_ADDR) && (reg_wr_we == 1)) begin
       cfg_trig_low_level <= reg_wr_data;
     end 
   end
@@ -421,7 +421,7 @@ begin
   if (rst_n == 0) begin
     cfg_trig_high_level <= 0;
   end else begin
-    if ((reg_addr == TRIG_HIGH_LEVEL_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == TRIG_HIGH_LEVEL_ADDR) && (reg_wr_we == 1)) begin
       cfg_trig_high_level <= reg_wr_data;
     end 
   end
@@ -437,7 +437,7 @@ begin
   if (rst_n == 0) begin
     cfg_trig_edge <= 0;
   end else begin
-    if ((reg_addr == TRIG_EDGE_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == TRIG_EDGE_ADDR) && (reg_wr_we == 1)) begin
       cfg_trig_edge <= reg_wr_data;
     end 
   end
@@ -453,7 +453,7 @@ begin
   if (rst_n == 0) begin
     cfg_dec_factor <= 0;
   end else begin
-    if ((reg_addr == DEC_FACTOR_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == DEC_FACTOR_ADDR) && (reg_wr_we == 1)) begin
       cfg_dec_factor <= reg_wr_data;
     end 
   end
@@ -469,7 +469,7 @@ begin
   if (rst_n == 0) begin
     cfg_dec_rshift <= 0;
   end else begin
-    if ((reg_addr == DEC_RSHIFT_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == DEC_RSHIFT_ADDR) && (reg_wr_we == 1)) begin
       cfg_dec_rshift <= reg_wr_data;
     end 
   end
@@ -485,7 +485,7 @@ begin
   if (rst_n == 0) begin
     cfg_avg_en <= 0;
   end else begin
-    if ((reg_addr == AVG_EN_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == AVG_EN_ADDR) && (reg_wr_we == 1)) begin
       cfg_avg_en <= reg_wr_data;
     end 
   end
@@ -501,7 +501,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_bypass <= 0;
   end else begin
-    if ((reg_addr == FILT_BYPASS_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == FILT_BYPASS_ADDR) && (reg_wr_we == 1)) begin
       cfg_filt_bypass <= reg_wr_data;
     end 
   end
@@ -517,7 +517,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_coeff_aa <= 0;
   end else begin
-    if ((reg_addr == FILT_COEFF_AA_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == FILT_COEFF_AA_ADDR) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_aa <= reg_wr_data;
     end 
   end
@@ -533,7 +533,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_coeff_bb <= 0;
   end else begin
-    if ((reg_addr == FILT_COEFF_BB_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == FILT_COEFF_BB_ADDR) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_bb <= reg_wr_data;
     end 
   end
@@ -549,7 +549,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_coeff_kk <= 0;
   end else begin
-    if ((reg_addr == FILT_COEFF_KK_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == FILT_COEFF_KK_ADDR) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_kk <= reg_wr_data;
     end 
   end
@@ -565,7 +565,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_coeff_pp <= 0;
   end else begin
-    if ((reg_addr == FILT_COEFF_PP_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == FILT_COEFF_PP_ADDR) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_pp <= reg_wr_data;
     end 
   end
@@ -581,7 +581,7 @@ begin
   if (rst_n == 0) begin
     cfg_dma_dst_addr1 <= 0;
   end else begin
-    if ((reg_addr == DMA_DST_ADDR1_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == DMA_DST_ADDR1_ADDR) && (reg_wr_we == 1)) begin
       cfg_dma_dst_addr1 <= reg_wr_data;
     end
   end
@@ -597,7 +597,7 @@ begin
   if (rst_n == 0) begin
     cfg_dma_dst_addr2 <= 0;
   end else begin
-    if ((reg_addr == DMA_DST_ADDR2_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == DMA_DST_ADDR2_ADDR) && (reg_wr_we == 1)) begin
       cfg_dma_dst_addr2 <= reg_wr_data;
     end
   end
@@ -613,7 +613,7 @@ begin
   if (rst_n == 0) begin
     cfg_dma_buf_size <= 0;
   end else begin
-    if ((reg_addr == DMA_BUF_SIZE_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == DMA_BUF_SIZE_ADDR) && (reg_wr_we == 1)) begin
       cfg_dma_buf_size <= reg_wr_data;
     end
   end
@@ -629,7 +629,7 @@ begin
   if (rst_n == 0) begin
     cfg_calib_offset <= 0;
   end else begin
-    if ((reg_addr == CALIB_OFFSET_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == CALIB_OFFSET_ADDR) && (reg_wr_we == 1)) begin
       cfg_calib_offset <= reg_wr_data;
     end
   end
@@ -645,7 +645,7 @@ begin
   if (rst_n == 0) begin
     cfg_calib_gain <= 0;
   end else begin
-    if ((reg_addr == CALIB_GAIN_ADDR) && (reg_wr_we == 1)) begin
+    if ((reg_addr[8-1:0] == CALIB_GAIN_ADDR) && (reg_wr_we == 1)) begin
       cfg_calib_gain <= reg_wr_data;
     end
   end
@@ -658,7 +658,7 @@ end
 
 always @(posedge clk)
 begin
-  case (reg_addr)
+  case (reg_addr[8-1:0])
     EVENT_STS_ADDR:       reg_rd_data <= {28'd0, event_sts_trig, event_sts_stop, event_sts_start, event_sts_reset};
     EVENT_SEL_ADDR:       reg_rd_data <= cfg_event_sel;
     TRIG_MASK_ADDR:       reg_rd_data <= cfg_trig_mask;
@@ -684,7 +684,7 @@ begin
     DMA_BUF_SIZE_ADDR:    reg_rd_data <= cfg_dma_buf_size; 
     BUF1_LOST_SAMP_CNT:   reg_rd_data <= buf1_ms_cnt; 
     BUF2_LOST_SAMP_CNT:   reg_rd_data <= buf2_ms_cnt; 
-    default               reg_rd_data <= 0;                                
+    default               reg_rd_data <= 32'd0;                                
   endcase
 end
 
