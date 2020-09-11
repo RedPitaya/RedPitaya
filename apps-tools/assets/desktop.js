@@ -17,7 +17,7 @@
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
         image: "../assets/images/development.png",
-        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github","activelearning","jupyter"]
+        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github", "activelearning", "jupyter"]
     }];
     var currentGroup = undefined;
 
@@ -33,71 +33,71 @@
     }
 
     Desktop.setApplications = function(listOfapplications) {
-    	$.ajax({
+        $.ajax({
                 method: "GET",
                 url: '/get_info'
             })
             .done(function(result) {
-                    stem_ver = result['stem_ver'];
+                stem_ver = result['stem_ver'];
 
-            		if (stem_ver == "STEM 16"){
-            			for (i = default_applications.length - 1; i >= 0; i -= 1){
-                                if (default_applications[i]["id"] === 'marketplace'
-                                || default_applications[i]["id"] === 'fpgaexamples'
-				|| default_applications[i]["id"] === 'jupyter'
-                                || default_applications[i]["id"] === 'activelearning'){
-   							 	        default_applications.splice(i, 1);
-   								}
-   							}
+                if (stem_ver == "STEM 16") {
+                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
+                        if (default_applications[i]["id"] === 'marketplace' ||
+                            default_applications[i]["id"] === 'fpgaexamples' ||
+                            default_applications[i]["id"] === 'jupyter' ||
+                            default_applications[i]["id"] === 'activelearning') {
+                            default_applications.splice(i, 1);
+                        }
+                    }
+                };
+
+                if (stem_ver == "STEM 250 12") {
+                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
+                        if (default_applications[i]["id"] === 'marketplace' ||
+                            default_applications[i]["id"] === 'fpgaexamples' ||
+                            default_applications[i]["id"] === 'jupyter' ||
+                            default_applications[i]["id"] === 'activelearning') {
+                            default_applications.splice(i, 1);
+                        }
+                    }
+                };
+
+                applications = [];
+                $.extend(true, applications, listOfapplications);
+                var url_arr = window.location.href.split("/");
+                var url = url_arr[0] + '//' + url_arr[2] + '/';
+
+                for (var i = 0; i < default_applications.length; i++) {
+                    if (default_applications[i].id == "marketplace")
+                        default_applications[i].url = url + 'bazaar'
+                    if (default_applications[i].url[0] == "/")
+                        default_applications[i].url = window.location.origin + default_applications[i].url;
+                    applications.push(default_applications[i]);
+                }
+
+                for (var i = 0; i < applications.length; i++) {
+                    applications[i].group = checkApplicationInGroup(applications[i].id);
+                    applications[i].is_group = false;
+                }
+
+                for (var i = 0; i < groups.length; i++) {
+                    var gr = {
+                        id: "",
+                        name: groups[i].name,
+                        description: groups[i].description,
+                        url: "#",
+                        image: groups[i].image,
+                        check_online: false,
+                        licensable: false,
+                        callback: openGroup,
+                        type: 'run',
+                        group: "",
+                        is_group: true
                     };
-
-                    if (stem_ver == "STEM 250 12"){
-            			for (i = default_applications.length - 1; i >= 0; i -= 1){
-                                if (default_applications[i]["id"] === 'marketplace'
-                                    || default_applications[i]["id"] === 'fpgaexamples'
-                                    || default_applications[i]["id"] === 'jupyter'
-                                    || default_applications[i]["id"] === 'activelearning'){
-   							 	        default_applications.splice(i, 1);
-   								}
-                            }
-            		};
-
-            	    applications = [];
-			        $.extend(true, applications, listOfapplications);
-			        var url_arr = window.location.href.split("/");
-			        var url = url_arr[0] + '//' + url_arr[2] + '/';
-
-			        for (var i = 0; i < default_applications.length; i++) {
-			            if (default_applications[i].id == "marketplace")
-			                default_applications[i].url = url + 'bazaar'
-			            if (default_applications[i].url[0] == "/")
-			                default_applications[i].url = window.location.origin + default_applications[i].url;
-			            applications.push(default_applications[i]);
-			        }
-
-			        for (var i = 0; i < applications.length; i++) {
-			            applications[i].group = checkApplicationInGroup(applications[i].id);
-			            applications[i].is_group = false;
-			        }
-
-			        for (var i = 0; i < groups.length; i++) {
-			            var gr = {
-			                id: "",
-			                name: groups[i].name,
-			                description: groups[i].description,
-			                url: "#",
-			                image: groups[i].image,
-			                check_online: false,
-			                licensable: false,
-			                callback: openGroup,
-			                type: 'run',
-			                group: "",
-			                is_group: true
-			            };
-			            applications.push(gr);
-			        }
-			        applications.unshift(backButton);
-			        Desktop.selectGroup();
+                    applications.push(gr);
+                }
+                applications.unshift(backButton);
+                Desktop.selectGroup();
             });
     }
 
@@ -141,7 +141,7 @@
 
         $('#list-container').empty();
         for (var i = 0; i < applications.length; i++) {
-            if ((currentGroup === undefined && (applications[i].group == "" || applications[i].group === undefined)) || applications[i].group == currentGroup || i==0) {
+            if ((currentGroup === undefined && (applications[i].group == "" || applications[i].group === undefined)) || applications[i].group == currentGroup || i == 0) {
                 var txt = '<li class="app-item" key="' + i + '" group="' + applications[i].group + '" style="display: none;">';
                 txt += '<a href="#" class="app-link"><div class="img-container"><img class="app-icon" src="' + applications[i]['image'] + '"></div><span class="app-name">' + applications[i]['name'] + '</span></a>';
                 txt += '</li>';
@@ -243,7 +243,7 @@
         { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya.readthedocs.io/en/latest/teaching/teaching.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-//        { id: "fpgaexamples", name: "FPGA", description: "Red Pitaya FPGA examples", url: "http://red-pitaya-fpga-examples.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        //        { id: "fpgaexamples", name: "FPGA", description: "Red Pitaya FPGA examples", url: "http://red-pitaya-fpga-examples.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
@@ -283,11 +283,38 @@
         });
         $("#reboot_confirm").click(function(event) {
             $.get('/reboot');
-            setTimeout(function(){ window.close(); }, 1000);
+            setTimeout(function() { window.close(); }, 1000);
         });
         $("#poweroff_confirm").click(function(event) {
             $.get('/poweroff');
-            setTimeout(function(){ window.close(); }, 1000);
+            setTimeout(function() { window.close(); }, 1000);
+        });
+        $("#info").click(function(event) {
+
+
+            $.ajax({
+                    method: "GET",
+                    url: '/get_sysinfo'
+                })
+                .done(function(result) {
+                    try {
+                        const obj = JSON.parse(result);
+                        var model = 'Unknown';
+                        if (obj['model'] === 'STEM_125-14') model = 'STEAMlab 125-14';
+                        if (obj['model'] === 'STEM_250-12_v1.1') model = 'SIGNALlab 250-12';
+                        if (obj['model'] === 'STEM_122-16') model = 'SDRlab 122-16';
+                        $('#SI_B_MODEL').text(model);
+                        $('#SI_MAC').text(obj['mac']);
+                        $('#SI_DNA').text(obj['dna']);
+                        $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + ' - ' + obj['ecosystem']['revision']);
+                        $('#SI_LINUX').text(obj['linux']);
+                        $('#sysinfo_dialog').modal("show");
+                    } catch (error) {
+                        console.error(error);
+                    }
+                });
+
+            $('#sysinfo_dialog').modal("show");
         });
     });
 

@@ -51,10 +51,17 @@ a:visited {
     cursor: pointer;
 }
 
+#info {
+    float: left;
+    width: 5%;
+    text-align: left;
+    cursor: pointer;
+}
+
 #description {
     padding-top: 4px;
     overflow: hidden;
-    width: 95%;
+    width: 90%;
     height: 30px;
     white-space: nowrap;
     margin-left: auto;
@@ -154,7 +161,7 @@ a:visited {
     position: relative;
 }
 
-.simplePagerNav > li {
+.simplePagerNav>li {
     list-style: none;
     display: inline-block;
 }

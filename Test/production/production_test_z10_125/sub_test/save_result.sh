@@ -90,15 +90,14 @@ MD5IN="$LOG_VAR $G_PASS"
 MD5OUT=`echo -n $MD5IN | md5sum | awk '{print $1}'`
 #echo $MD5OUT
 echo
-URL="http://account.redpitaya.com/production.php?test_rec_data=$LOG_VAR"
-URL+="&password=$MD5OUT"
-#echo $URL
+URL="http://production.redpitaya.com/Sync/LogUpdate?test_rec_date=$LOG_VAR"
+echo $URL
 echo
 #URL1="www.redpitaya.com"
 #echo $URL1
 #curl $URL1
 CURL_RSP="$(curl $URL)"
-if [ `echo $CURL_RSP | grep -c "OK" ` -gt 0 ]
+if [ `echo $CURL_RSP | grep -c "Success" ` -gt 0 ]
 then
 echo
 echo -n "      Test record was successfully added to production database. "
