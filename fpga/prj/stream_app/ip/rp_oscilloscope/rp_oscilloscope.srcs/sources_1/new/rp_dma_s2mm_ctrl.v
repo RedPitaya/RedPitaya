@@ -522,10 +522,8 @@ begin
         // Swap the buffer if we have reached the end of the current one
         if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
           if ((req_buf_addr_sel == 0) && ~buf2_full) begin
-   //       if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
             req_addr <= reg_dst_addr2;          
           end 
-          //if ((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
           if ((req_buf_addr_sel == 0) && ~buf1_full) begin
             req_addr <= reg_dst_addr1;
           end        
@@ -554,11 +552,9 @@ begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Reset to the start of the buffer if we have reached the end
         if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
-          //if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
           if ((req_buf_addr_sel == 0) && ~buf2_full) begin //only start writing to buf2 if it's empty
             req_buf_addr <= reg_dst_addr2;          
           end 
-          //if((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
           if ((req_buf_addr_sel == 1) && ~buf1_full) begin //only start writing to buf1 if it's empty
             req_buf_addr <= reg_dst_addr1;
           end   
