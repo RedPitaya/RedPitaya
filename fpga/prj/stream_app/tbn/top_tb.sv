@@ -249,8 +249,8 @@ bit [14-1:0] dat_ref [2*15];
 initial begin
   for (int unsigned i=0; i<31; i++) begin
     dat_ref [i] = {i, 2'b0};
-//    dat_ref [16-1-i] = {1'b1, 15'(1<<i)};
-//    dat_ref [16  +i] = {1'b0, 15'(1<<i)};
+    dat_ref [16-1-i] = {1'b1, 15'(1<<i)};
+    dat_ref [16  +i] = {1'b0, 15'(1<<i)};
   end
 end
 

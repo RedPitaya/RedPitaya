@@ -59,6 +59,7 @@ localparam CTRL_STRT        = 0;  // Control - Bit[0] : Start DMA
 localparam CTRL_INTR_ACK    = 1;  // Control - Bit[1] : Interrupt ACK
 localparam CTRL_BUF1_ACK    = 2;  // Control - Bit[2] : Buffer 1 ACK
 localparam CTRL_BUF2_ACK    = 3;  // Control - Bit[3] : Buffer 2 ACK
+localparam CTRL_RESET       = 4;  // Control - Bit[4] : Reset states and flags
 localparam CTRL_MODE_NORM   = 8;  // Control - Bit[8] : Mode normal DMA
 localparam CTRL_MODE_STREAM = 9;  // Control - Bit[9] : Mode streaming DMA
 
@@ -226,6 +227,8 @@ begin
       if (fifo_rst_cnt == 15) begin
         state_ns = WAIT_DATA_RDY;
       end
+      if (reg_ctrl[CTRL_RESET])
+        state_ns <= IDLE;
     end
     
     // WAIT_DATA_RDY - Wait for the data to be buffered before sending the request
@@ -233,6 +236,8 @@ begin
       if (fifo_empty == 0) begin
         state_ns = SEND_DMA_REQ;
       end
+      if (reg_ctrl[CTRL_RESET])
+        state_ns <= IDLE;
     end
     
     // SEND_DMA_REQ - Send the request 
@@ -244,6 +249,8 @@ begin
         end else begin
           state_ns = WAIT_DATA_RDY;
         end  
+        if (reg_ctrl[CTRL_RESET])
+          state_ns <= IDLE;
       end  
     end    
     
@@ -253,6 +260,8 @@ begin
       if (dat_ctrl_busy == 0) begin
         state_ns = IDLE;  
       end
+      if (reg_ctrl[CTRL_RESET])
+        state_ns <= IDLE;
     end
   endcase
 end
@@ -290,6 +299,9 @@ begin
         reg_ctrl[CTRL_BUF2_ACK] <= 0;
       end   
       
+      if (reg_ctrl[CTRL_RESET]) begin // reset ACK when buffer changes
+        reg_ctrl[CTRL_RESET] <= 0;
+      end   
       // Mode normal
       if (reg_ctrl[CTRL_MODE_NORM] == 1) begin
         reg_ctrl[CTRL_MODE_NORM] <= 0;
@@ -453,7 +465,7 @@ begin
     end    
 
     default: begin
-        if (buf2_full && data_valid_reg && req_buf_addr_sel) begin // buffer is full, there was a sample, buffer2 is chosen
+        if (buf2_full && data_valid_reg && req_buf_addr_sel) begin // buffer2 is full, there was a sample, buffer2 is chosen
           buf2_missed_samp <= buf2_missed_samp+16'd1;  
         end else if((~req_buf_addr_sel) && reg_ctrl[CTRL_BUF1_ACK]) begin 
           buf2_missed_samp <= 16'b0;
@@ -509,10 +521,12 @@ begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Swap the buffer if we have reached the end of the current one
         if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
-          if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
+          if ((req_buf_addr_sel == 0) && ~buf2_full) begin
+   //       if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
             req_addr <= reg_dst_addr2;          
           end 
-          if ((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
+          //if ((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
+          if ((req_buf_addr_sel == 0) && ~buf1_full) begin
             req_addr <= reg_dst_addr1;
           end        
         end else begin
@@ -540,10 +554,12 @@ begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Reset to the start of the buffer if we have reached the end
         if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
-          if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
+          //if ((req_buf_addr_sel == 0) && reg_ctrl[CTRL_BUF1_ACK]) begin
+          if ((req_buf_addr_sel == 0) && ~buf2_full) begin //only start writing to buf2 if it's empty
             req_buf_addr <= reg_dst_addr2;          
           end 
-          if((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
+          //if((req_buf_addr_sel == 1) && reg_ctrl[CTRL_BUF2_ACK]) begin
+          if ((req_buf_addr_sel == 1) && ~buf1_full) begin //only start writing to buf1 if it's empty
             req_buf_addr <= reg_dst_addr1;
           end   
         end
@@ -570,8 +586,11 @@ begin
     SEND_DMA_REQ: begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Reset to the start of the buffer if we have reached the end
-        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && (reg_ctrl[CTRL_BUF1_ACK] || reg_ctrl[CTRL_BUF2_ACK])) begin
-          req_buf_addr_sel <= ~req_buf_addr_sel;
+        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && ~buf1_full && req_buf_addr_sel == 1'b1) begin
+          req_buf_addr_sel <= 1'b0;
+        end
+        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && ~buf2_full && req_buf_addr_sel == 1'b0) begin
+          req_buf_addr_sel <= 1'b1;
         end
       end  
     end        

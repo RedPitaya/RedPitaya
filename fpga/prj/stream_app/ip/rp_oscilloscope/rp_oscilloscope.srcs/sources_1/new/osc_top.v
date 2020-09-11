@@ -10,7 +10,8 @@ module osc_top
     parameter TRIG_CNT_BITS     = 32, // Trigger counter bits
     parameter EVENT_SRC_NUM     = 1,  // Number of event sources
     parameter EVENT_NUM_LOG2    = $clog2(EVENT_SRC_NUM),
-    parameter TRIG_SRC_NUM      = 1)( // Number of trigger sources
+    parameter TRIG_SRC_NUM      = 1, // Number of trigger sources
+    parameter CHAN_NUM          = 1)( // which channel
   input wire                              clk,
   input wire                              rst_n,
   // Slave AXI-S
@@ -81,13 +82,15 @@ localparam FILT_COEFF_KK_ADDR   = 8'h48;  //72 Filter coeff KK address
 localparam FILT_COEFF_PP_ADDR   = 8'h4C;  //76 Filter coeff PP address
 localparam DMA_CTRL_ADDR        = 8'h50;  //80 DMA control register
 localparam DMA_STS_ADDR         = 8'h54;  //84 DMA status register
-localparam DMA_DST_ADDR1_ADDR   = 8'h58;  //88 DMA destination address 1
-localparam DMA_DST_ADDR2_ADDR   = 8'h5C;  //92 DMA destination address 2
-localparam DMA_BUF_SIZE_ADDR    = 8'h60;  //96 DMA buffer size
-localparam CALIB_OFFSET_ADDR    = 8'h64;  //100 Calibraton offset
-localparam CALIB_GAIN_ADDR      = 8'h68;  //104 Calibraton gain,
-localparam BUF1_LOST_SAMP_CNT   = 8'h6C;  //108 Number of lost samples in buffer 1
-localparam BUF2_LOST_SAMP_CNT   = 8'h70;  //112 Number of lost samples in buffer 2
+localparam DMA_BUF_SIZE_ADDR    = 8'h58;  //96 DMA buffer size
+localparam BUF1_LOST_SAMP_CNT   = 8'h5C;  //108 Number of lost samples in buffer 1
+localparam BUF2_LOST_SAMP_CNT   = 8'h60;  //112 Number of lost samples in buffer 2
+localparam DMA_DST_ADDR1_CH1    = 8'h64;  //88 DMA destination address 1
+localparam DMA_DST_ADDR2_CH1    = 8'h68;  //92 DMA destination address 2
+localparam DMA_DST_ADDR1_CH2    = 8'h6C;  //88 DMA destination address 1
+localparam DMA_DST_ADDR2_CH2    = 8'h70;  //92 DMA destination address 2
+localparam CALIB_OFFSET_ADDR    = 8'h74;  //100 Calibraton offset
+localparam CALIB_GAIN_ADDR      = 8'h78;  //104 Calibraton gain
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -581,7 +584,7 @@ begin
   if (rst_n == 0) begin
     cfg_dma_dst_addr1 <= 0;
   end else begin
-    if ((reg_addr[8-1:0] == DMA_DST_ADDR1_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == DMA_DST_ADDR1_CH2 && CHAN_NUM == 8'd2) || (reg_addr[8-1:0] == DMA_DST_ADDR1_CH1 && CHAN_NUM == 8'd1)) && (reg_wr_we == 1)) begin
       cfg_dma_dst_addr1 <= reg_wr_data;
     end
   end
@@ -597,7 +600,7 @@ begin
   if (rst_n == 0) begin
     cfg_dma_dst_addr2 <= 0;
   end else begin
-    if ((reg_addr[8-1:0] == DMA_DST_ADDR2_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == DMA_DST_ADDR2_CH2 && CHAN_NUM == 8'd2) || (reg_addr[8-1:0] == DMA_DST_ADDR2_CH1 && CHAN_NUM == 8'd1)) && (reg_wr_we == 1)) begin
       cfg_dma_dst_addr2 <= reg_wr_data;
     end
   end
@@ -679,8 +682,10 @@ begin
     FILT_COEFF_PP_ADDR:   reg_rd_data <= cfg_filt_coeff_pp;     
     DMA_CTRL_ADDR:        reg_rd_data <= cfg_dma_ctrl_reg;    
     DMA_STS_ADDR:         reg_rd_data <= cfg_dma_sts_reg;    
-    DMA_DST_ADDR1_ADDR:   reg_rd_data <= cfg_dma_dst_addr1; 
-    DMA_DST_ADDR2_ADDR:   reg_rd_data <= cfg_dma_dst_addr2; 
+    DMA_DST_ADDR1_CH1:    reg_rd_data <= cfg_dma_dst_addr1; 
+    DMA_DST_ADDR2_CH1:    reg_rd_data <= cfg_dma_dst_addr2; 
+    DMA_DST_ADDR1_CH2:    reg_rd_data <= cfg_dma_dst_addr1; 
+    DMA_DST_ADDR2_CH2:    reg_rd_data <= cfg_dma_dst_addr2; 
     DMA_BUF_SIZE_ADDR:    reg_rd_data <= cfg_dma_buf_size; 
     BUF1_LOST_SAMP_CNT:   reg_rd_data <= buf1_ms_cnt; 
     BUF2_LOST_SAMP_CNT:   reg_rd_data <= buf2_ms_cnt; 

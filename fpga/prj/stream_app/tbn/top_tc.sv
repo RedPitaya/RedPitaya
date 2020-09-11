@@ -63,7 +63,7 @@ task test_osc(
 );
    int unsigned dat;
 
-  ##10;
+  ##100;
   // configure
   // DMA control address (80) controls ack signals for buffers. for breakdown see rp_dma_s2mm_ctrl
   axi_write(offset+'d04,   evnt_in);  // osc1 events
@@ -79,11 +79,11 @@ task test_osc(
   axi_write(offset+'d52, 'd3);  // decimation shift
   
   ##5;
-  axi_write(offset+'d88, 'd1000);  // buffer 1 address
+  axi_write(offset+'d100, 'd1000);  // buffer 1 address
   ##5;
-  axi_write(offset+'d92, 'd2000);  // buffer 2 address
+  axi_write(offset+'d104, 'd2000);  // buffer 2 address
   ##5;
-  axi_write(offset+'d96, 'd500);  // buffer size - must be greater than axi burst size (128)
+  axi_write(offset+'d88, 'd500);  // buffer size - must be greater than axi burst size (128)
   ##5;
       axi_write(offset+'d80, 'd513);  // streaming DMA
     axi_write(offset+'d00,   2);  // start
@@ -126,7 +126,7 @@ task buf_ack(
         ##5;
   end while (dat[1] != 1'b1); // BUF 2 is full
   ##2000;
-  axi_write(offset+'d80,   'd8);  // BUF1 ACK 
+  axi_write(offset+'d80,   'd8);  // BUF2 ACK 
 
 endtask: buf_ack
 

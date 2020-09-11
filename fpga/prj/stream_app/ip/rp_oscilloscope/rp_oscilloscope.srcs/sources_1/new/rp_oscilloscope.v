@@ -128,6 +128,7 @@ wire signed [15:0]              s_axis_osc1_tdata;
 wire signed [15:0]              s_axis_osc2_tdata;
 
 wire                            adr_is_setting;
+wire                            adr_is_buf_ch1, adr_is_buf_ch2;
 
 
 always @(posedge clk)
@@ -146,10 +147,13 @@ assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
 
 assign intr = osc1_dma_intr | osc2_dma_intr;
 
-assign reg_wr_we = reg_en & (reg_we == 4'hF);
+assign reg_wr_we = reg_en & (reg_we == 4'h1); //CHANGE BACK TO 4'hF !!!!!!
 
 // addresses betwen 4 and 80 (and 96) are settings and are shared to both scope channels. 
-assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] > 8'h4) && (reg_addr[REG_ADDR_BITS-1:0] < 8'h50) && (reg_addr[REG_ADDR_BITS-1:0] != 8'h60);
+assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] < 8'h64);
+assign adr_is_buf_ch1 = (reg_addr[REG_ADDR_BITS-1:0] == 8'h64 || reg_addr[REG_ADDR_BITS-1:0] == 8'h68);
+assign adr_is_buf_ch2 = (reg_addr[REG_ADDR_BITS-1:0] == 8'h6C || reg_addr[REG_ADDR_BITS-1:0] == 8'h70);
+
 
 ////////////////////////////////////////////////////////////
 // Name : Register Control
@@ -197,7 +201,8 @@ osc_top #(
   .S_AXIS_DATA_BITS (16), 
   .REG_ADDR_BITS    (REG_ADDR_BITS),
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
-  .TRIG_SRC_NUM     (TRIG_SRC_NUM))
+  .TRIG_SRC_NUM     (TRIG_SRC_NUM),
+  .CHAN_NUM         (1))
   U_osc1(
   .clk              (m_axi_osc1_aclk),   
   .rst_n            (m_axi_osc1_aresetn), 
@@ -247,7 +252,8 @@ osc_top #(
   .S_AXIS_DATA_BITS (16), 
   .REG_ADDR_BITS    (REG_ADDR_BITS),  
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
-  .TRIG_SRC_NUM     (TRIG_SRC_NUM))
+  .TRIG_SRC_NUM     (TRIG_SRC_NUM),
+  .CHAN_NUM         (2))
   U_osc2(
   .clk              (m_axi_osc2_aclk),   
   .rst_n            (m_axi_osc2_aresetn), 
@@ -310,7 +316,7 @@ begin
   end
 end
 
-assign reg_rd_data = (reg_rd_data_sel == 0) ? osc1_reg_rd_data : osc2_reg_rd_data;
+assign reg_rd_data = (adr_is_setting || adr_is_buf_ch1) ? osc1_reg_rd_data : osc2_reg_rd_data;
           
 always @(posedge clk)
 begin
