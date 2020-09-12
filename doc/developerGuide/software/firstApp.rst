@@ -192,7 +192,7 @@ There are four WebSocket callbacks:
    - **APP.ws.onerror()** - called when there is an error in establishing socket connection
    - **APP.ws.onmessage()** - called when message was received
    
-Backend is a C/C++ application which controls Red Pitaya peripherals. Source code of this application is stored in src folder. It can be compiled intro controller.
+Backend is a C/C++ application which controls Red Pitaya peripherals. Source code of this application is stored in src folder. It can be compiled in to the controller.
 
 | Main file must contain 11 mandatory functions:
 | **const char *rp_app_desc(void)** - returns application description
