@@ -89,8 +89,10 @@ localparam DMA_DST_ADDR1_CH1    = 8'h64;  //88 DMA destination address 1
 localparam DMA_DST_ADDR2_CH1    = 8'h68;  //92 DMA destination address 2
 localparam DMA_DST_ADDR1_CH2    = 8'h6C;  //88 DMA destination address 1
 localparam DMA_DST_ADDR2_CH2    = 8'h70;  //92 DMA destination address 2
-localparam CALIB_OFFSET_ADDR    = 8'h74;  //100 Calibraton offset
-localparam CALIB_GAIN_ADDR      = 8'h78;  //104 Calibraton gain
+localparam CALIB_OFFSET_ADDR_CH1= 8'h74;  //100 Calibraton offset CH1
+localparam CALIB_GAIN_ADDR_CH1  = 8'h78;  //104 Calibraton gain CH1
+localparam CALIB_OFFSET_ADDR_CH2= 8'h7C;  //108 Calibraton offset CH2
+localparam CALIB_GAIN_ADDR_CH2  = 8'h80;  //112 Calibraton gain CH2
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -632,7 +634,7 @@ begin
   if (rst_n == 0) begin
     cfg_calib_offset <= 0;
   end else begin
-    if ((reg_addr[8-1:0] == CALIB_OFFSET_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == CALIB_OFFSET_ADDR_CH1 && CHAN_NUM == 8'd1) || (reg_addr[8-1:0] == CALIB_OFFSET_ADDR_CH2 && CHAN_NUM == 8'd2)) && (reg_wr_we == 1)) begin
       cfg_calib_offset <= reg_wr_data;
     end
   end
@@ -648,7 +650,7 @@ begin
   if (rst_n == 0) begin
     cfg_calib_gain <= 0;
   end else begin
-    if ((reg_addr[8-1:0] == CALIB_GAIN_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH1 && CHAN_NUM == 8'd1) || (reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH2 && CHAN_NUM == 8'd2)) && (reg_wr_we == 1)) begin
       cfg_calib_gain <= reg_wr_data;
     end
   end
