@@ -524,7 +524,7 @@ begin
           if ((req_buf_addr_sel == 0) && ~buf2_full) begin
             req_addr <= reg_dst_addr2;          
           end 
-          if ((req_buf_addr_sel == 0) && ~buf1_full) begin
+          if ((req_buf_addr_sel == 1) && ~buf1_full) begin
             req_addr <= reg_dst_addr1;
           end        
         end else begin
@@ -645,7 +645,7 @@ begin
     if ((intr == 1) && reg_ctrl[CTRL_INTR_ACK] == 1) begin
       intr <= 0; 
     end else begin
-      if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
+     if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
           ((mode == 1) && 
            ((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin // Set if streaming mode and buffer is full
         intr <= 1;  

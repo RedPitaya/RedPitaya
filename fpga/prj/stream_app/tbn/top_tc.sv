@@ -90,9 +90,9 @@ task test_osc(
   ##100;
   //axi_write(offset+'h00, 4'b1000);  // trigger
 
-  buf_ack(offset);
-    buf_ack(offset);
-      buf_ack(offset);
+  int_ack(offset);
+    int_ack(offset);
+      int_ack(offset);
   /*##1300;
   axi_write(offset+'d80,   'd4);  // BUF1 ACK
   ##1300;
@@ -130,7 +130,31 @@ task buf_ack(
 
 endtask: buf_ack
 
+task int_ack(
+  int unsigned offset
+);
+  int unsigned dat;
+  //axi_read_osc1(offset+'d80, dat);
+  ##10;
 
+  // configure
+  // DMA control address (80) controls ack signals for buffers. for breakdown see rp_dma_s2mm_ctrl
+
+  do begin
+    ##5;
+  end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
+  axi_write(offset+'d80, 'd2);  // INTR ACK
+  ##1000;
+  axi_write(offset+'d80, 'd4);  // BUF1 ACK
+
+  do begin
+        ##5;
+  end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
+  axi_write(offset+'d80, 'd2);  // INTR ACK
+  ##2000;
+  axi_write(offset+'d80,   'd8);  // BUF2 ACK 
+
+endtask: int_ack
 
 
 ////////////////////////////////////////////////////////////////////////////////
