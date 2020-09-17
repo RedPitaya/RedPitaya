@@ -66,33 +66,35 @@ task test_osc(
   ##100;
   // configure
   // DMA control address (80) controls ack signals for buffers. for breakdown see rp_dma_s2mm_ctrl
-  axi_write(offset+'d04,   evnt_in);  // osc1 events
-  axi_write(offset+'d16,  5);  // pre trigger samples
-  axi_write(offset+'d20,  50);  // pre trigger samples
-  axi_write(offset+'d32,  'd30);  // LOW LEVEL TRIG
-  axi_write(offset+'d36,  'd50);  // HI LEVEL TRIG
+  axi_write(offset+'h04,   evnt_in);  // osc1 events
+  axi_write(offset+'h10,  5);  // pre trigger samples
+  axi_write(offset+'h14,  50);  // pre trigger samples
+  axi_write(offset+'h20,  'd30);  // LOW LEVEL TRIG
+  axi_write(offset+'h24,  'd50);  // HI LEVEL TRIG
   ##5;
-  axi_write(offset+'d40, 'd0);  // TRIG EDGE
+  axi_write(offset+'h28, 'd0);  // TRIG EDGE
   ##5
-  axi_write(offset+'d56, 'd1);  // decimation enable
-  axi_write(offset+'d48, 'd8);  // decimation factor
-  axi_write(offset+'d52, 'd3);  // decimation shift
+  axi_write(offset+'h38, 'd1);  // decimation enable
+  axi_write(offset+'h30, 'd1);  // decimation factor
+  axi_write(offset+'h34, 'd0);  // decimation shift
   
   ##5;
-  axi_write(offset+'d100, 'd1000);  // buffer 1 address
+  axi_write(offset+'h64, 'd1000);  // buffer 1 address
   ##5;
-  axi_write(offset+'d104, 'd2000);  // buffer 2 address
+  axi_write(offset+'h68, 'd2000);  // buffer 2 address
   ##5;
-  axi_write(offset+'d88, 'd500);  // buffer size - must be greater than axi burst size (128)
+  axi_write(offset+'h58, 'd500);  // buffer size - must be greater than axi burst size (128)
   ##5;
-      axi_write(offset+'d80, 'd513);  // streaming DMA
-    axi_write(offset+'d00,   2);  // start
-  ##100;
+      axi_write(offset+'h50, 'h201);  // streaming DMA
+    axi_write(offset+'h0,   2);  // start
   //axi_write(offset+'h00, 4'b1000);  // trigger
 
   int_ack(offset);
-    int_ack(offset);
-      int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
   /*##1300;
   axi_write(offset+'d80,   'd4);  // BUF1 ACK
   ##1300;
@@ -151,7 +153,7 @@ task int_ack(
         ##5;
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
   axi_write(offset+'d80, 'd2);  // INTR ACK
-  ##2000;
+  ##5000;
   axi_write(offset+'d80,   'd8);  // BUF2 ACK 
 
 endtask: int_ack

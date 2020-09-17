@@ -377,15 +377,15 @@ begin
   case (state_cs)
     // IDLE - Wait for the DMA start signal
     IDLE: begin
-      buf1_missed_samp <= 16'b0;  
+      buf1_missed_samp <= 32'b0;  
     end    
 
     default: begin
       // increase counter until SW confirms buffer was read
         if (buf1_full && data_valid_reg && (~req_buf_addr_sel)) begin // buffer is full, there was a sample, buffer1 is chosen
-          buf1_missed_samp <= buf1_missed_samp+16'd1;  
-        end else if((req_buf_addr_sel) && reg_ctrl[CTRL_BUF2_ACK]) // number of missed samples is reset only when buffer2 is read completely
-          buf1_missed_samp <= 16'b0;
+          buf1_missed_samp <= buf1_missed_samp+32'd1;  
+        end else if(req_buf_addr_sel_nedge) // number of missed samples is reset when writing into the buffer starts.
+          buf1_missed_samp <= 32'b0;
         end       
   endcase
 end  
@@ -409,8 +409,8 @@ begin
       end else begin
         if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
           // Reset to the start of the buffer if we have reached the end
-          if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
-            if ((req_buf_addr_sel == 0) && (buf1_full == 1)) begin
+          if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && (req_buf_addr_sel == 0) && (buf1_full == 1)) begin
+            //if ((req_buf_addr_sel == 0) && (buf1_full == 1)) begin
               buf1_ovr <= 1;  
             end
           end
@@ -461,14 +461,14 @@ begin
   case (state_cs)
     // IDLE - Wait for the DMA start signal
     IDLE: begin
-      buf2_missed_samp <= 16'b0;  
+      buf2_missed_samp <= 32'b0;  
     end    
 
     default: begin
         if (buf2_full && data_valid_reg && req_buf_addr_sel) begin // buffer2 is full, there was a sample, buffer2 is chosen
-          buf2_missed_samp <= buf2_missed_samp+16'd1;  
-        end else if((~req_buf_addr_sel) && reg_ctrl[CTRL_BUF1_ACK]) begin 
-          buf2_missed_samp <= 16'b0;
+          buf2_missed_samp <= buf2_missed_samp+32'd1;  
+        end else if(req_buf_addr_sel_pedge) begin 
+          buf2_missed_samp <= 32'b0;
         end   
       end     
   endcase
@@ -492,8 +492,8 @@ begin
       end else begin
         if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
           // Reset to the start of the buffer if we have reached the end
-          if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
-            if ((req_buf_addr_sel == 1) && (buf2_full == 1)) begin
+          if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && (req_buf_addr_sel == 1) && (buf2_full == 1)) begin
+         //   if ((req_buf_addr_sel == 1) && (buf2_full == 1)) begin
               buf2_ovr <= 1;  
             end
           end
@@ -582,11 +582,12 @@ begin
     SEND_DMA_REQ: begin
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
         // Reset to the start of the buffer if we have reached the end
-        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && ~buf1_full && req_buf_addr_sel == 1'b1) begin
+        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
+          if (~buf1_full && req_buf_addr_sel == 1'b1) 
           req_buf_addr_sel <= 1'b0;
-        end
-        if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && ~buf2_full && req_buf_addr_sel == 1'b0) begin
-          req_buf_addr_sel <= 1'b1;
+        
+          if (~buf2_full && req_buf_addr_sel == 1'b0)
+            req_buf_addr_sel <= 1'b1;
         end
       end  
     end        
@@ -636,20 +637,29 @@ end
 // Name : Interrupt
 // Sends an interrupt to signal that the DMA has finished.
 ////////////////////////////////////////////////////////////
-
+reg intr_reg, intr_o;
 always @(posedge m_axi_aclk)
 begin
   if (m_axi_aresetn == 0) begin
     intr <= 0;
+    intr_reg <= 1'b0;
+    intr_o   <= 1'b0;
   end else begin
-    if ((intr == 1) && reg_ctrl[CTRL_INTR_ACK] == 1) begin
-      intr <= 0; 
+    intr_reg <= intr_o;
+    if (~intr_reg && intr_o) // on posedge of interrupt create a pulse
+      intr <= 1'b1;
+    else 
+      intr <= 1'b0;  
+
+    if ((intr_o == 1) && reg_ctrl[CTRL_INTR_ACK] == 1) begin
+      intr_o <= 0; 
     end else begin
      if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
           ((mode == 1) && 
            ((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin // Set if streaming mode and buffer is full
-        intr <= 1;  
-      end    
+        intr_o <= 1;  
+      end
+  
     end
   end
 end

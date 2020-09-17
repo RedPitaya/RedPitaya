@@ -52,7 +52,6 @@ endif
 $(FSBL_ELF): $(FPGA_BIT)
 	$(HSI) -source red_pitaya_hsi_fsbl.tcl -tclargs $(PRJ)
 
-
 $(DEVICE_TREE): $(FPGA_BIT)
 	$(HSI) -source red_pitaya_hsi_dts.tcl -tclargs $(PRJ)
 
