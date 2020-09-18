@@ -415,7 +415,6 @@ begin
           end
         end   
       end     
-    end
   endcase
 end  
       
@@ -493,11 +492,10 @@ begin
           // Reset to the start of the buffer if we have reached the end
           if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && (req_buf_addr_sel == 1) && (buf2_full == 1)) begin
               buf2_ovr <= 1;  
-            end
           end
-        end   
-      end     
-    end
+        end
+      end   
+    end     
   endcase
 end  
             
