@@ -413,8 +413,8 @@ begin
               buf1_ovr <= 1;  
           end
         end
-      end   
-    end     
+      end
+    end   
   endcase
 end  
       
