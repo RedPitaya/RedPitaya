@@ -151,7 +151,12 @@ assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
 assign intr = osc1_dma_intr | osc2_dma_intr;
 //assign intr = {osc2_dma_intr,osc1_dma_intr};
 
-assign reg_wr_we = reg_en & (reg_we == 4'h1); //CHANGE BACK TO 4'hF !!!!!!
+`ifdef SIMULATION
+  assign reg_wr_we = reg_en & (reg_we == 4'h1);
+`else
+  assign reg_wr_we = reg_en & (reg_we == 4'hF);
+`endif //SIMULATION
+
 
 assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] < 8'h64);
 

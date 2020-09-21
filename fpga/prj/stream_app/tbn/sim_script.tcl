@@ -64,7 +64,7 @@ proc create_root_design { parentCell } {
 
   # Set parent object as current
   current_bd_instance $parentObj
-
+set_property verilog_define {SIMULATION} [get_filesets sim_1]
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI_OSC
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_REG
 set_property -dict [list CONFIG.MAX_BURST_LENGTH {16} CONFIG.NUM_WRITE_OUTSTANDING {8} CONFIG.NUM_READ_OUTSTANDING {8} CONFIG.NUM_READ_THREADS {4} CONFIG.NUM_WRITE_THREADS {4} CONFIG.SUPPORTS_NARROW_BURST {0} CONFIG.ID_WIDTH {12} CONFIG.DATA_WIDTH {32} CONFIG.PROTOCOL {AXI3}] [get_bd_intf_ports S_AXI_REG]
