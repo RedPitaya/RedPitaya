@@ -79,16 +79,32 @@ task test_osc(
   axi_write(offset+'h34, 'd0);  // decimation shift
   
   ##5;
-  axi_write(offset+'h64, 'd1000);  // buffer 1 address
+  axi_write(offset+'h64, 'd10000);  // buffer 1 address
   ##5;
-  axi_write(offset+'h68, 'd2000);  // buffer 2 address
+  axi_write(offset+'h68, 'd20000);  // buffer 2 address
   ##5;
-  axi_write(offset+'h58, 'd500);  // buffer size - must be greater than axi burst size (128)
+  axi_write(offset+'h6C, 'd30000);  // buffer 1 address
+  ##5;
+  axi_write(offset+'h70, 'd40000);  // buffer 2 address
+  ##5;
+  axi_write(offset+'h58, 'd5000);  // buffer size - must be greater than axi burst size (128)
   ##5;
       axi_write(offset+'h50, 'h201);  // streaming DMA
     axi_write(offset+'h0,   2);  // start
   //axi_write(offset+'h00, 4'b1000);  // trigger
 
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
   int_ack(offset);
   int_ack(offset);
   int_ack(offset);
@@ -145,15 +161,17 @@ task int_ack(
   do begin
     ##5;
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
+  ##200;
   axi_write(offset+'d80, 'd2);  // INTR ACK
-  ##1000;
+  ##4000;
   axi_write(offset+'d80, 'd4);  // BUF1 ACK
 
   do begin
         ##5;
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
+  ##200;
   axi_write(offset+'d80, 'd2);  // INTR ACK
-  ##5000;
+  ##4000;
   axi_write(offset+'d80,   'd8);  // BUF2 ACK 
 
 endtask: int_ack

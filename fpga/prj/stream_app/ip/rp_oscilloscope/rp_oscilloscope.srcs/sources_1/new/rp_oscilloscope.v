@@ -11,7 +11,9 @@ module rp_oscilloscope
     parameter TRIG_SRC_NUM          = 7)(    
   input  wire                                   clk,
   input  wire                                   rst_n,
+  //output wire [              1:0]               intr,
   output wire                                   intr,
+
   //
   input  wire [ADC_DATA_BITS-1:0]               adc_data_ch1,
   input  wire [ADC_DATA_BITS-1:0]               adc_data_ch2,  
@@ -107,7 +109,6 @@ wire [3:0]                      reg_we;
 wire                            reg_wr_we;
 wire [31:0]                     reg_wr_data;    
 wire [31:0]                     reg_rd_data;
-reg                             reg_rd_data_sel;
 
 wire [REG_ADDR_BITS-1:0]        osc1_reg_addr;
 reg                             osc1_reg_wr_we;
@@ -128,7 +129,9 @@ wire signed [15:0]              s_axis_osc1_tdata;
 wire signed [15:0]              s_axis_osc2_tdata;
 
 wire                            adr_is_setting;
-wire                            adr_is_buf_ch1, adr_is_buf_ch2;
+wire                            adr_is_ch1, adr_is_ch2;
+wire                            adr_is_ctrl_ch1, adr_is_ctrl_ch2;
+
 
 
 always @(posedge clk)
@@ -146,14 +149,17 @@ end
 assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
 
 assign intr = osc1_dma_intr | osc2_dma_intr;
+//assign intr = {osc2_dma_intr,osc1_dma_intr};
 
-assign reg_wr_we = reg_en & (reg_we == 4'hF); //CHANGE BACK TO 4'hF !!!!!!
+assign reg_wr_we = reg_en & (reg_we == 4'h1); //CHANGE BACK TO 4'hF !!!!!!
 
-// addresses betwen 4 and 80 (and 96) are settings and are shared to both scope channels. 
 assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] < 8'h64);
-assign adr_is_buf_ch1 = (reg_addr[REG_ADDR_BITS-1:0] == 8'h64 || reg_addr[REG_ADDR_BITS-1:0] == 8'h68);
-assign adr_is_buf_ch2 = (reg_addr[REG_ADDR_BITS-1:0] == 8'h6C || reg_addr[REG_ADDR_BITS-1:0] == 8'h70);
 
+assign adr_is_ctrl_ch1= (reg_addr[REG_ADDR_BITS-1:0] == 8'h50 || reg_addr[REG_ADDR_BITS-1:0] == 8'h54 || reg_addr[REG_ADDR_BITS-1:0] == 8'h64|| reg_addr[REG_ADDR_BITS-1:0] == 8'h68);
+assign adr_is_ctrl_ch2= (reg_addr[REG_ADDR_BITS-1:0] == 8'h8C || reg_addr[REG_ADDR_BITS-1:0] == 8'h90 || reg_addr[REG_ADDR_BITS-1:0] == 8'h9C|| reg_addr[REG_ADDR_BITS-1:0] == 8'hA0);
+assign adr_is_ch1     = (reg_addr[REG_ADDR_BITS-1:0] == 8'h64 || reg_addr[REG_ADDR_BITS-1:0] == 8'h68) || adr_is_ctrl_ch1;
+assign adr_is_ch2     = (reg_addr[REG_ADDR_BITS-1:0] == 8'h6C || reg_addr[REG_ADDR_BITS-1:0] == 8'h70) || adr_is_ctrl_ch1;
+//assign adr_is_ch2     = (reg_addr[REG_ADDR_BITS-1:0] == 8'h6C || reg_addr[REG_ADDR_BITS-1:0] == 8'h70) || adr_is_ctrl_ch2;
 
 ////////////////////////////////////////////////////////////
 // Name : Register Control
@@ -202,6 +208,7 @@ osc_top #(
   .REG_ADDR_BITS    (REG_ADDR_BITS),
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
   .TRIG_SRC_NUM     (TRIG_SRC_NUM),
+  .CTRL_ADDR        ('h50),
   .CHAN_NUM         (1))
   U_osc1(
   .clk              (m_axi_osc1_aclk),   
@@ -253,6 +260,8 @@ osc_top #(
   .REG_ADDR_BITS    (REG_ADDR_BITS),  
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
   .TRIG_SRC_NUM     (TRIG_SRC_NUM),
+  .CTRL_ADDR        ('h50),
+  //.CTRL_ADDR        ('h84),
   .CHAN_NUM         (2))
   U_osc2(
   .clk              (m_axi_osc2_aclk),   
@@ -299,7 +308,7 @@ always @(*)
 begin
   osc1_reg_wr_we = 0;
   
-  if ((reg_wr_we == 1) && ((reg_addr[REG_ADDR_BITS] == 0) || adr_is_setting)) begin
+  if ((reg_wr_we == 1) && (adr_is_setting || adr_is_ch1)) begin
     osc1_reg_wr_we = 1;
   end
 end
@@ -311,16 +320,12 @@ always @(*)
 begin
   osc2_reg_wr_we = 0;
   
-  if ((reg_wr_we == 1) && ((reg_addr[REG_ADDR_BITS] == 1) || adr_is_setting)) begin
+  if ((reg_wr_we == 1) && (adr_is_setting || adr_is_ch2)) begin
     osc2_reg_wr_we = 1;
   end
 end
 
-assign reg_rd_data = (adr_is_setting || adr_is_buf_ch1) ? osc1_reg_rd_data : osc2_reg_rd_data;
-          
-always @(posedge clk)
-begin
-  reg_rd_data_sel <= reg_addr[REG_ADDR_BITS];
-end          
+assign reg_rd_data = (adr_is_setting || adr_is_ch1) ? osc1_reg_rd_data : osc2_reg_rd_data;
+        
           
 endmodule

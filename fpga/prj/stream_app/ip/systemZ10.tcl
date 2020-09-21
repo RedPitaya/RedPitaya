@@ -270,6 +270,7 @@ proc create_root_design { parentCell } {
   set intr_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 intr_concat ]
   set_property -dict [ list \
    CONFIG.NUM_PORTS {2} \
+   #CONFIG.NUM_PORTS {3} \
  ] $intr_concat
 
   # Create instance: processing_system7_0, and set properties
@@ -505,6 +506,7 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_IOPLL_CTRL_FBDIV {30} \
    CONFIG.PCW_IO_IO_PLL_FREQMHZ {1000.000} \
    CONFIG.PCW_IRQ_F2P_INTR {1} \
+   #CONFIG.PCW_IRQ_F2P_INTR {2} \
    CONFIG.PCW_IRQ_F2P_MODE {DIRECT} \
    CONFIG.PCW_MIO_0_DIRECTION {inout} \
    CONFIG.PCW_MIO_0_IOTYPE {LVCMOS 3.3V} \

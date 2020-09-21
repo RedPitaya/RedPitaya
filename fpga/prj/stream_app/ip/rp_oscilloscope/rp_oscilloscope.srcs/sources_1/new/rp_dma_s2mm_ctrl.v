@@ -385,7 +385,7 @@ begin
         if (buf1_full && data_valid_reg && (~req_buf_addr_sel)) begin // buffer is full, there was a sample, buffer1 is chosen
           buf1_missed_samp <= buf1_missed_samp+32'd1;  
         end else if(req_buf_addr_sel_nedge) // number of missed samples is reset when writing into the buffer starts.
-          buf1_missed_samp <= 32'b0;
+          buf1_missed_samp <= 32'd0;
         end       
   endcase
 end  
@@ -411,11 +411,10 @@ begin
           // Reset to the start of the buffer if we have reached the end
           if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && (req_buf_addr_sel == 0) && (buf1_full == 1)) begin
               buf1_ovr <= 1;  
-            end
           end
-        end   
-      end     
-    end
+        end
+      end   
+    end     
   endcase
 end  
       
@@ -467,7 +466,7 @@ begin
         if (buf2_full && data_valid_reg && req_buf_addr_sel) begin // buffer2 is full, there was a sample, buffer2 is chosen
           buf2_missed_samp <= buf2_missed_samp+32'd1;  
         end else if(req_buf_addr_sel_pedge) begin 
-          buf2_missed_samp <= 32'b0;
+          buf2_missed_samp <= 32'd0;
         end   
       end     
   endcase
@@ -493,11 +492,10 @@ begin
           // Reset to the start of the buffer if we have reached the end
           if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]) && (req_buf_addr_sel == 1) && (buf2_full == 1)) begin
               buf2_ovr <= 1;  
-            end
           end
-        end   
-      end     
-    end
+        end
+      end   
+    end     
   endcase
 end  
             

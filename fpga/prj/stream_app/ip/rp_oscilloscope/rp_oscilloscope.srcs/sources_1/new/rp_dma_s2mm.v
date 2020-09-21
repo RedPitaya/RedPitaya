@@ -26,7 +26,7 @@ module rp_dma_s2mm
   input  wire [31:0]                    reg_buf_size,
   //
   output wire [31:0]                    buf1_ms_cnt,
-  output wire [31:0]                    buf2_ms_cnt,    
+  output wire [31:0]                    buf2_ms_cnt,
   //                                        
   output wire [(AXI_ADDR_BITS-1):0]     m_axi_awaddr,     
   output wire [7:0]                     m_axi_awlen,      
