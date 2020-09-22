@@ -131,6 +131,7 @@ wire signed [15:0]              s_axis_osc2_tdata;
 wire                            adr_is_setting;
 wire                            adr_is_ch1, adr_is_ch2;
 wire                            adr_is_ctrl_ch1, adr_is_ctrl_ch2;
+wire                            buf_sel_ch1, buf_sel_ch2;
 
 
 
@@ -158,13 +159,15 @@ assign intr = osc1_dma_intr | osc2_dma_intr;
 `endif //SIMULATION
 
 
-assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] < 8'h64);
+assign adr_is_setting = (reg_addr[REG_ADDR_BITS-1:0] <= 8'h50);
 
-assign adr_is_ctrl_ch1= (reg_addr[REG_ADDR_BITS-1:0] == 8'h50 || reg_addr[REG_ADDR_BITS-1:0] == 8'h54 || reg_addr[REG_ADDR_BITS-1:0] == 8'h64|| reg_addr[REG_ADDR_BITS-1:0] == 8'h68);
-assign adr_is_ctrl_ch2= (reg_addr[REG_ADDR_BITS-1:0] == 8'h8C || reg_addr[REG_ADDR_BITS-1:0] == 8'h90 || reg_addr[REG_ADDR_BITS-1:0] == 8'h9C|| reg_addr[REG_ADDR_BITS-1:0] == 8'hA0);
+//assign adr_is_ctrl_ch1= (reg_addr[REG_ADDR_BITS-1:0] == 8'h50 || reg_addr[REG_ADDR_BITS-1:0] == 8'h54 || reg_addr[REG_ADDR_BITS-1:0] == 8'h64|| reg_addr[REG_ADDR_BITS-1:0] == 8'h68);
+//assign adr_is_ctrl_ch2= (reg_addr[REG_ADDR_BITS-1:0] == 8'h8C || reg_addr[REG_ADDR_BITS-1:0] == 8'h90 || reg_addr[REG_ADDR_BITS-1:0] == 8'h9C|| reg_addr[REG_ADDR_BITS-1:0] == 8'hA0);
+assign adr_is_ctrl_ch1= (reg_addr[REG_ADDR_BITS-1:0] == 8'h50 || reg_addr[REG_ADDR_BITS-1:0] == 8'h54 || reg_addr[REG_ADDR_BITS-1:0] == 8'h58);
 assign adr_is_ch1     = (reg_addr[REG_ADDR_BITS-1:0] == 8'h64 || reg_addr[REG_ADDR_BITS-1:0] == 8'h68) || adr_is_ctrl_ch1;
+//assign adr_is_ch1     = (reg_addr[REG_ADDR_BITS-1:0] >= 8'h54 && reg_addr[REG_ADDR_BITS-1:0] <= 8'h70);
 assign adr_is_ch2     = (reg_addr[REG_ADDR_BITS-1:0] == 8'h6C || reg_addr[REG_ADDR_BITS-1:0] == 8'h70) || adr_is_ctrl_ch1;
-//assign adr_is_ch2     = (reg_addr[REG_ADDR_BITS-1:0] == 8'h6C || reg_addr[REG_ADDR_BITS-1:0] == 8'h70) || adr_is_ctrl_ch2;
+//assign adr_is_ch2     = (reg_addr[REG_ADDR_BITS-1:0] >= 8'h74 && reg_addr[REG_ADDR_BITS-1:0] <= 8'h90);
 
 ////////////////////////////////////////////////////////////
 // Name : Register Control
@@ -214,6 +217,7 @@ osc_top #(
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
   .TRIG_SRC_NUM     (TRIG_SRC_NUM),
   .CTRL_ADDR        ('h50),
+  //.CTRL_ADDR        ('h54),
   .CHAN_NUM         (1))
   U_osc1(
   .clk              (m_axi_osc1_aclk),   
@@ -235,6 +239,8 @@ osc_top #(
   .reg_wr_data      (osc1_reg_wr_data),
   .reg_wr_we        (osc1_reg_wr_we),  
   .reg_rd_data      (osc1_reg_rd_data),
+  .buf_sel_in       (buf_sel_ch2),
+  .buf_sel_out      (buf_sel_ch1),
   .dma_intr         (osc1_dma_intr),
   .m_axi_awaddr     (m_axi_osc1_awaddr), 
   .m_axi_awlen      (m_axi_osc1_awlen),  
@@ -266,7 +272,7 @@ osc_top #(
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
   .TRIG_SRC_NUM     (TRIG_SRC_NUM),
   .CTRL_ADDR        ('h50),
-  //.CTRL_ADDR        ('h84),
+  //.CTRL_ADDR        ('h74),
   .CHAN_NUM         (2))
   U_osc2(
   .clk              (m_axi_osc2_aclk),   
@@ -288,6 +294,8 @@ osc_top #(
   .reg_wr_data      (osc2_reg_wr_data),
   .reg_wr_we        (osc2_reg_wr_we),  
   .reg_rd_data      (osc2_reg_rd_data),
+  .buf_sel_in       (buf_sel_ch1),
+  .buf_sel_out      (buf_sel_ch2),
   .dma_intr         (osc2_dma_intr),
   .m_axi_awaddr     (m_axi_osc2_awaddr), 
   .m_axi_awlen      (m_axi_osc2_awlen),  

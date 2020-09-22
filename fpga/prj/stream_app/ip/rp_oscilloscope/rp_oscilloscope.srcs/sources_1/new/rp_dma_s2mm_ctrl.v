@@ -30,7 +30,9 @@ module rp_dma_s2mm_ctrl
   input  wire                       req_we, 
   input  wire                       data_valid,
   output wire [31:0]                buf1_ms_cnt,
-  output wire [31:0]                buf2_ms_cnt,  
+  output wire [31:0]                buf2_ms_cnt,
+  input  wire                       buf_sel_in,
+  output wire                       buf_sel_out,
   //
   output wire [(AXI_ADDR_BITS-1):0] m_axi_awaddr,     
   output reg  [7:0]                 m_axi_awlen,      
@@ -121,6 +123,8 @@ assign reg_sts[STS_BUF1_FULL] = buf1_full;
 assign reg_sts[STS_BUF1_OVF] = buf1_ovr;
 assign reg_sts[STS_BUF2_FULL] = buf2_full;
 assign reg_sts[STS_BUF2_OVF] = buf2_ovr;
+
+assign buf_sel_out = req_buf_addr_sel;
 
 ////////////////////////////////////////////////////////////
 // Name : Request FIFO 
@@ -270,7 +274,6 @@ end
 // Name : Control Register
 // 
 ////////////////////////////////////////////////////////////
-
 always @(posedge m_axi_aclk)
 begin
   if (m_axi_aresetn == 0) begin
@@ -643,8 +646,8 @@ begin
     end else begin
      if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
           ((mode == 1) && 
-           ((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin // Set if streaming mode and buffer is full
-        intr <= 1;  
+           ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
+        intr <= 1;  // interrupt only triggers if the channel is not lagging behind. 
       end
   
     end

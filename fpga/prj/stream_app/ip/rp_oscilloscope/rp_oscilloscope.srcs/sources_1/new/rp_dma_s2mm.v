@@ -27,6 +27,8 @@ module rp_dma_s2mm
   //
   output wire [31:0]                    buf1_ms_cnt,
   output wire [31:0]                    buf2_ms_cnt,
+  input  wire                           buf_sel_in,
+  output wire                           buf_sel_out,
   //                                        
   output wire [(AXI_ADDR_BITS-1):0]     m_axi_awaddr,     
   output wire [7:0]                     m_axi_awlen,      
@@ -108,6 +110,8 @@ rp_dma_s2mm_ctrl #(
   .data_valid     (s_axis_tvalid),
   .buf1_ms_cnt    (buf1_ms_cnt),
   .buf2_ms_cnt    (buf2_ms_cnt),
+  .buf_sel_in     (buf_sel_in),
+  .buf_sel_out    (buf_sel_out),
   .m_axi_awaddr   (m_axi_awaddr),       
   .m_axi_awlen    (m_axi_awlen),        
   .m_axi_awsize   (m_axi_awsize),       

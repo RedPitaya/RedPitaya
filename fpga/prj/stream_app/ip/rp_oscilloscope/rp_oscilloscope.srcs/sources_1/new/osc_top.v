@@ -37,6 +37,9 @@ module osc_top
   input  wire [31:0]                      reg_wr_data,
   input  wire                             reg_wr_we,  
   output reg  [31:0]                      reg_rd_data,
+  //
+  input  wire                             buf_sel_in,
+  output wire                             buf_sel_out,
   //   
   output wire                             dma_intr,
   //
@@ -81,6 +84,26 @@ localparam FILT_COEFF_AA_ADDR   = 8'h40;  //64 Filter coeff AA address
 localparam FILT_COEFF_BB_ADDR   = 8'h44;  //68 Filter coeff BB address
 localparam FILT_COEFF_KK_ADDR   = 8'h48;  //72 Filter coeff KK address
 localparam FILT_COEFF_PP_ADDR   = 8'h4C;  //76 Filter coeff PP address
+/*localparam DMA_BUF_SIZE_ADDR    = 8'h50;  //96 DMA buffer size
+
+localparam DMA_CTRL_ADDR_CH1    = 8'h54;  //80 DMA control register
+localparam DMA_STS_ADDR_CH1     = 8'h58;  //84 DMA status register
+localparam DMA_DST_ADDR1_CH1    = 8'h5C;  //88 DMA destination address 1
+localparam DMA_DST_ADDR2_CH1    = 8'h60;  //92 DMA destination address 2
+localparam BUF1_LOST_SAMP_CNT_CH1   = 8'h64;  //108 Number of lost samples in buffer 1
+localparam BUF2_LOST_SAMP_CNT_CH1   = 8'h68;  //112 Number of lost samples in buffer 2
+localparam CALIB_OFFSET_ADDR_CH1= 8'h6C;  //100 Calibraton offset CH1
+localparam CALIB_GAIN_ADDR_CH1  = 8'h70;  //104 Calibraton gain CH1
+
+localparam DMA_CTRL_ADDR_CH2    = 8'h74;  //80 DMA control register CH2
+localparam DMA_STS_ADDR_CH2     = 8'h78;  //84 DMA status register CH2
+localparam DMA_DST_ADDR1_CH2    = 8'h7C;  //88 DMA destination address 1
+localparam DMA_DST_ADDR2_CH2    = 8'h80;  //92 DMA destination address 2
+localparam BUF1_LOST_SAMP_CNT_CH2   = 8'h84;  //108 Number of lost samples in buffer 1
+localparam BUF2_LOST_SAMP_CNT_CH2   = 8'h88;  //112 Number of lost samples in buffer 2
+localparam CALIB_OFFSET_ADDR_CH2= 8'h8C;  //108 Calibraton offset CH2
+localparam CALIB_GAIN_ADDR_CH2  = 8'h90;  //112 Calibraton gain CH21*/
+
 localparam DMA_CTRL_ADDR_CH1    = 8'h50;  //80 DMA control register
 localparam DMA_STS_ADDR_CH1     = 8'h54;  //84 DMA status register
 localparam DMA_BUF_SIZE_ADDR    = 8'h58;  //96 DMA buffer size
@@ -277,6 +300,8 @@ rp_dma_s2mm #(
   .reg_buf_size   (cfg_dma_buf_size),
   .buf1_ms_cnt    (buf1_ms_cnt),
   .buf2_ms_cnt    (buf2_ms_cnt),
+  .buf_sel_in     (buf_sel_in),
+  .buf_sel_out    (buf_sel_out),
   .m_axi_awaddr   (m_axi_awaddr), 
   .m_axi_awlen    (m_axi_awlen),  
   .m_axi_awsize   (m_axi_awsize), 
