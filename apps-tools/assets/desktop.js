@@ -299,14 +299,14 @@
                 .done(function(result) {
                     try {
                         const obj = JSON.parse(result);
-                        var model = 'Unknown';
-                        if (obj['model'] === 'STEM_125-14') model = 'STEAMlab 125-14';
-                        if (obj['model'] === 'STEM_250-12_v1.1') model = 'SIGNALlab 250-12';
-                        if (obj['model'] === 'STEM_122-16') model = 'SDRlab 122-16';
+                        var model = obj['model'];
+                        if (obj['model'].startsWith('STEM_125-14')) model = 'STEAMlab 125-14';
+                        if (obj['model'].startsWith('STEM_250-12')) model = 'SIGNALlab 250-12';
+                        if (obj['model'].startsWith('STEM_122-16')) model = 'SDRlab 122-16';
                         $('#SI_B_MODEL').text(model);
                         $('#SI_MAC').text(obj['mac']);
                         $('#SI_DNA').text(obj['dna']);
-                        $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + ' - ' + obj['ecosystem']['revision']);
+                        $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
                         $('#sysinfo_dialog').modal("show");
                     } catch (error) {
