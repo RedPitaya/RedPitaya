@@ -244,15 +244,19 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
         if (_size_ch1 + _size_ch2 > 0){
             
             if (m_fileType == TDMS_TYPE){
+                
                 if (_size_ch1>0){ 
-                    buff_ch1 = new uint8_t[_size_ch1];
+                    buff_ch1 = new uint8_t[_size_ch1 + _lostRate];
                     memcpy_neon(buff_ch1, _buffer_ch1, _size_ch1);
+                    memset(buff_ch1 + _size_ch1 , 0 , sizeof(uint8_t) * _lostRate);
                 }
 
                 if (_size_ch2>0){ 
-                    buff_ch2 = new uint8_t[_size_ch2];
+                    buff_ch2 = new uint8_t[_size_ch2 + _lostRate];
                     memcpy_neon(buff_ch2, _buffer_ch2, _size_ch2);
+                    memset(buff_ch2 + _size_ch2 , 0 , sizeof(uint8_t) * _lostRate);
                 }
+
 
                 auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, _size_ch1, buff_ch2, _size_ch2,_resolution);
                 if (!m_file_manager->AddBufferToWrite(stream_data))
@@ -265,15 +269,13 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
             if (m_fileType == WAV_TYPE){
 
                 if (_size_ch1>0){ 
-                    buff_ch1 = new uint8_t[_size_ch1 + _lostRate];
+                    buff_ch1 = new uint8_t[_size_ch1];
                     memcpy_neon(buff_ch1, _buffer_ch1, _size_ch1);
-                    memset(buff_ch1 + _size_ch1 , 0 , sizeof(uint8_t) * _lostRate);
                 }
 
                 if (_size_ch2>0){ 
-                    buff_ch2 = new uint8_t[_size_ch2 + _lostRate];
+                    buff_ch2 = new uint8_t[_size_ch2];
                     memcpy_neon(buff_ch2, _buffer_ch2, _size_ch2);
-                    memset(buff_ch2 + _size_ch2 , 0 , sizeof(uint8_t) * _lostRate);
                 }
 
                 auto stream_data = m_waveWriter->BuildWAVStream(buff_ch1, _size_ch1, buff_ch2, _size_ch2,_resolution);
