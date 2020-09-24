@@ -23,6 +23,7 @@
 
 #define UDP_BUFFER_LIMIT 512
 #define TCP_BUFFER_LIMIT 65536/2
+#define ZERO_BUFFER_SIZE 1048576
 #define MIN(X,Y) ((X < Y) ? X: Y)
 #define MAX(X,Y) ((X > Y) ? X: Y)
 
@@ -73,6 +74,7 @@ private:
     std::string       m_file_out;
     int               m_samples;  
     int               m_passSizeSamples;
+    uint8_t           m_zeroBuffer[ZERO_BUFFER_SIZE];
 
     bool m_use_local_file;
     Stream_FileType m_fileType;
