@@ -32,7 +32,7 @@ $(CONTROLLER):
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html info js target/$(APP)
+	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html fpga.sh info js target/$(APP)
 	mv $(SERVICE) $(INSTALL_DIR)/bin
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
