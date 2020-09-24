@@ -285,7 +285,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                 delete [] buff_ch2;
 
                 uint64_t saveLostSize = 0;
-                uint64_t saveSize = ZERO_BUFFER_SIZE;
+                uint64_t saveSize = ZERO_BUFFER_SIZE < _lostRate ? ZERO_BUFFER_SIZE : _lostRate;
                 while(((saveLostSize + saveSize) <= _lostRate) && (saveSize > 0)){
                     stream_data = m_waveWriter->BuildWAVStream(m_zeroBuffer, saveSize, m_zeroBuffer, saveSize,_resolution);
                     if (!m_file_manager->AddBufferToWrite(stream_data))
