@@ -153,7 +153,7 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size){
      asionet::CAsioNet::ExtractPack(buff,_size, id, lostRate,oscRate, resolution, ch1, size_ch1, ch2 , size_ch2);
      g_packCounter_ch1 += size_ch1 / (resolution == 16 ? 2 : 1);
      g_packCounter_ch2 += size_ch2 / (resolution == 16 ? 2 : 1);
-     g_lostRate = lostRate;
+     g_lostRate += lostRate;
     // std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
      g_manger->passBuffers(lostRate, oscRate, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);

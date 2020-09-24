@@ -52,7 +52,7 @@ private:
     uintmax_t m_BytesCount;
 
     void oscWorker();
-    bool passCh(int _bufferIndex, size_t &_size1,size_t &_size2);
+    uint32_t passCh(int _bufferIndex, size_t &_size1,size_t &_size2);
     int  oscNotify(uint64_t _lostRate, uint32_t _oscRate,const void *_buffer_ch1, size_t _size_ch1,const void *_buffer_ch2, size_t _size_ch2);
     void signalHandler(const asio::error_code &_error, int _signalNumber);
 };

@@ -6,7 +6,7 @@
 #include "rpsa/server/core/StreamingApplication.h"
 #include "rpsa/server/core/StreamingManager.h"
 
-int main()
+int main(int argc, char* argv[])
 {
     std::vector<UioT> uioList = GetUioList();
 
@@ -37,7 +37,10 @@ int main()
     // Search oscilloscope
     COscilloscope::Ptr osc0 = nullptr;
     COscilloscope::Ptr osc1 = nullptr;
-    int Decimation = 2;
+    int Decimation = 1;
+    if (argc > 1) {
+        Decimation = atoi(argv[1]);
+    }
 
     for (const UioT &uio : uioList)
     {
@@ -63,7 +66,6 @@ int main()
     // }
 
     CStreamingManager::Ptr s_manger = CStreamingManager::Create("127.0.0.1","8900",asionet::Protocol::TCP);
-
 
     // Run application
     CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3);

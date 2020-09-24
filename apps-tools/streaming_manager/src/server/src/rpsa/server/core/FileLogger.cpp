@@ -47,7 +47,7 @@ void CFileLogger::AddMetric(CFileLogger::Metric _metric, uint64_t _value){
         break;
 
         case Metric::OSC_RATE_LOST:
-            m_oscLostRate = _value;
+            m_oscLostRate += _value;
         break;
         
         case Metric::UPD_RATE:
@@ -101,7 +101,7 @@ void CFileLogger::DumpToFile(){
         log << "\n\n";
         log << "Current decimation factor:\t" << m_oscRate << "\n";
         log << "\n\n";
-        log << "Missed data buffers when reading from ADC:\t" << m_oscLostRate << "\n";
+        log << "Missed data samples when reading from ADC:\t" << m_oscLostRate << "\n";
         log << "Lost data during transfer by network:\t" << m_udpLostRate << "\n";
         log << "Lost data due to file write buffer overflow:\t" << m_fileSystemLostRate << "\n";
         log << "\n";

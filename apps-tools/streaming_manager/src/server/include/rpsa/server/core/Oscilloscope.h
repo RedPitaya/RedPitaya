@@ -16,33 +16,39 @@ constexpr uint32_t osc_buf_post_samp = (osc_buf_size / 4) * 3;
 
 struct OscilloscopeMapT
 {
-    uint32_t event_sts;             // 0 - offset
-    uint32_t event_sel;             // 4 - offset
-    uint32_t trig_mask;             // 8 - offset
-    uint32_t _reserved_0;           // 12 - offset
-    uint32_t trig_pre_samp;         // 16 - offset
-    uint32_t trig_post_samp;        // 20 - offset
-    uint32_t trig_pre_cnt;          // 24 - offset
-    uint32_t trig_post_cnt;         // 28 - offset
-    uint32_t trig_low_level;        // 32 - offset
-    uint32_t trig_high_level;       // 36 - offset
-    uint32_t trig_edge;             // 40 - offset
-    uint32_t _reserved_1;           // 44 - offset
-    uint32_t dec_factor;            // 48 - offset
-    uint32_t dec_rshift;            // 52 - offset
-    uint32_t avg_en_addr;           // 56 - offset
-    uint32_t filt_bypass;           // 60 - offset
-    uint32_t filt_coeff_aa;         // 64 - offset
-    uint32_t filt_coeff_bb;         // 68 - offset
-    uint32_t filt_coeff_kk;         // 72 - offset
-    uint32_t filt_coeff_pp;         // 76 - offset
-    uint32_t dma_ctrl;              // 80 - offset
-    uint32_t dma_sts_addr;          // 84 - offset
-    uint32_t dma_dst_addr1;         // 88 - offset
-    uint32_t dma_dst_addr2;         // 92 - offset
-    uint32_t dma_buf_size;          // 96 - offset
-    uint32_t calib_offset;          // 100 - offset
-    uint32_t calib_gain;            // 104 - offset
+    uint32_t event_sts;             // 0   - offset
+    uint32_t event_sel;             // 4   - offset
+    uint32_t trig_mask;             // 8   - offset
+    uint32_t _reserved_0;           // 12  - offset
+    uint32_t trig_pre_samp;         // 16  - offset 0x10
+    uint32_t trig_post_samp;        // 20  - offset 0x14
+    uint32_t trig_pre_cnt;          // 24  - offset 0x18
+    uint32_t trig_post_cnt;         // 28  - offset 0x1C
+    uint32_t trig_low_level;        // 32  - offset 0x20
+    uint32_t trig_high_level;       // 36  - offset 0x24
+    uint32_t trig_edge;             // 40  - offset 0x28
+    uint32_t _reserved_1;           // 44  - offset
+    uint32_t dec_factor;            // 48  - offset 0x30
+    uint32_t dec_rshift;            // 52  - offset 0x34
+    uint32_t avg_en_addr;           // 56  - offset 0x38
+    uint32_t filt_bypass;           // 60  - offset 0x3C
+    uint32_t filt_coeff_aa;         // 64  - offset 0x40
+    uint32_t filt_coeff_bb;         // 68  - offset 0x44
+    uint32_t filt_coeff_kk;         // 72  - offset 0x48
+    uint32_t filt_coeff_pp;         // 76  - offset 0x4C
+    uint32_t dma_ctrl;              // 80  - offset 0x50
+    uint32_t dma_sts_addr;          // 84  - offset 0x54
+    uint32_t dma_buf_size;          // 88  - offset 0x58
+    uint32_t lost_samples_buf1;     // 92  - offset 0x5C
+    uint32_t lost_samples_buf2;     // 96  - offset 0x60
+    uint32_t dma_dst_addr1_ch1;     // 100 - offset 0x64
+    uint32_t dma_dst_addr2_ch1;     // 104 - offset 0x68
+    uint32_t dma_dst_addr1_ch2;     // 108 - offset 0x6C
+    uint32_t dma_dst_addr2_ch2;     // 112 - offset 0x70
+    uint32_t calib_gain_ch1;        // 116 - offset 0x74
+    uint32_t calib_offset_ch1;      // 120 - offset 0x78  
+    uint32_t calib_gain_ch2;        // 124 - offset 0x7C
+    uint32_t calib_offset_ch2;      // 128 - offset 0x80   
 };
 
 class COscilloscope
@@ -58,8 +64,10 @@ public:
     ~COscilloscope();
 
     void prepare();
-    bool next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,bool &_overFlow1 , bool &_overFlow2);
+    bool next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow);
     bool clearBuffer();
+    bool wait();
+    bool clearInterrupt();
     void stop();
 
 private:
@@ -73,8 +81,7 @@ private:
     void *m_Buffer;
     size_t m_BufferSize;
     uintptr_t m_BufferPhysAddr;
-    volatile OscilloscopeMapT *m_OscMap1;
-    volatile OscilloscopeMapT *m_OscMap2;
+    volatile OscilloscopeMapT *m_OscMap;
     uint8_t *m_OscBuffer1;
     uint8_t *m_OscBuffer2;
     unsigned m_OscBufferNumber;

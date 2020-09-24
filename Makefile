@@ -113,6 +113,7 @@ NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 STARTUPSH       = $(INSTALL_DIR)/sbin/startup.sh
+GETSYSINFOSH    = $(INSTALL_DIR)/sbin/getsysinfo.sh
 
 WEBSOCKETPP_TAG = 0.7.0
 LUANGINX_TAG    = v0.10.7
@@ -210,6 +211,7 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 
 startupsh:
+	cp -f patches/startup/getsysinfo.sh $(GETSYSINFOSH)
 ifeq ($(MODEL),Z20_250_12)
 	cp -f patches/startup/startup.sh.Z250_12 $(STARTUPSH)
 else

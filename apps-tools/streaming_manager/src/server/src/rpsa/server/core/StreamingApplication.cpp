@@ -166,23 +166,23 @@ void CStreamingApplication::oscWorker()
     long long int timeBegin = value.count();
     uintmax_t counter = 0;
     uintmax_t passCounter = 0;
-    uint8_t   skipBuffs = 3;
+    uint8_t   skipBuffs = 0;
     m_Osc_ch->prepare();
 try{
     while (m_OscThreadRun.test_and_set())
     {
 #ifndef DISABLE_OSC
+        bool needClearInterrupt = m_Osc_ch->wait();
         m_size_ch1 = 0;
         m_size_ch2 = 0;
-        bool overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
+        uint32_t overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
         if (skipBuffs > 0) { skipBuffs--; continue; }
-        if (overFlow) {
-            m_lostRate++;
+        if (overFlow > 0) {
+            m_lostRate += overFlow;
             ++passCounter;
         }
 #endif
-        oscNotify(m_lostRate, m_oscRate, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
-        
+        oscNotify(overFlow, m_oscRate, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
         ++counter;
 
         timeNow = std::chrono::system_clock::now();
@@ -191,8 +191,9 @@ try{
 
           
         if ((value.count() - timeBegin) >= 5000) {
-            std::cout << "Lost rate: " << passCounter << " / " << counter << " (" << (100. * static_cast<double>(passCounter) / counter) << " %)\n";
+            std::cout << "Lost samples: " << m_lostRate  << "\n";
             counter = 0;
+            m_lostRate = 0;
             passCounter = 0;
             timeBegin = value.count();
         }
@@ -218,17 +219,16 @@ try{
 }
 
 
- bool CStreamingApplication::passCh(int _bufferIndex, size_t &_size1, size_t &_size2){
+ uint32_t CStreamingApplication::passCh(int _bufferIndex, size_t &_size1, size_t &_size2){
     
     uint8_t *buffer_ch1 = nullptr;
     uint8_t *buffer_ch2 = nullptr;
     size_t   size = 0;
     bool success = false;
     void *WriteBuffer_ch1 = nullptr;
-    bool  overFlow1 = false;
-    bool  overFlow2 = false;
+    uint32_t overFlow = 0;
     
-    success = m_Osc_ch->next(buffer_ch1, buffer_ch2, size , overFlow1 , overFlow2);
+    success = m_Osc_ch->next(buffer_ch1, buffer_ch2, size , overFlow );
 
     if (!success) {
         std::cerr << "Error: m_Osc->next()" << std::endl;
@@ -290,7 +290,7 @@ try{
     //      std::cout << (static_cast<int>(wb[_bufferIndex][i]) & 0xFF)  << " ";
     //   }
  	// exit(1);
-    return overFlow1 | overFlow2;
+    return overFlow;
 }
 
 
