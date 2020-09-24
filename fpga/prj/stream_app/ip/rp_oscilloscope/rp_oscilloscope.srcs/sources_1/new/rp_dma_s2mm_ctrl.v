@@ -241,7 +241,7 @@ begin
     end
     
     // WAIT_DATA_RDY - Wait for the data to be buffered before sending the request
-    WAIT_DATA_RDY: begin // do not send if next buffer is full
+    WAIT_DATA_RDY: begin
       if (fifo_empty == 0) begin
         state_ns = SEND_DMA_REQ;
       end
@@ -252,9 +252,9 @@ begin
     // SEND_DMA_REQ - Send the request 
     SEND_DMA_REQ: begin    
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
-          if (next_buf_full) // Test for the last transfer
+          if (next_buf_full) // do not send if next buffer is full
             state_ns = WAIT_BUF_FULL;
-          else if (req_xfer_last == 1) begin
+          else if (req_xfer_last == 1) begin // Test for the last transfer
             state_ns = WAIT_DATA_DONE;
           end else begin
             state_ns = WAIT_DATA_RDY;
@@ -275,8 +275,7 @@ begin
     end
 
     WAIT_BUF_FULL: begin
-      // Test if the data control is busy
-      if (~next_buf_full) begin
+      if (~next_buf_full) begin // do not start a new transfer until next buffer is cleared
         state_ns = WAIT_DATA_RDY;
       end
     end
