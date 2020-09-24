@@ -299,13 +299,17 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                 buff_ch1 = (uint8_t *) _buffer_ch1;
                 buff_ch2 = (uint8_t *) _buffer_ch2;
                 uint32_t counter = 0;
-
+                uint64_t sendLostRate = 0;
                 while ((frame_offset + split_size) <= buffer_size) {
                     if (frame_offset + split_size > buffer_size)
                         split_size = buffer_size - frame_offset;
+                        
+                    if ((frame_offset + split_size * 2) >= buffer_size){
+                        sendLostRate = _lostRate;
+                    }
 
                     size_t new_buff_size = 0;
-                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, _lostRate, _oscRate,  _resolution,
+                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, sendLostRate, _oscRate,  _resolution,
                                                                (&*buff_ch1 + frame_offset),
                                                                (_size_ch1 == 0 ? 0 : split_size),
                                                                (&*buff_ch2 + frame_offset),
