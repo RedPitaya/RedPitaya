@@ -442,8 +442,8 @@ assign #0.2 daisy_n[2] = daisy_n[0] ;
 
         .adc_clk_n(clkn),
         .adc_clk_p(clk),
-        .adc_data_ch1({1'b0,~adc_dr[0][12:0]}),
-        .adc_data_ch2({1'b0,~adc_dr[1][12:0]}));
+        .adc_data_ch1({3'b0,~adc_dr[0][12:0]}),
+        .adc_data_ch2({3'b0,~adc_dr[1][12:0]}));
 
 
 /*rp_concat #(

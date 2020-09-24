@@ -152,7 +152,7 @@ task int_ack(
   int unsigned offset
 );
   int unsigned dat;
-  //axi_read_osc1(offset+'d80, dat);
+  axi_read_osc1(offset+'h50, dat);
   ##10;
 
   // configure

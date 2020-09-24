@@ -56,6 +56,7 @@ localparam FIFO_RST         = 3'd1;
 localparam WAIT_DATA_RDY    = 3'd2;
 localparam SEND_DMA_REQ     = 3'd3;
 localparam WAIT_DATA_DONE   = 3'd4;
+localparam WAIT_BUF_FULL    = 3'd5;
 
 localparam CTRL_STRT        = 0;  // Control - Bit[0] : Start DMA
 localparam CTRL_INTR_ACK    = 1;  // Control - Bit[1] : Interrupt ACK
@@ -213,6 +214,10 @@ end
 // Name : State machine comb logic
 // Assigns the next state.
 ////////////////////////////////////////////////////////////
+wire next_buf_full; //is next buffer full?
+wire buf_oflw;
+assign buf_oflw = (req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]);
+assign next_buf_full = buf_oflw && (((req_buf_addr_sel == 0) && buf2_full) || ((req_buf_addr_sel == 1) && buf1_full));
 
 always @(*)
 begin
@@ -236,23 +241,24 @@ begin
     end
     
     // WAIT_DATA_RDY - Wait for the data to be buffered before sending the request
-    WAIT_DATA_RDY: begin
+    WAIT_DATA_RDY: begin // do not send if next buffer is full
       if (fifo_empty == 0) begin
         state_ns = SEND_DMA_REQ;
       end
       if (reg_ctrl[CTRL_RESET])
         state_ns <= IDLE;
     end
-    
+
     // SEND_DMA_REQ - Send the request 
-    SEND_DMA_REQ: begin
+    SEND_DMA_REQ: begin    
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
-        // Test for the last transfer
-        if (req_xfer_last == 1) begin
-          state_ns = WAIT_DATA_DONE;
-        end else begin
-          state_ns = WAIT_DATA_RDY;
-        end  
+          if (next_buf_full) // Test for the last transfer
+            state_ns = WAIT_BUF_FULL;
+          else if (req_xfer_last == 1) begin
+            state_ns = WAIT_DATA_DONE;
+          end else begin
+            state_ns = WAIT_DATA_RDY;
+          end  
         if (reg_ctrl[CTRL_RESET])
           state_ns <= IDLE;
       end  
@@ -266,6 +272,13 @@ begin
       end
       if (reg_ctrl[CTRL_RESET])
         state_ns <= IDLE;
+    end
+
+    WAIT_BUF_FULL: begin
+      // Test if the data control is busy
+      if (~next_buf_full) begin
+        state_ns = WAIT_DATA_RDY;
+      end
     end
   endcase
 end
@@ -646,7 +659,7 @@ begin
     end else begin
      if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
           ((mode == 1) && 
-           ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
+          ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
         intr <= 1;  // interrupt only triggers if the channel is not lagging behind. 
       end
   
