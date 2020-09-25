@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <memory>
-
+#include <mutex>
 #include <UioParser.h>
 
 constexpr uint32_t osc0_event_id = 2;
@@ -73,17 +73,18 @@ public:
 private:
     void setReg(volatile OscilloscopeMapT *_OscMap ,unsigned int _Channel);
 
-    bool m_Channel1;
-    bool m_Channel2;
-    int m_Fd;
-    void *m_Regset;
-    size_t m_RegsetSize;
-    void *m_Buffer;
-    size_t m_BufferSize;
-    uintptr_t m_BufferPhysAddr;
-    volatile OscilloscopeMapT *m_OscMap;
-    uint8_t *m_OscBuffer1;
-    uint8_t *m_OscBuffer2;
-    unsigned m_OscBufferNumber;
-    uint32_t m_dec_factor;
+    bool         m_Channel1;
+    bool         m_Channel2;
+    int          m_Fd;
+    void        *m_Regset;
+    size_t       m_RegsetSize;
+    void        *m_Buffer;
+    size_t       m_BufferSize;
+    uintptr_t    m_BufferPhysAddr;
+    volatile     OscilloscopeMapT *m_OscMap;
+    uint8_t     *m_OscBuffer1;
+    uint8_t     *m_OscBuffer2;
+    unsigned     m_OscBufferNumber;
+    uint32_t     m_dec_factor;
+    std::mutex   m_waitLock;
 };
