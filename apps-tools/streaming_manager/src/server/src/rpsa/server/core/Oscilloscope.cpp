@@ -209,6 +209,7 @@ bool COscilloscope::clearBuffer(){
 }
 
 bool COscilloscope::wait(){
+    m_waitLock.lock();
     int32_t cnt = 1;
     constexpr size_t cnt_size = sizeof(cnt);
     ssize_t bytes = write(m_Fd, &cnt, cnt_size);
@@ -220,10 +221,12 @@ bool COscilloscope::wait(){
 //        printf("\tINTERRUPT GET\n");
         clearInterrupt();
         if (bytes == cnt_size) {
+            m_waitLock.unlock();
             return true;
         }
     }
 //    printf("Exit by false\n");
+    m_waitLock.unlock();
     return false;
 }
 
@@ -235,6 +238,7 @@ bool COscilloscope::clearInterrupt(){
 
 void COscilloscope::stop()
 {
+    m_waitLock.lock();
     // Control stop
 //    printf("stop()\n");
     if (m_OscMap != nullptr){
@@ -243,4 +247,5 @@ void COscilloscope::stop()
         std::cerr << "Error: COscilloscope::stop()" << std::endl;
         exit(-1);
     }
+    m_waitLock.unlock();
 }

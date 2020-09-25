@@ -258,7 +258,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                 }
 
 
-                auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, _size_ch1, buff_ch2, _size_ch2,_resolution);
+                auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, _size_ch1 + _lostRate, buff_ch2, _size_ch2 + _lostRate,_resolution);
                 if (!m_file_manager->AddBufferToWrite(stream_data))
                 {
                     m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
