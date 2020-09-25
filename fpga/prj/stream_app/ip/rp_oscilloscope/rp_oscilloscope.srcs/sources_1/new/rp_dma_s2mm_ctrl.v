@@ -33,6 +33,7 @@ module rp_dma_s2mm_ctrl
   output wire [31:0]                buf2_ms_cnt,
   input  wire                       buf_sel_in,
   output wire                       buf_sel_out,
+  output reg                        next_buf_full,
   //
   output wire [(AXI_ADDR_BITS-1):0] m_axi_awaddr,     
   output reg  [7:0]                 m_axi_awlen,      
@@ -56,7 +57,6 @@ localparam FIFO_RST         = 3'd1;
 localparam WAIT_DATA_RDY    = 3'd2;
 localparam SEND_DMA_REQ     = 3'd3;
 localparam WAIT_DATA_DONE   = 3'd4;
-localparam WAIT_BUF_FULL    = 3'd5;
 
 localparam CTRL_STRT        = 0;  // Control - Bit[0] : Start DMA
 localparam CTRL_INTR_ACK    = 1;  // Control - Bit[1] : Interrupt ACK
@@ -214,10 +214,6 @@ end
 // Name : State machine comb logic
 // Assigns the next state.
 ////////////////////////////////////////////////////////////
-wire next_buf_full; //is next buffer full?
-wire buf_oflw;
-assign buf_oflw = (req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0]);
-assign next_buf_full = buf_oflw && (((req_buf_addr_sel == 0) && buf2_full) || ((req_buf_addr_sel == 1) && buf1_full));
 
 always @(*)
 begin
@@ -252,9 +248,8 @@ begin
     // SEND_DMA_REQ - Send the request 
     SEND_DMA_REQ: begin    
       if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
-          if (next_buf_full) // do not send if next buffer is full
-            state_ns = WAIT_BUF_FULL;
-          else if (req_xfer_last == 1) begin // Test for the last transfer
+
+          if (req_xfer_last == 1) begin // Test for the last transfer
             state_ns = WAIT_DATA_DONE;
           end else begin
             state_ns = WAIT_DATA_RDY;
@@ -274,11 +269,6 @@ begin
         state_ns <= IDLE;
     end
 
-    WAIT_BUF_FULL: begin
-      if (~next_buf_full) begin // do not start a new transfer until next buffer is cleared
-        state_ns = WAIT_DATA_RDY;
-      end
-    end
   endcase
 end
 
@@ -350,6 +340,32 @@ begin
     end    
   end
 end
+
+////////////////////////////////////////////////////////////
+// next buffer is still full
+////////////////////////////////////////////////////////////
+ 
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    // IDLE - Wait for the DMA start signal
+    IDLE: begin
+      next_buf_full <= 0;  
+    end    
+
+    default: begin
+        if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
+          if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
+            if (((req_buf_addr_sel == 0) && buf2_full) || ((req_buf_addr_sel == 1) && buf1_full)) begin // data loss is occuring
+              next_buf_full <= 1;  
+            end else begin
+              next_buf_full <= 0;
+            end
+          end
+        end   
+      end     
+  endcase
+end  
 
 ////////////////////////////////////////////////////////////
 // Name : Buffer 1 Full
