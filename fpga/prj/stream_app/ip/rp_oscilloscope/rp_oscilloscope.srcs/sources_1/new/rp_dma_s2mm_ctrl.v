@@ -107,8 +107,8 @@ wire [7:0]                fifo_rd_data;
 reg                       fifo_rd_re;
 wire                      fifo_empty;
 reg  [1:0]                buf_sel_reg;
-//reg                       fifo_dis;
 reg                       next_buf_full;
+reg                       fifo_rst_cntdwn;
 
 assign m_axi_awaddr  = req_addr;
 assign m_axi_awsize  = $clog2(AXI_DATA_BITS/8);   
@@ -332,6 +332,31 @@ begin
 end
 
 ////////////////////////////////////////////////////////////
+// FIFO reset countdown active
+// only activates after data loss FIFO reset
+// used to increase missed sample counter during FIFO reset
+////////////////////////////////////////////////////////////
+
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    WAIT_BUF_FULL: begin
+      if (~next_buf_full) begin // if next buffer is full, then wait
+        fifo_rst_cntdwn <= 1'b1; // go back to filling FIFOs
+      end
+    end
+
+    FIFO_RST: begin
+      if (fifo_rst_cnt == 15) begin
+        fifo_rst_cntdwn <= 1'b0;
+      end
+      if (reg_ctrl[CTRL_RESET])
+        fifo_rst_cntdwn <= 1'b0;
+    end     
+  endcase
+end  
+
+////////////////////////////////////////////////////////////
 // FIFO disable signal
 // Prevents writing new data into FIFOs
 ////////////////////////////////////////////////////////////
@@ -440,7 +465,7 @@ begin
 
     default: begin
       // increase counter until SW confirms buffer was read
-        if (buf1_ovr && data_valid_reg) begin // buffer1 is overflowing, there was a sample
+        if ((req_buf_addr_sel == 1 && (fifo_dis || fifo_rst_cntdwn)) && data_valid_reg) begin // buffer1 is overflowing, there was a sample
           buf1_missed_samp <= buf1_missed_samp+32'd1;  
         end else if(req_buf_addr_sel_pedge) // number of missed samples is reset when writing into the buffer starts.
           buf1_missed_samp <= 32'd0;
@@ -521,7 +546,7 @@ begin
     end    
 
     default: begin
-        if (buf2_ovr && data_valid_reg) begin // buffer 2 is overflowing, there was a sample
+        if ((req_buf_addr_sel == 0 && (fifo_dis || fifo_rst_cntdwn)) && data_valid_reg) begin // buffer2 is overflowing, there was a sample
           buf2_missed_samp <= buf2_missed_samp+32'd1;  
         end else if(req_buf_addr_sel_nedge) begin // number of missed samples is reset when writing into the buffer starts.
           buf2_missed_samp <= 32'd0;
