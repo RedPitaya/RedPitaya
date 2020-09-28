@@ -33,6 +33,7 @@ module rp_dma_s2mm_ctrl
   output wire [31:0]                buf2_ms_cnt,
   input  wire                       buf_sel_in,
   output wire                       buf_sel_out,
+  output reg                        fifo_dis,
   //
   output wire [(AXI_ADDR_BITS-1):0] m_axi_awaddr,     
   output reg  [7:0]                 m_axi_awlen,      
@@ -106,7 +107,7 @@ wire [7:0]                fifo_rd_data;
 reg                       fifo_rd_re;
 wire                      fifo_empty;
 reg  [1:0]                buf_sel_reg;
-reg                       fifo_dis;
+//reg                       fifo_dis;
 reg                       next_buf_full;
 
 assign m_axi_awaddr  = req_addr;
@@ -275,7 +276,7 @@ begin
 
     WAIT_BUF_FULL: begin
       if (~next_buf_full) begin // if next buffer is full, then wait
-        state_ns = WAIT_DATA_RDY; // go back to filling FIFOs
+        state_ns = FIFO_RST; // go back to filling FIFOs
       end
     end
 

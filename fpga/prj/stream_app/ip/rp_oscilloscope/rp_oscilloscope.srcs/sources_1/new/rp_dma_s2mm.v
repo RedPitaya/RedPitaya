@@ -72,8 +72,7 @@ wire                      fifo_empty;
 wire [FIFO_CNT_BITS-1:0]  fifo_rd_cnt;
 wire [7:0]                req_data;
 wire                      req_we;
-wire                      next_buf_full;
-wire                      ctrl_valid;
+wire                      fifo_dis;
 
 assign m_axi_wdata  = fifo_rd_data;
 assign m_axi_wstrb  = {AXI_DATA_BITS/8{1'b1}};
@@ -114,6 +113,7 @@ rp_dma_s2mm_ctrl #(
   .buf2_ms_cnt    (buf2_ms_cnt),
   .buf_sel_in     (buf_sel_in),
   .buf_sel_out    (buf_sel_out),
+  .fifo_dis       (fifo_dis),
   .m_axi_awaddr   (m_axi_awaddr),       
   .m_axi_awlen    (m_axi_awlen),        
   .m_axi_awsize   (m_axi_awsize),       
@@ -158,7 +158,7 @@ fifo_axi_data
   .rd_clk         (m_axi_aclk),               
   .rst            (fifo_rst),     
   .din            (fifo_wr_data),                     
-  .wr_en          (fifo_wr_we),               
+  .wr_en          (fifo_wr_we && ~fifo_dis),               
   .full           (),   
   .dout           (fifo_rd_data),    
   .rd_en          (fifo_rd_re),                                 
