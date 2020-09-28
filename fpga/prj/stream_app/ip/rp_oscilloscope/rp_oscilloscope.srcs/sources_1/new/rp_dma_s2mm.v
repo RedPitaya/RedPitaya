@@ -73,6 +73,7 @@ wire [FIFO_CNT_BITS-1:0]  fifo_rd_cnt;
 wire [7:0]                req_data;
 wire                      req_we;
 wire                      next_buf_full;
+wire                      ctrl_valid;
 
 assign m_axi_wdata  = fifo_rd_data;
 assign m_axi_wstrb  = {AXI_DATA_BITS/8{1'b1}};
@@ -113,7 +114,6 @@ rp_dma_s2mm_ctrl #(
   .buf2_ms_cnt    (buf2_ms_cnt),
   .buf_sel_in     (buf_sel_in),
   .buf_sel_out    (buf_sel_out),
-  .next_buf_full  (next_buf_full),
   .m_axi_awaddr   (m_axi_awaddr),       
   .m_axi_awlen    (m_axi_awlen),        
   .m_axi_awsize   (m_axi_awsize),       
@@ -122,7 +122,7 @@ rp_dma_s2mm_ctrl #(
   .m_axi_awcache  (m_axi_awcache),      
   .m_axi_awvalid  (m_axi_awvalid),      
   .m_axi_awready  (m_axi_awready), 
-  .m_axi_wvalid   (m_axi_wvalid),     
+  .m_axi_wvalid   (m_axi_wvalid),    
   .m_axi_wready   (m_axi_wready),     
   .m_axi_wlast    (m_axi_wlast));      
 
@@ -158,7 +158,7 @@ fifo_axi_data
   .rd_clk         (m_axi_aclk),               
   .rst            (fifo_rst),     
   .din            (fifo_wr_data),                     
-  .wr_en          (fifo_wr_we && ~next_buf_full), // write FIFO is not written into until next buffer is cleared                
+  .wr_en          (fifo_wr_we),               
   .full           (),   
   .dout           (fifo_rd_data),    
   .rd_en          (fifo_rd_re),                                 

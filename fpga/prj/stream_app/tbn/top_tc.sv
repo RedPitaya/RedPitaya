@@ -161,7 +161,7 @@ task int_ack(
   do begin
     ##5;
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
-  ##5;
+  ##50;
   axi_write(offset+'h50, 'd2);  // INTR ACK
   ##6000;
   axi_write(offset+'h50, 'd4);  // BUF1 ACK
@@ -169,7 +169,7 @@ task int_ack(
   do begin
         ##5;
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
-  ##5;
+  ##50;
   axi_write(offset+'h50, 'd2);  // INTR ACK
   ##6000;
   axi_write(offset+'h50,   'd8);  // BUF2 ACK 
