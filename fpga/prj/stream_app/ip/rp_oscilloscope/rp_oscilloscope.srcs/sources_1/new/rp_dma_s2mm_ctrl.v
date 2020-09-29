@@ -726,8 +726,8 @@ begin
     end else begin
      if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
           ((mode == 1) && 
-          ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
-        //((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin
+        //  ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
+        ((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin
         intr <= 1;  // interrupt only triggers if the channel is not lagging behind. 
       end
   
