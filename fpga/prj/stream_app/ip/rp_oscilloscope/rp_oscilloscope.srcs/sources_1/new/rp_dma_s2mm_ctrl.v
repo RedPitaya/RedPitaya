@@ -71,6 +71,7 @@ localparam STS_BUF1_FULL    = 0;  // Status = Bit[0] : Buffer 1 full
 localparam STS_BUF2_FULL    = 1;  // Status = Bit[1] : Buffer 2 full
 localparam STS_BUF1_OVF     = 2;  // Status = Bit[2] : Buffer 1 overflow
 localparam STS_BUF2_OVF     = 3;  // Status = Bit[3] : Buffer 2 overflow
+localparam STS_DIAG_INTR    = 4;  // Status of interrupt
 
 localparam AXI_BURST_BYTES  = AXI_BURST_LEN*AXI_DATA_BITS/8;
 localparam BUF_SIZE_BITS    = 17;
@@ -122,11 +123,12 @@ assign buf2_ms_cnt = buf2_missed_samp;
 assign req_buf_addr_sel_pedge = req_buf_addr_sel & ~req_buf_addr_sel_p1;
 assign req_buf_addr_sel_nedge = ~req_buf_addr_sel & req_buf_addr_sel_p1;
 
-assign reg_sts[31:4] = 28'd0;
+assign reg_sts[31:5] = 27'd0;
 assign reg_sts[STS_BUF1_FULL] = buf1_full;
 assign reg_sts[STS_BUF1_OVF] = buf1_ovr;
 assign reg_sts[STS_BUF2_FULL] = buf2_full;
 assign reg_sts[STS_BUF2_OVF] = buf2_ovr;
+assign reg_sts[STS_DIAG_INTR] = intr;
 
 assign buf_sel_out = req_buf_addr_sel;
 
@@ -233,25 +235,29 @@ begin
     
     // FIFO_RST - Reset the data FIFO
     FIFO_RST: begin
-      if (fifo_rst_cnt == 15) begin
-        state_ns = WAIT_DATA_RDY;
-      end
       if (reg_ctrl[CTRL_RESET])
         state_ns <= IDLE;
+      else if (fifo_rst_cnt == 15) begin
+        state_ns = WAIT_DATA_RDY;
+      end
     end
     
     // WAIT_DATA_RDY - Wait for the data to be buffered before sending the request
     WAIT_DATA_RDY: begin
-      if (fifo_empty == 0) begin
-        state_ns = SEND_DMA_REQ;
-      end
       if (reg_ctrl[CTRL_RESET])
         state_ns <= IDLE;
+      else if (fifo_empty == 0) begin
+        state_ns = SEND_DMA_REQ;
+      end
+      
     end
 
     // SEND_DMA_REQ - Send the request 
     SEND_DMA_REQ: begin
-        if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
+
+        if (reg_ctrl[CTRL_RESET])
+          state_ns <= IDLE;
+        else if ((m_axi_awvalid == 1) && (m_axi_awready == 1)) begin
           if (next_buf_full) // if next transfer results in overwriting the buffer, wait until the buffer is completely read out.
            state_ns = WAIT_BUF_FULL;
           else if (req_xfer_last == 1) begin // Test for the last transfer
@@ -259,23 +265,23 @@ begin
           end else begin
             state_ns = WAIT_DATA_RDY;
           end  
-        if (reg_ctrl[CTRL_RESET])
-          state_ns <= IDLE;
-      end  
+        end  
     end    
     
     // WAIT_DATA_DONE - Wait until data from all requests has been sent
     WAIT_DATA_DONE: begin
       // Test if the data control is busy
-      if (dat_ctrl_busy == 0) begin
+      if (reg_ctrl[CTRL_RESET])
+          state_ns <= IDLE;
+      else if (dat_ctrl_busy == 0) begin
         state_ns = IDLE;  
       end
-      if (reg_ctrl[CTRL_RESET])
-        state_ns <= IDLE;
     end
 
     WAIT_BUF_FULL: begin
-      if (~next_buf_full) begin // if next buffer is full, then wait
+      if (reg_ctrl[CTRL_RESET])
+          state_ns <= IDLE;
+      else if (~next_buf_full) begin // if next buffer is full, then wait
         state_ns = FIFO_RST; // go back to filling FIFOs
       end
     end
@@ -353,6 +359,11 @@ begin
       if (reg_ctrl[CTRL_RESET])
         fifo_rst_cntdwn <= 1'b0;
     end     
+
+    default: begin
+        fifo_rst_cntdwn <= 1'b0;
+      end
+
   endcase
 end  
 
@@ -465,7 +476,7 @@ begin
 
     default: begin
       // increase counter until SW confirms buffer was read
-        if ((req_buf_addr_sel == 1 && (fifo_dis || fifo_rst_cntdwn)) && data_valid_reg) begin // buffer1 is overflowing, there was a sample
+        if ((req_buf_addr_sel == 1 && (fifo_dis || fifo_rst_cntdwn)) && data_valid_reg && buf1_missed_samp < 32'hFFFFFFFF) begin // buffer1 is overflowing, there was a sample
           buf1_missed_samp <= buf1_missed_samp+32'd1;  
         end else if(req_buf_addr_sel_pedge) // number of missed samples is reset when writing into the buffer starts.
           buf1_missed_samp <= 32'd0;
@@ -546,7 +557,7 @@ begin
     end    
 
     default: begin
-        if ((req_buf_addr_sel == 0 && (fifo_dis || fifo_rst_cntdwn)) && data_valid_reg) begin // buffer2 is overflowing, there was a sample
+        if ((req_buf_addr_sel == 0 && (fifo_dis || fifo_rst_cntdwn)) && data_valid_reg && buf2_missed_samp < 32'hFFFFFFFF) begin // buffer2 is overflowing, there was a sample
           buf2_missed_samp <= buf2_missed_samp+32'd1;  
         end else if(req_buf_addr_sel_nedge) begin // number of missed samples is reset when writing into the buffer starts.
           buf2_missed_samp <= 32'd0;
@@ -718,21 +729,28 @@ end
 ////////////////////////////////////////////////////////////
 always @(posedge m_axi_aclk)
 begin
-  if (m_axi_aresetn == 0) begin
-    intr <= 0;
-  end else begin
-    if (reg_ctrl[CTRL_INTR_ACK] == 1) begin
-      intr <= 0; 
-    end else begin
-     if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
-          ((mode == 1) && 
-        //  ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
-        ((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin
-        intr <= 1;  // interrupt only triggers if the channel is not lagging behind. 
+  case (state_cs)
+    IDLE: begin
+        intr <= 1'b0;
       end
-  
+
+    default: begin
+      if (m_axi_aresetn == 0) begin
+        intr <= 0;
+      end else begin
+        if (reg_ctrl[CTRL_INTR_ACK] == 1) begin
+          intr <= 0; 
+        end else begin
+        if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
+              ((mode == 1) && 
+              ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
+            //((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin
+            intr <= 1;  // interrupt only triggers if the channel is not lagging behind. 
+          end
+        end
+      end
     end
-  end
+  endcase
 end
 
 ////////////////////////////////////////////////////////////
@@ -840,6 +858,8 @@ begin
     WAIT_DATA_RDY: begin
       m_axi_awlen <= fifo_rd_data[6:0]-1;
     end
+
+    
 
   endcase   
 end

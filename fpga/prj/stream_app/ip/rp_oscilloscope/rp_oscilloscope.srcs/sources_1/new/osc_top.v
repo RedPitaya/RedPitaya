@@ -125,6 +125,8 @@ localparam DMA_STS_ADDR_CH2     = 8'h90;  //84 DMA status register CH2
 //localparam BUF2_LOST_SAMP_CNT_CH1   = 8'h98;  //112 Number of lost samples in buffer 2
 localparam BUF1_LOST_SAMP_CNT_CH2   = 8'h9C;  //108 Number of lost samples in buffer 1
 localparam BUF2_LOST_SAMP_CNT_CH2   = 8'hA0;  //112 Number of lost samples in buffer 2
+localparam CURR_WP_CH1 = 8'hA4;  //current write pointer CH1
+localparam CURR_WP_CH2 = 8'hA8;  //current write pointer CH2
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -729,6 +731,9 @@ begin
     BUF2_LOST_SAMP_CNT_CH1:   reg_rd_data <= buf2_ms_cnt; 
     BUF1_LOST_SAMP_CNT_CH2:   reg_rd_data <= buf1_ms_cnt; 
     BUF2_LOST_SAMP_CNT_CH2:   reg_rd_data <= buf2_ms_cnt; 
+    CURR_WP_CH1:               reg_rd_data <= m_axi_awaddr;
+    CURR_WP_CH2:               reg_rd_data <= m_axi_awaddr;
+
     default               reg_rd_data <= 32'd0;                                
   endcase
 end
