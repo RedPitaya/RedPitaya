@@ -71,7 +71,7 @@ localparam STS_BUF1_FULL    = 0;  // Status = Bit[0] : Buffer 1 full
 localparam STS_BUF2_FULL    = 1;  // Status = Bit[1] : Buffer 2 full
 localparam STS_BUF1_OVF     = 2;  // Status = Bit[2] : Buffer 1 overflow
 localparam STS_BUF2_OVF     = 3;  // Status = Bit[3] : Buffer 2 overflow
-localparam STS_DIAG_INTR    = 4;  // Status of interrupt
+localparam STS_CURR_BUF     = 4;  // Currently selected buffer
 
 localparam AXI_BURST_BYTES  = AXI_BURST_LEN*AXI_DATA_BITS/8;
 localparam BUF_SIZE_BITS    = 17;
@@ -128,7 +128,7 @@ assign reg_sts[STS_BUF1_FULL] = buf1_full;
 assign reg_sts[STS_BUF1_OVF] = buf1_ovr;
 assign reg_sts[STS_BUF2_FULL] = buf2_full;
 assign reg_sts[STS_BUF2_OVF] = buf2_ovr;
-assign reg_sts[STS_DIAG_INTR] = intr;
+assign reg_sts[STS_CURR_BUF] = req_buf_addr_sel;
 
 assign buf_sel_out = req_buf_addr_sel;
 
