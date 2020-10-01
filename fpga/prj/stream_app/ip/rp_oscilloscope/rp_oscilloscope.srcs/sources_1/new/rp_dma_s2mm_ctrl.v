@@ -107,7 +107,6 @@ wire                      fifo_wr_we;
 wire [7:0]                fifo_rd_data;
 reg                       fifo_rd_re;
 wire                      fifo_empty;
-reg  [1:0]                buf_sel_reg;
 reg                       next_buf_full;
 reg                       fifo_rst_cntdwn;
 
@@ -312,16 +311,17 @@ begin
       end
       
       // Buf 1 ACK
-      if (reg_ctrl[CTRL_BUF1_ACK] && (buf_sel_reg == 2'b01)) begin // reset ACK when buffer changes
+      if (reg_ctrl[CTRL_BUF1_ACK]) begin
         reg_ctrl[CTRL_BUF1_ACK] <= 0;
       end
 
       // Buf 2 ACK
-      if (reg_ctrl[CTRL_BUF2_ACK] && (buf_sel_reg == 2'b10)) begin // reset ACK when buffer changes
+      if (reg_ctrl[CTRL_BUF2_ACK]) begin
         reg_ctrl[CTRL_BUF2_ACK] <= 0;
       end   
       
-      if (reg_ctrl[CTRL_RESET]) begin // reset ACK when buffer changes
+      // Reset state machine
+      if (reg_ctrl[CTRL_RESET]) begin
         reg_ctrl[CTRL_RESET] <= 0;
       end   
       // Mode normal
@@ -660,8 +660,6 @@ end
 
 always @(posedge m_axi_aclk)
 begin
-  buf_sel_reg[0] <= req_buf_addr_sel;
-  buf_sel_reg[1] <= buf_sel_reg[0];
   case (state_cs)
     // IDLE - Wait for the DMA start signal
     IDLE: begin
