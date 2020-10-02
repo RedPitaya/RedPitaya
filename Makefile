@@ -211,7 +211,6 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 
 startupsh:
-	cp -f patches/startup/getsysinfo.sh $(GETSYSINFOSH)
 ifeq ($(MODEL),Z20_250_12)
 	cp -f patches/startup/startup.sh.Z250_12 $(STARTUPSH)
 else
