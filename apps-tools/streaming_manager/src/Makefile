@@ -55,7 +55,7 @@ all: make_c_app service
 clean: clean_c_app
 
 build_lib:
-	./build.sh libs
+	./build.sh libs -DCMAKE_BUILD_TYPE=Debug
 
 .PHONY: make_c_app
 make_c_app: build_lib  $(OBJECTS)

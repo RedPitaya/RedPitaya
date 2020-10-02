@@ -216,7 +216,8 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
     ASIO_ASSERT(!(_size_ch1 != _size_ch2 && _size_ch1 != 0 && _size_ch2 != 0));
     uint8_t *buff_ch1 = nullptr;
     uint8_t *buff_ch2 = nullptr;
-
+    uint8_t byte_per_sample = (_resolution == 16 ? 2 : 1);
+    uint32_t lostSize = _lostRate * byte_per_sample;
     if (m_use_local_file){
         bool flag = false;
         if (m_samples != -1) {
@@ -244,21 +245,21 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
         if (_size_ch1 + _size_ch2 > 0){
             
             if (m_fileType == TDMS_TYPE){
-                
+
                 if (_size_ch1>0){ 
-                    buff_ch1 = new uint8_t[_size_ch1 + _lostRate];
+                    buff_ch1 = new uint8_t[_size_ch1 + lostSize];
                     memcpy_neon(buff_ch1, _buffer_ch1, _size_ch1);
-                    memset(buff_ch1 + _size_ch1 , 0 , sizeof(uint8_t) * _lostRate);
+                    memset(buff_ch1 + _size_ch1 , 0 , sizeof(uint8_t) * lostSize);
                 }
 
                 if (_size_ch2>0){ 
-                    buff_ch2 = new uint8_t[_size_ch2 + _lostRate];
+                    buff_ch2 = new uint8_t[_size_ch2 + lostSize];
                     memcpy_neon(buff_ch2, _buffer_ch2, _size_ch2);
-                    memset(buff_ch2 + _size_ch2 , 0 , sizeof(uint8_t) * _lostRate);
+                    memset(buff_ch2 + _size_ch2 , 0 , sizeof(uint8_t) * lostSize);
                 }
 
 
-                auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, _size_ch1 + _lostRate, buff_ch2, _size_ch2 + _lostRate,_resolution);
+                auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, _size_ch1 + lostSize, buff_ch2, _size_ch2 + lostSize,_resolution);
                 if (!m_file_manager->AddBufferToWrite(stream_data))
                 {
                     m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
@@ -287,16 +288,16 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                 delete [] buff_ch2;
 
                 uint64_t saveLostSize = 0;
-                uint64_t saveSize = ZERO_BUFFER_SIZE < _lostRate ? ZERO_BUFFER_SIZE : _lostRate;
-                while(((saveLostSize + saveSize) <= _lostRate) && (saveSize > 0)){
+                uint64_t saveSize = (ZERO_BUFFER_SIZE < lostSize ? ZERO_BUFFER_SIZE : lostSize);
+                while(((saveLostSize + saveSize) <= lostSize) && (saveSize > 0)){
                     stream_data = m_waveWriter->BuildWAVStream(m_zeroBuffer, saveSize, m_zeroBuffer, saveSize,_resolution);
                     if (!m_file_manager->AddBufferToWrite(stream_data))
                     {
                         m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
                     }
                     saveLostSize += saveSize;
-                    if ((saveLostSize + saveSize) > _lostRate){
-                        saveSize = _lostRate - saveLostSize;
+                    if ((saveLostSize + saveSize) > lostSize){
+                        saveSize = lostSize - saveLostSize;
                     }
                 }
             }

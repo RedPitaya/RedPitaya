@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <memory>
+#include "log.h"
 
 class CFileLogger{
 public:

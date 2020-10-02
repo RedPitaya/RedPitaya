@@ -9,6 +9,7 @@
 
 #include <Oscilloscope.h>
 #include <StreamingManager.h>
+#include "log.h"
 
 //#define DISABLE_OSC
 

@@ -182,6 +182,7 @@ try{
             ++passCounter;
         }
 #endif
+        LOG_P("Pass\n");
         oscNotify(overFlow, m_oscRate, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
         ++counter;
 

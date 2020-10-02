@@ -13,7 +13,7 @@
 #include "FileLogger.h"
 #include "neon_asm.h"
 #include "shared_buffer.h"
-
+#include "log.h"
 
 //using rpsa::msg::message_factory;
 //using rpsa::msg::message_type;
@@ -24,8 +24,10 @@
 #define UDP_BUFFER_LIMIT 512
 #define TCP_BUFFER_LIMIT 65536/2
 #define ZERO_BUFFER_SIZE 1048576
+
 #define MIN(X,Y) ((X < Y) ? X: Y)
 #define MAX(X,Y) ((X > Y) ? X: Y)
+
 
 class CStreamingManager
 {
