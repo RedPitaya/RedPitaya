@@ -17,7 +17,7 @@ module osc_calib
 );
 
 localparam CALC1_BITS = AXIS_DATA_BITS+1;
-localparam CALC2_BITS = AXIS_DATA_BITS+16;
+localparam CALC2_BITS = (2*AXIS_DATA_BITS-2); //1 bit sign, 1 bit before dec point
 
 localparam CALC_MAX  = (2**(AXIS_DATA_BITS-1))-1;
 localparam CALC_MIN  = -(2**(AXIS_DATA_BITS-1));
@@ -27,7 +27,11 @@ wire signed [15:0]                offset;
 wire signed [15:0]                gain;   
 reg  signed [CALC1_BITS-1:0]      offset_calc;
 reg  signed [AXIS_DATA_BITS-1:0]  offset_calc_limit;
-reg  signed [CALC2_BITS-1:0]      gain_calc;
+reg  signed [AXIS_DATA_BITS-1:0]  gain_calc;
+wire        [AXIS_DATA_BITS-1:0]  gain_uns;
+reg                               gain_sign;
+reg  signed [2*CALC2_BITS-1:0]    gain_calc_tmp;
+
 reg  signed [AXIS_DATA_BITS-1:0]  gain_calc_limit;
 reg                               s_axis_tvalid_p1;
 reg                               s_axis_tvalid_p2;
@@ -65,22 +69,30 @@ end
 // 
 ////////////////////////////////////////////////////////////
 
+assign gain_uns = offset_calc_limit[AXIS_DATA_BITS-1] ? -offset_calc_limit : offset_calc_limit;
 always @(posedge clk)
 begin
-  gain_calc <= offset_calc_limit * gain;  
+  gain_sign     <= offset_calc_limit[AXIS_DATA_BITS-1];
+  gain_calc_tmp <= {gain_uns,{15{1'b0}}} * {{15{1'b0}},gain};  
 end
 
 always @(*)
 begin
-  if (gain_calc > CALC_MAX) begin
-    gain_calc_limit = CALC_MAX;
-  end else begin
-    if (gain_calc < CALC_MIN) begin
+  if (gain_sign)
+    gain_calc = -gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
+  else
+    gain_calc =  gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
+
+  if   (gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)] > CALC_MAX) begin
+      gain_calc_limit = CALC_MAX;
+  end else  begin
+    if (-gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)]-1 < CALC_MIN) begin
       gain_calc_limit = CALC_MIN;
     end else begin
       gain_calc_limit = gain_calc;
     end  
   end
+  //gain_calc_limit = gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
 end
 
 ////////////////////////////////////////////////////////////

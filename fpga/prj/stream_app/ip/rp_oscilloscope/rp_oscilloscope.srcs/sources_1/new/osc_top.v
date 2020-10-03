@@ -84,25 +84,6 @@ localparam FILT_COEFF_AA_ADDR   = 8'h40;  //64 Filter coeff AA address
 localparam FILT_COEFF_BB_ADDR   = 8'h44;  //68 Filter coeff BB address
 localparam FILT_COEFF_KK_ADDR   = 8'h48;  //72 Filter coeff KK address
 localparam FILT_COEFF_PP_ADDR   = 8'h4C;  //76 Filter coeff PP address
-/*localparam DMA_BUF_SIZE_ADDR    = 8'h50;  //96 DMA buffer size
-
-localparam DMA_CTRL_ADDR_CH1    = 8'h54;  //80 DMA control register
-localparam DMA_STS_ADDR_CH1     = 8'h58;  //84 DMA status register
-localparam DMA_DST_ADDR1_CH1    = 8'h5C;  //88 DMA destination address 1
-localparam DMA_DST_ADDR2_CH1    = 8'h60;  //92 DMA destination address 2
-localparam BUF1_LOST_SAMP_CNT_CH1   = 8'h64;  //108 Number of lost samples in buffer 1
-localparam BUF2_LOST_SAMP_CNT_CH1   = 8'h68;  //112 Number of lost samples in buffer 2
-localparam CALIB_OFFSET_ADDR_CH1= 8'h6C;  //100 Calibraton offset CH1
-localparam CALIB_GAIN_ADDR_CH1  = 8'h70;  //104 Calibraton gain CH1
-
-localparam DMA_CTRL_ADDR_CH2    = 8'h74;  //80 DMA control register CH2
-localparam DMA_STS_ADDR_CH2     = 8'h78;  //84 DMA status register CH2
-localparam DMA_DST_ADDR1_CH2    = 8'h7C;  //88 DMA destination address 1
-localparam DMA_DST_ADDR2_CH2    = 8'h80;  //92 DMA destination address 2
-localparam BUF1_LOST_SAMP_CNT_CH2   = 8'h84;  //108 Number of lost samples in buffer 1
-localparam BUF2_LOST_SAMP_CNT_CH2   = 8'h88;  //112 Number of lost samples in buffer 2
-localparam CALIB_OFFSET_ADDR_CH2= 8'h8C;  //108 Calibraton offset CH2
-localparam CALIB_GAIN_ADDR_CH2  = 8'h90;  //112 Calibraton gain CH21*/
 
 localparam DMA_CTRL_ADDR_CH1    = 8'h50;  //80 DMA control register
 localparam DMA_STS_ADDR_CH1     = 8'h54;  //84 DMA status register
@@ -117,12 +98,8 @@ localparam CALIB_OFFSET_ADDR_CH1= 8'h74;  //100 Calibraton offset CH1
 localparam CALIB_GAIN_ADDR_CH1  = 8'h78;  //104 Calibraton gain CH1
 localparam CALIB_OFFSET_ADDR_CH2= 8'h7C;  //108 Calibraton offset CH2
 localparam CALIB_GAIN_ADDR_CH2  = 8'h80;  //112 Calibraton gain CH2
-//localparam DMA_CTRL_ADDR_CH1    = 8'h84;  //80 DMA control register CH1
-//localparam DMA_STS_ADDR_CH1     = 8'h88;  //84 DMA status register CH1
 localparam DMA_CTRL_ADDR_CH2    = 8'h8C;  //80 DMA control register CH2
 localparam DMA_STS_ADDR_CH2     = 8'h90;  //84 DMA status register CH2
-//localparam BUF1_LOST_SAMP_CNT_CH1   = 8'h94;  //108 Number of lost samples in buffer 1
-//localparam BUF2_LOST_SAMP_CNT_CH1   = 8'h98;  //112 Number of lost samples in buffer 2
 localparam BUF1_LOST_SAMP_CNT_CH2   = 8'h9C;  //108 Number of lost samples in buffer 1
 localparam BUF2_LOST_SAMP_CNT_CH2   = 8'hA0;  //112 Number of lost samples in buffer 2
 localparam CURR_WP_CH1 = 8'hA4;  //current write pointer CH1
@@ -178,6 +155,10 @@ reg  [31:0]                 cfg_dma_buf_size;
 reg  [15:0]                 cfg_calib_offset;
 reg  [15:0]                 cfg_calib_gain;
 
+wire [S_AXIS_DATA_BITS-1:0] calib_tdata;    
+wire                        calib_tvalid;   
+wire                        calib_tready;   
+
 wire [S_AXIS_DATA_BITS-1:0] dec_tdata;    
 wire                        dec_tvalid;   
 wire                        dec_tready;   
@@ -195,6 +176,27 @@ wire  [31:0]                buf1_ms_cnt;
 wire  [31:0]                buf2_ms_cnt;
  
 ////////////////////////////////////////////////////////////
+// Name : Calibration
+// 
+////////////////////////////////////////////////////////////
+
+osc_calib #(
+  .AXIS_DATA_BITS   (S_AXIS_DATA_BITS))
+  U_osc_calib(
+  .clk              (clk),
+  // Slave AXI-S
+  .s_axis_tdata     (s_axis_tdata),
+  .s_axis_tvalid    (s_axis_tvalid),
+  .s_axis_tready    (),
+  // Master AXI-S
+  .m_axis_tdata     (calib_tdata),
+  .m_axis_tvalid    (calib_tvalid),
+  .m_axis_tready    (calib_tready),
+  // Config
+  .cfg_calib_offset (cfg_calib_offset), 
+  .cfg_calib_gain   (cfg_calib_gain));
+
+////////////////////////////////////////////////////////////
 // Name : Decimation
 // 
 ////////////////////////////////////////////////////////////
@@ -206,9 +208,9 @@ osc_decimator #(
   U_osc_decimator(
   .clk            (clk),                   
   .rst_n          (rst_n),        
-  .s_axis_tdata   (s_axis_tdata),          
-  .s_axis_tvalid  (s_axis_tvalid),     
-  .s_axis_tready  (),                                                                 
+  .s_axis_tdata   (calib_tdata),          
+  .s_axis_tvalid  (calib_tvalid),     
+  .s_axis_tready  (calib_tready),                                                                 
   .m_axis_tdata   (dec_tdata),          
   .m_axis_tvalid  (dec_tvalid),    
   .m_axis_tready  (dec_tready),      
@@ -670,8 +672,8 @@ begin
   if (rst_n == 0) begin
     cfg_calib_offset <= 0;
   end else begin
-    if (((reg_addr[8-1:0] == CALIB_OFFSET_ADDR_CH1 && CHAN_NUM == 8'd1) || (reg_addr[8-1:0] == CALIB_OFFSET_ADDR_CH2 && CHAN_NUM == 8'd2)) && (reg_wr_we == 1)) begin
-      cfg_calib_offset <= reg_wr_data;
+    if (((reg_addr[8-1:0] == CALIB_OFFSET_ADDR_CH1 && CHAN_NUM == 'd1) || (reg_addr[8-1:0] == CALIB_OFFSET_ADDR_CH2 && CHAN_NUM == 'd2)) && (reg_wr_we == 1)) begin
+      cfg_calib_offset <= reg_wr_data[S_AXIS_DATA_BITS-1:0];
     end
   end
 end
@@ -686,8 +688,8 @@ begin
   if (rst_n == 0) begin
     cfg_calib_gain <= 0;
   end else begin
-    if (((reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH1 && CHAN_NUM == 8'd1) || (reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH2 && CHAN_NUM == 8'd2)) && (reg_wr_we == 1)) begin
-      cfg_calib_gain <= reg_wr_data;
+    if (((reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH1 && CHAN_NUM == 'd1) || (reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH2 && CHAN_NUM == 'd2)) && (reg_wr_we == 1)) begin
+      cfg_calib_gain <= reg_wr_data[S_AXIS_DATA_BITS-1:0];
     end
   end
 end

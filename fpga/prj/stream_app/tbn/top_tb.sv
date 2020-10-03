@@ -302,25 +302,28 @@ assign #0.2 daisy_n[2] = daisy_n[0] ;
 
 
 
+wire [11:0] wdat1; 
+wire [11:0] wdat2;
+wire [11:0] wdat3;
+wire [11:0] wdat4;
 
 
+assign wdat1 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[11:0];
+assign wdat2 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[27:16];
+assign wdat3 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[43:32];
+assign wdat4 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[59:48];
 
+reg [12:0] cnter;
+always @(clk) begin
 
+    if (rstn==0)
+        cnter <= 13'b0;
+    else if (cnter==13'hFFF && clk==1)
+        cnter <= 13'b0;
+    else if (clk == 1)
+        cnter <= cnter + 13'b1; 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+end
 
 
 
@@ -442,8 +445,8 @@ assign #0.2 daisy_n[2] = daisy_n[0] ;
 
         .adc_clk_n(clkn),
         .adc_clk_p(clk),
-        .adc_data_ch1({3'b0,~adc_dr[0][12:0]}),
-        .adc_data_ch2({3'b0,~adc_dr[1][12:0]}));
+        .adc_data_ch1({3'b0,~cnter}),
+        .adc_data_ch2({3'b0,~cnter}));
 
 
 /*rp_concat #(
