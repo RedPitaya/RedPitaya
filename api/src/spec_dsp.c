@@ -26,6 +26,10 @@
 #include "kiss_fftr.h"
 #include "rp_cross.h"
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 extern float g_spectr_fpga_adc_max_v;
 extern const int c_spectr_fpga_adc_bits;
 

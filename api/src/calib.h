@@ -16,7 +16,6 @@
 #define __CALIB_H
 
 #include <stdint.h>
-
 #include "rp_cross.h"
 
 #define CONSTANT_SIGNAL_AMPLITUDE 0.8

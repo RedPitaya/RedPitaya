@@ -23,7 +23,7 @@ C_OUT_NAME_GPIO=$(OUT_DIR)librp-gpio.so
 C_OUT_NAME_GPIO_A=$(OUT_DIR)librp-gpio.a
 
 COMMON_FLAGS+=-Wall -fPIC -Os -s -Wno-sign-compare
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++11
+CXXFLAGS += $(COMMON_FLAGS) -std=c++11
 CXXFLAGS += -I$(OUT_DIR)lib/include
 
 

@@ -22,6 +22,10 @@
 #include "rp-i2c-max7311-c.h"
 #endif
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 // global variables
 // TODO: should be organized into a system status structure
 float         chA_amplitude            = 1, chB_amplitude            = 1;

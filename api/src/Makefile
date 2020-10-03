@@ -56,7 +56,7 @@ endif
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s -D$(MODEL)
+CFLAGS  = -std=c11 -Wall -Werror -fPIC -Ikiss_fft -Os -s -D$(MODEL)
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../include
 LDFLAGS=-shared -Wl,--version-script=exportmap
