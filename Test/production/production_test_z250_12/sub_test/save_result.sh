@@ -39,7 +39,7 @@ then
     echo
     #echo 'sometext' | ssh zumy@192.168.178.123 "cat >> /home/zumy/Desktop/Test_LOGS/manuf_test.log"
     echo $LOG_VAR | sshpass -p "$G_LOCAL_SERVER_PASS" ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $G_LOCAL_USER@$G_LOCAL_SERVER_IP "cat >> $G_LOCAL_SERVER_DIR/$G_LOG_FILENAME"
-    if [[ $? = 255 ]] 
+    if [[ $? = 255 ]]
     then
       echo -n "      Test data logging on the local PC "
       print_fail
@@ -67,7 +67,7 @@ echo "------------Logging test result to the Red Pitaya d.d MAIN server---------
 echo
 echo "      Checking if board is online and server is available.."
 echo
-CURL_RSP="$(curl -Is http://www.redpitaya.com | head -1)"
+CURL_RSP="$(curl -Is http://production.redpitaya.com | head -1)"
 #echo $CURL_RSP
 echo
 if [ `echo $CURL_RSP | grep -c "HTTP/1.1" ` -gt 0 ]
@@ -97,7 +97,7 @@ echo
 #echo $URL1
 #curl $URL1
 CURL_RSP="$(curl $URL)"
-if [ `echo $CURL_RSP | grep -c "Success" ` -gt 0 ]
+if [ `echo $CURL_RSP | grep -c "Stored successfully" ` -gt 0 ]
 then
 echo
 echo -n "      Test record was successfully added to production database. "
