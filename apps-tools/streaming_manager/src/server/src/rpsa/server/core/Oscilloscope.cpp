@@ -23,7 +23,7 @@ void * MmapNumber(int _fd, size_t _size, size_t _number) {
 }
 
 void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
-    //printf("\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
+    LOG_P("\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
 }
@@ -170,7 +170,7 @@ void COscilloscope::prepare()
     }
     //printf("prepare()\n");
     setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000004));
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x00000212));
+    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x0000021E));
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x00000001));
     setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
     
@@ -180,13 +180,17 @@ bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,ui
 {
     //printf("getBuffer(%d);\n",m_OscBufferNumber);
     // Interrupt ACQ
-    //printf("\tDMA status  0x%X\n",m_OscMap->dma_sts_addr);
-    //printf("\tDMA lost1:  0x%X\tlost2:  0x%X\n",m_OscMap->lost_samples_buf1,m_OscMap->lost_samples_buf2);
-    //printf("\tCurrent buffer %d\n",m_OscBufferNumber);
+    LOG_P("\n\tDMA buff status  0x%X\n",m_OscMap->dma_sts_addr);
+    LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
+    LOG_P("\tCurrent buffer %d\n",m_OscBufferNumber);
     _buffer1 = m_Channel1 ? ( m_OscBuffer1 + osc_buf_size * m_OscBufferNumber) : nullptr;
     _buffer2 = m_Channel2 ? ( m_OscBuffer2 + osc_buf_size * m_OscBufferNumber) : nullptr;
-    _overFlow = (m_OscBufferNumber == 0 ? m_OscMap->lost_samples_buf1 : m_OscMap->lost_samples_buf2);
-
+    // This fix for FPGA
+    _overFlow = (m_OscBufferNumber == 1 ? m_OscMap->lost_samples_buf1 : m_OscMap->lost_samples_buf2);
+    LOG_P("\tDMA lost1:  %d\tlost2:  %d\t_overFlow: %d\n",m_OscMap->lost_samples_buf1 ,m_OscMap->lost_samples_buf2, _overFlow);
+    LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);  
+    LOG_P("\tDMA lost1:  %d\tlost2:  %d\t_overFlow: %d\n",m_OscMap->lost_samples_buf1 ,m_OscMap->lost_samples_buf2, _overFlow);
+    LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);    
     if (m_Channel1 || m_Channel2){
         _size = osc_buf_size;
     }else {
@@ -199,9 +203,10 @@ bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,ui
 
 bool COscilloscope::clearBuffer(){
 //    printf("clearBuffer(%d)\n",m_OscBufferNumber);
+    LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);    
     uint32_t clearFlag = (m_OscBufferNumber == 0 ? 0x00000004 : 0x00000008); // reset buffer
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), clearFlag );
- 
+    LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1); 
     if (m_Channel1 || m_Channel2){
         m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;
     }
@@ -215,11 +220,13 @@ bool COscilloscope::wait(){
     ssize_t bytes = write(m_Fd, &cnt, cnt_size);
 //    printf("wait()\n");
     if (bytes == cnt_size) {
-
-//        printf("\tWAIT INTERRUPT\n");
+        LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
+        LOG_P("\tWAIT INTERRUPT\n");
         bytes = read(m_Fd, &cnt, cnt_size);
-//        printf("\tINTERRUPT GET\n");
+        LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
         clearInterrupt();
+        LOG_P("\tINTERRUPT RESET\n");
+        LOG_P("\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
         if (bytes == cnt_size) {
             m_waitLock.unlock();
             return true;

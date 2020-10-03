@@ -211,7 +211,6 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
 
 startupsh:
-	cp -f patches/startup/getsysinfo.sh $(GETSYSINFOSH)
 ifeq ($(MODEL),Z20_250_12)
 	cp -f patches/startup/startup.sh.Z250_12 $(STARTUPSH)
 else
@@ -253,7 +252,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 # git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
 # ZIP file name should be updated for each new build
 SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
-SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
+SDR_URL = http://downloads.redpitaya.com/hamlab/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
 ifeq ($(MODEL),Z10)

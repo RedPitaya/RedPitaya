@@ -48,6 +48,7 @@ void CFileLogger::AddMetric(CFileLogger::Metric _metric, uint64_t _value){
 
         case Metric::OSC_RATE_LOST:
             m_oscLostRate += _value;
+            LOG_P("OSC_RATE_LOST: %jd\n",m_oscLostRate);
         break;
         
         case Metric::UPD_RATE:
@@ -56,6 +57,7 @@ void CFileLogger::AddMetric(CFileLogger::Metric _metric, uint64_t _value){
 
         case Metric::FILESYSTEM_RATE:
             m_fileSystemLostRate += _value;
+            LOG_P("FILESYSTEM_RATE: %jd\n",m_fileSystemLostRate);
         break;
 
         case Metric::RECIVE_DATE:
