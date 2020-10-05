@@ -418,10 +418,13 @@ begin
       next_buf_full <= 0;  
     end    
 
-    default: begin
+    WAIT_BUF_FULL: begin
         if (reg_ctrl[CTRL_BUF1_ACK] || reg_ctrl[CTRL_BUF2_ACK])
             next_buf_full <= 0;
-        else if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
+        end
+    
+    SEND_DMA_REQ: begin
+        if ((req_addr+AXI_BURST_BYTES) > (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])-AXI_BURST_BYTES) begin
           if (((req_buf_addr_sel == 0) && buf2_full) || ((req_buf_addr_sel == 1) && buf1_full)) begin // data loss is occuring
             next_buf_full <= 1;  
           end
@@ -625,10 +628,10 @@ begin
     WAIT_BUF_FULL: begin
       if (~next_buf_full) begin
         // Swap the buffer if we have reached the end of the current one
-          if ((req_buf_addr_sel == 0) && ~buf2_full) begin // only switch addresses when next buffer is read out
+          if ((req_buf_addr_sel == 0)) begin // only switch addresses when next buffer is read out
             req_addr <= reg_dst_addr2;          
           end 
-          if ((req_buf_addr_sel == 1) && ~buf1_full) begin
+          if ((req_buf_addr_sel == 1)) begin
             req_addr <= reg_dst_addr1;
           end        
       end   
@@ -666,10 +669,10 @@ begin
     WAIT_BUF_FULL: begin
       if (~next_buf_full) begin
         // Swap the buffer if we have reached the end of the current one
-          if ((req_buf_addr_sel == 0) && ~buf2_full) begin // only switch addresses when next buffer is read out
+          if ((req_buf_addr_sel == 0)) begin // only switch addresses when next buffer is read out
             req_buf_addr <= reg_dst_addr2;          
           end 
-          if ((req_buf_addr_sel == 1) && ~buf1_full) begin
+          if ((req_buf_addr_sel == 1)) begin
             req_buf_addr <= reg_dst_addr1;
           end  
         end      
