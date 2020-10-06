@@ -46,10 +46,10 @@ struct OscilloscopeMapT
     uint32_t dma_dst_addr2_ch1;     // 104 - offset 0x68
     uint32_t dma_dst_addr1_ch2;     // 108 - offset 0x6C
     uint32_t dma_dst_addr2_ch2;     // 112 - offset 0x70
-    uint32_t calib_gain_ch1;        // 116 - offset 0x74
-    uint32_t calib_offset_ch1;      // 120 - offset 0x78  
-    uint32_t calib_gain_ch2;        // 124 - offset 0x7C
-    uint32_t calib_offset_ch2;      // 128 - offset 0x80   
+    uint32_t calib_offset_ch1;      // 116 - offset 0x74
+    uint32_t calib_gain_ch1;        // 120 - offset 0x78  
+    uint32_t calib_offset_ch2;      // 124 - offset 0x7C
+    uint32_t calib_gain_ch2;        // 128 - offset 0x80   
 };
 
 class COscilloscope
@@ -66,13 +66,14 @@ public:
 
     void prepare();
     bool next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow);
+    void setCalibration(uint32_t ch1_offset,float ch1_gain, uint32_t ch2_offset, float ch2_gain);
     bool clearBuffer();
     bool wait();
     bool clearInterrupt();
     void stop();
 
 private:
-    void setReg(volatile OscilloscopeMapT *_OscMap ,unsigned int _Channel);
+    void setReg(volatile OscilloscopeMapT *_OscMap);
 
     bool         m_Channel1;
     bool         m_Channel2;
@@ -88,4 +89,8 @@ private:
     unsigned     m_OscBufferNumber;
     uint32_t     m_dec_factor;
     std::mutex   m_waitLock;
+    uint32_t     m_calib_offset_ch1;   
+    float        m_calib_gain_ch1;        
+    uint32_t     m_calib_offset_ch2;    
+    float        m_calib_gain_ch2;         
 };

@@ -1,4 +1,5 @@
 #pragma once
+#pragma GCC diagnostic ignored "-Wreorder"
 #include <iostream>
 #include <memory>
 #include "log.h"

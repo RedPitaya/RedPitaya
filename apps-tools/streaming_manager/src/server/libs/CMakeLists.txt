@@ -5,7 +5,7 @@ project(rpsasrv)
 add_library(${PROJECT_NAME})
 
 target_compile_options(rpsasrv
-    PRIVATE -std=c++14 -Wall -pedantic -Wextra)
+    PRIVATE -std=c++11 -Wall -pedantic -Wextra)
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}

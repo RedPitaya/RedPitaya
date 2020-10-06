@@ -27,18 +27,19 @@ LIBS += -L./server/bin
 
 COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD 
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
+LDWFLAGS+= -lrpsasrv 
 LDWFLAGS+= -lrp_sdk -lrp
-LDWFLAGS+= -lrpsasrv
 LDWFLAGS+= -Wl,--no-whole-archive
 LDWFLAGS+= -shared 
 
 LDSFLAGS+= -Wl,--whole-archive
-LDSFLAGS+= -lrpsasrv
+LDSFLAGS+= -lrpsasrv 
 LDSFLAGS+= -Wl,--no-whole-archive
 LDSFLAGS+= -lpthread
+LDSFLAGS+= -lrp
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
@@ -50,6 +51,8 @@ OBJECTS_SERVICE=$(COBJECTS) $(CXXOBJECTS_SERVICE)
 OUT_DIR=../
 C_OUT_NAME=$(OUT_DIR)controllerhf.so
 C_OUT_NAME_SERVICE=$(OUT_DIR)streaming-server
+
+.PHONY: all
 
 all: make_c_app service
 clean: clean_c_app

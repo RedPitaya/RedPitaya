@@ -111,6 +111,7 @@ void UsingArgs(char const* progName){
     std::cout << "\t-p Protocol (TCP or UDP required value)\n";
     std::cout << "\t-f Path to the directory where to save files\n";
     std::cout << "\t-t Type of file (tdms or wav required value)\n";
+    std::cout << "\t-v Convert values in volts (store as ADC raw data by default)\n";    
     std::cout << "\t-s Sample limit [1-2147483647] (no limit by default)\n";
 
 }
@@ -150,13 +151,15 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size){
      uint64_t lostRate = 0;
      uint32_t oscRate = 0;
      uint32_t resolution = 0;
-     asionet::CAsioNet::ExtractPack(buff,_size, id, lostRate,oscRate, resolution, ch1, size_ch1, ch2 , size_ch2);
+     uint32_t adc_mode = 0;
+     uint32_t adc_bits = 0;
+     asionet::CAsioNet::ExtractPack(buff,_size, id, lostRate,oscRate, resolution, adc_mode , adc_bits, ch1, size_ch1, ch2 , size_ch2);
      g_packCounter_ch1 += size_ch1 / (resolution == 16 ? 2 : 1);
      g_packCounter_ch2 += size_ch2 / (resolution == 16 ? 2 : 1);
      g_lostRate += lostRate;
     // std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
-     g_manger->passBuffers(lostRate, oscRate, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
+     g_manger->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
 
      
      delete [] ch1;
@@ -220,6 +223,7 @@ int main(int argc, char* argv[])
         char * ip_port   = getCmdOption(argv, argv + argc, "-h");
         char * protocol  = getCmdOption(argv, argv + argc, "-p");
         char * type_file = getCmdOption(argv, argv + argc, "-t");
+        bool   convert_v = cmdOptionExists(argv, argv + argc, "-v");        
         char * samples   = getCmdOption(argv, argv + argc, "-s");
         bool checkParameters = false;
         checkParameters |= CheckMissing(ip_port,"IP address of server");
@@ -230,6 +234,7 @@ int main(int argc, char* argv[])
             return -1;
         }
 
+        
         string host = ParseIpAddress(ip_port);
         string port = ParsePort(ip_port);
         if (filepath == nullptr)
@@ -253,7 +258,7 @@ int main(int argc, char* argv[])
 
 
         g_manger = CStreamingManager::Create((strcmp(type_file,"wav") == 0 ?
-                                              Stream_FileType::WAV_TYPE : Stream_FileType::TDMS_TYPE)  , filepath, samples_int);
+                                              Stream_FileType::WAV_TYPE : Stream_FileType::TDMS_TYPE)  , filepath, samples_int , convert_v);
   
         g_manger->run();
 

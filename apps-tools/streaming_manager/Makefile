@@ -27,7 +27,7 @@ export CFLAGS
 all: $(CONTROLLER)
 
 $(CONTROLLER):
-	$(MAKE) -C src MODEL=$(MODEL)
+	$(MAKE) -C src MODEL=$(MODEL) -j4
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf

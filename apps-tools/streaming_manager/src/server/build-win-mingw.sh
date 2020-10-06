@@ -1,11 +1,11 @@
 #!/bin/bash
 unzip -o ./libs/asio.zip -d ./libs
-cmake CMakeLists.txt -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake
-make
+cmake CMakeLists.txt -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake -DCMAKE_BUILD_TYPE=Release
+make -j2
 
 cd client
-cmake CMakeLists.txt -DCMAKE_TOOLCHAIN_FILE=../toolchains/toolchain-i686-w64-mingw32.cmake
-make
+cmake CMakeLists.txt -DCMAKE_TOOLCHAIN_FILE=../toolchains/toolchain-i686-w64-mingw32.cmake -DCMAKE_BUILD_TYPE=Release
+make -j2
 cd ..
 
 #APP=$(pwd | grep -o '[^/]*$')

@@ -76,6 +76,14 @@ void PrintLogInFile(const char *message){
 #endif
 }
 
+float calibFullScaleToVoltage(uint32_t fullScaleGain) {
+    /* no scale */
+    if (fullScaleGain == 0) {
+        return 1;
+    }
+    return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
+}
+
 //Application description
 const char *rp_app_desc(void)
 {
@@ -100,6 +108,7 @@ int rp_app_init(void)
 		PrintLogInFile(e.what());
 	}
 	PrintLogInFile("rp_app_init");
+
 	return 0;
 }
 
@@ -263,6 +272,30 @@ void StartServer(){
 	auto samples = ss_samples.Value();
 
 	std::vector<UioT> uioList = GetUioList();
+	rp_CalibInit();
+    auto osc_calib_params = rp_GetCalibrationSettings();
+    uint32_t ch1_off = 0;
+    uint32_t ch2_off = 0;
+    float ch1_gain = 0;
+    float ch2_gain = 0;
+#ifdef Z20_250_12
+// TODO 
+    // ch1_gain = osc_calib_params.osc_ch1_g_1_dc;  // 1:1
+    // ch2_gain = osc_calib_params.osc_ch2_g_1_dc;  // 1:1
+    // ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
+    // ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+#else
+    ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
+    ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
+    ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+    ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
+
+    // ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
+    // ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20
+    // ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
+    // ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+
+#endif    
 
 	// Decimation constants
 
@@ -283,6 +316,7 @@ void StartServer(){
 		{
 			// TODO start server;
 			osc = COscilloscope::Create(uio, (channel ==1 || channel == 3) , (channel ==2 || channel == 3) , rate);
+			osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
 			break;
 		}
 	}
@@ -294,7 +328,7 @@ void StartServer(){
 				std::to_string(sock_port).c_str(),
 				protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
 	}else{
-		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH, samples);
+		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH, samples , false);
 		s_manger->notifyStop = [](int status)
 							{
 								StopNonBlocking(status == 0 ? 2 : 3);
@@ -307,7 +341,7 @@ void StartServer(){
 		delete s_app;
 	}
 	int resolution_val = (resolution == 1 ? 8 : 16);
-	s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel);
+	s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , 0 , ADC_BITS);
 	ss_status.SendValue(1);
 	s_app->runNonBlock();
 

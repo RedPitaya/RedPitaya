@@ -1,4 +1,6 @@
 #pragma once
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 #include <fstream>
 #include <iostream>
 #include "DataType.h"

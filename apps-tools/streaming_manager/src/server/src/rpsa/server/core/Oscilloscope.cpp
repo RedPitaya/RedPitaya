@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define UNUSED(x) [&x]{}()
+
 namespace
 {
 //!
@@ -26,6 +28,8 @@ void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg
     LOG_P("\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
+
+
 }
 
 COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t _dec_factor)
@@ -97,6 +101,10 @@ COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd
     m_OscBufferNumber(0),
     m_dec_factor(_dec_factor)
 {
+    m_calib_offset_ch1 = 0;   
+    m_calib_gain_ch1 = 0x8000;        
+    m_calib_offset_ch2 = 0;    
+    m_calib_gain_ch2 = 0x8000; 
     uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset) +  osc0_baseaddr ;
     m_OscMap = reinterpret_cast<OscilloscopeMapT *>(oscMap);
     m_OscBuffer1 = static_cast<uint8_t *>(m_Buffer);  
@@ -111,50 +119,59 @@ COscilloscope::~COscilloscope()
     close(m_Fd);
 }
 
-void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap,unsigned int _Channel){
+void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
         // Buffer
-        setRegister(m_OscMap,&(m_OscMap->dma_buf_size),osc_buf_size);
-        setRegister(m_OscMap,&(m_OscMap->dma_dst_addr1_ch1),m_BufferPhysAddr);
-        setRegister(m_OscMap,&(m_OscMap->dma_dst_addr2_ch1),m_BufferPhysAddr + osc_buf_size);
-        setRegister(m_OscMap,&(m_OscMap->dma_dst_addr1_ch2),m_BufferPhysAddr + osc_buf_size * 2);
-        setRegister(m_OscMap,&(m_OscMap->dma_dst_addr2_ch2),m_BufferPhysAddr + osc_buf_size * 3);
+        setRegister(_OscMap,&(_OscMap->dma_buf_size),osc_buf_size);
+        setRegister(_OscMap,&(_OscMap->dma_dst_addr1_ch1),m_BufferPhysAddr);
+        setRegister(_OscMap,&(_OscMap->dma_dst_addr2_ch1),m_BufferPhysAddr + osc_buf_size);
+        setRegister(_OscMap,&(_OscMap->dma_dst_addr1_ch2),m_BufferPhysAddr + osc_buf_size * 2);
+        setRegister(_OscMap,&(_OscMap->dma_dst_addr2_ch2),m_BufferPhysAddr + osc_buf_size * 3);
         
     
-        setRegister(m_OscMap,&(m_OscMap->filt_bypass),UINT32_C(0x00000001));
+        setRegister(_OscMap,&(_OscMap->filt_bypass),UINT32_C(0x00000001));
         //_OscMap->filt_bypass = UINT32_C(0x00000001);
 
         
         // Event
-        setRegister(m_OscMap,&(m_OscMap->event_sel),osc0_event_id);
+        setRegister(_OscMap,&(_OscMap->event_sel),osc0_event_id);
         //_OscMap->event_sel =  osc0_event_id ;
 
         // Trigger mask
-        setRegister(m_OscMap,&(m_OscMap->trig_mask),UINT32_C(0x00000004));
+        setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000004));
         //_OscMap->trig_mask = UINT32_C(0x00000004);
 
         // Trigger low level
-        setRegister(m_OscMap,&(m_OscMap->trig_low_level),-4);
+        setRegister(_OscMap,&(_OscMap->trig_low_level),-4);
         //_OscMap->trig_low_level = -4;
 
         // Trigger high level
-        setRegister(m_OscMap,&(m_OscMap->trig_high_level),4);
+        setRegister(_OscMap,&(_OscMap->trig_high_level),4);
         //_OscMap->trig_high_level = 4;
 
         // Trigger edge
-        setRegister(m_OscMap,&(m_OscMap->trig_edge),UINT32_C(0x00000000));
+        setRegister(_OscMap,&(_OscMap->trig_edge),UINT32_C(0x00000000));
         //_OscMap->trig_edge = UINT32_C(0x00000000);
 
         // Trigger pre samples
-        setRegister(m_OscMap,&(m_OscMap->trig_pre_samp),osc_buf_pre_samp);
+        setRegister(_OscMap,&(_OscMap->trig_pre_samp),osc_buf_pre_samp);
         //_OscMap->trig_pre_samp = osc_buf_pre_samp;
 
         // Trigger post samples
-        setRegister(m_OscMap,&(m_OscMap->trig_post_samp),osc_buf_post_samp);            
+        setRegister(_OscMap,&(_OscMap->trig_post_samp),osc_buf_post_samp);            
         // _OscMap->trig_post_samp = osc_buf_post_samp;
 
         // Decimate factor
-        setRegister(m_OscMap,&(m_OscMap->dec_factor),m_dec_factor);   
+        setRegister(_OscMap,&(_OscMap->dec_factor),m_dec_factor);   
         //_OscMap->dec_factor = m_dec_factor; 
+
+        setRegister(_OscMap,&(_OscMap->calib_offset_ch1),m_calib_offset_ch1);   
+
+        setRegister(_OscMap,&(_OscMap->calib_gain_ch1),m_calib_gain_ch1);   
+
+        setRegister(_OscMap,&(_OscMap->calib_offset_ch2),m_calib_offset_ch2);  
+
+        setRegister(_OscMap,&(_OscMap->calib_gain_ch2),m_calib_gain_ch2);  
+         
         
 }
 
@@ -163,7 +180,7 @@ void COscilloscope::prepare()
     stop();
 
     if (m_OscMap != nullptr){
-        setReg(m_OscMap,0);
+        setReg(m_OscMap);
     }else{
         std::cerr << "Error: COscilloscope::prepare()  can't init first channel" << std::endl;
         exit(-1);
@@ -174,6 +191,13 @@ void COscilloscope::prepare()
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x00000001));
     setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
     
+}
+
+void COscilloscope::setCalibration(uint32_t ch1_offset,float ch1_gain, uint32_t ch2_offset, float ch2_gain){
+    m_calib_offset_ch1 = 0xFFFF & ch1_offset;
+    m_calib_offset_ch2 = 0xFFFF & ch2_offset;
+    m_calib_gain_ch1 = (((uint32_t*)&ch1_gain)[0] >> 8) & 0xFFFF;;// ch1_gain;
+    m_calib_gain_ch2 = (((uint32_t*)&ch2_gain)[0] >> 8) & 0xFFFF;;// ch2_gain;
 }
 
 bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow)

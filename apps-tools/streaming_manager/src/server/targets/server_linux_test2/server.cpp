@@ -69,11 +69,11 @@ int main(int argc, char* argv[])
 
 
     CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , ".", -1);
+    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , ".", -1,true);
 
 
     // Run application
-    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3);
+    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 14);
 
     app.run();
 

@@ -41,8 +41,8 @@ public:
     typedef std::function<void(int)> Callback;
     typedef std::function<void()> CallbackVoid;
 
-    static Ptr Create(Stream_FileType _fileType,std::string _filePath, int _samples);
-    CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples);
+    static Ptr Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode);
+    CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode);
 
     static Ptr Create(std::string _host, std::string _port, asionet::Protocol _protocol);
     CStreamingManager(std::string _host, std::string _port, asionet::Protocol _protocol);
@@ -56,7 +56,7 @@ public:
     void stop();
     bool isFileThreadWork();
     bool isOutOfSpace();
-    int passBuffers(uint64_t _lostRate, uint32_t _oscRate,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
+    int passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode,uint32_t _adc_bits,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
     CStreamingManager::Callback notifyPassData;
     CStreamingManager::Callback notifyStop;
     CStreamingManager::CallbackVoid notifyPassDataReset;
@@ -77,11 +77,12 @@ private:
     int               m_samples;  
     int               m_passSizeSamples;
     uint8_t           m_zeroBuffer[ZERO_BUFFER_SIZE];
-
+    
+    bool m_volt_mode;
     bool m_use_local_file;
     Stream_FileType m_fileType;
     void startServer();
     void stopServer();
-
+    uint8_t * convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, uint32_t _adc_mode, uint32_t _adc_bits, unsigned short _resolution);
     
 };
