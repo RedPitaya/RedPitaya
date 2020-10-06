@@ -125,35 +125,35 @@ std::iostream *CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,u
     {
         int Bufflen = (size_ch1 > 0 ? m_samplesPerChannel : 0) + (size_ch2 > 0 ? m_samplesPerChannel : 0);
         if (Bufflen > 0){
-            float_t* cross_buff = new float_t[Bufflen];
+            float* cross_buff = new float[Bufflen];
 
 
             if (size_ch2 > 0 && size_ch1 > 0){
                 for (int i = 0; i < m_samplesPerChannel; i++)
                 {
-                    cross_buff[i*2] = ((float_t*)buffer_ch1)[i];
+                    cross_buff[i*2] = ((float*)buffer_ch1)[i];
                 }
 
                 for (int i = 0; i < m_samplesPerChannel; i++)
                 {
-                    cross_buff[i*2 + 1] = ((float_t*)buffer_ch2)[i];                            
+                    cross_buff[i*2 + 1] = ((float*)buffer_ch2)[i];                            
                 }
             }
             else {
                 if (size_ch1 > 0){
                     for (int i = 0; i < m_samplesPerChannel; i++)
                     {
-                        cross_buff[i] = ((float_t *) buffer_ch1)[i];
+                        cross_buff[i] = ((float *) buffer_ch1)[i];
                     }
                 }
 
                 if (size_ch2 > 0) {
                     for (int i = 0; i < m_samplesPerChannel; i++) {
-                        cross_buff[i] = ((float_t *) buffer_ch2)[i];
+                        cross_buff[i] = ((float *) buffer_ch2)[i];
                     }
                 }
             }
-        memory->write((const char*)cross_buff, sizeof(float_t)* (Bufflen));
+        memory->write((const char*)cross_buff, sizeof(float)* (Bufflen));
         delete [] cross_buff;
         }
     }
