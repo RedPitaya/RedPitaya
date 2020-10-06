@@ -57,11 +57,11 @@ var samplesNumberChange = function(event) {
             $("#SS_SAMPLES").val(max_val);
         }
         SM.parametersCache["SS_SAMPLES"] = { value: samples };
-    }else{
+    } else {
         $("#SS_SAMPLES").val("ALL");
         SM.parametersCache["SS_SAMPLES"] = { value: -1 };
     }
-    SM.sendParameters(); 
+    SM.sendParameters();
 }
 
 
@@ -116,6 +116,18 @@ var resolutionChange = function(event) {
     SM.updateLimits();
 }
 
+var saveModeChange = function(event) {
+    SM.parametersCache["SS_SAVE_MODE"] = { value: $("#SS_SAVE_MODE option:selected").val() };
+    SM.sendParameters();
+    SM.updateLimits();
+}
+
+var useCalibChange = function(event) {
+    SM.parametersCache["SS_USE_CALIB"] = { value: $("#SS_USE_CALIB option:selected").val() };
+    SM.sendParameters();
+    SM.updateLimits();
+}
+
 var formatСhange = function(event) {
     SM.parametersCache["SS_FORMAT"] = { value: $("#SS_FORMAT option:selected").val() };
     SM.sendParameters();
@@ -141,10 +153,10 @@ var rateFocusOut = function(event) {
 }
 
 var rateFocusOutValue = function() {
-    
-    SM.parametersCache["SS_RATE"] = { value: SM.ss_rate  };
+
+    SM.parametersCache["SS_RATE"] = { value: SM.ss_rate };
     SM.sendParameters();
-    console.log("SEND RATE "+SM.ss_rate );
+    console.log("SEND RATE " + SM.ss_rate);
 
     text = "";
     rate_hz = SM.calcRateDecToHz();
@@ -171,7 +183,8 @@ changeCallbacks["SS_CHANNEL"] = channelChange;
 changeCallbacks["SS_RESOLUTION"] = resolutionChange;
 changeCallbacks["SS_FORMAT"] = formatСhange;
 changeCallbacks["SS_SAMPLES"] = samplesNumberChange;
-
+changeCallbacks["SS_USE_CALIB"] = useCalibChange;
+changeCallbacks["SS_SAVE_MODE"] = saveModeChange;
 
 var clickCallbacks = {}
 

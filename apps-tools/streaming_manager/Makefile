@@ -45,4 +45,5 @@ install: $(ZIP)
 clean:
 	$(MAKE) -C src clean
 	-$(RM) target -rf
+	-$(RM) $(SERVICE)
 	-$(RM) $(ZIP)

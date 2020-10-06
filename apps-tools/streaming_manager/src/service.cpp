@@ -126,30 +126,13 @@ int main(int argc, char *argv[])
     setlogmask (LOG_UPTO (LOG_INFO));
     openlog ("streaming-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 
-   rp_CalibInit();
-   auto osc_calib_params = rp_GetCalibrationSettings();
+    rp_CalibInit();
+    auto osc_calib_params = rp_GetCalibrationSettings();
     uint32_t ch1_off = 0;
     uint32_t ch2_off = 0;
-    float ch1_gain = 0;
-    float ch2_gain = 0;
-#ifdef Z20_250_12
-// TODO 
-    // ch1_gain = osc_calib_params.osc_ch1_g_1_dc;  // 1:1
-    // ch2_gain = osc_calib_params.osc_ch2_g_1_dc;  // 1:1
-    // ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-    // ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
-#else
-    ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
-    ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-    ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-    ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
-
-    // ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
-    // ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20
-    // ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-    // ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
-
-#endif    
+    float ch1_gain = 1;
+    float ch2_gain = 1;
+  
 
 
     if (is_fork){
@@ -198,6 +181,8 @@ int main(int argc, char *argv[])
     int rate = 1;
     bool use_file = false;
     int samples = -1;
+    int save_mode = 1;
+    bool use_calib = false;
 
     try{
         ifstream file(filepath);
@@ -243,6 +228,14 @@ int main(int argc, char *argv[])
                 channel = stoi(value);
                 continue;
             }
+            if ("save_mode" == key) {
+                save_mode = stoi(value);
+                continue;
+            }
+            if ("use_calib" == key) {
+                use_calib = (bool)(stoi(value) - 1);
+                continue;
+            }
             throw std::exception();
         }
     }catch(std::exception& e)
@@ -270,6 +263,27 @@ int main(int argc, char *argv[])
 
     try{
 
+        if (use_calib){
+#ifdef Z20_250_12
+// TODO 
+    // ch1_gain = osc_calib_params.osc_ch1_g_1_dc;  // 1:1
+    // ch2_gain = osc_calib_params.osc_ch2_g_1_dc;  // 1:1
+    // ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
+    // ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+#else
+    ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
+    ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
+    ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+    ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
+
+    // ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
+    // ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20
+    // ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
+    // ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+
+#endif 
+        }
+
         std::vector<UioT> uioList = GetUioList();
         // Search oscilloscope
         COscilloscope::Ptr osc = nullptr;
@@ -293,7 +307,7 @@ int main(int argc, char *argv[])
                     std::to_string(sock_port).c_str(),
                     protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
         }else{
-            s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH , samples,false);
+            s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH , samples, save_mode == 2);
             s_manger->notifyStop = [](int status)
                                 {
                                     StopNonBlocking(0);

@@ -317,7 +317,7 @@
             val = 1;
         if (val > SM.ss_max_rate)
             val = SM.ss_max_rate;
-        SM.ss_rate = Math.round( SM.ss_full_rate / val);
+        SM.ss_rate = Math.round(SM.ss_full_rate / val);
         return SM.ss_rate;
     }
 

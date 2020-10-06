@@ -139,12 +139,32 @@
                                                     </select>
                                     </div>
                                 </div>
+                                <div class="container_inline file" style="display: none;">
+                                    <div style="width: 170px;text-align: right;">Mode:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_SAVE_MODE" class="protocol" name="save_mode">
+                                                                <option value="1">RAW</option>
+                                                                <option value="2">Volt</option>
+                                                    </select>
+                                    </div>
+                                </div>
                                 <div class="container_inline">
                                     <div style="width: 50px;text-align: right;">Rate:</div>
                                     <div style="width: 240px;">
                                         <input id="SS_RATE" type="text" size="5" style="width: 235px;margin-left: 10px;" value="" step="1" min="1" max="65535">
                                     </div>
                                 </div>
+
+                                <div class="container_inline">
+                                    <div style="width: 170px;text-align: right;">Use calibration:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_USE_CALIB" class="protocol" name="calibration" value="2">
+                                                                <option value="1">NO</option>
+                                                                <option value="2" selected="selected">YES</option>
+                                                    </select>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <div align="center">

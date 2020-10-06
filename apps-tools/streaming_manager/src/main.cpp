@@ -56,6 +56,8 @@ CIntParameter		ss_protocol(  		"SS_PROTOCOL", 			CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_samples(  		"SS_SAMPLES", 			CBaseParameter::RW, 2000000000 ,0,	-1,2000000000);
 CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 1 ,0,	1,3);
 CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2);
+CIntParameter		ss_calib( 	 		"SS_USE_CALIB", 		CBaseParameter::RW, 2 ,0,	1,2);
+CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
@@ -159,6 +161,8 @@ void SaveConfigInFile(){
 	file << "use_file " << ss_use_localfile.Value() << std::endl;
 	file << "format " << ss_format.Value() << std::endl;
 	file << "samples " << ss_samples.Value() << std::endl;
+	file << "save_mode " << ss_save_mode.Value() << std::endl;
+	file << "use_calib " << ss_calib.Value() << std::endl;
 }
 
 //Update parameters
@@ -198,6 +202,18 @@ void UpdateParams(void)
 	if (ss_resolution.IsNewValue())
 	{
 		ss_resolution.Update();
+		SaveConfigInFile();
+	}
+
+	if (ss_save_mode.IsNewValue())
+	{
+		ss_save_mode.Update();
+		SaveConfigInFile();
+	}
+
+	if (ss_calib.IsNewValue())
+	{
+		ss_calib.Update();
 		SaveConfigInFile();
 	}
 
@@ -270,32 +286,37 @@ void StartServer(){
 	auto rate = ss_rate.Value();
 	auto ip_addr_host = ss_ip_addr.Value();
 	auto samples = ss_samples.Value();
+	auto use_calib = ss_calib.Value();
+	auto save_mode = ss_save_mode.Value();
 
 	std::vector<UioT> uioList = GetUioList();
 	rp_CalibInit();
     auto osc_calib_params = rp_GetCalibrationSettings();
     uint32_t ch1_off = 0;
     uint32_t ch2_off = 0;
-    float ch1_gain = 0;
-    float ch2_gain = 0;
-#ifdef Z20_250_12
-// TODO 
-    // ch1_gain = osc_calib_params.osc_ch1_g_1_dc;  // 1:1
-    // ch2_gain = osc_calib_params.osc_ch2_g_1_dc;  // 1:1
-    // ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-    // ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
-#else
-    ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
-    ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-    ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-    ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
+    float ch1_gain = 1;
+    float ch2_gain = 1;
 
-    // ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
-    // ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20
-    // ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-    // ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+if (use_calib == 2) {
+	#ifdef Z20_250_12
+	// TODO 
+		// ch1_gain = osc_calib_params.osc_ch1_g_1_dc;  // 1:1
+		// ch2_gain = osc_calib_params.osc_ch2_g_1_dc;  // 1:1
+		// ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
+		// ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+	#else
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
+		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
 
-#endif    
+		// ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
+		// ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20
+		// ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
+		// ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+
+	#endif    
+}
 
 	// Decimation constants
 
@@ -328,7 +349,7 @@ void StartServer(){
 				std::to_string(sock_port).c_str(),
 				protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
 	}else{
-		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH, samples , false);
+		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH, samples , save_mode == 2);
 		s_manger->notifyStop = [](int status)
 							{
 								StopNonBlocking(status == 0 ? 2 : 3);

@@ -404,7 +404,7 @@ input.ipaddress {
 
 .container-radio:hover input~.checkmark-radio {
     background-color: #ccc;
-} 
+}
 
 
 /* When the radio button is checked, add a blue background */
@@ -440,6 +440,3 @@ input.ipaddress {
     border-radius: 50%;
     background: white;
 }
-
-
-
