@@ -66,7 +66,7 @@ public:
 
     void prepare();
     bool next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow);
-    void setCalibration(uint32_t ch1_offset,float ch1_gain, uint32_t ch2_offset, float ch2_gain);
+    void setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain);
     bool clearBuffer();
     bool wait();
     bool clearInterrupt();
@@ -89,8 +89,8 @@ private:
     unsigned     m_OscBufferNumber;
     uint32_t     m_dec_factor;
     std::mutex   m_waitLock;
-    uint32_t     m_calib_offset_ch1;   
+    int32_t      m_calib_offset_ch1;   
     float        m_calib_gain_ch1;        
-    uint32_t     m_calib_offset_ch2;    
+    int32_t      m_calib_offset_ch2;    
     float        m_calib_gain_ch2;         
 };

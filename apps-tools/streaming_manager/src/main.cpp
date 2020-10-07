@@ -307,8 +307,8 @@ if (use_calib == 2) {
 	#else
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
+		ch1_off  = osc_calib_params.fe_ch1_hi_offs * -1; 
+		ch2_off  = osc_calib_params.fe_ch2_hi_offs * -1; 
 
 		// ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
 		// ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20

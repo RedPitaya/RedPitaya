@@ -128,8 +128,8 @@ int main(int argc, char *argv[])
 
     rp_CalibInit();
     auto osc_calib_params = rp_GetCalibrationSettings();
-    uint32_t ch1_off = 0;
-    uint32_t ch2_off = 0;
+    int32_t ch1_off = 0;
+    int32_t ch2_off = 0;
     float ch1_gain = 1;
     float ch2_gain = 1;
   
@@ -273,8 +273,8 @@ int main(int argc, char *argv[])
 #else
     ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
     ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-    ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-    ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
+    ch1_off  = osc_calib_params.fe_ch1_hi_offs * -1; 
+    ch2_off  = osc_calib_params.fe_ch2_hi_offs * -1; 
 
     // ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
     // ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20

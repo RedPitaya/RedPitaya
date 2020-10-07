@@ -193,9 +193,9 @@ void COscilloscope::prepare()
     
 }
 
-void COscilloscope::setCalibration(uint32_t ch1_offset,float ch1_gain, uint32_t ch2_offset, float ch2_gain){
-    m_calib_offset_ch1 = 0xFFFF & ch1_offset;
-    m_calib_offset_ch2 = 0xFFFF & ch2_offset;
+void COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain){
+    m_calib_offset_ch1 =  ch1_offset;
+    m_calib_offset_ch2 =  ch2_offset;
     m_calib_gain_ch1 = (((uint32_t*)&ch1_gain)[0] >> 8) & 0xFFFF;;// ch1_gain;
     m_calib_gain_ch2 = (((uint32_t*)&ch2_gain)[0] >> 8) & 0xFFFF;;// ch2_gain;
 }
