@@ -282,23 +282,24 @@ std::iostream *FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size
 //    dataprop.InitDataType(TDMS::DataType::TimeStamp,time);
 //    segment.AddProperties(root,"time_stamp_now",dataprop);
 
+    uint32_t data_type = TDMS::DataType::Integer8;
+    if (resolution == 16) data_type = TDMS::DataType::Integer16;
+    if (resolution == 32) data_type = TDMS::DataType::SingleFloat;
 
     if (size_ch1 != 0)
     {       
-        if (resolution == 16)
-            size_ch1 /= 2;
+        size_ch1 /= (resolution / 8);
         auto channel = segment.GenerateChannel("Group", "ch1");
         data.push_back(channel);
-        segment.AddRaw(channel, (resolution == 8 ? TDMS::DataType::Integer8 : TDMS::DataType::Integer16), size_ch1 , buffer_ch1);
+        segment.AddRaw(channel, data_type, size_ch1 , buffer_ch1);
     }
 
     if (size_ch2 != 0)
     {       
-        if (resolution == 16)
-            size_ch2 /= 2;
+        size_ch2 /= (resolution / 8);
         auto channel = segment.GenerateChannel("Group", "ch2");
         data.push_back(channel);
-        segment.AddRaw(channel, (resolution == 8 ? TDMS::DataType::Integer8 : TDMS::DataType::Integer16), size_ch2 , buffer_ch2);
+        segment.AddRaw(channel, data_type, size_ch2 , buffer_ch2);
     }
 
     segment.LoadMetadata(data);

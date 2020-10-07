@@ -25,6 +25,7 @@ public:
     void ResetCounters();
     void AddMetric(CFileLogger::Metric _metric, uint64_t _value);
     void AddMetricId(uint64_t _id);
+    void AddMetric(uint64_t _samples_data,uint64_t _lost);
 
     void DumpToFile();
 
@@ -34,6 +35,7 @@ private:
     CFileLogger(CFileLogger &&) = delete;
 
     std::string m_filePath;
+    std::string m_filePathLost;
     uint64_t    m_oscRate;
     uint64_t    m_oscLostRate;
     uint64_t    m_udpLostRate;
@@ -42,4 +44,6 @@ private:
     uint64_t    m_reciveData_ch1;
     uint64_t    m_reciveData_ch2;
     uint64_t    m_old_id;
+    uint64_t    m_current_sample;
+    std::ofstream m_fileLost;
 };
