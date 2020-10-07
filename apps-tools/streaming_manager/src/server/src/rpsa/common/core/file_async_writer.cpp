@@ -82,7 +82,7 @@ int FileQueueManager::AvailableSpace(std::string dst, ulong* availableSize) {
 
 bool FileQueueManager::AddBufferToWrite(std::iostream *buffer){
 
- //   acout() << m_useMemory  << "\n";
+ //   acout() << "m_threadWork: " << m_threadWork << " m_useMemory: " << m_useMemory << " m_aviablePhyMemory: " << m_aviablePhyMemory << '\n';
     if (m_threadWork && (m_useMemory < m_aviablePhyMemory)){
         pushQueue(buffer);
         return true;

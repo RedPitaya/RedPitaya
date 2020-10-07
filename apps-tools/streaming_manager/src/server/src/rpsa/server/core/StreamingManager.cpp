@@ -253,6 +253,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
             m_passSizeSamples += (_size_ch1 > 0 ? _size_ch1  : _size_ch2) / devider;
             if (m_passSizeSamples >= m_samples) {
                 flag = true;
+                _lostRate = 0;
                 int diff = (m_passSizeSamples - m_samples) * devider;
                 if (_size_ch1 > 0) {
                     if (diff > (int)_size_ch1)
