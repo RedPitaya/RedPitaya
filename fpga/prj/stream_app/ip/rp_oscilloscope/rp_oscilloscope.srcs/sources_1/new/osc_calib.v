@@ -48,7 +48,7 @@ assign s_axis_tready  = 1;
 
 always @(posedge clk)
 begin
-  offset_calc <= adc_data + offset;  
+  offset_calc <= $signed(adc_data) + $signed(offset);  
 end
 
 always @(*)
