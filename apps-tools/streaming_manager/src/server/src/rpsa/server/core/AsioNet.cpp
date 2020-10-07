@@ -29,6 +29,7 @@ namespace  asionet {
         prefix_lenght += sizeof(int32_t);     // adc_mode (4 byte)
         prefix_lenght += sizeof(int32_t);     // adc_bits (4 byte)
         size_t  buffer_size = prefix_lenght + _size_ch1 + _size_ch2;
+//        printf("buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
         auto buffer = new uint8_t[buffer_size];
         memcpy(buffer,ID_PACK,16);
         ((uint64_t*)buffer)[2] = _id;
@@ -76,6 +77,7 @@ namespace  asionet {
         prefix_lenght += sizeof(int32_t);     // resolution (4 byte)
         prefix_lenght += sizeof(int32_t);     // adc_mode (4 byte)
         size_t  buffer_size = prefix_lenght + _size_ch1 + _size_ch2;
+//       printf("buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
         memcpy(buffer,ID_PACK,16);
         ((uint64_t*)buffer)[2] = _id;
         ((uint64_t*)buffer)[3] = _lostRate;

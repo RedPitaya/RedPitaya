@@ -197,6 +197,7 @@ void CStreamingManager::run()
         std::cout << m_file_out << "\n"; 
         m_file_manager->OpenFile(m_file_out, false);
         m_file_manager->StartWrite(m_fileType);
+
     }
     else
         this->startServer();
@@ -236,7 +237,8 @@ uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_si
 
 int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id){
 
-    ASIO_ASSERT(!(_size_ch1 != _size_ch2 && _size_ch1 != 0 && _size_ch2 != 0));
+
+   // ASIO_ASSERT(!(_size_ch1 != _size_ch2 && _size_ch1 != 0 && _size_ch2 != 0));
     uint8_t *buff_ch1 = nullptr;
     uint8_t *buff_ch2 = nullptr;
     size_t   buff_ch1_size = 0;
@@ -272,17 +274,17 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
         if (m_volt_mode) byte_per_sample = 4; // FLOAT TYPE
         uint32_t lostSize = _lostRate * byte_per_sample;
 
-        if (_size_ch1 + _size_ch2 > 0){
+        if (_size_ch1 + _size_ch2  + lostSize> 0){
             
             if (m_fileType == TDMS_TYPE){
 
-                if (_size_ch1>0){ 
+                if (_size_ch1 > 0 || lostSize > 0){ 
                     buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode,_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
                     memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
                 }
 
-                if (_size_ch2>0){ 
+                if (_size_ch2 > 0 || lostSize > 0){ 
                     buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode,_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                     memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
@@ -308,11 +310,12 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                     buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,0,_adc_mode,_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                 }
-
-                auto stream_data = m_waveWriter->BuildWAVStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8);
-                if (!m_file_manager->AddBufferToWrite(stream_data))
-                {
-                    m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
+                if (_size_ch1 + _size_ch2 > 0){
+                    auto stream_data = m_waveWriter->BuildWAVStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8);
+                    if (!m_file_manager->AddBufferToWrite(stream_data))
+                    {
+                        m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
+                    }
                 }
                 delete [] buff_ch1;
                 delete [] buff_ch2;
@@ -320,7 +323,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                 uint64_t saveLostSize = 0;
                 uint64_t saveSize = (ZERO_BUFFER_SIZE < lostSize ? ZERO_BUFFER_SIZE : lostSize);
                 while(((saveLostSize + saveSize) <= lostSize) && (saveSize > 0)){
-                    stream_data = m_waveWriter->BuildWAVStream(m_zeroBuffer, saveSize, m_zeroBuffer, saveSize, byte_per_sample * 8);
+                    auto stream_data = m_waveWriter->BuildWAVStream(m_zeroBuffer, saveSize, m_zeroBuffer, saveSize, byte_per_sample * 8);
                     if (!m_file_manager->AddBufferToWrite(stream_data))
                     {
                         m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
@@ -361,21 +364,19 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
 
                 buff_ch1 = (uint8_t *) _buffer_ch1;
                 buff_ch2 = (uint8_t *) _buffer_ch2;
-                uint32_t counter = 0;
-                uint64_t sendLostRate = 0;
-                while (((frame_offset + split_size) <= buffer_size) && (split_size > 0)) {
-                                           
-                    if ((frame_offset + split_size)  == buffer_size){
-                        sendLostRate = _lostRate;
-                    }
+ 
+                size_t new_buff_size = 0;
+                while ((frame_offset + split_size) <= buffer_size) {
+                    if (frame_offset + split_size > buffer_size)
+                        split_size = buffer_size - frame_offset;
 
-                    size_t new_buff_size = 0;
-                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, sendLostRate, _oscRate,  _resolution, _adc_mode ,_adc_bits,
-                                                               (&*buff_ch1 + frame_offset),
-                                                               (_size_ch1 == 0 ? 0 : split_size),
-                                                               (&*buff_ch2 + frame_offset),
-                                                               (_size_ch2 == 0 ? 0 : split_size),
-                                                               new_buff_size);
+                    
+                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, 0, _oscRate,  _resolution, _adc_mode ,_adc_bits,
+                                                                (&*buff_ch1 + frame_offset),
+                                                                (_size_ch1 == 0 ? 0 : split_size),
+                                                                (&*buff_ch2 + frame_offset),
+                                                                (_size_ch2 == 0 ? 0 : split_size),
+                                                                new_buff_size);
 
                     ++m_ReadyToPass;
                     
@@ -384,9 +385,20 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                     }
                     delete buffer;
                     frame_offset += split_size;
-                    if (frame_offset + split_size > buffer_size)
-                        split_size = buffer_size - frame_offset;
-                    counter++;
+                }
+                 // Send empty pack with lost
+                if (_lostRate>0) {
+                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, _lostRate, _oscRate,  _resolution, _adc_mode ,_adc_bits,
+                                                                    nullptr,
+                                                                    0,
+                                                                    nullptr,
+                                                                    0,
+                                                                    new_buff_size);
+                    ++m_ReadyToPass;    
+                    if (!m_asionet->SendData(false, buffer, new_buff_size)) {
+                        m_ReadyToPass--;
+                    }
+                    delete buffer;
                 }
 
                 if (m_ReadyToPass > 0)
