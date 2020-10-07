@@ -104,6 +104,8 @@ localparam BUF1_LOST_SAMP_CNT_CH2   = 8'h9C;  //108 Number of lost samples in bu
 localparam BUF2_LOST_SAMP_CNT_CH2   = 8'hA0;  //112 Number of lost samples in buffer 2
 localparam CURR_WP_CH1 = 8'hA4;  //current write pointer CH1
 localparam CURR_WP_CH2 = 8'hA8;  //current write pointer CH2
+localparam CURR_DAT_CH1 = 8'hAC;  //current write pointer CH1
+localparam CURR_DAT_CH2 = 8'hB0;  //current write pointer CH2
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -682,7 +684,6 @@ end
 // Name : Calibration Gain
 // 
 ////////////////////////////////////////////////////////////
-
 always @(posedge clk)
 begin
   if (rst_n == 0) begin
@@ -691,6 +692,7 @@ begin
     if (((reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH1 && CHAN_NUM == 'd1) || (reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH2 && CHAN_NUM == 'd2)) && (reg_wr_we == 1)) begin
       cfg_calib_gain <= reg_wr_data[S_AXIS_DATA_BITS-1:0];
     end
+    
   end
 end
 
@@ -702,44 +704,42 @@ end
 always @(posedge clk)
 begin
   case (reg_addr[8-1:0])
-    EVENT_STS_ADDR:       reg_rd_data <= {28'd0, event_sts_trig, event_sts_stop, event_sts_start, event_sts_reset};
-    EVENT_SEL_ADDR:       reg_rd_data <= cfg_event_sel;
-    TRIG_MASK_ADDR:       reg_rd_data <= cfg_trig_mask;
-    TRIG_PRE_SAMP_ADDR:   reg_rd_data <= cfg_trig_pre_samp;
-    TRIG_POST_SAMP_ADDR:  reg_rd_data <= cfg_trig_post_samp;
-    TRIG_PRE_CNT_ADDR:    reg_rd_data <= {sts_trig_pre_overflow, sts_trig_pre_cnt[30:0]};
-    TRIG_POST_CNT_ADDR:   reg_rd_data <= {sts_trig_post_overflow, sts_trig_post_cnt[30:0]};
-    TRIG_LOW_LEVEL_ADDR:  reg_rd_data <= cfg_trig_low_level;     
-    TRIG_HIGH_LEVEL_ADDR: reg_rd_data <= cfg_trig_high_level;  
-    TRIG_EDGE_ADDR:       reg_rd_data <= cfg_trig_edge;  
-    DEC_FACTOR_ADDR:      reg_rd_data <= cfg_dec_factor;  
-    DEC_RSHIFT_ADDR:      reg_rd_data <= cfg_dec_rshift;  
-    AVG_EN_ADDR:          reg_rd_data <= cfg_avg_en;  
-    FILT_BYPASS_ADDR:     reg_rd_data <= cfg_filt_bypass;                          
-    FILT_COEFF_AA_ADDR:   reg_rd_data <= cfg_filt_coeff_aa;  
-    FILT_COEFF_BB_ADDR:   reg_rd_data <= cfg_filt_coeff_bb;  
-    FILT_COEFF_KK_ADDR:   reg_rd_data <= cfg_filt_coeff_kk;  
-    FILT_COEFF_PP_ADDR:   reg_rd_data <= cfg_filt_coeff_pp;     
-    DMA_CTRL_ADDR_CH1:    reg_rd_data <= cfg_dma_ctrl_reg;    
-    DMA_STS_ADDR_CH1:     reg_rd_data <= cfg_dma_sts_reg;    
-    DMA_CTRL_ADDR_CH2:    reg_rd_data <= cfg_dma_ctrl_reg;    
-    DMA_STS_ADDR_CH2:     reg_rd_data <= cfg_dma_sts_reg;   
-    DMA_DST_ADDR1_CH1:    reg_rd_data <= cfg_dma_dst_addr1; 
-    DMA_DST_ADDR2_CH1:    reg_rd_data <= cfg_dma_dst_addr2; 
-    DMA_DST_ADDR1_CH2:    reg_rd_data <= cfg_dma_dst_addr1; 
-    DMA_DST_ADDR2_CH2:    reg_rd_data <= cfg_dma_dst_addr2; 
-    DMA_BUF_SIZE_ADDR:    reg_rd_data <= cfg_dma_buf_size; 
-    BUF1_LOST_SAMP_CNT_CH1:   reg_rd_data <= buf1_ms_cnt; 
-    BUF2_LOST_SAMP_CNT_CH1:   reg_rd_data <= buf2_ms_cnt; 
-    BUF1_LOST_SAMP_CNT_CH2:   reg_rd_data <= buf1_ms_cnt; 
-    BUF2_LOST_SAMP_CNT_CH2:   reg_rd_data <= buf2_ms_cnt; 
-    CURR_WP_CH1:               reg_rd_data <= m_axi_awaddr;
-    CURR_WP_CH2:               reg_rd_data <= m_axi_awaddr;
-
-    default               reg_rd_data <= 32'd0;                                
+    EVENT_STS_ADDR:         reg_rd_data <= {28'd0, event_sts_trig, event_sts_stop, event_sts_start, event_sts_reset};
+    EVENT_SEL_ADDR:         reg_rd_data <= cfg_event_sel;
+    TRIG_MASK_ADDR:         reg_rd_data <= cfg_trig_mask;
+    TRIG_PRE_SAMP_ADDR:     reg_rd_data <= cfg_trig_pre_samp;
+    TRIG_POST_SAMP_ADDR:    reg_rd_data <= cfg_trig_post_samp;
+    TRIG_PRE_CNT_ADDR:      reg_rd_data <= {sts_trig_pre_overflow, sts_trig_pre_cnt[30:0]};
+    TRIG_POST_CNT_ADDR:     reg_rd_data <= {sts_trig_post_overflow, sts_trig_post_cnt[30:0]};
+    TRIG_LOW_LEVEL_ADDR:    reg_rd_data <= cfg_trig_low_level;     
+    TRIG_HIGH_LEVEL_ADDR:   reg_rd_data <= cfg_trig_high_level;  
+    TRIG_EDGE_ADDR:         reg_rd_data <= cfg_trig_edge;  
+    DEC_FACTOR_ADDR:        reg_rd_data <= cfg_dec_factor;  
+    DEC_RSHIFT_ADDR:        reg_rd_data <= cfg_dec_rshift;  
+    AVG_EN_ADDR:            reg_rd_data <= cfg_avg_en;  
+    FILT_BYPASS_ADDR:       reg_rd_data <= cfg_filt_bypass;                          
+    FILT_COEFF_AA_ADDR:     reg_rd_data <= cfg_filt_coeff_aa;  
+    FILT_COEFF_BB_ADDR:     reg_rd_data <= cfg_filt_coeff_bb;  
+    FILT_COEFF_KK_ADDR:     reg_rd_data <= cfg_filt_coeff_kk;  
+    FILT_COEFF_PP_ADDR:     reg_rd_data <= cfg_filt_coeff_pp;     
+    DMA_CTRL_ADDR_CH1:      reg_rd_data <= cfg_dma_ctrl_reg;    
+    DMA_STS_ADDR_CH1:       reg_rd_data <= cfg_dma_sts_reg;    
+    DMA_CTRL_ADDR_CH2:      reg_rd_data <= cfg_dma_ctrl_reg;    
+    DMA_STS_ADDR_CH2:       reg_rd_data <= cfg_dma_sts_reg;   
+    DMA_DST_ADDR1_CH1:      reg_rd_data <= cfg_dma_dst_addr1; 
+    DMA_DST_ADDR2_CH1:      reg_rd_data <= cfg_dma_dst_addr2; 
+    DMA_DST_ADDR1_CH2:      reg_rd_data <= cfg_dma_dst_addr1; 
+    DMA_DST_ADDR2_CH2:      reg_rd_data <= cfg_dma_dst_addr2; 
+    DMA_BUF_SIZE_ADDR:      reg_rd_data <= cfg_dma_buf_size; 
+    BUF1_LOST_SAMP_CNT_CH1: reg_rd_data <= buf1_ms_cnt; 
+    BUF2_LOST_SAMP_CNT_CH1: reg_rd_data <= buf2_ms_cnt; 
+    BUF1_LOST_SAMP_CNT_CH2: reg_rd_data <= buf1_ms_cnt; 
+    BUF2_LOST_SAMP_CNT_CH2: reg_rd_data <= buf2_ms_cnt; 
+    CURR_WP_CH1:            reg_rd_data <= m_axi_awaddr;
+    CURR_WP_CH2:            reg_rd_data <= m_axi_awaddr;
+    default                 reg_rd_data <= 32'd0;                                
   endcase
 end
-
 ////////////////////////////////////////////////////////////
 // Name : DMA Mode
 // 0 = Normal
