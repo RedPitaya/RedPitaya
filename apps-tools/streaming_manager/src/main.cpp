@@ -163,8 +163,10 @@ void SaveConfigInFile(){
 	file << "format " << ss_format.Value() << std::endl;
 	file << "samples " << ss_samples.Value() << std::endl;
 	file << "save_mode " << ss_save_mode.Value() << std::endl;
+#ifndef Z20
 	file << "use_calib " << ss_calib.Value() << std::endl;
 	file << "attenuator " << ss_attenuator.Value() << std::endl;
+#endif
 }
 
 //Update parameters
@@ -213,12 +215,6 @@ void UpdateParams(void)
 		SaveConfigInFile();
 	}
 
-	if (ss_calib.IsNewValue())
-	{
-		ss_calib.Update();
-		SaveConfigInFile();
-	}
-
 	if (ss_rate.IsNewValue())
 	{
 		ss_rate.Update();
@@ -231,12 +227,19 @@ void UpdateParams(void)
 		SaveConfigInFile();
 	}
 
+#ifndef Z20
 	if (ss_attenuator.IsNewValue())
 	{
 		ss_attenuator.Update();
 		SaveConfigInFile();
 	}
 
+	if (ss_calib.IsNewValue())
+	{
+		ss_calib.Update();
+		SaveConfigInFile();
+	}
+#endif
 
 	if (ss_samples.IsNewValue())
 	{
@@ -295,34 +298,50 @@ void StartServer(){
 	auto rate = ss_rate.Value();
 	auto ip_addr_host = ss_ip_addr.Value();
 	auto samples = ss_samples.Value();
-	auto use_calib = ss_calib.Value();
 	auto save_mode = ss_save_mode.Value();
-	auto attenuator = ss_attenuator.Value();
 
-	std::vector<UioT> uioList = GetUioList();
+#ifdef Z20
+	auto use_calib = 0;
+	auto attenuator = 0;
+#else
+	auto use_calib = ss_calib.Value();
+	auto attenuator = ss_attenuator.Value();
 	rp_CalibInit();
     auto osc_calib_params = rp_GetCalibrationSettings();
+#endif
+
+	std::vector<UioT> uioList = GetUioList();
     uint32_t ch1_off = 0;
     uint32_t ch2_off = 0;
     float ch1_gain = 1;
     float ch2_gain = 1;
 
+
+
 if (use_calib == 2) {
 #ifdef Z20_250_12
-	// TODO 
-		// ch1_gain = osc_calib_params.osc_ch1_g_1_dc;  // 1:1
-		// ch2_gain = osc_calib_params.osc_ch2_g_1_dc;  // 1:1
-		// ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-		// ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
-#else
+	if (attenuator == 0) {
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
+		ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
+		ch2_off  = osc_calib_params.osc_ch1_off_2_dc; 
+	}else{
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:20
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:20
+		ch1_off  = osc_calib_params.osc_ch1_off_20_dc; 
+		ch2_off  = osc_calib_params.osc_ch2_off_20_dc; 		
+	}
+#endif
+
+#ifdef Z10
 	if (attenuator == 0) {
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
 		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
 		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
 	}else{
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:1
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:1
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:20
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:20
 		ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
 		ch2_off  = osc_calib_params.fe_ch2_lo_offs; 		
 	}

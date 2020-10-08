@@ -25,6 +25,7 @@ void * MmapNumber(int _fd, size_t _size, size_t _number) {
 }
 
 void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
+    UNUSED(baseOsc_addr);
     LOG_P("\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
@@ -196,8 +197,9 @@ void COscilloscope::prepare()
 void COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain){
     m_calib_offset_ch1 =  ch1_offset;
     m_calib_offset_ch2 =  ch2_offset;
-    m_calib_gain_ch1 = (((uint32_t*)&ch1_gain)[0] >> 8) & 0xFFFF;;// ch1_gain;
-    m_calib_gain_ch2 = (((uint32_t*)&ch2_gain)[0] >> 8) & 0xFFFF;;// ch2_gain;
+    
+    m_calib_gain_ch1 = (reinterpret_cast<uint32_t>(&ch1_gain) >> 8) & 0xFFFF;// ch1_gain;
+    m_calib_gain_ch2 = (reinterpret_cast<uint32_t>(&ch2_gain) >> 8) & 0xFFFF;// ch2_gain;
 }
 
 bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow)

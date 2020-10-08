@@ -92,6 +92,11 @@
                     rate_devider = SM.max_SD_rate_devider_2chs[resolution-1];
                 }
             }
+            
+            var nodes = document.getElementsByClassName("122_16_block_remove");
+                    [...nodes].forEach((element, index, array) => {
+                            element.parentNode.removeChild(element);
+                        });                           
         }
         SM.ss_max_rate = rate;
         SM.ss_max_rate_devider = rate_devider;
