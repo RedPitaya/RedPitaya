@@ -344,7 +344,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
         m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE_LOST,_lostRate);        
         m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE,_oscRate);       
         m_fileLogger->AddMetricId(_id);         
-      
+        m_fileLogger->AddMetric(MAX(samples_buff1,samples_buff2),_lostRate);
         if (notifyPassData)
             notifyPassData(_size_ch1 + _size_ch2);
         if (flag) 

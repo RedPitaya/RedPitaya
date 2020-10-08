@@ -12,6 +12,7 @@ CFileLogger::Ptr CFileLogger::Create(std::string _filePath){
 
 CFileLogger::CFileLogger(std::string _filePath):  
 m_filePath(_filePath),
+m_filePathLost(_filePath + ".lost"),
 m_oscLostRate(0),
 m_oscRate(0),
 m_udpLostRate(0),
@@ -22,10 +23,15 @@ m_reciveData_ch2(0),
 m_old_id(0)
 {
     ResetCounters();
+    m_fileLost.open(m_filePathLost , std::ios_base::app | std::ios_base::out);
+    if (m_fileLost.is_open()){
+        m_fileLost << "Start\tSize\n";
+    }
 }
 
 CFileLogger::~CFileLogger()
 {
+    m_fileLost.close();
     DumpToFile();
 }
 
@@ -84,6 +90,20 @@ void CFileLogger::AddMetricId(uint64_t _id){
             m_udpLostRate++;   
         }
     m_old_id = _id;
+}
+
+void CFileLogger::AddMetric(uint64_t _samples_data,uint64_t _lost){
+    if (m_fileLost.is_open()){
+        if (_samples_data > 0){
+            m_fileLost << m_current_sample << "\t" << _samples_data << "\n";
+            m_current_sample += _samples_data;
+        }
+
+        if (_lost > 0){
+            m_fileLost << m_current_sample << "\t" << _lost << "\tlost\n";
+            m_current_sample += _lost;
+        }
+    }
 }
 
 
