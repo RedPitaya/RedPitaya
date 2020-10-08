@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
     int samples = -1;
     int save_mode = 1;
     bool use_calib = false;
+    int attenuator = 0;
 
     try{
         ifstream file(filepath);
@@ -222,6 +223,10 @@ int main(int argc, char *argv[])
             }
             if ("samples" == key) {
                 samples = stoi(value);
+                continue;
+            }
+            if ("attenuator" == key) {
+                attenuator = stoi(value);
                 continue;
             }
             if ("channels" == key) {
@@ -271,18 +276,28 @@ int main(int argc, char *argv[])
     // ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
     // ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
 #else
-    ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
-    ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-    ch1_off  = osc_calib_params.fe_ch1_hi_offs * -1; 
-    ch2_off  = osc_calib_params.fe_ch2_hi_offs * -1; 
-
-    // ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
-    // ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20
-    // ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-    // ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
-
+            if (attenuator == 0) {
+                ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
+                ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
+                ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+                ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
+            }else{
+                ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:1
+                ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:1
+                ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
+                ch2_off  = osc_calib_params.fe_ch2_lo_offs; 		
+            }
 #endif 
         }
+
+#ifdef Z20_250_12
+        rp_AcqSetGain(RP_CH_1, attenuator == 0 ?  RP_LOW : RP_HIGH);
+        rp_AcqSetGain(RP_CH_2, attenuator == 0 ?  RP_LOW : RP_HIGH);
+
+        rp_AcqSetAC_DC(RP_CH_1,RP_DC);
+        rp_AcqSetAC_DC(RP_CH_2,RP_DC);
+#endif
+
 
         std::vector<UioT> uioList = GetUioList();
         // Search oscilloscope
@@ -314,7 +329,7 @@ int main(int argc, char *argv[])
                                 };
         }
         int resolution_val = (resolution == 1 ? 8 : 16);
-        s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel, 0 , ADC_BITS);
+        s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel, attenuator , ADC_BITS);
         s_app->run();
         delete s_app;
     }catch (std::exception& e)

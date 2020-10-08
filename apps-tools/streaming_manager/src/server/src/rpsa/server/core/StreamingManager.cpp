@@ -12,6 +12,8 @@
 #include <sys/stat.h>
 #endif
 
+#define UNUSED(x) [&x]{}()
+
 bool createDir(const std::string dir)
 {
 #ifdef _WIN32
@@ -150,6 +152,7 @@ void CStreamingManager::startServer(){
                                      });
     m_asionet->addCallSend([this](std::error_code error,size_t size)
                             {
+                                UNUSED(error);
                                 m_ReadyToPass--;
                                 m_SendData += size;
                                 if (m_ReadyToPass == 0) {
@@ -214,19 +217,21 @@ void CStreamingManager::stop(){
 }
 
 uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, uint32_t _adc_mode, uint32_t _adc_bits, unsigned short _resolution){
+    UNUSED(_adc_bits);
     uint8_t *dest = nullptr;
+
     if (!m_volt_mode) {
         dest = new uint8_t[_buf_size + _lostSize];
         _dest_buff_size = _buf_size + _lostSize;
         memcpy_neon(dest, _buffer, _buf_size);
     }else{
-        auto samples = _buf_size / (_resolution  / 8);
+        uint32_t samples = _buf_size / (_resolution  / 8);
         float *dest_f = new float[samples + _lostSize / 4];
         _dest_buff_size = (samples + _lostSize / 4) * sizeof(float);
-        for(auto i = 0 ; i < samples; i++){
+        for(uint32_t i = 0 ; i < samples; i++){
             float cnt = (_resolution == 8) ?  ((int8_t*)_buffer)[i]:((int16_t*)_buffer)[i];
-            dest_f[i] = cnt / ( 1 << (_adc_bits - 1));
-//            dest_f[i] = cnt / ( 1 << (_resolution - 1));
+//            dest_f[i] = cnt / ( 1 << (_adc_bits - 1));
+            dest_f[i] = cnt / ( 1 << (_resolution - 1)) * (float)_adc_mode;
         }
 
         dest = reinterpret_cast<uint8_t*>(dest_f);
@@ -278,15 +283,15 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
         if (_size_ch1 + _size_ch2  + lostSize> 0){
             
             if (m_fileType == TDMS_TYPE){
-
+                // _adc_mode = 0 for 1:1 and 1 for 1:20 mode 
                 if (_size_ch1 > 0 || lostSize > 0){ 
-                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode,_adc_bits,_resolution);
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
                     memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
                 }
 
                 if (_size_ch2 > 0 || lostSize > 0){ 
-                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode,_adc_bits,_resolution);
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                     memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
                 }
@@ -302,13 +307,14 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
 
             if (m_fileType == WAV_TYPE){
 
+                // WAV type support float full range -1...1. adc_mode always equal 1
                 if (_size_ch1>0){ 
-                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,0,_adc_mode,_adc_bits,_resolution);
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,0, 1 ,_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");   
                 }
 
                 if (_size_ch2>0){ 
-                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,0,_adc_mode,_adc_bits,_resolution);
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,0, 1 ,_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                 }
                 if (_size_ch1 + _size_ch2 > 0){

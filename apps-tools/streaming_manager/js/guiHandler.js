@@ -116,6 +116,12 @@ var resolutionChange = function(event) {
     SM.updateLimits();
 }
 
+var attenuatorChange = function(event) {
+    SM.parametersCache["SS_ATTENUATOR"] = { value: $("#SS_ATTENUATOR option:selected").val() };
+    SM.sendParameters();
+    SM.updateLimits();
+}
+
 var saveModeChange = function(event) {
     SM.parametersCache["SS_SAVE_MODE"] = { value: $("#SS_SAVE_MODE option:selected").val() };
     SM.sendParameters();
@@ -185,6 +191,7 @@ changeCallbacks["SS_FORMAT"] = formatСhange;
 changeCallbacks["SS_SAMPLES"] = samplesNumberChange;
 changeCallbacks["SS_USE_CALIB"] = useCalibChange;
 changeCallbacks["SS_SAVE_MODE"] = saveModeChange;
+changeCallbacks["SS_ATTENUATOR"] = attenuatorChange;
 
 var clickCallbacks = {}
 

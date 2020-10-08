@@ -120,6 +120,15 @@
                                         <input id="SS_SAMPLES" style="width: 235px;margin-left: 10px;" type="text" size="15" value="2000000000" step="1" min="1" max="2000000000">
                                     </div>
                                 </div>
+                                <div class="container_inline file" style="display: none;">
+                                    <div style="width: 170px;text-align: right;">Mode:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_SAVE_MODE" class="protocol" name="save_mode">
+                                                                <option value="1">RAW</option>
+                                                                <option value="2">Volt</option>
+                                                    </select>
+                                    </div>
+                                </div>
                                 <div class="container_inline">
                                     <div style="width: 170px;text-align: right;">Channel:</div>
                                     <div style="width: 90px;">
@@ -139,13 +148,13 @@
                                                     </select>
                                     </div>
                                 </div>
-                                <div class="container_inline file" style="display: none;">
-                                    <div style="width: 170px;text-align: right;">Mode:</div>
+                                <div class="container_inline">
+                                    <div style="width: 170px;text-align: right;">Input attenuation:</div>
                                     <div style="width: 90px;">
-                                        <select id="SS_SAVE_MODE" class="protocol" name="save_mode">
-                                                                <option value="1">RAW</option>
-                                                                <option value="2">Volt</option>
-                                                    </select>
+                                        <select id="SS_ATTENUATOR" class="protocol" name="attenuation">
+                                                                <option value="1">1:1</option>
+                                                                <option value="2">1:20</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="container_inline">

@@ -62,6 +62,7 @@ CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
+CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 0 ,0,	0,1);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
 CStreamingManager::Ptr s_manger;
@@ -163,6 +164,7 @@ void SaveConfigInFile(){
 	file << "samples " << ss_samples.Value() << std::endl;
 	file << "save_mode " << ss_save_mode.Value() << std::endl;
 	file << "use_calib " << ss_calib.Value() << std::endl;
+	file << "attenuator " << ss_attenuator.Value() << std::endl;
 }
 
 //Update parameters
@@ -229,6 +231,13 @@ void UpdateParams(void)
 		SaveConfigInFile();
 	}
 
+	if (ss_attenuator.IsNewValue())
+	{
+		ss_attenuator.Update();
+		SaveConfigInFile();
+	}
+
+
 	if (ss_samples.IsNewValue())
 	{
 		ss_samples.Update();
@@ -288,6 +297,7 @@ void StartServer(){
 	auto samples = ss_samples.Value();
 	auto use_calib = ss_calib.Value();
 	auto save_mode = ss_save_mode.Value();
+	auto attenuator = ss_attenuator.Value();
 
 	std::vector<UioT> uioList = GetUioList();
 	rp_CalibInit();
@@ -298,25 +308,34 @@ void StartServer(){
     float ch2_gain = 1;
 
 if (use_calib == 2) {
-	#ifdef Z20_250_12
+#ifdef Z20_250_12
 	// TODO 
 		// ch1_gain = osc_calib_params.osc_ch1_g_1_dc;  // 1:1
 		// ch2_gain = osc_calib_params.osc_ch2_g_1_dc;  // 1:1
 		// ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
 		// ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
-	#else
+#else
+	if (attenuator == 0) {
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-		ch1_off  = osc_calib_params.fe_ch1_hi_offs * -1; 
-		ch2_off  = osc_calib_params.fe_ch2_hi_offs * -1; 
-
-		// ch1_gain = osc_calib_params.fe_ch1_fs_g_lo;  // 1:20
-		// ch2_gain = osc_calib_params.fe_ch2_fs_g_lo;  // 1:20
-		// ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-		// ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
-
-	#endif    
+		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
+	}else{
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:1
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:1
+		ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
+		ch2_off  = osc_calib_params.fe_ch2_lo_offs; 		
+	}
+#endif    
 }
+
+#ifdef Z20_250_12
+	rp_AcqSetGain(RP_CH_1, attenuator == 0 ?  RP_LOW : RP_HIGH);
+	rp_AcqSetGain(RP_CH_2, attenuator == 0 ?  RP_LOW : RP_HIGH);
+
+	rp_AcqSetAC_DC(RP_CH_1,RP_DC);
+	rp_AcqSetAC_DC(RP_CH_2,RP_DC);
+#endif
 
 	// Decimation constants
 
@@ -362,7 +381,7 @@ if (use_calib == 2) {
 		delete s_app;
 	}
 	int resolution_val = (resolution == 1 ? 8 : 16);
-	s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , 0 , ADC_BITS);
+	s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , ADC_BITS);
 	ss_status.SendValue(1);
 	s_app->runNonBlock();
 
