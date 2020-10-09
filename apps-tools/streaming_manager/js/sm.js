@@ -84,6 +84,7 @@
                         SM.connectWebSocket();
                         var element = document.getElementById("loader-wrapper");
                         element.parentNode.removeChild(element);
+			$('#main').removeAttr("style");
                         console.log("Load manager");
                     } catch (e) {
                         SM.startApp();
@@ -309,7 +310,6 @@
             if (SM.param_callbacks[param_name] !== undefined)
                 SM.param_callbacks[param_name](new_params);
         }
-        // Resize double-headed arrows showing the difference between cursors
     };
 
     SM.calcRateHz = function(val) {
