@@ -12,6 +12,9 @@
  * for more details on the language used herein.
  */
 
+#define _XOPEN_SOURCE   600
+#define _POSIX_C_SOURCE 200112L
+
 #include <stdlib.h>
 #include <unistd.h>
 #include "rp_cross.h"
