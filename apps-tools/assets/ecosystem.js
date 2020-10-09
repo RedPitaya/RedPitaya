@@ -153,7 +153,7 @@
 
     $(document).ready(function($) {
         getListOfApps();
-        
+
         $.ajax({
                 method: "GET",
                 url: '/get_info'
@@ -162,25 +162,21 @@
                 printRpVersion(msg);
                 stem_ver = msg['stem_ver'];
                 var board_type = "";
-                var linux_path = "";
+                var linux_path = "LinuxOS";
                 if (stem_ver == "STEM 16"){
                     board_type = "STEMlab-122-16/ecosystems";
-                    linux_path = "STEMlab-122-16";
                 } 
 
                 if (stem_ver == "STEM 250 12") {
                     board_type = "STEMlab-250-12/ecosystems";
-                    linux_path = "STEMlab-250-12";
                 }
 
                 if (stem_ver == "STEM 14"){
                     board_type = "STEMlab-125-1x/ecosystems";
-                    linux_path = "STEMlab-125-1x";
                 }
                 if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])){
                     $("#CUR_VER").text(msg["sd_linux_ver"]);
                     $("#REQ_VER").text(msg["linux_ver"]);
-                    
                     $("#NEED_UPDATE_LINUX_ID").attr("hidden",false);
                     var _href = $("#NEW_FIRMWARE_LINK_ID").attr("href");
                     $("#NEW_FIRMWARE_LINK_ID").attr("href", _href + linux_path);
@@ -222,7 +218,7 @@
                             clearInterval(new_firmware_timer);
                             new_firmware_timer = null;
                         }
-                        
+
                         if (RedPitayaOS.compareVersions(version,es_distro_vers.vers_as_str+"-"+es_distro_vers.build) == 1){
 
                             $("#NEW_FIRMWARE_ID").attr("hidden",false);
