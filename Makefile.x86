@@ -129,13 +129,13 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 
 # FIXME manually copy prebuilt streaming FPGA bitstream
 #	cp fpga/prj/streaming/prebuilt/* $(INSTALL_DIR)/fpga/
-ifeq ($(FPGA_MODEL), Z10)
-	cp fpga/prj/streaming/prebuilt/fpga_streaming.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif
+#ifeq ($(FPGA_MODEL), Z10)
+#	cp fpga/prj/streaming/prebuilt/fpga_streaming.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
+#endif
 
-ifeq ($(FPGA_MODEL), Z20)
-	cp fpga/prj/streaming/prebuilt/fpga_streaming_z20.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif
+#ifeq ($(FPGA_MODEL), Z20)
+#	cp fpga/prj/streaming/prebuilt/fpga_streaming_z20.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
+#endif
 
 	# copy archived FPGA bitstream images and decompress them
 	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
@@ -143,10 +143,10 @@ endif
 	# backward compatibility, TODO, should be removed at next OS release
 ifneq ($(FPGA_MODEL),Z20_250)
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 ifeq ($(FPGA_MODEL), Z10)
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 endif
 else
 	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
