@@ -254,7 +254,7 @@ function PrintToFile(){
 }
 
 function CombineLogVar(){
-    LOG_VAR=$(date)
+    LOG_VAR=$(date +'%d %m %y %T %Z %Y')
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/bit_value 2> /dev/null)"
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/zynq_code 2> /dev/null)"
     LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/mac_addr 2> /dev/null)"

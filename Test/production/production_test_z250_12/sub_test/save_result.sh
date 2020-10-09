@@ -90,7 +90,7 @@ MD5IN="$LOG_VAR $G_PASS"
 MD5OUT=`echo -n $MD5IN | md5sum | awk '{print $1}'`
 #echo $MD5OUT
 echo
-URL="http://production.redpitaya.com/Sync/LogUpdate?test_rec_date=$LOG_VAR"
+URL="http://production.redpitaya.com/Sync/LogUpdate?test_rec_data=$LOG_VAR"
 echo $URL
 echo
 #URL1="www.redpitaya.com"

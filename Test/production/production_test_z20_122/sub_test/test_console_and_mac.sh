@@ -39,7 +39,8 @@ READ_HWREV=$( $C_PRINTENV | grep hw_rev= | awk 'BEGIN {FS="="}{print $2}') > /de
 READ_SERIAL=$( $C_PRINTENV | grep serial= | awk 'BEGIN {FS="="}{print $2}') > /dev/null 2>&1
 MAC_BEGIN=${READ_MAC:0:8}
 HW_BEGIN=${READ_HWREV:0:11}
-PrintToFile "hw_rev" "$READ_HWREV"
+PrintToFile "hw_rev" "${READ_HWREV//_/-}"
+PrintToFile "mac_addr" "$READ_MAC"
 
 if [[ "$MAC_BEGIN" != "$RP_MAC_BEGINNING" ]] || [[ "$READ_NAV" == "" ]] || [[ "$HW_BEGIN" == "" ]] || [[ "$READ_SERIAL" == "" ]]
 then
