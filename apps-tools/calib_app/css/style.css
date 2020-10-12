@@ -172,6 +172,10 @@ area:hover {
     text-shadow: 0px 0px;
     /*  box-shadow: 0 0 0 1px #777; */
     color: #cdcccc !important;
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
 }
 
 .btn:hover,
@@ -279,38 +283,21 @@ input.ipaddress {
     color: lightblue;
 }
 
-.example_button {
-    margin-top: 20px;
-    width: 131px;
-    text-align: center;
-    list-style: none;
-    height: 40px;
-    padding-top: 5px;
-    border: 1px solid;
-}
 
-.example_button:hover {
-    background: gray;
-    cursor: pointer;
-}
-
-.example_button span {
-    color: #337ab7;
-}
 
 .run_buttons {
     display: inline-block;
     text-align: center;
     border: 1px solid;
     border-color: #cccccc;
-    background-color: #47b2d1;
+    background-color: #999;
     color: #000000;
     margin: 0 auto;
     font-size: 16pt;
 }
 
 .run_buttons:hover {
-    background-color: #69d4d1;
+    background-color: #616b6b;
     cursor: pointer;
 }
 
@@ -324,27 +311,6 @@ input.ipaddress {
     cursor: pointer;
 }
 
-.files_buttons {
-    display: inline-block;
-    text-align: center;
-    border: 1px solid;
-    border-color: gray;
-    background-color: rgba(0, 0, 0, 0.1);
-    color: gray;
-    margin: 0 auto;
-    font-size: 12pt;
-    padding-top: 3px;
-}
-
-.files_buttons:hover {
-    background-color: gray;
-    cursor: pointer;
-}
-
-.files_buttons a {
-    color: lightgrey;
-    text-decoration: none;
-}
 
 .container_inline {
     width: 100%;
@@ -360,83 +326,3 @@ input.ipaddress {
     flex-grow: 0;
 }
 
-
-/* Customize the label (the container) */
-
-.container-radio {
-    display: block;
-    position: relative;
-    cursor: pointer;
-    font-size: 22px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    border: none;
-}
-
-
-/* Hide the browser's default radio button */
-
-.container-radio input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-}
-
-
-/* Create a custom radio button */
-
-.checkmark-radio {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 25px;
-    width: 25px;
-    background-color: #eee;
-    border-radius: 50%;
-}
-
-
-/*  On mouse-over, add a grey background color */
-
-.container-radio:hover input~.checkmark-radio {
-    background-color: #ccc;
-}
-
-
-/* When the radio button is checked, add a blue background */
-
-.container-radio input:checked~.checkmark-radio {
-    background-color: #2196F3;
-}
-
-
-/* Create the indicator (the dot/circle - hidden when not checked) */
-
-.checkmark-radio:after {
-    content: "";
-    position: absolute;
-    display: none;
-}
-
-
-/* Show the indicator (dot/circle) when checked */
-
-.container-radio input:checked~.checkmark-radio:after {
-    display: block;
-}
-
-
-/* Style the indicator (dot/circle) */
-
-.container-radio .checkmark-radio:after {
-    top: 6px;
-    left: 6px;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: white;
-}
