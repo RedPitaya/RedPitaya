@@ -22,14 +22,11 @@
 
 #include "rp.h"
 #include "version.h"
+#include "acq.h"
 
+COscilloscope::Ptr g_acq;
 
-
-static std::mutex mut;
-static pthread_mutex_t mutex;
-
-
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 
 //Parameters
@@ -51,6 +48,13 @@ CBooleanParameter 	ss_start(			"SS_START", 	        CBaseParameter::RW, false,0)
 // CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 // CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 // CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 0 ,0,	0,1);
+CFloatParameter 	ch1_min("ch1_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch1_max("ch1_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch1_avg("ch1_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch2_min("ch2_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch2_max("ch2_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch2_avg("ch2_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+
 
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, RP_MODEL, 10);
 
@@ -81,12 +85,17 @@ int rp_app_init(void)
 	fprintf(stderr, "Loading calibraton app version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
 	PrintLogInFile("rp_app_init");
+	rp_Init();
+	g_acq = COscilloscope::Create(128);
+	g_acq->start();
 	return 0;
 }
 
 //Application exit
 int rp_app_exit(void)
 {
+	g_acq->stop();
+	rp_Release();
 	fprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
 	PrintLogInFile("Unloading stream server version");
 	return 0;
@@ -121,6 +130,14 @@ void UpdateSignals(void)
 void UpdateParams(void)
 {
 	try{
+		auto x = g_acq->getData();
+		ch1_max.Value() = x.ch1_max;
+		ch1_min.Value() = x.ch1_min;
+		ch1_avg.Value() = x.ch1_avg;
+		ch2_max.Value() = x.ch2_max;
+		ch2_min.Value() = x.ch2_min;
+		ch2_avg.Value() = x.ch2_avg;
+
 		// if (ss_port.IsNewValue())
 		// {
 		// 	ss_port.Update(););
