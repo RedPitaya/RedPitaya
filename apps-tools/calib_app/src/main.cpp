@@ -23,10 +23,12 @@
 #include "rp.h"
 #include "version.h"
 #include "acq.h"
+#include "calib.h"
 
 COscilloscope::Ptr g_acq;
+CCalib::Ptr        g_calib;
 
-#define DEBUG_MODE
+// #define DEBUG_MODE
 
 
 //Parameters
@@ -55,6 +57,8 @@ CFloatParameter 	ch2_min("ch2_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter 	ch2_max("ch2_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter 	ch2_avg("ch2_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 
+CIntParameter       ss_state(		"SS_STATE", 	CBaseParameter::RW ,-1,0,-1,100); // Current completed step
+CIntParameter       ss_next_step(	"SS_NEXTSTEP",	CBaseParameter::RW ,-1,0,-1,100); 
 
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, RP_MODEL, 10);
 
@@ -87,6 +91,7 @@ int rp_app_init(void)
 	PrintLogInFile("rp_app_init");
 	rp_Init();
 	g_acq = COscilloscope::Create(128);
+	g_calib = CCalib::Create(g_acq);
 	g_acq->start();
 	return 0;
 }
@@ -138,10 +143,13 @@ void UpdateParams(void)
 		ch2_min.Value() = x.ch2_min;
 		ch2_avg.Value() = x.ch2_avg;
 
-		// if (ss_port.IsNewValue())
-		// {
-		// 	ss_port.Update(););
-		// }
+		if (ss_next_step.IsNewValue())
+		{
+			ss_next_step.Update();
+			if (g_calib->calib(ss_next_step.Value()) == RP_OK){
+				ss_state.SendValue(ss_next_step.Value()); 
+			}
+		}
 
 		// if (ss_ip_addr.IsNewValue())
 		// {

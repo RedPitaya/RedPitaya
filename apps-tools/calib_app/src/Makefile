@@ -5,7 +5,7 @@ RM=rm
 
 PROJECT_ROOT=../..
 
-CXXSOURCES=main.cpp acq.cpp
+CXXSOURCES=main.cpp acq.cpp calib.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2

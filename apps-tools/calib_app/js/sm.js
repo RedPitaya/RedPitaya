@@ -55,7 +55,7 @@
                         SM.connectWebSocket();
                         var element = document.getElementById("loader-wrapper");
                         element.parentNode.removeChild(element);
-			$('#main').removeAttr("style");
+			            $('#main').removeAttr("style");
                         console.log("Load manager");
                     } catch (e) {
                         SM.startApp();
@@ -153,7 +153,7 @@
 
                     //Recieving parameters
                     if (receive.parameters) {
-                        console.log(receive.parameters);
+                    //    console.log(receive.parameters);
                         SM.parameterStack.push(receive.parameters);
                         parametersHandler();
                     }
@@ -242,20 +242,8 @@ $(function() {
     }
 
 
-    // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
-    $(window).resize(function() {
-        if (SM.ws) {
-            SM.sendParameters();
-        }
-    }).resize();
-
-
-
-
     // Stop the application when page is unloaded
     $(window).on('beforeunload', function() {
-        SM.parametersCache["SS_START"] = { value: false };
-        SM.sendParameters();
         SM.ws.onclose = function() {}; // disable onclose handler first
         SM.ws.close();
         $.ajax({

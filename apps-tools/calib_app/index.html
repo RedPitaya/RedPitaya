@@ -28,7 +28,6 @@
     <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="../assets/browsercheck.js?1"></script>
     <script src="../assets/popupstack.js?1"></script>
-    <script src="../assets/help-system/help-system.js"></script>
     <script src="../assets/pako.js"></script>
     <script src="js/guiHandler.js"></script>
     <script src="js/sm.js"></script>
@@ -75,7 +74,7 @@
                         </div>
                         <div>
                             <div class="container_inline" align=center>
-                                <div style="width: 200px; border: 1px solid white;margin-right: 10px">
+                                <div style="width: 300px; border: 1px solid white;margin-right: 10px">
                                     <li class="run_buttons" id="B_AUTO_MODE" style="width: 100%">
                                         <a href="#" id="a_run" style="display: block;">AUTO</a>
                                     </li>
@@ -83,7 +82,7 @@
                             </div>
 
                             <div class="container_inline" align=center>
-                                <div style="width: 200px; border: 1px solid white;margin-right: 10px">
+                                <div style="width: 300px; border: 1px solid white;margin-right: 10px">
                                     <li class="run_buttons" id="B_ADC_MODE" style="width: 100%">
                                         <a href="#" id="a_run" style="display: block;">ADC</a>
                                     </li>
@@ -91,9 +90,25 @@
                             </div>
 
                             <div class="container_inline" align=center>
-                                <div style="width: 200px; border: 1px solid white;margin-right: 10px">
+                                <div style="width: 300px; border: 1px solid white;margin-right: 10px">
                                     <li class="run_buttons" id="B_DAC_MODE" style="width: 100%">
                                         <a href="#" id="a_run" style="display: block;">DAC</a>
+                                    </li>
+                                </div>
+                            </div>
+
+                            <div class="container_inline" align=center>
+                                <div style="width: 300px; border: 1px solid white;margin-right: 10px">
+                                    <li class="run_buttons" id="B_RESET_DEFAULT" style="width: 100%">
+                                        <a href="#" id="a_run" style="display: block;">RESET TO DEFAULT</a>
+                                    </li>
+                                </div>
+                            </div>
+
+                            <div class="container_inline" align=center>
+                                <div style="width: 300px; border: 1px solid white;margin-right: 10px">
+                                    <li class="run_buttons" id="B_RESET_FACTORY" style="width: 100%">
+                                        <a href="#" id="a_run" style="display: block;">RESET TO FACTORY</a>
                                     </li>
                                 </div>
                             </div>
@@ -103,17 +118,19 @@
                             <table class="darkTable">
                                 <thead>
                                     <tr>
-                                        <th rowspan="2">MODE</th>
-                                        <th colspan="2">CH1</th>
-                                        <th colspan="2">CH2</th>
-                                        <th rowspan="2">VALUE</th>
-                                        <th rowspan="2">STATE</th>
+                                        <th rowspan="2" width="240px">MODE</th>
+                                        <th colspan="2" width="20%">CH1</th>
+                                        <th colspan="2" width="20%">CH2</th>
+                                        <th colspan="2">VALUE</th>
+                                        <th rowspan="2" width="80px">STATE</th>
                                     </tr>
                                     <tr>
-                                        <th>Before</th>
-                                        <th>After</th>
-                                        <th>Before</th>
-                                        <th>After</th>
+                                        <th width="10%">Before</th>
+                                        <th width="10%">After</th>
+                                        <th width="10%">Before</th>
+                                        <th width="10%">After</th>
+                                        <th>Ch1</th>
+                                        <th>Ch2</th>
                                     </tr>
                                 </thead>
                                 <tbody id="auto_calib_table">
@@ -124,6 +141,7 @@
                                         <td>cell4_1</td>
                                         <td>cell5_1</td>
                                         <td>cell6_1</td>
+                                        <td>cell7_1</td>
                                         <td>cell7_1</td>
                                     </tr>
                                 </tbody>
@@ -168,15 +186,16 @@
                         <h4 class="modal-title" id="oops_label">Calibration</h4>
                     </div>
                     <div class="modal-body" style="text-align: center; font-size: 18px;">
-                        <p id="info_dialog_label">TEXT</p>
+                        <img id="am_dialog_img" src="./img/125/RP_125_GND.png"/>
+                        <p id="am_dialog_text">TEXT</p>
                     </div>
                     <div class="modal-footer">
                         <div class="bazaar-link" style="float: left; width: 45%;">
-                            <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal" class="btn">Ok</a>
+                            <a href="#" style="border: 1px solid; width: 100%" id="am_ok_btn" data-dismiss="modal" class="btn">Ok</a>
                         </div>
 
                         <div class="bazaar-link" style="float: right; width: 45%;">
-                            <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal" class="btn">Cancel</a>
+                            <a href="#" style="border: 1px solid; width: 100%" id="am_cancel_btn" data-dismiss="modal" class="btn">Cancel</a>
                         </div>
                     </div>
                 </div>

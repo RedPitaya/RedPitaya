@@ -2,13 +2,29 @@
 #include <chrono>
 #include "acq.h"
 
+
+inline int32_t rawToInt32(uint32_t cnts)
+{
+    int32_t m;
+    /* check sign */
+    if(cnts & (1 << (ADC_BITS - 1))) {
+        /* negative number */
+        m = -1 *((cnts ^ ((1 << ADC_BITS) - 1)) + 1);
+    } else {
+        /* positive number */
+        m = cnts;
+    }
+    return m;
+}
+
 COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation)
 {
     return std::make_shared<COscilloscope>(_decimation);
 }
 
 COscilloscope::COscilloscope(uint32_t _decimation):
-m_decimation(_decimation)
+m_decimation(_decimation),
+m_index(0)
 {
    
     
@@ -29,6 +45,7 @@ void COscilloscope::stop(){
 
 void COscilloscope::start(){
     try {
+        m_index = 0;
         m_OscThreadRun.test_and_set();
         m_OscThread = std::thread(&COscilloscope::oscWorker, this);        
     }
@@ -45,8 +62,7 @@ void COscilloscope::oscWorker(){
         while (m_OscThreadRun.test_and_set())
         {
             acquire();
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }    
     }catch (std::exception& e)
     {
@@ -60,6 +76,7 @@ void COscilloscope::acquire(){
     int16_t             timeout = 10000;
     bool                fillState = false;
     uint32_t            acq_u_size = ADC_BUFFER_SIZE;
+    uint32_t            acq_u_size_raw = ADC_BUFFER_SIZE;
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
 
     rp_AcqSetDecimationFactor(m_decimation);
@@ -86,14 +103,22 @@ void COscilloscope::acquire(){
     rp_AcqStop();
     rp_AcqGetWritePointer(&pos);
     rp_AcqGetDataV2(pos, &acq_u_size, m_buffer[0], m_buffer[1]);
+    rp_AcqGetDataRawV2(pos, &acq_u_size_raw, m_buffer_raw[0],m_buffer_raw[1]);
     if (acq_u_size > 0) {
         DataPass localDP;
+        localDP.index = m_index++;
         localDP.ch1_avg = 0;
         localDP.ch2_avg = 0;
         localDP.ch1_max = m_buffer[0][0];
         localDP.ch1_min = m_buffer[0][0];
-        localDP.ch2_max = m_buffer[0][0];
-        localDP.ch2_min = m_buffer[0][0];
+        localDP.ch2_max = m_buffer[1][0];
+        localDP.ch2_min = m_buffer[1][0];
+        localDP.ch1_avg_raw = 0;
+        localDP.ch2_avg_raw = 0;
+        localDP.ch1_min_raw = rawToInt32(m_buffer_raw[0][0]);
+        localDP.ch1_max_raw = rawToInt32(m_buffer_raw[0][0]);
+        localDP.ch2_min_raw = rawToInt32(m_buffer_raw[1][0]);
+        localDP.ch2_max_raw = rawToInt32(m_buffer_raw[1][0]);
 
         for(auto i = 0 ; i < acq_u_size ; ++i){
             if (localDP.ch1_max < m_buffer[0][i]) localDP.ch1_max = m_buffer[0][i];
@@ -105,6 +130,21 @@ void COscilloscope::acquire(){
         }
         localDP.ch1_avg /= acq_u_size;
         localDP.ch2_avg /= acq_u_size;
+
+        for(auto i = 0 ; i < acq_u_size_raw; ++i){
+            auto ch1 = rawToInt32(m_buffer_raw[0][i]);
+            auto ch2 = rawToInt32(m_buffer_raw[1][i]);
+            
+            if (localDP.ch1_max_raw < ch1) localDP.ch1_max_raw = ch1;
+            if (localDP.ch2_max_raw < ch2) localDP.ch2_max_raw = ch2; 
+            if (localDP.ch1_min_raw > ch1) localDP.ch1_min_raw = ch1;
+            if (localDP.ch2_min_raw > ch2) localDP.ch2_min_raw = ch2;
+            localDP.ch1_avg_raw += ch1;
+            localDP.ch2_avg_raw += ch2;
+        }
+        localDP.ch1_avg_raw /= acq_u_size_raw;
+        localDP.ch2_avg_raw /= acq_u_size_raw;
+
         pthread_mutex_lock(&m_mutex);
         m_crossData = localDP;
         pthread_mutex_unlock(&m_mutex);

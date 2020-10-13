@@ -36,6 +36,14 @@
         return result;
      }
 
+    OBJ.setCH1Awg = function(_value){
+        OBJ.amSetCH1Avg(_value.value);    
+    }
+
+    OBJ.setCH2Awg = function(_value){
+        OBJ.amSetCH2Avg(_value.value);  
+    }
+
 }(window.OBJ = window.OBJ || {}, jQuery));
 
 
@@ -57,6 +65,7 @@ $(function() {
         OBJ.setMainMenu(false);
     });
 
-    
+    SM.param_callbacks["ch1_avg"] = OBJ.setCH1Awg;
+    SM.param_callbacks["ch2_avg"] = OBJ.setCH2Awg;   
     
 });

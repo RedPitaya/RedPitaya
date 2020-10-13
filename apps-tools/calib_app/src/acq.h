@@ -11,12 +11,19 @@ class COscilloscope {
 
         struct DataPass
         {
-            float ch1_min;
-            float ch1_max;
-            float ch1_avg;
-            float ch2_min;
-            float ch2_max;
-            float ch2_avg;
+            float   ch1_min;
+            float   ch1_max;
+            float   ch1_avg;
+            float   ch2_min;
+            float   ch2_max;
+            float   ch2_avg;
+            int32_t ch1_min_raw;
+            int32_t ch1_max_raw;
+            int32_t ch1_avg_raw;
+            int32_t ch2_min_raw;
+            int32_t ch2_max_raw;
+            int32_t ch2_avg_raw;
+            uint64_t index; 
         };
 
         using Ptr = std::shared_ptr<COscilloscope>;
@@ -38,5 +45,7 @@ class COscilloscope {
         pthread_mutex_t  m_mutex;
         uint32_t         m_decimation;
         float            m_buffer[2][ADC_BUFFER_SIZE];
+        uint16_t         m_buffer_raw[2][ADC_BUFFER_SIZE];
         DataPass         m_crossData;
+        uint64_t         m_index; 
 };
