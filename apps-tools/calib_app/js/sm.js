@@ -153,7 +153,7 @@
 
                     //Recieving parameters
                     if (receive.parameters) {
-                    //    console.log(receive.parameters);
+                        console.log(receive.parameters);
                         SM.parameterStack.push(receive.parameters);
                         parametersHandler();
                     }

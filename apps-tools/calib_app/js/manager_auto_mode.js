@@ -13,13 +13,15 @@
 
     OBJ.STATES_125_14 = {
         0    : {name: "Reset to default", span: true}, 
-        1    : {name: "ADC offset (1:1)",img: "./img/125/RP_125_GND.png", hint:"Please set LV mode and connect IN1 and IN2 to GND."}, 
-        2    : {name: "ADC gain   (1:1)"}, 
-        3    : {name: "ADC offset (1:20)"}, 
-        4    : {name: "ADC gain   (1:20)"}, 
-        5    : {name: "DAC offset"}, 
-        6    : {name: "DAC gain"},
-        7    : {name: "Calibration complete", span: true}   
+        1    : {name: "ADC offset (1:20)",img: "./img/125/RP_125_GND.png", hint:"Please set HV mode and connect IN1 and IN2 to GND."}, 
+        2    : {name: "ADC gain   (1:20)",img: "./img/125/RP_125_REF.png", hint:"Please set HV mode and connect IN1 and IN2 to reference DC source.",  input: 5}, 
+        3    : {name: "ADC offset (1:1)" ,img: "./img/125/RP_125_GND.png", hint:"Please set LV mode and connect IN1 and IN2 to GND."}, 
+        4    : {name: "ADC gain   (1:1)" ,img: "./img/125/RP_125_REF.png", hint:"Please set LV mode and connect IN1 and IN2 to reference DC source.",  input: 0.5}, 
+        5    : {name: "Disable DAC", span: true}, 
+        6    : {name: "DAC offset"       ,img: "./img/125/RP_125_GEN.png", hint:"Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2."}, 
+        7    : {name: "Enable DAC" , span: true}, 
+        8    : {name: "DAC gain"         ,img: "./img/125/RP_125_GEN.png", hint:"Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2."},
+        9    : {name: "Calibration complete", span: true, end: true}   
     };
 
     OBJ.STATES_250_12 = {
@@ -118,9 +120,14 @@
             d.appendChild(l);
             var a = document.createElement("a");
             l.appendChild(a);
-            a.innerHTML = "START";
             a.setAttribute("href","#");
-            l.onclick = OBJ.amStartButtonPress;
+            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("end")) {
+                a.innerHTML = "START";
+                l.onclick = OBJ.amStartButtonPress;
+            }else{
+                a.innerHTML = "DONE";
+                l.onclick = OBJ.showMainMenu;
+            }
         }
     }
 
@@ -168,7 +175,7 @@
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("span")) {
                 OBJ.amRemoveStateObject();
                 OBJ.amSetWait();
-                OBJ.amSendState(OBJ.amCurrentTest);
+                OBJ.amSendState(OBJ.amCurrentTest,0);
             }else{
                 OBJ.amShowDloag();
             }
@@ -196,7 +203,7 @@
                 OBJ.amRemoveStateObject();
                 OBJ.amSetOkState();
                 OBJ.amContinueCalibration();
-            }, 1000);
+            }, 2000);
         }
     }
 
@@ -212,6 +219,14 @@
             }else{
                 $("#am_dialog_text").text("");
             }
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
+                $("#SS_REF_VOLT").val(OBJ.amStates[OBJ.amCurrentTest].input);
+                $("#am_dialog_input").show();
+            }else{
+                $("#am_dialog_input").hide();
+            }
+
+            
         }
         $("#am_dialog_calib").modal('show');
     }
@@ -219,14 +234,16 @@
     OBJ.amClickOkDialog = function(){
         OBJ.amRemoveStateObject();
         OBJ.amSetWait();
-        OBJ.amSendState(OBJ.amCurrentTest);
+        var ref = 0;
+        if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
+            ref = $("#SS_REF_VOLT").val();
+        }
+        OBJ.amSendState(OBJ.amCurrentTest,ref);
     }
 
     OBJ.amStartCalibration = function(){
         OBJ.amCurrentTest = 0;
-        OBJ.amCurrentRowID = OBJ.amAddNewRowSpan();
-        OBJ.amSetName();
-        OBJ.amSetStartButton();
+        OBJ.amAddNextStepRow();  
         // OBJ.amCurrentTest = 1;
         // OBJ.amCurrentRowID = OBJ.amAddNewRow();
         // OBJ.amSetName();
@@ -238,8 +255,11 @@
         OBJ.amAddNextStepRow();               
     }
 
-    OBJ.amSendState = function(_state){
+    OBJ.amSendState = function(_state,_ref_volt){
         SM.parametersCache["SS_NEXTSTEP"] = { value: _state };
+        SM.parametersCache["SS_STATE"] = { value: _state -1 };
+        OBJ.amCurrentSuccesTest = _state - 1;
+        SM.parametersCache["ref_volt"] = {value:_ref_volt}; 
         SM.sendParameters();
     }
 
@@ -267,6 +287,21 @@
         }
     }
 
+    OBJ.amSetCalibValueCh1 = function(_value){
+        if (OBJ.amCheckEmptyVariables()){
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch1");
+            if (element_b != undefined) element_b.innerText = _value.value; 
+        }
+    }
+
+    OBJ.amSetCalibValueCh2 = function(_value){
+        if (OBJ.amCheckEmptyVariables()){
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch2");
+            if (element_b != undefined) element_b.innerText = _value.value; 
+        }
+    }
+
+
 }(window.OBJ = window.OBJ || {}, jQuery));
 
 
@@ -274,5 +309,7 @@
 $(function() {
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.amSetModel;
     SM.param_callbacks["SS_STATE"] = OBJ.amGetStatus;     
+    SM.param_callbacks["ch1_calib_pass"] = OBJ.amSetCalibValueCh1;     
+    SM.param_callbacks["ch2_calib_pass"] = OBJ.amSetCalibValueCh2;     
     $('#am_ok_btn').on('click', function() { OBJ.amClickOkDialog() });
 });

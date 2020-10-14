@@ -35,32 +35,20 @@ CCalib::Ptr        g_calib;
 
 CBooleanParameter 	ss_start(			"SS_START", 	        CBaseParameter::RW, false,0);
 
+CFloatParameter 	ch1_min(		"ch1_min", 			CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch1_max(		"ch1_max", 			CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch1_avg(		"ch1_avg", 			CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch2_min(		"ch2_min", 			CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch2_max(		"ch2_max", 			CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch2_avg(		"ch2_avg", 			CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CIntParameter		ch1_calib_pass( "ch1_calib_pass", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
+CIntParameter		ch2_calib_pass( "ch2_calib_pass", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
+CFloatParameter 	ref_volt(		"ref_volt",			CBaseParameter::RW,   1, 0, 0.001, 20);
 
-// CBooleanParameter 	ss_use_localfile(	"SS_USE_FILE", 	        CBaseParameter::RW, false,0);
-// CIntParameter		ss_port(  			"SS_PORT_NUMBER", 		CBaseParameter::RW, 8900,0,	1,65535);
-// CStringParameter    ss_ip_addr(			"SS_IP_ADDR",			CBaseParameter::RW, "",0);
-// CIntParameter		ss_protocol(  		"SS_PROTOCOL", 			CBaseParameter::RW, 1 ,0,	1,2);
-// CIntParameter		ss_samples(  		"SS_SAMPLES", 			CBaseParameter::RW, 2000000000 ,0,	-1,2000000000);
-// CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 1 ,0,	1,3);
-// CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2);
-// CIntParameter		ss_calib( 	 		"SS_USE_CALIB", 		CBaseParameter::RW, 2 ,0,	1,2);
-// CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2);
-// CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
-// CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
-// CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
-// CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
-// CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 0 ,0,	0,1);
-CFloatParameter 	ch1_min("ch1_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter 	ch1_max("ch1_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter 	ch1_avg("ch1_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter 	ch2_min("ch2_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter 	ch2_max("ch2_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter 	ch2_avg("ch2_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CIntParameter       ss_state(		"SS_STATE", 		CBaseParameter::RW ,-1,0,-1,100); // Current completed step
+CIntParameter       ss_next_step(	"SS_NEXTSTEP",		CBaseParameter::RW ,-1,0,-2,100); 
 
-CIntParameter       ss_state(		"SS_STATE", 	CBaseParameter::RW ,-1,0,-1,100); // Current completed step
-CIntParameter       ss_next_step(	"SS_NEXTSTEP",	CBaseParameter::RW ,-1,0,-1,100); 
-
-CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, RP_MODEL, 10);
+CStringParameter 	redpitaya_model("RP_MODEL_STR", 	CBaseParameter::RO, RP_MODEL, 10);
 
 
 
@@ -143,23 +131,22 @@ void UpdateParams(void)
 		ch2_min.Value() = x.ch2_min;
 		ch2_avg.Value() = x.ch2_avg;
 
-		if (ss_next_step.IsNewValue())
+		if (ss_next_step.IsNewValue() && ref_volt.IsNewValue())
 		{
 			ss_next_step.Update();
-			if (g_calib->calib(ss_next_step.Value()) == RP_OK){
-				ss_state.SendValue(ss_next_step.Value()); 
+			ref_volt.Update();
+			if (ss_next_step.Value() != -2){
+				if (g_calib->calib(ss_next_step.Value(),ref_volt.Value()) == RP_OK){
+					auto x = g_calib->getCalibData();
+					ch1_calib_pass.SendValue(x.ch1);
+					ch2_calib_pass.SendValue(x.ch2);
+					ss_state.SendValue(ss_next_step.Value()); 
+				}
+			}else{
+				g_calib->restoreCalib();
 			}
 		}
 
-		// if (ss_ip_addr.IsNewValue())
-		// {
-		// 	ss_ip_addr.Update();	
-		// }
-
-		// if (ss_use_localfile.IsNewValue())
-		// {
-		// 	ss_use_localfile.Update();
-		// }
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: UpdateParams() %s\n",e.what());

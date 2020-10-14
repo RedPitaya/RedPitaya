@@ -37,6 +37,12 @@ class COscilloscope {
         void start();
         void stop();
     DataPass getData();
+        void setLV(); // 1:1
+        void setHV(); // 1:20
+        void setGEN_DISABLE();
+        void setGEN0();
+        void setGEN0_5();
+        
     private:
         void oscWorker();
         void acquire();

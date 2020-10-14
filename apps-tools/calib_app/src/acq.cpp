@@ -128,8 +128,8 @@ void COscilloscope::acquire(){
             localDP.ch1_avg += m_buffer[0][i];
             localDP.ch2_avg += m_buffer[1][i];
         }
-        localDP.ch1_avg /= acq_u_size;
-        localDP.ch2_avg /= acq_u_size;
+        localDP.ch1_avg /= (float)acq_u_size;
+        localDP.ch2_avg /= (float)acq_u_size;
 
         for(auto i = 0 ; i < acq_u_size_raw; ++i){
             auto ch1 = rawToInt32(m_buffer_raw[0][i]);
@@ -142,13 +142,55 @@ void COscilloscope::acquire(){
             localDP.ch1_avg_raw += ch1;
             localDP.ch2_avg_raw += ch2;
         }
-        localDP.ch1_avg_raw /= acq_u_size_raw;
-        localDP.ch2_avg_raw /= acq_u_size_raw;
+        localDP.ch1_avg_raw /= (int32_t)acq_u_size_raw;
+        localDP.ch2_avg_raw /= (int32_t)acq_u_size_raw;
 
         pthread_mutex_lock(&m_mutex);
         m_crossData = localDP;
         pthread_mutex_unlock(&m_mutex);
     }
+}
+
+
+void COscilloscope::setLV(){
+    rp_AcqSetGain(RP_CH_1, RP_LOW);
+    rp_AcqSetGain(RP_CH_2, RP_LOW);
+}
+
+void COscilloscope::setHV(){
+    rp_AcqSetGain(RP_CH_1, RP_HIGH);
+    rp_AcqSetGain(RP_CH_2, RP_HIGH);
+}
+
+void COscilloscope::setGEN_DISABLE(){
+    rp_GenOutDisable(RP_CH_1);
+    rp_GenOutDisable(RP_CH_2);   
+}
+
+void COscilloscope::setGEN0(){
+    rp_GenAmp(RP_CH_1, 0);
+    rp_GenAmp(RP_CH_2, 0);
+	rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
+    rp_GenFreq(RP_CH_1, 100);
+    rp_GenFreq(RP_CH_2, 100);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+}
+
+void COscilloscope::setGEN0_5(){
+    rp_GenAmp(RP_CH_1, 0.5);
+    rp_GenAmp(RP_CH_2, 0.5);
+	rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
+    rp_GenFreq(RP_CH_1, 100);
+    rp_GenFreq(RP_CH_2, 100);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
 }
 
 COscilloscope::DataPass COscilloscope::getData(){

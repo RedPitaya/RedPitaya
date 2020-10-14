@@ -44,6 +44,11 @@
         OBJ.amSetCH2Avg(_value.value);  
     }
 
+    OBJ.showMainMenu = function(){
+        OBJ.setAutoMode(false);
+        OBJ.setMainMenu(true);
+    }
+
 }(window.OBJ = window.OBJ || {}, jQuery));
 
 
@@ -64,6 +69,15 @@ $(function() {
     $('#B_DAC_MODE').on('click', function(ev) {
         OBJ.setMainMenu(false);
     });
+
+    $('#B_CANCEL_CALIB').on('click', function(ev) {
+        OBJ.showMainMenu();
+        SM.parametersCache["SS_NEXTSTEP"] = { value: -2 };
+        SM.parametersCache["ref_volt"] = {value:0}; // SS_NEXTSTEP work only in pair ref_volt
+        SM.sendParameters();
+    });
+
+    
 
     SM.param_callbacks["ch1_avg"] = OBJ.setCH1Awg;
     SM.param_callbacks["ch2_avg"] = OBJ.setCH2Awg;   
