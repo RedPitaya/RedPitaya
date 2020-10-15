@@ -193,6 +193,19 @@ void COscilloscope::setGEN0_5(){
     rp_GenOutEnable(RP_CH_2);
 }
 
+void COscilloscope::setGEN0_5_SINE(){
+    rp_GenAmp(RP_CH_1, 0.5);
+    rp_GenAmp(RP_CH_2, 0.5);
+	rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
+    rp_GenFreq(RP_CH_1, 2500);
+    rp_GenFreq(RP_CH_2, 2500);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+}
+
 COscilloscope::DataPass COscilloscope::getData(){
     DataPass local_pass;
     pthread_mutex_lock(&m_mutex);
@@ -200,3 +213,25 @@ COscilloscope::DataPass COscilloscope::getData(){
     pthread_mutex_unlock(&m_mutex); 
     return local_pass;
 }
+
+#ifdef Z20_250_12
+void COscilloscope::setDC(){
+    rp_AcqSetAC_DC(RP_CH_1,RP_DC);
+    rp_AcqSetAC_DC(RP_CH_2,RP_DC);
+}
+
+void COscilloscope::setAC(){
+    rp_AcqSetAC_DC(RP_CH_1,RP_AC);
+    rp_AcqSetAC_DC(RP_CH_2,RP_AC);
+}
+
+void COscilloscope::setGenGainx1(){
+    rp_GenSetGainOut(RP_CH_1,RP_GAIN_1X);
+    rp_GenSetGainOut(RP_CH_2,RP_GAIN_1X);
+}
+
+void COscilloscope::setGenGainx5(){
+    rp_GenSetGainOut(RP_CH_1,RP_GAIN_5X);
+    rp_GenSetGainOut(RP_CH_2,RP_GAIN_5X);
+}
+#endif

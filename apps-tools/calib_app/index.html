@@ -115,6 +115,11 @@
                         </div>
                     </div>
                     <div id="auto_mode_body" style="display: none;">
+                            <div>
+                                <div align="center" style="font-size: 18pt; color: lightgray;">
+                                    <p>Automatic mode</p>
+                                </div>
+                            </div>
                             <table class="darkTable">
                                 <thead>
                                     <tr>
@@ -153,6 +158,46 @@
                                     </li>
                                 </div>
                             </div>
+                    </div>
+                    <div id="adc_125_mode_body" style="display: none;">
+                        <div>
+                            <div align="center" style="font-size: 18pt; color: lightgray;">
+                                <p>Automatic mode</p>
+                            </div>
+                        </div>
+                        <div align="center">
+
+                            <div class="container_inline">
+                                <div style="width:300px;height: 120px;padding-top: 25px;border: 1px solid #999">
+                                    <label style="position:relative;width: 0px; top:-30px;left:110px;background: black;">FILES</label>
+                                    <div style="display: inline;margin-right: 10px">
+                                        <li class="files_buttons" style="width: 120px;height: 30px">
+                                            <a href="/streaming_manager/upload" style="display: block;" target="_blank">Browse</a>
+                                        </li>
+                                    </div>
+                                    <div style="display: inline;">
+                                        <li class="files_buttons" id="CLEAR_FILES" style="width: 120px;height: 30px">
+                                            <a href="#" style="display: block;">Clear</a>
+                                        </li>
+                                    </div>
+                                    <p></p>
+                                    <div style="width: 125px;text-align: right;margin-top: 5px;">Type of file saved:</div>
+                                    <div style="width: 90px;margin-top: 5px;">
+                                        <select id="SS_FORMAT" class="protocol" name="rate">
+                                                                    <option value="0">wav</option>
+                                                                    <option value="1">tdms</option>                                                                        
+                                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container_inline" align=center>
+                            <div style="width: 180px; border: 1px solid white;margin-right: 10px">
+                                <li class="run_buttons" id="B_CLOSE_ADC_CALIB" style="width: 100%;height: 25px">
+                                    <a href="#" id="a_run" style="display: block;font-size: 12pt;">CLOSE</a>
+                                </li>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

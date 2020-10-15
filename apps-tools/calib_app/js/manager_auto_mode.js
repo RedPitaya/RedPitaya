@@ -26,19 +26,29 @@
 
     OBJ.STATES_250_12 = {
         0    : {name: "Reset to default", span: true},
-        1    : {name: "ADC offset DC (1:1)"}, 
-        2    : {name: "ADC gain DC   (1:1)"}, 
-        3    : {name: "ADC offset DC (1:20)"}, 
-        4    : {name: "ADC gain DC   (1:20)"}, 
-        5    : {name: "DAC offset"}, 
-        6    : {name: "DAC gain"},
-        7    : {name: "DAC offset"}, 
-        8    : {name: "DAC gain"},
-        9    : {name: "ADC offset AC (1:1)"}, 
-        10   : {name: "ADC gain AC   (1:1)"}, 
-        11   : {name: "ADC offset AC (1:20)"}, 
-        12   : {name: "ADC gain AC   (1:20)"},
-        13   : {name: "Calibration complete", span: true}       
+        1    : {name: "Set 1:1 DC mode" , span: true},
+        2    : {name: "ADC offset DC (1:1)" ,img: "./img/250/RP_250_GND.png", hint:"Please connect IN1 and IN2 to GND."}, 
+        3    : {name: "ADC gain DC   (1:1)" ,img: "./img/250/RP_250_REF.png", hint:"Please connect IN1 and IN2 to reference DC source.",  input: 0.5}, 
+        4    : {name: "Set 1:20 DC mode" , span: true},
+        5    : {name: "ADC offset DC (1:20)",img: "./img/250/RP_250_GND.png", hint:"Please connect IN1 and IN2 to GND."},
+        6    : {name: "ADC gain DC   (1:20)",img: "./img/250/RP_250_REF.png", hint:"Please connect IN1 and IN2 to reference DC source.",  input: 1}, 
+        7    : {name: "Disable DAC", span: true}, 
+        8    : {name: "DAC offset x1" , img: "./img/250/RP_250_GEN.png", hint:"Please connect OUT1 to IN1 and OUT2 to IN2."},
+        9    : {name: "Enable DAC" , span: true},  
+        10   : {name: "DAC gain x1"   , img: "./img/250/RP_250_GEN.png", hint:"Please connect OUT1 to IN1 and OUT2 to IN2."},
+        11   : {name: "Disable DAC", span: true}, 
+        12   : {name: "DAC offset x5" , img: "./img/250/RP_250_GEN.png", hint:"Please connect OUT1 to IN1 and OUT2 to IN2."}, 
+        13   : {name: "Enable DAC" , span: true}, 
+        14   : {name: "DAC gain x5"   , img: "./img/250/RP_250_GEN.png", hint:"Please connect OUT1 to IN1 and OUT2 to IN2."},
+        15   : {name: "Set 1:1 AC mode and disable dac", span: true},
+        16   : {name: "ADC offset AC (1:1)"  , img: "./img/250/RP_250_GND.png", hint:"Please connect IN1 and IN2 to GND.", use_max: true}, 
+        17   : {name: "Enable DAC", span: true},
+        18   : {name: "ADC gain AC   (1:1)"  , img: "./img/250/RP_250_GEN.png", hint:"Please connect OUT1 to IN1 and OUT2 to IN2.", use_max: true}, 
+        19   : {name: "Set 1:20 AC mode and disable dac", span: true},
+        20   : {name: "ADC offset AC (1:20)" , img: "./img/250/RP_250_GND.png", hint:"Please connect IN1 and IN2 to GND.", use_max: true}, 
+        21   : {name: "Enable DAC", span: true},
+        22   : {name: "ADC gain AC   (1:20)" , img: "./img/250/RP_250_GEN.png", hint:"Please connect OUT1 to IN1 and OUT2 to IN2.", use_max: true},
+        23   : {name: "Calibration complete", span: true, end: true}       
     };
 
     OBJ.amModel = undefined;
@@ -265,24 +275,56 @@
 
     OBJ.amSetCH1Avg = function(_value){
         if (OBJ.amCheckEmptyVariables()){
-            var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
-            var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
-            if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest){
-                if (element_b != undefined) element_b.innerText = _value + " V";
-            }else{
-                if (element_a != undefined) element_a.innerText = _value + " V";
+            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest){
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                }else{
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
             }
         }
     }
 
     OBJ.amSetCH2Avg = function(_value){
         if (OBJ.amCheckEmptyVariables()){
-            var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
-            var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
-            if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest){
-                if (element_b != undefined) element_b.innerText = _value + " V";
-            }else{
-                if (element_a != undefined) element_a.innerText = _value + " V";
+            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest){
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                }else{
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
+            }
+        }
+    }
+
+    OBJ.amSetCH1Max = function(_value){
+        if (OBJ.amCheckEmptyVariables()){
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest){
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                }else{
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
+            }
+        }
+    }
+
+    OBJ.amSetCH2Max = function(_value){
+        if (OBJ.amCheckEmptyVariables()){
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest){
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                }else{
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
             }
         }
     }
