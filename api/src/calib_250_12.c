@@ -154,12 +154,12 @@ void calib_SetToZero() {
     calib.osc_ch1_off_20_dc = 0;
     calib.osc_ch2_off_20_dc = 0;
 
-    calib.gen_ch1_g_1  =  calib.gen_ch1_g_5  = cmn_CalibFullScaleFromVoltage( 1 );
-    calib.gen_ch2_g_1  =  calib.gen_ch2_g_5  = cmn_CalibFullScaleFromVoltage( 1 );
-    calib.osc_ch1_g_20_ac = calib.osc_ch1_g_20_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
-    calib.osc_ch1_g_1_ac = calib.osc_ch1_g_1_dc = cmn_CalibFullScaleFromVoltage( 1.0 );
-    calib.osc_ch2_g_20_ac = calib.osc_ch2_g_20_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
-    calib.osc_ch2_g_1_ac = calib.osc_ch2_g_1_dc = cmn_CalibFullScaleFromVoltage( 1.0 );
+    calib.gen_ch1_g_1  =  calib.gen_ch1_g_5  = cmn_CalibFullScaleFromVoltage( 2 );
+    calib.gen_ch2_g_1  =  calib.gen_ch2_g_5  = cmn_CalibFullScaleFromVoltage( 2 );
+    calib.osc_ch1_g_20_ac = calib.osc_ch1_g_20_dc = cmn_CalibFullScaleFromVoltage( 1.0 );
+    calib.osc_ch1_g_1_ac = calib.osc_ch1_g_1_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
+    calib.osc_ch2_g_20_ac = calib.osc_ch2_g_20_dc = cmn_CalibFullScaleFromVoltage( 1.0 );
+    calib.osc_ch2_g_1_ac = calib.osc_ch2_g_1_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
 }
 
 
