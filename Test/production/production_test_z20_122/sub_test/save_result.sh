@@ -97,13 +97,13 @@ echo
 #echo $URL1
 #curl $URL1
 CURL_RSP="$(curl $URL)"
-if [ `echo $CURL_RSP | grep -c "Success" ` -gt 0 ]
+if [ `echo $CURL_RSP | grep -c "Stored successfully" ` -gt 0 ]
 then
 echo
 echo -n "      Test record was successfully added to production database. "
 print_ok
 echo
-elif [ `echo $CURL_RSP | grep -c "FAILED" ` -gt 0 ]
+elif [ `echo $CURL_RSP | grep -c "This entry already exists in DB" ` -gt 0 ]
 then
 echo
 echo

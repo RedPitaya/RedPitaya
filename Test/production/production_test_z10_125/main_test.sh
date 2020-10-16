@@ -264,7 +264,7 @@ fi
 # ADCs and DACs CALIBRATION
 ###############################################################################
 CheckTestPassForCalib
-if [[ $G_CALIBRATION == 1 ]] && [[ $STATUS == 1 ]]
+if [[ $G_CALIBRATION == 1 ]] && [[ $STATUS == 0 ]]
 then
     ./sub_test/calibration.sh
     if [[ "$?" = '0' ]]

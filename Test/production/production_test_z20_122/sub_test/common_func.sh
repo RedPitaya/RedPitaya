@@ -220,13 +220,13 @@ L_CUR_VALUE=$(( 0x80 | $L_CUR_VALUE ))
 }
 
 function InitBitState(){
-    echo "0x0000" > $TEST_TMP_DIR/bit_value
+    echo "0x000" > $TEST_TMP_DIR/bit_value
 }
 
 function SetBitState(){
     local VALUE=$(cat $TEST_TMP_DIR/bit_value)
     VALUE=$(( $VALUE | $1 ))
-    echo  $(printf "0x%04X\n" $VALUE) > $TEST_TMP_DIR/bit_value
+    echo  $(printf "0x%03X\n" $VALUE) > $TEST_TMP_DIR/bit_value
 }
 
 function SetBackLog(){

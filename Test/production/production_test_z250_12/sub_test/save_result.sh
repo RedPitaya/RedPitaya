@@ -103,7 +103,7 @@ echo
 echo -n "      Test record was successfully added to production database. "
 print_ok
 echo
-elif [ `echo $CURL_RSP | grep -c "FAILED" ` -gt 0 ]
+elif [ `echo $CURL_RSP | grep -c "This entry already exists in DB" ` -gt 0 ]
 then
 echo
 echo
