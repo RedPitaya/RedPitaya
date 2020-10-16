@@ -238,7 +238,7 @@ fi
 # SFDR test 
 ###############################################################################
 CheckTestPassForSFDR
-if [[ $G_SFDR_TEST == 1 ]] && [[ $STATUS == 1 ]]
+if [[ $G_SFDR_TEST == 1 ]] && [[ $STATUS == 0 ]]
 then
     ./sub_test/sfdr.sh
     if [[ "$?" = '0' ]]

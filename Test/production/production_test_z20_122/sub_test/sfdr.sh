@@ -115,7 +115,7 @@ test_sfdr() {
     local CH0_LEVEL=$(bc -l <<< "${CH0_PEAK_VALUE} - ${SFDR_LEVEL}")
     local CH1_LEVEL=$(bc -l <<< "${CH1_PEAK_VALUE} - ${SFDR_LEVEL}")
 
-    VAR=$(spectrum_sfdr_test.py \
+    VAR=$(./sub_test/spectrum_sfdr_test.py \
         --ch0-freq-min "${CH0_PEAK_FREQ_MIN}" \
         --ch0-freq-max "${CH0_PEAK_FREQ_MAX}" \
         --ch0-level "${CH0_LEVEL}" \
