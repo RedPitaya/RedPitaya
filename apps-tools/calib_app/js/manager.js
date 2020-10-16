@@ -30,18 +30,17 @@
     OBJ.setADCMode = function(_visible) {
         if (OBJ.model !== undefined) {
             if (OBJ.model === "Z10") {
-                if (_visible){
-                    $("#adc_125_mode_body").show();
-                }else{
-                    $("#adc_125_mode_body").hide();
-                }
+                
             }
+            
             if (OBJ.model === "Z20_250_12") {
-                if (_visible){
-                    $("#adc_250_mode_body").show();
-                }else{
-                    $("#adc_250_mode_body").hide();
-                }
+               
+            }
+
+            if (_visible){
+                $("#adc_mode_body").show();
+            }else{
+                $("#adc_mode_body").hide();
             }
         }
     }
@@ -73,6 +72,7 @@
     }
 
     OBJ.showMainMenu = function(){
+        OBJ.setADCMode(false);
         OBJ.setAutoMode(false);
         OBJ.setMainMenu(true);
     }
@@ -93,7 +93,8 @@ $(function() {
         SM.param_callbacks["ch2_avg"] = OBJ.setCH2Awg;  
         SM.param_callbacks["ch1_max"] = OBJ.setCH1Max;
         SM.param_callbacks["ch2_max"] = OBJ.setCH2Max;  
-        
+        SM.param_callbacks["ch1_min"] = undefined;
+        SM.param_callbacks["ch2_min"] = undefined; 
         OBJ.setMainMenu(false);
         OBJ.setAutoMode(true);
         OBJ.amClearTable();
@@ -101,7 +102,17 @@ $(function() {
     });
 
     $('#B_ADC_MODE').on('click', function(ev) {
+        SM.param_callbacks["ch1_avg"] = OBJ.adcSetCH1Avg;
+        SM.param_callbacks["ch2_avg"] = OBJ.adcSetCH2Avg;  
+        SM.param_callbacks["ch1_max"] = OBJ.adcSetCH1Max;
+        SM.param_callbacks["ch2_max"] = OBJ.adcSetCH2Max;  
+        SM.param_callbacks["ch1_min"] = OBJ.adcSetCH1Min;
+        SM.param_callbacks["ch2_min"] = OBJ.adcSetCH2Min;  
+        OBJ.adcInitData();
+        OBJ.adcInitPlotCH1(true);
+        OBJ.adcInitPlotCH2(true);
         OBJ.setMainMenu(false);
+        OBJ.setADCMode(true);
     });
 
     $('#B_DAC_MODE').on('click', function(ev) {
@@ -113,10 +124,23 @@ $(function() {
         SM.param_callbacks["ch2_avg"] = undefined;  
         SM.param_callbacks["ch1_max"] = undefined;
         SM.param_callbacks["ch2_max"] = undefined; 
+        SM.param_callbacks["ch1_min"] = undefined;
+        SM.param_callbacks["ch2_min"] = undefined; 
         OBJ.showMainMenu();
         SM.parametersCache["SS_NEXTSTEP"] = { value: -2 };
         SM.parametersCache["ref_volt"] = {value:0}; // SS_NEXTSTEP work only in pair ref_volt
         SM.sendParameters();
+    });
+
+    $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
+        SM.param_callbacks["ch1_avg"] = undefined;
+        SM.param_callbacks["ch2_avg"] = undefined;  
+        SM.param_callbacks["ch1_max"] = undefined;
+        SM.param_callbacks["ch2_max"] = undefined; 
+        SM.param_callbacks["ch1_min"] = undefined;
+        SM.param_callbacks["ch2_min"] = undefined; 
+        OBJ.adcInitData();
+        OBJ.showMainMenu();
     });
 
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.setModel;

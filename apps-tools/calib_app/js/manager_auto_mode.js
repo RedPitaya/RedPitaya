@@ -349,7 +349,7 @@
 
 // Page onload event handler
 $(function() {
-    SM.param_callbacks["RP_MODEL_STR"] = OBJ.amSetModel;
+    
     SM.param_callbacks["SS_STATE"] = OBJ.amGetStatus;     
     SM.param_callbacks["ch1_calib_pass"] = OBJ.amSetCalibValueCh1;     
     SM.param_callbacks["ch2_calib_pass"] = OBJ.amSetCalibValueCh2;     
