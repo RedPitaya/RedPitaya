@@ -1,4 +1,5 @@
 #include <fstream>
+#include <ctime>
 #include "calib.h"
 
 
@@ -180,34 +181,6 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
 }
 #endif
 
-// typedef struct {
-//     uint32_t gen_ch1_g_1;
-//     uint32_t gen_ch2_g_1;
-//     int32_t  gen_ch1_off_1;
-//     int32_t  gen_ch2_off_1;
-//     uint32_t gen_ch1_g_5;
-//     uint32_t gen_ch2_g_5;
-//     int32_t  gen_ch1_off_5;
-//     int32_t  gen_ch2_off_5;
-//     uint32_t osc_ch1_g_1_ac;
-//     uint32_t osc_ch2_g_1_ac;
-//     int32_t  osc_ch1_off_1_ac;
-//     int32_t  osc_ch2_off_1_ac;
-//     uint32_t osc_ch1_g_1_dc; // HIGH
-//     uint32_t osc_ch2_g_1_dc;
-//     int32_t  osc_ch1_off_1_dc;
-//     int32_t  osc_ch2_off_1_dc;
-//     uint32_t osc_ch1_g_20_ac; // LOW
-//     uint32_t osc_ch2_g_20_ac;
-//     int32_t  osc_ch1_off_20_ac;
-//     int32_t  osc_ch2_off_20_ac;
-//     uint32_t osc_ch1_g_20_dc;
-//     uint32_t osc_ch2_g_20_dc;
-//     int32_t  osc_ch1_off_20_dc;
-//     int32_t  osc_ch2_off_20_dc;
-// } rp_calib_params_t;
-
-#define Z20_250_12
 #ifdef Z20_250_12
 int CCalib::calib_board(uint16_t _step,float _refdc){
     if (m_current_step == _step) return 0;

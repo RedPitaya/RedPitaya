@@ -235,3 +235,38 @@ void COscilloscope::setGenGainx5(){
     rp_GenSetGainOut(RP_CH_2,RP_GAIN_5X);
 }
 #endif
+
+void COscilloscope::resetGen(){
+    enableGen(RP_CH_1,false);
+    enableGen(RP_CH_2,false);
+    setFreq(RP_CH_1,1000);
+    setFreq(RP_CH_2,1000);
+    setAmp(RP_CH_1,0.9);
+    setAmp(RP_CH_2,0.9);
+    setOffset(RP_CH_1,0);
+    setOffset(RP_CH_2,0);
+}
+
+void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){
+    if (_enable){
+        rp_GenOutEnable(_ch);
+    }else{
+        rp_GenOutDisable(_ch);
+    }
+}
+
+int COscilloscope::setFreq(rp_channel_t _ch,int _freq){
+    rp_GenFreq(_ch,_freq);
+}
+
+int COscilloscope::setAmp(rp_channel_t _ch,float _ampl){
+    rp_GenAmp(_ch,_ampl);
+}
+
+int COscilloscope::setOffset(rp_channel_t _ch,float _offset){
+    rp_GenOffset(_ch,_offset);
+}
+
+int COscilloscope::setGenType(rp_channel_t _ch,int _type){
+    rp_GenWaveform(_ch, (rp_waveform_t)_type);
+}

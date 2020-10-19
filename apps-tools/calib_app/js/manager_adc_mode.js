@@ -79,6 +79,12 @@ $(function() {
         OBJ.adcSig2ArrayMAX = [];
     }
 
+    OBJ.adcInitRequest = function() {
+        SM.parametersCache["calib_sig"] = { value: 1 };
+        SM.sendParameters();
+        $('.flipswitch').prop('checked', false);
+    }
+
 
     OBJ.prepareDataCH1 = function() {
         var ar_avg = OBJ.adcSig1ArrayAVG.slice(); 
@@ -331,6 +337,139 @@ $(function() {
         }   
     };
 
+    OBJ.amSetCh1GainADC = function(_value){
+        $("#CH1_GAIN").val(_value.value);
+    }
+
+    OBJ.amSetCh2GainADC = function(_value){
+        $("#CH2_GAIN").val(_value.value);
+    }
+
+    OBJ.amSetCh1OffADC = function(_value){
+        $("#CH1_OFFSET").val(_value.value);
+    }
+
+    OBJ.amSetCh2OffADC = function(_value){
+        $("#CH2_OFFSET").val(_value.value);
+    }
+
+    OBJ.amSetCh1GainDAC = function(_value){
+        $("#CH1_DAC_GAIN").val(_value.value);
+    }
+
+    OBJ.amSetCh2GainDAC = function(_value){
+        $("#CH2_DAC_GAIN").val(_value.value);
+    }
+
+    OBJ.amSetCh1OffDAC = function(_value){
+        $("#CH1_DAC_OFFSET").val(_value.value);
+    }
+
+    OBJ.amSetCh2OffDAC = function(_value){
+        $("#CH2_DAC_OFFSET").val(_value.value);
+    }
+
+    OBJ.amSetMode = function(_mode,_state){
+        if (_mode == "dac_gain"){
+            SM.parametersCache["gen_gain"] = { value: _state }; 
+            SM.sendParameters2("gen_gain");
+            setTimeout(OBJ.adcInitData,1000);
+        }
+        if (_mode == "ch1_dac_enable"){
+            SM.parametersCache["gen1_enable"] = { value: _state };
+            SM.sendParameters2("gen1_enable");
+            setTimeout(OBJ.adcInitData,1000);
+        }
+        if (_mode == "ch2_dac_enable"){
+            SM.parametersCache["gen2_enable"] = { value: _state };
+            SM.sendParameters2("gen2_enable");
+            setTimeout(OBJ.adcInitData,1000);
+        }
+        if (_mode == "HW_LV_MODE"){
+            SM.parametersCache["hv_lv_mode"] = { value: _state };
+            SM.sendParameters2("hv_lv_mode");
+            setTimeout(OBJ.adcInitData,1000);
+        }
+        if (_mode == "AC_DC_MODE"){
+            SM.parametersCache["ac_dc_mode"] = { value: _state };
+            SM.sendParameters2("ac_dc_mode");
+            setTimeout(OBJ.adcInitData,1000);
+        }
+    }
+
+    OBJ.amSetNewCalib = function(_mode , _new_val){
+        if (_mode == "CH1_ADC_OFF"){
+            SM.parametersCache["ch1_off_adc_new"] = { value: parseInt($("#CH1_OFFSET").val()) + _new_val }; 
+            SM.sendParameters2("ch1_off_adc_new");
+        }
+
+        if (_mode == "CH2_ADC_OFF"){
+            SM.parametersCache["ch2_off_adc_new"] = { value: parseInt($("#CH2_OFFSET").val()) + _new_val }; 
+            SM.sendParameters2("ch2_off_adc_new");
+        }
+
+        if (_mode == "CH1_ADC_GAIN"){
+            SM.parametersCache["ch1_gain_adc_new"] = { value: parseInt($("#CH1_GAIN").val()) + _new_val }; 
+            SM.sendParameters2("ch1_gain_adc_new");
+        }
+
+        if (_mode == "CH2_ADC_GAIN"){
+            SM.parametersCache["ch2_gain_adc_new"] = { value: parseInt($("#CH2_GAIN").val()) + _new_val }; 
+            SM.sendParameters2("ch2_gain_adc_new");
+        }
+
+        if (_mode == "CH1_DAC_OFF"){
+            SM.parametersCache["ch1_off_dac_new"] = { value: parseInt($("#CH1_DAC_OFFSET").val()) + _new_val }; 
+            SM.sendParameters2("ch1_off_dac_new");
+        }
+
+        if (_mode == "CH2_DAC_OFF"){
+            SM.parametersCache["ch2_off_dac_new"] = { value: parseInt($("#CH2_DAC_OFFSET").val()) + _new_val }; 
+            SM.sendParameters2("ch2_off_dac_new");
+        }
+
+        if (_mode == "CH1_DAC_GAIN"){
+            SM.parametersCache["ch1_gain_dac_new"] = { value: parseInt($("#CH1_DAC_GAIN").val()) + _new_val }; 
+            SM.sendParameters2("ch1_gain_dac_new");
+        }
+
+        if (_mode == "CH2_DAC_GAIN"){
+            SM.parametersCache["ch2_gain_dac_new"] = { value: parseInt($("#CH2_DAC_GAIN").val()) + _new_val }; 
+            SM.sendParameters2("ch2_gain_dac_new");
+        }
+    }
+
+    OBJ.amSetCh1GenType = function(_value){
+        $("#CH1_DAC_TYPE").val(_value.value);
+    }
+
+    OBJ.amSetCh2GenType = function(_value){
+        $("#CH2_DAC_TYPE").val(_value.value);
+    }
+
+    OBJ.amSetCh1GenFreq = function(_value){
+        $("#CH1_DAC_FREQ").val(_value.value);
+    }
+
+    OBJ.amSetCh2GenFreq = function(_value){
+        $("#CH2_DAC_FREQ").val(_value.value);
+    }
+
+    OBJ.amSetCh1GenAmp = function(_value){
+        $("#CH1_DAC_AMPL").val(_value.value);
+    }
+
+    OBJ.amSetCh2GenAmp = function(_value){
+        $("#CH2_DAC_AMPL").val(_value.value);
+    }
+
+    OBJ.amSetCh1GenOffset = function(_value){
+        $("#CH1_DAC_OFF").val(_value.value);
+    }
+
+    OBJ.amSetCh2GenOffset = function(_value){
+        $("#CH2_DAC_OFF").val(_value.value);
+    }
 
 }(window.OBJ = window.OBJ || {}, jQuery));
 
@@ -341,7 +480,95 @@ $(function() {
     setInterval(OBJ.drawSignalsCH1,100);
     setInterval(OBJ.drawSignalsCH2,100);
 
-    $('#switch').change(function() {
+    $('.flipswitch').change(function() {
         $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
+        OBJ.amSetMode($(this).attr('id'),$(this).is(':checked'));
+        
     }).trigger('change');
+
+
+    SM.param_callbacks["gen1_type"]   = OBJ.amSetCh1GenType;   
+    SM.param_callbacks["gen1_offset"] = OBJ.amSetCh1GenOffset;   
+    SM.param_callbacks["gen1_amp"]    = OBJ.amSetCh1GenAmp;  
+    SM.param_callbacks["gen1_freq"]   = OBJ.amSetCh1GenFreq;
+
+    SM.param_callbacks["gen2_type"]   = OBJ.amSetCh2GenType;   
+    SM.param_callbacks["gen2_offset"] = OBJ.amSetCh2GenOffset;   
+    SM.param_callbacks["gen2_amp"]    = OBJ.amSetCh2GenAmp;  
+    SM.param_callbacks["gen2_freq"]   = OBJ.amSetCh2GenFreq;
+
+    SM.param_callbacks["ch1_gain_adc"] = OBJ.amSetCh1GainADC;     
+    SM.param_callbacks["ch2_gain_adc"] = OBJ.amSetCh2GainADC;
+    SM.param_callbacks["ch1_off_adc"] = OBJ.amSetCh1OffADC;     
+    SM.param_callbacks["ch2_off_adc"] = OBJ.amSetCh2OffADC;
+    
+    SM.param_callbacks["ch1_gain_dac"] = OBJ.amSetCh1GainDAC;     
+    SM.param_callbacks["ch2_gain_dac"] = OBJ.amSetCh2GainDAC;
+    SM.param_callbacks["ch1_off_dac"] = OBJ.amSetCh1OffDAC;     
+    SM.param_callbacks["ch2_off_dac"] = OBJ.amSetCh2OffDAC;
+    
+    $('#B_CH1_SUB_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_ADC_OFF",parseInt($("#B_CH1_VALUE_OFF").val()) * -1);
+    });
+
+    $('#B_CH1_ADD_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_ADC_OFF",parseInt($("#B_CH1_VALUE_OFF").val()));
+    });
+
+    $('#B_CH2_SUB_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_ADC_OFF",parseInt($("#B_CH2_VALUE_OFF").val() * -1));
+    });
+
+    $('#B_CH2_ADD_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_ADC_OFF",parseInt($("#B_CH2_VALUE_OFF").val()));
+    });
+
+    $('#B_CH1_SUB_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_ADC_GAIN",parseInt($("#B_CH1_VALUE_GAIN").val()) * -1);
+    });
+
+    $('#B_CH1_ADD_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_ADC_GAIN",parseInt($("#B_CH1_VALUE_GAIN").val()));
+    });
+
+    $('#B_CH2_SUB_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_ADC_GAIN",parseInt($("#B_CH2_VALUE_GAIN").val() * -1));
+    });
+
+    $('#B_CH2_ADD_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_ADC_GAIN",parseInt($("#B_CH2_VALUE_GAIN").val()));
+    });
+
+    $('#B_CH1_DAC_SUB_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_DAC_OFF",parseInt($("#B_CH1_DAC_VALUE_OFF").val()) * -1);
+    });
+
+    $('#B_CH1_DAC_ADD_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_DAC_OFF",parseInt($("#B_CH1_DAC_VALUE_OFF").val()));
+    });
+
+    $('#B_CH2_DAC_SUB_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_DAC_OFF",parseInt($("#B_CH2_DAC_VALUE_OFF").val() * -1));
+    });
+
+    $('#B_CH2_DAC_ADD_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_DAC_OFF",parseInt($("#B_CH2_DAC_VALUE_OFF").val()));
+    });
+
+    $('#B_CH1_DAC_SUB_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_DAC_GAIN",parseInt($("#B_CH1_DAC_VALUE_GAIN").val()) * -1);
+    });
+
+    $('#B_CH1_DAC_ADD_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH1_DAC_GAIN",parseInt($("#B_CH1_DAC_VALUE_GAIN").val()));
+    });
+
+    $('#B_CH2_DAC_SUB_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_DAC_GAIN",parseInt($("#B_CH2_DAC_VALUE_GAIN").val() * -1));
+    });
+
+    $('#B_CH2_DAC_ADD_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH2_DAC_GAIN",parseInt($("#B_CH2_DAC_VALUE_GAIN").val()));
+    });
+  
 });

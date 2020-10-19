@@ -10,6 +10,7 @@
 (function(OBJ, $, undefined) {
 
     OBJ.model = undefined;
+    OBJ.maxGenFreq = 62500000;
 
     OBJ.setMainMenu = function(_visible) {
         if (_visible) {
@@ -78,9 +79,13 @@
     }
 
     OBJ.setModel = function(_value){
-        if (OBJ.model === undefined) OBJ.model = _value.value;
+        if (OBJ.model === undefined) {
+            OBJ.model = _value.value;
+        }
         OBJ.amSetModel(_value);
     }
+
+
 
 }(window.OBJ = window.OBJ || {}, jQuery));
 
@@ -109,6 +114,7 @@ $(function() {
         SM.param_callbacks["ch1_min"] = OBJ.adcSetCH1Min;
         SM.param_callbacks["ch2_min"] = OBJ.adcSetCH2Min;  
         OBJ.adcInitData();
+        OBJ.adcInitRequest();
         OBJ.adcInitPlotCH1(true);
         OBJ.adcInitPlotCH2(true);
         OBJ.setMainMenu(false);
@@ -139,9 +145,10 @@ $(function() {
         SM.param_callbacks["ch2_max"] = undefined; 
         SM.param_callbacks["ch1_min"] = undefined;
         SM.param_callbacks["ch2_min"] = undefined; 
-        OBJ.adcInitData();
         OBJ.showMainMenu();
     });
+
+   
 
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.setModel;
     

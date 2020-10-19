@@ -5,14 +5,13 @@ RM=rm
 
 PROJECT_ROOT=../..
 
-CXXSOURCES=main.cpp acq.cpp calib.cpp
+CXXSOURCES=main.cpp acq.cpp calib.cpp calib_man.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
 INCLUDE += -I$(INSTALL_DIR)/include/apiApp
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
-
 
 LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk

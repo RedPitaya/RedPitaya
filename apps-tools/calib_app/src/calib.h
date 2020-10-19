@@ -20,10 +20,11 @@ class CCalib {
         CCalib(CCalib &&) = delete;
         ~CCalib();
         
-        int resetCalibToZero();
-        int calib(uint16_t _step,float _refdc);
-   DataPass getCalibData();
-       void restoreCalib();
+         int resetCalibToZero();
+         int calib(uint16_t _step,float _refdc);
+    DataPass getCalibData();
+        void restoreCalib();
+  
 
     private:
                     int calib_board(uint16_t _step,float _refdc);

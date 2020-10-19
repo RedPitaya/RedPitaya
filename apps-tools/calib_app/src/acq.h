@@ -50,6 +50,13 @@ class COscilloscope {
         void setGEN0_5();
         void setGEN0_5_SINE();
 
+        void enableGen(rp_channel_t _ch,bool _enable);
+        void resetGen();
+         int setFreq(rp_channel_t _ch,int _freq);
+         int setAmp(rp_channel_t _ch,float _ampl);
+         int setOffset(rp_channel_t _ch,float _offset);
+         int setGenType(rp_channel_t _ch,int _type);
+         
     private:
         void oscWorker();
         void acquire();

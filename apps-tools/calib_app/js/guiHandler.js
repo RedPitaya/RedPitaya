@@ -37,28 +37,20 @@ $.fn.fI = function(e) { //Flash Item
     return this
 }
 
-function ValidateIPaddress(ipaddress) {
-    if (ipaddress == '')
+
+function Validate(x) {
+    if (x == '')
         return false;
-    if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {
+    if (/^(-{0,1}[0-9]{1,2}\.{0,1}[0-9]*)$/.test(x)) {
         return (true);
     }
     return (false);
 }
 
-function Validate(port) {
-    if (port == '')
+function ValidateInt(x) {
+    if (x == '')
         return false;
-    if (/^([0-9]{1,2}\.{0,1}[0-9]*)$/.test(port)) {
-        return (true);
-    }
-    return (false);
-}
-
-function ValidateSamples(port) {
-    if (port == '')
-        return false;
-    if (/^([0-9]{1,15}?)$/.test(port)) {
+    if (/^(\-{0,1}[0-9]{1,15}?)$/.test(x)) {
         return (true);
     }
     return (false);
@@ -84,12 +76,226 @@ var refVoltChange = function(event) {
     }
 }
 
+var checkIntParameters = function(_id){
+    if (ValidateInt($(_id).val()) == false) {
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    if ($(_id).val() > 2147483647){
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    else if ($(_id).val() < -2147483647){
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    return -1;
+}
 
+var checkUIntParameters = function(_id){
+    if (ValidateInt($(_id).val()) == false) {
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    if ($(_id).val() > 2147483647){
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    else if ($(_id).val() < 0){
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    return -1;
+}
+
+var checkIntParameters2 = function(_id,_min, _max){
+    if (Validate($(_id).val()) == false) {
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    if ($(_id).val() > _max){
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    else if ($(_id).val() < _min){
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    return -1;
+}
+
+var checkFloatParameters2 = function(_id,_min, _max){
+    if (Validate($(_id).val()) == false) {
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    if ($(_id).val() > _max){
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    else if ($(_id).val() < _min){
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    return -1;
+}
+
+var ch1GainChange = function(event) {
+    if (checkUIntParameters("#CH1_GAIN")!==0){
+        SM.parametersCache["ch1_gain_adc_new"] = { value: $("#CH1_GAIN").val() }; 
+        SM.sendParameters2("ch1_gain_adc_new");
+    }
+}
+
+var ch2GainChange = function(event) {
+    if (checkUIntParameters("#CH2_GAIN")!==0){
+        SM.parametersCache["ch2_gain_adc_new"] = { value: $("#CH2_GAIN").val() }; 
+        SM.sendParameters2("ch2_gain_adc_new");
+    }
+}
+
+var ch1OffChange = function(event) {
+    if (checkIntParameters("#CH1_OFFSET")!==0){
+        SM.parametersCache["ch1_off_adc_new"] = { value: $("#CH1_OFFSET").val() }; 
+        SM.sendParameters2("ch1_off_adc_new");
+    }
+}
+
+var ch2OffChange = function(event) {
+    if (checkIntParameters("#CH2_OFFSET")!==0){
+        SM.parametersCache["ch2_off_adc_new"] = { value: $("#CH2_OFFSET").val() }; 
+        SM.sendParameters2("ch2_off_adc_new");
+    }
+}
+
+var ch1DacGainChange = function(event) {
+    if (checkUIntParameters("#CH1_DAC_GAIN")!==0){
+        SM.parametersCache["ch1_gain_dac_new"] = { value: $("#CH1_DAC_GAIN").val() }; 
+        SM.sendParameters2("ch1_gain_dac_new");
+    }
+}
+
+var ch2DacGainChange = function(event) {
+    if (checkUIntParameters("#CH2_DAC_GAIN")!==0){
+        SM.parametersCache["ch2_gain_dac_new"] = { value: $("#CH2_DAC_GAIN").val() }; 
+        SM.sendParameters2("ch2_gain_dac_new");
+    }
+}
+
+var ch1DacOffChange = function(event) {
+    if (checkIntParameters("#CH1_DAC_OFFSET")!==0){
+        SM.parametersCache["ch1_off_dac_new"] = { value: $("#CH1_DAC_OFFSET").val() }; 
+        SM.sendParameters2("ch1_off_dac_new");
+    }
+}
+
+var ch2DacOffChange = function(event) {
+    if (checkIntParameters("#CH2_DAC_OFFSET")!==0){
+        SM.parametersCache["ch2_off_dac_new"] = { value: $("#CH2_DAC_OFFSET").val() }; 
+        SM.sendParameters2("ch2_off_dac_new");
+    }
+}
+
+var gen1TypeChange = function(event) {
+    if (checkIntParameters2("#CH1_DAC_TYPE",0,8)!==0){
+        SM.parametersCache["gen1_type"] = { value: $("#CH1_DAC_TYPE").val() }; 
+        SM.sendParameters2("gen1_type");
+    }
+}
+
+var gen1FreqChange = function(event) {
+    if (checkIntParameters2("#CH1_DAC_FREQ",1,OBJ.maxGenFreq)!==0){
+        SM.parametersCache["gen1_freq"] = { value: $("#CH1_DAC_FREQ").val() }; 
+        SM.sendParameters2("gen1_freq");
+    }
+}
+
+var gen1AmpChange = function(event) {
+    if (checkFloatParameters2("#CH1_DAC_AMPL",0.001,1)!==0){
+        SM.parametersCache["gen1_amp"] = { value: $("#CH1_DAC_AMPL").val() }; 
+        SM.sendParameters2("gen1_amp");
+    }
+}
+
+var gen1OffsetChange = function(event) {
+    if (checkFloatParameters2("#CH1_DAC_OFF",-1,1)!==0){
+        SM.parametersCache["gen1_offset"] = { value: $("#CH1_DAC_OFF").val() }; 
+        SM.sendParameters2("gen1_offset");
+    }
+}
+
+
+var gen2TypeChange = function(event) {
+    if (checkIntParameters2("#CH2_DAC_TYPE",0,8)!==0){
+        SM.parametersCache["gen2_type"] = { value: $("#CH2_DAC_TYPE").val() }; 
+        SM.sendParameters2("gen2_type");
+    }
+}
+
+var gen2FreqChange = function(event) {
+    if (checkIntParameters2("#CH2_DAC_FREQ",1,OBJ.maxGenFreq)!==0){
+        SM.parametersCache["gen2_freq"] = { value: $("#CH2_DAC_FREQ").val() }; 
+        SM.sendParameters2("gen2_freq");
+    }
+}
+
+var gen2AmpChange = function(event) {
+    if (checkFloatParameters2("#CH2_DAC_AMPL",0.001,1)!==0){
+        SM.parametersCache["gen2_amp"] = { value: $("#CH2_DAC_AMPL").val() }; 
+        SM.sendParameters2("gen2_amp");
+    }
+}
+
+var gen2OffsetChange = function(event) {
+    if (checkFloatParameters2("#CH2_DAC_OFF",-1,1)!==0){
+        SM.parametersCache["gen2_offset"] = { value: $("#CH2_DAC_OFF").val() }; 
+        SM.sendParameters2("gen2_offset");
+    }
+}
 
 //Create callback
 var changeCallbacks = {}
 
 changeCallbacks["SS_REF_VOLT"] = refVoltChange;
+changeCallbacks["CH1_GAIN"]   = ch1GainChange;
+changeCallbacks["CH2_GAIN"]   = ch2GainChange;
+changeCallbacks["CH1_OFFSET"] = ch1OffChange;
+changeCallbacks["CH2_OFFSET"] = ch2OffChange;
+
+changeCallbacks["CH1_DAC_GAIN"]   = ch1DacGainChange;
+changeCallbacks["CH2_DAC_GAIN"]   = ch2DacGainChange;
+changeCallbacks["CH1_DAC_OFFSET"] = ch1DacOffChange;
+changeCallbacks["CH2_DAC_OFFSET"] = ch2DacOffChange;
+
+
+changeCallbacks["CH1_DAC_TYPE"] = gen1TypeChange;
+changeCallbacks["CH1_DAC_FREQ"] = gen1FreqChange;
+changeCallbacks["CH1_DAC_AMPL"] = gen1AmpChange;
+changeCallbacks["CH1_DAC_OFF"]  = gen1OffsetChange;
+
+changeCallbacks["CH2_DAC_TYPE"] = gen2TypeChange;
+changeCallbacks["CH2_DAC_FREQ"] = gen2FreqChange;
+changeCallbacks["CH2_DAC_AMPL"] = gen2AmpChange;
+changeCallbacks["CH2_DAC_OFF"]  = gen2OffsetChange;
+
 
 var clickCallbacks = {}
 
