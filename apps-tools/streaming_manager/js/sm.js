@@ -453,10 +453,6 @@ $(function() {
 
     $('#CLEAR_FILES').click(SM.DeleteFiles);
 
-    // Init help
-    Help.init(helpListSM);
-    Help.setState("idle");
-
     SM.GetIP();
     // Everything prepared, start application
     SM.startApp();
