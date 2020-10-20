@@ -339,8 +339,17 @@ void UpdateParams(void)
 				gen2_amp.SendValue(0.9);
 				sendCalibInManualMode(true);
 			}
+
 			if (sig == 2){
 				sendCalibInManualMode(true);
+			}
+
+			if (sig == 3){
+				g_calib->resetCalibToZero();
+			}
+
+			if (sig == 4){
+				g_calib->resetCalibToFactory();
 			}
 		}
 

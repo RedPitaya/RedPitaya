@@ -161,7 +161,7 @@
                             </div>
                         </div>
                         <div align="center">
-                            <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid #999;display: inline-block;">
+                            <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid #999;display: inline-block;margin-top: 10px;">
                                 <div class="container_inline">
                                     <label style="font-size: 18pt; color: lightgray;">ADC</label>
                                 </div>
@@ -388,7 +388,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid #999;display: inline-block;">
+                            <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid #999;display: inline-block;vertical-align: bottom;margin-top: 10px;">
                                 <div class="container_inline">
                                     <label style="font-size: 18pt; color: lightgray;">DAC</label>
                                 </div>
@@ -628,8 +628,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="container_inline">
-                                    <div id="manual_x1_x5_mode" style="
+                                <div class="container_inline"  id="manual_x1_x5_mode">
+                                    <div  style="
                                             width: 120px;
                                             height: 40px;
                                             margin: 5px;">
@@ -697,11 +697,33 @@
                     </div>
                     <div class="modal-footer">
                         <div class="bazaar-link" style="float: left; width: 45%;">
-                            <a href="#" style="border: 1px solid; width: 100%" id="am_ok_btn" data-dismiss="modal" class="btn">Ok</a>
+                            <a style="border: 1px solid; width: 100%" id="am_ok_btn" data-dismiss="modal" class="btn">Ok</a>
                         </div>
 
                         <div class="bazaar-link" style="float: right; width: 45%;">
-                            <a href="#" style="border: 1px solid; width: 100%" id="am_cancel_btn" data-dismiss="modal" class="btn">Cancel</a>
+                            <a style="border: 1px solid; width: 100%" id="am_cancel_btn" data-dismiss="modal" class="btn">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="dialog_reset" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="oops_label">Calibration</h4>
+                    </div>
+                    <div class="modal-body" style="text-align: center; font-size: 18px;">
+                        <p id="dialog_reset_text">TEXT</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="bazaar-link" style="float: left; width: 45%;">
+                            <a style="border: 1px solid; width: 100%" id="reset_ok_btn" data-dismiss="modal" class="btn">Ok</a>
+                        </div>
+
+                        <div class="bazaar-link" style="float: right; width: 45%;">
+                            <a style="border: 1px solid; width: 100%" id="reset_cancel_btn" data-dismiss="modal" class="btn">Cancel</a>
                         </div>
                     </div>
                 </div>

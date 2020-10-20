@@ -395,15 +395,22 @@ APP_NETWORKMANAGER_DIR   = apps-tools/network_manager
 APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
+APP_CALIB_DIR			 = apps-tools/calib_app
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
 apps-tools: ecosystem updater network_manager scpi_manager
 
 ifeq ($(MODEL),Z20_250_12)
-apps-tools:
-else
-apps-tools: jupyter_manager streaming_manager
+apps-tools: calib_app
+endif
+
+ifeq ($(MODEL),Z10)
+apps-tools: jupyter_manager streaming_manager calib_app
+endif
+
+ifeq ($(MODEL),Z20)
+apps-tools: jupyter_manager streaming_manager 
 endif
 
 ecosystem:
@@ -422,6 +429,11 @@ streaming_manager: api $(NGINX)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+
+calib_app: api $(NGINX)
+	$(MAKE) -i -C $(APP_CALIB_DIR) clean
+	$(MAKE) -C $(APP_CALIB_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(APP_CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 
 
 network_manager: ecosystem

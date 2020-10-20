@@ -81,6 +81,10 @@
     OBJ.setModel = function(_value){
         if (OBJ.model === undefined) {
             OBJ.model = _value.value;
+            if (OBJ.model !== "Z20_250_12"){
+                $("#manual_x1_x5_mode").remove();
+                $("#manual_ac_dc_mode").remove();
+            }
         }
         OBJ.amSetModel(_value);
     }
@@ -121,8 +125,22 @@ $(function() {
         OBJ.setADCMode(true);
     });
 
-    $('#B_DAC_MODE').on('click', function(ev) {
-        OBJ.setMainMenu(false);
+    $('#B_RESET_DEFAULT').on('click', function(ev) {
+        $("#dialog_reset_text").text("Reset to default?");
+        $('#reset_ok_btn').on('click', function() { 
+            SM.parametersCache["calib_sig"] = { value: 3 };
+            SM.sendParameters();
+        });
+        $("#dialog_reset").modal('show');
+    });
+
+    $('#B_RESET_FACTORY').on('click', function(ev) {
+        $("#dialog_reset_text").text("Reset to factory calibration?");
+        $('#reset_ok_btn').on('click', function() {
+            SM.parametersCache["calib_sig"] = { value: 4 };
+            SM.sendParameters();
+        });
+        $("#dialog_reset").modal('show');
     });
 
     $('#B_CANCEL_CALIB').on('click', function(ev) {

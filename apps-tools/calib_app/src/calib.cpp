@@ -44,6 +44,10 @@ int CCalib::resetCalibToZero(){
     return rp_CalibrationReset();
 }
 
+int CCalib::resetCalibToFactory(){
+    return rp_CalibrationFactoryReset();
+}
+
 void CCalib::restoreCalib(){
     rp_CalibrationWriteParams(m_calib_parameters_old);
     rp_CalibInit();

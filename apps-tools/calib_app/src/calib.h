@@ -21,6 +21,7 @@ class CCalib {
         ~CCalib();
         
          int resetCalibToZero();
+         int resetCalibToFactory();
          int calib(uint16_t _step,float _refdc);
     DataPass getCalibData();
         void restoreCalib();
