@@ -7,6 +7,7 @@
 (function(Desktop, $) {
 
     var applications = [];
+    var sys_info_obj = undefined;
 
     var groups = [{
         name: "System",
@@ -197,12 +198,22 @@
         }
     }
 
+ 
     var showFeedBack = function() {
-        mail = "support@redpitaya.com";
-        subject = "Feedback Red Pitaya OS " + RedPitayaOS.getVersion();
-        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-        document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+        try{
+            var mail_item = document.createElement("a");
+            mail = "support@redpitaya.com";
+            subject = "Feedback Red Pitaya OS " + RedPitayaOS.getVersion();
+            var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO. DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+            body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }).replace(/[,$&]/g,'_') + "%0D%0A";
+            if (Desktop.sys_info_obj !== undefined){
+                body += "%0D%0ABoard:" + "%0D%0A" + JSON.stringify(Desktop.sys_info_obj).replace(/[,$&]/g,'_') + "%0D%0A";
+            }
+            mail_item.href = ("mailto:" + mail + "?subject=" + subject + "&body=" + body).replace(/ /g,'%20');
+            mail_item.click();
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     var overApp = function(e) {
@@ -312,10 +323,24 @@
                     } catch (error) {
                         console.error(error);
                     }
-                });
+                })
+                
 
             $('#sysinfo_dialog').modal("show");
         });
+
+        $.ajax({
+            method: "GET",
+            url: '/get_sysinfo'
+        })
+        .done(function(result) {
+            const obj = JSON.parse(result);
+            Desktop.sys_info_obj = obj;
+        })
+        .fail(function() {
+            Desktop.sys_info_obj = undefined;
+          });
+
     });
 
 })(window.Desktop = window.Desktop || {}, jQuery);
