@@ -12,7 +12,7 @@
         name: "System",
         description: "System tools for configuring your Red Pitaya",
         image: "../assets/images/system.png",
-        applications: ["updater", "wifi", "licmngr"]
+        applications: ["updater", "wifi", "licmngr" , "calib_app"]
     }, {
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
