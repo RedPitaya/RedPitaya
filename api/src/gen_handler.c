@@ -129,15 +129,15 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
 }
 
 int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
-#ifdef Z20_250_12
-    rp_gen_gain_t gain;
-        CHANNEL_ACTION(channel,
-            gain = chA_gain,
-            gain = chB_gain)
-    return generate_getAmplitude(channel, gain , amplitude);
-#else
-    return generate_getAmplitude(channel, amplitude);
-#endif
+    if (channel == RP_CH_1) {
+        *amplitude = chA_amplitude;
+        return RP_OK;
+    }
+    if (channel == RP_CH_2) {
+        *amplitude = chB_amplitude;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 int gen_setOffset(rp_channel_t channel, float offset) {
@@ -162,15 +162,15 @@ int gen_setOffset(rp_channel_t channel, float offset) {
 }
 
 int gen_getOffset(rp_channel_t channel, float *offset) {
-#ifdef Z20_250_12
-    rp_gen_gain_t gain;
-        CHANNEL_ACTION(channel,
-            gain = chA_gain,
-            gain = chB_gain)
-    return generate_getDCOffset(channel, gain , offset);
-#else
-    return generate_getDCOffset(channel, offset);
-#endif
+    if (channel == RP_CH_1) {
+        *offset = chA_offset;
+        return RP_OK;
+    }
+    if (channel == RP_CH_2) {
+        *offset = chB_offset;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 int gen_setFrequency(rp_channel_t channel, float frequency) {
