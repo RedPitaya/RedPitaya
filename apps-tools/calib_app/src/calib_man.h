@@ -36,6 +36,7 @@ class CCalibMan {
                 int setAmp(rp_channel_t _ch,float _ampl);
                 int setOffset(rp_channel_t _ch,float _offset);
                 int setGenType(rp_channel_t _ch,int _type);
+               void updateGen();
 #ifdef Z20_250_12
                void setModeAC_DC(rp_acq_ac_dc_mode_t _mode);
 rp_acq_ac_dc_mode_t getModeAC_DC();

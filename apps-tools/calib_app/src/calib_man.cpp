@@ -289,3 +289,7 @@ int CCalibMan::setOffset(rp_channel_t _ch,float _offset){
 int CCalibMan::setGenType(rp_channel_t _ch,int _type){
     m_acq->setGenType(_ch,_type);
 }
+
+void CCalibMan::updateGen(){
+    m_acq->updateGenCalib();
+}

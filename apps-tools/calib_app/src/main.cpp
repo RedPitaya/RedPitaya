@@ -122,7 +122,7 @@ int rp_app_init(void)
 	CDataManager::GetInstance()->SetParamInterval(100);
 	PrintLogInFile("rp_app_init");
 	rp_Init();
-	g_acq = COscilloscope::Create(128);
+	g_acq = COscilloscope::Create(64);
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
 	g_acq->start();
@@ -237,6 +237,7 @@ void getNewCalib(){
 
 	if (update){
 		g_calib_man->updateCalib();
+		g_calib_man->updateGen();
 		sendCalibInManualMode(true);
 	}
 }

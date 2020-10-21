@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include "acq.h"
 
@@ -24,10 +25,10 @@ COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation)
 
 COscilloscope::COscilloscope(uint32_t _decimation):
 m_decimation(_decimation),
-m_index(0)
+m_index(0),
+m_mutex()
 {
-   
-    
+    m_OscThreadRunState = false;
 }
 
 COscilloscope::~COscilloscope()
@@ -78,7 +79,6 @@ void COscilloscope::acquire(){
     uint32_t            acq_u_size = ADC_BUFFER_SIZE;
     uint32_t            acq_u_size_raw = ADC_BUFFER_SIZE;
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
-
     rp_AcqSetDecimationFactor(m_decimation);
     rp_AcqSetTriggerDelay( ADC_BUFFER_SIZE / 2.0 );
     rp_AcqStart();
@@ -86,7 +86,6 @@ void COscilloscope::acquire(){
 
     for (;timeout > 0;) {
         rp_AcqGetTriggerState(&trig_state);
-
         if (trig_state == RP_TRIG_STATE_TRIGGERED) {
             break;
         } else {
@@ -94,7 +93,6 @@ void COscilloscope::acquire(){
             timeout--;
         }
     }
-
     while(!fillState && (timeout > 0)){
         rp_AcqGetBufferFillState(&fillState);
         std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -269,4 +267,30 @@ int COscilloscope::setOffset(rp_channel_t _ch,float _offset){
 
 int COscilloscope::setGenType(rp_channel_t _ch,int _type){
     rp_GenWaveform(_ch, (rp_waveform_t)_type);
+}
+
+void PrintLogInFileACQ(const char *message){
+	std::time_t result = std::time(nullptr);
+	std::fstream fs;
+  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
+	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
+	fs.close();
+}
+
+void COscilloscope::updateGenCalib(){
+    float x = 0;
+    char s[100];
+    rp_GenGetAmp(RP_CH_1,&x);
+    sprintf(s,"x = %f",x);
+    PrintLogInFileACQ(s);
+    
+    rp_GenAmp(RP_CH_1,x);
+    rp_GenGetAmp(RP_CH_2,&x);
+        sprintf(s,"x2 = %f",x);
+    PrintLogInFileACQ(s);
+    rp_GenAmp(RP_CH_2,x);
+    rp_GenGetOffset(RP_CH_1,&x);
+    rp_GenOffset(RP_CH_1,x);
+    rp_GenGetOffset(RP_CH_2,&x);
+    rp_GenOffset(RP_CH_2,x);
 }

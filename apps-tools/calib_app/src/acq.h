@@ -49,7 +49,7 @@ class COscilloscope {
         void setGEN0();
         void setGEN0_5();
         void setGEN0_5_SINE();
-
+        void updateGenCalib();
         void enableGen(rp_channel_t _ch,bool _enable);
         void resetGen();
          int setFreq(rp_channel_t _ch,int _freq);
@@ -61,6 +61,7 @@ class COscilloscope {
         void oscWorker();
         void acquire();
         std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
+        std::atomic_bool m_OscThreadRunState;
         std::thread      m_OscThread;
         pthread_mutex_t  m_mutex;
         uint32_t         m_decimation;
