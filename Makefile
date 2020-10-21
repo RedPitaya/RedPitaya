@@ -89,12 +89,12 @@ ifeq ($(ENABLE_LICENSING),1)
 
 api: librpapp liblcr_meter
 
-librpapp: api
+librpapp: librp
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-liblcr_meter:
+liblcr_meter: librp
 	$(MAKE) -C $(LIBRPLCR_DIR) clean
 	$(MAKE) -C $(LIBRPLCR_DIR)
 	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -481,14 +481,14 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-apps-pro: scopegenpro spectrumpro ba_pro lcr_meter
+apps-pro: scopegenpro spectrumpro 
 ifeq ($(MODEL),Z20_250_12)
-apps-pro:
+apps-pro: ba_pro lcr_meter
 else
 ifeq ($(MODEL),Z20)
 apps-pro:
 else
-apps-pro: la_pro
+apps-pro: la_pro ba_pro lcr_meter
 endif
 endif
 
