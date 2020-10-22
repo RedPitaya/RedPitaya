@@ -18,9 +18,6 @@ CBooleanParameter ledState("LED_STATE", CBaseParameter::RW, false, 0);
 
 
 
-
-
-
 const char *rp_app_desc(void)
 {
     return (const char *)"Red Pitaya LED control.\n";
@@ -70,10 +67,6 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 {
     return 0;
 }
-
-
-
-
 
 
 

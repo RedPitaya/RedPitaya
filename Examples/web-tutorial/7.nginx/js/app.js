@@ -10,7 +10,7 @@
     
     // App configuration
     APP.config = {};
-    APP.config.app_id = '5.nginx';
+    APP.config.app_id = '7.nginx';
     APP.config.app_url = '/bazaar?start=' + APP.config.app_id + '?' + location.search.substr(1);
     APP.config.socket_url = 'ws://' + window.location.hostname + ':9002';
 
