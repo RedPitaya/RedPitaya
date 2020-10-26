@@ -13,29 +13,32 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Red Pitaya</title>
-    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/popupstack.css" type="text/css" />
-    <link rel="stylesheet" href="../assets/help-system/help-system.css" type="text/css" />
-    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="css/style.css?2">
-    <link rel="stylesheet" href="css/table.css">
-    <script src="../assets/jquery/jquery-2.1.3.min.js"></script>
-    <script src="../assets/jquery/jquery-ui.min.js"></script>
-    <script src="../assets/jquery/jquery.ui.touch-punch.min.js"></script>
-    <script src="../assets/jquery/jquery.cookie.js?3"></script>
-    <script src="../assets/jquery/jquery.flot.js"></script>
-    <script src="../assets/jquery/jquery.browser.js"></script>
-    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../assets/browsercheck.js?1"></script>
-    <script src="../assets/popupstack.js?1"></script>
-    <script src="../assets/pako.js"></script>
-    <script src="js/html2canvas.min.js" onerror="location.reload()"></script>
-    <script src="js/guiHandler.js" onerror="location.reload()"></script>
-    <script src="js/sm.js" onerror="location.reload()"></script>
-    <script src="js/manager.js" onerror="location.reload()"></script>
-    <script src="js/manager_auto_mode.js" onerror="location.reload()"></script>
-    <script src="js/manager_adc_mode.js" onerror="location.reload()"></script>
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css?1" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/popupstack.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/help-system/help-system.css?1" type="text/css" onerror="location.reload()" />
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/style.css?1" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/table.css?1" onerror="location.reload()" />
+    <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery-ui.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.ui.touch-punch.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.cookie.js?3" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.flot.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
+    <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
+    <script src="../assets/pako.js?1" onerror="location.reload()"></script>
+    <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
+    <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
+    <script src="js/sm.js?1" onerror="location.reload()"></script>
+    <script src="js/manager.js?1" onerror="location.reload()"></script>
+    <script src="js/manager_auto_mode.js?1" onerror="location.reload()"></script>
+    <script src="js/manager_adc_mode.js?1" onerror="location.reload()"></script>
 </head>
 
 <body>
@@ -103,56 +106,56 @@
                             <div class="container_inline" align=center>
                                 <div style="width: 300px; border: 1px solid white;margin-right: 10px">
                                     <li class="run_buttons" id="B_RESET_FACTORY" style="width: 100%">
-                                        <a  style="display: block;">RESET TO FACTORY</a>
+                                        <a style="display: block;">RESET TO FACTORY</a>
                                     </li>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div id="auto_mode_body" style="display: none;">
-                            <div>
-                                <div align="center" style="font-size: 18pt; color: lightgray;">
-                                    <p>Automatic mode</p>
-                                </div>
+                        <div>
+                            <div align="center" style="font-size: 18pt; color: lightgray;">
+                                <p>Automatic mode</p>
                             </div>
-                            <table class="darkTable">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2" width="240px">MODE</th>
-                                        <th colspan="2" width="20%">CH1</th>
-                                        <th colspan="2" width="20%">CH2</th>
-                                        <th colspan="2">VALUE</th>
-                                        <th rowspan="2" width="80px">STATE</th>
-                                    </tr>
-                                    <tr>
-                                        <th width="10%">Before</th>
-                                        <th width="10%">After</th>
-                                        <th width="10%">Before</th>
-                                        <th width="10%">After</th>
-                                        <th>Ch1</th>
-                                        <th>Ch2</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="auto_calib_table">
-                                    <tr>
-                                        <td>cell1_1</td>
-                                        <td>cell2_1</td>
-                                        <td>cell3_1</td>
-                                        <td>cell4_1</td>
-                                        <td>cell5_1</td>
-                                        <td>cell6_1</td>
-                                        <td>cell7_1</td>
-                                        <td>cell7_1</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="container_inline" align=center>
-                                <div style="width: 180px; border: 1px solid white;margin-right: 10px">
-                                    <li class="run_buttons" id="B_CANCEL_CALIB" style="width: 100%;height: 25px">
-                                        <a style="display: block;font-size: 12pt;">CANCEL</a>
-                                    </li>
-                                </div>
+                        </div>
+                        <table class="darkTable">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" width="240px">MODE</th>
+                                    <th colspan="2" width="20%">CH1</th>
+                                    <th colspan="2" width="20%">CH2</th>
+                                    <th colspan="2">VALUE</th>
+                                    <th rowspan="2" width="80px">STATE</th>
+                                </tr>
+                                <tr>
+                                    <th width="10%">Before</th>
+                                    <th width="10%">After</th>
+                                    <th width="10%">Before</th>
+                                    <th width="10%">After</th>
+                                    <th>Ch1</th>
+                                    <th>Ch2</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auto_calib_table">
+                                <tr>
+                                    <td>cell1_1</td>
+                                    <td>cell2_1</td>
+                                    <td>cell3_1</td>
+                                    <td>cell4_1</td>
+                                    <td>cell5_1</td>
+                                    <td>cell6_1</td>
+                                    <td>cell7_1</td>
+                                    <td>cell7_1</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="container_inline" align=center>
+                            <div style="width: 180px; border: 1px solid white;margin-right: 10px">
+                                <li class="run_buttons" id="B_CANCEL_CALIB" style="width: 100%;height: 25px">
+                                    <a style="display: block;font-size: 12pt;">CANCEL</a>
+                                </li>
                             </div>
+                        </div>
                     </div>
                     <div id="adc_mode_body" style="display: none;">
                         <div>
@@ -167,7 +170,7 @@
                                 </div>
                                 <div class="container_inline" style="display: inline-block; margin-right: 10px; width: 300px;vertical-align: bottom;">
                                     <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
-                                        <label >CH 1</label>
+                                        <label>CH 1</label>
                                         <div>
                                             <div class="container_inline">
                                                 <div style="width: 50px;text-align: right;margin-top: 5px;color:#f3ec1a">AVG:</div>
@@ -191,14 +194,14 @@
                                         <div style="width:280px;height: 100px;padding: 5px;  border: 1px solid rgba(153, 153, 153, 0.295)">
                                             <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 90px;">
                                                 <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 90px;">
-                                                    <div id="graph_bode_ch1" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">                        
+                                                    <div id="graph_bode_ch1" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
                                                         <canvas id="graph_bode_grid_ch1" class="graph_grid" style="width: 100%;height: 100%;"></canvas>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
-                                            <label >Calib parameters</label>
+                                            <label>Calib parameters</label>
                                             <div class="ch_setting">
                                                 <div class="container_inline">
                                                     <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
@@ -271,7 +274,7 @@
                                 </div>
                                 <div class="container_inline" style="display: inline-block; width: 300px;vertical-align: bottom;">
                                     <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
-                                        <label >CH 2</label>
+                                        <label>CH 2</label>
                                         <div>
                                             <div class="container_inline">
                                                 <div style="width: 50px;text-align: right;margin-top: 5px;color:#f3ec1a">AVG:</div>
@@ -295,14 +298,14 @@
                                         <div style="width:280px;height: 100px;padding: 5px;  border: 1px solid rgba(153, 153, 153, 0.295)">
                                             <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 90px;">
                                                 <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 90px;">
-                                                    <div id="graph_bode_ch2" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">                        
+                                                    <div id="graph_bode_ch2" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
                                                         <canvas id="graph_bode_grid_ch2" class="graph_grid" style="width: 100%;height: 100%;"></canvas>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
-                                            <label >Calib parameters</label>
+                                            <label>Calib parameters</label>
                                             <div class="ch_setting">
                                                 <div class="container_inline">
                                                     <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
@@ -394,7 +397,7 @@
                                 </div>
                                 <div class="container_inline" style="display: inline-block; margin-right: 10px; width: 300px;vertical-align: bottom;">
                                     <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
-                                        <label >CH 1</label>
+                                        <label>CH 1</label>
                                         <div class="container_inline" style="height: 285px;">
                                             <div style="margin-top: 0px;">
                                                 <div id="manual_ch1_on_off_mode" style="
@@ -439,7 +442,7 @@
                                             </div>
                                         </div>
                                         <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
-                                            <label >Calib parameters</label>
+                                            <label>Calib parameters</label>
                                             <div class="ch_setting">
                                                 <div class="container_inline">
                                                     <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
@@ -512,7 +515,7 @@
                                 </div>
                                 <div class="container_inline" style="display: inline-block; width: 300px;vertical-align: bottom;">
                                     <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
-                                        <label >CH 2</label>
+                                        <label>CH 2</label>
                                         <div class="container_inline" style="height: 285px;">
                                             <div style="margin-top: 0px;">
                                                 <div id="manual_ch2_on_off_mode" style="
@@ -557,7 +560,7 @@
                                             </div>
                                         </div>
                                         <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
-                                            <label >Calib parameters</label>
+                                            <label>Calib parameters</label>
                                             <div class="ch_setting">
                                                 <div class="container_inline">
                                                     <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
@@ -628,8 +631,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="container_inline"  id="manual_x1_x5_mode">
-                                    <div  style="
+                                <div class="container_inline" id="manual_x1_x5_mode">
+                                    <div style="
                                             width: 120px;
                                             height: 40px;
                                             margin: 5px;">
@@ -646,7 +649,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -686,13 +689,13 @@
                         <h4 class="modal-title" id="oops_label">Calibration</h4>
                     </div>
                     <div class="modal-body" style="text-align: center; font-size: 18px;">
-                        <img id="am_dialog_img" src="./img/125/RP_125_GND.png"/>
+                        <img id="am_dialog_img" src="./img/125/RP_125_GND.png" />
                         <p id="am_dialog_text">TEXT</p>
                         <div id="am_dialog_input" class="container_inline network">
                             <div style="width: 200px;text-align: right;">Reference voltage:</div>
                             <div>
                                 <input id="SS_REF_VOLT" type="text" size="5" style="width: 200px;margin-left: 10px;" value="0.5" step="0.001" min="0.001" max="20">
-                            </div>                           
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

@@ -53,9 +53,11 @@
     SM.config = {};
     SM.config.app_id = 'streaming_manager';
     SM.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    SM.config.start_app_url = (SM.config.server_ip.length ? 'http://' + SM.config.server_ip : '') + '/bazaar?start=' + SM.config.app_id;
-    SM.config.stop_app_url = (SM.config.server_ip.length ? 'http://' + SM.config.server_ip : '') + '/bazaar?stop=' + SM.config.app_id;
-    SM.config.socket_url = 'ws://' + (SM.config.server_ip.length ? SM.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
+
+    SM.config.start_app_url = window.location.origin + '/bazaar?start=' + SM.config.app_id;
+    SM.config.stop_app_url = window.location.origin + '/bazaar?stop=' + SM.config.app_id;
+    SM.config.socket_url = 'ws://' + window.location.host + '/wss';
+
     SM.rp_model = "";
 
     // App state
@@ -82,9 +84,6 @@
                 if (dresult.status == 'OK') {
                     try {
                         SM.connectWebSocket();
-                        var element = document.getElementById("loader-wrapper");
-                        element.parentNode.removeChild(element);
-			$('#main').removeAttr("style");
                         console.log("Load manager");
                     } catch (e) {
                         SM.startApp();
@@ -159,7 +158,10 @@
         if (SM.ws) {
             SM.ws.onopen = function() {
                 console.log('Socket opened');
-
+                SM.GetIP();
+                var element = document.getElementById("loader-wrapper");
+                element.parentNode.removeChild(element);
+                $('#main').removeAttr("style");
                 SM.state.socket_opened = true;
                 SM.sendParameters();
                 SM.unexpectedClose = true;
@@ -453,7 +455,7 @@ $(function() {
 
     $('#CLEAR_FILES').click(SM.DeleteFiles);
 
-    SM.GetIP();
+
     // Everything prepared, start application
     SM.startApp();
 
