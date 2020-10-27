@@ -1,4 +1,3 @@
-
 (function() {
     var originalAddClassMethod = jQuery.fn.addClass;
     var originalRemoveClassMethod = jQuery.fn.removeClass;
@@ -55,7 +54,7 @@
                         SM.connectWebSocket();
                         var element = document.getElementById("loader-wrapper");
                         element.parentNode.removeChild(element);
-			            $('#main').removeAttr("style");
+                        $('#main').removeAttr("style");
                         console.log("Load manager");
                     } catch (e) {
                         SM.startApp();
@@ -153,7 +152,7 @@
 
                     //Recieving parameters
                     if (receive.parameters) {
-                        // console.log(receive.parameters);
+                        console.log(receive.parameters);
                         SM.parameterStack.push(receive.parameters);
                         parametersHandler();
                     }
@@ -202,7 +201,7 @@
             return false;
         }
 
-        SM.parametersCache["in_command"] = { value: _key};
+        SM.parametersCache["in_command"] = { value: _key };
         SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
         SM.parametersCache = {};
         return true;

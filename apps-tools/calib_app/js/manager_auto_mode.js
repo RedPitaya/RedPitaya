@@ -56,6 +56,9 @@
     OBJ.amCurrentTest = undefined;
     OBJ.amCurrentSuccesTest = undefined;
     OBJ.amCurrentRowID = undefined;
+    OBJ.amLastAVGCH1 = 0;
+    OBJ.amLastAVGCH2 = 0;
+    OBJ.amLastState = false;
 
     OBJ.amSetModel = function(_model) {
         if (OBJ.amModel === undefined) {
@@ -67,6 +70,15 @@
 
     OBJ.amClearTable = function() {
         $("#auto_calib_table").empty();
+    }
+
+    OBJ.amSetLedState = function(_state) {
+        if (_state) {
+            $("#SS_REF_VLOT_STATE").attr("src", "img/green_led.png");
+        } else {
+            $("#SS_REF_VLOT_STATE").attr("src", "img/red_led.png");
+        }
+        OBJ.amLastState = _state;
     }
 
     OBJ.amAddNewRow = function() {
@@ -218,6 +230,7 @@
     }
 
     OBJ.amShowDloag = function() {
+        OBJ.amLastState = true;
         if (OBJ.amCheckEmptyVariables()) {
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("img")) {
                 $("#am_dialog_img").attr("src", OBJ.amStates[OBJ.amCurrentTest].img);
@@ -235,13 +248,12 @@
             } else {
                 $("#am_dialog_input").hide();
             }
-
-
         }
         $("#am_dialog_calib").modal('show');
     }
 
     OBJ.amClickOkDialog = function() {
+        if (OBJ.amLastState === false) return;
         OBJ.amRemoveStateObject();
         OBJ.amSetWait();
         var ref = 0;
@@ -249,6 +261,7 @@
             ref = $("#SS_REF_VOLT").val();
         }
         OBJ.amSendState(OBJ.amCurrentTest, ref);
+        $("#am_dialog_calib").modal('hide');
     }
 
     OBJ.amStartCalibration = function() {
@@ -273,8 +286,25 @@
         SM.sendParameters();
     }
 
+    OBJ.amCheckInputRef = function() {
+        var ref = parseFloat($("#SS_REF_VOLT").val());
+        var state = true;
+        if (isNaN(ref) === false) {
+            if ((ref * 0.75 > OBJ.amLastAVGCH1) || (OBJ.amLastAVGCH1 > ref * 1.25)) {
+                state = false;
+            }
+            if ((ref * 0.75 > OBJ.amLastAVGCH2) || (OBJ.amLastAVGCH2 > ref * 1.25)) {
+                state = false;
+            }
+        } else {
+            state = false;
+        }
+        OBJ.amSetLedState(state);
+    }
+
     OBJ.amSetCH1Avg = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
+            OBJ.amLastAVGCH1 = _value;
             if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
@@ -284,11 +314,15 @@
                     if (element_a != undefined) element_a.innerText = _value + " V";
                 }
             }
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
+                OBJ.amCheckInputRef();
+            }
         }
     }
 
     OBJ.amSetCH2Avg = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
+            OBJ.amLastAVGCH2 = _value;
             if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
@@ -297,6 +331,9 @@
                 } else {
                     if (element_a != undefined) element_a.innerText = _value + " V";
                 }
+            }
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
+                OBJ.amCheckInputRef();
             }
         }
     }
