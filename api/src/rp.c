@@ -169,6 +169,10 @@ int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
     return calib_WriteParams(calib_params,false);
 }
 
+int rp_CalibrationSetParams(rp_calib_params_t calib_params){
+    return calib_SetParams(calib_params);
+}
+
 /**
  * Identification
  */

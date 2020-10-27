@@ -111,6 +111,11 @@ int calib_LoadFromFactoryZone(){
     return calib_Init();
 }
 
+int calib_SetParams(rp_calib_params_t calib_params){
+    calib = calib_params;
+    return RP_OK;
+}
+
 int calib_WriteParams(rp_calib_params_t calib_params,bool use_factory_zone) {
     FILE   *fp;
     size_t  size;

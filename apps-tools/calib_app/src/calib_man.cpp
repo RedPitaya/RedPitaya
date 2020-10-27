@@ -60,9 +60,19 @@ int CCalibMan::readCalib(){
     return 0;
 }
 
-void CCalibMan::updateCalib(){
-    rp_CalibrationWriteParams(m_calib_parameters);
+int CCalibMan::readCalibEpprom(){
     rp_CalibInit();
+    m_calib_parameters = rp_GetCalibrationSettings();
+    return 0;
+}
+
+void CCalibMan::updateCalib(){
+    rp_CalibrationSetParams(m_calib_parameters);
+}
+
+void CCalibMan::writeCalib(){
+    readCalib();
+    rp_CalibrationWriteParams(m_calib_parameters);
 }
 
 void CCalibMan::setModeLV_HV(rp_pinState_t _mode){

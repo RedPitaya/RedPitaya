@@ -25,6 +25,7 @@ int calib_Release();
 
 rp_calib_params_t calib_GetParams();
     int calib_WriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
+    int calib_SetParams(rp_calib_params_t calib_params);
    void calib_SetToZero();
     int calib_LoadFromFactoryZone();
 

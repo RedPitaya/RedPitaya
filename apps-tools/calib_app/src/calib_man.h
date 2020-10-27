@@ -26,7 +26,9 @@ class CCalibMan {
                     ~CCalibMan();
                void init();
                 int readCalib();
+                int readCalibEpprom();
                void updateCalib();
+               void writeCalib(); 
                 int getCalibValue(ClalibValue _type);
                 int setCalibValue(ClalibValue _type,int _value);
                void setModeLV_HV(rp_pinState_t _mode);

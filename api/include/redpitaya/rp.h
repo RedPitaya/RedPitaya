@@ -444,6 +444,14 @@ int rp_CalibrationSetCachedParams();
 int rp_CalibrationWriteParams(rp_calib_params_t calib_params);
 ///@}
 
+/**
+* Set calibration values in memory.
+* Calibration values are written to temporary memory, but not permanently.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibrationSetParams(rp_calib_params_t calib_params);
+
 
 /** @name Identification
  */

@@ -338,6 +338,7 @@ void UpdateParams(void)
 				gen2_type.SendValue(0);
 				gen1_amp.SendValue(0.9);
 				gen2_amp.SendValue(0.9);
+				g_calib_man->readCalibEpprom();
 				sendCalibInManualMode(true);
 			}
 
@@ -351,6 +352,10 @@ void UpdateParams(void)
 
 			if (sig == 4){
 				g_calib->resetCalibToFactory();
+			}
+
+			if (sig == 5){
+				g_calib_man->writeCalib();
 			}
 		}
 
