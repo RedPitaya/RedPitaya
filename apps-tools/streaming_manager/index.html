@@ -13,28 +13,29 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Red Pitaya</title>
-    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/popupstack.css" type="text/css" />
-    <link rel="stylesheet" href="../assets/help-system/help-system.css" type="text/css" />
-    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="css/style.css?2">
-    <script src="../assets/jquery/jquery-2.1.3.min.js"></script>
-    <script src="../assets/jquery/jquery-ui.min.js"></script>
-    <script src="../assets/jquery/jquery.ui.touch-punch.min.js"></script>
-    <script src="../assets/jquery/jquery.cookie.js?3"></script>
-    <script src="../assets/jquery/jquery.browser.js"></script>
-    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../assets/browsercheck.js?1"></script>
-    <script src="../assets/analytics-core.js"></script>
-    <script src="../assets/popupstack.js?1"></script>
-    <script src="../assets/help-system/help-system.js"></script>
-    <script src="../assets/pako.js"></script>
-    <script src="js/help-sm.js"></script>
-    <script src="js/analytics-main.js?1"></script>
-    <script src="js/guiHandler.js"></script>
-    <script src="js/rate_limitator.js"></script>
-    <script src="js/sm.js"></script>
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css?1" onerror="location.reload()">
+    <link rel="stylesheet" href="../assets/popupstack.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/help-system/help-system.css?1" type="text/css" onerror="location.reload()" />
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/style.css?2" onerror="location.reload()">
+    <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery-ui.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.ui.touch-punch.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.cookie.js?3" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
+    <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
+    <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
+    <script src="../assets/pako.js?1" onerror="location.reload()"></script>
+    <script src="js/help-sm.js?1" onerror="location.reload()"></script>
+    <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
+    <script src="js/rate_limitator.js?1" onerror="location.reload()"></script>
+    <script src="js/sm.js?1" onerror="location.reload()"></script>
 </head>
 
 <body>
@@ -64,16 +65,14 @@
                         <ul class="nav navbar-nav">
                         </ul>
                     </div>
+                    <div align="center" style="font-size: 18pt;color: lightgray;padding-right: 20%;padding-left: 20%;padding-top: 5px;">
+                        Stream server application
+                    </div>
                 </div>
             </div>
             <div id="">
-                <div id="main">
+                <div id="main" style="visibility: hidden;">
                     <div>
-                        <div>
-                            <div align="center" style="font-size: 18pt; color: lightgray;">
-                                <p>Stream server application</p>
-                            </div>
-                        </div>
                         <div>
                             <div align="center">
 
@@ -117,7 +116,16 @@
                                 <div class="container_inline file" style="display: none;">
                                     <div style="width: 50px;text-align: right;">Samples:</div>
                                     <div style="width: 250px;">
-                                        <input id="SS_SAMPLES" style="width: 235px;margin-left: 10px;" type="text" size="15" value="2000000000" step="1" min="1" max="2000000000">
+                                        <input id="SS_SAMPLES" style="width: 235px;margin-left: 10px;" type="text" size="15" value="20000000" step="1" min="1" max="20000000">
+                                    </div>
+                                </div>
+                                <div class="container_inline file" style="display: none;">
+                                    <div style="width: 170px;text-align: right;">Mode:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_SAVE_MODE" class="protocol" name="save_mode">
+                                                                <option value="1">RAW</option>
+                                                                <option value="2">Volt</option>
+                                                    </select>
                                     </div>
                                 </div>
                                 <div class="container_inline">
@@ -139,12 +147,32 @@
                                                     </select>
                                     </div>
                                 </div>
+                                <div class="container_inline 122_16_block_remove">
+                                    <div style="width: 170px;text-align: right;">Input attenuation:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_ATTENUATOR" class="protocol" name="attenuation">
+                                                                <option value="1">1:1</option>
+                                                                <option value="2">1:20</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="container_inline">
                                     <div style="width: 50px;text-align: right;">Rate:</div>
                                     <div style="width: 240px;">
                                         <input id="SS_RATE" type="text" size="5" style="width: 235px;margin-left: 10px;" value="" step="1" min="1" max="65535">
                                     </div>
                                 </div>
+
+                                <div class="container_inline 122_16_block_remove">
+                                    <div style="width: 170px;text-align: right;">Use calibration:</div>
+                                    <div style="width: 90px;">
+                                        <select id="SS_USE_CALIB" class="protocol" name="calibration" value="2">
+                                                                <option value="1">NO</option>
+                                                                <option value="2" selected="selected">YES</option>
+                                                    </select>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <div align="center">
@@ -271,27 +299,6 @@
                     <div class="modal-footer">
                         <div class="bazaar-link" style="float: center; width: 100%;">
                             <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal" class="list-group-item btn">Ok</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title" id="bazaar_naLabel">Diagnostic & Usage</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p>Would you like to help Red Pitaya team to improve its product and services by occasionally providing anonymous diagnostic and usage information?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <div class="bazaar-link" style="float: left; width: 50%;">
-                            <a href="#" data-dismiss="modal" id="enable_analytics" class="list-group-item btn">Yes</a>
-                        </div>
-                        <div class="bazaar-link" style="float: left; width: 50%;">
-                            <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">No</a>
                         </div>
                     </div>
                 </div>

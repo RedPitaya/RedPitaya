@@ -21,6 +21,7 @@
 int gen_SetDefaultValues();
 int gen_Disable(rp_channel_t chanel);
 int gen_Enable(rp_channel_t chanel);
+int gen_EnableSync(bool enable);
 int gen_IsEnable(rp_channel_t channel, bool *value);
 int gen_setAmplitude(rp_channel_t channel, float amplitude);
 int gen_getAmplitude(rp_channel_t channel, float *amplitude);
@@ -64,6 +65,7 @@ int synthesis_square(float frequency, float *data_out,uint16_t buffSize);
 int synthesis_rampUp(float *data_out,uint16_t buffSize);
 int synthesis_rampDown(float *data_out,uint16_t buffSize);
 int synthesis_DC(float *data_out,uint16_t buffSize);
+int synthesis_DC_NEG(float *data_out,uint16_t buffSize);
 int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize);
 
 #ifdef Z20_250_12

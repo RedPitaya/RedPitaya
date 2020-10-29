@@ -11,10 +11,11 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+LINUX_VER = 1.02
 export BUILD_NUMBER
 export REVISION
 export VERSION
-
+export LINUX_VER
 ################################################################################
 #
 ################################################################################
@@ -88,12 +89,12 @@ ifeq ($(ENABLE_LICENSING),1)
 
 api: librpapp liblcr_meter
 
-librpapp: api
+librpapp: librp
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
 	$(MAKE) -C $(LIBRPAPP_DIR)
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-liblcr_meter:
+liblcr_meter: librp
 	$(MAKE) -C $(LIBRPLCR_DIR) clean
 	$(MAKE) -C $(LIBRPLCR_DIR)
 	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -112,6 +113,7 @@ NGINX           = $(INSTALL_DIR)/sbin/nginx
 IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 STARTUPSH       = $(INSTALL_DIR)/sbin/startup.sh
+GETSYSINFOSH    = $(INSTALL_DIR)/sbin/getsysinfo.sh
 
 WEBSOCKETPP_TAG = 0.7.0
 LUANGINX_TAG    = v0.10.7
@@ -250,7 +252,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 # git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
 # ZIP file name should be updated for each new build
 SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
-SDR_URL = http://downloads.redpitaya.com/downloads/charly25ab/$(SDR_ZIP)
+SDR_URL = http://downloads.redpitaya.com/hamlab/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
 ifeq ($(MODEL),Z10)
@@ -279,10 +281,10 @@ LA_TEST_DIR        = api2/test
 GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor monitor_old generator acquire calib calibrate spectrum laboardtest
-.PHONY: acquire2 
+.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
+.PHONY: acquire2
 
-examples: lcr bode monitor monitor_old calib generate_DC spectrum acquire2 generator
+examples: lcr bode monitor calib generate_DC spectrum acquire2 generator
 
 ifeq ($(MODEL),Z20_250_12)
 examples: rp_i2c_tool
@@ -295,14 +297,14 @@ rp_i2c_tool:
 	$(MAKE) -C $(LIBRP250_12_DIR) tool
 	$(MAKE) -C $(LIBRP250_12_DIR) install_tool INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-lcr:
-	$(MAKE) -C $(LCR_DIR) clean
-	$(MAKE) -C $(LCR_DIR) MODEL=$(MODEL)
-	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+# lcr:
+# 	$(MAKE) -C $(LCR_DIR) clean
+# 	$(MAKE) -C $(LCR_DIR) MODEL=$(MODEL)
+#	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-bode:
+bode: api
 	$(MAKE) -C $(BODE_DIR) clean
-	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor:
@@ -393,15 +395,22 @@ APP_NETWORKMANAGER_DIR   = apps-tools/network_manager
 APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
+APP_CALIB_DIR			 = apps-tools/calib_app
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
 apps-tools: ecosystem updater network_manager scpi_manager
 
 ifeq ($(MODEL),Z20_250_12)
-apps-tools:
-else
-apps-tools: jupyter_manager streaming_manager
+apps-tools: calib_app
+endif
+
+ifeq ($(MODEL),Z10)
+apps-tools: jupyter_manager streaming_manager calib_app
+endif
+
+ifeq ($(MODEL),Z20)
+apps-tools: jupyter_manager streaming_manager 
 endif
 
 ecosystem:
@@ -420,6 +429,11 @@ streaming_manager: api $(NGINX)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+
+calib_app: api $(NGINX)
+	$(MAKE) -i -C $(APP_CALIB_DIR) clean
+	$(MAKE) -C $(APP_CALIB_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(APP_CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 
 
 network_manager: ecosystem
@@ -465,16 +479,16 @@ APP_LCRMETER_DIR    = Applications/lcr_meter
 APP_LA_PRO_DIR 		= Applications/la_pro
 APP_BA_PRO_DIR 		= Applications/ba_pro
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-apps-pro: scopegenpro spectrumpro
+apps-pro: scopegenpro spectrumpro 
 ifeq ($(MODEL),Z20_250_12)
-apps-pro:
+apps-pro: ba_pro lcr_meter
 else
 ifeq ($(MODEL),Z20)
 apps-pro:
 else
-apps-pro: lcr_meter la_pro ba_pro
+apps-pro: la_pro ba_pro lcr_meter
 endif
 endif
 
@@ -485,12 +499,12 @@ scopegenpro: api $(NGINX)
 
 spectrumpro: api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
-	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
-	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 la_pro: api api2 $(NGINX)

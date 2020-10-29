@@ -87,17 +87,17 @@ KERNEL_HEADERS ?= YES
 HWID ?=
 
 ifeq ($(MODEL),Z10)
-FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite streaming
+FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 # NEED for FSBL fpga image
-FPGA_PRJ = streaming
+FPGA_PRJ = v0.94
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 endif
 
 ifeq ($(MODEL),Z20)
-FPGA_PRJ_LST = v0.94 streaming stream_app
+FPGA_PRJ_LST = v0.94 stream_app
 # NEED for FSBL fpga image
-FPGA_PRJ = streaming
+FPGA_PRJ = v0.94
 FPGA_MODEL ?= Z20
 DTS_PATH = dts
 endif
@@ -127,22 +127,13 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
 	done
 
-# FIXME manually copy prebuilt streaming FPGA bitstream
-#	cp fpga/prj/streaming/prebuilt/* $(INSTALL_DIR)/fpga/
-ifeq ($(FPGA_MODEL), Z10)
-	cp fpga/prj/streaming/prebuilt/fpga_streaming.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif
-
-ifeq ($(FPGA_MODEL), Z20)
-	cp fpga/prj/streaming/prebuilt/fpga_streaming_z20.bit $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif
-
 	# copy archived FPGA bitstream images and decompress them
-#	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-#	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
+	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
+	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
 	# backward compatibility, TODO, should be removed at next OS release
 ifneq ($(FPGA_MODEL),Z20_250)
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 ifeq ($(FPGA_MODEL), Z10)
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
@@ -188,7 +179,7 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 
 LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
 
-.PHONY: linux linux-install $(LINUX_DIR)
+.PHONY: linux linux-install $(LINUX_DIR) $(LINUX)
 
 linux: $(LINUX)
 
@@ -236,10 +227,9 @@ $(DTREE_DIR): $(DTREE_TAR)
 $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
-ifneq ($(MODEL),Z20_250_12)
-	patch $(TMP)/dts/pl.dtsi < fpga/dts/pl.dtsi.patch
-endif
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(DTS_PATH) $(TMP)/dts/system-top.dts
+	cat fpga/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
+	gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
 	# create device tree source from binary for reference
 	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 

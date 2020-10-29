@@ -16,7 +16,6 @@
 #define __CALIB_H
 
 #include <stdint.h>
-
 #include "rp_cross.h"
 
 #define CONSTANT_SIGNAL_AMPLITUDE 0.8
@@ -25,8 +24,10 @@ int calib_Init();
 int calib_Release();
 
 rp_calib_params_t calib_GetParams();
-    int calib_WriteParams(rp_calib_params_t calib_params);
+    int calib_WriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
+    int calib_SetParams(rp_calib_params_t calib_params);
    void calib_SetToZero();
+    int calib_LoadFromFactoryZone();
 
 
     int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params);

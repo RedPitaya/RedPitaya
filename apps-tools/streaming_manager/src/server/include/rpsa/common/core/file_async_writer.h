@@ -28,7 +28,7 @@ protected:
     ~Queue();
     void pushQueue(std::iostream* buffer);
     std::iostream* popQueue();
-    long long int  m_useMemory;    
+    uint64_t m_useMemory;    
 private:
     std::list<std::iostream*> m_queue;
     std::mutex mutex_;    
@@ -49,7 +49,7 @@ class FileQueueManager:public Queue{
     void Task();
    ulong m_freeSize;
    ulong m_hasWriteSize;   
-unsigned long long m_aviablePhyMemory; 
+    uint64_t m_aviablePhyMemory; 
 public:
     FileQueueManager();
     ~FileQueueManager();

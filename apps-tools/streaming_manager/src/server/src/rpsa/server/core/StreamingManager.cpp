@@ -12,6 +12,8 @@
 #include <sys/stat.h>
 #endif
 
+#define UNUSED(x) [&x]{}()
+
 bool createDir(const std::string dir)
 {
 #ifdef _WIN32
@@ -62,12 +64,13 @@ void CStreamingManager::MakeEmptyDir(std::string _filePath){
 
 
 
-CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath, int _samples){
+CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode){
 
-    return std::make_shared<CStreamingManager>(_fileType, _filePath,_samples);
+    return std::make_shared<CStreamingManager>(_fileType, _filePath,_samples, _v_mode);
 }
 
-CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples) :
+CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode) :
+    m_volt_mode(_v_mode),
     m_use_local_file(true),
     notifyPassData(nullptr),
     m_file_manager(nullptr),
@@ -83,6 +86,7 @@ CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _file
         
         m_file_manager = new FileQueueManager();
         m_waveWriter = new CWaveWriter();
+        memset(m_zeroBuffer,0,sizeof(uint8_t) * ZERO_BUFFER_SIZE);
     }
 }
 
@@ -91,6 +95,7 @@ CStreamingManager::Ptr CStreamingManager::Create(string _host, string _port, asi
 }
 
 CStreamingManager::CStreamingManager(string _host, string _port, asionet::Protocol _protocol):
+        m_volt_mode(false),
         m_use_local_file(false),
         notifyPassData(nullptr),
         m_file_manager(nullptr),
@@ -147,6 +152,7 @@ void CStreamingManager::startServer(){
                                      });
     m_asionet->addCallSend([this](std::error_code error,size_t size)
                             {
+                                UNUSED(error);
                                 m_ReadyToPass--;
                                 m_SendData += size;
                                 if (m_ReadyToPass == 0) {
@@ -194,6 +200,7 @@ void CStreamingManager::run()
         std::cout << m_file_out << "\n"; 
         m_file_manager->OpenFile(m_file_out, false);
         m_file_manager->StartWrite(m_fileType);
+
     }
     else
         this->startServer();
@@ -209,48 +216,88 @@ void CStreamingManager::stop(){
     }
 }
 
+uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, uint32_t _adc_mode, uint32_t _adc_bits, unsigned short _resolution){
+    UNUSED(_adc_bits);
+    uint8_t *dest = nullptr;
 
-int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id){
+    if (!m_volt_mode) {
+        dest = new uint8_t[_buf_size + _lostSize];
+        _dest_buff_size = _buf_size + _lostSize;
+        memcpy_neon(dest, _buffer, _buf_size);
+    }else{
+        uint32_t samples = _buf_size / (_resolution  / 8);
+        float *dest_f = new float[samples + _lostSize / 4];
+        _dest_buff_size = (samples + _lostSize / 4) * sizeof(float);
+        for(uint32_t i = 0 ; i < samples; i++){
+            float cnt = (_resolution == 8) ?  ((int8_t*)_buffer)[i]:((int16_t*)_buffer)[i];
+//            dest_f[i] = cnt / ( 1 << (_adc_bits - 1));
+            dest_f[i] = cnt / ( 1 << (_resolution - 1)) * (float)_adc_mode;
+        }
 
-    ASIO_ASSERT(!(_size_ch1 != _size_ch2 && _size_ch1 != 0 && _size_ch2 != 0));
+        dest = reinterpret_cast<uint8_t*>(dest_f);
+    }
+    return dest;
+}
+
+
+int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id){
+
+
+   // ASIO_ASSERT(!(_size_ch1 != _size_ch2 && _size_ch1 != 0 && _size_ch2 != 0));
     uint8_t *buff_ch1 = nullptr;
     uint8_t *buff_ch2 = nullptr;
+    size_t   buff_ch1_size = 0;
+    size_t   buff_ch2_size = 0;    
+    uint8_t  byte_per_sample = (_resolution == 16 ? 2 : 1);
+
 
     if (m_use_local_file){
         bool flag = false;
         if (m_samples != -1) {
-            int devider = (_resolution == 16 ? 2 : 1);
+            uint8_t devider = (_resolution == 16 ? 2 : 1);
             m_passSizeSamples += (_size_ch1 > 0 ? _size_ch1  : _size_ch2) / devider;
             if (m_passSizeSamples >= m_samples) {
                 flag = true;
+                _lostRate = 0;
                 int diff = (m_passSizeSamples - m_samples) * devider;
                 if (_size_ch1 > 0) {
-                    if (diff > _size_ch1)
+                    if (diff > (int)_size_ch1)
                         _size_ch1 = 0;
                     else
                         _size_ch1 -= diff;
                 }
                 if (_size_ch2 > 0) {
-                     if (diff > _size_ch2)
+                     if (diff > (int)_size_ch2)
                         _size_ch2 = 0;
                     else
                         _size_ch2 -= diff;
                 }
             }
         }
-        if (_size_ch1>0){ 
-            buff_ch1 = new uint8_t[_size_ch1];
-            memcpy_neon(buff_ch1, _buffer_ch1, _size_ch1);
-        }
 
-        if (_size_ch2>0){ 
-            buff_ch2 = new uint8_t[_size_ch2];
-            memcpy_neon(buff_ch2, _buffer_ch2, _size_ch2);
-        }
+        uint32_t samples_buff1 = _size_ch1 / byte_per_sample;
+        uint32_t samples_buff2 = _size_ch2 / byte_per_sample;
+        if (m_volt_mode) byte_per_sample = 4; // FLOAT TYPE
+        uint32_t lostSize = _lostRate * byte_per_sample;
 
-        if (_size_ch1 + _size_ch2 > 0){
+        if (_size_ch1 + _size_ch2  + lostSize> 0){
+            
             if (m_fileType == TDMS_TYPE){
-                auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, _size_ch1, buff_ch2, _size_ch2,_resolution);
+                // _adc_mode = 0 for 1:1 and 1 for 1:20 mode 
+                if (_size_ch1 > 0 || lostSize > 0){ 
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
+                    assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
+                    memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
+                }
+
+                if (_size_ch2 > 0 || lostSize > 0){ 
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
+                    assert(buff_ch2 && "wav writer: Buffer 2 is null");
+                    memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
+                }
+
+
+                auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8);
                 if (!m_file_manager->AddBufferToWrite(stream_data))
                 {
                     m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
@@ -259,13 +306,40 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
 
 
             if (m_fileType == WAV_TYPE){
-                auto stream_data = m_waveWriter->BuildWAVStream(buff_ch1, _size_ch1, buff_ch2, _size_ch2,_resolution);
-                if (!m_file_manager->AddBufferToWrite(stream_data))
-                {
-                    m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
+
+                // WAV type support float full range -1...1. adc_mode always equal 1
+                if (_size_ch1>0){ 
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,0, 1 ,_adc_bits,_resolution);
+                    assert(buff_ch1 && "wav writer: Buffer 1 is null");   
+                }
+
+                if (_size_ch2>0){ 
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,0, 1 ,_adc_bits,_resolution);
+                    assert(buff_ch2 && "wav writer: Buffer 2 is null");
+                }
+                if (_size_ch1 + _size_ch2 > 0){
+                    auto stream_data = m_waveWriter->BuildWAVStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8);
+                    if (!m_file_manager->AddBufferToWrite(stream_data))
+                    {
+                        m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
+                    }
                 }
                 delete [] buff_ch1;
                 delete [] buff_ch2;
+
+                uint64_t saveLostSize = 0;
+                uint64_t saveSize = (ZERO_BUFFER_SIZE < lostSize ? ZERO_BUFFER_SIZE : lostSize);
+                while(((saveLostSize + saveSize) <= lostSize) && (saveSize > 0)){
+                    auto stream_data = m_waveWriter->BuildWAVStream(m_zeroBuffer, saveSize, m_zeroBuffer, saveSize, byte_per_sample * 8);
+                    if (!m_file_manager->AddBufferToWrite(stream_data))
+                    {
+                        m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
+                    }
+                    saveLostSize += saveSize;
+                    if ((saveLostSize + saveSize) > lostSize){
+                        saveSize = lostSize - saveLostSize;
+                    }
+                }
             }
         }
 
@@ -276,7 +350,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
         m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE_LOST,_lostRate);        
         m_fileLogger->AddMetric(CFileLogger::Metric::OSC_RATE,_oscRate);       
         m_fileLogger->AddMetricId(_id);         
-      
+        m_fileLogger->AddMetric(MAX(samples_buff1,samples_buff2),_lostRate);
         if (notifyPassData)
             notifyPassData(_size_ch1 + _size_ch2);
         if (flag) 
@@ -295,22 +369,21 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                     split_size = buffer_size;
                 }                                                                              
 
-                size_t full_send_size = 0;
                 buff_ch1 = (uint8_t *) _buffer_ch1;
                 buff_ch2 = (uint8_t *) _buffer_ch2;
-                uint32_t counter = 0;
-
+ 
+                size_t new_buff_size = 0;
                 while ((frame_offset + split_size) <= buffer_size) {
                     if (frame_offset + split_size > buffer_size)
                         split_size = buffer_size - frame_offset;
 
-                    size_t new_buff_size = 0;
-                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, _lostRate, _oscRate,  _resolution,
-                                                               (&*buff_ch1 + frame_offset),
-                                                               (_size_ch1 == 0 ? 0 : split_size),
-                                                               (&*buff_ch2 + frame_offset),
-                                                               (_size_ch2 == 0 ? 0 : split_size),
-                                                               new_buff_size);
+                    
+                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, 0, _oscRate,  _resolution, _adc_mode ,_adc_bits,
+                                                                (&*buff_ch1 + frame_offset),
+                                                                (_size_ch1 == 0 ? 0 : split_size),
+                                                                (&*buff_ch2 + frame_offset),
+                                                                (_size_ch2 == 0 ? 0 : split_size),
+                                                                new_buff_size);
 
                     ++m_ReadyToPass;
                     
@@ -319,7 +392,20 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
                     }
                     delete buffer;
                     frame_offset += split_size;
-                    counter++;
+                }
+                 // Send empty pack with lost
+                if (_lostRate>0) {
+                    auto buffer = asionet::CAsioNet::BuildPack(m_index_of_message++, _lostRate, _oscRate,  _resolution, _adc_mode ,_adc_bits,
+                                                                    nullptr,
+                                                                    0,
+                                                                    nullptr,
+                                                                    0,
+                                                                    new_buff_size);
+                    ++m_ReadyToPass;    
+                    if (!m_asionet->SendData(false, buffer, new_buff_size)) {
+                        m_ReadyToPass--;
+                    }
+                    delete buffer;
                 }
 
                 if (m_ReadyToPass > 0)
@@ -332,7 +418,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, const 
 
         }
     }
-
+    return 0;
 }
 
 

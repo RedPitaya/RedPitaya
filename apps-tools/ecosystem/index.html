@@ -3,24 +3,27 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
-    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
-    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
-    <link href="./style.css" rel="stylesheet" type="text/css" />
-    <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
-    <script src="../assets/offline.min.js?1"></script>
-    <script src="../assets/onlinecheck.js?1"></script>
-    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
-    <script src="../assets/jquery.cookie.js"></script>
-    <script src="../assets/quickpager.jquery.js"></script>
-    <script src="../assets/hammer.js"></script>
-    <script src="../assets/desktop.js?1"></script>
-    <script src="../assets/browsercheck.js?1"></script>
-    <script src="../assets/ecosystem.js?1"></script>
-    <script src="../assets/popupstack.js?1"></script>
-    <script src="../assets/jquery.browser.js"></script>
-    <link href="./assets/popupstack.css" rel="stylesheet" type="text/css" />
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link href="../assets/style.css?6" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link href="./style.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <script src="../assets/bootstrap-3.0.0/js/jquery.js?1" onerror="location.reload()"></script>
+    <script src="../assets/offline.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/onlinecheck.js?1" onerror="location.reload()"></script>
+    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery.cookie.js?1" onerror="location.reload()"></script>
+    <script src="../assets/quickpager.jquery.js?1" onerror="location.reload()"></script>
+    <script src="../assets/hammer.js?1" onerror="location.reload()"></script>
+    <script src="../assets/desktop.js?1" onerror="location.reload()"></script>
+    <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
+    <script src="../assets/ecosystem.js?1" onerror="location.reload()"></script>
+    <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery.browser.js?1" onerror="location.reload()"></script>
+    <link href="./assets/popupstack.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>My Red Pitaya</title>
 </head>
@@ -32,6 +35,7 @@
     </div>
     <div id="main_content">
         <div id="header">
+            <div id="info"><img src="../assets/images/info.png" style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
             <div id="description"></div>
             <div id="reboot"><img src="../assets/images/power.png"></div>
         </div>
@@ -81,6 +85,72 @@
                         <a href="#" data-dismiss="modal" id="poweroff_confirm" class="list-group-item btn">Poweroff</a>
                     </div>
                     <div class="bazaar-link" style="float: left;width: 30%;margin-left: 5%;">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="firmware_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">OS upgrade notification</h4>
+                </div>
+                <div class="modal-body">
+                    <p>The required version of the Linux image does not match the version for the ecosystem.</p>
+                    <div style="text-align: left;margin-left: 30%;">
+                        <p>Current system version: <a id="CUR_VER">1.0</a></p>
+                        <p>Required version: <a id="REQ_VER">1.0</a></p>
+                    </div>
+                    <p>Matching Linux version can be downloaded from this <a href="http://downloads.redpitaya.com/downloads/" target="_blank" id="NEW_FIRMWARE_LINK_ID" style="color: red;">link</a></p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="sysinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">System Info</h4>
+                </div>
+                <div class="modal-body">
+                    <div style="text-align: left;margin-left: 10%;">
+                        <table>
+                            <col width="130px">
+                            <col width="280px">
+                            <tr style="height:40px;">
+                                <td>Board model:</td>
+                                <td><a id="SI_B_MODEL">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>MAC:</td>
+                                <td><a id="SI_MAC">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>DNA:</td>
+                                <td><a id="SI_DNA">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>Ecosystem:</td>
+                                <td><a id="SI_ECOSYSTEM">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>Linux:</td>
+                                <td><a id="SI_LINUX">-</a></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
                         <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>

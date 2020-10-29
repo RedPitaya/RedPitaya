@@ -2,7 +2,7 @@
 
 module osc_acquire
   #(parameter AXIS_DATA_BITS  = 16,
-    parameter CNT_BITS        = 31)( // No. of bits for the counters
+    parameter CNT_BITS        = 32)( // No. of bits for the counters
   input  wire                       clk,
   input  wire                       rst_n,
   // Slave AXI-S

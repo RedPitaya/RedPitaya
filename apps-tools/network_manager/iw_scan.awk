@@ -22,7 +22,7 @@ BEGIN {
 }
 
 substr($1, 0, 3) == "BSS" {
-    MAC = $2
+    MAC = $2$3$4$5$6
     # Default assumptions:
     wifi[MAC]["enc"] = "Open"
     wifi[MAC]["SSID"] = "Hidden" # Assume hidden

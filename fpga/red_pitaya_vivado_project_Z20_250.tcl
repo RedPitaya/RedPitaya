@@ -19,6 +19,8 @@ set path_brd brd
 set path_rtl rtl_250
 set path_ip  ip
 set path_sdc sdc_250
+set path_bd  project/redpitaya.srcs/sources_1/bd/system/hdl
+
 
 ################################################################################
 # list board files
@@ -54,6 +56,7 @@ generate_target all [get_files    system.bd]
 
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
+add_files                         $path_bd
 
 ## search for HWID parameter to select xdc
 foreach item $argv {
@@ -77,7 +80,7 @@ if {[info exists board]} {
 # start gui
 ################################################################################
 
-#import_files -force
+import_files -force
 
 update_compile_order -fileset sources_1
 

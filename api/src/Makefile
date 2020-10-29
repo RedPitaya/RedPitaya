@@ -46,7 +46,8 @@ OBJECTS =	common.o \
 		gen_handler.o \
 		spec_dsp.o \
 		spec_fpga.o \
-		rp.o
+		rp.o \
+		hw/uart.o
 		
 ifeq ($(MODEL),Z20_250_12)
 	OBJECTS += calib_250_12.o
@@ -56,7 +57,7 @@ endif
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Ikiss_fft -Os -s -D$(MODEL)
+CFLAGS  = -std=c11 -Wall -Werror -fPIC -Ikiss_fft -Os -s -D$(MODEL)
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../include
 LDFLAGS=-shared -Wl,--version-script=exportmap

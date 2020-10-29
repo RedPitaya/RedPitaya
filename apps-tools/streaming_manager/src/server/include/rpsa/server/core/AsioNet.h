@@ -1,4 +1,6 @@
 #pragma once
+#pragma GCC diagnostic ignored "-Wreorder"
+
 #include <iostream>
 #include <sstream>
 #include <cstring>
@@ -136,6 +138,8 @@ namespace  asionet {
                 uint64_t _lostRate ,
                 uint32_t _oscRate  ,
                 uint32_t _resolution ,
+                uint32_t _adc_mode,
+                uint32_t _adc_bits,
                 const void *_ch1 ,
                 size_t _size_ch1 ,
                 const void *_ch2 ,
@@ -148,6 +152,8 @@ namespace  asionet {
                 uint64_t _lostRate ,
                 uint32_t _oscRate  ,
                 uint32_t _resolution ,
+                uint32_t _adc_mode,
+                uint32_t _adc_bits,
                 const void *_ch1 ,
                 size_t _size_ch1 ,
                 const void  *_ch2 ,
@@ -161,6 +167,8 @@ namespace  asionet {
                 uint64_t &_lostRate ,
                 uint32_t &_oscRate  ,
                 uint32_t &_resolution ,
+                uint32_t &_adc_mode,
+                uint32_t &_adc_bits,
                 CAsioSocket::send_buffer &_ch1 ,
                 size_t &_size_ch1 ,
                 CAsioSocket::send_buffer  &_ch2 ,

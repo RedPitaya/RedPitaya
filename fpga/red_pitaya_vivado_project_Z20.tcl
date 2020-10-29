@@ -17,7 +17,9 @@ cd prj/$prj_name
 set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
-if {$prj_name eq "stream_app"} {set path_sdc sdc} else {set path_sdc ../../sdc}
+set path_bd  project/redpitaya.srcs/sources_1/bd/system/hdl
+set path_sdc ../../sdc
+set path_sdc_prj sdc
 
 ################################################################################
 # list board files
@@ -53,9 +55,10 @@ generate_target all [get_files    system.bd]
 
 add_files                         ../../$path_rtl
 add_files                         $path_rtl
+add_files                         $path_bd
 
-#add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
+add_files -fileset constrs_1      $path_sdc_prj/red_pitaya.xdc
 
 ################################################################################
 # start gui

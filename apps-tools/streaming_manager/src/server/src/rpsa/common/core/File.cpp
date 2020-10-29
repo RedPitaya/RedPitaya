@@ -155,7 +155,7 @@ namespace TDMS
             if (Check && segment->TableOfContents.HasRawData)
             {
                 while (nextOffset < segment->NextSegmentOffset   ||
-                       (segment->NextSegmentOffset == -1 &&  nextOffset < reader.GetFileSize()))
+                       (segment->NextSegmentOffset == -1 &&  nextOffset < (long)reader.GetFileSize()))
                 {
                     // Incremental Meta Data see http://www.ni.com/white-paper/5696/en/#toc1
                     for (auto &metadata : metadatas)

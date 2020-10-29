@@ -16,7 +16,7 @@ LIBRP=lib/librp.so
 all: $(LIBRP)
 
 $(LIBRP):
-	$(MAKE) -C src INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C src INSTALL_DIR=$(abspath $(INSTALL_DIR)) -j4
 
 clean:
 	$(MAKE) -C src clean

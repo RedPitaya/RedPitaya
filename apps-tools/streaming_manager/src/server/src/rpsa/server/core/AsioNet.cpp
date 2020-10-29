@@ -2,7 +2,7 @@
 #include "asio.hpp"
 #include "rpsa/server/core/AsioNet.h"
 
-#define ID_PACK "STREAMpackIDv1.0"
+static const char* ID_PACK = "STREAMpackIDv1.0";
 
 namespace  asionet {
 
@@ -11,6 +11,8 @@ namespace  asionet {
             uint64_t _lostRate ,
             uint32_t _oscRate  ,
             uint32_t _resolution ,
+            uint32_t _adc_mode,
+            uint32_t _adc_bits,
             const void *_ch1 ,
             size_t _size_ch1 ,
             const void *_ch2 ,
@@ -24,7 +26,10 @@ namespace  asionet {
         prefix_lenght += sizeof(int32_t);     // pack size (4 byte)
         prefix_lenght += sizeof(int32_t) * 2; // size of channel1 and channel2 (8 byte)
         prefix_lenght += sizeof(int32_t);     // resolution (4 byte)
+        prefix_lenght += sizeof(int32_t);     // adc_mode (4 byte)
+        prefix_lenght += sizeof(int32_t);     // adc_bits (4 byte)
         size_t  buffer_size = prefix_lenght + _size_ch1 + _size_ch2;
+//        printf("buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
         auto buffer = new uint8_t[buffer_size];
         memcpy(buffer,ID_PACK,16);
         ((uint64_t*)buffer)[2] = _id;
@@ -34,7 +39,8 @@ namespace  asionet {
         ((uint32_t*)buffer)[10] = (uint32_t)_size_ch1;
         ((uint32_t*)buffer)[11] = (uint32_t)_size_ch2;
         ((uint32_t*)buffer)[12] = _resolution;
-
+        ((uint32_t*)buffer)[13] = _adc_mode;
+        ((uint32_t*)buffer)[14] = _adc_bits;
         if (_size_ch1>0){
 
             memcpy_neon((&(*buffer)+prefix_lenght), _ch1, _size_ch1);
@@ -55,6 +61,8 @@ namespace  asionet {
             uint64_t _lostRate ,
             uint32_t _oscRate  ,
             uint32_t _resolution ,
+            uint32_t _adc_mode,
+            uint32_t _adc_bits,
             const void *_ch1 ,
             size_t _size_ch1 ,
             const void  *_ch2 ,
@@ -67,7 +75,9 @@ namespace  asionet {
         prefix_lenght += sizeof(int32_t);     // pack size (4 byte)
         prefix_lenght += sizeof(int32_t) * 2; // size of channel1 and channel2 (8 byte)
         prefix_lenght += sizeof(int32_t);     // resolution (4 byte)
+        prefix_lenght += sizeof(int32_t);     // adc_mode (4 byte)
         size_t  buffer_size = prefix_lenght + _size_ch1 + _size_ch2;
+//       printf("buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
         memcpy(buffer,ID_PACK,16);
         ((uint64_t*)buffer)[2] = _id;
         ((uint64_t*)buffer)[3] = _lostRate;
@@ -76,7 +86,9 @@ namespace  asionet {
         ((uint32_t*)buffer)[10] = (uint32_t)_size_ch1;
         ((uint32_t*)buffer)[11] = (uint32_t)_size_ch2;
         ((uint32_t*)buffer)[12] = _resolution;
-
+        ((uint32_t*)buffer)[13] = _adc_mode;
+        ((uint32_t*)buffer)[14] = _adc_bits;
+        
         if (_size_ch1>0){
 
             memcpy_neon((&(*buffer)+prefix_lenght), _ch1, _size_ch1);
@@ -98,6 +110,8 @@ namespace  asionet {
                     uint64_t &_lostRate ,
                     uint32_t &_oscRate  ,
                     uint32_t &_resolution ,
+                    uint32_t &_adc_mode,
+                    uint32_t &_adc_bits,
                     CAsioSocket::send_buffer &_ch1 ,
                     size_t &_size_ch1 ,
                     CAsioSocket::send_buffer  &_ch2 ,
@@ -110,7 +124,9 @@ namespace  asionet {
             _size_ch1 = ((uint32_t*)_buffer)[10];
             _size_ch2 = ((uint32_t*)_buffer)[11];
             _resolution = ((uint32_t*)_buffer)[12];
-            uint16_t prefix = 52;
+            _adc_mode = ((uint32_t*)_buffer)[13];     
+            _adc_bits = ((uint32_t*)_buffer)[14];            
+            uint16_t prefix = 60;
 
             if (_size_ch1 > 0) {
                 _ch1 = new uint8_t[_size_ch1];
@@ -355,16 +371,15 @@ namespace  asionet {
                 memcpy(m_tcp_fifo_buffer + m_pos_last_in_fifo,m_SocketReadBuffer,bytes_transferred);
                 m_pos_last_in_fifo += bytes_transferred;
 
-                char *id_str = ID_PACK;
                 uint8_t  size_id = sizeof(ID_PACK) - 1;
                 bool find_all_flag = false;
 //                cout << "Buff size " << m_pos_last_in_fifo << "\n";
                 do{
 
-                for (int i = 0; i < m_pos_last_in_fifo - size_id; ++i) {
+                for (uint32_t i = 0; i < m_pos_last_in_fifo - size_id; ++i) {
                     bool find_flag = false;
                     for (int j = 0; j < size_id; ++j) {
-                        if (m_tcp_fifo_buffer[i + j] == id_str[j]) {
+                        if (m_tcp_fifo_buffer[i + j] == ID_PACK[j]) {
                             find_flag = true;
                         } else {
                             find_flag = false;

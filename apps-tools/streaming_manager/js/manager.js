@@ -8,31 +8,7 @@
  */
 
 (function(OBJ, $, undefined) {
-    OBJ.CheckServerStatus = function() {
-        $.ajax({
-                url: '/get_scpi_status',
-                type: 'GET',
-                timeout: 1500
-            })
-            .fail(function(msg) {
-                if (msg.responseText.split('\n')[0] == "active") {
-                    $('#SERVER_RUN').hide();
-                    $('#SERVER_STOP').css('display', 'block');
-                    $('#label-is-runnung').hide();
-                    $('#label-is-not-runnung').show();
-                    $('#svg-is-runnung').css('display', '');
-                } else {
-                    $('#SERVER_STOP').hide();
-                    $('#SERVER_RUN').css('display', 'block');
-                    $('#label-is-not-runnung').hide();
-                    $('#label-is-runnung').show();
-                    $('#svg-is-runnung').css('display', 'none');
-                }
-            })
-    }
-
-
-
+    
     OBJ.GetIP = function() {
         var getFirstAddress = function(obj) {
             var address = null;
@@ -103,10 +79,8 @@ $(function() {
     Help.init(helpListStreamServer);
     Help.setState("idle");
 
-    //OBJ.CheckServerStatus();
     setInterval(OBJ.GetIP, 1000);
-    //   setInterval(OBJ.CheckServerStatus, 3000);
-
+    
     $('#CLEAR_FILES').click(OBJ.DeleteFiles);
 
 });

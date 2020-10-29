@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
         /* Trigger */
         case 't':
         {
-            int trigger = 0;
+            int trigger = 1;
             int edge = -1;
             if (get_trigger(&trigger, &edge, optarg) != 0) {
                 usage();
@@ -433,8 +433,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    t_params[GAIN1_PARAM] = 0;
-    t_params[GAIN2_PARAM] = 0;
+
 
     /* Acquisition size */
     uint32_t size = 0;

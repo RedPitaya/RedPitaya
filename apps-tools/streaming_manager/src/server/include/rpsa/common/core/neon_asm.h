@@ -1,10 +1,9 @@
 //
 // Created by user on 03.04.19.
 //
+#pragma once
+#pragma GCC diagnostic ignored "-Wunused-function"
 #include <iostream>
-
-#ifndef PROJECT_NEON_ASM_H
-#define PROJECT_NEON_ASM_H
 
 namespace {
     static void memcpy_neon(volatile void *dst, volatile const void *src, size_t n) noexcept
@@ -59,5 +58,3 @@ namespace {
 #endif
     }
 }
-
-#endif //PROJECT_NEON_ASM_H

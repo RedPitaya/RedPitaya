@@ -10,6 +10,8 @@
 
     SM.max_SD_rate_devider_1ch = [12.0 , 24.0];
     SM.max_SD_rate_devider_2chs = [24.0 , 48.0];
+    SM.first_run_net = true;
+    SM.first_run_sd  = true;
     
 
     SM.updateMaxLimits = function(model) {
@@ -24,7 +26,6 @@
                     
                     SM.max_SD_rate_1ch   = [max_possible_rate / SM.max_SD_rate_devider_1ch[0] , max_possible_rate /SM.max_SD_rate_devider_1ch[1]];
                     SM.max_SD_rate_2chs  = [max_possible_rate / SM.max_SD_rate_devider_2chs[0] , max_possible_rate / SM.max_SD_rate_devider_2chs[1]];
-                    $("#SS_RATE").val(max_possible_rate);
                 }
 
                 if (model.value == "Z20") {
@@ -36,7 +37,6 @@
                     
                     SM.max_SD_rate_1ch   = [max_possible_rate / SM.max_SD_rate_devider_1ch[0] , max_possible_rate /SM.max_SD_rate_devider_1ch[1]];
                     SM.max_SD_rate_2chs  = [max_possible_rate / SM.max_SD_rate_devider_2chs[0] , max_possible_rate / SM.max_SD_rate_devider_2chs[1]];
-                    $("#SS_RATE").val(max_possible_rate);
                 }
                 
                 SM.updateLimits();
@@ -48,7 +48,9 @@
     SM.updateLimits = function() {
         var rate = 125e6;
         var rate_devider = 1;
-        
+        var default_devider_net = 12.0;
+        var default_devider_sd  = 24.0;
+
         var use_net = $("#SS_USE_NET").prop('checked');
         var channel_mode = $("#SS_CHANNEL option:selected").val();
         var resolution = $("#SS_RESOLUTION option:selected").val();
@@ -62,6 +64,11 @@
                     rate = SM.max_rate_2chs[resolution-1];
                     rate_devider = SM.max_rate_devider_2chs[resolution-1];
                 }
+                if (SM.first_run_net){
+                    SM.first_run_net = false;
+                    rate = SM.ss_full_rate / default_devider_net;
+                    rate_devider = default_devider_net;
+                }
             }else {
                 if (channel_mode != 3) {
                     rate = SM.max_SD_rate_1ch[resolution-1];
@@ -69,6 +76,11 @@
                 }else{
                     rate = SM.max_SD_rate_2chs[resolution-1];
                     rate_devider = SM.max_SD_rate_devider_2chs[resolution-1];
+                }
+                if (SM.first_run_sd){
+                    SM.first_run_sd = false;
+                    rate = SM.ss_full_rate / default_devider_sd;
+                    rate_devider = default_devider_sd;
                 }
             }
         }
@@ -83,6 +95,11 @@
                     rate = SM.max_rate_2chs[resolution-1];
                     rate_devider = SM.max_rate_devider_2chs[resolution-1];
                 }
+                if (SM.first_run_net){
+                    SM.first_run_net = false;
+                    rate = SM.ss_full_rate / default_devider_net;
+                    rate_devider = default_devider_net;
+                }
             }else {
                 if (channel_mode != 3) {
                     rate = SM.max_SD_rate_1ch[resolution-1];
@@ -91,7 +108,17 @@
                     rate = SM.max_SD_rate_2chs[resolution-1];
                     rate_devider = SM.max_SD_rate_devider_2chs[resolution-1];
                 }
+                if (SM.first_run_sd){
+                    SM.first_run_sd = false;
+                    rate = SM.ss_full_rate / default_devider_sd;
+                    rate_devider = default_devider_sd;
+                }
             }
+            
+            var nodes = document.getElementsByClassName("122_16_block_remove");
+                    [...nodes].forEach((element, index, array) => {
+                            element.parentNode.removeChild(element);
+                        });                           
         }
         SM.ss_max_rate = rate;
         SM.ss_max_rate_devider = rate_devider;

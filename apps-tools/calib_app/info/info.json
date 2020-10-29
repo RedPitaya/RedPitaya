@@ -1,0 +1,6 @@
+{
+    "name": "Calibration",
+    "version": "1.00-0",
+    "revision": "",
+    "description": "Application for calibrating ADC and DAC"
+}

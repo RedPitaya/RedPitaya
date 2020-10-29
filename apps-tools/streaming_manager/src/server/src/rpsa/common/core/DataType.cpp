@@ -162,7 +162,8 @@ namespace TDMS {
                 std::cout << "DataType Error: " << message << std::endl;
 			//	throw std::invalid_argument(message.c_str());
 			}
-		}		
+		}	
+        return 0;	
 	}
 	
 	uint64_t DataType::GetArrayLength(uint32_t dataType, uint64_t size)
@@ -181,11 +182,11 @@ namespace TDMS {
             case Integer8: sprintf(cstr,"%i", this->GetData<int8_t>()); break;
             case Integer16: sprintf(cstr,"%i", this->GetData<int16_t>()); break;
             case Integer32: sprintf(cstr,"%i", this->GetData<int32_t>()); break;
-            case Integer64: sprintf(cstr,"%ld", this->GetData<int64_t>()); break;
+            case Integer64: sprintf(cstr,"%lld", this->GetData<int64_t>()); break;
             case UnsignedInteger8: sprintf(cstr,"%u", this->GetData<u_int8_t>()); break;
             case UnsignedInteger16: sprintf(cstr,"%u", this->GetData<u_int16_t>()); break;
             case UnsignedInteger32: sprintf(cstr,"%u", this->GetData<u_int32_t>()); break;
-            case UnsignedInteger64: sprintf(cstr,"%lu", this->GetData<u_int64_t>()); break;
+            case UnsignedInteger64: sprintf(cstr,"%llu", this->GetData<u_int64_t>()); break;
             case SingleFloat:
             case SingleFloatWithUnit: sprintf(cstr,"%f", this->GetData<float>()); break;
             case DoubleFloat:
@@ -303,7 +304,7 @@ namespace TDMS {
                             printf("\t\t\t- %i\n",((int32_t*)r->data)[j]);
                             break;
                         case Integer64:
-                            printf("\t\t\t- %ld\n",((int64_t*)r->data)[j]);
+                            printf("\t\t\t- %lld\n",((int64_t*)r->data)[j]);
                             break;
                         case UnsignedInteger8:
                             printf("\t\t\t- %u\n",((u_int8_t *)r->data)[j]);
@@ -315,7 +316,7 @@ namespace TDMS {
                             printf("\t\t\t- %u\n",((u_int32_t *)r->data)[j]);
                             break;
                         case UnsignedInteger64:
-                            printf("\t\t\t- %lu\n",((u_int64_t *)r->data)[j]);
+                            printf("\t\t\t- %llu\n",((u_int64_t *)r->data)[j]);
                             break;
                         case SingleFloat:
                         case SingleFloatWithUnit:

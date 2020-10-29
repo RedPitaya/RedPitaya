@@ -1,4 +1,5 @@
 #pragma once
+#pragma GCC diagnostic ignored "-Wpedantic"
 
 #include <stdint.h>
 #include <vector>

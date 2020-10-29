@@ -16,30 +16,36 @@
 MODEL ?= Z10
 
 # Versioning system
-VERSION ?= 0.25
+VERSION ?= 1.0
 REVISION ?= devbuild
+INSTALL_DIR ?= .
 
 # List of compiled object files (not yet linked to executable)
-OBJS = fpga_awg.o bode.o fpga_osc.o main_osc.o worker.o
+OBJS = bode.o ba_api.o
 # List of raw source files (all object files, renamed from .o to .c)
-SRCS = $(subst .o,.c, $(OBJS)))
+SRCS = $(subst .o,.cpp, $(OBJS)))
 
 # Executable name
 TARGET=bode
 
 # GCC compiling & linking flags
-CFLAGS  = -g -std=gnu99 -Wall -Werror
-CFLAGS += -I../../api/include
+CFLAGS  = -g -std=c++11 -Wall -Werror -Os
+CFLAGS += -I$(INSTALL_DIR)/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -D$(MODEL)
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -lpthread
+LIBS  = -L$(INSTALL_DIR)/lib 
+LIBS +=-static -lrp -lm -lpthread
 
 # Main GCC executable (used for compiling and linking)
-CC=$(CROSS_COMPILE)gcc
+CC=$(CROSS_COMPILE)g++
 # Installation directory
-INSTALL_DIR ?= .
+
+ifeq ($(MODEL),Z20_250_12)
+CFLAGS += -I$(INSTALL_DIR)/include/api250-12
+LIBS += -lrp-gpio -lrp-i2c -lrp-spi
+endif 
 
 # Makefile is composed of so called 'targets'. They give basic structure what 
 # needs to be execued during various stages of the building/removing/installing
@@ -61,7 +67,7 @@ all: $(TARGET)
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
-%.o: %.c
+%.o: %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)

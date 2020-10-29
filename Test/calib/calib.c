@@ -4,7 +4,7 @@
  * @brief Red Pitaya FE & BE calibration utility.
  *
  * @Author Ales Bardorfer <ales.bardorfer@redpitaya.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -35,7 +35,8 @@ typedef enum {
 	WANT_READ     = 0x01,
 	WANT_WRITE    = 0x02,
 	WANT_DEFAULTS = 0x04,
-	WANT_VERBOSE  = 0x08
+	WANT_VERBOSE  = 0x08,
+	WANT_Z_MODE   = 0x10
 } WANT_FLAGS;
 
 
@@ -61,7 +62,7 @@ void usage()
 
 
 /** Read eeprom calibration data and print them */
-int ReadCalib(bool factory, bool verbose)
+int ReadCalib(bool factory, bool verbose, bool z_mode)
 {
     eepromWpData_t eepromData;
     int ret = 0;
@@ -78,11 +79,30 @@ int ReadCalib(bool factory, bool verbose)
         RpPrintEepromCalData(eepromData);
     } else {
         int i;
-
-        for(i = 0; i < eCalParEnd; i++) {
-            fprintf(stdout, "%20d", eepromData.feCalPar[i]);
-        }
-        fprintf(stdout, "\n");
+	if (!z_mode) {
+        	for(i = 0; i < eCalParEnd; i++) {
+           		fprintf(stdout, "%20d", eepromData.feCalPar[i]);
+        	}
+        	fprintf(stdout, "\n");
+	}else{
+#ifdef Z20_250_12
+		fprintf(stdout, "Unsupport mode\n");
+#else
+		fprintf(stdout, "%20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d\n",
+                        eepromData.feCalPar[eCalPar_FE_CH1_DC_offs],
+                        eepromData.feCalPar[eCalPar_FE_CH2_DC_offs],
+                        eepromData.feCalPar[eCalPar_FE_CH1_FS_G_LO],
+                        eepromData.feCalPar[eCalPar_FE_CH2_FS_G_LO],
+                        eepromData.feCalPar[eCalPar_FE_CH1_DC_offs_HI],
+                        eepromData.feCalPar[eCalPar_FE_CH2_DC_offs_HI],
+                        eepromData.feCalPar[eCalPar_FE_CH1_FS_G_HI],
+                        eepromData.feCalPar[eCalPar_FE_CH2_FS_G_HI],
+                        eepromData.feCalPar[eCalPar_BE_CH1_DC_offs],
+                        eepromData.feCalPar[eCalPar_BE_CH2_DC_offs],
+                        eepromData.feCalPar[eCalPar_BE_CH1_FS],
+                        eepromData.feCalPar[eCalPar_BE_CH2_FS]);
+#endif
+	}
     }
 
     return ret;
@@ -158,7 +178,7 @@ int main(int argc, char **argv)
     }
 
     /* Parse options */
-    const char *optstring = "rwfdvh";
+    const char *optstring = "rwfdvhz";
     unsigned int want_bits = 0;
     bool factory = false;
 
@@ -184,6 +204,11 @@ int main(int argc, char **argv)
 
         case 'v':
             want_bits |= WANT_VERBOSE;
+            break;
+
+        // Specal mode for 125/122 production script
+        case 'z':
+                want_bits |= WANT_Z_MODE;
             break;
 
         case 'h':
@@ -225,7 +250,7 @@ int main(int argc, char **argv)
 
     /* Read */
     if (want_bits & WANT_READ) {
-        ret = ReadCalib(factory, want_bits & WANT_VERBOSE);
+        ret = ReadCalib(factory, want_bits & WANT_VERBOSE , want_bits  & WANT_Z_MODE);
         if (ret) {
             fprintf(stderr, "ERROR: Read failed!\n");
             return ret;

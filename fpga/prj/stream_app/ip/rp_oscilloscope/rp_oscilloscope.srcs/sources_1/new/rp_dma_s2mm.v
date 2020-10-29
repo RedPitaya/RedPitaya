@@ -23,7 +23,12 @@ module rp_dma_s2mm
   output wire [31:0]                    reg_sts,  
   input  wire [31:0]                    reg_dst_addr1,  
   input  wire [31:0]                    reg_dst_addr2,  
-  input  wire [31:0]                    reg_buf_size,    
+  input  wire [31:0]                    reg_buf_size,
+  //
+  output wire [31:0]                    buf1_ms_cnt,
+  output wire [31:0]                    buf2_ms_cnt,
+  input  wire                           buf_sel_in,
+  output wire                           buf_sel_out,
   //                                        
   output wire [(AXI_ADDR_BITS-1):0]     m_axi_awaddr,     
   output wire [7:0]                     m_axi_awlen,      
@@ -67,6 +72,7 @@ wire                      fifo_empty;
 wire [FIFO_CNT_BITS-1:0]  fifo_rd_cnt;
 wire [7:0]                req_data;
 wire                      req_we;
+wire                      fifo_dis;
 
 assign m_axi_wdata  = fifo_rd_data;
 assign m_axi_wstrb  = {AXI_DATA_BITS/8{1'b1}};
@@ -101,7 +107,13 @@ rp_dma_s2mm_ctrl #(
   .reg_buf_size   (reg_buf_size),    
   .fifo_rst       (fifo_rst),                 
   .req_data       (req_data),
-  .req_we         (req_we),     
+  .req_we         (req_we), 
+  .data_valid     (s_axis_tvalid),
+  .buf1_ms_cnt    (buf1_ms_cnt),
+  .buf2_ms_cnt    (buf2_ms_cnt),
+  .buf_sel_in     (buf_sel_in),
+  .buf_sel_out    (buf_sel_out),
+  .fifo_dis       (fifo_dis),
   .m_axi_awaddr   (m_axi_awaddr),       
   .m_axi_awlen    (m_axi_awlen),        
   .m_axi_awsize   (m_axi_awsize),       
@@ -110,7 +122,7 @@ rp_dma_s2mm_ctrl #(
   .m_axi_awcache  (m_axi_awcache),      
   .m_axi_awvalid  (m_axi_awvalid),      
   .m_axi_awready  (m_axi_awready), 
-  .m_axi_wvalid   (m_axi_wvalid),     
+  .m_axi_wvalid   (m_axi_wvalid),    
   .m_axi_wready   (m_axi_wready),     
   .m_axi_wlast    (m_axi_wlast));      
 
@@ -146,7 +158,7 @@ fifo_axi_data
   .rd_clk         (m_axi_aclk),               
   .rst            (fifo_rst),     
   .din            (fifo_wr_data),                     
-  .wr_en          (fifo_wr_we),                 
+  .wr_en          (fifo_wr_we && ~fifo_dis),               
   .full           (),   
   .dout           (fifo_rd_data),    
   .rd_en          (fifo_rd_re),                                 

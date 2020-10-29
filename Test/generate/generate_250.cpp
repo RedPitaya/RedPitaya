@@ -100,11 +100,11 @@ void synthesize_signal(config_t &conf,
     uint32_t calib_gain = 0;
     if (conf.calib == true){
         if (conf.gain == v_2){
-            calib_gain = (conf.ch == 1) ? g_osc_calib_params.gen_ch1_g_1 : g_osc_calib_params.gen_ch2_g_1;
-            dcoffs = (conf.ch == 1) ? g_osc_calib_params.gen_ch1_off_1 : g_osc_calib_params.gen_ch2_off_1;
+            calib_gain = (conf.ch == 0) ? g_osc_calib_params.gen_ch1_g_1 : g_osc_calib_params.gen_ch2_g_1;
+            dcoffs = (conf.ch == 0) ? g_osc_calib_params.gen_ch1_off_1 : g_osc_calib_params.gen_ch2_off_1;
         }else{
-            calib_gain = (conf.ch == 1) ? g_osc_calib_params.gen_ch1_g_5 : g_osc_calib_params.gen_ch2_g_5;
-            dcoffs = (conf.ch == 1) ? g_osc_calib_params.gen_ch1_off_5 : g_osc_calib_params.gen_ch2_off_5;
+            calib_gain = (conf.ch == 0) ? g_osc_calib_params.gen_ch1_g_5 : g_osc_calib_params.gen_ch2_g_5;
+            dcoffs = (conf.ch == 0) ? g_osc_calib_params.gen_ch1_off_5 : g_osc_calib_params.gen_ch2_off_5;
         }
         float fullScale = (uint32_t) (2.0 / 100.0 * ((uint64_t)1<<32));
         scale *= fullScale / (float)calib_gain  ;
@@ -264,6 +264,7 @@ void write_data_fpga(uint32_t ch,
      *       Otherwise, the not-to-be-affected channel is restarted as well
      *       causing unwanted disturbances on that channel.
      */
+    g_awg_reg->state_machine_conf = 0x00510051; //need for sync channels     
     g_awg_reg->state_machine_conf = 0x02110211;
 
     fpga_awg_exit();

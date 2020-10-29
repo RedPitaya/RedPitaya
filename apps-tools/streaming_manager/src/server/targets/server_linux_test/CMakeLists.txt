@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(server_linux_test)
 
-SET(CMAKE_C_FLAGS_DEBUG "-D_DEBUG")
-
 add_executable(server_linux_test server.cpp)
 
 target_compile_options(server_linux_test
-    PRIVATE -std=c++14 -pedantic -Wextra)
+    PRIVATE -std=c++11 -pedantic -Wextra)
 
 target_compile_definitions(server_linux_test
     PRIVATE ASIO_STANDALONE)

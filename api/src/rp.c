@@ -24,6 +24,7 @@
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
+#include "hw/uart.h"
 
 static char version[50];
 
@@ -157,12 +158,20 @@ int rp_CalibrationReset() {
     return calib_Reset();
 }
 
+int rp_CalibrationFactoryReset() {
+    return calib_LoadFromFactoryZone();
+}
+
 int rp_CalibrationSetCachedParams() {
     return calib_setCachedParams();
 }
 
 int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
-    return calib_WriteParams(calib_params);
+    return calib_WriteParams(calib_params,false);
+}
+
+int rp_CalibrationSetParams(rp_calib_params_t calib_params){
+    return calib_SetParams(calib_params);
 }
 
 /**
@@ -831,6 +840,14 @@ int rp_GenTrigger(uint32_t channel) {
     return gen_Trigger(channel);
 }
 
+int rp_GenSynchronise() {
+    return gen_Synchronise();
+}
+
+int rp_GenOutEnableSync(bool enable){
+    return gen_EnableSync(enable);
+}
+
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
 {
 	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
@@ -877,3 +894,19 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     return gen_getGainOut(channel,status);
 }
 #endif
+
+int rp_UartInit(){
+    return uart_Init();
+}
+
+int rp_UartRelease(){
+    return uart_Release();
+}
+
+int rp_UartRead(unsigned char *buffer, int *size){
+    return uart_read(buffer,size);
+}
+
+int rp_UartWrite(unsigned char *buffer, int size){
+    return uart_write(buffer,size);
+}

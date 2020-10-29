@@ -13,6 +13,7 @@
 #   include "rpsa/common/core/aligned_alloc.h"
 #endif // OS_MACOS
 
+#define UNUSED(x) [&x]{}()
 
 #ifdef DEBUG_OUT
 #define PrintDebugInFile(X) PrintDebugLogInFile(X);
@@ -28,7 +29,7 @@ void PrintDebugLogInFile(const char *message){
 	fs.close();
 }
 
-CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingManager,COscilloscope::Ptr _osc_ch, unsigned short _resolution,int _oscRate,int _channels) :
+CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingManager,COscilloscope::Ptr _osc_ch, unsigned short _resolution,int _oscRate,int _channels, int _adc_mode, uint32_t _adc_bits) :
     m_StreamingManager(_StreamingManager),
     m_Osc_ch(_osc_ch),
     m_OscThread(),
@@ -42,6 +43,8 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_isRun(false),
     m_isRunNonBloking(false),
     m_oscRate(_oscRate),
+    m_adc_mode(_adc_mode),
+    m_adc_bits(_adc_bits),
     m_channels(_channels),
     mtx()
 {
@@ -73,8 +76,9 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
 
 CStreamingApplication::~CStreamingApplication()
 {
+
     stop();
-  
+
     if (m_WriteBuffer_ch1) {
         free(m_WriteBuffer_ch1);
         m_WriteBuffer_ch1 = nullptr;
@@ -84,8 +88,6 @@ CStreamingApplication::~CStreamingApplication()
         free(m_WriteBuffer_ch2);
         m_WriteBuffer_ch2 = nullptr;
     }
-    
-
 }
 
 void CStreamingApplication::run()
@@ -135,7 +137,7 @@ void CStreamingApplication::runNonBlock(){
         std::cerr << "Error: CStreamingApplication::runNonBlock(), " << e.what() << std::endl;
         PrintDebugInFile( e.what());
     }
-};
+}
 
 bool CStreamingApplication::stop(bool wait){
     mtx.lock();   
@@ -154,7 +156,7 @@ bool CStreamingApplication::stop(bool wait){
     }
     mtx.unlock();
     return state;
-};
+}
 
 void CStreamingApplication::oscWorker()
 {
@@ -166,23 +168,24 @@ void CStreamingApplication::oscWorker()
     long long int timeBegin = value.count();
     uintmax_t counter = 0;
     uintmax_t passCounter = 0;
-    uint8_t   skipBuffs = 3;
+    uint8_t   skipBuffs = 0;
     m_Osc_ch->prepare();
 try{
     while (m_OscThreadRun.test_and_set())
     {
 #ifndef DISABLE_OSC
+        m_Osc_ch->wait();
         m_size_ch1 = 0;
         m_size_ch2 = 0;
-        bool overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
+        uint32_t overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
         if (skipBuffs > 0) { skipBuffs--; continue; }
-        if (overFlow) {
-            m_lostRate++;
+        if (overFlow > 0) {
+            m_lostRate += overFlow;
             ++passCounter;
         }
 #endif
-        oscNotify(m_lostRate, m_oscRate, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
-        
+        LOG_P("Pass\n");
+        oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
         ++counter;
 
         timeNow = std::chrono::system_clock::now();
@@ -191,8 +194,9 @@ try{
 
           
         if ((value.count() - timeBegin) >= 5000) {
-            std::cout << "Lost rate: " << passCounter << " / " << counter << " (" << (100. * static_cast<double>(passCounter) / counter) << " %)\n";
+            std::cout << "Lost samples: " << m_lostRate  << "\n";
             counter = 0;
+            m_lostRate = 0;
             passCounter = 0;
             timeBegin = value.count();
         }
@@ -218,17 +222,15 @@ try{
 }
 
 
- bool CStreamingApplication::passCh(int _bufferIndex, size_t &_size1, size_t &_size2){
-    
+ uint32_t CStreamingApplication::passCh(int _bufferIndex, size_t &_size1, size_t &_size2){
+    UNUSED(_bufferIndex);
     uint8_t *buffer_ch1 = nullptr;
     uint8_t *buffer_ch2 = nullptr;
     size_t   size = 0;
     bool success = false;
-    void *WriteBuffer_ch1 = nullptr;
-    bool  overFlow1 = false;
-    bool  overFlow2 = false;
+    uint32_t overFlow = 0;
     
-    success = m_Osc_ch->next(buffer_ch1, buffer_ch2, size , overFlow1 , overFlow2);
+    success = m_Osc_ch->next(buffer_ch1, buffer_ch2, size , overFlow );
 
     if (!success) {
         std::cerr << "Error: m_Osc->next()" << std::endl;
@@ -290,18 +292,19 @@ try{
     //      std::cout << (static_cast<int>(wb[_bufferIndex][i]) & 0xFF)  << " ";
     //   }
  	// exit(1);
-    return overFlow1 | overFlow2;
+    return overFlow;
 }
 
 
-int CStreamingApplication::oscNotify(uint64_t _lostRate, uint32_t _oscRate,const void *_buffer_ch1, size_t _size_ch1,const void *_buffer_ch2, size_t _size_ch2)
+int CStreamingApplication::oscNotify(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, size_t _size_ch1,const void *_buffer_ch2, size_t _size_ch2)
 {
-    return m_StreamingManager->passBuffers(_lostRate,_oscRate, _buffer_ch1,_size_ch1,_buffer_ch2,_size_ch2,m_Resolution, 0);
+    return m_StreamingManager->passBuffers(_lostRate,_oscRate, _adc_mode,_adc_bits, _buffer_ch1,_size_ch1,_buffer_ch2,_size_ch2,m_Resolution, 0);
 }
 
 
 void CStreamingApplication::signalHandler(const asio::error_code &_error, int _signalNumber)
 {
+    UNUSED(_error);
     static_cast<void>(_signalNumber);
     stop();
 }

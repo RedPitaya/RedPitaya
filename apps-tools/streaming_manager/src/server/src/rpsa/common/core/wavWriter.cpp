@@ -18,6 +18,10 @@ void CWaveWriter::resetHeaderInit(){
 
 std::iostream *CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2,unsigned short resolution){
 
+    // IF resolution = 32bit this FLOAT type data
+    m_bitDepth = resolution;
+    assert(((m_bitDepth % 8 == 0 ) && (m_bitDepth / 8 > 0))  && "Wav bit resolution is invalid");
+
     if (size_ch1!=0 && size_ch2 != 0)
         assert(size_ch1 == size_ch2);
 
@@ -31,11 +35,10 @@ std::iostream *CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,u
         m_numChannels = 0;
     }
 
-    m_bitDepth = resolution;
     if (size_ch1!=0)
-        m_samplesPerChannel = size_ch1 / (m_bitDepth==8 ? 1 : 2);
+        m_samplesPerChannel = size_ch1 / (m_bitDepth / 8);
     else
-        m_samplesPerChannel = size_ch2 / (m_bitDepth==8 ? 1 : 2);
+        m_samplesPerChannel = size_ch2 / (m_bitDepth / 8);
     //////////////////
 
     std::stringstream *memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
@@ -118,14 +121,51 @@ std::iostream *CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,u
         }
     }
 
+    if (m_bitDepth == 32)
+    {
+        int Bufflen = (size_ch1 > 0 ? m_samplesPerChannel : 0) + (size_ch2 > 0 ? m_samplesPerChannel : 0);
+        if (Bufflen > 0){
+            float* cross_buff = new float[Bufflen];
+
+
+            if (size_ch2 > 0 && size_ch1 > 0){
+                for (int i = 0; i < m_samplesPerChannel; i++)
+                {
+                    cross_buff[i*2] = ((float*)buffer_ch1)[i];
+                }
+
+                for (int i = 0; i < m_samplesPerChannel; i++)
+                {
+                    cross_buff[i*2 + 1] = ((float*)buffer_ch2)[i];                            
+                }
+            }
+            else {
+                if (size_ch1 > 0){
+                    for (int i = 0; i < m_samplesPerChannel; i++)
+                    {
+                        cross_buff[i] = ((float *) buffer_ch1)[i];
+                    }
+                }
+
+                if (size_ch2 > 0) {
+                    for (int i = 0; i < m_samplesPerChannel; i++) {
+                        cross_buff[i] = ((float *) buffer_ch2)[i];
+                    }
+                }
+            }
+        memory->write((const char*)cross_buff, sizeof(float)* (Bufflen));
+        delete [] cross_buff;
+        }
+    }
+
     return memory;
 }
 
 void CWaveWriter::BuildHeader(std::stringstream *memory){
 
     int sampleRate = 44100;
-    int32_t dataChunkSize = m_samplesPerChannel * m_numChannels * (m_bitDepth==8 ? 1 : 2);
-   
+    int32_t dataChunkSize = m_samplesPerChannel * m_numChannels * (m_bitDepth / 8);
+    int16_t data_format = m_bitDepth == 32 ? 0x0003: 0x0001; 
     addStringToFileData(memory,"RIFF");
     
     int32_t fileSizeInBytes = 4 + 24 + 8 + dataChunkSize;
@@ -137,7 +177,7 @@ void CWaveWriter::BuildHeader(std::stringstream *memory){
     // FORMAT CHUNK
     addStringToFileData(memory,"fmt ");
     addInt32ToFileData (memory, 16); // format chunk size (16 for PCM)
-    addInt16ToFileData (memory, 1); // audio format = 1
+    addInt16ToFileData (memory, data_format); // audio format = 1
     addInt16ToFileData (memory, (int16_t)m_numChannels); // num channels
     addInt32ToFileData (memory, (int32_t)m_samplesPerChannel); // sample rate
     

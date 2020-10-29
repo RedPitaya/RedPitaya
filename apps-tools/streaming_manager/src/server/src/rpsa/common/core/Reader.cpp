@@ -24,7 +24,7 @@ namespace TDMS
 
     shared_ptr<Segment> Reader::ReadSegment(uint64_t offset)
 	{
-		if (offset < 0 || offset >= m_fileSize)
+		if (offset >= m_fileSize)
 			return NULL;
 
 		m_fileStream->seekg(offset, m_fileStream->beg);

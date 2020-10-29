@@ -22,6 +22,10 @@
 #include "rp-i2c-max7311-c.h"
 #endif
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 // global variables
 // TODO: should be organized into a system status structure
 float         chA_amplitude            = 1, chB_amplitude            = 1;
@@ -63,8 +67,6 @@ int gen_SetDefaultValues() {
     gen_setAmplitude(RP_CH_2, AMPLITUDE_MAX);
     gen_setDutyCycle(RP_CH_1, 0.5);
     gen_setDutyCycle(RP_CH_2, 0.5);
-    gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
-    gen_setGenMode(RP_CH_2, RP_GEN_MODE_CONTINUOUS);
     gen_setBurstCount(RP_CH_1, 1);
     gen_setBurstCount(RP_CH_2, 1);
     gen_setBurstPeriod(RP_CH_1, BURST_PERIOD_MIN);
@@ -73,6 +75,8 @@ int gen_SetDefaultValues() {
     gen_setTriggerSource(RP_CH_2, RP_GEN_TRIG_SRC_INTERNAL);
     gen_setPhase(RP_CH_1, 0.0);
     gen_setPhase(RP_CH_2, 0.0);
+    gen_setGenMode(RP_CH_1, RP_GEN_MODE_CONTINUOUS);
+    gen_setGenMode(RP_CH_2, RP_GEN_MODE_CONTINUOUS);
 #ifdef Z20_250_12
     gen_setGainOut(RP_CH_1,RP_GAIN_1X);
     gen_setGainOut(RP_CH_2,RP_GAIN_1X);
@@ -86,6 +90,10 @@ int gen_Disable(rp_channel_t channel) {
 
 int gen_Enable(rp_channel_t channel) {
     return generate_setOutputDisable(channel, false);
+}
+
+int gen_EnableSync(bool enable){
+    return generate_setOutputEnableSync(enable); 
 }
 
 int gen_IsEnable(rp_channel_t channel, bool *value) {
@@ -121,15 +129,15 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
 }
 
 int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
-#ifdef Z20_250_12
-    rp_gen_gain_t gain;
-        CHANNEL_ACTION(channel,
-            gain = chA_gain,
-            gain = chB_gain)
-    return generate_getAmplitude(channel, gain , amplitude);
-#else
-    return generate_getAmplitude(channel, amplitude);
-#endif
+    if (channel == RP_CH_1) {
+        *amplitude = chA_amplitude;
+        return RP_OK;
+    }
+    if (channel == RP_CH_2) {
+        *amplitude = chB_amplitude;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 int gen_setOffset(rp_channel_t channel, float offset) {
@@ -154,15 +162,15 @@ int gen_setOffset(rp_channel_t channel, float offset) {
 }
 
 int gen_getOffset(rp_channel_t channel, float *offset) {
-#ifdef Z20_250_12
-    rp_gen_gain_t gain;
-        CHANNEL_ACTION(channel,
-            gain = chA_gain,
-            gain = chB_gain)
-    return generate_getDCOffset(channel, gain , offset);
-#else
-    return generate_getDCOffset(channel, offset);
-#endif
+    if (channel == RP_CH_1) {
+        *offset = chA_offset;
+        return RP_OK;
+    }
+    if (channel == RP_CH_2) {
+        *offset = chB_offset;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 int gen_setFrequency(rp_channel_t channel, float frequency) {
@@ -190,6 +198,8 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
 int gen_getFrequency(rp_channel_t channel, float *frequency) {
     return generate_getFrequency(channel, frequency);
 }
+
+
 
 int gen_setPhase(rp_channel_t channel, float phase) {
     if (phase < PHASE_MIN || phase > PHASE_MAX) {
@@ -525,6 +535,7 @@ int synthesize_signal(rp_channel_t channel) {
         case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data,buf_size);                 break;
         case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data,buf_size);                 break;
         case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
+        case RP_WAVEFORM_DC_NEG   : synthesis_DC_NEG   (data,buf_size);                 break; 
         case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data,buf_size);      break;
         case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size); break;
         default:                    return RP_EIPV;
@@ -564,6 +575,13 @@ int synthesis_rampDown(float *data_out,uint16_t buffSize) {
 int synthesis_DC(float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
         data_out[i] = 1.0;
+    }
+    return RP_OK;
+}
+
+int synthesis_DC_NEG(float *data_out,uint16_t buffSize) {
+    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+        data_out[i] = -1.0;
     }
     return RP_OK;
 }
