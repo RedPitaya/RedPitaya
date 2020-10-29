@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
 
     printf("Init result: %d\n",rp_UartInit());
     printf("Write result: %d\n", rp_UartWrite((unsigned char*)buffer,strlen(buffer)));
-    printf("Read result: %d\n",rp_UartRead(false,(unsigned char*)rx_buf,&size));
+    printf("Read result: %d\n",rp_UartRead((unsigned char*)rx_buf,&size));
     printf("Size: %d (%s)\n",size,rx_buf);
     printf("UnInit result: %d\n",rp_UartRelease());
     return 0;

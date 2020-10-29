@@ -21,7 +21,7 @@ int uart_InitDevice(char *_device);
 int uart_SetDefaultSettings();
 int uart_Release();
 
-int uart_read(bool _wait_data, unsigned char *_buffer,int *size);
+int uart_read(unsigned char *_buffer,int *size);
 int uart_write(unsigned char *_buffer, int size);
 
 #endif

@@ -91,7 +91,7 @@ int uart_SetDefaultSettings(){
 
 }
 
-int uart_read(bool _wait_data, unsigned char *_buffer,int *size){
+int uart_read(unsigned char *_buffer,int *size){
 
     if (_buffer == NULL || *size <= 0){
         fprintf(stderr, "Failed read from UART.\n");
@@ -107,8 +107,6 @@ int uart_read(bool _wait_data, unsigned char *_buffer,int *size){
                 return RP_ERU;
             }
 
-        //    unsigned char rx_buffer[size];
-
             int rx_length = read(uart_fd, (void*)_buffer, *size);
 
             if (rx_length < 0){
@@ -122,11 +120,7 @@ int uart_read(bool _wait_data, unsigned char *_buffer,int *size){
                 }
 
             }else if (rx_length == 0){
-                // Wait data from UART
-                if (! _wait_data) {
-                    *size = 0;
-                    break;
-                }
+                // Nothing to do
             }else{
                 *size = rx_length;
                 /* Data get */

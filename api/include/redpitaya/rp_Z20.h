@@ -1448,13 +1448,12 @@ int rp_UartRelease();
 
 /**
 * Reading values into the buffer from the UART device
-* @param wait_data Blocks the function until the data from UART is read.
 * @param buffer Non-zero buffer for writing data.
 * @param size Buffer size. Returns the amount of data read.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_UartRead(bool wait_data, unsigned char *buffer, int *size);
+int rp_UartRead(unsigned char *buffer, int *size);
 
 /**
 * Writes data to UART

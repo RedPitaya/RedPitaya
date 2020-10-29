@@ -903,8 +903,8 @@ int rp_UartRelease(){
     return uart_Release();
 }
 
-int rp_UartRead(bool wait_data, unsigned char *buffer, int *size){
-    return uart_read(wait_data,buffer,size);
+int rp_UartRead(unsigned char *buffer, int *size){
+    return uart_read(buffer,size);
 }
 
 int rp_UartWrite(unsigned char *buffer, int size){
