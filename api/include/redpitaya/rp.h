@@ -89,6 +89,12 @@ extern "C" {
 #define RP_EMNC   23
 /** Command not supported */
 #define RP_NOTS   24
+/** Failed to init uart */
+#define RP_EIU    25
+/** Failed read from uart */
+#define RP_ERU    26
+/** Failed write to uart */
+#define RP_EWU    27
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
@@ -1430,6 +1436,39 @@ int rp_SetPllControlEnable(bool enable);
 int rp_GetPllControlLocked(bool *status);
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
+
+/**
+ * Opens the UART device (/dev/ttyPS1). Initializes the default settings.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_UartInit();
+
+/**
+* Closes device UART
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartRelease();
+
+/**
+* Reading values into the buffer from the UART device
+* @param wait_data Blocks the function until the data from UART is read.
+* @param buffer Non-zero buffer for writing data.
+* @param size Buffer size. Returns the amount of data read.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartRead(bool wait_data, unsigned char *buffer, int *size);
+
+/**
+* Writes data to UART
+* @param buffer The buffer to be written to the UART.
+* @param size Buffer size.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartWrite(unsigned char *buffer, int size);
 
 #ifdef __cplusplus
 }

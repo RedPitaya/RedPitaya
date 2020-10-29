@@ -24,6 +24,7 @@
 #include "calib.h"
 #include "generate.h"
 #include "gen_handler.h"
+#include "hw/uart.h"
 
 static char version[50];
 
@@ -893,3 +894,19 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     return gen_getGainOut(channel,status);
 }
 #endif
+
+int rp_UartInit(){
+    return uart_Init();
+}
+
+int rp_UartRelease(){
+    return uart_Release();
+}
+
+int rp_UartRead(bool wait_data, unsigned char *buffer, int *size){
+    return uart_read(wait_data,buffer,size);
+}
+
+int rp_UartWrite(unsigned char *buffer, int size){
+    return uart_write(buffer,size);
+}
