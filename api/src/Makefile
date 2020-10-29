@@ -46,7 +46,8 @@ OBJECTS =	common.o \
 		gen_handler.o \
 		spec_dsp.o \
 		spec_fpga.o \
-		rp.o
+		rp.o \
+		hw/uart.o
 		
 ifeq ($(MODEL),Z20_250_12)
 	OBJECTS += calib_250_12.o

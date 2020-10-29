@@ -54,8 +54,7 @@ int main(int argc, char *argv[])
     /* Read buffer to hold the data */
     char *buffer = (char *)malloc(EEPROMSIZE * sizeof(char));
 
-    char data[] = "THIS IS A TEST MESSAGE FOR THE I2C PROTOCOL COMMUNICATION WITH A EEPROM. IT WAS WRITTEN FOR A
-    REDPITAYA MEASURMENT TOOL.";
+    char data[] = "THIS IS A TEST MESSAGE FOR THE I2C PROTOCOL COMMUNICATION WITH A EEPROM. IT WAS WRITTEN FOR A REDPITAYA MEASURMENT TOOL.";
     size_t size = strlen(data);
 
     /* Sample offset inside an eeprom */

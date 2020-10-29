@@ -1495,6 +1495,38 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status);
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 
+/**
+ * Opens the UART device (/dev/ttyPS1). Initializes the default settings.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_UartInit();
+
+/**
+* Closes device UART
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartRelease();
+
+/**
+* Reading values into the buffer from the UART device
+* @param buffer Non-zero buffer for writing data.
+* @param size Buffer size. Returns the amount of data read.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartRead(unsigned char *buffer, int *size);
+
+/**
+* Writes data to UART
+* @param buffer The buffer to be written to the UART.
+* @param size Buffer size.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartWrite(unsigned char *buffer, int size);
+
 #ifdef __cplusplus
 }
 #endif
