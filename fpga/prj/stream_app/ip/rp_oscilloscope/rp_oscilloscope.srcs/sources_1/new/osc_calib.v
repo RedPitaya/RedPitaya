@@ -70,6 +70,9 @@ end
 ////////////////////////////////////////////////////////////
 
 assign gain_uns = offset_calc_limit[AXIS_DATA_BITS-1] ? -offset_calc_limit : offset_calc_limit;
+wire pos_gain = gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
+wire neg_gain = -gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
+
 always @(posedge clk)
 begin
   gain_sign     <= offset_calc_limit[AXIS_DATA_BITS-1];
@@ -83,10 +86,10 @@ begin
   else
     gain_calc =  gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
 
-  if   (( gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)] > CALC_MAX[29-1:0])   && ~gain_sign) begin
+  if   (( gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)] > CALC_MAX)   && ~gain_sign) begin
       gain_calc_limit = CALC_MAX;
   end else  begin
-    if ((-gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)]-1 < CALC_MIN[29-1:0]) &&  gain_sign) begin
+    if ((-gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)]-1 < CALC_MIN) &&  gain_sign) begin
       gain_calc_limit = CALC_MIN;
     end else begin
       gain_calc_limit = gain_calc;
