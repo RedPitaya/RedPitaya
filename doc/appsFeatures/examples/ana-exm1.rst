@@ -12,8 +12,10 @@ inputs on Red Pitaya are rated from 0-3.3 Volts.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - R1 10K potentiometer
+
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 
 .. image:: Read_analog_voltage_on_Red_Pitaya_analog_input.png
 
@@ -53,6 +55,11 @@ MATLAB editor, save project and press run.
 Code - C
 ********
 
+.. note::
+
+    C code examples don't require the use of the SCPI server, we have included them here to demonstrate how the same functionality can be achieved with different programming languages. 
+    Instructions on how to compile the code are here -> `link <https://redpitaya.readthedocs.io/en/latest/developerGuide/comC.html>`_
+
 .. code-block:: c
 
     /* Read analog voltage on slow analog input */
@@ -60,7 +67,7 @@ Code - C
     #include <stdio.h>
     #include <stdlib.h>
 
-    #include "redpitaya/rp.h"
+    #include "rp.h"
 
     int main (int argc, char **argv) {
         float value [4];
@@ -181,7 +188,8 @@ How to set sockets is described on Blink example
     SOCKET_close(tcpipObj);
 
 Code - LabVIEW
+**************
 
 .. image:: Read-analog-voltage-on-slow-analog-input_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AAAi01EnApzCSEEGr3ksQz3ra/Read%20analog%20voltage%20on%20slow%20analog%20input.vi>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/Read%20analog%20voltage%20on%20slow%20analog%20input.vi>`_

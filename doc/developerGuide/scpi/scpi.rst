@@ -82,13 +82,6 @@ The server can be installed using the nect commands:
    rw
    ninja install
 
-Prerequisite for running mercury based scpi server is to apply mercury dtbo.  
-
-.. code-block:: shell-session 
-
-   sh /opt/redpitaya/sbin/overlay.sh mercury
-
-
 And run as a systemd service:
 
 .. code-block:: shell-session
@@ -99,7 +92,6 @@ Alternatively the server can be run directly from the build directory:
 
 .. code-block:: shell-session
 
-   /opt/redpitaya/sbin/overlay.sh mercury
    LD_LIBRARY_PATH=api1:subprojects/scpi-parser-redpitaya-2017/libscpi/ scpi/scpi
 
 
@@ -110,6 +102,7 @@ SCPI commands
 The next subsystems are available:
 
 Oscilloscope:
+``ACQ:SOURCE[<n>]``
 
 Generator:
 ``:SOURCE[<n>]``
@@ -119,10 +112,6 @@ The value of ``n`` selects one of the ``N`` oscilloscope channels.
 The indexing starts at ``1`` and ends at ``N``.
 The available options for ``n`` are ``1`` or ``2``.
 
-   | {.pattern = "SOURce#:RESET",                              .callback = rpscpi_gen_reset,},
-   | {.pattern = "SOURce#:START",                              .callback = rpscpi_gen_start,},
-   | {.pattern = "SOURce#:STOP",                               .callback = rpscpi_gen_stop,},
-   | {.pattern = "SOURce#:TRIGger",                            .callback = rpscpi_gen_trigger,},
 
 ========================
 ``:OUTPut[<n>][:STATe]``
@@ -199,7 +188,7 @@ Description
 
 Specify signal frequency when generator is in periodic mode.
 Query might return a slightly different value,
-since internaly all values are rounded.
+since internally all values are rounded.
 
 ----------
 Parameters
@@ -232,9 +221,9 @@ Description
 
 Specify signal phase when generator is in periodic mode.
 Query might return a slightly different value,
-since internaly all values are rounded.
+since internally all values are rounded.
 
-A new frequency is applied immediately.
+A new phase is only applied after the generator is triggered again.
 
 ----------
 Parameters
@@ -243,48 +232,12 @@ Parameters
 +---------+-------------+------------+---------+--------------+
 | Name    | Type        | Range      | Default | Default unit |
 +=========+=============+============+=========+==============+
-| <phase> | real number | 0° to 360° | 1 kHz   | degree (°)   |
+| <phase> | real number | 0° to 360° |    0°   | degree (°)   |
 +---------+-------------+------------+---------+--------------+
 
 The unit (degree symbol) should not be provided,
 other units are not supported yet.
-Negative values and values greater then 360° are properly wrapped.
-
-
-=================================
-``[:SOURce[<n>]]:PHASe[:ADJust]``
-=================================
-
--------
-Syntax:
--------
-
-``[:SOURce[<n>]]:PHASe[:ADJust] <phase>``
-``[:SOURce[<n>]]:PHASe[:ADJust]?``
-
------------
-Description
------------
-
-Specify signal phase when generator is in periodic mode.
-Query might return a slightly different value,
-since internaly all values are rounded.
-
-A new phase is only applied after the generator is triggered again.
-
-----------
-Parameters
-----------
-
-+-------------+----------------------+------------+---------+--------------+
-| Name        | Type                 | Range      | Default | Default unit |
-+=============+======================+============+=========+==============+
-| <frequency> | Positive real number | 0° to 360° | 1 kHz   | degree (°)   |
-+-------------+----------------------+------------+---------+--------------+
-
-The unit (degree symbol) should not be provided,
-other units are not supported yet.
-Negative values and values greater then 360° are properly wrapped.
+Negative values and values greater than 360° are properly wrapped.
 
 ===============================
 ``[:SOURce#]:FUNCtion[:SHAPe]``
@@ -328,9 +281,9 @@ Parameters
 | <duty_cycle> | float    | 0 to 1 *or* 0PCT to 100PCT       | 0.5      | none         |
 +--------------+----------+----------------------------------+----------+--------------+
 
-============================
-[:SOURce#]:TRACe:DATA[:DATA]
-============================
+================================
+``[:SOURce#]:TRACe:DATA[:DATA]``
+================================
 
 -------
 Syntax:
@@ -367,18 +320,3 @@ Parameters
 +--------+-------------+------------+---------+--------------+
 
 
-
-    {.pattern = "[SOURce#]:BURSt[:MODE]",                     .callback = rpscpi_gen_set_burst_mode,},
-    {.pattern = "[SOURce#]:BURSt[:MODE]?",                    .callback = rpscpi_gen_get_burst_mode,},
-    {.pattern = "[SOURce#]:BURSt:DATA:REPetitions",           .callback = rpscpi_gen_set_data_repetitions,},
-    {.pattern = "[SOURce#]:BURSt:DATA:REPetitions?",          .callback = rpscpi_gen_get_data_repetitions,},
-    {.pattern = "[SOURce#]:BURSt:DATA:LENgth",                .callback = rpscpi_gen_set_data_length,},
-    {.pattern = "[SOURce#]:BURSt:DATA:LENgth?",               .callback = rpscpi_gen_get_data_length,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:LENgth",              .callback = rpscpi_gen_set_period_length,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:LENgth?",             .callback = rpscpi_gen_get_period_length,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:NUMber",              .callback = rpscpi_gen_set_period_number,},
-    {.pattern = "[SOURce#]:BURSt:PERiod:NUMber?",             .callback = rpscpi_gen_get_period_number,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]",  .callback = rpscpi_gen_set_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate][:AMPlitude]?", .callback = rpscpi_gen_get_amplitude,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet",       .callback = rpscpi_gen_set_offset,},
-    {.pattern = "[SOURce#]:VOLTage[:IMMediate]:OFFSet?",      .callback = rpscpi_gen_get_offset,},

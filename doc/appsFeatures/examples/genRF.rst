@@ -1,5 +1,5 @@
-Generating signals at RF outputs (125 MS/s)
-###########################################
+Generating signals at RF outputs
+################################
 
 .. toctree::
    :maxdepth: 6
@@ -9,3 +9,4 @@ Generating signals at RF outputs (125 MS/s)
    genRF-exm2
    genRF-exm3
    genRF-exm4
+   genRF-exm5

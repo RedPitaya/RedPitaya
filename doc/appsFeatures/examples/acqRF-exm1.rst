@@ -9,31 +9,16 @@ Description
 
 This example shows how to acquire 16k samples of signal on fast analog inputs. Signal will be acquired when the
 internal trigger condition is meet. Time length of the acquired signal depends on the time scale of a buffer that can
-be set with a decimation factor. Decimations and time scales of a buffer are given in the table below. Voltage range 
-of fast analog inputs on the Red Pitaya depends on gain setting that can be set by jumpers. HV setting is for input 
-range to ±20V, while LV sets input range to ±1V.
+be set with a decimation factor. Decimations and time scales of a buffer are given in the :ref:`table <s_rate_and_dec>`. Voltage and frequency ranges depends on Red Pitaya model. 
 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
-| Decimation  | Sampling Rate  | Time scale/length of a buffer | Trigger delay in samples | Trigger delay in seconds | 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
-| 1           | 125 MS/s       | 131.072 us                    | from - 8192 to x         | -6.554E-5 to x           | 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
-| 8           | 15.6 MS/s      | 1.049 ms                      | from - 8192 to x         | -5.243E-4 to x           | 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
-| 64          | 1.9 MS/s       | 8.389 ms                      | from - 8192 to x         | -4.194E-3 to x           | 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
-| 1024        | 122.0 MS/s     | 134.218 ms                    | from - 8192 to x         | -6.711E-2 to x           | 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
-| 8192        | 15.2 kS/s      | 1.074 s                       | from - 8192 to x         | -5.369E-1 to x           | 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
-| 65536       | 7.6 kS/s       | 8.590 s                       | from - 8192 to x         | -4.295E+0 to x           | 
-+-------------+----------------+-------------------------------+--------------------------+--------------------------+
 
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - Signal (function) generator
+    
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 
 .. image:: on_given_trigger_acquire_signal_on_fast_analog_input.png
 
@@ -74,6 +59,13 @@ and press run.
    fprintf(tcpipObj,'ACQ:DEC 1');
    fprintf(tcpipObj,'ACQ:TRIG:LEV 0');
    
+   % there is an option to select coupling when using SIGNALlab 250-12 
+   % fprintf(tcpipObj,'ACQ:SOUR1:COUP AC'); % enables AC coupling on channel 1
+
+   % by default LOW level gain is selected
+   % fprintf(tcpipObj,'ACQ:SOUR1:GAIN LV'); % user can switch gain using this command
+
+
    % Set trigger delay to 0 samples
    % 0 samples delay set trigger to center of the buffer
    % Signal on your graph will have trigger in the center (symmetrical)
@@ -131,6 +123,11 @@ and press run.
 Code - C
 ********
 
+.. note::
+
+    C code examples don't require the use of the SCPI server, we have included them here to demonstrate how the same functionality can be achieved with different programming languages. 
+    Instructions on how to compile the code are here -> `link <https://redpitaya.readthedocs.io/en/latest/developerGuide/comC.html>`_
+
 .. code-block:: c
 
     /* Red Pitaya C API example Acquiring a signal from a buffer  
@@ -139,7 +136,7 @@ Code - C
     #include <stdio.h>
     #include <stdlib.h>
     #include <unistd.h>
-    #include "redpitaya/rp.h"
+    #include "rp.h"
     
     int main(int argc, char **argv){
     
@@ -163,6 +160,12 @@ Code - C
             rp_AcqSetDecimation(1);
             rp_AcqSetTriggerLevel(0.1); //Trig level is set in Volts while in SCPI 
             rp_AcqSetTriggerDelay(0);
+
+            // there is an option to select coupling when using SIGNALlab 250-12 
+            // rp_AcqSetAC_DC(RP_CH_1, RP_AC); // enables AC coupling on channel 1
+
+            // by default LV level gain is selected
+            // rp_AcqSetGain(RP_CH_1, RP_LOW); // user can switch gain using this command
     
             rp_AcqStart();
     
@@ -204,6 +207,12 @@ Code - Python
     import matplotlib.pyplot as plot
 
     rp_s = scpi.scpi(sys.argv[1])
+
+    # there is an option to select coupling when using SIGNALlab 250-12 
+    # rp_s.tx_txt('ACQ:SOUR1:COUP AC') # enables AC coupling on channel 1
+
+    # by default LOW level gain is selected
+    # rp_s.tx_txt('ACQ:SOUR1:GAIN LV') # user can switch gain using this command
 
     rp_s.tx_txt('ACQ:START')
     rp_s.tx_txt('ACQ:TRIG NOW')
@@ -256,6 +265,12 @@ for Scilab sockets. How to set socket is described on Blink example.
     
     SOCKET_write(tcpipObj,'ACQ:TRIG:LEV 0');
     
+    // there is an option to select coupling when using SIGNALlab 250-12 
+    // SOCKET_write(tcpipObj,'ACQ:SOUR1:COUP AC'); // enables AC coupling on channel 1
+
+    // by default LOW level gain is selected
+    // SOCKET_write(tcpipObj,'ACQ:SOUR1:GAIN LV'); // user can switch gain using this command
+
     // Set trigger delay to 0 samples
     // 0 samples delay set trigger to center of the buffer
     // Signal on your graph will have trigger in the center (symmetrical)
@@ -295,4 +310,4 @@ Code - LabVIEW
 
 .. image:: On-trigger-signal-acquisition_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AACA34cIKw3QkUskKoU7ZvTka/On%20trigger%20signal%20acquisition.vi?dl=0>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/On%20trigger%20signal%20acquisition.vi>`_

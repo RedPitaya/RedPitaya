@@ -13,11 +13,12 @@ that can be set by MATLAB® slider bar.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
 
 .. image:: RP-circuit-e1421258707736-300x212.png
 
 Code - MATLAB®
+**************
 
 The code is written in MATLAB. In the code we use SCPI commands and TCP/IP communication. Copy code from below to
 MATLAB editor, input value p save project and press run. Change p with slider bar from 0-100.
@@ -125,4 +126,4 @@ Code - LabVIEW
 
 .. image:: Interactive-LED-bar-graph_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AAAmHVIgezO9MqIpHrxZgJdDa/Interactive%20LED%20bar%20graph.vi>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/Interactive%20LED%20bar%20graph.vi>`_

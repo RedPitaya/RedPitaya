@@ -34,9 +34,9 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
     'sphinx.ext.todo',
-    'sphinxcontrib.wavedrom',
-    'breathe',
+    'sphinx_tabs.tabs',
     'github',
+    'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -54,8 +54,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Red Pitaya STEMlab'
-title = u'Red Pitaya STEMlab Documentation'
+project = u'Red Pitaya'
+title = u'Red Pitaya Documentation'
 copyright = u'2017, Red Pitaya d.d.'
 author = u'Red Pitaya'
 
@@ -138,7 +138,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "img/logo_stemlab.svg"
+html_logo = "img/head_logo.png"
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -155,6 +155,10 @@ html_context = {
             'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
             'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
             '_static/page_width.css',
+            '_static/sphinx_tabs/tabs.css',
+            '_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css',
+            '_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css',
+            '_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css',
         ],
     }
 
@@ -247,7 +251,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "img/logo_stemlab.svg"
+latex_logo = "img/head_logo.png"
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
@@ -304,3 +308,8 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+intersphinx_mapping = {
+    'sref': ('https://activelearning.readthedocs.io/en/latest/', None),
+    'fpga_teach': ('https://documentation-rp-test.readthedocs.io/en/latest/', None),
+}

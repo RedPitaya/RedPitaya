@@ -10,4 +10,5 @@ Quick start
    first
    SDcard/SDcard
    alucase/alucase
+   pvccase/pvccase
    troubleshooting/troubleshooting

@@ -2,7 +2,7 @@ Creating first app
 ##################
 
 Before you start creating your first application you need to set your development environment. Instructions how to do
-that are in article Setting development environment. Also it's recommended to read brief System overview in order to 
+that are in article :ref:`Setting development environment <ssh>`. Also it's recommended to read brief System overview in order to 
 understand what are the main components of system and how they communicate with each other.
 
 Preparations

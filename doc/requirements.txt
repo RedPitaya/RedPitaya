@@ -1,4 +1,1 @@
-# support for http://wavedrom.com
-sphinxcontrib-wavedrom
-# http://breathe.readthedocs.io/en/latest/
-breathe
+https://github.com/djungelorm/sphinx-tabs/releases/download/v1.1.13/sphinx-tabs-1.1.13.tar.gz

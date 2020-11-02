@@ -13,7 +13,7 @@ ramp down or pwm. Generated signal can be observed by an Oscilloscope.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
 
 .. image:: output_y49qDi.gif
 
@@ -58,7 +58,12 @@ MATLAB editor, save project and press run.
 
 Code - C
 ********
- 
+
+.. note::
+
+    C code examples don't require the use of the SCPI server, we have included them here to demonstrate how the same functionality can be achieved with different programming languages. 
+    Instructions on how to compile the code are here -> `link <https://redpitaya.readthedocs.io/en/latest/developerGuide/comC.html>`_
+
 .. code-block:: c
 
     /* Red Pitaya C API example Generating signal pulse on an external trigger 
@@ -68,7 +73,7 @@ Code - C
     #include <stdlib.h>
     #include <unistd.h>
 
-    #include "redpitaya/rp.h"
+    #include "rp.h"
 
     int main(int argc, char **argv){
 
@@ -116,14 +121,14 @@ Code - Python
     rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
     rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
     rp_s.tx_txt('SOUR1:BURS:NCYC 2')
-    rp_s.tx_txt('OUTPUT1:STATE ON')
     rp_s.tx_txt('SOUR1:BURS:STAT ON')
     rp_s.tx_txt('SOUR1:TRIG:SOUR INT')
     rp_s.tx_txt('SOUR1:TRIG:IMM')
+    rp_s.tx_txt('OUTPUT1:STATE ON')
 
 Code - LabVIEW
 **************
 
 .. image:: Generate-signal-pulses_LV.png
 
-`Downloads <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AACurlCDsGcxHemxedH453Sra/Generate%20signal%20pulses.vi>`_
+`Downloads <https://downloads.redpitaya.com/downloads/Clients/labview/Generate%20signal%20pulses.vi>`_

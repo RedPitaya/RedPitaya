@@ -3,7 +3,7 @@ Bode Analyzer
 
 .. image:: 01_iPad_Combo_Bode.jpg
 
-This application will turn your STEMlab into an affordable Bode analyzer. It is the perfect tool for educators, 
+This application will turn your Red Pitaya into an affordable Bode analyzer. It is the perfect tool for educators, 
 students, makers, hobbyists and professionals seeking affordable, highly functional test and measurement equipment. 
 The Bode analyzer is an ideal application for measuring frequency responses of the passive/active filters, complex 
 impedances and any other electronic circuit. The Gain/Phase frequency response can be used to characterize any device
@@ -50,7 +50,7 @@ Main feature of the Bode analyzer application are described below:
     - excitation signal parameters (amplitude and DC bias) can be adjusted to make measurements in different 
       sensitivities and conditions (amplifiers etc.).
     - The calibration function enables calibrating long leads and to remove leads and cables effect on final 
-      measurements. The calibration will also calibrate your STEMlab if any parasitics effects are present.   
+      measurements. The calibration will also calibrate your Red Pitaya if any parasitics effects are present.   
    
 .. image:: BA_Slika_05.png
    

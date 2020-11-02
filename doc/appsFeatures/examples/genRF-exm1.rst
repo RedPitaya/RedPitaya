@@ -6,14 +6,13 @@ Generate continuous signal
 Description
 ***********
 
-This example shows how to program Red Pitaya to generate analog 2kHz sine wave signal with 1V amplitude. Red Pitaya is
-able to generate signals in range from DC to 50 MHz with output voltage range from -1 to 1 Volt. Generated signal can 
-be observed by an Oscilloscope.
+This example shows how to program Red Pitaya to generate analog 2kHz sine wave signal with 1V amplitude. Voltage and frequency ranges depends on Red Pitaya model.
+
 
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
 
 .. image:: output_y49qDi.gif
 
@@ -38,7 +37,7 @@ MATLAB editor, save project and press run.
 
     fprintf(tcpipObj,'GEN:RST');
     fprintf(tcpipObj,'SOUR1:FUNC SINE');       % Set function of output signal
-                                            % {sine, square, triangle, sawu,sawd, pwm}
+                                               % {sine, square, triangle, sawu,sawd, pwm}
     fprintf(tcpipObj,'SOUR1:FREQ:FIX 2000');   % Set frequency of output signal
     fprintf(tcpipObj,'SOUR1:VOLT 1');          % Set amplitude of output signal
     fprintf(tcpipObj,'OUTPUT1:STATE ON');      % Set output to ON
@@ -51,6 +50,11 @@ MATLAB editor, save project and press run.
 Code - C
 ********
 
+.. note::
+
+    C code examples don't require the use of the SCPI server, we have included them here to demonstrate how the same functionality can be achieved with different programming languages. 
+    Instructions on how to compile the code are here -> `link <https://redpitaya.readthedocs.io/en/latest/developerGuide/comC.html>`_
+
 .. code-block:: c
 
     /* Red Pitaya C API example Generating continuous signal  
@@ -61,7 +65,7 @@ Code - C
     #include <stdlib.h>
     #include <unistd.h>
 
-    #include "redpitaya/rp.h"
+    #include "rp.h"
 
     int main(int argc, char **argv){
 
@@ -91,6 +95,8 @@ Code - C
 Code - Python
 *************
 
+.. code-block:: python
+
     #!/usr/bin/python
 
     import sys
@@ -115,4 +121,4 @@ Code - LabVIEW
 
 .. image:: Generate-continuous-signal_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AAD02Lsn5aXV7kRFFfaPi6eOa/Generate%20continuous%20signal.vi>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/Generate%20continuous%20signal.vi>`_

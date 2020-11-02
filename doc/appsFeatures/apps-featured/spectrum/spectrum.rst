@@ -3,7 +3,7 @@ Spectrum Analyzer
 
 .. image:: 01_iPad_Combo_Spectrum.jpg
 
-This application will turn your STEMlab board into a 2-channel DFT Spectrum Analyzer. It is the perfect tool for 
+This application will turn your RedPitaya board into a 2-channel DFT Spectrum Analyzer. It is the perfect tool for 
 educators, students, makers, hobbyists and professionals seeking affordable, highly functional test and measurement
 equipment. The DFT Spectrum analyzer application enables a quick and powerful spectrum analysis using a DFT algorithm.
 Frequency span is form DC up to 62.5MHz where the frequency range can be arbitrarily selected. You can easily measure
@@ -44,6 +44,13 @@ is used for the “MAX” signal where the MAX values of the signal spectrum are
 detecting signal glitches and the max/min spectrum amplitude values during the measurement.
 
 .. image:: Slika_03_SA.png
+
+For SIGNALlab 250-12 there are additional settings available where user can select:
+- **Input attenuation**
+- **Coupling**
+
+.. image:: Slika_09_SA.png
+
 
 CURSORS:
 ========
@@ -91,29 +98,44 @@ values.
 
 .. image:: Slika_07_SA.png
 
+OUTPUTS:
+========
+
+Spectrum analyzer WEB also includes a signal generator, so users can simultaneously generate signal & observe signal
+spectrum. For the signal generator setting and specifications refer to :ref:`outputs <output-ref>`
+
+External ref. Clock (only SIGNALlab 250-12):
+============================================
+
+External ref. Clock input can be enabled through the settings menu, once enabled it’s status is displayed
+in the main interface. Green status indicates that the sampling clock is locked to external ref. clock.
+
+.. image:: Slika_08_SA.png
+    :width: 30%
+
 SPECIFICATIONS
 **************
 
-+-------------------------------+----------------------+----------------------+
-|                               | STEMlab 125 - 10     | STEMlab 125 - 14     | 
-+-------------------------------+----------------------+----------------------+
-| Input channels                | 2                    | 2                    | 
-+-------------------------------+----------------------+----------------------+
-| Bandwidth                     | 0 - 50MHz            | 0 - 62MHz            | 
-+-------------------------------+----------------------+----------------------+
-| Resolution                    | 10 bit               | 14 bit               | 
-+-------------------------------+----------------------+----------------------+
-| DFT buffer                    | 16384                | 16384                | 
-+-------------------------------+----------------------+----------------------+
-| Dynamic Range                 | - 70 dBm             | - 80 dBm             | 
-+-------------------------------+----------------------+----------------------+
-| Input noise level             | < -100 dBm/Hz        | < -119 dBm/Hz        | 
-+-------------------------------+----------------------+----------------------+
-| Input range                   | 10dBm                | 10dBm                | 
-+-------------------------------+----------------------+----------------------+
-| Input impedance               | 1 MΩ / 10 pF         | 1 MΩ / 10 pF         | 
-+-------------------------------+----------------------+----------------------+
-| Input coupling                | DC                   | DC                   | 
-+-------------------------------+----------------------+----------------------+
-| Spurious frequency components | < -70 dBFS Typically | < -90 dBFS Typically | 
-+-------------------------------+----------------------+----------------------+
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+|                               | STEMlab 125 - 10     | STEMlab 125 - 14     | SDRlab 122 - 16      | SIGNALlab 250 - 12             | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Input channels                | 2                    | 2                    | 2                    | 2                              | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Bandwidth                     | 0 - 50MHz            | 0 - 60MHz            | 0 - 60MHz            | 0 - 60MHz                      | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Resolution                    | 10 bit               | 14 bit               | 16 bit               | 12 bit                         | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| DFT buffer                    | 16384                | 16384                | 16384                | 16384                          | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Dynamic Range                 | 60 dB                | 80 dB                | 96 dB                | 74 dB                          | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Input noise level             | < -100 dBm/Hz        | < -119 dBm/Hz        |                      |                                | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Input range                   | 10dBm                | 10dBm                | -2dBm                | 10dBm (when att. is disabled)  | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Input impedance               | 1 MΩ / 10 pF         | 1 MΩ / 10 pF         | 50ohm                | 1 MΩ / 10 pF                   | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Input coupling                | DC                   | DC                   | AC                   | DC/AC                          | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+
+| Spurious frequency components | < -70 dBFS Typically | < -90 dBFS Typically |                      |                                | 
++-------------------------------+----------------------+----------------------+----------------------+--------------------------------+

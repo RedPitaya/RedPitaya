@@ -13,14 +13,18 @@ The next procedure will create a clean SD card.
 #. Download the Red Pitaya SD card image:
 
 STEMlab 125-14 & STEMlab 125-10
-   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/STEMlab_125-xx_OS_0.98-696_stable.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
-   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-125-1x/STEMlab_125-xx_OS_0.99-48_beta.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
+   - `Latest Stable <https://downloads.redpitaya.com/downloads/STEMlab-125-1x/STEMlab_125-xx_OS_1.03-701_stable.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
+   - `Latest Beta <https://downloads.redpitaya.com/downloads/STEMlab-125-1x/STEMlab_125-xx_OS_1.03-5_beta.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md>`_
 
-STEMlab 122-16 SDR
-   - `Latest Stable <http://downloads.redpitaya.com/downloads/STEMlab-122-16/STEMlab_122-16_OS_0.98-5_stable.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
-   - `Latest Beta <http://downloads.redpitaya.com/downloads/STEMlab-122-16/STEMlab_122-16_OS_0.99-43_beta.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
+SDRlab 122-16
+   - `Latest Stable <https://downloads.redpitaya.com/downloads/SDRlab-122-16/SDRlab_122-16_OS_1.03-6_stable.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
+   - `Latest Beta <https://downloads.redpitaya.com/downloads/SDRlab-122-16/SDRlab_122-16_OS_1.03-6_beta.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md>`_
 
-..    - `Beta (including STEMlab SDR transceiver app) <http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_15-44-45_21-jul-2017.img.zip>`_.
+SIGNALlab 250-12
+   - `Latest Stable <https://downloads.redpitaya.com/downloads/SIGNALlab-250-12/SIGNALlab_250-12_OS_1.00-26_stable.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md>`_
+   - `Latest Beta <https://downloads.redpitaya.com/downloads/SIGNALlab-250-12/SIGNALlab_250-12_OS_1.03-1_beta.img.zip>`_  - `CHANGELOG <https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md>`_
+
+
 
 .. image:: microSDcard-RP.png
     :width: 10%
@@ -162,8 +166,8 @@ Using ApplePi-Baker
 
    .. image:: SDcard_insert.jpg
 
-#. Download `ApplePi-Baker <https://www.tweaking4all.com/hardware/raspberry-pi/applepi-baker-v2/>`_.
-Direct link:
+#. Download `ApplePi-Baker <https://www.tweaking4all.com/hardware/raspberry-pi/applepi-baker-v2/>`_. Direct link:
+
    - `ApplePi-Baker-v2.2.3.dmg <https://www.tweaking4all.com/downloads/raspberrypi/ApplePi-Baker-v2.2.3.dmg>`_
    - `ApplePi-Baker-1.9.9.dmg <https://www.tweaking4all.com/downloads/raspberrypi/ApplePi-Baker-1.9.9.dmg>`_
 
@@ -268,7 +272,7 @@ The OS is changed less frequently.
 .. note::
 
    You can find older and development Red Pitaya OS images and Ecosystem zipfiles
-   on our `download server <http://downloads.redpitaya.com/downloads/>`_.
+   on our `download server <https://downloads.redpitaya.com/downloads/>`_.
 
 .. note::
 
@@ -315,7 +319,7 @@ A manual upgrade allows you to fix a corrupted SD card image
 (if only the FAT partition is corrupted) or to install
 older, newer or custom ecosystem zip files.
 
-#. Download a zip file from our `download server <http://downloads.redpitaya.com/downloads/>`_.
+#. Download a zip file from our `download server <https://downloads.redpitaya.com/downloads/>`_.
 
 #. Insert SD card into card reader.
 
@@ -329,3 +333,32 @@ If you wish to keep wireless settings skip deleting the next files:
 
 * ``wpa_supplicant.conf``
 * ``hostapd.conf``
+
+
+******************
+Resize file system
+******************
+
+When recording an image to a flash card of any size, we get sections of the file system 4 GB in size.
+In order to increase the available free space you need to execute the script:
+
+      .. code-block:: shell-session
+
+          root@rp-f03dee:~# /opt/redpitaya/sbin/resize.sh
+
+After the script is completed, the system will ask you to restart Red Pitaya.
+If everything is done correctly, start the system with an increased size of space. This can be checked with the command:
+
+      .. code-block:: shell-session
+
+          root@rp-f03dee:~# df -h
+
+
+.. note::
+
+   If the file system size has not changed, you can try to manually run the command:
+
+      .. code-block:: shell-session
+
+         root@rp-f03dee:~# sudo resize2fs /dev/mmcblk0p2
+

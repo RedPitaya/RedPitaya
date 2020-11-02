@@ -4,7 +4,7 @@
 Ecosystem Guide
 ###############
 
-Go to redpitaya (git) directory.
+Go to red pitaya (git) directory.
 
 .. note::
    
@@ -71,8 +71,10 @@ different places one would expect.
 Supported platforms
 -------------------
 
-Red Pitaya is developed on Linux (64bit Ubuntu 16.04),
+Red Pitaya is developed on Linux (64bit Ubuntu 18.04),
 so Linux is also the only platform we support.
+
+.. _sys-req-label:
 
 ---------------------
 Software requirements
@@ -105,7 +107,7 @@ You will need the following to build the Red Pitaya components:
       sudo pip3 install meson
       sudo apt-get install ninja-build
 
-3. Xilinx `Vivado 2017.2 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
+3. Xilinx `Vivado 2020.1 <http://www.xilinx.com/support/download.html>`_ FPGA development tools.
    The SDK (bare metal toolchain) must also be installed, be careful during the install process to select it.
    Preferably use the default install location.
 
@@ -113,8 +115,8 @@ You will need the following to build the Red Pitaya components:
        folder, than we suggest you to use VirtualBox, since VMware has a bug in vmware-tools
        for Ubuntu guest and can not mount vmhgfs shared file system type.
 
-       Then install Ubuntu 16.04 in VirtualBox (NOTE: don't use encrypt installation, 
-       since it blocks some RedPitaya build procedures).
+       Then install Ubuntu 18.04 in VirtualBox (NOTE: don't use encrypt installation, 
+       since it blocks some Red Pitaya build procedures).
 
        After successfully installation, change settings for Ubuntu virtual machine.
        Go to Shared Folders menu and choose Xilinx installation directory on the host machine
@@ -140,15 +142,17 @@ You will need the following to build the Red Pitaya components:
 
       $ sudo ln -s /usr/bin/make /usr/bin/gmake
 
+.. _build-proc-label:
+
 =============
 Build process
 =============
 
 .. note::
 
-   To implement the build process, at least 8GB available space on local machine is required.
+   To implement the build process, at least 8GB available space on PC local machine is required.
 
-Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
+**1.** Go to your preferred development directory and clone the Red Pitaya repository from GitHub.
 The choice of specific branches or tags is up to the user.
 
 .. code-block:: shell-session
@@ -156,14 +160,41 @@ The choice of specific branches or tags is up to the user.
    git clone https://github.com/RedPitaya/RedPitaya.git
    cd RedPitaya
 
-An example script ``settings.sh`` is provided for setting all necessary environment variables.
+.. note:: 
+
+   You can run a script that builds the ecosystem from the build_scripts folder
+   To build an ecosystem for board 125-14:
+
+   .. code-block:: shell-session
+   
+      cd ./RedPitaya/build_scripts
+      sudo ./build_Z10.sh
+
+   To build an ecosystem for board 122-16:
+   
+   .. code-block:: shell-session
+   
+      cd ./RedPitaya/build_scripts
+      sudo ./build_Z20.sh
+
+   To build an ecosystem for board 250-12:
+   
+   .. code-block:: shell-session
+   
+      cd ./RedPitaya/build_scripts
+      sudo ./build_Z250_12.sh   
+
+   or follow the steps of the instructions and build yourself
+   
+
+**2.**  An example script ``settings.sh`` is provided for setting all necessary environment variables.
 The script assumes some default tool install paths, so it might need editing if install paths other than the ones described above were used.
 
 .. code-block:: shell-session
 
-   $ . settings.sh
+   settings.sh
 
-Prepare a download cache for various source tarballs.
+**3.** Prepare a download cache for various source tarballs.
 This is an optional step which will speedup the build process by avoiding downloads for all but the first build.
 There is a default cache path defined in the ``settings.sh`` script, you can edit it and avoid a rebuild the next time.
 
@@ -172,19 +203,19 @@ There is a default cache path defined in the ``settings.sh`` script, you can edi
    mkdir -p dl
    export DL=$PWD/dl
 
-Download the ARM Ubuntu root environment (usually the latest) from Red Pitaya download servers.
+**4.** Download the ARM Ubuntu root environment (usually the latest) from Red Pitaya download servers.
 You can also create your own root environment following instructions in :ref:`OS image build instructions <os>`.
 Correct file permissions are required for ``schroot`` to work properly.
 
 .. code-block:: shell-session
 
-   wget http://downloads.redpitaya.com/downloads/redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
+   wget https://downloads.redpitaya.com/downloads/STEMlab-125-1x/old/redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
    sudo chown root:root redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
    sudo chmod 664 redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
 
-Create schroot configuration file ``/etc/schroot/chroot.d/red-pitaya-ubuntu.conf``.
+**5.** Create schroot configuration file ``/etc/schroot/chroot.d/red-pitaya-ubuntu.conf``.
 Replace the tarball path stub with the absolute path of the previously downloaded image.
-Replace user names with a comma separeted list of users whom should be able to compile Red Pitaya.
+Replace user names with a comma separated list of users whom should be able to compile Red Pitaya.
 
 .. code-block:: none
 
@@ -192,14 +223,31 @@ Replace user names with a comma separeted list of users whom should be able to c
    description=Red Pitaya Debian/Ubuntu OS image
    type=file
    file=absolute-path-to-red-pitaya-ubuntu.tar.gz
-   users=comma-seperated-list-of-users-with-access-permissions
-   root-users=comma-seperated-list-of-users-with-root-access-permissions
+   users=comma-separated-list-of-users-with-access-permissions
+   root-users=comma-separated-list-of-users-with-root-access-permissions
    root-groups=root
    profile=desktop
    personality=linux
    preserve-environment=true
 
-To build everything a few ``make`` steps are required.
+.. note::
+
+   Example of configuration file:
+
+   .. code-block:: shell-session
+   
+      [red-pitaya-ubuntu]
+      description= Red pitaya
+      type=file
+      file=/home/user/RedPitaya/redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
+      users=root
+      root-users=root
+      root-groups=root
+      personality=linux
+      preserve-enviroment=true
+
+
+**6.** To build everything a few ``make`` steps are required.
 
 .. code-block:: shell-session
 
@@ -209,29 +257,41 @@ To build everything a few ``make`` steps are required.
    EOL_CHROOT
    make -f Makefile.x86 zip
 
-If you want build for RP122-16 based on Z7020 xilinx, you must pass parameter FPGA MODEL=Z20 in makefile
+**7.** If you want build for 122-16 based on Z7020 xilinx, you must pass parameter FPGA MODEL=Z20 in makefile
 This parameter defines how to create projects and should be transferred to all makefiles.
 
 .. code-block:: shell-session
 
-   make -f Makefile.x86 FPGA MODEL=Z20
+   make -f Makefile.x86 MODEL=Z20
    schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-   make FPGA MODEL=Z20
+   make MODEL=Z20
    EOL_CHROOT
-   make -f Makefile.x86 zip FPGA MODEL=Z20
+   make -f Makefile.x86 zip MODEL=Z20
 
-To get an itteractive ARM shell do.
+**8.** If you want build for 250-12 based on Z7020 xilinx, you must pass parameter FPGA MODEL=Z20_250_12 in makefile
+This parameter defines how to create projects and should be transferred to all makefiles.
+
+.. code-block:: shell-session
+
+   make -f Makefile.x86 MODEL=Z20_250_12
+   schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
+   make MODEL=Z20_250_12
+   EOL_CHROOT
+   make -f Makefile.x86 zip MODEL=Z20_250_12
+
+To get an interactive ARM shell do.
 
 .. code-block:: shell-session
 
    schroot -c red-pitaya-ubuntu
+   
 
 =======================
 Partial rebuild process
 =======================
 
 The next components can be built separately.
-By default, the project is built for RP125-14 (Z7010), if necessary build for the Z7020, use the parameter FPGA_MODEL=Z20
+By default, the project is built for RedPitaya 125-14 (Z7010), if necessary build for the (RedPitaya 122-16) Z7020, use the parameter MODEL=Z20 and parameter MODEL=Z20_250_12 for RedPitaya (250-12) Z7020.
 
 * FPGA + device tree
 * u-Boot
@@ -254,7 +314,7 @@ To be able to compile FPGA and cross compile *base system* software, it is neces
 
    $ . settings.sh
 
-On some systems (including Ubuntu 16.04) the library setup provided by Vivado conflicts with default system libraries.
+On some systems (including Ubuntu 18.04) the library setup provided by Vivado conflicts with default system libraries.
 To avoid this, disable library overrides specified by Vivado.
 
 
@@ -345,7 +405,7 @@ Linux user space
 Debian/Ubuntu OS
 ~~~~~~~~~~~~~~~~
 
-`Debian/Ubuntu OS instructions <OS/debian/README.md>`_ are detailed elsewhere.
+`Debian/Ubuntu OS instructions <https://github.com/RedPitaya/RedPitaya/tree/master/OS/debian>`_ are detailed elsewhere.
 
 ~~~
 API
@@ -375,7 +435,7 @@ To compile the server run:
 
 .. code-block:: shell-session
 
-   make api
+   make scpi MODEL=Z10
 
 The compiled executable is ``scpi-server/scpi-server``.
 You can install it on Red Pitaya by copying it there:

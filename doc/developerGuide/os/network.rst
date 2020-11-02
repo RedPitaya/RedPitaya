@@ -12,7 +12,7 @@ Quick setup
 
 .. note:: 
     
-    In order to set wireless or direct Ethernet connection you need to access Red Pitaya STEMlab 
+    In order to set wireless or direct Ethernet connection you need to access Red Pitaya 
     :ref:`Console interface <console>`.
 
 ===========

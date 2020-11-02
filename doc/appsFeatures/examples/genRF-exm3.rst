@@ -7,14 +7,13 @@ Description
 ***********
 
 This example shows how to program Red Pitaya to generate analog signal on external trigger. Red Pitaya will first wait 
-for trigger from external source and start generating desired signal right after trigger condition is met. Red Pitaya 
-is able to generate signals in range from DC to 50 MHz with output voltage range from -1 to 1 Volt. Generated signal 
-can be observed by an Oscilloscope.
+for trigger from external source and start generating desired signal right after trigger condition is met. Voltage and frequency ranges depends on Red Pitaya model.
+
 
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
 
 .. image:: output_y49qDi.gif
 
@@ -60,9 +59,17 @@ and press run.
     % on output you will get continuous  signal instead of pulses
 
 
-    fclose(tcpipObj);
-    view rawgenerate_burst_trigger_external.m
-    Code - C
+    fclose(tcpipObj)
+
+Code - C
+********
+
+.. note::
+
+    C code examples don't require the use of the SCPI server, we have included them here to demonstrate how the same functionality can be achieved with different programming languages. 
+    Instructions on how to compile the code are here -> `link <https://redpitaya.readthedocs.io/en/latest/developerGuide/comC.html>`_
+
+.. code-block:: c
 
     /* Red Pitaya external trigger pulse generation Example */
 
@@ -70,7 +77,7 @@ and press run.
     #include <stdlib.h>
     #include <unistd.h>
 
-    #include "redpitaya/rp.h"
+    #include "rp.h"
 
 
     int main(int argc, char **argv){
@@ -117,13 +124,13 @@ Code - Python
     rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
     rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
     rp_s.tx_txt('SOUR1:BURS:NCYC 2')
-    rp_s.tx_txt('OUTPUT1:STATE ON')
     rp_s.tx_txt('SOUR1:BURS:STAT ON')
     rp_s.tx_txt('SOUR1:TRIG:SOUR EXT_PE')
-
+    rp_s.tx_txt('OUTPUT1:STATE ON')
+    
 Code - LabVIEW
 **************
 
 .. image:: Generate-signal-on-external-trigger_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AAAnwA85bcChcQJVHBkG9ZSla/Generate%20signal%20on%20external%20trigger.vi>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/Generate%20signal%20on%20external%20trigger.vi>`_

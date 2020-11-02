@@ -200,7 +200,7 @@ Red Pitaya board analog frontend features 2 fast analog inputs.
 .. _calib:
 
 =========================
-Analog inptus calibration
+Analog inputs calibration
 =========================
 
 Calibration processes can be performed using the `Oscilloscope&Signal generator app <http://store.redpitaya.com/scopegenpro.html>`_.

@@ -4,7 +4,7 @@ SDR
 What is in the box 
 ******************
 
-The following accessories and materials are included with your STEMlab SDR transceiver module.
+The following accessories and materials are included with your Red Pitaya SDR transceiver module.
 
 	* SDR transceiver 160-10 10W module
 	* DC power cord with Anderson Power Pole™ connector
@@ -17,7 +17,7 @@ The following accessories and materials are included with your STEMlab SDR trans
 Other additional requirements
 *****************************
 
-In addition to the supplied accessories, software and cables supplied with STEMlab SDR transceiver kit, you will need to provide the following:
+In addition to the supplied accessories, software and cables supplied with Red Pitaya SDR transceiver kit, you will need to provide the following:
 
 	* An **HF-Antenna** or dummy load with BNC
 	* good RF **ground**	
@@ -27,8 +27,8 @@ SDR application requirements:
 
 	* Personal computer (PC) running Windows 7 or later. Either 32 or 64-bit operating systems are supported. 
 
-Start using STEMlab as Radio Station - SDR transceiver
-******************************************************
+Start using Red Pitaya as Radio Station - SDR transceiver
+********************************************************
 
 Connecting the cables
 ---------------------
@@ -61,7 +61,7 @@ identify pin with arrow and connect the cable as on the image bellow.
 
 .. note::
 	
-	STEMlab SDR transceiver module should be powered by DC 13.8V Power Supply that can provide at least 3 A of constant power. 
+	Red Pitaya SDR transceiver module should be powered by DC 13.8V Power Supply that can provide at least 3 A of constant power. 
 	Make sure that is turned off and then use DC power cord with Anderson Power Pole™ connector **(9)** to connect it with module. 
 	RED wire is positive (+) while BLACK wire is negative (-), double check to not mix the colours or polarity! 
 
@@ -72,7 +72,7 @@ identify pin with arrow and connect the cable as on the image bellow.
 Power SDR installation and SDR configuration
 ********************************************
 
-.. _here: http://downloads.redpitaya.com/hamlab/powersdr/Setup_PowerSDR_Charly_25_HAMlab_STEMlab_Edition.exe
+.. _here: https://downloads.redpitaya.com/downloads/Clients/powersdr/Setup_PowerSDR_Charly_25_HAMlab_STEMlab_Edition.exe
 
 Click here_ to download Power SDR installation package.
 
@@ -144,13 +144,13 @@ On Windows 10 you might get warning of Unknown Publisher you can procede with in
 		:scale: 75 %
    		:align: center
 
-6. After starting the PowerSDR software you will be led through the PowerSDR software specific setup wizard which lets you configure the software to use it with your STEMlab. Pick the HAMlab/STEMlab radio model.
+6. After starting the PowerSDR software you will be led through the PowerSDR software specific setup wizard which lets you configure the software to use it with your Red Pitaya. Pick the HAMlab/RedPitaya radio model.
 
 	.. image:: Capture11.PNG
 		:scale: 75 %
    		:align: center
 
-7. Select the region where you are using your STEMlab, this is important due to the different frequency ranges your are allowed to transmit in the different countries all over the world:
+7. Select the region where you are using your Red Pitaya, this is important due to the different frequency ranges your are allowed to transmit in the different countries all over the world:
 
 	.. image:: Capture12.PNG
 		:scale: 75 %
@@ -162,7 +162,7 @@ On Windows 10 you might get warning of Unknown Publisher you can procede with in
 		:scale: 75 %
    		:align: center
 
-9. Click Power to connect Power SDR with STEMlab. On the screen the input singnal should appear.
+9. Click Power to connect Power SDR with Red Pitaya. On the screen the input singnal should appear.
 
 	.. image:: Capture20.PNG
 		:scale: 75 %

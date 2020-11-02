@@ -13,8 +13,10 @@ outputs on Red Pitaya are in range from 0 to 1.8 Volts.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - Voltmeter
+    
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 
 .. image:: Set_analog_voltage_on_slow_analog_input1.png
 
@@ -48,14 +50,23 @@ MATLAB editor, save project and press run.
 
     fclose(tcpipObj);
     view rawanalog_outputs.m
-    Code - C
+    
+Code - C
+********
+
+.. note::
+
+    C code examples don't require the use of the SCPI server, we have included them here to demonstrate how the same functionality can be achieved with different programming languages. 
+    Instructions on how to compile the code are here -> `link <https://redpitaya.readthedocs.io/en/latest/developerGuide/comC.html>`_
+
+.. code-block:: c
 
     /* Set analog voltage on slow analog output */
 
     #include <stdio.h>
     #include <stdlib.h>
 
-    #include "redpitaya/rp.h"
+    #include "rp.h"
 
     int main (int argc, char **argv) {
         float value [4];
@@ -119,4 +130,4 @@ Code - LabVIEW
 
 .. image:: Set-analog-voltage-on-slow-analog-output_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AADPdeVj9vXRq8eXefXHNK9Ja/Set%20analog%20voltage%20on%20slow%20analog%20output.vi>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/Set%20analog%20voltage%20on%20slow%20analog%20output.vi>`_

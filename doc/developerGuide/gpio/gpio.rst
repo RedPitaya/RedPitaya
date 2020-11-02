@@ -6,7 +6,7 @@ General purpose input output
 GPIOs
 =====
 
-This document introduses handling of GPIO signals that are conected to Zynq-7000 PS EMIO block
+This document introduces handling of GPIO signals that are conected to Zynq-7000 PS EMIO block
 and is accesible as general purpose input / output pins on Extension conector E1 with Linux gpio subsystem userspace interfaces.
 
 There are two interfaces legacy sysfs interface and new character device based one.
@@ -109,14 +109,16 @@ Character device access
 
 Character device usersace access to gpio kernel subsystem is confirmed working on kernels newer and including 4.8.
 
-References:
+References: `GPIO for Engineers and Maker <http://elinux.org/images/9/9b/GPIO_for_Engineers_and_Makers.pdf>`_
 
-http://elinux.org/images/9/9b/GPIO_for_Engineers_and_Makers.pdf
-https://www.youtube.com/watch?v=lQRCDl0tFiQ
+.. raw:: html
 
-The Linux kernel contains GPIO utilities in its ``tools`` directory.
+    <div style="position: relative; padding-bottom: 30.25%; overflow: hidden; max-width: 50%; margin-left:auto; margin-right:auto;">
+        <iframe src="https://www.youtube.com/embed/lQRCDl0tFiQ" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
 
-https://github.com/torvalds/linux/tree/master/tools/gpio
+
+The Linux kernel contains GPIO utilities in its `tools <https://github.com/torvalds/linux/tree/master/tools/gpio>`_ directory.
 
 We isolated the sources and created a library from ``gpio-utils.c`` and
 executables from other source files.

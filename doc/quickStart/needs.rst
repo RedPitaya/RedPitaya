@@ -3,43 +3,28 @@ What do I need before I start?
 ##############################
 
 The following essential items needed to start are already included
-in each STEM kits available from our `WEB store <http://redpitaya.com/#products>`_:
+in each RedPitaya kits available from our `WEB store <http://redpitaya.com/#products>`_:
 
-* 5 V / 2 A micro USB power supply,
-* 4GB (up to 32GB) Class 10 micro SD card with pre-loaded Red Pitaya OS,
-* Ethernet cable.
+.. tabs::
 
-Additional Required Items not supplied with the STEM kits:
+   .. tab:: 125-10, 125-14, 122-16
+
+      * 5 V / 2 A micro USB power supply,
+      * 4GB (up to 32GB) Class 10 micro SD card with pre-loaded Red Pitaya OS,
+      * Ethernet cable.
+      
+   .. tab:: 250-12
+
+      * 12 V / 1 A power adapter with jack connector,
+      * 4GB (up to 32GB) Class 10 micro SD card with pre-loaded Red Pitaya OS,
+      * Ethernet cable.
+
+Additional Required Items not supplied with the RedPitaya kits:
 
 * computer with internet browser (Chrome browser recommended),
 * router with DHCP server enabled and access to the internet.
 
 .. note::
 
-   Red Pitaya should not be powered from a power supply that is <2A
-   or has a very thin power wires, since this will reflect in abnormal behavior of the device,
-   causing re-boots and network disconnections.
-   Same problem might appear if Red Pitaya is powered directly from USB on a PC or HUB
-   that cannot provide enough power or when using bad powering cable.
-
-.. note::
-
-   **Windows 7/8** users should install `Bonjour Print Services <http://redpitaya.com/bonjour>`_,
-   otherwise access to ``*.local`` addresses will not work.
-
-   **Windows 10** already supports mDNS and DNS-SD,
-   so there is no need to install additional software.
-
-.. note::
-
-   Before STEM kits were introduced all Red Pitaya kits were shipped with a blank SD cards.
-   If you have such a kit, please follow the steps in the :ref:`Prepare SD card <prepareSD>` 
-   paragraph to properly load Red Pitaya OS to your SD card.
-
-.. note::
-
-   Access to the internet is required only when:
-
-   * upgrading Red Pitaya OS,
-   * installing applications from the marketplace,
-   * unlocking applications.
+   Red Pitaya boards should not be powered from a power supply that provides less power than specified or has very thin power wires, since this will reflect abnormal behavior of the device, causing reboots and network disconnections. 
+   Same problem might appear if the Red Pitaya board is powered directly from USB on a PC or HUB that cannot provide enough power or when using a bad powering cable.

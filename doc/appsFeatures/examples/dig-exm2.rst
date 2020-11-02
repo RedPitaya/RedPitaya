@@ -13,7 +13,7 @@ The number of LEDs that will be turned ON, corresponds to the value of variable 
 Required hardware
 *****************
 
-    -  Red Pitaya
+    -  Red Pitaya device
 
 .. image:: RP-circuit-e1421258707736-300x212.png
 
@@ -112,4 +112,4 @@ Code - LabVIEW
 
 .. image:: Bar-graph-with-LEDs_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AAB00tnGyatP8ZXF7cVR5WDia/Bar%20graph%20with%20LEDs.vi>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/Bar%20graph%20with%20LEDs.vi>`_

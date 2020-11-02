@@ -12,8 +12,10 @@ outputs on Red Pitaya are in range from 0 to 1.8 Volts.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - Voltmeter
+
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 
 .. image:: Set_analog_voltage_on_slow_analog_input1.png
 
@@ -49,7 +51,7 @@ MATLAB editor, save project and press run.
                                             %// arrows
                                             %// and/or when clicking the slider bar
 
-        hLstn = handle.listener(h,'ActionEvent',@sliderCallback);
+        hLstn = addlistener(h,'ContinuousValueChange',@sliderCallback);
         %// (variable appears unused, but not assigning it to anything means that
         %// the listener is stored in the 'ans' variable. If "ans" is overwritten,
         %// the listener goes out of scope and is thus destroyed, and thus, it no
@@ -94,5 +96,5 @@ Code - LabVIEW
 
 .. image:: Interactive-voltage-setting-on-slow-analog-output_LV.png
 
-`Download <https://dl.dropboxusercontent.com/sh/6g8608y9do7s0ly/AADBbIo7oTxWxluMoQ0KB0x6a/Interactive%20voltage%20setting%20on%20slow%20analog%20output.vi>`_
+`Download <https://downloads.redpitaya.com/downloads/Clients/labview/Interactive%20voltage%20setting%20on%20slow%20analog%20output.vi>`_
 

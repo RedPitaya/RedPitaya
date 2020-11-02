@@ -17,7 +17,7 @@ The given setup has advantages and drawbacks.
 
 * MIO signals shared with SPI, I2C and UART are consumed.
   So this interfaces can not be used for other purposes.
-* On board I2C EEPROM cna not be accessed.
+* On board I2C EEPROM can not be accessed.
   This might cause issues in programs which store
   calibration data in the EEPROM.
 * Backlight control is not supported.

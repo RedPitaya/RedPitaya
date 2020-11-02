@@ -13,11 +13,12 @@ LED will turn ON, when button is pressed.
 Required hardware
 *****************
 
-    - Red Pitaya
+    - Red Pitaya device
     - Push button
     - Resistor 1K
     - RedPitaya_Push_button
 
+Wiring example for STEMlab 125-14 & STEMlab 125-10:
 .. image:: RedPitaya_Push_button.png
     
 Circuit
@@ -75,13 +76,18 @@ MATLAB editor, save project and press run.
 
 Code - C
 ********
- 
+
+.. note::
+
+    C code examples don't require the use of the SCPI server, we have included them here to demonstrate how the same functionality can be achieved with different programming languages. 
+    Instructions on how to compile the code are here -> `link <https://redpitaya.readthedocs.io/en/latest/developerGuide/comC.html>`_
+
 .. code-block:: c
 
     #include <stdio.h>
     #include <stdlib.h>
 
-    #include "redpitaya/rp.h"
+    #include "rp.h"
 
     int main (int argc, char **argv) {
         rp_pinState_t state;
@@ -139,4 +145,4 @@ Code - LabVIEW
 
 .. image:: Push-button-and-turn-on-LED_LV.png
 
-`Dowload <https://dl.dropboxusercontent.com/s/02fl6jylyr0slr5/Push%20button%20and%20turn%20on%20LED.vi?>`_
+`Dowload <https://downloads.redpitaya.com/downloads/Clients/labview/Push%20button%20and%20turn%20on%20LED.vi>`_

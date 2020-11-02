@@ -17,9 +17,9 @@ smartphone, tablet or a PC running any popular operating system (MAC, Linux, Win
 Logic Analyzer application possibilities:
 
    1. **Logic Analyzer Basic - Logic Analyzer extension module not reacquired** – Using directly the GPIO expansion
-      connector of the STEMlab board. **Works only with STEMlab 125-10!**
+      connector of the Red Pitaya board. **For STEMlab 125-10 only!**
    2. **Logic Analyzer PRO - Logic Analyzer extension module reacquired** – Enabling different logic levels, board
-      protection and higher performances. **Works with STEMlab 125-14 **
+      protection and higher performances. **Works with STEMlab 125-14 & SDRlab 122-16**
 
 The graphical user interface of the Logic Analyzer fits well into the overall design of the Red Pitaya applications
 providing the same operating concept. The Logic Analyzer user interface is shown below.
@@ -148,19 +148,19 @@ SPECIFICATIONS
 Hardware/Connections
 ====================
 
-Alongside the Logic analyzer application for maximal performance and protection of your STEMlab board the Logic
+Alongside the Logic analyzer application for maximal performance and protection of your Red Pitaya board the Logic
 analyzer extension module (Logic Analyzer PRO) is recommended. Using the LA extension module is straightforward, just
-plug it on your STEMlab and connect the leads to the desired measurement points.
+plug it on your Red Pitaya and connect the leads to the desired measurement points.
 
 .. image:: Slika_09_LA.png
 
 To use the Logic analyzer without the extension module (Logic Analyzer Basic) you need to be more careful in
-connecting the Logic analyzer probes to the extension connector :ref:`E1 <E1>` on the STEMlab board. The pins used for Logic
+connecting the Logic analyzer probes to the extension connector :ref:`E1 <E1>` on the Red Pitaya board. The pins used for Logic
 analyzer board are shown in picture below.
 
 .. note::
 
-    Using directly the GPIO expansion connector :ref:`E1 <E1>` pins of the STEMlab board w orks only with STEMlab 125-10! Picture
+    Using directly the GPIO expansion connector :ref:`E1 <E1>` pins of the Red Pitaya board works only with STEMlab 125-10! Picture
     bellow(left) shows connection for the STEMlab 125 – 10 board.
 
 .. image:: Slika_10_LA.png

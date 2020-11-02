@@ -4,10 +4,10 @@ LCR meter
 
 .. image:: 01_iPad_Combo_LCR.jpg
 
-This application will turn your STEMlab into an affordable LCR meter. It is the perfect tool for educators, students, 
+This application will turn your Red Pitaya into an affordable LCR meter. It is the perfect tool for educators, students, 
 makers, hobbyists and professionals seeking affordable, highly functional test and measurement equipment. The 
 Resistor, Capacitors and Inductors are basic components of all electrical circuits and working on your projects you 
-will definitely need to measure some components laying around on your working bench. The STEMlab LCR meter will enable 
+will definitely need to measure some components laying around on your working bench. The Red Pitaya LCR meter will enable 
 you to do that quickly and accurately just by switching from one application to another. 
 
 .. note:: 
@@ -127,3 +127,54 @@ the user expects some value in creating ranges, then the Manual mode can be used
     - Min, Max, Average measurements  
     - 1000 logging points   
     
+*******************
+Console application
+*******************
+
+Lcr meter can be used from console.
+
+.. code-block:: console
+
+   root@rp-f01c35:~# lcr
+   Too few arguments!
+
+   LCR meter version 0.00-0000, compiled at Fri Aug 14 03:29:10 2020
+
+   Usage:	lcr [freq] [r_shunt] 
+
+      freq               Signal frequency used for measurement [ 100 , 1000, 10000 , 100000 ] Hz.
+      r_shunt            Shunt resistor value in Ohms [ 10, 100, 1000, 10000, 100000, 1000000 ]. If set to 0, Automatic ranging is used.
+                        Automatic ranging demands Extenson module.
+
+   Output:	Frequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]
+
+
+For run the lcr, you need to do 23 steps:
+
+    #. ) Load the FPGA image of streaming
+
+        .. code-block:: console
+
+            root@rp-f01c35:/# cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+
+    #. ) Launch a console application.
+
+        .. code-block:: console
+
+            root@rp-f01c35:~# lcr 100 100000 -v
+            Frequency       100 Hz
+            Z       5.424000 kOmh
+            Phase   1.364216 deg
+            L(s)    205.533997 mH
+            C(s)    -12.324000 uF
+            R(s)    5.422000 kOmh
+            L(p)    0.000000 H
+            C(p)    0.000000 F
+            R(p)    5.425000 kOmh
+            Q       0.023815
+            D       -41.991112
+            X_s     129.141129
+            G_p     0.000184
+            B_p     0.000000
+            |Y|     0.000184
+            -P_Y    -1.364216 deg
