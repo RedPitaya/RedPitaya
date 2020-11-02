@@ -10,8 +10,9 @@
 #   2. Memtest (stand alone memory test) ELF binary.
 #   4. Linux device tree source (dts).
 
-PRJ ?= logic
+PRJ   ?= logic
 MODEL ?= Z10
+HWID  ?= ""
 
 # build artefacts
 FPGA_BIT    = prj/$(PRJ)/out/red_pitaya.bit
