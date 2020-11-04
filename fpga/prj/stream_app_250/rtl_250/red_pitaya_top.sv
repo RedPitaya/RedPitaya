@@ -110,11 +110,6 @@ module red_pitaya_top #(
   inout  logic          exp_9_io   ,
   inout  logic [ 9-1:0] exp_p_io   ,
   inout  logic [ 9-1:0] exp_n_io   ,
-  // SATA connector
-  output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
-  output logic [ 2-1:0] daisy_n_o  ,
-  input  logic [ 2-1:0] daisy_p_i  ,  // line 1 is clock capable
-  input  logic [ 2-1:0] daisy_n_i  ,
   // LED
   output logic [ 8-1:0] led_o
 );
