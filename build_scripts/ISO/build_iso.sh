@@ -17,8 +17,8 @@ PREFIX=$2
 REV="$(echo $1 | cut -d'-' -f2)"
 NUM="$(echo $1 | cut -d'-' -f3)"
 
-wget -N http://downloads.redpitaya.com/downloads/red_pitaya_OS-beta.img.zip
-unzip -n red_pitaya_OS-beta.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.02.img.zip
+unzip -n red_pitaya_OS-beta_1.02.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
