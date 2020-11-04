@@ -279,12 +279,12 @@ int main(int argc, char *argv[])
             ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
             ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
             ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-            ch2_off  = osc_calib_params.osc_ch1_off_2_dc; 
+            ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
         }else{
-            ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:20
-            ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:20
-            ch1_off  = osc_calib_params.osc_ch1_off_20_dc; 
-            ch2_off  = osc_calib_params.osc_ch2_off_20_dc; 		
+            ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
+            ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
+            ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
+            ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
         }
     #endif
 

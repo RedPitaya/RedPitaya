@@ -317,6 +317,32 @@ void StartServer(){
     float ch2_gain = 1;
 
 
+// typedef struct {
+//     uint32_t gen_ch1_g_1;
+//     uint32_t gen_ch2_g_1;
+//     int32_t  gen_ch1_off_1;
+//     int32_t  gen_ch2_off_1;
+//     uint32_t gen_ch1_g_5;
+//     uint32_t gen_ch2_g_5;
+//     int32_t  gen_ch1_off_5;
+//     int32_t  gen_ch2_off_5;
+//     uint32_t osc_ch1_g_1_ac;
+//     uint32_t osc_ch2_g_1_ac;
+//     int32_t  osc_ch1_off_1_ac;
+//     int32_t  osc_ch2_off_1_ac;
+//     uint32_t osc_ch1_g_1_dc; // HIGH
+//     uint32_t osc_ch2_g_1_dc;
+//     int32_t  osc_ch1_off_1_dc;
+//     int32_t  osc_ch2_off_1_dc;
+//     uint32_t osc_ch1_g_20_ac; // LOW
+//     uint32_t osc_ch2_g_20_ac;
+//     int32_t  osc_ch1_off_20_ac;
+//     int32_t  osc_ch2_off_20_ac;
+//     uint32_t osc_ch1_g_20_dc;
+//     uint32_t osc_ch2_g_20_dc;
+//     int32_t  osc_ch1_off_20_dc;
+//     int32_t  osc_ch2_off_20_dc;
+// } rp_calib_params_t;
 
 if (use_calib == 2) {
 #ifdef Z20_250_12
@@ -324,12 +350,12 @@ if (use_calib == 2) {
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
 		ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-		ch2_off  = osc_calib_params.osc_ch1_off_2_dc; 
+		ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
 	}else{
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:20
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:20
-		ch1_off  = osc_calib_params.osc_ch1_off_20_dc; 
-		ch2_off  = osc_calib_params.osc_ch2_off_20_dc; 		
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
+		ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
+		ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
 	}
 #endif
 

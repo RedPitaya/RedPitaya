@@ -41,6 +41,12 @@ LDSFLAGS+= -Wl,--no-whole-archive
 LDSFLAGS+= -lpthread
 LDSFLAGS+= -lrp
 
+ifeq ($(MODEL),Z20_250_12)
+INCLUDE += -I$(INSTALL_DIR)/include/api250-12
+LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
+endif 
+
+
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 OBJECTS=$(COBJECTS) $(CXXOBJECTS)
