@@ -94,23 +94,23 @@
     }
 
     RedPitayaOS.getVersion = function() {
-    	return version;
+        return version;
     }
 
 
     RedPitayaOS.getRevision = function() {
-    	return revision;
+        return revision;
     }
 
-    RedPitayaOS.compareVersions = function(ver1 , ver2){
+    RedPitayaOS.compareVersions = function(ver1, ver2) {
         try {
-            var vararr1 = ver1.replace('.','-');
-            vararr1 = vararr1.split("-");  
-            var vararr2 = ver2.replace('.','-').split("-");
+            var vararr1 = ver1.replace('.', '-');
+            vararr1 = vararr1.split("-");
+            var vararr2 = ver2.replace('.', '-').split("-");
             if (vararr1.length != vararr2.length) return 0;
             for (var i = 0; i < vararr1.length; i++) {
                 if (parseInt(vararr1[i]) > parseInt(vararr2[i])) return -1;
-                if (parseInt(vararr1[i]) < parseInt(vararr2[i])) return  1; 
+                if (parseInt(vararr1[i]) < parseInt(vararr2[i])) return 1;
             }
         } catch (error) {
             console.log(error)
@@ -128,27 +128,26 @@
         version = info['version'];
         revision = info['revision'];
         stem_ver = info['stem_ver'];
-        if (stem_ver === "STEM 10"){
-            stem_ver = "STEMlab 125-10"            
-        } else if (stem_ver === "STEM 14"){
+        if (stem_ver === "STEM 10") {
+            stem_ver = "STEMlab 125-10"
+        } else if (stem_ver === "STEM 14") {
             stem_ver = "STEMlab 125-14"
-        } else if (stem_ver === "STEM 16"){
+        } else if (stem_ver === "STEM 16") {
             stem_ver = "SDRlab 122-16"
-        } else if (stem_ver === "STEM 250 12"){
+        } else if (stem_ver === "STEM 250 12") {
             stem_ver = "SIGNALlab 250-12"
         } else {
             stem_ver = "unknown"
         }
-        
+
         $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + " <img id=\"NEW_FIRMWARE_ID\"src=\"../assets/images/warning.png\" hidden></a><img id=\"NEED_UPDATE_LINUX_ID\"src=\"../assets/images/warning.png\" hidden>");
         $("#NEED_UPDATE_LINUX_ID").click(function(event) {
             $('#firmware_dialog').modal("show");
         });
 
-        BrowserChecker.isOnline(function()
-            {
-                checkUpdates(info);
-            });
+        BrowserChecker.isOnline(function() {
+            checkUpdates(info);
+        });
     }
 
     $(document).ready(function($) {
@@ -163,70 +162,70 @@
                 stem_ver = msg['stem_ver'];
                 var board_type = "";
                 var linux_path = "LinuxOS";
-                if (stem_ver == "STEM 16"){
-                    board_type = "STEMlab-122-16/ecosystems";
-                } 
+                if (stem_ver == "STEM 16") {
+                    board_type = "SDRlab-122-16/ecosystems";
+                }
 
                 if (stem_ver == "STEM 250 12") {
-                    board_type = "STEMlab-250-12/ecosystems";
+                    board_type = "SIGNALlab-250-12/ecosystems";
                 }
 
-                if (stem_ver == "STEM 14"){
+                if (stem_ver == "STEM 14") {
                     board_type = "STEMlab-125-1x/ecosystems";
                 }
-                if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])){
+                if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])) {
                     $("#CUR_VER").text(msg["sd_linux_ver"]);
                     $("#REQ_VER").text(msg["linux_ver"]);
-                    $("#NEED_UPDATE_LINUX_ID").attr("hidden",false);
+                    $("#NEED_UPDATE_LINUX_ID").attr("hidden", false);
                     var _href = $("#NEW_FIRMWARE_LINK_ID").attr("href");
                     $("#NEW_FIRMWARE_LINK_ID").attr("href", _href + linux_path);
                 }
 
-                if (board_type != ""){
+                if (board_type != "") {
                     $.ajax({
-                        method: "GET",
-                        url: '/update_list?type=' + board_type
-                    })
-                    .done(function(msg) {
-                        var list = [];
-                        var arr = msg.split('\n');
-                        // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
-                        // example - version as array entry: 12933621
-                        for (var i = 0; i < arr.length; i += 2) {
-                            if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
-                                  list.push(arr[i]);
+                            method: "GET",
+                            url: '/update_list?type=' + board_type
+                        })
+                        .done(function(msg) {
+                            var list = [];
+                            var arr = msg.split('\n');
+                            // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
+                            // example - version as array entry: 12933621
+                            for (var i = 0; i < arr.length; i += 2) {
+                                if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
+                                    list.push(arr[i]);
+                                }
                             }
-                        }
 
-                        if (list.length == 0) return;
-                        list.sort();
-                        var es_distro_vers = { vers_as_str:'', build:0, ver_full:'' };
-                        // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
-                        for (var i = list.length - 1; i >= 0; i--) {
-                            var item = list[i].split('-');
-                            var ver = item[1];
-                            var build = item[2];
-                             // select latest version according to common version and build
-                            if (RedPitayaOS.compareVersions(ver+"."+build,es_distro_vers.vers_as_str + "."+es_distro_vers.build) === -1 ) {
-                                es_distro_vers.vers_as_str = ver;
-                                es_distro_vers.build = build;
-                                es_distro_vers.ver_full = item.slice(0, 4).join('-');
+                            if (list.length == 0) return;
+                            list.sort();
+                            var es_distro_vers = { vers_as_str: '', build: 0, ver_full: '' };
+                            // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
+                            for (var i = list.length - 1; i >= 0; i--) {
+                                var item = list[i].split('-');
+                                var ver = item[1];
+                                var build = item[2];
+                                // select latest version according to common version and build
+                                if (RedPitayaOS.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
+                                    es_distro_vers.vers_as_str = ver;
+                                    es_distro_vers.build = build;
+                                    es_distro_vers.ver_full = item.slice(0, 4).join('-');
+                                }
                             }
-                        }
 
-                        if(new_firmware_timer != null){
-                            clearInterval(new_firmware_timer);
-                            new_firmware_timer = null;
-                        }
+                            if (new_firmware_timer != null) {
+                                clearInterval(new_firmware_timer);
+                                new_firmware_timer = null;
+                            }
 
-                        if (RedPitayaOS.compareVersions(version,es_distro_vers.vers_as_str+"-"+es_distro_vers.build) == 1){
+                            if (RedPitayaOS.compareVersions(version, es_distro_vers.vers_as_str + "-" + es_distro_vers.build) == 1) {
 
-                            $("#NEW_FIRMWARE_ID").attr("hidden",false);
-                            $("#NEED_UPDATE_LINUX_ID").attr("hidden",true);
-                            if(new_firmware_timer == null)
-                                new_firmware_timer = setInterval(blink_NewFirmware, 2000);
-                        }
-                    });
+                                $("#NEW_FIRMWARE_ID").attr("hidden", false);
+                                $("#NEED_UPDATE_LINUX_ID").attr("hidden", true);
+                                if (new_firmware_timer == null)
+                                    new_firmware_timer = setInterval(blink_NewFirmware, 2000);
+                            }
+                        });
                 }
 
             })
