@@ -40,6 +40,11 @@ $(ZIP): $(CONTROLLER)
 	$(RM) target -rf
 
 install: $(ZIP)
+ifeq ($(MODEL),Z20_250_12)
+	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app_250' >> fpga.sh
+else
+	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app' >> fpga.sh
+endif
 	unzip -o $(ZIP) -d $(INSTALL_DIR)/www/apps
 
 clean:
