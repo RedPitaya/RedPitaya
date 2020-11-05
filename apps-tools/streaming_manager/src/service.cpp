@@ -30,6 +30,12 @@
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 
+#ifdef Z20_250_12
+#include "rp-spi.h"
+#include "rp-i2c-max7311.h"
+#endif
+
+
 #define DEBUG
 
 #ifdef DEBUG
@@ -187,6 +193,7 @@ int main(int argc, char *argv[])
     int save_mode = 1;
     bool use_calib = false;
     int attenuator = 0;
+    int ac_dc = 0;
 
     try{
         ifstream file(filepath);
@@ -246,6 +253,13 @@ int main(int argc, char *argv[])
                 continue;
             }
 #endif
+
+#ifdef Z20_250_12
+            if ("coupling" == key) {
+                ac_dc = stoi(value);
+                continue;
+            }
+#endif
             throw std::exception();
         }
     }catch(std::exception& e)
@@ -274,41 +288,55 @@ int main(int argc, char *argv[])
     try{
 
     if (use_calib == 2) {
-    #ifdef Z20_250_12
-        if (attenuator == 0) {
-            ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
-            ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
-            ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-            ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
-        }else{
-            ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
-            ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
-            ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
-            ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
-        }
-    #endif
+#ifdef Z20_250_12
+	if (attenuator == 1) {
+		if (ac_dc == 1) {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac);  // 1:1
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac);  // 1:1
+			ch1_off  = osc_calib_params.osc_ch1_off_1_ac; 
+			ch2_off  = osc_calib_params.osc_ch2_off_1_ac; 
+		}
+		else {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
+			ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
+			ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+		}
+	}else{
+		if (ac_dc == 1) {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_ac);  // 1:20
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_ac);  // 1:20
+			ch1_off  = osc_calib_params.osc_ch1_off_20_ac;
+			ch2_off  = osc_calib_params.osc_ch2_off_20_ac;
+		} else {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
+			ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
+			ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
+		}
+	}
+#endif
 
-    #ifdef Z10
-        if (attenuator == 0) {
-            ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
-            ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-            ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-            ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
-        }else{
-            ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:20
-            ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:20
-            ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-            ch2_off  = osc_calib_params.fe_ch2_lo_offs; 		
-        }
-    #endif    
+#ifdef Z10
+	if (attenuator == 1) {
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  
+		ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
+		ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+	}else{
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  
+		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 		
+	}
+#endif    
     }
 
 #ifdef Z20_250_12
-        rp_AcqSetGain(RP_CH_1, attenuator == 0 ?  RP_LOW : RP_HIGH);
-        rp_AcqSetGain(RP_CH_2, attenuator == 0 ?  RP_LOW : RP_HIGH);
-
-        rp_AcqSetAC_DC(RP_CH_1,RP_DC);
-        rp_AcqSetAC_DC(RP_CH_2,RP_DC);
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator == 1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == 1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+    rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
+    rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
 #endif
 
 

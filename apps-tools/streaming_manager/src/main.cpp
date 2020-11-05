@@ -47,7 +47,7 @@ static pthread_mutex_t mutex;
 
 #define SS_8BIT		1
 #define SS_16BIT	2
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 
 //Parameters
