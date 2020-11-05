@@ -94,18 +94,8 @@ module red_pitaya_top #(
   inout  logic                    adc_spi_sdio, // ADC spi DIO
   output logic                    adc_spi_clk, // ADC spi CLK
   output logic                    adc_sync_o, // ADC sync
-  // DAC
-  output logic [1:0][14-1:0] dac_dat_o,  // DAC combined data
-  input  logic               dac_dco_i,  // DAC clock
-  output logic               dac_reset_o,  // DAC reset
-  output logic               dac_spi_csb, // DAC spi CS
+
   inout  logic               dac_spi_sdio, // DAC spi DIO
-  output logic               dac_spi_clk, // DAC spi CLK
-  // PWM DAC
-  output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PWM DAC
-  // XADC
-  input  logic [ 5-1:0] vinp_i     ,  // voltages p
-  input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
   inout  logic          exp_9_io   ,
   inout  logic [ 9-1:0] exp_p_io   ,
@@ -117,12 +107,6 @@ module red_pitaya_top #(
 ////////////////////////////////////////////////////////////////////////////////
 // local signals
 ////////////////////////////////////////////////////////////////////////////////
-
-wire                  clk_125;
-wire                  clk_200;
-wire                  clk_10;  
-wire                  rstn_hk;
-wire                  rstn_dly;
 
 // PLL signals
 logic                 adc_clk_in;
@@ -161,8 +145,6 @@ assign adc_spi_clk  = hk_spi_clk[0];
 assign hk_spi_i[0]  = adc_spi_sdio;
 assign adc_spi_sdio = hk_spi_t[0] ? 1'bz : hk_spi_o[0] ;
 
-assign dac_spi_csb  = hk_spi_cs[1];
-assign dac_spi_clk  = hk_spi_clk[1];
 assign hk_spi_i[1]  = dac_spi_sdio;
 assign dac_spi_sdio = hk_spi_t[1] ? 1'bz : hk_spi_o[1] ;
 
@@ -207,6 +189,8 @@ assign adc_sync_o = 1'bz ;
 logic [2-1:0] [ 7-1:0] adc_dat_ibuf;
 logic [2-1:0] [ 7-1:0] adc_dat_idly;
 logic [2-1:0] [14-1:0] adc_dat_in;
+logic [2-1:0] [14-1:0] adc_dat_sw;
+
 
 genvar GV;
 generate
@@ -327,6 +311,12 @@ sys_bus_interconnect #(
   .bus_m (ps_sys),
   .bus_s (sys)
 );
+// data loopback
+always @(posedge adc_clk)
+begin
+  adc_dat_sw[0] <= { adc_dat_in[1][14-1:2] , 2'h0 }; // switch adc_b->ch_a
+  adc_dat_sw[1] <= { adc_dat_in[0][14-1:2] , 2'h0 }; // switch adc_a->ch_b
+end
 
 ////////////////////////////////////////////////////////////////////////////////
 //  House Keeping
@@ -468,8 +458,8 @@ assign gpio.i[23:16] = exp_n_in[7:0];
         .frstn_1(frstn[1]),
         .frstn_2(frstn[2]),
         .frstn_3(frstn[3]),
-        .adc_data_ch1(adc_dat_in[0]),
-        .adc_data_ch2(adc_dat_in[1]));
+        .adc_data_ch1(adc_dat_sw[0]),
+        .adc_data_ch2(adc_dat_sw[1]));
 
 assign axi_gp.AWREGION = '0;
 assign axi_gp.ARREGION = '0;

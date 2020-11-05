@@ -138,14 +138,14 @@ wire                            buf_sel_ch1, buf_sel_ch2;
 
 always @(posedge clk)
 begin
-  adc_data_ch1_signed <= {adc_data_ch1[ADC_DATA_BITS-1], ~{adc_data_ch1[ADC_DATA_BITS-2:0],{(16-ADC_DATA_BITS){1'b0}}}};  
+  adc_data_ch1_signed <= {{(16-ADC_DATA_BITS){adc_data_ch1[ADC_DATA_BITS-1]}},{adc_data_ch1}};  
 end
 
 assign s_axis_osc1_tdata = $signed(adc_data_ch1_signed);
 
 always @(posedge clk)
 begin
-  adc_data_ch2_signed <= {adc_data_ch2[ADC_DATA_BITS-1], ~{adc_data_ch2[ADC_DATA_BITS-2:0],{(16-ADC_DATA_BITS){1'b0}}}}; 
+  adc_data_ch2_signed <= {{(16-ADC_DATA_BITS){adc_data_ch2[ADC_DATA_BITS-1]}},{adc_data_ch2}};  
 end
 
 assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
