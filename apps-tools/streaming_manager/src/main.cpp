@@ -395,7 +395,6 @@ if (use_calib == 2) {
     rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == 1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
-	sleep(1);
 #endif
 
 	// Decimation constants

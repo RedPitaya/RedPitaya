@@ -31,6 +31,7 @@ $(CONTROLLER):
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
+	echo "#!/bin/sh" > fpga.sh
 ifeq ($(MODEL),Z20_250_12)
 	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app_250' >> fpga.sh
 else
