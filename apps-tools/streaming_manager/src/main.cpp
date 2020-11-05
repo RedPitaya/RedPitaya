@@ -24,6 +24,12 @@
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 
+#ifdef Z20_250_12
+#include "rp-spi.h"
+#include "rp-i2c-max7311.h"
+#endif
+
+
 
 void StartServer();
 void StopServer(int x);
@@ -41,7 +47,7 @@ static pthread_mutex_t mutex;
 
 #define SS_8BIT		1
 #define SS_16BIT	2
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 
 //Parameters
@@ -62,7 +68,8 @@ CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
-CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 0 ,0,	0,1);
+CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2);
+CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
 CStreamingManager::Ptr s_manger;
@@ -110,6 +117,12 @@ int rp_app_init(void)
 		fprintf(stderr, "Error: rp_app_init() %s\n",e.what());
 		PrintLogInFile(e.what());
 	}
+	#ifdef Z20_250_12
+    // rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
+    // rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
+    rp_max7311::rp_initController();
+    #endif 
+
 	PrintLogInFile("rp_app_init");
 
 	return 0;
@@ -167,6 +180,9 @@ void SaveConfigInFile(){
 	file << "use_calib " << ss_calib.Value() << std::endl;
 	file << "attenuator " << ss_attenuator.Value() << std::endl;
 #endif
+#ifdef Z20_250_12
+	file << "coupling " << ss_ac_dc.Value() << std::endl;
+#endif 
 }
 
 //Update parameters
@@ -241,6 +257,14 @@ void UpdateParams(void)
 	}
 #endif
 
+#ifdef Z20_250_12
+	if (ss_ac_dc.IsNewValue())
+	{
+		ss_ac_dc.Update();
+		SaveConfigInFile();
+	}
+#endif
+
 	if (ss_samples.IsNewValue())
 	{
 		ss_samples.Update();
@@ -310,6 +334,10 @@ void StartServer(){
     auto osc_calib_params = rp_GetCalibrationSettings();
 #endif
 
+#ifdef Z20_250_12
+	auto ac_dc = ss_ac_dc.Value();
+#endif
+
 	std::vector<UioT> uioList = GetUioList();
     uint32_t ch1_off = 0;
     uint32_t ch2_off = 0;
@@ -317,69 +345,57 @@ void StartServer(){
     float ch2_gain = 1;
 
 
-// typedef struct {
-//     uint32_t gen_ch1_g_1;
-//     uint32_t gen_ch2_g_1;
-//     int32_t  gen_ch1_off_1;
-//     int32_t  gen_ch2_off_1;
-//     uint32_t gen_ch1_g_5;
-//     uint32_t gen_ch2_g_5;
-//     int32_t  gen_ch1_off_5;
-//     int32_t  gen_ch2_off_5;
-//     uint32_t osc_ch1_g_1_ac;
-//     uint32_t osc_ch2_g_1_ac;
-//     int32_t  osc_ch1_off_1_ac;
-//     int32_t  osc_ch2_off_1_ac;
-//     uint32_t osc_ch1_g_1_dc; // HIGH
-//     uint32_t osc_ch2_g_1_dc;
-//     int32_t  osc_ch1_off_1_dc;
-//     int32_t  osc_ch2_off_1_dc;
-//     uint32_t osc_ch1_g_20_ac; // LOW
-//     uint32_t osc_ch2_g_20_ac;
-//     int32_t  osc_ch1_off_20_ac;
-//     int32_t  osc_ch2_off_20_ac;
-//     uint32_t osc_ch1_g_20_dc;
-//     uint32_t osc_ch2_g_20_dc;
-//     int32_t  osc_ch1_off_20_dc;
-//     int32_t  osc_ch2_off_20_dc;
-// } rp_calib_params_t;
-
 if (use_calib == 2) {
 #ifdef Z20_250_12
-	if (attenuator == 0) {
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
-		ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-		ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+	if (attenuator == 1) {
+		if (ac_dc == 1) {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac);  // 1:1
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac);  // 1:1
+			ch1_off  = osc_calib_params.osc_ch1_off_1_ac; 
+			ch2_off  = osc_calib_params.osc_ch2_off_1_ac; 
+		}
+		else {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
+			ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
+			ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+		}
 	}else{
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
-		ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
-		ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
+		if (ac_dc == 1) {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_ac);  // 1:20
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_ac);  // 1:20
+			ch1_off  = osc_calib_params.osc_ch1_off_20_ac;
+			ch2_off  = osc_calib_params.osc_ch2_off_20_ac;
+		} else {
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
+			ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
+			ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
+		}
 	}
 #endif
 
 #ifdef Z10
-	if (attenuator == 0) {
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  // 1:1
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  // 1:1
-		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 
-	}else{
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  // 1:20
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  // 1:20
+	if (attenuator == 1) {
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  
 		ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-		ch2_off  = osc_calib_params.fe_ch2_lo_offs; 		
+		ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+	}else{
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  
+		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 		
 	}
 #endif    
 }
 
 #ifdef Z20_250_12
-	rp_AcqSetGain(RP_CH_1, attenuator == 0 ?  RP_LOW : RP_HIGH);
-	rp_AcqSetGain(RP_CH_2, attenuator == 0 ?  RP_LOW : RP_HIGH);
-
-	rp_AcqSetAC_DC(RP_CH_1,RP_DC);
-	rp_AcqSetAC_DC(RP_CH_2,RP_DC);
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator == 1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == 1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+    rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
+    rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
+	sleep(1);
 #endif
 
 	// Decimation constants
