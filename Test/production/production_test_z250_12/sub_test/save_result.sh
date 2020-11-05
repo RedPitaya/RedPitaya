@@ -78,7 +78,7 @@ else
 echo -n "      Board is offline or server is not available. Logging test result to the Red Pitaya d.d MAIN server FAILD!!! "
 print_fail
 #exit
-fi
+
 echo
 echo "      Sending test record data to server..."
 # Prepare LOG_VAR data
@@ -116,6 +116,7 @@ echo
 echo -n "      No response from SERVER!!! "
 print_fail
 echo
+fi
 fi
 echo
 echo
