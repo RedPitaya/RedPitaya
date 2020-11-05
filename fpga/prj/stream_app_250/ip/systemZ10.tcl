@@ -1181,8 +1181,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net xlconstant_1_dout [get_bd_pins rp_concat/gen1_event_ip] [get_bd_pins rp_concat/gen2_event_ip] [get_bd_pins rp_concat/la_event_ip] [get_bd_pins xlconstant_1/dout]
 
   # Create address segments
-  assign_bd_address -offset 0x48000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs m_axi_hk/Reg] -force
-  assign_bd_address -offset 0x40000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs rp_oscilloscope/s_axi_reg/reg0] -force
+  assign_bd_address -offset 0x40000000 -range 0x00100000 -target_address_space [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs m_axi_hk/Reg] -force
+  assign_bd_address -offset 0x40100000 -range 0x00100000 -target_address_space [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs rp_oscilloscope/s_axi_reg/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc1] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc2] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
 
