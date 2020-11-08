@@ -94,6 +94,7 @@ reg   [  32-1: 0] buf_a_rpnt_rd, buf_b_rpnt_rd;
 reg               trig_a_sw    , trig_b_sw    ;
 reg   [   3-1: 0] trig_a_src   , trig_b_src   ;
 wire              trig_a_done  , trig_b_done  ;
+reg   [  14-1: 0] set_a_last   , set_b_last   ;
 
 red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
   // DAC
@@ -120,6 +121,7 @@ red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
   .set_wrap_i      ({set_b_wrap       , set_a_wrap       }),  // set wrap pointer
   .set_amp_i       ({set_b_amp        , set_a_amp        }),  // set amplitude scale
   .set_dc_i        ({set_b_dc         , set_a_dc         }),  // set output offset
+  .set_last_i      ({set_b_last       , set_a_last       }),  // set last value
   .set_zero_i      ({set_b_zero       , set_a_zero       }),  // set output to zero
   .set_ncyc_i      ({set_b_ncyc       , set_a_ncyc       }),  // set number of cycle
   .set_rnum_i      ({set_b_rnum       , set_a_rnum       }),  // set number of repetitions
@@ -176,6 +178,8 @@ if (dac_rstn_i == 1'b0) begin
    set_b_rnum  <= 16'h0    ;
    set_b_rdly  <= 32'h0    ;
    set_b_rgate <=  1'b0    ;
+   set_a_last  <= 14'b0    ;
+   set_b_last  <= 14'b0    ;
    ren_dly     <=  3'h0    ;
    ack_dly     <=  1'b0    ;
 end else begin
@@ -208,6 +212,9 @@ end else begin
       if (sys_addr[19:0]==20'h38)  set_b_ncyc <= sys_wdata[  16-1: 0] ;
       if (sys_addr[19:0]==20'h3C)  set_b_rnum <= sys_wdata[  16-1: 0] ;
       if (sys_addr[19:0]==20'h40)  set_b_rdly <= sys_wdata[  32-1: 0] ;
+
+      if (sys_addr[19:0]==20'h44)  set_a_last <= sys_wdata[  14-1: 0] ;
+      if (sys_addr[19:0]==20'h48)  set_b_last <= sys_wdata[  14-1: 0] ;
    end
 
    if (sys_ren) begin
@@ -252,6 +259,9 @@ end else begin
      20'h00038 : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_ncyc}         ; end
      20'h0003C : begin sys_ack <= sys_en;          sys_rdata <= {{32-16{1'b0}},set_b_rnum}         ; end
      20'h00040 : begin sys_ack <= sys_en;          sys_rdata <= set_b_rdly                         ; end
+
+     20'h00044 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}},set_a_last}         ; end
+     20'h00048 : begin sys_ack <= sys_en;          sys_rdata <= {{32-14{1'b0}},set_b_last}         ; end
 
      20'h1zzzz : begin sys_ack <= ack_dly;         sys_rdata <= {{32-14{1'b0}},buf_a_rdata}        ; end
      20'h2zzzz : begin sys_ack <= ack_dly;         sys_rdata <= {{32-14{1'b0}},buf_b_rdata}        ; end
