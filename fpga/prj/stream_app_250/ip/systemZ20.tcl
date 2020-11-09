@@ -1061,7 +1061,7 @@ proc create_root_design { parentCell } {
   # Create instance: rp_oscilloscope, and set properties
   set rp_oscilloscope [ create_bd_cell -type ip -vlnv redpitaya.com:user:rp_oscilloscope:1.16 rp_oscilloscope ]
   set_property -dict [ list \
-   CONFIG.ADC_DATA_BITS {14} \
+   CONFIG.ADC_DATA_BITS {12} \
    CONFIG.EVENT_SRC_NUM {5} \
    CONFIG.TRIG_SRC_NUM {5} \
  ] $rp_oscilloscope
