@@ -11,7 +11,6 @@ module rp_oscilloscope
     parameter TRIG_SRC_NUM          = 7)(    
   input  wire                                   clk,
   input  wire                                   rst_n,
-  //output wire [              1:0]               intr,
   output wire                                   intr,
 
   //
@@ -145,13 +144,12 @@ assign s_axis_osc1_tdata = $signed(adc_data_ch1_signed);
 
 always @(posedge clk)
 begin
-  adc_data_ch2_signed <= {{adc_data_ch2},{(16-ADC_DATA_BITS){1'b0}}};   
+  adc_data_ch2_signed <= {{adc_data_ch2},{(16-ADC_DATA_BITS){1'b0}}};
 end
 
 assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
 
 assign intr = osc1_dma_intr | osc2_dma_intr;
-//assign intr = {osc2_dma_intr,osc1_dma_intr};
 
 `ifdef SIMULATION
   assign reg_wr_we = reg_en & (reg_we == 4'h1);
