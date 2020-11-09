@@ -134,19 +134,26 @@ reg  [  32-1: 0] dly_cnt      ;
 reg  [   8-1: 0] dly_tick     ;
 
 reg              dac_do       ;
+reg  [   5-1: 0] dac_do_dlysr ;
 reg              dac_rep      ;
 wire             dac_trig     ;
 reg              dac_trigr    ;
 
 always @(posedge dac_clk_i)
 begin 
+   dac_do_dlysr[0]   <= dac_do;
+   dac_do_dlysr[4:1] <= dac_do_dlysr[3:0];
+end
+
+always @(posedge dac_clk_i)
+begin 
    if (dac_rstn_i == 1'b0)
       lastval <= 1'b0;
    else begin
-      if (~dac_do && dly_tick == 'd4) 
+      if (dac_do_dlysr[4:3] == 2'b10) // negative edge of dly_do, delayed for 4 cycles
          lastval <= 1'b1;
       
-      if (lastval && dly_cnt == 'd0)
+      if ((lastval && dly_cnt == 'd0 && |rep_cnt) || set_zero_i) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval.
          lastval <= 1'b0;
    end
 end

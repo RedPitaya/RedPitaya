@@ -178,8 +178,8 @@ if (dac_rstn_i == 1'b0) begin
    set_b_rnum  <= 16'h0    ;
    set_b_rdly  <= 32'h0    ;
    set_b_rgate <=  1'b0    ;
-   set_a_last  <= 14'b0    ;
-   set_b_last  <= 14'b0    ;
+   set_a_last  <= 14'h0    ;
+   set_b_last  <= 14'h0    ;
    ren_dly     <=  3'h0    ;
    ack_dly     <=  1'b0    ;
 end else begin
