@@ -93,9 +93,9 @@ task test_osc(
   ##5;
   axi_write(offset+'h70, 'd40000);  // buffer 2 address
   ##5;
-  axi_write(offset+'h74, 'h800);  // calibration offset
+  axi_write(offset+'h74, 'h0);  // calibration offset
   ##5;
-  axi_write(offset+'h78, 'hE000);  // calibration gain
+  axi_write(offset+'h78, 'h4000);  // calibration gain
   ##5;
   axi_write(offset+'h58, 'h400);  // buffer size - must be greater than axi burst size (128)
   ##5;

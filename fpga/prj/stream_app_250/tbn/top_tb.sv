@@ -79,8 +79,10 @@ logic                  trig;
 logic                  intr;
 
 logic               clk ;
+logic               clkout_125 ;
+logic               clkout_625 ;
 logic               clkn;
-wire               rstn_out;
+wire                rstn_out;
 logic               rstn;
 
 //glbl glbl();
@@ -186,7 +188,7 @@ end
 //end
 
 initial begin
-  ##500;
+  ##5000;
 
    //top_tc.test_hk                 (0<<20, 32'h55);
    //top_tc.test_sata               (5<<20, 32'h55);
@@ -302,27 +304,34 @@ assign #0.2 daisy_n[2] = daisy_n[0] ;
 
 
 
-wire [11:0] wdat1; 
-wire [11:0] wdat2;
-wire [11:0] wdat3;
-wire [11:0] wdat4;
+wire [15:0] wdat1; 
+wire [15:0] wdat2;
+wire [15:0] wdat3;
+wire [15:0] wdat4;
 
 
-assign wdat1 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[11:0];
-assign wdat2 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[27:16];
-assign wdat3 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[43:32];
-assign wdat4 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[59:48];
+assign wdat1 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[15:0];
+assign wdat2 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[31:16];
+assign wdat3 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[47:32];
+assign wdat4 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[63:48];
 
-reg [12:0] cnter;
+reg [13:0]        cnter;
+reg [ 1:0] [6:0] posnum;
+reg [ 1:0] [6:0] negnum;
+
 always @(clk) begin
 
     if (rstn==0)
-        cnter <= 13'b0;
-    else if (cnter==13'hFFF && clk==1)
-        cnter <= 13'b0;
+        cnter <= 14'b0;
+    else if (cnter==14'h1FFF && clk==1)
+        cnter <= 14'b0;
     else if (clk == 1)
-        cnter <= cnter + 13'h1; 
+        cnter <= cnter + 14'd16; 
 
+    posnum[1] <= cnter[13:7];
+    posnum[0] <= cnter[13:7];
+    negnum[1] <= ~cnter[13:7];
+    negnum[0] <= ~cnter[13:7];
 end
 
 
@@ -438,126 +447,16 @@ end
         .S_AXI_REG_wstrb(axi_reg.WSTRB),
         .S_AXI_REG_wvalid(axi_reg.WVALID),
 
-        .clkout_625(clkout_625),
-        .clk_125(clkout_125),
-        .rstn_hk(rstn_out),
         .rst_in(~rstn),
+        .rstn_out(rstn_out),
+        .clkout_125(clkout_125),
+        .clkout_625(clkout_625),
 
+        .cnter_in(cnter),
         .adc_clk_i({clk,clkn}),
-        .adc_dat_p_i({ cnter[12:5], cnter[12:5]}),
-        .adc_dat_n_i({~cnter[12:5],~cnter[12:5]})
+        .adc_dat_p_i(posnum),
+        .adc_dat_n_i(negnum)
         );
-/*rp_concat #(
-  .EVENT_SRC_NUM(5),
-  .TRIG_SRC_NUM(5)
-) rp_concat (
-  .event_reset(rp_oscilloscope.event_ip_reset),
-  .event_start(rp_oscilloscope.event_ip_start),
-  .event_stop(rp_oscilloscope.event_ip_stop),
-  .event_trig(rp_oscilloscope.event_ip_trig),
-  .gen1_event_ip(4'b0),
-  .gen1_trig_ip(1'b0),
-  .gen2_event_ip(4'b0),
-  .gen2_trig_ip(1'b0),
-  .la_event_ip(4'b0),
-  .la_trig_ip(1'b0),
-  .osc1_event_ip(rp_oscilloscope.osc1_event_op),
-  .osc1_trig_ip(rp_oscilloscope.osc1_trig_op),
-  .osc2_event_ip(rp_oscilloscope.osc2_event_op),
-  .osc2_trig_ip(rp_oscilloscope.osc2_trig_op),
-  .trig(rp_oscilloscope.trig_ip)
-);
-
-rp_oscilloscope #(
-  .S_AXI_REG_ADDR_BITS(REG_AW),
-  .M_AXI_OSC1_ADDR_BITS(OSC_AW),
-  .M_AXI_OSC1_DATA_BITS(OSC_DW),
-  .M_AXI_OSC2_ADDR_BITS(OSC_AW),
-  .M_AXI_OSC2_DATA_BITS(OSC_DW),
-  .ADC_DATA_BITS(14),
-  .EVENT_SRC_NUM(5),
-  .TRIG_SRC_NUM(5)
-) rp_oscilloscope (
-  
-  .clk(clk),
-  .rst_n(rstn),
-
-  .adc_data_ch1(adc_dr[0]),
-  .adc_data_ch2(adc_dr[1]),
-  
-  .event_ip_reset(rp_concat.event_reset),
-  .event_ip_start(rp_concat.event_start),
-  .event_ip_stop(rp_concat.event_stop),
-  .event_ip_trig(rp_concat.event_trig),
-  .trig_ip(rp_concat.trig),
-  
-  .osc1_event_op(rp_concat.osc1_event_ip),
-  .osc1_trig_op(rp_concat.osc1_trig_ip),
-  .osc2_event_op(rp_concat.osc2_event_ip),
-  .osc2_trig_op(rp_concat.osc2_trig_ip),
-
-  .intr(intr),
-
-  .m_axi_osc1_aclk(clk),
-  .m_axi_osc1_aresetn(rstn),
-  .m_axi_osc1_awaddr(axi_osc1.AWADDR),
-  .m_axi_osc1_awburst(axi_osc1.AWBURST),
-  .m_axi_osc1_awcache(axi_osc1.AWCACHE),
-  .m_axi_osc1_awlen(axi_osc1.AWLEN),
-  .m_axi_osc1_awprot(axi_osc1.AWPROT),
-  .m_axi_osc1_awready(axi_osc1.AWREADY),
-  .m_axi_osc1_awsize(axi_osc1.AWSIZE),
-  .m_axi_osc1_awvalid(axi_osc1.AWVALID),
-  .m_axi_osc1_bready(axi_osc1.BREADY),
-  .m_axi_osc1_bresp(axi_osc1.BRESP),
-  .m_axi_osc1_bvalid(axi_osc1.BVALID),
-  .m_axi_osc1_wdata(axi_osc1.WDATA),
-  .m_axi_osc1_wlast(axi_osc1.WLAST),
-  .m_axi_osc1_wready(axi_osc1.WREADY),
-  .m_axi_osc1_wstrb(axi_osc1.WSTRB),
-  .m_axi_osc1_wvalid(axi_osc1.WVALID),
-
-  .m_axi_osc2_aclk(clk),
-  .m_axi_osc2_aresetn(rstn),
-  .m_axi_osc2_awaddr(axi_osc2.AWADDR),
-  .m_axi_osc2_awburst(axi_osc2.AWBURST),
-  .m_axi_osc2_awcache(axi_osc2.AWCACHE),
-  .m_axi_osc2_awlen(axi_osc2.AWLEN),
-  .m_axi_osc2_awprot(axi_osc2.AWPROT),
-  .m_axi_osc2_awready(axi_osc2.AWREADY),
-  .m_axi_osc2_awsize(axi_osc2.AWSIZE),
-  .m_axi_osc2_awvalid(axi_osc2.AWVALID),
-  .m_axi_osc2_bready(axi_osc2.BREADY),
-  .m_axi_osc2_bresp(axi_osc2.BRESP),
-  .m_axi_osc2_bvalid(axi_osc2.BVALID),
-  .m_axi_osc2_wdata(axi_osc2.WDATA),
-  .m_axi_osc2_wlast(axi_osc2.WLAST),
-  .m_axi_osc2_wready(axi_osc2.WREADY),
-  .m_axi_osc2_wstrb(axi_osc2.WSTRB),
-  .m_axi_osc2_wvalid(axi_osc2.WVALID),
-
-  .s_axi_reg_aclk(clk),
-  .s_axi_reg_aresetn(rstn),
-  .s_axi_reg_araddr(axi_reg.ARADDR),
-  .s_axi_reg_arprot(axi_reg.ARPROT),
-  .s_axi_reg_arready(axi_reg.ARREADY),
-  .s_axi_reg_arvalid(axi_reg.ARVALID),
-  .s_axi_reg_awaddr(axi_reg.AWADDR),
-  .s_axi_reg_awprot(axi_reg.AWPROT),
-  .s_axi_reg_awready(axi_reg.AWREADY),
-  .s_axi_reg_awvalid(axi_reg.AWVALID),
-  .s_axi_reg_bready(axi_reg.BREADY),
-  .s_axi_reg_bresp(axi_reg.BRESP),
-  .s_axi_reg_bvalid(axi_reg.BVALID),
-  .s_axi_reg_rdata(axi_reg.RDATA),
-  .s_axi_reg_rready(axi_reg.RREADY),
-  .s_axi_reg_rresp(axi_reg.RRESP),
-  .s_axi_reg_rvalid(axi_reg.RVALID),
-  .s_axi_reg_wdata(axi_reg.WDATA),
-  .s_axi_reg_wready(axi_reg.WREADY),
-  .s_axi_reg_wstrb(axi_reg.WSTRB),
-  .s_axi_reg_wvalid(axi_reg.WVALID)
-);*/
 
 bufif1 bufif_exp_p_io [9-1:0] (exp_p_io, exp_p_od, exp_p_oe);
 bufif1 bufif_exp_n_io [9-1:0] (exp_n_io, exp_n_od, exp_n_oe);

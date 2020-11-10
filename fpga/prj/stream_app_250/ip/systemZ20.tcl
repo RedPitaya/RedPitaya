@@ -189,13 +189,12 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
-
+  set adc_bits 12
   # Save current instance; Restore later
   set oldCurInst [current_bd_instance .]
 
   # Set parent object as current
   current_bd_instance $parentObj
-
 
   # Create interface ports
   set DDR [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR ]
@@ -213,8 +212,8 @@ proc create_root_design { parentCell } {
 
 
   # Create ports
-  set adc_data_ch1 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch1 ]
-  set adc_data_ch2 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch2 ]
+  set adc_data_ch1 [ create_bd_port -dir I -from [expr $adc_bits - 1] -to 0 adc_data_ch1 ]
+  set adc_data_ch2 [ create_bd_port -dir I -from [expr $adc_bits - 1] -to 0 adc_data_ch2 ]
   set clkin_125 [ create_bd_port -dir I -type clk -freq_hz 125000000 clkin_125 ]
   set clkin_250 [ create_bd_port -dir I -type clk -freq_hz 250000000 clkin_250 ]
   set fclk_clk0 [ create_bd_port -dir O -type clk fclk_clk0 ]
@@ -1061,7 +1060,7 @@ proc create_root_design { parentCell } {
   # Create instance: rp_oscilloscope, and set properties
   set rp_oscilloscope [ create_bd_cell -type ip -vlnv redpitaya.com:user:rp_oscilloscope:1.16 rp_oscilloscope ]
   set_property -dict [ list \
-   CONFIG.ADC_DATA_BITS {12} \
+   CONFIG.ADC_DATA_BITS $adc_bits \
    CONFIG.EVENT_SRC_NUM {5} \
    CONFIG.TRIG_SRC_NUM {5} \
  ] $rp_oscilloscope

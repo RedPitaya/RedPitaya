@@ -7,6 +7,7 @@ module rp_oscilloscope
     parameter M_AXI_OSC2_ADDR_BITS  = 32,
     parameter M_AXI_OSC2_DATA_BITS  = 64,
     parameter ADC_DATA_BITS         = 14,
+    parameter ADC_IN_BITS           = 14,
     parameter EVENT_SRC_NUM         = 7,
     parameter TRIG_SRC_NUM          = 7)(    
   input  wire                                   clk,
@@ -144,7 +145,7 @@ assign s_axis_osc1_tdata = $signed(adc_data_ch1_signed);
 
 always @(posedge clk)
 begin
-  adc_data_ch2_signed <= {{adc_data_ch2},{(16-ADC_DATA_BITS){1'b0}}};
+  adc_data_ch2_signed <= {{adc_data_ch2},{(16-ADC_DATA_BITS){1'b0}}};  
 end
 
 assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);

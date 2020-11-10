@@ -193,6 +193,9 @@ logic                 pwm_rstn;
 logic                 adc_clk;
 logic                 adc_rstn;
 
+reg [14-1:0] dac_ch0;
+reg [14-1:0] dac_ch1;
+
 wire clkout_125;
 wire rstn_o;
 // stream bus type
@@ -427,6 +430,13 @@ ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(da
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
+
+always @(posedge dac_clk_1x) begin
+    dac_ch0 <= dac_dat_o;
+end
+always @(negedge dac_clk_1x) begin
+    dac_ch1 <= dac_dat_o;
+end
 ////////////////////////////////////////////////////////////////////////////////
 //  House Keeping
 ////////////////////////////////////////////////////////////////////////////////
