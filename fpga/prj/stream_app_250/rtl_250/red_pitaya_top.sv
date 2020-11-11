@@ -53,6 +53,7 @@ module red_pitaya_top #(
   // identification
   bit [0:5*32-1] GITH = '0,
   // module numbers
+  parameter ADC_DATA_BITS = 12,
   int unsigned MNA = 2,  // number of acquisition modules
   int unsigned MNG = 2   // number of generator   modules
 )(
@@ -458,8 +459,8 @@ assign gpio.i[23:16] = exp_n_in[7:0];
         .frstn_1(frstn[1]),
         .frstn_2(frstn[2]),
         .frstn_3(frstn[3]),
-        .adc_data_ch1(adc_dat_sw[0]),
-        .adc_data_ch2(adc_dat_sw[1]));
+        .adc_data_ch1(adc_dat_sw[0][13:(14-ADC_DATA_BITS)]),
+        .adc_data_ch2(adc_dat_sw[1][13:(14-ADC_DATA_BITS)]));
 
 assign axi_gp.AWREGION = '0;
 assign axi_gp.ARREGION = '0;
