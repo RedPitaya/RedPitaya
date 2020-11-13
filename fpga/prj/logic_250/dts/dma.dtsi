@@ -1,0 +1,17 @@
+/*
+ * Disable DMA after boot, must be anabled by a DT overlay
+ * TODO: it is probably not necessary to also disable each channel
+ */
+
+&axi_dma_0 {
+	status = "disabled";
+};
+&axi_dma_1 {
+	status = "disabled";
+};
+&axi_dma_2 {
+	status = "disabled";
+};
+&axi_dma_3 {
+	status = "disabled";
+};
