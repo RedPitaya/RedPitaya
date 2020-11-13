@@ -209,6 +209,20 @@ proc create_root_design { parentCell } {
 
 
   # Create ports
+  set In1_0 [ create_bd_port -dir I -from 0 -to 0 In1_0 ]
+  set In2_0 [ create_bd_port -dir I -from 0 -to 0 In2_0 ]
+  set In3_0 [ create_bd_port -dir I -from 0 -to 0 In3_0 ]
+  set In4_0 [ create_bd_port -dir I -from 0 -to 0 In4_0 ]
+  set In5_0 [ create_bd_port -dir I -from 0 -to 0 In5_0 ]
+  set In6_0 [ create_bd_port -dir I -from 0 -to 0 In6_0 ]
+  set In7_0 [ create_bd_port -dir I -from 0 -to 0 In7_0 ]
+  set In8_0 [ create_bd_port -dir I -from 0 -to 0 In8_0 ]
+  set In9_0 [ create_bd_port -dir I -from 0 -to 0 In9_0 ]
+  set In10_0 [ create_bd_port -dir I -from 0 -to 0 In10_0 ]
+  set In11_0 [ create_bd_port -dir I -from 0 -to 0 In11_0 ]
+  set In12_0 [ create_bd_port -dir I -from 0 -to 0 In12_0 ]
+  set In13_0 [ create_bd_port -dir I -from 0 -to 0 In13_0 ]
+  set In14_0 [ create_bd_port -dir I -from 0 -to 0 In14_0 ]
   set adc_data_ch1 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch1 ]
   set adc_data_ch2 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch2 ]
 
@@ -269,7 +283,7 @@ proc create_root_design { parentCell } {
   # Create instance: intr_concat, and set properties
   set intr_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 intr_concat ]
   set_property -dict [ list \
-   CONFIG.NUM_PORTS {2} \
+   CONFIG.NUM_PORTS {16} \
    #CONFIG.NUM_PORTS {3} \
  ] $intr_concat
 
@@ -506,7 +520,6 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_IOPLL_CTRL_FBDIV {30} \
    CONFIG.PCW_IO_IO_PLL_FREQMHZ {1000.000} \
    CONFIG.PCW_IRQ_F2P_INTR {1} \
-   #CONFIG.PCW_IRQ_F2P_INTR {2} \
    CONFIG.PCW_IRQ_F2P_MODE {DIRECT} \
    CONFIG.PCW_MIO_0_DIRECTION {inout} \
    CONFIG.PCW_MIO_0_IOTYPE {LVCMOS 3.3V} \
@@ -1145,8 +1158,22 @@ proc create_root_design { parentCell } {
   connect_bd_net -net rp_concat_0_event_stop [get_bd_pins rp_concat/event_stop] [get_bd_pins rp_oscilloscope/event_ip_stop]
   connect_bd_net -net rp_concat_0_event_trig [get_bd_pins rp_concat/event_trig] [get_bd_pins rp_oscilloscope/event_ip_trig]
   connect_bd_net -net rp_concat_0_trig [get_bd_pins rp_concat/trig] [get_bd_pins rp_oscilloscope/trig_ip]
+  connect_bd_net -net In1_0_1 [get_bd_ports In1_0] [get_bd_pins intr_concat/In1]
+  connect_bd_net -net In2_0_1 [get_bd_ports In2_0] [get_bd_pins intr_concat/In2]
+  connect_bd_net -net In3_0_1 [get_bd_ports In3_0] [get_bd_pins intr_concat/In3]
+  connect_bd_net -net In4_0_1 [get_bd_ports In4_0] [get_bd_pins intr_concat/In4]
+  connect_bd_net -net In5_0_1 [get_bd_ports In5_0] [get_bd_pins intr_concat/In5]
+  connect_bd_net -net In6_0_1 [get_bd_ports In6_0] [get_bd_pins intr_concat/In6]
+  connect_bd_net -net In7_0_1 [get_bd_ports In7_0] [get_bd_pins intr_concat/In7]
+  connect_bd_net -net In8_0_1 [get_bd_ports In8_0] [get_bd_pins intr_concat/In8]
+  connect_bd_net -net In9_0_1 [get_bd_ports In9_0] [get_bd_pins intr_concat/In9]
+  connect_bd_net -net In10_0_1 [get_bd_ports In10_0] [get_bd_pins intr_concat/In10]
+  connect_bd_net -net In11_0_1 [get_bd_ports In11_0] [get_bd_pins intr_concat/In11]
+  connect_bd_net -net In12_0_1 [get_bd_ports In12_0] [get_bd_pins intr_concat/In12]
+  connect_bd_net -net In13_0_1 [get_bd_ports In13_0] [get_bd_pins intr_concat/In13]
+  connect_bd_net -net In14_0_1 [get_bd_ports In14_0] [get_bd_pins intr_concat/In14]
   connect_bd_net -net xadc_ip2intc_irpt [get_bd_pins xadc/ip2intc_irpt] [get_bd_pins intr_concat/In0]
-  connect_bd_net -net rp_oscilloscope_0_intr [get_bd_pins intr_concat/In1] [get_bd_pins rp_oscilloscope/intr]
+  connect_bd_net -net rp_oscilloscope_0_intr [get_bd_pins intr_concat/In15] [get_bd_pins rp_oscilloscope/intr]
   connect_bd_net -net rp_oscilloscope_0_osc1_event_op [get_bd_pins rp_concat/osc1_event_ip] [get_bd_pins rp_oscilloscope/osc1_event_op]
   connect_bd_net -net rp_oscilloscope_0_osc1_trig_op [get_bd_pins rp_concat/osc1_trig_ip] [get_bd_pins rp_oscilloscope/osc1_trig_op]
   connect_bd_net -net rp_oscilloscope_0_osc2_event_op [get_bd_pins rp_concat/osc2_event_ip] [get_bd_pins rp_oscilloscope/osc2_event_op]
