@@ -64,8 +64,8 @@ module red_pitaya_top #(
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
   inout  logic          exp_9_io   ,
-  inout  logic [ 9-1:0] exp_p_io   ,
-  inout  logic [ 9-1:0] exp_n_io   ,
+  input  logic [ 9-1:0] exp_p_io   ,
+  output  logic [ 9-1:0] exp_n_io   ,
   // LED
   output logic [ 8-1:0] led_o
 );
@@ -417,16 +417,6 @@ cts cts_i (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// Identification
-////////////////////////////////////////////////////////////////////////////////
-/*
-old_id #(
-  .GITH (GITH)
-) id (
-  .bus (sys[0])
-);
-*/
-////////////////////////////////////////////////////////////////////////////////
 // I/O and stream multiplexing
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -440,20 +430,8 @@ muxctl muxctl (
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-// LED
-////////////////////////////////////////////////////////////////////////////////
-
-//IOBUF iobuf_led [8-1:0] (.O (gpio.i[7:0]), .IO(led_o), .I(gpio.o[7:0]), .T(gpio.t[7:0]));
-
-////////////////////////////////////////////////////////////////////////////////
 // GPIO ports
 ////////////////////////////////////////////////////////////////////////////////
-/*
-IOBUF i_iobufp [ 9-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
-IOBUF i_iobufn [ 9-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
-IOBUF i_iobuf9          (.O(exp_9_in), .IO(exp_9_io), .I(exp_9_out), .T(~exp_9_dir) );*/
-
-
 
 assign gpio.i [23:8] = {exp_n_io[7:0], exp_p_io[7:0]};
 
@@ -873,7 +851,7 @@ endgenerate
 old_asg_top #(
   .EN_LIN (0),
   .DT (SBL_T),
-  .TN ($bits(trg))
+  .TN (12)
 ) lg (
   // stream output
   .sto       (str_lgo),
@@ -911,7 +889,7 @@ assign axi_dtx[2].TREADY = 1'b1;
 
 old_la_top #(
   .DT (SBL_T),
-  .TN ($bits(trg)),
+  .TN (12),
   .CW (32)
 ) la (
   // streams
