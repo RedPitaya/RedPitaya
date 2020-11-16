@@ -1,0 +1,71 @@
+/dts-v1/;
+/plugin/;
+/{
+	fragment@1 {
+		target = <&axi_dma_2>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+	fragment@2{
+		target = <&amba_pl>;
+		__overlay__ {
+			id: id@40000000 {
+				compatible = "generic-uio";
+				reg = <0x40000000 0x10000>;
+			};
+			muxctl: muxctl@40040000 {
+				compatible = "generic-uio";
+				reg = <0x40040000 0x10000>;
+			};
+			calib: calib@40100000 {
+				compatible = "generic-uio";
+				reg = <0x40100000 0x10000>;
+			};
+			pdm: pdm@40140000 {
+				compatible = "generic-uio";
+				reg = <0x40140000 0x10000>;
+			};
+			pwm: pwm@40180000 {
+				compatible = "generic-uio";
+				reg = <0x40180000 0x10000>;
+			};
+			asg0: asg0@401c0000 {
+				compatible = "generic-uio";
+				reg = <0x401c0000 0x40000>;
+			};
+			asg1: asg1@40200000 {
+				compatible = "generic-uio";
+				reg = <0x40200000 0x40000>;
+			};
+			scope0: scope0@40240000 {
+				compatible = "generic-uio";
+				reg = <0x40240000 0x10000>;
+			};
+			scope1: scope1@40280000 {
+				compatible = "generic-uio";
+				reg = <0x40280000 0x10000>;
+			};
+			lg: lg@402c0000 {
+				compatible = "generic-uio";
+				reg = <0x402c0000 0x40000>;
+			};
+			la: la@40300000 {
+				compatible = "generic-uio";
+				reg = <0x40300000 0x10000>;
+			};
+		};
+	};
+	fragment@3{
+		target = <&amba_pl>;
+		__overlay__ {
+			rprx_2: rprx@2 {
+				compatible ="redpitaya,rprx";
+				dmas = <&axi_dma_2 0
+					&axi_dma_2 1>;
+				dma-names = "axidma0", "axidma1";
+				memory-region = <&rprx_reserverd>;
+			};
+		};
+	};
+};

@@ -1,0 +1,3 @@
+/include/ "redpitaya.dtsi"
+/include/ "led-user.dtsi"
+/include/ "dma.dtsi"
