@@ -42,7 +42,7 @@ OBJECTS =	la_acq.o \
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS  = -std=gnu99 -Wall -Werror -fPIC -Os -s
+CFLAGS  = -std=c11 -Wall -Werror -fPIC -Os -s
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CFLAGS += -I../include -I../include/redpitaya
 LDFLAGS=-shared -Wl,--version-script=exportmap
