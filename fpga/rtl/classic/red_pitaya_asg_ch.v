@@ -87,6 +87,9 @@ reg   [  16-1: 0] cyc_cnt   ;
 reg   [  28-1: 0] dac_mult  ;
 reg   [  15-1: 0] dac_sum   ;
 reg               lastval;
+wire              not_burst;
+
+assign not_burst = (&(~set_ncyc_i)) && (&(~set_rnum_i));
 
 // read
 always @(posedge dac_clk_i)
@@ -153,7 +156,7 @@ begin
       if (dac_do_dlysr[4:3] == 2'b10) // negative edge of dly_do, delayed for 4 cycles
          lastval <= 1'b1;
       
-      if ((lastval && dly_cnt == 'd0 && |rep_cnt) || set_zero_i || set_rst_i) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval.
+      if ((lastval && dly_cnt == 'd0 && |rep_cnt) || set_zero_i || set_rst_i || not_burst) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval. also resets if reset is set or continous mode is selected.
          lastval <= 1'b0;
    end
 end
