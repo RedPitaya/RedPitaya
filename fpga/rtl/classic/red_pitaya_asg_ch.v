@@ -153,7 +153,7 @@ begin
       if (dac_do_dlysr[4:3] == 2'b10) // negative edge of dly_do, delayed for 4 cycles
          lastval <= 1'b1;
       
-      if ((lastval && dly_cnt == 'd0 && |rep_cnt) || set_zero_i) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval.
+      if ((lastval && dly_cnt == 'd0 && |rep_cnt) || set_zero_i || set_rst_i) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval.
          lastval <= 1'b0;
    end
 end
