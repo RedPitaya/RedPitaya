@@ -257,6 +257,17 @@ function CombineLogVar(){
     LOG_VAR="$LOG_VAR 2 $(cat $TEST_TMP_DIR/hw_rev 2> /dev/null)"
 }
 
+function CombineLogVarLocal(){
+    LOG_VAR=$(date)
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/bit_value 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/zynq_code 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/mac_addr 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/temp_and_power 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(cat $TEST_TMP_DIR/sfdr 2> /dev/null)"
+    LOG_VAR="$LOG_VAR $(calib -r -z | xargs echo -n)"
+    LOG_VAR="$LOG_VAR 2 $(cat $TEST_TMP_DIR/hw_rev 2> /dev/null)"
+}
+
 function CheckTestPass(){
     TEST_RES=$(cat $TEST_TMP_DIR/bit_value)
     if [[ "$TEST_RES" = "0x1FF" ]]
