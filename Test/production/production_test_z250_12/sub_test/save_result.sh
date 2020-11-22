@@ -1,7 +1,7 @@
 #!/bin/bash
 source ./sub_test/common_func.sh
 
-CombineLogVar
+CombineLogVarLocal
 
 ###############################################################################
 # LOGGING TEST TO SD CARD
@@ -58,6 +58,7 @@ echo
 echo
 fi
 
+CombineLogVar
 
 ###############################################################################
 # LOGGING TEST RESULTS TO SERVER
