@@ -77,9 +77,9 @@ task test_osc(
   ##5;
   axi_write(offset+'h28, 'd0);  // TRIG EDGE
   ##5
-  axi_write(offset+'h38, 'd1);  // decimation enable
+  axi_write(offset+'h38, 'd0);  // decimation enable
   axi_write(offset+'h3C, 'd1);  // decimation enable
-  axi_write(offset+'h30, 'd1);  // decimation factor
+  axi_write(offset+'h30, 'h18);  // decimation factor
   axi_write(offset+'h34, 'd0);  // decimation shift
   axi_write(offset+'h0,   'd2);  // start
   axi_write(offset+'h08,   'd4);  // start
@@ -95,7 +95,7 @@ task test_osc(
   ##5;
   axi_write(offset+'h74, 'h0);  // calibration offset
   ##5;
-  axi_write(offset+'h78, 'h4000);  // calibration gain
+  axi_write(offset+'h78, 'h8000);  // calibration gain
   ##5;
   axi_write(offset+'h58, 'h400);  // buffer size - must be greater than axi burst size (128)
   ##5;

@@ -18,50 +18,40 @@ module osc_calib
 
 localparam CALC1_BITS = AXIS_DATA_BITS+1;
 localparam CALC2_BITS = (2*AXIS_DATA_BITS-2); //1 bit sign, 1 bit before dec point
+localparam CALC3_BITS = 2*CALC2_BITS+2;
+localparam CALC_MAX   = (2**(AXIS_DATA_BITS-1))-1;
+localparam CALC_MIN   = -(2**(AXIS_DATA_BITS-1));
 
-localparam CALC_MAX  = (2**(AXIS_DATA_BITS-1))-1;
-localparam CALC_MIN  = -(2**(AXIS_DATA_BITS-1));
+localparam C_START    = 16;
+localparam C_END      = C_START+16;
 
-wire signed [AXIS_DATA_BITS-1:0]  adc_data;
-wire signed [15:0]                offset;
-wire signed [15:0]                gain;   
-reg  signed [CALC1_BITS-1:0]      offset_calc;
-reg  signed [AXIS_DATA_BITS-1:0]  offset_calc_limit;
-reg  signed [AXIS_DATA_BITS-1:0]  gain_calc;
-wire        [AXIS_DATA_BITS-1:0]  gain_uns;
-reg                               gain_sign;
-reg  signed [2*CALC2_BITS-1:0]    gain_calc_tmp;
+reg  signed [AXIS_DATA_BITS-1:0]  adc_data;
+reg  signed [15:0]                offset;
+reg  signed [15:0]                gain;   
 
-reg  signed [AXIS_DATA_BITS-1:0]  gain_calc_limit;
+reg  signed [    CALC1_BITS-1:0]  offset_calc;
+wire                              offs_max, offs_min;
+wire signed [AXIS_DATA_BITS-1:0]  offset_calc_limit;
+
+reg  signed [    CALC3_BITS-1:0]  gain_calc;
+reg  signed [    CALC3_BITS-1:0]  gain_calc_r;
+wire                              gain_max, gain_min;
+wire signed [AXIS_DATA_BITS-1:0]  gain_calc_limit;
+
 reg                               s_axis_tvalid_p1;
 reg                               s_axis_tvalid_p2;
 
-assign adc_data = s_axis_tdata;
-assign offset   = cfg_calib_offset;
-assign gain     = cfg_calib_gain;
-assign s_axis_tready  = 1;
-   
+
 ////////////////////////////////////////////////////////////
-// Name : Offset Calculation
+// Registration of input data
 // 
 ////////////////////////////////////////////////////////////
 
 always @(posedge clk)
 begin
-  offset_calc <= $signed(adc_data) + $signed(offset);  
-end
-
-always @(*)
-begin
-  if (offset_calc > CALC_MAX) begin
-    offset_calc_limit = CALC_MAX;
-  end else begin
-    if (offset_calc < CALC_MIN) begin
-      offset_calc_limit = CALC_MIN;
-    end else begin
-      offset_calc_limit = offset_calc;
-    end  
-  end
+  adc_data <= s_axis_tdata;
+  offset   <= cfg_calib_offset;
+  gain     <= cfg_calib_gain;
 end
 
 ////////////////////////////////////////////////////////////
@@ -69,31 +59,31 @@ end
 // 
 ////////////////////////////////////////////////////////////
 
-assign gain_uns = offset_calc_limit[AXIS_DATA_BITS-1] ? -offset_calc_limit : offset_calc_limit;
 always @(posedge clk)
 begin
-  gain_sign     <= offset_calc_limit[AXIS_DATA_BITS-1];
-  gain_calc_tmp <= {gain_uns,{15{1'b0}}} * {{15{1'b0}},gain};  
+  gain_calc_r <= $signed({adc_data,{15{1'b0}}}) * $signed({{15{1'b0}},gain});
+  gain_calc   <= gain_calc_r; // output of multiplier needs to be registered to avoid timing issues
 end
 
-always @(*)
+assign gain_max = (gain_calc[46:45] == 2'b01);
+assign gain_min = (gain_calc[46:45] == 2'b10);
+
+assign gain_calc_limit = gain_max ? CALC_MAX : (gain_min ? CALC_MIN : gain_calc[(CALC3_BITS-C_START-1):((CALC3_BITS)-C_END)]);
+
+////////////////////////////////////////////////////////////
+// Name : Offset Calculation
+// 
+////////////////////////////////////////////////////////////
+
+always @(posedge clk)
 begin
-  if (gain_sign)
-    gain_calc = -gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
-  else
-    gain_calc =  gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
-
-  if   (( gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)]   > CALC_MAX) && ~gain_sign) begin
-      gain_calc_limit = CALC_MAX;
-  end else begin
-    if ((-gain_calc_tmp[(2*CALC2_BITS-1):((2*CALC2_BITS)-30)]-1 < CALC_MIN) &&  gain_sign) begin
-      gain_calc_limit = CALC_MIN;
-    end else begin
-      gain_calc_limit = gain_calc;
-    end  
-  end
-  //gain_calc_limit = gain_calc_tmp[(2*CALC2_BITS-14-1):((2*CALC2_BITS)-AXIS_DATA_BITS-14)];
+  offset_calc <= $signed(gain_calc_limit) + $signed(offset);  
 end
+
+assign offs_max = (offset_calc[16:15] == 2'b01);
+assign offs_min = (offset_calc[16:15] == 2'b10);
+
+assign offset_calc_limit = offs_max ? CALC_MAX : (offs_min ? CALC_MIN : offset_calc);
 
 ////////////////////////////////////////////////////////////
 // Name : Master AXI-S TDATA
@@ -102,7 +92,7 @@ end
 
 always @(posedge clk)
 begin
-  m_axis_tdata <= gain_calc_limit[AXIS_DATA_BITS-1:0];  
+  m_axis_tdata <= offset_calc_limit[AXIS_DATA_BITS-1:0];  
 end
 
 ////////////////////////////////////////////////////////////
@@ -116,5 +106,7 @@ begin
   s_axis_tvalid_p2  <= s_axis_tvalid_p1;
   m_axis_tvalid     <= s_axis_tvalid_p2;  
 end
-    
+
+assign s_axis_tready  = 1;
+   
 endmodule

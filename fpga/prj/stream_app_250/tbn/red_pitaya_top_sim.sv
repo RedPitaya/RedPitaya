@@ -378,6 +378,35 @@ sys_bus_interconnect #(
   .bus_m (ps_sys),
   .bus_s (sys)
 );
+reg [13:0]        cnter; // ta signal gre na vhod A
+reg [14:0]        oflw;
+
+always @(posedge adc_clk) begin
+    if (adc_rstn==0)
+        oflw <= 16'b0;
+    else if (oflw==16'h3FFF)
+        oflw <= 16'b0;
+    else
+        oflw <= oflw + 16'd8; 
+    
+    
+    if (adc_rstn==0)
+        cnter <= 16'b0;
+    else if (cnter==14'h1FFF)
+        cnter <= 16'b0;
+    else
+        cnter <= cnter + 16'd8; 
+        
+
+ /*   if (adc_rstn==0)
+        cnter <= 14'b0;
+    else if (~oflw[14] && oflw > 15'h1FFF)
+        cnter <= 14'h1FFF;
+    else if (oflw[14] && oflw < 15'h5FFF)
+        cnter <= 14'h2000;
+    else
+        cnter <= oflw[13:0];*/
+end
 // data loopback
 always @(posedge adc_clk)
 begin
@@ -558,7 +587,7 @@ assign gpio.i[23:16] = exp_n_in[7:0];
         .S_AXI_REG_wstrb(S_AXI_REG_wstrb),
         .S_AXI_REG_wvalid(S_AXI_REG_wvalid),
 
-        .adc_data_ch1(cnter_in[13:(14-ADC_DATA_BITS)]),
+        .adc_data_ch1(cnter[13:(14-ADC_DATA_BITS)]),
         .adc_data_ch2(adc_dat_sw[1][13:(14-ADC_DATA_BITS)]),
 
         .m_axi_hk_arvalid (axi_gp.ARVALID),

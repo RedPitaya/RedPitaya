@@ -3,7 +3,7 @@
 module osc_top
   #(parameter M_AXI_ADDR_BITS   = 32, // DMA Address bits
     parameter M_AXI_DATA_BITS   = 64, // DMA data bits
-    parameter S_AXIS_DATA_BITS  = 16, // ADC data bits
+    parameter S_AXIS_DATA_BITS  = 16, // Stream data bits
     parameter REG_ADDR_BITS     = 12, // Register interface address bits
     parameter DEC_CNT_BITS      = 17, // Decimator counter bits
     parameter DEC_SHIFT_BITS    = 4,  // Decimator shifter bits
@@ -688,7 +688,7 @@ end
 always @(posedge clk)
 begin
   if (rst_n == 0) begin
-    cfg_calib_gain <= 0;
+    cfg_calib_gain <= 16'h8000; //gain is 1 by default.
   end else begin
     if (((reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH1 && CHAN_NUM == 'd1) || (reg_addr[8-1:0] == CALIB_GAIN_ADDR_CH2 && CHAN_NUM == 'd2)) && (reg_wr_we == 1)) begin
       cfg_calib_gain <= reg_wr_data[S_AXIS_DATA_BITS-1:0];

@@ -52,8 +52,8 @@
 module red_pitaya_top #(
   // identification
   bit [0:5*32-1] GITH = '0,
+  parameter ADC_DATA_BITS = 12, // number of data bits
   // module numbers
-  parameter ADC_DATA_BITS = 12,
   int unsigned MNA = 2,  // number of acquisition modules
   int unsigned MNG = 2   // number of generator   modules
 )(

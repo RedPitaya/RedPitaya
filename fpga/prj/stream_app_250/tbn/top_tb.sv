@@ -261,7 +261,7 @@ logic [2-1:0] [14-1:0] adc_dr ;
 assign adc_dr[0] =  dat_ref[cyc % $size(dat_ref)];
 assign adc_dr[1] = ~dat_ref[cyc % $size(dat_ref)];
 
-always @(clk) begin
+always @(posedge clk) begin
   if (clk==1) begin
     #(0.1);
     adc_dat[0] <= {adc_dr[0][12], adc_dr[0][10], adc_dr[0][8], adc_dr[0][6], adc_dr[0][4], adc_dr[0][2]};
@@ -315,28 +315,45 @@ assign wdat2 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_ax
 assign wdat3 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[47:32];
 assign wdat4 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[63:48];
 
-reg [13:0]        cnter;
+reg [13:0]        cnter; // ta signal gre na vhod A
+reg [14:0]        oflw;
 reg [ 1:0] [6:0] posnum;
 reg [ 1:0] [6:0] negnum;
 
-always @(clk) begin
-
+always @(posedge clk) begin
     if (rstn==0)
-        cnter <= 14'b0;
-    else if (cnter==14'h1FFF && clk==1)
-        cnter <= 14'b0;
+        oflw <= 16'b0;
+    else if (oflw==16'h3FFF)
+        oflw <= 16'b0;
     else if (clk == 1)
-        cnter <= cnter + 14'd16; 
+        oflw <= oflw + 16'd8; 
+        
 
+     if (rstn==0)
+        cnter <= 14'b0;
+    else if (~oflw[14] && oflw > 15'h1FFF)
+        cnter <= 14'h1FFF;
+    else if (oflw[14] && oflw < 15'h5FFF)
+        cnter <= 14'h2000;
+    else if (clk == 1)
+        cnter <= oflw[13:0];
+        
     posnum[1] <= cnter[13:7];
     posnum[0] <= cnter[13:7];
     negnum[1] <= ~cnter[13:7];
     negnum[0] <= ~cnter[13:7];
+
+ /*   if (rstn==0)
+        cnter <= 14'b0;
+    else if (cnter==14'h1FFF && clk==1)
+        cnter <= 14'b0;
+    else if (clk == 1)
+        cnter <= cnter + 14'd4; */
+
 end
 
 
-
-
+        
 
 
 
@@ -454,8 +471,10 @@ end
 
         .cnter_in(cnter),
         .adc_clk_i({clk,clkn}),
-        .adc_dat_p_i(posnum),
-        .adc_dat_n_i(negnum)
+        /*.adc_dat_p_i(posnum),
+        .adc_dat_n_i(negnum)*/
+        .adc_dat_p_i(adc_dat),
+        .adc_dat_n_i(~adc_dat)
         );
 
 bufif1 bufif_exp_p_io [9-1:0] (exp_p_io, exp_p_od, exp_p_oe);
