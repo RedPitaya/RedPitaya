@@ -48,6 +48,25 @@
         }
     }
 
+    OBJ.setFILTERMode = function(_visible) {
+        if (OBJ.model !== undefined) {
+            if (OBJ.model === "Z10") {
+
+            }
+
+            if (OBJ.model === "Z20_250_12") {
+
+            }
+
+            if (_visible) {
+                $("#filter_mode_body").show();
+                $("#B_APPLY_CONT").show();
+            } else {
+                $("#filter_mode_body").hide();
+            }
+        }
+    }
+
     OBJ.makeid = function(length) {
         var result = '';
         var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -77,6 +96,7 @@
     OBJ.showMainMenu = function() {
         OBJ.setADCMode(false);
         OBJ.setAutoMode(false);
+        OBJ.setFILTERMode(false);
         OBJ.setMainMenu(true);
     }
 
@@ -86,6 +106,9 @@
             if (OBJ.model !== "Z20_250_12") {
                 $("#manual_x1_x5_mode").remove();
                 $("#manual_ac_dc_mode").remove();
+            }
+            if (OBJ.model !== "Z10") {
+                $("#filter_calib_button").remove();
             }
         }
         OBJ.amSetModel(_value);
@@ -135,6 +158,12 @@ $(function() {
         OBJ.adcInitPlotCH2(true);
         OBJ.setMainMenu(false);
         OBJ.setADCMode(true);
+    });
+
+    $('#B_FILTER_MODE').on('click', function(ev) {
+        OBJ.filterInitRequest();
+        OBJ.setMainMenu(false);
+        OBJ.setFILTERMode(true);
     });
 
     $('#B_APPLY').on('click', function(ev) {
@@ -192,9 +221,27 @@ $(function() {
         } else {
             OBJ.closeManualMode();
         }
-
-
     });
+
+    $('#B_CLOSE_FILTER_CALIB').on('click', function(ev) {
+        if (OBJ.filterCalibChange === true) {
+            $("#dialog_reset_text").text("Save new parameters?");
+            $('#reset_ok_btn').on('click', function() {
+                // SM.parametersCache["calib_sig"] = { value: 5 };
+                // SM.sendParameters();
+                OBJ.closeManualMode();
+            });
+            $('#reset_cancel_btn').on('click', function() {
+                OBJ.closeManualMode();
+            });
+
+            $("#dialog_reset").modal('show');
+        } else {
+            OBJ.closeManualMode();
+        }
+    });
+
+
 
 
 

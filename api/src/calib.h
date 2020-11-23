@@ -20,6 +20,7 @@
 
 #define CONSTANT_SIGNAL_AMPLITUDE 0.8
 
+
 int calib_Init();
 int calib_Release();
 
@@ -50,6 +51,10 @@ uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain);
  int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain);
  int32_t calib_getGenOffset(rp_channel_t channel);
 uint32_t calib_getGenScale(rp_channel_t channel);
+#ifdef Z10
+     int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff , uint32_t value);
+uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff);
+#endif
 #else
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode);
  int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode);

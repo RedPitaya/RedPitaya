@@ -205,6 +205,16 @@ typedef enum {
 } rp_channel_trigger_t;
 
 /**
+ * The type represents the names of the coefficients in the filter.
+ */
+typedef enum {
+    AA,    //!< AA
+    BB,    //!< BB
+    PP,    //!< PP 
+    KK     //!< KK
+} rp_eq_filter_cof_t;
+
+/**
  * Type representing acquire signal sampling rate.
  */
 typedef enum {
@@ -260,19 +270,36 @@ typedef enum {
  * Calibration parameters, stored in the EEPROM device
  */
 typedef struct {
-    uint32_t fe_ch1_fs_g_hi; //!< High gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_hi; //!< High gain front end full scale voltage, channel B
-    uint32_t fe_ch1_fs_g_lo; //!< Low gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_lo; //!< Low gain front end full scale voltage, channel B
-    int32_t  fe_ch1_lo_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_lo_offs; //!< Front end DC offset, channel B
-    uint32_t be_ch1_fs;      //!< Back end full scale voltage, channel A
-    uint32_t be_ch2_fs;      //!< Back end full scale voltage, channel B
-    int32_t  be_ch1_dc_offs; //!< Back end DC offset, channel A
-    int32_t  be_ch2_dc_offs; //!< Back end DC offset, on channel B
-	uint32_t magic;			 //!
-    int32_t  fe_ch1_hi_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_hi_offs; //!< Front end DC offset, channel B
+    uint32_t fe_ch1_fs_g_hi;    //!< High gain front end full scale voltage, channel A
+    uint32_t fe_ch2_fs_g_hi;    //!< High gain front end full scale voltage, channel B
+    uint32_t fe_ch1_fs_g_lo;    //!< Low gain front end full scale voltage, channel A
+    uint32_t fe_ch2_fs_g_lo;    //!< Low gain front end full scale voltage, channel B
+    int32_t  fe_ch1_lo_offs;    //!< Front end DC offset, channel A
+    int32_t  fe_ch2_lo_offs;    //!< Front end DC offset, channel B
+    uint32_t be_ch1_fs;         //!< Back end full scale voltage, channel A
+    uint32_t be_ch2_fs;         //!< Back end full scale voltage, channel B
+    int32_t  be_ch1_dc_offs;    //!< Back end DC offset, channel A
+    int32_t  be_ch2_dc_offs;    //!< Back end DC offset, on channel B
+	uint32_t magic;			    //!
+    int32_t  fe_ch1_hi_offs;    //!< Front end DC offset, channel A
+    int32_t  fe_ch2_hi_offs;    //!< Front end DC offset, channel B
+    uint32_t low_filter_aa_ch1;  //!< Filter equalization coefficients AA for Low mode, channel A
+    uint32_t low_filter_bb_ch1;  //!< Filter equalization coefficients BB for Low mode, channel A
+    uint32_t low_filter_pp_ch1;  //!< Filter equalization coefficients PP for Low mode, channel A
+    uint32_t low_filter_kk_ch1;  //!< Filter equalization coefficients KK for Low mode, channel A
+    uint32_t low_filter_aa_ch2;  //!< Filter equalization coefficients AA for Low mode, channel B
+    uint32_t low_filter_bb_ch2;  //!< Filter equalization coefficients BB for Low mode, channel B
+    uint32_t low_filter_pp_ch2;  //!< Filter equalization coefficients PP for Low mode, channel B
+    uint32_t low_filter_kk_ch2;  //!< Filter equalization coefficients KK for Low mode, channel B
+    uint32_t  hi_filter_aa_ch1;  //!< Filter equalization coefficients AA for High mode, channel A
+    uint32_t  hi_filter_bb_ch1;  //!< Filter equalization coefficients BB for High mode, channel A
+    uint32_t  hi_filter_pp_ch1;  //!< Filter equalization coefficients PP for High mode, channel A
+    uint32_t  hi_filter_kk_ch1;  //!< Filter equalization coefficients KK for High mode, channel A
+    uint32_t  hi_filter_aa_ch2;  //!< Filter equalization coefficients AA for High mode, channel B
+    uint32_t  hi_filter_bb_ch2;  //!< Filter equalization coefficients BB for High mode, channel B
+    uint32_t  hi_filter_pp_ch2;  //!< Filter equalization coefficients PP for High mode, channel B
+    uint32_t  hi_filter_kk_ch2;  //!< Filter equalization coefficients KK for High mode, channel B   
+
 } rp_calib_params_t;
 
 

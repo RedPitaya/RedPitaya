@@ -21,6 +21,7 @@
 #include "calib.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
+#include "calib.h"
 
 #ifdef Z20_250_12
 #include "rp-i2c-mcp47x6-c.h"
@@ -68,6 +69,12 @@ static const uint32_t GAIN_HI_FILT_BB = 0x2F38B;
 static const uint32_t GAIN_HI_FILT_PP = 0x2666;
 static const uint32_t GAIN_HI_FILT_KK = 0xd9999a;
 
+void PrintLogInFile2(const char *message){
+    FILE *f = fopen("/tmp/debug.log", "a+");
+  	fprintf(f, "%s\n", message);
+    fclose(f);
+}
+
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -113,10 +120,22 @@ static int64_t cnvSmplsToTime(int32_t samples)
  */
 static int setEqFilters(rp_channel_t channel)
 {
+
     rp_pinState_t gain;
     acq_GetGain(channel, &gain);
-
+#ifdef Z10
+    uint32_t aa = calib_GetFilterCoff(channel,gain,AA);
+    uint32_t bb = calib_GetFilterCoff(channel,gain,BB);
+    uint32_t kk = calib_GetFilterCoff(channel,gain,KK);
+    uint32_t pp = calib_GetFilterCoff(channel,gain,PP);
+  
     // Update equalization filter with default coefficients
+    if (channel == RP_CH_1) {
+        return osc_SetEqFiltersChA(aa, bb, kk, pp);
+    } else {
+        return osc_SetEqFiltersChB(aa, bb, kk, pp);
+    }
+#else
     if (channel == RP_CH_1) {
         if (gain == RP_HIGH)  return osc_SetEqFiltersChA(GAIN_HI_FILT_AA, GAIN_HI_FILT_BB, GAIN_HI_FILT_KK, GAIN_HI_FILT_PP);
         else                  return osc_SetEqFiltersChA(GAIN_LO_FILT_AA, GAIN_LO_FILT_BB, GAIN_LO_FILT_KK, GAIN_LO_FILT_PP);
@@ -124,6 +143,7 @@ static int setEqFilters(rp_channel_t channel)
         if (gain == RP_HIGH)  return osc_SetEqFiltersChB(GAIN_HI_FILT_AA, GAIN_HI_FILT_BB, GAIN_HI_FILT_KK, GAIN_HI_FILT_PP);
         else                  return osc_SetEqFiltersChB(GAIN_LO_FILT_AA, GAIN_LO_FILT_BB, GAIN_LO_FILT_KK, GAIN_LO_FILT_PP);
     }
+#endif
 }
 
 /*----------------------------------------------------------------------------*/
@@ -377,11 +397,7 @@ int acq_GetAveraging(bool* enable)
     return osc_GetAveraging(enable);
 }
 
-void PrintLogInFile(const char *message){
-    FILE *f = fopen("/tmp/debug.log", "a+");
-  	fprintf(f, "%s\n", message);
-    fclose(f);
-}
+
 
 int acq_SetTriggerSrc(rp_acq_trig_src_t source)
 {

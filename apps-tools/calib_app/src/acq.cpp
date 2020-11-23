@@ -2,7 +2,18 @@
 #include <fstream>
 #include <chrono>
 #include "acq.h"
+#include <cassert>
+ 
+// Use (void) to silent unused warnings.
+#define assertm(exp, msg) assert(((void)msg, exp))
 
+void PrintLogInFileACQ(const char *message){
+	std::time_t result = std::time(nullptr);
+	std::fstream fs;
+  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
+	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
+	fs.close();
+}
 
 inline int32_t rawToInt32(uint32_t cnts)
 {
@@ -26,9 +37,17 @@ COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation)
 COscilloscope::COscilloscope(uint32_t _decimation):
 m_decimation(_decimation),
 m_index(0),
-m_mutex()
+m_mode(0),
+m_channel(RP_CH_1),
+m_mutex(),
+m_funcSelector(),
+m_cursor1(0.3),
+m_cursor2(0.7)
 {
     m_OscThreadRunState = false;
+    m_zoomMode = false;
+    m_curCursor1 = m_cursor1;
+    m_curCursor2 = m_cursor2;
 }
 
 COscilloscope::~COscilloscope()
@@ -45,6 +64,11 @@ void COscilloscope::stop(){
 }
 
 void COscilloscope::start(){
+    m_mode = 0;
+    startThread();
+}
+
+void COscilloscope::startThread(){
     try {
         m_index = 0;
         m_OscThreadRun.test_and_set();
@@ -56,14 +80,46 @@ void COscilloscope::start(){
     }
 }
 
+void COscilloscope::startNormal(){
+    pthread_mutex_lock(&m_funcSelector);
+    m_mode = 0;
+    pthread_mutex_unlock(&m_funcSelector);
+}
+        
+void COscilloscope::startSquare(uint32_t _decimation){
+    pthread_mutex_lock(&m_funcSelector);
+    m_mode = 1;
+    m_decimationSq = _decimation;
+    pthread_mutex_unlock(&m_funcSelector);
+}
+
+void COscilloscope::setAcquireChannel(rp_channel_t _ch){
+    pthread_mutex_lock(&m_funcSelector);
+    m_channel = _ch;
+    pthread_mutex_unlock(&m_funcSelector);
+}
+
+void COscilloscope::setCursor1(float value){
+    m_cursor1 = value;
+}
+void COscilloscope::setCursor2(float value){
+    m_cursor2 = value;
+}
 
 void COscilloscope::oscWorker(){
     try{
         
         while (m_OscThreadRun.test_and_set())
         {
-            acquire();
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+           pthread_mutex_lock(&m_funcSelector);
+           if (m_mode == 0){
+                acquire();
+           }
+           if (m_mode == 1){
+               acquireSquare();
+           }
+           pthread_mutex_unlock(&m_funcSelector);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }    
     }catch (std::exception& e)
     {
@@ -149,6 +205,121 @@ void COscilloscope::acquire(){
     }
 }
 
+void COscilloscope::acquireSquare(){
+    uint32_t pos = 0;
+    int16_t             timeout = 1000;
+    bool                fillState = false;
+    uint32_t            acq_u_size = ADC_BUFFER_SIZE;
+    uint32_t            acq_u_size_raw = ADC_BUFFER_SIZE;
+    rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
+    rp_AcqSetDecimationFactor(m_decimationSq);
+    rp_AcqSetTriggerDelay( ADC_BUFFER_SIZE/4.0);
+    rp_AcqSetTriggerHyst(0.01);
+    rp_AcqStart();
+    uint32_t time = (double)(ADC_BUFFER_SIZE / 4) * ((double)m_decimationSq / ADC_SAMPLE_RATE) * 1000000;
+    std::this_thread::sleep_for(std::chrono::microseconds(time == 0 ? 1 : time));
+    switch(m_channel){
+        case RP_CH_1:
+            rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+        break;
+        case RP_CH_2:
+            rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHB_PE);
+        break;
+        default:
+            assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
+
+    }
+    for (;timeout > 0;) {
+        rp_AcqGetTriggerState(&trig_state);
+        if (trig_state == RP_TRIG_STATE_TRIGGERED) {
+            break;
+        } else {
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            timeout--;
+        }
+    }
+    while(!fillState && (timeout > 0)){
+        rp_AcqGetBufferFillState(&fillState);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        timeout--;
+    }
+    rp_AcqStop();
+ //   rp_AcqGetWritePointerAtTrig(&pos);
+    rp_AcqGetWritePointer(&pos);
+    rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
+//    rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
+
+    if (acq_u_size > 0) {
+        auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1]; 
+        m_curCursor1 = std::min(m_curCursor1,m_curCursor2);
+        m_curCursor2 = std::max(m_curCursor1,m_curCursor2);
+        auto min_cursor = std::min(m_cursor1,m_cursor2);
+        auto max_cursor = std::max(m_cursor1,m_cursor2);
+        double min_dt = min_cursor;
+        double max_dt = 1 - max_cursor;
+        
+        auto time  = duration_cast< microseconds >(system_clock::now().time_since_epoch());
+        auto time_diff = (time - m_lastTimeAni);
+        double dt = static_cast<double>(time_diff.count()) / TIME_ANIMATION;
+        min_dt *= dt;
+        max_dt *= dt;
+        m_lastTimeAni = time;
+
+        if (m_zoomMode){
+            m_curCursor1 += min_dt;
+            m_curCursor2 -= max_dt;
+            if (m_curCursor1 > min_cursor) m_curCursor1 = min_cursor;
+            if (m_curCursor2 < max_cursor) m_curCursor2 = max_cursor;
+        }else{
+            m_curCursor1 -= min_dt;
+            m_curCursor2 += max_dt;
+            if (m_curCursor1 < 0 || m_curCursor1 > 1) m_curCursor1 = 0;
+            if (m_curCursor2 > 1 || m_curCursor2 < 0) m_curCursor2 = 1;
+        }
+        char z[1000];
+        sprintf(z,"%lf %lf dt %lf %lf %lf %lf\n",m_curCursor1, m_curCursor2 ,min_dt ,max_dt,static_cast<double>(time_diff.count()),dt);
+        PrintLogInFileACQ(z);
+        DataPassSq localDP = selectRange(ch, m_curCursor1 , m_curCursor2);
+        pthread_mutex_lock(&m_mutex);
+        m_crossDataSq = localDP;
+        pthread_mutex_unlock(&m_mutex);
+    }
+}
+
+COscilloscope::DataPassSq COscilloscope::selectRange(float *buffer,double _start,double _stop){
+    DataPassSq localDP;
+    localDP.index = m_index++;
+    localDP.cur_channel = m_channel;
+    int startX = (double)ADC_BUFFER_SIZE * std::min(_start,_stop);
+    int stopX  = (double)ADC_BUFFER_SIZE * std::max(_start,_stop);
+    float core_size = (float)(stopX - startX) / (float)SCREEN_BUFF_SIZE;
+  //  int screenSize = core_size < 1 ? stopX - startX : SCREEN_BUFF_SIZE;
+    if (core_size < 1){
+        localDP.wave_size = stopX - startX;
+        int j = 0;
+        for( int i = startX ; i < stopX ;i ++){
+            localDP.wave[j++] = buffer[i];
+        }
+    }else{
+        localDP.wave_size = SCREEN_BUFF_SIZE;
+        for( int i = 0 ; i < SCREEN_BUFF_SIZE ;i ++){
+            float sum = 0; 
+            int ii = (float)i * core_size + startX;
+            for( int j = 0 ; j < (int)core_size ; j++){
+                sum += (float)(buffer[ ii + j ]);
+            }
+            sum /= (int)core_size;
+            localDP.wave[i] = sum;
+        }
+    }
+    return localDP;
+}
+
+void COscilloscope::setZoomMode(bool enable){
+    m_zoomMode = enable;
+    m_lastTimeAni = duration_cast< microseconds >(system_clock::now().time_since_epoch());
+}
+
 
 void COscilloscope::setLV(){
     rp_AcqSetGain(RP_CH_1, RP_LOW);
@@ -212,6 +383,14 @@ COscilloscope::DataPass COscilloscope::getData(){
     return local_pass;
 }
 
+COscilloscope::DataPassSq COscilloscope::getDataSq(){
+    DataPassSq local_pass;
+    pthread_mutex_lock(&m_mutex);
+    local_pass = m_crossDataSq;
+    pthread_mutex_unlock(&m_mutex); 
+    return local_pass;
+}
+
 #ifdef Z20_250_12
 void COscilloscope::setDC(){
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
@@ -269,13 +448,7 @@ int COscilloscope::setGenType(rp_channel_t _ch,int _type){
     rp_GenWaveform(_ch, (rp_waveform_t)_type);
 }
 
-void PrintLogInFileACQ(const char *message){
-	std::time_t result = std::time(nullptr);
-	std::fstream fs;
-  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
-	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
-	fs.close();
-}
+
 
 void COscilloscope::updateGenCalib(){
     float x = 0;

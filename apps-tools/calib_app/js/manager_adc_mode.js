@@ -158,10 +158,11 @@ $(function() {
             },
             yaxes: [{
                 show: false,
-                min: null,
-                max: null,
+                min: -1,
+                max: 1,
                 labelWidth: 5,
-                alignTicksWithAxis: 1,
+                tickDecimals: 1,
+                //   alignTicksWithAxis: 1,
                 position: "left"
             }],
             xaxis: {
@@ -221,6 +222,7 @@ $(function() {
 
         OBJ.adcGraphCacheCh2 = {};
         OBJ.adcGraphCacheCh2.elem = $('<div id="bode_plot_ch2" class="plot" style="width:268px;height:90px;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_ch2');
+
 
         var t = null;
         var options = {

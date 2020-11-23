@@ -18,8 +18,63 @@
 
 #include <stdbool.h>
 
-#ifdef Z20_250_12
+#ifdef Z10
+#define PACK_ID 1
+typedef enum {
+    eCalPar_FE_CH1_FS_G_HI,
+    eCalPar_FE_CH2_FS_G_HI,
+    eCalPar_FE_CH1_FS_G_LO,
+    eCalPar_FE_CH2_FS_G_LO,
+    eCalPar_FE_CH1_DC_offs,
+    eCalPar_FE_CH2_DC_offs,
+    eCalPar_BE_CH1_FS,
+    eCalPar_BE_CH2_FS,
+    eCalPar_BE_CH1_DC_offs,
+    eCalPar_BE_CH2_DC_offs,
+    eCalParMagic,   // needed for compatibility with a very old version of calibration parameters
+    eCalPar_FE_CH1_DC_offs_HI,
+    eCalPar_FE_CH2_DC_offs_HI,
+    eCalPar_F_LOW_AA_CH1,
+    eCalPar_F_LOW_BB_CH1,
+    eCalPar_F_LOW_PP_CH1,
+    eCalPar_F_LOW_KK_CH1,
+    eCalPar_F_LOW_AA_CH2,
+    eCalPar_F_LOW_BB_CH2,
+    eCalPar_F_LOW_PP_CH2,
+    eCalPar_F_LOW_KK_CH2,
+    eCalPar_F_HI_AA_CH1,
+    eCalPar_F_HI_BB_CH1,
+    eCalPar_F_HI_PP_CH1,
+    eCalPar_F_HI_KK_CH1,
+    eCalPar_F_HI_AA_CH2,
+    eCalPar_F_HI_BB_CH2,
+    eCalPar_F_HI_PP_CH2,
+    eCalPar_F_HI_KK_CH2,
+    eCalParEnd
+} calPar_t;
+#endif
 
+#ifdef Z20
+#define PACK_ID 1
+typedef enum {
+    eCalPar_FE_CH1_FS_G_HI,
+    eCalPar_FE_CH2_FS_G_HI,
+    eCalPar_FE_CH1_FS_G_LO,
+    eCalPar_FE_CH2_FS_G_LO,
+    eCalPar_FE_CH1_DC_offs,
+    eCalPar_FE_CH2_DC_offs,
+    eCalPar_BE_CH1_FS,
+    eCalPar_BE_CH2_FS,
+    eCalPar_BE_CH1_DC_offs,
+    eCalPar_BE_CH2_DC_offs,
+    eCalParMagic,   // needed for compatibility with a very old version of calibration parameters
+    eCalPar_FE_CH1_DC_offs_HI,
+    eCalPar_FE_CH2_DC_offs_HI,
+    eCalParEnd
+} calPar_t;
+#endif
+
+#ifdef Z20_250_12
 #define PACK_ID 2
 typedef enum {
     eCalPar_GEN_CH1_G_1,
@@ -48,28 +103,9 @@ typedef enum {
     eCalPar_OSC_CH2_OFF_20_DC,
     eCalParEnd
 } calPar_t;
-
-#else
-
-#define PACK_ID 1
-typedef enum {
-    eCalPar_FE_CH1_FS_G_HI,
-    eCalPar_FE_CH2_FS_G_HI,
-    eCalPar_FE_CH1_FS_G_LO,
-    eCalPar_FE_CH2_FS_G_LO,
-    eCalPar_FE_CH1_DC_offs,
-    eCalPar_FE_CH2_DC_offs,
-    eCalPar_BE_CH1_FS,
-    eCalPar_BE_CH2_FS,
-    eCalPar_BE_CH1_DC_offs,
-    eCalPar_BE_CH2_DC_offs,
-    eCalParMagic,   // needed for compatibility with a very old version of calibration parameters
-    eCalPar_FE_CH1_DC_offs_HI,
-    eCalPar_FE_CH2_DC_offs_HI,
-    eCalParEnd
-} calPar_t;
-
 #endif
+
+
 
 
 

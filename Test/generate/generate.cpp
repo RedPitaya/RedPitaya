@@ -65,7 +65,7 @@ void synthesize_signal(config_t &conf,
     const int trans0 = 30;
     const int trans1 = 300;
     const double tt2 = 0.249;
-    
+ 
     uint16_t scale = 0x1fff * (ampl / 2.0);
     uint32_t calib_gain = 0;
     if (conf.calib == true){
@@ -74,7 +74,7 @@ void synthesize_signal(config_t &conf,
         float fullScale = (uint32_t) (1.0 / 100.0 * ((uint64_t)1<<32));
         scale *=   fullScale / (float)calib_gain;
     }
-  
+
     scale = scale & 0x3fff;
 
     /* This is where frequency is used... */
@@ -187,7 +187,8 @@ void write_data_fpga(uint32_t ch,
     uint32_t i;
 
     fpga_awg_init();
-
+    g_awg_reg->ch1_burst_last = 0;
+    g_awg_reg->ch2_burst_last = 0;
     if(ch == 0) {
         /* Channel A */
         g_awg_reg->state_machine_conf = 0x000041;

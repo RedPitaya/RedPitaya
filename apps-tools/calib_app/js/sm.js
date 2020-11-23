@@ -37,10 +37,13 @@
     SM.config.socket_url = 'ws://' + (SM.config.server_ip.length ? SM.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
     SM.rp_model = "";
 
+
     // App state
     SM.state = {
         socket_opened: false,
-        processing: false
+        processing: false,
+        cursor_dragging: false,
+        mouseover: false
     };
 
 
@@ -152,10 +155,18 @@
 
                     //Recieving parameters
                     if (receive.parameters) {
-                        //    console.log(receive.parameters);
+                        console.log(receive.parameters);
                         SM.parameterStack.push(receive.parameters);
                         parametersHandler();
                     }
+
+                    if (receive.signals) {
+                        if (receive.signals.wave.size > 0) {
+                            SM.signalStack.push(receive.signals);
+                            signalsHandler();
+                        }
+                    }
+
 
                 } catch (e) {
                     //BA.state.processing = false;
@@ -212,7 +223,8 @@
     //Handlers
     var signalsHandler = function() {
         if (SM.signalStack.length > 0) {
-
+            console.log(SM.signalStack[0].wave);
+            OBJ.filterSignal = SM.signalStack[0].wave;
             SM.signalStack.splice(0, 1);
         }
         if (SM.signalStack.length > 2)
@@ -237,142 +249,8 @@
         }
     }
 
-    SM.initPlot = function(update) {
-        delete BA.graphCache;
-        $('#bode_plot').remove();
 
 
-        var yMin1 = parseFloat($('#BA_SIGNAL_1_MIN').val()) * 1;
-        var yMax1 = parseFloat($('#BA_SIGNAL_1_MAX').val()) * 1;
-
-        var yMin2 = parseFloat($('#BA_SIGNAL_2_MIN').val()) * 1;
-        var yMax2 = parseFloat($('#BA_SIGNAL_2_MAX').val()) * 1;
-
-        BA.graphCache = {};
-        BA.graphCache.elem = $('<div id="bode_plot" class="plot" style="position: absolute;margin-top: auto;left: 0px;"/>').css($('#graph_bode_grid').css(['height', 'width'])).appendTo('#graph_bode');
-
-        var t = [];
-        if ($("#BA_SCALE1").hasClass("active"))
-            t = [1, 10, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000, 8000, 10000, 20000, 40000, 60000, 80000, 100000, 200000, 400000, 600000, 800000, 1000000, 2000000, 4000000, 6000000, 8000000, 10000000, , 20000000, 40000000, 60000000, 80000000, 100000000];
-        else
-            t = null;
-
-        var options = {
-            series: {
-                shadowSize: 0
-            },
-            yaxes: [{
-                    min: yMin1,
-                    max: yMax1,
-                    labelWidth: 30,
-                    alignTicksWithAxis: 1,
-                    position: "left"
-                },
-                {
-                    min: yMin2,
-                    max: yMax2,
-                    labelWidth: 30,
-                    alignTicksWithAxis: 2,
-                    position: "right"
-                }
-            ],
-            xaxis: {
-                color: '#aaaaaa',
-                tickColor: '#aaaaaa',
-                ticks: t,
-                transform: function(v) {
-                    if (BA.scale)
-                        return Math.log(v + 0.0001); // move away from zero
-                    else
-                        return v;
-
-                },
-                tickDecimals: 0,
-                reserveSpace: false,
-                tickFormatter: funcxTickFormat,
-                min: null,
-                max: null,
-            },
-            grid: {
-                show: true,
-                color: '#aaaaaa',
-                borderColor: '#aaaaaa',
-                tickColor: '#aaaaaa',
-                tickColor: '#aaaaaa',
-                markingsColor: '#aaaaaa'
-            },
-            legend: {
-                position: "sw",
-                backgroundOpacity: 0.15
-            }
-        };
-
-
-        if ($("#BA_SCALE0").hasClass("active")) {
-            options.xaxis.transform = null;
-        }
-
-        var lastsig1 = [];
-        var lastsig2 = [];
-        var lastsig1_bad = [];
-        var lastsig2_bad = [];
-        if (update == true) {
-            lastsig1 = BA.lastSignals["BA_SIGNAL_1"];
-            lastsig2 = BA.lastSignals["BA_SIGNAL_2"];
-            lastsig1_bad = BA.lastSignals["BA_SIGNAL_1_BAD"];
-            lastsig2_bad = BA.lastSignals["BA_SIGNAL_2_BAD"];
-        }
-        var data_points = [{ data: lastsig1, color: '#f3ec1a', label: "Amplitude" }, { data: lastsig2, color: '#31b44b', label: "Phase", yaxis: 2 }];
-        if ($('#BA_SHOWALL_BTN').hasClass('active')) {
-            data_points.push({ data: lastsig1_bad, color: '#d26500', label: "Invalid amplitude" });
-            data_points.push({ data: lastsig2_bad, color: '#685b00', label: "Invalid phase", yaxis: 2 });
-        }
-        BA.graphCache.plot = $.plot(BA.graphCache.elem, data_points, options);
-        $('.flot-text').css('color', '#aaaaaa');
-    }
-
-
-    //Draw signals
-    SM.drawSignals = function() {
-
-        if (BA.running == true) {
-
-            var lastsig1 = [];
-            var lastsig2 = [];
-            var lastsig1_bad = [];
-            var lastsig2_bad = [];
-
-            // If there is graph on screen
-            if (BA.graphCache == undefined) {
-                BA.initPlot(false);
-            }
-
-
-            // Prepare every signal
-            BA.prepareOneSignal('BA_SIGNAL_1');
-            BA.prepareOneSignal('BA_SIGNAL_2');
-
-            lastsig1 = BA.lastSignals["BA_SIGNAL_1"];
-            lastsig2 = BA.lastSignals["BA_SIGNAL_2"];
-            lastsig1_bad = BA.lastSignals["BA_SIGNAL_1_BAD"];
-            lastsig2_bad = BA.lastSignals["BA_SIGNAL_2_BAD"];
-
-            BA.graphCache.elem.show();
-            BA.graphCache.plot.resize();
-            BA.graphCache.plot.setupGrid();
-            var data_points = [{ data: lastsig1, color: '#f3ec1a', label: "Amplitude" }, { data: lastsig2, color: '#31b44b', label: "Phase", yaxis: 2 }];
-            if ($('#BA_SHOWALL_BTN').hasClass('active')) {
-                data_points.push({ data: lastsig1_bad, color: '#d26500', label: "Invalid amplitude" });
-                data_points.push({ data: lastsig2_bad, color: '#685b00', label: "Invalid phase", yaxis: 2 });
-            }
-            BA.graphCache.plot.setData(data_points);
-            BA.graphCache.plot.draw();
-            BA.updateLinesAndArrows();
-
-            // Reset resize flag
-            BA.state.resized = false;
-        }
-    };
 
 }(window.SM = window.SM || {}, jQuery));
 
@@ -399,10 +277,15 @@ $(function() {
         });
     });
 
+    $(window).resize(function() {
+        OBJ.cursorResize();
+    });
+
 
     //Crash buttons
     $('#send_report_btn').on('click', function() { SM.formEmail() });
     $('#restart_app_btn').on('click', function() { location.reload() });
+
 
 
     // Everything prepared, start application

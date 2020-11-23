@@ -39,6 +39,7 @@
     <script src="js/manager.js?1" onerror="location.reload()"></script>
     <script src="js/manager_auto_mode.js?1" onerror="location.reload()"></script>
     <script src="js/manager_adc_mode.js?1" onerror="location.reload()"></script>
+    <script src="js/manager_filter_mode.js?1" onerror="location.reload()"></script>
 </head>
 
 <body>
@@ -87,7 +88,7 @@
                     </div>
                     <div>
                         <div class="container_inline" align=center>
-                            <div style="width: 300px; border: 1px solid white;margin-right: 10px">
+                            <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_AUTO_MODE" style="width: 100%">
                                     <a style="display: block;">AUTO</a>
                                 </li>
@@ -95,15 +96,23 @@
                         </div>
 
                         <div class="container_inline" align=center>
-                            <div style="width: 300px; border: 1px solid white;margin-right: 10px">
+                            <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_ADC_MODE" style="width: 100%">
                                     <a style="display: block;">MANUAL</a>
                                 </li>
                             </div>
                         </div>
 
+                        <div class="container_inline" align=center id="filter_calib_button">
+                            <div style="width: 300px; margin-right: 10px">
+                                <li class="run_buttons" id="B_FILTER_MODE" style="width: 100%">
+                                    <a style="display: block;">FILTER</a>
+                                </li>
+                            </div>
+                        </div>
+
                         <div class="container_inline" align=center>
-                            <div style="width: 300px; border: 1px solid white;margin-right: 10px">
+                            <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_RESET_DEFAULT" style="width: 100%">
                                     <a style="display: block;">RESET TO DEFAULT</a>
                                 </li>
@@ -111,7 +120,7 @@
                         </div>
 
                         <div class="container_inline" align=center>
-                            <div style="width: 300px; border: 1px solid white;margin-right: 10px">
+                            <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_RESET_FACTORY" style="width: 100%">
                                     <a style="display: block;">RESET TO FACTORY</a>
                                 </li>
@@ -649,9 +658,166 @@
                         </div>
                     </div>
                 </div>
+                <div id="filter_mode_body" style="display: none;">
+                    <div align="center">
+                        <div style="width:90%;height: 700px;padding-top: 5px;border: 1px solid #999;display: inline-block;margin-top: 10px;">
+                            <div class="container_inline" style="display: inline-block; width: 70%;height: 100%; vertical-align: bottom;">
+                                <div id="graph_cont" style="padding: 5px;  border: 1px solid rgba(153, 153, 153, 0.295);width: 100%;height: 94%;">
+                                    <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 100%;">
+                                        <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 100%;">
+                                            <div id="graph_bode_filt" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
+                                                <canvas id="graph_bode_grid_filt" class="graph_grid" style="width: 100%;height: 100%;"></canvas>
+                                                <img id="cur_x1_arrow" class="varrow cursor_animation" src="img/cursor-arrow-up.png">
+                                                <div id="cur_x1" class="vline cursor_animation"></div>
+                                                <img id="cur_x2_arrow" class="varrow cursor_animation" src="img/cursor-arrow-up.png">
+                                                <div id="cur_x2" class="vline cursor_animation"></div>
+                                                <div id="cur_x_diff" class="cursor_animation"></div>
+                                                <div id="zoom_button"><img id="zoom_img" src="./img/zoom_plus.png" style="width: 100%;" /></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container_inline" style="display: inline-block; width: 28%;vertical-align: bottom;height: 100%;">
+                                <div class="container_inline">
+                                    <div id="filter_channel" style="
+                                                width: 110px;
+                                                height: 40px;
+                                                margin: 5px;">
+                                        <input id="FILTER_CHANNEL" type="checkbox" class="flipswitch" data-on="CH 2" data-off="CH 1" />
+                                    </div>
+                                    <div id="filter_hv_lv_mode" style="
+                                                width: 110px;
+                                                height: 40px;
+                                                margin: 5px;">
+                                        <input id="FILTER_HV_LV_MODE" type="checkbox" class="flipswitch" data-on="HV" data-off="LV" />
+                                    </div>
+                                </div>
 
+                                <!-- <div>
+                                        <div class="container_inline">
+                                            <div style="width: 50px;text-align: right;margin-top: 5px;color:#f3ec1a">AVG:</div>
+                                            <div style="width: 200px;margin-top: 5px;">
+                                                <input id="CH1_AVG" type="text" size="5" style="width: 185px;margin-left: 10px;" value="" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="container_inline">
+                                            <div style="width: 50px;text-align: right;margin-top: 5px;color:#00FF00">MIN:</div>
+                                            <div style="width: 200px;margin-top: 5px;">
+                                                <input id="CH1_MIN" type="text" size="5" style="width: 185px;margin-left: 10px;" value="" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="container_inline">
+                                            <div style="width: 50px;text-align: right;margin-top: 5px;color:#ff0000">MAX:</div>
+                                            <div style="width: 200px;margin-top: 5px;">
+                                                <input id="CH1_MAX" type="text" size="5" style="width: 185px;margin-left: 10px;" value="" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="width:280px;height: 100px;padding: 5px;  border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 90px;">
+                                            <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 90px;">
+                                                <div id="graph_bode_ch1" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
+                                                    <canvas id="graph_bode_grid_ch1" class="graph_grid" style="width: 100%;height: 100%;"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
+                                        <label>Calib parameters</label>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH1_OFFSET" type="text" size="5" style="width: 185px;margin-left: 10px;" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
+                                                <div style="margin-top: 0px;">
+                                                    <div style="width: 24px; border: 1px solid white;margin-top: 0px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH1_SUB_OFF" style="width: 100%;height: 24px;border-radius: 50%;">
+                                                            <a style="display: block;font-size: 12pt;">-</a>
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH1_VALUE_OFF" class="protocol" name="rate" style="width: 110px;margin-left: 0px;">
+                                                                                        <option value="1">1</option>
+                                                                                        <option value="10">10</option> 
+                                                                                        <option value="100">100</option> 
+                                                                                        <option value="1000">1000</option> 
+                                                                                        <option value="10000">10000</option> 
+                                                                                        <option value="100000">100000</option> 
+                                                                                        <option value="1000000">1000000</option>                                                                        
+                                                                            </select>
+                                                    </div>
+                                                    <div style="width: 24px; border: 1px solid white;margin-right: 10px;margin-top: 0px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH1_ADD_OFF" style="width: 100%;height: 24px;border-radius: 50%;">
+                                                            <a style="display: block;font-size: 12pt;">+</a>
+                                                        </li>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH1_GAIN" type="text" size="5" style="width: 185px;margin-left: 10px;" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
+                                                <div style="margin-top: 0px;">
+                                                    <div style="width: 24px; border: 1px solid white;margin-top: 0px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH1_SUB_GAIN" style="width: 100%;height: 24px;border-radius: 50%;">
+                                                            <a style="display: block;font-size: 12pt;">-</a>
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH1_VALUE_GAIN" class="protocol" name="rate" style="width: 110px;margin-left: 0px;">
+                                                                                        <option value="1">1</option>
+                                                                                        <option value="10">10</option> 
+                                                                                        <option value="100">100</option> 
+                                                                                        <option value="1000">1000</option> 
+                                                                                        <option value="10000">10000</option> 
+                                                                                        <option value="100000">100000</option> 
+                                                                                        <option value="1000000">1000000</option>  
+                                                                                        <option value="10000000">10000000</option>                                                                        
+                                                                            </select>
+                                                    </div>
+                                                    <div style="width: 24px; border: 1px solid white;margin-right: 10px;margin-top: 0px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH1_ADD_GAIN" style="width: 100%;height: 24px;border-radius: 50%;">
+                                                            <a style="display: block;font-size: 12pt;">+</a>
+                                                        </li>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> -->
+                            </div>
+                        </div>
+                        <!-- <div class="container_inline">
+                                <div id="manual_lv_hv_mode" style="
+                                            width: 120px;
+                                            height: 40px;
+                                            margin: 5px;">
+                                    <input id="HW_LV_MODE" type="checkbox" class="flipswitch" data-on="HV" data-off="LV" />
+                                </div>
+                            </div> -->
+                    </div>
+                    <div class="container_inline" align=center>
+                        <div style="
+                                    width: 140px;
+                                    height: 40px;
+                                    margin: 10px;">
+                            <li class="run_buttons" id="B_CLOSE_FILTER_CALIB" style="width: 100%;height: 25px">
+                                <a style="display: block;font-size: 12pt;">CLOSE</a>
+                            </li>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
     </div>
     <div>
         <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">

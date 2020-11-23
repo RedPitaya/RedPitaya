@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "rp_cross.h"
+#include "calib.h"
 
 #ifdef Z20_250_12
  #define ADC_SAMPLE_PERIOD_DEF 4

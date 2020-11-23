@@ -96,6 +96,14 @@ CBooleanParameter 	gen_gain(	  "gen_gain", 		        CBaseParameter::RW, false,0
 CBooleanParameter 	ac_dc_mode(	  "ac_dc_mode", 	        CBaseParameter::RW, false,0);
 #endif
 
+#ifdef Z10
+CIntParameter		adc_mode(     "adc_acquire_mode", 		CBaseParameter::RW,   0 ,0,	0, 10);
+CFloatSignal 		waveSignal(   "wave", 					SCREEN_BUFF_SIZE,     0.0f);
+CFloatParameter		cursor_x1(    "cursor_x1",				CBaseParameter::RW,   0.2 ,0,	0, 1);
+CFloatParameter		cursor_x2(    "cursor_x2",				CBaseParameter::RW,   0.4 ,0,	0, 1);
+CBooleanParameter 	zoom_mode(    "zoom_mode", 	        	CBaseParameter::RW,   false, 0);
+#endif
+
 void PrintLogInFile(const char *message){
 #ifdef DEBUG_MODE
 	std::time_t result = std::time(nullptr);
@@ -160,7 +168,25 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 //Update signals
 void UpdateSignals(void)
 {
+	static uint64_t m_old_index = 0; 
+	try{
+#ifdef Z10
+		auto y = g_acq->getDataSq();
+		if (y.index != m_old_index){
+			if (waveSignal.GetSize() != y.wave_size)
+				waveSignal.Resize(y.wave_size);
+			for (int i = 0; i < y.wave_size; i++)
+    	        waveSignal[i] = y.wave[i];
+			m_old_index = y.index;
+		}else{
+			waveSignal.Resize(0);
+		}
 
+#endif
+	}catch (std::exception& e)
+	{
+		fprintf(stderr, "Error: UpdateSignals() %s\n",e.what());
+	}
 }
 
 void sendCalibInManualMode(bool _force){
@@ -294,6 +320,23 @@ void setupGen(){
 	}
 }
 
+void updateFilterModeParameter(){
+	if (cursor_x1.IsNewValue()){
+		cursor_x1.Update();
+		g_acq->setCursor1(cursor_x1.Value());
+	}
+
+	if (cursor_x2.IsNewValue()){
+		cursor_x2.Update();
+		g_acq->setCursor2(cursor_x2.Value());
+	}
+
+	if (zoom_mode.IsNewValue()) {
+		zoom_mode.Update();
+		g_acq->setZoomMode(zoom_mode.Value());
+	}
+}
+
 //Update parameters
 void UpdateParams(void)
 {
@@ -357,6 +400,17 @@ void UpdateParams(void)
 			if (sig == 5){
 				g_calib_man->writeCalib();
 			}
+
+// FREQ CALIB
+#ifdef Z10
+			if (sig == 100){
+				g_calib_man->initSq();
+				g_calib_man->readCalibEpprom();
+				cursor_x1.SendValue(0.2);
+				cursor_x2.SendValue(0.4);
+				zoom_mode.SendValue(false);
+			}
+#endif		
 		}
 
 		if (hv_lv_mode.IsNewValue()){
@@ -391,7 +445,10 @@ void UpdateParams(void)
 #endif
 		getNewCalib();
 		setupGen();
-		
+#ifdef Z10
+		updateFilterModeParameter();
+#endif
+
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: UpdateParams() %s\n",e.what());

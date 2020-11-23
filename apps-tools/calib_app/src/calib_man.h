@@ -13,6 +13,17 @@ enum ClalibValue{
     DAC_CH2_OFF,
     DAC_CH1_GAIN,
     DAC_CH2_GAIN    
+#ifdef Z10
+    ,
+    F_AA_CH1,
+    F_BB_CH1,
+    F_PP_CH1,
+    F_KK_CH1,
+    F_AA_CH2,
+    F_BB_CH2,
+    F_PP_CH2,
+    F_KK_CH2
+#endif
 };
 
 class CCalibMan {
@@ -25,6 +36,7 @@ class CCalibMan {
                     CCalibMan(CCalibMan &&) = delete;
                     ~CCalibMan();
                void init();
+               void initSq();
                 int readCalib();
                 int readCalibEpprom();
                void updateCalib();

@@ -43,6 +43,7 @@ CCalibMan::~CCalibMan()
 }
 
 void CCalibMan::init(){
+    m_acq->startNormal();
     m_acq->resetGen();
     m_currentGain = RP_LOW;
     m_acq->setLV();
@@ -52,6 +53,11 @@ void CCalibMan::init(){
     m_currentGenGain = RP_GAIN_1X;
     m_acq->setGenGainx1();
 #endif
+    readCalib();
+}
+
+void CCalibMan::initSq(){
+    m_acq->startSquare(1);
     readCalib();
 }
 
@@ -189,6 +195,46 @@ int CCalibMan::getCalibValue(ClalibValue _type){
         case DAC_CH2_OFF:  return m_calib_parameters.be_ch2_dc_offs;
         case DAC_CH1_GAIN:  return m_calib_parameters.be_ch1_fs;
         case DAC_CH2_GAIN:  return m_calib_parameters.be_ch2_fs;  
+        case F_AA_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_aa_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_aa_ch1;
+            break;
+        }
+        case F_AA_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_aa_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_aa_ch2;
+            break;
+        }
+        case F_BB_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_bb_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_bb_ch1;
+            break;
+        }
+        case F_BB_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_bb_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_bb_ch2;
+            break;
+        }
+        case F_PP_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_pp_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_pp_ch1;
+            break;
+        }
+        case F_PP_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_pp_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_pp_ch2;
+            break;
+        }
+         case F_KK_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_kk_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_kk_ch1;
+            break;
+        }
+        case F_KK_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_kk_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_kk_ch2;
+            break;
+        }
     }
 #endif
     return 0;

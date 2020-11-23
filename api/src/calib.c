@@ -24,6 +24,17 @@
 
 
 #define CALIB_MAGIC 0xAABBCCDD
+#ifdef Z10
+#define CALIB_MAGIC_FILTER 0xDDCCBBAA 
+#define GAIN_LO_FILT_AA 0x7D93
+#define GAIN_LO_FILT_BB 0x437C7
+#define GAIN_LO_FILT_PP 0x2666
+#define GAIN_LO_FILT_KK 0xd9999a
+#define GAIN_HI_FILT_AA 0x4C5F
+#define GAIN_HI_FILT_BB 0x2F38B
+#define GAIN_HI_FILT_PP 0x2666
+#define GAIN_HI_FILT_KK 0xd9999a
+#endif
 
 int calib_ReadParams(rp_calib_params_t *calib_params,bool use_factory_zone);
 
@@ -98,10 +109,31 @@ int calib_ReadParams(rp_calib_params_t *calib_params,bool use_factory_zone)
     }
     fclose(fp);
 
-    if (calib_params->magic != CALIB_MAGIC) {
+#ifdef Z10
+    if (calib_params->magic != CALIB_MAGIC && calib_params->magic != CALIB_MAGIC_FILTER) {
 		calib_params->fe_ch1_hi_offs = calib_params->fe_ch1_lo_offs;
 		calib_params->fe_ch2_hi_offs = calib_params->fe_ch2_lo_offs;
 	}
+    else if (calib_params->magic != CALIB_MAGIC_FILTER){
+        calib_params->low_filter_aa_ch1 = GAIN_LO_FILT_AA;
+        calib_params->low_filter_bb_ch1 = GAIN_LO_FILT_BB;
+        calib_params->low_filter_pp_ch1 = GAIN_LO_FILT_PP;
+        calib_params->low_filter_kk_ch1 = GAIN_LO_FILT_KK;
+        calib_params->low_filter_aa_ch2 = GAIN_LO_FILT_AA;
+        calib_params->low_filter_bb_ch2 = GAIN_LO_FILT_BB;
+        calib_params->low_filter_pp_ch2 = GAIN_LO_FILT_PP;
+        calib_params->low_filter_kk_ch2 = GAIN_LO_FILT_KK;
+        
+        calib_params->hi_filter_aa_ch1 = GAIN_HI_FILT_AA;
+        calib_params->hi_filter_bb_ch1 = GAIN_HI_FILT_BB;
+        calib_params->hi_filter_pp_ch1 = GAIN_HI_FILT_PP;
+        calib_params->hi_filter_kk_ch1 = GAIN_HI_FILT_KK;
+        calib_params->hi_filter_aa_ch2 = GAIN_HI_FILT_AA;
+        calib_params->hi_filter_bb_ch2 = GAIN_HI_FILT_BB;
+        calib_params->hi_filter_pp_ch2 = GAIN_HI_FILT_PP;
+        calib_params->hi_filter_kk_ch2 = GAIN_HI_FILT_KK;
+    }
+#endif
 
     return 0;
 }
@@ -178,6 +210,7 @@ int calib_SetParams(rp_calib_params_t calib_params){
 }
 
 void calib_SetToZero() {
+    calib.magic = CALIB_MAGIC;
     calib.be_ch1_dc_offs = 0;
     calib.be_ch2_dc_offs = 0;
     calib.fe_ch1_lo_offs = 0;
@@ -196,6 +229,27 @@ void calib_SetToZero() {
     calib.fe_ch1_fs_g_hi = cmn_CalibFullScaleFromVoltage(coff );
     calib.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
     calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(coff );
+
+#ifdef Z10 
+    calib.magic = CALIB_MAGIC_FILTER;
+    calib.low_filter_aa_ch1 = GAIN_LO_FILT_AA;
+    calib.low_filter_bb_ch1 = GAIN_LO_FILT_BB;
+    calib.low_filter_pp_ch1 = GAIN_LO_FILT_PP;
+    calib.low_filter_kk_ch1 = GAIN_LO_FILT_KK;
+    calib.low_filter_aa_ch2 = GAIN_LO_FILT_AA;
+    calib.low_filter_bb_ch2 = GAIN_LO_FILT_BB;
+    calib.low_filter_pp_ch2 = GAIN_LO_FILT_PP;
+    calib.low_filter_kk_ch2 = GAIN_LO_FILT_KK;
+    
+    calib.hi_filter_aa_ch1 = GAIN_HI_FILT_AA;
+    calib.hi_filter_bb_ch1 = GAIN_HI_FILT_BB;
+    calib.hi_filter_pp_ch1 = GAIN_HI_FILT_PP;
+    calib.hi_filter_kk_ch1 = GAIN_HI_FILT_KK;
+    calib.hi_filter_aa_ch2 = GAIN_HI_FILT_AA;
+    calib.hi_filter_bb_ch2 = GAIN_HI_FILT_BB;
+    calib.hi_filter_pp_ch2 = GAIN_HI_FILT_PP;
+    calib.hi_filter_kk_ch2 = GAIN_HI_FILT_KK;
+#endif   
 }
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
@@ -556,3 +610,142 @@ int32_t calib_getGenOffset(rp_channel_t channel){
 uint32_t calib_getGenScale(rp_channel_t channel){
     return (channel == RP_CH_1 ?  calib.be_ch1_fs: calib.be_ch2_fs);
 }
+
+#ifdef Z10
+
+int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff , uint32_t value){
+    rp_calib_params_t params;
+    calib_ReadParams(&params,false);
+    if (params.magic == CALIB_MAGIC){
+        params.magic = CALIB_MAGIC_FILTER;
+        params.low_filter_aa_ch1 = GAIN_LO_FILT_AA;
+        params.low_filter_bb_ch1 = GAIN_LO_FILT_BB;
+        params.low_filter_pp_ch1 = GAIN_LO_FILT_PP;
+        params.low_filter_kk_ch1 = GAIN_LO_FILT_KK;
+        params.low_filter_aa_ch2 = GAIN_LO_FILT_AA;
+        params.low_filter_bb_ch2 = GAIN_LO_FILT_BB;
+        params.low_filter_pp_ch2 = GAIN_LO_FILT_PP;
+        params.low_filter_kk_ch2 = GAIN_LO_FILT_KK;
+        
+        params.hi_filter_aa_ch1 = GAIN_HI_FILT_AA;
+        params.hi_filter_bb_ch1 = GAIN_HI_FILT_BB;
+        params.hi_filter_pp_ch1 = GAIN_HI_FILT_PP;
+        params.hi_filter_kk_ch1 = GAIN_HI_FILT_KK;
+        params.hi_filter_aa_ch2 = GAIN_HI_FILT_AA;
+        params.hi_filter_bb_ch2 = GAIN_HI_FILT_BB;
+        params.hi_filter_pp_ch2 = GAIN_HI_FILT_PP;
+        params.hi_filter_kk_ch2 = GAIN_HI_FILT_KK;
+    }
+    if (channel == RP_CH_1){
+        if (gain == RP_HIGH){
+            switch(coff){
+                case AA: params.hi_filter_aa_ch1 = value; break;
+                case BB: params.hi_filter_bb_ch1 = value; break;
+                case PP: params.hi_filter_pp_ch1 = value; break;
+                case KK: params.hi_filter_kk_ch1 = value; break; 
+                default:
+                  break;
+            }
+        }
+        if (gain == RP_LOW){
+            switch(coff){
+                case AA: params.low_filter_aa_ch1 = value; break;
+                case BB: params.low_filter_bb_ch1 = value; break;
+                case PP: params.low_filter_pp_ch1 = value; break;
+                case KK: params.low_filter_kk_ch1 = value; break; 
+                default:
+                    break;
+            }
+        }
+    }
+    if (channel == RP_CH_2){
+        if (gain == RP_HIGH){
+            switch(coff){
+                case AA: params.hi_filter_aa_ch2 = value; break;
+                case BB: params.hi_filter_bb_ch2 = value; break;
+                case PP: params.hi_filter_pp_ch2 = value; break;
+                case KK: params.hi_filter_kk_ch2 = value; break; 
+                default:
+                  break;
+            }
+        }
+        if (gain == RP_LOW){
+            switch(coff){
+                case AA: params.low_filter_aa_ch2 = value; break;
+                case BB: params.low_filter_bb_ch2 = value; break;
+                case PP: params.low_filter_pp_ch2 = value; break;
+                case KK: params.low_filter_kk_ch2 = value; break; 
+                default:
+                  break;
+            }
+        }
+    }
+    calib_WriteParams(calib,false);
+    return RP_OK;
+}
+
+uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff){
+     if (channel == RP_CH_1){
+        if (gain == RP_HIGH){
+            switch(coff){
+                case AA:
+                return calib.hi_filter_aa_ch1;
+                case BB:
+                return calib.hi_filter_bb_ch1;
+                case PP:
+                return calib.hi_filter_pp_ch1;
+                case KK:
+                return calib.hi_filter_kk_ch1; 
+                default:
+                  break;
+            }
+        }
+        if (gain == RP_LOW){
+            switch(coff){
+                case AA:
+                return calib.low_filter_aa_ch1;
+                case BB:
+                return calib.low_filter_bb_ch1;
+                case PP:
+                return calib.low_filter_pp_ch1;
+                case KK:
+                return calib.low_filter_kk_ch1; 
+                default:
+                  break;
+            }
+        }
+    }
+    if (channel == RP_CH_2){
+        if (gain == RP_HIGH){
+            switch(coff){
+                case AA:
+                return calib.hi_filter_aa_ch2;
+                case BB:
+                return calib.hi_filter_bb_ch2;
+                case PP:
+                return calib.hi_filter_pp_ch2;
+                case KK:
+                return calib.hi_filter_kk_ch2; 
+                default:
+                  break;
+            }
+        }
+        if (gain == RP_LOW){
+            switch(coff){
+                case AA:
+                return calib.low_filter_aa_ch2;
+                case BB:
+                return calib.low_filter_bb_ch2;
+                case PP:
+                return calib.low_filter_pp_ch2;
+                case KK:
+                return calib.low_filter_kk_ch2; 
+                default:
+                  break;
+            }
+        }
+    }
+    return 0;
+}
+
+#endif

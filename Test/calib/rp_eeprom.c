@@ -53,7 +53,55 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
     {"OSC_CH1_OFF_20_DC"},
     {"OSC_CH2_OFF_20_DC"}
 };
-#else
+#endif
+
+#ifdef Z10
+#define CALIB_MAGIC 0xAABBCCDD
+#define CALIB_MAGIC_FILTER 0xDDCCBBAA
+// Default values
+#define GAIN_LO_FILT_AA 0x7D93
+#define GAIN_LO_FILT_BB 0x437C7
+#define GAIN_LO_FILT_PP 0x2666
+#define GAIN_LO_FILT_KK 0xd9999a
+#define GAIN_HI_FILT_AA 0x4C5F
+#define GAIN_HI_FILT_BB 0x2F38B
+#define GAIN_HI_FILT_PP 0x2666
+#define GAIN_HI_FILT_KK 0xd9999a
+
+const char * c_wpCalParDesc[eCalParEnd][20]={
+    {"FE_CH1_FS_G_HI"},
+    {"FE_CH2_FS_G_HI"},
+    {"FE_CH1_FS_G_LO"},
+    {"FE_CH2_FS_G_LO"},
+    {"FE_CH1_DC_offs"},
+    {"FE_CH2_DC_offs"},
+    {"BE_CH1_FS"},
+    {"BE_CH2_FS"},
+    {"BE_CH1_DC_offs"},
+    {"BE_CH2_DC_offs"},
+    {"Magic"},
+    {"FE_CH1_DC_offs_HI"},
+    {"FE_CH2_DC_offs_HI"},
+    {"LOW_FILTER_AA_CH1"},
+    {"LOW_FILTER_BB_CH1"},
+    {"LOW_FILTER_PP_CH1"},
+    {"LOW_FILTER_KK_CH1"},
+    {"LOW_FILTER_AA_CH2"},
+    {"LOW_FILTER_BB_CH2"},
+    {"LOW_FILTER_PP_CH2"},
+    {"LOW_FILTER_KK_CH2"},
+    {"HI_FILTER_AA_CH1"},
+    {"HI_FILTER_BB_CH1"},
+    {"HI_FILTER_PP_CH1"},
+    {"HI_FILTER_KK_CH1"},
+    {"HI_FILTER_AA_CH2"},
+    {"HI_FILTER_BB_CH2"},
+    {"HI_FILTER_PP_CH2"},
+    {"HI_FILTER_KK_CH2"}
+};
+#endif
+
+#ifdef Z20
 #define CALIB_MAGIC 0xAABBCCDD
 const char * c_wpCalParDesc[eCalParEnd][20]={
     {"FE_CH1_FS_G_HI"},
@@ -96,7 +144,25 @@ int RpEepromCalDataRead(eepromWpData_t * eepromData, bool factory)
         fclose(fp);
         return -1;
     }
+#ifdef Z10
+    eepromData->feCalPar[eCalPar_F_LOW_AA_CH1] = GAIN_LO_FILT_AA;
+    eepromData->feCalPar[eCalPar_F_LOW_BB_CH1] = GAIN_LO_FILT_BB;
+    eepromData->feCalPar[eCalPar_F_LOW_PP_CH1] = GAIN_LO_FILT_PP;
+    eepromData->feCalPar[eCalPar_F_LOW_KK_CH1] = GAIN_LO_FILT_KK;
+    eepromData->feCalPar[eCalPar_F_LOW_AA_CH2] = GAIN_LO_FILT_AA;
+    eepromData->feCalPar[eCalPar_F_LOW_BB_CH2] = GAIN_LO_FILT_BB;
+    eepromData->feCalPar[eCalPar_F_LOW_PP_CH2] = GAIN_LO_FILT_PP;
+    eepromData->feCalPar[eCalPar_F_LOW_KK_CH2] = GAIN_LO_FILT_KK;
 
+    eepromData->feCalPar[eCalPar_F_HI_AA_CH1] = GAIN_HI_FILT_AA;
+    eepromData->feCalPar[eCalPar_F_HI_BB_CH1] = GAIN_HI_FILT_BB;
+    eepromData->feCalPar[eCalPar_F_HI_PP_CH1] = GAIN_HI_FILT_PP;
+    eepromData->feCalPar[eCalPar_F_HI_KK_CH1] = GAIN_HI_FILT_KK;
+    eepromData->feCalPar[eCalPar_F_HI_AA_CH2] = GAIN_HI_FILT_AA;
+    eepromData->feCalPar[eCalPar_F_HI_BB_CH2] = GAIN_HI_FILT_BB;
+    eepromData->feCalPar[eCalPar_F_HI_PP_CH2] = GAIN_HI_FILT_PP;
+    eepromData->feCalPar[eCalPar_F_HI_KK_CH2] = GAIN_HI_FILT_KK;
+#endif
     fclose(fp);
     return 0;
 }
@@ -109,7 +175,7 @@ int RpEepromCalDataWrite(eepromWpData_t * eepromData, bool factory)
     /* Fix ID and set reserved data */
     eepromData->dataStructureId = PACK_ID;
     eepromData->wpCheck += 1;
-#ifndef Z20_250_12
+#ifdef Z20
     eepromData->feCalPar[eCalParMagic]=CALIB_MAGIC;
 #endif
     memset((char*)&eepromData->reserved[0], 0, 6);
@@ -159,8 +225,13 @@ int RpEepromCalDataVerify(eepromWpData_t * a_eepromData, bool factory)
 void RpPrintEepromCalData(eepromWpData_t a_eepromData)
 {
     int i;
-
-    for(i=0; i < eCalParEnd; i++) {
+    int size = eCalParEnd;
+#ifdef Z10
+    if (a_eepromData.feCalPar[eCalParMagic] == CALIB_MAGIC){
+        size = eCalPar_F_LOW_AA_CH1;
+    }
+#endif
+    for(i=0; i < size; i++) {
         printf("%s = %d\n", c_wpCalParDesc[i][0], a_eepromData.feCalPar[i]);
     }
 }
