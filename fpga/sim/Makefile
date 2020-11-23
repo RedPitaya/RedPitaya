@@ -21,6 +21,8 @@ LIB=$(PATH_LIB)/unisims/DNA_PORT.v \
     $(PATH_LIB)/unisims/ODDR.v \
     $(PATH_LIB)/unisims/OSERDESE2.v \
     $(PATH_LIB)/unisims/ISERDESE2.v \
+    $(PATH_LIB)/unisims/IDELAYCTRL.v \
+    $(PATH_LIB)/unisims/IDELAYE2.v \
     $(PATH_LIB)/unisims/BUFIO.v \
     $(PATH_LIB)/unisims/BUFR.v \
     $(PATH_LIB)/glbl.v

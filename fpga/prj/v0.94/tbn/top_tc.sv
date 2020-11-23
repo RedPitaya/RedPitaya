@@ -247,6 +247,9 @@ task test_asg(
 );
 
 reg [9-1: 0] ch0_set;
+reg [9-1: 0] ch1_set0;
+reg [9-1: 0] ch1_unset0;
+
 reg [9-1: 0] ch1_set;
 logic        [ 32-1: 0] rdata;
 logic signed [ 32-1: 0] rdata_blk [];
@@ -275,34 +278,35 @@ logic signed [ 32-1: 0] rdata_blk [];
 
   ch0_set = {1'b0 ,1'b0, 1'b0, 1'b0, 1'b1,    1'b0, 3'h2} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
 
+
   // CH1 DAC data
-  for (int k=0; k<8000; k++) begin
+  for (int k=0; k<1000; k++) begin
     axi_write(offset+32'h20000 + (k*4), k);  // write table
   end
 
   // CH1 DAC settings
   axi_write(offset+32'h00024,{2'h0, 14'd0, 2'h0, 14'h2000}    );  // DC offset, amplitude
-  axi_write(offset+32'h00028,{2'h0, 14'd7999, 16'hffff}       );  // table size
+  axi_write(offset+32'h00028,{2'h0, 14'd999, 16'hffff}       );  // table size
   axi_write(offset+32'h0002C,{2'h0, 14'h5, 16'h0}             );  // reset offset
   axi_write(offset+32'h00030,{2'h0, 14'h9, 16'h0}             );  // table step
   axi_write(offset+32'h00038,{16'h0, 16'd4}                   );  // number of cycles
   axi_write(offset+32'h0003C,{16'h0, 16'd2}                   );  // number of repetitions
-  axi_write(offset+32'h00040,{32'd10}                         );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00040,{32'd2}                         );  // number of 1us delay between repetitions
   axi_write(offset+32'h00048,{32'd50}                         );  // number of 1us delay between repetitions
 
   ch1_set = {1'b0, 1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
 
   //axi_write(offset+32'h00000,{8'h0, ch1_set,  8'h0, ch0_set}  ); // write configuration
-  axi_write(offset+32'h00000,{8'h0, 8'h91,  8'h0, 8'h11}  ); // write configuration
+  axi_write(offset+32'h00000,{8'h0, 8'h11,  8'h0, 8'h11}  ); // write configuration
 
   ##2000;
 
   ch1_set = {1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
 
-  axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
+ // axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
 
-  ##200;
-
+ // ##200;
+/*
   // CH1 table data readback
   rdata_blk = new [80];
   for (int k=0; k<80; k++) begin
@@ -315,19 +319,31 @@ logic signed [ 32-1: 0] rdata_blk [];
     axi_read_osc1(offset+32'h00034, rdata);  // read read pointer
     ##1737;
   end
-
+*/
   ##500;
-ch1_set = {1'b1, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
+/*ch1_set0 = {1'b1, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
+ch1_unset0 = {1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
+  axi_write(offset+32'h00000,{7'h0, ch1_set0,  7'h0, ch0_set}  ); // write configuration
+ #100;
+  axi_write(offset+32'h00000,{7'h0, ch1_unset0,  7'h0, ch0_set}  ); // write configuration
+*/
+  axi_write(offset+32'h00024,{2'h0, 14'd0, 2'h0, 14'h2000}    );  // DC offset, amplitude
+  axi_write(offset+32'h00028,{2'h0, 14'd7, 16'hffff}       );  // table size
+  axi_write(offset+32'h0002C,{2'h0, 14'h5, 16'h0}             );  // reset offset
+  axi_write(offset+32'h00030,{2'h0, 14'h2, 16'h0}             );  // table step
+  axi_write(offset+32'h00038,{16'h0, 16'd0}                   );  // number of cycles
+  axi_write(offset+32'h0003C,{16'h0, 16'd0}                   );  // number of repetitions
+  axi_write(offset+32'h00040,{32'd10}                         );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00048,{32'd50}                         );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00000,{8'h0, 8'h11,  8'h0, 8'h11}  ); // write configuration
 
-  axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
- #100;
-  axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
- #100;
+ /*#100;
   axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
 #100;
 ch1_set = {1'b0, 1'b1, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
 
   axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
+  */
 endtask: test_asg
 
 
