@@ -387,7 +387,7 @@ $(function() {
             SM.sendParameters2("gen2_enable");
             setTimeout(OBJ.adcInitData, 1000);
         }
-        if (_mode == "HW_LV_MODE") {
+        if (_mode == "HV_LV_MODE") {
             SM.parametersCache["hv_lv_mode"] = { value: _state };
             SM.sendParameters2("hv_lv_mode");
             setTimeout(OBJ.adcInitData, 1000);
@@ -490,7 +490,7 @@ $(function() {
     setInterval(OBJ.drawSignalsCH1, 100);
     setInterval(OBJ.drawSignalsCH2, 100);
 
-    $('.flipswitch').change(function() {
+    $('.man_flipswitch').change(function() {
         $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
         OBJ.amSetMode($(this).attr('id'), $(this).is(':checked'));
 

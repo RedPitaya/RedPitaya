@@ -23,6 +23,7 @@ $(function() {
     OBJ.zoomMode = false;
     OBJ.cursor_x1_Pos = undefined;
     OBJ.cursor_x2_Pos = undefined;
+    OBJ.filterHvLv = false;
 
     OBJ.filterSetModel = function(_model) {
         if (OBJ.filterModel === undefined) {
@@ -41,6 +42,12 @@ $(function() {
         OBJ.filterCalibChange = false;
         SM.parametersCache["calib_sig"] = { value: 100 };
         SM.sendParameters();
+        $('.filter_flipswitch').prop('checked', false);
+        OBJ.filterHvLv = false;
+        if (OBJ.filterGraphCache !== undefined) {
+            delete OBJ.filterGraphCache;
+            OBJ.filterGraphCache = undefined;
+        }
     }
 
 
@@ -52,7 +59,10 @@ $(function() {
 
         OBJ.filterGraphCache = {};
         OBJ.filterGraphCache.elem = $('<div id="bode_plot_filt" class="plot" style="width:100%;height:100%;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_filt');
-
+        var max_value = 1;
+        if (OBJ.filterHvLv) {
+            max_value = 10;
+        }
 
         var options = {
             series: {
@@ -60,8 +70,8 @@ $(function() {
             },
             yaxes: [{
                 show: true,
-                min: -1,
-                max: 1,
+                min: -1 * max_value,
+                max: max_value,
             }],
             xaxis: {
                 show: false,
@@ -215,7 +225,6 @@ $(function() {
         }
     }
 
-
     // OBJ.amSetCh1GainADC = function(_value) {
     //     $("#CH1_GAIN").val(_value.value);
     // }
@@ -248,33 +257,25 @@ $(function() {
     //     $("#CH2_DAC_OFFSET").val(_value.value);
     // }
 
-    // OBJ.amSetMode = function(_mode, _state) {
-    //     if (_mode == "dac_gain") {
-    //         SM.parametersCache["gen_gain"] = { value: _state };
-    //         SM.sendParameters2("gen_gain");
-    //         setTimeout(OBJ.filterInitData, 1000);
-    //     }
-    //     if (_mode == "ch1_dac_enable") {
-    //         SM.parametersCache["gen1_enable"] = { value: _state };
-    //         SM.sendParameters2("gen1_enable");
-    //         setTimeout(OBJ.filterInitData, 1000);
-    //     }
-    //     if (_mode == "ch2_dac_enable") {
-    //         SM.parametersCache["gen2_enable"] = { value: _state };
-    //         SM.sendParameters2("gen2_enable");
-    //         setTimeout(OBJ.filterInitData, 1000);
-    //     }
-    //     if (_mode == "HW_LV_MODE") {
-    //         SM.parametersCache["hv_lv_mode"] = { value: _state };
-    //         SM.sendParameters2("hv_lv_mode");
-    //         setTimeout(OBJ.filterInitData, 1000);
-    //     }
-    //     if (_mode == "AC_DC_MODE") {
-    //         SM.parametersCache["ac_dc_mode"] = { value: _state };
-    //         SM.sendParameters2("ac_dc_mode");
-    //         setTimeout(OBJ.filterInitData, 1000);
-    //     }
-    // }
+    OBJ.filterSetMode = function(_mode, _state) {
+        if (_mode == "FILTER_CHANNEL") {
+            SM.parametersCache["adc_channel"] = { value: _state };
+            SM.sendParameters2("adc_channel");
+        }
+        if (_mode == "FILTER_HV_LV_MODE") {
+            SM.parametersCache["filter_hv_lv_mode"] = { value: _state };
+            SM.sendParameters2("filter_hv_lv_mode");
+            OBJ.filterHvLv = _state;
+            if (OBJ.filterGraphCache !== undefined) {
+                delete OBJ.filterGraphCache;
+                OBJ.filterGraphCache = undefined;
+            }
+        }
+    }
+
+    OBJ.filterSetHyst = function(_value) {
+        $("#FILTER_HYST").val(_value.value);
+    }
 
     // OBJ.amSetNewCalib = function(_mode, _new_val) {
     //     if (_mode == "CH1_ADC_OFF") {
@@ -372,16 +373,17 @@ $(function() {
         SM.sendParameters2("zoom_mode");
     });
 
-    // $('.flipswitch').change(function() {
-    //     $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
-    //     OBJ.amSetMode($(this).attr('id'), $(this).is(':checked'));
+    $('.filter_flipswitch').change(function() {
+        $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
+        OBJ.filterSetMode($(this).attr('id'), $(this).is(':checked'));
 
-    // }).trigger('change');
+    }).trigger('change');
 
 
     SM.param_callbacks["zoom_mode"] = OBJ.filtSetZoomMode;
     SM.param_callbacks["cursor_x1"] = OBJ.cursorX1;
     SM.param_callbacks["cursor_x2"] = OBJ.cursorX2;
+
 
     $('#cur_x1_arrow, #cur_x2_arrow').mouseenter(function(event) {
         SM.state.mouseover = true;
@@ -419,7 +421,7 @@ $(function() {
 
 
 
-    // SM.param_callbacks["gen1_offset"] = OBJ.amSetCh1GenOffset;
+    SM.param_callbacks["adc_hyst"] = OBJ.filterSetHyst;
     // SM.param_callbacks["gen1_amp"] = OBJ.amSetCh1GenAmp;
     // SM.param_callbacks["gen1_freq"] = OBJ.amSetCh1GenFreq;
 

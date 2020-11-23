@@ -57,6 +57,7 @@ class COscilloscope {
         void setZoomMode(bool enable);
         void setCursor1(float value);
         void setCursor2(float value);
+        void setHyst(float value);
         void setLV(); // 1:1
         void setHV(); // 1:20
         void setAcquireChannel(rp_channel_t _ch);
@@ -95,6 +96,7 @@ class COscilloscope {
             double           m_curCursor2;
             double           m_cursor1;
             double           m_cursor2;
+            float            m_hyst;
                 microseconds m_startTimeAni;
                 microseconds m_lastTimeAni;
             std::atomic_bool m_zoomMode;

@@ -41,8 +41,9 @@ m_mode(0),
 m_channel(RP_CH_1),
 m_mutex(),
 m_funcSelector(),
-m_cursor1(0.3),
-m_cursor2(0.7)
+m_cursor1(0),
+m_cursor2(1),
+m_hyst(0.01)
 {
     m_OscThreadRunState = false;
     m_zoomMode = false;
@@ -96,6 +97,12 @@ void COscilloscope::startSquare(uint32_t _decimation){
 void COscilloscope::setAcquireChannel(rp_channel_t _ch){
     pthread_mutex_lock(&m_funcSelector);
     m_channel = _ch;
+    pthread_mutex_unlock(&m_funcSelector);
+}
+
+void COscilloscope::setHyst(float _value){
+    pthread_mutex_lock(&m_funcSelector);
+    m_hyst = _value;
     pthread_mutex_unlock(&m_funcSelector);
 }
 
@@ -214,7 +221,7 @@ void COscilloscope::acquireSquare(){
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
     rp_AcqSetDecimationFactor(m_decimationSq);
     rp_AcqSetTriggerDelay( ADC_BUFFER_SIZE/4.0);
-    rp_AcqSetTriggerHyst(0.01);
+    rp_AcqSetTriggerHyst(m_hyst);
     rp_AcqStart();
     uint32_t time = (double)(ADC_BUFFER_SIZE / 4) * ((double)m_decimationSq / ADC_SAMPLE_RATE) * 1000000;
     std::this_thread::sleep_for(std::chrono::microseconds(time == 0 ? 1 : time));
@@ -268,13 +275,13 @@ void COscilloscope::acquireSquare(){
         if (m_zoomMode){
             m_curCursor1 += min_dt;
             m_curCursor2 -= max_dt;
-            if (m_curCursor1 > min_cursor) m_curCursor1 = min_cursor;
-            if (m_curCursor2 < max_cursor) m_curCursor2 = max_cursor;
+            if (m_curCursor1 > min_cursor) { m_curCursor1 = min_cursor; m_curCursor2 = max_cursor; }
+            if (m_curCursor2 < max_cursor) { m_curCursor1 = min_cursor; m_curCursor2 = max_cursor; }
         }else{
             m_curCursor1 -= min_dt;
             m_curCursor2 += max_dt;
-            if (m_curCursor1 < 0 || m_curCursor1 > 1) m_curCursor1 = 0;
-            if (m_curCursor2 > 1 || m_curCursor2 < 0) m_curCursor2 = 1;
+            if (m_curCursor1 < 0 || m_curCursor1 > 1) { m_curCursor1 = 0; m_curCursor2 = 1; }
+            if (m_curCursor2 > 1 || m_curCursor2 < 0) { m_curCursor1 = 0; m_curCursor2 = 1; }
         }
         char z[1000];
         sprintf(z,"%lf %lf dt %lf %lf %lf %lf\n",m_curCursor1, m_curCursor2 ,min_dt ,max_dt,static_cast<double>(time_diff.count()),dt);
