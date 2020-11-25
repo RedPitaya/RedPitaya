@@ -287,10 +287,13 @@ sys_bus_if   sys [8-1:0] (.clk (adc_clk2d), .rstn (adc_rstn));
 
 // silence unused busses
 generate
-for (genvar i=1; i<8; i++) begin: for_sys
+for (genvar i=3; i<8; i++) begin: for_sys
   sys_bus_stub sys_bus_stub_1_7 (sys[i]);
 end: for_sys
 endgenerate
+  sys_bus_stub sys_bus_stub_0 (sys[0]);
+  sys_bus_stub sys_bus_stub_0 (sys[1]);
+
 
 axi4_if #(.DW (32), .AW (32), .IW (12), .LW (4)) axi_gp (.ACLK (ps_sys.clk), .ARESETn (ps_sys.rstn));
 
@@ -362,13 +365,13 @@ i_hk (
   .exp_n_dat_o     (           exp_n_out ),
   .exp_n_dir_o     (           exp_n_dir ),
    // System bus
-  .sys_addr        (sys[0].addr ),
-  .sys_wdata       (sys[0].wdata),
-  .sys_wen         (sys[0].wen  ),
-  .sys_ren         (sys[0].ren  ),
-  .sys_rdata       (sys[0].rdata),
-  .sys_err         (sys[0].err  ),
-  .sys_ack         (sys[0].ack  )
+  .sys_addr        (sys[2].addr ),
+  .sys_wdata       (sys[2].wdata),
+  .sys_wen         (sys[2].wen  ),
+  .sys_ren         (sys[2].ren  ),
+  .sys_rdata       (sys[2].rdata),
+  .sys_err         (sys[2].err  ),
+  .sys_ack         (sys[2].ack  )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
