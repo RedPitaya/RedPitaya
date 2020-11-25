@@ -86,24 +86,6 @@
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
                             <ul class="nav navbar-nav">
-                                <li id="B_F_CLOSE_CONT" style="display: none">
-                                    <a id="B_CLOSE_FILTER_CALIB" href="#" style="color:#ff5512">CLOSE</a>
-                                </li>
-                            </ul>
-                        </ul>
-                    </div>
-                    <div class="collapse navbar-collapse">
-                        <ul class="nav navbar-nav">
-                            <ul class="nav navbar-nav">
-                                <li id="B_F_APPLY_CONT" style="display: none">
-                                    <a id="B_F_APPLY" href="#" style="color:#12ff12">APPLY</a>
-                                </li>
-                            </ul>
-                        </ul>
-                    </div>
-                    <div class="collapse navbar-collapse">
-                        <ul class="nav navbar-nav">
-                            <ul class="nav navbar-nav">
                                 <li id="B_AUTO_CLOSE_CONT" style="display: none">
                                     <a id="B_CANCEL_CALIB" href="#" style="color:#ff5512">CLOSE</a>
                                 </li>
@@ -676,16 +658,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- <div class="container_inline" align=center>
-                        <div style="
-                                width: 140px;
-                                height: 40px;
-                                margin: 10px;">
-                            <li class="run_buttons" id="B_CLOSE_ADC_CALIB" style="width: 100%;height: 25px">
-                                <a style="display: block;font-size: 12pt;">CLOSE</a>
-                            </li>
-                        </div>
-                    </div> -->
                 </div>
                 <div id="filter_mode_body" style="display: none;">
                     <div align="center">
@@ -775,6 +747,51 @@
                                         <div style="width: 50px;text-align: right;margin-top: 5px;">KK:</div>
                                         <div style="width: 180px;margin-top: 5px;">
                                             <input id="FILTER_KK" type="text" size="5" style="width: 160px;margin-left: 10px;" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding-bottom: 10px;padding-top: 5px;margin-top: 5px;width: 248px;">
+                                    <label style="display: flow-root;">DAC</label>
+                                    <div style="margin-top:0px">
+                                        <label style="display: flow-root;">CH1</label>
+                                        <div id="filter_channel" style="
+                                                    width: 100px;
+                                                    height: 40px;
+                                                    margin-top: 0px;
+                                                    margin-left: 10px;
+                                                    margin-right: 10px;
+                                                    vertical-align: top;">
+                                            <input id="FILTER_DAC_CH1" type="checkbox" class="filter_flipswitch flipswitch" data-on="ON" data-off="OFF" />
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:0px">
+                                        <label style="display: flow-root;">CH2</label>
+                                        <div id="filter_channel" style="
+                                                    width: 100px;
+                                                    height: 40px;
+                                                    margin-top: 0px;
+                                                    margin-left: 10px;
+                                                    margin-right: 10px;
+                                                    vertical-align: top;">
+                                            <input id="FILTER_DAC_CH2" type="checkbox" class="filter_flipswitch flipswitch" data-on="ON" data-off="OFF" />
+                                        </div>
+                                    </div>
+                                    <div class="container_inline">
+                                        <div style="width: 80px;text-align: right;margin-top: 5px;">Freq (Hz):</div>
+                                        <div style="width: 160px;margin-top: 5px;">
+                                            <input id="FILTER_DAC_FREQ" type="text" size="5" style="width: 130px;margin-left: 10px;" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="container_inline">
+                                        <div style="width: 80px;text-align: right;margin-top: 5px;">Amp (V):</div>
+                                        <div style="width: 160px;margin-top: 5px;">
+                                            <input id="FILTER_DAC_AMPL" type="text" size="5" style="width: 130px;margin-left: 10px;" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="container_inline">
+                                        <div style="width: 80px;text-align: right;margin-top: 5px;">Offset (V):</div>
+                                        <div style="width: 160px;margin-top: 5px;">
+                                            <input id="FILTER_DAC_OFF" type="text" size="5" style="width: 130px;margin-left: 10px;" value="0">
                                         </div>
                                     </div>
                                 </div>

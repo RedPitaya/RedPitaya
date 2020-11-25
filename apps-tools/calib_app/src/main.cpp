@@ -81,8 +81,8 @@ CIntParameter		calib_sig(    "calib_sig", 	CBaseParameter::RW,   0 ,0,	-21474836
 CBooleanParameter 	hv_lv_mode(	  "hv_lv_mode", 	        CBaseParameter::RW, false,0);
 
 // GENERATOR SETUP
-CBooleanParameter 	gen1_enable(  "gen1_enable", 	        CBaseParameter::RW, false,0);
-CBooleanParameter 	gen2_enable(  "gen2_enable", 	        CBaseParameter::RW, false,0);
+CBooleanParameter 	gen1_enable(  "gen1_enable", 	        CBaseParameter::RW,   false,0);
+CBooleanParameter 	gen2_enable(  "gen2_enable", 	        CBaseParameter::RW,   false,0);
 CIntParameter		gen1_type(    "gen1_type", 				CBaseParameter::RW,   0 ,0,	0, 10);
 CIntParameter		gen2_type(    "gen2_type", 				CBaseParameter::RW,   0 ,0,	0, 10);	
 CFloatParameter		gen1_offset(  "gen1_offset",			CBaseParameter::RW,   0 ,0,	-1, 1);
@@ -106,7 +106,16 @@ CBooleanParameter 	zoom_mode(    		"zoom_mode", 	        	CBaseParameter::RW,   
 CIntParameter		adc_decimation(     "adc_decimation", 			CBaseParameter::RW,   1 ,0,	1, 65535);
 CIntParameter		adc_channel(     	"adc_channel", 				CBaseParameter::RW,   0 ,0,	0, 1);
 CBooleanParameter 	filter_hv_lv_mode(	"filter_hv_lv_mode", 	    CBaseParameter::RW, false,0);
-CFloatParameter		adc_hyst(    		"adc_hyst",					CBaseParameter::RW,   0.01 ,0,	0, 1);
+CFloatParameter		adc_hyst(    		"adc_hyst",					CBaseParameter::RW,   0.05 ,0,	0, 1);
+CBooleanParameter 	filt_gen1_enable(	"filt_gen1_enable", 		CBaseParameter::RW,   false,0);
+CBooleanParameter 	filt_gen2_enable(	"filt_gen2_enable", 		CBaseParameter::RW,   false,0);
+CFloatParameter		filt_gen_offset(  	"filt_gen_offset",			CBaseParameter::RW,   0 	,0,	-1, 1);
+CFloatParameter		filt_gen_amp(  		"filt_gen_amp",				CBaseParameter::RW,   0.9   ,0,	0.001, 1);
+CFloatParameter		filt_gen_freq(  	"filt_gen_freq",			CBaseParameter::RW,   1000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
+CUIntParameter		filt_aa(	     	"filt_aa", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
+CUIntParameter		filt_bb(	     	"filt_bb", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
+CUIntParameter		filt_pp(	     	"filt_pp", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
+CUIntParameter		filt_kk(	     	"filt_kk", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
 #endif
 
 void PrintLogInFile(const char *message){
@@ -119,6 +128,7 @@ void PrintLogInFile(const char *message){
 #endif
 }
 
+void sendFilterCalibValues(rp_channel_t _ch);
 
 //Application description
 const char *rp_app_desc(void)
@@ -275,6 +285,38 @@ void getNewCalib(){
 	}
 }
 
+void getNewFilterCalib(){
+	bool update = false;
+	if (filt_aa.IsNewValue()){
+		filt_aa.Update();
+		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_AA_CH1 : F_AA_CH2  ,filt_aa.Value());
+		update = true;
+	}
+	
+	if (filt_bb.IsNewValue()){
+		filt_bb.Update();
+		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_BB_CH1 : F_BB_CH2  ,filt_bb.Value());
+		update = true;
+	}
+
+	if (filt_pp.IsNewValue()){
+		filt_pp.Update();
+		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_PP_CH1 : F_PP_CH2  ,filt_pp.Value());
+		update = true;
+	}
+
+	if (filt_kk.IsNewValue()){
+		filt_kk.Update();
+		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_KK_CH1 : F_KK_CH2  ,filt_kk.Value());
+		update = true;
+	}
+
+	if (update){
+		g_calib_man->updateCalib();
+		sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+	}
+}
+
 void setupGen(){
 	if (gen1_enable.IsNewValue()){
 		gen1_enable.Update();
@@ -327,6 +369,36 @@ void setupGen(){
 	}
 }
 
+void setupGenFilter(){
+	if (filt_gen1_enable.IsNewValue()){
+		filt_gen1_enable.Update();
+		g_calib_man->enableGen(RP_CH_1,filt_gen1_enable.Value());
+	}
+	
+	if (filt_gen2_enable.IsNewValue()){
+		filt_gen2_enable.Update();
+		g_calib_man->enableGen(RP_CH_2,filt_gen2_enable.Value());
+	}
+
+	if (filt_gen_freq.IsNewValue()){
+		filt_gen_freq.Update();
+		g_calib_man->setFreq(RP_CH_1,filt_gen_freq.Value());
+		g_calib_man->setFreq(RP_CH_2,filt_gen_freq.Value());
+	}
+
+	if (filt_gen_amp.IsNewValue()){
+		filt_gen_amp.Update();
+		g_calib_man->setAmp(RP_CH_1,filt_gen_amp.Value());
+		g_calib_man->setAmp(RP_CH_2,filt_gen_amp.Value());
+	}
+
+	if (filt_gen_offset.IsNewValue()){
+		filt_gen_offset.Update();
+		g_calib_man->setOffset(RP_CH_1,filt_gen_offset.Value());
+		g_calib_man->setOffset(RP_CH_2,filt_gen_offset.Value());
+	}
+}
+
 void updateFilterModeParameter(){
 	if (cursor_x1.IsNewValue()){
 		cursor_x1.Update();
@@ -351,17 +423,26 @@ void updateFilterModeParameter(){
 	if (adc_channel.IsNewValue()){
 		adc_channel.Update();
 		g_calib_man->changeChannel(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2 );
+		sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 	}
 
 	if (filter_hv_lv_mode.IsNewValue()){
 		filter_hv_lv_mode.Update();
 		g_calib_man->setModeLV_HV(filter_hv_lv_mode.Value() ? RP_HIGH :RP_LOW);
+		sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 	}
 
 	if (adc_hyst.IsNewValue()){
 		adc_hyst.Update();
 		g_acq->setHyst(adc_hyst.Value());
 	}
+}
+
+void sendFilterCalibValues(rp_channel_t _ch){
+	filt_aa.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_AA_CH1 : F_AA_CH2));
+	filt_bb.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_BB_CH1 : F_BB_CH2));
+	filt_pp.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_PP_CH1 : F_PP_CH2));
+	filt_kk.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_KK_CH1 : F_KK_CH2));
 }
 
 //Update parameters
@@ -439,7 +520,17 @@ void UpdateParams(void)
 				zoom_mode.SendValue(false);
 				filter_hv_lv_mode.SendValue(false);
 				adc_channel.SendValue(RP_CH_1);
-				adc_hyst.SendValue(0.01);
+				adc_hyst.SendValue(0.05);
+				g_calib_man->setOffset(RP_CH_1,filt_gen_offset.Value());
+				g_calib_man->setFreq(RP_CH_1,filt_gen_freq.Value());
+				g_calib_man->setAmp(RP_CH_1,filt_gen_amp.Value());	
+				g_calib_man->setOffset(RP_CH_2,filt_gen_offset.Value());
+				g_calib_man->setFreq(RP_CH_2,filt_gen_freq.Value());
+				g_calib_man->setAmp(RP_CH_2,filt_gen_amp.Value());	
+				filt_gen_freq.SendValue(filt_gen_freq.Value());
+				filt_gen_amp.SendValue(filt_gen_amp.Value());
+				filt_gen_offset.SendValue(filt_gen_offset.Value());
+				sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 			}
 #endif		
 		}
@@ -465,7 +556,9 @@ void UpdateParams(void)
 		getNewCalib();
 		setupGen();
 #ifdef Z10
+		setupGenFilter();
 		updateFilterModeParameter();
+		getNewFilterCalib();
 #endif
 
 	}catch (std::exception& e)

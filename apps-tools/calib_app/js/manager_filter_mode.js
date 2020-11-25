@@ -24,6 +24,11 @@ $(function() {
     OBJ.cursor_x1_Pos = undefined;
     OBJ.cursor_x2_Pos = undefined;
     OBJ.filterHvLv = false;
+    OBJ.filterHexMode = false;
+    OBJ.filterAA = 0;
+    OBJ.filterBB = 0;
+    OBJ.filterPP = 0;
+    OBJ.filterKK = 0;
 
     OBJ.filterSetModel = function(_model) {
         if (OBJ.filterModel === undefined) {
@@ -44,6 +49,7 @@ $(function() {
         SM.sendParameters();
         $('.filter_flipswitch').prop('checked', false);
         OBJ.filterHvLv = false;
+        OBJ.filterHexMode = false;
         if (OBJ.filterGraphCache !== undefined) {
             delete OBJ.filterGraphCache;
             OBJ.filterGraphCache = undefined;
@@ -225,38 +231,6 @@ $(function() {
         }
     }
 
-    // OBJ.amSetCh1GainADC = function(_value) {
-    //     $("#CH1_GAIN").val(_value.value);
-    // }
-
-    // OBJ.amSetCh2GainADC = function(_value) {
-    //     $("#CH2_GAIN").val(_value.value);
-    // }
-
-    // OBJ.amSetCh1OffADC = function(_value) {
-    //     $("#CH1_OFFSET").val(_value.value);
-    // }
-
-    // OBJ.amSetCh2OffADC = function(_value) {
-    //     $("#CH2_OFFSET").val(_value.value);
-    // }
-
-    // OBJ.amSetCh1GainDAC = function(_value) {
-    //     $("#CH1_DAC_GAIN").val(_value.value);
-    // }
-
-    // OBJ.amSetCh2GainDAC = function(_value) {
-    //     $("#CH2_DAC_GAIN").val(_value.value);
-    // }
-
-    // OBJ.amSetCh1OffDAC = function(_value) {
-    //     $("#CH1_DAC_OFFSET").val(_value.value);
-    // }
-
-    // OBJ.amSetCh2OffDAC = function(_value) {
-    //     $("#CH2_DAC_OFFSET").val(_value.value);
-    // }
-
     OBJ.filterSetMode = function(_mode, _state) {
         if (_mode == "FILTER_CHANNEL") {
             SM.parametersCache["adc_channel"] = { value: _state };
@@ -270,6 +244,18 @@ $(function() {
                 delete OBJ.filterGraphCache;
                 OBJ.filterGraphCache = undefined;
             }
+        }
+        if (_mode == "FILTER_DEC_HEX") {
+            OBJ.filterHexMode = _state;
+            OBJ.filterUpdateCoff();
+        }
+        if (_mode == "FILTER_DAC_CH1") {
+            SM.parametersCache["filt_gen1_enable"] = { value: _state };
+            SM.sendParameters2("filt_gen1_enable");
+        }
+        if (_mode == "FILTER_DAC_CH2") {
+            SM.parametersCache["filt_gen2_enable"] = { value: _state };
+            SM.sendParameters2("filt_gen2_enable");
         }
     }
 
@@ -327,37 +313,53 @@ $(function() {
     //     }
     // }
 
-    // OBJ.amSetCh1GenType = function(_value) {
-    //     $("#CH1_DAC_TYPE").val(_value.value);
-    // }
+    OBJ.filterSetAA = function(_value) {
+        OBJ.filterAA = _value.value;
+        $("#FILTER_AA").val((OBJ.filterHexMode ? "0x" : "") + OBJ.filterAA.toString(OBJ.filterHexMode ? 16 : 10));
 
-    // OBJ.amSetCh2GenType = function(_value) {
-    //     $("#CH2_DAC_TYPE").val(_value.value);
-    // }
+    }
 
-    // OBJ.amSetCh1GenFreq = function(_value) {
-    //     $("#CH1_DAC_FREQ").val(_value.value);
-    // }
+    OBJ.filterSetBB = function(_value) {
+        OBJ.filterBB = _value.value;
+        $("#FILTER_BB").val((OBJ.filterHexMode ? "0x" : "") + OBJ.filterBB.toString(OBJ.filterHexMode ? 16 : 10));
+    }
 
-    // OBJ.amSetCh2GenFreq = function(_value) {
-    //     $("#CH2_DAC_FREQ").val(_value.value);
-    // }
+    OBJ.filterSetPP = function(_value) {
+        OBJ.filterPP = _value.value;
+        $("#FILTER_PP").val((OBJ.filterHexMode ? "0x" : "") + OBJ.filterPP.toString(OBJ.filterHexMode ? 16 : 10));
+    }
 
-    // OBJ.amSetCh1GenAmp = function(_value) {
-    //     $("#CH1_DAC_AMPL").val(_value.value);
-    // }
+    OBJ.filterSetKK = function(_value) {
+        OBJ.filterKK = _value.value;
+        $("#FILTER_KK").val((OBJ.filterHexMode ? "0x" : "") + OBJ.filterKK.toString(OBJ.filterHexMode ? 16 : 10));
+    }
 
-    // OBJ.amSetCh2GenAmp = function(_value) {
-    //     $("#CH2_DAC_AMPL").val(_value.value);
-    // }
+    OBJ.filterUpdateCoff = function() {
+        if (OBJ.filterHexMode) {
+            $("#FILTER_AA").val("0x" + OBJ.filterAA.toString(16));
+            $("#FILTER_BB").val("0x" + OBJ.filterBB.toString(16));
+            $("#FILTER_PP").val("0x" + OBJ.filterPP.toString(16));
+            $("#FILTER_KK").val("0x" + OBJ.filterKK.toString(16));
+        } else {
+            $("#FILTER_AA").val(OBJ.filterAA);
+            $("#FILTER_BB").val(OBJ.filterBB);
+            $("#FILTER_PP").val(OBJ.filterPP);
+            $("#FILTER_KK").val(OBJ.filterKK);
+        }
+    }
 
-    // OBJ.amSetCh1GenOffset = function(_value) {
-    //     $("#CH1_DAC_OFF").val(_value.value);
-    // }
 
-    // OBJ.amSetCh2GenOffset = function(_value) {
-    //     $("#CH2_DAC_OFF").val(_value.value);
-    // }
+    OBJ.filterSetChGenFreq = function(_value) {
+        $("#FILTER_DAC_FREQ").val(_value.value);
+    }
+
+    OBJ.filterSetChGenAmp = function(_value) {
+        $("#FILTER_DAC_AMPL").val(_value.value);
+    }
+
+    OBJ.filterSetChGenOffset = function(_value) {
+        $("#FILTER_DAC_OFF").val(_value.value);
+    }
 
 }(window.OBJ = window.OBJ || {}, jQuery));
 
@@ -422,86 +424,13 @@ $(function() {
 
 
     SM.param_callbacks["adc_hyst"] = OBJ.filterSetHyst;
-    // SM.param_callbacks["gen1_amp"] = OBJ.amSetCh1GenAmp;
-    // SM.param_callbacks["gen1_freq"] = OBJ.amSetCh1GenFreq;
+    SM.param_callbacks["filt_gen_offset"] = OBJ.filterSetChGenOffset;
+    SM.param_callbacks["filt_gen_amp"] = OBJ.filterSetChGenAmp;
+    SM.param_callbacks["filt_gen_freq"] = OBJ.filterSetChGenFreq;
 
-    // SM.param_callbacks["gen2_type"] = OBJ.amSetCh2GenType;
-    // SM.param_callbacks["gen2_offset"] = OBJ.amSetCh2GenOffset;
-    // SM.param_callbacks["gen2_amp"] = OBJ.amSetCh2GenAmp;
-    // SM.param_callbacks["gen2_freq"] = OBJ.amSetCh2GenFreq;
-
-    // SM.param_callbacks["ch1_gain_adc"] = OBJ.amSetCh1GainADC;
-    // SM.param_callbacks["ch2_gain_adc"] = OBJ.amSetCh2GainADC;
-    // SM.param_callbacks["ch1_off_adc"] = OBJ.amSetCh1OffADC;
-    // SM.param_callbacks["ch2_off_adc"] = OBJ.amSetCh2OffADC;
-
-    // SM.param_callbacks["ch1_gain_dac"] = OBJ.amSetCh1GainDAC;
-    // SM.param_callbacks["ch2_gain_dac"] = OBJ.amSetCh2GainDAC;
-    // SM.param_callbacks["ch1_off_dac"] = OBJ.amSetCh1OffDAC;
-    // SM.param_callbacks["ch2_off_dac"] = OBJ.amSetCh2OffDAC;
-
-    // $('#B_CH1_SUB_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_ADC_OFF", parseInt($("#B_CH1_VALUE_OFF").val()) * -1);
-    // });
-
-    // $('#B_CH1_ADD_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_ADC_OFF", parseInt($("#B_CH1_VALUE_OFF").val()));
-    // });
-
-    // $('#B_CH2_SUB_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_ADC_OFF", parseInt($("#B_CH2_VALUE_OFF").val() * -1));
-    // });
-
-    // $('#B_CH2_ADD_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_ADC_OFF", parseInt($("#B_CH2_VALUE_OFF").val()));
-    // });
-
-    // $('#B_CH1_SUB_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_ADC_GAIN", parseInt($("#B_CH1_VALUE_GAIN").val()) * -1);
-    // });
-
-    // $('#B_CH1_ADD_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_ADC_GAIN", parseInt($("#B_CH1_VALUE_GAIN").val()));
-    // });
-
-    // $('#B_CH2_SUB_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_ADC_GAIN", parseInt($("#B_CH2_VALUE_GAIN").val() * -1));
-    // });
-
-    // $('#B_CH2_ADD_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_ADC_GAIN", parseInt($("#B_CH2_VALUE_GAIN").val()));
-    // });
-
-    // $('#B_CH1_DAC_SUB_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_DAC_OFF", parseInt($("#B_CH1_DAC_VALUE_OFF").val()) * -1);
-    // });
-
-    // $('#B_CH1_DAC_ADD_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_DAC_OFF", parseInt($("#B_CH1_DAC_VALUE_OFF").val()));
-    // });
-
-    // $('#B_CH2_DAC_SUB_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_DAC_OFF", parseInt($("#B_CH2_DAC_VALUE_OFF").val() * -1));
-    // });
-
-    // $('#B_CH2_DAC_ADD_OFF').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_DAC_OFF", parseInt($("#B_CH2_DAC_VALUE_OFF").val()));
-    // });
-
-    // $('#B_CH1_DAC_SUB_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_DAC_GAIN", parseInt($("#B_CH1_DAC_VALUE_GAIN").val()) * -1);
-    // });
-
-    // $('#B_CH1_DAC_ADD_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH1_DAC_GAIN", parseInt($("#B_CH1_DAC_VALUE_GAIN").val()));
-    // });
-
-    // $('#B_CH2_DAC_SUB_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_DAC_GAIN", parseInt($("#B_CH2_DAC_VALUE_GAIN").val() * -1));
-    // });
-
-    // $('#B_CH2_DAC_ADD_GAIN').on('click', function(ev) {
-    //     OBJ.amSetNewCalib("CH2_DAC_GAIN", parseInt($("#B_CH2_DAC_VALUE_GAIN").val()));
-    // });
+    SM.param_callbacks["filt_aa"] = OBJ.filterSetAA;
+    SM.param_callbacks["filt_bb"] = OBJ.filterSetBB;
+    SM.param_callbacks["filt_pp"] = OBJ.filterSetPP;
+    SM.param_callbacks["filt_kk"] = OBJ.filterSetKK;
 
 });

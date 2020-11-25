@@ -17,8 +17,6 @@
             $("#main_menu_body").show();
             $("#B_APPLY_CONT").hide();
             $("#B_CLOSE_CONT").hide();
-            $("#B_F_APPLY_CONT").hide();
-            $("#B_F_CLOSE_CONT").hide();
             $("#B_AUTO_CLOSE_CONT").hide();
         } else {
             $("#main_menu_body").hide();
@@ -66,8 +64,8 @@
 
             if (_visible) {
                 $("#filter_mode_body").show();
-                $("#B_F_APPLY_CONT").show();
-                $("#B_F_CLOSE_CONT").show();
+                $("#B_APPLY_CONT").show();
+                $("#B_CLOSE_CONT").show();
             } else {
                 $("#filter_mode_body").hide();
             }
@@ -177,6 +175,7 @@ $(function() {
         SM.parametersCache["calib_sig"] = { value: 5 };
         SM.sendParameters();
         OBJ.adcCalibChange = false;
+        OBJ.filterCalibChange = false;
     });
 
     $('#B_RESET_DEFAULT').on('click', function(ev) {
@@ -213,7 +212,7 @@ $(function() {
     });
 
     $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
-        if (OBJ.adcCalibChange === true) {
+        if (OBJ.adcCalibChange || OBJ.filterCalibChange) {
             $("#dialog_reset_text").text("Save new parameters?");
             $('#reset_ok_btn').on('click', function() {
                 SM.parametersCache["calib_sig"] = { value: 5 };
@@ -230,30 +229,8 @@ $(function() {
         }
     });
 
-    $('#B_CLOSE_FILTER_CALIB').on('click', function(ev) {
-        if (OBJ.filterCalibChange === true) {
-            $("#dialog_reset_text").text("Save new parameters?");
-            $('#reset_ok_btn').on('click', function() {
-                // SM.parametersCache["calib_sig"] = { value: 5 };
-                // SM.sendParameters();
-                OBJ.closeManualMode();
-            });
-            $('#reset_cancel_btn').on('click', function() {
-                OBJ.closeManualMode();
-            });
-
-            $("#dialog_reset").modal('show');
-        } else {
-            OBJ.closeManualMode();
-        }
-    });
-
-
-
-
 
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.setModel;
-
 
 
 

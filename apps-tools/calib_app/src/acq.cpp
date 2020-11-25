@@ -245,6 +245,10 @@ void COscilloscope::acquireSquare(){
             timeout--;
         }
     }
+    if (timeout == 0){
+        rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
+        timeout = 1000;
+    }
     while(!fillState && (timeout > 0)){
         rp_AcqGetBufferFillState(&fillState);
         std::this_thread::sleep_for(std::chrono::microseconds(10));
