@@ -37,7 +37,8 @@ CCalibMan::Ptr     g_calib_man;
 #endif
 //#define DEBUG_MODE
 
-
+#define DEFAULT_CURSOR_1 0.2
+#define DEFAULT_CURSOR_2 0.4
 //Parameters
 
 CStringParameter 	redpitaya_model("RP_MODEL_STR", 	CBaseParameter::RO, RP_MODEL, 10);
@@ -97,11 +98,15 @@ CBooleanParameter 	ac_dc_mode(	  "ac_dc_mode", 	        CBaseParameter::RW, fals
 #endif
 
 #ifdef Z10
-CIntParameter		adc_mode(     "adc_acquire_mode", 		CBaseParameter::RW,   0 ,0,	0, 10);
-CFloatSignal 		waveSignal(   "wave", 					SCREEN_BUFF_SIZE,     0.0f);
-CFloatParameter		cursor_x1(    "cursor_x1",				CBaseParameter::RW,   0.2 ,0,	0, 1);
-CFloatParameter		cursor_x2(    "cursor_x2",				CBaseParameter::RW,   0.4 ,0,	0, 1);
-CBooleanParameter 	zoom_mode(    "zoom_mode", 	        	CBaseParameter::RW,   false, 0);
+CIntParameter		adc_mode(     		"adc_acquire_mode", 		CBaseParameter::RW,   0 ,0,	0, 10);
+CFloatSignal 		waveSignal(   		"wave", 					SCREEN_BUFF_SIZE,     0.0f);
+CFloatParameter		cursor_x1(    		"cursor_x1",				CBaseParameter::RW,   DEFAULT_CURSOR_1 ,0,	0, 1);
+CFloatParameter		cursor_x2(    		"cursor_x2",				CBaseParameter::RW,   DEFAULT_CURSOR_2 ,0,	0, 1);
+CBooleanParameter 	zoom_mode(    		"zoom_mode", 	        	CBaseParameter::RW,   false, 0);
+CIntParameter		adc_decimation(     "adc_decimation", 			CBaseParameter::RW,   1 ,0,	1, 65535);
+CIntParameter		adc_channel(     	"adc_channel", 				CBaseParameter::RW,   0 ,0,	0, 1);
+CBooleanParameter 	filter_hv_lv_mode(	"filter_hv_lv_mode", 	    CBaseParameter::RW, false,0);
+CFloatParameter		adc_hyst(    		"adc_hyst",					CBaseParameter::RW,   0.01 ,0,	0, 1);
 #endif
 
 void PrintLogInFile(const char *message){
@@ -134,6 +139,8 @@ int rp_app_init(void)
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
 	g_acq->start();
+	g_acq->setCursor1(cursor_x1.Value());
+	g_acq->setCursor2(cursor_x2.Value());
 	return 0;
 }
 
@@ -335,6 +342,26 @@ void updateFilterModeParameter(){
 		zoom_mode.Update();
 		g_acq->setZoomMode(zoom_mode.Value());
 	}
+
+	if (adc_decimation.IsNewValue()){
+		adc_decimation.Update();
+		g_calib_man->changeDecimation(adc_decimation.Value());
+	}
+
+	if (adc_channel.IsNewValue()){
+		adc_channel.Update();
+		g_calib_man->changeChannel(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2 );
+	}
+
+	if (filter_hv_lv_mode.IsNewValue()){
+		filter_hv_lv_mode.Update();
+		g_calib_man->setModeLV_HV(filter_hv_lv_mode.Value() ? RP_HIGH :RP_LOW);
+	}
+
+	if (adc_hyst.IsNewValue()){
+		adc_hyst.Update();
+		g_acq->setHyst(adc_hyst.Value());
+	}
 }
 
 //Update parameters
@@ -404,42 +431,34 @@ void UpdateParams(void)
 // FREQ CALIB
 #ifdef Z10
 			if (sig == 100){
-				g_calib_man->initSq();
+				g_calib_man->initSq(adc_decimation.Value());
+				adc_decimation.SendValue(adc_decimation.Value());
 				g_calib_man->readCalibEpprom();
-				cursor_x1.SendValue(0.2);
-				cursor_x2.SendValue(0.4);
+				cursor_x1.SendValue(DEFAULT_CURSOR_1);
+				cursor_x2.SendValue(DEFAULT_CURSOR_2);
 				zoom_mode.SendValue(false);
+				filter_hv_lv_mode.SendValue(false);
+				adc_channel.SendValue(RP_CH_1);
+				adc_hyst.SendValue(0.01);
 			}
 #endif		
 		}
 
 		if (hv_lv_mode.IsNewValue()){
 			hv_lv_mode.Update();
-			if (hv_lv_mode.Value()){
-				g_calib_man->setModeLV_HV(RP_HIGH);
-			}else{
-				g_calib_man->setModeLV_HV(RP_LOW);
-			}
+			g_calib_man->setModeLV_HV(hv_lv_mode.Value() ? RP_HIGH :RP_LOW);		
 			sendCalibInManualMode(true);
 		}
 #ifdef Z20_250_12
 		if (ac_dc_mode.IsNewValue()){
 			ac_dc_mode.Update();
-			if (ac_dc_mode.Value()){
-				g_calib_man->setModeAC_DC(RP_AC);
-			}else{
-				g_calib_man->setModeAC_DC(RP_DC);
-			}
+			g_calib_man->setModeAC_DC(ac_dc_mode.Value() ? RP_AC : RP_DC);		
 			sendCalibInManualMode(true);
 		}
 
 		if (gen_gain.IsNewValue()){
 			gen_gain.Update();
-			if (gen_gain.Value()){
-				g_calib_man->setGenGain(RP_GAIN_5X);
-			}else{
-				g_calib_man->setGenGain(RP_GAIN_1X);
-			}
+			g_calib_man->setGenGain(gen_gain.Value() ? RP_GAIN_5X : RP_GAIN_1X);
 			sendCalibInManualMode(true);
 		}
 #endif

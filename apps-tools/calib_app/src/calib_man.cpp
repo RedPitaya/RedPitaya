@@ -27,7 +27,8 @@ CCalibMan::Ptr CCalibMan::Create(COscilloscope::Ptr _acq)
 }
 
 CCalibMan::CCalibMan(COscilloscope::Ptr _acq):
-m_acq(_acq)
+m_acq(_acq),
+m_calibMode(0)
 {
     m_currentGain = RP_LOW;
 #ifdef Z20_250_12
@@ -54,11 +55,28 @@ void CCalibMan::init(){
     m_acq->setGenGainx1();
 #endif
     readCalib();
+    m_calibMode = 0;
 }
 
-void CCalibMan::initSq(){
-    m_acq->startSquare(1);
+void CCalibMan::initSq(int _decimation){
+    m_acq->startSquare(_decimation);
+	this->setModeLV_HV(RP_LOW);	
+	this->changeChannel(RP_CH_1);
+    m_acq->setHyst(0.01);
     readCalib();
+    m_calibMode = 1;
+}
+
+int CCalibMan::getCalibMode(){
+    return m_calibMode;
+}
+
+void CCalibMan::changeDecimation(int _decimation){
+    m_acq->startSquare(_decimation);
+}
+
+void CCalibMan::changeChannel(rp_channel_t _ch){
+    m_acq->setAcquireChannel(_ch);
 }
 
 int CCalibMan::readCalib(){

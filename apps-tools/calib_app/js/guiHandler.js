@@ -274,6 +274,20 @@ var gen2OffsetChange = function(event) {
     }
 }
 
+var filterDecimationChange = function(event) {
+    SM.parametersCache["adc_decimation"] = { value: $("#FILTER_DECIMATION").val() };
+    SM.sendParameters2("adc_decimation");
+    SM.parametersCache["zoom_mode"] = { value: false };
+    SM.sendParameters2("zoom_mode");
+}
+
+var filterChnageHyst = function(event) {
+    if (checkFloatParameters2("#FILTER_HYST", 0, 1) !== 0) {
+        SM.parametersCache["adc_hyst"] = { value: $("#FILTER_HYST").val() };
+        SM.sendParameters2("adc_hyst");
+    }
+}
+
 //Create callback
 var changeCallbacks = {}
 
@@ -298,7 +312,8 @@ changeCallbacks["CH2_DAC_TYPE"] = gen2TypeChange;
 changeCallbacks["CH2_DAC_FREQ"] = gen2FreqChange;
 changeCallbacks["CH2_DAC_AMPL"] = gen2AmpChange;
 changeCallbacks["CH2_DAC_OFF"] = gen2OffsetChange;
-
+changeCallbacks["FILTER_DECIMATION"] = filterDecimationChange;
+changeCallbacks["FILTER_HYST"] = filterChnageHyst;
 
 var clickCallbacks = {}
 

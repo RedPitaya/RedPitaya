@@ -16,6 +16,10 @@
         if (_visible) {
             $("#main_menu_body").show();
             $("#B_APPLY_CONT").hide();
+            $("#B_CLOSE_CONT").hide();
+            $("#B_F_APPLY_CONT").hide();
+            $("#B_F_CLOSE_CONT").hide();
+            $("#B_AUTO_CLOSE_CONT").hide();
         } else {
             $("#main_menu_body").hide();
         }
@@ -24,6 +28,7 @@
     OBJ.setAutoMode = function(_visible) {
         if (_visible) {
             $("#auto_mode_body").show();
+            $("#B_AUTO_CLOSE_CONT").show();
         } else {
             $("#auto_mode_body").hide();
         }
@@ -42,6 +47,7 @@
             if (_visible) {
                 $("#adc_mode_body").show();
                 $("#B_APPLY_CONT").show();
+                $("#B_CLOSE_CONT").show();
             } else {
                 $("#adc_mode_body").hide();
             }
@@ -60,7 +66,8 @@
 
             if (_visible) {
                 $("#filter_mode_body").show();
-                $("#B_APPLY_CONT").show();
+                $("#B_F_APPLY_CONT").show();
+                $("#B_F_CLOSE_CONT").show();
             } else {
                 $("#filter_mode_body").hide();
             }

@@ -68,8 +68,44 @@
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
                             <ul class="nav navbar-nav">
+                                <li id="B_CLOSE_CONT" style="display: none">
+                                    <a id="B_CLOSE_ADC_CALIB" href="#" style="color:#ff5512">CLOSE</a>
+                                </li>
+                            </ul>
+                        </ul>
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <ul class="nav navbar-nav">
                                 <li id="B_APPLY_CONT" style="display: none">
                                     <a id="B_APPLY" href="#" style="color:#12ff12">APPLY</a>
+                                </li>
+                            </ul>
+                        </ul>
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <ul class="nav navbar-nav">
+                                <li id="B_F_CLOSE_CONT" style="display: none">
+                                    <a id="B_CLOSE_FILTER_CALIB" href="#" style="color:#ff5512">CLOSE</a>
+                                </li>
+                            </ul>
+                        </ul>
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <ul class="nav navbar-nav">
+                                <li id="B_F_APPLY_CONT" style="display: none">
+                                    <a id="B_F_APPLY" href="#" style="color:#12ff12">APPLY</a>
+                                </li>
+                            </ul>
+                        </ul>
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <ul class="nav navbar-nav">
+                                <li id="B_AUTO_CLOSE_CONT" style="display: none">
+                                    <a id="B_CANCEL_CALIB" href="#" style="color:#ff5512">CLOSE</a>
                                 </li>
                             </ul>
                         </ul>
@@ -160,22 +196,15 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div class="container_inline" align=center>
-                        <div style="width: 180px; border: 1px solid white;margin-right: 10px">
-                            <li class="run_buttons" id="B_CANCEL_CALIB" style="width: 100%;height: 25px">
-                                <a style="display: block;font-size: 12pt;">CANCEL</a>
-                            </li>
-                        </div>
-                    </div>
                 </div>
                 <div id="adc_mode_body" style="display: none;">
                     <div align="center">
-                        <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid #999;display: inline-block;margin-top: 10px;">
+                        <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;margin-top: 10px;">
                             <div class="container_inline">
                                 <label style="font-size: 18pt; color: lightgray;">ADC</label>
                             </div>
                             <div class="container_inline" style="display: inline-block; margin-right: 10px; width: 300px;vertical-align: bottom;">
-                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
+                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <label>CH 1</label>
                                     <div>
                                         <div class="container_inline">
@@ -206,7 +235,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
+                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                         <label>Calib parameters</label>
                                         <div class="ch_setting">
                                             <div class="container_inline">
@@ -279,7 +308,7 @@
                                 </div>
                             </div>
                             <div class="container_inline" style="display: inline-block; width: 300px;vertical-align: bottom;">
-                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
+                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <label>CH 2</label>
                                     <div>
                                         <div class="container_inline">
@@ -310,7 +339,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
+                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                         <label>Calib parameters</label>
                                         <div class="ch_setting">
                                             <div class="container_inline">
@@ -387,22 +416,22 @@
                                             width: 120px;
                                             height: 40px;
                                             margin: 5px;">
-                                    <input id="HW_LV_MODE" type="checkbox" class="flipswitch" data-on="HV" data-off="LV" />
+                                    <input id="HV_LV_MODE" type="checkbox" class="man_flipswitch flipswitch" data-on="HV" data-off="LV" />
                                 </div>
                                 <div id="manual_ac_dc_mode" style="
                                             width: 120px;
                                             height: 40px;
                                             margin: 5px;">
-                                    <input id="AC_DC_MODE" type="checkbox" class="flipswitch" data-on="AC" data-off="DC" />
+                                    <input id="AC_DC_MODE" type="checkbox" class="man_flipswitch flipswitch" data-on="AC" data-off="DC" />
                                 </div>
                             </div>
                         </div>
-                        <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid #999;display: inline-block;vertical-align: bottom;margin-top: 10px;">
+                        <div style="width:650px;height: 780px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;vertical-align: bottom;margin-top: 10px;">
                             <div class="container_inline">
                                 <label style="font-size: 18pt; color: lightgray;">DAC</label>
                             </div>
                             <div class="container_inline" style="display: inline-block; margin-right: 10px; width: 300px;vertical-align: bottom;">
-                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
+                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <label>CH 1</label>
                                     <div class="container_inline" style="height: 285px;">
                                         <div style="margin-top: 0px;">
@@ -410,7 +439,7 @@
                                                         width: 120px;
                                                         height: 40px;
                                                         margin: 5px;">
-                                                <input id="ch1_dac_enable" type="checkbox" class="flipswitch" data-on="ON" data-off="OFF" />
+                                                <input id="ch1_dac_enable" type="checkbox" class="man_flipswitch flipswitch" data-on="ON" data-off="OFF" />
                                             </div>
                                         </div>
                                         <div class="container_inline">
@@ -447,7 +476,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
+                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                         <label>Calib parameters</label>
                                         <div class="ch_setting">
                                             <div class="container_inline">
@@ -520,7 +549,7 @@
                                 </div>
                             </div>
                             <div class="container_inline" style="display: inline-block; width: 300px;vertical-align: bottom;">
-                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid #999">
+                                <div style="width:300px;height: 660px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <label>CH 2</label>
                                     <div class="container_inline" style="height: 285px;">
                                         <div style="margin-top: 0px;">
@@ -528,7 +557,7 @@
                                                         width: 120px;
                                                         height: 40px;
                                                         margin: 5px;">
-                                                <input id="ch2_dac_enable" type="checkbox" class="flipswitch" data-on="ON" data-off="OFF" />
+                                                <input id="ch2_dac_enable" type="checkbox" class="man_flipswitch flipswitch" data-on="ON" data-off="OFF" />
                                             </div>
                                         </div>
                                         <div class="container_inline">
@@ -565,7 +594,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
+                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                         <label>Calib parameters</label>
                                         <div class="ch_setting">
                                             <div class="container_inline">
@@ -642,12 +671,12 @@
                                             width: 120px;
                                             height: 40px;
                                             margin: 5px;">
-                                    <input id="dac_gain" type="checkbox" class="flipswitch" data-on="x5" data-off="x1" />
+                                    <input id="dac_gain" type="checkbox" class="man_flipswitch flipswitch" data-on="x5" data-off="x1" />
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="container_inline" align=center>
+                    <!-- <div class="container_inline" align=center>
                         <div style="
                                 width: 140px;
                                 height: 40px;
@@ -656,13 +685,13 @@
                                 <a style="display: block;font-size: 12pt;">CLOSE</a>
                             </li>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
                 <div id="filter_mode_body" style="display: none;">
                     <div align="center">
-                        <div style="width:90%;height: 700px;padding-top: 5px;border: 1px solid #999;display: inline-block;margin-top: 10px;">
-                            <div class="container_inline" style="display: inline-block; width: 70%;height: 100%; vertical-align: bottom;">
-                                <div id="graph_cont" style="padding: 5px;  border: 1px solid rgba(153, 153, 153, 0.295);width: 100%;height: 94%;">
+                        <div style="width:90%;padding-top: 5px;display: inline-block;margin-top: 10px;">
+                            <div class="container_inline" style="display: inline-block; width: calc(100% - 255px);;height: 700px; vertical-align: bottom;min-width: 750px;">
+                                <div id="graph_cont" style="padding: 5px;  border: 1px solid rgba(153, 153, 153, 0.295);width: 100%;height: 88%;">
                                     <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 100%;">
                                         <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 100%;">
                                             <div id="graph_bode_filt" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
@@ -677,141 +706,79 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="container_inline" style="display: inline-block; width: 28%;vertical-align: bottom;height: 100%;">
-                                <div class="container_inline">
+                                <div class="container_inline" style="margin-top: 0px;">
                                     <div id="filter_channel" style="
                                                 width: 110px;
                                                 height: 40px;
-                                                margin: 5px;">
-                                        <input id="FILTER_CHANNEL" type="checkbox" class="flipswitch" data-on="CH 2" data-off="CH 1" />
+                                                margin: 10px;
+                                                vertical-align: top;">
+                                        <input id="FILTER_CHANNEL" type="checkbox" class="filter_flipswitch flipswitch" data-on="CH 2" data-off="CH 1" />
                                     </div>
                                     <div id="filter_hv_lv_mode" style="
                                                 width: 110px;
                                                 height: 40px;
-                                                margin: 5px;">
-                                        <input id="FILTER_HV_LV_MODE" type="checkbox" class="flipswitch" data-on="HV" data-off="LV" />
+                                                margin: 10px;
+                                                vertical-align: top;">
+                                        <input id="FILTER_HV_LV_MODE" type="checkbox" class="filter_flipswitch flipswitch" data-on="HV" data-off="LV" />
+                                    </div>
+                                    <div style="width: 120px;text-align: right;">Decimation:</div>
+                                    <div style="width: 100px;">
+                                        <select id="FILTER_DECIMATION" class="protocol" name="resolution" style="width:100%">
+                                                    <option value="1" >1</option>
+                                                    <option value="2" >2</option>
+                                                    <option value="4" >4</option>
+                                                    <option value="8" >8</option>
+                                                    <option value="16" >16</option>
+                                                    <option value="32" >32</option>
+                                                    <option value="64" >64</option>
+                                                    <option value="128" >128</option>
+                                                    <option value="256" >256</option>
+                                                    <option value="512" >512</option>
+                                                    <option value="1024" >1024</option>
+                                                </select>
+                                    </div>
+                                    <div style="width: 120px;text-align: right;margin-top: 5px;">Hysteresis (V):</div>
+                                    <div style="width: 100px;margin-top: 0px;">
+                                        <input id="FILTER_HYST" type="text" size="5" style="width: 100%;margin-left: 10px;" value="0.01" max="1" min="0">
                                     </div>
                                 </div>
-
-                                <!-- <div>
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;color:#f3ec1a">AVG:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH1_AVG" type="text" size="5" style="width: 185px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;color:#00FF00">MIN:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH1_MIN" type="text" size="5" style="width: 185px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;color:#ff0000">MAX:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH1_MAX" type="text" size="5" style="width: 185px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="width:280px;height: 100px;padding: 5px;  border: 1px solid rgba(153, 153, 153, 0.295)">
-                                        <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 90px;">
-                                            <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 90px;">
-                                                <div id="graph_bode_ch1" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
-                                                    <canvas id="graph_bode_grid_ch1" class="graph_grid" style="width: 100%;height: 100%;"></canvas>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="width:280px;height: 290px;padding-top: 5px;border: 1px solid #999">
-                                        <label>Calib parameters</label>
-                                        <div class="ch_setting">
-                                            <div class="container_inline">
-                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
-                                                <div style="width: 200px;margin-top: 5px;">
-                                                    <input id="CH1_OFFSET" type="text" size="5" style="width: 185px;margin-left: 10px;" value="0">
-                                                </div>
-                                            </div>
-                                            <div class="container_inline" style="margin-top: 5px;">
-                                                <div style="margin-top: 0px;">
-                                                    <div style="width: 24px; border: 1px solid white;margin-top: 0px;border-radius: 50%;margin-left: 70px; ">
-                                                        <li class="run_buttons" id="B_CH1_SUB_OFF" style="width: 100%;height: 24px;border-radius: 50%;">
-                                                            <a style="display: block;font-size: 12pt;">-</a>
-                                                        </li>
-                                                    </div>
-                                                    <div style="width: 120px;margin-top: 5px;">
-                                                        <select id="B_CH1_VALUE_OFF" class="protocol" name="rate" style="width: 110px;margin-left: 0px;">
-                                                                                        <option value="1">1</option>
-                                                                                        <option value="10">10</option> 
-                                                                                        <option value="100">100</option> 
-                                                                                        <option value="1000">1000</option> 
-                                                                                        <option value="10000">10000</option> 
-                                                                                        <option value="100000">100000</option> 
-                                                                                        <option value="1000000">1000000</option>                                                                        
-                                                                            </select>
-                                                    </div>
-                                                    <div style="width: 24px; border: 1px solid white;margin-right: 10px;margin-top: 0px;border-radius: 50%;">
-                                                        <li class="run_buttons" id="B_CH1_ADD_OFF" style="width: 100%;height: 24px;border-radius: 50%;">
-                                                            <a style="display: block;font-size: 12pt;">+</a>
-                                                        </li>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ch_setting">
-                                            <div class="container_inline">
-                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
-                                                <div style="width: 200px;margin-top: 5px;">
-                                                    <input id="CH1_GAIN" type="text" size="5" style="width: 185px;margin-left: 10px;" value="0">
-                                                </div>
-                                            </div>
-                                            <div class="container_inline" style="margin-top: 5px;">
-                                                <div style="margin-top: 0px;">
-                                                    <div style="width: 24px; border: 1px solid white;margin-top: 0px;border-radius: 50%;margin-left: 70px; ">
-                                                        <li class="run_buttons" id="B_CH1_SUB_GAIN" style="width: 100%;height: 24px;border-radius: 50%;">
-                                                            <a style="display: block;font-size: 12pt;">-</a>
-                                                        </li>
-                                                    </div>
-                                                    <div style="width: 120px;margin-top: 5px;">
-                                                        <select id="B_CH1_VALUE_GAIN" class="protocol" name="rate" style="width: 110px;margin-left: 0px;">
-                                                                                        <option value="1">1</option>
-                                                                                        <option value="10">10</option> 
-                                                                                        <option value="100">100</option> 
-                                                                                        <option value="1000">1000</option> 
-                                                                                        <option value="10000">10000</option> 
-                                                                                        <option value="100000">100000</option> 
-                                                                                        <option value="1000000">1000000</option>  
-                                                                                        <option value="10000000">10000000</option>                                                                        
-                                                                            </select>
-                                                    </div>
-                                                    <div style="width: 24px; border: 1px solid white;margin-right: 10px;margin-top: 0px;border-radius: 50%;">
-                                                        <li class="run_buttons" id="B_CH1_ADD_GAIN" style="width: 100%;height: 24px;border-radius: 50%;">
-                                                            <a style="display: block;font-size: 12pt;">+</a>
-                                                        </li>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div> -->
                             </div>
-                        </div>
-                        <!-- <div class="container_inline">
-                                <div id="manual_lv_hv_mode" style="
-                                            width: 120px;
-                                            height: 40px;
-                                            margin: 5px;">
-                                    <input id="HW_LV_MODE" type="checkbox" class="flipswitch" data-on="HV" data-off="LV" />
+                            <div class="container_inline" style="display: inline-block; width: 200px;vertical-align: bottom;height: 700px;min-width: 250px;">
+                                <div style="padding-bottom: 10px;padding-top: 5px;border:1px solid rgba(153, 153, 153, 0.295)">
+                                    <label style="display: flow-root;">Calib parameters</label>
+                                    <div id="filter_channel" style="
+                                                width: 100px;
+                                                height: 40px;
+                                                margin: 10px;
+                                                vertical-align: top;">
+                                        <input id="FILTER_DEC_HEX" type="checkbox" class="filter_flipswitch flipswitch" data-on="HEX" data-off="DEC" />
+                                    </div>
+                                    <div class="ch_setting2" style="margin-top: 5px;">
+                                        <div style="width: 50px;text-align: right;margin-top: 5px;">AA:</div>
+                                        <div style="width: 180px;margin-top: 5px;">
+                                            <input id="FILTER_AA" type="text" size="5" style="width: 160px;margin-left: 10px;" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ch_setting2" style="margin-top: 5px;">
+                                        <div style="width: 50px;text-align: right;margin-top: 5px;">BB:</div>
+                                        <div style="width: 180px;margin-top: 5px;">
+                                            <input id="FILTER_BB" type="text" size="5" style="width: 160px;margin-left: 10px;" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ch_setting2" style="margin-top: 5px;">
+                                        <div style="width: 50px;text-align: right;margin-top: 5px;">PP:</div>
+                                        <div style="width: 180px;margin-top: 5px;">
+                                            <input id="FILTER_PP" type="text" size="5" style="width: 160px;margin-left: 10px;" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="ch_setting2" style="margin-top: 5px;">
+                                        <div style="width: 50px;text-align: right;margin-top: 5px;">KK:</div>
+                                        <div style="width: 180px;margin-top: 5px;">
+                                            <input id="FILTER_KK" type="text" size="5" style="width: 160px;margin-left: 10px;" value="0">
+                                        </div>
+                                    </div>
                                 </div>
-                            </div> -->
-                    </div>
-                    <div class="container_inline" align=center>
-                        <div style="
-                                    width: 140px;
-                                    height: 40px;
-                                    margin: 10px;">
-                            <li class="run_buttons" id="B_CLOSE_FILTER_CALIB" style="width: 100%;height: 25px">
-                                <a style="display: block;font-size: 12pt;">CLOSE</a>
-                            </li>
+                            </div>
                         </div>
                     </div>
                 </div>

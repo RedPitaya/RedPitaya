@@ -262,6 +262,14 @@ public:
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
 };
 
+//custom CIntParameter
+class CUIntParameter : public CCustomParameter<uint32_t>
+{
+public:
+	CUIntParameter(std::string _name, CBaseParameter::AccessMode _access_mode, uint32_t _value, int _fpga_update, uint32_t _min, uint32_t _max)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
+};
+
 //custom CFloatParameter
 class CFloatParameter : public CCustomParameter<float>
 {

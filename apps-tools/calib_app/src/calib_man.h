@@ -36,7 +36,10 @@ class CCalibMan {
                     CCalibMan(CCalibMan &&) = delete;
                     ~CCalibMan();
                void init();
-               void initSq();
+               void initSq(int _decimation);
+                int getCalibMode();
+               void changeDecimation(int _decimation);
+               void changeChannel(rp_channel_t _ch);
                 int readCalib();
                 int readCalibEpprom();
                void updateCalib();
@@ -60,6 +63,7 @@ rp_acq_ac_dc_mode_t getModeAC_DC();
              
 
 private:
+                int m_calibMode;
  COscilloscope::Ptr m_acq;
       rp_pinState_t m_currentGain;  
   rp_calib_params_t m_calib_parameters;
