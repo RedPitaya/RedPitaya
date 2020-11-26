@@ -145,6 +145,7 @@ int RpEepromCalDataRead(eepromWpData_t * eepromData, bool factory)
         return -1;
     }
 #ifdef Z10
+if (eepromData->feCalPar[eCalParMagic] != CALIB_MAGIC_FILTER){
     eepromData->feCalPar[eCalPar_F_LOW_AA_CH1] = GAIN_LO_FILT_AA;
     eepromData->feCalPar[eCalPar_F_LOW_BB_CH1] = GAIN_LO_FILT_BB;
     eepromData->feCalPar[eCalPar_F_LOW_PP_CH1] = GAIN_LO_FILT_PP;
@@ -162,6 +163,7 @@ int RpEepromCalDataRead(eepromWpData_t * eepromData, bool factory)
     eepromData->feCalPar[eCalPar_F_HI_BB_CH2] = GAIN_HI_FILT_BB;
     eepromData->feCalPar[eCalPar_F_HI_PP_CH2] = GAIN_HI_FILT_PP;
     eepromData->feCalPar[eCalPar_F_HI_KK_CH2] = GAIN_HI_FILT_KK;
+}
 #endif
     fclose(fp);
     return 0;
