@@ -35,7 +35,7 @@ CCalibMan::Ptr     g_calib_man;
 #else
 #define DAC_DEVIDER 2.0
 #endif
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 #define DEFAULT_CURSOR_1 0.2
 #define DEFAULT_CURSOR_2 0.4
@@ -112,17 +112,17 @@ CBooleanParameter 	filt_gen2_enable(	"filt_gen2_enable", 		CBaseParameter::RW,  
 CFloatParameter		filt_gen_offset(  	"filt_gen_offset",			CBaseParameter::RW,   0 	,0,	-1, 1);
 CFloatParameter		filt_gen_amp(  		"filt_gen_amp",				CBaseParameter::RW,   0.9   ,0,	0.001, 1);
 CFloatParameter		filt_gen_freq(  	"filt_gen_freq",			CBaseParameter::RW,   1000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
-CUIntParameter		filt_aa(	     	"filt_aa", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
-CUIntParameter		filt_bb(	     	"filt_bb", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
-CUIntParameter		filt_pp(	     	"filt_pp", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
-CUIntParameter		filt_kk(	     	"filt_kk", 					CBaseParameter::RW,   0 ,0,	0, 0xFFFFFFFF);
+CIntParameter		filt_aa(	     	"filt_aa", 					CBaseParameter::RW,   0 ,0,	0, 0x3FFFF);
+CIntParameter		filt_bb(	     	"filt_bb", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		filt_pp(	     	"filt_pp", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		filt_kk(	     	"filt_kk", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
 #endif
 
 void PrintLogInFile(const char *message){
 #ifdef DEBUG_MODE
 	std::time_t result = std::time(nullptr);
 	std::fstream fs;
-  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
+  	fs.open ("/tmp/debug2.log", std::fstream::in | std::fstream::out | std::fstream::app);
 	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
 	fs.close();
 #endif
@@ -143,7 +143,6 @@ int rp_app_init(void)
 {
 	fprintf(stderr, "Loading calibraton app version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
-	PrintLogInFile("rp_app_init");
 	rp_Init();
 	g_acq = COscilloscope::Create(64);
 	g_calib = CCalib::Create(g_acq);
@@ -160,7 +159,6 @@ int rp_app_exit(void)
 	g_acq->stop();
 	rp_Release();
 	fprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
-	PrintLogInFile("Unloading stream server version");
 	return 0;
 }
 
@@ -313,6 +311,7 @@ void getNewFilterCalib(){
 
 	if (update){
 		g_calib_man->updateCalib();
+		g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 		sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 	}
 }
@@ -537,7 +536,8 @@ void UpdateParams(void)
 
 		if (hv_lv_mode.IsNewValue()){
 			hv_lv_mode.Update();
-			g_calib_man->setModeLV_HV(hv_lv_mode.Value() ? RP_HIGH :RP_LOW);		
+			g_calib_man->setModeLV_HV(hv_lv_mode.Value() ? RP_HIGH :RP_LOW);			
+			g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);	
 			sendCalibInManualMode(true);
 		}
 #ifdef Z20_250_12

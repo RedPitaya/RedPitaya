@@ -286,10 +286,7 @@ void COscilloscope::acquireSquare(){
             m_curCursor2 += max_dt;
             if (m_curCursor1 < 0 || m_curCursor1 > 1) { m_curCursor1 = 0; m_curCursor2 = 1; }
             if (m_curCursor2 > 1 || m_curCursor2 < 0) { m_curCursor1 = 0; m_curCursor2 = 1; }
-        }
-        char z[1000];
-        sprintf(z,"%lf %lf dt %lf %lf %lf %lf\n",m_curCursor1, m_curCursor2 ,min_dt ,max_dt,static_cast<double>(time_diff.count()),dt);
-        PrintLogInFileACQ(z);
+        }      
         DataPassSq localDP = selectRange(ch, m_curCursor1 , m_curCursor2);
         pthread_mutex_lock(&m_mutex);
         m_crossDataSq = localDP;
@@ -463,15 +460,9 @@ int COscilloscope::setGenType(rp_channel_t _ch,int _type){
 
 void COscilloscope::updateGenCalib(){
     float x = 0;
-    char s[100];
-    rp_GenGetAmp(RP_CH_1,&x);
-    sprintf(s,"x = %f",x);
-    PrintLogInFileACQ(s);
-    
+    rp_GenGetAmp(RP_CH_1,&x);    
     rp_GenAmp(RP_CH_1,x);
     rp_GenGetAmp(RP_CH_2,&x);
-        sprintf(s,"x2 = %f",x);
-    PrintLogInFileACQ(s);
     rp_GenAmp(RP_CH_2,x);
     rp_GenGetOffset(RP_CH_1,&x);
     rp_GenOffset(RP_CH_1,x);

@@ -347,7 +347,7 @@ var filterOffsetChange = function(event) {
 }
 
 var filterAAChange = function(event) {
-    if (checkIntParameters3("#FILTER_AA", 0, 0xFFFFFFFF) !== 0) {
+    if (checkIntParameters3("#FILTER_AA", 0, 0x3FFFF) !== 0) {
         var x = parseInt($("#FILTER_AA").val());
         if (x !== OBJ.filterAA) {
             SM.parametersCache["filt_aa"] = { value: x };
@@ -358,7 +358,7 @@ var filterAAChange = function(event) {
 }
 
 var filterBBChange = function(event) {
-    if (checkIntParameters3("#FILTER_BB", 0, 0xFFFFFFFF) !== 0) {
+    if (checkIntParameters3("#FILTER_BB", 0, 0x1FFFFFF) !== 0) {
         var x = parseInt($("#FILTER_BB").val());
         if (x !== OBJ.filterBB) {
             SM.parametersCache["filt_bb"] = { value: x };
@@ -369,7 +369,7 @@ var filterBBChange = function(event) {
 }
 
 var filterPPChange = function(event) {
-    if (checkIntParameters3("#FILTER_PP", 0, 0xFFFFFFFF) !== 0) {
+    if (checkIntParameters3("#FILTER_PP", 0, 0x1FFFFFF) !== 0) {
         var x = parseInt($("#FILTER_PP").val());
         if (x !== OBJ.filterPP) {
             SM.parametersCache["filt_pp"] = { value: x };
@@ -380,7 +380,7 @@ var filterPPChange = function(event) {
 }
 
 var filterKKChange = function(event) {
-    if (checkIntParameters3("#FILTER_KK", 0, 0xFFFFFFFF) !== 0) {
+    if (checkIntParameters3("#FILTER_KK", 0, 0x1FFFFFF) !== 0) {
         var x = parseInt($("#FILTER_KK").val());
         if (x !== OBJ.filterKK) {
             SM.parametersCache["filt_kk"] = { value: x };

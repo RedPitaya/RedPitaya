@@ -64,7 +64,7 @@ $(function() {
 
 
         OBJ.filterGraphCache = {};
-        OBJ.filterGraphCache.elem = $('<div id="bode_plot_filt" class="plot" style="width:100%;height:100%;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_filt');
+        OBJ.filterGraphCache.elem = $('<div id="bode_plot_filt" class="plot" style="width:100%;height:100%;position: absolute;margin-top: auto;left: 0px;top:0px"/>').appendTo('#graph_bode_filt');
         var max_value = 1;
         if (OBJ.filterHvLv) {
             max_value = 10;
@@ -263,55 +263,6 @@ $(function() {
         $("#FILTER_HYST").val(_value.value);
     }
 
-    // OBJ.amSetNewCalib = function(_mode, _new_val) {
-    //     if (_mode == "CH1_ADC_OFF") {
-    //         SM.parametersCache["ch1_off_adc_new"] = { value: parseInt($("#CH1_OFFSET").val()) + _new_val };
-    //         SM.sendParameters2("ch1_off_adc_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-
-    //     if (_mode == "CH2_ADC_OFF") {
-    //         SM.parametersCache["ch2_off_adc_new"] = { value: parseInt($("#CH2_OFFSET").val()) + _new_val };
-    //         SM.sendParameters2("ch2_off_adc_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-
-    //     if (_mode == "CH1_ADC_GAIN") {
-    //         SM.parametersCache["ch1_gain_adc_new"] = { value: parseInt($("#CH1_GAIN").val()) + _new_val };
-    //         SM.sendParameters2("ch1_gain_adc_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-
-    //     if (_mode == "CH2_ADC_GAIN") {
-    //         SM.parametersCache["ch2_gain_adc_new"] = { value: parseInt($("#CH2_GAIN").val()) + _new_val };
-    //         SM.sendParameters2("ch2_gain_adc_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-
-    //     if (_mode == "CH1_DAC_OFF") {
-    //         SM.parametersCache["ch1_off_dac_new"] = { value: parseInt($("#CH1_DAC_OFFSET").val()) + _new_val };
-    //         SM.sendParameters2("ch1_off_dac_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-
-    //     if (_mode == "CH2_DAC_OFF") {
-    //         SM.parametersCache["ch2_off_dac_new"] = { value: parseInt($("#CH2_DAC_OFFSET").val()) + _new_val };
-    //         SM.sendParameters2("ch2_off_dac_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-
-    //     if (_mode == "CH1_DAC_GAIN") {
-    //         SM.parametersCache["ch1_gain_dac_new"] = { value: parseInt($("#CH1_DAC_GAIN").val()) + _new_val };
-    //         SM.sendParameters2("ch1_gain_dac_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-
-    //     if (_mode == "CH2_DAC_GAIN") {
-    //         SM.parametersCache["ch2_gain_dac_new"] = { value: parseInt($("#CH2_DAC_GAIN").val()) + _new_val };
-    //         SM.sendParameters2("ch2_gain_dac_new");
-    //         OBJ.filterCalibChange = true;
-    //     }
-    // }
 
     OBJ.filterSetAA = function(_value) {
         OBJ.filterAA = _value.value;
