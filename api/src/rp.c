@@ -174,6 +174,9 @@ int rp_CalibrationSetParams(rp_calib_params_t calib_params){
     return calib_SetParams(calib_params);
 }
 
+rp_calib_params_t rp_GetDefaultCalibrationSettings(){
+    return calib_GetDefaultCalib();
+}
 
 
 /**

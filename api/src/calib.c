@@ -37,6 +37,7 @@
 #endif
 
 int calib_ReadParams(rp_calib_params_t *calib_params,bool use_factory_zone);
+rp_calib_params_t getDefualtCalib();
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;
@@ -63,6 +64,10 @@ int calib_Release()
 rp_calib_params_t calib_GetParams()
 {
     return calib;
+}
+
+rp_calib_params_t calib_GetDefaultCalib(){
+    return getDefualtCalib();
 }
 
 /**
@@ -208,7 +213,8 @@ int calib_SetParams(rp_calib_params_t calib_params){
     return RP_OK;
 }
 
-void calib_SetToZero() {
+rp_calib_params_t getDefualtCalib(){
+    rp_calib_params_t calib;
     calib.magic = CALIB_MAGIC;
     calib.be_ch1_dc_offs = 0;
     calib.be_ch2_dc_offs = 0;
@@ -248,7 +254,12 @@ void calib_SetToZero() {
     calib.hi_filter_bb_ch2 = GAIN_HI_FILT_BB;
     calib.hi_filter_pp_ch2 = GAIN_HI_FILT_PP;
     calib.hi_filter_kk_ch2 = GAIN_HI_FILT_KK;
-#endif   
+#endif
+    return calib;
+}
+
+void calib_SetToZero() {
+    calib = getDefualtCalib();
 }
 
 uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain) {
