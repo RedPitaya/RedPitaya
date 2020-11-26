@@ -174,6 +174,8 @@ int rp_CalibrationSetParams(rp_calib_params_t calib_params){
     return calib_SetParams(calib_params);
 }
 
+
+
 /**
  * Identification
  */
@@ -717,6 +719,12 @@ int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
 
 int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
     return acq_GetAC_DC(channel,status);
+}
+#endif
+
+#ifdef Z10
+int rp_AcqUpdateAcqFilter(rp_channel_t channel){
+    return acq_UpdateAcqFilter(channel);
 }
 #endif
 

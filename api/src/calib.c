@@ -193,7 +193,6 @@ int calib_WriteParams(rp_calib_params_t calib_params,bool use_factory_zone) {
     }
 
     /* write data to EEPROM component */
-    calib_params.magic = CALIB_MAGIC;
     size = fwrite(&calib_params, sizeof(char), sizeof(rp_calib_params_t), fp);
     if(size != sizeof(rp_calib_params_t)) {
         fclose(fp);

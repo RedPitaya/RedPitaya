@@ -486,6 +486,7 @@ int rp_CalibrationWriteParams(rp_calib_params_t calib_params);
 int rp_CalibrationSetParams(rp_calib_params_t calib_params);
 
 
+
 /** @name Identification
  */
 ///@{
@@ -1114,6 +1115,12 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 int rp_AcqGetBufSize(uint32_t* size);
 
+/**
+* Sets the current calibration values from temporary memory to the FPGA filter
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 
 ///@}
 /** @name Generate

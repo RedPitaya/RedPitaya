@@ -997,3 +997,9 @@ int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 
 
 #endif
+
+#ifdef Z10
+int acq_UpdateAcqFilter(rp_channel_t channel){
+    return setEqFilters(channel);
+}
+#endif
