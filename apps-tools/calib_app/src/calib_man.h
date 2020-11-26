@@ -49,6 +49,7 @@ class CCalibMan {
                 int setCalibValue(ClalibValue _type,int _value);
                void setModeLV_HV(rp_pinState_t _mode);
       rp_pinState_t getModeLV_HV();
+                int setDefualtFilter(rp_channel_t _ch);
                 int enableGen(rp_channel_t _ch,bool _enable);
                 int setFreq(rp_channel_t _ch,int _freq);
                 int setAmp(rp_channel_t _ch,float _ampl);

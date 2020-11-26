@@ -111,7 +111,7 @@ CBooleanParameter 	filt_gen1_enable(	"filt_gen1_enable", 		CBaseParameter::RW,  
 CBooleanParameter 	filt_gen2_enable(	"filt_gen2_enable", 		CBaseParameter::RW,   false,0);
 CFloatParameter		filt_gen_offset(  	"filt_gen_offset",			CBaseParameter::RW,   0 	,0,	-1, 1);
 CFloatParameter		filt_gen_amp(  		"filt_gen_amp",				CBaseParameter::RW,   0.9   ,0,	0.001, 1);
-CFloatParameter		filt_gen_freq(  	"filt_gen_freq",			CBaseParameter::RW,   1000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
+CFloatParameter		filt_gen_freq(  	"filt_gen_freq",			CBaseParameter::RW,   10000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
 CIntParameter		filt_aa(	     	"filt_aa", 					CBaseParameter::RW,   0 ,0,	0, 0x3FFFF);
 CIntParameter		filt_bb(	     	"filt_bb", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
 CIntParameter		filt_pp(	     	"filt_pp", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
@@ -508,8 +508,17 @@ void UpdateParams(void)
 				g_calib_man->writeCalib();
 			}
 
+			
+
 // FREQ CALIB
 #ifdef Z10
+
+			if (sig == 6){
+				g_calib_man->setDefualtFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+				g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+				sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+			}
+
 			if (sig == 100){
 				g_calib_man->initSq(adc_decimation.Value());
 				adc_decimation.SendValue(adc_decimation.Value());

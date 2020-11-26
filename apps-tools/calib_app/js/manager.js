@@ -17,6 +17,7 @@
             $("#main_menu_body").show();
             $("#B_APPLY_CONT").hide();
             $("#B_CLOSE_CONT").hide();
+            $("#B_DEFAULT_CONT").hide();
             $("#B_AUTO_CLOSE_CONT").hide();
         } else {
             $("#main_menu_body").hide();
@@ -66,6 +67,7 @@
                 $("#filter_mode_body").show();
                 $("#B_APPLY_CONT").show();
                 $("#B_CLOSE_CONT").show();
+                $("#B_DEFAULT_CONT").show();
             } else {
                 $("#filter_mode_body").hide();
             }
@@ -227,6 +229,20 @@ $(function() {
         } else {
             OBJ.closeManualMode();
         }
+    });
+
+    $('#B_DEFAULT').on('click', function(ev) {
+
+        $("#dialog_reset_text").text("Set default parameters?");
+        $('#reset_ok_btn').on('click', function() {
+            SM.parametersCache["calib_sig"] = { value: 6 };
+            SM.sendParameters();
+        });
+
+        $('#reset_cancel_btn').on('click', function() {});
+
+        $("#dialog_reset").modal('show');
+
     });
 
 

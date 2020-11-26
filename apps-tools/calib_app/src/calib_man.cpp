@@ -433,3 +433,42 @@ void CCalibMan::updateAcqFilter(rp_channel_t _ch){
     rp_AcqUpdateAcqFilter(_ch);
 #endif
 }
+
+int CCalibMan::setDefualtFilter(rp_channel_t _ch){
+#ifdef Z10
+    auto x = rp_GetDefaultCalibrationSettings();
+    auto g = getModeLV_HV();
+    if (_ch == RP_CH_1){
+        if (g == RP_LOW)  {
+            setCalibValue(F_AA_CH1,x.low_filter_aa_ch1);
+            setCalibValue(F_BB_CH1,x.low_filter_bb_ch1);
+            setCalibValue(F_PP_CH1,x.low_filter_pp_ch1);
+            setCalibValue(F_KK_CH1,x.low_filter_kk_ch1);
+        }
+        if (g == RP_HIGH) {
+            setCalibValue(F_AA_CH1,x.hi_filter_aa_ch1);
+            setCalibValue(F_BB_CH1,x.hi_filter_bb_ch1);
+            setCalibValue(F_PP_CH1,x.hi_filter_pp_ch1);
+            setCalibValue(F_KK_CH1,x.hi_filter_kk_ch1);
+        }
+    }
+
+    if (_ch == RP_CH_2){
+        if (g == RP_LOW)  {
+            setCalibValue(F_AA_CH2,x.low_filter_aa_ch2);
+            setCalibValue(F_BB_CH2,x.low_filter_bb_ch2);
+            setCalibValue(F_PP_CH2,x.low_filter_pp_ch2);
+            setCalibValue(F_KK_CH2,x.low_filter_kk_ch2);
+        }
+        if (g == RP_HIGH) {
+            setCalibValue(F_AA_CH2,x.hi_filter_aa_ch2);
+            setCalibValue(F_BB_CH2,x.hi_filter_bb_ch2);
+            setCalibValue(F_PP_CH2,x.hi_filter_pp_ch2);
+            setCalibValue(F_KK_CH2,x.hi_filter_kk_ch2);
+        }
+    }
+    return 0;
+#else 
+    return -1;
+#endif
+}
