@@ -242,9 +242,11 @@ try{
     //     buffer_ch2[i] = 0;
     // }
 
-    // short *wb2 = (short*)buffer;
-    // for(int i = 0 ;i < 40 /2 ;i ++)
-    //     std::cout << std::hex <<  (static_cast<int>(wb2[i]) & 0xFFFF)  << " ";
+    // std::ofstream outfile2;
+    // outfile2.open("/tmp/test.txt", std::ios_base::app);  
+    // short *wb2_1 = (short*)buffer_ch1;
+    // for(int i = 0 ;i < 16000 /2 ;i ++)
+    //     outfile2 << std::hex <<  (static_cast<int>(wb2_1[i]) & 0xFFFF)  << " ";
     
     if (buffer_ch1 != nullptr){
         _size1 = size;
@@ -284,14 +286,17 @@ try{
 
     m_Osc_ch->clearBuffer();
 
-    //std::ofstream outfile2;
-    //outfile2.open("/tmp/test.txt", std::ios_base::app);  
+    // std::ofstream outfile3;
+    // outfile3.open("/tmp/test2.txt", std::ios_base::app);  
+    // short *wb2 = ((short*)m_WriteBuffer_ch1);
+    // for(int i = 0 ;i < 16000 /2 ;i ++)
+    //     outfile3 << std::hex <<  (static_cast<int>(wb2[i]) & 0xFFFF)  << " ";
     // char **wb = (char**)WriteBuffer;
     //   for(int i = 0 ;i < _size ;i ++){
     //      wb[_bufferIndex][i] = ~(-wb[_bufferIndex][i]) + 1;
     //      std::cout << (static_cast<int>(wb[_bufferIndex][i]) & 0xFF)  << " ";
     //   }
- 	// exit(1);
+ 	//  exit(1);
     return overFlow;
 }
 

@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     CStreamingManager::Ptr s_manger = CStreamingManager::Create("127.0.0.1","8900",asionet::Protocol::TCP);
 
     // Run application
-    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 14);
+    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
     app.run();
 
     return 0;

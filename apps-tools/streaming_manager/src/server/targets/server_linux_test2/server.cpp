@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     // Search oscilloscope
     COscilloscope::Ptr osc0 = nullptr;
     COscilloscope::Ptr osc1 = nullptr;
-    int Decimation = 1;
+    int Decimation = 16;
     if (argc > 1) {
         Decimation = atoi(argv[1]);
     }
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
         {
             // TODO start server;
             osc0 = COscilloscope::Create(uio, true , true , Decimation);
+            osc0->setCalibration(0,1,0,1);
  //           osc1 = COscilloscope::Create(uio, 1 , 1);
             break;
         }
@@ -69,11 +70,11 @@ int main(int argc, char* argv[])
 
 
     CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , ".", -1,true);
+    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , ".", -1,false);
 
 
     // Run application
-    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 14);
+    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
 
     app.run();
 

@@ -340,8 +340,7 @@ int main(int argc, char *argv[])
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
 #endif
-
-
+        
         std::vector<UioT> uioList = GetUioList();
         // Search oscilloscope
         COscilloscope::Ptr osc = nullptr;
@@ -372,7 +371,7 @@ int main(int argc, char *argv[])
                                 };
         }
         int resolution_val = (resolution == 1 ? 8 : 16);
-        s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel, attenuator , ADC_BITS);
+        s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel, attenuator , 16);
         s_app->run();
         delete s_app;
     }catch (std::exception& e)

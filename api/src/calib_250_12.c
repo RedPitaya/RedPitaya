@@ -52,6 +52,10 @@ rp_calib_params_t calib_GetParams()
     return calib;
 }
 
+rp_calib_params_t calib_GetDefaultCalib(){
+    return getDefualtCalib();
+}
+
 /**
  * @brief Read calibration parameters from EEPROM device.
  *
