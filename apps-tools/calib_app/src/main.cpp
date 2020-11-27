@@ -148,8 +148,10 @@ int rp_app_init(void)
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
 	g_acq->start();
+#ifdef Z10	
 	g_acq->setCursor1(cursor_x1.Value());
 	g_acq->setCursor2(cursor_x2.Value());
+#endif
 	return 0;
 }
 
@@ -283,39 +285,6 @@ void getNewCalib(){
 	}
 }
 
-void getNewFilterCalib(){
-	bool update = false;
-	if (filt_aa.IsNewValue()){
-		filt_aa.Update();
-		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_AA_CH1 : F_AA_CH2  ,filt_aa.Value());
-		update = true;
-	}
-	
-	if (filt_bb.IsNewValue()){
-		filt_bb.Update();
-		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_BB_CH1 : F_BB_CH2  ,filt_bb.Value());
-		update = true;
-	}
-
-	if (filt_pp.IsNewValue()){
-		filt_pp.Update();
-		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_PP_CH1 : F_PP_CH2  ,filt_pp.Value());
-		update = true;
-	}
-
-	if (filt_kk.IsNewValue()){
-		filt_kk.Update();
-		g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_KK_CH1 : F_KK_CH2  ,filt_kk.Value());
-		update = true;
-	}
-
-	if (update){
-		g_calib_man->updateCalib();
-		g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
-		sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
-	}
-}
-
 void setupGen(){
 	if (gen1_enable.IsNewValue()){
 		gen1_enable.Update();
@@ -368,12 +337,47 @@ void setupGen(){
 	}
 }
 
+#ifdef Z10
+
+void getNewFilterCalib(){
+        bool update = false;
+        if (filt_aa.IsNewValue()){
+                filt_aa.Update();
+                g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_AA_CH1 : F_AA_CH2  ,filt_aa.Value());
+                update = true;
+        }
+
+        if (filt_bb.IsNewValue()){
+                filt_bb.Update();
+                g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_BB_CH1 : F_BB_CH2  ,filt_bb.Value());
+                update = true;
+        }
+
+        if (filt_pp.IsNewValue()){
+                filt_pp.Update();
+                g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_PP_CH1 : F_PP_CH2  ,filt_pp.Value());
+                update = true;
+        }
+
+        if (filt_kk.IsNewValue()){
+                filt_kk.Update();
+                g_calib_man->setCalibValue(adc_channel.Value() == 0 ? F_KK_CH1 : F_KK_CH2  ,filt_kk.Value());
+                update = true;
+        }
+
+        if (update){
+                g_calib_man->updateCalib();
+                g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+                sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+        }
+}
+
 void setupGenFilter(){
 	if (filt_gen1_enable.IsNewValue()){
 		filt_gen1_enable.Update();
 		g_calib_man->enableGen(RP_CH_1,filt_gen1_enable.Value());
 	}
-	
+
 	if (filt_gen2_enable.IsNewValue()){
 		filt_gen2_enable.Update();
 		g_calib_man->enableGen(RP_CH_2,filt_gen2_enable.Value());
@@ -443,6 +447,7 @@ void sendFilterCalibValues(rp_channel_t _ch){
 	filt_pp.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_PP_CH1 : F_PP_CH2));
 	filt_kk.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_KK_CH1 : F_KK_CH2));
 }
+#endif
 
 //Update parameters
 void UpdateParams(void)
@@ -508,7 +513,7 @@ void UpdateParams(void)
 				g_calib_man->writeCalib();
 			}
 
-			
+
 
 // FREQ CALIB
 #ifdef Z10
@@ -540,13 +545,15 @@ void UpdateParams(void)
 				filt_gen_offset.SendValue(filt_gen_offset.Value());
 				sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 			}
-#endif		
+#endif
 		}
 
 		if (hv_lv_mode.IsNewValue()){
 			hv_lv_mode.Update();
-			g_calib_man->setModeLV_HV(hv_lv_mode.Value() ? RP_HIGH :RP_LOW);			
+			g_calib_man->setModeLV_HV(hv_lv_mode.Value() ? RP_HIGH :RP_LOW);		
+#ifdef Z10				
 			g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);	
+#endif			
 			sendCalibInManualMode(true);
 		}
 #ifdef Z20_250_12
