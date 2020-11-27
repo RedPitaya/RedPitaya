@@ -1,0 +1,41 @@
+<!--
+    The "write" attribute is used to pass the value on the i2c bus. May take the following values:
+        - value
+        - default
+        - none
+-->
+<configuration>
+    <bus_name>/dev/mem</bus_name>
+    <fpga_base address="0x40200000"/> 
+    <device_on_bus address="0x50"/> <!-- offset in register of fpga (0x40000050) -->
+    <reg_set>
+        <!-- Chip configuration -->
+        <register address="0x00" value="0x18" write="none"  default="0x18" decription="SPI port config"/>
+        <register address="0x01" value="0x83" write="none"  default="0x83" decription="Chip ID"/>
+        <!-- Channel index -->
+        <register address="0x02" value=""     write="none"  default="" decription="Chip grade"/>
+        <register address="0x05" value="0x03" write="none"  default="0x03" decription="Channel index"/>
+        <register address="0xFF" value="0x00" write="value" default="0x00" decription="Transfer"/>
+        <!-- ADC Functions -->
+        <register address="0x08" value="0x00" write="none"  default="0x00" decription="Power modes"/>
+        <register address="0x09" value="0x01" write="none"  default="0x01" decription="Global clock"/>
+        <register address="0x0B" value="0x00" write="none"  default="0x00" decription="Clock divide"/>
+        <register address="0x0D" value="0x00" write="none"  default="0x00" decription="Test mode"/>
+        <register address="0x10" value="0x00" write="none"  default="0x00" decription="Offset adjust"/>
+        <register address="0x14" value="0x01" write="default"  default="0x05" decription="Output mode"/>
+        <register address="0x15" value="0x01" write="none"  default="0x01" decription="Output adjust"/>
+        <register address="0x16" value="0xA0" write="default" default="0x00" decription="Clock phase control"/>
+        <register address="0x17" value="0x00" write="none"  default="0x00" decription="DCO output delay"/>
+        <register address="0x18" value="0x1B" write="default"  default="0x00" decription="Input scan select"/>
+        <register address="0x19" value="0x00" write="none"   default="0x00" decription="Test pattern 1 LSB"/>
+        <register address="0x1A" value="0x00" write="none"   default="0x00" decription="Test pattern 1 MSB"/>
+        <register address="0x1B" value="0x00" write="none"   default="0x00" decription="Test pattern 2 LSB"/>
+        <register address="0x1C" value="0x00" write="none"   default="0x00" decription="Test pattern 2 MSB"/>
+        <register address="0x1D" value="0x00" write="none"   default="0x00" decription="Test pattern 3 LSB"/>
+        <register address="0x1E" value="0x00" write="none"   default="0x00" decription="Test pattern 3 MSB"/>
+        <register address="0x1F" value="0x00" write="none"   default="0x00" decription="Test pattern 4 LSB"/>
+        <register address="0x3A" value="0x00" write="none"   default="0x00" decription="Sync control"/>
+        <!-- NEED for start new parameters -->
+        <register address="0xFF" value="0x01" write="value" default="0x00" decription="Transfer"/>
+    </reg_set>
+</configuration>

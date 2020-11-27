@@ -130,7 +130,6 @@ int write_to_fpga_spi(const char* _path,unsigned int fpga_address,unsigned short
 	/* Read from command line */
 	//unsigned long addr;
 
-
 	/* Map one page */
 	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, fpga_address);
 	if(map_base == (void *) -1) retval = -1;

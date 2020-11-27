@@ -152,6 +152,10 @@ int rp_app_init(void)
 	g_acq->setCursor1(cursor_x1.Value());
 	g_acq->setCursor2(cursor_x2.Value());
 #endif
+    #ifdef Z20_250_12
+    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
+    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
+#endif
 	return 0;
 }
 

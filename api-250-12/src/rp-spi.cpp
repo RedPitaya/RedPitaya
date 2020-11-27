@@ -370,7 +370,7 @@ int rp_spi_compare(const char *configuration_file){
 
 int rp_spi_load_via_fpga(const char *configuration_file){
     string bus_name = "";
-    unsigned short fpga_device_addr = 0;
+    unsigned int   fpga_device_addr = 0;
     unsigned short device_addr = 0;
     
     XMLDocument *doc = readFile(configuration_file);
