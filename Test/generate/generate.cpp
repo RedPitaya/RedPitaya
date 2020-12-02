@@ -187,8 +187,7 @@ void write_data_fpga(uint32_t ch,
     uint32_t i;
 
     fpga_awg_init();
-    g_awg_reg->ch1_burst_last = 0;
-    g_awg_reg->ch2_burst_last = 0;
+
     if(ch == 0) {
         /* Channel A */
         g_awg_reg->state_machine_conf = 0x000041;
