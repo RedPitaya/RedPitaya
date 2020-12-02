@@ -351,7 +351,7 @@ void COscilloscope::acquireAutoFilter(){
 #ifndef Z10 
     // disable this function
     assert(false);
-#endif
+#else
     DataPassAutoFilter localDP;
     uint32_t            pos = 0;
     int16_t             timeout = 1000000; // timeout 1 second
@@ -364,9 +364,7 @@ void COscilloscope::acquireAutoFilter(){
     memset(m_acu_buffer,0,sizeof(float) * ADC_BUFFER_SIZE);
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
     localDP.ampl = -1;
-#ifdef Z10     
     rp_AcqGetFilterCalibValue(m_channel,&localDP.f_aa,&localDP.f_bb,&localDP.f_kk,&localDP.f_pp);
-#endif
     while(repeat_count < 1) {
         rp_AcqSetDecimationFactor(m_decimationSq);
         rp_AcqSetTriggerDelay( ADC_BUFFER_SIZE/4.0);
@@ -419,9 +417,6 @@ void COscilloscope::acquireAutoFilter(){
     for(int i = 0 ; i < acq_u_size ; i++){
         m_acu_buffer[i] /= (double)repeat_count;
     }
-
-   
-    // ch = filterBuffer(ch,acq_u_size);  
     localDP.cur_channel = m_channel;
     localDP.is_valid = true;
     localDP.index = m_index++;
@@ -436,8 +431,7 @@ void COscilloscope::acquireAutoFilter(){
     pthread_mutex_lock(&m_mutex);
     m_crossDataAutoFilter = localDP;
     pthread_mutex_unlock(&m_mutex);
-//  delete ch;
-    
+#endif    
 }
 
 void COscilloscope::setZoomMode(bool enable){
