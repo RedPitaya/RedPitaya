@@ -718,6 +718,10 @@ begin
     DEC_FACTOR_ADDR:        reg_rd_data <= cfg_dec_factor;  
     DEC_RSHIFT_ADDR:        reg_rd_data <= cfg_dec_rshift;  
     AVG_EN_ADDR:            reg_rd_data <= cfg_avg_en;  
+    CALIB_OFFSET_ADDR_CH1:  reg_rd_data <= cfg_calib_offset;
+    CALIB_GAIN_ADDR_CH1:    reg_rd_data <= cfg_calib_gain;
+    CALIB_OFFSET_ADDR_CH2:  reg_rd_data <= cfg_calib_offset;
+    CALIB_GAIN_ADDR_CH2:    reg_rd_data <= cfg_calib_gain;
     FILT_BYPASS_ADDR:       reg_rd_data <= cfg_filt_bypass;                          
     FILT_COEFF_AA_ADDR:     reg_rd_data <= cfg_filt_coeff_aa;  
     FILT_COEFF_BB_ADDR:     reg_rd_data <= cfg_filt_coeff_bb;  
@@ -741,6 +745,7 @@ begin
     default                 reg_rd_data <= 32'd0;                                
   endcase
 end
+
 ////////////////////////////////////////////////////////////
 // Name : DMA Mode
 // 0 = Normal
