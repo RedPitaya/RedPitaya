@@ -1,9 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
-#include "acq.h"
 #include <cassert>
- 
+#include <cstring>
+#include <vector>
+#include "acq.h"
+#include "acq_math.h"
+
 // Use (void) to silent unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 
@@ -94,6 +97,13 @@ void COscilloscope::startSquare(uint32_t _decimation){
     pthread_mutex_unlock(&m_funcSelector);
 }
 
+void COscilloscope::startAutoFilter(uint32_t _decimation){
+    pthread_mutex_lock(&m_funcSelector);
+    m_mode = 2;
+    m_decimationSq = _decimation;
+    pthread_mutex_unlock(&m_funcSelector);
+}
+
 void COscilloscope::setAcquireChannel(rp_channel_t _ch){
     pthread_mutex_lock(&m_funcSelector);
     m_channel = _ch;
@@ -104,6 +114,14 @@ void COscilloscope::setHyst(float _value){
     pthread_mutex_lock(&m_funcSelector);
     m_hyst = _value;
     pthread_mutex_unlock(&m_funcSelector);
+}
+
+void COscilloscope::updateAcqFilter(rp_channel_t _ch){
+#ifdef Z10
+    pthread_mutex_lock(&m_funcSelector);
+    rp_AcqUpdateAcqFilter(_ch);
+    pthread_mutex_unlock(&m_funcSelector);
+#endif
 }
 
 void COscilloscope::setCursor1(float value){
@@ -124,6 +142,9 @@ void COscilloscope::oscWorker(){
            }
            if (m_mode == 1){
                acquireSquare();
+           }
+           if (m_mode == 2){
+               acquireAutoFilter();
            }
            pthread_mutex_unlock(&m_funcSelector);
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -262,6 +283,7 @@ void COscilloscope::acquireSquare(){
 
     if (acq_u_size > 0) {
         auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1]; 
+        //ch = filterBuffer(ch,acq_u_size);
         m_curCursor1 = std::min(m_curCursor1,m_curCursor2);
         m_curCursor2 = std::max(m_curCursor1,m_curCursor2);
         auto min_cursor = std::min(m_cursor1,m_cursor2);
@@ -291,6 +313,7 @@ void COscilloscope::acquireSquare(){
         pthread_mutex_lock(&m_mutex);
         m_crossDataSq = localDP;
         pthread_mutex_unlock(&m_mutex);
+        //delete ch;
     }
 }
 
@@ -321,6 +344,94 @@ COscilloscope::DataPassSq COscilloscope::selectRange(float *buffer,double _start
         }
     }
     return localDP;
+}
+
+
+void COscilloscope::acquireAutoFilter(){
+    DataPassAutoFilter localDP;
+    uint32_t            pos = 0;
+    int16_t             timeout = 1000000; // timeout 1 second
+    int16_t             repeat_count = 0;   
+    bool                fillState = false;
+    uint32_t            aa,bb,pp,kk;
+    uint32_t            acq_u_size = ADC_BUFFER_SIZE;
+    uint32_t            acq_u_size_raw = ADC_BUFFER_SIZE;
+    float               m_acu_buffer[ADC_BUFFER_SIZE];
+    memset(m_acu_buffer,0,sizeof(float) * ADC_BUFFER_SIZE);
+    rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
+    localDP.ampl = -1;
+    rp_AcqGetFilterCalibValue(m_channel,&localDP.f_aa,&localDP.f_bb,&localDP.f_kk,&localDP.f_pp);
+    while(repeat_count < 1) {
+        rp_AcqSetDecimationFactor(m_decimationSq);
+        rp_AcqSetTriggerDelay( ADC_BUFFER_SIZE/4.0);
+        rp_AcqSetTriggerHyst(m_hyst);
+        rp_AcqGetFilterCalibValue(m_channel,&aa,&bb,&kk,&pp);
+        rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
+        rp_AcqStart();
+        uint32_t time = (double)(ADC_BUFFER_SIZE / 4) * ((double)m_decimationSq / ADC_SAMPLE_RATE) * 1000000;
+        std::this_thread::sleep_for(std::chrono::microseconds(time == 0 ? 1 : time));
+        switch(m_channel){
+            case RP_CH_1:
+                rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+            break;
+            case RP_CH_2:
+                rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHB_PE);
+            break;
+            default:
+                assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
+
+        }
+        for (;timeout > 0;) {
+            rp_AcqGetTriggerState(&trig_state);
+            if (trig_state == RP_TRIG_STATE_TRIGGERED) {
+                break;
+            } else {
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                timeout--;
+            }
+        }
+
+        while(!fillState && (timeout > 0)){
+            rp_AcqGetBufferFillState(&fillState);
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            timeout--;
+        }           
+        rp_AcqStop();
+        if (timeout <= 0 ) return;
+    //   rp_AcqGetWritePointerAtTrig(&pos);
+        rp_AcqGetWritePointer(&pos);
+        rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
+    //    rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
+        if (aa != localDP.f_aa || bb != localDP.f_bb || pp != localDP.f_pp || kk != localDP.f_kk) return;
+        for(int i = 0 ; i < acq_u_size ; i++){
+            auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1];
+            m_acu_buffer[i] += ch[i];
+        }
+        repeat_count++;            
+    }
+
+    for(int i = 0 ; i < acq_u_size ; i++){
+        m_acu_buffer[i] /= (double)repeat_count;
+    }
+
+   
+    // ch = filterBuffer(ch,acq_u_size);  
+    localDP.cur_channel = m_channel;
+    localDP.is_valid = true;
+    localDP.index = m_index++;
+    auto cross = calcCountCrossZero(m_acu_buffer,acq_u_size);
+    if (cross.size() >= 2 ){
+        auto last_max = findLastMax(m_acu_buffer,acq_u_size,cross[1]);
+        double value = calculate(m_acu_buffer, acq_u_size, m_acu_buffer[last_max], cross[0],cross[1],localDP.deviation);
+        localDP.calib_valie = value;
+        localDP.ampl = m_acu_buffer[last_max];
+      //  std::cout << m_acu_buffer[last_max] << std::endl;
+    }
+    pthread_mutex_lock(&m_mutex);
+    m_crossDataAutoFilter = localDP;
+    pthread_mutex_unlock(&m_mutex);
+//  delete ch;
+    
 }
 
 void COscilloscope::setZoomMode(bool enable){
@@ -395,6 +506,14 @@ COscilloscope::DataPassSq COscilloscope::getDataSq(){
     DataPassSq local_pass;
     pthread_mutex_lock(&m_mutex);
     local_pass = m_crossDataSq;
+    pthread_mutex_unlock(&m_mutex); 
+    return local_pass;
+}
+
+COscilloscope::DataPassAutoFilter COscilloscope::getDataAutoFilter(){
+    DataPassAutoFilter local_pass;
+    pthread_mutex_lock(&m_mutex);
+    local_pass = m_crossDataAutoFilter;
     pthread_mutex_unlock(&m_mutex); 
     return local_pass;
 }

@@ -729,6 +729,11 @@ int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 int rp_AcqUpdateAcqFilter(rp_channel_t channel){
     return acq_UpdateAcqFilter(channel);
 }
+
+int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp){
+    return acq_GetFilterCalibValue( channel,coef_aa, coef_bb, coef_kk, coef_pp);
+}
+
 #endif
 
 /**

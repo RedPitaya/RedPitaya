@@ -25,10 +25,12 @@
 #include "acq.h"
 #include "calib.h"
 #include "calib_man.h"
+#include "filter_logic.h"
 
 COscilloscope::Ptr g_acq;
 CCalib::Ptr        g_calib;
 CCalibMan::Ptr     g_calib_man;
+CFilter_logic::Ptr g_filter_logic;
 
 #ifdef Z20_250_12
 #define DAC_DEVIDER 4.0
@@ -116,6 +118,8 @@ CIntParameter		filt_aa(	     	"filt_aa", 					CBaseParameter::RW,   0 ,0,	0, 0x3
 CIntParameter		filt_bb(	     	"filt_bb", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
 CIntParameter		filt_pp(	     	"filt_pp", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
 CIntParameter		filt_kk(	     	"filt_kk", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		filt_calib_step(	"filt_calib_step",			CBaseParameter::RW,   0 ,0,	0, 100000);
+CIntParameter		filt_calib_progress("filt_calib_progress",			CBaseParameter::RW,   0 ,0,	0, 100);
 #endif
 
 void PrintLogInFile(const char *message){
@@ -147,6 +151,7 @@ int rp_app_init(void)
 	g_acq = COscilloscope::Create(64);
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
+	g_filter_logic = CFilter_logic::Create(g_calib_man);
 	g_acq->start();
 #ifdef Z10	
 	g_acq->setCursor1(cursor_x1.Value());
@@ -445,6 +450,65 @@ void updateFilterModeParameter(){
 	}
 }
 
+void calibFilter(){
+	if (filt_calib_step.Value() == 1){
+		g_filter_logic->init(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+		g_calib_man->setOffset(RP_CH_1,0);
+		g_calib_man->setFreq(RP_CH_1,10000);
+		g_calib_man->setAmp(RP_CH_1,0.9);	
+		g_calib_man->setOffset(RP_CH_2,0);
+		g_calib_man->setFreq(RP_CH_2,10000);
+		g_calib_man->setAmp(RP_CH_2,0.9);	
+		g_calib_man->enableGen(RP_CH_1,true);
+		g_calib_man->enableGen(RP_CH_2,true);
+		g_acq->startAutoFilter(1);
+		filt_calib_step.SendValue(2);
+		return;
+	}
+
+	if (filt_calib_step.Value() == 2) {
+		while (g_filter_logic->setCalibParameters() != -1){
+            auto dp = g_acq->getDataAutoFilter();
+            if (dp.is_valid == true) {
+                g_filter_logic->setCalculatedValue(dp);                
+            }
+        }
+        g_filter_logic->removeHalfCalib();
+        if (g_filter_logic->nextSetupCalibParameters() == -1) {
+			filt_calib_step.SendValue(3);
+			return;
+		}
+		filt_calib_progress.SendValue(g_filter_logic->calcProgress());
+	}
+
+	if (filt_calib_step.Value() == 3){
+		g_filter_logic->setGoodCalibParameter();
+		std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+		while(1){
+			auto d = g_acq->getDataAutoFilter();
+			if (d.ampl > 0){
+				if (g_filter_logic->calibPP(d,0.9) != 0) break;
+			}
+		}
+		filt_calib_step.SendValue(4);
+	}
+
+	if (filt_calib_step.Value() == 4){
+		filt_calib_step.SendValue(100);
+		sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+		g_calib_man->initSq(adc_decimation.Value());
+		g_calib_man->enableGen(RP_CH_1,filt_gen1_enable.Value());
+		g_calib_man->enableGen(RP_CH_2,filt_gen2_enable.Value());
+		g_calib_man->setOffset(RP_CH_1,filt_gen_offset.Value());
+		g_calib_man->setFreq(RP_CH_1,filt_gen_freq.Value());
+		g_calib_man->setAmp(RP_CH_1,filt_gen_amp.Value());	
+		g_calib_man->setOffset(RP_CH_2,filt_gen_offset.Value());
+		g_calib_man->setFreq(RP_CH_2,filt_gen_freq.Value());
+		g_calib_man->setAmp(RP_CH_2,filt_gen_amp.Value());
+	}
+
+}
+
 void sendFilterCalibValues(rp_channel_t _ch){
 	filt_aa.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_AA_CH1 : F_AA_CH2));
 	filt_bb.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_BB_CH1 : F_BB_CH2));
@@ -524,6 +588,7 @@ void UpdateParams(void)
 
 			if (sig == 6){
 				g_calib_man->setDefualtFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
+  			 	g_calib_man->updateCalib();
 				g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 				sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 			}
@@ -548,14 +613,15 @@ void UpdateParams(void)
 				filt_gen_amp.SendValue(filt_gen_amp.Value());
 				filt_gen_offset.SendValue(filt_gen_offset.Value());
 				sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
-			}
+			}	
 #endif
 		}
 
 		if (hv_lv_mode.IsNewValue()){
 			hv_lv_mode.Update();
 			g_calib_man->setModeLV_HV(hv_lv_mode.Value() ? RP_HIGH :RP_LOW);		
-#ifdef Z10				
+#ifdef Z10	
+		
 			g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);	
 #endif			
 			sendCalibInManualMode(true);
@@ -576,6 +642,10 @@ void UpdateParams(void)
 		getNewCalib();
 		setupGen();
 #ifdef Z10
+		if (filt_calib_step.IsNewValue() || (filt_calib_step.Value() >= 1 && filt_calib_step.Value() <= 100)){
+			filt_calib_step.Update();
+			calibFilter();
+		}
 		setupGenFilter();
 		updateFilterModeParameter();
 		getNewFilterCalib();

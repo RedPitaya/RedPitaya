@@ -429,9 +429,7 @@ void CCalibMan::updateGen(){
 }
 
 void CCalibMan::updateAcqFilter(rp_channel_t _ch){
-#ifdef Z10
-    rp_AcqUpdateAcqFilter(_ch);
-#endif
+    m_acq->updateAcqFilter(_ch);
 }
 
 int CCalibMan::setDefualtFilter(rp_channel_t _ch){

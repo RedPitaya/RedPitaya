@@ -1130,6 +1130,18 @@ int rp_AcqGetBufSize(uint32_t* size);
 */
 int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 
+/**
+* Sets the current calibration values from temporary memory to the FPGA filter
+* @param channel Channel A or B for which we want to retrieve the ADC buffer.
+* @param coef_aa Return AA coefficient.
+* @param coef_bb Return BB coefficient.
+* @param coef_kk Return KK coefficient.
+* @param coef_pp Return PP coefficient.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+
 ///@}
 /** @name Generate
 */

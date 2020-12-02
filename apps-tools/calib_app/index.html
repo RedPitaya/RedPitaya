@@ -44,7 +44,15 @@
 
 <body>
     <div id="loader-wrapper">
-        <div id="loader"></div>
+
+        <div style="width: 100%;height: 60%;">
+            <div id="loader" style="top:70%"></div>
+        </div>
+        <div>
+            <progress id="PROGRESS" max="100" value="0" style="display: none;
+            margin-left: auto;
+            margin-right: auto;" />
+        </div>
     </div>
     <div id="header">
         <div id="description">&nbsp;</div>
@@ -130,7 +138,7 @@
                             </div>
                         </div>
 
-                        <div class="container_inline" align=center id="filter_calib_button">
+                        <div class="container_inline" align=center id="filter_calib_button" style="display: none;">
                             <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_FILTER_MODE" style="width: 100%">
                                     <a style="display: block;">FILTER</a>
@@ -733,6 +741,19 @@
                                                 margin: 10px;
                                                 vertical-align: top;">
                                         <input id="FILTER_DEC_HEX" type="checkbox" class="filter_flipswitch flipswitch" data-on="HEX" data-off="DEC" />
+                                    </div>
+                                    <div id="filter_channel" style="
+                                                width: 100px;
+                                                height: 40px;
+                                                margin: 10px;
+                                                vertical-align: top;">
+                                        <li class="run_buttons" id="B_FILTER_AUTO" style="width: 100%;height: 100%;margin-top: 4px;">
+                                            <a style="display: block;font-size: 12pt;
+                                                font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                                                font-size: 14px;
+                                                font-weight: bold;
+                                                margin-top: 10px;">AUTO</a>
+                                        </li>
                                     </div>
                                     <div class="ch_setting2" style="margin-top: 5px;">
                                         <div style="width: 50px;text-align: right;margin-top: 5px;">AA:</div>

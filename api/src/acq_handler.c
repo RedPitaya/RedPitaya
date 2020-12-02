@@ -1002,4 +1002,14 @@ int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 int acq_UpdateAcqFilter(rp_channel_t channel){
     return setEqFilters(channel);
 }
+
+int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp){
+    if (channel == RP_CH_1){
+        return osc_GetEqFiltersChA(coef_aa,coef_bb,coef_kk,coef_pp);
+    }
+    if (channel == RP_CH_2){
+        return osc_GetEqFiltersChB(coef_aa,coef_bb,coef_kk,coef_pp);
+    }
+    return RP_EOOR;
+}
 #endif

@@ -312,6 +312,18 @@ $(function() {
         $("#FILTER_DAC_OFF").val(_value.value);
     }
 
+    OBJ.filtGetCalibSig = function(_value) {
+        if (_value.value === 100) {
+            $('body').addClass("loaded")
+            $('#PROGRESS').hide();
+        }
+    }
+
+    OBJ.filtSetProgress = function(_value) {
+        $('#PROGRESS').attr('value', _value.value);
+    }
+
+
 }(window.OBJ = window.OBJ || {}, jQuery));
 
 
@@ -324,6 +336,14 @@ $(function() {
     $('#zoom_img').click(function() {
         SM.parametersCache["zoom_mode"] = { value: OBJ.zoomMode ? false : true };
         SM.sendParameters2("zoom_mode");
+    });
+
+    $("#B_FILTER_AUTO").click(function() {
+        $('body').removeClass("loaded")
+        $('#PROGRESS').css("display", "block");
+        $('#PROGRESS').attr('value', 0);
+        SM.parametersCache["filt_calib_step"] = { value: 1 };
+        SM.sendParameters();
     });
 
     $('.filter_flipswitch').change(function() {
@@ -383,5 +403,7 @@ $(function() {
     SM.param_callbacks["filt_bb"] = OBJ.filterSetBB;
     SM.param_callbacks["filt_pp"] = OBJ.filterSetPP;
     SM.param_callbacks["filt_kk"] = OBJ.filterSetKK;
+    SM.param_callbacks["filt_calib_step"] = OBJ.filtGetCalibSig;
+    SM.param_callbacks["filt_calib_progress"] = OBJ.filtSetProgress;
 
 });

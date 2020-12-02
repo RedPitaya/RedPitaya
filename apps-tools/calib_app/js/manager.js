@@ -117,6 +117,11 @@
             if (OBJ.model !== "Z10") {
                 $("#filter_calib_button").remove();
             }
+
+            if (OBJ.model === "Z10") {
+                $("#filter_calib_button").show();
+            }
+
         }
         OBJ.amSetModel(_value);
     }
@@ -130,6 +135,7 @@
         SM.param_callbacks["ch2_min"] = undefined;
         OBJ.showMainMenu();
     }
+
 
 
 
@@ -233,7 +239,7 @@ $(function() {
 
     $('#B_DEFAULT').on('click', function(ev) {
 
-        $("#dialog_reset_text").text("Set default parameters?");
+        $("#dialog_reset_text").text("Set default parameters for current channel?");
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 6 };
             SM.sendParameters();

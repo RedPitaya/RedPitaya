@@ -55,8 +55,9 @@
                 if (dresult.status == 'OK') {
                     try {
                         SM.connectWebSocket();
-                        var element = document.getElementById("loader-wrapper");
-                        element.parentNode.removeChild(element);
+                        //  var element = document.getElementById("loader-wrapper");
+                        //  element.parentNode.removeChild(element);
+                        $('body').addClass('loaded');
                         $('#main').removeAttr("style");
                         console.log("Load manager");
                     } catch (e) {
