@@ -42,6 +42,10 @@ CXXOBJECTS_WEB=$(CXXSOURCES_WEB:.cpp=.o)
 CXXOBJECTS_TEST=$(CXXSOURCES_TEST:.cpp=.o)
 OBJECTS=$(COBJECTS) $(CXXOBJECTS)
 
+ifeq ($(MODEL),Z20_250_12)
+INCLUDE += -I$(INSTALL_DIR)/include/api250-12
+LDWFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
+endif 
 
 
 OUT_DIR=../

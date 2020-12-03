@@ -3,15 +3,6 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
 #include <fstream>  
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/syslog.h>
-#include <complex.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
 #include <ctime>
 #include <stdlib.h>
 
@@ -25,6 +16,12 @@
 #include "acq.h"
 #include "calib.h"
 #include "calib_man.h"
+#ifdef Z20_250_12
+#include "rp-spi.h"
+#include "rp-i2c-max7311.h"
+#endif
+
+
 #ifdef Z10
 #include "filter_logic.h"
 CFilter_logic::Ptr g_filter_logic;
