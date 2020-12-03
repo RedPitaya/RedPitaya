@@ -251,11 +251,8 @@ $(function() {
         }
         if (_mode == "FILTER_DAC_CH1") {
             SM.parametersCache["filt_gen1_enable"] = { value: _state };
-            SM.sendParameters2("filt_gen1_enable");
-        }
-        if (_mode == "FILTER_DAC_CH2") {
             SM.parametersCache["filt_gen2_enable"] = { value: _state };
-            SM.sendParameters2("filt_gen2_enable");
+            SM.sendParameters();
         }
     }
 
@@ -321,6 +318,10 @@ $(function() {
 
     OBJ.filtSetProgress = function(_value) {
         $('#PROGRESS').attr('value', _value.value);
+    }
+
+    OBJ.filterSetDecimation = function(_value) {
+        $("#FILTER_DECIMATION").val(_value.value);
     }
 
 
@@ -398,6 +399,7 @@ $(function() {
     SM.param_callbacks["filt_gen_offset"] = OBJ.filterSetChGenOffset;
     SM.param_callbacks["filt_gen_amp"] = OBJ.filterSetChGenAmp;
     SM.param_callbacks["filt_gen_freq"] = OBJ.filterSetChGenFreq;
+    SM.param_callbacks["adc_decimation"] = OBJ.filterSetDecimation;
 
     SM.param_callbacks["filt_aa"] = OBJ.filterSetAA;
     SM.param_callbacks["filt_bb"] = OBJ.filterSetBB;

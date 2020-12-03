@@ -141,7 +141,7 @@
                         <div class="container_inline" align=center id="filter_calib_button" style="display: none;">
                             <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_FILTER_MODE" style="width: 100%">
-                                    <a style="display: block;">FILTER</a>
+                                    <a style="display: block;">FREQUENCY FILTER</a>
                                 </li>
                             </div>
                         </div>
@@ -696,20 +696,6 @@
                                     </div>
                                 </div>
                                 <div class="container_inline" style="margin-top: 0px;">
-                                    <div id="filter_channel" style="
-                                                width: 110px;
-                                                height: 40px;
-                                                margin: 10px;
-                                                vertical-align: top;">
-                                        <input id="FILTER_CHANNEL" type="checkbox" class="filter_flipswitch flipswitch" data-on="CH 2" data-off="CH 1" />
-                                    </div>
-                                    <div id="filter_hv_lv_mode" style="
-                                                width: 110px;
-                                                height: 40px;
-                                                margin: 10px;
-                                                vertical-align: top;">
-                                        <input id="FILTER_HV_LV_MODE" type="checkbox" class="filter_flipswitch flipswitch" data-on="HV" data-off="LV" />
-                                    </div>
                                     <div style="width: 120px;text-align: right;">Decimation:</div>
                                     <div style="width: 100px;">
                                         <select id="FILTER_DECIMATION" class="protocol" name="resolution" style="width:100%">
@@ -733,7 +719,23 @@
                                 </div>
                             </div>
                             <div class="container_inline" style="display: inline-block; width: 200px;vertical-align: bottom;height: 700px;min-width: 250px;">
-                                <div style="padding-bottom: 10px;padding-top: 5px;border:1px solid rgba(153, 153, 153, 0.295)">
+                                <div style="padding-bottom: 10px;padding-top: 5px;margin-top: 5px;">
+                                    <div id="filter_channel" style="
+                                                width: 100px;
+                                                height: 40px;
+                                                margin: 10px;
+                                                vertical-align: top;">
+                                        <input id="FILTER_CHANNEL" type="checkbox" class="filter_flipswitch flipswitch" data-on="CH 2" data-off="CH 1" />
+                                    </div>
+                                    <div id="filter_hv_lv_mode" style="
+                                                width: 100px;
+                                                height: 40px;
+                                                margin: 10px;
+                                                vertical-align: top;">
+                                        <input id="FILTER_HV_LV_MODE" type="checkbox" class="filter_flipswitch flipswitch" data-on="HV" data-off="LV" />
+                                    </div>
+                                </div>
+                                <div style="padding-bottom: 10px;padding-top: 5px;border:1px solid rgba(153, 153, 153, 0.295);margin-top: 10px;">
                                     <label style="display: flow-root;">Calib parameters</label>
                                     <div id="filter_channel" style="
                                                 width: 100px;
@@ -781,9 +783,8 @@
                                     </div>
                                 </div>
                                 <div style="padding-bottom: 10px;padding-top: 5px;margin-top: 5px;width: 248px;">
-                                    <label style="display: flow-root;">DAC</label>
+                                    <label style="display: flow-root;">Generator</label>
                                     <div style="margin-top:0px">
-                                        <label style="display: flow-root;">CH1</label>
                                         <div id="filter_channel" style="
                                                     width: 100px;
                                                     height: 40px;
@@ -792,18 +793,6 @@
                                                     margin-right: 10px;
                                                     vertical-align: top;">
                                             <input id="FILTER_DAC_CH1" type="checkbox" class="filter_flipswitch flipswitch" data-on="ON" data-off="OFF" />
-                                        </div>
-                                    </div>
-                                    <div style="margin-top:0px">
-                                        <label style="display: flow-root;">CH2</label>
-                                        <div id="filter_channel" style="
-                                                    width: 100px;
-                                                    height: 40px;
-                                                    margin-top: 0px;
-                                                    margin-left: 10px;
-                                                    margin-right: 10px;
-                                                    vertical-align: top;">
-                                            <input id="FILTER_DAC_CH2" type="checkbox" class="filter_flipswitch flipswitch" data-on="ON" data-off="OFF" />
                                         </div>
                                     </div>
                                     <div class="container_inline">

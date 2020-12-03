@@ -5,10 +5,13 @@ RM=rm
 
 PROJECT_ROOT=../..
 
-CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp filter_logic.cpp
+CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp 
 CXXSOURCES_WEB=main.cpp
 CXXSOURCES_TEST=test.cpp
 
+ifeq ($(MODEL),Z10)
+CXXSOURCES += filter_logic.cpp
+endif
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2

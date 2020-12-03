@@ -25,19 +25,22 @@
 #include "acq.h"
 #include "calib.h"
 #include "calib_man.h"
+#ifdef Z10
 #include "filter_logic.h"
+CFilter_logic::Ptr g_filter_logic;
+#endif
 
 COscilloscope::Ptr g_acq;
 CCalib::Ptr        g_calib;
 CCalibMan::Ptr     g_calib_man;
-CFilter_logic::Ptr g_filter_logic;
+
 
 #ifdef Z20_250_12
 #define DAC_DEVIDER 4.0
 #else
 #define DAC_DEVIDER 2.0
 #endif
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 #define DEFAULT_CURSOR_1 0.2
 #define DEFAULT_CURSOR_2 0.4
@@ -105,15 +108,15 @@ CFloatSignal 		waveSignal(   		"wave", 					SCREEN_BUFF_SIZE,     0.0f);
 CFloatParameter		cursor_x1(    		"cursor_x1",				CBaseParameter::RW,   DEFAULT_CURSOR_1 ,0,	0, 1);
 CFloatParameter		cursor_x2(    		"cursor_x2",				CBaseParameter::RW,   DEFAULT_CURSOR_2 ,0,	0, 1);
 CBooleanParameter 	zoom_mode(    		"zoom_mode", 	        	CBaseParameter::RW,   false, 0);
-CIntParameter		adc_decimation(     "adc_decimation", 			CBaseParameter::RW,   1 ,0,	1, 65535);
+CIntParameter		adc_decimation(     "adc_decimation", 			CBaseParameter::RW,   8 ,0,	1, 65535);
 CIntParameter		adc_channel(     	"adc_channel", 				CBaseParameter::RW,   0 ,0,	0, 1);
-CBooleanParameter 	filter_hv_lv_mode(	"filter_hv_lv_mode", 	    CBaseParameter::RW, false,0);
+CBooleanParameter 	filter_hv_lv_mode(	"filter_hv_lv_mode", 	    CBaseParameter::RW,   false,0);
 CFloatParameter		adc_hyst(    		"adc_hyst",					CBaseParameter::RW,   0.05 ,0,	0, 1);
 CBooleanParameter 	filt_gen1_enable(	"filt_gen1_enable", 		CBaseParameter::RW,   false,0);
 CBooleanParameter 	filt_gen2_enable(	"filt_gen2_enable", 		CBaseParameter::RW,   false,0);
 CFloatParameter		filt_gen_offset(  	"filt_gen_offset",			CBaseParameter::RW,   0 	,0,	-1, 1);
 CFloatParameter		filt_gen_amp(  		"filt_gen_amp",				CBaseParameter::RW,   0.9   ,0,	0.001, 1);
-CFloatParameter		filt_gen_freq(  	"filt_gen_freq",			CBaseParameter::RW,   10000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
+CFloatParameter		filt_gen_freq(  	"filt_gen_freq",			CBaseParameter::RW,   1000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
 CIntParameter		filt_aa(	     	"filt_aa", 					CBaseParameter::RW,   0 ,0,	0, 0x3FFFF);
 CIntParameter		filt_bb(	     	"filt_bb", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
 CIntParameter		filt_pp(	     	"filt_pp", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
@@ -151,16 +154,16 @@ int rp_app_init(void)
 	g_acq = COscilloscope::Create(64);
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
-	g_filter_logic = CFilter_logic::Create(g_calib_man);
-	g_acq->start();
 #ifdef Z10	
+	g_filter_logic = CFilter_logic::Create(g_calib_man);
 	g_acq->setCursor1(cursor_x1.Value());
 	g_acq->setCursor2(cursor_x2.Value());
 #endif
-    #ifdef Z20_250_12
+#ifdef Z20_250_12
     rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
     rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
 #endif
+	g_acq->start();
 	return 0;
 }
 
@@ -487,7 +490,7 @@ void calibFilter(){
 		while(1){
 			auto d = g_acq->getDataAutoFilter();
 			if (d.ampl > 0){
-				if (g_filter_logic->calibPP(d,0.9) != 0) break;
+				if (g_filter_logic->calibPP(d,filter_hv_lv_mode.Value() ? 9.0 :0.9) != 0) break;
 			}
 		}
 		filt_calib_step.SendValue(4);
