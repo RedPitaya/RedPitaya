@@ -51,20 +51,29 @@ double calculate(float *_buffer, int _size,float _last_max, int _cross1,int _cro
     if (_cross1 + 1 > _size) return -1;
     _cross1++;
     if (_cross1 >= _cross2) return -1;
-    int count = _cross2 - _cross1;
+    int count = 0;
     double sum = 0;
     auto ch = _buffer;
     auto coff = 1 / _last_max;
     //auto ch = filterBuffer(_buffer,_size);
-    for(int i = _cross1 ; i < _cross2 ; i++){
-        sum  += ch[i] * coff; 
+    float w = 10;
+    for(int i = _cross1 ; i < _cross2-1 ; i++){
+        if (fabs(sin(1.0/(ch[i] - ch[i+1])) - 1) > 0.05) {
+            sum  += fabs(ch[i] * coff - 1)  * w; 
+            count ++;
+            w--;
+            if (w < 1) w =1;
+        }
     }
 //    double avg = _last_max;
     _deviation = 0;
-    for(int i = _cross1 * 1.1 ; i < _cross2 * 0.9 ; i++){
-         _deviation  += fabs(ch[i] * coff - ch[i+1] * coff); 
+    for(int i = _cross1; i < _cross2-1 ; i++){
+        if (fabs(sin(1.0/(ch[i] - ch[i+1])) - 1) > 0.03) {
+            auto z= fabs(ch[i] * coff - ch[i+1] * coff);
+             _deviation  +=  z;
+        } 
     }    
     _deviation /= 1000.0;
-    sum = fabs(sum - count);
+   // sum = fabs(sum - count);
     return sum;
 }

@@ -19,7 +19,7 @@
 #define MAX_BB GAIN_LO_FILT_BB * (1.0 + PERCENT_RANGE / 100.0)
 #define MIN_PP 0
 #define MAX_PP 0x5000
-#define STEPS_AA 10
+#define STEPS_AA 2
 #define STEPS_BB STEPS_AA
 
 CFilter_logic::Ptr CFilter_logic::Create(CCalibMan::Ptr _calib_man)
@@ -132,7 +132,7 @@ int CFilter_logic::setCalculatedValue(COscilloscope::DataPassAutoFilter item){
 
 void CFilter_logic::removeHalfCalib(){
     sort();
-    m_grid.erase (m_grid.end() - m_grid.size() /2 , m_grid.end());
+    m_grid.erase (m_grid.end() - m_grid.size() / 3.0 , m_grid.end());
     if (m_grid.size() > 0) 
         m_lastGood = m_grid[0];
 }

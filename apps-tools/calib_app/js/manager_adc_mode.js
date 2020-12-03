@@ -158,8 +158,8 @@ $(function() {
             },
             yaxes: [{
                 show: false,
-                min: -1,
-                max: 1,
+                min: null,
+                max: null,
                 labelWidth: 5,
                 tickDecimals: 1,
                 //   alignTicksWithAxis: 1,

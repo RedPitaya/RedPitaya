@@ -365,7 +365,10 @@ void COscilloscope::acquireAutoFilter(){
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
     localDP.ampl = -1;
     rp_AcqGetFilterCalibValue(m_channel,&localDP.f_aa,&localDP.f_bb,&localDP.f_kk,&localDP.f_pp);
-    while(repeat_count < 1) {
+    while(repeat_count < 8) {
+        timeout = 1000000;
+        fillState = false;
+        trig_state = RP_TRIG_STATE_TRIGGERED;
         rp_AcqSetDecimationFactor(m_decimationSq);
         rp_AcqSetTriggerDelay( ADC_BUFFER_SIZE/4.0);
         rp_AcqSetTriggerHyst(m_hyst);
@@ -407,8 +410,8 @@ void COscilloscope::acquireAutoFilter(){
         rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
     //    rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
         if (aa != localDP.f_aa || bb != localDP.f_bb || pp != localDP.f_pp || kk != localDP.f_kk) return;
+        auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1];
         for(int i = 0 ; i < acq_u_size ; i++){
-            auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1];
             m_acu_buffer[i] += ch[i];
         }
         repeat_count++;            
@@ -543,6 +546,8 @@ void COscilloscope::setGenGainx5(){
 void COscilloscope::resetGen(){
     enableGen(RP_CH_1,false);
     enableGen(RP_CH_2,false);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
     setFreq(RP_CH_1,1000);
     setFreq(RP_CH_2,1000);
     setAmp(RP_CH_1,0.9);

@@ -454,14 +454,14 @@ void calibFilter(){
 	if (filt_calib_step.Value() == 1){
 		g_filter_logic->init(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 		g_calib_man->setOffset(RP_CH_1,0);
-		g_calib_man->setFreq(RP_CH_1,10000);
+		g_calib_man->setFreq(RP_CH_1,1000);
 		g_calib_man->setAmp(RP_CH_1,0.9);	
 		g_calib_man->setOffset(RP_CH_2,0);
-		g_calib_man->setFreq(RP_CH_2,10000);
+		g_calib_man->setFreq(RP_CH_2,1000);
 		g_calib_man->setAmp(RP_CH_2,0.9);	
 		g_calib_man->enableGen(RP_CH_1,true);
 		g_calib_man->enableGen(RP_CH_2,true);
-		g_acq->startAutoFilter(1);
+		g_acq->startAutoFilter(8);
 		filt_calib_step.SendValue(2);
 		return;
 	}
@@ -496,7 +496,10 @@ void calibFilter(){
 	if (filt_calib_step.Value() == 4){
 		filt_calib_step.SendValue(100);
 		sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
-		g_calib_man->initSq(adc_decimation.Value());
+		g_acq->setHyst(adc_hyst.Value());
+		g_calib_man->changeDecimation(adc_decimation.Value());		
+		g_calib_man->setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
+    	g_calib_man->setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);    
 		g_calib_man->enableGen(RP_CH_1,filt_gen1_enable.Value());
 		g_calib_man->enableGen(RP_CH_2,filt_gen2_enable.Value());
 		g_calib_man->setOffset(RP_CH_1,filt_gen_offset.Value());
