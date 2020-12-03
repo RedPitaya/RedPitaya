@@ -180,10 +180,15 @@ $(function() {
     });
 
     $('#B_APPLY').on('click', function(ev) {
-        SM.parametersCache["calib_sig"] = { value: 5 };
-        SM.sendParameters();
-        OBJ.adcCalibChange = false;
-        OBJ.filterCalibChange = false;
+        $("#dialog_reset_text").text("Apply new calibration?");
+        $('#reset_ok_btn').on('click', function() {
+            SM.parametersCache["calib_sig"] = { value: 5 };
+            SM.sendParameters();
+            OBJ.adcCalibChange = false;
+            OBJ.filterCalibChange = false;
+        });
+        $('#reset_cancel_btn').on('click', function() {});
+        $("#dialog_reset").modal('show');
     });
 
     $('#B_RESET_DEFAULT').on('click', function(ev) {

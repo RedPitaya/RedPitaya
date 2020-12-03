@@ -340,11 +340,19 @@ $(function() {
     });
 
     $("#B_FILTER_AUTO").click(function() {
-        $('body').removeClass("loaded")
-        $('#PROGRESS').css("display", "block");
-        $('#PROGRESS').attr('value', 0);
-        SM.parametersCache["filt_calib_step"] = { value: 1 };
-        SM.sendParameters();
+        var s = "Please connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL (1Khz , 0.9V).";
+        if ($("#FILTER_HV_LV_MODE").is(':checked')) s = "Please connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL (1Khz , 9V).";
+        $("#dialog_reset_text").text(s);
+        $('#reset_ok_btn').on('click', function() {
+            $('body').removeClass("loaded")
+            $('#PROGRESS').css("display", "block");
+            $('#PROGRESS').attr('value', 0);
+            SM.parametersCache["filt_calib_step"] = { value: 1 };
+            SM.sendParameters();
+
+        });
+        $('#reset_cancel_btn').on('click', function() {});
+        $("#dialog_reset").modal('show');
     });
 
     $('.filter_flipswitch').change(function() {
