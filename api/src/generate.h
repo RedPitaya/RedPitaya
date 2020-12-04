@@ -97,6 +97,10 @@ typedef struct generate_control_s {
 
     ch_properties_t properties_chA;
     ch_properties_t properties_chB;
+#ifndef Z20_250_12
+    uint32_t     BurstFinalValue_chA;
+    uint32_t     BurstFinalValue_chB;
+#endif
 } generate_control_t;
 
 int generate_Init();
@@ -110,6 +114,8 @@ int generate_setAmplitude(rp_channel_t channel, float amplitude);
 int generate_getAmplitude(rp_channel_t channel, float *amplitude);
 int generate_setDCOffset(rp_channel_t channel, float offset);
 int generate_getDCOffset(rp_channel_t channel, float *offset);
+int generate_setBurstLastValue(rp_channel_t channel, float amplitude);
+int generate_getBurstLastValue(rp_channel_t channel, float *amplitude);
 #else
 int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain,  float amplitude);
 int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);

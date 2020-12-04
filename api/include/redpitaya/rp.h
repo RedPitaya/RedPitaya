@@ -1350,6 +1350,24 @@ int rp_GenBurstCount(rp_channel_t channel, int num);
 int rp_GenGetBurstCount(rp_channel_t channel, int *num);
 
 /**
+* Sets the value to be set at the end of the generated signal in burst mode.
+* @param channel Channel A or B for witch we want to set number of generated waveforms in a burst.
+* @param amplitude Amplitude level at the end of the signal (Volt).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenBurstLastValue(rp_channel_t channel, float amlitude);
+
+/**
+* Gets the value to be set at the end of the generated signal in burst mode.
+* @param channel Channel A or B for witch we want to get number of generated waveforms in a burst.
+* @param amplitude Amplitude where value will be returned (Volt).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude);
+
+/**
 * Sets number of burst repetitions. This determines how many bursts will be generated.
 * @param channel Channel A or B for witch we want to set number of burst repetitions.
 * @param repetitions Number of generated bursts. If -1, infinite bursts will be generated.

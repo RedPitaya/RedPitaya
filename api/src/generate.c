@@ -178,6 +178,25 @@ int generate_getDCOffset(rp_channel_t channel, float *offset) {
     return RP_OK;
 }
 
+int generate_setBurstLastValue(rp_channel_t channel, float amplitude){
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
+    uint32_t cnt = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX, false, amp_max, dc_offs, 0);
+    CHANNEL_ACTION(channel,
+        generate->BurstFinalValue_chA = cnt,
+        generate->BurstFinalValue_chB = cnt)
+    return RP_OK;
+}
+
+int generate_getBurstLastValue(rp_channel_t channel, float *amplitude){
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
+    *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, channel == RP_CH_1 ? (generate->BurstFinalValue_chA) : (generate->BurstFinalValue_chB)
+        , AMPLITUDE_MAX , amp_max, dc_offs, 0.0 , 1.0);
+    return RP_OK;
+}
+
+
 #else
 
 int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitude) {

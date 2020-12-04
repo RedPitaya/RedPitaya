@@ -828,6 +828,16 @@ int rp_GenGetBurstCount(rp_channel_t channel, int *num) {
     return gen_getBurstCount(channel, num);
 }
 
+#ifndef Z20_250_12
+int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
+    return gen_setBurstLastValue(channel,amlitude);
+}
+
+int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
+    return gen_getBurstLastValue(channel,amlitude);
+}
+#endif
+
 int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
     return gen_setBurstRepetitions(channel, repetitions);
 }
