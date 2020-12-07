@@ -343,6 +343,8 @@ $(function() {
         var s = "Please connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL (1Khz , 0.9V).";
         if ($("#FILTER_HV_LV_MODE").is(':checked')) s = "Please connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL (1Khz , 9V).";
         $("#dialog_reset_text").text(s);
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
         $('#reset_ok_btn').on('click', function() {
             $('body').removeClass("loaded")
             $('#PROGRESS').css("display", "block");

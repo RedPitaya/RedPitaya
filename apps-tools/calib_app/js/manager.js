@@ -181,6 +181,8 @@ $(function() {
 
     $('#B_APPLY').on('click', function(ev) {
         $("#dialog_reset_text").text("Apply new calibration?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 5 };
             SM.sendParameters();
@@ -193,6 +195,8 @@ $(function() {
 
     $('#B_RESET_DEFAULT').on('click', function(ev) {
         $("#dialog_reset_text").text("Reset to default?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 3 };
             SM.sendParameters();
@@ -203,6 +207,8 @@ $(function() {
 
     $('#B_RESET_FACTORY').on('click', function(ev) {
         $("#dialog_reset_text").text("Reset to factory calibration?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 4 };
             SM.sendParameters();
@@ -227,6 +233,8 @@ $(function() {
     $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
         if (OBJ.adcCalibChange || OBJ.filterCalibChange) {
             $("#dialog_reset_text").text("Save new parameters?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
                 SM.parametersCache["calib_sig"] = { value: 5 };
                 SM.sendParameters();
@@ -245,6 +253,8 @@ $(function() {
     $('#B_DEFAULT').on('click', function(ev) {
 
         $("#dialog_reset_text").text("Set default parameters for current channel?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 6 };
             SM.sendParameters();
