@@ -1,3 +1,4 @@
+#include "acq_math.h"
 #include "acq.h"
 #include "filter_logic.h"
 #include "rp.h"
@@ -11,6 +12,7 @@ int main()
 
     auto calib = CCalibMan::Create(acq);
     auto f_l = CFilter_logic::Create(calib);
+    calib->setModeLV_HV( RP_HIGH );
     f_l->init(RP_CH_1);
     f_l->print();
     acq->start();
@@ -57,7 +59,7 @@ int main()
         
         printf("PP: %d , ampl: %f\n",d.f_pp,d.ampl);
         if (d.ampl > 0){
-            if (f_l->calibPP(d,0.9) != 0) break;
+            if (f_l->calibPP(d,4) != 0) break;
         }
     }
  //   auto x = acq->getDataAutoFilter();

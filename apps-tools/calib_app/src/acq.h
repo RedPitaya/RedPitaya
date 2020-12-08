@@ -43,7 +43,8 @@ class COscilloscope {
         struct DataPassAutoFilter
         {
             double   ampl; 
-            double   calib_valie; // Calib value for AA and BB coff
+            double   calib_value; // Calib value for AA and BB coff
+            double   calib_value_raw;
             double   deviation;
             uint32_t f_aa;
             uint32_t f_bb;

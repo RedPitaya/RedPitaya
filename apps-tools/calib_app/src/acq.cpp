@@ -361,6 +361,7 @@ void COscilloscope::acquireAutoFilter(){
     uint32_t            acq_u_size = ADC_BUFFER_SIZE;
     uint32_t            acq_u_size_raw = ADC_BUFFER_SIZE;
     float               m_acu_buffer[ADC_BUFFER_SIZE];
+    float               m_acu_buffer_raw[ADC_BUFFER_SIZE];
     memset(m_acu_buffer,0,sizeof(float) * ADC_BUFFER_SIZE);
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
     localDP.ampl = -1;
@@ -408,17 +409,20 @@ void COscilloscope::acquireAutoFilter(){
     //   rp_AcqGetWritePointerAtTrig(&pos);
         rp_AcqGetWritePointer(&pos);
         rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
-    //    rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
+        rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
         if (aa != localDP.f_aa || bb != localDP.f_bb || pp != localDP.f_pp || kk != localDP.f_kk) return;
         auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1];
+        auto *ch_raw = m_buffer_raw[m_channel == RP_CH_1 ? 0 : 1];
         for(int i = 0 ; i < acq_u_size ; i++){
             m_acu_buffer[i] += ch[i];
+            m_acu_buffer_raw[i] += convertCnts(ch_raw[i]);
         }
         repeat_count++;            
     }
 
     for(int i = 0 ; i < acq_u_size ; i++){
         m_acu_buffer[i] /= (double)repeat_count;
+        m_acu_buffer_raw[i] /= (double)repeat_count;
     }
     localDP.cur_channel = m_channel;
     localDP.is_valid = true;
@@ -426,8 +430,11 @@ void COscilloscope::acquireAutoFilter(){
     auto cross = calcCountCrossZero(m_acu_buffer,acq_u_size);
     if (cross.size() >= 2 ){
         auto last_max = findLastMax(m_acu_buffer,acq_u_size,cross[1]);
+        auto last_max_raw = findLastMax(m_acu_buffer_raw,acq_u_size,cross[1]);
         double value = calculate(m_acu_buffer, acq_u_size, m_acu_buffer[last_max], cross[0],cross[1],localDP.deviation);
-        localDP.calib_valie = value;
+        double value_raw = calculate(m_acu_buffer_raw, acq_u_size, m_acu_buffer_raw[last_max], cross[0],cross[1],localDP.deviation);
+        localDP.calib_value = value;
+        localDP.calib_value_raw = value_raw;        
         localDP.ampl = m_acu_buffer[last_max];
       //  std::cout << m_acu_buffer[last_max] << std::endl;
     }

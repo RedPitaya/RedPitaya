@@ -500,7 +500,12 @@ void calibFilter(){
 		while(1){
 			auto d = g_acq->getDataAutoFilter();
 			if (d.ampl > 0){
-				if (g_filter_logic->calibPP(d,filter_hv_lv_mode.Value() ? 9.0 :0.9) != 0) break;
+				float nominal = 0.9;
+				if (filt_calib_auto_mode.Value() == 0) {
+					nominal = filt_calib_ref_amp.Value();
+				}
+
+				if (g_filter_logic->calibPP(d, nominal) != 0) break;
 			}
 		}
 		filt_calib_step.SendValue(4);

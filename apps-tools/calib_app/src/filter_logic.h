@@ -20,6 +20,7 @@ class CFilter_logic {
         uint32_t aa;
         uint32_t bb;
         double   value;
+        double   value_raw;
         double   deviationFromAVG;
         double   lastValue;
         double   lastDeviation;

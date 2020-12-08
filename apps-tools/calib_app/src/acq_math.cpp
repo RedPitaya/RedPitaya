@@ -2,7 +2,29 @@
 #include <iostream>
 #include <math.h>
 #include "acq_math.h"
+#include "rp.h"
 
+
+int16_t convertCnts(int16_t cnts)
+{
+    int16_t m;
+
+    /* check sign */
+    if(cnts & (1 << (ADC_BITS - 1))) {
+        /* negative number */
+        m = -1 *((cnts ^ ((1 << ADC_BITS) - 1)) + 1);
+    } else {
+        /* positive number */
+        m = cnts;
+    }
+    /* check limits */
+    if(m < (-1 * (1 << (ADC_BITS - 1))))
+        m = (-1 * (1 << (ADC_BITS - 1)));
+    else if(m > (1 << (ADC_BITS - 1)))
+        m = (1 << (ADC_BITS - 1));
+
+    return m;
+}
 
 std::vector<int> calcCountCrossZero(float *_buffer, int _size){
     std::vector<int> cross;

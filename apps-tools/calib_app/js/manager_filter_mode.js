@@ -403,15 +403,15 @@ $(function() {
         SM.sendParameters();
 
 
-        $("#reset_ok_btn").off('click');
+        $("#am_filt_external_btn").off('click');
         $('#am_filt_cancel_btn').off('click');
-        $('#reset_ok_btn').on('click', function() {
+        $('#am_filt_external_btn').on('click', function() {
             $('body').removeClass("loaded")
             $('#PROGRESS').css("display", "block");
             $('#PROGRESS').attr('value', 0);
             SM.parametersCache["filt_calib_step"] = { value: 1 };
             SM.sendParameters();
-
+            $("#am_dialog_filter_calib").modal('hide');
         });
         $('#am_filt_cancel_btn').on('click', function() {});
         $("#am_dialog_filter_calib").modal('show');

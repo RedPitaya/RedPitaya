@@ -5,8 +5,8 @@
 #define GAIN_LO_FILT_BB 0x437C7
 #define GAIN_LO_FILT_PP 0x2666
 #define GAIN_LO_FILT_KK 0xd9999a
-#define GAIN_HI_FILT_AA 0x4C5F
-#define GAIN_HI_FILT_BB 0x2F38B
+#define GAIN_HI_FILT_AA 0x4205
+#define GAIN_HI_FILT_BB 0x2Fbcb
 #define GAIN_HI_FILT_PP 0x2666
 #define GAIN_HI_FILT_KK 0xd9999a
 
@@ -17,6 +17,10 @@
 #define MAX_AA GAIN_LO_FILT_AA * (1.0 + PERCENT_RANGE / 100.0)
 #define MIN_BB GAIN_LO_FILT_BB * (1.0 - PERCENT_RANGE / 100.0)
 #define MAX_BB GAIN_LO_FILT_BB * (1.0 + PERCENT_RANGE / 100.0)
+#define MIN_AA_HI GAIN_HI_FILT_AA * (1.0 - PERCENT_RANGE / 100.0)
+#define MAX_AA_HI GAIN_HI_FILT_AA * (1.0 + PERCENT_RANGE / 100.0)
+#define MIN_BB_HI GAIN_HI_FILT_BB * (1.0 - PERCENT_RANGE / 100.0)
+#define MAX_BB_HI GAIN_HI_FILT_BB * (1.0 + PERCENT_RANGE / 100.0)
 #define MIN_PP 0
 #define MAX_PP 0x5000
 #define STEPS_AA 2
@@ -29,7 +33,7 @@ CFilter_logic::Ptr CFilter_logic::Create(CCalibMan::Ptr _calib_man)
 
 bool compare(CFilter_logic::GridItem i1, CFilter_logic::GridItem i2) 
 { 
-    return ((i1.value  * i1.value + i1.deviationFromAVG * i1.deviationFromAVG) < (i2.value  * i2.value + i2.deviationFromAVG * i2.deviationFromAVG)); 
+    return ((i1.value_raw  * i1.value_raw + i1.deviationFromAVG * i1.deviationFromAVG) < (i2.value_raw  * i2.value_raw + i2.deviationFromAVG * i2.deviationFromAVG)); 
 } 
 
 bool IsContain(std::vector<CFilter_logic::GridItem> &_list, CFilter_logic::GridItem i1){
@@ -59,8 +63,19 @@ void CFilter_logic::init(rp_channel_t _ch){
     m_calibAmpl = 0x1000;
     m_oldcalibAmpl = -1;
     m_grid.clear();
-    for(int i = MIN_AA ; i <= MAX_AA ; i += (MAX_AA - MIN_AA) / STEPS_AA){
-        for(int j = MIN_BB ; j <= MAX_BB ; j += (MAX_BB - MIN_BB) / STEPS_BB){
+    auto min_a = MIN_AA;
+    auto max_a = MAX_AA;
+    auto min_b = MIN_BB;
+    auto max_b = MAX_BB;
+
+    if (m_calib_man->getModeLV_HV() == RP_HIGH){
+        min_a = MIN_AA_HI;
+        max_a = MAX_AA_HI;
+        min_b = MIN_BB_HI;
+        max_b = MAX_BB_HI;
+    }
+    for(int i = min_a ; i <= max_a ; i += (max_a - min_a) / STEPS_AA){
+        for(int j = min_b ; j <= max_b ; j += (max_b - min_b) / STEPS_BB){
             GridItem item;
             item.aa = i;
             item.bb = j;
@@ -85,7 +100,7 @@ void CFilter_logic::setCalibMode(int _mode){
 void CFilter_logic::print(){
     sort();
     for(int i = 0 ; i < m_grid.size() ; i++){
-        printf("%d {AA: %6x, BB: %6x, V: %2.6f, D: %3.6f, index: %d}\n",i,m_grid[i].aa,m_grid[i].bb,m_grid[i].value,m_grid[i].deviationFromAVG,m_grid[i].index);
+        printf("%d {AA: %6x, BB: %6x, V: %2.6f, Vraw: %2.6f, D: %3.6f, index: %d}\n",i,m_grid[i].aa,m_grid[i].bb,m_grid[i].value,m_grid[i].value_raw,m_grid[i].deviationFromAVG,m_grid[i].index);
 
     }
 }
@@ -131,7 +146,8 @@ int CFilter_logic::setCalculatedValue(COscilloscope::DataPassAutoFilter item){
                 if (m_grid[i].ch == item.cur_channel)
                     if (!m_grid[i].calculate)
                     {
-                        m_grid[i].value = item.calib_valie;
+                        m_grid[i].value = item.calib_value;
+                        m_grid[i].value_raw = item.calib_value_raw;                        
                         m_grid[i].calculate = true;
                         m_grid[i].deviationFromAVG = item.deviation;
     //                    std::cout  << "Cur step " << i <<  " aa = " << m_grid[i].aa << " bb = " << m_grid[i].bb << " VALUE " << m_grid[i].value <<  std::endl;
