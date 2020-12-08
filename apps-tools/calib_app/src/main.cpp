@@ -100,26 +100,29 @@ CBooleanParameter 	ac_dc_mode(	  "ac_dc_mode", 	        CBaseParameter::RW, fals
 #endif
 
 #ifdef Z10
-CIntParameter		adc_mode(     		"adc_acquire_mode", 		CBaseParameter::RW,   0 ,0,	0, 10);
-CFloatSignal 		waveSignal(   		"wave", 					SCREEN_BUFF_SIZE,     0.0f);
-CFloatParameter		cursor_x1(    		"cursor_x1",				CBaseParameter::RW,   DEFAULT_CURSOR_1 ,0,	0, 1);
-CFloatParameter		cursor_x2(    		"cursor_x2",				CBaseParameter::RW,   DEFAULT_CURSOR_2 ,0,	0, 1);
-CBooleanParameter 	zoom_mode(    		"zoom_mode", 	        	CBaseParameter::RW,   false, 0);
-CIntParameter		adc_decimation(     "adc_decimation", 			CBaseParameter::RW,   8 ,0,	1, 65535);
-CIntParameter		adc_channel(     	"adc_channel", 				CBaseParameter::RW,   0 ,0,	0, 1);
-CBooleanParameter 	filter_hv_lv_mode(	"filter_hv_lv_mode", 	    CBaseParameter::RW,   false,0);
-CFloatParameter		adc_hyst(    		"adc_hyst",					CBaseParameter::RW,   0.05 ,0,	0, 1);
-CBooleanParameter 	filt_gen1_enable(	"filt_gen1_enable", 		CBaseParameter::RW,   false,0);
-CBooleanParameter 	filt_gen2_enable(	"filt_gen2_enable", 		CBaseParameter::RW,   false,0);
-CFloatParameter		filt_gen_offset(  	"filt_gen_offset",			CBaseParameter::RW,   0 	,0,	-1, 1);
-CFloatParameter		filt_gen_amp(  		"filt_gen_amp",				CBaseParameter::RW,   0.9   ,0,	0.001, 1);
-CFloatParameter		filt_gen_freq(  	"filt_gen_freq",			CBaseParameter::RW,   1000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
-CIntParameter		filt_aa(	     	"filt_aa", 					CBaseParameter::RW,   0 ,0,	0, 0x3FFFF);
-CIntParameter		filt_bb(	     	"filt_bb", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
-CIntParameter		filt_pp(	     	"filt_pp", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
-CIntParameter		filt_kk(	     	"filt_kk", 					CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
-CIntParameter		filt_calib_step(	"filt_calib_step",			CBaseParameter::RW,   0 ,0,	0, 100000);
-CIntParameter		filt_calib_progress("filt_calib_progress",			CBaseParameter::RW,   0 ,0,	0, 100);
+CIntParameter		adc_mode(     		 "adc_acquire_mode", 		CBaseParameter::RW,   0 ,0,	0, 10);
+CFloatSignal 		waveSignal(   		 "wave", 					SCREEN_BUFF_SIZE,     0.0f);
+CFloatParameter		cursor_x1(    		 "cursor_x1",				CBaseParameter::RW,   DEFAULT_CURSOR_1 ,0,	0, 1);
+CFloatParameter		cursor_x2(    		 "cursor_x2",				CBaseParameter::RW,   DEFAULT_CURSOR_2 ,0,	0, 1);
+CBooleanParameter 	zoom_mode(    		 "zoom_mode", 	        	CBaseParameter::RW,   false, 0);
+CIntParameter		adc_decimation(      "adc_decimation", 			CBaseParameter::RW,   8 ,0,	1, 65535);
+CIntParameter		adc_channel(     	 "adc_channel", 			CBaseParameter::RW,   0 ,0,	0, 1);
+CBooleanParameter 	filter_hv_lv_mode(	 "filter_hv_lv_mode", 	    CBaseParameter::RW,   false,0);
+CFloatParameter		adc_hyst(    		 "adc_hyst",				CBaseParameter::RW,   0.05 ,0,	0, 1);
+CBooleanParameter 	filt_gen1_enable(	 "filt_gen1_enable", 		CBaseParameter::RW,   false,0);
+CBooleanParameter 	filt_gen2_enable(	 "filt_gen2_enable", 		CBaseParameter::RW,   false,0);
+CFloatParameter		filt_gen_offset(  	 "filt_gen_offset",			CBaseParameter::RW,   0 	,0,	-1, 1);
+CFloatParameter		filt_gen_amp(  		 "filt_gen_amp",			CBaseParameter::RW,   0.9   ,0,	0.001, 1);
+CFloatParameter		filt_gen_freq(  	 "filt_gen_freq",			CBaseParameter::RW,   1000  ,0,	1, DAC_FREQUENCY / DAC_DEVIDER);
+CIntParameter		filt_aa(	     	 "filt_aa", 				CBaseParameter::RW,   0 ,0,	0, 0x3FFFF);
+CIntParameter		filt_bb(	     	 "filt_bb", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		filt_pp(	     	 "filt_pp", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		filt_kk(	     	 "filt_kk", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		filt_calib_step(	 "filt_calib_step",			CBaseParameter::RW,   0 ,0,	0, 100000);
+CIntParameter		filt_calib_progress( "filt_calib_progress",		CBaseParameter::RW,   0 ,0,	0, 100);
+CIntParameter		filt_calib_auto_mode("filt_calib_auto_mode",	CBaseParameter::RW,   0 ,0,	0, 1);
+CFloatParameter		filt_calib_ref_amp(	 "filt_calib_ref_amp",		CBaseParameter::RW,   0.9   ,0,	0.001, 20);
+
 #endif
 
 void PrintLogInFile(const char *message){
@@ -447,6 +450,16 @@ void updateFilterModeParameter(){
 	if (adc_hyst.IsNewValue()){
 		adc_hyst.Update();
 		g_acq->setHyst(adc_hyst.Value());
+	}
+
+	if(filt_calib_auto_mode.IsNewValue()){
+		filt_calib_auto_mode.Update();
+		g_filter_logic->setCalibMode(filt_calib_auto_mode.Value());
+	}
+
+	if(filt_calib_ref_amp.IsNewValue()){
+		filt_calib_ref_amp.Update();
+		g_filter_logic->setCalibRef(filt_calib_ref_amp.Value());
 	}
 }
 

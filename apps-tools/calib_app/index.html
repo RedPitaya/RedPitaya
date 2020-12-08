@@ -882,6 +882,48 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="am_dialog_filter_calib" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Calibration</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <div style="margin-bottom: 20px;" class="container_inline">
+                        <div style="width: 200px;text-align: right;height: 100%;">
+                            <div style="height: 100%;margin: auto;padding: 10px;">Reference generator:</div>
+                        </div>
+                        <div style="vertical-align: top;">
+                            <input id="am_filt_switch" type="checkbox" class="filter_flipswitch flipswitch" data-on="INTERNAL" data-off="EXTERNAL" style="width: 200px; margin-left: 10px;height: 38px;" />
+                        </div>
+                    </div>
+                    <div class="container_inline">
+                        <img id="am_filt_dialog_img" src="./img/125/RP_125_GND.png" />
+                        <p id="am_filt_dialog_text">TEXT</p>
+                    </div>
+                    <div id="am_filt_dialog_input" class="container_inline">
+                        <div style="width: 200px;text-align: right;">Reference voltage:</div>
+                        <div>
+                            <input id="SS_FILT_REF_VOLT" type="text" size="5" style="width: 200px;margin-left: 10px;" value="0.5" step="0.001" min="0.001" max="20">
+                        </div>
+                        <!-- <div>
+                            <img id="SS_REF_VLOT_STATE" src="img/green_led.png" style="width: 25px;">
+                        </div> -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 45%;">
+                        <a style="border: 1px solid; width: 100%" id="am_filt_external_btn" class="btn">Calibrate</a>
+                    </div>
+
+                    <div class="bazaar-link" style="float: right; width: 45%;">
+                        <a style="border: 1px solid; width: 100%" id="am_filt_cancel_btn" data-dismiss="modal" class="btn">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="dialog_reset" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

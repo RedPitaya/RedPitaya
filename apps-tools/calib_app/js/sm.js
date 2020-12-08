@@ -224,7 +224,7 @@
     //Handlers
     var signalsHandler = function() {
         if (SM.signalStack.length > 0) {
-            console.log(SM.signalStack[0].wave);
+            //console.log(SM.signalStack[0].wave);
             OBJ.filterSignal = SM.signalStack[0].wave;
             SM.signalStack.splice(0, 1);
         }

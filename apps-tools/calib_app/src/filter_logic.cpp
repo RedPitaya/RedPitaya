@@ -47,6 +47,8 @@ m_calib_man(_calib_man)
     m_calibAmpl = 0x1000;
     m_index = 0;
     m_oldcalibAmpl = -1;
+    m_calibRef = 0.9;
+    m_calibMode - 0;
     m_grid.clear();
 }
 
@@ -69,6 +71,15 @@ void CFilter_logic::init(rp_channel_t _ch){
             m_grid.push_back(item);
         }
     }
+}
+
+void CFilter_logic::setCalibRef(float _value){
+    m_calibRef = _value;
+}
+
+// 0 - External, 1 - Internal
+void CFilter_logic::setCalibMode(int _mode){
+    m_calibMode = _mode;
 }
 
 void CFilter_logic::print(){

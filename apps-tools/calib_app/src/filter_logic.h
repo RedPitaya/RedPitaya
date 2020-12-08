@@ -44,6 +44,8 @@ class CFilter_logic {
                     auto calcProgress() -> int;
                     auto setGoodCalibParameter() -> void;
                     auto calibPP(COscilloscope::DataPassAutoFilter item,float _nominal) -> int;
+                    auto setCalibRef(float _value) -> void;
+                    auto setCalibMode(int _mode) -> void;
     private:
         std::vector<GridItem> m_grid; 
         GridItem              m_lastGood;
@@ -53,4 +55,6 @@ class CFilter_logic {
         double                m_percent;  
         int                   m_calibAmpl; // step calib amlitude 
         float                 m_oldcalibAmpl;
+        int                   m_calibMode; // 0 - External, 1 - Internal
+        float                 m_calibRef; 
 };
