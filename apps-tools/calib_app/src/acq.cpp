@@ -147,7 +147,7 @@ void COscilloscope::oscWorker(){
                acquireAutoFilter();
            }
            pthread_mutex_unlock(&m_funcSelector);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+           std::this_thread::sleep_for(std::chrono::microseconds(100));
         }    
     }catch (std::exception& e)
     {
