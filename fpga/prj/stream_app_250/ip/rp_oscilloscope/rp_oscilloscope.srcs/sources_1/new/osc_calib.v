@@ -25,9 +25,9 @@ localparam CALC_MIN   = -(2**(AXIS_DATA_BITS-1));
 localparam C_START    = 16;
 localparam C_END      = C_START+16;
 
-reg  signed [AXIS_DATA_BITS-1:0]  adc_data;
-reg  signed [15:0]                offset;
-reg  signed [15:0]                gain;   
+wire signed [AXIS_DATA_BITS-1:0]  adc_data;
+wire signed [15:0]                offset;
+wire signed [15:0]                gain;   
 
 reg  signed [    CALC1_BITS-1:0]  offset_calc;
 wire                              offs_max, offs_min;
@@ -43,16 +43,13 @@ reg                               s_axis_tvalid_p2;
 
 
 ////////////////////////////////////////////////////////////
-// Registration of input data
+// Input data
 // 
 ////////////////////////////////////////////////////////////
 
-always @(posedge clk)
-begin
-  adc_data <= s_axis_tdata;
-  offset   <= cfg_calib_offset;
-  gain     <= cfg_calib_gain;
-end
+assign adc_data = s_axis_tdata;
+assign offset   = cfg_calib_offset;
+assign gain     = cfg_calib_gain;
 
 ////////////////////////////////////////////////////////////
 // Name : Gain Calculation
