@@ -29,18 +29,19 @@ int main()
     // chip.setOutputLevel(0);
     // chip.writeConfig();
 
-    // MSG("Init",rp_max7311::rp_initController());
-    // MSG("set AC/DC 1",rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_DC_MODE));
-    // MSG("get AC/DC 1",rp_max7311::rp_getAC_DC(RP_MAX7311_IN1));
+     MSG("Init",rp_max7311::rp_initController());
+      MSG("Check",rp_max7311::rp_check());
+//     MSG("set AC/DC 1",rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_DC_MODE));
+//     MSG("get AC/DC 1",rp_max7311::rp_getAC_DC(RP_MAX7311_IN1));
 //max7311::setPIN_GROUP(PIN_K1,RP_AC_MODE);
- //    MSG("set AC/DC 2",rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE));
-    // MSG("get AC/DC 2",rp_max7311::rp_getAC_DC(RP_MAX7311_IN2));
+//     MSG("set AC/DC 2",rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE));
+  //   MSG("get AC/DC 2",rp_max7311::rp_getAC_DC(RP_MAX7311_IN2));
 
-    // MSG("set Attenuator 1",rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_20));
-    // MSG("get Attenuator 1",rp_max7311::rp_getAttenuator(RP_MAX7311_IN1));
+  //   MSG("set Attenuator 1",rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_20));
+ //    MSG("get Attenuator 1",rp_max7311::rp_getAttenuator(RP_MAX7311_IN1));
 
-    // MSG("set Attenuator 2",rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_20));
-    // MSG("get Attenuator 2",rp_max7311::rp_getAttenuator(RP_MAX7311_IN2));
+   ///  MSG("set Attenuator 2",rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_20));
+ //    MSG("get Attenuator 2",rp_max7311::rp_getAttenuator(RP_MAX7311_IN2));
 
     // MSG("set Gain 1",rp_max7311::rp_setGainOut(RP_MAX7311_OUT1,RP_GAIN_10V));
     // MSG("get Gain 1",rp_max7311::rp_getGainOut(RP_MAX7311_OUT1));
@@ -59,9 +60,9 @@ int main()
    // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_ON);
 //    sleep(2);
    // rp_gpio_power::rp_set_power_mode(ADC_POWER,POWER_OFF);
-    rp_spi_fpga::rp_spi_enable_verbous();
+//    rp_spi_fpga::rp_spi_enable_verbous();
 //    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
-    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250_default.xml");
+ //   rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250_default.xml");
     //rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250_streaming.xml");
     // char x = 0;
     // rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x50,0x14,x);
