@@ -1,18 +1,29 @@
 #include "acq_math.h"
 #include "acq.h"
 #include "filter_logic.h"
+#include "filter_logic2ch.h"
 #include "rp.h"
 #include <iostream>
 
 #define DEC 8
+
+void test1();
+void test2();
+
 int main()
 {
-  	rp_Init();
+  //  test1();
+    test2();
+    return 0;
+}
+
+void test1(){
+      	rp_Init();
 	auto acq = COscilloscope::Create(DEC);
 
     auto calib = CCalibMan::Create(acq);
     auto f_l = CFilter_logic::Create(calib);
-    calib->setModeLV_HV( RP_HIGH );
+    calib->setModeLV_HV( RP_LOW );
     f_l->init(RP_CH_1);
     f_l->print();
     acq->start();
@@ -35,7 +46,7 @@ int main()
                 
             
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            printf("\rPROGRESS: %6d/%6d",f_l->getcCalibDone(), f_l->getCalibCount());
+            printf("\rPROGRESS: %6d/%6d",f_l->getCalibDone(), f_l->getCalibCount());
         }
         printf("\n");
     //       std::cout <<  " AA = " << d.f_aa << " BB = " << d.f_bb << " PP = " << d.f_pp << " KK = " << d.f_kk << std::endl;
@@ -59,12 +70,80 @@ int main()
         
         printf("PP: %d , ampl: %f\n",d.f_pp,d.ampl);
         if (d.ampl > 0){
-            if (f_l->calibPP(d,4) != 0) break;
+            if (f_l->calibPP(d,0.9) != 0) break;
         }
     }
  //   auto x = acq->getDataAutoFilter();
  //   std::cout <<  " AA = " << x.f_aa << " BB = " << x.f_bb << " PP = " << x.f_pp << " KK = " << x.f_kk << std::endl;
     acq->stop();
+
     rp_Release();
-    return 0;
+}
+
+
+void test2(){
+
+    rp_Init();
+	auto acq = COscilloscope::Create(DEC);
+    auto calib = CCalibMan::Create(acq);
+
+    auto f_l = CFilter_logic2ch::Create(calib);
+    calib->setModeLV_HV( RP_LOW );
+    f_l->init();
+    f_l->print();
+    acq->start();
+    acq->startAutoFilter2Ch(DEC);
+    acq->updateAcqFilter(RP_CH_1);
+    acq->updateAcqFilter(RP_CH_2);
+    while(1){
+        auto d = acq->getDataAutoFilter2Ch();
+        while (f_l->setCalibParameters() != -1){
+        //    auto dp = acq->getDataAutoFilter();
+        //    auto cur_index = dp.index;
+            
+            auto dp = acq->getDataAutoFilter2Ch();
+            f_l->setCalculatedValue(dp);                
+            
+
+            //if (f_l->setCalculatedValue(dp)== -1) break;
+                
+            
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            printf("\rPROGRESS: %6d/%6d",f_l->getCalibDone(), f_l->getCalibCount());
+        }
+        printf("\n");
+    //       std::cout <<  " AA = " << d.f_aa << " BB = " << d.f_bb << " PP = " << d.f_pp << " KK = " << d.f_kk << std::endl;
+        f_l->removeHalfCalib();
+        printf("CALCULATE\n");
+        f_l->print();
+    //    getchar();
+        if (f_l->nextSetupCalibParameters() == -1) break;
+        printf("SPLIT\n");
+        f_l->print();
+        printf("======= PROGRESS: %d\n",f_l->calcProgress());
+
+   //     getchar();
+       // break;
+    }
+    f_l->setGoodCalibParameter();
+    
+
+
+    while(1){
+        auto d = acq->getDataAutoFilter2Ch();
+        
+    //    printf("PP: %d , ampl: %f\n",d.valueCH1.f_pp,d.valueCH1.ampl);
+        if (f_l->calibPPCh1(d,0.9) != 0) break;
+    }
+
+     while(1){
+        auto d = acq->getDataAutoFilter2Ch();
+        
+    //    printf("PP: %d , ampl: %f\n",d.valueCH2.f_pp,d.valueCH2.ampl);
+        if (f_l->calibPPCh2(d,0.9) != 0) break;
+    }
+ //   auto x = acq->getDataAutoFilter();
+ //   std::cout <<  " AA = " << x.f_aa << " BB = " << x.f_bb << " PP = " << x.f_pp << " KK = " << x.f_kk << std::endl;
+    acq->stop();
+    rp_Release();
 }

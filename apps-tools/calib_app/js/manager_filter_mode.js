@@ -84,6 +84,8 @@ $(function() {
                 show: true,
                 min: -1 * max_value,
                 max: max_value,
+                ticks: 20,
+                tickDecimals: 1
             }],
             xaxis: {
                 show: false,
