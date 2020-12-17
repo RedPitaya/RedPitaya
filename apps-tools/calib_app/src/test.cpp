@@ -88,7 +88,17 @@ void test2(){
     auto calib = CCalibMan::Create(acq);
 
     auto f_l = CFilter_logic2ch::Create(calib);
-    calib->setModeLV_HV( RP_LOW );
+    calib->setModeLV_HV( RP_HIGH );
+    	calib->setOffset(RP_CH_1,0);
+		calib->setFreq(RP_CH_1,1000);
+		calib->setAmp(RP_CH_1,0.9);	
+		calib->setOffset(RP_CH_2,0);
+		calib->setFreq(RP_CH_2,1000);
+		calib->setAmp(RP_CH_2,0.9);	
+		calib->setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
+    	calib->setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);  
+		calib->enableGen(RP_CH_1,true);
+		calib->enableGen(RP_CH_2,true);
     f_l->init();
     f_l->print();
     acq->start();
@@ -125,9 +135,9 @@ void test2(){
    //     getchar();
        // break;
     }
-    f_l->setGoodCalibParameter();
+    f_l->setGoodCalibParameterCh1();
     
-
+    printf("CALIB CH1\n");
 
     while(1){
         auto d = acq->getDataAutoFilter2Ch();
@@ -135,7 +145,8 @@ void test2(){
     //    printf("PP: %d , ampl: %f\n",d.valueCH1.f_pp,d.valueCH1.ampl);
         if (f_l->calibPPCh1(d,0.9) != 0) break;
     }
-
+    printf("CALIB CH2\n");
+    f_l->setGoodCalibParameterCh2();
      while(1){
         auto d = acq->getDataAutoFilter2Ch();
         

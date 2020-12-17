@@ -22,7 +22,8 @@ class CFilter_logic2ch {
                 auto removeHalfCalib() -> void;
                 auto nextSetupCalibParameters() -> int;
                 auto calcProgress() -> int;
-                auto setGoodCalibParameter() -> void;
+                auto setGoodCalibParameterCh1() -> void;
+                auto setGoodCalibParameterCh2() -> void;
                 auto calibPPCh1(COscilloscope::DataPassAutoFilter2Ch item,float _nominal) -> int;
                 auto calibPPCh2(COscilloscope::DataPassAutoFilter2Ch item,float _nominal) -> int;
                 auto setCalibRef(float _value) -> void;

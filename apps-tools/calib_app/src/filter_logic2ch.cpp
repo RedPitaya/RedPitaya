@@ -68,8 +68,11 @@ int CFilter_logic2ch::calcProgress(){
     return x > y ? y : x;
 }
 
-void CFilter_logic2ch::setGoodCalibParameter(){
+void CFilter_logic2ch::setGoodCalibParameterCh1(){
     m_fl1->setGoodCalibParameter();
+}
+
+void CFilter_logic2ch::setGoodCalibParameterCh2(){
     m_fl2->setGoodCalibParameter();
 }
 

@@ -22,7 +22,7 @@
 #define MIN_BB_HI GAIN_HI_FILT_BB * (1.0 - PERCENT_RANGE / 100.0)
 #define MAX_BB_HI GAIN_HI_FILT_BB * (1.0 + PERCENT_RANGE / 100.0)
 #define MIN_PP 0
-#define MAX_PP 0x5000
+#define MAX_PP 0x50000
 #define STEPS_AA 2
 #define STEPS_BB STEPS_AA
 
@@ -53,7 +53,7 @@ m_calib_man(_calib_man)
     m_index = 0;
     m_oldcalibAmpl = -1;
     m_calibRef = 0.9;
-    m_calibMode - 0;
+    m_calibMode = 0;
     m_grid.clear();
 }
 
