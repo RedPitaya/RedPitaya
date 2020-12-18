@@ -40,7 +40,7 @@ CCalibMan::Ptr     g_calib_man;
 #else
 #define DAC_DEVIDER 2.0
 #endif
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 #define DEFAULT_CURSOR_1 0.2
 #define DEFAULT_CURSOR_2 0.4
@@ -557,15 +557,9 @@ void calibFilter(){
 }
 
 void calibAutoFilter(){
-		 char s[100];
-		 sprintf(s,"State %d\n",f_ss_next_step.Value());
-		 PrintLogInFile(s);
 
 	if (f_ref_volt.IsNewValue()){
 		f_ref_volt.Update();
-		// char s[100];
-		// sprintf(s,"Ref %f\n",f_ref_volt.Value());
-		// PrintLogInFile(s);
 	}
 
 	if (f_external_gen.IsNewValue()){
@@ -815,40 +809,6 @@ void calibAutoFilter(){
 			return;
 		}
 
-	// if (f_ss_next_step.Value() == 2){
-	// 	g_filter_logic->setGoodCalibParameter();
-	// 	std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-	// 	while(1){
-	// 		auto d = g_acq->getDataAutoFilter();
-	// 		if (d.ampl > 0){
-	// 			float nominal = 0.9;
-	// 			if (filt_calib_auto_mode.Value() == 0) {
-	// 				nominal = filt_calib_ref_amp.Value();
-	// 			}
-
-	// 			if (g_filter_logic->calibPP(d, nominal) != 0) break;
-	// 		}
-	// 	}
-	// 	f_ss_next_step.SendValue(3);
-	// }
-
-	// if (filt_calib_step.Value() == 4){
-	// 	filt_calib_step.SendValue(100);
-	// 	sendFilterCalibValues(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
-	// 	g_acq->setHyst(adc_hyst.Value());
-	// 	g_calib_man->changeDecimation(adc_decimation.Value());		
-	// 	g_calib_man->setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
-    // 	g_calib_man->setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);    
-	// 	g_calib_man->enableGen(RP_CH_1,filt_gen1_enable.Value());
-	// 	g_calib_man->enableGen(RP_CH_2,filt_gen2_enable.Value());
-	// 	g_calib_man->setOffset(RP_CH_1,filt_gen_offset.Value());
-	// 	g_calib_man->setFreq(RP_CH_1,filt_gen_freq.Value());
-	// 	g_calib_man->setAmp(RP_CH_1,filt_gen_amp.Value());	
-	// 	g_calib_man->setOffset(RP_CH_2,filt_gen_offset.Value());
-	// 	g_calib_man->setFreq(RP_CH_2,filt_gen_freq.Value());
-	// 	g_calib_man->setAmp(RP_CH_2,filt_gen_amp.Value());
-	// }
-
 }
 
 void sendFilterCalibValues(rp_channel_t _ch){
@@ -894,16 +854,6 @@ void UpdateParams(void)
 		if (f_ss_next_step.IsNewValue())
 		{
 			f_ss_next_step.Update();
-			if (f_ss_next_step.Value() != -2){
-				// if (g_calib->calib(ss_next_step.Value(),ref_volt.Value()) == RP_OK){
-				// 	auto x = g_calib->getCalibData();
-				// 	ch1_calib_pass.SendValue(x.ch1);
-				// 	ch2_calib_pass.SendValue(x.ch2);
-				//	f_ss_state.SendValue(f_ss_next_step.Value());
-			//	}
-			}else{
-				//g_calib->restoreCalib();
-			}
 		}
 
 		calibAutoFilter();

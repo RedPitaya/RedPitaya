@@ -87,7 +87,6 @@ double calculate(float *_buffer, int _size,float _last_max, int _cross1,int _cro
             if (w < 1) w =1;
         }
     }
-//    double avg = _last_max;
     _deviation = 0;
     for(int i = _cross1; i < _cross2-1 ; i++){
         if (fabs(sin(1.0/(ch[i] - ch[i+1])) - 1) > 0.03) {
@@ -96,6 +95,5 @@ double calculate(float *_buffer, int _size,float _last_max, int _cross1,int _cro
         } 
     }    
     _deviation /= 1000.0;
-   // sum = fabs(sum - count);
     return sum;
 }

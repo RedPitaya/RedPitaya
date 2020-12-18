@@ -41,15 +41,6 @@
         $("#fauto_calib_table").empty();
     }
 
-    // OBJ.famSetLedState = function(_state) {
-    //     if (_state) {
-    //         $("#SS_REF_VLOT_STATE").attr("src", "img/green_led.png");
-    //     } else {
-    //         $("#SS_REF_VLOT_STATE").attr("src", "img/red_led.png");
-    //     }
-    //     OBJ.famLastState = _state;
-    // }
-
     OBJ.famAddNewRow = function() {
         var table = document.getElementById("fauto_calib_table");
         var row = table.insertRow(-1);
@@ -186,9 +177,6 @@
                 element.appendChild(elem);
             }
         }
-        // <progress id="PROGRESS" max="100" value="0" style="display: none;
-        // margin-left: auto;
-        // margin-right: auto;" />
     }
 
     OBJ.famStartButtonPress = function() {
@@ -231,22 +219,6 @@
     OBJ.famShowDloag = function() {
         OBJ.famLastState = true;
         if (OBJ.famCheckEmptyVariables()) {
-            // if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("low")) {
-            //     $("#am_dialog_img").attr("src", OBJ.famStates[OBJ.famCurrentTest].img);
-            // } else {
-            //     $("#am_dialog_img").attr("src", "");
-            // }
-            // if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("hint")) {
-            //     $("#am_dialog_text").text(OBJ.famStates[OBJ.famCurrentTest].hint);
-            // } else {
-            //     $("#am_dialog_text").text("");
-            // }
-            // if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
-            //     $("#SS_REF_VOLT").val(OBJ.famStates[OBJ.famCurrentTest].input);
-            //     $("#am_dialog_input").show();
-            // } else {
-            //     $("#am_dialog_input").hide();
-            // }
             if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("low")) {
                 if ($("#am_a_filt_switch").is(':checked')) {
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_AUTO_MODE.png");
@@ -284,7 +256,6 @@
             $('#am_a_filt_cancel_btn').on('click', function() {});
             $("#am_dialog_a_filter_calib").modal('show');
         }
-        //$("#am_dialog_calib").modal('show');
     }
 
     OBJ.famClickOkDialog = function() {
@@ -298,10 +269,6 @@
     OBJ.famStartCalibration = function() {
         OBJ.famCurrentTest = 0;
         OBJ.famAddNextStepRow();
-        // OBJ.famCurrentTest = 1;
-        // OBJ.famCurrentRowID = OBJ.famAddNewRow();
-        // OBJ.famSetName();
-        // OBJ.famSetStartButton();
     }
 
     OBJ.famContinueCalibration = function() {
@@ -315,86 +282,6 @@
         OBJ.famCurrentSuccesTest = _state - 1;
         SM.sendParameters();
     }
-
-    // OBJ.famCheckInputRef = function() {
-    //     var ref = parseFloat($("#SS_REF_VOLT").val());
-    //     var state = true;
-    //     if (isNaN(ref) === false) {
-    //         if ((ref * 0.75 > OBJ.famLastAVGCH1) || (OBJ.famLastAVGCH1 > ref * 1.25)) {
-    //             state = false;
-    //         }
-    //         if ((ref * 0.75 > OBJ.famLastAVGCH2) || (OBJ.famLastAVGCH2 > ref * 1.25)) {
-    //             state = false;
-    //         }
-    //     } else {
-    //         state = false;
-    //     }
-    //     OBJ.famSetLedState(state);
-    // }
-
-    // OBJ.famSetCH1Avg = function(_value) {
-    //     if (OBJ.famCheckEmptyVariables()) {
-    //         OBJ.famLastAVGCH1 = _value;
-    //         if (!OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("use_max")) {
-    //             var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch1_befor");
-    //             var element_a = document.getElementById(OBJ.famCurrentRowID + "_ch1_after");
-    //             if (OBJ.famCurrentTest !== OBJ.famCurrentSuccesTest) {
-    //                 if (element_b != undefined) element_b.innerText = _value + " V";
-    //             } else {
-    //                 if (element_a != undefined) element_a.innerText = _value + " V";
-    //             }
-    //         }
-    //         // if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
-    //         //     OBJ.famCheckInputRef();
-    //         // }
-    //     }
-    // }
-
-    // OBJ.famSetCH2Avg = function(_value) {
-    //     if (OBJ.famCheckEmptyVariables()) {
-    //         OBJ.famLastAVGCH2 = _value;
-    //         if (!OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("use_max")) {
-    //             var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch2_befor");
-    //             var element_a = document.getElementById(OBJ.famCurrentRowID + "_ch2_after");
-    //             if (OBJ.famCurrentTest !== OBJ.famCurrentSuccesTest) {
-    //                 if (element_b != undefined) element_b.innerText = _value + " V";
-    //             } else {
-    //                 if (element_a != undefined) element_a.innerText = _value + " V";
-    //             }
-    //         }
-    //         // if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
-    //         //     OBJ.famCheckInputRef();
-    //         // }
-    //     }
-    // }
-
-    // OBJ.famSetCH1Max = function(_value) {
-    //     if (OBJ.famCheckEmptyVariables()) {
-    //         if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("use_max")) {
-    //             var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch1_befor");
-    //             var element_a = document.getElementById(OBJ.famCurrentRowID + "_ch1_after");
-    //             if (OBJ.famCurrentTest !== OBJ.famCurrentSuccesTest) {
-    //                 if (element_b != undefined) element_b.innerText = _value + " V";
-    //             } else {
-    //                 if (element_a != undefined) element_a.innerText = _value + " V";
-    //             }
-    //         }
-    //     }
-    // }
-
-    // OBJ.famSetCH2Max = function(_value) {
-    //     if (OBJ.famCheckEmptyVariables()) {
-    //         if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("use_max")) {
-    //             var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch2_befor");
-    //             var element_a = document.getElementById(OBJ.famCurrentRowID + "_ch2_after");
-    //             if (OBJ.famCurrentTest !== OBJ.famCurrentSuccesTest) {
-    //                 if (element_b != undefined) element_b.innerText = _value + " V";
-    //             } else {
-    //                 if (element_a != undefined) element_a.innerText = _value + " V";
-    //             }
-    //         }
-    //     }
-    // }
 
     OBJ.famSetCalibAACh1 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
@@ -562,8 +449,6 @@ $(function() {
     SM.param_callbacks["fauto_kk_Ch1"] = OBJ.famSetCalibKKCh1;
     SM.param_callbacks["fauto_kk_Ch2"] = OBJ.famSetCalibKKCh2;
 
-    // SM.param_callbacks["ch1_calib_pass"] = OBJ.famSetCalibValueCh1;
-    // SM.param_callbacks["ch2_calib_pass"] = OBJ.famSetCalibValueCh2;
     $('#am_a_filt_external_btn').on('click', function() { OBJ.famClickOkDialog() });
 
     $('.a_filter_flipswitch').change(function() {

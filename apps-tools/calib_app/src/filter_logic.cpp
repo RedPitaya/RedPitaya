@@ -104,7 +104,6 @@ void CFilter_logic::print(){
     sort();
     for(int i = 0 ; i < m_grid.size() ; i++){
         printf("%d {AA: %6x, BB: %6x, V: %2.6f, Vraw: %2.6f, D: %3.6f, index: %d}\n",i,m_grid[i].aa,m_grid[i].bb,m_grid[i].value,m_grid[i].value_raw,m_grid[i].deviationFromAVG,m_grid[i].index);
-
     }
 }
 
@@ -252,9 +251,9 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item,float _nominal
             dir *= -1;
             m_calibAmpl /= 2;
         }
-        std::cout <<  "A: " << item.ampl << " m_calibAmpl = " << m_calibAmpl << " dir = " << dir << " PP :" << item.f_pp << std::endl;
+//        std::cout <<  "A: " << item.ampl << " m_calibAmpl = " << m_calibAmpl << " dir = " << dir << " PP :" << item.f_pp << std::endl;
         item.f_pp += m_calibAmpl * dir;
-        std::cout <<  "New PP :" << item.f_pp << std::endl;
+//        std::cout <<  "New PP :" << item.f_pp << std::endl;
         if (item.f_pp == MIN_PP) return -1;
         if (item.f_pp >= MAX_PP) return -1;
         m_calib_man->setCalibValue(item.cur_channel == RP_CH_1 ? F_AA_CH1 : F_AA_CH2  ,item.f_aa);
