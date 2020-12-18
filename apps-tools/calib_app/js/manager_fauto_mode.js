@@ -15,7 +15,7 @@
         0: { name: "Prepare", span: true },
         1: { name: "LV mode", input: 0.9, low: true },
         2: { name: "Prepare", span: true },
-        3: { name: "HV mode", input: 4 },
+        3: { name: "HV mode", input: 9 },
         4: { name: "Save calibration values", span: true },
         5: { name: "Calibration complete", span: true, end: true }
     };
