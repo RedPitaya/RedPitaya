@@ -123,6 +123,9 @@
             if (OBJ.model !== "Z20_250_12") {
                 $("#manual_x1_x5_mode").remove();
                 $("#manual_ac_dc_mode").remove();
+            } else {
+                $("#b_auto_menu").text("AUTO AC/DC");
+                $("#b_manual_menu").text("MANUAL AC/DC");
             }
             if (OBJ.model !== "Z10") {
                 $("#filter_calib_button").remove();
