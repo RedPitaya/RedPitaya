@@ -1,4 +1,4 @@
-/* Red Pitaya C API example Acquiring a signal from a buffer and check it  
+/* Red Pitaya C API example Acquiring a signal from a buffer and check it
  * This application acquires a signal on a specific channel */
 
 #include <stdio.h>
@@ -19,7 +19,7 @@ const float c_min_period = 19.6e-9; // 51 MHz
 
 void filterBuffer(float *_buffer,int _size){
     float *n_b = malloc(_size * sizeof(float));
-    memcpy(n_b,_buffer,_size);    
+    memcpy(n_b,_buffer,_size);
     float core[] = { 1.0 / 8.0 , 1.0 / 4.0 , 1.0 / 4.0 , 1.0 / 4.0 , 1.0 / 8.0};
     for(int i = 2 ; i < _size - 2 ; i++ ){
         float sum = 0;
@@ -40,7 +40,7 @@ bool checkAmplitudeAndFreq(float *_buff, uint32_t _size,float _nominal,float *mi
                 *min = _buff[0];
                 *max = _buff[0];
                 for (int i = 1 ; i < _size ; ++i){
-                        if (*min > _buff[i]) *min = _buff[i];                        
+                        if (*min > _buff[i]) *min = _buff[i];
                         if (*max < _buff[i]) *max = _buff[i];
                 }
 
@@ -117,6 +117,7 @@ bool isSineTester(float *data, uint32_t size)
 int main(int argc, char **argv){
 
         bool fillState = false;
+	int  counter=100;
         /* Print error, if rp_Init() function failed */
         if(rp_Init() != RP_OK){
                 fprintf(stderr, "Rp api init failed!\n");
@@ -137,7 +138,7 @@ int main(int argc, char **argv){
         rp_AcqSetTriggerLevel(RP_CH_1, 0);
         rp_AcqSetTriggerDelay(ADC_BUFFER_SIZE/2.0);
 
-        while(1){
+        while(counter--){
                 fillState = false;
                 rp_AcqStart();
 
@@ -159,7 +160,7 @@ int main(int argc, char **argv){
                 while(!fillState){
                         rp_AcqGetBufferFillState(&fillState);
                 }
-                
+
                 rp_AcqStop();
                 rp_AcqGetOldestDataV(RP_CH_1, &buff_size, buff);
                 filterBuffer(buff,buff_size);
