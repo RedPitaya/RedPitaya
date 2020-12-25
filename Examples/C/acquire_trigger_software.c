@@ -25,7 +25,7 @@ int main(int argc, char **argv){
         float *buff = (float *)malloc(buff_size * sizeof(float));
 
         rp_AcqReset();
-        rp_AcqSetDecimation(1);
+        rp_AcqSetDecimation(RP_DEC_8);
         rp_AcqSetTriggerDelay(0);
 
         rp_AcqStart();
