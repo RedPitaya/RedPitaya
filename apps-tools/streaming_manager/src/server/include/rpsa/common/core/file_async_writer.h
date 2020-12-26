@@ -17,6 +17,7 @@
 enum Stream_FileType{
     TDMS_TYPE,
     WAV_TYPE,
+    CSV_TYPE
 };
 
 class Queue
@@ -64,5 +65,6 @@ public:
     void CloseFile();
 static int  AvailableSpace(std::string dst, ulong* availableSize);
     std::iostream *BuildTDMSStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2,unsigned short resolution);
+    std::iostream *BuildCSVStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution);
     void updateWavFile(int _size);
 };

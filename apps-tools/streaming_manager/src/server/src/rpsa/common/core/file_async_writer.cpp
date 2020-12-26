@@ -202,15 +202,18 @@ int FileQueueManager::WriteToFile(){
         delete bstream;
         return 1;
     }
+    
+    bstream->seekg(0, bstream->end);
+    auto Length = bstream->tellg();
 
-    if (fs.good() && m_hasWriteSize < m_freeSize) {
-        
+    if (fs.good() && ((m_hasWriteSize + Length) < m_freeSize)) {
+        bstream->seekg(0, bstream->beg);        
         fs << bstream->rdbuf();
         fs.flush();
-        bstream->seekg(0, std::ios::end);
-        auto Length = bstream->tellg();
+//        bstream->seekg(0, std::ios::end);
+//        auto Length = bstream->tellg();
         m_hasWriteSize += Length;
-
+    
         if (m_fileType == Stream_FileType::WAV_TYPE){
             if (m_firstSectionWrite){
                 updateWavFile(Length);
@@ -222,8 +225,9 @@ int FileQueueManager::WriteToFile(){
         }
 
     } else{
-        m_IsOutOfSpace = true;
+        m_IsOutOfSpace  = true;
         m_hasErrorWrite = true;
+        m_hasWriteSize += Length;
         if (!(m_hasWriteSize < m_freeSize)){
             acout() << "The disc has reached the write limit\n";
         }else {
@@ -305,6 +309,78 @@ std::iostream *FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size
     segment.LoadMetadata(data);
     stringstream *memory = new stringstream(ios_base::in | ios_base::out | ios_base::binary);
     outFile.WriteMemory(*memory,segment);
+    return memory;
+}
+
+std::iostream *FileQueueManager::BuildCSVStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution){
+    stringstream *memory = new stringstream(ios_base::in | ios_base::out);
+    size_ch1 /= (resolution / 8);
+    size_ch2 /= (resolution / 8);
+    
+    if (size_ch1 != 0 && size_ch2 == 0)
+    {       
+        if (resolution == 8) { 
+            for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                *memory << (int)((int8_t*)buffer_ch1)[ix] << "\n";
+            }
+        }
+
+        if (resolution == 16) { 
+            for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                *memory << ((int16_t*)buffer_ch1)[ix] << "\n";
+            }
+        }
+
+        if (resolution == 32) { 
+            for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                *memory << ((float*)buffer_ch1)[ix] << "\n";
+            }
+        }
+    }
+
+    if (size_ch1 == 0 && size_ch2 != 0)
+    {       
+        if (resolution == 8) { 
+            for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                *memory << (int)((int8_t*)buffer_ch2)[ix] << "\n";
+            }
+        }
+
+        if (resolution == 16) { 
+            for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                *memory << ((int16_t*)buffer_ch2)[ix] << "\n";
+            }
+        }
+
+        if (resolution == 32) { 
+            for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                *memory << ((float*)buffer_ch2)[ix] << "\n";
+            }
+        }
+    }
+
+    if (size_ch1 != 0 && size_ch2 != 0)
+    {       
+        if (resolution == 8) { 
+            for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                *memory << (int)((int8_t*)buffer_ch1)[ix] << "," << (int)((int8_t*)buffer_ch2)[ix] << "\n";
+            }
+        }
+
+        if (resolution == 16) { 
+            for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                *memory << ((int16_t*)buffer_ch1)[ix] << "," << ((int16_t*)buffer_ch2)[ix] << "\n";
+            }
+        }
+
+        if (resolution == 32) { 
+            for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                *memory << ((float*)buffer_ch1)[ix] << "," << ((float*)buffer_ch2)[ix] << "\n";
+            }
+        }
+    }
+
+
     return memory;
 }
 

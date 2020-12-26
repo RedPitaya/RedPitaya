@@ -54,7 +54,11 @@ std::string getNewFileName(Stream_FileType _fileType,string _filePath)
     time_t now = time(nullptr);
     timenow = gmtime(&now);
     strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
-    std::string filename = _filePath  + "/" + std::string("data_file_") + time_str+"." + (_fileType == Stream_FileType::TDMS_TYPE ? "tdms":"wav");
+    std::string filename = _filePath  + "/" + std::string("data_file_") + time_str + ".";
+    if (_fileType == Stream_FileType::TDMS_TYPE) filename += "tdms";
+    if (_fileType == Stream_FileType::WAV_TYPE)  filename += "wav";
+    if (_fileType == Stream_FileType::CSV_TYPE)  filename += "csv";
+    
     return filename;
 }
 
@@ -301,7 +305,6 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                     memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
                 }
 
-
                 auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8);
                 if (!m_file_manager->AddBufferToWrite(stream_data))
                 {
@@ -344,6 +347,26 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                     if ((saveLostSize + saveSize) > lostSize){
                         saveSize = lostSize - saveLostSize;
                     }
+                }
+            }
+
+            if (m_fileType == CSV_TYPE){
+                 if (_size_ch1 > 0 || lostSize > 0){ 
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
+                    assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
+                    memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
+                }
+
+                if (_size_ch2 > 0 || lostSize > 0){ 
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
+                    assert(buff_ch2 && "wav writer: Buffer 2 is null");
+                    memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
+                }
+
+                auto stream_data = m_file_manager->BuildCSVStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8);
+                if (!m_file_manager->AddBufferToWrite(stream_data))
+                {
+                    m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
                 }
             }
         }

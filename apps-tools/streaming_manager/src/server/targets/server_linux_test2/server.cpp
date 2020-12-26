@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 
 
     CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , ".", -1,false);
+    s_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , ".", 100000,false);
 
 
     // Run application
