@@ -30,6 +30,8 @@ FileQueueManager::FileQueueManager():Queue(){
     m_waitAllWrite = false;    
     m_hasErrorWrite = false;
     m_IsOutOfSpace = false;
+    th = nullptr;
+    memset(endOfSegment, 0xFF, 12);
 }
 
 FileQueueManager::~FileQueueManager(){
@@ -164,7 +166,7 @@ void FileQueueManager::StopWrite(bool waitAllWrite){
         m_waitLock.unlock();
         m_ThreadRun.clear();
     }
-    if (th != nullptr) {
+    if (th) {
         if (th->joinable())
             th->join();
         delete th;
@@ -312,75 +314,120 @@ std::iostream *FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size
     return memory;
 }
 
-std::iostream *FileQueueManager::BuildCSVStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution){
+std::iostream *FileQueueManager::BuildBINStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution,uint32_t _lostSize){
+    stringstream *memory = new stringstream(ios_base::in | ios_base::out | ios_base::binary);
+    BinHeader header;
+    header.dataFormatSize = resolution / 8;
+    header.sizeCh1 = size_ch1 / header.dataFormatSize;
+    header.sizeCh2 = size_ch2 / header.dataFormatSize;
+    header.lostCount = _lostSize;
+    header.sigmentLength = size_ch1 + size_ch2;
+    //Write header
+    memory->write((void*)&header,sizeof(BinHeader));
+    if (size_ch1 > 0) memory->write(buffer_ch1, size_ch1);
+    if (size_ch2 > 0) memory->write(buffer_ch2, size_ch2);
+    //Write end segment
+    memory->write(endOfSegment,12);
+    return memory;
+}
+
+std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer,int64_t *_position){
+    uint32_t endSeg[] = { 0, 0 ,0}; 
     stringstream *memory = new stringstream(ios_base::in | ios_base::out);
-    size_ch1 /= (resolution / 8);
-    size_ch2 /= (resolution / 8);
-    
-    if (size_ch1 != 0 && size_ch2 == 0)
-    {       
-        if (resolution == 8) { 
-            for(auto ix = 0u ; ix < size_ch1 ; ix++){
-                *memory << (int)((int8_t*)buffer_ch1)[ix] << "\n";
+    buffer->seekg(*_position, std::ios::beg);
+    BinHeader header;
+    buffer->read((void*)&header, sizeof(BinHeader));
+    buffer->seekg(*_position + sizeof(BinHeader) + header.sigmentLength, std::ios::beg);
+    buffer->read((void*)endSeg , 12);
+    if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF){
+        uint32_t size_ch1 = header.sizeCh1;
+        uint32_t size_ch2 = header.sizeCh2;
+        char resolution = header.dataFormatSize * 8;
+        char *buffer_ch1 = nullptr;
+        char *buffer_ch2 = nullptr;
+        buffer->seekg(*_position + sizeof(BinHeader), std::ios::beg);
+        if (size_ch1 > 0) {
+            buffer_ch1 = new char[size_ch1 * header.dataFormatSize];
+            buffer->read(buffer_ch1,size_ch1 * header.dataFormatSize);
+        }
+        if (size_ch2 > 0) {
+            buffer_ch2 = new char[size_ch2 * header.dataFormatSize];
+            buffer->read(buffer_ch2,size_ch2 * header.dataFormatSize);
+        }
+
+        if (size_ch1 != 0 && size_ch2 == 0)
+        {       
+            if (resolution == 8) { 
+                for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                    *memory << (int)((int8_t*)buffer_ch1)[ix] << "\n";
+                }
+            }
+
+            if (resolution == 16) { 
+                for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                    *memory << ((int16_t*)buffer_ch1)[ix] << "\n";
+                }
+            }
+
+            if (resolution == 32) { 
+                for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                    *memory << ((float*)buffer_ch1)[ix] << "\n";
+                }
             }
         }
 
-        if (resolution == 16) { 
-            for(auto ix = 0u ; ix < size_ch1 ; ix++){
-                *memory << ((int16_t*)buffer_ch1)[ix] << "\n";
+        if (size_ch1 == 0 && size_ch2 != 0)
+        {       
+            if (resolution == 8) { 
+                for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                    *memory << (int)((int8_t*)buffer_ch2)[ix] << "\n";
+                }
+            }
+
+            if (resolution == 16) { 
+                for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                    *memory << ((int16_t*)buffer_ch2)[ix] << "\n";
+                }
+            }
+
+            if (resolution == 32) { 
+                for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                    *memory << ((float*)buffer_ch2)[ix] << "\n";
+                }
             }
         }
 
-        if (resolution == 32) { 
-            for(auto ix = 0u ; ix < size_ch1 ; ix++){
-                *memory << ((float*)buffer_ch1)[ix] << "\n";
+        if (size_ch1 != 0 && size_ch2 != 0)
+        {       
+            if (resolution == 8) { 
+                for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                    *memory << (int)((int8_t*)buffer_ch1)[ix] << "," << (int)((int8_t*)buffer_ch2)[ix] << "\n";
+                }
+            }
+
+            if (resolution == 16) { 
+                for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                    *memory << ((int16_t*)buffer_ch1)[ix] << "," << ((int16_t*)buffer_ch2)[ix] << "\n";
+                }
+            }
+
+            if (resolution == 32) { 
+                for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                    *memory << ((float*)buffer_ch1)[ix] << "," << ((float*)buffer_ch2)[ix] << "\n";
+                }
             }
         }
+        if (buffer_ch1 != nullptr) delete[] buffer_ch1;
+        if (buffer_ch2 != nullptr) delete[] buffer_ch2;
+        buffer->seekg(0, std::ios::end);
+        auto Length = buffer->tellg();
+        *_position = *_position + sizeof(BinHeader) + header.sigmentLength + 12;
+        if (*_position >= Length) {
+            *_position = -2;
+        }
+    }else{
+        *_position = -1;
     }
-
-    if (size_ch1 == 0 && size_ch2 != 0)
-    {       
-        if (resolution == 8) { 
-            for(auto ix = 0u ; ix < size_ch2 ; ix++){
-                *memory << (int)((int8_t*)buffer_ch2)[ix] << "\n";
-            }
-        }
-
-        if (resolution == 16) { 
-            for(auto ix = 0u ; ix < size_ch2 ; ix++){
-                *memory << ((int16_t*)buffer_ch2)[ix] << "\n";
-            }
-        }
-
-        if (resolution == 32) { 
-            for(auto ix = 0u ; ix < size_ch2 ; ix++){
-                *memory << ((float*)buffer_ch2)[ix] << "\n";
-            }
-        }
-    }
-
-    if (size_ch1 != 0 && size_ch2 != 0)
-    {       
-        if (resolution == 8) { 
-            for(auto ix = 0u ; ix < size_ch1 ; ix++){
-                *memory << (int)((int8_t*)buffer_ch1)[ix] << "," << (int)((int8_t*)buffer_ch2)[ix] << "\n";
-            }
-        }
-
-        if (resolution == 16) { 
-            for(auto ix = 0u ; ix < size_ch1 ; ix++){
-                *memory << ((int16_t*)buffer_ch1)[ix] << "," << ((int16_t*)buffer_ch2)[ix] << "\n";
-            }
-        }
-
-        if (resolution == 32) { 
-            for(auto ix = 0u ; ix < size_ch1 ; ix++){
-                *memory << ((float*)buffer_ch1)[ix] << "," << ((float*)buffer_ch2)[ix] << "\n";
-            }
-        }
-    }
-
-
     return memory;
 }
 

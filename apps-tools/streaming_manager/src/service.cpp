@@ -47,6 +47,8 @@ syslog(__VA_ARGS__);
 
 std::mutex mtx;
 std::condition_variable cv;
+COscilloscope::Ptr osc = nullptr;
+CStreamingManager::Ptr s_manger = nullptr;
 
 float calibFullScaleToVoltage(uint32_t fullScaleGain) {
     /* no scale */
@@ -101,9 +103,10 @@ static void handleCloseChildEvents()
 
 static void termSignalHandler(int signum)
 {
-    fprintf(stdout,"Received terminate signal. Exiting...\n");
+    fprintf(stdout,"\nReceived terminate signal. Exiting...\n");
     syslog (LOG_NOTICE, "Received terminate signal. Exiting...");
     StopNonBlocking(0);
+    if (s_manger) s_manger->stopWriteToCSV();
 }
 
 
@@ -342,8 +345,7 @@ int main(int argc, char *argv[])
         
         std::vector<UioT> uioList = GetUioList();
         // Search oscilloscope
-        COscilloscope::Ptr osc = nullptr;
-        CStreamingManager::Ptr s_manger = nullptr;
+        auto file_type = Stream_FileType::WAV_TYPE;
 
         for (const UioT &uio : uioList)
         {
@@ -363,19 +365,19 @@ int main(int argc, char *argv[])
                     std::to_string(sock_port).c_str(),
                     protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
         }else{
-        	auto file_type = Stream_FileType::WAV_TYPE;
 	    	if (format == 1) file_type = Stream_FileType::TDMS_TYPE;
-    //		if (format == 2) file_type = Stream_FileType::CSV_TYPE;
+    		if (format == 2) file_type = Stream_FileType::CSV_TYPE;
             s_manger = CStreamingManager::Create(file_type , FILE_PATH , samples, save_mode == 2);
             s_manger->notifyStop = [](int status)
                                 {
-                                    StopNonBlocking(0);
+                                    StopNonBlocking(0);                                   
                                 };
         }
         int resolution_val = (resolution == 1 ? 8 : 16);
         s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel, attenuator , 16);
         s_app->run();
         delete s_app;
+        if (file_type == Stream_FileType::CSV_TYPE) s_manger->convertToCSV();
     }catch (std::exception& e)
     {
         fprintf(stderr, "Error: main() %s\n",e.what());

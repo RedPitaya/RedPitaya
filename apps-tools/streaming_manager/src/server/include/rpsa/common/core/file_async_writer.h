@@ -20,6 +20,14 @@ enum Stream_FileType{
     CSV_TYPE
 };
 
+struct BinHeader{
+    char dataFormatSize;
+    uint32_t sizeCh1;
+    uint32_t sizeCh2;
+    uint32_t lostCount;
+    uint32_t sigmentLength;
+};
+
 class Queue
 {
 public:
@@ -65,6 +73,9 @@ public:
     void CloseFile();
 static int  AvailableSpace(std::string dst, ulong* availableSize);
     std::iostream *BuildTDMSStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2,unsigned short resolution);
-    std::iostream *BuildCSVStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution);
+    std::iostream *BuildBINStream (uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution,uint32_t _lostSize);
+    static std::iostream *ReadCSV(std::iostream *buffer,int64_t *_position);
     void updateWavFile(int _size);
+private:
+    char endOfSegment[12];
 };

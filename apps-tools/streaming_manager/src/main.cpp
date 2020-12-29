@@ -428,7 +428,7 @@ if (use_calib == 2) {
 	}else{
 		auto file_type = Stream_FileType::WAV_TYPE;
 		if (format == 1) file_type = Stream_FileType::TDMS_TYPE;
-//		if (format == 2) file_type = Stream_FileType::CSV_TYPE;
+		if (format == 2) file_type = Stream_FileType::CSV_TYPE;
 		s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == 2);
 		s_manger->notifyStop = [](int status)
 							{

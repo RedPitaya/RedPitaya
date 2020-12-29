@@ -13,6 +13,7 @@
 #include "FileLogger.h"
 #include "neon_asm.h"
 #include "shared_buffer.h"
+#include "thread_cout.h"
 #include "log.h"
 
 //using rpsa::msg::message_factory;
@@ -56,6 +57,9 @@ public:
     void stop();
     bool isFileThreadWork();
     bool isOutOfSpace();
+    bool convertToCSV();
+    bool convertToCSV(std::string _file_name);
+    void stopWriteToCSV();
     int passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode,uint32_t _adc_bits,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
     CStreamingManager::Callback notifyPassData;
     CStreamingManager::Callback notifyStop;
@@ -80,6 +84,7 @@ private:
     
     bool m_volt_mode;
     bool m_use_local_file;
+    bool m_stopWriteCSV;
     Stream_FileType m_fileType;
     void startServer();
     void stopServer();
