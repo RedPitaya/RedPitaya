@@ -58,7 +58,7 @@ public:
     bool isFileThreadWork();
     bool isOutOfSpace();
     bool convertToCSV();
-    bool convertToCSV(std::string _file_name);
+    bool convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg);
     void stopWriteToCSV();
     int passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode,uint32_t _adc_bits,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
     CStreamingManager::Callback notifyPassData;

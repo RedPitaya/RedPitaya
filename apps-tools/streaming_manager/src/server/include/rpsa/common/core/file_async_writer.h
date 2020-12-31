@@ -28,6 +28,27 @@ struct BinHeader{
     uint32_t sigmentLength;
 };
 
+struct BinInfo{
+    char dataFormatSize;
+    uint32_t size_ch1;
+    uint32_t size_ch2;
+    uint32_t segSamplesCount;
+    uint32_t segLastSamplesCount;
+    uint32_t segCount;
+    bool     lastSegState;
+    uint64_t lostCount;
+    BinInfo(){
+        dataFormatSize = 0;
+        size_ch1 = 0;
+        size_ch2 = 0;
+        segSamplesCount = 0;
+        segCount = 0;
+        lastSegState = false;
+        lostCount = 0;
+        segLastSamplesCount = 0;
+    }
+};
+
 class Queue
 {
 public:
@@ -74,7 +95,8 @@ public:
 static int  AvailableSpace(std::string dst, ulong* availableSize);
     std::iostream *BuildTDMSStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2,unsigned short resolution);
     std::iostream *BuildBINStream (uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution,uint32_t _lostSize);
-    static std::iostream *ReadCSV(std::iostream *buffer,int64_t *_position);
+    static std::iostream *ReadCSV(std::iostream *buffer,int64_t *_position,bool skipData=false);
+    static BinInfo        ReadBinInfo(std::iostream *buffer);
     void updateWavFile(int _size);
 private:
     char endOfSegment[12];

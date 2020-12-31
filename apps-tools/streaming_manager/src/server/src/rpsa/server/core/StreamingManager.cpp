@@ -455,10 +455,10 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
 }
 
 bool CStreamingManager::convertToCSV(){
-    return convertToCSV(m_file_out);
+    return convertToCSV(m_file_out,-2,-2);
 }
 
-bool CStreamingManager::convertToCSV(std::string _file_name){
+bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg){
     bool ret = true;
     try{
         if (m_stopWriteCSV) return false;
@@ -476,6 +476,8 @@ bool CStreamingManager::convertToCSV(std::string _file_name){
             fs.seekg(0, std::ios::end);
             int64_t Length = fs.tellg();
             int64_t position = 0;
+            int32_t curSegment = 0;
+            start_seg = MAX(start_seg,1);
             while(position >= 0){
                 auto freeSize = FileQueueManager::GetFreeSpaceDisk(csv_file);
                 if (freeSize <= USING_FREE_SPACE){
@@ -488,20 +490,34 @@ bool CStreamingManager::convertToCSV(std::string _file_name){
                     ret = false;
                     break;
                 }
-
-                auto csv_seg = FileQueueManager::ReadCSV(&fs,&position);
-                if (position >=0) {
-                    acout() << "\rPROGRESS: " << (position * 100) / Length  << " %";
+                curSegment++;
+                bool notSkip = (start_seg <= curSegment) && ((end_seg != -2 && end_seg >= curSegment) || end_seg == -2);
+                auto csv_seg = FileQueueManager::ReadCSV(&fs,&position,!notSkip);
+                if (end_seg == -2){
+                    if (position >=0) {
+                        acout() << "\rPROGRESS: " << (position * 100) / Length  << " %";
+                    }else{
+                        if (position == -2){
+                            acout() << "\rPROGRESS: 100 %";
+                        }
+                    }
                 }else{
-                    if (position == -2){
-                        acout() << "\rPROGRESS: 100 %";
+                    if (curSegment - start_seg >= 0 && (end_seg-1) > start_seg) {
+                        acout() << "\rPROGRESS: " << ((curSegment - start_seg - 1) * 100) / (end_seg - start_seg)  << " %";
                     }
                 }
-                csv_seg->seekg(0, csv_seg->beg);  
-                fs_out << csv_seg->rdbuf();
-                fs_out.flush();
+                
+                if (notSkip){
+                    csv_seg->seekg(0, csv_seg->beg);  
+                    fs_out << csv_seg->rdbuf();
+                    fs_out.flush();
+                }
                 delete csv_seg;
                 
+                if (end_seg != -2 && end_seg < curSegment){
+                    break;
+                }
+
                 if (fs.fail() || fs_out.fail()) {
                     acout() << "\nError write to CSV file\n";
                     ret = false;
