@@ -347,14 +347,14 @@ if (use_calib == 2) {
 #ifdef Z20_250_12
 	if (attenuator == 1) {
 		if (ac_dc == 1) {
-			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac);  // 1:1
-			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac);  // 1:1
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac) / 20.0;  // 1:1
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac) / 20.0;  // 1:1
 			ch1_off  = osc_calib_params.osc_ch1_off_1_ac; 
 			ch2_off  = osc_calib_params.osc_ch2_off_1_ac; 
 		}
 		else {
-			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
-			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc) / 20.0;  // 1:1
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc) / 20.0;  // 1:1
 			ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
 			ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
 		}
@@ -375,21 +375,21 @@ if (use_calib == 2) {
 
 #ifdef Z10
 	if (attenuator == 1) {
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  
-		ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-		ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;  
+		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;  
+		ch1_off  = osc_calib_params.fe_ch1_lo_offs;
+		ch2_off  = osc_calib_params.fe_ch2_lo_offs;
 	}else{
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  
-		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 		
+		ch1_off  = osc_calib_params.fe_ch1_hi_offs;
+		ch2_off  = osc_calib_params.fe_ch2_hi_offs;
 	}
-#endif    
+#endif
 }
 
 #ifdef Z20_250_12
-	rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250_streaming.xml");
+//rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250_streaming.xml");
     rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator == 1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
     rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == 1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
     rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == 1 ? RP_AC_MODE : RP_DC_MODE);
@@ -413,7 +413,6 @@ if (use_calib == 2) {
 	{
 		if (uio.nodeName == "rp_oscilloscope")
 		{
-			// TODO start server;
 			osc = COscilloscope::Create(uio, (channel ==1 || channel == 3) , (channel ==2 || channel == 3) , rate);
 			osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
 			break;

@@ -3,14 +3,6 @@
 #include "calib_man.h"
 
 
-void PrintLogInFile3(const char *message){
-	std::time_t result = std::time(nullptr);
-	std::fstream fs;
-  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
-	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
-	fs.close();
-}
-
 float calibFullScaleToVoltageMan(uint32_t fullScaleGain) {
     if (fullScaleGain == 0) return 1;
     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));

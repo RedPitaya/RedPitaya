@@ -121,6 +121,9 @@ namespace rp_max7311{
 
     /* Sets the sleep time to switch the relay. The default value is below 1000 ms. */
     void rp_setSleepTime(unsigned long time);
+
+    /* Chack  0x08 register status */
+    char rp_check();
 }
 
 #ifdef  __cplusplus

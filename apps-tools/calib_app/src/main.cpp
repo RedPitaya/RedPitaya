@@ -24,7 +24,10 @@
 
 #ifdef Z10
 #include "filter_logic.h"
+#include "filter_logic2ch.h"
 CFilter_logic::Ptr g_filter_logic;
+CFilter_logic2ch::Ptr g_filter_logic2ch;
+int g_sub_progress = 0;
 #endif
 
 COscilloscope::Ptr g_acq;
@@ -123,6 +126,27 @@ CIntParameter		filt_calib_progress( "filt_calib_progress",		CBaseParameter::RW, 
 CIntParameter		filt_calib_auto_mode("filt_calib_auto_mode",	CBaseParameter::RW,   0 ,0,	0, 1);
 CFloatParameter		filt_calib_ref_amp(	 "filt_calib_ref_amp",		CBaseParameter::RW,   0.9   ,0,	0.001, 20);
 
+// AUTO MODE FOR FILTER CALIB
+CBooleanParameter 	f_external_gen(	"f_external_gen", 		CBaseParameter::RW,   false,0);
+CFloatParameter 	f_ref_volt(		"f_ref_volt",			CBaseParameter::RW,   1, 0, 0.001, 20);
+CIntParameter       f_ss_state(		"F_SS_STATE", 			CBaseParameter::RW,  -1, 0, -1,100); // Current completed step
+CIntParameter       f_ss_next_step(	"F_SS_NEXTSTEP",		CBaseParameter::RW,  -1, 0, -2,100);
+
+CIntParameter		fauto_aa_Ch1(	     	 "fauto_aa_Ch1", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		fauto_bb_Ch1(	     	 "fauto_bb_Ch1", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		fauto_pp_Ch1(	     	 "fauto_pp_Ch1", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		fauto_kk_Ch1(	     	 "fauto_kk_Ch1", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+
+CIntParameter		fauto_aa_Ch2(	     	 "fauto_aa_Ch2", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		fauto_bb_Ch2(	     	 "fauto_bb_Ch2", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		fauto_pp_Ch2(	     	 "fauto_pp_Ch2", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+CIntParameter		fauto_kk_Ch2(	     	 "fauto_kk_Ch2", 				CBaseParameter::RW,   0 ,0,	0, 0x1FFFFFF);
+
+CFloatParameter 	fauto_value_ch1_before(	 "fauto_value_ch1_before", 			CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	fauto_value_ch2_before(	 "fauto_value_ch2_before", 			CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	fauto_value_ch1_after(	 "fauto_value_ch1_after", 			CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	fauto_value_ch2_after(	 "fauto_value_ch2_after", 			CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
+CIntParameter		fauto_calib_progress( 	 "fauto_calib_progress",		CBaseParameter::RW,   0 ,0,	0, 120);
 #endif
 
 void PrintLogInFile(const char *message){
@@ -156,6 +180,7 @@ int rp_app_init(void)
 	g_calib_man = CCalibMan::Create(g_acq);
 #ifdef Z10	
 	g_filter_logic = CFilter_logic::Create(g_calib_man);
+	g_filter_logic2ch = CFilter_logic2ch::Create(g_calib_man);
 	g_acq->setCursor1(cursor_x1.Value());
 	g_acq->setCursor2(cursor_x2.Value());
 #endif
@@ -476,6 +501,7 @@ void calibFilter(){
 		g_calib_man->enableGen(RP_CH_2,true);
 		g_acq->startAutoFilter(8);
 		filt_calib_step.SendValue(2);
+		fauto_calib_progress.SendValue(0);
 		return;
 	}
 
@@ -530,6 +556,261 @@ void calibFilter(){
 
 }
 
+void calibAutoFilter(){
+
+	if (f_ref_volt.IsNewValue()){
+		f_ref_volt.Update();
+	}
+
+	if (f_external_gen.IsNewValue()){
+		f_external_gen.Update();
+	}
+
+	if (f_ss_next_step.Value() == 0){
+		fauto_value_ch1_before.Value() = 0;
+		fauto_value_ch1_before.Value() = 0;
+		fauto_value_ch1_after.Value() = 0;
+		fauto_value_ch2_after.Value() = 0;
+		g_sub_progress = 0;
+		g_calib_man->setModeLV_HV( RP_LOW );
+		g_filter_logic2ch->init();
+		g_calib_man->setOffset(RP_CH_1,0);
+		g_calib_man->setFreq(RP_CH_1,1000);
+		g_calib_man->setAmp(RP_CH_1,0.9);	
+		g_calib_man->setOffset(RP_CH_2,0);
+		g_calib_man->setFreq(RP_CH_2,1000);
+		g_calib_man->setAmp(RP_CH_2,0.9);	
+		g_calib_man->setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
+    	g_calib_man->setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);  
+		g_calib_man->enableGen(RP_CH_1,true);
+		g_calib_man->enableGen(RP_CH_2,true);
+		g_acq->startAutoFilter2Ch(8);
+		g_acq->updateAcqFilter(RP_CH_1);
+    	g_acq->updateAcqFilter(RP_CH_2);
+		f_ss_state.SendValue(f_ss_next_step.Value());
+		f_ss_next_step.SendValue(-1);
+		return;
+	}
+
+	if (f_ss_next_step.Value() == 1) {
+		if (g_sub_progress == 0){
+			auto d = g_acq->getDataAutoFilter2Ch();
+			auto v1 = (d.valueCH1.calib_value_raw   + d.valueCH1.deviation );
+			auto v2 = (d.valueCH2.calib_value_raw   + d.valueCH2.deviation );
+			fauto_value_ch1_before.SendValue(v1);
+			fauto_value_ch2_before.SendValue(v2);
+			fauto_aa_Ch1.SendValue(0);
+			fauto_bb_Ch1.SendValue(0);
+			fauto_pp_Ch1.SendValue(0);
+			fauto_kk_Ch1.SendValue(0);
+
+			fauto_aa_Ch2.SendValue(0);
+			fauto_bb_Ch2.SendValue(0);
+			fauto_pp_Ch2.SendValue(0);
+			fauto_kk_Ch2.SendValue(0);
+			g_sub_progress = 1;
+			return;
+		}
+
+		if (g_sub_progress == 1){
+			while (g_filter_logic2ch->setCalibParameters() != -1){
+				auto dp = g_acq->getDataAutoFilter2Ch();
+				g_filter_logic2ch->setCalculatedValue(dp);                
+			}
+			g_filter_logic2ch->removeHalfCalib();
+			if (g_filter_logic2ch->nextSetupCalibParameters() == -1){		
+				g_sub_progress = 2;
+				return;
+			}
+			fauto_calib_progress.SendValue(g_filter_logic2ch->calcProgress());
+		}
+
+		if (g_sub_progress == 2){
+			g_filter_logic2ch->setGoodCalibParameterCh1();
+			std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+			auto ext = f_external_gen.Value();
+			auto volt_ref = f_ref_volt.Value();
+			if (!ext) volt_ref = 0.9;
+			while(1){
+        		auto d = g_acq->getDataAutoFilter2Ch();
+        		if (g_filter_logic2ch->calibPPCh1(d,volt_ref) != 0) break;
+    		}
+			fauto_calib_progress.SendValue(110);
+			g_sub_progress = 3;
+			return;
+		}
+
+		if (g_sub_progress == 3){
+			g_filter_logic2ch->setGoodCalibParameterCh2();
+			std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+			auto ext = f_external_gen.Value();
+			auto volt_ref = f_ref_volt.Value();
+			if (!ext) volt_ref = 0.9;
+			while(1){
+        		auto d = g_acq->getDataAutoFilter2Ch();
+        		if (g_filter_logic2ch->calibPPCh2(d,volt_ref) != 0) break;
+    		}
+			fauto_calib_progress.SendValue(120);
+			g_sub_progress = 4;
+			return;
+		}
+
+		if (g_sub_progress == 4){
+			std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+			auto d = g_acq->getDataAutoFilter2Ch();
+			auto v1 = (d.valueCH1.calib_value_raw   + d.valueCH1.deviation );
+			auto v2 = (d.valueCH2.calib_value_raw   + d.valueCH2.deviation );
+			fauto_value_ch1_after.SendValue(v1);
+			fauto_value_ch2_after.SendValue(v2);
+			fauto_calib_progress.SendValue(0);
+			fauto_aa_Ch1.SendValue(d.valueCH1.f_aa);
+			fauto_bb_Ch1.SendValue(d.valueCH1.f_bb);
+			fauto_pp_Ch1.SendValue(d.valueCH1.f_pp);
+			fauto_kk_Ch1.SendValue(d.valueCH1.f_kk);
+
+			fauto_aa_Ch2.SendValue(d.valueCH2.f_aa);
+			fauto_bb_Ch2.SendValue(d.valueCH2.f_bb);
+			fauto_pp_Ch2.SendValue(d.valueCH2.f_pp);
+			fauto_kk_Ch2.SendValue(d.valueCH2.f_kk);
+			
+			g_sub_progress = 0;
+			f_ss_state.SendValue(f_ss_next_step.Value());
+			f_ss_next_step.SendValue(-1);
+			return;
+		}
+		
+	}
+
+	if (f_ss_next_step.Value() == 2){
+			fauto_value_ch1_before.Value() = 0;
+			fauto_value_ch1_before.Value() = 0;
+			fauto_value_ch1_after.Value() = 0;
+			fauto_value_ch2_after.Value() = 0;
+			g_sub_progress = 0;
+			g_calib_man->setModeLV_HV( RP_HIGH );
+			g_filter_logic2ch->init();
+			g_calib_man->setOffset(RP_CH_1,0);
+			g_calib_man->setFreq(RP_CH_1,1000);
+			g_calib_man->setAmp(RP_CH_1,0.9);	
+			g_calib_man->setOffset(RP_CH_2,0);
+			g_calib_man->setFreq(RP_CH_2,1000);
+			g_calib_man->setAmp(RP_CH_2,0.9);	
+			g_calib_man->setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
+	    	g_calib_man->setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);    
+			g_calib_man->enableGen(RP_CH_1,true);
+			g_calib_man->enableGen(RP_CH_2,true);
+			g_acq->startAutoFilter2Ch(8);
+			g_acq->updateAcqFilter(RP_CH_1);
+			g_acq->updateAcqFilter(RP_CH_2);
+			f_ss_state.SendValue(f_ss_next_step.Value());
+			f_ss_next_step.SendValue(-1);
+			return;
+		}
+
+	if (f_ss_next_step.Value() == 3) {
+			if (g_sub_progress == 0){
+				auto d = g_acq->getDataAutoFilter2Ch();
+				auto v1 = (d.valueCH1.calib_value_raw   + d.valueCH1.deviation );
+				auto v2 = (d.valueCH2.calib_value_raw   + d.valueCH2.deviation );
+				fauto_value_ch1_before.SendValue(v1);
+				fauto_value_ch2_before.SendValue(v2);
+				fauto_aa_Ch1.SendValue(0);
+				fauto_bb_Ch1.SendValue(0);
+				fauto_pp_Ch1.SendValue(0);
+				fauto_kk_Ch1.SendValue(0);
+
+				fauto_aa_Ch2.SendValue(0);
+				fauto_bb_Ch2.SendValue(0);
+				fauto_pp_Ch2.SendValue(0);
+				fauto_kk_Ch2.SendValue(0);
+				g_sub_progress = 1;
+				return;
+			}
+
+			if (g_sub_progress == 1){
+				while (g_filter_logic2ch->setCalibParameters() != -1){
+					auto dp = g_acq->getDataAutoFilter2Ch();
+					g_filter_logic2ch->setCalculatedValue(dp);                
+				}
+				g_filter_logic2ch->removeHalfCalib();
+				if (g_filter_logic2ch->nextSetupCalibParameters() == -1){		
+					g_sub_progress = 2;
+					return;
+				}
+				fauto_calib_progress.SendValue(g_filter_logic2ch->calcProgress());
+			}
+
+			if (g_sub_progress == 2){
+				g_filter_logic2ch->setGoodCalibParameterCh1();
+				std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+				auto ext = f_external_gen.Value();
+				auto volt_ref = f_ref_volt.Value();
+				if (!ext) volt_ref = 0.9;
+				while(1){
+					auto d = g_acq->getDataAutoFilter2Ch();
+					if (g_filter_logic2ch->calibPPCh1(d,volt_ref) != 0) break;
+				}
+				fauto_calib_progress.SendValue(110);
+				g_sub_progress = 3;
+				return;
+			}
+
+			if (g_sub_progress == 3){
+				g_filter_logic2ch->setGoodCalibParameterCh2();
+				std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+				auto ext = f_external_gen.Value();
+				auto volt_ref = f_ref_volt.Value();
+				if (!ext) volt_ref = 0.9;
+				while(1){
+					auto d = g_acq->getDataAutoFilter2Ch();
+					if (g_filter_logic2ch->calibPPCh2(d,volt_ref) != 0) break;
+				}
+				fauto_calib_progress.SendValue(120);
+				g_sub_progress = 4;
+				return;
+			}
+
+			if (g_sub_progress == 4){
+				std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+				auto d = g_acq->getDataAutoFilter2Ch();
+				auto v1 = (d.valueCH1.calib_value_raw   + d.valueCH1.deviation );
+				auto v2 = (d.valueCH2.calib_value_raw   + d.valueCH2.deviation );
+				fauto_value_ch1_after.SendValue(v1);
+				fauto_value_ch2_after.SendValue(v2);
+				fauto_calib_progress.SendValue(0);
+				fauto_aa_Ch1.SendValue(d.valueCH1.f_aa);
+				fauto_bb_Ch1.SendValue(d.valueCH1.f_bb);
+				fauto_pp_Ch1.SendValue(d.valueCH1.f_pp);
+				fauto_kk_Ch1.SendValue(d.valueCH1.f_kk);
+
+				fauto_aa_Ch2.SendValue(d.valueCH2.f_aa);
+				fauto_bb_Ch2.SendValue(d.valueCH2.f_bb);
+				fauto_pp_Ch2.SendValue(d.valueCH2.f_pp);
+				fauto_kk_Ch2.SendValue(d.valueCH2.f_kk);
+				
+				g_sub_progress = 0;
+				f_ss_state.SendValue(f_ss_next_step.Value());
+				f_ss_next_step.SendValue(-1);
+				return;
+			}
+
+		}
+	
+	if (f_ss_next_step.Value() == 4){
+			fauto_value_ch1_before.Value() = 0;
+			fauto_value_ch1_before.Value() = 0;
+			fauto_value_ch1_after.Value() = 0;
+			fauto_value_ch2_after.Value() = 0;
+			g_calib_man->writeCalib();
+			g_calib_man->enableGen(RP_CH_1,false);
+			g_calib_man->enableGen(RP_CH_2,false);
+			f_ss_state.SendValue(f_ss_next_step.Value());
+			f_ss_next_step.SendValue(-1);
+			return;
+		}
+
+}
+
 void sendFilterCalibValues(rp_channel_t _ch){
 	filt_aa.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_AA_CH1 : F_AA_CH2));
 	filt_bb.SendValue(g_calib_man->getCalibValue(_ch == RP_CH_1 ? F_BB_CH1 : F_BB_CH2));
@@ -567,6 +848,17 @@ void UpdateParams(void)
 				g_calib->restoreCalib();
 			}
 		}
+
+#ifdef Z10
+// FILTER AUTO MODE 
+		if (f_ss_next_step.IsNewValue())
+		{
+			f_ss_next_step.Update();
+		}
+
+		calibAutoFilter();
+#endif
+
 // MANUAL MODE
 		if (calib_sig.IsNewValue()){
 			calib_sig.Update();

@@ -287,48 +287,48 @@ int main(int argc, char *argv[])
 
     try{
 
-    if (use_calib == 2) {
+    if (use_calib) {
 #ifdef Z20_250_12
-	if (attenuator == 1) {
-		if (ac_dc == 1) {
-			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac);  // 1:1
-			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac);  // 1:1
-			ch1_off  = osc_calib_params.osc_ch1_off_1_ac; 
-			ch2_off  = osc_calib_params.osc_ch2_off_1_ac; 
-		}
-		else {
-			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc);  // 1:1
-			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc);  // 1:1
-			ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-			ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
-		}
-	}else{
-		if (ac_dc == 1) {
-			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_ac);  // 1:20
-			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_ac);  // 1:20
-			ch1_off  = osc_calib_params.osc_ch1_off_20_ac;
-			ch2_off  = osc_calib_params.osc_ch2_off_20_ac;
-		} else {
-			ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
-			ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
-			ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
-			ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
-		}
-	}
+        if (attenuator == 1) {
+            if (ac_dc == 1) {
+                ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac) / 20.0;  // 1:1
+                ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac) / 20.0;  // 1:1
+                ch1_off  = osc_calib_params.osc_ch1_off_1_ac; 
+                ch2_off  = osc_calib_params.osc_ch2_off_1_ac;
+            }
+            else {
+                ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc) / 20.0;  // 1:1
+                ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc) / 20.0;  // 1:1
+                ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
+                ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+            }
+        }else{
+            if (ac_dc == 1) {
+                ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_ac);  // 1:20
+                ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_ac);  // 1:20
+                ch1_off  = osc_calib_params.osc_ch1_off_20_ac;
+                ch2_off  = osc_calib_params.osc_ch2_off_20_ac;
+            } else {
+                ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
+                ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
+                ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
+                ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
+            }
+        }
 #endif
 
 #ifdef Z10
-	if (attenuator == 1) {
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo);  
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo);  
-		ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
-		ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
-	}else{
-		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  
-		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  
-		ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
-		ch2_off  = osc_calib_params.fe_ch2_hi_offs; 		
-	}
+        if (attenuator == 1) {
+            ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;  
+            ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;  
+            ch1_off  = osc_calib_params.fe_ch1_lo_offs; 
+            ch2_off  = osc_calib_params.fe_ch2_lo_offs; 
+        }else{
+            ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  
+            ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  
+            ch1_off  = osc_calib_params.fe_ch1_hi_offs; 
+            ch2_off  = osc_calib_params.fe_ch2_hi_offs; 		
+        }
 #endif    
     }
 

@@ -22,7 +22,7 @@
 #define MIN_BB_HI GAIN_HI_FILT_BB * (1.0 - PERCENT_RANGE / 100.0)
 #define MAX_BB_HI GAIN_HI_FILT_BB * (1.0 + PERCENT_RANGE / 100.0)
 #define MIN_PP 0
-#define MAX_PP 0x5000
+#define MAX_PP 0x50000
 #define STEPS_AA 2
 #define STEPS_BB STEPS_AA
 
@@ -34,6 +34,7 @@ CFilter_logic::Ptr CFilter_logic::Create(CCalibMan::Ptr _calib_man)
 bool compare(CFilter_logic::GridItem i1, CFilter_logic::GridItem i2) 
 { 
     return ((i1.value_raw  * i1.value_raw + i1.deviationFromAVG * i1.deviationFromAVG) < (i2.value_raw  * i2.value_raw + i2.deviationFromAVG * i2.deviationFromAVG)); 
+//    return ((i1.value  * i1.value + i1.deviationFromAVG * i1.deviationFromAVG) < (i2.value  * i2.value + i2.deviationFromAVG * i2.deviationFromAVG)); 
 } 
 
 bool IsContain(std::vector<CFilter_logic::GridItem> &_list, CFilter_logic::GridItem i1){
@@ -52,7 +53,7 @@ m_calib_man(_calib_man)
     m_index = 0;
     m_oldcalibAmpl = -1;
     m_calibRef = 0.9;
-    m_calibMode - 0;
+    m_calibMode = 0;
     m_grid.clear();
 }
 
@@ -80,8 +81,10 @@ void CFilter_logic::init(rp_channel_t _ch){
             item.aa = i;
             item.bb = j;
             item.value = 0;
+            item.value_raw = 0;
             item.calculate = false;
             item.ch = _ch;
+            item.deviationFromAVG = 0;
             item.index = m_index++;
             m_grid.push_back(item);
         }
@@ -101,7 +104,6 @@ void CFilter_logic::print(){
     sort();
     for(int i = 0 ; i < m_grid.size() ; i++){
         printf("%d {AA: %6x, BB: %6x, V: %2.6f, Vraw: %2.6f, D: %3.6f, index: %d}\n",i,m_grid[i].aa,m_grid[i].bb,m_grid[i].value,m_grid[i].value_raw,m_grid[i].deviationFromAVG,m_grid[i].index);
-
     }
 }
 
@@ -131,7 +133,7 @@ int CFilter_logic::getCalibCount(){
     return m_grid.size();
 }
 
-int CFilter_logic::getcCalibDone(){
+int CFilter_logic::getCalibDone(){
     int x = 0;
     for(int i = 0 ; i < m_grid.size() ; i++){
         if (m_grid[i].calculate) x++;
@@ -199,6 +201,7 @@ std::vector<CFilter_logic::GridItem> Split(CFilter_logic::GridItem _item,double 
 }
 
 int CFilter_logic::nextSetupCalibParameters(){
+   if (m_percent < PERCENT_MIN) return -1;
    std::vector<GridItem> new_grid;
    std::vector<int64_t>  index_list;
    for(int i = 0 ; i < m_grid.size() ; i++){
@@ -237,7 +240,10 @@ int CFilter_logic::calcProgress(){
 };
 
 int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item,float _nominal){
+    if (item.is_valid == false) return 0;
+    if (m_calibAmpl == 0) return -2;     
     if (m_oldcalibAmpl != -1){
+        if (m_oldPP != item.f_pp) return 0;
         float dir = 1;
         if (item.ampl > _nominal) dir = -1;
 
@@ -245,8 +251,9 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item,float _nominal
             dir *= -1;
             m_calibAmpl /= 2;
         }
-        std::cout << "m_calibAmpl = " << m_calibAmpl << std::endl;
+//        std::cout <<  "A: " << item.ampl << " m_calibAmpl = " << m_calibAmpl << " dir = " << dir << " PP :" << item.f_pp << std::endl;
         item.f_pp += m_calibAmpl * dir;
+//        std::cout <<  "New PP :" << item.f_pp << std::endl;
         if (item.f_pp == MIN_PP) return -1;
         if (item.f_pp >= MAX_PP) return -1;
         m_calib_man->setCalibValue(item.cur_channel == RP_CH_1 ? F_AA_CH1 : F_AA_CH2  ,item.f_aa);
@@ -258,5 +265,6 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item,float _nominal
         if (m_calibAmpl == 0) return -2; 
     }
     m_oldcalibAmpl = item.ampl;
+    m_oldPP = item.f_pp;
     return 0;
 }

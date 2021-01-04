@@ -84,6 +84,8 @@ $(function() {
                 show: true,
                 min: -1 * max_value,
                 max: max_value,
+                ticks: 20,
+                tickDecimals: 1
             }],
             xaxis: {
                 show: false,
@@ -272,7 +274,7 @@ $(function() {
                     $("#am_filt_dialog_input").hide();
                 } else {
                     $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_REF_HV_FILTER.png");
-                    $("#am_filt_dialog_text").text("Please set HV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1Khz.");
+                    $("#am_filt_dialog_text").text("Please set HV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
                     $("#am_filt_dialog_input").show();
                 }
             } else {
@@ -282,7 +284,7 @@ $(function() {
                     $("#am_filt_dialog_input").hide();
                 } else {
                     $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_REF_FILTER.png");
-                    $("#am_filt_dialog_text").text("Please set LV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1Khz.");
+                    $("#am_filt_dialog_text").text("Please set LV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
                     $("#am_filt_dialog_input").show();
                 }
             }

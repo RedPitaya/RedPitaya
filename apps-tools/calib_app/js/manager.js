@@ -33,6 +33,15 @@
         }
     }
 
+    OBJ.setFAutoMode = function(_visible) {
+        if (_visible) {
+            $("#fauto_mode_body").show();
+            $("#B_AUTO_CLOSE_CONT").show();
+        } else {
+            $("#fauto_mode_body").hide();
+        }
+    }
+
     OBJ.setADCMode = function(_visible) {
         if (OBJ.model !== undefined) {
             if (OBJ.model === "Z10") {
@@ -104,6 +113,7 @@
         OBJ.setADCMode(false);
         OBJ.setAutoMode(false);
         OBJ.setFILTERMode(false);
+        OBJ.setFAutoMode(false);
         OBJ.setMainMenu(true);
     }
 
@@ -113,17 +123,23 @@
             if (OBJ.model !== "Z20_250_12") {
                 $("#manual_x1_x5_mode").remove();
                 $("#manual_ac_dc_mode").remove();
+            } else {
+                $("#b_auto_menu").text("AUTO AC/DC");
+                $("#b_manual_menu").text("MANUAL AC/DC");
             }
             if (OBJ.model !== "Z10") {
                 $("#filter_calib_button").remove();
+                $("#afilter_calib_button").remove();
             }
 
             if (OBJ.model === "Z10") {
                 $("#filter_calib_button").show();
+                $("#afilter_calib_button").show();
             }
 
         }
         OBJ.amSetModel(_value);
+        OBJ.famSetModel(_value);
     }
 
     OBJ.closeManualMode = function() {
@@ -171,6 +187,14 @@ $(function() {
         OBJ.adcInitPlotCH2(true);
         OBJ.setMainMenu(false);
         OBJ.setADCMode(true);
+    });
+
+    $('#B_AUTO_FILTER_MODE').on('click', function(ev) {
+        //  OBJ.filterInitRequest();
+        OBJ.setMainMenu(false);
+        OBJ.setFAutoMode(true);
+        OBJ.famClearTable();
+        OBJ.famStartCalibration();
     });
 
     $('#B_FILTER_MODE').on('click', function(ev) {
@@ -237,10 +261,14 @@ $(function() {
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
                 SM.parametersCache["calib_sig"] = { value: 5 };
+                OBJ.filterCalibChange = false;
+                OBJ.adcCalibChange = false;
                 SM.sendParameters();
                 OBJ.closeManualMode();
             });
             $('#reset_cancel_btn').on('click', function() {
+                OBJ.filterCalibChange = false;
+                OBJ.adcCalibChange = false;
                 OBJ.closeManualMode();
             });
 

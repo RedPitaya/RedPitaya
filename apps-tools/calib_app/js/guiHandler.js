@@ -397,6 +397,13 @@ var filterCalibAmpChange = function(event) {
     }
 }
 
+var afilterCalibAmpChange = function(event) {
+    if (checkFloatParameters2("#SS_A_FILT_REF_VOLT", 0.001, 20) !== 0) {
+        SM.parametersCache["f_ref_volt"] = { value: $("#SS_A_FILT_REF_VOLT").val() };
+        SM.sendParameters2("f_ref_volt");
+    }
+}
+
 //Create callback
 var changeCallbacks = {}
 
@@ -432,7 +439,7 @@ changeCallbacks["FILTER_BB"] = filterBBChange;
 changeCallbacks["FILTER_PP"] = filterPPChange;
 changeCallbacks["FILTER_KK"] = filterKKChange;
 changeCallbacks["SS_FILT_REF_VOLT"] = filterCalibAmpChange;
-
+changeCallbacks["SS_A_FILT_REF_VOLT"] = afilterCalibAmpChange;
 
 var clickCallbacks = {}
 

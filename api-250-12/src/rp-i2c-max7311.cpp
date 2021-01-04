@@ -176,3 +176,10 @@ int  rp_max7311::rp_setGainOut(char port,char mode){
 void rp_max7311::rp_setSleepTime(unsigned long time){
     max7311::setSleepTime(time);
 }
+
+char rp_max7311::rp_check(){
+    char value = 0;
+    if (read_from_i2c(MAX7311_DEFAULT_DEV , MAX7311_DEFAULT_ADDRESS , 0x08, value , false) == -1)
+        return -1;
+    return value;
+}

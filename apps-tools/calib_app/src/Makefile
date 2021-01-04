@@ -5,7 +5,7 @@ RM=rm
 
 PROJECT_ROOT=../..
 
-CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp 
+CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp filter_logic2ch.cpp
 CXXSOURCES_WEB=main.cpp
 CXXSOURCES_TEST=test.cpp
 

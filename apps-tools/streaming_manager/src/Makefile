@@ -26,7 +26,7 @@ LIBS += -L$(INSTALL_DIR)/rp_sdk
 LIBS += -L./server/bin
 
 COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD 
-CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
+CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
@@ -68,11 +68,11 @@ build_lib:
 
 .PHONY: make_c_app
 make_c_app: build_lib  $(OBJECTS)
-	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LDWFLAGS)
+	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) $(LDWFLAGS)
 
 .PHONY: service
 service: build_lib $(OBJECTS_SERVICE)
-	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CFLAGS) $(LDFLAGS) $(LDSFLAGS)
+	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CXXFLAGS) $(LDFLAGS) $(LDSFLAGS)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)

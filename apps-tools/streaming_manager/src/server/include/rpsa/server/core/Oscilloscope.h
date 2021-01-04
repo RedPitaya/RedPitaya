@@ -90,7 +90,7 @@ private:
     uint32_t     m_dec_factor;
     std::mutex   m_waitLock;
     int32_t      m_calib_offset_ch1;   
-    float        m_calib_gain_ch1;        
+    uint32_t     m_calib_gain_ch1;        
     int32_t      m_calib_offset_ch2;    
-    float        m_calib_gain_ch2;         
+    uint32_t     m_calib_gain_ch2;         
 };

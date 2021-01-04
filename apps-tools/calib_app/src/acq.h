@@ -53,6 +53,21 @@ class COscilloscope {
             rp_channel_t cur_channel;
             uint64_t index;
             bool     is_valid;
+            DataPassAutoFilter(){
+                ampl = 0;
+                calib_value = 0;
+                calib_value_raw = 0;
+                deviation = 0;
+                f_aa = f_bb = f_kk = f_pp = 0;
+                index = 0;
+                is_valid = false;
+            }
+        };
+
+        struct DataPassAutoFilter2Ch
+        {
+            DataPassAutoFilter valueCH1;
+            DataPassAutoFilter valueCH2;
         };
 
         using Ptr = std::shared_ptr<COscilloscope>;
@@ -63,22 +78,24 @@ class COscilloscope {
         COscilloscope(COscilloscope &&) = delete;
         ~COscilloscope();
 
-                void start();
-                void startNormal();
-                void startSquare(uint32_t _decimation);
-                void startAutoFilter(uint32_t _decimation);
-                void stop();
-            DataPass getData();
-          DataPassSq getDataSq();
-  DataPassAutoFilter getDataAutoFilter(); 
-                void setZoomMode(bool enable);
-                void setCursor1(float value);
-                void setCursor2(float value);
-                void setHyst(float value);
-                void setLV(); // 1:1
-                void setHV(); // 1:20
-                void setAcquireChannel(rp_channel_t _ch);
-                void updateAcqFilter(rp_channel_t _ch);
+                    void start();
+                    void startNormal();
+                    void startSquare(uint32_t _decimation);
+                    void startAutoFilter(uint32_t _decimation);
+                    void startAutoFilter2Ch(uint32_t _decimation);
+                    void stop();
+                DataPass getData();
+              DataPassSq getDataSq();
+      DataPassAutoFilter getDataAutoFilter();
+   DataPassAutoFilter2Ch getDataAutoFilter2Ch();
+                    void setZoomMode(bool enable);
+                    void setCursor1(float value);
+                    void setCursor2(float value);
+                    void setHyst(float value);
+                    void setLV(); // 1:1
+                    void setHV(); // 1:20
+                    void setAcquireChannel(rp_channel_t _ch);
+                    void updateAcqFilter(rp_channel_t _ch);
 #ifdef Z20_250_12
         void setDC();
         void setAC();
@@ -103,6 +120,7 @@ class COscilloscope {
                         void acquire();
                         void acquireSquare();
                         void acquireAutoFilter();
+                        void acquireAutoFilter2Ch();
    COscilloscope::DataPassSq selectRange(float *buffer,double _start,double _stop);
             std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
             std::atomic_bool m_OscThreadRunState;
@@ -124,6 +142,7 @@ class COscilloscope {
             DataPass         m_crossData;
             DataPassSq       m_crossDataSq;
           DataPassAutoFilter m_crossDataAutoFilter;
+       DataPassAutoFilter2Ch m_crossDataAutoFilter2Ch;
             uint64_t         m_index;
             char             m_mode;
             rp_channel_t     m_channel;

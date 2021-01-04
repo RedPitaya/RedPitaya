@@ -38,6 +38,7 @@
     <script src="js/sm.js?1" onerror="location.reload()"></script>
     <script src="js/manager.js?1" onerror="location.reload()"></script>
     <script src="js/manager_auto_mode.js?1" onerror="location.reload()"></script>
+    <script src="js/manager_fauto_mode.js?1" onerror="location.reload()"></script>
     <script src="js/manager_adc_mode.js?1" onerror="location.reload()"></script>
     <script src="js/manager_filter_mode.js?1" onerror="location.reload()"></script>
 </head>
@@ -125,7 +126,7 @@
                         <div class="container_inline" align=center>
                             <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_AUTO_MODE" style="width: 100%">
-                                    <a style="display: block;">AUTO</a>
+                                    <a id="b_auto_menu" style="display: block;">AUTO DC</a>
                                 </li>
                             </div>
                         </div>
@@ -133,19 +134,24 @@
                         <div class="container_inline" align=center>
                             <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_ADC_MODE" style="width: 100%">
-                                    <a style="display: block;">MANUAL</a>
+                                    <a id="b_manual_menu" style="display: block;">MANUAL DC</a>
                                 </li>
                             </div>
                         </div>
-
+                        <div class="container_inline" align=center id="afilter_calib_button" style="display: none;">
+                            <div style="width: 300px; margin-right: 10px">
+                                <li class="run_buttons" id="B_AUTO_FILTER_MODE" style="width: 100%">
+                                    <a style="display: block;">AUTO FREQUENCY</a>
+                                </li>
+                            </div>
+                        </div>
                         <div class="container_inline" align=center id="filter_calib_button" style="display: none;">
                             <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_FILTER_MODE" style="width: 100%">
-                                    <a style="display: block;">FREQUENCY FILTER</a>
+                                    <a style="display: block;">MANUAL FREQUENCY</a>
                                 </li>
                             </div>
                         </div>
-
                         <div class="container_inline" align=center>
                             <div style="width: 300px; margin-right: 10px">
                                 <li class="run_buttons" id="B_RESET_DEFAULT" style="width: 100%">
@@ -192,6 +198,54 @@
                                 <td>cell6_1</td>
                                 <td>cell7_1</td>
                                 <td>cell7_1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="fauto_mode_body" style="display: none;">
+                    <table class="darkTable">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" width="240px">MODE</th>
+                                <th colspan="2" width="20%">CH1</th>
+                                <th colspan="2" width="20%">CH2</th>
+                                <th colspan="2">AA</th>
+                                <th colspan="2">BB</th>
+                                <th colspan="2">PP</th>
+                                <th colspan="2">KK</th>
+                                <th rowspan="2" width="80px">STATE</th>
+                            </tr>
+                            <tr>
+                                <th width="10%">Before</th>
+                                <th width="10%">After</th>
+                                <th width="10%">Before</th>
+                                <th width="10%">After</th>
+                                <th>Ch1</th>
+                                <th>Ch2</th>
+                                <th>Ch1</th>
+                                <th>Ch2</th>
+                                <th>Ch1</th>
+                                <th>Ch2</th>
+                                <th>Ch1</th>
+                                <th>Ch2</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fauto_calib_table">
+                            <tr>
+                                <td>cell1_1</td>
+                                <td>cell2_1</td>
+                                <td>cell3_1</td>
+                                <td>cell4_1</td>
+                                <td>cell5_1</td>
+                                <td>cell6_1</td>
+                                <td>cell7_1</td>
+                                <td>cell8_1</td>
+                                <td>cell9_1</td>
+                                <td>cell10_1</td>
+                                <td>cell11_1</td>
+                                <td>cell12_1</td>
+                                <td>cell13_1</td>
+                                <td>cell14_1</td>
                             </tr>
                         </tbody>
                     </table>
@@ -919,6 +973,48 @@
 
                     <div class="bazaar-link" style="float: right; width: 45%;">
                         <a style="border: 1px solid; width: 100%" id="am_filt_cancel_btn" data-dismiss="modal" class="btn">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="am_dialog_a_filter_calib" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Auto calibration</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <div style="margin-bottom: 20px;" class="container_inline">
+                        <div style="width: 200px;text-align: right;height: 100%;">
+                            <div style="height: 100%;margin: auto;padding: 10px;">Reference generator:</div>
+                        </div>
+                        <div style="vertical-align: top;">
+                            <input id="am_a_filt_switch" type="checkbox" class="a_filter_flipswitch flipswitch" data-on="INTERNAL" data-off="EXTERNAL" style="width: 200px; margin-left: 10px;height: 38px;" />
+                        </div>
+                    </div>
+                    <div class="container_inline">
+                        <img id="am_a_filt_dialog_img" src="" />
+                        <p id="am_a_filt_dialog_text">TEXT</p>
+                    </div>
+                    <div id="am_a_filt_dialog_input" class="container_inline">
+                        <div style="width: 200px;text-align: right;">Reference voltage:</div>
+                        <div>
+                            <input id="SS_A_FILT_REF_VOLT" type="text" size="5" style="width: 200px;margin-left: 10px;" value="0.5" step="0.001" min="0.001" max="20">
+                        </div>
+                        <!-- <div>
+                            <img id="SS_REF_VLOT_STATE" src="img/green_led.png" style="width: 25px;">
+                        </div> -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 45%;">
+                        <a style="border: 1px solid; width: 100%" id="am_a_filt_external_btn" class="btn">Calibrate</a>
+                    </div>
+
+                    <div class="bazaar-link" style="float: right; width: 45%;">
+                        <a style="border: 1px solid; width: 100%" id="am_a_filt_cancel_btn" data-dismiss="modal" class="btn">Cancel</a>
                     </div>
                 </div>
             </div>

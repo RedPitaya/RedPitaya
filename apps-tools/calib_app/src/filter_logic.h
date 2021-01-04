@@ -41,7 +41,7 @@ class CFilter_logic {
                     auto nextSetupCalibParameters() -> int;
                     auto removeHalfCalib() -> void;
                     auto getCalibCount() -> int;
-                    auto getcCalibDone() -> int;
+                    auto getCalibDone() -> int;
                     auto calcProgress() -> int;
                     auto setGoodCalibParameter() -> void;
                     auto calibPP(COscilloscope::DataPassAutoFilter item,float _nominal) -> int;
@@ -56,6 +56,7 @@ class CFilter_logic {
         double                m_percent;  
         int                   m_calibAmpl; // step calib amlitude 
         float                 m_oldcalibAmpl;
+        int64_t               m_oldPP;
         int                   m_calibMode; // 0 - External, 1 - Internal
         float                 m_calibRef; 
 };
