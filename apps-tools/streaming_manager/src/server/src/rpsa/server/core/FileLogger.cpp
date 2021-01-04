@@ -20,6 +20,7 @@ m_fileSystemLostRate(0),
 m_reciveData(0),
 m_reciveData_ch1(0),
 m_reciveData_ch2(0),
+m_current_sample(0),
 m_old_id(0)
 {
     ResetCounters();
@@ -43,6 +44,7 @@ void CFileLogger::ResetCounters(){
     m_reciveData_ch1 = 0;
     m_reciveData_ch2 = 0;
     m_oscRate = 0;
+    m_current_sample = 0;
 }
 
 void CFileLogger::AddMetric(CFileLogger::Metric _metric, uint64_t _value){

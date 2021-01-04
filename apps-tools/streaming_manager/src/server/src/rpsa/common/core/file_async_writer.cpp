@@ -30,6 +30,8 @@ FileQueueManager::FileQueueManager():Queue(){
     m_waitAllWrite = false;    
     m_hasErrorWrite = false;
     m_IsOutOfSpace = false;
+    th = nullptr;
+    memset(endOfSegment, 0xFF, 12);
 }
 
 FileQueueManager::~FileQueueManager(){
@@ -164,7 +166,7 @@ void FileQueueManager::StopWrite(bool waitAllWrite){
         m_waitLock.unlock();
         m_ThreadRun.clear();
     }
-    if (th != nullptr) {
+    if (th) {
         if (th->joinable())
             th->join();
         delete th;
@@ -202,15 +204,18 @@ int FileQueueManager::WriteToFile(){
         delete bstream;
         return 1;
     }
+    
+    bstream->seekg(0, bstream->end);
+    auto Length = bstream->tellg();
 
-    if (fs.good() && m_hasWriteSize < m_freeSize) {
-        
+    if (fs.good() && ((m_hasWriteSize + Length) < m_freeSize)) {
+        bstream->seekg(0, bstream->beg);        
         fs << bstream->rdbuf();
         fs.flush();
-        bstream->seekg(0, std::ios::end);
-        auto Length = bstream->tellg();
+//        bstream->seekg(0, std::ios::end);
+//        auto Length = bstream->tellg();
         m_hasWriteSize += Length;
-
+    
         if (m_fileType == Stream_FileType::WAV_TYPE){
             if (m_firstSectionWrite){
                 updateWavFile(Length);
@@ -222,8 +227,9 @@ int FileQueueManager::WriteToFile(){
         }
 
     } else{
-        m_IsOutOfSpace = true;
+        m_IsOutOfSpace  = true;
         m_hasErrorWrite = true;
+        m_hasWriteSize += Length;
         if (!(m_hasWriteSize < m_freeSize)){
             acout() << "The disc has reached the write limit\n";
         }else {
@@ -306,6 +312,157 @@ std::iostream *FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size
     stringstream *memory = new stringstream(ios_base::in | ios_base::out | ios_base::binary);
     outFile.WriteMemory(*memory,segment);
     return memory;
+}
+
+std::iostream *FileQueueManager::BuildBINStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution,uint32_t _lostSize){
+    stringstream *memory = new stringstream(ios_base::in | ios_base::out | ios_base::binary);
+    BinHeader header;
+    header.dataFormatSize = resolution / 8;
+    header.sizeCh1 = size_ch1 / header.dataFormatSize;
+    header.sizeCh2 = size_ch2 / header.dataFormatSize;
+    header.lostCount = _lostSize;
+    header.sigmentLength = size_ch1 + size_ch2;
+    //Write header
+    memory->write((void*)&header,sizeof(BinHeader));
+    if (size_ch1 > 0) memory->write(buffer_ch1, size_ch1);
+    if (size_ch2 > 0) memory->write(buffer_ch2, size_ch2);
+    //Write end segment
+    memory->write(endOfSegment,12);
+    return memory;
+}
+
+std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_position,bool skipData){
+    uint32_t endSeg[] = { 0, 0 ,0}; 
+    stringstream *memory = new stringstream(ios_base::in | ios_base::out);
+    buffer->seekg(*_position, std::ios::beg);
+    BinHeader header;
+    buffer->read((void*)&header, sizeof(BinHeader));
+    buffer->seekg(*_position + sizeof(BinHeader) + header.sigmentLength, std::ios::beg);
+    buffer->read((void*)endSeg , 12);
+    if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF){
+        if (!skipData){
+            uint32_t size_ch1 = header.sizeCh1;
+            uint32_t size_ch2 = header.sizeCh2;
+            char resolution = header.dataFormatSize * 8;
+            char *buffer_ch1 = nullptr;
+            char *buffer_ch2 = nullptr;
+            buffer->seekg(*_position + sizeof(BinHeader), std::ios::beg);
+            if (size_ch1 > 0) {
+                buffer_ch1 = new char[size_ch1 * header.dataFormatSize];
+                buffer->read(buffer_ch1,size_ch1 * header.dataFormatSize);
+            }
+            if (size_ch2 > 0) {
+                buffer_ch2 = new char[size_ch2 * header.dataFormatSize];
+                buffer->read(buffer_ch2,size_ch2 * header.dataFormatSize);
+            }
+
+            if (size_ch1 != 0 && size_ch2 == 0)
+            {       
+                if (resolution == 8) { 
+                    for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                        *memory << (int)((int8_t*)buffer_ch1)[ix] << "\n";
+                    }
+                }
+
+                if (resolution == 16) { 
+                    for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                        *memory << ((int16_t*)buffer_ch1)[ix] << "\n";
+                    }
+                }
+
+                if (resolution == 32) { 
+                    for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                        *memory << ((float*)buffer_ch1)[ix] << "\n";
+                    }
+                }
+            }
+
+            if (size_ch1 == 0 && size_ch2 != 0)
+            {       
+                if (resolution == 8) { 
+                    for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                        *memory << (int)((int8_t*)buffer_ch2)[ix] << "\n";
+                    }
+                }
+
+                if (resolution == 16) { 
+                    for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                        *memory << ((int16_t*)buffer_ch2)[ix] << "\n";
+                    }
+                }
+
+                if (resolution == 32) { 
+                    for(auto ix = 0u ; ix < size_ch2 ; ix++){
+                        *memory << ((float*)buffer_ch2)[ix] << "\n";
+                    }
+                }
+            }
+
+            if (size_ch1 != 0 && size_ch2 != 0)
+            {       
+                if (resolution == 8) { 
+                    for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                        *memory << (int)((int8_t*)buffer_ch1)[ix] << "," << (int)((int8_t*)buffer_ch2)[ix] << "\n";
+                    }
+                }
+
+                if (resolution == 16) { 
+                    for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                        *memory << ((int16_t*)buffer_ch1)[ix] << "," << ((int16_t*)buffer_ch2)[ix] << "\n";
+                    }
+                }
+
+                if (resolution == 32) { 
+                    for(auto ix = 0u ; ix < size_ch1 ; ix++){
+                        *memory << ((float*)buffer_ch1)[ix] << "," << ((float*)buffer_ch2)[ix] << "\n";
+                    }
+                }
+            }
+            if (buffer_ch1 != nullptr) delete[] buffer_ch1;
+            if (buffer_ch2 != nullptr) delete[] buffer_ch2;
+        }
+        buffer->seekg(0, std::ios::end);
+        auto Length = buffer->tellg();
+        *_position = *_position + sizeof(BinHeader) + header.sigmentLength + 12;
+        if (*_position >= Length) {
+            *_position = -2;
+        }
+    }else{
+        *_position = -1;
+    }
+    return memory;
+}
+
+BinInfo FileQueueManager::ReadBinInfo(std::iostream *buffer){
+    int64_t position = 0;
+    buffer->seekg(0, std::ios::end);
+    auto Length = buffer->tellg();
+    BinInfo bi;
+    while(position >= 0){
+        uint32_t endSeg[] = { 0, 0 ,0}; 
+        buffer->seekg(position, std::ios::beg);
+        BinHeader header;
+        buffer->read((void*)&header, sizeof(BinHeader));
+        buffer->seekg(position + sizeof(BinHeader) + header.sigmentLength, std::ios::beg);
+        buffer->read((void*)endSeg , 12);
+        bi.dataFormatSize = header.dataFormatSize;
+        bi.size_ch1  += header.sizeCh1;
+        bi.size_ch2  += header.sizeCh2;
+        bi.lostCount += header.lostCount;
+        if (bi.segSamplesCount == 0) bi.segSamplesCount = header.sizeCh1 > header.sizeCh2 ? header.sizeCh1 : header.sizeCh2;
+        bi.segLastSamplesCount = header.sizeCh1 > header.sizeCh2 ? header.sizeCh1 : header.sizeCh2;
+        bi.segCount++;
+        if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF){
+            position =  position + sizeof(BinHeader) + header.sigmentLength + 12;
+            if (position >= Length) {
+                position = -2;
+            }
+        }else{
+            position = -1;
+        }
+    }
+    bi.lastSegState = position == -2;
+    return bi;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

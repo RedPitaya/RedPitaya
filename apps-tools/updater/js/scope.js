@@ -15,7 +15,7 @@
     UPD.isApply = false;
 
     UPD.currentVer = undefined;
-    UPD.EcosystemLinuxVer = undefined; 
+    UPD.EcosystemLinuxVer = undefined;
     UPD.SdLinuxVer = undefined;
     UPD.type = 'stemlab';
     UPD.path_fw = '';
@@ -25,6 +25,7 @@
         $('#step_' + UPD.currentStep).css("color", "#CCC");
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/loader.gif');
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').show();
+        $('#select_ver').hide();
         switch (UPD.currentStep) {
             case 1:
                 UPD.checkConnection();
@@ -60,6 +61,12 @@
         UPD.startStep(UPD.currentStep + 1);
     }
 
+    UPD.setIcon = function() {
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/success.png');
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show();
+    }
+
+
     UPD.checkConnection = function() {
         OnlineChecker.checkAsync(function() {
             if (OnlineChecker.isOnline()) {
@@ -74,15 +81,15 @@
     UPD.checkVersion = function() {
         setTimeout(function() {
             $.ajax({
-                url: '/get_info',
-                type: 'GET',
-                timeout: 1500
-            })
+                    url: '/get_info',
+                    type: 'GET',
+                    timeout: 1500
+                })
                 .done(function(msg) {
                     UPD.currentVer = msg['version'];
                     UPD.SdLinuxVer = msg['sd_linux_ver'];
                     UPD.EcosystemLinuxVer = msg['linux_ver'];
-                    
+
                     $('#step_2_version').text(msg['version']);
                     UPD.nextStep();
                 })
@@ -93,14 +100,14 @@
         }, 500);
     }
 
-    UPD.compareVersions = function(ver1 , ver2){
+    UPD.compareVersions = function(ver1, ver2) {
         try {
             var vararr1 = ver1.split('.').join('-').split("-");
             var vararr2 = ver2.split('.').join('-').split("-");
             if (vararr1.length != vararr2.length) return 0;
             for (var i = 0; i < vararr1.length; i++) {
                 if (parseInt(vararr1[i]) > parseInt(vararr2[i])) return -1;
-                if (parseInt(vararr1[i]) < parseInt(vararr2[i])) return  1; 
+                if (parseInt(vararr1[i]) < parseInt(vararr2[i])) return 1;
             }
         } catch (error) {
             console.log(error)
@@ -112,9 +119,9 @@
         $('#select_ver').hide();
         setTimeout(function() {
             $.ajax({
-                url: '/update_list?type=' + type,
-                type: 'GET',
-            })
+                    url: '/update_list?type=' + type,
+                    type: 'GET',
+                })
                 .done(function(msg) {
                     var resp = msg;
                     var arr = resp.split('\n');
@@ -128,20 +135,20 @@
                     // - no available distributives for selected type
                     // - invalid response format
                     if (arr.length == 0 || arr.length % 2 != 0) {
-/*
-                        TODO: remove before merge to master branch
-                        if(UPD.type == "0.97")
-                        {
-                            $("#ecosystem_type").val("2");
-                            UPD.type = "0.96";
-                            UPD.checkUpdates('0.96');
-                            return;
-                        } else {
-                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                            $('#step_' + UPD.currentStep).find('.error_msg').show();
-                            return;
-                        }
-*/
+                        /*
+                                                TODO: remove before merge to master branch
+                                                if(UPD.type == "0.97")
+                                                {
+                                                    $("#ecosystem_type").val("2");
+                                                    UPD.type = "0.96";
+                                                    UPD.checkUpdates('0.96');
+                                                    return;
+                                                } else {
+                                                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                                    $('#step_' + UPD.currentStep).find('.error_msg').show();
+                                                    return;
+                                                }
+                        */
                         $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
                         $('#step_' + UPD.currentStep).find('.error_msg').show();
                         return;
@@ -171,7 +178,7 @@
                     list.sort();
                     $('#ecosystem_ver').empty();
                     var es_distro_size = 0;
-                    var es_distro_vers = { vers_as_str:'0.0', build:0, ver_full:'' };
+                    var es_distro_vers = { vers_as_str: '0.0', build: 0, ver_full: '' };
                     // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
                     for (var i = list.length - 1; i >= 0; i--) {
                         var item = list[i].split('-');
@@ -179,8 +186,8 @@
                         var build = item[2];
                         var size = item[4];
                         // select latest version according to common version and build
-                        if (UPD.compareVersions(ver+"."+build,es_distro_vers.vers_as_str + "."+es_distro_vers.build) === -1 ){
-//                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
+                        if (UPD.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
+                            //                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
                             es_distro_vers.vers_as_str = ver;
                             es_distro_vers.build = build;
                             es_distro_size = size;
@@ -188,24 +195,36 @@
                         }
                     }
                     var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
-                    $('#distro_dsc').text(distro_desc);
-                    $('#ecosystem_ver').removeAttr('disabled');
-                    $('#select_ver').show();
-                    $('#apply').click(function(event) {
-                        if (UPD.isApply)
-                            return; // FIXME
-                        $('.select_ver').hide();
-                        UPD.isApply = true;
-                        var val = es_distro_vers.ver_full;
-                        UPD.chosen_eco = UPD.ecosystems.indexOf(val);
-                        if (UPD.chosen_eco != -1) {
-                            UPD.nextStep();
-                            $('#apply').hide();
-                            $('#and_click').hide();
-                            $('#ecosystem_ver').attr('disabled', 'disabled');
-                        }
-                    });
-                    $('#ecosystem_ver').change();
+                    var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
+                    if (distro_desc_short === UPD.currentVer) {
+                        $('#used_last_version').show();
+                        $('#select_ver').hide();
+                        $('#step_4').hide();
+                        $('#step_5').hide();
+                        $('#step_6').hide();
+                        $('#step_7').hide();
+                        UPD.setIcon();
+
+                    } else {
+                        $('#distro_dsc').text(distro_desc);
+                        $('#ecosystem_ver').removeAttr('disabled');
+                        $('#select_ver').show();
+                        $('#apply').click(function(event) {
+                            if (UPD.isApply)
+                                return; // FIXME
+                            $('.select_ver').hide();
+                            UPD.isApply = true;
+                            var val = es_distro_vers.ver_full;
+                            UPD.chosen_eco = UPD.ecosystems.indexOf(val);
+                            if (UPD.chosen_eco != -1) {
+                                UPD.nextStep();
+                                $('#apply').hide();
+                                $('#and_click').hide();
+                                $('#ecosystem_ver').attr('disabled', 'disabled');
+                            }
+                        });
+                        $('#ecosystem_ver').change();
+                    }
                 });
         }, 500);
     }
@@ -255,9 +274,9 @@
     UPD.applyChanges = function() {
         setTimeout(function() {
             $.ajax({
-                url: '/update_extract',
-                type: 'GET',
-            })
+                    url: '/update_extract',
+                    type: 'GET',
+                })
                 .done(function(msg) {
                     var text = msg;
                     if (text.startsWith("OK"))
@@ -276,17 +295,17 @@
         setTimeout(function() {
             $('#step_' + UPD.currentStep).find('.warn_msg').show();
             $.ajax({
-                url: '/update_ecosystem',
-                type: 'GET',
-            })
+                    url: '/update_ecosystem',
+                    type: 'GET',
+                })
                 .always(function() {
-                    setTimeout(function (){
+                    setTimeout(function() {
                         var prepare_check = setInterval(function() {
                             $.ajax({
-                                url: '/get_info',
-                                type: 'GET',
-                                timeout: 1500
-                            })
+                                    url: '/get_info',
+                                    type: 'GET',
+                                    timeout: 1500
+                                })
                                 .done(function(msg) {
                                     if (msg != undefined && msg['version'] !== undefined) {
                                         var eco = UPD.ecosystems[UPD.chosen_eco];
@@ -321,9 +340,9 @@
 
 UPD.getChangelog = function(ecosystem) {
     $.ajax({
-        url: '/update_changelog?id=' + ecosystem,
-        type: 'GET',
-    })
+            url: '/update_changelog?id=' + ecosystem,
+            type: 'GET',
+        })
         .done(function(msg) {
             if (msg.length < 3)
                 msg = "Changelog is empty";
@@ -337,7 +356,7 @@ function checkDev() {
         type: 'GET',
     }).always(function(msg) {
         if (msg[0] == 'd')
-            $('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev'}));
+            $('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev' }));
     });
 }
 
@@ -377,28 +396,27 @@ $(document).ready(function() {
     });
 
     $.ajax({
-                method: "GET",
-                url: '/get_info'
-            })
-            .done(function(result) {
-                    stem_ver = result['stem_ver'];
-                    if (stem_ver == "STEM 16"){
-                        UPD.type = "SDRlab-122-16/ecosystems";
-                        UPD.path_fw = "SDRlab-122-16";
-                        $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
-                    } else if (stem_ver == "STEM 250 12") {
-                        UPD.type = "SIGNALlab-250-12/ecosystems";
-                        UPD.path_fw = "SIGNALlab-250-12";
-                        $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
-                    }
-                    else{
-                        UPD.type = "STEMlab-125-1x/ecosystems";
-                        UPD.path_fw = "STEMlab-125-1x";
-                        $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
-                    }
-                });
+            method: "GET",
+            url: '/get_info'
+        })
+        .done(function(result) {
+            stem_ver = result['stem_ver'];
+            if (stem_ver == "STEM 16") {
+                UPD.type = "SDRlab-122-16/ecosystems";
+                UPD.path_fw = "SDRlab-122-16";
+                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
+            } else if (stem_ver == "STEM 250 12") {
+                UPD.type = "SIGNALlab-250-12/ecosystems";
+                UPD.path_fw = "SIGNALlab-250-12";
+                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
+            } else {
+                UPD.type = "STEMlab-125-1x/ecosystems";
+                UPD.path_fw = "STEMlab-125-1x";
+                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
+            }
+        });
 
-    $('#ecosystem_type').change(function(){
+    $('#ecosystem_type').change(function() {
         /*
         Reason: exist one branch with fixed name for download distros with latest OS version
 		if ($(this).val() == '1') {
@@ -423,4 +441,3 @@ $(document).ready(function() {
         UPD.getChangelog(UPD.type + '/' + cur + '.changelog');
     });
 })
-

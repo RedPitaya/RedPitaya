@@ -54,7 +54,11 @@ std::string getNewFileName(Stream_FileType _fileType,string _filePath)
     time_t now = time(nullptr);
     timenow = gmtime(&now);
     strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
-    std::string filename = _filePath  + "/" + std::string("data_file_") + time_str+"." + (_fileType == Stream_FileType::TDMS_TYPE ? "tdms":"wav");
+    std::string filename = _filePath  + "/" + std::string("data_file_") + time_str + ".";
+    if (_fileType == Stream_FileType::TDMS_TYPE) filename += "tdms";
+    if (_fileType == Stream_FileType::WAV_TYPE)  filename += "wav";
+    if (_fileType == Stream_FileType::CSV_TYPE)  filename += "bin";
+    
     return filename;
 }
 
@@ -109,18 +113,19 @@ CStreamingManager::CStreamingManager(string _host, string _port, asionet::Protoc
         notifyStop(nullptr),
         m_samples(0)
 {
-
+        m_stopWriteCSV = false;
 }
 
 CStreamingManager::~CStreamingManager()
 {
     this->stop();
-    if (m_file_manager!= nullptr){
+    stopWriteToCSV();
+    if (m_file_manager){
         delete m_file_manager;
         m_file_manager = nullptr;
     }
 
-    if (m_waveWriter!=nullptr){
+    if (m_waveWriter){
         delete m_waveWriter;
         m_waveWriter = nullptr;
     }
@@ -130,6 +135,10 @@ CStreamingManager::~CStreamingManager()
         m_asionet = nullptr;
     }
 
+}
+
+void CStreamingManager::stopWriteToCSV(){
+    m_stopWriteCSV = true;
 }
 
 void CStreamingManager::startServer(){
@@ -208,7 +217,7 @@ void CStreamingManager::run()
 
 void CStreamingManager::stop(){
     if (m_use_local_file){
-        if (m_file_manager != nullptr) {
+        if (m_file_manager) {
             m_file_manager->StopWrite(false);
         }
     } else{
@@ -290,17 +299,16 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
             if (m_fileType == TDMS_TYPE){
                 // _adc_mode = 0 for 1:1 and 1 for 1:20 mode 
                 if (_size_ch1 > 0 || lostSize > 0){ 
-                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
                     memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
                 }
 
                 if (_size_ch2 > 0 || lostSize > 0){ 
-                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode ? 20 : 1,_adc_bits,_resolution);
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                     memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
                 }
-
 
                 auto stream_data = m_file_manager->BuildTDMSStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8);
                 if (!m_file_manager->AddBufferToWrite(stream_data))
@@ -345,6 +353,26 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                         saveSize = lostSize - saveLostSize;
                     }
                 }
+            }       
+
+            if (m_fileType == CSV_TYPE){
+                 if (_size_ch1 > 0){ 
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size, 0 ,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
+                    assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
+                }
+
+                if (_size_ch2 > 0){ 
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size, 0 ,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
+                    assert(buff_ch2 && "wav writer: Buffer 2 is null");
+                }
+
+                auto stream_data = m_file_manager->BuildBINStream(buff_ch1, buff_ch1_size, buff_ch2, buff_ch2_size, byte_per_sample * 8, lostSize);
+                if (!m_file_manager->AddBufferToWrite(stream_data))
+                {
+                    m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
+                }
+                delete [] buff_ch1;
+                delete [] buff_ch2;
             }
         }
 
@@ -426,6 +454,86 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
     return 0;
 }
 
+bool CStreamingManager::convertToCSV(){
+    return convertToCSV(m_file_out,-2,-2);
+}
+
+bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg){
+    bool ret = true;
+    try{
+        if (m_stopWriteCSV) return false;
+        acout() << "Started converting to CSV\n";
+        std::string csv_file = _file_name.substr(0, _file_name.size()-3) + "csv";
+        acout() << csv_file << "\n";
+        std::fstream fs;
+        std::fstream fs_out;
+        fs.open(_file_name, std::ios::binary | std::ofstream::in | std::ofstream::out);
+        fs_out.open(csv_file, std::ofstream::in |  std::ofstream::trunc | std::ofstream::out);
+        if (fs.fail() || fs_out.fail()) {
+            acout() << " Error open files\n";
+            ret = false;
+        }else{
+            fs.seekg(0, std::ios::end);
+            int64_t Length = fs.tellg();
+            int64_t position = 0;
+            int32_t curSegment = 0;
+            start_seg = MAX(start_seg,1);
+            while(position >= 0){
+                auto freeSize = FileQueueManager::GetFreeSpaceDisk(csv_file);
+                if (freeSize <= USING_FREE_SPACE){
+                    acout() << "\nDisk is full\n";
+                    ret = false;
+                    break;
+                }
+                if (m_stopWriteCSV){
+                    acout() << "\nAbort writing to CSV file\n";
+                    ret = false;
+                    break;
+                }
+                curSegment++;
+                bool notSkip = (start_seg <= curSegment) && ((end_seg != -2 && end_seg >= curSegment) || end_seg == -2);
+                auto csv_seg = FileQueueManager::ReadCSV(&fs,&position,!notSkip);
+                if (end_seg == -2){
+                    if (position >=0) {
+                        acout() << "\rPROGRESS: " << (position * 100) / Length  << " %";
+                    }else{
+                        if (position == -2){
+                            acout() << "\rPROGRESS: 100 %";
+                        }
+                    }
+                }else{
+                    if (curSegment - start_seg >= 0 && (end_seg-1) > start_seg) {
+                        acout() << "\rPROGRESS: " << ((curSegment - start_seg - 1) * 100) / (end_seg - start_seg)  << " %";
+                    }
+                }
+                
+                if (notSkip){
+                    csv_seg->seekg(0, csv_seg->beg);  
+                    fs_out << csv_seg->rdbuf();
+                    fs_out.flush();
+                }
+                delete csv_seg;
+                
+                if (end_seg != -2 && end_seg < curSegment){
+                    break;
+                }
+
+                if (fs.fail() || fs_out.fail()) {
+                    acout() << "\nError write to CSV file\n";
+                    ret = false;
+                    break;
+                }
+                
+            }
+        }
+        acout() << "\nEnded converting\n";
+    }catch (std::exception& e)
+	{
+		std::cerr << "Error: convertToCSV() : " << e.what() << std::endl ;
+        ret = false;
+	}
+    return ret;
+}
 
 
 

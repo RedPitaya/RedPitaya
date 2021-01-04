@@ -215,7 +215,7 @@ try{
     
 }catch (std::exception& e)
 	{
-		std::cerr << "Error: oscWorker() -> %s\n" << e.what() << std::endl ;
+		std::cerr << "Error: oscWorker() " << e.what() << std::endl ;
         PrintDebugInFile( e.what());
 	}
     m_isRun = false;

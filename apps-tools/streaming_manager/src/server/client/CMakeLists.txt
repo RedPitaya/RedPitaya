@@ -6,7 +6,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 add_executable(rpsa_client client.cpp)
 
 target_compile_options(rpsa_client
-    PRIVATE -std=c++11 -pedantic -static -static-libstdc++ -static-libgcc)
+    PRIVATE -std=c++11 -O3 -pedantic -static -static-libstdc++ -static-libgcc)
 
 
 target_compile_definitions(rpsa_client  PRIVATE ASIO_STANDALONE)
