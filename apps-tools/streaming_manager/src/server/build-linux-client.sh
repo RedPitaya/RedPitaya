@@ -1,6 +1,6 @@
 #!/bin/bash
 unzip -o ./libs/asio.zip -d ./libs
-cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Debug
+cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release
 make
 
 cd client
@@ -9,7 +9,7 @@ make
 cd ..
 
 cd convert_tool
-cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Debug
+cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release
 make
 cd ..
 
