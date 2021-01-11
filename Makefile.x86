@@ -146,6 +146,10 @@ ifeq ($(FPGA_MODEL), Z10)
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 endif
+ifeq ($(FPGA_MODEL), Z20_125)
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+endif
 else
 	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
