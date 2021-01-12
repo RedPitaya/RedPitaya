@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
         }
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
         if (attenuator == 1) {
             ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;  
             ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;  

@@ -123,7 +123,7 @@ static int setEqFilters(rp_channel_t channel)
 
     rp_pinState_t gain;
     acq_GetGain(channel, &gain);
-#ifdef Z10
+#if defined Z10 || defined Z20_125
     uint32_t aa = calib_GetFilterCoff(channel,gain,AA);
     uint32_t bb = calib_GetFilterCoff(channel,gain,BB);
     uint32_t kk = calib_GetFilterCoff(channel,gain,KK);
@@ -998,7 +998,7 @@ int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 int acq_UpdateAcqFilter(rp_channel_t channel){
     return setEqFilters(channel);
 }

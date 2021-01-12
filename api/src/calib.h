@@ -47,20 +47,20 @@ rp_calib_params_t calib_GetDefaultCalib();
               int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
 
               int calib_setCachedParams();  
-          #ifndef Z20_250_12 
+#ifndef Z20_250_12 
          uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain);
           int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain);
           int32_t calib_getGenOffset(rp_channel_t channel);
          uint32_t calib_getGenScale(rp_channel_t channel);
-          #ifdef Z10
+#if defined Z10 || defined Z20_125
               int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff , uint32_t value);
          uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff);
-          #endif
-          #else
+#endif
+#else
          uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode);
           int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode);
           int32_t calib_getGenOffset(rp_channel_t channel, rp_gen_gain_t gain);
          uint32_t calib_getGenScale(rp_channel_t channel, rp_gen_gain_t gain);
-          #endif
+#endif
 
 #endif //__CALIB_H

@@ -177,7 +177,7 @@ int CCalibMan::getCalibValue(ClalibValue _type){
     }
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 
     switch (_type)
     {
@@ -302,7 +302,7 @@ auto g = getModeLV_HV();
     }
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 
     switch (_type)
     {
@@ -425,7 +425,7 @@ void CCalibMan::updateAcqFilter(rp_channel_t _ch){
 }
 
 int CCalibMan::setDefualtFilter(rp_channel_t _ch){
-#ifdef Z10
+#if defined Z10 || defined Z20_125
     auto x = rp_GetDefaultCalibrationSettings();
     auto g = getModeLV_HV();
     if (_ch == RP_CH_1){

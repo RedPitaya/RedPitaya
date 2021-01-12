@@ -24,7 +24,7 @@
 
 
 #define CALIB_MAGIC 0xAABBCCDD
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define CALIB_MAGIC_FILTER 0xDDCCBBAA 
 #define GAIN_LO_FILT_AA 0x7D93
 #define GAIN_LO_FILT_BB 0x437C7
@@ -114,7 +114,7 @@ int calib_ReadParams(rp_calib_params_t *calib_params,bool use_factory_zone)
     }
     fclose(fp);
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
     if (calib_params->magic != CALIB_MAGIC && calib_params->magic != CALIB_MAGIC_FILTER) {
 		calib_params->fe_ch1_hi_offs = calib_params->fe_ch1_lo_offs;
 		calib_params->fe_ch2_hi_offs = calib_params->fe_ch2_lo_offs;
@@ -235,7 +235,7 @@ rp_calib_params_t getDefualtCalib(){
     calib.fe_ch2_fs_g_lo = cmn_CalibFullScaleFromVoltage(20.0 );
     calib.fe_ch2_fs_g_hi = cmn_CalibFullScaleFromVoltage(coff );
 
-#ifdef Z10 
+#if defined Z10 || defined Z20_125
     calib.magic = CALIB_MAGIC_FILTER;
     calib.low_filter_aa_ch1 = GAIN_LO_FILT_AA;
     calib.low_filter_bb_ch1 = GAIN_LO_FILT_BB;
@@ -621,7 +621,7 @@ uint32_t calib_getGenScale(rp_channel_t channel){
     return (channel == RP_CH_1 ?  calib.be_ch1_fs: calib.be_ch2_fs);
 }
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 
 int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff , uint32_t value){
     rp_calib_params_t params;

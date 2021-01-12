@@ -30,7 +30,7 @@
 #define SPECTR_ADC_BITS ADC_BITS
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
 #define SPECTR_ADC_BITS ADC_BITS
 #endif

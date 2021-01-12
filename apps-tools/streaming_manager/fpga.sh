@@ -1,2 +1,2 @@
-#!/bin/bash
-/opt/redpitaya/sbin/mkoverlay.sh stream_app_250
+#!/bin/sh
+/opt/redpitaya/sbin/mkoverlay.sh stream_app

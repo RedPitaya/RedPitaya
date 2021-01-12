@@ -24,7 +24,7 @@
  #define ADC_SAMPLE_PERIOD_DEF 4
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define ADC_SAMPLE_PERIOD_DEF 8
 #endif
 
@@ -92,7 +92,7 @@ int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
 int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 int acq_UpdateAcqFilter(rp_channel_t channel);
 int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 #endif

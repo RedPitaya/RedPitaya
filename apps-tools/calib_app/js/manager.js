@@ -44,7 +44,7 @@
 
     OBJ.setADCMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10") {
+            if (OBJ.model === "Z10" || OBJ.amModel === "Z20_125") {
 
             }
 
@@ -64,7 +64,7 @@
 
     OBJ.setFILTERMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10") {
+            if (OBJ.model === "Z10" || OBJ.amModel === "Z20_125") {
 
             }
 
@@ -127,12 +127,12 @@
                 $("#b_auto_menu").text("AUTO AC/DC");
                 $("#b_manual_menu").text("MANUAL AC/DC");
             }
-            if (OBJ.model !== "Z10") {
+            if (OBJ.model !== "Z10" && OBJ.amModel !== "Z20_125") {
                 $("#filter_calib_button").remove();
                 $("#afilter_calib_button").remove();
             }
 
-            if (OBJ.model === "Z10") {
+            if (OBJ.model === "Z10" || OBJ.amModel === "Z20_125") {
                 $("#filter_calib_button").show();
                 $("#afilter_calib_button").show();
             }
