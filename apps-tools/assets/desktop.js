@@ -313,6 +313,7 @@
                         const obj = JSON.parse(result);
                         var model = obj['model'];
                         if (obj['model'].startsWith('STEM_125-14')) model = 'STEMlab 125-14';
+                        if (obj['model'].startsWith('STEM_125-14-Z7020')) model = 'STEMlab 125-14-Z7020';
                         if (obj['model'].startsWith('STEM_250-12')) model = 'SIGNALlab 250-12';
                         if (obj['model'].startsWith('STEM_122-16')) model = 'SDRlab 122-16';
                         $('#SI_B_MODEL').text(model);

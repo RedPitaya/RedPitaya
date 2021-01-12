@@ -132,6 +132,8 @@
             stem_ver = "STEMlab 125-10"
         } else if (stem_ver === "STEM 14") {
             stem_ver = "STEMlab 125-14"
+        } else if (stem_ver === "STEM 14-Z20") {
+            stem_ver = "STEMlab 125-14-Z7020"
         } else if (stem_ver === "STEM 16") {
             stem_ver = "SDRlab 122-16"
         } else if (stem_ver === "STEM 250 12") {
@@ -173,6 +175,11 @@
                 if (stem_ver == "STEM 14") {
                     board_type = "STEMlab-125-1x/ecosystems";
                 }
+
+                if (stem_ver == "STEM 14-Z20") {
+                    board_type = "STEMlab-125-14-Z7020/ecosystems";
+                }
+
                 if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])) {
                     $("#CUR_VER").text(msg["sd_linux_ver"]);
                     $("#REQ_VER").text(msg["linux_ver"]);

@@ -409,6 +409,10 @@ $(document).ready(function() {
                 UPD.type = "SIGNALlab-250-12/ecosystems";
                 UPD.path_fw = "SIGNALlab-250-12";
                 $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
+            } else if (stem_ver == "STEM 14-Z20") {
+                UPD.type = "STEMlab-125-14-Z7020/ecosystems";
+                UPD.path_fw = "STEMlab-125-14-Z7020";
+                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
             } else {
                 UPD.type = "STEMlab-125-1x/ecosystems";
                 UPD.path_fw = "STEMlab-125-1x";
