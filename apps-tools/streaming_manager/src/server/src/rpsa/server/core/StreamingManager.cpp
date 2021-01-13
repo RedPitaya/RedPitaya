@@ -477,6 +477,7 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
             int64_t Length = fs.tellg();
             int64_t position = 0;
             int32_t curSegment = 0;
+            int     channels = 0;
             start_seg = MAX(start_seg,1);
             while(position >= 0){
                 auto freeSize = FileQueueManager::GetFreeSpaceDisk(csv_file);
@@ -492,7 +493,7 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
                 }
                 curSegment++;
                 bool notSkip = (start_seg <= curSegment) && ((end_seg != -2 && end_seg >= curSegment) || end_seg == -2);
-                auto csv_seg = FileQueueManager::ReadCSV(&fs,&position,!notSkip);
+                auto csv_seg = FileQueueManager::ReadCSV(&fs,&position, &channels, !notSkip);
                 if (end_seg == -2){
                     if (position >=0) {
                         acout() << "\rPROGRESS: " << (position * 100) / Length  << " %";
@@ -507,10 +508,11 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
                     }
                 }
                 
-                if (notSkip){
+                if (notSkip && csv_seg){
                     csv_seg->seekg(0, csv_seg->beg);  
                     fs_out << csv_seg->rdbuf();
                     fs_out.flush();
+                    fs_out.sync();
                 }
                 delete csv_seg;
                 
@@ -520,6 +522,9 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
 
                 if (fs.fail() || fs_out.fail()) {
                     acout() << "\nError write to CSV file\n";
+                    if (fs.fail()) acout() << "FS is fail\n";
+                    if (fs_out.fail()) acout()  << "FS out is fail\n";
+                    
                     ret = false;
                     break;
                 }

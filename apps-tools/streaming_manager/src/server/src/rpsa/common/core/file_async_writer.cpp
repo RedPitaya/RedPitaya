@@ -331,9 +331,10 @@ std::iostream *FileQueueManager::BuildBINStream(uint8_t* buffer_ch1,size_t size_
     return memory;
 }
 
-std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_position,bool skipData){
+std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_position,int *_channels,bool skipData){
     uint32_t endSeg[] = { 0, 0 ,0}; 
-    stringstream *memory = new stringstream(ios_base::in | ios_base::out);
+    stringstream *memory = nullptr;
+     new stringstream(ios_base::in | ios_base::out);
     buffer->seekg(*_position, std::ios::beg);
     BinHeader header;
     buffer->read((void*)&header, sizeof(BinHeader));
@@ -343,6 +344,14 @@ std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_positi
         if (!skipData){
             uint32_t size_ch1 = header.sizeCh1;
             uint32_t size_ch2 = header.sizeCh2;
+            if (*_channels == 0) {
+                *_channels = (size_ch1 > 0 ? 1 : 0) + (size_ch2 > 0 ? 1 :0);
+            } 
+            uint32_t lost     = header.lostCount;
+//            acout() << "* " << size_ch1 << " - " << size_ch2 << " $ " << lost << "\n";
+            if (size_ch1 || size_ch2 || lost) {
+                memory = new stringstream(ios_base::in | ios_base::out);
+            }
             char resolution = header.dataFormatSize * 8;
             char *buffer_ch1 = nullptr;
             char *buffer_ch2 = nullptr;
@@ -375,6 +384,7 @@ std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_positi
                         *memory << ((float*)buffer_ch1)[ix] << "\n";
                     }
                 }
+                
             }
 
             if (size_ch1 == 0 && size_ch2 != 0)
@@ -420,9 +430,18 @@ std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_positi
             }
             if (buffer_ch1 != nullptr) delete[] buffer_ch1;
             if (buffer_ch2 != nullptr) delete[] buffer_ch2;
+            if (lost > 0) {
+                std::string s = "";
+                if (*_channels == 2) s = "0,0\n";
+                if (*_channels == 1) s = "0\n";
+                for(int i = 0 ; i < lost ; ++i){
+                    *memory << s;
+                }
+            }
         }
         buffer->seekg(0, std::ios::end);
         auto Length = buffer->tellg();
+//        acout() << "\nLen " << Length <<  " Pos " << *_position <<"\n";
         *_position = *_position + sizeof(BinHeader) + header.sigmentLength + 12;
         if (*_position >= Length) {
             *_position = -2;
