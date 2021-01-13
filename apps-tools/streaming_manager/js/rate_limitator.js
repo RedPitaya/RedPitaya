@@ -66,7 +66,7 @@
         var channel_mode = $("#SS_CHANNEL option:selected").val();
         var resolution = $("#SS_RESOLUTION option:selected").val();
 
-        if (SM.rp_model === "Z10" || model.value === "Z20_125") {
+        if (SM.rp_model === "Z10" || SM.rp_model === "Z20_125") {
             if (use_net) {
                 if (channel_mode != 3) {
                     rate = SM.max_rate_1ch[resolution - 1];
