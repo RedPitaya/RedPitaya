@@ -9,7 +9,7 @@ make
 cd ..
 
 cd convert_tool
-cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release
+cmake CMakeLists.txt -DCMAKE_TOOLCHAIN_FILE=../toolchains/toolchain-i686-w64-mingw32.cmake -DCMAKE_BUILD_TYPE=Release
 make
 cd ..
 
