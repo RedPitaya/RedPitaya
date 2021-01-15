@@ -14,7 +14,7 @@ int main()
     int status = 0;
     char value = 0;
     
-    status |= rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem",0x50,0x01,value); // Get CHIP ID
+    status |= rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem",,0x40000000,0x50,0x01,value); // Get CHIP ID
     printf("Check SPI bus with AD9613 chip %s\n",(value == 0x83)?"[OK]":"[ERROR]");
     status |= (value != 0x83);
 
