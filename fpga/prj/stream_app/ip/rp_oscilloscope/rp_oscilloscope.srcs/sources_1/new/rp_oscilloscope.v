@@ -136,23 +136,6 @@ wire                            adr_is_diag_ch1, adr_is_diag_ch2;
 wire                            adr_is_cntms_ch1, adr_is_cntms_ch2;
 wire                            buf_sel_ch1, buf_sel_ch2;
 
-
-/*
-always @(posedge clk)
-begin
-  adc_data_ch1_signed <= {adc_data_ch1[ADC_DATA_BITS-1], ~{adc_data_ch1[ADC_DATA_BITS-2:0],{(16-ADC_DATA_BITS){1'b0}}}};  
-end
-
-assign s_axis_osc1_tdata = $signed(adc_data_ch1_signed);
-
-always @(posedge clk)
-begin
-  adc_data_ch2_signed <= {adc_data_ch2[ADC_DATA_BITS-1], ~{adc_data_ch2[ADC_DATA_BITS-2:0],{(16-ADC_DATA_BITS){1'b0}}}}; 
-end
-
-assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
-*/
-
 always @(posedge clk)
 begin
   adc_data_ch1_signed <= {{adc_data_ch1},{(16-ADC_DATA_BITS){1'b0}}};  
