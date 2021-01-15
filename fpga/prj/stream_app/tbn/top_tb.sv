@@ -307,21 +307,29 @@ wire [11:0] wdat2;
 wire [11:0] wdat3;
 wire [11:0] wdat4;
 
-
-assign wdat1 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[11:0];
+wire [15:0] wdat5; 
+wire [15:0] wdat6;
+wire [15:0] wdat7;
+wire [15:0] wdat8;
+assign wdat1 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[11: 0];
 assign wdat2 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[27:16];
 assign wdat3 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[43:32];
 assign wdat4 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[59:48];
 
-reg [12:0] cnter;
+assign wdat5 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc2_wdata[15: 0];
+assign wdat6 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc2_wdata[31:16];
+assign wdat7 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc2_wdata[47:32];
+assign wdat8 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc2_wdata[63:48];
+
+reg [15:0] cnter;
 always @(clk) begin
 
     if (rstn==0)
         cnter <= 13'b0;
-    else if (cnter==13'hFFF && clk==1)
-        cnter <= 13'b0;
+    //else if (cnter==13'hFFF && clk==1)
+    //    cnter <= 13'b0;
     else if (clk == 1)
-        cnter <= cnter + 13'b1; 
+        cnter <= cnter + 15'b1; 
 
 end
 
@@ -445,8 +453,9 @@ end
 
         .adc_clk_n(clkn),
         .adc_clk_p(clk),
-        .adc_data_ch1({1'b0,cnter,2'b0}),
-        .adc_data_ch2({1'b0,~cnter,2'b11}));
+        //.adc_data_ch1({1'b0,cnter,2'b0}),
+        .adc_data_ch1(16'h7000),
+        .adc_data_ch2({cnter[15:3],3'b00}));
 
 
 /*rp_concat #(
