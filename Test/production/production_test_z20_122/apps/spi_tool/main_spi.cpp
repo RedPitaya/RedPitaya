@@ -75,10 +75,10 @@ static int init_spi(){
     int mode = 0;
 
     /* Opening file stream */
-    spi_fd = open("/dev/spidev2.0", O_RDWR | O_NOCTTY);
+    spi_fd = open("/dev/spidev1.0", O_RDWR | O_NOCTTY);
 
     if(spi_fd < 0){
-        printf("Error opening spidev0.1. Error: %s\n", strerror(errno));
+        printf("Error opening spidev1.0. Error: %s\n", strerror(errno));
         return -1;
     }
 
