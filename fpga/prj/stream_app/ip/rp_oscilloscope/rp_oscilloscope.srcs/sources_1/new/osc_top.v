@@ -80,10 +80,6 @@ localparam DEC_FACTOR_ADDR      = 8'h30;  //48 Decimation factor address
 localparam DEC_RSHIFT_ADDR      = 8'h34;  //52 Decimation right shift address
 localparam AVG_EN_ADDR          = 8'h38;  //56 Average enable address
 localparam FILT_BYPASS_ADDR     = 8'h3C;  //60 Filter bypass address
-localparam FILT_COEFF_AA_ADDR   = 8'h40;  //64 Filter coeff AA address
-localparam FILT_COEFF_BB_ADDR   = 8'h44;  //68 Filter coeff BB address
-localparam FILT_COEFF_KK_ADDR   = 8'h48;  //72 Filter coeff KK address
-localparam FILT_COEFF_PP_ADDR   = 8'h4C;  //76 Filter coeff PP address
 
 localparam DMA_CTRL_ADDR_CH1    = 8'h50;  //80 DMA control register
 localparam DMA_STS_ADDR_CH1     = 8'h54;  //84 DMA status register
@@ -106,6 +102,16 @@ localparam CURR_WP_CH1 = 8'hA4;  //current write pointer CH1
 localparam CURR_WP_CH2 = 8'hA8;  //current write pointer CH2
 localparam CURR_DAT_CH1 = 8'hAC;  //current write pointer CH1
 localparam CURR_DAT_CH2 = 8'hB0;  //current write pointer CH2
+
+localparam FILT_COEFF_AA_CH1   = 8'hC0;  //64 Filter coeff AA address CH1
+localparam FILT_COEFF_BB_CH1   = 8'hC4;  //68 Filter coeff BB address CH1
+localparam FILT_COEFF_KK_CH1   = 8'hC8;  //72 Filter coeff KK address CH1
+localparam FILT_COEFF_PP_CH1   = 8'hCC;  //76 Filter coeff PP address CH1
+
+localparam FILT_COEFF_AA_CH2   = 8'hD0;  //64 Filter coeff AA address CH2
+localparam FILT_COEFF_BB_CH2   = 8'hD4;  //68 Filter coeff BB address CH2
+localparam FILT_COEFF_KK_CH2   = 8'hD8;  //72 Filter coeff KK address CH2
+localparam FILT_COEFF_PP_CH2   = 8'hDC;  //76 Filter coeff PP address CH2
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -176,6 +182,22 @@ wire                        acq_tlast;
 
 wire  [31:0]                buf1_ms_cnt;
 wire  [31:0]                buf2_ms_cnt;
+
+wire                        filt_tdata;   
+
+
+red_pitaya_dfilt1 i_dfilt (
+   // ADC
+  .adc_clk_i   ( adc_clk_i       ),  // ADC clock
+  .adc_rstn_i  ( adc_rstn_i      ),  // ADC reset - active low
+  .adc_dat_i   ( s_axis_tdata    ),  // ADC data
+  .adc_dat_o   ( filt_tdata      ),  // ADC data
+   // configuration
+  .cfg_aa_i    ( cfg_filt_coeff_aa   ),  // config AA coefficient
+  .cfg_bb_i    ( cfg_filt_coeff_bb   ),  // config BB coefficient
+  .cfg_kk_i    ( cfg_filt_coeff_kk   ),  // config KK coefficient
+  .cfg_pp_i    ( cfg_filt_coeff_pp   )   // config PP coefficient
+);
  
 ////////////////////////////////////////////////////////////
 // Name : Calibration
@@ -187,7 +209,7 @@ osc_calib #(
   U_osc_calib(
   .clk              (clk),
   // Slave AXI-S
-  .s_axis_tdata     (s_axis_tdata),
+  .s_axis_tdata     (filt_tdata),
   .s_axis_tvalid    (s_axis_tvalid),
   .s_axis_tready    (),
   // Master AXI-S
@@ -562,7 +584,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_coeff_aa <= 0;
   end else begin
-    if ((reg_addr[8-1:0] == FILT_COEFF_AA_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == FILT_COEFF_AA_CH2 && CHAN_NUM == 'd2) || (reg_addr[8-1:0] == FILT_COEFF_AA_CH1 && CHAN_NUM == 'd1)) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_aa <= reg_wr_data;
     end 
   end
@@ -578,7 +600,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_coeff_bb <= 0;
   end else begin
-    if ((reg_addr[8-1:0] == FILT_COEFF_BB_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == FILT_COEFF_BB_CH2 && CHAN_NUM == 'd2) || (reg_addr[8-1:0] == FILT_COEFF_BB_CH1 && CHAN_NUM == 'd1)) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_bb <= reg_wr_data;
     end 
   end
@@ -592,9 +614,9 @@ end
 always @(posedge clk)
 begin
   if (rst_n == 0) begin
-    cfg_filt_coeff_kk <= 0;
+    cfg_filt_coeff_kk <= 25'hffffff;
   end else begin
-    if ((reg_addr[8-1:0] == FILT_COEFF_KK_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == FILT_COEFF_KK_CH2 && CHAN_NUM == 'd2) || (reg_addr[8-1:0] == FILT_COEFF_KK_CH1 && CHAN_NUM == 'd1)) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_kk <= reg_wr_data;
     end 
   end
@@ -610,7 +632,7 @@ begin
   if (rst_n == 0) begin
     cfg_filt_coeff_pp <= 0;
   end else begin
-    if ((reg_addr[8-1:0] == FILT_COEFF_PP_ADDR) && (reg_wr_we == 1)) begin
+    if (((reg_addr[8-1:0] == FILT_COEFF_PP_CH2 && CHAN_NUM == 'd2) || (reg_addr[8-1:0] == FILT_COEFF_PP_CH1 && CHAN_NUM == 'd1)) && (reg_wr_we == 1)) begin
       cfg_filt_coeff_pp <= reg_wr_data;
     end 
   end
@@ -721,11 +743,7 @@ begin
     CALIB_GAIN_ADDR_CH1:    reg_rd_data <= cfg_calib_gain;
     CALIB_OFFSET_ADDR_CH2:  reg_rd_data <= cfg_calib_offset;
     CALIB_GAIN_ADDR_CH2:    reg_rd_data <= cfg_calib_gain;
-    FILT_BYPASS_ADDR:       reg_rd_data <= cfg_filt_bypass;                          
-    FILT_COEFF_AA_ADDR:     reg_rd_data <= cfg_filt_coeff_aa;  
-    FILT_COEFF_BB_ADDR:     reg_rd_data <= cfg_filt_coeff_bb;  
-    FILT_COEFF_KK_ADDR:     reg_rd_data <= cfg_filt_coeff_kk;  
-    FILT_COEFF_PP_ADDR:     reg_rd_data <= cfg_filt_coeff_pp;     
+    FILT_BYPASS_ADDR:       reg_rd_data <= cfg_filt_bypass;                           
     DMA_CTRL_ADDR_CH1:      reg_rd_data <= cfg_dma_ctrl_reg;    
     DMA_STS_ADDR_CH1:       reg_rd_data <= cfg_dma_sts_reg;    
     DMA_CTRL_ADDR_CH2:      reg_rd_data <= cfg_dma_ctrl_reg;    
@@ -741,6 +759,14 @@ begin
     BUF2_LOST_SAMP_CNT_CH2: reg_rd_data <= buf2_ms_cnt; 
     CURR_WP_CH1:            reg_rd_data <= m_axi_awaddr;
     CURR_WP_CH2:            reg_rd_data <= m_axi_awaddr;
+    FILT_COEFF_AA_CH1:      reg_rd_data <= cfg_filt_coeff_aa;
+    FILT_COEFF_BB_CH1:      reg_rd_data <= cfg_filt_coeff_bb;
+    FILT_COEFF_KK_CH1:      reg_rd_data <= cfg_filt_coeff_kk;
+    FILT_COEFF_PP_CH1:      reg_rd_data <= cfg_filt_coeff_pp;
+    FILT_COEFF_AA_CH2:      reg_rd_data <= cfg_filt_coeff_aa;
+    FILT_COEFF_BB_CH2:      reg_rd_data <= cfg_filt_coeff_bb;
+    FILT_COEFF_KK_CH2:      reg_rd_data <= cfg_filt_coeff_kk;
+    FILT_COEFF_PP_CH2:      reg_rd_data <= cfg_filt_coeff_pp;
     default                 reg_rd_data <= 32'd0;                                
   endcase
 end
