@@ -143,7 +143,6 @@ begin
   adc_data_ch1_signed <= {adc_data_ch1[ADC_DATA_BITS-1], ~{adc_data_ch1[ADC_DATA_BITS-2:0],{(16-ADC_DATA_BITS){adc_sign_ch1}}}};  
 end
 
-//assign s_axis_osc1_tdata = $signed(adc_data_ch1_signed);
 assign s_axis_osc1_tdata = adc_data_ch1_signed;
 
 always @(posedge clk)
@@ -151,7 +150,6 @@ begin
   adc_data_ch2_signed <= {adc_data_ch2[ADC_DATA_BITS-1], ~{adc_data_ch2[ADC_DATA_BITS-2:0],{(16-ADC_DATA_BITS){adc_sign_ch2}}}}; 
 end
 
-//assign s_axis_osc2_tdata = $signed(adc_data_ch2_signed);
 assign s_axis_osc2_tdata = adc_data_ch2_signed;
 
 assign intr = osc1_dma_intr | osc2_dma_intr;

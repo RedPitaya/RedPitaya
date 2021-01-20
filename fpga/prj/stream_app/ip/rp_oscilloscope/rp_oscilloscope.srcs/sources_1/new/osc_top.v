@@ -100,8 +100,6 @@ localparam BUF1_LOST_SAMP_CNT_CH2   = 8'h9C;  //108 Number of lost samples in bu
 localparam BUF2_LOST_SAMP_CNT_CH2   = 8'hA0;  //112 Number of lost samples in buffer 2
 localparam CURR_WP_CH1 = 8'hA4;  //current write pointer CH1
 localparam CURR_WP_CH2 = 8'hA8;  //current write pointer CH2
-localparam CURR_DAT_CH1 = 8'hAC;  //current write pointer CH1
-localparam CURR_DAT_CH2 = 8'hB0;  //current write pointer CH2
 
 localparam FILT_COEFF_AA_CH1   = 8'hC0;  //64 Filter coeff AA address CH1
 localparam FILT_COEFF_BB_CH1   = 8'hC4;  //68 Filter coeff BB address CH1
@@ -163,7 +161,9 @@ reg  [31:0]                 cfg_dma_buf_size;
 reg  [15:0]                 cfg_calib_offset;
 reg  [15:0]                 cfg_calib_gain;
 
-wire [S_AXIS_DATA_BITS-1:0] calib_tdata;    
+wire [S_AXIS_DATA_BITS-1:0] calib_tdata;   
+wire [S_AXIS_DATA_BITS-1:0] calib_datain;    
+
 wire                        calib_tvalid;   
 wire                        calib_tready;   
 
@@ -203,13 +203,14 @@ red_pitaya_dfilt1 i_dfilt (
 // Name : Calibration
 // 
 ////////////////////////////////////////////////////////////
+assign calib_datain = cfg_filt_bypass ? s_axis_tdata : filt_tdata;
 
 osc_calib #(
   .AXIS_DATA_BITS   (S_AXIS_DATA_BITS))
   U_osc_calib(
   .clk              (clk),
   // Slave AXI-S
-  .s_axis_tdata     (filt_tdata),
+  .s_axis_tdata     (calib_datain),
   .s_axis_tvalid    (s_axis_tvalid),
   .s_axis_tready    (),
   // Master AXI-S
