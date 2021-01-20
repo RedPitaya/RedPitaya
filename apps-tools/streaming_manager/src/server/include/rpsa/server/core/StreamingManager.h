@@ -60,7 +60,8 @@ public:
     bool convertToCSV();
     bool convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg);
     void stopWriteToCSV();
-    int passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode,uint32_t _adc_bits,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
+     int passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode,uint32_t _adc_bits,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
+   float convertADCMode(uint32_t _adc_mode);
     CStreamingManager::Callback notifyPassData;
     CStreamingManager::Callback notifyStop;
     CStreamingManager::CallbackVoid notifyPassDataReset;
@@ -88,6 +89,6 @@ private:
     Stream_FileType m_fileType;
     void startServer();
     void stopServer();
-    uint8_t * convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, uint32_t _adc_mode, uint32_t _adc_bits, unsigned short _resolution);
+    uint8_t * convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, float _adc_mode, uint32_t _adc_bits, unsigned short _resolution);
     
 };

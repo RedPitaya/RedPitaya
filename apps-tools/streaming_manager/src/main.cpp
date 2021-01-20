@@ -324,7 +324,7 @@ void StartServer(){
 
 #ifdef Z20
 	auto use_calib = 0;
-	auto attenuator = 0;
+	auto attenuator = 3; // 1 - 1V ; 2 - 20V ; 3 - 0.5V
 #else
 	auto use_calib = ss_calib.Value();
 	auto attenuator = ss_attenuator.Value();

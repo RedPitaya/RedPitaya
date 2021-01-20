@@ -195,9 +195,11 @@ int main(int argc, char *argv[])
     int samples = -1;
     int save_mode = 1;
     bool use_calib = false;
-    int attenuator = 0;
+    int attenuator = 1;
     int ac_dc = 0;
-
+#ifdef Z20
+    attenuator = 3;
+#endif
     try{
         ifstream file(filepath);
         std::string key;

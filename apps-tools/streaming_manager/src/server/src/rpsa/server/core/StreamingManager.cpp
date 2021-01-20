@@ -225,7 +225,7 @@ void CStreamingManager::stop(){
     }
 }
 
-uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, uint32_t _adc_mode, uint32_t _adc_bits, unsigned short _resolution){
+uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, float _adc_mode, uint32_t _adc_bits, unsigned short _resolution){
     UNUSED(_adc_bits);
     uint8_t *dest = nullptr;
 
@@ -245,12 +245,19 @@ uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_si
         for(uint32_t i = 0 ; i < samples; i++){
             float cnt = (_resolution == 8) ?  ((int8_t*)_buffer)[i]:((int16_t*)_buffer)[i];
 //            dest_f[i] = cnt / ( 1 << (_adc_bits - 1));
-            dest_f[i] = cnt / ( 1 << (_resolution - 1)) * (float)_adc_mode;
+            dest_f[i] = cnt / ( 1 << (_resolution - 1)) * _adc_mode;
         }
 
         dest = reinterpret_cast<uint8_t*>(dest_f);
     }
     return dest;
+}
+
+float CStreamingManager::convertADCMode(uint32_t _adc_mode){
+    if (_adc_mode == 1) return 1.0;
+    if (_adc_mode == 2) return 20.0;
+    if (_adc_mode == 3) return 0.5;
+    return 1.0;
 }
 
 
@@ -297,15 +304,14 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
         if (_size_ch1 + _size_ch2  + lostSize> 0){
             
             if (m_fileType == TDMS_TYPE){
-                // _adc_mode = 0 for 1:1 and 1 for 1:20 mode 
                 if (_size_ch1 > 0 || lostSize > 0){ 
-                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,convertADCMode(_adc_mode),_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
                     memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
                 }
 
                 if (_size_ch2 > 0 || lostSize > 0){ 
-                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,convertADCMode(_adc_mode),_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                     memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
                 }
@@ -357,12 +363,12 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
 
             if (m_fileType == CSV_TYPE){
                  if (_size_ch1 > 0){ 
-                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size, 0 ,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
+                    buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size, 0 ,convertADCMode(_adc_mode),_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
                 }
 
                 if (_size_ch2 > 0){ 
-                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size, 0 ,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
+                    buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size, 0 ,convertADCMode(_adc_mode),_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                 }
 
