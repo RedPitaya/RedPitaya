@@ -88,6 +88,22 @@ To install them do:
 
       $ sudo pip3 install pyvisa pyvisa-py
 
+   .. note::
+
+         To run the examples, you need python version 3. Make sure the python versions before running.
+         If the system has python version 2.7, this version will be used by default.
+
+         .. code-block:: shell-session
+
+            $ python --version
+            Python 2.7.17
+         
+         Then, in order to run the examples, specify explicitly the python version
+
+         .. code-block:: shell-session
+
+            $ python3.5 blink.py 192.168.178.108
+
 #. Open the :ref:`blink <blink>` tutorial and copy the code to your favorite text editor
 #. Save the file as ``blink.py`` to your working folder → for example ``examples_py``
 #. Copy and save the
@@ -117,6 +133,10 @@ To install them do:
    .. image:: scpi-example-cli.png
 
 More examples about how to control Red Pitaya from MATLAB can be find :ref:`here <examples>`.
+
+   .. note::
+   
+      Python examples can also be run directly from RP device itself. To do so fist start SCPI server and then use local device IP: 127.0.0.1
 
 =======
 LabVIEW

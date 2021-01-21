@@ -141,7 +141,7 @@ Schematics of extension connectors is shown in picture bellow.
 #. Valid for low frequency signals. For input signals that contain frequency components beyond 1 kHz, the full scale
    value defines the maximum admissible input voltage.
 #. Jumper settings are limited to the positions described in the user manual. Any other configuration or use of
-   different jumper type may damage the product. 
+   different jumper type may damage the product and voiding the warranty. 
 #. SMA connectors on the cables connected to Red Pitaya must correspond to the standard MILC39012. It’s Important that
    central pin is of suitable length, otherwise the SMA connector installed in Red Pitaya will mechanically damage the
    SMA connector. Central pin of the SMA connector on Red Pitaya will loose contact to the board and the board will 

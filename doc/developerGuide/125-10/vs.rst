@@ -160,3 +160,25 @@ for universities,students and makers, SDRlab 122-16 is tailored for SDR applicat
 +------------------------------+------------------------------+------------------------------+------------------------------+-------------------------+
 | Ref. clock input             | N/A                          | N/A                          | N/A                          | through BNC connector   |
 +------------------------------+------------------------------+------------------------------+------------------------------+-------------------------+
+
+
+.. note::
+    
+   RedPitaya devices:
+
+   * should be operated at normal conditions with ambient temperatures not exceeding 30°C (86°F) and should not be covered.
+   * are intended for Indoor use, maximum altitude: 2000 m, pollution degree 2, and relative humidity ≤90%
+   * intended for use with low-voltage energy sources and signals: it should not be used in any direct connection with voltages above 30 volts.
+
+
+.. warning::
+
+   All inputs and outputs available through (SMA/BNC) connectors share a common ground connected to the power supply ground.
+
+
+.. warning::
+
+   Power supply precautions:
+
+   * STEMlab 125-14, STEMlab 125-10, SDRlab 122-16 shall only be powered by an isolated external power supply providing 5 volts direct current, and a maximum current of 2 amperes. The KA23-0502000DES model is recommended. Any other external power supply used with Red Pitaya must comply with relevant regulations and standards applicable in the country of use.
+   * SIGNALlab 250-12 shall only be powered by an original KA2401A 24V/1A isolated power supply.

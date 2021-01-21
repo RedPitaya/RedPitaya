@@ -7,4 +7,5 @@ Acquiring signals at RF inputs
    acqRF-exm1
    acqRF-exm2
    acqRF-exm3
+   acqRF-exm4
    acqRF-samp-and-dec

@@ -51,7 +51,7 @@ Red Pitaya board analog frontend features 2 fast analog inputs.
     .. warning::
     
         Jumper settings are limited to the described positions. Any other configuration or use of different jumper
-        type may damage the product.
+        type may damage the product and voiding the warranty.
         
         
     9. Input stage schematics is given in picture below.
