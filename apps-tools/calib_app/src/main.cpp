@@ -884,10 +884,14 @@ void UpdateParams(void)
 
 			if (sig == 3){
 				g_calib->resetCalibToZero();
+				g_calib_man->readCalibEpprom();
+				sendCalibInManualMode(true);
 			}
 
 			if (sig == 4){
 				g_calib->resetCalibToFactory();
+				g_calib_man->readCalibEpprom();
+				sendCalibInManualMode(true);
 			}
 
 			if (sig == 5){
