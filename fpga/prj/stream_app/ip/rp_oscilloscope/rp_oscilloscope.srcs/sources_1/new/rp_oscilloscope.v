@@ -133,6 +133,7 @@ wire                            adr_is_cal_ch1, adr_is_cal_ch2;
 wire                            adr_is_dma_ch1, adr_is_dma_ch2;
 wire                            adr_is_diag_ch1, adr_is_diag_ch2;
 wire                            adr_is_cntms_ch1, adr_is_cntms_ch2;
+wire                            adr_is_filt_ch1, adr_is_filt_ch2;
 wire                            buf_sel_ch1, buf_sel_ch2;
 
 wire                            adc_sign_ch1 = ~adc_data_ch1[ADC_DATA_BITS-1];
@@ -175,8 +176,11 @@ assign adr_is_dma_ch2= (reg_addr[REG_ADDR_BITS-1:0] == 8'h6C || reg_addr[REG_ADD
 assign adr_is_cntms_ch1= (reg_addr[REG_ADDR_BITS-1:0] == 8'h5C || reg_addr[REG_ADDR_BITS-1:0] == 8'h60);
 assign adr_is_cntms_ch2= (reg_addr[REG_ADDR_BITS-1:0] == 8'h9C || reg_addr[REG_ADDR_BITS-1:0] == 8'hA0);
 
-assign adr_is_ch1     = (adr_is_dma_ch1 || adr_is_cal_ch1 || adr_is_diag_ch1);
-assign adr_is_ch2     = (adr_is_dma_ch2 || adr_is_cal_ch2 || adr_is_diag_ch1);
+assign adr_is_filt_ch1= (reg_addr[REG_ADDR_BITS-1:0] >= 8'hC0 || reg_addr[REG_ADDR_BITS-1:0] <= 8'hCC);
+assign adr_is_filt_ch2= (reg_addr[REG_ADDR_BITS-1:0] >= 8'hD0 || reg_addr[REG_ADDR_BITS-1:0] <= 8'hDC);
+
+assign adr_is_ch1     = (adr_is_dma_ch1 || adr_is_cal_ch1 || adr_is_diag_ch1 || adr_is_filt_ch1);
+assign adr_is_ch2     = (adr_is_dma_ch2 || adr_is_cal_ch2 || adr_is_diag_ch1 || adr_is_filt_ch2);
 
 ////////////////////////////////////////////////////////////
 // Name : Register Control
