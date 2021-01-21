@@ -360,6 +360,14 @@ int rp_EnableDigitalLoop(bool enable);
 rp_calib_params_t rp_GetCalibrationSettings();
 
 /**
+* Returns default calibration settings.
+* These calibration settings are populated only once from EEPROM at rp_Init().
+* Each rp_GetCalibrationSettings call returns the same cached setting values.
+* @return Calibration settings
+*/
+rp_calib_params_t rp_GetDefaultCalibrationSettings();
+
+/**
 * Calibrates input channel offset. This input channel must be grounded to calibrate properly.
 * Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
 * @param channel Channel witch is going to be calibrated

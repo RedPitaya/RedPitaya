@@ -383,6 +383,16 @@ int gen_getBurstCount(rp_channel_t channel, int *num) {
     return generate_getBurstCount(channel, (uint32_t *) num);
 }
 
+#ifndef Z20_250_12
+int gen_setBurstLastValue(rp_channel_t channel, float amplitude){
+    return generate_setBurstLastValue(channel,  amplitude);
+}
+
+int gen_getBurstLastValue(rp_channel_t channel, float *amplitude){
+    return generate_getBurstLastValue(channel, amplitude);
+}
+#endif
+
 int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
     if ((repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) && repetitions != -1) {
         return RP_EOOR;

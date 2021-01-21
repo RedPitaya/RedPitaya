@@ -205,6 +205,16 @@ typedef enum {
 } rp_channel_trigger_t;
 
 /**
+ * The type represents the names of the coefficients in the filter.
+ */
+typedef enum {
+    AA,    //!< AA
+    BB,    //!< BB
+    PP,    //!< PP 
+    KK     //!< KK
+} rp_eq_filter_cof_t;
+
+/**
  * Type representing acquire signal sampling rate.
  */
 typedef enum {
@@ -260,19 +270,36 @@ typedef enum {
  * Calibration parameters, stored in the EEPROM device
  */
 typedef struct {
-    uint32_t fe_ch1_fs_g_hi; //!< High gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_hi; //!< High gain front end full scale voltage, channel B
-    uint32_t fe_ch1_fs_g_lo; //!< Low gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_lo; //!< Low gain front end full scale voltage, channel B
-    int32_t  fe_ch1_lo_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_lo_offs; //!< Front end DC offset, channel B
-    uint32_t be_ch1_fs;      //!< Back end full scale voltage, channel A
-    uint32_t be_ch2_fs;      //!< Back end full scale voltage, channel B
-    int32_t  be_ch1_dc_offs; //!< Back end DC offset, channel A
-    int32_t  be_ch2_dc_offs; //!< Back end DC offset, on channel B
-	uint32_t magic;			 //!
-    int32_t  fe_ch1_hi_offs; //!< Front end DC offset, channel A
-    int32_t  fe_ch2_hi_offs; //!< Front end DC offset, channel B
+    uint32_t fe_ch1_fs_g_hi;    //!< High gain front end full scale voltage, channel A
+    uint32_t fe_ch2_fs_g_hi;    //!< High gain front end full scale voltage, channel B
+    uint32_t fe_ch1_fs_g_lo;    //!< Low gain front end full scale voltage, channel A
+    uint32_t fe_ch2_fs_g_lo;    //!< Low gain front end full scale voltage, channel B
+    int32_t  fe_ch1_lo_offs;    //!< Front end DC offset, channel A
+    int32_t  fe_ch2_lo_offs;    //!< Front end DC offset, channel B
+    uint32_t be_ch1_fs;         //!< Back end full scale voltage, channel A
+    uint32_t be_ch2_fs;         //!< Back end full scale voltage, channel B
+    int32_t  be_ch1_dc_offs;    //!< Back end DC offset, channel A
+    int32_t  be_ch2_dc_offs;    //!< Back end DC offset, on channel B
+	uint32_t magic;			    //!
+    int32_t  fe_ch1_hi_offs;    //!< Front end DC offset, channel A
+    int32_t  fe_ch2_hi_offs;    //!< Front end DC offset, channel B
+    uint32_t low_filter_aa_ch1;  //!< Filter equalization coefficients AA for Low mode, channel A
+    uint32_t low_filter_bb_ch1;  //!< Filter equalization coefficients BB for Low mode, channel A
+    uint32_t low_filter_pp_ch1;  //!< Filter equalization coefficients PP for Low mode, channel A
+    uint32_t low_filter_kk_ch1;  //!< Filter equalization coefficients KK for Low mode, channel A
+    uint32_t low_filter_aa_ch2;  //!< Filter equalization coefficients AA for Low mode, channel B
+    uint32_t low_filter_bb_ch2;  //!< Filter equalization coefficients BB for Low mode, channel B
+    uint32_t low_filter_pp_ch2;  //!< Filter equalization coefficients PP for Low mode, channel B
+    uint32_t low_filter_kk_ch2;  //!< Filter equalization coefficients KK for Low mode, channel B
+    uint32_t  hi_filter_aa_ch1;  //!< Filter equalization coefficients AA for High mode, channel A
+    uint32_t  hi_filter_bb_ch1;  //!< Filter equalization coefficients BB for High mode, channel A
+    uint32_t  hi_filter_pp_ch1;  //!< Filter equalization coefficients PP for High mode, channel A
+    uint32_t  hi_filter_kk_ch1;  //!< Filter equalization coefficients KK for High mode, channel A
+    uint32_t  hi_filter_aa_ch2;  //!< Filter equalization coefficients AA for High mode, channel B
+    uint32_t  hi_filter_bb_ch2;  //!< Filter equalization coefficients BB for High mode, channel B
+    uint32_t  hi_filter_pp_ch2;  //!< Filter equalization coefficients PP for High mode, channel B
+    uint32_t  hi_filter_kk_ch2;  //!< Filter equalization coefficients KK for High mode, channel B   
+
 } rp_calib_params_t;
 
 
@@ -356,6 +383,14 @@ int rp_EnableDigitalLoop(bool enable);
 * @return Calibration settings
 */
 rp_calib_params_t rp_GetCalibrationSettings();
+
+/**
+* Returns default calibration settings.
+* These calibration settings are populated only once from EEPROM at rp_Init().
+* Each rp_GetCalibrationSettings call returns the same cached setting values.
+* @return Calibration settings
+*/
+rp_calib_params_t rp_GetDefaultCalibrationSettings();
 
 /**
 * Calibrates input channel offset. This input channel must be grounded to calibrate properly.
@@ -457,6 +492,7 @@ int rp_CalibrationWriteParams(rp_calib_params_t calib_params);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_CalibrationSetParams(rp_calib_params_t calib_params);
+
 
 
 /** @name Identification
@@ -1087,6 +1123,24 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 int rp_AcqGetBufSize(uint32_t* size);
 
+/**
+* Sets the current calibration values from temporary memory to the FPGA filter
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqUpdateAcqFilter(rp_channel_t channel);
+
+/**
+* Sets the current calibration values from temporary memory to the FPGA filter
+* @param channel Channel A or B for which we want to retrieve the ADC buffer.
+* @param coef_aa Return AA coefficient.
+* @param coef_bb Return BB coefficient.
+* @param coef_kk Return KK coefficient.
+* @param coef_pp Return PP coefficient.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
 ///@}
 /** @name Generate
@@ -1294,6 +1348,24 @@ int rp_GenBurstCount(rp_channel_t channel, int num);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenGetBurstCount(rp_channel_t channel, int *num);
+
+/**
+* Sets the value to be set at the end of the generated signal in burst mode.
+* @param channel Channel A or B for witch we want to set number of generated waveforms in a burst.
+* @param amplitude Amplitude level at the end of the signal (Volt).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenBurstLastValue(rp_channel_t channel, float amlitude);
+
+/**
+* Gets the value to be set at the end of the generated signal in burst mode.
+* @param channel Channel A or B for witch we want to get number of generated waveforms in a burst.
+* @param amplitude Amplitude where value will be returned (Volt).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude);
 
 /**
 * Sets number of burst repetitions. This determines how many bursts will be generated.

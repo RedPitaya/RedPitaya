@@ -1,11 +1,11 @@
 #!/bin/bash
 unzip -o ./libs/asio.zip -d ./libs
 cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release
-make -j2
+make
 
 cd client
 cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release
-make -j2
+make
 cd ..
 
 #APP=$(pwd | grep -o '[^/]*$')

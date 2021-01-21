@@ -21,6 +21,7 @@ using namespace XML;
 namespace rp_spi_fpga{
 
 static XML::XMLString bus_node_name("bus_name");
+static XML::XMLString bus_node_fpga_base_name("fpga_base");
 static XML::XMLString bus_node_dev_addr_name("device_on_bus");
 static XML::XMLString bus_node_header_name("header");
 static XML::XMLString bus_node_reg_set_name("reg_set");
@@ -113,12 +114,12 @@ int rp_read_from_spi(const char* spi_dev_path,char *buffer_header,int header_len
     return read_from_spi(spi_dev_path,buffer_header,header_length,value);
 }
 
- int rp_write_to_spi_fpga(const char* spi_dev_path,unsigned short dev_address,int reg_addr, unsigned char spi_val_to_write){
-    return write_to_fpga_spi(spi_dev_path,dev_address, reg_addr , spi_val_to_write);
+ int rp_write_to_spi_fpga(const char* spi_dev_path,unsigned int fpga_address,unsigned short dev_address,int reg_addr, unsigned char spi_val_to_write){
+    return write_to_fpga_spi(spi_dev_path,fpga_address,dev_address, reg_addr , spi_val_to_write);
  }
 
-int rp_read_from_spi_fpga(const char* spi_dev_path,unsigned short dev_address,int reg_addr, char &value){
-    return read_from_fpga_spi(spi_dev_path,dev_address, reg_addr , value);
+int rp_read_from_spi_fpga(const char* spi_dev_path,unsigned int fpga_address,unsigned short dev_address,int reg_addr, char &value){
+    return read_from_fpga_spi(spi_dev_path,fpga_address,dev_address, reg_addr , value);
 }
 
 
@@ -369,6 +370,7 @@ int rp_spi_compare(const char *configuration_file){
 
 int rp_spi_load_via_fpga(const char *configuration_file){
     string bus_name = "";
+    unsigned int   fpga_device_addr = 0;
     unsigned short device_addr = 0;
     
     XMLDocument *doc = readFile(configuration_file);
@@ -381,7 +383,20 @@ int rp_spi_load_via_fpga(const char *configuration_file){
     }
     bus_name =  XMLString::toString(bus_node->GetInnerText());
 
-    XMLNode *bus_node_dev_addr = doc->FindFirstNodeByName(bus_node_dev_addr_name);
+    XMLNode *bus_node_dev_addr = doc->FindFirstNodeByName(bus_node_fpga_base_name);
+    if (bus_node_dev_addr == nullptr){
+        MSG_A("[rp_spi] Missing node device_on_bus in configuration file\n");
+        return  -1;
+    }else{
+        XMLAttribute *attr = bus_node_dev_addr->GetAttributesByName(attr_address_string);
+        if (attr == nullptr) {
+            MSG_A("[rp_spi] Missing attribute address in device_on_bus\n");
+            return  -1;
+        }
+        sscanf(attr->ValueString().c_str(), "%x", &fpga_device_addr);
+    }
+
+    bus_node_dev_addr = doc->FindFirstNodeByName(bus_node_dev_addr_name);
     if (bus_node_dev_addr == nullptr){
         MSG_A("[rp_spi] Missing node device_on_bus in configuration file\n");
         return  -1;
@@ -441,7 +456,7 @@ int rp_spi_load_via_fpga(const char *configuration_file){
                 data = (char)reg_default;
             }
 
-            if (rp_spi_fpga::rp_write_to_spi_fpga(bus_name.c_str(), device_addr , reg_addr , data) != 0) {
+            if (rp_spi_fpga::rp_write_to_spi_fpga(bus_name.c_str(),fpga_device_addr ,device_addr , reg_addr , data) != 0) {
                 /* Error process */
                 MSG_A("[rp_spi] ERROR write value of %s to spi\n",reg_description.c_str());
             }

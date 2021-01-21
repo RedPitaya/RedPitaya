@@ -124,6 +124,7 @@ typedef struct awg_reg_t {
      * bits [29: 0] - Counter step
      */
     uint32_t chb_count_step;
+
 } awg_reg_t;
 
 /** @} */

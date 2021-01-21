@@ -31,6 +31,12 @@ $(CONTROLLER):
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
+	echo "#!/bin/sh" > fpga.sh
+ifeq ($(MODEL),Z20_250_12)
+	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app_250' >> fpga.sh
+else
+	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app' >> fpga.sh
+endif
 	mkdir -p target/$(APP)
 	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html fpga.sh info js target/$(APP)
 	mv $(SERVICE) $(INSTALL_DIR)/bin

@@ -3,14 +3,6 @@
 #include "calib_man.h"
 
 
-void PrintLogInFile3(const char *message){
-	std::time_t result = std::time(nullptr);
-	std::fstream fs;
-  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
-	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
-	fs.close();
-}
-
 float calibFullScaleToVoltageMan(uint32_t fullScaleGain) {
     if (fullScaleGain == 0) return 1;
     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
@@ -27,7 +19,8 @@ CCalibMan::Ptr CCalibMan::Create(COscilloscope::Ptr _acq)
 }
 
 CCalibMan::CCalibMan(COscilloscope::Ptr _acq):
-m_acq(_acq)
+m_acq(_acq),
+m_calibMode(0)
 {
     m_currentGain = RP_LOW;
 #ifdef Z20_250_12
@@ -43,6 +36,7 @@ CCalibMan::~CCalibMan()
 }
 
 void CCalibMan::init(){
+    m_acq->startNormal();
     m_acq->resetGen();
     m_currentGain = RP_LOW;
     m_acq->setLV();
@@ -53,6 +47,32 @@ void CCalibMan::init(){
     m_acq->setGenGainx1();
 #endif
     readCalib();
+    m_calibMode = 0;
+}
+
+void CCalibMan::initSq(int _decimation){
+    m_acq->startSquare(_decimation);
+	this->setModeLV_HV(RP_LOW);	
+	this->changeChannel(RP_CH_1);
+    setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
+    setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);    
+    m_acq->setHyst(0.05);
+    enableGen(RP_CH_1,false);
+    enableGen(RP_CH_2,false);
+    readCalib();
+    m_calibMode = 1;
+}
+
+int CCalibMan::getCalibMode(){
+    return m_calibMode;
+}
+
+void CCalibMan::changeDecimation(int _decimation){
+    m_acq->startSquare(_decimation);
+}
+
+void CCalibMan::changeChannel(rp_channel_t _ch){
+    m_acq->setAcquireChannel(_ch);
 }
 
 int CCalibMan::readCalib(){
@@ -189,6 +209,46 @@ int CCalibMan::getCalibValue(ClalibValue _type){
         case DAC_CH2_OFF:  return m_calib_parameters.be_ch2_dc_offs;
         case DAC_CH1_GAIN:  return m_calib_parameters.be_ch1_fs;
         case DAC_CH2_GAIN:  return m_calib_parameters.be_ch2_fs;  
+        case F_AA_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_aa_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_aa_ch1;
+            break;
+        }
+        case F_AA_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_aa_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_aa_ch2;
+            break;
+        }
+        case F_BB_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_bb_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_bb_ch1;
+            break;
+        }
+        case F_BB_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_bb_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_bb_ch2;
+            break;
+        }
+        case F_PP_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_pp_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_pp_ch1;
+            break;
+        }
+        case F_PP_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_pp_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_pp_ch2;
+            break;
+        }
+         case F_KK_CH1: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_kk_ch1;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_kk_ch1;
+            break;
+        }
+        case F_KK_CH2: {
+            if (g == RP_LOW)  return m_calib_parameters.low_filter_kk_ch2;
+            if (g == RP_HIGH) return m_calib_parameters.hi_filter_kk_ch2;
+            break;
+        }
     }
 #endif
     return 0;
@@ -200,7 +260,7 @@ int setCalibInt(int32_t *_x, int _value){
 }
 
 int setCalibUInt(uint32_t *_x, int _value){
-    *_x = _value;
+    *_x = _value;   
     return 0;
 }
 
@@ -269,6 +329,62 @@ auto g = getModeLV_HV();
             if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.fe_ch2_fs_g_hi,_value);
             break;
         }
+
+        case F_AA_CH1: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_aa_ch1,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_aa_ch1,_value);
+            break;
+        }
+
+        case F_AA_CH2: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_aa_ch2,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_aa_ch2,_value);
+            break;
+        }
+
+        case F_BB_CH1: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_bb_ch1,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_bb_ch1,_value);
+            break;
+        }
+
+        case F_BB_CH2: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_bb_ch2,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_bb_ch2,_value);
+            break;
+        }
+
+        case F_PP_CH1: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_pp_ch1,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_pp_ch1,_value);
+            break;
+        }
+
+        case F_PP_CH2: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_pp_ch2,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_pp_ch2,_value);
+            break;
+        }
+
+        case F_KK_CH1: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_kk_ch1,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_kk_ch1,_value);
+            break;
+        }
+
+        case F_KK_CH2: {
+            m_calib_parameters.magic = 0xDDCCBBAA;
+            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_kk_ch2,_value);
+            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_kk_ch2,_value);
+            break;
+        }
        
         case DAC_CH1_OFF:  return setCalibInt(&m_calib_parameters.be_ch1_dc_offs,_value);
         case DAC_CH2_OFF:  return setCalibInt(&m_calib_parameters.be_ch2_dc_offs,_value);
@@ -302,4 +418,47 @@ int CCalibMan::setGenType(rp_channel_t _ch,int _type){
 
 void CCalibMan::updateGen(){
     m_acq->updateGenCalib();
+}
+
+void CCalibMan::updateAcqFilter(rp_channel_t _ch){
+    m_acq->updateAcqFilter(_ch);
+}
+
+int CCalibMan::setDefualtFilter(rp_channel_t _ch){
+#ifdef Z10
+    auto x = rp_GetDefaultCalibrationSettings();
+    auto g = getModeLV_HV();
+    if (_ch == RP_CH_1){
+        if (g == RP_LOW)  {
+            setCalibValue(F_AA_CH1,x.low_filter_aa_ch1);
+            setCalibValue(F_BB_CH1,x.low_filter_bb_ch1);
+            setCalibValue(F_PP_CH1,x.low_filter_pp_ch1);
+            setCalibValue(F_KK_CH1,x.low_filter_kk_ch1);
+        }
+        if (g == RP_HIGH) {
+            setCalibValue(F_AA_CH1,x.hi_filter_aa_ch1);
+            setCalibValue(F_BB_CH1,x.hi_filter_bb_ch1);
+            setCalibValue(F_PP_CH1,x.hi_filter_pp_ch1);
+            setCalibValue(F_KK_CH1,x.hi_filter_kk_ch1);
+        }
+    }
+
+    if (_ch == RP_CH_2){
+        if (g == RP_LOW)  {
+            setCalibValue(F_AA_CH2,x.low_filter_aa_ch2);
+            setCalibValue(F_BB_CH2,x.low_filter_bb_ch2);
+            setCalibValue(F_PP_CH2,x.low_filter_pp_ch2);
+            setCalibValue(F_KK_CH2,x.low_filter_kk_ch2);
+        }
+        if (g == RP_HIGH) {
+            setCalibValue(F_AA_CH2,x.hi_filter_aa_ch2);
+            setCalibValue(F_BB_CH2,x.hi_filter_bb_ch2);
+            setCalibValue(F_PP_CH2,x.hi_filter_pp_ch2);
+            setCalibValue(F_KK_CH2,x.hi_filter_kk_ch2);
+        }
+    }
+    return 0;
+#else 
+    return -1;
+#endif
 }

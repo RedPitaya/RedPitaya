@@ -174,6 +174,11 @@ int rp_CalibrationSetParams(rp_calib_params_t calib_params){
     return calib_SetParams(calib_params);
 }
 
+rp_calib_params_t rp_GetDefaultCalibrationSettings(){
+    return calib_GetDefaultCalib();
+}
+
+
 /**
  * Identification
  */
@@ -720,6 +725,17 @@ int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 }
 #endif
 
+#ifdef Z10
+int rp_AcqUpdateAcqFilter(rp_channel_t channel){
+    return acq_UpdateAcqFilter(channel);
+}
+
+int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp){
+    return acq_GetFilterCalibValue( channel,coef_aa, coef_bb, coef_kk, coef_pp);
+}
+
+#endif
+
 /**
 * Generate methods
 */
@@ -811,6 +827,16 @@ int rp_GenBurstCount(rp_channel_t channel, int num) {
 int rp_GenGetBurstCount(rp_channel_t channel, int *num) {
     return gen_getBurstCount(channel, num);
 }
+
+#ifndef Z20_250_12
+int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
+    return gen_setBurstLastValue(channel,amlitude);
+}
+
+int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
+    return gen_getBurstLastValue(channel,amlitude);
+}
+#endif
 
 int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
     return gen_setBurstRepetitions(channel, repetitions);

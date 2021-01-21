@@ -26,7 +26,7 @@ LIBS += -L$(INSTALL_DIR)/rp_sdk
 LIBS += -L./server/bin
 
 COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD 
-CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
+CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
@@ -40,6 +40,12 @@ LDSFLAGS+= -lrpsasrv
 LDSFLAGS+= -Wl,--no-whole-archive
 LDSFLAGS+= -lpthread
 LDSFLAGS+= -lrp
+
+ifeq ($(MODEL),Z20_250_12)
+INCLUDE += -I$(INSTALL_DIR)/include/api250-12
+LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
+endif 
+
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
@@ -62,11 +68,11 @@ build_lib:
 
 .PHONY: make_c_app
 make_c_app: build_lib  $(OBJECTS)
-	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LDWFLAGS)
+	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) $(LDWFLAGS)
 
 .PHONY: service
 service: build_lib $(OBJECTS_SERVICE)
-	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CFLAGS) $(LDFLAGS) $(LDSFLAGS)
+	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CXXFLAGS) $(LDFLAGS) $(LDSFLAGS)
 
 clean_c_app:
 	$(RM) -f $(C_OUT_NAME) $(OBJECTS)

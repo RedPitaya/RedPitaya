@@ -3,5 +3,4 @@ Python applications should be executed with the device IP address in the command
 $ ./
 ```
 
-This example is written and completely supported by Python 2.7
-TODO:Export to python 3.4
+This example is written and completely supported by Python 3.5

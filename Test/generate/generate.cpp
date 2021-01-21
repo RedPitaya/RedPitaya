@@ -65,7 +65,7 @@ void synthesize_signal(config_t &conf,
     const int trans0 = 30;
     const int trans1 = 300;
     const double tt2 = 0.249;
-    
+ 
     uint16_t scale = 0x1fff * (ampl / 2.0);
     uint32_t calib_gain = 0;
     if (conf.calib == true){
@@ -74,7 +74,7 @@ void synthesize_signal(config_t &conf,
         float fullScale = (uint32_t) (1.0 / 100.0 * ((uint64_t)1<<32));
         scale *=   fullScale / (float)calib_gain;
     }
-  
+
     scale = scale & 0x3fff;
 
     /* This is where frequency is used... */

@@ -1,4 +1,2 @@
-#!/bin/sh
-
-# DO NOT EDIT
-/opt/redpitaya/sbin/mkoverlay.sh stream_app
+#!/bin/bash
+/opt/redpitaya/sbin/mkoverlay.sh stream_app_250

@@ -122,6 +122,12 @@ var attenuatorChange = function(event) {
     SM.updateLimits();
 }
 
+var acdcChange = function(event) {
+    SM.parametersCache["SS_AC_DC"] = { value: $("#SS_AC_DC option:selected").val() };
+    SM.sendParameters();
+    SM.updateLimits();
+}
+
 var saveModeChange = function(event) {
     SM.parametersCache["SS_SAVE_MODE"] = { value: $("#SS_SAVE_MODE option:selected").val() };
     SM.sendParameters();
@@ -192,6 +198,7 @@ changeCallbacks["SS_SAMPLES"] = samplesNumberChange;
 changeCallbacks["SS_USE_CALIB"] = useCalibChange;
 changeCallbacks["SS_SAVE_MODE"] = saveModeChange;
 changeCallbacks["SS_ATTENUATOR"] = attenuatorChange;
+changeCallbacks["SS_AC_DC"] = acdcChange;
 
 var clickCallbacks = {}
 

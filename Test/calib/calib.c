@@ -27,6 +27,10 @@
 /** Minimal number of command line arguments */
 #define MINARGS 2
 
+#ifdef Z10
+#define CALIB_MAGIC 0xAABBCCDD
+#endif
+
 /** Program name */
 const char *g_argv0 = NULL;
 
@@ -80,7 +84,13 @@ int ReadCalib(bool factory, bool verbose, bool z_mode)
     } else {
         int i;
 	if (!z_mode) {
-        	for(i = 0; i < eCalParEnd; i++) {
+            int size = eCalParEnd;
+#ifdef Z10
+            if (eepromData.feCalPar[eCalParMagic] == CALIB_MAGIC){
+                size = eCalPar_F_LOW_AA_CH1;
+            }
+#endif
+        	for(i = 0; i < size; i++) {
            		fprintf(stdout, "%20d", eepromData.feCalPar[i]);
         	}
         	fprintf(stdout, "\n");
@@ -114,7 +124,7 @@ int WriteCalib(bool factory)
 {
     eepromWpData_t eepromData;
     const char delimiters[] = " ,:;\t";
-    char buf[512];
+    char buf[1024];
     int ret = 0;
 
     /* Read current eeprom data */

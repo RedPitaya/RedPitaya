@@ -15,7 +15,7 @@ export G_USB_DEVICE="/dev/sda1"
 export G_USB_MOUNT_FOLDER="/mnt/usb"
 
 # Production PC/SERVER variables
-export G_LOCAL_SERVER_IP='192.168.1.1'
+export G_LOCAL_SERVER_IP='192.168.1.2'
 export G_LOCAL_SERVER_PASS='redpitaya'
 export G_LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 export G_LOCAL_USER='redpitaya'
@@ -57,7 +57,7 @@ export G_PLL_TEST=1
 export G_EXT_TRIGGER_TEST=1
 
 #enable save result
-#export G_SAVE_TO_PC=1
+export G_SAVE_TO_PC=1
 
 # make temprary directory
 export TEST_TMP_DIR=$(mktemp -d)

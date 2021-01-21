@@ -22,9 +22,9 @@ REVISION ?= devbuild
 # List of compiled object files (not yet linked to executable)
 OBJS = fpga_awg.o main.o
 ifeq ($(MODEL),Z20_250_12)
-	OBJS += generate_250.o 
+	OBJS += generate_250.o
 else
-	OBJS += generate.o 
+	OBJS += generate.o
 endif
 
 # List of raw source files (all object files, renamed from .o to .c)

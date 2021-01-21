@@ -61,6 +61,7 @@ module red_pitaya_asg_ch #(
    input                 set_wrap_i      ,  //!< set wrap enable
    input     [  14-1: 0] set_amp_i       ,  //!< set amplitude scale
    input     [  14-1: 0] set_dc_i        ,  //!< set output offset
+   input     [  14-1: 0] set_last_i      ,  //!< set final value in burst
    input                 set_zero_i      ,  //!< set output to zero
    input     [  16-1: 0] set_ncyc_i      ,  //!< set number of cycle
    input     [  16-1: 0] set_rnum_i      ,  //!< set number of repetitions
@@ -82,8 +83,13 @@ wire  [RSZ+16: 0] dac_npnt  ; // next read pointer
 wire  [RSZ+16: 0] dac_npnt_sub ;
 wire              dac_npnt_sub_neg;
 
+reg   [  16-1: 0] cyc_cnt   ;
 reg   [  28-1: 0] dac_mult  ;
 reg   [  15-1: 0] dac_sum   ;
+reg               lastval;
+wire              not_burst;
+
+assign not_burst = (&(~set_ncyc_i)) && (&(~set_rnum_i));
 
 // read
 always @(posedge dac_clk_i)
@@ -109,8 +115,13 @@ begin
    dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
 
    // saturation
-   if (set_zero_i)  dac_o <= 14'h0;
-   else             dac_o <= ^dac_sum[15-1:15-2] ? {dac_sum[15-1], {13{~dac_sum[15-1]}}} : dac_sum[13:0];
+   if (set_zero_i)  
+      dac_o <= 14'h0;
+   else if (lastval) //on last value in burst send user specified last value
+      dac_o <= set_last_i;
+   else 
+      dac_o <= ^dac_sum[15-1:15-2] ? {dac_sum[15-1], {13{~dac_sum[15-1]}}} : dac_sum[13:0];
+
 end
 
 //---------------------------------------------------------------------------------
@@ -121,15 +132,34 @@ reg              trig_in      ;
 wire             ext_trig_p   ;
 wire             ext_trig_n   ;
 
-reg  [  16-1: 0] cyc_cnt      ;
 reg  [  16-1: 0] rep_cnt      ;
 reg  [  32-1: 0] dly_cnt      ;
 reg  [   8-1: 0] dly_tick     ;
 
 reg              dac_do       ;
+reg  [   5-1: 0] dac_do_dlysr ;
 reg              dac_rep      ;
 wire             dac_trig     ;
 reg              dac_trigr    ;
+
+always @(posedge dac_clk_i)
+begin 
+   dac_do_dlysr[0]   <= dac_do;
+   dac_do_dlysr[4:1] <= dac_do_dlysr[3:0];
+end
+
+always @(posedge dac_clk_i)
+begin 
+   if (dac_rstn_i == 1'b0)
+      lastval <= 1'b0;
+   else begin
+      if (dac_do_dlysr[4:3] == 2'b10) // negative edge of dly_do, delayed for 4 cycles
+         lastval <= 1'b1;
+      
+      if ((lastval && dly_cnt == 'd0 && |rep_cnt) || set_zero_i || set_rst_i || not_burst) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval. also resets if reset is set or continous mode is selected.
+         lastval <= 1'b0;
+   end
+end
 
 // state machine
 always @(posedge dac_clk_i) begin

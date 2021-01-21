@@ -104,3 +104,15 @@ echo "Ch B number of burst repetitions 0x4020003C : $X ($RET)"
 X=$(monitor 0x40200040)
 hexToDec $X
 echo "Ch B delay between burst repetitions 0x40200040 : $X ($RET)"
+
+
+echo
+
+X=$(monitor 0x40200044)
+hexToDec $X
+echo "Ch A number of burst repetitions 0x40200044 : $X ($RET)"
+
+X=$(monitor 0x40200048)
+hexToDec $X
+echo "Ch B number of burst repetitions 0x40200048 : $X ($RET)"
+

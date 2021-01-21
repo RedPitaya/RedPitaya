@@ -445,8 +445,8 @@ end
 
         .adc_clk_n(clkn),
         .adc_clk_p(clk),
-        .adc_data_ch1({3'b0,~cnter}),
-        .adc_data_ch2({3'b0,~cnter}));
+        .adc_data_ch1({1'b0,cnter,2'b0}),
+        .adc_data_ch2({1'b0,~cnter,2'b11}));
 
 
 /*rp_concat #(

@@ -23,6 +23,7 @@
 #include "calib.h"
 
 int calib_ReadParams(rp_calib_params_t *calib_params,bool use_factory_zone);
+rp_calib_params_t getDefualtCalib();
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
 static const int  eeprom_calib_off=0x0008;
@@ -49,6 +50,10 @@ int calib_Release()
 rp_calib_params_t calib_GetParams()
 {
     return calib;
+}
+
+rp_calib_params_t calib_GetDefaultCalib(){
+    return getDefualtCalib();
 }
 
 /**
@@ -144,7 +149,8 @@ int calib_WriteParams(rp_calib_params_t calib_params,bool use_factory_zone) {
     return RP_OK;
 }
 
-void calib_SetToZero() {
+rp_calib_params_t getDefualtCalib(){
+    rp_calib_params_t calib;
     calib.gen_ch1_off_1 = 0;
     calib.gen_ch2_off_1 = 0;
     calib.gen_ch1_off_5 = 0;
@@ -165,6 +171,11 @@ void calib_SetToZero() {
     calib.osc_ch1_g_1_ac = calib.osc_ch1_g_1_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
     calib.osc_ch2_g_20_ac = calib.osc_ch2_g_20_dc = cmn_CalibFullScaleFromVoltage( 1.0 );
     calib.osc_ch2_g_1_ac = calib.osc_ch2_g_1_dc = cmn_CalibFullScaleFromVoltage( 20.0 );
+    return calib;
+}
+
+void calib_SetToZero() {
+    calib = getDefualtCalib();
 }
 
 

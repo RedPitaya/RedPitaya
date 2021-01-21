@@ -78,6 +78,7 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
     m_current_step = _step;
     switch(_step){
         case 0: {
+            m_acq->startNormal();
             m_calib_parameters_old = rp_GetCalibrationSettings();
             resetCalibToZero();
             m_calib_parameters = rp_GetCalibrationSettings();

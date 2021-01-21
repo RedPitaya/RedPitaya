@@ -224,6 +224,11 @@ uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_si
         dest = new uint8_t[_buf_size + _lostSize];
         _dest_buff_size = _buf_size + _lostSize;
         memcpy_neon(dest, _buffer, _buf_size);
+   
+        // short *wb2 = ((short*)dest);
+        // for(int i = 0 ;i < (_buf_size) /2 ;i ++)
+        //     std::cout << std::hex <<  (static_cast<int>(wb2[i]) & 0xFFFF)  << " ";
+        //     exit(1);
     }else{
         uint32_t samples = _buf_size / (_resolution  / 8);
         float *dest_f = new float[samples + _lostSize / 4];

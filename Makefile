@@ -399,18 +399,18 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
-apps-tools: ecosystem updater network_manager scpi_manager
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager
 
 ifeq ($(MODEL),Z20_250_12)
 apps-tools: calib_app
 endif
 
 ifeq ($(MODEL),Z10)
-apps-tools: jupyter_manager streaming_manager calib_app
+apps-tools: jupyter_manager calib_app
 endif
 
 ifeq ($(MODEL),Z20)
-apps-tools: jupyter_manager streaming_manager 
+apps-tools: jupyter_manager
 endif
 
 ecosystem:

@@ -16,6 +16,9 @@
         if (_visible) {
             $("#main_menu_body").show();
             $("#B_APPLY_CONT").hide();
+            $("#B_CLOSE_CONT").hide();
+            $("#B_DEFAULT_CONT").hide();
+            $("#B_AUTO_CLOSE_CONT").hide();
         } else {
             $("#main_menu_body").hide();
         }
@@ -24,8 +27,18 @@
     OBJ.setAutoMode = function(_visible) {
         if (_visible) {
             $("#auto_mode_body").show();
+            $("#B_AUTO_CLOSE_CONT").show();
         } else {
             $("#auto_mode_body").hide();
+        }
+    }
+
+    OBJ.setFAutoMode = function(_visible) {
+        if (_visible) {
+            $("#fauto_mode_body").show();
+            $("#B_AUTO_CLOSE_CONT").show();
+        } else {
+            $("#fauto_mode_body").hide();
         }
     }
 
@@ -42,8 +55,30 @@
             if (_visible) {
                 $("#adc_mode_body").show();
                 $("#B_APPLY_CONT").show();
+                $("#B_CLOSE_CONT").show();
             } else {
                 $("#adc_mode_body").hide();
+            }
+        }
+    }
+
+    OBJ.setFILTERMode = function(_visible) {
+        if (OBJ.model !== undefined) {
+            if (OBJ.model === "Z10") {
+
+            }
+
+            if (OBJ.model === "Z20_250_12") {
+
+            }
+
+            if (_visible) {
+                $("#filter_mode_body").show();
+                $("#B_APPLY_CONT").show();
+                $("#B_CLOSE_CONT").show();
+                $("#B_DEFAULT_CONT").show();
+            } else {
+                $("#filter_mode_body").hide();
             }
         }
     }
@@ -77,6 +112,8 @@
     OBJ.showMainMenu = function() {
         OBJ.setADCMode(false);
         OBJ.setAutoMode(false);
+        OBJ.setFILTERMode(false);
+        OBJ.setFAutoMode(false);
         OBJ.setMainMenu(true);
     }
 
@@ -86,9 +123,23 @@
             if (OBJ.model !== "Z20_250_12") {
                 $("#manual_x1_x5_mode").remove();
                 $("#manual_ac_dc_mode").remove();
+            } else {
+                $("#b_auto_menu").text("AUTO AC/DC");
+                $("#b_manual_menu").text("MANUAL AC/DC");
             }
+            if (OBJ.model !== "Z10") {
+                $("#filter_calib_button").remove();
+                $("#afilter_calib_button").remove();
+            }
+
+            if (OBJ.model === "Z10") {
+                $("#filter_calib_button").show();
+                $("#afilter_calib_button").show();
+            }
+
         }
         OBJ.amSetModel(_value);
+        OBJ.famSetModel(_value);
     }
 
     OBJ.closeManualMode = function() {
@@ -100,6 +151,7 @@
         SM.param_callbacks["ch2_min"] = undefined;
         OBJ.showMainMenu();
     }
+
 
 
 
@@ -137,14 +189,38 @@ $(function() {
         OBJ.setADCMode(true);
     });
 
+    $('#B_AUTO_FILTER_MODE').on('click', function(ev) {
+        //  OBJ.filterInitRequest();
+        OBJ.setMainMenu(false);
+        OBJ.setFAutoMode(true);
+        OBJ.famClearTable();
+        OBJ.famStartCalibration();
+    });
+
+    $('#B_FILTER_MODE').on('click', function(ev) {
+        OBJ.filterInitRequest();
+        OBJ.setMainMenu(false);
+        OBJ.setFILTERMode(true);
+    });
+
     $('#B_APPLY').on('click', function(ev) {
-        SM.parametersCache["calib_sig"] = { value: 5 };
-        SM.sendParameters();
-        OBJ.adcCalibChange = false;
+        $("#dialog_reset_text").text("Apply new calibration?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
+        $('#reset_ok_btn').on('click', function() {
+            SM.parametersCache["calib_sig"] = { value: 5 };
+            SM.sendParameters();
+            OBJ.adcCalibChange = false;
+            OBJ.filterCalibChange = false;
+        });
+        $('#reset_cancel_btn').on('click', function() {});
+        $("#dialog_reset").modal('show');
     });
 
     $('#B_RESET_DEFAULT').on('click', function(ev) {
         $("#dialog_reset_text").text("Reset to default?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 3 };
             SM.sendParameters();
@@ -155,6 +231,8 @@ $(function() {
 
     $('#B_RESET_FACTORY').on('click', function(ev) {
         $("#dialog_reset_text").text("Reset to factory calibration?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 4 };
             SM.sendParameters();
@@ -177,14 +255,20 @@ $(function() {
     });
 
     $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
-        if (OBJ.adcCalibChange === true) {
+        if (OBJ.adcCalibChange || OBJ.filterCalibChange) {
             $("#dialog_reset_text").text("Save new parameters?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
                 SM.parametersCache["calib_sig"] = { value: 5 };
+                OBJ.filterCalibChange = false;
+                OBJ.adcCalibChange = false;
                 SM.sendParameters();
                 OBJ.closeManualMode();
             });
             $('#reset_cancel_btn').on('click', function() {
+                OBJ.filterCalibChange = false;
+                OBJ.adcCalibChange = false;
                 OBJ.closeManualMode();
             });
 
@@ -192,14 +276,26 @@ $(function() {
         } else {
             OBJ.closeManualMode();
         }
+    });
 
+    $('#B_DEFAULT').on('click', function(ev) {
+
+        $("#dialog_reset_text").text("Set default parameters for current channel?");
+        $("#reset_ok_btn").off('click');
+        $('#reset_cancel_btn').off('click');
+        $('#reset_ok_btn').on('click', function() {
+            SM.parametersCache["calib_sig"] = { value: 6 };
+            SM.sendParameters();
+        });
+
+        $('#reset_cancel_btn').on('click', function() {});
+
+        $("#dialog_reset").modal('show');
 
     });
 
 
-
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.setModel;
-
 
 
 

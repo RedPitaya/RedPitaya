@@ -45,6 +45,10 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions);
 int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions);
 int gen_setBurstPeriod(rp_channel_t channel, uint32_t period);
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period);
+#ifndef Z20_250_12
+int gen_setBurstLastValue(rp_channel_t channel, float amplitude);
+int gen_getBurstLastValue(rp_channel_t channel, float *amplitude);
+#endif
 int gen_setTriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_getTriggerSource(rp_channel_t chanel, rp_trig_src_t *src);
 int gen_Trigger(uint32_t channel);

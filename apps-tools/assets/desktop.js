@@ -13,7 +13,7 @@
         name: "System",
         description: "System tools for configuring your Red Pitaya",
         image: "../assets/images/system.png",
-        applications: ["updater", "wifi", "licmngr" , "calib_app"]
+        applications: ["updater", "wifi", "licmngr", "calib_app"]
     }, {
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
@@ -198,18 +198,18 @@
         }
     }
 
- 
+
     var showFeedBack = function() {
-        try{
+        try {
             var mail_item = document.createElement("a");
             mail = "support@redpitaya.com";
             subject = "Feedback Red Pitaya OS " + RedPitayaOS.getVersion();
             var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO. DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-            body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }).replace(/[,$&]/g,'_') + "%0D%0A";
-            if (Desktop.sys_info_obj !== undefined){
-                body += "%0D%0ABoard:" + "%0D%0A" + JSON.stringify(Desktop.sys_info_obj).replace(/[,$&]/g,'_') + "%0D%0A";
+            body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }).replace(/[,$&]/g, '_') + "%0D%0A";
+            if (Desktop.sys_info_obj !== undefined) {
+                body += "%0D%0ABoard:" + "%0D%0A" + JSON.stringify(Desktop.sys_info_obj).replace(/[,$&]/g, '_') + "%0D%0A";
             }
-            mail_item.href = ("mailto:" + mail + "?subject=" + subject + "&body=" + body).replace(/ /g,'%20');
+            mail_item.href = ("mailto:" + mail + "?subject=" + subject + "&body=" + body).replace(/ /g, '%20');
             mail_item.click();
         } catch (error) {
             console.error(error);
@@ -254,6 +254,7 @@
         { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya.readthedocs.io/en/latest/teaching/teaching.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        //    { id: "warranty_ext", name: "Warranty extension", description: "Standard Warranty Extension", url: "https://redpitaya.com/warranty_extension", image: "../assets/images/WarrantyExt.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         //        { id: "fpgaexamples", name: "FPGA", description: "Red Pitaya FPGA examples", url: "http://red-pitaya-fpga-examples.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
@@ -324,22 +325,22 @@
                         console.error(error);
                     }
                 })
-                
+
 
             $('#sysinfo_dialog').modal("show");
         });
 
         $.ajax({
-            method: "GET",
-            url: '/get_sysinfo'
-        })
-        .done(function(result) {
-            const obj = JSON.parse(result);
-            Desktop.sys_info_obj = obj;
-        })
-        .fail(function() {
-            Desktop.sys_info_obj = undefined;
-          });
+                method: "GET",
+                url: '/get_sysinfo'
+            })
+            .done(function(result) {
+                const obj = JSON.parse(result);
+                Desktop.sys_info_obj = obj;
+            })
+            .fail(function() {
+                Desktop.sys_info_obj = undefined;
+            });
 
     });
 

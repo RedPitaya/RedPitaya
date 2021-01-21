@@ -57,5 +57,5 @@ fi
 
 echo
 echo "Final log:"
-CombineLogVar
+CombineLogVarLocal
 echo $LOG_VAR

@@ -100,7 +100,7 @@ fi
 
 echo -n "Download redpitaya ubuntu OS. "
 cd $DL
-wget -N http://downloads.redpitaya.com/downloads/$RP_UBUNTU
+wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
 sudo chown root:root redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
 sudo chmod 664 redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
 

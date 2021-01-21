@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "rp_cross.h"
+#include "calib.h"
 
 #ifdef Z20_250_12
  #define ADC_SAMPLE_PERIOD_DEF 4
@@ -89,6 +90,11 @@ int acq_SetDefault();
 #ifdef Z20_250_12
 int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
 int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+#endif
+
+#ifdef Z10
+int acq_UpdateAcqFilter(rp_channel_t channel);
+int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 #endif
 
 #endif /* SRC_ACQ_HANDLER_H_ */

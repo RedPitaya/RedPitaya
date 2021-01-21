@@ -161,7 +161,8 @@ $(function() {
                 min: null,
                 max: null,
                 labelWidth: 5,
-                alignTicksWithAxis: 1,
+                tickDecimals: 1,
+                //   alignTicksWithAxis: 1,
                 position: "left"
             }],
             xaxis: {
@@ -221,6 +222,7 @@ $(function() {
 
         OBJ.adcGraphCacheCh2 = {};
         OBJ.adcGraphCacheCh2.elem = $('<div id="bode_plot_ch2" class="plot" style="width:268px;height:90px;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_ch2');
+
 
         var t = null;
         var options = {
@@ -385,7 +387,7 @@ $(function() {
             SM.sendParameters2("gen2_enable");
             setTimeout(OBJ.adcInitData, 1000);
         }
-        if (_mode == "HW_LV_MODE") {
+        if (_mode == "HV_LV_MODE") {
             SM.parametersCache["hv_lv_mode"] = { value: _state };
             SM.sendParameters2("hv_lv_mode");
             setTimeout(OBJ.adcInitData, 1000);
@@ -488,7 +490,7 @@ $(function() {
     setInterval(OBJ.drawSignalsCH1, 100);
     setInterval(OBJ.drawSignalsCH2, 100);
 
-    $('.flipswitch').change(function() {
+    $('.man_flipswitch').change(function() {
         $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
         OBJ.amSetMode($(this).attr('id'), $(this).is(':checked'));
 
