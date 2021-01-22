@@ -55,7 +55,7 @@
 #define PARAMETER_CORRECT 0 
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define SAMPLE_RATE 125e6
 #define PARAMETER_CORRECT 0 
 #endif

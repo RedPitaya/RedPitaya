@@ -20,7 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Red Pitaya</title>
     <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/loader.css?1"  type="text/css">
+    <link rel="stylesheet" href="../assets/loader.css?1" type="text/css">
     <link rel="stylesheet" href="../assets/popupstack.css" type="text/css" />
     <link rel="stylesheet" href="../assets/help-system/help-system.css" type="text/css" />
     <link rel="stylesheet" href="css/style.css?2">
@@ -33,9 +33,9 @@
     <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="../assets/fastclick.min.js"></script>
     <script src="../assets/browsercheck.js"></script>
-    <script src="../assets/analytics-core.js"></script> 
+    <script src="../assets/analytics-core.js"></script>
     <script src="../assets/offline.min.js"></script>
-    <script src="../assets/onlinecheck.js"></script>   
+    <script src="../assets/onlinecheck.js"></script>
     <script src="../assets/popupstack.js"></script>
     <script src="../assets/help-system/help-system.js"></script>
     <script src="js/help-updater.js"></script>
@@ -90,19 +90,10 @@
                                 </tr>
                                 <tr id="step_3" class="step">
                                     <td class="step_desc">Step 3. Checking for updates
-<!--
-                                        Reason: now exist one branch with fixed name for getting distros with latest OS version
-                                        <p class="select_ver">Select release type:
-                                            <select id="ecosystem_type" >
-												<option value="1">Stable 0.97</option>
-												<option value="2">Stable 0.96</option>
-												<option value="3">Beta</option>
-                                            </select>
-                                        </p>
-                                        <p id="warn">Warning: Install this versions on your own risk!</p>
---> 
-                                        <p id="select_ver">
-                                            <!-- <select id="ecosystem_ver" disabled> -->
+                                        <div id="used_last_version" style="display:none">
+                                            <p>You are using the latest ecosystem</p>
+                                        </div>
+                                        <div id="select_ver">
                                             <table style="width: 100%;">
                                                 <tr>
                                                     <td>Distributive version:</td>
@@ -113,7 +104,7 @@
                                                     <td><a id="change_log_link" target="_blank" href="https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md">Release notes</a></td>
                                                 </tr>                
                                             </table>
-                                        </p>
+                                        </div>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later.<button id="retry">Retry</button></p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>

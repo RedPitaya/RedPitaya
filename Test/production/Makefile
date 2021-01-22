@@ -12,7 +12,7 @@ ifeq ($(MODEL), Z20_250_12)
 	make -C production_test_z250_12/apps/capacitor_calib_tool
 endif
 
-ifeq ($(MODEL), Z10)
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
 	make -C production_test_z10_125/apps/spi_tool
 	make -C production_test_z10_125/apps/generate_with_api
 endif
@@ -45,7 +45,7 @@ ifeq ($(MODEL), Z20_250_12)
 	cp --parents `find production_test_z250_12 -name \*.sh*` $(INSTALL_DIR)/bin
 endif
 
-ifeq ($(MODEL), Z10)
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
 	make -C production_test_z10_125/apps/spi_tool install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	make -C production_test_z10_125/apps/generate_with_api install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp --parents `find production_test_z10_125 -name \*.sh*` $(INSTALL_DIR)/bin

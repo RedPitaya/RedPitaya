@@ -125,7 +125,7 @@ void COscilloscope::setHyst(float _value){
 }
 
 void COscilloscope::updateAcqFilter(rp_channel_t _ch){
-#ifdef Z10
+#if defined Z10 || defined Z20_125
     pthread_mutex_lock(&m_funcSelector);
     rp_AcqUpdateAcqFilter(_ch);
     pthread_mutex_unlock(&m_funcSelector);
@@ -359,10 +359,7 @@ COscilloscope::DataPassSq COscilloscope::selectRange(float *buffer,double _start
 
 
 void COscilloscope::acquireAutoFilter(){
-#ifndef Z10 
-    // disable this function
-    assert(false);
-#else
+#if defined Z10 || defined Z20_125
     DataPassAutoFilter localDP;
     uint32_t            pos = 0;
     int16_t             timeout = 1000000; // timeout 1 second
@@ -458,10 +455,7 @@ void COscilloscope::acquireAutoFilter(){
 }
 
 void COscilloscope::acquireAutoFilter2Ch(){
-#ifndef Z10 
-    // disable this function
-    assert(false);
-#else
+#if defined Z10 || defined Z20_125
     DataPassAutoFilter2Ch localDP;
     uint32_t            pos = 0;
     int16_t             timeout = 1000000; // timeout 1 second

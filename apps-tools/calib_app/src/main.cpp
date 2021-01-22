@@ -22,7 +22,7 @@
 #endif
 
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #include "filter_logic.h"
 #include "filter_logic2ch.h"
 CFilter_logic::Ptr g_filter_logic;
@@ -102,7 +102,7 @@ CBooleanParameter 	gen_gain(	  "gen_gain", 		        CBaseParameter::RW, false,0
 CBooleanParameter 	ac_dc_mode(	  "ac_dc_mode", 	        CBaseParameter::RW, false,0);
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 CIntParameter		adc_mode(     		 "adc_acquire_mode", 		CBaseParameter::RW,   0 ,0,	0, 10);
 CFloatSignal 		waveSignal(   		 "wave", 					SCREEN_BUFF_SIZE,     0.0f);
 CFloatParameter		cursor_x1(    		 "cursor_x1",				CBaseParameter::RW,   DEFAULT_CURSOR_1 ,0,	0, 1);
@@ -178,7 +178,7 @@ int rp_app_init(void)
 	g_acq = COscilloscope::Create(64);
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
-#ifdef Z10	
+#if defined Z10 || defined Z20_125
 	g_filter_logic = CFilter_logic::Create(g_calib_man);
 	g_filter_logic2ch = CFilter_logic2ch::Create(g_calib_man);
 	g_acq->setCursor1(cursor_x1.Value());
@@ -224,7 +224,7 @@ void UpdateSignals(void)
 {
 	static uint64_t m_old_index = 0; 
 	try{
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 		auto y = g_acq->getDataSq();
 		if (y.index != m_old_index){
 			if (waveSignal.GetSize() != y.wave_size)
@@ -374,7 +374,7 @@ void setupGen(){
 	}
 }
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 
 void getNewFilterCalib(){
         bool update = false;
@@ -849,7 +849,7 @@ void UpdateParams(void)
 			}
 		}
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 // FILTER AUTO MODE 
 		if (f_ss_next_step.IsNewValue())
 		{
@@ -884,10 +884,14 @@ void UpdateParams(void)
 
 			if (sig == 3){
 				g_calib->resetCalibToZero();
+				g_calib_man->readCalibEpprom();
+				sendCalibInManualMode(true);
 			}
 
 			if (sig == 4){
 				g_calib->resetCalibToFactory();
+				g_calib_man->readCalibEpprom();
+				sendCalibInManualMode(true);
 			}
 
 			if (sig == 5){
@@ -897,7 +901,7 @@ void UpdateParams(void)
 
 
 // FREQ CALIB
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 
 			if (sig == 6){
 				g_calib_man->setDefualtFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
@@ -933,7 +937,7 @@ void UpdateParams(void)
 		if (hv_lv_mode.IsNewValue()){
 			hv_lv_mode.Update();
 			g_calib_man->setModeLV_HV(hv_lv_mode.Value() ? RP_HIGH :RP_LOW);		
-#ifdef Z10	
+#if defined Z10 || defined Z20_125
 		
 			g_calib_man->updateAcqFilter(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);	
 #endif			
@@ -954,7 +958,7 @@ void UpdateParams(void)
 #endif
 		getNewCalib();
 		setupGen();
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 		if (filt_calib_step.IsNewValue() || (filt_calib_step.Value() >= 1 && filt_calib_step.Value() <= 100)){
 			filt_calib_step.Update();
 			calibFilter();

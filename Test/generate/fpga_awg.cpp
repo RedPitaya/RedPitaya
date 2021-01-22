@@ -59,7 +59,7 @@
 #define SAMPLE_RATE 122.880e6
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define SAMPLE_RATE 125e6
 #endif
 

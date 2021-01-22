@@ -72,7 +72,7 @@ CCalib::DataPass CCalib::getCalibData(){
     return m_pass_data;
 }
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 int CCalib::calib_board(uint16_t _step,float _refdc){
     if (m_current_step == _step) return 0;
     m_current_step = _step;

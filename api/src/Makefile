@@ -116,6 +116,9 @@ endif
 ifeq ($(MODEL),Z20)
 	cp ../include/redpitaya/rp_Z20.h $(INSTALL_DIR)/include/rp.h
 endif
+ifeq ($(MODEL),Z20_125)
+	cp ../include/redpitaya/rp_Z20_125.h $(INSTALL_DIR)/include/rp.h
+endif
 ifeq ($(MODEL),Z20_250_12)
 	cp ../include/redpitaya/rp_Z20_250_12.h $(INSTALL_DIR)/include/rp.h
 endif

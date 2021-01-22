@@ -65,7 +65,7 @@ CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2
 CIntParameter		ss_calib( 	 		"SS_USE_CALIB", 		CBaseParameter::RW, 2 ,0,	1,2);
 CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
-CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
+CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2);
@@ -373,7 +373,7 @@ if (use_calib == 2) {
 	}
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 	if (attenuator == 1) {
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;  
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;  
@@ -426,7 +426,10 @@ if (use_calib == 2) {
 				std::to_string(sock_port).c_str(),
 				protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
 	}else{
-		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH, samples , save_mode == 2);
+		auto file_type = Stream_FileType::WAV_TYPE;
+		if (format == 1) file_type = Stream_FileType::TDMS_TYPE;
+		if (format == 2) file_type = Stream_FileType::CSV_TYPE;
+		s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == 2);
 		s_manger->notifyStop = [](int status)
 							{
 								StopNonBlocking(status == 0 ? 2 : 3);

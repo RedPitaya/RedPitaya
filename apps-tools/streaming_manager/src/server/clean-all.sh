@@ -20,3 +20,6 @@ cd targets
 find . -not -name "CMakeLists.txt" -not -name "server.cpp" -maxdepth 2 -type f -exec rm -r "{}" \;
 cd ..
 
+cd convert_tool
+find . -not -name "CMakeLists.txt" -not -name "main.cpp" -maxdepth 2 -type f -exec rm -r "{}" \;
+cd ..

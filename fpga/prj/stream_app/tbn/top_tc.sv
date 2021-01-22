@@ -77,9 +77,9 @@ task test_osc(
   ##5;
   axi_write(offset+'h28, 'd0);  // TRIG EDGE
   ##5
-  axi_write(offset+'h38, 'd1);  // decimation enable
-  axi_write(offset+'h3C, 'd1);  // decimation enable
-  axi_write(offset+'h30, 'd2);  // decimation factor
+  axi_write(offset+'h38, 'd0);  // decimation enable
+  axi_write(offset+'h3C, 'd0);  // decimation enable
+  axi_write(offset+'h30, 'd1);  // decimation factor
   axi_write(offset+'h34, 'd1);  // decimation shift
   axi_write(offset+'h0,   'd2);  // start
   axi_write(offset+'h08,   'd4);  // start
@@ -92,10 +92,12 @@ task test_osc(
   axi_write(offset+'h6C, 'd30000);  // buffer 1 address
   ##5;
   axi_write(offset+'h70, 'd40000);  // buffer 2 address
+  /*
   ##5;
   axi_write(offset+'h74, 'h800);  // calibration offset
   ##5;
   axi_write(offset+'h78, 'h8000);  // calibration gain
+  */
   ##5;
   axi_write(offset+'h58, 'h400);  // buffer size - must be greater than axi burst size (128)
   ##5;
@@ -110,17 +112,17 @@ task test_osc(
   //axi_write(offset+'h00, 4'b1000);  // trigger
 
   int_ack(offset);
-    axi_write(offset+'h74, 'hFFFFF800);  // calibration offset
+   // axi_write(offset+'h74, 'hFFFFF800);  // calibration offset
 
-  int_ack_del(offset);
   int_ack(offset);
-  int_ack_del(offset);
   int_ack(offset);
-  int_ack_del(offset);
   int_ack(offset);
-  int_ack_del(offset);
   int_ack(offset);
-  int_ack_del(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
   int_ack(offset);
   int_ack_del(offset);
   int_ack(offset);
@@ -195,7 +197,7 @@ task int_ack(
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
   ##5;
   axi_write(offset+'h50, 'd2);  // INTR ACK
-  ##3000;
+  ##500;
   axi_write(offset+'h50, 'h4);  // BUF1 ACK
 
   do begin
@@ -203,7 +205,7 @@ task int_ack(
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
   ##5;
   axi_write(offset+'h50, 'd2);  // INTR ACK
-  ##3200;
+  ##500;
   axi_write(offset+'h50,   'h8);  // BUF2 ACK 
 
 endtask: int_ack

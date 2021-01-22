@@ -9,7 +9,7 @@ CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp filter_logic2ch.cpp
 CXXSOURCES_WEB=main.cpp
 CXXSOURCES_TEST=test.cpp
 
-ifeq ($(MODEL),Z10)
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
 CXXSOURCES += filter_logic.cpp
 endif
 

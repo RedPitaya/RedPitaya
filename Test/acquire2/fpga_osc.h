@@ -31,7 +31,7 @@
 #define ADC_MAX_V 1.0
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define ADC_SAMPLE_RATE 125e6
 #define ADC_BITS 14
 #define ADC_MASK 0x3fff

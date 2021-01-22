@@ -16,8 +16,8 @@
 
     SM.updateMaxLimits = function(model) {
         if (model !== undefined) {
-            if (SM.rp_model == "") {
-                if (model.value == "Z10") {
+            if (SM.rp_model === "") {
+                if (model.value === "Z10" || model.value === "Z20_125") {
                     SM.rp_model = model.value;
                     var max_possible_rate = 125e6;
                     SM.ss_full_rate = max_possible_rate;
@@ -28,7 +28,7 @@
                     SM.max_SD_rate_2chs = [max_possible_rate / SM.max_SD_rate_devider_2chs[0], max_possible_rate / SM.max_SD_rate_devider_2chs[1]];
                 }
 
-                if (model.value == "Z20") {
+                if (model.value === "Z20") {
                     SM.rp_model = model.value;
                     var max_possible_rate = 122.88e6;
                     SM.ss_full_rate = max_possible_rate;
@@ -39,7 +39,7 @@
                     SM.max_SD_rate_2chs = [max_possible_rate / SM.max_SD_rate_devider_2chs[0], max_possible_rate / SM.max_SD_rate_devider_2chs[1]];
                 }
 
-                if (model.value == "Z20_250_12") {
+                if (model.value === "Z20_250_12") {
                     SM.rp_model = model.value;
                     var max_possible_rate = 250e6;
                     SM.ss_full_rate = max_possible_rate;
@@ -66,7 +66,7 @@
         var channel_mode = $("#SS_CHANNEL option:selected").val();
         var resolution = $("#SS_RESOLUTION option:selected").val();
 
-        if (SM.rp_model == "Z10") {
+        if (SM.rp_model === "Z10" || SM.rp_model === "Z20_125") {
             if (use_net) {
                 if (channel_mode != 3) {
                     rate = SM.max_rate_1ch[resolution - 1];
@@ -101,7 +101,7 @@
             });
         }
 
-        if (SM.rp_model == "Z20") {
+        if (SM.rp_model === "Z20") {
             var rate = 122.88e6;
             if (use_net) {
                 if (channel_mode != 3) {
@@ -137,7 +137,7 @@
             });
         }
 
-        if (SM.rp_model == "Z20_250_12") {
+        if (SM.rp_model === "Z20_250_12") {
             var rate = 250e6;
             if (use_net) {
                 if (channel_mode != 3) {

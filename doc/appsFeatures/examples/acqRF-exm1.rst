@@ -160,7 +160,7 @@ Code - C
             float *buff = (float *)malloc(buff_size * sizeof(float));
     
             rp_AcqReset();
-            rp_AcqSetDecimation(1);
+            rp_AcqSetDecimation(RP_DEC_8);
             rp_AcqSetTriggerLevel(0.1); //Trig level is set in Volts while in SCPI 
             rp_AcqSetTriggerDelay(0);
     

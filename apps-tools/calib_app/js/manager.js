@@ -19,6 +19,7 @@
             $("#B_CLOSE_CONT").hide();
             $("#B_DEFAULT_CONT").hide();
             $("#B_AUTO_CLOSE_CONT").hide();
+            $("#B_RESET_CONT").hide();
         } else {
             $("#main_menu_body").hide();
         }
@@ -44,7 +45,7 @@
 
     OBJ.setADCMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10") {
+            if (OBJ.model === "Z10" || OBJ.amModel === "Z20_125") {
 
             }
 
@@ -56,6 +57,7 @@
                 $("#adc_mode_body").show();
                 $("#B_APPLY_CONT").show();
                 $("#B_CLOSE_CONT").show();
+                $("#B_RESET_CONT").show();
             } else {
                 $("#adc_mode_body").hide();
             }
@@ -64,7 +66,7 @@
 
     OBJ.setFILTERMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10") {
+            if (OBJ.model === "Z10" || OBJ.amModel === "Z20_125") {
 
             }
 
@@ -127,12 +129,12 @@
                 $("#b_auto_menu").text("AUTO AC/DC");
                 $("#b_manual_menu").text("MANUAL AC/DC");
             }
-            if (OBJ.model !== "Z10") {
+            if (OBJ.model !== "Z10" && OBJ.amModel !== "Z20_125") {
                 $("#filter_calib_button").remove();
                 $("#afilter_calib_button").remove();
             }
 
-            if (OBJ.model === "Z10") {
+            if (OBJ.model === "Z10" || OBJ.amModel === "Z20_125") {
                 $("#filter_calib_button").show();
                 $("#afilter_calib_button").show();
             }
@@ -224,6 +226,7 @@ $(function() {
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 3 };
             SM.sendParameters();
+            OBJ.adcCalibChange = false;
         });
         $('#reset_cancel_btn').on('click', function() {});
         $("#dialog_reset").modal('show');
@@ -236,6 +239,7 @@ $(function() {
         $('#reset_ok_btn').on('click', function() {
             SM.parametersCache["calib_sig"] = { value: 4 };
             SM.sendParameters();
+            OBJ.adcCalibChange = false;
         });
         $('#reset_cancel_btn').on('click', function() {});
         $("#dialog_reset").modal('show');

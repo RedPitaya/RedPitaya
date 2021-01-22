@@ -33,7 +33,7 @@
     OBJ.famSetModel = function(_model) {
         if (OBJ.famModel === undefined) {
             OBJ.famModel = _model.value;
-            if (OBJ.famModel === "Z10") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z10" || OBJ.amModel === "Z20_125") OBJ.famStates = OBJ.F_STATES_125_14;
         }
     }
 
