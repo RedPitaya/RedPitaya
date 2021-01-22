@@ -92,6 +92,20 @@ task test_osc(
   axi_write(offset+'h6C, 'd30000);  // buffer 1 address
   ##5;
   axi_write(offset+'h70, 'd40000);  // buffer 2 address
+  ##5;
+  axi_write(offset+'hC0, 'h100);  // buffer 2 address
+  ##5;
+  axi_read_osc1(offset+'hC0, dat);  // buffer 2 address
+  ##5;
+  axi_write(offset+'hD0, 'h100);  // buffer 2 address
+    ##5;
+  axi_read_osc1(offset+'h64, dat);  // buffer 2 address
+  ##5;
+  axi_read_osc1(offset+'hD0, dat);  // buffer 2 address
+  ##5;
+  axi_read_osc1(offset+'hD8, dat);  // buffer 2 address
+  ##5;
+
   /*
   ##5;
   axi_write(offset+'h74, 'h800);  // calibration offset
@@ -113,7 +127,28 @@ task test_osc(
 
   int_ack(offset);
    // axi_write(offset+'h74, 'hFFFFF800);  // calibration offset
-
+  ##5;
+  axi_read_osc1(offset+'hC8, dat);  // buffer 2 address
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
   int_ack(offset);
   int_ack(offset);
   int_ack(offset);

@@ -325,11 +325,11 @@ reg [15:0] cnter;
 always @(clk) begin
 
     if (rstn==0)
-        cnter <= 13'b0;
+        cnter <= 16'b0;
     //else if (cnter==13'hFFF && clk==1)
     //    cnter <= 13'b0;
     else if (clk == 1)
-        cnter <= cnter + 15'b1; 
+        cnter <= cnter + 16'b1; 
 
 end
 
@@ -455,7 +455,7 @@ end
         .adc_clk_p(clk),
         //.adc_data_ch1({1'b0,cnter,2'b0}),
         .adc_data_ch1(16'h7000),
-        .adc_data_ch2({cnter[15:3],3'b00}));
+        .adc_data_ch2({cnter[15:1],1'b0}));
 
 
 /*rp_concat #(
