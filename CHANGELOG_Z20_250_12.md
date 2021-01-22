@@ -1,3 +1,7 @@
+# Release (1.04-21)
+
+- Improving streaming application
+
 # Release (1.04-19)
 
 - The streaming application was improved. One of the main features is that users can now exactly know when and which samples are lost due to throughput problems or limitation
