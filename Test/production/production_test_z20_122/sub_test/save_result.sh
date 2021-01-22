@@ -68,7 +68,7 @@ echo "------------Logging test result to the Red Pitaya d.d MAIN server---------
 echo
 echo "      Checking if board is online and server is available.."
 echo
-CURL_RSP="$(curl -Is http://www.redpitaya.com | head -1)"
+CURL_RSP="$(curl -Is http://production.redpitaya.com | head -1)"
 #echo $CURL_RSP
 echo
 if [ `echo $CURL_RSP | grep -c "HTTP/1.1" ` -gt 0 ]

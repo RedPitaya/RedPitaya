@@ -361,7 +361,7 @@ echo "      IN2 mean value is $ADC_B"
 
 getHighRefValue
 REF_VALUE_HV=$REF_V
-echo $REF_VALUE_HV
+#echo $REF_VALUE_HV
 GAIN1_HV_DC=$(awk -v N1_HV=$N1_HV_DC -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_A=$ADC_A 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_A-N1_HV ) ) }')
 GAIN2_HV_DC=$(awk -v N2_HV=$N2_HV_DC -v REF_VALUE_HV=$REF_VALUE_HV -v ADC_B=$ADC_B 'BEGIN { print ( ( REF_VALUE_HV) / ( ADC_B-N2_HV ) ) }')
 
