@@ -78,7 +78,7 @@ static int init_spi(){
     spi_fd = open("/dev/spidev1.0", O_RDWR | O_NOCTTY);
 
     if(spi_fd < 0){
-        printf("Error opening spidev0.1. Error: %s\n", strerror(errno));
+        printf("Error opening spidev1.0. Error: %s\n", strerror(errno));
         return -1;
     }
 
