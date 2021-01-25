@@ -448,6 +448,6 @@ module red_pitaya_top_sim
 
         .adc_clk_n(adc_clk_n),
         .adc_clk_p(adc_clk_p),
-        .adc_data_ch1(adc_data_ch1[15:2]),
-        .adc_data_ch2(adc_data_ch2[15:2]));
+        .adc_data_ch1(adc_data_ch1[16-1:2]),
+        .adc_data_ch2(adc_data_ch2[16-1:2]));
 endmodule
