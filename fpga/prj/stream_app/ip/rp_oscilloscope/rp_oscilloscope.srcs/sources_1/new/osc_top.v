@@ -184,34 +184,41 @@ wire  [31:0]                buf1_ms_cnt;
 wire  [31:0]                buf2_ms_cnt;
 
 wire                        filt_tdata;   
+wire                        filt_tvalid;   
 
 
-red_pitaya_dfilt1 i_dfilt (
+osc_filter i_dfilt (
    // ADC
-  .adc_clk_i   ( adc_clk_i       ),  // ADC clock
-  .adc_rstn_i  ( adc_rstn_i      ),  // ADC reset - active low
-  .adc_dat_i   ( s_axis_tdata    ),  // ADC data
-  .adc_dat_o   ( filt_tdata      ),  // ADC data
+  .clk              ( clk         ),  // ADC clock
+  .rst_n            ( rst_n       ),  // ADC reset - active low
+  // Slave AXI-S
+  .s_axis_tdata     (s_axis_tdata),
+  .s_axis_tvalid    (s_axis_tvalid),
+  .s_axis_tready    (),
+  // Master AXI-S
+  .m_axis_tdata     (filt_tdata),
+  .m_axis_tvalid    (filt_tvalid),
+  .m_axis_tready    (),
    // configuration
-  .cfg_aa_i    ( cfg_filt_coeff_aa   ),  // config AA coefficient
-  .cfg_bb_i    ( cfg_filt_coeff_bb   ),  // config BB coefficient
-  .cfg_kk_i    ( cfg_filt_coeff_kk   ),  // config KK coefficient
-  .cfg_pp_i    ( cfg_filt_coeff_pp   )   // config PP coefficient
+  .cfg_bypass      ( cfg_filt_bypass     ),
+  .cfg_coeff_aa    ( cfg_filt_coeff_aa   ),  // config AA coefficient
+  .cfg_coeff_bb    ( cfg_filt_coeff_bb   ),  // config BB coefficient
+  .cfg_coeff_kk    ( cfg_filt_coeff_kk   ),  // config KK coefficient
+  .cfg_coeff_pp    ( cfg_filt_coeff_pp   )   // config PP coefficient
 );
  
 ////////////////////////////////////////////////////////////
 // Name : Calibration
 // 
 ////////////////////////////////////////////////////////////
-assign calib_datain = cfg_filt_bypass ? s_axis_tdata : filt_tdata;
 
 osc_calib #(
   .AXIS_DATA_BITS   (S_AXIS_DATA_BITS))
   U_osc_calib(
   .clk              (clk),
   // Slave AXI-S
-  .s_axis_tdata     (calib_datain),
-  .s_axis_tvalid    (s_axis_tvalid),
+  .s_axis_tdata     (filt_tdata),
+  .s_axis_tvalid    (filt_tvalid),
   .s_axis_tready    (),
   // Master AXI-S
   .m_axis_tdata     (calib_tdata),
