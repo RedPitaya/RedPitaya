@@ -183,7 +183,7 @@ wire                        acq_tlast;
 wire  [31:0]                buf1_ms_cnt;
 wire  [31:0]                buf2_ms_cnt;
 
-wire                        filt_tdata;   
+wire [S_AXIS_DATA_BITS-1:0] filt_tdata;   
 wire                        filt_tvalid;   
 
 
