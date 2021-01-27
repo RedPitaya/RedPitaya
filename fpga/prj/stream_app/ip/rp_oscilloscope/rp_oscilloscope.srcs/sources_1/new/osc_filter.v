@@ -52,21 +52,34 @@ reg  signed [16:0]  r3_shr; // r3sum-33-1
 wire signed [41:0]  kk_mult;
 reg  signed [15:0]  r5_reg;
 
+reg                 bypass_reg;
+wire                bypass_dis;
+
 assign din            = s_axis_tdata;
 assign s_axis_tready  = 1;
 assign coeff_aa       = cfg_coeff_aa;
 assign coeff_bb       = cfg_coeff_bb;
 assign coeff_kk       = cfg_coeff_kk;
 assign coeff_pp       = cfg_coeff_pp;
-assign m_axis_tdata   = (cfg_bypass == 0) ? r5_reg : tdata_pipe[3];
+assign m_axis_tdata   = (cfg_bypass == 1'b0) ? r5_reg : tdata_pipe[3];
+//assign m_axis_tdata   = r1_reg[35:20];
+
 assign m_axis_tvalid  = tvalid_pipe[3];
+
 
 assign bb_mult = din * coeff_bb;
 assign r2_sum  = r01_reg + r1_reg;
 
 always @(posedge clk)
 begin
-  if (~rst_n) begin
+  bypass_reg <= cfg_bypass;
+end
+
+assign bypass_dis     = bypass_reg && ~cfg_bypass;
+
+always @(posedge clk)
+begin
+ if ((rst_n == 1'b0) || bypass_dis) begin
     r1_reg  <= 'h0;
     r2_reg  <= 'h0;
     r01_reg <= 'h0;
@@ -87,10 +100,10 @@ assign r3_sum  = (r2_reg <<< 25) + (r3_reg_dsp2 <<< 25) - aa_mult;
 
 always @(posedge clk)
 begin
- if (rst_n == 0) begin
-   r3_reg_dsp1 <= 0;
-   r3_reg_dsp2 <= 0;
-   r3_reg_dsp3 <= 0;          
+ if ((rst_n == 1'b0) || bypass_dis) begin
+   r3_reg_dsp1 <= 'h0;
+   r3_reg_dsp2 <= 'h0;
+   r3_reg_dsp3 <= 'h0;          
  end else begin
    r3_reg_dsp1 <= r3_sum >>> 25;
    r3_reg_dsp2 <= r3_sum >>> 25;
@@ -106,9 +119,9 @@ assign r4_sum  = r3_shr + (pp_mult >>> 16);
 
 always @(posedge clk)
 begin
- if (rst_n == 0) begin
-   r3_shr <= 0;   
-   r4_reg <= 0;     
+ if ((rst_n == 1'b0) || bypass_dis) begin
+   r3_shr <= 'h0;   
+   r4_reg <= 'h0;     
  end else begin
    r3_shr <= r3_reg_dsp3;
    r4_reg <= r4_sum;
@@ -122,15 +135,19 @@ assign kk_mult = r4_reg * coeff_kk;
 
 always @(posedge clk)
 begin
- if ((kk_mult >>> 24) > $signed(16'h7FFF)) begin
-  r5_reg <= 16'h7FFF;
+ if ((rst_n == 1'b0) || bypass_dis) begin
+   r5_reg <= 'h0;   
  end else begin
-   if ((kk_mult >>> 24) < $signed(16'h8000)) begin 
-     r5_reg <= 16'h8000;
-   end else  begin
-     r5_reg <= kk_mult >>> 24;
-   end
- end
+    if ((kk_mult >>> 24) > $signed(16'h7FFF)) begin
+      r5_reg <= 16'h7FFF;
+    end else begin
+      if ((kk_mult >>> 24) < $signed(16'h8000)) begin 
+        r5_reg <= 16'h8000;
+      end else  begin
+        r5_reg <= kk_mult >>> 24;
+      end
+    end
+  end
 end
 
 always @(posedge clk)

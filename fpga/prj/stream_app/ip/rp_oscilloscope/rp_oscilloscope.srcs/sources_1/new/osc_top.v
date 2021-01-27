@@ -574,10 +574,10 @@ end
 always @(posedge clk)
 begin
   if (rst_n == 0) begin
-    cfg_filt_bypass <= 0;
+    cfg_filt_bypass <= 1'b1;
   end else begin
     if ((reg_addr[8-1:0] == FILT_BYPASS_ADDR) && (reg_wr_we == 1)) begin
-      cfg_filt_bypass <= reg_wr_data;
+      cfg_filt_bypass <= reg_wr_data[0];
     end 
   end
 end
