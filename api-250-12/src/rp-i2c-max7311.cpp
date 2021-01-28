@@ -6,6 +6,31 @@
 
 unsigned long g_sleep_time = 50 * 1000;
 
+
+// I2C Address of device
+#define MAX7311_DEFAULT_ADDRESS_1_1	0x20
+#define MAX7311_DEFAULT_ADDRESS_1_2	0x21
+#define MAX7311_DEFAULT_DEV     "/dev/i2c-0"
+
+char g_I2C_address = 0;
+
+std::string exec(const char* cmd) {
+    char buffer[128];
+    std::string result = "";
+    FILE* pipe = popen(cmd, "r");
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    try {
+        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+            result += buffer;
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
+}
+
 int max7311::initController(const char *i2c_dev_path,  char address){
     bool state = true;
     char value = 0xAA;
@@ -35,15 +60,26 @@ int max7311::initController(const char *i2c_dev_path,  char address){
 }
 
 int max7311::initControllerDefault(){
-    return initController(MAX7311_DEFAULT_DEV, MAX7311_DEFAULT_ADDRESS);
+
+    return initController(MAX7311_DEFAULT_DEV, getDefaultAddress());
+}
+
+char max7311::getDefaultAddress(){
+    if (g_I2C_address) return g_I2C_address;
+    g_I2C_address = MAX7311_DEFAULT_ADDRESS_1_1;
+    auto model = exec("fw_printenv -n hw_rev");   
+    std::size_t found = model.find("STEM_250-12_v1.2");
+    if (found != std::string::npos) g_I2C_address = MAX7311_DEFAULT_ADDRESS_1_2;
+    printf("initController: Model = %s I2C address: 0x%x\n",model.c_str(),g_I2C_address);
+    return g_I2C_address;
 }
 
 int max7311::setPIN(unsigned short pin,bool state){
-    return setPIN_EX(MAX7311_DEFAULT_DEV, MAX7311_DEFAULT_ADDRESS, pin, state);
+    return setPIN_EX(MAX7311_DEFAULT_DEV, getDefaultAddress(), pin, state);
 }
 
 int max7311::getPIN(unsigned short pin){
-    return getPIN_EX(MAX7311_DEFAULT_DEV, MAX7311_DEFAULT_ADDRESS, pin);
+    return getPIN_EX(MAX7311_DEFAULT_DEV, getDefaultAddress(), pin);
 }
 
 int max7311::setPIN_EX(const char *i2c_dev_path,  char address, unsigned short pin,bool state){
@@ -82,7 +118,7 @@ int max7311::getPIN_EX(const char *i2c_dev_path,  char address, unsigned short p
 }
 
 int max7311::setPIN_GROUP(unsigned short pin_group,int state){
-    return setPIN_GROUP_EX(MAX7311_DEFAULT_DEV, MAX7311_DEFAULT_ADDRESS, pin_group, state);
+    return setPIN_GROUP_EX(MAX7311_DEFAULT_DEV, getDefaultAddress(), pin_group, state);
 }
 
 int max7311::setPIN_GROUP_EX(const char *i2c_dev_path, char address, unsigned short pin_group,int state){
@@ -178,8 +214,9 @@ void rp_max7311::rp_setSleepTime(unsigned long time){
 }
 
 char rp_max7311::rp_check(){
+    if (max7311::getDefaultAddress() == MAX7311_DEFAULT_ADDRESS_1_2) return 0;
     char value = 0;
-    if (read_from_i2c(MAX7311_DEFAULT_DEV , MAX7311_DEFAULT_ADDRESS , 0x08, value , false) == -1)
+    if (read_from_i2c(MAX7311_DEFAULT_DEV , max7311::getDefaultAddress() , 0x08, value , false) == -1)
         return -1;
     return value;
 }

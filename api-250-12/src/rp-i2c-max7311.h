@@ -5,12 +5,6 @@
 extern "C" {
 #endif
 
-// I2C Address of device
-// MCP4706, MCP4716 & MCP4726 are factory programed for any of 0x60 thru 0x67
-//  commonly 0x60
-#define MAX7311_DEFAULT_ADDRESS	0x20
-#define MAX7311_DEFAULT_DEV     "/dev/i2c-0"
-
 namespace max7311{
 
 #define PIN_0  0x0001
@@ -40,6 +34,8 @@ namespace max7311{
 
     int  initController(const char *i2c_dev_path,  char address);
     int  initControllerDefault();
+
+    char getDefaultAddress();
 
     /*Sets the output current value.
     If an error occurs then the value will be -1*/
@@ -122,7 +118,11 @@ namespace rp_max7311{
     /* Sets the sleep time to switch the relay. The default value is below 1000 ms. */
     void rp_setSleepTime(unsigned long time);
 
-    /* Chack  0x08 register status */
+    /* Check  0x08 register status 
+    This function is used to check if an LCR meter is connected.
+    If the board revision is 1.2 then the function always returns zero.
+    If the revision of the board is less than 1.2, then the value from register 0x8 is returned
+    */
     char rp_check();
 }
 
