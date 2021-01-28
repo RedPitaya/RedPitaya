@@ -100,15 +100,17 @@ COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd
     m_OscBuffer1(nullptr),
     m_OscBuffer2(nullptr),
     m_OscBufferNumber(0),
-    m_dec_factor(_dec_factor)
+    m_dec_factor(_dec_factor),
+    m_filterBypass(true)
 {
     m_calib_offset_ch1 = 0;
     m_calib_gain_ch1 = 0x8000;
     m_calib_offset_ch2 = 0;
     m_calib_gain_ch2 = 0x8000;
-    setFilterCalibrationCh1(0x7d93,0x437c7,0xd9999a,0x2666);
-    setFilterCalibrationCh2(0x7d93,0x437c7,0xd9999a,0x2666);
-    // setFilterCalibrationCh2(0,0,0xFFFFFF,0);
+    //setFilterCalibrationCh1(0x7d93,0x437c7,0xd9999a,0x2666);
+    //setFilterCalibrationCh2(0x7d93,0x437c7,0xd9999a,0x2666);
+    setFilterCalibrationCh1(0,0,0xFFFFFF,0);
+    setFilterCalibrationCh2(0,0,0xFFFFFF,0);
     uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset) +  osc0_baseaddr;
     m_OscMap = reinterpret_cast<OscilloscopeMapT *>(oscMap);
     m_OscBuffer1 = static_cast<uint8_t *>(m_Buffer);
@@ -132,9 +134,8 @@ void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
         setRegister(_OscMap,&(_OscMap->dma_dst_addr2_ch2),m_BufferPhysAddr + osc_buf_size * 3);
         
     
-        setRegister(_OscMap,&(_OscMap->filt_bypass),UINT32_C(0x00000000));
+        setRegister(_OscMap,&(_OscMap->filt_bypass), m_filterBypass ? UINT32_C(0x00000001) : UINT32_C(0x00000000));
         //_OscMap->filt_bypass = UINT32_C(0x00000001);
-
         
         // Event
         setRegister(_OscMap,&(_OscMap->event_sel),osc0_event_id);
@@ -176,6 +177,7 @@ void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
 
         setRegister(_OscMap,&(_OscMap->calib_gain_ch2),m_calib_gain_ch2);
 
+#ifndef Z20_250_12
         setRegister(_OscMap,&(_OscMap->filt_coeff_aa_ch1),m_AA_ch1);
 
         setRegister(_OscMap,&(_OscMap->filt_coeff_bb_ch1),m_BB_ch1);
@@ -191,7 +193,7 @@ void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
         setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch2),m_KK_ch2);
 
         setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch2),m_PP_ch2);
-         
+#endif
 }
 
 void COscilloscope::setFilterCalibrationCh1(int32_t _aa,int32_t _bb, int32_t _kk, int32_t _pp){
@@ -206,6 +208,10 @@ void COscilloscope::setFilterCalibrationCh2(int32_t _aa,int32_t _bb, int32_t _kk
     m_BB_ch2 = _bb;
     m_KK_ch2 = _kk;
     m_PP_ch2 = _pp;
+}
+
+void COscilloscope::setFilterBypass(bool _state){
+    m_filterBypass = _state;
 }
 
 void COscilloscope::prepare()
@@ -232,8 +238,8 @@ void COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch
     if (ch2_gain >= 2) ch2_gain = 1.999999;
     if (ch2_gain < 0)  ch2_gain = 0;
 
-    m_calib_offset_ch1 =  ch1_offset;
-    m_calib_offset_ch2 =  ch2_offset;
+    m_calib_offset_ch1 =  ch1_offset * -4;
+    m_calib_offset_ch2 =  ch2_offset * -4;
     m_calib_gain_ch1 = ch1_gain * 32768; 
     m_calib_gain_ch2 = ch2_gain * 32768; 
 }

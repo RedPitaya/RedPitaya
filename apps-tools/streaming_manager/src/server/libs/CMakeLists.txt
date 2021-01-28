@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 project(rpsasrv)
 
+message("MODEL=${MODEL}")
 
 add_library(${PROJECT_NAME})
 
 target_compile_options(rpsasrv
-    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive)
+    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive -D${MODEL})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}
