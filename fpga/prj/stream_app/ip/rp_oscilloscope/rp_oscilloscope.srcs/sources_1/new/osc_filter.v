@@ -61,7 +61,7 @@ assign coeff_aa       = cfg_coeff_aa;
 assign coeff_bb       = cfg_coeff_bb;
 assign coeff_kk       = cfg_coeff_kk;
 assign coeff_pp       = cfg_coeff_pp;
-assign m_axis_tdata   = (cfg_bypass == 1'b0) ? r5_reg : tdata_pipe[3];
+assign m_axis_tdata   = (cfg_bypass == 1'b0) ? r5_reg : din;
 //assign m_axis_tdata   = r1_reg[35:20];
 
 assign m_axis_tvalid  = tvalid_pipe[3];
