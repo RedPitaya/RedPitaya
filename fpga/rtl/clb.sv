@@ -126,14 +126,14 @@ if (!bus.rstn) begin
   end
 end else begin
   if (bus.wen) begin
-    for (int unsigned i=0; i<MNG; i++) begin
-      if (bus.addr[AW-1:2]==      (2*i+0))  cfg_dac_mul[i] <= bus.wdata;
-      if (bus.addr[AW-1:2]==      (2*i+1))  cfg_dac_sum[i] <= bus.wdata;
-    end
-    for (int unsigned i=0; i<MNO; i++) begin
-      if (bus.addr[AW-1:2]==2*MNG+(2*i+0))  cfg_adc_mul[i] <= bus.wdata;
-      if (bus.addr[AW-1:2]==2*MNG+(2*i+1))  cfg_adc_sum[i] <= bus.wdata;
-    end
+    if (bus.addr[AW-1:0]==5'h0)   cfg_dac_mul[0] <= bus.wdata;
+    if (bus.addr[AW-1:0]==5'h4)   cfg_dac_sum[0] <= bus.wdata;
+    if (bus.addr[AW-1:0]==5'h8)   cfg_dac_mul[1] <= bus.wdata;
+    if (bus.addr[AW-1:0]==5'hC)   cfg_dac_sum[1] <= bus.wdata;
+    if (bus.addr[AW-1:0]==5'h10)  cfg_adc_mul[0] <= bus.wdata;
+    if (bus.addr[AW-1:0]==5'h14)  cfg_adc_sum[0] <= bus.wdata;
+    if (bus.addr[AW-1:0]==5'h18)  cfg_adc_mul[1] <= bus.wdata;
+    if (bus.addr[AW-1:0]==5'h1C)  cfg_adc_sum[1] <= bus.wdata;
   end
 end
 
@@ -153,19 +153,15 @@ end
 // read access
 always_ff @(posedge bus.clk)
 if (bus.ren) begin
-  case (bus.addr[AW-1])
-    1'b0: begin
-      case (bus.addr[2])
-        1'b0:  bus.rdata <= cfg_dac_mul[bus.addr[AW-2:3]];
-        1'b1:  bus.rdata <= cfg_dac_sum[bus.addr[AW-2:3]];
-      endcase
-    end
-    1'b1: begin
-      case (bus.addr[2])
-        1'b0:  bus.rdata <= cfg_adc_mul[bus.addr[AW-2:3]];
-        1'b1:  bus.rdata <= cfg_adc_sum[bus.addr[AW-2:3]];
-      endcase
-    end
+  case (bus.addr[AW-1:0])
+    5'h0:  bus.rdata <= cfg_dac_mul[0];
+    5'h4:  bus.rdata <= cfg_dac_sum[0];
+    5'h8:  bus.rdata <= cfg_dac_mul[1];
+    5'hC:  bus.rdata <= cfg_dac_sum[1];
+    5'h10: bus.rdata <= cfg_adc_mul[0];
+    5'h14: bus.rdata <= cfg_adc_sum[0];
+    5'h18: bus.rdata <= cfg_adc_mul[1];
+    5'h1C: bus.rdata <= cfg_adc_sum[1];
   endcase
 end
 

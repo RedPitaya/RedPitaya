@@ -45,6 +45,7 @@ localparam int unsigned DWO = $bits(DTO);
 localparam int unsigned DWM = $bits(DTM);
 
 axi4_stream_if #(.DN (DN), .DT (logic signed [DWI+DWM-1:0])) str (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
+axi4_stream_if #(.DN (DN), .DT (logic signed [DWI+DWM-1:0])) stc (.ACLK (sti.ACLK), .ARESETn (sti.ARESETn));
 
 ////////////////////////////////////////////////////////////////////////////////
 // multiplication
@@ -75,13 +76,33 @@ assign sti.TREADY = str.TREADY | ~str.TVALID;
 
 generate
 for (genvar i=0; i<DN; i++) begin: for_shf
-  assign sto.TDATA[i] = str.TDATA[i] >>> (DWM-2);
-  assign sto.TKEEP[i] = str.TKEEP[i];
+  assign stc.TDATA[i] = str.TDATA[i] >>> (DWM-2);
+  assign stc.TKEEP[i] = str.TKEEP[i];
+  
+  assign stc.TLAST  = str.TLAST;
+  assign stc.TVALID = str.TVALID;
+
 end: for_shf
 endgenerate
 
-assign sto.TLAST  = str.TLAST;
-assign sto.TVALID = str.TVALID;
+////////////////////////////////////////////////////////////////////////////////
+// shift (this is a compbinatorial stage)
+////////////////////////////////////////////////////////////////////////////////
+
+generate
+for (genvar i=0; i<DN; i++) begin: for_sat
+  always_ff @(posedge sti.ACLK)
+  if (str.transf) begin
+    sto.TDATA[i] <= ^stc.TDATA[i][DWO:DWO-1] ? {stc.TDATA[i][DWO], {DWO-1{~stc.TDATA[i][DWO]}}}
+                                             :  stc.TDATA[i][DWO-1:0];
+    sto.TKEEP[i] <=  stc.TKEEP[i];
+  end
+end: for_sat
+endgenerate
+
+
+assign sto.TLAST  = stc.TLAST;
+assign sto.TVALID = stc.TVALID;
 
 assign str.TREADY = sto.TREADY;
 
