@@ -30,13 +30,13 @@ CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
-LDWFLAGS+= -lrpsasrv 
+LDWFLAGS+= -lrpsasrv
 LDWFLAGS+= -lrp_sdk -lrp
 LDWFLAGS+= -Wl,--no-whole-archive
-LDWFLAGS+= -shared 
+LDWFLAGS+= -shared
 
 LDSFLAGS+= -Wl,--whole-archive
-LDSFLAGS+= -lrpsasrv 
+LDSFLAGS+= -lrpsasrv
 LDSFLAGS+= -Wl,--no-whole-archive
 LDSFLAGS+= -lpthread
 LDSFLAGS+= -lrp
@@ -44,7 +44,7 @@ LDSFLAGS+= -lrp
 ifeq ($(MODEL),Z20_250_12)
 INCLUDE += -I$(INSTALL_DIR)/include/api250-12
 LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
-endif 
+endif
 
 
 COBJECTS=$(CSOURCES:.c=.o)
@@ -64,7 +64,7 @@ all: make_c_app service
 clean: clean_c_app
 
 build_lib:
-	./build.sh libs -DCMAKE_BUILD_TYPE=Release
+	./build.sh libs -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
 
 .PHONY: make_c_app
 make_c_app: build_lib  $(OBJECTS)

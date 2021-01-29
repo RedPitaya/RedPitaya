@@ -57,6 +57,7 @@ int main(int argc, char* argv[])
             // TODO start server;
             osc0 = COscilloscope::Create(uio, true , true , Decimation);
             osc0->setCalibration(0,1,0,1);
+            osc0->setFilterBypass(true);
  //           osc1 = COscilloscope::Create(uio, 1 , 1);
             break;
         }

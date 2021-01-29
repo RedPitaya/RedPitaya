@@ -245,9 +245,11 @@ try{
     // std::ofstream outfile2;
     // outfile2.open("/tmp/test.txt", std::ios_base::app);  
     // short *wb2_1 = (short*)buffer_ch1;
-    // for(int i = 0 ;i < 16000 /2 ;i ++)
-    //     outfile2 << std::hex <<  (static_cast<int>(wb2_1[i]) & 0xFFFF)  << " ";
-    
+    // short *wb2_2 = (short*)buffer_ch2;
+    // for(int i = 0 ;i < 16 ;i ++)
+    //     acout() << std::hex <<  (static_cast<int>(wb2_1[i]/ 4))  << " - " << (static_cast<int>(wb2_2[i]/ 4))  << "\n";
+    // exit(1);
+
     if (buffer_ch1 != nullptr){
         _size1 = size;
         switch (m_Resolution)
