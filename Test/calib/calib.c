@@ -27,7 +27,7 @@
 /** Minimal number of command line arguments */
 #define MINARGS 2
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define CALIB_MAGIC 0xAABBCCDD
 #endif
 
@@ -85,7 +85,7 @@ int ReadCalib(bool factory, bool verbose, bool z_mode)
         int i;
 	if (!z_mode) {
             int size = eCalParEnd;
-#ifdef Z10
+#if defined Z10 || defined Z20_125
             if (eepromData.feCalPar[eCalParMagic] == CALIB_MAGIC){
                 size = eCalPar_F_LOW_AA_CH1;
             }

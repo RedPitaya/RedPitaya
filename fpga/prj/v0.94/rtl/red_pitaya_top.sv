@@ -297,17 +297,17 @@ endgenerate
 // Analog mixed signals (PDM analog outputs)
 ////////////////////////////////////////////////////////////////////////////////
 
-logic [4-1:0] [24-1:0] pwm_cfg;
+logic [4-1:0] [8-1:0] pdm_cfg;
 
 red_pitaya_ams i_ams (
   // power test
   .clk_i           (adc_clk ),  // clock
   .rstn_i          (adc_rstn),  // reset - active low
   // PWM configuration
-  .dac_a_o         (pwm_cfg[0]),
-  .dac_b_o         (pwm_cfg[1]),
-  .dac_c_o         (pwm_cfg[2]),
-  .dac_d_o         (pwm_cfg[3]),
+  .dac_a_o         (pdm_cfg[0]),
+  .dac_b_o         (pdm_cfg[1]),
+  .dac_c_o         (pdm_cfg[2]),
+  .dac_d_o         (pdm_cfg[3]),
   // System bus
   .sys_addr        (sys[4].addr ),
   .sys_wdata       (sys[4].wdata),
@@ -318,15 +318,16 @@ red_pitaya_ams i_ams (
   .sys_ack         (sys[4].ack  )
 );
 
-red_pitaya_pwm pwm [4-1:0] (
+red_pitaya_pdm pdm (
   // system signals
-  .clk   (pwm_clk ),
-  .rstn  (pwm_rstn),
+  .clk   (adc_clk ),
+  .rstn  (adc_rstn),
   // configuration
-  .cfg   (pwm_cfg),
+  .cfg   (pdm_cfg),
+  .ena      (1'b1),
+  .rng      (8'd255),
   // PWM outputs
-  .pwm_o (dac_pwm_o),
-  .pwm_s ()
+  .pdm (dac_pwm_o)
 );
 
 ////////////////////////////////////////////////////////////////////////////////

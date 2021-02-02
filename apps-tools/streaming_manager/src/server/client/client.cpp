@@ -24,9 +24,6 @@ uint64_t                              g_packCounter_ch2;
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
-    //    Example
-    //    char * filename = getCmdOption(argv, argv + argc, "-f");
-
     char ** itr = std::find(begin, end, option);
     if (itr != end && ++itr != end)
     {
@@ -37,9 +34,6 @@ char* getCmdOption(char ** begin, char ** end, const std::string & option)
 
 bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
-    //    Example
-    //    if(cmdOptionExists(argv, argv+argc, "-h"))
-    //    {  // Do stuff    }
     return std::find(begin, end, option) != end;
 }
 
@@ -110,7 +104,7 @@ void UsingArgs(char const* progName){
     std::cout << "\t-h IP_ADDRESS:[port] (default value 8900)\n";
     std::cout << "\t-p Protocol (TCP or UDP required value)\n";
     std::cout << "\t-f Path to the directory where to save files\n";
-    std::cout << "\t-t Type of file (tdms or wav required value)\n";
+    std::cout << "\t-t Type of file (tdms, wav, csv)\n";
     std::cout << "\t-v Convert values in volts (store as ADC raw data by default)\n";    
     std::cout << "\t-s Sample limit [1-2147483647] (no limit by default)\n";
 
@@ -199,12 +193,13 @@ void sigHandler (int sigNum){
     g_terminate = true;
 }
 
+void sigHandlerStopCSV (int sigNum){
+    g_manger->stopWriteToCSV();
+}
+
 
 int main(int argc, char* argv[])
 {
-//    try
-//    {
-
         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
         auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
         auto value = curTime.time_since_epoch();
@@ -216,6 +211,7 @@ int main(int argc, char* argv[])
         g_BytesCount = 0;
         g_terminate = false;
         signal(SIGINT, sigHandler);
+        signal(SIGINT, sigHandlerStopCSV);
       //  signal(SIGKILL, sigHandler);
         asionet::Protocol protocol_val;
 
@@ -255,10 +251,11 @@ int main(int argc, char* argv[])
             return -1;
         }
 
+        auto file_type = Stream_FileType::WAV_TYPE;
+        if (strcmp(type_file,"tdms") == 0) file_type = Stream_FileType::TDMS_TYPE;
+		if (strcmp(type_file,"csv") == 0)  file_type = Stream_FileType::CSV_TYPE;
 
-
-        g_manger = CStreamingManager::Create((strcmp(type_file,"wav") == 0 ?
-                                              Stream_FileType::WAV_TYPE : Stream_FileType::TDMS_TYPE)  , filepath, samples_int , convert_v);
+        g_manger = CStreamingManager::Create(file_type , filepath, samples_int , convert_v);
   
         g_manger->run();
 
@@ -280,11 +277,6 @@ int main(int argc, char* argv[])
             
         }
         sigHandler(0);
-//    }
-//    catch (std::exception& e)
-//   {
-//        std::cerr << "Exception: " << e.what() << "\n";
-//    }
-
-    return 0;
+        if (file_type == Stream_FileType::CSV_TYPE) g_manger->convertToCSV();
+        return 0;
 }

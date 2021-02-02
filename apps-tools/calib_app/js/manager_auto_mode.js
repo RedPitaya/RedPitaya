@@ -63,7 +63,7 @@
     OBJ.amSetModel = function(_model) {
         if (OBJ.amModel === undefined) {
             OBJ.amModel = _model.value;
-            if (OBJ.amModel === "Z10") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z10" || OBJ.amModel === "Z20_125") OBJ.amStates = OBJ.STATES_125_14;
             if (OBJ.amModel === "Z20_250_12") OBJ.amStates = OBJ.STATES_250_12;
         }
     }

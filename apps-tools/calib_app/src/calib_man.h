@@ -13,7 +13,7 @@ enum ClalibValue{
     DAC_CH2_OFF,
     DAC_CH1_GAIN,
     DAC_CH2_GAIN    
-#ifdef Z10
+#if defined Z10 || defined Z20_125
     ,
     F_AA_CH1,
     F_BB_CH1,

@@ -65,7 +65,7 @@ CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2
 CIntParameter		ss_calib( 	 		"SS_USE_CALIB", 		CBaseParameter::RW, 2 ,0,	1,2);
 CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
-CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0,1);
+CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2);
@@ -341,7 +341,15 @@ void StartServer(){
     uint32_t ch2_off = 0;
     float ch1_gain = 1;
     float ch2_gain = 1;
-
+	bool  filterBypass = true;
+	uint32_t aa_ch1 = 0;
+	uint32_t bb_ch1 = 0;
+	uint32_t kk_ch1 = 0xFFFFFF;
+	uint32_t pp_ch1 = 0;
+	uint32_t aa_ch2 = 0;
+	uint32_t bb_ch2 = 0;
+	uint32_t kk_ch2 = 0xFFFFFF;
+	uint32_t pp_ch2 = 0;
 
 if (use_calib == 2) {
 #ifdef Z20_250_12
@@ -373,17 +381,35 @@ if (use_calib == 2) {
 	}
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
+	filterBypass = false;
 	if (attenuator == 1) {
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;  
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;  
 		ch1_off  = osc_calib_params.fe_ch1_lo_offs;
 		ch2_off  = osc_calib_params.fe_ch2_lo_offs;
+		aa_ch1 = osc_calib_params.low_filter_aa_ch1;
+		bb_ch1 = osc_calib_params.low_filter_bb_ch1;
+		pp_ch1 = osc_calib_params.low_filter_pp_ch1;
+		kk_ch1 = osc_calib_params.low_filter_kk_ch1;
+		aa_ch2 = osc_calib_params.low_filter_aa_ch2;
+		bb_ch2 = osc_calib_params.low_filter_bb_ch2;
+		pp_ch2 = osc_calib_params.low_filter_pp_ch2;
+		kk_ch2 = osc_calib_params.low_filter_kk_ch2;
+
 	}else{
 		ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  
 		ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  
 		ch1_off  = osc_calib_params.fe_ch1_hi_offs;
 		ch2_off  = osc_calib_params.fe_ch2_hi_offs;
+		aa_ch1 = osc_calib_params.hi_filter_aa_ch1;
+		bb_ch1 = osc_calib_params.hi_filter_bb_ch1;
+		pp_ch1 = osc_calib_params.hi_filter_pp_ch1;
+		kk_ch1 = osc_calib_params.hi_filter_kk_ch1;
+		aa_ch2 = osc_calib_params.hi_filter_aa_ch2;
+		bb_ch2 = osc_calib_params.hi_filter_bb_ch2;
+		pp_ch2 = osc_calib_params.hi_filter_pp_ch2;
+		kk_ch2 = osc_calib_params.hi_filter_kk_ch2;
 	}
 #endif
 }
@@ -407,18 +433,19 @@ if (use_calib == 2) {
 
 	// Search oscilloscope
 	COscilloscope::Ptr osc = nullptr;
-
-
+	
 	for (const UioT &uio : uioList)
 	{
 		if (uio.nodeName == "rp_oscilloscope")
 		{
 			osc = COscilloscope::Create(uio, (channel ==1 || channel == 3) , (channel ==2 || channel == 3) , rate);
 			osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
+			osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
+			osc->setFilterCalibrationCh2(aa_ch2,bb_ch2,kk_ch2,pp_ch2);
+			osc->setFilterBypass(filterBypass);
 			break;
 		}
 	}
-
 	CStreamingManager::Ptr s_manger = nullptr;
 	if (use_file == false) {
 		s_manger = CStreamingManager::Create(
@@ -426,7 +453,10 @@ if (use_calib == 2) {
 				std::to_string(sock_port).c_str(),
 				protocol == 1 ? asionet::Protocol::TCP : asionet::Protocol::UDP);
 	}else{
-		s_manger = CStreamingManager::Create((format == 0 ? Stream_FileType::WAV_TYPE: Stream_FileType::TDMS_TYPE) , FILE_PATH, samples , save_mode == 2);
+		auto file_type = Stream_FileType::WAV_TYPE;
+		if (format == 1) file_type = Stream_FileType::TDMS_TYPE;
+		if (format == 2) file_type = Stream_FileType::CSV_TYPE;
+		s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == 2);
 		s_manger->notifyStop = [](int status)
 							{
 								StopNonBlocking(status == 0 ? 2 : 3);

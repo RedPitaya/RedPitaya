@@ -2,7 +2,7 @@
 DL ?= dl
 
 INSTALL_DIR ?= build
-ENABLE_LICENSING ?= 0
+ENABLE_LICENSING ?= 1
 ################################################################################
 # versioning system
 ################################################################################
@@ -11,7 +11,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
-LINUX_VER = 1.02
+LINUX_VER = 1.03
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -24,6 +24,7 @@ export LINUX_VER
 # USED parameters:
 # Z10 - for Redpitaya 125-14
 # Z20 - for Redpitaya 122-16
+# Z20_125 - for Redpitaya Z20 125-14
 # Z20_250_12 - for RepPitaya 250-12
 # Production test script
 MODEL ?= Z10
@@ -255,7 +256,7 @@ SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
 SDR_URL = http://downloads.redpitaya.com/hamlab/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
-ifeq ($(MODEL),Z10)
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))  
 	wget $(SDR_URL) -O $(DL)/$(SDR_ZIP) --show-progress
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
@@ -405,7 +406,7 @@ ifeq ($(MODEL),Z20_250_12)
 apps-tools: calib_app
 endif
 
-ifeq ($(MODEL),Z10)
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
 apps-tools: jupyter_manager calib_app
 endif
 
@@ -457,7 +458,7 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-vna: api2
-ifeq ($(MODEL),Z10)
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
 	$(MAKE) -C $(VNA_DIR) clean
 	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))

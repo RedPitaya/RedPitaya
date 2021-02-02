@@ -69,7 +69,7 @@ assign gain     = cfg_calib_gain;
 
 always @(posedge clk)
 begin
-  gain_calc_r <= $signed({adc_data,{15{1'b0}}}) * $signed({{15{1'b0}},gain});
+  gain_calc_r <= $signed({offset_calc_limit,{15{1'b0}}}) * $signed({{15{1'b0}},gain});
   gain_calc   <= gain_calc_r; // output of multiplier needs to be registered to avoid timing issues
 end
 

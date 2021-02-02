@@ -725,7 +725,7 @@ int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 }
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 int rp_AcqUpdateAcqFilter(rp_channel_t channel){
     return acq_UpdateAcqFilter(channel);
 }
@@ -935,4 +935,20 @@ int rp_UartRead(unsigned char *buffer, int *size){
 
 int rp_UartWrite(unsigned char *buffer, int size){
     return uart_write(buffer,size);
+}
+
+int rp_UartSpeed(int value){
+    return uart_SetSpeed(value);
+}
+
+int rp_UartSetBits(rp_uart_bits_size_t _size){
+    return uart_SetBits(_size);
+}
+
+int rp_UartSetStopBits(rp_uart_stop_bits_t _size){
+    return uart_SetStopBits(_size);
+}
+
+int rp_UartSetParityMode(rp_uart_parity_t mode){
+    return uart_SetParityMode(mode);
 }

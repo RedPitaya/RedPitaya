@@ -55,7 +55,7 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
 };
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define CALIB_MAGIC 0xAABBCCDD
 #define CALIB_MAGIC_FILTER 0xDDCCBBAA
 // Default values
@@ -144,7 +144,7 @@ int RpEepromCalDataRead(eepromWpData_t * eepromData, bool factory)
         fclose(fp);
         return -1;
     }
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 if (eepromData->feCalPar[eCalParMagic] != CALIB_MAGIC_FILTER){
     eepromData->feCalPar[eCalPar_F_LOW_AA_CH1] = GAIN_LO_FILT_AA;
     eepromData->feCalPar[eCalPar_F_LOW_BB_CH1] = GAIN_LO_FILT_BB;
@@ -228,7 +228,7 @@ void RpPrintEepromCalData(eepromWpData_t a_eepromData)
 {
     int i;
     int size = eCalParEnd;
-#ifdef Z10
+#if defined Z10 || defined Z20_125
     if (a_eepromData.feCalPar[eCalParMagic] == CALIB_MAGIC){
         size = eCalPar_F_LOW_AA_CH1;
     }

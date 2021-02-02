@@ -20,7 +20,7 @@
 #define ARG_CORRECTION 1
 #endif
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define SAMPLE_RATE 125e6
 #define ARG_CORRECTION 0
 #endif

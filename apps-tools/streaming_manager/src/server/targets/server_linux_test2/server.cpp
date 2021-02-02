@@ -57,6 +57,7 @@ int main(int argc, char* argv[])
             // TODO start server;
             osc0 = COscilloscope::Create(uio, true , true , Decimation);
             osc0->setCalibration(0,1,0,1);
+            osc0->setFilterBypass(true);
  //           osc1 = COscilloscope::Create(uio, 1 , 1);
             break;
         }
@@ -70,7 +71,7 @@ int main(int argc, char* argv[])
 
 
     CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , ".", -1,false);
+    s_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , ".", 100000,false);
 
 
     // Run application

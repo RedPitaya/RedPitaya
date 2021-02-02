@@ -68,7 +68,7 @@ echo "------------Logging test result to the Red Pitaya d.d MAIN server---------
 echo
 echo "      Checking if board is online and server is available.."
 echo
-CURL_RSP="$(curl -Is http://www.redpitaya.com | head -1)"
+CURL_RSP="$(curl -Is http://production.redpitaya.com | head -1)"
 #echo $CURL_RSP
 echo
 if [ `echo $CURL_RSP | grep -c "HTTP/1.1" ` -gt 0 ]
@@ -78,8 +78,8 @@ print_ok
 else
 echo -n "      Board is offline or server is not available. Logging test result to the Red Pitaya d.d MAIN server FAILD!!! "
 print_fail
-#exit
-
+exit
+fi
 echo
 echo "      Sending test record data to server..."
 # Prepare LOG_VAR data
@@ -117,7 +117,6 @@ echo
 echo -n "      No response from SERVER!!! "
 print_fail
 echo
-fi
 fi
 echo
 echo

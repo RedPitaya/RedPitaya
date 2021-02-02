@@ -18,7 +18,7 @@
 
 #include <stdbool.h>
 
-#ifdef Z10
+#if defined Z10 || defined Z20_125
 #define PACK_ID 1
 typedef enum {
     eCalPar_FE_CH1_FS_G_HI,
