@@ -936,3 +936,19 @@ int rp_UartRead(unsigned char *buffer, int *size){
 int rp_UartWrite(unsigned char *buffer, int size){
     return uart_write(buffer,size);
 }
+
+int rp_UartSpeed(int value){
+    return uart_SetSpeed(value);
+}
+
+int rp_UartSetBits(rp_uart_bits_size_t _size){
+    return uart_SetBits(_size);
+}
+
+int rp_UartSetStopBits(rp_uart_stop_bits_t _size){
+    return uart_SetStopBits(_size);
+}
+
+int rp_UartSetParityMode(rp_uart_parity_t mode){
+    return uart_SetParityMode(mode);
+}

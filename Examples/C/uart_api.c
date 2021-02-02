@@ -17,12 +17,17 @@
 
 int main(int argc, char *argv[]){
 
-    char *buffer = "TEST STRING";
+    char *buffer = "TEST string";
     char rx_buf[255];
     memset(rx_buf,0,255);
     int size = 255;
 
     printf("Init result: %d\n",rp_UartInit());
+    printf("Set speed: %d\n",rp_UartSpeed(115200));
+    printf("Set CS8: %d\n",rp_UartSetBits(RP_UART_CS8));
+    printf("Set Stop Bits 2: %d\n",rp_UartSetStopBits(RP_UART_STOP2));
+    printf("Set Parity Mode: %d\n",rp_UartSetParityMode(RP_UART_MARK));
+    
     printf("Write result: %d\n", rp_UartWrite((unsigned char*)buffer,strlen(buffer)));
     printf("Read result: %d\n",rp_UartRead((unsigned char*)rx_buf,&size));
     printf("Size: %d (%s)\n",size,rx_buf);

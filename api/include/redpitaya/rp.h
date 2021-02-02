@@ -95,6 +95,10 @@ extern "C" {
 #define RP_ERU    26
 /** Failed write to uart */
 #define RP_EWU    27
+/** Failed set settings to uart */
+#define RP_ESU    28
+/** Failed get settings from uart */
+#define RP_EGU    29
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
@@ -302,6 +306,34 @@ typedef struct {
 
 } rp_calib_params_t;
 
+/**
+ * UART Character bits size
+ */
+typedef enum {
+    RP_UART_CS6,      //!< Set 6 bits
+    RP_UART_CS7,      //!< Set 7 bits
+    RP_UART_CS8       //!< Set 8 bits
+} rp_uart_bits_size_t;
+
+
+/**
+ * UART stop bits
+ */
+typedef enum {
+    RP_UART_STOP1,      //!< Set 1 bit
+    RP_UART_STOP2       //!< Set 2 bits
+} rp_uart_stop_bits_t;
+
+/**
+ * UART parity mode
+ */
+typedef enum {
+    RP_UART_NONE,      //!< Disable parity check
+    RP_UART_EVEN,      //!< Set even mode for parity
+    RP_UART_ODD,       //!< Set odd mode for parity
+    RP_UART_MARK,      //!< Set Always 1
+    RP_UART_SPACE      //!< Set Always 0
+} rp_uart_parity_t;
 
 /** @name General
  */
@@ -1540,6 +1572,38 @@ int rp_UartRead(unsigned char *buffer, int *size);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_UartWrite(unsigned char *buffer, int size);
+
+/**
+* Set speed for the UART.
+* @param speed Value of speed
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartSpeed(int speed);
+
+/**
+* Set character size for the UART.
+* @param size Value of size
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartSetBits(rp_uart_bits_size_t size);
+
+/**
+* Set stop bits size for the UART.
+* @param mode Value of size
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartSetStopBits(rp_uart_stop_bits_t mode);
+
+/**
+* Set parity check mode for the UART.
+* @param mode Value of size
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_UartSetParityMode(rp_uart_parity_t mode);
 
 #ifdef __cplusplus
 }
