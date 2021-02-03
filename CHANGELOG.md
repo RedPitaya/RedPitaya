@@ -10,7 +10,7 @@
 - Jupyter calibration and overflow bug fixed
 - Other general improvements and updates including
 
-# Beta version (1.04-7)
+# Stable version (1.04-7)
 
 - The streaming application was improved. One of the main features is that users can now exactly know when and which samples are lost due to throughput problems or limitation
 - Watchdog was implemented for Linux and WEB applications. In case of fatal error or lost connection device will always return to its previous operation state. 
