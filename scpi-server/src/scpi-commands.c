@@ -132,6 +132,12 @@ static const scpi_command_t scpi_commands[] = {
 
     /* RedPitaya */
 
+    {.pattern = "SYSTem:TIME", .callback                = RP_Time,},
+    {.pattern = "SYSTem:TIME?", .callback               = RP_TimeQ,},
+
+    {.pattern = "SYSTem:DATE", .callback                = RP_Date,},
+    {.pattern = "SYSTem:DATE?", .callback               = RP_DateQ,},
+
     /* General commands */
     {.pattern = "RP:INit", .callback                    = RP_InitAll,},
     {.pattern = "RP:REset", .callback                   = RP_ResetAll,},
@@ -346,5 +352,5 @@ scpi_t scpi_context = {
     .interface = &scpi_interface,
     .registers = scpi_regs,
     .units = scpi_units_def,
-    .idn = {"REDPITAYA", "INSTR2020", NULL, "01-02"},
+    .idn = {"REDPITAYA", "INSTR2023", NULL, "05-03"},
 };
