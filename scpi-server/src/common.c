@@ -14,6 +14,8 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
+
 #include "common.h"
 
 const scpi_choice_def_t scpi_RpLogMode[] = {
@@ -123,4 +125,169 @@ rp_HPeModels_t getModel(){
         RP_LOG(LOG_WARNING,"[Error] Can't get board model\n");
     }
     return c;
+}
+
+scpi_result_t RP_Time(scpi_t *context){
+    uint32_t hh, mm, ss;
+
+    if(!SCPI_ParamUInt32(context, &hh, true)){
+        RP_LOG(LOG_ERR, "*SYSTem:TIME Unable to read HOURS parameter.\n");
+        return SCPI_RES_ERR;
+    }else{
+        if (hh > 23){
+            RP_LOG(LOG_ERR, "*SYSTem:TIME Invalid value for the HOURS. Parameter must be between 0 and 23.\n");
+            return SCPI_RES_ERR;
+        }
+    }
+
+    if(!SCPI_ParamUInt32(context, &mm, true)){
+        RP_LOG(LOG_ERR, "*SYSTem:TIME Unable to read MINUTES parameter.\n");
+        return SCPI_RES_ERR;
+    }else{
+        if (mm > 59){
+            RP_LOG(LOG_ERR, "*SYSTem:TIME Invalid value for the MINUTES. Parameter must be between 0 and 23.\n");
+            return SCPI_RES_ERR;
+        }
+    }
+
+    if(!SCPI_ParamUInt32(context, &ss, true)){
+        RP_LOG(LOG_ERR, "*SYSTem:TIME Unable to read SECONDS parameter.\n");
+        return SCPI_RES_ERR;
+    }else{
+        if (ss > 59){
+            RP_LOG(LOG_ERR, "*SYSTem:TIME Invalid value for the SECONDS. Parameter must be between 0 and 23.\n");
+            return SCPI_RES_ERR;
+        }
+    }
+
+
+    struct timespec t_time;
+    if (clock_gettime (CLOCK_REALTIME, & t_time)){
+        RP_LOG(LOG_ERR, "*SYSTem:TIME Error getting current time.\n");
+        return SCPI_RES_ERR;
+    }
+    time_t t_t = (time_t)t_time.tv_sec;
+    struct tm *time = gmtime(&t_t);
+
+    time->tm_hour = hh;
+    time->tm_min  = mm;
+    time->tm_sec  = ss;
+
+    time_t t = mktime(time);
+    if (t != (time_t)(-1)){
+        struct timespec new_time = {t,0};
+        if (clock_settime(CLOCK_REALTIME, &new_time)){
+        RP_LOG(LOG_ERR, "*SYSTem:TIME Error setting new time.\n");
+            return SCPI_RES_ERR;
+        }
+    }else{
+        RP_LOG(LOG_ERR, "*SYSTem:TIME New time conversion error.\n");
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SYSTem:TIME Successfully set time.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_TimeQ(scpi_t *context){
+
+    struct timespec t_time;
+    if (clock_gettime (CLOCK_REALTIME, & t_time)){
+        RP_LOG(LOG_ERR, "*SYSTem:TIME? Error getting current time.\n");
+        return SCPI_RES_ERR;
+    }
+
+    struct tm *time = gmtime(&t_time.tv_sec);
+
+    char buff[10];
+    sprintf(buff,"%d,%d,%d",time->tm_hour,time->tm_min,time->tm_sec);
+    // Return back result
+    SCPI_ResultMnemonic(context, buff);
+
+
+    RP_LOG(LOG_INFO, "*SYSTem:TIME? Successfully returned time.\n");
+    return SCPI_RES_OK;
+}
+
+
+scpi_result_t RP_Date(scpi_t *context){
+    uint32_t year, m, d;
+
+    if(!SCPI_ParamUInt32(context, &year, true)){
+        RP_LOG(LOG_ERR, "*SYSTem:DATE Unable to read YEAR parameter.\n");
+        return SCPI_RES_ERR;
+    }else{
+        if (year < 1900){
+            RP_LOG(LOG_ERR, "*SYSTem:DATE Invalid value for the YEAR. The value must be greater 1900.\n");
+            return SCPI_RES_ERR;
+        }
+    }
+
+    if(!SCPI_ParamUInt32(context, &m, true)){
+        RP_LOG(LOG_ERR, "*SYSTem:DATE Unable to read MONTH parameter.\n");
+        return SCPI_RES_ERR;
+    }else{
+        if (m < 1 || m > 12){
+            RP_LOG(LOG_ERR, "*SYSTem:DATE Invalid value for the MONTH. Parameter must be between 1 and 12.\n");
+            return SCPI_RES_ERR;
+        }
+    }
+
+    if(!SCPI_ParamUInt32(context, &d, true)){
+        RP_LOG(LOG_ERR, "*SYSTem:DATE Unable to read DAY parameter.\n");
+        return SCPI_RES_ERR;
+    }else{
+        if (d < 1 || d > 31){
+            RP_LOG(LOG_ERR, "*SYSTem:DATE Invalid value for the DAY. Parameter must be between 1 and 31.\n");
+            return SCPI_RES_ERR;
+        }
+    }
+
+
+    struct timespec t_time;
+    if (clock_gettime (CLOCK_REALTIME, & t_time)){
+        RP_LOG(LOG_ERR, "*SYSTem:DATE Error getting current date.\n");
+        return SCPI_RES_ERR;
+    }
+    time_t t_t = (time_t)t_time.tv_sec;
+    struct tm *time = gmtime(&t_t);
+
+    time->tm_year = year - 1900;
+    time->tm_mon  = m - 1;
+    time->tm_mday = d;
+
+    time_t t = mktime(time);
+    if (t != (time_t)(-1)){
+        struct timespec new_time = {t,0};
+        if (clock_settime(CLOCK_REALTIME, &new_time)){
+            RP_LOG(LOG_ERR, "*SYSTem:DATE Error setting new date.\n");
+            return SCPI_RES_ERR;
+        }
+    }else{
+        RP_LOG(LOG_ERR, "*SYSTem:DATE New date conversion error.\n");
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SYSTem:DATE Successfully set date.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_DateQ(scpi_t *context){
+
+    struct timespec t_time;
+    if (clock_gettime (CLOCK_REALTIME, & t_time)){
+        RP_LOG(LOG_ERR, "*SYSTem:DATE? Error getting current date.\n");
+        return SCPI_RES_ERR;
+    }
+
+    struct tm *time = gmtime(&t_time.tv_sec);
+
+    char buff[10];
+    sprintf(buff,"%d,%d,%d",time->tm_year + 1900,time->tm_mon + 1,time->tm_mday);
+    // Return back result
+    SCPI_ResultMnemonic(context, buff);
+
+
+    RP_LOG(LOG_INFO, "*SYSTem:DATE? Successfully returned date.\n");
+    return SCPI_RES_OK;
 }

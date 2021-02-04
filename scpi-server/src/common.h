@@ -48,4 +48,10 @@ uint32_t getADCRate();
 rp_HPeModels_t getModel();
 
 
+scpi_result_t RP_Time(scpi_t *context);
+scpi_result_t RP_TimeQ(scpi_t *context);
+
+scpi_result_t RP_Date(scpi_t *context);
+scpi_result_t RP_DateQ(scpi_t *context);
+
 #endif /* COMMON_H_ */
