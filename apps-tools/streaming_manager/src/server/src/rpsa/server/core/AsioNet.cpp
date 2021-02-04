@@ -198,7 +198,7 @@ namespace  asionet {
     }
 
     void CAsioNet::SendServerStop(){
-        if (m_IsRun && m_mode == asionet::Mode::CLIENT){
+        if (IsConnected() && m_mode == asionet::Mode::CLIENT){
             m_server->SendBuffer("\x00",1);
         }
         m_server->CloseSocket();

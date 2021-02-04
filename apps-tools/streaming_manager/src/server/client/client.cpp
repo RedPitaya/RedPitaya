@@ -197,6 +197,20 @@ void sigHandlerStopCSV (int sigNum){
     g_manger->stopWriteToCSV();
 }
 
+void installTermSignalHandler()
+{
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = sigHandler;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+
+    struct sigaction actionStopCSV;
+    memset(&actionStopCSV, 0, sizeof(struct sigaction));
+    actionStopCSV.sa_handler = sigHandlerStopCSV;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+}
 
 int main(int argc, char* argv[])
 {
@@ -210,9 +224,9 @@ int main(int argc, char* argv[])
         g_lostRate = 0;
         g_BytesCount = 0;
         g_terminate = false;
-        signal(SIGINT, sigHandler);
-        signal(SIGINT, sigHandlerStopCSV);
-      //  signal(SIGKILL, sigHandler);
+
+        installTermSignalHandler();
+
         asionet::Protocol protocol_val;
 
         char * filepath  = getCmdOption(argv, argv + argc, "-f");
@@ -277,6 +291,8 @@ int main(int argc, char* argv[])
             
         }
         sigHandler(0);
-        if (file_type == Stream_FileType::CSV_TYPE) g_manger->convertToCSV();
+        if (file_type == Stream_FileType::CSV_TYPE) {
+            g_manger->convertToCSV();
+        }
         return 0;
 }
