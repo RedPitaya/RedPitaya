@@ -199,6 +199,13 @@ void sigHandlerStopCSV (int sigNum){
 
 void installTermSignalHandler()
 {
+#ifdef _WIN32
+    signal(SIGINT, sigHandler);
+    signal(SIGINT, sigHandlerStopCSV);
+    signal(SIGTERM, sigHandler);
+    signal(SIGTERM, sigHandlerStopCSV);
+
+#else
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = sigHandler;
@@ -210,6 +217,7 @@ void installTermSignalHandler()
     actionStopCSV.sa_handler = sigHandlerStopCSV;
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGINT, &action, NULL);
+#endif
 }
 
 int main(int argc, char* argv[])
