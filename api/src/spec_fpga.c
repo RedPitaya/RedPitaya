@@ -25,21 +25,6 @@
 #include "rp_cross.h"
 #include "spec_fpga.h"
 
-#ifdef Z20_250_12
-#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
-#define SPECTR_ADC_BITS ADC_BITS
-#endif
-
-#if defined Z10 || defined Z20_125
-#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
-#define SPECTR_ADC_BITS ADC_BITS
-#endif
-
-#ifdef Z20
-#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
-#define SPECTR_ADC_BITS ADC_BITS
-#endif
-
 /* internals */
 /* The FPGA register structure */
 spectr_fpga_reg_mem_t *g_spectr_fpga_reg_mem = NULL;
@@ -49,17 +34,20 @@ uint32_t           *g_spectr_fpga_chb_mem = NULL;
 /* The memory file descriptor used to mmap() the FPGA space */
 int             g_spectr_fpga_mem_fd = -1;
 
+unsigned short      g_signal_fgpa_length = ADC_BUFFER_SIZE;
+
 /* constants */
 /* ADC format = s.13 */
-const int c_spectr_fpga_adc_bits = SPECTR_ADC_BITS;
+const int c_spectr_fpga_adc_bits = ADC_BITS;
 /* c_osc_fpga_max_v */
 float g_spectr_fpga_adc_max_v;
 const float c_spectr_fpga_adc_max_v_revC= +1.079;
 const float c_spectr_fpga_adc_max_v_revD= +1.027;
 /* Sampling frequency = 125Mspmpls (non-decimated) */
-float spectr_get_fpga_smpl_freq() { return SPECTR_ADC_SAMPLE_RATE; }
+float spectr_get_fpga_smpl_freq() { return ADC_SAMPLE_RATE; }
 /* Sampling period (non-decimated) - 8 [ns] */
-const float c_spectr_fpga_smpl_period = (1. / SPECTR_ADC_SAMPLE_RATE);
+const float c_spectr_fpga_smpl_period = (1. / ADC_SAMPLE_RATE);
+
 
 
 double __rp_rand()
@@ -152,7 +140,7 @@ int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
         return -1;
     }
 
-    fpga_delay = SPECTR_FPGA_SIG_LEN - 3;
+    fpga_delay = rp_get_fpga_signal_length();
 
     /* Trig source is written after ARM */
     /*    g_spectr_fpga_reg_mem->trig_source   = fpga_trig_source;*/
@@ -209,6 +197,10 @@ int spectr_fpga_triggered(void)
     return ((g_spectr_fpga_reg_mem->trig_source & SPECTR_FPGA_TRIG_SRC_MASK)==0);
 }
 
+int spectr_fpga_buffer_fill(void){
+    return ((g_spectr_fpga_reg_mem->conf & SPECTR_FPGA_BUFFER_FILL));
+}
+
 int spectr_fpga_get_sig_ptr(int **cha_signal, int **chb_signal)
 {
     *cha_signal = (int *)g_spectr_fpga_cha_mem;
@@ -218,6 +210,7 @@ int spectr_fpga_get_sig_ptr(int **cha_signal, int **chb_signal)
 
 int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
 {
+    //int cur_ptr_trig;
     int wr_ptr_trig;
     int in_idx, out_idx;
     double *cha_o = *cha_signal;
@@ -229,20 +222,20 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
     }
 
     spectr_fpga_get_wr_ptr(NULL, &wr_ptr_trig);
-
+    //fprintf(stderr, "Cur %d trig %d\n",cur_ptr_trig ,wr_ptr_trig);
     for(in_idx = wr_ptr_trig + 1, out_idx = 0;
-        out_idx < SPECTR_FPGA_SIG_LEN; in_idx++, out_idx++) {
-        if(in_idx >= SPECTR_FPGA_SIG_LEN)
-            in_idx = in_idx % SPECTR_FPGA_SIG_LEN;
+        out_idx < rp_get_fpga_signal_length(); in_idx++, out_idx++) {
+        if(in_idx >= ADC_BUFFER_SIZE)
+            in_idx = in_idx % ADC_BUFFER_SIZE;
 
         cha_o[out_idx] = g_spectr_fpga_cha_mem[in_idx];
         chb_o[out_idx] = g_spectr_fpga_chb_mem[in_idx];
 
         // convert to signed
-        if(cha_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
-            cha_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
-        if(chb_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
-            chb_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
+        if(cha_o[out_idx] > (double)(1 << (ADC_BITS-1)))
+            cha_o[out_idx] -= (double)(1 << ADC_BITS);
+        if(chb_o[out_idx] > (double)(1 << (ADC_BITS-1)))
+            chb_o[out_idx] -= (double)(1 << ADC_BITS);
     }   
     return 0;
 }
@@ -391,4 +384,27 @@ float spectr_fpga_cnv_cnt_to_v(int cnts)
     return (m * g_spectr_fpga_adc_max_v /
             (float)(1<<(c_spectr_fpga_adc_bits-1)));
 
+}
+
+int rp_set_fpga_signal_length(unsigned short len){
+    if (len < 256 || len > ADC_BUFFER_SIZE) return -1;
+    
+    unsigned char res = 0;
+    unsigned short n = len; 
+    while (n) {
+        res += n&1;
+        n >>= 1;
+    }
+    if (res != 1) return -1;
+
+    g_signal_fgpa_length = len; 
+    return 0;
+}
+
+unsigned short rp_get_fpga_signal_length(){
+    return g_signal_fgpa_length;
+}
+
+unsigned short rp_get_fpga_signal_max_length(){
+    return ADC_BUFFER_SIZE;
 }
