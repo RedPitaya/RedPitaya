@@ -285,60 +285,6 @@ int spectr_fpga_cnv_trig_source(int trig_imm, int trig_source, int trig_edge)
     return fpga_trig_source;
 }
 
-// int spectr_fpga_cnv_freq_range_to_dec(int freq_range)
-// {
-//     /* Input: 0, 1, 2, 3, 4, 5 translates to:
-//      * Output: 1x, 8x, 64x, 1kx, 8kx, 65kx */
-//     switch(freq_range) {
-//     case 0:
-//         return 1;
-//         break;
-//     case 1:
-//         return 8;
-//         break;
-//     case 2:
-//         return 64;
-//         break;
-//     case 3:
-//         return 1024;
-//         break;
-//     case 4:
-//         return 8*1024;
-//         break;
-//     case 5:
-//         return 64*1024;
-//         break;
-//     default:
-//         return -1;
-//     }
-
-//     return -1;
-// }
-
-// int spectr_fpga_cnv_freq_range_to_unit(int freq_range)
-// {
-//     /* Input freq. range: 0, 1, 2, 3, 4, 5 translates to:
-//      * Output: 0 - [MHz], 1 - [kHz], 2 - [Hz] */
-//     switch(freq_range) {
-//     case 0:
-//     case 1:
-//         return 2;
-//         break;
-//     case 2:
-//     case 3:
-//     case 4:
-//         return 1;
-//         break;
-//     case 5:
-//         return 0;
-//         break;
-//     default:
-//         return -1;
-//         break;
-//     };
-
-//     return -1;
-// }
 
 int spectr_fpga_cnv_time_to_smpls(float time, int dec_factor)
 {
