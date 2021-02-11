@@ -43,8 +43,8 @@ always @(posedge axi_i.ACLK) begin
     axi_o.RDATA <= axi_i.RDATA;
     axi_o.RRESP <= axi_i.RRESP;
     axi_o.RLAST <= axi_i.RLAST;
-    axi_o.RVALID <= axi_i.RVALID;
-    axi_i.RREADY <= axi_o.RREADY;
+    axi_i.RVALID <= axi_o.RVALID;
+    axi_o.RREADY <= axi_i.RREADY;
 end
 
 endmodule: axi4_sync

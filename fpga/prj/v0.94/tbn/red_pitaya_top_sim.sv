@@ -79,48 +79,50 @@ module red_pitaya_top_sim #(
   inout  logic          DDR_ras_n  ,
   inout  logic          DDR_reset_n,
   inout  logic          DDR_we_n   ,
-
-  input [31:0]S_AXI_REG_araddr,
-  input [1:0]S_AXI_REG_arburst,
-  input [3:0]S_AXI_REG_arcache,
-  input [11:0]S_AXI_REG_arid,
-  input [3:0]S_AXI_REG_arlen,
-  input [1:0]S_AXI_REG_arlock,
-  input [2:0]S_AXI_REG_arprot,
-  input [3:0]S_AXI_REG_arqos,
-  output S_AXI_REG_arready,
-  input [2:0]S_AXI_REG_arsize,
-  input S_AXI_REG_arvalid,
-  input [31:0]S_AXI_REG_awaddr,
-  input [1:0]S_AXI_REG_awburst,
-  input [3:0]S_AXI_REG_awcache,
-  input [11:0]S_AXI_REG_awid,
-  input [3:0]S_AXI_REG_awlen,
-  input [1:0]S_AXI_REG_awlock,
-  input [2:0]S_AXI_REG_awprot,
-  input [3:0]S_AXI_REG_awqos,
-  output S_AXI_REG_awready,
-  input [2:0]S_AXI_REG_awsize,
-  input S_AXI_REG_awvalid,
-  output [11:0]S_AXI_REG_bid,
-  input S_AXI_REG_bready,
-  output [1:0]S_AXI_REG_bresp,
-  output S_AXI_REG_bvalid,
-  output [31:0]S_AXI_REG_rdata,
-  output [11:0]S_AXI_REG_rid,
-  output S_AXI_REG_rlast,
-  input S_AXI_REG_rready,
-  output [1:0]S_AXI_REG_rresp,
-  output S_AXI_REG_rvalid,
-  input [31:0]S_AXI_REG_wdata,
-  input [11:0]S_AXI_REG_wid,
-  input S_AXI_REG_wlast,
-  output S_AXI_REG_wready,
-  input [3:0]S_AXI_REG_wstrb,
-  input S_AXI_REG_wvalid,
+/*
+  input [31:0]S_AXI_REG_araddr;
+  input [1:0]S_AXI_REG_arburst;
+  input [3:0]S_AXI_REG_arcache;
+  input [11:0]S_AXI_REG_arid;
+  input [3:0]S_AXI_REG_arlen;
+  input [1:0]S_AXI_REG_arlock;
+  input [2:0]S_AXI_REG_arprot;
+  input [3:0]S_AXI_REG_arqos;
+  output S_AXI_REG_arready;
+  input [2:0]S_AXI_REG_arsize;
+  input S_AXI_REG_arvalid;
+  input [31:0]S_AXI_REG_awaddr;
+  input [1:0]S_AXI_REG_awburst;
+  input [3:0]S_AXI_REG_awcache;
+  input [11:0]S_AXI_REG_awid;
+  input [3:0]S_AXI_REG_awlen;
+  input [1:0]S_AXI_REG_awlock;
+  input [2:0]S_AXI_REG_awprot;
+  input [3:0]S_AXI_REG_awqos;
+  output S_AXI_REG_awready;
+  input [2:0]S_AXI_REG_awsize;
+  input S_AXI_REG_awvalid;
+  output [11:0]S_AXI_REG_bid;
+  input S_AXI_REG_bready;
+  output [1:0]S_AXI_REG_bresp;
+  output S_AXI_REG_bvalid;
+  output [31:0]S_AXI_REG_rdata;
+  output [11:0]S_AXI_REG_rid;
+  output S_AXI_REG_rlast;
+  input S_AXI_REG_rready;
+  output [1:0]S_AXI_REG_rresp;
+  output S_AXI_REG_rvalid;
+  input [31:0]S_AXI_REG_wdata;
+  input [11:0]S_AXI_REG_wid;
+  input S_AXI_REG_wlast;
+  output S_AXI_REG_wready;
+  input [3:0]S_AXI_REG_wstrb;
+  input S_AXI_REG_wvalid;
+*/
   // Red Pitaya periphery
 
   // ADC
+  axi4_if.s axi_reg,
   input  logic [MNA-1:0] [16-1:0] adc_dat_i,  // ADC data
   input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
   output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
@@ -230,6 +232,9 @@ sys_bus_if   sys [8-1:0] (.clk (adc_clk), .rstn (adc_rstn));
 // GPIO interface
 gpio_if #(.DW (24)) gpio ();
 
+assign clkout =adc_clk;
+assign rstn_out =adc_rstn;
+
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
@@ -298,6 +303,47 @@ red_pitaya_ps_sim ps (
   .DDR_ras_n     (DDR_ras_n   ),
   .DDR_reset_n   (DDR_reset_n ),
   .DDR_we_n      (DDR_we_n    ),
+  /*
+        .S_AXI_REG_araddr(S_AXI_REG_araddr),
+        .S_AXI_REG_arburst(S_AXI_REG_arburst),
+        .S_AXI_REG_arcache(S_AXI_REG_arcache),
+        .S_AXI_REG_arid(S_AXI_REG_arid),
+        .S_AXI_REG_arlen(S_AXI_REG_arlen),
+        .S_AXI_REG_arlock(S_AXI_REG_arlock),
+        .S_AXI_REG_arprot(S_AXI_REG_arprot),
+        .S_AXI_REG_arqos(S_AXI_REG_arqos),
+        .S_AXI_REG_arready(S_AXI_REG_arready),
+        .S_AXI_REG_arsize(S_AXI_REG_arsize),
+        .S_AXI_REG_arvalid(S_AXI_REG_arvalid),
+        .S_AXI_REG_awaddr(S_AXI_REG_awaddr),
+        .S_AXI_REG_awburst(S_AXI_REG_awburst),
+        .S_AXI_REG_awcache(S_AXI_REG_awcache),
+        .S_AXI_REG_awid(S_AXI_REG_awid),
+        .S_AXI_REG_awlen(S_AXI_REG_awlen),
+        .S_AXI_REG_awlock(S_AXI_REG_awlock),
+        .S_AXI_REG_awprot(S_AXI_REG_awprot),
+        .S_AXI_REG_awqos(S_AXI_REG_awqos),
+        .S_AXI_REG_awready(S_AXI_REG_awready),
+        .S_AXI_REG_awsize(S_AXI_REG_awsize),
+        .S_AXI_REG_awvalid(S_AXI_REG_awvalid),
+        .S_AXI_REG_bid(S_AXI_REG_bid),
+        .S_AXI_REG_bready(S_AXI_REG_bready),
+        .S_AXI_REG_bresp(S_AXI_REG_bresp),
+        .S_AXI_REG_bvalid(S_AXI_REG_bvalid),
+        .S_AXI_REG_rdata(S_AXI_REG_rdata),
+        .S_AXI_REG_rid(S_AXI_REG_rid),
+        .S_AXI_REG_rlast(S_AXI_REG_rlast),
+        .S_AXI_REG_rready(S_AXI_REG_rready),
+        .S_AXI_REG_rresp(S_AXI_REG_rresp),
+        .S_AXI_REG_rvalid(S_AXI_REG_rvalid),
+        .S_AXI_REG_wdata(S_AXI_REG_wdata),
+        .S_AXI_REG_wid(S_AXI_REG_wid),
+        .S_AXI_REG_wlast(S_AXI_REG_wlast),
+        .S_AXI_REG_wready(S_AXI_REG_wready),
+        .S_AXI_REG_wstrb(S_AXI_REG_wstrb),
+        .S_AXI_REG_wvalid(S_AXI_REG_wvalid),
+      */
+  .axi_reg(axi_reg),
   // system signals
   .fclk_clk_o    (fclk        ),
   .fclk_rstn_o   (frstn       ),

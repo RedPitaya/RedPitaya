@@ -81,15 +81,16 @@ logic                  intr;
 logic               clk,clk1 ;
 logic               clkn;
 wire               rstn_out;
+wire               clkout;
+
 logic               rstn;
 wire clkout_125;
-wire clkout;
 //glbl glbl();
 
 localparam OSC_DW = 64;
 localparam REG_DW = 32;
 localparam OSC_AW = 32;
-localparam REG_AW = 12;
+localparam REG_AW = 32;
 localparam IW = 12;
 localparam LW = 8;
 
@@ -99,7 +100,11 @@ localparam OSC1_EVENT = 2;
 localparam OSC2_EVENT = 3;
 localparam LA_EVENT = 4;
 
+axi4_if #(.DW (REG_DW), .AW (REG_AW), .IW (IW), .LW (LW)) axi_reg (
+  .ACLK    (clkout   ),  .ARESETn (rstn_out)
+);
 
+axi_bus_model #(.AW (REG_AW), .DW (REG_DW), .IW (IW), .LW (LW)) axi_bm_reg  (axi_reg );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Clock and reset generation
@@ -145,6 +150,9 @@ endclocking: cb
 initial begin
         rstn = 1'b0;
   ##4;  rstn = 1'b1;
+  //##1000;  rstn = 1'b0;
+  //##4;  rstn = 1'b1;
+
 end
 
 // clock cycle counter
@@ -181,11 +189,11 @@ end
 initial begin
   ##500;
 
-   //top_tc.test_hk                 (0<<20, 32'h55);
+   top_tc.test_hk                 (32'h40000000, 32'h0);
    //top_tc.test_sata               (5<<20, 32'h55);
-   //top_tc.test_osc                (32'h40100000, OSC1_EVENT);
+   top_tc.test_osc                (32'h40100000, OSC1_EVENT);
 
-     top_tc.test_asg                (32'h40200000, 32'h0, 2);
+   //  top_tc.test_asg                (32'h40200000, 32'h0, 2);
 
 
   ##1600000000;
@@ -380,7 +388,47 @@ end
         .FIXED_IO_ps_clk(),
         .FIXED_IO_ps_porb(),
         .FIXED_IO_ps_srstb(),
-
+/*
+        .S_AXI_REG_araddr(axi_reg.ARADDR),
+        .S_AXI_REG_arburst(axi_reg.ARBURST),
+        .S_AXI_REG_arcache(axi_reg.ARCACHE),
+        .S_AXI_REG_arid(axi_reg.ARID),
+        .S_AXI_REG_arlen(axi_reg.ARLEN),
+        .S_AXI_REG_arlock(axi_reg.ARLOCK),
+        .S_AXI_REG_arprot(axi_reg.ARPROT),
+        .S_AXI_REG_arqos(axi_reg.ARQOS),
+        .S_AXI_REG_arready(axi_reg.ARREADY),
+        .S_AXI_REG_arsize(axi_reg.ARSIZE),
+        .S_AXI_REG_arvalid(axi_reg.ARVALID),
+        .S_AXI_REG_awaddr(axi_reg.AWADDR),
+        .S_AXI_REG_awburst(axi_reg.AWBURST),
+        .S_AXI_REG_awcache(axi_reg.AWCACHE),
+        .S_AXI_REG_awid(axi_reg.AWID),
+        .S_AXI_REG_awlen(axi_reg.AWLEN),
+        .S_AXI_REG_awlock(axi_reg.AWLOCK),
+        .S_AXI_REG_awprot(axi_reg.AWPROT),
+        .S_AXI_REG_awqos(axi_reg.AWQOS),
+        .S_AXI_REG_awready(axi_reg.AWREADY),
+        .S_AXI_REG_awsize(axi_reg.AWSIZE),
+        .S_AXI_REG_awvalid(axi_reg.AWVALID),
+        .S_AXI_REG_bid(axi_reg.BID),
+        .S_AXI_REG_bready(axi_reg.BREADY),
+        .S_AXI_REG_bresp(axi_reg.BRESP),
+        .S_AXI_REG_bvalid(axi_reg.BVALID),
+        .S_AXI_REG_rdata(axi_reg.RDATA),
+        .S_AXI_REG_rid(axi_reg.RID),
+        .S_AXI_REG_rlast(axi_reg.RLAST),
+        .S_AXI_REG_rready(axi_reg.RREADY),
+        .S_AXI_REG_rresp(axi_reg.RRESP),
+        .S_AXI_REG_rvalid(axi_reg.RVALID),
+        .S_AXI_REG_wdata(axi_reg.WDATA),
+        .S_AXI_REG_wid(axi_reg.WID),
+        .S_AXI_REG_wlast(axi_reg.WLAST),
+        .S_AXI_REG_wready(axi_reg.WREADY),
+        .S_AXI_REG_wstrb(axi_reg.WSTRB),
+        .S_AXI_REG_wvalid(axi_reg.WVALID),
+*/
+        .axi_reg(axi_reg),
         .adc_dat_i({{3'b0,cnter},{3'b0,~cnter}}),  // ADC data
         .adc_clk_i({clk,clkn}),  // ADC clock {p,n}
         .adc_clk_o(),  // optional ADC clock source (unused)
@@ -406,7 +454,9 @@ end
         .daisy_n_i  (),
         // LED
         .led_o(),
-        .rstn(rstn));
+        .rstn(rstn),
+        .clkout(clkout),
+        .rstn_out(rstn_out));
 
 
 bufif1 bufif_exp_p_io [9-1:0] (exp_p_io, exp_p_od, exp_p_oe);
