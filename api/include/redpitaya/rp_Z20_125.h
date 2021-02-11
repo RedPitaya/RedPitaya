@@ -89,7 +89,16 @@ extern "C" {
 #define RP_EMNC   23
 /** Command not supported */
 #define RP_NOTS   24
-
+/** Failed to init uart */
+#define RP_EIU    25
+/** Failed read from uart */
+#define RP_ERU    26
+/** Failed write to uart */
+#define RP_EWU    27
+/** Failed set settings to uart */
+#define RP_ESU    28
+/** Failed get settings from uart */
+#define RP_EGU    29
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
