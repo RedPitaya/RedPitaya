@@ -178,7 +178,7 @@ int spectr_fpga_init(void);
 int spectr_fpga_exit(void);
 
 int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
-                           float trig_delay, float trig_level, int time_range,
+                           float trig_delay, float trig_level, float decimation,
                            int enable_avg_at_dec);
 int spectr_fpga_reset(void);
 int spectr_fpga_arm_trigger(void);
@@ -221,9 +221,9 @@ unsigned short rp_get_fpga_signal_max_length();
  */
 int spectr_fpga_cnv_trig_source(int trig_imm, int trig_source, int trig_edge);
 /* Converts freq_range parameter (0-5) to decimation factor */
-int spectr_fpga_cnv_freq_range_to_dec(int freq_range);
+// int spectr_fpga_cnv_freq_range_to_dec(int freq_range);
 /* Converts freq_range parameter (0-5) to unit enumerator */
-int spectr_fpga_cnv_freq_range_to_unit(int freq_range);
+// int spectr_fpga_cnv_freq_range_to_unit(int freq_range);
 
 /* Converts time in [s] to ADC samples (depends on decimation) */
 int spectr_fpga_cnv_time_to_smpls(float time, int dec_factor);

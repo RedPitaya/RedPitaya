@@ -25,9 +25,6 @@ typedef enum{
     KAISER_8 = 6
 } window_mode_t;
 
-//#define c_dsp_sig_len (SPECTR_OUT_SIG_LENGTH>>1)
-//#define c_dsp_sig_len (rp_get_spectr_out_signal_length())
-
 extern const double c_c2v;
 
 /* Prepare frequency vector (output of size SPECTR_OUT_SIG_LEN) */
@@ -37,18 +34,6 @@ int rp_spectr_prepare_freq_vector(float **freq_out, double f_s,
 
 unsigned short rp_get_spectr_out_signal_length();
 unsigned short rp_get_spectr_out_signal_max_length();
-
-
-/// DEPRECATED functions
-/* Processing stuff - Hanning window */
-
-// int rp_spectr_hann_init();
-// int rp_spectr_hann_clean();
-
-// /* Input & Outputs of SPECTR_FPGA_SIG_LEN */
-// int rp_spectr_hann_filter(double *cha_in, double *chb_in,
-//                           double **cha_out, double **chb_out);
-//////////////////////// 
 
 int rp_spectr_window_init(window_mode_t mode);
 int rp_spectr_window_clean();
@@ -86,6 +71,6 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
                          float **cha_out, float **chb_out,
                          float *peak_power_cha, float *peak_freq_cha,
                          float *peak_power_chb, float *peak_freq_chb,
-                         float freq_range);
+                         float  decimation);
 
 #endif //__DSP_H
