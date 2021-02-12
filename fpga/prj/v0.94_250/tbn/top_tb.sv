@@ -76,16 +76,50 @@ logic                  pll_hi;
 logic                  pll_ref;
 logic                  trig;
 
-glbl glbl();
+logic                  intr;
+
+logic               clk,clk1 ;
+logic               clkn;
+wire               rstn_out;
+wire               clkout;
+
+logic               rstn;
+wire clkout_125;
+//glbl glbl();
+
+localparam OSC_DW = 64;
+localparam REG_DW = 32;
+localparam OSC_AW = 32;
+localparam REG_AW = 32;
+localparam IW = 12;
+localparam LW = 8;
+
+localparam GEN1_EVENT = 0;
+localparam GEN2_EVENT = 1;
+localparam OSC1_EVENT = 2;
+localparam OSC2_EVENT = 3;
+localparam LA_EVENT = 4;
+
+axi4_if #(.DW (REG_DW), .AW (REG_AW), .IW (IW), .LW (LW)) axi_reg (
+  .ACLK    (clkout   ),  .ARESETn (rstn_out)
+);
+
+axi_bus_model #(.AW (REG_AW), .DW (REG_DW), .IW (IW), .LW (LW)) axi_bm_reg  (axi_reg );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Clock and reset generation
 ////////////////////////////////////////////////////////////////////////////////
+logic clk_start;
 
-logic               clk ;
-logic               rstn;
+assign clkn = ~clk;
+// default clocking 
 
-// clock
+default clocking cb @ (posedge clk);
+  input  rstn;
+  input  exp_p_od, exp_p_oe;
+  input  exp_n_od, exp_n_oe;
+endclocking: cb
+
 initial        clk = 1'b0;
 always #(TP/2) clk = ~clk;
 
@@ -97,14 +131,6 @@ initial begin
         rstn = 1'b0;
   ##4;  rstn = 1'b1;
 end
-
-// default clocking 
-default clocking cb @ (posedge clk);
-  input  rstn;
-  input  exp_p_od, exp_p_oe;
-  input  exp_n_od, exp_n_oe;
-endclocking: cb
-
 
 
 // clock cycle counter
@@ -141,9 +167,9 @@ end
 initial begin
   ##100;
 
-   top_tc.test_hk                 (0<<20, 32'h55);
-   top_tc.test_sata               (5<<20, 32'h55);
-   top_tc.test_osc                (1<<20, 32'h40090000, 2);
+   top_tc.test_hk                 (32'h40000000, 32'h0);
+   //top_tc.test_sata               (5<<20, 32'h55);
+   top_tc.test_osc                (32'h40100000, OSC1_EVENT);
 
 //   top_tc.test_asg                (2<<20, 32'h40090000, 2);
 
@@ -286,7 +312,7 @@ assign #0.2 daisy_n[2] = daisy_n[0] ;
 ////////////////////////////////////////////////////////////////////////////////
 
 // module under test
-red_pitaya_top #(
+red_pitaya_top_sim #(
   .GITH (160'ha0a1a2a3b0b1b2b3c0c1c2c3d0d1d2d3e0e1e2e3)
 ) top (
   // PS connections
@@ -343,13 +369,19 @@ red_pitaya_top #(
   .exp_p_io       (exp_p_io),
   .exp_n_io       (exp_n_io),
   .exp_9_io       (exp_9_io),
+
+  .axi_reg(axi_reg),
+
   // SATA connector
   .daisy_p_o       ( daisy_p[1:0]  ),  //!< TX data and clock [1]-clock, [0]-data
   .daisy_n_o       ( daisy_n[1:0]  ),  //!< TX data and clock [1]-clock, [0]-data
   .daisy_p_i       ( daisy_p[3:2]  ),  //!< RX data and clock [1]-clock, [0]-data
   .daisy_n_i       ( daisy_n[3:2]  ),  //!< RX data and clock [1]-clock, [0]-data
-  // LED
-  .led_o          (led)
+        // LED
+        .led_o(),
+        .rstn(rstn),
+        .clkout(clkout),
+        .rstn_out(rstn_out)
 );
 
 bufif1 bufif_exp_p_io [9-1:0] (exp_p_io, exp_p_od, exp_p_oe);
