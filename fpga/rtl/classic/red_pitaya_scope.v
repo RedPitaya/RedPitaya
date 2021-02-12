@@ -531,8 +531,7 @@ axi_wr_fifo #(
   .axi_wlen_o         (  axi0_wlen_o       ), // write burst length
   .axi_wfixed_o       (  axi0_wfixed_o     ), // write burst type (fixed / incremental)
   .axi_werr_i         (  axi0_werr_i       ), // write error
- // .axi_wrdy_i         (  axi0_wrdy_i       ), // write ready
-  .axi_wrdy_i         (  1'b1       ), // write ready
+  .axi_wrdy_i         (  axi0_wrdy_i       ), // write ready
 
    // data and configuration
   .wr_data_i          (  axi_a_dat         ), // write data
@@ -861,8 +860,6 @@ if (adc_rstn_i == 1'b0) begin
    set_deb_len   <=  20'd62500  ;
    set_a_axi_en  <=   1'b0      ;
    set_b_axi_en  <=   1'b0      ;
-   set_a_axi_start <= 32'b0;
-   set_b_axi_start <= 32'b0;
 end else begin
    if (sys_wen) begin
       if (sys_addr[19:0]==20'h00)   adc_we_keep   <= sys_wdata[     3] ;
