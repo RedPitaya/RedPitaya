@@ -13,15 +13,15 @@ MAX_NOISE_STD=15 # Old value 8 -> Change to 25 because od +15V switching PS on t
 MAX_NOISE_STD_NO_DEC=25 # Old value 15 -> Change to 25 because od +15V switching PS on the test board
 MAX_NOISE_P2P=80  # # Old value 60 -> Change to 25 because od +15V switching PS on the test board
 
-MIN_SIG_STD_HIGH_GAIN=2100
-MAX_SIG_STD_HIGH_GAIN=2800
-MIN_SIG_STD_LOW_GAIN=85
-MAX_SIG_STD_LOW_GAIN=175
+MIN_SIG_STD_HIGH_GAIN=1995
+MAX_SIG_STD_HIGH_GAIN=2940
+MIN_SIG_STD_LOW_GAIN=80
+MAX_SIG_STD_LOW_GAIN=183
 
-MIN_SIG_P2P_HIGH_GAIN=6000
-MAX_SIG_P2P_HIGH_GAIN=8000
-MIN_SIG_P2P_LOW_GAIN=225
-MAX_SIG_P2P_LOW_GAIN=425
+MIN_SIG_P2P_HIGH_GAIN=5700
+MAX_SIG_P2P_HIGH_GAIN=8400
+MIN_SIG_P2P_LOW_GAIN=213
+MAX_SIG_P2P_LOW_GAIN=446
 
 echo
 echo -e "\e[94m########################################################################\e[0m"
