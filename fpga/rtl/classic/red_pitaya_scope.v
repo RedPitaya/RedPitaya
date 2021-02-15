@@ -475,15 +475,15 @@ always @(posedge axi0_clk_o) begin
    else begin
       if (adc_arm_do && set_a_axi_en)
          axi_a_we <= 1'b1 ;
-      else if (((axi_a_dly_do || adc_trig) && (axi_a_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
+      else if (((axi_a_dly_do || adc_trig) && (axi_a_dly_cnt == dec1)) || adc_rst_do) //delayed reached or reset
          axi_a_we <= 1'b0 ;
 
       if (adc_trig && axi_a_we)
          axi_a_dly_do  <= 1'b1 ;
-      else if ((axi_a_dly_do && (axi_a_dly_cnt == 32'b0)) || axi_a_clr || adc_arm_do) //delayed reached or reset
+      else if ((axi_a_dly_do && (axi_a_dly_cnt == dec1)) || axi_a_clr || adc_arm_do) //delayed reached or reset
          axi_a_dly_do  <= 1'b0 ;
 
-      if (axi_a_dly_do && axi_a_we && adc_dv)
+      if ((axi_a_dly_do || adc_trig) && axi_a_we && adc_dv)
          axi_a_dly_cnt <= axi_a_dly_cnt - 1;
       else if (!axi_a_dly_do)
          axi_a_dly_cnt <= set_a_axi_dly ;
@@ -581,15 +581,15 @@ always @(posedge axi1_clk_o) begin
    else begin
       if (adc_arm_do && set_b_axi_en)
          axi_b_we <= 1'b1 ;
-      else if (((axi_b_dly_do || adc_trig) && (axi_b_dly_cnt == 32'h0)) || adc_rst_do) //delayed reached or reset
+      else if (((axi_b_dly_do || adc_trig) && (axi_b_dly_cnt == dec1)) || adc_rst_do) //delayed reached or reset
          axi_b_we <= 1'b0 ;
 
       if (adc_trig && axi_b_we)
          axi_b_dly_do  <= 1'b1 ;
-      else if ((axi_b_dly_do && (axi_b_dly_cnt == 32'b0)) || axi_b_clr || adc_arm_do) //delayed reached or reset
+      else if ((axi_b_dly_do && (axi_b_dly_cnt == dec1)) || axi_b_clr || adc_arm_do) //delayed reached or reset
          axi_b_dly_do  <= 1'b0 ;
 
-      if (axi_b_dly_do && axi_b_we && adc_dv)
+      if ((axi_b_dly_do || adc_trig) && axi_b_we && adc_dv)
          axi_b_dly_cnt <= axi_b_dly_cnt - 1;
       else if (!axi_b_dly_do)
          axi_b_dly_cnt <= set_b_axi_dly ;
