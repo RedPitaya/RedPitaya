@@ -23,7 +23,7 @@
 static int init_spi();
 static int release_spi();
 static int read_flash_id(int fd);
-static int write_spi(char *write_data, int size);
+static int write_spi(const char *write_data, int size);
 
 /* Constants definition */
 int spi_fd = -1;
@@ -31,7 +31,7 @@ int spi_fd = -1;
 int main(void){
 
     /* Sample data */
-    char *data = "REDPITAYA SPI TEST";
+    const char *data = "REDPITAYA SPI TEST";
 
     /* Init the spi resources */
     if(init_spi() < 0){
@@ -178,7 +178,7 @@ static int read_flash_id(int fd){
 }
 
 /* Write data to the SPI bus */
-static int write_spi(char *write_buffer, int size){
+static int write_spi(const char *write_buffer, int size){
 
     int write_spi = write(spi_fd, write_buffer, strlen(write_buffer));
 

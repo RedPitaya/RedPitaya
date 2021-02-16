@@ -48,7 +48,7 @@ export ENABLE_NOISE_NO_DEC=1
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_NOISE_P2P
 export MIN_P2P=0
-export ACQ_PARAM="-d B"
+export ACQ_PARAM="-d B -c"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
@@ -73,7 +73,7 @@ export ENABLE_NOISE_NO_DEC=0
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_SIG_P2P_HIGH_GAIN
 export MIN_P2P=$MIN_SIG_P2P_HIGH_GAIN
-export ACQ_PARAM="-d B"
+export ACQ_PARAM="-d B -c"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
@@ -97,7 +97,7 @@ export ENABLE_NOISE_NO_DEC=1
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_NOISE_P2P
 export MIN_P2P=0
-export ACQ_PARAM="-1 20 -2 20 -d B"
+export ACQ_PARAM="-1 20 -2 20 -d B -c"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
@@ -121,7 +121,7 @@ export ENABLE_NOISE_NO_DEC=0
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_SIG_P2P_LOW_GAIN
 export MIN_P2P=$MIN_SIG_P2P_LOW_GAIN
-export ACQ_PARAM="-1 20 -2 20 -d B"
+export ACQ_PARAM="-1 20 -2 20 -d B -c"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
@@ -193,7 +193,7 @@ export ENABLE_NOISE_NO_DEC=1
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_NOISE_P2P
 export MIN_P2P=0
-export ACQ_PARAM="-1 20 -2 20"
+export ACQ_PARAM="-1 20 -2 20 -c"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
@@ -217,7 +217,7 @@ export ENABLE_NOISE_NO_DEC=0
 export MAX_NOISE_NO_DEC=$MAX_NOISE_STD_NO_DEC
 export MAX_P2P=$MAX_SIG_P2P_LOW_GAIN
 export MIN_P2P=$MIN_SIG_P2P_LOW_GAIN
-export ACQ_PARAM="-1 20 -2 20"
+export ACQ_PARAM="-1 20 -2 20 -c"
 
 ./sub_test/fast_adc_sub_test.sh
 if [[ $? == 1 ]]
