@@ -31,37 +31,34 @@ done
 
 $C_PHY_TOOL write eth0/1/0x1B 0x0000
 REG_VALUE=$($C_PHY_TOOL read eth0/1/0x1B)
-
-if [[ "$REG_VALUE" != "0x0000" ]]
+echo -n "    Write 0x0000 and read ethernet register 0x1B "
+if [[ "$REG_VALUE" != "0000" ]]
 then
-    echo -n "    Write 0x0000 and read ethernet register 0x1B "
     print_fail
     STATUS=1
 else
-    print_test_ok
+    print_ok
 fi
 
 $C_PHY_TOOL write eth0/1/0x1B 0x0F0F
 REG_VALUE=$($C_PHY_TOOL read eth0/1/0x1B)
-
-if [[ "$REG_VALUE" != "0x0F0F" ]]
+echo -n "    Write 0x0F0F and read ethernet register 0x1B "
+if [[ "$REG_VALUE" != "0x0f0f" ]]
 then
-    echo -n "    Write 0x0F0F and read ethernet register 0x1B "
     print_fail
     STATUS=1
 else
-    print_test_ok
+    print_ok
 fi
 
-REG_VALUE=$($C_PHY_TOOL read eth0/1/0x1B)
-
+REG_VALUE=$($C_PHY_TOOL read eth0/1/0x1)
+echo -n "    Read ethernet register 0x1 "
 if [[ "$REG_VALUE" != "0x796d" ]]
 then
-    echo -n "    Read ethernet register 0x1 "
     print_fail
     STATUS=1
 else
-    print_test_ok
+    print_ok
 fi
 
 # Verify that eth configuration MAC matches the EEPROM MAC
