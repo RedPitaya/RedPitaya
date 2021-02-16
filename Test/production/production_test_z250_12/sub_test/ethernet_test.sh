@@ -6,7 +6,7 @@ EXP_LINK_SPEED='1000'
 EXP_DUPLEX='full'
 N_PING_PKG=10
 PKT_SIZE=16000
-PING_IP=$G_LOCAL_SERVER_IP
+PING_IP=$G_PING_IP
 MIN_QR_LENGTH=50             # Set to 50 when using QR scanner
 RP_MAC_BEGINNING='00:26:32'
 ##########
@@ -17,6 +17,52 @@ echo -e "\e[94m#            Ethernet network test                               
 echo -e "\e[94m########################################################################\e[0m"
 
 STATUS=0
+
+echo
+echo "Ethernet LEDs will blink for 5 sec - USER: verify"
+echo
+for i in $(seq 1 1 5)
+do
+    $C_PHY_TOOL write eth0/1/0x1B 0x0000
+    sleep 0.5
+    $C_PHY_TOOL write eth0/1/0x1B 0x0F0F
+    sleep 0.5
+done
+
+$C_PHY_TOOL write eth0/1/0x1B 0x0000
+REG_VALUE=$($C_PHY_TOOL read eth0/1/0x1B)
+
+if [[ "$REG_VALUE" != "0x0000" ]]
+then
+    echo -n "    Write 0x0000 and read ethernet register 0x1B "
+    print_fail
+    STATUS=1
+else
+    print_test_ok
+fi
+
+$C_PHY_TOOL write eth0/1/0x1B 0x0F0F
+REG_VALUE=$($C_PHY_TOOL read eth0/1/0x1B)
+
+if [[ "$REG_VALUE" != "0x0F0F" ]]
+then
+    echo -n "    Write 0x0F0F and read ethernet register 0x1B "
+    print_fail
+    STATUS=1
+else
+    print_test_ok
+fi
+
+REG_VALUE=$($C_PHY_TOOL read eth0/1/0x1B)
+
+if [[ "$REG_VALUE" != "0x796d" ]]
+then
+    echo -n "    Read ethernet register 0x1 "
+    print_fail
+    STATUS=1
+else
+    print_test_ok
+fi
 
 # Verify that eth configuration MAC matches the EEPROM MAC
 echo "Verify MAC address consistence with EEPROM..."

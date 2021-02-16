@@ -21,6 +21,8 @@ export G_LOCAL_SERVER_DIR='/home/redpitaya/Desktop/Test_LOGS'
 export G_LOCAL_USER='redpitaya'
 export G_PASS="xBqRnS8r"
 
+# Ping test
+export G_PING_IP='192.168.1.1'
 
 # For loging on the Red Pitaya itself (practicali the same as loging in to SD card it sohuld )
 export G_LOG_MNT_FOLDER='/mnt/log'
@@ -35,6 +37,7 @@ export C_GENERATE="$G_SD_CARD_PATH/bin/generate"
 export C_ACQUIRE="$G_SD_CARD_PATH/bin/acquire"
 export C_CALIB="$G_SD_CARD_PATH/bin/calib"
 export C_UART_TOOL="$G_SD_CARD_PATH/bin/uart_prod_tool"
+export C_PHY_TOOL="$G_SD_CARD_PATH/bin/phytool"
 export C_POWER_ON_TOOL="$G_SD_CARD_PATH/bin/rp_power_on"
 export C_CAPACITOR_CALIB_TOOL="$G_SD_CARD_PATH/bin/capacitor_calib_tool"
 export C_MEM_TEST_TOOL="memtester"

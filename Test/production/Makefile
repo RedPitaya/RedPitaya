@@ -43,6 +43,7 @@ ifeq ($(MODEL), Z20_250_12)
 	make -C production_test_z250_12/apps/generate_with_api install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	make -C production_test_z250_12/apps/capacitor_calib_tool install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	cp --parents `find production_test_z250_12 -name \*.sh*` $(INSTALL_DIR)/bin
+	cp production_test_z250_12/apps/phytool $(INSTALL_DIR)/bin
 endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
