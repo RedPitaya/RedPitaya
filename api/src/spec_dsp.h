@@ -47,6 +47,9 @@ int rp_spectr_get_remove_DC();
 int rp_spectr_fft_init();
 int rp_spectr_fft_clean();
 
+void rp_spectr_set_volt_mode(int mode);
+int  rp_spectr_get_volt_mode();
+
 /* Inputs length: SPECTR_FPGA_SIG_LEN
  * Outputs length: floor(SPECTR_FPGA_SIG_LEN/2) 
  * Output is not complex number as usually is from the FFT but abs() value of the
@@ -68,6 +71,12 @@ int rp_spectr_decimate(double *cha_in, double *chb_in,
  * Input & Outputs of length SPECTR_OUT_SIG_LEN (decimated length)
  */
 int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
+                         float **cha_out, float **chb_out,
+                         float *peak_power_cha, float *peak_freq_cha,
+                         float *peak_power_chb, float *peak_freq_chb,
+                         float  decimation);
+
+int rp_spectr_cnv_to_v(float *cha_in, float *chb_in,
                          float **cha_out, float **chb_out,
                          float *peak_power_cha, float *peak_freq_cha,
                          float *peak_power_chb, float *peak_freq_chb,

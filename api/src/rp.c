@@ -27,6 +27,7 @@
 #include "hw/uart.h"
 
 static char version[50];
+int g_api_state = 0;
 
 /**
  * Global methods
@@ -52,8 +53,12 @@ int rp_InitReset(bool reset)
     if (reset){
         rp_Reset();
     }
-
+    g_api_state = true;
     return RP_OK;
+}
+
+int rp_IsApiInit(){
+    return g_api_state;
 }
 
 int rp_CalibInit()
@@ -71,7 +76,7 @@ int rp_Release()
     hk_Release();
     calib_Release();
     cmn_Release();
-
+    g_api_state = false;
     // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
 }

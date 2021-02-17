@@ -24,6 +24,9 @@
 #include <fcntl.h>
 #include "rp_cross.h"
 #include "spec_fpga.h"
+#include "spec_dsp.h"
+#include "calib.h"
+#include "common.h"
 
 /* internals */
 /* The FPGA register structure */
@@ -135,6 +138,28 @@ int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
     uint32_t gain_hi_chb_filt_pp = 0x0;
     uint32_t gain_hi_chb_filt_kk = 0xd9999a;
 
+#if defined Z10 || defined Z20_125
+    rp_pinState_t stateCh1 = RP_HIGH;
+    rp_pinState_t stateCh2 = RP_HIGH;
+    if (!rp_IsApiInit()){ 
+        calib_Init();
+    }else{
+        rp_AcqGetGain(RP_CH_1,&stateCh1);
+        rp_AcqGetGain(RP_CH_2,&stateCh2);
+    }
+
+    gain_hi_cha_filt_aa = calib_GetFilterCoff(RP_CH_1,stateCh1,AA);
+    gain_hi_cha_filt_bb = calib_GetFilterCoff(RP_CH_1,stateCh1,BB);
+    gain_hi_cha_filt_pp = calib_GetFilterCoff(RP_CH_1,stateCh1,PP);
+    gain_hi_cha_filt_kk = calib_GetFilterCoff(RP_CH_1,stateCh1,KK);
+
+    gain_hi_chb_filt_aa = calib_GetFilterCoff(RP_CH_2,stateCh2,AA);
+    gain_hi_chb_filt_bb = calib_GetFilterCoff(RP_CH_2,stateCh2,BB);
+    gain_hi_chb_filt_pp = calib_GetFilterCoff(RP_CH_2,stateCh2,PP);
+    gain_hi_chb_filt_kk = calib_GetFilterCoff(RP_CH_2,stateCh2,KK);
+    if (!rp_IsApiInit()) calib_Release(); 
+#endif
+
     if((fpga_trig_source < 0) || (fpga_dec_factor < 0)) {
         fprintf(stderr, "spectr_fpga_update_params() failed\n");
         return -1;
@@ -221,6 +246,55 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
         return -1;
     }
 
+    double offset[2] = {0,0};
+    double gain[2] = {1,1};
+    if (rp_spectr_get_volt_mode()){
+#if defined Z10 || defined Z20_125
+        rp_pinState_t stateCh1 = RP_HIGH;
+        rp_pinState_t stateCh2 = RP_HIGH;
+
+        if (!rp_IsApiInit()){ 
+            calib_Init();
+        }else{
+            rp_AcqGetGain(RP_CH_1,&stateCh1);
+            rp_AcqGetGain(RP_CH_2,&stateCh2);
+        }
+
+        offset[0] = calib_getOffset(RP_CH_1,stateCh1);
+        offset[1] = calib_getOffset(RP_CH_2,stateCh2);
+        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1 == RP_HIGH ? RP_LOW : RP_HIGH) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
+        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh1 == RP_HIGH ? RP_LOW : RP_HIGH) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
+        //fprintf(stderr,"Off %f %f Gain %f %f \n",offset[0],offset[1],gain[0],gain[1]);
+        if (!rp_IsApiInit()) calib_Release();
+#endif
+
+#if defined Z20_250_12
+        rp_pinState_t stateCh1 = RP_HIGH;
+        rp_pinState_t stateCh2 = RP_HIGH;
+        rp_acq_ac_dc_mode_t ac_dc_Ch1 = RP_DC;
+        rp_acq_ac_dc_mode_t ac_dc_Ch2 = RP_DC;
+        float ch1VMax = 1;
+        float ch2VMax = 1;
+
+        if (!rp_IsApiInit()){ 
+            calib_Init();
+        }else{
+            rp_AcqGetGain(RP_CH_1,&stateCh1);
+            rp_AcqGetGain(RP_CH_2,&stateCh2);
+            rp_AcqGetGainV(RP_CH_1,&ch1VMax);
+            rp_AcqGetGainV(RP_CH_2,&ch2VMax);
+            rp_AcqGetAC_DC(RP_CH_1,&ac_dc_Ch1);
+            rp_AcqGetAC_DC(RP_CH_2,&ac_dc_Ch2);
+        }
+
+        offset[0] = calib_getOffset(RP_CH_1,stateCh1);
+        offset[1] = calib_getOffset(RP_CH_2,stateCh2);
+        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1,ac_dc_Ch1) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh1 == RP_HIGH ? 1 : 20);
+        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh2,ac_dc_Ch2) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh2 == RP_HIGH ? 1 : 20);
+        if (!rp_IsApiInit()) calib_Release(); 
+#endif
+    }
+
     spectr_fpga_get_wr_ptr(NULL, &wr_ptr_trig);
     //fprintf(stderr, "Cur %d trig %d\n",cur_ptr_trig ,wr_ptr_trig);
     for(in_idx = wr_ptr_trig + 1, out_idx = 0;
@@ -236,6 +310,11 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
             cha_o[out_idx] -= (double)(1 << ADC_BITS);
         if(chb_o[out_idx] > (double)(1 << (ADC_BITS-1)))
             chb_o[out_idx] -= (double)(1 << ADC_BITS);
+
+        cha_o[out_idx] = (cha_o[out_idx] + offset[0]) * gain[0];
+        chb_o[out_idx] = (chb_o[out_idx] + offset[1]) * gain[1];
+
+        
     }   
     return 0;
 }

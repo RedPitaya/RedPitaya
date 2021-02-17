@@ -332,6 +332,8 @@ int rp_Init();
 
 int rp_InitReset(bool reset);
 
+int rp_IsApiInit();
+
 int rp_CalibInit();
 
 /**
