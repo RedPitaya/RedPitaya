@@ -22,11 +22,10 @@
 #define SPECTR_FPGA_BASE_ADDR 0x00100000
 #define SPECTR_FPGA_BASE_SIZE 0x00030000
 
-#define SPECTR_FPGA_SIG_LEN   (16*1024)
-
 #define SPECTR_FPGA_CONF_ARM_BIT  1
 #define SPECTR_FPGA_CONF_RST_BIT  2
 
+#define SPECTR_FPGA_BUFFER_FILL   0x00000010
 #define SPECTR_FPGA_TRIG_SRC_MASK 0x00000007
 #define SPECTR_FPGA_CHA_THR_MASK  0x00003fff
 #define SPECTR_FPGA_CHB_THR_MASK  0x00003fff
@@ -37,22 +36,32 @@
 #define SPECTR_FPGA_CHB_OFFSET    0x20000
 
 typedef struct spectr_fpga_reg_mem_s {
-    /* configuration:
-     * bit     [0] - arm_trigger
-     * bit     [1] - rst_wr_state_machine
-     * bits [31:2] - reserved 
+    /** @brief Offset 0x00 - configuration register
+     *
+     * Configuration register (offset 0x00):
+     * bit [0] - (W) arm_trigger
+     * bit [1] - (W) rst_wr_state_machine
+     * bit [2] - (R) trigger_status
+     * bit [3] - (W) arm_keep
+     * bit [4] - (R) All data written to buffer
+     * bits [31:5] - reserved
      */
     uint32_t conf;
 
-    /* trigger source:
+    /** @brief Offset 0x04 - trigger source register
+     *
+     * Trigger source register (offset 0x04):
      * bits [ 2 : 0] - trigger source:
-     *   1 - trig immediately
-     *   2 - ChA positive edge
-     *   3 - ChA negative edge
-     *   4 - ChB positive edge 
-     *   5 - ChB negative edge
-     *   6 - External trigger 0
-     *   7 - External trigger 1 
+     * 1 - trig immediately
+     * 2 - ChA positive edge
+     * 3 - ChA negative edge
+     * 4 - ChB positive edge
+     * 5 - ChB negative edge
+     * 6 - External trigger 0
+     * 7 - External trigger 1
+     Only for 250-12
+     * 8 - Arbitrary wave generator positive edge
+     * 9 - Arbitrary wave generator negative edge
      * bits [31 : 3] -reserved
      */
     uint32_t trig_source;
@@ -169,7 +178,7 @@ int spectr_fpga_init(void);
 int spectr_fpga_exit(void);
 
 int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge, 
-                           float trig_delay, float trig_level, int time_range,
+                           float trig_delay, float trig_level, float decimation,
                            int enable_avg_at_dec);
 int spectr_fpga_reset(void);
 int spectr_fpga_arm_trigger(void);
@@ -178,6 +187,10 @@ int spectr_fpga_set_trigger_delay(uint32_t trig_delay);
 
 /* Returns 0 if no trigger, 1 if trigger */
 int spectr_fpga_triggered(void);
+
+/* Returns 0 if buffer not filled, 1 if all data write in buffer */
+int spectr_fpga_buffer_fill(void);
+
 
 /* Returns pointer to the ChA and ChB signals (of length SPECTR_FPGA_SIG_LEN) */
 int spectr_fpga_get_sig_ptr(int **cha_signal, int **chb_signal);
@@ -193,15 +206,24 @@ int spectr_fpga_get_wr_ptr(int *wr_ptr_curr, int *wr_ptr_trig);
 float spectr_get_fpga_smpl_freq();
 extern const float c_spectr_fpga_smpl_period;
 
+/*
+    Sets the value of the amount of data to be processed from the FPGA.
+    The default is 16384 samples.
+    The minimum value is 256 and the maximum value is 16384 inclusive.
+*/
+int rp_set_fpga_signal_length(unsigned short len);
+unsigned short rp_get_fpga_signal_length();
+unsigned short rp_get_fpga_signal_max_length();
+
 /* helper conversion functions */
 /* Convert correct value for FPGA trigger source from trig_immediately, 
  * trig_source and trig_edge from application params.
  */
 int spectr_fpga_cnv_trig_source(int trig_imm, int trig_source, int trig_edge);
 /* Converts freq_range parameter (0-5) to decimation factor */
-int spectr_fpga_cnv_freq_range_to_dec(int freq_range);
+// int spectr_fpga_cnv_freq_range_to_dec(int freq_range);
 /* Converts freq_range parameter (0-5) to unit enumerator */
-int spectr_fpga_cnv_freq_range_to_unit(int freq_range);
+// int spectr_fpga_cnv_freq_range_to_unit(int freq_range);
 
 /* Converts time in [s] to ADC samples (depends on decimation) */
 int spectr_fpga_cnv_time_to_smpls(float time, int dec_factor);

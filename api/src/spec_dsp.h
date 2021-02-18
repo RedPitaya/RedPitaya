@@ -15,10 +15,15 @@
 #ifndef __DSP_H
 #define __DSP_H
 
-
-#define SPECTR_OUT_SIG_LENGTH (8*1024)
-//#define c_dsp_sig_len (SPECTR_OUT_SIG_LENGTH>>1)
- #define c_dsp_sig_len (SPECTR_OUT_SIG_LENGTH)
+typedef enum{
+    RECTANGULAR = 0,
+    HANNING = 1,
+    HAMMING = 2,
+    BLACKMAN_HARRIS = 3,
+    FLAT_TOP = 4,
+    KAISER_4 = 5,
+    KAISER_8 = 6
+} window_mode_t;
 
 extern const double c_c2v;
 
@@ -26,17 +31,24 @@ extern const double c_c2v;
 int rp_spectr_prepare_freq_vector(float **freq_out, double f_s,
                                   float freq_range);
 
-/* Processing stuff - Hanning window */
-#define RP_SPECTR_HANN_AMP 0.8165 // Hann window power scaling (1/sqrt(sum(rcos.^2/N)))
-int rp_spectr_hann_init();
-int rp_spectr_hann_clean();
 
-/* Input & Outputs of SPECTR_FPGA_SIG_LEN */
-int rp_spectr_hann_filter(double *cha_in, double *chb_in,
+unsigned short rp_get_spectr_out_signal_length();
+unsigned short rp_get_spectr_out_signal_max_length();
+
+int rp_spectr_window_init(window_mode_t mode);
+int rp_spectr_window_clean();
+int rp_spectr_window_filter(double *cha_in, double *chb_in,
                           double **cha_out, double **chb_out);
+window_mode_t rp_spectr_get_current_windows();
+
+void rp_spectr_remove_DC(int state);
+int rp_spectr_get_remove_DC();
 
 int rp_spectr_fft_init();
 int rp_spectr_fft_clean();
+
+void rp_spectr_set_volt_mode(int mode);
+int  rp_spectr_get_volt_mode();
 
 /* Inputs length: SPECTR_FPGA_SIG_LEN
  * Outputs length: floor(SPECTR_FPGA_SIG_LEN/2) 
@@ -62,6 +74,12 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
                          float **cha_out, float **chb_out,
                          float *peak_power_cha, float *peak_freq_cha,
                          float *peak_power_chb, float *peak_freq_chb,
-                         float freq_range);
+                         float  decimation);
+
+int rp_spectr_cnv_to_v(float *cha_in, float *chb_in,
+                         float **cha_out, float **chb_out,
+                         float *peak_power_cha, float *peak_freq_cha,
+                         float *peak_power_chb, float *peak_freq_chb,
+                         float  decimation);
 
 #endif //__DSP_H

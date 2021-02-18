@@ -49,59 +49,23 @@ module red_pitaya_ps_sim (
   inout  logic           DDR_ras_n          ,
   inout  logic           DDR_reset_n        ,
   inout  logic           DDR_we_n           ,
-/*
-  input [31:0]S_AXI_REG_araddr;
-  input [1:0]S_AXI_REG_arburst;
-  input [3:0]S_AXI_REG_arcache;
-  input [11:0]S_AXI_REG_arid;
-  input [3:0]S_AXI_REG_arlen;
-  input [1:0]S_AXI_REG_arlock;
-  input [2:0]S_AXI_REG_arprot;
-  input [3:0]S_AXI_REG_arqos;
-  output S_AXI_REG_arready;
-  input [2:0]S_AXI_REG_arsize;
-  input S_AXI_REG_arvalid;
-  input [31:0]S_AXI_REG_awaddr;
-  input [1:0]S_AXI_REG_awburst;
-  input [3:0]S_AXI_REG_awcache;
-  input [11:0]S_AXI_REG_awid;
-  input [3:0]S_AXI_REG_awlen;
-  input [1:0]S_AXI_REG_awlock;
-  input [2:0]S_AXI_REG_awprot;
-  input [3:0]S_AXI_REG_awqos;
-  output S_AXI_REG_awready;
-  input [2:0]S_AXI_REG_awsize;
-  input S_AXI_REG_awvalid;
-  output [11:0]S_AXI_REG_bid;
-  input S_AXI_REG_bready;
-  output [1:0]S_AXI_REG_bresp;
-  output S_AXI_REG_bvalid;
-  output [31:0]S_AXI_REG_rdata;
-  output [11:0]S_AXI_REG_rid;
-  output S_AXI_REG_rlast;
-  input S_AXI_REG_rready;
-  output [1:0]S_AXI_REG_rresp;
-  output S_AXI_REG_rvalid;
-  input [31:0]S_AXI_REG_wdata;
-  input [11:0]S_AXI_REG_wid;
-  input S_AXI_REG_wlast;
-  output S_AXI_REG_wready;
-  input [3:0]S_AXI_REG_wstrb;
-  input S_AXI_REG_wvalid;
-*/
-  axi4_if.s axi_reg,
   // system signals
   output logic [  4-1:0] fclk_clk_o         ,
   output logic [  4-1:0] fclk_rstn_o        ,
   // XADC
   input  logic  [ 5-1:0] vinp_i             ,  // voltages p
   input  logic  [ 5-1:0] vinn_i             ,  // voltages n
-  // GPIO
-  gpio_if.m              gpio,
-  // system read/write channel
-  sys_bus_if.m           bus,
+
   input logic rstn,
   input  clk_in,
+  axi4_if.s axi_reg,
+
+  // GPIO
+  gpio_if.m              gpio,
+  // SPI
+  spi_if.m               spi0,
+  // system read/write channel
+  sys_bus_if.m           bus,
   // AXI masters
   input              axi1_clk_i   , axi0_clk_i   ,  // global clock
   input              axi1_rstn_i  , axi0_rstn_i  ,  // global reset
@@ -161,7 +125,6 @@ wire [  6-1: 0] hp1_saxi_wid    , hp0_saxi_wid    ;
 wire [ 64-1: 0] hp1_saxi_wdata  , hp0_saxi_wdata  ;
 wire [  8-1: 0] hp1_saxi_wstrb  , hp0_saxi_wstrb  ;
 
-//wire _rstn_out;
 axi_master #(
   .DW   (  64    ), // data width (8,16,...,1024)
   .AW   (  32    ), // address width
@@ -259,10 +222,11 @@ axi4_slave #(
   .IW (12)
 ) axi_slave_gp0 (
   // AXI bus
-  .axi_in       (axi_reg),
+  .axi_in     (axi_reg),
   // system read/write channel
   .bus       (bus)
 );
+
 ////////////////////////////////////////////////////////////////////////////////
 // PS STUB
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,6 +235,7 @@ assign fclk_rstn_o = fclk_rstn;
 assign fclk_rstn = {rstn,rstn,rstn,rstn};
 
 BUFG fclk_buf [4-1:0] (.O(fclk_clk_o), .I(fclk_clk));
+
 system system_i (
   // MIO
   .FIXED_IO_mio      (FIXED_IO_mio     ),
@@ -300,27 +265,69 @@ system system_i (
   .FCLK_CLK1         (fclk_clk[1]      ),
   .FCLK_CLK2         (fclk_clk[2]      ),
   .FCLK_CLK3         (fclk_clk[3]      ),
-  .rstn_in(rstn),
-  .clk_in(clk_in),
+  .FCLK_RESET0_N     (fclk_rstn[0]     ),
+  .FCLK_RESET1_N     (fclk_rstn[1]     ),
+  .FCLK_RESET2_N     (fclk_rstn[2]     ),
+  .FCLK_RESET3_N     (fclk_rstn[3]     ),
+  // XADC
+  /*
+  .Vaux0_v_n (vinn_i[1]),  .Vaux0_v_p (vinp_i[1]),
+  .Vaux1_v_n (vinn_i[2]),  .Vaux1_v_p (vinp_i[2]),
+  .Vaux8_v_n (vinn_i[0]),  .Vaux8_v_p (vinp_i[0]),
+  .Vaux9_v_n (vinn_i[3]),  .Vaux9_v_p (vinp_i[3]),
+  .Vp_Vn_v_n (vinn_i[4]),  .Vp_Vn_v_p (vinp_i[4]),
+  // GP0
+  .M_AXI_GP0_ACLK    (axi_gp.ACLK   ),
+//  .M_AXI_GP0_ARESETn (axi_gp.ARESETn),
+  .M_AXI_GP0_arvalid (axi_gp.ARVALID),
+  .M_AXI_GP0_awvalid (axi_gp.AWVALID),
+  .M_AXI_GP0_bready  (axi_gp.BREADY ),
+  .M_AXI_GP0_rready  (axi_gp.RREADY ),
+  .M_AXI_GP0_wlast   (axi_gp.WLAST  ),
+  .M_AXI_GP0_wvalid  (axi_gp.WVALID ),
+  .M_AXI_GP0_arid    (axi_gp.ARID   ),
+  .M_AXI_GP0_awid    (axi_gp.AWID   ),
+  .M_AXI_GP0_wid     (axi_gp.WID    ),
+  .M_AXI_GP0_arburst (axi_gp.ARBURST),
+  .M_AXI_GP0_arlock  (axi_gp.ARLOCK ),
+  .M_AXI_GP0_arsize  (axi_gp.ARSIZE ),
+  .M_AXI_GP0_awburst (axi_gp.AWBURST),
+  .M_AXI_GP0_awlock  (axi_gp.AWLOCK ),
+  .M_AXI_GP0_awsize  (axi_gp.AWSIZE ),
+  .M_AXI_GP0_arprot  (axi_gp.ARPROT ),
+  .M_AXI_GP0_awprot  (axi_gp.AWPROT ),
+  .M_AXI_GP0_araddr  (axi_gp.ARADDR ),
+  .M_AXI_GP0_awaddr  (axi_gp.AWADDR ),
+  .M_AXI_GP0_wdata   (axi_gp.WDATA  ),
+  .M_AXI_GP0_arcache (axi_gp.ARCACHE),
+  .M_AXI_GP0_arlen   (axi_gp.ARLEN  ),
+  .M_AXI_GP0_arqos   (axi_gp.ARQOS  ),
+  .M_AXI_GP0_awcache (axi_gp.AWCACHE),
+  .M_AXI_GP0_awlen   (axi_gp.AWLEN  ),
+  .M_AXI_GP0_awqos   (axi_gp.AWQOS  ),
+  .M_AXI_GP0_wstrb   (axi_gp.WSTRB  ),
+  .M_AXI_GP0_arready (axi_gp.ARREADY),
+  .M_AXI_GP0_awready (axi_gp.AWREADY),
+  .M_AXI_GP0_bvalid  (axi_gp.BVALID ),
+  .M_AXI_GP0_rlast   (axi_gp.RLAST  ),
+  .M_AXI_GP0_rvalid  (axi_gp.RVALID ),
+  .M_AXI_GP0_wready  (axi_gp.WREADY ),
+  .M_AXI_GP0_bid     (axi_gp.BID    ),
+  .M_AXI_GP0_rid     (axi_gp.RID    ),
+  .M_AXI_GP0_bresp   (axi_gp.BRESP  ),
+  .M_AXI_GP0_rresp   (axi_gp.RRESP  ),
+  .M_AXI_GP0_rdata   (axi_gp.RDATA  ),*/
   // GPIO
   .GPIO_tri_i (gpio.i),
   .GPIO_tri_o (gpio.o),
   .GPIO_tri_t (gpio.t),
   // SPI
-  .SPI0_io0_i (1'b0),
-  .SPI0_io0_o (),
-  .SPI0_io0_t (),
-  .SPI0_io1_i (1'b0),
-  .SPI0_io1_o (),
-  .SPI0_io1_t (),
-  .SPI0_sck_i (1'b0),
-  .SPI0_sck_o (),
-  .SPI0_sck_t (),
-  .SPI0_ss1_o (),
-  .SPI0_ss2_o (),
-  .SPI0_ss_i  (1'b0),
-  .SPI0_ss_o  (),
-  .SPI0_ss_t  (),
+  .SPI0_io1_i (spi0.io_i[1]),  .SPI0_io1_o (spi0.io_o[1]),  .SPI0_io1_t (spi0.io_t[1]),  // MISO <=> IO[1]
+  .SPI0_io0_i (spi0.io_i[0]),  .SPI0_io0_o (spi0.io_o[0]),  .SPI0_io0_t (spi0.io_t[0]),  // MOSI <=> IO[0]
+  .SPI0_sck_i (spi0.sck_i  ),  .SPI0_sck_o (spi0.sck_o  ),  .SPI0_sck_t (spi0.sck_t  ),
+  .SPI0_ss_i  (spi0.ss_i   ),  .SPI0_ss_o  (spi0.ss_o   ),  .SPI0_ss_t  (spi0.ss_t   ),
+                               .SPI0_ss1_o (spi0.ss1_o  ),
+                               .SPI0_ss2_o (spi0.ss2_o  ),
   // HP0                                  // HP1
   .S_AXI_HP0_arready (hp0_saxi_arready),  .S_AXI_HP1_arready (hp1_saxi_arready), // out
   .S_AXI_HP0_awready (hp0_saxi_awready),  .S_AXI_HP1_awready (hp1_saxi_awready), // out
@@ -363,6 +370,6 @@ system system_i (
   .S_AXI_HP0_wstrb   (hp0_saxi_wstrb  ),  .S_AXI_HP1_wstrb   (hp1_saxi_wstrb  )  // in 8
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// since the PS GP0 port is AXI3 and the local bus is AXI4
 
 endmodule

@@ -24,21 +24,9 @@
 #include <fcntl.h>
 #include "rp_cross.h"
 #include "spec_fpga.h"
-
-#ifdef Z20_250_12
-#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
-#define SPECTR_ADC_BITS ADC_BITS
-#endif
-
-#if defined Z10 || defined Z20_125
-#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
-#define SPECTR_ADC_BITS ADC_BITS
-#endif
-
-#ifdef Z20
-#define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
-#define SPECTR_ADC_BITS ADC_BITS
-#endif
+#include "spec_dsp.h"
+#include "calib.h"
+#include "common.h"
 
 /* internals */
 /* The FPGA register structure */
@@ -49,17 +37,20 @@ uint32_t           *g_spectr_fpga_chb_mem = NULL;
 /* The memory file descriptor used to mmap() the FPGA space */
 int             g_spectr_fpga_mem_fd = -1;
 
+unsigned short      g_signal_fgpa_length = ADC_BUFFER_SIZE;
+
 /* constants */
 /* ADC format = s.13 */
-const int c_spectr_fpga_adc_bits = SPECTR_ADC_BITS;
+const int c_spectr_fpga_adc_bits = ADC_BITS;
 /* c_osc_fpga_max_v */
 float g_spectr_fpga_adc_max_v;
 const float c_spectr_fpga_adc_max_v_revC= +1.079;
 const float c_spectr_fpga_adc_max_v_revD= +1.027;
 /* Sampling frequency = 125Mspmpls (non-decimated) */
-float spectr_get_fpga_smpl_freq() { return SPECTR_ADC_SAMPLE_RATE; }
+float spectr_get_fpga_smpl_freq() { return ADC_SAMPLE_RATE; }
 /* Sampling period (non-decimated) - 8 [ns] */
-const float c_spectr_fpga_smpl_period = (1. / SPECTR_ADC_SAMPLE_RATE);
+const float c_spectr_fpga_smpl_period = (1. / ADC_SAMPLE_RATE);
+
 
 
 double __rp_rand()
@@ -126,13 +117,13 @@ int spectr_fpga_exit(void)
 }
 
 int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
-                           float trig_delay, float trig_level, int freq_range,
+                           float trig_delay, float trig_level, float decimation,
                            int enable_avg_at_dec)
 {
     /* TODO: Locking of memory map */
     int fpga_trig_source = spectr_fpga_cnv_trig_source(trig_imm, trig_source,
                                                     trig_edge);
-    int fpga_dec_factor = spectr_fpga_cnv_freq_range_to_dec(freq_range);
+    int fpga_dec_factor = decimation;
     int fpga_delay;
     int fpga_trig_thr = spectr_fpga_cnv_v_to_cnt(trig_level);
 
@@ -147,12 +138,34 @@ int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
     uint32_t gain_hi_chb_filt_pp = 0x0;
     uint32_t gain_hi_chb_filt_kk = 0xd9999a;
 
+#if defined Z10 || defined Z20_125
+    rp_pinState_t stateCh1 = RP_HIGH;
+    rp_pinState_t stateCh2 = RP_HIGH;
+    if (!rp_IsApiInit()){ 
+        calib_Init();
+    }else{
+        rp_AcqGetGain(RP_CH_1,&stateCh1);
+        rp_AcqGetGain(RP_CH_2,&stateCh2);
+    }
+
+    gain_hi_cha_filt_aa = calib_GetFilterCoff(RP_CH_1,stateCh1,AA);
+    gain_hi_cha_filt_bb = calib_GetFilterCoff(RP_CH_1,stateCh1,BB);
+    gain_hi_cha_filt_pp = calib_GetFilterCoff(RP_CH_1,stateCh1,PP);
+    gain_hi_cha_filt_kk = calib_GetFilterCoff(RP_CH_1,stateCh1,KK);
+
+    gain_hi_chb_filt_aa = calib_GetFilterCoff(RP_CH_2,stateCh2,AA);
+    gain_hi_chb_filt_bb = calib_GetFilterCoff(RP_CH_2,stateCh2,BB);
+    gain_hi_chb_filt_pp = calib_GetFilterCoff(RP_CH_2,stateCh2,PP);
+    gain_hi_chb_filt_kk = calib_GetFilterCoff(RP_CH_2,stateCh2,KK);
+    if (!rp_IsApiInit()) calib_Release(); 
+#endif
+
     if((fpga_trig_source < 0) || (fpga_dec_factor < 0)) {
         fprintf(stderr, "spectr_fpga_update_params() failed\n");
         return -1;
     }
 
-    fpga_delay = SPECTR_FPGA_SIG_LEN - 3;
+    fpga_delay = rp_get_fpga_signal_length();
 
     /* Trig source is written after ARM */
     /*    g_spectr_fpga_reg_mem->trig_source   = fpga_trig_source;*/
@@ -209,6 +222,10 @@ int spectr_fpga_triggered(void)
     return ((g_spectr_fpga_reg_mem->trig_source & SPECTR_FPGA_TRIG_SRC_MASK)==0);
 }
 
+int spectr_fpga_buffer_fill(void){
+    return ((g_spectr_fpga_reg_mem->conf & SPECTR_FPGA_BUFFER_FILL));
+}
+
 int spectr_fpga_get_sig_ptr(int **cha_signal, int **chb_signal)
 {
     *cha_signal = (int *)g_spectr_fpga_cha_mem;
@@ -218,6 +235,7 @@ int spectr_fpga_get_sig_ptr(int **cha_signal, int **chb_signal)
 
 int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
 {
+    //int cur_ptr_trig;
     int wr_ptr_trig;
     int in_idx, out_idx;
     double *cha_o = *cha_signal;
@@ -228,21 +246,75 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
         return -1;
     }
 
-    spectr_fpga_get_wr_ptr(NULL, &wr_ptr_trig);
+    double offset[2] = {0,0};
+    double gain[2] = {1,1};
+    if (rp_spectr_get_volt_mode()){
+#if defined Z10 || defined Z20_125
+        rp_pinState_t stateCh1 = RP_HIGH;
+        rp_pinState_t stateCh2 = RP_HIGH;
 
+        if (!rp_IsApiInit()){ 
+            calib_Init();
+        }else{
+            rp_AcqGetGain(RP_CH_1,&stateCh1);
+            rp_AcqGetGain(RP_CH_2,&stateCh2);
+        }
+
+        offset[0] = calib_getOffset(RP_CH_1,stateCh1);
+        offset[1] = calib_getOffset(RP_CH_2,stateCh2);
+        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1 == RP_HIGH ? RP_LOW : RP_HIGH) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
+        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh1 == RP_HIGH ? RP_LOW : RP_HIGH) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
+        //fprintf(stderr,"Off %f %f Gain %f %f \n",offset[0],offset[1],gain[0],gain[1]);
+        if (!rp_IsApiInit()) calib_Release();
+#endif
+
+#if defined Z20_250_12
+        rp_pinState_t stateCh1 = RP_HIGH;
+        rp_pinState_t stateCh2 = RP_HIGH;
+        rp_acq_ac_dc_mode_t ac_dc_Ch1 = RP_DC;
+        rp_acq_ac_dc_mode_t ac_dc_Ch2 = RP_DC;
+        float ch1VMax = 1;
+        float ch2VMax = 1;
+
+        if (!rp_IsApiInit()){ 
+            calib_Init();
+        }else{
+            rp_AcqGetGain(RP_CH_1,&stateCh1);
+            rp_AcqGetGain(RP_CH_2,&stateCh2);
+            rp_AcqGetGainV(RP_CH_1,&ch1VMax);
+            rp_AcqGetGainV(RP_CH_2,&ch2VMax);
+            rp_AcqGetAC_DC(RP_CH_1,&ac_dc_Ch1);
+            rp_AcqGetAC_DC(RP_CH_2,&ac_dc_Ch2);
+        }
+
+        offset[0] = calib_getOffset(RP_CH_1,stateCh1,ac_dc_Ch1);
+        offset[1] = calib_getOffset(RP_CH_2,stateCh2,ac_dc_Ch2);
+        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1,ac_dc_Ch1) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh1 == RP_HIGH ? 1 : 20);
+        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh2,ac_dc_Ch2) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh2 == RP_HIGH ? 1 : 20);
+        if (!rp_IsApiInit()) calib_Release(); 
+#endif
+    }
+
+    spectr_fpga_get_wr_ptr(NULL, &wr_ptr_trig);
+    //fprintf(stderr, "Cur %d trig %d\n",cur_ptr_trig ,wr_ptr_trig);
     for(in_idx = wr_ptr_trig + 1, out_idx = 0;
-        out_idx < SPECTR_FPGA_SIG_LEN; in_idx++, out_idx++) {
-        if(in_idx >= SPECTR_FPGA_SIG_LEN)
-            in_idx = in_idx % SPECTR_FPGA_SIG_LEN;
+        out_idx < rp_get_fpga_signal_length(); in_idx++, out_idx++) {
+        if(in_idx >= ADC_BUFFER_SIZE)
+            in_idx = in_idx % ADC_BUFFER_SIZE;
 
         cha_o[out_idx] = g_spectr_fpga_cha_mem[in_idx];
         chb_o[out_idx] = g_spectr_fpga_chb_mem[in_idx];
 
         // convert to signed
-        if(cha_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
-            cha_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
-        if(chb_o[out_idx] > (double)(1 << (SPECTR_ADC_BITS-1)))
-            chb_o[out_idx] -= (double)(1 << SPECTR_ADC_BITS);
+        if(cha_o[out_idx] > (double)(1 << (ADC_BITS-1)))
+            cha_o[out_idx] -= (double)(1 << ADC_BITS);
+        if(chb_o[out_idx] > (double)(1 << (ADC_BITS-1)))
+            chb_o[out_idx] -= (double)(1 << ADC_BITS);
+
+        cha_o[out_idx] = (cha_o[out_idx] + offset[0]) * gain[0];
+        chb_o[out_idx] = (chb_o[out_idx] + offset[1]) * gain[1];
+
+        
     }   
     return 0;
 }
@@ -292,60 +364,6 @@ int spectr_fpga_cnv_trig_source(int trig_imm, int trig_source, int trig_edge)
     return fpga_trig_source;
 }
 
-int spectr_fpga_cnv_freq_range_to_dec(int freq_range)
-{
-    /* Input: 0, 1, 2, 3, 4, 5 translates to:
-     * Output: 1x, 8x, 64x, 1kx, 8kx, 65kx */
-    switch(freq_range) {
-    case 0:
-        return 1;
-        break;
-    case 1:
-        return 8;
-        break;
-    case 2:
-        return 64;
-        break;
-    case 3:
-        return 1024;
-        break;
-    case 4:
-        return 8*1024;
-        break;
-    case 5:
-        return 64*1024;
-        break;
-    default:
-        return -1;
-    }
-
-    return -1;
-}
-
-int spectr_fpga_cnv_freq_range_to_unit(int freq_range)
-{
-    /* Input freq. range: 0, 1, 2, 3, 4, 5 translates to:
-     * Output: 0 - [MHz], 1 - [kHz], 2 - [Hz] */
-    switch(freq_range) {
-    case 0:
-    case 1:
-        return 2;
-        break;
-    case 2:
-    case 3:
-    case 4:
-        return 1;
-        break;
-    case 5:
-        return 0;
-        break;
-    default:
-        return -1;
-        break;
-    };
-
-    return -1;
-}
 
 int spectr_fpga_cnv_time_to_smpls(float time, int dec_factor)
 {
@@ -391,4 +409,27 @@ float spectr_fpga_cnv_cnt_to_v(int cnts)
     return (m * g_spectr_fpga_adc_max_v /
             (float)(1<<(c_spectr_fpga_adc_bits-1)));
 
+}
+
+int rp_set_fpga_signal_length(unsigned short len){
+    if (len < 256 || len > ADC_BUFFER_SIZE) return -1;
+    
+    unsigned char res = 0;
+    unsigned short n = len; 
+    while (n) {
+        res += n&1;
+        n >>= 1;
+    }
+    if (res != 1) return -1;
+
+    g_signal_fgpa_length = len; 
+    return 0;
+}
+
+unsigned short rp_get_fpga_signal_length(){
+    return g_signal_fgpa_length;
+}
+
+unsigned short rp_get_fpga_signal_max_length(){
+    return ADC_BUFFER_SIZE;
 }
