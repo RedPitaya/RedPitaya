@@ -287,8 +287,8 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
             rp_AcqGetAC_DC(RP_CH_2,&ac_dc_Ch2);
         }
 
-        offset[0] = calib_getOffset(RP_CH_1,stateCh1);
-        offset[1] = calib_getOffset(RP_CH_2,stateCh2);
+        offset[0] = calib_getOffset(RP_CH_1,stateCh1,ac_dc_Ch1);
+        offset[1] = calib_getOffset(RP_CH_2,stateCh2,ac_dc_Ch2);
         gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1,ac_dc_Ch1) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh1 == RP_HIGH ? 1 : 20);
         gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh2,ac_dc_Ch2) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh2 == RP_HIGH ? 1 : 20);
         if (!rp_IsApiInit()) calib_Release(); 
