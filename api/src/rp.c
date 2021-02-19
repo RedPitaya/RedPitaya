@@ -538,6 +538,10 @@ int rp_AcqGetDecimationFactor(uint32_t* decimation)
     return acq_GetDecimationFactor(decimation);
 }
 
+int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation){
+    return acq_ConvertFactorToDecimation(factor,decimation);
+}
+
 int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
 {
     return acq_SetSamplingRate(sampling_rate);

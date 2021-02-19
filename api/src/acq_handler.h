@@ -44,6 +44,7 @@ int acq_SetDecimation(rp_acq_decimation_t decimation);
 int acq_GetDecimation(rp_acq_decimation_t* decimation);
 int acq_SetDecimationFactor(uint32_t decimation);
 int acq_GetDecimationFactor(uint32_t* decimation);
+int acq_ConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation);
 int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
 int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
 int acq_GetSamplingRateHz(float* sampling_rate);

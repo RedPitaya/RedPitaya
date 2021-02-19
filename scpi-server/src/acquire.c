@@ -171,31 +171,31 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-// TODO: remove this limited decimation options
+// // TODO: remove this limited decimation options
 
-static int getRpDecimation(uint32_t decimationInt, rp_acq_decimation_t *decimation) {
-    switch (decimationInt) {
-        case     1:  *decimation = RP_DEC_1    ;  return RP_OK;
-        case     8:  *decimation = RP_DEC_8    ;  return RP_OK;
-        case    64:  *decimation = RP_DEC_64   ;  return RP_OK;
-        case  1024:  *decimation = RP_DEC_1024 ;  return RP_OK;
-        case  8192:  *decimation = RP_DEC_8192 ;  return RP_OK;
-        case 65536:  *decimation = RP_DEC_65536;  return RP_OK;
-        default   :                               return RP_EOOR;
-    }
-}
+// static int getRpDecimation(uint32_t decimationInt, rp_acq_decimation_t *decimation) {
+//     switch (decimationInt) {
+//         case     1:  *decimation = RP_DEC_1    ;  return RP_OK;
+//         case     8:  *decimation = RP_DEC_8    ;  return RP_OK;
+//         case    64:  *decimation = RP_DEC_64   ;  return RP_OK;
+//         case  1024:  *decimation = RP_DEC_1024 ;  return RP_OK;
+//         case  8192:  *decimation = RP_DEC_8192 ;  return RP_OK;
+//         case 65536:  *decimation = RP_DEC_65536;  return RP_OK;
+//         default   :                               return RP_EOOR;
+//     }
+// }
 
-static int getRpDecimationInt(rp_acq_decimation_t decimation, uint32_t *decimationInt) {
-    switch (decimation) {
-        case RP_DEC_1    :  *decimationInt =     1;  return RP_OK;
-        case RP_DEC_8    :  *decimationInt =     8;  return RP_OK;
-        case RP_DEC_64   :  *decimationInt =    64;  return RP_OK;
-        case RP_DEC_1024 :  *decimationInt =  1024;  return RP_OK;
-        case RP_DEC_8192 :  *decimationInt =  8192;  return RP_OK;
-        case RP_DEC_65536:  *decimationInt = 65536;  return RP_OK;
-        default          :                           return RP_EOOR;
-    }
-}
+// static int getRpDecimationInt(rp_acq_decimation_t decimation, uint32_t *decimationInt) {
+//     switch (decimation) {
+//         case RP_DEC_1    :  *decimationInt =     1;  return RP_OK;
+//         case RP_DEC_8    :  *decimationInt =     8;  return RP_OK;
+//         case RP_DEC_64   :  *decimationInt =    64;  return RP_OK;
+//         case RP_DEC_1024 :  *decimationInt =  1024;  return RP_OK;
+//         case RP_DEC_8192 :  *decimationInt =  8192;  return RP_OK;
+//         case RP_DEC_65536:  *decimationInt = 65536;  return RP_OK;
+//         default          :                           return RP_EOOR;
+//     }
+// }
 
 scpi_result_t RP_AcqDecimation(scpi_t *context) {
     
@@ -209,7 +209,7 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
 
     // Convert decimation to rp_acq_decimation_t
     rp_acq_decimation_t decimation;
-    if (getRpDecimation(value, &decimation)) {
+    if (rp_AcqConvertFactorToDecimation(value, &decimation)) {
         syslog(LOG_ERR, "*ACQ:DEC parameter decimation is invalid.");
         return SCPI_RES_ERR;
     }
@@ -236,11 +236,11 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
     }
 
     // Convert decimation to int
-    uint32_t value;
-    if (RP_OK != getRpDecimationInt(decimation, &value)) {
-        syslog(LOG_ERR, "*ACQ:DEC? Failed to convert decimation to integer: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
+    uint32_t value = (uint32_t)decimation;
+    // if (RP_OK != getRpDecimationInt(decimation, &value)) {
+    //     syslog(LOG_ERR, "*ACQ:DEC? Failed to convert decimation to integer: %s", rp_GetError(result));
+    //     return SCPI_RES_ERR;
+    // }
 
     // Return back result
     SCPI_ResultUInt32Base(context, value, 10);

@@ -222,12 +222,23 @@ typedef enum {
  * Type representing acquire signal sampling rate.
  */
 typedef enum {
-    RP_SMP_125M     = 0,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-    RP_SMP_15_625M  = 1,  //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-    RP_SMP_1_953M   = 2,   //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-    RP_SMP_122_070K = 3, //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-    RP_SMP_15_258K  = 4,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-    RP_SMP_1_907K   = 5   //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_SMP_125M     = 1,       //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    RP_SMP_62_500M  = 2,       //!< Sample rate 62.5Msps; Buffer time length 262us; Decimation 2
+    RP_SMP_31_250M  = 4,       //!< Sample rate 31.25Msps; Buffer time length 524us; Decimation 4
+    RP_SMP_15_625M  = 8,       //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    RP_SMP_7_812M   = 16,      //!< Sample rate 7.8125Msps; Buffer time length 2.096ms; Decimation 16
+    RP_SMP_3_906M   = 32,      //!< Sample rate 3.906Msps; Buffer time length 4.192ms; Decimation 32
+    RP_SMP_1_953M   = 64,      //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    RP_SMP_976_562K = 128,     //!< Sample rate 976ksps; Buffer time length 16.768ms; Decimation 128
+    RP_SMP_448_281K = 256,     //!< Sample rate 488ksps; Buffer time length 33.798ms; Decimation 256
+    RP_SMP_244_140K = 512,     //!< Sample rate 244ksps; Buffer time length 67.07ms; Decimation 512
+    RP_SMP_122_070K = 1024,    //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    RP_SMP_61_035K  = 2048,    //!< Sample rate 61.035ksps; Buffer time length 268.288ms; Decimation 2048
+    RP_SMP_30_517K  = 4096,    //!< Sample rate 30.517ksps; Buffer time length 536.5ms; Decimation 4096
+    RP_SMP_15_258K  = 8192,    //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    RP_SMP_7_629K   = 16384,   //!< Sample rate 7.629ksps; Buffer time length 2.146s; Decimation 16384
+    RP_SMP_3_814K   = 32768,   //!< Sample rate 3.814ksps; Buffer time length 4.292s; Decimation 32768
+    RP_SMP_1_907K   = 65536    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_sampling_rate_t;
 
 
@@ -235,13 +246,25 @@ typedef enum {
  * Type representing decimation used at acquiring signal.
  */
 typedef enum {
-    RP_DEC_1,     //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-    RP_DEC_8,     //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-    RP_DEC_64,    //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-    RP_DEC_1024,  //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-    RP_DEC_8192,  //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-    RP_DEC_65536  //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_DEC_1     = 1,       //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+    RP_DEC_2     = 2,       //!< Sample rate 62.5Msps; Buffer time length 262us; Decimation 2
+    RP_DEC_4     = 4,       //!< Sample rate 31.25Msps; Buffer time length 524us; Decimation 4
+    RP_DEC_8     = 8,       //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+    RP_DEC_16    = 16,      //!< Sample rate 7.8125Msps; Buffer time length 2.096ms; Decimation 16
+    RP_DEC_32    = 32,      //!< Sample rate 3.906Msps; Buffer time length 4.192ms; Decimation 32
+    RP_DEC_64    = 64,      //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+    RP_DEC_128   = 128,     //!< Sample rate 976ksps; Buffer time length 16.768ms; Decimation 128
+    RP_DEC_256   = 256,     //!< Sample rate 488ksps; Buffer time length 33.798ms; Decimation 256
+    RP_DEC_512   = 512,     //!< Sample rate 244ksps; Buffer time length 67.07ms; Decimation 512
+    RP_DEC_1024  = 1024,    //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+    RP_DEC_2048  = 2048,    //!< Sample rate 61.035ksps; Buffer time length 268.288ms; Decimation 2048
+    RP_DEC_4096  = 4096,    //!< Sample rate 30.517ksps; Buffer time length 536.5ms; Decimation 4096
+    RP_DEC_8192  = 8192,    //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+    RP_DEC_16384 = 16384,   //!< Sample rate 7.629ksps; Buffer time length 2.146s; Decimation 16384
+    RP_DEC_32768 = 32768,   //!< Sample rate 3.814ksps; Buffer time length 4.292s; Decimation 32768
+    RP_DEC_65536 = 65536    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_decimation_t;
+
 
 
 /**
@@ -791,6 +814,16 @@ int rp_AcqSetDecimation(rp_acq_decimation_t decimation);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetDecimation(rp_acq_decimation_t* decimation);
+
+/**
+ * Convert factor to decimation used at acquiring signal. There is only a get of pre-defined decimation
+ * values which can be specified. See the #rp_acq_decimation_t enum values.
+ * @param factor Decimation factor.
+ * @param decimation Returns one of pre-defined decimation values which is currently set.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation);
 
 /**
  * Sets the decimation used at acquiring signal. 
