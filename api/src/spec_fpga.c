@@ -127,6 +127,18 @@ int spectr_fpga_update_params(int trig_imm, int trig_source, int trig_edge,
     int fpga_delay;
     int fpga_trig_thr = spectr_fpga_cnv_v_to_cnt(trig_level);
 
+
+    // uint32_t gain_hi_cha_filt_aa = 0;
+    // uint32_t gain_hi_cha_filt_bb = 0;
+    // uint32_t gain_hi_cha_filt_pp = 0;
+    // uint32_t gain_hi_cha_filt_kk = 0xFFFFFF;
+
+    // uint32_t gain_hi_chb_filt_aa = 0;
+    // uint32_t gain_hi_chb_filt_bb = 0;
+    // uint32_t gain_hi_chb_filt_pp = 0;
+    // uint32_t gain_hi_chb_filt_kk = 0xFFFFFF;
+
+
     /* Equalization filter coefficients */
     uint32_t gain_hi_cha_filt_aa = 0x7D93;
     uint32_t gain_hi_cha_filt_bb = 0x437C7;
@@ -248,7 +260,6 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
 
     double offset[2] = {0,0};
     double gain[2] = {1,1};
-    if (rp_spectr_get_volt_mode()){
 #if defined Z10 || defined Z20_125
         rp_pinState_t stateCh1 = RP_HIGH;
         rp_pinState_t stateCh2 = RP_HIGH;
@@ -262,9 +273,8 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
 
         offset[0] = calib_getOffset(RP_CH_1,stateCh1);
         offset[1] = calib_getOffset(RP_CH_2,stateCh2);
-        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1 == RP_HIGH ? RP_LOW : RP_HIGH) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
-        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh1 == RP_HIGH ? RP_LOW : RP_HIGH) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
-        //fprintf(stderr,"Off %f %f Gain %f %f \n",offset[0],offset[1],gain[0],gain[1]);
+        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh1 == RP_LOW ? 20 : 1) * (stateCh1 == RP_LOW ? 1 : 20);
+        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh2) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh2 == RP_LOW ? 20 : 1) * (stateCh2 == RP_LOW ? 1 : 20);
         if (!rp_IsApiInit()) calib_Release();
 #endif
 
@@ -289,14 +299,12 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
 
         offset[0] = calib_getOffset(RP_CH_1,stateCh1,ac_dc_Ch1);
         offset[1] = calib_getOffset(RP_CH_2,stateCh2,ac_dc_Ch2);
-        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1 == RP_HIGH ? RP_LOW : RP_HIGH,ac_dc_Ch1) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
-        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh2 == RP_HIGH ? RP_LOW : RP_HIGH,ac_dc_Ch2) / (double)rp_cmn_CalibFullScaleFromVoltage(1);
+        gain[0] = (double)calib_GetFrontEndScale(RP_CH_1,stateCh1,ac_dc_Ch1) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh1 == RP_LOW ? 20 : 1) * (stateCh1 == RP_LOW ? 1 : 20);
+        gain[1] = (double)calib_GetFrontEndScale(RP_CH_2,stateCh2,ac_dc_Ch2) / (double)rp_cmn_CalibFullScaleFromVoltage(stateCh2 == RP_LOW ? 20 : 1) * (stateCh2 == RP_LOW ? 1 : 20);
         if (!rp_IsApiInit()) calib_Release(); 
 #endif
-    }
 
     spectr_fpga_get_wr_ptr(NULL, &wr_ptr_trig);
-    //fprintf(stderr, "Cur %d trig %d\n",cur_ptr_trig ,wr_ptr_trig);
     for(in_idx = wr_ptr_trig + 1, out_idx = 0;
         out_idx < rp_get_fpga_signal_length(); in_idx++, out_idx++) {
         if(in_idx >= ADC_BUFFER_SIZE)
@@ -311,11 +319,10 @@ int spectr_fpga_get_signal(double **cha_signal, double **chb_signal)
         if(chb_o[out_idx] > (double)(1 << (ADC_BITS-1)))
             chb_o[out_idx] -= (double)(1 << ADC_BITS);
 
-        cha_o[out_idx] = (cha_o[out_idx] + offset[0]) * gain[0];
-        chb_o[out_idx] = (chb_o[out_idx] + offset[1]) * gain[1];
+        cha_o[out_idx] = ((cha_o[out_idx] - offset[0]) * gain[0]) / (double)((int)(1<<(c_spectr_fpga_adc_bits-1)));
+        chb_o[out_idx] = ((chb_o[out_idx] - offset[1]) * gain[1]) / (double)((int)(1<<(c_spectr_fpga_adc_bits-1)));
+    }
 
-        
-    }   
     return 0;
 }
 

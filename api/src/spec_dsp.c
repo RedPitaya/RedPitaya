@@ -52,6 +52,7 @@ extern const int c_spectr_fpga_adc_bits;
 
 /* Internal structures used in DSP  */
 double               *rp_window   = NULL;
+double                rp_window_sum = 1;
 kiss_fft_cpx         *rp_kiss_fft_out1 = NULL;
 kiss_fft_cpx         *rp_kiss_fft_out2 = NULL;
 kiss_fftr_cfg         rp_kiss_fft_cfg  = NULL;
@@ -62,7 +63,7 @@ int                   g_voltMode = 0;
 int                   g_remove_DC = 1;
 /* constants - calibration dependant */
 /* Power calc. impedance*/
-const double c_imp = 50;
+double c_imp = 50;
 /* Const - [W] -> [mW] */
 const double c_w2mw = 1000;
 
@@ -97,6 +98,14 @@ int rp_spectr_prepare_freq_vector(float **freq_out, double f_s, float decimation
     return 0;
 }
 
+void   rp_set_impedance(double value){
+    if (value > 0)
+        c_imp = value;
+}
+
+double rp_get_impedance(){
+    return c_imp;
+}
 
 
 unsigned short rp_get_spectr_out_signal_length(){
@@ -107,11 +116,11 @@ unsigned short rp_get_spectr_out_signal_max_length(){
     return rp_get_fpga_signal_max_length()/2;
 }
 
-void rp_spectr_set_volt_mode(int mode){
+void rp_spectr_set_mode(int mode){
     g_voltMode = mode;
 }
 
-int rp_spectr_get_volt_mode(){
+int rp_spectr_get_mode(){
     return g_voltMode;
 }
 
@@ -133,7 +142,7 @@ double __zeroethOrderBessel( double x )
 
 int rp_spectr_window_init(window_mode_t mode){
     int i;
-
+    rp_window_sum = 0;
     g_window_mode = mode;
     rp_spectr_window_clean();
     
@@ -148,12 +157,14 @@ int rp_spectr_window_init(window_mode_t mode){
             for(i = 0; i < SPECTR_FPGA_SIG_LEN; i++) {
                 rp_window[i] = RP_SPECTR_HANN_AMP * 
                 (1 - cos(2*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1)));
+                rp_window_sum += rp_window[i];
             }
             break;
         }
         case RECTANGULAR:{
            for(i = 0; i < SPECTR_FPGA_SIG_LEN; i++) {
                 rp_window[i] = 1;
+                rp_window_sum += rp_window[i];
             }
             break;
         }
@@ -161,6 +172,7 @@ int rp_spectr_window_init(window_mode_t mode){
             for(i = 0; i < SPECTR_FPGA_SIG_LEN; i++) {
                 rp_window[i] = 0.54 - 
                 0.46 * cos(2*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1));
+                rp_window_sum += rp_window[i];
             }
             break;
         }
@@ -170,6 +182,7 @@ int rp_spectr_window_init(window_mode_t mode){
                                RP_BLACKMAN_A1 * cos(2*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1)) +
                                RP_BLACKMAN_A2 * cos(4*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1)) -
                                RP_BLACKMAN_A3 * cos(6*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1));
+                rp_window_sum += rp_window[i];
             }
             break;
         }
@@ -180,6 +193,7 @@ int rp_spectr_window_init(window_mode_t mode){
                                RP_FLATTOP_A2 * cos(4*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1)) -
                                RP_FLATTOP_A3 * cos(6*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1)) +
                                RP_FLATTOP_A4 * cos(8*M_PI*i / (double)(SPECTR_FPGA_SIG_LEN-1));
+                rp_window_sum += rp_window[i];
             }
             break;
         }
@@ -191,7 +205,7 @@ int rp_spectr_window_init(window_mode_t mode){
                 const double K = (i - y) / y;
                 const double arg = sqrt( 1.0 - (K * K) );
                 rp_window[i] = __zeroethOrderBessel( 4 * arg ) * x;
-
+                rp_window_sum += rp_window[i];
             }
             break;
         }
@@ -204,7 +218,7 @@ int rp_spectr_window_init(window_mode_t mode){
                 const double K = (i - y) / y;
                 const double arg = sqrt( 1.0 - (K * K) );
                 rp_window[i] = __zeroethOrderBessel( 8 * arg ) * x;
-
+                rp_window_sum += rp_window[i];
             }
             break;
         }
@@ -298,14 +312,13 @@ int rp_spectr_fft(double *cha_in, double *chb_in,
         fprintf(stderr, "rp_spect_fft not initialized");
         return -1;
     }
-    
+
     kiss_fftr(rp_kiss_fft_cfg, (kiss_fft_scalar *)cha_in, rp_kiss_fft_out1);
     kiss_fftr(rp_kiss_fft_cfg, (kiss_fft_scalar *)chb_in, rp_kiss_fft_out2);
-
     for(i = 0; i < SPECTR_OUT_SIG_LENGTH; i++) {                     // FFT limited to fs/2, specter of amplitudes
-        cha_o[i] = sqrt(pow(rp_kiss_fft_out1[i].r, 2) + 
+        cha_o[i] = sqrt(pow(rp_kiss_fft_out1[i].r, 2) +
                         pow(rp_kiss_fft_out1[i].i, 2));
-        chb_o[i] = sqrt(pow(rp_kiss_fft_out2[i].r, 2) + 
+        chb_o[i] = sqrt(pow(rp_kiss_fft_out2[i].r, 2) +
                         pow(rp_kiss_fft_out2[i].i, 2));
     }
     return 0;
@@ -323,21 +336,9 @@ int rp_spectr_decimate(double *cha_in, double *chb_in,
     if(!cha_in || !chb_in || !*cha_out || !*chb_out)
         return -1;
 
-	/* Conversion factor from ADC counts to Volts */
-    float max_v_ch1 = g_spectr_fpga_adc_max_v;
-    float max_v_ch2 = g_spectr_fpga_adc_max_v;
- 
-#if defined Z10 || defined Z20_125 || defined Z20_250_12
-    if (rp_IsApiInit() && rp_spectr_get_volt_mode()){ 
-        max_v_ch1 = 1;
-        max_v_ch2 = 1;
-    }
-#endif
-
     step = (int)round((float)in_len / (float)out_len);
     if(step < 1)
         step = 1;
-
     for(i = 0, j = 0; i < out_len; i++, j+=step) {
         int k=j;
 
@@ -349,37 +350,36 @@ int rp_spectr_decimate(double *cha_in, double *chb_in,
         chb_o[i] = 0;
 	
 
-    	double c2v_Ch1 = max_v_ch1 /(float)((int)(1<<(c_spectr_fpga_adc_bits-1)));
-        double c2v_Ch2 = max_v_ch2 /(float)((int)(1<<(c_spectr_fpga_adc_bits-1)));
-        double c2v = g_spectr_fpga_adc_max_v /(float)((int)(1<<(c_spectr_fpga_adc_bits-1)));
-
         for(k=j; k < j+step; k++) {
 	
-            double p_a = 0;
-            double p_b = 0;
             double cha_p = 0;
             double chb_p = 0;
+            //dBm
+            if (rp_spectr_get_mode() == 0){
+                /* Conversion to power (Watts) */
+                // V -> RMS -> power
+                cha_p = pow((cha_in[k] / rp_window_sum * 2) / 1.414213562, 2) / c_imp;
+                chb_p = pow((chb_in[k] / rp_window_sum * 2) / 1.414213562, 2) / c_imp;
+            }
+            // V
+            if (rp_spectr_get_mode() == 1){
+                cha_p = cha_in[k] / rp_window_sum  * 2; 
+                chb_p = chb_in[k] / rp_window_sum  * 2; 
+            }
+            // dBu
+            if (rp_spectr_get_mode() == 2){
+                cha_p = cha_in[k] / rp_window_sum  * 2 / 1.414213562;
+                chb_p = chb_in[k] / rp_window_sum  * 2 / 1.414213562; 
+            }
 
-            if (rp_spectr_get_volt_mode()!=0){
-                p_a = cha_in[k] * c2v_Ch1;
-                p_b = chb_in[k] * c2v_Ch2;
-                cha_p = p_a / (double)SPECTR_FPGA_SIG_LEN  * 2; 
-                chb_p = p_b / (double)SPECTR_FPGA_SIG_LEN  * 2; 
-            }
-            else
-            {
-        /* Conversion to power (Watts) */
-                p_a = pow(cha_in[k] * c2v, 2) / c_imp;
-                p_b = pow(chb_in[k] * c2v, 2) / c_imp;
-                cha_p = p_a / (double)SPECTR_FPGA_SIG_LEN / (double)SPECTR_FPGA_SIG_LEN * 2; // x 2 for unilateral spectral density representation
-                chb_p = p_b / (double)SPECTR_FPGA_SIG_LEN / (double)SPECTR_FPGA_SIG_LEN * 2; // c_imp = 50 Ohms, is the transmission line impdeance  
-            }
+            
        
-            cha_o[i] += (float)cha_p;  // Summing the power expressed in Watts associated to each FFT bin
-            chb_o[i] += (float)chb_p;
+            cha_o[i] += (double)cha_p;  // Summing the power expressed in Watts associated to each FFT bin
+            chb_o[i] += (double)chb_p;
         }
+        cha_o[i] /= step;
+        chb_o[i] /= step;
     }
-
     return 0;
 }
 
@@ -410,7 +410,7 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
         double cha_p=cha_in[i];
         double chb_p=chb_in[i];    
         
-        // Avoiding -Inf due to log10(0.0) 
+        // Avoiding -Inf due to log10(0.0)
         
         if (cha_p * c_w2mw > 1.0e-12 )	
             cha_o[i] = 10 * log10(cha_p * c_w2mw);  // W -> mW -> dBm
@@ -434,38 +434,6 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
         }
     }
 
-	// Power correction (summing contributions of contiguous bins)
-	const int c_pwr_int_cnts=3; // Number of bins on the left and right side of the max
-	float cha_pwr=0;
-	float chb_pwr=0;
-	int ii;
-	int ixxa,ixxb;
-    for(ii = 0; ii < (c_pwr_int_cnts*2+1); ii++) {
-
-        ixxa=max_pw_idx_cha+ii-c_pwr_int_cnts;
-        ixxb=max_pw_idx_chb+ii-c_pwr_int_cnts;
-        
-        if ((ixxa>=0) && (ixxa<SPECTR_OUT_SIG_LENGTH)) 
-        {
-            cha_pwr+=pow(10.0,cha_o[ixxa]/10.0);
-        }
-        if ((ixxb>=0) && (ixxb<SPECTR_OUT_SIG_LENGTH)) 
-        {
-            chb_pwr+=pow(10.0,chb_o[ixxb]/10.0);
-        }
-    }
-
-    if (cha_pwr<=1.0e-10)
-        max_pw_cha = -200.0;
-    else
-        max_pw_cha = 10.0 * log10(cha_pwr);
-       
-    if (chb_pwr<=1.0e-10)
-	    max_pw_chb = -200.0;
-    else
-        max_pw_chb = 10.0 * log10(chb_pwr);
-       
-
        
     *peak_power_cha = max_pw_cha;
     *peak_freq_cha = ((float)max_pw_idx_cha / (float)SPECTR_OUT_SIG_LENGTH * 
@@ -478,11 +446,11 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
 }
 
 
-int rp_spectr_cnv_to_v(float *cha_in, float *chb_in,
-                         float **cha_out, float **chb_out,
-                         float *peak_power_cha, float *peak_freq_cha,
-                         float *peak_power_chb, float *peak_freq_chb,
-                         float  decimation){
+int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
+                            float **cha_out, float **chb_out,
+                            float *peak_power_cha, float *peak_freq_cha,
+                            float *peak_power_chb, float *peak_freq_chb,
+                            float  decimation){
     int i;
     float *cha_o = *cha_out;
     float *chb_o = *chb_out;
@@ -500,9 +468,39 @@ int rp_spectr_cnv_to_v(float *cha_in, float *chb_in,
     for(i = 0; i < SPECTR_OUT_SIG_LENGTH; i++) {
 
         /* Conversion to power (Watts) */
+        if (rp_spectr_get_mode() == 0){
+            double cha_p=cha_in[i];
+            double chb_p=chb_in[i];    
+            if (cha_p * c_w2mw > 1.0e-12 )	
+                cha_o[i] = 10 * log10(cha_p * c_w2mw);  // W -> mW -> dBm
+            else	
+                cha_o[i] = 10 * log10(1.0e-12);
+        
+            if (chb_p * c_w2mw > 1.0e-12 )        	
+                chb_o[i] = 10 * log10(chb_p * c_w2mw);
+            else	
+                chb_o[i] = 10 * log10(1.0e-12);
+        }
 
-        cha_o[i] = cha_in[i];
-        chb_o[i] = chb_in[i];    
+        if (rp_spectr_get_mode() == 1){
+            cha_o[i] = cha_in[i];
+            chb_o[i] = chb_in[i];
+        }
+
+        if (rp_spectr_get_mode() == 2){
+            double cha_p=cha_in[i];
+            double chb_p=chb_in[i];    
+            // ( 20*log10( 0.686 / .775 ))
+            if (cha_p * c_w2mw > 1.0e-12 )	
+                cha_o[i] = 20 * log10(cha_p / 0.775);
+            else	
+                cha_o[i] = 20 * log10(1.0e-12);
+        
+            if (chb_p * c_w2mw > 1.0e-12 )
+                chb_o[i] = 20 * log10(chb_p / 0.775);
+            else	
+                chb_o[i] = 20 * log10(1.0e-12);
+        }
 
         /* Find peaks */
         if(cha_o[i] > max_pw_cha) {
@@ -514,30 +512,6 @@ int rp_spectr_cnv_to_v(float *cha_in, float *chb_in,
             max_pw_idx_chb = i;
         }
     }
-
-	// Power correction (summing contributions of contiguous bins)
-	const int c_pwr_int_cnts=3; // Number of bins on the left and right side of the max
-	float cha_pwr=0;
-	float chb_pwr=0;
-	int ii;
-	int ixxa,ixxb;
-    for(ii = 0; ii < (c_pwr_int_cnts*2+1); ii++) {
-
-        ixxa=max_pw_idx_cha+ii-c_pwr_int_cnts;
-        ixxb=max_pw_idx_chb+ii-c_pwr_int_cnts;
-        
-        if ((ixxa>=0) && (ixxa<SPECTR_OUT_SIG_LENGTH)) 
-        {
-            cha_pwr+=cha_o[ixxa];
-        }
-        if ((ixxb>=0) && (ixxb<SPECTR_OUT_SIG_LENGTH)) 
-        {
-            chb_pwr+=chb_o[ixxb];
-        }
-    }
-
-    max_pw_cha = cha_pwr;
-    max_pw_chb = chb_pwr;
 
        
     *peak_power_cha = max_pw_cha;

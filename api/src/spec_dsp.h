@@ -47,8 +47,11 @@ int rp_spectr_get_remove_DC();
 int rp_spectr_fft_init();
 int rp_spectr_fft_clean();
 
-void rp_spectr_set_volt_mode(int mode);
-int  rp_spectr_get_volt_mode();
+void rp_spectr_set_mode(int mode);
+int  rp_spectr_get_mode();
+
+void   rp_set_impedance(double value);
+double rp_get_impedance();
 
 /* Inputs length: SPECTR_FPGA_SIG_LEN
  * Outputs length: floor(SPECTR_FPGA_SIG_LEN/2) 
@@ -76,7 +79,7 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
                          float *peak_power_chb, float *peak_freq_chb,
                          float  decimation);
 
-int rp_spectr_cnv_to_v(float *cha_in, float *chb_in,
+int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
                          float **cha_out, float **chb_out,
                          float *peak_power_cha, float *peak_freq_cha,
                          float *peak_power_chb, float *peak_freq_chb,
