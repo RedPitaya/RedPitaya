@@ -903,6 +903,61 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
     return RP_OK;
 }
 
+int acq_GetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2)
+{
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    float gainV1, gainV2;
+    rp_pinState_t gain1, gain2;
+    acq_GetGainV(RP_CH_1, &gainV1);
+    acq_GetGain(RP_CH_1, &gain1);
+    acq_GetGainV(RP_CH_2, &gainV2);
+    acq_GetGain(RP_CH_2, &gain2);
+
+#ifdef Z20_250_12
+    rp_acq_ac_dc_mode_t power_mode1;
+    acq_GetAC_DC(RP_CH_1,&power_mode1);
+    int32_t dc_offs1 = calib_getOffset(RP_CH_1, gain1,power_mode1);
+    uint32_t calibScale1 = calib_GetFrontEndScale(RP_CH_1, gain1, power_mode1);
+#else
+    int32_t dc_offs1 = calib_getOffset(RP_CH_1, gain1);
+    uint32_t calibScale1 = calib_GetFrontEndScale(RP_CH_1, gain1);
+#endif
+
+#ifdef Z20_250_12
+    rp_acq_ac_dc_mode_t power_mode2;
+    acq_GetAC_DC(RP_CH_2,&power_mode2);
+    int32_t dc_offs2 = calib_getOffset(RP_CH_2, gain2,power_mode2);
+    uint32_t calibScale2 = calib_GetFrontEndScale(RP_CH_2, gain2,power_mode2);
+#else
+    int32_t dc_offs2 = calib_getOffset(RP_CH_2, gain2);
+    uint32_t calibScale2 = calib_GetFrontEndScale(RP_CH_2, gain2);
+#endif
+
+    const volatile uint32_t* raw_buffer1 = getRawBuffer(RP_CH_1);
+    const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
+
+    uint32_t cnts1[*size];
+    uint32_t cnts2[*size];
+    uint32_t* ptr1 = cnts1;
+    uint32_t* ptr2 = cnts2;
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+        *ptr1++ = raw_buffer1[pos];
+        *ptr2++ = raw_buffer2[pos];
+        pos = (pos + 1) % ADC_BUFFER_SIZE;
+    }
+
+    ptr1 = cnts1;
+    ptr2 = cnts2;
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+        *buffer1++ = (double)cmn_CnvCntToV(ADC_BITS, *ptr1++ & ADC_BITS_MASK, gainV1, calibScale1, dc_offs1, 0.0);
+        *buffer2++ = (double)cmn_CnvCntToV(ADC_BITS, *ptr2++ & ADC_BITS_MASK, gainV2, calibScale2, dc_offs2, 0.0);
+    }
+    return RP_OK;
+}
+
 int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size)
 {
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);

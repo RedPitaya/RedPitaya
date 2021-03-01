@@ -710,6 +710,10 @@ int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2
     return acq_GetDataV2(pos, size, buffer1, buffer2);
 }
 
+int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2){
+    return acq_GetDataV2D(pos, size, buffer1, buffer2);
+}
+
 int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetOldestDataV(channel, size, buffer);

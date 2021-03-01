@@ -45,7 +45,6 @@ OBJECTS =	common.o \
 		generate.o \
 		gen_handler.o \
 		spec_dsp.o \
-		spec_fpga.o \
 		rp.o \
 		hw/uart.o
 		

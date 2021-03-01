@@ -31,9 +31,11 @@ extern const double c_c2v;
 int rp_spectr_prepare_freq_vector(float **freq_out, double f_s,
                                   float freq_range);
 
-
+int rp_set_spectr_signal_length(int len);
 unsigned short rp_get_spectr_out_signal_length();
 unsigned short rp_get_spectr_out_signal_max_length();
+unsigned short rp_get_spectr_signal_length();
+unsigned short rp_get_spectr_signal_max_length();
 
 int rp_spectr_window_init(window_mode_t mode);
 int rp_spectr_window_clean();

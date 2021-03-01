@@ -81,6 +81,7 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 int acq_GetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
 int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2);
+int acq_GetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2);
 int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 

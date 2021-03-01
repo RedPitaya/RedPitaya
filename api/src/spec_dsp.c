@@ -21,7 +21,6 @@
 #include <stdlib.h>
 
 #include "spec_dsp.h"
-#include "spec_fpga.h"
 #include "kiss_fftr.h"
 #include "rp_cross.h"
 
@@ -29,13 +28,11 @@
     #define M_PI 3.14159265358979323846
 #endif
 
-extern float g_spectr_fpga_adc_max_v;
-extern const int c_spectr_fpga_adc_bits;
-
+unsigned short      g_signal_fgpa_length = ADC_BUFFER_SIZE;
 /* length of output signals: floor(SPECTR_FPGA_SIG_LEN/2) */
 
-#define SPECTR_OUT_SIG_LENGTH (rp_get_fpga_signal_length()/2)
-#define SPECTR_FPGA_SIG_LEN   (rp_get_fpga_signal_length())
+#define SPECTR_OUT_SIG_LENGTH (rp_get_spectr_out_signal_length())
+#define SPECTR_FPGA_SIG_LEN   (rp_get_spectr_signal_length())
 
 #define RP_SPECTR_HANN_AMP 0.8165 // Hann window power scaling (1/sqrt(sum(rcos.^2/N)))
 
@@ -59,7 +56,7 @@ kiss_fftr_cfg         rp_kiss_fft_cfg  = NULL;
 
 
 window_mode_t         g_window_mode = HANNING;
-int                   g_voltMode = 0;
+int                   g_mode = 0;
 int                   g_remove_DC = 1;
 /* constants - calibration dependant */
 /* Power calc. impedance*/
@@ -109,19 +106,42 @@ double rp_get_impedance(){
 
 
 unsigned short rp_get_spectr_out_signal_length(){
-    return rp_get_fpga_signal_length()/2;
+    return rp_get_spectr_signal_length()/2;
 }
 
 unsigned short rp_get_spectr_out_signal_max_length(){
-    return rp_get_fpga_signal_max_length()/2;
+    return rp_get_spectr_signal_max_length()/2;
+}
+
+unsigned short rp_get_spectr_signal_length(){
+    return g_signal_fgpa_length;
+}
+
+unsigned short rp_get_spectr_signal_max_length(){
+    return ADC_BUFFER_SIZE;
+}
+
+int rp_set_spectr_signal_length(int len){
+    if (len < 256 || len > ADC_BUFFER_SIZE) return -1;
+    
+    unsigned char res = 0;
+    int n = len; 
+    while (n) {
+        res += n&1;
+        n >>= 1;
+    }
+    if (res != 1) return -1;
+
+    g_signal_fgpa_length = len;
+    return 0;
 }
 
 void rp_spectr_set_mode(int mode){
-    g_voltMode = mode;
+    g_mode = mode;
 }
 
 int rp_spectr_get_mode(){
-    return g_voltMode;
+    return g_mode;
 }
 
 double __zeroethOrderBessel( double x )
@@ -146,7 +166,7 @@ int rp_spectr_window_init(window_mode_t mode){
     g_window_mode = mode;
     rp_spectr_window_clean();
     
-    rp_window = (double *)malloc(rp_get_fpga_signal_max_length() * sizeof(double));
+    rp_window = (double *)malloc(rp_get_spectr_signal_max_length() * sizeof(double));
     if(rp_window == NULL) {
         fprintf(stderr, "rp_spectr_window_init() can not allocate mem");
         return -1;
@@ -272,11 +292,11 @@ int rp_spectr_fft_init()
     }
 
     rp_kiss_fft_out1 = 
-        (kiss_fft_cpx *)malloc(rp_get_fpga_signal_length() * sizeof(kiss_fft_cpx));
+        (kiss_fft_cpx *)malloc(rp_get_spectr_signal_length() * sizeof(kiss_fft_cpx));
     rp_kiss_fft_out2 =
-        (kiss_fft_cpx *)malloc(rp_get_fpga_signal_length() * sizeof(kiss_fft_cpx));
+        (kiss_fft_cpx *)malloc(rp_get_spectr_signal_length() * sizeof(kiss_fft_cpx));
 
-    rp_kiss_fft_cfg = kiss_fftr_alloc(rp_get_fpga_signal_length(), 0, NULL, NULL);
+    rp_kiss_fft_cfg = kiss_fftr_alloc(rp_get_spectr_signal_length(), 0, NULL, NULL);
 
     return 0;
 }
@@ -396,7 +416,7 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
     double max_pw_chb = -1e5;
     int max_pw_idx_cha = 0;
     int max_pw_idx_chb = 0;
-    float freq_smpl = spectr_get_fpga_smpl_freq() / decimation;
+    float freq_smpl = ADC_SAMPLE_RATE / decimation;
    
     if (g_remove_DC != 0) {
             cha_o[0] = cha_o[1] = cha_o[2];
@@ -458,7 +478,7 @@ int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
     double max_pw_chb = 0;
     int    max_pw_idx_cha = 0;
     int    max_pw_idx_chb = 0;
-    float  freq_smpl = spectr_get_fpga_smpl_freq() / decimation;
+    float  freq_smpl = ADC_SAMPLE_RATE / decimation;
 
     if (g_remove_DC != 0) {
             cha_o[0] = cha_o[1] = cha_o[2];
@@ -513,7 +533,7 @@ int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
         }
     }
 
-       
+
     *peak_power_cha = max_pw_cha;
     *peak_freq_cha = ((float)max_pw_idx_cha / (float)SPECTR_OUT_SIG_LENGTH * 
                       freq_smpl  / 2) ;
