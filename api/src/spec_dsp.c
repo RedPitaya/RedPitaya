@@ -89,7 +89,7 @@ int rp_spectr_prepare_freq_vector(float **freq_out, double f_s, float decimation
     for(i = 0; i < SPECTR_OUT_SIG_LENGTH; i++) {
         /* We use full FPGA signal length range for this calculation, eventhough
          * the output vector is smaller. */
-        f[i] = (float)i / (float)SPECTR_FPGA_SIG_LEN * freq_smpl / unit_div;
+        f[i] = (float)i / (float)SPECTR_FPGA_SIG_LEN * f  / unit_div;
     }
 
     return 0;

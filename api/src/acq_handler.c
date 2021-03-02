@@ -890,16 +890,10 @@ int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
     ptr1 = cnts1;
     ptr2 = cnts2;
 
-    // FILE *pFile = fopen ("/tmp/debugout.txt","a+");  
-
     for (uint32_t i = 0; i < (*size); ++i) {
         *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++ & ADC_BITS_MASK, gainV1, calibScale1, dc_offs1, 0.0);
         *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++ & ADC_BITS_MASK, gainV2, calibScale2, dc_offs2, 0.0);
-//        fprintf (pFile, "%d - %f - %d - %d\n",*(ptr1-1),*(buffer1-1),calibScale1,dc_offs1);
     }
-//    fclose (pFile);
-    
-
     return RP_OK;
 }
 

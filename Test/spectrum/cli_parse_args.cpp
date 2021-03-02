@@ -12,8 +12,7 @@ std::string cli_help_string() {
     "-a, --average: average the measurement from 10 times (default: enabled)\n"
     "-n, --no-average: disable average the measurement from 10 times\n"
     "-C, --csv: print values by columns Frequency (Hz), ch0 (dB), ch1 (dB)\n"
-    "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n"
-    "-t, --test: test mode avoids the initiating/resetting/releasing FPGA";
+    "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n";
 }
 
 bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
@@ -28,8 +27,7 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
         { "no-average", no_argument, nullptr, 'n' },
         { "csv", no_argument, nullptr, 'C' },
         { "csv-limit", no_argument, nullptr, 'L' },
-        { "test", no_argument, nullptr, 't' },
-        { nullptr, 0, nullptr, 0 },
+        { nullptr, 0, nullptr, 0 }
     };
 
     bool success = true;
@@ -79,10 +77,6 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
 
             case 'L':
                 args.csv_limit = true;
-                break;
-
-            case 't':
-                args.test = true;
                 break;
 
             // case '?':

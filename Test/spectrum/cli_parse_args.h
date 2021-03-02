@@ -9,7 +9,6 @@ struct cli_args_t {
     bool average_for_10 = true;
     bool csv = false;
     bool csv_limit = false;
-    bool test = false;
     bool help = false;
 };
 

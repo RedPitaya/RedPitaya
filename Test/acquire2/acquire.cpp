@@ -502,11 +502,8 @@ int main(int argc, char *argv[])
         for(i = 0; i < SIGNALS_NUM; i++) {
             s[i] = (float *)malloc(SIGNAL_LENGTH * sizeof(float));
         }
-        //std::cout << "STEP 1\n";
         while(retries >= 0) {
-        //    std::cout << "STEP 2\n";
             if((ret_val = rp_get_signals(&s, &sig_num, &sig_len)) >= 0) {
-        //        std::cout << "STEP 3\n";
                 /* Signals acquired in s[][]:
                  * s[0][i] - TODO
                  * s[1][i] - Channel ADC1 raw signal
@@ -541,7 +538,6 @@ int main(int argc, char *argv[])
                 }
                 break;
             }
-        //    std::cout << "STEP 4\n";
             if(retries-- == 0) {
                 fprintf(stderr, "Signal scquisition was not triggered!\n");
                 break;

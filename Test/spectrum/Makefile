@@ -24,7 +24,7 @@ TARGET = spectrum
 
 # GCC compiling & linking flags
 CXXFLAGS  = -std=c++14 -Wall -Wextra -Weffc++ -O3
-CXXFLAGS += -I../../api/include -L../../api/lib
+CXXFLAGS += -I../../api/include -L../../api/lib -lrp
 CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Additional libraries which needs to be dynamically linked to the executable

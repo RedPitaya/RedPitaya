@@ -1137,6 +1137,18 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* bu
 int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2);
 
 /**
+ * Returns the ADC buffer in Volt units from specified position and desired size.
+ * Output buffer must be at least 'size' long.
+ * @param pos Starting position of the ADC buffer to retrieve
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @param buffer1 The output buffer gets filled with the selected part of the ADC buffer for channel 1.
+ * @param buffer2 The output buffer gets filled with the selected part of the ADC buffer for channel 2.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2);
+
+/**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.
  * Output buffer must be at least 'size' long.
  * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
