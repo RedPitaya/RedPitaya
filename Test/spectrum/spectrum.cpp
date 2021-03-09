@@ -92,7 +92,7 @@ static void spectrum_worker(cli_args_t args) {
     std::vector<double> chb_fft(rp_get_spectr_out_signal_max_length(), 0);
 
     // API compatible
-    float *tmp_signal_0 = tmp_signals[0].data();
+    // float *tmp_signal_0 = tmp_signals[0].data();
     float *tmp_signal_1 = tmp_signals[1].data();
     float *tmp_signal_2 = tmp_signals[2].data();
     double *p_cha_fft = cha_fft.data();
@@ -149,7 +149,7 @@ static void spectrum_worker(cli_args_t args) {
         uint32_t trig_pos;
         rp_AcqGetWritePointerAtTrig(&trig_pos);
         rp_AcqGetDataV2D(trig_pos,&buffer_size, p_cha_in, p_chb_in);
-        rp_spectr_prepare_freq_vector(&tmp_signal_0, ADC_SAMPLE_RATE, decimation);
+    //    rp_spectr_prepare_freq_vector(&tmp_signal_0, ADC_SAMPLE_RATE, decimation);
         rp_spectr_window_filter(p_cha_in, p_chb_in, &p_cha_in, &p_chb_in);
         rp_spectr_fft(p_cha_in, p_chb_in, &p_cha_fft, &p_chb_fft);
         rp_spectr_decimate(p_cha_fft, p_chb_fft, &tmp_signal_1, &tmp_signal_2, rp_get_spectr_out_signal_length(), spectrum_signal_size);

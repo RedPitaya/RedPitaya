@@ -71,25 +71,25 @@ int rp_spectr_prepare_freq_vector(float **freq_out, double f_s, float decimation
     float freq_smpl = f_s / decimation;
     // (float)spectr_fpga_cnv_freq_range_to_dec(freq_range);
     /* Divider to get to the right units - [MHz], [kHz] or [Hz] */
-    float unit_div = 1e6;
+    //float unit_div = 1e6;
 
     if(!f) {
         fprintf(stderr, "rp_spectr_prepare_freq_vector() not initialized\n");
         return -1;
     }
     
-    if (freq_smpl > 1e3) {
-        unit_div = 1e3;
-    }
+    // if (freq_smpl > 1e3) {
+    //     unit_div = 1e3;
+    // }
 
-    if (freq_smpl > 1e6) {
-        unit_div = 1;
-    }
+    // if (freq_smpl > 1e6) {
+    //     unit_div = 1;
+    // }
 
     for(i = 0; i < SPECTR_OUT_SIG_LENGTH; i++) {
         /* We use full FPGA signal length range for this calculation, eventhough
          * the output vector is smaller. */
-        f[i] = (float)i / (float)SPECTR_FPGA_SIG_LEN * freq_smpl  / unit_div;
+        f[i] = (float)i / (float)SPECTR_FPGA_SIG_LEN * freq_smpl;
     }
 
     return 0;
@@ -474,8 +474,8 @@ int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
     int i;
     float *cha_o = *cha_out;
     float *chb_o = *chb_out;
-    double max_pw_cha = 0;
-    double max_pw_chb = 0;
+    double max_pw_cha = -10000;
+    double max_pw_chb = -10000;
     int    max_pw_idx_cha = 0;
     int    max_pw_idx_chb = 0;
     float  freq_smpl = ADC_SAMPLE_RATE / decimation;
@@ -496,7 +496,7 @@ int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
             else	
                 cha_o[i] = 10 * log10(1.0e-12);
         
-            if (chb_p * c_w2mw > 1.0e-12 )        	
+            if (chb_p * c_w2mw > 1.0e-12 )
                 chb_o[i] = 10 * log10(chb_p * c_w2mw);
             else	
                 chb_o[i] = 10 * log10(1.0e-12);
