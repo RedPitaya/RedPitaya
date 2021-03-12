@@ -665,6 +665,11 @@ int rp_AcqReset()
     return acq_Reset();
 }
 
+int rp_AcqResetFpga()
+{
+    return acq_ResetFpga();
+}
+
 uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos)
 {
     return acq_GetNormalizedDataPos(pos);

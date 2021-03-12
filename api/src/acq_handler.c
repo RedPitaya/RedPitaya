@@ -697,6 +697,11 @@ int acq_Reset()
     return osc_ResetWriteStateMachine();
 }
 
+int acq_ResetFpga()
+{
+    return osc_ResetWriteStateMachine();
+}
+
 static const volatile uint32_t* getRawBuffer(rp_channel_t channel)
 {
     if (channel == RP_CH_1) {

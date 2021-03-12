@@ -428,7 +428,7 @@ int rp_spectr_cnv_to_dBm(float *cha_in, float *chb_in,
         /* Conversion to power (Watts) */
 
         double cha_p=cha_in[i];
-        double chb_p=chb_in[i];    
+        double chb_p=chb_in[i];
         
         // Avoiding -Inf due to log10(0.0)
         
@@ -494,12 +494,12 @@ int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
             if (cha_p * c_w2mw > 1.0e-12 )	
                 cha_o[i] = 10 * log10(cha_p * c_w2mw);  // W -> mW -> dBm
             else	
-                cha_o[i] = 10 * log10(1.0e-12);
+                cha_o[i] = -120;
         
             if (chb_p * c_w2mw > 1.0e-12 )
                 chb_o[i] = 10 * log10(chb_p * c_w2mw);
             else	
-                chb_o[i] = 10 * log10(1.0e-12);
+                chb_o[i] = -120;
         }
 
         if (rp_spectr_get_mode() == 1){
@@ -514,12 +514,12 @@ int rp_spectr_cnv_to_metric(float *cha_in, float *chb_in,
             if (cha_p * c_w2mw > 1.0e-12 )	
                 cha_o[i] = 20 * log10(cha_p / 0.775);
             else	
-                cha_o[i] = 20 * log10(1.0e-12);
+                cha_o[i] = -120;
         
             if (chb_p * c_w2mw > 1.0e-12 )
                 chb_o[i] = 20 * log10(chb_p / 0.775);
             else	
-                chb_o[i] = 20 * log10(1.0e-12);
+                chb_o[i] = -120;
         }
 
         /* Find peaks */

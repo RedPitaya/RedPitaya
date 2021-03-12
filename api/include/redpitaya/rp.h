@@ -1053,11 +1053,19 @@ int rp_AcqStart();
 int rp_AcqStop();
 
 /**
- * Resets the acquire writing state machine.
+ * Resets the acquire writing state machine and set by default all parameters.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqReset();
+
+
+/**
+ * Resets the acquire writing state machine.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqResetFpga();
 
 /**
  * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...

@@ -71,6 +71,7 @@ int acq_GetWritePointerAtTrig(uint32_t* pos);
 int acq_Start();
 int acq_Stop();
 int acq_Reset();
+int acq_ResetFpga();
 
 uint32_t acq_GetNormalizedDataPos(uint32_t pos);
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
