@@ -92,7 +92,7 @@
                                     <td class="step_desc">Step 3. Checking for updates
                                         <div id="used_last_version" style="display:none">
                                             <p>You are using the latest ecosystem</p>
-                                        </div>
+                                        </div>                                       
                                         <div id="select_ver">
                                             <table style="width: 100%;">
                                                 <tr>
@@ -104,6 +104,11 @@
                                                     <td><a id="change_log_link" target="_blank" href="https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md">Release notes</a></td>
                                                 </tr>                
                                             </table>
+                                        </div>
+                                        <div id="not_supported_linux" style="display:none;color: red;font-size: medium;">
+                                            <p>The latest Ecosystem is not supported by the current Linux version,</p>
+                                            <p>please re-install the SD card image <a id="change_log_link" target="_blank" href="https://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html">manually</a>.</p>
+                                            
                                         </div>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later.<button id="retry">Retry</button></p>
                                     </td>
