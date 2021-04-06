@@ -98,38 +98,122 @@ float l_inter(float a, float b, float f)
 // 	*dec_val = g_dec[f];
 // }
 
+double InterpolateLagrangePolynomial (double x, double* x_values, double* y_values, int size)
+{
+	double lagrange_pol = 0;
+	double basics_pol;
+
+	for (int i = 0; i < size; i++)
+	{
+		basics_pol = 1;
+		for (int j = 0; j < size; j++)
+		{
+			if (j == i) continue;
+			basics_pol *= (x - x_values[j])/(x_values[i] - x_values[j]);		
+		}
+		lagrange_pol += basics_pol*y_values[i];
+	}
+	return lagrange_pol;
+}
 
 
-std::pair<double, int> crossCorrelation(double *xSignalArray, double *ySignalArray, int lenghtArray)
+
+std::pair<double, double> crossCorrelation(double *xSignalArray, double *ySignalArray, int lenghtArray,int sepm_Per)
 {
     double max_value = -100000.0;
-    int argmax = 0;
+    double argmax = 0;
     // Stores the final array
     double *crossCorrelate = (double*)malloc(((lenghtArray * 2) + 1) * sizeof(double));
     memset(crossCorrelate, 0, ((lenghtArray * 2) + 1) * sizeof(double));
     // Traver the two given arrays
-    for (int i = 0; i < lenghtArray; i++) {
-        for (int j = 0; j < lenghtArray; j++) {
+    // for (int i = 0; i < lenghtArray; i++) {
+    //     for (int j = 0; j < lenghtArray; j++) {
+    //    crossCorrelate[i + j] += (xSignalArray[i] * ySignalArray[lenghtArray - j - 1]);
+    //     }
+    // }
 
-            // Update the convolution array
-            crossCorrelate[i + j] += (xSignalArray[i] * ySignalArray[lenghtArray - j - 1]);
-            if (crossCorrelate[i + j] > max_value)
-            {
-                max_value = crossCorrelate[i + j];
-                argmax = i + j;
-            }
+	// double *a = xSignalArray;
+    // for (int i = 0; i < lenghtArray; i++) {
+	// 	double *b = (ySignalArray + lenghtArray - 1);
+	// 	double *c = crossCorrelate + i;
+    //     for (int j = 0; j < lenghtArray; j++) {
+    //         // Update the convolution array
+    //         *c += ((*a) * (*b));
+	// 		--b;
+	// 		++c;
+    //     }
+	// 	++a;
+    // }
+
+	double *a = xSignalArray;
+	double *b = ySignalArray;
+	int start_k = lenghtArray - sepm_Per < 0 ? 0 : lenghtArray - sepm_Per;
+	int end_k = lenghtArray + sepm_Per > lenghtArray * 2 ? lenghtArray * 2 : lenghtArray + sepm_Per;
+
+	for(int k = start_k ; k < end_k; k++){
+		for (int i = 0; i < lenghtArray; i++) {
+			int j = k - i;
+			if(j < 0 || j >= lenghtArray) continue;
+			crossCorrelate[k] +=a[i]*b[lenghtArray - j - 1]; 
+
+		}
+	}
+
+
+	for(int i = 0 ; i < (lenghtArray * 2) ; ++i){
+        if ((crossCorrelate[i]) > max_value)
+        {
+            max_value = (crossCorrelate[i]);
+            argmax = i;
         }
-    }
+	}
+
+	if (argmax > 0 && argmax < lenghtArray * 2 ){
+		double x_axis[] = { 0 , 1 , 2};
+		double y_axis[3];
+		y_axis[0] = crossCorrelate[(int)argmax - 1];
+		y_axis[1] = crossCorrelate[(int)argmax];
+		y_axis[2] = crossCorrelate[(int)argmax + 1];
+		double eps = 0.0001;
+		double start = 0;
+		double stop = 2;
+		double y_start = InterpolateLagrangePolynomial(start,x_axis,y_axis,3);
+		double y_stop  = InterpolateLagrangePolynomial(stop,x_axis,y_axis,3);
+		//fprintf(stderr,"Y(%f,%f,%f)\n",y_axis[0],y_axis[1],y_axis[2]);
+		double max_inter = 0;
+		while(eps  < (stop - start)){
+			double z = (stop - start)/2.0 + start;
+			double y_sub  = InterpolateLagrangePolynomial(z,x_axis,y_axis,3);
+			//fprintf(stderr,"start %f stop %f z %f (%f,%f,%f)\n",start,stop,z,y_start,y_stop,y_sub);
+			if (y_sub > y_start || y_sub > y_stop){
+				if (y_start > y_stop){
+					stop = z;
+					y_stop = y_sub;
+				}else{
+					start = z;
+					y_start = y_sub;
+				}
+				max_inter = z;
+			}
+			else{
+				max_inter = y_stop > y_start? stop : start;
+				break;
+			}
+		}
+		//argmax = InterpolateLagrangePolynomial(max_inter,x_axis,y_axis,3);
+		argmax = argmax-1 + max_inter;
+	}
+
     free(crossCorrelate);
     auto answer = std::make_pair(max_value, argmax);
     return answer;
 }
 
-double phaseCalculator(double freq_HZ, double samplesPerSecond, int numSamples, double *xSamples, double *ySamples)
+double phaseCalculator(double freq_HZ, double samplesPerSecond, int numSamples,int sepm_Per, double *xSamples, double *ySamples)
 {
     double maxValue, timeShift, phaseShift, timeLine;
-    int argmax;
-    auto result = crossCorrelation(xSamples, ySamples, numSamples);
+    double argmax;
+    auto result = crossCorrelation(xSamples, ySamples, numSamples,sepm_Per);
     maxValue = result.first;
     argmax = result.second;
 
@@ -140,8 +224,8 @@ double phaseCalculator(double freq_HZ, double samplesPerSecond, int numSamples, 
 		phaseShift += M_PI;
 	else if (phaseShift >= M_PI/2) 
 		phaseShift -= M_PI;
-	fprintf(stderr,"freq_HZ %f  samplesPerSecond %f\n",freq_HZ,samplesPerSecond);
-	fprintf(stderr,"argmax %d  maxValue %f timeShift %f phaseShift %f \n",argmax,maxValue,timeShift,phaseShift * 180.0 / M_PI);
+	//fprintf(stderr,"freq_HZ %f  samplesPerSecond %f\n",freq_HZ,samplesPerSecond);
+	//fprintf(stderr,"argmax %f  maxValue %f timeShift %f phaseShift %f \n",argmax,maxValue,timeShift,phaseShift * 180.0 / M_PI);
 	return phaseShift;
 }
 
@@ -333,10 +417,17 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	double max_ch2 = -100000;
 	double min_ch1 = 100000;
 	double min_ch2 = 100000;
+	
+	;
 
 	for (size_t i = 0; i < size; i++){
 		buf1[i] = buffer.ch1[i];
 		buf2[i] = buffer.ch2[i];
+		// Filtring 
+		//buf1[i]  = buf1[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
+		//buf2[i]  = buf2[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
+
+		// 
 		if ((buf1[i]) > max_ch1) {
 			max_ch1 = (buf1[i]);
 		}
@@ -357,43 +448,25 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 
 	
 
-	double dot = 0;
-	double norm1 = 0;
-	double norm2 = 0;
+// 	double dot = 0;
+// 	double norm1 = 0;
+// 	double norm2 = 0;
 
-// 	// double dot_offset = 0;
-// 	// double norm1_offset = 0;
-// 	// double norm2_offset = 0;
-	for (size_t i = 0; i < size; i++){
-		dot += buf1[i] * buf2[i];
-		norm1 += (buf1[i] * buf1[i]);
-		norm2 += (buf2[i] * buf2[i]);
-// 		// dot_offset += buf1[i] * buf2_offset[i];
-// 		// norm1_offset += (buf1[i] * buf1[i]);
-// 		// norm2_offset += (buf2_offset[i] * buf2_offset[i]);
-	}
-// 	// double y_max = -100;
-// 	// double x_max = -100;
-// 	// for (int i = 0 ; i < size ; i++){
-// 	// 	if (buf2[i] >= y_max){
-// 	// 		y_max = buf2[i];
-// 	// 		x_max = buf1[i];
-// 	// 	}
+// 	// for (size_t i = 0; i < size; i++){
+// 	// 	dot += buf1[i] * buf2[i];
+// 	// 	norm1 += (buf1[i] * buf1[i]);
+// 	// 	norm2 += (buf2[i] * buf2[i]);
 // 	// }
-// 	// fprintf(stderr,"Coord %f %f size %d\n",x_max,y_max,size);
 
-  	norm1 = sqrt(norm1);
- 	norm2 = sqrt(norm2);
-// 	// norm1_offset = sqrt(norm1_offset);
-// 	// norm2_offset = sqrt(norm2_offset);
- 	if (norm1 * norm2 != 0){
- 		phase =  acos(( dot / (norm1 * norm2)));
-// 		// phase_offset =  acos(( dot_offset / (norm1_offset * norm2_offset)));
-// //		fprintf(stderr,"P = %f, DEG = %f\n",phase , phase*180/M_PI);
- 	}else{
-// //		fprintf(stderr,"Norm is zero\n");
-// 		ret_value = RP_EIPV;
- 	}
+//   	norm1 = sqrt(norm1);
+//  	norm2 = sqrt(norm2);
+//  	if (norm1 * norm2 != 0){
+//  		phase =  acos(( dot / (norm1 * norm2)));
+// // //		fprintf(stderr,"P = %f, DEG = %f\n",phase , phase*180/M_PI);
+//  	}else{
+// 		fprintf(stderr,"Norm is zero\n");
+//  		ret_value = RP_EIPV;
+//  	}
 
 	double sig1_rms =  RMS(buffer.ch1,size);
 	double sig2_rms =  RMS(buffer.ch2,size);
@@ -405,14 +478,14 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	// }
 	if ((max_ch1 - min_ch1) < input_threshold) ret_value = RP_EIPV;
 	if ((max_ch2 - min_ch2) < input_threshold) ret_value = RP_EIPV;
-	fprintf(stderr,"pp_ch1 %f pp_ch2 %f\n", (max_ch1 - min_ch1), (max_ch2 - min_ch2));
+	//fprintf(stderr,"pp_ch1 %f pp_ch2 %f\n", (max_ch1 - min_ch1), (max_ch2 - min_ch2));
 	int s = size;
-	if (samples_period * 3 < size){
-		s = samples_period * 3;
-		if (s < 100 && size > 100)
-			s = 100;
-	}
-	auto phase2 = phaseCalculator(_freq,samplesPerSecond, s ,buf1,buf2);
+	// if (samples_period * 4 < size){
+	// 	s = samples_period * 4;
+	// 	// if (s < 100 && size > 100)
+	// 	// 	s = 100;
+	// }
+	auto phase2 = phaseCalculator(_freq,samplesPerSecond, size ,samples_period,buf1,buf2);
 	// std::vector<int> points;
 	// int dirs_pos = 0;
 	// int dirs_neg = 0;
@@ -446,14 +519,14 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 
 
 	/* Phase has to be limited between M_PI and -M_PI. */
-	if (phase <= -M_PI) 
-		phase += 2*M_PI;
-	else if (phase >= M_PI) 
-		phase -= 2*M_PI;
+	if (phase2 <= -M_PI) 
+		phase2 += 2*M_PI;
+	else if (phase2 >= M_PI) 
+		phase2 -= 2*M_PI;
 
-	*phase_out = phase *  (180.0 / M_PI) * (phase2 >= 0 ? 1 : -1);
+	*phase_out = phase2 *  (180.0 / M_PI) ;//* (phase2 >= 0 ? 1 : -1);
 	//*gain = u_dut_1_ampl / u_dut_2_ampl;
-	fprintf(stderr,"phase %f phase2 %f offset %f semples %d size %d\n\n",phase,phase2  , phase / (2 * M_PI) * samples_period ,samples_period ,size);
+	//fprintf(stderr,"phase %f phase2 %f offset %f semples %d size %d\n\n",phase,phase2  , phase / (2 * M_PI) * samples_period ,samples_period ,size);
 	return ret_value;
 }
 
