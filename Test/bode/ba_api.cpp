@@ -176,8 +176,8 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 		buf1[i] = buffer.ch1[i];
 		buf2[i] = buffer.ch2[i];
 		// Filtring 
-		buf1[i]  = buf1[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
-		buf2[i]  = buf2[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
+		//buf1[i]  = buf1[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
+		//buf2[i]  = buf2[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
 
 		// 
 		if ((buf1[i]) > max_ch1) {
