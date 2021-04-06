@@ -169,33 +169,10 @@
     var clickApp = function(e) {
         var key = parseInt($(this).attr('key')) * 1;
         e.preventDefault();
-        if (applications[key].check_online) {
-            OnlineChecker.checkAsync(function() {
-                if (!OnlineChecker.isOnline()) {
-                    if (applications[key].licensable) {
-                        $('#ignore_link').text('Ignore');
-                        $('#ignore_link').attr('href', applications[key].url);
-                        $('#lic_failed').show();
-                    } else {
-                        $('#ignore_link').text('Close');
-                        $('#ignore_link').attr('href', "#");
-                        $('#lic_failed').hide();
-                    }
-
-                    $('#ic_missing').modal('show');
-                    return;
-                }
-                if (applications[key].url != "")
-                    window.location = applications[key].url;
-                if (applications[key].callback !== undefined)
-                    applications[key].callback(key);
-            });
-        } else {
-            if (applications[key].url != "")
-                window.location = applications[key].url;
-            if (applications[key].callback !== undefined)
-                applications[key].callback(key);
-        }
+        if (applications[key].url != "")
+            window.location = applications[key].url;
+        if (applications[key].callback !== undefined)
+            applications[key].callback(key);
     }
 
 
