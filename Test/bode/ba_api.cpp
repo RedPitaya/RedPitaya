@@ -211,10 +211,10 @@ std::pair<double, double> crossCorrelation(double *xSignalArray, double *ySignal
 
 double phaseCalculator(double freq_HZ, double samplesPerSecond, int numSamples,int sepm_Per, double *xSamples, double *ySamples)
 {
-    double maxValue, timeShift, phaseShift, timeLine;
+    double timeShift, phaseShift, timeLine;
     double argmax;
     auto result = crossCorrelation(xSamples, ySamples, numSamples,sepm_Per);
-    maxValue = result.first;
+    //double maxValue = result.first;
     argmax = result.second;
 
     timeLine = ((numSamples - 1) / samplesPerSecond);
@@ -326,7 +326,7 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	// 	phase_z_rad = phase_z_rad * (180.0 / M_PI);
 	// 	fprintf(stderr, "u_dut_ampl %f u_dut_phase_ampl %f\n",z_ampl,phase_z_rad);
 	// }
-	double phase = 0;
+	//double phase = 0;
 	//double phase_offset = 0;
 
 	// double T = (decimation / ADC_SAMPLE_RATE);
@@ -479,7 +479,7 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	if ((max_ch1 - min_ch1) < input_threshold) ret_value = RP_EIPV;
 	if ((max_ch2 - min_ch2) < input_threshold) ret_value = RP_EIPV;
 	//fprintf(stderr,"pp_ch1 %f pp_ch2 %f\n", (max_ch1 - min_ch1), (max_ch2 - min_ch2));
-	int s = size;
+	//int s = size;
 	// if (samples_period * 4 < size){
 	// 	s = samples_period * 4;
 	// 	// if (s < 100 && size > 100)
