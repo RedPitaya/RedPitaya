@@ -60,14 +60,14 @@ static bool triggerDelayInNs = false;
 rp_acq_trig_src_t last_trig_src = RP_TRIG_SRC_DISABLED;
 
 /* @brief Default filter equalization coefficients */
-static const uint32_t GAIN_LO_FILT_AA = 0x7D93;
-static const uint32_t GAIN_LO_FILT_BB = 0x437C7;
-static const uint32_t GAIN_LO_FILT_PP = 0x2666;
-static const uint32_t GAIN_LO_FILT_KK = 0xd9999a;
-static const uint32_t GAIN_HI_FILT_AA = 0x4C5F;
-static const uint32_t GAIN_HI_FILT_BB = 0x2F38B;
-static const uint32_t GAIN_HI_FILT_PP = 0x2666;
-static const uint32_t GAIN_HI_FILT_KK = 0xd9999a;
+// static const uint32_t GAIN_LO_FILT_AA = 0x7D93;
+// static const uint32_t GAIN_LO_FILT_BB = 0x437C7;
+// static const uint32_t GAIN_LO_FILT_PP = 0x2666;
+// static const uint32_t GAIN_LO_FILT_KK = 0xd9999a;
+// static const uint32_t GAIN_HI_FILT_AA = 0x4C5F;
+// static const uint32_t GAIN_HI_FILT_BB = 0x2F38B;
+// static const uint32_t GAIN_HI_FILT_PP = 0x2666;
+// static const uint32_t GAIN_HI_FILT_KK = 0xd9999a;
 
 void PrintLogInFile2(const char *message){
     FILE *f = fopen("/tmp/debug.log", "a+");

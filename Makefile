@@ -48,9 +48,9 @@ $(INSTALL_DIR):
 # API libraries
 ################################################################################
 
-LIBRP_DIR       = api
-LIBRP2_DIR      = api2
-LIBRP250_12_DIR = api-250-12
+LIBRP_DIR       = rp-api/api
+LIBRP2_DIR      = rp-api/api2
+LIBRP250_12_DIR = rp-api/api-250-12
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
@@ -276,7 +276,7 @@ GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
-LA_TEST_DIR        = api2/test
+LA_TEST_DIR        = rp-api/api2/test
 
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
