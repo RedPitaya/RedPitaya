@@ -41,6 +41,7 @@ CXXFLAGS += -D$(MODEL)
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBS+=-L$(INSTALL_DIR)/lib -static -lrp
 ifeq ($(MODEL),Z20_250_12)
+CXXFLAGS += -I$(INSTALL_DIR)/include/api250-12
 LIBS+= -static -lrp-i2c -static -lrp-gpio -static -lrp-spi 
 endif
 LIBS+=-lm -lpthread  -lstdc++
