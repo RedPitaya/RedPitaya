@@ -28,7 +28,6 @@ export LINUX_VER
 # Z20_250_12 - for RepPitaya 250-12
 # Production test script
 MODEL ?= Z10
-ENABLE_PRODUCTION_TEST ?= 0
 
 all: api nginx examples  apps-tools apps-pro  production_test startupsh scpi
 
@@ -509,16 +508,6 @@ endif
 #
 ################################################################################
 
-PRODUCTION_TEST_DIR = Test/production
-
-.PHONY: production_test
-
-production_test:
-ifeq ($(ENABLE_PRODUCTION_TEST), 1)
-	$(MAKE) -C $(PRODUCTION_TEST_DIR) clean
-	$(MAKE) -C $(PRODUCTION_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
-	$(MAKE) -C $(PRODUCTION_TEST_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
-endif
 
 clean:
 	# todo, remove downloaded libraries and symlinks
