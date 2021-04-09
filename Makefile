@@ -29,7 +29,7 @@ export LINUX_VER
 # Production test script
 MODEL ?= Z10
 
-all: api nginx examples  apps-tools apps-pro  production_test startupsh scpi
+all: api nginx examples  apps-tools apps-pro startupsh scpi
 
 ifeq ($(MODEL),Z20_250_12)
 all: 
