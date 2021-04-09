@@ -12,6 +12,7 @@
 # For the details about the usage and building please visit:
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
+
 MODEL ?= Z10
 
 # Versioning system
@@ -20,25 +21,38 @@ REVISION ?= devbuild
 
 # List of compiled object files (not yet linked to executable)
 OBJS = fpga_osc.o main_osc.o worker.o acquire.o
+ifeq ($(MODEL),Z20_250_12)
+OBJS += acquire_250.o
+endif
 # List of raw source files (all object files, renamed from .o to .c)
-SRCS = $(subst .o,.c, $(OBJS)))
+SRCS = $(subst .o,.cpp, $(OBJS)))
 
 # Executable name
 TARGET=acquire
 
 # GCC compiling & linking flags
-CFLAGS  = -g -std=gnu99 -Wall -Werror
-CFLAGS += -I../../api/include
-CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -D$(MODEL)
+CXXFLAGS  = -Wall -Werror -Wno-unused-variable -Wno-unused-but-set-variable
+CXXFLAGS += -I../../api/include
+ifeq ($(MODEL),Z20_250_12)
+CXXFLAGS += -I../../api-250-12/bin/include
+endif
+CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+CXXFLAGS += -D$(MODEL)
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS=-lm -lpthread
+LIBS+=-L$(INSTALL_DIR)/lib -static -lrp
+ifeq ($(MODEL),Z20_250_12)
+LIBS+=-L../../api-250-12/bin/ -static -lrp-i2c -static -lrp-gpio -static -lrp-spi 
+endif
+LIBS+=-lm -lpthread  -lstdc++
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
 # Installation directory
 INSTALL_DIR ?= .
+
+.PHONY: all
 
 # Makefile is composed of so called 'targets'. They give basic structure what 
 # needs to be execued during various stages of the building/removing/installing
@@ -61,12 +75,12 @@ all: $(TARGET)
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
 %.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CXXFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $@ $^ $(CXXFLAGS) $(LIBS)
 
 # Clean target - when called it cleans all object files and executables.
 clean:

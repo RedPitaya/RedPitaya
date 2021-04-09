@@ -269,9 +269,7 @@ endif
 LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
-MONITOR_OLD_DIR    = Test/monitor_old
 ACQUIRE_DIR        = Test/acquire
-ACQUIRE2_DIR       = Test/acquire2
 CALIB_DIR          = Test/calib
 CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
@@ -279,19 +277,16 @@ SPECTRUM_DIR       = Test/spectrum
 COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = api2/test
-GENERATE_DC_DIR    = Test/generate_DC
 
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
-.PHONY: acquire2
 
-examples: lcr bode monitor calib generate_DC spectrum acquire2 generator
+examples: lcr bode monitor calib spectrum acquire generator
 
 ifeq ($(MODEL),Z20_250_12)
 examples: rp_i2c_tool
 endif
 # calibrate laboardtest
-
 
 rp_i2c_tool:
 	$(MAKE) -C $(LIBRP250_12_DIR) clean
@@ -313,24 +308,14 @@ monitor:
 	$(MAKE) -C $(MONITOR_DIR)
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-monitor_old:
-	$(MAKE) -C $(MONITOR_OLD_DIR) clean
-	$(MAKE) -C $(MONITOR_OLD_DIR)
-	$(MAKE) -C $(MONITOR_OLD_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
 generator: api
 	$(MAKE) -C $(GENERATOR_DIR) clean 
 	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-# remove old tool
-#acquire: api
-#	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL)
-#	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-acquire2: api
-	$(MAKE) -C $(ACQUIRE2_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(ACQUIRE2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+acquire: api
+	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
@@ -355,12 +340,6 @@ laboardtest: api2
 rp_communication:
 	make -C $(COMM_DIR)
 
-generate_DC: api
-ifeq ($(ENABLE_PRODUCTION_TEST), 1)
-	$(MAKE) -C $(GENERATE_DC_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	cp $(GENERATE_DC_DIR)/generate_DC $(INSTALL_DIR)/bin/
-	cp $(GENERATE_DC_DIR)/generate_DC_LO $(INSTALL_DIR)/bin/
-endif
 
 ################################################################################
 # Red Pitaya ecosystem and tools
@@ -544,11 +523,9 @@ clean:
 	# todo, remove downloaded libraries and symlinks
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
-	make -C $(MONITOR_OLD_DIR) clean
 	make -C $(GENERATOR_DIR) clean
 	make -C $(ACQUIRE_DIR) clean
 	make -C $(GENERATOR250_DIR) clean
-	make -C $(ACQUIRE250_DIR) clean
 	make -C $(CALIB_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP250_12_DIR)    clean
@@ -557,6 +534,5 @@ clean:
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
-	make -C $(GENERATE_DC_DIR) clean
 	make -C $(PRODUCTION_TEST_DIR) clean
 	apps-free-clean
