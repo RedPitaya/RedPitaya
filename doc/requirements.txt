@@ -1,4 +1,0 @@
-# support for http://wavedrom.com
-sphinxcontrib-wavedrom
-# http://breathe.readthedocs.io/en/latest/
-breathe
