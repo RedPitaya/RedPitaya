@@ -18,6 +18,7 @@ MODEL ?= Z10
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
+INSTALL_DIR ?= .
 
 # List of compiled object files (not yet linked to executable)
 OBJS = fpga_osc.o main_osc.o worker.o acquire.o
@@ -32,10 +33,7 @@ TARGET=acquire
 
 # GCC compiling & linking flags
 CXXFLAGS  = -Wall -Werror -Wno-unused-variable -Wno-unused-but-set-variable
-CXXFLAGS += -I../../api/include
-ifeq ($(MODEL),Z20_250_12)
-CXXFLAGS += -I../../api-250-12/bin/include
-endif
+CXXFLAGS += -I$(INSTALL_DIR)/include
 CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CXXFLAGS += -D$(MODEL)
 
@@ -43,7 +41,7 @@ CXXFLAGS += -D$(MODEL)
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBS+=-L$(INSTALL_DIR)/lib -static -lrp
 ifeq ($(MODEL),Z20_250_12)
-LIBS+=-L../../api-250-12/bin/ -static -lrp-i2c -static -lrp-gpio -static -lrp-spi 
+LIBS+= -static -lrp-i2c -static -lrp-gpio -static -lrp-spi 
 endif
 LIBS+=-lm -lpthread  -lstdc++
 

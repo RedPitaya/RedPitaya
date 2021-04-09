@@ -7,12 +7,12 @@
 #include <cmath>
 #include <csignal>
 #include <unistd.h>
-#include <redpitaya/version.h>
-#include <redpitaya/rp.h>
+#include <version.h>
+#include <rp.h>
 #include "cli_parse_args.h"
 
 extern "C" {
-    #include <../src/spec_dsp.h>
+    #include <../../rp-api/api/src/spec_dsp.h>
 }
 
 namespace {

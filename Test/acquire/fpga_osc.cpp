@@ -24,7 +24,7 @@
 #include <fcntl.h>
 
 #include "fpga_osc.h"
-#include "rp_cross.h"
+#include "rp.h"
 
 #ifdef Z20_250_12
 #include "acquire_250.h"

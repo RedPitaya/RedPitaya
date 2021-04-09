@@ -305,7 +305,7 @@ bode: api
 
 monitor:
 	$(MAKE) -C $(MONITOR_DIR) clean
-	$(MAKE) -C $(MONITOR_DIR)
+	$(MAKE) -C $(MONITOR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 generator: api
@@ -319,7 +319,7 @@ acquire: api
 
 calib:
 	$(MAKE) -C $(CALIB_DIR) clean
-	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL)
+	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrum: api
@@ -329,7 +329,7 @@ spectrum: api
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
-	$(MAKE) -C $(CALIBRATE_DIR)
+	$(MAKE) -C $(CALIBRATE_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 laboardtest: api2
@@ -337,6 +337,7 @@ laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR)
 	cp api2/test/laboardtest build/bin/laboardtest
 	cp api2/test/install.sh build/install.sh
+	
 rp_communication:
 	make -C $(COMM_DIR)
 

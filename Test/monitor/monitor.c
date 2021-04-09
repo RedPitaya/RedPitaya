@@ -27,7 +27,7 @@
 #include <sys/mman.h>
 #include <stdint.h>
 
-#include "redpitaya/version.h"
+#include "version.h"
 
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)

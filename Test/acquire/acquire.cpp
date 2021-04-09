@@ -23,7 +23,7 @@
 
 #include "main_osc.h"
 #include "fpga_osc.h"
-#include "redpitaya/version.h"
+#include "version.h"
 
 
 #ifdef Z20_250_12

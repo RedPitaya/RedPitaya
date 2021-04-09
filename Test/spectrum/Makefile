@@ -13,6 +13,7 @@ MODEL ?= Z10
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
+INSTALL_DIR ?= .
 
 # List of compiled object files (not yet linked to executable)
 OBJS = spectrum.o cli_parse_args.o
@@ -24,7 +25,7 @@ TARGET = spectrum
 
 # GCC compiling & linking flags
 CXXFLAGS  = -std=c++14 -Wall -Wextra -Weffc++ -O3
-CXXFLAGS += -I../../api/include -L../../api/lib -lrp
+CXXFLAGS += -I$(INSTALL_DIR)/include -L$(INSTALL_DIR)/lib -lrp
 CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Additional libraries which needs to be dynamically linked to the executable
