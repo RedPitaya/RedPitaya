@@ -205,9 +205,6 @@ int gen_setPhase(rp_channel_t channel, float phase) {
     if (phase < PHASE_MIN || phase > PHASE_MAX) {
         return RP_EOOR;
     }
-    if (phase < 0) {
-        phase += 360;
-    }
     CHANNEL_ACTION(channel,
             chA_phase = phase,
             chB_phase = phase)
@@ -517,21 +514,22 @@ int synthesize_signal(rp_channel_t channel) {
     float data[BUFFER_LENGTH];
     rp_waveform_t waveform;
     float dutyCycle, frequency;
-    uint32_t size, phase;
+    uint32_t size;
+    int32_t phase;
 
     if (channel == RP_CH_1) {
         waveform = chA_waveform;
         dutyCycle = chA_dutyCycle;
         frequency = chA_frequency;
         size = chA_size;
-        phase = (uint32_t) (chA_phase * BUFFER_LENGTH / 360.0);
+        phase = (chA_phase * BUFFER_LENGTH / 360.0);
     }
     else if (channel == RP_CH_2) {
         waveform = chB_waveform;
         dutyCycle = chB_dutyCycle;
         frequency = chB_frequency;
     	size = chB_size;
-        phase = (uint32_t) (chB_phase * BUFFER_LENGTH / 360.0);
+        phase = (chB_phase * BUFFER_LENGTH / 360.0);
     }
     else{
         return RP_EPN;
@@ -550,6 +548,7 @@ int synthesize_signal(rp_channel_t channel) {
         case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size); break;
         default:                    return RP_EIPV;
     }
+    if (waveform != RP_WAVEFORM_ARBITRARY) size = buf_size;
     return generate_writeData(channel, data, phase, size);
 }
 
