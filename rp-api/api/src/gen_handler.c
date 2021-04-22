@@ -32,11 +32,15 @@ float         chA_amplitude            = 1, chB_amplitude            = 1;
 float         chA_offset               = 0, chB_offset               = 0;
 float         chA_dutyCycle            = 0, chB_dutyCycle            = 0;
 float         chA_frequency               , chB_frequency               ;
+float         chA_sweepStartFrequency     , chB_sweepStartFrequency     ;
+float         chA_sweepEndFrequency       , chB_sweepEndFrequency       ;
 float         chA_phase                = 0, chB_phase                = 0;
 int           chA_burstCount           = 1, chB_burstCount           = 1;
 int           chA_burstRepetition      = 1, chB_burstRepetition      = 1;
 uint32_t      chA_burstPeriod          = 0, chB_burstPeriod          = 0;
 rp_waveform_t chA_waveform                , chB_waveform                ;
+rp_gen_sweep_mode_t  chA_sweepMode        , chB_sweepMode               ;
+rp_gen_sweep_dir_t   chA_sweepDir         , chB_sweepDir                ;
 uint32_t      chA_size     = BUFFER_LENGTH, chB_size     = BUFFER_LENGTH;
 uint32_t      chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
 
@@ -55,12 +59,20 @@ int gen_SetDefaultValues() {
     gen_Disable(RP_CH_2);
     gen_setFrequency(RP_CH_1, 1000);
     gen_setFrequency(RP_CH_2, 1000);
+    gen_setSweepStartFrequency(RP_CH_1, 1000);
+    gen_setSweepEndFrequency(RP_CH_2, 1000);
+    gen_setSweepStartFrequency(RP_CH_1, 1000);
+    gen_setSweepEndFrequency(RP_CH_2, 1000);
     gen_setBurstRepetitions(RP_CH_1, 1);
     gen_setBurstRepetitions(RP_CH_2, 1);
     gen_setBurstPeriod(RP_CH_1, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
     gen_setBurstPeriod(RP_CH_2, (uint32_t) (1 / 1000.0 * MICRO));   // period = 1/frequency in us
     gen_setWaveform(RP_CH_1, RP_WAVEFORM_SINE);
     gen_setWaveform(RP_CH_2, RP_WAVEFORM_SINE);
+    gen_setSweepMode(RP_CH_1, RP_GEN_SWEEP_MODE_LINEAR);
+    gen_setSweepMode(RP_CH_2, RP_GEN_SWEEP_MODE_LINEAR);
+    gen_setSweepDir(RP_CH_1,RP_GEN_SWEEP_DIR_NORMAL);
+    gen_setSweepDir(RP_CH_2,RP_GEN_SWEEP_DIR_NORMAL);
     gen_setOffset(RP_CH_1, 0);
     gen_setOffset(RP_CH_2, 0);
     gen_setAmplitude(RP_CH_1, AMPLITUDE_MAX);
@@ -199,6 +211,57 @@ int gen_getFrequency(rp_channel_t channel, float *frequency) {
     return generate_getFrequency(channel, frequency);
 }
 
+int gen_setSweepStartFrequency(rp_channel_t channel, float frequency){
+    if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
+        return RP_EOOR;
+    }
+     if (channel == RP_CH_1) {
+        chA_sweepStartFrequency = frequency;
+        gen_setBurstPeriod(channel, chA_burstPeriod);
+    }
+    else if (channel == RP_CH_2) {
+        chB_sweepStartFrequency = frequency;
+        gen_setBurstPeriod(channel, chB_burstPeriod);
+    }
+    else {
+        return RP_EPN;
+    }
+    synthesize_signal(channel);
+    return gen_Synchronise();
+}
+
+int gen_getSweepStartFrequency(rp_channel_t channel, float *frequency){
+    CHANNEL_ACTION(channel,
+            *frequency = chA_sweepStartFrequency,
+            *frequency = chB_sweepStartFrequency)
+    return RP_OK;
+}
+
+int gen_setSweepEndFrequency(rp_channel_t channel, float frequency){
+    if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
+        return RP_EOOR;
+    }
+     if (channel == RP_CH_1) {
+        chA_sweepEndFrequency = frequency;
+        gen_setBurstPeriod(channel, chA_burstPeriod);
+    }
+    else if (channel == RP_CH_2) {
+        chB_sweepEndFrequency = frequency;
+        gen_setBurstPeriod(channel, chB_burstPeriod);
+    }
+    else {
+        return RP_EPN;
+    }
+    synthesize_signal(channel);
+    return gen_Synchronise();
+}
+
+int gen_getSweepEndFrequency(rp_channel_t channel, float *frequency){
+    CHANNEL_ACTION(channel,
+            *frequency = chA_sweepEndFrequency,
+            *frequency = chB_sweepEndFrequency)
+    return RP_OK;
+}
 
 
 int gen_setPhase(rp_channel_t channel, float phase) {
@@ -241,6 +304,34 @@ int gen_getWaveform(rp_channel_t channel, rp_waveform_t *type) {
     CHANNEL_ACTION(channel,
             *type = chA_waveform,
             *type = chB_waveform)
+    return RP_OK;
+}
+
+int gen_setSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode) {
+    CHANNEL_ACTION(channel,
+            chA_sweepMode = mode,
+            chB_sweepMode = mode)    
+    return synthesize_signal(channel);
+}
+
+int gen_getSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode) {
+    CHANNEL_ACTION(channel,
+            *mode = chA_sweepMode,
+            *mode = chB_sweepMode)
+    return RP_OK;
+}
+
+int gen_setSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode){
+    CHANNEL_ACTION(channel,
+            chA_sweepDir = mode,
+            chB_sweepDir = mode)    
+    return synthesize_signal(channel);
+}
+
+int gen_getSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
+    CHANNEL_ACTION(channel,
+            *mode = chA_sweepDir,
+            *mode = chB_sweepDir)
     return RP_OK;
 }
 
@@ -513,29 +604,43 @@ int gen_Synchronise() {
 int synthesize_signal(rp_channel_t channel) {
     float data[BUFFER_LENGTH];
     rp_waveform_t waveform;
-    float dutyCycle, frequency;
-    uint32_t size;
+    rp_gen_sweep_mode_t sweep_mode;
+    rp_gen_sweep_dir_t sweep_dir;
+    float dutyCycle, frequency,sweepStartFreq , sweepEndFreq;
+    uint32_t size = BUFFER_LENGTH;
     int32_t phase;
+    float  phaseRad = 0;
 
     if (channel == RP_CH_1) {
         waveform = chA_waveform;
         dutyCycle = chA_dutyCycle;
         frequency = chA_frequency;
+        sweepStartFreq = chA_sweepStartFrequency;
+        sweepEndFreq = chA_sweepEndFrequency;
+        sweep_mode = chA_sweepMode;
+        sweep_dir = chA_sweepDir;
         size = chA_size;
         phase = (chA_phase * BUFFER_LENGTH / 360.0);
+        phaseRad = chA_phase/180.0 *  M_PI;
     }
     else if (channel == RP_CH_2) {
         waveform = chB_waveform;
         dutyCycle = chB_dutyCycle;
         frequency = chB_frequency;
-    	size = chB_size;
+        sweepStartFreq = chB_sweepStartFrequency;
+        sweepEndFreq = chB_sweepEndFrequency;
+        sweep_mode = chB_sweepMode;
+        sweep_dir = chB_sweepDir;
+        size = chB_size;
         phase = (chB_phase * BUFFER_LENGTH / 360.0);
+        phaseRad = chB_phase/180.0 *  M_PI;
     }
     else{
         return RP_EPN;
     }
     uint16_t buf_size = BUFFER_LENGTH;
-
+    if(waveform == RP_WAVEFORM_SWEEP) phase = 0;
+    
     switch (waveform) {
         case RP_WAVEFORM_SINE     : synthesis_sin      (data,buf_size);                 break;
         case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data,buf_size);                 break;
@@ -545,7 +650,8 @@ int synthesize_signal(rp_channel_t channel) {
         case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
         case RP_WAVEFORM_DC_NEG   : synthesis_DC_NEG   (data,buf_size);                 break; 
         case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data,buf_size);      break;
-        case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size); break;
+        case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size);          break;
+        case RP_WAVEFORM_SWEEP    : synthesis_sweep(frequency,sweepStartFreq,sweepEndFreq,phaseRad,sweep_mode,sweep_dir, data, buf_size);break;
         default:                    return RP_EIPV;
     }
     if (waveform != RP_WAVEFORM_ARBITRARY) size = buf_size;
@@ -660,6 +766,37 @@ int synthesis_square_Z20_250(float frequency, float *data_out,uint16_t buffSize)
 
     return RP_OK;
 }
+
+int synthesis_sweep(float frequency,float frequency_start,float frequency_end,float phaseRad,rp_gen_sweep_mode_t mode,rp_gen_sweep_dir_t dir, float *data_out,uint16_t buffSize) {
+
+    bool inverDir = false;
+    float sign = 1;
+    if (frequency_end < frequency_start){
+        inverDir = true;
+    }
+    for(int unsigned i = 0; i < buffSize; i++) {
+        double x = (double)i / (double)buffSize;
+        if (dir == RP_GEN_SWEEP_DIR_UP_DOWN){
+            x = x * 2;
+            if (x > 1) {
+                x = 2 - x;
+                sign = -1;
+            }
+        }
+
+        double freq = 0;    
+        if (mode == RP_GEN_SWEEP_MODE_LINEAR){
+            freq = ((frequency_end - frequency_start)*x + frequency_start) * 2;
+        }
+        if (mode == RP_GEN_SWEEP_MODE_LOG){
+            freq = frequency_start  * exp(x *log(frequency_end/frequency_start));
+        }        
+        if (inverDir) x = 1 - x;
+        data_out[i] = sin(freq * 2 * M_PI * (x)/frequency + phaseRad) * sign;
+    }
+    return RP_OK;
+}
+
 
 int triggerIfInternal(rp_channel_t channel) {
     uint32_t value;

@@ -174,7 +174,8 @@ typedef enum {
     RP_WAVEFORM_DC,         //!< Wave form dc
     RP_WAVEFORM_PWM,        //!< Wave form pwm
     RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
-    RP_WAVEFORM_DC_NEG      //!< Wave form negative dc 
+    RP_WAVEFORM_DC_NEG,     //!< Wave form negative dc
+    RP_WAVEFORM_SWEEP       //!< Wave form sweep
 } rp_waveform_t;
 
 typedef enum {
@@ -183,6 +184,15 @@ typedef enum {
     RP_GEN_MODE_STREAM      //!< User can continuously write data to buffer
 } rp_gen_mode_t;
 
+typedef enum {
+    RP_GEN_SWEEP_DIR_NORMAL,     //!< Generate sweep signal from start frequency to end frequency
+    RP_GEN_SWEEP_DIR_UP_DOWN     //!< Generate sweep signal from start frequency to end frequency and back to start frequency
+} rp_gen_sweep_dir_t;
+
+typedef enum {
+    RP_GEN_SWEEP_MODE_LINEAR,     //!< Generate sweep signal in linear mode
+    RP_GEN_SWEEP_MODE_LOG         //!< Generate sweep signal in log mode
+} rp_gen_sweep_mode_t;
 
 typedef enum {
     RP_GEN_TRIG_SRC_INTERNAL = 1,   //!< Internal trigger source
@@ -1271,6 +1281,25 @@ int rp_GenGetOffset(rp_channel_t channel, float *offset);
 */
 int rp_GenFreq(rp_channel_t channel, float frequency);
 
+
+/**
+* Sets channel sweep signal start frequency.
+* @param channel Channel A or B for witch we want to set frequency.
+* @param frequency Frequency of the generated signal in Hz.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSweepStartFreq(rp_channel_t channel, float frequency);
+
+/**
+* Gets channel sweep signal start frequency.
+* @param channel Channel A or B for witch we want to get frequency.
+* @param frequency Pointer where value will be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetSweepStartFreq(rp_channel_t channel, float *frequency);
+
 /**
 * Gets channel signal frequency.
 * @param channel Channel A or B for witch we want to get frequency.
@@ -1279,6 +1308,24 @@ int rp_GenFreq(rp_channel_t channel, float frequency);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenGetFreq(rp_channel_t channel, float *frequency);
+
+/**
+* Sets channel sweep signal end frequency.
+* @param channel Channel A or B for witch we want to set frequency.
+* @param frequency Frequency of the generated signal in Hz.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSweepEndFreq(rp_channel_t channel, float frequency);
+
+/**
+* Gets channel sweep signal end frequency.
+* @param channel Channel A or B for witch we want to get frequency.
+* @param frequency Pointer where value will be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetSweepEndFreq(rp_channel_t channel, float *frequency);
 
 /**
 * Sets channel signal phase. This shifts the signal in time.
@@ -1301,7 +1348,7 @@ int rp_GenGetPhase(rp_channel_t channel, float *phase);
 /**
 * Sets channel signal waveform. This determines how the signal looks.
 * @param channel Channel A or B for witch we want to set waveform type.
-* @param form Wave form of the generated signal [SINE, SQUARE, TRIANGLE, SAWTOOTH, PWM, DC, ARBITRARY].
+* @param form Wave form of the generated signal [SINE, SQUARE, TRIANGLE, SAWTOOTH, PWM, DC, ARBITRARY, SWEEP].
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
@@ -1315,6 +1362,43 @@ int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type);
+
+/**
+* Sets the generation mode for the sweep signal.
+* @param channel Channel A or B for witch we want to set waveform type.
+* @param mode Mode of the generated signal [RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG].
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode);
+
+/**
+* Gets the generation mode for the sweep signal.
+* @param channel Channel A or B for witch we want to get waveform.
+* @param mode Pointer where value will be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode);
+
+
+/**
+* Sets the direction of frequency change for sweep.
+* @param channel Channel A or B for witch we want to set waveform type.
+* @param mode Wave form of the generated signal [RP_GEN_SWEEP_DIR_NORMAL, RP_GEN_SWEEP_DIR_UP_DOWN].
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode);
+
+/**
+* Gets the direction of frequency change for sweep.
+* @param channel Channel A or B for witch we want to get waveform.
+* @param mode Pointer where value will be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode);
 
 /**
 * Sets user defined waveform.

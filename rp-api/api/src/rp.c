@@ -798,6 +798,22 @@ int rp_GenGetFreq(rp_channel_t channel, float *frequency) {
     return gen_getFrequency(channel, frequency);
 }
 
+int rp_GenSweepStartFreq(rp_channel_t channel, float frequency){
+    return gen_setSweepStartFrequency(channel,frequency);
+}
+
+int rp_GenGetSweepStartFreq(rp_channel_t channel, float *frequency){
+    return gen_getSweepStartFrequency(channel,frequency);
+}
+
+int rp_GenSweepEndFreq(rp_channel_t channel, float frequency){
+    return gen_setSweepEndFrequency(channel,frequency);
+}
+
+int rp_GenGetSweepEndFreq(rp_channel_t channel, float *frequency){
+    return gen_getSweepEndFrequency(channel,frequency);
+}
+
 int rp_GenPhase(rp_channel_t channel, float phase) {
     return gen_setPhase(channel, phase);
 }
@@ -812,6 +828,22 @@ int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
 
 int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type) {
     return gen_getWaveform(channel, type);
+}
+
+int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode){
+    return gen_setSweepMode(channel,mode);
+}
+
+int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode){
+    return gen_getSweepMode(channel,mode);
+}
+
+int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode){
+    return gen_setSweepDir(channel,mode);
+}
+
+int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
+    return gen_getSweepDir(channel,mode);    
 }
 
 int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
