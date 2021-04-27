@@ -11,6 +11,8 @@
  * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
  * for more details on the language used herein.
  */
+#include <iostream>
+#include <fstream>
 #include <complex.h>
 #include <limits.h>
 #include <unistd.h>
@@ -22,7 +24,12 @@
 #include <pthread.h>
 //#include <mutex>
 #include "ba_api.h"
+#include <chrono>
+#include "arm_neon.h"
 
+using namespace std::chrono;
+
+typedef double data_t;
 
 #define EXEC_CHECK_MUTEX(x, mutex){ \
  		int retval = (x); \
@@ -36,8 +43,8 @@
 static std::vector<float> calib_data;
 static pthread_mutex_t mutex;
 
-double RMS(const std::vector<float> &data, int size){
-    double result = 0;
+data_t RMS(const std::vector<float> &data, int size){
+    data_t result = 0;
     for(int i = 0; i < size; i++){
         result += data[i] * data[i];
     }
@@ -51,10 +58,10 @@ float l_inter(float a, float b, float f)
     return a + f * (b - a);
 }
 
-double InterpolateLagrangePolynomial (double x, double* x_values, double* y_values, int size)
+data_t InterpolateLagrangePolynomial (data_t x, data_t* x_values, data_t* y_values, int size)
 {
-	double lagrange_pol = 0;
-	double basics_pol;
+	data_t lagrange_pol = 0;
+	data_t basics_pol;
 
 	for (int i = 0; i < size; i++)
 	{
@@ -69,53 +76,84 @@ double InterpolateLagrangePolynomial (double x, double* x_values, double* y_valu
 	return lagrange_pol;
 }
 
+data_t calcPoint(data_t *a, data_t *b,int lenghtArray,int index){
+	data_t x = 0;
+	int j = 0;
+	int i = index - lenghtArray > 0 ? index - lenghtArray : 0;
+	for (; i < lenghtArray && i <= index; i++) {
+		j = index - i;
+		x +=a[i]*b[lenghtArray - j - 1];
+	}
+	return x;
+}
 
+data_t getMaxArg(data_t *a, data_t *b,int start,int stop, int step,int lenghtArray){
+	int len = lenghtArray / step;
+	if (stop == 0)  stop = len;
+	data_t packBufA[len];
+	data_t packBufB[len];
+	data_t corralate[len];
+	int    corralateIndex[len];
+	
+	for(auto k = 0; k < len ; k++){
+		packBufA[k] = a[k*step];
+		packBufB[k] = b[k*step];
+		corralateIndex[k] = -1;
+	}
 
-std::pair<double, double> crossCorrelation(double *xSignalArray, double *ySignalArray, int lenghtArray,int sepm_Per)
+	for(auto k = start; k <stop ; k++){
+		corralate[k] = calcPoint(packBufA,packBufB,len,k);
+		corralateIndex[k] = k;
+	}
+	int maxK = 0;
+	int maxCor = 0;
+	bool init = true;
+	for(auto k = 0; k < len ; k++){
+		if (corralateIndex[k] != -1)
+			if (corralate[k] > maxCor || init){
+				init = false;
+				maxCor = corralate[k];
+				maxK = k;
+			}
+	}
+	return maxK * step;
+}
+
+data_t crossCorrelation(data_t *xSignalArray, data_t *ySignalArray, int lenghtArray,int sepm_Per)
 {
-    double max_value = -100000.0;
-    double argmax = 0;
-    // Stores the final array
-    double *crossCorrelate = (double*)malloc(((lenghtArray * 2) + 1) * sizeof(double));
-    memset(crossCorrelate, 0, ((lenghtArray * 2) + 1) * sizeof(double));
-   
-	double *a = xSignalArray;
-	double *b = ySignalArray;
-	int start_k = lenghtArray - sepm_Per < 0 ? 0 : lenghtArray - sepm_Per;
-	int end_k = lenghtArray + sepm_Per > lenghtArray * 2 ? lenghtArray * 2 : lenghtArray + sepm_Per;
+    data_t argmax = 0;
+    data_t crossCorrelate[3];
+	data_t *a = xSignalArray;
+	data_t *b = ySignalArray;
+	int step = log2(lenghtArray);
+	int maxK = -1;
+	int start = 0;
+	int stop  = 0;
+	while(step>=1){
+		maxK =getMaxArg(a,b,start/step,stop/step,step,lenghtArray);
+		start = maxK - step * 10 < 0 ? 0 : maxK - step * 10;
+		stop  = maxK + step * 10 > (lenghtArray * 2 + 1) ? (lenghtArray * 2 + 1) : maxK + step * 10;
+		step /=2;
+	}
 
-	for(int k = start_k ; k < end_k; k++){
-		for (int i = 0; i < lenghtArray; i++) {
-			int j = k - i;
-			if(j < 0 || j >= lenghtArray) continue;
-			crossCorrelate[k] +=a[i]*b[lenghtArray - j - 1]; 
+	argmax = maxK;
 
+	if (argmax > 0 && argmax < lenghtArray * 2){
+		data_t x_axis[] = { 0 , 1 , 2};
+		data_t y_axis[3];
+
+		for(int i = argmax-1,j=0; i <= argmax+1 ;i++,j++){
+			y_axis[j] = calcPoint(a,b,lenghtArray,i);
 		}
-	}
-
-	for(int i = 0 ; i < (lenghtArray * 2) ; ++i){
-        if ((crossCorrelate[i]) > max_value)
-        {
-            max_value = (crossCorrelate[i]);
-            argmax = i;
-        }
-	}
-
-	if (argmax > 0 && argmax < lenghtArray * 2 ){
-		double x_axis[] = { 0 , 1 , 2};
-		double y_axis[3];
-		y_axis[0] = crossCorrelate[(int)argmax - 1];
-		y_axis[1] = crossCorrelate[(int)argmax];
-		y_axis[2] = crossCorrelate[(int)argmax + 1];
-		double eps = 0.0001;
-		double start = 0;
-		double stop = 2;
-		double y_start = InterpolateLagrangePolynomial(start,x_axis,y_axis,3);
-		double y_stop  = InterpolateLagrangePolynomial(stop,x_axis,y_axis,3);
-		double max_inter = 0;
+		data_t eps = 0.0001;
+		data_t start = 0;
+		data_t stop = 2;
+		data_t y_start = InterpolateLagrangePolynomial(start,x_axis,y_axis,3);
+		data_t y_stop  = InterpolateLagrangePolynomial(stop,x_axis,y_axis,3);
+		data_t max_inter = 0;
 		while(eps  < (stop - start)){
-			double z = (stop - start)/2.0 + start;
-			double y_sub  = InterpolateLagrangePolynomial(z,x_axis,y_axis,3);
+			data_t z = (stop - start)/2.0 + start;
+			data_t y_sub  = InterpolateLagrangePolynomial(z,x_axis,y_axis,3);
 			if (y_sub > y_start || y_sub > y_stop){
 				if (y_start > y_stop){
 					stop = z;
@@ -133,17 +171,13 @@ std::pair<double, double> crossCorrelation(double *xSignalArray, double *ySignal
 		}
 		argmax = argmax-1 + max_inter;
 	}
-
-    free(crossCorrelate);
-    return std::make_pair(max_value, argmax);
+    return argmax;
 }
 
-double phaseCalculator(double freq_HZ, double samplesPerSecond, int numSamples,int sepm_Per, double *xSamples, double *ySamples)
+data_t phaseCalculator(data_t freq_HZ, data_t samplesPerSecond, int numSamples,int sepm_Per, data_t *xSamples, data_t *ySamples)
 {
-    double timeShift, phaseShift, timeLine;
-    double argmax;
-    auto result = crossCorrelation(xSamples, ySamples, numSamples,sepm_Per);
-    argmax = result.second;
+    data_t timeShift, phaseShift, timeLine;
+    auto argmax = crossCorrelation(xSamples, ySamples, numSamples,sepm_Per);
 
     timeLine = ((numSamples - 1) / samplesPerSecond);
     timeShift = ((timeLine * argmax) / (numSamples - 1)) + (-timeLine);
@@ -165,19 +199,19 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 					float input_threshold) 
 {
 	int ret_value = RP_OK;
-	double buf1[size];
-	double buf2[size];
-	double max_ch1 = -100000;
-	double max_ch2 = -100000;
-	double min_ch1 = 100000;
-	double min_ch2 = 100000;
+	data_t buf1[size];
+	data_t buf2[size];
+	data_t max_ch1 = -100000;
+	data_t max_ch2 = -100000;
+	data_t min_ch1 = 100000;
+	data_t min_ch2 = 100000;
 
 	for (size_t i = 0; i < size; i++){
 		buf1[i] = buffer.ch1[i];
 		buf2[i] = buffer.ch2[i];
 		// Filtring 
-		//buf1[i]  = buf1[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
-		//buf2[i]  = buf2[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (double)(size-1)));
+		//buf1[i]  = buf1[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (data_t)(size-1)));
+		//buf2[i]  = buf2[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (data_t)(size-1)));
 
 		// 
 		if ((buf1[i]) > max_ch1) {
@@ -194,8 +228,8 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 		}
 	}
 
-	double sig1_rms =  RMS(buffer.ch1,size);
-	double sig2_rms =  RMS(buffer.ch2,size);
+	data_t sig1_rms =  RMS(buffer.ch1,size);
+	data_t sig2_rms =  RMS(buffer.ch2,size);
 	*gain = sig2_rms / sig1_rms;
 	
 	if ((max_ch1 - min_ch1) < input_threshold) ret_value = RP_EIPV;
@@ -339,6 +373,7 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 	pthread_mutex_lock(&mutex);
 	EXEC_CHECK_MUTEX(rp_AcqSetDecimationFactor(_decimation), mutex);
 	EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(ADC_BUFFER_SIZE / 2.0), mutex);
+	//EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(-ADC_BUFFER_SIZE / 2.0 + acq_u_size), mutex);
 	EXEC_CHECK_MUTEX(rp_AcqStart(), mutex);
 	usleep(sleep_time);
 	// Trigger, it is needed for the RP_DEC_1 decimation
@@ -401,7 +436,6 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
     rp_BaSafeThreadAcqData(_buffer,new_dec, acq_size,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
     int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / new_dec,_freq, samples_period,  &gain, &phase_out,_input_threshold);
-	
 
     *_amplitude = 10.*logf(gain);
     *_phase = phase_out;
