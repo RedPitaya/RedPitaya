@@ -122,8 +122,7 @@ data_t getMaxArg(data_t *a, data_t *b,int start,int stop, int step,int lenghtArr
 data_t crossCorrelation(data_t *xSignalArray, data_t *ySignalArray, int lenghtArray,int sepm_Per)
 {
     data_t argmax = 0;
-    data_t crossCorrelate[3];
-	data_t *a = xSignalArray;
+    data_t *a = xSignalArray;
 	data_t *b = ySignalArray;
 	int step = log2(lenghtArray);
 	int maxK = -1;
