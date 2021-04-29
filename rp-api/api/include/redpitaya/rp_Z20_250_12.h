@@ -1303,6 +1303,15 @@ int rp_GenGetOffset(rp_channel_t channel, float *offset);
 int rp_GenFreq(rp_channel_t channel, float frequency);
 
 /**
+* Sets channel signal frequency in fpga without reset generator and rebuild signal.
+* @param channel Channel A or B for witch we want to set frequency.
+* @param frequency Frequency of the generated signal in Hz.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenFreqDirect(rp_channel_t channel, float frequency);
+
+/**
 * Gets channel signal frequency.
 * @param channel Channel A or B for witch we want to get frequency.
 * @param frequency Pointer where value will be returned.

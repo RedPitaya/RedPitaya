@@ -794,6 +794,10 @@ int rp_GenFreq(rp_channel_t channel, float frequency) {
     return gen_setFrequency(channel, frequency);
 }
 
+int rp_GenFreqDirect(rp_channel_t channel, float frequency){
+    return gen_setFrequencyDirect(channel, frequency);
+}
+
 int rp_GenGetFreq(rp_channel_t channel, float *frequency) {
     return gen_getFrequency(channel, frequency);
 }

@@ -207,6 +207,22 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
     return gen_Synchronise();
 }
 
+int gen_setFrequencyDirect(rp_channel_t channel, float frequency){
+    if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
+        return RP_EOOR;
+    }
+    if (channel == RP_CH_1) {
+        chA_frequency = frequency;
+    }
+    else if (channel == RP_CH_2) {
+        chB_frequency = frequency;
+    }
+    else {
+        return RP_EPN;
+    }
+    return generate_setFrequency(channel, frequency);
+}
+
 int gen_getFrequency(rp_channel_t channel, float *frequency) {
     return generate_getFrequency(channel, frequency);
 }
