@@ -173,8 +173,8 @@ typedef enum {
     RP_WAVEFORM_DC,         //!< Wave form dc
     RP_WAVEFORM_PWM,        //!< Wave form pwm
     RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
-    RP_WAVEFORM_DC_NEG      //!< Wave form negative dc
-    RP_WAVEFORM_SWEEP,      //!< Wave form sweep
+    RP_WAVEFORM_DC_NEG,     //!< Wave form negative dc
+    RP_WAVEFORM_SWEEP       //!< Wave form sweep
 } rp_waveform_t;
 
 typedef enum {
