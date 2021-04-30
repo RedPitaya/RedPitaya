@@ -30,6 +30,21 @@ public:
 	void UpdateAllSignals(void); // involves Update function for registered signal
 	void RegisterParam(CBaseParameter * _param);
 	void RegisterSignal(CBaseParameter * _signal);
+	
+	template<class T>
+	T* GetByName(std::string _name){
+		for (auto x : m_params) { 
+			if (std::string(x->GetName()) == _name)
+				return dynamic_cast<T*>(x);
+		}
+		for (auto x : m_signals) { 
+			if (std::string(x->GetName()) == _name)
+				return dynamic_cast<T*>(x);
+		}
+		return nullptr;
+	}
+	const std::vector<CBaseParameter*>* GetParametersList() {return &m_params;}
+	const std::vector<CBaseParameter*>* GetSignalList(){return &m_signals;}
 
 	void UnRegisterParam(const char * _name);
 	void UnRegisterSignal(const char * _name);
