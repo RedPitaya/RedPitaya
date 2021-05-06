@@ -27,7 +27,7 @@ $(CONTROLLER):
 install: $(CONTROLLER)
 	mkdir -p $(TARGET)
 
-	cp -r $(CONTROLLER) nginx.conf fpga.conf css img *.html info js *.sh $(TARGET)
+	cp -r $(CONTROLLER) nginx.conf fpga.conf css img *.html info js scripts $(TARGET)
 
 	sed -i $(TARGET)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i $(TARGET)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'

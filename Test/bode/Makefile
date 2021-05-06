@@ -29,7 +29,7 @@ SRCS = $(subst .o,.cpp, $(OBJS)))
 TARGET=bode
 
 # GCC compiling & linking flags
-CFLAGS  = -g -std=c++11 -Wall -Werror -Os
+CFLAGS  = -g -std=c++11 -Wall -Werror -Os -mfpu=neon
 CFLAGS += -I$(INSTALL_DIR)/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -D$(MODEL)
 

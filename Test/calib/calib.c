@@ -21,7 +21,7 @@
 #include <sys/param.h>
 
 #include "rp_eeprom.h"
-#include "redpitaya/version.h"
+#include "version.h"
 
 
 /** Minimal number of command line arguments */

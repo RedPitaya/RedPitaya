@@ -1,6 +1,6 @@
 #!/bin/bash
 unzip -o ./libs/asio.zip -d ./libs
-cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release
+cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release -DMODEL=Z10
 make
 
 cd client

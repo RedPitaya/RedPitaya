@@ -17,6 +17,27 @@
 
 #include <stdint.h>
 
+#ifdef Z20_250_12
+#define ADC_SAMPLE_RATE 250e6
+#define ADC_BITS 14
+#define ADC_MASK 0x3fff
+#define ADC_MAX_V 1.0
+#endif
+
+#ifdef Z20
+#define ADC_SAMPLE_RATE 122.880e6
+#define ADC_BITS 16
+#define ADC_MASK 0xffff
+#define ADC_MAX_V 1.0
+#endif
+
+#if defined Z10 || defined Z20_125
+#define ADC_SAMPLE_RATE 125e6
+#define ADC_BITS 14
+#define ADC_MASK 0x3fff
+#define ADC_MAX_V 1.0
+#endif
+
 /** @defgroup fpga_osc_h fpga_osc_h
  * @{
  */
@@ -33,15 +54,17 @@
 #define OSC_FPGA_CONF_RST_BIT  2
 
 /** OSC FPGA trigger source register mask */
-#define OSC_FPGA_TRIG_SRC_MASK 0x00000007
+#define OSC_FPGA_TRIG_SRC_MASK  0x00000007
+/** OSC FPGA trigger source register mask */
+#define OSC_FPGA_BUFF_FILL_MASK 0x00000010
 /** OSC FPGA Channel A threshold register mask */
-#define OSC_FPGA_CHA_THR_MASK  0x00003fff
+#define OSC_FPGA_CHA_THR_MASK   0x00003fff
 /** OSC FPGA Channel B threshold register mask */
-#define OSC_FPGA_CHB_THR_MASK  0x00003fff
+#define OSC_FPGA_CHB_THR_MASK   0x00003fff
 /** OSC FPGA trigger delay register register mask */
-#define OSC_FPGA_TRIG_DLY_MASK 0xffffffff
+#define OSC_FPGA_TRIG_DLY_MASK  0xffffffff
 /** OSC FPGA data decimation mask */
-#define OSC_FPGA_DATA_DEC_MASK 0x0001ffff
+#define OSC_FPGA_DATA_DEC_MASK  0x0001ffff
 
 /** OSC FPGA Channel A input signal buffer offset */
 #define OSC_FPGA_CHA_OFFSET    0x10000
@@ -59,7 +82,10 @@ typedef struct osc_fpga_reg_mem_s {
      * Configuration register (offset 0x00):
      * bit     [0] - arm_trigger
      * bit     [1] - rst_wr_state_machine
-     * bits [31:2] - reserved 
+     * bit     [2] - Trigger has arrived stays on (1) until next arm or reset (R)
+     * bit     [3] - Trigger remains armed after ACQ delay passes (W)
+     * bit     [4] - ACQ delay has passed / (all data was written to buffer) (R)
+     * bits [31:5] - reserved 
      */
     uint32_t conf;
 
@@ -248,7 +274,18 @@ int osc_fpga_cnv_time_to_smpls(float time, int dec_factor);
 /* Converts voltage in [V] to ADC counts */
 int osc_fpga_cnv_v_to_cnt(float voltage);
 /* Converts ADC ounts to [V] */
-float osc_fpga_cnv_cnt_to_v(int cnts);
+float osc_fpga_cnv_cnt_to_v(int cnts); // Need for worker.c
+
+/* Converts ADC ounts to [V] */
+float osc_fpga_cnv_cnt_to_v2(int cnts);
+
+/* Calibrate ADC count */
+#ifdef Z20_250_12
+int   osc_calibrate_value(int cnts,int channel,int attenuator,int mode); 
+#else
+//int   osc_calibrate_value(int cnts,int ); 
+int   osc_calibrate_value(int cnts,int channel,int mode); 
+#endif
 
 /* Debug - dump to stderr current parameter settings (leave out data) */
 void osc_fpga_dump_regs(void);

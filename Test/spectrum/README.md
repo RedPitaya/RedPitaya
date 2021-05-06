@@ -13,7 +13,6 @@ LD_LIBRARY_PATH=/opt/redpitaya/lib spectrum
 * -n, --no-average: disable average the measurement from 10 times
 * -C, --csv: print values by columns Frequency (Hz), ch0 (dB), ch1 (dB)
 * -L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)
-* -t, --test: test mode avoids the initiating/resetting/releasing FPGA
 
 # Examples
 ```

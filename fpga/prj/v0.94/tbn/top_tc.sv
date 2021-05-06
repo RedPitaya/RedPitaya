@@ -18,6 +18,9 @@ task test_hk (
   axi_read_osc1(offset+'h4, dat); //DNA
   axi_read_osc1(offset+'h8, dat); //DNA
   axi_write(offset+'h30, led); // LED
+    axi_write(offset+'hc, 32'b0); // LED
+   $display("HK setting") ;
+
   axi_read_osc1(offset+'h30, dat); // LED
 
   ##1000;
@@ -66,93 +69,63 @@ task test_osc(
   ##100;
   // configure
   // DMA control address (80) controls ack signals for buffers. for breakdown see rp_dma_s2mm_ctrl
+/*
+ adr 0: config
+ 1 W arm trigger - starts write into memory
+ 2 W reset write state machine
+ 4 R Trigger arrived
+ 8 W trigger armed after ACQ delay
+ 16 R ACQ delay passed (all written to buffer)
 
+ adr 4: trig source 
+1 - trig immediately
+2 - ch A threshold positive edge
+3 - ch A threshold negative edge
+4 - ch B threshold positive edge
+5 - ch B threshold negative edge
+6 - external trigger positive edge - DIO0_P pin
+7 - external trigger negative edge
+8 - arbitrary wave generator application positive edge
+9 - arbitrary wave generator application negative edge 
+*/
+  axi_write(offset+'h0 ,  'd1  );  // ARM trigger
+  axi_write(offset+'h8 ,  'd100);  // chA threshold
+  axi_write(offset+'hC ,  'd200);  // chB threshold
+  axi_write(offset+'h10,  'h20A);  // delay after trigger
+  axi_write(offset+'h14,  'h1);  // decimation
+  axi_read_osc1(offset+'h18,  dat);  // current WP
+  axi_read_osc1(offset+'h1C,  dat);  // trigger WP
+  axi_write(offset+'h20,  'd0);  // chA hysteresis
+  axi_write(offset+'h24,  'd0);  // chB hysteresis
+  axi_write(offset+'h28,  'd1);  // enable signal average at decimation
+  axi_write(offset+'h2C,  'd0);  // chA hysteresis
+  axi_write(offset+'h50,  'h0);  // chA AXI low address
+  axi_write(offset+'h54,  'h0);  // chA AXI hi address
+  axi_write(offset+'h58,  'h0);  // chA AXI trig dly
+  axi_write(offset+'h5C,  'h0);  // chA AXI enable master
+  axi_read_osc1(offset+'h60,  dat);  // chA AXI WP trigger
+  axi_read_osc1(offset+'h64,  dat);  // chA AXI WP current
+  axi_write(offset+'h70,  'h0);  // chB AXI low address
+  axi_write(offset+'h74,  'h0);  // chB AXI hi address
+  axi_write(offset+'h78,  'h0);  // chB AXI trig dly
+  axi_write(offset+'h7C,  'h0);  // chB AXI enable master
+  axi_read_osc1(offset+'h80,  dat);  // chB AXI WP trigger
+  axi_read_osc1(offset+'h84,  dat);  // chB AXI WP current
+  axi_write(offset+'h90,  'h64);  // trig debounce
+  axi_write(offset+'hA0,  'h64);  // Accumulator data sequence length
+  axi_write(offset+'hA4,  'h64);  // Accumulator data offset corection ChA
+  axi_write(offset+'hA8,  'h64);  // Accumulator data offset corection ChA
 
-  axi_write(offset+'h0,   'd4);  // start
-  axi_write(offset+'h04,   evnt_in);  // osc1 events
-  axi_write(offset+'h10,  'h2000);  // pre trigger samples
-  axi_write(offset+'h14,  'h6000);  // pre trigger samples
-  axi_write(offset+'h20,  'd30);  // LOW LEVEL TRIG
-  axi_write(offset+'h24,  'd50);  // HI LEVEL TRIG
-  ##5;
-  axi_write(offset+'h28, 'd0);  // TRIG EDGE
-  ##5
-  axi_write(offset+'h38, 'd1);  // decimation enable
-  axi_write(offset+'h3C, 'd1);  // decimation enable
-  axi_write(offset+'h30, 'd2);  // decimation factor
-  axi_write(offset+'h34, 'd1);  // decimation shift
-  axi_write(offset+'h0,   'd2);  // start
-  axi_write(offset+'h08,   'd4);  // start
-
-  ##5;
-  axi_write(offset+'h64, 'h1000);  // buffer 1 address
-  ##5;
-  axi_write(offset+'h68, 'h2000);  // buffer 2 address
-  ##5;
-  axi_write(offset+'h6C, 'd30000);  // buffer 1 address
-  ##5;
-  axi_write(offset+'h70, 'd40000);  // buffer 2 address
-  ##5;
-  axi_write(offset+'h74, 'h800);  // calibration offset
-  ##5;
-  axi_write(offset+'h78, 'h8000);  // calibration gain
-  ##5;
-  axi_write(offset+'h58, 'h400);  // buffer size - must be greater than axi burst size (128)
-  ##5;
-      axi_write(offset+'h50, 'h212);  // streaming DMA
-      axi_write(offset+'h50, 'h2);  // streaming DMA
-      axi_write(offset+'h50, 'h1);  // streaming DMA
-        axi_write(offset+'h0,   'd0);  // start
-  axi_write(offset+'h0,   'd1);  // start
-  axi_write(offset+'h0,   'd2);  // start
-
-
-  //axi_write(offset+'h00, 4'b1000);  // trigger
-
-  /*int_ack(offset);
-    axi_write(offset+'h74, 'hFFFFF800);  // calibration offset
-
-  int_ack_del(offset);
-  int_ack(offset);
-  int_ack_del(offset);
-  int_ack(offset);
-  int_ack_del(offset);
-  int_ack(offset);
-  int_ack_del(offset);
-  int_ack(offset);
-  int_ack_del(offset);
-  int_ack(offset);
-  int_ack_del(offset);
-  int_ack(offset);
-  int_ack_del(offset);
-  int_ack(offset);
-  int_ack_del(offset);*/
-
-  /*
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);*/
-  
-  
-  /*##1300;
-  axi_write(offset+'d80,   'd4);  // BUF1 ACK
-  ##1300;
-  axi_write(offset+'d80,   'd8);  // BUF2 ACK
-  ##1300;
-  axi_write(offset+'d80,   'd4);  // BUF1 ACK
-  ##1300;
-  axi_write(offset+'d80,   'd8);  // BUF2 ACK*/
+  axi_write(offset+'h0 ,  'd1  );  // ARM trigger
+  axi_write(offset+'h4 ,  'd1  );  // manual trigger
+  ##5000;
+  axi_write(offset+'h14,  'h2);  // decimation
+  axi_write(offset+'h0 ,  'd1  );  // ARM trigger
+  axi_write(offset+'h4 ,  'd1  );  // manual trigger
+  ##5000;
+  axi_write(offset+'h14,  'h4);  // decimation
+  axi_write(offset+'h0 ,  'd1  );  // ARM trigger
+  axi_write(offset+'h4 ,  'd1  );  // manual trigger
 ##10000;
 endtask: test_osc
 
@@ -420,7 +393,7 @@ task axi_read_osc1 (
   output logic [32-1:0] dat
 );
   //top_tb.axi_bm_reg.ReadTransaction (
-  top_tb.red_pitaya_top.ps.axi_bm_reg.ReadTransaction (  
+  top_tb.axi_bm_reg.ReadTransaction (  
     .ARDelay (0),  .ar ('{
                           id    : 0,
                           addr  : adr,
@@ -465,7 +438,7 @@ task axi_write (
 );
   int b;
   //top_tb.axi_bm_reg.WriteTransaction (
-  top_tb.red_pitaya_top.ps.axi_bm_reg.WriteTransaction (  
+  top_tb.axi_bm_reg.WriteTransaction (  
     .AWDelay (0),  .aw ('{
                           id    : 0,
                           addr  : adr,

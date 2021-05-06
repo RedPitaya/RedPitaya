@@ -49,7 +49,47 @@ module red_pitaya_ps_sim (
   inout  logic           DDR_ras_n          ,
   inout  logic           DDR_reset_n        ,
   inout  logic           DDR_we_n           ,
-
+/*
+  input [31:0]S_AXI_REG_araddr;
+  input [1:0]S_AXI_REG_arburst;
+  input [3:0]S_AXI_REG_arcache;
+  input [11:0]S_AXI_REG_arid;
+  input [3:0]S_AXI_REG_arlen;
+  input [1:0]S_AXI_REG_arlock;
+  input [2:0]S_AXI_REG_arprot;
+  input [3:0]S_AXI_REG_arqos;
+  output S_AXI_REG_arready;
+  input [2:0]S_AXI_REG_arsize;
+  input S_AXI_REG_arvalid;
+  input [31:0]S_AXI_REG_awaddr;
+  input [1:0]S_AXI_REG_awburst;
+  input [3:0]S_AXI_REG_awcache;
+  input [11:0]S_AXI_REG_awid;
+  input [3:0]S_AXI_REG_awlen;
+  input [1:0]S_AXI_REG_awlock;
+  input [2:0]S_AXI_REG_awprot;
+  input [3:0]S_AXI_REG_awqos;
+  output S_AXI_REG_awready;
+  input [2:0]S_AXI_REG_awsize;
+  input S_AXI_REG_awvalid;
+  output [11:0]S_AXI_REG_bid;
+  input S_AXI_REG_bready;
+  output [1:0]S_AXI_REG_bresp;
+  output S_AXI_REG_bvalid;
+  output [31:0]S_AXI_REG_rdata;
+  output [11:0]S_AXI_REG_rid;
+  output S_AXI_REG_rlast;
+  input S_AXI_REG_rready;
+  output [1:0]S_AXI_REG_rresp;
+  output S_AXI_REG_rvalid;
+  input [31:0]S_AXI_REG_wdata;
+  input [11:0]S_AXI_REG_wid;
+  input S_AXI_REG_wlast;
+  output S_AXI_REG_wready;
+  input [3:0]S_AXI_REG_wstrb;
+  input S_AXI_REG_wvalid;
+*/
+  axi4_if.s axi_reg,
   // system signals
   output logic [  4-1:0] fclk_clk_o         ,
   output logic [  4-1:0] fclk_rstn_o        ,
@@ -212,8 +252,6 @@ assign hp1_saxi_aclk   = hp1_saxi_clk_i ;
 logic [4-1:0] fclk_clk ;
 logic [4-1:0] fclk_rstn;
 
-axi4_if #(.DW (32), .AW (32), .IW (12), .LW (8)) axi_gp (.ACLK (bus.clk), .ARESETn (bus.rstn));
-axi_bus_model #(.AW (32), .DW (32), .IW (12), .LW (8)) axi_bm_reg  (axi_gp);
 
 axi4_slave #(
   .DW (32),
@@ -221,7 +259,7 @@ axi4_slave #(
   .IW (12)
 ) axi_slave_gp0 (
   // AXI bus
-  .axi_in       (axi_gp),
+  .axi_in       (axi_reg),
   // system read/write channel
   .bus       (bus)
 );

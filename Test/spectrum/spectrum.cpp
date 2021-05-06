@@ -7,13 +7,12 @@
 #include <cmath>
 #include <csignal>
 #include <unistd.h>
-#include <redpitaya/version.h>
-#include <redpitaya/rp.h>
+#include <version.h>
+#include <rp.h>
 #include "cli_parse_args.h"
 
 extern "C" {
-    #include <../src/spec_fpga.h>
-    #include <../src/spec_dsp.h>
+    #include <../../rp-api/api/src/spec_dsp.h>
 }
 
 namespace {
@@ -34,18 +33,51 @@ static void quit_handler(int) {
     g_quit_requested = 1;
 }
 
-static void spectrum_worker(cli_args_t args) {
-    // Calculate the frequency range
-    constexpr std::array<float, 6> freq_range_values = {62500000., 7800000., 976000., 61000., 7600., 953.};
-    size_t freq_range_index = 0;
+int spectr_fpga_cnv_freq_range_to_unit(int freq_range)
+{
+    /* Input freq. range: 0, 1, 2, 3, 4, 5 translates to:
+     * Output: 0 - [MHz], 1 - [kHz], 2 - [Hz] */
+    switch(freq_range) {
+    case 0:
+    case 1:
+        return 2;
+        break;
+    case 2:
+    case 3:
+    case 4:
+        return 1;
+        break;
+    case 5:
+        return 0;
+        break;
+    default:
+        return -1;
+        break;
+    };
 
-    for (size_t i = 1; i < freq_range_values.size(); ++i) {
-        if (args.freq_max <= freq_range_values[i]) {
-            freq_range_index = i;
-        } else {
-            break;
-        }
+    return -1;
+}
+
+static void spectrum_worker(cli_args_t args) {
+
+    int decimation =     ADC_SAMPLE_RATE /  (args.freq_max * 2);
+
+    if (decimation < 16){
+        if (decimation >= 8)
+            decimation = 8;
+        else
+            if (decimation >= 4)
+                decimation = 4;
+            else
+                if (decimation >= 2)
+                    decimation = 2;
+                else 
+                    decimation = 1;
     }
+
+
+	auto current_freq_range = ADC_SAMPLE_RATE  / (decimation * 2);
+	
 
     // const std::array<std::string, 3> unit_str = {"Hz", "kHz", "MHz"};
     std::array<signal_array_t, spectrum_signal_count> tmp_signals = {};
@@ -54,18 +86,13 @@ static void spectrum_worker(cli_args_t args) {
         signal_array = signal_array_t(spectrum_signal_size, 0);
     }
 
-    std::vector<double> cha_in(SPECTR_FPGA_SIG_LEN, 0);
-    std::vector<double> chb_in(SPECTR_FPGA_SIG_LEN, 0);
-    std::vector<double> cha_fft(c_dsp_sig_len, 0);
-    std::vector<double> chb_fft(c_dsp_sig_len, 0);
-
-    // FPGA parameters
-    spectr_fpga_reset();
-    spectr_fpga_update_params(0, 0, 0, 0, 0, freq_range_index, args.average_for_10 ? 1 : 0);
-    // int unit = spectr_fpga_cnv_freq_range_to_unit(freq_range_index);
+    std::vector<double> cha_in(rp_get_spectr_signal_max_length(), 0);
+    std::vector<double> chb_in(rp_get_spectr_signal_max_length(), 0);
+    std::vector<double> cha_fft(rp_get_spectr_out_signal_max_length(), 0);
+    std::vector<double> chb_fft(rp_get_spectr_out_signal_max_length(), 0);
 
     // API compatible
-    float *tmp_signal_0 = tmp_signals[0].data();
+    // float *tmp_signal_0 = tmp_signals[0].data();
     float *tmp_signal_1 = tmp_signals[1].data();
     float *tmp_signal_2 = tmp_signals[2].data();
     double *p_cha_fft = cha_fft.data();
@@ -73,7 +100,7 @@ static void spectrum_worker(cli_args_t args) {
     double *p_cha_in = cha_in.data();
     double *p_chb_in = chb_in.data();
 
-    const float freq_step = freq_range_values[freq_range_index] / (spectrum_signal_size - 1);
+    const float freq_step = current_freq_range / (spectrum_signal_size - 1);
     const size_t freq_index_min = std::floor(args.freq_min / freq_step);
     const size_t freq_index_max = std::ceil(args.freq_max / freq_step);
 
@@ -97,24 +124,35 @@ static void spectrum_worker(cli_args_t args) {
     }
 
     bool is_infinity = count < 0;
-
+    uint32_t buffer_size = ADC_BUFFER_SIZE;
     while (!g_quit_requested && ((count > 0) || is_infinity)) {
-        // Start the writting machine
-        spectr_fpga_arm_trigger();
+        rp_AcqSetDecimation((rp_acq_decimation_t)decimation);
+        rp_AcqSetTriggerDelay(buffer_size - ADC_BUFFER_SIZE / 2.0);
+        rp_AcqStart();
         usleep(10);
-        spectr_fpga_set_trigger(1);
+        rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
 
-        // Polling until data is ready
-        while (!spectr_fpga_triggered()) {
-            usleep(1);
+         rp_acq_trig_state_t stateTrig = RP_TRIG_STATE_WAITING;
+        /* polling until data is ready */
+        while(1) {
+            if (rp_AcqGetTriggerState(&stateTrig)) exit(1);
+            if(stateTrig == RP_TRIG_STATE_TRIGGERED) break;
         }
+        bool fillState = false;
+        while(!fillState){
+            if(rp_AcqGetBufferFillState(&fillState)) exit(1);
+        }
+        rp_AcqStop();
+
 
         // Retrieve data and process it
-        spectr_fpga_get_signal(&p_cha_in, &p_chb_in);
-        rp_spectr_prepare_freq_vector(&tmp_signal_0, spectr_get_fpga_smpl_freq(), freq_range_index);
-        rp_spectr_hann_filter(p_cha_in, p_chb_in, &p_cha_in, &p_chb_in);
+        uint32_t trig_pos;
+        rp_AcqGetWritePointerAtTrig(&trig_pos);
+        rp_AcqGetDataV2D(trig_pos,&buffer_size, p_cha_in, p_chb_in);
+    //    rp_spectr_prepare_freq_vector(&tmp_signal_0, ADC_SAMPLE_RATE, decimation);
+        rp_spectr_window_filter(p_cha_in, p_chb_in, &p_cha_in, &p_chb_in);
         rp_spectr_fft(p_cha_in, p_chb_in, &p_cha_fft, &p_chb_fft);
-        rp_spectr_decimate(p_cha_fft, p_chb_fft, &tmp_signal_1, &tmp_signal_2, c_dsp_sig_len, spectrum_signal_size);
+        rp_spectr_decimate(p_cha_fft, p_chb_fft, &tmp_signal_1, &tmp_signal_2, rp_get_spectr_out_signal_length(), spectrum_signal_size);
 
         // Unused
         rp_spectr_worker_res_t tmp_result;
@@ -125,7 +163,7 @@ static void spectrum_worker(cli_args_t args) {
                                 &tmp_result.peak_pw_cha,
                                 &tmp_result.peak_pw_freq_cha, &tmp_result.peak_pw_chb,
                                 &tmp_result.peak_pw_freq_chb,
-                                freq_range_index);
+                                decimation);
 
         // Peak calculation
         const auto it_ch0_max = std::max_element(std::begin(tmp_signals[1]) + freq_index_min, std::begin(tmp_signals[1]) + freq_index_max + 1);
@@ -228,44 +266,26 @@ int main(int argc, char *argv[]) {
     // Init
     int error_code = RP_OK;
 
-    if (!args.test) {
-        error_code = rp_Init();
+    error_code = rp_Init();
 
-        if (error_code != RP_OK) {
-            std::cerr << "Error: rp_Init, code: " << error_code << std::endl;
-            return 1;
-        }
-
-        error_code = rp_Reset();
-
-        if (error_code != RP_OK) {
-            std::cerr << "Error: rp_Reset, code: " << error_code << std::endl;
-            return 1;
-        }
-    }
-
-    error_code = spectr_fpga_init();
-
-    if (error_code != 0) {
-        std::cerr << "Error: spectr_fpga_init, code: " << error_code << std::endl;
-
-        if (!args.test) {
-            rp_Release();
-        }
-
+    if (error_code != RP_OK) {
+        std::cerr << "Error: rp_Init, code: " << error_code << std::endl;
         return 1;
     }
 
-    error_code = rp_spectr_hann_init();
+    error_code = rp_Reset();
+
+    if (error_code != RP_OK) {
+        std::cerr << "Error: rp_Reset, code: " << error_code << std::endl;
+        return 1;
+    }
+    
+
+    error_code = rp_spectr_window_init(HANNING);
 
     if (error_code != 0) {
-        std::cerr << "Error: rp_spectr_hann_init, code: " << error_code << std::endl;
-        spectr_fpga_exit();
-
-        if (!args.test) {
-            rp_Release();
-        }
-
+        std::cerr << "Error: rp_spectr_init, code: " << error_code << std::endl;
+        rp_Release();
         return 1;
     }
 
@@ -273,13 +293,8 @@ int main(int argc, char *argv[]) {
 
     if (error_code != 0) {
         std::cerr << "Error: rp_spectr_fft_init, code: " << error_code << std::endl;
-        rp_spectr_hann_clean();
-        spectr_fpga_exit();
-
-        if (!args.test) {
-            rp_Release();
-        }
-
+        rp_spectr_window_clean();
+        rp_Release();
         return 1;
     }
 
@@ -293,20 +308,11 @@ int main(int argc, char *argv[]) {
         signal_array = signal_array_t(spectrum_signal_size, 0);
     }
 
-    // Signals directly pointing at the FPGA mem space
-    int *rp_fpga_cha_signal = nullptr;
-    int *rp_fpga_chb_signal = nullptr;
-    spectr_fpga_get_sig_ptr(&rp_fpga_cha_signal, &rp_fpga_chb_signal);
-
     spectrum_worker(args);
 
     rp_spectr_fft_clean();
-    rp_spectr_hann_clean();
-    spectr_fpga_exit();
-
-    if (!args.test) {
-        rp_Release();
-    }
+    rp_spectr_window_clean();
+    rp_Release();
 
     return 0;
 }

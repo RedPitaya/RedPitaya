@@ -14,17 +14,16 @@
 
 
     BrowserChecker.isOnline = function(callback){
-    	var get_uri = 'http://store.redpitaya.com/get_lic/';
+    	var get_uri = '/check_inet';   
 
 	 	$.ajax({
-            method: "GET",
-            url: get_uri,
-            timeout: 300
+            url: get_uri
+        //    timeout: 1000,
         }).done(function(msg) {
-        	if (msg.includes("-1")){
+        	//if (msg.includes("-1")){
             	//console.log("online");
             	callback();
-        	}
+        	//}
         	//else
         		//console.log("offline");
         }).fail(function(msg) {

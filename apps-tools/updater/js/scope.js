@@ -225,6 +225,16 @@
                         });
                         $('#ecosystem_ver').change();
                     }
+                    $.ajax({
+                        url: '/check_linux_os?type=' + type+"&ecosystem="+es_distro_vers.ver_full,
+                        type: 'GET',
+                    })
+                    .done(function(msg) {
+                        console.log(msg)
+                        if (msg.trim() !== "" && msg.trim() !== UPD.EcosystemLinuxVer.trim()){
+                            $("#not_supported_linux").show();
+                        }
+                    });
                 });
         }, 500);
     }
