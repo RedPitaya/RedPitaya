@@ -70,11 +70,6 @@ char max7311::getDefaultAddress(){
     auto model = exec("fw_printenv -n hw_rev");   
     std::size_t found = model.find("STEM_250-12_v1.2");
     if (found != std::string::npos) g_I2C_address = MAX7311_DEFAULT_ADDRESS_1_2;
-<<<<<<< HEAD:api-250-12/src/rp-i2c-max7311.cpp
-//    printf("initController: Model = %s I2C address: 0x%x\n",model.c_str(),g_I2C_address);
-=======
-    //printf("initController: Model = %s I2C address: 0x%x\n",model.c_str(),g_I2C_address);
->>>>>>> dev-250-12:rp-api/api-250-12/src/rp-i2c-max7311.cpp
     return g_I2C_address;
 }
 
