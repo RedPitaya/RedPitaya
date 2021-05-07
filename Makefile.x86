@@ -111,9 +111,9 @@ DTS_PATH = dts
 endif
 
 ifeq ($(MODEL),Z20_250_12)
-FPGA_PRJ_LST = stream_app_250 v0.94_250
+FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 # NEED for FSBL fpga image
-FPGA_PRJ = v0.94
+FPGA_PRJ = logic_250
 FPGA_MODEL ?= Z20_250
 DTS_PATH = dts_250
 endif
