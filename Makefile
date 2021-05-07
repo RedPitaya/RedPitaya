@@ -463,7 +463,7 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 apps-pro: scopegenpro spectrumpro 
 ifeq ($(MODEL),Z20_250_12)
-apps-pro: ba_pro lcr_meter
+apps-pro: ba_pro lcr_meter la_pro
 else
 ifeq ($(MODEL),Z20)
 apps-pro:
