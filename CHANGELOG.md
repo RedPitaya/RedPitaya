@@ -1,3 +1,15 @@
+# Beta version (1.04-9)
+
+-Spectrum analyzer got new features (improved spectrum resolution, added more windowing functions, units, scalings and more)
+-Bode Analyzer gain & phase calculation algorithms have been improved on speed and precision
+-Signal generator freq. sweep support added
+-added more acquisition decimation options
+-fixed trigger bug for osc. that appeared at very slow signals
+-board boots properly even when ext. clock is not present
+-fixed issues with LA triggering
+-OS updater notifications
+-other general improvements & bug fix
+
 # Beta version (1.04-8)
 
 - Freq. calibration feature was added to the calibration utility that enables users to improve and flatten freq. response of 125-xx devices
