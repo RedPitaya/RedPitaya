@@ -1,4 +1,16 @@
-# Release (1.03-701)
+# Beta version (1.04-8)
+
+- Freq. calibration feature was added to the calibration utility that enables users to improve and flatten freq. response of 125-xx devices
+- CAN decoding was added to Logic analyzer app
+- STEMlab 125-10 now supports use of Logic analyzer extension module 
+- Logic analyzer app now stores all settings
+- Burst generator bug at higher frequencies was fixed
+- Ripple on slow analog outputs is fixed
+- LA trigger issue fixed
+- Jupyter calibration and overflow bug fixed
+- Other general improvements and updates including
+
+# Stable version (1.04-7)
 
 - The streaming application was improved. One of the main features is that users can now exactly know when and which samples are lost due to throughput problems or limitation
 - Watchdog was implemented for Linux and WEB applications. In case of fatal error or lost connection device will always return to its previous operation state. 
