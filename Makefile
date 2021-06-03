@@ -333,9 +333,10 @@ calibrate: api
 
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
-	$(MAKE) -C $(LA_TEST_DIR)
-	cp api2/test/laboardtest build/bin/laboardtest
-	cp api2/test/install.sh build/install.sh
+	$(MAKE) -C $(LA_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	cp rp-api/api2/test/laboardtest $(abspath $(INSTALL_DIR))/bin/laboardtest
+	cp rp-api/api2/test/install.sh $(abspath $(INSTALL_DIR))/install.sh
 	
 rp_communication:
 	make -C $(COMM_DIR)

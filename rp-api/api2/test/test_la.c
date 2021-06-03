@@ -8,7 +8,7 @@
 #include <time.h>
 #include "rpdma.h"
 
-#include "redpitaya/rp2.h"
+#include "rp2.h"
 #include "la_acq.h"
 #include "rp_dma.h"
 
@@ -33,9 +33,9 @@ int main (int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    rp_SetSgmntC (&handle, 4);
-    rp_SetSgmntS (&handle, SIZE*2);
-    handle.dma_size = 4*SIZE*2;
+    rp_SetSgmntC (&handle, 4); // Set the number of segments
+    rp_SetSgmntS (&handle, SIZE*2); // Setting the segment size
+    handle.dma_size = 4*SIZE*2; // Set the full length of the buffer for the dma channel
 
     int16_t * map=NULL;
     map = (int16_t *) mmap(NULL, handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle.dma_fd, 0);
@@ -46,11 +46,11 @@ int main (int argc, char **argv) {
 
     // configure acquire
     rp_la_cfg_regset_t cfg;
-    cfg.pre=0;
-    cfg.pst=length;
+    cfg.pre=0; // Number of samples before trigger
+    cfg.pst=length; // Number of samples after trigger
     rp_LaAcqSetCntConfig (&handle, cfg);
-    rp_LaAcqSetConfig    (&handle, 0x2);
-    rp_LaAcqGlobalTrigSet(&handle, 0x0);
+    rp_LaAcqSetConfig    (&handle, 0x2); // Set auto mode. Will be stopped after triggered
+    rp_LaAcqGlobalTrigSet(&handle, 0x0); // Disable triggers
 
     // test loop
     for (int n=0; n<6; n++) {
