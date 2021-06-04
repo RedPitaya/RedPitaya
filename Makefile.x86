@@ -219,7 +219,7 @@ ifeq ($(KERNEL_HEADERS),YES)
 	make -C $< headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))/include/linux
 endif
 
-linux-install: linux $(INSTALL_DIR)
+linux-install: $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
 ################################################################################
