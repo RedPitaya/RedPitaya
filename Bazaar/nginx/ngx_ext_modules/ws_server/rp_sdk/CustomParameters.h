@@ -5,6 +5,8 @@
 
 #include "Parameter.h"
 
+#define CONFIG_VAR 1
+
 template <typename Type> class CDecoderParameter : public CParameter<Type, Type>
 {
 public:
@@ -43,9 +45,19 @@ public:
 	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max)
 		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
 		, m_SentValue(_value)
-		, m_NeedUnregister(false)
 		, m_Dirty(false)
+		, m_NeedUnregister(false)
 		, m_NeedSend(false)
+		, m_Tag(0)
+	{}
+
+	CCustomParameter(std::string _name, CBaseParameter::AccessMode _access_mode, Type _value, int _fpga_update, Type _min, Type _max,int _tag)
+		: CParameter<Type, Type>(_name, _access_mode, _value, _fpga_update, _min, _max)
+		, m_SentValue(_value)
+		, m_Dirty(false)
+		, m_NeedUnregister(false)
+		, m_NeedSend(false)
+		, m_Tag(_tag)
 	{}
 
 	~CCustomParameter()
@@ -153,11 +165,17 @@ public:
 		return tmp;
 	}
 
+	int Tag() const
+	{
+		return m_Tag;
+	}
+
 protected:
 	mutable Type m_SentValue;
 	mutable bool m_Dirty;
 	bool m_NeedUnregister;
 	mutable bool m_NeedSend;
+	mutable int m_Tag;
 };
 
 
@@ -260,6 +278,9 @@ class CIntParameter : public CCustomParameter<int>
 public:
 	CIntParameter(std::string _name, CBaseParameter::AccessMode _access_mode, int _value, int _fpga_update, int _min, int _max)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
+
+	CIntParameter(std::string _name, CBaseParameter::AccessMode _access_mode, int _value, int _fpga_update, int _min, int _max,int _tag)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max,_tag){};
 };
 
 //custom CIntParameter
@@ -268,6 +289,9 @@ class CUIntParameter : public CCustomParameter<uint32_t>
 public:
 	CUIntParameter(std::string _name, CBaseParameter::AccessMode _access_mode, uint32_t _value, int _fpga_update, uint32_t _min, uint32_t _max)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
+
+	CUIntParameter(std::string _name, CBaseParameter::AccessMode _access_mode, uint32_t _value, int _fpga_update, uint32_t _min, uint32_t _max,int _tag)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max,_tag){};
 };
 
 //custom CFloatParameter
@@ -276,6 +300,9 @@ class CFloatParameter : public CCustomParameter<float>
 public:
 	CFloatParameter(std::string _name, CBaseParameter::AccessMode _access_mode, float _value, int _fpga_update, float _min, float _max)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
+
+	CFloatParameter(std::string _name, CBaseParameter::AccessMode _access_mode, float _value, int _fpga_update, float _min, float _max,int _tag)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max,_tag){};
 };
 
 //custom CDoubleParameter
@@ -284,6 +311,9 @@ class CDoubleParameter : public CCustomParameter<double>
 public:
 	CDoubleParameter(std::string _name, CBaseParameter::AccessMode _access_mode, double _value, int _fpga_update, double _min, double _max)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
+	
+	CDoubleParameter(std::string _name, CBaseParameter::AccessMode _access_mode, double _value, int _fpga_update, double _min, double _max,int _tag)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max,_tag){};
 };
 
 //custom CBooleanParameter
@@ -292,6 +322,9 @@ class CBooleanParameter : public CCustomParameter<bool>
 public:
 	CBooleanParameter(std::string _name, CBaseParameter::AccessMode _access_mode, bool _value, int _fpga_update)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, false, true){};
+
+	CBooleanParameter(std::string _name, CBaseParameter::AccessMode _access_mode, bool _value, int _fpga_update,int _tag)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, false, true,_tag){};
 };
 
 //custom CStringParameter
@@ -300,6 +333,9 @@ class CStringParameter : public CCustomParameter<std::string>
 public:
 	CStringParameter(std::string _name, CBaseParameter::AccessMode _access_mode, std::string _value, int _fpga_update)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, "", ""){};
+
+	CStringParameter(std::string _name, CBaseParameter::AccessMode _access_mode, std::string _value, int _fpga_update,int _tag)
+		:CCustomParameter(_name, _access_mode, _value, _fpga_update, "", "",_tag){};
 
 	void Set(const std::string& _value)
 	{
@@ -356,3 +392,4 @@ public:
 extern CBooleanParameter IsDemoParam;		// special default parameter to check mode (demo or not)
 extern CStringParameter InCommandParam;		// special default parameter to receive a string command from WEB UI
 extern CStringParameter OutCommandParam;	// special default parameter to send a string command to WEB UI
+

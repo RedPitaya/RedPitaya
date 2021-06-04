@@ -16,6 +16,7 @@
 # Versioning system
 VERSION ?= 0.00-0000
 REVISION ?= devbuild
+INSTALL_DIR ?= .
 
 # List of compiled object files (not yet linked to executable)
 OBJS = monitor.o xadc.o
@@ -27,7 +28,7 @@ TARGET=monitor
 
 # GCC compiling & linking flags
 CFLAGS  = -g -std=gnu99 -Wall
-CFLAGS += -I../../api/include
+CFLAGS += -I$(INSTALL_DIR)/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 # Additional libraries which needs to be dynamically linked to the executable
@@ -37,7 +38,6 @@ LIBS=-lm -lpthread
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
 # Installation directory
-INSTALL_DIR ?= .
 
 # Makefile is composed of so called 'targets'. They give basic structure what 
 # needs to be execued during various stages of the building/removing/installing

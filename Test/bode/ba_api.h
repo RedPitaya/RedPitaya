@@ -24,13 +24,15 @@
 
 #define BA_CALIB_FILENAME "/tmp/ba_calib.data"
 
+
+
 struct rp_ba_buffer_t{
 	std::vector<float> ch1;
 	std::vector<float> ch2;
 	explicit rp_ba_buffer_t(size_t size): ch1(size), ch2(size) {}
 };
 
-  int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,uint32_t size,	float w_out, int decimation, float *gain, float *phase_out,float input_threshold);
+  int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,uint32_t size, float samplesPerSecond,float _freq,  int  samples_period, float *gain, float *phase_out);
   int rp_BaSafeThreadAcqPrepare();
   int rp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, float _dc_bias);
   int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, rp_acq_decimation_t _decimation, int _acq_size, int _dec, float _trigger);

@@ -44,7 +44,7 @@ LIBS = -L$(INSTALL_DIR)/lib -static -lrp -lm
 
 ifeq ($(MODEL),Z20_250_12)
 LIBS += -L$(INSTALL_DIR)/lib -static -lrp-i2c -static -lrp-gpio -static -lrp-spi -lstdc++ -lpthread
-CXXFLAGS += -I../../api-250-12/bin/include
+CXXFLAGS += -I$(INSTALL_DIR)/include/api250-12
 endif
 
 # Main GCC executable (used for compiling and linking)

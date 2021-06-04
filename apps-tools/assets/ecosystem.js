@@ -160,7 +160,7 @@
                 url: '/get_info'
             })
             .done(function(msg) {
-                printRpVersion(msg);
+                setTimeout(printRpVersion(msg),2000);
                 stem_ver = msg['stem_ver'];
                 var board_type = "";
                 var linux_path = "LinuxOS";

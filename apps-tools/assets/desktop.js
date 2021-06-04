@@ -169,33 +169,10 @@
     var clickApp = function(e) {
         var key = parseInt($(this).attr('key')) * 1;
         e.preventDefault();
-        if (applications[key].check_online) {
-            OnlineChecker.checkAsync(function() {
-                if (!OnlineChecker.isOnline()) {
-                    if (applications[key].licensable) {
-                        $('#ignore_link').text('Ignore');
-                        $('#ignore_link').attr('href', applications[key].url);
-                        $('#lic_failed').show();
-                    } else {
-                        $('#ignore_link').text('Close');
-                        $('#ignore_link').attr('href', "#");
-                        $('#lic_failed').hide();
-                    }
-
-                    $('#ic_missing').modal('show');
-                    return;
-                }
-                if (applications[key].url != "")
-                    window.location = applications[key].url;
-                if (applications[key].callback !== undefined)
-                    applications[key].callback(key);
-            });
-        } else {
-            if (applications[key].url != "")
-                window.location = applications[key].url;
-            if (applications[key].callback !== undefined)
-                applications[key].callback(key);
-        }
+        if (applications[key].url != "")
+            window.location = applications[key].url;
+        if (applications[key].callback !== undefined)
+            applications[key].callback(key);
     }
 
 
@@ -254,7 +231,7 @@
         { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya.readthedocs.io/en/latest/teaching/teaching.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        //	{ id: "warranty_ext", name: "Warranty extension", description: "Standard Warranty Extension", url: "https://redpitaya.com/warranty_extension", image: "../assets/images/WarrantyExt.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "warranty_ext", name: "Unlock new benefits", description: "Keep your Red Pitaya fresh for longer", url: "https://go.redpitaya.com/refresh", image: "../assets/images/WarrantyExt.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         //        { id: "fpgaexamples", name: "FPGA", description: "Red Pitaya FPGA examples", url: "http://red-pitaya-fpga-examples.readthedocs.io/en/latest/", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];

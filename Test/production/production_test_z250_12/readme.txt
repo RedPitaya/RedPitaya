@@ -1,1 +1,0 @@
-To run the test, you need to run production_testing_script.sh
