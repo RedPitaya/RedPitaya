@@ -436,14 +436,11 @@ $(function() {
 
     // Stop the application when page is unloaded
     $(window).on('beforeunload', function() {
-        SM.parametersCache["SS_START"] = { value: false };
-        SM.sendParameters();
         SM.ws.onclose = function() {}; // disable onclose handler first
         SM.ws.close();
-        $.ajax({
-            url: SM.config.stop_app_url,
-            async: false
-        });
+        $.get(
+            SM.config.stop_app_url
+        )
     });
 
 
