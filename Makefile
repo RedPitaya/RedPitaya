@@ -208,7 +208,7 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 	test -d $(INSTALL_DIR)/sbin || mkdir -p $(INSTALL_DIR)/sbin
 	cp $</sockproc $@
 
-nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
+nginx: $(NGINX) $(SOCKPROC)
 
 startupsh:
 ifeq ($(MODEL),Z20_250_12)
