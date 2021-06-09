@@ -186,35 +186,30 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size){
 
 }
 
+void stopCSV (int sigNum){
+    g_manger->stopWriteToCSV();
+}
 
-void sigHandler (int sigNum){
+void stopStreaming(int sigNum){
     g_manger->stop();
     g_asionet->Stop();
     g_terminate = true;
 }
 
-void sigHandlerStopCSV (int sigNum){
-    g_manger->stopWriteToCSV();
+void sigHandler (int sigNum){
+    stopCSV(sigNum);
+    stopStreaming(sigNum);
 }
 
 void installTermSignalHandler()
 {
 #ifdef _WIN32
     signal(SIGINT, sigHandler);
-    signal(SIGINT, sigHandlerStopCSV);
     signal(SIGTERM, sigHandler);
-    signal(SIGTERM, sigHandlerStopCSV);
-
 #else
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = sigHandler;
-    sigaction(SIGTERM, &action, NULL);
-    sigaction(SIGINT, &action, NULL);
-
-    struct sigaction actionStopCSV;
-    memset(&actionStopCSV, 0, sizeof(struct sigaction));
-    actionStopCSV.sa_handler = sigHandlerStopCSV;
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGINT, &action, NULL);
 #endif
@@ -286,7 +281,7 @@ int main(int argc, char* argv[])
         g_asionet->addCallClient_Error([](std::error_code error)
                                        {
                                            std::cout << "Disconnect;" << '\n';
-                                           sigHandler(0);
+                                           stopStreaming(0);
                                        });
         g_asionet->addCallReceived(reciveData);
         g_asionet->Start();
@@ -298,7 +293,7 @@ int main(int argc, char* argv[])
 #endif // _WIN32
             
         }
-        sigHandler(0);
+        stopStreaming(0);
         if (file_type == Stream_FileType::CSV_TYPE) {
             g_manger->convertToCSV();
         }

@@ -84,7 +84,7 @@ private:
     
     bool m_volt_mode;
     bool m_use_local_file;
-    bool m_stopWriteCSV;
+    std::atomic_bool m_stopWriteCSV;
     Stream_FileType m_fileType;
     void startServer();
     void stopServer();
