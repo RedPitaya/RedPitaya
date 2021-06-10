@@ -11,7 +11,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
-LINUX_VER = 1.03
+LINUX_VER = 1.04
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -208,7 +208,7 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 	test -d $(INSTALL_DIR)/sbin || mkdir -p $(INSTALL_DIR)/sbin
 	cp $</sockproc $@
 
-nginx: $(NGINX) $(IDGEN) $(SOCKPROC)
+nginx: $(NGINX) $(SOCKPROC)
 
 startupsh:
 ifeq ($(MODEL),Z20_250_12)
@@ -333,9 +333,10 @@ calibrate: api
 
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
-	$(MAKE) -C $(LA_TEST_DIR)
-	cp api2/test/laboardtest build/bin/laboardtest
-	cp api2/test/install.sh build/install.sh
+	$(MAKE) -C $(LA_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	cp rp-api/api2/test/laboardtest $(abspath $(INSTALL_DIR))/bin/laboardtest
+	cp rp-api/api2/test/install.sh $(abspath $(INSTALL_DIR))/install.sh
 	
 rp_communication:
 	make -C $(COMM_DIR)
@@ -463,7 +464,7 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 apps-pro: scopegenpro spectrumpro 
 ifeq ($(MODEL),Z20_250_12)
-apps-pro: ba_pro lcr_meter
+apps-pro: ba_pro lcr_meter la_pro
 else
 ifeq ($(MODEL),Z20)
 apps-pro:

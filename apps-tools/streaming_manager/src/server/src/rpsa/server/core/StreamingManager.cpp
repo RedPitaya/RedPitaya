@@ -460,6 +460,7 @@ bool CStreamingManager::convertToCSV(){
 
 bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg){
     bool ret = true;
+    m_stopWriteCSV = false;
     try{
         if (m_stopWriteCSV) return false;
         acout() << "Started converting to CSV\n";

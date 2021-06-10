@@ -111,9 +111,9 @@ DTS_PATH = dts
 endif
 
 ifeq ($(MODEL),Z20_250_12)
-FPGA_PRJ_LST = stream_app_250 v0.94_250
+FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 # NEED for FSBL fpga image
-FPGA_PRJ = v0.94
+FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_250
 DTS_PATH = dts_250
 endif
@@ -151,9 +151,11 @@ ifeq ($(FPGA_MODEL), Z20_125)
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 endif
 else
+	cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
 	mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
+	mv $(INSTALL_DIR)/fpga/logic_250 $(INSTALL_DIR)/fpga/logic
 endif
 
 ################################################################################
@@ -217,7 +219,7 @@ ifeq ($(KERNEL_HEADERS),YES)
 	make -C $< headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))/include/linux
 endif
 
-linux-install: linux $(INSTALL_DIR)
+linux-install: $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
 ################################################################################

@@ -120,9 +120,6 @@ int rp_app_init(void)
 	#ifdef Z20_250_12
     rp_max7311::rp_initController();
     #endif 
-
-	PrintLogInFile("rp_app_init");
-
 	return 0;
 }
 
@@ -130,9 +127,7 @@ int rp_app_init(void)
 int rp_app_exit(void)
 {
 	StopServer(0);
-	fprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
-	PrintLogInFile("Unloading stream server version");
-
+	fprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);	
 	return 0;
 }
 
@@ -271,20 +266,16 @@ void UpdateParams(void)
 
 	if (ss_start.IsNewValue())
 	{
-		PrintLogInFile("command");
 		ss_start.Update();
 		if (ss_start.Value() == 1){
-			PrintLogInFile("Start server");
 			StartServer();
 		}else{
-			PrintLogInFile("Stop server");
 			StopNonBlocking(0);
 		}
 	}
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: UpdateParams() %s\n",e.what());
-		PrintLogInFile(e.what());
 	}
 	
 }
@@ -476,7 +467,6 @@ if (use_calib == 2) {
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
-		PrintLogInFile(e.what());
 	}
 }
 
@@ -487,7 +477,6 @@ void StopNonBlocking(int x){
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
-		PrintLogInFile(e.what());
 	}
 }
 
@@ -503,6 +492,5 @@ void StopServer(int x){
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
-		PrintLogInFile(e.what());
 	}
 }
