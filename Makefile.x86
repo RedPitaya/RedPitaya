@@ -105,7 +105,7 @@ endif
 ifeq ($(MODEL),Z20_125)
 FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 # NEED for FSBL fpga image
-FPGA_PRJ = v0.94
+FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_14
 DTS_PATH = dts
 endif
