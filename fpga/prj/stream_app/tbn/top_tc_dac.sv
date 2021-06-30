@@ -2,12 +2,13 @@
 
 `timescale 1ns / 1ps
 
-module top_tc ();
+module top_tc_dac ();
 
 
 //default clocking cb @ (posedge dac_sim.clk);
 default clocking cb @ (posedge top_tb.clk);
 endclocking: cb
+
 // DMA status reg
 localparam READ_STATE_BUF1      = 0;
 localparam END_STATE_BUF1       = 1;
@@ -22,8 +23,6 @@ localparam CTRL_MODE_NORM       = 4;
 localparam CTRL_MODE_STREAM     = 5;
 localparam CTRL_BUF1_RDY        = 6;
 localparam CTRL_BUF2_RDY        = 7;
-
-logic [12-1:0] id_test;
 
 task test_hk (
   int unsigned offset,
@@ -78,9 +77,7 @@ task test_osc(
   int unsigned offset,
   int unsigned evnt_in
 );
-
    int unsigned dat;
-id_test = {4'h0,offset[27:20]};
 
   ##100;
   // configure
@@ -158,11 +155,11 @@ id_test = {4'h0,offset[27:20]};
   int_ack(offset);
   int_ack(offset);
   int_ack(offset);
+  int_ack_del(offset);
   int_ack(offset);
+  int_ack_del(offset);
   int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
-  int_ack(offset);
+  int_ack_del(offset);
 
   /*
   int_ack(offset);
@@ -197,24 +194,30 @@ task buf_ack(
 );
   int unsigned dat;
   //axi_read(offset+'d80, dat);
+  $display("@ %t buf_ack started", $time);
+
   ##10;
 
   // configure
   // DMA control address (80) controls ack signals for buffers. for breakdown see rp_dma_s2mm_ctrl
+  do begin
+    $display("@ %t waiting for buffer to be read out", $time);
+
+    axi_read(offset+'h2C, dat);
+      $display("read out %x", dat);
+    ##5;
+  end while (dat[END_STATE_BUF1] != 1'b1);
+  //end while (dac_sim.axi_reg.RDATA[END_STATE_BUF1] != 1'b1 && dac_sim.axi_reg.RVALID); // BUF 1 is full
+  ##1000;
+  axi_write(offset+'h28, 1 << CTRL_BUF2_RDY);  // BUF1 ACK
 
   do begin
     axi_read(offset+'h2C, dat);
     ##5;
-  end while (dat[END_STATE_BUF1] != 1'b1); // BUF 1 is full
+  end while (dat[END_STATE_BUF2] != 1'b1);
+  //end while (dac_sim.axi_reg.RDATA[END_STATE_BUF2] != 1'b1 && dac_sim.axi_reg.RVALID); // BUF 1 is full
   ##1000;
-  axi_write(offset+'d28, 1 << CTRL_BUF2_RDY);  // BUF1 ACK
-
-  do begin
-    axi_read(offset+'h2C, dat);
-    ##5;
-  end while (dat[END_STATE_BUF2] != 1'b1); // BUF 1 is full
-  ##1000;
-  axi_write(offset+'d28, 1 << CTRL_BUF1_RDY);  // BUF1 ACK
+  axi_write(offset+'h28, 1 << CTRL_BUF1_RDY);  // BUF1 ACK
 
 endtask: buf_ack
 
@@ -222,21 +225,21 @@ task int_ack(
   int unsigned offset
 );
   int unsigned dat;
-  ##20;
+  ##2000;
 
   // configure
   // DMA control address (80) controls ack signals for buffers. for breakdown see rp_dma_s2mm_ctrl
-  do begin
-    ##5;
-  end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
+  //do begin
+  //  ##5;
+  //end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
   ##5;
   axi_write(offset+'h50, 'd2);  // INTR ACK
   ##500;
   axi_write(offset+'h50, 'h4);  // BUF1 ACK
 
-  do begin
-        ##5;
-  end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
+  //do begin
+  //      ##5;
+  //end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
   ##5;
   axi_write(offset+'h50, 'd2);  // INTR ACK
   ##500;
@@ -285,6 +288,7 @@ task test_dac(
 );
    int unsigned dat;
 ##1000;
+$display("Setting up DAC stream");
   // configure
   axi_write(offset+'h1C,   'd0);  // stop event
   ##10;
@@ -296,7 +300,7 @@ task test_dac(
   ##10;
   axi_write(offset+'h04,   'd0);  // scale and offset
   ##10;
-  axi_write(offset+'h08,  'd4);  // step
+  axi_write(offset+'h08,  'd6144);  // step
   ##10;
   axi_write(offset+'h1C,   'd2);  // start event
   ##10;
@@ -307,16 +311,30 @@ task test_dac(
   axi_write(offset+'h3C, 'h2000);  // buffer address
   ##20;
   axi_write(offset+'h34, 'h100);  // buffer size
-  axi_write(offset+'h58, 'h22);  // streaming DMA, reset buffers and flags
-  axi_write(offset+'h58,   'd1);  // start DMA
+  ##10;
+  axi_write(offset+'h28, 'h22);  // streaming DMA, reset buffers and flags
+  ##10;
   axi_write(offset+'h1C,   'd2);  // start event
+  ##10;
+  axi_write(offset+'h28,   'd1);  // start DMA
+  ##20;
+  $display("just before buf_ack start");
+
+  axi_write(offset+'h28,   'd1);  // start DMA
+
+  ##200;
   buf_ack(offset);
+  ##200;
   buf_ack(offset);
+  ##200;
   buf_ack(offset);
+  ##200;
   buf_ack(offset);
+  ##200;
   buf_ack(offset);
 ##100000;
 endtask: test_dac
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Testing arbitrary signal generator
@@ -475,7 +493,7 @@ task axi_read (
   //dac_sim.axi_bm_reg.ReadTransaction (
   top_tb.axi_bm_reg.ReadTransaction (
     .ARDelay (0),  .ar ('{
-                          id    : id_test,
+                          id    : 0,
                           addr  : adr,
                           region: 0,
                           len   : 0,
@@ -520,7 +538,7 @@ task axi_write (
   //dac_sim.axi_bm_reg.WriteTransaction (
   top_tb.axi_bm_reg.WriteTransaction (
     .AWDelay (0),  .aw ('{
-                          id    : id_test,
+                          id    : 0,
                           addr  : adr,
                           region: 0,
                           len   : 0,
@@ -532,7 +550,7 @@ task axi_write (
                           qos   : 0
                          }),
      .WDelay (0),   .w ('{
-                          id    : id_test,
+                          id    : 0,
                           data  : dat,
                           strb  : '1,
                           last  : 1

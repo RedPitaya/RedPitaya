@@ -202,11 +202,6 @@ proc create_root_design { parentCell } {
 
   set FIXED_IO [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_processing_system7:fixedio_rtl:1.0 FIXED_IO ]
 
-  set adc [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 adc ]
-  set_property -dict [ list \
-   CONFIG.FREQ_HZ {125000000} \
-   ] $adc
-
 
   # Create ports
   set In1_0 [ create_bd_port -dir I -from 0 -to 0 In1_0 ]
@@ -225,6 +220,12 @@ proc create_root_design { parentCell } {
   set In14_0 [ create_bd_port -dir I -from 0 -to 0 In14_0 ]
   set adc_data_ch1 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch1 ]
   set adc_data_ch2 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch2 ]
+  set adc_clk [ create_bd_port -dir I -type clk -freq_hz 125000000 adc_clk ]
+
+  set dac_dat_a [ create_bd_port -dir O -from 13 -to 0 dac_dat_a ]
+  set dac_dat_b [ create_bd_port -dir O -from 13 -to 0 dac_dat_b ]
+  set trig_in [ create_bd_port -dir I trig_in ]
+  set trig_out [ create_bd_port -dir O trig_out ]
 
   # Create instance: axi_interconnect_0, and set properties
   set axi_interconnect_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_0 ]
@@ -275,7 +276,7 @@ proc create_root_design { parentCell } {
    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
    CONFIG.NUM_OUT_CLKS {4} \
    CONFIG.PRIM_IN_FREQ {125.000} \
-   CONFIG.PRIM_SOURCE {Differential_clock_capable_pin} \
+   CONFIG.PRIM_SOURCE {Single_ended_clock_capable_pin} \
    CONFIG.USE_LOCKED {false} \
    CONFIG.USE_RESET {false} \
  ] $clk_gen
@@ -284,7 +285,6 @@ proc create_root_design { parentCell } {
   set intr_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 intr_concat ]
   set_property -dict [ list \
    CONFIG.NUM_PORTS {16} \
-   #CONFIG.NUM_PORTS {3} \
  ] $intr_concat
 
   # Create instance: processing_system7_0, and set properties
@@ -1095,6 +1095,7 @@ proc create_root_design { parentCell } {
   set rp_concat [ create_bd_cell -type ip -vlnv redpitaya.com:user:rp_concat:1.0 rp_concat ]
   set_property -dict [ list \
    CONFIG.EVENT_SRC_NUM {5} \
+   CONFIG.TRIG_SRC_NUM {6} \
  ] $rp_concat
 
   # Create instance: rp_oscilloscope, and set properties
@@ -1102,7 +1103,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.ADC_DATA_BITS {14} \
    CONFIG.EVENT_SRC_NUM {5} \
-   CONFIG.TRIG_SRC_NUM {5} \
+   CONFIG.TRIG_SRC_NUM {6} \
  ] $rp_oscilloscope
 
   # Create instance: rst_gen, and set properties
@@ -1138,7 +1139,6 @@ proc create_root_design { parentCell } {
  ] $xadc
 
   # Create interface connections
-  connect_bd_intf_net -intf_net CLK_IN1_D_0_1 [get_bd_intf_ports adc] [get_bd_intf_pins clk_gen/CLK_IN1_D]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins axi_interconnect_0/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
   connect_bd_intf_net -intf_net axi_reg_M00_AXI [get_bd_intf_pins axi_reg/M00_AXI] [get_bd_intf_pins rp_oscilloscope/s_axi_reg]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7_0/DDR]
@@ -1173,6 +1173,10 @@ proc create_root_design { parentCell } {
   connect_bd_net -net In13_0_1 [get_bd_ports In13_0] [get_bd_pins intr_concat/In13]
   connect_bd_net -net In14_0_1 [get_bd_ports In14_0] [get_bd_pins intr_concat/In14]
   connect_bd_net -net xadc_ip2intc_irpt [get_bd_pins xadc/ip2intc_irpt] [get_bd_pins intr_concat/In0]
+  connect_bd_net -net adc_clk_1 [get_bd_ports adc_clk] [get_bd_pins clk_gen/clk_in1]
+  connect_bd_net -net rp_oscilloscope_trig_out [get_bd_ports trig_out] [get_bd_pins rp_oscilloscope/trig_out]
+  connect_bd_net -net rp_concat_ext_trig_ip [get_bd_ports trig_in] [get_bd_pins rp_concat/ext_trig_ip]
+
   connect_bd_net -net rp_oscilloscope_0_intr [get_bd_pins intr_concat/In15] [get_bd_pins rp_oscilloscope/intr]
   connect_bd_net -net rp_oscilloscope_0_osc1_event_op [get_bd_pins rp_concat/osc1_event_ip] [get_bd_pins rp_oscilloscope/osc1_event_op]
   connect_bd_net -net rp_oscilloscope_0_osc1_trig_op [get_bd_pins rp_concat/osc1_trig_ip] [get_bd_pins rp_oscilloscope/osc1_trig_op]

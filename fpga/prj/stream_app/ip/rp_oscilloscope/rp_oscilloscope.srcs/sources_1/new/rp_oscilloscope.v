@@ -22,6 +22,7 @@ module rp_oscilloscope
   input  wire [EVENT_SRC_NUM-1:0]               event_ip_start,
   input  wire [EVENT_SRC_NUM-1:0]               event_ip_reset,
   input  wire [TRIG_SRC_NUM-1:0]                trig_ip,
+  output wire                                   trig_out,
   //
   output wire [3:0]                             osc1_event_op,    
   output wire                                   osc1_trig_op,    
@@ -246,6 +247,7 @@ osc_top #(
   .event_op_reset   (osc1_event_op[3]),
   .trig_ip          (trig_ip),
   .trig_op          (osc1_trig_op),  
+  .trig_o           (trig_out),
   .ctl_rst          (),
   .reg_addr         (osc1_reg_addr),   
   .reg_wr_data      (osc1_reg_wr_data),
@@ -300,6 +302,7 @@ osc_top #(
   .event_op_reset   (osc2_event_op[3]),
   .trig_ip          (trig_ip),
   .trig_op          (osc2_trig_op),  
+  .trig_o           (),
   .ctl_rst          (),
   .reg_addr         (osc2_reg_addr),   
   .reg_wr_data      (osc2_reg_wr_data),

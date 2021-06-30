@@ -6,9 +6,12 @@
 ################################################################################
 
 set prj_name [lindex $argv 0]
+set prj_defs [lindex $argv 1]
 puts "Project name: $prj_name"
+puts "Defines: $prj_defs"
 cd prj/$prj_name
 #cd prj/$::argv 0
+
 
 ################################################################################
 # install UltraFast Design Methodology from TCL Store
@@ -23,6 +26,7 @@ tclapp::install -quiet ultrafast
 set path_brd ../../brd
 set path_rtl rtl
 set path_ip  ip
+#set path_bd  .srcs/sources_1/bd/system
 set path_bd  .srcs/sources_1/bd/system/hdl
 set path_sdc ../../sdc
 set path_sdc_prj sdc
@@ -46,6 +50,7 @@ set_param board.repoPaths [list $path_brd]
 set part xc7z010clg400-1
 
 create_project -in_memory -part $part
+set_property verilog_define $prj_defs [current_fileset]
 
 ################################################################################
 # create PS BD (processing system block design)
