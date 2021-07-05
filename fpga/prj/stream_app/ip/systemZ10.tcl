@@ -242,6 +242,7 @@ proc create_root_design { parentCell } {
    CONFIG.S00_HAS_REGSLICE {0} \
  ] $axi_reg
 
+
   # Create instance: clk_gen, and set properties
   set clk_gen [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_gen ]
   set_property -dict [ list \
@@ -275,6 +276,7 @@ proc create_root_design { parentCell } {
    CONFIG.MMCM_CLKOUT3_DIVIDE {16} \
    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
    CONFIG.NUM_OUT_CLKS {4} \
+   ONFIG.PRIM_IN_FREQ.VALUE_SRC USER \
    CONFIG.PRIM_IN_FREQ {125.000} \
    CONFIG.PRIM_SOURCE {Single_ended_clock_capable_pin} \
    CONFIG.USE_LOCKED {false} \
