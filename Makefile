@@ -23,19 +23,25 @@ export LINUX_VER
 # MODEL USE FOR determine kind of assembly
 # USED parameters:
 # Z10 - for Redpitaya 125-14
+# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode  
 # Z20 - for Redpitaya 122-16
 # Z20_125 - for Redpitaya Z20 125-14
 # Z20_250_12 - for RepPitaya 250-12
 # Production test script
 MODEL ?= Z10
 
-all: api nginx examples  apps-tools apps-pro startupsh scpi
-
-ifeq ($(MODEL),Z20_250_12)
-all: 
-else
-all: sdr apps-free-vna rp_communication
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
+all: api nginx examples  apps-tools apps-pro startupsh scpi sdr apps-free-vna rp_communication
 endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10_SLAVE))
+all: api nginx apps-tools streaming_slave
+endif
+
 
 $(DL):
 	mkdir -p $@
@@ -217,6 +223,10 @@ else
 	cp -f patches/startup/startup.sh $(STARTUPSH)
 endif
 
+streaming_slave:
+	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	echo "slave mode" > $(INSTALL_DIR))/bin/.streaming_mode
+
 
 ################################################################################
 # SCPI server
@@ -380,18 +390,23 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager
-
-ifeq ($(MODEL),Z20_250_12)
-apps-tools: calib_app
-endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
-apps-tools: jupyter_manager calib_app
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
 endif
 
-ifeq ($(MODEL),Z20)
-apps-tools: jupyter_manager
+ifeq ($(MODEL),$(filter $(MODEL),Z20))
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10_SLAVE))
+apps-tools: ecosystem updater network_manager
 endif
 
 ecosystem:
