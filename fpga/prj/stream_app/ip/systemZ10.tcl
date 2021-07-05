@@ -276,7 +276,7 @@ proc create_root_design { parentCell } {
    CONFIG.MMCM_CLKOUT3_DIVIDE {16} \
    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
    CONFIG.NUM_OUT_CLKS {4} \
-   ONFIG.PRIM_IN_FREQ.VALUE_SRC USER \
+   CONFIG.PRIM_IN_FREQ.VALUE_SRC USER \
    CONFIG.PRIM_IN_FREQ {125.000} \
    CONFIG.PRIM_SOURCE {Single_ended_clock_capable_pin} \
    CONFIG.USE_LOCKED {false} \
