@@ -164,8 +164,8 @@ dac_rst  <= ~rstn_0 | ~pll_locked;
 always @(posedge pwm_clk)
 pwm_rstn <=  rstn_0 &  pll_locked;
 */
-  //system_wrapper system_wrapper_i
-  system system_wrapper_i
+  system_wrapper system_wrapper_i
+  //system system_wrapper_i
        (.DDR_addr(DDR_addr),
         .DDR_ba(DDR_ba),
         .DDR_cas_n(DDR_cas_n),
