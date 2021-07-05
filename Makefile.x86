@@ -85,6 +85,7 @@ KERNEL_HEADERS ?= YES
 ################################################################################
 
 HWID ?=
+DEF_PARAM ?=
 
 ifeq ($(MODEL),Z10)
 FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
@@ -118,6 +119,15 @@ FPGA_MODEL ?= Z20_250
 DTS_PATH = dts_250
 endif
 
+ifeq ($(MODEL),Z10_SLAVE)
+FPGA_PRJ_LST = stream_app
+# NEED for FSBL fpga image
+FPGA_PRJ = stream_app
+FPGA_MODEL ?= Z10
+DTS_PATH = dts
+DEF_PARAM = SLAVE
+endif
+
 .PHONY: fpga $(INSTALL_DIR)/fpga
 
 fpga: $(INSTALL_DIR)/fpga
@@ -126,7 +136,7 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
 	# compile FPGA projects
 	for ITM in $(FPGA_PRJ_LST); do \
-	    make -C fpga PRJ=$$ITM MODEL=$(FPGA_MODEL) HWID=$(HWID); \
+	    make -C fpga PRJ=$$ITM MODEL=$(FPGA_MODEL) DEFINES=$(DEF_PARAM) HWID=$(HWID); \
 	    mkdir -p $(INSTALL_DIR)/fpga/$$ITM; \
 	    cp    fpga/prj/$$ITM/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$$ITM/fpga.bit; \
 	    cp    fpga/prj/$$ITM/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$$ITM/fsbl.elf; \
@@ -135,27 +145,32 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
 	done
 
-	# copy archived FPGA bitstream images and decompress them
-	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
-	# backward compatibility, TODO, should be removed at next OS release
-ifneq ($(FPGA_MODEL),Z20_250)
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-ifeq ($(FPGA_MODEL), Z10)
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
-endif
-ifeq ($(FPGA_MODEL), Z20_14)
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
-endif
+ifneq ($(DEF_PARAM),SLAVE)
+		# copy archived FPGA bitstream images and decompress them
+		cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
+		cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
+		# backward compatibility, TODO, should be removed at next OS release
+
+	ifneq ($(FPGA_MODEL),Z20_250)
+		cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+		cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+		ifeq ($(FPGA_MODEL), Z10)
+			cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+			cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+		endif
+		ifeq ($(FPGA_MODEL), Z20_14)
+			cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+			cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+		endif
+	else
+		cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+		cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+		cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+		mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
+		mv $(INSTALL_DIR)/fpga/logic_250 $(INSTALL_DIR)/fpga/logic
+	endif
 else
-	cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
-	mv $(INSTALL_DIR)/fpga/logic_250 $(INSTALL_DIR)/fpga/logic
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 endif
 
 ################################################################################
