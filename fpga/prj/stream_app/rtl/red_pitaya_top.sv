@@ -123,7 +123,7 @@ ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(adc_clk_out), .CE(
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 red_pitaya_pll pll (
   // inputs
   .clk         (adc_clk_in),  // clock
@@ -152,6 +152,7 @@ ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(da
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
 // ADC reset (active low)
+
 always @(posedge adc_clk)
 adc_rstn <=  rstn_0 &  pll_locked;
 
@@ -162,7 +163,7 @@ dac_rst  <= ~rstn_0 | ~pll_locked;
 // PWM reset (active low)
 always @(posedge pwm_clk)
 pwm_rstn <=  rstn_0 &  pll_locked;
-
+*/
   //system_wrapper system_wrapper_i
   system system_wrapper_i
        (.DDR_addr(DDR_addr),
