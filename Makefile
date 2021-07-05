@@ -225,7 +225,7 @@ endif
 
 streaming_slave:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
-	echo "slave mode" > $(INSTALL_DIR))/bin/.streaming_mode
+	echo "slave mode" > $(abspath $(INSTALL_DIR))/bin/.streaming_mode
 
 
 ################################################################################
