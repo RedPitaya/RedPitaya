@@ -39,7 +39,7 @@ all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
 endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z10_SLAVE))
-all: api nginx apps-tools streaming_slave
+all: nginx apps-tools streaming_slave
 endif
 
 
