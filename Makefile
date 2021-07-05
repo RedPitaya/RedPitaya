@@ -413,7 +413,7 @@ ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-updater: ecosystem api $(NGINX)
+updater: ecosystem $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR) clean
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
