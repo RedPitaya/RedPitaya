@@ -120,7 +120,7 @@ DTS_PATH = dts_250
 endif
 
 ifeq ($(MODEL),Z10_SLAVE)
-FPGA_PRJ_LST = stream_app
+FPGA_PRJ_LST = stream_app logic
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
