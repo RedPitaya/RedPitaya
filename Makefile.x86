@@ -122,7 +122,7 @@ endif
 ifeq ($(MODEL),Z10_SLAVE)
 FPGA_PRJ_LST = stream_app
 # NEED for FSBL fpga image
-FPGA_PRJ = stream_app
+FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 DEF_PARAM = SLAVE
