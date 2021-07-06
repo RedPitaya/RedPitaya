@@ -415,19 +415,37 @@ $(document).ready(function() {
                 UPD.type = "SDRlab-122-16/ecosystems";
                 UPD.path_fw = "SDRlab-122-16";
                 $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
+            } else if (stem_ver == "STEM 16 SLAVE") {
+                UPD.type = "Streaming slave boards/SDRlab-122-16/ecosystems";
+                UPD.path_fw = "Streaming slave boards/SDRlab-122-16";
+                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
             } else if (stem_ver == "STEM 250 12") {
                 UPD.type = "SIGNALlab-250-12/ecosystems";
                 UPD.path_fw = "SIGNALlab-250-12";
+                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
+            } else if (stem_ver == "STEM 250 12 SLAVE") {
+                UPD.type = "Streaming slave boards/SIGNALlab-250-12/ecosystems";
+                UPD.path_fw = "Streaming slave boards/SIGNALlab-250-12";
                 $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
             } else if (stem_ver == "STEM 14-Z20") {
                 UPD.type = "STEMlab-125-14-Z7020/ecosystems";
                 UPD.path_fw = "STEMlab-125-14-Z7020";
                 $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
-            } else {
-                UPD.type = "STEMlab-125-1x/ecosystems";
-                UPD.path_fw = "STEMlab-125-1x";
+            } else if (stem_ver == "STEM 14-Z20 SLAVE") {
+                UPD.type = "Streaming slave boards/STEMlab-125-14-Z7020/ecosystems";
+                UPD.path_fw = "Streaming slave boards/STEMlab-125-14-Z7020";
                 $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
-            }
+            } else {
+                if (stem_ver.includes("SLAVE")){
+                    UPD.type = "Streaming slave boards/STEMlab-125-1x/ecosystems";
+                    UPD.path_fw = "Streaming slave boards/STEMlab-125-1x";
+                    $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
+                }else{
+                    UPD.type = "STEMlab-125-1x/ecosystems";
+                    UPD.path_fw = "STEMlab-125-1x";
+                    $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
+                }
+            } 
         });
 
     $('#ecosystem_type').change(function() {
