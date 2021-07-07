@@ -322,7 +322,7 @@
                         var model = obj['model'];
                         if (obj['model'].startsWith('STEM_125-10_v1.0')) model = 'STEMlab 125-10 v1.0';
                         if (obj['model'].startsWith('STEM_125-14_v1.0')) model = 'STEMlab 125-14 v1.0';
-                        if (obj['model'].startsWith('STEM_125-14-Z7020_v1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
+                        if (obj['model'].startsWith('STEM_125-14_Z7020_v1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
                         if (obj['model'].startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
                         if (obj['model'].startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
                         if (obj['model'].startsWith('STEM_122-16SDR_v1.0')) model = 'SDRlab 122-16 v1.0';
