@@ -1688,6 +1688,54 @@ int rp_UartSetStopBits(rp_uart_stop_bits_t mode);
 */
 int rp_UartSetParityMode(rp_uart_parity_t mode);
 
+/**
+* The function returns the on state of the 9 yellow LED indicator.
+* @param enable return current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetLEDMMCState(bool *_enable);
+
+/**
+* The function enables or disables the 9 yellow LED indicator
+* @param enable Flag enabling LED.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetLEDMMCState(bool _enable);
+
+/**
+* The function returns the on state of the red LED indicator.
+* @param enable return current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetLEDHeartBeatState(bool *_enable);
+
+/**
+* The function enables or disables the red LED indicator
+* @param enable Flag enabling LED.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetLEDHeartBeatState(bool _enable);
+
+/**
+* The function returns the status of indicators on the Ethernet connector.
+* @param enable return current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetLEDEthState(bool *_state);
+
+/**
+* The function enables or disables indicators on the the Ethernet connector.
+* @param enable Flag enabling LED.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetLEDEthState(bool _state);
+
 #ifdef __cplusplus
 }
 #endif

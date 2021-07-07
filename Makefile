@@ -283,14 +283,15 @@ CALIB_DIR          = Test/calib
 CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
+LED_CONTROL_DIR    = Test/led_control
 COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
+.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest led_control
 
-examples: lcr bode monitor calib spectrum acquire generator
+examples: lcr bode monitor calib spectrum acquire generator led_control
 
 ifeq ($(MODEL),Z20_250_12)
 examples: rp_i2c_tool
@@ -340,6 +341,11 @@ calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
 	$(MAKE) -C $(CALIBRATE_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+led_control: api
+	$(MAKE) -C $(LED_CONTROL_DIR) clean
+	$(MAKE) -C $(LED_CONTROL_DIR) INSTALL_DIR=$(abspath $(LED_CONTROL_DIR))
+	$(MAKE) -C $(LED_CONTROL_DIR) install INSTALL_DIR=$(abspath $(LED_CONTROL_DIR))
 
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
