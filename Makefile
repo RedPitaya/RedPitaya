@@ -344,8 +344,8 @@ calibrate: api
 
 led_control: api
 	$(MAKE) -C $(LED_CONTROL_DIR) clean
-	$(MAKE) -C $(LED_CONTROL_DIR) INSTALL_DIR=$(abspath $(LED_CONTROL_DIR))
-	$(MAKE) -C $(LED_CONTROL_DIR) install INSTALL_DIR=$(abspath $(LED_CONTROL_DIR))
+	$(MAKE) -C $(LED_CONTROL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(LED_CONTROL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
