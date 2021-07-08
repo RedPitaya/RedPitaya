@@ -146,29 +146,29 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	done
 
 ifneq ($(DEF_PARAM),SLAVE)
-		# copy archived FPGA bitstream images and decompress them
-		cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-		cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
-		# backward compatibility, TODO, should be removed at next OS release
+	# copy archived FPGA bitstream images and decompress them
+	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
+	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
+	# backward compatibility, TODO, should be removed at next OS release
 
-	ifneq ($(FPGA_MODEL),Z20_250)
-		cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-		cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-		ifeq ($(FPGA_MODEL), Z10)
-			cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-			cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
-		endif
-		ifeq ($(FPGA_MODEL), Z20_14)
-			cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-			cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
-		endif
-	else
-		cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-		cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-		cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-		mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
-		mv $(INSTALL_DIR)/fpga/logic_250 $(INSTALL_DIR)/fpga/logic
-	endif
+ifneq ($(FPGA_MODEL),Z20_250)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+ifeq ($(FPGA_MODEL), Z10)
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+endif
+ifeq ($(FPGA_MODEL), Z20_14)
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
+endif
+else
+	cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
+	mv $(INSTALL_DIR)/fpga/logic_250 $(INSTALL_DIR)/fpga/logic
+endif
 else
 	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 endif
