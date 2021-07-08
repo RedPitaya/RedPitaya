@@ -374,7 +374,7 @@
         }
 
         $.ajax({
-            url: '/get_ip',
+            url: '/get_streaming_ip',
             type: 'GET',
         }).fail(function(msg) {
             $('#SS_IP_ADDR').val(parseAddress(msg.responseText));
