@@ -48,7 +48,7 @@
         }
 
         $.ajax({
-            url: '/get_ip',
+            url: '/get_streaming_ip',
             type: 'GET',
         }).fail(function(msg) {
             $('#ip-addr').text(parseAddress(msg.responseText));
