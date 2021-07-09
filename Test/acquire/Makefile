@@ -32,10 +32,12 @@ SRCS = $(subst .o,.cpp, $(OBJS)))
 TARGET=acquire
 
 # GCC compiling & linking flags
-CXXFLAGS  = -Wall -Werror -Wno-unused-variable -Wno-unused-but-set-variable
+CXXFLAGS  = -Wall -Werror -Wno-unused-variable -Wno-unused-but-set-variable -Wno-uninitialized -Os -ffunction-sections -fdata-sections
 CXXFLAGS += -I$(INSTALL_DIR)/include
 CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 CXXFLAGS += -D$(MODEL)
+
+LDFLAGS = -Wl,--gc-sections
 
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
@@ -74,12 +76,12 @@ all: $(TARGET)
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
 %.o: %.c
-	$(CC) -c $(CXXFLAGS) $< -o $@
+	$(CC) -c  $(CXXFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(CXXFLAGS) $(LIBS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CXXFLAGS) $(LIBS)
 
 # Clean target - when called it cleans all object files and executables.
 clean:

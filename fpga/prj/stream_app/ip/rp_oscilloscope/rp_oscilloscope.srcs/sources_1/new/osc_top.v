@@ -32,6 +32,7 @@ module osc_top
   input  wire [TRIG_SRC_NUM-1:0]          trig_ip,
   output wire                             trig_op,
   output wire                             ctl_rst,
+  output wire                             trig_o,
   //
   input  wire [REG_ADDR_BITS-1:0]         reg_addr,
   input  wire [31:0]                      reg_wr_data,
@@ -111,6 +112,8 @@ localparam FILT_COEFF_BB_CH2   = 8'hD4;  //68 Filter coeff BB address CH2
 localparam FILT_COEFF_KK_CH2   = 8'hD8;  //72 Filter coeff KK address CH2
 localparam FILT_COEFF_PP_CH2   = 8'hDC;  //76 Filter coeff PP address CH2
 
+localparam DIAG_REG            = 8'hE0;  //76 Filter coeff PP address CH2
+
 ////////////////////////////////////////////////////////////
 // Signals
 ////////////////////////////////////////////////////////////
@@ -186,6 +189,16 @@ wire  [31:0]                buf2_ms_cnt;
 wire [S_AXIS_DATA_BITS-1:0] filt_tdata;   
 wire                        filt_tvalid;   
 
+reg intr_reg;
+reg [16-1:0] intr_cnt='h0;
+
+always @(posedge clk)
+begin
+  intr_reg <= dma_intr;
+  if (~intr_reg && dma_intr) begin
+    intr_cnt <= intr_cnt+1;
+  end  
+end
 
 osc_filter i_dfilt (
    // ADC
@@ -378,6 +391,7 @@ assign ctl_rst = event_num_reset;
 assign event_sts_reset = 0;
 
 assign ctl_trg = event_num_trig | |(trig_ip & cfg_trig_mask);
+assign trig_o  = |(trig_ip & cfg_trig_mask);
 
 ////////////////////////////////////////////////////////////
 // Name : 
@@ -775,6 +789,7 @@ begin
     FILT_COEFF_BB_CH2:      reg_rd_data <= cfg_filt_coeff_bb;
     FILT_COEFF_KK_CH2:      reg_rd_data <= cfg_filt_coeff_kk;
     FILT_COEFF_PP_CH2:      reg_rd_data <= cfg_filt_coeff_pp;
+    DIAG_REG:               reg_rd_data <= intr_cnt;
     default                 reg_rd_data <= 32'd0;                                
   endcase
 end

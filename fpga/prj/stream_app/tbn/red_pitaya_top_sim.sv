@@ -115,8 +115,8 @@ module red_pitaya_top_sim
     rstn_out,
     rst_in,
 
-    adc_clk_n,
-    adc_clk_p,
+    adc_clk,
+    //adc_clk_p,
     adc_data_ch1,
     adc_data_ch2);
 
@@ -225,8 +225,8 @@ module red_pitaya_top_sim
   output rstn_out;
   input  rst_in;
 
-  input adc_clk_n;
-  input adc_clk_p;
+  input adc_clk;
+  //input adc_clk_p;
   input [15:0]adc_data_ch1;
   input [15:0]adc_data_ch2;
 
@@ -335,8 +335,8 @@ module red_pitaya_top_sim
   wire rstn_out;
   wire rst_in;
 
-  wire adc_clk_n;
-  wire adc_clk_p;
+  wire adc_clk;
+  //wire adc_clk_p;
   wire [15:0]adc_data_ch1;
   wire [15:0]adc_data_ch2;
 
@@ -363,17 +363,17 @@ module red_pitaya_top_sim
         .FIXED_IO_ps_porb(FIXED_IO_ps_porb),
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
 
-        .M_AXI_OSC_araddr(M_AXI_OSC_araddr),
-        .M_AXI_OSC_arburst(M_AXI_OSC_arburst),
-        .M_AXI_OSC_arcache(M_AXI_OSC_arcache),
-        .M_AXI_OSC_arid(M_AXI_OSC_arid),
-        .M_AXI_OSC_arlen(M_AXI_OSC_arlen),
-        .M_AXI_OSC_arlock(M_AXI_OSC_arlock),
-        .M_AXI_OSC_arprot(M_AXI_OSC_arprot),
-        .M_AXI_OSC_arqos(M_AXI_OSC_arqos),
-        .M_AXI_OSC_arready(M_AXI_OSC_arready),
-        .M_AXI_OSC_arsize(M_AXI_OSC_arsize),
-        .M_AXI_OSC_arvalid(M_AXI_OSC_arvalid),
+        //.M_AXI_OSC_araddr(M_AXI_OSC_araddr),
+        //.M_AXI_OSC_arburst(M_AXI_OSC_arburst),
+        //.M_AXI_OSC_arcache(M_AXI_OSC_arcache),
+        //.M_AXI_OSC_arid(M_AXI_OSC_arid),
+        //.M_AXI_OSC_arlen(M_AXI_OSC_arlen),
+        //.M_AXI_OSC_arlock(M_AXI_OSC_arlock),
+        //.M_AXI_OSC_arprot(M_AXI_OSC_arprot),
+        //.M_AXI_OSC_arqos(M_AXI_OSC_arqos),
+        //.M_AXI_OSC_arready(M_AXI_OSC_arready),
+        //.M_AXI_OSC_arsize(M_AXI_OSC_arsize),
+        //.M_AXI_OSC_arvalid(M_AXI_OSC_arvalid),
         .M_AXI_OSC_awaddr(M_AXI_OSC_awaddr),
         .M_AXI_OSC_awburst(M_AXI_OSC_awburst),
         .M_AXI_OSC_awcache(M_AXI_OSC_awcache),
@@ -389,12 +389,12 @@ module red_pitaya_top_sim
         .M_AXI_OSC_bready(M_AXI_OSC_bready),
         .M_AXI_OSC_bresp(M_AXI_OSC_bresp),
         .M_AXI_OSC_bvalid(M_AXI_OSC_bvalid),
-        .M_AXI_OSC_rdata(M_AXI_OSC_rdata),
-        .M_AXI_OSC_rid(M_AXI_OSC_rid),
-        .M_AXI_OSC_rlast(M_AXI_OSC_rlast),
-        .M_AXI_OSC_rready(M_AXI_OSC_rready),
-        .M_AXI_OSC_rresp(M_AXI_OSC_rresp),
-        .M_AXI_OSC_rvalid(M_AXI_OSC_rvalid),
+        //.M_AXI_OSC_rdata(M_AXI_OSC_rdata),
+        //.M_AXI_OSC_rid(M_AXI_OSC_rid),
+        //.M_AXI_OSC_rlast(M_AXI_OSC_rlast),
+        //.M_AXI_OSC_rready(M_AXI_OSC_rready),
+        //.M_AXI_OSC_rresp(M_AXI_OSC_rresp),
+        //.M_AXI_OSC_rvalid(M_AXI_OSC_rvalid),
         .M_AXI_OSC_wdata(M_AXI_OSC_wdata),
         .M_AXI_OSC_wid(M_AXI_OSC_wid),
         .M_AXI_OSC_wlast(M_AXI_OSC_wlast),
@@ -445,9 +445,10 @@ module red_pitaya_top_sim
         .clkout_125(clkout_125),
         .rstn_out(rstn_out),
         .rst_in(rst_in),
+        .adc_clk(adc_clk),
 
-        .adc_clk_n(adc_clk_n),
-        .adc_clk_p(adc_clk_p),
+        /*.adc_clk_n(adc_clk_n),
+        .adc_clk_p(adc_clk_p),*/
         .adc_data_ch1(adc_data_ch1[16-1:2]),
         .adc_data_ch2(adc_data_ch2[16-1:2]));
 endmodule

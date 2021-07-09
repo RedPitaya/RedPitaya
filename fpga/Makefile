@@ -13,6 +13,7 @@
 PRJ   ?= logic
 MODEL ?= Z10
 HWID  ?= ""
+DEFINES ?= ""
 
 # build artefacts
 FPGA_BIT    = prj/$(PRJ)/out/red_pitaya.bit
@@ -25,6 +26,7 @@ DEVICE_TREE = prj/$(PRJ)/sdk/dts/system.dts
 # both tools are run in batch mode with an option to avoid log/journal files
 VIVADO = vivado -nojournal -mode batch
 HSI    = hsi    -nolog -nojournal -mode batch
+#HSI    = hsi    -nolog -mode batch
 
 .PHONY: all clean project
 
@@ -37,16 +39,16 @@ clean:
 
 project:
 ifneq ($(HWID),"")
-	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ) HWID=$(HWID)
+	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ) $(DEFINES) HWID=$(HWID) 
 else
-	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ)
+	vivado -source red_pitaya_vivado_project_$(MODEL).tcl -tclargs $(PRJ) $(DEFINES)
 endif
 
 $(FPGA_BIT):
 ifneq ($(HWID),"")
-	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ) HWID=$(HWID)
+	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ) $(DEFINES) HWID=$(HWID) 
 else
-	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ)
+	$(VIVADO) -source red_pitaya_vivado_$(MODEL).tcl -tclargs $(PRJ) $(DEFINES)
 endif
 	./synCheck.sh
 

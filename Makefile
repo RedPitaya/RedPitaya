@@ -23,19 +23,25 @@ export LINUX_VER
 # MODEL USE FOR determine kind of assembly
 # USED parameters:
 # Z10 - for Redpitaya 125-14
+# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode  
 # Z20 - for Redpitaya 122-16
 # Z20_125 - for Redpitaya Z20 125-14
 # Z20_250_12 - for RepPitaya 250-12
 # Production test script
 MODEL ?= Z10
 
-all: api nginx examples  apps-tools apps-pro startupsh scpi
-
-ifeq ($(MODEL),Z20_250_12)
-all: 
-else
-all: sdr apps-free-vna rp_communication
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
+all: api nginx examples  apps-tools apps-pro startupsh scpi sdr apps-free-vna rp_communication
 endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10_SLAVE))
+all: nginx apps-tools streaming_slave startupsh
+endif
+
 
 $(DL):
 	mkdir -p $@
@@ -217,6 +223,10 @@ else
 	cp -f patches/startup/startup.sh $(STARTUPSH)
 endif
 
+streaming_slave:
+	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	echo "slave mode" > $(abspath $(INSTALL_DIR))/bin/.streaming_mode
+
 
 ################################################################################
 # SCPI server
@@ -255,7 +265,7 @@ SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
 SDR_URL = http://downloads.redpitaya.com/hamlab/charly25ab/$(SDR_ZIP)
 
 sdr: | $(DL)
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))  
+ifeq ($(MODEL),$(filter $(MODEL),Z10))
 	wget $(SDR_URL) -O $(DL)/$(SDR_ZIP) --show-progress
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
@@ -273,14 +283,15 @@ CALIB_DIR          = Test/calib
 CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
+LED_CONTROL_DIR    = Test/led_control
 COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
 
 .PHONY: examples rp_communication
-.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest
+.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest led_control
 
-examples: lcr bode monitor calib spectrum acquire generator
+examples: lcr bode monitor calib spectrum acquire generator led_control
 
 ifeq ($(MODEL),Z20_250_12)
 examples: rp_i2c_tool
@@ -331,6 +342,11 @@ calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+led_control: api
+	$(MAKE) -C $(LED_CONTROL_DIR) clean
+	$(MAKE) -C $(LED_CONTROL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(LED_CONTROL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
 	$(MAKE) -C $(LA_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -380,25 +396,30 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager
-
-ifeq ($(MODEL),Z20_250_12)
-apps-tools: calib_app
-endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
-apps-tools: jupyter_manager calib_app
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
 endif
 
-ifeq ($(MODEL),Z20)
-apps-tools: jupyter_manager
+ifeq ($(MODEL),$(filter $(MODEL),Z20))
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10_SLAVE))
+apps-tools: ecosystem updater network_manager
 endif
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-updater: ecosystem api $(NGINX)
+updater: ecosystem $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR) clean
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -438,7 +459,7 @@ apps-free: lcr bode
 	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 apps-free-vna: api2
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
+ifeq ($(MODEL),$(filter $(MODEL),Z10))
 	$(MAKE) -C $(VNA_DIR) clean
 	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))

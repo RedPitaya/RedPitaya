@@ -3,7 +3,7 @@
 #
 # (c) Red Pitaya  http://www.redpitaya.com
 #
-# Signal generator project file. To build executable for Signal generator run:
+# Acquire utility project file. To build executable for acquire utility run:
 # 'make all'
 #
 # This project file is written for GNU/Make software. For more details please 
@@ -16,38 +16,36 @@
 MODEL ?= Z10
 
 # Versioning system
-VERSION ?= 1.0
+VERSION ?= 0.00-0000
 REVISION ?= devbuild
 INSTALL_DIR ?= .
 
 # List of compiled object files (not yet linked to executable)
-OBJS = bode.o ba_api.o
+OBJS = main.o
 # List of raw source files (all object files, renamed from .o to .c)
 SRCS = $(subst .o,.cpp, $(OBJS)))
 
 # Executable name
-TARGET=bode
+TARGET=led_control
 
 # GCC compiling & linking flags
-CFLAGS  = -g -std=c++11 -Wall -Werror -Os -mfpu=neon -ffunction-sections -fdata-sections
-CFLAGS += -I$(INSTALL_DIR)/include
-CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -D$(MODEL)
+CXXFLAGS  = -Wall -Werror -Os -ffunction-sections -fdata-sections
+CXXFLAGS += -I$(INSTALL_DIR)/include
+CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+CXXFLAGS += -D$(MODEL)
 
 LDFLAGS = -Wl,--gc-sections
-
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS  = -L$(INSTALL_DIR)/lib 
-LIBS +=-static -lrp -lm -lpthread
+LIBS+=-L$(INSTALL_DIR)/lib -static -lrp
+LIBS+=-lm -lstdc++
 
 # Main GCC executable (used for compiling and linking)
-CC=$(CROSS_COMPILE)g++
+CC=$(CROSS_COMPILE)gcc
 # Installation directory
+INSTALL_DIR ?= .
 
-ifeq ($(MODEL),Z20_250_12)
-CFLAGS += -I$(INSTALL_DIR)/include/api250-12
-LIBS += -lrp-gpio -lrp-i2c -lrp-spi
-endif 
+.PHONY: all
 
 # Makefile is composed of so called 'targets'. They give basic structure what 
 # needs to be execued during various stages of the building/removing/installing
@@ -69,13 +67,13 @@ all: $(TARGET)
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then 
 # objects (.o) files.
-%.o: %.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
+%.o: %.c
+	$(CC) -c $(CXXFLAGS) $< -o $@
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS) $(LIBS)
+	$(CC) -o  $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LIBS)
 
 # Clean target - when called it cleans all object files and executables.
 clean:

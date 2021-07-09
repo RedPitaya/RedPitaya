@@ -138,9 +138,21 @@
             stem_ver = "SDRlab 122-16"
         } else if (stem_ver === "STEM 250 12") {
             stem_ver = "SIGNALlab 250-12"
-        } else {
+        } else if (stem_ver === "STEM 10 SLAVE") {
+            stem_ver = "STEMlab 125-10 (Streaming slave)"
+        } else if (stem_ver === "STEM 14 SLAVE") {
+            stem_ver = "STEMlab 125-14 (Streaming slave)"
+        } else if (stem_ver === "STEM 14-Z20 SLAVE") {
+            stem_ver = "STEMlab 125-14-Z7020 (Streaming slave)"
+        } else if (stem_ver === "STEM 16 SLAVE") {
+            stem_ver = "SDRlab 122-16 (Streaming slave)"
+        } else if (stem_ver === "STEM 250 12 SLAVE") {
+            stem_ver = "SIGNALlab 250-12 (Streaming slave)"
+        } else
+        {
             stem_ver = "unknown"
         }
+
 
         $('#footer').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + " <img id=\"NEW_FIRMWARE_ID\"src=\"../assets/images/warning.png\" hidden></a><img id=\"NEED_UPDATE_LINUX_ID\"src=\"../assets/images/warning.png\" hidden>");
         $("#NEED_UPDATE_LINUX_ID").click(function(event) {
@@ -179,6 +191,24 @@
                 if (stem_ver == "STEM 14-Z20") {
                     board_type = "STEMlab-125-14-Z7020/ecosystems";
                 }
+
+                if (stem_ver == "STEM 16 SLAVE") {
+                    board_type = "Streaming slave boards/SDRlab-122-16/ecosystems";
+                }
+
+                if (stem_ver == "STEM 250 12 SLAVE") {
+                    board_type = "Streaming slave boards/SIGNALlab-250-12/ecosystems";
+                }
+
+                if (stem_ver == "STEM 14 SLAVE") {
+                    board_type = "Streaming slave boards/STEMlab-125-1x/ecosystems";
+                }
+
+                if (stem_ver == "STEM 14-Z20 SLAVE") {
+                    board_type = "Streaming slave boards/STEMlab-125-14-Z7020/ecosystems";
+                }
+
+                
 
                 if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])) {
                     $("#CUR_VER").text(msg["sd_linux_ver"]);
