@@ -74,16 +74,24 @@ CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::
 }
 
 CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode) :
+    notifyPassData(nullptr),
+    notifyStop(nullptr),
+    m_fileLogger(nullptr),
+    m_ReadyToPass(0),
+    m_SendData(0),
+    m_file_manager(nullptr),
+    m_host(""),
+    m_port(""),
+    m_filePath(_filePath),
+    m_protocol(asionet::TCP),
+    m_asionet(nullptr),
+    m_index_of_message(0),
+    m_file_out(""),
+    m_samples(_samples),
+    m_passSizeSamples(0),
     m_volt_mode(_v_mode),
     m_use_local_file(true),
-    notifyPassData(nullptr),
-    m_file_manager(nullptr),
-    m_fileType(_fileType),
-    m_asionet(nullptr),
-    m_filePath(_filePath),
-    m_index_of_message(0),
-    notifyStop(nullptr),
-    m_samples(_samples)
+    m_fileType(_fileType)
 {
     
     if (m_use_local_file){
@@ -99,19 +107,24 @@ CStreamingManager::Ptr CStreamingManager::Create(string _host, string _port, asi
 }
 
 CStreamingManager::CStreamingManager(string _host, string _port, asionet::Protocol _protocol):
-        m_volt_mode(false),
-        m_use_local_file(false),
         notifyPassData(nullptr),
+        notifyStop(nullptr),
+        m_fileLogger(nullptr),
+        m_ReadyToPass(0),
+        m_SendData(0),
         m_file_manager(nullptr),
         m_waveWriter(nullptr),
         m_host(_host),
         m_port(_port),
+        m_filePath(""),
         m_protocol(_protocol),
         m_asionet(nullptr),
-        m_filePath(""),
         m_index_of_message(0),
-        notifyStop(nullptr),
-        m_samples(0)
+        m_file_out(""),
+        m_samples(0),
+        m_passSizeSamples(0),
+        m_volt_mode(false),
+        m_use_local_file(false)
 {
         m_stopWriteCSV = false;
 }

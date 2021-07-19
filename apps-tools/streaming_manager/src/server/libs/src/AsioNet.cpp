@@ -2,7 +2,9 @@
 #include "asio.hpp"
 #include "AsioNet.h"
 
-static const char* ID_PACK = "STREAMpackIDv1.0";
+#define UNUSED(x) [&x]{}()
+
+static constexpr char ID_PACK[] = "STREAMpackIDv1.0";
 
 namespace  asionet {
 
@@ -116,6 +118,8 @@ namespace  asionet {
                     size_t &_size_ch1 ,
                     CAsioSocket::send_buffer  &_ch2 ,
                     size_t &_size_ch2){
+        UNUSED(_size);
+
         if (strncmp((const char*)_buffer,ID_PACK,16) == 0){
             _id = ((uint64_t*)_buffer)[2];
             _lostRate = ((uint64_t*)_buffer)[3];
@@ -153,13 +157,13 @@ namespace  asionet {
 
     CAsioNet::CAsioNet(asionet::Mode _mode,asionet::Protocol _protocol,std::string _host , std::string _port) :
             m_mode(_mode),
-            m_Ios(),
-            m_Work(m_Ios),
             m_protocol(_protocol),
             m_host(_host),
             m_port(_port),
-            m_IsRun(false),
-            m_asio_th(nullptr)
+            m_Ios(),
+            m_Work(m_Ios),
+            m_asio_th(nullptr),
+            m_IsRun(false)
     {
         m_server = CAsioSocket::Create(m_Ios, m_protocol, m_host, m_port);
         auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run), &m_Ios);
@@ -261,17 +265,18 @@ namespace  asionet {
     }
 
     CAsioSocket::CAsioSocket(asio::io_service &io, asionet::Protocol _protocol, std::string host, std::string port) :
+            m_mode(Mode::NONE),
             m_protocol(_protocol),
             m_host(host),
             m_port(port),
             m_io_service(io),
-            m_is_udp_connected(false),
-            m_is_tcp_connected(false),
-            m_mode(Mode::NONE),
             m_udp_socket(0),
             m_tcp_socket(0),
             m_tcp_acceptor(0),
             m_udp_endpoint(),
+            m_is_udp_connected(false),
+            m_is_tcp_connected(false),
+            m_pos_last_in_fifo(0),
             m_last_pack_id(0)
     {
         m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];

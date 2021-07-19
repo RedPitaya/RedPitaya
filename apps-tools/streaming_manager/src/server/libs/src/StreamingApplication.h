@@ -28,7 +28,7 @@ private:
     COscilloscope::Ptr m_Osc_ch;
     CStreamingManager::Ptr m_StreamingManager;
     std::thread m_OscThread;
-    std::thread m_SocketThread;
+    // std::thread m_SocketThread;
     std::mutex mtx;
     std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
     std::atomic_int  m_ReadyToPass;

@@ -27,8 +27,6 @@ static const time_t time_1904 = GetTime1904();
 
 namespace TDMS {
 
-
-
 	DataType::DataType():
     m_dataType(-1),
     m_dataStringLenght(-1),
@@ -105,13 +103,43 @@ namespace TDMS {
         std::shared_ptr<Raw> raw = std::make_shared<Raw>();
         raw->data = (uint8_t*)rawData;
         raw->size = count * GetLength();
+        raw->dataType = dataType;
         this->m_vectorData.push_back(raw);
 	}
 
 	DataType::~DataType()
 	{
 	    if (m_rawData != nullptr)
-    	    delete  [] m_rawData;
+    	    switch (m_dataType)
+            {
+                case DataType::Empty: {
+                    std::string message = "Cannot delete empty type";
+                    throw std::runtime_error(message.c_str());
+                }
+                case DataType::Void: {
+                     std::string message = "Cannot delete void type";
+                    throw std::runtime_error(message.c_str());
+                }
+                case DataType::Integer8:  delete[] reinterpret_cast<int8_t*>(m_rawData); break;
+                case DataType::Integer16: delete[] reinterpret_cast<int16_t*>(m_rawData); break;
+                case DataType::Integer32: delete[] reinterpret_cast<int32_t*>(m_rawData); break;
+                case DataType::Integer64: delete[] reinterpret_cast<int64_t*>(m_rawData); break;
+                case DataType::Boolean:
+                case DataType::UnsignedInteger8: delete[] reinterpret_cast<uint8_t*>(m_rawData); break;
+                case DataType::UnsignedInteger16: delete[] reinterpret_cast<uint16_t*>(m_rawData); break;
+                case DataType::UnsignedInteger32: delete[] reinterpret_cast<uint32_t*>(m_rawData); break;
+                case DataType::TimeStamp:
+                case DataType::UnsignedInteger64: delete[] reinterpret_cast<uint64_t*>(m_rawData); break;
+                case DataType::SingleFloat:
+                case DataType::SingleFloatWithUnit: delete[] reinterpret_cast<float*>(m_rawData); break;
+                case DataType::DoubleFloat:
+                case DataType::DoubleFloatWithUnit:delete[] reinterpret_cast<double*>(m_rawData); break;
+                case DataType::String:delete[] reinterpret_cast<char*>(m_rawData); break;
+                default: {
+                    std::string message = "Cannot determine of data type ";
+                    throw std::runtime_error(message.c_str());
+                }
+            }
 	}
 
 
@@ -368,4 +396,39 @@ namespace TDMS {
 	    val[1] = time_val - time_1904;
         return val;
 	}
+
+    TDMS::DataType::Raw::~Raw(){
+        if (data != nullptr){
+            switch (dataType)
+            {
+                case DataType::Empty: {
+                    std::string message = "Cannot delete empty type";
+                    throw std::runtime_error(message.c_str());
+                }
+                case DataType::Void: {
+                     std::string message = "Cannot delete void type";
+                    throw std::runtime_error(message.c_str());
+                }
+                case DataType::Integer8:  delete[] reinterpret_cast<int8_t*>(data); break;
+                case DataType::Integer16: delete[] reinterpret_cast<int16_t*>(data); break;
+                case DataType::Integer32: delete[] reinterpret_cast<int32_t*>(data); break;
+                case DataType::Integer64: delete[] reinterpret_cast<int64_t*>(data); break;
+                case DataType::Boolean:
+                case DataType::UnsignedInteger8: delete[] reinterpret_cast<uint8_t*>(data); break;
+                case DataType::UnsignedInteger16: delete[] reinterpret_cast<uint16_t*>(data); break;
+                case DataType::UnsignedInteger32: delete[] reinterpret_cast<uint32_t*>(data); break;
+                case DataType::TimeStamp:
+                case DataType::UnsignedInteger64: delete[] reinterpret_cast<uint64_t*>(data); break;
+                case DataType::SingleFloat:
+                case DataType::SingleFloatWithUnit: delete[] reinterpret_cast<float*>(data); break;
+                case DataType::DoubleFloat:
+                case DataType::DoubleFloatWithUnit:delete[] reinterpret_cast<double*>(data); break;
+                case DataType::String:delete[] reinterpret_cast<char*>(data); break;
+                default: {
+                    std::string message = "Cannot determine of data type ";
+                    throw std::runtime_error(message.c_str());
+                }
+            }
+        }
+    }
 }

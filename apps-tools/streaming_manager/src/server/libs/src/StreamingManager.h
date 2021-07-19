@@ -16,8 +16,6 @@
 #include "thread_cout.h"
 #include "log.h"
 
-//using rpsa::msg::message_factory;
-//using rpsa::msg::message_type;
 
 //#define FILE_PATH "/opt/redpitaya/www/apps/streaming_manager/upload"
 #define FILE_PATH "/tmp/stream_files"

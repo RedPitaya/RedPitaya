@@ -1,5 +1,4 @@
 #pragma once
-#pragma GCC diagnostic ignored "-Wreorder"
 
 #include <iostream>
 #include <sstream>

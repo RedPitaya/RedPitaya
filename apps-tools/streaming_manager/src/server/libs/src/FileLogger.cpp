@@ -13,15 +13,15 @@ CFileLogger::Ptr CFileLogger::Create(std::string _filePath){
 CFileLogger::CFileLogger(std::string _filePath):  
 m_filePath(_filePath),
 m_filePathLost(_filePath + ".lost"),
-m_oscLostRate(0),
 m_oscRate(0),
+m_oscLostRate(0),
 m_udpLostRate(0),
 m_fileSystemLostRate(0),
 m_reciveData(0),
 m_reciveData_ch1(0),
 m_reciveData_ch2(0),
-m_current_sample(0),
-m_old_id(0)
+m_old_id(0),
+m_current_sample(0)
 {
     ResetCounters();
     m_fileLost.open(m_filePathLost , std::ios_base::app | std::ios_base::out);

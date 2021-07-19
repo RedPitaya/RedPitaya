@@ -1,5 +1,4 @@
 #pragma once
-#pragma GCC diagnostic ignored "-Wpedantic"
 
 #include <stdint.h>
 #include <vector>
@@ -16,19 +15,6 @@ namespace TDMS
 	class DataType
 	{
 	public:
-	    struct Raw{
-	        uint8_t *data;
-	        long     size;
-            Raw():
-			data(nullptr),
-			size(0){                
-            }
-
-	        ~Raw(){
-            	delete []  data;
-	        }
-	    };
-
 		static const uint32_t Empty = 0x0000000F;
 		static const uint32_t Void = 0x00000000;
 		static const uint32_t Integer8 = 0x00000001;
@@ -48,6 +34,20 @@ namespace TDMS
 		static const uint32_t String = 0x00000020;
 		static const uint32_t Boolean = 0x00000021;
 		static const uint32_t TimeStamp = 0x00000044;
+
+	    struct Raw{
+	        uint8_t *data;
+	        long     size;
+			uint32_t dataType;
+            Raw():
+			data(nullptr),
+			size(0),
+			dataType(DataType::Empty){                
+            }
+			~Raw();
+	    };
+
+		
 	
 	protected:
 		uint32_t m_dataType;
@@ -77,16 +77,16 @@ namespace TDMS
         const  void*    GetRawData();
 		template<typename T>
 					  T GetData() {
-						  T* val = (T*)m_rawData;
+						  T* val = static_cast<T*>(m_rawData);
 						  return val[0];
-					  };
+					  }
 
         template<typename T>
         static    void* MakeData(T value){
                         uint8_t *buff = new uint8_t[sizeof(T)];
                         memcpy(buff,&value,sizeof(T));
                         return  buff;
-                      };
+                      }
 
 			std::string GetDataString() {
 						  std::string str = std::string((char*)m_rawData,m_dataStringLenght);

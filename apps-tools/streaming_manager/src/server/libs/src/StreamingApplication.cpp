@@ -30,23 +30,23 @@ void PrintDebugLogInFile(const char *message){
 }
 
 CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingManager,COscilloscope::Ptr _osc_ch, unsigned short _resolution,int _oscRate,int _channels, int _adc_mode, uint32_t _adc_bits) :
-    m_StreamingManager(_StreamingManager),
     m_Osc_ch(_osc_ch),
+    m_StreamingManager(_StreamingManager),
     m_OscThread(),
+    mtx(),
     m_ReadyToPass(0),
-    m_Ios(),
-    m_WriteBuffer_ch1(nullptr),
-    m_WriteBuffer_ch2(nullptr),
-    m_Timer(m_Ios),
-    m_BytesCount(0),
-    m_Resolution(_resolution),
     m_isRun(false),
     m_isRunNonBloking(false),
+    m_Ios(),
+    m_Resolution(_resolution),
+    m_WriteBuffer_ch1(nullptr),
+    m_WriteBuffer_ch2(nullptr),
     m_oscRate(_oscRate),
+    m_channels(_channels),
     m_adc_mode(_adc_mode),
     m_adc_bits(_adc_bits),
-    m_channels(_channels),
-    mtx()
+    m_Timer(m_Ios),
+    m_BytesCount(0)
 {
     
     assert(this->m_Resolution == 8 || this->m_Resolution == 16);

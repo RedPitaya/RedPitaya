@@ -323,9 +323,9 @@ std::iostream *FileQueueManager::BuildBINStream(uint8_t* buffer_ch1,size_t size_
     header.lostCount = _lostSize;
     header.sigmentLength = size_ch1 + size_ch2;
     //Write header
-    memory->write((void*)&header,sizeof(BinHeader));
-    if (size_ch1 > 0) memory->write(buffer_ch1, size_ch1);
-    if (size_ch2 > 0) memory->write(buffer_ch2, size_ch2);
+    memory->write((const char*)&header,sizeof(BinHeader));
+    if (size_ch1 > 0) memory->write((const char*)buffer_ch1, size_ch1);
+    if (size_ch2 > 0) memory->write((const char*)buffer_ch2, size_ch2);
     //Write end segment
     memory->write(endOfSegment,12);
     return memory;
@@ -337,9 +337,9 @@ std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_positi
      new stringstream(ios_base::in | ios_base::out);
     buffer->seekg(*_position, std::ios::beg);
     BinHeader header;
-    buffer->read((void*)&header, sizeof(BinHeader));
+    buffer->read((char*)&header, sizeof(BinHeader));
     buffer->seekg(*_position + sizeof(BinHeader) + header.sigmentLength, std::ios::beg);
-    buffer->read((void*)endSeg , 12);
+    buffer->read((char*)endSeg , 12);
     if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF){
         if (!skipData){
             uint32_t size_ch1 = header.sizeCh1;
@@ -434,7 +434,7 @@ std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_positi
                 std::string s = "";
                 if (*_channels == 2) s = "0,0\n";
                 if (*_channels == 1) s = "0\n";
-                for(int i = 0 ; i < lost ; ++i){
+                for(uint32_t i = 0 ; i < lost ; ++i){
                     *memory << s;
                 }
             }
@@ -461,9 +461,9 @@ BinInfo FileQueueManager::ReadBinInfo(std::iostream *buffer){
         uint32_t endSeg[] = { 0, 0 ,0}; 
         buffer->seekg(position, std::ios::beg);
         BinHeader header;
-        buffer->read((void*)&header, sizeof(BinHeader));
+        buffer->read((char*)&header, sizeof(BinHeader));
         buffer->seekg(position + sizeof(BinHeader) + header.sigmentLength, std::ios::beg);
-        buffer->read((void*)endSeg , 12);
+        buffer->read((char*)endSeg , 12);
         bi.dataFormatSize = header.dataFormatSize;
         bi.size_ch1  += header.sizeCh1;
         bi.size_ch2  += header.sizeCh2;

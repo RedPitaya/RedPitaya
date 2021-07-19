@@ -1,5 +1,4 @@
 #pragma once
-#pragma GCC diagnostic ignored "-Wpedantic"
 
 #include <fstream>
 #include <iostream>
@@ -24,7 +23,7 @@ namespace TDMS
 		static T Read(iostream &reader, int dataType) {
 		 	DataType data = BinaryStream::Read(reader, dataType);
 			return data.GetData<T>();
-		};
+		}
 
 		static void     Write(iostream &writer,DataType& data);
 
