@@ -2,7 +2,7 @@
 // Created by user on 15.11.18.
 //
 #include <iostream>
-#include "rpsa/common/core/Writer.h"
+#include "Writer.h"
 
 #define  OFFSET_NEXT_SEGMENT    12
 #define  OFFSET_RAW_DATA        OFFSET_NEXT_SEGMENT + 8

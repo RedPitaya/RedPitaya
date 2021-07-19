@@ -11,7 +11,7 @@ target_compile_options(rpsa_client
 
 target_compile_definitions(rpsa_client  PRIVATE ASIO_STANDALONE)
 
-target_include_directories(rpsa_client  PRIVATE  ${CMAKE_SOURCE_DIR}/../include  ${CMAKE_SOURCE_DIR}/../include/rpsa/common/core ${CMAKE_SOURCE_DIR}/../include/rpsa/server/core  ${CMAKE_SOURCE_DIR}/../libs/asio/include)
+target_include_directories(rpsa_client  PRIVATE   ${CMAKE_SOURCE_DIR}/../libs/src/common ${CMAKE_SOURCE_DIR}/../libs/src  ${CMAKE_SOURCE_DIR}/../libs/asio/include)
 
 add_library(rpsasrv STATIC IMPORTED)
 set_property(TARGET rpsasrv PROPERTY

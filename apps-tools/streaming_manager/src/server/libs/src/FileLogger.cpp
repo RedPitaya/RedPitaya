@@ -3,7 +3,7 @@
 #include <fstream>
 #include <time.h>
 #include <cstdlib>
-#include "rpsa/server/core/FileLogger.h"
+#include "FileLogger.h"
 
 
 CFileLogger::Ptr CFileLogger::Create(std::string _filePath){

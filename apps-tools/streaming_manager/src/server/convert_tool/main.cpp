@@ -7,8 +7,8 @@
 
 #include <asio.hpp>
 #include <chrono>
-#include "rpsa/server/core/AsioNet.h"
-#include "rpsa/server/core/StreamingManager.h"
+#include "AsioNet.h"
+#include "StreamingManager.h"
 
 
 using namespace std;

@@ -15,8 +15,8 @@ INCLUDE += -I$(INSTALL_DIR)/include/apiApp
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
 
-INCLUDE += -I./server/include/rpsa/server/core
-INCLUDE += -I./server/include/rpsa/common/core
+INCLUDE += -I./server/libs/src/
+INCLUDE += -I./server/libs/src/common
 INCLUDE += -I./server/common
 INCLUDE += -I./server/libs/asio/include
 

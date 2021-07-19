@@ -4,7 +4,7 @@
 #include <time.h>
 #include <functional>
 #include <cstdlib>
-#include "rpsa/server/core/StreamingManager.h"
+#include "StreamingManager.h"
 
 #ifdef _WIN32
 #include <dir.h>

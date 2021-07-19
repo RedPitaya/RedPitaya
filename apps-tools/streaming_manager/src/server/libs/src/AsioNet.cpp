@@ -1,6 +1,6 @@
 #include <fstream>
 #include "asio.hpp"
-#include "rpsa/server/core/AsioNet.h"
+#include "AsioNet.h"
 
 static const char* ID_PACK = "STREAMpackIDv1.0";
 

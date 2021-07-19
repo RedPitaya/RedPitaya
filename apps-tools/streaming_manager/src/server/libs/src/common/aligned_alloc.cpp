@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "rpsa/common/core/aligned_alloc.h"
+#include "aligned_alloc.h"
 
 #ifndef align_up
 #define align_up(num, align) \

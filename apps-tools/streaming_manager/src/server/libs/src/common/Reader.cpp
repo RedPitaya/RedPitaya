@@ -1,4 +1,4 @@
-#include "rpsa/common/core/Reader.h"
+#include "Reader.h"
 
 namespace TDMS
 {

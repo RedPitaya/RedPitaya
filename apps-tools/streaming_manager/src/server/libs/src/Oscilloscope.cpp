@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include "rpsa/server/core/Oscilloscope.h"
+#include "Oscilloscope.h"
 #include <stdio.h>
 #include <string.h>
 

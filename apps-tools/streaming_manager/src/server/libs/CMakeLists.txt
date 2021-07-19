@@ -21,41 +21,38 @@ target_compile_definitions(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${CMAKE_SOURCE_DIR}/libs/asio/include
-            ${CMAKE_SOURCE_DIR}/common
-            ${CMAKE_SOURCE_DIR}/include
-	        ${CMAKE_SOURCE_DIR}/include/rpsa/server/core
-	        ${CMAKE_SOURCE_DIR}/include/rpsa/common/core
-            ${CMAKE_SOURCE_DIR}/include/rpsa/common/xml)
+            ${CMAKE_SOURCE_DIR}/libs/src
+            ${CMAKE_SOURCE_DIR}/libs/src/common)
 
 if (NOT WIN32)
 target_sources(${PROJECT_NAME}
-    PRIVATE ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/StreamingManager.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/AsioNet.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/FileLogger.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/Oscilloscope.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/StreamingApplication.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/UioParser.cpp
             # Common
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/File.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/BinaryStream.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/file_async_writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/wavWriter.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/Oscilloscope.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/StreamingApplication.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/UioParser.cpp)
+            ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/File.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/Reader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/BinaryStream.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
 else()
 target_sources(${PROJECT_NAME}
-    PRIVATE ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/StreamingManager.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/AsioNet.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/server/core/FileLogger.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
             # Common
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/File.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/BinaryStream.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/file_async_writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/rpsa/common/core/wavWriter.cpp)
+            ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/File.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/Reader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/BinaryStream.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
 endif()
 
 

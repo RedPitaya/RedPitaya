@@ -11,7 +11,7 @@ target_compile_options(convert_tool
 
 target_compile_definitions(convert_tool  PRIVATE ASIO_STANDALONE)
 
-target_include_directories(convert_tool  PRIVATE  ${CMAKE_SOURCE_DIR}/../include  ${CMAKE_SOURCE_DIR}/../include/rpsa/common/core ${CMAKE_SOURCE_DIR}/../include/rpsa/server/core  ${CMAKE_SOURCE_DIR}/../libs/asio/include)
+target_include_directories(convert_tool  PRIVATE   ${CMAKE_SOURCE_DIR}/../libs/src/common ${CMAKE_SOURCE_DIR}/../libs/src  ${CMAKE_SOURCE_DIR}/../libs/asio/include)
 
 add_library(rpsasrv STATIC IMPORTED)
 set_property(TARGET rpsasrv PROPERTY

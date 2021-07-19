@@ -11,7 +11,8 @@ target_compile_definitions(server_linux_test
 
 target_include_directories(server_linux_test
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/libs/src
+        ${CMAKE_SOURCE_DIR}/libs/src/common
         ${CMAKE_SOURCE_DIR}/libs/asio/include)
 
 

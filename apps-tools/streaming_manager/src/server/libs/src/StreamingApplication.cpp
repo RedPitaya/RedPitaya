@@ -3,14 +3,14 @@
 #include <fstream>
 #include <functional>
 #include <cstdlib>
-#include "rpsa/server/core/StreamingApplication.h"
+#include "StreamingApplication.h"
 #include "AsioNet.h"
 
 #define CH1 1
 #define CH2 2
 
 #ifdef OS_MACOS
-#   include "rpsa/common/core/aligned_alloc.h"
+#   include "common/aligned_alloc.h"
 #endif // OS_MACOS
 
 #define UNUSED(x) [&x]{}()

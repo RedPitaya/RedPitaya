@@ -6,8 +6,8 @@
 // Created by user on 11.10.18.
 //
 
-#include "rpsa/common/core/file_async_writer.h"
-#include "rpsa/common/core/File.h"
+#include "file_async_writer.h"
+#include "File.h"
 #include <ctime>
 
 #ifndef _WIN32

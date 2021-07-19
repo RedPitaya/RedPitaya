@@ -7,7 +7,7 @@
 #include <locale>
 #include <iomanip>
 #include "types.h"
-#include "rpsa/common/core/DataType.h"
+#include "DataType.h"
 
 namespace {
 static time_t GetTime1904()

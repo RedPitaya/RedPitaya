@@ -2,7 +2,7 @@
 #include <exception>
 #include <fstream>
 #include <dirent.h>
-#include "rpsa/server/core/UioParser.h"
+#include "UioParser.h"
 
 namespace
 {

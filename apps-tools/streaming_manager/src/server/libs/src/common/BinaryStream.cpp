@@ -1,4 +1,4 @@
-#include "rpsa/common/core/BinaryStream.h"
+#include "BinaryStream.h"
 
 namespace TDMS
 {

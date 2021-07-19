@@ -1,4 +1,4 @@
-#include "rpsa/common/core/wavWriter.h"
+#include "wavWriter.h"
 
 
 CWaveWriter::CWaveWriter(){
