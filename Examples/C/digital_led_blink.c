@@ -4,7 +4,7 @@
 #include "rp.h"
 
 int main (int argc, char **argv) {
-    int unsigned period = 1000000; // uS
+    int unsigned period = 1000; // uS
     int unsigned led;
 
     // index of blinking LED can be provided as an argument
@@ -23,7 +23,7 @@ int main (int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    int unsigned retries = 1000;
+    int unsigned retries = 100;
     while (retries--){
         rp_DpinSetState(led, RP_HIGH);
         usleep(period/2);
