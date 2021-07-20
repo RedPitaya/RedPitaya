@@ -28,10 +28,13 @@ if (NOT WIN32)
 target_sources(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/Oscilloscope.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/StreamingApplication.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/UioParser.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp            
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
@@ -44,7 +47,10 @@ else()
 target_sources(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp  
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
@@ -57,5 +63,5 @@ endif()
 
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE pthread gcc stdc++)
+    PRIVATE pthread gcc stdc++ ${Boost_LIBRARIES})
 

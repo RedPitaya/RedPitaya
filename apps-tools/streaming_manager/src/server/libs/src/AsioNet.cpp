@@ -201,6 +201,11 @@ namespace  asionet {
         m_IsRun = false;
     }
 
+    void CAsioNet::disconnect(){
+        m_server->CloseSocket();
+        m_IsRun = false;
+    }
+
     void CAsioNet::SendServerStop(){
         if (IsConnected() && m_mode == asionet::Mode::CLIENT){
             m_server->SendBuffer("\x00",1);
@@ -210,45 +215,45 @@ namespace  asionet {
 
     void CAsioNet::addCallServer_Connect(std::function<void(std::string host)> _func){
         if (m_server){
-            m_server->addHandler(CAsioSocket::Events::CONNECT_SERVER, _func);
+            m_server->addHandler(Events::CONNECT_SERVER, _func);
         }
     }
 
     void CAsioNet::addCallServer_Disconnect(std::function<void(std::string host)> _func){
         if (m_server){
-            m_server->addHandler(CAsioSocket::Events::DISCONNECT_SERVER, _func);
+            m_server->addHandler(Events::DISCONNECT_SERVER, _func);
         }
     }
 
     void CAsioNet::addCallServer_Error(std::function<void(std::error_code error)> _func){
         if (m_server) {
-            m_server->addHandler(CAsioSocket::Events::ERROR_SERVER, _func);
+            m_server->addHandler(Events::ERROR_SERVER, _func);
         }
     }
 
     void CAsioNet::addCallClient_Connect(std::function<void(std::string host)> _func){
         if (m_server)
-            m_server->addHandler(CAsioSocket::Events::CONNECT_CLIENT, _func);
+            m_server->addHandler(Events::CONNECT_CLIENT, _func);
     }
 
     void CAsioNet::addCallClient_Disconnect(std::function<void(std::string host)> _func){
         if (m_server)
-            m_server->addHandler(CAsioSocket::Events::DISCONNECT_CLIENT, _func);
+            m_server->addHandler(Events::DISCONNECT_CLIENT, _func);
     }
 
     void CAsioNet::addCallClient_Error(std::function<void(std::error_code error)> _func){
         if (m_server)
-            m_server->addHandler(CAsioSocket::Events::ERROR_CLIENT, _func);
+            m_server->addHandler(Events::ERROR_CLIENT, _func);
     }
 
     void CAsioNet::addCallSend(std::function<void(std::error_code error,size_t)> _func){
         if (m_server)
-            m_server->addHandler(CAsioSocket::Events::SEND_DATA, _func);
+            m_server->addHandler(Events::SEND_DATA, _func);
     }
 
     void CAsioNet::addCallReceived(std::function<void(std::error_code error,uint8_t*,size_t)> _func){
         if (m_server)
-            m_server->addHandler(CAsioSocket::Events::RECIVED_DATA_FROM_SERVER, _func);
+            m_server->addHandler(Events::RECIVED_DATA_FROM_SERVER, _func);
     }
 
     bool CAsioNet::SendData(bool async,CAsioSocket::send_buffer _buffer,size_t _size){

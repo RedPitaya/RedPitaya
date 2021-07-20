@@ -1,117 +1,41 @@
-//
-// Created by user on 02.04.19.
-//
+#pragma once
+
 #include <functional>
 #include <map>
 #include <vector>
 
-#ifndef PROJECT_EVENTHANDLERS_H
-#define PROJECT_EVENTHANDLERS_H
 
-
-template <typename T>
+template<typename... Args>
 class EventList {
 private:
-    typedef std::function<void(T)> EventHandler;
+    typedef std::function<void(Args...)> EventHandler;
     typedef std::vector<EventHandler> EventHandlerList;
-    std::map<int, EventHandlerList> m_handlers;
+    std::map<int, EventHandlerList> m_handlers {};
 
 public:
 
-
-    void addListener(int eventId, EventHandler listener){
-        if(hasEvent(eventId)){
-            EventHandlerList& list = m_handlers.at(eventId);
+    void addListener(int event_type, EventHandler listener) {
+        if (hasEvent(event_type)) {
+            EventHandlerList& list = m_handlers.at(event_type);
             list.push_back(listener);
-        }else{
-           std::vector<EventHandler> list;
-           list.push_back(listener);
-           m_handlers.insert(std::make_pair(eventId, list));
         }
-
-    }
-
-    void emitEvent(int eventId,T value){
-        if(hasEvent(eventId)){
-            EventHandlerList& list = m_handlers.at(eventId);
-            for(auto & func : list){
-                func(value);
-            }
-        }
-    }
-
-
-    bool hasEvent(int eventId){
-        return m_handlers.find(eventId)!=m_handlers.end();
-    }
-};
-
-template <typename T, typename E>
-class EventList2 {
-private:
-    typedef std::function<void(T,E)> EventHandler;
-    typedef std::vector<EventHandler> EventHandlerList;
-    std::map<int, EventHandlerList> m_handlers;
-
-public:
-    void addListener(int eventId, EventHandler listener){
-        if(hasEvent(eventId)){
-            EventHandlerList& list = m_handlers.at(eventId);
-            list.push_back(listener);
-        }else{
+        else {
             std::vector<EventHandler> list;
             list.push_back(listener);
-            m_handlers.insert(std::make_pair(eventId, list));
+            m_handlers.insert(std::make_pair(event_type, list));
         }
     }
 
-    void emitEvent(int eventId,T param1,E param2){
-        if(hasEvent(eventId)){
-            EventHandlerList& list = m_handlers.at(eventId);
-            for(auto & func : list){
-                func(param1,param2);
+    void emitEvent(int event_type, Args... vals) {
+        if (hasEvent(event_type)) {
+            EventHandlerList& list = m_handlers.at(event_type);
+            for (auto& func : list) {
+                func(vals...);
             }
         }
     }
 
-
-    bool hasEvent(int eventId){
-        return m_handlers.find(eventId)!=m_handlers.end();
+    bool hasEvent(int event_type) {
+        return m_handlers.find(event_type) != m_handlers.end();
     }
 };
-
-template <typename T, typename E,typename F>
-class EventList3 {
-private:
-    typedef std::function<void(T,E,F)> EventHandler;
-    typedef std::vector<EventHandler> EventHandlerList;
-    std::map<int, EventHandlerList> m_handlers;
-
-public:
-    void addListener(int eventId, EventHandler listener){
-        if(hasEvent(eventId)){
-            EventHandlerList& list = m_handlers.at(eventId);
-            list.push_back(listener);
-        }else{
-            std::vector<EventHandler> list;
-            list.push_back(listener);
-            m_handlers.insert(std::make_pair(eventId, list));
-        }
-    }
-
-    void emitEvent(int eventId,T param1,E param2,F param3){
-        if(hasEvent(eventId)){
-            EventHandlerList& list = m_handlers.at(eventId);
-            for(auto & func : list){
-                func(param1,param2,param3);
-            }
-        }
-    }
-
-
-    bool hasEvent(int eventId){
-        return m_handlers.find(eventId)!=m_handlers.end();
-    }
-};
-
-#endif //PROJECT_EVENTHANDLERS_H

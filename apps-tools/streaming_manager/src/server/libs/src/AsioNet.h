@@ -33,18 +33,20 @@ namespace  asionet {
         NONE
     };
 
+    enum Events{
+        CONNECT_SERVER,
+        DISCONNECT_SERVER,
+        CONNECT_CLIENT,
+        DISCONNECT_CLIENT,
+        ERROR_SERVER,
+        ERROR_CLIENT,
+        SEND_DATA,
+        RECIVED_DATA_FROM_SERVER};
+
     class CAsioSocket {
     public:
         typedef uint8_t* send_buffer;
-        enum Events{
-            CONNECT_SERVER,
-            DISCONNECT_SERVER,
-            CONNECT_CLIENT,
-            DISCONNECT_CLIENT,
-            ERROR_SERVER,
-            ERROR_CLIENT,
-            SEND_DATA,
-            RECIVED_DATA_FROM_SERVER};
+       
 
         using Ptr = shared_ptr<CAsioSocket>;
 
@@ -100,8 +102,8 @@ namespace  asionet {
 
         EventList<std::string> m_callback_Str;
         EventList<std::error_code> m_callback_Error;
-        EventList2<std::error_code,size_t> m_callback_ErrorInt;
-        EventList3<std::error_code,uint8_t*,size_t > m_callbackErrorUInt8Int;
+        EventList<std::error_code,size_t> m_callback_ErrorInt;
+        EventList<std::error_code,uint8_t*,size_t > m_callbackErrorUInt8Int;
     };
 
 
@@ -116,6 +118,7 @@ namespace  asionet {
 
         void Start();
         void Stop();
+        void disconnect();
         void addCallServer_Connect(function<void(string host)> _func);
         void addCallServer_Disconnect(function<void(string host)> _func);
         void addCallServer_Error(function<void(error_code error)> _func);
