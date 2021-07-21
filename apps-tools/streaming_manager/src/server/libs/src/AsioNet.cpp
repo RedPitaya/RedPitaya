@@ -330,12 +330,14 @@ namespace  asionet {
         if (m_is_tcp_connected)
             m_callback_Str.emitEvent(Events::DISCONNECT_SERVER, m_tcp_endpoint.address().to_string());
 
-        if (m_tcp_socket && (*m_tcp_socket).is_open()){
-            (*m_tcp_socket).close();
+        if (m_tcp_socket && m_tcp_socket->is_open()){
+            m_tcp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
+            m_tcp_socket->close();
             m_is_tcp_connected = false;
         }
-        if (m_udp_socket && (*m_udp_socket).is_open()) {
-            (*m_udp_socket).close();
+        if (m_udp_socket && m_udp_socket->is_open()) {
+            m_udp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
+            m_udp_socket->close();
             m_is_udp_connected = false;
         }
     }
@@ -606,7 +608,7 @@ namespace  asionet {
 
     void CAsioSocket::HandlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint8_t *buffer){
         HandlerSend(_error,_bytesTransferred);
-        delete buffer;
+        delete[] buffer;
     }
     void CAsioSocket::HandlerSend(const asio::error_code &_error, size_t _bytesTransferred){
 

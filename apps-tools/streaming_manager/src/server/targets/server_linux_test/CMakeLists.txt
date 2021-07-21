@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.14)
 project(server_linux_test)
 
 add_executable(server_linux_test server.cpp)

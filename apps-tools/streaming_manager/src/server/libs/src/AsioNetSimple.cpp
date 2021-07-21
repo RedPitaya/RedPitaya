@@ -20,7 +20,7 @@ namespace  asionet_simple {
             m_asio_th(nullptr),
             m_IsRun(false)
     {
-        m_server = CAsioSocketSimple::Create(m_Ios, m_host, m_port);
+        m_server  = new CAsioSocketSimple(m_Ios, m_host, m_port);
         auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run), &m_Ios);
         m_asio_th = new asio::thread(func);
     }
@@ -32,7 +32,7 @@ namespace  asionet_simple {
             m_asio_th->join();
             delete  m_asio_th;
         }
-
+        delete m_server;
     }
 
     bool CAsioNetSimple::isConnected(){

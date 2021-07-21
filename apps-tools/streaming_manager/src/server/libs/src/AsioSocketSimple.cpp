@@ -87,10 +87,10 @@ namespace  asionet_simple {
         if (m_is_tcp_connected){
             m_is_tcp_connected = false;
             m_callback_Str.emitEvent(Events::DISCONNECT, m_tcp_endpoint.address().to_string());
-        }
-
-        if (m_tcp_socket && m_tcp_socket->is_open()){
-            m_tcp_socket->close();
+            if (m_tcp_socket && m_tcp_socket->is_open()){
+                m_tcp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
+                m_tcp_socket->close();
+            }
         }
     }
 
@@ -117,12 +117,18 @@ namespace  asionet_simple {
         {
             m_is_tcp_connected = true;
             m_callback_Str.emitEvent(Events::CONNECT,m_tcp_endpoint.address().to_string());
+            m_tcp_socket->async_receive(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
+                                        std::bind(&CAsioSocketSimple::HandlerReceive, this,
+                                                  std::placeholders::_1, std::placeholders::_2));
         }
         else if (_error.value() != 1) // Already open connection
         {
             m_is_tcp_connected = false;
             m_callback_Error.emitEvent(Events::ERROR,_error);
-            m_tcp_acceptor->async_accept(*m_tcp_socket, m_tcp_endpoint, std::bind(&CAsioSocketSimple::HandlerAccept, this, std::placeholders::_1));
+            if (m_tcp_socket->is_open()) {
+                m_tcp_acceptor->async_accept(*m_tcp_socket, m_tcp_endpoint,
+                                             std::bind(&CAsioSocketSimple::HandlerAccept, this, std::placeholders::_1));
+            }
         }
     }
 
@@ -160,7 +166,7 @@ namespace  asionet_simple {
 
     void CAsioSocketSimple::HandlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint8_t *buffer){
         HandlerSend(_error,_bytesTransferred);
-        delete buffer;
+        delete[] buffer;
     }
 
     void CAsioSocketSimple::HandlerSend(const asio::error_code &_error, size_t _bytesTransferred){

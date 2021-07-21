@@ -53,7 +53,7 @@ namespace  asionet_simple {
         asio::io_service::work m_Work;
         asio::thread *m_asio_th;
         bool m_IsRun;
-        shared_ptr<CAsioSocketSimple> m_server;
+        CAsioSocketSimple *m_server;
     };
 
 

@@ -34,6 +34,52 @@ asionet_simple::buffer CNetConfigManager::pack(string key,string value,size_t *l
     return buffer;
 }
 
+asionet_simple::buffer CNetConfigManager::pack(string key,uint32_t value,size_t *len){
+    uint32_t key_size = key.size();
+    uint32_t data_size = sizeof(uint32_t);
+    uint32_t header = HEADER_STR_INT;
+    uint32_t prefix_len = sizeof(uint32_t) * 4;
+    uint32_t segment_size = key_size + data_size + prefix_len;
+    asionet_simple::buffer buffer = new uint8_t[segment_size];
+    ((uint32_t*)buffer)[0] = (uint32_t)header;
+    ((uint32_t*)buffer)[1] = (uint32_t)segment_size;
+    ((uint32_t*)buffer)[2] = (uint32_t)key_size;
+    ((uint32_t*)buffer)[3] = (uint32_t)data_size;
+    memcpy_neon((&(*buffer)+prefix_len), key.data(), key_size);
+    memcpy_neon((&(*buffer)+prefix_len + key_size), &value, data_size);
+    *len = segment_size;
+    return buffer;
+}
+
+asionet_simple::buffer CNetConfigManager::pack(string key, double value,size_t *len){
+    static_assert(sizeof(double) == 8,"Double have wrong size");
+    uint32_t key_size = key.size();
+    uint32_t data_size = sizeof(double);
+    uint32_t header = HEADER_STR_DOUBLE;
+    uint32_t prefix_len = sizeof(uint32_t) * 4;
+    uint32_t segment_size = key_size + data_size + prefix_len;
+    asionet_simple::buffer buffer = new uint8_t[segment_size];
+    ((uint32_t*)buffer)[0] = (uint32_t)header;
+    ((uint32_t*)buffer)[1] = (uint32_t)segment_size;
+    ((uint32_t*)buffer)[2] = (uint32_t)key_size;
+    ((uint32_t*)buffer)[3] = (uint32_t)data_size;
+    memcpy_neon((&(*buffer)+prefix_len), key.data(), key_size);
+    memcpy_neon((&(*buffer)+prefix_len + key_size), &value, data_size);
+    *len = segment_size;
+    return buffer;
+}
+
+asionet_simple::buffer CNetConfigManager::pack(uint32_t command,size_t *len){
+    uint32_t header = HEADER_COMMAND;
+    uint32_t segment_size = sizeof(uint32_t) * 3;
+    asionet_simple::buffer buffer = new uint8_t[segment_size];
+    ((uint32_t*)buffer)[0] = (uint32_t)header;
+    ((uint32_t*)buffer)[1] = (uint32_t)segment_size;
+    ((uint32_t*)buffer)[2] = (uint32_t)command;
+    *len = segment_size;
+    return buffer;
+}
+
 CNetConfigManager::CNetConfigManager() :
     m_host(""),
     m_port(""),
@@ -94,6 +140,18 @@ void CNetConfigManager::addHandlerReceiveStrStr(function<void(string,string)> _f
     this->m_callback_StrStr.addListener(HEADER_STR_STR,_func);
 }
 
+void CNetConfigManager::addHandlerReceiveStrInt(function<void(string, uint32_t)> _func) {
+    this->m_callback_StrInt.addListener(HEADER_STR_INT,_func);
+}
+
+void CNetConfigManager::addHandlerReceiveStrDouble(function<void(string, double)> _func) {
+    this->m_callback_StrDouble.addListener(HEADER_STR_DOUBLE,_func);
+}
+
+void CNetConfigManager::addHandlerReceiveCommand(function<void(uint32_t)> _func) {
+    this->m_callback_Int.addListener(HEADER_COMMAND,_func);
+}
+
 bool CNetConfigManager::start(){
     if (m_host == ""  || m_port == "")
         return false;
@@ -104,22 +162,22 @@ bool CNetConfigManager::start(){
     }
     m_asionet = new CAsioNetSimple(m_mode, m_host, m_port);
     m_asionet->addCall_Connect([this](std::string host){
-                                        LOG_P("Connected: %s\n",host);
+                                        //LOG_P("Connected: %s\n",host.c_str() );
                                         this->m_callback_Str.emitEvent(CONNECT,host);                                         
                                     });
     m_asionet->addCall_Disconnect([this](std::string host)
                                     {
-                                        LOG_P("Disconnected: %s\n",host);
+                                        //LOG_P("Disconnected: %s \n",host.c_str());
                                         this->m_callback_Str.emitEvent(DISCONNECT,host);
                                     });
     m_asionet->addCall_Error([this](error_code error)
                                     {
-                                        LOG_P("Error: %d\n",error);
+                                        //LOG_P("Error: %d (%s)\n", error.value(),error.message().c_str());
                                         this->m_callback_Error.emitEvent(ERROR,error);
                                     });
     m_asionet->addCall_Send([this](error_code error,size_t size)
                                     {
-                                        LOG_P("Data sent (%d): %d\n",size,error);
+                                        //LOG_P("Data sent (%d): %d\n",size,error.value() );
                                         this->m_callback_ErrorInt.emitEvent(SEND_DATA,error,size);
                                     });
     
@@ -145,6 +203,37 @@ bool CNetConfigManager::sendData(string key,string value,bool async){
     return ret;
 }
 
+bool CNetConfigManager::sendData(string key,uint32_t value,bool async){
+    if (!m_asionet) return false;
+    if (!m_asionet->isConnected()) return false;
+    size_t len = 0;
+    auto buff = pack(key,value,&len);
+    bool ret = m_asionet->sendData(async,buff,len);
+    if (!async)
+        delete[] buff; // delete only in sync mode
+    return ret;
+}
+bool CNetConfigManager::sendData(string key,double value,bool async){
+    if (!m_asionet) return false;
+    if (!m_asionet->isConnected()) return false;
+    size_t len = 0;
+    auto buff = pack(key,value,&len);
+    bool ret = m_asionet->sendData(async,buff,len);
+    if (!async)
+        delete[] buff; // delete only in sync mode
+    return ret;
+}
+bool CNetConfigManager::sendData(uint32_t command,bool async){
+    if (!m_asionet) return false;
+    if (!m_asionet->isConnected()) return false;
+    size_t len = 0;
+    auto buff = pack(command,&len);
+    bool ret = m_asionet->sendData(async,buff,len);
+    if (!async)
+        delete[] buff; // delete only in sync mode
+    return ret;
+}
+
 
 void CNetConfigManager::receiveHandler(error_code error,uint8_t* _buff,size_t _size){
     UNUSED(error);
@@ -164,11 +253,32 @@ void CNetConfigManager::receiveHandler(error_code error,uint8_t* _buff,size_t _s
         if (header == HEADER_STR_STR){
             uint32_t key_size = ((uint32_t*)m_buffers.m_buffers)[2];
             uint32_t data_size = ((uint32_t*)m_buffers.m_buffers)[3];
-            std::string key(reinterpret_cast<char const*>(&m_buffers.m_buffers[4]), key_size);
-            std::string data(reinterpret_cast<char const*>(&m_buffers.m_buffers[4+key_size]), data_size);
+            std::string key(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16])), key_size);
+            std::string data(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16+key_size])), data_size);
             m_buffers.removeAtStart(segment_size);
             this->m_callback_StrStr.emitEvent(HEADER_STR_STR,key,data);
         }
+        else if (header == HEADER_STR_INT){
+            uint32_t key_size = ((uint32_t*)m_buffers.m_buffers)[2];
+            std::string key(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16])), key_size);
+            uint32_t data = (reinterpret_cast<uint32_t*>(&(m_buffers.m_buffers[16+key_size])))[0];
+            m_buffers.removeAtStart(segment_size);
+            this->m_callback_StrInt.emitEvent(HEADER_STR_INT,key,data);
+        }
+        else if (header == HEADER_STR_DOUBLE){
+            uint32_t key_size = ((uint32_t*)m_buffers.m_buffers)[2];
+            std::string key(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16])), key_size);
+            double data = (reinterpret_cast<double*>(&(m_buffers.m_buffers[16+key_size])))[0];
+            m_buffers.removeAtStart(segment_size);
+            this->m_callback_StrDouble.emitEvent(HEADER_STR_DOUBLE,key,data);
+        }else if (header == HEADER_COMMAND){
+            uint32_t command = ((uint32_t*)m_buffers.m_buffers)[2];
+            m_buffers.removeAtStart(segment_size);
+            this->m_callback_Int.emitEvent(HEADER_COMMAND,command);
+        }else{
+            throw runtime_error("Broken header");
+        }
+
     }
 }
 
@@ -194,7 +304,7 @@ void CNetConfigManager::dyn_buffer::resize(int _size){
 
 void CNetConfigManager::dyn_buffer::removeAtStart(int _size){
     if (_size > m_data_size) throw std::runtime_error("[Error] remove buffer wrong size");
-    memcpy_neon(m_buffers ,(&(*m_buffers)+m_data_size),m_data_size - _size);
+    memcpy_neon(m_buffers ,(&(*m_buffers)+_size),m_data_size - _size);
     m_data_size -= _size;
 }
 
