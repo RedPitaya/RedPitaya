@@ -8,7 +8,6 @@
 #include "NetConfigManager.h"
 
 #define UNUSED(x) [&x]{}()
-#define MAX_BUFFER_SIZE 1024
 
 #define HEADER_STR_STR      0xABCDEF
 #define HEADER_STR_INT      0xABCDEE
@@ -87,8 +86,12 @@ void CNetConfigManager::addHandlerError(std::function<void(std::error_code error
     this->m_callback_Error.addListener(ERROR,_func);   
 }
 
-void CNetConfigManager::addHandlerSentCallback(Events _event, function<void(error_code,int)> _func){
+void CNetConfigManager::addHandlerSentCallback(function<void(error_code,int)> _func){
     this->m_callback_ErrorInt.addListener(SEND_DATA,_func);
+}
+
+void CNetConfigManager::addHandlerReceiveStrStr(function<void(string,string)> _func){
+    this->m_callback_StrStr.addListener(HEADER_STR_STR,_func);
 }
 
 bool CNetConfigManager::start(){
@@ -136,28 +139,63 @@ bool CNetConfigManager::sendData(string key,string value,bool async){
     if (!m_asionet->isConnected()) return false;
     size_t len = 0;
     auto buff = pack(key,value,&len);
-    if (len > 0 && len < MAX_BUFFER_SIZE){    
-        bool ret = m_asionet->sendData(async,buff,len);
-        if (!async)
-            delete[] buff; // delete only in sync mode
-        return ret;
-    }else{
-        delete[] buff;
-        if (len >= MAX_BUFFER_SIZE)
-            throw std::runtime_error("Buffer is too large");
-    }
-    return false;
+    bool ret = m_asionet->sendData(async,buff,len);
+    if (!async)
+        delete[] buff; // delete only in sync mode
+    return ret;
 }
 
-void CNetConfigManager::receiveHandler(error_code error,uint8_t* _buff,size_t _size){
-    RAW item;
-    item.pos = 0;
-    item.size = _size;
-    item.data = new uint8_t[_size];
-    memcpy_neon(item.data, _buff, _size);
-    m_buffers.push_back(item);
 
-    // TODO 
+void CNetConfigManager::receiveHandler(error_code error,uint8_t* _buff,size_t _size){
+    UNUSED(error);
+    m_buffers.push_back(_buff,_size);
+
+    while(m_buffers.m_data_size > 0){
+        if (m_buffers.m_data_size < 8){
+            break;
+        }
+        uint32_t header = ((uint32_t*)m_buffers.m_buffers)[0];
+        int segment_size = ((uint32_t*)m_buffers.m_buffers)[1];
+        
+        if (m_buffers.m_data_size < segment_size){
+            break;
+        }
+
+        if (header == HEADER_STR_STR){
+            uint32_t key_size = ((uint32_t*)m_buffers.m_buffers)[2];
+            uint32_t data_size = ((uint32_t*)m_buffers.m_buffers)[3];
+            std::string key(reinterpret_cast<char const*>(&m_buffers.m_buffers[4]), key_size);
+            std::string data(reinterpret_cast<char const*>(&m_buffers.m_buffers[4+key_size]), data_size);
+            m_buffers.removeAtStart(segment_size);
+            this->m_callback_StrStr.emitEvent(HEADER_STR_STR,key,data);
+        }
+    }
+}
+
+void CNetConfigManager::dyn_buffer::push_back(uint8_t *_src,int _size){
+    if (_size + m_data_size > m_size){
+        resize(_size + m_data_size);
+    }
+    memcpy_neon((&(*m_buffers)+m_data_size), _src, _size);
+    m_data_size += _size;
+}
+
+void CNetConfigManager::dyn_buffer::resize(int _size){
+    if (_size < m_size){
+        m_size = _size;
+    }
+    uint8_t *new_buff = new uint8_t[_size];
+    if (m_buffers)
+        memcpy_neon(new_buff,m_buffers,m_size);
+    m_size = _size;
+    if (m_buffers) delete[] m_buffers;
+    m_buffers = new_buff;
+}
+
+void CNetConfigManager::dyn_buffer::removeAtStart(int _size){
+    if (_size > m_data_size) throw std::runtime_error("[Error] remove buffer wrong size");
+    memcpy_neon(m_buffers ,(&(*m_buffers)+m_data_size),m_data_size - _size);
+    m_data_size -= _size;
 }
 
 
