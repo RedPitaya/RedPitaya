@@ -17,7 +17,7 @@ add_library(rpsasrv STATIC IMPORTED)
 set_property(TARGET rpsasrv PROPERTY
              IMPORTED_LOCATION ../bin/librpsasrv.a)
 
-target_link_libraries(convert_tool PRIVATE rpsasrv)
+target_link_libraries(convert_tool PRIVATE rpsasrv jsoncpp_lib)
 if(NOT WIN32 )
     target_link_libraries(convert_tool PRIVATE pthread)
 else()

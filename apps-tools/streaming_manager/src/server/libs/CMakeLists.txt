@@ -9,7 +9,8 @@ include(FetchContent)
 
 FetchContent_Declare(json
         GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp
-        GIT_TAG 1.9.4)
+        GIT_TAG 1.9.4
+        CMAKE_ARGS "-DBUILD_SHARED_LIBS=OFF")
 
 FetchContent_GetProperties(json)
 if(NOT json_POPULATED)
@@ -20,7 +21,7 @@ endif()
 add_library(${PROJECT_NAME})
 
 target_compile_options(rpsasrv
-    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive -D${MODEL})
+    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive -static -D${MODEL})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}
