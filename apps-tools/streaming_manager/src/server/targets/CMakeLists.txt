@@ -12,3 +12,8 @@ endif()
 if( NOT WIN32 )
 add_subdirectory(broadcast_test)
 endif()
+
+if( NOT WIN32 )
+add_subdirectory(settings_test)
+endif()
+
