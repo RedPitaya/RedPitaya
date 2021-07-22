@@ -4,28 +4,35 @@
 #define UNUSED(x) [&x]{}()
 #define SOCKET_BUFFER_SIZE 1024
 
-namespace  asionet_simple {
+namespace  asionet_broadcast {
 
 
     CAsioBroadcastSocket::Ptr
-    CAsioBroadcastSocket::Create(asio::io_service &io,string host,  std::string port) {
-        return std::make_shared<CAsioBroadcastSocket>(io, host, port);
+    CAsioBroadcastSocket::Create(string host,  std::string port) {
+        return std::make_shared<CAsioBroadcastSocket>(host, port);
     }
 
-    CAsioBroadcastSocket::CAsioBroadcastSocket(asio::io_service &io,string host, std::string port) :
+    CAsioBroadcastSocket::CAsioBroadcastSocket(string host, std::string port) :
             m_mode(Mode::NONE),
             m_sleep_time_ms(1000),
             m_host(host),
             m_port(port),
-            m_io_service(io),
+            m_Ios(),
             m_socket(0)
     {
         m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];
+        auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run), &m_Ios);
+        m_asio_th = new asio::thread(func);
     }
 
     CAsioBroadcastSocket::~CAsioBroadcastSocket() {
         CloseSocket();
         delete[] m_SocketReadBuffer;
+        m_Ios.stop();
+        if (m_asio_th != nullptr){
+            m_asio_th->join();
+            delete  m_asio_th;
+        }
     }
 
     void CAsioBroadcastSocket::InitServer(Mode mode,int sleep_time_ms) {
@@ -36,7 +43,7 @@ namespace  asionet_simple {
             return;
         }
         error_code error;
-        m_socket = std::make_shared<asio::ip::udp::socket>(m_io_service);
+        m_socket = std::make_shared<asio::ip::udp::socket>(m_Ios);
         m_socket->open(asio::ip::udp::v4(), error);
         if (!error){
             m_mode = mode;
@@ -52,7 +59,7 @@ namespace  asionet_simple {
 
     void CAsioBroadcastSocket::InitClient(){
         error_code error;
-        m_socket = std::make_shared<asio::ip::udp::socket>(m_io_service);
+        m_socket = std::make_shared<asio::ip::udp::socket>(m_Ios);
         m_socket->open(asio::ip::udp::v4(), error);
         if (!error){
             m_mode = Mode::CLIENT;

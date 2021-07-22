@@ -18,7 +18,7 @@
 using  namespace std;
 using  namespace asio;
 
-namespace  asionet_simple {
+namespace  asionet_broadcast {
 
     enum Mode {
         SERVER_MASTER,
@@ -40,8 +40,8 @@ namespace  asionet_simple {
 
         using Ptr = shared_ptr<CAsioBroadcastSocket>;
 
-        static Ptr Create(asio::io_service &io,string host, string port);
-        CAsioBroadcastSocket(asio::io_service &io,string host, string port);
+        static Ptr Create(string host, string port);
+        CAsioBroadcastSocket(string host, string port);
         ~CAsioBroadcastSocket();
 
         void InitServer(Mode mode,int sleep_time_ms = 1000);
@@ -67,7 +67,7 @@ namespace  asionet_simple {
         int  m_sleep_time_ms;
         string m_host;
         string m_port;
-        io_service &m_io_service;
+        asio::io_service m_Ios;
 
         shared_ptr<asio::ip::udp::socket> m_socket;
 
@@ -76,6 +76,7 @@ namespace  asionet_simple {
         EventList<std::error_code> m_callback_Error;
         EventList<std::error_code,size_t> m_callback_ErrorInt;
         EventList<std::error_code,uint8_t*,size_t > m_callbackErrorUInt8Int;
+        asio::thread *m_asio_th;
     };
 }
 
