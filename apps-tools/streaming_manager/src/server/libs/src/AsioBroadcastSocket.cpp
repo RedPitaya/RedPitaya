@@ -28,12 +28,12 @@ namespace  asionet_broadcast {
 
     CAsioBroadcastSocket::~CAsioBroadcastSocket() {
         CloseSocket();
-        delete[] m_SocketReadBuffer;
         m_Ios.stop();
         if (m_asio_th != nullptr){
             m_asio_th->join();
             delete  m_asio_th;
         }
+        delete[] m_SocketReadBuffer;
     }
 
     void CAsioBroadcastSocket::InitServer(Mode mode,int sleep_time_ms) {
@@ -65,8 +65,7 @@ namespace  asionet_broadcast {
         m_mode = Mode::CLIENT;
         m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
         m_socket->set_option(asio::socket_base::broadcast(true));
-        asio::ip::udp::endpoint sender_endpoint;
-        m_socket->async_receive_from(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),sender_endpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this, std::placeholders::_1 ,std::placeholders::_2 ));
+        m_socket->async_receive_from(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this, std::placeholders::_1 ,std::placeholders::_2 ));
     }
 
     void CAsioBroadcastSocket::CloseSocket(){
@@ -82,9 +81,9 @@ namespace  asionet_broadcast {
     void CAsioBroadcastSocket::HandlerReceive(const asio::error_code &error,size_t bytes_transferred) {
         if (!error){
             m_callbackErrorUInt8Int.emitEvent(Events::RECIVED_DATA,error,m_SocketReadBuffer,bytes_transferred);
-            asio::ip::udp::endpoint sender_endpoint;
+            asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::any(), std::stoi(m_port));
             m_socket->async_receive_from(
-                    asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),sender_endpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this,
+                    asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this,
                             std::placeholders::_1,std::placeholders::_2)
                     );
         }else{
