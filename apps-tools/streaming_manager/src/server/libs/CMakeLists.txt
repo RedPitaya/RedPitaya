@@ -29,6 +29,7 @@ target_sources(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioBroadcastSocket.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/Oscilloscope.cpp
@@ -47,6 +48,7 @@ else()
 target_sources(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioBroadcastSocket.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
