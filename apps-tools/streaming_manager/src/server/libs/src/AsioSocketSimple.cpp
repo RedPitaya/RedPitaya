@@ -84,13 +84,17 @@ namespace  asionet_simple {
 
     void CAsioSocketSimple::CloseSocket(){
 
-        if (m_is_tcp_connected){
-            m_is_tcp_connected = false;
-            m_callback_Str.emitEvent(Events::DISCONNECT, m_tcp_endpoint.address().to_string());
-            if (m_tcp_socket && m_tcp_socket->is_open()){
-                m_tcp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
-                m_tcp_socket->close();
+        try {
+            if (m_is_tcp_connected) {
+                m_is_tcp_connected = false;
+                m_callback_Str.emitEvent(Events::DISCONNECT, m_tcp_endpoint.address().to_string());
+                if (m_tcp_socket && m_tcp_socket->is_open()) {
+                    m_tcp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
+                    m_tcp_socket->close();
+                }
             }
+        }catch (...){
+
         }
     }
 

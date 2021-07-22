@@ -18,10 +18,11 @@ namespace  asionet_broadcast {
             m_host(host),
             m_port(port),
             m_Ios(),
+            m_Work(m_Ios),
             m_socket(0)
     {
         m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];
-        auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run), &m_Ios);
+        auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run),&m_Ios);
         m_asio_th = new asio::thread(func);
     }
 
@@ -59,32 +60,31 @@ namespace  asionet_broadcast {
 
     void CAsioBroadcastSocket::InitClient(){
         error_code error;
-        m_socket = std::make_shared<asio::ip::udp::socket>(m_Ios);
-        m_socket->open(asio::ip::udp::v4(), error);
-        if (!error){
-            m_mode = Mode::CLIENT;
-            m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
-            m_socket->set_option(asio::socket_base::broadcast(true));
-            asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), std::stoi(m_port));
-            m_socket->async_receive_from(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this, std::placeholders::_1 ,std::placeholders::_2 ));
-        }else{
-            m_callback_Error.emitEvent(Events::ERROR,error);
-        }
+        asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::any(), std::stoi(m_port));
+        m_socket = std::make_shared<asio::ip::udp::socket>(m_Ios,senderEndpoint);
+        m_mode = Mode::CLIENT;
+        m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
+        m_socket->set_option(asio::socket_base::broadcast(true));
+        asio::ip::udp::endpoint sender_endpoint;
+        m_socket->async_receive_from(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),sender_endpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this, std::placeholders::_1 ,std::placeholders::_2 ));
     }
 
     void CAsioBroadcastSocket::CloseSocket(){
-        if (m_socket && m_socket->is_open()){
-            m_socket->shutdown(socket_base::shutdown_type::shutdown_both);
-            m_socket->close();
+        try {
+            if (m_socket && m_socket->is_open()) {
+                m_socket->shutdown(socket_base::shutdown_type::shutdown_both);
+                m_socket->close();
+            }
+        }catch (...){
         }
     }
 
     void CAsioBroadcastSocket::HandlerReceive(const asio::error_code &error,size_t bytes_transferred) {
         if (!error){
             m_callbackErrorUInt8Int.emitEvent(Events::RECIVED_DATA,error,m_SocketReadBuffer,bytes_transferred);
-            asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), std::stoi(m_port));
+            asio::ip::udp::endpoint sender_endpoint;
             m_socket->async_receive_from(
-                    asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this,
+                    asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),sender_endpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this,
                             std::placeholders::_1,std::placeholders::_2)
                     );
         }else{
@@ -108,7 +108,7 @@ namespace  asionet_broadcast {
 
     void CAsioBroadcastSocket::HandlerSend(const asio::error_code &_error, size_t _bytesTransferred){
         m_callback_ErrorInt.emitEvent(Events::SEND_DATA,_error,_bytesTransferred);
-        if (!_error){
+        if (_error){
             if (m_mode == Mode::SERVER_MASTER || m_mode == Mode::SERVER_SLAVE) {
                 m_callback_Error.emitEvent(Events::ERROR, _error);
                 InitServer(m_mode,m_sleep_time_ms);

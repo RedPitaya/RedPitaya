@@ -68,7 +68,8 @@ namespace  asionet_broadcast {
         string m_host;
         string m_port;
         asio::io_service m_Ios;
-
+        asio::io_service::work m_Work;
+        
         shared_ptr<asio::ip::udp::socket> m_socket;
 
         uint8_t *m_SocketReadBuffer;
