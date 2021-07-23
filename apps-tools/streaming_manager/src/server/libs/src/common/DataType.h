@@ -44,7 +44,7 @@ namespace TDMS
 			size(0),
 			dataType(DataType::Empty){                
             }
-			~Raw();
+			~Raw() noexcept(false);
 	    };
 
 		
@@ -59,7 +59,7 @@ namespace TDMS
 	public:
 
 		DataType();
-		~DataType();
+		~DataType() noexcept(false);
         void DestroyVector();
 		DataType(const DataType& tmp);
 		DataType& operator=(const DataType& tmp);

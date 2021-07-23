@@ -5,7 +5,7 @@ if [[ $1 == 'libs' ]]; then
     cd server
     unzip -o ./libs/asio.zip -d ./libs
     cmake CMakeLists.txt $2 $3
-    make
+    make -j$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
     cd ..
 fi
 

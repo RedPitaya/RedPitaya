@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
             if (bi.dataFormatSize == 4) dft = "Float";
             printf("Data format type: %s\n",dft.c_str());
             printf("Samples count CH1(%d) CH2(%d)\n",bi.size_ch1,bi.size_ch2);
-            printf("Lost samples count: %lld\n",bi.lostCount);
+            printf("Lost samples count: %lld\n",(long long int)bi.lostCount);
             printf("Segments count: %d\n",bi.segCount);
             printf("Samples per segment: %d\n",bi.segSamplesCount);
             printf("Samples in last segment: %d\n",bi.segLastSamplesCount);
