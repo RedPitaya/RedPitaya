@@ -16,12 +16,14 @@ public:
     enum class Commands{
         GET_NEW_SETTING,
         STOP_STREAMING,
-        START_STREAMING
+        START_STREAMING,
+        CLIENT_CONNECTED,
+        CLIENT_DISCONNECTED
     };
-    ServerNetConfigManager(std::string defualt_file_settings_path, std::string host,std::string port);
+    ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode, std::string host,std::string port);
     ~ServerNetConfigManager();
 
-    auto startBroadcast(asionet_broadcast::CAsioBroadcastSocket::ABMode mode,std::string host,std::string port) -> void;
+    auto startBroadcast(std::string host,std::string port) -> void;
     auto isConnected() -> bool;
     auto sendServerStarted() -> bool;
     auto sendServerStopped() -> bool;
@@ -42,10 +44,13 @@ private:
     auto receiveValueStr(std::string key,std::string value) -> void;
     auto receiveValueInt(std::string key,uint32_t value) -> void;
     auto receiveValueDouble(std::string key,double value) -> void;
+    auto connected(std::string host) -> void;
+    auto disconnected(std::string host) -> void;
     auto serverError(std::error_code error) -> void;
 
     States m_currentState;
     EventList<Errors> m_errorCallback;
     EventList<> m_callbacks;
     std::string m_file_settings;
+    asionet_broadcast::CAsioBroadcastSocket::ABMode m_mode;
 };

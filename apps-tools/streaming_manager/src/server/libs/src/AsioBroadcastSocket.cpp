@@ -51,7 +51,7 @@ namespace  asionet_broadcast {
             m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
             m_socket->set_option(asio::socket_base::broadcast(true));
             asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), std::stoi(m_port));
-            std::string buf = std::string((mode == ABMode::AB_SERVER_MASTER ? "M" : "S")) + m_host;
+            std::string buf = m_host + std::string((mode == ABMode::AB_SERVER_MASTER ? "M" : "S"));
             m_socket->async_send_to(asio::buffer(buf.c_str(),buf.size()),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerSend, this, std::placeholders::_1 ,std::placeholders::_2 ));
         }else{
             m_callback_Error.emitEvent((int)ABEvents::AB_ERROR,error);
@@ -120,7 +120,7 @@ namespace  asionet_broadcast {
 #endif // _WIN32
 
             asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), std::stoi(m_port));
-            std::string buf = std::string((m_mode == ABMode::AB_SERVER_MASTER ? "M" : "S")) + m_host;
+            std::string buf = m_host + std::string((m_mode == ABMode::AB_SERVER_MASTER ? "M" : "S"));
             m_socket->async_send_to(asio::buffer(buf.c_str(),buf.size()),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerSend, this, std::placeholders::_1 ,std::placeholders::_2));
         }
     }

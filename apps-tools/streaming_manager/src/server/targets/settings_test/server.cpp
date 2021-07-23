@@ -19,13 +19,13 @@ int main(int argc, char* argv[])
     settings.setResolution(CStreamSettings::BIT_16);
     settings.setSamples(-1);
     auto ret = settings.writeToFile("/home/swat/json.conf");
-    cout << "Write state " << ret << "\n";
+    std::cout << "Write state " << ret << "\n";
     settings.setHost("127.0.0.2");
-    cout << "Host " << settings.getHost().c_str() << "\n";
+    std::cout << "Host " << settings.getHost().c_str() << "\n";
     ret = settings.readFromFile("/home/swat/json.conf");
-    cout << "Read state " << ret << "\n";
-    cout << "Host " << settings.getHost().c_str() << "\n";
-    cout << "DONE \n";
+    std::cout << "Read state " << ret << "\n";
+    std::cout << "Host " << settings.getHost().c_str() << "\n";
+    std::cout << "DONE \n";
 
     return 0;
 }

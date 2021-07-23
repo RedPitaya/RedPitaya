@@ -308,7 +308,7 @@ auto CStreamSettings::setValue(std::string key,uint32_t value) -> bool{
     return false;
 }
 
-auto setValue(std::string key,double value) -> bool{
+auto CStreamSettings::setValue(std::string key,double value) -> bool{
     UNUSED(key);
     UNUSED(value);
     return false;

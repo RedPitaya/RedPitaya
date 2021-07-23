@@ -24,7 +24,9 @@ public:
         SAVE_TO_FILE_FAIL,
         LOAD_SETTING_FROM_FILE,
         LOAD_FROM_FILE_SUCCES,
-        LOAD_FROM_FILE_FAIL
+        LOAD_FROM_FILE_FAIL,
+        MASTER_CONNETED,
+        SLAVE_CONNECTED
     };
 
     static std::shared_ptr<CNetConfigManager> instance()
@@ -40,6 +42,8 @@ public:
     auto startAsioNet(CAsioSocketSimple::ASMode _mode, std::string _host,std::string _port) -> bool;
     auto stopAsioNet() -> bool;
     auto isConnected() -> bool;
+    auto getHost() -> std::string;
+    auto getPort() -> std::string;
 
     auto addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::string host)> _func) -> void;
     auto addHandlerSentCallback(std::function<void(std::error_code,int)> _func) -> void;

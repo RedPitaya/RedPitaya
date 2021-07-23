@@ -319,6 +319,14 @@ void CNetConfigManager::dyn_buffer::removeAtStart(int _size){
     m_data_size -= _size;
 }
 
+auto CNetConfigManager::getHost() -> std::string{
+    return m_host;
+}
+
+auto CNetConfigManager::getPort() -> std::string{
+    return m_port;
+}
+
 
 
 

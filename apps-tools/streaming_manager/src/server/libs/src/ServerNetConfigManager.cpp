@@ -1,17 +1,20 @@
 #include "ServerNetConfigManager.h"
+#define UNUSED(x) [&x]{}()
 
-
-ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings_path,std::string host,std::string port):CStreamSettings(),
+ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode,std::string host,std::string port):CStreamSettings(),
     m_pBroadcast(nullptr),
     m_pNetConfManager(nullptr),
     m_currentState(States::NORMAL),
-    m_file_settings(defualt_file_settings_path)
+    m_file_settings(defualt_file_settings_path),
+    m_mode(mode)
 {
     m_pNetConfManager = std::make_shared<CNetConfigManager>();
     m_pNetConfManager->addHandlerReceiveCommand(std::bind(&ServerNetConfigManager::receiveCommand, this, std::placeholders::_1));
     m_pNetConfManager->addHandlerReceiveStrStr(std::bind(&ServerNetConfigManager::receiveValueStr, this, std::placeholders::_1, std::placeholders::_2));
     m_pNetConfManager->addHandlerReceiveStrInt(std::bind(&ServerNetConfigManager::receiveValueInt, this, std::placeholders::_1, std::placeholders::_2));
     m_pNetConfManager->addHandlerReceiveStrDouble(std::bind(&ServerNetConfigManager::receiveValueDouble, this, std::placeholders::_1, std::placeholders::_2));
+    m_pNetConfManager->addHandler(asionet_simple::CAsioSocketSimple::ASEvents::AS_CONNECT,std::bind(&ServerNetConfigManager::connected,this,std::placeholders::_1));
+    m_pNetConfManager->addHandler(asionet_simple::CAsioSocketSimple::ASEvents::AS_DISCONNECT,std::bind(&ServerNetConfigManager::disconnected,this,std::placeholders::_1));
 
     m_pNetConfManager->addHandlerError(std::bind(&ServerNetConfigManager::serverError, this, std::placeholders::_1));
     m_pNetConfManager->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_SERVER,host,port);
@@ -22,9 +25,9 @@ ServerNetConfigManager::~ServerNetConfigManager(){
 
 }
 
-auto ServerNetConfigManager::startBroadcast(asionet_broadcast::CAsioBroadcastSocket::ABMode mode,std::string host,std::string port) -> void{
+auto ServerNetConfigManager::startBroadcast(std::string host,std::string port) -> void{
     m_pBroadcast = asionet_broadcast::CAsioBroadcastSocket::Create(host,port);
-    m_pBroadcast->InitServer(mode);
+    m_pBroadcast->InitServer(m_mode);
     m_pBroadcast->addHandler(asionet_broadcast::CAsioBroadcastSocket::ABEvents::AB_ERROR,[this](std::error_code er){
         fprintf(stderr,"[ServerNetConfigManager] Broadcast server error: %s (%d)\n",er.message().c_str(),er.value());
         m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR);
@@ -41,6 +44,20 @@ auto ServerNetConfigManager::addHandlerError(std::function<void(ServerNetConfigM
 
 auto ServerNetConfigManager::addHandler(ServerNetConfigManager::Commands event,std::function<void()> _func) -> void{
     m_callbacks.addListener(static_cast<int>(event),_func);
+}
+
+auto ServerNetConfigManager::connected(std::string host) -> void{
+    UNUSED(host);
+    m_callbacks.emitEvent(static_cast<int>(Commands::CLIENT_CONNECTED));
+    if (m_mode == asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER)
+        m_pNetConfManager->sendData(CNetConfigManager::Commands::MASTER_CONNETED );
+    if (m_mode == asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE)
+        m_pNetConfManager->sendData(CNetConfigManager::Commands::SLAVE_CONNECTED);
+}
+
+auto ServerNetConfigManager::disconnected(std::string host) -> void{
+    UNUSED(host);
+    m_callbacks.emitEvent(static_cast<int>(Commands::CLIENT_DISCONNECTED));
 }
 
 auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
