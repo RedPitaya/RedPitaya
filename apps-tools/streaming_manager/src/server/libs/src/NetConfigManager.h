@@ -5,16 +5,15 @@
 #include "AsioNetSimple.h"
 #include "log.h"
 
-using namespace std;
 using namespace asionet_simple;
 
 class CNetConfigManager
 {
 public:
 
-    static shared_ptr<CNetConfigManager> instance()
+    static std::shared_ptr<CNetConfigManager> instance()
     {
-        static shared_ptr<CNetConfigManager> inst{new CNetConfigManager()};
+        static std::shared_ptr<CNetConfigManager> inst{new CNetConfigManager()};
         return inst;
     }
 
@@ -22,21 +21,21 @@ public:
     ~CNetConfigManager();
 
 
-    auto startAsioNet(Mode _mode, string _host,string _port) -> bool;
+    auto startAsioNet(CAsioSocketSimple::ASMode _mode, std::string _host,std::string _port) -> bool;
     auto stopAsioNet() -> bool;
     auto isConnected() -> bool;
 
-    auto addHandler(Events _event, function<void(string host)> _func) -> void;
-    auto addHandlerSentCallback(function<void(error_code,int)> _func) -> void;
-    auto addHandlerError(function<void(error_code error)> _func) -> void;
-    auto addHandlerReceiveStrStr(function<void(string,string)> _func) -> void;
-    auto addHandlerReceiveStrInt(function<void(string,uint32_t)> _func) -> void;
-    auto addHandlerReceiveStrDouble(function<void(string,double)> _func) -> void;
-    auto addHandlerReceiveCommand(function<void(uint32_t)> _func) -> void;
+    auto addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::string host)> _func) -> void;
+    auto addHandlerSentCallback(std::function<void(std::error_code,int)> _func) -> void;
+    auto addHandlerError(std::function<void(std::error_code error)> _func) -> void;
+    auto addHandlerReceiveStrStr(std::function<void(std::string,std::string)> _func) -> void;
+    auto addHandlerReceiveStrInt(std::function<void(std::string,uint32_t)> _func) -> void;
+    auto addHandlerReceiveStrDouble(std::function<void(std::string,double)> _func) -> void;
+    auto addHandlerReceiveCommand(std::function<void(uint32_t)> _func) -> void;
 
-    auto sendData(string key,string value,bool async = true) -> bool;
-    auto sendData(string key,uint32_t value,bool async = true) -> bool;
-    auto sendData(string key,double value,bool async = true) -> bool;
+    auto sendData(std::string key,std::string value,bool async = true) -> bool;
+    auto sendData(std::string key,uint32_t value,bool async = true) -> bool;
+    auto sendData(std::string key,double value,bool async = true) -> bool;
     auto sendData(uint32_t command,bool async = true) -> bool;
 
 private:
@@ -54,23 +53,23 @@ private:
     CNetConfigManager(CNetConfigManager &&) = delete;
 
     auto start() -> bool;
-    auto pack(string key,string value,size_t *len) -> asionet_simple::buffer;
-    auto pack(string key,uint32_t value,size_t *len) -> asionet_simple::buffer;
-    auto pack(string key,double value,size_t *len) -> asionet_simple::buffer;
-    auto pack(uint32_t command,size_t *len) -> asionet_simple::buffer;
+    auto pack(std::string key,std::string value,size_t *len) -> CAsioSocketSimple::as_buffer;
+    auto pack(std::string key,uint32_t value,size_t *len) -> CAsioSocketSimple::as_buffer;
+    auto pack(std::string key,double value,size_t *len) -> CAsioSocketSimple::as_buffer;
+    auto pack(uint32_t command,size_t *len) -> CAsioSocketSimple::as_buffer;
 
-    auto receiveHandler(error_code error,uint8_t*,size_t) -> void;
+    auto receiveHandler(std::error_code error,uint8_t*,size_t) -> void;
 
-    string                      m_host;
-    string                      m_port;
+    std::string                      m_host;
+    std::string                      m_port;
     CAsioNetSimple*             m_asionet;
-    Mode                        m_mode;
-    EventList<string>           m_callback_Str;
-    EventList<string,string>    m_callback_StrStr;
-    EventList<string,uint32_t>  m_callback_StrInt;
-    EventList<string,double>    m_callback_StrDouble;
+    CAsioSocketSimple::ASMode                        m_mode;
+    EventList<std::string>           m_callback_Str;
+    EventList<std::string,std::string>    m_callback_StrStr;
+    EventList<std::string,uint32_t>  m_callback_StrInt;
+    EventList<std::string,double>    m_callback_StrDouble;
     EventList<uint32_t>         m_callback_Int;
-    EventList<error_code>       m_callback_Error;
-    EventList<error_code,int>   m_callback_ErrorInt;
+    EventList<std::error_code>       m_callback_Error;
+    EventList<std::error_code,int>   m_callback_ErrorInt;
     dyn_buffer                  m_buffers;
 };

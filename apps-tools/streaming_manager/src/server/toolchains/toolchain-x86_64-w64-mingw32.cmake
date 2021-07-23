@@ -25,3 +25,4 @@ set (Boost_THREADAPI win32)
 set (CMAKE_Fortran_COMPILER x86_64-w64-mingw32-gfortran)
 set (CMAKE_AR:FILEPATH x86_64-w64-mingw32-ar)
 set (CMAKE_RANLIB:FILEPATH x86_64-w64-mingw32-ranlib)
+

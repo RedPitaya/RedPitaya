@@ -14,42 +14,37 @@
 #include "asio.hpp"
 #include "EventHandlers.h"
 
-
-using  namespace std;
-using  namespace asio;
-
 namespace  asionet_broadcast {
-
-    enum Mode {
-        SERVER_MASTER,
-        SERVER_SLAVE,
-        CLIENT,
-        NONE
-    };
-
-    enum Events{
-        ERROR,
-        SEND_DATA,
-        RECIVED_DATA};
-
-    typedef uint8_t* buffer;
 
     class CAsioBroadcastSocket {
     public:
-       
 
-        using Ptr = shared_ptr<CAsioBroadcastSocket>;
+        enum class ABMode {
+            AB_SERVER_MASTER,
+            AB_SERVER_SLAVE,
+            AB_CLIENT,
+            AB_NONE
+        };
 
-        static Ptr Create(string host, string port);
-        CAsioBroadcastSocket(string host, string port);
+        enum class ABEvents{
+            AB_ERROR,
+            AB_SEND_DATA,
+            AB_RECIVED_DATA};
+
+        typedef uint8_t* ab_buffer;
+
+        using Ptr = std::shared_ptr<CAsioBroadcastSocket>;
+
+        static Ptr Create(std::string host, std::string port);
+        CAsioBroadcastSocket(std::string host, std::string port);
         ~CAsioBroadcastSocket();
 
-        void InitServer(Mode mode,int sleep_time_ms = 1000);
+        void InitServer(CAsioBroadcastSocket::ABMode mode,int sleep_time_ms = 1000);
         void InitClient();
         void CloseSocket();
-        void addHandler(Events _event, std::function<void(error_code error)> _func);
-        void addHandler(Events _event, std::function<void(error_code error,size_t)> _func);
-        void addHandler(Events _event, std::function<void(error_code error,uint8_t*,size_t)> _func);
+        void addHandler(CAsioBroadcastSocket::ABEvents _event, std::function<void(std::error_code error)> _func);
+        void addHandler(CAsioBroadcastSocket::ABEvents _event, std::function<void(std::error_code error,size_t)> _func);
+        void addHandler(CAsioBroadcastSocket::ABEvents _event, std::function<void(std::error_code error,uint8_t*,size_t)> _func);
 
     private:
 
@@ -63,14 +58,14 @@ namespace  asionet_broadcast {
         void HandlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint8_t *buffer);
         void HandlerReceiveFromServer(const asio::error_code &ErrorCode, size_t bytes_transferred);
 
-        Mode m_mode;
+        CAsioBroadcastSocket::ABMode m_mode;
         int  m_sleep_time_ms;
-        string m_host;
-        string m_port;
+        std::string m_host;
+        std::string m_port;
         asio::io_service m_Ios;
         asio::io_service::work m_Work;
-        
-        shared_ptr<asio::ip::udp::socket> m_socket;
+
+        std::shared_ptr<asio::ip::udp::socket> m_socket;
 
         uint8_t *m_SocketReadBuffer;
 

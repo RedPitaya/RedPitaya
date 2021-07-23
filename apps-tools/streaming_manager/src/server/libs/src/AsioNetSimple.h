@@ -15,30 +15,27 @@
 #include "EventHandlers.h"
 #include "AsioSocketSimple.h"
 
-using  namespace std;
-using  namespace asio;
-
 namespace  asionet_simple {
 
     class CAsioNetSimple {
     public:
 
-        using Ptr = shared_ptr<CAsioNetSimple>;
+        using Ptr = std::shared_ptr<CAsioNetSimple>;
 
-        static Ptr Create(Mode _mode,string _host , string _port);
-        CAsioNetSimple(Mode _mode,string _host , string _port);
+        static Ptr Create(CAsioSocketSimple::ASMode _mode,std::string _host , std::string _port);
+        CAsioNetSimple(CAsioSocketSimple::ASMode _mode,std::string _host , std::string _port);
         ~CAsioNetSimple();
 
         void start();
         void disconnect();
-        void addCall_Connect(function<void(string host)> _func);
-        void addCall_Disconnect(function<void(string host)> _func);
-        void addCall_Error(function<void(error_code error)> _func);
+        void addCall_Connect(std::function<void(std::string host)> _func);
+        void addCall_Disconnect(std::function<void(std::string host)> _func);
+        void addCall_Error(std::function<void(std::error_code error)> _func);
 
-        void addCall_Send(function<void(error_code error,size_t)> _func);
-        void addCall_Received(function<void(error_code error,asionet_simple::buffer,size_t)> _func);
+        void addCall_Send(std::function<void(std::error_code error,size_t)> _func);
+        void addCall_Received(std::function<void(std::error_code error,CAsioSocketSimple::as_buffer,size_t)> _func);
 
-        bool sendData(bool async,asionet_simple::buffer _buffer,size_t _size);
+        bool sendData(bool async,CAsioSocketSimple::as_buffer _buffer,size_t _size);
         bool isConnected();
 
     private:
@@ -46,9 +43,9 @@ namespace  asionet_simple {
         CAsioNetSimple(const CAsioNetSimple &) = delete;
         CAsioNetSimple(CAsioNetSimple &&) = delete;
 
-        Mode m_mode;
-        string m_host;
-        string m_port;
+        CAsioSocketSimple::ASMode m_mode;
+        std::string m_host;
+        std::string m_port;
         asio::io_service m_Ios;
         asio::io_service::work m_Work;
         asio::thread *m_asio_th;

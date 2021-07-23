@@ -17,13 +17,13 @@
 
 using namespace asionet_simple;
 
-asionet_simple::buffer CNetConfigManager::pack(string key,string value,size_t *len){
+CAsioSocketSimple::as_buffer CNetConfigManager::pack(std::string key,std::string value,size_t *len){
     uint32_t key_size = key.size();
     uint32_t data_size = value.size();
     uint32_t header = HEADER_STR_STR;
     uint32_t prefix_len = sizeof(uint32_t) * 4;
     uint32_t segment_size = key_size + data_size + prefix_len;
-    asionet_simple::buffer buffer = new uint8_t[segment_size];
+    CAsioSocketSimple::as_buffer buffer = new uint8_t[segment_size];
     ((uint32_t*)buffer)[0] = (uint32_t)header;
     ((uint32_t*)buffer)[1] = (uint32_t)segment_size;
     ((uint32_t*)buffer)[2] = (uint32_t)key_size;
@@ -34,13 +34,13 @@ asionet_simple::buffer CNetConfigManager::pack(string key,string value,size_t *l
     return buffer;
 }
 
-asionet_simple::buffer CNetConfigManager::pack(string key,uint32_t value,size_t *len){
+CAsioSocketSimple::as_buffer CNetConfigManager::pack(std::string key,uint32_t value,size_t *len){
     uint32_t key_size = key.size();
     uint32_t data_size = sizeof(uint32_t);
     uint32_t header = HEADER_STR_INT;
     uint32_t prefix_len = sizeof(uint32_t) * 4;
     uint32_t segment_size = key_size + data_size + prefix_len;
-    asionet_simple::buffer buffer = new uint8_t[segment_size];
+    CAsioSocketSimple::as_buffer buffer = new uint8_t[segment_size];
     ((uint32_t*)buffer)[0] = (uint32_t)header;
     ((uint32_t*)buffer)[1] = (uint32_t)segment_size;
     ((uint32_t*)buffer)[2] = (uint32_t)key_size;
@@ -51,14 +51,14 @@ asionet_simple::buffer CNetConfigManager::pack(string key,uint32_t value,size_t 
     return buffer;
 }
 
-asionet_simple::buffer CNetConfigManager::pack(string key, double value,size_t *len){
+CAsioSocketSimple::as_buffer CNetConfigManager::pack(std::string key, double value,size_t *len){
     static_assert(sizeof(double) == 8,"Double have wrong size");
     uint32_t key_size = key.size();
     uint32_t data_size = sizeof(double);
     uint32_t header = HEADER_STR_DOUBLE;
     uint32_t prefix_len = sizeof(uint32_t) * 4;
     uint32_t segment_size = key_size + data_size + prefix_len;
-    asionet_simple::buffer buffer = new uint8_t[segment_size];
+    CAsioSocketSimple::as_buffer buffer = new uint8_t[segment_size];
     ((uint32_t*)buffer)[0] = (uint32_t)header;
     ((uint32_t*)buffer)[1] = (uint32_t)segment_size;
     ((uint32_t*)buffer)[2] = (uint32_t)key_size;
@@ -69,10 +69,10 @@ asionet_simple::buffer CNetConfigManager::pack(string key, double value,size_t *
     return buffer;
 }
 
-asionet_simple::buffer CNetConfigManager::pack(uint32_t command,size_t *len){
+CAsioSocketSimple::as_buffer CNetConfigManager::pack(uint32_t command,size_t *len){
     uint32_t header = HEADER_COMMAND;
     uint32_t segment_size = sizeof(uint32_t) * 3;
-    asionet_simple::buffer buffer = new uint8_t[segment_size];
+    CAsioSocketSimple::as_buffer buffer = new uint8_t[segment_size];
     ((uint32_t*)buffer)[0] = (uint32_t)header;
     ((uint32_t*)buffer)[1] = (uint32_t)segment_size;
     ((uint32_t*)buffer)[2] = (uint32_t)command;
@@ -84,7 +84,7 @@ CNetConfigManager::CNetConfigManager() :
     m_host(""),
     m_port(""),
     m_asionet(nullptr),
-    m_mode(CLIENT),    
+    m_mode(CAsioSocketSimple::ASMode::AS_CLIENT),
     m_buffers()
 {    
 }
@@ -94,7 +94,7 @@ CNetConfigManager::~CNetConfigManager()
    stopAsioNet();
 }
 
-bool CNetConfigManager::startAsioNet(Mode _mode, string _host,string _port){
+bool CNetConfigManager::startAsioNet(CAsioSocketSimple::ASMode _mode, std::string _host,std::string _port){
     m_mode = _mode;
     m_host = _host;
     m_port = _port;
@@ -113,14 +113,14 @@ bool CNetConfigManager::stopAsioNet(){
     return false;
 }
 
-void CNetConfigManager::addHandler(Events _event, std::function<void(std::string host)> _func){
+void CNetConfigManager::addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::string host)> _func){
     switch(_event){
-        case CONNECT:{
-            this->m_callback_Str.addListener(CONNECT,_func);
+        case CAsioSocketSimple::ASEvents::AS_CONNECT:{
+            this->m_callback_Str.addListener((int)CAsioSocketSimple::ASEvents::AS_CONNECT,_func);
             break;
         }
-        case DISCONNECT:{
-            this->m_callback_Str.addListener(DISCONNECT,_func);
+        case CAsioSocketSimple::ASEvents::AS_DISCONNECT:{
+            this->m_callback_Str.addListener((int)CAsioSocketSimple::ASEvents::AS_DISCONNECT,_func);
             break;
         }
         default:
@@ -129,26 +129,26 @@ void CNetConfigManager::addHandler(Events _event, std::function<void(std::string
 }
 
 void CNetConfigManager::addHandlerError(std::function<void(std::error_code error)> _func){
-    this->m_callback_Error.addListener(ERROR,_func);   
+    this->m_callback_Error.addListener((int)CAsioSocketSimple::ASEvents::AS_ERROR,_func);
 }
 
-void CNetConfigManager::addHandlerSentCallback(function<void(error_code,int)> _func){
-    this->m_callback_ErrorInt.addListener(SEND_DATA,_func);
+void CNetConfigManager::addHandlerSentCallback(std::function<void(std::error_code,int)> _func){
+    this->m_callback_ErrorInt.addListener((int)CAsioSocketSimple::ASEvents::AS_SEND_DATA,_func);
 }
 
-void CNetConfigManager::addHandlerReceiveStrStr(function<void(string,string)> _func){
+void CNetConfigManager::addHandlerReceiveStrStr(std::function<void(std::string,std::string)> _func){
     this->m_callback_StrStr.addListener(HEADER_STR_STR,_func);
 }
 
-void CNetConfigManager::addHandlerReceiveStrInt(function<void(string, uint32_t)> _func) {
+void CNetConfigManager::addHandlerReceiveStrInt(std::function<void(std::string, uint32_t)> _func) {
     this->m_callback_StrInt.addListener(HEADER_STR_INT,_func);
 }
 
-void CNetConfigManager::addHandlerReceiveStrDouble(function<void(string, double)> _func) {
+void CNetConfigManager::addHandlerReceiveStrDouble(std::function<void(std::string, double)> _func) {
     this->m_callback_StrDouble.addListener(HEADER_STR_DOUBLE,_func);
 }
 
-void CNetConfigManager::addHandlerReceiveCommand(function<void(uint32_t)> _func) {
+void CNetConfigManager::addHandlerReceiveCommand(std::function<void(uint32_t)> _func) {
     this->m_callback_Int.addListener(HEADER_COMMAND,_func);
 }
 
@@ -163,22 +163,22 @@ bool CNetConfigManager::start(){
     m_asionet = new CAsioNetSimple(m_mode, m_host, m_port);
     m_asionet->addCall_Connect([this](std::string host){
                                         //LOG_P("Connected: %s\n",host.c_str() );
-                                        this->m_callback_Str.emitEvent(CONNECT,host);                                         
+                                        this->m_callback_Str.emitEvent((int)CAsioSocketSimple::ASEvents::AS_CONNECT,host);
                                     });
     m_asionet->addCall_Disconnect([this](std::string host)
                                     {
                                         //LOG_P("Disconnected: %s \n",host.c_str());
-                                        this->m_callback_Str.emitEvent(DISCONNECT,host);
+                                        this->m_callback_Str.emitEvent((int)CAsioSocketSimple::ASEvents::AS_DISCONNECT,host);
                                     });
-    m_asionet->addCall_Error([this](error_code error)
+    m_asionet->addCall_Error([this](std::error_code error)
                                     {
                                         //LOG_P("Error: %d (%s)\n", error.value(),error.message().c_str());
-                                        this->m_callback_Error.emitEvent(ERROR,error);
+                                        this->m_callback_Error.emitEvent((int)CAsioSocketSimple::ASEvents::AS_ERROR,error);
                                     });
-    m_asionet->addCall_Send([this](error_code error,size_t size)
+    m_asionet->addCall_Send([this](std::error_code error,size_t size)
                                     {
                                         //LOG_P("Data sent (%d): %d\n",size,error.value() );
-                                        this->m_callback_ErrorInt.emitEvent(SEND_DATA,error,size);
+                                        this->m_callback_ErrorInt.emitEvent((int)CAsioSocketSimple::ASEvents::AS_SEND_DATA,error,size);
                                     });
     
     m_asionet->addCall_Received(std::bind(&CNetConfigManager::receiveHandler, this, std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
@@ -192,7 +192,7 @@ bool CNetConfigManager::isConnected(){
     return m_asionet->isConnected();
 }
 
-bool CNetConfigManager::sendData(string key,string value,bool async){
+bool CNetConfigManager::sendData(std::string key,std::string value,bool async){
     if (!m_asionet) return false;
     if (!m_asionet->isConnected()) return false;
     size_t len = 0;
@@ -203,7 +203,7 @@ bool CNetConfigManager::sendData(string key,string value,bool async){
     return ret;
 }
 
-bool CNetConfigManager::sendData(string key,uint32_t value,bool async){
+bool CNetConfigManager::sendData(std::string key,uint32_t value,bool async){
     if (!m_asionet) return false;
     if (!m_asionet->isConnected()) return false;
     size_t len = 0;
@@ -213,7 +213,7 @@ bool CNetConfigManager::sendData(string key,uint32_t value,bool async){
         delete[] buff; // delete only in sync mode
     return ret;
 }
-bool CNetConfigManager::sendData(string key,double value,bool async){
+bool CNetConfigManager::sendData(std::string key,double value,bool async){
     if (!m_asionet) return false;
     if (!m_asionet->isConnected()) return false;
     size_t len = 0;
@@ -235,7 +235,7 @@ bool CNetConfigManager::sendData(uint32_t command,bool async){
 }
 
 
-void CNetConfigManager::receiveHandler(error_code error,uint8_t* _buff,size_t _size){
+void CNetConfigManager::receiveHandler(std::error_code error,uint8_t* _buff,size_t _size){
     UNUSED(error);
     m_buffers.push_back(_buff,_size);
 
@@ -276,7 +276,7 @@ void CNetConfigManager::receiveHandler(error_code error,uint8_t* _buff,size_t _s
             m_buffers.removeAtStart(segment_size);
             this->m_callback_Int.emitEvent(HEADER_COMMAND,command);
         }else{
-            throw runtime_error("Broken header");
+            throw std::runtime_error("Broken header");
         }
 
     }

@@ -14,35 +14,31 @@
 #include "asio.hpp"
 #include "EventHandlers.h"
 
-
-using  namespace std;
-using  namespace asio;
-
 namespace  asionet_simple {
-
-    enum Mode {
-        SERVER,
-        CLIENT,
-        NONE
-    };
-
-    enum Events{
-        CONNECT,
-        DISCONNECT,
-        ERROR,
-        SEND_DATA,
-        RECIVED_DATA};
-
-    typedef uint8_t* buffer;
 
     class CAsioSocketSimple {
     public:
-       
 
-        using Ptr = shared_ptr<CAsioSocketSimple>;
+        enum class ASMode {
+            AS_SERVER,
+            AS_CLIENT,
+            AS_NONE
+        };
 
-        static Ptr Create(asio::io_service &io, string host, string port);
-        CAsioSocketSimple(asio::io_service &io, string host, string port);
+        enum class ASEvents{
+            AS_CONNECT,
+            AS_DISCONNECT,
+            AS_ERROR,
+            AS_SEND_DATA,
+            AS_RECIVED_DATA
+        };
+
+        typedef uint8_t* as_buffer;
+
+        using Ptr = std::shared_ptr<CAsioSocketSimple>;
+
+        static Ptr Create(asio::io_service &io, std::string host, std::string port);
+        CAsioSocketSimple(asio::io_service &io, std::string host, std::string port);
         ~CAsioSocketSimple();
 
         void InitServer();
@@ -50,11 +46,11 @@ namespace  asionet_simple {
         void CloseSocket();
         bool IsConnected();
         // Buffer will be deleted after send in async mode. In sync mode not deleted
-        bool sendBuffer(bool async, buffer _buffer, size_t _size);
-        void addHandler(Events _event, std::function<void(string host)> _func);
-        void addHandler(Events _event, std::function<void(error_code error)> _func);
-        void addHandler(Events _event, std::function<void(error_code error,size_t)> _func);
-        void addHandler(Events _event, std::function<void(error_code error,uint8_t*,size_t)> _func);
+        bool sendBuffer(bool async, as_buffer _buffer, size_t _size);
+        void addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::string host)> _func);
+        void addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::error_code error)> _func);
+        void addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::error_code error,size_t)> _func);
+        void addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::error_code error,uint8_t*,size_t)> _func);
 
     private:
 
@@ -68,13 +64,13 @@ namespace  asionet_simple {
         void HandlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint8_t *buffer);
         void HandlerReceiveFromServer(const asio::error_code &ErrorCode, size_t bytes_transferred);
 
-        Mode m_mode;
-        string m_host;
-        string m_port;
-        io_service &m_io_service;
+        CAsioSocketSimple::ASMode m_mode;
+        std::string m_host;
+        std::string m_port;
+        asio::io_service &m_io_service;
 
-        shared_ptr<asio::ip::tcp::socket> m_tcp_socket;
-        shared_ptr<asio::ip::tcp::acceptor> m_tcp_acceptor;
+        std::shared_ptr<asio::ip::tcp::socket> m_tcp_socket;
+        std::shared_ptr<asio::ip::tcp::acceptor> m_tcp_acceptor;
         asio::ip::tcp::endpoint m_tcp_endpoint;
 
         uint8_t *m_SocketReadBuffer;

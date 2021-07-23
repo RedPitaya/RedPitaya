@@ -6,12 +6,12 @@
 
 namespace  asionet_simple {
 
-    CAsioNetSimple::Ptr CAsioNetSimple::Create(Mode _mode,std::string _host , std::string _port) {
+    CAsioNetSimple::Ptr CAsioNetSimple::Create(CAsioSocketSimple::ASMode _mode,std::string _host , std::string _port) {
 
         return std::make_shared<CAsioNetSimple>(_mode,_host,_port);
     }
 
-    CAsioNetSimple::CAsioNetSimple(Mode _mode,std::string _host , std::string _port) :
+    CAsioNetSimple::CAsioNetSimple( CAsioSocketSimple::ASMode _mode,std::string _host , std::string _port) :
             m_mode(_mode),
             m_host(_host),
             m_port(_port),
@@ -42,10 +42,10 @@ namespace  asionet_simple {
     void CAsioNetSimple::start()  {
         if (m_IsRun)
             return;
-        if (m_mode == Mode::SERVER) {
+        if (m_mode == CAsioSocketSimple::ASMode::AS_SERVER) {
             m_server->InitServer();
         }
-        if (m_mode == Mode::CLIENT){
+        if (m_mode == CAsioSocketSimple::ASMode::AS_CLIENT){
             m_server->InitClient();
         }
         m_IsRun = true;
@@ -57,26 +57,26 @@ namespace  asionet_simple {
     }
 
     void CAsioNetSimple::addCall_Connect(std::function<void(std::string host)> _func){
-        if (m_server) m_server->addHandler(Events::CONNECT, _func);        
+        if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_CONNECT, _func);
     }
 
     void CAsioNetSimple::addCall_Disconnect(std::function<void(std::string host)> _func){
-        if (m_server) m_server->addHandler(Events::DISCONNECT, _func);        
+        if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_DISCONNECT, _func);
     }
 
     void CAsioNetSimple::addCall_Error(std::function<void(std::error_code error)> _func){
-        if (m_server) m_server->addHandler(Events::ERROR, _func);        
+        if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_ERROR, _func);
     }
 
     void CAsioNetSimple::addCall_Send(std::function<void(std::error_code error,size_t)> _func){
-        if (m_server) m_server->addHandler(Events::SEND_DATA, _func);
+        if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_SEND_DATA, _func);
     }
 
-    void CAsioNetSimple::addCall_Received(std::function<void(std::error_code error,asionet_simple::buffer, size_t)> _func){
-        if (m_server) m_server->addHandler(Events::RECIVED_DATA, _func);
+    void CAsioNetSimple::addCall_Received(std::function<void(std::error_code error,CAsioSocketSimple::as_buffer, size_t)> _func){
+        if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_RECIVED_DATA, _func);
     }
 
-    bool CAsioNetSimple::sendData(bool async,asionet_simple::buffer _buffer,size_t _size){
+    bool CAsioNetSimple::sendData(bool async,CAsioSocketSimple::as_buffer _buffer,size_t _size){
         if (m_server) 
             return m_server->sendBuffer(async,_buffer,_size);
         return false;

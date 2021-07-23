@@ -7,21 +7,24 @@ set(CMAKE_CXX_STANDARD 11)
 
 include(FetchContent)
 
+set (BUILD_SHARED_LIBS OFF CACHE INTERNAL "Turn off shared")
+set (JSONCPP_WITH_TESTS OFF CACHE INTERNAL "Turn off jsontest")
+
 FetchContent_Declare(json
         GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp
         GIT_TAG 1.9.4
-        CMAKE_ARGS "-DBUILD_SHARED_LIBS=OFF")
-
-FetchContent_GetProperties(json)
-if(NOT json_POPULATED)
-    FetchContent_Populate(json)
-    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
+        )
+FetchContent_MakeAvailable(json)
+#FetchContent_GetProperties(json)
+#if(NOT json_POPULATED)
+#    FetchContent_Populate(json)
+#    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+#endif()
 
 add_library(${PROJECT_NAME})
 
 target_compile_options(rpsasrv
-    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive -static -D${MODEL})
+    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive -D${MODEL})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}
@@ -81,6 +84,9 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
 endif()
 
+add_library(jsoncpp STATIC IMPORTED)
+set_property(TARGET jsoncpp PROPERTY
+        IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libjsoncpp.a)
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE pthread gcc stdc++ ${Boost_LIBRARIES} jsoncpp_lib)
+    PRIVATE pthread gcc stdc++ ${Boost_LIBRARIES} jsoncpp)

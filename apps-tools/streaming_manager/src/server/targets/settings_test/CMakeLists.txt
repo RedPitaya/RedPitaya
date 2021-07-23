@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(settings_test)
 
+message(${CMAKE_BINARY_DIR})
+
 add_executable(settings_test server.cpp)
 
 target_compile_options(settings_test
@@ -14,7 +16,6 @@ target_include_directories(settings_test
         ${CMAKE_SOURCE_DIR}/libs/src
         ${CMAKE_SOURCE_DIR}/libs/src/common
         ${CMAKE_SOURCE_DIR}/libs/asio/include)
-
 
 target_link_libraries(settings_test
     PRIVATE  rpsasrv pthread)
