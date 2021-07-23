@@ -1,8 +1,6 @@
 #pragma once
 #include <string>
 
-using namespace std;
-
 class CStreamSettings {
 
 public:
@@ -50,13 +48,17 @@ public:
     CStreamSettings();
     auto reset() -> void;
     auto isSetted() -> bool;
-    auto writeToFile(string _filename) -> bool;
-    auto readFromFile(string _filename) -> bool;
+    auto setValue(std::string key,std::string value) -> bool;
+    auto setValue(std::string key,uint32_t value) -> bool;
+    auto setValue(std::string key,double value) -> bool;
 
-    auto setHost(string _host) -> void;
-    auto getHost() -> string ;
-    auto setPort(string _port) -> void;
-    auto getPort() -> string;
+    auto writeToFile(std::string _filename) -> bool;
+    auto readFromFile(std::string _filename) -> bool;
+
+    auto setHost(std::string _host) -> void;
+    auto getHost() -> std::string ;
+    auto setPort(std::string _port) -> void;
+    auto getPort() -> std::string;
     auto setProtocol(Protocol _port) -> void;
     auto getProtocol() -> Protocol;
     auto setSamples(int32_t _samples) -> void;
@@ -95,8 +97,8 @@ private:
     bool m_Bres;
     bool m_Bdecimation;
 
-    string      m_host;
-    string      m_port;
+    std::string      m_host;
+    std::string      m_port;
     Protocol    m_protocol;
     uint32_t    m_samples;
     DataFormat  m_format;

@@ -10,6 +10,22 @@ using namespace asionet_simple;
 class CNetConfigManager
 {
 public:
+    enum class Commands{
+        BEGIN_SEND_SETTING,
+        END_SEND_SETTING,
+        SETTING_GET_SUCCES,
+        SETTING_GET_FAIL,
+        STOP_STREAMING,
+        START_STREAMING,
+        SERVER_STOPPED,
+        SERVER_STARTED,
+        SAVE_SETTING_TO_FILE,
+        SAVE_TO_FILE_SUCCES,
+        SAVE_TO_FILE_FAIL,
+        LOAD_SETTING_FROM_FILE,
+        LOAD_FROM_FILE_SUCCES,
+        LOAD_FROM_FILE_FAIL
+    };
 
     static std::shared_ptr<CNetConfigManager> instance()
     {
@@ -37,6 +53,7 @@ public:
     auto sendData(std::string key,uint32_t value,bool async = true) -> bool;
     auto sendData(std::string key,double value,bool async = true) -> bool;
     auto sendData(uint32_t command,bool async = true) -> bool;
+    auto sendData(Commands command,bool async = true) -> bool;
 
 private:
     struct dyn_buffer{
@@ -62,14 +79,14 @@ private:
 
     std::string                      m_host;
     std::string                      m_port;
-    CAsioNetSimple*             m_asionet;
-    CAsioSocketSimple::ASMode                        m_mode;
+    CAsioNetSimple*                  m_asionet;
+    CAsioSocketSimple::ASMode        m_mode;
     EventList<std::string>           m_callback_Str;
     EventList<std::string,std::string>    m_callback_StrStr;
     EventList<std::string,uint32_t>  m_callback_StrInt;
     EventList<std::string,double>    m_callback_StrDouble;
-    EventList<uint32_t>         m_callback_Int;
+    EventList<uint32_t>              m_callback_Int;
     EventList<std::error_code>       m_callback_Error;
     EventList<std::error_code,int>   m_callback_ErrorInt;
-    dyn_buffer                  m_buffers;
+    dyn_buffer                       m_buffers;
 };

@@ -55,6 +55,8 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/StreamingApplication.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/UioParser.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
@@ -73,6 +75,8 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp

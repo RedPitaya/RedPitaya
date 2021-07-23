@@ -234,6 +234,17 @@ bool CNetConfigManager::sendData(uint32_t command,bool async){
     return ret;
 }
 
+auto CNetConfigManager::sendData(Commands command,bool async) -> bool{
+    if (!m_asionet) return false;
+    if (!m_asionet->isConnected()) return false;
+    size_t len = 0;
+    auto buff = pack(static_cast<uint32_t>(command),&len);
+    bool ret = m_asionet->sendData(async,buff,len);
+    if (!async)
+        delete[] buff; // delete only in sync mode
+    return ret;
+}
+
 
 void CNetConfigManager::receiveHandler(std::error_code error,uint8_t* _buff,size_t _size){
     UNUSED(error);

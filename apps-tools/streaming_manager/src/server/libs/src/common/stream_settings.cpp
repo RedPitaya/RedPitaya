@@ -2,6 +2,9 @@
 #include <fstream>
 #include "stream_settings.h"
 #include "json/json.h"
+#define UNUSED(x) [&x]{}()
+
+using namespace std;
 
 CStreamSettings::CStreamSettings(){
     m_host = "";
@@ -234,6 +237,83 @@ void CStreamSettings::setDecimation(uint32_t _decimation){
 uint32_t CStreamSettings::getDecimation(){
     return m_decimation;
 }
+
+auto CStreamSettings::setValue(std::string key,std::string value) -> bool{
+    if (key == "host") {
+        setHost(value);
+        return true;
+    }
+
+    if (key == "port") {
+        setPort(value);
+        return true;
+    }
+    return false;
+}
+
+auto CStreamSettings::setValue(std::string key,uint32_t value) -> bool{
+    if (key == "protocol") {
+        setProtocol(static_cast<Protocol>(value));
+        return true;
+    }
+
+    if (key == "samples") {
+        setSamples(value);
+        return true;
+    }
+
+    if (key == "format") {
+        setFormat(static_cast<DataFormat>(value));
+        return true;
+    }
+
+    if (key == "type") {
+        setType(static_cast<DataType>(value));
+        return true;
+    }
+
+    if (key == "channels") {
+        setChannels(static_cast<Channel>(value));
+        return true;
+    }
+
+    if (key == "resolution") {
+        setResolution(static_cast<Resolution>(value));
+        return true;
+    }
+
+    if (key == "decimation") {
+        setDecimation(value);
+        return true;
+    }
+
+#ifndef Z20
+    if (key == "attenuator") {
+        setAttenuator(static_cast<Attenuator>(value));
+        return true;
+    }
+
+    if (key == "calibration") {
+        setCalibration(static_cast<bool>(value));
+        return true;
+    }
+#endif
+
+#ifdef Z20_250_12
+    if (key == "coupling") {
+        setAC_DC(static_cast<AC_DC>(value));
+        return true;
+    }
+#endif
+    return false;
+}
+
+auto setValue(std::string key,double value) -> bool{
+    UNUSED(key);
+    UNUSED(value);
+    return false;
+}
+
 
 #ifndef Z20
 void CStreamSettings::setAttenuator(CStreamSettings::Attenuator _attenuator){
