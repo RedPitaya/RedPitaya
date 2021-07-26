@@ -16,15 +16,9 @@ CStreamSettings::CStreamSettings(){
     m_channels = CH1;
     m_res = BIT_8;
     m_decimation = 1;
-
-#ifndef Z20
     m_attenuator = A_1_1;
     m_calib = false;
-#endif
-
-#ifdef Z20_250_12
     m_ac_dc = AC;
-#endif
     reset();
 }
 
@@ -38,15 +32,9 @@ void CStreamSettings::reset(){
     m_Bchannels =
     m_Bres =
     m_Bdecimation = false;
-
-#ifndef Z20
     m_Battenuator = false;
     m_Bcalib = false;
-#endif
-
-#ifdef Z20_250_12
     m_Bac_dc = false;
-#endif
 }
 
 bool CStreamSettings::isSetted(){
@@ -59,15 +47,10 @@ bool CStreamSettings::isSetted(){
             m_Btype &&
             m_Bchannels &&
             m_Bres &&
-            m_Bdecimation;
-
-#ifndef Z20
-    res = res && m_Battenuator && m_Bcalib;
-#endif
-
-#ifdef Z20_250_12
-    res = res && m_Bac_dc;
-#endif
+            m_Bdecimation &&
+            m_Battenuator &&
+            m_Bcalib &&
+            m_Bac_dc;
 
     return res;
 }
@@ -84,19 +67,14 @@ bool CStreamSettings::writeToFile(string _filename){
         root["channels"] = getChannels();
         root["resolution"] = getResolution();
         root["decimation"] = getDecimation();
-#ifndef Z20
         root["attenuator"] = getAttenuator();
         root["calibration"] = getCalibration();
-#endif
-
-#ifdef Z20_250_12
         root["coupling"] = getAC_DC();
-#endif
         Json::StreamWriterBuilder builder;
         const std::string json_file = Json::writeString(builder, root);
         ofstream file(_filename , 	ios::out | ios::trunc);
-        if (!file) {
-            std::cerr << "file open failed: " << std::strerror(errno) << "\n";
+        if (!file.is_open()) {
+            std::cerr << "file write failed: " << std::strerror(errno) << "\n";
             return false;
         }
         file << json_file;
@@ -109,8 +87,8 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
 
     Json::Value root;
     std::ifstream file(_filename , 	ios::in);
-    if (!file) {
-        std::cerr << "file open failed: " << std::strerror(errno) << "\n";
+    if (!file.is_open()) {
+        std::cerr << "file read failed: " << std::strerror(errno) << "\n";
         return false;
     }
 
@@ -140,17 +118,12 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         setResolution(static_cast<Resolution>(root["resolution"].asInt()));
     if (root.isMember("decimation"))
         setDecimation(root["decimation"].asUInt());
-#ifndef Z20
     if (root.isMember("attenuator"))
         setAttenuator(static_cast<Attenuator>(root["attenuator"].asInt()));
     if (root.isMember("calibration"))
         setCalibration(root["calibration"].asBool());
-#endif
-
-#ifdef Z20_250_12
     if (root.isMember("coupling"))
         setAC_DC(static_cast<AC_DC>(root["coupling"].asInt()));
-#endif
     return isSetted();
 
 }
@@ -287,7 +260,6 @@ auto CStreamSettings::setValue(std::string key,uint32_t value) -> bool{
         return true;
     }
 
-#ifndef Z20
     if (key == "attenuator") {
         setAttenuator(static_cast<Attenuator>(value));
         return true;
@@ -297,14 +269,11 @@ auto CStreamSettings::setValue(std::string key,uint32_t value) -> bool{
         setCalibration(static_cast<bool>(value));
         return true;
     }
-#endif
 
-#ifdef Z20_250_12
     if (key == "coupling") {
         setAC_DC(static_cast<AC_DC>(value));
         return true;
     }
-#endif
     return false;
 }
 
@@ -315,7 +284,6 @@ auto CStreamSettings::setValue(std::string key,double value) -> bool{
 }
 
 
-#ifndef Z20
 void CStreamSettings::setAttenuator(CStreamSettings::Attenuator _attenuator){
     m_attenuator = _attenuator;
     m_Battenuator = true;
@@ -333,9 +301,7 @@ void CStreamSettings::setCalibration(bool _calibration){
 bool CStreamSettings::getCalibration(){
     return m_calib;
 }
-#endif
 
-#ifdef Z20_250_12
 void CStreamSettings::setAC_DC(CStreamSettings::AC_DC _value){
     m_ac_dc = _value;
     m_Bac_dc = true;
@@ -344,4 +310,3 @@ void CStreamSettings::setAC_DC(CStreamSettings::AC_DC _value){
 CStreamSettings::AC_DC CStreamSettings::getAC_DC(){
     return m_ac_dc;
 }
-#endif

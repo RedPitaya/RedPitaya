@@ -29,6 +29,7 @@ namespace  asionet_simple {
             AS_CONNECT,
             AS_DISCONNECT,
             AS_ERROR,
+            AS_CONNECT_TIMEOUT,
             AS_SEND_DATA,
             AS_RECIVED_DATA
         };
@@ -72,10 +73,11 @@ namespace  asionet_simple {
         std::shared_ptr<asio::ip::tcp::socket> m_tcp_socket;
         std::shared_ptr<asio::ip::tcp::acceptor> m_tcp_acceptor;
         asio::ip::tcp::endpoint m_tcp_endpoint;
-
+        asio::steady_timer  m_timoutTimer;
         uint8_t *m_SocketReadBuffer;
         bool m_is_tcp_connected;
-        
+        bool m_disableRestartServer;
+
         EventList<std::string> m_callback_Str;
         EventList<std::error_code> m_callback_Error;
         EventList<std::error_code,size_t> m_callback_ErrorInt;

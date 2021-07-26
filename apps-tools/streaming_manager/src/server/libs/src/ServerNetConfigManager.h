@@ -13,7 +13,7 @@ public:
         BROADCAST_ERROR
     };
 
-    enum class Commands{
+    enum class Events{
         GET_NEW_SETTING,
         STOP_STREAMING,
         START_STREAMING,
@@ -29,7 +29,7 @@ public:
     auto sendServerStopped() -> bool;
 
     auto addHandlerError(std::function<void(ServerNetConfigManager::Errors)> _func) -> void;
-    auto addHandler(ServerNetConfigManager::Commands event,std::function<void()> _func) -> void;
+    auto addHandler(ServerNetConfigManager::Events event, std::function<void()> _func) -> void;
 
 private:
     enum class States{
@@ -47,6 +47,7 @@ private:
     auto connected(std::string host) -> void;
     auto disconnected(std::string host) -> void;
     auto serverError(std::error_code error) -> void;
+    auto sendConfig(bool _async) -> bool;
 
     States m_currentState;
     EventList<Errors> m_errorCallback;

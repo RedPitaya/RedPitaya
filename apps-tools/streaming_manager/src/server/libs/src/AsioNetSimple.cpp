@@ -68,6 +68,10 @@ namespace  asionet_simple {
         if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_ERROR, _func);
     }
 
+    void CAsioNetSimple::addCall_TimeoutError(std::function<void(std::error_code error)> _func){
+        if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_CONNECT_TIMEOUT, _func);
+    }
+
     void CAsioNetSimple::addCall_Send(std::function<void(std::error_code error,size_t)> _func){
         if (m_server) m_server->addHandler(CAsioSocketSimple::ASEvents::AS_SEND_DATA, _func);
     }

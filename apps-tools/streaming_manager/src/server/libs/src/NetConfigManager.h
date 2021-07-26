@@ -15,6 +15,7 @@ public:
         END_SEND_SETTING,
         SETTING_GET_SUCCES,
         SETTING_GET_FAIL,
+        REQUEST_SERVER_SETTINGS,
         STOP_STREAMING,
         START_STREAMING,
         SERVER_STOPPED,
@@ -48,6 +49,8 @@ public:
     auto addHandler(CAsioSocketSimple::ASEvents _event, std::function<void(std::string host)> _func) -> void;
     auto addHandlerSentCallback(std::function<void(std::error_code,int)> _func) -> void;
     auto addHandlerError(std::function<void(std::error_code error)> _func) -> void;
+    auto addHandlerTimeout(std::function<void(std::error_code error)> _func) -> void;
+
     auto addHandlerReceiveStrStr(std::function<void(std::string,std::string)> _func) -> void;
     auto addHandlerReceiveStrInt(std::function<void(std::string,uint32_t)> _func) -> void;
     auto addHandlerReceiveStrDouble(std::function<void(std::string,double)> _func) -> void;

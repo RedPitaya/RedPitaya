@@ -2,6 +2,7 @@
 #include "ClientNetConfigManager.h"
 // IN seconds
 #define BROADCAST_TIMEOUT 10
+#define UNUSED(x) [&x]{}()
 
 std::mutex g_broadcast_mutex;
 std::mutex g_client_mutex;
@@ -21,13 +22,14 @@ ClientNetConfigManager::~ClientNetConfigManager(){
 auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -> void{
     m_pBroadcast = asionet_broadcast::CAsioBroadcastSocket::Create(host,port);
     m_pBroadcast->InitClient();
-    m_pBroadcast->addHandler(asionet_broadcast::CAsioBroadcastSocket::ABEvents::AB_ERROR,[this](std::error_code er){
+    m_pBroadcast->addHandler(asionet_broadcast::CAsioBroadcastSocket::ABEvents::AB_ERROR,[this,host](std::error_code er){
         fprintf(stderr,"[ServerNetConfigManager] Broadcast client error: %s (%d)\n",er.message().c_str(),er.value());
-        m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR);
+        m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR,host);
     });
 
-    m_pBroadcast->addHandler(asionet_broadcast::CAsioBroadcastSocket::ABEvents::AB_RECIVED_DATA,[this](std::error_code er,uint8_t* buf,size_t size){
+    m_pBroadcast->addHandler(asionet_broadcast::CAsioBroadcastSocket::ABEvents::AB_RECIVED_DATA,[this,host](std::error_code er,uint8_t* buf,size_t size){
         bool riseEmit = false;
+        std::string h = "";
         if (!er) {
             const std::lock_guard<std::mutex> lock(g_broadcast_mutex);
             BroadCastClients cl;
@@ -40,10 +42,10 @@ auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -
             if (s[s.size()-1] == 'S'){
                 cl.mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
             }else{
-                m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR_PARSE);
+                m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR_PARSE,host);
             }
             s.pop_back();
-            cl.host = s;
+            cl.host = h = s;
             auto find = std::find_if(std::begin(m_broadcastClients),std::end(m_broadcastClients),[&cl](const BroadCastClients &c){
                 return c.host == cl.host;
             });
@@ -58,10 +60,10 @@ auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -
             });
         }else{
             fprintf(stderr,"[ServerNetConfigManager] Broadcast client error: %s (%d)\n",er.message().c_str(),er.value());
-            m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR);
+            m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR,host);
         }
 
-        if (riseEmit) m_callbacks.emitEvent((int)Commands::BROADCAST_NEW_CLIENT);
+        if (riseEmit) m_callbacksStr.emitEvent((int)Events::BROADCAST_NEW_CLIENT,h);
     });
 }
 
@@ -75,138 +77,216 @@ auto ClientNetConfigManager::getBroadcastClients() -> const std::list<ClientNetC
 }
 
 
-auto ClientNetConfigManager::addHandlerError(std::function<void(ClientNetConfigManager::Errors)> _func) -> void{
+auto ClientNetConfigManager::addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string host)> _func) -> void{
     m_errorCallback.addListener(0,_func);
 }
 
-auto ClientNetConfigManager::addHandler(ClientNetConfigManager::Commands event,std::function<void()> _func) -> void{
-    m_callbacks.addListener(static_cast<int>(event),_func);
+auto ClientNetConfigManager::addHandler(ClientNetConfigManager::Events event, std::function<void(std::string)> _func) -> void{
+    m_callbacksStr.addListener(static_cast<int>(event),_func);
 }
 
 auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,std::string port) -> void{
     m_clients.clear();
     for(std::string host:_hosts){
-        Clients cl;
-        cl.m_manager = std::make_shared<CNetConfigManager>();
-        cl.m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
-        cl.m_manager->addHandlerReceiveCommand(std::bind(&ClientNetConfigManager::receiveCommand, this, std::placeholders::_1,cl.m_manager));
-        cl.m_manager->addHandlerReceiveStrStr(std::bind(&ClientNetConfigManager::receiveValueStr, this, std::placeholders::_1, std::placeholders::_2,cl.m_manager));
-        cl.m_manager->addHandlerReceiveStrInt(std::bind(&ClientNetConfigManager::receiveValueInt, this, std::placeholders::_1, std::placeholders::_2,cl.m_manager));
-        cl.m_manager->addHandlerReceiveStrDouble(std::bind(&ClientNetConfigManager::receiveValueDouble, this, std::placeholders::_1, std::placeholders::_2,cl.m_manager));
+        auto cl = std::make_shared<Clients>();
+        cl->m_manager = std::make_shared<CNetConfigManager>();
+        cl->m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
+        cl->m_manager->addHandlerReceiveCommand(std::bind(&ClientNetConfigManager::receiveCommand, this, std::placeholders::_1,cl));
+        cl->m_manager->addHandlerReceiveStrStr(std::bind(&ClientNetConfigManager::receiveValueStr, this, std::placeholders::_1, std::placeholders::_2,cl));
+        cl->m_manager->addHandlerReceiveStrInt(std::bind(&ClientNetConfigManager::receiveValueInt, this, std::placeholders::_1, std::placeholders::_2,cl));
+        cl->m_manager->addHandlerReceiveStrDouble(std::bind(&ClientNetConfigManager::receiveValueDouble, this, std::placeholders::_1, std::placeholders::_2,cl));
 
-        cl.m_manager->addHandlerError(std::bind(&ClientNetConfigManager::serverError, this, std::placeholders::_1,cl.m_manager));
-        cl.m_manager->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_CLIENT,host,port);
+        cl->m_manager->addHandlerError(std::bind(&ClientNetConfigManager::serverError, this, std::placeholders::_1,cl));
+        cl->m_manager->addHandlerTimeout(std::bind(&ClientNetConfigManager::connectTimeoutError, this, std::placeholders::_1,cl));
+
+        cl->m_manager->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_CLIENT,host,port);
         m_clients.push_back(cl);
     }
 }
 
-auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<CNetConfigManager> sender) -> void{
+auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Clients> sender) -> void{
     CNetConfigManager::Commands c = static_cast<CNetConfigManager::Commands>(command);
 
     if (c == CNetConfigManager::Commands::MASTER_CONNETED){
         g_client_mutex.lock();
-        auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&sender](const Clients& c){
-            return c.m_manager == sender;
-        });
-        if (it != std::end(m_clients)){
-            it->m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
-        }
+        sender->m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
         g_client_mutex.unlock();
-        m_callbacks.emitEvent(static_cast<int>(Commands::SERVER_CONNECTED));
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_CONNECTED),sender->m_manager->getHost());
     }
     if (c == CNetConfigManager::Commands::SLAVE_CONNECTED){
         g_client_mutex.lock();
-        auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&sender](const Clients& c){
-            return c.m_manager == sender;
-        });
-        if (it != std::end(m_clients)){
-            it->m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
-        }
+        sender->m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
         g_client_mutex.unlock();
-        m_callbacks.emitEvent(static_cast<int>(Commands::SERVER_CONNECTED));
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_CONNECTED),sender->m_manager->getHost());
     }
 
-//    if (c == CNetConfigManager::Commands::END_SEND_SETTING){
-//        m_currentState = States::NORMAL;
-//        if (isSetted()){
-//            m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
-//            m_callbacks.emitEvent(static_cast<int>(Commands::GET_NEW_SETTING));
-//        }else{
-//            reset();
-//            m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
-//        }
+    if (c == CNetConfigManager::Commands::BEGIN_SEND_SETTING){
+
+        g_client_mutex.lock();
+        sender->m_current_state = Clients::States::GET_DATA;
+        sender->m_client_settings.reset();
+        g_client_mutex.unlock();
+    }
+
+    if (c == CNetConfigManager::Commands::END_SEND_SETTING){
+        bool emitGetSettings = false;
+        g_client_mutex.lock();
+        sender->m_current_state = Clients::States::NORMAL;
+        if (sender->m_client_settings.isSetted()){
+            sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
+            emitGetSettings = true;
+        }else{
+            sender->m_client_settings.reset();
+            sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
+        }
+        g_client_mutex.unlock();
+        if (emitGetSettings)
+            m_callbacksStr.emitEvent(static_cast<int>(Events::GET_NEW_SETTING),sender->m_manager->getHost());
+    }
+//
+//    if (c == CNetConfigManager::Events::START_STREAMING){
+//        m_callbacks.emitEvent(static_cast<int>(Events::START_STREAMING));
 //    }
 //
-//    if (c == CNetConfigManager::Commands::START_STREAMING){
-//        m_callbacks.emitEvent(static_cast<int>(Commands::START_STREAMING));
+//    if (c == CNetConfigManager::Events::STOP_STREAMING){
+//        m_callbacks.emitEvent(static_cast<int>(Events::STOP_STREAMING));
 //    }
 //
-//    if (c == CNetConfigManager::Commands::STOP_STREAMING){
-//        m_callbacks.emitEvent(static_cast<int>(Commands::STOP_STREAMING));
-//    }
-//
-//    if (c == CNetConfigManager::Commands::LOAD_SETTING_FROM_FILE){
+//    if (c == CNetConfigManager::Events::LOAD_SETTING_FROM_FILE){
 //        if (readFromFile(m_file_settings)){
-//            m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_SUCCES);
-//            m_callbacks.emitEvent(static_cast<int>(Commands::GET_NEW_SETTING));
+//            m_pNetConfManager->sendData(CNetConfigManager::Events::LOAD_FROM_FILE_SUCCES);
+//            m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
 //        }else{
-//            m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_FAIL);
+//            m_pNetConfManager->sendData(CNetConfigManager::Events::LOAD_FROM_FILE_FAIL);
 //        }
 //    }
 //
-//    if (c == CNetConfigManager::Commands::SAVE_SETTING_TO_FILE){
+//    if (c == CNetConfigManager::Events::SAVE_SETTING_TO_FILE){
 //        if (writeToFile(m_file_settings)){
-//            m_pNetConfManager->sendData(CNetConfigManager::Commands::SAVE_TO_FILE_SUCCES);
+//            m_pNetConfManager->sendData(CNetConfigManager::Events::SAVE_TO_FILE_SUCCES);
 //        }else{
-//            m_pNetConfManager->sendData(CNetConfigManager::Commands::SAVE_TO_FILE_FAIL);
+//            m_pNetConfManager->sendData(CNetConfigManager::Events::SAVE_TO_FILE_FAIL);
 //        }
 //    }
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
+    const std::lock_guard<std::mutex> lock(g_client_mutex);
     bool ret = true;
-    g_client_mutex.lock();
     for(auto &c : m_clients){
-        if (c.m_mode == asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE){
+        if (c->m_mode == asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE && c->m_manager->isConnected()){
             ret = false;
             break;
         }
     }
-    g_client_mutex.unlock();
     return ret;
 }
 
-auto ClientNetConfigManager::receiveValueStr(std::string key,std::string value,std::shared_ptr<CNetConfigManager> sender) -> void{
-//    if (m_currentState == States::GET_DATA){
-//        if (setValue(key,value)){
-//            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
-//        }
-//    }
+auto ClientNetConfigManager::receiveValueStr(std::string key,std::string value,std::shared_ptr<Clients> sender) -> void{
+    if (sender->m_current_state == Clients::States::GET_DATA){
+        if (sender->m_client_settings.setValue(key,value)){
+            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
+        }
+    }
 }
 
-auto ClientNetConfigManager::receiveValueInt(std::string key,uint32_t value,std::shared_ptr<CNetConfigManager> sender) -> void{
-//    if (m_currentState == States::GET_DATA){
-//        if (setValue(key,value)){
-//            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
-//        }
-//    }
+auto ClientNetConfigManager::receiveValueInt(std::string key,uint32_t value,std::shared_ptr<Clients> sender) -> void{
+    if (sender->m_current_state == Clients::States::GET_DATA){
+        if (sender->m_client_settings.setValue(key,value)){
+            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
+        }
+    }
 }
 
-auto ClientNetConfigManager::receiveValueDouble(std::string key,double value,std::shared_ptr<CNetConfigManager> sender) -> void{
-//    if (m_currentState == States::GET_DATA){
-//        if (setValue(key,value)){
-//            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
-//        }
-//    }
+auto ClientNetConfigManager::receiveValueDouble(std::string key,double value,std::shared_ptr<Clients> sender) -> void{
+    if (sender->m_current_state == Clients::States::GET_DATA){
+        if (sender->m_client_settings.setValue(key,value)){
+            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
+        }
+    }
 }
 
 
-auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<CNetConfigManager> sender) -> void{
-//    fprintf(stderr,"[ServerNetConfigManager] serverError: %s (%d)\n",error.message().c_str(),error.value());
-//    m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL);
-//    if (m_currentState == States::GET_DATA){
-//        reset();
-//        m_currentState = States::NORMAL;
-//        m_errorCallback.emitEvent(0,Errors::BREAK_RECEIVE_SETTINGS);
-//    }
+auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<Clients> sender) -> void{
+    fprintf(stderr,"[ClientNetConfigManager] Server error: %s (%d)\n",error.message().c_str(),error.value());
+    m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL,sender-> m_manager->getHost());
+    if (sender->m_current_state  == Clients::States::GET_DATA){
+        sender->m_client_settings.reset();
+        sender->m_current_state = Clients::States::NORMAL;
+        m_errorCallback.emitEvent(0,Errors::BREAK_RECEIVE_SETTINGS,sender->m_manager->getHost());
+    }
+}
+
+auto ClientNetConfigManager::connectTimeoutError(std::error_code error,std::shared_ptr<Clients> sender) -> void{
+    UNUSED(error);
+    m_errorCallback.emitEvent(0,Errors::CONNECT_TIMEOUT,sender->m_manager->getHost());
+}
+
+auto ClientNetConfigManager::sendConfigAll() -> void{
+    const std::lock_guard<std::mutex> lock(g_client_mutex);
+    for(const auto &c : m_clients){
+        if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE){
+            auto ret =  sendConfig(c,true);
+            if (!ret) {
+                c->m_manager->stopAsioNet();
+                m_errorCallback.emitEvent(0,Errors::ERROR_SEND_CONFIG,c->m_manager->getHost());
+            }
+        }
+    }
+}
+
+auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
+    const std::lock_guard<std::mutex> lock(g_client_mutex);
+    for(const auto &c : m_clients){
+        if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE && host == c->m_manager->getHost()){
+            auto ret =  sendConfig(c,true);
+            if (!ret) {
+                c->m_manager->stopAsioNet();
+                m_errorCallback.emitEvent(0,Errors::ERROR_SEND_CONFIG,c->m_manager->getHost());
+            }
+            break;
+        }
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _async) -> bool{
+    if (_client->m_manager->isConnected()) {
+        if (!_client->m_manager->sendData(CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;
+        if (!_client->m_manager->sendData("host",getHost(),_async)) return false;
+        if (!_client->m_manager->sendData("port",getPort(),_async)) return false;
+        if (!_client->m_manager->sendData("protocol",static_cast<uint32_t>(getProtocol()),_async)) return false;
+        if (!_client->m_manager->sendData("samples",static_cast<uint32_t>(getSamples()),_async)) return false;
+        if (!_client->m_manager->sendData("format",static_cast<uint32_t>(getFormat()),_async)) return false;
+        if (!_client->m_manager->sendData("type",static_cast<uint32_t>(getType()),_async)) return false;
+        if (!_client->m_manager->sendData("channels",static_cast<uint32_t>(getChannels()),_async)) return false;
+        if (!_client->m_manager->sendData("resolution",static_cast<uint32_t>(getResolution()),_async)) return false;
+        if (!_client->m_manager->sendData("decimation",static_cast<uint32_t>(getDecimation()),_async)) return false;
+        if (!_client->m_manager->sendData("attenuator",static_cast<uint32_t>(getAttenuator()),_async)) return false;
+        if (!_client->m_manager->sendData("calibration",static_cast<uint32_t>(getCalibration()),_async)) return false;
+        if (!_client->m_manager->sendData("coupling",static_cast<uint32_t>(getAC_DC()),_async)) return false;
+        if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
+        return true;
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::requestConfig(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::REQUEST_SERVER_SETTINGS);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::getLocalSettingsOfHost(std::string host) -> CStreamSettings*{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return (CStreamSettings*)&(it->operator->()->m_client_settings);
+    }
+    return nullptr;
 }

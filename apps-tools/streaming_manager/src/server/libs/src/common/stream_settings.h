@@ -31,19 +31,16 @@ public:
         BIT_16 = 2
     };
 
-#ifndef Z20
     enum Attenuator{
         A_1_1  = 1,
         A_1_20 = 2
     };
-#endif
 
-#ifdef Z20_250_12
     enum AC_DC{
         AC = 1,
         DC = 2
     };
-#endif
+
 
     CStreamSettings();
     auto reset() -> void;
@@ -74,17 +71,12 @@ public:
     auto setDecimation(uint32_t _decimation) -> void;
     auto getDecimation() -> uint32_t;
 
-#ifndef Z20
     auto setAttenuator(Attenuator _attenuator) -> void;
     auto getAttenuator() -> Attenuator;
     auto setCalibration(bool _calibration) -> void;
     auto getCalibration() -> bool;
-#endif
-
-#ifdef Z20_250_12
     auto setAC_DC(AC_DC _value) -> void;
     auto getAC_DC() -> AC_DC;
-#endif
 
 private:
     bool m_Bhost;
@@ -96,7 +88,9 @@ private:
     bool m_Bchannels;
     bool m_Bres;
     bool m_Bdecimation;
-
+    bool m_calib;
+    bool m_Battenuator;
+    bool m_Bcalib;
     std::string      m_host;
     std::string      m_port;
     Protocol    m_protocol;
@@ -106,18 +100,9 @@ private:
     Channel     m_channels;
     Resolution  m_res;
     uint32_t    m_decimation;
-
-#ifndef Z20
     Attenuator  m_attenuator;
-    bool        m_calib;
-    bool        m_Battenuator;
-    bool        m_Bcalib;
-#endif
-
-#ifdef Z20_250_12
     AC_DC       m_ac_dc;
     bool        m_Bac_dc;
-#endif
 
 };
 

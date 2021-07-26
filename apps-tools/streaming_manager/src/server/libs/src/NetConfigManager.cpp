@@ -132,6 +132,10 @@ void CNetConfigManager::addHandlerError(std::function<void(std::error_code error
     this->m_callback_Error.addListener((int)CAsioSocketSimple::ASEvents::AS_ERROR,_func);
 }
 
+auto CNetConfigManager::addHandlerTimeout(std::function<void(std::error_code error)> _func) -> void{
+    this->m_callback_Error.addListener((int)CAsioSocketSimple::ASEvents::AS_CONNECT_TIMEOUT,_func);
+}
+
 void CNetConfigManager::addHandlerSentCallback(std::function<void(std::error_code,int)> _func){
     this->m_callback_ErrorInt.addListener((int)CAsioSocketSimple::ASEvents::AS_SEND_DATA,_func);
 }
@@ -162,22 +166,22 @@ bool CNetConfigManager::start(){
     }
     m_asionet = new CAsioNetSimple(m_mode, m_host, m_port);
     m_asionet->addCall_Connect([this](std::string host){
-                                        //LOG_P("Connected: %s\n",host.c_str() );
                                         this->m_callback_Str.emitEvent((int)CAsioSocketSimple::ASEvents::AS_CONNECT,host);
                                     });
     m_asionet->addCall_Disconnect([this](std::string host)
                                     {
-                                        //LOG_P("Disconnected: %s \n",host.c_str());
                                         this->m_callback_Str.emitEvent((int)CAsioSocketSimple::ASEvents::AS_DISCONNECT,host);
                                     });
     m_asionet->addCall_Error([this](std::error_code error)
                                     {
-                                        //LOG_P("Error: %d (%s)\n", error.value(),error.message().c_str());
                                         this->m_callback_Error.emitEvent((int)CAsioSocketSimple::ASEvents::AS_ERROR,error);
                                     });
+    m_asionet->addCall_TimeoutError([this](std::error_code error)
+                                     {
+                                         this->m_callback_Error.emitEvent((int)CAsioSocketSimple::ASEvents::AS_CONNECT_TIMEOUT,error);
+                                     });
     m_asionet->addCall_Send([this](std::error_code error,size_t size)
                                     {
-                                        //LOG_P("Data sent (%d): %d\n",size,error.value() );
                                         this->m_callback_ErrorInt.emitEvent((int)CAsioSocketSimple::ASEvents::AS_SEND_DATA,error,size);
                                     });
     

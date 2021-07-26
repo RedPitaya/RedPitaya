@@ -42,13 +42,14 @@ auto ServerNetConfigManager::addHandlerError(std::function<void(ServerNetConfigM
     m_errorCallback.addListener(0,_func);
 }
 
-auto ServerNetConfigManager::addHandler(ServerNetConfigManager::Commands event,std::function<void()> _func) -> void{
+auto ServerNetConfigManager::addHandler(ServerNetConfigManager::Events event, std::function<void()> _func) -> void{
     m_callbacks.addListener(static_cast<int>(event),_func);
 }
 
 auto ServerNetConfigManager::connected(std::string host) -> void{
     UNUSED(host);
-    m_callbacks.emitEvent(static_cast<int>(Commands::CLIENT_CONNECTED));
+    m_currentState = States::NORMAL;
+    m_callbacks.emitEvent(static_cast<int>(Events::CLIENT_CONNECTED));
     if (m_mode == asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER)
         m_pNetConfManager->sendData(CNetConfigManager::Commands::MASTER_CONNETED );
     if (m_mode == asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE)
@@ -57,7 +58,7 @@ auto ServerNetConfigManager::connected(std::string host) -> void{
 
 auto ServerNetConfigManager::disconnected(std::string host) -> void{
     UNUSED(host);
-    m_callbacks.emitEvent(static_cast<int>(Commands::CLIENT_DISCONNECTED));
+    m_callbacks.emitEvent(static_cast<int>(Events::CLIENT_DISCONNECTED));
 }
 
 auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
@@ -70,7 +71,7 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
         m_currentState = States::NORMAL;
         if (isSetted()){
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
-            m_callbacks.emitEvent(static_cast<int>(Commands::GET_NEW_SETTING));
+            m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
         }else{
             reset();
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
@@ -78,17 +79,17 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
     }
 
     if (c == CNetConfigManager::Commands::START_STREAMING){
-        m_callbacks.emitEvent(static_cast<int>(Commands::START_STREAMING));
+        m_callbacks.emitEvent(static_cast<int>(Events::START_STREAMING));
     }
 
     if (c == CNetConfigManager::Commands::STOP_STREAMING){
-        m_callbacks.emitEvent(static_cast<int>(Commands::STOP_STREAMING));
+        m_callbacks.emitEvent(static_cast<int>(Events::STOP_STREAMING));
     }
 
     if (c == CNetConfigManager::Commands::LOAD_SETTING_FROM_FILE){
         if (readFromFile(m_file_settings)){
             m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_SUCCES);
-            m_callbacks.emitEvent(static_cast<int>(Commands::GET_NEW_SETTING));
+            m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
         }else{
             m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_FAIL);
         }
@@ -100,6 +101,10 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
         }else{
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SAVE_TO_FILE_FAIL);
         }
+    }
+
+    if (c == CNetConfigManager::Commands::REQUEST_SERVER_SETTINGS){
+        sendConfig(false);
     }
 }
 
@@ -145,3 +150,25 @@ auto ServerNetConfigManager::sendServerStarted() -> bool{
 auto ServerNetConfigManager::sendServerStopped() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STOPPED);
 }
+
+auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
+    if (m_pNetConfManager->isConnected()) {
+        if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;
+        if (!m_pNetConfManager->sendData("host",getHost(),_async)) return false;
+        if (!m_pNetConfManager->sendData("port",getPort(),_async)) return false;
+        if (!m_pNetConfManager->sendData("protocol",static_cast<uint32_t>(getProtocol()),_async)) return false;
+        if (!m_pNetConfManager->sendData("samples",static_cast<uint32_t>(getSamples()),_async)) return false;
+        if (!m_pNetConfManager->sendData("format",static_cast<uint32_t>(getFormat()),_async)) return false;
+        if (!m_pNetConfManager->sendData("type",static_cast<uint32_t>(getType()),_async)) return false;
+        if (!m_pNetConfManager->sendData("channels",static_cast<uint32_t>(getChannels()),_async)) return false;
+        if (!m_pNetConfManager->sendData("resolution",static_cast<uint32_t>(getResolution()),_async)) return false;
+        if (!m_pNetConfManager->sendData("decimation",static_cast<uint32_t>(getDecimation()),_async)) return false;
+        if (!m_pNetConfManager->sendData("attenuator",static_cast<uint32_t>(getAttenuator()),_async)) return false;
+        if (!m_pNetConfManager->sendData("calibration",static_cast<uint32_t>(getCalibration()),_async)) return false;
+        if (!m_pNetConfManager->sendData("coupling",static_cast<uint32_t>(getAC_DC()),_async)) return false;
+        if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
+        return true;
+    }
+    return false;
+}
+

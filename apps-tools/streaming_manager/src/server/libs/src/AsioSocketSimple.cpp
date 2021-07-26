@@ -3,6 +3,7 @@
 
 #define UNUSED(x) [&x]{}()
 #define SOCKET_BUFFER_SIZE 1024
+#define CONNECT_TIMEOUT 5
 
 namespace  asionet_simple {
 
@@ -19,18 +20,22 @@ namespace  asionet_simple {
             m_io_service(io),
             m_tcp_socket(0),
             m_tcp_acceptor(0),
-            m_is_tcp_connected(false)
+            m_timoutTimer(m_io_service),
+            m_is_tcp_connected(false),
+            m_disableRestartServer(true)
     {
         m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];
     }
 
     CAsioSocketSimple::~CAsioSocketSimple() {
+        m_disableRestartServer = true;
         CloseSocket();
         delete[] m_SocketReadBuffer;
     }
 
     void CAsioSocketSimple::InitServer() {
         m_is_tcp_connected = false;
+        m_disableRestartServer = false;
         m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(m_io_service);
         m_tcp_acceptor = std::make_shared<asio::ip::tcp::acceptor>(m_io_service);
         asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), std::stoi(m_port));
@@ -51,11 +56,28 @@ namespace  asionet_simple {
         m_tcp_endpoint = *iter;
         m_tcp_socket->async_connect(m_tcp_endpoint, std::bind(&CAsioSocketSimple::HandlerConnect, this, std::placeholders::_1 , iter));
         m_mode = ASMode::AS_CLIENT;
+        m_timoutTimer.expires_after(std::chrono::seconds(CONNECT_TIMEOUT));
+        m_timoutTimer.async_wait([this](std::error_code er){
+            if (er.value() != asio::error::operation_aborted) {
+                try {
+                    if (m_tcp_socket && m_tcp_socket->is_open()) {
+                        m_tcp_socket->cancel();
+                        m_tcp_socket->shutdown(asio::socket_base::shutdown_type::shutdown_both);
+                        m_tcp_socket->close();
+                    }
+                }catch (...){
+
+                }
+                this->m_timoutTimer.cancel();
+                m_callback_Error.emitEvent((int) ASEvents::AS_CONNECT_TIMEOUT, er);
+            }
+        });
     }
 
     void CAsioSocketSimple::HandlerConnect(const asio::error_code &_error, asio::ip::tcp::resolver::iterator endpoint_iterator)
     {
 		try {
+            this->m_timoutTimer.cancel();
 			if (!_error)
 			{
 				m_is_tcp_connected = true;
@@ -108,6 +130,9 @@ namespace  asionet_simple {
         }else{
             m_callback_Error.emitEvent((int)ASEvents::AS_ERROR,error);
             CloseSocket();
+            if (m_mode == ASMode::AS_SERVER  && !m_disableRestartServer) {
+                InitServer();
+            }
         }
     }
 
@@ -180,7 +205,7 @@ namespace  asionet_simple {
 
         } else if ((_error == asio::error::eof) || (_error == asio::error::connection_reset) ||
                 _error == asio::error::broken_pipe) {
-            if (m_mode == ASMode::AS_SERVER) {
+            if (m_mode == ASMode::AS_SERVER && !m_disableRestartServer) {
                 if (m_is_tcp_connected)
                     m_callback_Str.emitEvent((int)ASEvents::AS_DISCONNECT, m_tcp_endpoint.address().to_string());
                 InitServer();

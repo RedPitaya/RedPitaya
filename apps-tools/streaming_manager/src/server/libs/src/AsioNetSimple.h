@@ -31,6 +31,7 @@ namespace  asionet_simple {
         void addCall_Connect(std::function<void(std::string host)> _func);
         void addCall_Disconnect(std::function<void(std::string host)> _func);
         void addCall_Error(std::function<void(std::error_code error)> _func);
+        void addCall_TimeoutError(std::function<void(std::error_code error)> _func);
 
         void addCall_Send(std::function<void(std::error_code error,size_t)> _func);
         void addCall_Received(std::function<void(std::error_code error,CAsioSocketSimple::as_buffer,size_t)> _func);
