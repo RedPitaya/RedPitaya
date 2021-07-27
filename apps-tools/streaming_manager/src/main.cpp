@@ -181,7 +181,24 @@ void setConfig(bool _force){
 		ss_ip_addr.Update();
 		g_serverNetConfig->setHost(ss_ip_addr.Value());
 		g_serverNetConfig->startServer(ss_ip_addr.Value(),SERVER_CONFIG_PORT);
-		g_serverNetConfig->startBroadcast(ss_ip_addr.Value(),SERVER_BROADCAST_PORT);
+
+		#ifdef Z10
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14;		
+		#endif
+
+		#ifdef Z20
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_122_16;		
+		#endif
+
+		#ifdef Z20_125
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14_Z20;		
+		#endif
+
+		#ifdef Z20_250_12
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_250_12;		
+		#endif
+
+		g_serverNetConfig->startBroadcast(model, ss_ip_addr.Value(),SERVER_BROADCAST_PORT);
 	}
 
 	if (ss_use_localfile.IsNewValue() || _force)
