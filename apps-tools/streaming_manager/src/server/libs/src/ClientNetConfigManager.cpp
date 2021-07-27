@@ -57,7 +57,7 @@ auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -
             }
             m_broadcastClients.remove_if([](const BroadCastClients &c){
                          return (std::time(0) - c.ts > BROADCAST_TIMEOUT);
-            });
+            });            
         }else{
             fprintf(stderr,"[ServerNetConfigManager] Broadcast client error: %s (%d)\n",er.message().c_str(),er.value());
             m_errorCallback.emitEvent(0,Errors::BROADCAST_ERROR,host);

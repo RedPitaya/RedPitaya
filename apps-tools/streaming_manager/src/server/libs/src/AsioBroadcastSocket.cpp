@@ -65,7 +65,7 @@ namespace  asionet_broadcast {
         m_mode = ABMode::AB_CLIENT;
         m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
         m_socket->set_option(asio::socket_base::broadcast(true));
-        m_socket->async_receive_from(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this, std::placeholders::_1 ,std::placeholders::_2 ));
+        m_socket->async_receive(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),std::bind(&CAsioBroadcastSocket::HandlerReceive, this, std::placeholders::_1 ,std::placeholders::_2 ));
     }
 
     void CAsioBroadcastSocket::CloseSocket(){
@@ -82,8 +82,8 @@ namespace  asionet_broadcast {
         if (!error){
             m_callbackErrorUInt8Int.emitEvent((int)ABEvents::AB_RECIVED_DATA,error,m_SocketReadBuffer,bytes_transferred);
             asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::any(), std::stoi(m_port));
-            m_socket->async_receive_from(
-                    asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerReceive, this,
+            m_socket->async_receive(
+                    asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),std::bind(&CAsioBroadcastSocket::HandlerReceive, this,
                             std::placeholders::_1,std::placeholders::_2)
                     );
         }else{

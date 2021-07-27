@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     list.push_back("129.0.0.2");
     list.push_back("130.0.0.2");
     list.push_back("131.0.0.2");
-    //client->connectToServers(list,"9875");
+    client->connectToServers(list,"9875");
     client->startBroadcast("127.0.0.1","8902");
     std::cout << "PRESS\n";
     std::getchar();
