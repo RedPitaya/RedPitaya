@@ -37,7 +37,7 @@ auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -
             cl.mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
             cl.ts = std::time(0);
             std::string s = std::string((char *) buf, size);
-            uint8_t model = s[s.size()-1];
+            uint8_t model =  s[s.size()-1] - '0';
             cl.model = static_cast<asionet_broadcast::CAsioBroadcastSocket::Model>(model);
             s.pop_back();
             if (s[s.size()-1] == 'M'){
