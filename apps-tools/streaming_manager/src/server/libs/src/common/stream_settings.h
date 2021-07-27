@@ -41,6 +41,11 @@ public:
         DC = 2
     };
 
+    enum SaveType{
+        NET = 0,
+        FILE = 1
+    };
+
 
     CStreamSettings();
     auto reset() -> void;
@@ -64,6 +69,8 @@ public:
     auto getFormat() -> DataFormat;
     auto setType(DataType _type) -> void;
     auto getType() -> DataType;
+    auto setSaveType(SaveType _type) -> void;
+    auto getSaveType() -> SaveType;
     auto setChannels(Channel _channels) -> void;
     auto getChannels() -> Channel;
     auto setResolution(Resolution _resolution) -> void;
@@ -85,6 +92,7 @@ private:
     bool m_Bsamples;
     bool m_Bformat;
     bool m_Btype;
+    bool m_BsaveType;
     bool m_Bchannels;
     bool m_Bres;
     bool m_Bdecimation;
@@ -97,6 +105,7 @@ private:
     uint32_t    m_samples;
     DataFormat  m_format;
     DataType    m_type;
+    SaveType    m_saveType;
     Channel     m_channels;
     Resolution  m_res;
     uint32_t    m_decimation;

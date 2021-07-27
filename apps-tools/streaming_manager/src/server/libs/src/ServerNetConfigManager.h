@@ -23,6 +23,7 @@ public:
     ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode, std::string host,std::string port);
     ~ServerNetConfigManager();
 
+    auto startServer(std::string host,std::string port) -> void;
     auto startBroadcast(std::string host,std::string port) -> void;
     auto isConnected() -> bool;
     auto sendServerStarted() -> bool;

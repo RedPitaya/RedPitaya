@@ -143,31 +143,6 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         if (emitGetSettings)
             m_callbacksStr.emitEvent(static_cast<int>(Events::GET_NEW_SETTING),sender->m_manager->getHost());
     }
-//
-//    if (c == CNetConfigManager::Events::START_STREAMING){
-//        m_callbacks.emitEvent(static_cast<int>(Events::START_STREAMING));
-//    }
-//
-//    if (c == CNetConfigManager::Events::STOP_STREAMING){
-//        m_callbacks.emitEvent(static_cast<int>(Events::STOP_STREAMING));
-//    }
-//
-//    if (c == CNetConfigManager::Events::LOAD_SETTING_FROM_FILE){
-//        if (readFromFile(m_file_settings)){
-//            m_pNetConfManager->sendData(CNetConfigManager::Events::LOAD_FROM_FILE_SUCCES);
-//            m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
-//        }else{
-//            m_pNetConfManager->sendData(CNetConfigManager::Events::LOAD_FROM_FILE_FAIL);
-//        }
-//    }
-//
-//    if (c == CNetConfigManager::Events::SAVE_SETTING_TO_FILE){
-//        if (writeToFile(m_file_settings)){
-//            m_pNetConfManager->sendData(CNetConfigManager::Events::SAVE_TO_FILE_SUCCES);
-//        }else{
-//            m_pNetConfManager->sendData(CNetConfigManager::Events::SAVE_TO_FILE_FAIL);
-//        }
-//    }
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
@@ -259,6 +234,7 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("samples",static_cast<uint32_t>(getSamples()),_async)) return false;
         if (!_client->m_manager->sendData("format",static_cast<uint32_t>(getFormat()),_async)) return false;
         if (!_client->m_manager->sendData("type",static_cast<uint32_t>(getType()),_async)) return false;
+        if (!_client->m_manager->sendData("save_type",static_cast<uint32_t>(getSaveType()),_async)) return false;
         if (!_client->m_manager->sendData("channels",static_cast<uint32_t>(getChannels()),_async)) return false;
         if (!_client->m_manager->sendData("resolution",static_cast<uint32_t>(getResolution()),_async)) return false;
         if (!_client->m_manager->sendData("decimation",static_cast<uint32_t>(getDecimation()),_async)) return false;

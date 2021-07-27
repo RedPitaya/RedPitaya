@@ -17,13 +17,18 @@ ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings
     m_pNetConfManager->addHandler(asionet_simple::CAsioSocketSimple::ASEvents::AS_DISCONNECT,std::bind(&ServerNetConfigManager::disconnected,this,std::placeholders::_1));
 
     m_pNetConfManager->addHandlerError(std::bind(&ServerNetConfigManager::serverError, this, std::placeholders::_1));
-    m_pNetConfManager->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_SERVER,host,port);
+    startServer(host,port);
     readFromFile(defualt_file_settings_path);
 }
 
 ServerNetConfigManager::~ServerNetConfigManager(){
 
 }
+
+auto ServerNetConfigManager::startServer(std::string host,std::string port) -> void{
+    m_pNetConfManager->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_SERVER,host,port);
+}
+
 
 auto ServerNetConfigManager::startBroadcast(std::string host,std::string port) -> void{
     m_pBroadcast = asionet_broadcast::CAsioBroadcastSocket::Create(host,port);
@@ -160,6 +165,7 @@ auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
         if (!m_pNetConfManager->sendData("samples",static_cast<uint32_t>(getSamples()),_async)) return false;
         if (!m_pNetConfManager->sendData("format",static_cast<uint32_t>(getFormat()),_async)) return false;
         if (!m_pNetConfManager->sendData("type",static_cast<uint32_t>(getType()),_async)) return false;
+        if (!m_pNetConfManager->sendData("save_type",static_cast<uint32_t>(getSaveType()),_async)) return false;
         if (!m_pNetConfManager->sendData("channels",static_cast<uint32_t>(getChannels()),_async)) return false;
         if (!m_pNetConfManager->sendData("resolution",static_cast<uint32_t>(getResolution()),_async)) return false;
         if (!m_pNetConfManager->sendData("decimation",static_cast<uint32_t>(getDecimation()),_async)) return false;

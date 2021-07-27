@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     server->addHandler(ServerNetConfigManager::Events::CLIENT_DISCONNECTED, [](){
         std::cout << "CLIENT DISCONNECTED\n";
     });
-    server->startBroadcast("127.0.0.1_" + s,"9876");
+    server->startBroadcast("127.0.0.1_" + s,"8902");
     std::cout << "PRESS\n";
     std::getchar();
     delete server;

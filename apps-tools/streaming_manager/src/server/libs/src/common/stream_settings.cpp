@@ -13,6 +13,7 @@ CStreamSettings::CStreamSettings(){
     m_samples = -1;
     m_format = WAV;
     m_type = RAW;
+    m_saveType = NET;
     m_channels = CH1;
     m_res = BIT_8;
     m_decimation = 1;
@@ -29,11 +30,12 @@ void CStreamSettings::reset(){
     m_Bsamples =
     m_Bformat =
     m_Btype =
+    m_BsaveType = 
     m_Bchannels =
     m_Bres =
-    m_Bdecimation = false;
-    m_Battenuator = false;
-    m_Bcalib = false;
+    m_Bdecimation =
+    m_Battenuator = 
+    m_Bcalib =
     m_Bac_dc = false;
 }
 
@@ -64,6 +66,7 @@ bool CStreamSettings::writeToFile(string _filename){
         root["samples"] = getSamples();
         root["format"] = getFormat();
         root["type"] = getType();
+        root["save_type"] = getSaveType();
         root["channels"] = getChannels();
         root["resolution"] = getResolution();
         root["decimation"] = getDecimation();
@@ -112,6 +115,8 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         setFormat(static_cast<DataFormat>(root["format"].asInt()));
     if (root.isMember("type"))
         setType(static_cast<DataType>(root["type"].asInt()));
+    if (root.isMember("save_type"))
+        setSaveType(static_cast<SaveType>(root["save_type"].asInt()));
     if (root.isMember("channels"))
         setChannels(static_cast<Channel>(root["channels"].asInt()));
     if (root.isMember("resolution"))
@@ -184,6 +189,15 @@ CStreamSettings::DataType CStreamSettings::getType(){
     return m_type;
 }
 
+auto CStreamSettings::setSaveType(CStreamSettings::SaveType _type) -> void{
+    m_saveType = _type;
+    m_BsaveType = true;
+}
+
+auto CStreamSettings::getSaveType() -> CStreamSettings::SaveType{
+    return m_saveType;
+}
+
 void CStreamSettings::setChannels(CStreamSettings::Channel _channels){
     m_channels = _channels;
     m_Bchannels = true;
@@ -242,6 +256,11 @@ auto CStreamSettings::setValue(std::string key,uint32_t value) -> bool{
 
     if (key == "type") {
         setType(static_cast<DataType>(value));
+        return true;
+    }
+
+    if (key == "save_type") {
+        setSaveType(static_cast<SaveType>(value));
         return true;
     }
 

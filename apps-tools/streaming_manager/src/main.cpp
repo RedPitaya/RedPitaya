@@ -23,6 +23,7 @@
 #include "version.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
+#include "ServerNetConfigManager.h"
 
 #ifdef Z20_250_12
 #include "rp-spi.h"
@@ -34,9 +35,11 @@
 void StartServer();
 void StopServer(int x);
 void StopNonBlocking(int x);
+void setConfig(bool _force);
 
 static std::mutex mut;
 static pthread_mutex_t mutex;
+static constexpr char config_file[] = "/root/.streaming_config";
 
 #define SS_TCP		1
 #define SS_UDP  	2
@@ -47,6 +50,11 @@ static pthread_mutex_t mutex;
 
 #define SS_8BIT		1
 #define SS_16BIT	2
+
+#define SERVER_CONFIG_PORT "8901"
+#define SERVER_BROADCAST_PORT "8902"
+
+
 //#define DEBUG_MODE
 
 
@@ -57,7 +65,7 @@ CBooleanParameter 	ss_start(			"SS_START", 	        CBaseParameter::RW, false,0)
 
 CBooleanParameter 	ss_use_localfile(	"SS_USE_FILE", 	        CBaseParameter::RW, false,0);
 CIntParameter		ss_port(  			"SS_PORT_NUMBER", 		CBaseParameter::RW, 8900,0,	1,65535);
-CStringParameter    ss_ip_addr(			"SS_IP_ADDR",			CBaseParameter::RW, "",0);
+CStringParameter    ss_ip_addr(			"SS_IP_ADDR",			CBaseParameter::RW, "127.0.0.1",0);
 CIntParameter		ss_protocol(  		"SS_PROTOCOL", 			CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_samples(  		"SS_SAMPLES", 			CBaseParameter::RW, 20000000 ,0,	-1,2000000000);
 CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 1 ,0,	1,3);
@@ -72,19 +80,20 @@ CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2
 CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
-CStreamingManager::Ptr s_manger;
+CStreamingManager::Ptr  s_manger;
 CStreamingApplication  *s_app;
+std::shared_ptr<ServerNetConfigManager> g_serverNetConfig;
 
 
-void PrintLogInFile(const char *message){
-#ifdef DEBUG_MODE
-	std::time_t result = std::time(nullptr);
-	std::fstream fs;
-  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
-	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
-	fs.close();
-#endif
-}
+// void PrintLogInFile(const char *message){
+// #ifdef DEBUG_MODE
+// 	std::time_t result = std::time(nullptr);
+// 	std::fstream fs;
+//   	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
+// 	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
+// 	fs.close();
+// #endif
+// }
 
 float calibFullScaleToVoltage(uint32_t fullScaleGain) {
     /* no scale */
@@ -107,19 +116,20 @@ int rp_app_init(void)
 {
 	fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
-
-	ss_status.SendValue(0);
-	ss_acd_max.SendValue(ADC_SAMPLE_RATE);
-	try {
+	try {	
+		g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
+		ss_status.SendValue(0);
+		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
+		setConfig(true);
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
+#ifdef Z20_250_12
+	    rp_max7311::rp_initController();
+#endif 
+
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: rp_app_init() %s\n",e.what());
-		PrintLogInFile(e.what());
 	}
-	#ifdef Z20_250_12
-    rp_max7311::rp_initController();
-    #endif 
 	return 0;
 }
 
@@ -155,124 +165,166 @@ void UpdateSignals(void)
 
 }
 
-void SaveConfigInFile(){
-	char pathtofile[255];
-	sprintf(pathtofile,"/root/%s",".streaming_config");
-	ofstream file(pathtofile);
-	file << "host " << ss_ip_addr.Value() << std::endl;
-	file << "port " << ss_port.Value() << std::endl;
-	file << "protocol " << ss_protocol.Value() << std::endl;
-	file << "rate " << ss_rate.Value() << std::endl;
-	file << "channels " << ss_channels.Value() << std::endl;
-	file << "resolution " << ss_resolution.Value() << std::endl;
-	file << "use_file " << ss_use_localfile.Value() << std::endl;
-	file << "format " << ss_format.Value() << std::endl;
-	file << "samples " << ss_samples.Value() << std::endl;
-	file << "save_mode " << ss_save_mode.Value() << std::endl;
+void saveConfigInFile(){
+	g_serverNetConfig->writeToFile(config_file);
+
+// 	ofstream file(config_file);
+// 	file << "host " << ss_ip_addr.Value() << std::endl;
+// 	file << "port " << ss_port.Value() << std::endl;
+// 	file << "protocol " << ss_protocol.Value() << std::endl;
+// 	file << "rate " << ss_rate.Value() << std::endl;
+// 	file << "channels " << ss_channels.Value() << std::endl;
+// 	file << "resolution " << ss_resolution.Value() << std::endl;
+// 	file << "use_file " << ss_use_localfile.Value() << std::endl;
+// 	file << "format " << ss_format.Value() << std::endl;
+// 	file << "samples " << ss_samples.Value() << std::endl;
+// 	file << "save_mode " << ss_save_mode.Value() << std::endl;
+// #ifndef Z20
+// 	file << "use_calib " << ss_calib.Value() << std::endl;
+// 	file << "attenuator " << ss_attenuator.Value() << std::endl;
+// #endif
+// #ifdef Z20_250_12
+// 	file << "coupling " << ss_ac_dc.Value() << std::endl;
+// #endif 
+}
+
+void setConfig(bool _force){
+	if (ss_port.IsNewValue() || _force)
+	{
+		ss_port.Update();
+		g_serverNetConfig->setPort(std::to_string(ss_port.Value()));
+	}
+
+	if (ss_ip_addr.IsNewValue() || _force)
+	{
+		ss_ip_addr.Update();
+		g_serverNetConfig->setHost(ss_ip_addr.Value());
+		g_serverNetConfig->startServer(ss_ip_addr.Value(),SERVER_CONFIG_PORT);
+		g_serverNetConfig->startBroadcast(ss_ip_addr.Value(),SERVER_BROADCAST_PORT);
+	}
+
+	if (ss_use_localfile.IsNewValue() || _force)
+	{
+		ss_use_localfile.Update();
+		if (ss_use_localfile.Value() == 1)
+			g_serverNetConfig->setSaveType(CStreamSettings::FILE);
+		else
+			g_serverNetConfig->setSaveType(CStreamSettings::NET);
+		
+	}
+
+	if (ss_protocol.IsNewValue() || _force)
+	{
+		ss_protocol.Update();
+		if (ss_protocol.Value() == SS_TCP)
+			g_serverNetConfig->setProtocol(CStreamSettings::TCP);
+		if (ss_protocol.Value() == SS_UDP)
+			g_serverNetConfig->setProtocol(CStreamSettings::UDP);
+	}
+
+	if (ss_channels.IsNewValue() || _force)
+	{
+		ss_channels.Update();
+		if (ss_channels.Value() == 1)
+			g_serverNetConfig->setChannels(CStreamSettings::CH1);
+		if (ss_channels.Value() == 2)
+			g_serverNetConfig->setChannels(CStreamSettings::CH2);
+		if (ss_channels.Value() == 3)
+			g_serverNetConfig->setChannels(CStreamSettings::BOTH);				
+	}
+
+	if (ss_resolution.IsNewValue() || _force)
+	{
+		ss_resolution.Update();
+		if (ss_resolution.Value() == SS_8BIT)
+			g_serverNetConfig->setResolution(CStreamSettings::BIT_8);
+		if (ss_resolution.Value() == SS_16BIT)
+			g_serverNetConfig->setResolution(CStreamSettings::BIT_16);
+	}
+
+	if (ss_save_mode.IsNewValue() || _force)
+	{
+		ss_save_mode.Update();
+		if (ss_save_mode.Value() == 1)
+			g_serverNetConfig->setType(CStreamSettings::RAW);
+		if (ss_save_mode.Value() == 2)
+			g_serverNetConfig->setType(CStreamSettings::VOLT);
+	}
+
+	if (ss_rate.IsNewValue() || _force)
+	{
+		ss_rate.Update();
+		g_serverNetConfig->setDecimation(ss_rate.Value());
+	}
+
+	if (ss_format.IsNewValue() || _force)
+	{
+		ss_format.Update();
+		if (ss_format.Value() == 0) 
+			g_serverNetConfig->setFormat(CStreamSettings::WAV);
+		if (ss_format.Value() == 1) 
+			g_serverNetConfig->setFormat(CStreamSettings::TDMS);
+		if (ss_format.Value() == 2) 
+			g_serverNetConfig->setFormat(CStreamSettings::CSV);
+	}
+
+	if (ss_samples.IsNewValue() || _force)
+	{
+		ss_samples.Update();
+		g_serverNetConfig->setSamples(ss_samples.Value());
+	}
+
 #ifndef Z20
-	file << "use_calib " << ss_calib.Value() << std::endl;
-	file << "attenuator " << ss_attenuator.Value() << std::endl;
+	if (ss_attenuator.IsNewValue() || _force)
+	{
+		ss_attenuator.Update();
+		if (ss_attenuator.Value() == 1)
+			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
+		if (ss_attenuator.Value() == 2)
+			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_20);			
+	}
+
+	if (ss_calib.IsNewValue() || _force)
+	{
+		ss_calib.Update();
+		g_serverNetConfig->setCalibration(ss_calib.Value() == 2);
+	}
+#else
+	g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
+	g_serverNetConfig->setCalibration(false);	
 #endif
+
 #ifdef Z20_250_12
-	file << "coupling " << ss_ac_dc.Value() << std::endl;
-#endif 
+	if (ss_ac_dc.IsNewValue() || _force)
+	{
+		ss_ac_dc.Update();
+		if (ss_ac_dc.Value() == 1)
+			g_serverNetConfig->setAC_DC(CStreamSettings::AC);
+		if (ss_ac_dc.Value() == 2)
+			g_serverNetConfig->setAC_DC(CStreamSettings::DC);				
+	}
+#else
+	g_serverNetConfig->setAC_DC(CStreamSettings::AC);
+#endif
+	saveConfigInFile();
 }
 
 //Update parameters
 void UpdateParams(void)
 {
 	try{
-	if (ss_port.IsNewValue())
-	{
-		ss_port.Update();
-		SaveConfigInFile();
-	}
+		
+		setConfig(false);
 
-	if (ss_ip_addr.IsNewValue())
-	{
-		ss_ip_addr.Update();
-		SaveConfigInFile();		
-	}
-
-	if (ss_use_localfile.IsNewValue())
-	{
-		ss_use_localfile.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_protocol.IsNewValue())
-	{
-		ss_protocol.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_channels.IsNewValue())
-	{
-		ss_channels.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_resolution.IsNewValue())
-	{
-		ss_resolution.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_save_mode.IsNewValue())
-	{
-		ss_save_mode.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_rate.IsNewValue())
-	{
-		ss_rate.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_format.IsNewValue())
-	{
-		ss_format.Update();
-		SaveConfigInFile();
-	}
-
-#ifndef Z20
-	if (ss_attenuator.IsNewValue())
-	{
-		ss_attenuator.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_calib.IsNewValue())
-	{
-		ss_calib.Update();
-		SaveConfigInFile();
-	}
-#endif
-
-#ifdef Z20_250_12
-	if (ss_ac_dc.IsNewValue())
-	{
-		ss_ac_dc.Update();
-		SaveConfigInFile();
-	}
-#endif
-
-	if (ss_samples.IsNewValue())
-	{
-		ss_samples.Update();
-		SaveConfigInFile();
-	}
-
-	if (ss_start.IsNewValue())
-	{
-		ss_start.Update();
-		if (ss_start.Value() == 1){
-			StartServer();
-		}else{
-			StopNonBlocking(0);
+		if (ss_start.IsNewValue())
+		{
+			ss_start.Update();
+			if (ss_start.Value() == 1){
+				StartServer();
+			}else{
+				StopNonBlocking(0);
+			}
 		}
-	}
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: UpdateParams() %s\n",e.what());
@@ -286,10 +338,8 @@ void PostUpdateSignals(){}
 
 void OnNewParams(void)
 {
-
 	//Update parameters
 	UpdateParams();
-
 }
 
 void OnNewSignals(void)
