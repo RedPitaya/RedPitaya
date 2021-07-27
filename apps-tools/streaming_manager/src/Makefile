@@ -24,19 +24,20 @@ INCLUDE += -I./server/libs/asio/include
 LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 LIBS += -L./server/bin
+LIBS += -L./server/lib
 
-COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD -g
+COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
-LDWFLAGS+= -lrpsasrv
+LDWFLAGS+= -ljsoncpp -lrpsasrv
 LDWFLAGS+= -lrp_sdk -lrp
 LDWFLAGS+= -Wl,--no-whole-archive
 LDWFLAGS+= -shared
 
 LDSFLAGS+= -Wl,--whole-archive
-LDSFLAGS+= -lrpsasrv
+LDSFLAGS+= -ljsoncpp -lrpsasrv
 LDSFLAGS+= -Wl,--no-whole-archive
 LDSFLAGS+= -lpthread
 LDSFLAGS+= -lrp

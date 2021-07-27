@@ -5,16 +5,25 @@ message("MODEL=${MODEL}")
 
 set(CMAKE_CXX_STANDARD 11)
 
+
+
 include(FetchContent)
 
 set (BUILD_SHARED_LIBS OFF CACHE INTERNAL "Turn off shared")
 set (JSONCPP_WITH_TESTS OFF CACHE INTERNAL "Turn off jsontest")
 
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC")
+endif()
+
+
 FetchContent_Declare(json
         GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp
         GIT_TAG 1.9.4
         )
+
 FetchContent_MakeAvailable(json)
+
 #FetchContent_GetProperties(json)
 #if(NOT json_POPULATED)
 #    FetchContent_Populate(json)
@@ -23,9 +32,6 @@ FetchContent_MakeAvailable(json)
 
 add_library(${PROJECT_NAME})
 
-target_compile_options(rpsasrv
-    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive -D${MODEL})
-
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}
         PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
@@ -33,6 +39,11 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_definitions(${PROJECT_NAME}
         PRIVATE ARCH_ARM)
 endif()
+
+target_compile_options(rpsasrv
+    PRIVATE -std=c++11 -O3 -Wall -pedantic -Wextra -fpermissive -D${MODEL})
+
+
 
 target_compile_definitions(${PROJECT_NAME}
     PUBLIC ASIO_STANDALONE)
