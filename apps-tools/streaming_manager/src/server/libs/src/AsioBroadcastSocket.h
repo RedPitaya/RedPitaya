@@ -19,6 +19,14 @@ namespace  asionet_broadcast {
     class CAsioBroadcastSocket {
     public:
 
+        enum class Model{
+            CLIENT        = 0,
+            RP_125_14     = 1,
+            RP_125_14_Z20 = 2,
+            RP_122_16     = 3,
+            RP_250_12     = 4
+        };
+
         enum class ABMode {
             AB_SERVER_MASTER,
             AB_SERVER_SLAVE,
@@ -35,8 +43,8 @@ namespace  asionet_broadcast {
 
         using Ptr = std::shared_ptr<CAsioBroadcastSocket>;
 
-        static Ptr Create(std::string host, std::string port);
-        CAsioBroadcastSocket(std::string host, std::string port);
+        static Ptr Create(Model model,std::string host, std::string port);
+        CAsioBroadcastSocket(Model model,std::string host, std::string port);
         ~CAsioBroadcastSocket();
 
         void InitServer(CAsioBroadcastSocket::ABMode mode,int sleep_time_ms = 1000);
@@ -73,6 +81,7 @@ namespace  asionet_broadcast {
         EventList<std::error_code,size_t> m_callback_ErrorInt;
         EventList<std::error_code,uint8_t*,size_t > m_callbackErrorUInt8Int;
         asio::thread *m_asio_th;
+        Model m_model;
     };
 }
 

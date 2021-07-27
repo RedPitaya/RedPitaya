@@ -11,6 +11,7 @@ public:
     struct BroadCastClients{
         std::string host;
         asionet_broadcast::CAsioBroadcastSocket::ABMode mode;
+        asionet_broadcast::CAsioBroadcastSocket::Model  model;
         std::time_t ts;
     };
 
@@ -29,7 +30,7 @@ public:
         SERVER_CONNECTED,
         GET_NEW_SETTING
     };
-    ClientNetConfigManager(std::string default_file_settings_path);
+    ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
 
     auto startBroadcast(std::string host,std::string port) -> void;

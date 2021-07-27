@@ -7,12 +7,13 @@
 std::mutex g_broadcast_mutex;
 std::mutex g_client_mutex;
 
-ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings_path):CStreamSettings(),
+ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig):CStreamSettings(),
     m_pBroadcast(nullptr),
     m_file_settings(default_file_settings_path),
     m_broadcastClients()
 {
-    readFromFile(default_file_settings_path);
+    if (loadConfig)
+        readFromFile(default_file_settings_path);
 }
 
 ClientNetConfigManager::~ClientNetConfigManager(){
@@ -20,7 +21,7 @@ ClientNetConfigManager::~ClientNetConfigManager(){
 }
 
 auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -> void{
-    m_pBroadcast = asionet_broadcast::CAsioBroadcastSocket::Create(host,port);
+    m_pBroadcast = asionet_broadcast::CAsioBroadcastSocket::Create(asionet_broadcast::CAsioBroadcastSocket::Model::CLIENT,host,port);
     m_pBroadcast->InitClient();
     m_pBroadcast->addHandler(asionet_broadcast::CAsioBroadcastSocket::ABEvents::AB_ERROR,[this,host](std::error_code er){
         fprintf(stderr,"[ServerNetConfigManager] Broadcast client error: %s (%d)\n",er.message().c_str(),er.value());
@@ -36,6 +37,9 @@ auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -
             cl.mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
             cl.ts = std::time(0);
             std::string s = std::string((char *) buf, size);
+            uint8_t model = s[s.size()-1];
+            cl.model = static_cast<asionet_broadcast::CAsioBroadcastSocket::Model>(model);
+            s.pop_back();
             if (s[s.size()-1] == 'M'){
                 cl.mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
             }else

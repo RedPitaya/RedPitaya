@@ -24,7 +24,7 @@ public:
     ~ServerNetConfigManager();
 
     auto startServer(std::string host,std::string port) -> void;
-    auto startBroadcast(std::string host,std::string port) -> void;
+    auto startBroadcast(asionet_broadcast::CAsioBroadcastSocket::Model model,std::string host,std::string port) -> void;
     auto isConnected() -> bool;
     auto sendServerStarted() -> bool;
     auto sendServerStopped() -> bool;

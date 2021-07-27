@@ -30,8 +30,8 @@ auto ServerNetConfigManager::startServer(std::string host,std::string port) -> v
 }
 
 
-auto ServerNetConfigManager::startBroadcast(std::string host,std::string port) -> void{
-    m_pBroadcast = asionet_broadcast::CAsioBroadcastSocket::Create(host,port);
+auto ServerNetConfigManager::startBroadcast(asionet_broadcast::CAsioBroadcastSocket::Model model,std::string host,std::string port) -> void{
+    m_pBroadcast = asionet_broadcast::CAsioBroadcastSocket::Create(model,host,port);
     m_pBroadcast->InitServer(m_mode);
     m_pBroadcast->addHandler(asionet_broadcast::CAsioBroadcastSocket::ABEvents::AB_ERROR,[this](std::error_code er){
         fprintf(stderr,"[ServerNetConfigManager] Broadcast server error: %s (%d)\n",er.message().c_str(),er.value());

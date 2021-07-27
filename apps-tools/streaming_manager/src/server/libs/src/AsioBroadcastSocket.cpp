@@ -8,11 +8,11 @@ namespace  asionet_broadcast {
 
 
     CAsioBroadcastSocket::Ptr
-    CAsioBroadcastSocket::Create(std::string host,  std::string port) {
-        return std::make_shared<CAsioBroadcastSocket>(host, port);
+    CAsioBroadcastSocket::Create(Model model, std::string host,  std::string port) {
+        return std::make_shared<CAsioBroadcastSocket>(model,host, port);
     }
 
-    CAsioBroadcastSocket::CAsioBroadcastSocket(std::string host, std::string port) :
+    CAsioBroadcastSocket::CAsioBroadcastSocket(Model model,std::string host, std::string port) :
             m_mode(ABMode::AB_NONE),
             m_sleep_time_ms(1000),
             m_host(host),
@@ -21,6 +21,7 @@ namespace  asionet_broadcast {
             m_Work(m_Ios),
             m_socket(0)
     {
+        m_model = model;
         m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];
         auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run),&m_Ios);
         m_asio_th = new asio::thread(func);
@@ -51,7 +52,9 @@ namespace  asionet_broadcast {
             m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
             m_socket->set_option(asio::socket_base::broadcast(true));
             asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), std::stoi(m_port));
-            std::string buf = m_host + std::string((mode == ABMode::AB_SERVER_MASTER ? "M" : "S"));
+            std::string model = std::to_string(static_cast<uint8_t>(m_model));
+            assert(model.size() == 1);
+            std::string buf = m_host + std::string((mode == ABMode::AB_SERVER_MASTER ? "M" : "S")) + model;
             m_socket->async_send_to(asio::buffer(buf.c_str(),buf.size()),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerSend, this, std::placeholders::_1 ,std::placeholders::_2 ));
         }else{
             m_callback_Error.emitEvent((int)ABEvents::AB_ERROR,error);
@@ -120,7 +123,9 @@ namespace  asionet_broadcast {
 #endif // _WIN32
 
             asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), std::stoi(m_port));
-            std::string buf = m_host + std::string((m_mode == ABMode::AB_SERVER_MASTER ? "M" : "S"));
+            std::string model = std::to_string(static_cast<uint8_t>(m_model));
+            assert(model.size() == 1);
+            std::string buf = m_host + std::string((m_mode == ABMode::AB_SERVER_MASTER ? "M" : "S")) + model;
             m_socket->async_send_to(asio::buffer(buf.c_str(),buf.size()),senderEndpoint,std::bind(&CAsioBroadcastSocket::HandlerSend, this, std::placeholders::_1 ,std::placeholders::_2));
         }
     }
