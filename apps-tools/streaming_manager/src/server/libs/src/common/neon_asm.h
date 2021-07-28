@@ -10,7 +10,7 @@ namespace {
     {
 
 #ifdef ARCH_ARM
-        if (n & 63) {
+        if ((n & 63) || n < 64){
             memcpy((void*)dst,(void*)src,n);
             //std::cout << "Warning: Non-optimal neon copy\n";
             return;

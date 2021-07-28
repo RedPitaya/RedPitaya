@@ -4,7 +4,7 @@ project(rpsa_client)
 add_executable(rpsa_client search.cpp config.cpp options.cpp main.cpp)
 
 target_compile_options(rpsa_client
-    PRIVATE -std=c++11 $<$<CONFIG:Debug>:-fsanitize=address -g3> $<$<CONFIG:Release>:-Os> -pedantic -static -static-libstdc++ -static-libgcc)
+    PRIVATE -std=c++11 $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -pedantic -static -static-libstdc++ -static-libgcc)
 
 
 target_compile_definitions(rpsa_client  PRIVATE ASIO_STANDALONE)
