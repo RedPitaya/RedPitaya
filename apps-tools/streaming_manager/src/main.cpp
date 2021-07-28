@@ -179,7 +179,6 @@ void setConfig(bool _force){
 	if (ss_ip_addr.IsNewValue() || _force)
 	{
 		ss_ip_addr.Update();
-		g_serverNetConfig->setHost(ss_ip_addr.Value());
 		g_serverNetConfig->startServer(ss_ip_addr.Value(),SERVER_CONFIG_PORT);
 
 		#ifdef Z10
@@ -357,7 +356,7 @@ void StartServer(){
 		auto protocol     = g_serverNetConfig->getProtocol(); 
 		auto channel      = g_serverNetConfig->getChannels();
 		auto rate         = g_serverNetConfig->getDecimation();
-		auto ip_addr_host = g_serverNetConfig->getHost();
+		auto ip_addr_host = ss_ip_addr.Value();
 		auto samples      = g_serverNetConfig->getSamples();
 		auto save_mode    = g_serverNetConfig->getType();
 

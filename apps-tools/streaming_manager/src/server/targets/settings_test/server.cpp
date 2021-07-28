@@ -7,8 +7,6 @@
 int main(int argc, char* argv[])
 {
     CStreamSettings settings;
-    settings.setHost("130.0.0.1");
-    settings.setPort("1111");
     settings.setAttenuator(CStreamSettings::A_1_20);
     settings.setCalibration(false);
     settings.setChannels(CStreamSettings::CH2);
@@ -21,11 +19,8 @@ int main(int argc, char* argv[])
     settings.setAC_DC(CStreamSettings::AC);
     auto ret = settings.writeToFile("./json.conf");
     std::cout << "Write state " << ret << "\n";
-    settings.setHost("127.0.0.2");
-    std::cout << "Host " << settings.getHost().c_str() << "\n";
     ret = settings.readFromFile("./json.conf");
     std::cout << "Read state " << ret << "\n";
-    std::cout << "Host " << settings.getHost().c_str() << "\n";
     std::cout << "DONE \n";
 
     return 0;

@@ -4,7 +4,7 @@ project(server_linux_test)
 add_executable(server_linux_test server.cpp)
 
 target_compile_options(server_linux_test
-    PRIVATE -std=c++11 -pedantic -Wextra)
+    PRIVATE -std=c++11 -pedantic -Wextra $<$<CONFIG:Debug>:-fsanitize=address -g3> $<$<CONFIG:Release>:-Os>)
 
 target_compile_definitions(server_linux_test
     PRIVATE ASIO_STANDALONE)

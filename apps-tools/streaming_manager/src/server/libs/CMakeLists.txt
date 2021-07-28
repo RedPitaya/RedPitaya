@@ -41,7 +41,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 endif()
 
 target_compile_options(rpsasrv
-    PRIVATE -std=c++11 -Os -Wall -pedantic -Wextra -fpermissive -D${MODEL})
+    PRIVATE -std=c++11 -Wall -pedantic -Wextra -fpermissive -D${MODEL} $<$<CONFIG:Debug>:-fsanitize=address -g3> $<$<CONFIG:Release>:-Os>)
 
 
 
