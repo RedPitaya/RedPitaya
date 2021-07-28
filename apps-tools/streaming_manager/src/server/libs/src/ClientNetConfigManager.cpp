@@ -163,7 +163,7 @@ auto ClientNetConfigManager::isServersConnected() -> bool{
 
 auto ClientNetConfigManager::receiveValueStr(std::string key,std::string value,std::shared_ptr<Clients> sender) -> void{
     if (sender->m_current_state == Clients::States::GET_DATA){
-        if (sender->m_client_settings.setValue(key,value)){
+        if (!sender->m_client_settings.setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
         }
     }
@@ -171,7 +171,7 @@ auto ClientNetConfigManager::receiveValueStr(std::string key,std::string value,s
 
 auto ClientNetConfigManager::receiveValueInt(std::string key,uint32_t value,std::shared_ptr<Clients> sender) -> void{
     if (sender->m_current_state == Clients::States::GET_DATA){
-        if (sender->m_client_settings.setValue(key,value)){
+        if (!sender->m_client_settings.setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
         }
     }
@@ -179,7 +179,7 @@ auto ClientNetConfigManager::receiveValueInt(std::string key,uint32_t value,std:
 
 auto ClientNetConfigManager::receiveValueDouble(std::string key,double value,std::shared_ptr<Clients> sender) -> void{
     if (sender->m_current_state == Clients::States::GET_DATA){
-        if (sender->m_client_settings.setValue(key,value)){
+        if (!sender->m_client_settings.setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
         }
     }
@@ -192,7 +192,7 @@ auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<C
     if (sender->m_current_state  == Clients::States::GET_DATA){
         sender->m_client_settings.reset();
         sender->m_current_state = Clients::States::NORMAL;
-        m_errorCallback.emitEvent(0,Errors::BREAK_RECEIVE_SETTINGS,sender->m_manager->getHost());
+        m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
     }
 }
 

@@ -115,7 +115,7 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
 
 auto ServerNetConfigManager::receiveValueStr(std::string key,std::string value) -> void{
     if (m_currentState == States::GET_DATA){
-        if (setValue(key,value)){
+        if (!setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
         }
     }
@@ -123,7 +123,7 @@ auto ServerNetConfigManager::receiveValueStr(std::string key,std::string value) 
 
 auto ServerNetConfigManager::receiveValueInt(std::string key,uint32_t value) -> void{
     if (m_currentState == States::GET_DATA){
-        if (setValue(key,value)){
+        if (!setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
         }
     }
@@ -131,7 +131,7 @@ auto ServerNetConfigManager::receiveValueInt(std::string key,uint32_t value) -> 
 
 auto ServerNetConfigManager::receiveValueDouble(std::string key,double value) -> void{
     if (m_currentState == States::GET_DATA){
-        if (setValue(key,value)){
+        if (!setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
         }
     }
