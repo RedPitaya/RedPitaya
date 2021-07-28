@@ -7,7 +7,6 @@
 using namespace std;
 
 CStreamSettings::CStreamSettings(){
-    m_host = "";
     m_port = "";
     m_protocol = TCP;
     m_samples = -1;
@@ -24,7 +23,6 @@ CStreamSettings::CStreamSettings(){
 }
 
 void CStreamSettings::reset(){
-    m_Bhost =
     m_Bport =
     m_Bprotocol =
     m_Bsamples =
@@ -41,8 +39,7 @@ void CStreamSettings::reset(){
 
 bool CStreamSettings::isSetted(){
     bool res = true;
-    res =   m_Bhost &&
-            m_Bport &&
+    res =   m_Bport &&
             m_Bprotocol &&
             m_Bsamples &&
             m_Bformat &&
@@ -60,7 +57,6 @@ bool CStreamSettings::isSetted(){
 bool CStreamSettings::writeToFile(string _filename){
     if (isSetted()){
         Json::Value root;
-        root["host"] = getHost();
         root["port"] = getPort();
         root["protocol"] = getProtocol();
         root["samples"] = getSamples();
@@ -103,8 +99,6 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         std::cerr << "[CStreamSettings] Error parse json" << errs << std::endl;
         return false;
     }
-    if (root.isMember("host"))
-        setHost(root["host"].asString());
     if (root.isMember("port"))
         setPort(root["port"].asString());
     if (root.isMember("protocol"))
@@ -131,17 +125,6 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         setAC_DC(static_cast<AC_DC>(root["coupling"].asInt()));
     return isSetted();
 
-}
-
-
-
-void CStreamSettings::setHost(string _host){
-    m_host  = _host;
-    m_Bhost = true;
-}
-
-string CStreamSettings::getHost(){
-    return m_host;
 }
 
 void CStreamSettings::setPort(string _port){
@@ -226,11 +209,6 @@ uint32_t CStreamSettings::getDecimation(){
 }
 
 auto CStreamSettings::setValue(std::string key,std::string value) -> bool{
-    if (key == "host") {
-        setHost(value);
-        return true;
-    }
-
     if (key == "port") {
         setPort(value);
         return true;

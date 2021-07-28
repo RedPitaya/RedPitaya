@@ -57,8 +57,6 @@ public:
     auto writeToFile(std::string _filename) -> bool;
     auto readFromFile(std::string _filename) -> bool;
 
-    auto setHost(std::string _host) -> void;
-    auto getHost() -> std::string ;
     auto setPort(std::string _port) -> void;
     auto getPort() -> std::string;
     auto setProtocol(Protocol _port) -> void;
@@ -86,7 +84,6 @@ public:
     auto getAC_DC() -> AC_DC;
 
 private:
-    bool m_Bhost;
     bool m_Bport;
     bool m_Bprotocol;
     bool m_Bsamples;
@@ -99,7 +96,6 @@ private:
     bool m_calib;
     bool m_Battenuator;
     bool m_Bcalib;
-    std::string      m_host;
     std::string      m_port;
     Protocol    m_protocol;
     uint32_t    m_samples;

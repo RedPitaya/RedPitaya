@@ -14,6 +14,20 @@ static struct option long_options_broadcast[] = {
 
 static constexpr char optstring_broadcast[] = "sp:t:";
 
+static struct option long_options_config[] = {
+        /* These options set a flag. */
+        {"config",       no_argument,       0, 'c'},
+        {"hosts",        required_argument, 0, 'h'},
+        {"port",         required_argument, 0, 'p'},
+        {"get",          required_argument, 0, 'g'},
+        {"set",          required_argument, 0, 's'},
+        {"config_file",  required_argument, 0, 'f'},
+
+        {0, 0, 0, 0}
+};
+
+static constexpr char optstring_config[] = "ch:p:gs";
+
 std::vector<std::string> split(const std::string& s, char seperator)
 {
     std::vector<std::string> output;

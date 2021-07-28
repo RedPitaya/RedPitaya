@@ -159,7 +159,6 @@ auto ServerNetConfigManager::sendServerStopped() -> bool{
 auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
     if (m_pNetConfManager->isConnected()) {
         if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;
-        if (!m_pNetConfManager->sendData("host",getHost(),_async)) return false;
         if (!m_pNetConfManager->sendData("port",getPort(),_async)) return false;
         if (!m_pNetConfManager->sendData("protocol",static_cast<uint32_t>(getProtocol()),_async)) return false;
         if (!m_pNetConfManager->sendData("samples",static_cast<uint32_t>(getSamples()),_async)) return false;

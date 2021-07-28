@@ -232,7 +232,6 @@ auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
 auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _async) -> bool{
     if (_client->m_manager->isConnected()) {
         if (!_client->m_manager->sendData(CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;
-        if (!_client->m_manager->sendData("host",getHost(),_async)) return false;
         if (!_client->m_manager->sendData("port",getPort(),_async)) return false;
         if (!_client->m_manager->sendData("protocol",static_cast<uint32_t>(getProtocol()),_async)) return false;
         if (!_client->m_manager->sendData("samples",static_cast<uint32_t>(getSamples()),_async)) return false;
