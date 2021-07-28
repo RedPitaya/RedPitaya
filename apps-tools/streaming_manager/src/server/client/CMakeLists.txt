@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(rpsa_client)
 
-add_executable(rpsa_client search.cpp options.cpp main.cpp)
+add_executable(rpsa_client search.cpp config.cpp options.cpp main.cpp)
 
 target_compile_options(rpsa_client
     PRIVATE -std=c++11 -O3 -pedantic -static -static-libstdc++ -static-libgcc)

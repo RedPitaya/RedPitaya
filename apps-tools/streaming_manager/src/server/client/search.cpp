@@ -1,6 +1,6 @@
 #include "search.h"
 
-auto startSearch(ClientOpt::Optons &option) -> void{
+auto startSearch(ClientOpt::Options &option) -> void{
     ClientNetConfigManager client("",false);
     client.startBroadcast("127.0.0.1",option.port != "" ? option.port : "8902");
     int timout = option.timeout;
