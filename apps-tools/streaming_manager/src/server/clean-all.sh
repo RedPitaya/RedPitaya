@@ -16,13 +16,13 @@ cd ..
 
 
 cd client
-find . -not -name "CMakeLists.txt" -not -name "*.cpp" -maxdepth 1 -type f -exec rm -r "{}" \;
+find . -not -name "CMakeLists.txt" -not -name "*.cpp" -not name "*.h" -maxdepth 1 -type f -exec rm -r "{}" \;
 cd ..
 
 cd targets
-find . -not -name "CMakeLists.txt" -not -name "*.cpp" -maxdepth 2 -type f -exec rm -r "{}" \;
+find . -not -name "CMakeLists.txt" -not -name "*.cpp" -not name "*.h" -maxdepth 2 -type f -exec rm -r "{}" \;
 cd ..
 
 cd convert_tool
-find . -not -name "CMakeLists.txt" -not -name "*.cpp" -maxdepth 2 -type f -exec rm -r "{}" \;
+find . -not -name "CMakeLists.txt" -not -name "*.cpp" -not name "*.h" -maxdepth 2 -type f -exec rm -r "{}" \;
 cd ..
