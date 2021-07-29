@@ -118,7 +118,7 @@ int rp_app_init(void)
 	fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
 	g_serverRun = false;
-	try {	
+	try {
 		try {
 			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
@@ -143,7 +143,7 @@ int rp_app_init(void)
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 #ifdef Z20_250_12
 	    rp_max7311::rp_initController();
-#endif 
+#endif
 
 	}catch (std::exception& e)
 	{
@@ -211,7 +211,7 @@ void updateUI(){
 			ss_protocol.SendValue(SS_UDP);
 			break;
 	}
-	
+
 	switch (g_serverNetConfig->getChannels())
 	{
 		case CStreamSettings::CH1:
@@ -224,7 +224,7 @@ void updateUI(){
 			ss_channels.SendValue(3);
 			break;
 	}
-	
+
 	switch (g_serverNetConfig->getResolution())
 	{
 		case CStreamSettings::BIT_8:
@@ -257,7 +257,7 @@ void updateUI(){
 			ss_format.SendValue(2);
 			break;
 	}
-	
+
 	switch (g_serverNetConfig->getAttenuator())
 	{
 		case CStreamSettings::A_1_1:
@@ -296,19 +296,19 @@ void setConfig(bool _force){
 		g_serverNetConfig->startServer(ss_ip_addr.Value(),SERVER_CONFIG_PORT);
 
 		#ifdef Z10
-		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14;		
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14;
 		#endif
 
 		#ifdef Z20
-		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_122_16;		
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_122_16;
 		#endif
 
 		#ifdef Z20_125
-		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14_Z20;		
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14_Z20;
 		#endif
 
 		#ifdef Z20_250_12
-		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_250_12;		
+		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_250_12;
 		#endif
 
 		g_serverNetConfig->startBroadcast(model, ss_ip_addr.Value(),SERVER_BROADCAST_PORT);
@@ -321,7 +321,7 @@ void setConfig(bool _force){
 			g_serverNetConfig->setSaveType(CStreamSettings::FILE);
 		else
 			g_serverNetConfig->setSaveType(CStreamSettings::NET);
-		
+
 	}
 
 	if (ss_protocol.IsNewValue() || _force)
@@ -341,7 +341,7 @@ void setConfig(bool _force){
 		if (ss_channels.Value() == 2)
 			g_serverNetConfig->setChannels(CStreamSettings::CH2);
 		if (ss_channels.Value() == 3)
-			g_serverNetConfig->setChannels(CStreamSettings::BOTH);				
+			g_serverNetConfig->setChannels(CStreamSettings::BOTH);
 	}
 
 	if (ss_resolution.IsNewValue() || _force)
@@ -392,7 +392,7 @@ void setConfig(bool _force){
 		if (ss_attenuator.Value() == 1)
 			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
 		if (ss_attenuator.Value() == 2)
-			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_20);			
+			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_20);
 	}
 
 	if (ss_calib.IsNewValue() || _force)
@@ -402,7 +402,7 @@ void setConfig(bool _force){
 	}
 #else
 	g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
-	g_serverNetConfig->setCalibration(false);	
+	g_serverNetConfig->setCalibration(false);
 #endif
 
 #ifdef Z20_250_12
@@ -412,7 +412,7 @@ void setConfig(bool _force){
 		if (ss_ac_dc.Value() == 1)
 			g_serverNetConfig->setAC_DC(CStreamSettings::AC);
 		if (ss_ac_dc.Value() == 2)
-			g_serverNetConfig->setAC_DC(CStreamSettings::DC);				
+			g_serverNetConfig->setAC_DC(CStreamSettings::DC);
 	}
 #else
 	g_serverNetConfig->setAC_DC(CStreamSettings::AC);
@@ -424,7 +424,7 @@ void setConfig(bool _force){
 void UpdateParams(void)
 {
 	try{
-		
+
 		setConfig(false);
 
 		if (ss_start.IsNewValue())
@@ -440,7 +440,7 @@ void UpdateParams(void)
 	{
 		fprintf(stderr, "Error: UpdateParams() %s\n",e.what());
 	}
-	
+
 }
 
 
@@ -463,13 +463,16 @@ void OnNewSignals(void)
 void StartServer(){
 	try{
 		if (!g_serverNetConfig->isSetted()) return;
-		if (g_serverRun) return;
-			g_serverRun = true;
+		if (g_serverRun) {
+			g_serverNetConfig->sendServerStarted();
+			return;
+		}
+		g_serverRun = true;
 		auto resolution   = g_serverNetConfig->getResolution();
 		auto format       = g_serverNetConfig->getFormat();
 		auto sock_port    = g_serverNetConfig->getPort();
 		auto use_file     = g_serverNetConfig->getSaveType();
-		auto protocol     = g_serverNetConfig->getProtocol(); 
+		auto protocol     = g_serverNetConfig->getProtocol();
 		auto channel      = g_serverNetConfig->getChannels();
 		auto rate         = g_serverNetConfig->getDecimation();
 		auto ip_addr_host = ss_ip_addr.Value();
@@ -511,14 +514,14 @@ void StartServer(){
 				if (ac_dc == CStreamSettings::AC) {
 					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac) / 20.0;  // 1:1
 					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac) / 20.0;  // 1:1
-					ch1_off  = osc_calib_params.osc_ch1_off_1_ac; 
-					ch2_off  = osc_calib_params.osc_ch2_off_1_ac; 
+					ch1_off  = osc_calib_params.osc_ch1_off_1_ac;
+					ch2_off  = osc_calib_params.osc_ch2_off_1_ac;
 				}
 				else {
 					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc) / 20.0;  // 1:1
 					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc) / 20.0;  // 1:1
-					ch1_off  = osc_calib_params.osc_ch1_off_1_dc; 
-					ch2_off  = osc_calib_params.osc_ch2_off_1_dc; 
+					ch1_off  = osc_calib_params.osc_ch1_off_1_dc;
+					ch2_off  = osc_calib_params.osc_ch2_off_1_dc;
 				}
 			}else{
 				if (ac_dc == CStreamSettings::A_1_1) {
@@ -538,8 +541,8 @@ void StartServer(){
 #if defined Z10 || defined Z20_125
 			filterBypass = false;
 			if (attenuator == CStreamSettings::A_1_1) {
-				ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;  
-				ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;  
+				ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;
+				ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;
 				ch1_off  = osc_calib_params.fe_ch1_lo_offs;
 				ch2_off  = osc_calib_params.fe_ch2_lo_offs;
 				aa_ch1 = osc_calib_params.low_filter_aa_ch1;
@@ -552,8 +555,8 @@ void StartServer(){
 				kk_ch2 = osc_calib_params.low_filter_kk_ch2;
 
 			}else{
-				ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);  
-				ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);  
+				ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);
+				ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);
 				ch1_off  = osc_calib_params.fe_ch1_hi_offs;
 				ch2_off  = osc_calib_params.fe_ch2_hi_offs;
 				aa_ch1 = osc_calib_params.hi_filter_aa_ch1;
@@ -577,7 +580,7 @@ void StartServer(){
 
 		// Search oscilloscope
 		COscilloscope::Ptr osc = nullptr;
-		
+
 		for (const UioT &uio : uioList)
 		{
 			if (uio.nodeName == "rp_oscilloscope")
