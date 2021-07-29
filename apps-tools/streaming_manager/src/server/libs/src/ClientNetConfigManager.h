@@ -32,7 +32,11 @@ public:
         SUCCESS_SEND_CONFIG,
         FAIL_SEND_CONFIG,
         SUCCESS_SAVE_CONFIG,
-        FAIL_SAVE_CONFIG
+        FAIL_SAVE_CONFIG,
+        SERVER_STARTED,
+        SERVER_STOPPED,
+        SERVER_STOPPED_SD_FULL,
+        SERVER_STOPPED_SD_DONE
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();

@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
     }
 
     if (opt.mode == ClientOpt::Mode::REMOTE){
-        startConfig(opt);
+        startRemote(opt);
         return 0;
     }
 

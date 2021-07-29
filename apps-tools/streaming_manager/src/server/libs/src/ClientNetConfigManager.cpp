@@ -162,6 +162,23 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
     if (c== CNetConfigManager::Commands::SAVE_TO_FILE_FAIL){
         m_callbacksStr.emitEvent(static_cast<int>(Events::FAIL_SAVE_CONFIG),sender->m_manager->getHost());
     }
+
+    if (c== CNetConfigManager::Commands::SERVER_STARTED){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STARTED),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_STOPPED){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STOPPED),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_STOPPED_SD_DONE){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STOPPED_SD_DONE),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_STOPPED_SD_FULL){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STOPPED_SD_FULL),sender->m_manager->getHost());
+    }
+
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
