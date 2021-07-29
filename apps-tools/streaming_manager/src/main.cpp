@@ -84,7 +84,7 @@ CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MO
 CStreamingManager::Ptr  s_manger;
 CStreamingApplication  *s_app;
 std::shared_ptr<ServerNetConfigManager> g_serverNetConfig;
-
+std::atomic_bool g_serverRun(false);
 
 // void PrintLogInFile(const char *message){
 // #ifdef DEBUG_MODE
@@ -117,6 +117,7 @@ int rp_app_init(void)
 {
 	fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
+	g_serverRun = false;
 	try {	
 		try {
 			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
@@ -462,6 +463,8 @@ void OnNewSignals(void)
 void StartServer(){
 	try{
 		if (!g_serverNetConfig->isSetted()) return;
+		if (g_serverRun) return;
+			g_serverRun = true;
 		auto resolution   = g_serverNetConfig->getResolution();
 		auto format       = g_serverNetConfig->getFormat();
 		auto sock_port    = g_serverNetConfig->getPort();
@@ -615,6 +618,7 @@ void StartServer(){
 		ss_status.SendValue(1);
 		s_app->runNonBlock();
 		g_serverNetConfig->sendServerStarted();
+		fprintf(stderr,"[Streaming] Start server\n");
 
 	}catch (std::exception& e)
 	{
@@ -644,7 +648,7 @@ void StopServer(int x){
 		ss_status.SendValue(x);
 		switch (x)
 		{
-		case 1:
+		case 0:
 			g_serverNetConfig->sendServerStopped();
 			break;
 		case 2:
@@ -657,6 +661,8 @@ void StopServer(int x){
 			throw runtime_error("Unknown state");
 			break;
 		}
+		g_serverRun = false;
+		fprintf(stderr,"[Streaming] Stop server\n");
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
