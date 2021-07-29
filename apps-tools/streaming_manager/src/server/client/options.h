@@ -8,6 +8,7 @@ namespace ClientOpt {
         ERROR_PARAM,
         SEARCH,
         CONFIG,
+        REMOTE,
         STREAMING
     };
 
@@ -25,6 +26,13 @@ namespace ClientOpt {
         FILE
     };
 
+    enum class RemoteMode{
+        NONE,
+        START,
+        STOP,
+        START_STOP
+    };
+
     struct Options {
         Mode mode;
         std::string port;
@@ -33,7 +41,9 @@ namespace ClientOpt {
         ConfGet conf_get;
         ConfSet conf_set;
         std::string  conf_file;
-        bool conf_verbous;
+        bool verbous;
+        RemoteMode remote_mode;
+
         Options(){
             mode = Mode::ERROR;
             port = "";
@@ -42,7 +52,8 @@ namespace ClientOpt {
             conf_get = ConfGet::NONE;
             conf_set = ConfSet::NONE;
             conf_file = "";
-            conf_verbous = false;
+            verbous = false;
+            remote_mode = RemoteMode::NONE;
         };
     };
 

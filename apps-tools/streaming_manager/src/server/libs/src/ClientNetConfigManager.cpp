@@ -280,3 +280,34 @@ auto ClientNetConfigManager::sendSaveToFile(std::string host) -> bool{
     }
     return false;
 }
+
+auto ClientNetConfigManager::sendStart(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_STREAMING);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendStop(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::STOP_STREAMING);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode{
+    const std::lock_guard<std::mutex> lock(g_client_mutex);
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_mode;
+    }
+    return asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
+}

@@ -10,6 +10,8 @@
 #include "options.h"
 #include "search.h"
 #include "config.h"
+#include "remote.h"
+
 #include "AsioNet.h"
 #include "StreamingManager.h"
 
@@ -201,8 +203,10 @@ void stopStreaming(int sigNum){
 }
 
 void sigHandler (int sigNum){
-    stopCSV(sigNum);
-    stopStreaming(sigNum);
+    //stopCSV(sigNum);
+    //stopStreaming(sigNum);
+    remoteSIGHandler();
+    configSIGHandler();
 }
 
 void installTermSignalHandler()
@@ -221,6 +225,8 @@ void installTermSignalHandler()
 
 int main(int argc, char* argv[])
 {
+    installTermSignalHandler();
+
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
     if (opt.mode == ClientOpt::Mode::ERROR) {
@@ -232,10 +238,17 @@ int main(int argc, char* argv[])
         startSearch(opt);
         return 0;
     }
+
     if (opt.mode == ClientOpt::Mode::CONFIG){
         startConfig(opt);
         return 0;
     }
+
+    if (opt.mode == ClientOpt::Mode::REMOTE){
+        startConfig(opt);
+        return 0;
+    }
+
     return 0;
 
         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
@@ -249,7 +262,7 @@ int main(int argc, char* argv[])
         g_BytesCount = 0;
         g_terminate = false;
 
-        installTermSignalHandler();
+
 
         asionet::Protocol protocol_val;
 

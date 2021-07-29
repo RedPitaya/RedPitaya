@@ -43,7 +43,10 @@ public:
     auto isServersConnected() -> bool;
     auto sendConfig(std::string host) -> bool;
     auto sendSaveToFile(std::string host) -> bool;
+    auto sendStart(std::string host) -> bool;
+    auto sendStop(std::string host) -> bool;
     auto requestConfig(std::string host) -> bool;
+    auto getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode;
     auto getLocalSettingsOfHost(std::string host) -> CStreamSettings*;
 
     auto addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string)> _func) -> void;
