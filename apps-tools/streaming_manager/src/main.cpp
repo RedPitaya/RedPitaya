@@ -36,6 +36,7 @@ void StartServer();
 void StopServer(int x);
 void StopNonBlocking(int x);
 void setConfig(bool _force);
+void UpdateUINonBlocking();
 
 static std::mutex mut;
 static pthread_mutex_t mutex;
@@ -118,6 +119,10 @@ int rp_app_init(void)
 	CDataManager::GetInstance()->SetParamInterval(100);
 	try {	
 		g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
+		g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
+			UpdateUINonBlocking();
+		});
+
 		ss_status.SendValue(0);
 		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
 		setConfig(true);
@@ -508,6 +513,16 @@ void StartServer(){
 	}
 }
 
+void UpdateUINonBlocking(){
+	try{
+		std::thread th(setConfig ,true);
+		th.detach();
+	}catch (std::exception& e)
+	{
+		fprintf(stderr, "Error: StopServer() %s\n",e.what());
+	}
+}
+
 void StopNonBlocking(int x){
 	try{
 		std::thread th(StopServer ,x);
@@ -517,6 +532,7 @@ void StopNonBlocking(int x){
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
 	}
 }
+
 
 void StopServer(int x){
 	try{
