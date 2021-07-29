@@ -82,6 +82,136 @@ bool CStreamSettings::writeToFile(string _filename){
     return false;
 }
 
+auto CStreamSettings::getJson()-> std::string{
+    if (isSetted()){
+        Json::Value root;
+        root["port"] = getPort();
+        root["protocol"] = getProtocol();
+        root["samples"] = getSamples();
+        root["format"] = getFormat();
+        root["type"] = getType();
+        root["save_type"] = getSaveType();
+        root["channels"] = getChannels();
+        root["resolution"] = getResolution();
+        root["decimation"] = getDecimation();
+        root["attenuator"] = getAttenuator();
+        root["calibration"] = getCalibration();
+        root["coupling"] = getAC_DC();
+        Json::StreamWriterBuilder builder;
+        const std::string json = Json::writeString(builder, root);
+        return json;
+    }
+    return "INCOMPLETE SETTING";
+}
+
+auto CStreamSettings::String()-> std::string{
+    if (isSetted()){
+        std::string  str = "";
+        str = str + "Port:\t\t\t"+getPort()+"\n";
+
+        std::string  protocol = "ERROR";
+        switch (getProtocol()) {
+            case TCP:
+                protocol = "TCP";
+                break;
+            case UDP:
+                protocol = "UDP";
+                break;
+        }
+        str = str + "Protocol:\t\t" + protocol  +"\n";
+
+        std::string  channels = "ERROR";
+        switch (getChannels()) {
+            case CH1:
+                channels = "Channel 1";
+                break;
+            case CH2:
+                channels = "Channel 2";
+                break;
+            case BOTH:
+                channels = "Both channel";
+                break;
+        }
+        str = str + "Channels:\t\t" + channels  +"\n";
+
+        str = str + "Decimation:\t\t" + std::to_string(getDecimation())  +"\n";
+
+        std::string  resolution = "ERROR";
+        switch (getResolution()) {
+            case BIT_8:
+                resolution = "8 Bit";
+                break;
+            case BIT_16:
+                resolution = "16 Bit";
+                break;
+        }
+        str = str + "Resolution:\t\t" + resolution  +"\n";
+
+        std::string  attenuator = "ERROR";
+        switch (getAttenuator()) {
+            case A_1_1:
+                attenuator = "1:1";
+                break;
+            case A_1_20:
+                attenuator = "1:20";
+                break;
+        }
+        str = str + "Attenuator:\t\t" + attenuator  +" (125-14 and 250-12 only)\n";
+        str = str + "Calibration:\t" + (getCalibration() ? "Enable" : "Disable")  +" (125-14 and 250-12 only)\n";
+
+        std::string  coupling = "ERROR";
+        switch (getAC_DC()) {
+            case AC:
+                coupling = "AC";
+                break;
+            case DC:
+                coupling = "DC";
+                break;
+        }
+        str = str + "AC/DC mode:\t\t" + coupling  +" (250-12 only)\n";
+
+        std::string  savetype = "ERROR";
+        switch (getSaveType()) {
+            case SaveType::NET:
+                savetype = "Network";
+                break;
+            case SaveType::FILE:
+                savetype = "Local file";
+        }
+        str = str + "Mode:\t\t\t" + savetype  + "\n";
+
+        str = str + "Samples:\t\t" + (getSamples() == -1 ? "Unlimited" : std::to_string(getSamples()))  +" (In file mode)\n";
+
+        std::string  format = "ERROR";
+        switch (getFormat()) {
+            case DataFormat::WAV:
+                format = "WAV";
+                break;
+            case DataFormat::TDMS:
+                format = "TDMS";
+                break;
+            case DataFormat::CSV:
+                format = "CSV";
+                break;
+        }
+        str = str + "Data format:\t" + format  +" (In file mode)\n";
+
+        std::string  type = "ERROR";
+        switch (getType()) {
+            case DataType::RAW:
+                type = "RAW";
+                break;
+            case DataType::VOLT:
+                type = "Voltage";
+        }
+        str = str + "Data type:\t\t" + type  +" (In file mode)\n";
+
+        return str;
+    }
+    return "INCOMPLETE SETTING";
+}
+
+
 auto CStreamSettings::readFromFile(string _filename) -> bool {
 
     Json::Value root;

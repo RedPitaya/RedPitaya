@@ -91,6 +91,12 @@ auto check_ip( const std::string &value ) -> bool {
     return true;
 }
 
+void remove_duplicates(std::vector<std::string>& vec)
+{
+    std::sort(vec.begin(), vec.end());
+    vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
+}
+
 
 /** Print usage information */
 auto ClientOpt::usage(char const* progName) -> void{
@@ -114,9 +120,9 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t%s -s [-p PORT] [-t SEC]\n"
             "\t\t%s --search [--port=PORT] [--timeout=SEC]\n"
             "\n"
-            "\t\t--search            -s        Enable broadcast search.\n"
-            "\t\t--port=PORT         -p PORT   Port for broadcast (Default: 8902).\n"
-            "\t\t--timeout=SEC       -t SEC    Timeout(Default: 5 sec).\n"
+            "\t\t--search            -s           Enable broadcast search.\n"
+            "\t\t--port=PORT         -p PORT      Port for broadcast (Default: 8902).\n"
+            "\t\t--timeout=SEC       -t SEC       Timeout(Default: 5 sec).\n"
             "\n"
             "\tConfiguration Mode:\n"
             "\t\tThey will allow you to get or set the configuration on the boards.\n"
@@ -127,20 +133,21 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t%s --config --hosts='IPs' [--port=PORT] --get=V|VV|F [--verbose]\n"
             "\t\t%s --config --hosts='IPs' [--port=PORT] --set=M|F [--config_file=FILE] [--verbose]\n"
             "\n"
-            "\t\t--config            -c        Enable config mode.\n"
-            "\t\t--hosts=IP;..       -h IP;... You can specify one or more board IP addresses through a separator - ','\n"
-            "\t\t                              Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
+            "\t\t--config            -c           Enable config mode.\n"
+            "\t\t--hosts=IP;..       -h IP;...    You can specify one or more board IP addresses through a separator - ','\n"
+            "\t\t                                 Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
             "\t\t                                        -p 127.0.0.1     or  -p 127.0.0.1,127.0.0.2,127.0.0.3\n"
-            "\t\t--port=PORT         -p PORT   Port for broadcast (Default: 8901).\n"
-            "\t\t--get=V|VV|F        -g V|VV|F Requests configurations from all boards.\n"
-            "\t\t                              Keys: V  = Displays on the screen in json format.\n"
-            "\t\t                                    VV = Displays on the screen in a format with decoding values.\n"
-            "\t\t                                    F  = Saves to a config files.\n"
-            "\t\t--set=M|F           -s M|F    Sets configurations for all boards.\n"
-            "\t\t                              Keys: M  = Sets values only to memory without saving to file.\n"
-            "\t\t                                    F  = Sets configuration and saves to file on remote boards.\n"
-            "\t\t--config_file=FILE  -f FILE   Configuration file for setting values on boards (Default: config.json).\n"
-            "\t\t--verbose           -v        Displays service information.\n"
+            "\t\t--port=PORT         -p PORT      Port for broadcast (Default: 8901).\n"
+            "\t\t--get=V|V1|VV|F     -g V|V1|VV|F Requests configurations from all boards.\n"
+            "\t\t                                 Keys: V  = Displays on the screen in json format.\n"
+            "\t\t                                       V1 = Displays on the screen in json format (only data).\n"
+            "\t\t                                       VV = Displays on the screen in a format with decoding values.\n"
+            "\t\t                                       F  = Saves to a config files.\n"
+            "\t\t--set=M|F           -s M|F       Sets configurations for all boards.\n"
+            "\t\t                                 Keys: M  = Sets values only to memory without saving to file.\n"
+            "\t\t                                       F  = Sets configuration and saves to file on remote boards.\n"
+            "\t\t--config_file=FILE  -f FILE      Configuration file for setting values on boards (Default: config.json).\n"
+            "\t\t--verbose           -v           Displays service information.\n"
             "\n"
             "\n"
             "\n"
@@ -222,7 +229,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 'h': {
                     opt.hosts = split(optarg, ',');
-                    std::unique(opt.hosts.begin(),opt.hosts.end());
+                    remove_duplicates(opt.hosts);
                     if (opt.hosts.size() > 0) {
                         for (auto &s:opt.hosts) {
                             if (!check_ip(s)) {
@@ -242,6 +249,8 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                 case 'g': {
                     if (strcmp(optarg, "V") == 0) {
                         opt.conf_get = ConfGet::VERBOUS_JSON;
+                    } else if (strcmp(optarg, "V1") == 0) {
+                        opt.conf_get = ConfGet::VERBOUS_JSON_DATA;
                     } else if (strcmp(optarg, "VV") == 0) {
                         opt.conf_get = ConfGet::VERBOUS;
                     } else if (strcmp(optarg, "F") == 0) {

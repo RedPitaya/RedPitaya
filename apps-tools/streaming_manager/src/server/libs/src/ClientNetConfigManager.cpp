@@ -147,6 +147,22 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         if (emitGetSettings)
             m_callbacksStr.emitEvent(static_cast<int>(Events::GET_NEW_SETTING),sender->m_manager->getHost());
     }
+
+    if (c== CNetConfigManager::Commands::SETTING_GET_SUCCES){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SUCCESS_SEND_CONFIG),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SETTING_GET_FAIL){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::FAIL_SEND_CONFIG),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SAVE_TO_FILE_SUCCES){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SUCCESS_SAVE_CONFIG),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SAVE_TO_FILE_FAIL){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::FAIL_SAVE_CONFIG),sender->m_manager->getHost());
+    }
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
@@ -201,19 +217,6 @@ auto ClientNetConfigManager::connectTimeoutError(std::error_code error,std::shar
     m_errorCallback.emitEvent(0,Errors::CONNECT_TIMEOUT,sender->m_manager->getHost());
 }
 
-auto ClientNetConfigManager::sendConfigAll() -> void{
-    const std::lock_guard<std::mutex> lock(g_client_mutex);
-    for(const auto &c : m_clients){
-        if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE){
-            auto ret =  sendConfig(c,true);
-            if (!ret) {
-                c->m_manager->stopAsioNet();
-                m_errorCallback.emitEvent(0,Errors::ERROR_SEND_CONFIG,c->m_manager->getHost());
-            }
-        }
-    }
-}
-
 auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
     const std::lock_guard<std::mutex> lock(g_client_mutex);
     for(const auto &c : m_clients){
@@ -221,9 +224,8 @@ auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
             auto ret =  sendConfig(c,true);
             if (!ret) {
                 c->m_manager->stopAsioNet();
-                m_errorCallback.emitEvent(0,Errors::ERROR_SEND_CONFIG,c->m_manager->getHost());
             }
-            break;
+            return ret;
         }
     }
     return false;
@@ -268,4 +270,14 @@ auto ClientNetConfigManager::getLocalSettingsOfHost(std::string host) -> CStream
         return (CStreamSettings*)&(it->operator->()->m_client_settings);
     }
     return nullptr;
+}
+
+auto ClientNetConfigManager::sendSaveToFile(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::SAVE_SETTING_TO_FILE);
+    }
+    return false;
 }

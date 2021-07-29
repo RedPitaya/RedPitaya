@@ -28,7 +28,11 @@ public:
     enum class Events{
         BROADCAST_NEW_CLIENT,
         SERVER_CONNECTED,
-        GET_NEW_SETTING
+        GET_NEW_SETTING,
+        SUCCESS_SEND_CONFIG,
+        FAIL_SEND_CONFIG,
+        SUCCESS_SAVE_CONFIG,
+        FAIL_SAVE_CONFIG
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
@@ -37,8 +41,8 @@ public:
     auto getBroadcastClients() -> const std::list<BroadCastClients>;
     auto connectToServers(std::vector<std::string> _hosts,std::string port) -> void;
     auto isServersConnected() -> bool;
-    auto sendConfigAll() -> void;
     auto sendConfig(std::string host) -> bool;
+    auto sendSaveToFile(std::string host) -> bool;
     auto requestConfig(std::string host) -> bool;
     auto getLocalSettingsOfHost(std::string host) -> CStreamSettings*;
 

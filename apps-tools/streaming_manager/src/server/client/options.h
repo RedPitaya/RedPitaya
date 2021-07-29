@@ -14,6 +14,7 @@ namespace ClientOpt {
     enum class ConfGet{
         NONE,
         VERBOUS_JSON,
+        VERBOUS_JSON_DATA,
         VERBOUS,
         FILE
     };

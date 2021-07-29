@@ -56,6 +56,8 @@ public:
 
     auto writeToFile(std::string _filename) -> bool;
     auto readFromFile(std::string _filename) -> bool;
+    auto getJson()-> std::string;
+    auto String()-> std::string;
 
     auto setPort(std::string _port) -> void;
     auto getPort() -> std::string;
