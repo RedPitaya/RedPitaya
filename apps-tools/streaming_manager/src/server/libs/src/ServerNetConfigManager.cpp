@@ -22,8 +22,14 @@ ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings
 }
 
 ServerNetConfigManager::~ServerNetConfigManager(){
-
+    stop();
 }
+
+auto ServerNetConfigManager::stop() -> void{
+    m_pBroadcast->CloseSocket();
+    m_pNetConfManager->stopAsioNet();
+}
+
 
 auto ServerNetConfigManager::startServer(std::string host,std::string port) -> void{
     m_pNetConfManager->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_SERVER,host,port);

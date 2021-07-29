@@ -25,6 +25,7 @@ public:
 
     auto startServer(std::string host,std::string port) -> void;
     auto startBroadcast(asionet_broadcast::CAsioBroadcastSocket::Model model,std::string host,std::string port) -> void;
+    auto stop() -> void;
     auto isConnected() -> bool;
     auto sendServerStarted() -> bool;
     auto sendServerStopped() -> bool;

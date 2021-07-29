@@ -147,21 +147,7 @@ var formatСhange = function(event) {
 
 var rateFocusOut = function(event) {
     SM.calcRateHz($("#SS_RATE").val());
-    rateFocusOutValue();
-    // SM.calcRateHz($("#SS_RATE").val());
-    // SM.parametersCache["SS_RATE"] = { value: SM.ss_rate };
-    // SM.sendParameters();
-
-    // text = "";
-    // rate_hz = SM.calcRateDecToHz();
-    // if (rate_hz > 1000000)
-    //     text = Math.round(rate_hz / 1000) / 1000 + " MHz";
-    // else if (rate_hz > 1000)
-    //     text = rate_hz / 1000 + " kHz";
-    // else
-    //     text = rate_hz + " Hz";
-
-    // $("#SS_RATE").val(text);
+    rateFocusOutValue();    
 }
 
 var rateFocusOutValue = function() {

@@ -36,7 +36,7 @@ void StartServer();
 void StopServer(int x);
 void StopNonBlocking(int x);
 void setConfig(bool _force);
-void UpdateUINonBlocking();
+void updateUI();
 
 static std::mutex mut;
 static pthread_mutex_t mutex;
@@ -118,14 +118,19 @@ int rp_app_init(void)
 	fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
 	try {	
-		g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
-		g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
-			UpdateUINonBlocking();
-		});
+		try {
+			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
+				updateUI();
+			});
+		}catch (std::exception& e)
+			{
+				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());
+			}
 
 		ss_status.SendValue(0);
 		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
-		setConfig(true);
+		updateUI();
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 #ifdef Z20_250_12
 	    rp_max7311::rp_initController();
@@ -141,6 +146,7 @@ int rp_app_init(void)
 //Application exit
 int rp_app_exit(void)
 {
+	g_serverNetConfig->stop();
 	StopServer(0);
 	fprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);	
 	return 0;
@@ -172,6 +178,100 @@ void UpdateSignals(void)
 
 void saveConfigInFile(){
 	g_serverNetConfig->writeToFile(config_file);
+}
+
+void updateUI(){
+	ss_port.SendValue(std::atoi(g_serverNetConfig->getPort().c_str()));
+
+	switch (g_serverNetConfig->getSaveType())
+	{
+		case CStreamSettings::NET:
+			ss_use_localfile.SendValue(0);
+			break;
+		case CStreamSettings::FILE:
+			ss_use_localfile.SendValue(1);
+			break;
+	}
+
+	switch (g_serverNetConfig->getProtocol())
+	{
+		case CStreamSettings::TCP:
+			ss_protocol.SendValue(SS_TCP);
+			break;
+		case CStreamSettings::UDP:
+			ss_protocol.SendValue(SS_UDP);
+			break;
+	}
+	
+	switch (g_serverNetConfig->getChannels())
+	{
+		case CStreamSettings::CH1:
+			ss_protocol.SendValue(1);
+			break;
+		case CStreamSettings::CH2:
+			ss_channels.SendValue(2);
+			break;
+		case CStreamSettings::BOTH:
+			ss_channels.SendValue(3);
+			break;
+	}
+	
+	switch (g_serverNetConfig->getResolution())
+	{
+		case CStreamSettings::BIT_8:
+			ss_resolution.SendValue(SS_8BIT);
+			break;
+		case CStreamSettings::BIT_16:
+			ss_resolution.SendValue(SS_16BIT);
+			break;
+	}
+
+	switch (g_serverNetConfig->getType())
+	{
+		case CStreamSettings::RAW:
+			ss_save_mode.SendValue(1);
+			break;
+		case CStreamSettings::VOLT:
+			ss_save_mode.SendValue(2);
+			break;
+	}
+
+	switch (g_serverNetConfig->getFormat())
+	{
+		case CStreamSettings::WAV:
+			ss_format.SendValue(0);
+			break;
+		case CStreamSettings::TDMS:
+			ss_format.SendValue(1);
+			break;
+		case CStreamSettings::CSV:
+			ss_format.SendValue(2);
+			break;
+	}
+	
+	switch (g_serverNetConfig->getAttenuator())
+	{
+		case CStreamSettings::A_1_1:
+			ss_attenuator.SendValue(1);
+			break;
+		case CStreamSettings::A_1_20:
+			ss_attenuator.SendValue(2);
+			break;
+	}
+
+	switch (g_serverNetConfig->getAC_DC())
+	{
+		case CStreamSettings::AC:
+			ss_ac_dc.SendValue(1);
+			break;
+		case CStreamSettings::DC:
+			ss_ac_dc.SendValue(2);
+			break;
+	}
+
+	ss_rate.SendValue(g_serverNetConfig->getDecimation());
+	ss_samples.SendValue(g_serverNetConfig->getSamples());
+	ss_calib.SendValue(g_serverNetConfig->getCalibration() ? 2 : 1);
 }
 
 void setConfig(bool _force){
@@ -507,16 +607,6 @@ void StartServer(){
 		ss_status.SendValue(1);
 		s_app->runNonBlock();
 
-	}catch (std::exception& e)
-	{
-		fprintf(stderr, "Error: StopServer() %s\n",e.what());
-	}
-}
-
-void UpdateUINonBlocking(){
-	try{
-		std::thread th(setConfig ,true);
-		th.detach();
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());

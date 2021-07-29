@@ -157,7 +157,7 @@ auto CStreamSettings::String()-> std::string{
                 break;
         }
         str = str + "Attenuator:\t\t" + attenuator  +" (125-14 and 250-12 only)\n";
-        str = str + "Calibration:\t" + (getCalibration() ? "Enable" : "Disable")  +" (125-14 and 250-12 only)\n";
+        str = str + "Calibration:\t\t" + (getCalibration() ? "Enable" : "Disable")  +" (125-14 and 250-12 only)\n";
 
         std::string  coupling = "ERROR";
         switch (getAC_DC()) {
@@ -194,7 +194,7 @@ auto CStreamSettings::String()-> std::string{
                 format = "CSV";
                 break;
         }
-        str = str + "Data format:\t" + format  +" (In file mode)\n";
+        str = str + "Data format:\t\t" + format  +" (In file mode)\n";
 
         std::string  type = "ERROR";
         switch (getType()) {
