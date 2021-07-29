@@ -142,6 +142,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
             std::cerr << "Error: " << host.c_str() << "\n";
             g_connect_counter--;
             g_get_counter--;
+            g_set_counter--;
         }
 
         if (errors == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG){

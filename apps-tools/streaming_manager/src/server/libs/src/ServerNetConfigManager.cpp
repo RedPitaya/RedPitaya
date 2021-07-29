@@ -75,8 +75,8 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
     if (c == CNetConfigManager::Commands::END_SEND_SETTING){
         m_currentState = States::NORMAL;
         if (isSetted()){
-            m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
             m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
+            m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
         }else{
             reset();
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
@@ -93,8 +93,8 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
 
     if (c == CNetConfigManager::Commands::LOAD_SETTING_FROM_FILE){
         if (readFromFile(m_file_settings)){
-            m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_SUCCES);
             m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
+            m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_SUCCES);
         }else{
             m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_FAIL);
         }

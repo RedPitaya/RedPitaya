@@ -133,19 +133,18 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
     }
 
     if (c == CNetConfigManager::Commands::END_SEND_SETTING){
-        bool emitGetSettings = false;
+        if (sender->m_client_settings.isSetted())
+            m_callbacksStr.emitEvent(static_cast<int>(Events::GET_NEW_SETTING),sender->m_manager->getHost());
         g_client_mutex.lock();
         sender->m_current_state = Clients::States::NORMAL;
         if (sender->m_client_settings.isSetted()){
             sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
-            emitGetSettings = true;
         }else{
             sender->m_client_settings.reset();
             sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
         }
         g_client_mutex.unlock();
-        if (emitGetSettings)
-            m_callbacksStr.emitEvent(static_cast<int>(Events::GET_NEW_SETTING),sender->m_manager->getHost());
+
     }
 
     if (c== CNetConfigManager::Commands::SETTING_GET_SUCCES){
