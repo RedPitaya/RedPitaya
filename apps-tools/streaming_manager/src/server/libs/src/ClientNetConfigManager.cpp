@@ -219,7 +219,8 @@ auto ClientNetConfigManager::receiveValueDouble(std::string key,double value,std
 
 
 auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<Clients> sender) -> void{
-    fprintf(stderr,"[ClientNetConfigManager] Server error: %s (%d)\n",error.message().c_str(),error.value());
+    UNUSED(error);
+    //fprintf(stderr,"[ClientNetConfigManager] Server error: %s (%d)\n",error.message().c_str(),error.value());
     m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL,sender-> m_manager->getHost());
     if (sender->m_current_state  == Clients::States::GET_DATA){
         sender->m_client_settings.reset();

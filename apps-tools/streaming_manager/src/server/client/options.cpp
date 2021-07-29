@@ -178,7 +178,7 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t                                 Keys: start = Starts the server.\n"
             "\t\t                                       stop = Stop the server.\n"
             "\t\t                                       start_stop = Sends a start command at the end of the timeout sends a stop command.\n"
-            "\t\t--timeout=SEC       -t SEC       Timeout (Default: 5 sec). Used only in conjunction with the start_stop command.\n"
+            "\t\t--timeout=MSEC      -t MSEC      Timeout (Default: 1000 ms). Used only in conjunction with the start_stop command.\n"
             "\t\t--verbose           -v           Displays service information.\n"
             "\n"
             "\tStreaming Mode:\n"
@@ -298,7 +298,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 't': {
                     int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timout", 100000) != 0) {
+                    if (get_int(&t_out, optarg, "Error get timeout", 100000) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -382,27 +382,15 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                     break;
                 }
 
-                case 's': {
-                    if (strncmp(optarg, "M", 1) == 0) {
-                        opt.conf_set = ConfSet::MEMORY;
-                    } else if (strncmp(optarg, "F", 1) == 0) {
-                        opt.conf_set = ConfSet::FILE;
-                    } else {
-                        fprintf(stderr, "Error key in --set: %s\n", optarg);
+                case 't': {
+                    int t_out = 0;
+                    if (get_int(&t_out, optarg, "Error get timeout", 0xFFFFFFF) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
+                    opt.timeout = t_out;
                     break;
                 }
-
-                case 'f':
-                    if (optarg == NULL || strlen(optarg) == 0) {
-                        fprintf(stderr, "Error get filename\n");
-                        opt.mode = Mode::ERROR_PARAM;
-                        return opt;
-                    }
-                    opt.conf_file = std::string(optarg);
-                    break;
 
                 default: {
                     if (opt.mode == Mode::CONFIG) {

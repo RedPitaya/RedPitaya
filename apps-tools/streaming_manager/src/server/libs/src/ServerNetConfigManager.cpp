@@ -145,7 +145,8 @@ auto ServerNetConfigManager::receiveValueDouble(std::string key,double value) ->
 
 
 auto ServerNetConfigManager::serverError(std::error_code error) -> void{
-    fprintf(stderr,"[ServerNetConfigManager] serverError: %s (%d)\n",error.message().c_str(),error.value());
+    UNUSED(error);
+    //fprintf(stderr,"[ServerNetConfigManager] serverError: %s (%d)\n",error.message().c_str(),error.value());
     m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL);
     if (m_currentState == States::GET_DATA){
         reset();
