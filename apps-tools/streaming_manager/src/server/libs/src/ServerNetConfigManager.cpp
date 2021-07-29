@@ -162,6 +162,14 @@ auto ServerNetConfigManager::sendServerStopped() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STOPPED);
 }
 
+auto ServerNetConfigManager::sendServerStoppedSDFull() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STOPPED_SD_FULL);
+}
+
+auto ServerNetConfigManager::sendServerStoppedDone() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STOPPED_SD_DONE);
+}
+
 auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
     if (m_pNetConfManager->isConnected()) {
         if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;

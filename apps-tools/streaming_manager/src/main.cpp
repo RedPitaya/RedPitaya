@@ -123,6 +123,14 @@ int rp_app_init(void)
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
 				updateUI();
 			});
+
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING,[g_serverNetConfig](){
+				StartServer();
+			});
+
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[g_serverNetConfig](){
+				StopNonBlocking(0);
+			});
 		}catch (std::exception& e)
 			{
 				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());
@@ -606,10 +614,11 @@ void StartServer(){
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
 		ss_status.SendValue(1);
 		s_app->runNonBlock();
+		g_serverNetConfig->sendServerStarted();
 
 	}catch (std::exception& e)
 	{
-		fprintf(stderr, "Error: StopServer() %s\n",e.what());
+		fprintf(stderr, "Error: StartServer() %s\n",e.what());
 	}
 }
 
@@ -633,6 +642,21 @@ void StopServer(int x){
 			s_app = nullptr;
 		}
 		ss_status.SendValue(x);
+		switch (x)
+		{
+		case 1:
+			g_serverNetConfig->sendServerStopped();
+			break;
+		case 2:
+			g_serverNetConfig->sendServerStoppedSDFull();
+			break;
+		case 3:
+			g_serverNetConfig->sendServerStoppedDone();
+			break;
+		default:
+			throw runtime_error("Unknown state");
+			break;
+		}
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());

@@ -29,6 +29,9 @@ public:
     auto isConnected() -> bool;
     auto sendServerStarted() -> bool;
     auto sendServerStopped() -> bool;
+    auto sendServerStoppedSDFull() -> bool;
+    auto sendServerStoppedDone() -> bool;
+    
 
     auto addHandlerError(std::function<void(ServerNetConfigManager::Errors)> _func) -> void;
     auto addHandler(ServerNetConfigManager::Events event, std::function<void()> _func) -> void;
