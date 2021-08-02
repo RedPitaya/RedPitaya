@@ -187,7 +187,6 @@ void CStreamingManager::startServer(){
 }
 
 void CStreamingManager::stopServer(){
-
     if (m_asionet) {
         m_asionet->Stop();
         delete m_asionet;

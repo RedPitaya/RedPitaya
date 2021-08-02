@@ -325,20 +325,29 @@ namespace  asionet {
 
     void CAsioSocket::CloseSocket(){
 
-        if (m_is_udp_connected)
-            m_callback_Str.emitEvent(Events::DISCONNECT_SERVER, m_udp_endpoint.address().to_string());
-        if (m_is_tcp_connected)
-            m_callback_Str.emitEvent(Events::DISCONNECT_SERVER, m_tcp_endpoint.address().to_string());
+        try {
+            if (m_is_udp_connected)
+                m_callback_Str.emitEvent(Events::DISCONNECT_SERVER, m_udp_endpoint.address().to_string());
+            if (m_is_tcp_connected)
+                m_callback_Str.emitEvent(Events::DISCONNECT_SERVER, m_tcp_endpoint.address().to_string());
+            }catch (...){
 
-        if (m_tcp_socket && m_tcp_socket->is_open()){
-            m_tcp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
-            m_tcp_socket->close();
-            m_is_tcp_connected = false;
         }
-        if (m_udp_socket && m_udp_socket->is_open()) {
-            m_udp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
-            m_udp_socket->close();
-            m_is_udp_connected = false;
+        try {
+            if (m_tcp_socket && m_tcp_socket->is_open()){
+                m_tcp_socket->cancel();
+                m_tcp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
+                m_tcp_socket->close();
+                m_is_tcp_connected = false;
+            }
+            if (m_udp_socket && m_udp_socket->is_open()) {
+                m_udp_socket->cancel();
+                m_udp_socket->shutdown(socket_base::shutdown_type::shutdown_both);
+                m_udp_socket->close();
+                m_is_udp_connected = false;
+            }
+        }catch (...){
+
         }
     }
 
