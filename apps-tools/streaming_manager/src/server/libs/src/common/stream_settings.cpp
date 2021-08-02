@@ -50,7 +50,17 @@ bool CStreamSettings::isSetted(){
             m_Battenuator &&
             m_Bcalib &&
             m_Bac_dc;
-
+    // std::cerr << " port " << m_Bport 
+    //           << " protocol " << m_Bprotocol 
+    //           << " smaples " << m_Bsamples
+    //           << " format " << m_Bformat 
+    //           << " type " << m_Btype
+    //           << " channel " << m_Bchannels
+    //           << " res " << m_Bres 
+    //           << " dec " << m_Bdecimation 
+    //           << " atte " << m_Battenuator
+    //           << " calib " << m_Bcalib
+    //           << " dc " << m_Bac_dc << "\n";
     return res;
 }
 

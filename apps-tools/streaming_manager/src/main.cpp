@@ -73,7 +73,7 @@ CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 1 ,0,	1,3);
 CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2);
 CIntParameter		ss_calib( 	 		"SS_USE_CALIB", 		CBaseParameter::RW, 2 ,0,	1,2);
 CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2);
-CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 1 ,0,	1,65536);
+CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 4 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
@@ -139,7 +139,11 @@ int rp_app_init(void)
 
 		ss_status.SendValue(0);
 		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
-		updateUI();
+		if (g_serverNetConfig->isSetted()){
+			updateUI();
+		}else{
+			setConfig(true);
+		}
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 #ifdef Z20_250_12
 	    rp_max7311::rp_initController();
@@ -186,7 +190,9 @@ void UpdateSignals(void)
 }
 
 void saveConfigInFile(){
-	g_serverNetConfig->writeToFile(config_file);
+	if (!g_serverNetConfig->writeToFile(config_file)){
+		std::cerr << "Error save to file\n";
+	}
 }
 
 void updateUI(){
@@ -284,10 +290,12 @@ void updateUI(){
 }
 
 void setConfig(bool _force){
+	bool needUpdate = false;
 	if (ss_port.IsNewValue() || _force)
 	{
 		ss_port.Update();
 		g_serverNetConfig->setPort(std::to_string(ss_port.Value()));
+		needUpdate = true;
 	}
 
 	if (ss_ip_addr.IsNewValue() || _force)
@@ -321,7 +329,7 @@ void setConfig(bool _force){
 			g_serverNetConfig->setSaveType(CStreamSettings::FILE);
 		else
 			g_serverNetConfig->setSaveType(CStreamSettings::NET);
-
+		needUpdate = true;
 	}
 
 	if (ss_protocol.IsNewValue() || _force)
@@ -331,6 +339,7 @@ void setConfig(bool _force){
 			g_serverNetConfig->setProtocol(CStreamSettings::TCP);
 		if (ss_protocol.Value() == SS_UDP)
 			g_serverNetConfig->setProtocol(CStreamSettings::UDP);
+		needUpdate = true;
 	}
 
 	if (ss_channels.IsNewValue() || _force)
@@ -342,6 +351,7 @@ void setConfig(bool _force){
 			g_serverNetConfig->setChannels(CStreamSettings::CH2);
 		if (ss_channels.Value() == 3)
 			g_serverNetConfig->setChannels(CStreamSettings::BOTH);
+		needUpdate = true;
 	}
 
 	if (ss_resolution.IsNewValue() || _force)
@@ -351,6 +361,7 @@ void setConfig(bool _force){
 			g_serverNetConfig->setResolution(CStreamSettings::BIT_8);
 		if (ss_resolution.Value() == SS_16BIT)
 			g_serverNetConfig->setResolution(CStreamSettings::BIT_16);
+		needUpdate = true;
 	}
 
 	if (ss_save_mode.IsNewValue() || _force)
@@ -360,12 +371,14 @@ void setConfig(bool _force){
 			g_serverNetConfig->setType(CStreamSettings::RAW);
 		if (ss_save_mode.Value() == 2)
 			g_serverNetConfig->setType(CStreamSettings::VOLT);
+		needUpdate = true;
 	}
 
 	if (ss_rate.IsNewValue() || _force)
 	{
 		ss_rate.Update();
 		g_serverNetConfig->setDecimation(ss_rate.Value());
+		needUpdate = true;
 	}
 
 	if (ss_format.IsNewValue() || _force)
@@ -377,12 +390,14 @@ void setConfig(bool _force){
 			g_serverNetConfig->setFormat(CStreamSettings::TDMS);
 		if (ss_format.Value() == 2) 
 			g_serverNetConfig->setFormat(CStreamSettings::CSV);
+		needUpdate = true;
 	}
 
 	if (ss_samples.IsNewValue() || _force)
 	{
 		ss_samples.Update();
 		g_serverNetConfig->setSamples(ss_samples.Value());
+		needUpdate = true;
 	}
 
 #ifndef Z20
@@ -393,12 +408,14 @@ void setConfig(bool _force){
 			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
 		if (ss_attenuator.Value() == 2)
 			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_20);
+		needUpdate = true;
 	}
 
 	if (ss_calib.IsNewValue() || _force)
 	{
 		ss_calib.Update();
 		g_serverNetConfig->setCalibration(ss_calib.Value() == 2);
+		needUpdate = true;
 	}
 #else
 	g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
@@ -413,11 +430,14 @@ void setConfig(bool _force){
 			g_serverNetConfig->setAC_DC(CStreamSettings::AC);
 		if (ss_ac_dc.Value() == 2)
 			g_serverNetConfig->setAC_DC(CStreamSettings::DC);
+		needUpdate = true;
 	}
 #else
 	g_serverNetConfig->setAC_DC(CStreamSettings::AC);
 #endif
-	saveConfigInFile();
+	if (needUpdate){
+		saveConfigInFile();
+	}
 }
 
 //Update parameters
