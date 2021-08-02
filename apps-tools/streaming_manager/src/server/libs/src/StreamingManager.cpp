@@ -44,17 +44,17 @@ bool createDirTree(const std::string full_path)
     return ret_val;
 }
 
-std::string getNewFileName(Stream_FileType _fileType,string _filePath)
+std::string getNewFileName(Stream_FileType _fileType,string _filePath,string _prefix)
 {
     createDirTree(_filePath);
 
-    char time_str[40];
-    struct tm *timenow;
+//    char time_str[40];
+//    struct tm *timenow;
+//    time_t now = time(nullptr);
+//    timenow = gmtime(&now);
+//    strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
 
-    time_t now = time(nullptr);
-    timenow = gmtime(&now);
-    strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
-    std::string filename = _filePath  + "/" + std::string("data_file_") + time_str + ".";
+    std::string filename = _filePath  + "/" + std::string("data_file_") + _prefix + ".";
     if (_fileType == Stream_FileType::TDMS_TYPE) filename += "tdms";
     if (_fileType == Stream_FileType::WAV_TYPE)  filename += "wav";
     if (_fileType == Stream_FileType::CSV_TYPE)  filename += "bin";
@@ -212,11 +212,11 @@ bool CStreamingManager::isOutOfSpace(){
     return false;  
 }
 
-void CStreamingManager::run()
+void CStreamingManager::run(std::string _prefix)
 {
     if (m_use_local_file){
         m_passSizeSamples = 0;
-        m_file_out = getNewFileName(m_fileType, m_filePath);      
+        m_file_out = getNewFileName(m_fileType, m_filePath, _prefix);
         m_fileLogger = CFileLogger::Create(m_file_out + ".log"); 
         std::cout << m_file_out << "\n"; 
         m_file_manager->OpenFile(m_file_out, false);
@@ -466,18 +466,21 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
     return 0;
 }
 
-bool CStreamingManager::convertToCSV(){
-    return convertToCSV(m_file_out,-2,-2);
+bool CStreamingManager::convertToCSV(std::string _prefix){
+    return convertToCSV(m_file_out,-2,-2,_prefix);
 }
 
-bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg){
+bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg,std::string _prefix){
     bool ret = true;
     m_stopWriteCSV = false;
     try{
         if (m_stopWriteCSV) return false;
-        acout() << "Started converting to CSV\n";
+        if (_prefix != "") {
+            _prefix = "["+_prefix + "] ";
+        }
+        acout() << _prefix << "Started converting to CSV\n";
         std::string csv_file = _file_name.substr(0, _file_name.size()-3) + "csv";
-        acout() << csv_file << "\n";
+        acout() << _prefix << csv_file << "\n";
         std::fstream fs;
         std::fstream fs_out;
         fs.open(_file_name, std::ios::binary | std::ofstream::in | std::ofstream::out);
@@ -495,12 +498,12 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
             while(position >= 0){
                 auto freeSize = FileQueueManager::GetFreeSpaceDisk(csv_file);
                 if (freeSize <= USING_FREE_SPACE){
-                    acout() << "\nDisk is full\n";
+                    acout() << _prefix << "\nDisk is full\n";
                     ret = false;
                     break;
                 }
                 if (m_stopWriteCSV){
-                    acout() << "\nAbort writing to CSV file\n";
+                    acout() << _prefix << "\nAbort writing to CSV file\n";
                     ret = false;
                     break;
                 }
@@ -509,15 +512,15 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
                 auto csv_seg = FileQueueManager::ReadCSV(&fs,&position, &channels, !notSkip);
                 if (end_seg == -2){
                     if (position >=0) {
-                        acout() << "\rPROGRESS: " << (position * 100) / Length  << " %";
+                        acout() << "\r" << _prefix << "PROGRESS: " << (position * 100) / Length  << " %";
                     }else{
                         if (position == -2){
-                            acout() << "\rPROGRESS: 100 %";
+                            acout() << "\r" << _prefix << "PROGRESS: 100 %";
                         }
                     }
                 }else{
                     if (curSegment - start_seg >= 0 && (end_seg-1) > start_seg) {
-                        acout() << "\rPROGRESS: " << ((curSegment - start_seg - 1) * 100) / (end_seg - start_seg)  << " %";
+                        acout() << "\r" << _prefix << "PROGRESS: " << ((curSegment - start_seg - 1) * 100) / (end_seg - start_seg)  << " %";
                     }
                 }
                 
@@ -534,9 +537,9 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
                 }
 
                 if (fs.fail() || fs_out.fail()) {
-                    acout() << "\nError write to CSV file\n";
-                    if (fs.fail()) acout() << "FS is fail\n";
-                    if (fs_out.fail()) acout()  << "FS out is fail\n";
+                    acout() << "\n" << _prefix <<"Error write to CSV file\n";
+                    if (fs.fail()) acout() << _prefix << "FS is fail\n";
+                    if (fs_out.fail()) acout()  << _prefix << "FS out is fail\n";
                     
                     ret = false;
                     break;
@@ -544,10 +547,10 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
                 
             }
         }
-        acout() << "\nEnded converting\n";
+        acout() << "\n" << _prefix << "Ended converting\n";
     }catch (std::exception& e)
 	{
-		std::cerr << "Error: convertToCSV() : " << e.what() << std::endl ;
+        std::cerr << _prefix << "Error: convertToCSV() : " << e.what() << std::endl ;
         ret = false;
 	}
     return ret;

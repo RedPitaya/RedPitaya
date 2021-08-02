@@ -90,7 +90,7 @@ CStreamingApplication::~CStreamingApplication()
     }
 }
 
-void CStreamingApplication::run()
+void CStreamingApplication::run(std::string _file_name_prefix)
 {
     m_size_ch1 = 0;
     m_size_ch2 = 0;
@@ -101,7 +101,7 @@ void CStreamingApplication::run()
 
     try {
 
-        m_StreamingManager->run();
+        m_StreamingManager->run(_file_name_prefix);
         m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
         // OS signal handler
         // asio::signal_set signalSet(m_Ios, SIGINT, SIGTERM);
@@ -122,14 +122,14 @@ void CStreamingApplication::run()
 
 }
 
-void CStreamingApplication::runNonBlock(){
+void CStreamingApplication::runNonBlock(std::string _file_name_prefix){
     m_size_ch1 = 0;
     m_size_ch2 = 0;
     m_lostRate = 0;
     m_isRun = true;
     m_isRunNonBloking = true;    
     try {
-        m_StreamingManager->run(); // MUST BE INIT FIRST for thread logic
+        m_StreamingManager->run(_file_name_prefix); // MUST BE INIT FIRST for thread logic
         m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);        
     }
     catch (const asio::system_error &e)

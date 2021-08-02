@@ -47,21 +47,28 @@ auto startRemote(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming started: " << host << " OK\n";
+            std::cout << "Streaming started: " << host << " TCP mode [OK]\n";
         g_rstart_counter--;
     });
 
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming started: " << host << " OK\n";
+            std::cout << "Streaming started: " << host << " UDP mode [OK]\n";
+        g_rstart_counter--;
+    });
+
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&cl](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << "Streaming started: " << host << " Local mode [OK]\n";
         g_rstart_counter--;
     });
 
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming stopped: " << host << " OK\n";
+            std::cout << "Streaming stopped: " << host << " [OK]\n";
         masterHosts.remove(host);
         slaveHosts.remove(host);
         g_rstop_counter--;
@@ -70,7 +77,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_FULL, [&cl,&masterHosts,&slaveHosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming stopped: " << host << " OK [SD card is full]\n";
+            std::cout << "Streaming stopped: " << host << " SD card is full [OK]\n";
         masterHosts.remove(host);
         slaveHosts.remove(host);
         g_rstop_counter--;
@@ -79,7 +86,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_DONE, [&cl,&masterHosts,&slaveHosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming stopped: " << host << " OK [All samples are recorded on the SD card]\n";
+            std::cout << "Streaming stopped: " << host << " All samples are recorded on the SD card [OK]\n";
         masterHosts.remove(host);
         slaveHosts.remove(host);
         g_rstop_counter--;

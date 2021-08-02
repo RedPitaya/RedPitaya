@@ -203,8 +203,8 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t--timeout=MSEC      -t MSEC      Timeout (Default: 1000 ms). Used only in conjunction with the start_stop command.\n"
             "\t\t--verbose           -v           Displays service information.\n"
             "\n"
-            "\tStreaming Mode:\n"
-            "\t\tThis mode allows you to control streaming as a client, and also captures data in network streaming mode.\n"
+            "Streaming Mode:\n"
+            "\tThis mode allows you to control streaming as a client, and also captures data in network streaming mode.\n"
             "\n"
             "\tOptions:\n"
             "\t\t%s -s -h IPs [-p PORT] [-c PORT] -f tdms|wav|csv [-d NAME] [-m raw|volt] [-l SAMPLES] [-t MSEC] [-v]\n"
@@ -535,12 +535,12 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                     break;
                 }
                 case 'l': {
-                    int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get samples limit",1, 0x7FFFFFFF) != 0) {
+                    int samp = 0;
+                    if (get_int(&samp, optarg, "Error get samples limit",1, 0x7FFFFFFF) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.timeout = t_out;
+                    opt.samples = samp;
                     break;
                 }
 
@@ -551,6 +551,17 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         return opt;
                     }
                     opt.timeout = t_out;
+                    break;
+                }
+
+                case 'd': {
+                    if (strcmp(optarg, "") != 0) {
+                        opt.save_dir = optarg;
+                    } else {
+                        fprintf(stderr, "Error key --dir: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
                     break;
                 }
 
