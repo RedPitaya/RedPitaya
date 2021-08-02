@@ -29,6 +29,7 @@ public:
     auto isConnected() -> bool;
     auto sendServerStartedTCP() -> bool;
     auto sendServerStartedUDP() -> bool;
+    auto sendServerStartedSD() -> bool;
     auto sendServerStopped() -> bool;
     auto sendServerStoppedSDFull() -> bool;
     auto sendServerStoppedDone() -> bool;

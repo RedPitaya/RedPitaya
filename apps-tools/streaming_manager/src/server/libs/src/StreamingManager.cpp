@@ -554,5 +554,13 @@ bool CStreamingManager::convertToCSV(std::string _file_name,int32_t start_seg, i
     return ret;
 }
 
+auto CStreamingManager::getProtocol() -> asionet::Protocol{
+    return m_protocol;
+}
+
+auto CStreamingManager::isLocalMode() -> bool{
+    return m_use_local_file;
+}
+
 
 

@@ -163,6 +163,10 @@ auto ServerNetConfigManager::sendServerStartedUDP() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STARTED_UDP);
 }
 
+auto ServerNetConfigManager::sendServerStartedSD() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STARTED_SD);
+}
+
 auto ServerNetConfigManager::sendServerStopped() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STOPPED);
 }

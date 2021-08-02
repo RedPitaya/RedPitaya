@@ -461,10 +461,25 @@ void OnNewSignals(void)
 
 
 void StartServer(){
+	// Search oscilloscope
+	COscilloscope::Ptr osc = nullptr;
+	CStreamingManager::Ptr s_manger = nullptr;
+	
 	try{
 		if (!g_serverNetConfig->isSetted()) return;
 		if (g_serverRun) {
-			g_serverNetConfig->sendServerStarted();
+			if (s_manger){
+				if (!s_manger->isLocalMode()){
+					if (s_manger->getProtocol() == asionet::Protocol::TCP){
+						g_serverNetConfig->sendServerStartedTCP();
+					}
+					if (s_manger->getProtocol() == asionet::Protocol::UDP){
+						g_serverNetConfig->sendServerStartedUDP();
+					}
+				}else{
+					g_serverNetConfig->sendServerStartedSD();
+				}
+			}
 			return;
 		}
 		g_serverRun = true;
@@ -578,9 +593,6 @@ void StartServer(){
 		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
 #endif
 
-		// Search oscilloscope
-		COscilloscope::Ptr osc = nullptr;
-
 		for (const UioT &uio : uioList)
 		{
 			if (uio.nodeName == "rp_oscilloscope")
@@ -594,7 +606,7 @@ void StartServer(){
 			}
 		}
 
-		CStreamingManager::Ptr s_manger = nullptr;
+
 		if (use_file == CStreamSettings::NET) {
 			s_manger = CStreamingManager::Create(
 					ip_addr_host,
@@ -620,7 +632,17 @@ void StartServer(){
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
 		ss_status.SendValue(1);
 		s_app->runNonBlock();
-		g_serverNetConfig->sendServerStarted();
+		if (!s_manger->isLocalMode()){
+			if (s_manger->getProtocol() == asionet::Protocol::TCP){
+				g_serverNetConfig->sendServerStartedTCP();
+			}
+			if (s_manger->getProtocol() == asionet::Protocol::UDP){
+				g_serverNetConfig->sendServerStartedUDP();
+			}
+		}else{
+			g_serverNetConfig->sendServerStartedSD();
+		}
+
 		fprintf(stderr,"[Streaming] Start server\n");
 
 	}catch (std::exception& e)

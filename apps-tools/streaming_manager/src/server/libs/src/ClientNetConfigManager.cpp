@@ -171,6 +171,10 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STARTED_UDP),sender->m_manager->getHost());
     }
 
+    if (c== CNetConfigManager::Commands::SERVER_STARTED_SD){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STARTED_SD),sender->m_manager->getHost());
+    }
+
     if (c== CNetConfigManager::Commands::SERVER_STOPPED){
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STOPPED),sender->m_manager->getHost());
     }
