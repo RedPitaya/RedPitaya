@@ -43,6 +43,23 @@ static struct option long_options_remote[] = {
 
 static constexpr char optstring_remote[] = "rh:p:m:t:v";
 
+static struct option long_options_streaming[] = {
+        /* These options set a flag. */
+        {"streaming",    no_argument,       0, 's'},
+        {"hosts",        required_argument, 0, 'h'},
+        {"port",         required_argument, 0, 'p'},
+        {"config_port",  required_argument, 0, 'c'},
+        {"format",       required_argument, 0, 'f'},
+        {"dir",          required_argument, 0, 'd'},
+        {"limit",        required_argument, 0, 'l'},
+        {"mode",         required_argument, 0, 'm'},
+        {"timeout",      required_argument, 0, 't'},
+        {"verbose",      no_argument,       0, 'v'},
+        {0, 0, 0, 0}
+};
+
+static constexpr char optstring_streaming[] = "sh:p:c:f:d:l:m:t:v";
+
 std::vector<std::string> split(const std::string& s, char seperator)
 {
     std::vector<std::string> output;
@@ -63,7 +80,7 @@ std::vector<std::string> split(const std::string& s, char seperator)
     return output;
 }
 
-int get_int(int *value, const char *str,const char *message,int max_value)
+int get_int(int *value, const char *str,const char *message,int min_value, int max_value)
 {
     try
     {
@@ -83,6 +100,11 @@ int get_int(int *value, const char *str,const char *message,int max_value)
         fprintf(stderr, "%s: %s\n",message, str);
         return -1;
     }
+    if (*value < min_value){
+        fprintf(stderr, "%s: %s\n",message, str);
+        return -1;
+    }
+
     if (*value > max_value){
         fprintf(stderr, "%s: %s\n",message, str);
         return -1;
@@ -166,8 +188,8 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\tThis mode allows you to control streaming as a client.\n"
             "\n"
             "\tOptions:\n"
-            "\t\t%s -r -h IPs [-p PORT] -m start|stop|start_stop [-w] [-t SEC] [-v]\n"
-            "\t\t%s --remote --hosts=IPs [--port=PORT] --mode=start|stop|start_stop [--timeout=SEC] [--verbose]\n"
+            "\t\t%s -r -h IPs [-p PORT] -m start|stop|start_stop [-t MSEC] [-v]\n"
+            "\t\t%s --remote --hosts=IPs [--port=PORT] --mode=start|stop|start_stop [--timeout=MSEC] [--verbose]\n"
             "\n"
             "\t\t--remote            -r           Enable remote control mode.\n"
             "\t\t--hosts=IP;..       -h IP;...    You can specify one or more board IP addresses through a separator - ','\n"
@@ -184,9 +206,31 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\tStreaming Mode:\n"
             "\t\tThis mode allows you to control streaming as a client, and also captures data in network streaming mode.\n"
             "\n"
+            "\tOptions:\n"
+            "\t\t%s -s -h IPs [-p PORT] [-c PORT] -f tdms|wav|csv [-d NAME] [-m raw|volt] [-l SAMPLES] [-t MSEC] [-v]\n"
+            "\t\t%s --streaming --hosts=IPs [--port=PORT] [--config_port=PORT] --format=tdms|wav|csv [--dir=NAME] [--limit=SAMPLES] [--mode=raw|volt] [--timeout=MSEC] [--verbose]\n"
+            "\n"
+            "\t\t--streaming         -s           Enable remote control mode.\n"
+            "\t\t--hosts=IP;..       -h IP;...    You can specify one or more board IP addresses through a separator - ','\n"
+            "\t\t                                 Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
+            "\t\t                                           -p 127.0.0.1     or  -p 127.0.0.1,127.0.0.2,127.0.0.3\n"
+            "\t\t--port=PORT         -p PORT      Port for streaming server (Default: 8900).\n"
+            "\t\t--config_port=PORT  -c PORT      Port for configuration server (Default: 8901).\n"
+            "\t\t--format=FORMAT     -f FORMAT    The format in which the data will be saved.\n"
+            "\t\t                                 Keys: tdsm = NI TDMS File Format.\n"
+            "\t\t                                       wav = Waveform Audio File Format.\n"
+            "\t\t                                       csv = Text file that uses a comma to separate values.\n"
+            "\t\t--dir=NAME          -d NAME      Path to the directory where to save files.\n"
+            "\t\t--limit=SAMPLES     -l SAMPLES   Sample limit [1-%d] (no limit by default).\n"
+            "\t\t--mode=MODE         -m MODE      Convert values in volts (store as ADC raw data by default).\n"
+            "\t\t                                 Keys: raw = 8/16 Bit binary raw format.\n"
+            "\t\t                                       volt = Converts binary integer format to floating point format.\n"
+            "\t\t                                              Measured in volts. In wav format, it is limited from -1 to 1.\n"
+            "\t\t--timeout=MSEC      -t MSEC      Stops recording after a specified amount of time.\n"
+            "\t\t--verbose           -v           Displays service information.\n"
             "\n";
     auto n = name.c_str();
-    fprintf( stderr, format, n,n,n,n,n,n,n,n,n);
+    fprintf( stderr, format, n,n,n,n,n,n,n,n,n,n,n,0x7FFFFFFF);
 }
 
 auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
@@ -206,7 +250,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 'p': {
                     int port = 0;
-                    if (get_int(&port, optarg, "Error get port number", 65535) != 0) {
+                    if (get_int(&port, optarg, "Error get port number",1, 65535) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -216,7 +260,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 't': {
                     int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timout", 100000) != 0) {
+                    if (get_int(&t_out, optarg, "Error get timout",0, 100000) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -252,7 +296,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 'p': {
                     int port = 0;
-                    if (get_int(&port, optarg, "Error get port number", 65535) != 0) {
+                    if (get_int(&port, optarg, "Error get port number",1, 65535) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -298,7 +342,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 't': {
                     int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timeout", 100000) != 0) {
+                    if (get_int(&t_out, optarg, "Error get timeout",0, 100000) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -340,7 +384,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 'p': {
                     int port = 0;
-                    if (get_int(&port, optarg, "Error get port number", 65535) != 0) {
+                    if (get_int(&port, optarg, "Error get port number",1, 65535) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -384,7 +428,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
 
                 case 't': {
                     int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timeout", 0xFFFFFFF) != 0) {
+                    if (get_int(&t_out, optarg, "Error get timeout",0, 0xFFFFFFF) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -402,8 +446,126 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
         }
 
         if (opt.mode != Mode::ERROR){
-            if (opt.mode == Mode::REMOTE && opt.remote_mode ==RemoteMode::NONE){
+            if (opt.mode == Mode::REMOTE && (opt.remote_mode ==RemoteMode::NONE || opt.hosts.size() == 0)){
                 fprintf(stderr,"[ERROR] Missing required key in remote mode\n");
+                exit( EXIT_FAILURE );
+            }
+            return opt;
+        }
+    }
+
+    option_index = 0;
+    ch = -1;
+    if ((strcmp(argv[1],"-s") == 0) || (strcmp(argv[1],"--streaming") == 0)) {
+        while ((ch = getopt_long(argc, argv, optstring_streaming, long_options_streaming, &option_index)) != -1) {
+            switch (ch) {
+
+                case 's':
+                    opt.mode = Mode::STREAMING;
+                    break;
+
+                case 'v':
+                    opt.verbous = true;
+                    break;
+
+                case 'p': {
+                    int port = 0;
+                    if (get_int(&port, optarg, "Error get port number", 1,65535) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.port = optarg;
+                    break;
+                }
+
+                case 'c': {
+                    int conf_port = 0;
+                    if (get_int(&conf_port, optarg, "Error get port number for configuration server",1, 65535) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.controlPort = optarg;
+                    break;
+                }
+
+                case 'h': {
+                    opt.hosts = split(optarg, ',');
+                    remove_duplicates(opt.hosts);
+                    if (opt.hosts.size() > 0) {
+                        for (auto &s:opt.hosts) {
+                            if (!check_ip(s)) {
+                                fprintf(stderr, "Error parse ip address: %s\n", s.c_str());
+                                opt.mode = Mode::ERROR_PARAM;
+                                return opt;
+                            }
+                        }
+                    } else {
+                        fprintf(stderr, "Error parse ip address: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+
+                case 'f': {
+                    if (strcmp(optarg, "tdms") == 0) {
+                        opt.streamign_type = StreamingType::TDMS;
+                    } else if (strcmp(optarg, "wav") == 0) {
+                        opt.streamign_type = StreamingType::WAV;
+                    } else if (strcmp(optarg, "csv") == 0) {
+                        opt.streamign_type = StreamingType::CSV;
+                    } else {
+                        fprintf(stderr, "Error key --format: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+
+                case 'm': {
+                    if (strcmp(optarg, "raw") == 0) {
+                        opt.save_type = SaveType::RAW;
+                    } else if (strcmp(optarg, "volt") == 0) {
+                        opt.save_type = SaveType::VOL;
+                    } else {
+                        fprintf(stderr, "Error key --mode: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+                case 'l': {
+                    int t_out = 0;
+                    if (get_int(&t_out, optarg, "Error get samples limit",1, 0x7FFFFFFF) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.timeout = t_out;
+                    break;
+                }
+
+                case 't': {
+                    int t_out = 0;
+                    if (get_int(&t_out, optarg, "Error get timeout", 0,0xFFFFFFF) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.timeout = t_out;
+                    break;
+                }
+
+                default: {
+                    if (opt.mode == Mode::CONFIG) {
+                        fprintf(stderr, "[ERROR] Unknown parameter\n");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+        }
+
+        if (opt.mode != Mode::ERROR){
+            if (opt.mode == Mode::STREAMING && (opt.streamign_type == StreamingType::NONE || opt.hosts.size() == 0)){
+                fprintf(stderr,"[ERROR] Missing required key in streaming mode\n");
                 exit( EXIT_FAILURE );
             }
             return opt;

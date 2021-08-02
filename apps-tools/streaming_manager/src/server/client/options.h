@@ -33,6 +33,19 @@ namespace ClientOpt {
         START_STOP
     };
 
+    enum class StreamingType{
+        NONE,
+        TDMS,
+        WAV,
+        CSV
+    };
+
+    enum class SaveType{
+        NONE,
+        RAW,
+        VOL
+    };
+
     struct Options {
         Mode mode;
         std::string port;
@@ -44,6 +57,14 @@ namespace ClientOpt {
         bool verbous;
         RemoteMode remote_mode;
 
+        // streaming
+        std::string  save_dir;
+        StreamingType streamign_type;
+        SaveType      save_type;
+        int           samples;
+        std::string   controlPort;
+        ////////////////////////
+
         Options(){
             mode = Mode::ERROR;
             port = "";
@@ -54,6 +75,11 @@ namespace ClientOpt {
             conf_file = "";
             verbous = false;
             remote_mode = RemoteMode::NONE;
+            save_dir = "";
+            streamign_type = StreamingType::NONE;
+            save_type = SaveType::NONE;
+            samples = -1;
+            controlPort = "";
         };
     };
 
