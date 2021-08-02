@@ -27,7 +27,8 @@ public:
     auto startBroadcast(asionet_broadcast::CAsioBroadcastSocket::Model model,std::string host,std::string port) -> void;
     auto stop() -> void;
     auto isConnected() -> bool;
-    auto sendServerStarted() -> bool;
+    auto sendServerStartedTCP() -> bool;
+    auto sendServerStartedUDP() -> bool;
     auto sendServerStopped() -> bool;
     auto sendServerStoppedSDFull() -> bool;
     auto sendServerStoppedDone() -> bool;

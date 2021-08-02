@@ -163,8 +163,12 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         m_callbacksStr.emitEvent(static_cast<int>(Events::FAIL_SAVE_CONFIG),sender->m_manager->getHost());
     }
 
-    if (c== CNetConfigManager::Commands::SERVER_STARTED){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STARTED),sender->m_manager->getHost());
+    if (c== CNetConfigManager::Commands::SERVER_STARTED_TCP){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STARTED_TCP),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_STARTED_UDP){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STARTED_UDP),sender->m_manager->getHost());
     }
 
     if (c== CNetConfigManager::Commands::SERVER_STOPPED){

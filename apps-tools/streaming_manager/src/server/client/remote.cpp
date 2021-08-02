@@ -44,7 +44,14 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
     });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED, [&cl](std::string host){
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&cl](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << "Streaming started: " << host << " OK\n";
+        g_rstart_counter--;
+    });
+
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
             std::cout << "Streaming started: " << host << " OK\n";

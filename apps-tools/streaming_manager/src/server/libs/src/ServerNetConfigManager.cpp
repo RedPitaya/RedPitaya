@@ -155,8 +155,12 @@ auto ServerNetConfigManager::serverError(std::error_code error) -> void{
     }
 }
 
-auto ServerNetConfigManager::sendServerStarted() -> bool{
-    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STARTED);
+auto ServerNetConfigManager::sendServerStartedTCP() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STARTED_TCP);
+}
+
+auto ServerNetConfigManager::sendServerStartedUDP() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STARTED_UDP);
 }
 
 auto ServerNetConfigManager::sendServerStopped() -> bool{
