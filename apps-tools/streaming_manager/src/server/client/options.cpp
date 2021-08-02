@@ -457,6 +457,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
     option_index = 0;
     ch = -1;
     if ((strcmp(argv[1],"-s") == 0) || (strcmp(argv[1],"--streaming") == 0)) {
+        opt.timeout = -1;
         while ((ch = getopt_long(argc, argv, optstring_streaming, long_options_streaming, &option_index)) != -1) {
             switch (ch) {
 
