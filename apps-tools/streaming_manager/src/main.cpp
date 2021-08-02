@@ -81,8 +81,10 @@ CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2
 CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
-CStreamingManager::Ptr  s_manger;
-CStreamingApplication  *s_app;
+CStreamingApplication  *s_app = nullptr;
+CStreamingManager::Ptr 	s_manger = nullptr;
+COscilloscope::Ptr 		osc = nullptr;
+
 std::shared_ptr<ServerNetConfigManager> g_serverNetConfig;
 std::atomic_bool g_serverRun(false);
 
@@ -482,15 +484,14 @@ void OnNewSignals(void)
 
 void StartServer(){
 	// Search oscilloscope
-	COscilloscope::Ptr osc = nullptr;
-	CStreamingManager::Ptr s_manger = nullptr;
-	
+
 	try{
 		if (!g_serverNetConfig->isSetted()) return;
 		if (g_serverRun) {
 			if (s_manger){
 				if (!s_manger->isLocalMode()){
 					if (s_manger->getProtocol() == asionet::Protocol::TCP){
+						std:cerr << "Send Start TCP\n";
 						g_serverNetConfig->sendServerStartedTCP();
 					}
 					if (s_manger->getProtocol() == asionet::Protocol::UDP){
