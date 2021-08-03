@@ -14,6 +14,7 @@ REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
 INSTALL_DIR ?= .
+STREAMING_MODE ?= MASTER
 
 CONTROLLER=controllerhf.so
 SERVICE=streaming-server
@@ -27,7 +28,7 @@ export CFLAGS
 all: $(CONTROLLER)
 
 $(CONTROLLER):
-	$(MAKE) -C src MODEL=$(MODEL)
+	$(MAKE) -C src MODEL=$(MODEL) STREAMING_MODE=$(STREAMING_MODE)
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf

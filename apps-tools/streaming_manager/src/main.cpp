@@ -122,9 +122,12 @@ int rp_app_init(void)
 	g_serverRun = false;
 	try {
 		try {
-			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
-			#ifdef Z10_SLAVE
-				mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
+			
+			#ifdef STREAMING_MASTER
+				auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
+			#endif
+			#ifdef STREAMING_SLAVE
+				auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
 			#endif 
 			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,mode,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){

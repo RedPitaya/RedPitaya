@@ -190,9 +190,11 @@ int main(int argc, char *argv[])
             }
         }
         
-        auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
-        #ifdef Z10_SLAVE
-            mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
+       	#ifdef STREAMING_MASTER
+			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
+		#endif
+        #ifdef STREAMING_SLAVE
+			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
         #endif 
 
         #ifdef Z10
