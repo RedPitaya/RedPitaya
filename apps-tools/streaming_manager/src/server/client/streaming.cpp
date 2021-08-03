@@ -122,6 +122,9 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
             break;
     }
 
+    if (state == StateRunnedHosts::UDP)
+        protocol = asionet::UDP;
+
     g_manger[host] = CStreamingManager::Create(file_type , g_soption.save_dir.c_str(), g_soption.samples , convert_v);
     g_manger[host]->run(host + "_" + g_filenameDate);
 
@@ -181,7 +184,8 @@ auto startStreaming(ClientOpt::Options &option) -> void{
     if (startRemote(remote_opt,&runned_hosts)){
 
         for(auto &kv:runned_hosts){
-            clients.push_back(std::thread(runClient, kv.first,kv.second));
+            if (kv.second == StateRunnedHosts::TCP || kv.second == StateRunnedHosts::UDP)
+                clients.push_back(std::thread(runClient, kv.first,kv.second));
         }
 
         for (std::thread &t: clients) {
