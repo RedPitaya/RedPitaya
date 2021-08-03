@@ -3,6 +3,7 @@
 #include "StreamingManager.h"
 #include "thread_cout.h"
 #include "config.h"
+#include "remote.h"
 #include <chrono>
 
 std::map<std::string,CStreamingManager::Ptr> g_manger;
@@ -78,7 +79,7 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     }
 }
 
-auto runClient(std::string  host) -> void{
+auto runClient(std::string  host,StateRunnedHosts state) -> void{
     g_packCounter_ch1[host] = 0;
     g_packCounter_ch2[host] = 0;
     g_lostRate[host] = 0;
@@ -120,57 +121,6 @@ auto runClient(std::string  host) -> void{
             convert_v = false;
             break;
     }
-
-
-    ClientNetConfigManager cl("",false);
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_CONNECTED, [&cl](std::string host){
-        const std::lock_guard<std::mutex> lock(g_smutex);
-        if (g_soption.verbous)
-            std::cout << "Connected: " << host << "\n";
-        cl.sendStart(host);
-    });
-
-    cl.addHandlerError([&err_exit_flag](ClientNetConfigManager::Errors errors,std::string host){
-        const std::lock_guard<std::mutex> lock(g_smutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            std::cerr << "Error: " << host.c_str() << "\n";
-            err_exit_flag = true;
-        }
-    });
-
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&started_flag,&protocol](std::string host){
-        const std::lock_guard<std::mutex> lock(g_smutex);
-        if (g_soption.verbous)
-            std::cout << "Streaming started: " << host << " TCP mode  [OK] \n";
-        protocol = asionet::TCP;
-        started_flag = true;
-    });
-
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&started_flag,&protocol](std::string host){
-        const std::lock_guard<std::mutex> lock(g_smutex);
-        if (g_soption.verbous)
-            std::cout << "Streaming started: " << host << " UDP mode [OK]\n";
-        protocol = asionet::UDP;
-        started_flag = true;
-    });
-
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&started_flag,&protocol,&err_local_flag](std::string host){
-        const std::lock_guard<std::mutex> lock(g_smutex);
-        if (g_soption.verbous)
-            std::cout << "Streaming started: " << host << " local mode [OK]\n";
-        err_local_flag = true;
-    });
-
-    std::vector<std::string> hosts;
-    hosts.push_back(host);
-    cl.connectToServers(hosts,g_soption.controlPort != "" ? g_soption.controlPort : "8901");
-    while (!started_flag){
-        sleepMs(100);
-        if (err_exit_flag) return;
-        if (err_local_flag) return;
-        if (sig_exit_flag) return;
-    }
-
 
     g_manger[host] = CStreamingManager::Create(file_type , g_soption.save_dir.c_str(), g_soption.samples , convert_v);
     g_manger[host]->run(host + "_" + g_filenameDate);
@@ -223,13 +173,21 @@ auto startStreaming(ClientOpt::Options &option) -> void{
     std::cout << "Free disk space: "<< size / (1024 * 1024) << "Mb \n";
 #endif
 
-    for(auto &host:option.hosts){
-        clients.push_back(std::thread(runClient, host));
-    }
+    ClientOpt::Options remote_opt = g_soption;
+    remote_opt.mode = ClientOpt::Mode::REMOTE;
+    remote_opt.remote_mode = ClientOpt::RemoteMode::START;
+    remote_opt.port = g_soption.controlPort;
+    std::map<string,StateRunnedHosts> runned_hosts;
+    if (startRemote(remote_opt,&runned_hosts)){
 
-    for (std::thread &t: clients) {
-        if (t.joinable()) {
-            t.join();
+        for(auto &kv:runned_hosts){
+            clients.push_back(std::thread(runClient, kv.first,kv.second));
+        }
+
+        for (std::thread &t: clients) {
+            if (t.joinable()) {
+                t.join();
+            }
         }
     }
 }

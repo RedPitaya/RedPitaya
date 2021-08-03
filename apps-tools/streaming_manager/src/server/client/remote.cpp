@@ -15,7 +15,7 @@ std::atomic<int>   g_rstop_counter;
 std::mutex         g_rmutex;
 std::atomic<bool>  g_rexit_flag;
 
-auto startRemote(ClientOpt::Options &option) -> void{
+auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
     std::list<std::string> connected_hosts;
     std::list<std::string> slaveHosts;
     std::list<std::string> masterHosts;
@@ -44,25 +44,28 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
     });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&cl](std::string host){
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&cl,runned_hosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
             std::cout << "Streaming started: " << host << " TCP mode [OK]\n";
         g_rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
     });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&cl](std::string host){
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&cl,runned_hosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
             std::cout << "Streaming started: " << host << " UDP mode [OK]\n";
         g_rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::UDP;
     });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&cl](std::string host){
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&cl,runned_hosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
             std::cout << "Streaming started: " << host << " Local mode [OK]\n";
         g_rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
     });
 
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
@@ -96,7 +99,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
     cl.connectToServers(option.hosts,g_roption.port != "" ? g_roption.port : "8901");
     while (g_rconnect_counter>0){
         sleepMs(100);
-        if (g_rexit_flag) return;
+        if (g_rexit_flag) return false;
     }
 
     for(auto &host:connected_hosts) {
@@ -123,7 +126,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstart_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
 
         g_rstart_counter = masterHosts.size();
@@ -136,7 +139,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstart_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
     }
 
@@ -151,7 +154,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstop_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
 
         g_rstop_counter = slaveHosts.size();
@@ -164,7 +167,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstop_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
     }
 
@@ -179,7 +182,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstart_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
 
         g_rstart_counter = masterHosts.size();
@@ -192,7 +195,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstart_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
 
         auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
@@ -214,7 +217,7 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstop_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
 
         g_rstop_counter = slaveHosts.size();
@@ -227,9 +230,10 @@ auto startRemote(ClientOpt::Options &option) -> void{
         }
         while (g_rstop_counter>0){
             sleepMs(100);
-            if (g_rexit_flag) return;
+            if (g_rexit_flag) return false;
         }
     }
+    return true;
 }
 
 auto remoteSIGHandler() -> void{
