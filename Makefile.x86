@@ -89,44 +89,54 @@ KERNEL_HEADERS ?= YES
 HWID ?=
 DEF_PARAM ?=
 
-ifeq ($(MODEL),Z10 && ($(STREAMING),MASTER))
+ifeq ($(MODEL),Z10)
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 endif
+endif
 
-ifeq ($(MODEL),Z20 && ($(STREAMING),MASTER))
+ifeq ($(MODEL),Z20)
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = v0.94 stream_app
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
 FPGA_MODEL ?= Z20
 DTS_PATH = dts
 endif
+endif
 
-ifeq ($(MODEL),Z20_125 && ($(STREAMING),MASTER))
+ifeq ($(MODEL),Z20_125)
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_14
 DTS_PATH = dts
 endif
+endif
 
-ifeq ($(MODEL),Z20_250_12 && ($(STREAMING),MASTER))
+ifeq ($(MODEL),Z20_250_12) 
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_250
 DTS_PATH = dts_250
 endif
+endif
 
-ifeq ($(MODEL),Z10 && ($(STREAMING),SLAVE))
+ifeq ($(MODEL),Z10)
+ifeq ($(STREAMING),SLAVE)
 FPGA_PRJ_LST = stream_app logic
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
+endif
 endif
 
 .PHONY: fpga $(INSTALL_DIR)/fpga

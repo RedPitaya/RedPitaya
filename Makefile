@@ -31,16 +31,22 @@ export LINUX_VER
 # Production test script
 MODEL ?= Z10
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20) && ($(STREAMING),MASTER))
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
+ifeq ($(STREAMING),MASTER)
 all: api nginx examples  apps-tools apps-pro startupsh scpi sdr apps-free-vna rp_communication
 endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12) && ($(STREAMING),MASTER))
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
 endif
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10) && ($(STREAMING),SLAVE))
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
+ifeq ($(STREAMING),MASTER)
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10))
+ifeq ($(STREAMING),SLAVE)
 all: nginx apps-tools streaming_slave startupsh
+endif
 endif
 
 
@@ -398,22 +404,30 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125) && ($(STREAMING),MASTER))
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
+ifeq ($(STREAMING),MASTER)
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
 endif
+endif
 
-ifeq ($(MODEL),$(filter $(MODEL),Z20) && ($(STREAMING),MASTER))
+ifeq ($(MODEL),$(filter $(MODEL),Z20))
+($(STREAMING),MASTER)
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
 endif
-
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12) && ($(STREAMING),MASTER))
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
 endif
 
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10) && ($(STREAMING),SLAVE))
+ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
+($(STREAMING),MASTER)
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
+endif
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10))
+ifeq ($(STREAMING),SLAVE)
 apps-tools: ecosystem updater network_manager streaming_manager
+endif
 endif
 
 ecosystem:
