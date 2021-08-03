@@ -340,6 +340,19 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                     break;
                 }
 
+                case 's': {
+                    if (strcmp(optarg, "M") == 0) {
+                        opt.conf_set = ConfSet::MEMORY;
+                    } else if (strcmp(optarg, "F") == 0) {
+                        opt.conf_set = ConfSet::FILE;
+                    } else {
+                        fprintf(stderr, "Error key --set: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+
                 case 't': {
                     int t_out = 0;
                     if (get_int(&t_out, optarg, "Error get timeout",0, 100000) != 0) {

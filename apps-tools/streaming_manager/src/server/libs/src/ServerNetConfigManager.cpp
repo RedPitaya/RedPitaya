@@ -26,7 +26,8 @@ ServerNetConfigManager::~ServerNetConfigManager(){
 }
 
 auto ServerNetConfigManager::stop() -> void{
-    m_pBroadcast->CloseSocket();
+    if (m_pBroadcast)
+        m_pBroadcast->CloseSocket();
     m_pNetConfManager->stopAsioNet();
 }
 

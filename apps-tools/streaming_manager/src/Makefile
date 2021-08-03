@@ -7,7 +7,8 @@ PROJECT_ROOT=../..
 
 CXXSOURCES=main.cpp
 
-CXXSOURCES_SERVICE=service.cpp
+CXXSOURCES_SERVICE = console_server/main.cpp \
+					 console_server/options.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -25,8 +26,10 @@ LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 LIBS += -L./server/bin
 LIBS += -L./server/lib
+LIBS += -L./server/libs
 
-COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD
+
+COMMON_FLAGS+= -Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
@@ -36,11 +39,9 @@ LDWFLAGS+= -lrp_sdk -lrp
 LDWFLAGS+= -Wl,--no-whole-archive
 LDWFLAGS+= -shared
 
-LDSFLAGS+= -Wl,--whole-archive
-LDSFLAGS+= -ljsoncpp -lrpsasrv
-LDSFLAGS+= -Wl,--no-whole-archive
+LDSFLAGS+= -lrpsasrv -ljsoncpp
 LDSFLAGS+= -lpthread
-LDSFLAGS+= -lrp
+LDSFLAGS+= -lrp -static-libstdc++ -static-libgcc
 
 ifeq ($(MODEL),Z20_250_12)
 INCLUDE += -I$(INSTALL_DIR)/include/api250-12

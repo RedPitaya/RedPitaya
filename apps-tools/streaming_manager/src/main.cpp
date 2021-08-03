@@ -122,7 +122,11 @@ int rp_app_init(void)
 	g_serverRun = false;
 	try {
 		try {
-			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
+			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
+			#ifdef Z10_SLAVE
+				mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
+			#endif 
+			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,mode,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
 				updateUI();
 			});
@@ -491,7 +495,6 @@ void StartServer(){
 			if (s_manger){
 				if (!s_manger->isLocalMode()){
 					if (s_manger->getProtocol() == asionet::Protocol::TCP){
-						std:cerr << "Send Start TCP\n";
 						g_serverNetConfig->sendServerStartedTCP();
 					}
 					if (s_manger->getProtocol() == asionet::Protocol::UDP){

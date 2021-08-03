@@ -3,6 +3,7 @@ DL ?= dl
 
 INSTALL_DIR ?= build
 ENABLE_LICENSING ?= 1
+STREAMING ?= MASTER
 ################################################################################
 # versioning system
 ################################################################################
@@ -30,15 +31,15 @@ export LINUX_VER
 # Production test script
 MODEL ?= Z10
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20) && ($(STREAMING),MASTER))
 all: api nginx examples  apps-tools apps-pro startupsh scpi sdr apps-free-vna rp_communication
 endif
 
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12) && ($(STREAMING),MASTER))
 all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
 endif
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10_SLAVE))
+ifeq ($(MODEL),$(filter $(MODEL),Z10) && ($(STREAMING),SLAVE))
 all: nginx apps-tools streaming_slave startupsh
 endif
 
@@ -397,22 +398,22 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125) && ($(STREAMING),MASTER))
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
 endif
 
-ifeq ($(MODEL),$(filter $(MODEL),Z20))
+ifeq ($(MODEL),$(filter $(MODEL),Z20) && ($(STREAMING),MASTER))
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
 endif
 
 
-ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
+ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12) && ($(STREAMING),MASTER))
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
 endif
 
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10_SLAVE))
-apps-tools: ecosystem updater network_manager
+ifeq ($(MODEL),$(filter $(MODEL),Z10) && ($(STREAMING),SLAVE))
+apps-tools: ecosystem updater network_manager streaming_manager
 endif
 
 ecosystem:
@@ -429,8 +430,8 @@ scpi_manager: ecosystem api $(NGINX)
 
 streaming_manager: api $(NGINX)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) STREAMING_MODE=$(STREAMING)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) STREAMING_MODE=$(STREAMING)
 
 calib_app: api $(NGINX)
 	$(MAKE) -i -C $(APP_CALIB_DIR) clean
