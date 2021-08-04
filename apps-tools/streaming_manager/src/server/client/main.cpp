@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
-    if (opt.mode == ClientOpt::Mode::ERROR) {
+    if (opt.mode == ClientOpt::Mode::ERROR_MODE) {
         ClientOpt::usage(g_argv0);
         return 0;
     }

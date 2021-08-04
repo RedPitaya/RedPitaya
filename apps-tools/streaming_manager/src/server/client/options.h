@@ -4,7 +4,7 @@
 
 namespace ClientOpt {
     enum class Mode{
-        ERROR,
+        ERROR_MODE,
         ERROR_PARAM,
         SEARCH,
         CONFIG,
@@ -66,7 +66,7 @@ namespace ClientOpt {
         ////////////////////////
 
         Options(){
-            mode = Mode::ERROR;
+            mode = Mode::ERROR_MODE;
             port = "";
             timeout = 5;
             hosts.clear();

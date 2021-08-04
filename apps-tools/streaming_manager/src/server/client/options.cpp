@@ -235,7 +235,7 @@ auto ClientOpt::usage(char const* progName) -> void{
 
 auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
     Options opt;
-    opt.mode = Mode::ERROR;
+    opt.mode = Mode::ERROR_MODE;
     if (argc < 2) return opt;
     /* getopt_long stores the option index here. */
     int option_index = 0;
@@ -275,7 +275,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                 }
             }
         }
-        if (opt.mode != Mode::ERROR){
+        if (opt.mode != Mode::ERROR_MODE){
             return opt;
         }
     }
@@ -383,7 +383,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
             }
         }
 
-        if (opt.mode != Mode::ERROR){
+        if (opt.mode != Mode::ERROR_MODE){
             if (opt.mode == Mode::CONFIG && (opt.hosts.size() == 0 || (opt.conf_get == ConfGet::NONE && opt.conf_set == ConfSet::NONE))){
                 fprintf(stderr,"[ERROR] Missing required key in configuration mode\n");
                 exit( EXIT_FAILURE );
@@ -469,7 +469,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
             }
         }
 
-        if (opt.mode != Mode::ERROR){
+        if (opt.mode != Mode::ERROR_MODE){
             if (opt.mode == Mode::REMOTE && (opt.remote_mode ==RemoteMode::NONE || opt.hosts.size() == 0)){
                 fprintf(stderr,"[ERROR] Missing required key in remote mode\n");
                 exit( EXIT_FAILURE );
@@ -599,7 +599,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
             }
         }
 
-        if (opt.mode != Mode::ERROR){
+        if (opt.mode != Mode::ERROR_MODE){
             if (opt.mode == Mode::STREAMING && (opt.streamign_type == StreamingType::NONE || opt.hosts.size() == 0)){
                 fprintf(stderr,"[ERROR] Missing required key in streaming mode\n");
                 exit( EXIT_FAILURE );
