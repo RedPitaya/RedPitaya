@@ -72,6 +72,7 @@ class FileQueueManager:public Queue{
     bool m_threadWork;
     int  m_waitAllWrite;
     std::mutex       m_waitLock;
+    std::mutex       m_threadControl;
     bool m_hasErrorWrite;
     Stream_FileType  m_fileType; // FLAG for file type TDMS/Wav
     bool m_firstSectionWrite; // Need for detect first section of wav file

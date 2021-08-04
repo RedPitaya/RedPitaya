@@ -30,7 +30,7 @@ namespace  asionet_broadcast {
     CAsioBroadcastSocket::~CAsioBroadcastSocket() {
         CloseSocket();
         m_Ios.stop();
-        if (m_asio_th != nullptr){
+        if (m_asio_th){
             m_asio_th->join();
             delete  m_asio_th;
         }

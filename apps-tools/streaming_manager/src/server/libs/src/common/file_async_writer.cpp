@@ -166,12 +166,16 @@ void FileQueueManager::StopWrite(bool waitAllWrite){
         m_waitLock.unlock();
         m_ThreadRun.clear();
     }
+    m_threadControl.lock();
     if (th) {
         if (th->joinable())
+        {
             th->join();
+        }
         delete th;
         th = nullptr;
     }
+    m_threadControl.unlock();
 }
 
 void FileQueueManager::Task(){
@@ -238,8 +242,7 @@ int FileQueueManager::WriteToFile(){
         return 1;
     }
     delete bstream;
-
-    return 0;    
+    return 0;
 }
 
 void FileQueueManager::updateWavFile(int _size){

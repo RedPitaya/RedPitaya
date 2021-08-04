@@ -14,7 +14,7 @@ ClientOpt::Options g_soption;
 std::string        g_filenameDate;
 std::atomic<bool>  sig_exit_flag(false);
 
-long long int                         g_timeBegin;
+std::map<std::string,long long int>   g_timeBegin;
 std::map<std::string,bool>            g_terminate;
 std::map<std::string,uint64_t>        g_BytesCount;
 std::map<std::string,uint64_t>        g_lostRate;
@@ -58,7 +58,7 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     auto value = curTime.time_since_epoch();
     //     std::cout << value.count() << "\n";
     //     std::cout <<  g_timeBegin << "\n";
-    if ((value.count() - g_timeBegin) >= 5000) {
+    if ((value.count() - g_timeBegin[host]) >= 5000) {
         const std::lock_guard<std::mutex> lock(g_smutex);
         uint64_t bw = g_BytesCount[host];
         std::string pref = " ";
@@ -75,11 +75,14 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
         << "\tch2:\t" << g_packCounter_ch2[host]  <<  "\tLost:\t" << g_lostRate[host]  << "\n";
         g_BytesCount[host]  = 0;
         g_lostRate[host]  = 0;
-        g_timeBegin = value.count();
+        g_timeBegin[host] = value.count();
     }
 }
 
 auto runClient(std::string  host,StateRunnedHosts state) -> void{
+    std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+    g_timeBegin[host] = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow).time_since_epoch().count();
+
     g_packCounter_ch1[host] = 0;
     g_packCounter_ch2[host] = 0;
     g_lostRate[host] = 0;
@@ -159,10 +162,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
 
 auto startStreaming(ClientOpt::Options &option) -> void{
     g_soption = option;
-    std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-    auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
-    auto value = curTime.time_since_epoch();
-    g_timeBegin = value.count();
+
 
     char time_str[40];
     struct tm *timenow;
