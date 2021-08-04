@@ -231,7 +231,7 @@ else
 endif
 
 streaming_slave:
-	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	test -d $(INSTALL_DIR)/bin || mkdir -p $(INSTALL_DIR)/bin
 	echo "slave mode" > $(abspath $(INSTALL_DIR))/bin/.streaming_mode
 
 
