@@ -184,7 +184,15 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> voi
 
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		g_app = new CStreamingApplication(g_manger, osc, resolution_val, rate, channel , attenuator , 16);
-		g_app->runNonBlock();
+		
+		char time_str[40];
+    	struct tm *timenow;
+    	time_t now = time(nullptr);
+    	timenow = gmtime(&now);
+    	strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
+    	std::string filenameDate = time_str;
+
+		g_app->runNonBlock(filenameDate);
 		if (!g_manger->isLocalMode()){
 			if (g_manger->getProtocol() == asionet::Protocol::TCP){
 				g_serverNetConfig->sendServerStartedTCP();

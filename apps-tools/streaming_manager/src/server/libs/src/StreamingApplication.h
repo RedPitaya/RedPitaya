@@ -18,8 +18,8 @@ class CStreamingApplication
 public:
     CStreamingApplication(CStreamingManager::Ptr _StreamingManager, COscilloscope::Ptr _osc_ch,unsigned short _resolution,int _oscRate, int _channels, int _adc_mode , uint32_t _adc_bits);
     ~CStreamingApplication();
-    void run(std::string _file_name_prefix = "");
-    void runNonBlock(std::string _file_name_prefix = "");
+    void run(std::string _file_name_prefix);
+    void runNonBlock(std::string _file_name_prefix);
     bool stop(bool wait = true);
     bool isRun(){return m_isRun;}
 private:

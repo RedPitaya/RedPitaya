@@ -55,7 +55,7 @@ public:
     void stop();
     bool isFileThreadWork();
     bool isOutOfSpace();
-    bool convertToCSV(std::string _prefix = "");
+    bool convertToCSV(std::string _prefix);
     auto getProtocol() -> asionet::Protocol;
     auto isLocalMode() -> bool;
     bool convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg,std::string _prefix);

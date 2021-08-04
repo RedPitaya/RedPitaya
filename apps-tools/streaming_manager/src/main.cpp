@@ -658,7 +658,15 @@ void StartServer(){
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
 		ss_status.SendValue(1);
-		s_app->runNonBlock();
+		
+		char time_str[40];
+    	struct tm *timenow;
+    	time_t now = time(nullptr);
+    	timenow = gmtime(&now);
+    	strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
+    	std::string filenameDate = time_str;
+
+		s_app->runNonBlock(filenameDate);
 		if (!s_manger->isLocalMode()){
 			if (s_manger->getProtocol() == asionet::Protocol::TCP){
 				g_serverNetConfig->sendServerStartedTCP();
