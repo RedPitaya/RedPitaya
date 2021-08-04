@@ -411,14 +411,14 @@ endif
 endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z20))
-($(STREAMING),MASTER)
+ifeq ($(STREAMING),MASTER)
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
 endif
 endif
 
 
 ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
-($(STREAMING),MASTER)
+ifeq ($(STREAMING),MASTER)
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
 endif
 endif
