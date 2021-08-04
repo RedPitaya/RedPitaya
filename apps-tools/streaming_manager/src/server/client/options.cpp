@@ -363,6 +363,17 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                     break;
                 }
 
+                case 'f': {
+                    if (strcmp(optarg, "") != 0) {
+                        opt.conf_file = optarg;
+                    } else {
+                        fprintf(stderr, "Error key --file: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+
                 default: {
                     if (opt.mode == Mode::CONFIG) {
                         fprintf(stderr, "[ERROR] Unknown parameter\n");
