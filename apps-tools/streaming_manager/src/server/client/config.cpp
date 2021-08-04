@@ -81,7 +81,11 @@ auto startConfig(ClientOpt::Options &option) -> void{
                 std::cout << "CONFIGURATION " << host.c_str() << "\n";
             }
             std::cout << str;
-            std::cout << "\n===============================\n";
+            if (g_option.conf_get == ClientOpt::ConfGet::VERBOUS_JSON){
+                std::cout << "\n===============================\n";
+            }else{
+                std::cout << "\n";
+            }
         }
         if (g_option.conf_get == ClientOpt::ConfGet::VERBOUS){
             auto str = s->String();
