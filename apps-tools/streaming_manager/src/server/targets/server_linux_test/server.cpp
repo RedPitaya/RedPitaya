@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 
     // Run application
     CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
-    app.run();
+    app.run("");
 
     return 0;
 }

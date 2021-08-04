@@ -32,8 +32,6 @@ m_current_sample(0)
 
 CFileLogger::~CFileLogger()
 {
-    m_fileLost.close();
-    DumpToFile();
 }
 
 void CFileLogger::ResetCounters(){
@@ -112,6 +110,10 @@ void CFileLogger::AddMetric(uint64_t _samples_data,uint64_t _lost){
 void CFileLogger::DumpToFile(){
     
     try{
+        if (m_fileLost.is_open()){
+            m_fileLost.close();
+        }
+
         std::ofstream log(m_filePath , std::ios_base::app | std::ios_base::out);
         
         char buff[20];
