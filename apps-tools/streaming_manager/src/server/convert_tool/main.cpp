@@ -7,8 +7,8 @@
 
 #include <asio.hpp>
 #include <chrono>
-#include "rpsa/server/core/AsioNet.h"
-#include "rpsa/server/core/StreamingManager.h"
+#include "AsioNet.h"
+#include "StreamingManager.h"
 
 
 using namespace std;
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     std::string file_name = argv[1];
     if (!check_info){
         g_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , file_name, -1 , false);
-        g_manger->convertToCSV(file_name, s, e);
+        g_manger->convertToCSV(file_name, s, e,"");
     }else{
         std::fstream fs;
         fs.open(file_name, std::ios::binary | std::ofstream::in | std::ofstream::out);
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
             if (bi.dataFormatSize == 4) dft = "Float";
             printf("Data format type: %s\n",dft.c_str());
             printf("Samples count CH1(%d) CH2(%d)\n",bi.size_ch1,bi.size_ch2);
-            printf("Lost samples count: %lld\n",bi.lostCount);
+            printf("Lost samples count: %lld\n",(long long int)bi.lostCount);
             printf("Segments count: %d\n",bi.segCount);
             printf("Samples per segment: %d\n",bi.segSamplesCount);
             printf("Samples in last segment: %d\n",bi.segLastSamplesCount);

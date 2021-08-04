@@ -307,11 +307,48 @@
         var old_params = $.extend(true, {}, SM.params.orig);
         var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
         SM.updateMaxLimits(new_params['RP_MODEL_STR']);
+
         for (var param_name in new_params) {
+
             SM.params.orig[param_name] = new_params[param_name];
+            var field = $('#' + param_name);
+
             if (SM.param_callbacks[param_name] !== undefined)
                 SM.param_callbacks[param_name](new_params);
+
+            // Do not change fields from dialogs when user is editing something
+            if ((old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
+                if (field.is('select') || field.is('input:text')) {
+                    if (param_name == "SS_RATE"){
+                        SM.ss_rate = new_params[param_name].value;
+                        rateFocusOutValue();
+                    }else{
+                        field.val(new_params[param_name].value)
+                    }                 
+                } else if (field.is('button')) {
+                    field[new_params[param_name].value === true ? 'addClass' : 'removeClass']('active');
+                } else if (field.is('input:radio')) {
+                    if (param_name == "SS_USE_FILE"){
+                        $("#SS_USE_NET").prop('checked',!new_params[param_name].value)
+                        $("#SS_USE_FILE").prop('checked',new_params[param_name].value)
+                        if (new_params[param_name].value){
+                            $(".network").hide();
+                            $(".file").show();
+                        }else{
+                            $(".network").show();
+                            $(".file").hide();
+                        }
+                    }else{
+                        var radios = $('input[name="' + param_name + '"]');
+                        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+                        radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
+                    }
+                } else if (field.is('span')) {
+                    field.html(new_params[param_name].value);
+                }
+            }
         }
+
     };
 
     SM.calcRateHz = function(val) {
@@ -390,6 +427,7 @@
     //    setInterval(parametersHandler, 50);
 
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
+
 
 }(window.SM = window.SM || {}, jQuery));
 

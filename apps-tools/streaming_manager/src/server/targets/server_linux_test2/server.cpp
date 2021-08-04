@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <iostream>
 
-#include "rpsa/server/core/UioParser.h"
-#include "rpsa/server/core/Oscilloscope.h"
-#include "rpsa/server/core/StreamingApplication.h"
-#include "rpsa/server/core/StreamingManager.h"
+#include "UioParser.h"
+#include "Oscilloscope.h"
+#include "StreamingApplication.h"
+#include "StreamingManager.h"
 
 
 // void sigHandler (int sigNum){
