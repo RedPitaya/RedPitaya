@@ -25,12 +25,14 @@
 #include <signal.h>
 #include <unistd.h>
 #include <regex>
+#include <mutex>
 
 #include "rp.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 #include "ServerNetConfigManager.h"
 #include "options.h"
+#include "streaming.h"
 
 #ifdef Z20_250_12
 #include "rp-spi.h"
@@ -42,23 +44,14 @@
 
 std::mutex g_print_mtx;
 // std::condition_variable cv;
-COscilloscope::Ptr osc = nullptr;
-CStreamingManager::Ptr s_manger = nullptr;
-std::shared_ptr<CStreamingApplication> s_app = nullptr;
+// COscilloscope::Ptr osc = nullptr;
+// CStreamingManager::Ptr s_manger = nullptr;
+// std::shared_ptr<CStreamingApplication> s_app = nullptr;
 std::shared_ptr<ServerNetConfigManager> con_server = nullptr;
 std::atomic_bool g_run(true);
 
 const char  *g_argv0 = nullptr;
 
-void StopNonBlocking(int x);
-
-float calibFullScaleToVoltage(uint32_t fullScaleGain) {
-    /* no scale */
-    if (fullScaleGain == 0) {
-        return 1;
-    }
-    return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
-}
 
 static void handleCloseChildEvents()
 {
@@ -114,24 +107,24 @@ int main(int argc, char *argv[])
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
 
-#ifndef Z20
-    rp_CalibInit();
-    auto osc_calib_params = rp_GetCalibrationSettings();
-#endif
+// #ifndef Z20
+//     rp_CalibInit();
+//     auto osc_calib_params = rp_GetCalibrationSettings();
+// #endif
 
-    int32_t  ch1_off = 0;
-    int32_t  ch2_off = 0;
-    float    ch1_gain = 1;
-    float    ch2_gain = 1;
-    bool     filterBypass = true;
-	uint32_t aa_ch1 = 0;
-	uint32_t bb_ch1 = 0;
-	uint32_t kk_ch1 = 0xFFFFFF;
-	uint32_t pp_ch1 = 0;
-	uint32_t aa_ch2 = 0;
-	uint32_t bb_ch2 = 0;
-	uint32_t kk_ch2 = 0xFFFFFF;
-	uint32_t pp_ch2 = 0;
+    // int32_t  ch1_off = 0;
+    // int32_t  ch2_off = 0;
+    // float    ch1_gain = 1;
+    // float    ch2_gain = 1;
+    // bool     filterBypass = true;
+	// uint32_t aa_ch1 = 0;
+	// uint32_t bb_ch1 = 0;
+	// uint32_t kk_ch1 = 0xFFFFFF;
+	// uint32_t pp_ch1 = 0;
+	// uint32_t aa_ch2 = 0;
+	// uint32_t bb_ch2 = 0;
+	// uint32_t kk_ch2 = 0xFFFFFF;
+	// uint32_t pp_ch2 = 0;
 
 
     if (opt.background){
@@ -216,19 +209,20 @@ int main(int argc, char *argv[])
 		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
         con_server->startBroadcast(model, brchost,opt.broadcast_port);
 
-        con_server->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[](){
+        con_server->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[con_server](){
             std::lock_guard<std::mutex> lock(g_print_mtx);
             fprintf(stdout, "Get new settings\n");
+            fprintf(stdout,"%s",con_server->String().c_str());
             RP_LOG (LOG_INFO,"Get new settings\n");
-            //updateUI();
+            RP_LOG (LOG_INFO,"%s",con_server->String().c_str());
         });
 
-        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING,[](){
-            //StartServer();
+        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING,[con_server](){
+            startServer(con_server);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[](){
-            //StopNonBlocking(0);
+            stopNonBlocking(0);
         });
         
     }catch (std::exception& e)
@@ -457,6 +451,7 @@ int main(int argc, char *argv[])
 //         s_app->run();
 //         delete s_app;
 //         if (file_type == Stream_FileType::CSV_TYPE) s_manger->convertToCSV();
+        stopServer(0);
     }catch (std::exception& e)
     {
         fprintf(stderr, "Error: main() %s\n",e.what());
@@ -469,25 +464,25 @@ int main(int argc, char *argv[])
     return (EXIT_SUCCESS);
 }
 
-void StopServer(int x){
-	try{
-		if (s_app!= nullptr){
-			s_app->stop(false);
-		}
-	}catch (std::exception& e){
-		fprintf(stderr, "Error: StopServer() %s\n",e.what());
-        RP_LOG(LOG_ERR, "Error: StopServer() %s\n",e.what());
-	}
-}
+// void StopServer(int x){
+// 	try{
+// 		if (s_app!= nullptr){
+// 			s_app->stop(false);
+// 		}
+// 	}catch (std::exception& e){
+// 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
+//         RP_LOG(LOG_ERR, "Error: StopServer() %s\n",e.what());
+// 	}
+// }
 
-void StopNonBlocking(int x){
-	try{
-		std::thread th(StopServer ,x);
-		th.detach();
-	}catch (std::exception& e){
-		fprintf(stderr, "Error: StopNonBlocking() %s\n",e.what());
-        RP_LOG(LOG_ERR, "Error: StopNonBlocking() %s\n",e.what());
-	}
-}
+// void StopNonBlocking(int x){
+// 	try{
+// 		std::thread th(StopServer ,x);
+// 		th.detach();
+// 	}catch (std::exception& e){
+// 		fprintf(stderr, "Error: StopNonBlocking() %s\n",e.what());
+//         RP_LOG(LOG_ERR, "Error: StopNonBlocking() %s\n",e.what());
+// 	}
+// }
 
 

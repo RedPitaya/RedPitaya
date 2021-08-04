@@ -9,7 +9,8 @@ PROJECT_ROOT=../..
 CXXSOURCES=main.cpp
 
 CXXSOURCES_SERVICE = console_server/main.cpp \
-					 console_server/options.cpp
+					 console_server/options.cpp \
+					 console_server/streaming.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2

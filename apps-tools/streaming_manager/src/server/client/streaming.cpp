@@ -146,7 +146,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     while(g_manger[host]->isFileThreadWork() &&  !g_terminate[host]){
         sleepMs(1);
         if (g_soption.timeout >= 0){
-            if (curTime - beginTime < g_soption.timeout) break;
+            if (curTime - beginTime >= g_soption.timeout) break;
             curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
         }
     }
