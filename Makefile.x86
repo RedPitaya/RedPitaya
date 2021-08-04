@@ -136,6 +136,7 @@ FPGA_PRJ_LST = stream_app logic
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
+DEF_PARAM = SLAVE
 endif
 endif
 
