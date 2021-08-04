@@ -43,7 +43,7 @@ LDWFLAGS+= -shared
 
 LDSFLAGS+= -lrpsasrv -ljsoncpp
 LDSFLAGS+= -lpthread
-LDSFLAGS+= -lrp -static-libstdc++ -static-libgcc
+LDSFLAGS+= -static -lrp -static-libstdc++ -static-libgcc
 
 ifeq ($(MODEL),Z20_250_12)
 INCLUDE += -I$(INSTALL_DIR)/include/api250-12
