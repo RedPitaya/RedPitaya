@@ -13,6 +13,7 @@ CFileLogger::Ptr CFileLogger::Create(std::string _filePath){
 CFileLogger::CFileLogger(std::string _filePath):  
 m_filePath(_filePath),
 m_filePathLost(_filePath + ".lost"),
+m_file_open(false),
 m_oscRate(0),
 m_oscLostRate(0),
 m_udpLostRate(0),
@@ -24,6 +25,7 @@ m_old_id(0),
 m_current_sample(0)
 {
     ResetCounters();
+    m_file_open = true;
     m_fileLost.open(m_filePathLost , std::ios_base::app | std::ios_base::out);
     if (m_fileLost.is_open()){
         m_fileLost << "Start\tSize\n";
@@ -93,7 +95,8 @@ void CFileLogger::AddMetricId(uint64_t _id){
 }
 
 void CFileLogger::AddMetric(uint64_t _samples_data,uint64_t _lost){
-    if (m_fileLost.is_open()){
+    const std::lock_guard<std::mutex> lock(m_mtx);
+    if (m_file_open && m_fileLost.is_open()){
         if (_samples_data > 0){
             m_fileLost << m_current_sample << "\t" << _samples_data << "\n";
             m_current_sample += _samples_data;
@@ -108,8 +111,10 @@ void CFileLogger::AddMetric(uint64_t _samples_data,uint64_t _lost){
 
 
 void CFileLogger::DumpToFile(){
-    
+    const std::lock_guard<std::mutex> lock(m_mtx);    
     try{
+        if (!m_file_open) return;
+        m_file_open = false;
         if (m_fileLost.is_open()){
             m_fileLost.close();
         }

@@ -235,7 +235,8 @@ void CStreamingManager::stop(){
     } else{
         this->stopServer();
     }
-    m_fileLogger->DumpToFile();
+    if (m_fileLogger)
+        m_fileLogger->DumpToFile();
 }
 
 uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_size,size_t &_dest_buff_size,uint32_t _lostSize, uint32_t _adc_mode, uint32_t _adc_bits, unsigned short _resolution){

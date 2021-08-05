@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include "log.h"
 
 class CFileLogger{
@@ -35,6 +36,8 @@ private:
 
     std::string m_filePath;
     std::string m_filePathLost;
+    std::mutex  m_mtx;
+    bool        m_file_open;
     uint64_t    m_oscRate;
     uint64_t    m_oscLostRate;
     uint64_t    m_udpLostRate;
