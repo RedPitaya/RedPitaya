@@ -12,10 +12,11 @@ static struct option long_options[] = {
         {"file",             required_argument, 0, 'f'},
         {"port",             required_argument, 0, 'p'},
         {"search_port",      required_argument, 0, 's'},
+        {"help",             no_argument, 0, 'h'},
         {0, 0, 0, 0}
 };
 
-static constexpr char optstring[] = "bf:p:s:";
+static constexpr char optstring[] = "bf:p:s:h";
 
 std::vector<std::string> ClientOpt::split(const std::string& s, char seperator)
 {
@@ -85,8 +86,8 @@ auto ClientOpt::usage(char const* progName) -> void{
         name = arr[arr.size()-1];
     const char *format =
                 "Usage: \n"
-                "\t%s [-b] [-f PATH] [-p PORT] [-s PORT] [-v]\n";
-                "\t%s [--background] [--file=PATH] [--port=PORT] [--search_port=PORT] [--verbose]\n";
+                "\t%s [-b] [-f PATH] [-p PORT] [-s PORT] [-v]\n"
+                "\t%s [--background] [--file=PATH] [--port=PORT] [--search_port=PORT] [--verbose]\n"
                 "\n"
                 "\t--background          -b        Run service in background.\n"
                 "\t--file=PATH           -f FILE   Path to configuration file.\n"
@@ -122,6 +123,12 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                     exit(EXIT_FAILURE);
                 }
                 opt.config_port = optarg;
+                break;
+            }
+
+            case 'h': {
+                usage(argv[0]);
+                exit(EXIT_SUCCESS);
                 break;
             }
 

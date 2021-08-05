@@ -42,6 +42,7 @@ endif
 	mkdir -p $(INSTALL_DIR)/bin
 	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html fpga.sh info js target/$(APP)
 	cp $(SERVICE) $(INSTALL_DIR)/bin/$(SERVICE)
+	cp $(SERVICE).run.sh $(INSTALL_DIR)/bin/$(SERVICE).run.sh
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *
