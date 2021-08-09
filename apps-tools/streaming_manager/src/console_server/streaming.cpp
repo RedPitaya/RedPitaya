@@ -151,7 +151,13 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> voi
 		{
 			if (uio.nodeName == "rp_oscilloscope")
 			{
-				osc = COscilloscope::Create(uio, (channel == CStreamSettings::CH1 || channel == CStreamSettings::BOTH), (channel == CStreamSettings::CH2 || channel == CStreamSettings::BOTH), rate);
+				#ifdef STREAMING_MASTER
+					auto isMaster = true;
+				#endif
+				#ifdef STREAMING_SLAVE
+					auto isMaster = false
+				#endif
+				osc = COscilloscope::Create(uio, (channel == CStreamSettings::CH1 || channel == CStreamSettings::BOTH), (channel == CStreamSettings::CH2 || channel == CStreamSettings::BOTH), rate,isMaster);
 				osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
 				osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
 				osc->setFilterCalibrationCh2(aa_ch2,bb_ch2,kk_ch2,pp_ch2);

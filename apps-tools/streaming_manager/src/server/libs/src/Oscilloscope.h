@@ -107,9 +107,9 @@ class COscilloscope
 public:
     using Ptr = std::shared_ptr<COscilloscope>;
 
-    static Ptr Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable, uint32_t _dec_factor);
+    static Ptr Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable, uint32_t _dec_factor,bool _isMaster);
 
-    COscilloscope(bool _channel1Enable,bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor);
+    COscilloscope(bool _channel1Enable,bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster);
     COscilloscope(const COscilloscope &) = delete;
     COscilloscope(COscilloscope &&) = delete;
     ~COscilloscope();
@@ -155,4 +155,5 @@ private:
     int32_t      m_PP_ch2;
     int32_t      m_KK_ch2;
     bool         m_filterBypass;
+    bool         m_isMaster;
 };

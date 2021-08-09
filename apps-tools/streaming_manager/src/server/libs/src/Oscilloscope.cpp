@@ -33,7 +33,7 @@ void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg
 
 }
 
-COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t _dec_factor)
+COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t _dec_factor,bool _isMaster)
 {
     // Validation
     if (_uio.mapList.size() < 2)
@@ -87,7 +87,7 @@ COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable,
     return std::make_shared<COscilloscope>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor);
 }
 
-COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor) :
+COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster) :
     m_Channel1(_channel1Enable),
     m_Channel2(_channel2Enable),
     m_Fd(_fd),
@@ -101,7 +101,8 @@ COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd
     m_OscBuffer2(nullptr),
     m_OscBufferNumber(0),
     m_dec_factor(_dec_factor),
-    m_filterBypass(true)
+    m_filterBypass(true),
+    m_isMaster(_isMaster)
 {
     m_calib_offset_ch1 = 0;
     m_calib_gain_ch1 = 0x8000;
@@ -142,7 +143,10 @@ void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
         //_OscMap->event_sel =  osc0_event_id ;
 
         // Trigger mask
-        setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000004));
+        if (m_isMaster)
+            setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000004));
+        else
+            setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000020));
         //_OscMap->trig_mask = UINT32_C(0x00000004);
 
         // Trigger low level

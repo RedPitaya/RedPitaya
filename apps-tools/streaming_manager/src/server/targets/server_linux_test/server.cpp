@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         if (uio.nodeName == "rp_oscilloscope")
         {
             // TODO start server;
-            osc0 = COscilloscope::Create(uio, true , true , Decimation);
+            osc0 = COscilloscope::Create(uio, true , true , Decimation,true);
  //           osc1 = COscilloscope::Create(uio, 1 , 1);
             break;
         }
