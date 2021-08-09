@@ -84,7 +84,7 @@ COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable,
     }
 
    
-    return std::make_shared<COscilloscope>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor);
+    return std::make_shared<COscilloscope>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor,_isMaster);
 }
 
 COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster) :
