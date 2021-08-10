@@ -220,6 +220,7 @@ proc create_root_design { parentCell } {
   set adc_data_ch1 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch1 ]
   set adc_data_ch2 [ create_bd_port -dir I -from 13 -to 0 adc_data_ch2 ]
   set adc_clk [ create_bd_port -dir I -type clk -freq_hz 125000000 adc_clk ]
+  set clk_out [ create_bd_port -dir O -type clk -freq_hz 125000000 clk_out ]
 
   set dac_dat_a [ create_bd_port -dir O -from 13 -to 0 dac_dat_a ]
   set dac_dat_b [ create_bd_port -dir O -from 13 -to 0 dac_dat_b ]
@@ -1154,6 +1155,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_gen_clk_62_5 [get_bd_pins axi_reg/ACLK] [get_bd_pins axi_reg/S00_ACLK] [get_bd_pins clk_gen/clk_62_5] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins rst_gen/slowest_sync_clk]
   connect_bd_net -net clk_wiz_0_adc_clk [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_reg/M00_ACLK] [get_bd_pins clk_gen/clk_125] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins rp_oscilloscope/clk] [get_bd_pins rp_oscilloscope/m_axi_osc1_aclk] [get_bd_pins rp_oscilloscope/m_axi_osc2_aclk] [get_bd_pins rp_oscilloscope/s_axi_reg_aclk] [get_bd_pins xadc/s_axi_aclk]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins rst_gen/ext_reset_in]
+  connect_bd_net [get_bd_ports clk_out] [get_bd_pins clk_gen/clk_125]
   connect_bd_net -net rp_concat_0_event_reset [get_bd_pins rp_concat/event_reset] [get_bd_pins rp_oscilloscope/event_ip_reset]
   connect_bd_net -net rp_concat_0_event_start [get_bd_pins rp_concat/event_start] [get_bd_pins rp_oscilloscope/event_ip_start]
   connect_bd_net -net rp_concat_0_event_stop [get_bd_pins rp_concat/event_stop] [get_bd_pins rp_oscilloscope/event_ip_stop]

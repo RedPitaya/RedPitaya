@@ -59,8 +59,8 @@ module red_pitaya_top #(
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  input  logic [ 8-1:0] exp_p_io   ,
-  output logic [ 8-1:0] exp_n_io   ,
+  inout  logic [ 8-1:0] exp_p_io   ,
+  inout  logic [ 8-1:0] exp_n_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
@@ -116,6 +116,10 @@ wire adc_clk_out = 1'b0;
 `endif
 
 wire trig_out;
+wire clk_125;
+wire trig_ext_syncd;
+
+reg trig_ext_sync1, trig_ext_sync2;
 
 ODDR i_adc_clk_p ( .Q(adc_clk_o[0]), .D1(1'b1), .D2(1'b0), .C(adc_clk_out), .CE(1'b1), .R(1'b0), .S(1'b0));
 ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(adc_clk_out), .CE(1'b1), .R(1'b0), .S(1'b0));
@@ -164,8 +168,8 @@ dac_rst  <= ~rstn_0 | ~pll_locked;
 always @(posedge pwm_clk)
 pwm_rstn <=  rstn_0 &  pll_locked;
 */
-  system_wrapper system_wrapper_i
-  //system system_wrapper_i
+  //system_wrapper system_wrapper_i
+  system system_wrapper_i
        (.DDR_addr(DDR_addr),
         .DDR_ba(DDR_ba),
         .DDR_cas_n(DDR_cas_n),
@@ -187,11 +191,14 @@ pwm_rstn <=  rstn_0 &  pll_locked;
         .FIXED_IO_ps_clk(FIXED_IO_ps_clk),
         .FIXED_IO_ps_porb(FIXED_IO_ps_porb),
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
-        .trig_in(trig_ext),
+        .trig_in(trig_ext_syncd),
         .trig_out(trig_out),
         .adc_clk(adc_clk_in),
-        .dac_dat_a(dac_dat_a),
-        .dac_dat_b(dac_dat_b),
+        .clk_out(clk_125),
+        //.dac_dat_a(dac_dat_a),
+        //.dac_dat_b(dac_dat_b),
+        //.gpio_p(exp_p_io),
+        //.gpio_n(exp_n_io),
         .adc_data_ch1(adc_dat_i[0][15:2]),
         .adc_data_ch2(adc_dat_i[1][15:2]));
 
@@ -224,8 +231,24 @@ IBUFDS #() i_IBUFDS_trig
   .IB ( daisy_n_i[0]  ),
   .O  ( trig_ext      )
 );
+assign trig_ext_syncd = trig_ext;
 
 `else
+
+IBUFDS #() i_IBUFDS_trig
+(
+  .I  ( daisy_p_i[0]  ),
+  .IB ( daisy_n_i[0]  ),
+  .O  ( trig_ext)
+);
+
+always @(posedge clk_125) //sync external trigger from external master to local clock
+begin
+  trig_ext_sync1 <= trig_ext;
+  trig_ext_sync2 <= trig_ext_sync1;
+end
+assign trig_ext_syncd = trig_ext_sync2;
+
 
 IBUFDS #() i_IBUF_clk
 (
