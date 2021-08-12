@@ -5,7 +5,7 @@
 module top_tc ();
 
 
-//default clocking cb @ (posedge dac_sim.clk);
+//default clocking cb @ (posedge gpio_sim.clk);
 default clocking cb @ (posedge top_tb.clk);
 endclocking: cb
 // DMA status reg
@@ -192,6 +192,79 @@ id_test = {4'h0,offset[27:20]};
 ##10000;
 endtask: test_osc
 
+////////////////////////////////////////////////////////////////////////////////
+// Testing osciloscope
+////////////////////////////////////////////////////////////////////////////////
+
+task test_gpio(
+  int unsigned offset,
+  int unsigned evnt_in
+);
+
+   int unsigned dat;
+id_test = {4'h0,offset[27:20]};
+
+  ##100;
+  // configure
+  axi_write(offset+'h88,   'd4);  // start
+  axi_write(offset+'h80,   evnt_in);  // osc1 events
+  axi_write(offset+'h10,  'h2000);  // pre trigger samples
+  axi_write(offset+'h14,  'h6000);  // pre trigger samples
+  axi_write(offset+'h44,  'h10);  // trig mask
+  ##5;
+  axi_write(offset+'h48, 'd1);  // TRIG EDGE POS
+  ##5
+  axi_write(offset+'h50, 'd1);  // decimation enable
+  axi_write(offset+'h3C, 'd0);  // decimation enable
+  axi_write(offset+'h30, 'd1);  // decimation factor
+  axi_write(offset+'h34, 'd1);  // decimation shift
+  axi_write(offset+'h88,   'd2);  // start
+  axi_write(offset+'h84,   'd4);  // trigger
+
+  ##5;
+  axi_write(offset+'hA0, 'h1000);  // buffer 1 address
+  ##5;
+  axi_write(offset+'hA8, 'h2000);  // buffer 2 address
+  ##5;
+  axi_write(offset+'hA4, 'd30000);  // buffer 1 address
+  ##5;
+  axi_write(offset+'hAC, 'd40000);  // buffer 2 address
+
+  ##5;
+  axi_read(offset+'hA0, dat);  // buffer 2 address
+  ##5;
+  axi_read(offset+'hA8, dat);  // buffer 2 address
+  ##5;
+  axi_write(offset+'h9C, 'h400);  // buffer size - must be greater than axi burst size (128)
+
+  ##5;
+  axi_write(offset+'h8C, 'h212);  // streaming DMA
+  axi_write(offset+'h8C, 'h2);  // streaming DMA
+  axi_write(offset+'h8C, 'h1);  // streaming DMA
+  axi_write(offset+'h88,   'd0);  // start
+  axi_write(offset+'h88,   'd1);  // start
+  axi_write(offset+'h88,   'd2);  // start
+
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+  int_ack(offset);
+
+##10000;
+endtask: test_gpio
+
 task buf_ack(
   int unsigned offset
 );
@@ -230,17 +303,17 @@ task int_ack(
     ##5;
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
   ##5;
-  axi_write(offset+'h50, 'd2);  // INTR ACK
+  axi_write(offset+'h8C, 'd2);  // INTR ACK
   ##500;
-  axi_write(offset+'h50, 'h4);  // BUF1 ACK
+  axi_write(offset+'h8C, 'h4);  // BUF1 ACK
 
   do begin
         ##5;
   end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
   ##5;
-  axi_write(offset+'h50, 'd2);  // INTR ACK
+  axi_write(offset+'h8C, 'd2);  // INTR ACK
   ##500;
-  axi_write(offset+'h50,   'h8);  // BUF2 ACK 
+  axi_write(offset+'h8C,   'h8);  // BUF2 ACK 
 
 endtask: int_ack
 
@@ -250,7 +323,7 @@ task int_ack_del(
   int unsigned offset
 );
   int unsigned dat;
-  axi_read(offset+'h50, dat);
+  axi_read(offset+'h8C, dat);
   ##10;
 
   // configure
@@ -260,17 +333,17 @@ task int_ack_del(
   //  ##5;
   //end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
   ##5;
-  axi_write(offset+'h50, 'd2);  // INTR ACK
+  axi_write(offset+'h8C, 'd2);  // INTR ACK
   ##40000;
-  axi_write(offset+'h50, 'h4);  // BUF1 ACK
+  axi_write(offset+'h8C, 'h4);  // BUF1 ACK
 
   //do begin
   //      ##5;
   //end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
   ##5;
-  axi_write(offset+'h50, 'd2);  // INTR ACK
+  axi_write(offset+'h8C, 'd2);  // INTR ACK
   ##50000;
-  axi_write(offset+'h50, 'h8);  // BUF2 ACK
+  axi_write(offset+'h8C, 'h8);  // BUF2 ACK
 
 
 endtask: int_ack_del

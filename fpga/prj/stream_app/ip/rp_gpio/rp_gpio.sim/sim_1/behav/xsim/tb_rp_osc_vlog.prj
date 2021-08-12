@@ -1,0 +1,44 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../rp_gpio.srcs/sources_1/ip/fifo_axi_req/sim/fifo_axi_req.v" \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_s2mm.v" \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_s2mm_ctrl.v" \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_s2mm_data_ctrl.v" \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_s2mm_upsize.v" \
+"../../../../rp_gpio.srcs/sources_1/ip/fifo_axi_data/sim/fifo_axi_data.v" \
+
+sv xil_defaultlib  \
+"../../../../rp_gpio.srcs/sources_1/new/gpio_in_top.sv" \
+
+verilog xil_defaultlib  \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_mm2s_data_ctrl.v" \
+
+sv xil_defaultlib  \
+"../../../../rp_gpio.srcs/sources_1/new/rp_gpio.sv" \
+"../../../../../../../../rtl/axi4_stream_reg.sv" \
+"../../../../../../../../rtl/rle.sv" \
+"../../../../../../../../rtl/interface/axi4_if.sv" \
+"../../../../../../../../rtl/interface/gpio_if.sv" \
+"../../../../../../../../rtl/evn_pkg.sv" \
+"../../../../../../../../rtl/interface/axi4_lite_if.sv" \
+"../../../../../../../../rtl/axi4_stream_cnt.sv" \
+"../../../../../../../../rtl/old_acq.sv" \
+"../../../../../../../../rtl/interface/axi4_stream_if.sv" \
+"../../../../../../../../rtl/la_trg.sv" \
+"../../../../../../../../rtl/interface/sys_bus_if.sv" \
+"../../../../../../../../rtl/interface/spi_if.sv" \
+"../../../../../../../../rtl/str_dec.sv" \
+
+verilog xil_defaultlib  \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_mm2s.v" \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_mm2s_downsize.v" \
+"../../../../rp_gpio.srcs/sources_1/new/rp_dma_mm2s_ctrl.v" \
+
+sv xil_defaultlib  \
+"../../../../rp_gpio.srcs/sources_1/new/gpio_out_top.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
