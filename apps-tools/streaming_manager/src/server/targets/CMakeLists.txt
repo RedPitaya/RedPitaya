@@ -10,6 +10,10 @@ add_subdirectory(server_linux_test2)
 endif()
 
 if( NOT WIN32 )
+    add_subdirectory(dac_net_test)
+endif()
+
+if( NOT WIN32 )
 add_subdirectory(broadcast_test)
 endif()
 

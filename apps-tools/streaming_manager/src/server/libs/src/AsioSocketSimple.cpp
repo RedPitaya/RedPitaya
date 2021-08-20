@@ -182,8 +182,15 @@ namespace  asionet_simple {
         asio::error_code _error;
         if (m_is_tcp_connected  && m_tcp_socket->is_open()) {
             if (!async) {
-                m_tcp_socket->send(asio::buffer(_buffer, _size), 0, _error);
-                this->HandlerSend(_error,_size);
+                size_t offset = 0;
+                while(offset < _size){
+                    size_t send_size = m_tcp_socket->send(asio::buffer((uint8_t*)(&(*_buffer)+offset), _size-offset), 0, _error);
+                    if (_error.value() != 0){
+                        return false;
+                    }
+                    offset += send_size;
+                }
+                this->HandlerSend(_error,offset);
             }else {
                 m_tcp_socket->async_send(asio::buffer(_buffer,_size),
                                             std::bind(&CAsioSocketSimple::HandlerSend2, this, std::placeholders::_1 ,std::placeholders::_2,_buffer ));
