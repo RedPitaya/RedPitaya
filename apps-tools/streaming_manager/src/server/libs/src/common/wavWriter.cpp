@@ -1,22 +1,17 @@
+#include <cassert>
+#include <sstream>
 #include "wavWriter.h"
-
 
 CWaveWriter::CWaveWriter(){
     resetHeaderInit();
     m_endianness = CWaveWriter::Endianness::LittleEndian;
 }
 
-// void CWaveWriter::writeStringToFileData (std::vector<uint8_t>& fileData, std::string s)
-// {
-//     for (int i = 0; i < s.length();i++)
-//         fileData.push_back ((uint8_t) s[i]);
-// }
-
-void CWaveWriter::resetHeaderInit(){
+auto CWaveWriter::resetHeaderInit() -> void{
     m_headerInit = true;
 }
 
-std::iostream *CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2,unsigned short resolution){
+auto CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2,unsigned short resolution) -> std::iostream *{
 
     // IF resolution = 32bit this FLOAT type data
     m_bitDepth = resolution;
@@ -47,8 +42,6 @@ std::iostream *CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,u
         BuildHeader(memory);
         m_headerInit = false;
     }
-
-    
 
     if (m_bitDepth == 8)
     {
@@ -157,11 +150,10 @@ std::iostream *CWaveWriter::BuildWAVStream(uint8_t* buffer_ch1,size_t size_ch1,u
         delete [] cross_buff;
         }
     }
-
     return memory;
 }
 
-void CWaveWriter::BuildHeader(std::stringstream *memory){
+auto CWaveWriter::BuildHeader(std::stringstream *memory) -> void{
 
     int sampleRate = 44100;
     int32_t dataChunkSize = m_samplesPerChannel * m_numChannels * (m_bitDepth / 8);
@@ -196,7 +188,7 @@ void CWaveWriter::BuildHeader(std::stringstream *memory){
 }
 
 
-void CWaveWriter::addStringToFileData (std::stringstream *memory, std::string s)
+auto CWaveWriter::addStringToFileData (std::stringstream *memory, std::string s) -> void
 {
     memory->write(s.data(),s.size());
 }

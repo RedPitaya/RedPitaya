@@ -17,11 +17,7 @@ static std::mutex mtx_cout;
 struct acout
 {
     std::unique_lock<std::mutex> lk;
-    acout()
-            :
-            lk(std::unique_lock<std::mutex>(mtx_cout))
-    {
-
+    acout():lk(std::unique_lock<std::mutex>(mtx_cout)){
     }
 
     template<typename T>

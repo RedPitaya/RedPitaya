@@ -12,9 +12,7 @@
 #include "AsioNet.h"
 #include "FileLogger.h"
 #include "neon_asm.h"
-#include "shared_buffer.h"
 #include "thread_cout.h"
-#include "log.h"
 
 
 //#define FILE_PATH "/opt/redpitaya/www/apps/streaming_manager/upload"

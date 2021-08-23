@@ -2,7 +2,6 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include "log.h"
 
 class CFileLogger{
 public:

@@ -1,13 +1,5 @@
-//
-// Created by user on 22.11.18.
-//
-
-//
-// Created by user on 11.10.18.
-//
-
 #include "file_async_writer.h"
-#include "File.h"
+#include "common/TDMS/File.h"
 #include <ctime>
 
 #ifndef _WIN32
@@ -52,7 +44,7 @@ unsigned long long getTotalSystemMemory()
 #endif
 }
 
-int FileQueueManager::AvailableSpace(std::string dst, ulong* availableSize) {
+auto FileQueueManager::AvailableSpace(std::string dst, ulong* availableSize) -> int {
 #ifdef _WIN32
 	*availableSize = UINT32_MAX;
 	return 0;
@@ -64,7 +56,6 @@ int FileQueueManager::AvailableSpace(std::string dst, ulong* availableSize) {
         if ((statvfs(dst.c_str(), &devData)) >= 0) {
             if (availableSize != NULL) {
                 //I don't know if it's right, but I'll set availableSize only if the available size doesn't pass the ulong limit.
-
                 if (devData.f_bavail  > (std::numeric_limits<ulong>::max() / devData.f_bsize)) {
                     *availableSize = std::numeric_limits<ulong>::max();
                 } else {
@@ -82,8 +73,7 @@ int FileQueueManager::AvailableSpace(std::string dst, ulong* availableSize) {
 #endif
 }
 
-bool FileQueueManager::AddBufferToWrite(std::iostream *buffer){
-
+auto FileQueueManager::AddBufferToWrite(std::iostream *buffer) -> bool{
  //   acout() << "m_threadWork: " << m_threadWork << " m_useMemory: " << m_useMemory << " m_aviablePhyMemory: " << m_aviablePhyMemory << '\n';
     if (m_threadWork && (m_useMemory < m_aviablePhyMemory)){
         pushQueue(buffer);
@@ -95,32 +85,21 @@ bool FileQueueManager::AddBufferToWrite(std::iostream *buffer){
     }
 }
 
-ulong FileQueueManager::GetFreeSpaceDisk(std::string _filePath){
-
+auto FileQueueManager::GetFreeSpaceDisk(std::string _filePath) -> ulong{
     ulong m_freeSize = 0;
     if (FileQueueManager::AvailableSpace(_filePath, &m_freeSize) == 0){
-
-        // std::time_t result = std::time(nullptr);	
-        // std::fstream fs;
-        // fs.open ("/tmp/debug_streaming.log", std::fstream::in | std::fstream::out | std::fstream::app);
-        // char* date = std::asctime(std::localtime(&result));
-        // date[strlen(date) - 1] = '\0';
-        // fs << date << " : Free space on drive: " << m_freeSize << "\n";
-        // fs.close();
-
         if (m_freeSize < USING_FREE_SPACE){
             m_freeSize = 0;
         }else{
             m_freeSize = m_freeSize - USING_FREE_SPACE;
         }
-
     }else{
         m_freeSize = 0;
     }
     return  m_freeSize;
 }
 
-void FileQueueManager::OpenFile(std::string FileName,bool Append){
+auto FileQueueManager::OpenFile(std::string FileName,bool Append) -> void{
     fs.open(FileName, std::ios::binary | std::ofstream::out| std::ofstream::in | (Append? std::ofstream::binary  : std::ofstream::trunc));
     if (fs.fail()) {
         fs.open(FileName, std::ios::binary | std::ofstream::out| std::ofstream::in |  std::ofstream::trunc);
@@ -129,9 +108,8 @@ void FileQueueManager::OpenFile(std::string FileName,bool Append){
             return;
         }
     }
-
     auto dirName = DirNameOf(FileName);
-    if (dirName == "") {
+    if (dirName == ""){
         dirName = ".";
     }
 
@@ -143,12 +121,12 @@ void FileQueueManager::OpenFile(std::string FileName,bool Append){
     m_hasWriteSize = 0;
 }
 
-void FileQueueManager::CloseFile(){
+auto FileQueueManager::CloseFile() -> void{
     if (fs.is_open())
         fs.close();
 }
 
-void FileQueueManager::StartWrite(Stream_FileType _fileType){
+auto FileQueueManager::StartWrite(Stream_FileType _fileType) -> void{
     m_ThreadRun.test_and_set();
     m_threadWork = true;
     m_fileType = _fileType;
@@ -159,7 +137,7 @@ void FileQueueManager::StartWrite(Stream_FileType _fileType){
     th = new std::thread(&FileQueueManager::Task,this);
 }
 
-void FileQueueManager::StopWrite(bool waitAllWrite){
+auto FileQueueManager::StopWrite(bool waitAllWrite) -> void{
     if (m_threadWork) {
         m_waitLock.lock();
         m_waitAllWrite = waitAllWrite;
@@ -178,8 +156,7 @@ void FileQueueManager::StopWrite(bool waitAllWrite){
     m_threadControl.unlock();
 }
 
-void FileQueueManager::Task(){
-
+auto FileQueueManager::Task() -> void{
     while (m_ThreadRun.test_and_set()){
         WriteToFile();        
     }
@@ -197,10 +174,8 @@ void FileQueueManager::Task(){
     m_waitLock.unlock();
 }
 
-
-int FileQueueManager::WriteToFile(){
+auto FileQueueManager::WriteToFile() -> int{
     auto bstream = popQueue();
-        
     if (bstream == nullptr)
         return -1;
 
@@ -222,7 +197,7 @@ int FileQueueManager::WriteToFile(){
     
         if (m_fileType == Stream_FileType::WAV_TYPE){
             if (m_firstSectionWrite){
-                updateWavFile(Length);
+                UpdateWavFile(Length);
             }
 
             if (m_firstSectionWrite == false){
@@ -245,7 +220,7 @@ int FileQueueManager::WriteToFile(){
     return 0;
 }
 
-void FileQueueManager::updateWavFile(int _size){
+auto FileQueueManager::UpdateWavFile(int _size) -> void{
     int offset1 = 4;
     int offset2 = 40;
    
@@ -270,7 +245,7 @@ void FileQueueManager::updateWavFile(int _size){
     fs.seekg(cur_g);
 }
 
-std::iostream *FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution){
+auto FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution) -> std::iostream *{
     TDMS::File outFile;
     TDMS::WriterSegment segment;
     vector<shared_ptr<TDMS::Metadata>> data;
@@ -291,9 +266,9 @@ std::iostream *FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size
 //    dataprop.InitDataType(TDMS::DataType::TimeStamp,time);
 //    segment.AddProperties(root,"time_stamp_now",dataprop);
 
-    uint32_t data_type = TDMS::DataType::Integer8;
-    if (resolution == 16) data_type = TDMS::DataType::Integer16;
-    if (resolution == 32) data_type = TDMS::DataType::SingleFloat;
+    auto data_type = TDMS::TDMSType::Integer8;
+    if (resolution == 16) data_type = TDMS::TDMSType::Integer16;
+    if (resolution == 32) data_type = TDMS::TDMSType::SingleFloat;
 
     if (size_ch1 != 0)
     {       
@@ -317,7 +292,7 @@ std::iostream *FileQueueManager::BuildTDMSStream(uint8_t* buffer_ch1,size_t size
     return memory;
 }
 
-std::iostream *FileQueueManager::BuildBINStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution,uint32_t _lostSize){
+auto FileQueueManager::BuildBINStream(uint8_t* buffer_ch1,size_t size_ch1,uint8_t* buffer_ch2,size_t size_ch2, unsigned short resolution,uint32_t _lostSize) -> std::iostream *{
     stringstream *memory = new stringstream(ios_base::in | ios_base::out | ios_base::binary);
     BinHeader header;
     header.dataFormatSize = resolution / 8;
@@ -334,7 +309,7 @@ std::iostream *FileQueueManager::BuildBINStream(uint8_t* buffer_ch1,size_t size_
     return memory;
 }
 
-std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_position,int *_channels,bool skipData){
+auto FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_position,int *_channels,bool skipData) -> std::iostream*{
     uint32_t endSeg[] = { 0, 0 ,0}; 
     stringstream *memory = nullptr;
      new stringstream(ios_base::in | ios_base::out);
@@ -444,7 +419,6 @@ std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_positi
         }
         buffer->seekg(0, std::ios::end);
         auto Length = buffer->tellg();
-//        acout() << "\nLen " << Length <<  " Pos " << *_position <<"\n";
         *_position = *_position + sizeof(BinHeader) + header.sigmentLength + 12;
         if (*_position >= Length) {
             *_position = -2;
@@ -455,7 +429,7 @@ std::iostream *FileQueueManager::ReadCSV(std::iostream *buffer, int64_t *_positi
     return memory;
 }
 
-BinInfo FileQueueManager::ReadBinInfo(std::iostream *buffer){
+auto FileQueueManager::ReadBinInfo(std::iostream *buffer) -> BinInfo{
     int64_t position = 0;
     buffer->seekg(0, std::ios::end);
     auto Length = buffer->tellg();
@@ -489,33 +463,23 @@ BinInfo FileQueueManager::ReadBinInfo(std::iostream *buffer){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-Queue::Queue():
-m_useMemory(0)
-{
-
-}
+Queue::Queue(): m_useMemory(0)
+{}
 
 Queue::~Queue(){
-
 }
 
-
-
-
-void Queue::pushQueue(std::iostream* buffer){
-    mutex_.lock();
+auto Queue::pushQueue(std::iostream* buffer) -> void{
+    m_mutex.lock();
     m_queue.push_back(buffer);
     buffer->seekg(0, std::ios::end);
     auto Length = buffer->tellg();
     m_useMemory += Length;
-    mutex_.unlock();
+    m_mutex.unlock();
 }
 
-
-
-std::iostream* Queue::popQueue(){
-    mutex_.lock();
+auto Queue::popQueue() -> std::iostream*{
+    m_mutex.lock();
     std::iostream* buffer = m_queue.front();
     if (buffer != nullptr){
         m_queue.pop_front();
@@ -524,15 +488,14 @@ std::iostream* Queue::popQueue(){
         m_useMemory -= Length;
         buffer->seekg(0, std::ios::beg);
     }
-    mutex_.unlock();
-
+    m_mutex.unlock();
     return buffer;
 }
 
-long Queue::queueSize(){
-    mutex_.lock();
+auto Queue::queueSize() -> long{
+    m_mutex.lock();
     long size = m_queue.size();
-    mutex_.unlock();
+    m_mutex.unlock();
     return size;
 }
 

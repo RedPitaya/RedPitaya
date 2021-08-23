@@ -6,13 +6,6 @@
 #include "StreamingApplication.h"
 #include "AsioNet.h"
 
-#define CH1 1
-#define CH2 2
-
-#ifdef OS_MACOS
-#   include "common/aligned_alloc.h"
-#endif // OS_MACOS
-
 #define UNUSED(x) [&x]{}()
 
 #ifdef DEBUG_OUT
@@ -184,7 +177,6 @@ try{
             ++passCounter;
         }
 #endif
-        LOG_P("Pass\n");
         oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
         ++counter;
 

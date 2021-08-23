@@ -4,8 +4,6 @@
 
 #define UNUSED(x) [&x]{}()
 
-
-
 namespace  asionet {
 
     uint8_t *CAsioNet::BuildPack(

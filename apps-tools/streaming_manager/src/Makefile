@@ -1,5 +1,6 @@
 MODEL ?= Z10
 STREAMING_MODE ?= MASTER
+MODE ?= Release
 
 CXX=$(CROSS_COMPILE)g++
 RM=rm
@@ -75,7 +76,7 @@ all: make_c_app service
 clean: clean_c_app
 
 build_lib:
-	./build.sh libs -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
+	./build.sh libs -DCMAKE_BUILD_TYPE=$(MODE) -DMODEL=$(MODEL)
 
 .PHONY: make_c_app
 make_c_app: build_lib  $(OBJECTS)

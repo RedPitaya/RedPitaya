@@ -72,11 +72,11 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/DACAsioNetController.cpp
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/File.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/BinaryStream.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
 else()
@@ -94,11 +94,11 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/DACAsioNetController.cpp
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/File.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/BinaryStream.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
 endif()
