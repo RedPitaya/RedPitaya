@@ -3,7 +3,6 @@
 #include <list>
 #include "EventHandlers.h"
 #include "AsioNetSimple.h"
-#include "log.h"
 
 using namespace asionet_simple;
 

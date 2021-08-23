@@ -4,12 +4,13 @@
 #include <vector>
 #include <map>
 
-#include "DataType.h"
+#include "common/TDMS/DataType.h"
 
 using namespace std;
+
 namespace TDMS
 {
-	
+
 	struct TableOfContents
 	{
 		bool HasMetaData;
@@ -53,5 +54,4 @@ namespace TDMS
 		map<string, DataType> Properties;
 	};
 
-	
 }

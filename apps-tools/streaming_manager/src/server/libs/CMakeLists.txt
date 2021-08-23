@@ -58,6 +58,7 @@ if (NOT WIN32)
 target_sources(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioSocket.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioBroadcastSocket.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
@@ -68,19 +69,21 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/DACAsioNetController.cpp
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/File.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/BinaryStream.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
 else()
 target_sources(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioSocket.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioBroadcastSocket.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
@@ -88,13 +91,14 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/DACAsioNetController.cpp
             # Common
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/File.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/BinaryStream.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
 endif()

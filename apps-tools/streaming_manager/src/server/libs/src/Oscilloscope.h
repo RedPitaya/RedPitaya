@@ -4,7 +4,6 @@
 #include <memory>
 #include <mutex>
 #include <UioParser.h>
-#include "log.h"
 
 constexpr uint32_t osc0_event_id = 2;
 constexpr uint32_t osc1_event_id = 3;
