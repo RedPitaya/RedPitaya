@@ -146,6 +146,7 @@ auto Reader::ReadRawFixed(long offset, long count, TDMSType dataType) -> vector<
     shared_ptr<DataType::Raw> raw = make_shared<DataType::Raw>();
     raw->data = buff;
     raw->size = sizeread;
+    raw->dataType = dataType;
     vec.push_back(raw);
     return  vec;
 }
@@ -157,6 +158,7 @@ auto Reader::ReadRawInterleaved(long offset, long count, TDMSType dataType, int 
     shared_ptr<DataType::Raw> raw = make_shared<DataType::Raw>();
     raw->data = buff;
     raw->size = sizeread;
+    raw->dataType = dataType;
     vec.push_back(raw);
     return vec;
 }
@@ -177,6 +179,7 @@ auto Reader::ReadRawStrings(long offset, long count) -> vector<shared_ptr<DataTy
         shared_ptr<DataType::Raw> raw = make_shared<DataType::Raw>();
         raw->data = buff;
         raw->size = (int)((dataOffset + endOfString) - dataPosition);
+        raw->dataType = TDMSType::String;
         vec.push_back(raw);
         dataPosition = dataOffset + endOfString;
         m_fileStream->seekg(indexPosition);

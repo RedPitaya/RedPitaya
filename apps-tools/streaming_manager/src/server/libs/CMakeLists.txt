@@ -78,7 +78,8 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavReader.cpp)
 else()
 target_sources(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
@@ -100,7 +101,8 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp)
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavReader.cpp)
 endif()
 
 add_library(jsoncpp STATIC IMPORTED)
