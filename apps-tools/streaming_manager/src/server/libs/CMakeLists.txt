@@ -64,6 +64,7 @@ target_sources(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/Oscilloscope.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/Generator.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/StreamingApplication.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/UioParser.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp

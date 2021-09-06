@@ -3,51 +3,38 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include "Oscilloscope.h"
+#include "Generator.h"
 #include <stdio.h>
 #include <string.h>
 
 #define UNUSED(x) [&x]{}()
 
-namespace
-{
-//!
-//!@brief Map register using UIO.
-//!
-//!@param _fd File descriptor.
-//!@param _size The register map size.
-//!@param _number The register map number.
-//!@return The memory map pointer.
-//!
 void * MmapNumber(int _fd, size_t _size, size_t _number) {
     const size_t offset = _number * getpagesize();
     return mmap(nullptr, _size, PROT_READ | PROT_WRITE, MAP_SHARED, _fd, offset);
 }
 
-void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
+inline void setRegister(volatile GeneratorMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
     UNUSED(baseOsc_addr);
     //fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
 
-
-}
-
-COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t _dec_factor,bool _isMaster)
+CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable)
 {
     // Validation
     if (_uio.mapList.size() < 2)
     {
         // Error: validation.
         std::cerr << "Error: UIO validation." << std::endl;
-        return COscilloscope::Ptr();
+        return CGenerator::Ptr();
     }
 
     if (_uio.mapList[1].size < (osc_buf_size * 4))
     {
         // Error: buffer size.
         std::cerr << "Error: buffer size." << std::endl;
-        return COscilloscope::Ptr();
+        return CGenerator::Ptr();
     }
 
     // Open file
@@ -58,7 +45,7 @@ COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable,
     {
         // Error: open file.
         std::cerr << "Error: open file." << std::endl;
-        return COscilloscope::Ptr();
+        return CGenerator::Ptr();
     }
 
     // Map
@@ -80,14 +67,14 @@ COscilloscope::Ptr COscilloscope::Create(const UioT &_uio, bool _channel1Enable,
         std::cerr << "Error: mmap buffer." << std::endl;
         munmap(regset, _uio.mapList[0].size);
         close(fd);
-        return COscilloscope::Ptr();
+        return CGenerator::Ptr();
     }
 
    
-    return std::make_shared<COscilloscope>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor,_isMaster);
+    return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr);
 }
 
-COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster) :
+CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster) :
     m_Channel1(_channel1Enable),
     m_Channel2(_channel2Enable),
     m_Fd(_fd),
@@ -112,7 +99,7 @@ COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd
     //setFilterCalibrationCh2(0x7d93,0x437c7,0xd9999a,0x2666);
     setFilterCalibrationCh1(0,0,0xFFFFFF,0);
     setFilterCalibrationCh2(0,0,0xFFFFFF,0);
-    uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset);
+    uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset) +  osc0_baseaddr;
     m_OscMap = reinterpret_cast<OscilloscopeMapT *>(oscMap);
     m_OscBuffer1 = static_cast<uint8_t *>(m_Buffer);
     m_OscBuffer2 = static_cast<uint8_t *>(m_Buffer) + osc_buf_size * 2;

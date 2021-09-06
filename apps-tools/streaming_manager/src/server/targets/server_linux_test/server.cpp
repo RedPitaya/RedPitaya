@@ -65,11 +65,11 @@ int main(int argc, char* argv[])
     //     return 1;
     // }
 
-    CStreamingManager::Ptr s_manger = CStreamingManager::Create("127.0.0.1","8900",asionet::Protocol::TCP);
+  //  CStreamingManager::Ptr s_manger = CStreamingManager::Create("127.0.0.1","8900",asionet::Protocol::TCP);
 
     // Run application
-    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
-    app.run("");
+  //  CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
+  //  app.run("");
 
     return 0;
 }
