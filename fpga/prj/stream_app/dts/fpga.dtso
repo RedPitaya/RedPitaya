@@ -13,7 +13,7 @@
                                 compatible = "generic-uio";
                                 interrupt-parent = <&intc>;
 			        interrupts = <0 59 4>;
-                                reg = <0x40000000 0x100000>,<0x1000000 0x100000>;
+                                reg = <0x40000000 0x100000>,<0x1000000 0x80000>;
                                        reg-names = "regset", "buffer";
 
                         };
@@ -26,7 +26,7 @@
                                 compatible = "generic-uio";
                                 interrupt-parent = <&intc>;
 			        interrupts = <0 58 4>;
-                                reg = <0x40100000 0x100000>,<0x1000000 0x100000>;
+                                reg = <0x40100000 0x100000>,<0x1080000 0x80000>;
                                        reg-names = "regset", "buffer";
 
                         };
@@ -39,7 +39,7 @@
                                 compatible = "generic-uio";
                                 interrupt-parent = <&intc>;
 			        interrupts = <0 57 4>;
-                                reg = <0x40200000 0x100000>,<0x1000000 0x100000>;
+                                reg = <0x40200000 0x100000>,<0x1100000 0x80000>;
                                        reg-names = "regset", "buffer";
 
                         };                        
