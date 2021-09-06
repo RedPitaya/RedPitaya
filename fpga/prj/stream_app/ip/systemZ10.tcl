@@ -1264,7 +1264,7 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc1] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc2] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac1] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
-  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac1] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
+  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac2] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_in       ] [get_bd_addr_segs processing_system7_0/S_AXI_HP2/HP2_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_out      ] [get_bd_addr_segs processing_system7_0/S_AXI_HP2/HP2_DDR_LOWOCM] -force
 
