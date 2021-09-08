@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Product Version: Vivado v2020.2 (64-bit)              -->
+<!-- Product Version: Vivado v2020.1 (64-bit)              -->
 <!--                                                         -->
 <!-- Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="54" Path="/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.xpr">
+<Project Version="7" Minor="49" Path="/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/rp_gpio/rp_gpio.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
-    <Option Name="Id" Val="8425b4259e254a4c874600d534396b66"/>
+    <Option Name="Id" Val="f452e1e2e8234dd3a1715cdbd9ac7633"/>
     <Option Name="Part" Val="xc7z010clg400-1"/>
-    <Option Name="CompiledLibDir" Val="$PPRDIR/../../../../HDS/mentor_questa_lib"/>
+    <Option Name="CompiledLibDir" Val="$PPRDIR/../HDS/mentor_questa_lib"/>
     <Option Name="CompiledLibDirXSim" Val=""/>
-    <Option Name="CompiledLibDirModelSim" Val="$PPRDIR/../../../../HDS/mentor_xilinx_lib"/>
-    <Option Name="CompiledLibDirQuesta" Val="$PPRDIR/../../../../HDS/mentor_questa_lib"/>
+    <Option Name="CompiledLibDirModelSim" Val="$PPRDIR/../HDS/mentor_xilinx_lib"/>
+    <Option Name="CompiledLibDirQuesta" Val="$PPRDIR/../HDS/mentor_questa_lib"/>
     <Option Name="CompiledLibDirIES" Val="$PCACHEDIR/compile_simlib/ies"/>
     <Option Name="CompiledLibDirXcelium" Val="$PCACHEDIR/compile_simlib/xcelium"/>
     <Option Name="CompiledLibDirVCS" Val="$PCACHEDIR/compile_simlib/vcs"/>
@@ -24,26 +24,18 @@
     <Option Name="SimulatorInstallDirVCS" Val=""/>
     <Option Name="SimulatorInstallDirRiviera" Val=""/>
     <Option Name="SimulatorInstallDirActiveHdl" Val=""/>
-    <Option Name="SimulatorGccInstallDirModelSim" Val=""/>
-    <Option Name="SimulatorGccInstallDirQuesta" Val=""/>
-    <Option Name="SimulatorGccInstallDirIES" Val=""/>
-    <Option Name="SimulatorGccInstallDirXcelium" Val=""/>
-    <Option Name="SimulatorGccInstallDirVCS" Val=""/>
-    <Option Name="SimulatorGccInstallDirRiviera" Val=""/>
-    <Option Name="SimulatorGccInstallDirActiveHdl" Val=""/>
     <Option Name="BoardPart" Val=""/>
     <Option Name="SourceMgmtMode" Val="DisplayOnly"/>
     <Option Name="ActiveSimSet" Val="sim_1"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="ProjectType" Val="Default"/>
-    <Option Name="IPRepoPath" Val="$PSRCDIR"/>
-    <Option Name="IPOutputRepo" Val="$PPRDIR/ip"/>
+    <Option Name="IPRepoPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs"/>
     <Option Name="IPCachePermission" Val="read"/>
     <Option Name="IPCachePermission" Val="write"/>
     <Option Name="EnableCoreContainer" Val="FALSE"/>
     <Option Name="CreateRefXciForCoreContainers" Val="FALSE"/>
-    <Option Name="IPUserFilesDir" Val="$PPRDIR/../../../../../Work/P0095_red_pitaya/Vivado/rp_gpio/rp_gpio.ip_user_files"/>
-    <Option Name="IPStaticSourceDir" Val="$PPRDIR/../../../../../Work/P0095_red_pitaya/Vivado/rp_gpio/rp_gpio.ip_user_files/ipstatic"/>
+    <Option Name="IPUserFilesDir" Val="$PIPUSERFILESDIR"/>
+    <Option Name="IPStaticSourceDir" Val="$PIPUSERFILESDIR/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="WTXSimLaunchSim" Val="121"/>
     <Option Name="WTModelSimLaunchSim" Val="19"/>
@@ -74,39 +66,49 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_s2mm.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_s2mm.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_s2mm.v"/>
+          <Attr Name="ImportTime" Val="1631085953"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_s2mm_ctrl.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_s2mm_ctrl.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_s2mm_ctrl.v"/>
+          <Attr Name="ImportTime" Val="1631086016"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_s2mm_data_ctrl.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_s2mm_data_ctrl.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_s2mm_data_ctrl.v"/>
+          <Attr Name="ImportTime" Val="1631086040"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_s2mm_upsize.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_s2mm_upsize.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_s2mm_upsize.v"/>
+          <Attr Name="ImportTime" Val="1631086063"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/component.xml">
+      <File Path="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/component.xml">
         <FileInfo SFType="IPXACT"/>
       </File>
       <File Path="$PSRCDIR/sources_1/ip/fifo_axi_data/fifo_axi_data.xci">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/ip/fifo_axi_data/fifo_axi_data.xci"/>
+          <Attr Name="ImportTime" Val="1618568645"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -114,6 +116,8 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/reg_ctrl/reg_ctrl.xci">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/ip/reg_ctrl/reg_ctrl.xci"/>
+          <Attr Name="ImportTime" Val="1618568645"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -121,6 +125,8 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/fifo_axi_req/fifo_axi_req.xci">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/ip/fifo_axi_req/fifo_axi_req.xci"/>
+          <Attr Name="ImportTime" Val="1618568645"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -128,13 +134,17 @@
       </File>
       <File Path="$PSRCDIR/sources_1/new/gpio_in_top.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_in_top.sv"/>
+          <Attr Name="ImportTime" Val="1631085880"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_mm2s_data_ctrl.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_mm2s_data_ctrl.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_mm2s_data_ctrl.v"/>
+          <Attr Name="ImportTime" Val="1631086047"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -142,118 +152,126 @@
       </File>
       <File Path="$PSRCDIR/sources_1/new/rp_gpio.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/rp_gpio.sv"/>
+          <Attr Name="ImportTime" Val="1628773096"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/axi4_stream_reg.sv">
+      <File Path="$PPRDIR/../rtl/axi4_stream_reg.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/rle.sv">
+      <File Path="$PPRDIR/../rtl/rle.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/interface/axi4_if.sv">
+      <File Path="$PPRDIR/../rtl/interface/axi4_if.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/interface/gpio_if.sv">
+      <File Path="$PPRDIR/../rtl/interface/gpio_if.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/evn_pkg.sv">
+      <File Path="$PPRDIR/../rtl/evn_pkg.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/interface/axi4_lite_if.sv">
+      <File Path="$PPRDIR/../rtl/interface/axi4_lite_if.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/axi4_stream_cnt.sv">
+      <File Path="$PPRDIR/../rtl/axi4_stream_cnt.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/old_acq.sv">
+      <File Path="$PPRDIR/../rtl/old_acq.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/interface/axi4_stream_if.sv">
+      <File Path="$PPRDIR/../rtl/interface/axi4_stream_if.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/la_trg.sv">
+      <File Path="$PPRDIR/../rtl/la_trg.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/interface/sys_bus_if.sv">
+      <File Path="$PPRDIR/../rtl/interface/sys_bus_if.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/interface/spi_if.sv">
+      <File Path="$PPRDIR/../rtl/interface/spi_if.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/str_dec.sv">
+      <File Path="$PPRDIR/../rtl/str_dec.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_mm2s.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_mm2s.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_mm2s.v"/>
+          <Attr Name="ImportTime" Val="1631085962"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_mm2s_downsize.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_mm2s_downsize.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_mm2s_downsize.v"/>
+          <Attr Name="ImportTime" Val="1631086069"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/rp_dma_mm2s_ctrl.v">
+      <File Path="$PSRCDIR/sources_1/new/gpio_dma_mm2s_ctrl.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_dma_mm2s_ctrl.v"/>
+          <Attr Name="ImportTime" Val="1631085993"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -261,6 +279,8 @@
       </File>
       <File Path="$PSRCDIR/sources_1/new/gpio_out_top.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/gpio_out_top.sv"/>
+          <Attr Name="ImportTime" Val="1631085858"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -268,12 +288,14 @@
       </File>
       <File Path="$PSRCDIR/sources_1/new/rle_rev.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/new/rle_rev.sv"/>
+          <Attr Name="ImportTime" Val="1628149516"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../rtl/cts.sv">
+      <File Path="$PPRDIR/../rtl/cts.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -305,8 +327,8 @@
         <Option Name="PamSignalDriverFile" Val="xil_bypass_driver"/>
         <Option Name="PamPseudoTop" Val="pseudo_tb"/>
         <Option Name="SrcSet" Val="sources_1"/>
-        <Option Name="XSimWcfgFile" Val="$PPRDIR/tb_rp_osc_behav.wcfg"/>
-        <Option Name="XSimWcfgFile" Val="$PPRDIR/tb_rp_osc_behav1.wcfg"/>
+        <Option Name="XSimWcfgFile" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/tb_rp_osc_behav.wcfg"/>
+        <Option Name="XSimWcfgFile" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/tb_rp_osc_behav1.wcfg"/>
       </Config>
     </FileSet>
     <FileSet Name="utils_1" Type="Utils" RelSrcDir="$PSRCDIR/utils_1">
@@ -318,6 +340,8 @@
     <FileSet Name="fifo_axi_req" Type="BlockSrcs" RelSrcDir="$PSRCDIR/fifo_axi_req">
       <File Path="$PSRCDIR/sources_1/ip/fifo_axi_req/fifo_axi_req.xci">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/ip/fifo_axi_req/fifo_axi_req.xci"/>
+          <Attr Name="ImportTime" Val="1618568645"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -331,6 +355,8 @@
     <FileSet Name="reg_ctrl" Type="BlockSrcs" RelSrcDir="$PSRCDIR/reg_ctrl">
       <File Path="$PSRCDIR/sources_1/ip/reg_ctrl/reg_ctrl.xci">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../prj/stream_app/ip/rp_gpio/rp_gpio.srcs/sources_1/ip/reg_ctrl/reg_ctrl.xci"/>
+          <Attr Name="ImportTime" Val="1618568645"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -366,8 +392,8 @@
       <Option Name="Description" Val="Riviera-PRO Simulator"/>
     </Simulator>
   </Simulators>
-  <Runs Version="1" Minor="15">
-    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" IncludeInArchive="true" AutoIncrementalDir="$PPRDIR/../rp_dac/rp_gpio.srcs/utils_1/imports/synth_1">
+  <Runs Version="1" Minor="11">
+    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2018"/>
         <Step Id="synth_design"/>
@@ -376,7 +402,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="fifo_axi_req_synth_1" Type="Ft3:Synth" SrcSet="fifo_axi_req" Part="xc7z010clg400-1" ConstrsSet="fifo_axi_req" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" IncludeInArchive="true" AutoIncrementalDir="$PPRDIR/../rp_dac/rp_gpio.srcs/utils_1/imports/fifo_axi_req_synth_1">
+    <Run Id="fifo_axi_req_synth_1" Type="Ft3:Synth" SrcSet="fifo_axi_req" Part="xc7z010clg400-1" ConstrsSet="fifo_axi_req" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2018"/>
         <Step Id="synth_design"/>
@@ -385,7 +411,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="reg_ctrl_synth_1" Type="Ft3:Synth" SrcSet="reg_ctrl" Part="xc7z010clg400-1" ConstrsSet="reg_ctrl" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" IncludeInArchive="true" AutoIncrementalDir="$PPRDIR/../rp_dac/rp_gpio.srcs/utils_1/imports/reg_ctrl_synth_1">
+    <Run Id="reg_ctrl_synth_1" Type="Ft3:Synth" SrcSet="reg_ctrl" Part="xc7z010clg400-1" ConstrsSet="reg_ctrl" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2018"/>
         <Step Id="synth_design"/>
@@ -394,7 +420,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true" AutoIncrementalDir="$PPRDIR/../rp_dac/rp_gpio.srcs/utils_1/imports/impl_1">
+    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2018"/>
         <Step Id="init_design"/>
@@ -411,7 +437,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="fifo_axi_req_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="fifo_axi_req" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="fifo_axi_req_synth_1" IncludeInArchive="false" GenFullBitstream="true" AutoIncrementalDir="$PPRDIR/../rp_dac/rp_gpio.srcs/utils_1/imports/fifo_axi_req_impl_1">
+    <Run Id="fifo_axi_req_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="fifo_axi_req" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="fifo_axi_req_synth_1" IncludeInArchive="false" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2018"/>
         <Step Id="init_design"/>
@@ -428,7 +454,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="reg_ctrl_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="reg_ctrl" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="reg_ctrl_synth_1" IncludeInArchive="false" GenFullBitstream="true" AutoIncrementalDir="$PPRDIR/../rp_dac/rp_gpio.srcs/utils_1/imports/reg_ctrl_impl_1">
+    <Run Id="reg_ctrl_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="reg_ctrl" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="reg_ctrl_synth_1" IncludeInArchive="false" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2018"/>
         <Step Id="init_design"/>

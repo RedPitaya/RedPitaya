@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module rp_dma_mm2s_ctrl
+module gpio_dma_mm2s_ctrl
   #(parameter AXI_ADDR_BITS = 32,  
     parameter AXI_DATA_BITS = 64,
     parameter AXI_BURST_LEN = 16,
@@ -152,7 +152,7 @@ assign fifo_wr_we   = req_we; // && ~fifo_dis; // writing request buffer is only
 // 
 ////////////////////////////////////////////////////////////
   
-rp_dma_mm2s_data_ctrl U_dma_mm2s_data_ctrl(
+gpio_dma_mm2s_data_ctrl U_dma_mm2s_data_ctrl(
   .m_axi_aclk     (m_axi_aclk),            
   .m_axi_aresetn  (m_axi_aresetn),                  
   .fifo_rst       (fifo_rst),              

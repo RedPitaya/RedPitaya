@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module rp_dma_mm2s
+module gpio_dma_mm2s
   #(parameter AXI_ADDR_BITS   = 32,                    
     parameter AXI_DATA_BITS   = 64,                        
     parameter AXIS_DATA_BITS  = 16,              
@@ -147,7 +147,7 @@ assign fifo_r = fifo_rst;
 reg         fifo_re_reg;
 reg         fifo_dis_reg;
 
-rp_dma_mm2s_ctrl #(
+gpio_dma_mm2s_ctrl #(
   .AXI_ADDR_BITS  (AXI_ADDR_BITS),
   .AXI_DATA_BITS  (AXI_DATA_BITS),
   .AXI_BURST_LEN  (AXI_BURST_LEN),
@@ -194,7 +194,7 @@ rp_dma_mm2s_ctrl #(
 // Packs input data into the AXI bus width. 
 ////////////////////////////////////////////////////////////
 
-rp_dma_mm2s_downsize #(
+gpio_dma_mm2s_downsize #(
   .AXI_DATA_BITS  (AXI_DATA_BITS),
   .AXIS_DATA_BITS (AXIS_DATA_BITS),
   .AXI_BURST_LEN  (2))

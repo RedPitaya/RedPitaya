@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module rp_dma_s2mm_upsize
+module gpio_dma_s2mm_upsize
   #(parameter AXI_DATA_BITS   = 64,
     parameter AXIS_DATA_BITS  = 16,     
     parameter AXI_BURST_LEN   = 16)(    

@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module rp_dma_s2mm
+module gpio_dma_s2mm
   #(parameter AXI_ADDR_BITS   = 32,                    
     parameter AXI_DATA_BITS   = 64,                        
     parameter AXIS_DATA_BITS  = 16,              
@@ -83,7 +83,7 @@ assign m_axi_bready = m_axi_bvalid;
 // Accepts DMA requests and sends data over the AXI bus.
 ////////////////////////////////////////////////////////////
 
-rp_dma_s2mm_ctrl #(
+gpio_dma_s2mm_ctrl #(
   .AXI_ADDR_BITS  (AXI_ADDR_BITS),
   .AXI_DATA_BITS  (AXI_DATA_BITS),
   .AXI_BURST_LEN  (AXI_BURST_LEN),
@@ -131,7 +131,7 @@ rp_dma_s2mm_ctrl #(
 // Packs input data into the AXI bus width. 
 ////////////////////////////////////////////////////////////
 
-rp_dma_s2mm_upsize #(
+gpio_dma_s2mm_upsize #(
   .AXI_DATA_BITS  (AXI_DATA_BITS),
   .AXIS_DATA_BITS (AXIS_DATA_BITS))
   U_dma_s2mm_upsize(

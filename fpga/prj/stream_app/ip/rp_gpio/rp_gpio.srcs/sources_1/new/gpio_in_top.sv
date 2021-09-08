@@ -256,7 +256,7 @@ assign sto2.TREADY = sto1.TREADY;
 // 
 ////////////////////////////////////////////////////////////
 
-rp_dma_s2mm #(
+gpio_dma_s2mm #(
   .AXI_ADDR_BITS  (M_AXI_GPIO_ADDR_BITS),
   .AXI_DATA_BITS  (M_AXI_GPIO_DATA_BITS),
   .AXIS_DATA_BITS (32),

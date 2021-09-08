@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module rp_dma_mm2s_data_ctrl(
+module gpio_dma_mm2s_data_ctrl(
   input  wire       m_axi_aclk,
   input  wire       m_axi_aresetn,
   input  wire       fifo_rst,

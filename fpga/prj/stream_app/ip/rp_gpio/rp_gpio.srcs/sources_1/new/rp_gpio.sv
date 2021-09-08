@@ -211,30 +211,6 @@ wire [M_AXI_GPIO_ADDR_BITS-1:0]   gpio_out_rp;
 DT              dir_p;
 DT              dir_n;
 
-//če je dir_ 1, potem je na vhodnem bufferju high Z stanje.
-//če je dir_ 0, potem se izhod ignorira
-// torej 1 -> izhod, 0 -> vhod
-
-////////////////////////////////////////////////////
-// 64 bit atom?
-
-// RLE naj bo 8 bitov. 
-// struktura atoma:
-
-// INPUT
-// 8 bit GPIO_P
-// 8 bit GPIO_N
-// 8 bit RLE
-
-
-// OUTPUT
-// 8 bit GPIO_P
-// 8 bit GPIO_N
-// 8 bit RLE
-
-////////////////////////////////////////////////////
-
-
 `ifdef SIMULATION
 
 assign sti.TDATA[0] = gpiop_i ;
@@ -306,7 +282,7 @@ reg_ctrl U_reg_ctrl(
   .s_axi_wready   (s_axi_reg_wready),   
   .s_axi_bresp    (s_axi_reg_bresp),     
   .s_axi_bvalid   (s_axi_reg_bvalid),  
-  .s_axi_bready   (s_axi_reg_bready),   // če se bready ne postavi na 1, se reg_ctrl ustavi 
+  .s_axi_bready   (s_axi_reg_bready),
   .s_axi_araddr   (s_axi_reg_araddr),   
   .s_axi_arprot   (s_axi_reg_arprot),   
   .s_axi_arvalid  (s_axi_reg_arvalid), 
@@ -357,8 +333,6 @@ if (~rst_n) begin
 
   cfg_ctrl_reg_in   <= 'h0;
   cfg_ctrl_reg_out  <= 'h0;
-  //dma_sts_reg_in    <= 'h0;
-  //dma_sts_reg_out   <= 'h0;
 
   cfg_dma_buf_size  <= 'h0;
   cfg_buf1_adr_in   <= 'h0;
@@ -372,7 +346,6 @@ end else begin
     // acquire regset
     if (reg_addr[8-1:0]=='h04)   cfg_con <= reg_wr_data[0];
     if (reg_addr[8-1:0]=='h04)   cfg_aut <= reg_wr_data[1];
-    //if (reg_addr[8-1:0]=='h08)   cfg_trg <= reg_wr_data[TN-1:0];
     if (reg_addr[8-1:0]=='h10)   cfg_pre <= reg_wr_data[CW-1:0];
     if (reg_addr[8-1:0]=='h14)   cfg_pst <= reg_wr_data[CW-1:0];
 
@@ -402,8 +375,7 @@ end else begin
 
     if (reg_addr[8-1:0]=='h8C)   cfg_ctrl_reg_in  <= reg_wr_data;
     if (reg_addr[8-1:0]=='h90)   cfg_ctrl_reg_out <= reg_wr_data;
-    //if (reg_addr[8-1:0]=='h94)   dma_sts_reg_in   <= reg_wr_data;
-    //if (reg_addr[8-1:0]=='h98)   dma_sts_reg_out  <= reg_wr_data;
+
 
     if (reg_addr[8-1:0]=='h9C)   cfg_dma_buf_size <= reg_wr_data;
     if (reg_addr[8-1:0]=='hA0)   cfg_buf1_adr_in  <= reg_wr_data;
@@ -423,7 +395,6 @@ begin
     // acquire regset
     'h00 : reg_rd_data <= {{32-  4{1'b0}},~sts_acq, sts_acq, sts_trg, 1'b0};
     'h04 : reg_rd_data <= {{32-  2{1'b0}}, cfg_aut, cfg_con};
-    //'h08 : reg_rd_data <= {{32- TN{1'b0}}, cfg_trg};
     'h10 : reg_rd_data <=              32'(cfg_pre); // number of samples pre trigger
     'h14 : reg_rd_data <=              32'(cfg_pst); // number of samples post trigger
     'h18 : reg_rd_data <=              32'(sts_pre); // current number of pre trig samples
@@ -659,28 +630,13 @@ wire event_val = (reg_addr[8-1:0] == 8'h88) && (reg_wr_we == 1);
 always @(posedge clk)
 begin
   if (rst_n == 0) begin
-    /*event_op_trig   <= 0;
-    event_op_stop   <= 0;
-    event_op_start  <= 0;
-    event_op_reset  <= 0;*/
     la_event_op <= 'h0;
   end else begin
     if (event_val) begin
-      /*event_op_trig   <= event_sel[3];
-      event_op_stop   <= event_sel[2];
-      event_op_start  <= event_sel[1];
-      event_op_reset  <= event_sel[0];    */
       la_event_op <= cfg_event_sts;   
     end else begin
-      /*event_op_trig   <= 0;
-      event_op_stop   <= 0;
-      event_op_start  <= 0;
-      event_op_reset  <= 0;   */  
       la_event_op <= 'h0;
     end
   end
 end       
-
-//assign la_event_op = {event_op_trig, event_op_stop, event_op_start, event_op_reset};
-
 endmodule

@@ -702,7 +702,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>0bc7c0d9</spirit:value>
+            <spirit:value>e1a9f82c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -724,7 +724,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>0bc7c0d9</spirit:value>
+            <spirit:value>e1a9f82c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1876,32 +1876,29 @@
       <spirit:file>
         <spirit:name>sources_1/ip/fifo_axi_req/fifo_axi_req.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
-        <spirit:userFileType>CELL_NAME_gpio_in_top/rp_dma_s2mm/rp_dma_s2mm_ctrl/rp_dma_s2mm_data_ctrl/fifo_axi_req/fifo_axi_req</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>sources_1/ip/reg_ctrl/reg_ctrl.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
-        <spirit:userFileType>CELL_NAME_reg_ctrl/reg_ctrl</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>sources_1/ip/fifo_axi_data/fifo_axi_data.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
-        <spirit:userFileType>CELL_NAME_gpio_in_top/rp_dma_s2mm/fifo_axi_data/fifo_axi_data</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm_data_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm_data_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm_upsize.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm_upsize.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1909,7 +1906,7 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s_data_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s_data_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1969,15 +1966,15 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s_downsize.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s_downsize.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -2019,32 +2016,29 @@
       <spirit:file>
         <spirit:name>sources_1/ip/fifo_axi_req/fifo_axi_req.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
-        <spirit:userFileType>CELL_NAME_gpio_in_top/rp_dma_s2mm/rp_dma_s2mm_ctrl/rp_dma_s2mm_data_ctrl/fifo_axi_req/fifo_axi_req</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>sources_1/ip/reg_ctrl/reg_ctrl.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
-        <spirit:userFileType>CELL_NAME_reg_ctrl/reg_ctrl</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>sources_1/ip/fifo_axi_data/fifo_axi_data.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
-        <spirit:userFileType>CELL_NAME_gpio_in_top/rp_dma_s2mm/fifo_axi_data/fifo_axi_data</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm_data_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm_data_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_s2mm_upsize.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_s2mm_upsize.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -2052,7 +2046,7 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s_data_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s_data_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -2112,15 +2106,15 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s_downsize.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s_downsize.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>sources_1/new/rp_dma_mm2s_ctrl.v</spirit:name>
+        <spirit:name>sources_1/new/gpio_dma_mm2s_ctrl.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -2217,8 +2211,8 @@
         <xilinx:xpmLibrary>XPM_CDC</xilinx:xpmLibrary>
         <xilinx:xpmLibrary>XPM_MEMORY</xilinx:xpmLibrary>
       </xilinx:xpmLibraries>
-      <xilinx:coreRevision>38</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2021-08-05T07:36:02Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>40</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2021-09-08T07:49:05Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="xilinx.com:user:rp_gpio:1.0_ARCHIVE_LOCATION">d:/work/p0095_red_pitaya/vivado/rp_gpio/rp_gpio.srcs</xilinx:tag>
         <xilinx:tag xilinx:name="redpitaya.com:user:rp_gpio:1.0_ARCHIVE_LOCATION">d:/work/p0095_red_pitaya/vivado/rp_gpio/rp_gpio.srcs</xilinx:tag>
@@ -2965,14 +2959,55 @@
         <xilinx:tag xilinx:name="ui.data.coregen.dd@11e52423_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@1739a07f_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@393da20e_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@58b8d197_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@35ad23e3_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@11a8336c_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3fda2201_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@51bd7759_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@72fd7bee_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@a30a63f_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7b23b0b5_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6544e526_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@796c61d7_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@767f2ece_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@452a641d_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@49eee833_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1b3921d1_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@63914a05_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@75920980_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@16857481_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2eb38a37_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6bef3bc1_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2ee62eff_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@355d9c64_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5e72196c_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@eb3a18a_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@543d41fa_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3cb13d58_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@204ac43f_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3c238f0f_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1b406554_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7047a40f_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@75816ae5_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7e6ae183_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3d38085b_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@290e8f73_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@48879a76_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@203f873e_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@77c69e00_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@d61ffed_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7ab71e6e_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@15ee0b97_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5d9a2536_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6765cc79_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_gpio/rp_gpio.srcs</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
-      <xilinx:xilinxVersion>2020.2</xilinx:xilinxVersion>
+      <xilinx:xilinxVersion>2020.1</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="a1a29337"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="f2d8ce3c"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="5406f93f"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="d4bcfa53"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="6ec902d3"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="8e3dfe1d"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="785b0670"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="3984094f"/>
