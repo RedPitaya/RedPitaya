@@ -110,9 +110,9 @@ echo
 
 X=$(monitor 0x40200044)
 hexToDec $X
-echo "Ch A number of burst repetitions 0x40200044 : $X ($RET)"
+echo "Ch A last value after burst 0x40200044 : $X ($RET)"
 
 X=$(monitor 0x40200048)
 hexToDec $X
-echo "Ch B number of burst repetitions 0x40200048 : $X ($RET)"
+echo "Ch B last value after burst 0x40200048 : $X ($RET)"
 
