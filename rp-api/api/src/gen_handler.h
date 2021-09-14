@@ -28,7 +28,7 @@ int gen_getAmplitude(rp_channel_t channel, float *amplitude);
 int gen_setOffset(rp_channel_t channel, float offset) ;
 int gen_getOffset(rp_channel_t channel, float *offset) ;
 int gen_setFrequency(rp_channel_t channel, float frequency);
-int gen_setFrequencyDirect(rp_channel_t channel, float frequency);
+int gen_setFrequencyDirect(rp_channel_t channel, float frequency); // Used for sweepmode
 int gen_getFrequency(rp_channel_t channel, float *frequency);
 int gen_setSweepStartFrequency(rp_channel_t channel, float frequency);
 int gen_getSweepStartFrequency(rp_channel_t channel, float *frequency);

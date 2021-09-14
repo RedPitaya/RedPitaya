@@ -36,7 +36,7 @@
 #define PHASE_MAX               360         // deg
 #define DUTY_CYCLE_MIN          0           // %
 #define DUTY_CYCLE_MAX          100         // %
-#define BURST_COUNT_MIN        -1
+#define BURST_COUNT_MIN         1
 #define BURST_COUNT_MAX         50000
 #define BURST_REPETITIONS_MIN   1
 #define BURST_REPETITIONS_MAX   50000
