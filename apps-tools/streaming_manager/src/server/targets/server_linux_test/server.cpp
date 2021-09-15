@@ -3,6 +3,7 @@
 
 #include "UioParser.h"
 #include "Oscilloscope.h"
+#include "Generator.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 
@@ -14,17 +15,17 @@ int main(int argc, char* argv[])
     std::ios oldState(nullptr);
     oldState.copyfmt(std::cout);
 
-    std::cout << std::hex << std::noshowbase << std::setfill('0');
+    std::cerr << std::hex << std::noshowbase << std::setfill('0');
 
     for (const UioT &uio : uioList)
     {
-        std::cout << "name:\t" << uio.name << "\n"
+        std::cerr << "name:\t" << uio.name << "\n"
                   << "node:\t" << uio.nodeName << "\n"
                   << "maps:" << std::endl;
 
         for (const UioMapT &uioMap : uio.mapList)
         {
-            std::cout << "\tname: " << uioMap.name
+            std::cerr << "\tname: " << uioMap.name
                       << ", addr: 0x" << std::setw(8) << uioMap.addr
                       << ", offset: 0x" << std::setw(8) << uioMap.offset
                       << ", size: 0x" << std::setw(8) << uioMap.size
@@ -35,8 +36,9 @@ int main(int argc, char* argv[])
     std::cout.copyfmt(oldState);
 
     // Search oscilloscope
-    COscilloscope::Ptr osc0 = nullptr;
-    COscilloscope::Ptr osc1 = nullptr;
+    COscilloscope::Ptr osc = nullptr;
+    CGenerator::Ptr gen = nullptr;
+
     int Decimation = 1;
     if (argc > 1) {
         Decimation = atoi(argv[1]);
@@ -46,10 +48,12 @@ int main(int argc, char* argv[])
     {
         if (uio.nodeName == "rp_oscilloscope")
         {
-            // TODO start server;
-            osc0 = COscilloscope::Create(uio, true , true , Decimation,true);
- //           osc1 = COscilloscope::Create(uio, 1 , 1);
-            break;
+            osc = COscilloscope::Create(uio, true , true , Decimation,true);
+        }
+
+        if (uio.nodeName == "rp_dac")
+        {
+            gen = CGenerator::Create(uio, true , true );
         }
     }
 
@@ -65,11 +69,46 @@ int main(int argc, char* argv[])
     //     return 1;
     // }
 
+    size_t size = 1024 * 16;
+    uint16_t buf1[size];
+    uint16_t buf2[size];
+    for(int i = 0 ; i< size ; i++){
+        buf1[i]= i / 2;// i % ((1 << 14) - 500) + 500;
+        buf2[i]= i / 2;//i % 4096; //i % ((1 << 14) - 500) + 500;
+    }
+    if (gen){
+        std::cerr << "\n";
+        gen->printReg();
+        std::cerr << "\n";
+        gen->prepare();
+        std::cerr << "\n";
+        gen->printReg();
+        bool firstBuf = true;
+        std::cerr << "\nInit first and second buffers\n";
+        gen->initFirst((uint8_t*)buf1,(uint8_t*)buf1,size * 2);
+        gen->initSecond((uint8_t*)buf2,(uint8_t*)buf2,size * 2);
+        std::cerr << "\n";
+        gen->printReg();
+        gen->start();
+        std::cerr << "\n";
+        //sleep(2);
+        gen->printReg();
+        while(1){
+           // sleep(1);
+           std::cerr << "\n";
+            gen->printReg();                
+            if (gen->write(firstBuf ? (uint8_t*)buf1 : (uint8_t*)buf2,nullptr, size * 2)){
+                
+                firstBuf != firstBuf;
+            }
+        }
+    }
+
   //  CStreamingManager::Ptr s_manger = CStreamingManager::Create("127.0.0.1","8900",asionet::Protocol::TCP);
 
     // Run application
   //  CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
   //  app.run("");
-
+    std::cerr << "End of programm\n";
     return 0;
 }

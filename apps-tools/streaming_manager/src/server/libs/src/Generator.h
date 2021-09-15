@@ -4,7 +4,10 @@
 #include <memory>
 #include <mutex>
 #include <UioParser.h>
+#include "neon_asm.h"
 
+constexpr uint32_t gen0_event_id = 0x1;
+constexpr uint32_t gen1_event_id = 0x2;
 constexpr uint32_t dac_buf_size = (65536) / 2.0;
 
 struct GeneratorMapT
@@ -38,17 +41,22 @@ public:
     static Ptr Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable);
 
     CGenerator(bool _channel1Enable,bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr);
-    CGenerator(const COscilloscope &) = delete;
-    CGenerator(COscilloscope &&) = delete;
+    CGenerator(const CGenerator &) = delete;
+    CGenerator(CGenerator &&) = delete;
     ~CGenerator();
 
-    // void prepare();
-    // bool next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow);
+    auto prepare() -> void;
+    auto initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool;
+    auto initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool;
+    
+    auto write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool;
     auto setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void;
     // bool clearBuffer();
     // bool wait();
     // bool clearInterrupt();
-    // void stop();
+    auto start() -> void;
+    auto stop() -> void;
+    auto printReg() -> void;
 
 private:
     auto setReg(volatile GeneratorMapT *_OscMap) -> void;
@@ -61,10 +69,10 @@ private:
     void        *m_Buffer;
     size_t       m_BufferSize;
     uintptr_t    m_BufferPhysAddr;
-    volatile     GeneratorMapT *m_OscMap;
-    uint8_t     *m_OscBuffer1;
-    uint8_t     *m_OscBuffer2;
-    unsigned     m_OscBufferNumber;
+    volatile     GeneratorMapT *m_Map;
+    uint8_t     *m_Buffer1;
+    uint8_t     *m_Buffer2;
+    unsigned     m_BufferNumber[2];
     std::mutex   m_waitLock;
     int32_t      m_calib_offset_ch1;
     uint32_t     m_calib_gain_ch1;
