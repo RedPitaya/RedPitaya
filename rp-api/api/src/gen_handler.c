@@ -733,10 +733,10 @@ int synthesis_DC_NEG(float *data_out,uint16_t buffSize) {
 
 int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize) {
     // calculate number of samples that need to be high
-    int h = (int) (buffSize/2 * ratio);
+    int h = (int) (buffSize * ratio);
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if (i < h || i >= buffSize - h) {
+        if (i < h) {
             data_out[i] = 1.0;
         }
         else {
