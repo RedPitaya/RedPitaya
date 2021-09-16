@@ -351,6 +351,14 @@ int generate_Synchronise() {
     return RP_OK;
 }
 
+int generate_Reset(rp_channel_t channel){
+    uint32_t value = channel == RP_CH_1 ? 0x00000040 : 0x00400000;
+    cmn_SetBits((uint32_t *) generate, value, 0xFFFFFFFF);
+    cmn_UnsetBits((uint32_t *) generate, value, 0xFFFFFFFF);
+    return RP_OK;
+}
+
+
 int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_t length) {
     volatile int32_t *dataOut;
     CHANNEL_ACTION(channel,

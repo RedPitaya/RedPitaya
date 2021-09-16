@@ -101,7 +101,7 @@ scpi_result_t RP_GenSyncState(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*OUTPUT#:STATE Successfully enabled generate output.\n");
+    RP_LOG(LOG_INFO, "*OUTPUT:STATE Successfully enabled generate output.\n");
     return SCPI_RES_OK;
 }
 
@@ -683,34 +683,31 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     
     rp_channel_t channel;
     int result;
-
     if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
     result = rp_GenTrigger(channel);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:TRIG:IMM Failed to set immediate "
+        RP_LOG(LOG_ERR, "*SOUR#:TRIG:INT Failed to set immediate "
             "trigger: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*SOUR#:TRIG:IMM Successfully set immediate trigger.\n");
+    RP_LOG(LOG_INFO, "*SOUR#:TRIG:INT Successfully set immediate trigger.\n");
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenTriggerBoth(scpi_t *context) {
-    
+scpi_result_t RP_GenTriggerBoth(scpi_t *context) {   
     int result;
-
     result = rp_GenTrigger(3);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR:TRIG:IMM Failed to set immediate "
+        RP_LOG(LOG_ERR, "*SOUR:TRIG:INT Failed to set immediate "
             "trigger: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*SOUR:TRIG:IMM Successfully set immediate trigger.\n");
+    RP_LOG(LOG_INFO, "*SOUR:TRIG:INT Successfully set immediate trigger.\n");
     return SCPI_RES_OK;
 }
 

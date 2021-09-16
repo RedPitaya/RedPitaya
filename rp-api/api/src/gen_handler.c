@@ -575,7 +575,6 @@ int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period) {
 int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (src == RP_GEN_TRIG_GATED_BURST) {
         generate_setGatedBurst(channel, 1);
-        //gen_setGenMode(channel, RP_GEN_MODE_BURST);
         return generate_setTriggerSource(channel, 2);
     }
     else {
@@ -583,15 +582,12 @@ int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     }
 
     if (src == RP_GEN_TRIG_SRC_INTERNAL) {
-    //    gen_setGenMode(channel, RP_GEN_MODE_CONTINUOUS);
         return generate_setTriggerSource(channel, 1);
     }
     else if (src == RP_GEN_TRIG_SRC_EXT_PE) {
-    //    gen_setGenMode(channel, RP_GEN_MODE_BURST);
         return generate_setTriggerSource(channel, 2);
     }
     else if (src == RP_GEN_TRIG_SRC_EXT_NE) {
-    //    gen_setGenMode(channel, RP_GEN_MODE_BURST);
         return generate_setTriggerSource(channel, 3);
     }
     else {
@@ -615,16 +611,19 @@ int gen_Trigger(uint32_t channel) {
     switch (channel) {
         case 0:
         case 1:
-        //    gen_setGenMode(channel, RP_GEN_MODE_BURST);
-            return generate_setTriggerSource(channel, RP_GEN_TRIG_SRC_INTERNAL);
+            generate_setTriggerSource(channel, RP_GEN_TRIG_SRC_INTERNAL);
+            return generate_Reset(channel);
         case 2:
         case 3:
-        //    gen_setGenMode(RP_CH_1, RP_GEN_MODE_BURST);
-        //    gen_setGenMode(RP_CH_2, RP_GEN_MODE_BURST);
-            return generate_simultaneousTrigger();
+            generate_simultaneousTrigger();
+            return generate_Synchronise();
         default:
             return RP_EOOR;
     }
+}
+
+int gen_ResetTrigger(rp_channel_t channel){
+    return generate_Reset(channel);
 }
 
 int gen_Synchronise() {

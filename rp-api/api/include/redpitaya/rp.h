@@ -1603,7 +1603,7 @@ int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
 int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
 
 /**
-* Sets Trigger for specified channel/channels.
+* Sets Trigger internal for specified channel/channels.
 * @param mask Mask determines channel: 1->ch1, 2->ch2, 3->ch1&ch2.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
@@ -1616,6 +1616,14 @@ int rp_GenTrigger(uint32_t channel);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenSynchronise();
+
+/**
+* The generator is reset on channels.
+* @param channel Channel A or B
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenResetTrigger(rp_channel_t channel);
 
 /**
 * Sets the DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS

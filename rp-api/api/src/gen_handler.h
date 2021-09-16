@@ -62,6 +62,7 @@ int gen_setTriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_getTriggerSource(rp_channel_t chanel, rp_trig_src_t *src);
 int gen_Trigger(uint32_t channel);
 int gen_Synchronise();
+int gen_ResetTrigger(rp_channel_t channel);
 int triggerIfInternal(rp_channel_t channel);
 
 int gen_setEnableTempProtection(rp_channel_t channel, bool enable);

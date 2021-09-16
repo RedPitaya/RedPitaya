@@ -145,6 +145,7 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
 
 int generate_simultaneousTrigger();
 int generate_Synchronise();
+int generate_Reset(rp_channel_t channel);
 
 int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_t length);
 
