@@ -119,8 +119,11 @@ scpi_result_t RP_GenState(scpi_t *context) {
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
-
-    state_c ? (result = rp_GenOutEnable(channel)) : (result = rp_GenOutDisable(channel));
+    if (state_c){
+        result = rp_GenOutEnable(channel);
+    }else{
+        result = rp_GenOutDisable(channel);
+    }
 
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n", 
@@ -638,6 +641,7 @@ scpi_result_t RP_GenTriggerSource(scpi_t *context) {
     }
 
     rp_trig_src_t trig_src = trig_choice;
+
     result = rp_GenTriggerSource(channel, trig_src);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:TRIG:SOUR Failed to set generate"
@@ -665,7 +669,6 @@ scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
     }
 
     int32_t trig_n = trig_src;
-
     if(!SCPI_ChoiceToName(scpi_RpGenTrig, trig_n, &trig_name)){
         RP_LOG(LOG_ERR, "*SOUR#:TRIG:SOUR? Failed to parse trigger name.\n");
         return SCPI_RES_ERR;

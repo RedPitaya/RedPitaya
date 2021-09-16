@@ -102,6 +102,7 @@ int gen_Disable(rp_channel_t channel) {
 }
 
 int gen_Enable(rp_channel_t channel) {
+    gen_ResetTrigger(channel);
     return generate_setOutputDisable(channel, false);
 }
 

@@ -330,31 +330,31 @@ int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay) {
 
 int generate_simultaneousTrigger() {
     // simultaneously trigger both channels
-    return cmn_SetBits((uint32_t *) generate, 0x00010001, 0xFFFFFFFF);
+    return cmn_SetBits((uint32_t *) generate, 0x00010001, 0x00010001);
 }
 
 int generate_setOutputEnableSync(bool enable){
     if (enable) {
-        cmn_UnsetBits((uint32_t *) generate, 0x00810081 , 0xFFFFFFFF);
+        cmn_UnsetBits((uint32_t *) generate, 0x00800080 , 0x00800080);
         generate_Synchronise();
-        return cmn_SetBits((uint32_t *) generate, 0x00110011 , 0xFFFFFFFF);
+        return cmn_SetBits((uint32_t *) generate, 0x00000000 , 0x00800080);
     }else{
-        return cmn_SetBits((uint32_t *) generate, 0x00800080 , 0xFFFFFFFF);
+        return cmn_SetBits((uint32_t *) generate, 0x00800080 , 0x00800080);
     }
 }
 
 
 int generate_Synchronise() {
     // Both channels must be reset simultaneously
-    cmn_SetBits((uint32_t *) generate, 0x00400040, 0xFFFFFFFF);
-    cmn_UnsetBits((uint32_t *) generate, 0x00400040, 0xFFFFFFFF);
+    cmn_SetBits((uint32_t *) generate, 0x00400040, 0x00400040);
+    cmn_UnsetBits((uint32_t *) generate, 0x00400040, 0x00400040);
     return RP_OK;
 }
 
 int generate_Reset(rp_channel_t channel){
     uint32_t value = channel == RP_CH_1 ? 0x00000040 : 0x00400000;
-    cmn_SetBits((uint32_t *) generate, value, 0xFFFFFFFF);
-    cmn_UnsetBits((uint32_t *) generate, value, 0xFFFFFFFF);
+    cmn_SetBits((uint32_t *) generate, value, value);
+    cmn_UnsetBits((uint32_t *) generate, value, value);
     return RP_OK;
 }
 
