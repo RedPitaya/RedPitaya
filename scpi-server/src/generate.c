@@ -101,7 +101,7 @@ scpi_result_t RP_GenSyncState(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*OUTPUT#:STATE Successfully enabled generate output.\n");
+    RP_LOG(LOG_INFO, "*OUTPUT:STATE Successfully enabled generate output.\n");
     return SCPI_RES_OK;
 }
 
@@ -119,8 +119,11 @@ scpi_result_t RP_GenState(scpi_t *context) {
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Missing first parameter.\n");
         return SCPI_RES_ERR;
     }
-
-    state_c ? (result = rp_GenOutEnable(channel)) : (result = rp_GenOutDisable(channel));
+    if (state_c){
+        result = rp_GenOutEnable(channel);
+    }else{
+        result = rp_GenOutDisable(channel);
+    }
 
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n", 
@@ -482,19 +485,19 @@ scpi_result_t RP_GenBurstCount(scpi_t *context) {
     }
 
     if(!SCPI_ParamInt32(context, &count, true)){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT Failed to parse "
+        RP_LOG(LOG_ERR, "*SOUR#:BURS:NCYC Failed to parse "
             "first parameter.\n");
         return SCPI_RES_ERR;
     }
 
     result = rp_GenBurstCount(channel, count);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT Failed to set "
+        RP_LOG(LOG_ERR, "*SOUR#:BURS:NCYC Failed to set "
             "count parameter: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*SOUR#:BURS:STAT Successfully set generate burst count.\n");
+    RP_LOG(LOG_INFO, "*SOUR#:BURS:NCYC Successfully set generate burst count.\n");
     return SCPI_RES_OK;
 }
 
@@ -509,14 +512,14 @@ scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
 
     result = rp_GenGetBurstCount(channel, &count);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT? Failed to get generate "
+        RP_LOG(LOG_ERR, "*SOUR#:BURS:NCYC? Failed to get generate "
             "burst count: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultInt32(context, count);
 
-    RP_LOG(LOG_INFO, "*SOUR#:BURS:STAT? Successfully returned generate "
+    RP_LOG(LOG_INFO, "*SOUR#:BURS:NCYC? Successfully returned generate "
         "burst count value to client.\n");
     return SCPI_RES_OK;
 }
@@ -638,6 +641,7 @@ scpi_result_t RP_GenTriggerSource(scpi_t *context) {
     }
 
     rp_trig_src_t trig_src = trig_choice;
+
     result = rp_GenTriggerSource(channel, trig_src);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:TRIG:SOUR Failed to set generate"
@@ -665,7 +669,6 @@ scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
     }
 
     int32_t trig_n = trig_src;
-
     if(!SCPI_ChoiceToName(scpi_RpGenTrig, trig_n, &trig_name)){
         RP_LOG(LOG_ERR, "*SOUR#:TRIG:SOUR? Failed to parse trigger name.\n");
         return SCPI_RES_ERR;
@@ -683,34 +686,31 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     
     rp_channel_t channel;
     int result;
-
     if (RP_ParseChArgv(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
     result = rp_GenTrigger(channel);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:TRIG:IMM Failed to set immediate "
+        RP_LOG(LOG_ERR, "*SOUR#:TRIG:INT Failed to set immediate "
             "trigger: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*SOUR#:TRIG:IMM Successfully set immediate trigger.\n");
+    RP_LOG(LOG_INFO, "*SOUR#:TRIG:INT Successfully set immediate trigger.\n");
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenTriggerBoth(scpi_t *context) {
-    
+scpi_result_t RP_GenTriggerBoth(scpi_t *context) {   
     int result;
-
     result = rp_GenTrigger(3);
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR:TRIG:IMM Failed to set immediate "
+        RP_LOG(LOG_ERR, "*SOUR:TRIG:INT Failed to set immediate "
             "trigger: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*SOUR:TRIG:IMM Successfully set immediate trigger.\n");
+    RP_LOG(LOG_INFO, "*SOUR:TRIG:INT Successfully set immediate trigger.\n");
     return SCPI_RES_OK;
 }
 

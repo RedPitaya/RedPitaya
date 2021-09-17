@@ -1300,7 +1300,7 @@ parent = get(obj,'parent');
 %Get interface
 interface = get(parent,'interface');
 
-fprintf(interface, ['OUTPUT1:TRIG:IMM']);</MCode>
+fprintf(interface, ['OUTPUT1:TRIG:INT']);</MCode>
                </Code>
                <Description/>
             </Method>
@@ -1354,7 +1354,7 @@ parent = get(obj,'parent');
 %Get interface
 interface = get(parent,'interface');
 
-fprintf(interface, ['OUTPUT2:TRIG:IMM']);</MCode>
+fprintf(interface, ['OUTPUT2:TRIG:INT']);</MCode>
                </Code>
                <Description/>
             </Method>

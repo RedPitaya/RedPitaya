@@ -4,6 +4,7 @@
 #pragma once
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include <iostream>
+#include <cstring>
 
 namespace {
     static void memcpy_neon(volatile void *dst, volatile const void *src, size_t n) noexcept

@@ -52,7 +52,7 @@ else
     disp('INFO: Sending data in ASCII format');
     % convert float to string
     waveform_ch_1_0 = num2str(y_sum,'%1.5f,');
-    % remove the last “,”.
+    % remove the last ï¿½,ï¿½.
     waveform_ch_1 = waveform_ch_1_0(1,1: size(waveform_ch_1_0,2)-1);
     fprintf(RP,['SOURce1:TRACe:DATA:DATA ' waveform_ch_1]);
 end

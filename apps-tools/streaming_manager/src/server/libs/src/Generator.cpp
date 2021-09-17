@@ -16,7 +16,7 @@ void * MmapNumber(int _fd, size_t _size, size_t _number) {
 
 inline void setRegister(volatile GeneratorMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
     UNUSED(baseOsc_addr);
-    //fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
+    fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
 
@@ -30,7 +30,7 @@ CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool 
         return CGenerator::Ptr();
     }
 
-    if (_uio.mapList[1].size < (osc_buf_size * 4))
+    if (_uio.mapList[1].size < (dac_buf_size * 4))
     {
         // Error: buffer size.
         std::cerr << "Error: buffer size." << std::endl;
@@ -56,7 +56,7 @@ CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool 
         // Error: mmap
         std::cerr << "Error: mmap regset." << std::endl;
         close(fd);
-        return COscilloscope::Ptr();
+        return CGenerator::Ptr();
     }
 
     void *buffer = MmapNumber(fd, _uio.mapList[1].size, 1);
@@ -74,7 +74,7 @@ CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool 
     return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr);
 }
 
-CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster) :
+CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr) :
     m_Channel1(_channel1Enable),
     m_Channel2(_channel2Enable),
     m_Fd(_fd),
@@ -83,232 +83,252 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
     m_Buffer(_buffer),
     m_BufferSize(_bufferSize),
     m_BufferPhysAddr(_bufferPhysAddr),
-    m_OscMap(nullptr),
-    m_OscBuffer1(nullptr),
-    m_OscBuffer2(nullptr),
-    m_OscBufferNumber(0),
-    m_dec_factor(_dec_factor),
-    m_filterBypass(true),
-    m_isMaster(_isMaster)
+    m_Map(nullptr),
+    m_Buffer1(nullptr),
+    m_Buffer2(nullptr),
+    m_waitLock()
 {
+    m_BufferNumber[0] = m_BufferNumber[1] = 0;
     m_calib_offset_ch1 = 0;
-    m_calib_gain_ch1 = 0x8000;
+    m_calib_gain_ch1 = 0x2000;
     m_calib_offset_ch2 = 0;
-    m_calib_gain_ch2 = 0x8000;
-    //setFilterCalibrationCh1(0x7d93,0x437c7,0xd9999a,0x2666);
-    //setFilterCalibrationCh2(0x7d93,0x437c7,0xd9999a,0x2666);
-    setFilterCalibrationCh1(0,0,0xFFFFFF,0);
-    setFilterCalibrationCh2(0,0,0xFFFFFF,0);
-    uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset) +  osc0_baseaddr;
-    m_OscMap = reinterpret_cast<OscilloscopeMapT *>(oscMap);
-    m_OscBuffer1 = static_cast<uint8_t *>(m_Buffer);
-    m_OscBuffer2 = static_cast<uint8_t *>(m_Buffer) + osc_buf_size * 2;
+    m_calib_gain_ch2 = 0x2000;
+    uintptr_t Map = reinterpret_cast<uintptr_t>(m_Regset);
+    m_Map = reinterpret_cast<GeneratorMapT *>(Map);
+    m_Buffer1 = static_cast<uint8_t *>(m_Buffer);
+    m_Buffer2 = static_cast<uint8_t *>(m_Buffer) + dac_buf_size * 2;
     
 }
 
-COscilloscope::~COscilloscope()
+CGenerator::~CGenerator()
 {
+    stop();
     munmap(m_Regset, m_RegsetSize);
     munmap(m_Buffer, m_BufferSize);
     close(m_Fd);
 }
 
-void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
+void CGenerator::setReg(volatile GeneratorMapT *_Map){
+
+        // Reset EVENT        
+        setRegister(_Map,&(_Map->event_status),0);
         // Buffer
-        setRegister(_OscMap,&(_OscMap->dma_buf_size),osc_buf_size);
-        setRegister(_OscMap,&(_OscMap->dma_dst_addr1_ch1),m_BufferPhysAddr);
-        setRegister(_OscMap,&(_OscMap->dma_dst_addr2_ch1),m_BufferPhysAddr + osc_buf_size);
-        setRegister(_OscMap,&(_OscMap->dma_dst_addr1_ch2),m_BufferPhysAddr + osc_buf_size * 2);
-        setRegister(_OscMap,&(_OscMap->dma_dst_addr2_ch2),m_BufferPhysAddr + osc_buf_size * 3);
-        
-    
-        setRegister(_OscMap,&(_OscMap->filt_bypass), m_filterBypass ? UINT32_C(0x00000001) : UINT32_C(0x00000000));
-        //_OscMap->filt_bypass = UINT32_C(0x00000001);
-        
-        // Event
-        setRegister(_OscMap,&(_OscMap->event_sel),osc0_event_id);
-        //_OscMap->event_sel =  osc0_event_id ;
+        setRegister(_Map,&(_Map->dma_size),dac_buf_size);
+        setRegister(_Map,&(_Map->chA_dma_addr1),m_BufferPhysAddr);
+        setRegister(_Map,&(_Map->chA_dma_addr2),m_BufferPhysAddr + dac_buf_size);
+        setRegister(_Map,&(_Map->chB_dma_addr1),m_BufferPhysAddr + dac_buf_size * 2);
+        setRegister(_Map,&(_Map->chB_dma_addr2),m_BufferPhysAddr + dac_buf_size * 3);
 
-        // Trigger mask
-        if (m_isMaster)
-            setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000004));
-        else
-            setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000020));
-        //_OscMap->trig_mask = UINT32_C(0x00000004);
+        // Select event
+        setRegister(_Map,&(_Map->event_select),gen0_event_id);
 
-        // Trigger low level
-        setRegister(_OscMap,&(_OscMap->trig_low_level),-4);
-        //_OscMap->trig_low_level = -4;
+        // Event trig
+        setRegister(_Map,&(_Map->trig_mask),1);
 
-        // Trigger high level
-        setRegister(_OscMap,&(_OscMap->trig_high_level),4);
-        //_OscMap->trig_high_level = 4;
+        // Set trigger immediatly
+        setRegister(_Map,&(_Map->config),0x10001);
 
-        // Trigger edge
-        setRegister(_OscMap,&(_OscMap->trig_edge),UINT32_C(0x00000000));
-        //_OscMap->trig_edge = UINT32_C(0x00000000);
+        // Set calib for chA
+        setRegister(_Map,&(_Map->chA_calib),m_calib_offset_ch1 << 16 | m_calib_gain_ch1);
 
-        // Trigger pre samples
-        setRegister(_OscMap,&(_OscMap->trig_pre_samp),osc_buf_pre_samp);
-        //_OscMap->trig_pre_samp = osc_buf_pre_samp;
+        // Set calib for chB
+        setRegister(_Map,&(_Map->chB_calib),m_calib_offset_ch2 << 16 | m_calib_gain_ch2);
 
-        // Trigger post samples
-        setRegister(_OscMap,&(_OscMap->trig_post_samp),osc_buf_post_samp);            
-        // _OscMap->trig_post_samp = osc_buf_post_samp;
+        // Set step for pointer 
+        setRegister(_Map,&(_Map->chA_counter_step),1 << 7);
+        setRegister(_Map,&(_Map->chB_counter_step),1 << 7);
 
-        // Decimate factor
-        setRegister(_OscMap,&(_OscMap->dec_factor),m_dec_factor);   
-        //_OscMap->dec_factor = m_dec_factor; 
-
-        setRegister(_OscMap,&(_OscMap->calib_offset_ch1),m_calib_offset_ch1);
-
-        setRegister(_OscMap,&(_OscMap->calib_gain_ch1),m_calib_gain_ch1);
-
-        setRegister(_OscMap,&(_OscMap->calib_offset_ch2),m_calib_offset_ch2);
-
-        setRegister(_OscMap,&(_OscMap->calib_gain_ch2),m_calib_gain_ch2);
-
-#ifndef Z20_250_12
-        setRegister(_OscMap,&(_OscMap->filt_coeff_aa_ch1),m_AA_ch1);
-
-        setRegister(_OscMap,&(_OscMap->filt_coeff_bb_ch1),m_BB_ch1);
-
-        setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch1),m_KK_ch1);
-
-        setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch1),m_PP_ch1);
-
-        setRegister(_OscMap,&(_OscMap->filt_coeff_aa_ch2),m_AA_ch2);
-
-        setRegister(_OscMap,&(_OscMap->filt_coeff_bb_ch2),m_BB_ch2);
-
-        setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch2),m_KK_ch2);
-
-        setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch2),m_PP_ch2);
-#endif
+        // Set streaming DMA, reset Buffers and flags
+        setRegister(_Map,&(_Map->dma_control),0x2222);
 }
 
-void COscilloscope::setFilterCalibrationCh1(int32_t _aa,int32_t _bb, int32_t _kk, int32_t _pp){
-    m_AA_ch1 = _aa;
-    m_BB_ch1 = _bb;
-    m_KK_ch1 = _kk;
-    m_PP_ch1 = _pp;
-}
-
-void COscilloscope::setFilterCalibrationCh2(int32_t _aa,int32_t _bb, int32_t _kk, int32_t _pp){
-    m_AA_ch2 = _aa;
-    m_BB_ch2 = _bb;
-    m_KK_ch2 = _kk;
-    m_PP_ch2 = _pp;
-}
-
-void COscilloscope::setFilterBypass(bool _state){
-    m_filterBypass = _state;
-}
-
-void COscilloscope::prepare()
+auto CGenerator::prepare() -> void
 {
     stop();
 
-    if (m_OscMap != nullptr){
-        setReg(m_OscMap);
+    if (m_Map != nullptr){
+        setReg(m_Map);
     }else{
-        std::cerr << "Error: COscilloscope::prepare()  can't init first channel" << std::endl;
+        std::cerr << "Error: CGenerator::prepare()  can't init first channel" << std::endl;
         exit(-1);
     }
-    //printf("prepare()\n");
-    setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000004));
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x0000021E));
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x00000001));
-    setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
+    m_BufferNumber[0] = m_BufferNumber[1] = 0;
     
 }
 
-void COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain){
-    if (ch1_gain >= 2) ch1_gain = 1.999999;
-    if (ch1_gain < 0)  ch1_gain = 0;
-    if (ch2_gain >= 2) ch2_gain = 1.999999;
-    if (ch2_gain < 0)  ch2_gain = 0;
+auto CGenerator::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void{
+    // if (ch1_gain >= 2) ch1_gain = 1.999999;
+    // if (ch1_gain < 0)  ch1_gain = 0;
+    // if (ch2_gain >= 2) ch2_gain = 1.999999;
+    // if (ch2_gain < 0)  ch2_gain = 0;
 
-    m_calib_offset_ch1 =  ch1_offset * -4;
-    m_calib_offset_ch2 =  ch2_offset * -4;
-    m_calib_gain_ch1 = ch1_gain * 32768; 
-    m_calib_gain_ch2 = ch2_gain * 32768; 
+    // m_calib_offset_ch1 =  ch1_offset * -4;
+    // m_calib_offset_ch2 =  ch2_offset * -4;
+    // m_calib_gain_ch1 = ch1_gain * 32768; 
+    // m_calib_gain_ch2 = ch2_gain * 32768; 
 }
 
-bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow)
+auto CGenerator::initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool{
+    const std::lock_guard<std::mutex> lock(m_waitLock);
+    if (_buffer1){
+        memcpy_neon(m_Buffer1,_buffer1,_size);
+        setRegister(m_Map,&(m_Map->dma_control),1 << 6);
+    }
+
+    if (_buffer2){
+        memcpy_neon(m_Buffer2,_buffer2,_size);
+        setRegister(m_Map,&(m_Map->dma_control),1 << 14);
+    }
+}
+
+auto CGenerator::initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool{
+    const std::lock_guard<std::mutex> lock(m_waitLock);
+    if (_buffer1){
+        memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
+        setRegister(m_Map,&(m_Map->dma_control),1 << 7);
+    }
+
+    if (_buffer2){
+        memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
+        setRegister(m_Map,&(m_Map->dma_control),1 << 15);
+    }
+}
+
+auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool
 {
-    // Interrupt ACQ
-//    fprintf(stderr,"\n\tDMA buff status  0x%X\n",m_OscMap->dma_sts_addr);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//    fprintf(stderr,"\tCurrent buffer %d\n",m_OscBufferNumber);
-    _buffer1 = m_Channel1 ? ( m_OscBuffer1 + osc_buf_size * m_OscBufferNumber) : nullptr;
-    _buffer2 = m_Channel2 ? ( m_OscBuffer2 + osc_buf_size * m_OscBufferNumber) : nullptr;
-    // This fix for FPGA
-    _overFlow = (m_OscBufferNumber == 1 ? m_OscMap->lost_samples_buf1 : m_OscMap->lost_samples_buf2);
-//    fprintf(stderr,"\tDMA lost1:  %d\tlost2:  %d\t_overFlow: %d\n",m_OscMap->lost_samples_buf1 ,m_OscMap->lost_samples_buf2, _overFlow);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//    fprintf(stderr,"\tDMA lost1:  %d\tlost2:  %d\t_overFlow: %d\n",m_OscMap->lost_samples_buf1 ,m_OscMap->lost_samples_buf2, _overFlow);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-    if (m_Channel1 || m_Channel2){
-        _size = osc_buf_size;
-    }else {
-        _size = 0;
-    }
-    return true;    
-}
-
-
-
-bool COscilloscope::clearBuffer(){
-//    printf("clearBuffer(%d)\n",m_OscBufferNumber);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-    uint32_t clearFlag = (m_OscBufferNumber == 0 ? 0x00000004 : 0x00000008); // reset buffer
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl), clearFlag );
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-    if (m_Channel1 || m_Channel2){
-        m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;
-    }
-    return true;
-}
-
-bool COscilloscope::wait(){
-    m_waitLock.lock();
-    int32_t cnt = 1;
-    constexpr size_t cnt_size = sizeof(cnt);
-    ssize_t bytes = write(m_Fd, &cnt, cnt_size);
-    if (bytes == cnt_size) {
-//        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//        fprintf(stderr,"\tWAIT INTERRUPT\n");
-        bytes = read(m_Fd, &cnt, cnt_size);
-//        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-        clearInterrupt();
-//        fprintf(stderr,"\tINTERRUPT RESET\n");
-//        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-        if (bytes == cnt_size) {
-            m_waitLock.unlock();
-            return true;
+    bool ret = false;
+    const std::lock_guard<std::mutex> lock(m_waitLock);
+    if (_buffer1){
+        if (m_BufferNumber[0] == 0){
+            if (m_Map->chA_dma_status & 0x3){
+                std::cerr << "Write CHA 1 Buf 2\n";
+      //          memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
+                m_BufferNumber[0] = 1;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 7);
+                ret = true;
+            }
+        }else{
+            if (m_Map->chA_dma_status & 0xC){
+                std::cerr << "Write CHA 1 Buf 1\n";
+        //        memcpy_neon(m_Buffer1,_buffer1,_size);
+                m_BufferNumber[0] = 0;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 6);
+                ret = true;
+            }
         }
     }
-    m_waitLock.unlock();
-    return false;
+
+    if (_buffer2){
+        if (m_BufferNumber[1] == 0){
+            if (m_Map->chB_dma_status & 0x1){
+                memcpy_neon(m_Buffer2,_buffer2,_size);
+                m_BufferNumber[1] = 1;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 15);
+                ret = true;
+            }
+        }else{
+            if (m_Map->chB_dma_status & 0x4){
+                memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
+                m_BufferNumber[1] = 0;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 14);
+                ret = true;
+            }
+        }
+    }
+    return ret;
 }
 
-bool COscilloscope::clearInterrupt(){
-//    fprintf(stderr,"clearInterrupt()\n");
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl), 0x00000002 );
-    return true;
-}
 
-void COscilloscope::stop()
-{
-    m_waitLock.lock();
-    // Control stop
-    //    fprintf(stderr,"stop()\n");
-    if (m_OscMap != nullptr){
-        setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000004));
+
+// bool COscilloscope::clearBuffer(){
+// //    printf("clearBuffer(%d)\n",m_OscBufferNumber);
+// //    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
+//     uint32_t clearFlag = (m_OscBufferNumber == 0 ? 0x00000004 : 0x00000008); // reset buffer
+//     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), clearFlag );
+// //    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
+//     if (m_Channel1 || m_Channel2){
+//         m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;
+//     }
+//     return true;
+// }
+
+// bool COscilloscope::wait(){
+//     m_waitLock.lock();
+//     int32_t cnt = 1;
+//     constexpr size_t cnt_size = sizeof(cnt);
+//     ssize_t bytes = write(m_Fd, &cnt, cnt_size);
+//     if (bytes == cnt_size) {
+// //        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
+// //        fprintf(stderr,"\tWAIT INTERRUPT\n");
+//         bytes = read(m_Fd, &cnt, cnt_size);
+// //        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
+//         clearInterrupt();
+// //        fprintf(stderr,"\tINTERRUPT RESET\n");
+// //        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
+//         if (bytes == cnt_size) {
+//             m_waitLock.unlock();
+//             return true;
+//         }
+//     }
+//     m_waitLock.unlock();
+//     return false;
+// }
+
+// bool COscilloscope::clearInterrupt(){
+// //    fprintf(stderr,"clearInterrupt()\n");
+//     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), 0x00000002 );
+//     return true;
+// }
+
+auto CGenerator::start() -> void{
+    const std::lock_guard<std::mutex> lock(m_waitLock);
+    if (m_Map != nullptr){
+        std::cerr << "Start\n";
+ 
+        // Start event
+        setRegister(m_Map,&(m_Map->event_status),0x2);
+        
+        // Start DMA
+       setRegister(m_Map,&(m_Map->dma_control),0x101);
+        std::cerr << "End start\n";
     }else {
-        std::cerr << "Error: COscilloscope::stop()" << std::endl;
+        std::cerr << "Error: CGenerator::stop()" << std::endl;
         exit(-1);
     }
-    m_waitLock.unlock();
+}
+
+auto CGenerator::stop() -> void
+{
+    const std::lock_guard<std::mutex> lock(m_waitLock);
+    if (m_Map != nullptr){
+         // Stop EVENT        
+        setRegister(m_Map,&(m_Map->event_status),0x4);
+        // Stop DMA        
+        setRegister(m_Map,&(m_Map->dma_control),0);
+    }else {
+        std::cerr << "Error: CGenerator::stop()" << std::endl;
+        exit(-1);
+    }
+}
+
+auto CGenerator::printReg() -> void{
+    fprintf(stderr,"0x00 Config = 0x%X\n", m_Map->config);
+    fprintf(stderr,"0x04 chA_calib = 0x%X\n", m_Map->chA_calib);
+    fprintf(stderr,"0x08 chA_counter_step = 0x%X\n", m_Map->chA_counter_step);
+    fprintf(stderr,"0x0C chA_read_pointer = 0x%X\n", m_Map->chA_read_pointer);
+    fprintf(stderr,"0x10 chB_calib = 0x%X\n", m_Map->chB_calib);
+    fprintf(stderr,"0x14 chB_counter_step = 0x%X\n", m_Map->chB_counter_step);
+    fprintf(stderr,"0x18 chB_read_pointer = 0x%X\n", m_Map->chB_read_pointer);
+    fprintf(stderr,"0x1C event_status = 0x%X\n", m_Map->event_status);
+    fprintf(stderr,"0x20 event_select = 0x%X\n", m_Map->event_select);
+    fprintf(stderr,"0x24 trig_mask = 0x%X\n", m_Map->trig_mask);
+    fprintf(stderr,"0x28 dma_control = 0x%X\n", m_Map->dma_control);
+    fprintf(stderr,"0x2C chA_dma_status = 0x%X\n", m_Map->chA_dma_status);
+    fprintf(stderr,"0x30 chB_dma_status = 0x%X\n", m_Map->chB_dma_status);
+    fprintf(stderr,"0x34 dma_size = 0x%X\n", m_Map->dma_size);
+    fprintf(stderr,"0x38 chA_dma_addr1 = 0x%X\n", m_Map->chA_dma_addr1);
+    fprintf(stderr,"0x3C chA_dma_addr2 = 0x%X\n", m_Map->chA_dma_addr2);
+    fprintf(stderr,"0x40 chB_dma_addr1 = 0x%X\n", m_Map->chB_dma_addr1);
+    fprintf(stderr,"0x44 chB_dma_addr2 = 0x%X\n", m_Map->chB_dma_addr2);
+
 }

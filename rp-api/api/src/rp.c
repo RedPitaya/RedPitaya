@@ -925,6 +925,10 @@ int rp_GenSynchronise() {
     return gen_Synchronise();
 }
 
+int rp_GenResetTrigger(rp_channel_t channel){
+    return gen_ResetTrigger(channel);
+}
+
 int rp_GenOutEnableSync(bool enable){
     return gen_EnableSync(enable);
 }
