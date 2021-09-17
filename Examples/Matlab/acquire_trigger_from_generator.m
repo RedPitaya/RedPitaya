@@ -24,9 +24,8 @@ fprintf(tcpipObj,'SOUR1:FUNC SINE');
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 1000');     % Set frequency of output signal
 fprintf(tcpipObj,'SOUR1:VOLT 1');          % Set amplitude of output signal
 
-fprintf(tcpipObj,'SOUR1:BURS:STAT ON');    % Set burst mode to ON
+fprintf(tcpipObj,'SOUR1:BURS:STAT BURST');    % Set burst mode to ON
 fprintf(tcpipObj,'SOUR1:BURS:NCYC 1');       % Set 1 pulses of sine wave
-fprintf(tcpipObj,'OUTPUT1:STATE ON');         % Set output to ON
 
 %% Set Acquire
 
@@ -41,6 +40,7 @@ fprintf(tcpipObj,'ACQ:START');
 pause(1);
 fprintf(tcpipObj,'ACQ:TRIG AWG_PE');
 fprintf(tcpipObj,'SOUR1:TRIG:INT');           % Set generator trigger to immediately
+fprintf(tcpipObj,'OUTPUT1:STATE ON');         % Set output to ON
 
 %% Wait for trigger
  while 1
