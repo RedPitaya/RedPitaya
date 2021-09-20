@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <stdio.h>
 
 #include "api_cmd.h"
 #include "common.h"
@@ -37,7 +38,6 @@ bool RST_executed = FALSE;
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
 
     size_t total = 0;
-
     if (context->user_context != NULL) {
         int fd = *(int *)(context->user_context);
         while (len > 0) {
@@ -48,6 +48,7 @@ size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
                     len, written);
                 return total;
             }
+            
             len -= written;
             data += written;
             total += written;
