@@ -3,11 +3,12 @@
 import sys
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
+import struct
 
 rp_s = scpi.scpi(sys.argv[1])
 
-rp_s.tx_txt('ACQ:DATA:FORMAT ASCII')
-rp_s.tx_txt('ACQ:DATA:UNITS FLOAT')
+rp_s.tx_txt('ACQ:DATA:FORMAT BIN')
+rp_s.tx_txt('ACQ:DATA:UNITS RAW')
 rp_s.tx_txt('ACQ:DEC 8')
 
 rp_s.tx_txt('ACQ:START')
@@ -19,9 +20,8 @@ while 1:
         break
 
 rp_s.tx_txt('ACQ:SOUR1:DATA?')
-buff_string = rp_s.rx_txt()
-buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-buff = list(map(float, buff_string))
+buff_byte = rp_s.rx_arb()
+buff = [struct.unpack('!h',bytearray(buff_byte[i:i+2]))[0] for i in range(0, len(buff_byte), 2)]
 
 plot.plot(buff)
 plot.ylabel('Voltage')
