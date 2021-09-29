@@ -41,7 +41,7 @@ module rp_dma_mm2s_ctrl
   input [AXI_ADDR_BITS-1:0]             dac_buf1_adr,
   input [AXI_ADDR_BITS-1:0]             dac_buf2_adr,
   output [AXI_ADDR_BITS-1:0]            dac_rp,
-
+  output [32-1:0] diag_reg,
 
   input                                 dac_trig,
   input [ 8-1:0]                        dac_ctrl_reg,
@@ -108,6 +108,8 @@ wire [7:0]                dat_ctrl_req_data;
 wire                      dat_ctrl_req_we;
 reg                       buf1_rdy;
 reg                       buf2_rdy;
+reg                       buf1_read;
+reg                       buf2_read;
 reg                       buf1_ovr;
 reg                       buf2_ovr;
 reg                       data_valid_reg;
@@ -124,6 +126,8 @@ reg                       fifo_rst_cntdwn;
 reg                       transf_end;
 wire                      m_axi_rready;
 
+reg [32-1:0] diag_reg_1;
+
 reg  [ADDR_DECS-1:0]      dac_rp_curr;
 
 wire [ADDR_DECS-1:0]      dac_rp_next   = dac_rp_curr+{16'h0, dac_pntr_step};
@@ -132,6 +136,7 @@ wire                      buf_ovr_limit = dac_rp_next[ADDR_DECS-1:16] >= (req_bu
 assign m_axi_dac_araddr_o = req_addr;
 assign dac_rp             = req_addr;
 assign m_axi_dac_rready_o = m_axi_rready;
+assign diag_reg = diag_reg_1;
 
 ////////////////////////////////////////////////////////////
 // Name : Request FIFO 
@@ -187,10 +192,19 @@ begin
 end
 
 ////////////////////////////////////////////////////////////
+// Name : Diag reg
+// Sets AXI diag reg
+////////////////////////////////////////////////////////////
+
+always @(posedge m_axi_aclk)
+begin
+  diag_reg_1 <= {27'b0, m_axi_dac_arready_i, m_axi_dac_rvalid_i, m_axi_dac_rlast_i,  m_axi_dac_arvalid_o, m_axi_dac_rready_o};
+end
+
+////////////////////////////////////////////////////////////
 // Name : Status reg
 // Sets status reg
 ////////////////////////////////////////////////////////////
-
 always @(posedge m_axi_aclk)
 begin
   if (m_axi_aresetn == 0) begin
@@ -543,6 +557,67 @@ begin
   endcase
 end  
 */      
+
+////////////////////////////////////////////////////////////
+// Name : Buffer 1 Read
+// Set when buffer 1 is completely read.
+////////////////////////////////////////////////////////////
+ /*
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    // IDLE - Wait for the DMA start signal
+    IDLE: begin
+      buf1_read <= 0;  
+    end 
+
+    default: begin
+      if (reg_ctrl[CTRL_BUF1_ACK] == 1) begin
+        buf1_read <= 0;     
+      end else begin
+        if (transf_end) begin
+          // Reset to the start of the buffer if we have reached the end
+          if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
+            if (req_buf_addr_sel == 0) begin // buffer 1 is full if next transfer goes over specified buffer size
+              buf1_read <= 1;
+            end
+          end
+        end   
+      end     
+    end
+  endcase
+end  
+*/
+////////////////////////////////////////////////////////////
+// Name : Buffer 2 Read
+// Set when buffer 2 is completely read.
+////////////////////////////////////////////////////////////
+ /*
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    // IDLE - Wait for the DMA start signal
+    IDLE: begin
+      buf2_read <= 0;  
+    end 
+
+    default: begin
+      if (reg_ctrl[CTRL_BUF1_ACK] == 1) begin
+        buf2_read <= 0;     
+      end else begin
+        if (transf_end) begin
+          // Reset to the start of the buffer if we have reached the end
+          if ((req_addr+AXI_BURST_BYTES) >= (req_buf_addr[AXI_ADDR_BITS-1:0]+reg_buf_size[BUF_SIZE_BITS-1:0])) begin
+            if (req_buf_addr_sel == 0) begin // buffer 1 is full if next transfer goes over specified buffer size
+              buf2_read <= 1;
+            end
+          end
+        end   
+      end     
+    end
+  endcase
+end  
+*/
 ////////////////////////////////////////////////////////////
 // Name : Buffer 2 Full
 // Set when buffer 2 is full.
@@ -648,7 +723,7 @@ begin
               req_addr <= dac_buf1_adr;
             end             
           end else begin
-            req_addr <= dac_rp_curr[ADDR_DECS-1:16];
+            req_addr <= {dac_rp_curr[ADDR_DECS-1:16+3], 3'b0}; //reading every 64 bits (8 bytes)
           end
         end  
       end
