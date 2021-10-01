@@ -1150,6 +1150,7 @@ proc create_root_design { parentCell } {
   set rp_dac [ create_bd_cell -type ip -vlnv redpitaya.com:user:rp_dac:1.0 rp_dac ]
   set_property -dict [ list \
    CONFIG.DAC_DATA_BITS {14} \
+   CONFIG.M_AXI_DAC_DATA_BITS {16} \
    CONFIG.EVENT_SRC_NUM {5} \
    CONFIG.TRIG_SRC_NUM {6} \
  ] $rp_dac
