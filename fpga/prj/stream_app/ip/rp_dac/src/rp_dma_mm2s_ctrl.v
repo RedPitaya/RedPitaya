@@ -30,6 +30,7 @@ module rp_dma_mm2s_ctrl
 
   input  wire                       data_valid, 
   output reg                        fifo_rst,
+  output wire                       fifo_we_dat,
 
   //output reg                        fifo_dis,
 
@@ -51,7 +52,7 @@ module rp_dma_mm2s_ctrl
   input  wire                           m_axi_dac_rvalid_i   ,
   input  wire                           m_axi_dac_rlast_i    ,
   output wire [AXI_ADDR_BITS-1: 0]      m_axi_dac_araddr_o   ,
-  output reg  [3:0]                     m_axi_dac_arlen_o    ,
+  output reg  [7:0]                     m_axi_dac_arlen_o    ,
   output reg                            m_axi_dac_arvalid_o  ,
   output wire                           m_axi_dac_rready_o //must be created somehow
 );
@@ -130,19 +131,23 @@ reg [32-1:0] diag_reg_1;
 
 reg  [ADDR_DECS-1:0]      dac_rp_curr;
 
-wire [ADDR_DECS-1:0]      dac_rp_next   = dac_rp_curr+{16'h0, dac_pntr_step};
+wire [ADDR_DECS-1:0]      dac_rp_next   = dac_rp_curr+{15'h0, dac_pntr_step, 1'b0}; //shifted by 1 so that step 1 is a read of 1 address.
 wire                      buf_ovr_limit = dac_rp_next[ADDR_DECS-1:16] >= (req_buf_addr+dac_buf_size);  
 
 assign m_axi_dac_araddr_o = req_addr;
 assign dac_rp             = req_addr;
-assign m_axi_dac_rready_o = m_axi_rready;
+assign m_axi_dac_rready_o = m_axi_rready /*& ((dac_rp_curr[ADDR_DECS-1:16+1] != req_addr[AXI_ADDR_BITS-1:1]))*/;
 assign diag_reg = diag_reg_1;
 
+wire [31-1:0] test1=dac_rp_curr[ADDR_DECS-1:16+1]; 
+wire [31-1:0] test2=req_addr[AXI_ADDR_BITS-1:1]; 
+
+assign fifo_we_dat = (dac_rp_curr[ADDR_DECS-1:16+1] != req_addr[AXI_ADDR_BITS-1:1]);
 ////////////////////////////////////////////////////////////
 // Name : Request FIFO 
 // Stores the DMA requests.
 ////////////////////////////////////////////////////////////
-
+/*
 fifo_axi_req U_fifo_axi_req(
   .wr_clk (s_axis_aclk),
   .rd_clk (m_axi_aclk),      
@@ -153,7 +158,8 @@ fifo_axi_req U_fifo_axi_req(
   .dout   (fifo_rd_data),   
   .rd_en  (fifo_rd_re), 
   .empty  (fifo_empty));
-  
+  */
+assign fifo_empty   = 1'b0;
 assign fifo_wr_data = req_data;
 assign fifo_wr_we   = req_we; // && ~fifo_dis; // writing request buffer is only enabled when not waiting on clearing of the next buffer. 
 
@@ -174,7 +180,7 @@ rp_dma_mm2s_data_ctrl U_dma_mm2s_data_ctrl(
   .m_axi_rready   (m_axi_rready),          
   .m_axi_rlast    (m_axi_dac_rlast_i));
   
-assign dat_ctrl_req_data = m_axi_dac_arlen_o+1;
+assign dat_ctrl_req_data = (m_axi_dac_arlen_o+1)*2;
 assign dat_ctrl_req_we   = (m_axi_dac_arvalid_o  & m_axi_dac_arready_i); // && ~fifo_dis; // writing data buffer is only enabled when not waiting on clearing of the next buffer. 
         
 ////////////////////////////////////////////////////////////
@@ -714,7 +720,7 @@ begin
       end
       
       SEND_DMA_REQ: begin
-        if (m_axi_dac_rvalid_i && m_axi_dac_rready_o) begin
+        if (m_axi_dac_rvalid_i && m_axi_rready) begin
           if (buf_ovr_limit || dac_trig) begin
             if ((req_buf_addr_sel == 0) && buf2_rdy) begin //only start writing to buf2 if it's full
               req_addr <= dac_buf2_adr;          
@@ -723,7 +729,7 @@ begin
               req_addr <= dac_buf1_adr;
             end             
           end else begin
-            req_addr <= {dac_rp_curr[ADDR_DECS-1:16+3], 3'b0}; //reading every 64 bits (8 bytes)
+            req_addr <= {dac_rp_curr[ADDR_DECS-1:16+1], 1'b0}; //reading every 16 bits (2 bytes)
           end
         end  
       end
@@ -761,7 +767,7 @@ begin
       end
       
       SEND_DMA_REQ: begin
-        if (m_axi_dac_rvalid_i && m_axi_dac_rready_o) begin
+        if (m_axi_dac_rvalid_i && m_axi_rready) begin
           if (buf_ovr_limit || dac_trig) begin
             if ((req_buf_addr_sel == 0) && buf2_rdy) begin //only start writing to buf2 if it's full
               dac_rp_curr <= {dac_buf2_adr, 16'h0};      
@@ -869,7 +875,8 @@ begin
   case (state_cs) 
     // WAIT_DATA_RDY - Wait until there is enough data to send an AXI transfer
     WAIT_DATA_RDY: begin
-      req_xfer_last <= fifo_rd_data[7];
+      //req_xfer_last <= fifo_rd_data[7];
+      req_xfer_last <= req_data[7];
     end
 
   endcase   
@@ -971,7 +978,7 @@ end
 // Name : FIFO Read Enable
 // Reads requests from the FIFO when available. 
 ////////////////////////////////////////////////////////////
-
+/*
 always @(*)
 begin
   fifo_rd_re = 0;
@@ -986,7 +993,7 @@ begin
      
   endcase   
 end
-
+*/
 ////////////////////////////////////////////////////////////
 // Name : Master AXI ARVALID
 // 
@@ -1028,7 +1035,8 @@ begin
   case (state_cs) 
     // WAIT_DATA_RDY - Wait until there is enough data to send an AXI transfer
     WAIT_DATA_RDY: begin
-      m_axi_dac_arlen_o <= fifo_rd_data[6:0]-1;
+      //m_axi_dac_arlen_o <= fifo_rd_data[6:0]-1;
+      m_axi_dac_arlen_o <= req_data[6:0]-1;
     end
 
     

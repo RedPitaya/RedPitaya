@@ -3,7 +3,7 @@
 module rp_dma_mm2s_downsize
   #(parameter AXI_DATA_BITS   = 64,
     parameter AXIS_DATA_BITS  = 16,     
-    parameter AXI_BURST_LEN   = 16)(    
+    parameter AXI_BURST_LEN   = 126)(    
   input  wire                       clk,
   input  wire                       rst,
   
@@ -14,7 +14,7 @@ module rp_dma_mm2s_downsize
 
   input  wire [AXI_DATA_BITS-1:0]   fifo_rd_data,
   input  wire                       fifo_valid,
-  output reg                        fifo_rd_re,      
+  output wire                       fifo_rd_re,      
   input  wire                       fifo_last,    
   
   output reg  [AXIS_DATA_BITS-1:0]  m_axis_tdata,
@@ -31,13 +31,17 @@ genvar      i;
 reg  [2:0]  rd_cnt;
 reg  [4:0]  empty_reg;
 
-assign req_len = xfer_cnt+1;
+
+//assign req_len = xfer_cnt+1;
+assign req_len = AXI_BURST_LEN;
+
+assign fifo_rd_re = ~fifo_empty;
 
 ////////////////////////////////////////////////////////////
 // Name : 
 // 
 ////////////////////////////////////////////////////////////
-
+/*
 always @(posedge clk)
 begin
   if (rst == 1) begin
@@ -52,7 +56,7 @@ begin
     end
   end
 end
-
+*/
 ////////////////////////////////////////////////////////////
 // Name : Request Data
 // Sends the transfer count and indicates if this is the 
@@ -74,11 +78,12 @@ begin
   if (rst == 1) begin
     req_we <= 0;  
   end else begin
-    if (((m_axis_tvalid == 1) && (m_axis_tready == 1) && ((tlast == 1) || (xfer_cnt == AXI_BURST_LEN-1)))) begin
+    /*if (((m_axis_tvalid == 1) && (m_axis_tready == 1) && ((tlast == 1) || (xfer_cnt == AXI_BURST_LEN-1)))) begin
       req_we <= 1;      
     end else begin
       req_we <= 0;  
-    end
+    end*/
+    req_we <= 1;
   end
 end
 
@@ -104,7 +109,7 @@ begin
   end else begin 
     //if (~empty_reg[4]) begin
     if (~fifo_empty) begin
-      if (rd_cnt < 'd4)
+      /*if (rd_cnt < 'd4)
         rd_cnt <= rd_cnt + 1;
       else
         rd_cnt <= 'd0;
@@ -117,8 +122,13 @@ begin
         'd2: m_axis_tdata <= fifo_rd_data[29:16];
         'd3: m_axis_tdata <= fifo_rd_data[45:32];
         'd4: m_axis_tdata <= fifo_rd_data[61:48];
-      endcase
+      endcase      
+*/
+      m_axis_tvalid <= 1'b1;
+      m_axis_tdata <= fifo_rd_data[13: 0];
     end
+
+      //fifo_rd_re <= ~fifo_empty;
   end
 end
 

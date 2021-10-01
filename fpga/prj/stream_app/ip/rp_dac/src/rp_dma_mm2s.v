@@ -35,12 +35,12 @@ module rp_dma_mm2s
   //
   output wire [AXIS_DATA_BITS-1: 0]     dac_rdata_o,
   output wire                           dac_rvalid_o,
-  input  wire                           gpio_rready_i,
+  output [32-1:0]                       diag_reg,
 
   // 
   output wire [3:0]                       m_axi_arid_o     , // read address ID
   output wire [AXI_ADDR_BITS-1: 0]        m_axi_araddr_o   , // read address
-  output wire [3:0]                       m_axi_arlen_o    , // read burst length
+  output wire [7:0]                       m_axi_arlen_o    , // read burst length
   output wire [2:0]                       m_axi_arsize_o   , // read burst size
   output wire [1:0]                       m_axi_arburst_o  , // read burst type
   output wire [1:0]                       m_axi_arlock_o   , // read lock type
@@ -75,6 +75,7 @@ wire                      fifo_empty;
 wire [FIFO_CNT_BITS-1:0]  fifo_rd_cnt;
 wire [7:0]                req_data;
 wire                      req_we;
+wire                      fifo_we_dat;
 //wire                      fifo_dis;
 
 wire [AXIS_DATA_BITS-1:0] downsized_data;
@@ -95,7 +96,8 @@ assign dac_rdata_o  = downsized_data;
 assign dac_rvalid_o = downsized_valid;
 
 assign fifo_wr_data  = m_axi_rdata_i;
-assign fifo_wr_we = m_axi_rvalid_i && m_axi_rready_o;
+//assign fifo_wr_we = m_axi_rvalid_i && m_axi_rready_o && fifo_we_dat;
+assign fifo_wr_we = we_dat_r2;
 //assign m_axi_rready_o  = 1'b1;
 assign m_axi_arlock_o  = 2'b00;
 
@@ -177,6 +179,8 @@ rp_dma_mm2s_ctrl #(
   .dac_sts_reg      (dac_sts_reg),
   //.fifo_dis       (fifo_dis),
   .fifo_rst         (fifo_rst),
+  .fifo_we_dat      (fifo_we_dat),
+  .diag_reg         (diag_reg),
   .m_axi_dac_araddr_o   (m_axi_araddr_o),       
   .m_axi_dac_arlen_o    (m_axi_arlen_o),      
   .m_axi_dac_arvalid_o  (m_axi_arvalid_o), 
@@ -198,6 +202,12 @@ valid_reg <= m_axi_rvalid_i;
 last_reg <= 1'b0;
 end
 
+reg we_dat_r1, we_dat_r2;
+always @(posedge s_axis_aclk) begin
+//  valid_reg <= fifo_rd_re;
+we_dat_r1 <= m_axi_rvalid_i && m_axi_rready_o && fifo_we_dat;
+we_dat_r2 <= we_dat_r1;
+end
 rp_dma_mm2s_downsize #(
   .AXI_DATA_BITS  (AXI_DATA_BITS),
   .AXIS_DATA_BITS (AXIS_DATA_BITS))
@@ -213,7 +223,7 @@ rp_dma_mm2s_downsize #(
   .fifo_last      (last_reg), 
   .m_axis_tdata   (downsized_data),      
   .m_axis_tvalid  (downsized_valid),     
-  .m_axis_tready  (gpio_rready_i | fifo_empty));      
+  .m_axis_tready  (fifo_empty));      
 
 
 ////////////////////////////////////////////////////////////
@@ -228,7 +238,7 @@ fifo_axi_data
   .rst            (fifo_rst),     
   .din            (fifo_wr_data),                     
   .wr_en          (fifo_wr_we),// && ~fifo_dis),               
-  .full           (),   
+  .full           (fifo_full),   
   .dout           (fifo_rd_data),    
   .rd_en          (fifo_rd_re),                                 
   .empty          (fifo_empty),                 

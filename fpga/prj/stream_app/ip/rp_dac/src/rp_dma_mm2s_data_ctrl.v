@@ -38,6 +38,7 @@ wire          fifo_empty;
 
 reg  [7:0]    req_xfer_cnt;
 
+/*
 fifo_axi_req U_fifo_axi_req(
   .wr_clk (m_axi_aclk),
   .rd_clk (m_axi_aclk),      
@@ -48,9 +49,11 @@ fifo_axi_req U_fifo_axi_req(
   .dout   (fifo_rd_data),   
   .rd_en  (fifo_rd_re), 
   .empty  (fifo_empty));
+*/
 
-assign fifo_wr_data = req_data;
-assign fifo_wr_we   = req_we;
+assign fifo_empty = 1'b0;
+assign fifo_rd_data = req_data;
+//assign fifo_wr_we   = req_we;
 
 ////////////////////////////////////////////////////////////
 // Name : State machine seq logic
@@ -91,7 +94,8 @@ begin
   case (state_cs)
     // IDLE - Wait for a request in the FIFO
     IDLE: begin
-      if (fifo_empty == 0) begin
+      //if (fifo_empty == 0) begin
+      if (req_we == 1) begin
         state_ns = SEND_AXI_DATA;
       end
     end
@@ -113,7 +117,7 @@ end
 
 always @(posedge m_axi_aclk)
 begin
-  if (m_axi_aresetn == 0) begin
+  /*if (m_axi_aresetn == 0) begin
     busy <= 0;
   end else begin
     if (req_we == 1) begin
@@ -124,7 +128,8 @@ begin
         busy <= 0;
       end
     end
-  end
+  end*/
+  busy <= 1'b0;
 end
 
 ////////////////////////////////////////////////////////////
@@ -199,7 +204,7 @@ end
 // Name : FIFO Read Enable
 // Reads requests from the FIFO when available. 
 ////////////////////////////////////////////////////////////
-
+/*
 always @(*)
 begin
   fifo_rd_re = 0;
@@ -213,7 +218,7 @@ begin
     end  
   endcase   
 end
-
+*/
 ////////////////////////////////////////////////////////////
 // Name : Transfer Count
 // Counts the AXI transfers in the request.
