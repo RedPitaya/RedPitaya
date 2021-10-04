@@ -16,7 +16,7 @@ void * MmapNumber(int _fd, size_t _size, size_t _number) {
 
 inline void setRegister(volatile GeneratorMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
     UNUSED(baseOsc_addr);
-    fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
+//    fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
 
@@ -135,8 +135,8 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map){
         setRegister(_Map,&(_Map->chB_calib),m_calib_offset_ch2 << 16 | m_calib_gain_ch2);
 
         // Set step for pointer 
-        setRegister(_Map,&(_Map->chA_counter_step),1 << 7);
-        setRegister(_Map,&(_Map->chB_counter_step),1 << 7);
+        setRegister(_Map,&(_Map->chA_counter_step),1 << 16);
+        setRegister(_Map,&(_Map->chB_counter_step),1 << 16);
 
         // Set streaming DMA, reset Buffers and flags
         setRegister(_Map,&(_Map->dma_control),0x2222);
@@ -201,16 +201,18 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> boo
     if (_buffer1){
         if (m_BufferNumber[0] == 0){
             if (m_Map->chA_dma_status & 0x3){
-                std::cerr << "Write CHA 1 Buf 2\n";
-      //          memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
+            //    fprintf(stderr,"chA_dma_status For Buffer 1 %X\n", m_Map->chA_dma_status);            
+            //    std::cerr << "Write data to chA Buffer 2\n";
+               // memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
                 m_BufferNumber[0] = 1;
                 setRegister(m_Map,&(m_Map->dma_control),1 << 7);
                 ret = true;
             }
         }else{
             if (m_Map->chA_dma_status & 0xC){
-                std::cerr << "Write CHA 1 Buf 1\n";
-        //        memcpy_neon(m_Buffer1,_buffer1,_size);
+            //    fprintf(stderr,"chA_dma_status For Buffer 2 %X\n", m_Map->chA_dma_status);
+            //    std::cerr << "Write data to chA Buffer 1\n";
+             //   memcpy_neon(m_Buffer1,_buffer1,_size);
                 m_BufferNumber[0] = 0;
                 setRegister(m_Map,&(m_Map->dma_control),1 << 6);
                 ret = true;
@@ -218,23 +220,23 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> boo
         }
     }
 
-    if (_buffer2){
-        if (m_BufferNumber[1] == 0){
-            if (m_Map->chB_dma_status & 0x1){
-                memcpy_neon(m_Buffer2,_buffer2,_size);
-                m_BufferNumber[1] = 1;
-                setRegister(m_Map,&(m_Map->dma_control),1 << 15);
-                ret = true;
-            }
-        }else{
-            if (m_Map->chB_dma_status & 0x4){
-                memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
-                m_BufferNumber[1] = 0;
-                setRegister(m_Map,&(m_Map->dma_control),1 << 14);
-                ret = true;
-            }
-        }
-    }
+    // if (_buffer2){
+    //     if (m_BufferNumber[1] == 0){
+    //         if (m_Map->chB_dma_status & 0x1){
+    //             memcpy_neon(m_Buffer2,_buffer2,_size);
+    //             m_BufferNumber[1] = 1;
+    //             setRegister(m_Map,&(m_Map->dma_control),1 << 15);
+    //             ret = true;
+    //         }
+    //     }else{
+    //         if (m_Map->chB_dma_status & 0x4){
+    //             memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
+    //             m_BufferNumber[1] = 0;
+    //             setRegister(m_Map,&(m_Map->dma_control),1 << 14);
+    //             ret = true;
+    //         }
+    //     }
+    // }
     return ret;
 }
 
@@ -312,6 +314,7 @@ auto CGenerator::stop() -> void
 }
 
 auto CGenerator::printReg() -> void{
+    fprintf(stderr,"printReg\n");
     fprintf(stderr,"0x00 Config = 0x%X\n", m_Map->config);
     fprintf(stderr,"0x04 chA_calib = 0x%X\n", m_Map->chA_calib);
     fprintf(stderr,"0x08 chA_counter_step = 0x%X\n", m_Map->chA_counter_step);

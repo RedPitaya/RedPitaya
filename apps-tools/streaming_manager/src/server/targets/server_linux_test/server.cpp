@@ -7,8 +7,29 @@
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 
+int stop = 0;
+
+void sigHandler (int sigNum){
+    stop = 1;
+}
+
+void installTermSignalHandler()
+{
+#ifdef _WIN32
+    signal(SIGINT, sigHandler);
+    signal(SIGTERM, sigHandler);
+#else
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = sigHandler;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+#endif
+}
+
 int main(int argc, char* argv[])
 {
+    installTermSignalHandler();
     std::vector<UioT> uioList = GetUioList();
 
     // Print UIOs
@@ -73,8 +94,8 @@ int main(int argc, char* argv[])
     uint16_t buf1[size];
     uint16_t buf2[size];
     for(int i = 0 ; i< size ; i++){
-        buf1[i]= i / 2;// i % ((1 << 14) - 500) + 500;
-        buf2[i]= i / 2;//i % 4096; //i % ((1 << 14) - 500) + 500;
+        buf1[i]= 4096;//i < 4096 || i > 4096 * 3 ? 4096 : 0;// i % ((1 << 14) - 500) + 500;
+        buf2[i]= 0;//i % 4096; //i % ((1 << 14) - 500) + 500;
     }
     if (gen){
         std::cerr << "\n";
@@ -92,18 +113,22 @@ int main(int argc, char* argv[])
         gen->start();
         std::cerr << "\n";
         //sleep(2);
+        std::cerr << "Reg after start\n";        
         gen->printReg();
-        while(1){
-           // sleep(1);
-           std::cerr << "\n";
-            gen->printReg();                
+        while(stop == 0){
+//            sleep(1);
             if (gen->write(firstBuf ? (uint8_t*)buf1 : (uint8_t*)buf2,nullptr, size * 2)){
-                
+                //gen->printReg();
+                //std::cerr << "\n";
+//                std::cerr << firstBuf << "\n";
                 firstBuf != firstBuf;
+      //          return 0;
             }
+
         }
     }
-
+  gen->printReg();
+  std::cerr << "\n";
   //  CStreamingManager::Ptr s_manger = CStreamingManager::Create("127.0.0.1","8900",asionet::Protocol::TCP);
 
     // Run application
