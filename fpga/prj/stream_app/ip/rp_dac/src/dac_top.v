@@ -57,11 +57,12 @@ module dac_top
 
 
   output [DAC_DATA_BITS-1:0]              dac_data_o,
+  output [32-1:0]                         diag_reg,
 
   //
   output wire [3:0]                       m_axi_dac_arid_o     , // read address ID
   output wire [M_AXI_DAC_ADDR_BITS-1: 0]  m_axi_dac_araddr_o   , // read address
-  output wire [3:0]                       m_axi_dac_arlen_o    , // read burst length
+  output wire [7:0]                       m_axi_dac_arlen_o    , // read burst length
   output wire [2:0]                       m_axi_dac_arsize_o   , // read burst size
   output wire [1:0]                       m_axi_dac_arburst_o  , // read burst type
   output wire [1:0]                       m_axi_dac_arlock_o   , // read lock type
@@ -104,7 +105,7 @@ wire                        event_sts_start;
 wire                        event_sts_reset;
 wire                        ctl_trg;
 wire dac_rvalid;           
-
+wire [DAC_DATA_BITS-1:0]    dac_data_raw;
 wire set_zero = dac_conf[OUT_ZERO];
   
 ////////////////////////////////////////////////////////////
@@ -148,39 +149,40 @@ rp_dma_mm2s #(
   .dac_ctrl_reg     (dac_ctrl_reg),
   .dac_sts_reg      (dac_sts_reg),
 
-  .dac_rdata_o       (dac_data_o),
-  .dac_rvalid_o       (dac_rvalid),
+  .dac_rdata_o      (dac_data_raw),
+  .dac_rvalid_o     (dac_rvalid),
+  .diag_reg         (diag_reg),
   
-  .m_axi_arid_o   (m_axi_dac_arid_o), 
-  .m_axi_araddr_o    (m_axi_dac_araddr_o),  
-  .m_axi_arlen_o   (m_axi_dac_arlen_o), 
-  .m_axi_arsize_o  (m_axi_dac_arsize_o),
-  .m_axi_arburst_o   (m_axi_dac_arburst_o), 
-  .m_axi_arlock_o  (m_axi_dac_arlock_o),
+  .m_axi_arid_o     (m_axi_dac_arid_o), 
+  .m_axi_araddr_o   (m_axi_dac_araddr_o),  
+  .m_axi_arlen_o    (m_axi_dac_arlen_o), 
+  .m_axi_arsize_o   (m_axi_dac_arsize_o),
+  .m_axi_arburst_o  (m_axi_dac_arburst_o), 
+  .m_axi_arlock_o   (m_axi_dac_arlock_o),
   .m_axi_arcache_o  (m_axi_dac_arcache_o),
-  .m_axi_arprot_o  (m_axi_dac_arprot_o),
-  .m_axi_arvalid_o    (m_axi_dac_arvalid_o),  
-  .m_axi_arready_i    (m_axi_dac_arready_i),  
-  .m_axi_rid_i    (m_axi_dac_rid_i),  
-  .m_axi_rdata_i   (m_axi_dac_rdata_i), 
-  .m_axi_rresp_i   (m_axi_dac_rresp_i), 
+  .m_axi_arprot_o   (m_axi_dac_arprot_o),
+  .m_axi_arvalid_o  (m_axi_dac_arvalid_o),  
+  .m_axi_arready_i  (m_axi_dac_arready_i),  
+  .m_axi_rid_i      (m_axi_dac_rid_i),  
+  .m_axi_rdata_i    (m_axi_dac_rdata_i), 
+  .m_axi_rresp_i    (m_axi_dac_rresp_i), 
   .m_axi_rlast_i    (m_axi_dac_rlast_i),  
   .m_axi_rvalid_i   (m_axi_dac_rvalid_i), 
   .m_axi_rready_o   (m_axi_dac_rready_o));     
 
 dac_calib #(
-  .AXIS_DATA_BITS   (DAC_DATA_BITS))
+  .AXIS_DATA_BITS (DAC_DATA_BITS))
   U_osc_calib(
-  .dac_clk_i              (clk),
-  .dac_rstn_i             (rst_n),
+  .dac_clk_i      (clk),
+  .dac_rstn_i     (rst_n),
 
-  .dac_o     (dac_o),
-  .dac_rdata_i    (dac_data_o),
-  .dac_rvalid_i    (dac_rvalid),
+  .dac_o          (dac_data_o),
+  .dac_rdata_i    (dac_data_raw),
+  .dac_rvalid_i   (dac_rvalid),
   // conf
-  .set_amp_i     (dac_scale),
-  .set_dc_i    (dac_offs),
-  .set_zero_i    (set_zero));
+  .set_amp_i      (dac_scale),
+  .set_dc_i       (dac_offs),
+  .set_zero_i     (set_zero));
 
 
 always @(posedge clk)
