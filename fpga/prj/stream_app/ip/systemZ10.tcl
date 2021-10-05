@@ -1151,7 +1151,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.DAC_DATA_BITS {14} \
    CONFIG.M_AXI_DAC_DATA_BITS {32} \
-   CONFIG.M_AXI_DAC_DATA_BITS_O {16} \
+   CONFIG.M_AXI_DAC_DATA_BITS_O {32} \
    CONFIG.EVENT_SRC_NUM {5} \
    CONFIG.TRIG_SRC_NUM {6} \
  ] $rp_dac

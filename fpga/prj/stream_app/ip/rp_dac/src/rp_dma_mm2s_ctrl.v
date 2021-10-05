@@ -42,6 +42,7 @@ module rp_dma_mm2s_ctrl
   input [AXI_ADDR_BITS-1:0]             dac_buf1_adr,
   input [AXI_ADDR_BITS-1:0]             dac_buf2_adr,
   output [AXI_ADDR_BITS-1:0]            dac_rp,
+  output reg                            dac_word,
   output [32-1:0] diag_reg,
 
   input                                 dac_trig,
@@ -738,7 +739,7 @@ begin
               req_addr <= dac_buf1_adr;
             end             
           end else begin
-            req_addr <= {dac_rp_curr[ADDR_DECS-1:16+1], 1'b0}; //reading every 16 bits (2 bytes)
+            req_addr <= {dac_rp_curr[ADDR_DECS-1:16+2], 2'b0}; //reading every 32 bits (4 bytes)
           end
         end  
       end
@@ -751,6 +752,56 @@ begin
             end 
             if ((req_buf_addr_sel == 1) && buf1_rdy) begin
               req_addr <= dac_buf1_adr;
+            end        
+        end   
+      end   
+
+    endcase
+  end
+end
+
+/////////////////////////////////////////////////////////////////
+// Name : Data word
+// need to determine which part of the 32 bit read must be used
+// reject last bit as we need 16 bits, not 8
+// 0: bits 15:0
+// 1: bits 31:16
+/////////////////////////////////////////////////////////////////
+
+always @(posedge m_axi_aclk)
+begin
+  if (m_axi_aresetn == 0)
+    dac_word <= 'h0;
+  else begin
+    case (state_cs)
+      // IDLE - Wait for the DMA start signal
+      IDLE: begin
+        dac_word <= req_buf_addr[1];  
+      end
+      
+      SEND_DMA_REQ: begin
+        if (m_axi_dac_rvalid_i && m_axi_rready) begin
+          if (buf_ovr_limit || dac_trig) begin
+            if ((req_buf_addr_sel == 0) && buf2_rdy) begin
+              dac_word <= dac_buf2_adr[1]; 
+            end 
+            if ((req_buf_addr_sel == 1) && buf1_rdy) begin
+              dac_word <= dac_buf1_adr[1];
+            end             
+          end else begin
+            dac_word <= dac_rp_curr[17];
+          end
+        end  
+      end
+
+      WAIT_BUF_FULL: begin
+        if (~next_buf_nfull) begin
+          // Swap the buffer if we have reached the end of the current one
+            if ((req_buf_addr_sel == 0) && buf2_rdy) begin // only switch addresses when next buffer is read out
+              dac_word <= dac_buf2_adr[1];          
+            end 
+            if ((req_buf_addr_sel == 1) && buf1_rdy) begin
+              dac_word <= dac_buf1_adr[1];
             end        
         end   
       end   

@@ -76,6 +76,8 @@ wire [FIFO_CNT_BITS-1:0]  fifo_rd_cnt;
 wire [7:0]                req_data;
 wire                      req_we;
 wire                      fifo_we_dat;
+wire                      dac_word_wr;
+wire                      dac_word_rd;
 //wire                      fifo_dis;
 
 wire [AXIS_DATA_BITS-1:0] downsized_data;
@@ -173,6 +175,7 @@ rp_dma_mm2s_ctrl #(
   //.dac_start_offs   (dac_start_offs),
   .dac_pntr_step    (dac_step),
   .dac_rp           (dac_rp),
+  .dac_word         (dac_word),
   .dac_buf_size     (dac_buf_size),
   .dac_buf1_adr     (dac_buf1_adr),
   .dac_buf2_adr     (dac_buf2_adr),
@@ -223,6 +226,7 @@ rp_dma_mm2s_downsize #(
   .fifo_valid     (valid_reg),     
   .fifo_rd_re     (fifo_rd_re),     
   .fifo_last      (last_reg), 
+  .word_sel       (dac_word_rd),
   .m_axis_tdata   (downsized_data),      
   .m_axis_tvalid  (downsized_valid),     
   .m_axis_tready  (fifo_empty));      
@@ -238,10 +242,10 @@ fifo_axi_data
   .wr_clk         (m_axi_aclk),               
   .rd_clk         (s_axis_aclk),               
   .rst            (fifo_rst),     
-  .din            (fifo_wr_data),                     
+  .din            ({dac_word_wr, fifo_wr_data}),                     
   .wr_en          (fifo_wr_we),// && ~fifo_dis),               
   .full           (fifo_full),   
-  .dout           (fifo_rd_data),    
+  .dout           ({dac_word_rd, fifo_rd_data}),    
   .rd_en          (fifo_rd_re),                                 
   .empty          (fifo_empty),                 
   .rd_data_count  (fifo_rd_cnt), 

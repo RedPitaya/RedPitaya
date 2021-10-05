@@ -4,7 +4,7 @@ module rp_dac
   #(parameter S_AXI_REG_ADDR_BITS   = 12,
     parameter M_AXI_DAC_ADDR_BITS   = 32,
     parameter M_AXI_DAC_DATA_BITS   = 32,
-    parameter M_AXI_DAC_DATA_BITS_O = 16,
+    parameter M_AXI_DAC_DATA_BITS_O = 32,
     parameter DAC_DATA_BITS         = 14,
     parameter EVENT_SRC_NUM         = 7,
     parameter TRIG_SRC_NUM          = 7)(    

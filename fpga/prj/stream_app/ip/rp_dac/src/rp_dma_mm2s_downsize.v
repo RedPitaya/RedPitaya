@@ -16,9 +16,11 @@ module rp_dma_mm2s_downsize
   input  wire                       fifo_valid,
   output wire                       fifo_rd_re,      
   input  wire                       fifo_last,    
-  
+
+  input  wire                       word_sel,    
+ 
   output reg  [AXIS_DATA_BITS-1:0]  m_axis_tdata,
-  output reg                       m_axis_tvalid,
+  output reg                        m_axis_tvalid,
   input  wire                       m_axis_tready 
 );
 
@@ -125,7 +127,7 @@ begin
       endcase      
 */
       m_axis_tvalid <= 1'b1;
-      m_axis_tdata <= fifo_rd_data[13: 0];
+      m_axis_tdata  <= word_sel ? fifo_rd_data[29:16]: fifo_rd_data[13: 0];
     end
 
       //fifo_rd_re <= ~fifo_empty;
