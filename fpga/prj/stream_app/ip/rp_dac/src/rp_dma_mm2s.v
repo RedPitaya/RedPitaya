@@ -175,7 +175,7 @@ rp_dma_mm2s_ctrl #(
   //.dac_start_offs   (dac_start_offs),
   .dac_pntr_step    (dac_step),
   .dac_rp           (dac_rp),
-  .dac_word         (dac_word),
+  .dac_word         (dac_word_wr),
   .dac_buf_size     (dac_buf_size),
   .dac_buf1_adr     (dac_buf1_adr),
   .dac_buf2_adr     (dac_buf2_adr),
