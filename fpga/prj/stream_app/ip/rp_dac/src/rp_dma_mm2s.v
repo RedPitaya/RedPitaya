@@ -93,6 +93,8 @@ wire                      ctrl_norm  = dac_ctrl_reg[CTRL_MODE_NORM];
 wire                      ctrl_strm  = dac_ctrl_reg[CTRL_MODE_STREAM];
 
 assign dac_rdata_o  = downsized_data;
+//assign dac_rdata_o  = m_axi_araddr_o[13:0];
+
 assign dac_rvalid_o = downsized_valid;
 
 assign fifo_wr_data  = m_axi_rdata_i;

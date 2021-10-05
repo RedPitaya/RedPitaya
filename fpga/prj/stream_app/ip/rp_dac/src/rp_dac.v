@@ -3,7 +3,8 @@
 module rp_dac
   #(parameter S_AXI_REG_ADDR_BITS   = 12,
     parameter M_AXI_DAC_ADDR_BITS   = 32,
-    parameter M_AXI_DAC_DATA_BITS   = 16,
+    parameter M_AXI_DAC_DATA_BITS   = 32,
+    parameter M_AXI_DAC_DATA_BITS_O = 16,
     parameter DAC_DATA_BITS         = 14,
     parameter EVENT_SRC_NUM         = 7,
     parameter TRIG_SRC_NUM          = 7)(    
@@ -62,7 +63,7 @@ module rp_dac
   output wire                                   m_axi_dac1_arvalid_o  ,
   input  wire                                   m_axi_dac1_arready_i  ,
   input  wire [    3: 0]                        m_axi_dac1_rid_i      ,
-  input  wire [ 32-1: 0]                        m_axi_dac1_rdata_i    ,
+  input  wire [ M_AXI_DAC_DATA_BITS-1: 0]       m_axi_dac1_rdata_i    ,
   input  wire [    1: 0]                        m_axi_dac1_rresp_i    ,
   input  wire                                   m_axi_dac1_rlast_i    ,
   input  wire                                   m_axi_dac1_rvalid_i   ,
@@ -81,7 +82,7 @@ module rp_dac
   output wire                                   m_axi_dac2_arvalid_o  ,
   input  wire                                   m_axi_dac2_arready_i  ,
   input  wire [3:0]                             m_axi_dac2_rid_i      ,
-  input  wire [ 32-1: 0]                        m_axi_dac2_rdata_i    ,
+  input  wire [ M_AXI_DAC_DATA_BITS-1: 0]       m_axi_dac2_rdata_i    ,
   input  wire [1:0]                             m_axi_dac2_rresp_i    ,
   input  wire                                   m_axi_dac2_rlast_i    ,
   input  wire                                   m_axi_dac2_rvalid_i   ,
@@ -175,6 +176,8 @@ wire                            reg_wr_we;
 wire [31:0]                     reg_wr_data;    
 reg  [31:0]                     reg_rd_data;
 
+
+
 reg ctrl_cha;
 reg ctrl_chb;
 wire sts_cha   = (reg_addr[8-1:0] == DMA_STS_ADDR_CHA  ) && (reg_wr_we == 1);
@@ -194,6 +197,22 @@ wire [31:0] diag_reg;
 `endif //SIMULATION
 
 assign intr = 1'b0;
+
+
+wire [DAC_DATA_BITS-1:0]        dac_a;
+wire [DAC_DATA_BITS-1:0]        dac_b;
+reg  [DAC_DATA_BITS-1:0]        dac_dat_a;
+reg  [DAC_DATA_BITS-1:0]        dac_dat_b;    
+
+always @(posedge clk)
+begin
+  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]}; // inversion for DAC input
+  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
+end
+
+assign dac_data_cha_o = dac_dat_a;
+assign dac_data_chb_o = dac_dat_b;
+
 ////////////////////////////////////////////////////////////
 // Name : Register Control
 // 
@@ -328,7 +347,7 @@ end
 ////////////////////////////////////////////////////////////     
 dac_top #(
   .M_AXI_DAC_ADDR_BITS  (M_AXI_DAC_ADDR_BITS),
-  .M_AXI_DAC_DATA_BITS  (M_AXI_DAC_DATA_BITS),
+  .M_AXI_DAC_DATA_BITS  (M_AXI_DAC_DATA_BITS_O),
   .DAC_DATA_BITS    (DAC_DATA_BITS), 
   .REG_ADDR_BITS    (REG_ADDR_BITS),
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
@@ -364,8 +383,8 @@ dac_top #(
   .dac_buf_size     (cfg_dma_buf_size),
   .dac_buf1_adr     (cfg_buf1_adr_cha),
   .dac_buf2_adr     (cfg_buf2_adr_cha),
-  .dac_data_o       (dac_data_cha_o),
-  //.diag_reg         (diag_reg),
+  .dac_data_o       (dac_a),
+  .diag_reg         (diag_reg),
 
   .m_axi_dac_arid_o     (m_axi_dac1_arid_o),
   .m_axi_dac_araddr_o   (m_axi_dac1_araddr_o),
@@ -378,7 +397,7 @@ dac_top #(
   .m_axi_dac_arvalid_o  (m_axi_dac1_arvalid_o),
   .m_axi_dac_arready_i  (m_axi_dac1_arready_i),
   .m_axi_dac_rid_i      (m_axi_dac1_rid_i),
-  .m_axi_dac_rdata_i    (m_axi_dac1_rdata_i[M_AXI_DAC_DATA_BITS-1: 0]),
+  .m_axi_dac_rdata_i    (m_axi_dac1_rdata_i[M_AXI_DAC_DATA_BITS_O-1: 0]),
   .m_axi_dac_rresp_i    (m_axi_dac1_rresp_i),
   .m_axi_dac_rlast_i    (m_axi_dac1_rlast_i),
   .m_axi_dac_rvalid_i   (m_axi_dac1_rvalid_i),
@@ -390,7 +409,7 @@ dac_top #(
 
 dac_top #(
   .M_AXI_DAC_ADDR_BITS  (M_AXI_DAC_ADDR_BITS),
-  .M_AXI_DAC_DATA_BITS  (M_AXI_DAC_DATA_BITS),
+  .M_AXI_DAC_DATA_BITS  (M_AXI_DAC_DATA_BITS_O),
   .DAC_DATA_BITS    (DAC_DATA_BITS), 
   .REG_ADDR_BITS    (REG_ADDR_BITS),
   .EVENT_SRC_NUM    (EVENT_SRC_NUM),
@@ -426,7 +445,8 @@ dac_top #(
   .dac_buf_size     (cfg_dma_buf_size),
   .dac_buf1_adr     (cfg_buf1_adr_chb),
   .dac_buf2_adr     (cfg_buf2_adr_chb),
-  .dac_data_o       (dac_data_chb_o),
+  .dac_data_o       (dac_b),
+  
   .m_axi_dac_arid_o     (m_axi_dac2_arid_o),
   .m_axi_dac_araddr_o   (m_axi_dac2_araddr_o),
   .m_axi_dac_arlen_o    (m_axi_dac2_arlen_o),
@@ -438,7 +458,7 @@ dac_top #(
   .m_axi_dac_arvalid_o  (m_axi_dac2_arvalid_o),
   .m_axi_dac_arready_i  (m_axi_dac2_arready_i),
   .m_axi_dac_rid_i      (m_axi_dac2_rid_i),
-  .m_axi_dac_rdata_i    (m_axi_dac2_rdata_i[M_AXI_DAC_DATA_BITS-1: 0]),
+  .m_axi_dac_rdata_i    (m_axi_dac2_rdata_i[M_AXI_DAC_DATA_BITS_O-1: 0]),
   .m_axi_dac_rresp_i    (m_axi_dac2_rresp_i),
   .m_axi_dac_rlast_i    (m_axi_dac2_rlast_i),
   .m_axi_dac_rvalid_i   (m_axi_dac2_rvalid_i),

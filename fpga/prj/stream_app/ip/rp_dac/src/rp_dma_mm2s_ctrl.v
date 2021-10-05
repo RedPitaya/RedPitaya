@@ -201,10 +201,19 @@ end
 // Name : Diag reg
 // Sets AXI diag reg
 ////////////////////////////////////////////////////////////
+assign req_buf_addr_sel_pedge =  req_buf_addr_sel & ~req_buf_addr_sel_p1;
+assign req_buf_addr_sel_nedge = ~req_buf_addr_sel &  req_buf_addr_sel_p1;
+reg [32-1:0] bufcnt;
 
 always @(posedge m_axi_aclk)
 begin
-  diag_reg_1 <= {27'b0, m_axi_dac_arready_i, m_axi_dac_rvalid_i, m_axi_dac_rlast_i,  m_axi_dac_arvalid_o, m_axi_dac_rready_o};
+  req_buf_addr_sel_p1 <= req_buf_addr_sel;
+  if (req_buf_addr_sel_pedge)
+    bufcnt <= 'h0;
+  else if (~req_buf_addr_sel_pedge & req_buf_addr_sel & ~next_buf_nfull & ~m_axi_dac_rvalid_i) 
+    bufcnt<= bufcnt + 'h1;
+
+  diag_reg_1 <= bufcnt;
 end
 
 ////////////////////////////////////////////////////////////
