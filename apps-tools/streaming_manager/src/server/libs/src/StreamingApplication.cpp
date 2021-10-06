@@ -30,7 +30,6 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_ReadyToPass(0),
     m_isRun(false),
     m_isRunNonBloking(false),
-    m_Ios(),
     m_Resolution(_resolution),
     m_WriteBuffer_ch1(nullptr),
     m_WriteBuffer_ch2(nullptr),
@@ -38,7 +37,6 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_channels(_channels),
     m_adc_mode(_adc_mode),
     m_adc_bits(_adc_bits),
-    m_Timer(m_Ios),
     m_BytesCount(0)
 {
     
@@ -67,16 +65,12 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_OscThreadRun.test_and_set();
 }
 
-CStreamingApplication::~CStreamingApplication()
-{
-
+CStreamingApplication::~CStreamingApplication(){
     stop();
-
     if (m_WriteBuffer_ch1) {
         free(m_WriteBuffer_ch1);
         m_WriteBuffer_ch1 = nullptr;
     }
-
     if (m_WriteBuffer_ch2) {
         free(m_WriteBuffer_ch2);
         m_WriteBuffer_ch2 = nullptr;
@@ -96,12 +90,6 @@ void CStreamingApplication::run(std::string _file_name_prefix)
 
         m_StreamingManager->run(_file_name_prefix);
         m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
-        // OS signal handler
-        // asio::signal_set signalSet(m_Ios, SIGINT, SIGTERM);
-        // signalSet.async_wait(std::bind(&CStreamingApplication::signalHandler, this, std::placeholders::_1, std::placeholders::_2));
-
-        // asio::io_service::work idle(m_Ios);
-        // m_Ios.run();
         if (m_OscThread.joinable()){
             m_OscThread.join();
         }
@@ -143,7 +131,6 @@ bool CStreamingApplication::stop(bool wait){
             while(isRun());
         }
         m_StreamingManager->stop();
-        // m_Ios.stop();
         m_Osc_ch->stop();
         state = true;
     }

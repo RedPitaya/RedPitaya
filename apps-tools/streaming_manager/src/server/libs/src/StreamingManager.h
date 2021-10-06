@@ -45,8 +45,8 @@ public:
     CStreamingManager(std::string _host, std::string _port, asionet::Protocol _protocol);
 
     ~CStreamingManager();
-    CStreamingManager(const COscilloscope &) = delete;
-    CStreamingManager(COscilloscope &&) = delete;
+    CStreamingManager(const CStreamingManager &) = delete;
+    CStreamingManager(CStreamingManager &&) = delete;
     
 
     void run(std::string _prefix);

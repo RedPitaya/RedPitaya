@@ -2,6 +2,7 @@
 #define STREAMING_ROOT_DACASIONETCONTROLLER_H
 
 #include <mutex>
+#include "AsioSocket.h"
 #include "AsioNetSimple.h"
 #include "EventHandlers.h"
 

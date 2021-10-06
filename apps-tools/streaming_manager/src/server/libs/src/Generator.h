@@ -8,7 +8,7 @@
 
 constexpr uint32_t gen0_event_id = 0x1;
 constexpr uint32_t gen1_event_id = 0x2;
-constexpr uint32_t dac_buf_size = (65536) / 2.0;
+constexpr uint32_t dac_buf_size = (65536)/2;
 
 struct GeneratorMapT
 {

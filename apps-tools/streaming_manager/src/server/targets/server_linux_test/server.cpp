@@ -91,11 +91,14 @@ int main(int argc, char* argv[])
     // }
 
     size_t size = 1024 * 16;
-    uint16_t buf1[size];
-    uint16_t buf2[size];
+    int16_t buf1[size];
+    int16_t buf2[size];
+    int x = 0;
     for(int i = 0 ; i< size ; i++){
-        buf1[i]= 4096;//i < 4096 || i > 4096 * 3 ? 4096 : 0;// i % ((1 << 14) - 500) + 500;
-        buf2[i]= 0;//i % 4096; //i % ((1 << 14) - 500) + 500;
+      //  x = (i / 1024)+1;
+        // (i / 1024) % 2 ? 8000 : 0;
+        buf1[i]= (i / 1024) % 2 ? 8000 : 0;//(i / 16) %2 ? 4096 : 0; //i < 512 || i > size - 512 ? 4096 : 0;// i % ((1 << 14) - 500) + 500;
+        buf2[i]= -2048;//i % 4096; //i % ((1 << 14) - 500) + 500;
     }
     if (gen){
         std::cerr << "\n";
@@ -118,8 +121,8 @@ int main(int argc, char* argv[])
         while(stop == 0){
 //            sleep(1);
             if (gen->write(firstBuf ? (uint8_t*)buf1 : (uint8_t*)buf2,nullptr, size * 2)){
-                //gen->printReg();
-                //std::cerr << "\n";
+            //    gen->printReg();
+            //    std::cerr << "\n";
 //                std::cerr << firstBuf << "\n";
                 firstBuf != firstBuf;
       //          return 0;

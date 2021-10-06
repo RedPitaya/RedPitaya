@@ -54,57 +54,41 @@ target_include_directories(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}/libs/src/common
             ${json_SOURCE_DIR}/include)
 
-if (NOT WIN32)
-target_sources(${PROJECT_NAME}
-    PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
+list(APPEND src
+            ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/wavReader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/DACAsioNetController.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/DACStreamingManager.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocket.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioBroadcastSocket.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
+        )
+
+if (NOT WIN32)
+    list(APPEND src
             ${CMAKE_SOURCE_DIR}/libs/src/Oscilloscope.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/Generator.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/StreamingApplication.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/UioParser.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/DACAsioNetController.cpp
-            # Common
-            ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/wavReader.cpp)
-else()
-target_sources(${PROJECT_NAME}
-    PRIVATE ${CMAKE_SOURCE_DIR}/libs/src/StreamingManager.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/AsioNet.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/AsioSocket.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/AsioBroadcastSocket.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/AsioNetSimple.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/AsioSocketSimple.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/FileLogger.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/DACAsioNetController.cpp
-            # Common
-            ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Reader.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/BinaryStream.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/wavReader.cpp)
+            ${CMAKE_SOURCE_DIR}/libs/src/DACStreamingApplication.cpp
+    )
 endif()
+
+target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 add_library(jsoncpp STATIC IMPORTED)
 set_property(TARGET jsoncpp PROPERTY

@@ -160,7 +160,6 @@ auto CDACAsioNetController::extractBuffer(uint8_t* buff,size_t size) -> void{
     BufferPack obj;
     if (ExtractPack(buff,size,obj.index,obj.ch1,obj.size_ch1,obj.ch2,obj.size_ch2)){
         obj.empty = false;
-        std::cout << "New buff " << obj.index << "\n";
         m_bufferdeq.push_front(obj);
     }
 }

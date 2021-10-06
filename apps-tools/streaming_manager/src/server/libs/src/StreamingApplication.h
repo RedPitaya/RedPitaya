@@ -14,6 +14,7 @@
 
 class CStreamingApplication
 {
+
 public:
     CStreamingApplication(CStreamingManager::Ptr _StreamingManager, COscilloscope::Ptr _osc_ch,unsigned short _resolution,int _oscRate, int _channels, int _adc_mode , uint32_t _adc_bits);
     ~CStreamingApplication();
@@ -21,13 +22,13 @@ public:
     void runNonBlock(std::string _file_name_prefix);
     bool stop(bool wait = true);
     bool isRun(){return m_isRun;}
+
 private:
     int m_PerformanceCounterPeriod = 10;
 
     COscilloscope::Ptr m_Osc_ch;
     CStreamingManager::Ptr m_StreamingManager;
     std::thread m_OscThread;
-    // std::thread m_SocketThread;
     std::mutex mtx;
     std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
     std::atomic_int  m_ReadyToPass;
@@ -35,7 +36,6 @@ private:
     std::atomic_bool m_isRunNonBloking;
     static_assert(ATOMIC_INT_LOCK_FREE == 2,"this implementation does not guarantee that std::atomic<int> is always lock free.");
 
-    asio::io_service m_Ios;
     unsigned short m_Resolution;
 
     void *m_WriteBuffer_ch1;
@@ -48,9 +48,6 @@ private:
     int              m_adc_mode;
     uint32_t         m_adc_bits;   
   
-
-    uint8_t val;
-    asio::steady_timer m_Timer;
     uintmax_t m_BytesCount;
 
     void oscWorker();

@@ -97,7 +97,6 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
     m_Map = reinterpret_cast<GeneratorMapT *>(Map);
     m_Buffer1 = static_cast<uint8_t *>(m_Buffer);
     m_Buffer2 = static_cast<uint8_t *>(m_Buffer) + dac_buf_size * 2;
-    
 }
 
 CGenerator::~CGenerator()
@@ -157,41 +156,50 @@ auto CGenerator::prepare() -> void
 }
 
 auto CGenerator::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void{
-    // if (ch1_gain >= 2) ch1_gain = 1.999999;
-    // if (ch1_gain < 0)  ch1_gain = 0;
-    // if (ch2_gain >= 2) ch2_gain = 1.999999;
-    // if (ch2_gain < 0)  ch2_gain = 0;
+    if (ch1_gain >= 2) ch1_gain = 1.999999;
+    if (ch1_gain < 0)  ch1_gain = 0;
+    if (ch2_gain >= 2) ch2_gain = 1.999999;
+    if (ch2_gain < 0)  ch2_gain = 0;
 
-    // m_calib_offset_ch1 =  ch1_offset * -4;
-    // m_calib_offset_ch2 =  ch2_offset * -4;
-    // m_calib_gain_ch1 = ch1_gain * 32768; 
-    // m_calib_gain_ch2 = ch2_gain * 32768; 
+    m_calib_offset_ch1 =  ch1_offset;
+    m_calib_offset_ch2 =  ch2_offset;
+
+    m_calib_gain_ch1 = ch1_gain * 0x2000; 
+    m_calib_gain_ch2 = ch2_gain * 0x2000; 
 }
 
 auto CGenerator::initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool{
     const std::lock_guard<std::mutex> lock(m_waitLock);
+    bool ret = false;
     if (_buffer1){
         memcpy_neon(m_Buffer1,_buffer1,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 6);
+        ret = true;
     }
 
     if (_buffer2){
         memcpy_neon(m_Buffer2,_buffer2,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 14);
+        ret = true;
     }
+    return ret;
 }
 
 auto CGenerator::initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool{
     const std::lock_guard<std::mutex> lock(m_waitLock);
+    bool ret = false;
     if (_buffer1){
         memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 7);
+        ret = true;
     }
 
     if (_buffer2){
         memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 15);
+        ret = true;
     }
+    return ret;
 }
 
 auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool
@@ -201,18 +209,14 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> boo
     if (_buffer1){
         if (m_BufferNumber[0] == 0){
             if (m_Map->chA_dma_status & 0x3){
-            //    fprintf(stderr,"chA_dma_status For Buffer 1 %X\n", m_Map->chA_dma_status);            
-            //    std::cerr << "Write data to chA Buffer 2\n";
-               // memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
+                memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
                 m_BufferNumber[0] = 1;
                 setRegister(m_Map,&(m_Map->dma_control),1 << 7);
                 ret = true;
             }
         }else{
             if (m_Map->chA_dma_status & 0xC){
-            //    fprintf(stderr,"chA_dma_status For Buffer 2 %X\n", m_Map->chA_dma_status);
-            //    std::cerr << "Write data to chA Buffer 1\n";
-             //   memcpy_neon(m_Buffer1,_buffer1,_size);
+                memcpy_neon(m_Buffer1,_buffer1,_size);
                 m_BufferNumber[0] = 0;
                 setRegister(m_Map,&(m_Map->dma_control),1 << 6);
                 ret = true;
@@ -220,79 +224,35 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> boo
         }
     }
 
-    // if (_buffer2){
-    //     if (m_BufferNumber[1] == 0){
-    //         if (m_Map->chB_dma_status & 0x1){
-    //             memcpy_neon(m_Buffer2,_buffer2,_size);
-    //             m_BufferNumber[1] = 1;
-    //             setRegister(m_Map,&(m_Map->dma_control),1 << 15);
-    //             ret = true;
-    //         }
-    //     }else{
-    //         if (m_Map->chB_dma_status & 0x4){
-    //             memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
-    //             m_BufferNumber[1] = 0;
-    //             setRegister(m_Map,&(m_Map->dma_control),1 << 14);
-    //             ret = true;
-    //         }
-    //     }
-    // }
+    if (_buffer2){
+        if (m_BufferNumber[1] == 0){
+            if (m_Map->chB_dma_status & 0x1){
+                memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
+                m_BufferNumber[1] = 1;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 15);
+                ret = true;
+            }
+        }else{
+            if (m_Map->chB_dma_status & 0x4){
+                memcpy_neon(m_Buffer2,_buffer2,_size);
+                m_BufferNumber[1] = 0;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 14);
+                ret = true;
+            }
+        }
+    }
     return ret;
 }
 
 
-
-// bool COscilloscope::clearBuffer(){
-// //    printf("clearBuffer(%d)\n",m_OscBufferNumber);
-// //    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//     uint32_t clearFlag = (m_OscBufferNumber == 0 ? 0x00000004 : 0x00000008); // reset buffer
-//     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), clearFlag );
-// //    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//     if (m_Channel1 || m_Channel2){
-//         m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;
-//     }
-//     return true;
-// }
-
-// bool COscilloscope::wait(){
-//     m_waitLock.lock();
-//     int32_t cnt = 1;
-//     constexpr size_t cnt_size = sizeof(cnt);
-//     ssize_t bytes = write(m_Fd, &cnt, cnt_size);
-//     if (bytes == cnt_size) {
-// //        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-// //        fprintf(stderr,"\tWAIT INTERRUPT\n");
-//         bytes = read(m_Fd, &cnt, cnt_size);
-// //        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//         clearInterrupt();
-// //        fprintf(stderr,"\tINTERRUPT RESET\n");
-// //        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//         if (bytes == cnt_size) {
-//             m_waitLock.unlock();
-//             return true;
-//         }
-//     }
-//     m_waitLock.unlock();
-//     return false;
-// }
-
-// bool COscilloscope::clearInterrupt(){
-// //    fprintf(stderr,"clearInterrupt()\n");
-//     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), 0x00000002 );
-//     return true;
-// }
-
 auto CGenerator::start() -> void{
     const std::lock_guard<std::mutex> lock(m_waitLock);
     if (m_Map != nullptr){
-        std::cerr << "Start\n";
- 
         // Start event
         setRegister(m_Map,&(m_Map->event_status),0x2);
         
         // Start DMA
        setRegister(m_Map,&(m_Map->dma_control),0x101);
-        std::cerr << "End start\n";
     }else {
         std::cerr << "Error: CGenerator::stop()" << std::endl;
         exit(-1);
