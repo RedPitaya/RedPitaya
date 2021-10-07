@@ -1,14 +1,3 @@
-
-# ==================================================================================================
-# block_design.tcl - Create Vivado Project - 4_frequency_counter
-#
-# This script should be run from the base redpitaya-guides/ folder inside Vivado tcl console.
-#
-# This script is modification of Pavel Demin's project.tcl and block_design.tcl files
-# by Anton Potocnik, 08.01.2017
-# Tested with Vivado 2016.4
-# ==================================================================================================
-
 # Create cores
 source make_cores.tcl
 

@@ -288,8 +288,8 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
-for (genvar i=6; i<8; i++) begin: for_sys
-  sys_bus_stub sys_bus_stub_5_7 (sys[i]);
+for (genvar i=7; i<8; i++) begin: for_sys
+    sys_bus_stub sys_bus_stub_5_7 (sys[i]);
 end: for_sys
 endgenerate
 
@@ -434,8 +434,28 @@ assign gpio.i[23:16] = exp_n_in;
 ////////////////////////////////////////////////////////////////////////////////
 
 logic trig_asg_out;
+logic  [14-1: 0] adc_i;
+logic  [14-1: 0] adc_o;
 
-red_pitaya_scope i_scope (
+// Simple Moving Average
+red_pitaya_proc i_proc (
+    .clk_i    (  adc_clk     ),  // clock
+    .rstn_i   (  adc_rstn    ),  // reset - active low
+    .addr_i   (  sys[6].addr ),  // address
+    .wdata_i  (  sys[6].wdata),  // write data
+    .wen_i    (  sys[6].wen  ),  // write enable
+    .ren_i    (  sys[6].ren  ),  // read enable
+    .rdata_o  (  sys[6].rdata),  // read data
+    .err_o    (  sys[6].err  ),  // error indicator
+    .ack_o    (  sys[6].ack  ),  // acknowledge signal
+    .adc_i    (  adc_i       ),
+    .adc_o    (  adc_o       )
+);
+
+loop_scope i_scope (
+  // Simple Moving Average
+  .adc_in        (adc_o       ),
+  .adc_out       (adc_i       ),
   // ADC
   .adc_a_i       (adc_dat[0]  ),  // CH 1
   .adc_b_i       (adc_dat[1]  ),  // CH 2
