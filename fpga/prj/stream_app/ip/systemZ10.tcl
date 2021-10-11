@@ -267,9 +267,9 @@ proc create_root_design { parentCell } {
    CONFIG.CLKOUT1_JITTER {119.348} \
    CONFIG.CLKOUT1_PHASE_ERROR {96.948} \
    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {125.000} \
-   CONFIG.CLKOUT2_JITTER {104.759} \
+   CONFIG.CLKOUT2_JITTER {109.241} \
    CONFIG.CLKOUT2_PHASE_ERROR {96.948} \
-   CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {250.000} \
+   CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {200.000} \
    CONFIG.CLKOUT2_USED {true} \
    CONFIG.CLKOUT3_JITTER {104.759} \
    CONFIG.CLKOUT3_PHASE_ERROR {96.948} \
@@ -281,13 +281,13 @@ proc create_root_design { parentCell } {
    CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {62.5} \
    CONFIG.CLKOUT4_USED {true} \
    CONFIG.CLK_OUT1_PORT {clk_125} \
-   CONFIG.CLK_OUT2_PORT {clk_250} \
+   CONFIG.CLK_OUT2_PORT {clk_200} \
    CONFIG.CLK_OUT3_PORT {clk_250_90} \
    CONFIG.CLK_OUT4_PORT {clk_62_5} \
    CONFIG.MMCM_CLKFBOUT_MULT_F {8.000} \
    CONFIG.MMCM_CLKIN1_PERIOD {8.000} \
    CONFIG.MMCM_CLKOUT0_DIVIDE_F {8.000} \
-   CONFIG.MMCM_CLKOUT1_DIVIDE {4} \
+   CONFIG.MMCM_CLKOUT1_DIVIDE {5} \
    CONFIG.MMCM_CLKOUT2_DIVIDE {4} \
    CONFIG.MMCM_CLKOUT2_PHASE {90.000} \
    CONFIG.MMCM_CLKOUT3_DIVIDE {16} \
@@ -955,7 +955,7 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_S_AXI_HP0_ID_WIDTH {6} \
    CONFIG.PCW_S_AXI_HP1_DATA_WIDTH {32} \
    CONFIG.PCW_S_AXI_HP1_ID_WIDTH {6} \
-   CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {64} \
+   CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {32} \
    CONFIG.PCW_S_AXI_HP2_ID_WIDTH {6} \
    CONFIG.PCW_S_AXI_HP3_DATA_WIDTH {64} \
    CONFIG.PCW_S_AXI_HP3_ID_WIDTH {6} \
@@ -1129,7 +1129,7 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_USE_S_AXI_HP0 {1} \
    CONFIG.PCW_USE_S_AXI_HP1 {1} \
    CONFIG.PCW_USE_S_AXI_HP2 {1} \
-   CONFIG.PCW_USE_S_AXI_HP3 {0} \
+   CONFIG.PCW_USE_S_AXI_HP3 {1} \
    CONFIG.PCW_USE_TRACE {0} \
    CONFIG.PCW_USE_TRACE_DATA_EDGE_DETECTOR {0} \
    CONFIG.PCW_VALUE_SILVERSION {3} \
@@ -1173,7 +1173,8 @@ proc create_root_design { parentCell } {
  ] $rp_oscilloscope
 
   # Create instance: rst_gen, and set properties
-  set rst_gen [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_gen ]
+  set rst_gen  [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_gen  ]
+  set rst_gen2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_gen2 ]
 
   # Create instance: xadc, and set properties
   set xadc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.3 xadc ]
@@ -1192,9 +1193,13 @@ proc create_root_design { parentCell } {
  ] $xadc
 
   # Create interface connections
+  connect_bd_net -net clk_wiz_0_dac_axi_clk [get_bd_pins clk_gen/clk_200] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK] [get_bd_pins axi_interconnect_1/ACLK] [get_bd_pins axi_interconnect_1/M00_ACLK] [get_bd_pins axi_interconnect_1/S00_ACLK] [get_bd_pins axi_interconnect_1/S01_ACLK]  [get_bd_pins rp_dac/m_axi_dac1_aclk] [get_bd_pins rp_dac/m_axi_dac2_aclk] [get_bd_pins processing_system7_0/S_AXI_HP2_ACLK] 
+  #set_property -dict [list CONFIG.FREQ_HZ {200000000}] [get_bd_intf_pins rp_dac/m_axi_dac1]
+  #set_property -dict [list CONFIG.FREQ_HZ {200000000}] [get_bd_intf_pins rp_dac/m_axi_dac2]
+
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins axi_interconnect_0/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
-  connect_bd_intf_net -intf_net axi_interconnect_1_M00_AXI [get_bd_intf_pins axi_interconnect_1/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP1]
-  connect_bd_intf_net -intf_net axi_interconnect_2_M00_AXI [get_bd_intf_pins axi_interconnect_2/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP2]
+  #connect_bd_intf_net -intf_net axi_interconnect_1_M00_AXI [get_bd_intf_pins axi_interconnect_1/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP1]
+  connect_bd_intf_net -intf_net axi_interconnect_2_M00_AXI [get_bd_intf_pins axi_interconnect_2/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP3]
 
   connect_bd_intf_net -intf_net axi_reg_M00_AXI [get_bd_intf_pins axi_reg/M00_AXI] [get_bd_intf_pins rp_oscilloscope/s_axi_reg]
   connect_bd_intf_net -intf_net axi_reg_M01_AXI [get_bd_intf_pins axi_reg/M01_AXI] [get_bd_intf_pins rp_dac/s_axi_reg]
@@ -1202,12 +1207,27 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7_0/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7_0/FIXED_IO]
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins axi_reg/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP0]
-  connect_bd_intf_net -intf_net rp_dac_m_axi_dac1 [get_bd_intf_pins axi_interconnect_1/S00_AXI] [get_bd_intf_pins rp_dac/m_axi_dac1]
-  connect_bd_intf_net -intf_net rp_dac_m_axi_dac2 [get_bd_intf_pins axi_interconnect_1/S01_AXI] [get_bd_intf_pins rp_dac/m_axi_dac2]
+  #connect_bd_intf_net -intf_net rp_dac_m_axi_dac1 [get_bd_intf_pins axi_interconnect_1/S00_AXI] [get_bd_intf_pins rp_dac/m_axi_dac1]
+  #connect_bd_intf_net -intf_net rp_dac_m_axi_dac2 [get_bd_intf_pins axi_interconnect_1/S01_AXI] [get_bd_intf_pins rp_dac/m_axi_dac2]
+
+  connect_bd_intf_net -intf_net rp_dac_m_axi_dac1 [get_bd_intf_pins processing_system7_0/S_AXI_HP1] [get_bd_intf_pins rp_dac/m_axi_dac1]
+  connect_bd_intf_net -intf_net rp_dac_m_axi_dac2 [get_bd_intf_pins processing_system7_0/S_AXI_HP2] [get_bd_intf_pins rp_dac/m_axi_dac2]
+
   connect_bd_intf_net -intf_net p_gpio_axi_gpio_in [get_bd_intf_pins axi_interconnect_2/S00_AXI] [get_bd_intf_pins rp_gpio/axi_gpio_in]
   connect_bd_intf_net -intf_net p_gpio_axi_gpio_out [get_bd_intf_pins axi_interconnect_2/S01_AXI] [get_bd_intf_pins rp_gpio/axi_gpio_out]
   connect_bd_intf_net -intf_net rp_oscilloscope_m_axi_osc1 [get_bd_intf_pins axi_interconnect_0/S00_AXI] [get_bd_intf_pins rp_oscilloscope/m_axi_osc1]
   connect_bd_intf_net -intf_net rp_oscilloscope_m_axi_osc2 [get_bd_intf_pins axi_interconnect_0/S01_AXI] [get_bd_intf_pins rp_oscilloscope/m_axi_osc2]
+
+connect_bd_net [get_bd_pins rst_gen2/ext_reset_in] [get_bd_pins processing_system7_0/FCLK_RESET0_N]
+connect_bd_net [get_bd_pins rst_gen2/slowest_sync_clk] [get_bd_pins clk_gen/clk_200]
+delete_bd_objs [get_bd_nets rst_ps7_0_50M_peripheral_aresetn]
+delete_bd_objs [get_bd_nets rst_ps7_0_50M_interconnect_aresetn]
+connect_bd_net [get_bd_pins rst_gen2/interconnect_aresetn] [get_bd_pins axi_interconnect_1/ARESETN]
+connect_bd_net [get_bd_pins rst_gen2/peripheral_aresetn] [get_bd_pins axi_interconnect_1/S00_ARESETN]
+connect_bd_net [get_bd_pins axi_interconnect_1/M00_ARESETN] [get_bd_pins rst_gen2/peripheral_aresetn]
+connect_bd_net [get_bd_pins axi_interconnect_1/S01_ARESETN] [get_bd_pins rst_gen2/peripheral_aresetn]
+connect_bd_net [get_bd_pins rp_dac/m_axi_dac1_aresetn] [get_bd_pins rst_gen2/peripheral_aresetn]
+connect_bd_net [get_bd_pins rp_dac/m_axi_dac2_aresetn] [get_bd_pins rst_gen2/peripheral_aresetn]
 
   # Create port connections
   connect_bd_net -net In10_0_1 [get_bd_ports In10_0] [get_bd_pins intr_concat/In10]
@@ -1227,7 +1247,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net adc_data_ch1_0_1 [get_bd_ports adc_data_ch1] [get_bd_pins rp_oscilloscope/adc_data_ch1]
   connect_bd_net -net adc_data_ch2_0_1 [get_bd_ports adc_data_ch2] [get_bd_pins rp_oscilloscope/adc_data_ch2]
   connect_bd_net -net clk_gen_clk_62_5 [get_bd_pins axi_reg/ACLK] [get_bd_pins axi_reg/S00_ACLK] [get_bd_pins clk_gen/clk_62_5] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins rst_gen/slowest_sync_clk]
-  connect_bd_net -net clk_wiz_0_adc_clk [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_1/ACLK] [get_bd_pins axi_interconnect_1/M00_ACLK] [get_bd_pins axi_interconnect_1/S00_ACLK] [get_bd_pins axi_interconnect_1/S01_ACLK] [get_bd_pins axi_interconnect_2/ACLK] [get_bd_pins axi_interconnect_2/M00_ACLK] [get_bd_pins axi_interconnect_2/S00_ACLK] [get_bd_pins axi_interconnect_2/S01_ACLK] [get_bd_pins axi_reg/M00_ACLK] [get_bd_pins axi_reg/M01_ACLK] [get_bd_pins axi_reg/M02_ACLK] [get_bd_pins clk_gen/clk_125] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP2_ACLK] [get_bd_pins rp_dac/clk] [get_bd_pins rp_dac/m_axi_dac1_aclk] [get_bd_pins rp_dac/m_axi_dac2_aclk] [get_bd_pins rp_dac/s_axi_reg_aclk] [get_bd_pins rp_gpio/clk] [get_bd_pins rp_gpio/m_axi_gpio_in_aclk] [get_bd_pins rp_gpio/m_axi_gpio_out_aclk] [get_bd_pins rp_gpio/s_axi_reg_aclk] [get_bd_pins rp_oscilloscope/clk] [get_bd_pins rp_oscilloscope/m_axi_osc1_aclk] [get_bd_pins rp_oscilloscope/m_axi_osc2_aclk] [get_bd_pins rp_oscilloscope/s_axi_reg_aclk] [get_bd_pins xadc/s_axi_aclk]
+  connect_bd_net -net clk_wiz_0_adc_clk [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_2/ACLK] [get_bd_pins axi_interconnect_2/M00_ACLK] [get_bd_pins axi_interconnect_2/S00_ACLK] [get_bd_pins axi_interconnect_2/S01_ACLK] [get_bd_pins axi_reg/M00_ACLK] [get_bd_pins axi_reg/M01_ACLK] [get_bd_pins axi_reg/M02_ACLK] [get_bd_pins clk_gen/clk_125] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP3_ACLK]  [get_bd_pins rp_dac/clk] [get_bd_pins rp_dac/s_axi_reg_aclk] [get_bd_pins rp_gpio/clk] [get_bd_pins rp_gpio/m_axi_gpio_in_aclk] [get_bd_pins rp_gpio/m_axi_gpio_out_aclk] [get_bd_pins rp_gpio/s_axi_reg_aclk] [get_bd_pins rp_oscilloscope/clk] [get_bd_pins rp_oscilloscope/m_axi_osc1_aclk] [get_bd_pins rp_oscilloscope/m_axi_osc2_aclk] [get_bd_pins rp_oscilloscope/s_axi_reg_aclk] [get_bd_pins xadc/s_axi_aclk]
   connect_bd_net [get_bd_ports clk_out] [get_bd_pins clk_gen/clk_125]
   connect_bd_net -net dac_data_ch1_0_1 [get_bd_ports dac_dat_a] [get_bd_pins rp_dac/dac_data_cha_o]
   connect_bd_net -net dac_data_ch2_0_1 [get_bd_ports dac_dat_b] [get_bd_pins rp_dac/dac_data_chb_o]
@@ -1249,8 +1269,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net rp_oscilloscope_0_osc2_event_op [get_bd_pins rp_concat/osc2_event_ip] [get_bd_pins rp_oscilloscope/osc2_event_op]
   connect_bd_net -net rp_oscilloscope_0_osc2_trig_op [get_bd_pins rp_concat/osc2_trig_ip] [get_bd_pins rp_oscilloscope/osc2_trig_op]
   connect_bd_net -net rp_oscilloscope_trig_out [get_bd_ports trig_out] [get_bd_pins rp_oscilloscope/trig_out]
-  connect_bd_net -net rst_ps7_0_50M_peripheral_aresetn [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins axi_interconnect_1/M00_ARESETN] [get_bd_pins axi_interconnect_1/S00_ARESETN] [get_bd_pins axi_interconnect_1/S01_ARESETN] [get_bd_pins axi_interconnect_2/S00_ARESETN] [get_bd_pins axi_interconnect_2/S01_ARESETN] [get_bd_pins axi_interconnect_2/M00_ARESETN] [get_bd_pins axi_interconnect_2/ARESETN] [get_bd_pins axi_interconnect_1/S00_ARESETN] [get_bd_pins axi_reg/M00_ARESETN] [get_bd_pins axi_reg/M01_ARESETN] [get_bd_pins axi_reg/M02_ARESETN] [get_bd_pins axi_reg/S00_ARESETN] [get_bd_pins rp_dac/m_axi_dac1_aresetn] [get_bd_pins rp_dac/m_axi_dac2_aresetn] [get_bd_pins rp_dac/rst_n] [get_bd_pins rp_dac/s_axi_reg_aresetn] [get_bd_pins rp_gpio/m_axi_gpio_in_aresetn] [get_bd_pins rp_gpio/m_axi_gpio_out_aresetn] [get_bd_pins rp_gpio/rst_n] [get_bd_pins rp_gpio/s_axi_reg_aresetn] [get_bd_pins rp_oscilloscope/m_axi_osc1_aresetn] [get_bd_pins rp_oscilloscope/m_axi_osc2_aresetn] [get_bd_pins rp_oscilloscope/rst_n] [get_bd_pins rp_oscilloscope/s_axi_reg_aresetn] [get_bd_pins rst_gen/peripheral_aresetn]
-  connect_bd_net -net rst_ps7_0_50M_interconnect_aresetn [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_1/ARESETN] [get_bd_pins axi_reg/ARESETN] [get_bd_pins rst_gen/interconnect_aresetn]
+  connect_bd_net -net rst_ps7_0_50M_peripheral_aresetn [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins axi_interconnect_2/S00_ARESETN] [get_bd_pins axi_interconnect_2/S01_ARESETN] [get_bd_pins axi_interconnect_2/M00_ARESETN] [get_bd_pins axi_interconnect_2/ARESETN] [get_bd_pins axi_reg/M00_ARESETN] [get_bd_pins axi_reg/M01_ARESETN] [get_bd_pins axi_reg/M02_ARESETN] [get_bd_pins axi_reg/S00_ARESETN] [get_bd_pins rp_dac/rst_n] [get_bd_pins rp_dac/s_axi_reg_aresetn] [get_bd_pins rp_gpio/m_axi_gpio_in_aresetn] [get_bd_pins rp_gpio/m_axi_gpio_out_aresetn] [get_bd_pins rp_gpio/rst_n] [get_bd_pins rp_gpio/s_axi_reg_aresetn] [get_bd_pins rp_oscilloscope/m_axi_osc1_aresetn] [get_bd_pins rp_oscilloscope/m_axi_osc2_aresetn] [get_bd_pins rp_oscilloscope/rst_n] [get_bd_pins rp_oscilloscope/s_axi_reg_aresetn] [get_bd_pins rst_gen/peripheral_aresetn]
+  connect_bd_net -net rst_ps7_0_50M_interconnect_aresetn [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_reg/ARESETN] [get_bd_pins rst_gen/interconnect_aresetn]
   connect_bd_net -net xadc_ip2intc_irpt [get_bd_pins intr_concat/In0] [get_bd_pins xadc/ip2intc_irpt]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins intr_concat/dout] [get_bd_pins processing_system7_0/IRQ_F2P]
   connect_bd_net -net rp_gpio_trig_op [get_bd_pins rp_concat/la_trig_ip] [get_bd_pins rp_gpio/la_trig_op]
@@ -1266,11 +1286,16 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc1] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc2] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac1] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
-  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac2] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
-  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_in       ] [get_bd_addr_segs processing_system7_0/S_AXI_HP2/HP2_DDR_LOWOCM] -force
-  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_out      ] [get_bd_addr_segs processing_system7_0/S_AXI_HP2/HP2_DDR_LOWOCM] -force
+  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac2] [get_bd_addr_segs processing_system7_0/S_AXI_HP2/HP2_DDR_LOWOCM] -force
+  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_in       ] [get_bd_addr_segs processing_system7_0/S_AXI_HP3/HP3_DDR_LOWOCM] -force
+  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_out      ] [get_bd_addr_segs processing_system7_0/S_AXI_HP3/HP3_DDR_LOWOCM] -force
 
-
+  #assign_bd_address -offset 0x01000000 -range 0x10000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc1] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
+  #assign_bd_address -offset 0x01010000 -range 0x10000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_osc2] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
+  #assign_bd_address -offset 0x01080000 -range 0x10000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac1] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
+  #assign_bd_address -offset 0x01090000 -range 0x10000 -target_address_space [get_bd_addr_spaces rp_oscilloscope/m_axi_dac2] [get_bd_addr_segs processing_system7_0/S_AXI_HP2/HP2_DDR_LOWOCM] -force
+  #assign_bd_address -offset 0x010E0000 -range 0x10000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_in       ] [get_bd_addr_segs processing_system7_0/S_AXI_HP3/HP3_DDR_LOWOCM] -force
+  #assign_bd_address -offset 0x010F0000 -range 0x10000 -target_address_space [get_bd_addr_spaces rp_gpio/axi_gpio_out      ] [get_bd_addr_segs processing_system7_0/S_AXI_HP3/HP3_DDR_LOWOCM] -force
   # Restore current instance
   current_bd_instance $oldCurInst
 

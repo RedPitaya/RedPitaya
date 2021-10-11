@@ -58,13 +58,15 @@ module dac_calib #(
 reg   [  AXIS_DATA_BITS*2-1: 0] dac_mult  ;
 reg   [  AXIS_DATA_BITS+1-1: 0] dac_sum   ;
 
-
+reg   [  AXIS_DATA_BITS*2-1: 0] dac_mult_r  ;
+reg   [  AXIS_DATA_BITS+1-1: 0] dac_sum_r   ;
 // scale and offset
 always @(posedge dac_clk_i)
 begin
-   dac_mult <= $signed(dac_rdata_i)       * $signed({1'b0,set_amp_i}) ;
-   dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
-
+   dac_mult_r <= $signed(dac_rdata_i)       * $signed({1'b0,set_amp_i}) ;
+   dac_mult   <= dac_mult_r;
+   dac_sum_r  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
+   dac_sum    <= dac_sum_r;
    // saturation
    if (set_zero_i)  
       dac_o <= 14'h0;

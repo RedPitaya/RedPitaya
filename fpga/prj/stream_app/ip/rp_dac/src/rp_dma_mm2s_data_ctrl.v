@@ -4,12 +4,12 @@ module rp_dma_mm2s_data_ctrl(
   input  wire       m_axi_aclk,
   input  wire       m_axi_aresetn,
   input  wire       fifo_rst,
+  input  wire       fifo_full,
   //
   output reg        busy,
   //
-  input  wire [7:0] req_data,
+  input  wire [8:0] req_data,
   input  wire       req_we,
-  //output reg  [7:0] req_xfer_cnt,
   //  
   input  wire       m_axi_rvalid,    
   output reg        m_axi_rready,    
@@ -20,40 +20,27 @@ module rp_dma_mm2s_data_ctrl(
 // Parameters
 //////////////////////////////////////////////////////////// 
 
-localparam IDLE           = 1'd0;
-localparam SEND_AXI_DATA  = 1'd1;
+localparam IDLE           = 2'd0;
+localparam SEND_AXI_DATA  = 2'd1;
+localparam WAIT_FULL      = 2'd2;
 
 ////////////////////////////////////////////////////////////
 // Signals
 //////////////////////////////////////////////////////////// 
 
-reg  [0:0]    state_cs;                // Current state
-reg  [0:0]    state_ns;                // Next state  
+reg  [1:0]    state_cs;                // Current state
+reg  [1:0]    state_ns;                // Next state  
 reg  [199:0]  state_ascii;             // ASCII state
 wire [7:0]    fifo_wr_data; 
 wire          fifo_wr_we;
-wire [7:0]    fifo_rd_data;
+wire [8:0]    fifo_rd_data;
 reg           fifo_rd_re;
 wire          fifo_empty;
-
-reg  [7:0]    req_xfer_cnt;
-
-/*
-fifo_axi_req U_fifo_axi_req(
-  .wr_clk (m_axi_aclk),
-  .rd_clk (m_axi_aclk),      
-  .rst    (fifo_rst),      
-  .din    (fifo_wr_data),     
-  .wr_en  (fifo_wr_we),  
-  .full   (),  
-  .dout   (fifo_rd_data),   
-  .rd_en  (fifo_rd_re), 
-  .empty  (fifo_empty));
-*/
+reg req_st;
+reg  [8:0]    req_xfer_cnt;
 
 assign fifo_empty = 1'b0;
 assign fifo_rd_data = req_data;
-//assign fifo_wr_we   = req_we;
 
 ////////////////////////////////////////////////////////////
 // Name : State machine seq logic
@@ -63,7 +50,7 @@ assign fifo_rd_data = req_data;
 always @(posedge m_axi_aclk)
 begin
   if (m_axi_aresetn == 0) begin
-    state_cs <= IDLE;
+    state_cs <= IDLE;    
   end else begin
     state_cs <= state_ns;
   end
@@ -79,6 +66,7 @@ begin
   case (state_cs)
     IDLE:           state_ascii = "IDLE";
     SEND_AXI_DATA:  state_ascii = "SEND_AXI_DATA";
+    WAIT_FULL:      state_ascii = "WAIT_FULL";
   endcase
 end
 
@@ -94,131 +82,46 @@ begin
   case (state_cs)
     // IDLE - Wait for a request in the FIFO
     IDLE: begin
-      //if (fifo_empty == 0) begin
-      if (req_we == 1) begin
+      if (req_we == 1 || req_st) begin
         state_ns = SEND_AXI_DATA;
       end
     end
-    
+
+    // Just wait the buffer is not full
+    WAIT_FULL: begin
+      if (~fifo_full) begin
+        if (req_st)
+          state_ns = SEND_AXI_DATA;        
+        else
+          state_ns = IDLE;
+      end      
+    end
+
     // SEND_AXI_DATA - Transfer the AXI data 
     SEND_AXI_DATA: begin
       if ((m_axi_rvalid == 1) && (m_axi_rready == 1) && (m_axi_rlast == 1)) begin
-        state_ns = IDLE;
+        if (fifo_full)
+          state_ns = WAIT_FULL;
+        else
+          state_ns = IDLE;
       end      
     end
   endcase
 end
 
-////////////////////////////////////////////////////////////
-// Name : Busy
-// Indicates that there are requests in the queue of data 
-// is being sent
-////////////////////////////////////////////////////////////
-
 always @(posedge m_axi_aclk)
 begin
-  /*if (m_axi_aresetn == 0) begin
-    busy <= 0;
-  end else begin
-    if (req_we == 1) begin
-      busy <= 1;  
-    end else begin
-      if ((fifo_empty == 1) && 
-          ((m_axi_rvalid == 1) && (m_axi_rready == 1) && (m_axi_rlast == 1))) begin
-        busy <= 0;
-      end
-    end
-  end*/
-  busy <= 1'b0;
-end
-
-////////////////////////////////////////////////////////////
-// Name : Master AXI WVALID
-// 
-////////////////////////////////////////////////////////////
-/*
-always @(posedge m_axi_aclk)
-begin
-  if (m_axi_aresetn == 0) begin
-    m_axi_rvalid <= 0;
-  end else begin
-    case (state_cs) 
-      // IDLE - Wait for a request in the FIFO
-      IDLE: begin
-        if (fifo_empty == 0) begin
-          m_axi_rvalid <= 1;
-        end else begin
-          m_axi_rvalid <= 0;
-        end
-      end  
-      
-      // SEND_AXI_DATA - Transfer the AXI data 
-      SEND_AXI_DATA: begin
-        if ((m_axi_rvalid == 1) && (m_axi_rready == 1) && (m_axi_rlast == 1)) begin
-          m_axi_rvalid <= 0;
-        end      
-      end      
-    endcase   
-  end
-end
-*/
-////////////////////////////////////////////////////////////
-// Name : Master AXI WLAST
-// 
-////////////////////////////////////////////////////////////
-/*
-always @(posedge m_axi_aclk)
-begin
-  if (m_axi_aresetn == 0) begin
-    m_axi_rlast <= 0;
-  end else begin
-    case (state_cs) 
-      // IDLE - Wait for a request in the FIFO
-      IDLE: begin
-        if (fifo_empty == 0) begin
-          if (fifo_rd_data == 1) begin
-            m_axi_rlast <= 1;
-          end else begin
-            m_axi_rlast <= 0;
-          end
-        end 
-      end  
-      
-      // SEND_AXI_DATA - Transfer the AXI data 
-      SEND_AXI_DATA: begin
-        if ((m_axi_rvalid == 1) && (m_axi_rready == 1)) begin
-          if (m_axi_rlast == 1) begin
-            m_axi_rlast <= 0;        
-          end else begin
-            if (req_xfer_cnt == 2) begin
-              m_axi_rlast <= 1;  
-            end        
-          end
-        end      
-      end      
-    endcase   
-  end
-end
-*/
-////////////////////////////////////////////////////////////
-// Name : FIFO Read Enable
-// Reads requests from the FIFO when available. 
-////////////////////////////////////////////////////////////
-/*
-always @(*)
-begin
-  fifo_rd_re = 0;
-        
   case (state_cs) 
-    // IDLE - Wait for a request in the FIFO
-    IDLE: begin
-      if (fifo_empty == 0) begin
-        fifo_rd_re = 1;
-      end 
+    WAIT_FULL: begin
+      if (req_we)
+        req_st <= 'b1;
+    end     
+
+    default: begin
+      req_st <= 'b0;
     end  
   endcase   
 end
-*/
 ////////////////////////////////////////////////////////////
 // Name : Transfer Count
 // Counts the AXI transfers in the request.
@@ -252,17 +155,25 @@ end
 
 always @(posedge m_axi_aclk)
 begin
-  case (state_cs) 
-    // IDLE - Wait for a request in the FIFO
-    IDLE: begin
+  if (m_axi_aresetn == 0)
       m_axi_rready <= 1'b0;
-    end  
-    
-    // SEND_AXI_DATA - Transfer the AXI data 
-    SEND_AXI_DATA: begin
-      m_axi_rready <= |req_xfer_cnt;    
-    end      
-  endcase   
+  else begin
+    case (state_cs) 
+      // IDLE - Wait for a request in the FIFO
+      IDLE: begin
+        m_axi_rready <= 1'b0;
+      end  
+
+      WAIT_FULL: begin
+        m_axi_rready <= 1'b0;
+      end  
+
+      // SEND_AXI_DATA - Transfer the AXI data 
+      SEND_AXI_DATA: begin
+        m_axi_rready <= |req_xfer_cnt;    
+      end      
+    endcase   
+  end
 end
       
 

@@ -13,6 +13,8 @@ module dac_top
 )( // which channel
   input wire                              clk,
   input wire                              rst_n,
+  input wire                              axi_clk,
+  input wire                              axi_rstn,
   //
   input  wire [EVENT_SRC_NUM-1:0]         event_ip_trig,
   input  wire [EVENT_SRC_NUM-1:0]         event_ip_stop,
@@ -36,11 +38,6 @@ module dac_top
   input  wire                           sts_val, 
 
   input  [16-1:0]                       dac_conf,
-  //input [16-1:0]                          dac_num_cyc,
-  //input [16-1:0]                          dac_num_reps,
-  //input [16-1:0]                          dac_burst_dly,
-  //input [M_AXI_DAC_ADDR_BITS-1:0]         dac_wrap,
-  //input [M_AXI_DAC_ADDR_BITS-1:0]         dac_start_offs,
 
   input [DAC_DATA_BITS-1:0]               dac_scale,
   input [DAC_DATA_BITS-1:0]               dac_offs,
@@ -58,6 +55,7 @@ module dac_top
 
   output [DAC_DATA_BITS-1:0]              dac_data_o,
   output [32-1:0]                         diag_reg,
+  output [32-1:0]                         diag_reg2,
 
   //
   output wire [3:0]                       m_axi_dac_arid_o     , // read address ID
@@ -119,7 +117,7 @@ rp_dma_mm2s #(
   .AXIS_DATA_BITS (DAC_DATA_BITS),
   .AXI_BURST_LEN  (16))
   U_dma_mm2s(
-  .m_axi_aclk     (clk),        
+  .m_axi_aclk     (axi_clk),        
   .s_axis_aclk    (clk),      
   .aresetn        (rst_n),  
   .busy           (),
@@ -131,20 +129,12 @@ rp_dma_mm2s #(
   .reg_sts        (reg_sts),
   .sts_val        (sts_val),  
 
-  //.dac_conf         (dac_conf),
-  //.dac_wrap         (dac_wrap),
-  //.dac_start_offs   (dac_start_offs),
   .dac_step         (dac_step),
   .dac_rp           (dac_rp),
   .dac_buf_size     (dac_buf_size),
   .dac_buf1_adr     (dac_buf1_adr),
   .dac_buf2_adr     (dac_buf2_adr),
 
-  //.dac_scale        (dac_scale),
-  //.dac_offs         (dac_offs),
-  //.dac_num_cyc      (dac_num_cyc),
-  //.dac_num_reps     (dac_num_reps),
-  //.dac_burst_dly    (dac_burst_dly),
   .dac_trig         (ctl_trg),
   .dac_ctrl_reg     (dac_ctrl_reg),
   .dac_sts_reg      (dac_sts_reg),
@@ -152,7 +142,8 @@ rp_dma_mm2s #(
   .dac_rdata_o      (dac_data_raw),
   .dac_rvalid_o     (dac_rvalid),
   .diag_reg         (diag_reg),
-  
+  .diag_reg2        (diag_reg2),
+ 
   .m_axi_arid_o     (m_axi_dac_arid_o), 
   .m_axi_araddr_o   (m_axi_dac_araddr_o),  
   .m_axi_arlen_o    (m_axi_dac_arlen_o), 
@@ -231,22 +222,5 @@ begin
     end
   end
 end       
-
-////////////////////////////////////////////////////////////
-// Name : DMA Mode
-// 0 = Normal
-// 1 = Streaming
-////////////////////////////////////////////////////////////
-
-//always @(posedge clk)
-//begin
-//  if (rst_n == 0) begin
-//    dma_mode <= 0;
-//  end else begin
-//    if (cfg_dma_ctrl_reg[DMA_CTRL_STRT] == 1) begin
-//      dma_mode <= cfg_dma_ctrl_reg[DMA_CTRL_MODE];
-//    end
-//  end
-//end
 
 endmodule
