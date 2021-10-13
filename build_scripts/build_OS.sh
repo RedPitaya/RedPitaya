@@ -2,7 +2,7 @@
 
 PATH_XILINX_SDK=/opt/Xilinx/SDK/2019.1
 PATH_XILINX_VIVADO=/opt/Xilinx/Vivado/2020.1
-RP_UBUNTU=redpitaya_ubuntu_13-14-23_25-sep-2017.tar.gz
+RP_UBUNTU=redpitaya_ubuntu_04-oct-2021.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
 function print_ok(){
@@ -101,8 +101,8 @@ fi
 echo -n "Download redpitaya ubuntu OS. "
 cd $DL
 wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
-sudo chown root:root redpitaya_ubuntu_17-00-00_02-aug-2021.tar.gz
-sudo chmod 664 redpitaya_ubuntu_17-00-00_02-aug-2021.tar.gz
+sudo chown root:root redpitaya_ubuntu_04-oct-2021.tar.gz
+sudo chmod 664 redpitaya_ubuntu_04-oct-2021.tar.gz
 
 echo -n "Check redpitaya ubuntu OS. "
 if [[ -f "$RP_UBUNTU" ]]
