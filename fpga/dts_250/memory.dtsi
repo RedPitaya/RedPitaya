@@ -20,7 +20,7 @@
 		};
 
 		streaming_reserved: buffer@1000000 {
-			reg = <0x1000000 0x100000>;
+			reg = <0x1000000 0x180000>;
 		};
 
 	};

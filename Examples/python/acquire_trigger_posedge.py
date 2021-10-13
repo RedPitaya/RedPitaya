@@ -6,6 +6,10 @@ import matplotlib.pyplot as plot
 
 rp_s = scpi.scpi(sys.argv[1])
 
+rp_s.tx_txt('ACQ:DATA:FORMAT ASCII')
+rp_s.tx_txt('ACQ:DATA:UNITS VOLTS')
+rp_s.tx_txt('ACQ:DEC 8')
+
 rp_s.tx_txt('ACQ:START')
 rp_s.tx_txt('ACQ:TRIG NOW')
 

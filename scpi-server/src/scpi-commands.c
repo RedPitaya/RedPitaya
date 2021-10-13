@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <stdio.h>
 
 #include "api_cmd.h"
 #include "common.h"
@@ -37,7 +38,6 @@ bool RST_executed = FALSE;
 size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
 
     size_t total = 0;
-
     if (context->user_context != NULL) {
         int fd = *(int *)(context->user_context);
         while (len > 0) {
@@ -48,6 +48,7 @@ size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
                     len, written);
                 return total;
             }
+            
             len -= written;
             data += written;
             total += written;
@@ -181,10 +182,11 @@ static const scpi_command_t scpi_commands[] = {
 
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
-    {.pattern = "GEN:SYNC", .callback                   = RP_GenSync,},
+    {.pattern = "PHAS:ALIGN", .callback                 = RP_GenSync,},
     {.pattern = "OUTPUT:STATE", .callback               = RP_GenSyncState,},
     {.pattern = "OUTPUT#:STATE", .callback              = RP_GenState,},
     {.pattern = "OUTPUT#:STATE?", .callback             = RP_GenStateQ,},
+    {.pattern = "SOUR:TRIG:INT", .callback              = RP_GenTriggerBoth,},
     {.pattern = "SOUR#:FREQ:FIX", .callback             = RP_GenFrequency,},
     {.pattern = "SOUR#:FREQ:FIX?", .callback            = RP_GenFrequencyQ,},
     {.pattern = "SOUR#:FUNC", .callback                 = RP_GenWaveForm,},
@@ -209,8 +211,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:BURS:INT:PER?", .callback        = RP_GenBurstPeriodQ,},
     {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
-    {.pattern = "SOUR#:TRIG:IMM", .callback             = RP_GenTrigger,},
-    {.pattern = "SOUR:TRIG:IMM", .callback              = RP_GenTriggerBoth,},
+    {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
 
     SCPI_CMD_LIST_END
 };

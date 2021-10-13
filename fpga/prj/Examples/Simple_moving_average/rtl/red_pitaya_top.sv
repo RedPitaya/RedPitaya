@@ -288,8 +288,13 @@ sys_bus_interconnect #(
 
 // silence unused busses
 generate
+<<<<<<< HEAD
 for (genvar i=7; i<8; i++) begin: for_sys
     sys_bus_stub sys_bus_stub_5_7 (sys[i]);
+=======
+for (genvar i=6; i<8; i++) begin: for_sys
+  sys_bus_stub sys_bus_stub_5_7 (sys[i]);
+>>>>>>> dev-250-12
 end: for_sys
 endgenerate
 
@@ -434,6 +439,7 @@ assign gpio.i[23:16] = exp_n_in;
 ////////////////////////////////////////////////////////////////////////////////
 
 logic trig_asg_out;
+<<<<<<< HEAD
 logic  [14-1: 0] adc_i;
 logic  [14-1: 0] adc_o;
 
@@ -456,6 +462,10 @@ loop_scope i_scope (
   // Simple Moving Average
   .adc_in        (adc_o       ),
   .adc_out       (adc_i       ),
+=======
+
+red_pitaya_scope i_scope (
+>>>>>>> dev-250-12
   // ADC
   .adc_a_i       (adc_dat[0]  ),  // CH 1
   .adc_b_i       (adc_dat[1]  ),  // CH 2

@@ -14,6 +14,8 @@ SUBMODULE_UBT = "redpitaya-v2016.4"
 SUBMODULE_LIN = "branch-redpitaya-v2017.2"
 SUBMODULE_APP = ""
 
+STREAMING ?= MASTER
+
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
@@ -58,7 +60,7 @@ $(INSTALL_DIR):
 # X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
 ################################################################################
 
-UBOOT_TAG     = redpitaya-v2016.4
+UBOOT_TAG     = redpitaya-v2016.4.1
 LINUX_TAG     = branch-redpitaya-v2017.2
 DTREE_TAG     = xilinx-v2017.2
 
@@ -88,44 +90,54 @@ HWID ?=
 DEF_PARAM ?=
 
 ifeq ($(MODEL),Z10)
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 endif
+endif
 
 ifeq ($(MODEL),Z20)
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = v0.94 stream_app
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
 FPGA_MODEL ?= Z20
 DTS_PATH = dts
 endif
+endif
 
 ifeq ($(MODEL),Z20_125)
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_14
 DTS_PATH = dts
 endif
+endif
 
-ifeq ($(MODEL),Z20_250_12)
+ifeq ($(MODEL),Z20_250_12) 
+ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_250
 DTS_PATH = dts_250
 endif
+endif
 
-ifeq ($(MODEL),Z10_SLAVE)
+ifeq ($(MODEL),Z10)
+ifeq ($(STREAMING),SLAVE)
 FPGA_PRJ_LST = stream_app logic
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 DEF_PARAM = SLAVE
+endif
 endif
 
 .PHONY: fpga $(INSTALL_DIR)/fpga
@@ -145,7 +157,7 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
 	done
 
-ifneq ($(DEF_PARAM),SLAVE)
+ifneq ($(STREAMING),SLAVE)
 	# copy archived FPGA bitstream images and decompress them
 	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
 	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz

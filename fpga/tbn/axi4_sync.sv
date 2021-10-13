@@ -40,7 +40,7 @@ always @(posedge axi_i.ACLK) begin
     axi_o.ARVALID <= axi_i.ARVALID;
     axi_i.ARREADY <= axi_o.ARREADY;
     axi_o.RID <= axi_i.RID;
-    axi_o.RDATA <= axi_i.RDATA;
+    axi_i.RDATA <= axi_o.RDATA;
     axi_o.RRESP <= axi_i.RRESP;
     axi_o.RLAST <= axi_i.RLAST;
     axi_i.RVALID <= axi_o.RVALID;

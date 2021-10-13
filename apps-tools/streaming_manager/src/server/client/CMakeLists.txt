@@ -1,21 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.14)
 project(rpsa_client)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
-
-add_executable(rpsa_client client.cpp)
+add_executable(rpsa_client search.cpp remote.cpp streaming.cpp config.cpp options.cpp main.cpp)
 
 target_compile_options(rpsa_client
-    PRIVATE -std=c++11 -O3 -pedantic -static -static-libstdc++ -static-libgcc)
+    PRIVATE -std=c++11 $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -pedantic -static -static-libstdc++ -static-libgcc)
 
 
 target_compile_definitions(rpsa_client  PRIVATE ASIO_STANDALONE)
 
-target_include_directories(rpsa_client  PRIVATE  ${CMAKE_SOURCE_DIR}/../include  ${CMAKE_SOURCE_DIR}/../include/rpsa/common/core ${CMAKE_SOURCE_DIR}/../include/rpsa/server/core  ${CMAKE_SOURCE_DIR}/../libs/asio/include)
-
-add_library(rpsasrv STATIC IMPORTED)
-set_property(TARGET rpsasrv PROPERTY
-             IMPORTED_LOCATION ../bin/librpsasrv.a)
+target_include_directories(rpsa_client  PRIVATE   ${CMAKE_SOURCE_DIR}/../libs/src/common ${CMAKE_SOURCE_DIR}/../libs/src  ${CMAKE_SOURCE_DIR}/../libs/asio/include)
 
 target_link_libraries(rpsa_client PRIVATE rpsasrv)
 if(NOT WIN32 )
@@ -23,5 +17,3 @@ if(NOT WIN32 )
 else()
     target_link_libraries(rpsa_client PRIVATE pthread wsock32 ws2_32)
 endif()
-
-

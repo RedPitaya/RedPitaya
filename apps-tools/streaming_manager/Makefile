@@ -14,6 +14,7 @@ REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
 INSTALL_DIR ?= .
+STREAMING_MODE ?= MASTER
 
 CONTROLLER=controllerhf.so
 SERVICE=streaming-server
@@ -27,7 +28,7 @@ export CFLAGS
 all: $(CONTROLLER)
 
 $(CONTROLLER):
-	$(MAKE) -C src MODEL=$(MODEL)
+	$(MAKE) -C src MODEL=$(MODEL) STREAMING_MODE=$(STREAMING_MODE)
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
@@ -38,8 +39,10 @@ else
 	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app' >> fpga.sh
 endif
 	mkdir -p target/$(APP)
+	mkdir -p $(INSTALL_DIR)/bin
 	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html fpga.sh info js target/$(APP)
-	mv $(SERVICE) $(INSTALL_DIR)/bin
+	cp $(SERVICE) $(INSTALL_DIR)/bin/$(SERVICE)
+	cp $(SERVICE).run.sh $(INSTALL_DIR)/bin/$(SERVICE).run.sh
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *

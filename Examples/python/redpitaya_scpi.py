@@ -50,24 +50,24 @@ class scpi (object):
     def rx_arb(self):
         numOfBytes = 0
         """ Recieve binary data from scpi server"""
-        str=''
+        str=b''
         while (len(str) != 1):
             str = (self._socket.recv(1))
-        if not (str == '#'):
+        if not (str == b'#'):
             return False
-        str=''
+        str=b''
         while (len(str) != 1):
             str = (self._socket.recv(1))
         numOfNumBytes = int(str)
         if not (numOfNumBytes > 0):
             return False
-        str=''
+        str=b''
         while (len(str) != numOfNumBytes):
             str += (self._socket.recv(1))
         numOfBytes = int(str)
-        str=''
+        str=b''
         while (len(str) != numOfBytes):
-            str += (self._socket.recv(1))
+            str += (self._socket.recv(4096))
         return str
 
     def tx_txt(self, msg):

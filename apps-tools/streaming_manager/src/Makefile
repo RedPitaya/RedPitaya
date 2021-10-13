@@ -1,4 +1,6 @@
 MODEL ?= Z10
+STREAMING_MODE ?= MASTER
+MODE ?= Release
 
 CXX=$(CROSS_COMPILE)g++
 RM=rm
@@ -7,7 +9,9 @@ PROJECT_ROOT=../..
 
 CXXSOURCES=main.cpp
 
-CXXSOURCES_SERVICE=service.cpp
+CXXSOURCES_SERVICE = console_server/main.cpp \
+					 console_server/options.cpp \
+					 console_server/streaming.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -15,8 +19,8 @@ INCLUDE += -I$(INSTALL_DIR)/include/apiApp
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
 
-INCLUDE += -I./server/include/rpsa/server/core
-INCLUDE += -I./server/include/rpsa/common/core
+INCLUDE += -I./server/libs/src/
+INCLUDE += -I./server/libs/src/common
 INCLUDE += -I./server/common
 INCLUDE += -I./server/libs/asio/include
 
@@ -24,28 +28,36 @@ INCLUDE += -I./server/libs/asio/include
 LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 LIBS += -L./server/bin
+LIBS += -L./server/lib
+LIBS += -L./server/libs
 
-COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD -g
+
+COMMON_FLAGS+= -Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
-LDWFLAGS+= -lrpsasrv
+LDWFLAGS+= -ljsoncpp -lrpsasrv
 LDWFLAGS+= -lrp_sdk -lrp
 LDWFLAGS+= -Wl,--no-whole-archive
 LDWFLAGS+= -shared
 
-LDSFLAGS+= -Wl,--whole-archive
-LDSFLAGS+= -lrpsasrv
-LDSFLAGS+= -Wl,--no-whole-archive
+LDSFLAGS+= -lrpsasrv -ljsoncpp
 LDSFLAGS+= -lpthread
-LDSFLAGS+= -lrp
+LDSFLAGS+= -lrp -static-libstdc++ -static-libgcc
 
 ifeq ($(MODEL),Z20_250_12)
 INCLUDE += -I$(INSTALL_DIR)/include/api250-12
 LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
 endif
 
+ifeq ($(STREAMING_MODE),MASTER)
+CXXFLAGS+= -DSTREAMING_MASTER
+endif
+
+ifeq ($(STREAMING_MODE),SLAVE)
+CXXFLAGS+= -DSTREAMING_SLAVE
+endif
 
 COBJECTS=$(CSOURCES:.c=.o)
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
@@ -64,7 +76,7 @@ all: make_c_app service
 clean: clean_c_app
 
 build_lib:
-	./build.sh libs -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
+	./build.sh libs -DCMAKE_BUILD_TYPE=$(MODE) -DMODEL=$(MODEL)
 
 .PHONY: make_c_app
 make_c_app: build_lib  $(OBJECTS)

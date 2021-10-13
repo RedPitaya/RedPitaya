@@ -1,0 +1,5 @@
+Vivado Simulator 2020.2
+Copyright 1986-1999, 2001-2020 Xilinx, Inc. All Rights Reserved.
+Running: /mnt/ubuntusw/xilinx/Vivado/2020.2/bin/unwrapped/lnx64.o/xelab -wto 8425b4259e254a4c874600d534396b66 --incr --debug typical --relax --mt 8 -L xil_defaultlib -L fifo_generator_v13_2_5 -L axi_bram_ctrl_v4_1_4 -L uvm -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_rp_osc_behav xil_defaultlib.tb_rp_osc xil_defaultlib.glbl -log elaborate.log 
+Using 8 slave threads.
+ERROR: [XSIM 43-3225] Cannot find design unit xil_defaultlib.tb_rp_osc in library work located at xsim.dir/work.

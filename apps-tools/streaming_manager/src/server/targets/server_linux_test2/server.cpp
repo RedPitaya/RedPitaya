@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <iostream>
 
-#include "rpsa/server/core/UioParser.h"
-#include "rpsa/server/core/Oscilloscope.h"
-#include "rpsa/server/core/StreamingApplication.h"
-#include "rpsa/server/core/StreamingManager.h"
+#include "UioParser.h"
+#include "Oscilloscope.h"
+#include "StreamingApplication.h"
+#include "StreamingManager.h"
 
 
 // void sigHandler (int sigNum){
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         if (uio.nodeName == "rp_oscilloscope")
         {
             // TODO start server;
-            osc0 = COscilloscope::Create(uio, true , true , Decimation);
+            osc0 = COscilloscope::Create(uio, true , true , Decimation,true);
             osc0->setCalibration(0,1,0,1);
             osc0->setFilterBypass(true);
  //           osc1 = COscilloscope::Create(uio, 1 , 1);
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     // Run application
     CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
 
-    app.run();
+    app.run("");
 
     return 0;
 }

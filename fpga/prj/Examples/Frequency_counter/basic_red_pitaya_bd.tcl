@@ -1,5 +1,21 @@
+<<<<<<< HEAD
 set project_name freq
 
+=======
+
+# ==================================================================================================
+# block_design.tcl - Create Vivado Project - basic red pitaya block design
+#
+# This script should be run from the base redpitaya-guides/ folder inside Vivado tcl console.
+#
+# This script is modification of Pavel Demin's project.tcl and block_design.tcl files
+# by Anton Potocnik, 29.11.2016
+# Tested with Vivado 2016.3
+# ==================================================================================================
+
+
+#set project_name 4_averager
+>>>>>>> dev-250-12
 set part_name xc7z010clg400-1
 set bd_path tmp/$project_name/$project_name.srcs/sources_1/bd/system
 

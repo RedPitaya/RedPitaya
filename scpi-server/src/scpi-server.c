@@ -132,7 +132,15 @@ static int handleConnection(int connfd) {
     prctl( 1, SIGTERM );
 
     RP_LOG(LOG_INFO, "Waiting for first client request.");
+    int buf = 1024 * 16;
+    if (setsockopt(connfd, SOL_SOCKET, SO_RCVBUF, &buf, sizeof(int)) == -1) {
+        RP_LOG(LOG_ERR, "Error setting socket opts: %s\n", strerror(errno));
+    }
 
+    buf = 1024 * 16;
+    if (setsockopt(connfd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(int)) == -1) {
+        RP_LOG(LOG_ERR, "Error setting socket opts: %s\n", strerror(errno));
+    }
     //Receive a message from client
     while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
     {
@@ -251,6 +259,15 @@ int main(int argc, char *argv[])
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_addr.sin_port = htons(LISTEN_PORT);
+    int buf = 1024 * 16;
+    if (setsockopt(listenfd, SOL_SOCKET, SO_RCVBUF, &buf, sizeof(int)) == -1) {
+        RP_LOG(LOG_ERR, "Error setting socket opts: %s\n", strerror(errno));
+    }
+
+    buf = 1024 * 16;
+    if (setsockopt(listenfd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(int)) == -1) {
+        RP_LOG(LOG_ERR, "Error setting socket opts: %s\n", strerror(errno));
+    }
 
     if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
     {

@@ -5,7 +5,11 @@ if [[ $1 == 'libs' ]]; then
     cd server
     unzip -o ./libs/asio.zip -d ./libs
     cmake CMakeLists.txt $2 $3
-    make
+    CORES=$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
+    if [[ $CORES == "" ]]; then
+	CORES=2
+    fi
+    make -j$CORES
     cd ..
 fi
 

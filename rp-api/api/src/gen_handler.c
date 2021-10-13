@@ -28,21 +28,22 @@
 
 // global variables
 // TODO: should be organized into a system status structure
-float         chA_amplitude            = 1, chB_amplitude            = 1;
-float         chA_offset               = 0, chB_offset               = 0;
-float         chA_dutyCycle            = 0, chB_dutyCycle            = 0;
-float         chA_frequency               , chB_frequency               ;
-float         chA_sweepStartFrequency     , chB_sweepStartFrequency     ;
-float         chA_sweepEndFrequency       , chB_sweepEndFrequency       ;
-float         chA_phase                = 0, chB_phase                = 0;
-int           chA_burstCount           = 1, chB_burstCount           = 1;
-int           chA_burstRepetition      = 1, chB_burstRepetition      = 1;
-uint32_t      chA_burstPeriod          = 0, chB_burstPeriod          = 0;
-rp_waveform_t chA_waveform                , chB_waveform                ;
-rp_gen_sweep_mode_t  chA_sweepMode        , chB_sweepMode               ;
-rp_gen_sweep_dir_t   chA_sweepDir         , chB_sweepDir                ;
-uint32_t      chA_size     = BUFFER_LENGTH, chB_size     = BUFFER_LENGTH;
-uint32_t      chA_arb_size = BUFFER_LENGTH, chB_arb_size = BUFFER_LENGTH;
+float         chA_amplitude            = 1,         chB_amplitude            = 1;
+float         chA_offset               = 0,         chB_offset               = 0;
+float         chA_dutyCycle            = 0,         chB_dutyCycle            = 0;
+float         chA_frequency               ,         chB_frequency               ;
+float         chA_sweepStartFrequency     ,         chB_sweepStartFrequency     ;
+float         chA_sweepEndFrequency       ,         chB_sweepEndFrequency       ;
+float         chA_phase                = 0,         chB_phase                = 0;
+int           chA_burstCount           = 1,         chB_burstCount           = 1;
+int           chA_burstRepetition      = 1,         chB_burstRepetition      = 1;
+uint32_t      chA_burstPeriod          = 0,         chB_burstPeriod          = 0;
+rp_waveform_t chA_waveform                ,         chB_waveform                ;
+rp_gen_sweep_mode_t  chA_sweepMode        ,         chB_sweepMode               ;
+rp_gen_sweep_dir_t   chA_sweepDir         ,         chB_sweepDir                ;
+uint32_t      chA_size     = BUFFER_LENGTH,         chB_size     = BUFFER_LENGTH;
+uint32_t      chA_arb_size = BUFFER_LENGTH,         chB_arb_size = BUFFER_LENGTH;
+rp_gen_mode_t chA_mode = RP_GEN_MODE_CONTINUOUS,    chB_mode = RP_GEN_MODE_CONTINUOUS;
 
 bool          chA_EnableTempProtection = 0, chB_EnableTempProtection = 0;
 bool          chA_LatchTempAlarm       = 0, chB_LatchTempAlarm       = 0;
@@ -96,11 +97,12 @@ int gen_SetDefaultValues() {
     return RP_OK;
 }
 
-int gen_Disable(rp_channel_t channel) {
+int gen_Disable(rp_channel_t channel) {    
     return generate_setOutputDisable(channel, true);
 }
 
 int gen_Enable(rp_channel_t channel) {
+    gen_ResetTrigger(channel);
     return generate_setOutputDisable(channel, false);
 }
 
@@ -233,11 +235,9 @@ int gen_setSweepStartFrequency(rp_channel_t channel, float frequency){
     }
      if (channel == RP_CH_1) {
         chA_sweepStartFrequency = frequency;
-        gen_setBurstPeriod(channel, chA_burstPeriod);
     }
     else if (channel == RP_CH_2) {
         chB_sweepStartFrequency = frequency;
-        gen_setBurstPeriod(channel, chB_burstPeriod);
     }
     else {
         return RP_EPN;
@@ -259,11 +259,9 @@ int gen_setSweepEndFrequency(rp_channel_t channel, float frequency){
     }
      if (channel == RP_CH_1) {
         chA_sweepEndFrequency = frequency;
-        gen_setBurstPeriod(channel, chA_burstPeriod);
     }
     else if (channel == RP_CH_2) {
         chB_sweepEndFrequency = frequency;
-        gen_setBurstPeriod(channel, chB_burstPeriod);
     }
     else {
         return RP_EPN;
@@ -434,17 +432,23 @@ int gen_getDutyCycle(rp_channel_t channel, float *ratio) {
 }
 
 int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
+    
+    CHANNEL_ACTION(channel,
+            chA_mode = mode,
+            chB_mode = mode)
+
     if (mode == RP_GEN_MODE_CONTINUOUS) {
         generate_setGatedBurst(channel, 0);
         generate_setBurstDelay(channel, 0);
         generate_setBurstRepetitions(channel, 0);
         generate_setBurstCount(channel, 0);
-        return triggerIfInternal(channel);
+        return RP_OK;
     }
     else if (mode == RP_GEN_MODE_BURST) {
         gen_setBurstCount(channel, channel == RP_CH_1 ? chA_burstCount : chB_burstCount);
         gen_setBurstRepetitions(channel, channel == RP_CH_1 ? chA_burstRepetition : chB_burstRepetition);
         gen_setBurstPeriod(channel, channel == RP_CH_1 ? chA_burstPeriod : chB_burstPeriod);
+        gen_Synchronise();
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_STREAM) {
@@ -456,35 +460,38 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
 }
 
 int gen_getGenMode(rp_channel_t channel, rp_gen_mode_t *mode) {
-    uint32_t num;
-    generate_getBurstCount(channel, &num);
-    if (num != 0) {
-        *mode = RP_GEN_MODE_BURST;
-    }
-    else {
-        *mode = RP_GEN_MODE_CONTINUOUS;
-    }
+    CHANNEL_ACTION(channel,
+            *mode = chA_mode,
+            *mode = chB_mode)
     return RP_OK;
 }
 
 int gen_setBurstCount(rp_channel_t channel, int num) {
-    if ((num < BURST_COUNT_MIN || num > BURST_COUNT_MAX) && num == 0) {
+    rp_gen_mode_t mode;
+    CHANNEL_ACTION(channel,
+            mode = chA_mode,
+            mode = chB_mode)
+
+    if (num < BURST_COUNT_MIN || num > BURST_COUNT_MAX) {
         return RP_EOOR;
     }
+
     CHANNEL_ACTION(channel,
             chA_burstCount = num,
             chB_burstCount = num)
-    if (num == -1) {    // -1 represents infinity. In FPGA value 0 represents infinity
-        num = 0;
+    gen_setBurstPeriod(channel, channel == RP_CH_1 ? chA_burstPeriod : chB_burstPeriod);
+    if (mode == RP_GEN_MODE_BURST){
+        int ret = generate_setBurstCount(channel, (uint32_t) num);
+        return ret;
     }
-    generate_setBurstCount(channel, (uint32_t) num);
-
-    // trigger channel if internal trigger source
-    return triggerIfInternal(channel);
+    return RP_OK;
 }
 
 int gen_getBurstCount(rp_channel_t channel, int *num) {
-    return generate_getBurstCount(channel, (uint32_t *) num);
+    CHANNEL_ACTION(channel,
+            *num = chA_burstCount,
+            *num = chB_burstCount)
+    return RP_OK;
 }
 
 #ifndef Z20_250_12
@@ -498,70 +505,77 @@ int gen_getBurstLastValue(rp_channel_t channel, float *amplitude){
 #endif
 
 int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
-    if ((repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) && repetitions != -1) {
+    rp_gen_mode_t mode;
+    CHANNEL_ACTION(channel,
+            mode = chA_mode,
+            mode = chB_mode)
+    
+    if (repetitions < BURST_REPETITIONS_MIN || repetitions > BURST_REPETITIONS_MAX) {
         return RP_EOOR;
     }
     CHANNEL_ACTION(channel,
             chA_burstRepetition = repetitions,
             chB_burstRepetition = repetitions)
-    if (repetitions == -1) {
-        repetitions = 0;
+    if (mode == RP_GEN_MODE_BURST){ 
+        int ret =  generate_setBurstRepetitions(channel, (uint32_t) (repetitions-1));
+        return ret;
     }
-    generate_setBurstRepetitions(channel, (uint32_t) (repetitions-1));
-
-    // trigger channel if internal trigger source
-    return triggerIfInternal(channel);
+    return RP_OK;
 }
 
 int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions) {
-    uint32_t tmp;
-    generate_getBurstRepetitions(channel, &tmp);
-    *repetitions = tmp+1;
+    CHANNEL_ACTION(channel,
+            *repetitions = chA_burstRepetition,
+            *repetitions = chB_burstRepetition)
     return RP_OK;
 }
 
 int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
+    rp_gen_mode_t mode;
+    CHANNEL_ACTION(channel,
+            mode = chA_mode,
+            mode = chB_mode)
+
     if (period < BURST_PERIOD_MIN || period > BURST_PERIOD_MAX) {
         return RP_EOOR;
     }
     int burstCount;
+    int delay = 0;
     CHANNEL_ACTION(channel,
             burstCount = chA_burstCount,
             burstCount = chB_burstCount)
-    // period = signal_time * burst_count + delay_time
-    int delay = (int) (period - (1 / (channel == RP_CH_1 ? chA_frequency : chB_frequency) * MICRO) * burstCount);
-    if (delay <= 0) {
-        // if delay is 0, then FPGA generates continuous signal
-        delay = 1;
-    }
-    generate_setBurstDelay(channel, (uint32_t) delay);
-
+    float freq;
     CHANNEL_ACTION(channel,
-                   chA_burstPeriod = period,
-                   chB_burstPeriod = period)
+            freq = chA_frequency,
+            freq = chB_frequency)
 
-    // trigger channel if internal trigger source
-    return triggerIfInternal(channel);
+    int sigLen = ((1.0 * MICRO) / freq ) * burstCount;
+    // period = signal_time * burst_count + delay_time
+    if ((int)period - sigLen <= 0){
+        period = sigLen + 1;
+    }
+    delay = period - sigLen;
+    CHANNEL_ACTION(channel,
+                chA_burstPeriod = period,
+                chB_burstPeriod = period)
+
+    if (mode == RP_GEN_MODE_BURST){ 
+        int ret = generate_setBurstDelay(channel, (uint32_t) delay);
+        return ret;
+    }
+    return RP_OK;
 }
 
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period) {
-    uint32_t delay, burstCount;
-    float frequency;
-    generate_getBurstDelay(channel, &delay);
-    generate_getBurstCount(channel, &burstCount);
-    generate_getFrequency(channel, &frequency);
-
-    if (delay == 1) {    // if delay is 0, then FPGA generates continuous signal
-        delay = 0;
-    }
-    *period = (uint32_t) (delay + (1 / frequency * MICRO) * burstCount);
+    CHANNEL_ACTION(channel,
+                   *period = chA_burstPeriod,
+                   *period = chB_burstPeriod)
     return RP_OK;
 }
 
 int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (src == RP_GEN_TRIG_GATED_BURST) {
         generate_setGatedBurst(channel, 1);
-        gen_setGenMode(channel, RP_GEN_MODE_BURST);
         return generate_setTriggerSource(channel, 2);
     }
     else {
@@ -569,15 +583,12 @@ int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     }
 
     if (src == RP_GEN_TRIG_SRC_INTERNAL) {
-        gen_setGenMode(channel, RP_GEN_MODE_CONTINUOUS);
         return generate_setTriggerSource(channel, 1);
     }
     else if (src == RP_GEN_TRIG_SRC_EXT_PE) {
-        gen_setGenMode(channel, RP_GEN_MODE_BURST);
         return generate_setTriggerSource(channel, 2);
     }
     else if (src == RP_GEN_TRIG_SRC_EXT_NE) {
-        gen_setGenMode(channel, RP_GEN_MODE_BURST);
         return generate_setTriggerSource(channel, 3);
     }
     else {
@@ -601,16 +612,19 @@ int gen_Trigger(uint32_t channel) {
     switch (channel) {
         case 0:
         case 1:
-            gen_setGenMode(channel, RP_GEN_MODE_BURST);
-            return generate_setTriggerSource(channel, RP_GEN_TRIG_SRC_INTERNAL);
+            generate_setTriggerSource(channel, RP_GEN_TRIG_SRC_INTERNAL);
+            return generate_Reset(channel);
         case 2:
         case 3:
-            gen_setGenMode(RP_CH_1, RP_GEN_MODE_BURST);
-            gen_setGenMode(RP_CH_2, RP_GEN_MODE_BURST);
-            return generate_simultaneousTrigger();
+            generate_simultaneousTrigger();
+            return generate_Synchronise();
         default:
             return RP_EOOR;
     }
+}
+
+int gen_ResetTrigger(rp_channel_t channel){
+    return generate_Reset(channel);
 }
 
 int gen_Synchronise() {
@@ -719,10 +733,10 @@ int synthesis_DC_NEG(float *data_out,uint16_t buffSize) {
 
 int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize) {
     // calculate number of samples that need to be high
-    int h = (int) (buffSize/2 * ratio);
+    int h = (int) (buffSize * ratio);
 
     for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
-        if (i < h || i >= buffSize - h) {
+        if (i < h) {
             data_out[i] = 1.0;
         }
         else {

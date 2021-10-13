@@ -5,7 +5,7 @@
 		target = <&amba_pl>;
                 __overlay__ {
 
-                        rp_oscilloscope: rp_oscilloscope@43c00000 {
+                        rp_oscilloscope: rp_oscilloscope@40000000 {
                      		#address-cells = <1>;
                 		#size-cells = <1>;
                                 clock-names = "clk", "s_axi_reg_aclk", "m_axi_osc1_aclk", "m_axi_osc2_aclk";
@@ -13,13 +13,39 @@
                                 compatible = "generic-uio";
                                 interrupt-parent = <&intc>;
 			        interrupts = <0 59 4>;
-                                reg = <0x40000000 0x10000>,<0x1000000 0x100000>;
+                                reg = <0x40000000 0x100000>,<0x1000000 0x80000>;
                                        reg-names = "regset", "buffer";
 
                         };
-                        
+
+                        rp_dac: rp_dac@40100000 {
+                     		#address-cells = <1>;
+                		#size-cells = <1>;
+                                clock-names = "clk", "s_axi_reg_aclk", "m_axi_dac1_aclk", "m_axi_dac2_aclk";
+                                clocks = <0x9 0x9 0x9 0x9>;
+                                compatible = "generic-uio";
+                                interrupt-parent = <&intc>;
+			        interrupts = <0 58 4>;
+                                reg = <0x40100000 0x100000>,<0x1080000 0x80000>;
+                                       reg-names = "regset", "buffer";
+
+                        };
+
+                        rp_gpio: rp_gpio@40200000 {
+                     		#address-cells = <1>;
+                		#size-cells = <1>;
+                                clock-names = "clk", "s_axi_reg_aclk", "m_axi_gpio_in_aclk", "m_axi_gpio_out_aclk";
+                                clocks = <0x9 0x9 0x9 0x9>;
+                                compatible = "generic-uio";
+                                interrupt-parent = <&intc>;
+			        interrupts = <0 57 4>;
+                                reg = <0x40200000 0x100000>,<0x1100000 0x80000>;
+                                       reg-names = "regset", "buffer";
+
+                        };                        
                 };
 
         };
 };
+
 
