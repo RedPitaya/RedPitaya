@@ -59,8 +59,8 @@ module red_pitaya_top_Z20 #(
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
   input  logic [ 5-1:0] vinn_i     ,  // voltages n
   // Expansion connector
-  input  logic [ 8-1:0] exp_p_io   ,
-  output logic [ 8-1:0] exp_n_io   ,
+  inout  logic [ 8-1:0] exp_p_io   ,
+  inout  logic [ 8-1:0] exp_n_io   ,
   // SATA connector
   output logic [ 2-1:0] daisy_p_o  ,  // line 1 is clock capable
   output logic [ 2-1:0] daisy_n_o  ,
@@ -76,28 +76,7 @@ logic                 pll_adc_clk;
 logic                 pll_dac_clk_1x;
 logic                 pll_dac_clk_2x;
 logic                 pll_dac_clk_2p;
-logic                 pll_ser_clk;
-logic                 pll_pwm_clk;
 logic                 pll_locked;
-// fast serial signals
-logic                 ser_clk ;
-// PWM clock and reset
-logic                 pwm_clk ;
-logic                 pwm_rstn;
-
-// Synchronization of multiple RP boards via SATA connectors
-logic                 sync_en;
-logic                 sync_master;
-
-// ADC clock/reset
-logic                 adc_clk;
-logic                 adc_rstn;
-
-// stream bus type
-localparam type SBA_T = logic signed [14-1:0];  // acquire
-localparam type SBG_T = logic signed [14-1:0];  // generate
-
-SBA_T [MNA-1:0]          adc_dat;
 
 // DAC signals
 logic                    dac_clk_1x;
@@ -106,16 +85,19 @@ logic                    dac_clk_2p;
 logic                    dac_rst;
 
 logic        [14-1:0] dac_dat_a, dac_dat_b;
-logic        [14-1:0] dac_a    , dac_b    ;
-logic signed [15-1:0] dac_a_sum, dac_b_sum;
 
 `ifdef SLAVE
-wire adc_clk_out = adc_clk_in;//(sync_en & ~sync_master) ? adc_clk_sel : 1'b0;
+wire adc_clk_out = adc_clk_in;
 `else
 wire adc_clk_out = 1'b0;
 `endif
 
 wire trig_out;
+wire clk_125;
+wire trig_ext_syncd;
+wire rstn_0;
+
+reg trig_ext_sync1, trig_ext_sync2;
 
 ODDR i_adc_clk_p ( .Q(adc_clk_o[0]), .D1(1'b1), .D2(1'b0), .C(adc_clk_out), .CE(1'b1), .R(1'b0), .S(1'b0));
 ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(adc_clk_out), .CE(1'b1), .R(1'b0), .S(1'b0));
@@ -123,7 +105,7 @@ ODDR i_adc_clk_n ( .Q(adc_clk_o[1]), .D1(1'b0), .D2(1'b1), .C(adc_clk_out), .CE(
 ////////////////////////////////////////////////////////////////////////////////
 // PLL (clock and reset)
 ////////////////////////////////////////////////////////////////////////////////
-/*
+
 red_pitaya_pll pll (
   // inputs
   .clk         (adc_clk_in),  // clock
@@ -132,8 +114,6 @@ red_pitaya_pll pll (
   .clk_dac_1x  (pll_dac_clk_1x),  // DAC clock 125MHz
   .clk_dac_2x  (pll_dac_clk_2x),  // DAC clock 250MHz
   .clk_dac_2p  (pll_dac_clk_2p),  // DAC clock 250MHz -45DGR
-  .clk_ser     (pll_ser_clk   ),  // fast serial clock
-  .clk_pdm     (pll_pwm_clk   ),  // PWM clock
   // status outputs
   .pll_locked  (pll_locked)
 );
@@ -141,8 +121,6 @@ red_pitaya_pll pll (
 BUFG bufg_dac_clk_1x (.O (dac_clk_1x), .I (pll_dac_clk_1x));
 BUFG bufg_dac_clk_2x (.O (dac_clk_2x), .I (pll_dac_clk_2x));
 BUFG bufg_dac_clk_2p (.O (dac_clk_2p), .I (pll_dac_clk_2p));
-BUFG bufg_ser_clk    (.O (ser_clk   ), .I (pll_ser_clk   ));
-BUFG bufg_pwm_clk    (.O (pwm_clk   ), .I (pll_pwm_clk   ));
 
 // DDR outputs
 ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2p), .CE(1'b1), .R(1'b0   ), .S(1'b0));
@@ -151,21 +129,16 @@ ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(da
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
-// ADC reset (active low)
-
-always @(posedge adc_clk)
-adc_rstn <=  rstn_0 &  pll_locked;
-
 // DAC reset (active high)
 always @(posedge dac_clk_1x)
 dac_rst  <= ~rstn_0 | ~pll_locked;
 
-// PWM reset (active low)
-always @(posedge pwm_clk)
-pwm_rstn <=  rstn_0 &  pll_locked;
-*/
-  system_wrapper system_wrapper_i
-  //system system_wrapper_i
+////////////////////////////////////////////////////////////////////////////////
+// DAC IO
+////////////////////////////////////////////////////////////////////////////////
+
+  //system_wrapper system_wrapper_i
+  system system_wrapper_i
        (.DDR_addr(DDR_addr),
         .DDR_ba(DDR_ba),
         .DDR_cas_n(DDR_cas_n),
@@ -187,11 +160,15 @@ pwm_rstn <=  rstn_0 &  pll_locked;
         .FIXED_IO_ps_clk(FIXED_IO_ps_clk),
         .FIXED_IO_ps_porb(FIXED_IO_ps_porb),
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
-        .trig_in(trig_ext),
+        .trig_in(trig_ext_syncd),
         .trig_out(trig_out),
         .adc_clk(adc_clk_in),
+        .clk_out(clk_125),
+        .rstn_out(rstn_0),
         .dac_dat_a(dac_dat_a),
         .dac_dat_b(dac_dat_b),
+        .gpio_p(exp_p_io),
+        .gpio_n(exp_n_io),
         .adc_data_ch1(adc_dat_i[0]),
         .adc_data_ch2(adc_dat_i[1]));
 
@@ -224,8 +201,24 @@ IBUFDS #() i_IBUFDS_trig
   .IB ( daisy_n_i[0]  ),
   .O  ( trig_ext      )
 );
+assign trig_ext_syncd = trig_ext;
 
 `else
+
+IBUFDS #() i_IBUFDS_trig
+(
+  .I  ( daisy_p_i[0]  ),
+  .IB ( daisy_n_i[0]  ),
+  .O  ( trig_ext)
+);
+
+always @(posedge clk_125) //sync external trigger from external master to local clock
+begin
+  trig_ext_sync1 <= trig_ext;
+  trig_ext_sync2 <= trig_ext_sync1;
+end
+assign trig_ext_syncd = trig_ext_sync2;
+
 
 IBUFDS #() i_IBUF_clk
 (
