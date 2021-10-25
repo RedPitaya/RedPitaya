@@ -82,7 +82,7 @@ sudo rm "root/usr/bin/qemu-arm-static"
 
 sudo rm -rf ./boot/*
 echo "STOP"
-read
+# read
 echo "DONE"
 sleep 2
 sudo unzip -o $ECO_FILE -d ./boot

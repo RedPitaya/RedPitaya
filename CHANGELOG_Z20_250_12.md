@@ -1,4 +1,15 @@
-# Beta version (1.04-21)
+# Beta version (1.04-27)
+
+- Spectrum analyzer got new features (improved spectrum resolution, added more windowing functions, units, scaling's and more)
+- SCPI server speed was improved
+- Signal generator freq. sweep support added
+- Bode Analyzer gain & phase calculation algorithms have been improved on speed and precision
+- other general improvements & bug fixes
+    - added more acquisition decimation options
+    - fixed trigger bug for osc. that appeared at very slow signals
+    - fixed averaging after signal decimation
+    - OS updater notifications
+# Stable version (1.04-21)
 
 - Streaming application added
 

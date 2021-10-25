@@ -1,15 +1,18 @@
-# Beta version (1.04-9)
+# Beta version (1.04-10)
 
-- Spectrum analyzer got new features (improved spectrum resolution, added more windowing functions, units, scalings and more)
-- Bode Analyzer gain & phase calculation algorithms have been improved on speed and precision
+- Spectrum analyzer got new features (improved spectrum resolution, added more windowing functions, units, scaling's and more)
+- SCPI server speed was improved
 - Signal generator freq. sweep support added
-- Added more acquisition decimation options
-- Fixed trigger bug for osc. that appeared at very slow signals
-- Board boots properly even when ext. clock is not present
-- fixed issues with LA triggering
-- OS updater notifications
-- Other general improvements & bug fix
-# Beta version (1.04-8)
+- Bode Analyzer gain & phase calculation algorithms have been improved on speed and precision
+- Command line tool that enables user to disable LEDs blinking and lower RF noise to its minimum
+- other general improvements & bug fixes
+    - added more acquisition decimation options
+    - fixed trigger bug for osc. that appeared at very slow signals
+    - fixed issues with LA triggering
+    - fixed averaging after signal decimation
+    - OS updater notifications
+
+# Stable version (1.04-8)
 
 - The streaming application was improved. One of the main features is that users can now exactly know when and which samples are lost due to throughput problems or limitation
 - Watchdog was implemented for Linux and WEB applications. In case of fatal error or lost connection device will always return to its previous operation state. 
