@@ -12,7 +12,7 @@
     - fixed averaging after signal decimation
     - OS updater notifications
 
-- # Stable version (1.04-8)
+# Stable version (1.04-8)
 
 - Freq. calibration feature was added to the calibration utility that enables users to improve and flatten freq. response of 125-xx devices
 - CAN decoding was added to Logic analyzer app
