@@ -83,10 +83,27 @@ void CDACStreamingApplication::genWorker()
     uintmax_t counter = 0;
     uintmax_t passCounter = 0;
     uint8_t   skipBuffs = 0;
+    bool isFirstBufferInit = false;
+    bool isSecondBufferInit = false;
     m_gen->prepare();
+    m_gen->start();
+    uint64_t bufferAll = 0;
+    int      bufferCounter = 0;
+
 try{
     while (m_GenThreadRun.test_and_set())
     {
+        auto buffer = m_streamingManager->getBuffer();
+        if (!buffer.empty) {
+            m_gen->write(buffer.ch1,buffer.ch2,buffer.size_ch1,buffer.size_ch2);
+            bufferCounter++;
+        }
+
+        if (bufferCounter > 100) {
+            bufferAll += bufferCounter;
+            bufferCounter = 0;
+            std::cout << "All buffers: " << bufferAll  << "\n";            
+        }
 
         // oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
         // ++counter;
@@ -114,6 +131,7 @@ try{
         //         m_StreamingManager->notifyStop = nullptr;                
         //     }
         // }
+
     }
     
 }catch (std::exception& e)

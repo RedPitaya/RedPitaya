@@ -10,7 +10,6 @@
 #include <asio.hpp>
 #include "Generator.h"
 #include "DACAsioNetController.h"
-#include "FileLogger.h"
 #include "neon_asm.h"
 #include "thread_cout.h"
 

@@ -1,7 +1,8 @@
 #!/bin/bash
 unzip -o ./libs/asio.zip -d ./libs
 cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release -DMODEL=Z10 -DCLIENT_PRJ=ON
-make -j$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
+make
+# -j$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
 
 
 #APP=$(pwd | grep -o '[^/]*$')

@@ -38,7 +38,11 @@ public:
         SERVER_STARTED_SD,
         SERVER_STOPPED,
         SERVER_STOPPED_SD_FULL,
-        SERVER_STOPPED_SD_DONE
+        SERVER_STOPPED_SD_DONE,
+        SERVER_DAC_STARTED,
+        SERVER_DAC_STARTED_SD,
+        SERVER_DAC_STOPPED,
+        SERVER_DAC_STOPPED_SD_DONE
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
@@ -51,6 +55,8 @@ public:
     auto sendSaveToFile(std::string host) -> bool;
     auto sendStart(std::string host) -> bool;
     auto sendStop(std::string host) -> bool;
+    auto sendDACStart(std::string host) -> bool;
+    auto sendDACStop(std::string host) -> bool;
     auto requestConfig(std::string host) -> bool;
     auto getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode;
     auto getLocalSettingsOfHost(std::string host) -> CStreamSettings*;

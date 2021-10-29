@@ -27,7 +27,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         const std::lock_guard<std::mutex> lock(g_rmutex);
 
         if (g_roption.verbous)
-            std::cout << "Connected: " << host << "\n";
+            std::cout << getTS(": ") << "Connected: " << host << "\n";
         connected_hosts.push_back(host);
         g_rconnect_counter--;
     });
@@ -35,7 +35,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     cl.addHandlerError([&masterHosts,&slaveHosts](ClientNetConfigManager::Errors errors,std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            std::cerr << "Error: " << host.c_str() << "\n";
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
             g_rconnect_counter--;
             g_rstart_counter--;
             g_rstop_counter--;
@@ -47,7 +47,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&cl,runned_hosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming started: " << host << " TCP mode [OK]\n";
+            std::cout << getTS(": ") << "Streaming started: " << host << " TCP mode [OK]\n";
         g_rstart_counter--;
         if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
     });
@@ -55,7 +55,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&cl,runned_hosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming started: " << host << " UDP mode [OK]\n";
+            std::cout << getTS(": ") << "Streaming started: " << host << " UDP mode [OK]\n";
         g_rstart_counter--;
         if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::UDP;
     });
@@ -63,15 +63,32 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&cl,runned_hosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming started: " << host << " Local mode [OK]\n";
+            std::cout << getTS(": ") << "Streaming started: " << host << " Local mode [OK]\n";
         g_rstart_counter--;
         if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
     });
 
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED, [&cl,runned_hosts](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming started: " << host << " TCP mode [OK]\n";
+        g_rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
+    });
+
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED_SD, [&cl,runned_hosts](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming started: " << host << " Local mode [OK]\n";
+        g_rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
+    });
+
+
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming stopped: " << host << " [OK]\n";
+            std::cout << getTS(": ") << "Streaming stopped: " << host << " [OK]\n";
         masterHosts.remove(host);
         slaveHosts.remove(host);
         g_rstop_counter--;
@@ -80,7 +97,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_FULL, [&cl,&masterHosts,&slaveHosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming stopped: " << host << " SD card is full [OK]\n";
+            std::cout << getTS(": ") << "Streaming stopped: " << host << " SD card is full [OK]\n";
         masterHosts.remove(host);
         slaveHosts.remove(host);
         g_rstop_counter--;
@@ -89,7 +106,25 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_DONE, [&cl,&masterHosts,&slaveHosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_rmutex);
         if (g_roption.verbous)
-            std::cout << "Streaming stopped: " << host << " All samples are recorded on the SD card [OK]\n";
+            std::cout << getTS(": ") << "Streaming stopped: " << host << " All samples are recorded on the SD card [OK]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        g_rstop_counter--;
+    });
+
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        g_rstop_counter--;
+    });
+
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_DONE, [&cl,&masterHosts,&slaveHosts](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
         masterHosts.remove(host);
         slaveHosts.remove(host);
         g_rstop_counter--;
@@ -119,7 +154,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstart_counter = slaveHosts.size();
         for(auto &host:slaveHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send start command to slave board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send start command to slave board " << host.c_str() << "\n";
             if (!cl.sendStart(host)){
                 g_rstart_counter--;
             }
@@ -132,8 +167,36 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstart_counter = masterHosts.size();
         for(auto &host:masterHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send start command to master board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send start command to master board " << host.c_str() << "\n";
             if (!cl.sendStart(host)){
+                g_rstart_counter--;
+            }
+        }
+        while (g_rstart_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+    }
+
+    if (g_roption.remote_mode == ClientOpt::RemoteMode::START_DAC) {
+        g_rstart_counter = slaveHosts.size();
+        for(auto &host:slaveHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send start DAC command to slave board " << host.c_str() << "\n";
+            if (!cl.sendDACStart(host)){
+                g_rstart_counter--;
+            }
+        }
+        while (g_rstart_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+
+        g_rstart_counter = masterHosts.size();
+        for(auto &host:masterHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send start DAC command to master board " << host.c_str() << "\n";
+            if (!cl.sendDACStart(host)){
                 g_rstart_counter--;
             }
         }
@@ -147,7 +210,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstop_counter = masterHosts.size();
         for(auto &host:masterHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send stop command to master board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send stop command to master board " << host.c_str() << "\n";
             if (!cl.sendStop(host)){
                 g_rstop_counter--;
             }
@@ -160,8 +223,36 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstop_counter = slaveHosts.size();
         for(auto &host:slaveHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send stop command to slave board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send stop command to slave board " << host.c_str() << "\n";
             if (!cl.sendStop(host)){
+                g_rstop_counter--;
+            }
+        }
+        while (g_rstop_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+    }
+
+    if (g_roption.remote_mode == ClientOpt::RemoteMode::STOP_DAC) {
+        g_rstop_counter = masterHosts.size();
+        for(auto &host:masterHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send stop DAC command to master board " << host.c_str() << "\n";
+            if (!cl.sendDACStop(host)){
+                g_rstop_counter--;
+            }
+        }
+        while (g_rstop_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+
+        g_rstop_counter = slaveHosts.size();
+        for(auto &host:slaveHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send stop DAC command to slave board " << host.c_str() << "\n";
+            if (!cl.sendDACStop(host)){
                 g_rstop_counter--;
             }
         }
@@ -175,7 +266,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstart_counter = slaveHosts.size();
         for(auto &host:slaveHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send start command to slave board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send start command to slave board " << host.c_str() << "\n";
             if (!cl.sendStart(host)){
                 g_rstart_counter--;
             }
@@ -188,7 +279,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstart_counter = masterHosts.size();
         for(auto &host:masterHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send start command to master board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send start command to master board " << host.c_str() << "\n";
             if (!cl.sendStart(host)){
                 g_rstart_counter--;
             }
@@ -201,7 +292,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
         auto curTime = beginTime;
         g_roption.timeout = g_roption.timeout == 0 ? 1000 : g_roption.timeout;
-        while ((curTime - beginTime < g_roption.timeout) && (masterHosts.size() > 0 || slaveHosts.size() > 0)){
+        while ((curTime - beginTime <= g_roption.timeout) && (masterHosts.size() > 0 || slaveHosts.size() > 0)){
             sleepMs(1);
             if (g_rexit_flag) break;
             curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
@@ -210,7 +301,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstop_counter = masterHosts.size();
         for(auto &host:masterHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send stop command to master board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send stop command to master board " << host.c_str() << "\n";
             if (!cl.sendStop(host)){
                 g_rstop_counter--;
             }
@@ -223,8 +314,71 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstop_counter = slaveHosts.size();
         for(auto &host:slaveHosts) {
             if (g_roption.verbous)
-                std::cerr << "Send stop command to slave board " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send stop command to slave board " << host.c_str() << "\n";
             if (!cl.sendStop(host)){
+                g_rstop_counter--;
+            }
+        }
+        while (g_rstop_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+    }
+
+    if (g_roption.remote_mode == ClientOpt::RemoteMode::START_STOP_DAC) {
+        g_rstart_counter = slaveHosts.size();
+        for(auto &host:slaveHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send start DAC command to slave board " << host.c_str() << "\n";
+            if (!cl.sendDACStart(host)){
+                g_rstart_counter--;
+            }
+        }
+        while (g_rstart_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+
+        g_rstart_counter = masterHosts.size();
+        for(auto &host:masterHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send start DAC command to master board " << host.c_str() << "\n";
+            if (!cl.sendDACStart(host)){
+                g_rstart_counter--;
+            }
+        }
+        while (g_rstart_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+
+        auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
+        auto curTime = beginTime;
+        g_roption.timeout = g_roption.timeout == 0 ? 1000 : g_roption.timeout;
+        while ((curTime - beginTime <= g_roption.timeout) && (masterHosts.size() > 0 || slaveHosts.size() > 0)){
+            sleepMs(1);
+            if (g_rexit_flag) break;
+            curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
+        }
+
+        g_rstop_counter = masterHosts.size();
+        for(auto &host:masterHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send stop DAC command to master board " << host.c_str() << "\n";
+            if (!cl.sendDACStop(host)){
+                g_rstop_counter--;
+            }
+        }
+        while (g_rstop_counter>0){
+            sleepMs(100);
+            if (g_rexit_flag) return false;
+        }
+
+        g_rstop_counter = slaveHosts.size();
+        for(auto &host:slaveHosts) {
+            if (g_roption.verbous)
+                std::cerr << getTS(": ") << "Send stop DAC command to slave board " << host.c_str() << "\n";
+            if (!cl.sendDACStop(host)){
                 g_rstop_counter--;
             }
         }

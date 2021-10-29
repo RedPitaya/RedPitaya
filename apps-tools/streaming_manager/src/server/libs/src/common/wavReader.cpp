@@ -9,6 +9,11 @@ CWaveReader::CWaveReader(){
     std::memset(&m_header,0,sizeof (m_header));
 }
 
+CWaveReader::~CWaveReader(){
+    if (m_read_fs.is_open())
+        m_read_fs.close();
+}
+
 auto CWaveReader::openFile(string fileName) -> bool{
     if (m_read_fs.is_open())
         m_read_fs.close();

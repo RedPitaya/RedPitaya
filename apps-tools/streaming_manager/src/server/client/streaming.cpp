@@ -134,12 +134,12 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     g_asionet[host] = asionet::CAsioNet::Create(asionet::Mode::CLIENT, protocol ,host , g_soption.port != "" ? g_soption.controlPort : "8900");
     g_asionet[host]->addCallClient_Connect([](std::string host) {
         const std::lock_guard<std::mutex> lock(g_smutex);
-        std::cout << "Try connect " << host << '\n';
+        std::cout << getTS(": ") << "Try connect " << host << '\n';
     });
     g_asionet[host]->addCallClient_Error([host](std::error_code error)
     {
         const std::lock_guard<std::mutex> lock(g_smutex);
-        std::cout << "Disconnect;" << '\n';
+        std::cout << getTS(": ") <<"Disconnect;" << '\n';
         stopStreaming(host);
     });
     g_asionet[host]->addCallReceived(std::bind(&reciveData,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,host));
@@ -173,7 +173,7 @@ auto startStreaming(ClientOpt::Options &option) -> void{
 
 #ifndef  _WIN32
     auto size =  FileQueueManager::GetFreeSpaceDisk(option.save_dir != "" ? option.save_dir : "." );
-    std::cout << "Free disk space: "<< size / (1024 * 1024) << "Mb \n";
+    std::cout << getTS(": ") << "Free disk space: "<< size / (1024 * 1024) << "Mb \n";
 #endif
 
     ClientOpt::Options remote_opt = g_soption;

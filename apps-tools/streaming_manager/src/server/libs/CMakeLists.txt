@@ -64,6 +64,7 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavReader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/ReaderController.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp

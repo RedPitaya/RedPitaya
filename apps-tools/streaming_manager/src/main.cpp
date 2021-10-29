@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-#include <fstream>  
+#include <fstream>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -81,6 +81,13 @@ CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2
 CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
 
+CStringParameter    ss_dac_file(		"SS_DAC_FILE",			CBaseParameter::RW, "", 0);
+CIntParameter    	ss_dac_file_type(	"SS_DAC_FILE_TYPE",		CBaseParameter::RW,  0 ,0, 0, 1);
+CIntParameter    	ss_dac_gain(		"SS_DAC_GAIN",			CBaseParameter::RW,  0 ,0, 0, 1);
+CIntParameter    	ss_dac_mode(		"SS_DAC_MODE",			CBaseParameter::RW,  0 ,0, 0, 1);
+CIntParameter    	ss_dac_repeat(		"SS_DAC_REPEAT",		CBaseParameter::RW, -1 ,0, -2, 1000000);
+CIntParameter		ss_dac_port(		"SS_DAC_PORT_NUMBER", 	CBaseParameter::RW, 8903,0,	1,65535);
+
 CStreamingApplication  *s_app = nullptr;
 CStreamingManager::Ptr 	s_manger = nullptr;
 COscilloscope::Ptr 		osc = nullptr;
@@ -111,8 +118,6 @@ const char *rp_app_desc(void)
 {
 	return (const char *)"Red Pitaya Stream server application.\n";
 }
-
-
 
 //Application init
 int rp_app_init(void)
@@ -200,12 +205,14 @@ void UpdateSignals(void)
 
 void saveConfigInFile(){
 	if (!g_serverNetConfig->writeToFile(config_file)){
-		std::cerr << "Error save to file\n";
+		std::cerr << "Error save to file(" << config_file <<")\n";
 	}
 }
 
 void updateUI(){
 	ss_port.SendValue(std::atoi(g_serverNetConfig->getPort().c_str()));
+	ss_dac_file.SendValue(g_serverNetConfig->getDACFile());
+	ss_dac_port.SendValue(std::atoi(g_serverNetConfig->getDACPort().c_str()));
 
 	switch (g_serverNetConfig->getSaveType())
 	{
@@ -293,6 +300,38 @@ void updateUI(){
 			break;
 	}
 
+	switch (g_serverNetConfig->getDACFileType())
+	{
+		case CStreamSettings::WAV:
+			ss_dac_file_type.SendValue(0);
+			break;
+		case CStreamSettings::TDMS:
+			ss_dac_file_type.SendValue(1);
+			break;
+	}
+
+	switch (g_serverNetConfig->getDACGain())
+	{
+		case CStreamSettings::X1:
+			ss_dac_gain.SendValue(0);
+			break;
+		case CStreamSettings::X5:
+			ss_dac_gain.SendValue(1);
+			break;
+	}
+
+	switch (g_serverNetConfig->getDACMode())
+	{
+		case CStreamSettings::DAC_NET:
+			ss_dac_mode.SendValue(0);
+			break;
+		case CStreamSettings::DAC_FILE:
+			ss_dac_mode.SendValue(1);
+			break;
+	}
+
+
+	ss_dac_repeat.SendValue(g_serverNetConfig->getDACRepeat());
 	ss_rate.SendValue(g_serverNetConfig->getDecimation());
 	ss_samples.SendValue(g_serverNetConfig->getSamples());
 	ss_calib.SendValue(g_serverNetConfig->getCalibration() ? 2 : 1);
@@ -304,6 +343,20 @@ void setConfig(bool _force){
 	{
 		ss_port.Update();
 		g_serverNetConfig->setPort(std::to_string(ss_port.Value()));
+		needUpdate = true;
+	}
+
+	if (ss_dac_file.IsNewValue() || _force)
+	{
+		ss_dac_file.Update();
+		g_serverNetConfig->setDACFile(ss_dac_file.Value());
+		needUpdate = true;
+	}
+
+	if (ss_dac_port.IsNewValue() || _force)
+	{
+		ss_dac_port.Update();
+		g_serverNetConfig->setDACPort(std::to_string(ss_dac_port.Value()));
 		needUpdate = true;
 	}
 
@@ -444,6 +497,48 @@ void setConfig(bool _force){
 #else
 	g_serverNetConfig->setAC_DC(CStreamSettings::AC);
 #endif
+
+	if (ss_dac_file_type.IsNewValue() || _force)
+	{
+		ss_dac_file_type.Update();
+		if (ss_dac_file_type.Value() == 0) 
+			g_serverNetConfig->setDACFileType(CStreamSettings::WAV);
+		if (ss_dac_file_type.Value() == 1) 
+			g_serverNetConfig->setDACFileType(CStreamSettings::TDMS);
+		needUpdate = true;
+	}
+
+#ifdef Z20_250_12
+	if (ss_dac_gain.IsNewValue() || _force)
+	{
+		ss_dac_gain.Update();
+		if (ss_dac_gain.Value() == 0)
+			g_serverNetConfig->setDACGain(CStreamSettings::X1);
+		if (ss_dac_gain.Value() == 1)
+			g_serverNetConfig->setDACGain(CStreamSettings::X5);
+		needUpdate = true;
+	}
+#else
+	g_serverNetConfig->setDACGain(CStreamSettings::X1);
+#endif
+
+	if (ss_dac_mode.IsNewValue() || _force)
+	{
+		ss_dac_mode.Update();
+		if (ss_dac_mode.Value() == 0)
+			g_serverNetConfig->setDACMode(CStreamSettings::DAC_NET);
+		if (ss_dac_mode.Value() == 1)
+			g_serverNetConfig->setDACMode(CStreamSettings::DAC_FILE);
+		needUpdate = true;
+	}
+
+	if (ss_dac_repeat.IsNewValue() || _force)
+	{
+		ss_dac_repeat.Update();
+		g_serverNetConfig->setDACRepeat(ss_dac_repeat.Value());
+		needUpdate = true;
+	}
+
 	if (needUpdate){
 		saveConfigInFile();
 	}

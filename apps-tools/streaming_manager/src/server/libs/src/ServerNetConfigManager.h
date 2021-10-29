@@ -18,7 +18,9 @@ public:
         STOP_STREAMING,
         START_STREAMING,
         CLIENT_CONNECTED,
-        CLIENT_DISCONNECTED
+        CLIENT_DISCONNECTED,
+        START_DAC_STREAMING,
+        STOP_DAC_STREAMING
     };
     ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode, std::string host,std::string port);
     ~ServerNetConfigManager();
@@ -30,10 +32,14 @@ public:
     auto sendServerStartedTCP() -> bool;
     auto sendServerStartedUDP() -> bool;
     auto sendServerStartedSD() -> bool;
+    auto sendDACServerStarted() -> bool;
+    auto sendDACServerStartedSD() -> bool;
+
     auto sendServerStopped() -> bool;
     auto sendServerStoppedSDFull() -> bool;
     auto sendServerStoppedDone() -> bool;
-    
+    auto sendDACServerStopped() -> bool;
+    auto sendDACServerStoppedSDDone() -> bool;
 
     auto addHandlerError(std::function<void(ServerNetConfigManager::Errors)> _func) -> void;
     auto addHandler(ServerNetConfigManager::Events event, std::function<void()> _func) -> void;

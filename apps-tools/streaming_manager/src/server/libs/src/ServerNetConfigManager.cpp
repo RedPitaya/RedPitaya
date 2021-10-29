@@ -19,6 +19,7 @@ ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings
     m_pNetConfManager->addHandlerError(std::bind(&ServerNetConfigManager::serverError, this, std::placeholders::_1));
     startServer(host,port);
     readFromFile(defualt_file_settings_path);
+
 }
 
 ServerNetConfigManager::~ServerNetConfigManager(){
@@ -98,6 +99,14 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
         m_callbacks.emitEvent(static_cast<int>(Events::STOP_STREAMING));
     }
 
+    if (c == CNetConfigManager::Commands::START_DAC_STREAMING){
+        m_callbacks.emitEvent(static_cast<int>(Events::START_DAC_STREAMING));
+    }
+
+    if (c == CNetConfigManager::Commands::STOP_DAC_STREAMING){
+        m_callbacks.emitEvent(static_cast<int>(Events::STOP_DAC_STREAMING));
+    }
+    
     if (c == CNetConfigManager::Commands::LOAD_SETTING_FROM_FILE){
         if (readFromFile(m_file_settings)){
             m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
@@ -168,6 +177,14 @@ auto ServerNetConfigManager::sendServerStartedSD() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STARTED_SD);
 }
 
+auto ServerNetConfigManager::sendDACServerStarted() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STARTED);
+}
+
+auto ServerNetConfigManager::sendDACServerStartedSD() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STARTED_SD);
+}
+
 auto ServerNetConfigManager::sendServerStopped() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STOPPED);
 }
@@ -179,6 +196,15 @@ auto ServerNetConfigManager::sendServerStoppedSDFull() -> bool{
 auto ServerNetConfigManager::sendServerStoppedDone() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STOPPED_SD_DONE);
 }
+
+auto ServerNetConfigManager::sendDACServerStopped() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STOPPED);
+}
+
+auto ServerNetConfigManager::sendDACServerStoppedSDDone() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_DONE);
+}
+
 
 auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
     if (m_pNetConfManager->isConnected()) {
@@ -195,6 +221,14 @@ auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
         if (!m_pNetConfManager->sendData("attenuator",static_cast<uint32_t>(getAttenuator()),_async)) return false;
         if (!m_pNetConfManager->sendData("calibration",static_cast<uint32_t>(getCalibration()),_async)) return false;
         if (!m_pNetConfManager->sendData("coupling",static_cast<uint32_t>(getAC_DC()),_async)) return false;
+
+        if (!m_pNetConfManager->sendData("dac_file",getDACFile(),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_port",getDACPort(),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_file_type",static_cast<uint32_t>(getDACFileType()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_gain",static_cast<uint32_t>(getDACGain()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_mode",static_cast<uint32_t>(getDACMode()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
+
         if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;
     }
