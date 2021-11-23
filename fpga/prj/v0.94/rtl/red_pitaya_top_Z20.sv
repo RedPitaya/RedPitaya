@@ -85,7 +85,7 @@ module red_pitaya_top_Z20 #(
   // ADC
   input  logic [MNA-1:0] [16-1:0] adc_dat_i,  // ADC data
   input  logic           [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
-  output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused)
+  output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused) [0] = p; [1] = n
   output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
   // DAC
   output logic [14-1:0] dac_dat_o  ,  // DAC combined data
@@ -474,7 +474,7 @@ red_pitaya_asg i_asg (
    // DAC
   .dac_a_o         (asg_dat[0]  ),  // CH 1
   .dac_b_o         (asg_dat[1]  ),  // CH 2
-  .dac_clk_i       (adc_clk     ),  // clock
+  .dac_clk_i       (dac_clk_1x  ),  // clock
   .dac_rstn_i      (adc_rstn    ),  // reset - active low
   .trig_a_i        (gpio.i[8]   ),
   .trig_b_i        (gpio.i[8]   ),

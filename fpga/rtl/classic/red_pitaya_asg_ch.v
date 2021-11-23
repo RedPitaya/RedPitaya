@@ -76,6 +76,7 @@ module red_pitaya_asg_ch #(
 reg   [  14-1: 0] dac_buf [0:(1<<RSZ)-1] ;
 reg   [  14-1: 0] dac_rd    ;
 reg   [  14-1: 0] dac_rdat  ;
+
 reg   [ RSZ-1: 0] dac_rp    ;
 reg   [RSZ+15: 0] dac_pnt   ; // read pointer
 reg   [RSZ+15: 0] dac_pntp  ; // previour read pointer
@@ -84,8 +85,15 @@ wire  [RSZ+16: 0] dac_npnt_sub ;
 wire              dac_npnt_sub_neg;
 
 reg   [  16-1: 0] cyc_cnt   ;
-reg   [  28-1: 0] dac_mult  ;
-reg   [  15-1: 0] dac_sum   ;
+reg signed  [  18-1: 0] dac_rdat_pipe  ;
+reg signed  [  25-1: 0] set_amp_pipe  ;
+
+reg signed  [  14-1: 0] dac_mult  ;
+reg signed  [  43-1: 0] dac_mult_r  ;
+
+reg signed  [  15-1: 0] dac_sum   ;
+reg signed  [  15-1: 0] dac_sum_r   ;
+
 reg               lastval;
 wire              not_burst;
 
@@ -111,8 +119,14 @@ buf_rdata_o <= dac_buf[buf_addr_i] ;
 // scale and offset
 always @(posedge dac_clk_i)
 begin
-   dac_mult <= $signed(dac_rdat) * $signed({1'b0,set_amp_i}) ;
-   dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
+
+   dac_rdat_pipe <= {dac_rdat, 4'h0};
+   set_amp_pipe  <= {set_amp_i, 11'h0};
+   dac_mult_r <= $signed(dac_rdat_pipe) * $signed(set_amp_pipe) ;
+   dac_mult <= dac_mult_r[43-1:29];
+
+   dac_sum_r  <= $signed(dac_mult) + $signed(set_dc_i) ;
+   dac_sum  <= dac_sum_r;
 
    // saturation
    if (set_zero_i)  
@@ -155,9 +169,8 @@ begin
    else begin
       if (dac_do_dlysr[4:3] == 2'b10) // negative edge of dly_do, delayed for 4 cycles
          lastval <= 1'b1;
-      
-      if ((lastval && dly_cnt == 'd0 && |rep_cnt) || set_zero_i || set_rst_i || not_burst) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval. also resets if reset is set or continous mode is selected.
-         lastval <= 1'b0;
+      else if ((lastval && dly_cnt == 'd0 && (|rep_cnt || (trig_in && !dac_do)))  || set_zero_i || set_rst_i || not_burst) // release from last value when new cycle starts or a set_zero is written. After final cycle, stay on lastval. also resets if reset is set or continous mode is selected.
+         lastval <= 1'b0; // reset from lastval when a new trigger arrives
    end
 end
 
@@ -189,8 +202,8 @@ always @(posedge dac_clk_i) begin
 
       // repetitions counter
       if (trig_in && !dac_do)
-         rep_cnt <= set_rnum_i ;
-      else if (!set_rgate_i && (|rep_cnt && dac_rep && (dac_trig && !dac_do)))
+         rep_cnt <= set_rnum_i;
+      else if (!set_rgate_i && (|rep_cnt && dac_rep && (dac_trig && !dac_do)) && (set_rnum_i != 16'hffff)) // only substract at the end of a cycle; 16'hffff is infinite pulses
          rep_cnt <= rep_cnt - 16'h1 ;
       else if (set_rgate_i && ((!trig_ext_i && trig_src_i==3'd2) || (trig_ext_i && trig_src_i==3'd3)))
          rep_cnt <= 16'h0 ;
