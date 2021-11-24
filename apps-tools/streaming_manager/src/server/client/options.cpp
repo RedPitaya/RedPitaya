@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstring>
 #include <algorithm>
+#include <ctime>
+#include <chrono>
 
 #include "options.h"
 
@@ -60,23 +62,56 @@ static struct option long_options_streaming[] = {
 
 static constexpr char optstring_streaming[] = "sh:p:c:f:d:l:m:t:v";
 
+static struct option long_options_dac_streaming[] = {
+        /* These options set a flag. */
+        {"out_streaming", no_argument,       0, 'o'},
+        {"hosts",         required_argument, 0, 'h'},
+        {"port",          required_argument, 0, 'p'},
+        {"config_port",   required_argument, 0, 'c'},
+        {"format",        required_argument, 0, 'f'},
+        {"data",          required_argument, 0, 'd'},
+        {"repeat",        required_argument, 0, 'r'},
+        {"verbose",       no_argument,       0, 'v'},
+        {0, 0, 0, 0}
+};
+
+static constexpr char optstring_dac_streaming[] = "oh:p:c:f:d:r:v";
+
+auto getTS(std::string suffix) -> std::string{
+
+    using namespace std;
+    using namespace std::chrono;
+    system_clock::time_point timeNow = system_clock::now();
+    auto ttime_t = system_clock::to_time_t(timeNow);
+    auto tp_sec = system_clock::from_time_t(ttime_t);
+    milliseconds ms = duration_cast<milliseconds>(timeNow - tp_sec);
+
+    std::tm * ttm = localtime(&ttime_t);
+
+    char date_time_format[] = "%Y.%m.%d-%H.%M.%S";
+
+    char time_str[] = "yyyy.mm.dd.HH-MM.SS.fff";
+
+    strftime(time_str, strlen(time_str), date_time_format, ttm);
+
+    string result(time_str);
+    result.append(".");
+    result.append(to_string(ms.count()));
+    result.append(suffix);
+    return result;
+}
+
 std::vector<std::string> split(const std::string& s, char seperator)
 {
     std::vector<std::string> output;
-
     std::string::size_type prev_pos = 0, pos = 0;
-
     while((pos = s.find(seperator, pos)) != std::string::npos)
     {
         std::string substring( s.substr(prev_pos, pos-prev_pos) );
-
         output.push_back(substring);
-
         prev_pos = ++pos;
     }
-
     output.push_back(s.substr(prev_pos, pos-prev_pos)); // Last word
-
     return output;
 }
 
@@ -104,7 +139,6 @@ int get_int(int *value, const char *str,const char *message,int min_value, int m
         fprintf(stderr, "%s: %s\n",message, str);
         return -1;
     }
-
     if (*value > max_value){
         fprintf(stderr, "%s: %s\n",message, str);
         return -1;
@@ -188,8 +222,8 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\tThis mode allows you to control streaming as a client.\n"
             "\n"
             "\tOptions:\n"
-            "\t\t%s -r -h IPs [-p PORT] -m start|stop|start_stop [-t MSEC] [-v]\n"
-            "\t\t%s --remote --hosts=IPs [--port=PORT] --mode=start|stop|start_stop [--timeout=MSEC] [--verbose]\n"
+            "\t\t%s -r -h IPs [-p PORT] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac [-t MSEC] [-v]\n"
+            "\t\t%s --remote --hosts=IPs [--port=PORT] --mode=start|stop|start_stop|start_dac|stop_dac|start_stop_dac [--timeout=MSEC] [--verbose]\n"
             "\n"
             "\t\t--remote            -r           Enable remote control mode.\n"
             "\t\t--hosts=IP,...      -h IP,...    You can specify one or more board IP addresses through a separator - ','\n"
@@ -200,6 +234,9 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t                                 Keys: start = Starts the server.\n"
             "\t\t                                       stop = Stop the server.\n"
             "\t\t                                       start_stop = Sends a start command at the end of the timeout sends a stop command.\n"
+            "\t\t                                       start_dac = Starts the DAC server.\n"
+            "\t\t                                       stop_dac = Stop the DAC server.\n"
+            "\t\t                                       start_stop_dac = Sends a start command at the end of the timeout sends a stop command for DAC mode.\n"
             "\t\t--timeout=MSEC      -t MSEC      Timeout (Default: 1000 ms). Used only in conjunction with the start_stop command.\n"
             "\t\t--verbose           -v           Displays service information.\n"
             "\n"
@@ -210,7 +247,7 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t%s -s -h IPs [-p PORT] [-c PORT] -f tdms|wav|csv [-d NAME] [-m raw|volt] [-l SAMPLES] [-t MSEC] [-v]\n"
             "\t\t%s --streaming --hosts=IPs [--port=PORT] [--config_port=PORT] --format=tdms|wav|csv [--dir=NAME] [--limit=SAMPLES] [--mode=raw|volt] [--timeout=MSEC] [--verbose]\n"
             "\n"
-            "\t\t--streaming         -s           Enable remote control mode.\n"
+            "\t\t--streaming         -s           Enable streaming mode.\n"
             "\t\t--hosts=IP,...      -h IP,...    You can specify one or more board IP addresses through a separator - ','\n"
             "\t\t                                 Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
             "\t\t                                           -p 127.0.0.1     or  -p 127.0.0.1,127.0.0.2,127.0.0.3\n"
@@ -228,9 +265,31 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t                                              Measured in volts. In wav format, it is limited from -1 to 1.\n"
             "\t\t--timeout=MSEC      -t MSEC      Stops recording after a specified amount of time.\n"
             "\t\t--verbose           -v           Displays service information.\n"
+            "\n"
+            "DAC streaming Mode:\n"
+            "\tThis mode allows you to generate output data using a signal from a file.\n"
+            "\n"
+            "\tOptions:\n"
+            "\t\t%s -o -h IPs [-p PORT] [-c PORT] -f tdms|wav -d FILE_NAME [-r inf|COUNT] [-v]\n"
+            "\t\t%s --out_streaming --hosts=IPs [--port=PORT] [--config_port=PORT] --format=tdms|wav --data=FILE_NAME [--repeat=inf|COUNT] [--verbose]\n"
+            "\n"
+            "\t\t--out_streaming     -o           Enable dac streaming mode.\n"
+            "\t\t--hosts=IP,...      -h IP,...    You can specify one or more board IP addresses through a separator - ','\n"
+            "\t\t                                 Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
+            "\t\t                                           -p 127.0.0.1     or  -p 127.0.0.1,127.0.0.2,127.0.0.3\n"
+            "\t\t--port=PORT         -p PORT      Port for dac streaming server (Default: 8903).\n"
+            "\t\t--config_port=PORT  -c PORT      Port for configuration server (Default: 8901).\n"
+            "\t\t--format=FORMAT     -f FORMAT    The format in which the data will be used.\n"
+            "\t\t                                 Keys: tdsm = NI TDMS File Format.\n"
+            "\t\t                                       wav = Waveform Audio File Format.\n"
+            "\t\t--data=FILE_NAME    -d FILE_NAME Path to the file for streaming.\n"
+            "\t\t--repeat=inf|COUNT  -r inf|COUNT The number of times the file has been resent.\n" 
+            "\t\t                                 Keys: inf is an infinite number of times.\n" 
+            "\t\t                                       COUNT - value from [1 ... 1000000]\n"
+            "\t\t--verbose           -v           Displays service information.\n"
             "\n";
     auto n = name.c_str();
-    fprintf( stderr, format, n,n,n,n,n,n,n,n,n,n,n,0x7FFFFFFF);
+    fprintf( stderr, format, n,n,n,n,n,n,n,n,n,n,n,0x7FFFFFFF,n,n);
 }
 
 auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
@@ -442,6 +501,12 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.remote_mode = RemoteMode::STOP;
                     } else if (strcmp(optarg, "start_stop") == 0) {
                         opt.remote_mode = RemoteMode::START_STOP;
+                    } else if (strcmp(optarg, "start_dac") == 0) {
+                        opt.remote_mode = RemoteMode::START_DAC;
+                    } else if (strcmp(optarg, "stop_dac") == 0) {
+                        opt.remote_mode = RemoteMode::STOP_DAC;
+                    } else if (strcmp(optarg, "start_stop_dac") == 0) {
+                        opt.remote_mode = RemoteMode::START_STOP_DAC;
                     } else {
                         fprintf(stderr, "Error key --mode: %s\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
@@ -584,6 +649,116 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.save_dir = optarg;
                     } else {
                         fprintf(stderr, "Error key --dir: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+
+                default: {
+                    if (opt.mode == Mode::CONFIG) {
+                        fprintf(stderr, "[ERROR] Unknown parameter\n");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+        }
+
+        if (opt.mode != Mode::ERROR_MODE){
+            if (opt.mode == Mode::STREAMING && (opt.streamign_type == StreamingType::NONE || opt.hosts.size() == 0)){
+                fprintf(stderr,"[ERROR] Missing required key in streaming mode\n");
+                exit( EXIT_FAILURE );
+            }
+            return opt;
+        }
+    }
+
+    option_index = 0;
+    ch = -1;
+    if ((strcmp(argv[1],"-o") == 0) || (strcmp(argv[1],"--out_streaming") == 0)) {
+        opt.timeout = -1;
+        while ((ch = getopt_long(argc, argv, optstring_streaming, long_options_streaming, &option_index)) != -1) {
+            switch (ch) {
+
+                case 'o':
+                    opt.mode = Mode::STREAMING_DAC;
+                    break;
+
+                case 'v':
+                    opt.verbous = true;
+                    break;
+
+                case 'p': {
+                    int port = 0;
+                    if (get_int(&port, optarg, "Error get port number", 1,65535) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.dac_port = optarg;
+                    break;
+                }
+
+                case 'c': {
+                    int conf_port = 0;
+                    if (get_int(&conf_port, optarg, "Error get port number for configuration server",1, 65535) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.controlPort = optarg;
+                    break;
+                }
+
+                case 'h': {
+                    opt.hosts = split(optarg, ',');
+                    remove_duplicates(opt.hosts);
+                    if (opt.hosts.size() > 0) {
+                        for (auto &s:opt.hosts) {
+                            if (!check_ip(s)) {
+                                fprintf(stderr, "Error parse ip address: %s\n", s.c_str());
+                                opt.mode = Mode::ERROR_PARAM;
+                                return opt;
+                            }
+                        }
+                    } else {
+                        fprintf(stderr, "Error parse ip address: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+
+                case 'f': {
+                    if (strcmp(optarg, "tdms") == 0) {
+                        opt.streamign_type = StreamingType::TDMS;
+                    } else if (strcmp(optarg, "wav") == 0) {
+                        opt.streamign_type = StreamingType::WAV;
+                    } else {
+                        fprintf(stderr, "Error key --format: %s\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
+
+                case 'r': {
+                    int repeat = 0;
+                    if (strcmp(optarg, "inf") == 0) {
+                        opt.dac_repeat = (int)RepeatDAC::INF;
+                    }else if (get_int(&repeat, optarg, "Error get repeat count",1, 1000000) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }else{
+                        opt.dac_repeat = repeat;
+                    }
+                    
+                    break;
+                }
+
+                case 'd': {
+                    if (strcmp(optarg, "") != 0) {
+                        opt.dac_file = optarg;
+                    } else {
+                        fprintf(stderr, "Error key --data: %s\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }

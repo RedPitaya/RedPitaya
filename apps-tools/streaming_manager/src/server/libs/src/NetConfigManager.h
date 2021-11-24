@@ -30,7 +30,13 @@ public:
         LOAD_FROM_FILE_SUCCES,
         LOAD_FROM_FILE_FAIL,
         MASTER_CONNETED,
-        SLAVE_CONNECTED
+        SLAVE_CONNECTED,
+        START_DAC_STREAMING,
+        STOP_DAC_STREAMING,
+        SERVER_DAC_STOPPED,
+        SERVER_DAC_STOPPED_SD_DONE,
+        SERVER_DAC_STARTED,
+        SERVER_DAC_STARTED_SD
     };
 
     static std::shared_ptr<CNetConfigManager> instance()

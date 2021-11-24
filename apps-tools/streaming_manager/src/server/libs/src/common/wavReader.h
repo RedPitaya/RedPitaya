@@ -27,6 +27,7 @@ class CWaveReader
 
 public:
     CWaveReader();
+    ~CWaveReader();
 
     auto openFile(string fileName) -> bool;
     auto getHeader() -> WavHeader_t;

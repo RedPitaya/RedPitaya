@@ -11,7 +11,8 @@ CXXSOURCES=main.cpp
 
 CXXSOURCES_SERVICE = console_server/main.cpp \
 					 console_server/options.cpp \
-					 console_server/streaming.cpp
+					 console_server/streaming.cpp \
+ 					 console_server/dac_streaming.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -87,5 +88,5 @@ service: build_lib $(OBJECTS_SERVICE)
 	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CXXFLAGS) $(LDFLAGS) $(LDSFLAGS)
 
 clean_c_app:
-	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
+	$(RM) -f $(C_OUT_NAME) $(OBJECTS) $(OBJECTS_SERVICE) $(C_OUT_NAME_SERVICE)
 	./build.sh clean

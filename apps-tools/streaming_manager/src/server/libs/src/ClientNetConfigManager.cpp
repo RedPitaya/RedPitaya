@@ -187,6 +187,21 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STOPPED_SD_FULL),sender->m_manager->getHost());
     }
 
+    if (c== CNetConfigManager::Commands::SERVER_DAC_STARTED){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STARTED),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_DAC_STARTED_SD){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STARTED_SD),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_DONE){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_DONE),sender->m_manager->getHost());
+    }
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
@@ -271,6 +286,14 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("attenuator",static_cast<uint32_t>(getAttenuator()),_async)) return false;
         if (!_client->m_manager->sendData("calibration",static_cast<uint32_t>(getCalibration()),_async)) return false;
         if (!_client->m_manager->sendData("coupling",static_cast<uint32_t>(getAC_DC()),_async)) return false;
+
+        if (!_client->m_manager->sendData("dac_file",getDACFile(),_async)) return false;
+        if (!_client->m_manager->sendData("dac_port",getDACPort(),_async)) return false;
+        if (!_client->m_manager->sendData("dac_file_type",static_cast<uint32_t>(getDACFileType()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_gain",static_cast<uint32_t>(getDACGain()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_mode",static_cast<uint32_t>(getDACMode()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
+
         if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;
     }
@@ -326,6 +349,27 @@ auto ClientNetConfigManager::sendStop(std::string host) -> bool{
     }
     return false;
 }
+
+auto ClientNetConfigManager::sendDACStart(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_DAC_STREAMING);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendDACStop(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::STOP_DAC_STREAMING);
+    }
+    return false;
+}
+
 
 auto ClientNetConfigManager::getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode{
     const std::lock_guard<std::mutex> lock(g_client_mutex);

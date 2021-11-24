@@ -46,10 +46,10 @@ public:
     ~CGenerator();
 
     auto prepare() -> void;
-    auto initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool;
-    auto initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool;
+    auto initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool;
+    auto initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool;
     
-    auto write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool;
+    auto write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool;
     auto setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void;
     // bool clearBuffer();
     // bool wait();

@@ -33,6 +33,7 @@
 #include "ServerNetConfigManager.h"
 #include "options.h"
 #include "streaming.h"
+#include "dac_streaming.h"
 
 #ifdef Z20_250_12
 #include "rp-spi.h"
@@ -102,7 +103,6 @@ int main(int argc, char *argv[])
 
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
-
     if (opt.background){
         FILE *fp= NULL;
         pid_t process_id = 0;
@@ -200,6 +200,14 @@ int main(int argc, char *argv[])
         con_server->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[](){
             stopNonBlocking(0);
         });
+
+        con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[con_server](){
+            startDACServer(con_server);
+        });
+
+        con_server->addHandler(ServerNetConfigManager::Events::STOP_DAC_STREAMING,[](){
+            stopDACNonBlocking(0);
+        });
         
     }catch (std::exception& e)
     {
@@ -229,6 +237,7 @@ int main(int argc, char *argv[])
 
     try{
         stopServer(0);
+        stopDACServer(0);
     }catch (std::exception& e)
     {
         fprintf(stderr, "Error: main() %s\n",e.what());

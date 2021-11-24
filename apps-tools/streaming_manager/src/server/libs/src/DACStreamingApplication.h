@@ -19,7 +19,7 @@ public:
     ~CDACStreamingApplication();
     auto run() -> void;
     auto runNonBlock() -> void;
-    auto stop(bool wait) -> bool;
+    auto stop(bool wait = true) -> bool;
     auto isRun() -> bool {return m_isRun;}
 
 private:

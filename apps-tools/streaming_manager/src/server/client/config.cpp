@@ -64,7 +64,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::SERVER_CONNECTED, [&cl,&connected_hosts](std::string host){
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (g_option.verbous)
-            std::cout << "Connected: " << host << "\n";
+            std::cout << getTS(": ") << "Connected: " << host << "\n";
         connected_hosts.push_back(host);
         g_connect_counter--;
     });
@@ -72,7 +72,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::GET_NEW_SETTING,[&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (g_option.verbous)
-            std::cerr << "Get settings from: " << host.c_str() << "\n";
+            std::cerr << getTS(": ") << "Get settings from: " << host.c_str() << "\n";
         CStreamSettings* s = cl.getLocalSettingsOfHost(host);
         if (g_option.conf_get == ClientOpt::ConfGet::VERBOUS_JSON || g_option.conf_get == ClientOpt::ConfGet::VERBOUS_JSON_DATA){
             auto str = s->getJson();
@@ -98,7 +98,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
             createDirTreeConfig("configs");
             std::string file = "configs/config_" + host + ".json";
             if (g_option.verbous)
-                std::cout << "Save configuration from " << host << " to " <<  file << "\n";
+                std::cout << getTS(": ") << "Save configuration from " << host << " to " <<  file << "\n";
             s->writeToFile(file);
         }
         g_get_counter--;
@@ -107,10 +107,10 @@ auto startConfig(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::SUCCESS_SEND_CONFIG, [&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (g_option.verbous)
-            std::cout << "SET: " << host << " OK\n";
+            std::cout << getTS(": ") <<"SET: " << host << " OK\n";
         if (g_option.conf_set == ClientOpt::ConfSet::FILE){
             if (g_option.verbous)
-                std::cout << "Send configuration save command to: " << host.c_str() << "\n";
+                std::cout << getTS(": ") << "Send configuration save command to: " << host.c_str() << "\n";
             cl.sendSaveToFile(host);
         }else{
             g_set_counter--;
@@ -120,7 +120,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::FAIL_SEND_CONFIG, [&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (g_option.verbous)
-            std::cout << "SET: " << host << " FAIL\n";
+            std::cout << getTS(": ") << "SET: " << host << " FAIL\n";
         g_set_counter--;
     });
 
@@ -128,7 +128,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::SUCCESS_SAVE_CONFIG, [&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (g_option.verbous)
-            std::cout << "SAVE TO FILE: " << host << " OK\n";
+            std::cout << getTS(": ") << "SAVE TO FILE: " << host << " OK\n";
         g_set_counter--;
     });
 
@@ -136,14 +136,14 @@ auto startConfig(ClientOpt::Options &option) -> void{
     cl.addHandler(ClientNetConfigManager::Events::FAIL_SAVE_CONFIG, [&cl](std::string host){
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (g_option.verbous)
-            std::cout << "SAVE TO FILE: " << host << " FAIL\n";
+            std::cout << getTS(": ") << "SAVE TO FILE: " << host << " FAIL\n";
         g_set_counter--;
     });
 
     cl.addHandlerError([](ClientNetConfigManager::Errors errors,std::string host){
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            std::cerr << "Error: " << host.c_str() << "\n";
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
             g_connect_counter--;
             g_get_counter--;
             g_set_counter--;
@@ -151,19 +151,19 @@ auto startConfig(ClientOpt::Options &option) -> void{
 
         if (errors == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG){
             if (g_option.verbous)
-                std::cerr << "Error get settings from: " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Error get settings from: " << host.c_str() << "\n";
             g_get_counter--;
         }
 
         if (errors == ClientNetConfigManager::Errors::CONNECT_TIMEOUT) {
             if (g_option.verbous)
-                std::cerr << "Connect timeout: " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Connect timeout: " << host.c_str() << "\n";
             g_connect_counter--;
         }
 
         if (errors == ClientNetConfigManager::Errors::ERROR_SEND_CONFIG){
             if (g_option.verbous)
-                std::cerr << "Error send configuration: " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Error send configuration: " << host.c_str() << "\n";
             g_set_counter--;
         }
 
@@ -181,7 +181,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
         g_get_counter = connected_hosts.size();
         for(auto &host:connected_hosts) {
             if (g_option.verbous)
-                std::cerr << "Send configuration request: " << host.c_str() << "\n";
+                std::cerr << getTS(": ") << "Send configuration request: " << host.c_str() << "\n";
             if (!cl.requestConfig(host)){
                 g_get_counter--;
             }
@@ -198,7 +198,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
             g_set_counter = connected_hosts.size();
             for(auto &host:connected_hosts) {
                 if (g_option.verbous)
-                    std::cout << "Send configuration to: " << host.c_str() << "\n";
+                    std::cout << getTS(": ") << "Send configuration to: " << host.c_str() << "\n";
                 if (!cl.sendConfig(host)){
                     g_set_counter--;
                 }
@@ -209,7 +209,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
             }
         }else{
             if (g_option.verbous)
-                std::cerr << "Error read configuration file: " << file.c_str() << "\n";
+                std::cerr << getTS(": ") << "Error read configuration file: " << file.c_str() << "\n";
         }
     }
 }

@@ -9,7 +9,8 @@ namespace ClientOpt {
         SEARCH,
         CONFIG,
         REMOTE,
-        STREAMING
+        STREAMING,
+        STREAMING_DAC
     };
 
     enum class ConfGet{
@@ -30,7 +31,10 @@ namespace ClientOpt {
         NONE,
         START,
         STOP,
-        START_STOP
+        START_STOP,
+        START_DAC,
+        STOP_DAC,
+        START_STOP_DAC
     };
 
     enum class StreamingType{
@@ -46,6 +50,11 @@ namespace ClientOpt {
         VOL
     };
 
+    enum class RepeatDAC{
+        NONE = -1,
+        INF  = -2
+    };
+
     struct Options {
         Mode mode;
         std::string port;
@@ -58,7 +67,10 @@ namespace ClientOpt {
         RemoteMode remote_mode;
 
         // streaming
-        std::string  save_dir;
+        std::string   save_dir;
+        std::string   dac_file; // For DAC streaming
+        int           dac_repeat; // For DAC streaming
+        std::string   dac_port; // For DAC streaming
         StreamingType streamign_type;
         SaveType      save_type;
         int           samples;
@@ -80,9 +92,14 @@ namespace ClientOpt {
             save_type = SaveType::NONE;
             samples = -1;
             controlPort = "";
+            dac_file = "";
+            dac_repeat = (int)RepeatDAC::NONE;
+            dac_port = "";
         };
     };
 
     auto usage(char const *progName) -> void;
     auto parse(int argc, char* argv[]) -> Options;
 }
+
+auto getTS(std::string suffix = "") -> std::string;

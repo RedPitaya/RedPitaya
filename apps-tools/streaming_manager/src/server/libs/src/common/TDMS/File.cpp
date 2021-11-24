@@ -15,6 +15,8 @@ m_reader(nullptr)
 
 
 File::~File(){
+    if (m_read_fs.is_open())
+        m_read_fs.close();
 }
 
 auto File::Print(vector<shared_ptr<Metadata>> &data,bool PrintRaw,long limitData) -> void{

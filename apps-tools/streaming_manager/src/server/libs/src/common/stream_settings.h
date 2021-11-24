@@ -10,9 +10,10 @@ public:
     };
 
     enum DataFormat{
-        WAV =  0,
-        TDMS = 1,
-        CSV =  2
+        UNDEF = -1,
+        WAV   =  0,
+        TDMS  =  1,
+        CSV   =  2
     };
 
     enum DataType{
@@ -44,6 +45,22 @@ public:
     enum SaveType{
         NET = 0,
         FILE = 1
+    };
+
+    enum DACType{
+        DAC_NET = 0,
+        DAC_FILE = 1
+    };
+
+    enum DACRepeat{
+        DAC_REP_OFF = -1,
+        DAC_REP_INF = -2,
+        DAC_REP_ON  =  0
+    };
+
+    enum DACGain{
+        X1 = 0,
+        X5 = 1
     };
 
 
@@ -85,8 +102,22 @@ public:
     auto setAC_DC(AC_DC _value) -> void;
     auto getAC_DC() -> AC_DC;
 
+    auto setDACFile(std::string _value) -> void;
+    auto getDACFile() -> std::string;
+    auto setDACFileType(DataFormat _value) -> void;
+    auto getDACFileType() -> DataFormat;
+    auto setDACGain(DACGain _value) -> void;
+    auto getDACGain() -> DACGain;
+    auto setDACMode(DACType _value) -> void;
+    auto getDACMode() -> DACType;
+    auto setDACRepeat(int _value) -> void;
+    auto getDACRepeat() -> int;
+    auto getDACPort() -> std::string;
+    auto setDACPort(std::string _port) -> void;
+
 private:
     bool m_Bport;
+    bool m_Bdac_file;
     bool m_Bprotocol;
     bool m_Bsamples;
     bool m_Bformat;
@@ -98,18 +129,29 @@ private:
     bool m_calib;
     bool m_Battenuator;
     bool m_Bcalib;
-    std::string      m_port;
-    Protocol    m_protocol;
-    uint32_t    m_samples;
-    DataFormat  m_format;
-    DataType    m_type;
-    SaveType    m_saveType;
-    Channel     m_channels;
-    Resolution  m_res;
-    uint32_t    m_decimation;
-    Attenuator  m_attenuator;
-    AC_DC       m_ac_dc;
-    bool        m_Bac_dc;
+    bool m_Bac_dc;
+    bool m_Bdac_gain;
+    bool m_Bdac_file_type;
+    bool m_Bdac_mode;
+    bool m_Bdac_repeat;
+    bool m_Bdac_port;
 
+    std::string     m_port;
+    std::string     m_dac_file;
+    Protocol        m_protocol;
+    uint32_t        m_samples;
+    DataFormat      m_format;
+    DataType        m_type;
+    SaveType        m_saveType;
+    Channel         m_channels;
+    Resolution      m_res;
+    uint32_t        m_decimation;
+    Attenuator      m_attenuator;
+    AC_DC           m_ac_dc;
+    DACGain         m_dac_gain;
+    DataFormat      m_dac_file_type;
+    DACType         m_dac_mode;
+    int             m_dac_repeat;
+    std::string     m_dac_port;
 };
 
