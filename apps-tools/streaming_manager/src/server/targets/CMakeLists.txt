@@ -25,3 +25,8 @@ if( NOT WIN32 )
     add_subdirectory(tdms_test)
 endif()
 
+if( NOT WIN32 )
+    add_subdirectory(reader_controller_test)
+endif()
+
+

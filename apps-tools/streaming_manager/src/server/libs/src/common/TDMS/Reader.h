@@ -13,7 +13,7 @@ namespace TDMS
 	class Reader
 	{
         public:
-            Reader(iostream &fileStream,uint64_t fileSize);
+            Reader(iostream &fileStream,uint64_t fileSize,bool showLog = false);
             ~Reader();
             auto GetFileSize() -> uint64_t;
             auto ReadFirstSegment() -> shared_ptr<Segment>;
@@ -28,5 +28,6 @@ namespace TDMS
             iostream*    m_fileStream;
             uint64_t     m_fileSize;
             BinaryStream m_bstream;
+            bool         m_showLog;
 	};
 }
