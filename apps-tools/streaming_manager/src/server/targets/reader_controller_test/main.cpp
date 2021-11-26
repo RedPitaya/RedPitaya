@@ -10,11 +10,11 @@
 
 using namespace TDMS;
 
-#define WAV_TEST_COUNT 1
+#define WAV_TEST_COUNT 1000
 #define TDMS_TEST_COUNT 1000
 #define DATA_SIZE 1000000
 
-#define USE_PREDEFINE
+//#define USE_PREDEFINE
 // Test TDMS num samples: 369247 channels:1 repmode: 0 repcount: 1
 #define NUMSAMP 975221
 #define CHANNELS 1
@@ -48,7 +48,7 @@ Buff* genBuffer(int size){
 vector<Buff*> genVector(size_t numbersCount){
     vector<Buff*> vect;
     while(numbersCount >0){
-        size_t size = random() % numbersCount;
+        size_t size = random() % numbersCount + 1;
         if (numbersCount < 100){
             size = numbersCount;
         }
@@ -57,6 +57,7 @@ vector<Buff*> genVector(size_t numbersCount){
     }
     return vect;
 }
+
 
 Buff* genResultBuff(vector<Buff*>* vect,int repeat){
     size_t allsize = 0;
@@ -134,36 +135,37 @@ vector<Buff*> genTDMS(size_t numCount,int channel){
 
     bool append = false;
     for(ulong i = 0 ; i < vect.size();i++){
+        {
+            WriterSegment seg;
+            vector<shared_ptr<Metadata>> data;
 
-        WriterSegment seg;
-        vector<shared_ptr<Metadata>> data;
+            auto root = seg.GenerateRoot();
+            root->TableOfContents.HasMetaData = true;
+            root->TableOfContents.HasRawData  = true;
+            data.push_back(root);
 
-        auto root = seg.GenerateRoot();
-        root->TableOfContents.HasMetaData = true;
-        root->TableOfContents.HasRawData  = true;
-        data.push_back(root);
+            auto group =seg.GenerateGroup("Group");
+            data.push_back(group);
 
-        auto group =seg.GenerateGroup("Group");
-        data.push_back(group);
+            if (channel == 1 || channel == 3){
+                auto channelSeg = seg.GenerateChannel("Group","ch1");
+                data.push_back(channelSeg);
+                uint8_t *tbuf = new uint8_t[vect[i]->size];
+                memcpy(tbuf,vect[i]->buffer,vect[i]->size);
+                seg.AddRaw(channelSeg,TDMSType::UnsignedInteger16,vect[i]->size/2,tbuf);
+            }
 
-        if (channel == 1 || channel == 3){
-            auto channelSeg = seg.GenerateChannel("Group","ch1");
-            data.push_back(channelSeg);
-            uint8_t *tbuf = new uint8_t[vect[i]->size];
-            memcpy(tbuf,vect[i]->buffer,vect[i]->size);
-            seg.AddRaw(channelSeg,TDMSType::UnsignedInteger16,vect[i]->size/2,tbuf);
+            if (channel == 2 || channel == 3){
+                auto channel2Seg =seg.GenerateChannel("Group","ch2");
+                data.push_back(channel2Seg);
+                uint8_t *tbuf = new uint8_t[vect[i]->size];
+                memcpy(tbuf,vect[i]->buffer,vect[i]->size);
+                seg.AddRaw(channel2Seg,TDMSType::UnsignedInteger16,vect[i]->size/2,tbuf);
+            }
+            seg.LoadMetadata(data);
+            outFile.WriteFile("test.tdms",seg, append);
+            append = true;
         }
-
-        if (channel == 2 || channel == 3){
-            auto channel2Seg =seg.GenerateChannel("Group","ch2");
-            data.push_back(channel2Seg);
-            uint8_t *tbuf = new uint8_t[vect[i]->size];
-            memcpy(tbuf,vect[i]->buffer,vect[i]->size);
-            seg.AddRaw(channel2Seg,TDMSType::UnsignedInteger16,vect[i]->size/2,tbuf);
-        }
-        seg.LoadMetadata(data);
-        outFile.WriteFile("test.tdms",seg, append);
-        append = true;
     }
     return vect;
 
@@ -255,7 +257,7 @@ void checkWAV(){
             }
         }
 
-        std::cout << "Test WAV num samples: " << numSamples << " channels:" << ch << " repmode: " << enableRepeat << " repcount: " << repCount << " mem: " << mem;
+        std::cout << i << " Test WAV num samples: " << numSamples << " channels:" << ch << " repmode: " << enableRepeat << " repcount: " << repCount << " mem: " << mem;
         if (compareRes == 0) std::cout << " [OK]\n";
         if (compareRes & 0x3) {
             std::cout << " [FAIL ch1 and ch2]\n";
@@ -293,7 +295,7 @@ void checkTDMS(){
         auto enableRepeat = (random() % 100 < 50) ?  CStreamSettings::DACRepeat::DAC_REP_OFF : CStreamSettings::DACRepeat::DAC_REP_ON;
         int repCount = 1;
         if (enableRepeat == CStreamSettings::DACRepeat::DAC_REP_ON){
-        //    repCount = random() % 100 + 1;
+            repCount = random() % 100 + 1;
         }
         int mem = random() % 1000000;
 
@@ -326,7 +328,6 @@ void checkTDMS(){
                 }
                 if (ch1) delete[](ch1);
                 if (ch2) delete[](ch2);
-
                 if (res != CReaderController::BR_OK)
                     break;
             }
@@ -365,7 +366,7 @@ void checkTDMS(){
             }
         }
 
-        std::cout << "Test TDMS num samples: " << numSamples << " channels:" << ch << " repmode: " << enableRepeat << " repcount: " << repCount << " mem: " << mem;
+        std::cout << i <<  " Test TDMS num samples: " << numSamples << " channels:" << ch << " repmode: " << enableRepeat << " repcount: " << repCount << " mem: " << mem;
         if (compareRes == 0) std::cout << " [OK]\n";
         if (compareRes & 0x3) {
             std::cout << " [FAIL ch1 and ch2]\n";

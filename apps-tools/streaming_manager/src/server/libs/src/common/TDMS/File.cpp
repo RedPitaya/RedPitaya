@@ -41,6 +41,11 @@ auto File::Print(vector<shared_ptr<Metadata>> &data,bool PrintRaw,long limitData
     }
 }
 
+auto File::clearPrevMetadata() -> void{
+    m_prevMetaDataLookup.clear();
+}
+
+
 auto File::ReadFile(string m_fileName) -> vector<shared_ptr<Metadata>>{
     std::fstream ifs;
     ifs.open(m_fileName, ios::binary | std::ifstream::in );

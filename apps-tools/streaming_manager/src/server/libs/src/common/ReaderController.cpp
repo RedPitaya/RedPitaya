@@ -34,6 +34,7 @@ CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std:
         openTDMS();
     }
     m_result = checkFile();
+    resetReadFromBuffer();
     m_useMemoryCache = memoryCacheSize >= m_channel1Size || memoryCacheSize >= m_channel2Size;
 }
 
@@ -106,6 +107,7 @@ auto CReaderController::resetReadFromBuffer() -> bool{
         if (m_fileType == CStreamSettings::DataFormat::TDMS){
             m_currentSegment = 0;
             m_currentMetadata = -1;
+            m_tdmsFile->clearPrevMetadata();
             moveNextMetadata();
         }
         return true;
@@ -122,6 +124,7 @@ auto CReaderController::resetReadFromBuffer() -> bool{
         if (m_fileType == CStreamSettings::DataFormat::TDMS){
             m_currentSegment = 0;
             m_currentMetadata = -1;
+            m_tdmsFile->clearPrevMetadata();
             moveNextMetadata();
             return true;
         }
@@ -413,6 +416,8 @@ auto CReaderController::getBufferTdms(uint8_t **ch1,size_t *size_ch1, uint8_t **
             *size_ch1 = size1;
             *size_ch2 = size2;
             return true;
+        }else{
+            moveNextMetadata();
         }
     }
     return false;
@@ -426,7 +431,6 @@ auto CReaderController::moveNextMetadata() -> bool{
             }
             m_currentVecMetadataPtr = m_tdmsFile->GetMetadata(m_tdmsSegments[m_currentSegment]);
         }
-
         m_currentMetadata++;
         if (m_currentMetadata < m_currentVecMetadataPtr.size()){
             m_currentMetadataPtr = m_currentVecMetadataPtr[m_currentMetadata];

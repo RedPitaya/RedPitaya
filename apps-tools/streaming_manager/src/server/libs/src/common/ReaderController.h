@@ -14,6 +14,12 @@
 #include "wavReader.h"
 #include "common/TDMS/File.h"
 
+
+/**
+ * Error of reading TMDS file if Metadata block has empty data.
+ * Data is dublicated
+ */
+
 using namespace std;
 
 class CReaderController
