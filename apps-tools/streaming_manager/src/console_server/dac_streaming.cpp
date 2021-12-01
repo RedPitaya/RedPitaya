@@ -18,6 +18,7 @@ auto calibDACFullScaleToVoltage(uint32_t fullScaleGain) -> float {
 auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
     if (!serverNetConfig) return;
     g_serverDACNetConfig = serverNetConfig;
+	gen = nullptr;
 	try{
 		if (!g_serverDACNetConfig->isSetted()) return;
 		if (g_dac_serverRun) {
@@ -93,6 +94,12 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 				gen = CGenerator::Create(uio, true , true );
 				gen->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
 			}
+		}
+
+		if (!gen){
+			fprintf(stdout,"[Streaming] Error init generator module\n");
+        	syslog (LOG_NOTICE, "[Streaming] Error init generator module\n");
+			return;
 		}
 
 

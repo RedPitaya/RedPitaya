@@ -18,6 +18,7 @@ auto calibFullScaleToVoltage(uint32_t fullScaleGain) -> float {
 auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
 	// Search oscilloscope
     if (!serverNetConfig) return;
+	osc = nullptr;
     g_serverNetConfig = serverNetConfig;
 	try{
 		if (!g_serverNetConfig->isSetted()) return;
