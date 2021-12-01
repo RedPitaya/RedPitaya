@@ -23,6 +23,7 @@ void sigHandler (int){
     remoteSIGHandler();
     configSIGHandler();
     streamingSIGHandler();
+    dac_streamingSIGHandler();
 }
 
 void installTermSignalHandler()

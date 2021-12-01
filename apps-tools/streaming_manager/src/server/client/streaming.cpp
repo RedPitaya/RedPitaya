@@ -204,7 +204,7 @@ auto startStreaming(ClientOpt::Options &option) -> void{
 
 auto streamingSIGHandler() -> void{
     stopCSV();
-    stopStreaming();
+    stopStreaming();    
     sig_exit_flag = true;
 }
 

@@ -76,15 +76,28 @@ auto dac_runClient(DacSettings conf) -> void{
         const std::lock_guard<std::mutex> lock(g_dac_smutex);
         switch(res){
             case CDACStreamingManager::NotifyResult::NR_BROKEN:{
-                std::cout << getTS(": ") << "File" << conf.dac_file << " is broken\n" ;
+                if (conf.verbous)
+                    std::cout << getTS(": ") << "File" << conf.dac_file << " is broken\n" ;
                 break;
             }
             case CDACStreamingManager::NotifyResult::NR_EMPTY:{
-                std::cout << getTS(": ") << "File" << conf.dac_file << " is empty\n" ;
+                if (conf.verbous)
+                    std::cout << getTS(": ") << "File" << conf.dac_file << " is empty\n" ;
                 break;
             }
             case CDACStreamingManager::NotifyResult::NR_MISSING_FILE:{
-                std::cout << getTS(": ") << "File" << conf.dac_file << " is missing\n" ;
+                if (conf.verbous)
+                    std::cout << getTS(": ") << "File" << conf.dac_file << " is missing\n" ;
+                break;
+            }
+            case CDACStreamingManager::NotifyResult::NR_STOP:{
+                if (conf.verbous)
+                    std::cout << getTS(": ") << "Get stop command from data controller\n" ;
+                break;
+            }
+            case CDACStreamingManager::NotifyResult::NR_ENDED:{
+                if (conf.verbous)
+                    std::cout << getTS(": ") << "All data sended " << conf.dac_file << "\n" ;
                 break;
             }
             default:
@@ -104,9 +117,10 @@ auto dac_runClient(DacSettings conf) -> void{
     g_dac_asionet[conf.host]->addHandler(CDACAsioNetController::Events::DISCONNECTED, [=](std::string host){
         const std::lock_guard<std::mutex> lock(g_dac_smutex);
         std::cout << getTS(": ") << "CLIENT DISCONNECTED " << host << "\n" ;
+        g_dac_terminate[conf.host] = true;
     });
 
-    g_dac_asionet[conf.host]->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_CLIENT,conf.host,conf.port);
+    g_dac_asionet[conf.host]->startAsioNet(asionet_simple::CAsioSocketSimple::ASMode::AS_CLIENT,conf.host,conf.port != "" ? conf.port : "8903");
 
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
     auto curTime = beginTime;
@@ -123,7 +137,13 @@ auto dac_runClient(DacSettings conf) -> void{
             size_t size1 = 0;
             size_t size2 = 0;
             auto res = g_dac_manger[conf.host]->getBuffer();
-            g_dac_asionet[conf.host]->sendBuffer(ch1,size1,ch2,size2);
+            if (!res.empty){
+                ch1 = res.ch1;
+                ch2 = res.ch2;
+                size1 = res.size_ch1;
+                size2 = res.size_ch2;
+                g_dac_asionet[conf.host]->sendBuffer(ch1,size1,ch2,size2);
+            }
             if (ch1){
                 g_dac_packCounter_ch1[conf.host]++;
                 g_dac_BytesCount[conf.host] += size1;
