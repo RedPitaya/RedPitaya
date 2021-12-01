@@ -319,7 +319,7 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t%s --out_streaming_conf CONFIG_FILE\n"
             "\n"
             "\t\t--out_streaming        -o           Enable dac streaming mode.\n"
-            "\t\t--out_streaming_conf   -oc           Enable dac streaming mode.\n"
+            "\t\t--out_streaming_conf   -oc          Enable dac streaming mode.\n"
             "\t\t--hosts=IP,...         -h IP,...    You can specify one or more board IP addresses through a separator - ','\n"
             "\t\t                                    Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
             "\t\t                                              -p 127.0.0.1     or  -p 127.0.0.1,127.0.0.2,127.0.0.3\n"
@@ -727,7 +727,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
     ch = -1;
     if ((strcmp(argv[1],"-o") == 0) || (strcmp(argv[1],"--out_streaming") == 0)) {
         opt.timeout = -1;
-        while ((ch = getopt_long(argc, argv, optstring_streaming, long_options_streaming, &option_index)) != -1) {
+        while ((ch = getopt_long(argc, argv, optstring_dac_streaming, long_options_dac_streaming, &option_index)) != -1) {
             switch (ch) {
 
                 case 'o':

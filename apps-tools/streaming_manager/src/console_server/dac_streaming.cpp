@@ -23,7 +23,7 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 		if (g_dac_serverRun) {
 			if (g_dac_manger){
 				if (!g_dac_manger->isLocalMode()){
-					g_serverDACNetConfig->sendServerStartedUDP();
+					g_serverDACNetConfig->sendServerStartedTCP();
 				}else{
 					g_serverDACNetConfig->sendServerStartedSD();
 				}
