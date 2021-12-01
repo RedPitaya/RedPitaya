@@ -30,6 +30,8 @@ public:
         bool     empty = true;
     };
 
+    using Ptr = std::shared_ptr<CDACAsioNetController>;
+
     CDACAsioNetController();
     ~CDACAsioNetController();
 

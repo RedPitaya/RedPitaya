@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace ClientOpt {
     enum class Mode{
@@ -10,7 +11,8 @@ namespace ClientOpt {
         CONFIG,
         REMOTE,
         STREAMING,
-        STREAMING_DAC
+        STREAMING_DAC,
+        STREAMING_DAC_CONF
     };
 
     enum class ConfGet{
@@ -63,6 +65,7 @@ namespace ClientOpt {
         ConfGet conf_get;
         ConfSet conf_set;
         std::string  conf_file;
+        std::string  streaming_conf_file;
         bool verbous;
         RemoteMode remote_mode;
 
@@ -71,6 +74,8 @@ namespace ClientOpt {
         std::string   dac_file; // For DAC streaming
         int           dac_repeat; // For DAC streaming
         std::string   dac_port; // For DAC streaming
+        int64_t       dac_memory; // For DAC streaming
+
         StreamingType streamign_type;
         SaveType      save_type;
         int           samples;
@@ -95,6 +100,8 @@ namespace ClientOpt {
             dac_file = "";
             dac_repeat = (int)RepeatDAC::NONE;
             dac_port = "";
+            dac_memory = 1048576;
+            streaming_conf_file = "";
         };
     };
 
@@ -102,4 +109,7 @@ namespace ClientOpt {
     auto parse(int argc, char* argv[]) -> Options;
 }
 
+
+
+auto time_point_to_string(std::chrono::system_clock::time_point &tp) -> std::string;
 auto getTS(std::string suffix = "") -> std::string;

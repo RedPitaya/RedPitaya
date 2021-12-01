@@ -23,8 +23,10 @@ CStreamSettings::CStreamSettings(){
     m_dac_gain = X1;
     m_dac_file_type = WAV;
     m_dac_mode = DAC_NET;
-    m_dac_repeat = (int)DAC_REP_OFF;
+    m_dac_repeat = DAC_REP_OFF;
     m_dac_port = "";
+    m_dac_memoryUsage = 1024 * 1024;
+    m_dac_repeatCount = 0;
     reset();
 }
 
@@ -46,7 +48,9 @@ void CStreamSettings::reset(){
     m_Bdac_mode = 
     m_Bdac_file_type = 
     m_Bdac_port =
-    m_Bdac_repeat = false;
+    m_Bdac_repeat =
+    m_Bdac_memoryUsage =
+    m_Bdac_repeatCount = false;
 }
 
 bool CStreamSettings::isSetted(){
@@ -67,7 +71,9 @@ bool CStreamSettings::isSetted(){
             m_Bdac_mode &&
             m_Bdac_file_type &&
             m_Bdac_port &&
-            m_Bdac_repeat;
+            m_dac_memoryUsage &&
+            m_Bdac_repeat &&
+            m_Bdac_repeatCount;
 
     // std::cerr << " port " << m_Bport 
     //           << " dac_file " << m_Bdac_file 
@@ -106,7 +112,9 @@ bool CStreamSettings::writeToFile(string _filename){
         root["dac_gain"] = getDACGain();
         root["dac_mode"] = getDACMode();
         root["dac_repeat"] = getDACRepeat();
+        root["dac_repeatCount"] = getDACRepeatCount();
         root["dac_port"] = getDACPort();
+        root["dac_memoryUsage"] = getDACMemoryUsage();
 
         Json::StreamWriterBuilder builder;
         const std::string json_file = Json::writeString(builder, root);
@@ -141,7 +149,9 @@ auto CStreamSettings::getJson()-> std::string{
         root["dac_gain"] = getDACGain();
         root["dac_mode"] = getDACMode();
         root["dac_repeat"] = getDACRepeat();
+        root["dac_repeatCount"] = getDACRepeatCount();
         root["dac_port"] = getDACPort();
+        root["dac_memoryUsage"] = getDACMemoryUsage();
 
         Json::StreamWriterBuilder builder;
         const std::string json = Json::writeString(builder, root);
@@ -282,6 +292,23 @@ auto CStreamSettings::String()-> std::string{
         }
         str = str + "Data format:\t\t" + dac_format  +" (In DAC file mode)\n";
 
+        std::string  dac_repeat = "ERROR";
+        switch (getDACRepeat()) {
+            case DACRepeat::DAC_REP_OFF:
+                dac_repeat = "OFF";
+                break;
+            case DACRepeat::DAC_REP_INF:
+                dac_repeat = "INF";
+                break;
+            case DACRepeat::DAC_REP_ON:
+                dac_repeat = "ON";
+                break;
+        }
+        str = str + "DAC repeat:\t\t" + dac_repeat +" (In file mode)\n";
+        str = str + "DAC repeat count:\t\t" + std::to_string(getDACRepeatCount())  +" (In DAC file mode\n";
+        str = str + "DAC memory cache:\t\t" + std::to_string(getDACMemoryUsage())  +" (In DAC file mode\n";
+
+
         std::string  dac_gain = "ERROR";
         switch (getDACGain()) {
             case DACGain::X1:
@@ -291,21 +318,7 @@ auto CStreamSettings::String()-> std::string{
                 dac_gain = "X5";
                 break;
         }
-        str = str + "DAC Gain:\t\t" + dac_gain  +" (250-12 only)\n";
-        
-        std::string  dac_repeat = "ERROR";
-        switch (getDACRepeat()) {
-            case DACRepeat::DAC_REP_OFF:
-                dac_repeat = "OFF";
-                break;
-            case DACRepeat::DAC_REP_INF:
-                dac_repeat = "INF";
-                break;
-            default:
-                dac_repeat = std::to_string(getDACRepeat());
-        }
-        str = str + "DAC repeat:\t\t" + dac_repeat +"\n";
-
+        str = str + "DAC Gain:\t\t" + dac_gain  +" (250-12 only)\n";        
         return str;
     }
     return "INCOMPLETE SETTING";
@@ -364,9 +377,13 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
     if (root.isMember("dac_mode"))
         setDACMode(static_cast<DACType>(root["dac_mode"].asInt()));
     if (root.isMember("dac_repeat"))
-        setDACRepeat(root["dac_repeat"].asInt());
+        setDACRepeat(static_cast<DACRepeat>(root["dac_repeat"].asInt()));
+    if (root.isMember("dac_repeatCount"))
+        setDACRepeatCount(static_cast<uint32_t>(root["dac_repeatCount"].asInt()));
     if (root.isMember("dac_port"))
         setDACPort(root["dac_port"].asString());
+    if (root.isMember("dac_memoryUsage"))
+        setDACMemoryUsage(root["dac_memoryUsage"].asInt64());
     return isSetted();
 }
 
@@ -467,7 +484,7 @@ auto CStreamSettings::setValue(std::string key,std::string value) -> bool{
     return false;
 }
 
-auto CStreamSettings::setValue(std::string key,uint32_t value) -> bool{
+auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
     if (key == "protocol") {
         setProtocol(static_cast<Protocol>(value));
         return true;
@@ -539,15 +556,23 @@ auto CStreamSettings::setValue(std::string key,uint32_t value) -> bool{
     }
 
     if (key == "dac_repeat") {
-        setDACRepeat(static_cast<int>(value));
+        setDACRepeat(static_cast<DACRepeat>(value));
+        return true;
+    }
+
+    if (key == "dac_repeatCount") {
+        setDACRepeatCount(static_cast<uint32_t>(value));
+        return true;
+    }
+
+    if (key == "dac_memoryUsage") {
+        setDACMemoryUsage(static_cast<int64_t>(value));
         return true;
     }
     return false;
 }
 
-auto CStreamSettings::setValue(std::string key,double value) -> bool{
-    UNUSED(key);
-    UNUSED(value);
+auto CStreamSettings::setValue(std::string,double) -> bool{
     return false;
 }
 
@@ -619,12 +644,12 @@ auto CStreamSettings::getDACMode() -> CStreamSettings::DACType{
     return m_dac_mode;
 }
 
-auto CStreamSettings::setDACRepeat(int _value) -> void{
+auto CStreamSettings::setDACRepeat(DACRepeat _value) -> void{
     m_dac_repeat = _value;
     m_Bdac_repeat = true;
 }
 
-auto CStreamSettings::getDACRepeat() -> int{
+auto CStreamSettings::getDACRepeat() -> DACRepeat{
     return m_dac_repeat;
 }
 
@@ -635,4 +660,22 @@ auto CStreamSettings::getDACPort() -> std::string{
 auto CStreamSettings::setDACPort(std::string _port) -> void{
     m_dac_port = _port;
     m_Bdac_port = true;
+}
+
+auto CStreamSettings::getDACMemoryUsage() -> int64_t{
+    return m_dac_memoryUsage;
+}
+
+auto CStreamSettings::setDACMemoryUsage(int64_t _value) -> void{
+    m_dac_memoryUsage = _value;
+    m_Bdac_memoryUsage = true;
+}
+
+auto CStreamSettings::setDACRepeatCount(uint32_t _value) -> void{
+    m_dac_repeatCount = _value;
+    m_Bdac_repeatCount = true;
+}
+
+auto CStreamSettings:: getDACRepeatCount() -> uint32_t{
+    return m_dac_repeatCount;
 }

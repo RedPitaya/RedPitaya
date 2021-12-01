@@ -59,8 +59,7 @@ auto ServerNetConfigManager::addHandler(ServerNetConfigManager::Events event, st
     m_callbacks.addListener(static_cast<int>(event),_func);
 }
 
-auto ServerNetConfigManager::connected(std::string host) -> void{
-    UNUSED(host);
+auto ServerNetConfigManager::connected(std::string) -> void{
     m_currentState = States::NORMAL;
     m_callbacks.emitEvent(static_cast<int>(Events::CLIENT_CONNECTED));
     if (m_mode == asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER)
@@ -69,8 +68,7 @@ auto ServerNetConfigManager::connected(std::string host) -> void{
         m_pNetConfManager->sendData(CNetConfigManager::Commands::SLAVE_CONNECTED);
 }
 
-auto ServerNetConfigManager::disconnected(std::string host) -> void{
-    UNUSED(host);
+auto ServerNetConfigManager::disconnected(std::string) -> void{
     m_callbacks.emitEvent(static_cast<int>(Events::CLIENT_DISCONNECTED));
 }
 
@@ -139,7 +137,7 @@ auto ServerNetConfigManager::receiveValueStr(std::string key,std::string value) 
 
 auto ServerNetConfigManager::receiveValueInt(std::string key,uint32_t value) -> void{
     if (m_currentState == States::GET_DATA){
-        if (!setValue(key,value)){
+        if (!setValue(key,(int64_t)value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
         }
     }
@@ -154,8 +152,7 @@ auto ServerNetConfigManager::receiveValueDouble(std::string key,double value) ->
 }
 
 
-auto ServerNetConfigManager::serverError(std::error_code error) -> void{
-    UNUSED(error);
+auto ServerNetConfigManager::serverError(std::error_code) -> void{
     //fprintf(stderr,"[ServerNetConfigManager] serverError: %s (%d)\n",error.message().c_str(),error.value());
     m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL);
     if (m_currentState == States::GET_DATA){
@@ -205,6 +202,18 @@ auto ServerNetConfigManager::sendDACServerStoppedSDDone() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_DONE);
 }
 
+auto ServerNetConfigManager::sendDACServerStoppedSDEmpty() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_EMPTY);
+}
+
+auto ServerNetConfigManager::sendDACServerStoppedSDBroken() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_BROKEN);
+}
+
+auto ServerNetConfigManager::sendDACServerStoppedSDMissingFile() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_MISSING);
+}
+
 
 auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
     if (m_pNetConfManager->isConnected()) {
@@ -228,6 +237,8 @@ auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
         if (!m_pNetConfManager->sendData("dac_gain",static_cast<uint32_t>(getDACGain()),_async)) return false;
         if (!m_pNetConfManager->sendData("dac_mode",static_cast<uint32_t>(getDACMode()),_async)) return false;
         if (!m_pNetConfManager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_repeatCount",static_cast<uint32_t>(getDACRepeatCount()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
 
         if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;

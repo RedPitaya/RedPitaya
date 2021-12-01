@@ -130,6 +130,33 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         g_rstop_counter--;
     });
 
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_BROKEN, [&cl,&masterHosts,&slaveHosts](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File broken]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        g_rstop_counter--;
+    });
+
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_EMPTY, [&cl,&masterHosts,&slaveHosts](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File empty]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        g_rstop_counter--;
+    });
+
+    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_MISSING, [&cl,&masterHosts,&slaveHosts](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File missing]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        g_rstop_counter--;
+    });
+
     g_rconnect_counter = g_roption.hosts.size();
     cl.connectToServers(option.hosts,g_roption.port != "" ? g_roption.port : "8901");
     while (g_rconnect_counter>0){

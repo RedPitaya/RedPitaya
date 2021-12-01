@@ -1,0 +1,19 @@
+{
+  "config_port":"8901",
+  "nodes": [
+    {
+      // Need set addres of board
+      "host":"127.0.0.1",
+      "port":"8903",
+      "file":"FileName",
+      // Values: WAV / TDMS
+      "file_type":"WAV",
+      // Values: OFF / ON / INF
+      "repeat_mode":"OFF",
+      "repeats":0,
+      // Values in bytes 
+      "memory_cache":1048576,
+      "verbous":true
+    }
+  ]
+}

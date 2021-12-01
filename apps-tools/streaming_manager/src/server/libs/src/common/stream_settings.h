@@ -68,7 +68,7 @@ public:
     auto reset() -> void;
     auto isSetted() -> bool;
     auto setValue(std::string key,std::string value) -> bool;
-    auto setValue(std::string key,uint32_t value) -> bool;
+    auto setValue(std::string key,int64_t value) -> bool;
     auto setValue(std::string key,double value) -> bool;
 
     auto writeToFile(std::string _filename) -> bool;
@@ -110,10 +110,15 @@ public:
     auto getDACGain() -> DACGain;
     auto setDACMode(DACType _value) -> void;
     auto getDACMode() -> DACType;
-    auto setDACRepeat(int _value) -> void;
-    auto getDACRepeat() -> int;
+    auto setDACRepeat(DACRepeat _value) -> void;
+    auto getDACRepeat() -> DACRepeat;
+    auto setDACRepeatCount(uint32_t _value) -> void;
+    auto getDACRepeatCount() -> uint32_t;
     auto getDACPort() -> std::string;
     auto setDACPort(std::string _port) -> void;
+    auto getDACMemoryUsage() -> int64_t;
+    auto setDACMemoryUsage(int64_t _value) -> void;
+
 
 private:
     bool m_Bport;
@@ -135,6 +140,8 @@ private:
     bool m_Bdac_mode;
     bool m_Bdac_repeat;
     bool m_Bdac_port;
+    bool m_Bdac_memoryUsage;
+    bool m_Bdac_repeatCount;
 
     std::string     m_port;
     std::string     m_dac_file;
@@ -151,7 +158,9 @@ private:
     DACGain         m_dac_gain;
     DataFormat      m_dac_file_type;
     DACType         m_dac_mode;
-    int             m_dac_repeat;
+    DACRepeat       m_dac_repeat;
     std::string     m_dac_port;
+    int64_t         m_dac_memoryUsage;
+    uint32_t        m_dac_repeatCount;
 };
 

@@ -12,5 +12,5 @@
 #endif
 
 auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void;
-auto stopDACNonBlocking(int x) -> void;
-auto stopDACServer(int x) -> void;
+auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void;
+auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void;

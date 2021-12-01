@@ -61,7 +61,7 @@ vector<Buff*> genVector(size_t numbersCount){
 
 Buff* genResultBuff(vector<Buff*>* vect,int repeat){
     size_t allsize = 0;
-    for(ulong i = 0;i < vect->size();i++){
+    for(unsigned long i = 0;i < vect->size();i++){
         allsize += vect->at(i)->size;
     }
 
@@ -76,7 +76,7 @@ Buff* genResultBuff(vector<Buff*>* vect,int repeat){
     memset(b,0,allsize);
     int pos = 0;
     for(int z = 0 ; z < repeat;z++){
-        for(ulong i = 0;i < vect->size();i++){
+        for(unsigned long i = 0;i < vect->size();i++){
             memcpy(b+pos,vect->at(i)->buffer,vect->at(i)->size);
             pos += vect->at(i)->size;
         }
@@ -89,13 +89,13 @@ Buff* genResultBuff(vector<Buff*>* vect,int repeat){
 
 Buff* genBuff(vector<Buff*>* vect){
     size_t allsize = 0;
-    for(ulong i = 0;i < vect->size();i++){
+    for(unsigned long i = 0;i < vect->size();i++){
         allsize += vect->at(i)->size;
     }
 
     uint8_t* b = new uint8_t[allsize];
     int pos = 0;
-    for(ulong i = 0;i < vect->size();i++){
+    for(unsigned long i = 0;i < vect->size();i++){
         memcpy(b+pos,vect->at(i)->buffer,vect->at(i)->size);
         pos += vect->at(i)->size;
     }
@@ -134,7 +134,7 @@ vector<Buff*> genTDMS(size_t numCount,int channel){
     File outFile;
 
     bool append = false;
-    for(ulong i = 0 ; i < vect.size();i++){
+    for(unsigned long i = 0 ; i < vect.size();i++){
         {
             WriterSegment seg;
             vector<shared_ptr<Metadata>> data;
@@ -233,7 +233,7 @@ void checkWAV(){
 
         if (ch == 1 || ch == 2){
             if (resBuff->size == ch1Pos){
-                for(int i = 0 ;i < resBuff->size;i++){
+                for(size_t i = 0 ;i < resBuff->size;i++){
                     if (resBuff->buffer[i] != ch1Res[i]){
                         compareRes = compareRes | 0x1;
                         break;
@@ -246,7 +246,7 @@ void checkWAV(){
 
         if (ch == 2){
             if (resBuff->size == ch2Pos){
-                for(int i = 0 ;i < resBuff->size;i++){
+                for(size_t i = 0 ;i < resBuff->size;i++){
                     if (resBuff->buffer[i] != ch2Res[i]){
                         compareRes = compareRes | 0x2;
                         break;
@@ -270,7 +270,7 @@ void checkWAV(){
            exit(-1);
         }
 
-        for(ulong i = 0 ;i < vec.size();i++){
+        for(unsigned long i = 0 ;i < vec.size();i++){
             delete vec[i];
         }
         delete resBuff;
@@ -340,7 +340,7 @@ void checkTDMS(){
 
         if (ch == 1 || ch == 3){
             if (resBuff->size == ch1Pos){
-                for(int i = 0 ;i < resBuff->size;i++){
+                for(size_t i = 0 ;i < resBuff->size;i++){
                     if (resBuff->buffer[i] != ch1Res[i]){
                         std::cout <<  "Index  = " << i << " Value 1 = " << (uint8_t)resBuff->buffer[i] << " Value 2 = " << (uint8_t)ch1Res[i] << "\n";
                         compareRes = compareRes | 0x1;
@@ -354,7 +354,7 @@ void checkTDMS(){
 
         if (ch == 2 || ch == 3){
             if (resBuff->size == ch2Pos){
-                for(int i = 0 ;i < resBuff->size;i++){
+                for(size_t i = 0 ;i < resBuff->size;i++){
                     if (resBuff->buffer[i] != ch2Res[i]){
                         std::cout <<  "Index  = " << i << " Value 1 = " << (uint8_t)resBuff->buffer[i] << " Value 2 = " << (uint8_t)ch2Res[i] << "\n";
                         compareRes = compareRes | 0x2;
@@ -379,7 +379,7 @@ void checkTDMS(){
            exit(-1);
         }
 
-        for(ulong i = 0 ;i < vec.size();i++){
+        for(unsigned long i = 0 ;i < vec.size();i++){
             delete vec[i];
         }
         delete resBuff;

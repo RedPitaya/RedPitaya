@@ -12,15 +12,14 @@
 #include "config.h"
 #include "remote.h"
 #include "streaming.h"
+#include "dac_streaming.h"
 
-#define UNUSED(x) [&x]{}()
 
 using namespace std;
 
-const char                           *g_argv0 = NULL;
+const char *g_argv0 = NULL;
 
-void sigHandler (int sigNum){
-    UNUSED(sigNum);
+void sigHandler (int){
     remoteSIGHandler();
     configSIGHandler();
     streamingSIGHandler();
@@ -68,6 +67,16 @@ int main(int argc, char* argv[])
 
     if (opt.mode == ClientOpt::Mode::STREAMING){
         startStreaming(opt);
+        return 0;
+    }
+
+    if (opt.mode == ClientOpt::Mode::STREAMING_DAC){
+        startDACStreaming(opt);
+        return 0;
+    }
+
+    if (opt.mode == ClientOpt::Mode::STREAMING_DAC_CONF){
+        startDACStreaming(opt.streaming_conf_file);
         return 0;
     }
 

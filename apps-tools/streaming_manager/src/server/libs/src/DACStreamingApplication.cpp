@@ -80,15 +80,13 @@ void CDACStreamingApplication::genWorker()
     auto value = curTime.time_since_epoch();
 
     long long int timeBegin = value.count();
-    uintmax_t counter = 0;
-    uintmax_t passCounter = 0;
-    uint8_t   skipBuffs = 0;
-    bool isFirstBufferInit = false;
-    bool isSecondBufferInit = false;
+    int64_t counter = 0;
+//    uintmax_t passCounter = 0;
+    //uint8_t   skipBuffs = 0;
+    //bool isFirstBufferInit = false;
+    //bool isSecondBufferInit = false;
     m_gen->prepare();
     m_gen->start();
-    uint64_t bufferAll = 0;
-    int      bufferCounter = 0;
 
 try{
     while (m_GenThreadRun.test_and_set())
@@ -96,13 +94,13 @@ try{
         auto buffer = m_streamingManager->getBuffer();
         if (!buffer.empty) {
             m_gen->write(buffer.ch1,buffer.ch2,buffer.size_ch1,buffer.size_ch2);
-            bufferCounter++;
+            counter++;
         }
 
-        if (bufferCounter > 100) {
-            bufferAll += bufferCounter;
-            bufferCounter = 0;
-            std::cout << "All buffers: " << bufferAll  << "\n";            
+        if ((value.count() - timeBegin) >= 5000) {
+            std::cout << "Get buffers: " << counter  << "\n";
+            counter = 0;
+            timeBegin = value.count();
         }
 
         // oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
@@ -141,9 +139,8 @@ try{
     m_isRun = false;
 }
 
-void CDACStreamingApplication::signalHandler(const asio::error_code &_error, int _signalNumber)
+void CDACStreamingApplication::signalHandler(const asio::error_code &, int _signalNumber)
 {
-    UNUSED(_error);
     static_cast<void>(_signalNumber);
     stop(true);
 }

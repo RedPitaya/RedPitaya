@@ -107,7 +107,7 @@ auto CReaderController::resetReadFromBuffer() -> bool{
         if (m_fileType == CStreamSettings::DataFormat::TDMS){
             m_currentSegment = 0;
             m_currentMetadata = -1;
-            m_tdmsFile->clearPrevMetadata();
+            if(m_tdmsFile) m_tdmsFile->clearPrevMetadata();
             moveNextMetadata();
         }
         return true;
@@ -124,7 +124,7 @@ auto CReaderController::resetReadFromBuffer() -> bool{
         if (m_fileType == CStreamSettings::DataFormat::TDMS){
             m_currentSegment = 0;
             m_currentMetadata = -1;
-            m_tdmsFile->clearPrevMetadata();
+            if(m_tdmsFile) m_tdmsFile->clearPrevMetadata();
             moveNextMetadata();
             return true;
         }
