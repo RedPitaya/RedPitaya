@@ -10,9 +10,9 @@ set (CMAKE_CXX_STANDARD 11)
 add_subdirectory(libs)
 
 
-#if (CLIENT_PRJ)
+if (CLIENT_PRJ)
 add_subdirectory(client)
 add_subdirectory(convert_tool)
-#else()
+else()
 add_subdirectory(targets)
-#endif()
+endif()

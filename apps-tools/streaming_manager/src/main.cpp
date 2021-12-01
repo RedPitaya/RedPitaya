@@ -539,7 +539,7 @@ void setConfig(bool _force){
 	if (ss_dac_repeat.IsNewValue() || _force)
 	{
 		ss_dac_repeat.Update();
-		g_serverNetConfig->setDACRepeat(ss_dac_repeat.Value());
+		g_serverNetConfig->setDACRepeat((CStreamSettings::DACRepeat)ss_dac_repeat.Value());
 		needUpdate = true;
 	}
 

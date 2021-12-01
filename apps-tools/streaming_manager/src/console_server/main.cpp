@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::STOP_DAC_STREAMING,[](){
-            stopDACNonBlocking(0);
+            stopDACNonBlocking(CDACStreamingManager::NR_STOP);
         });
         
     }catch (std::exception& e)
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
 
     try{
         stopServer(0);
-        stopDACServer(0);
+        stopDACServer(CDACStreamingManager::NR_STOP);
     }catch (std::exception& e)
     {
         fprintf(stderr, "Error: main() %s\n",e.what());

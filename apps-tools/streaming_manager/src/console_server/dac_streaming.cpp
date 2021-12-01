@@ -108,10 +108,10 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 			auto dacRepeatCount = g_serverDACNetConfig->getDACRepeatCount();
 			auto dacMemory = g_serverDACNetConfig->getDACMemoryUsage();
 			
-			if (format == CStreamSettings::WAV){
-				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,getDACRepeatCount,dacMemory);
-			}else{
-				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE,filePath,dacRepeatMode,getDACRepeatCount,dacMemory);
+			if (format == CStreamSettings::WAV) {
+				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
+			}else if (format == CStreamSettings::TDMS) {
+				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
 			}else{
 				return;
 			}
@@ -170,19 +170,19 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void{
         if (g_serverDACNetConfig){
             switch (x)
             {
-				case CReaderController::NR_STOP:
+				case CDACStreamingManager::NR_STOP:
 					g_serverDACNetConfig->sendDACServerStopped();
 					break;
-				case CReaderController::NR_ENDED:
+				case CDACStreamingManager::NR_ENDED:
 					g_serverDACNetConfig->sendDACServerStoppedSDDone();
 					break;
-				case CReaderController::NR_EMPTY:
+				case CDACStreamingManager::NR_EMPTY:
 					g_serverDACNetConfig->sendDACServerStoppedSDEmpty();
 					break;
-				case CReaderController::NR_BROKEN:
+				case CDACStreamingManager::NR_BROKEN:
 					g_serverDACNetConfig->sendDACServerStoppedSDBroken();
 					break;
-				case CReaderController::NR_MISSING_FILE:
+				case CDACStreamingManager::NR_MISSING_FILE:
 					g_serverDACNetConfig->sendDACServerStoppedSDMissingFile();
 					break;
 				default:
