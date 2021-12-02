@@ -42,7 +42,10 @@ public:
         SERVER_DAC_STARTED,
         SERVER_DAC_STARTED_SD,
         SERVER_DAC_STOPPED,
-        SERVER_DAC_STOPPED_SD_DONE
+        SERVER_DAC_STOPPED_SD_DONE,
+        SERVER_DAC_STOPPED_SD_EMPTY,
+        SERVER_DAC_STOPPED_SD_BROKEN,
+        SERVER_DAC_STOPPED_SD_MISSING
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();

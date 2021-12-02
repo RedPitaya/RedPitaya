@@ -40,6 +40,9 @@ public:
     auto sendServerStoppedDone() -> bool;
     auto sendDACServerStopped() -> bool;
     auto sendDACServerStoppedSDDone() -> bool;
+    auto sendDACServerStoppedSDEmpty() -> bool;
+    auto sendDACServerStoppedSDBroken() -> bool;
+    auto sendDACServerStoppedSDMissingFile() -> bool;
 
     auto addHandlerError(std::function<void(ServerNetConfigManager::Errors)> _func) -> void;
     auto addHandler(ServerNetConfigManager::Events event, std::function<void()> _func) -> void;

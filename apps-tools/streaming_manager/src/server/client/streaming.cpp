@@ -71,8 +71,9 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
             bw = g_BytesCount[host]   / (1024 * 1024 * 5);
             pref = " Mi";
         }
-        std::cout << time_point_to_string(timeNow) << "\tHOST IP:" << host << ": Bandwidth:\t" << bw <<  pref <<"B/s\tData count ch1:\t" << g_packCounter_ch1[host]
-        << "\tch2:\t" << g_packCounter_ch2[host]  <<  "\tLost:\t" << g_lostRate[host]  << "\n";
+        if (g_soption.verbous)
+            std::cout << time_point_to_string(timeNow) << "\tHOST IP:" << host << ": Bandwidth:\t" << bw <<  pref <<"B/s\tData count ch1:\t" << g_packCounter_ch1[host]
+            << "\tch2:\t" << g_packCounter_ch2[host]  <<  "\tLost:\t" << g_lostRate[host]  << "\n";
         g_BytesCount[host]  = 0;
         g_lostRate[host]  = 0;
         g_timeBegin[host] = value.count();
@@ -109,6 +110,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
             file_type = Stream_FileType::CSV_TYPE;
             break;
         default:
+            stopStreaming(host);
             return;
     }
 
@@ -131,15 +133,17 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     g_manger[host] = CStreamingManager::Create(file_type , g_soption.save_dir.c_str(), g_soption.samples , convert_v);
     g_manger[host]->run(host + "_" + g_filenameDate);
 
-    g_asionet[host] = asionet::CAsioNet::Create(asionet::Mode::CLIENT, protocol ,host , g_soption.port != "" ? g_soption.controlPort : "8900");
+    g_asionet[host] = asionet::CAsioNet::Create(asionet::Mode::CLIENT, protocol ,host , g_soption.ports.streaming_port  != "" ? g_soption.ports.streaming_port : ClientOpt::Ports().streaming_port);
     g_asionet[host]->addCallClient_Connect([](std::string host) {
         const std::lock_guard<std::mutex> lock(g_smutex);
-        std::cout << getTS(": ") << "Try connect " << host << '\n';
+        if (g_soption.verbous)
+            std::cout << getTS(": ") << "Try connect " << host << '\n';
     });
     g_asionet[host]->addCallClient_Error([host](std::error_code error)
     {
         const std::lock_guard<std::mutex> lock(g_smutex);
-        std::cout << getTS(": ") <<"Disconnect;" << '\n';
+        if (g_soption.verbous)
+            std::cout << getTS(": ") <<"Disconnect;" << '\n';
         stopStreaming(host);
     });
     g_asionet[host]->addCallReceived(std::bind(&reciveData,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,host));
@@ -173,13 +177,15 @@ auto startStreaming(ClientOpt::Options &option) -> void{
 
 #ifndef  _WIN32
     auto size =  FileQueueManager::GetFreeSpaceDisk(option.save_dir != "" ? option.save_dir : "." );
-    std::cout << getTS(": ") << "Free disk space: "<< size / (1024 * 1024) << "Mb \n";
+    if (g_soption.verbous)
+        std::cout << getTS(": ") << "Free disk space: "<< size / (1024 * 1024) << "Mb \n";
 #endif
 
     ClientOpt::Options remote_opt = g_soption;
     remote_opt.mode = ClientOpt::Mode::REMOTE;
     remote_opt.remote_mode = ClientOpt::RemoteMode::START;
-    remote_opt.port = g_soption.controlPort;
+    remote_opt.ports.config_port = g_soption.ports.config_port  != "" ? g_soption.ports.config_port : ClientOpt::Ports().config_port;
+    remote_opt.verbous = g_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
     if (startRemote(remote_opt,&runned_hosts)){
 
@@ -198,7 +204,7 @@ auto startStreaming(ClientOpt::Options &option) -> void{
 
 auto streamingSIGHandler() -> void{
     stopCSV();
-    stopStreaming();
+    stopStreaming();    
     sig_exit_flag = true;
 }
 
@@ -228,26 +234,3 @@ auto stopStreaming() -> void{
     }
 }
 
-auto time_point_to_string(std::chrono::system_clock::time_point &tp) -> std::string
-{
-    using namespace std;
-    using namespace std::chrono;
-
-    auto ttime_t = system_clock::to_time_t(tp);
-    auto tp_sec = system_clock::from_time_t(ttime_t);
-    milliseconds ms = duration_cast<milliseconds>(tp - tp_sec);
-
-    std::tm * ttm = localtime(&ttime_t);
-
-    char date_time_format[] = "%Y.%m.%d-%H.%M.%S";
-
-    char time_str[] = "yyyy.mm.dd.HH-MM.SS.fff";
-
-    strftime(time_str, strlen(time_str), date_time_format, ttm);
-
-    string result(time_str);
-    result.append(".");
-    result.append(to_string(ms.count()));
-
-    return result;
-}

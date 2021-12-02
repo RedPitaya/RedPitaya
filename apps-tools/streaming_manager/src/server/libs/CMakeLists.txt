@@ -56,6 +56,7 @@ target_include_directories(${PROJECT_NAME}
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
+            ${CMAKE_SOURCE_DIR}/libs/src/common/dac_settings.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp

@@ -85,8 +85,10 @@ CStringParameter    ss_dac_file(		"SS_DAC_FILE",			CBaseParameter::RW, "", 0);
 CIntParameter    	ss_dac_file_type(	"SS_DAC_FILE_TYPE",		CBaseParameter::RW,  0 ,0, 0, 1);
 CIntParameter    	ss_dac_gain(		"SS_DAC_GAIN",			CBaseParameter::RW,  0 ,0, 0, 1);
 CIntParameter    	ss_dac_mode(		"SS_DAC_MODE",			CBaseParameter::RW,  0 ,0, 0, 1);
-CIntParameter    	ss_dac_repeat(		"SS_DAC_REPEAT",		CBaseParameter::RW, -1 ,0, -2, 1000000);
+CIntParameter    	ss_dac_repeat(		"SS_DAC_REPEAT",		CBaseParameter::RW, -1 ,0, -2, 0);
+CIntParameter    	ss_dac_rep_count(	"SS_DAC_REPEAT_COUNT",	CBaseParameter::RW, 1 ,0, 1, 2000000000);
 CIntParameter		ss_dac_port(		"SS_DAC_PORT_NUMBER", 	CBaseParameter::RW, 8903,0,	1,65535);
+CIntParameter		ss_dac_memory(		"SS_DAC_MEMORYCACHE", 	CBaseParameter::RW, 1024 * 1024,0,	0, 1024 * 1024 * 64);
 
 CStreamingApplication  *s_app = nullptr;
 CStreamingManager::Ptr 	s_manger = nullptr;
@@ -332,6 +334,8 @@ void updateUI(){
 
 
 	ss_dac_repeat.SendValue(g_serverNetConfig->getDACRepeat());
+	ss_dac_rep_count.SendValue(g_serverNetConfig->getDACRepeatCount());
+	ss_dac_memory.SendValue(g_serverNetConfig->getDACMemoryUsage());
 	ss_rate.SendValue(g_serverNetConfig->getDecimation());
 	ss_samples.SendValue(g_serverNetConfig->getSamples());
 	ss_calib.SendValue(g_serverNetConfig->getCalibration() ? 2 : 1);
@@ -535,7 +539,21 @@ void setConfig(bool _force){
 	if (ss_dac_repeat.IsNewValue() || _force)
 	{
 		ss_dac_repeat.Update();
-		g_serverNetConfig->setDACRepeat(ss_dac_repeat.Value());
+		g_serverNetConfig->setDACRepeat((CStreamSettings::DACRepeat)ss_dac_repeat.Value());
+		needUpdate = true;
+	}
+
+	if (ss_dac_rep_count.IsNewValue() || _force)
+	{
+		ss_dac_rep_count.Update();
+		g_serverNetConfig->setDACRepeatCount(ss_dac_rep_count.Value());
+		needUpdate = true;
+	}
+
+	if (ss_dac_memory.IsNewValue() || _force)
+	{
+		ss_dac_memory.Update();
+		g_serverNetConfig->setDACMemoryUsage(ss_dac_memory.Value());
 		needUpdate = true;
 	}
 

@@ -195,10 +195,10 @@ auto DataType::ToString() -> std::string{
         case TDMSType::Integer16: sprintf(cstr,"%i", this->GetData<int16_t>()); break;
         case TDMSType::Integer32: sprintf(cstr,"%i", this->GetData<int32_t>()); break;
         case TDMSType::Integer64: sprintf(cstr,"%ld",(long int) this->GetData<int64_t>()); break;
-        case TDMSType::UnsignedInteger8: sprintf(cstr,"%u", this->GetData<u_int8_t>()); break;
-        case TDMSType::UnsignedInteger16: sprintf(cstr,"%u", this->GetData<u_int16_t>()); break;
-        case TDMSType::UnsignedInteger32: sprintf(cstr,"%u", this->GetData<u_int32_t>()); break;
-        case TDMSType::UnsignedInteger64: sprintf(cstr,"%lu", (long unsigned int)this->GetData<u_int64_t>()); break;
+        case TDMSType::UnsignedInteger8: sprintf(cstr,"%u", this->GetData<uint8_t>()); break;
+        case TDMSType::UnsignedInteger16: sprintf(cstr,"%u", this->GetData<uint16_t>()); break;
+        case TDMSType::UnsignedInteger32: sprintf(cstr,"%u", this->GetData<uint32_t>()); break;
+        case TDMSType::UnsignedInteger64: sprintf(cstr,"%lu", (long unsigned int)this->GetData<uint64_t>()); break;
         case TDMSType::SingleFloat:
         case TDMSType::SingleFloatWithUnit: sprintf(cstr,"%f", this->GetData<float>()); break;
         case TDMSType::DoubleFloat:
@@ -305,16 +305,16 @@ auto DataType::PrintVector(int limitDataSize) -> void{
                         printf("\t\t\t- %ld\n",(long int)((int64_t*)r->data)[j]);
                         break;
                     case TDMSType::UnsignedInteger8:
-                        printf("\t\t\t- %u\n",((u_int8_t *)r->data)[j]);
+                        printf("\t\t\t- %u\n",((uint8_t *)r->data)[j]);
                         break;
                     case TDMSType::UnsignedInteger16:
-                        printf("\t\t\t- %u\n",((u_int16_t *)r->data)[j]);
+                        printf("\t\t\t- %u\n",((uint16_t *)r->data)[j]);
                         break;
                     case TDMSType::UnsignedInteger32:
-                        printf("\t\t\t- %u\n",((u_int32_t *)r->data)[j]);
+                        printf("\t\t\t- %u\n",((uint32_t *)r->data)[j]);
                         break;
                     case TDMSType::UnsignedInteger64:
-                        printf("\t\t\t- %lu\n",(long unsigned int)((u_int64_t *)r->data)[j]);
+                        printf("\t\t\t- %lu\n",(long unsigned int)((uint64_t *)r->data)[j]);
                         break;
                     case TDMSType::SingleFloat:
                     case TDMSType::SingleFloatWithUnit:

@@ -15,8 +15,7 @@ m_reader(nullptr)
 
 
 File::~File(){
-    if (m_read_fs.is_open())
-        m_read_fs.close();
+    Close();
 }
 
 auto File::Print(vector<shared_ptr<Metadata>> &data,bool PrintRaw,long limitData) -> void{
@@ -41,6 +40,11 @@ auto File::Print(vector<shared_ptr<Metadata>> &data,bool PrintRaw,long limitData
         }
     }
 }
+
+auto File::clearPrevMetadata() -> void{
+    m_prevMetaDataLookup.clear();
+}
+
 
 auto File::ReadFile(string m_fileName) -> vector<shared_ptr<Metadata>>{
     std::fstream ifs;
@@ -79,7 +83,7 @@ auto File::ReadFileWithoutClose(string m_fileName) -> vector<shared_ptr<Segment>
     m_read_fs.seekg(0, ios::end);
     fsize = m_read_fs.tellg() - fsize;
     m_read_fs.seekg(0, ios::beg);
-    m_reader = new Reader(m_read_fs,fsize);
+    m_reader = new Reader(m_read_fs,fsize,false);
     return GetSegments(*m_reader);
 }
 
@@ -101,7 +105,7 @@ auto File::Close() -> bool{
 
 auto File::WriteFile(string m_fileName,WriterSegment &segment,bool Append) -> void{
     std::fstream ifs;
-    ifs.open(m_fileName, ios::binary | std::ofstream::out| std::ofstream::in | (Append? std::ofstream::binary  : std::ofstream::trunc));
+    ifs.open(   m_fileName, ios::binary | std::ofstream::out| std::ofstream::in | (Append? std::ofstream::binary  : std::ofstream::trunc));
     if (ifs.fail()) {
         ifs.open(m_fileName, ios::binary | std::ofstream::out| std::ofstream::in |  std::ofstream::trunc);
         if (ifs.fail()) {

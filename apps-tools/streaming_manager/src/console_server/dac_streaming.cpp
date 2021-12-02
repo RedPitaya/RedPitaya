@@ -18,12 +18,13 @@ auto calibDACFullScaleToVoltage(uint32_t fullScaleGain) -> float {
 auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
     if (!serverNetConfig) return;
     g_serverDACNetConfig = serverNetConfig;
+	gen = nullptr;
 	try{
 		if (!g_serverDACNetConfig->isSetted()) return;
 		if (g_dac_serverRun) {
 			if (g_dac_manger){
 				if (!g_dac_manger->isLocalMode()){
-					g_serverDACNetConfig->sendServerStartedUDP();
+					g_serverDACNetConfig->sendServerStartedTCP();
 				}else{
 					g_serverDACNetConfig->sendServerStartedSD();
 				}
@@ -95,20 +96,37 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 			}
 		}
 
+		if (!gen){
+			fprintf(stdout,"[Streaming] Error init generator module\n");
+        	syslog (LOG_NOTICE, "[Streaming] Error init generator module\n");
+			return;
+		}
 
-		if (use_file == CStreamSettings::NET) {
+
+		if (use_file == CStreamSettings::DAC_NET) {
 			g_dac_manger = CDACStreamingManager::Create(
 					ip_addr_host,
 					sock_port);
 		}else{
-			// auto file_type = Stream_FileType::WAV_TYPE;
-			// if (format == CStreamSettings::TDMS) file_type = Stream_FileType::TDMS_TYPE;
-			// if (format == CStreamSettings::CSV)  file_type = Stream_FileType::CSV_TYPE;
-			// g_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT);
-			// g_manger->notifyStop = [](int status)
-			// 					{
-			// 						stopNonBlocking(status == 0 ? 2 : 3);
-			// 					};
+
+			auto format = g_serverDACNetConfig->getDACFileType();
+			auto filePath = g_serverDACNetConfig->getDACFile();
+			auto dacRepeatMode = g_serverDACNetConfig->getDACRepeat();
+			auto dacRepeatCount = g_serverDACNetConfig->getDACRepeatCount();
+			auto dacMemory = g_serverDACNetConfig->getDACMemoryUsage();
+			
+			if (format == CStreamSettings::WAV) {
+				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
+			}else if (format == CStreamSettings::TDMS) {
+				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
+			}else{
+				return;
+			}
+			g_dac_manger->notifyStop = [](CDACStreamingManager::NotifyResult status)
+			{
+				stopDACNonBlocking(status);
+			};
+		
 		}
 
 		if (g_dac_app!= nullptr){
@@ -136,7 +154,7 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 	}
 }
 
-auto stopDACNonBlocking(int x) -> void{
+auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void{
 	try{
 		std::thread th(stopDACServer ,x);
 		th.detach();
@@ -148,7 +166,7 @@ auto stopDACNonBlocking(int x) -> void{
 }
 
 
-auto stopDACServer(int x) -> void{
+auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void{
 	try{
 		if (g_dac_app)
 		{
@@ -159,15 +177,24 @@ auto stopDACServer(int x) -> void{
         if (g_serverDACNetConfig){
             switch (x)
             {
-            case 0:
-                g_serverDACNetConfig->sendDACServerStopped();
-                break;
-            case 2:
-                g_serverDACNetConfig->sendDACServerStoppedSDDone();
-                break;
-            default:
-                throw runtime_error("Unknown state");
-                break;
+				case CDACStreamingManager::NR_STOP:
+					g_serverDACNetConfig->sendDACServerStopped();
+					break;
+				case CDACStreamingManager::NR_ENDED:
+					g_serverDACNetConfig->sendDACServerStoppedSDDone();
+					break;
+				case CDACStreamingManager::NR_EMPTY:
+					g_serverDACNetConfig->sendDACServerStoppedSDEmpty();
+					break;
+				case CDACStreamingManager::NR_BROKEN:
+					g_serverDACNetConfig->sendDACServerStoppedSDBroken();
+					break;
+				case CDACStreamingManager::NR_MISSING_FILE:
+					g_serverDACNetConfig->sendDACServerStoppedSDMissingFile();
+					break;
+				default:
+					throw runtime_error("Unknown state");
+					break;
             }
         }
 		g_dac_serverRun = false;

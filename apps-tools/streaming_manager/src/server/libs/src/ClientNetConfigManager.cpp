@@ -202,6 +202,19 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
     if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_DONE){
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_DONE),sender->m_manager->getHost());
     }
+
+    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_EMPTY){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_EMPTY),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_BROKEN){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_BROKEN),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_MISSING){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_MISSING),sender->m_manager->getHost());
+    }
+
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
@@ -226,7 +239,7 @@ auto ClientNetConfigManager::receiveValueStr(std::string key,std::string value,s
 
 auto ClientNetConfigManager::receiveValueInt(std::string key,uint32_t value,std::shared_ptr<Clients> sender) -> void{
     if (sender->m_current_state == Clients::States::GET_DATA){
-        if (!sender->m_client_settings.setValue(key,value)){
+        if (!sender->m_client_settings.setValue(key,(int64_t)value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
         }
     }
@@ -242,8 +255,7 @@ auto ClientNetConfigManager::receiveValueDouble(std::string key,double value,std
 
 
 auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<Clients> sender) -> void{
-    UNUSED(error);
-    //fprintf(stderr,"[ClientNetConfigManager] Server error: %s (%d)\n",error.message().c_str(),error.value());
+    fprintf(stderr,"[ClientNetConfigManager] Server error: %s (%d)\n",error.message().c_str(),error.value());
     m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL,sender-> m_manager->getHost());
     if (sender->m_current_state  == Clients::States::GET_DATA){
         sender->m_client_settings.reset();
@@ -293,6 +305,8 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("dac_gain",static_cast<uint32_t>(getDACGain()),_async)) return false;
         if (!_client->m_manager->sendData("dac_mode",static_cast<uint32_t>(getDACMode()),_async)) return false;
         if (!_client->m_manager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_repeatCount",static_cast<uint32_t>(getDACRepeatCount()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
 
         if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;

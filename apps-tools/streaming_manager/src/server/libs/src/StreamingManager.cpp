@@ -93,13 +93,9 @@ CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _file
     m_use_local_file(true),
     m_fileType(_fileType)
 {
-    
-    if (m_use_local_file){
-        
-        m_file_manager = new FileQueueManager();
-        m_waveWriter = new CWaveWriter();
-        memset(m_zeroBuffer,0,sizeof(uint8_t) * ZERO_BUFFER_SIZE);
-    }
+    m_file_manager = new FileQueueManager();
+    m_waveWriter = new CWaveWriter();
+    memset(m_zeroBuffer,0,sizeof(uint8_t) * ZERO_BUFFER_SIZE);
 }
 
 CStreamingManager::Ptr CStreamingManager::Create(string _host, string _port, asionet::Protocol _protocol){

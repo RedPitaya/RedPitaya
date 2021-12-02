@@ -13,6 +13,8 @@ rm ./target -rf
 mkdir -p target
 cp ./bin/rpsa_client.exe ./target
 cp ./bin/convert_tool.exe ./target
+cp ./client/default_multiple_dac_config.json ./target
+cp ./client/default_dac_config.json ./target
 cd target
 zip -r "$ZIP" *
 mv  "$ZIP" ../"$ZIP"

@@ -171,7 +171,7 @@ auto startConfig(ClientOpt::Options &option) -> void{
 
 
     g_connect_counter = g_option.hosts.size();
-    cl.connectToServers(option.hosts,g_option.port != "" ? g_option.port : "8901");
+    cl.connectToServers(option.hosts,g_option.ports.config_port != "" ? g_option.ports.config_port : ClientOpt::Ports().config_port);
     while (g_connect_counter>0){
         sleepMs(100);
         if (g_exit_flag) return;
