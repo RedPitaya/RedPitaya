@@ -134,8 +134,8 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map){
         setRegister(_Map,&(_Map->chB_calib),m_calib_offset_ch2 << 16 | m_calib_gain_ch2);
 
         // Set step for pointer 
-        setRegister(_Map,&(_Map->chA_counter_step),1 << 16);
-        setRegister(_Map,&(_Map->chB_counter_step),1 << 16);
+        setRegister(_Map,&(_Map->chA_counter_step),1 << 10);
+        setRegister(_Map,&(_Map->chB_counter_step),1 << 10);
 
         // Set streaming DMA, reset Buffers and flags
         setRegister(_Map,&(_Map->dma_control),0x2222);

@@ -96,16 +96,17 @@ try{
         }
 
         if (!lastPack.empty) {
-            m_gen->write(lastPack.ch1,lastPack.ch2,lastPack.size_ch1,lastPack.size_ch2);
-            counter++;
-            if (lastPack.ch1){
-                delete[] lastPack.ch1;
-            }
+            if (m_gen->write(lastPack.ch1,lastPack.ch2,lastPack.size_ch1,lastPack.size_ch2)){
+                counter++;
+                if (lastPack.ch1){
+                    delete[] lastPack.ch1;
+                }
 
-            if (lastPack.ch2){
-                delete[] lastPack.ch2;
+                if (lastPack.ch2){
+                    delete[] lastPack.ch2;
+                }
+                lastPack = CDACAsioNetController::BufferPack();
             }
-            lastPack = CDACAsioNetController::BufferPack();
         }
 
         timeNow = std::chrono::system_clock::now();
