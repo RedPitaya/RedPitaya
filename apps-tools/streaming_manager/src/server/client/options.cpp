@@ -363,7 +363,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.port = optarg;
+                    opt.ports.broadcast_port = optarg;
                     break;
                 }
 
@@ -409,7 +409,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.port = optarg;
+                    opt.ports.config_port = optarg;
                     break;
                 }
 
@@ -521,7 +521,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.port = optarg;
+                    opt.ports.config_port = optarg;
                     break;
                 }
 
@@ -614,7 +614,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.port = optarg;
+                    opt.ports.streaming_port = optarg;
                     break;
                 }
 
@@ -624,7 +624,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.controlPort = optarg;
+                    opt.ports.config_port = optarg;
                     break;
                 }
 
@@ -744,7 +744,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.dac_port = optarg;
+                    opt.ports.dac_streaming_port = optarg;
                     break;
                 }
 
@@ -764,7 +764,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.controlPort = optarg;
+                    opt.ports.config_port = optarg;
                     break;
                 }
 

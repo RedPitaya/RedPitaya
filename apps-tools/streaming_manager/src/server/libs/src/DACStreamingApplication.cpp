@@ -97,6 +97,15 @@ try{
             counter++;
         }
 
+        if (buffer.ch1){
+            delete[] buffer.ch1;
+        }
+
+        if (buffer.ch2){
+            delete[] buffer.ch2;
+        }
+
+
         if ((value.count() - timeBegin) >= 5000) {
             std::cout << "Get buffers: " << counter  << "\n";
             counter = 0;

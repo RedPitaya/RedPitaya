@@ -158,7 +158,7 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     });
 
     g_rconnect_counter = g_roption.hosts.size();
-    cl.connectToServers(option.hosts,g_roption.port != "" ? g_roption.port : "8901");
+    cl.connectToServers(option.hosts,g_roption.ports.config_port  != "" ? g_roption.ports.config_port : ClientOpt::Ports().config_port);
     while (g_rconnect_counter>0){
         sleepMs(100);
         if (g_rexit_flag) return false;

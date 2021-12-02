@@ -57,11 +57,19 @@ namespace ClientOpt {
         INF  = -2
     };
 
+    struct Ports{
+        std::string streaming_port     = "8900";
+        std::string config_port        = "8901";
+        std::string broadcast_port     = "8902";
+        std::string dac_streaming_port = "8903";
+    };
+
     struct Options {
         Mode mode;
-        std::string port;
         int timeout;
         std::vector<std::string> hosts;
+        Ports ports;
+
         ConfGet conf_get;
         ConfSet conf_set;
         std::string  conf_file;
@@ -73,18 +81,15 @@ namespace ClientOpt {
         std::string   save_dir;
         std::string   dac_file; // For DAC streaming
         int           dac_repeat; // For DAC streaming
-        std::string   dac_port; // For DAC streaming
         int64_t       dac_memory; // For DAC streaming
 
         StreamingType streamign_type;
         SaveType      save_type;
         int           samples;
-        std::string   controlPort;
         ////////////////////////
 
         Options(){
             mode = Mode::ERROR_MODE;
-            port = "";
             timeout = 5;
             hosts.clear();
             conf_get = ConfGet::NONE;
@@ -96,10 +101,8 @@ namespace ClientOpt {
             streamign_type = StreamingType::NONE;
             save_type = SaveType::NONE;
             samples = -1;
-            controlPort = "";
             dac_file = "";
             dac_repeat = (int)RepeatDAC::NONE;
-            dac_port = "";
             dac_memory = 1048576;
             streaming_conf_file = "";
         };

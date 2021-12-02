@@ -175,7 +175,7 @@ auto dac_runClient(DacSettings conf) -> void{
                     bw = g_dac_BytesCount[conf.host]   / (1024 * 1024 * 5);
                     pref = " Mi";
                 }
-                std::cout << getTS(": ") << "\tHOST IP:" << conf.host << ": Bandwidth:\t" << bw <<  pref <<"B/s\tData count ch1:\t" << g_dac_packCounter_ch1[conf.host]
+                std::cout << getTS(": ") << "\tHOST IP:" << conf.host << ": Bandwidth:\t" << bw <<  pref <<"B/s \tData count ch1:\t" << g_dac_packCounter_ch1[conf.host]
                 << "\tch2:\t" << g_dac_packCounter_ch2[conf.host]  << "\n";
                 g_dac_BytesCount[conf.host]  = 0;
                 g_dac_timeBegin[conf.host] = value.count();
@@ -195,7 +195,7 @@ auto startDACStreaming(std::string &conf) -> void{
         bool verbous = false;
         for (auto &item : settings){
             remote_opt.hosts.push_back(item.host);
-            remote_opt.port = item.config_port;
+            remote_opt.ports.config_port = item.config_port  != "" ? item.config_port : ClientOpt::Ports().config_port;
             verbous |= item.verbous;
         }
         remote_opt.verbous = verbous;
@@ -230,7 +230,7 @@ auto startDACStreaming(ClientOpt::Options &option) -> void{
     ClientOpt::Options remote_opt = g_dac_soption;
     remote_opt.mode = ClientOpt::Mode::REMOTE;
     remote_opt.remote_mode = ClientOpt::RemoteMode::START_DAC;
-    remote_opt.port = g_dac_soption.controlPort != "" ? g_dac_soption.controlPort : "8901";
+    remote_opt.ports.config_port = g_dac_soption.ports.config_port  != "" ? g_dac_soption.ports.config_port : ClientOpt::Ports().config_port;
     remote_opt.verbous = g_dac_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
     if (startRemote(remote_opt,&runned_hosts)){
@@ -239,7 +239,7 @@ auto startDACStreaming(ClientOpt::Options &option) -> void{
             if (kv.second == StateRunnedHosts::TCP){
                 DacSettings conf;
                 conf.host = kv.first;
-                conf.port = g_dac_soption.dac_port;
+                conf.port = g_dac_soption.ports.dac_streaming_port  != "" ? g_dac_soption.ports.dac_streaming_port : ClientOpt::Ports().dac_streaming_port;
                 switch(g_dac_soption.streamign_type){
                     case ClientOpt::StreamingType::TDMS:
                         conf.file_type = CStreamSettings::TDMS;
