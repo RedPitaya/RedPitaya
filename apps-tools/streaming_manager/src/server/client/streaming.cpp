@@ -133,7 +133,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     g_manger[host] = CStreamingManager::Create(file_type , g_soption.save_dir.c_str(), g_soption.samples , convert_v);
     g_manger[host]->run(host + "_" + g_filenameDate);
 
-    g_asionet[host] = asionet::CAsioNet::Create(asionet::Mode::CLIENT, protocol ,host , g_soption.port != "" ? g_soption.controlPort : "8900");
+    g_asionet[host] = asionet::CAsioNet::Create(asionet::Mode::CLIENT, protocol ,host , g_soption.port != "" ? g_soption.port : "8900");
     g_asionet[host]->addCallClient_Connect([](std::string host) {
         const std::lock_guard<std::mutex> lock(g_smutex);
         if (g_soption.verbous)
@@ -184,7 +184,7 @@ auto startStreaming(ClientOpt::Options &option) -> void{
     ClientOpt::Options remote_opt = g_soption;
     remote_opt.mode = ClientOpt::Mode::REMOTE;
     remote_opt.remote_mode = ClientOpt::RemoteMode::START;
-    remote_opt.port = g_soption.controlPort;
+    remote_opt.port = g_soption.controlPort != "" ? g_soption.controlPort : "8901";
     remote_opt.verbous = g_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
     if (startRemote(remote_opt,&runned_hosts)){

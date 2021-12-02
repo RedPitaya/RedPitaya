@@ -230,7 +230,7 @@ auto startDACStreaming(ClientOpt::Options &option) -> void{
     ClientOpt::Options remote_opt = g_dac_soption;
     remote_opt.mode = ClientOpt::Mode::REMOTE;
     remote_opt.remote_mode = ClientOpt::RemoteMode::START_DAC;
-    remote_opt.port = g_dac_soption.controlPort;
+    remote_opt.port = g_dac_soption.controlPort != "" ? g_dac_soption.controlPort : "8901";
     remote_opt.verbous = g_dac_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
     if (startRemote(remote_opt,&runned_hosts)){
