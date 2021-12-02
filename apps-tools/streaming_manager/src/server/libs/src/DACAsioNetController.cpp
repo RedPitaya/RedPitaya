@@ -197,7 +197,9 @@ auto CDACAsioNetController::sendBuffer(uint8_t *buffer_ch1,size_t size_ch1,uint8
     if (m_asionet->isConnected()){
         size_t size = 0;
         auto buf = BuildPack(m_index++,buffer_ch1,size_ch1,buffer_ch2,size_ch2,size);
-        return m_asionet->sendData(false,buf,size);
+        auto ret = m_asionet->sendData(false,buf,size);
+        delete[] buf;
+        return ret;
     }
     return false;
 }

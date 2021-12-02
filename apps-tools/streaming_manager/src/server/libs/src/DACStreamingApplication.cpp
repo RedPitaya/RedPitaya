@@ -87,22 +87,25 @@ void CDACStreamingApplication::genWorker()
     //bool isSecondBufferInit = false;
     m_gen->prepare();
     m_gen->start();
-
+    CDACAsioNetController::BufferPack lastPack;
 try{
     while (m_GenThreadRun.test_and_set())
     {
-        auto buffer = m_streamingManager->getBuffer();
-        if (!buffer.empty) {
-            m_gen->write(buffer.ch1,buffer.ch2,buffer.size_ch1,buffer.size_ch2);
+        if (lastPack.empty){
+            lastPack = m_streamingManager->getBuffer();
+        }
+
+        if (!lastPack.empty) {
+            m_gen->write(lastPack.ch1,lastPack.ch2,lastPack.size_ch1,lastPack.size_ch2);
             counter++;
-        }
+            if (lastPack.ch1){
+                delete[] lastPack.ch1;
+            }
 
-        if (buffer.ch1){
-            delete[] buffer.ch1;
-        }
-
-        if (buffer.ch2){
-            delete[] buffer.ch2;
+            if (lastPack.ch2){
+                delete[] lastPack.ch2;
+            }
+            lastPack = CDACAsioNetController::BufferPack();
         }
 
         timeNow = std::chrono::system_clock::now();
