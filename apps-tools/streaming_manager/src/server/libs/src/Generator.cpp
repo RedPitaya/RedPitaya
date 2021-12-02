@@ -134,8 +134,8 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map){
         setRegister(_Map,&(_Map->chB_calib),m_calib_offset_ch2 << 16 | m_calib_gain_ch2);
 
         // Set step for pointer 
-        setRegister(_Map,&(_Map->chA_counter_step),1 << 10);
-        setRegister(_Map,&(_Map->chB_counter_step),1 << 10);
+        setRegister(_Map,&(_Map->chA_counter_step),1 << 12);
+        setRegister(_Map,&(_Map->chB_counter_step),1 << 12);
 
         // Set streaming DMA, reset Buffers and flags
         setRegister(_Map,&(_Map->dma_control),0x2222);
@@ -206,39 +206,22 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
 {
     bool ret = false;
     const std::lock_guard<std::mutex> lock(m_waitLock);
-    if (_buffer1){
-        if (m_BufferNumber[0] == 0){
-            if (m_Map->chA_dma_status & 0x3){
-                memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
-                m_BufferNumber[0] = 1;
-                setRegister(m_Map,&(m_Map->dma_control),1 << 7);
-                ret = true;
-            }
-        }else{
-            if (m_Map->chA_dma_status & 0xC){
-                memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
-                m_BufferNumber[0] = 0;
-                setRegister(m_Map,&(m_Map->dma_control),1 << 6);
-                ret = true;
-            }
+    // if (_buffer1){
+    if (m_BufferNumber[0] == 0){
+        if (m_Map->chA_dma_status & 0x3 && m_Map->chB_dma_status & 0x3){
+            if (_buffer1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
+            if (_buffer2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
+            m_BufferNumber[0] = 1;
+            setRegister(m_Map,&(m_Map->dma_control),1 << 7 | 1 << 15);
+            ret = true;
         }
-    }
-
-    if (_buffer2){
-        if (m_BufferNumber[1] == 0){
-            if (m_Map->chB_dma_status & 0x1){
-                memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
-                m_BufferNumber[1] = 1;
-                setRegister(m_Map,&(m_Map->dma_control),1 << 15);
-                ret = true;
-            }
-        }else{
-            if (m_Map->chB_dma_status & 0x4){
-                memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
-                m_BufferNumber[1] = 0;
-                setRegister(m_Map,&(m_Map->dma_control),1 << 14);
-                ret = true;
-            }
+    }else{
+        if (m_Map->chA_dma_status & 0xC && m_Map->chB_dma_status & 0xC){
+            if (_buffer1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
+            if (_buffer2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
+            m_BufferNumber[0] = 0;
+            setRegister(m_Map,&(m_Map->dma_control),1 << 6 | 1 << 14);
+            ret = true;
         }
     }
     return ret;
