@@ -105,6 +105,8 @@ try{
             delete[] buffer.ch2;
         }
 
+        timeNow = std::chrono::system_clock::now();
+        value = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow).time_since_epoch();
 
         if ((value.count() - timeBegin) >= 5000) {
             std::cout << "Get buffers: " << counter  << "\n";
