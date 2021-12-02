@@ -104,7 +104,7 @@ void CDACAsioNetController::receiveHandler(std::error_code error,uint8_t* _buff,
             exit(5);
         }
 
-        memcpy_neon(m_tcp_fifo_buffer + m_pos_last_in_fifo, _buff, _size);
+        memcpy(m_tcp_fifo_buffer + m_pos_last_in_fifo, _buff, _size);
         m_pos_last_in_fifo += _size;
 
         uint8_t  size_id = sizeof(DAC_ID_PACK) - 1;
@@ -129,7 +129,7 @@ void CDACAsioNetController::receiveHandler(std::error_code error,uint8_t* _buff,
                     if ((pack_size + i) <= m_pos_last_in_fifo) {
                         extractBuffer(m_tcp_fifo_buffer + i, (size_t)pack_size);
 
-                        memcpy_neon(m_tcp_fifo_buffer, m_tcp_fifo_buffer + i + pack_size,
+                        memcpy(m_tcp_fifo_buffer, m_tcp_fifo_buffer + i + pack_size,
                                m_pos_last_in_fifo - pack_size - i);
                         m_pos_last_in_fifo = m_pos_last_in_fifo - pack_size - i;
                         find_all_flag = true;
@@ -224,12 +224,12 @@ uint8_t* CDACAsioNetController::BuildPack(
 
     if (_size_ch1>0){
 
-        memcpy_neon((&(*buffer)+prefix_lenght), _ch1, _size_ch1);
+        memcpy((&(*buffer)+prefix_lenght), _ch1, _size_ch1);
     }
 
     if (_size_ch2>0){
 
-        memcpy_neon((&(*buffer)+prefix_lenght + _size_ch1), _ch2, _size_ch2);
+        memcpy((&(*buffer)+prefix_lenght + _size_ch1), _ch2, _size_ch2);
     }
 
     _buffer_size = buffer_size;
@@ -255,14 +255,14 @@ bool CDACAsioNetController::ExtractPack(
 
         if (_size_ch1 > 0) {
             _ch1 = new uint8_t[_size_ch1];
-            memcpy_neon(_ch1,_buffer + prefix,_size_ch1);
+            memcpy(_ch1,_buffer + prefix,_size_ch1);
         }else{
             _ch1 = nullptr;
         }
 
         if (_size_ch2 > 0) {
             _ch2 = new uint8_t[_size_ch2];
-            memcpy_neon(_ch2,_buffer + prefix + _size_ch1,_size_ch2);
+            memcpy(_ch2,_buffer + prefix + _size_ch1,_size_ch2);
         }else{
             _ch2 = nullptr;
         }

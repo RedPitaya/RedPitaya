@@ -91,17 +91,17 @@ void CDACStreamingApplication::genWorker()
 try{
     while (m_GenThreadRun.test_and_set())
     {
-        // auto buffer = m_streamingManager->getBuffer();
-        // if (!buffer.empty) {
-        //     m_gen->write(buffer.ch1,buffer.ch2,buffer.size_ch1,buffer.size_ch2);
-        //     counter++;
-        // }
+        auto buffer = m_streamingManager->getBuffer();
+        if (!buffer.empty) {
+            m_gen->write(buffer.ch1,buffer.ch2,buffer.size_ch1,buffer.size_ch2);
+            counter++;
+        }
 
-        // if ((value.count() - timeBegin) >= 5000) {
-        //     std::cout << "Get buffers: " << counter  << "\n";
-        //     counter = 0;
-        //     timeBegin = value.count();
-        // }
+        if ((value.count() - timeBegin) >= 5000) {
+            std::cout << "Get buffers: " << counter  << "\n";
+            counter = 0;
+            timeBegin = value.count();
+        }
 
     }
     
