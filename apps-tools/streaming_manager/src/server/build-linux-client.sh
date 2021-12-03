@@ -6,7 +6,7 @@ make
 
 
 #APP=$(pwd | grep -o '[^/]*$')
-APP='linux-tool_beta_2.0'
+APP='linux-tool_beta_2.1'
 
 echo "$APP"
 ZIP="$APP".zip

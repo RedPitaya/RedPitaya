@@ -5,7 +5,7 @@ make -j$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
 
 
 #APP=$(pwd | grep -o '[^/]*$')
-APP='windows-tool_beta_2.0'
+APP='windows-tool_beta_2.1'
 
 echo "$APP"
 ZIP="$APP".zip
