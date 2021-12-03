@@ -32,16 +32,15 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 			return;
 		}
 		g_dac_serverRun = true;
-		// TODO make setting for read from lacal file
 		auto use_file     =  g_serverDACNetConfig->getDACMode();
 		auto sock_port    =  g_serverDACNetConfig->getDACPort();
+		auto dac_speed    =  g_serverDACNetConfig->getDACHz();
 		auto ip_addr_host = "127.0.0.1";
 
 #ifdef Z20
 		auto use_calib    = 0;
 		auto attenuator   = 0;
 #else
-		// TODO make settings for use calibration
 		auto use_calib    = g_serverDACNetConfig->getCalibration();
 		rp_CalibInit();
 		auto osc_calib_params = rp_GetCalibrationSettings();
@@ -93,6 +92,7 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 			{
 				gen = CGenerator::Create(uio, true , true ,DAC_FREQUENCY);
 				gen->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
+				gen->setDacHz(dac_speed);
 			}
 		}
 

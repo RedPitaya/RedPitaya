@@ -24,6 +24,8 @@
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 #include "ServerNetConfigManager.h"
+#include "DACStreamingApplication.h"
+#include "DACStreamingManager.h"
 
 #ifdef Z20_250_12
 #include "rp-spi.h"
@@ -35,6 +37,11 @@
 void StartServer();
 void StopServer(int x);
 void StopNonBlocking(int x);
+
+auto startDACServer() -> void;
+auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void;
+auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void;
+
 void setConfig(bool _force);
 void updateUI();
 
@@ -61,7 +68,8 @@ static constexpr char config_file[] = "/root/.streaming_config";
 
 //Parameters
 
-CBooleanParameter 	ss_start(			"SS_START", 	        CBaseParameter::RW, false,0);
+CBooleanParameter 	ss_start(			"SS_START", 			CBaseParameter::RW, false,0);
+CBooleanParameter 	ss_dac_start(		"SS_DAC_START", 		CBaseParameter::RW, false,0);
 
 
 CBooleanParameter 	ss_use_localfile(	"SS_USE_FILE", 	        CBaseParameter::RW, false,0);
@@ -76,7 +84,7 @@ CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2)
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 4 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
-CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
+CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RO, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2);
 CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
@@ -85,17 +93,25 @@ CStringParameter    ss_dac_file(		"SS_DAC_FILE",			CBaseParameter::RW, "", 0);
 CIntParameter    	ss_dac_file_type(	"SS_DAC_FILE_TYPE",		CBaseParameter::RW,  0 ,0, 0, 1);
 CIntParameter    	ss_dac_gain(		"SS_DAC_GAIN",			CBaseParameter::RW,  0 ,0, 0, 1);
 CIntParameter    	ss_dac_mode(		"SS_DAC_MODE",			CBaseParameter::RW,  0 ,0, 0, 1);
+CIntParameter		ss_dac_speed(		"SS_DAC_HZ", 			CBaseParameter::RW, DAC_FREQUENCY ,0,	1 / (65536 /DAC_FREQUENCY) + 1, DAC_FREQUENCY);
+CIntParameter		ss_dac_max_speed(	"SS_DAC_MAX_HZ",		CBaseParameter::RO, DAC_FREQUENCY ,0,	0, DAC_FREQUENCY);
 CIntParameter    	ss_dac_repeat(		"SS_DAC_REPEAT",		CBaseParameter::RW, -1 ,0, -2, 0);
 CIntParameter    	ss_dac_rep_count(	"SS_DAC_REPEAT_COUNT",	CBaseParameter::RW, 1 ,0, 1, 2000000000);
 CIntParameter		ss_dac_port(		"SS_DAC_PORT_NUMBER", 	CBaseParameter::RW, 8903,0,	1,65535);
 CIntParameter		ss_dac_memory(		"SS_DAC_MEMORYCACHE", 	CBaseParameter::RW, 1024 * 1024,0,	0, 1024 * 1024 * 64);
+CIntParameter		ss_dac_status( 		"SS_DAC_STATUS",		CBaseParameter::RW, 1 ,0,	0,100);
 
 CStreamingApplication  *s_app = nullptr;
 CStreamingManager::Ptr 	s_manger = nullptr;
 COscilloscope::Ptr 		osc = nullptr;
 
+CDACStreamingApplication *g_dac_app = nullptr;
+CDACStreamingManager::Ptr g_dac_manger = nullptr;
+CGenerator::Ptr 		gen = nullptr;
+
 std::shared_ptr<ServerNetConfigManager> g_serverNetConfig;
 std::atomic_bool g_serverRun(false);
+std::atomic_bool g_dac_serverRun(false);
 
 // void PrintLogInFile(const char *message){
 // #ifdef DEBUG_MODE
@@ -148,6 +164,11 @@ int rp_app_init(void)
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[g_serverNetConfig](){
 				StopNonBlocking(0);
 			});
+
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[g_serverNetConfig](){
+				startDACServer();
+			});
+
 		}catch (std::exception& e)
 			{
 				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());
@@ -155,6 +176,7 @@ int rp_app_init(void)
 
 		ss_status.SendValue(0);
 		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
+		ss_dac_max_speed.SendValue(DAC_FREQUENCY);
 		if (g_serverNetConfig->isSetted()){
 			updateUI();
 		}else{
@@ -336,6 +358,7 @@ void updateUI(){
 	ss_dac_repeat.SendValue(g_serverNetConfig->getDACRepeat());
 	ss_dac_rep_count.SendValue(g_serverNetConfig->getDACRepeatCount());
 	ss_dac_memory.SendValue(g_serverNetConfig->getDACMemoryUsage());
+	ss_dac_speed.SendValue(g_serverNetConfig->getDACHz());
 	ss_rate.SendValue(g_serverNetConfig->getDecimation());
 	ss_samples.SendValue(g_serverNetConfig->getSamples());
 	ss_calib.SendValue(g_serverNetConfig->getCalibration() ? 2 : 1);
@@ -557,6 +580,13 @@ void setConfig(bool _force){
 		needUpdate = true;
 	}
 
+	if (ss_dac_speed.IsNewValue() || _force)
+	{
+		ss_dac_speed.Update();
+		g_serverNetConfig->setDACHz(ss_dac_speed.Value());
+		needUpdate = true;
+	}
+
 	if (needUpdate){
 		saveConfigInFile();
 	}
@@ -576,6 +606,16 @@ void UpdateParams(void)
 				StartServer();
 			}else{
 				StopNonBlocking(0);
+			}
+		}
+
+		if (ss_dac_start.IsNewValue())
+		{
+			ss_dac_start.Update();
+			if (ss_dac_start.Value() == 1){
+				startDACServer();
+			}else{
+				stopDACNonBlocking(CDACStreamingManager::NR_STOP);
 			}
 		}
 	}catch (std::exception& e)
@@ -845,5 +885,197 @@ void StopServer(int x){
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
+	}
+}
+
+
+auto startDACServer() -> void{
+    if (!g_serverNetConfig) return;
+	gen = nullptr;
+	try{
+		if (!g_serverNetConfig->isSetted()) return;
+		if (g_dac_serverRun) {
+			if (g_dac_manger){
+				if (!g_dac_manger->isLocalMode()){
+					g_serverNetConfig->sendServerStartedTCP();
+				}else{
+					g_serverNetConfig->sendServerStartedSD();
+				}
+			}
+			return;
+		}
+		g_dac_serverRun = true;
+		auto use_file     =  g_serverNetConfig->getDACMode();
+		auto sock_port    =  g_serverNetConfig->getDACPort();
+		auto dac_speed    =  g_serverNetConfig->getDACHz();
+		auto ip_addr_host = "127.0.0.1";
+
+#ifdef Z20
+		auto use_calib    = 0;
+		auto attenuator   = 0;
+#else
+		auto use_calib    = g_serverNetConfig->getCalibration();
+		rp_CalibInit();
+		auto osc_calib_params = rp_GetCalibrationSettings();
+#endif
+
+#ifdef Z20_250_12
+		auto dac_gain = g_serverNetConfig->getDACGain();
+#endif
+
+		std::vector<UioT> uioList = GetUioList();
+		uint32_t ch1_off = 0;
+		uint32_t ch2_off = 0;
+		float ch1_gain = 1;
+		float ch2_gain = 1;
+
+		if (use_calib == 1) {
+#ifdef Z20_250_12
+			if (dac_gain == CStreamSettings::x1) {			
+				ch1_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch1_g_1);  
+				ch2_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch2_g_1);  
+				ch1_off  = osc_calib_params.gen_ch1_off_1;
+				ch2_off  = osc_calib_params.gen_ch2_off_1;
+			}else{
+				ch1_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch1_g_5);  
+				ch2_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch2_g_5);  
+				ch1_off  = osc_calib_params.gen_ch1_off_5;
+				ch2_off  = osc_calib_params.gen_ch2_off_5;
+			}
+#endif
+
+#if defined Z10 || defined Z20_125
+			ch1_gain = calibFullScaleToVoltage(osc_calib_params.be_ch1_fs);
+			ch2_gain = calibFullScaleToVoltage(osc_calib_params.be_ch2_fs);
+			ch1_off  = osc_calib_params.be_ch1_dc_offs;
+			ch2_off  = osc_calib_params.be_ch2_dc_offs;
+#endif
+		}
+
+#ifdef Z20_250_12
+
+        rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::x1 ? RP_GAIN_2V : RP_GAIN_10V);
+        rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::x1 ? RP_GAIN_2V : RP_GAIN_10V);
+
+#endif
+
+		for (const UioT &uio : uioList)
+		{
+			 if (uio.nodeName == "rp_dac")
+			{
+				gen = CGenerator::Create(uio, true , true ,DAC_FREQUENCY);
+				gen->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
+				gen->setDacHz(dac_speed);
+			}
+		}
+
+		if (!gen){
+			fprintf(stdout,"[Streaming] Error init generator module\n");
+        	syslog (LOG_NOTICE, "[Streaming] Error init generator module\n");
+			return;
+		}
+
+
+		if (use_file == CStreamSettings::DAC_NET) {
+			g_dac_manger = CDACStreamingManager::Create(
+					ip_addr_host,
+					sock_port);
+		}else{
+
+			auto format = g_serverNetConfig->getDACFileType();
+			auto filePath = g_serverNetConfig->getDACFile();
+			auto dacRepeatMode = g_serverNetConfig->getDACRepeat();
+			auto dacRepeatCount = g_serverNetConfig->getDACRepeatCount();
+			auto dacMemory = g_serverNetConfig->getDACMemoryUsage();
+			
+			if (format == CStreamSettings::WAV) {
+				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
+			}else if (format == CStreamSettings::TDMS) {
+				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
+			}else{
+				return;
+			}
+			g_dac_manger->notifyStop = [](CDACStreamingManager::NotifyResult status)
+			{
+				stopDACNonBlocking(status);
+			};
+		
+		}
+
+		if (g_dac_app!= nullptr){
+			g_dac_app->stop();
+			delete g_dac_app;
+		}
+
+
+		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
+		
+
+		g_dac_app->runNonBlock();
+		if (g_dac_manger->isLocalMode()){
+			g_serverNetConfig->sendDACServerStartedSD();
+		}else{
+			g_serverNetConfig->sendDACServerStarted();
+		}
+
+		fprintf(stdout,"[Streaming] Start dac server\n");
+        syslog (LOG_NOTICE, "[Streaming] Start dac server\n");
+	}catch (std::exception& e)
+	{
+		fprintf(stderr, "Error: startDACServer() %s\n",e.what());
+        syslog (LOG_ERR,"Error: startDACServer() %s\n",e.what());
+	}
+}
+
+auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void{
+	try{
+		std::thread th(stopDACServer ,x);
+		th.detach();
+	}catch (std::exception& e)
+	{
+		fprintf(stderr, "Error: StopNonBlocking() %s\n",e.what());
+        syslog (LOG_ERR,"Error: StopNonBlocking() %s\n",e.what());
+	}
+}
+
+
+auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void{
+	try{
+		if (g_dac_app)
+		{
+			g_dac_app->stop();
+			delete g_dac_app;
+			g_dac_app = nullptr;
+		}
+        if (g_serverNetConfig){
+            switch (x)
+            {
+				case CDACStreamingManager::NR_STOP:
+					g_serverNetConfig->sendDACServerStopped();
+					break;
+				case CDACStreamingManager::NR_ENDED:
+					g_serverNetConfig->sendDACServerStoppedSDDone();
+					break;
+				case CDACStreamingManager::NR_EMPTY:
+					g_serverNetConfig->sendDACServerStoppedSDEmpty();
+					break;
+				case CDACStreamingManager::NR_BROKEN:
+					g_serverNetConfig->sendDACServerStoppedSDBroken();
+					break;
+				case CDACStreamingManager::NR_MISSING_FILE:
+					g_serverNetConfig->sendDACServerStoppedSDMissingFile();
+					break;
+				default:
+					throw runtime_error("Unknown state");
+					break;
+            }
+        }
+		g_dac_serverRun = false;
+        fprintf(stdout,"[Streaming] Stop dac server\n");
+        syslog (LOG_NOTICE, "[Streaming] Stop dac server\n");
+	}catch (std::exception& e)
+	{
+		fprintf(stderr, "Error: stopDACServer() %s\n",e.what());
+        syslog (LOG_ERR,"Error: stopDACServer() %s\n",e.what());
 	}
 }
