@@ -168,7 +168,7 @@ int get_memory(int64_t *value, const char *str,const char *message)
             multipyMode = 1024;
         }
         if (subSuffix){
-            checkstr[strlen(checkstr) - 1] = 0;
+            checkstr[strLen - 1] = 0;
         }
         int idx = 0;
         while(checkstr[idx])
