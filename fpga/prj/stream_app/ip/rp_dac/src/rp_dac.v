@@ -7,7 +7,8 @@ module rp_dac
     parameter M_AXI_DAC_DATA_BITS_O = 32,
     parameter DAC_DATA_BITS         = 14,
     parameter EVENT_SRC_NUM         = 7,
-    parameter TRIG_SRC_NUM          = 7)(    
+    parameter TRIG_SRC_NUM          = 7,
+    parameter ID_WIDTH              = 5)(    
   input  wire                                   clk,
   input  wire                                   rst_n,
   output wire                                   intr,
@@ -54,7 +55,7 @@ module rp_dac
 
   input  wire                                   m_axi_dac1_aclk       ,
   input  wire                                   m_axi_dac1_aresetn    ,
-  output wire [5:0]                             m_axi_dac1_arid_o     ,
+  output wire [ID_WIDTH-1: 0]                   m_axi_dac1_arid_o     ,
   output wire [M_AXI_DAC_ADDR_BITS-1: 0]        m_axi_dac1_araddr_o   ,
   output wire [3:0]                             m_axi_dac1_arlen_o    ,
   output wire [2:0]                             m_axi_dac1_arsize_o   ,
@@ -64,7 +65,7 @@ module rp_dac
   output wire [2:0]                             m_axi_dac1_arprot_o   ,
   output wire                                   m_axi_dac1_arvalid_o  ,
   input  wire                                   m_axi_dac1_arready_i  ,
-  input  wire [    5: 0]                        m_axi_dac1_rid_i      ,
+  input  wire [ID_WIDTH-1: 0]                   m_axi_dac1_rid_i      ,
   input  wire [ M_AXI_DAC_DATA_BITS-1: 0]       m_axi_dac1_rdata_i    ,
   input  wire [    1: 0]                        m_axi_dac1_rresp_i    ,
   input  wire                                   m_axi_dac1_rlast_i    ,
@@ -72,7 +73,7 @@ module rp_dac
   output wire                                   m_axi_dac1_rready_o   ,
 
    // AXI Write Address Channel Signals
-   output reg [      5: 0] m_axi_dac1_awid_o             ,
+   output reg [ID_WIDTH-1: 0] m_axi_dac1_awid_o             ,
    output reg [      3: 0] m_axi_dac1_awlen_o            ,
    output reg [    3-1: 0] m_axi_dac1_awsize_o           ,
    output reg [    2-1: 0] m_axi_dac1_awburst_o          ,
@@ -90,9 +91,9 @@ module rp_dac
    output reg              m_axi_dac1_wlast_o            ,
    output reg              m_axi_dac1_wvalid_o           ,
    input                   m_axi_dac1_wready_i           ,
-   output reg [       5:0] m_axi_dac1_wid_o,
+   output reg [ID_WIDTH-1:0] m_axi_dac1_wid_o,
    // AXI Write Response Channel Signals
-   input      [      5: 0] m_axi_dac1_bid_i              ,
+   input      [ID_WIDTH-1: 0] m_axi_dac1_bid_i              ,
    input      [    2-1: 0] m_axi_dac1_bresp_i            ,
    input                   m_axi_dac1_bvalid_i           ,
    output reg              m_axi_dac1_bready_o           ,
@@ -100,7 +101,7 @@ module rp_dac
 
   input  wire                                   m_axi_dac2_aclk       ,    
   input  wire                                   m_axi_dac2_aresetn    ,    
-  output wire [5:0]                             m_axi_dac2_arid_o     ,
+  output wire [ID_WIDTH-1:0]                    m_axi_dac2_arid_o     ,
   output wire [M_AXI_DAC_ADDR_BITS-1: 0]        m_axi_dac2_araddr_o   ,
   output wire [3:0]                             m_axi_dac2_arlen_o    ,
   output wire [2:0]                             m_axi_dac2_arsize_o   ,
@@ -110,7 +111,7 @@ module rp_dac
   output wire [2:0]                             m_axi_dac2_arprot_o   ,
   output wire                                   m_axi_dac2_arvalid_o  ,
   input  wire                                   m_axi_dac2_arready_i  ,
-  input  wire [5:0]                             m_axi_dac2_rid_i      ,
+  input  wire [ID_WIDTH-1:0]                    m_axi_dac2_rid_i      ,
   input  wire [ M_AXI_DAC_DATA_BITS-1: 0]       m_axi_dac2_rdata_i    ,
   input  wire [1:0]                             m_axi_dac2_rresp_i    ,
   input  wire                                   m_axi_dac2_rlast_i    ,
@@ -118,7 +119,7 @@ module rp_dac
   output wire                                   m_axi_dac2_rready_o   ,
   
    // AXI Write Address Channel Signals
-   output reg [      5: 0] m_axi_dac2_awid_o             ,
+   output reg [ID_WIDTH-1: 0] m_axi_dac2_awid_o             ,
    output reg [      3: 0] m_axi_dac2_awlen_o            ,
    output reg [    3-1: 0] m_axi_dac2_awsize_o           ,
    output reg [    2-1: 0] m_axi_dac2_awburst_o          ,
@@ -136,9 +137,9 @@ module rp_dac
    output reg              m_axi_dac2_wlast_o            ,
    output reg              m_axi_dac2_wvalid_o           ,
    input                   m_axi_dac2_wready_i           ,
-   output reg [       5:0] m_axi_dac2_wid_o,
+   output reg [ID_WIDTH-1:0] m_axi_dac2_wid_o,
    // AXI Write Response Channel Signals
-   input      [      5: 0] m_axi_dac2_bid_i              ,
+   input      [ID_WIDTH-1: 0] m_axi_dac2_bid_i              ,
    input      [    2-1: 0] m_axi_dac2_bresp_i            ,
    input                   m_axi_dac2_bvalid_i           ,
    output reg              m_axi_dac2_bready_o           ,
@@ -168,8 +169,7 @@ localparam EVENT_SEL_ADDR       = 8'h20;
 localparam TRIG_MASK_ADDR       = 8'h24;
 
 localparam DMA_CTRL_ADDR        = 8'h28;
-localparam DMA_STS_ADDR_CHA     = 8'h2C;
-localparam DMA_STS_ADDR_CHB     = 8'h30; 
+localparam DMA_STS_ADDR         = 8'h2C;
 
 localparam DMA_BUF_SIZE_ADDR    = 8'h34;
 localparam DMA_BUF1_ADR_CHA     = 8'h38;
@@ -236,8 +236,8 @@ reg  [31:0]                     reg_rd_data;
 
 reg ctrl_cha;
 reg ctrl_chb;
-wire sts_cha   = (reg_addr[8-1:0] == DMA_STS_ADDR_CHA  ) && (reg_wr_we == 1);
-wire sts_chb   = (reg_addr[8-1:0] == DMA_STS_ADDR_CHB  ) && (reg_wr_we == 1);
+wire sts_cha   = (reg_addr[8-1:0] == DMA_STS_ADDR  ) && (reg_wr_we == 1);
+wire sts_chb   = (reg_addr[8-1:0] == DMA_STS_ADDR  ) && (reg_wr_we == 1);
 wire event_val = (reg_addr[8-1:0] == EVENT_STS_ADDR    ) && (reg_wr_we == 1);
 wire [31:0] ctrl_cha_o; 
 wire [31:0] ctrl_chb_o;
@@ -328,8 +328,7 @@ begin
     TRIG_MASK_ADDR:         reg_rd_data <= cfg_trig_mask;
 
     DMA_CTRL_ADDR:          reg_rd_data <= {ctrl_chb_o[15:0], ctrl_cha_o[15:0]};      
-    DMA_STS_ADDR_CHA:       reg_rd_data <= sts_cha_o;   
-    DMA_STS_ADDR_CHB:       reg_rd_data <= sts_chb_o;   
+    DMA_STS_ADDR:           reg_rd_data <= {sts_chb_o[15:0] , sts_cha_o[15:0]};   
 
     DMA_BUF_SIZE_ADDR:      reg_rd_data <= cfg_dma_buf_size;
     DMA_BUF1_ADR_CHA:       reg_rd_data <= cfg_buf1_adr_cha;
@@ -338,7 +337,8 @@ begin
     DMA_BUF2_ADR_CHB:       reg_rd_data <= cfg_buf2_adr_chb;     
     DIAG_REG_ADDR1:         reg_rd_data <= diag_reg;                            
     DIAG_REG_ADDR2:         reg_rd_data <= diag_reg2;                            
-                       
+    DIAG_REG_ADDR3:         reg_rd_data <= diag_reg3;                            
+    DIAG_REG_ADDR4:         reg_rd_data <= diag_reg4;                            
   endcase
 end
 
@@ -446,6 +446,8 @@ dac_top #(
   .dac_data_o       (dac_a),
   .diag_reg         (diag_reg),
   .diag_reg2        (diag_reg2),
+  .diag_reg3        (diag_reg3),
+  .diag_reg4        (diag_reg4),
 
   .m_axi_dac_arid_o     (m_axi_dac1_arid_o),
   .m_axi_dac_araddr_o   (m_axi_dac1_araddr_o),
@@ -458,7 +460,7 @@ dac_top #(
   .m_axi_dac_arvalid_o  (m_axi_dac1_arvalid_o),
   .m_axi_dac_arready_i  (m_axi_dac1_arready_i),
   .m_axi_dac_rid_i      (m_axi_dac1_rid_i),
-  .m_axi_dac_rdata_i    (m_axi_dac1_rdata_i[M_AXI_DAC_DATA_BITS_O-1: 0]),
+  .m_axi_dac_rdata_i    (m_axi_dac1_rdata_i),
   .m_axi_dac_rresp_i    (m_axi_dac1_rresp_i),
   .m_axi_dac_rlast_i    (m_axi_dac1_rlast_i),
   .m_axi_dac_rvalid_i   (m_axi_dac1_rvalid_i),
@@ -521,7 +523,7 @@ dac_top #(
   .m_axi_dac_arvalid_o  (m_axi_dac2_arvalid_o),
   .m_axi_dac_arready_i  (m_axi_dac2_arready_i),
   .m_axi_dac_rid_i      (m_axi_dac2_rid_i),
-  .m_axi_dac_rdata_i    (m_axi_dac2_rdata_i[M_AXI_DAC_DATA_BITS_O-1: 0]),
+  .m_axi_dac_rdata_i    (m_axi_dac2_rdata_i),
   .m_axi_dac_rresp_i    (m_axi_dac2_rresp_i),
   .m_axi_dac_rlast_i    (m_axi_dac2_rlast_i),
   .m_axi_dac_rvalid_i   (m_axi_dac2_rvalid_i),
