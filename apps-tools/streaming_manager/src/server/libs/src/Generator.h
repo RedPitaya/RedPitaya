@@ -38,13 +38,14 @@ class CGenerator
 public:
     using Ptr = std::shared_ptr<CGenerator>;
 
-    static Ptr Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable);
+    static Ptr Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t maxDacHz);
 
-    CGenerator(bool _channel1Enable,bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr);
+    CGenerator(bool _channel1Enable,bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t maxDacHz);
     CGenerator(const CGenerator &) = delete;
     CGenerator(CGenerator &&) = delete;
     ~CGenerator();
-
+    auto getDacHz() -> uint32_t;
+    auto setDacHz(uint32_t hz) -> bool;
     auto prepare() -> void;
     auto initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool;
     auto initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool;
@@ -78,4 +79,6 @@ private:
     uint32_t     m_calib_gain_ch1;
     int32_t      m_calib_offset_ch2;
     uint32_t     m_calib_gain_ch2;
+    uint32_t     m_maxDacSpeedHz;
+    uint32_t     m_dacSpeedHz;
 };

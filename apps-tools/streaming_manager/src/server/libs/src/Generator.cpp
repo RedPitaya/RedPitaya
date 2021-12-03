@@ -20,7 +20,7 @@ inline void setRegister(volatile GeneratorMapT * baseOsc_addr,volatile uint32_t 
     *reg = value;
 }
 
-CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable)
+CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t maxDacHz)
 {
     // Validation
     if (_uio.mapList.size() < 2)
@@ -71,10 +71,10 @@ CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool 
     }
 
    
-    return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr);
+    return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,maxDacHz);
 }
 
-CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr) :
+CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t maxDacHz) :
     m_Channel1(_channel1Enable),
     m_Channel2(_channel2Enable),
     m_Fd(_fd),
@@ -86,7 +86,9 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
     m_Map(nullptr),
     m_Buffer1(nullptr),
     m_Buffer2(nullptr),
-    m_waitLock()
+    m_waitLock(),
+    m_maxDacSpeedHz(maxDacHz),
+    m_dacSpeedHz(maxDacHz)
 {
     m_BufferNumber[0] = m_BufferNumber[1] = 0;
     m_calib_offset_ch1 = 0;
@@ -105,6 +107,14 @@ CGenerator::~CGenerator()
     munmap(m_Regset, m_RegsetSize);
     munmap(m_Buffer, m_BufferSize);
     close(m_Fd);
+}
+
+auto CGenerator::getDacHz() -> uint32_t{
+    return m_dacSpeedHz;
+}
+
+auto CGenerator::setDacHz(uint32_t hz) -> bool{
+    m_dacSpeedHz = hz;
 }
 
 void CGenerator::setReg(volatile GeneratorMapT *_Map){
@@ -133,9 +143,11 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map){
         // Set calib for chB
         setRegister(_Map,&(_Map->chB_calib),m_calib_offset_ch2 << 16 | m_calib_gain_ch2);
 
-        // Set step for pointer 
-        setRegister(_Map,&(_Map->chA_counter_step),1 << 12);
-        setRegister(_Map,&(_Map->chB_counter_step),1 << 12);
+        // Set step for pointer
+        double coff = (double)m_dacSpeedHz / (double)m_maxDacSpeedHz;
+        uint32_t step = (1 << 16) * coff; 
+        setRegister(_Map,&(_Map->chA_counter_step),step);
+        setRegister(_Map,&(_Map->chB_counter_step),step);
 
         // Set streaming DMA, reset Buffers and flags
         setRegister(_Map,&(_Map->dma_control),0x2222);
@@ -206,13 +218,13 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
 {
     bool ret = false;
     const std::lock_guard<std::mutex> lock(m_waitLock);
-    // if (_buffer1){
     if (m_BufferNumber[0] == 0){
         if (m_Map->chA_dma_status & 0x3 && m_Map->chB_dma_status & 0x3){
             if (_buffer1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
             m_BufferNumber[0] = 1;
-            setRegister(m_Map,&(m_Map->dma_control),1 << 7 | 1 << 15);
+            int command = 1 << 7 | 1 << 15;
+            setRegister(m_Map,&(m_Map->dma_control),command);
             ret = true;
         }
     }else{
@@ -220,7 +232,8 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
             if (_buffer1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
             m_BufferNumber[0] = 0;
-            setRegister(m_Map,&(m_Map->dma_control),1 << 6 | 1 << 14);
+            int command = 1 << 6  | 1 <<  14;
+            setRegister(m_Map,&(m_Map->dma_control),command);
             ret = true;
         }
     }
