@@ -44,6 +44,8 @@ module osc_top
   //   
   output wire                             dma_intr,
   //
+  output wire                             loopback_sel,
+  //
   output wire [(M_AXI_ADDR_BITS-1):0]     m_axi_awaddr,    
   output wire [7:0]                       m_axi_awlen,     
   output wire [2:0]                       m_axi_awsize,    
@@ -81,6 +83,7 @@ localparam DEC_FACTOR_ADDR      = 8'h30;  //48 Decimation factor address
 localparam DEC_RSHIFT_ADDR      = 8'h34;  //52 Decimation right shift address
 localparam AVG_EN_ADDR          = 8'h38;  //56 Average enable address
 localparam FILT_BYPASS_ADDR     = 8'h3C;  //60 Filter bypass address
+localparam LOOPBACK_ADDR        = 8'h40;  //64 Digital loopback
 
 localparam DMA_CTRL_ADDR_CH1    = 8'h50;  //80 DMA control register
 localparam DMA_STS_ADDR_CH1     = 8'h54;  //84 DMA status register
@@ -148,6 +151,7 @@ reg                         cfg_trig_edge;
 reg                         cfg_avg_en; 
 reg  [DEC_CNT_BITS-1:0]     cfg_dec_factor;  
 reg  [DEC_SHIFT_BITS-1:0]   cfg_dec_rshift;  
+reg  [             8-1:0]   cfg_loopback;
 
 reg                         cfg_filt_bypass;  
 reg signed [17:0]           cfg_filt_coeff_aa; 
@@ -199,6 +203,8 @@ begin
     intr_cnt <= intr_cnt+1;
   end  
 end
+
+assign loopback_sel = cfg_loopback;
 
 osc_filter i_dfilt (
    // ADC
@@ -581,6 +587,23 @@ begin
 end
 
 ////////////////////////////////////////////////////////////
+// Name : Digital loopback
+// 
+////////////////////////////////////////////////////////////
+
+always @(posedge clk)
+begin
+  if (rst_n == 0) begin
+    cfg_loopback <= 0;
+  end else begin
+    if (((reg_addr[8-1:0] == LOOPBACK_ADDR)) && (reg_wr_we == 1)) begin
+      cfg_loopback <= reg_wr_data[8-1:0];
+    end
+  end
+end
+
+
+////////////////////////////////////////////////////////////
 // Name : Filter Bypass
 // 
 ////////////////////////////////////////////////////////////
@@ -761,6 +784,7 @@ begin
     DEC_FACTOR_ADDR:        reg_rd_data <= cfg_dec_factor;  
     DEC_RSHIFT_ADDR:        reg_rd_data <= cfg_dec_rshift;  
     AVG_EN_ADDR:            reg_rd_data <= cfg_avg_en;  
+    LOOPBACK_ADDR:          reg_rd_data <= cfg_loopback;                           
     CALIB_OFFSET_ADDR_CH1:  reg_rd_data <= cfg_calib_offset;
     CALIB_GAIN_ADDR_CH1:    reg_rd_data <= cfg_calib_gain;
     CALIB_OFFSET_ADDR_CH2:  reg_rd_data <= cfg_calib_offset;

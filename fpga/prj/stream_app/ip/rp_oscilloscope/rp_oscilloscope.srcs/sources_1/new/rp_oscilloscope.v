@@ -29,6 +29,8 @@ module rp_oscilloscope
   // 
   output wire [3:0]                             osc2_event_op,      
   output wire                                   osc2_trig_op,  
+  //
+  output wire [7:0]                             loopback_sel,      
   //    
   input  wire                                   s_axi_reg_aclk,    
   input  wire                                   s_axi_reg_aresetn,    
@@ -256,6 +258,7 @@ osc_top #(
   .buf_sel_in       (buf_sel_ch2),
   .buf_sel_out      (buf_sel_ch1),
   .dma_intr         (osc1_dma_intr),
+  .loopback_sel     (loopback_sel),
   .m_axi_awaddr     (m_axi_osc1_awaddr), 
   .m_axi_awlen      (m_axi_osc1_awlen),  
   .m_axi_awsize     (m_axi_osc1_awsize), 

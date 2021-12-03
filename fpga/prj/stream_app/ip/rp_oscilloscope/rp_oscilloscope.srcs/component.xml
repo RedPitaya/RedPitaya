@@ -708,7 +708,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>27414de4</spirit:value>
+            <spirit:value>4faf177e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -730,7 +730,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>27414de4</spirit:value>
+            <spirit:value>4faf177e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -744,7 +744,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>16f84472</spirit:value>
+            <spirit:value>71be77d5</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -759,7 +759,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>81ce87ce</spirit:value>
+            <spirit:value>428cf7b0</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -987,6 +987,23 @@
         <spirit:name>osc2_trig_op</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
+              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>loopback_sel</spirit:name>
+        <spirit:wire>
+          <spirit:direction>out</spirit:direction>
+          <spirit:vector>
+            <spirit:left spirit:format="long">7</spirit:left>
+            <spirit:right spirit:format="long">0</spirit:right>
+          </spirit:vector>
           <spirit:wireTypeDefs>
             <spirit:wireTypeDef>
               <spirit:typeName>wire</spirit:typeName>
@@ -2018,7 +2035,7 @@
       <spirit:file>
         <spirit:name>sources_1/new/rp_oscilloscope.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_24a68e72</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_436b847c</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -2125,7 +2142,7 @@
       <spirit:file>
         <spirit:name>xgui/rp_oscilloscope_v1_16.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_16f84472</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_71be77d5</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -2206,8 +2223,8 @@
         <xilinx:xpmLibrary>XPM_CDC</xilinx:xpmLibrary>
         <xilinx:xpmLibrary>XPM_MEMORY</xilinx:xpmLibrary>
       </xilinx:xpmLibraries>
-      <xilinx:coreRevision>36</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-10-17T11:17:13Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>37</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2021-12-03T11:58:21Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="xilinx.com:user:rp_oscilloscope:1.0_ARCHIVE_LOCATION">d:/work/p0095_red_pitaya/vivado/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
         <xilinx:tag xilinx:name="redpitaya.com:user:rp_oscilloscope:1.0_ARCHIVE_LOCATION">d:/work/p0095_red_pitaya/vivado/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
@@ -2542,15 +2559,21 @@
         <xilinx:tag xilinx:name="ui.data.coregen.dd@51cdbdcd_ARCHIVE_LOCATION">d:/Work/P0095_red_pitaya/Vivado/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@53dd7dce_ARCHIVE_LOCATION">d:/Work/P0095_red_pitaya/Vivado/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@2fb8d6f7_ARCHIVE_LOCATION">d:/Work/P0095_red_pitaya/Vivado/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@187b296_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1a456597_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6ddb5033_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@49e9036c_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3a19718f_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@144811a2_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_oscilloscope/rp_oscilloscope.srcs</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
-      <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
+      <xilinx:xilinxVersion>2020.1</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="c823d1be"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="9a991df2"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="5406f93f"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="00c4f7a6"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="16a0c010"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c38a0a18"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="240574af"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="c9114e81"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="3d9e934a"/>
     </xilinx:packagingInfo>

@@ -133,6 +133,17 @@ ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(da
 always @(posedge dac_clk_1x)
 dac_rst  <= ~rstn_0 | ~pll_locked;
 
+wire [ 4-1:0] loopback_sel_ch2,loopback_sel_ch1;
+wire [14-1:0] adc_dat_ch1, adc_dat_ch2;
+
+assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0][15:2]    :
+                    (loopback_sel_ch1 == 'h1 ? dac_dat_a             :
+                                              {3'h0, exp_p_io, 3'h0} );
+
+assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1][15:2]    :
+                    (loopback_sel_ch2 == 'h1 ? dac_dat_b             :
+                                              {3'h0, exp_n_io, 3'h0} );
+
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +180,7 @@ dac_rst  <= ~rstn_0 | ~pll_locked;
         .dac_dat_b(dac_dat_b),
         .gpio_p(exp_p_io),
         .gpio_n(exp_n_io),
+        .loopback_sel({loopback_sel_ch2,loopback_sel_ch1}),
         .adc_data_ch1(adc_dat_i[0][15:2]),
         .adc_data_ch2(adc_dat_i[1][15:2]));
 
