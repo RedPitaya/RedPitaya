@@ -114,7 +114,9 @@ auto CGenerator::getDacHz() -> uint32_t{
 }
 
 auto CGenerator::setDacHz(uint32_t hz) -> bool{
+    if (((double)hz / (double)m_maxDacSpeedHz) * (1<<16) < 1) return false;
     m_dacSpeedHz = hz;
+    return true;
 }
 
 void CGenerator::setReg(volatile GeneratorMapT *_Map){
