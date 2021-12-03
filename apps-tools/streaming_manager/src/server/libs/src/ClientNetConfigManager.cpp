@@ -17,7 +17,9 @@ ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings
 }
 
 ClientNetConfigManager::~ClientNetConfigManager(){
-
+    for(auto &cli:m_clients){
+        cli->m_manager = nullptr;
+    }
 }
 
 auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -> void{
