@@ -112,6 +112,8 @@ public:
     auto getDACMode() -> DACType;
     auto setDACRepeat(DACRepeat _value) -> void;
     auto getDACRepeat() -> DACRepeat;
+    auto setDACHz(uint32_t _value) -> void;
+    auto getDACHz() -> uint32_t;
     auto setDACRepeatCount(uint32_t _value) -> void;
     auto getDACRepeatCount() -> uint32_t;
     auto getDACPort() -> std::string;
@@ -142,6 +144,7 @@ private:
     bool m_Bdac_port;
     bool m_Bdac_memoryUsage;
     bool m_Bdac_repeatCount;
+    bool m_Bdac_speed_Hz;
 
     std::string     m_port;
     std::string     m_dac_file;
@@ -162,5 +165,6 @@ private:
     std::string     m_dac_port;
     int64_t         m_dac_memoryUsage;
     uint32_t        m_dac_repeatCount;
+    uint32_t        m_dac_speed_Hz;
 };
 

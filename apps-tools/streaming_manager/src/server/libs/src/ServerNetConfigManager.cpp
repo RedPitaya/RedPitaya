@@ -239,6 +239,7 @@ auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
         if (!m_pNetConfManager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
         if (!m_pNetConfManager->sendData("dac_repeatCount",static_cast<uint32_t>(getDACRepeatCount()),_async)) return false;
         if (!m_pNetConfManager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_speed",static_cast<uint32_t>(getDACHz()),_async)) return false;
 
         if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;

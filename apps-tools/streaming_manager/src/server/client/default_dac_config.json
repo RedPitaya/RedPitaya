@@ -11,7 +11,9 @@
       // Values: OFF / ON / INF
       "repeat_mode":"OFF",
       "repeats":0,
-      // Values in bytes 
+      // Speed of DAC in Hz
+      "dac_speed":125000000,
+      // Values in bytes
       "memory_cache":1048576,
       "verbous":true
     }

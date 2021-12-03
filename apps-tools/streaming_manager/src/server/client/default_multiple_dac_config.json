@@ -11,7 +11,9 @@
       // Values: OFF / ON / INF
       "repeat_mode":"OFF",
       "repeats":0,
-      // Values in bytes 
+      // Speed of DAC in Hz
+      "dac_speed":125000000,
+      // Values in bytes
       "memory_cache":1048576,
       "verbous":true
     },
@@ -21,11 +23,13 @@
       "port":"8903",
       "file":"FileName",
       // Values: WAV / TDMS
-      "file_type":"WAV",      
+      "file_type":"WAV",
       // Values: OFF / ON / INF
       "repeat_mode":"OFF",
       "repeats":0,
-      // Values in bytes 
+      // Speed of DAC in Hz
+      "dac_speed":125000000,
+      // Values in bytes
       "memory_cache":1048576,
       "verbous":true
     },
@@ -35,11 +39,13 @@
       "port":"8903",
       "file":"FileName",
       // Values: WAV / TDMS
-      "file_type":"WAV",      
+      "file_type":"WAV",
       // Values: OFF / ON / INF
       "repeat_mode":"OFF",
       "repeats":0,
-      // Values in bytes 
+      // Speed of DAC in Hz
+      "dac_speed":125000000,
+      // Values in bytes
       "memory_cache":1048576,
       "verbous":true
     }

@@ -265,7 +265,7 @@ auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<C
 }
 
 auto ClientNetConfigManager::connectTimeoutError(std::error_code error,std::shared_ptr<Clients> sender) -> void{
-    UNUSED(error);
+    fprintf(stderr,"[ClientNetConfigManager] Connection timeout error: %s (%d)\n",error.message().c_str(),error.value());
     m_errorCallback.emitEvent(0,Errors::CONNECT_TIMEOUT,sender->m_manager->getHost());
 }
 
@@ -307,6 +307,7 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
         if (!_client->m_manager->sendData("dac_repeatCount",static_cast<uint32_t>(getDACRepeatCount()),_async)) return false;
         if (!_client->m_manager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_speed",static_cast<uint32_t>(getDACHz()),_async)) return false;
 
         if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;

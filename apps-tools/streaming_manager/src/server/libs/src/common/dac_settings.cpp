@@ -100,6 +100,12 @@ auto DacSettings::readFromFile(string _filename) -> std::vector<DacSettings> {
                 std::cerr << "[CDacSettings] Can't parse memory_cache value: " << obj["memory_cache"].toStyledString() << std::endl;
             }
 
+            if (obj.isMember("dac_speed") && obj["dac_speed"].isInt()){
+                s.dac_speed = obj["dac_speed"].asInt();
+            }else{
+                std::cerr << "[CDacSettings] Can't parse dac_speed value: " << obj["dac_speed"].toStyledString() << std::endl;
+            }
+
             if (obj.isMember("verbous") && obj["verbous"].isBool()){
                 s.verbous = obj["verbous"].asBool();
             }else{

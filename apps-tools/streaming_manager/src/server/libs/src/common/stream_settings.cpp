@@ -27,6 +27,7 @@ CStreamSettings::CStreamSettings(){
     m_dac_port = "";
     m_dac_memoryUsage = 1024 * 1024;
     m_dac_repeatCount = 0;
+    m_dac_speed_Hz = 0;
     reset();
 }
 
@@ -50,7 +51,8 @@ void CStreamSettings::reset(){
     m_Bdac_port =
     m_Bdac_repeat =
     m_Bdac_memoryUsage =
-    m_Bdac_repeatCount = false;
+    m_Bdac_repeatCount =
+    m_Bdac_speed_Hz= false;
 }
 
 bool CStreamSettings::isSetted(){
@@ -73,7 +75,8 @@ bool CStreamSettings::isSetted(){
             m_Bdac_port &&
             m_dac_memoryUsage &&
             m_Bdac_repeat &&
-            m_Bdac_repeatCount;
+            m_Bdac_repeatCount &&
+            m_Bdac_speed_Hz;
 
     // std::cerr << " port " << m_Bport 
     //           << " dac_file " << m_Bdac_file 
@@ -115,6 +118,7 @@ bool CStreamSettings::writeToFile(string _filename){
         root["dac_repeatCount"] = getDACRepeatCount();
         root["dac_port"] = getDACPort();
         root["dac_memoryUsage"] = getDACMemoryUsage();
+        root["dac_speed"] = getDACHz();
 
         Json::StreamWriterBuilder builder;
         const std::string json_file = Json::writeString(builder, root);
@@ -152,6 +156,7 @@ auto CStreamSettings::getJson()-> std::string{
         root["dac_repeatCount"] = getDACRepeatCount();
         root["dac_port"] = getDACPort();
         root["dac_memoryUsage"] = getDACMemoryUsage();
+        root["dac_speed"] = getDACHz();
 
         Json::StreamWriterBuilder builder;
         const std::string json = Json::writeString(builder, root);
@@ -307,6 +312,7 @@ auto CStreamSettings::String()-> std::string{
         str = str + "DAC repeat:\t\t" + dac_repeat +" (In file mode)\n";
         str = str + "DAC repeat count:\t\t" + std::to_string(getDACRepeatCount())  +" (In DAC file mode\n";
         str = str + "DAC memory cache:\t\t" + std::to_string(getDACMemoryUsage())  +" (In DAC file mode\n";
+        str = str + "DAC speed (Hz):\t\t" + std::to_string(getDACHz())  +"\n";
 
 
         std::string  dac_gain = "ERROR";
@@ -384,6 +390,8 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         setDACPort(root["dac_port"].asString());
     if (root.isMember("dac_memoryUsage"))
         setDACMemoryUsage(root["dac_memoryUsage"].asInt64());
+    if (root.isMember("dac_speed"))
+        setDACHz(root["dac_speed"].asInt());
     return isSetted();
 }
 
@@ -569,6 +577,11 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
         setDACMemoryUsage(static_cast<int64_t>(value));
         return true;
     }
+
+    if (key == "dac_speed") {
+        setDACHz(static_cast<uint32_t>(value));
+        return true;
+    }
     return false;
 }
 
@@ -643,6 +656,16 @@ auto CStreamSettings::setDACMode(CStreamSettings::DACType _value) -> void{
 auto CStreamSettings::getDACMode() -> CStreamSettings::DACType{
     return m_dac_mode;
 }
+
+auto CStreamSettings::setDACHz(uint32_t _value) -> void{
+    m_dac_speed_Hz = _value;
+    m_Bdac_speed_Hz = true;
+}
+
+auto CStreamSettings::getDACHz() -> uint32_t{
+    return m_dac_speed_Hz;
+}
+
 
 auto CStreamSettings::setDACRepeat(DACRepeat _value) -> void{
     m_dac_repeat = _value;

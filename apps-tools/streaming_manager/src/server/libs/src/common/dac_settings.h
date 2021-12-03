@@ -12,6 +12,7 @@ struct DacSettings {
     CStreamSettings::DACRepeat  dac_repeat_mode = CStreamSettings::DAC_REP_OFF;
     int64_t                     dac_repeat = 0;
     int64_t                     dac_memory = 0;
+    int32_t                     dac_speed  = 0;
     bool                        verbous    = false;
 
     static auto readFromFile(std::string _filename) -> std::vector<DacSettings>;

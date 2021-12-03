@@ -281,13 +281,14 @@ auto stopDACStreaming(std::string host) -> void{
 }
 
 auto stopDACStreaming() -> void{
-    for(const auto& kv : g_dac_manger){
-        kv.second->stop();
-    }
-    for(const auto& kv : g_dac_asionet){
-        kv.second->stopAsioNet();
-    }
     for(auto& kv : g_dac_terminate){
         kv.second = true;
     }
+
+//    for(const auto& kv : g_dac_manger){
+//        kv.second->stop();
+//    }
+//    for(const auto& kv : g_dac_asionet){
+//        kv.second->stopAsioNet();
+//    }
 }
