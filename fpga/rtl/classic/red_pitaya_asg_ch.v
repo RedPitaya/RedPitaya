@@ -88,14 +88,8 @@ wire  [PNT_SIZE  : 0] dac_npnt_sub ;
 wire              dac_npnt_sub_neg;
 
 reg   [  16-1: 0] cyc_cnt   ;
-reg signed  [  18-1: 0] dac_rdat_pipe  ;
-reg signed  [  25-1: 0] set_amp_pipe  ;
-
-reg signed  [  14-1: 0] dac_mult  ;
-reg signed  [  43-1: 0] dac_mult_r  ;
-
+reg signed  [  28-1: 0] dac_mult  ;
 reg signed  [  15-1: 0] dac_sum   ;
-reg signed  [  15-1: 0] dac_sum_r   ;
 
 reg               lastval;
 wire              not_burst;
@@ -122,14 +116,8 @@ buf_rdata_o <= dac_buf[buf_addr_i] ;
 // scale and offset
 always @(posedge dac_clk_i)
 begin
-
-   dac_rdat_pipe <= {dac_rdat, 4'h0};
-   set_amp_pipe  <= {set_amp_i, 11'h0};
-   dac_mult_r <= $signed(dac_rdat_pipe) * $signed(set_amp_pipe) ;
-   dac_mult <= dac_mult_r[43-1:29];
-
-   dac_sum_r  <= $signed(dac_mult) + $signed(set_dc_i) ;
-   dac_sum  <= dac_sum_r;
+   dac_mult <= $signed(dac_rdat) * $signed({1'b0,set_amp_i}) ;
+   dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
 
    // saturation
    if (set_zero_i)  
