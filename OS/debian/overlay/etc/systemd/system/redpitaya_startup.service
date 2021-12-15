@@ -1,0 +1,13 @@
+[Unit]
+Description=Service for startup script Red Pitaya
+After=network.target
+Before=redpitaya_nginx.service
+
+[Service]
+Type=simple
+Environment=PATH_REDPITAYA=/opt/redpitaya
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+ExecStart=/bin/sh -c '/opt/redpitaya/sbin/startup.sh'
+
+[Install]
+WantedBy=multi-user.target

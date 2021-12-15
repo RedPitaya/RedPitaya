@@ -1,3 +1,3 @@
 #!/bin/bash
 export MODEL=Z20_125
-./build_OS.sh
+./build_OS.sh $1
