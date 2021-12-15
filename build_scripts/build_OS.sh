@@ -98,14 +98,23 @@ print_fail
 exit 1
 fi
 
-echo -n "Download redpitaya ubuntu OS. "
-cd $DL
-wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
-sudo chown root:root redpitaya_ubuntu_17-00-00_02-aug-2021.tar.gz
-sudo chmod 664 redpitaya_ubuntu_17-00-00_02-aug-2021.tar.gz
+if [ -z "$1" ]
+then
+        echo -n "Download redpitaya ubuntu OS. "
+        cd $DL
+        wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
+else
+        echo "Set ubuntu OS from parameter $1"
+	RP_UBUNTU=$1
+	cp -f $RP_UBUNTU $DL/$RP_UBUNTU
+	cd $DL
+fi
+
 
 echo -n "Check redpitaya ubuntu OS. "
 if [[ -f "$RP_UBUNTU" ]]
+        chown root:root $RP_UBUNTU
+        chmod 664 $RP_UBUNTU
 then
 print_ok
 else
@@ -124,7 +133,7 @@ fi
 
 sleep 1
 echo  "Write new configuration"
-echo 
+echo
 echo  "[red-pitaya-ubuntu]"      | sudo tee -a $SCHROOT_CONF_PATH
 echo  "description=Red pitaya"   | sudo tee -a $SCHROOT_CONF_PATH
 echo  "type=file"                | sudo tee -a $SCHROOT_CONF_PATH
@@ -134,13 +143,13 @@ echo  "root-users=root"          | sudo tee -a $SCHROOT_CONF_PATH
 echo  "root-groups=root"         | sudo tee -a $SCHROOT_CONF_PATH
 echo  "personality=linux"        | sudo tee -a $SCHROOT_CONF_PATH
 echo  "preserve-enviroment=true" | sudo tee -a $SCHROOT_CONF_PATH
-if [[ $? = 0 ]] 
+if [[ $? = 0 ]]
 then
-echo 
+echo
 echo -n "Complete write new configuration "
 print_ok
-echo 
-else 
+echo
+else
 echo -n "Complete write new configuration "
 print_fail
 exit 1
