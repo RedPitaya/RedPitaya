@@ -106,6 +106,7 @@ then
 else
         echo "Set ubuntu OS from parameter $1"
 	RP_UBUNTU=$1
+	cd build_scripts
 	cp -f $RP_UBUNTU $DL/$RP_UBUNTU
 	cd $DL
 fi
