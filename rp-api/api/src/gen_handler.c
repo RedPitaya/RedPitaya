@@ -442,13 +442,34 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         generate_setBurstDelay(channel, 0);
         generate_setBurstRepetitions(channel, 0);
         generate_setBurstCount(channel, 0);
+
+        bool enable1,enable2;
+        generate_getOutputEnabled(RP_CH_1,&enable1);
+        generate_getOutputEnabled(RP_CH_2,&enable2);
+
+        if (enable1 && enable2){
+            gen_Synchronise();
+        }else{
+            generate_Reset(channel);
+        }
+
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_BURST) {
         gen_setBurstCount(channel, channel == RP_CH_1 ? chA_burstCount : chB_burstCount);
         gen_setBurstRepetitions(channel, channel == RP_CH_1 ? chA_burstRepetition : chB_burstRepetition);
         gen_setBurstPeriod(channel, channel == RP_CH_1 ? chA_burstPeriod : chB_burstPeriod);
-        gen_Synchronise();
+        
+        bool enable1,enable2;
+        generate_getOutputEnabled(RP_CH_1,&enable1);
+        generate_getOutputEnabled(RP_CH_2,&enable2);
+        
+        if (enable1 && enable2){
+            gen_Synchronise();
+        }else{
+            generate_Reset(channel);
+        }
+
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_STREAM) {

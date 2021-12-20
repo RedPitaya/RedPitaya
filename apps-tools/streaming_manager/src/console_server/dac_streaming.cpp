@@ -58,7 +58,7 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 
 		if (use_calib == 1) {
 #ifdef Z20_250_12
-			if (dac_gain == CStreamSettings::x1) {			
+			if (dac_gain == CStreamSettings::X1) {			
 				ch1_gain = calibDACFullScaleToVoltage(osc_calib_params.gen_ch1_g_1);  
 				ch2_gain = calibDACFullScaleToVoltage(osc_calib_params.gen_ch2_g_1);  
 				ch1_off  = osc_calib_params.gen_ch1_off_1;
@@ -81,8 +81,8 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 
 #ifdef Z20_250_12
 
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::x1 ? RP_GAIN_2V : RP_GAIN_10V);
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::x1 ? RP_GAIN_2V : RP_GAIN_10V);
+        rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
+        rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
 
 #endif
 
