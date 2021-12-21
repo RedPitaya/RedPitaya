@@ -1080,7 +1080,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>ce262660</spirit:value>
+            <spirit:value>019c8b01</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1102,7 +1102,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>dfecaa34</spirit:value>
+            <spirit:value>70596fe6</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1116,7 +1116,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>bd87b232</spirit:value>
+            <spirit:value>b6738f7b</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1680,7 +1680,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -1845,7 +1845,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -1950,7 +1950,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2208,7 +2208,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2225,7 +2225,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2337,7 +2337,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2502,7 +2502,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2607,7 +2607,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2865,7 +2865,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2882,7 +2882,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">5</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.ID_WIDTH&apos;)) - 1)">4</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2998,6 +2998,11 @@
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>M_AXI_DAC_DATA_BITS_O</spirit:name>
         <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.M_AXI_DAC_DATA_BITS_O">32</spirit:value>
+      </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>ID_WIDTH</spirit:name>
+        <spirit:displayName>Id Width</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.ID_WIDTH">5</spirit:value>
       </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
@@ -3161,7 +3166,7 @@
       <spirit:file>
         <spirit:name>xgui/rp_dac_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_bd87b232</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_b6738f7b</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -3207,6 +3212,11 @@
       <spirit:displayName>M Axi Dac Data Bits Output</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.M_AXI_DAC_DATA_BITS_O">32</spirit:value>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>ID_WIDTH</spirit:name>
+      <spirit:displayName>Id Width</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.ID_WIDTH">5</spirit:value>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
@@ -3222,8 +3232,8 @@
         <xilinx:xpmLibrary>XPM_CDC</xilinx:xpmLibrary>
         <xilinx:xpmLibrary>XPM_MEMORY</xilinx:xpmLibrary>
       </xilinx:xpmLibraries>
-      <xilinx:coreRevision>23</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2021-10-11T07:28:26Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>24</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2021-10-15T10:42:09Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@7487980_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@2397fd48_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
@@ -3714,6 +3724,17 @@
         <xilinx:tag xilinx:name="ui.data.coregen.dd@29057716_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@37c47771_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@15672dff_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@42770543_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1899f8ac_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@443ec24a_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@73acb68_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6fbf154c_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1d431959_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@10914c7f_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6b79bb0d_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@302e4599_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4807b3b_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@54bee143_ARCHIVE_LOCATION">/home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/prj/stream_app/ip/rp_dac</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
@@ -3721,10 +3742,10 @@
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="3ed34160"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="0ccefdd3"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="5406f93f"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="462f1f3b"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="08ad1931"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="51894779"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="62ad2d82"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="2972fe04"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="4bea94cf"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="eacd089c"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="0663d891"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>
