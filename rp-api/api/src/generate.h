@@ -38,8 +38,8 @@
 #define DUTY_CYCLE_MAX          100         // %
 #define BURST_COUNT_MIN         1
 #define BURST_COUNT_MAX         50000
-#define BURST_REPETITIONS_MIN   1
-#define BURST_REPETITIONS_MAX   50000
+#define BURST_REPETITIONS_MIN   0x1
+#define BURST_REPETITIONS_MAX   0x10000     // Used as value-1  0x10000 => 0xFFFF (inf mode)
 #define BURST_PERIOD_MIN        1           // us
 #define BURST_PERIOD_MAX        500000000   // us
 

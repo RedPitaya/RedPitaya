@@ -1485,7 +1485,7 @@ int rp_GenGetBurstCount(rp_channel_t channel, int *num);
 /**
 * Sets number of burst repetitions. This determines how many bursts will be generated.
 * @param channel Channel A or B for witch we want to set number of burst repetitions.
-* @param repetitions Number of generated bursts. If -1, infinite bursts will be generated.
+* @param repetitions Number of generated bursts. If 0x10000, infinite bursts will be generated.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
