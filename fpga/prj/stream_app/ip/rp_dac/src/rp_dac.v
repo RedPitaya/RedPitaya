@@ -246,6 +246,8 @@ wire [31:0] sts_chb_o;
 
 wire [31:0] diag_reg;
 wire [31:0] diag_reg2;
+wire [31:0] diag_reg3;
+wire [31:0] diag_reg4;
 
 `ifdef SIMULATION
   assign reg_wr_we = reg_en & (reg_we == 4'h1);
@@ -446,8 +448,8 @@ dac_top #(
   .dac_data_o       (dac_a),
   .diag_reg         (diag_reg),
   .diag_reg2        (diag_reg2),
-  .diag_reg3        (diag_reg3),
-  .diag_reg4        (diag_reg4),
+  //.diag_reg3        (diag_reg3),
+  //.diag_reg4        (diag_reg4),
 
   .m_axi_dac_arid_o     (m_axi_dac1_arid_o),
   .m_axi_dac_araddr_o   (m_axi_dac1_araddr_o),
