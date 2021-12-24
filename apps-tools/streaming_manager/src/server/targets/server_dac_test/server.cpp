@@ -64,50 +64,39 @@ int main(int argc, char* argv[])
     COscilloscope::Ptr osc0 = nullptr;
     CGenerator::Ptr gen = nullptr;
 
-    int Decimation = 16;
+    int dacSpeed = 125e6;
     if (argc > 1) {
-        Decimation = atoi(argv[1]);
+        dacSpeed = atoi(argv[1]);
     }
 
     for (const UioT &uio : uioList)
     {
-        if (uio.nodeName == "rp_oscilloscope")
-        {
-            // TODO start server;
-            osc0 = COscilloscope::Create(uio, true , true , Decimation,true);
-            osc0->setCalibration(0,1,0,1);
-            osc0->setFilterBypass(true);
-        }
 
         if (uio.nodeName == "rp_dac")
         {
-            gen = CGenerator::Create(uio, true , true, 125e6, 125e6);
+            gen = CGenerator::Create(uio, true , true, dacSpeed,125e6);
+            gen->setDacHz(dacSpeed);
         }
     }
 
-    if (!osc0)
+    if (!gen)
     {
-        std::cerr << "Error: create osc0" << std::endl;
+        std::cerr << "Error: create gen" << std::endl;
         return 1;
     }
 
 
 
-    CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , ".", 100000,false);
-    // Run application
-    CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
-    app.runNonBlock("");
-
-    CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create("127.0.0.1","12345");
+    CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,"test.wav",CStreamSettings::DAC_REP_INF,1,10000000);
     CDACStreamingApplication dac(dac_manager,gen);
 
     dac.runNonBlock();
-
     while(stop == 0){
+        sleep(5);
+        gen->printReg();
+
     }
     std::cout << "STOP\n";
-    app.stop();
     dac.stop();
 
     return 0;

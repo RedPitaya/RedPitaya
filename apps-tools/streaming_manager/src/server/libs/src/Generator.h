@@ -23,8 +23,8 @@ struct GeneratorMapT
     uint32_t event_select;          // 32   - offset 0x20
     uint32_t trig_mask;             // 36   - offset 0x24
     uint32_t dma_control;           // 40   - offset 0x28
-    uint32_t chA_dma_status;        // 44   - offset 0x2C
-    uint32_t chB_dma_status;        // 48   - offset 0x30
+    uint32_t ch_dma_status;         // 44   - offset 0x2C
+    uint32_t unused;                // 48   - offset 0x30
     uint32_t dma_size;              // 52   - offset 0x34
     uint32_t chA_dma_addr1;         // 56   - offset 0x38
     uint32_t chA_dma_addr2;         // 60   - offset 0x3C
@@ -38,9 +38,9 @@ class CGenerator
 public:
     using Ptr = std::shared_ptr<CGenerator>;
 
-    static Ptr Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t maxDacHz);
+    static Ptr Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t dacHz,uint32_t maxDacHz);
 
-    CGenerator(bool _channel1Enable,bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t maxDacHz);
+    CGenerator(bool _channel1Enable,bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t dacHz,uint32_t maxDacHz);
     CGenerator(const CGenerator &) = delete;
     CGenerator(CGenerator &&) = delete;
     ~CGenerator();

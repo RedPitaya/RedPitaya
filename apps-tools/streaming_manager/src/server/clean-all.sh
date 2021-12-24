@@ -21,7 +21,7 @@ find . -not -name "CMakeLists.txt" -not -name "*.cpp" -not -name "*.h" -not -nam
 cd ..
 
 cd targets
-find . -not -name "CMakeLists.txt" -not -name "*.cpp" -not -name "*.h"  -type f -exec rm -r "{}" \;
+find . -not -name "CMakeLists.txt" -not -name "*.cpp" -not -name "*.h" -not -name "*.wav"  -type f -exec rm -r "{}" \;
 cd ..
 
 cd convert_tool

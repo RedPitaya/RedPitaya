@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
         if (uio.nodeName == "rp_dac")
         {
-            gen = CGenerator::Create(uio, true , true, 125e6);
+            gen = CGenerator::Create(uio, true , true, 125e6, 125e6);
         }
     }
 

@@ -20,7 +20,7 @@ inline void setRegister(volatile GeneratorMapT * baseOsc_addr,volatile uint32_t 
     *reg = value;
 }
 
-CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t maxDacHz)
+CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t dacHz,uint32_t maxDacHz)
 {
     // Validation
     if (_uio.mapList.size() < 2)
@@ -71,10 +71,10 @@ CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool 
     }
 
    
-    return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,maxDacHz);
+    return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,dacHz,maxDacHz);
 }
 
-CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t maxDacHz) :
+CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t dacHz,uint32_t maxDacHz) :
     m_Channel1(_channel1Enable),
     m_Channel2(_channel2Enable),
     m_Fd(_fd),
@@ -88,7 +88,7 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
     m_Buffer2(nullptr),
     m_waitLock(),
     m_maxDacSpeedHz(maxDacHz),
-    m_dacSpeedHz(maxDacHz)
+    m_dacSpeedHz(dacHz)
 {
     m_BufferNumber[0] = m_BufferNumber[1] = 0;
     m_calib_offset_ch1 = 0;
@@ -221,7 +221,7 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
     bool ret = false;
     const std::lock_guard<std::mutex> lock(m_waitLock);
     if (m_BufferNumber[0] == 0){
-        if (m_Map->chA_dma_status & 0x3 && m_Map->chB_dma_status & 0x3){
+        if (m_Map->ch_dma_status & 0x00030003){
             if (_buffer1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
             m_BufferNumber[0] = 1;
@@ -230,7 +230,8 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
             ret = true;
         }
     }else{
-        if (m_Map->chA_dma_status & 0xC && m_Map->chB_dma_status & 0xC){
+        if (m_Map->ch_dma_status & 0x000C000C){
+           // printReg();
             if (_buffer1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
             m_BufferNumber[0] = 0;
@@ -284,8 +285,7 @@ auto CGenerator::printReg() -> void{
     fprintf(stderr,"0x20 event_select = 0x%X\n", m_Map->event_select);
     fprintf(stderr,"0x24 trig_mask = 0x%X\n", m_Map->trig_mask);
     fprintf(stderr,"0x28 dma_control = 0x%X\n", m_Map->dma_control);
-    fprintf(stderr,"0x2C chA_dma_status = 0x%X\n", m_Map->chA_dma_status);
-    fprintf(stderr,"0x30 chB_dma_status = 0x%X\n", m_Map->chB_dma_status);
+    fprintf(stderr,"0x2C ch_dma_status = 0x%X\n", m_Map->ch_dma_status);
     fprintf(stderr,"0x34 dma_size = 0x%X\n", m_Map->dma_size);
     fprintf(stderr,"0x38 chA_dma_addr1 = 0x%X\n", m_Map->chA_dma_addr1);
     fprintf(stderr,"0x3C chA_dma_addr2 = 0x%X\n", m_Map->chA_dma_addr2);
