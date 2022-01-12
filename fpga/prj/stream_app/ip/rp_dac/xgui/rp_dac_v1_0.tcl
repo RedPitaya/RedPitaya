@@ -1,7 +1,19 @@
 # Definitional proc to organize widgets for parameters.
 proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "Component_Name"
+  #Adding Page
+  ipgui::add_page $IPINST -name "Page 0"
 
+
+}
+
+proc update_PARAM_VALUE.AXI_BURST_LEN { PARAM_VALUE.AXI_BURST_LEN } {
+	# Procedure called to update AXI_BURST_LEN when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.AXI_BURST_LEN { PARAM_VALUE.AXI_BURST_LEN } {
+	# Procedure called to validate AXI_BURST_LEN
+	return true
 }
 
 proc update_PARAM_VALUE.DAC_DATA_BITS { PARAM_VALUE.DAC_DATA_BITS } {
@@ -19,6 +31,15 @@ proc update_PARAM_VALUE.EVENT_SRC_NUM { PARAM_VALUE.EVENT_SRC_NUM } {
 
 proc validate_PARAM_VALUE.EVENT_SRC_NUM { PARAM_VALUE.EVENT_SRC_NUM } {
 	# Procedure called to validate EVENT_SRC_NUM
+	return true
+}
+
+proc update_PARAM_VALUE.ID_WIDTH { PARAM_VALUE.ID_WIDTH } {
+	# Procedure called to update ID_WIDTH when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.ID_WIDTH { PARAM_VALUE.ID_WIDTH } {
+	# Procedure called to validate ID_WIDTH
 	return true
 }
 
@@ -101,5 +122,15 @@ proc update_MODELPARAM_VALUE.TRIG_SRC_NUM { MODELPARAM_VALUE.TRIG_SRC_NUM PARAM_
 proc update_MODELPARAM_VALUE.M_AXI_DAC_DATA_BITS_O { MODELPARAM_VALUE.M_AXI_DAC_DATA_BITS_O PARAM_VALUE.M_AXI_DAC_DATA_BITS_O } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.M_AXI_DAC_DATA_BITS_O}] ${MODELPARAM_VALUE.M_AXI_DAC_DATA_BITS_O}
+}
+
+proc update_MODELPARAM_VALUE.ID_WIDTH { MODELPARAM_VALUE.ID_WIDTH PARAM_VALUE.ID_WIDTH } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.ID_WIDTH}] ${MODELPARAM_VALUE.ID_WIDTH}
+}
+
+proc update_MODELPARAM_VALUE.AXI_BURST_LEN { MODELPARAM_VALUE.AXI_BURST_LEN PARAM_VALUE.AXI_BURST_LEN } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.AXI_BURST_LEN}] ${MODELPARAM_VALUE.AXI_BURST_LEN}
 }
 

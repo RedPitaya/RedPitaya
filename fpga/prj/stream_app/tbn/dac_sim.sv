@@ -2,6 +2,7 @@
 module dac_sim #(
       // time period
   realtime  TP = 8.0ns,  // 250MHz
+  realtime  AXIP = 5.0ns,  // 200MHz
   realtime  RP = 100.1ns  // ~10MHz
 );
 // ADC
@@ -40,16 +41,19 @@ logic                  trig;
 logic                  intr;
 
 logic               clk ;
+logic               axi_clk ;
+
 logic               clkn;
 wire               rstn_out;
 logic               rstn;
 
-localparam OSC_DW = 64;
+localparam OSC_DW = 32;
 localparam REG_DW = 32;
 localparam OSC_AW = 32;
 localparam REG_AW = 12;
 localparam IW = 12;
-localparam LW = 8;
+localparam LW = 4;
+localparam LW2 = 8;
 
 localparam GEN1_EVENT = 0;
 localparam GEN2_EVENT = 1;
@@ -64,7 +68,8 @@ always #(TP/2) clk = ~clk;
 initial        pll_ref = 1'b0;
 always #(RP/2) pll_ref = ~pll_ref;
 
-
+initial          axi_clk = 1'b0;
+always #(AXIP/2) axi_clk = ~axi_clk;
 
 // default clocking 
 default clocking cb @ (posedge clk);
@@ -92,15 +97,15 @@ axi4_if #(.DW (REG_DW), .AW (REG_AW), .IW (IW), .LW (LW)) axi_syncd (
   .ACLK    (clk   ),  .ARESETn (rstn)
 );
 
-axi4_if #(.DW (OSC_DW), .AW (OSC_AW), .IW (IW), .LW (LW)) axi_dac1 (
-  .ACLK    (clk   ),  .ARESETn (rstn)
+axi4_if #(.DW (OSC_DW), .AW (OSC_AW), .IW (IW), .LW (LW2)) axi_dac1 (
+  .ACLK    (axi_clk   ),  .ARESETn (rstn)
 );
 
 
 top_tc_dac top_tc_dac();
 
 axi_bus_model #(.AW (REG_AW), .DW (REG_DW), .IW (IW), .LW (LW)) axi_bm_reg  (axi_reg );
-axi_bus_model #(.AW (OSC_AW), .DW (OSC_DW), .IW (IW), .LW (LW)) axi_bm_osc2 (axi_dac1);
+axi_bus_model #(.AW (OSC_AW), .DW (OSC_DW), .IW (IW), .LW (LW2)) axi_bm_osc2 (axi_dac1);
 
 axi4_sync sync (
 .axi_i(axi_reg),
@@ -113,7 +118,7 @@ initial begin
    //top_tc.test_hk                 (0<<20, 32'h55);
    //top_tc.test_sata               (5<<20, 32'h55);
    //top_tc.test_osc                (32'h40100000, OSC1_EVENT);
-   top_tc_dac.test_dac                (32'h40200000, GEN1_EVENT);
+   top_tc_dac.test_dac2                (32'h40200000, GEN1_EVENT);
 //   top_tc.test_asg                (2<<20, 32'h40090000, 2);
 
 
@@ -146,13 +151,14 @@ end*/
   output wire                                   m_axi_dac1_rready_o   , // read response ready
 */
    axi_slave_model #(
-    .AXI_DW           (  64          ) , // data width (8,16,...,1024)
+    .AXI_DW           (  32          ) , // data width (8,16,...,1024)
     .AXI_AW           (  32          ) , // address width ()
     .AXI_ID           (   0          ) , // master ID
     .AXI_IW           (   4          ) , // master ID width   
+    .AXI_LW           (   8          ) , // burst length width, 256 max
     .AXI_SW           (   8          )   // strobe width - 1 bit for every data byte
 ) i_slave_model (     
-    .axi_clk_i       (     clk     ), // global clock
+    .axi_clk_i       (     axi_clk     ), // global clock
     .axi_rstn_i      (     rstn    ), // global reset
 /*                    
     .axi_awid_i     (   m_sm_awid      ), // write address ID
@@ -180,7 +186,6 @@ end*/
     .axi_bvalid_o    (   m_sm_bval      ), // write response valid
     .axi_bready_i    (   m_sm_brea      ), // write response ready
 */   
-    
     .axi_arid_i     (  axi_dac1.ARID       ), // read address ID
     .axi_araddr_i   (  axi_dac1.ARADDR     ), // read address
     .axi_arlen_i    (  axi_dac1.ARLEN      ), // read burst length
@@ -204,7 +209,11 @@ end*/
     
   // ne pozabi define SIMULATION
   // s_axi_awready na 1
-  rp_dac rp_dac_mod (    
+  rp_dac #(
+    .M_AXI_DAC_DATA_BITS  (32),
+    .M_AXI_DAC_ADDR_BITS  (32)
+
+  ) rp_dac_mod (    
   .clk(clk),
   .rst_n(rstn),
   .intr(),
@@ -263,6 +272,8 @@ end*/
   .s_axi_reg_wid(axi_syncd.WID),
   .s_axi_reg_wlast(axi_syncd.WLAST),
 */
+  .m_axi_dac1_aclk(axi_clk),
+  .m_axi_dac1_aresetn(rstn),
   .m_axi_dac1_arid_o(axi_dac1.ARID),
   .m_axi_dac1_araddr_o(axi_dac1.ARADDR),
   .m_axi_dac1_arlen_o(axi_dac1.ARLEN),

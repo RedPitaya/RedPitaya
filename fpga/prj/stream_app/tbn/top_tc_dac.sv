@@ -136,7 +136,7 @@ task test_osc(
       axi_write(offset+'h50, 'h1);  // streaming DMA
         axi_write(offset+'h0,   'd0);  // start
   axi_write(offset+'h0,   'd1);  // start
-  axi_write(offset+'h0,   'd2);  // start
+ // axi_write(offset+'h0,   'd2);  // start
 
 
   //axi_write(offset+'h00, 4'b1000);  // trigger
@@ -209,7 +209,7 @@ task buf_ack(
   end while (dat[END_STATE_BUF1] != 1'b1);
   //end while (dac_sim.axi_reg.RDATA[END_STATE_BUF1] != 1'b1 && dac_sim.axi_reg.RVALID); // BUF 1 is full
   ##1000;
-  axi_write(offset+'h28, 1 << CTRL_BUF2_RDY);  // BUF1 ACK
+  axi_write(offset+'h28, ((1 << CTRL_BUF2_RDY) + (1 << CTRL_BUF2_RDY+8)));  // BUF1 ACK
 
   do begin
     axi_read(offset+'h2C, dat);
@@ -217,7 +217,8 @@ task buf_ack(
   end while (dat[END_STATE_BUF2] != 1'b1);
   //end while (dac_sim.axi_reg.RDATA[END_STATE_BUF2] != 1'b1 && dac_sim.axi_reg.RVALID); // BUF 1 is full
   ##1000;
-  axi_write(offset+'h28, 1 << CTRL_BUF1_RDY);  // BUF1 ACK
+  axi_write(offset+'h28, ((1 << CTRL_BUF1_RDY) + (1 << CTRL_BUF1_RDY+8)));  // BUF1 ACK
+  //axi_write(offset+'h28, 1 << CTRL_BUF1_RDY);  // BUF1 ACK
 
 endtask: buf_ack
 
@@ -234,7 +235,7 @@ task int_ack(
   //end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 1 is full
   ##5;
   axi_write(offset+'h50, 'd2);  // INTR ACK
-  ##500;
+  ##5000;
   axi_write(offset+'h50, 'h4);  // BUF1 ACK
 
   //do begin
@@ -242,7 +243,7 @@ task int_ack(
   //end while (top_tb.red_pitaya_top_sim.system_wrapper_i.system_i.processing_system7_0.IRQ_F2P[1] != 1'b1); // BUF 2 is full
   ##5;
   axi_write(offset+'h50, 'd2);  // INTR ACK
-  ##500;
+  ##5000;
   axi_write(offset+'h50,   'h8);  // BUF2 ACK 
 
 endtask: int_ack
@@ -290,7 +291,7 @@ task test_dac(
 ##1000;
 $display("Setting up DAC stream");
   // configure
-  axi_write(offset+'h1C,   'd0);  // stop event
+  axi_write(offset+'h1C,   'd0);  // no event
   ##10;
   axi_write(offset+'h1C,   'd4);  // stop event
   ##10;
@@ -332,8 +333,195 @@ $display("Setting up DAC stream");
   buf_ack(offset);
   ##200;
   buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
 ##100000;
 endtask: test_dac
+
+task test_dac2(
+  int unsigned offset,
+  int unsigned evnt_in
+);
+   int unsigned dat;
+##1000;
+$display("Setting up DAC stream");
+  // configure
+  axi_write(offset+'h1C,   'd4);  // no event
+  ##10;
+  axi_write(offset+'h28, 'h0);  // streaming DMA, reset buffers and flags
+  ##10;
+  axi_write(offset+'h1C,   'd0);  // stop event
+  ##20;
+  axi_write(offset+'h34, 'h8000);  // buffer size
+  ##10;
+  axi_write(offset+'h38, 'h1080000);  // buffer address
+  ##10;
+  axi_read(offset+'h38, dat);  // buffer address
+  ##10;
+  axi_write(offset+'h3C, 'h1088000);  // buffer address
+  ##10;
+  axi_write(offset+'h40, 'h1090000);  // buffer address
+  ##10;
+  axi_write(offset+'h44, 'h1098000);  // buffer address
+  ##10;
+  axi_write(offset+'h20,   evnt_in);  // gen1 events
+  ##10;
+  axi_write(offset+'h24,   'd1);  // DAC1 trigger
+  ##10;
+  axi_write(offset+'h0,   'h10001);  // DAC module setup, currently unsupported
+  ##10;
+  axi_write(offset+'h08,  'h10000);  // step
+  ##10;
+  axi_write(offset+'h14,  'h10000);  // step
+  ##10;
+  axi_write(offset+'h04,   {2'h0, 14'h0, 2'h0, 14'h2000});  // scale and offset
+  ##10;
+  axi_write(offset+'h10,   {2'h0, 14'h0, 2'h0, 14'h2000});  // scale and offset
+  ##10;
+  axi_write(offset+'h28, 'h2222);  // streaming DMA, reset buffers and flags
+  ##10;
+  axi_write(offset+'h28, 'h4040);  // streaming DMA, reset buffers and flags
+  ##10;
+  //axi_write(offset+'h28, 'h4000);  // streaming DMA, reset buffers and flags
+  ##10;
+  axi_write(offset+'h28, 'h8080);  // streaming DMA, reset buffers and flags
+  ##10;
+  //axi_write(offset+'h28, 'h8000);  // streaming DMA, reset buffers and flags
+  ##10;
+  axi_write(offset+'h1C,   'd2);  // start event
+  ##10;
+  axi_write(offset+'h28,   'h1);  // start DMA
+  ##20;
+  $display("just before buf_ack start");
+
+  //axi_write(offset+'h28,   'd1);  // start DMA
+
+ //##2000;
+ // axi_write(offset+'h28,   'h40);  // gen1 events
+ 
+  ##200;
+  
+  buf_ack(offset);
+   ##10;
+  axi_write(offset+'h08,  'h10000);  // step
+  ##10;
+  axi_write(offset+'h14,  'h10000);  // step
+  ##200;
+  buf_ack(offset);
+  ##10;
+  axi_write(offset+'h08,  'h10000);  // step
+  ##10;
+  axi_write(offset+'h14,  'h10000);  // step
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+  ##200;
+  buf_ack(offset);
+##100000;
+endtask: test_dac2
 
 
 ////////////////////////////////////////////////////////////////////////////////

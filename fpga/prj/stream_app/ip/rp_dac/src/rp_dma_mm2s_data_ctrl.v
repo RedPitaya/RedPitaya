@@ -6,7 +6,6 @@ module rp_dma_mm2s_data_ctrl(
   input  wire       fifo_rst,
   input  wire       fifo_full,
   //
-  output reg        busy,
   //
   input  wire [8:0] req_data,
   input  wire       req_we,
@@ -31,16 +30,9 @@ localparam WAIT_FULL      = 2'd2;
 reg  [1:0]    state_cs;                // Current state
 reg  [1:0]    state_ns;                // Next state  
 reg  [199:0]  state_ascii;             // ASCII state
-wire [7:0]    fifo_wr_data; 
-wire          fifo_wr_we;
-wire [8:0]    fifo_rd_data;
-reg           fifo_rd_re;
-wire          fifo_empty;
-reg req_st;
+reg           req_st;
 reg  [8:0]    req_xfer_cnt;
 
-assign fifo_empty = 1'b0;
-assign fifo_rd_data = req_data;
 
 ////////////////////////////////////////////////////////////
 // Name : State machine seq logic
@@ -132,14 +124,14 @@ begin
   case (state_cs) 
     // IDLE - Wait for a request in the FIFO
     IDLE: begin
-      req_xfer_cnt <= fifo_rd_data;
+      req_xfer_cnt <= req_data;
     end  
     
     // SEND_AXI_DATA - Transfer the AXI data 
     SEND_AXI_DATA: begin
       if ((m_axi_rvalid == 1) && (m_axi_rready == 1)) begin
         if (m_axi_rlast == 1) begin
-          req_xfer_cnt <= fifo_rd_data; 
+          req_xfer_cnt <= req_data; 
         end else begin
           req_xfer_cnt <= req_xfer_cnt - 1;     
         end       
@@ -170,7 +162,8 @@ begin
 
       // SEND_AXI_DATA - Transfer the AXI data 
       SEND_AXI_DATA: begin
-        m_axi_rready <= |req_xfer_cnt;    
+        if (m_axi_rvalid == 1)
+          m_axi_rready <= |req_xfer_cnt;    
       end      
     endcase   
   end

@@ -3,7 +3,8 @@
 module dac_top
   #(parameter M_AXI_DAC_ADDR_BITS   = 32, // DMA Address bits
     parameter M_AXI_DAC_DATA_BITS   = 64, // DMA data bits
-    parameter DAC_DATA_BITS     = 14, // ADC data bits
+    parameter DAC_DATA_BITS         = 14, // ADC data bits
+    parameter AXI_BURST_LEN         = 16,
     parameter REG_ADDR_BITS     = 12, // Register interface address bits
     parameter TRIG_CNT_BITS     = 32, // Trigger counter bits
     parameter EVENT_SRC_NUM     = 1,  // Number of event sources
@@ -47,16 +48,14 @@ module dac_top
   input [M_AXI_DAC_ADDR_BITS-1:0]         dac_buf2_adr,
   output [M_AXI_DAC_ADDR_BITS-1:0]        dac_rp,
 
-
   input  [ 5-1:0]                         dac_trig,
   input  [ 8-1:0]                         dac_ctrl_reg,
-  output [ 5-1:0]                         dac_sts_reg,
-
 
   output [DAC_DATA_BITS-1:0]              dac_data_o,
   output [32-1:0]                         diag_reg,
   output [32-1:0]                         diag_reg2,
-
+  output [32-1:0]                         diag_reg3,
+  output [32-1:0]                         diag_reg4,
   //
   output wire [3:0]                       m_axi_dac_arid_o     , // read address ID
   output wire [M_AXI_DAC_ADDR_BITS-1: 0]  m_axi_dac_araddr_o   , // read address
@@ -68,6 +67,7 @@ module dac_top
   output wire [2:0]                       m_axi_dac_arprot_o   , // read protection type
   output wire                             m_axi_dac_arvalid_o  , // read address valid
   input  wire                             m_axi_dac_arready_i  , // read address ready
+  output wire [    3: 0]                  m_axi_dac_arqos_o    , // read QOS
   input  wire [    3: 0]                  m_axi_dac_rid_i      , // read response ID
   input  wire [M_AXI_DAC_DATA_BITS-1: 0]  m_axi_dac_rdata_i    , // read data
   input  wire [    1: 0]                  m_axi_dac_rresp_i    , // read response
@@ -115,7 +115,8 @@ rp_dma_mm2s #(
   .AXI_ADDR_BITS  (M_AXI_DAC_ADDR_BITS),
   .AXI_DATA_BITS  (M_AXI_DAC_DATA_BITS),
   .AXIS_DATA_BITS (DAC_DATA_BITS),
-  .AXI_BURST_LEN  (16))
+  .AXI_BURST_LEN  (AXI_BURST_LEN),
+  .CH_NUM         (CH_NUM))
   U_dma_mm2s(
   .m_axi_aclk     (axi_clk),        
   .s_axis_aclk    (clk),      
@@ -137,13 +138,12 @@ rp_dma_mm2s #(
 
   .dac_trig         (ctl_trg),
   .dac_ctrl_reg     (dac_ctrl_reg),
-  .dac_sts_reg      (dac_sts_reg),
 
   .dac_rdata_o      (dac_data_raw),
   .dac_rvalid_o     (dac_rvalid),
   .diag_reg         (diag_reg),
   .diag_reg2        (diag_reg2),
- 
+  
   .m_axi_arid_o     (m_axi_dac_arid_o), 
   .m_axi_araddr_o   (m_axi_dac_araddr_o),  
   .m_axi_arlen_o    (m_axi_dac_arlen_o), 
@@ -154,6 +154,7 @@ rp_dma_mm2s #(
   .m_axi_arprot_o   (m_axi_dac_arprot_o),
   .m_axi_arvalid_o  (m_axi_dac_arvalid_o),  
   .m_axi_arready_i  (m_axi_dac_arready_i),  
+  .m_axi_arqos_o    (m_axi_dac_arqos_o),  
   .m_axi_rid_i      (m_axi_dac_rid_i),  
   .m_axi_rdata_i    (m_axi_dac_rdata_i), 
   .m_axi_rresp_i    (m_axi_dac_rresp_i), 

@@ -45,13 +45,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="4"/>
-    <Option Name="WTModelSimExportSim" Val="4"/>
-    <Option Name="WTQuestaExportSim" Val="4"/>
-    <Option Name="WTIesExportSim" Val="4"/>
-    <Option Name="WTVcsExportSim" Val="4"/>
-    <Option Name="WTRivieraExportSim" Val="4"/>
-    <Option Name="WTActivehdlExportSim" Val="4"/>
+    <Option Name="WTXSimExportSim" Val="8"/>
+    <Option Name="WTModelSimExportSim" Val="8"/>
+    <Option Name="WTQuestaExportSim" Val="8"/>
+    <Option Name="WTIesExportSim" Val="8"/>
+    <Option Name="WTVcsExportSim" Val="8"/>
+    <Option Name="WTRivieraExportSim" Val="8"/>
+    <Option Name="WTActivehdlExportSim" Val="8"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -67,13 +67,6 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PPRDIR/src/fifo_axi_data_dac/fifo_axi_data_dac.xci">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PPRDIR/src/dac_calib.v">
         <FileInfo>
           <Attr Name="Library" Val=""/>
@@ -195,6 +188,19 @@
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
+    <FileSet Name="fifo_axi_data_dac" Type="BlockSrcs" RelSrcDir="$PSRCDIR/fifo_axi_data_dac">
+      <File Path="$PPRDIR/src/fifo_axi_data_dac/fifo_axi_data_dac.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <Config>
+        <Option Name="TopModule" Val="fifo_axi_data_dac"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
   </FileSets>
   <Simulators>
     <Simulator Name="XSim">
@@ -240,6 +246,16 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
+    <Run Id="fifo_axi_data_dac_synth_1" Type="Ft3:Synth" SrcSet="fifo_axi_data_dac" Part="xc7z010clg400-1" ConstrsSet="fifo_axi_data_dac" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/fifo_axi_data_dac_synth_1" IncludeInArchive="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2020"/>
+        <Step Id="synth_design"/>
+      </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
+      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2020"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
     <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2020"/>
@@ -258,6 +274,23 @@
       <RQSFiles/>
     </Run>
     <Run Id="reg_ctrl_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="reg_ctrl" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="reg_ctrl_synth_1" IncludeInArchive="false" GenFullBitstream="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2020"/>
+        <Step Id="init_design"/>
+        <Step Id="opt_design"/>
+        <Step Id="power_opt_design"/>
+        <Step Id="place_design"/>
+        <Step Id="post_place_power_opt_design"/>
+        <Step Id="phys_opt_design"/>
+        <Step Id="route_design"/>
+        <Step Id="post_route_phys_opt_design"/>
+        <Step Id="write_bitstream"/>
+      </Strategy>
+      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2020"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="fifo_axi_data_dac_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="fifo_axi_data_dac" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="fifo_axi_data_dac_synth_1" IncludeInArchive="false" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2020"/>
         <Step Id="init_design"/>

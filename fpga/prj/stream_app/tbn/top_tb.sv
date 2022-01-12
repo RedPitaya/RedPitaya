@@ -8,7 +8,8 @@
 
 module top_tb #(
   // time period
-  realtime  TP = 4.0ns,  // 250MHz
+  realtime  TP = 8.0ns,  // 250MHz
+  realtime  AXIP = 5.0ns,  // 200MHz
   realtime  RP = 100.1ns,  // ~10MHz
   // DUT configuration
   int unsigned DAC_DW = 14, // ADC data width
@@ -79,17 +80,21 @@ logic                  trig;
 logic                  intr;
 
 logic               clk ;
+logic               axi_clk ;
+
 logic               clkn;
 wire               rstn_out;
 logic               rstn;
 
+wire clkout_200;
+wire rstn_200;
 //glbl glbl();
 
 localparam OSC_DW = 64;
 localparam REG_DW = 32;
 localparam OSC_AW = 32;
 localparam REG_AW = 32;
-localparam IW = 12;
+localparam IW = 4;
 localparam LW = 8;
 
 localparam GEN1_EVENT = 0;
@@ -97,6 +102,11 @@ localparam GEN2_EVENT = 1;
 localparam OSC1_EVENT = 2;
 localparam OSC2_EVENT = 3;
 localparam LA_EVENT = 4;
+
+wire interf_clk, interf_rst;
+
+assign interf_clk=clkout_200;
+assign interf_rst=rstn_200;
 
 /*axi4_if #(.DW (REG_DW), .AW (REG_AW), .IW (IW), .LW (LW)) axi_reg (
   .ACLK    (clk   ),  .ARESETn (rstn)
@@ -116,7 +126,7 @@ axi4_if #(.DW (REG_DW), .AW (REG_AW), .IW (IW), .LW (LW)) axi_syncd (
 );
 
 axi4_if #(.DW (OSC_DW), .AW (OSC_AW), .IW (IW), .LW (LW)) axi_osc1 (
-  .ACLK    (clkout_125   ),  .ARESETn (rstn_out)
+  .ACLK    (interf_clk   ),  .ARESETn (interf_rst)
 );
 
 /*axi4_if #(.DW (OSC_DW), .AW (OSC_AW), .IW (IW), .LW (LW)) axi_osc2 (
@@ -129,8 +139,8 @@ axi_bus_model #(.AW (REG_AW), .DW (REG_DW), .IW (IW), .LW (LW)) axi_bm_reg  (axi
 axi_slave_model #(.AXI_AW (OSC_AW), .AXI_DW (OSC_DW), .AXI_IW (IW), .AXI_ID(0)) 
 axi_bm_osc1 (
    // global signals
-  .axi_clk_i      (clkout_125), // global clock
-  .axi_rstn_i     (rstn_out), // global reset
+  .axi_clk_i      (interf_clk), // global clock
+  .axi_rstn_i     (interf_rst), // global reset
    // axi write address channel
   .axi_awid_i     (axi_osc1.AWID), // write address ID
   .axi_awaddr_i   (axi_osc1.AWADDR), // write address
@@ -192,7 +202,8 @@ always #(TP/2) clk = ~clk;
 initial        pll_ref = 1'b0;
 always #(RP/2) pll_ref = ~pll_ref;
 
-
+initial          axi_clk = 1'b0;
+always #(AXIP/2) axi_clk = ~axi_clk;
 
 // default clocking 
 default clocking cb @ (posedge clk);
@@ -243,8 +254,8 @@ initial begin
 
    //top_tc.test_hk                 (0<<20, 32'h55);
    //top_tc.test_sata               (5<<20, 32'h55);
-   top_tc.test_osc                (32'h40000000, OSC1_EVENT);
-   top_tc_dac.test_dac            (32'h40100000, GEN1_EVENT);
+   //top_tc.test_osc                (32'h40000000, OSC1_EVENT);
+   top_tc_dac.test_dac2            (32'h40100000, GEN1_EVENT);
 
 //   top_tc.test_asg                (2<<20, 32'h40090000, 2);
 
@@ -502,7 +513,11 @@ end
 
         .clkout_625(clkout_625),
         .clkout_125(clkout_125),
+        .clkout_200(clkout_200),
+
         .rstn_out(rstn_out),
+        .rstn_200(rstn_200),
+
         .rst_in(~rstn),
 
         .adc_clk(clk),

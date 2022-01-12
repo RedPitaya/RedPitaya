@@ -112,7 +112,11 @@ module red_pitaya_top_sim
 
     clkout_625,
     clkout_125,
+    clkout_200,
+
     rstn_out,
+    rstn_200,
+
     rst_in,
 
     adc_clk,
@@ -145,7 +149,7 @@ module red_pitaya_top_sim
   output [31:0]M_AXI_OSC_araddr;
   output [1:0]M_AXI_OSC_arburst;
   output [3:0]M_AXI_OSC_arcache;
-  output [0:0]M_AXI_OSC_arid;
+  output [4:0]M_AXI_OSC_arid;
   output [3:0]M_AXI_OSC_arlen;
   output [1:0]M_AXI_OSC_arlock;
   output [2:0]M_AXI_OSC_arprot;
@@ -169,12 +173,12 @@ module red_pitaya_top_sim
   input [1:0]M_AXI_OSC_bresp;
   input M_AXI_OSC_bvalid;
   input [63:0]M_AXI_OSC_rdata;
-  input [0:0]M_AXI_OSC_rid;
+  input [4:0]M_AXI_OSC_rid;
   input M_AXI_OSC_rlast;
   output M_AXI_OSC_rready;
   input [1:0]M_AXI_OSC_rresp;
   input M_AXI_OSC_rvalid;
-  output [63:0]M_AXI_OSC_wdata;
+  output [31:0]M_AXI_OSC_wdata;
   output [0:0]M_AXI_OSC_wid;
   output M_AXI_OSC_wlast;
   input M_AXI_OSC_wready;
@@ -222,7 +226,11 @@ module red_pitaya_top_sim
 
   output clkout_625;
   output clkout_125;
+  output clkout_200;
+
   output rstn_out;
+  output rstn_200;
+
   input  rst_in;
 
   input adc_clk;
@@ -255,7 +263,7 @@ module red_pitaya_top_sim
   wire [31:0]M_AXI_OSC_araddr;
   wire [1:0]M_AXI_OSC_arburst;
   wire [3:0]M_AXI_OSC_arcache;
-  wire [0:0]M_AXI_OSC_arid;
+  wire [4:0]M_AXI_OSC_arid;
   wire [3:0]M_AXI_OSC_arlen;
   wire [1:0]M_AXI_OSC_arlock;
   wire [2:0]M_AXI_OSC_arprot;
@@ -279,7 +287,7 @@ module red_pitaya_top_sim
   wire [1:0]M_AXI_OSC_bresp;
   wire M_AXI_OSC_bvalid;
   wire [63:0]M_AXI_OSC_rdata;
-  wire [0:0]M_AXI_OSC_rid;
+  wire [4:0]M_AXI_OSC_rid;
   wire M_AXI_OSC_rlast;
   wire M_AXI_OSC_rready;
   wire [1:0]M_AXI_OSC_rresp;
@@ -332,7 +340,10 @@ module red_pitaya_top_sim
 
   wire clkout_625;
   wire clkout_125;
+  wire clkout_200;
   wire rstn_out;
+  wire rstn_200;
+
   wire rst_in;
 
   wire adc_clk;
@@ -362,18 +373,22 @@ module red_pitaya_top_sim
         .FIXED_IO_ps_clk(FIXED_IO_ps_clk),
         .FIXED_IO_ps_porb(FIXED_IO_ps_porb),
         .FIXED_IO_ps_srstb(FIXED_IO_ps_srstb),
-
-        //.M_AXI_OSC_araddr(M_AXI_OSC_araddr),
-        //.M_AXI_OSC_arburst(M_AXI_OSC_arburst),
-        //.M_AXI_OSC_arcache(M_AXI_OSC_arcache),
-        //.M_AXI_OSC_arid(M_AXI_OSC_arid),
-        //.M_AXI_OSC_arlen(M_AXI_OSC_arlen),
-        //.M_AXI_OSC_arlock(M_AXI_OSC_arlock),
-        //.M_AXI_OSC_arprot(M_AXI_OSC_arprot),
+        
+        
+        .M_AXI_OSC_araddr(M_AXI_OSC_araddr),
+        .M_AXI_OSC_arburst(M_AXI_OSC_arburst),
+        .M_AXI_OSC_arcache(M_AXI_OSC_arcache),
+        .M_AXI_OSC_arid(M_AXI_OSC_arid),
+        .M_AXI_OSC_arlen(M_AXI_OSC_arlen),
+        .M_AXI_OSC_arlock(M_AXI_OSC_arlock),
+        .M_AXI_OSC_arprot(M_AXI_OSC_arprot),
         //.M_AXI_OSC_arqos(M_AXI_OSC_arqos),
-        //.M_AXI_OSC_arready(M_AXI_OSC_arready),
-        //.M_AXI_OSC_arsize(M_AXI_OSC_arsize),
-        //.M_AXI_OSC_arvalid(M_AXI_OSC_arvalid),
+        .M_AXI_OSC_arready(M_AXI_OSC_arready),
+        .M_AXI_OSC_arsize(M_AXI_OSC_arsize),
+        .M_AXI_OSC_arvalid(M_AXI_OSC_arvalid),
+        
+        
+/*
         .M_AXI_OSC_awaddr(M_AXI_OSC_awaddr),
         .M_AXI_OSC_awburst(M_AXI_OSC_awburst),
         .M_AXI_OSC_awcache(M_AXI_OSC_awcache),
@@ -389,19 +404,23 @@ module red_pitaya_top_sim
         .M_AXI_OSC_bready(M_AXI_OSC_bready),
         .M_AXI_OSC_bresp(M_AXI_OSC_bresp),
         .M_AXI_OSC_bvalid(M_AXI_OSC_bvalid),
-        //.M_AXI_OSC_rdata(M_AXI_OSC_rdata),
-        //.M_AXI_OSC_rid(M_AXI_OSC_rid),
-        //.M_AXI_OSC_rlast(M_AXI_OSC_rlast),
-        //.M_AXI_OSC_rready(M_AXI_OSC_rready),
-        //.M_AXI_OSC_rresp(M_AXI_OSC_rresp),
-        //.M_AXI_OSC_rvalid(M_AXI_OSC_rvalid),
+*/
+        
+        .M_AXI_OSC_rdata(M_AXI_OSC_rdata),
+        .M_AXI_OSC_rid(M_AXI_OSC_rid),
+        .M_AXI_OSC_rlast(M_AXI_OSC_rlast),
+        .M_AXI_OSC_rready(M_AXI_OSC_rready),
+        .M_AXI_OSC_rresp(M_AXI_OSC_rresp),
+        .M_AXI_OSC_rvalid(M_AXI_OSC_rvalid),
+        
+/*
         .M_AXI_OSC_wdata(M_AXI_OSC_wdata),
         .M_AXI_OSC_wid(M_AXI_OSC_wid),
         .M_AXI_OSC_wlast(M_AXI_OSC_wlast),
         .M_AXI_OSC_wready(M_AXI_OSC_wready),
         .M_AXI_OSC_wstrb(M_AXI_OSC_wstrb),
         .M_AXI_OSC_wvalid(M_AXI_OSC_wvalid),
-
+*/
         .S_AXI_REG_araddr(S_AXI_REG_araddr),
         .S_AXI_REG_arburst(S_AXI_REG_arburst),
         .S_AXI_REG_arcache(S_AXI_REG_arcache),
@@ -442,8 +461,10 @@ module red_pitaya_top_sim
         .S_AXI_REG_wvalid(S_AXI_REG_wvalid),
 
         .clkout_625(clkout_625),
+        .clkout_200(clkout_200),
         .clkout_125(clkout_125),
         .rstn_out(rstn_out),
+        .rstn_200(rstn_200),
         .rst_in(rst_in),
         .adc_clk(adc_clk),
 

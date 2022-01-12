@@ -67,35 +67,46 @@ proc create_root_design { parentCell } {
 set_property verilog_define {SIMULATION} [get_filesets sim_1]
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI_OSC
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_REG
-set_property -dict [list CONFIG.MAX_BURST_LENGTH {16} CONFIG.NUM_WRITE_OUTSTANDING {8} CONFIG.NUM_READ_OUTSTANDING {8} CONFIG.NUM_READ_THREADS {4} CONFIG.NUM_WRITE_THREADS {4} CONFIG.SUPPORTS_NARROW_BURST {0} CONFIG.ID_WIDTH {12} CONFIG.DATA_WIDTH {32} CONFIG.PROTOCOL {AXI3}] [get_bd_intf_ports S_AXI_REG]
-delete_bd_objs [get_bd_intf_nets axi_interconnect_0_M00_AXI]
-set_property -dict [list CONFIG.HAS_REGION {0}] [get_bd_intf_ports S_AXI_REG]
+set_property -dict [list CONFIG.HAS_REGION {0} CONFIG.MAX_BURST_LENGTH {16} CONFIG.NUM_WRITE_OUTSTANDING {8} CONFIG.NUM_READ_OUTSTANDING {8} CONFIG.NUM_READ_THREADS {4} CONFIG.NUM_WRITE_THREADS {4} CONFIG.SUPPORTS_NARROW_BURST {0} CONFIG.ID_WIDTH {12} CONFIG.DATA_WIDTH {32} CONFIG.PROTOCOL {AXI3}] [get_bd_intf_ports S_AXI_REG]
+delete_bd_objs [get_bd_intf_nets rp_dac_m_axi_dac1]
+
 delete_bd_objs [get_bd_intf_nets processing_system7_0_M_AXI_GP0]
 connect_bd_intf_net [get_bd_intf_ports S_AXI_REG] -boundary_type upper [get_bd_intf_pins axi_reg/S00_AXI]
 delete_bd_objs [get_bd_addr_segs processing_system7_0/Data/SEG_rp_dac_reg0]
 delete_bd_objs [get_bd_addr_segs processing_system7_0/Data/SEG_rp_oscilloscope_reg0]
+create_bd_port -dir O -type rst rstn_200
+connect_bd_net [get_bd_ports rstn_200] [get_bd_pins rst_gen2/peripheral_aresetn]
+create_bd_port -dir O -type clk clkout_200
+connect_bd_net [get_bd_ports clkout_200] [get_bd_pins clk_gen/clk_200]
+set_property -dict [list CONFIG.HAS_QOS {1} CONFIG.HAS_REGION {0} CONFIG.NUM_WRITE_OUTSTANDING {8} CONFIG.NUM_READ_OUTSTANDING {8} CONFIG.FREQ_HZ {250000000} CONFIG.PROTOCOL {AXI3} CONFIG.DATA_WIDTH {64}] [get_bd_intf_ports M_AXI_OSC]
+set_property -dict [list CONFIG.CLK_DOMAIN {system_clk_gen_0_clk_200}] [get_bd_intf_ports M_AXI_OSC]
+connect_bd_intf_net [get_bd_intf_ports M_AXI_OSC] [get_bd_intf_pins rp_dac/m_axi_dac1]
 
-#set_property -dict [list CONFIG.CLK_DOMAIN {system_clk_gen_0_clk_125} CONFIG.FREQ_HZ {62500000}] [get_bd_intf_ports S_AXI_REG]
-set_property -dict [list CONFIG.HAS_REGION {0}] [get_bd_intf_ports M_AXI_OSC]
-set_property -dict [list CONFIG.NUM_WRITE_OUTSTANDING {8} CONFIG.NUM_READ_OUTSTANDING {8} CONFIG.FREQ_HZ {125000000} CONFIG.PROTOCOL {AXI3} CONFIG.DATA_WIDTH {64}] [get_bd_intf_ports M_AXI_OSC]
-connect_bd_intf_net [get_bd_intf_ports M_AXI_OSC] -boundary_type upper [get_bd_intf_pins axi_interconnect_0/M00_AXI]
-set_property -dict [list CONFIG.CLK_DOMAIN {system_clk_gen_0_clk_125}] [get_bd_intf_ports M_AXI_OSC]
 create_bd_port -dir O -type clk clkout_625
 create_bd_port -dir O -type clk clkout_125
 connect_bd_net [get_bd_ports clkout_125] [get_bd_pins clk_gen/clk_125]
 connect_bd_net [get_bd_ports clkout_625] [get_bd_pins clk_gen/clk_62_5]
 set_property CONFIG.ASSOCIATED_BUSIF {S_AXI_REG} [get_bd_ports /clkout_625]
-set_property CONFIG.ASSOCIATED_BUSIF {M_AXI_OSC} [get_bd_ports /clkout_125]
 
+set_property CONFIG.ASSOCIATED_BUSIF {M_AXI_OSC} [get_bd_ports /clkout_200]
 delete_bd_objs [get_bd_addr_segs] [get_bd_addr_segs -excluded]
 
-assign_bd_address -target_address_space /rp_oscilloscope/m_axi_osc1 [get_bd_addr_segs M_AXI_OSC/Reg] -force
-set_property offset 0x00000000 [get_bd_addr_segs {rp_oscilloscope/m_axi_osc1/SEG_M_AXI_OSC_Reg}]
-set_property range 512M [get_bd_addr_segs {rp_oscilloscope/m_axi_osc1/SEG_M_AXI_OSC_Reg}]
+# assign_bd_address -target_address_space /rp_oscilloscope/m_axi_osc1 [get_bd_addr_segs M_AXI_OSC/Reg] -force
+# set_property offset 0x00000000 [get_bd_addr_segs {rp_oscilloscope/m_axi_osc1/SEG_M_AXI_OSC_Reg}]
+# set_property range 512M [get_bd_addr_segs {rp_oscilloscope/m_axi_osc1/SEG_M_AXI_OSC_Reg}]
 
-assign_bd_address -target_address_space /rp_oscilloscope/m_axi_osc2 [get_bd_addr_segs M_AXI_OSC/Reg] -force
-set_property offset 0x00000000 [get_bd_addr_segs {rp_oscilloscope/m_axi_osc2/SEG_M_AXI_OSC_Reg}]
-set_property range 512M [get_bd_addr_segs {rp_oscilloscope/m_axi_osc2/SEG_M_AXI_OSC_Reg}]
+# assign_bd_address -target_address_space /rp_oscilloscope/m_axi_osc2 [get_bd_addr_segs M_AXI_OSC/Reg] -force
+# set_property offset 0x00000000 [get_bd_addr_segs {rp_oscilloscope/m_axi_osc2/SEG_M_AXI_OSC_Reg}]
+# set_property range 512M [get_bd_addr_segs {rp_oscilloscope/m_axi_osc2/SEG_M_AXI_OSC_Reg}]
+
+
+assign_bd_address -target_address_space /rp_dac/m_axi_dac1 [get_bd_addr_segs M_AXI_OSC/Reg] -force
+set_property offset 0x00000000 [get_bd_addr_segs {rp_dac/m_axi_dac1/SEG_M_AXI_OSC_Reg}]
+set_property range 512M [get_bd_addr_segs {rp_dac/m_axi_dac1/SEG_M_AXI_OSC_Reg}]
+
+#assign_bd_address -target_address_space /rp_dac/m_axi_dac2 [get_bd_addr_segs M_AXI_OSC/Reg] -force
+#set_property offset 0x00000000 [get_bd_addr_segs {rp_dac/m_axi_dac2/SEG_M_AXI_OSC_Reg}]
+#set_property range 512M [get_bd_addr_segs {rp_dac/m_axi_dac2/SEG_M_AXI_OSC_Reg}]
 
 assign_bd_address -target_address_space /S_AXI_REG [get_bd_addr_segs rp_oscilloscope/s_axi_reg/reg0] -force
 set_property offset 0x40000000 [get_bd_addr_segs {S_AXI_REG/SEG_rp_oscilloscope_reg0}]
@@ -105,25 +116,31 @@ assign_bd_address -target_address_space /S_AXI_REG [get_bd_addr_segs rp_dac/s_ax
 set_property offset 0x40100000 [get_bd_addr_segs {S_AXI_REG/SEG_rp_dac_reg0}]
 set_property range 1M [get_bd_addr_segs {S_AXI_REG/SEG_rp_dac_reg0}]
 
-assign_bd_address -target_address_space /rp_dac/m_axi_dac1 [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
-set_property offset 0x00000000 [get_bd_addr_segs {rp_dac/m_axi_dac1/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
-set_property range 512M [get_bd_addr_segs {rp_dac/m_axi_dac1/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
+# assign_bd_address -target_address_space /rp_dac/m_axi_dac1 [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
+# set_property offset 0x00000000 [get_bd_addr_segs {rp_dac/m_axi_dac1/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
+# set_property range 512M [get_bd_addr_segs {rp_dac/m_axi_dac1/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
 
-assign_bd_address -target_address_space /rp_dac/m_axi_dac2 [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
-set_property offset 0x00000000 [get_bd_addr_segs {rp_dac/m_axi_dac2/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
-set_property range 512M [get_bd_addr_segs {rp_dac/m_axi_dac2/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
+# assign_bd_address -target_address_space /rp_dac/m_axi_dac2 [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] -force
+# set_property offset 0x00000000 [get_bd_addr_segs {rp_dac/m_axi_dac2/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
+# set_property range 512M [get_bd_addr_segs {rp_dac/m_axi_dac2/SEG_processing_system7_0_HP1_DDR_LOWOCM}]
+
+
+assign_bd_address -target_address_space /rp_oscilloscope/m_axi_osc1 [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
+set_property offset 0x00000000 [get_bd_addr_segs {rp_oscilloscope/m_axi_osc1/SEG_processing_system7_0_HP0_DDR_LOWOCM}]
+set_property range 512M [get_bd_addr_segs {rp_oscilloscope/m_axi_osc1/SEG_processing_system7_0_HP0_DDR_LOWOCM}]
+
+assign_bd_address -target_address_space /rp_oscilloscope/m_axi_osc2 [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] -force
+set_property offset 0x00000000 [get_bd_addr_segs {rp_oscilloscope/m_axi_osc2/SEG_processing_system7_0_HP0_DDR_LOWOCM}]
+set_property range 512M [get_bd_addr_segs {rp_oscilloscope/m_axi_osc2/SEG_processing_system7_0_HP0_DDR_LOWOCM}]
+
 
 delete_bd_objs [get_bd_nets processing_system7_0_FCLK_RESET0_N]
 create_bd_port -dir I -type rst rst_in
 set_property CONFIG.POLARITY ACTIVE_HIGH [get_bd_ports rst_in]
 connect_bd_net [get_bd_ports rst_in] [get_bd_pins rst_gen/ext_reset_in]
-create_bd_port -dir O -type rst rstn_out
+connect_bd_net [get_bd_ports rst_in] [get_bd_pins rst_gen2/ext_reset_in]
 connect_bd_net [get_bd_ports rstn_out] [get_bd_pins rst_gen/peripheral_aresetn]
 
-#delete_bd_objs [get_bd_addr_segs processing_system7_0/Data/SEG_rp_oscilloscope_reg0] [get_bd_addr_segs rp_oscilloscope/m_axi_osc1/SEG_processing_system7_0_HP0_DDR_LOWOCM] [get_bd_addr_segs rp_oscilloscope/m_axi_osc2/SEG_processing_system7_0_HP0_DDR_LOWOCM]
-#assign_bd_address [get_bd_addr_segs {rp_oscilloscope/s_axi_reg/reg0 }]
-#assign_bd_address [get_bd_addr_segs {rp_oscilloscope/m_axi_osc1/reg0 }]
-#assign_bd_address [get_bd_addr_segs {rp_oscilloscope/m_axi_osc2/reg0 }]
   
   current_bd_instance $oldCurInst
   validate_bd_design
@@ -147,7 +164,11 @@ set_property SOURCE_SET sources_1 [get_filesets sim_1]
 set path_sim tbn
 add_files -fileset sim_1      $path_sim
 add_files -fileset sim_1 -norecurse {../../tbn/axi_bus_model.sv}
-add_files -fileset sim_1 -norecurse /home/juretrnovec/RPdev/RP30/redpitaya-public/fpga/tbn/axi4_sync.sv
+add_files -fileset sim_1 -norecurse {../../tbn/axi_slave_model.v}
+add_files -fileset sim_1 -norecurse {../../tbn/axi4_sync.sv}
+#set_property USED_IN_SIMULATION 0 [get_files project/redpitaya.srcs/sources_1/bd/system/ip/system_rp_dac_0/src/fifo_axi_data/fifo_axi_data.xci]
+#set_property SOURCE_SET sources_1 [get_filesets sim_1]
+#add_files -fileset sim_1 -norecurse {ip/rp_dac/src/fifo_axi_data/sim/fifo_axi_data.v ip/rp_dac/src/fifo_axi_data/simulation/fifo_generator_vlog_beh.v}
 set_property used_in_simulation false [get_files red_pitaya_top.sv]
 set_property top top_tb [get_filesets sim_1]
 update_compile_order -fileset sim_1
@@ -228,3 +249,4 @@ export_ip_user_files -of_objects  [get_files  project/redpitaya.srcs/sources_1/b
 generate_target Simulation [get_files project/redpitaya.srcs/sources_1/bd/system/system.bd]
 export_ip_user_files -of_objects [get_files project/redpitaya.srcs/sources_1/bd/system/system.bd] -no_script -sync -force -quiet
 export_simulation -of_objects [get_files project/redpitaya.srcs/sources_1/bd/system/system.bd] -directory project/redpitaya.ip_user_files/sim_scripts -ip_user_files_dir project/redpitaya.ip_user_files -ipstatic_source_dir project/redpitaya.ip_user_files/ipstatic -lib_map_path [list {modelsim=project/redpitaya.cache/compile_simlib/modelsim} {questa=project/redpitaya.cache/compile_simlib/questa} {ies=project/redpitaya.cache/compile_simlib/ies} {xcelium=project/redpitaya.cache/compile_simlib/xcelium} {vcs=project/redpitaya.cache/compile_simlib/vcs} {riviera=project/redpitaya.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+launch_simulation
