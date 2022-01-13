@@ -963,7 +963,7 @@ auto startDACServer() -> void{
 		{
 			 if (uio.nodeName == "rp_dac")
 			{
-				gen = CGenerator::Create(uio, true , true ,DAC_FREQUENCY);
+				gen = CGenerator::Create(uio, true , true ,dac_speed,DAC_FREQUENCY);
 				gen->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
 				gen->setDacHz(dac_speed);
 			}
