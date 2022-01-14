@@ -404,7 +404,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.c_include_mm2s {1} \
    CONFIG.c_include_sg {1} \
-   CONFIG.c_m_axi_mm2s_data_width {32} \
+   CONFIG.c_m_axi_mm2s_data_width {64} \
    CONFIG.c_m_axis_mm2s_tdata_width {16} \
    CONFIG.c_mm2s_burst_size {64} \
    CONFIG.c_s2mm_burst_size {64} \
@@ -417,7 +417,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.c_include_mm2s {1} \
    CONFIG.c_include_sg {1} \
-   CONFIG.c_m_axi_mm2s_data_width {32} \
+   CONFIG.c_m_axi_mm2s_data_width {64} \
    CONFIG.c_m_axis_mm2s_tdata_width {16} \
    CONFIG.c_mm2s_burst_size {16} \
    CONFIG.c_s2mm_burst_size {16} \
@@ -430,6 +430,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.NUM_MI {5} \
    CONFIG.NUM_SI {1} \
+  CONFIG.STRATEGY {1} \
  ] $axi_interconnect_0
 
   # Create instance: axi_interconnect_1, and set properties
@@ -453,7 +454,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.NUM_MI {1} \
    CONFIG.NUM_SI {2} \
-   CONFIG.STRATEGY {0} \
+   CONFIG.STRATEGY {1} \
  ] $axi_interconnect_3
 
   # Create instance: axi_interconnect_4, and set properties
