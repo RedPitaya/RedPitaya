@@ -31,6 +31,7 @@ wire [ADDR_DECS-1:0]      dac_rp_next_next = dac_rp_next+{15'h0, dac_pntr_step, 
 reg [AXIS_DATA_BITS-1:0] samp_buf [0:NUM_SAMPS-1]; 
 reg fifo_empty_r;
 reg first_full;
+reg  [AXIS_DATA_BITS-1:0]  m_axis_tdata_r;
 ////////////////////////////////////////////////////////////
 // Name : First full
 // must wait to fill up the FIFO before starting to read
@@ -64,7 +65,7 @@ genvar GV;
 generate
 for (GV = 0; GV < NUM_SAMPS; GV = GV + 1) begin : read_decoder
   always @(posedge clk) begin
-    samp_buf[GV] <= fifo_rd_data[GV*16+13:GV*16];  
+    samp_buf[GV] <= fifo_rd_data[GV*16+15:GV*16+2];  
   end
 end
 endgenerate
@@ -73,6 +74,8 @@ endgenerate
 // Set the valid signal if all samples are assigned to the
 // ouput data or the last sample has arrived.
 ////////////////////////////////////////////////////////////
+wire [AXIS_DATA_BITS-1:0] test_diff = m_axis_tdata - m_axis_tdata_r;
+
 always @(posedge clk)
 begin
   if (rst == 0) begin
@@ -80,6 +83,7 @@ begin
   end else begin 
     m_axis_tvalid <= first_full;
     m_axis_tdata  <= samp_buf[dac_rp_curr[NUM_SAMPS_BITS+16:17]];
+    m_axis_tdata_r <= m_axis_tdata;
   end
 end
 

@@ -205,7 +205,7 @@ begin
 end
 
 assign loopback_sel = cfg_loopback;
-/*
+
 osc_filter i_dfilt (
    // ADC
   .clk              ( clk         ),  // ADC clock
@@ -225,7 +225,7 @@ osc_filter i_dfilt (
   .cfg_coeff_kk    ( cfg_filt_coeff_kk   ),  // config KK coefficient
   .cfg_coeff_pp    ( cfg_filt_coeff_pp   )   // config PP coefficient
 );
- */
+ 
 ////////////////////////////////////////////////////////////
 // Name : Calibration
 // 
@@ -236,10 +236,8 @@ osc_calib #(
   U_osc_calib(
   .clk              (clk),
   // Slave AXI-S
-  .s_axis_tdata     (s_axis_tdata),
-  .s_axis_tvalid    (s_axis_tvalid),
-  //.s_axis_tdata     (filt_tdata),
-  //.s_axis_tvalid    (filt_tvalid),
+  .s_axis_tdata     (filt_tdata),
+  .s_axis_tvalid    (filt_tvalid),
   .s_axis_tready    (),
   // Master AXI-S
   .m_axis_tdata     (calib_tdata),

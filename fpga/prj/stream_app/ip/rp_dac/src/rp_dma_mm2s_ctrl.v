@@ -91,6 +91,8 @@ reg  [3:0]                state_ns;                // Next state
 reg  [199:0]              state_ascii;             // ASCII state
 reg  [AXI_ADDR_BITS-1:0]  req_buf_addr;
 reg                       req_buf_addr_sel;
+reg                       final_transf;
+reg                       next_buf_nfull_r;
 reg                       req_buf_addr_sel_p1;
 wire [8:0]                dat_ctrl_req_data;
 wire                      dat_ctrl_req_we;
@@ -330,10 +332,10 @@ begin
         if (reg_ctrl[CTRL_RESET])
           state_ns = IDLE;
         else if (transf_end) begin
-          if (next_buf_nfull) // if next transfer results in overwriting the buffer, wait until the buffer is completely read out.
+          if (next_buf_nfull | final_transf) // if next transfer results in overwriting the buffer, wait until the buffer is completely read out.
            state_ns = WAIT_BUF_FULL;
           else
-            state_ns = WAIT_DATA_RDY;     
+           state_ns = WAIT_DATA_RDY;     
           //end  
         end  
     end    
@@ -341,9 +343,10 @@ begin
     WAIT_BUF_FULL: begin
       if (reg_ctrl[CTRL_RESET])
           state_ns = IDLE;
-      else if (~next_buf_nfull) begin // if next buffer is full, then wait
+      else if (next_buf_nfull_r)
+        state_ns = WAIT_DATA_RDY;     
+      else if (~next_buf_nfull) // if next buffer is full, then wait
         state_ns = FIFO_RST; // go back to filling FIFOs
-      end
     end
 
   endcase
@@ -477,7 +480,7 @@ begin
     default: begin
         if (reg_ctrl[CTRL_BUF1_RDY] || reg_ctrl[CTRL_BUF2_RDY])
             next_buf_nfull <= 0;
-        else if (buf_ovr_limit) begin
+        else if (buf_ovr_limit & state_cs == SEND_DMA_REQ) begin
           if (((req_buf_addr_sel == 0) && ~buf2_rdy) || ((req_buf_addr_sel == 1) && ~buf1_rdy)) begin // data loss is occuring
             next_buf_nfull <= 1;  
           end
@@ -503,7 +506,7 @@ begin
         buf1_rdy <= 1;     
       end else begin
         // Reset to the start of the buffer if we have reached the end
-        if (buf_ovr_limit) begin
+        if (final_transf) begin
           if (req_buf_addr_sel == 0 && buf1_rdy) begin // buffer 1 is full if next transfer goes over specified buffer size
             buf1_rdy <= 0;
           end
@@ -530,7 +533,7 @@ begin
         buf2_rdy <= 1;     
       end else begin
         // Reset to the start of the buffer if we have reached the end
-        if (buf_ovr_limit) begin
+        if (final_transf) begin
           if (req_buf_addr_sel == 1 && buf2_rdy) begin // buffer 1 is full if next transfer goes over specified buffer size
             buf2_rdy <= 0;
           end
@@ -560,7 +563,7 @@ begin
 
       SEND_DMA_REQ: begin
         if (transf_end) begin
-          if (buf_ovr_limit || dac_trig) begin
+          if (final_transf || dac_trig) begin
             if ((req_buf_addr_sel == 0) && buf2_rdy) begin //only start writing to buf2 if it's full
               dac_rp_curr <= dac_buf2_adr;      
             end 
@@ -602,7 +605,7 @@ begin
     end  
     
     SEND_DMA_REQ: begin
-      if (buf_ovr_limit) begin
+      if (final_transf) begin
         if ((req_buf_addr_sel == 0) && buf2_rdy) begin //only start writing to buf2 if it's full
           req_buf_addr <= dac_buf2_adr;          
         end 
@@ -640,7 +643,7 @@ begin
     end  
     
     SEND_DMA_REQ: begin
-      if (buf_ovr_limit) begin
+      if (final_transf) begin
         if ((req_buf_addr_sel == 1) && buf1_rdy)
           req_buf_addr_sel <= 1'b0;
         
@@ -654,6 +657,46 @@ begin
           req_buf_addr_sel <= ~req_buf_addr_sel;
         end      
       end        
+  endcase
+end
+
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    // IDLE - Wait for the DMA start signal
+    IDLE: begin
+      final_transf <= 0;  
+    end  
+    
+    SEND_DMA_REQ: begin
+      if (m_axi_dac_rlast_i & buf_ovr_limit)
+        final_transf <= 'h1;
+    end  
+    
+    WAIT_BUF_FULL: begin // only happens when exiting FIFO reset state after data loss
+      if (~next_buf_nfull) // if next buffer is full, then wait
+        final_transf <= 0;   
+    end        
+  endcase
+end
+
+always @(posedge m_axi_aclk)
+begin
+  case (state_cs)
+    // IDLE - Wait for the DMA start signal
+    IDLE: begin
+      next_buf_nfull_r <= 0;  
+    end  
+    
+    SEND_DMA_REQ: begin
+      if (m_axi_dac_rlast_i & ~next_buf_nfull & buf_ovr_limit)
+        next_buf_nfull_r <= 'h1;
+    end  
+    
+    WAIT_BUF_FULL: begin // only happens when exiting FIFO reset state after data loss
+      if (~next_buf_nfull) // if next buffer is full, then wait
+        next_buf_nfull_r <= 0;   
+    end        
   endcase
 end
 

@@ -59,7 +59,8 @@ module rp_dma_mm2s
 // Parameters
 ////////////////////////////////////////////////////////////
 
-localparam FIFO_CNT_BITS = 9;  // Size of the FIFO data counter
+localparam FIFO_CNT_BITS = 12;  // Size of the FIFO data counter
+localparam FIFO_MAX      = (1<<FIFO_CNT_BITS)-2-256;
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -72,6 +73,9 @@ wire [AXI_DATA_BITS-1:0]  fifo_rd_data;
 wire                      fifo_rd_re;
 wire                      fifo_empty;
 wire                      fifo_full;
+wire [FIFO_CNT_BITS-1:0]  fifo_wr_cnt; 
+wire [FIFO_CNT_BITS-1:0]  fifo_rd_cnt; 
+wire                      fifo_almost_full = fifo_wr_cnt > FIFO_MAX;
 
 // DMA control reg
 localparam CTRL_STRT            = 0;
@@ -85,6 +89,8 @@ wire                      ctrl_norm  = dac_ctrl_reg[CTRL_MODE_NORM];
 wire                      ctrl_strm  = dac_ctrl_reg[CTRL_MODE_STREAM];
 
 assign fifo_wr_data = m_axi_rdata_i;                    // write data into the FIFO from AXI
+//assign fifo_wr_data = {4{1'b0,m_axi_araddr_o[14:0]}};                    // write data into the FIFO from AXI
+
 assign fifo_wr_we   = m_axi_rvalid_i && m_axi_rready_o; // when valid data is on the bus
 
 assign m_axi_arlock_o  = 2'b00; 
@@ -133,7 +139,7 @@ rp_dma_mm2s_ctrl #(
   .dac_trig         (dac_trig),
   .dac_ctrl_reg     (dac_ctrl_reg),
   .fifo_rst         (fifo_rst),
-  .fifo_full        (fifo_full),   
+  .fifo_full        (fifo_full | fifo_almost_full),   
   .fifo_re          ((fifo_rd_re | fifo_empty)),   
 
   .m_axi_dac_araddr_o   (m_axi_araddr_o),       
@@ -158,7 +164,7 @@ rp_dma_mm2s_downsize #(
   .clk            (s_axis_aclk),              
   .rst            (aresetn ),        
   .fifo_empty     (fifo_empty),
-  .fifo_full      (fifo_full),
+  .fifo_full      (fifo_full | fifo_almost_full),
   .fifo_rd_data   (fifo_rd_data),          
   .fifo_rd_re     (fifo_rd_re),     
   .dac_pntr_step  (dac_step),
@@ -181,7 +187,9 @@ fifo_axi_data_dac
   .wr_en          (fifo_wr_we),            
   .full           (fifo_full),   
   .dout           (fifo_rd_data),    
-  .rd_en          (fifo_rd_re),                                 
+  .rd_en          (fifo_rd_re),
+  .rd_data_count  (fifo_rd_cnt),
+  .wr_data_count  (fifo_wr_cnt),
   .empty          (fifo_empty)
 );
 
