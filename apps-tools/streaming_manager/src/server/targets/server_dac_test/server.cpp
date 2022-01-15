@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     COscilloscope::Ptr osc0 = nullptr;
     CGenerator::Ptr gen = nullptr;
 
-    int dacSpeed = 125e6;
+    int dacSpeed = 125e6 / 4;
     if (argc > 1) {
         dacSpeed = atoi(argv[1]);
     }
@@ -92,8 +92,8 @@ int main(int argc, char* argv[])
 
     dac.runNonBlock();
     while(stop == 0){
-        sleep(5);
-        gen->printReg();
+//        sleep(5);
+//        gen->printReg();
 
     }
     std::cout << "STOP\n";

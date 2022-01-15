@@ -166,7 +166,7 @@ auto CGenerator::prepare() -> void
         exit(-1);
     }
     m_BufferNumber[0] = m_BufferNumber[1] = 0;
-    
+
 }
 
 auto CGenerator::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void{
@@ -178,8 +178,8 @@ auto CGenerator::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_o
     m_calib_offset_ch1 =  ch1_offset;
     m_calib_offset_ch2 =  ch2_offset;
 
-    m_calib_gain_ch1 = ch1_gain * 0x2000; 
-    m_calib_gain_ch2 = ch2_gain * 0x2000; 
+    m_calib_gain_ch1 = ch1_gain * 0x2000;
+    m_calib_gain_ch2 = ch2_gain * 0x2000;
 }
 
 auto CGenerator::initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool{
@@ -220,9 +220,12 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
 {
     bool ret = false;
     const std::lock_guard<std::mutex> lock(m_waitLock);
+    auto status = m_Map->ch_dma_status;
     if (m_BufferNumber[0] == 0){
-        if (m_Map->ch_dma_status & 0x00030003){
-            if (_buffer1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
+        if (status & 0x00030000 && status & 0x00000003){
+            //fprintf(stderr,"Write 2 = 0x%X\n", status);
+            printReg();
+	        if (_buffer1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
             m_BufferNumber[0] = 1;
             int command = 1 << 7 | 1 << 15;
@@ -230,8 +233,9 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
             ret = true;
         }
     }else{
-        if (m_Map->ch_dma_status & 0x000C000C){
-           // printReg();
+        if (status & 0x000C0000 && status & 0x0000000C){
+            //fprintf(stderr,"Write 1 = 0x%X\n", status);
+            printReg();
             if (_buffer1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
             m_BufferNumber[0] = 0;
@@ -240,6 +244,7 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
             ret = true;
         }
     }
+    fprintf(stderr,"Skip write  = 0x%X\n", status);
     return ret;
 }
 
@@ -249,7 +254,7 @@ auto CGenerator::start() -> void{
     if (m_Map != nullptr){
         // Start event
         setRegister(m_Map,&(m_Map->event_status),0x2);
-        
+
         // Start DMA
        setRegister(m_Map,&(m_Map->dma_control),0x101);
     }else {
