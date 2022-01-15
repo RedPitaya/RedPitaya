@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2020.1
+set scripts_vivado_version 2020.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -744,6 +744,16 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_USE_M_AXI_GP1 {1} \
    CONFIG.PCW_USE_S_AXI_HP0 {1} \
    CONFIG.PCW_USE_S_AXI_HP1 {1} \
+   CONFIG.PCW_USE_S_AXI_HP2 {1} \
+   CONFIG.PCW_USE_S_AXI_HP3 {1} \
+   CONFIG.PCW_S_AXI_HP0_DATA_WIDTH {64} \
+   CONFIG.PCW_S_AXI_HP0_ID_WIDTH {6} \
+   CONFIG.PCW_S_AXI_HP1_DATA_WIDTH {64} \
+   CONFIG.PCW_S_AXI_HP1_ID_WIDTH {6} \
+   CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {64} \
+   CONFIG.PCW_S_AXI_HP2_ID_WIDTH {4} \
+   CONFIG.PCW_S_AXI_HP3_DATA_WIDTH {64} \
+   CONFIG.PCW_S_AXI_HP3_ID_WIDTH {4} \
  ] $processing_system7
 
   # Create instance: xadc, and set properties
@@ -799,8 +809,8 @@ CONFIG.NUM_WRITE_OUTSTANDING {1} \
   connect_bd_net -net processing_system7_0_fclk_reset1_n [get_bd_ports FCLK_RESET1_N] [get_bd_pins processing_system7/FCLK_RESET1_N]
   connect_bd_net -net processing_system7_0_fclk_reset2_n [get_bd_ports FCLK_RESET2_N] [get_bd_pins processing_system7/FCLK_RESET2_N]
   connect_bd_net -net processing_system7_0_fclk_reset3_n [get_bd_ports FCLK_RESET3_N] [get_bd_pins proc_sys_reset/ext_reset_in] [get_bd_pins processing_system7/FCLK_RESET3_N]
-  connect_bd_net -net s_axi_hp0_aclk [get_bd_ports S_AXI_HP0_aclk] [get_bd_pins processing_system7/S_AXI_HP0_ACLK]
-  connect_bd_net -net s_axi_hp1_aclk [get_bd_ports S_AXI_HP1_aclk] [get_bd_pins processing_system7/S_AXI_HP1_ACLK]
+  connect_bd_net -net s_axi_hp0_aclk [get_bd_ports S_AXI_HP0_aclk] [get_bd_pins processing_system7/S_AXI_HP0_ACLK] [get_bd_pins processing_system7/S_AXI_HP2_ACLK]
+  connect_bd_net -net s_axi_hp1_aclk [get_bd_ports S_AXI_HP1_aclk] [get_bd_pins processing_system7/S_AXI_HP1_ACLK] [get_bd_pins processing_system7/S_AXI_HP3_ACLK]
   connect_bd_net -net xadc_ip2intc_irpt [get_bd_pins processing_system7/IRQ_F2P] [get_bd_pins xadc/ip2intc_irpt]
   connect_bd_net -net xlconstant_dout [get_bd_pins proc_sys_reset/aux_reset_in] [get_bd_pins xlconstant/dout]
 

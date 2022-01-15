@@ -93,7 +93,7 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
 FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 # NEED for FSBL fpga image
-FPGA_PRJ = v0.94
+FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 endif
@@ -133,7 +133,7 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
 FPGA_PRJ_LST = stream_app logic
 # NEED for FSBL fpga image
-FPGA_PRJ = v0.94
+FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 DEF_PARAM = SLAVE

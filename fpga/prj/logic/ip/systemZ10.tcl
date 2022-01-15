@@ -404,7 +404,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.c_include_mm2s {1} \
    CONFIG.c_include_sg {1} \
-   CONFIG.c_m_axi_mm2s_data_width {32} \
+   CONFIG.c_m_axi_mm2s_data_width {64} \
    CONFIG.c_m_axis_mm2s_tdata_width {16} \
    CONFIG.c_mm2s_burst_size {64} \
    CONFIG.c_s2mm_burst_size {64} \
@@ -417,7 +417,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.c_include_mm2s {1} \
    CONFIG.c_include_sg {1} \
-   CONFIG.c_m_axi_mm2s_data_width {32} \
+   CONFIG.c_m_axi_mm2s_data_width {64} \
    CONFIG.c_m_axis_mm2s_tdata_width {16} \
    CONFIG.c_mm2s_burst_size {16} \
    CONFIG.c_s2mm_burst_size {16} \
@@ -882,8 +882,8 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_SPI_PERIPHERAL_VALID {1} \
    CONFIG.PCW_S_AXI_HP0_DATA_WIDTH {64} \
    CONFIG.PCW_S_AXI_HP1_DATA_WIDTH {32} \
-   CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {32} \
-   CONFIG.PCW_S_AXI_HP3_DATA_WIDTH {32} \
+   CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {64} \
+   CONFIG.PCW_S_AXI_HP3_DATA_WIDTH {64} \
    CONFIG.PCW_TPIU_PERIPHERAL_DIVISOR0 {1} \
    CONFIG.PCW_TTC0_CLK0_PERIPHERAL_FREQMHZ {133.333333} \
    CONFIG.PCW_TTC0_CLK1_PERIPHERAL_FREQMHZ {133.333333} \
