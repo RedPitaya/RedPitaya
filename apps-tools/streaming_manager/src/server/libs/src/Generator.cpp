@@ -224,7 +224,7 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
     if (m_BufferNumber[0] == 0){
         if (status & 0x00030000 && status & 0x00000003){
             //fprintf(stderr,"Write 2 = 0x%X\n", status);
-            printReg();
+            //printReg();
 	        if (_buffer1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
             m_BufferNumber[0] = 1;
@@ -235,7 +235,7 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
     }else{
         if (status & 0x000C0000 && status & 0x0000000C){
             //fprintf(stderr,"Write 1 = 0x%X\n", status);
-            printReg();
+            //printReg();
             if (_buffer1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
             if (_buffer2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
             m_BufferNumber[0] = 0;
@@ -244,7 +244,7 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
             ret = true;
         }
     }
-    fprintf(stderr,"Skip write  = 0x%X\n", status);
+    //fprintf(stderr,"Skip write  = 0x%X\n", status);
     return ret;
 }
 
