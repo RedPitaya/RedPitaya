@@ -136,13 +136,13 @@ dac_rst  <= ~rstn_0 | ~pll_locked;
 wire [ 4-1:0] loopback_sel_ch2,loopback_sel_ch1;
 wire [14-1:0] adc_dat_ch1, adc_dat_ch2;
 
-assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0][15:2]    :
-                    (loopback_sel_ch1 == 'h1 ? dac_dat_a             :
-                                              {3'h0, exp_p_io, 3'h0} );
+assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0][15:2]    : dac_dat_a;
+                   // (loopback_sel_ch1 == 'h1 ? dac_dat_a             :
+                   //                           {3'h0, exp_p_io, 3'h0} );
 
-assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1][15:2]    :
-                    (loopback_sel_ch2 == 'h1 ? dac_dat_b             :
-                                              {3'h0, exp_n_io, 3'h0} );
+assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1][15:2]    : dac_dat_b;
+                    //(loopback_sel_ch2 == 'h1 ? dac_dat_b             :
+                    //                          {3'h0, exp_n_io, 3'h0} );
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
