@@ -181,8 +181,8 @@ assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1][15:2]    :
         .gpio_p(exp_p_io),
         .gpio_n(exp_n_io),
         .loopback_sel({loopback_sel_ch2,loopback_sel_ch1}),
-        .adc_data_ch1(adc_dat_i[0][15:2]),
-        .adc_data_ch2(adc_dat_i[1][15:2]));
+        .adc_data_ch1(adc_dat_ch1),
+        .adc_data_ch2(adc_dat_ch2));
 
 OBUFDS #(.IOSTANDARD ("DIFF_HSTL18_I"), .SLEW ("FAST")) i_OBUF_trig
 (
