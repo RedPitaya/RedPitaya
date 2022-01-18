@@ -44,7 +44,7 @@ module osc_top
   //   
   output wire                             dma_intr,
   //
-  output wire                             loopback_sel,
+  output wire [7:0]                       loopback_sel,
   //
   output wire [(M_AXI_ADDR_BITS-1):0]     m_axi_awaddr,    
   output wire [7:0]                       m_axi_awlen,     
@@ -151,7 +151,7 @@ reg                         cfg_trig_edge;
 reg                         cfg_avg_en; 
 reg  [DEC_CNT_BITS-1:0]     cfg_dec_factor;  
 reg  [DEC_SHIFT_BITS-1:0]   cfg_dec_rshift;  
-reg  [             8-1:0]   cfg_loopback;
+reg  [            16-1:0]   cfg_loopback;
 
 reg                         cfg_filt_bypass;  
 reg signed [17:0]           cfg_filt_coeff_aa; 
@@ -174,9 +174,11 @@ wire [S_AXIS_DATA_BITS-1:0] calib_datain;
 wire                        calib_tvalid;   
 wire                        calib_tready;   
 
+wire [S_AXIS_DATA_BITS-1:0] dec_indata;    
 wire [S_AXIS_DATA_BITS-1:0] dec_tdata;    
 wire                        dec_tvalid;   
 wire                        dec_tready;   
+wire                        dec_select;
 
 wire [S_AXIS_DATA_BITS-1:0] trig_tdata;    
 wire                        trig_tvalid;   
@@ -204,7 +206,18 @@ begin
   end  
 end
 
-assign loopback_sel = cfg_loopback;
+reg [S_AXIS_DATA_BITS-1:0] ramp_sig;    
+always @(posedge clk)
+begin
+  if (~rst_n)
+    ramp_sig <= 'h0;
+  else begin
+      ramp_sig <= ramp_sig + 'h1;
+  end
+end
+
+assign loopback_sel = cfg_loopback[8-1:0];
+assign dec_select   = (CHAN_NUM == 1) ? cfg_loopback[8] : cfg_loopback[12];
 
 osc_filter i_dfilt (
    // ADC
@@ -251,6 +264,7 @@ osc_calib #(
 // Name : Decimation
 // 
 ////////////////////////////////////////////////////////////
+assign dec_indata = dec_select ? ramp_sig : calib_tdata;    
 
 osc_decimator #(
   .AXIS_DATA_BITS (S_AXIS_DATA_BITS), 
@@ -259,7 +273,7 @@ osc_decimator #(
   U_osc_decimator(
   .clk            (clk),                   
   .rst_n          (rst_n),        
-  .s_axis_tdata   (calib_tdata),          
+  .s_axis_tdata   (dec_indata),          
   .s_axis_tvalid  (calib_tvalid),     
   .s_axis_tready  (calib_tready),                                                                 
   .m_axis_tdata   (dec_tdata),          
@@ -597,7 +611,7 @@ begin
     cfg_loopback <= 0;
   end else begin
     if (((reg_addr[8-1:0] == LOOPBACK_ADDR)) && (reg_wr_we == 1)) begin
-      cfg_loopback <= reg_wr_data[8-1:0];
+      cfg_loopback <= reg_wr_data[16-1:0];
     end
   end
 end

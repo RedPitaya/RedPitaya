@@ -134,15 +134,15 @@ always @(posedge dac_clk_1x)
 dac_rst  <= ~rstn_0 | ~pll_locked;
 
 wire [ 4-1:0] loopback_sel_ch2,loopback_sel_ch1;
-wire [14-1:0] adc_dat_ch1, adc_dat_ch2;
+wire [16-1:0] adc_dat_ch1, adc_dat_ch2;
 
-assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0]          :
-                    (loopback_sel_ch1 == 'h1 ? dac_dat_a             :
-                                              {4'h0, exp_p_io, 4'h0} );
+assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0]          : {dac_dat_a, 2'b0};
+                    //(loopback_sel_ch1 == 'h1 ? dac_dat_a             :
+                    //                          {4'h0, exp_p_io, 4'h0} );
 
-assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1]          :
-                    (loopback_sel_ch2 == 'h1 ? dac_dat_b             :
-                                              {4'h0, exp_n_io, 4'h0} );
+assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1]          : {dac_dat_b, 2'b0};
+                    //(loopback_sel_ch2 == 'h1 ? dac_dat_b             :
+                    //                         {4'h0, exp_n_io, 4'h0} );
 
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
@@ -181,8 +181,8 @@ assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1]          :
         .gpio_p(exp_p_io),
         .gpio_n(exp_n_io),
         .loopback_sel({loopback_sel_ch2,loopback_sel_ch1}),
-        .adc_data_ch1(adc_dat_i[0]),
-        .adc_data_ch2(adc_dat_i[1]));
+        .adc_data_ch1(adc_dat_ch1),
+        .adc_data_ch2(adc_dat_ch2));
 
 OBUFDS #(.IOSTANDARD ("DIFF_HSTL18_I"), .SLEW ("FAST")) i_OBUF_trig
 (
