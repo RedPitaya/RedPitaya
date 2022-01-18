@@ -127,7 +127,7 @@ ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0     ), .D2(1'b1     ), .C(da
 ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
 ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
-ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b_o), .D2(dac_dat_a_o), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
 
 // DAC reset (active high)
 always @(posedge dac_clk_1x)
@@ -135,12 +135,16 @@ dac_rst  <= ~rstn_0 | ~pll_locked;
 
 wire [ 4-1:0] loopback_sel_ch2,loopback_sel_ch1;
 wire [16-1:0] adc_dat_ch1, adc_dat_ch2;
+wire [16-1:0] dac_dat_a_o, dac_dat_b_o;
 
-assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0]          : {dac_dat_a, 2'b0};
+assign dac_dat_a_o = {dac_dat_a[16-1], ~dac_dat_a[16-2:0]}; // inversion for DAC input
+assign dac_dat_b_o = {dac_dat_b[16-1], ~dac_dat_b[16-2:0]};
+
+assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0]          : dac_dat_a;
                     //(loopback_sel_ch1 == 'h1 ? dac_dat_a             :
                     //                          {4'h0, exp_p_io, 4'h0} );
 
-assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1]          : {dac_dat_b, 2'b0};
+assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1]          : dac_dat_b;
                     //(loopback_sel_ch2 == 'h1 ? dac_dat_b             :
                     //                         {4'h0, exp_n_io, 4'h0} );
 

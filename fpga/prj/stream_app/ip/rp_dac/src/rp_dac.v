@@ -126,10 +126,16 @@ localparam DMA_BUF2_ADR_CHA     = 8'h3C;
 localparam DMA_BUF1_ADR_CHB     = 8'h40;
 localparam DMA_BUF2_ADR_CHB     = 8'h44;
 
-localparam DIAG_REG_ADDR1     = 8'h50;
-localparam DIAG_REG_ADDR2     = 8'h54;
-localparam DIAG_REG_ADDR3     = 8'h58;
-localparam DIAG_REG_ADDR4     = 8'h5C;
+localparam SETDEC_CHA           = 8'h48; // diagnostic only, to test the ramp signal.
+localparam SETDEC_CHB           = 8'h4C;
+localparam ERRS_RST             = 8'h50;
+localparam ERRS_CNT_CHA         = 8'h54;
+localparam ERRS_CNT_CHB         = 8'h58;
+
+localparam DIAG_REG_ADDR1     = 8'h60;
+localparam DIAG_REG_ADDR2     = 8'h64;
+localparam DIAG_REG_ADDR3     = 8'h68;
+localparam DIAG_REG_ADDR4     = 8'h6c;
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -157,6 +163,9 @@ reg [16-1:0]                    cfg_chb_num_cyc;
 reg [16-1:0]                    cfg_chb_num_reps;
 reg [16-1:0]                    cfg_chb_burst_dly;
 
+reg [16-1:0]                    cfg_cha_setdec;
+reg [16-1:0]                    cfg_chb_setdec;
+
 reg [EVENT_SRC_NUM-1:0]         cfg_event_sts;
 reg [EVENT_SRC_NUM-1:0]         cfg_event_sel;
 reg [TRIG_SRC_NUM -1:0]         cfg_trig_mask;
@@ -179,6 +188,7 @@ wire                            reg_wr_we;
 wire [31:0]                     reg_wr_data;    
 reg  [31:0]                     reg_rd_data;
 
+reg  [31:0]                     errs_cnt_cha, errs_cnt_chb;
 
 
 reg ctrl_cha;
@@ -203,19 +213,30 @@ wire [31:0] diag_reg2;
 assign intr = 1'b0;
 
 
-wire [DAC_DATA_BITS-1:0]        dac_a;
-wire [DAC_DATA_BITS-1:0]        dac_b;
-reg  [DAC_DATA_BITS-1:0]        dac_dat_a;
-reg  [DAC_DATA_BITS-1:0]        dac_dat_b;    
-
+reg  [DAC_DATA_BITS-1:0]        dac_a_r, dac_b_r;
+reg  [DAC_DATA_BITS-1:0]        dac_a_diff, dac_b_diff;    
 always @(posedge clk)
 begin
-  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]}; // inversion for DAC input
-  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
-end
+  dac_a_r <= dac_data_cha_o;
+  dac_b_r <= dac_data_chb_o;
+  dac_a_diff <= dac_data_cha_o - dac_a_r;
+  dac_b_diff <= dac_data_chb_o - dac_b_r;
+  if (~rst_n) begin
+    errs_cnt_cha <= 'h0;
+    errs_cnt_chb <= 'h0;
+  end else begin
+    if ((reg_addr[8-1:0] == ERRS_RST) && (reg_wr_we == 1))
+      errs_cnt_cha <= 'h0;  
+    else if ((dac_a_diff != cfg_cha_setdec) & (dac_a_diff != 'h0) & (dac_a_diff < 16'h7000))
+      errs_cnt_cha <= errs_cnt_cha + 'h1;
 
-assign dac_data_cha_o = dac_dat_a;
-assign dac_data_chb_o = dac_dat_b;
+    if ((reg_addr[8-1:0] == ERRS_RST) && (reg_wr_we == 1))
+      errs_cnt_chb <= 'h0;
+    else if ((dac_b_diff != cfg_chb_setdec) & (dac_b_diff != 'h0) & (dac_b_diff < 16'h7000))
+      errs_cnt_chb <= errs_cnt_chb + 'h1;
+  end
+
+end
 
 ////////////////////////////////////////////////////////////
 // Name : Register Control
@@ -282,6 +303,8 @@ begin
     DMA_BUF1_ADR_CHB:       reg_rd_data <= cfg_buf1_adr_chb;
     DMA_BUF2_ADR_CHA:       reg_rd_data <= cfg_buf2_adr_cha;
     DMA_BUF2_ADR_CHB:       reg_rd_data <= cfg_buf2_adr_chb;     
+    ERRS_CNT_CHA:           reg_rd_data <= errs_cnt_cha;                            
+    ERRS_CNT_CHB:           reg_rd_data <= errs_cnt_chb;    
     DIAG_REG_ADDR1:         reg_rd_data <= diag_reg;                            
     DIAG_REG_ADDR2:         reg_rd_data <= diag_reg2;                            
     DIAG_REG_ADDR3:         reg_rd_data <= diag_reg;                            
@@ -313,6 +336,8 @@ begin
     cfg_buf1_adr_chb    <= 32'h0;
     cfg_buf2_adr_cha    <= 32'h0;
     cfg_buf2_adr_chb    <= 32'h0;
+    cfg_cha_setdec      <= 16'h1;
+    cfg_chb_setdec      <= 16'h1;
   end else begin
     if ((reg_addr[8-1:0] == DAC_CONF_REG      ) && (reg_wr_we == 1)) begin dac_chb_conf       <= reg_wr_data[31:16];  dac_cha_conf  <= reg_wr_data[15:0]; end    
     if ((reg_addr[8-1:0] == DAC_CHA_SCALE_OFFS) && (reg_wr_we == 1)) begin cfg_cha_offs       <= reg_wr_data[29:16];  cfg_cha_scale <= reg_wr_data[13:0]; end    
@@ -331,6 +356,9 @@ begin
     if ((reg_addr[8-1:0] == DMA_BUF1_ADR_CHB  ) && (reg_wr_we == 1)) begin cfg_buf1_adr_chb   <= reg_wr_data; end   
     if ((reg_addr[8-1:0] == DMA_BUF2_ADR_CHA  ) && (reg_wr_we == 1)) begin cfg_buf2_adr_cha   <= reg_wr_data; end    
     if ((reg_addr[8-1:0] == DMA_BUF2_ADR_CHB  ) && (reg_wr_we == 1)) begin cfg_buf2_adr_chb   <= reg_wr_data; end   
+
+    if ((reg_addr[8-1:0] == SETDEC_CHA        ) && (reg_wr_we == 1)) begin cfg_cha_setdec     <= reg_wr_data[15:0]; end    
+    if ((reg_addr[8-1:0] == SETDEC_CHB        ) && (reg_wr_we == 1)) begin cfg_chb_setdec     <= reg_wr_data[15:0]; end 
   end
 end 
 
@@ -390,7 +418,7 @@ dac_top #(
   .dac_buf_size     (cfg_dma_buf_size),
   .dac_buf1_adr     (cfg_buf1_adr_cha),
   .dac_buf2_adr     (cfg_buf2_adr_cha),
-  .dac_data_o       (dac_a),
+  .dac_data_o       (dac_data_cha_o),
   .diag_reg         (diag_reg),
   .diag_reg2        (diag_reg2),
   
@@ -456,7 +484,7 @@ dac_top #(
   .dac_buf_size     (cfg_dma_buf_size),
   .dac_buf1_adr     (cfg_buf1_adr_chb),
   .dac_buf2_adr     (cfg_buf2_adr_chb),
-  .dac_data_o       (dac_b),
+  .dac_data_o       (dac_data_chb_o),
   
   .m_axi_dac_arid_o     (m_axi_dac2_arid_o),
   .m_axi_dac_araddr_o   (m_axi_dac2_araddr_o),

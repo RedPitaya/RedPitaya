@@ -65,7 +65,7 @@ genvar GV;
 generate
 for (GV = 0; GV < NUM_SAMPS; GV = GV + 1) begin : read_decoder
   always @(posedge clk) begin
-    samp_buf[GV] <= fifo_rd_data[GV*16+15:GV*16+2];  
+    samp_buf[GV] <= fifo_rd_data[GV*16+15:GV*16];  
   end
 end
 endgenerate

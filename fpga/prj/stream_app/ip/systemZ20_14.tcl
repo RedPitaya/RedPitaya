@@ -1124,7 +1124,7 @@ proc create_root_design { parentCell } {
   # Create instance: rp_dac, and set properties
   set rp_dac [ create_bd_cell -type ip -vlnv redpitaya.com:user:rp_dac:1.0 rp_dac ]
   set_property -dict [ list \
-   CONFIG.DAC_DATA_BITS {14} \
+   CONFIG.DAC_DATA_BITS {16} \
    CONFIG.EVENT_SRC_NUM {5} \
    CONFIG.ID_WIDTH {4} \
    CONFIG.M_AXI_DAC_ADDR_BITS {32} \
