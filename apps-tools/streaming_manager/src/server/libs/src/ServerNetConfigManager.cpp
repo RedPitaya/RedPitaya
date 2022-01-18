@@ -82,7 +82,7 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
         m_currentState = States::NORMAL;
         if (isSetted()){
             m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
-            m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
+            m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCESS);
         }else{
             reset();
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
@@ -124,6 +124,16 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
 
     if (c == CNetConfigManager::Commands::REQUEST_SERVER_SETTINGS){
         sendConfig(false);
+    }
+
+    // Loopback commands
+
+    if (c == CNetConfigManager::Commands::SERVER_LOOPBACK_START){
+        m_callbacks.emitEvent(static_cast<int>(Events::START_LOOPBACK_MODE));
+    }
+
+    if (c == CNetConfigManager::Commands::SERVER_LOOPBACK_STOP){
+        m_callbacks.emitEvent(static_cast<int>(Events::STOP_LOOPBACK_MODE));
     }
 }
 
@@ -214,6 +224,17 @@ auto ServerNetConfigManager::sendDACServerStoppedSDMissingFile() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_MISSING);
 }
 
+auto ServerNetConfigManager::sendServerStartedLoopBackMode() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_STARTED);
+}
+
+auto ServerNetConfigManager::sendServerStoppedLoopBackMode() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_STOPPED);
+}
+
+auto ServerNetConfigManager::sendStreamServerBusy() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_BUSY);
+}
 
 auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
     if (m_pNetConfManager->isConnected()) {
@@ -240,6 +261,11 @@ auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
         if (!m_pNetConfManager->sendData("dac_repeatCount",static_cast<uint32_t>(getDACRepeatCount()),_async)) return false;
         if (!m_pNetConfManager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
         if (!m_pNetConfManager->sendData("dac_speed",static_cast<uint32_t>(getDACHz()),_async)) return false;
+
+        if (!m_pNetConfManager->sendData("loopback_timeout",static_cast<uint32_t>(getLoopbackTimeout()),_async)) return false;
+        if (!m_pNetConfManager->sendData("loopback_speed",static_cast<uint32_t>(getLoopbackSpeed()),_async)) return false;
+        if (!m_pNetConfManager->sendData("loopback_mode",static_cast<uint32_t>(getLoopbackMode()),_async)) return false;
+        if (!m_pNetConfManager->sendData("loopback_channels",static_cast<uint32_t>(getLoopbackChannels()),_async)) return false;
 
         if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;

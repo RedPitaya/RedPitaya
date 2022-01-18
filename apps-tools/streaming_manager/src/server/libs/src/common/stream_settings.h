@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <map>
 
 class CStreamSettings {
 
@@ -63,6 +64,14 @@ public:
         X5 = 1
     };
 
+    enum LOOPBACKChannels{
+        ONE = 0,
+        TWO = 1
+    };
+
+    enum LOOPBACKMode{
+        DD  = 0
+    };
 
     CStreamSettings();
     auto reset() -> void;
@@ -121,30 +130,17 @@ public:
     auto getDACMemoryUsage() -> int64_t;
     auto setDACMemoryUsage(int64_t _value) -> void;
 
+    auto getLoopbackTimeout() -> uint32_t;
+    auto setLoopbackTimeout(uint32_t value) -> void;
+    auto getLoopbackSpeed() -> int32_t;
+    auto setLoopbackSpeed(int32_t value) -> void;
+    auto getLoopbackMode() -> LOOPBACKMode;
+    auto setLoopbackMode(LOOPBACKMode mode) -> void;
+    auto getLoopbackChannels() -> LOOPBACKChannels;
+    auto setLoopbackChannels(LOOPBACKChannels channels) -> void;
+
 
 private:
-    bool m_Bport;
-    bool m_Bdac_file;
-    bool m_Bprotocol;
-    bool m_Bsamples;
-    bool m_Bformat;
-    bool m_Btype;
-    bool m_BsaveType;
-    bool m_Bchannels;
-    bool m_Bres;
-    bool m_Bdecimation;
-    bool m_calib;
-    bool m_Battenuator;
-    bool m_Bcalib;
-    bool m_Bac_dc;
-    bool m_Bdac_gain;
-    bool m_Bdac_file_type;
-    bool m_Bdac_mode;
-    bool m_Bdac_repeat;
-    bool m_Bdac_port;
-    bool m_Bdac_memoryUsage;
-    bool m_Bdac_repeatCount;
-    bool m_Bdac_speed_Hz;
 
     std::string     m_port;
     std::string     m_dac_file;
@@ -157,7 +153,9 @@ private:
     Resolution      m_res;
     uint32_t        m_decimation;
     Attenuator      m_attenuator;
+    bool            m_calib;
     AC_DC           m_ac_dc;
+
     DACGain         m_dac_gain;
     DataFormat      m_dac_file_type;
     DACType         m_dac_mode;
@@ -166,5 +164,13 @@ private:
     int64_t         m_dac_memoryUsage;
     uint32_t        m_dac_repeatCount;
     uint32_t        m_dac_speed_Hz;
+
+    uint32_t         m_loopback_timeout;
+    int32_t          m_loopback_speed_Hz;
+    LOOPBACKMode     m_loopback_mode;
+    LOOPBACKChannels m_loopback_channels;
+
+
+    std::map<std::string, bool> m_var_changed;
 };
 

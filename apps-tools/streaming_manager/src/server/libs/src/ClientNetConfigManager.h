@@ -45,7 +45,11 @@ public:
         SERVER_DAC_STOPPED_SD_DONE,
         SERVER_DAC_STOPPED_SD_EMPTY,
         SERVER_DAC_STOPPED_SD_BROKEN,
-        SERVER_DAC_STOPPED_SD_MISSING
+        SERVER_DAC_STOPPED_SD_MISSING,
+
+        SERVER_LOOPBACK_STARTED,
+        SERVER_LOOPBACK_STOPPED,
+        SERVER_LOOPBACK_BUSY
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
@@ -63,6 +67,9 @@ public:
     auto requestConfig(std::string host) -> bool;
     auto getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode;
     auto getLocalSettingsOfHost(std::string host) -> CStreamSettings*;
+
+    auto sendLoopbackStart(std::string host) -> bool;
+    auto sendLoopbackStop(std::string host) -> bool;
 
     auto addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string)> _func) -> void;
     auto addHandler(ClientNetConfigManager::Events event, std::function<void(std::string)> _func) -> void;

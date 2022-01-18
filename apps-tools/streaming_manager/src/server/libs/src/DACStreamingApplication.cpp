@@ -3,6 +3,7 @@
 #include <fstream>
 #include <functional>
 #include <cstdlib>
+#include <deque>
 #include "DACStreamingApplication.h"
 #include "AsioNet.h"
 
@@ -46,7 +47,7 @@ auto CDACStreamingApplication::runNonBlock() -> void {
     m_isRunNonBloking = true;    
     try {
         m_streamingManager->run(); // MUST BE INIT FIRST for thread logic
-        m_Thread = std::thread(&CDACStreamingApplication::genWorker, this);        
+        m_Thread = std::thread(&CDACStreamingApplication::genWorker, this);
     }
     catch (const asio::system_error &e)
     {
@@ -87,25 +88,28 @@ void CDACStreamingApplication::genWorker()
     //bool isSecondBufferInit = false;
     m_gen->prepare();
     m_gen->start();
-    CDACAsioNetController::BufferPack lastPack;
+    
+    std::deque<CDACAsioNetController::BufferPack> packs;
 try{
     while (m_GenThreadRun.test_and_set())
     {
-        if (lastPack.empty){
-            lastPack = m_streamingManager->getBuffer();
+        if (packs.size() < 10){
+            auto buf = m_streamingManager->getBuffer();
+            packs.push_back(buf);
         }
 
-        if (!lastPack.empty) {
-            if (m_gen->write(lastPack.ch1,lastPack.ch2,lastPack.size_ch1,lastPack.size_ch2)){
+        if (packs.size() > 0) {
+            auto pack = packs[0];
+            if (m_gen->write(pack.ch1,pack.ch2,pack.size_ch1,pack.size_ch2)){
                 counter++;
-                if (lastPack.ch1){
-                    delete[] lastPack.ch1;
+                if (pack.ch1){
+                    delete[] pack.ch1;
                 }
 
-                if (lastPack.ch2){
-                    delete[] lastPack.ch2;
+                if (pack.ch2){
+                    delete[] pack.ch2;
                 }
-                lastPack = CDACAsioNetController::BufferPack();
+                packs.pop_front();
             }
         }
 

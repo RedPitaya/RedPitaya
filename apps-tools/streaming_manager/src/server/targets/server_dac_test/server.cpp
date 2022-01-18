@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 
 
 
-    CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,"test_small.wav",CStreamSettings::DAC_REP_INF,1,10000000);
+    CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,"test.wav",CStreamSettings::DAC_REP_INF,1,10000000);
     CDACStreamingApplication dac(dac_manager,gen);
 
     dac.runNonBlock();

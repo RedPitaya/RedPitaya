@@ -20,6 +20,7 @@ CStreamSettings::CStreamSettings(){
     m_attenuator = A_1_1;
     m_calib = false;
     m_ac_dc = AC;
+
     m_dac_gain = X1;
     m_dac_file_type = WAV;
     m_dac_mode = DAC_NET;
@@ -28,98 +29,94 @@ CStreamSettings::CStreamSettings(){
     m_dac_memoryUsage = 1024 * 1024;
     m_dac_repeatCount = 0;
     m_dac_speed_Hz = 0;
+
+    m_loopback_timeout = 10;
+    m_loopback_speed_Hz = -1;
+    m_loopback_mode = LOOPBACKMode::DD;
+    m_loopback_channels = LOOPBACKChannels::TWO;
+
     reset();
 }
 
 void CStreamSettings::reset(){
-    m_Bport =
-    m_Bprotocol =
-    m_Bsamples =
-    m_Bformat =
-    m_Btype =
-    m_BsaveType = 
-    m_Bchannels =
-    m_Bres =
-    m_Bdecimation =
-    m_Battenuator = 
-    m_Bcalib =
-    m_Bac_dc =
-    m_Bdac_file =
-    m_Bdac_gain = 
-    m_Bdac_mode = 
-    m_Bdac_file_type = 
-    m_Bdac_port =
-    m_Bdac_repeat =
-    m_Bdac_memoryUsage =
-    m_Bdac_repeatCount =
-    m_Bdac_speed_Hz= false;
+    m_var_changed = { {"m_port",        false}, 
+                      {"m_dac_file",    false},
+                      {"m_protocol",    false},
+                      {"m_samples",     false},
+                      {"m_format",      false},
+                      {"m_type",        false},
+                      {"m_saveType",    false},
+                      {"m_channels",    false},
+                      {"m_res",         false},
+                      {"m_decimation",  false},
+                      {"m_attenuator",  false},
+                      {"m_calib",       false},
+                      {"m_ac_dc",       false},
+
+                      {"m_dac_gain",        false},
+                      {"m_dac_file_type",   false},
+                      {"m_dac_mode",        false},
+                      {"m_dac_repeat",      false},
+                      {"m_dac_port",        false},
+                      {"m_dac_memoryUsage", false},
+                      {"m_dac_repeatCount", false},
+                      {"m_dac_speed_Hz",    false},
+                      
+                      {"m_loopback_timeout",  false},
+                      {"m_loopback_speed_Hz", false},
+                      {"m_loopback_mode",     false},
+                      {"m_loopback_channels", false}
+
+                      };
 }
 
 bool CStreamSettings::isSetted(){
-    bool res = true;
-    res =   m_Bport &&
-            m_Bdac_file &&
-            m_Bprotocol &&
-            m_Bsamples &&
-            m_Bformat &&
-            m_Btype &&
-            m_Bchannels &&
-            m_Bres &&
-            m_Bdecimation &&
-            m_Battenuator &&
-            m_Bcalib &&
-            m_Bac_dc &&
-            m_Bdac_gain &&
-            m_Bdac_mode &&
-            m_Bdac_file_type &&
-            m_Bdac_port &&
-            m_dac_memoryUsage &&
-            m_Bdac_repeat &&
-            m_Bdac_repeatCount &&
-            m_Bdac_speed_Hz;
-
-    // std::cerr << " port " << m_Bport 
-    //           << " dac_file " << m_Bdac_file 
-    //           << " protocol " << m_Bprotocol 
-    //           << " smaples " << m_Bsamples
-    //           << " format " << m_Bformat 
-    //           << " type " << m_Btype
-    //           << " channel " << m_Bchannels
-    //           << " res " << m_Bres 
-    //           << " dec " << m_Bdecimation 
-    //           << " atte " << m_Battenuator
-    //           << " calib " << m_Bcalib
-    //           << " dac_gain " << m_Bdac_gain
-    //           << " m_Bdac_file_type " << m_Bdac_file_type
-    //           << " dc " << m_Bac_dc << "\n";
-    return res;
+    for (auto& item: m_var_changed) {
+        if (!item.second) return false;
+    }
+    return true;
 }
 
 bool CStreamSettings::writeToFile(string _filename){
     if (isSetted()){
         Json::Value root;
-        root["port"] = getPort();
-        root["protocol"] = getProtocol();
-        root["samples"] = getSamples();
-        root["format"] = getFormat();
-        root["type"] = getType();
-        root["save_type"] = getSaveType();
-        root["channels"] = getChannels();
-        root["resolution"] = getResolution();
-        root["decimation"] = getDecimation();
-        root["attenuator"] = getAttenuator();
-        root["calibration"] = getCalibration();
-        root["coupling"] = getAC_DC();
-        root["dac_file"] = getDACFile();
-        root["dac_file_type"] = getDACFileType();
-        root["dac_gain"] = getDACGain();
-        root["dac_mode"] = getDACMode();
-        root["dac_repeat"] = getDACRepeat();
-        root["dac_repeatCount"] = getDACRepeatCount();
-        root["dac_port"] = getDACPort();
-        root["dac_memoryUsage"] = getDACMemoryUsage();
-        root["dac_speed"] = getDACHz();
+        Json::Value adc_config;
+        Json::Value dac_config;
+        Json::Value loopback_config;
 
+        adc_config["port"] = getPort();
+        adc_config["protocol"] = getProtocol();
+        adc_config["samples"] = getSamples();
+        adc_config["format"] = getFormat();
+        adc_config["type"] = getType();
+        adc_config["save_type"] = getSaveType();
+        adc_config["channels"] = getChannels();
+        adc_config["resolution"] = getResolution();
+        adc_config["decimation"] = getDecimation();
+        adc_config["attenuator"] = getAttenuator();
+        adc_config["calibration"] = getCalibration();
+        adc_config["coupling"] = getAC_DC();
+
+        dac_config["dac_file"] = getDACFile();
+        dac_config["dac_file_type"] = getDACFileType();
+        dac_config["dac_gain"] = getDACGain();
+        dac_config["dac_mode"] = getDACMode();
+        dac_config["dac_repeat"] = getDACRepeat();
+        dac_config["dac_repeatCount"] = getDACRepeatCount();
+        dac_config["dac_port"] = getDACPort();
+        dac_config["dac_memoryUsage"] = getDACMemoryUsage();
+        dac_config["dac_speed"] = getDACHz();
+
+        loopback_config["timeout"] = getLoopbackTimeout();
+        loopback_config["dac_speed"] = getLoopbackSpeed();
+        loopback_config["mode"] = getLoopbackMode();
+        loopback_config["channels"] = getLoopbackChannels();
+
+
+        root["adc_streaming"] = adc_config;
+        root["dac_streaming"] = dac_config;
+        root["loopback"] = loopback_config;
+        
         Json::StreamWriterBuilder builder;
         const std::string json_file = Json::writeString(builder, root);
         ofstream file(_filename , 	ios::out | ios::trunc);
@@ -135,28 +132,43 @@ bool CStreamSettings::writeToFile(string _filename){
 
 auto CStreamSettings::getJson()-> std::string{
     if (isSetted()){
+
         Json::Value root;
-        root["port"] = getPort();
-        root["protocol"] = getProtocol();
-        root["samples"] = getSamples();
-        root["format"] = getFormat();
-        root["type"] = getType();
-        root["save_type"] = getSaveType();
-        root["channels"] = getChannels();
-        root["resolution"] = getResolution();
-        root["decimation"] = getDecimation();
-        root["attenuator"] = getAttenuator();
-        root["calibration"] = getCalibration();
-        root["coupling"] = getAC_DC();
-        root["dac_file"] = getDACFile();
-        root["dac_file_type"] = getDACFileType();
-        root["dac_gain"] = getDACGain();
-        root["dac_mode"] = getDACMode();
-        root["dac_repeat"] = getDACRepeat();
-        root["dac_repeatCount"] = getDACRepeatCount();
-        root["dac_port"] = getDACPort();
-        root["dac_memoryUsage"] = getDACMemoryUsage();
-        root["dac_speed"] = getDACHz();
+        Json::Value adc_config;
+        Json::Value dac_config;
+        Json::Value loopback_config;
+
+        adc_config["port"] = getPort();
+        adc_config["protocol"] = getProtocol();
+        adc_config["samples"] = getSamples();
+        adc_config["format"] = getFormat();
+        adc_config["type"] = getType();
+        adc_config["save_type"] = getSaveType();
+        adc_config["channels"] = getChannels();
+        adc_config["resolution"] = getResolution();
+        adc_config["decimation"] = getDecimation();
+        adc_config["attenuator"] = getAttenuator();
+        adc_config["calibration"] = getCalibration();
+        adc_config["coupling"] = getAC_DC();
+
+        dac_config["dac_file"] = getDACFile();
+        dac_config["dac_file_type"] = getDACFileType();
+        dac_config["dac_gain"] = getDACGain();
+        dac_config["dac_mode"] = getDACMode();
+        dac_config["dac_repeat"] = getDACRepeat();
+        dac_config["dac_repeatCount"] = getDACRepeatCount();
+        dac_config["dac_port"] = getDACPort();
+        dac_config["dac_memoryUsage"] = getDACMemoryUsage();
+        dac_config["dac_speed"] = getDACHz();
+
+        loopback_config["timeout"] = getLoopbackTimeout();
+        loopback_config["dac_speed"] = getLoopbackSpeed();
+        loopback_config["mode"] = getLoopbackMode();
+        loopback_config["channels"] = getLoopbackChannels();
+
+        root["adc_streaming"] = adc_config;
+        root["dac_streaming"] = dac_config;
+        root["loopback"] = loopback_config;
 
         Json::StreamWriterBuilder builder;
         const std::string json = Json::writeString(builder, root);
@@ -324,7 +336,43 @@ auto CStreamSettings::String()-> std::string{
                 dac_gain = "X5";
                 break;
         }
-        str = str + "DAC Gain:\t\t" + dac_gain  +" (250-12 only)\n";        
+        str = str + "DAC Gain:\t\t" + dac_gain  +" (250-12 only)\n";
+
+
+        str = str + "\n******************** Loopback ********************\n";
+        
+        std::string  lb_mode = "ERROR";
+        switch (getLoopbackMode()) {
+            case LOOPBACKMode::DD:
+                lb_mode = "DD";
+                break;
+            default:
+                break;
+        }
+        str = str + "Mode:\t\t" + lb_mode  + "\n";
+
+        std::string  lb_chs = "ERROR";
+        switch (getLoopbackChannels()) {
+            case LOOPBACKChannels::ONE:
+                lb_chs = "ONE";
+                break;
+            case LOOPBACKChannels::TWO:
+                lb_chs = "TWO";
+                break;                
+            default:
+                break;
+        }
+        str = str + "Channels:\t\t" + lb_chs  + "\n";
+
+        str = str + "Timeout:\t\t" + std::to_string(getLoopbackTimeout()) +" (In sec)\n";
+
+        auto lb_speed = getLoopbackSpeed();
+        if (lb_speed == -1){
+            str = str + "DAC Speed:\t\t" +"MAX\n";
+        }else{
+            str = str + "DAC Speed:\t\t" + std::to_string(lb_speed)  +"\n";            
+        }
+        
         return str;
     }
     return "INCOMPLETE SETTING";
@@ -334,6 +382,10 @@ auto CStreamSettings::String()-> std::string{
 auto CStreamSettings::readFromFile(string _filename) -> bool {
 
     Json::Value root;
+    Json::Value adc_config;
+    Json::Value dac_config;
+    Json::Value loopback_config;
+
     std::ifstream file(_filename , 	ios::in);
     if (!file.is_open()) {
         std::cerr << "file "<< _filename.c_str() <<" read failed: " << std::strerror(errno) << "\n";
@@ -348,56 +400,90 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         std::cerr << "[CStreamSettings] Error parse json" << errs << std::endl;
         return false;
     }
-    if (root.isMember("port"))
-        setPort(root["port"].asString());
-    if (root.isMember("protocol"))
-        setProtocol(static_cast<Protocol>(root["protocol"].asInt()));
-    if (root.isMember("samples"))
-        setSamples(root["samples"].asInt());
-    if (root.isMember("format"))
-        setFormat(static_cast<DataFormat>(root["format"].asInt()));
-    if (root.isMember("type"))
-        setType(static_cast<DataType>(root["type"].asInt()));
-    if (root.isMember("save_type"))
-        setSaveType(static_cast<SaveType>(root["save_type"].asInt()));
-    if (root.isMember("channels"))
-        setChannels(static_cast<Channel>(root["channels"].asInt()));
-    if (root.isMember("resolution"))
-        setResolution(static_cast<Resolution>(root["resolution"].asInt()));
-    if (root.isMember("decimation"))
-        setDecimation(root["decimation"].asUInt());
-    if (root.isMember("attenuator"))
-        setAttenuator(static_cast<Attenuator>(root["attenuator"].asInt()));
-    if (root.isMember("calibration"))
-        setCalibration(root["calibration"].asBool());
-    if (root.isMember("coupling"))
-        setAC_DC(static_cast<AC_DC>(root["coupling"].asInt()));
-    if (root.isMember("resolution"))
-        setResolution(static_cast<Resolution>(root["resolution"].asInt()));
-    if (root.isMember("dac_file_type"))
-        setDACFileType(static_cast<DataFormat>(root["dac_file_type"].asInt()));
-    if (root.isMember("dac_gain"))
-        setDACGain(static_cast<DACGain>(root["dac_gain"].asInt()));
-    if (root.isMember("dac_file"))
-        setDACFile(root["dac_file"].asString());
-    if (root.isMember("dac_mode"))
-        setDACMode(static_cast<DACType>(root["dac_mode"].asInt()));
-    if (root.isMember("dac_repeat"))
-        setDACRepeat(static_cast<DACRepeat>(root["dac_repeat"].asInt()));
-    if (root.isMember("dac_repeatCount"))
-        setDACRepeatCount(static_cast<uint32_t>(root["dac_repeatCount"].asInt()));
-    if (root.isMember("dac_port"))
-        setDACPort(root["dac_port"].asString());
-    if (root.isMember("dac_memoryUsage"))
-        setDACMemoryUsage(root["dac_memoryUsage"].asInt64());
-    if (root.isMember("dac_speed"))
-        setDACHz(root["dac_speed"].asInt());
+
+    if (root.isMember("adc_streaming")){
+        adc_config = root["adc_streaming"];
+    }else{
+        std::cerr << "[CStreamSettings] Error parse json. Invalid file" << std::endl;
+        return false;
+    }
+
+    if (root.isMember("dac_streaming")){
+        dac_config = root["dac_streaming"];
+    }else{
+        std::cerr << "[CStreamSettings] Error parse json. Invalid file" << std::endl;
+        return false;
+    }
+
+    if (root.isMember("loopback")){
+        loopback_config = root["loopback"];
+    }else{
+        std::cerr << "[CStreamSettings] Error parse json. Invalid file" << std::endl;
+        return false;
+    }
+
+    if (adc_config.isMember("port"))
+        setPort(adc_config["port"].asString());
+    if (adc_config.isMember("protocol"))
+        setProtocol(static_cast<Protocol>(adc_config["protocol"].asInt()));
+    if (adc_config.isMember("samples"))
+        setSamples(adc_config["samples"].asInt());
+    if (adc_config.isMember("format"))
+        setFormat(static_cast<DataFormat>(adc_config["format"].asInt()));
+    if (adc_config.isMember("type"))
+        setType(static_cast<DataType>(adc_config["type"].asInt()));
+    if (adc_config.isMember("save_type"))
+        setSaveType(static_cast<SaveType>(adc_config["save_type"].asInt()));
+    if (adc_config.isMember("channels"))
+        setChannels(static_cast<Channel>(adc_config["channels"].asInt()));
+    if (adc_config.isMember("resolution"))
+        setResolution(static_cast<Resolution>(adc_config["resolution"].asInt()));
+    if (adc_config.isMember("decimation"))
+        setDecimation(adc_config["decimation"].asUInt());
+    if (adc_config.isMember("attenuator"))
+        setAttenuator(static_cast<Attenuator>(adc_config["attenuator"].asInt()));
+    if (adc_config.isMember("calibration"))
+        setCalibration(adc_config["calibration"].asBool());
+    if (adc_config.isMember("coupling"))
+        setAC_DC(static_cast<AC_DC>(adc_config["coupling"].asInt()));
+    if (adc_config.isMember("resolution"))
+        setResolution(static_cast<Resolution>(adc_config["resolution"].asInt()));
+
+
+    if (dac_config.isMember("dac_file_type"))
+        setDACFileType(static_cast<DataFormat>(dac_config["dac_file_type"].asInt()));
+    if (dac_config.isMember("dac_gain"))
+        setDACGain(static_cast<DACGain>(dac_config["dac_gain"].asInt()));
+    if (dac_config.isMember("dac_file"))
+        setDACFile(dac_config["dac_file"].asString());
+    if (dac_config.isMember("dac_mode"))
+        setDACMode(static_cast<DACType>(dac_config["dac_mode"].asInt()));
+    if (dac_config.isMember("dac_repeat"))
+        setDACRepeat(static_cast<DACRepeat>(dac_config["dac_repeat"].asInt()));
+    if (dac_config.isMember("dac_repeatCount"))
+        setDACRepeatCount(static_cast<uint32_t>(dac_config["dac_repeatCount"].asInt()));
+    if (dac_config.isMember("dac_port"))
+        setDACPort(dac_config["dac_port"].asString());
+    if (dac_config.isMember("dac_memoryUsage"))
+        setDACMemoryUsage(dac_config["dac_memoryUsage"].asInt64());
+    if (dac_config.isMember("dac_speed"))
+        setDACHz(dac_config["dac_speed"].asInt());
+    
+    if (loopback_config.isMember("timeout"))
+        setLoopbackTimeout(loopback_config["timeout"].asInt());
+    if (loopback_config.isMember("dac_speed"))
+        setLoopbackSpeed(loopback_config["dac_speed"].asInt());
+    if (loopback_config.isMember("mode"))
+        setLoopbackMode(static_cast<LOOPBACKMode>(loopback_config["mode"].asInt()));
+    if (loopback_config.isMember("channels"))
+        setLoopbackChannels(static_cast<LOOPBACKChannels>(loopback_config["channels"].asInt()));
+
     return isSetted();
 }
 
 void CStreamSettings::setPort(string _port){
     m_port  = _port;
-    m_Bport = true;
+    m_var_changed["m_port"] = true;
 }
 
 string CStreamSettings::getPort(){
@@ -406,7 +492,7 @@ string CStreamSettings::getPort(){
 
 void  CStreamSettings::setProtocol(CStreamSettings::Protocol _protocol){
     m_protocol  = _protocol;
-    m_Bprotocol = true;
+    m_var_changed["m_protocol"] = true;
 }
 
 CStreamSettings::Protocol CStreamSettings::getProtocol(){
@@ -415,7 +501,7 @@ CStreamSettings::Protocol CStreamSettings::getProtocol(){
 
 void CStreamSettings::setSamples(int32_t _samples){
     m_samples  = _samples;
-    m_Bsamples = true;
+    m_var_changed["m_samples"] = true;
 }
 
 int32_t CStreamSettings::getSamples(){
@@ -424,7 +510,7 @@ int32_t CStreamSettings::getSamples(){
 
 void CStreamSettings::setFormat(CStreamSettings::DataFormat _format){
     m_format = _format;
-    m_Bformat = true;
+    m_var_changed["m_format"] = true;
 }
 
 CStreamSettings::DataFormat CStreamSettings::getFormat(){
@@ -433,7 +519,7 @@ CStreamSettings::DataFormat CStreamSettings::getFormat(){
 
 void CStreamSettings::setType(DataType _type){
     m_type = _type;
-    m_Btype = true;
+    m_var_changed["m_type"] = true;
 }
 
 CStreamSettings::DataType CStreamSettings::getType(){
@@ -442,7 +528,7 @@ CStreamSettings::DataType CStreamSettings::getType(){
 
 auto CStreamSettings::setSaveType(CStreamSettings::SaveType _type) -> void{
     m_saveType = _type;
-    m_BsaveType = true;
+    m_var_changed["m_saveType"] = true;
 }
 
 auto CStreamSettings::getSaveType() -> CStreamSettings::SaveType{
@@ -451,7 +537,7 @@ auto CStreamSettings::getSaveType() -> CStreamSettings::SaveType{
 
 void CStreamSettings::setChannels(CStreamSettings::Channel _channels){
     m_channels = _channels;
-    m_Bchannels = true;
+    m_var_changed["m_channels"] = true;
 }
 
 CStreamSettings::Channel CStreamSettings::getChannels(){
@@ -460,7 +546,7 @@ CStreamSettings::Channel CStreamSettings::getChannels(){
 
 void CStreamSettings::setResolution(Resolution _resolution){
     m_res = _resolution;
-    m_Bres = true;
+    m_var_changed["m_res"] = true;
 }
 
 CStreamSettings::Resolution CStreamSettings::getResolution(){
@@ -469,7 +555,7 @@ CStreamSettings::Resolution CStreamSettings::getResolution(){
 
 void CStreamSettings::setDecimation(uint32_t _decimation){
     m_decimation = _decimation;
-    m_Bdecimation = true;
+    m_var_changed["m_decimation"] = true;
 }
 
 uint32_t CStreamSettings::getDecimation(){
@@ -582,6 +668,26 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
         setDACHz(static_cast<uint32_t>(value));
         return true;
     }
+
+    if (key == "loopback_timeout") {
+        setLoopbackTimeout(static_cast<uint32_t>(value));
+        return true;
+    }
+
+    if (key == "loopback_speed") {
+        setLoopbackSpeed(static_cast<int32_t>(value));
+        return true;
+    }
+
+    if (key == "loopback_mode") {
+        setLoopbackMode(static_cast<LOOPBACKMode>(value));
+        return true;
+    }
+
+    if (key == "loopback_channels") {
+        setLoopbackChannels(static_cast<LOOPBACKChannels>(value));
+        return true;
+    }
     return false;
 }
 
@@ -592,7 +698,7 @@ auto CStreamSettings::setValue(std::string,double) -> bool{
 
 void CStreamSettings::setAttenuator(CStreamSettings::Attenuator _attenuator){
     m_attenuator = _attenuator;
-    m_Battenuator = true;
+    m_var_changed["m_attenuator"] = true;
 }
 
 CStreamSettings::Attenuator CStreamSettings::getAttenuator(){
@@ -601,7 +707,7 @@ CStreamSettings::Attenuator CStreamSettings::getAttenuator(){
 
 void CStreamSettings::setCalibration(bool _calibration){
     m_calib = _calibration;
-    m_Bcalib = true;
+    m_var_changed["m_calib"] = true;
 }
 
 bool CStreamSettings::getCalibration(){
@@ -610,7 +716,7 @@ bool CStreamSettings::getCalibration(){
 
 void CStreamSettings::setAC_DC(CStreamSettings::AC_DC _value){
     m_ac_dc = _value;
-    m_Bac_dc = true;
+    m_var_changed["m_ac_dc"] = true;
 }
 
 CStreamSettings::AC_DC CStreamSettings::getAC_DC(){
@@ -619,7 +725,7 @@ CStreamSettings::AC_DC CStreamSettings::getAC_DC(){
 
 auto CStreamSettings::setDACFile(std::string _value) -> void{
     m_dac_file = _value;
-    m_Bdac_file = true;
+    m_var_changed["m_dac_file"] = true;
 }
 
 auto CStreamSettings::getDACFile() -> std::string{
@@ -632,7 +738,7 @@ auto CStreamSettings::setDACFileType(CStreamSettings::DataFormat _value) -> void
     }else{
         m_dac_file_type = _value;
     }
-    m_Bdac_file_type = true;
+    m_var_changed["m_dac_file_type"] = true;
 }
 
 auto CStreamSettings::getDACFileType() -> CStreamSettings::DataFormat{
@@ -641,7 +747,7 @@ auto CStreamSettings::getDACFileType() -> CStreamSettings::DataFormat{
 
 auto CStreamSettings::setDACGain(CStreamSettings::DACGain _value) -> void{
     m_dac_gain = _value;
-    m_Bdac_gain = true;
+    m_var_changed["m_dac_gain"] = true;
 }
 
 auto CStreamSettings::getDACGain() -> CStreamSettings::DACGain{
@@ -650,7 +756,7 @@ auto CStreamSettings::getDACGain() -> CStreamSettings::DACGain{
 
 auto CStreamSettings::setDACMode(CStreamSettings::DACType _value) -> void{
     m_dac_mode = _value;
-    m_Bdac_mode = true;
+    m_var_changed["m_dac_mode"] = true;
 }
 
 auto CStreamSettings::getDACMode() -> CStreamSettings::DACType{
@@ -659,7 +765,7 @@ auto CStreamSettings::getDACMode() -> CStreamSettings::DACType{
 
 auto CStreamSettings::setDACHz(uint32_t _value) -> void{
     m_dac_speed_Hz = _value;
-    m_Bdac_speed_Hz = true;
+    m_var_changed["m_dac_speed_Hz"] = true;
 }
 
 auto CStreamSettings::getDACHz() -> uint32_t{
@@ -669,7 +775,7 @@ auto CStreamSettings::getDACHz() -> uint32_t{
 
 auto CStreamSettings::setDACRepeat(DACRepeat _value) -> void{
     m_dac_repeat = _value;
-    m_Bdac_repeat = true;
+    m_var_changed["m_dac_repeat"] = true;
 }
 
 auto CStreamSettings::getDACRepeat() -> DACRepeat{
@@ -682,7 +788,7 @@ auto CStreamSettings::getDACPort() -> std::string{
 
 auto CStreamSettings::setDACPort(std::string _port) -> void{
     m_dac_port = _port;
-    m_Bdac_port = true;
+    m_var_changed["m_dac_port"] = true;
 }
 
 auto CStreamSettings::getDACMemoryUsage() -> int64_t{
@@ -691,14 +797,50 @@ auto CStreamSettings::getDACMemoryUsage() -> int64_t{
 
 auto CStreamSettings::setDACMemoryUsage(int64_t _value) -> void{
     m_dac_memoryUsage = _value;
-    m_Bdac_memoryUsage = true;
+    m_var_changed["m_dac_memoryUsage"] = true;
 }
 
 auto CStreamSettings::setDACRepeatCount(uint32_t _value) -> void{
     m_dac_repeatCount = _value;
-    m_Bdac_repeatCount = true;
+    m_var_changed["m_dac_repeatCount"] = true;
 }
 
 auto CStreamSettings:: getDACRepeatCount() -> uint32_t{
     return m_dac_repeatCount;
+}
+
+auto CStreamSettings::getLoopbackTimeout() -> uint32_t{
+    return m_loopback_timeout;
+}
+
+auto CStreamSettings::setLoopbackTimeout(uint32_t value) -> void{
+    m_loopback_timeout = value;
+    m_var_changed["m_loopback_timeout"] = true;    
+}
+
+auto CStreamSettings::getLoopbackSpeed() -> int32_t{
+    return m_loopback_speed_Hz;
+}
+
+auto CStreamSettings::setLoopbackSpeed(int32_t value) -> void{
+    m_loopback_speed_Hz = value;
+    m_var_changed["m_loopback_speed_Hz"] = true; 
+}
+
+auto CStreamSettings::getLoopbackMode() -> LOOPBACKMode{
+    return m_loopback_mode;
+}
+
+auto CStreamSettings::setLoopbackMode(LOOPBACKMode mode) -> void{
+    m_loopback_mode = mode;
+    m_var_changed["m_loopback_mode"] = true; 
+}
+
+auto CStreamSettings::getLoopbackChannels() -> LOOPBACKChannels{
+    return m_loopback_channels;
+}
+
+auto CStreamSettings::setLoopbackChannels(LOOPBACKChannels channels) -> void{
+    m_loopback_channels = channels;
+    m_var_changed["m_loopback_channels"] = true; 
 }

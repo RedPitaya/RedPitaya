@@ -99,6 +99,7 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
     m_Map = reinterpret_cast<GeneratorMapT *>(Map);
     m_Buffer1 = static_cast<uint8_t *>(m_Buffer);
     m_Buffer2 = static_cast<uint8_t *>(m_Buffer) + dac_buf_size * 2;
+    memset(m_Buffer,0,dac_buf_size * 4);
 }
 
 CGenerator::~CGenerator()
@@ -223,28 +224,25 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
     auto status = m_Map->ch_dma_status;
     if (m_BufferNumber[0] == 0){
         if (status & 0x00030000 && status & 0x00000003){
-            //fprintf(stderr,"Write 2 = 0x%X\n", status);
-            //printReg();
-	        if (_buffer1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
-            if (_buffer2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
+            // printReg();
+	        if (_buffer1 && _size_ch1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
+            if (_buffer2 && _size_ch2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
             m_BufferNumber[0] = 1;
-            int command = 1 << 7 | 1 << 15;
+            int command =  1 << 7  |  1 << 15;
             setRegister(m_Map,&(m_Map->dma_control),command);
             ret = true;
         }
     }else{
         if (status & 0x000C0000 && status & 0x0000000C){
-            //fprintf(stderr,"Write 1 = 0x%X\n", status);
-            //printReg();
-            if (_buffer1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
-            if (_buffer2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
+            // printReg();
+            if (_buffer1 && _size_ch1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
+            if (_buffer2 && _size_ch2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
             m_BufferNumber[0] = 0;
-            int command = 1 << 6  | 1 <<  14;
+            int command =  1 << 6  |  1 << 14;
             setRegister(m_Map,&(m_Map->dma_control),command);
             ret = true;
         }
     }
-    //fprintf(stderr,"Skip write  = 0x%X\n", status);
     return ret;
 }
 

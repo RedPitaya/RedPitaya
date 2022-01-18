@@ -12,7 +12,7 @@ public:
     enum class Commands{
         BEGIN_SEND_SETTING,
         END_SEND_SETTING,
-        SETTING_GET_SUCCES,
+        SETTING_GET_SUCCESS,
         SETTING_GET_FAIL,
         REQUEST_SERVER_SETTINGS,
         STOP_STREAMING,
@@ -39,7 +39,14 @@ public:
         SERVER_DAC_STOPPED_SD_BROKEN,
         SERVER_DAC_STOPPED_SD_MISSING,
         SERVER_DAC_STARTED,
-        SERVER_DAC_STARTED_SD
+        SERVER_DAC_STARTED_SD,
+
+        // Loopback commands
+        SERVER_LOOPBACK_START,
+        SERVER_LOOPBACK_STOP,
+        SERVER_LOOPBACK_STARTED,
+        SERVER_LOOPBACK_STOPPED,
+        SERVER_LOOPBACK_BUSY        // Streaming server in active streaming mode        
     };
 
     static std::shared_ptr<CNetConfigManager> instance()

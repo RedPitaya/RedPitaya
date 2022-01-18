@@ -20,7 +20,9 @@ public:
         CLIENT_CONNECTED,
         CLIENT_DISCONNECTED,
         START_DAC_STREAMING,
-        STOP_DAC_STREAMING
+        STOP_DAC_STREAMING,
+        START_LOOPBACK_MODE,
+        STOP_LOOPBACK_MODE
     };
     ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode, std::string host,std::string port);
     ~ServerNetConfigManager();
@@ -44,6 +46,10 @@ public:
     auto sendDACServerStoppedSDBroken() -> bool;
     auto sendDACServerStoppedSDMissingFile() -> bool;
 
+    auto sendServerStartedLoopBackMode() -> bool;
+    auto sendServerStoppedLoopBackMode() -> bool;
+    auto sendStreamServerBusy() -> bool;
+    
     auto addHandlerError(std::function<void(ServerNetConfigManager::Errors)> _func) -> void;
     auto addHandler(ServerNetConfigManager::Events event, std::function<void()> _func) -> void;
 

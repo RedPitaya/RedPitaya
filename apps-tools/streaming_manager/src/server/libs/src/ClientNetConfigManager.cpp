@@ -140,7 +140,7 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         g_client_mutex.lock();
         sender->m_current_state = Clients::States::NORMAL;
         if (sender->m_client_settings.isSetted()){
-            sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
+            sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCESS);
         }else{
             sender->m_client_settings.reset();
             sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
@@ -149,7 +149,7 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
 
     }
 
-    if (c== CNetConfigManager::Commands::SETTING_GET_SUCCES){
+    if (c== CNetConfigManager::Commands::SETTING_GET_SUCCESS){
         m_callbacksStr.emitEvent(static_cast<int>(Events::SUCCESS_SEND_CONFIG),sender->m_manager->getHost());
     }
 
@@ -217,6 +217,18 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_MISSING),sender->m_manager->getHost());
     }
 
+    // Loopback commands
+    if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_STARTED){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_STARTED),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_STOPPED){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_STOPPED),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_BUSY){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_BUSY),sender->m_manager->getHost());
+    }
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
@@ -311,6 +323,11 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
         if (!_client->m_manager->sendData("dac_speed",static_cast<uint32_t>(getDACHz()),_async)) return false;
 
+        if (!_client->m_manager->sendData("loopback_timeout",static_cast<uint32_t>(getLoopbackTimeout()),_async)) return false;
+        if (!_client->m_manager->sendData("loopback_speed",static_cast<uint32_t>(getLoopbackSpeed()),_async)) return false;
+        if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(getLoopbackMode()),_async)) return false;
+        if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(getLoopbackChannels()),_async)) return false;
+
         if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;
     }
@@ -397,4 +414,25 @@ auto ClientNetConfigManager::getModeByHost(std::string host) -> asionet_broadcas
         return it->operator->()->m_mode;
     }
     return asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
+}
+
+
+auto ClientNetConfigManager::sendLoopbackStart(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_START);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendLoopbackStop(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_STOP);
+    }
+    return false;
 }

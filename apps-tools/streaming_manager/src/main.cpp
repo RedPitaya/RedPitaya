@@ -101,6 +101,12 @@ CIntParameter		ss_dac_port(		"SS_DAC_PORT_NUMBER", 	CBaseParameter::RW, 8903,0,	
 CIntParameter		ss_dac_memory(		"SS_DAC_MEMORYCACHE", 	CBaseParameter::RW, 1024 * 1024,0,	0, 1024 * 1024 * 64);
 CIntParameter		ss_dac_status( 		"SS_DAC_STATUS",		CBaseParameter::RW, 1 ,0,	0,100);
 
+CIntParameter    	ss_lb_mode(			"SS_LB_MODE",		    CBaseParameter::RW,  0,0,   0,100);
+CIntParameter		ss_lb_speed(		"SS_LB_SPEED", 			CBaseParameter::RW, -1,0,	-1,DAC_FREQUENCY);
+CIntParameter		ss_lb_timeout(		"SS_LB_TIMEOUT",	 	CBaseParameter::RW,  1,0,	0,1);
+CIntParameter		ss_lb_channels(		"SS_LB_CHANNELS",		CBaseParameter::RW,  1,0,	0,1);
+
+
 CStreamingApplication  *s_app = nullptr;
 CStreamingManager::Ptr 	s_manger = nullptr;
 COscilloscope::Ptr 		osc = nullptr;
@@ -362,6 +368,12 @@ void updateUI(){
 	ss_rate.SendValue(g_serverNetConfig->getDecimation());
 	ss_samples.SendValue(g_serverNetConfig->getSamples());
 	ss_calib.SendValue(g_serverNetConfig->getCalibration() ? 2 : 1);
+	
+	ss_lb_channels.SendValue(g_serverNetConfig->getLoopbackChannels());
+	ss_lb_mode.SendValue(g_serverNetConfig->getLoopbackMode());
+	ss_lb_timeout.SendValue(g_serverNetConfig->getLoopbackTimeout());
+	ss_lb_speed.SendValue(g_serverNetConfig->getLoopbackSpeed());
+	
 }
 
 void setConfig(bool _force){
@@ -587,6 +599,35 @@ void setConfig(bool _force){
 		needUpdate = true;
 	}
 
+
+	if (ss_lb_channels.IsNewValue() || _force)
+	{
+		ss_lb_channels.Update();
+		g_serverNetConfig->setLoopbackChannels((CStreamSettings::LOOPBACKChannels)ss_lb_channels.Value());
+		needUpdate = true;
+	}
+
+	if (ss_lb_mode.IsNewValue() || _force)
+	{
+		ss_lb_mode.Update();
+		g_serverNetConfig->setLoopbackMode((CStreamSettings::LOOPBACKMode)ss_lb_mode.Value());
+		needUpdate = true;
+	}
+
+	if (ss_lb_speed.IsNewValue() || _force)
+	{
+		ss_lb_speed.Update();
+		g_serverNetConfig->setLoopbackSpeed(ss_lb_speed.Value());
+		needUpdate = true;
+	}
+
+	if (ss_lb_timeout.IsNewValue() || _force)
+	{
+		ss_lb_timeout.Update();
+		g_serverNetConfig->setLoopbackTimeout(ss_lb_timeout.Value());
+		needUpdate = true;
+	}
+	
 	if (needUpdate){
 		saveConfigInFile();
 	}
