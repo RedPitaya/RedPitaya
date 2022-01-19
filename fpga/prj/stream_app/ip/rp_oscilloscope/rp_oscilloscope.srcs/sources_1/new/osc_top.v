@@ -178,7 +178,8 @@ wire [S_AXIS_DATA_BITS-1:0] dec_indata;
 wire [S_AXIS_DATA_BITS-1:0] dec_tdata;    
 wire                        dec_tvalid;   
 wire                        dec_tready;   
-wire                        dec_select;
+wire                        ramp_en;
+wire                        loopback_en;
 
 wire [S_AXIS_DATA_BITS-1:0] trig_tdata;    
 wire                        trig_tvalid;   
@@ -217,7 +218,8 @@ begin
 end
 
 assign loopback_sel = cfg_loopback[8-1:0];
-assign dec_select   = (CHAN_NUM == 1) ? cfg_loopback[8] : cfg_loopback[12];
+assign ramp_en      = (CHAN_NUM == 1) ? cfg_loopback[8] : cfg_loopback[12];
+assign loopback_en  = (CHAN_NUM == 1) ? cfg_loopback[0] : cfg_loopback[ 4];
 
 osc_filter i_dfilt (
    // ADC
@@ -264,7 +266,8 @@ osc_calib #(
 // Name : Decimation
 // 
 ////////////////////////////////////////////////////////////
-assign dec_indata = dec_select ? ramp_sig : calib_tdata;    
+assign dec_indata = ramp_en     ? ramp_sig     : 
+                   (loopback_en ? s_axis_tdata : calib_tdata);    
 
 osc_decimator #(
   .AXIS_DATA_BITS (S_AXIS_DATA_BITS), 

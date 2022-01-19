@@ -131,6 +131,7 @@ localparam SETDEC_CHB           = 8'h4C;
 localparam ERRS_RST             = 8'h50;
 localparam ERRS_CNT_CHA         = 8'h54;
 localparam ERRS_CNT_CHB         = 8'h58;
+localparam LOOPBACK_EN          = 8'h5C;
 
 localparam DIAG_REG_ADDR1     = 8'h60;
 localparam DIAG_REG_ADDR2     = 8'h64;
@@ -189,6 +190,7 @@ wire [31:0]                     reg_wr_data;
 reg  [31:0]                     reg_rd_data;
 
 reg  [31:0]                     errs_cnt_cha, errs_cnt_chb;
+reg                             cfg_loopback_cha, cfg_loopback_chb;
 
 
 reg ctrl_cha;
@@ -359,6 +361,7 @@ begin
 
     if ((reg_addr[8-1:0] == SETDEC_CHA        ) && (reg_wr_we == 1)) begin cfg_cha_setdec     <= reg_wr_data[15:0]; end    
     if ((reg_addr[8-1:0] == SETDEC_CHB        ) && (reg_wr_we == 1)) begin cfg_chb_setdec     <= reg_wr_data[15:0]; end 
+    if ((reg_addr[8-1:0] == LOOPBACK_EN       ) && (reg_wr_we == 1)) begin cfg_loopback_cha   <= reg_wr_data[0];      cfg_loopback_chb <= reg_wr_data[4]; end   
   end
 end 
 
@@ -421,7 +424,8 @@ dac_top #(
   .dac_data_o       (dac_data_cha_o),
   .diag_reg         (diag_reg),
   .diag_reg2        (diag_reg2),
-  
+  .loopback_en      (cfg_loopback_cha),
+
   .m_axi_dac_arid_o     (m_axi_dac1_arid_o),
   .m_axi_dac_araddr_o   (m_axi_dac1_araddr_o),
   .m_axi_dac_arlen_o    (m_axi_dac1_arlen_o),
@@ -485,6 +489,7 @@ dac_top #(
   .dac_buf1_adr     (cfg_buf1_adr_chb),
   .dac_buf2_adr     (cfg_buf2_adr_chb),
   .dac_data_o       (dac_data_chb_o),
+  .loopback_en      (cfg_loopback_chb),
   
   .m_axi_dac_arid_o     (m_axi_dac2_arid_o),
   .m_axi_dac_araddr_o   (m_axi_dac2_araddr_o),

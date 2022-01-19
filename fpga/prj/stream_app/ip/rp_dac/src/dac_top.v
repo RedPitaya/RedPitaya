@@ -56,6 +56,8 @@ module dac_top
   output [32-1:0]                         diag_reg2,
   output [32-1:0]                         diag_reg3,
   output [32-1:0]                         diag_reg4,
+  input  wire                             loopback_en, 
+ 
   //
   output wire [3:0]                       m_axi_dac_arid_o     , // read address ID
   output wire [M_AXI_DAC_ADDR_BITS-1: 0]  m_axi_dac_araddr_o   , // read address
@@ -102,10 +104,13 @@ wire                        event_sts_stop;
 wire                        event_sts_start;
 wire                        event_sts_reset;
 wire                        ctl_trg;
-wire dac_rvalid;           
+wire                        dac_rvalid;           
 wire [DAC_DATA_BITS-1:0]    dac_data_raw;
+wire [DAC_DATA_BITS-1:0]    dac_calibrated;
+
 wire set_zero = dac_conf[OUT_ZERO];
-  
+
+assign dac_data_o = loopback_en ? dac_data_raw : dac_calibrated;
 ////////////////////////////////////////////////////////////
 // Name : DMA S2MM
 // 
@@ -168,7 +173,7 @@ dac_calib #(
   .dac_clk_i      (clk),
   .dac_rstn_i     (rst_n),
 
-  .dac_o          (dac_data_o),
+  .dac_o          (dac_calibrated),
   .dac_rdata_i    (dac_data_raw),
   .dac_rvalid_i   (dac_rvalid),
   // conf
