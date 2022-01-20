@@ -58,11 +58,14 @@ public:
     auto isLocalMode() -> bool;
     bool convertToCSV(std::string _file_name,int32_t start_seg, int32_t end_seg,std::string _prefix);
     void stopWriteToCSV();
-    int passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode,uint32_t _adc_bits,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
+    int  passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode,uint32_t _adc_bits,const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution ,uint64_t _id);
     CStreamingManager::Callback notifyPassData;
     CStreamingManager::Callback notifyStop;
     CStreamingManager::CallbackVoid notifyPassDataReset;
     
+    auto getNetworkLost() -> uint64_t;
+    auto getFileLost() -> uint64_t;
+
 private:
     CFileLogger::Ptr  m_fileLogger;
     std::atomic_int   m_ReadyToPass;

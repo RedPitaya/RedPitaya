@@ -28,6 +28,9 @@ public:
 
     void DumpToFile();
 
+    auto getNetworkLost() -> uint64_t;
+    auto getFileLost() -> uint64_t;
+
 private:
     
     CFileLogger(const CFileLogger &) = delete;

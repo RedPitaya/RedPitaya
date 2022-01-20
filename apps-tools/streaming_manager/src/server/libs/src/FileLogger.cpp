@@ -85,6 +85,14 @@ void CFileLogger::AddMetric(CFileLogger::Metric _metric, uint64_t _value){
     }
 }
 
+auto CFileLogger::getNetworkLost() -> uint64_t{
+    return m_udpLostRate;
+}
+
+auto CFileLogger::getFileLost() -> uint64_t{
+    return m_fileSystemLostRate;
+}
+
 void CFileLogger::AddMetricId(uint64_t _id){
     if (_id != 0 && m_old_id != 0)
         if (_id != (m_old_id + 1))

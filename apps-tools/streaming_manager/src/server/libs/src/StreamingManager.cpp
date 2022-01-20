@@ -263,6 +263,20 @@ uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_si
     return dest;
 }
 
+auto CStreamingManager::getNetworkLost() -> uint64_t{
+    if (m_fileLogger != nullptr) {
+        return m_fileLogger->getNetworkLost();
+    }
+    return 0;
+}
+
+auto CStreamingManager::getFileLost() -> uint64_t{
+    if (m_fileLogger != nullptr) {
+        return m_fileLogger->getFileLost();
+    }
+    return 0;
+}
+
 
 int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id){
 

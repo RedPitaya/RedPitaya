@@ -1,5 +1,6 @@
 #include "test_helper.h"
 #include <chrono>
+#include <math.h>
 
 ClientOpt::Options g_hoption;
 std::atomic<bool>  g_helper_exit_flag;
@@ -9,7 +10,10 @@ std::mutex                            g_statMutex;
 long long int                         g_timeBegin;
 std::map<std::string,long long int>   g_timeHostBegin;
 std::map<std::string,uint64_t>        g_BytesCount;
+std::map<std::string,uint64_t>        g_BytesCountTotal;
 std::map<std::string,uint64_t>        g_lostRate;
+std::map<std::string,uint64_t>        g_lostRateTotal;
+
 std::map<std::string,uint64_t>        g_packCounter_ch1;
 std::map<std::string,uint64_t>        g_packCounter_ch2;
 
@@ -19,86 +23,17 @@ auto setOptions(ClientOpt::Options option) -> void{
 }
 
 
-auto getHostConfig(std::string host) -> bool{
-
-    std::list<std::string> connected_hosts;
-    ClientNetConfigManager cl("",false);
-    std::atomic<int>   connect_counter;
-    std::atomic<int>   get_counter;
-
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_CONNECTED, [&](std::string host){
-        const std::lock_guard<std::mutex> lock(g_helper_mutex);
-        connected_hosts.push_back(host);
-        connect_counter--;
-    });
-
-    cl.addHandler(ClientNetConfigManager::Events::GET_NEW_SETTING,[&](std::string host){
-        const std::lock_guard<std::mutex> lock(g_helper_mutex);
-
-        CStreamSettings* s = cl.getLocalSettingsOfHost(host);
-        auto str = s->StringStreaming();
-        std::cout << "========================================================\n";
-        std::cout << "Host:\t\t\t" << host.c_str() << "\n";
-        std::cout << str;
-        std::cout <<   "========================================================\n";
-
-        get_counter--;
-    });
-
-
-    cl.addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
-        const std::lock_guard<std::mutex> lock(g_helper_mutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
-            connect_counter--;
-            get_counter--;
-        }
-
-        if (errors == ClientNetConfigManager::Errors::CONNECT_TIMEOUT) {
-            std::cerr << getTS(": ") << "Connect timeout: " << host.c_str() << "\n";
-            connect_counter--;
-        }
-    });
-
-    std::vector<std::string> hosts;
-    hosts.push_back(host);
-
-    connect_counter = hosts.size();
-    cl.connectToServers(hosts,g_hoption.ports.config_port != "" ? g_hoption.ports.config_port : ClientOpt::Ports().config_port);
-
-    while (connect_counter>0){
-        sleepMs(100);
-        if (g_helper_exit_flag) return false;
-    }
-
-    
-    get_counter = connected_hosts.size();
-    for(auto &host:connected_hosts) {
-        if (!cl.requestConfig(host)){
-            get_counter--;
-        }
-    }
-
-    while (get_counter>0){
-        sleepMs(100);
-        if (g_helper_exit_flag) return false;
-    }
-    return true;
-}
-
-auto helperSIGHandler() -> void{
-    g_helper_exit_flag = true;
-}
-
-
 auto resetStreamingCounter() -> void{
     const std::lock_guard<std::mutex> lock(g_statMutex);
     g_timeBegin = 0;
     g_timeHostBegin.clear();
     g_BytesCount.clear();
+    g_lostRate.clear();
+    g_lostRateTotal.clear();
+    g_BytesCountTotal.clear();
 }
 
-auto addStatisticSteaming(std::string &host,uint64_t bytesCount) -> void{
+auto addStatisticSteaming(std::string &host,uint64_t bytesCount,uint64_t samp_ch1,uint64_t samp_ch2,uint64_t lost,uint64_t networkLost,uint64_t fileLost) -> void{
     const std::lock_guard<std::mutex> lock(g_statMutex);
 
     if (g_timeHostBegin.count(host) == 0){
@@ -108,6 +43,48 @@ auto addStatisticSteaming(std::string &host,uint64_t bytesCount) -> void{
     }
 
     g_BytesCount[host] += bytesCount;
+    g_BytesCountTotal[host] += bytesCount;
+}
+
+auto createStr(std::string str,int len) -> std::string {
+    std::string s(len, ' ');
+    for(int i = 0 ; i < str.length() && i < len; i++){
+        s[i] = str[i];
+    }
+    return s;
+}
+
+auto convertBtoS(u_int64_t value) -> std::string {
+    double d = value;
+    std::string s = "";
+    if (value >= 1024 * 1024) {
+        d = round(((double)value * 1000.0) / (1024 * 1024)) / 1000;
+        s =  to_string_with_precision(d,3) + " Mb";
+    } else if (value >= 1024){
+        d = round(((double)value * 1000.0) / (1024)) / 1000;
+        s =  to_string_with_precision(d,3) + " kb";
+    }else  {
+        s =  std::to_string(value) + " b";
+    }
+    return s;
+}
+
+auto convertBtoSpeed(u_int64_t value,uint64_t time) -> std::string {
+    double d = value;
+    double t = time;
+    t = t / 1000;
+    d = d / t;
+    std::string s = "";
+    if (value >= 1024 * 1024) {
+        d = round(((double)d * 1000.0) / (1024 * 1024)) / 1000;
+        s =  to_string_with_precision(d,3) + " MB/s";
+    } else if (value >= 1024){
+        d = round(((double)d * 1000.0) / (1024)) / 1000;
+        s =  to_string_with_precision(d,3) + " kB/s";
+    }else  {
+        s =  std::to_string(d) + " B/s";
+    }
+    return s;
 }
 
 auto printStatisitc(bool force) -> void{
@@ -142,11 +119,17 @@ auto printStatisitc(bool force) -> void{
         // g_BytesCount[host]  = 0;
         // g_lostRate[host]  = 0;
         if (keys.size() > 0){
+            std::cout << "\n" << getTS() << "\n";
             std::cout << "===========================================================================================\n";
-            std::cout << "Host              |                                                                        \n";
+            std::cout << "Host              | Bytes all         | Bandwidth         |                                \n";
 
             for(auto const& host: keys){
-                std::cout << host << "\n";
+                auto bw = convertBtoSpeed(g_BytesCount[host],value.count() - g_timeHostBegin[host]);
+                std::cout << createStr(host,18) << "|";
+                std::cout << " " << createStr(convertBtoS(g_BytesCountTotal[host]),18) << "|";
+                std::cout << " " << createStr(bw,18) << "|";
+                std::cout << "\n";
+                g_BytesCount[host] = 0;
                 g_timeHostBegin[host] = value.count();
             }
             std::cout << "===========================================================================================\n";

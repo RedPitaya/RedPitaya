@@ -170,7 +170,6 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
         sleepMs(100);
         if (g_rexit_flag) return false;
     }
-
     for(auto &host:connected_hosts) {
         switch (cl.getModeByHost(host)) {
             case asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER:
@@ -243,6 +242,7 @@ auto startStreaming(ClientNetConfigManager &cl,const std::list<std::string> &mas
             g_rstart_counter--;
         }
     }
+
     while (g_rstart_counter>0){
         sleepMs(100);
         if (g_rexit_flag) return false;

@@ -18,7 +18,7 @@ ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings
 
 ClientNetConfigManager::~ClientNetConfigManager(){
     for(auto &cli:m_clients){
-        cli->m_manager = nullptr;
+        cli->m_manager->stopAsioNet();
     }
 }
 
@@ -93,7 +93,7 @@ auto ClientNetConfigManager::addHandler(ClientNetConfigManager::Events event, st
 
 auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,std::string port) -> void{
     m_clients.clear();
-    for(std::string host:_hosts){
+    for(std::string& host:_hosts){
         auto cl = std::make_shared<Clients>();
         cl->m_manager = std::make_shared<CNetConfigManager>();
         cl->m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;

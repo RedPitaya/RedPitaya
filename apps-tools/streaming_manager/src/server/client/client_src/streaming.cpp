@@ -25,7 +25,6 @@ auto stopStreaming(std::string host) -> void;
 
 void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string host){
     //std::cout << "Get data: " <<  _size << "\n";
-//    g_BytesCount[host] += _size;
     uint8_t *ch1 = nullptr;
     uint8_t *ch2 = nullptr;
     size_t   size_ch1 = 0;
@@ -38,9 +37,6 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     uint32_t adc_bits = 0;
 
     asionet::CAsioNet::ExtractPack(buff,_size, id, lostRate,oscRate, resolution, adc_mode , adc_bits, ch1, size_ch1, ch2 , size_ch2);
-//    g_packCounter_ch1[host] += size_ch1 / (resolution == 16 ? 2 : 1);
-//    g_packCounter_ch2[host] += size_ch2 / (resolution == 16 ? 2 : 1);
-//    g_lostRate[host] += lostRate;
     
   //  std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
@@ -50,43 +46,15 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     delete [] ch1;
     delete [] ch2;
     if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
-        addStatisticSteaming(host,_size);
+        uint64_t sempCh1 = size_ch1 / (resolution == 16 ? 2 : 1);
+        uint64_t sempCh2 = size_ch2 / (resolution == 16 ? 2 : 1);
+        auto net   = g_manger[host]->getNetworkLost();
+        auto flost = g_manger[host]->getFileLost();
+        addStatisticSteaming(host,_size,sempCh1,sempCh2,lostRate, net, flost);
     }
-    // std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-    // auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
-    // auto value = curTime.time_since_epoch();
-    //     std::cout << value.count() << "\n";
-    //     std::cout <<  g_timeBegin << "\n";
-    // if ((value.count() - g_timeBegin[host]) >= 5000) {
-    //     const std::lock_guard<std::mutex> lock(g_smutex);
-    //     uint64_t bw = g_BytesCount[host];
-    //     std::string pref = " ";
-    //     if (g_BytesCount[host]  > (1024 * 5)) {
-    //         bw = g_BytesCount[host]  / (1024 * 5);
-    //         pref = " ki";
-    //     }
-
-    //     if (g_BytesCount[host]   > (1024 * 1024 * 5)) {
-    //         bw = g_BytesCount[host]   / (1024 * 1024 * 5);
-    //         pref = " Mi";
-    //     }
-    //     if (g_soption.verbous)
-    //         std::cout << time_point_to_string(timeNow) << "\tHOST IP:" << host << ": Bandwidth:\t" << bw <<  pref <<"B/s\tData count ch1:\t" << g_packCounter_ch1[host]
-    //         << "\tch2:\t" << g_packCounter_ch2[host]  <<  "\tLost:\t" << g_lostRate[host]  << "\n";
-    //     g_BytesCount[host]  = 0;
-    //     g_lostRate[host]  = 0;
-    //     g_timeBegin[host] = value.count();
-    // }
 }
 
 auto runClient(std::string  host,StateRunnedHosts state) -> void{
-    //std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-    //g_timeBegin[host] = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow).time_since_epoch().count();
-
-    // g_packCounter_ch1[host] = 0;
-    // g_packCounter_ch2[host] = 0;
-    // g_lostRate[host] = 0;
-    // g_BytesCount[host] = 0;
     g_terminate[host] = false;
     std::atomic<bool>  err_exit_flag(false);
     std::atomic<bool>  err_local_flag(false);
@@ -184,12 +152,6 @@ auto startStreaming(ClientOpt::Options &option) -> void{
     if (g_soption.verbous)
         std::cout << getTS(": ") << "Free disk space: "<< size / (1024 * 1024) << "Mb \n";
 #endif
-
-    if(g_soption.testmode == ClientOpt::TestMode::ENABLE){
-        for(auto &host:g_soption.hosts) {
-            getHostConfig(host);
-        }
-    }
 
     resetStreamingCounter();
 
