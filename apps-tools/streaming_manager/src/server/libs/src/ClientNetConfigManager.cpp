@@ -364,12 +364,12 @@ auto ClientNetConfigManager::sendSaveToFile(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendStart(std::string host) -> bool{
+auto ClientNetConfigManager::sendStart(std::string host,bool test_mode) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
     if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_STREAMING);
+        return it->operator->()->m_manager->sendData(test_mode ?  CNetConfigManager::Commands::START_STREAMING_TEST : CNetConfigManager::Commands::START_STREAMING);
     }
     return false;
 }
@@ -384,12 +384,12 @@ auto ClientNetConfigManager::sendStop(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendDACStart(std::string host) -> bool{
+auto ClientNetConfigManager::sendDACStart(std::string host,bool test_mode) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
     if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_DAC_STREAMING);
+        return it->operator->()->m_manager->sendData(test_mode ?  CNetConfigManager::Commands::START_DAC_STREAMING_TEST :CNetConfigManager::Commands::START_DAC_STREAMING);
     }
     return false;
 }
@@ -433,6 +433,54 @@ auto ClientNetConfigManager::sendLoopbackStop(std::string host) -> bool{
     });
     if (it != std::end(m_clients)){
         return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_STOP);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendLoopbackDACSpeed(std::string host,int32_t value,bool _async) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        if (!it->operator->()->m_manager->sendData("loopback_speed",static_cast<uint32_t>(value),_async)) return false;
+        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
+        return true;
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendLoopbackMode(std::string host,int32_t value,bool _async) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        if (!it->operator->()->m_manager->sendData("loopback_mode",static_cast<uint32_t>(value),_async)) return false;
+        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
+        return true;
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendLoopbackChannels(std::string host,int32_t value,bool _async) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        if (!it->operator->()->m_manager->sendData("loopback_channels",static_cast<uint32_t>(value),_async)) return false;
+        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
+        return true;
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendLoopbackTimeout(std::string host,int32_t value,bool _async) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        if (!it->operator->()->m_manager->sendData("loopback_timeout",static_cast<uint32_t>(value),_async)) return false;
+        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
+        return true;
     }
     return false;
 }

@@ -18,10 +18,12 @@ class CStreamingApplication
 public:
     CStreamingApplication(CStreamingManager::Ptr _StreamingManager, COscilloscope::Ptr _osc_ch,unsigned short _resolution,int _oscRate, int _channels, int _adc_mode , uint32_t _adc_bits);
     ~CStreamingApplication();
-    void run(std::string _file_name_prefix);
-    void runNonBlock(std::string _file_name_prefix);
-    bool stop(bool wait = true);
-    bool isRun(){return m_isRun;}
+    auto run(std::string _file_name_prefix) -> void;
+    auto runNonBlock(std::string _file_name_prefix) -> void;
+    auto stop(bool wait = true) -> bool;
+    auto isRun() -> bool {return m_isRun;}
+    auto setTestMode(bool mode) -> void;
+    auto setVerbousMode(bool mode) -> void;
 
 private:
     int m_PerformanceCounterPeriod = 10;
@@ -40,6 +42,10 @@ private:
 
     void *m_WriteBuffer_ch1;
     void *m_WriteBuffer_ch2;
+    
+    void *m_testBuffer_ch1;
+    void *m_testBuffer_ch2;
+    
     size_t m_size_ch1;
     size_t m_size_ch2;
     uint64_t         m_lostRate;
@@ -48,10 +54,13 @@ private:
     int              m_adc_mode;
     uint32_t         m_adc_bits;   
   
-    uintmax_t m_BytesCount;
+    uintmax_t        m_BytesCount;
+    bool             m_testMode;
+    bool             m_verbMode;
 
-    void oscWorker();
-    uint32_t passCh(int _bufferIndex, size_t &_size1,size_t &_size2);
-    int  oscNotify(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits,const void *_buffer_ch1, size_t _size_ch1,const void *_buffer_ch2, size_t _size_ch2);
-    void signalHandler(const asio::error_code &_error, int _signalNumber);
+    auto oscWorker() -> void;
+    auto passCh(int _bufferIndex, size_t &_size1,size_t &_size2) -> uint32_t;
+    auto oscNotify(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits,const void *_buffer_ch1, size_t _size_ch1,const void *_buffer_ch2, size_t _size_ch2) -> int;
+    auto signalHandler(const asio::error_code &_error, int _signalNumber) -> void;
+    auto prepareTestBuffers() -> void;
 };

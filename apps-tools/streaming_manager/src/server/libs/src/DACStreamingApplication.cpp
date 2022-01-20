@@ -16,7 +16,9 @@ CDACStreamingApplication::CDACStreamingApplication(CDACStreamingManager::Ptr _st
     mtx(),
     m_ReadyToPass(0),
     m_isRun(false),
-    m_isRunNonBloking(false)
+    m_isRunNonBloking(false),
+    m_testMode(false),
+    m_verbMode(false)
 {
     m_GenThreadRun.test_and_set();
 }
@@ -135,4 +137,12 @@ void CDACStreamingApplication::signalHandler(const asio::error_code &, int _sign
 {
     static_cast<void>(_signalNumber);
     stop(true);
+}
+
+auto CDACStreamingApplication::setTestMode(bool mode) -> void{
+    m_testMode = mode;
+}
+
+auto CDACStreamingApplication::setVerbousMode(bool mode) -> void{
+    m_verbMode = mode;
 }

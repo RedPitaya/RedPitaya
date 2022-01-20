@@ -60,9 +60,9 @@ public:
     auto isServersConnected() -> bool;
     auto sendConfig(std::string host) -> bool;
     auto sendSaveToFile(std::string host) -> bool;
-    auto sendStart(std::string host) -> bool;
+    auto sendStart(std::string host,bool test_mode = false) -> bool;
     auto sendStop(std::string host) -> bool;
-    auto sendDACStart(std::string host) -> bool;
+    auto sendDACStart(std::string host,bool test_mode = false) -> bool;
     auto sendDACStop(std::string host) -> bool;
     auto requestConfig(std::string host) -> bool;
     auto getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode;
@@ -70,6 +70,11 @@ public:
 
     auto sendLoopbackStart(std::string host) -> bool;
     auto sendLoopbackStop(std::string host) -> bool;
+
+    auto sendLoopbackDACSpeed(std::string host,int32_t value,bool _async = true) -> bool;
+    auto sendLoopbackMode(std::string host,int32_t value,bool _async = true) -> bool;
+    auto sendLoopbackChannels(std::string host,int32_t value,bool _async = true) -> bool;
+    auto sendLoopbackTimeout(std::string host,int32_t value,bool _async = true) -> bool;
 
     auto addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string)> _func) -> void;
     auto addHandler(ClientNetConfigManager::Events event, std::function<void(std::string)> _func) -> void;

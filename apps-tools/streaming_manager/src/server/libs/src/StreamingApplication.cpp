@@ -33,11 +33,15 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_Resolution(_resolution),
     m_WriteBuffer_ch1(nullptr),
     m_WriteBuffer_ch2(nullptr),
+    m_testBuffer_ch1(nullptr),
+    m_testBuffer_ch2(nullptr),
     m_oscRate(_oscRate),
     m_channels(_channels),
     m_adc_mode(_adc_mode),
     m_adc_bits(_adc_bits),
-    m_BytesCount(0)
+    m_BytesCount(0),
+    m_testMode(false),
+    m_verbMode(false)
 {
     
     assert(this->m_Resolution == 8 || this->m_Resolution == 16);
@@ -74,6 +78,16 @@ CStreamingApplication::~CStreamingApplication(){
     if (m_WriteBuffer_ch2) {
         free(m_WriteBuffer_ch2);
         m_WriteBuffer_ch2 = nullptr;
+    }
+
+    if (m_testBuffer_ch1) {
+        free(m_testBuffer_ch1);
+        m_testBuffer_ch1 = nullptr;
+    }
+
+    if (m_testBuffer_ch2) {
+        free(m_testBuffer_ch2);
+        m_testBuffer_ch2 = nullptr;
     }
 }
 
@@ -146,9 +160,12 @@ void CStreamingApplication::oscWorker()
     auto value = curTime.time_since_epoch();
 
     long long int timeBegin = value.count();
-    uintmax_t counter = 0;
-    uintmax_t passCounter = 0;
+    // uintmax_t counter = 0;
+    // uintmax_t passCounter = 0;
     uint8_t   skipBuffs = 0;
+    if (m_testMode) {
+        prepareTestBuffers();
+    }
     m_Osc_ch->prepare();
 try{
     while (m_OscThreadRun.test_and_set())
@@ -161,23 +178,31 @@ try{
         if (skipBuffs > 0) { skipBuffs--; continue; }
         if (overFlow > 0) {
             m_lostRate += overFlow;
-            ++passCounter;
+            // ++passCounter;
         }
 #endif
-        oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
-        ++counter;
+        void* passB1 = m_WriteBuffer_ch1;
+        void* passB2 = m_WriteBuffer_ch2;
+        
+        if (m_testMode){
+            passB1 = m_testBuffer_ch1;
+            passB2 = m_testBuffer_ch2;
+        }
 
-        timeNow = std::chrono::system_clock::now();
-        curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
-        value = curTime.time_since_epoch();
-
-          
-        if ((value.count() - timeBegin) >= 5000) {
-            std::cout << "Lost samples: " << m_lostRate  << "\n";
-            counter = 0;
-            m_lostRate = 0;
-            passCounter = 0;
-            timeBegin = value.count();
+        oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, passB1, m_size_ch1, passB2, m_size_ch2);
+        if (m_verbMode){
+            // ++counter;
+            timeNow = std::chrono::system_clock::now();
+            curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
+            value = curTime.time_since_epoch();
+            
+            if ((value.count() - timeBegin) >= 5000) {
+                std::cout << "Lost samples: " << m_lostRate  << "\n";
+                //counter = 0;
+                m_lostRate = 0;
+                // passCounter = 0;
+                timeBegin = value.count();
+            }
         }
 
         if (!m_StreamingManager->isFileThreadWork()){
@@ -293,4 +318,34 @@ void CStreamingApplication::signalHandler(const asio::error_code &_error, int _s
     UNUSED(_error);
     static_cast<void>(_signalNumber);
     stop();
+}
+
+auto CStreamingApplication::setTestMode(bool mode) -> void{
+    m_testMode = mode;
+}
+
+auto CStreamingApplication::setVerbousMode(bool mode) -> void{
+    m_verbMode = mode;
+}
+
+auto CStreamingApplication::prepareTestBuffers() -> void{
+    m_testBuffer_ch1 = aligned_alloc(64, osc_buf_size);
+
+    if (!m_testBuffer_ch1) {
+        std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
+        std::terminate();
+    }
+    
+
+    m_testBuffer_ch2 = aligned_alloc(64, osc_buf_size);
+
+    if (!m_testBuffer_ch2) {
+        std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
+        std::terminate();
+    }
+    uint8_t z = 0;
+    for(uint32_t i = 0; i < osc_buf_size;i++,z++){
+        ((uint8_t*)m_testBuffer_ch1)[i] = z;
+        ((uint8_t*)m_testBuffer_ch2)[i] = z;
+    }
 }

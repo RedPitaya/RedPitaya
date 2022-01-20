@@ -93,12 +93,20 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
         m_callbacks.emitEvent(static_cast<int>(Events::START_STREAMING));
     }
 
+    if (c == CNetConfigManager::Commands::START_STREAMING_TEST){
+        m_callbacks.emitEvent(static_cast<int>(Events::START_STREAMING_TEST));
+    }
+
     if (c == CNetConfigManager::Commands::STOP_STREAMING){
         m_callbacks.emitEvent(static_cast<int>(Events::STOP_STREAMING));
     }
 
     if (c == CNetConfigManager::Commands::START_DAC_STREAMING){
         m_callbacks.emitEvent(static_cast<int>(Events::START_DAC_STREAMING));
+    }
+
+    if (c == CNetConfigManager::Commands::START_DAC_STREAMING_TEST){
+        m_callbacks.emitEvent(static_cast<int>(Events::START_DAC_STREAMING_TEST));
     }
 
     if (c == CNetConfigManager::Commands::STOP_DAC_STREAMING){

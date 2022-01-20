@@ -34,11 +34,11 @@
 
 
 
-void StartServer();
+void StartServer(bool testMode);
 void StopServer(int x);
 void StopNonBlocking(int x);
 
-auto startDACServer() -> void;
+auto startDACServer(bool testMode) -> void;
 auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void;
 auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void;
 
@@ -164,7 +164,11 @@ int rp_app_init(void)
 			});
 
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING,[g_serverNetConfig](){
-				StartServer();
+				StartServer(false);
+			});
+
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING_TEST,[g_serverNetConfig](){
+				StartServer(true);
 			});
 
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[g_serverNetConfig](){
@@ -172,7 +176,11 @@ int rp_app_init(void)
 			});
 
 			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[g_serverNetConfig](){
-				startDACServer();
+				startDACServer(false);
+			});
+
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING_TEST,[g_serverNetConfig](){
+				startDACServer(true);
 			});
 
 		}catch (std::exception& e)
@@ -644,7 +652,7 @@ void UpdateParams(void)
 		{
 			ss_start.Update();
 			if (ss_start.Value() == 1){
-				StartServer();
+				StartServer(false);
 			}else{
 				StopNonBlocking(0);
 			}
@@ -654,7 +662,7 @@ void UpdateParams(void)
 		{
 			ss_dac_start.Update();
 			if (ss_dac_start.Value() == 1){
-				startDACServer();
+				startDACServer(false);
 			}else{
 				stopDACNonBlocking(CDACStreamingManager::NR_STOP);
 			}
@@ -683,7 +691,7 @@ void OnNewSignals(void)
 
 
 
-void StartServer(){
+void StartServer(bool testMode){
 	// Search oscilloscope
 
 	try{
@@ -857,6 +865,8 @@ void StartServer(){
 
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
+		s_app->setTestMode(testMode);
+
 		ss_status.SendValue(1);
 		
 		char time_str[40];
@@ -930,7 +940,7 @@ void StopServer(int x){
 }
 
 
-auto startDACServer() -> void{
+auto startDACServer(bool testMode) -> void{
     if (!g_serverNetConfig) return;
 	gen = nullptr;
 	try{
@@ -1050,7 +1060,7 @@ auto startDACServer() -> void{
 
 
 		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
-		
+		g_dac_app->setTestMode(testMode);		
 
 		g_dac_app->runNonBlock();
 		if (g_dac_manger->isLocalMode()){

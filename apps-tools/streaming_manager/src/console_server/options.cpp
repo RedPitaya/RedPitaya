@@ -87,14 +87,15 @@ auto ClientOpt::usage(char const* progName) -> void{
         name = arr[arr.size()-1];
     const char *format =
                 "Usage: \n"
-                "\t%s [-b] [-f PATH] [-p PORT] [-s PORT]\n"
-                "\t%s [--background] [--file=PATH] [--port=PORT] [--search_port=PORT]\n"
+                "\t%s [-b] [-f PATH] [-p PORT] [-s PORT] [-v]\n"
+                "\t%s [--background] [--file=PATH] [--port=PORT] [--search_port=PORT] [--verbose]\n"
                 "\n"
                 "\t--background          -b        Run service in background.\n"
                 "\t--file=PATH           -f FILE   Path to configuration file.\n"
                 "\t                                By default uses the config file /root/.streaming_config.\n"
                 "\t--port=PORT           -p PORT   Port for configuration server (Default: 8901).\n";
                 "\t--search_port=PORT    -s PORT   Port for broadcast (Default: 8902).\n"
+                "\t--verbose             -v        Displays information.\n"
                 "\n"
                 "\t Example:\n"
                 "\t\t%s -b -f /root/.streaming_config_new\n";
@@ -133,9 +134,9 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                 break;
             }
 
-            // case 'v':
-            //     opt.verbose = true;
-            //     break;
+            case 'v':
+                opt.verbose = true;
+                break;
 
             case 's': {
                 int config_port = 0;

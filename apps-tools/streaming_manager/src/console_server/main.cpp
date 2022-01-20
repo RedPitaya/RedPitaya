@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
 
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
+    bool verbMode = opt.verbose;
     if (opt.background){
         FILE *fp= NULL;
         pid_t process_id = 0;
@@ -185,24 +186,34 @@ int main(int argc, char *argv[])
 		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
         con_server->startBroadcast(model, brchost,opt.broadcast_port);
 
-        con_server->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[con_server](){
+        con_server->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[con_server,verbMode](){
             std::lock_guard<std::mutex> lock(g_print_mtx);
-            fprintf(stdout, "Get new settings\n");
-            fprintf(stdout,"%s",con_server->String().c_str());
-            RP_LOG (LOG_INFO,"Get new settings\n");
-            RP_LOG (LOG_INFO,"%s",con_server->String().c_str());
+            if (verbMode){
+                fprintf(stdout, "Get new settings\n");
+                fprintf(stdout,"%s",con_server->String().c_str());
+                RP_LOG (LOG_INFO,"Get new settings\n");
+                RP_LOG (LOG_INFO,"%s",con_server->String().c_str());
+            }
         });
 
-        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING,[con_server](){
-            startServer(con_server);
+        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING,[con_server,verbMode](){
+            startServer(con_server,verbMode,false);
+        });
+
+        con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[con_server,verbMode](){
+            startDACServer(con_server,verbMode,false);
+        });
+
+        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING_TEST,[con_server,verbMode](){
+            startServer(con_server,verbMode,true);
+        });
+
+        con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING_TEST,[con_server,verbMode](){
+            startDACServer(con_server,verbMode,true);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[](){
             stopNonBlocking(0);
-        });
-
-        con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[con_server](){
-            startDACServer(con_server);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::STOP_DAC_STREAMING,[](){
@@ -215,9 +226,10 @@ int main(int argc, char *argv[])
         RP_LOG (LOG_ERR,"Error: Init ServerNetConfigManager() %s\n",e.what());
         exit(EXIT_FAILURE);
     }
-
-    fprintf(stdout,"streaming-server started\n");
-    RP_LOG (LOG_NOTICE, "streaming-server started");
+    if (verbMode){
+        fprintf(stdout,"streaming-server started\n");
+        RP_LOG (LOG_NOTICE, "streaming-server started");
+    }
 
     installTermSignalHandler();
     // Handle close child events
@@ -244,8 +256,10 @@ int main(int argc, char *argv[])
         RP_LOG(LOG_ERR, "Error: main() %s\n",e.what());
     }
     con_server->stop();
-    fprintf(stdout,  "streaming-server stopped.\n");
-    RP_LOG(LOG_INFO, "streaming-server stopped.");
+    if (verbMode){
+        fprintf(stdout,  "streaming-server stopped.\n");
+        RP_LOG(LOG_INFO, "streaming-server stopped.");
+    }
     closelog ();
     return (EXIT_SUCCESS);
 }

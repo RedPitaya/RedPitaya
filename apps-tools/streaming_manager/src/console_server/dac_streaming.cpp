@@ -3,7 +3,9 @@
 
 CDACStreamingApplication *g_dac_app = nullptr;
 CDACStreamingManager::Ptr g_dac_manger = nullptr;
-CGenerator::Ptr 		gen = nullptr;
+bool					  g_dac_verbMode = false;
+CGenerator::Ptr 		  gen = nullptr;
+
 std::shared_ptr<ServerNetConfigManager> g_serverDACNetConfig = nullptr;
 std::atomic_bool g_dac_serverRun(false);
 
@@ -15,10 +17,11 @@ auto calibDACFullScaleToVoltage(uint32_t fullScaleGain) -> float {
     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
 }
 
-auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
+auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool verbMode,bool testMode) -> void{
     if (!serverNetConfig) return;
     g_serverDACNetConfig = serverNetConfig;
 	gen = nullptr;
+	g_dac_verbMode = verbMode;
 	try{
 		if (!g_serverDACNetConfig->isSetted()) return;
 		if (g_dac_serverRun) {
@@ -97,8 +100,8 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 		}
 
 		if (!gen){
-			fprintf(stdout,"[Streaming] Error init generator module\n");
-        	syslog (LOG_NOTICE, "[Streaming] Error init generator module\n");
+			fprintf(stderr,"[Streaming] Error init generator module\n");
+        	syslog (LOG_ERR, "[Streaming] Error init generator module\n");
 			return;
 		}
 
@@ -136,7 +139,8 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 
 
 		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
-		
+		g_dac_app->setVerbousMode(g_dac_verbMode);
+		g_dac_app->setTestMode(testMode);
 
 		g_dac_app->runNonBlock();
 		if (g_dac_manger->isLocalMode()){
@@ -144,9 +148,10 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> 
 		}else{
 			g_serverDACNetConfig->sendDACServerStarted();
 		}
-
-		fprintf(stdout,"[Streaming] Start dac server\n");
-        syslog (LOG_NOTICE, "[Streaming] Start dac server\n");
+		if (g_dac_verbMode){
+			fprintf(stdout,"[Streaming] Start dac server\n");
+        	syslog (LOG_NOTICE, "[Streaming] Start dac server\n");
+		}
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: startDACServer() %s\n",e.what());
@@ -198,8 +203,10 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void{
             }
         }
 		g_dac_serverRun = false;
-        fprintf(stdout,"[Streaming] Stop dac server\n");
-        syslog (LOG_NOTICE, "[Streaming] Stop dac server\n");
+		if (g_dac_verbMode){
+        	fprintf(stdout,"[Streaming] Stop dac server\n");
+        	syslog (LOG_NOTICE, "[Streaming] Stop dac server\n");
+		}
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: stopDACServer() %s\n",e.what());

@@ -3,9 +3,10 @@
 
 CStreamingApplication  *g_app = nullptr;
 CStreamingManager::Ptr 	g_manger = nullptr;
+bool					g_verbMode = false;
 COscilloscope::Ptr 		osc = nullptr;
 std::shared_ptr<ServerNetConfigManager> g_serverNetConfig = nullptr;
-std::atomic_bool g_serverRun(false);
+
 
 auto calibFullScaleToVoltage(uint32_t fullScaleGain) -> float {
     /* no scale */
@@ -15,29 +16,15 @@ auto calibFullScaleToVoltage(uint32_t fullScaleGain) -> float {
     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
 }
 
-auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
+auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool verbMode,bool testMode) -> void{
 	// Search oscilloscope
     if (!serverNetConfig) return;
 	osc = nullptr;
+	g_verbMode = verbMode;
     g_serverNetConfig = serverNetConfig;
 	try{
 		if (!g_serverNetConfig->isSetted()) return;
-		if (g_serverRun) {
-			if (g_manger){
-				if (!g_manger->isLocalMode()){
-					if (g_manger->getProtocol() == asionet::Protocol::TCP){
-						g_serverNetConfig->sendServerStartedTCP();
-					}
-					if (g_manger->getProtocol() == asionet::Protocol::UDP){
-						g_serverNetConfig->sendServerStartedUDP();
-					}
-				}else{
-					g_serverNetConfig->sendServerStartedSD();
-				}
-			}
-			return;
-		}
-		g_serverRun = true;
+
 		auto resolution   = g_serverNetConfig->getResolution();
 		auto format       = g_serverNetConfig->getFormat();
 		auto sock_port    = g_serverNetConfig->getPort();
@@ -148,6 +135,11 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> voi
 		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
 #endif
 
+		if (g_app!= nullptr){
+			g_app->stop();
+			delete g_app;
+		}
+
 		for (const UioT &uio : uioList)
 		{
 			if (uio.nodeName == "rp_oscilloscope")
@@ -167,7 +159,6 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> voi
 			}
 		}
 
-
 		if (use_file == CStreamSettings::NET) {
 			g_manger = CStreamingManager::Create(
 					ip_addr_host,
@@ -184,14 +175,11 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> voi
 								};
 		}
 
-		if (g_app!= nullptr){
-			g_app->stop();
-			delete g_app;
-		}
-
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		g_app = new CStreamingApplication(g_manger, osc, resolution_val, rate, channel , attenuator , 16);
-		
+		g_app->setVerbousMode(g_verbMode);
+		g_app->setTestMode(testMode);
+
 		char time_str[40];
     	struct tm *timenow;
     	time_t now = time(nullptr);
@@ -210,9 +198,10 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> voi
 		}else{
 			g_serverNetConfig->sendServerStartedSD();
 		}
-
-		fprintf(stdout,"[Streaming] Start server\n");
-        syslog (LOG_NOTICE, "[Streaming] Start server\n");
+		if (g_verbMode){
+			fprintf(stdout,"[Streaming] Start server %s\n",testMode ? "[Benchmark mode]":"");
+        	syslog (LOG_NOTICE, "[Streaming] Start server %s\n",testMode ? "[Benchmark mode]":"");
+		}
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StartServer() %s\n",e.what());
@@ -257,9 +246,11 @@ auto stopServer(int x) -> void{
                 break;
             }
         }
-		g_serverRun = false;
-        fprintf(stdout,"[Streaming] Stop server\n");
-        syslog (LOG_NOTICE, "[Streaming] Stop server\n");
+
+		if (g_verbMode){
+        	fprintf(stdout,"[Streaming] Stop server\n");
+        	syslog (LOG_NOTICE, "[Streaming] Stop server\n");
+		}
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());

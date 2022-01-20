@@ -9,7 +9,8 @@ add_executable(rpsa_client
                 client_src/dac_streaming.cpp 
                 client_src/config.cpp 
                 client_src/options.cpp 
-                client_src/main.cpp)
+                client_src/main.cpp
+                client_src/test_helper.cpp)
 
 target_compile_options(rpsa_client
     PRIVATE -std=c++11 $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -pedantic -static -static-libstdc++ -static-libgcc)
