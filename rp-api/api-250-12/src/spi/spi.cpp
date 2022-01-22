@@ -15,7 +15,9 @@
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 
-#define MSG_A(args...) fprintf(stdout,args);
+#define MSG(...) if (g_enable_verbous) fprintf(stdout,__VA_ARGS__);
+#define MSG_A(...) fprintf(stdout,__VA_ARGS__);
+
 static char mode = SPI_MODE_0;
 
 #define MAP_SIZE 4096UL
@@ -48,7 +50,9 @@ int write_to_spi(const char* spi_dev_path,char *buffer_header,int header_length,
 		return -1;
 	}
 	
-	struct spi_ioc_transfer mesg[2] = { 0, };
+	struct spi_ioc_transfer mesg[2];
+	memset(&mesg[0], 0, sizeof (spi_ioc_transfer));
+	memset(&mesg[1], 0, sizeof (spi_ioc_transfer));
 
     mesg[0].tx_buf = (unsigned long)buffer_header;
     mesg[0].rx_buf = (unsigned long)NULL;
@@ -97,7 +101,9 @@ int read_from_spi(const char* spi_dev_path,char *buffer_header,int header_length
 		return -1;
 	}
 	
-	struct spi_ioc_transfer mesg[2] = { 0, };
+	struct spi_ioc_transfer mesg[2];
+	memset(&mesg[0], 0, sizeof (spi_ioc_transfer));
+	memset(&mesg[1], 0, sizeof (spi_ioc_transfer));
 
     mesg[0].tx_buf = (unsigned long)buffer_header;
     mesg[0].rx_buf = (unsigned long)NULL;
@@ -123,7 +129,7 @@ int read_from_spi(const char* spi_dev_path,char *buffer_header,int header_length
 int write_to_fpga_spi(const char* _path,unsigned int fpga_address,unsigned short dev_address, char a_addr, unsigned char spi_val_to_write){
 	int fd = -1;
 	int retval = 0;
-	void* map_base = (void*)(-1);
+	char* map_base = (char*)(-1);
 
 	if((fd = open(_path, O_RDWR | O_SYNC)) == -1) return -1;
 
@@ -131,16 +137,16 @@ int write_to_fpga_spi(const char* _path,unsigned int fpga_address,unsigned short
 	//unsigned long addr;
 
 	/* Map one page */
-	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, fpga_address);
-	if(map_base == (void *) -1) retval = -1;
+	map_base = (char*)mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, fpga_address);
+	if(map_base == (char *) -1) retval = -1;
 
 	void* virt_addr = map_base + (dev_address & MAP_MASK);
 	*((unsigned long *) virt_addr) = (unsigned long)a_addr;
 	virt_addr = map_base	   + ((dev_address + 0x0004) & MAP_MASK);
 	*((unsigned long *) virt_addr) = (unsigned long)spi_val_to_write;
-	if (map_base != (void*)(-1)) {
+	if (map_base != (char*)(-1)) {
 		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
-		map_base = (void*)(-1);
+		map_base = (char*)(-1);
 	}
 	if (fd != -1) {
 		close(fd);
@@ -151,13 +157,13 @@ int write_to_fpga_spi(const char* _path,unsigned int fpga_address,unsigned short
 int read_from_fpga_spi(const char* _path,unsigned int fpga_address,unsigned short dev_address,char a_addr, char &value){
 		int fd = -1;
 	int retval = 0;
-	void* map_base = (void*)(-1);
+	char* map_base = (char*)(-1);
 
 	if((fd = open(_path, O_RDWR | O_SYNC)) == -1) return -1;
 
 	/* Map one page */
-	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, fpga_address);
-	if(map_base == (void *) -1) retval = -1;
+	map_base = (char*)mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, fpga_address);
+	if(map_base == (char *) -1) retval = -1;
 	void* virt_addr = map_base + (dev_address & MAP_MASK);
 	*((unsigned long *) virt_addr) = (unsigned long)a_addr + 0x8000;
 	virt_addr = map_base	   + ((dev_address + 0x0004) & MAP_MASK);
@@ -166,9 +172,9 @@ int read_from_fpga_spi(const char* _path,unsigned int fpga_address,unsigned shor
 	usleep(100 * 1000);
 	value = (char)(*((uint32_t *) virt_addr));
 	
-	if (map_base != (void*)(-1)) {
+	if (map_base != (char*)(-1)) {
 		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
-		map_base = (void*)(-1);
+		map_base = (char*)(-1);
 	}
 	if (fd != -1) {
 		close(fd);

@@ -12,10 +12,10 @@
  * for more details on the language used herein.
  */
 
-#ifndef __LED_SYSTEM_H
-#define __LED_SYSTEM_H
+#ifndef LED_SYSTEM_H
+#define LED_SYSTEM_H
 
-#include "rp_cross.h"
+#include "rp_hw.h"
 
 int led_GetMMCState(bool *_enable);
 int led_SetMMCState(bool _enable);

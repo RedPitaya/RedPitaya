@@ -45,9 +45,7 @@ OBJECTS =	common.o \
 		generate.o \
 		gen_handler.o \
 		spec_dsp.o \
-		rp.o \
-		hw/uart.o \
-		hw/led_system.o
+		rp.o
 		
 ifeq ($(MODEL),Z20_250_12)
 	OBJECTS += calib_250_12.o

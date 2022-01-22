@@ -118,13 +118,13 @@ int main(int argc, char* argv[])
         int addr = 0;
         int reg  = 0;
 
-        if (sscanf(ADDRESS, "%x", &addr) == 0){
+        if (sscanf(ADDRESS, "%x", (unsigned int*)&addr) == 0){
             printf("Error parse address.\n");
             UsingArgs(argv[0]);
         }
 
         
-        if (sscanf(REGISTER, "%x", &reg) == 0){
+        if (sscanf(REGISTER, "%x", (unsigned int*)&reg) == 0){
             printf("Error parse register.\n");
             UsingArgs(argv[0]);
         }
@@ -154,18 +154,18 @@ int main(int argc, char* argv[])
         int reg  = 0;
         int val  = 0;
 
-        if (sscanf(ADDRESS, "%x", &addr) == 0){
+        if (sscanf(ADDRESS, "%x", (unsigned int*)&addr) == 0){
             printf("Error parse address.\n");
             UsingArgs(argv[0]);
         }
 
         
-        if (sscanf(REGISTER, "%x", &reg) == 0){
+        if (sscanf(REGISTER, "%x", (unsigned int*)&reg) == 0){
             printf("Error parse register.\n");
             UsingArgs(argv[0]);
         }
 
-        if (sscanf(VALUE, "%x", &val) == 0){
+        if (sscanf(VALUE, "%x", (unsigned int*)&val) == 0){
             printf("Error parse value.\n");
             UsingArgs(argv[0]);
         }

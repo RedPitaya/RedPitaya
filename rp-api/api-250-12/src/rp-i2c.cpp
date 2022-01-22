@@ -31,8 +31,8 @@ static XML::XMLString attr_default_string("default");
 static XML::XMLString attr_decription_string("decription");
 
 bool g_enable_verbous = false;
-#define MSG(args...) if (g_enable_verbous) fprintf(stdout,args);
-#define MSG_A(args...) fprintf(stdout,args);
+#define MSG(...) if (g_enable_verbous) fprintf(stdout,__VA_ARGS__);
+#define MSG_A(...) fprintf(stdout,__VA_ARGS__);
 
 void rp_i2c_enable_verbous(){
     g_enable_verbous = true;
@@ -76,7 +76,7 @@ int readAttributeValue(XMLNode *node,XMLString &name,int &value){
         MSG_A("[rp_i2c] Missing attribute %s in register\n",name.getText());
         return  -1;
     }
-    sscanf(attr->ValueString().c_str(), "%x", &value);
+    sscanf(attr->ValueString().c_str(), "%x", (unsigned int*)&value);
     return 0;
 }
 
@@ -105,7 +105,7 @@ int read_address(XMLDocument *doc,int &device_addr, string &bus_name){
             MSG_A("[rp_i2c] Missing attribute address in device_on_bus\n");
             return  -1;
         }
-        sscanf(attr->ValueString().c_str(), "%x", &device_addr);
+        sscanf(attr->ValueString().c_str(), "%x", (unsigned int*)&device_addr);
     }
 
     bus_name =  XMLString::toString(bus_node->GetInnerText());

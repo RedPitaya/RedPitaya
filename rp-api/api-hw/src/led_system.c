@@ -66,9 +66,9 @@ int led_GetMMCState(bool *_enable){
     sprintf(path,"%s/%s",mmc_Led,"trigger");
     if (GetValueFromFile(path,value)){
         *_enable = strstr(value, "[mmc0]") != NULL; 
-        return RP_OK;
+        return RP_HW_OK;
     }
-    return RP_EUF;
+    return RP_HW_EUF;
 }
 
 int led_SetMMCState(bool _enable){
@@ -77,9 +77,9 @@ int led_SetMMCState(bool _enable){
     sprintf(value,"%s",_enable ? "mmc0" : "none");
     sprintf(path,"%s/%s",mmc_Led,"trigger");
     if (SetValueToFile(path,value)){
-        return RP_OK;
+        return RP_HW_OK;
     }
-    return RP_EUF;
+    return RP_HW_EUF;
 }
 
 int led_GetHeartBeatState(bool *_enable){
@@ -88,9 +88,9 @@ int led_GetHeartBeatState(bool *_enable){
     sprintf(path,"%s/%s",heartbeat_Led,"trigger");
     if (GetValueFromFile(path,value)){
         *_enable = strstr(value, "[heartbeat]") != NULL; 
-        return RP_OK;
+        return RP_HW_OK;
     }
-    return RP_EUF;
+    return RP_HW_EUF;
 }
 
 int led_SetHeartBeatState(bool _enable){
@@ -99,9 +99,9 @@ int led_SetHeartBeatState(bool _enable){
     sprintf(value,"%s",_enable ? "heartbeat" : "none");
     sprintf(path,"%s/%s",heartbeat_Led,"trigger");
     if (SetValueToFile(path,value)){
-        return RP_OK;
+        return RP_HW_OK;
     }   
-    return RP_EUF;
+    return RP_HW_EUF;
 }
 
 int __phy_op(const device_t *loc, uint16_t *val, int cmd)
@@ -141,7 +141,7 @@ int phy_read(uint16_t *_val)
 		fprintf(stderr, "Error: phy_read (%d)\n", err);
 		return err;
 	}
-	return RP_OK;
+	return RP_HW_OK;
 }
 
 int phy_write(uint16_t val)
@@ -156,17 +156,17 @@ int phy_write(uint16_t val)
 
 int led_GetEthState(bool *_state){
     uint16_t val = 0;
-    if (phy_read(&val) == RP_OK){
+    if (phy_read(&val) == RP_HW_OK){
         *_state = val != 0;
-        return RP_OK;
+        return RP_HW_OK;
     }
-    return RP_EUF;
+    return RP_HW_EUF;
 }
 
 int led_SetEthState(bool _state){
     uint16_t val = _state ? 0x0F00 : 0;
     if (phy_write(val) == 0){
-        return RP_OK;
+        return RP_HW_OK;
     }
-    return RP_EUF;
+    return RP_HW_EUF;
 }
