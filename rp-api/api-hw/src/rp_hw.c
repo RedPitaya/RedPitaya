@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "uart.h"
+#include "spi.h"
 #include "led_system.h"
 
 int rp_UartInit(){
@@ -72,4 +73,73 @@ int rp_GetLEDEthState(bool *_state){
 
 int rp_SetLEDEthState(bool _state){
     return led_SetEthState(_state);
+}
+
+
+int rp_SPI_Init(){
+    return spi_Init();
+}
+
+int rp_SPI_InitDevice(char *_device){
+    return spi_InitDevice(_device);
+}
+
+int rp_SPI_SetDefaultSettings(){
+    return spi_SetDefaultSettings();
+}
+
+int rp_SPI_GetSetings(){
+    return spi_GetSettings();
+}
+
+int rp_SPI_SetSettings(){
+    return spi_SetSettings();
+}
+
+int rp_SPI_Release(){
+    return spi_Release();
+}
+
+int rp_SPI_GetMode(rp_spi_mode_t *mode){
+    return spi_GetMode(mode);
+}
+
+int rp_SPI_SetMode(rp_spi_mode_t mode){
+    return spi_SetMode(mode);
+}
+
+int rp_SPI_GetState(rp_spi_state_t *state){
+    return spi_GetState(state);
+}
+
+int rp_SPI_SetState(rp_spi_state_t state){
+    return spi_SetState(state);
+}
+
+int rp_SPI_GetOrderBit(rp_spi_order_bit_t *order){
+    return spi_GetOrderBit(order);
+}
+
+int rp_SPI_SetOrderBit(rp_spi_order_bit_t order){
+    return spi_SetOrderBit(order);
+}
+
+int rp_SPI_GetSpeed(int *speed){
+    return spi_GetSpeed(speed);
+}
+
+int rp_SPI_SetSpeed(int speed){
+    return spi_SetSpeed(speed);
+}
+
+int rp_SPI_GetWordLen(int *len){
+    return spi_GetWordLen(len);
+}
+
+int rp_SPI_SetWordLen(int len){
+    return spi_SetWordLen(len);
+}
+
+int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, size_t length){
+    return spi_ReadWrite(tx_buffer,rx_buffer,length);
 }
