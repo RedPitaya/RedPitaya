@@ -91,16 +91,7 @@ extern "C" {
 #define RP_EMNC   23
 /** Command not supported */
 #define RP_NOTS   24
-/** Failed to init uart */
-#define RP_EIU    25
-/** Failed read from uart */
-#define RP_ERU    26
-/** Failed write to uart */
-#define RP_EWU    27
-/** Failed set settings to uart */
-#define RP_ESU    28
-/** Failed get settings from uart */
-#define RP_EGU    29
+
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
@@ -333,35 +324,6 @@ typedef struct {
     int32_t  osc_ch1_off_20_dc;
     int32_t  osc_ch2_off_20_dc;
 } rp_calib_params_t;
-
-/**
- * UART Character bits size
- */
-typedef enum {
-    RP_UART_CS6,      //!< Set 6 bits
-    RP_UART_CS7,      //!< Set 7 bits
-    RP_UART_CS8       //!< Set 8 bits
-} rp_uart_bits_size_t;
-
-
-/**
- * UART stop bits
- */
-typedef enum {
-    RP_UART_STOP1,      //!< Set 1 bit
-    RP_UART_STOP2       //!< Set 2 bits
-} rp_uart_stop_bits_t;
-
-/**
- * UART parity mode
- */
-typedef enum {
-    RP_UART_NONE,      //!< Disable parity check
-    RP_UART_EVEN,      //!< Set even mode for parity
-    RP_UART_ODD,       //!< Set odd mode for parity
-    RP_UART_MARK,      //!< Set Always 1
-    RP_UART_SPACE      //!< Set Always 0
-} rp_uart_parity_t;
 
 /** @name General
  */
@@ -1695,119 +1657,6 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status);
 
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
-
-/**
- * Opens the UART device (/dev/ttyPS1). Initializes the default settings.
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_UartInit();
-
-/**
-* Closes device UART
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_UartRelease();
-
-/**
-* Reading values into the buffer from the UART device
-* @param buffer Non-zero buffer for writing data.
-* @param size Buffer size. Returns the amount of data read.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_UartRead(unsigned char *buffer, int *size);
-
-/**
-* Writes data to UART
-* @param buffer The buffer to be written to the UART.
-* @param size Buffer size.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_UartWrite(unsigned char *buffer, int size);
-
-/**
-* Set speed for the UART.
-* @param speed Value of speed
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_UartSpeed(int speed);
-
-/**
-* Set character size for the UART.
-* @param size Value of size
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_UartSetBits(rp_uart_bits_size_t size);
-
-/**
-* Set stop bits size for the UART.
-* @param mode Value of size
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_UartSetStopBits(rp_uart_stop_bits_t mode);
-
-/**
-* Set parity check mode for the UART.
-* @param mode Value of size
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_UartSetParityMode(rp_uart_parity_t mode);
-
-
-/**
-* The function returns the on state of the 9 yellow LED indicator.
-* @param enable return current state.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GetLEDMMCState(bool *_enable);
-
-/**
-* The function enables or disables the 9 yellow LED indicator
-* @param enable Flag enabling LED.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_SetLEDMMCState(bool _enable);
-
-/**
-* The function returns the on state of the red LED indicator.
-* @param enable return current state.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GetLEDHeartBeatState(bool *_enable);
-
-/**
-* The function enables or disables the red LED indicator
-* @param enable Flag enabling LED.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_SetLEDHeartBeatState(bool _enable);
-
-/**
-* The function returns the status of indicators on the Ethernet connector.
-* @param enable return current state.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GetLEDEthState(bool *_state);
-
-/**
-* The function enables or disables indicators on the the Ethernet connector.
-* @param enable Flag enabling LED.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_SetLEDEthState(bool _state);
 
 #ifdef __cplusplus
 }

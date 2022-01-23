@@ -21,7 +21,7 @@
 #include <sys/param.h>
 #include <iostream>
 
-#include "rp.h"
+#include "rp_hw.h"
 
 /** Program name */
 const char *g_argv0 = NULL;
@@ -125,12 +125,12 @@ int main(int argc, char *argv[])
 
     if (y_flag) {
         if (set_y_state){
-            if (rp_SetLEDMMCState(y_state) != RP_OK){
+            if (rp_SetLEDMMCState(y_state) != RP_HW_OK){
                 fprintf(stderr,"[Error] Can't set yellow led state\n");
             }
         }else{
             bool state = false;
-            if (rp_GetLEDMMCState(&state) == RP_OK){
+            if (rp_GetLEDMMCState(&state) == RP_HW_OK){
                 printf("MMC LED state = %d\n",state);
             }else{
                 fprintf(stderr,"[Error] Can't get yellow led state\n");
@@ -140,12 +140,12 @@ int main(int argc, char *argv[])
 
     if (r_flag) {
         if (set_r_state){
-            if (rp_SetLEDHeartBeatState(r_state) != RP_OK){
+            if (rp_SetLEDHeartBeatState(r_state) != RP_HW_OK){
                 fprintf(stderr,"[Error] Can't set red led state\n");
             }
         }else{
             bool state = false;
-            if (rp_GetLEDHeartBeatState(&state) == RP_OK){
+            if (rp_GetLEDHeartBeatState(&state) == RP_HW_OK){
                 printf("HEARBEAT LED state = %d\n",state);
             }else{
                 fprintf(stderr,"[Error] Can't get red led state\n");
@@ -155,12 +155,12 @@ int main(int argc, char *argv[])
 
     if (e_flag) {
         if (set_e_state){
-            if (rp_SetLEDEthState(e_state) != RP_OK){
+            if (rp_SetLEDEthState(e_state) != RP_HW_OK){
                 fprintf(stderr,"[Error] Can't set ethernet led state\n");
             }
         }else{
             bool state = false;
-            if (rp_GetLEDEthState(&state) == RP_OK){
+            if (rp_GetLEDEthState(&state) == RP_HW_OK){
                 printf("Ethernet LED state = %d\n",state);
             }else{
                 fprintf(stderr,"[Error] Can't get ethernet led state\n");

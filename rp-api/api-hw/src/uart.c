@@ -53,7 +53,7 @@ int uart_InitDevice(char *_device){
 
     if(uart_fd == -1){
         fprintf(stderr, "Failed to open UART.\n");
-        return RP_EIU;
+        return RP_HW_EIU;
     }
 
     tcgetattr(uart_fd, &g_settings);
@@ -82,10 +82,10 @@ int uart_SetDefaultSettings(){
         /* Setting attributes */
         tcflush(uart_fd, TCIFLUSH);
         tcsetattr(uart_fd, TCSANOW, &g_settings);
-        return RP_OK;
+        return RP_HW_OK;
     }else{
         fprintf(stderr, "Failed setup settings to UART.\n");
-        return RP_EIU;
+        return RP_HW_EIU;
     }
 
 }
@@ -94,7 +94,7 @@ int uart_read(unsigned char *_buffer,int *size){
 
     if (_buffer == NULL || *size <= 0){
         fprintf(stderr, "Failed read from UART.\n");
-        return RP_EIPV;
+        return RP_HW_EIPV;
     }
 
     if (uart_fd != -1){
@@ -103,7 +103,7 @@ int uart_read(unsigned char *_buffer,int *size){
         while(1){
             if(uart_fd == -1){
                 fprintf(stderr, "Failed to read from UART. UART is closed.\n");
-                return RP_ERU;
+                return RP_HW_ERU;
             }
 
             int rx_length = read(uart_fd, (void*)_buffer, *size);
@@ -115,7 +115,7 @@ int uart_read(unsigned char *_buffer,int *size){
                 /* Error differs */
                 }else{
                     fprintf(stderr, "Error read from UART. Errno: %d\n", errno);
-                    return RP_ERU;
+                    return RP_HW_ERU;
                 }
 
             }else if (rx_length == 0){
@@ -126,10 +126,10 @@ int uart_read(unsigned char *_buffer,int *size){
                 break;
             }
         }
-        return RP_OK;
+        return RP_HW_OK;
     }else{
         fprintf(stderr, "Failed read from UART.\n");
-        return RP_EIU;
+        return RP_HW_EIU;
     }
 }
 
@@ -137,7 +137,7 @@ int uart_write(unsigned char *_buffer, int size){
     int count = 0;
     if (_buffer == NULL || size <= 0){
         fprintf(stderr, "Failed write to UART.\n");
-        return RP_EIPV;
+        return RP_HW_EIPV;
     }
 
     if (uart_fd != -1){
@@ -147,18 +147,18 @@ int uart_write(unsigned char *_buffer, int size){
             count = write(uart_fd, _buffer, size);
         }else{
             fprintf(stderr, "Failed write to UART.\n");
-            return RP_EIU;
+            return RP_HW_EIU;
         }
 
         if(count < 0){
             fprintf(stderr, "Failed write to UART.\n");
-            return RP_EWU;
+            return RP_HW_EWU;
         }
 
-        return RP_OK;
+        return RP_HW_OK;
     }else{
         fprintf(stderr, "Failed write to UART.\n");
-        return RP_EWU;
+        return RP_HW_EWU;
     }
 
    
@@ -172,27 +172,27 @@ int uart_Release(){
         close(uart_fd);
         uart_fd = -1;
     }
-    return RP_OK;
+    return RP_HW_OK;
 }
 
 int uart_SetSpeed(int _speed){
     if(uart_fd == -1){
         fprintf(stderr, "Failed to open UART.\n");
-        return RP_EIU;
+        return RP_HW_EIU;
     }
    
     if (cfsetspeed(&g_settings, uart_GetSpeedType(_speed))){
         fprintf(stderr, "Error set speed for UART. Errno: %d\n", errno);
-        return RP_ESU;
+        return RP_HW_ESU;
     }
 
     /* Setting attributes */
     tcflush(uart_fd, TCIFLUSH);
     if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
         fprintf(stderr, "Error set speed for UART. Errno: %d\n", errno);
-        return RP_ESU;
+        return RP_HW_ESU;
     }
-    return RP_OK;
+    return RP_HW_OK;
 }
 
 
@@ -227,7 +227,7 @@ int uart_GetSpeedType(int _speed){
 int uart_SetBits(rp_uart_bits_size_t _size){
     if(uart_fd == -1){
         fprintf(stderr, "Failed to open UART.\n");
-        return RP_EIU;
+        return RP_HW_EIU;
     }
     int mode = 0;
     switch(_size){
@@ -244,7 +244,7 @@ int uart_SetBits(rp_uart_bits_size_t _size){
             break;
         }
         default:
-            return RP_ESU;
+            return RP_HW_ESU;
     }
 
     g_settings.c_cflag &= ~CSIZE;
@@ -253,15 +253,15 @@ int uart_SetBits(rp_uart_bits_size_t _size){
     tcflush(uart_fd, TCIFLUSH);
     if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
         fprintf(stderr, "Error set BitsSize in UART. Errno: %d\n", errno);
-        return RP_ESU;
+        return RP_HW_ESU;
     }
-    return RP_OK;
+    return RP_HW_OK;
 }
 
 int uart_SetParityMode(rp_uart_parity_t mode){
     if(uart_fd == -1){
         fprintf(stderr, "Failed to open UART.\n");
-        return RP_EIU;
+        return RP_HW_EIU;
     }
 
     switch(mode){
@@ -290,22 +290,22 @@ int uart_SetParityMode(rp_uart_parity_t mode){
         }
 
         default:
-            return RP_ESU;
+            return RP_HW_ESU;
     }
     /* Setting attributes */
     tcflush(uart_fd, TCIFLUSH);
     if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
         fprintf(stderr, "Error set Stop Bits in UART. Errno: %d\n", errno);
-        return RP_ESU;
+        return RP_HW_ESU;
     }
-    return RP_OK;
+    return RP_HW_OK;
 }
 
 
 int uart_SetStopBits(rp_uart_stop_bits_t mode){
     if(uart_fd == -1){
         fprintf(stderr, "Failed to open UART.\n");
-        return RP_EIU;
+        return RP_HW_EIU;
     }
 
     g_settings.c_cflag &= ~CSTOPB;
@@ -315,8 +315,8 @@ int uart_SetStopBits(rp_uart_stop_bits_t mode){
     tcflush(uart_fd, TCIFLUSH);
     if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
         fprintf(stderr, "Error set Stop Bits in UART. Errno: %d\n", errno);
-        return RP_ESU;
+        return RP_HW_ESU;
     }
-    return RP_OK;
+    return RP_HW_OK;
 }
 

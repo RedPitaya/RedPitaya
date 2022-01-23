@@ -33,8 +33,8 @@ static XML::XMLString attr_decription_string("decription");
 static XML::XMLString attr_length_string("length");
 
 bool g_enable_verbous = false;
-#define MSG(args...) if (g_enable_verbous) fprintf(stdout,args);
-#define MSG_A(args...) fprintf(stdout,args);
+#define MSG(...) if (g_enable_verbous) fprintf(stdout,__VA_ARGS__);
+#define MSG_A(...) fprintf(stdout,__VA_ARGS__);
 
 void rp_spi_enable_verbous(){
     g_enable_verbous = true;
@@ -78,7 +78,7 @@ int readAttributeValue(XML::XMLNode *node,XML::XMLString &name,int &value){
         MSG_A("[rp_spi] Missing attribute %s in register\n",name.getText());
         return  -1;
     }
-    sscanf(attr->ValueString().c_str(), "%x", &value);
+    sscanf(attr->ValueString().c_str(), "%x", (unsigned int*) &value);
     return 0;
 }
 
@@ -140,7 +140,7 @@ int read_header_length(XML::XMLDocument *doc,int &header_length, string &bus_nam
             MSG_A("[rp_spi] Missing attribute length in header\n");
             return  -1;
         }
-        sscanf(attr->ValueString().c_str(), "%x", &header_length);
+        sscanf(attr->ValueString().c_str(), "%x", (unsigned int*)&header_length);
     }
 
     bus_name =  XMLString::toString(bus_node->GetInnerText());
@@ -406,7 +406,7 @@ int rp_spi_load_via_fpga(const char *configuration_file){
             MSG_A("[rp_spi] Missing attribute address in device_on_bus\n");
             return  -1;
         }
-        sscanf(attr->ValueString().c_str(), "%x", &device_addr);
+        sscanf(attr->ValueString().c_str(), "%x", (unsigned int*)&device_addr);
     }
 
     XMLNode *bus_reg_set = doc->FindFirstNodeByName(bus_node_reg_set_name);

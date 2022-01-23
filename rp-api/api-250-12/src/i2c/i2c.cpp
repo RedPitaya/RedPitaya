@@ -12,7 +12,8 @@
 #include <errno.h>
 #include <string.h>
 
-#define MSG_A(args...) fprintf(stdout,args);
+#define MSG(...) if (g_enable_verbous) fprintf(stdout,__VA_ARGS__);
+#define MSG_A(...) fprintf(stdout,__VA_ARGS__);
 
 pthread_mutex_t i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
 

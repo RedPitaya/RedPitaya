@@ -16,7 +16,7 @@
 #define __UART_H
 
 
-#include "rp_cross.h"
+#include "rp_hw.h"
 
 int uart_Init();
 int uart_InitDevice(char *_device);
