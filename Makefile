@@ -81,12 +81,11 @@ librp: librp250_12
 else
 librp:
 endif
-	$(MAKE) -C $(LIBRP_DIR) clean
-	$(MAKE) -C $(LIBRP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(LIBRP_DIR) -S$(LIBRP_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DIR) install
 
 librp_hw:
-	cmake -B$(LIBRP_HW_DIR) -S$(LIBRP_HW_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
+	cmake -B$(LIBRP_HW_DIR) -S$(LIBRP_HW_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_DIR) install
 
 librp1:
