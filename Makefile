@@ -109,12 +109,12 @@ api: librpapp liblcr_meter
 
 librpapp: librp
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
-	$(MAKE) -C $(LIBRPAPP_DIR)
+	$(MAKE) -C $(LIBRPAPP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 liblcr_meter: librp
 	$(MAKE) -C $(LIBRPLCR_DIR) clean
-	$(MAKE) -C $(LIBRPLCR_DIR)
+	$(MAKE) -C $(LIBRPLCR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 endif
 
