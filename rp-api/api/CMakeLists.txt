@@ -120,6 +120,7 @@ if(BUILD_SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
+    target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
@@ -139,6 +140,7 @@ if(BUILD_STATIC)
     add_library(${PROJECT_NAME}-static STATIC)
     set_property(TARGET ${PROJECT_NAME}-static PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-static PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
+    target_link_libraries(${PROJECT_NAME}-static -lm -lpthread)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-static
