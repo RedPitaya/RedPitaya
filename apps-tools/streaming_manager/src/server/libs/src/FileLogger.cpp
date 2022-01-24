@@ -6,11 +6,11 @@
 #include "FileLogger.h"
 
 
-CFileLogger::Ptr CFileLogger::Create(std::string _filePath){
-    return std::make_shared<CFileLogger>(_filePath);
+CFileLogger::Ptr CFileLogger::Create(std::string _filePath,bool testMode){
+    return std::make_shared<CFileLogger>(_filePath,testMode);
 }
 
-CFileLogger::CFileLogger(std::string _filePath):  
+CFileLogger::CFileLogger(std::string _filePath,bool testMode):
 m_filePath(_filePath),
 m_filePathLost(_filePath + ".lost"),
 m_file_open(false),
@@ -22,13 +22,16 @@ m_reciveData(0),
 m_reciveData_ch1(0),
 m_reciveData_ch2(0),
 m_old_id(0),
-m_current_sample(0)
+m_current_sample(0),
+m_testMode(testMode)
 {
     ResetCounters();
     m_file_open = true;
-    m_fileLost.open(m_filePathLost , std::ios_base::app | std::ios_base::out);
-    if (m_fileLost.is_open()){
-        m_fileLost << "Start\tSize\n";
+    if (!m_testMode){
+        m_fileLost.open(m_filePathLost , std::ios_base::app | std::ios_base::out);
+        if (m_fileLost.is_open()){
+            m_fileLost << "Start\tSize\n";
+        }
     }
 }
 

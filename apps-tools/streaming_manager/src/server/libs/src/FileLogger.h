@@ -16,9 +16,9 @@ public:
     };
 
     using Ptr = std::shared_ptr<CFileLogger>;
-    static Ptr Create(std::string _filePath);
+    static Ptr Create(std::string _filePath,bool testMode);
 
-    CFileLogger(std::string _filePath);
+    CFileLogger(std::string _filePath,bool testMode);
     ~CFileLogger();
 
     void ResetCounters();
@@ -50,4 +50,5 @@ private:
     uint64_t    m_old_id;
     uint64_t    m_current_sample;
     std::ofstream m_fileLost;
+    bool        m_testMode;
 };

@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <unistd.h>
 
 namespace ClientOpt {
     enum class Mode{

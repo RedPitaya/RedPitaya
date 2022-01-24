@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
     
     std::string file_name = argv[1];
     if (!check_info){
-        g_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , file_name, -1 , false);
-        g_manger->convertToCSV(file_name, s, e,"");
+        g_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE,file_name,-1,false,false);
+        g_manger->convertToCSV(file_name,s,e,"");
     }else{
         std::fstream fs;
         fs.open(file_name, std::ios::binary | std::ofstream::in | std::ofstream::out);

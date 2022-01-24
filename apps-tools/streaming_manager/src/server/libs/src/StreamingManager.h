@@ -38,8 +38,8 @@ public:
     typedef std::function<void(int)> Callback;
     typedef std::function<void()> CallbackVoid;
 
-    static Ptr Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode);
-    CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode);
+    static Ptr Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode,bool testMode);
+    CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode,bool testMode);
 
     static Ptr Create(std::string _host, std::string _port, asionet::Protocol _protocol);
     CStreamingManager(std::string _host, std::string _port, asionet::Protocol _protocol);
@@ -83,6 +83,7 @@ private:
     int               m_passSizeSamples;
     uint8_t           m_zeroBuffer[ZERO_BUFFER_SIZE];
     
+    bool m_testMode;
     bool m_volt_mode;
     bool m_use_local_file;
     std::atomic_bool m_stopWriteCSV;

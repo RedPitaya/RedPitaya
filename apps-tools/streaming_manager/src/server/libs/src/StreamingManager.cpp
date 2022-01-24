@@ -68,12 +68,12 @@ void CStreamingManager::MakeEmptyDir(std::string _filePath){
 
 
 
-CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode){
+CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode,bool testMode){
 
-    return std::make_shared<CStreamingManager>(_fileType, _filePath,_samples, _v_mode);
+    return std::make_shared<CStreamingManager>(_fileType, _filePath,_samples, _v_mode,testMode);
 }
 
-CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode) :
+CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode,bool testMode) :
     notifyPassData(nullptr),
     notifyStop(nullptr),
     m_fileLogger(nullptr),
@@ -89,11 +89,12 @@ CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _file
     m_file_out(""),
     m_samples(_samples),
     m_passSizeSamples(0),
+    m_testMode(testMode),
     m_volt_mode(_v_mode),
     m_use_local_file(true),
     m_fileType(_fileType)
 {
-    m_file_manager = new FileQueueManager();
+    m_file_manager = new FileQueueManager(testMode);
     m_waveWriter = new CWaveWriter();
     memset(m_zeroBuffer,0,sizeof(uint8_t) * ZERO_BUFFER_SIZE);
 }
@@ -213,7 +214,7 @@ void CStreamingManager::run(std::string _prefix)
     if (m_use_local_file){
         m_passSizeSamples = 0;
         m_file_out = getNewFileName(m_fileType, m_filePath, _prefix);
-        m_fileLogger = CFileLogger::Create(m_file_out + ".log"); 
+        m_fileLogger = CFileLogger::Create(m_file_out + ".log",m_testMode);
         std::cout << m_file_out << "\n"; 
         m_file_manager->OpenFile(m_file_out, false);
         m_file_manager->StartWrite(m_fileType);
@@ -227,11 +228,14 @@ void CStreamingManager::stop(){
     if (m_use_local_file){
         if (m_file_manager) {
             m_file_manager->StopWrite(false);
+            if (m_testMode){
+                m_file_manager->deleteFile();
+            }
         }
     } else{
         this->stopServer();
     }
-    if (m_fileLogger)
+    if (m_fileLogger && !m_testMode)
         m_fileLogger->DumpToFile();
 }
 

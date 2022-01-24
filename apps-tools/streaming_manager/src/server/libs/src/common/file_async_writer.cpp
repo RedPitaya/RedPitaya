@@ -17,17 +17,29 @@ std::string DirNameOf(const std::string& fname)
            : fname.substr(0, pos);
 }
 
-FileQueueManager::FileQueueManager():Queue(){
+FileQueueManager::FileQueueManager(bool testMode):Queue(){
     m_threadWork = false;
     m_waitAllWrite = false;    
     m_hasErrorWrite = false;
     m_IsOutOfSpace = false;
     th = nullptr;
     memset(endOfSegment, 0xFF, 12);
+    m_testMode = testMode;
+    m_fileName = "";
 }
 
 FileQueueManager::~FileQueueManager(){
     this->StopWrite(false);
+}
+
+auto FileQueueManager::deleteFile() -> void{
+    try {
+        std::remove(m_fileName.c_str());
+    }
+    catch (std::exception& e)
+    {
+        std::cout <<  "Error delete file: " << m_fileName << " err: " << e.what() << '\n';
+    }
 }
 
 unsigned long long getTotalSystemMemory()
@@ -108,6 +120,7 @@ auto FileQueueManager::OpenFile(std::string FileName,bool Append) -> void{
             return;
         }
     }
+    m_fileName = FileName;
     auto dirName = DirNameOf(FileName);
     if (dirName == ""){
         dirName = ".";
@@ -183,12 +196,15 @@ auto FileQueueManager::WriteToFile() -> int{
         delete bstream;
         return 1;
     }
-    
+
     bstream->seekg(0, bstream->end);
     auto Length = bstream->tellg();
 
     if (fs.good() && ((m_hasWriteSize + Length) < m_freeSize)) {
-        bstream->seekg(0, bstream->beg);        
+        bstream->seekg(0, bstream->beg);
+        if (m_testMode) {
+            fs.seekp(0);
+        }
         fs << bstream->rdbuf();
         fs.flush();
 //        bstream->seekg(0, std::ios::end);

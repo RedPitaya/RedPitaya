@@ -67,7 +67,7 @@ class Queue
 
 class FileQueueManager:public Queue{
     public:
-        FileQueueManager();
+        FileQueueManager(bool testMode = false);
         ~FileQueueManager();
 
         auto AddBufferToWrite(std::iostream *buffer) -> bool;
@@ -81,6 +81,7 @@ class FileQueueManager:public Queue{
         auto StopWrite(bool waitAllWrite) -> void;
         auto UpdateWavFile(int _size) -> void;
         auto WriteToFile() -> int;
+        auto deleteFile() -> void;
 
         static auto AvailableSpace(std::string dst, unsigned long* availableSize) -> int;
         static auto GetFreeSpaceDisk(std::string _filePath) -> unsigned long;
@@ -107,4 +108,6 @@ class FileQueueManager:public Queue{
         unsigned long m_freeSize;
         unsigned long m_hasWriteSize;
         uint64_t m_aviablePhyMemory;
+        bool m_testMode;
+        std::string m_fileName;
 };

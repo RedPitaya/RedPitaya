@@ -40,18 +40,25 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     
   //  std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
-    g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
+    bool passBuff = (g_soption.testmode == ClientOpt::TestMode::NONE) || (g_soption.testmode == ClientOpt::TestMode::ENABLE &&
+                                                                          g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_SAVE_FILE);
 
+    if (passBuff)
+        g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
 
-    delete [] ch1;
-    delete [] ch2;
     if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
         uint64_t sempCh1 = size_ch1 / (resolution == 16 ? 2 : 1);
         uint64_t sempCh2 = size_ch2 / (resolution == 16 ? 2 : 1);
         auto net   = g_manger[host]->getNetworkLost();
         auto flost = g_manger[host]->getFileLost();
-        addStatisticSteaming(host,_size,sempCh1,sempCh2,lostRate, net, flost);
+        int  brokenBuffer = -1;
+        if (g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_TEST_DATA){
+            brokenBuffer = testBuffer(ch1,ch2,size_ch1,size_ch2) ? 0 : 1;
+        }
+        addStatisticSteaming(host,_size,sempCh1,sempCh2,lostRate, net, flost,brokenBuffer);
     }
+    delete [] ch1;
+    delete [] ch2;
 }
 
 auto runClient(std::string  host,StateRunnedHosts state) -> void{
@@ -97,7 +104,8 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     if (state == StateRunnedHosts::UDP)
         protocol = asionet::UDP;
 
-    g_manger[host] = CStreamingManager::Create(file_type , g_soption.save_dir.c_str(), g_soption.samples , convert_v);
+    bool testMode = g_soption.testmode == ClientOpt::TestMode::ENABLE;
+    g_manger[host] = CStreamingManager::Create(file_type , g_soption.save_dir.c_str(), g_soption.samples , convert_v,testMode);
     g_manger[host]->run(host + "_" + g_filenameDate);
 
     g_asionet[host] = asionet::CAsioNet::Create(asionet::Mode::CLIENT, protocol ,host , g_soption.ports.streaming_port  != "" ? g_soption.ports.streaming_port : ClientOpt::Ports().streaming_port);
@@ -172,6 +180,10 @@ auto startStreaming(ClientOpt::Options &option) -> void{
             if (t.joinable()) {
                 t.join();
             }
+        }
+        if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
+            const std::lock_guard<std::mutex> lock(g_smutex);
+            printFinalStatisitc();
         }
     }
 }
