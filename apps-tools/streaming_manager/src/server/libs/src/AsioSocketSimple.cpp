@@ -111,6 +111,8 @@ namespace  asionet_simple {
                 m_is_tcp_connected = false;
                 m_callback_Str.emitEvent((int)ASEvents::AS_DISCONNECT, m_tcp_endpoint.address().to_string());
                 if (m_tcp_socket && m_tcp_socket->is_open()) {
+                    m_callback_Error.removeHadlers();
+                    m_tcp_socket->cancel();
                     m_tcp_socket->shutdown(asio::socket_base::shutdown_type::shutdown_both);
                     m_tcp_socket->close();
                 }

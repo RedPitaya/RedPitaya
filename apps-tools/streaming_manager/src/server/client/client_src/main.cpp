@@ -14,11 +14,14 @@
 #include "streaming.h"
 #include "dac_streaming.h"
 #include "test_helper.h"
+#include "ClientNetConfigManager.h"
 
 
 using namespace std;
 
 const char *g_argv0 = NULL;
+
+std::shared_ptr<ClientNetConfigManager> g_cl;
 
 void sigHandler (int){
     remoteSIGHandler();
@@ -43,6 +46,7 @@ void installTermSignalHandler()
 
 int main(int argc, char* argv[])
 {
+    g_cl = std::make_shared<ClientNetConfigManager>("",false);
     installTermSignalHandler();
 
     g_argv0 = argv[0];
@@ -59,30 +63,33 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    if (connectConfigServer(g_cl,opt) == false){
+        return 0;
+    }
+
     if (opt.mode == ClientOpt::Mode::CONFIG){
-        startConfig(opt);
+        startConfig(g_cl,opt);
         return 0;
     }
 
     if (opt.mode == ClientOpt::Mode::REMOTE){
-        startRemote(opt);
+        startRemote(g_cl,opt);
         return 0;
     }
 
     if (opt.mode == ClientOpt::Mode::STREAMING){
-        startStreaming(opt);
+        startStreaming(g_cl,opt);
         return 0;
     }
 
     if (opt.mode == ClientOpt::Mode::STREAMING_DAC){
-        startDACStreaming(opt);
+        startDACStreaming(g_cl,opt);
         return 0;
     }
 
     if (opt.mode == ClientOpt::Mode::STREAMING_DAC_CONF){
-        startDACStreaming(opt.streaming_conf_file);
+        startDACStreaming(g_cl,opt.streaming_conf_file);
         return 0;
     }
-
     return 0;
 }

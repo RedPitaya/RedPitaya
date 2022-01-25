@@ -40,11 +40,7 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     
   //  std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
-    bool passBuff = (g_soption.testmode == ClientOpt::TestMode::NONE) || (g_soption.testmode == ClientOpt::TestMode::ENABLE &&
-                                                                          g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_SAVE_FILE);
-
-    if (passBuff)
-        g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
+    g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
 
     if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
         uint64_t sempCh1 = size_ch1 / (resolution == 16 ? 2 : 1);
@@ -144,7 +140,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     }
 }
 
-auto startStreaming(ClientOpt::Options &option) -> void{
+auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) -> void{
     g_soption = option;
 
 
@@ -169,7 +165,7 @@ auto startStreaming(ClientOpt::Options &option) -> void{
     remote_opt.ports.config_port = g_soption.ports.config_port  != "" ? g_soption.ports.config_port : ClientOpt::Ports().config_port;
     remote_opt.verbous = g_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
-    if (startRemote(remote_opt,&runned_hosts)){
+    if (startRemote(cl,remote_opt,&runned_hosts)){
 
         for(auto &kv:runned_hosts){
             if (kv.second == StateRunnedHosts::TCP || kv.second == StateRunnedHosts::UDP)

@@ -53,10 +53,11 @@ public:
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
-
     auto startBroadcast(std::string host,std::string port) -> void;
     auto getBroadcastClients() -> const std::list<BroadCastClients>;
     auto connectToServers(std::vector<std::string> _hosts,std::string port) -> void;
+    auto diconnectAll() -> void;
+    auto getHosts() -> std::list<std::string>;
     auto isServersConnected() -> bool;
     auto sendConfig(std::string host) -> bool;
     auto sendTestConfig(std::string host,const CStreamSettings &settings) -> bool;
@@ -81,6 +82,8 @@ public:
 
     auto addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string)> _func) -> void;
     auto addHandler(ClientNetConfigManager::Events event, std::function<void(std::string)> _func) -> void;
+    auto removeHadlers() -> void;
+
 private:
     struct Clients{
         enum class States{

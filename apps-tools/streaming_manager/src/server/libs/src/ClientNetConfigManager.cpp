@@ -17,6 +17,7 @@ ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings
 }
 
 ClientNetConfigManager::~ClientNetConfigManager(){
+    removeHadlers();
     for(auto &cli:m_clients){
         cli->m_manager->stopAsioNet();
     }
@@ -91,6 +92,22 @@ auto ClientNetConfigManager::addHandler(ClientNetConfigManager::Events event, st
     m_callbacksStr.addListener(static_cast<int>(event),_func);
 }
 
+auto ClientNetConfigManager::removeHadlers() -> void{
+    m_errorCallback.removeHadlers();
+    m_callbacksStr.removeHadlers();
+}
+
+auto ClientNetConfigManager::getHosts() -> std::list<std::string>{
+    std::list<std::string> list;
+    for(auto &c : m_clients){
+        if (c->m_manager->isConnected()){
+            list.push_back(c->m_manager->getHost());
+        }
+    }
+    return list;
+}
+
+
 auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,std::string port) -> void{
     m_clients.clear();
     for(std::string& host:_hosts){
@@ -109,6 +126,14 @@ auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,st
         m_clients.push_back(cl);
     }
 }
+
+auto ClientNetConfigManager::diconnectAll() -> void{
+    const std::lock_guard<std::mutex> lock(g_client_mutex);
+    for(const auto &c : m_clients){
+        c->m_manager->stopAsioNet();
+    }
+}
+
 
 auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Clients> sender) -> void{
     CNetConfigManager::Commands c = static_cast<CNetConfigManager::Commands>(command);

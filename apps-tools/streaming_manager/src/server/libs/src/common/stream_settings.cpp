@@ -365,8 +365,8 @@ auto CStreamSettings::String()-> std::string{
                 break;
         }
         str = str + "DAC repeat:\t\t" + dac_repeat +" (In file mode)\n";
-        str = str + "DAC repeat count:\t\t" + std::to_string(getDACRepeatCount())  +" (In DAC file mode\n";
-        str = str + "DAC memory cache:\t\t" + std::to_string(getDACMemoryUsage())  +" (In DAC file mode\n";
+        str = str + "DAC repeat count:\t" + std::to_string(getDACRepeatCount())  +" (In DAC file mode)\n";
+        str = str + "DAC memory cache:\t" + std::to_string(getDACMemoryUsage())  +" (In DAC file mode)\n";
         str = str + "DAC speed (Hz):\t\t" + std::to_string(getDACHz())  +"\n";
 
 
@@ -382,7 +382,7 @@ auto CStreamSettings::String()-> std::string{
         str = str + "DAC Gain:\t\t" + dac_gain  +" (250-12 only)\n";
 
 
-        str = str + "\n******************** Loopback ********************\n";
+        str = str + "\n******************** Loopback **************************\n";
         
         std::string  lb_mode = "ERROR";
         switch (getLoopbackMode()) {
@@ -392,7 +392,7 @@ auto CStreamSettings::String()-> std::string{
             default:
                 break;
         }
-        str = str + "Mode:\t\t" + lb_mode  + "\n";
+        str = str + "Mode:\t\t\t" + lb_mode  + "\n";
 
         std::string  lb_chs = "ERROR";
         switch (getLoopbackChannels()) {
