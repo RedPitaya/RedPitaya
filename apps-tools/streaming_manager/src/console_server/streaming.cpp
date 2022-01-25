@@ -23,31 +23,32 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool ve
 	g_verbMode = verbMode;
     g_serverNetConfig = serverNetConfig;
 	try{
-		if (!g_serverNetConfig->isSetted()) return;
+		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
+		if (!settings.isSetted()) return;
 
-		auto resolution   = g_serverNetConfig->getResolution();
-		auto format       = g_serverNetConfig->getFormat();
-		auto sock_port    = g_serverNetConfig->getPort();
-		auto use_file     = g_serverNetConfig->getSaveType();
-		auto protocol     = g_serverNetConfig->getProtocol();
-		auto channel      = g_serverNetConfig->getChannels();
-		auto rate         = g_serverNetConfig->getDecimation();
+		auto resolution   = settings.getResolution();
+		auto format       = settings.getFormat();
+		auto sock_port    = settings.getPort();
+		auto use_file     = settings.getSaveType();
+		auto protocol     = settings.getProtocol();
+		auto channel      = settings.getChannels();
+		auto rate         = settings.getDecimation();
 		auto ip_addr_host = "127.0.0.1";
-		auto samples      = g_serverNetConfig->getSamples();
-		auto save_mode    = g_serverNetConfig->getType();
+		auto samples      = settings.getSamples();
+		auto save_mode    = settings.getType();
 
 #ifdef Z20
 		auto use_calib    = 0;
 		auto attenuator   = 0;
 #else
-		auto use_calib    = g_serverNetConfig->getCalibration();
-		auto attenuator   = g_serverNetConfig->getAttenuator();
+		auto use_calib    = settings.getCalibration();
+		auto attenuator   = settings.getAttenuator();
 		rp_CalibInit();
 		auto osc_calib_params = rp_GetCalibrationSettings();
 #endif
 
 #ifdef Z20_250_12
-		auto ac_dc = serverNetConfig->getAC_DC();
+		auto ac_dc = settings.getAC_DC();
 #endif
 
 		std::vector<UioT> uioList = GetUioList();
@@ -168,7 +169,7 @@ auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool ve
 			auto file_type = Stream_FileType::WAV_TYPE;
 			if (format == CStreamSettings::TDMS) file_type = Stream_FileType::TDMS_TYPE;
 			if (format == CStreamSettings::CSV)  file_type = Stream_FileType::CSV_TYPE;
-			g_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT);
+			g_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT, testMode);
 			g_manger->notifyStop = [](int status)
 								{
 									stopNonBlocking(status == 0 ? 2 : 3);

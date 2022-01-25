@@ -74,8 +74,11 @@ public:
     };
 
     CStreamSettings();
+    CStreamSettings (const CStreamSettings&);
+    CStreamSettings& operator= (const CStreamSettings&);
     auto reset() -> void;
     auto isSetted() -> bool;
+    auto copy(const CStreamSettings &) -> void;
     auto setValue(std::string key,std::string value) -> bool;
     auto setValue(std::string key,int64_t value) -> bool;
     auto setValue(std::string key,double value) -> bool;
@@ -87,61 +90,64 @@ public:
     auto StringStreaming()-> std::string;
 
     auto setPort(std::string _port) -> void;
-    auto getPort() -> std::string;
+    auto getPort() const -> std::string;
     auto setProtocol(Protocol _port) -> void;
-    auto getProtocol() -> Protocol;
+    auto getProtocol() const -> Protocol;
     auto setSamples(int32_t _samples) -> void;
-    auto getSamples() -> int32_t;
+    auto getSamples() const -> int32_t;
     auto setFormat(DataFormat _format) -> void;
-    auto getFormat() -> DataFormat;
+    auto getFormat() const -> DataFormat;
     auto setType(DataType _type) -> void;
-    auto getType() -> DataType;
+    auto getType() const -> DataType;
     auto setSaveType(SaveType _type) -> void;
-    auto getSaveType() -> SaveType;
+    auto getSaveType() const -> SaveType;
     auto setChannels(Channel _channels) -> void;
-    auto getChannels() -> Channel;
+    auto getChannels() const -> Channel;
     auto setResolution(Resolution _resolution) -> void;
-    auto getResolution() -> Resolution;
+    auto getResolution() const -> Resolution;
     auto setDecimation(uint32_t _decimation) -> void;
-    auto getDecimation() -> uint32_t;
+    auto getDecimation() const -> uint32_t;
 
     auto setAttenuator(Attenuator _attenuator) -> void;
-    auto getAttenuator() -> Attenuator;
+    auto getAttenuator() const -> Attenuator;
     auto setCalibration(bool _calibration) -> void;
-    auto getCalibration() -> bool;
+    auto getCalibration() const -> bool;
     auto setAC_DC(AC_DC _value) -> void;
-    auto getAC_DC() -> AC_DC;
+    auto getAC_DC() const -> AC_DC;
 
     auto setDACFile(std::string _value) -> void;
-    auto getDACFile() -> std::string;
+    auto getDACFile() const -> std::string;
     auto setDACFileType(DataFormat _value) -> void;
-    auto getDACFileType() -> DataFormat;
+    auto getDACFileType() const -> DataFormat;
     auto setDACGain(DACGain _value) -> void;
-    auto getDACGain() -> DACGain;
+    auto getDACGain() const -> DACGain;
     auto setDACMode(DACType _value) -> void;
-    auto getDACMode() -> DACType;
+    auto getDACMode() const -> DACType;
     auto setDACRepeat(DACRepeat _value) -> void;
-    auto getDACRepeat() -> DACRepeat;
+    auto getDACRepeat() const -> DACRepeat;
     auto setDACHz(uint32_t _value) -> void;
-    auto getDACHz() -> uint32_t;
+    auto getDACHz() const -> uint32_t;
     auto setDACRepeatCount(uint32_t _value) -> void;
-    auto getDACRepeatCount() -> uint32_t;
-    auto getDACPort() -> std::string;
+    auto getDACRepeatCount() const -> uint32_t;
+    auto getDACPort() const -> std::string;
     auto setDACPort(std::string _port) -> void;
-    auto getDACMemoryUsage() -> int64_t;
+    auto getDACMemoryUsage() const -> int64_t;
     auto setDACMemoryUsage(int64_t _value) -> void;
 
-    auto getLoopbackTimeout() -> uint32_t;
+    auto getLoopbackTimeout() const -> uint32_t;
     auto setLoopbackTimeout(uint32_t value) -> void;
-    auto getLoopbackSpeed() -> int32_t;
+    auto getLoopbackSpeed() const -> int32_t;
     auto setLoopbackSpeed(int32_t value) -> void;
-    auto getLoopbackMode() -> LOOPBACKMode;
+    auto getLoopbackMode() const -> LOOPBACKMode;
     auto setLoopbackMode(LOOPBACKMode mode) -> void;
-    auto getLoopbackChannels() -> LOOPBACKChannels;
+    auto getLoopbackChannels() const -> LOOPBACKChannels;
     auto setLoopbackChannels(LOOPBACKChannels channels) -> void;
 
 
 private:
+
+    CStreamSettings(CStreamSettings&&) = delete;
+    CStreamSettings& operator=(CStreamSettings&&) = delete;
 
     std::string     m_port;
     std::string     m_dac_file;

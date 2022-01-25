@@ -4,7 +4,7 @@
 #include "NetConfigManager.h"
 #include "EventHandlers.h"
 
-class ServerNetConfigManager : public  CStreamSettings{
+class ServerNetConfigManager{
 public:
     enum class Errors{
         CANNT_SET_DATA,
@@ -15,6 +15,7 @@ public:
 
     enum class Events{
         GET_NEW_SETTING,
+        GET_NEW_TEST_SETTING,        
         STOP_STREAMING,
         START_STREAMING,
         START_STREAMING_TEST,
@@ -52,13 +53,18 @@ public:
     auto sendServerStoppedLoopBackMode() -> bool;
     auto sendStreamServerBusy() -> bool;
     
+    auto getSettingsRef() -> CStreamSettings&;
+    auto getSettings() -> const CStreamSettings;
+    auto getTempSettings() -> const CStreamSettings;
+    
     auto addHandlerError(std::function<void(ServerNetConfigManager::Errors)> _func) -> void;
     auto addHandler(ServerNetConfigManager::Events event, std::function<void()> _func) -> void;
 
 private:
     enum class States{
         NORMAL,
-        GET_DATA
+        GET_DATA,
+        GET_TEMP_DATA
     };
 
     std::shared_ptr<asionet_broadcast::CAsioBroadcastSocket> m_pBroadcast;
@@ -71,11 +77,13 @@ private:
     auto connected(std::string host) -> void;
     auto disconnected(std::string host) -> void;
     auto serverError(std::error_code error) -> void;
-    auto sendConfig(bool _async) -> bool;
+    auto sendConfig(bool sendTest, bool _async) -> bool;
 
     States m_currentState;
     EventList<Errors> m_errorCallback;
     EventList<> m_callbacks;
     std::string m_file_settings;
     asionet_broadcast::CAsioBroadcastSocket::ABMode m_mode;
+    CStreamSettings m_settings;
+    CStreamSettings m_testSettings;
 };

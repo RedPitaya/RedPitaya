@@ -1,7 +1,8 @@
 #include "ServerNetConfigManager.h"
+
 #define UNUSED(x) [&x]{}()
 
-ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode,std::string host,std::string port):CStreamSettings(),
+ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode,std::string host,std::string port):
     m_pBroadcast(nullptr),
     m_pNetConfManager(nullptr),
     m_currentState(States::NORMAL),
@@ -18,8 +19,7 @@ ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings
 
     m_pNetConfManager->addHandlerError(std::bind(&ServerNetConfigManager::serverError, this, std::placeholders::_1));
     startServer(host,port);
-    readFromFile(defualt_file_settings_path);
-
+    m_settings.readFromFile(defualt_file_settings_path);
 }
 
 ServerNetConfigManager::~ServerNetConfigManager(){
@@ -76,16 +76,33 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
     CNetConfigManager::Commands c = static_cast<CNetConfigManager::Commands>(command);
     if (c == CNetConfigManager::Commands::BEGIN_SEND_SETTING){
         m_currentState = States::GET_DATA;
-        reset();
+        m_settings.reset();
     }
+
     if (c == CNetConfigManager::Commands::END_SEND_SETTING){
         m_currentState = States::NORMAL;
-        if (isSetted()){
+        if (m_settings.isSetted()){
             m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCESS);
         }else{
-            reset();
+            m_settings.reset();
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
+        }
+    }
+
+    if (c == CNetConfigManager::Commands::BEGIN_SEND_TEST_SETTING){
+        m_currentState = States::GET_TEMP_DATA;
+        m_testSettings.reset();
+    }
+
+    if (c == CNetConfigManager::Commands::END_SEND_TEST_SETTING){
+        m_currentState = States::NORMAL;
+        if (m_testSettings.isSetted()){
+            m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_TEST_SETTING));
+            m_pNetConfManager->sendData(CNetConfigManager::Commands::TEST_SETTING_GET_SUCCESS);
+        }else{
+            m_testSettings.reset();
+            m_pNetConfManager->sendData(CNetConfigManager::Commands::TEST_SETTING_GET_FAIL);
         }
     }
 
@@ -112,9 +129,14 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
     if (c == CNetConfigManager::Commands::STOP_DAC_STREAMING){
         m_callbacks.emitEvent(static_cast<int>(Events::STOP_DAC_STREAMING));
     }
+
+    if (c == CNetConfigManager::Commands::COPY_SETTINGS_TO_TEST_SETTINGS){
+        m_testSettings = m_settings;
+        m_pNetConfManager->sendData(CNetConfigManager::Commands::COPY_SETTINGS_TO_TEST_SETTINGS_DONE);
+    }
     
     if (c == CNetConfigManager::Commands::LOAD_SETTING_FROM_FILE){
-        if (readFromFile(m_file_settings)){
+        if (m_settings.readFromFile(m_file_settings)){
             m_callbacks.emitEvent(static_cast<int>(Events::GET_NEW_SETTING));
             m_pNetConfManager->sendData(CNetConfigManager::Commands::LOAD_FROM_FILE_SUCCES);
         }else{
@@ -123,7 +145,7 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
     }
 
     if (c == CNetConfigManager::Commands::SAVE_SETTING_TO_FILE){
-        if (writeToFile(m_file_settings)){
+        if (m_settings.writeToFile(m_file_settings)){
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SAVE_TO_FILE_SUCCES);
         }else{
             m_pNetConfManager->sendData(CNetConfigManager::Commands::SAVE_TO_FILE_FAIL);
@@ -131,7 +153,11 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
     }
 
     if (c == CNetConfigManager::Commands::REQUEST_SERVER_SETTINGS){
-        sendConfig(false);
+        sendConfig(false,false);
+    }
+
+    if (c == CNetConfigManager::Commands::REQUEST_SERVER_TEST_SETTINGS){
+        sendConfig(true,false);
     }
 
     // Loopback commands
@@ -147,7 +173,13 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
 
 auto ServerNetConfigManager::receiveValueStr(std::string key,std::string value) -> void{
     if (m_currentState == States::GET_DATA){
-        if (!setValue(key,value)){
+        if (!m_settings.setValue(key,value)){
+            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
+        }
+    }
+
+    if (m_currentState == States::GET_TEMP_DATA){
+        if (!m_testSettings.setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
         }
     }
@@ -155,7 +187,13 @@ auto ServerNetConfigManager::receiveValueStr(std::string key,std::string value) 
 
 auto ServerNetConfigManager::receiveValueInt(std::string key,uint32_t value) -> void{
     if (m_currentState == States::GET_DATA){
-        if (!setValue(key,(int64_t)value)){
+        if (!m_settings.setValue(key,(int64_t)value)){
+            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
+        }
+    }
+
+    if (m_currentState == States::GET_TEMP_DATA){
+        if (!m_testSettings.setValue(key,(int64_t)value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
         }
     }
@@ -163,7 +201,13 @@ auto ServerNetConfigManager::receiveValueInt(std::string key,uint32_t value) -> 
 
 auto ServerNetConfigManager::receiveValueDouble(std::string key,double value) -> void{
     if (m_currentState == States::GET_DATA){
-        if (!setValue(key,value)){
+        if (!m_settings.setValue(key,value)){
+            m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
+        }
+    }
+
+    if (m_currentState == States::GET_TEMP_DATA){
+        if (!m_testSettings.setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA);
         }
     }
@@ -174,7 +218,13 @@ auto ServerNetConfigManager::serverError(std::error_code) -> void{
     //fprintf(stderr,"[ServerNetConfigManager] serverError: %s (%d)\n",error.message().c_str(),error.value());
     m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL);
     if (m_currentState == States::GET_DATA){
-        reset();
+        m_settings.reset();
+        m_currentState = States::NORMAL;
+        m_errorCallback.emitEvent(0,Errors::BREAK_RECEIVE_SETTINGS);
+    }
+
+    if (m_currentState == States::GET_TEMP_DATA){
+        m_testSettings.reset();
         m_currentState = States::NORMAL;
         m_errorCallback.emitEvent(0,Errors::BREAK_RECEIVE_SETTINGS);
     }
@@ -244,40 +294,58 @@ auto ServerNetConfigManager::sendStreamServerBusy() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_BUSY);
 }
 
-auto ServerNetConfigManager::sendConfig(bool _async) -> bool{
+auto ServerNetConfigManager::sendConfig(bool sendTest,bool _async) -> bool{
     if (m_pNetConfManager->isConnected()) {
-        if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;
-        if (!m_pNetConfManager->sendData("port",getPort(),_async)) return false;
-        if (!m_pNetConfManager->sendData("protocol",static_cast<uint32_t>(getProtocol()),_async)) return false;
-        if (!m_pNetConfManager->sendData("samples",static_cast<uint32_t>(getSamples()),_async)) return false;
-        if (!m_pNetConfManager->sendData("format",static_cast<uint32_t>(getFormat()),_async)) return false;
-        if (!m_pNetConfManager->sendData("type",static_cast<uint32_t>(getType()),_async)) return false;
-        if (!m_pNetConfManager->sendData("save_type",static_cast<uint32_t>(getSaveType()),_async)) return false;
-        if (!m_pNetConfManager->sendData("channels",static_cast<uint32_t>(getChannels()),_async)) return false;
-        if (!m_pNetConfManager->sendData("resolution",static_cast<uint32_t>(getResolution()),_async)) return false;
-        if (!m_pNetConfManager->sendData("decimation",static_cast<uint32_t>(getDecimation()),_async)) return false;
-        if (!m_pNetConfManager->sendData("attenuator",static_cast<uint32_t>(getAttenuator()),_async)) return false;
-        if (!m_pNetConfManager->sendData("calibration",static_cast<uint32_t>(getCalibration()),_async)) return false;
-        if (!m_pNetConfManager->sendData("coupling",static_cast<uint32_t>(getAC_DC()),_async)) return false;
+        CStreamSettings s = sendTest ? m_testSettings : m_settings;
+        
+        if (!m_pNetConfManager->sendData(sendTest ? CNetConfigManager::Commands::BEGIN_SEND_TEST_SETTING : CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;
+        if (!m_pNetConfManager->sendData("port",s.getPort(),_async)) return false;
+        if (!m_pNetConfManager->sendData("protocol",static_cast<uint32_t>(s.getProtocol()),_async)) return false;
+        if (!m_pNetConfManager->sendData("samples",static_cast<uint32_t>(s.getSamples()),_async)) return false;
+        if (!m_pNetConfManager->sendData("format",static_cast<uint32_t>(s.getFormat()),_async)) return false;
+        if (!m_pNetConfManager->sendData("type",static_cast<uint32_t>(s.getType()),_async)) return false;
+        if (!m_pNetConfManager->sendData("save_type",static_cast<uint32_t>(s.getSaveType()),_async)) return false;
+        if (!m_pNetConfManager->sendData("channels",static_cast<uint32_t>(s.getChannels()),_async)) return false;
+        if (!m_pNetConfManager->sendData("resolution",static_cast<uint32_t>(s.getResolution()),_async)) return false;
+        if (!m_pNetConfManager->sendData("decimation",static_cast<uint32_t>(s.getDecimation()),_async)) return false;
+        if (!m_pNetConfManager->sendData("attenuator",static_cast<uint32_t>(s.getAttenuator()),_async)) return false;
+        if (!m_pNetConfManager->sendData("calibration",static_cast<uint32_t>(s.getCalibration()),_async)) return false;
+        if (!m_pNetConfManager->sendData("coupling",static_cast<uint32_t>(s.getAC_DC()),_async)) return false;
 
-        if (!m_pNetConfManager->sendData("dac_file",getDACFile(),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_port",getDACPort(),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_file_type",static_cast<uint32_t>(getDACFileType()),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_gain",static_cast<uint32_t>(getDACGain()),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_mode",static_cast<uint32_t>(getDACMode()),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_repeatCount",static_cast<uint32_t>(getDACRepeatCount()),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
-        if (!m_pNetConfManager->sendData("dac_speed",static_cast<uint32_t>(getDACHz()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_file",s.getDACFile(),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_port",s.getDACPort(),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_file_type",static_cast<uint32_t>(s.getDACFileType()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_gain",static_cast<uint32_t>(s.getDACGain()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_mode",static_cast<uint32_t>(s.getDACMode()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_repeat",static_cast<uint32_t>(s.getDACRepeat()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_repeatCount",static_cast<uint32_t>(s.getDACRepeatCount()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_memoryUsage",static_cast<uint32_t>(s.getDACMemoryUsage()),_async)) return false;
+        if (!m_pNetConfManager->sendData("dac_speed",static_cast<uint32_t>(s.getDACHz()),_async)) return false;
 
-        if (!m_pNetConfManager->sendData("loopback_timeout",static_cast<uint32_t>(getLoopbackTimeout()),_async)) return false;
-        if (!m_pNetConfManager->sendData("loopback_speed",static_cast<uint32_t>(getLoopbackSpeed()),_async)) return false;
-        if (!m_pNetConfManager->sendData("loopback_mode",static_cast<uint32_t>(getLoopbackMode()),_async)) return false;
-        if (!m_pNetConfManager->sendData("loopback_channels",static_cast<uint32_t>(getLoopbackChannels()),_async)) return false;
+        if (!m_pNetConfManager->sendData("loopback_timeout",static_cast<uint32_t>(s.getLoopbackTimeout()),_async)) return false;
+        if (!m_pNetConfManager->sendData("loopback_speed",static_cast<uint32_t>(s.getLoopbackSpeed()),_async)) return false;
+        if (!m_pNetConfManager->sendData("loopback_mode",static_cast<uint32_t>(s.getLoopbackMode()),_async)) return false;
+        if (!m_pNetConfManager->sendData("loopback_channels",static_cast<uint32_t>(s.getLoopbackChannels()),_async)) return false;
 
-        if (!m_pNetConfManager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
+        if (!m_pNetConfManager->sendData(sendTest ? CNetConfigManager::Commands::END_SEND_TEST_SETTING : CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;
     }
     return false;
 }
 
+auto ServerNetConfigManager::getSettings() -> const CStreamSettings{
+    return m_settings;
+}
+
+auto ServerNetConfigManager::getSettingsRef() -> CStreamSettings&{
+    return m_settings;
+}
+
+
+auto ServerNetConfigManager::getTempSettings() -> const CStreamSettings{
+    if (m_testSettings.isSetted()){
+        return m_testSettings;
+    }
+    m_testSettings = m_settings;
+    return m_testSettings;
+}

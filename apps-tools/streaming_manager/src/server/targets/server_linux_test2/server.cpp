@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 
 
     CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , ".", 100000,false);
+    s_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , ".", 100000,false,false);
     // Run application
     CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
     app.runNonBlock("");

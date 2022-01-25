@@ -225,7 +225,7 @@ auto printFinalStatisitc() -> void{
             std::cout << " " << createStr(convertBtoS(g_BytesCountTotal[host]),18) << "|";
             std::cout << " " << createStr(bw,18) << "|";
             std::cout << " " << createStr(std::to_string(g_packCounterTotal_ch1[host]),18) << "|";
-            std::cout << " " << createStr(std::to_string(g_packCounterTotal_ch1[host]),18) << "|";
+            std::cout << " " << createStr(std::to_string(g_packCounterTotal_ch2[host]),18) << "|";
             std::cout << "                  |\n";
             std::cout << "                  +...................+...................+...................+...................+";
             std::cout << " " + createStr(std::to_string(g_lostRateTotal[host]),17) << "|\n";

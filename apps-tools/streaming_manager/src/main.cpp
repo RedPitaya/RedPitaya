@@ -159,27 +159,27 @@ int rp_app_init(void)
 				auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
 			#endif 
 			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,mode,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[](){
 				updateUI();
 			});
 
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING,[g_serverNetConfig](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING,[](){
 				StartServer(false);
 			});
 
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING_TEST,[g_serverNetConfig](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING_TEST,[](){
 				StartServer(true);
 			});
 
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[g_serverNetConfig](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[](){
 				StopNonBlocking(0);
 			});
 
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[g_serverNetConfig](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[](){
 				startDACServer(false);
 			});
 
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING_TEST,[g_serverNetConfig](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING_TEST,[](){
 				startDACServer(true);
 			});
 
@@ -191,7 +191,7 @@ int rp_app_init(void)
 		ss_status.SendValue(0);
 		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
 		ss_dac_max_speed.SendValue(DAC_FREQUENCY);
-		if (g_serverNetConfig->isSetted()){
+		if (g_serverNetConfig->getSettingsRef().isSetted()){
 			updateUI();
 		}else{
 			setConfig(true);
@@ -242,17 +242,17 @@ void UpdateSignals(void)
 }
 
 void saveConfigInFile(){
-	if (!g_serverNetConfig->writeToFile(config_file)){
+	if (!g_serverNetConfig->getSettingsRef().writeToFile(config_file)){
 		std::cerr << "Error save to file(" << config_file <<")\n";
 	}
 }
 
 void updateUI(){
-	ss_port.SendValue(std::atoi(g_serverNetConfig->getPort().c_str()));
-	ss_dac_file.SendValue(g_serverNetConfig->getDACFile());
-	ss_dac_port.SendValue(std::atoi(g_serverNetConfig->getDACPort().c_str()));
+	ss_port.SendValue(std::atoi(g_serverNetConfig->getSettingsRef().getPort().c_str()));
+	ss_dac_file.SendValue(g_serverNetConfig->getSettingsRef().getDACFile());
+	ss_dac_port.SendValue(std::atoi(g_serverNetConfig->getSettingsRef().getDACPort().c_str()));
 
-	switch (g_serverNetConfig->getSaveType())
+	switch (g_serverNetConfig->getSettingsRef().getSaveType())
 	{
 		case CStreamSettings::NET:
 			ss_use_localfile.SendValue(0);
@@ -262,7 +262,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getProtocol())
+	switch (g_serverNetConfig->getSettingsRef().getProtocol())
 	{
 		case CStreamSettings::TCP:
 			ss_protocol.SendValue(SS_TCP);
@@ -272,7 +272,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getChannels())
+	switch (g_serverNetConfig->getSettingsRef().getChannels())
 	{
 		case CStreamSettings::CH1:
 			ss_protocol.SendValue(1);
@@ -285,7 +285,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getResolution())
+	switch (g_serverNetConfig->getSettingsRef().getResolution())
 	{
 		case CStreamSettings::BIT_8:
 			ss_resolution.SendValue(SS_8BIT);
@@ -295,7 +295,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getType())
+	switch (g_serverNetConfig->getSettingsRef().getType())
 	{
 		case CStreamSettings::RAW:
 			ss_save_mode.SendValue(1);
@@ -305,7 +305,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getFormat())
+	switch (g_serverNetConfig->getSettingsRef().getFormat())
 	{
 		case CStreamSettings::WAV:
 			ss_format.SendValue(0);
@@ -318,7 +318,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getAttenuator())
+	switch (g_serverNetConfig->getSettingsRef().getAttenuator())
 	{
 		case CStreamSettings::A_1_1:
 			ss_attenuator.SendValue(1);
@@ -328,7 +328,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getAC_DC())
+	switch (g_serverNetConfig->getSettingsRef().getAC_DC())
 	{
 		case CStreamSettings::AC:
 			ss_ac_dc.SendValue(1);
@@ -338,7 +338,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getDACFileType())
+	switch (g_serverNetConfig->getSettingsRef().getDACFileType())
 	{
 		case CStreamSettings::WAV:
 			ss_dac_file_type.SendValue(0);
@@ -348,7 +348,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getDACGain())
+	switch (g_serverNetConfig->getSettingsRef().getDACGain())
 	{
 		case CStreamSettings::X1:
 			ss_dac_gain.SendValue(0);
@@ -358,7 +358,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getDACMode())
+	switch (g_serverNetConfig->getSettingsRef().getDACMode())
 	{
 		case CStreamSettings::DAC_NET:
 			ss_dac_mode.SendValue(0);
@@ -369,18 +369,18 @@ void updateUI(){
 	}
 
 
-	ss_dac_repeat.SendValue(g_serverNetConfig->getDACRepeat());
-	ss_dac_rep_count.SendValue(g_serverNetConfig->getDACRepeatCount());
-	ss_dac_memory.SendValue(g_serverNetConfig->getDACMemoryUsage());
-	ss_dac_speed.SendValue(g_serverNetConfig->getDACHz());
-	ss_rate.SendValue(g_serverNetConfig->getDecimation());
-	ss_samples.SendValue(g_serverNetConfig->getSamples());
-	ss_calib.SendValue(g_serverNetConfig->getCalibration() ? 2 : 1);
+	ss_dac_repeat.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeat());
+	ss_dac_rep_count.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeatCount());
+	ss_dac_memory.SendValue(g_serverNetConfig->getSettingsRef().getDACMemoryUsage());
+	ss_dac_speed.SendValue(g_serverNetConfig->getSettingsRef().getDACHz());
+	ss_rate.SendValue(g_serverNetConfig->getSettingsRef().getDecimation());
+	ss_samples.SendValue(g_serverNetConfig->getSettingsRef().getSamples());
+	ss_calib.SendValue(g_serverNetConfig->getSettingsRef().getCalibration() ? 2 : 1);
 	
-	ss_lb_channels.SendValue(g_serverNetConfig->getLoopbackChannels());
-	ss_lb_mode.SendValue(g_serverNetConfig->getLoopbackMode());
-	ss_lb_timeout.SendValue(g_serverNetConfig->getLoopbackTimeout());
-	ss_lb_speed.SendValue(g_serverNetConfig->getLoopbackSpeed());
+	ss_lb_channels.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackChannels());
+	ss_lb_mode.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackMode());
+	ss_lb_timeout.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackTimeout());
+	ss_lb_speed.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackSpeed());
 	
 }
 
@@ -389,21 +389,21 @@ void setConfig(bool _force){
 	if (ss_port.IsNewValue() || _force)
 	{
 		ss_port.Update();
-		g_serverNetConfig->setPort(std::to_string(ss_port.Value()));
+		g_serverNetConfig->getSettingsRef().setPort(std::to_string(ss_port.Value()));
 		needUpdate = true;
 	}
 
 	if (ss_dac_file.IsNewValue() || _force)
 	{
 		ss_dac_file.Update();
-		g_serverNetConfig->setDACFile(ss_dac_file.Value());
+		g_serverNetConfig->getSettingsRef().setDACFile(ss_dac_file.Value());
 		needUpdate = true;
 	}
 
 	if (ss_dac_port.IsNewValue() || _force)
 	{
 		ss_dac_port.Update();
-		g_serverNetConfig->setDACPort(std::to_string(ss_dac_port.Value()));
+		g_serverNetConfig->getSettingsRef().setDACPort(std::to_string(ss_dac_port.Value()));
 		needUpdate = true;
 	}
 
@@ -435,9 +435,9 @@ void setConfig(bool _force){
 	{
 		ss_use_localfile.Update();
 		if (ss_use_localfile.Value() == 1)
-			g_serverNetConfig->setSaveType(CStreamSettings::FILE);
+			g_serverNetConfig->getSettingsRef().setSaveType(CStreamSettings::FILE);
 		else
-			g_serverNetConfig->setSaveType(CStreamSettings::NET);
+			g_serverNetConfig->getSettingsRef().setSaveType(CStreamSettings::NET);
 		needUpdate = true;
 	}
 
@@ -445,9 +445,9 @@ void setConfig(bool _force){
 	{
 		ss_protocol.Update();
 		if (ss_protocol.Value() == SS_TCP)
-			g_serverNetConfig->setProtocol(CStreamSettings::TCP);
+			g_serverNetConfig->getSettingsRef().setProtocol(CStreamSettings::TCP);
 		if (ss_protocol.Value() == SS_UDP)
-			g_serverNetConfig->setProtocol(CStreamSettings::UDP);
+			g_serverNetConfig->getSettingsRef().setProtocol(CStreamSettings::UDP);
 		needUpdate = true;
 	}
 
@@ -455,11 +455,11 @@ void setConfig(bool _force){
 	{
 		ss_channels.Update();
 		if (ss_channels.Value() == 1)
-			g_serverNetConfig->setChannels(CStreamSettings::CH1);
+			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::CH1);
 		if (ss_channels.Value() == 2)
-			g_serverNetConfig->setChannels(CStreamSettings::CH2);
+			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::CH2);
 		if (ss_channels.Value() == 3)
-			g_serverNetConfig->setChannels(CStreamSettings::BOTH);
+			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::BOTH);
 		needUpdate = true;
 	}
 
@@ -467,9 +467,9 @@ void setConfig(bool _force){
 	{
 		ss_resolution.Update();
 		if (ss_resolution.Value() == SS_8BIT)
-			g_serverNetConfig->setResolution(CStreamSettings::BIT_8);
+			g_serverNetConfig->getSettingsRef().setResolution(CStreamSettings::BIT_8);
 		if (ss_resolution.Value() == SS_16BIT)
-			g_serverNetConfig->setResolution(CStreamSettings::BIT_16);
+			g_serverNetConfig->getSettingsRef().setResolution(CStreamSettings::BIT_16);
 		needUpdate = true;
 	}
 
@@ -477,16 +477,16 @@ void setConfig(bool _force){
 	{
 		ss_save_mode.Update();
 		if (ss_save_mode.Value() == 1)
-			g_serverNetConfig->setType(CStreamSettings::RAW);
+			g_serverNetConfig->getSettingsRef().setType(CStreamSettings::RAW);
 		if (ss_save_mode.Value() == 2)
-			g_serverNetConfig->setType(CStreamSettings::VOLT);
+			g_serverNetConfig->getSettingsRef().setType(CStreamSettings::VOLT);
 		needUpdate = true;
 	}
 
 	if (ss_rate.IsNewValue() || _force)
 	{
 		ss_rate.Update();
-		g_serverNetConfig->setDecimation(ss_rate.Value());
+		g_serverNetConfig->getSettingsRef().setDecimation(ss_rate.Value());
 		needUpdate = true;
 	}
 
@@ -494,18 +494,18 @@ void setConfig(bool _force){
 	{
 		ss_format.Update();
 		if (ss_format.Value() == 0) 
-			g_serverNetConfig->setFormat(CStreamSettings::WAV);
+			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::WAV);
 		if (ss_format.Value() == 1) 
-			g_serverNetConfig->setFormat(CStreamSettings::TDMS);
+			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::TDMS);
 		if (ss_format.Value() == 2) 
-			g_serverNetConfig->setFormat(CStreamSettings::CSV);
+			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::CSV);
 		needUpdate = true;
 	}
 
 	if (ss_samples.IsNewValue() || _force)
 	{
 		ss_samples.Update();
-		g_serverNetConfig->setSamples(ss_samples.Value());
+		g_serverNetConfig->getSettingsRef().setSamples(ss_samples.Value());
 		needUpdate = true;
 	}
 
@@ -514,21 +514,21 @@ void setConfig(bool _force){
 	{
 		ss_attenuator.Update();
 		if (ss_attenuator.Value() == 1)
-			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
+			g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_1);
 		if (ss_attenuator.Value() == 2)
-			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_20);
+			g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_20);
 		needUpdate = true;
 	}
 
 	if (ss_calib.IsNewValue() || _force)
 	{
 		ss_calib.Update();
-		g_serverNetConfig->setCalibration(ss_calib.Value() == 2);
+		g_serverNetConfig->getSettingsRef().setCalibration(ss_calib.Value() == 2);
 		needUpdate = true;
 	}
 #else
-	g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
-	g_serverNetConfig->setCalibration(false);
+	g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_1);
+	g_serverNetConfig->getSettingsRef().setCalibration(false);
 #endif
 
 #ifdef Z20_250_12
@@ -536,22 +536,22 @@ void setConfig(bool _force){
 	{
 		ss_ac_dc.Update();
 		if (ss_ac_dc.Value() == 1)
-			g_serverNetConfig->setAC_DC(CStreamSettings::AC);
+			g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::AC);
 		if (ss_ac_dc.Value() == 2)
-			g_serverNetConfig->setAC_DC(CStreamSettings::DC);
+			g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::DC);
 		needUpdate = true;
 	}
 #else
-	g_serverNetConfig->setAC_DC(CStreamSettings::AC);
+	g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::AC);
 #endif
 
 	if (ss_dac_file_type.IsNewValue() || _force)
 	{
 		ss_dac_file_type.Update();
 		if (ss_dac_file_type.Value() == 0) 
-			g_serverNetConfig->setDACFileType(CStreamSettings::WAV);
+			g_serverNetConfig->getSettingsRef().setDACFileType(CStreamSettings::WAV);
 		if (ss_dac_file_type.Value() == 1) 
-			g_serverNetConfig->setDACFileType(CStreamSettings::TDMS);
+			g_serverNetConfig->getSettingsRef().setDACFileType(CStreamSettings::TDMS);
 		needUpdate = true;
 	}
 
@@ -560,50 +560,50 @@ void setConfig(bool _force){
 	{
 		ss_dac_gain.Update();
 		if (ss_dac_gain.Value() == 0)
-			g_serverNetConfig->setDACGain(CStreamSettings::X1);
+			g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X1);
 		if (ss_dac_gain.Value() == 1)
-			g_serverNetConfig->setDACGain(CStreamSettings::X5);
+			g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X5);
 		needUpdate = true;
 	}
 #else
-	g_serverNetConfig->setDACGain(CStreamSettings::X1);
+	g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X1);
 #endif
 
 	if (ss_dac_mode.IsNewValue() || _force)
 	{
 		ss_dac_mode.Update();
 		if (ss_dac_mode.Value() == 0)
-			g_serverNetConfig->setDACMode(CStreamSettings::DAC_NET);
+			g_serverNetConfig->getSettingsRef().setDACMode(CStreamSettings::DAC_NET);
 		if (ss_dac_mode.Value() == 1)
-			g_serverNetConfig->setDACMode(CStreamSettings::DAC_FILE);
+			g_serverNetConfig->getSettingsRef().setDACMode(CStreamSettings::DAC_FILE);
 		needUpdate = true;
 	}
 
 	if (ss_dac_repeat.IsNewValue() || _force)
 	{
 		ss_dac_repeat.Update();
-		g_serverNetConfig->setDACRepeat((CStreamSettings::DACRepeat)ss_dac_repeat.Value());
+		g_serverNetConfig->getSettingsRef().setDACRepeat((CStreamSettings::DACRepeat)ss_dac_repeat.Value());
 		needUpdate = true;
 	}
 
 	if (ss_dac_rep_count.IsNewValue() || _force)
 	{
 		ss_dac_rep_count.Update();
-		g_serverNetConfig->setDACRepeatCount(ss_dac_rep_count.Value());
+		g_serverNetConfig->getSettingsRef().setDACRepeatCount(ss_dac_rep_count.Value());
 		needUpdate = true;
 	}
 
 	if (ss_dac_memory.IsNewValue() || _force)
 	{
 		ss_dac_memory.Update();
-		g_serverNetConfig->setDACMemoryUsage(ss_dac_memory.Value());
+		g_serverNetConfig->getSettingsRef().setDACMemoryUsage(ss_dac_memory.Value());
 		needUpdate = true;
 	}
 
 	if (ss_dac_speed.IsNewValue() || _force)
 	{
 		ss_dac_speed.Update();
-		g_serverNetConfig->setDACHz(ss_dac_speed.Value());
+		g_serverNetConfig->getSettingsRef().setDACHz(ss_dac_speed.Value());
 		needUpdate = true;
 	}
 
@@ -611,28 +611,28 @@ void setConfig(bool _force){
 	if (ss_lb_channels.IsNewValue() || _force)
 	{
 		ss_lb_channels.Update();
-		g_serverNetConfig->setLoopbackChannels((CStreamSettings::LOOPBACKChannels)ss_lb_channels.Value());
+		g_serverNetConfig->getSettingsRef().setLoopbackChannels((CStreamSettings::LOOPBACKChannels)ss_lb_channels.Value());
 		needUpdate = true;
 	}
 
 	if (ss_lb_mode.IsNewValue() || _force)
 	{
 		ss_lb_mode.Update();
-		g_serverNetConfig->setLoopbackMode((CStreamSettings::LOOPBACKMode)ss_lb_mode.Value());
+		g_serverNetConfig->getSettingsRef().setLoopbackMode((CStreamSettings::LOOPBACKMode)ss_lb_mode.Value());
 		needUpdate = true;
 	}
 
 	if (ss_lb_speed.IsNewValue() || _force)
 	{
 		ss_lb_speed.Update();
-		g_serverNetConfig->setLoopbackSpeed(ss_lb_speed.Value());
+		g_serverNetConfig->getSettingsRef().setLoopbackSpeed(ss_lb_speed.Value());
 		needUpdate = true;
 	}
 
 	if (ss_lb_timeout.IsNewValue() || _force)
 	{
 		ss_lb_timeout.Update();
-		g_serverNetConfig->setLoopbackTimeout(ss_lb_timeout.Value());
+		g_serverNetConfig->getSettingsRef().setLoopbackTimeout(ss_lb_timeout.Value());
 		needUpdate = true;
 	}
 	
@@ -695,46 +695,48 @@ void StartServer(bool testMode){
 	// Search oscilloscope
 
 	try{
-		if (!g_serverNetConfig->isSetted()) return;
-		if (g_serverRun) {
-			if (s_manger){
-				if (!s_manger->isLocalMode()){
-					if (s_manger->getProtocol() == asionet::Protocol::TCP){
-						g_serverNetConfig->sendServerStartedTCP();
-					}
-					if (s_manger->getProtocol() == asionet::Protocol::UDP){
-						g_serverNetConfig->sendServerStartedUDP();
-					}
-				}else{
-					g_serverNetConfig->sendServerStartedSD();
-				}
-			}
-			return;
-		}
-		g_serverRun = true;
-		auto resolution   = g_serverNetConfig->getResolution();
-		auto format       = g_serverNetConfig->getFormat();
-		auto sock_port    = g_serverNetConfig->getPort();
-		auto use_file     = g_serverNetConfig->getSaveType();
-		auto protocol     = g_serverNetConfig->getProtocol();
-		auto channel      = g_serverNetConfig->getChannels();
-		auto rate         = g_serverNetConfig->getDecimation();
+		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
+		if (!settings.isSetted()) return;
+		// if (g_serverRun) {
+		// 	if (s_manger){
+		// 		if (!s_manger->isLocalMode()){
+		// 			if (s_manger->getProtocol() == asionet::Protocol::TCP){
+		// 				g_serverNetConfig->sendServerStartedTCP();
+		// 			}
+		// 			if (s_manger->getProtocol() == asionet::Protocol::UDP){
+		// 				g_serverNetConfig->sendServerStartedUDP();
+		// 			}
+		// 		}else{
+		// 			g_serverNetConfig->sendServerStartedSD();
+		// 		}
+		// 	}
+		// 	return;
+		// }
+		// g_serverRun = true;
+
+		auto resolution   = settings.getResolution();
+		auto format       = settings.getFormat();
+		auto sock_port    = settings.getPort();
+		auto use_file     = settings.getSaveType();
+		auto protocol     = settings.getProtocol();
+		auto channel      = settings.getChannels();
+		auto rate         = settings.getDecimation();
 		auto ip_addr_host = ss_ip_addr.Value();
-		auto samples      = g_serverNetConfig->getSamples();
-		auto save_mode    = g_serverNetConfig->getType();
+		auto samples      = settings.getSamples();
+		auto save_mode    = settings.getType();
 
 #ifdef Z20
 		auto use_calib = 0;
 		auto attenuator = 0;
 #else
-		auto use_calib    = g_serverNetConfig->getCalibration();
-		auto attenuator   = g_serverNetConfig->getAttenuator();
+		auto use_calib    = settings.getCalibration();
+		auto attenuator   = settings.getAttenuator();
 		rp_CalibInit();
 		auto osc_calib_params = rp_GetCalibrationSettings();
 #endif
 
 #ifdef Z20_250_12
-		auto ac_dc = g_serverNetConfig->getAC_DC();
+		auto ac_dc = settings.getAC_DC();
 #endif
 
 		std::vector<UioT> uioList = GetUioList();
@@ -822,6 +824,11 @@ void StartServer(bool testMode){
 		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
 #endif
 
+		if (s_app!= nullptr){
+			s_app->stop();
+			delete s_app;
+		}
+
 		for (const UioT &uio : uioList)
 		{
 			if (uio.nodeName == "rp_oscilloscope")
@@ -851,17 +858,13 @@ void StartServer(bool testMode){
 			auto file_type = Stream_FileType::WAV_TYPE;
 			if (format == CStreamSettings::TDMS) file_type = Stream_FileType::TDMS_TYPE;
 			if (format == CStreamSettings::CSV)  file_type = Stream_FileType::CSV_TYPE;
-			s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT);
+			s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT,testMode);
 			s_manger->notifyStop = [](int status)
 								{
 									StopNonBlocking(status == 0 ? 2 : 3);
 								};
 		}
 
-		if (s_app!= nullptr){
-			s_app->stop();
-			delete s_app;
-		}
 
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
@@ -931,7 +934,7 @@ void StopServer(int x){
 			throw runtime_error("Unknown state");
 			break;
 		}
-		g_serverRun = false;
+		//g_serverRun = false;
 		fprintf(stderr,"[Streaming] Stop server\n");
 	}catch (std::exception& e)
 	{
@@ -944,7 +947,7 @@ auto startDACServer(bool testMode) -> void{
     if (!g_serverNetConfig) return;
 	gen = nullptr;
 	try{
-		if (!g_serverNetConfig->isSetted()) return;
+		if (!g_serverNetConfig->getSettingsRef().isSetted()) return;
 		if (g_dac_serverRun) {
 			if (g_dac_manger){
 				if (!g_dac_manger->isLocalMode()){
@@ -956,16 +959,16 @@ auto startDACServer(bool testMode) -> void{
 			return;
 		}
 		g_dac_serverRun = true;
-		auto use_file     =  g_serverNetConfig->getDACMode();
-		auto sock_port    =  g_serverNetConfig->getDACPort();
-		auto dac_speed    =  g_serverNetConfig->getDACHz();
+		auto use_file     =  g_serverNetConfig->getSettingsRef().getDACMode();
+		auto sock_port    =  g_serverNetConfig->getSettingsRef().getDACPort();
+		auto dac_speed    =  g_serverNetConfig->getSettingsRef().getDACHz();
 		auto ip_addr_host = "127.0.0.1";
 
 #ifdef Z20
 		auto use_calib    = 0;
 		auto attenuator   = 0;
 #else
-		auto use_calib    = g_serverNetConfig->getCalibration();
+		auto use_calib    = g_serverNetConfig->getSettingsRef().getCalibration();
 		rp_CalibInit();
 		auto osc_calib_params = rp_GetCalibrationSettings();
 #endif
@@ -1033,11 +1036,11 @@ auto startDACServer(bool testMode) -> void{
 					sock_port);
 		}else{
 
-			auto format = g_serverNetConfig->getDACFileType();
-			auto filePath = g_serverNetConfig->getDACFile();
-			auto dacRepeatMode = g_serverNetConfig->getDACRepeat();
-			auto dacRepeatCount = g_serverNetConfig->getDACRepeatCount();
-			auto dacMemory = g_serverNetConfig->getDACMemoryUsage();
+			auto format = g_serverNetConfig->getSettingsRef().getDACFileType();
+			auto filePath = g_serverNetConfig->getSettingsRef().getDACFile();
+			auto dacRepeatMode = g_serverNetConfig->getSettingsRef().getDACRepeat();
+			auto dacRepeatCount = g_serverNetConfig->getSettingsRef().getDACRepeatCount();
+			auto dacMemory = g_serverNetConfig->getSettingsRef().getDACMemoryUsage();
 			
 			if (format == CStreamSettings::WAV) {
 				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);

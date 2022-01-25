@@ -48,7 +48,7 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
 
     if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
         uint64_t sempCh1 = size_ch1 / (resolution == 16 ? 2 : 1);
-        uint64_t sempCh2 = size_ch2 / (resolution == 16 ? 2 : 1);
+        uint64_t sempCh2 = size_ch2 / (resolution == 16 ? 2 : 1);        
         auto net   = g_manger[host]->getNetworkLost();
         auto flost = g_manger[host]->getFileLost();
         int  brokenBuffer = -1;

@@ -190,9 +190,9 @@ int main(int argc, char *argv[])
             std::lock_guard<std::mutex> lock(g_print_mtx);
             if (verbMode){
                 fprintf(stdout, "Get new settings\n");
-                fprintf(stdout,"%s",con_server->String().c_str());
+                fprintf(stdout,"%s",con_server->getSettingsRef().String().c_str());
                 RP_LOG (LOG_INFO,"Get new settings\n");
-                RP_LOG (LOG_INFO,"%s",con_server->String().c_str());
+                RP_LOG (LOG_INFO,"%s",con_server->getSettingsRef().String().c_str());
             }
         });
 

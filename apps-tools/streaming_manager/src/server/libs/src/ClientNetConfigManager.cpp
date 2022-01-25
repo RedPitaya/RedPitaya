@@ -297,6 +297,21 @@ auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
     return false;
 }
 
+auto ClientNetConfigManager::sendTestConfig(std::string host,const CStreamSettings &settings) -> bool{
+    const std::lock_guard<std::mutex> lock(g_client_mutex);
+    for(const auto &c : m_clients){
+        if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE && host == c->m_manager->getHost()){
+            auto ret =  sendTestConfig(c,true,settings);
+            if (!ret) {
+                c->m_manager->stopAsioNet();
+            }
+            return ret;
+        }
+    }
+    return false;
+}
+
+
 auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _async) -> bool{
     if (_client->m_manager->isConnected()) {
         if (!_client->m_manager->sendData(CNetConfigManager::Commands::BEGIN_SEND_SETTING,_async)) return false;
@@ -334,6 +349,43 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
     return false;
 }
 
+auto ClientNetConfigManager::sendTestConfig(std::shared_ptr<Clients> _client, bool _async,const CStreamSettings &settings) -> bool{
+    if (_client->m_manager->isConnected()) {
+        if (!_client->m_manager->sendData(CNetConfigManager::Commands::BEGIN_SEND_TEST_SETTING,_async)) return false;
+        if (!_client->m_manager->sendData("port",settings.getPort(),_async)) return false;
+        if (!_client->m_manager->sendData("protocol",static_cast<uint32_t>(settings.getProtocol()),_async)) return false;
+        if (!_client->m_manager->sendData("samples",static_cast<uint32_t>(settings.getSamples()),_async)) return false;
+        if (!_client->m_manager->sendData("format",static_cast<uint32_t>(settings.getFormat()),_async)) return false;
+        if (!_client->m_manager->sendData("type",static_cast<uint32_t>(settings.getType()),_async)) return false;
+        if (!_client->m_manager->sendData("save_type",static_cast<uint32_t>(settings.getSaveType()),_async)) return false;
+        if (!_client->m_manager->sendData("channels",static_cast<uint32_t>(settings.getChannels()),_async)) return false;
+        if (!_client->m_manager->sendData("resolution",static_cast<uint32_t>(settings.getResolution()),_async)) return false;
+        if (!_client->m_manager->sendData("decimation",static_cast<uint32_t>(settings.getDecimation()),_async)) return false;
+        if (!_client->m_manager->sendData("attenuator",static_cast<uint32_t>(settings.getAttenuator()),_async)) return false;
+        if (!_client->m_manager->sendData("calibration",static_cast<uint32_t>(settings.getCalibration()),_async)) return false;
+        if (!_client->m_manager->sendData("coupling",static_cast<uint32_t>(settings.getAC_DC()),_async)) return false;
+
+        if (!_client->m_manager->sendData("dac_file",settings.getDACFile(),_async)) return false;
+        if (!_client->m_manager->sendData("dac_port",settings.getDACPort(),_async)) return false;
+        if (!_client->m_manager->sendData("dac_file_type",static_cast<uint32_t>(settings.getDACFileType()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_gain",static_cast<uint32_t>(settings.getDACGain()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_mode",static_cast<uint32_t>(settings.getDACMode()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_repeat",static_cast<uint32_t>(settings.getDACRepeat()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_repeatCount",static_cast<uint32_t>(settings.getDACRepeatCount()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_memoryUsage",static_cast<uint32_t>(settings.getDACMemoryUsage()),_async)) return false;
+        if (!_client->m_manager->sendData("dac_speed",static_cast<uint32_t>(settings.getDACHz()),_async)) return false;
+
+        if (!_client->m_manager->sendData("loopback_timeout",static_cast<uint32_t>(settings.getLoopbackTimeout()),_async)) return false;
+        if (!_client->m_manager->sendData("loopback_speed",static_cast<uint32_t>(settings.getLoopbackSpeed()),_async)) return false;
+        if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(settings.getLoopbackMode()),_async)) return false;
+        if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(settings.getLoopbackChannels()),_async)) return false;
+
+        if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_TEST_SETTING,_async)) return false;
+        return true;
+    }
+    return false;
+}
+
 auto ClientNetConfigManager::requestConfig(std::string host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
@@ -344,12 +396,32 @@ auto ClientNetConfigManager::requestConfig(std::string host) -> bool{
     return false;
 }
 
+auto ClientNetConfigManager::requestTestConfig(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::REQUEST_SERVER_TEST_SETTINGS);
+    }
+    return false;
+}
+
 auto ClientNetConfigManager::getLocalSettingsOfHost(std::string host) -> CStreamSettings*{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
     if (it != std::end(m_clients)){
         return (CStreamSettings*)&(it->operator->()->m_client_settings);
+    }
+    return nullptr;
+}
+
+auto ClientNetConfigManager::getLocalTestSettingsOfHost(std::string host) -> CStreamSettings*{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return (CStreamSettings*)&(it->operator->()->m_testSettings);
     }
     return nullptr;
 }

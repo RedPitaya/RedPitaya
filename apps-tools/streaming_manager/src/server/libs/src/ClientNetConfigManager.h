@@ -59,14 +59,17 @@ public:
     auto connectToServers(std::vector<std::string> _hosts,std::string port) -> void;
     auto isServersConnected() -> bool;
     auto sendConfig(std::string host) -> bool;
+    auto sendTestConfig(std::string host,const CStreamSettings &settings) -> bool;
     auto sendSaveToFile(std::string host) -> bool;
     auto sendStart(std::string host,bool test_mode = false) -> bool;
     auto sendStop(std::string host) -> bool;
     auto sendDACStart(std::string host,bool test_mode = false) -> bool;
     auto sendDACStop(std::string host) -> bool;
     auto requestConfig(std::string host) -> bool;
+    auto requestTestConfig(std::string host) -> bool;    
     auto getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode;
     auto getLocalSettingsOfHost(std::string host) -> CStreamSettings*;
+    auto getLocalTestSettingsOfHost(std::string host) -> CStreamSettings*;
 
     auto sendLoopbackStart(std::string host) -> bool;
     auto sendLoopbackStop(std::string host) -> bool;
@@ -86,6 +89,7 @@ private:
         };
         States m_current_state = States::NORMAL;
         CStreamSettings m_client_settings;
+        CStreamSettings m_testSettings;
         std::shared_ptr<CNetConfigManager> m_manager;
         asionet_broadcast::CAsioBroadcastSocket::ABMode m_mode;
     };
@@ -99,6 +103,7 @@ private:
     auto serverError(std::error_code error,std::shared_ptr<Clients> sender) -> void;
     auto connectTimeoutError(std::error_code error,std::shared_ptr<Clients> sender) -> void;
     auto sendConfig(std::shared_ptr<Clients> _client, bool _async) -> bool;
+    auto sendTestConfig(std::shared_ptr<Clients> _client, bool _async,const CStreamSettings &settings) -> bool;
 
     EventList<Errors,std::string> m_errorCallback;
     EventList<std::string> m_callbacksStr;
