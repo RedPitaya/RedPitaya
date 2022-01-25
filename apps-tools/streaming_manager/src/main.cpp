@@ -947,28 +947,19 @@ auto startDACServer(bool testMode) -> void{
     if (!g_serverNetConfig) return;
 	gen = nullptr;
 	try{
-		if (!g_serverNetConfig->getSettingsRef().isSetted()) return;
-		if (g_dac_serverRun) {
-			if (g_dac_manger){
-				if (!g_dac_manger->isLocalMode()){
-					g_serverNetConfig->sendServerStartedTCP();
-				}else{
-					g_serverNetConfig->sendServerStartedSD();
-				}
-			}
-			return;
-		}
-		g_dac_serverRun = true;
-		auto use_file     =  g_serverNetConfig->getSettingsRef().getDACMode();
-		auto sock_port    =  g_serverNetConfig->getSettingsRef().getDACPort();
-		auto dac_speed    =  g_serverNetConfig->getSettingsRef().getDACHz();
+		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
+		if (!settings.isSetted()) return;
+		// g_dac_serverRun = true;
+		auto use_file     =  settings.getDACMode();
+		auto sock_port    =  settings.getDACPort();
+		auto dac_speed    =  settings.getDACHz();
 		auto ip_addr_host = "127.0.0.1";
 
 #ifdef Z20
 		auto use_calib    = 0;
 		auto attenuator   = 0;
 #else
-		auto use_calib    = g_serverNetConfig->getSettingsRef().getCalibration();
+		auto use_calib    = settings.getCalibration();
 		rp_CalibInit();
 		auto osc_calib_params = rp_GetCalibrationSettings();
 #endif
@@ -1013,6 +1004,11 @@ auto startDACServer(bool testMode) -> void{
 
 #endif
 
+		if (g_dac_app!= nullptr){
+			g_dac_app->stop();
+			delete g_dac_app;
+		}
+
 		for (const UioT &uio : uioList)
 		{
 			 if (uio.nodeName == "rp_dac")
@@ -1036,11 +1032,11 @@ auto startDACServer(bool testMode) -> void{
 					sock_port);
 		}else{
 
-			auto format = g_serverNetConfig->getSettingsRef().getDACFileType();
-			auto filePath = g_serverNetConfig->getSettingsRef().getDACFile();
-			auto dacRepeatMode = g_serverNetConfig->getSettingsRef().getDACRepeat();
-			auto dacRepeatCount = g_serverNetConfig->getSettingsRef().getDACRepeatCount();
-			auto dacMemory = g_serverNetConfig->getSettingsRef().getDACMemoryUsage();
+			auto format = settings.getDACFileType();
+			auto filePath = settings.getDACFile();
+			auto dacRepeatMode = settings.getDACRepeat();
+			auto dacRepeatCount = settings.getDACRepeatCount();
+			auto dacMemory = settings.getDACMemoryUsage();
 			
 			if (format == CStreamSettings::WAV) {
 				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
@@ -1055,12 +1051,6 @@ auto startDACServer(bool testMode) -> void{
 			};
 		
 		}
-
-		if (g_dac_app!= nullptr){
-			g_dac_app->stop();
-			delete g_dac_app;
-		}
-
 
 		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
 		g_dac_app->setTestMode(testMode);		
@@ -1124,7 +1114,6 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void{
 					break;
             }
         }
-		g_dac_serverRun = false;
         fprintf(stdout,"[Streaming] Stop dac server\n");
         syslog (LOG_NOTICE, "[Streaming] Stop dac server\n");
 	}catch (std::exception& e)
