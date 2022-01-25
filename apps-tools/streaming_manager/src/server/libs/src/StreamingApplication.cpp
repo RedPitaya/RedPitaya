@@ -145,7 +145,9 @@ bool CStreamingApplication::stop(bool wait){
             while(isRun());
         }
         m_StreamingManager->stop();
+        m_StreamingManager = nullptr;
         m_Osc_ch->stop();
+        m_Osc_ch = nullptr;
         state = true;
     }
     mtx.unlock();

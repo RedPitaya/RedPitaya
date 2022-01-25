@@ -184,6 +184,8 @@ int main(int argc, char *argv[])
 		#endif
 
 		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
+        setServer(con_server);
+        setDACServer(con_server);
         con_server->startBroadcast(model, brchost,opt.broadcast_port);
 
         con_server->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[con_server,verbMode](){
@@ -197,19 +199,19 @@ int main(int argc, char *argv[])
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING,[con_server,verbMode](){
-            startServer(con_server,verbMode,false);
+            startServer(verbMode,false);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[con_server,verbMode](){
-            startDACServer(con_server,verbMode,false);
+            startDACServer(verbMode,false);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING_TEST,[con_server,verbMode](){
-            startServer(con_server,verbMode,true);
+            startServer(verbMode,true);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING_TEST,[con_server,verbMode](){
-            startDACServer(con_server,verbMode,true);
+            startDACServer(verbMode,true);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[](){
@@ -234,7 +236,6 @@ int main(int argc, char *argv[])
     installTermSignalHandler();
     // Handle close child events
     handleCloseChildEvents();
-
     try {
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 	}catch (std::exception& e)

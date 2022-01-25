@@ -183,6 +183,11 @@ int rp_app_init(void)
 				startDACServer(true);
 			});
 
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_DAC_STREAMING,[](){
+				stopDACNonBlocking(CDACStreamingManager::NR_STOP);
+			});
+
+
 		}catch (std::exception& e)
 			{
 				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());

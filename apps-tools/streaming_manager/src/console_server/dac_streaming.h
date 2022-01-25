@@ -11,6 +11,7 @@
 #include "rp-i2c-max7311.h"
 #endif
 
-auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig ,bool verbMode ,bool testMode) -> void;
+auto startDACServer(bool verbMode ,bool testMode) -> void;
 auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void;
 auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void;
+auto setDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void;
