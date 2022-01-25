@@ -16,12 +16,15 @@ auto calibFullScaleToVoltage(uint32_t fullScaleGain) -> float {
     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
 }
 
-auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool verbMode,bool testMode) -> void{
+auto setServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
+    g_serverNetConfig = serverNetConfig;
+}
+
+auto startServer(bool verbMode,bool testMode) -> void{
 	// Search oscilloscope
-    if (!serverNetConfig) return;
+    if (!g_serverNetConfig) return;
 	osc = nullptr;
 	g_verbMode = verbMode;
-    g_serverNetConfig = serverNetConfig;
 	try{
 		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
 		if (!settings.isSetted()) return;

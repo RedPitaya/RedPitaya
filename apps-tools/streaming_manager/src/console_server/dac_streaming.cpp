@@ -17,9 +17,12 @@ auto calibDACFullScaleToVoltage(uint32_t fullScaleGain) -> float {
     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
 }
 
-auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool verbMode,bool testMode) -> void{
-    if (!serverNetConfig) return;
+auto setDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
     g_serverDACNetConfig = serverNetConfig;
+}
+
+auto startDACServer(bool verbMode,bool testMode) -> void{
+    if (!g_serverDACNetConfig) return;
 	gen = nullptr;
 	g_dac_verbMode = verbMode;
 	try{
@@ -104,6 +107,7 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool
 
 
 		if (use_file == CStreamSettings::DAC_NET) {
+			g_dac_manger = nullptr;
 			g_dac_manger = CDACStreamingManager::Create(
 					ip_addr_host,
 					sock_port);
@@ -114,7 +118,7 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool
 			auto dacRepeatMode = settings.getDACRepeat();
 			auto dacRepeatCount = settings.getDACRepeatCount();
 			auto dacMemory = settings.getDACMemoryUsage();
-			
+			g_dac_manger = nullptr;			
 			if (format == CStreamSettings::WAV) {
 				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
 			}else if (format == CStreamSettings::TDMS) {
@@ -143,6 +147,7 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool
 			fprintf(stdout,"[Streaming] Start dac server\n");
         	syslog (LOG_NOTICE, "[Streaming] Start dac server\n");
 		}
+
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: startDACServer() %s\n",e.what());
@@ -193,7 +198,6 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void{
 					break;
             }
         }
-		g_dac_serverRun = false;
 		if (g_dac_verbMode){
         	fprintf(stdout,"[Streaming] Stop dac server\n");
         	syslog (LOG_NOTICE, "[Streaming] Stop dac server\n");

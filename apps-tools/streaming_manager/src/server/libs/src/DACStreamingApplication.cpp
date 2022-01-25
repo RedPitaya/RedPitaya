@@ -68,7 +68,9 @@ auto CDACStreamingApplication::stop(bool wait) -> bool{
             while(isRun());
         }
         m_streamingManager->stop();
+        m_streamingManager = nullptr;
         m_gen->stop();
+        m_gen = nullptr;
         state = true;
     }
     mtx.unlock();

@@ -11,6 +11,7 @@
 #include "rp-i2c-max7311.h"
 #endif
 
-auto startServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool verbMode,bool testMode) -> void;
+auto startServer(bool verbMode,bool testMode) -> void;
 auto stopNonBlocking(int x) -> void;
 auto stopServer(int x) -> void;
+auto setServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void;

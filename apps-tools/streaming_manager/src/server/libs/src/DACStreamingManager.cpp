@@ -23,7 +23,8 @@ CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::st
     m_asionet(nullptr),
     m_repeat(_repeat),
     m_rep_count(_rep_count),
-    m_memoryCacheSize(memoryCacheSize)
+    m_memoryCacheSize(memoryCacheSize),
+    m_readerController(nullptr)
 {
     if (m_fileType == DACStream_FileType::TDMS_TYPE){
         m_readerController = new CReaderController(CStreamSettings::TDMS,m_filePath,m_repeat,m_rep_count,m_memoryCacheSize);
@@ -48,7 +49,8 @@ CDACStreamingManager::CDACStreamingManager(std::string _host, std::string _port)
     m_asionet(nullptr),
     m_repeat(CStreamSettings::DAC_REP_OFF),
     m_rep_count(0),
-    m_memoryCacheSize(0)
+    m_memoryCacheSize(0),
+    m_readerController(nullptr)
 {
 }
 
