@@ -152,7 +152,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
 					auto isMaster = true;
 				#endif
 				#ifdef STREAMING_SLAVE
-					auto isMaster = false
+					auto isMaster = false;
 				#endif
 				osc = COscilloscope::Create(uio, (channel == CStreamSettings::CH1 || channel == CStreamSettings::BOTH), (channel == CStreamSettings::CH2 || channel == CStreamSettings::BOTH), rate,isMaster);
 				osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
