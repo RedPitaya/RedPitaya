@@ -23,34 +23,26 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool
 	gen = nullptr;
 	g_dac_verbMode = verbMode;
 	try{
-		if (!g_serverDACNetConfig->getSettingsRef().isSetted()) return;
-		if (g_dac_serverRun) {
-			if (g_dac_manger){
-				if (!g_dac_manger->isLocalMode()){
-					g_serverDACNetConfig->sendServerStartedTCP();
-				}else{
-					g_serverDACNetConfig->sendServerStartedSD();
-				}
-			}
-			return;
-		}
+		CStreamSettings settings = testMode ? g_serverDACNetConfig->getTempSettings() : g_serverDACNetConfig->getSettings();
+		if (!settings.isSetted()) return;
+
 		g_dac_serverRun = true;
-		auto use_file     =  g_serverDACNetConfig->getSettingsRef().getDACMode();
-		auto sock_port    =  g_serverDACNetConfig->getSettingsRef().getDACPort();
-		auto dac_speed    =  g_serverDACNetConfig->getSettingsRef().getDACHz();
+		auto use_file     =  settings.getDACMode();
+		auto sock_port    =  settings.getDACPort();
+		auto dac_speed    =  settings.getDACHz();
 		auto ip_addr_host = "127.0.0.1";
 
 #ifdef Z20
 		auto use_calib    = 0;
 		auto attenuator   = 0;
 #else
-		auto use_calib    = g_serverDACNetConfig->getSettingsRef().getCalibration();
+		auto use_calib    = settings.getCalibration();
 		rp_CalibInit();
 		auto osc_calib_params = rp_GetCalibrationSettings();
 #endif
 
 #ifdef Z20_250_12
-		auto dac_gain = g_serverDACNetConfig->getSettingsRef().getDACGain();
+		auto dac_gain = settings.getDACGain();
 #endif
 
 		std::vector<UioT> uioList = GetUioList();
@@ -89,6 +81,11 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool
 
 #endif
 
+		if (g_dac_app!= nullptr){
+			g_dac_app->stop();
+			delete g_dac_app;
+		}
+
 		for (const UioT &uio : uioList)
 		{
 			 if (uio.nodeName == "rp_dac")
@@ -112,11 +109,11 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool
 					sock_port);
 		}else{
 
-			auto format = g_serverDACNetConfig->getSettingsRef().getDACFileType();
-			auto filePath = g_serverDACNetConfig->getSettingsRef().getDACFile();
-			auto dacRepeatMode = g_serverDACNetConfig->getSettingsRef().getDACRepeat();
-			auto dacRepeatCount = g_serverDACNetConfig->getSettingsRef().getDACRepeatCount();
-			auto dacMemory = g_serverDACNetConfig->getSettingsRef().getDACMemoryUsage();
+			auto format = settings.getDACFileType();
+			auto filePath = settings.getDACFile();
+			auto dacRepeatMode = settings.getDACRepeat();
+			auto dacRepeatCount = settings.getDACRepeatCount();
+			auto dacMemory = settings.getDACMemoryUsage();
 			
 			if (format == CStreamSettings::WAV) {
 				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
@@ -131,12 +128,6 @@ auto startDACServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig,bool
 			};
 		
 		}
-
-		if (g_dac_app!= nullptr){
-			g_dac_app->stop();
-			delete g_dac_app;
-		}
-
 
 		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
 		g_dac_app->setVerbousMode(g_dac_verbMode);
