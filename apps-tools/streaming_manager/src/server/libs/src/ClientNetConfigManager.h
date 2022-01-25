@@ -81,6 +81,8 @@ public:
 
     auto addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string)> _func) -> void;
     auto addHandler(ClientNetConfigManager::Events event, std::function<void(std::string)> _func) -> void;
+    auto removeHadlers() -> void;
+
 private:
     struct Clients{
         enum class States{

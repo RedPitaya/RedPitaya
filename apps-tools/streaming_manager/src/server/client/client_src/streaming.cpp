@@ -40,11 +40,7 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     
   //  std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
-    bool passBuff = (g_soption.testmode == ClientOpt::TestMode::NONE) || (g_soption.testmode == ClientOpt::TestMode::ENABLE &&
-                                                                          g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_SAVE_FILE);
-
-    if (passBuff)
-        g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
+    g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
 
     if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
         uint64_t sempCh1 = size_ch1 / (resolution == 16 ? 2 : 1);

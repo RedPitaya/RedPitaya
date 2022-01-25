@@ -91,6 +91,11 @@ auto ClientNetConfigManager::addHandler(ClientNetConfigManager::Events event, st
     m_callbacksStr.addListener(static_cast<int>(event),_func);
 }
 
+auto ClientNetConfigManager::removeHadlers() -> void{
+    m_errorCallback.removeHadlers();
+    m_callbacksStr.removeHadlers();
+}
+
 auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,std::string port) -> void{
     m_clients.clear();
     for(std::string& host:_hosts){

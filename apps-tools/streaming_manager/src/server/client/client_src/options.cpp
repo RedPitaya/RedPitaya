@@ -311,7 +311,7 @@ auto ClientOpt::usage(char const* progName) -> void{
             "\t\t--timeout=MSEC         -t MSEC      Stops recording after a specified amount of time.\n"
             "\t\t--verbose              -v           Displays service information.\n"
             "\t\t--benchmark=MODE       -b MODE      Starts the throughput test mode at the current settings.\n"
-            "\t\t                                    Keys: TD = The mode includes testing data for correctness, without testing the speed of writing to disk.\n"
+            "\t\t                                    Keys: TD = Adds validation of data. Works only in network test mode.\n"
             "\t\t                                          F  = Full system performance testing.\n"
             "\n"
             "DAC streaming Mode:\n"
