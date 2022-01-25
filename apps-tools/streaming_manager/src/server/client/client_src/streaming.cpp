@@ -140,7 +140,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     }
 }
 
-auto startStreaming(ClientOpt::Options &option) -> void{
+auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) -> void{
     g_soption = option;
 
 
@@ -165,7 +165,7 @@ auto startStreaming(ClientOpt::Options &option) -> void{
     remote_opt.ports.config_port = g_soption.ports.config_port  != "" ? g_soption.ports.config_port : ClientOpt::Ports().config_port;
     remote_opt.verbous = g_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
-    if (startRemote(remote_opt,&runned_hosts)){
+    if (startRemote(cl,remote_opt,&runned_hosts)){
 
         for(auto &kv:runned_hosts){
             if (kv.second == StateRunnedHosts::TCP || kv.second == StateRunnedHosts::UDP)

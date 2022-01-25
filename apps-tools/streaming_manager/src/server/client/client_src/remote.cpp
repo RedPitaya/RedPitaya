@@ -9,169 +9,152 @@
 #endif
 
 ClientOpt::Options g_roption;
-std::atomic<int>   g_rconnect_counter;
-std::atomic<int>   g_rstart_counter;
-std::atomic<int>   g_rstop_counter;
+//std::atomic<int>   g_rstart_counter;
+//std::atomic<int>   g_rstop_counter;
 std::mutex         g_rmutex;
 std::atomic<bool>  g_rexit_flag;
 
-auto startStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts,bool test_mode) -> bool;
-auto startDACStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts,bool test_mode) -> bool;
-auto stopStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool;
-auto stopDACStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool;
-auto startStopStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool;
-auto startStopDACStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool;
+auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
+auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
+auto stopStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
+auto stopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
+auto startStopStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
+auto startStopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
 
-auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
+auto startRemote(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
     std::list<std::string> connected_hosts;
     std::list<std::string> slaveHosts;
     std::list<std::string> masterHosts;
     g_rexit_flag = false;
     g_roption = option;
 
-    ClientNetConfigManager cl("",false);
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_CONNECTED, [&cl,&connected_hosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
+//    cl.addHandlerError([&masterHosts,&slaveHosts](ClientNetConfigManager::Errors errors,std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+//            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+//            g_rstart_counter--;
+//            g_rstop_counter--;
+//            masterHosts.remove(host);
+//            slaveHosts.remove(host);
+//        }
+//    });
 
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "Connected: " << host << "\n";
-        connected_hosts.push_back(host);
-        g_rconnect_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&cl,runned_hosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "Streaming started: " << host << " TCP mode [OK]\n";
+//        g_rstart_counter--;
+//        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
+//    });
 
-    cl.addHandlerError([&masterHosts,&slaveHosts](ClientNetConfigManager::Errors errors,std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
-            g_rconnect_counter--;
-            g_rstart_counter--;
-            g_rstop_counter--;
-            masterHosts.remove(host);
-            slaveHosts.remove(host);
-        }
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&cl,runned_hosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "Streaming started: " << host << " UDP mode [OK]\n";
+//        g_rstart_counter--;
+//        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::UDP;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&cl,runned_hosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "Streaming started: " << host << " TCP mode [OK]\n";
-        g_rstart_counter--;
-        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&cl,runned_hosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "Streaming started: " << host << " Local mode [OK]\n";
+//        g_rstart_counter--;
+//        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&cl,runned_hosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "Streaming started: " << host << " UDP mode [OK]\n";
-        g_rstart_counter--;
-        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::UDP;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED, [&cl,runned_hosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "DAC streaming started: " << host << " TCP mode [OK]\n";
+//        g_rstart_counter--;
+//        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&cl,runned_hosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "Streaming started: " << host << " Local mode [OK]\n";
-        g_rstart_counter--;
-        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
-    });
-
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED, [&cl,runned_hosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "DAC streaming started: " << host << " TCP mode [OK]\n";
-        g_rstart_counter--;
-        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
-    });
-
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED_SD, [&cl,runned_hosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "DAC streaming started: " << host << " Local mode [OK]\n";
-        g_rstart_counter--;
-        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED_SD, [&cl,runned_hosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "DAC streaming started: " << host << " Local mode [OK]\n";
+//        g_rstart_counter--;
+//        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
+//    });
 
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "Streaming stopped: " << host << " [OK]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "Streaming stopped: " << host << " [OK]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_FULL, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "Streaming stopped: " << host << " SD card is full [OK]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_FULL, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "Streaming stopped: " << host << " SD card is full [OK]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_DONE, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "Streaming stopped: " << host << " All samples are recorded on the SD card [OK]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_DONE, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "Streaming stopped: " << host << " All samples are recorded on the SD card [OK]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_DONE, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_DONE, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_BROKEN, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File broken]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_BROKEN, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File broken]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_EMPTY, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File empty]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_EMPTY, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File empty]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_MISSING, [&cl,&masterHosts,&slaveHosts](std::string host){
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (g_roption.verbous)
-            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File missing]\n";
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        g_rstop_counter--;
-    });
+//    cl.addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_MISSING, [&cl,&masterHosts,&slaveHosts](std::string host){
+//        const std::lock_guard<std::mutex> lock(g_rmutex);
+//        if (g_roption.verbous)
+//            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File missing]\n";
+//        masterHosts.remove(host);
+//        slaveHosts.remove(host);
+//        g_rstop_counter--;
+//    });
 
-    g_rconnect_counter = g_roption.hosts.size();
-    cl.connectToServers(option.hosts,g_roption.ports.config_port  != "" ? g_roption.ports.config_port : ClientOpt::Ports().config_port);
-    while (g_rconnect_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
-    }
+    connected_hosts = cl->getHosts();
     for(auto &host:connected_hosts) {
-        switch (cl.getModeByHost(host)) {
+        switch (cl->getModeByHost(host)) {
             case asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER:
                 masterHosts.push_back(host);
                 break;
@@ -184,27 +167,27 @@ auto startRemote(ClientOpt::Options &option,std::map<std::string,StateRunnedHost
     }
     switch(g_roption.remote_mode){
         case ClientOpt::RemoteMode::START:{
-            return startStreaming(cl,masterHosts,slaveHosts, g_roption.testmode == ClientOpt::TestMode::ENABLE);
+            return startStreaming(cl,masterHosts,slaveHosts, g_roption.testmode == ClientOpt::TestMode::ENABLE,runned_hosts);
         }
 
         case ClientOpt::RemoteMode::START_DAC:{
-            return startDACStreaming(cl,masterHosts,slaveHosts, g_roption.testmode == ClientOpt::TestMode::ENABLE);
+            return startDACStreaming(cl,masterHosts,slaveHosts, g_roption.testmode == ClientOpt::TestMode::ENABLE,runned_hosts);
         }
 
         case ClientOpt::RemoteMode::STOP:{
-            return stopStreaming(cl,masterHosts,slaveHosts);
+            return stopStreaming(cl,masterHosts,slaveHosts,runned_hosts);
         }
 
         case ClientOpt::RemoteMode::STOP_DAC:{
-            return stopDACStreaming(cl,masterHosts,slaveHosts);
+            return stopDACStreaming(cl,masterHosts,slaveHosts,runned_hosts);
         }
 
         case ClientOpt::RemoteMode::START_STOP:{
-            return startStopStreaming(cl,masterHosts,slaveHosts);
+            return startStopStreaming(cl,masterHosts,slaveHosts,g_roption.testmode == ClientOpt::TestMode::ENABLE,runned_hosts);
         }
 
         case ClientOpt::RemoteMode::START_STOP_DAC:{
-            return startStopDACStreaming(cl,masterHosts,slaveHosts);
+            return startStopDACStreaming(cl,masterHosts,slaveHosts,g_roption.testmode == ClientOpt::TestMode::ENABLE,runned_hosts);
         }
 
         default: {
@@ -220,150 +203,318 @@ auto remoteSIGHandler() -> void{
 }
 
 
-auto startStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts,bool test_mode) -> bool{
-    g_rstart_counter = slaveHosts.size();
+auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
+    std::atomic<int>   rstart_counter;
+
+    cl->addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+            rstart_counter--;
+            masterHosts.remove(host);
+            slaveHosts.remove(host);
+        }
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_STARTED_TCP, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "Streaming started: " << host << " TCP mode [OK]\n";
+        rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_STARTED_UDP, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "Streaming started: " << host << " UDP mode [OK]\n";
+        rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::UDP;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_STARTED_SD, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "Streaming started: " << host << " Local mode [OK]\n";
+        rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
+    });
+
+
+    rstart_counter = slaveHosts.size();
     for(auto &host:slaveHosts) {
         if (g_roption.verbous)
             std::cerr << getTS(": ") << "Send start command to slave board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
-        if (!cl.sendStart(host,test_mode)){
-            g_rstart_counter--;
+        if (!cl->sendStart(host,test_mode)){
+            rstart_counter--;
         }
     }
-    while (g_rstart_counter>0){
+    while (rstart_counter>0){
         sleepMs(100);
-        if (g_rexit_flag) return false;
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
     }
 
-    g_rstart_counter = masterHosts.size();
+    rstart_counter = masterHosts.size();
     for(auto &host:masterHosts) {
         if (g_roption.verbous)
             std::cerr << getTS(": ") << "Send start command to master board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
-        if (!cl.sendStart(host,test_mode)){
-            g_rstart_counter--;
+        if (!cl->sendStart(host,test_mode)){
+            rstart_counter--;
         }
     }
 
-    while (g_rstart_counter>0){
+    while (rstart_counter>0){
         sleepMs(100);
-        if (g_rexit_flag) return false;
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
     }
+    cl->removeHadlers();
     return true;
 }
 
-auto startDACStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts,bool test_mode) -> bool{
-     g_rstart_counter = slaveHosts.size();
-        for(auto &host:slaveHosts) {
-            if (g_roption.verbous)
-                std::cerr << getTS(": ") << "Send start DAC command to slave board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
-            if (!cl.sendDACStart(host,test_mode)){
-                g_rstart_counter--;
-            }
-        }
-        while (g_rstart_counter>0){
-            sleepMs(100);
-            if (g_rexit_flag) return false;
-        }
+auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
+    std::atomic<int>   rstart_counter;
 
-        g_rstart_counter = masterHosts.size();
-        for(auto &host:masterHosts) {
-            if (g_roption.verbous)
-                std::cerr << getTS(": ") << "Send start DAC command to master board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
-            if (!cl.sendDACStart(host,test_mode)){
-                g_rstart_counter--;
-            }
+    cl->addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+            rstart_counter--;
+            masterHosts.remove(host);
+            slaveHosts.remove(host);
         }
-        while (g_rstart_counter>0){
-            sleepMs(100);
-            if (g_rexit_flag) return false;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming started: " << host << " TCP mode [OK]\n";
+        rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::TCP;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_DAC_STARTED_SD, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming started: " << host << " Local mode [OK]\n";
+        rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
+    });
+
+    rstart_counter = slaveHosts.size();
+
+    for(auto &host:slaveHosts) {
+        if (g_roption.verbous)
+            std::cerr << getTS(": ") << "Send start DAC command to slave board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
+        if (!cl->sendDACStart(host,test_mode)){
+            rstart_counter--;
         }
+    }
+    while (rstart_counter>0){
+        sleepMs(100);
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
+    }
+
+    rstart_counter = masterHosts.size();
+    for(auto &host:masterHosts) {
+        if (g_roption.verbous)
+            std::cerr << getTS(": ") << "Send start DAC command to master board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
+        if (!cl->sendDACStart(host,test_mode)){
+            rstart_counter--;
+        }
+    }
+    while (rstart_counter>0){
+        sleepMs(100);
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
+    }
+    cl->removeHadlers();
     return true;
 }
 
-auto stopStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool{
-    g_rstop_counter = masterHosts.size();
+auto stopStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
+    std::atomic<int>   rstop_counter;
+
+    cl->addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+            rstop_counter--;
+            masterHosts.remove(host);
+            slaveHosts.remove(host);
+        }
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_STOPPED, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "Streaming stopped: " << host << " [OK]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_FULL, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "Streaming stopped: " << host << " SD card is full [OK]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_DONE, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "Streaming stopped: " << host << " All samples are recorded on the SD card [OK]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    rstop_counter = masterHosts.size();
     for(auto &host:masterHosts) {
         if (g_roption.verbous)
             std::cerr << getTS(": ") << "Send stop command to master board " << host.c_str() << "\n";
-        if (!cl.sendStop(host)){
-            g_rstop_counter--;
+        if (!cl->sendStop(host)){
+            rstop_counter--;
         }
     }
-    while (g_rstop_counter>0){
+    while (rstop_counter>0){
         sleepMs(100);
-        if (g_rexit_flag) return false;
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
     }
 
-    g_rstop_counter = slaveHosts.size();
+    rstop_counter = slaveHosts.size();
     for(auto &host:slaveHosts) {
         if (g_roption.verbous)
             std::cerr << getTS(": ") << "Send stop command to slave board " << host.c_str() << "\n";
-        if (!cl.sendStop(host)){
-            g_rstop_counter--;
+        if (!cl->sendStop(host)){
+            rstop_counter--;
         }
     }
-    while (g_rstop_counter>0){
+    while (rstop_counter>0){
         sleepMs(100);
-        if (g_rexit_flag) return false;
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
     }
+    cl->removeHadlers();
     return true;
 }
 
 
-auto stopDACStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool{
-    g_rstop_counter = masterHosts.size();
+auto stopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
+    std::atomic<int>   rstop_counter;
+
+    cl->addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+            rstop_counter--;
+            masterHosts.remove(host);
+            slaveHosts.remove(host);
+        }
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_DONE, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [OK]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_BROKEN, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File broken]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_EMPTY, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File empty]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::SERVER_DAC_STOPPED_SD_MISSING, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "DAC streaming stopped: " << host << " [File missing]\n";
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+        rstop_counter--;
+    });
+
+    rstop_counter = masterHosts.size();
     for(auto &host:masterHosts) {
         if (g_roption.verbous)
             std::cerr << getTS(": ") << "Send stop DAC command to master board " << host.c_str() << "\n";
-        if (!cl.sendDACStop(host)){
-            g_rstop_counter--;
+        if (!cl->sendDACStop(host)){
+            rstop_counter--;
         }
     }
-    while (g_rstop_counter>0){
+    while (rstop_counter>0){
         sleepMs(100);
-        if (g_rexit_flag) return false;
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
     }
 
-    g_rstop_counter = slaveHosts.size();
+    rstop_counter = slaveHosts.size();
     for(auto &host:slaveHosts) {
         if (g_roption.verbous)
             std::cerr << getTS(": ") << "Send stop DAC command to slave board " << host.c_str() << "\n";
-        if (!cl.sendDACStop(host)){
-            g_rstop_counter--;
+        if (!cl->sendDACStop(host)){
+            rstop_counter--;
         }
     }
-    while (g_rstop_counter>0){
+    while (rstop_counter>0){
         sleepMs(100);
-        if (g_rexit_flag) return false;
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
     }
     return true;
 }
 
 
-auto startStopStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool{
-    g_rstart_counter = slaveHosts.size();
-    for(auto &host:slaveHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send start command to slave board " << host.c_str() << "\n";
-        if (!cl.sendStart(host)){
-            g_rstart_counter--;
-        }
-    }
-    while (g_rstart_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
-    }
+auto startStopStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
 
-    g_rstart_counter = masterHosts.size();
-    for(auto &host:masterHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send start command to master board " << host.c_str() << "\n";
-        if (!cl.sendStart(host)){
-            g_rstart_counter--;
-        }
-    }
-    while (g_rstart_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
+    if (!startStreaming(cl,masterHosts,slaveHosts,test_mode,runned_hosts)){
+        return false;
     }
 
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
@@ -375,60 +526,20 @@ auto startStopStreaming(ClientNetConfigManager &cl,const std::list<std::string> 
         curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
     }
 
-    g_rstop_counter = masterHosts.size();
-    for(auto &host:masterHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send stop command to master board " << host.c_str() << "\n";
-        if (!cl.sendStop(host)){
-            g_rstop_counter--;
-        }
-    }
-    while (g_rstop_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
+    g_rexit_flag = false;
+
+    if (!stopStreaming(cl,masterHosts,slaveHosts,runned_hosts)){
+        return false;
     }
 
-    g_rstop_counter = slaveHosts.size();
-    for(auto &host:slaveHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send stop command to slave board " << host.c_str() << "\n";
-        if (!cl.sendStop(host)){
-            g_rstop_counter--;
-        }
-    }
-    while (g_rstop_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
-    }
     return true;
 }
 
 
-auto startStopDACStreaming(ClientNetConfigManager &cl,const std::list<std::string> &masterHosts,const std::list<std::string> &slaveHosts) -> bool{
-    g_rstart_counter = slaveHosts.size();
-    for(auto &host:slaveHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send start DAC command to slave board " << host.c_str() << "\n";
-        if (!cl.sendDACStart(host)){
-            g_rstart_counter--;
-        }
-    }
-    while (g_rstart_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
-    }
+auto startStopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
 
-    g_rstart_counter = masterHosts.size();
-    for(auto &host:masterHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send start DAC command to master board " << host.c_str() << "\n";
-        if (!cl.sendDACStart(host)){
-            g_rstart_counter--;
-        }
-    }
-    while (g_rstart_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
+    if (!startDACStreaming(cl,masterHosts,slaveHosts,test_mode,runned_hosts)){
+        return false;
     }
 
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
@@ -440,30 +551,9 @@ auto startStopDACStreaming(ClientNetConfigManager &cl,const std::list<std::strin
         curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
     }
 
-    g_rstop_counter = masterHosts.size();
-    for(auto &host:masterHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send stop DAC command to master board " << host.c_str() << "\n";
-        if (!cl.sendDACStop(host)){
-            g_rstop_counter--;
-        }
-    }
-    while (g_rstop_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
+    if (!stopDACStreaming(cl,masterHosts,slaveHosts,runned_hosts)){
+        return false;
     }
 
-    g_rstop_counter = slaveHosts.size();
-    for(auto &host:slaveHosts) {
-        if (g_roption.verbous)
-            std::cerr << getTS(": ") << "Send stop DAC command to slave board " << host.c_str() << "\n";
-        if (!cl.sendDACStop(host)){
-            g_rstop_counter--;
-        }
-    }
-    while (g_rstop_counter>0){
-        sleepMs(100);
-        if (g_rexit_flag) return false;
-    }
     return true;
 }

@@ -186,7 +186,7 @@ auto dac_runClient(DacSettings conf) -> void{
     stopDACStreaming(conf.host);
 }
 
-auto startDACStreaming(std::string &conf) -> void{
+auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::string &conf) -> void{
     auto settings = DacSettings::readFromFile(conf);
     if (settings.size() > 0){
         ClientOpt::Options remote_opt;
@@ -200,7 +200,7 @@ auto startDACStreaming(std::string &conf) -> void{
         }
         remote_opt.verbous = verbous;
         std::map<string,StateRunnedHosts> runned_hosts;
-        if (startRemote(remote_opt,&runned_hosts)){
+        if (startRemote(cl,remote_opt,&runned_hosts)){
 
             for(auto &kv:runned_hosts){
                 if (kv.second == StateRunnedHosts::TCP){
@@ -224,7 +224,7 @@ auto startDACStreaming(std::string &conf) -> void{
     }
 }
 
-auto startDACStreaming(ClientOpt::Options &option) -> void{
+auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) -> void{
     g_dac_soption = option;
 
     ClientOpt::Options remote_opt = g_dac_soption;
@@ -233,7 +233,7 @@ auto startDACStreaming(ClientOpt::Options &option) -> void{
     remote_opt.ports.config_port = g_dac_soption.ports.config_port  != "" ? g_dac_soption.ports.config_port : ClientOpt::Ports().config_port;
     remote_opt.verbous = g_dac_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
-    if (startRemote(remote_opt,&runned_hosts)){
+    if (startRemote(cl,remote_opt,&runned_hosts)){
 
         for(auto &kv:runned_hosts){
             if (kv.second == StateRunnedHosts::TCP){

@@ -5,5 +5,5 @@
 #include "ClientNetConfigManager.h"
 
 
-auto startStreaming(ClientOpt::Options &option) -> void;
+auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) -> void;
 auto streamingSIGHandler() -> void;

@@ -53,10 +53,11 @@ public:
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
-
     auto startBroadcast(std::string host,std::string port) -> void;
     auto getBroadcastClients() -> const std::list<BroadCastClients>;
     auto connectToServers(std::vector<std::string> _hosts,std::string port) -> void;
+    auto diconnectAll() -> void;
+    auto getHosts() -> std::list<std::string>;
     auto isServersConnected() -> bool;
     auto sendConfig(std::string host) -> bool;
     auto sendTestConfig(std::string host,const CStreamSettings &settings) -> bool;

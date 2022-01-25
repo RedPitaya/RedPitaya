@@ -5,6 +5,6 @@
 #include "ClientNetConfigManager.h"
 #include <chrono>
 
-auto startDACStreaming(std::string &conf) -> void;
-auto startDACStreaming(ClientOpt::Options &option) -> void;
+auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::string &conf) -> void;
+auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) -> void;
 auto dac_streamingSIGHandler() -> void;
