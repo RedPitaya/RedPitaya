@@ -68,17 +68,17 @@ set_property PACKAGE_PIN N20 [get_ports {adc_clk_o[0]}]
 set_property PACKAGE_PIN P20 [get_ports {adc_clk_o[1]}]
 
 # ADC clock stabilizer
-set_property IOSTANDARD LVCMOS18 [get_ports adc_cdcs_o]
+set_property IOSTANDARD  LVCMOS18 [get_ports adc_cdcs_o]
 set_property PACKAGE_PIN V18     [get_ports adc_cdcs_o]
-set_property SLEW       FAST     [get_ports adc_cdcs_o]
-set_property DRIVE      8        [get_ports adc_cdcs_o]
+set_property SLEW        FAST     [get_ports adc_cdcs_o]
+set_property DRIVE       8        [get_ports adc_cdcs_o]
 
 ### DAC
 
 # data
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_dat_o[*]}]
 set_property SLEW       SLOW     [get_ports {dac_dat_o[*]}]
-set_property DRIVE      4        [get_ports {dac_dat_o[*]}]
+set_property DRIVE      8        [get_ports {dac_dat_o[*]}]
 #set_property IOB        TRUE     [get_ports {dac_dat_o[*]}]
 
 set_property PACKAGE_PIN M19 [get_ports {dac_dat_o[0]}]
@@ -109,9 +109,9 @@ set_property PACKAGE_PIN N15 [get_ports dac_rst_o]
 
 ### PWM DAC
 set_property IOSTANDARD LVCMOS18 [get_ports {dac_pwm_o[*]}]
-set_property SLEW FAST           [get_ports {dac_pwm_o[*]}]
-set_property DRIVE 12            [get_ports {dac_pwm_o[*]}]
-set_property IOB TRUE            [get_ports {dac_pwm_o[*]}]
+set_property SLEW       FAST     [get_ports {dac_pwm_o[*]}]
+set_property DRIVE      12       [get_ports {dac_pwm_o[*]}]
+set_property IOB        TRUE     [get_ports {dac_pwm_o[*]}]
 
 set_property PACKAGE_PIN T10 [get_ports {dac_pwm_o[0]}]
 set_property PACKAGE_PIN T11 [get_ports {dac_pwm_o[1]}]
@@ -201,7 +201,7 @@ create_clock -period 8.000 -name adc_clk [get_ports adc_clk_i[1]]
 
 set_input_delay -clock adc_clk 3.400 [get_ports adc_dat_i[*][*]]
 
-create_clock -period 4.000 -name rx_clk  [get_ports daisy_p_i[1]]
+#create_clock -period 4.000 -name rx_clk  [get_ports daisy_p_i[1]]
 
 set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_o]
 set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_2x]
@@ -214,4 +214,3 @@ set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks ser_clk]
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks pdm_clk]
 set_false_path -from [get_clocks dac_clk_o] -to [get_clocks dac_clk_2x]
 set_false_path -from [get_clocks dac_clk_o] -to [get_clocks dac_clk_2p]
-
