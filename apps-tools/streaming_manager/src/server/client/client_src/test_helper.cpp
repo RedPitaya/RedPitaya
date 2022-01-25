@@ -99,7 +99,7 @@ auto createStr(std::string str,int len) -> std::string {
     return s;
 }
 
-auto convertBtoS(u_int64_t value) -> std::string {
+auto convertBtoS(uint64_t value) -> std::string {
     double d = value;
     std::string s = "";
     if (value >= 1024 * 1024) {
@@ -114,7 +114,7 @@ auto convertBtoS(u_int64_t value) -> std::string {
     return s;
 }
 
-auto convertBtoST(u_int64_t value) -> std::string {
+auto convertBtoST(uint64_t value) -> std::string {
     double d = value;
     std::string s = "";
     auto h = value / (60 * 60 * 1000);
@@ -125,7 +125,7 @@ auto convertBtoST(u_int64_t value) -> std::string {
     return s;
 }
 
-auto convertBtoSpeed(u_int64_t value,uint64_t time) -> std::string {
+auto convertBtoSpeed(uint64_t value,uint64_t time) -> std::string {
     double d = value;
     double t = time;
     t = t / 1000;
