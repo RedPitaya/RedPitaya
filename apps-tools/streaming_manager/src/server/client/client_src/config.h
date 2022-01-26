@@ -7,3 +7,4 @@ auto sleepMs(int ms) -> void;
 auto connectConfigServer(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) -> bool;
 auto startConfig(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) -> bool;
 auto configSIGHandler() -> void;
+auto sendCopyToTestConfig(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option) ->bool;
