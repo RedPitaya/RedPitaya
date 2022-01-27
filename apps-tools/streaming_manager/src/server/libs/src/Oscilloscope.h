@@ -122,7 +122,8 @@ public:
     bool clearBuffer();
     bool wait();
     bool clearInterrupt();
-    void stop();
+    auto stop() -> void;
+    auto printReg() -> void;
 
 private:
     void setReg(volatile OscilloscopeMapT *_OscMap);

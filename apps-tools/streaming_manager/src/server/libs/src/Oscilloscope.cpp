@@ -325,3 +325,56 @@ void COscilloscope::stop()
     }
     m_waitLock.unlock();
 }
+
+auto COscilloscope::printReg() -> void{
+    #ifdef Z20_250_12
+        fprintf(stderr,"not implemented\n");
+    #else
+        fprintf(stderr,"printReg\n");
+        fprintf(stderr,"0x00 event_sts = 0x%X\n", m_OscMap->event_sts);
+        fprintf(stderr,"0x04 event_sel = 0x%X\n", m_OscMap->event_sel);
+        fprintf(stderr,"0x08 trig_mask = 0x%X\n", m_OscMap->trig_mask);
+        fprintf(stderr,"0x10 trig_pre_samp = 0x%X\n", m_OscMap->trig_pre_samp);
+        fprintf(stderr,"0x14 trig_post_samp = 0x%X\n", m_OscMap->trig_post_samp);
+        fprintf(stderr,"0x18 trig_pre_cnt = 0x%X\n", m_OscMap->trig_pre_cnt);
+        fprintf(stderr,"0x1C trig_post_cnt = 0x%X\n", m_OscMap->trig_post_cnt);
+        fprintf(stderr,"0x20 trig_low_level = 0x%X\n", m_OscMap->trig_low_level);
+        fprintf(stderr,"0x24 trig_high_level = 0x%X\n", m_OscMap->trig_high_level);
+        fprintf(stderr,"0x28 trig_edge = 0x%X\n", m_OscMap->trig_edge);
+        
+        fprintf(stderr,"0x30 dec_factor = 0x%X\n", m_OscMap->dec_factor);
+        fprintf(stderr,"0x34 dec_rshift = 0x%X\n", m_OscMap->dec_rshift);
+        fprintf(stderr,"0x38 avg_en_addr = 0x%X\n", m_OscMap->avg_en_addr);
+        fprintf(stderr,"0x3C filt_bypass = 0x%X\n", m_OscMap->filt_bypass);
+
+        fprintf(stderr,"0x50 dma_ctrl = 0x%X\n", m_OscMap->dma_ctrl);
+        fprintf(stderr,"0x54 dma_sts_addr = 0x%X\n", m_OscMap->dma_sts_addr);
+        fprintf(stderr,"0x58 dma_buf_size = 0x%X\n", m_OscMap->dma_buf_size);
+        fprintf(stderr,"0x5C lost_samples_buf1 = 0x%X\n", m_OscMap->lost_samples_buf1);
+        fprintf(stderr,"0x60 lost_samples_buf2 = 0x%X\n", m_OscMap->lost_samples_buf2);
+        fprintf(stderr,"0x64 dma_dst_addr1_ch1 = 0x%X\n", m_OscMap->dma_dst_addr1_ch1);
+        fprintf(stderr,"0x68 dma_dst_addr2_ch1 = 0x%X\n", m_OscMap->dma_dst_addr2_ch1);
+        fprintf(stderr,"0x6C dma_dst_addr1_ch2 = 0x%X\n", m_OscMap->dma_dst_addr1_ch2);
+        fprintf(stderr,"0x70 dma_dst_addr2_ch2 = 0x%X\n", m_OscMap->dma_dst_addr2_ch2);
+
+        fprintf(stderr,"0x74 calib_offset_ch1 = 0x%X\n", m_OscMap->calib_offset_ch1);
+        fprintf(stderr,"0x78 calib_gain_ch1 = 0x%X\n", m_OscMap->calib_gain_ch1);
+        fprintf(stderr,"0x7C calib_offset_ch2 = 0x%X\n", m_OscMap->calib_offset_ch2);
+        fprintf(stderr,"0x80 calib_gain_ch2 = 0x%X\n", m_OscMap->calib_gain_ch2);
+
+        fprintf(stderr,"0x9C lost_samples_buf1_ch2 = 0x%X\n", m_OscMap->lost_samples_buf1_ch2);
+        fprintf(stderr,"0xA0 lost_samples_buf2_ch2 = 0x%X\n", m_OscMap->lost_samples_buf2_ch2);
+        fprintf(stderr,"0xA4 write_pointer_ch1 = 0x%X\n", m_OscMap->write_pointer_ch1);
+        fprintf(stderr,"0xA8 write_pointer_ch2 = 0x%X\n", m_OscMap->write_pointer_ch2);
+
+        fprintf(stderr,"0xC0 filt_coeff_aa_ch1 = 0x%X\n", m_OscMap->filt_coeff_aa_ch1);
+        fprintf(stderr,"0xC4 filt_coeff_bb_ch1 = 0x%X\n", m_OscMap->filt_coeff_bb_ch1);
+        fprintf(stderr,"0xC8 filt_coeff_kk_ch1 = 0x%X\n", m_OscMap->filt_coeff_kk_ch1);
+        fprintf(stderr,"0xCC filt_coeff_pp_ch1 = 0x%X\n", m_OscMap->filt_coeff_pp_ch1);
+        fprintf(stderr,"0xD0 filt_coeff_aa_ch2 = 0x%X\n", m_OscMap->filt_coeff_aa_ch2);
+        fprintf(stderr,"0xD4 filt_coeff_bb_ch2 = 0x%X\n", m_OscMap->filt_coeff_bb_ch2);
+        fprintf(stderr,"0xD8 filt_coeff_kk_ch2 = 0x%X\n", m_OscMap->filt_coeff_kk_ch2);
+        fprintf(stderr,"0xDC filt_coeff_pp_ch2 = 0x%X\n", m_OscMap->filt_coeff_pp_ch2);
+
+    #endif
+}
