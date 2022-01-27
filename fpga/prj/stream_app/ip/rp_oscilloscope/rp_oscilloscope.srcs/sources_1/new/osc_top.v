@@ -117,11 +117,18 @@ localparam FILT_COEFF_PP_CH2   = 8'hDC;  //76 Filter coeff PP address CH2
 
 localparam DIAG_REG            = 8'hE0;  //76 Filter coeff PP address CH2
 
+localparam CTRL_STRT        = 0;  // Control - Bit[0] : Start DMA
+localparam CTRL_INTR_ACK    = 1;  // Control - Bit[1] : Interrupt ACK
+localparam CTRL_BUF1_ACK    = 2;  // Control - Bit[2] : Buffer 1 ACK
+localparam CTRL_BUF2_ACK    = 3;  // Control - Bit[3] : Buffer 2 ACK
+localparam CTRL_RESET       = 4;  // Control - Bit[4] : Reset states and flags
+localparam CTRL_MODE_NORM   = 8;  // Control - Bit[8] : Mode normal DMA
+localparam CTRL_MODE_STREAM = 9;  // Control - Bit[9] : Mode streaming DMA
 ////////////////////////////////////////////////////////////
 // Signals
 ////////////////////////////////////////////////////////////
 
-wire                        dma_mode;
+reg                         cfg_dma_mode;
 
 reg  [EVENT_NUM_LOG2-1:0]   cfg_event_sel;
 reg  [TRIG_SRC_NUM-1:0]     cfg_trig_mask;
@@ -781,6 +788,22 @@ begin
 end
 
 ////////////////////////////////////////////////////////////
+// Name : DMA Mode
+// 0 = Normal
+// 1 = Streaming
+////////////////////////////////////////////////////////////
+
+always @(posedge clk)
+begin
+  if (rst_n == 0) begin
+    dma_mode <= 'h1;
+  end else begin
+    if (cfg_dma_ctrl_reg[CTRL_STRT] == 1) begin
+      dma_mode <= (1'b0 & cfg_dma_ctrl_reg[CTRL_MODE_NORM]) | (1'b1 & cfg_dma_ctrl_reg[CTRL_MODE_STREAM]) ;
+    end
+  end
+end
+////////////////////////////////////////////////////////////
 // Name : Register Read Data
 // 
 ////////////////////////////////////////////////////////////
@@ -834,22 +857,5 @@ begin
     default                 reg_rd_data <= 32'd0;                                
   endcase
 end
-
-////////////////////////////////////////////////////////////
-// Name : DMA Mode
-// 0 = Normal
-// 1 = Streaming
-////////////////////////////////////////////////////////////
-
-//always @(posedge clk)
-//begin
-//  if (rst_n == 0) begin
-//    dma_mode <= 0;
-//  end else begin
-//    if (cfg_dma_ctrl_reg[DMA_CTRL_STRT] == 1) begin
-//      dma_mode <= cfg_dma_ctrl_reg[DMA_CTRL_MODE];
-//    end
-//  end
-//end
 
 endmodule
