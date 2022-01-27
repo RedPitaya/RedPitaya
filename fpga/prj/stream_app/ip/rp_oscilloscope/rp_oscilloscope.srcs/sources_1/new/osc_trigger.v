@@ -53,13 +53,15 @@ begin
   if (cfg_trig_edge == 0) begin
     if ((adc_data >= trig_high_level) && ((s_axis_tvalid == 1) && (s_axis_tready == 1))) begin
       trig_detect <= 1; 
-    end else begin
+    //end else begin    
+    end else if ((adc_data < trig_low_level) && ((s_axis_tvalid == 1) && (s_axis_tready == 1))) begin
       trig_detect <= 0; 
     end
   end else begin
     if ((adc_data <= trig_low_level) && ((s_axis_tvalid == 1) && (s_axis_tready == 1))) begin
       trig_detect <= 1; 
-    end else begin
+    //end else begin  
+    end else if ((adc_data > trig_high_level) && ((s_axis_tvalid == 1) && (s_axis_tready == 1))) begin
       trig_detect <= 0; 
     end  
   end
