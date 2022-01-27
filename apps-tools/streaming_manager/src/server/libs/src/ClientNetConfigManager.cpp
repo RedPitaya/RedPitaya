@@ -242,6 +242,10 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_MISSING),sender->m_manager->getHost());
     }
 
+    if (c== CNetConfigManager::Commands::COPY_SETTINGS_TO_TEST_SETTINGS_DONE){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::COPY_SETTINGS_TO_TEST_SETTINGS_DONE),sender->m_manager->getHost());
+    }
+
     // Loopback commands
     if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_STARTED){
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_STARTED),sender->m_manager->getHost());
@@ -420,6 +424,18 @@ auto ClientNetConfigManager::requestConfig(std::string host) -> bool{
     }
     return false;
 }
+
+
+auto ClientNetConfigManager::sendCopyConfigToTest(std::string host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::COPY_SETTINGS_TO_TEST_SETTINGS);
+    }
+    return false;
+}
+
 
 auto ClientNetConfigManager::requestTestConfig(std::string host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){

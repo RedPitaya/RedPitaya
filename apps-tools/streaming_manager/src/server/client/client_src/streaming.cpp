@@ -158,6 +158,11 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
 #endif
 
     resetStreamingCounter();
+    if (g_soption.testmode == ClientOpt::TestMode::ENABLE){
+        if (!sendCopyToTestConfig(cl,option)){
+            return;
+        }
+    }
 
     ClientOpt::Options remote_opt = g_soption;
     remote_opt.mode = ClientOpt::Mode::REMOTE;

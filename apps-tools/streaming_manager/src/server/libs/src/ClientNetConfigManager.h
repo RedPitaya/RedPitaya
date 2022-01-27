@@ -49,7 +49,8 @@ public:
 
         SERVER_LOOPBACK_STARTED,
         SERVER_LOOPBACK_STOPPED,
-        SERVER_LOOPBACK_BUSY
+        SERVER_LOOPBACK_BUSY,
+        COPY_SETTINGS_TO_TEST_SETTINGS_DONE
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
@@ -61,6 +62,7 @@ public:
     auto isServersConnected() -> bool;
     auto sendConfig(std::string host) -> bool;
     auto sendTestConfig(std::string host,const CStreamSettings &settings) -> bool;
+    auto sendCopyConfigToTest(std::string host) -> bool;
     auto sendSaveToFile(std::string host) -> bool;
     auto sendStart(std::string host,bool test_mode = false) -> bool;
     auto sendStop(std::string host) -> bool;
