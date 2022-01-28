@@ -1,6 +1,6 @@
 --- a/arch/arm/configs/xilinx_zynq_defconfig	2017-10-26 12:59:42.000000000 +0600
 +++ b/arch/arm/configs/xilinx_zynq_defconfig	2020-04-09 11:08:15.000000000 +0600
-@@ -251,6 +251,23 @@
+@@ -251,6 +251,24 @@
  CONFIG_LANTIQ_PHY=y
  # Wireless
  CONFIG_WIRELESS=y
