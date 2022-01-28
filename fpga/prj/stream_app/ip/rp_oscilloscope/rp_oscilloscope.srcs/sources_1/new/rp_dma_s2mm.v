@@ -24,6 +24,8 @@ module rp_dma_s2mm
   input  wire [31:0]                    reg_dst_addr1,  
   input  wire [31:0]                    reg_dst_addr2,  
   input  wire [31:0]                    reg_buf_size,
+  input  wire                           ctl_stop,
+
   //
   output wire [31:0]                    buf1_ms_cnt,
   output wire [31:0]                    buf2_ms_cnt,
@@ -104,7 +106,8 @@ rp_dma_s2mm_ctrl #(
   .reg_sts        (reg_sts),  
   .reg_dst_addr1  (reg_dst_addr1),  
   .reg_dst_addr2  (reg_dst_addr2),  
-  .reg_buf_size   (reg_buf_size),    
+  .reg_buf_size   (reg_buf_size), 
+  .ctl_stop       (ctl_stop),      
   .fifo_rst       (fifo_rst),                 
   .req_data       (req_data),
   .req_we         (req_we), 

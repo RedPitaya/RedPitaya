@@ -23,7 +23,8 @@ module rp_dma_s2mm_ctrl
   output wire [31:0]                reg_sts,
   input  wire [31:0]                reg_dst_addr1,  
   input  wire [31:0]                reg_dst_addr2,  
-  input  wire [31:0]                reg_buf_size,         
+  input  wire [31:0]                reg_buf_size,      
+  input  wire                       ctl_stop,   
   //
   output reg                        fifo_rst,
   input  wire [7:0]                 req_data,
@@ -788,8 +789,8 @@ begin
           intr <= 0; 
         end else begin
         if (((state_cs == WAIT_DATA_DONE) && (dat_ctrl_busy == 0)) ||
-              ((mode == 1) && 
-              ((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
+              ctl_stop ||
+              (((req_buf_addr_sel_pedge == 1 && buf_sel_in == 0) || (req_buf_addr_sel_nedge == 1 && buf_sel_in == 1)))) begin // Set if streaming mode and buffer is full
             //((req_buf_addr_sel_pedge == 1) || (req_buf_addr_sel_nedge == 1)))) begin
             intr <= 1;  // interrupt only triggers if the channel is not lagging behind. 
           end

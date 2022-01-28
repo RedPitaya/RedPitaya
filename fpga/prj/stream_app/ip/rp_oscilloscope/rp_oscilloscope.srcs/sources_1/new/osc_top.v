@@ -369,6 +369,7 @@ rp_dma_s2mm #(
   .reg_dst_addr1  (cfg_dma_dst_addr1),
   .reg_dst_addr2  (cfg_dma_dst_addr2),
   .reg_buf_size   (cfg_dma_buf_size),
+  .ctl_stop       (event_num_stop),   
   .buf1_ms_cnt    (buf1_ms_cnt),
   .buf2_ms_cnt    (buf2_ms_cnt),
   .buf_sel_in     (buf_sel_in),
