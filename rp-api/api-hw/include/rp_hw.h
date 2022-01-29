@@ -52,6 +52,16 @@ extern "C" {
 #define RP_HW_ESSS   42
 /** Failed SPI read/write */
 #define RP_HW_EST    43
+/** Failed to init I2C */
+#define RP_HW_EIIIC  60
+/** Failed to read from I2C */
+#define RP_HW_ERIIC  61
+/** Failed to write to I2C */
+#define RP_HW_EWIIC  62
+/** Failed to set slave mode for I2C */
+#define RP_HW_ESIIC  63
+/** Failed I2C. Buffer is NULL */
+#define RP_HW_EBIIC  64
 
 ///@}
 
@@ -371,7 +381,113 @@ int rp_SPI_SetWordLen(int len);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, size_t length);
+int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length);
+
+
+/**
+ * Set parameters for the I2C.
+ * @param device Path to device. Commonly used: /dev/i2c-0.
+ * @param addr Device address on the bus in range [0x03-0x77]
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_InitDevice(char *device,uint8_t addr);
+
+/**
+ * Enables forced bus operation even if the device is in use.
+ * @param force Enable force mode
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_setForceMode(bool force);
+
+/**
+ * Gets the current forced mode setting.
+ * @param value Return current mode
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_getForceMode(bool *value);
+
+/**
+ * Gets the current device address.
+ * @param value Return current device address
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_getDevAddress(int * address);
+
+/**
+ * Read byte from I2C. Used smbus.
+ * @param reg Address of register
+ * @param value Returns the read value
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_Read(uint8_t reg,uint8_t *value);
+
+/**
+ * Read word from I2C. Used smbus.
+ * @param reg Address of register
+ * @param value Returns the read value
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_ReadWord(uint8_t reg,uint16_t *value);
+
+/**
+ * Read command from I2C. Used smbus.
+ * @param value Returns the read value
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_ReadCommand(uint8_t *value);
+
+/**
+ * Read buffer from I2C. Used smbus.
+ * @param reg Address of register
+ * @param buffer Buffer pointer
+ * @param len Indicates how much data to read, and returns the number of bytes read
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len);
+
+/**
+ * Write byte to I2C. Used smbus.
+ * @param reg Address of register
+ * @param value Value for write
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_Write(uint8_t reg,uint8_t value);
+
+/**
+ * Write word to I2C. Used smbus.
+ * @param reg Address of register
+ * @param value Value for write
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_WriteWord(uint8_t reg,uint16_t value);
+
+/**
+ * Write command to I2C. Used smbus.
+ * @param value Value for write
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_WriteCommand(uint8_t value);
+
+/**
+ * Write buffer to I2C. Used smbus.
+ * @param reg Address of register
+ * @param buffer Buffer pointer
+ * @param len buffer length
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_WriteBuffer(uint8_t reg, uint8_t *buffer, int len);
 
 #ifdef __cplusplus
 }

@@ -203,7 +203,7 @@ int spi_SetWordLen(int len){
     return RP_HW_OK;
 }
 
-int spi_ReadWrite(void *tx_buffer, void *rx_buffer, size_t length){
+int spi_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length){
     if(spi_fd == -1){
         MSG("Failed SPI not init\n");
         return RP_HW_EIS;

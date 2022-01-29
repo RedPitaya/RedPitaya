@@ -40,6 +40,6 @@ int spi_SetSpeed(int speed);
 int spi_GetWordLen(int *len);
 int spi_SetWordLen(int len);
 
-int spi_ReadWrite(void *tx_buffer, void *rx_buffer, size_t length);
+int spi_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length);
 
 #endif

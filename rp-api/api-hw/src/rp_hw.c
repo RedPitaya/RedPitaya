@@ -18,6 +18,7 @@
 #include "uart.h"
 #include "spi.h"
 #include "led_system.h"
+#include "i2c.h"
 
 int rp_UartInit(){
     return uart_Init();
@@ -140,6 +141,56 @@ int rp_SPI_SetWordLen(int len){
     return spi_SetWordLen(len);
 }
 
-int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, size_t length){
+int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length){
     return spi_ReadWrite(tx_buffer,rx_buffer,length);
+}
+
+int rp_I2C_InitDevice(char *_device,uint8_t addr){
+    return i2c_InitDevice(_device,addr);
+}
+
+int rp_I2C_setForceMode(bool force){
+    return i2c_setForceMode(force);
+}
+
+int rp_I2C_getForceMode(bool *value){
+    *value = i2c_getForceMode();
+    return RP_HW_OK;
+}
+
+int rp_I2C_getDevAddress(int *address){
+    *address = i2c_getDevAddress();
+    return RP_HW_OK;
+}
+
+int rp_I2C_Read(uint8_t reg,uint8_t *value){
+    return i2c_Read(reg,value);
+}
+
+int rp_I2C_ReadWord(uint8_t reg,uint16_t *value){
+    return i2c_ReadWord(reg,value);
+}
+
+int rp_I2C_ReadCommand(uint8_t *value){
+    return i2c_ReadCommand(value);
+}
+
+int rp_I2C_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len){
+    return i2c_ReadBuffer(reg,buffer,len);
+}
+
+int rp_I2C_Write(uint8_t reg,uint8_t value){
+    return i2c_Write(reg,value);
+}
+
+int rp_I2C_WriteWord(uint8_t reg,uint16_t value){
+    return i2c_WriteWord(reg,value);
+}
+
+int rp_I2C_WriteCommand(uint8_t value){
+    return i2c_WriteCommand(value);
+}
+
+int rp_I2C_WriteBuffer(uint8_t reg, uint8_t *buffer, int len){
+    return rp_I2C_WriteBuffer(reg,buffer,len);
 }

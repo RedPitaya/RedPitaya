@@ -34,7 +34,7 @@ int read_spi_configuration(int fd, spi_config_t *config);
 
 int write_spi_configuration(int fd, spi_config_t *config);
 
-int read_write_spi_buffers(int fd, void *tx_buffer, void *rx_buffer, size_t length);
+int read_write_spi_buffers(int fd, void *tx_buffer, void *rx_buffer, unsigned int length);
 
 
 #endif
