@@ -28,6 +28,10 @@ int rp_UartRelease(){
     return uart_Release();
 }
 
+int rp_UartSetSettings(){
+    return uart_SetSettings();
+}
+
 int rp_UartRead(unsigned char *buffer, int *size){
     return uart_read(buffer,size);
 }
@@ -36,21 +40,52 @@ int rp_UartWrite(unsigned char *buffer, int size){
     return uart_write(buffer,size);
 }
 
-int rp_UartSpeed(int value){
+int rp_UartSetSpeed(int value){
     return uart_SetSpeed(value);
+}
+
+int rp_UartGetSpeed(int *value){
+    *value = uart_GetSpeed(value);
+    return RP_HW_OK;
 }
 
 int rp_UartSetBits(rp_uart_bits_size_t _size){
     return uart_SetBits(_size);
 }
 
+int rp_UartGetBits(rp_uart_bits_size_t *value){
+    *value = uart_GetBits();
+    return RP_HW_OK;
+}
+
 int rp_UartSetStopBits(rp_uart_stop_bits_t _size){
     return uart_SetStopBits(_size);
+}
+
+int rp_UartGetStopBits(rp_uart_stop_bits_t *value){
+    *value = uart_GetStopBits();
+    return RP_HW_OK;
 }
 
 int rp_UartSetParityMode(rp_uart_parity_t mode){
     return uart_SetParityMode(mode);
 }
+
+int rp_UartGetParityMode(rp_uart_parity_t *value){
+    *value = uart_GetParityMode();
+    return RP_HW_OK;
+}
+
+int rp_UartSetTimeout(uint8_t deca_sec){
+    return uart_Timeout(deca_sec);
+}
+
+int rp_UartGetTimeout(uint8_t *value){
+    *value = uart_GetTimeout();
+    return RP_HW_OK;
+}
+
+
 
 int rp_GetLEDMMCState(bool *_enable){
     return led_GetMMCState(_enable);

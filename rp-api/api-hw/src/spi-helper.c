@@ -94,5 +94,6 @@ int read_write_spi_buffers(int fd, void *tx_buffer, void *rx_buffer, unsigned in
 	if (ioctl(fd, SPI_IOC_MESSAGE(1), & transfer) < 0)
 		return RP_HW_EST;
 
+	printf("Read size %d\n",transfer.len);
 	return RP_HW_OK;
 }
