@@ -11,7 +11,7 @@
 set project_name Led_blink
 set part_name xc7z010clg400-1
 set bd_path tmp/$project_name/$project_name.srcs/sources_1/bd/system
-
+set cfg_path C:\Users\Amar\Documents\Xilinx_workspace\RedPitaya-master\fpga\prj\Examples\Led_blink
 
 file delete -force tmp/$project_name
 
@@ -21,7 +21,7 @@ create_bd_design system
 # open_bd_design {$bd_path/system.bd}
 
 # Load RedPitaya ports
-source cfg/ports.tcl
+source $cfg_path/ports.tcl
 
 # Set Path for the custom IP cores
 set_property IP_REPO_PATHS tmp/cores [current_project]
