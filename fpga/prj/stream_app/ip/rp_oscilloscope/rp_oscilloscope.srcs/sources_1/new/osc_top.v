@@ -115,7 +115,11 @@ localparam FILT_COEFF_BB_CH2   = 8'hD4;  //68 Filter coeff BB address CH2
 localparam FILT_COEFF_KK_CH2   = 8'hD8;  //72 Filter coeff KK address CH2
 localparam FILT_COEFF_PP_CH2   = 8'hDC;  //76 Filter coeff PP address CH2
 
-localparam DIAG_REG            = 8'hE0;  //76 Filter coeff PP address CH2
+localparam DIAG_REG1           = 8'hE0;
+localparam DIAG_REG2           = 8'hE4;
+localparam DIAG_REG3           = 8'hE8;
+localparam DIAG_REG4           = 8'hEC;
+
 ////////////////////////////////////////////////////////////
 // Signals
 ////////////////////////////////////////////////////////////
@@ -204,6 +208,20 @@ begin
   if (~intr_reg && dma_intr) begin
     intr_cnt <= intr_cnt+1;
   end  
+end
+
+reg [32-1:0] trig_cnt, clk_cnt;
+always @(posedge clk)
+begin
+  if (~rst_n) begin
+    trig_cnt <= 'h0;
+    clk_cnt  <= 'h0;
+  end else begin
+    clk_cnt  <= clk_cnt + 'h1;
+    if (trig_ip[5]) begin
+      trig_cnt <= trig_cnt + 'h1;
+    end  
+  end
 end
 
 reg [S_AXIS_DATA_BITS-1:0] ramp_sig;    
@@ -830,7 +848,11 @@ begin
     FILT_COEFF_BB_CH2:      reg_rd_data <= cfg_filt_coeff_bb;
     FILT_COEFF_KK_CH2:      reg_rd_data <= cfg_filt_coeff_kk;
     FILT_COEFF_PP_CH2:      reg_rd_data <= cfg_filt_coeff_pp;
-    DIAG_REG:               reg_rd_data <= intr_cnt;
+    DIAG_REG1:              reg_rd_data <= intr_cnt;
+    DIAG_REG2:              reg_rd_data <= trig_cnt;
+    DIAG_REG3:              reg_rd_data <= clk_cnt;
+    DIAG_REG4:              reg_rd_data <= 'h0;
+
     default                 reg_rd_data <= 32'd0;                                
   endcase
 end
