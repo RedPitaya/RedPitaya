@@ -6,6 +6,7 @@
 #include "Oscilloscope.h"
 #include <stdio.h>
 #include <string.h>
+#include <poll.h>
 
 #define UNUSED(x) [&x]{}()
 
@@ -26,7 +27,7 @@ void * MmapNumber(int _fd, size_t _size, size_t _number) {
 
 void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
     UNUSED(baseOsc_addr);
-    //fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
+    // fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
 
@@ -108,8 +109,6 @@ COscilloscope::COscilloscope(bool _channel1Enable, bool _channel2Enable, int _fd
     m_calib_gain_ch1 = 0x8000;
     m_calib_offset_ch2 = 0;
     m_calib_gain_ch2 = 0x8000;
-    //setFilterCalibrationCh1(0x7d93,0x437c7,0xd9999a,0x2666);
-    //setFilterCalibrationCh2(0x7d93,0x437c7,0xd9999a,0x2666);
     setFilterCalibrationCh1(0,0,0xFFFFFF,0);
     setFilterCalibrationCh2(0,0,0xFFFFFF,0);
     uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset);
@@ -143,11 +142,7 @@ void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
         //_OscMap->event_sel =  osc0_event_id ;
 
         // Trigger mask
-        if (m_isMaster)
-            setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000004));
-        else
-            setRegister(_OscMap,&(_OscMap->trig_mask),UINT32_C(0x00000020));
-        //_OscMap->trig_mask = UINT32_C(0x00000004);
+        setRegister(_OscMap,&(_OscMap->trig_mask),m_isMaster ? UINT32_C(0x00000004) : UINT32_C(0x00000020));
 
         // Trigger low level
         setRegister(_OscMap,&(_OscMap->trig_low_level),-4);
@@ -162,7 +157,8 @@ void COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap){
         //_OscMap->trig_edge = UINT32_C(0x00000000);
 
         // Trigger pre samples
-        setRegister(_OscMap,&(_OscMap->trig_pre_samp),osc_buf_pre_samp);
+        setRegister(_OscMap,&(_OscMap->trig_pre_samp),m_isMaster ? osc_buf_pre_samp : 0);
+
         //_OscMap->trig_pre_samp = osc_buf_pre_samp;
 
         // Trigger post samples
@@ -228,12 +224,10 @@ void COscilloscope::prepare()
         std::cerr << "Error: COscilloscope::prepare()  can't init first channel" << std::endl;
         exit(-1);
     }
-    //printf("prepare()\n");
-    setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000004));
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x0000021E));
+    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,m_isMaster ? UINT32_C(0x0000021E) : UINT32_C(0x0000011E));
+    
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x00000001));
     setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
-    
 }
 
 void COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain){
@@ -251,17 +245,10 @@ void COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch
 bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow)
 {
     // Interrupt ACQ
-//    fprintf(stderr,"\n\tDMA buff status  0x%X\n",m_OscMap->dma_sts_addr);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//    fprintf(stderr,"\tCurrent buffer %d\n",m_OscBufferNumber);
     _buffer1 = m_Channel1 ? ( m_OscBuffer1 + osc_buf_size * m_OscBufferNumber) : nullptr;
     _buffer2 = m_Channel2 ? ( m_OscBuffer2 + osc_buf_size * m_OscBufferNumber) : nullptr;
     // This fix for FPGA
     _overFlow = (m_OscBufferNumber == 1 ? m_OscMap->lost_samples_buf1 : m_OscMap->lost_samples_buf2);
-//    fprintf(stderr,"\tDMA lost1:  %d\tlost2:  %d\t_overFlow: %d\n",m_OscMap->lost_samples_buf1 ,m_OscMap->lost_samples_buf2, _overFlow);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//    fprintf(stderr,"\tDMA lost1:  %d\tlost2:  %d\t_overFlow: %d\n",m_OscMap->lost_samples_buf1 ,m_OscMap->lost_samples_buf2, _overFlow);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
     if (m_Channel1 || m_Channel2){
         _size = osc_buf_size;
     }else {
@@ -273,11 +260,8 @@ bool COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,ui
 
 
 bool COscilloscope::clearBuffer(){
-//    printf("clearBuffer(%d)\n",m_OscBufferNumber);
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
     uint32_t clearFlag = (m_OscBufferNumber == 0 ? 0x00000004 : 0x00000008); // reset buffer
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), clearFlag );
-//    fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
     if (m_Channel1 || m_Channel2){
         m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;
     }
@@ -285,28 +269,31 @@ bool COscilloscope::clearBuffer(){
 }
 
 bool COscilloscope::wait(){
-    m_waitLock.lock();
     int32_t cnt = 1;
     constexpr size_t cnt_size = sizeof(cnt);
-    ssize_t bytes = write(m_Fd, &cnt, cnt_size);
+    ssize_t bytes = write(m_Fd, &cnt, cnt_size); // Unmmask interrupt
     if (bytes == cnt_size) {
-//        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-//        fprintf(stderr,"\tWAIT INTERRUPT\n");
-        bytes = read(m_Fd, &cnt, cnt_size);
-//        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-        clearInterrupt();
-//        fprintf(stderr,"\tINTERRUPT RESET\n");
-//        fprintf(stderr,"\tDMA Current buffer 0x%X\n",(m_OscMap->dma_sts_addr >> 4) & 0x1);
-        if (bytes == cnt_size) {
-            m_waitLock.unlock();
-            return true;
+        // wait for the interrupt
+        struct pollfd pfd = {.fd = m_Fd, .events = POLLIN};
+        int timeout_ms = 1000;
+        int rv = poll(&pfd, 1, timeout_ms);
+        // clear the interrupt
+        if (rv >= 1) {
+               uint32_t info;
+               read(m_Fd, &info, sizeof(info));
+        } else if (rv == 0) {
+               return false;
+        } else {
+               perror("UIO::wait()");
         }
+        clearInterrupt();
+        return true;
     }
-    m_waitLock.unlock();
     return false;
 }
 
 bool COscilloscope::clearInterrupt(){
+    const std::lock_guard<std::mutex> lock(m_waitLock);
 //    fprintf(stderr,"clearInterrupt()\n");
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), 0x00000002 );
     return true;
@@ -314,16 +301,13 @@ bool COscilloscope::clearInterrupt(){
 
 void COscilloscope::stop()
 {
-    m_waitLock.lock();
-    // Control stop
-    //    fprintf(stderr,"stop()\n");
+    const std::lock_guard<std::mutex> lock(m_waitLock);
     if (m_OscMap != nullptr){
         setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000004));
     }else {
         std::cerr << "Error: COscilloscope::stop()" << std::endl;
         exit(-1);
     }
-    m_waitLock.unlock();
 }
 
 auto COscilloscope::printReg() -> void{

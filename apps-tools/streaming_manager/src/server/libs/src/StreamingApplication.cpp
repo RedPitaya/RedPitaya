@@ -138,15 +138,15 @@ bool CStreamingApplication::stop(bool wait){
     mtx.lock();   
     bool state = false;
     if (m_isRun){
+        m_StreamingManager->stop();
+        m_Osc_ch->stop();
         m_OscThreadRun.clear();
         if (wait) {
             m_OscThread.join();
         }else{
             while(isRun());
         }
-        m_StreamingManager->stop();
         m_StreamingManager = nullptr;
-        m_Osc_ch->stop();
         m_Osc_ch = nullptr;
         state = true;
     }
@@ -169,52 +169,60 @@ void CStreamingApplication::oscWorker()
         prepareTestBuffers();
     }
     m_Osc_ch->prepare();
+    // m_Osc_ch->printReg();
+
 try{
     while (m_OscThreadRun.test_and_set())
     {
+        bool state = true;
+        uint32_t overFlow = 0;
 #ifndef DISABLE_OSC
-        m_Osc_ch->wait();
-        m_size_ch1 = 0;
-        m_size_ch2 = 0;
-        uint32_t overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
-        if (skipBuffs > 0) { skipBuffs--; continue; }
-        if (overFlow > 0) {
-            m_lostRate += overFlow;
-            // ++passCounter;
-        }
-#endif
-        void* passB1 = m_WriteBuffer_ch1;
-        void* passB2 = m_WriteBuffer_ch2;
-        
-        if (m_testMode){
-            passB1 = m_testBuffer_ch1;
-            passB2 = m_testBuffer_ch2;
-        }
-
-        oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, passB1, m_size_ch1, passB2, m_size_ch2);
-        if (m_verbMode){
-            // ++counter;
-            timeNow = std::chrono::system_clock::now();
-            curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
-            value = curTime.time_since_epoch();
-            
-            if ((value.count() - timeBegin) >= 5000) {
-                std::cout << "Lost samples: " << m_lostRate  << "\n";
-                //counter = 0;
-                m_lostRate = 0;
-                // passCounter = 0;
-                timeBegin = value.count();
+        state = m_Osc_ch->wait();
+        if (state){
+            m_size_ch1 = 0;
+            m_size_ch2 = 0;
+            overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
+            if (skipBuffs > 0) { skipBuffs--; continue; }
+            if (overFlow > 0) {
+                m_lostRate += overFlow;
+                // ++passCounter;
             }
         }
-
-        if (!m_StreamingManager->isFileThreadWork()){
+#endif
+        if (state){
+            void* passB1 = m_WriteBuffer_ch1;
+            void* passB2 = m_WriteBuffer_ch2;
             
-            if (m_StreamingManager->notifyStop){
-                if (m_StreamingManager->isOutOfSpace())
-                    m_StreamingManager->notifyStop(0);
-                else 
-                    m_StreamingManager->notifyStop(1);
-                m_StreamingManager->notifyStop = nullptr;                
+            if (m_testMode){
+                passB1 = m_testBuffer_ch1;
+                passB2 = m_testBuffer_ch2;
+            }
+            // printf("SAVE data to file\n");
+            oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, passB1, m_size_ch1, passB2, m_size_ch2);
+            if (m_verbMode){
+                // ++counter;
+                timeNow = std::chrono::system_clock::now();
+                curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
+                value = curTime.time_since_epoch();
+                
+                if ((value.count() - timeBegin) >= 5000) {
+                    std::cout << "Lost samples: " << m_lostRate  << "\n";
+                    //counter = 0;
+                    m_lostRate = 0;
+                    // passCounter = 0;
+                    timeBegin = value.count();
+                }
+            }
+
+            if (!m_StreamingManager->isFileThreadWork()){
+                
+                if (m_StreamingManager->notifyStop){
+                    if (m_StreamingManager->isOutOfSpace())
+                        m_StreamingManager->notifyStop(0);
+                    else 
+                        m_StreamingManager->notifyStop(1);
+                    m_StreamingManager->notifyStop = nullptr;                
+                }
             }
         }
     }
