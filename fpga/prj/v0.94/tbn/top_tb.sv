@@ -9,6 +9,7 @@
 module top_tb #(
   // time period
   realtime  TP = 8.0ns,  // 125MHz
+  realtime  DEL = 1.0ns,  // 125MHz
   realtime  RP = 100.1ns,  // ~10MHz
   // DUT configuration
   int unsigned DAC_DW = 14, // ADC data width
@@ -79,7 +80,7 @@ logic                  trig;
 logic                  intr;
 
 logic               clk,clk1 ;
-logic               clkn;
+logic               clkn, clk1n;
 wire               rstn_out;
 wire               clkout;
 
@@ -112,6 +113,8 @@ axi_bus_model #(.AW (REG_AW), .DW (REG_DW), .IW (IW), .LW (LW)) axi_bm_reg  (axi
 logic clk_start;
 
 assign clkn = ~clk;
+assign clk1n = ~clk1;
+
 // clock
 /*initial begin
   clk_start = 1'b0;
@@ -133,6 +136,16 @@ end*/
 
 initial        clk = 1'b0;
 always #(TP/2) clk = ~clk;
+
+/*
+initial       
+begin
+#DEL;
+
+clk1 = 1'b0; 
+end*/
+
+always clk1 = #DEL clk;
 
 initial        pll_ref = 1'b0;
 always #(RP/2) pll_ref = ~pll_ref;
@@ -159,6 +172,22 @@ end
 int unsigned cyc=0;
 always_ff @ (posedge clk)
 cyc <= cyc+1;
+
+
+reg ext_trig;
+
+initial begin
+  ext_trig = 1'b0;
+ /* ##150000;
+  ext_trig = 1'b1;
+  ##10;
+  ext_trig = 1'b0;
+  ##80000;
+  ext_trig = 1'b1;
+  ##10;
+  ext_trig = 1'b0;
+*/
+end
 
 /*always begin
   red_pitaya_top.ps.fclk_rstn <= {rstn,rstn,rstn,rstn};
@@ -191,9 +220,9 @@ initial begin
 
    top_tc.test_hk                 (32'h40000000, 32'h0);
    //top_tc.test_sata               (5<<20, 32'h55);
-   top_tc.test_osc                (32'h40100000, OSC1_EVENT);
+   //top_tc.test_osc                (32'h40100000, OSC1_EVENT);
 
-   //  top_tc.test_asg                (32'h40200000, 32'h0, 2);
+   top_tc.test_asg                (32'h40200000, 32'h0, 2);
 
 
   ##1600000000;
@@ -314,21 +343,106 @@ assign wdat2 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_ax
 assign wdat3 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[43:32];
 assign wdat4 = red_pitaya_top_sim.system_wrapper_i.system_i.rp_oscilloscope.m_axi_osc1_wdata[59:48];
 */
-reg [12:0] cnter;
+reg [12:0] cnter1, cnter2, cnter3, cnter4;
+
+wire [13:0] cnter1_dat = {1'b0, cnter1};
+wire [13:0] cnter2_dat = {1'b0, cnter2};
+wire [13:0] cnter3_dat = {1'b0, cnter3};
+wire [13:0] cnter4_dat = {1'b0, cnter4};
+
+wire [13:0] cnter1_diag = {cnter1_dat[13], ~cnter1_dat[12:0]};
+wire [13:0] cnter2_diag = {cnter2_dat[13], ~cnter2_dat[12:0]};
+wire [13:0] cnter3_diag = {cnter3_dat[13], ~cnter3_dat[12:0]};
+wire [13:0] cnter4_diag = {cnter4_dat[13], ~cnter4_dat[12:0]};
+
+wire [6:0] cnter1_o ;
+wire [6:0] cnter2_o;
+wire [6:0] cnter3_o;
+wire [6:0] cnter4_o;
+
+reg  [6:0] cnter1_h, cnter1_l;
+reg  [6:0] cnter2_h, cnter2_l;
+reg  [6:0] cnter3_h, cnter3_l;
+reg  [6:0] cnter4_h, cnter4_l;
+
+genvar GV;
+generate
+for (GV = 0; GV < 7; GV = GV + 1) begin : adc_encode
+  assign cnter1_o[GV] = clk  ? cnter1_dat[2*GV] : cnter1_dat[2*GV+1]; 
+  assign cnter2_o[GV] = 'h0; 
+  assign cnter3_o[GV] = 'h0; 
+  assign cnter4_o[GV] = 'h0; 
+  //assign cnter2_o[GV] = clk  ? cnter2_dat[2*GV] : cnter2_dat[2*GV+1]; 
+  //assign cnter3_o[GV] = clk1 ? cnter3_dat[2*GV] : cnter3_dat[2*GV+1]; 
+  //assign cnter4_o[GV] = clk1 ? cnter4_dat[2*GV] : cnter4_dat[2*GV+1]; 
+  always @(*) begin
+    if (clk) begin
+      cnter1_h[GV] <= cnter1_dat[2*GV];
+      cnter2_h[GV] <= cnter2_dat[2*GV];
+      cnter3_h[GV] <= cnter3_dat[2*GV];
+      cnter4_h[GV] <= cnter4_dat[2*GV];
+    end
+    if (~clk) begin
+      cnter1_l[GV] <= cnter1_dat[2*GV+1];
+      cnter2_l[GV] <= cnter2_dat[2*GV+1];
+      cnter3_l[GV] <= cnter3_dat[2*GV+1];
+      cnter4_l[GV] <= cnter4_dat[2*GV+1];
+    end
+  end
+end 
+endgenerate
 always @(clk) begin
 
     if (rstn==0)
-        cnter <= 13'b0;
-    else if (cnter==13'hFFF && clk==1)
-        cnter <= 13'b0;
+        cnter1 <= 13'h1;
+    else if (cnter1==13'hFFF && clk==1)
+        cnter1 <= 13'b0;
     else if (clk == 1)
-        cnter <= cnter + 13'b1; 
+        cnter1 <= cnter1 + 13'b1; 
 
+
+    if (rstn==0)
+        cnter2 <= 13'h2;
+    else if (cnter2==13'hFFF && clk==1)
+        cnter2 <= 13'b0;
+    else if (clk == 1)
+        cnter2 <= cnter2 + 13'b1; 
+end
+
+always @(clk1) begin
+    if (rstn==0)
+        cnter3 <= 13'h0;
+    else if (cnter3==13'hFFF && clk1==1)
+        cnter3 <= 13'b0;
+    else if (clk1 == 1)
+        cnter3 <= cnter3 + 13'b1; 
+
+
+    if (rstn==0)
+        cnter4 <= 13'h1;
+    else if (cnter4==13'hFFF && clk1==1)
+        cnter4 <= 13'b0;
+    else if (clk1 == 1)
+        cnter4 <= cnter4 + 13'b1; 
 end
 
 
 
+reg [15:0] trigcnt;
+reg  trigr;
 
+always @(clk) begin
+
+    if (rstn==0)
+        trigcnt <= 16'b0;
+    else if (trigcnt==16'd25000 && clk==1) begin //200 us 
+        trigcnt <= 13'b0;
+        trigr <= 1'b1;
+    end else if (clk == 1) begin
+        trigcnt <= trigcnt + 13'b1; 
+        trigr <= 1'b0;
+    end
+end
 
 
 
@@ -365,8 +479,8 @@ end
   // LED
   inout  logic [ 8-1:0] led_o
 */
-
- red_pitaya_top_sim red_pitaya_top
+wire [14-1:0] dac_dat_o;
+ red_pitaya_top_sim4ch red_pitaya_top
        (.DDR_addr(),
         .DDR_ba(),
         .DDR_cas_n(),
@@ -388,77 +502,72 @@ end
         .FIXED_IO_ps_clk(),
         .FIXED_IO_ps_porb(),
         .FIXED_IO_ps_srstb(),
-/*
-        .S_AXI_REG_araddr(axi_reg.ARADDR),
-        .S_AXI_REG_arburst(axi_reg.ARBURST),
-        .S_AXI_REG_arcache(axi_reg.ARCACHE),
-        .S_AXI_REG_arid(axi_reg.ARID),
-        .S_AXI_REG_arlen(axi_reg.ARLEN),
-        .S_AXI_REG_arlock(axi_reg.ARLOCK),
-        .S_AXI_REG_arprot(axi_reg.ARPROT),
-        .S_AXI_REG_arqos(axi_reg.ARQOS),
-        .S_AXI_REG_arready(axi_reg.ARREADY),
-        .S_AXI_REG_arsize(axi_reg.ARSIZE),
-        .S_AXI_REG_arvalid(axi_reg.ARVALID),
-        .S_AXI_REG_awaddr(axi_reg.AWADDR),
-        .S_AXI_REG_awburst(axi_reg.AWBURST),
-        .S_AXI_REG_awcache(axi_reg.AWCACHE),
-        .S_AXI_REG_awid(axi_reg.AWID),
-        .S_AXI_REG_awlen(axi_reg.AWLEN),
-        .S_AXI_REG_awlock(axi_reg.AWLOCK),
-        .S_AXI_REG_awprot(axi_reg.AWPROT),
-        .S_AXI_REG_awqos(axi_reg.AWQOS),
-        .S_AXI_REG_awready(axi_reg.AWREADY),
-        .S_AXI_REG_awsize(axi_reg.AWSIZE),
-        .S_AXI_REG_awvalid(axi_reg.AWVALID),
-        .S_AXI_REG_bid(axi_reg.BID),
-        .S_AXI_REG_bready(axi_reg.BREADY),
-        .S_AXI_REG_bresp(axi_reg.BRESP),
-        .S_AXI_REG_bvalid(axi_reg.BVALID),
-        .S_AXI_REG_rdata(axi_reg.RDATA),
-        .S_AXI_REG_rid(axi_reg.RID),
-        .S_AXI_REG_rlast(axi_reg.RLAST),
-        .S_AXI_REG_rready(axi_reg.RREADY),
-        .S_AXI_REG_rresp(axi_reg.RRESP),
-        .S_AXI_REG_rvalid(axi_reg.RVALID),
-        .S_AXI_REG_wdata(axi_reg.WDATA),
-        .S_AXI_REG_wid(axi_reg.WID),
-        .S_AXI_REG_wlast(axi_reg.WLAST),
-        .S_AXI_REG_wready(axi_reg.WREADY),
-        .S_AXI_REG_wstrb(axi_reg.WSTRB),
-        .S_AXI_REG_wvalid(axi_reg.WVALID),
-*/
+
         .axi_reg(axi_reg),
-        .adc_dat_i({{3'b0,cnter},{3'b0,~cnter}}),  // ADC data
-        .adc_clk_i({clk,clkn}),  // ADC clock {p,n}
-        .adc_clk_o(),  // optional ADC clock source (unused)
+        .adc_dat_i({cnter4_o, cnter3_o, cnter2_o, cnter1_o}),  // ADC data
+        //`ifdef SLAVE
+        //.daisy_p_i({clk,trigr}),  // ADC clock {p,n}       
+        //.daisy_n_i({clkn,~trigr}),  // ADC clock {p,n}         
+        //`else
+        .adc_clk_i({{clk1,clk1n},{clk,clkn}}),  // ADC clock {p,n}
+        //`endif
+        //.adc_clk_o(),  // optional ADC clock source (unused)
         .adc_cdcs_o(), // ADC clock duty cycle stabilizer
-        // DAC
-        .dac_dat_o  (),  // DAC combined data
-        .dac_wrt_o  (),  // DAC write
-        .dac_sel_o  (),  // DAC channel select
-        .dac_clk_o  (),  // DAC clock
-        .dac_rst_o  (),  // DAC reset
+
         // PWM DAC
         .dac_pwm_o  (),  // 1-bit PWM DAC
         // XADC
         .vinp_i     (),  // voltages p
         .vinn_i     (),  // voltages n
         // Expansion connector
-        .exp_p_io   (),
-        .exp_n_io   (),
+        .exp_p_io   ({7'h0,ext_trig}),
+        .exp_n_io   (8'h0),
         // SATA connector
         .daisy_p_o  (),  // line 1 is clock capable
         .daisy_n_o  (),
-        .daisy_p_i  (),  // line 1 is clock capable
-        .daisy_n_i  (),
+        //.daisy_p_i  (),  // line 1 is clock capable
+        //.daisy_n_i  (),
         // LED
         .led_o(),
         .rstn(rstn),
         .clkout(clkout),
         .rstn_out(rstn_out));
+/*
+reg [14-1:0] dac_cha, dac_cha_prev;
+reg [14-1:0] dac_chb, dac_chb_prev;
 
+always @(posedge dac_clk_o) begin
+    if (~dac_wrt_o) begin
+        if (~dac_sel_o)
+            dac_cha <= dac_dat_o;
+        else 
+            dac_chb <= dac_dat_o;  
+    end
+    dac_cha_prev <= dac_cha;
+    dac_chb_prev <= dac_chb;
 
+end
+
+wire port1_en  = dac_wrt_o &  dac_sel_o;
+wire port2_en  = dac_wrt_o & ~dac_sel_o;
+wire port_sync = dac_clk_o & ~dac_rst_o;
+reg [14-1:0] port1, port2;
+reg [14-1:0] port1_o, port2_o;
+
+always @(posedge port1_en)
+  port1 <= dac_dat_o;
+
+always @(posedge port2_en)
+  port2 <= dac_dat_o;
+
+always @(posedge dac_clk_o) begin
+  port1_o <= ~port1;
+  port2_o <= ~port2;
+end
+
+wire cha_test = (dac_cha_prev - dac_cha) > 1 ? 1'b0 : 1'b1;
+wire chb_test = (dac_chb_prev - dac_chb) > 1 ? 1'b0 : 1'b1;
+*/
 bufif1 bufif_exp_p_io [9-1:0] (exp_p_io, exp_p_od, exp_p_oe);
 bufif1 bufif_exp_n_io [9-1:0] (exp_n_io, exp_n_od, exp_n_oe);
 bufif1 bufif_exp_9_io         (exp_9_io, exp_9_od, exp_9_oe);

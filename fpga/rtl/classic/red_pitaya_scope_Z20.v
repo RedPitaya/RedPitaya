@@ -58,6 +58,8 @@ module red_pitaya_scope_Z20 #(
    // trigger sources
    input                 trig_ext_i      ,  // external trigger
    input                 trig_asg_i      ,  // ASG trigger
+   output     [  4-1: 0] trig_ch_o       ,  // output trigger to ADC for other 2 channels
+   input      [  4-1: 0] trig_ch_i       ,  // input ADC trigger from other 2 channels
 
    // AXI0 master
    output                axi0_clk_o      ,  // global clock
@@ -663,10 +665,15 @@ end else begin
        4'd7 : adc_trig <= ext_trig_n    ; // external - falling edge
        4'd8 : adc_trig <= asg_trig_p    ; // ASG - rising edge
        4'd9 : adc_trig <= asg_trig_n    ; // ASG - falling edge
-    default : adc_trig <= 1'b0          ;
+       4'd10: adc_trig <= trig_ch_i[0]  ; // from the other two ADC channels: C ch rising edge
+       4'd11: adc_trig <= trig_ch_i[1]  ; // from the other two ADC channels: C ch falling edge
+       4'd12: adc_trig <= trig_ch_i[2]  ; // from the other two ADC channels: D ch rising edge
+       4'd13: adc_trig <= trig_ch_i[3]  ; // from the other two ADC channels: D ch falling edge
+    default : adc_trig <= 1'b0          ; 
    endcase
 end
 
+assign trig_ch_o = {adc_trig_bn, adc_trig_bp, adc_trig_an, adc_trig_ap};
 //---------------------------------------------------------------------------------
 //  Trigger created from input signal
 

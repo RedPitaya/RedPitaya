@@ -119,13 +119,18 @@ task test_osc(
   axi_write(offset+'h0 ,  'd1  );  // ARM trigger
   axi_write(offset+'h4 ,  'd1  );  // manual trigger
   ##5000;
-  axi_write(offset+'h14,  'h2);  // decimation
+  axi_write(offset+'h14,  'd100);  // decimation
+  axi_write(offset+'h0 ,  'd1  );  // ARM trigger
+  axi_write(offset+'h4 ,  'd1  );  // manual trigger
+  ##5000;
+  axi_write(offset+'h14,  'd100);  // decimation
+  axi_write(offset+'h28,  'd0);  // enable signal average at decimation
   axi_write(offset+'h0 ,  'd1  );  // ARM trigger
   axi_write(offset+'h4 ,  'd1  );  // manual trigger
   ##5000;
   axi_write(offset+'h14,  'h4);  // decimation
   axi_write(offset+'h0 ,  'd1  );  // ARM trigger
-  axi_write(offset+'h4 ,  'd1  );  // manual trigger
+  axi_write(offset+'h4 ,  'd2  );  // pos chA trigger
 ##10000;
 endtask: test_osc
 
@@ -230,55 +235,63 @@ logic signed [ 32-1: 0] rdata_blk [];
   ##100;
 
   // CH0 DAC data
-  axi_write(offset+32'h10000, 32'd3     );  // write table
-  axi_write(offset+32'h10004, 32'd30    );  // write table
-  axi_write(offset+32'h10008, 32'd8000  );  // write table
-  axi_write(offset+32'h1000C,-32'd4     );  // write table
-  axi_write(offset+32'h10010,-32'd40    );  // write table
-  axi_write(offset+32'h10014,-32'd8000  );  // write table
-  axi_write(offset+32'h10018, 32'd4  );  // write table
-  axi_write(offset+32'h1001c, 32'd250   );  // write table
+  axi_write(offset+32'h10000, 32'h1FFF     );  // write table
+  axi_write(offset+32'h10004, 32'h1FFF    );  // write table
+  axi_write(offset+32'h10008, 32'h1FFF  );  // write table
+  axi_write(offset+32'h1000C, 32'h1FFF     );  // write table
+  axi_write(offset+32'h10010, 32'h1FFF    );  // write table
+  axi_write(offset+32'h10014, 32'h1FFF  );  // write table
+  axi_write(offset+32'h10018, 32'h1FFF  );  // write table
+  axi_write(offset+32'h1001c, 32'h1FFF   );  // write table
 
   // CH0 DAC settings
-  axi_write(offset+32'h00004,{2'h0,-14'd500, 2'h0, 14'h2F00}  );  // DC offset, amplitude
-  axi_write(offset+32'h00008,{2'h0, 14'd7, 16'hffff}          );  // table size
-  axi_write(offset+32'h0000C,{2'h0, 14'h1, 16'h0}             );  // reset offset
-  axi_write(offset+32'h00010,{2'h0, 14'h2, 16'h0}             );  // table step
+  axi_write(offset+32'h00004,{16'h3fff, 2'h0, 14'h2000}  );  // DC offset, amplitude
+  //axi_write(offset+32'h00004,{16'h3f9e, 2'h0, 14'h8}  );  // DC offset, amplitude
+
+//  axi_write(offset+32'h00008,{2'h0, 14'd7, 16'hffff}          );  // table size
+  axi_write(offset+32'h00008,{32'h7ffff}          );  // table size
+
+  axi_write(offset+32'h0000C,{2'h0, 14'h0, 16'h0}             );  // reset offset
+  axi_write(offset+32'h00010,{2'h0, 14'h0, 16'h100}             );  // table step
   axi_write(offset+32'h00018,{16'h0, 16'd0}                   );  // number of cycles
   axi_write(offset+32'h0001C,{16'h0, 16'd0}                   );  // number of repetitions
-  axi_write(offset+32'h00020,{32'd3}                          );  // number of 1us delay between repetitions
-  axi_write(offset+32'h00044,{32'd100}                          );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00020,{32'd10}                          );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00044,{32'd0}                          );  // number of 1us delay between repetitions
 
-  ch0_set = {1'b0 ,1'b0, 1'b0, 1'b0, 1'b1,    1'b0, 3'h2} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
+  ch0_set = {1'b0 ,1'b0, 1'b0, 1'b0, 1'b1,    1'b0, 3'h1} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
 
 
   // CH1 DAC data
-  for (int k=0; k<1000; k++) begin
+  for (int k=0; k<16384; k++) begin
     axi_write(offset+32'h20000 + (k*4), k);  // write table
   end
 
   // CH1 DAC settings
-  axi_write(offset+32'h00024,{2'h0, 14'd0, 2'h0, 14'h2000}    );  // DC offset, amplitude
-  axi_write(offset+32'h00028,{2'h0, 14'd999, 16'hffff}       );  // table size
-  axi_write(offset+32'h0002C,{2'h0, 14'h5, 16'h0}             );  // reset offset
-  axi_write(offset+32'h00030,{2'h0, 14'h9, 16'h0}             );  // table step
-  axi_write(offset+32'h00038,{16'h0, 16'd4}                   );  // number of cycles
-  axi_write(offset+32'h0003C,{16'h0, 16'd2}                   );  // number of repetitions
-  axi_write(offset+32'h00040,{32'd2}                         );  // number of 1us delay between repetitions
-  axi_write(offset+32'h00048,{32'd50}                         );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00024,{16'h3fb1, 2'h0, 14'h1d6b}  );  // DC offset, amplitude
+  axi_write(offset+32'h00028,{16'h3fff, 16'hffff}       );  // table size
+  axi_write(offset+32'h0002C,{2'h0, 14'h0, 16'h0}             );  // reset offset
+  axi_write(offset+32'h00030,{32'h10000}             );  // table step 100Hz
+  //axi_write(offset+32'h00030,{32'd100000}             );  // table step 1kHz
+  axi_write(offset+32'h00038,{16'h0, 16'd1}                   );  // number of cycles
+  axi_write(offset+32'h0003C,{16'h0, 16'd65535}                   );  // number of repetitions
+  axi_write(offset+32'h00040,{32'd5}                         );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00048,{32'd0}                         );  // last value
 
   ch1_set = {1'b0, 1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_rgate, set_zero, set_rst, set_once(NA), set_wrap, 1'b0, trig_src
 
   //axi_write(offset+32'h00000,{8'h0, ch1_set,  8'h0, ch0_set}  ); // write configuration
-  axi_write(offset+32'h00000,{8'h0, 8'h11,  8'h0, 8'h11}  ); // write configuration
+  axi_write(offset+32'h00000,{8'h0, 8'h12,  8'h0, 8'h91}  ); // write configuration
+  axi_write(32'h40000030,8'h0  ); // write configuration
+  axi_write(32'h40000030,8'hff  ); // write configuration
+  axi_write(32'h40000030,8'h0  ); // write configuration
 
-  ##2000;
+  ##100000;
+  //axi_write(32'h40000030,8'h0  ); // write configuration
+  //axi_write(32'h40000030,8'hff  ); // write configuration
+  //axi_write(32'h40000030,8'h0  ); // write configuration
 
-  ch1_set = {1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
 
- // axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
-
- // ##200;
+  ##200;
 /*
   // CH1 table data readback
   rdata_blk = new [80];
@@ -293,13 +306,28 @@ logic signed [ 32-1: 0] rdata_blk [];
     ##1737;
   end
 */
-  ##500;
+/*
+  axi_write(offset+32'h00038,{16'h0, 16'd1}                   );  // number of cycles
+  axi_write(offset+32'h0003C,{16'h0, 16'd1}                   );  // number of repetitions
+  axi_write(offset+32'h00040,{32'd5}                         );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00018,{16'h0, 16'd2}                   );  // number of cycles
+  axi_write(offset+32'h0001C,{16'h0, 16'd3}                   );  // number of repetitions
+  axi_write(offset+32'h00020,{32'd5}                          );  // number of 1us delay between repetitions
+  axi_write(offset+32'h00000,{8'h0, 8'h11,  8'h0, 8'h91}  ); // write configuration
+
+  ##20000;
+  axi_write(offset+32'h00000,{8'h0, 8'h11,  8'h0, 8'h91}  ); // write configuration
+
+  axi_write(32'h40000030,{32'h1}  ); // write configuration
+  axi_write(32'h40000030,{32'h0}  ); // write configuration
+*/
 /*ch1_set0 = {1'b1, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
 ch1_unset0 = {1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst, set_a_once, set_a_wrap, 1'b0, trig_src
   axi_write(offset+32'h00000,{7'h0, ch1_set0,  7'h0, ch0_set}  ); // write configuration
  #100;
   axi_write(offset+32'h00000,{7'h0, ch1_unset0,  7'h0, ch0_set}  ); // write configuration
 */
+/*
   axi_write(offset+32'h00024,{2'h0, 14'd0, 2'h0, 14'h2000}    );  // DC offset, amplitude
   axi_write(offset+32'h00028,{2'h0, 14'd7, 16'hffff}       );  // table size
   axi_write(offset+32'h0002C,{2'h0, 14'h5, 16'h0}             );  // reset offset
@@ -309,7 +337,7 @@ ch1_unset0 = {1'b0, 1'b0, 1'b1, 1'b1,    1'b0, 3'h1} ;  // set_a_zero, set_a_rst
   axi_write(offset+32'h00040,{32'd10}                         );  // number of 1us delay between repetitions
   axi_write(offset+32'h00048,{32'd50}                         );  // number of 1us delay between repetitions
   axi_write(offset+32'h00000,{8'h0, 8'h11,  8'h0, 8'h11}  ); // write configuration
-
+*/
  /*#100;
   axi_write(offset+32'h00000,{7'h0, ch1_set,  7'h0, ch0_set}  ); // write configuration
 #100;
