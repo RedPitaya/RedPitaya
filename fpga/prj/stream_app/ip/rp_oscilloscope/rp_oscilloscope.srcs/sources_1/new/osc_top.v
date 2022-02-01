@@ -115,10 +115,10 @@ localparam FILT_COEFF_BB_CH2   = 8'hD4;  //68 Filter coeff BB address CH2
 localparam FILT_COEFF_KK_CH2   = 8'hD8;  //72 Filter coeff KK address CH2
 localparam FILT_COEFF_PP_CH2   = 8'hDC;  //76 Filter coeff PP address CH2
 
-localparam DIAG_REG1           = 8'hE0;
-localparam DIAG_REG2           = 8'hE4;
-localparam DIAG_REG3           = 8'hE8;
-localparam DIAG_REG4           = 8'hEC;
+localparam DIAG_REG1           = 8'hE0; // interrupt counter
+localparam DIAG_REG2           = 8'hE4; // external trigger counter
+localparam DIAG_REG3           = 8'hE8; // clock counter
+localparam DIAG_REG4           = 8'hEC; // status of state machine
 
 ////////////////////////////////////////////////////////////
 // Signals
@@ -167,6 +167,8 @@ wire [31:0]                 cfg_dma_sts_reg;
 reg  [31:0]                 cfg_dma_dst_addr1;
 reg  [31:0]                 cfg_dma_dst_addr2;
 reg  [31:0]                 cfg_dma_buf_size;
+wire [31:0]                 cfg_dma_diags_reg;
+
 
 reg  [15:0]                 cfg_calib_offset;
 reg  [15:0]                 cfg_calib_gain;
@@ -200,12 +202,14 @@ wire [S_AXIS_DATA_BITS-1:0] filt_tdata;
 wire                        filt_tvalid;   
 
 reg intr_reg;
-reg [16-1:0] intr_cnt='h0;
+reg [32-1:0] intr_cnt;
 
 always @(posedge clk)
 begin
   intr_reg <= dma_intr;
-  if (~intr_reg && dma_intr) begin
+  if (~rst_n)
+    intr_cnt <= 'h0;
+  else if (~intr_reg && dma_intr) begin
     intr_cnt <= intr_cnt+1;
   end  
 end
@@ -384,6 +388,7 @@ rp_dma_s2mm #(
   .reg_wr_we      (reg_wr_we),   
   .reg_ctrl       (cfg_dma_ctrl_reg),
   .reg_sts        (cfg_dma_sts_reg),
+  .reg_diags      (cfg_dma_diags_reg),  
   .reg_dst_addr1  (cfg_dma_dst_addr1),
   .reg_dst_addr2  (cfg_dma_dst_addr2),
   .reg_buf_size   (cfg_dma_buf_size),
@@ -851,7 +856,7 @@ begin
     DIAG_REG1:              reg_rd_data <= intr_cnt;
     DIAG_REG2:              reg_rd_data <= trig_cnt;
     DIAG_REG3:              reg_rd_data <= clk_cnt;
-    DIAG_REG4:              reg_rd_data <= 'h0;
+    DIAG_REG4:              reg_rd_data <= cfg_dma_diags_reg;
 
     default                 reg_rd_data <= 32'd0;                                
   endcase
