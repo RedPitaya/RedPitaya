@@ -150,6 +150,7 @@ wire                        sts_trig_post_overflow;
 reg  [S_AXIS_DATA_BITS-1:0] cfg_trig_low_level;
 reg  [S_AXIS_DATA_BITS-1:0] cfg_trig_high_level;
 reg                         cfg_trig_edge;  
+wire                        trig_mod_op;
 
 reg                         cfg_avg_en; 
 reg  [DEC_CNT_BITS-1:0]     cfg_dec_factor;  
@@ -392,7 +393,8 @@ rp_dma_s2mm #(
   .reg_dst_addr1  (cfg_dma_dst_addr1),
   .reg_dst_addr2  (cfg_dma_dst_addr2),
   .reg_buf_size   (cfg_dma_buf_size),
-  .ctl_stop       (event_num_stop),   
+  .ctl_start_o    (ctl_start_o),
+  .ctl_start_ext  (trig_ip[5]),
   .buf1_ms_cnt    (buf1_ms_cnt),
   .buf2_ms_cnt    (buf2_ms_cnt),
   .buf_sel_in     (buf_sel_in),
@@ -437,7 +439,7 @@ assign ctl_rst = event_num_reset;
 assign event_sts_reset = 0;
 
 assign ctl_trg = event_num_trig | |(trig_ip & cfg_trig_mask);
-assign trig_o  = |(trig_ip & cfg_trig_mask);
+assign trig_o  = /*|(trig_ip & cfg_trig_mask) | */ ctl_start_o;
 
 ////////////////////////////////////////////////////////////
 // Name : 
