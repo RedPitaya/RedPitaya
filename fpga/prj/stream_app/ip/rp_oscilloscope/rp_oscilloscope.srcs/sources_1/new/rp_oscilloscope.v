@@ -185,6 +185,7 @@ assign adr_is_filt_ch2= (reg_addr[REG_ADDR_BITS-1:0] >= 8'hD0 && reg_addr[REG_AD
 assign adr_is_ch1     = (adr_is_dma_ch1 || adr_is_cal_ch1 || adr_is_diag_ch1 || adr_is_filt_ch1);
 assign adr_is_ch2     = (adr_is_dma_ch2 || adr_is_cal_ch2 || adr_is_diag_ch1 || adr_is_filt_ch2);
 
+assign trig_out = trig_out1 | trig_out2;
 ////////////////////////////////////////////////////////////
 // Name : Register Control
 // 
@@ -249,7 +250,7 @@ osc_top #(
   .event_op_reset   (osc1_event_op[3]),
   .trig_ip          (trig_ip),
   .trig_op          (osc1_trig_op),  
-  .trig_o           (trig_out),
+  .trig_o           (trig_out1),
   .ctl_rst          (),
   .reg_addr         (osc1_reg_addr),   
   .reg_wr_data      (osc1_reg_wr_data),
@@ -305,7 +306,7 @@ osc_top #(
   .event_op_reset   (osc2_event_op[3]),
   .trig_ip          (trig_ip),
   .trig_op          (osc2_trig_op),  
-  .trig_o           (),
+  .trig_o           (trig_out2),
   .ctl_rst          (),
   .reg_addr         (osc2_reg_addr),   
   .reg_wr_data      (osc2_reg_wr_data),
