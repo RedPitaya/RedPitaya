@@ -38,15 +38,21 @@ module red_pitaya_hk_4adc #(
   output reg [DWL-1:0] led_o      ,  // LED output
   // global configuration
   output reg           digital_loop,
-  input                pll_sys_i,    // system clock
-  input                pll_ref_i,    // reference clock
-  output               pll_hi_o,     // PLL high
-  output               pll_lo_o,     // PLL low
+  input                pll_sys_i  ,  // system clock
+  input                pll_ref_i  ,  // reference clock
+  output               pll_hi_o   ,  // PLL high
+  output               pll_lo_o   ,  // PLL low
+
+  // SPI interface to ADC
+  output               spi_cs_o   ,
+  output               spi_clk_o  ,
+  output               spi_mosi_o ,
+
   // idelay control
-  output reg [2*7-1:0] idly_rst_o,
-  output reg [2*7-1:0] idly_ce_o,
-  output reg [2*7-1:0] idly_inc_o,
-  input      [2*5-1:0] idly_cnt_i,
+  output reg [4*7-1:0] idly_rst_o,
+  output reg [4*7-1:0] idly_ce_o,
+  output reg [4*7-1:0] idly_inc_o,
+  input      [4*5-1:0] idly_cnt_i,
   // Expansion connector
   input      [DWE-1:0] exp_p_dat_i,  // exp. con. input data
   output reg [DWE-1:0] exp_p_dat_o,  // exp. con. output data
@@ -237,11 +243,17 @@ always @(posedge clk_i)
 begin
   idly_rst_o[  6: 0] <= sys_wdata[ 7-1: 0] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
   idly_rst_o[ 13: 7] <= sys_wdata[15-1: 8] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
+  idly_rst_o[  6: 0] <= sys_wdata[23-1:16] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
+  idly_rst_o[ 13: 7] <= sys_wdata[31-1:24] & {7{ ((sys_addr[19:0]==20'h44) & sys_wen) || (rstn_i == 1'b0) }};
 
   idly_ce_o[   6: 0] <= sys_wdata[ 7-1: 0] & {7{ ((sys_addr[19:0]==20'h48) & sys_wen) }};
   idly_inc_o[  6: 0] <= sys_wdata[15-1: 8] & {7{ ((sys_addr[19:0]==20'h48) & sys_wen) }};
   idly_ce_o[  13: 7] <= sys_wdata[23-1:16] & {7{ ((sys_addr[19:0]==20'h4C) & sys_wen) }};
   idly_inc_o[ 13: 7] <= sys_wdata[31-1:24] & {7{ ((sys_addr[19:0]==20'h4C) & sys_wen) }};
+  idly_ce_o[  20:14] <= sys_wdata[ 7-1: 0] & {7{ ((sys_addr[19:0]==20'h50) & sys_wen) }};
+  idly_inc_o[ 20:14] <= sys_wdata[15-1: 8] & {7{ ((sys_addr[19:0]==20'h50) & sys_wen) }};
+  idly_ce_o[  27:21] <= sys_wdata[23-1:16] & {7{ ((sys_addr[19:0]==20'h54) & sys_wen) }};
+  idly_inc_o[ 27:21] <= sys_wdata[31-1:24] & {7{ ((sys_addr[19:0]==20'h54) & sys_wen) }};
 end
 
 wire sys_en;
@@ -271,11 +283,153 @@ end else begin
 
     20'h00040: begin sys_ack <= sys_en;  sys_rdata <= {                pll_cfg_rd}        ; end
 
-    20'h00048: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[4:0]}   ; end
-    20'h0004C: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[9:5]}   ; end
+    20'h00048: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[ 4: 0]}   ; end
+    20'h0004C: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[ 9: 5]}   ; end
+    20'h00050: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[14:10]}   ; end
+    20'h00054: begin sys_ack <= sys_en;  sys_rdata <= {{32-  5{1'b0}}, idly_cnt_i[19:15]}   ; end
 
       default: begin sys_ack <= sys_en;  sys_rdata <=  32'h0                              ; end
   endcase
 end
+
+//--------------------------------------------------------------------------
+// SPI master for ADC
+
+wire          spi_rw;
+wire          spi_cs_sel;
+wire [ 5-1:0] spi_h_lng;
+wire [ 5-1:0] spi_l_lng;
+wire [ 8-1:0] spi_clk_pre;
+wire          spi_wr_edg;
+wire          spi_rd_edg;
+wire          spi_clk_idle;
+wire          spi_busy;
+reg  [16-1:0] spi_dat;
+reg  [16-1:0] spi_adr;
+reg           spi_start;
+assign spi_rw       = 1'h0;  // no read from ADC
+assign spi_cs_sel   = 1'h1;  // only one device
+assign spi_h_lng    = 5'h8;  // 8+8 bits
+assign spi_l_lng    = 5'h8;
+assign spi_clk_pre  = 8'd10; // 12.5 MHz
+assign spi_wr_edg   = 1'h1;  // change on falling edge
+assign spi_rd_edg   = 1'h1;  // change on falling edge
+assign spi_clk_idle = 1'h1;  // idle on HI level
+
+localparam PDWN_ADR = 16'h1;
+localparam TIM_ADR  = 16'h2;
+localparam MODE_ADR = 16'h3;
+localparam FORM_ADR = 16'h4;
+
+localparam PDWN_DAT = 16'h0; // write mode, normal operation
+localparam TIM_DAT  = 16'h1; // write mode, normal clock polarity, no CLKOUT delay, clock duty cycle stabilizer ON
+localparam MODE_DAT = 16'h2; // write mode, default LVDS config, no LVDS termination, digital out enabled, DDR CMOS output mode
+localparam FORM_DAT = 16'h0; // write mode, default values
+
+`ifdef SIMULATION
+localparam ONE_SECOND = 12500; // 100 us
+`else 
+localparam ONE_SECOND = 125000000; 
+`endif
+parameter  RESET = 3'h0, INIT_PDWN = 3'h1, INIT_TIM=3'h2, INIT_MODE=3'h3, INIT_FORM=3'h4, SPI_END=3'h5;
+
+//              ____________________________________________________________
+// data format: |ADR MSB | MSB-1 | ... | LSB | DAT MSB | MSB-1 | ... | LSB |
+
+reg [32-1:0] spi_wait_cnt;
+reg [ 3-1:0] spi_state;
+always @(posedge clk_i) begin
+  if (~rstn_i)
+    spi_wait_cnt <= 'h0;
+  else if (spi_wait_cnt < ONE_SECOND)
+    spi_wait_cnt <= spi_wait_cnt + 'h1;
+end 
+
+always @(posedge clk_i) begin
+  if (~rstn_i)
+    spi_state <= RESET;
+
+  case (spi_state)
+    RESET: begin
+      spi_start <= (spi_wait_cnt >= ONE_SECOND) & ~spi_busy;
+      if (spi_wait_cnt >= ONE_SECOND & ~spi_busy & ~spi_start) begin
+        spi_state <= INIT_PDWN;
+        spi_adr   <= PDWN_ADR;
+        spi_dat   <= PDWN_DAT;
+      end
+    end
+
+    INIT_PDWN: begin
+      spi_start <= ~spi_busy;
+      if (~spi_busy & ~spi_start) begin
+        spi_state <= INIT_TIM;
+        spi_adr   <= TIM_ADR;
+        spi_dat   <= TIM_DAT;
+      end
+    end
+
+    INIT_TIM: begin
+      spi_start <= ~spi_busy;
+      if (~spi_busy & ~spi_start) begin
+        spi_state <= INIT_MODE;
+        spi_adr   <= MODE_ADR;
+        spi_dat   <= MODE_DAT;
+      end
+    end
+
+    INIT_MODE: begin
+      spi_start <= ~spi_busy;
+      if (~spi_busy & ~spi_start) begin
+        spi_state <= INIT_FORM;
+        spi_adr   <= FORM_ADR;
+        spi_dat   <= FORM_DAT;
+      end
+    end
+
+    INIT_FORM: begin
+      spi_start <= 'h0;
+      if (~spi_busy & ~spi_start) begin
+        spi_state <= SPI_END;
+      end
+    end
+
+    default: begin
+      spi_start <= 'h0;
+      spi_adr   <= 'h0;
+      spi_dat   <= 'h0;
+    end
+  endcase
+end 
+
+
+spi_master #(
+  .RST_ACT_LVL (0),
+  .NUM_OF_CS (1)
+) spi_master (
+  // settings & status
+  .clk_i           (clk_i       ) ,
+  .rst_i           (rstn_i      ) ,
+
+  .spi_cs_o        (spi_cs_o    ) ,
+  .spi_clk_o       (spi_clk_o   ) ,
+  .spi_miso_i      (spi_miso_i  ) ,
+  .spi_mosi_t      (spi_mosi_t  ) ,
+  .spi_mosi_o      (spi_mosi_o  ) ,
+  
+  .spi_start_i     (spi_start   ) ,
+  .dat_wr_h_i      (spi_adr     ) ,  // data to write high part
+  .dat_wr_l_i      (spi_dat     ) ,  // data to write low part
+  .dat_rd_l_o      (spir_rd_dat ) ,  // data readed on low part
+
+  .cfg_rw_i        (spi_rw      ) ,  // config - 1-read 0-write
+  .cfg_cs_act_i    (spi_cs_sel  ) ,  // config - active cs - ONLY ONE CS CAN BE ACTIVE FOR CORRECT READING !!
+  .cfg_h_lng_i     (spi_h_lng   ) ,  // config - h part length
+  .cfg_l_lng_i     (spi_l_lng   ) ,  // config - l part length
+  .cfg_clk_presc_i (spi_clk_pre ) ,  // config - clk_i/presc -> spi_clk_o
+  .cfg_clk_wr_edg_i(spi_wr_edg  ) ,  // config - sent data on clock: 1-falling edge 0-rising edge
+  .cfg_clk_rd_edg_i(spi_rd_edg  ) ,  // config - read data on clock: 1-rising edge 0-falling edge
+  .cfg_clk_idle_i  (spi_clk_idle) ,  // config - clock leven on idle
+  .sts_spi_busy_o  (spi_busy    )    // status - spi state machine busy
+);
 
 endmodule
