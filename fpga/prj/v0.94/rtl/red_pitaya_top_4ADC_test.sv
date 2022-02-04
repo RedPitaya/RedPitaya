@@ -340,7 +340,6 @@ logic [4*7-1:0] idly_ce  ;
 logic [4*7-1:0] idly_inc ;
 logic [4*7-1:0] [5-1:0] idly_cnt ;
 
-`ifdef DDRTEST
 IDELAYCTRL i_idelayctrl (
   .RDY(idly_rdy),   // 1-bit output: Ready output
   .REFCLK(fclk[3]), // 1-bit input: Reference clock input
@@ -399,18 +398,6 @@ for (GVC = 0; GVC < 2; GVC = GVC + 1) begin : channels
   end 
 end
 endgenerate
-`else
-logic [2-1:0] [14-1:0] adc_dat_raw;
-always @(posedge adc_clk)
-begin
-  adc_dat_raw[0] <= adc_dat_i[0];
-  adc_dat_raw[1] <= adc_dat_i[1];
-end
-
-// transform into 2's complement (negative slope)
-assign adc_dat[0] = {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
-assign adc_dat[1] = {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
-`endif
 
 
 
