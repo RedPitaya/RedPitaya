@@ -474,7 +474,7 @@ red_pitaya_asg i_asg (
    // DAC
   .dac_a_o         (asg_dat[0]  ),  // CH 1
   .dac_b_o         (asg_dat[1]  ),  // CH 2
-  .dac_clk_i       (dac_clk_1x  ),  // clock
+  .dac_clk_i       (adc_clk     ),  // clock
   .dac_rstn_i      (adc_rstn    ),  // reset - active low
   .trig_a_i        (gpio.i[8]   ),
   .trig_b_i        (gpio.i[8]   ),
