@@ -85,14 +85,17 @@ module red_pitaya_top_4ADC #(
   input  logic [MNA-1:0] [ 7-1:0] adc_dat_i,  // ADC data
   input  logic [  2-1:0] [ 2-1:0] adc_clk_i,  // ADC clock {p,n}
   //output logic           [ 2-1:0] adc_clk_o,  // optional ADC clock source (unused) [0] = p; [1] = n
-  output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
+  //output logic                    adc_cdcs_o, // ADC clock duty cycle stabilizer
 
+  // SPI interface to ADC
+  output                spi_cs_o   ,
+  output                spi_clk_o  ,
+  output                spi_mosi_o ,
   // PLL control
-  input  logic          pll_ref_i,
-  output logic          pll_hi_o,
-  output logic          pll_lo_o,
+  input  logic          pll_ref_i  ,
+  output logic          pll_hi_o   ,
+  output logic          pll_lo_o   ,
   // PWM DAC
-
   output logic [ 4-1:0] dac_pwm_o  ,  // 1-bit PWM DAC
   // XADC
   input  logic [ 5-1:0] vinp_i     ,  // voltages p
@@ -310,6 +313,139 @@ end: for_sys
 endgenerate
 
 ////////////////////////////////////////////////////////////////////////////////
+// ADC IO
+////////////////////////////////////////////////////////////////////////////////
+
+// DDR inputs
+// falling edge: odd bits    rising edge: even bits   
+// 0: CH1 falling edge data  1: CH1 rising edge data
+// 2: CH2 falling edge data  3: CH2 rising edge data
+// 4: CH3 falling edge data  5: CH3 rising edge data
+// 6: CH4 falling edge data  7: CH4 rising edge data
+
+// delay input ADC signals
+//(* IODELAY_GROUP = adc_inputs *) // Specifies group name for associated IDELAYs/ODELAYs and IDELAYCTRL
+logic [4*7-1:0] idly_rst ;
+logic [4*7-1:0] idly_ce  ;
+logic [4*7-1:0] idly_inc ;
+logic [4*7-1:0] [5-1:0] idly_cnt ;
+
+IDELAYCTRL i_idelayctrl (
+  .RDY(idly_rdy),   // 1-bit output: Ready output
+  .REFCLK(fclk[3]), // 1-bit input: Reference clock input
+  .RST(!frstn[3])   // 1-bit input: Active high reset input
+);
+
+genvar GV;
+genvar GVC;
+genvar GVD;
+
+generate
+for (GVC = 0; GVC < 4; GVC = GVC + 1) begin : channels
+  for (GV = 0; GV < 7; GV = GV + 1) begin : adc_decode
+    logic          adc_dat_idly;
+    logic [ 2-1:0] adc_dat_ddr;
+
+//    logic [8-1:0] [ 7-1:0] adc_dat_ddr;
+//    logic [4-1:0] [ 7-1:0] adc_dat_idly;
+   //(* IODELAY_GROUP = adc_inputs *)
+   IDELAYE2 #(
+      .DELAY_SRC("IDATAIN"),           // Delay input (IDATAIN, DATAIN)
+      .HIGH_PERFORMANCE_MODE("TRUE"),  // Reduced jitter ("TRUE"), Reduced power ("FALSE")
+      .IDELAY_TYPE("VARIABLE"),        // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
+      .IDELAY_VALUE(0),                // Input delay tap setting (0-31)
+      .PIPE_SEL("FALSE"),              // Select pipelined mode, FALSE, TRUE
+      .REFCLK_FREQUENCY(200.0),        // IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
+      .SIGNAL_PATTERN("DATA")          // DATA, CLOCK input signal
+   )
+   i_dly (
+      .CNTVALUEOUT  ( idly_cnt[GV+GVC*7]    ),  // 5-bit output: Counter value output
+      .DATAOUT      ( adc_dat_idly          ),  // 1-bit output: Delayed data output
+      .C            ( adc_clk_in[GVC/2]     ),  // 1-bit input: Clock input
+      .CE           ( idly_ce[GV+GVC*7]     ),  // 1-bit input: Active high enable increment/decrement input
+      .CINVCTRL     ( 1'b0                  ),  // 1-bit input: Dynamic clock inversion input
+      .CNTVALUEIN   ( 5'h0                  ),  // 5-bit input: Counter value input
+      .DATAIN       ( 1'b0                  ),  // 1-bit input: Internal delay data input
+      .IDATAIN      ( adc_dat_i[GVC][GV]    ),  // 1-bit input: Data input from the I/O
+      .INC          ( idly_inc[GV+GVC*7]    ),  // 1-bit input: Increment / Decrement tap delay input
+      .LD           ( idly_rst[GV+GVC*7]    ),  // 1-bit input: Load IDELAY_VALUE input
+      .LDPIPEEN     ( 1'b0                  ),  // 1-bit input: Enable PIPELINE register to load data input
+      .REGRST       ( 1'b0                  )   // 1-bit input: Active-high reset tap-delay input
+   );
+  
+    IDDR #(.DDR_CLK_EDGE("SAME_EDGE")) iddr_adc_dat_0 (.D(adc_dat_idly), .Q1({adc_dat_ddr[1]}), .Q2({adc_dat_ddr[0]}), .C(adc_clks[GVC/2]), .CE(1'b1), .R(1'b0), .S(1'b0));
+    assign adc_dat_raw[GVC][2*GV  ] = adc_dat_ddr[0];
+    assign adc_dat_raw[GVC][2*GV+1] = adc_dat_ddr[1];
+  end 
+end
+endgenerate
+
+logic [4-1:0] [14-1:0] adc_dat_raw;
+
+always @(posedge adc_clk_01) begin
+  adc_dat_r[0] <= {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
+  adc_dat_r[1] <= {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
+
+  adc_dat  [0] <= adc_dat_r[0];
+  adc_dat  [1] <= adc_dat_r[1];
+end
+
+always @(posedge adc_clk_23) begin
+  adc_dat_r[2] <= {adc_dat_raw[2][14-1], ~adc_dat_raw[2][14-2:0]};
+  adc_dat_r[3] <= {adc_dat_raw[3][14-1], ~adc_dat_raw[3][14-2:0]};
+
+  adc_dat  [2] <= adc_dat_r[2];
+  adc_dat  [3] <= adc_dat_r[3];
+end
+
+////////////////////////////////////////////////////////////////////////////////
+//  House Keeping
+////////////////////////////////////////////////////////////////////////////////
+
+logic [  8-1: 0] exp_p_in , exp_n_in ;
+logic [  8-1: 0] exp_p_out, exp_n_out;
+logic [  8-1: 0] exp_p_dir, exp_n_dir;
+
+red_pitaya_hk_4adc i_hk (
+  // system signals
+  .clk_i           (adc_clk_01 ),  // clock
+  .rstn_i          (adc_rstn_01),  // reset - active low
+  // LED
+  .led_o           (led_o       ),  // LED output
+  // idelay control
+  .idly_rst_o      (idly_rst    ),
+  .idly_ce_o       (idly_ce     ),
+  .idly_inc_o      (idly_inc    ),
+  .idly_cnt_i      ({idly_cnt[21],idly_cnt[14],idly_cnt[7],idly_cnt[0]}),
+
+  .spi_cs_o        (spi_cs_o   ),
+  .spi_clk_o       (spi_clk_o  ),
+  .spi_mosi_o      (spi_mosi_o ),
+
+  // global configuration
+  .digital_loop    (digital_loop),
+  .pll_sys_i       (adc_10mhz   ),    // system clock
+  .pll_ref_i       (pll_ref_i   ),    // reference clock
+  .pll_hi_o        (pll_hi_o    ),    // PLL high
+  .pll_lo_o        (pll_lo_o    ),    // PLL low
+  // Expansion connector
+  .exp_p_dat_i     (exp_p_in ),  // input data
+  .exp_p_dat_o     (exp_p_out),  // output data
+  .exp_p_dir_o     (exp_p_dir),  // 1-output enable
+  .exp_n_dat_i     (exp_n_in ),
+  .exp_n_dat_o     (exp_n_out),
+  .exp_n_dir_o     (exp_n_dir),
+   // System bus
+  .sys_addr        (sys[0].addr ),
+  .sys_wdata       (sys[0].wdata),
+  .sys_wen         (sys[0].wen  ),
+  .sys_ren         (sys[0].ren  ),
+  .sys_rdata       (sys[0].rdata),
+  .sys_err         (sys[0].err  ),
+  .sys_ack         (sys[0].ack  )
+);
+
+////////////////////////////////////////////////////////////////////////////////
 // Analog mixed signals (PDM analog outputs)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -345,144 +481,6 @@ red_pitaya_pdm pdm (
   // PWM outputs
   .pdm (dac_pwm_o)
 );
-
-////////////////////////////////////////////////////////////////////////////////
-// ADC IO
-////////////////////////////////////////////////////////////////////////////////
-
-// generating ADC clock is disabled
-
-// ADC clock duty cycle stabilizer is enabled
-assign adc_cdcs_o = 1'b1 ;
-
-logic [8-1:0] [ 7-1:0] adc_dat_ddr;
-logic [4-1:0] [ 7-1:0] adc_dat_idly;
-
-logic [4-1:0] [14-1:0] adc_dat_raw;
-
-always @(posedge adc_clk_01) begin
-  adc_dat_r[0] <= {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
-  adc_dat_r[1] <= {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
-
-  adc_dat  [0] <= adc_dat_r[0];
-  adc_dat  [1] <= adc_dat_r[1];
-end
-
-always @(posedge adc_clk_23) begin
-  adc_dat_r[2] <= {adc_dat_raw[2][14-1], ~adc_dat_raw[2][14-2:0]};
-  adc_dat_r[3] <= {adc_dat_raw[3][14-1], ~adc_dat_raw[3][14-2:0]};
-
-  adc_dat  [2] <= adc_dat_r[2];
-  adc_dat  [3] <= adc_dat_r[3];
-end
-
-////////////////////////////////////////////////////////////////////////////////
-// ADC IO
-////////////////////////////////////////////////////////////////////////////////
-
-// DDR inputs
-// falling edge: odd bits    rising edge: even bits   
-// 0: CH1 falling edge data  1: CH1 rising edge data
-// 2: CH2 falling edge data  3: CH2 rising edge data
-// 4: CH3 falling edge data  5: CH3 rising edge data
-// 6: CH4 falling edge data  7: CH4 rising edge data
-
-// delay input ADC signals
-//(* IODELAY_GROUP = adc_inputs *) // Specifies group name for associated IDELAYs/ODELAYs and IDELAYCTRL
-logic [2*7-1:0] idly_rst ;
-logic [2*7-1:0] idly_ce  ;
-logic [2*7-1:0] idly_inc ;
-logic [2*7-1:0] [5-1:0] idly_cnt ;
-
-IDELAYCTRL i_idelayctrl (
-  .RDY(idly_rdy),   // 1-bit output: Ready output
-  .REFCLK(fclk[3]), // 1-bit input: Reference clock input
-  .RST(!frstn[3])   // 1-bit input: Active high reset input
-);
-
-genvar GV;
-genvar GVC;
-genvar GVD;
-
-generate
-for (GVC = 0; GVC < 4; GVC = GVC + 1) begin : channels
-  for (GV = 0; GV < 7; GV = GV + 1) begin : adc_decode
-   //(* IODELAY_GROUP = adc_inputs *)
-   IDELAYE2 #(
-      .DELAY_SRC("IDATAIN"),           // Delay input (IDATAIN, DATAIN)
-      .HIGH_PERFORMANCE_MODE("TRUE"),  // Reduced jitter ("TRUE"), Reduced power ("FALSE")
-      .IDELAY_TYPE("VARIABLE"),        // FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
-      .IDELAY_VALUE(0),                // Input delay tap setting (0-31)
-      .PIPE_SEL("FALSE"),              // Select pipelined mode, FALSE, TRUE
-      .REFCLK_FREQUENCY(200.0),        // IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
-      .SIGNAL_PATTERN("DATA")          // DATA, CLOCK input signal
-   )
-   i_dly (
-      .CNTVALUEOUT  ( idly_cnt[GV]          ),  // 5-bit output: Counter value output
-      .DATAOUT      ( adc_dat_idly[GVC][GV] ),  // 1-bit output: Delayed data output
-      .C            ( adc_clk_in[GVC/2]     ),  // 1-bit input: Clock input
-      .CE           ( idly_ce[GV]           ),  // 1-bit input: Active high enable increment/decrement input
-      .CINVCTRL     ( 1'b0                  ),  // 1-bit input: Dynamic clock inversion input
-      .CNTVALUEIN   ( 5'h0                  ),  // 5-bit input: Counter value input
-      .DATAIN       ( 1'b0                  ),  // 1-bit input: Internal delay data input
-      .IDATAIN      ( adc_dat_i[GVC][GV]    ),  // 1-bit input: Data input from the I/O
-      .INC          ( idly_inc[GV]          ),  // 1-bit input: Increment / Decrement tap delay input
-      .LD           ( idly_rst[GV]          ),  // 1-bit input: Load IDELAY_VALUE input
-      .LDPIPEEN     ( 1'b0                  ),  // 1-bit input: Enable PIPELINE register to load data input
-      .REGRST       ( 1'b0                  )   // 1-bit input: Active-high reset tap-delay input
-   );
-  
-    IDDR #(.DDR_CLK_EDGE("SAME_EDGE")) iddr_adc_dat_0 (.D(adc_dat_idly[GVC][GV]), .Q1({adc_dat_ddr[2*GVC + 1][GV]}), .Q2({adc_dat_ddr[2*GVC][GV]}), .C(adc_clks[GVC/2]), .CE(1'b1), .R(1'b0), .S(1'b0));
-    assign adc_dat_raw[GVC][2*GV  ] = adc_dat_ddr[2*GVC  ][GV];
-    assign adc_dat_raw[GVC][2*GV+1] = adc_dat_ddr[2*GVC+1][GV];
-  end 
-end
-endgenerate
-////////////////////////////////////////////////////////////////////////////////
-//  House Keeping
-////////////////////////////////////////////////////////////////////////////////
-
-logic [  8-1: 0] exp_p_in , exp_n_in ;
-logic [  8-1: 0] exp_p_out, exp_n_out;
-logic [  8-1: 0] exp_p_dir, exp_n_dir;
-
-red_pitaya_hk_4adc i_hk (
-  // system signals
-  .clk_i           (adc_clk_01 ),  // clock
-  .rstn_i          (adc_rstn_01),  // reset - active low
-  // LED
-  .led_o           (led_o       ),  // LED output
-  // idelay control
-  .idly_rst_o      (idly_rst    ),
-  .idly_ce_o       (idly_ce     ),
-  .idly_inc_o      (idly_inc    ),
-  .idly_cnt_i      ({idly_cnt[7],idly_cnt[0]}),
-  // global configuration
-  .digital_loop    (digital_loop),
-  .pll_sys_i       (adc_10mhz   ),    // system clock
-  .pll_ref_i       (pll_ref_i   ),    // reference clock
-  .pll_hi_o        (pll_hi_o    ),    // PLL high
-  .pll_lo_o        (pll_lo_o    ),    // PLL low
-  // Expansion connector
-  .exp_p_dat_i     (exp_p_in ),  // input data
-  .exp_p_dat_o     (exp_p_out),  // output data
-  .exp_p_dir_o     (exp_p_dir),  // 1-output enable
-  .exp_n_dat_i     (exp_n_in ),
-  .exp_n_dat_o     (exp_n_out),
-  .exp_n_dir_o     (exp_n_dir),
-   // System bus
-  .sys_addr        (sys[0].addr ),
-  .sys_wdata       (sys[0].wdata),
-  .sys_wen         (sys[0].wen  ),
-  .sys_ren         (sys[0].ren  ),
-  .sys_rdata       (sys[0].rdata),
-  .sys_err         (sys[0].err  ),
-  .sys_ack         (sys[0].ack  )
-);
-
-////////////////////////////////////////////////////////////////////////////////
-// LED
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPIO

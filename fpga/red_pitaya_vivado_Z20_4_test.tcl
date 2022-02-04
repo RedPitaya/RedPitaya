@@ -46,7 +46,7 @@ set_param board.repoPaths [list $path_brd]
 # setup an in memory project
 ################################################################################
 
-set part xc7z020clg400-1
+set part xc7z010clg400-1
 
 create_project -in_memory -part $part
 set_property verilog_define $prj_defs [current_fileset]
@@ -57,7 +57,7 @@ set_property verilog_define $prj_defs [current_fileset]
 
 # file was created from GUI using "write_bd_tcl -force ip/systemZ20.tcl"
 # create PS BD
-source                            $path_ip/systemZ20_14.tcl
+source                            $path_ip/systemZ10.tcl
 
 # generate SDK files
 generate_target all [get_files    system.bd]
@@ -76,8 +76,7 @@ add_files                         ../../$path_rtl
 add_files                               $path_rtl
 add_files                               $path_bd
 
-add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc
-add_files -fileset constrs_1      $path_sdc_prj/red_pitaya.xdc
+add_files -fileset constrs_1      $path_sdc_prj/red_pitaya_4adc_test.xdc
 
 ################################################################################
 # ser parameter containing Git hash
