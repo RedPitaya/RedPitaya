@@ -27,6 +27,7 @@ public:
     auto isRun() -> bool {return m_isRun;}
     auto setTestMode(bool mode) -> void;
     auto setVerbousMode(bool mode) -> void;
+    auto setPrintDebugBuffer(bool mode) -> void {m_printDebugBuffer = true;};
 
 private:
     int m_PerformanceCounterPeriod = 10;
@@ -61,6 +62,7 @@ private:
     uintmax_t        m_BytesCount;
     bool             m_testMode;
     bool             m_verbMode;
+    bool             m_printDebugBuffer;
 
     auto oscWorker() -> void;
     auto passCh(int _bufferIndex, size_t &_size1,size_t &_size2) -> uint32_t;
