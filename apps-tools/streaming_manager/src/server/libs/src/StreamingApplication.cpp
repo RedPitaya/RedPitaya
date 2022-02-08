@@ -42,7 +42,8 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_adc_bits(_adc_bits),
     m_BytesCount(0),
     m_testMode(false),
-    m_verbMode(false)
+    m_verbMode(false),
+    m_printDebugBuffer(false)
 {
     
     assert(this->m_Resolution == 8 || this->m_Resolution == 16);
@@ -299,14 +300,16 @@ try{
     //     buffer_ch1[i] = 0;
     //     buffer_ch2[i] = 0;
     // }
-
-    // std::ofstream outfile2;
-    // outfile2.open("/tmp/test.txt", std::ios_base::app);  
-    // short *wb2_1 = (short*)buffer_ch1;
-    // short *wb2_2 = (short*)buffer_ch2;
-    // for(int i = 0 ;i < 16 ;i ++)
-    //     acout() << std::hex <<  (static_cast<int>(wb2_1[i]/ 4))  << " - " << (static_cast<int>(wb2_2[i]/ 4))  << "\n";
-    // exit(1);
+    if (m_printDebugBuffer){
+        std::ofstream outfile2;
+        outfile2.open("/tmp/test.txt", std::ios_base::app);  
+        short *wb2_1 = (short*)buffer_ch1;
+        short *wb2_2 = (short*)buffer_ch2;
+        for(int i = 0 ;i < 16 ;i ++){            
+            acout() << std::hex <<  (wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0)  << " - " << (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0)  << "\n";
+        }
+        exit(1);
+    }
 
     if (buffer_ch1 != nullptr){
         _size1 = size;

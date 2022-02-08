@@ -108,6 +108,7 @@ int main(int argc, char* argv[])
 
     // Run application
     CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
+    app.setPrintDebugBuffer(true);
     app.runNonBlock("");
     CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create("127.0.0.1","12345");
     CDACStreamingApplication dac(dac_manager,gen);
