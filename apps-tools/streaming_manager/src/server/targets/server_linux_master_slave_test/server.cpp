@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
 
     CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , "./data", 200000,false,true);
+    s_manger = CStreamingManager::Create(Stream_FileType::WAV_TYPE , "./data", 20000,false,false);
     s_manger->notifyStop = [](int status)
                         {
                             stop = 1;

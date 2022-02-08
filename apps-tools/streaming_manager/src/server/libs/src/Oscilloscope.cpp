@@ -225,13 +225,11 @@ void COscilloscope::prepare()
         std::cerr << "Error: COscilloscope::prepare()  can't init first channel" << std::endl;
         exit(-1);
     }
-    //setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,m_isMaster ? UINT32_C(0x0000021E) : UINT32_C(0x0000011E));
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) , UINT32_C(0x0000021E) );
-    
+    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) , UINT32_C(0x0000021E));
+    setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
     if (m_isMaster){
         setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x00000001));
     }
-    setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
 }
 
 void COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain){
@@ -278,7 +276,7 @@ bool COscilloscope::wait(){
     ssize_t bytes = write(m_Fd, &cnt, cnt_size); // Unmmask interrupt
     if (bytes == cnt_size) {
         // wait for the interrupt
-        // printf("Wait Itr\n");
+        printf("Wait Itr\n");
         struct pollfd pfd = {.fd = m_Fd, .events = POLLIN};
         int timeout_ms = 1000;
         int rv = poll(&pfd, 1, timeout_ms);
@@ -286,7 +284,7 @@ bool COscilloscope::wait(){
         if (rv >= 1) {
                uint32_t info;
                read(m_Fd, &info, sizeof(info));
-            //    printf("Itr\n");
+                printf("Itr\n");
         } else if (rv == 0) {
                return false;
         } else {
