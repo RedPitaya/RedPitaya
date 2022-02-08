@@ -258,6 +258,21 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
     if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_BUSY){
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_BUSY),sender->m_manager->getHost());
     }
+
+    // Server mode
+
+    if (c== CNetConfigManager::Commands::SERVER_MODE_SD){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_MODE_SD),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_MODE_TCP){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_MODE_TCP),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::SERVER_MODE_UDP){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_MODE_UDP),sender->m_manager->getHost());
+    }
+
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
@@ -312,7 +327,7 @@ auto ClientNetConfigManager::connectTimeoutError(std::error_code error,std::shar
     m_errorCallback.emitEvent(0,Errors::CONNECT_TIMEOUT,sender->m_manager->getHost());
 }
 
-auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
+auto ClientNetConfigManager::sendConfig(const std::string &host) -> bool{
     const std::lock_guard<std::mutex> lock(g_client_mutex);
     for(const auto &c : m_clients){
         if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE && host == c->m_manager->getHost()){
@@ -326,7 +341,7 @@ auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendTestConfig(std::string host,const CStreamSettings &settings) -> bool{
+auto ClientNetConfigManager::sendTestConfig(const std::string &host,const CStreamSettings &settings) -> bool{
     const std::lock_guard<std::mutex> lock(g_client_mutex);
     for(const auto &c : m_clients){
         if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE && host == c->m_manager->getHost()){
@@ -415,7 +430,7 @@ auto ClientNetConfigManager::sendTestConfig(std::shared_ptr<Clients> _client, bo
     return false;
 }
 
-auto ClientNetConfigManager::requestConfig(std::string host) -> bool{
+auto ClientNetConfigManager::requestConfig(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -426,7 +441,7 @@ auto ClientNetConfigManager::requestConfig(std::string host) -> bool{
 }
 
 
-auto ClientNetConfigManager::sendCopyConfigToTest(std::string host) -> bool{
+auto ClientNetConfigManager::sendCopyConfigToTest(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -437,7 +452,7 @@ auto ClientNetConfigManager::sendCopyConfigToTest(std::string host) -> bool{
 }
 
 
-auto ClientNetConfigManager::requestTestConfig(std::string host) -> bool{
+auto ClientNetConfigManager::requestTestConfig(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -447,7 +462,7 @@ auto ClientNetConfigManager::requestTestConfig(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::getLocalSettingsOfHost(std::string host) -> CStreamSettings*{
+auto ClientNetConfigManager::getLocalSettingsOfHost(const std::string &host) -> CStreamSettings*{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -457,7 +472,7 @@ auto ClientNetConfigManager::getLocalSettingsOfHost(std::string host) -> CStream
     return nullptr;
 }
 
-auto ClientNetConfigManager::getLocalTestSettingsOfHost(std::string host) -> CStreamSettings*{
+auto ClientNetConfigManager::getLocalTestSettingsOfHost(const std::string &host) -> CStreamSettings*{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -467,7 +482,7 @@ auto ClientNetConfigManager::getLocalTestSettingsOfHost(std::string host) -> CSt
     return nullptr;
 }
 
-auto ClientNetConfigManager::sendSaveToFile(std::string host) -> bool{
+auto ClientNetConfigManager::sendSaveToFile(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -477,7 +492,7 @@ auto ClientNetConfigManager::sendSaveToFile(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendStart(std::string host,bool test_mode) -> bool{
+auto ClientNetConfigManager::sendStart(const std::string &host,bool test_mode) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -487,7 +502,7 @@ auto ClientNetConfigManager::sendStart(std::string host,bool test_mode) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendStop(std::string host) -> bool{
+auto ClientNetConfigManager::sendStop(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -497,7 +512,7 @@ auto ClientNetConfigManager::sendStop(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendDACStart(std::string host,bool test_mode) -> bool{
+auto ClientNetConfigManager::sendDACStart(const std::string &host,bool test_mode) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -507,7 +522,7 @@ auto ClientNetConfigManager::sendDACStart(std::string host,bool test_mode) -> bo
     return false;
 }
 
-auto ClientNetConfigManager::sendDACStop(std::string host) -> bool{
+auto ClientNetConfigManager::sendDACStop(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -517,8 +532,27 @@ auto ClientNetConfigManager::sendDACStop(std::string host) -> bool{
     return false;
 }
 
+auto ClientNetConfigManager::sendGetServerMode(const std::string &host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::GET_SERVER_MODE);
+    }
+    return false;
+}
 
-auto ClientNetConfigManager::getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode{
+auto ClientNetConfigManager::sendGetServerTestMode(const std::string &host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::GET_SERVER_TEST_MODE);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::getModeByHost(const std::string &host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode{
     const std::lock_guard<std::mutex> lock(g_client_mutex);
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
@@ -530,7 +564,7 @@ auto ClientNetConfigManager::getModeByHost(std::string host) -> asionet_broadcas
 }
 
 
-auto ClientNetConfigManager::sendLoopbackStart(std::string host) -> bool{
+auto ClientNetConfigManager::sendLoopbackStart(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -540,7 +574,7 @@ auto ClientNetConfigManager::sendLoopbackStart(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendLoopbackStop(std::string host) -> bool{
+auto ClientNetConfigManager::sendLoopbackStop(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -550,7 +584,7 @@ auto ClientNetConfigManager::sendLoopbackStop(std::string host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendLoopbackDACSpeed(std::string host,int32_t value,bool _async) -> bool{
+auto ClientNetConfigManager::sendLoopbackDACSpeed(const std::string &host,int32_t value,bool _async) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -562,7 +596,7 @@ auto ClientNetConfigManager::sendLoopbackDACSpeed(std::string host,int32_t value
     return false;
 }
 
-auto ClientNetConfigManager::sendLoopbackMode(std::string host,int32_t value,bool _async) -> bool{
+auto ClientNetConfigManager::sendLoopbackMode(const std::string &host,int32_t value,bool _async) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -574,7 +608,7 @@ auto ClientNetConfigManager::sendLoopbackMode(std::string host,int32_t value,boo
     return false;
 }
 
-auto ClientNetConfigManager::sendLoopbackChannels(std::string host,int32_t value,bool _async) -> bool{
+auto ClientNetConfigManager::sendLoopbackChannels(const std::string &host,int32_t value,bool _async) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -586,7 +620,7 @@ auto ClientNetConfigManager::sendLoopbackChannels(std::string host,int32_t value
     return false;
 }
 
-auto ClientNetConfigManager::sendLoopbackTimeout(std::string host,int32_t value,bool _async) -> bool{
+auto ClientNetConfigManager::sendLoopbackTimeout(const std::string &host,int32_t value,bool _async) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });

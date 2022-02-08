@@ -302,3 +302,43 @@ auto startConfig(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &
 auto configSIGHandler() -> void{
     g_exit_flag = true;
 }
+
+auto getCurrentStreamingMode(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) ->bool{
+    std::atomic<int> set_counter;
+    cl->addHandler(ClientNetConfigManager::Events::COPY_SETTINGS_TO_TEST_SETTINGS_DONE, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_mutex);
+        if (option.verbous)
+            std::cout << getTS(": ") <<"copy config to test: " << host << " [OK]\n";
+        set_counter--;
+    });
+
+    cl->addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
+        const std::lock_guard<std::mutex> lock(g_mutex);
+        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+            set_counter--;
+        }
+    });
+
+
+    auto connected_hosts = cl->getHosts();
+    set_counter = connected_hosts.size();
+    for(auto &host:connected_hosts) {
+        if (option.verbous)
+            std::cout << getTS(": ") << "Get streaming mode: " << host.c_str() << "\n";
+        if (!cl->sendCopyConfigToTest(host)){
+            set_counter--;
+        }
+    }
+    while (set_counter>0){
+        sleepMs(100);
+        if (g_exit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
+    }
+
+    cl->removeHadlers();
+    return true;
+}
+

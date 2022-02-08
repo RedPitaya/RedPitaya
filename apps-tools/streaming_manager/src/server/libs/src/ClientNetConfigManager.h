@@ -50,7 +50,13 @@ public:
         SERVER_LOOPBACK_STARTED,
         SERVER_LOOPBACK_STOPPED,
         SERVER_LOOPBACK_BUSY,
-        COPY_SETTINGS_TO_TEST_SETTINGS_DONE
+        COPY_SETTINGS_TO_TEST_SETTINGS_DONE,
+
+        SERVER_MODE_TCP,
+        SERVER_MODE_UDP,
+        SERVER_MODE_SD,
+        GET_SERVER_MODE,
+        GET_SERVER_TEST_MODE
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
@@ -60,27 +66,29 @@ public:
     auto diconnectAll() -> void;
     auto getHosts() -> std::list<std::string>;
     auto isServersConnected() -> bool;
-    auto sendConfig(std::string host) -> bool;
-    auto sendTestConfig(std::string host,const CStreamSettings &settings) -> bool;
-    auto sendCopyConfigToTest(std::string host) -> bool;
-    auto sendSaveToFile(std::string host) -> bool;
-    auto sendStart(std::string host,bool test_mode = false) -> bool;
-    auto sendStop(std::string host) -> bool;
-    auto sendDACStart(std::string host,bool test_mode = false) -> bool;
-    auto sendDACStop(std::string host) -> bool;
-    auto requestConfig(std::string host) -> bool;
-    auto requestTestConfig(std::string host) -> bool;    
-    auto getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode;
-    auto getLocalSettingsOfHost(std::string host) -> CStreamSettings*;
-    auto getLocalTestSettingsOfHost(std::string host) -> CStreamSettings*;
+    auto sendConfig(const std::string &host) -> bool;
+    auto sendTestConfig(const std::string &host,const CStreamSettings &settings) -> bool;
+    auto sendCopyConfigToTest(const std::string &host) -> bool;
+    auto sendSaveToFile(const std::string &host) -> bool;
+    auto sendStart(const std::string &host,bool test_mode = false) -> bool;
+    auto sendStop(const std::string &host) -> bool;
+    auto sendDACStart(const std::string &host,bool test_mode = false) -> bool;
+    auto sendDACStop(const std::string &host) -> bool;
+    auto sendGetServerMode(const std::string &host) -> bool;
+    auto sendGetServerTestMode(const std::string &host) -> bool;
+    auto requestConfig(const std::string &host) -> bool;
+    auto requestTestConfig(const std::string &host) -> bool;
+    auto getModeByHost(const std::string &host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode;
+    auto getLocalSettingsOfHost(const std::string &host) -> CStreamSettings*;
+    auto getLocalTestSettingsOfHost(const std::string &host) -> CStreamSettings*;
 
-    auto sendLoopbackStart(std::string host) -> bool;
-    auto sendLoopbackStop(std::string host) -> bool;
+    auto sendLoopbackStart(const std::string &host) -> bool;
+    auto sendLoopbackStop(const std::string &host) -> bool;
 
-    auto sendLoopbackDACSpeed(std::string host,int32_t value,bool _async = true) -> bool;
-    auto sendLoopbackMode(std::string host,int32_t value,bool _async = true) -> bool;
-    auto sendLoopbackChannels(std::string host,int32_t value,bool _async = true) -> bool;
-    auto sendLoopbackTimeout(std::string host,int32_t value,bool _async = true) -> bool;
+    auto sendLoopbackDACSpeed(const std::string &host,int32_t value,bool _async = true) -> bool;
+    auto sendLoopbackMode(const std::string &host,int32_t value,bool _async = true) -> bool;
+    auto sendLoopbackChannels(const std::string &host,int32_t value,bool _async = true) -> bool;
+    auto sendLoopbackTimeout(const std::string &host,int32_t value,bool _async = true) -> bool;
 
     auto addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string)> _func) -> void;
     auto addHandler(ClientNetConfigManager::Events event, std::function<void(std::string)> _func) -> void;

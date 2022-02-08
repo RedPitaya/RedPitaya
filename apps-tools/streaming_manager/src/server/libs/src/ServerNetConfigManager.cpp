@@ -169,6 +169,16 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
     if (c == CNetConfigManager::Commands::SERVER_LOOPBACK_STOP){
         m_callbacks.emitEvent(static_cast<int>(Events::STOP_LOOPBACK_MODE));
     }
+
+    // Server mode
+
+    if (c== CNetConfigManager::Commands::GET_SERVER_MODE){
+        m_callbacks.emitEvent(static_cast<int>(Events::GET_SERVER_MODE));
+    }
+
+    if (c== CNetConfigManager::Commands::GET_SERVER_TEST_MODE){
+        m_callbacks.emitEvent(static_cast<int>(Events::GET_SERVER_TEST_MODE));
+    }
 }
 
 auto ServerNetConfigManager::receiveValueStr(std::string key,std::string value) -> void{
@@ -240,6 +250,18 @@ auto ServerNetConfigManager::sendServerStartedUDP() -> bool{
 
 auto ServerNetConfigManager::sendServerStartedSD() -> bool{
     return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_STARTED_SD);
+}
+
+auto ServerNetConfigManager::sendServerModeTCP() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_MODE_TCP);
+}
+
+auto ServerNetConfigManager::sendServerModeUDP() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_MODE_UDP);
+}
+
+auto ServerNetConfigManager::sendServerModeSD() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::SERVER_MODE_SD);
 }
 
 auto ServerNetConfigManager::sendDACServerStarted() -> bool{

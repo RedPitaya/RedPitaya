@@ -57,7 +57,13 @@ public:
         SERVER_LOOPBACK_STOP,
         SERVER_LOOPBACK_STARTED,
         SERVER_LOOPBACK_STOPPED,
-        SERVER_LOOPBACK_BUSY        // Streaming server in active streaming mode        
+        SERVER_LOOPBACK_BUSY,        // Streaming server in active streaming mode
+
+        SERVER_MODE_TCP,
+        SERVER_MODE_UDP,
+        SERVER_MODE_SD,
+        GET_SERVER_MODE,
+        GET_SERVER_TEST_MODE
     };
 
     static std::shared_ptr<CNetConfigManager> instance()

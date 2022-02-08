@@ -13,6 +13,7 @@ std::mutex         g_s_csv_mutex;
 ClientOpt::Options g_soption;
 std::string        g_filenameDate;
 std::atomic<bool>  sig_exit_flag(false);
+std::atomic<int>   g_runClientCounter;
 
 std::map<std::string,bool>            g_terminate;
 
@@ -108,7 +109,8 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     g_asionet[host]->addCallClient_Connect([](std::string host) {
         const std::lock_guard<std::mutex> lock(g_smutex);
         if (g_soption.verbous)
-            std::cout << getTS(": ") << "Try connect " << host << '\n';
+            std::cout << getTS(": ") << "Connect " << host << '\n';
+        g_runClientCounter--;
     });
     g_asionet[host]->addCallClient_Error([host](std::error_code error)
     {
@@ -116,6 +118,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
         if (g_soption.verbous)
             std::cout << getTS(": ") <<"Disconnect;" << '\n';
         stopStreaming(host);
+        g_runClientCounter--;
     });
     g_asionet[host]->addCallReceived(std::bind(&reciveData,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,host));
     g_asionet[host]->Start();
@@ -166,26 +169,51 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
 
     ClientOpt::Options remote_opt = g_soption;
     remote_opt.mode = ClientOpt::Mode::REMOTE;
-    remote_opt.remote_mode = ClientOpt::RemoteMode::START;
+    remote_opt.remote_mode = ClientOpt::RemoteMode::STOP;
     remote_opt.ports.config_port = g_soption.ports.config_port  != "" ? g_soption.ports.config_port : ClientOpt::Ports().config_port;
     remote_opt.verbous = g_soption.verbous;
     std::map<string,StateRunnedHosts> runned_hosts;
-    if (startRemote(cl,remote_opt,&runned_hosts)){
+    if (!startRemote(cl,remote_opt,&runned_hosts)){
+        std::cout << getTS(": ") << "Can't stop streaming on remote machines\n";
+        return;
+    }
 
+    remote_opt.hosts.clear();
+    for(auto &kv:runned_hosts){
+        if (kv.second != StateRunnedHosts::NONE)
+            remote_opt.hosts.push_back(kv.first);
+    }
+
+    {
+        const std::lock_guard<std::mutex> lock(g_smutex);
+        g_runClientCounter = runned_hosts.size();
         for(auto &kv:runned_hosts){
             if (kv.second == StateRunnedHosts::TCP || kv.second == StateRunnedHosts::UDP)
                 clients.push_back(std::thread(runClient, kv.first,kv.second));
         }
-
-        for (std::thread &t: clients) {
-            if (t.joinable()) {
-                t.join();
+        while (g_runClientCounter>0){
+            sleepMs(100);
+            if (sig_exit_flag) {
+                break;
             }
         }
-        if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
-            const std::lock_guard<std::mutex> lock(g_smutex);
-            printFinalStatisitc();
+    }
+
+    if (!sig_exit_flag){
+        remote_opt.remote_mode = ClientOpt::RemoteMode::START;
+        if (!startRemote(cl,remote_opt,&runned_hosts)){
+            std::cout << getTS(": ") << "Can't start streaming on remote machines\n";
         }
+    }
+
+    for (std::thread &t: clients) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+    if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
+        const std::lock_guard<std::mutex> lock(g_smutex);
+        printFinalStatisitc();
     }
 }
 

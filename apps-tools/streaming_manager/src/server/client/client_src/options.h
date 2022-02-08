@@ -4,6 +4,13 @@
 #include <chrono>
 #include <unistd.h>
 
+enum class StateRunnedHosts{
+    NONE,
+    TCP,
+    UDP,
+    LOCAL
+};
+
 namespace ClientOpt {
     enum class Mode{
         ERROR_MODE,
