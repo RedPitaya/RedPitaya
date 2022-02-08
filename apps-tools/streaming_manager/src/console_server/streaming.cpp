@@ -18,6 +18,7 @@ auto calibFullScaleToVoltage(uint32_t fullScaleGain) -> float {
 
 auto setServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
     g_serverNetConfig = serverNetConfig;
+
 }
 
 auto startServer(bool verbMode,bool testMode) -> void{
@@ -191,7 +192,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
     	strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
     	std::string filenameDate = time_str;
 
-		g_app->runNonBlock(filenameDate);
+		g_app->runNonBlockNoADC(filenameDate);
 		if (!g_manger->isLocalMode()){
 			if (g_manger->getProtocol() == asionet::Protocol::TCP){
 				g_serverNetConfig->sendServerStartedTCP();
@@ -259,5 +260,17 @@ auto stopServer(int x) -> void{
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
         syslog (LOG_ERR,"Error: StopServer() %s\n",e.what());
+	}
+}
+
+auto startADC() -> void{
+	try{
+		if (g_app){
+			g_app->runADC();
+		}
+	}catch (std::exception& e)
+	{
+		fprintf(stderr, "Error: startADC() %s\n",e.what());
+        syslog (LOG_ERR,"Error: startADC() %s\n",e.what());
 	}
 }

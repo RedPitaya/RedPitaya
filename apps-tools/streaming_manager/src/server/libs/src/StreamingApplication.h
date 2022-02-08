@@ -20,6 +20,9 @@ public:
     ~CStreamingApplication();
     auto run(std::string _file_name_prefix) -> void;
     auto runNonBlock(std::string _file_name_prefix) -> void;
+    auto runNonBlockNoADC(std::string _file_name_prefix) -> void;
+    auto runADC() -> void;
+
     auto stop(bool wait = true) -> bool;
     auto isRun() -> bool {return m_isRun;}
     auto setTestMode(bool mode) -> void;
@@ -36,6 +39,7 @@ private:
     std::atomic_int  m_ReadyToPass;
     std::atomic_bool m_isRun;
     std::atomic_bool m_isRunNonBloking;
+    std::atomic_bool m_isRunADC;
     static_assert(ATOMIC_INT_LOCK_FREE == 2,"this implementation does not guarantee that std::atomic<int> is always lock free.");
 
     unsigned short m_Resolution;

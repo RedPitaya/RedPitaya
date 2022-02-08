@@ -30,6 +30,7 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_ReadyToPass(0),
     m_isRun(false),
     m_isRunNonBloking(false),
+    m_isRunADC(false),
     m_Resolution(_resolution),
     m_WriteBuffer_ch1(nullptr),
     m_WriteBuffer_ch2(nullptr),
@@ -93,13 +94,14 @@ CStreamingApplication::~CStreamingApplication(){
 
 void CStreamingApplication::run(std::string _file_name_prefix)
 {
+    mtx.lock();
     m_size_ch1 = 0;
     m_size_ch2 = 0;
     m_lostRate = 0;
   
     m_isRun = true;
     m_isRunNonBloking = false;
-
+    m_isRunADC = true;
     try {
 
         m_StreamingManager->run(_file_name_prefix);
@@ -114,15 +116,17 @@ void CStreamingApplication::run(std::string _file_name_prefix)
         std::cerr << "Error: CStreamingApplication::run(), " << e.what() << std::endl;
         PrintDebugInFile( e.what());
     }
-
+    mtx.unlock();
 }
 
 void CStreamingApplication::runNonBlock(std::string _file_name_prefix){
+    mtx.lock();
     m_size_ch1 = 0;
     m_size_ch2 = 0;
     m_lostRate = 0;
     m_isRun = true;
-    m_isRunNonBloking = true;    
+    m_isRunNonBloking = true;
+    m_isRunADC = true;
     try {
         m_StreamingManager->run(_file_name_prefix); // MUST BE INIT FIRST for thread logic
         m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);        
@@ -132,7 +136,43 @@ void CStreamingApplication::runNonBlock(std::string _file_name_prefix){
         std::cerr << "Error: CStreamingApplication::runNonBlock(), " << e.what() << std::endl;
         PrintDebugInFile( e.what());
     }
+    mtx.unlock();
 }
+
+auto CStreamingApplication::runNonBlockNoADC(std::string _file_name_prefix) -> void{
+    mtx.lock();    
+    m_size_ch1 = 0;
+    m_size_ch2 = 0;
+    m_lostRate = 0;
+    m_isRun = true;
+    m_isRunNonBloking = true;
+    m_isRunADC = false;
+    try {
+        m_StreamingManager->run(_file_name_prefix); // MUST BE INIT FIRST for thread logic
+    }
+    catch (const asio::system_error &e)
+    {
+        std::cerr << "Error: CStreamingApplication::runNonBlock(), " << e.what() << std::endl;
+        PrintDebugInFile( e.what());
+    }
+    mtx.unlock();
+}
+
+auto CStreamingApplication::runADC() -> void{
+    try {
+        if (m_isRun && !m_isRunADC){
+            m_isRunADC = true;
+            m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
+        }
+    }
+    catch (const asio::system_error &e)
+    {
+        std::cerr << "Error: CStreamingApplication::runNonBlock(), " << e.what() << std::endl;
+        PrintDebugInFile( e.what());
+    }
+}
+    
+
 
 bool CStreamingApplication::stop(bool wait){
     mtx.lock();   
@@ -141,14 +181,18 @@ bool CStreamingApplication::stop(bool wait){
         m_StreamingManager->stop();
         m_Osc_ch->stop();
         m_OscThreadRun.clear();
-        if (wait) {
-            m_OscThread.join();
+        if (m_isRunADC){
+            if (wait) {
+                m_OscThread.join();
+            }else{
+                while(isRun());
+            }
         }else{
-            while(isRun());
+            m_isRun = false;
         }
-        m_StreamingManager = nullptr;
         m_Osc_ch = nullptr;
         state = true;
+        m_StreamingManager = nullptr;
     }
     mtx.unlock();
     return state;

@@ -142,6 +142,34 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
         m_testSettings = m_settings;
         m_pNetConfManager->sendData(CNetConfigManager::Commands::COPY_SETTINGS_TO_TEST_SETTINGS_DONE);
     }
+
+    if (c == CNetConfigManager::Commands::GET_SERVER_MODE){
+        if (m_settings.getSaveType() == CStreamSettings::FILE){
+            sendServerModeSD();
+        }else if (m_settings.getSaveType() == CStreamSettings::NET){
+            if (m_settings.getProtocol() == CStreamSettings::TCP){
+                sendServerModeTCP();
+            }else if (m_settings.getProtocol() == CStreamSettings::TCP){
+                sendServerModeUDP();
+            }else{
+                fprintf(stderr,"[ServerNetConfigManager] Error in GET_SERVER_MODE. Unknown settings\n");
+            }
+        }
+    }
+
+    if (c == CNetConfigManager::Commands::GET_SERVER_TEST_MODE){
+        if (m_testSettings.getSaveType() == CStreamSettings::FILE){
+            sendServerModeSD();
+        }else if (m_testSettings.getSaveType() == CStreamSettings::NET){
+            if (m_testSettings.getProtocol() == CStreamSettings::TCP){
+                sendServerModeTCP();
+            }else if (m_testSettings.getProtocol() == CStreamSettings::TCP){
+                sendServerModeUDP();
+            }else{
+                fprintf(stderr,"[ServerNetConfigManager] Error in GET_SERVER_MODE. Unknown settings\n");
+            }
+        }
+    }
     
     if (c == CNetConfigManager::Commands::LOAD_SETTING_FROM_FILE){
         if (m_settings.readFromFile(m_file_settings)){

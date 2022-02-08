@@ -35,7 +35,7 @@ LIBS += -L./server/libs
 
 COMMON_FLAGS+= -Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++17 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
 LDWFLAGS+= -ljsoncpp -lrpsasrv

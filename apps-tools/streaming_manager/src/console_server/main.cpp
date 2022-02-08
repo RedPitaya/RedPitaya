@@ -97,6 +97,13 @@ std::string exec(const char* cmd) {
 
 int main(int argc, char *argv[])
 {
+    #ifdef STREAMING_MASTER
+		auto isMaster = true;
+    #endif
+    #ifdef STREAMING_SLAVE
+        auto isMaster = false;
+    #endif
+
      // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
     setlogmask (LOG_UPTO (LOG_INFO));
     openlog ("streaming-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
@@ -160,12 +167,7 @@ int main(int argc, char *argv[])
             }
         }
         
-       	#ifdef STREAMING_MASTER
-			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
-		#endif
-        #ifdef STREAMING_SLAVE
-			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
-        #endif 
+    	auto mode = isMaster ? asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER : asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
 
         #ifdef Z10
 		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14;
@@ -221,6 +223,11 @@ int main(int argc, char *argv[])
         con_server->addHandler(ServerNetConfigManager::Events::STOP_DAC_STREAMING,[](){
             stopDACNonBlocking(CDACStreamingManager::NR_STOP);
         });
+
+        con_server->addHandler(ServerNetConfigManager::Events::START_ADC,[con_server,verbMode](){
+            startADC();
+            con_server->sendADCStarted();
+        });
         
     }catch (std::exception& e)
     {
@@ -229,8 +236,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     if (verbMode){
-        fprintf(stdout,"streaming-server started\n");
-        RP_LOG (LOG_NOTICE, "streaming-server started");
+        fprintf(stdout,"streaming-server started %s\n", isMaster ? "[MASTER]" : "[SLAVE]");
+        RP_LOG (LOG_NOTICE, "streaming-server started %s", isMaster ? "[MASTER]" : "[SLAVE]");
     }
 
     installTermSignalHandler();
