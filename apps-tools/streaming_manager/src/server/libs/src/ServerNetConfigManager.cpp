@@ -106,6 +106,14 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
         }
     }
 
+    if (c == CNetConfigManager::Commands::START_ADC){
+        m_callbacks.emitEvent(static_cast<int>(Events::START_ADC));
+    }
+
+    if (c == CNetConfigManager::Commands::START_DAC){
+        m_callbacks.emitEvent(static_cast<int>(Events::START_DAC));
+    }
+
     if (c == CNetConfigManager::Commands::START_STREAMING){
         m_callbacks.emitEvent(static_cast<int>(Events::START_STREAMING));
     }
@@ -238,6 +246,14 @@ auto ServerNetConfigManager::serverError(std::error_code) -> void{
         m_currentState = States::NORMAL;
         m_errorCallback.emitEvent(0,Errors::BREAK_RECEIVE_SETTINGS);
     }
+}
+
+auto ServerNetConfigManager::sendADCStarted() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::START_ADC_DONE);
+}
+
+auto ServerNetConfigManager::sendDACStarted() -> bool{
+    return m_pNetConfManager->sendData(CNetConfigManager::Commands::START_DAC_DONE);
 }
 
 auto ServerNetConfigManager::sendServerStartedTCP() -> bool{

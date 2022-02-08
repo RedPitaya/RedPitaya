@@ -33,6 +33,7 @@ public:
         FAIL_SEND_CONFIG,
         SUCCESS_SAVE_CONFIG,
         FAIL_SAVE_CONFIG,
+
         SERVER_STARTED_TCP,
         SERVER_STARTED_UDP,
         SERVER_STARTED_SD,
@@ -74,6 +75,8 @@ public:
     auto sendStop(const std::string &host) -> bool;
     auto sendDACStart(const std::string &host,bool test_mode = false) -> bool;
     auto sendDACStop(const std::string &host) -> bool;
+    auto sendStartADC(const std::string &host) -> bool;
+    auto sendStartDAC(const std::string &host) -> bool;
     auto sendGetServerMode(const std::string &host) -> bool;
     auto sendGetServerTestMode(const std::string &host) -> bool;
     auto requestConfig(const std::string &host) -> bool;

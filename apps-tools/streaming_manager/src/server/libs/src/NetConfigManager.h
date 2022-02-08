@@ -10,6 +10,7 @@ class CNetConfigManager
 {
 public:
     enum class Commands{
+
         BEGIN_SEND_SETTING,
         END_SEND_SETTING,
         SETTING_GET_SUCCESS,
@@ -22,6 +23,7 @@ public:
         
         REQUEST_SERVER_SETTINGS,
         REQUEST_SERVER_TEST_SETTINGS,
+
         STOP_STREAMING,
         START_STREAMING,
         START_STREAMING_TEST,        
@@ -31,6 +33,13 @@ public:
         SERVER_STARTED_TCP,
         SERVER_STARTED_UDP,
         SERVER_STARTED_SD,
+
+        START_ADC,
+        START_ADC_DONE,
+
+        START_DAC,
+        START_DAC_DONE,
+
         SAVE_SETTING_TO_FILE,
         SAVE_TO_FILE_SUCCES,
         SAVE_TO_FILE_FAIL,
@@ -39,6 +48,7 @@ public:
         LOAD_FROM_FILE_FAIL,
         COPY_SETTINGS_TO_TEST_SETTINGS,
         COPY_SETTINGS_TO_TEST_SETTINGS_DONE,        
+
         MASTER_CONNETED,
         SLAVE_CONNECTED,
         START_DAC_STREAMING,

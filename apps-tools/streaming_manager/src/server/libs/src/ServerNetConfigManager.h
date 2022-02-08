@@ -27,7 +27,9 @@ public:
         START_LOOPBACK_MODE,
         STOP_LOOPBACK_MODE,
         GET_SERVER_MODE,
-        GET_SERVER_TEST_MODE
+        GET_SERVER_TEST_MODE,
+        START_ADC,
+        START_DAC
     };
     ServerNetConfigManager(std::string defualt_file_settings_path,asionet_broadcast::CAsioBroadcastSocket::ABMode mode, std::string host,std::string port);
     ~ServerNetConfigManager();
@@ -44,6 +46,9 @@ public:
     auto sendServerModeSD() -> bool;
     auto sendDACServerStarted() -> bool;
     auto sendDACServerStartedSD() -> bool;
+
+    auto sendADCStarted() -> bool;
+    auto sendDACStarted() -> bool;
 
     auto sendServerStopped() -> bool;
     auto sendServerStoppedSDFull() -> bool;

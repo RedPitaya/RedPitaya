@@ -532,6 +532,27 @@ auto ClientNetConfigManager::sendDACStop(const std::string &host) -> bool{
     return false;
 }
 
+auto ClientNetConfigManager::sendStartADC(const std::string &host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_ADC);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendStartDAC(const std::string &host) -> bool{
+    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
+        return c->m_manager->getHost()  == host;
+    });
+    if (it != std::end(m_clients)){
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_DAC);
+    }
+    return false;
+}
+
+
 auto ClientNetConfigManager::sendGetServerMode(const std::string &host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
