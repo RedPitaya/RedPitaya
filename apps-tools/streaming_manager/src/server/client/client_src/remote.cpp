@@ -308,7 +308,7 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> 
     for(auto &host:slaveHosts) {
         if (g_roption.verbous)
             std::cerr << getTS(": ") << "Send start ADC command to slave board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
-        if (!cl->sendDACStart(host,test_mode)){
+        if (!cl->sendStartADC(host)){
             rstart_counter--;
         }
     }
