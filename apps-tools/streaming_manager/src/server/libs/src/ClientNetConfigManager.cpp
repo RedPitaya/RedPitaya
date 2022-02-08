@@ -273,6 +273,17 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_MODE_UDP),sender->m_manager->getHost());
     }
 
+
+    //ADC/DAC control
+
+    if (c== CNetConfigManager::Commands::START_ADC_DONE){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::START_ADC_DONE),sender->m_manager->getHost());
+    }
+
+    if (c== CNetConfigManager::Commands::START_DAC_DONE){
+        m_callbacksStr.emitEvent(static_cast<int>(Events::START_DAC_DONE),sender->m_manager->getHost());
+    }
+
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{

@@ -44,7 +44,9 @@ namespace ClientOpt {
         START_STOP,
         START_DAC,
         STOP_DAC,
-        START_STOP_DAC
+        START_STOP_DAC,
+        START_FPGA_ADC,
+        START_FPGA_DAC
     };
 
     enum class StreamingType{

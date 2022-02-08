@@ -20,6 +20,7 @@ auto stopStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::str
 auto stopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
 auto startStopStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
 auto startStopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
+auto startADC(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool;
 
 auto startRemote(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &option,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
     std::list<std::string> connected_hosts;
@@ -171,7 +172,11 @@ auto startRemote(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Options &
         }
 
         case ClientOpt::RemoteMode::START_DAC:{
-            return startDACStreaming(cl,masterHosts,slaveHosts, g_roption.testmode == ClientOpt::TestMode::ENABLE,runned_hosts);
+            return startStreaming(cl,masterHosts,slaveHosts, g_roption.testmode == ClientOpt::TestMode::ENABLE,runned_hosts);
+        }
+
+        case ClientOpt::RemoteMode::START_FPGA_ADC:{
+            return startADC(cl,masterHosts,slaveHosts, g_roption.testmode == ClientOpt::TestMode::ENABLE,runned_hosts);
         }
 
         case ClientOpt::RemoteMode::STOP:{
@@ -266,6 +271,63 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::st
         }
     }
 
+    while (rstart_counter>0){
+        sleepMs(100);
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
+    }
+    cl->removeHadlers();
+    return true;
+}
+
+auto startADC(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::string> &masterHosts,std::list<std::string> &slaveHosts,bool test_mode,std::map<std::string,StateRunnedHosts> *runned_hosts) -> bool{
+    std::atomic<int>   rstart_counter;
+
+    cl->addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+            std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+            rstart_counter--;
+            masterHosts.remove(host);
+            slaveHosts.remove(host);
+        }
+    });
+
+    cl->addHandler(ClientNetConfigManager::Events::START_ADC_DONE, [&](std::string host){
+        const std::lock_guard<std::mutex> lock(g_rmutex);
+        if (g_roption.verbous)
+            std::cout << getTS(": ") << "ADC is run: " << host << "\n";
+        rstart_counter--;
+        if (runned_hosts) (*runned_hosts)[host] = StateRunnedHosts::NONE;
+    });
+
+    rstart_counter = slaveHosts.size();
+
+    for(auto &host:slaveHosts) {
+        if (g_roption.verbous)
+            std::cerr << getTS(": ") << "Send start ADC command to slave board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
+        if (!cl->sendDACStart(host,test_mode)){
+            rstart_counter--;
+        }
+    }
+    while (rstart_counter>0){
+        sleepMs(100);
+        if (g_rexit_flag) {
+            cl->removeHadlers();
+            return false;
+        }
+    }
+
+    rstart_counter = masterHosts.size();
+    for(auto &host:masterHosts) {
+        if (g_roption.verbous)
+            std::cerr << getTS(": ") << "Send start ADC command to master board " << host.c_str() << (test_mode ? " [Benchmark mode]":"") << "\n";
+        if (!cl->sendStartADC(host)){
+            rstart_counter--;
+        }
+    }
     while (rstart_counter>0){
         sleepMs(100);
         if (g_rexit_flag) {

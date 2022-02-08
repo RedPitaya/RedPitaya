@@ -177,16 +177,9 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
         std::cout << getTS(": ") << "Can't stop streaming on remote machines\n";
         return;
     }
-
-    remote_opt.hosts.clear();
-    for(auto &kv:runned_hosts){
-        if (kv.second != StateRunnedHosts::NONE)
-            remote_opt.hosts.push_back(kv.first);
-    }
-
-    {
-        const std::lock_guard<std::mutex> lock(g_smutex);
-        g_runClientCounter = runned_hosts.size();
+    runned_hosts.clear();
+    remote_opt.remote_mode = ClientOpt::RemoteMode::START;
+    if (startRemote(cl,remote_opt,&runned_hosts)){
         for(auto &kv:runned_hosts){
             if (kv.second == StateRunnedHosts::TCP || kv.second == StateRunnedHosts::UDP)
                 clients.push_back(std::thread(runClient, kv.first,kv.second));
@@ -197,24 +190,31 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
                 break;
             }
         }
-    }
 
-    if (!sig_exit_flag){
-        remote_opt.remote_mode = ClientOpt::RemoteMode::START;
+        remote_opt.remote_mode = ClientOpt::RemoteMode::START_FPGA_ADC;
         if (!startRemote(cl,remote_opt,&runned_hosts)){
-            std::cout << getTS(": ") << "Can't start streaming on remote machines\n";
+            std::cout << getTS(": ") << "Can't start ADC on remote machines\n";
+        }
+
+        for (std::thread &t: clients) {
+            if (t.joinable()) {
+                t.join();
+            }
+        }
+
+        remote_opt.remote_mode = ClientOpt::RemoteMode::STOP;
+        if (!startRemote(cl,remote_opt,&runned_hosts)){
+            std::cout << getTS(": ") << "Can't stop streaming on remote machines\n";
+            return;
+        }
+
+        if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
+            const std::lock_guard<std::mutex> lock(g_smutex);
+            printFinalStatisitc();
         }
     }
 
-    for (std::thread &t: clients) {
-        if (t.joinable()) {
-            t.join();
-        }
-    }
-    if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
-        const std::lock_guard<std::mutex> lock(g_smutex);
-        printFinalStatisitc();
-    }
+
 }
 
 auto streamingSIGHandler() -> void{

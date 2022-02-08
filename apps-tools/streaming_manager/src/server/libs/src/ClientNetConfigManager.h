@@ -57,7 +57,10 @@ public:
         SERVER_MODE_UDP,
         SERVER_MODE_SD,
         GET_SERVER_MODE,
-        GET_SERVER_TEST_MODE
+        GET_SERVER_TEST_MODE,
+
+        START_ADC_DONE,
+        START_DAC_DONE
     };
     ClientNetConfigManager(std::string default_file_settings_path,bool loadConfig = true);
     ~ClientNetConfigManager();
