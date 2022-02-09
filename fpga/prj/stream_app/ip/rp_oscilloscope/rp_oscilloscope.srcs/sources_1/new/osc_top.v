@@ -202,6 +202,8 @@ wire  [31:0]                buf2_ms_cnt;
 wire [S_AXIS_DATA_BITS-1:0] filt_tdata;   
 wire                        filt_tvalid;   
 
+wire                        external_trig_val;
+
 reg intr_reg;
 reg [32-1:0] intr_cnt;
 
@@ -223,7 +225,7 @@ begin
     clk_cnt  <= 'h0;
   end else begin
     clk_cnt  <= clk_cnt + 'h1;
-    if (trig_ip[5]) begin
+    if (external_trig_val) begin
       trig_cnt <= trig_cnt + 'h1;
     end  
   end
@@ -239,6 +241,7 @@ begin
   end
 end
 
+assign external_trig_val = trig_ip[5] & (cfg_trig_mask == 'h20);
 assign loopback_sel = cfg_loopback[8-1:0];
 assign ramp_en      = (CHAN_NUM == 1) ? cfg_loopback[8] : cfg_loopback[12];
 assign loopback_en  = (CHAN_NUM == 1) ? cfg_loopback[0] : cfg_loopback[ 4];
@@ -394,7 +397,7 @@ rp_dma_s2mm #(
   .reg_dst_addr2  (cfg_dma_dst_addr2),
   .reg_buf_size   (cfg_dma_buf_size),
   .ctl_start_o    (ctl_start_o),
-  .ctl_start_ext  (trig_ip[5]),
+  .ctl_start_ext  (external_trig_val),
   .buf1_ms_cnt    (buf1_ms_cnt),
   .buf2_ms_cnt    (buf2_ms_cnt),
   .buf_sel_in     (buf_sel_in),
@@ -439,7 +442,7 @@ assign ctl_rst = event_num_reset;
 assign event_sts_reset = 0;
 
 assign ctl_trg = event_num_trig | |(trig_ip & cfg_trig_mask);
-assign trig_o  = /*|(trig_ip & cfg_trig_mask) | */ ctl_start_o;
+assign trig_o  = ctl_start_o;
 
 ////////////////////////////////////////////////////////////
 // Name : 
