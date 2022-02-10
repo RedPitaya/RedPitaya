@@ -114,6 +114,7 @@ wire                      fifo_empty;
 reg                       next_buf_full;
 reg                       fifo_rst_cntdwn;
 reg                       transf_end;
+reg                       bit_start;
 
 assign m_axi_awaddr  = req_addr;
 assign m_axi_awsize  = $clog2(AXI_DATA_BITS/8);   
@@ -136,7 +137,7 @@ assign reg_sts[STS_CURR_BUF] = req_buf_addr_sel;
 
 
 assign buf_sel_out = req_buf_addr_sel_p1;
-assign ctl_start_o = reg_ctrl[CTRL_STRT] | ctl_start_ext;
+assign ctl_start_o = (reg_ctrl[CTRL_STRT] == 1) | ctl_start_ext;
 ////////////////////////////////////////////////////////////
 // Name : Request FIFO 
 // Stores the DMA requests.
@@ -195,6 +196,11 @@ begin
   reg_diags <= {m_axi_awlen,{3'b0,intr},{3'b0,fifo_dis},{3'b0,req_buf_addr_sel},{buf2_ovr,buf1_ovr,buf2_full,buf1_full},{m_axi_awready,m_axi_wready,m_axi_awvalid,m_axi_wvalid},{1'b0,state_cs}};
 end
 
+always @(posedge m_axi_aclk)
+begin
+  bit_start <= reg_ctrl[CTRL_STRT] == 1 || ctl_start_ext;
+end
+
 ////////////////////////////////////////////////////////////
 // Name : data_valid synchronisation
 // data valid must be delayed by one clock to align with 
@@ -238,7 +244,7 @@ begin
   case (state_cs)
     // IDLE - Wait for the DMA start signal
     IDLE: begin
-      if (reg_ctrl[CTRL_STRT] == 1 || ctl_start_ext) begin
+      if (bit_start) begin
         state_ns = FIFO_RST;
       end
     end
@@ -768,7 +774,7 @@ begin
   case (state_cs) 
     // IDLE - Wait for the DMA start signal
     IDLE: begin
-      if (reg_ctrl[CTRL_STRT] == 1 || ctl_start_ext) begin
+      if (bit_start) begin
         busy <= 1;
       end else begin
         busy <= 0;

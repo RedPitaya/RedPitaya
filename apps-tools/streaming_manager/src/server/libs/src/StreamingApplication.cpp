@@ -308,7 +308,7 @@ try{
         for(int i = 0 ;i < 16 ;i ++){            
             acout() << std::hex <<  (wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0)  << " - " << (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0)  << "\n";
         }
-        exit(1);
+//        exit(1);
     }
 
     if (buffer_ch1 != nullptr){
