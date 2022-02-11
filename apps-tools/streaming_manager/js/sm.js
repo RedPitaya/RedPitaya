@@ -290,7 +290,14 @@
             }
         }
         SM.ss_status_last = ss_status;
+    }
 
+    SM.change_adc_data_pass = function(new_params) {
+        if (new_params['SS_ADC_DATA_PASS'].value == 1) {
+            $('#svg-is-data-pass').show();
+        }else{
+            $('#svg-is-data-pass').hide();
+        }
     }
 
     //Handlers
@@ -427,6 +434,7 @@
     //    setInterval(parametersHandler, 50);
 
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
+    SM.param_callbacks["SS_ADC_DATA_PASS"] = SM.change_adc_data_pass;
 
 
 }(window.SM = window.SM || {}, jQuery));

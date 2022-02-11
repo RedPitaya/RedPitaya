@@ -69,6 +69,7 @@ static constexpr char config_file[] = "/root/.streaming_config";
 //Parameters
 
 CBooleanParameter 	ss_start(			"SS_START", 			CBaseParameter::RW, false,0);
+
 CBooleanParameter 	ss_dac_start(		"SS_DAC_START", 		CBaseParameter::RW, false,0);
 
 
@@ -84,6 +85,7 @@ CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2)
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 4 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
+CBooleanParameter 	ss_adc_data_pass(	"SS_ADC_DATA_PASS",		CBaseParameter::RW, false,0);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RO, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2);
 CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
@@ -118,6 +120,8 @@ CGenerator::Ptr 		gen = nullptr;
 std::shared_ptr<ServerNetConfigManager> g_serverNetConfig;
 std::atomic_bool g_serverRun(false);
 std::atomic_bool g_dac_serverRun(false);
+
+void startADC();
 
 // void PrintLogInFile(const char *message){
 // #ifdef DEBUG_MODE
@@ -187,6 +191,9 @@ int rp_app_init(void)
 				stopDACNonBlocking(CDACStreamingManager::NR_STOP);
 			});
 
+	        g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_ADC,[](){
+            	startADC();
+        	});
 
 		}catch (std::exception& e)
 			{
@@ -194,6 +201,7 @@ int rp_app_init(void)
 			}
 
 		ss_status.SendValue(0);
+		ss_adc_data_pass.SendValue(0);
 		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
 		ss_dac_max_speed.SendValue(DAC_FREQUENCY);
 		if (g_serverNetConfig->getSettingsRef().isSetted()){
@@ -874,7 +882,6 @@ void StartServer(bool testMode){
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
 		s_app->setTestMode(testMode);
-
 		ss_status.SendValue(1);
 		
 		char time_str[40];
@@ -884,7 +891,12 @@ void StartServer(bool testMode){
     	strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
     	std::string filenameDate = time_str;
 
-		s_app->runNonBlock(filenameDate);
+		s_app->runNonBlockNoADC(filenameDate);
+		
+		if (use_file == CStreamSettings::FILE) {
+			startADC();
+		}
+
 		if (!s_manger->isLocalMode()){
 			if (s_manger->getProtocol() == asionet::Protocol::TCP){
 				g_serverNetConfig->sendServerStartedTCP();
@@ -901,6 +913,20 @@ void StartServer(bool testMode){
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StartServer() %s\n",e.what());
+	}
+}
+
+void startADC(){
+	try{
+		if (s_app){
+			s_app->runADC();
+			ss_adc_data_pass.SendValue(1);
+           	g_serverNetConfig->sendADCStarted();
+		}
+	}catch (std::exception& e)
+	{
+		fprintf(stderr, "Error: startADC() %s\n",e.what());
+        syslog (LOG_ERR,"Error: startADC() %s\n",e.what());
 	}
 }
 
@@ -924,6 +950,7 @@ void StopServer(int x){
 			s_app = nullptr;
 		}
 		ss_status.SendValue(x);
+		ss_adc_data_pass.SendValue(0);
 		switch (x)
 		{
 		case 0:
