@@ -56,9 +56,9 @@ unsigned long long getTotalSystemMemory()
 #endif
 }
 
-auto FileQueueManager::AvailableSpace(std::string dst, unsigned long* availableSize) -> int {
+auto FileQueueManager::AvailableSpace(std::string dst, unsigned long long* availableSize) -> int {
 #ifdef _WIN32
-	*availableSize = UINT32_MAX;
+	*availableSize = UINT64_MAX;
 	return 0;
 #else
     int result = -1;
@@ -68,10 +68,10 @@ auto FileQueueManager::AvailableSpace(std::string dst, unsigned long* availableS
         if ((statvfs(dst.c_str(), &devData)) >= 0) {
             if (availableSize != NULL) {
                 //I don't know if it's right, but I'll set availableSize only if the available size doesn't pass the ulong limit.
-                if (devData.f_bavail  > (std::numeric_limits<unsigned long>::max() / devData.f_bsize)) {
-                    *availableSize = std::numeric_limits<unsigned long>::max();
+                if (devData.f_bavail  > (std::numeric_limits<unsigned long long>::max() / devData.f_bsize)) {
+                    *availableSize = std::numeric_limits<unsigned long long>::max();
                 } else {
-                    *availableSize = devData.f_bavail * devData.f_bsize;
+                    *availableSize = (unsigned long long)devData.f_bavail * (unsigned long long)devData.f_bsize;
                 }
             }
             result = 0;
@@ -97,8 +97,8 @@ auto FileQueueManager::AddBufferToWrite(std::iostream *buffer) -> bool{
     }
 }
 
-auto FileQueueManager::GetFreeSpaceDisk(std::string _filePath) -> unsigned long{
-    unsigned long m_freeSize = 0;
+auto FileQueueManager::GetFreeSpaceDisk(std::string _filePath) -> unsigned long long{
+    unsigned long long m_freeSize = 0;
     if (FileQueueManager::AvailableSpace(_filePath, &m_freeSize) == 0){
         if (m_freeSize < USING_FREE_SPACE){
             m_freeSize = 0;
@@ -127,6 +127,9 @@ auto FileQueueManager::OpenFile(std::string FileName,bool Append) -> void{
     }
 
     m_freeSize = GetFreeSpaceDisk(dirName);
+    if (m_testMode){
+        m_freeSize = std::numeric_limits<unsigned long long>::max();
+    }
     m_aviablePhyMemory = getTotalSystemMemory();
     std::cout << "Available physical memory: " << m_aviablePhyMemory / (1024 * 1024) << "Mb\n";
     m_aviablePhyMemory /= 2;

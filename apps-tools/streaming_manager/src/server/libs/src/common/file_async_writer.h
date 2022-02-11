@@ -83,8 +83,8 @@ class FileQueueManager:public Queue{
         auto WriteToFile() -> int;
         auto deleteFile() -> void;
 
-        static auto AvailableSpace(std::string dst, unsigned long* availableSize) -> int;
-        static auto GetFreeSpaceDisk(std::string _filePath) -> unsigned long;
+        static auto AvailableSpace(std::string dst, unsigned long long* availableSize) -> int;
+        static auto GetFreeSpaceDisk(std::string _filePath) -> unsigned long long;
 
         static auto ReadBinInfo(std::iostream *buffer) -> BinInfo;
         static auto ReadCSV(std::iostream *buffer,int64_t *_position,int *_channels,bool skipData = false) -> std::iostream *;
@@ -105,8 +105,8 @@ class FileQueueManager:public Queue{
         Stream_FileType  m_fileType; // FLAG for file type TDMS/Wav
         bool m_firstSectionWrite; // Need for detect first section of wav file
         bool m_IsOutOfSpace;
-        unsigned long m_freeSize;
-        unsigned long m_hasWriteSize;
+        unsigned long long m_freeSize;
+        unsigned long long m_hasWriteSize;
         uint64_t m_aviablePhyMemory;
         bool m_testMode;
         std::string m_fileName;

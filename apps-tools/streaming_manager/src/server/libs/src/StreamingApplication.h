@@ -27,7 +27,7 @@ public:
     auto isRun() -> bool {return m_isRun;}
     auto setTestMode(bool mode) -> void;
     auto setVerbousMode(bool mode) -> void;
-    auto setPrintDebugBuffer(bool mode) -> void {m_printDebugBuffer = true;};
+    auto setPrintDebugBuffer(bool mode) -> void {m_printDebugBuffer = mode;};
 
 private:
     int m_PerformanceCounterPeriod = 10;
