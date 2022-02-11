@@ -15,7 +15,7 @@
 #endif
 
 void PrintDebugLogInFile(const char *message){
-	std::time_t result = std::time(nullptr);	
+	std::time_t result = std::time(nullptr);
     std::fstream fs;
   	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
 	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
@@ -45,7 +45,6 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
     m_verbMode(false),
     m_printDebugBuffer(false)
 {
-    
     assert(this->m_Resolution == 8 || this->m_Resolution == 16);
 
     m_size_ch1 = 0;
@@ -58,7 +57,6 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
         std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
         std::terminate();
     }
-    
 
     m_WriteBuffer_ch2 = aligned_alloc(64, osc_buf_size);
 
@@ -66,7 +64,6 @@ CStreamingApplication::CStreamingApplication(CStreamingManager::Ptr _StreamingMa
         std::cerr << "CStreamingApplication: aligned_alloc" << std::endl;
         std::terminate();
     }
-    
 
     m_OscThreadRun.test_and_set();
 }
@@ -99,7 +96,7 @@ void CStreamingApplication::run(std::string _file_name_prefix)
     m_size_ch1 = 0;
     m_size_ch2 = 0;
     m_lostRate = 0;
-  
+
     m_isRun = true;
     m_isRunNonBloking = false;
     m_isRunADC = true;
@@ -130,7 +127,7 @@ void CStreamingApplication::runNonBlock(std::string _file_name_prefix){
     m_isRunADC = true;
     try {
         m_StreamingManager->run(_file_name_prefix); // MUST BE INIT FIRST for thread logic
-        m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);        
+        m_OscThread = std::thread(&CStreamingApplication::oscWorker, this);
     }
     catch (const asio::system_error &e)
     {
@@ -141,7 +138,7 @@ void CStreamingApplication::runNonBlock(std::string _file_name_prefix){
 }
 
 auto CStreamingApplication::runNonBlockNoADC(std::string _file_name_prefix) -> void{
-    mtx.lock();    
+    mtx.lock();
     m_size_ch1 = 0;
     m_size_ch2 = 0;
     m_lostRate = 0;
@@ -172,11 +169,11 @@ auto CStreamingApplication::runADC() -> void{
         PrintDebugInFile( e.what());
     }
 }
-    
+
 
 
 bool CStreamingApplication::stop(bool wait){
-    mtx.lock();   
+    mtx.lock();
     bool state = false;
     if (m_isRun){
         m_StreamingManager->stop();
@@ -199,9 +196,7 @@ bool CStreamingApplication::stop(bool wait){
     return state;
 }
 
-void CStreamingApplication::oscWorker()
-{
-       
+void CStreamingApplication::oscWorker(){
     auto timeNow = std::chrono::system_clock::now();
     auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
     auto value = curTime.time_since_epoch();
@@ -209,7 +204,6 @@ void CStreamingApplication::oscWorker()
     long long int timeBegin = value.count();
     // uintmax_t counter = 0;
     // uintmax_t passCounter = 0;
-    uint8_t   skipBuffs = 0;
     if (m_testMode) {
         prepareTestBuffers();
     }
@@ -227,8 +221,8 @@ try{
             m_size_ch1 = 0;
             m_size_ch2 = 0;
             overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
-            if (skipBuffs > 0) { skipBuffs--; continue; }
             if (overFlow > 0) {
+		overFlow+=2;
                 m_lostRate += overFlow;
                 // ++passCounter;
             }
@@ -237,7 +231,7 @@ try{
         if (state){
             void* passB1 = m_WriteBuffer_ch1;
             void* passB2 = m_WriteBuffer_ch2;
-            
+
             if (m_testMode){
                 passB1 = m_testBuffer_ch1;
                 passB2 = m_testBuffer_ch2;
@@ -249,7 +243,7 @@ try{
                 timeNow = std::chrono::system_clock::now();
                 curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
                 value = curTime.time_since_epoch();
-                
+
                 if ((value.count() - timeBegin) >= 5000) {
                     std::cout << "Lost samples: " << m_lostRate  << "\n";
                     //counter = 0;
@@ -260,18 +254,16 @@ try{
             }
 
             if (!m_StreamingManager->isFileThreadWork()){
-                
                 if (m_StreamingManager->notifyStop){
                     if (m_StreamingManager->isOutOfSpace())
                         m_StreamingManager->notifyStop(0);
                     else 
                         m_StreamingManager->notifyStop(1);
-                    m_StreamingManager->notifyStop = nullptr;                
+                    m_StreamingManager->notifyStop = nullptr;
                 }
             }
         }
     }
-    
 }catch (std::exception& e)
 	{
 		std::cerr << "Error: oscWorker() " << e.what() << std::endl ;
