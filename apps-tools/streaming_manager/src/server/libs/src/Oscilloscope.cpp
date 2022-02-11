@@ -277,7 +277,7 @@ bool COscilloscope::wait(){
     ssize_t bytes = write(m_Fd, &cnt, cnt_size); // Unmmask interrupt
     if (bytes == cnt_size) {
         // wait for the interrupt
-        printf("Wait Itr\n");
+//        printf("Wait Itr\n");
         struct pollfd pfd = {.fd = m_Fd, .events = POLLIN};
         int timeout_ms = 1000;
         int rv = poll(&pfd, 1, timeout_ms);
@@ -285,11 +285,7 @@ bool COscilloscope::wait(){
         if (rv >= 1) {
                uint32_t info;
                read(m_Fd, &info, sizeof(info));
-<<<<<<< HEAD
-               printf("Itr\n");
-=======
-                printf("Itr\n");
->>>>>>> 2ae993e07b902e6113666627bf21a47fab729564
+//               printf("Itr\n");
         } else if (rv == 0) {
                return false;
         } else {
