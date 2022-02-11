@@ -36,12 +36,13 @@ void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string hos
     uint32_t resolution = 0;
     uint32_t adc_mode = 0;
     uint32_t adc_bits = 0;
+    int channels = 0;
 
-    asionet::CAsioNet::ExtractPack(buff,_size, id, lostRate,oscRate, resolution, adc_mode , adc_bits, ch1, size_ch1, ch2 , size_ch2);
+    asionet::CAsioNet::ExtractPack(buff,_size, id, lostRate,oscRate, resolution, adc_mode , adc_bits, ch1, size_ch1, ch2 , size_ch2,channels);
     
   //  std::cout << id << " ; " <<  _size  <<  " ; " << resolution << " ; " << size_ch1 << " ; " << size_ch2 << "\n";
 
-    g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id);
+    g_manger[host]->passBuffers(lostRate, oscRate , adc_mode , adc_bits, ch1 , size_ch1 ,  ch2 , size_ch2 , resolution, id,channels);
 
     if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
         uint64_t sempCh1 = size_ch1 / (resolution == 16 ? 2 : 1);
@@ -196,11 +197,37 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
             std::cout << getTS(": ") << "Can't start ADC on remote machines\n";
         }
 
+        cl->addHandlerError([&](ClientNetConfigManager::Errors errors,std::string host){
+            if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+                std::cerr << getTS(": ") << "Error: " << host.c_str() << "\n";
+            }
+            stopStreaming(host);
+        });
+
+        cl->addHandler(ClientNetConfigManager::Events::SERVER_STOPPED, [&](std::string host){
+            if (g_soption.verbous)
+                std::cout << getTS(": ") << "Streaming stopped: " << host << " TCP mode [OK]\n";
+            stopStreaming(host);
+        });
+
+        cl->addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_FULL, [&](std::string host){
+            if (g_soption.verbous)
+                std::cout << getTS(": ") << "Streaming stopped: " << host << " UDP mode [OK]\n";
+            stopStreaming(host);
+        });
+
+        cl->addHandler(ClientNetConfigManager::Events::SERVER_STOPPED_SD_DONE, [&](std::string host){
+            if (g_soption.verbous)
+                std::cout << getTS(": ") << "Streaming stopped: " << host << " Local mode [OK]\n";
+            stopStreaming(host);
+        });
+
         for (std::thread &t: clients) {
             if (t.joinable()) {
                 t.join();
             }
         }
+        
 
         remote_opt.remote_mode = ClientOpt::RemoteMode::STOP;
         if (!startRemote(cl,remote_opt,&runned_hosts)){

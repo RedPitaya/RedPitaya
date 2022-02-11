@@ -366,7 +366,7 @@ try{
 
 int CStreamingApplication::oscNotify(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, size_t _size_ch1,const void *_buffer_ch2, size_t _size_ch2)
 {
-    return m_StreamingManager->passBuffers(_lostRate,_oscRate, _adc_mode,_adc_bits, _buffer_ch1,_size_ch1,_buffer_ch2,_size_ch2,m_Resolution, 0);
+    return m_StreamingManager->passBuffers(_lostRate,_oscRate, _adc_mode,_adc_bits, _buffer_ch1,_size_ch1,_buffer_ch2,_size_ch2,m_Resolution, 0,m_channels);
 }
 
 

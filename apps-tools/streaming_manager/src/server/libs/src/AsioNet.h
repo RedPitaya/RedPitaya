@@ -61,7 +61,8 @@ namespace  asionet {
                 size_t _size_ch1 ,
                 const void *_ch2 ,
                 size_t _size_ch2 ,
-                size_t &_buffer_size );
+                size_t &_buffer_size,
+                int _channels);
 
         static void BuildPack(
                 CAsioSocket::send_buffer buffer ,
@@ -75,7 +76,8 @@ namespace  asionet {
                 size_t _size_ch1 ,
                 const void  *_ch2 ,
                 size_t _size_ch2 ,
-                size_t &_buffer_size);
+                size_t &_buffer_size,
+                int _channels);
 
         static bool     ExtractPack(
                 CAsioSocket::send_buffer _buffer ,
@@ -89,7 +91,8 @@ namespace  asionet {
                 CAsioSocket::send_buffer &_ch1 ,
                 size_t &_size_ch1 ,
                 CAsioSocket::send_buffer  &_ch2 ,
-                size_t &_size_ch2);
+                size_t &_size_ch2,
+                int &_channels);
 
     private:
 

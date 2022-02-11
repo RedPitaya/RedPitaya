@@ -11,7 +11,7 @@ namespace {
     {
 
 #ifdef ARCH_ARM
-        if ((n & 63) || n < 64){
+        if ((n % 64) || n < 64){
             memcpy((void*)dst,(void*)src,n);
             //std::cout << "Warning: Non-optimal neon copy\n";
             return;
@@ -32,7 +32,7 @@ namespace {
     static void memcpy_stride_8bit_neon(volatile void *dst, volatile const void *src, size_t n) noexcept
     {
 #ifdef ARCH_ARM
-        if (n & 63) {
+        if (n % 64) {
             memcpy((void*)dst,(void*)src,n);
             //std::cout << "Warning: Non-optimal neon copy\n";
         return;

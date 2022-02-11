@@ -569,6 +569,7 @@ auto stopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,std::list<std::
             return false;
         }
     }
+    cl->removeHadlers();
     return true;
 }
 

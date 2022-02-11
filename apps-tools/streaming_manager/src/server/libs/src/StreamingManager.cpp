@@ -5,6 +5,7 @@
 #include <functional>
 #include <cstdlib>
 #include "StreamingManager.h"
+#include "stream_settings.h"
 
 #ifdef _WIN32
 #include <dir.h>
@@ -282,7 +283,7 @@ auto CStreamingManager::getFileLost() -> uint64_t{
 }
 
 
-int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id){
+int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id,int _channels){
 
 
    // ASIO_ASSERT(!(_size_ch1 != _size_ch2 && _size_ch1 != 0 && _size_ch2 != 0));
@@ -322,17 +323,20 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
         if (m_volt_mode) byte_per_sample = 4; // FLOAT TYPE
         uint32_t lostSize = _lostRate * byte_per_sample;
 
-        if (_size_ch1 + _size_ch2  + lostSize> 0){
+        auto ch1_enable = (_channels == CStreamSettings::CH1 || _channels == CStreamSettings::BOTH);
+        auto ch2_enable = (_channels == CStreamSettings::CH2 || _channels == CStreamSettings::BOTH);
+        
+        if (_size_ch1 + _size_ch2  + lostSize > 0){
             
             if (m_fileType == TDMS_TYPE){
                 // _adc_mode = 0 for 1:1 and 1 for 1:20 mode 
-                if (_size_ch1 > 0 || lostSize > 0){ 
+                if (_size_ch1 > 0 || (lostSize > 0 && ch1_enable)){ 
                     buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
                     memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
                 }
 
-                if (_size_ch2 > 0 || lostSize > 0){ 
+                if (_size_ch2 > 0 || (lostSize > 0 && ch2_enable)){ 
                     buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                     memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
@@ -371,13 +375,13 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                 uint64_t saveLostSize = 0;
                 uint64_t saveSize = (ZERO_BUFFER_SIZE < lostSize ? ZERO_BUFFER_SIZE : lostSize);
                 while(((saveLostSize + saveSize) <= lostSize) && (saveSize > 0)){
-                    auto stream_data = m_waveWriter->BuildWAVStream(m_zeroBuffer, saveSize, m_zeroBuffer, saveSize, byte_per_sample * 8);
+                    auto stream_data = m_waveWriter->BuildWAVStream(ch1_enable ? m_zeroBuffer : nullptr, ch1_enable ? saveSize : 0, ch2_enable ? m_zeroBuffer : nullptr, ch2_enable ? saveSize : 0, byte_per_sample * 8);
                     if (!m_file_manager->AddBufferToWrite(stream_data))
                     {
                         m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
                     }
                     saveLostSize += saveSize;
-                    if ((saveLostSize + saveSize) > lostSize){
+                    if ((saveLostSize + saveSize) >= lostSize){
                         saveSize = lostSize - saveLostSize;
                     }
                 }
@@ -444,7 +448,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                                                                 (_size_ch1 == 0 ? 0 : split_size),
                                                                 (&*buff_ch2 + frame_offset),
                                                                 (_size_ch2 == 0 ? 0 : split_size),
-                                                                new_buff_size);
+                                                                new_buff_size,_channels);
 
                     ++m_ReadyToPass;
                     
@@ -461,7 +465,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                                                                     0,
                                                                     nullptr,
                                                                     0,
-                                                                    new_buff_size);
+                                                                    new_buff_size,_channels);
                     ++m_ReadyToPass;    
                     if (!m_asionet->SendData(false, buffer, new_buff_size)) {
                         m_ReadyToPass--;
