@@ -225,15 +225,9 @@ void COscilloscope::prepare()
         std::cerr << "Error: COscilloscope::prepare()  can't init first channel" << std::endl;
         exit(-1);
     }
-<<<<<<< HEAD
-    //setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,m_isMaster ? UINT32_C(0x0000021E) : UINT32_C(0x0000011E));
-    setRegister(m_OscMap,&(m_OscMap->dma_ctrl) , UINT32_C(0x0000021E) );
-    setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
-
-=======
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl) , UINT32_C(0x0000021E));
     setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000002));
->>>>>>> 2ae993e07b902e6113666627bf21a47fab729564
+
     if (m_isMaster){
         setRegister(m_OscMap,&(m_OscMap->dma_ctrl) ,UINT32_C(0x00000001));
     }
