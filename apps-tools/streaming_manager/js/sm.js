@@ -364,6 +364,15 @@
         if (val > SM.ss_max_rate)
             val = SM.ss_max_rate;
         SM.ss_rate = Math.round(SM.ss_full_rate / val);
+        if (SM.ss_rate >= 65536){
+            SM.ss_rate = 65536;
+        }
+        if (SM.ss_rate == 3){
+            SM.ss_rate = 4;
+        }
+        if (SM.ss_rate >= 5 && SM.ss_rate <= 7){
+            SM.ss_rate = 8;
+        }
         return SM.ss_rate;
     }
 
