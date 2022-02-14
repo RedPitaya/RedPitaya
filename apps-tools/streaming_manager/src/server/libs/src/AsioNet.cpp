@@ -32,7 +32,7 @@ namespace  asionet {
         prefix_lenght += sizeof(int32_t);     // channels (4 byte)
 
         size_t  buffer_size = prefix_lenght + _size_ch1 + _size_ch2;
-//        printf("buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
+        // fprintf(stderr,"buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
         auto buffer = new uint8_t[buffer_size];
         memcpy(buffer,ID_PACK,16);
         ((uint64_t*)buffer)[2] = _id;
@@ -139,7 +139,7 @@ namespace  asionet {
             _adc_bits = ((uint32_t*)_buffer)[14];
             _channels = ((uint32_t*)_buffer)[15];
 
-            uint16_t prefix = 60;
+            uint16_t prefix = 64;
 
             if (_size_ch1 > 0) {
                 _ch1 = new uint8_t[_size_ch1];
