@@ -222,6 +222,7 @@ try{
             m_size_ch2 = 0;
             overFlow = this->passCh(0,m_size_ch1,m_size_ch2);
             if (overFlow > 0) {
+		overFlow += 2;
                 m_lostRate += overFlow;
                 // ++passCounter;
             }
