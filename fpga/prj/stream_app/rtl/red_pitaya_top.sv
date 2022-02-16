@@ -72,6 +72,7 @@ module red_pitaya_top #(
 
 // PLL signals
 logic                 adc_clk_in;
+logic                 adc_clk_daisy;
 logic                 pll_adc_clk;
 logic                 pll_dac_clk_1x;
 logic                 pll_dac_clk_2x;
@@ -87,7 +88,7 @@ logic                    dac_rst;
 logic        [16-1:0] dac_dat_a, dac_dat_b;
 
 `ifdef SLAVE
-wire adc_clk_out = adc_clk_in;
+wire adc_clk_out = adc_clk_daisy;
 `else
 wire adc_clk_out = 1'b0;
 `endif
@@ -148,6 +149,7 @@ assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1][15:2]    : dac_dat_b
                     //(loopback_sel_ch2 == 'h1 ? dac_dat_b             :
                     //                          {3'h0, exp_n_io, 3'h0} );
 
+assign adc_cdcs_o = 1'b1 ;
 ////////////////////////////////////////////////////////////////////////////////
 // DAC IO
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,16 +201,23 @@ OBUFDS #(.IOSTANDARD ("DIFF_HSTL18_I"), .SLEW ("FAST")) i_OBUF_clk
 (
   .O  ( daisy_p_o[1]  ),
   .OB ( daisy_n_o[1]  ),
-  .I  ( adc_clk_in    )
+  .I  ( adc_clk_daisy )
+);
+
+IBUFDS #() i_IBUF_clkadc
+(
+  .I  ( adc_clk_i[1]  ),
+  .IB ( adc_clk_i[0]  ),
+  .O  ( adc_clk_in    )
 );
 
 `ifdef SLAVE
 
-IBUFDS #() i_IBUF_clk
+IBUFDS #() i_IBUF_clkdaisy
 (
   .I  ( daisy_p_i[1]  ),
   .IB ( daisy_n_i[1]  ),
-  .O  ( adc_clk_in    )
+  .O  ( adc_clk_daisy )
 );
 
 IBUFDS #() i_IBUFDS_trig
@@ -235,13 +244,6 @@ begin
 end
 assign trig_ext_syncd = trig_ext_sync2;
 
-
-IBUFDS #() i_IBUF_clk
-(
-  .I  ( adc_clk_i[1]  ),
-  .IB ( adc_clk_i[0]  ),
-  .O  ( adc_clk_in    )
-);
 
 //assign trig_ext = gpio.i[8];
 
