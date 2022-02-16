@@ -45,8 +45,7 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void;
 void setConfig(bool _force);
 void updateUI();
 
-static std::mutex mut;
-static pthread_mutex_t mutex;
+static std::mutex g_adc_mutex;
 static constexpr char config_file[] = "/root/.streaming_config";
 
 #define SS_TCP		1
@@ -708,24 +707,9 @@ void StartServer(bool testMode){
 	// Search oscilloscope
 
 	try{
+		std::lock_guard<std::mutex> guard(g_adc_mutex);
 		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
 		if (!settings.isSetted()) return;
-		// if (g_serverRun) {
-		// 	if (s_manger){
-		// 		if (!s_manger->isLocalMode()){
-		// 			if (s_manger->getProtocol() == asionet::Protocol::TCP){
-		// 				g_serverNetConfig->sendServerStartedTCP();
-		// 			}
-		// 			if (s_manger->getProtocol() == asionet::Protocol::UDP){
-		// 				g_serverNetConfig->sendServerStartedUDP();
-		// 			}
-		// 		}else{
-		// 			g_serverNetConfig->sendServerStartedSD();
-		// 		}
-		// 	}
-		// 	return;
-		// }
-		// g_serverRun = true;
 
 		auto resolution   = settings.getResolution();
 		auto format       = settings.getFormat();
@@ -851,7 +835,8 @@ void StartServer(bool testMode){
 				#endif
 				#ifdef STREAMING_SLAVE
 					auto isMaster = false;
-				#endif 
+				#endif
+				fprintf(stderr,"COscilloscope::Create\n");
 				osc = COscilloscope::Create(uio, (channel == CStreamSettings::CH1 || channel == CStreamSettings::BOTH), (channel == CStreamSettings::CH2 || channel == CStreamSettings::BOTH), rate,isMaster);
 				osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
 				osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
@@ -863,6 +848,7 @@ void StartServer(bool testMode){
 
 
 		if (use_file == CStreamSettings::NET) {
+			fprintf(stderr,"CStreamingManager::Create\n");
 			s_manger = CStreamingManager::Create(
 					ip_addr_host,
 					sock_port,
@@ -871,6 +857,7 @@ void StartServer(bool testMode){
 			auto file_type = Stream_FileType::WAV_TYPE;
 			if (format == CStreamSettings::TDMS) file_type = Stream_FileType::TDMS_TYPE;
 			if (format == CStreamSettings::CSV)  file_type = Stream_FileType::CSV_TYPE;
+
 			s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT,testMode);
 			s_manger->notifyStop = [](int status)
 								{
@@ -880,6 +867,7 @@ void StartServer(bool testMode){
 
 
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
+		fprintf(stderr,"CStreamingApplication::Create\n");
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
 		s_app->setTestMode(testMode);
 		ss_status.SendValue(1);
@@ -943,6 +931,7 @@ void StopNonBlocking(int x){
 
 void StopServer(int x){
 	try{
+		std::lock_guard<std::mutex> guard(g_adc_mutex);
 		if (s_app!= nullptr)
 		{
 			s_app->stop();
