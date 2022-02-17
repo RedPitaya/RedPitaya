@@ -105,7 +105,7 @@ reg                       buf2_ovr;
 reg                       data_valid_reg;
 reg  [31:0]               buf1_missed_samp;
 reg  [31:0]               buf2_missed_samp;
-reg  [3:0]                fifo_rst_cnt;
+reg  [4:0]                fifo_rst_cnt;
 wire [7:0]                fifo_wr_data; 
 wire                      fifo_wr_we;
 wire [7:0]                fifo_rd_data;
@@ -255,8 +255,11 @@ begin
     FIFO_RST: begin
       if (reg_ctrl[CTRL_RESET])
         state_ns <= IDLE;
-      else if (fifo_rst_cnt == 15) begin
-        state_ns = WAIT_DATA_RDY;
+      else if (fifo_rst_cnt == 31) begin
+        if (next_buf_full)
+          state_ns = WAIT_BUF_FULL;
+        else
+          state_ns = WAIT_DATA_RDY;
       end
     end
     
@@ -277,7 +280,7 @@ begin
           state_ns <= IDLE;
         else if (transf_end) begin
           if (next_buf_full) // if next transfer results in overwriting the buffer, wait until the buffer is completely read out.
-           state_ns = WAIT_BUF_FULL;
+           state_ns = FIFO_RST; // first reset the FIFO, then wait. That way, we don't have to wait for the FIFO to finish its reset. 
           else if (req_xfer_last == 1) begin // Test for the last transfer
             state_ns = WAIT_DATA_DONE;   
           end else begin
@@ -300,7 +303,7 @@ begin
       if (reg_ctrl[CTRL_RESET])
           state_ns <= IDLE;
       else if (~next_buf_full) begin // if next buffer is full, then wait
-        state_ns = FIFO_RST; // go back to filling FIFOs
+        state_ns = WAIT_DATA_RDY; // go back to filling FIFOs
       end
     end
 
@@ -330,12 +333,12 @@ begin
       end
       
       // Buf 1 ACK
-      if (reg_ctrl[CTRL_BUF1_ACK]) begin
+      if (reg_ctrl[CTRL_BUF1_ACK] & state_cs != FIFO_RST) begin
         reg_ctrl[CTRL_BUF1_ACK] <= 0;
       end
 
       // Buf 2 ACK
-      if (reg_ctrl[CTRL_BUF2_ACK]) begin
+      if (reg_ctrl[CTRL_BUF2_ACK] & state_cs != FIFO_RST) begin
         reg_ctrl[CTRL_BUF2_ACK] <= 0;
       end   
       
@@ -383,14 +386,14 @@ end
 always @(posedge m_axi_aclk)
 begin
   case (state_cs)
-    WAIT_BUF_FULL: begin
-      if (~next_buf_full) begin // if next buffer is full, then wait
+    SEND_DMA_REQ: begin
+      if (full_immed) begin // if next buffer is full, then wait
         fifo_rst_cntdwn <= 1'b1; // go back to filling FIFOs
       end
     end
 
     FIFO_RST: begin
-      if (fifo_rst_cnt == 15) begin
+      if (fifo_rst_cnt == 31) begin
         fifo_rst_cntdwn <= 1'b0;
       end
       if (reg_ctrl[CTRL_RESET])
@@ -412,18 +415,18 @@ end
 always @(posedge m_axi_aclk)
 begin
   case (state_cs)
+    IDLE: begin
+        fifo_dis <= 1'b0; // disable signal
+      end
+
     SEND_DMA_REQ: begin
       if (full_immed)
         fifo_dis <= 1'b1;
       end
       
     WAIT_BUF_FULL: begin
-        fifo_dis <= 1'b1; // disable signal
+        fifo_dis <= next_buf_full; // disable signal
       end
-    
-    default: begin
-        fifo_dis <= 1'b0;
-      end        
   endcase
 end  
 

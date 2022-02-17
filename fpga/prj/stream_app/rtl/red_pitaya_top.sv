@@ -240,7 +240,8 @@ IBUFDS #() i_IBUFDS_trig
   .O  ( trig_ext)
 );
 
-assign adc_clk_daisy = adc_clk_in;
+//assign adc_clk_daisy = adc_clk_in;
+assign adc_clk_daisy = clk_125;
 
 always @(posedge clk_125) //sync external trigger from external master to local clock
 begin
