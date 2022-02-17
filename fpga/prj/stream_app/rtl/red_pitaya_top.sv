@@ -85,7 +85,7 @@ logic                    dac_clk_2x;
 logic                    dac_clk_2p;
 logic                    dac_rst;
 
-logic        [16-1:0] dac_dat_a, dac_dat_b;
+logic        [14-1:0] dac_dat_a, dac_dat_b;
 
 `ifdef SLAVE
 wire adc_clk_out = adc_clk_daisy;
@@ -136,16 +136,19 @@ dac_rst  <= ~rstn_0 | ~pll_locked;
 
 wire [ 4-1:0] loopback_sel_ch2,loopback_sel_ch1;
 wire [14-1:0] adc_dat_ch1, adc_dat_ch2;
-wire [14-1:0] dac_dat_a_o, dac_dat_b_o;
+reg  [14-1:0] dac_dat_a_o, dac_dat_b_o;
 
-assign dac_dat_a_o = {dac_dat_a[16-1], ~dac_dat_a[16-2:2]}; // inversion for DAC input
-assign dac_dat_b_o = {dac_dat_b[16-1], ~dac_dat_b[16-2:2]};
+always @(posedge dac_clk_1x)
+begin
+  dac_dat_a_o <= {dac_dat_a[14-1], ~dac_dat_a[14-2:0]};
+  dac_dat_b_o <= {dac_dat_b[14-1], ~dac_dat_b[14-2:0]};
+end
 
-assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0][15:2]    : dac_dat_a[15:2];
+assign adc_dat_ch1 = loopback_sel_ch1 == 'h0 ? adc_dat_i[0][15:2]    : dac_dat_a;
                    // (loopback_sel_ch1 == 'h1 ? dac_dat_a             :
                    //                           {3'h0, exp_p_io, 3'h0} );
 
-assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1][15:2]    : dac_dat_b[15:2];
+assign adc_dat_ch2 = loopback_sel_ch2 == 'h0 ? adc_dat_i[1][15:2]    : dac_dat_b;
                     //(loopback_sel_ch2 == 'h1 ? dac_dat_b             :
                     //                          {3'h0, exp_n_io, 3'h0} );
 
@@ -236,6 +239,8 @@ IBUFDS #() i_IBUFDS_trig
   .IB ( daisy_n_i[0]  ),
   .O  ( trig_ext)
 );
+
+assign adc_clk_daisy = adc_clk_in;
 
 always @(posedge clk_125) //sync external trigger from external master to local clock
 begin
