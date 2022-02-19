@@ -124,7 +124,7 @@ int rp_SPI_SetDefaultSettings(){
     return spi_SetDefaultSettings();
 }
 
-int rp_SPI_GetSetings(){
+int rp_SPI_GetSettings(){
     return spi_GetSettings();
 }
 
@@ -176,11 +176,39 @@ int rp_SPI_SetWordLen(int len){
     return spi_SetWordLen(len);
 }
 
-int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length){
-    return spi_ReadWrite(tx_buffer,rx_buffer,length);
+int rp_SPI_ReadWrite(){
+    return spi_ReadWrite();
 }
 
-int rp_I2C_InitDevice(char *_device,uint8_t addr){
+int rp_SPI_CreateMessage(size_t len){
+    return spi_CreateMessage(len);
+}
+
+int rp_SPI_GetMessageLen(size_t *len){
+    return spi_GetMessageLen(len);
+}
+
+int rp_SPI_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+    return spi_GetRxBuffer(msg,buffer,len);    
+}
+
+int rp_SPI_GetTxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+    return spi_GetTxBuffer(msg,buffer,len);
+}
+
+int rp_SPI_GetCSChangeState(size_t msg,bool *cs_change){
+    return spi_GetCSChangeState(msg,cs_change);
+}
+
+int rp_SPI_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
+    return spi_SetBufferForMessage(msg,tx_buffer,init_rx_buffer,len,cs_change);
+}
+
+int rp_SPI_DestoryMessage(){
+    return spi_DestoryMessage();
+}
+
+int rp_I2C_InitDevice(const char *_device,uint8_t addr){
     return i2c_InitDevice(_device,addr);
 }
 
@@ -198,34 +226,42 @@ int rp_I2C_getDevAddress(int *address){
     return RP_HW_OK;
 }
 
-int rp_I2C_Read(uint8_t reg,uint8_t *value){
-    return i2c_Read(reg,value);
+int rp_I2C_SMBUS_Read(uint8_t reg,uint8_t *value){
+    return i2c_SMBUS_Read(reg,value);
 }
 
-int rp_I2C_ReadWord(uint8_t reg,uint16_t *value){
-    return i2c_ReadWord(reg,value);
+int rp_I2C_SMBUS_ReadWord(uint8_t reg,uint16_t *value){
+    return i2c_SMBUS_ReadWord(reg,value);
 }
 
-int rp_I2C_ReadCommand(uint8_t *value){
-    return i2c_ReadCommand(value);
+int rp_I2C_SMBUS_ReadCommand(uint8_t *value){
+    return i2c_SMBUS_ReadCommand(value);
 }
 
-int rp_I2C_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len){
-    return i2c_ReadBuffer(reg,buffer,len);
+int rp_I2C_SMBUS_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len){
+    return i2c_SMBUS_ReadBuffer(reg,buffer,len);
 }
 
-int rp_I2C_Write(uint8_t reg,uint8_t value){
-    return i2c_Write(reg,value);
+int rp_I2C_SMBUS_Write(uint8_t reg,uint8_t value){
+    return i2c_SMBUS_Write(reg,value);
 }
 
-int rp_I2C_WriteWord(uint8_t reg,uint16_t value){
-    return i2c_WriteWord(reg,value);
+int rp_I2C_SMBUS_WriteWord(uint8_t reg,uint16_t value){
+    return i2c_SMBUS_WriteWord(reg,value);
 }
 
-int rp_I2C_WriteCommand(uint8_t value){
-    return i2c_WriteCommand(value);
+int rp_I2C_SMBUS_WriteCommand(uint8_t value){
+    return i2c_SMBUS_WriteCommand(value);
 }
 
-int rp_I2C_WriteBuffer(uint8_t reg, uint8_t *buffer, int len){
-    return rp_I2C_WriteBuffer(reg,buffer,len);
+int rp_I2C_SMBUS_WriteBuffer(uint8_t reg, uint8_t *buffer, int len){
+    return i2c_SMBUS_WriteBuffer(reg,buffer,len);
+}
+
+int rp_I2C_IOCTL_ReadBuffer(uint8_t *buffer, int len){
+    return i2c_IOCTL_ReadBuffer(buffer,len);
+}
+
+int rp_I2C_IOCTL_WriteBuffer(uint8_t *buffer, int len){
+    return i2c_IOCTL_WriteBuffer(buffer,len);
 }

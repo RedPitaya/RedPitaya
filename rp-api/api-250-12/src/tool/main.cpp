@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
             printf("Error parse register.\n");
             UsingArgs(argv[0]);
         }
-        char read_val = 0;
+        uint8_t read_val = 0;
         if (rp_i2c::rp_read_from_i2c(I2C_DEVICE,addr,reg,read_val,force_mode)){
             printf("ERROR read i2c from %s addr: 0x%.2x\treg: 0x%.2x\n",I2C_DEVICE,addr,reg);
             return -1;

@@ -22,6 +22,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -30,6 +31,8 @@ extern "C" {
 
 /** Success */
 #define RP_HW_OK     0
+/** Bad alloc */
+#define RP_HW_EAL    13
 /** Timeout read from uart */
 #define RP_HW_EUTO   14
 /** Invalid parameter value */
@@ -54,6 +57,10 @@ extern "C" {
 #define RP_HW_ESSS   42
 /** Failed SPI read/write */
 #define RP_HW_EST    43
+/** Failed SPI message not init */
+#define RP_HW_ESMI   44
+/** Failed index SPI message out of range */
+#define RP_HW_ESMO   45
 /** Failed to init I2C */
 #define RP_HW_EIIIC  60
 /** Failed to read from I2C */
@@ -64,6 +71,7 @@ extern "C" {
 #define RP_HW_ESIIC  63
 /** Failed I2C. Buffer is NULL */
 #define RP_HW_EBIIC  64
+
 
 ///@}
 
@@ -114,7 +122,7 @@ typedef enum {
 
 typedef enum {
     RP_SPI_ORDER_BIT_MSB = 0,    //!< MSB first
-    RP_SPI_ORDER_BIT_LSB =1      //!< LSB first
+    RP_SPI_ORDER_BIT_LSB =1      //!< LSB first (Not supported)
 } rp_spi_order_bit_t;
 
 /**
@@ -123,8 +131,9 @@ typedef enum {
 
 typedef enum {
     RP_SPI_STATE_NOT   = 0,  //!< Not ready
-    RP_SPI_STATE_READY = 1   //!< Ready state bit setted
+    RP_SPI_STATE_READY = 1   //!< Ready state bit setted (Not supported)
 } rp_spi_state_t;
+
 
 /** @name General
  */
@@ -342,6 +351,70 @@ int rp_SPI_SetSettings();
 int rp_SPI_Release();
 
 /**
+ * Creates a message batch in the internal buffer for SPI exchange
+ * @param len Number of messages in a batch
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_SPI_CreateMessage(size_t len);
+
+/**
+ * Gets the current number of messages
+ * @param len Return number of messages in a batch
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_SPI_GetMessageLen(size_t *len);
+
+/**
+ * Gets a read buffer from the specified messages
+ * @param msg Index of msg. Must be less than message length
+ * @param buffer Pointer to the data buffer to read. If the buffer was not set in the current message, then the pointer is equal to zero
+ * @param len Returns the length of the buffer
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_SPI_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len);
+
+/**
+ * Gets a write buffer from the specified messages
+ * @param msg Index of msg. Must be less than message length
+ * @param buffer Pointer to the data buffer to write. If the buffer was not set in the current message, then the pointer is equal to zero
+ * @param len Returns the length of the buffer
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_SPI_GetTxBuffer(size_t msg,uint8_t **buffer,size_t *len);
+
+/**
+ * Returns chip select reset states. If the value is not set, then within the transmission of the message packet, the state of the chip selection will not be reset.
+ * @param msg Index of msg. Must be less than message length
+ * @param cs_change Returns the chip select state
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_SPI_GetCSChangeState(size_t msg,bool *cs_change);
+
+/**
+ * Sets the data for the message.
+ * @param msg Index of msg. Must be less than message length
+ * @param tx_buffer Buffer to send a message. If nothing is sent within this message, then the buffer should be NULL
+ * @param init_rx_buffer Initializes a buffer for reading the specified length in the len parameter
+ * @param len The length of the buffer for reading and writing, if a buffer for writing is specified, then the buffer for reading will be initialized with the same length.
+ * @param cs_change Sets the ability to reset the chip selection between messages. Default value should be false
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_SPI_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change);
+
+/**
+ * Deletes messages from the internal buffer
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_SPI_DestoryMessage();
+
+/**
 * Get mode of the SPI.
 * @param mode mode:
 * RP_SPI_MODE_LISL = 0 - Low idle level, Sample on leading edge
@@ -432,13 +505,10 @@ int rp_SPI_SetWordLen(int len);
 
 /**
 * Writes or reads data from the SPI interface.
-* @param tx_buffer Buffer for sending data. Can be NULL value
-* @param rx_buffer Buffer for receiving data. Can be NULL value
-* @param length Buffers length. (RX and TX buffers must be the same length)
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length);
+int rp_SPI_ReadWrite();
 
 
 /**
@@ -448,7 +518,7 @@ int rp_SPI_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_InitDevice(char *device,uint8_t addr);
+int rp_I2C_InitDevice(const char *device,uint8_t addr);
 
 /**
  * Enables forced bus operation even if the device is in use.
@@ -481,7 +551,7 @@ int rp_I2C_getDevAddress(int * address);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_Read(uint8_t reg,uint8_t *value);
+int rp_I2C_SMBUS_Read(uint8_t reg,uint8_t *value);
 
 /**
  * Read word from I2C. Used smbus.
@@ -490,7 +560,7 @@ int rp_I2C_Read(uint8_t reg,uint8_t *value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_ReadWord(uint8_t reg,uint16_t *value);
+int rp_I2C_SMBUS_ReadWord(uint8_t reg,uint16_t *value);
 
 /**
  * Read command from I2C. Used smbus.
@@ -498,7 +568,7 @@ int rp_I2C_ReadWord(uint8_t reg,uint16_t *value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_ReadCommand(uint8_t *value);
+int rp_I2C_SMBUS_ReadCommand(uint8_t *value);
 
 /**
  * Read buffer from I2C. Used smbus.
@@ -508,7 +578,7 @@ int rp_I2C_ReadCommand(uint8_t *value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len);
+int rp_I2C_SMBUS_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len);
 
 /**
  * Write byte to I2C. Used smbus.
@@ -517,7 +587,7 @@ int rp_I2C_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_Write(uint8_t reg,uint8_t value);
+int rp_I2C_SMBUS_Write(uint8_t reg,uint8_t value);
 
 /**
  * Write word to I2C. Used smbus.
@@ -526,7 +596,7 @@ int rp_I2C_Write(uint8_t reg,uint8_t value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_WriteWord(uint8_t reg,uint16_t value);
+int rp_I2C_SMBUS_WriteWord(uint8_t reg,uint16_t value);
 
 /**
  * Write command to I2C. Used smbus.
@@ -534,7 +604,7 @@ int rp_I2C_WriteWord(uint8_t reg,uint16_t value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_WriteCommand(uint8_t value);
+int rp_I2C_SMBUS_WriteCommand(uint8_t value);
 
 /**
  * Write buffer to I2C. Used smbus.
@@ -544,7 +614,26 @@ int rp_I2C_WriteCommand(uint8_t value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_WriteBuffer(uint8_t reg, uint8_t *buffer, int len);
+int rp_I2C_SMBUS_WriteBuffer(uint8_t reg, uint8_t *buffer, int len);
+
+
+/**
+ * Read buffer from I2C. Used IOCTL.
+ * @param buffer Buffer pointer
+ * @param len Indicates how much data to read
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_IOCTL_ReadBuffer(uint8_t *buffer, int len);
+
+/**
+ * Write buffer to I2C. Used IOCTL.
+ * @param buffer Buffer pointer
+ * @param len buffer length
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+int rp_I2C_IOCTL_WriteBuffer(uint8_t *buffer, int len);
 
 #ifdef __cplusplus
 }

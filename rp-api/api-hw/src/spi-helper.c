@@ -3,6 +3,8 @@
 
 #include <linux/spi/spidev.h>
 #include <sys/ioctl.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "spi-helper.h"
 
@@ -76,24 +78,41 @@ int write_spi_configuration(int fd, spi_config_t *config)
 	return RP_HW_OK;
 }
 
-int read_write_spi_buffers(int fd, void *tx_buffer, void *rx_buffer, unsigned int length)
+int read_write_spi_buffers(int fd, spi_data_t *data)
 {
-	struct spi_ioc_transfer transfer = {
-		.tx_buf        = 0,
-		.rx_buf        = 0,
-		.len           = 0,
-		.delay_usecs   = 0,
-		.speed_hz      = 0,
-		.bits_per_word = 0,
-	};
+	// struct spi_ioc_transfer transfer = {
+	// 	.tx_buf        = 0,
+	// 	.rx_buf        = 0,
+	// 	.len           = 0,
+	// 	.delay_usecs   = 0,
+	// 	.speed_hz      = 0,
+	// 	.bits_per_word = 0,
+	// };
 
-	transfer.rx_buf = (unsigned long)rx_buffer;
-	transfer.tx_buf = (unsigned long)tx_buffer;
-	transfer.len = length;
+	if (!data) {
+		MSG("[Error] Message for SPI not init\n");
+		return RP_HW_ESMI;
+	}
 
-	if (ioctl(fd, SPI_IOC_MESSAGE(1), & transfer) < 0)
+	struct spi_ioc_transfer *messages = calloc(data->size, sizeof(struct spi_ioc_transfer));
+
+	if (!messages){
+		MSG("[Error] Can't allocate memory for spi_ioc_transfer\n");
+		return RP_HW_EAL;
+	}
+
+	for(size_t i = 0; i < data->size; i++){
+		memset(&messages[i], 0, sizeof (struct spi_ioc_transfer));
+		messages[i].rx_buf = (unsigned long)data->messages[i].rx_buffer;
+		messages[i].tx_buf = (unsigned long)data->messages[i].tx_buffer;
+		messages[i].len = data->messages[i].size;
+		messages[i].cs_change = (i == data->size - 1 || data->messages[i].cs_change ? 1 : 0);	
+	}
+
+	
+	if (ioctl(fd, SPI_IOC_MESSAGE(data->size), messages) < 0)
 		return RP_HW_EST;
 
-	printf("Read size %d\n",transfer.len);
+	// printf("Read size %d\n",transfer.len);
 	return RP_HW_OK;
 }

@@ -29,12 +29,25 @@ typedef struct spi_config {
 
 } spi_config_t;
 
+typedef struct spi_message {
+    uint8_t *rx_buffer;
+    uint8_t *tx_buffer;
+    size_t   size;
+    bool     cs_change;
+} spi_message_t;
+
+typedef struct spi_data {
+    spi_message_t *messages;
+    size_t         size;
+} spi_data_t;
+
+
 
 int read_spi_configuration(int fd, spi_config_t *config);
 
 int write_spi_configuration(int fd, spi_config_t *config);
 
-int read_write_spi_buffers(int fd, void *tx_buffer, void *rx_buffer, unsigned int length);
+int read_write_spi_buffers(int fd, spi_data_t *data);
 
 
 #endif

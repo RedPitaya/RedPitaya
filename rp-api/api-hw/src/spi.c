@@ -17,7 +17,9 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h> 
-
+#include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
 #include "spi.h"
 #include "spi-helper.h"
 
@@ -25,6 +27,8 @@ spi_config_t g_settings;
 
 /* File descriptor definition */
 int spi_fd = -1;
+spi_data_t *g_spi_data = NULL;
+pthread_mutex_t spi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int spi_Init(){
     return spi_InitDevice("/dev/spidev1.0");
@@ -36,6 +40,8 @@ int spi_InitDevice(char *_device){
             return RP_HW_EIS;
         }
     }
+    
+    spi_DestoryMessage();
 
     spi_fd = open(_device, O_RDONLY);
 
@@ -92,8 +98,146 @@ int spi_Release(){
         }
         spi_fd = -1;
     }
+    spi_DestoryMessage();
     return RP_HW_OK;
 }
+
+int spi_CreateMessage(size_t len){
+    spi_DestoryMessage();
+   	pthread_mutex_lock(&spi_mutex);
+    g_spi_data = malloc(sizeof(spi_data_t));
+    
+    if (!g_spi_data){
+		MSG("[Error] Can't allocate memory for spi_data_t\n");
+		return RP_HW_EAL;
+	}
+
+    g_spi_data->messages = calloc(len,sizeof(spi_message_t));
+    
+    if (!g_spi_data){
+		MSG("[Error] Can't allocate memory for spi_message_t\n");
+        free(g_spi_data);
+        g_spi_data = NULL;
+		return RP_HW_EAL;
+	}
+
+    g_spi_data->size = len;
+  	pthread_mutex_unlock(&spi_mutex);
+    return RP_HW_OK;
+}
+
+int spi_DestoryMessage(){
+    pthread_mutex_lock(&spi_mutex);
+    if (g_spi_data){
+        if(g_spi_data->messages){
+            for (size_t i = 0; i < g_spi_data->size; i++){
+                free(g_spi_data->messages[i].rx_buffer);
+                free(g_spi_data->messages[i].tx_buffer);
+            }
+        }
+        free(g_spi_data->messages);
+        g_spi_data = NULL;
+       	pthread_mutex_unlock(&spi_mutex);
+        return RP_HW_OK;
+    }
+	pthread_mutex_unlock(&spi_mutex);
+    return RP_HW_ESMI;
+}
+
+int spi_GetMessageLen(size_t *len){
+    pthread_mutex_lock(&spi_mutex);
+    if (g_spi_data){
+        *len = g_spi_data->size;
+    	pthread_mutex_unlock(&spi_mutex);
+        return RP_HW_OK;
+    }
+   	pthread_mutex_unlock(&spi_mutex);
+    return RP_HW_ESMI;
+}
+
+int spi_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+    pthread_mutex_lock(&spi_mutex);
+    if (g_spi_data){
+        if (g_spi_data->size <= msg){
+            pthread_mutex_unlock(&spi_mutex);
+            return RP_HW_ESMO;
+        }
+        *buffer = g_spi_data->messages[msg].rx_buffer;
+        *len   = g_spi_data->messages[msg].size;
+    	pthread_mutex_unlock(&spi_mutex);
+        return RP_HW_OK;
+    }
+   	pthread_mutex_unlock(&spi_mutex);
+    return RP_HW_ESMI;
+}
+
+int spi_GetTxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+    pthread_mutex_lock(&spi_mutex);
+    if (g_spi_data){
+        if (g_spi_data->size <= msg){
+            pthread_mutex_unlock(&spi_mutex);
+            return RP_HW_ESMO;
+        }
+        *buffer = g_spi_data->messages[msg].tx_buffer;
+        *len   = g_spi_data->messages[msg].size;
+    	pthread_mutex_unlock(&spi_mutex);
+        return RP_HW_OK;
+    }
+   	pthread_mutex_unlock(&spi_mutex);
+    return RP_HW_ESMI;
+}
+
+int spi_GetCSChangeState(size_t msg,bool *cs_change){
+    pthread_mutex_lock(&spi_mutex);
+    if (g_spi_data){
+        if (g_spi_data->size <= msg){
+            pthread_mutex_unlock(&spi_mutex);
+            return RP_HW_ESMO;
+        }
+        *cs_change = g_spi_data->messages[msg].cs_change;
+    	pthread_mutex_unlock(&spi_mutex);
+        return RP_HW_OK;
+    }
+   	pthread_mutex_unlock(&spi_mutex);
+    return RP_HW_ESMI;
+}
+
+int spi_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
+    pthread_mutex_lock(&spi_mutex);
+    if (g_spi_data){
+        if (g_spi_data->size <= msg){
+            pthread_mutex_unlock(&spi_mutex);
+            return RP_HW_ESMO;
+        }
+        g_spi_data->messages[msg].rx_buffer = 0;
+        if (init_rx_buffer) {
+            g_spi_data->messages[msg].rx_buffer = malloc(len);
+            if (!g_spi_data->messages[msg].rx_buffer){
+		        MSG("[Error] Can't allocate memory for rx_buffer\n");
+                pthread_mutex_unlock(&spi_mutex);
+	        	return RP_HW_EAL;
+    	    }
+            memset(g_spi_data->messages[msg].rx_buffer,0,len);
+        }
+        g_spi_data->messages[msg].tx_buffer = 0;
+        if (tx_buffer){
+            g_spi_data->messages[msg].tx_buffer = malloc(len);
+            if (!g_spi_data->messages[msg].tx_buffer){
+		        MSG("[Error] Can't allocate memory for tx_buffer\n");
+                pthread_mutex_unlock(&spi_mutex);
+	        	return RP_HW_EAL;
+    	    }
+            memcpy(g_spi_data->messages[msg].tx_buffer,tx_buffer,len);
+        }
+        g_spi_data->messages[msg].size = len;
+        g_spi_data->messages[msg].cs_change = cs_change;
+    	pthread_mutex_unlock(&spi_mutex);
+        return RP_HW_OK;
+    }
+   	pthread_mutex_unlock(&spi_mutex);
+    return RP_HW_ESMI;
+}
+
 
 int spi_GetMode(rp_spi_mode_t *mode){
     if(spi_fd == -1){
@@ -203,11 +347,13 @@ int spi_SetWordLen(int len){
     return RP_HW_OK;
 }
 
-int spi_ReadWrite(void *tx_buffer, void *rx_buffer, unsigned int length){
+int spi_ReadWrite(){
     if(spi_fd == -1){
         MSG("Failed SPI not init\n");
         return RP_HW_EIS;
     }
-
-    return read_write_spi_buffers(spi_fd,tx_buffer,rx_buffer,length);
+   	pthread_mutex_lock(&spi_mutex);
+    int res = read_write_spi_buffers(spi_fd,g_spi_data);
+  	pthread_mutex_unlock(&spi_mutex);
+    return res;
 }

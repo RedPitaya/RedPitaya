@@ -23,7 +23,7 @@ char    g_devicePath[DEV_PATH_LEN] = "/dev/i2c-0";
 bool    g_forceMode = false;
 int     g_addr = -1;
 
-int i2c_InitDevice(char *_device, uint8_t addr){
+int i2c_InitDevice(const char *_device, uint8_t addr){
 
     if (addr < 0x03 || addr > 0x77) {
         fprintf(stderr,"[rp_i2c] Device address out of range [0x03-0x77].\n");
@@ -54,66 +54,82 @@ int i2c_getDevAddress(){
 }
 
 
-int i2c_Read(uint8_t reg,uint8_t *value){
+int i2c_SMBUS_Read(uint8_t reg,uint8_t *value){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return read_from_i2c(g_devicePath,g_addr,reg,value,g_forceMode);
+    return i2c_SBMUS_read_byte(g_devicePath,g_addr,reg,value,g_forceMode);
 }
 
-int i2c_ReadWord(uint8_t reg,uint16_t *value){
+int i2c_SMBUS_ReadWord(uint8_t reg,uint16_t *value){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return read_from_i2c_word(g_devicePath,g_addr,reg,value,g_forceMode);
+    return i2c_SBMUS_read_word(g_devicePath,g_addr,reg,value,g_forceMode);
 }
 
-int i2c_ReadCommand(uint8_t *value){
+int i2c_SMBUS_ReadCommand(uint8_t *value){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return read_from_i2c_command(g_devicePath,g_addr,value,g_forceMode);
+    return i2c_SBMUS_read_command(g_devicePath,g_addr,value,g_forceMode);
 }
 
-int i2c_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len){
+int i2c_SMBUS_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return read_to_i2c_buffer(g_devicePath,g_addr,reg,buffer,len,g_forceMode);
+    return i2c_SBMUS_read_buffer(g_devicePath,g_addr,reg,buffer,len,g_forceMode);
 }
 
-int i2c_Write(uint8_t reg,uint8_t value){
+int i2c_SMBUS_Write(uint8_t reg,uint8_t value){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return write_to_i2c(g_devicePath,g_addr,reg,value,g_forceMode);
+    return i2c_SBMUS_write_byte(g_devicePath,g_addr,reg,value,g_forceMode);
 }
 
-int i2c_WriteWord(uint8_t reg,uint16_t value){
+int i2c_SMBUS_WriteWord(uint8_t reg,uint16_t value){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return write_to_i2c_word(g_devicePath,g_addr,reg,value,g_forceMode);
+    return i2c_SBMUS_write_word(g_devicePath,g_addr,reg,value,g_forceMode);
 }
 
-int i2c_WriteCommand(uint8_t value){
+int i2c_SMBUS_WriteCommand(uint8_t value){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return write_to_i2c_command(g_devicePath,g_addr,value,g_forceMode);
+    return i2c_SBMUS_write_command(g_devicePath,g_addr,value,g_forceMode);
 }
 
-int i2c_WriteBuffer(uint8_t reg, uint8_t *buffer, int len){
+int i2c_SMBUS_WriteBuffer(uint8_t reg, uint8_t *buffer, int len){
     if (g_addr < 0) {
         fprintf(stderr,"[rp_i2c] Device address not set.\n");
         return RP_HW_EIIIC;
     }
-    return write_to_i2c_buffer(g_devicePath,g_addr,reg,buffer,len,g_forceMode);
+    return i2c_SBMUS_write_buffer(g_devicePath,g_addr,reg,buffer,len,g_forceMode);
+}
+
+int  i2c_IOCTL_ReadBuffer(uint8_t *buffer, int len){
+    if (g_addr < 0) {
+        fprintf(stderr,"[rp_i2c] Device address not set.\n");
+        return RP_HW_EIIIC;
+    }
+    return i2c_IOCTL_read_buffer(g_devicePath,g_addr,buffer,len,g_forceMode);
+}
+
+int  i2c_IOCTL_WriteBuffer(uint8_t *buffer, int len){
+    if (g_addr < 0) {
+        fprintf(stderr,"[rp_i2c] Device address not set.\n");
+        return RP_HW_EIIIC;
+    }
+    return i2c_IOCTL_write_buffer(g_devicePath,g_addr,buffer,len,g_forceMode);
 }
