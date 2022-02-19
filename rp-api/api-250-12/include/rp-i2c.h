@@ -31,7 +31,7 @@ namespace rp_i2c {
     i2c_dev_node_path must be like "/dev/i2c-0"
     */
 
-    int rp_read_from_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value, bool force);
+    int rp_read_from_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, uint8_t &value, bool force);
 }
 
 #ifdef  __cplusplus

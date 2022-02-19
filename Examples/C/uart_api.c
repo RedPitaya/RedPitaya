@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rp.h"
+#include "rp_hw.h"
 
 
 int main(int argc, char *argv[]){
@@ -23,11 +23,16 @@ int main(int argc, char *argv[]){
     int size = 255;
 
     printf("Init result: %d\n",rp_UartInit());
-    printf("Set speed: %d\n",rp_UartSpeed(115200));
+    printf("Set timeout: %d\n",rp_UartSetTimeout(10));
+    
+    printf("Set speed: %d\n",rp_UartSetSpeed(115200));
     printf("Set CS8: %d\n",rp_UartSetBits(RP_UART_CS8));
     printf("Set Stop Bits 2: %d\n",rp_UartSetStopBits(RP_UART_STOP2));
     printf("Set Parity Mode: %d\n",rp_UartSetParityMode(RP_UART_MARK));
     
+    printf("Set settings: %d\n",rp_UartSetSettings());
+    
+
     printf("Write result: %d\n", rp_UartWrite((unsigned char*)buffer,strlen(buffer)));
     printf("Read result: %d\n",rp_UartRead((unsigned char*)rx_buf,&size));
     printf("Size: %d (%s)\n",size,rx_buf);

@@ -42,20 +42,20 @@ message(STATUS "Install path ${INSTALL_DIR}")
 
 include_directories("src/xml")
 include_directories("include")
+include_directories("include")
+include_directories(${INSTALL_DIR}/include)
 
-file(GLOB PR_XML_SOURCES "src/xml/*.cpp")  
+file(GLOB PR_XML_SOURCES "src/xml/*.cpp")
 
 file(GLOB PR_I2C_SOURCES "src/rp-i2c.cpp"
                          "src/rp-i2c-mcp47x6.cpp"
                          "src/rp-i2c-max7311.cpp"
                          "src/rp-i2c-mcp47x6-c.cpp"
-                         "src/rp-i2c-max7311-c.cpp"
-                         "src/i2c/i2c.cpp")    
+                         "src/rp-i2c-max7311-c.cpp")
 
 file(GLOB PR_SPI_SOURCES "src/rp-spi.cpp"
                          "src/spi/spi.cpp")
 
-                         
 
 file(GLOB PR_GPIO_SOURCES "src/rp-gpio-power.cpp"
                           "src/gpio/gpio.cpp")
@@ -65,6 +65,7 @@ file(GLOB RP_HEADERS "include/*.h")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options(-Wall -pedantic -Wextra -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+link_libraries(-L${INSTALL_DIR}/lib librp-hw.a)
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})
 add_library(${PROJECT_NAME}-i2c OBJECT ${PR_I2C_SOURCES})
@@ -76,17 +77,14 @@ if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-i2c-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-i2c-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-i2c)
     target_sources(${PROJECT_NAME}-i2c-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
-    target_link_options(${PROJECT_NAME}-i2c-shared PRIVATE -shared -Wl,--version-script=src/exportmap)
 
     add_library(${PROJECT_NAME}-spi-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-spi-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-spi)
     target_sources(${PROJECT_NAME}-spi-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-spi>)
-    target_link_options(${PROJECT_NAME}-spi-shared PRIVATE -shared -Wl,--version-script=src/exportmap)
 
     add_library(${PROJECT_NAME}-gpio-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-gpio-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-gpio)
     target_sources(${PROJECT_NAME}-gpio-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-gpio>)
-    target_link_options(${PROJECT_NAME}-gpio-shared PRIVATE -shared -Wl,--version-script=src/exportmap)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-i2c-shared

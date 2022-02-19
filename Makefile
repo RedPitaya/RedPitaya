@@ -98,7 +98,7 @@ librp2:
 	$(MAKE) -C $(LIBRP2_DIR)
 	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-librp250_12:
+librp250_12: librp_hw
 	cmake -B$(LIBRP250_12_DIR) -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
 	$(MAKE) -C $(LIBRP250_12_DIR) install
 

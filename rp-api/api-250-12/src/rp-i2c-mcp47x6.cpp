@@ -1,6 +1,9 @@
 #include "rp-i2c-mcp47x6.h"
-#include "i2c/i2c.h"
+#include "rp_hw.h"
 #include <iostream>
+#include <pthread.h>
+
+pthread_mutex_t g_mcp_i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 using namespace RP_MCP47X6;
 
@@ -34,8 +37,16 @@ mcp47x6::mcp47x6(mcp47x6_model model, const char* i2c_dev_path, uint8_t address)
 }
 
 bool mcp47x6::readConfig() {
+    pthread_mutex_lock(&g_mcp_i2c_mutex);
+    if (rp_I2C_InitDevice(m_i2c_dev_path,m_devAddr) != RP_HW_OK){
+		pthread_mutex_unlock(&g_mcp_i2c_mutex);
+        return false;
+    }
+    rp_I2C_setForceMode(true);
+
     unsigned char buff[8];
-    int size = read_to_i2c_buffer(m_i2c_dev_path,m_devAddr,0,buff,true);
+    int len = 8;
+    rp_I2C_SMBUS_ReadBuffer(0,buff,&len);
     //printf("size %d 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x \n",size,buff[0],buff[1],buff[2],buff[3],buff[4],buff[5]);    
     if (m_model == MCP4706){
         m_config = buff[0] & 0x1F;
@@ -57,7 +68,8 @@ bool mcp47x6::readConfig() {
             m_level_eeprom = (buff[4] << 8 | buff[5]) >> 4;
         }
     }
-    return (size >  0);
+	pthread_mutex_unlock(&g_mcp_i2c_mutex);
+    return (len >  0);
 }
 
 bool mcp47x6::writeConfig() {
@@ -79,6 +91,13 @@ bool mcp47x6::writeConfig() {
     // printf("level value 0x%.2x level 0x%.2x \n",command, data);
     // return (write_to_i2c_word(m_i2c_dev_path , m_devAddr , command, data) == 0);
     
+    pthread_mutex_lock(&g_mcp_i2c_mutex);
+    if (rp_I2C_InitDevice(m_i2c_dev_path,m_devAddr) != RP_HW_OK){
+		pthread_mutex_unlock(&g_mcp_i2c_mutex);
+        return false;
+    }
+    rp_I2C_setForceMode(true);
+
     bool state = true;
 
     char command = (m_config & ~MCP47X6_PWRDN_MASK) << 3; 
@@ -97,13 +116,21 @@ bool mcp47x6::writeConfig() {
         data    = 0xFF & m_level;
     }
 
-    state = (write_to_i2c(m_i2c_dev_path , m_devAddr , command, data,false) == 0) & state;
+    state = (rp_I2C_SMBUS_Write(command, data) == RP_HW_OK) & state;
     char value = (m_config & MCP47X6_CMD_MASK) | MCP47X6_CMD_VOLCONFIG;
-    state = (write_to_i2c_command(m_i2c_dev_path , m_devAddr , value,false) == 0) & state;
+    state = (rp_I2C_SMBUS_WriteCommand(value) == RP_HW_OK) & state;
+	pthread_mutex_unlock(&g_mcp_i2c_mutex);
     return state;
 }
 
 bool mcp47x6::writeConfigAll() {
+    pthread_mutex_lock(&g_mcp_i2c_mutex);
+    if (rp_I2C_InitDevice(m_i2c_dev_path,m_devAddr) != RP_HW_OK){
+		pthread_mutex_unlock(&g_mcp_i2c_mutex);
+        return false;
+    }
+    rp_I2C_setForceMode(true);
+
     char  command = (m_config | MCP47X6_CMD_ALL); 
     unsigned short data = 0;
     if (m_model == MCP4706){
@@ -119,7 +146,9 @@ bool mcp47x6::writeConfigAll() {
     }
 
     //printf("level value 0x%.2x level 0x%.2x \n",command, data);
-    return (write_to_i2c_word(m_i2c_dev_path , m_devAddr , command, data,false) == 0);
+    bool ret = (rp_I2C_SMBUS_WriteWord(command, data) == RP_HW_OK);
+    pthread_mutex_unlock(&g_mcp_i2c_mutex);
+    return ret;
 }
 
 /******************************************

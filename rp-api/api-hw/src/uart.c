@@ -19,11 +19,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <stdint.h>
 #include <termios.h>
 #include <errno.h>
 #include "uart.h"
 
+#define   VMINX          1
 
 /*  CONFIGURE THE UART
 *  The flags (defined in /usr/include/termios.h - see http://pubs.opengroup.org/onlinepubs/007908799/xsh/termios.h.html):
@@ -38,7 +40,15 @@
 
 struct termios g_settings;
 /* File descriptor definition */
-int uart_fd = -1;
+int     uart_fd = -1;
+int     g_timeout = 0;
+speed_t g_baud_rate = B9600;
+rp_uart_bits_size_t g_bit_size = RP_UART_CS8;
+rp_uart_parity_t    g_parity = RP_UART_NONE;
+rp_uart_stop_bits_t g_stop_bit = RP_UART_STOP1;
+
+int uart_GetSpeedType(int _speed);
+int uart_ConvertSpeed(int _speed);
 
 int uart_Init(){
     return uart_InitDevice("/dev/ttyPS1");
@@ -49,39 +59,111 @@ int uart_InitDevice(char *_device){
         uart_Release();
     }
 
-    uart_fd = open(_device, O_RDWR | O_NOCTTY | O_NDELAY);
+    uart_fd = open(_device, O_RDWR | O_NOCTTY);
 
     if(uart_fd == -1){
         fprintf(stderr, "Failed to open UART.\n");
         return RP_HW_EIU;
     }
-
+    
+    tcflush(uart_fd, TCIFLUSH);
+    tcflush(uart_fd, TCIOFLUSH);
+    
     tcgetattr(uart_fd, &g_settings);
-    return uart_SetDefaultSettings();
+    return uart_SetSettings();
 }
 
-int uart_SetDefaultSettings(){
+int uart_Timeout(uint8_t deca_sec){
+    g_timeout = deca_sec;
+    return RP_HW_OK;
+}
+
+uint8_t uart_GetTimeout(){
+    return g_timeout; 
+}
+
+int uart_SetSettings(){
     if (uart_fd != -1){
         /* Set baud rate - default set to 9600Hz */
-        speed_t baud_rate = B9600;
+
+
+        int mode = 0;
+        switch(g_bit_size){
+            case RP_UART_CS6: {
+                mode = CS6;
+                break;
+            }
+            case RP_UART_CS7: {
+                mode = CS7;
+                break;
+            }
+            case RP_UART_CS8: {
+                mode = CS8;
+                break;
+            }
+            default:
+                return RP_HW_ESU;
+        }
+
+        switch(g_parity){
+            case RP_UART_NONE: {
+                g_settings.c_cflag &= ~(PARENB | PARODD | CMSPAR);
+                break;
+            }
+            case RP_UART_EVEN: {
+                g_settings.c_cflag &= ~(PARODD  | CMSPAR);
+                g_settings.c_cflag |= PARENB;
+                break;
+            }
+            case RP_UART_ODD: {
+                g_settings.c_cflag &= ~CMSPAR;
+                g_settings.c_cflag |= PARENB | PARODD ;
+                break;
+            }
+            case RP_UART_SPACE: {
+                g_settings.c_cflag |= PARENB | PARODD | CMSPAR;
+                break;
+            }
+            case RP_UART_MARK: {
+                g_settings.c_cflag &= ~PARODD;
+                g_settings.c_cflag |= PARENB | CMSPAR;
+                break;
+            }
+
+            default:
+                return RP_HW_ESU;
+        }
+        
+        g_settings.c_cflag &= ~CSTOPB;
+        if (g_stop_bit == RP_UART_STOP2)
+            g_settings.c_cflag |= CSTOPB; /* 8 bits */
+
+        g_settings.c_cflag &= ~CSIZE;
+        g_settings.c_cflag |= mode | CLOCAL | CREAD; /* 8 bits */
+        g_settings.c_cflag &= ~CRTSCTS; // Disable flow control
+        g_settings.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
+        g_settings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode
+        g_settings.c_oflag &= ~OPOST; /* raw output */
+        
+        g_settings.c_lflag = 0;               //  enable raw input instead of canonical,
+        g_settings.c_cc[VMIN]  = 0;           // Read at least 1 character
+        g_settings.c_cc[VTIME] = g_timeout;          // Wait indefinetly
 
         /* Baud rate fuctions
         * cfsetospeed - Set output speed
         * cfsetispeed - Set input speed
         * cfsetspeed  - Set both output and input speed */
-
-        cfsetspeed(&g_settings, baud_rate);
-        g_settings.c_cflag &= ~PARENB; /* no parity */
-        g_settings.c_cflag &= ~CSTOPB; /* 1 stop bit */
-        g_settings.c_cflag &= ~CSIZE;
-        g_settings.c_cflag |= CS8 | CLOCAL; /* 8 bits */
-        g_settings.c_cflag &= ~CRTSCTS; // Disable flow control
-        g_settings.c_lflag &= ~ICANON; /* canonical mode */
-        g_settings.c_oflag &= ~OPOST; /* raw output */
+       
+        cfsetspeed(&g_settings, g_baud_rate);
 
         /* Setting attributes */
-        tcflush(uart_fd, TCIFLUSH);
         tcsetattr(uart_fd, TCSANOW, &g_settings);
+        
+        tcflush(uart_fd, TCIFLUSH);
+        tcflush(uart_fd, TCIOFLUSH);
+
+        usleep(500000);   // 0.5 sec delay
+        
         return RP_HW_OK;
     }else{
         fprintf(stderr, "Failed setup settings to UART.\n");
@@ -93,35 +175,35 @@ int uart_SetDefaultSettings(){
 int uart_read(unsigned char *_buffer,int *size){
 
     if (_buffer == NULL || *size <= 0){
-        fprintf(stderr, "Failed read from UART.\n");
+        fprintf(stderr, "Failed read from UART. Buffer is null\n");
         return RP_HW_EIPV;
     }
 
-    if (uart_fd != -1){
-        fcntl(uart_fd, F_SETFL, FNDELAY);
-
+    if (uart_fd != -1){        
         while(1){
             if(uart_fd == -1){
                 fprintf(stderr, "Failed to read from UART. UART is closed.\n");
                 return RP_HW_ERU;
             }
-
+            errno = 0;
             int rx_length = read(uart_fd, (void*)_buffer, *size);
-
             if (rx_length < 0){
-                /* No data yet avaliable, check again */
-                if(errno == EAGAIN){
-                    continue;
-                /* Error differs */
-                }else{
-                    fprintf(stderr, "Error read from UART. Errno: %d\n", errno);
+                 /* No data yet avaliable, check again */
+                 if(errno == EAGAIN){
+                     continue;
+                 /* Error differs */
+                 }else{
+                     fprintf(stderr, "Error read from UART. Errno: %d\n", errno);
                     return RP_HW_ERU;
                 }
-
+    
             }else if (rx_length == 0){
+                if (g_timeout){
+                    return RP_HW_EUTO;
+                }
                 // Nothing to do
             }else{
-                *size = rx_length;
+                 *size = rx_length;
                 /* Data get */
                 break;
             }
@@ -160,9 +242,6 @@ int uart_write(unsigned char *_buffer, int size){
         fprintf(stderr, "Failed write to UART.\n");
         return RP_HW_EWU;
     }
-
-   
-
     return 0;
 }
 
@@ -176,23 +255,41 @@ int uart_Release(){
 }
 
 int uart_SetSpeed(int _speed){
-    if(uart_fd == -1){
-        fprintf(stderr, "Failed to open UART.\n");
-        return RP_HW_EIU;
-    }
-   
-    if (cfsetspeed(&g_settings, uart_GetSpeedType(_speed))){
-        fprintf(stderr, "Error set speed for UART. Errno: %d\n", errno);
-        return RP_HW_ESU;
-    }
-
-    /* Setting attributes */
-    tcflush(uart_fd, TCIFLUSH);
-    if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
-        fprintf(stderr, "Error set speed for UART. Errno: %d\n", errno);
-        return RP_HW_ESU;
-    }
+    g_baud_rate = uart_GetSpeedType(_speed);
     return RP_HW_OK;
+}
+
+int uart_GetSpeed(){
+    return uart_ConvertSpeed(g_baud_rate);
+} 
+
+
+int uart_SetBits(rp_uart_bits_size_t _size){
+    g_bit_size = _size;
+    return RP_HW_OK;
+}
+
+rp_uart_bits_size_t uart_GetBits(){
+    return g_bit_size;
+}
+
+int uart_SetParityMode(rp_uart_parity_t mode){
+    g_parity = mode;
+    return RP_HW_OK;;
+}
+
+rp_uart_parity_t uart_GetParityMode(){
+    return g_parity;
+}
+
+
+int uart_SetStopBits(rp_uart_stop_bits_t mode){
+    g_stop_bit = mode;
+    return RP_HW_OK;
+}
+
+rp_uart_stop_bits_t uart_GetStopBits(){
+    return g_stop_bit;
 }
 
 
@@ -211,7 +308,7 @@ int uart_GetSpeedType(int _speed){
         case 115200: return B115200;
         case 230400: return B230400;
         case 576000: return B576000;
-        case 912600: return B921600;
+        case 921600: return B921600;
         case 1000000: return B1000000;
         case 1152000: return B1152000;
         case 1500000: return B1500000;
@@ -224,99 +321,27 @@ int uart_GetSpeedType(int _speed){
     return -1;
 }
 
-int uart_SetBits(rp_uart_bits_size_t _size){
-    if(uart_fd == -1){
-        fprintf(stderr, "Failed to open UART.\n");
-        return RP_HW_EIU;
+int uart_ConvertSpeed(int _speed){
+    switch(_speed){
+        case B1200: return 1200;
+        case B2400: return 2400;
+        case B4800: return 4800;
+        case B9600: return 9600;
+        case B19200: return 19200;
+        case B38400: return 38400;
+        case B57600: return 57600;
+        case B115200: return 115200;
+        case B230400: return 230400;
+        case B576000: return 576000;
+        case B921600: return 921600;
+        case B1000000: return 1000000;
+        case B1152000: return 1152000;
+        case B1500000: return 1500000;
+        case B2000000: return 2000000;
+        case B2500000: return 2500000;
+        case B3000000: return 3000000;
+        case B3500000: return 3500000;
+        case B4000000: return 4000000;
     }
-    int mode = 0;
-    switch(_size){
-        case RP_UART_CS6: {
-            mode = CS6;
-            break;
-        }
-        case RP_UART_CS7: {
-            mode = CS7;
-            break;
-        }
-        case RP_UART_CS8: {
-            mode = CS8;
-            break;
-        }
-        default:
-            return RP_HW_ESU;
-    }
-
-    g_settings.c_cflag &= ~CSIZE;
-    g_settings.c_cflag |= mode; /* 8 bits */
-    /* Setting attributes */
-    tcflush(uart_fd, TCIFLUSH);
-    if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
-        fprintf(stderr, "Error set BitsSize in UART. Errno: %d\n", errno);
-        return RP_HW_ESU;
-    }
-    return RP_HW_OK;
+    return -1;
 }
-
-int uart_SetParityMode(rp_uart_parity_t mode){
-    if(uart_fd == -1){
-        fprintf(stderr, "Failed to open UART.\n");
-        return RP_HW_EIU;
-    }
-
-    switch(mode){
-        case RP_UART_NONE: {
-            g_settings.c_cflag &= ~(PARENB | PARODD | CMSPAR);
-            break;
-        }
-        case RP_UART_EVEN: {
-            g_settings.c_cflag &= ~(PARODD  | CMSPAR);
-            g_settings.c_cflag |= PARENB;
-            break;
-        }
-        case RP_UART_ODD: {
-            g_settings.c_cflag &= ~CMSPAR;
-            g_settings.c_cflag |= PARENB | PARODD ;
-            break;
-        }
-        case RP_UART_SPACE: {
-            g_settings.c_cflag |= PARENB | PARODD | CMSPAR;
-            break;
-        }
-        case RP_UART_MARK: {
-            g_settings.c_cflag &= ~PARODD;
-            g_settings.c_cflag |= PARENB | CMSPAR;
-            break;
-        }
-
-        default:
-            return RP_HW_ESU;
-    }
-    /* Setting attributes */
-    tcflush(uart_fd, TCIFLUSH);
-    if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
-        fprintf(stderr, "Error set Stop Bits in UART. Errno: %d\n", errno);
-        return RP_HW_ESU;
-    }
-    return RP_HW_OK;
-}
-
-
-int uart_SetStopBits(rp_uart_stop_bits_t mode){
-    if(uart_fd == -1){
-        fprintf(stderr, "Failed to open UART.\n");
-        return RP_HW_EIU;
-    }
-
-    g_settings.c_cflag &= ~CSTOPB;
-    if (mode == RP_UART_STOP2)
-        g_settings.c_cflag |= CSTOPB; /* 8 bits */
-    /* Setting attributes */
-    tcflush(uart_fd, TCIFLUSH);
-    if (tcsetattr(uart_fd, TCSANOW, &g_settings)){
-        fprintf(stderr, "Error set Stop Bits in UART. Errno: %d\n", errno);
-        return RP_HW_ESU;
-    }
-    return RP_HW_OK;
-}
-
