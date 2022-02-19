@@ -45,18 +45,17 @@ include_directories("include")
 include_directories("include")
 include_directories(${INSTALL_DIR}/include)
 
-file(GLOB PR_XML_SOURCES "src/xml/*.cpp")  
+file(GLOB PR_XML_SOURCES "src/xml/*.cpp")
 
 file(GLOB PR_I2C_SOURCES "src/rp-i2c.cpp"
                          "src/rp-i2c-mcp47x6.cpp"
                          "src/rp-i2c-max7311.cpp"
                          "src/rp-i2c-mcp47x6-c.cpp"
-                         "src/rp-i2c-max7311-c.cpp")    
+                         "src/rp-i2c-max7311-c.cpp")
 
 file(GLOB PR_SPI_SOURCES "src/rp-spi.cpp"
                          "src/spi/spi.cpp")
 
-                         
 
 file(GLOB PR_GPIO_SOURCES "src/rp-gpio-power.cpp"
                           "src/gpio/gpio.cpp")
