@@ -44,7 +44,7 @@ LDFLAGS = -Wl,--gc-sections
 LIBS+=-L$(INSTALL_DIR)/lib -static -lrp
 ifeq ($(MODEL),Z20_250_12)
 CXXFLAGS += -I$(INSTALL_DIR)/include/api250-12
-LIBS+= -static -lrp-i2c -static -lrp-gpio -static -lrp-spi 
+LIBS+= -static -lrp-i2c -static -lrp-gpio -static -lrp-spi -lrp-hw
 endif
 LIBS+=-lm -lpthread  -lstdc++
 
