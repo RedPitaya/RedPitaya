@@ -23,6 +23,7 @@
 #include "dpin.h"
 #include "apin.h"
 #include "uart.h"
+#include "led.h"
 #include "acquire.h"
 #include "generate.h"
 #include "scpi/error.h"
@@ -231,6 +232,13 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "UART:WRITE", .callback                 = RP_Uart_SendBuffer,},
     {.pattern = "UART:READ", .callback                  = RP_Uart_ReadBuffer,},
 
+    /* led */
+    {.pattern = "LED:MMC", .callback                    = RP_LED_MMC,},
+    {.pattern = "LED:MMC?", .callback                   = RP_LED_MMCQ,},
+    {.pattern = "LED:HB", .callback                     = RP_LED_HB,},
+    {.pattern = "LED:HB?", .callback                    = RP_LED_HBQ,},
+    {.pattern = "LED:ETH", .callback                    = RP_LED_ETH,},
+    {.pattern = "LED:ETH?", .callback                   = RP_LED_ETHQ,},
     SCPI_CMD_LIST_END
 };
 
