@@ -37,8 +37,8 @@ CXXFLAGS += -D$(MODEL)
 LDFLAGS = -Wl,--gc-sections
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
-LIBS+=-L$(INSTALL_DIR)/lib -static -lrp-hw
-LIBS+=-lm -lstdc++
+LIBS+=-L$(INSTALL_DIR)/lib -static -lrp-hw 
+LIBS+=-lm -lstdc++ -lpthread
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
