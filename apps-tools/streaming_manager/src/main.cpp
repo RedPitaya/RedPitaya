@@ -986,7 +986,7 @@ auto startDACServer(bool testMode) -> void{
 #endif
 
 #ifdef Z20_250_12
-		auto dac_gain = g_serverNetConfig->getDACGain();
+		auto dac_gain = settings.getDACGain();
 #endif
 
 		std::vector<UioT> uioList = GetUioList();
@@ -1058,7 +1058,7 @@ auto startDACServer(bool testMode) -> void{
 			auto dacRepeatMode = settings.getDACRepeat();
 			auto dacRepeatCount = settings.getDACRepeatCount();
 			auto dacMemory = settings.getDACMemoryUsage();
-			
+
 			if (format == CStreamSettings::WAV) {
 				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
 			}else if (format == CStreamSettings::TDMS) {
@@ -1070,11 +1070,10 @@ auto startDACServer(bool testMode) -> void{
 			{
 				stopDACNonBlocking(status);
 			};
-		
 		}
 
 		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
-		g_dac_app->setTestMode(testMode);		
+		g_dac_app->setTestMode(testMode);
 
 		g_dac_app->runNonBlock();
 		if (g_dac_manger->isLocalMode()){
