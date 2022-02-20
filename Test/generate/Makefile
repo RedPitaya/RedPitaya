@@ -43,7 +43,7 @@ CXXFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) -D$(MODEL)
 LIBS = -L$(INSTALL_DIR)/lib -static -lrp -lm
 
 ifeq ($(MODEL),Z20_250_12)
-LIBS += -L$(INSTALL_DIR)/lib -static -lrp-i2c -static -lrp-gpio -static -lrp-spi -lstdc++ -lpthread
+LIBS += -L$(INSTALL_DIR)/lib -static -lrp-i2c -static -lrp-gpio -static -lrp-spi -lrp-hw -lstdc++ -lpthread
 CXXFLAGS += -I$(INSTALL_DIR)/include/api250-12
 endif
 
