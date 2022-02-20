@@ -22,6 +22,7 @@
 #include "common.h"
 #include "dpin.h"
 #include "apin.h"
+#include "uart.h"
 #include "acquire.h"
 #include "generate.h"
 #include "scpi/error.h"
@@ -212,6 +213,23 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
     {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
+
+    /* uart */
+    {.pattern = "UART:INIT", .callback                  = RP_Uart_Init,},
+    {.pattern = "UART:RELEASE", .callback               = RP_Uart_Release,},
+    {.pattern = "UART:SETUP", .callback                 = RP_Uart_SetSettings,},
+    {.pattern = "UART:BITS", .callback                  = RP_Uart_BIT_Size,},
+    {.pattern = "UART:BITS?", .callback                 = RP_Uart_BIT_SizeQ,},
+    {.pattern = "UART:SPEED", .callback                 = RP_Uart_Speed,},
+    {.pattern = "UART:SPEED?", .callback                = RP_Uart_SpeedQ,},
+    {.pattern = "UART:STOPB", .callback                 = RP_Uart_STOP_Bit,},
+    {.pattern = "UART:STOPB?", .callback                = RP_Uart_STOP_BitQ,},
+    {.pattern = "UART:PARITY", .callback                = RP_Uart_PARITY,},
+    {.pattern = "UART:PARITY?", .callback               = RP_Uart_PARITYQ,},
+    {.pattern = "UART:TIMEOUT", .callback               = RP_Uart_Timeout,},
+    {.pattern = "UART:TIMEOUT?", .callback              = RP_Uart_TimeoutQ,},
+    {.pattern = "UART:WRITE", .callback                 = RP_Uart_SendBuffer,},
+    {.pattern = "UART:READ", .callback                  = RP_Uart_ReadBuffer,},
 
     SCPI_CMD_LIST_END
 };
