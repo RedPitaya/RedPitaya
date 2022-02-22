@@ -16,7 +16,7 @@
 # prepating image
 ################################################################################
 
-VERSION_IMG=1.06
+apt install -y qemu-user-static curl
 
 # current time and date are used to create the image name
 DATE=`date +"%H-%M-%S_%d-%b-%Y"`

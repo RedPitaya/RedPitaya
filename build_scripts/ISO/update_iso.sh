@@ -1,24 +1,8 @@
 #!/bin/bash
 
-if [ -z "$1" ]
-then
-    echo "Missing ecosystem file name as parameter"
-    exit 1
-fi
 
-if [ -z "$2" ]
-then
-    echo "Missing prefix of file name"
-    exit 1
-fi
-
-ECO_FILE=$1
-PREFIX=$2
-REV="$(echo $1 | cut -d'-' -f2)"
-NUM="$(echo $1 | cut -d'-' -f3)"
-
-wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.07.img.zip
-unzip -n red_pitaya_OS-beta_1.07.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.06.img.zip
+unzip -n red_pitaya_OS-beta_1.06.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
@@ -53,12 +37,12 @@ chmod +x '/usr/sbin/policy-rc.d'
 
 # you can install missing tools
 #sudo apt-get install -y sshpass
-#apt update -y
+apt update -y
 #apt -yq install apt-utils
 #apt -yq install memtester
 #apt full-upgrade -y
 #apt clean -y
-
+apt -y install wireless-tools
 # Unlock services
 rm '/usr/sbin/policy-rc.d'
 
@@ -81,9 +65,33 @@ echo "remove qemu"
 sudo rm "root/usr/bin/qemu-arm-static"
 
 sudo rm -rf ./boot/*
+echo "PRESS ANY KEY"
+read
+echo "DONE"
 
-sleep 2
-sudo unzip -o $ECO_FILE -d ./boot
+sleep 3
+echo "run chroot root"
+cat << EOF | sudo chroot root
+
+export LANG='C' LC_ALL='C' LANGUAGE='C'
+export DEBIAN_FRONTEND=noninteractive
+
+# Lock services
+echo 'exit 101' > '/usr/sbin/policy-rc.d'
+chmod +x '/usr/sbin/policy-rc.d'
+
+systemctl enable r8188eu.network
+
+# Unlock services
+rm '/usr/sbin/policy-rc.d'
+
+exit
+
+EOF
+
+
+sleep 5
+
 
 sudo dd if=/dev/zero of=boot/zero.bin bs=1MiB
 sudo dd if=/dev/zero of=root/zero.bin bs=1MiB
@@ -104,7 +112,4 @@ sudo losetup -d "$LOOP_DEV"
 
 sleep 2
 
-mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
-zip $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img') 
-rm -f $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
 echo "ALL DONE"

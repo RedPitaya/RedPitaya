@@ -139,7 +139,15 @@ install -v -m 664 -o root -D $OVERLAY/etc/fstab  $ROOT_DIR/etc/fstab
 . OS/debian/redpitaya.sh
 . OS/debian/jupyter.sh
 . OS/debian/watchdog.sh
+
+# Up to version version 1.05
 . OS/debian/cmake3.21.sh
+
+# TODO update CA sertificates -> up to version 1.06
+
+# Up to version version 1.07
+. OS/debian/wireless_tool.sh
+
 #. OS/debian/tft.sh
 
 ################################################################################
@@ -164,9 +172,6 @@ apt-get clean
 history -c
 EOF_CHROOT
 
-# set version on ubuntu
-
-echo $VERSION_IMG > $ROOT_DIR/root/.version
 
 # file system cleanup for better compression
 cat /dev/zero > $ROOT_DIR/zero.file
