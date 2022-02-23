@@ -43,10 +43,13 @@ print("Check timeout",rp_s.rx_txt())
 rp_s.tx_txt('UART:SETUP')
 print("Setup settings")
 
-rp_s.tx_txt('UART:WRITE 7,#H11,#H22,#H33,33,33,#Q11,#B11001100')
-print("Write to uart: 7,#H11,#H22,#H33,33,33,#Q11,#B11001100'")
+rp_s.tx_txt('UART:WRITE7 #H11,#H22,#H33,33,33,#Q11,#B11001100')
+print("Write 7 bytes to uart: #H11,#H22,#H33,33,33,#Q11,#B11001100'")
 
-rp_s.tx_txt('UART:READ 7')
+rp_s.tx_txt('UART:READ3')
+print("Read: ",rp_s.rx_txt())
+
+rp_s.tx_txt('UART:READ4')
 print("Read: ",rp_s.rx_txt())
 
 rp_s.tx_txt('UART:RELEASE')
