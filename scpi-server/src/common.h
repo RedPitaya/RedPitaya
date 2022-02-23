@@ -28,9 +28,10 @@
 #define RP_LOG(...) \
 syslog(__VA_ARGS__);
 #else
-#define RP_LOG(...)
+#define RP_LOG(X,...)
 #endif
 
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
+
 
 #endif /* COMMON_H_ */

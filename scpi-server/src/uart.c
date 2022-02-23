@@ -141,7 +141,6 @@ scpi_result_t RP_Uart_Speed(scpi_t *context){
 }
 
 scpi_result_t RP_Uart_SpeedQ(scpi_t *context){
-    // Get decimation
     int32_t speed;
     int result = rp_UartGetSpeed(&speed);
 
@@ -153,7 +152,7 @@ scpi_result_t RP_Uart_SpeedQ(scpi_t *context){
     // Return back result
     SCPI_ResultUInt32Base(context, speed, 10);
 
-    RP_LOG(LOG_INFO, "*UART:SPEED? Successfully returned decimation.\n");
+    RP_LOG(LOG_INFO, "*UART:SPEED? Successfully returned speed.\n");
     return SCPI_RES_OK;
 }
 
@@ -263,7 +262,6 @@ scpi_result_t RP_Uart_Timeout(scpi_t *context){
 }
 
 scpi_result_t RP_Uart_TimeoutQ(scpi_t *context){
-    // Get decimation
     uint8_t speed;
     int result = rp_UartGetTimeout(&speed);
 
@@ -274,22 +272,31 @@ scpi_result_t RP_Uart_TimeoutQ(scpi_t *context){
     // Return back result
     SCPI_ResultUInt32Base(context, speed, 10);
 
-    RP_LOG(LOG_INFO, "*UART:TIMEOUT? Successfully returned decimation.\n");
+    RP_LOG(LOG_INFO, "*UART:TIMEOUT? Successfully returned timeout.\n");
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_Uart_SendBuffer(scpi_t * context){
 
     uint8_t *buffer;
-    uint32_t size;
+    size_t size;
     uint32_t buf_size;
     int result;
-
-    if (!SCPI_ParamUInt32(context, &size, true)) {
-        RP_LOG(LOG_ERR, "*UART:WRITE Failed to get buffer size.\n");
+    int32_t cmd[1] = {0};
+    
+    if (!SCPI_CommandNumbers(context,cmd,1,-1)){
+        RP_LOG(LOG_ERR, "*UART:WRITE Failed to get parameters.\n");
         return SCPI_RES_ERR;
     }
-    buffer = malloc(size*sizeof(uint8_t));
+    
+    if (cmd[0] == -1){
+        RP_LOG(LOG_ERR, "*UART:WRITE Failed to get size.\n");
+        return SCPI_RES_ERR;
+    }
+    
+    size = cmd[0];
+
+    buffer = malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR, "*UART:WRITE Failed allocate buffer with size: %d.\n",size);
         return SCPI_RES_ERR;
@@ -309,7 +316,7 @@ scpi_result_t RP_Uart_SendBuffer(scpi_t * context){
 
     result = rp_UartWrite(buffer, buf_size);
     if(result != RP_HW_OK){
-        RP_LOG(LOG_ERR, "*UART:WRITE Failed send data: %s\n", result);
+        RP_LOG(LOG_ERR, "*UART:WRITE Failed send data: %d\n", result);
         free(buffer);        
         return SCPI_RES_ERR;
     }
@@ -320,15 +327,24 @@ scpi_result_t RP_Uart_SendBuffer(scpi_t * context){
 
 scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
     uint8_t *buffer = 0;
-    uint32_t size = 0;
+    size_t size = 0;
     int32_t read_size = 0;
     int result;
-
-    if (!SCPI_ParamUInt32(context, &size, true)) {
-        RP_LOG(LOG_ERR, "*UART:READ Failed to get buffer size.\n");
+    int32_t cmd[1] = {0};
+    
+    if (!SCPI_CommandNumbers(context,cmd,1,-1)){
+        RP_LOG(LOG_ERR, "*UART:READ Failed to get parameters.\n");
         return SCPI_RES_ERR;
     }
-    buffer = malloc(size*sizeof(uint8_t));
+    
+    if (cmd[0] == -1){
+        RP_LOG(LOG_ERR, "*UART:READ Failed to get size.\n");
+        return SCPI_RES_ERR;
+    }
+
+    size = cmd[0];
+
+    buffer = malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR,"*UART:READ Failed allocate buffer with size: %d.\n",size);
         return SCPI_RES_ERR;
@@ -336,7 +352,7 @@ scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
     read_size = size;
     result = rp_UartRead(buffer, &read_size);
     if(result != RP_HW_OK){
-        RP_LOG(LOG_ERR, "*UART:READ Failed read data: %s\n", result);
+        RP_LOG(LOG_ERR, "*UART:READ Failed read data: %d\n", result);
         free(buffer);        
         return SCPI_RES_ERR;
     }

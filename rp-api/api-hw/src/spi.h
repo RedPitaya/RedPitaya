@@ -19,7 +19,7 @@
 #include "rp_hw.h"
 
 int spi_Init();
-int spi_InitDevice(char *_device);
+int spi_InitDevice(const char *_device);
 int spi_SetDefaultSettings();
 int spi_GetSettings();
 int spi_SetSettings();
@@ -27,10 +27,10 @@ int spi_Release();
 
 int spi_CreateMessage(size_t len);
 int spi_GetMessageLen(size_t *len);
-int spi_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len);
-int spi_GetTxBuffer(size_t msg,uint8_t **buffer,size_t *len);
+int spi_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
+int spi_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
 int spi_GetCSChangeState(size_t msg,bool *cs_change);
-int spi_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change);
+int spi_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change);
 int spi_DestoryMessage();
 
 int spi_GetMode(rp_spi_mode_t *mode);

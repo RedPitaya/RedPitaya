@@ -122,7 +122,7 @@ typedef enum {
 
 typedef enum {
     RP_SPI_ORDER_BIT_MSB = 0,    //!< MSB first
-    RP_SPI_ORDER_BIT_LSB =1      //!< LSB first (Not supported)
+    RP_SPI_ORDER_BIT_LSB = 1      //!< LSB first (Not supported)
 } rp_spi_order_bit_t;
 
 /**
@@ -320,7 +320,7 @@ int rp_SPI_Init();
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_InitDevice(char *device);
+int rp_SPI_InitDevice(const char *device);
 
 /**
  * Sets the default values for an open SPI device.
@@ -374,7 +374,7 @@ int rp_SPI_GetMessageLen(size_t *len);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len);
+int rp_SPI_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
 
 /**
  * Gets a write buffer from the specified messages
@@ -384,7 +384,7 @@ int rp_SPI_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_GetTxBuffer(size_t msg,uint8_t **buffer,size_t *len);
+int rp_SPI_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
 
 /**
  * Returns chip select reset states. If the value is not set, then within the transmission of the message packet, the state of the chip selection will not be reset.
@@ -405,7 +405,7 @@ int rp_SPI_GetCSChangeState(size_t msg,bool *cs_change);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change);
+int rp_SPI_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change);
 
 /**
  * Deletes messages from the internal buffer

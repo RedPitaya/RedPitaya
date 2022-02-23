@@ -42,7 +42,8 @@ OBJECTS =	scpi-commands.o \
 		generate.o \
 		common.o \
 		uart.o \
-		led.o
+		led.o \
+		spi.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 

@@ -24,6 +24,7 @@
 #include "apin.h"
 #include "uart.h"
 #include "led.h"
+#include "spi.h"
 #include "acquire.h"
 #include "generate.h"
 #include "scpi/error.h"
@@ -229,8 +230,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "UART:PARITY?", .callback               = RP_Uart_PARITYQ,},
     {.pattern = "UART:TIMEOUT", .callback               = RP_Uart_Timeout,},
     {.pattern = "UART:TIMEOUT?", .callback              = RP_Uart_TimeoutQ,},
-    {.pattern = "UART:WRITE", .callback                 = RP_Uart_SendBuffer,},
-    {.pattern = "UART:READ", .callback                  = RP_Uart_ReadBuffer,},
+    {.pattern = "UART:WRITE#", .callback                = RP_Uart_SendBuffer,},
+    {.pattern = "UART:READ#", .callback                 = RP_Uart_ReadBuffer,},
 
     /* led */
     {.pattern = "LED:MMC", .callback                    = RP_LED_MMC,},
@@ -239,10 +240,44 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "LED:HB?", .callback                    = RP_LED_HBQ,},
     {.pattern = "LED:ETH", .callback                    = RP_LED_ETH,},
     {.pattern = "LED:ETH?", .callback                   = RP_LED_ETHQ,},
+
+    /* spi */
+    {.pattern = "SPI:INIT", .callback                   = RP_SPI_Init,},
+    {.pattern = "SPI:INIT:DEV", .callback               = RP_SPI_InitDev,},
+    {.pattern = "SPI:RELEASE", .callback                = RP_SPI_Release,},
+    {.pattern = "SPI:SETtings:DEF", .callback           = RP_SPI_SetDefault,},
+    {.pattern = "SPI:SETtings:SET", .callback           = RP_SPI_SetSettings,},
+    {.pattern = "SPI:SETtings:GET", .callback           = RP_SPI_GetSettings,},
+
+    {.pattern = "SPI:SETtings:MODE", .callback          = RP_SPI_SetMode,},
+    {.pattern = "SPI:SETtings:MODE?", .callback         = RP_SPI_GetMode,},
+    {.pattern = "SPI:SETtings:SPEED", .callback         = RP_SPI_SetSpeed,},
+    {.pattern = "SPI:SETtings:SPEED?", .callback        = RP_SPI_GetSpeed,},
+
+    {.pattern = "SPI:SETtings:WORD", .callback         = RP_SPI_SetWord,},
+    {.pattern = "SPI:SETtings:WORD?", .callback        = RP_SPI_GetWord,},
+
+
+    {.pattern = "SPI:MSG:CREATE", .callback             = RP_SPI_CreateMessage,},
+    {.pattern = "SPI:MSG:DEL", .callback                = RP_SPI_DestroyMessage,},
+    {.pattern = "SPI:MSG:SIZE?", .callback              = RP_SPI_GetMessageLen,},
+
+    {.pattern = "SPI:MSG#:TX#", .callback               = RP_SPI_SetTX,},
+    {.pattern = "SPI:MSG#:TX#:RX", .callback            = RP_SPI_SetTXRX,},
+    {.pattern = "SPI:MSG#:RX#", .callback               = RP_SPI_SetRX,},
+    {.pattern = "SPI:MSG#:TX#:CS", .callback            = RP_SPI_SetTXCS,},
+    {.pattern = "SPI:MSG#:TX#:RX:CS", .callback         = RP_SPI_SetTXRXCS,},
+    {.pattern = "SPI:MSG#:RX#:CS", .callback            = RP_SPI_SetRXCS,},
+    {.pattern = "SPI:MSG#:RX?", .callback               = RP_SPI_GetRXBuffer,},
+    {.pattern = "SPI:MSG#:TX?", .callback               = RP_SPI_GetTXBuffer,},
+    {.pattern = "SPI:MSG#:CS?", .callback               = RP_SPI_GetCSChangeState,},
+
+    {.pattern = "SPI:PASS", .callback                   = RP_SPI_Pass,},
+    
     SCPI_CMD_LIST_END
 };
 
-static scpi_interface_t scpi_interface = {
+static scpi_interface_t scpi_interface = {  
     .error   = SCPI_Error,
     .write   = SCPI_Write,
     .control = SCPI_Control,

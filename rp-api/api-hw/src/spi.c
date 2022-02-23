@@ -34,7 +34,7 @@ int spi_Init(){
     return spi_InitDevice("/dev/spidev1.0");
 }
 
-int spi_InitDevice(char *_device){
+int spi_InitDevice(const char *_device){
     if(spi_fd != -1){
         if (spi_Release() != RP_HW_OK){
             return RP_HW_EIS;
@@ -62,7 +62,7 @@ int spi_SetDefaultSettings(){
     spi_config_t defConfig;
     defConfig.spi_mode = RP_SPI_MODE_LISL;
     defConfig.spi_ready = RP_SPI_STATE_NOT;
-    defConfig.lsb_first = RP_SPI_ORDER_BIT_LSB;
+    defConfig.lsb_first = RP_SPI_ORDER_BIT_MSB;
     defConfig.bits_per_word = 8;
     defConfig.spi_speed = 50000000;
         
@@ -155,7 +155,7 @@ int spi_GetMessageLen(size_t *len){
     return RP_HW_ESMI;
 }
 
-int spi_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+int spi_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
     pthread_mutex_lock(&spi_mutex);
     if (g_spi_data){
         if (g_spi_data->size <= msg){
@@ -171,7 +171,7 @@ int spi_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len){
     return RP_HW_ESMI;
 }
 
-int spi_GetTxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+int spi_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
     pthread_mutex_lock(&spi_mutex);
     if (g_spi_data){
         if (g_spi_data->size <= msg){
@@ -202,12 +202,15 @@ int spi_GetCSChangeState(size_t msg,bool *cs_change){
     return RP_HW_ESMI;
 }
 
-int spi_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
+int spi_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
     pthread_mutex_lock(&spi_mutex);
     if (g_spi_data){
         if (g_spi_data->size <= msg){
             pthread_mutex_unlock(&spi_mutex);
             return RP_HW_ESMO;
+        }
+        if (g_spi_data->messages[msg].rx_buffer){
+            free(g_spi_data->messages[msg].rx_buffer);
         }
         g_spi_data->messages[msg].rx_buffer = 0;
         if (init_rx_buffer) {
@@ -218,6 +221,9 @@ int spi_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,si
 	        	return RP_HW_EAL;
     	    }
             memset(g_spi_data->messages[msg].rx_buffer,0,len);
+        }
+        if (g_spi_data->messages[msg].tx_buffer){
+            free(g_spi_data->messages[msg].tx_buffer);
         }
         g_spi_data->messages[msg].tx_buffer = 0;
         if (tx_buffer){
