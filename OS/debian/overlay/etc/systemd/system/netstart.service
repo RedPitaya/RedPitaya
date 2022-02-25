@@ -1,0 +1,15 @@
+[Unit]
+Description=Service for startup wifi
+Before=network.target
+Requires=r8188eu.network.service
+After=r8188eu.network.service
+
+[Service]
+Type=forking
+Environment=PATH_REDPITAYA=/opt/redpitaya
+Environment=LD_LIBRARY_PATH=/opt/redpitaya/lib PATH=/sbin:/usr/sbin:/bin:/usr/bin:/opt/redpitaya/sbin:/opt/redpitaya/bin
+ExecStart=/opt/redpitaya/www/apps/network_manager/scripts/startup_network.sh
+
+[Install]
+WantedBy=multi-user.target
+
