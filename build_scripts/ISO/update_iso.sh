@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.06.img.zip
-unzip -n red_pitaya_OS-beta_1.06.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.07.img.zip
+unzip -n red_pitaya_OS-beta_1.07.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
@@ -80,7 +80,9 @@ export DEBIAN_FRONTEND=noninteractive
 echo 'exit 101' > '/usr/sbin/policy-rc.d'
 chmod +x '/usr/sbin/policy-rc.d'
 
-systemctl enable r8188eu.network
+systemctl enable netstart.service
+systemctl disable wpa_supplicant@wlan0.service
+rm -f /etc/systemd/system/wpa_supplicant@.service
 
 # Unlock services
 rm '/usr/sbin/policy-rc.d'
