@@ -243,8 +243,6 @@ scpi_result_t RP_I2C_IOCTL_ReadBuffer(scpi_t * context){
         RP_LOG(LOG_ERR, "*%s Failed allocate buffer with size: %d.\n",func,size);
         return SCPI_RES_ERR;
     }
-    printf("read size %d\n",size);
-    for(int i = 0 ;i < 16 ;i++) printf("%d\n",buffer[i]);
 
     int read_size = size;
     int result = rp_I2C_IOCTL_ReadBuffer(buffer, read_size);
@@ -253,8 +251,6 @@ scpi_result_t RP_I2C_IOCTL_ReadBuffer(scpi_t * context){
         free(buffer);        
         return SCPI_RES_ERR;
     }
-    printf("read size %d\n",read_size);
-    for(int i = 0 ;i < 16 ;i++) printf("%d\n",buffer[i]);
     
     SCPI_ResultBufferUInt8(context, buffer, read_size);
     free(buffer);
@@ -424,9 +420,6 @@ scpi_result_t RP_I2C_IOCTL_WriteBuffer(scpi_t * context){
         return SCPI_RES_ERR;
     }
     
-    printf("write size %d\n",buf_size);
-    for(int i = 0 ;i < 16 ;i++) printf("%d\n",buffer[i]);
-
     int result = rp_I2C_IOCTL_WriteBuffer(buffer, buf_size);
     if(result != RP_HW_OK){
         RP_LOG(LOG_ERR, "*%s Failed write buffer: %d\n", func, result);
