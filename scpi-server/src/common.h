@@ -31,8 +31,8 @@ syslog(__VA_ARGS__);
 #define RP_F_NAME(X) X
 
 #else
-#define RP_LOG(X,...) fprintf(stdout,__VA_ARGS__);
-#define RP_F_NAME(X) X
+#define RP_LOG(X,...)
+#define RP_F_NAME(X)
 #endif
 
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
