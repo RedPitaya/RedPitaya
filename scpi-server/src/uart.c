@@ -333,12 +333,12 @@ scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
     int32_t cmd[1] = {0};
     
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
-        RP_LOG(LOG_ERR, "*UART:READ Failed to get parameters.\n");
+        RP_LOG(LOG_ERR, "*UART:READ# Failed to get parameters.\n");
         return SCPI_RES_ERR;
     }
     
     if (cmd[0] == -1){
-        RP_LOG(LOG_ERR, "*UART:READ Failed to get size.\n");
+        RP_LOG(LOG_ERR, "*UART:READ# Failed to get size.\n");
         return SCPI_RES_ERR;
     }
 
@@ -346,19 +346,19 @@ scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
 
     buffer = malloc(size * sizeof(uint8_t));
     if (!buffer){
-        RP_LOG(LOG_ERR,"*UART:READ Failed allocate buffer with size: %d.\n",size);
+        RP_LOG(LOG_ERR,"*UART:READ# Failed allocate buffer with size: %d.\n",size);
         return SCPI_RES_ERR;
     }
     read_size = size;
     result = rp_UartRead(buffer, &read_size);
     if(result != RP_HW_OK){
-        RP_LOG(LOG_ERR, "*UART:READ Failed read data: %d\n", result);
+        RP_LOG(LOG_ERR, "*UART:READ# Failed read data: %d\n", result);
         free(buffer);        
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultBufferUInt8(context, buffer, read_size);
     free(buffer);
-    RP_LOG(LOG_INFO, "*UART:READ Successfully returned uart data to client.\n");
+    RP_LOG(LOG_INFO, "*UART:READ# Successfully returned uart data to client.\n");
     return SCPI_RES_OK;
 }

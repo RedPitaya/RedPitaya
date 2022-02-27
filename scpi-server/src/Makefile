@@ -43,7 +43,8 @@ OBJECTS =	scpi-commands.o \
 		common.o \
 		uart.o \
 		led.o \
-		spi.o
+		spi.o \
+		i2c.o
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 

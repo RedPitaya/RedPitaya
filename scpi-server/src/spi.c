@@ -54,7 +54,6 @@ scpi_result_t RP_SPI_InitDev(scpi_t *context){
     size_t param_len = 0;
     memset(dev,0,255);
 
-    // read first parameter Format type (BIN, ASCII)
     if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
         RP_LOG(LOG_ERR, "*SPI:INIT:DEV is missing first parameter.\n");
         return SCPI_RES_ERR;
@@ -342,7 +341,6 @@ scpi_result_t RP_SPI_SetTXRXCS(scpi_t * context){
 scpi_result_t RP_SPI_SetRX2(scpi_t * context,bool cs_state,const char func[]){
     size_t index = 0;
     size_t size = 0;
-    uint8_t *buffer = NULL;
     int32_t cmd[2] = {0,0};
 
     
@@ -367,10 +365,8 @@ scpi_result_t RP_SPI_SetRX2(scpi_t * context,bool cs_state,const char func[]){
     int result = rp_SPI_SetBufferForMessage(index,NULL,true,size,cs_state);
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*%s Failed to set RX buffer: %d",func, result);
-        free(buffer);
         return SCPI_RES_ERR;
     }
-    free(buffer);
     RP_LOG(LOG_INFO, "*%s Successfully set RX buffer.\n",func);
     return SCPI_RES_OK;    
 }

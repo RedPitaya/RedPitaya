@@ -13,8 +13,8 @@
  */
 
 
-#ifndef RPHW_UART_H_
-#define RPHW_UART_H_
+#ifndef SCPI_UART_H_
+#define SCPI_UART_H_
 
 #include "scpi/types.h"
 
@@ -34,4 +34,4 @@ scpi_result_t RP_Uart_TimeoutQ(scpi_t *context);
 scpi_result_t RP_Uart_SendBuffer(scpi_t * context);
 scpi_result_t RP_Uart_ReadBuffer(scpi_t * context);
 
-#endif /* RPHW_UART_H_ */
+#endif /* SCPI_UART_H_ */

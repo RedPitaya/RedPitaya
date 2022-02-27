@@ -25,6 +25,7 @@
 #include "uart.h"
 #include "led.h"
 #include "spi.h"
+#include "i2c.h"
 #include "acquire.h"
 #include "generate.h"
 #include "scpi/error.h"
@@ -274,6 +275,23 @@ static const scpi_command_t scpi_commands[] = {
 
     {.pattern = "SPI:PASS", .callback                   = RP_SPI_Pass,},
     
+     /* i2c */
+    {.pattern = "I2C:DEV#", .callback                  = RP_I2C_Dev,},
+    {.pattern = "I2C:DEV?", .callback                  = RP_I2C_DevQ,},
+    {.pattern = "I2C:FMODE", .callback                 = RP_I2C_ForceMode,},
+    {.pattern = "I2C:FMODE?", .callback                = RP_I2C_ForceModeQ,},
+
+    {.pattern = "I2C:Smbus:Read#", .callback           = RP_I2C_SMBUS_Read,},
+    {.pattern = "I2C:Smbus:Read#:Word", .callback      = RP_I2C_SMBUS_ReadWord,},
+    {.pattern = "I2C:Smbus:Read#:Buffer#", .callback   = RP_I2C_SMBUS_ReadBuffer,},
+    {.pattern = "I2C:IOctl:Read:Buffer#", .callback    = RP_I2C_IOCTL_ReadBuffer,},
+
+    {.pattern = "I2C:Smbus:Write#", .callback          = RP_I2C_SMBUS_Write,},
+    {.pattern = "I2C:Smbus:Write#:Word", .callback     = RP_I2C_SMBUS_WriteWord,},
+    {.pattern = "I2C:Smbus:Write#:Buffer#", .callback  = RP_I2C_SMBUS_WriteBuffer,},
+    {.pattern = "I2C:IOctl:Write:Buffer#", .callback   = RP_I2C_IOCTL_WriteBuffer,},
+
+
     SCPI_CMD_LIST_END
 };
 
