@@ -57,14 +57,14 @@ LDFLAGS=
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBPATH= -L ../scpi-parser/libscpi/dist -L $(INSTALL_DIR)/lib
-LIBS=  -lm -l:librp-hw.a -lpthread -lrp -l:libscpi.a
+LIBS=  -lm  -lrp -l:libscpi.a -l:librp-hw.a -lpthread
 
 INC= -I../scpi-parser/libscpi/inc -I$(INSTALL_DIR)/include
 
 ifeq ($(MODEL),Z20_250_12)
 INC += -I$(INSTALL_DIR)/include/api250-12
-LIBS += -lrp-gpio -lrp-i2c -lrp-spi 
-endif 
+LIBS += -lrp-gpio -lrp-i2c -lrp-spi
+endif
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
