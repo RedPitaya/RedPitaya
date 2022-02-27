@@ -27,10 +27,15 @@
 #ifdef SCPI_DEBUG
 #define RP_LOG(...) \
 syslog(__VA_ARGS__);
+
+#define RP_F_NAME(X) X
+
 #else
-#define RP_LOG(...)
+#define RP_LOG(X,...)
+#define RP_F_NAME(X)
 #endif
 
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
+
 
 #endif /* COMMON_H_ */

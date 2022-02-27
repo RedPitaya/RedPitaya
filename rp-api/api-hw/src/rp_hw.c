@@ -116,7 +116,7 @@ int rp_SPI_Init(){
     return spi_Init();
 }
 
-int rp_SPI_InitDevice(char *_device){
+int rp_SPI_InitDevice(const char *_device){
     return spi_InitDevice(_device);
 }
 
@@ -188,11 +188,11 @@ int rp_SPI_GetMessageLen(size_t *len){
     return spi_GetMessageLen(len);
 }
 
-int rp_SPI_GetRxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+int rp_SPI_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
     return spi_GetRxBuffer(msg,buffer,len);    
 }
 
-int rp_SPI_GetTxBuffer(size_t msg,uint8_t **buffer,size_t *len){
+int rp_SPI_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
     return spi_GetTxBuffer(msg,buffer,len);
 }
 
@@ -200,7 +200,7 @@ int rp_SPI_GetCSChangeState(size_t msg,bool *cs_change){
     return spi_GetCSChangeState(msg,cs_change);
 }
 
-int rp_SPI_SetBufferForMessage(size_t msg,uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
+int rp_SPI_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
     return spi_SetBufferForMessage(msg,tx_buffer,init_rx_buffer,len,cs_change);
 }
 
