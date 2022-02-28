@@ -141,7 +141,6 @@ rp_dma_mm2s_ctrl #(
   .fifo_rst         (fifo_rst),
   .fifo_full        (fifo_full | fifo_almost_full),   
   .fifo_re          ((fifo_rd_re | fifo_empty)),   
-
   .m_axi_dac_araddr_o   (m_axi_araddr_o),       
   .m_axi_dac_arlen_o    (m_axi_arlen_o),      
   .m_axi_dac_arvalid_o  (m_axi_arvalid_o), 

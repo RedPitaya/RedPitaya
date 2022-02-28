@@ -65,13 +65,13 @@ always @(posedge dac_clk_i)
 begin
    dac_mult_r <= $signed(dac_rdata_i)       * $signed({1'b0,set_amp_i}) ;
    dac_mult   <= dac_mult_r;
-   dac_sum_r  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
+   dac_sum_r  <= $signed(dac_mult[AXIS_DATA_BITS*2-3:AXIS_DATA_BITS-3]) + $signed(set_dc_i) ;
    dac_sum    <= dac_sum_r;
    // saturation
    if (set_zero_i)  
-      dac_o <= 14'h0;
+      dac_o <= 'h0;
    else 
-      dac_o <= ^dac_sum[15-1:15-2] ? {dac_sum[15-1], {13{~dac_sum[15-1]}}} : dac_sum[13:0]; // saturation
+      dac_o <= ^dac_sum[AXIS_DATA_BITS-2:AXIS_DATA_BITS-3] ? {{3{dac_sum[AXIS_DATA_BITS-2]}}, {13{~dac_sum[AXIS_DATA_BITS-2]}}} : dac_sum[AXIS_DATA_BITS-1:0]; // saturation
 
 end
 

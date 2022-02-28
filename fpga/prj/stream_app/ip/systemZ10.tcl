@@ -225,8 +225,8 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.FREQ_HZ {125000000} \
  ] $clk_out
-  set dac_dat_a [ create_bd_port -dir O -from 13 -to 0 dac_dat_a ]
-  set dac_dat_b [ create_bd_port -dir O -from 13 -to 0 dac_dat_b ]
+  set dac_dat_a [ create_bd_port -dir O -from 15 -to 0 dac_dat_a ]
+  set dac_dat_b [ create_bd_port -dir O -from 15 -to 0 dac_dat_b ]
   set gpio_n [ create_bd_port -dir IO -from 7 -to 0 gpio_n ]
   set gpio_p [ create_bd_port -dir IO -from 7 -to 0 gpio_p ]
   set loopback_sel [ create_bd_port -dir O -from 7 -to 0 loopback_sel ]

@@ -225,6 +225,7 @@ begin
     clk_cnt  <= 'h0;
   end else begin
     clk_cnt  <= clk_cnt + 'h1;
+
     if (external_trig_val) begin
       trig_cnt <= trig_cnt + 'h1;
     end  
@@ -239,6 +240,13 @@ begin
   else begin
       ramp_sig <= ramp_sig + 'h1;
   end
+end
+
+reg [S_AXIS_DATA_BITS-1:0] dec_test;    
+always @(posedge clk)
+begin
+  if (dec_tvalid)
+    dec_test <= dec_tdata;
 end
 
 assign external_trig_val = trig_ip[5] & (cfg_trig_mask == 'h20);
@@ -861,7 +869,7 @@ begin
     DIAG_REG1:              reg_rd_data <= intr_cnt;
     DIAG_REG2:              reg_rd_data <= trig_cnt;
     DIAG_REG3:              reg_rd_data <= clk_cnt;
-    DIAG_REG4:              reg_rd_data <= cfg_dma_diags_reg;
+    DIAG_REG4:              reg_rd_data <= trig_ip;
 
     default                 reg_rd_data <= 32'd0;                                
   endcase

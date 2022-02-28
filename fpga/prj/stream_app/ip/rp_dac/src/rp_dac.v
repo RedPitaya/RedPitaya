@@ -15,8 +15,8 @@ module rp_dac
   output wire                                   intr,
 
   //
-  output  wire [DAC_DATA_BITS-1:0]              dac_data_cha_o,
-  output  wire [DAC_DATA_BITS-1:0]              dac_data_chb_o,  
+  output wire [DAC_DATA_BITS-1:0]               dac_data_cha_o,
+  output wire [DAC_DATA_BITS-1:0]               dac_data_chb_o,
   //
   input  wire [EVENT_SRC_NUM-1:0]               event_ip_trig,
   input  wire [EVENT_SRC_NUM-1:0]               event_ip_stop,
@@ -192,7 +192,6 @@ reg  [31:0]                     reg_rd_data;
 reg  [31:0]                     errs_cnt_cha, errs_cnt_chb;
 reg                             cfg_loopback_cha, cfg_loopback_chb;
 
-
 reg ctrl_cha;
 reg ctrl_chb;
 wire sts_cha   = (reg_addr[8-1:0] == DMA_STS_ADDR  ) && (reg_wr_we == 1);
@@ -340,6 +339,9 @@ begin
     cfg_buf2_adr_chb    <= 32'h0;
     cfg_cha_setdec      <= 16'h1;
     cfg_chb_setdec      <= 16'h1;
+    cfg_loopback_cha    <= 16'h0;
+    cfg_loopback_chb    <= 16'h0;
+
   end else begin
     if ((reg_addr[8-1:0] == DAC_CONF_REG      ) && (reg_wr_we == 1)) begin dac_chb_conf       <= reg_wr_data[31:16];  dac_cha_conf  <= reg_wr_data[15:0]; end    
     if ((reg_addr[8-1:0] == DAC_CHA_SCALE_OFFS) && (reg_wr_we == 1)) begin cfg_cha_offs       <= reg_wr_data[29:16];  cfg_cha_scale <= reg_wr_data[13:0]; end    
