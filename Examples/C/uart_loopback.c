@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     int res = rp_UartInit(); // init uart api
     printf("Init result: %d\n",res);
     
-    res = rp_UartSetTimeout(10); // set timeout in decaseconds. 10 decsec = 1 sec 
+    res = rp_UartSetTimeout(10); // set timeout in 1/10 sec. 10 = 1 sec 
     printf("Set timeout: %d\n",res);
     
     res = rp_UartSetSpeed(115200); // set uart speed

@@ -26,7 +26,7 @@ fprintf(tcpipObj,'UART:PARITY ODD');       % set parity
 res = query(tcpipObj,'UART:PARITY?');      % check current settings for parity
 fprintf('Parity %s\n', res);
 
-fprintf(tcpipObj,'UART:TIMEOUT 10');       % set timeout in deca sec. 10 desasec = 1 sec
+fprintf(tcpipObj,'UART:TIMEOUT 10');       % set timeout in 1/10 sec. 10 = 1 sec 
 res = query(tcpipObj,'UART:TIMEOUT?');     % check current settings for parity
 fprintf('Timeout %s\n', res);
 
