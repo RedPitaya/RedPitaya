@@ -2,7 +2,7 @@
 clc
 clear all
 close all
-IP= '192.168.1.106'; % Input IP of your Red Pitaya...
+IP= ''; % Input IP of your Red Pitaya...
 port = 5000; % If you are using WiFi then IP is:
 tcpipObj=tcpip(IP, port); % 192.168.128.1
 
