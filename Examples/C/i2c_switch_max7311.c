@@ -1,5 +1,4 @@
 /* @brief This is a simple application for testing I2C communication on a RedPitaya
-* @Author Luka Golinar <luka.golinar@redpitaya.com>
 *
 * (c) Red Pitaya  http://www.redpitaya.com
 *
