@@ -450,7 +450,8 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         if (enable1 && enable2){
             gen_Synchronise();
         }else{
-            generate_Reset(channel);
+            if (enable1 || enable2)
+                generate_Reset(channel);
         }
 
         return RP_OK;
@@ -467,7 +468,8 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         if (enable1 && enable2){
             gen_Synchronise();
         }else{
-            generate_Reset(channel);
+            if (enable1 || enable2)
+                generate_Reset(channel);
         }
 
         return RP_OK;
