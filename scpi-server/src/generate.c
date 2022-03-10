@@ -56,7 +56,7 @@ const scpi_choice_def_t scpi_RpGenMode[] = {
 };
 
 scpi_result_t RP_GenReset(scpi_t *context) {
-    int result = D();
+    int result = rp_GenReset();
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*GEN:RST Failed to reset Red "
             "Pitaya generate: %s\n", rp_GetError(result));
