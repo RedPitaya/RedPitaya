@@ -92,6 +92,9 @@ reg signed  [  28-1: 0] dac_mult  ;
 reg signed  [  15-1: 0] dac_sum   ;
 
 reg               lastval;
+reg   [   5-1: 0] lastval_sr;
+reg   [   5-1: 0] zero_sr;
+
 wire              not_burst;
 
 assign not_burst = (&(~set_ncyc_i)) && (&(~set_rnum_i));
@@ -103,6 +106,12 @@ begin
    dac_rp     <= dac_pnt[PNT_SIZE-1:16+32];
    dac_rd     <= dac_buf[dac_rp] ;
    dac_rdat   <= dac_rd ;  // improve timing
+end
+
+always @(posedge dac_clk_i) // shift regs are needed because of processing path delay
+begin
+   lastval_sr <= {lastval_sr[3:0], lastval   };
+   zero_sr    <= {zero_sr[3:0]   , set_zero_i};
 end
 
 // write
@@ -120,9 +129,9 @@ begin
    dac_sum  <= $signed(dac_mult[28-1:13]) + $signed(set_dc_i) ;
 
    // saturation
-   if (set_zero_i)  
+   if (set_zero_i || |zero_sr)  
       dac_o <= 14'h0;
-   else if (lastval) //on last value in burst send user specified last value
+   else if (lastval || |lastval_sr) //on last value in burst send user specified last value
       dac_o <= set_last_i;
    else 
       dac_o <= ^dac_sum[15-1:15-2] ? {dac_sum[15-1], {13{~dac_sum[15-1]}}} : dac_sum[13:0];
