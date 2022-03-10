@@ -184,8 +184,11 @@ gpio_if #(.DW (24)) gpio ();
 ////////////////////////////////////////////////////////////////////////////////
 
 // diferential clock input
-IBUFDS i_clk_01 (.I (adc_clk_i[0][1]), .IB (adc_clk_i[0][0]), .O (adc_clk_in[0]));  // differential clock input
-IBUFDS i_clk_23 (.I (adc_clk_i[1][1]), .IB (adc_clk_i[1][0]), .O (adc_clk_in[1]));  // differential clock input
+//IBUFDS i_clk_01 (.I (adc_clk_i[0][1]), .IB (adc_clk_i[0][0]), .O (adc_clk_in[0]));  // differential clock input
+//IBUFDS i_clk_23 (.I (adc_clk_i[1][1]), .IB (adc_clk_i[1][0]), .O (adc_clk_in[1]));  // differential clock input
+
+IBUFG i_clk_01 (.I (adc_clk_i[0][1]), .O (adc_clk_in[0]));  // differential clock input
+IBUFG i_clk_23 (.I (adc_clk_i[0][0]), .O (adc_clk_in[1]));  // differential clock input
 
 red_pitaya_pll_4adc pll_01 (
   // inputs
@@ -346,8 +349,7 @@ for (GVC = 0; GVC < 4; GVC = GVC + 1) begin : channels
     logic          adc_dat_idly;
     logic [ 2-1:0] adc_dat_ddr;
 
-//    logic [8-1:0] [ 7-1:0] adc_dat_ddr;
-//    logic [4-1:0] [ 7-1:0] adc_dat_idly;
+
    //(* IODELAY_GROUP = adc_inputs *)
    IDELAYE2 #(
       .DELAY_SRC("IDATAIN"),           // Delay input (IDATAIN, DATAIN)

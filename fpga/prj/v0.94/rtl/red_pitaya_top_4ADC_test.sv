@@ -267,7 +267,6 @@ red_pitaya_ps ps (
   .axi3_wrdy_o   (axi3_wrdy   ),  .axi2_wrdy_o   (axi2_wrdy   )   // system write ready
 );
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // system bus decoder & multiplexer (it breaks memory addresses into 8 regions)
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,16 +350,12 @@ logic [4-1:0] [ 7-1:0] adc_dat_ddr;
 
 genvar GV;
 genvar GVC;
+
 generate
-
-
 for (GVC = 0; GVC < 2; GVC = GVC + 1) begin : channels
   for (GV = 0; GV < 7; GV = GV + 1) begin : adc_decode
-  logic adc_dat_idly;
+  logic          adc_dat_idly;
   logic [ 2-1:0] adc_dat_ddr;
-  logic                  adc_dat_iddr;
-  assign adc_dat_iddr = adc_dat_i[GVC][GV];
-  //assign adc_dat_idly = adc_dat_i[GVC][2*GV+1];
 
 
    //(* IODELAY_GROUP = adc_inputs *)
@@ -381,24 +376,22 @@ for (GVC = 0; GVC < 2; GVC = GVC + 1) begin : channels
       .CINVCTRL     ( 1'b0                  ),  // 1-bit input: Dynamic clock inversion input
       .CNTVALUEIN   ( 5'h0                  ),  // 5-bit input: Counter value input
       .DATAIN       ( 1'b0                  ),  // 1-bit input: Internal delay data input
-      .IDATAIN      ( adc_dat_iddr          ),  // 1-bit input: Data input from the I/O
+      .IDATAIN      ( adc_dat_i[GVC][GV]    ),  // 1-bit input: Data input from the I/O
       .INC          ( idly_inc[GV]          ),  // 1-bit input: Increment / Decrement tap delay input
       .LD           ( idly_rst[GV]          ),  // 1-bit input: Load IDELAY_VALUE input
       .LDPIPEEN     ( 1'b0                  ),  // 1-bit input: Enable PIPELINE register to load data input
       .REGRST       ( 1'b0                  )   // 1-bit input: Active-high reset tap-delay input
    );
   
-    //IDDR #(.DDR_CLK_EDGE("SAME_EDGE")) iddr_adc_dat_0 (.D(adc_dat_idly), .Q1({adc_dat_ddr[2*GVC + 1][GV]}), .Q2({adc_dat_ddr[2*GVC][GV]}), .C(adc_clk), .CE(1'b1), .R(1'b0), .S(1'b0));
     IDDR #(.DDR_CLK_EDGE("SAME_EDGE")) iddr_adc_dat_0 (.D(adc_dat_idly), .Q1({adc_dat_ddr[1]}), .Q2({adc_dat_ddr[0]}), .C(adc_clk), .CE(1'b1), .R(1'b0), .S(1'b0));
     assign adc_dat_raw[GVC][2*GV  ] = adc_dat_ddr[0];
     assign adc_dat_raw[GVC][2*GV+1] = adc_dat_ddr[1];
-
-    assign adc_dat[0] = {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
-    assign adc_dat[1] = {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
   end 
 end
 endgenerate
 
+assign adc_dat[0] = {adc_dat_raw[0][14-1], ~adc_dat_raw[0][14-2:0]};
+assign adc_dat[1] = {adc_dat_raw[1][14-1], ~adc_dat_raw[1][14-2:0]};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -504,6 +497,64 @@ red_pitaya_scope i_scope_0_1 (
   .sys_ack       (sys[1].ack  )
 );
 
+`ifdef ASG_ON
+////////////////////////////////////////////////////////////////////////////////
+//  DAC arbitrary signal generator
+////////////////////////////////////////////////////////////////////////////////
+
+red_pitaya_asg i_asg (
+   // DAC
+  .dac_a_o         (asg_dat[0]  ),  // CH 1
+  .dac_b_o         (asg_dat[1]  ),  // CH 2
+  .dac_clk_i       (adc_clk     ),  // clock
+  .dac_rstn_i      (adc_rstn    ),  // reset - active low
+  .trig_a_i        (gpio.i[8]   ),
+  .trig_b_i        (gpio.i[8]   ),
+  .trig_out_o      (trig_asg_out),
+  // System bus
+  .sys_addr        (sys[2].addr ),
+  .sys_wdata       (sys[2].wdata),
+  .sys_wen         (sys[2].wen  ),
+  .sys_ren         (sys[2].ren  ),
+  .sys_rdata       (sys[2].rdata),
+  .sys_err         (sys[2].err  ),
+  .sys_ack         (sys[2].ack  )
+);
+localparam type SBG_T = logic signed [14-1:0];  // generate
+
+SBA_T [MNA-1:0]          adc_dat;
+
+// ASG
+SBG_T [2-1:0]            asg_dat;
+
+// PID
+SBA_T [2-1:0]            pid_dat;
+
+assign pid_dat[0] = 'h0;
+assign pid_dat[1] = 'h0;
+
+// Sumation of ASG and PID signal perform saturation before sending to DAC 
+assign dac_a_sum = asg_dat[0] + pid_dat[0];
+assign dac_b_sum = asg_dat[1] + pid_dat[1];
+
+// saturation
+assign dac_a = (^dac_a_sum[15-1:15-2]) ? {dac_a_sum[15-1], {13{~dac_a_sum[15-1]}}} : dac_a_sum[14-1:0];
+assign dac_b = (^dac_b_sum[15-1:15-2]) ? {dac_b_sum[15-1], {13{~dac_b_sum[15-1]}}} : dac_b_sum[14-1:0];
+
+// output registers + signed to unsigned (also to negative slope)
+always @(posedge dac_clk_1x)
+begin
+  dac_dat_a <= {dac_a[14-1], ~dac_a[14-2:0]};
+  dac_dat_b <= {dac_b[14-1], ~dac_b[14-2:0]};
+end
+
+// DDR outputs
+ODDR oddr_dac_clk          (.Q(dac_clk_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2p), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_wrt          (.Q(dac_wrt_o), .D1(1'b0     ), .D2(1'b1     ), .C(dac_clk_2x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_sel          (.Q(dac_sel_o), .D1(1'b1     ), .D2(1'b0     ), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+ODDR oddr_dac_rst          (.Q(dac_rst_o), .D1(dac_rst  ), .D2(dac_rst  ), .C(dac_clk_1x), .CE(1'b1), .R(1'b0   ), .S(1'b0));
+ODDR oddr_dac_dat [14-1:0] (.Q(dac_dat_o), .D1(dac_dat_b), .D2(dac_dat_a), .C(dac_clk_1x), .CE(1'b1), .R(dac_rst), .S(1'b0));
+`else
 ////////////////////////////////////////////////////////////////////////////////
 // oscilloscope CH2 and CH3
 ////////////////////////////////////////////////////////////////////////////////
@@ -538,7 +589,7 @@ red_pitaya_scope i_scope_2_3 (
   .sys_err       (sys[2].err  ),
   .sys_ack       (sys[2].ack  )
 );
-
+`endif
 ////////////////////////////////////////////////////////////////////////////////
 // Daisy test code
 ////////////////////////////////////////////////////////////////////////////////
