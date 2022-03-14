@@ -1,6 +1,0 @@
-# compile vhdl design source files
-vhdl xil_defaultlib  \
-"../../../../rp_gpio.srcs/sources_1/ip/reg_ctrl/sim/reg_ctrl.vhd" \
-
-# Do not sort compile order
-nosort
