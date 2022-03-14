@@ -372,9 +372,9 @@ $(DTREE_DIR): $(DTREE_TAR)
 $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
-	cat fpga/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
+	cat fpga/$(FPGA_PRJ)/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
 	gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
 	# create device tree source from binary for reference
 	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
