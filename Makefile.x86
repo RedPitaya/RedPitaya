@@ -4,6 +4,10 @@
 
 VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 BUILD_NUMBER ?= 0
+
+GIT_MODE ?= GITHUB
+GITLAB_TOKEN ?= 
+
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
 export BUILD_NUMBER
@@ -89,9 +93,45 @@ KERNEL_HEADERS ?= YES
 HWID ?=
 DEF_PARAM ?=
 
+# stream_app
+FPGA_STREAM_APP=
+
+# stream_app_250
+FPGA_STREAM_APP_250=
+
+# classic
+FPGA_CLASSIC=
+
+# logic
+FPGA_LOGIC=
+
+# logic_250
+FPGA_LOGIC_250=
+
+# v0.94
+FPGA_0_94=
+
+# v0.94_250
+FPGA_0_94_250=
+
+# mercury
+FPGA_MERCURY=
+
+# axi4lite
+FPGA_AXI4LITE=
+
+
 ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
-FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
+# FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
+
+FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_CLASSIC 	= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_LOGIC		= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_0_94		= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_MERCURY	= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_AXI4LITE	= 748304679bc649f4f54b39dc88d42c84de55f17a
+
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
@@ -101,7 +141,11 @@ endif
 
 ifeq ($(MODEL),Z20)
 ifeq ($(STREAMING),MASTER)
-FPGA_PRJ_LST = v0.94 stream_app
+# FPGA_PRJ_LST = v0.94 stream_app
+
+FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_0_94		= 748304679bc649f4f54b39dc88d42c84de55f17a
+
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
 FPGA_MODEL ?= Z20
@@ -111,7 +155,15 @@ endif
 
 ifeq ($(MODEL),Z20_125)
 ifeq ($(STREAMING),MASTER)
-FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
+# FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
+
+FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_CLASSIC 	= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_LOGIC		= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_0_94		= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_MERCURY	= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_AXI4LITE	= 748304679bc649f4f54b39dc88d42c84de55f17a
+
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_14
@@ -121,7 +173,12 @@ endif
 
 ifeq ($(MODEL),Z20_250_12) 
 ifeq ($(STREAMING),MASTER)
-FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
+# FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
+
+FPGA_STREAM_APP_250 = 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_0_94_250		= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_LOGIC_250		= 748304679bc649f4f54b39dc88d42c84de55f17a
+
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_250
@@ -131,7 +188,11 @@ endif
 
 ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
-FPGA_PRJ_LST = stream_app logic
+# FPGA_PRJ_LST = stream_app logic
+
+FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_CLASSIC 	= 748304679bc649f4f54b39dc88d42c84de55f17a
+
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
@@ -144,18 +205,58 @@ endif
 
 fpga: $(INSTALL_DIR)/fpga
 
+
+define build_fpga
+	./download_fpga.sh $(1) $(GIT_MODE) $(5) $(GITLAB_TOKEN)
+	mkdir -p $(INSTALL_DIR)/fpga/$(1)
+	make -C fpga/$(1) PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4)
+	
+	cp    fpga/$(1)/prj/$(1)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(1)/fpga.bit
+	cp    fpga/$(1)/prj/$(1)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(1)/fsbl.elf
+	cp -r fpga/$(1)/prj/$(1)/sdk/dts                  $(INSTALL_DIR)/fpga/$(1)
+	cp    fpga/$(1)/prj/$(1)/dts/*                    $(INSTALL_DIR)/fpga/$(1)/dts/
+	tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(1)/fpga.dtbo -i fpga/$(1)/prj/$(1)/dts -i fpga/$(1)/dts fpga/$(1)/prj/$(1)/dts/fpga.dtso
+endef
+
 $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
-	# compile FPGA projects
-	for ITM in $(FPGA_PRJ_LST); do \
-	    make -C fpga PRJ=$$ITM MODEL=$(FPGA_MODEL) DEFINES=$(DEF_PARAM) HWID=$(HWID); \
-	    mkdir -p $(INSTALL_DIR)/fpga/$$ITM; \
-	    cp    fpga/prj/$$ITM/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$$ITM/fpga.bit; \
-	    cp    fpga/prj/$$ITM/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$$ITM/fsbl.elf; \
-	    cp -r fpga/prj/$$ITM/sdk/dts                  $(INSTALL_DIR)/fpga/$$ITM         ; \
-	    cp    fpga/prj/$$ITM/dts/*                    $(INSTALL_DIR)/fpga/$$ITM/dts/    ; \
-	    tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$$ITM/fpga.dtbo -i fpga/prj/$$ITM/dts -i fpga/dts fpga/prj/$$ITM/dts/fpga.dtso;\
-	done
+
+ifneq "$(FPGA_STREAM_APP)" ""
+	$(call build_fpga,stream_app,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP))
+endif
+
+ifneq "$(FPGA_STREAM_APP_250)" ""
+	$(call build_fpga,stream_app_250,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP_250))
+endif
+
+ifneq "$(FPGA_CLASSIC)" ""
+	$(call build_fpga,classic,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_CLASSIC))
+endif
+
+ifneq "$(FPGA_LOGIC)" ""
+	$(call build_fpga,logic,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC))
+endif
+
+ifneq "$(FPGA_LOGIC_250)" ""
+	$(call build_fpga,logic_250,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC_250))
+endif
+
+ifneq "$(FPGA_0_94)" ""
+	$(call build_fpga,v0.94,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94))
+endif
+
+ifneq "$(FPGA_0_94_250)" ""
+	$(call build_fpga,v0.94_250,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94_250))
+endif
+
+ifneq "$(FPGA_MERCURY)" ""
+	$(call build_fpga,mercury,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_MERCURY))
+endif
+
+ifneq "$(FPGA_AXI4LITE)" ""
+	$(call build_fpga,axi4lite,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
+endif
+
 
 ifneq ($(STREAMING),SLAVE)
 	# copy archived FPGA bitstream images and decompress them
@@ -265,6 +366,8 @@ $(DTREE_TAR): | $(DL)
 $(DTREE_DIR): $(DTREE_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
+	mkdir -p fpga/tmp
+	cp -r $@ fpga/tmp
 
 $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
