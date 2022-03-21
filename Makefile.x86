@@ -208,7 +208,7 @@ fpga: $(INSTALL_DIR)/fpga
 
 define build_fpga
 	./download_fpga.sh $(1) $(GIT_MODE) $(5) $(GITLAB_TOKEN)
-	./gen_fpga_report.sh $(1) $(5)
+	./gen_fpga_report.sh GEN $(1) $(5)
 	mkdir -p $(INSTALL_DIR)/fpga/$(1)
 	make -C fpga/$(1) PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4)
 	
@@ -258,6 +258,7 @@ ifneq "$(FPGA_AXI4LITE)" ""
 	$(call build_fpga,axi4lite,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
 endif
 
+	./gen_fpga_report.sh PACK
 
 ifneq ($(STREAMING),SLAVE)
 	# copy archived FPGA bitstream images and decompress them
