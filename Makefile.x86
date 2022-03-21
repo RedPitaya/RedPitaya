@@ -208,7 +208,6 @@ fpga: $(INSTALL_DIR)/fpga
 
 define build_fpga
 	./download_fpga.sh $(1) $(GIT_MODE) $(5) $(GITLAB_TOKEN)
-	./gen_fpga_report.sh GEN $(1) $(5)
 	mkdir -p $(INSTALL_DIR)/fpga/$(1)
 	make -C fpga/$(1) PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4)
 	
@@ -257,8 +256,6 @@ endif
 ifneq "$(FPGA_AXI4LITE)" ""
 	$(call build_fpga,axi4lite,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
 endif
-
-	./gen_fpga_report.sh PACK
 
 ifneq ($(STREAMING),SLAVE)
 	# copy archived FPGA bitstream images and decompress them
@@ -426,3 +423,49 @@ clean:
 	-make -C $(UBOOT_DIR) clean
 	# todo, remove downloaded libraries and symlinks
 	$(RM) $(INSTALL_DIR) -rf
+
+
+################################################################################
+#
+################################################################################
+
+
+gen_report:
+
+ifneq "$(FPGA_STREAM_APP)" ""
+	./gen_fpga_report.sh GEN stream_app $(FPGA_STREAM_APP)
+endif
+
+ifneq "$(FPGA_STREAM_APP_250)" ""
+	./gen_fpga_report.sh GEN stream_app_250 $(FPGA_STREAM_APP_250)
+endif
+
+ifneq "$(FPGA_CLASSIC)" ""
+	./gen_fpga_report.sh GEN classic $(FPGA_CLASSIC)
+endif
+
+ifneq "$(FPGA_LOGIC)" ""
+	./gen_fpga_report.sh GEN logic $(FPGA_LOGIC)
+endif
+
+ifneq "$(FPGA_LOGIC_250)" ""
+	./gen_fpga_report.sh GEN logic_250 $(FPGA_LOGIC_250)
+endif
+
+ifneq "$(FPGA_0_94)" ""
+	./gen_fpga_report.sh GEN v0.94 $(FPGA_0_94)
+endif
+
+ifneq "$(FPGA_0_94_250)" ""
+	./gen_fpga_report.sh GEN v0.94_250 $(FPGA_0_94_250)
+endif
+
+ifneq "$(FPGA_MERCURY)" ""
+	./gen_fpga_report.sh GEN mercury $(FPGA_MERCURY)
+endif
+
+ifneq "$(FPGA_AXI4LITE)" ""
+	./gen_fpga_report.sh GEN axi4lite $(FPGA_AXI4LITE)
+endif
+
+	./gen_fpga_report.sh PACK
