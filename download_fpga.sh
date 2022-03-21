@@ -10,7 +10,7 @@ then
     mkdir -p fpga/$PRJ/
     echo "Download from gitlab $1"
     cd fpga/$PRJ/
-    git clone https://gitlab-ci-token:$TOKEN@gitlab.redpitaya.com/redpitaya-3.0/redpitaya-fpga.git 
+    git clone https://gitlab-ci-token:$TOKEN@gitlab.redpitaya.com/redpitaya-3.0/redpitaya-fpga.git .
     git checkout $3
     cd ../..
 #    curl -L "https://gitlab.redpitaya.com/redpitaya-3.0/redpitaya-fpga/-/archive/$COMMIT/redpitaya-public-$COMMIT.zip?private_token=$TOKEN" -o fpga/$PRJ/$COMMIT.zip
