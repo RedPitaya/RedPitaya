@@ -4,3 +4,6 @@ Name=wlan*
 [Network]
 LinkLocalAddressing=ipv4
 DHCP=ipv4
+
+[DHCP]
+RouteMetric=10

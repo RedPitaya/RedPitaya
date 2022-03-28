@@ -116,7 +116,7 @@ chown -v -R jupyter:jupyter /home/jupyter/.jupyter
 EOF_CHROOT
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-systemctl enable jupyter
+# systemctl enable jupyter
 EOF_CHROOT
 
 ###############################################################################

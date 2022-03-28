@@ -31,6 +31,9 @@ install -v -m 664 -o root -D $OVERLAY/etc/avahi/services/scpi.service           
 install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/hostname-mac.service            $ROOT_DIR/etc/systemd/system/hostname-mac.service
 
 chroot $ROOT_DIR <<- EOF_CHROOT
+
+export DEBIAN_FRONTEND=noninteractive
+
 # network tools
 apt-get -y install iproute2 iputils-ping curl
 

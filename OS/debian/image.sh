@@ -16,6 +16,8 @@
 # prepating image
 ################################################################################
 
+VERSION_IMG=1.06
+
 # current time and date are used to create the image name
 DATE=`date +"%H-%M-%S_%d-%b-%Y"`
 
@@ -65,6 +67,10 @@ mount $ROOT_DEV $ROOT_DIR
 ################################################################################
 # umount image
 ################################################################################
+
+# kill -k file users and list them -m before Unmount file systems
+fuser -km $BOOT_DIR
+fuser -km $ROOT_DIR
 
 # Unmount file systems
 umount $BOOT_DIR $ROOT_DIR

@@ -16,7 +16,7 @@ else
 fi
 
 # Install Ubuntu base system to the root file system
-UBUNTU_BASE_VER=16.04.3
+UBUNTU_BASE_VER=16.04.6
 UBUNTU_BASE_TAR=ubuntu-base-${UBUNTU_BASE_VER}-base-armhf.tar.gz
 UBUNTU_BASE_URL=http://cdimage.ubuntu.com/ubuntu-base/releases/${UBUNTU_BASE_VER}/release/${UBUNTU_BASE_TAR}
 test -f $UBUNTU_BASE_TAR || curl -L $UBUNTU_BASE_URL -o $UBUNTU_BASE_TAR
@@ -38,11 +38,15 @@ install -v -m 664 -o root -D $OVERLAY/etc/apt/apt.conf.d/99norecommends $ROOT_DI
 install -v -m 664 -o root -D $OVERLAY/etc/apt/sources.list              $ROOT_DIR/etc/apt/sources.list
 
 chroot $ROOT_DIR <<- EOF_CHROOT
+
+export DEBIAN_FRONTEND=noninteractive
+
 apt-get update
 apt-get -y upgrade
+apt-get install -y apt-utils
 
 # install HWE kernell
-apt-get -y install --install-recommends linux-tools-generic-hwe-16.04 linux-headers-generic-hwe-16.04
+pt-get -y install --install-recommends linux-tools-generic-hwe-16.04 linux-headers-generic-hwe-16.04
 
 # add package containing add-apt-repository
 apt-get -y install software-properties-common
@@ -57,6 +61,9 @@ EOF_CHROOT
 ################################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
+
+export DEBIAN_FRONTEND=noninteractive
+
 # this is needed by systemd services 'keyboard-setup.service' and 'console-setup.service'
 DEBIAN_FRONTEND=noninteractive \
 apt-get -y install console-setup
@@ -66,9 +73,8 @@ apt-get -y install locales
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
 
-# TODO seems sytemd is not running without /proc/cmdline or something
-#localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
-#localectl set-keymap us
+# localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
+# localectl set-keymap us
 
 # Debug log
 locale -a
@@ -95,22 +101,19 @@ install -v -m 664 -o root -D $OVERLAY/etc/hostname  $ROOT_DIR/etc/hostname
 ################################################################################
 
 chroot $ROOT_DIR <<- EOF_CHROOT
+
+export DEBIAN_FRONTEND=noninteractive
+
 # install fake hardware clock
 apt-get -y install fake-hwclock
 
-dpkg-reconfigure --frontend=noninteractive tzdata
 
-# TODO seems sytemd is not running without /proc/cmdline or something
-#timedatectl set-timezone Europe/Ljubljana
+ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+apt-get install -y tzdata
+dpkg-reconfigure --frontend noninteractive tzdata
+
 EOF_CHROOT
 
-# set default timezone
-if [ "$TIMEZONE" = "" ]; then
-  TIMEZONE="Etc/UTC"
-fi
-# set timezone and fake RTC time
-echo timezone = $TIMEZONE
-echo $TIMEZONE > $ROOT_DIR/etc/timezone
 
 # the fake HW clock will be UTC, so an adjust file is not needed
 #echo $MYADJTIME > $ROOT_DIR/etc/adjtime
@@ -125,6 +128,7 @@ echo $DATETIME > $ROOT_DIR/etc/fake-hwclock.data
 
 install -v -m 664 -o root -D $OVERLAY/etc/fstab  $ROOT_DIR/etc/fstab
 
+
 ################################################################################
 # run other scripts
 ################################################################################
@@ -134,17 +138,18 @@ install -v -m 664 -o root -D $OVERLAY/etc/fstab  $ROOT_DIR/etc/fstab
 . OS/debian/zynq.sh
 . OS/debian/redpitaya.sh
 . OS/debian/jupyter.sh
+. OS/debian/watchdog.sh
+. OS/debian/cmake3.21.sh
 #. OS/debian/tft.sh
 
 ################################################################################
 # handle users
-################################################################################
+###############################################################################
 
 # http://0pointer.de/blog/projects/serial-console.html
 
 install -v -m 664 -o root -D $OVERLAY/etc/securetty $ROOT_DIR/etc/securetty
-install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/serial-getty@ttyPS0.service.d/override.conf \
-                            $ROOT_DIR/etc/systemd/system/serial-getty@ttyPS0.service.d/override.conf
+install -v -m 664 -o root -D $OVERLAY/etc/systemd/system/serial-getty@ttyPS0.service $ROOT_DIR/etc/systemd/system/getty.target.wants/serial-getty@ttyPS0.service
 
 chroot $ROOT_DIR <<- EOF_CHROOT
 echo root:root | chpasswd
@@ -159,9 +164,9 @@ apt-get clean
 history -c
 EOF_CHROOT
 
-# kill -k file users and list them -m before Unmount file systems
-fuser -km $BOOT_DIR
-fuser -km $ROOT_DIR
+# set version on ubuntu
+
+echo $VERSION_IMG > $ROOT_DIR/root/.version
 
 # file system cleanup for better compression
 cat /dev/zero > $ROOT_DIR/zero.file

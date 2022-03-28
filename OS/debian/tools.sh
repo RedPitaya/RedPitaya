@@ -12,7 +12,10 @@ else
 fi
 
 chroot $ROOT_DIR <<- EOF_CHROOT
-apt-get -y install dbus udev
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get -y install dbus udev curl
 
 # Git can be used to share notebook examples
 apt-get -y install git
@@ -22,7 +25,18 @@ apt-get -y install build-essential less vim nano sudo usbutils psmisc lsof
 apt-get -y install parted dosfstools
 
 # Python 3
-apt-get -y install python3 python3-pip python3-setuptools
+
+# install PPA
+add-apt-repository ppa:deadsnakes/ppa
+
+# update and install
+apt update
+apt -y install python3.8 python3.8-dev python3.8-venv
+update-alternatives --set python3 /usr/bin/python3.8
+
+curl https://bootstrap.pypa.io/get-pip.py | python3.8
+
+#apt-get -y install python3.9 python3.9-pip python3.9-setuptools
 pip3 install --upgrade pip
 
 # Meson+ninja build system
@@ -35,4 +49,8 @@ apt-get -y install mtd-utils
 # DSP library for C language
 # TODO: the package does not exist yet in Ubuntu 16.04
 #apt-get -y install libliquid-dev
+
+# Install Midnight commander
+apt-get -y install mc 
+
 EOF_CHROOT
