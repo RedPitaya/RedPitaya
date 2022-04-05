@@ -49,9 +49,11 @@ int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_cha
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable) {
     if (channel == RP_CH_1) {
+        cmn_Debug("generate->AsetOutputTo0",disable ? 1 : 0);
         generate->AsetOutputTo0 = disable ? 1 : 0;
     }
     else if (channel == RP_CH_2) {
+        cmn_Debug("generate->BsetOutputTo0",disable ? 1 : 0);
         generate->BsetOutputTo0 = disable ? 1 : 0;
     }
     else {
@@ -85,9 +87,11 @@ int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
 int generate_setEnableTempProtection(rp_channel_t channel, bool enable) {
     #ifdef Z20_250_12
         if (channel == RP_CH_1) {
+            cmn_Debug("generate->AtempProtected",disable ? 1 : 0);
             generate->AtempProtected = enable ? 1 : 0;
         }
         else if (channel == RP_CH_2) {
+            cmn_Debug("generate->BtempProtected",disable ? 1 : 0);
             generate->BtempProtected = enable ? 1 : 0;
         }
         else {
@@ -115,9 +119,11 @@ int generate_getLatchTempAlarm(rp_channel_t channel, bool *state){
 int generate_setLatchTempAlarm(rp_channel_t channel, bool state) {
     #ifdef Z20_250_12
         if (channel == RP_CH_1) {
+            cmn_Debug("generate->AlatchedTempAlarm",disable ? 1 : 0);
             generate->AlatchedTempAlarm = state ? 1 : 0;
         }
         else if (channel == RP_CH_2) {
+            cmn_Debug("generate->BlatchedTempAlarm",disable ? 1 : 0);
             generate->BlatchedTempAlarm = state ? 1 : 0;
         }
         else {
@@ -148,7 +154,9 @@ int generate_setAmplitude(rp_channel_t channel, float amplitude) {
     volatile ch_properties_t *ch_properties;
     uint32_t amp_max = calib_getGenScale(channel);
     getChannelPropertiesAddress(&ch_properties, channel);
-    ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX , false, amp_max, 0, 0.0);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX , false, amp_max, 0, 0.0);
+    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
+    ch_properties->amplitudeScale = value;
     return RP_OK;
 }
 
@@ -165,7 +173,9 @@ int generate_setDCOffset(rp_channel_t channel, float offset) {
     int dc_offs = calib_getGenOffset(channel);
     uint32_t amp_max = calib_getGenScale(channel);
     getChannelPropertiesAddress(&ch_properties, channel);
-    ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset , (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset , (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
+    ch_properties->amplitudeOffset = value;
     return RP_OK;
 }
 
@@ -182,6 +192,7 @@ int generate_setBurstLastValue(rp_channel_t channel, float amplitude){
     int dc_offs = calib_getGenOffset(channel);
     uint32_t amp_max = calib_getGenScale(channel);
     uint32_t cnt = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX, false, amp_max, dc_offs, 0);
+    cmn_DebugCh("generate->BurstFinalValue_ch",channel,cnt);
     CHANNEL_ACTION(channel,
         generate->BurstFinalValue_chA = cnt,
         generate->BurstFinalValue_chB = cnt)
@@ -203,7 +214,9 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
     volatile ch_properties_t *ch_properties;
     uint32_t amp_max = calib_getGenScale(channel,gain);
     getChannelPropertiesAddress(&ch_properties, channel);
-    ch_properties->amplitudeScale = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX , false, amp_max, 0, 0.0);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX , false, amp_max, 0, 0.0);
+    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
+    ch_properties->amplitudeScale = value;
     return RP_OK;
 }
 
@@ -220,7 +233,9 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
     int dc_offs = calib_getGenOffset(channel,gain);
     uint32_t amp_max = calib_getGenScale(channel,gain);
     getChannelPropertiesAddress(&ch_properties, channel);
-    ch_properties->amplitudeOffset = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    cmn_DebugCh("ch_properties->amplitudeOffset",channel,value);
+    ch_properties->amplitudeOffset = value;
     return RP_OK;
 }
 
@@ -238,8 +253,11 @@ int generate_getDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float *offset)
 int generate_setFrequency(rp_channel_t channel, float frequency) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    ch_properties->counterStep = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
+    uint32_t value = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
+    cmn_DebugCh("ch_properties->counterStep",channel,value);
+    ch_properties->counterStep = value;
     uint32_t wrap_flag = 1;
+    cmn_DebugCh("generate->_SM_WrapPointer",channel,wrap_flag);
     channel == RP_CH_1 ? (generate->ASM_WrapPointer = wrap_flag) : (generate->BSM_WrapPointer = wrap_flag);
     return RP_OK;
 }
@@ -252,6 +270,7 @@ int generate_getFrequency(rp_channel_t channel, float *frequency) {
 }
 
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
+    cmn_DebugCh("generate->properties_ch_.counterWrap",channel,65536 * size - 1);
     CHANNEL_ACTION(channel,
             generate->properties_chA.counterWrap = 65536 * size - 1,
             generate->properties_chB.counterWrap = 65536 * size - 1)
@@ -259,6 +278,7 @@ int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
 }
 
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
+    cmn_DebugCh("generate->_triggerSelector",channel,value);
     CHANNEL_ACTION(channel,
             generate->AtriggerSelector = value,
             generate->BtriggerSelector = value)
@@ -273,6 +293,7 @@ int generate_getTriggerSource(rp_channel_t channel, uint32_t *value) {
 }
 
 int generate_setGatedBurst(rp_channel_t channel, uint32_t value) {
+    cmn_DebugCh("generate->_gatedBursts",channel,value);
     CHANNEL_ACTION(channel,
             generate->AgatedBursts = value,
             generate->BgatedBursts = value)
@@ -289,6 +310,7 @@ int generate_getGatedBurst(rp_channel_t channel, uint32_t *value) {
 int generate_setBurstCount(rp_channel_t channel, uint32_t num) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
+    cmn_DebugCh("ch_properties->cyclesInOneBurs",channel,num);
     ch_properties->cyclesInOneBurst = num;
     return RP_OK;
 }
@@ -303,6 +325,7 @@ int generate_getBurstCount(rp_channel_t channel, uint32_t *num) {
 int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
+    cmn_DebugCh("ch_properties->burstRepetitions",channel,repetitions);
     ch_properties->burstRepetitions = repetitions;
     return RP_OK;
 }
@@ -317,6 +340,7 @@ int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions) {
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
+    cmn_DebugCh("ch_properties->delayBetweenBurstRepetitions",channel,delay);
     ch_properties->delayBetweenBurstRepetitions = delay;
     return RP_OK;
 }
@@ -330,15 +354,19 @@ int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay) {
 
 int generate_simultaneousTrigger() {
     // simultaneously trigger both channels
+    cmn_Debug("cmn_SetBits((uint32_t *) generate)",0x00010001);
     return cmn_SetBits((uint32_t *) generate, 0x00010001, 0x00010001);
 }
 
 int generate_setOutputEnableSync(bool enable){
     if (enable) {
+        cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00800080",0x00800080);
         cmn_UnsetBits((uint32_t *) generate, 0x00800080 , 0x00800080);
         generate_Synchronise();
+        cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00800080",0x00000000);
         return cmn_SetBits((uint32_t *) generate, 0x00000000 , 0x00800080);
     }else{
+        cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00800080",0x00800080);
         return cmn_SetBits((uint32_t *) generate, 0x00800080 , 0x00800080);
     }
 }
@@ -346,14 +374,18 @@ int generate_setOutputEnableSync(bool enable){
 
 int generate_Synchronise() {
     // Both channels must be reset simultaneously
+    cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00400040",0x00400040);
     cmn_SetBits((uint32_t *) generate, 0x00400040, 0x00400040);
+    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00400040",0x00400040);
     cmn_UnsetBits((uint32_t *) generate, 0x00400040, 0x00400040);
     return RP_OK;
 }
 
 int generate_Reset(rp_channel_t channel){
     uint32_t value = channel == RP_CH_1 ? 0x00000040 : 0x00400000;
+    cmn_Debug("cmn_SetBits((uint32_t *) generate) 0x00400040",value);
     cmn_SetBits((uint32_t *) generate, value, value);
+    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) 0x00400040",value);
     cmn_UnsetBits((uint32_t *) generate, value, value);
     return RP_OK;
 }

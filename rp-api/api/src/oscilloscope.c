@@ -52,7 +52,8 @@ int osc_Release()
 
 int osc_SetDecimation(uint32_t decimation)
 {
-    return cmn_SetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK);
+    uint32_t currentValue = 0;
+    return cmn_SetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK,&currentValue);
 }
 
 int osc_GetDecimation(uint32_t* decimation)
@@ -81,7 +82,8 @@ int osc_GetAveraging(bool* enable)
 
 int osc_SetTriggerSource(uint32_t source)
 {
-    return cmn_SetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK);
+    uint32_t currentValue = 0;
+    return cmn_SetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK,&currentValue);
 }
 
 int osc_GetTriggerSource(uint32_t* source)
@@ -136,7 +138,8 @@ int osc_GetPreTriggerCounter(uint32_t *value)
 
 int osc_SetTriggerDelay(uint32_t decimated_data_num)
 {
-    return cmn_SetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
+    uint32_t currentValue = 0;
+    return cmn_SetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK,&currentValue);
 }
 
 int osc_GetTriggerDelay(uint32_t* decimated_data_num)
@@ -150,7 +153,8 @@ int osc_GetTriggerDelay(uint32_t* decimated_data_num)
 
 int osc_SetThresholdChA(uint32_t threshold)
 {
-    return cmn_SetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK);
+    uint32_t currentValue = 0;
+    return cmn_SetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK,&currentValue);
 }
 
 int osc_GetThresholdChA(uint32_t* threshold)
@@ -160,7 +164,8 @@ int osc_GetThresholdChA(uint32_t* threshold)
 
 int osc_SetThresholdChB(uint32_t threshold)
 {
-    return cmn_SetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK);
+    uint32_t currentValue = 0;
+    return cmn_SetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK,&currentValue);
 }
 
 int osc_GetThresholdChB(uint32_t* threshold)
@@ -173,7 +178,8 @@ int osc_GetThresholdChB(uint32_t* threshold)
  */
 int osc_SetHysteresisChA(uint32_t hysteresis)
 {
-    return cmn_SetValue(&osc_reg->cha_hystersis, hysteresis, HYSTERESIS_MASK);
+    uint32_t currentValue = 0;
+    return cmn_SetValue(&osc_reg->cha_hystersis, hysteresis, HYSTERESIS_MASK,&currentValue);
 }
 
 int osc_GetHysteresisChA(uint32_t* hysteresis)
@@ -183,7 +189,8 @@ int osc_GetHysteresisChA(uint32_t* hysteresis)
 
 int osc_SetHysteresisChB(uint32_t hysteresis)
 {
-    return cmn_SetValue(&osc_reg->chb_hystersis, hysteresis, HYSTERESIS_MASK);
+    uint32_t currentValue = 0;
+    return cmn_SetValue(&osc_reg->chb_hystersis, hysteresis, HYSTERESIS_MASK,&currentValue);
 }
 
 int osc_GetHysteresisChB(uint32_t* hysteresis)
@@ -196,10 +203,15 @@ int osc_GetHysteresisChB(uint32_t* hysteresis)
  */
 int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
 {
-    cmn_SetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA);
-    cmn_SetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER);
-    cmn_SetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER);
-    cmn_SetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER);
+    uint32_t currentValueAA = 0;
+    uint32_t currentValueBB = 0;
+    uint32_t currentValueKK = 0;
+    uint32_t currentValuePP = 0;
+
+    cmn_SetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA,&currentValueAA);
+    cmn_SetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER,&currentValueBB);
+    cmn_SetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
+    cmn_SetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
 }
 
@@ -214,10 +226,14 @@ int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
 {
-    cmn_SetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA);
-    cmn_SetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER);
-    cmn_SetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER);
-    cmn_SetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER);
+    uint32_t currentValueAA = 0;
+    uint32_t currentValueBB = 0;
+    uint32_t currentValueKK = 0;
+    uint32_t currentValuePP = 0;
+    cmn_SetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA,&currentValueAA);
+    cmn_SetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER,&currentValueBB);
+    cmn_SetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
+    cmn_SetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
 }
 

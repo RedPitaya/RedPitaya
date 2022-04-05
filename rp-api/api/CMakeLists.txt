@@ -23,6 +23,10 @@ if(NOT DEFINED INSTALL_DIR)
     set(IS_INSTALL OFF)
 endif()
 
+if(NOT DEFINED DEBUG_REG)
+  set(DEBUG_REG OFF)
+endif()
+
 
 if(NOT DEFINED VERSION)
   set(VERSION 0.00-0000)
@@ -103,6 +107,10 @@ endif()
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options(-std=c11 -Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
+if(DEBUG_REG)
+add_compile_options(-DDEBUG_REG)
+endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 

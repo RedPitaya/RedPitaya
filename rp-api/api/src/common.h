@@ -20,8 +20,6 @@
 #include <stdio.h>
 
 
-
-
 #define ECHECK(x) { \
         int retval = (x); \
         if (retval != RP_OK) { \
@@ -40,6 +38,14 @@ else if ((CHANNEL) == RP_CH_2) { \
 else { \
     return RP_EPN; \
 }
+
+#ifdef DEBUG_REG
+#define cmn_Debug(X,Y) cmn_DebugReg(X,Y);
+#define cmn_DebugCh(X,Y,Z) cmn_DebugRegCh(X,Y,Z);
+#else
+#define cmn_Debug(X,Y) ;
+#define cmn_DebugCh(X,Y,Z) ;
+#endif
 
 // unmasked IO read/write (p - pointer, v - value)
 #define ioread32(p) (*(volatile uint32_t *)(p))
@@ -65,13 +71,17 @@ else { \
 int cmn_Init();
 int cmn_Release();
 
+void cmn_DebugReg(const char* msg,uint32_t value);
+void cmn_DebugRegCh(const char* msg,int ch,uint32_t value);
+
+
 int cmn_Map(size_t size, size_t offset, void** mapped);
 int cmn_Unmap(size_t size, void** mapped);
 
 int cmn_SetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
 int cmn_UnsetBits(volatile uint32_t* field, uint32_t bits, uint32_t mask);
-int cmn_SetValue(volatile uint32_t* field, uint32_t value, uint32_t mask);
-int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSet);
+int cmn_SetValue(volatile uint32_t* field, uint32_t value, uint32_t mask,uint32_t *settedValue);
+int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSet,uint32_t *settedValue);
 int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask);
 int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
 int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* result);
