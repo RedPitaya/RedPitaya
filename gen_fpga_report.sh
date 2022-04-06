@@ -7,14 +7,14 @@ REPORT_FILE=report.xml
 
 if [[ "$MODE" == "BRANCH_KERNEL" ]]
 then
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCH=$(git branch --contains HEAD)
 LOG=$(git log -n 1)
 echo "<field name=\"Kernel\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
 fi
 
 if [[ "$MODE" == "BRANCH_ECOSYSTEM" ]]
 then
-BRANCH=$(git name-rev $COMMIT)
+BRANCH=$(git branch --contains HEAD)
 LOG=$(git log -n 1)
 echo "<field name=\"Ecosystem\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
 fi

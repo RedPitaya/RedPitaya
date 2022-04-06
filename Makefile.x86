@@ -432,7 +432,7 @@ clean:
 
 gen_report:
 
-	./gen_fpga_report.sh BRANCH_KERNEL stream_app $(FPGA_STREAM_APP)
+	./gen_fpga_report.sh BRANCH_KERNEL
 
 ifneq "$(FPGA_STREAM_APP)" ""
 	./gen_fpga_report.sh GEN stream_app $(FPGA_STREAM_APP)
