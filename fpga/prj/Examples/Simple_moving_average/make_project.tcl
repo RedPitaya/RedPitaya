@@ -47,10 +47,7 @@ add_files                         $fpga_path/$path_rtl
 add_files                         $path_rtl
 add_files                         $path_bd
 
-<<<<<<< HEAD
-=======
 update_files -from_files $path_rtl/red_pitaya_scope.v -to_files ../$fpga_path/$path_rtl/classic/red_pitaya_scope.v -filesets [get_filesets *]
->>>>>>> dev-250-12
 add_files -fileset sim_1 -norecurse $path_tbn/red_pitaya_proc_tb.vhd
 
 add_files -fileset constrs_1      $path_sdc/red_pitaya.xdc

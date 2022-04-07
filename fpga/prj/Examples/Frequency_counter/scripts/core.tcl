@@ -9,7 +9,7 @@ set version [string trimleft [join [lrange $elements end-1 end] .] v]
 
 file delete -force tmp/cores/$core_name tmp/cores/$project_name.cache tmp/cores/$project_name.hw tmp/cores/$project_name.xpr tmp/cores/$project_name.sim
 
-create_project -part $part_name $project_name tmp/cores
+create_project -force -part $part_name $project_name tmp/cores
 
 add_files -norecurse [glob cores/$core_name/*.v]
 
