@@ -352,6 +352,8 @@ int rp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, flo
 	EXEC_CHECK_MUTEX(rp_GenWaveform(_channel, RP_WAVEFORM_SINE), mutex);
 	EXEC_CHECK_MUTEX(rp_GenFreq(_channel, _frequency), mutex);
 	EXEC_CHECK_MUTEX(rp_GenOutEnable(_channel), mutex);
+	EXEC_CHECK_MUTEX(rp_GenResetTrigger(_channel), mutex);
+
 	usleep(10000);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
