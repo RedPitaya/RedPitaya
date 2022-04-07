@@ -62,6 +62,7 @@ int gen_setTriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_getTriggerSource(rp_channel_t chanel, rp_trig_src_t *src);
 int gen_Trigger(uint32_t channel);
 int gen_TriggerSync();
+int gen_TriggerOnly(uint32_t channel);
 
 int gen_SynchroniseSM();
 int gen_ResetChannelSM(rp_channel_t channel);

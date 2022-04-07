@@ -347,6 +347,7 @@ int rp_BaSafeThreadAcqPrepare()
 int rp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, float _dc_bias)
 {
 	pthread_mutex_lock(&mutex);
+	EXEC_CHECK_MUTEX(rp_GenReset(), mutex);
 	EXEC_CHECK_MUTEX(rp_GenAmp(_channel, _ampl), mutex); //LCR_AMPLITUDE
 	EXEC_CHECK_MUTEX(rp_GenOffset(_channel, _dc_bias), mutex); // 0.25
 	EXEC_CHECK_MUTEX(rp_GenWaveform(_channel, RP_WAVEFORM_SINE), mutex);

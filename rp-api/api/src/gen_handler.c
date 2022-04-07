@@ -633,11 +633,22 @@ int gen_Trigger(uint32_t channel) {
     }
 }
 
+int gen_TriggerOnly(uint32_t channel){
+    switch (channel) {
+        case RP_CH_1:
+        case RP_CH_2:
+            return generate_Trigger(channel);
+       
+        default:
+            return RP_EOOR;
+    }
+}
+
+
 int gen_TriggerSync(){
     generate_ResetSM();
     return generate_simultaneousTrigger();
 }
-
 
 int gen_ResetChannelSM(rp_channel_t channel){
     return generate_ResetChannelSM(channel);

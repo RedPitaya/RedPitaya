@@ -1,5 +1,5 @@
 #!/bin/bash
-wget -O /tmp/requirements.txt "https://downloads.redpitaya.com/downloads/$1/requirements.txt" &> /dev/null
+timeout 3 wget -O /tmp/requirements.txt "https://downloads.redpitaya.com/downloads/$1/requirements.txt" &> /dev/null
 
 IFS=$'\n'
 for l in `cat /tmp/requirements.txt`; do

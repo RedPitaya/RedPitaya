@@ -7,7 +7,7 @@ REPORT_FILE=report.xml
 
 if [[ "$MODE" == "BRANCH_KERNEL" ]]
 then
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCH=$(git show -s --pretty=%D HEAD | awk '{gsub("origin/",""); print $2}')
 LOG=$(git log -n 1)
 echo "<field name=\"Kernel\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
 fi

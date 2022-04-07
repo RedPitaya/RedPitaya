@@ -919,6 +919,10 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
 //     return gen_Trigger(channel);
 // }
 
+int rp_GenTriggerOnly(rp_channel_t channel){
+    return gen_TriggerOnly(channel);
+}
+
 int rp_GenSynchronise() {
     return gen_TriggerSync();
 }

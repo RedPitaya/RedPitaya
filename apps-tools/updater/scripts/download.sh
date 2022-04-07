@@ -24,5 +24,5 @@ killall wget &> /dev/null
 rm -rf /tmp/build
 mkdir -p /tmp/build
 rm -rf /tmp/build/*
-wget -O /tmp/build/build.zip "http://downloads.redpitaya.com/downloads/$1" &> /dev/null
+timeout 3 wget -O /tmp/build/build.zip "http://downloads.redpitaya.com/downloads/$1" &> /dev/null
 echo "OK"
