@@ -352,17 +352,42 @@ int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay) {
     return RP_OK;
 }
 
+int generate_Trigger(rp_channel_t channel){
+    uint32_t mask = 0;
+    switch(channel){
+        case RP_CH_1:
+            mask = 0x0000000F;
+            break;
+        case RP_CH_2:
+            mask = 0x000F0000;
+            break;
+        default:
+            return RP_EOOR;
+    }
+    uint32_t curValue = 0;
+    if (cmn_GetValue((uint32_t *) generate,&curValue,mask) == RP_OK){
+        cmn_DebugCh("cmn_UnsetBits((uint32_t *) generate) mask 0x000F000F",channel,curValue);
+        cmn_UnsetBits((uint32_t *) generate, curValue, mask);
+        cmn_DebugCh("cmn_SetBits((uint32_t *) generate) mask 0x000F000F",channel,curValue);
+        return cmn_SetBits((uint32_t *) generate, curValue, mask);
+    }
+    return RP_EOOR;
+}
+
 int generate_simultaneousTrigger() {
-    // simultaneously trigger both channels
-    cmn_Debug("cmn_SetBits((uint32_t *) generate)",0x00010001);
-    return cmn_SetBits((uint32_t *) generate, 0x00010001, 0x00010001);
+    uint32_t mask = 0x000F000F;
+    uint32_t curValue = 0;
+    if (cmn_GetValue((uint32_t *) generate,&curValue,mask) == RP_OK){
+        cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x000F000F",curValue);
+        cmn_UnsetBits((uint32_t *) generate, curValue, mask);
+        cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x000F000F",curValue);
+        return cmn_SetBits((uint32_t *) generate, curValue, mask);
+    }
+    return RP_EOOR;
 }
 
 int generate_setOutputEnableSync(bool enable){
     if (enable) {
-        cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00800080",0x00800080);
-        cmn_UnsetBits((uint32_t *) generate, 0x00800080 , 0x00800080);
-        generate_Synchronise();
         cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00800080",0x00000000);
         return cmn_SetBits((uint32_t *) generate, 0x00000000 , 0x00800080);
     }else{
@@ -372,8 +397,8 @@ int generate_setOutputEnableSync(bool enable){
 }
 
 
-int generate_Synchronise() {
-    // Both channels must be reset simultaneously
+int generate_ResetSM() {
+    // Both channels must be reset state machine
     cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00400040",0x00400040);
     cmn_SetBits((uint32_t *) generate, 0x00400040, 0x00400040);
     cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00400040",0x00400040);
@@ -381,11 +406,11 @@ int generate_Synchronise() {
     return RP_OK;
 }
 
-int generate_Reset(rp_channel_t channel){
+int generate_ResetChannelSM(rp_channel_t channel){
     uint32_t value = channel == RP_CH_1 ? 0x00000040 : 0x00400000;
-    cmn_Debug("cmn_SetBits((uint32_t *) generate) 0x00400040",value);
+    cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00400040",value);
     cmn_SetBits((uint32_t *) generate, value, value);
-    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) 0x00400040",value);
+    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask0x00400040",value);
     cmn_UnsetBits((uint32_t *) generate, value, value);
     return RP_OK;
 }

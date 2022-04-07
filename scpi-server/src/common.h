@@ -22,20 +22,24 @@
 
 #define CH_NUM		4
 
-#define SCPI_CMD_NUM 	1
+typedef enum {
+    RP_SCPI_LOG_OFF,
+    RP_SCPI_LOG_CONSOLE,
+    RP_SCPI_LOG_SYSLOG
+} rp_scpi_log;
 
-#ifdef SCPI_DEBUG
-#define RP_LOG(...) \
-syslog(__VA_ARGS__);
+
+#define SCPI_CMD_NUM 	1
 
 #define RP_F_NAME(X) X
 
-#else
-#define RP_LOG(X,...)
-#define RP_F_NAME(X)
-#endif
 
 int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
+
+rp_scpi_log getLogMode();
+scpi_result_t RP_SetLogMode(scpi_t *context);
+
+void RP_LOG(int mode,const char * format, ...);
 
 
 #endif /* COMMON_H_ */

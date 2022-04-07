@@ -915,16 +915,16 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
     return gen_getTriggerSource(channel, src);
 }
 
-int rp_GenTrigger(uint32_t channel) {
-    return gen_Trigger(channel);
-}
+// int rp_GenTrigger(uint32_t channel) {
+//     return gen_Trigger(channel);
+// }
 
 int rp_GenSynchronise() {
-    return gen_Synchronise();
+    return gen_TriggerSync();
 }
 
 int rp_GenResetTrigger(rp_channel_t channel){
-    return gen_ResetTrigger(channel);
+    return gen_Trigger(channel);
 }
 
 int rp_GenOutEnableSync(bool enable){

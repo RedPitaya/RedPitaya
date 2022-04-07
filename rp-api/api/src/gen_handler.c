@@ -94,6 +94,7 @@ int gen_SetDefaultValues() {
     gen_setGainOut(RP_CH_1,RP_GAIN_1X);
     gen_setGainOut(RP_CH_2,RP_GAIN_1X);
 #endif
+    generate_ResetSM();
     return RP_OK;
 }
 
@@ -102,7 +103,6 @@ int gen_Disable(rp_channel_t channel) {
 }
 
 int gen_Enable(rp_channel_t channel) {
-    gen_ResetTrigger(channel);
     return generate_setOutputDisable(channel, false);
 }
 
@@ -205,8 +205,7 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
     }
 
     generate_setFrequency(channel, frequency);
-    synthesize_signal(channel);
-    return gen_Synchronise();
+    return synthesize_signal(channel);
 }
 
 int gen_setFrequencyDirect(rp_channel_t channel, float frequency){
@@ -242,8 +241,7 @@ int gen_setSweepStartFrequency(rp_channel_t channel, float frequency){
     else {
         return RP_EPN;
     }
-    synthesize_signal(channel);
-    return gen_Synchronise();
+    return synthesize_signal(channel);
 }
 
 int gen_getSweepStartFrequency(rp_channel_t channel, float *frequency){
@@ -266,8 +264,7 @@ int gen_setSweepEndFrequency(rp_channel_t channel, float frequency){
     else {
         return RP_EPN;
     }
-    synthesize_signal(channel);
-    return gen_Synchronise();
+    return synthesize_signal(channel);
 }
 
 int gen_getSweepEndFrequency(rp_channel_t channel, float *frequency){
@@ -286,8 +283,7 @@ int gen_setPhase(rp_channel_t channel, float phase) {
             chA_phase = phase,
             chB_phase = phase)
 
-    synthesize_signal(channel);
-    return gen_Synchronise();
+    return synthesize_signal(channel);
 }
 
 int gen_getPhase(rp_channel_t channel, float *phase) {
@@ -443,16 +439,16 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         generate_setBurstRepetitions(channel, 0);
         generate_setBurstCount(channel, 0);
 
-        bool enable1,enable2;
-        generate_getOutputEnabled(RP_CH_1,&enable1);
-        generate_getOutputEnabled(RP_CH_2,&enable2);
+        // bool enable1,enable2;
+        // generate_getOutputEnabled(RP_CH_1,&enable1);
+        // generate_getOutputEnabled(RP_CH_2,&enable2);
 
-        if (enable1 && enable2){
-            gen_Synchronise();
-        }else{
-            if (enable1 || enable2)
-                generate_Reset(channel);
-        }
+        // if (enable1 && enable2){
+        //     gen_Synchronise();
+        // }else{
+        //     if (enable1 || enable2)
+        //         generate_Reset(channel);
+        // }
 
         return RP_OK;
     }
@@ -461,16 +457,16 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         gen_setBurstRepetitions(channel, channel == RP_CH_1 ? chA_burstRepetition : chB_burstRepetition);
         gen_setBurstPeriod(channel, channel == RP_CH_1 ? chA_burstPeriod : chB_burstPeriod);
         
-        bool enable1,enable2;
-        generate_getOutputEnabled(RP_CH_1,&enable1);
-        generate_getOutputEnabled(RP_CH_2,&enable2);
+        // bool enable1,enable2;
+        // generate_getOutputEnabled(RP_CH_1,&enable1);
+        // generate_getOutputEnabled(RP_CH_2,&enable2);
         
-        if (enable1 && enable2){
-            gen_Synchronise();
-        }else{
-            if (enable1 || enable2)
-                generate_Reset(channel);
-        }
+        // if (enable1 && enable2){
+        //     gen_Synchronise();
+        // }else{
+        //     if (enable1 || enable2)
+        //         generate_Reset(channel);
+        // }
 
         return RP_OK;
     }
@@ -567,7 +563,7 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
     CHANNEL_ACTION(channel,
             burstCount = chA_burstCount,
             burstCount = chB_burstCount)
-    float freq;
+    double freq;
     CHANNEL_ACTION(channel,
             freq = chA_frequency,
             freq = chB_frequency)
@@ -577,7 +573,9 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
     if ((int)period - sigLen <= 0){
         period = sigLen + 1;
     }
+
     delay = period - sigLen;
+
     CHANNEL_ACTION(channel,
                 chA_burstPeriod = period,
                 chB_burstPeriod = period)
@@ -597,13 +595,13 @@ int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period) {
 }
 
 int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
-    if (src == RP_GEN_TRIG_GATED_BURST) {
-        generate_setGatedBurst(channel, 1);
-        return generate_setTriggerSource(channel, 2);
-    }
-    else {
-        generate_setGatedBurst(channel, 0);
-    }
+    // if (src == RP_GEN_TRIG_GATED_BURST) {
+    //     generate_setGatedBurst(channel, 1);
+    //     return generate_setGatedBurst(channel, 2);
+    // }
+    // else {
+    //     generate_setGatedBurst(channel, 0);
+    // }
 
     if (src == RP_GEN_TRIG_SRC_INTERNAL) {
         return generate_setTriggerSource(channel, 1);
@@ -620,38 +618,33 @@ int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
 }
 
 int gen_getTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
-    uint32_t gated;
-    generate_getGatedBurst(channel, &gated);
-    if (gated == 1) {
-        *src = RP_GEN_TRIG_GATED_BURST;
-    }
-    else {
-        generate_getTriggerSource(channel, (uint32_t *) &src);
-    }
-    return RP_OK;
+    return generate_getTriggerSource(channel, (uint32_t *) &src);
 }
 
 int gen_Trigger(uint32_t channel) {
     switch (channel) {
-        case 0:
-        case 1:
-            generate_setTriggerSource(channel, RP_GEN_TRIG_SRC_INTERNAL);
-            return generate_Reset(channel);
-        case 2:
-        case 3:
-            generate_simultaneousTrigger();
-            return generate_Synchronise();
+        case RP_CH_1:
+        case RP_CH_2:
+            gen_ResetChannelSM(channel);
+            return generate_Trigger(channel);
+       
         default:
             return RP_EOOR;
     }
 }
 
-int gen_ResetTrigger(rp_channel_t channel){
-    return generate_Reset(channel);
+int gen_TriggerSync(){
+    generate_ResetSM();
+    return generate_simultaneousTrigger();
 }
 
-int gen_Synchronise() {
-    return generate_Synchronise();
+
+int gen_ResetChannelSM(rp_channel_t channel){
+    return generate_ResetChannelSM(channel);
+}
+
+int gen_SynchroniseSM() {
+    return generate_ResetSM();
 }
 
 int synthesize_signal(rp_channel_t channel) {

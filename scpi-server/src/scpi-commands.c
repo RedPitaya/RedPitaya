@@ -134,6 +134,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "RP:RELease", .callback                 = RP_ReleaseAll,},
     {.pattern = "RP:FPGABITREAM", .callback             = RP_FpgaBitStream,},
     {.pattern = "RP:DIg[:loop]", .callback              = RP_EnableDigLoop,},
+    {.pattern = "RP:LOGmode", .callback                 = RP_SetLogMode,},
 
     {.pattern = "DIG:RST", .callback                    = RP_DigitalPinReset,},
     {.pattern = "DIG:PIN", .callback                    = RP_DigitalPinState,},
