@@ -38,6 +38,7 @@ namespace  asionet {
         CloseSocket();
         delete [] m_SocketReadBuffer;
         delete [] m_tcp_fifo_buffer;
+
     }
 
 
@@ -377,6 +378,7 @@ namespace  asionet {
                     m_callback_Str.emitEvent(Events::DISCONNECT_SERVER, m_udp_endpoint.address().to_string());
                 if (m_is_tcp_connected)
                     m_callback_Str.emitEvent(Events::DISCONNECT_SERVER, m_tcp_endpoint.address().to_string());
+                InitServer();
             }
 
             if (m_mode == Mode::CLIENT) {

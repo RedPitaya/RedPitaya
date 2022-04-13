@@ -2,13 +2,12 @@
 
 using namespace TDMS;
 
-Reader::~Reader(){
-}
-
-Reader::Reader(iostream &fileStream, uint64_t fileSize,bool showLog){
+Reader::Reader(iostream &fileStream, uint64_t fileSize){
     m_fileStream = &fileStream;
     m_fileSize = fileSize;
-    m_showLog = showLog;
+}
+
+Reader::~Reader(){
 }
 
 uint64_t Reader::GetFileSize(){
@@ -51,15 +50,15 @@ auto Reader::ReadSegment(uint64_t offset) -> shared_ptr<Segment>{
     if (rawdataoffset !=0)
         rawdataoffset +=   offset + leadin->Length;
     leadin->RawDataOffset = rawdataoffset;
-    if (m_showLog) cout << "Segment offset :" << offset << "\n";
+    cout << "Segment offset :" << offset << "\n";
     return leadin;
 }
 
 auto Reader::ReadMetadata(shared_ptr<Segment> segment) -> vector<shared_ptr<Metadata>>{
     vector<shared_ptr<Metadata>> metadatas;
 
-    if (m_showLog) cout << "Metadata offset: " << segment->MetadataOffset << "\n";
-    if (m_showLog) cout << "Raw offset: " << segment->RawDataOffset << "\n";
+    cout << "Metadata offset: " << segment->MetadataOffset << "\n";
+    cout << "Raw offset: " << segment->RawDataOffset << "\n";
     m_fileStream->seekg(segment->MetadataOffset, ios::beg);
     int32_t objectCount = m_bstream.Read<int32_t>(*m_fileStream, TDMSType::Integer32);
     long rawDataOffset = segment->RawDataOffset;
@@ -67,7 +66,7 @@ auto Reader::ReadMetadata(shared_ptr<Segment> segment) -> vector<shared_ptr<Meta
     int interleaveStride = 0;
     for (int32_t x = 0; x < objectCount; x++)
     {
-        if (m_showLog) cout << "Metadata offset position: " << m_fileStream->tellg() << "\n";
+        cout << "Metadata offset position: " << m_fileStream->tellg() << "\n";
         shared_ptr<Metadata> metadata = std::make_shared<Metadata>();
         metadata->TableOfContents = segment->TableOfContents;
         metadata->Version = segment->Version;
@@ -86,7 +85,7 @@ auto Reader::ReadMetadata(shared_ptr<Segment> segment) -> vector<shared_ptr<Meta
         if (rawDataIndexLength > 0)
         {
             metadata->RawData.Offset = rawDataOffset;
-            if (m_showLog) cout << "RawData.Offset " << rawDataOffset << endl;
+            cout << "RawData.Offset " << rawDataOffset << endl;
             metadata->RawData.IsInterleaved = segment->TableOfContents.RawDataIsInterleaved;
 
             TDMSType dataType = m_bstream.Read<TDMSType>(*m_fileStream, TDMSType::Integer32);
@@ -100,7 +99,7 @@ auto Reader::ReadMetadata(shared_ptr<Segment> segment) -> vector<shared_ptr<Meta
                 (long)DataType::GetArrayLength(metadata->RawData.DataType.GetDataType(), metadata->RawData.Count);
 
             vector<shared_ptr<DataType::Raw>> raw = ReadRawData(metadata->RawData);
-            if (m_showLog) cout << "RawData.Size " << metadata->RawData.Size << endl;
+            cout << "RawData.Size " << metadata->RawData.Size << endl;
             metadata->RawData.DataType.InitDataType(dataType, raw);
             if (isInterleaved)
             {
@@ -111,7 +110,7 @@ auto Reader::ReadMetadata(shared_ptr<Segment> segment) -> vector<shared_ptr<Meta
             else
                 rawDataOffset += metadata->RawData.Size;
         }
-        if (m_showLog) cout << "Property offset position: " << m_fileStream->tellg() << "\n";
+        cout << "Property offset position: " << m_fileStream->tellg() << "\n";
         auto propertyCount = m_bstream.Read<int32_t>(*m_fileStream, TDMSType::Integer32);
         for (auto y = 0; y < propertyCount; y++)
         {

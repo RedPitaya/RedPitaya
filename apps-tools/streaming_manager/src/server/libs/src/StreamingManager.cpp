@@ -5,7 +5,6 @@
 #include <functional>
 #include <cstdlib>
 #include "StreamingManager.h"
-#include "stream_settings.h"
 
 #ifdef _WIN32
 #include <dir.h>
@@ -69,12 +68,12 @@ void CStreamingManager::MakeEmptyDir(std::string _filePath){
 
 
 
-CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode,bool testMode){
+CStreamingManager::Ptr CStreamingManager::Create(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode){
 
-    return std::make_shared<CStreamingManager>(_fileType, _filePath,_samples, _v_mode,testMode);
+    return std::make_shared<CStreamingManager>(_fileType, _filePath,_samples, _v_mode);
 }
 
-CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode,bool testMode) :
+CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _filePath, int _samples, bool _v_mode) :
     notifyPassData(nullptr),
     notifyStop(nullptr),
     m_fileLogger(nullptr),
@@ -90,14 +89,17 @@ CStreamingManager::CStreamingManager(Stream_FileType _fileType,std::string _file
     m_file_out(""),
     m_samples(_samples),
     m_passSizeSamples(0),
-    m_testMode(testMode),
     m_volt_mode(_v_mode),
     m_use_local_file(true),
     m_fileType(_fileType)
 {
-    m_file_manager = new FileQueueManager(testMode);
-    m_waveWriter = new CWaveWriter();
-    memset(m_zeroBuffer,0,sizeof(uint8_t) * ZERO_BUFFER_SIZE);
+    
+    if (m_use_local_file){
+        
+        m_file_manager = new FileQueueManager();
+        m_waveWriter = new CWaveWriter();
+        memset(m_zeroBuffer,0,sizeof(uint8_t) * ZERO_BUFFER_SIZE);
+    }
 }
 
 CStreamingManager::Ptr CStreamingManager::Create(string _host, string _port, asionet::Protocol _protocol){
@@ -215,7 +217,7 @@ void CStreamingManager::run(std::string _prefix)
     if (m_use_local_file){
         m_passSizeSamples = 0;
         m_file_out = getNewFileName(m_fileType, m_filePath, _prefix);
-        m_fileLogger = CFileLogger::Create(m_file_out + ".log",m_testMode);
+        m_fileLogger = CFileLogger::Create(m_file_out + ".log"); 
         std::cout << m_file_out << "\n"; 
         m_file_manager->OpenFile(m_file_out, false);
         m_file_manager->StartWrite(m_fileType);
@@ -229,14 +231,11 @@ void CStreamingManager::stop(){
     if (m_use_local_file){
         if (m_file_manager) {
             m_file_manager->StopWrite(false);
-            if (m_testMode){
-                m_file_manager->deleteFile();
-            }
         }
     } else{
         this->stopServer();
     }
-    if (m_fileLogger && !m_testMode)
+    if (m_fileLogger)
         m_fileLogger->DumpToFile();
 }
 
@@ -268,22 +267,8 @@ uint8_t * CStreamingManager::convertBuffers(const void *_buffer,uint32_t _buf_si
     return dest;
 }
 
-auto CStreamingManager::getNetworkLost() -> uint64_t{
-    if (m_fileLogger != nullptr) {
-        return m_fileLogger->getNetworkLost();
-    }
-    return 0;
-}
 
-auto CStreamingManager::getFileLost() -> uint64_t{
-    if (m_fileLogger != nullptr) {
-        return m_fileLogger->getFileLost();
-    }
-    return 0;
-}
-
-
-int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id,int _channels){
+int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32_t _adc_mode, uint32_t _adc_bits, const void *_buffer_ch1, uint32_t _size_ch1,const void *_buffer_ch2, uint32_t _size_ch2, unsigned short _resolution, uint64_t _id){
 
 
    // ASIO_ASSERT(!(_size_ch1 != _size_ch2 && _size_ch1 != 0 && _size_ch2 != 0));
@@ -323,20 +308,17 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
         if (m_volt_mode) byte_per_sample = 4; // FLOAT TYPE
         uint32_t lostSize = _lostRate * byte_per_sample;
 
-        auto ch1_enable = (_channels == CStreamSettings::CH1 || _channels == CStreamSettings::BOTH);
-        auto ch2_enable = (_channels == CStreamSettings::CH2 || _channels == CStreamSettings::BOTH);
-        
-        if (_size_ch1 + _size_ch2  + lostSize > 0){
+        if (_size_ch1 + _size_ch2  + lostSize> 0){
             
             if (m_fileType == TDMS_TYPE){
                 // _adc_mode = 0 for 1:1 and 1 for 1:20 mode 
-                if (_size_ch1 > 0 || (lostSize > 0 && ch1_enable)){ 
+                if (_size_ch1 > 0 || lostSize > 0){ 
                     buff_ch1 = convertBuffers(_buffer_ch1,_size_ch1,buff_ch1_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
                     assert(buff_ch1 && "wav writer: Buffer 1 is null");                    
                     memset(buff_ch1 + (samples_buff1 * byte_per_sample)  , 0 , sizeof(uint8_t) * lostSize);
                 }
 
-                if (_size_ch2 > 0 || (lostSize > 0 && ch2_enable)){ 
+                if (_size_ch2 > 0 || lostSize > 0){ 
                     buff_ch2 = convertBuffers(_buffer_ch2,_size_ch2,buff_ch2_size,lostSize,_adc_mode == 1 ? 1 : 20,_adc_bits,_resolution);
                     assert(buff_ch2 && "wav writer: Buffer 2 is null");
                     memset(buff_ch2 + (samples_buff2 * byte_per_sample) , 0 , sizeof(uint8_t) * lostSize);
@@ -375,13 +357,13 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                 uint64_t saveLostSize = 0;
                 uint64_t saveSize = (ZERO_BUFFER_SIZE < lostSize ? ZERO_BUFFER_SIZE : lostSize);
                 while(((saveLostSize + saveSize) <= lostSize) && (saveSize > 0)){
-                    auto stream_data = m_waveWriter->BuildWAVStream(ch1_enable ? m_zeroBuffer : nullptr, ch1_enable ? saveSize : 0, ch2_enable ? m_zeroBuffer : nullptr, ch2_enable ? saveSize : 0, byte_per_sample * 8);
+                    auto stream_data = m_waveWriter->BuildWAVStream(m_zeroBuffer, saveSize, m_zeroBuffer, saveSize, byte_per_sample * 8);
                     if (!m_file_manager->AddBufferToWrite(stream_data))
                     {
                         m_fileLogger->AddMetric(CFileLogger::Metric::FILESYSTEM_RATE,1);
                     }
                     saveLostSize += saveSize;
-                    if ((saveLostSize + saveSize) >= lostSize){
+                    if ((saveLostSize + saveSize) > lostSize){
                         saveSize = lostSize - saveLostSize;
                     }
                 }
@@ -448,7 +430,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                                                                 (_size_ch1 == 0 ? 0 : split_size),
                                                                 (&*buff_ch2 + frame_offset),
                                                                 (_size_ch2 == 0 ? 0 : split_size),
-                                                                new_buff_size,_channels);
+                                                                new_buff_size);
 
                     ++m_ReadyToPass;
                     
@@ -465,7 +447,7 @@ int CStreamingManager::passBuffers(uint64_t _lostRate, uint32_t _oscRate, uint32
                                                                     0,
                                                                     nullptr,
                                                                     0,
-                                                                    new_buff_size,_channels);
+                                                                    new_buff_size);
                     ++m_ReadyToPass;    
                     if (!m_asionet->SendData(false, buffer, new_buff_size)) {
                         m_ReadyToPass--;

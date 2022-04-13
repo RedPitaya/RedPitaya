@@ -6,11 +6,11 @@
 #include "FileLogger.h"
 
 
-CFileLogger::Ptr CFileLogger::Create(std::string _filePath,bool testMode){
-    return std::make_shared<CFileLogger>(_filePath,testMode);
+CFileLogger::Ptr CFileLogger::Create(std::string _filePath){
+    return std::make_shared<CFileLogger>(_filePath);
 }
 
-CFileLogger::CFileLogger(std::string _filePath,bool testMode):
+CFileLogger::CFileLogger(std::string _filePath):  
 m_filePath(_filePath),
 m_filePathLost(_filePath + ".lost"),
 m_file_open(false),
@@ -22,16 +22,13 @@ m_reciveData(0),
 m_reciveData_ch1(0),
 m_reciveData_ch2(0),
 m_old_id(0),
-m_current_sample(0),
-m_testMode(testMode)
+m_current_sample(0)
 {
     ResetCounters();
     m_file_open = true;
-    if (!m_testMode){
-        m_fileLost.open(m_filePathLost , std::ios_base::app | std::ios_base::out);
-        if (m_fileLost.is_open()){
-            m_fileLost << "Start\tSize\n";
-        }
+    m_fileLost.open(m_filePathLost , std::ios_base::app | std::ios_base::out);
+    if (m_fileLost.is_open()){
+        m_fileLost << "Start\tSize\n";
     }
 }
 
@@ -86,14 +83,6 @@ void CFileLogger::AddMetric(CFileLogger::Metric _metric, uint64_t _value){
         default:
         break;
     }
-}
-
-auto CFileLogger::getNetworkLost() -> uint64_t{
-    return m_udpLostRate;
-}
-
-auto CFileLogger::getFileLost() -> uint64_t{
-    return m_fileSystemLostRate;
 }
 
 void CFileLogger::AddMetricId(uint64_t _id){

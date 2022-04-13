@@ -2,7 +2,7 @@
 
 auto startSearch(ClientOpt::Options &option) -> void{
     ClientNetConfigManager client("",false);
-    client.startBroadcast("127.0.0.1",option.ports.broadcast_port  != "" ? option.ports.broadcast_port : ClientOpt::Ports().broadcast_port);
+    client.startBroadcast("127.0.0.1",option.port != "" ? option.port : "8902");
     int timout = option.timeout;
 
     std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();

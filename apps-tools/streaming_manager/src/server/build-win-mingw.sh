@@ -5,7 +5,7 @@ make -j$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
 
 
 #APP=$(pwd | grep -o '[^/]*$')
-APP='windows-tool_beta_2.1'
+APP='windows-tool_beta_2.0'
 
 echo "$APP"
 ZIP="$APP".zip
@@ -13,9 +13,6 @@ rm ./target -rf
 mkdir -p target
 cp ./bin/rpsa_client.exe ./target
 cp ./bin/convert_tool.exe ./target
-cp ./bin/rpsa_loopback_test ./target
-cp ./client/default_multiple_dac_config.json ./target
-cp ./client/default_dac_config.json ./target
 cd target
 zip -r "$ZIP" *
 mv  "$ZIP" ../"$ZIP"

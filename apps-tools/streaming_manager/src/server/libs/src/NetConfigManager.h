@@ -10,70 +10,27 @@ class CNetConfigManager
 {
 public:
     enum class Commands{
-
         BEGIN_SEND_SETTING,
         END_SEND_SETTING,
-        SETTING_GET_SUCCESS,
+        SETTING_GET_SUCCES,
         SETTING_GET_FAIL,
-        
-        BEGIN_SEND_TEST_SETTING,
-        END_SEND_TEST_SETTING,
-        TEST_SETTING_GET_SUCCESS,
-        TEST_SETTING_GET_FAIL,
-        
         REQUEST_SERVER_SETTINGS,
-        REQUEST_SERVER_TEST_SETTINGS,
-
         STOP_STREAMING,
         START_STREAMING,
-        START_STREAMING_TEST,        
         SERVER_STOPPED,
         SERVER_STOPPED_SD_FULL,
         SERVER_STOPPED_SD_DONE,
         SERVER_STARTED_TCP,
         SERVER_STARTED_UDP,
         SERVER_STARTED_SD,
-
-        START_ADC,
-        START_ADC_DONE,
-
-        START_DAC,
-        START_DAC_DONE,
-
         SAVE_SETTING_TO_FILE,
         SAVE_TO_FILE_SUCCES,
         SAVE_TO_FILE_FAIL,
         LOAD_SETTING_FROM_FILE,
         LOAD_FROM_FILE_SUCCES,
         LOAD_FROM_FILE_FAIL,
-        COPY_SETTINGS_TO_TEST_SETTINGS,
-        COPY_SETTINGS_TO_TEST_SETTINGS_DONE,        
-
         MASTER_CONNETED,
-        SLAVE_CONNECTED,
-        START_DAC_STREAMING,
-        START_DAC_STREAMING_TEST,
-        STOP_DAC_STREAMING,
-        SERVER_DAC_STOPPED,
-        SERVER_DAC_STOPPED_SD_DONE,
-        SERVER_DAC_STOPPED_SD_EMPTY,
-        SERVER_DAC_STOPPED_SD_BROKEN,
-        SERVER_DAC_STOPPED_SD_MISSING,
-        SERVER_DAC_STARTED,
-        SERVER_DAC_STARTED_SD,
-
-        // Loopback commands
-        SERVER_LOOPBACK_START,
-        SERVER_LOOPBACK_STOP,
-        SERVER_LOOPBACK_STARTED,
-        SERVER_LOOPBACK_STOPPED,
-        SERVER_LOOPBACK_BUSY,        // Streaming server in active streaming mode
-
-        SERVER_MODE_TCP,
-        SERVER_MODE_UDP,
-        SERVER_MODE_SD,
-        GET_SERVER_MODE,
-        GET_SERVER_TEST_MODE
+        SLAVE_CONNECTED
     };
 
     static std::shared_ptr<CNetConfigManager> instance()

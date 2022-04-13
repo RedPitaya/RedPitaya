@@ -33,7 +33,6 @@
 #include "ServerNetConfigManager.h"
 #include "options.h"
 #include "streaming.h"
-#include "dac_streaming.h"
 
 #ifdef Z20_250_12
 #include "rp-spi.h"
@@ -97,20 +96,13 @@ std::string exec(const char* cmd) {
 
 int main(int argc, char *argv[])
 {
-    #ifdef STREAMING_MASTER
-		auto isMaster = true;
-    #endif
-    #ifdef STREAMING_SLAVE
-        auto isMaster = false;
-    #endif
-
      // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
     setlogmask (LOG_UPTO (LOG_INFO));
     openlog ("streaming-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
-    bool verbMode = opt.verbose;
+
     if (opt.background){
         FILE *fp= NULL;
         pid_t process_id = 0;
@@ -167,7 +159,12 @@ int main(int argc, char *argv[])
             }
         }
         
-    	auto mode = isMaster ? asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER : asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
+       	#ifdef STREAMING_MASTER
+			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_MASTER;
+		#endif
+        #ifdef STREAMING_SLAVE
+			auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
+        #endif 
 
         #ifdef Z10
 		asionet_broadcast::CAsioBroadcastSocket::Model model = asionet_broadcast::CAsioBroadcastSocket::Model::RP_125_14;
@@ -186,47 +183,22 @@ int main(int argc, char *argv[])
 		#endif
 
 		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
-        setServer(con_server);
-        setDACServer(con_server);
         con_server->startBroadcast(model, brchost,opt.broadcast_port);
 
-        con_server->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[con_server,verbMode](){
+        con_server->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[con_server](){
             std::lock_guard<std::mutex> lock(g_print_mtx);
-            if (verbMode){
-                fprintf(stdout, "Get new settings\n");
-                fprintf(stdout,"%s",con_server->getSettingsRef().String().c_str());
-                RP_LOG (LOG_INFO,"Get new settings\n");
-                RP_LOG (LOG_INFO,"%s",con_server->getSettingsRef().String().c_str());
-            }
+            fprintf(stdout, "Get new settings\n");
+            fprintf(stdout,"%s",con_server->String().c_str());
+            RP_LOG (LOG_INFO,"Get new settings\n");
+            RP_LOG (LOG_INFO,"%s",con_server->String().c_str());
         });
 
-        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING,[con_server,verbMode](){
-            startServer(verbMode,false);
-        });
-
-        con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[con_server,verbMode](){
-            startDACServer(verbMode,false);
-        });
-
-        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING_TEST,[con_server,verbMode](){
-            startServer(verbMode,true);
-        });
-
-        con_server->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING_TEST,[con_server,verbMode](){
-            startDACServer(verbMode,true);
+        con_server->addHandler(ServerNetConfigManager::Events::START_STREAMING,[con_server](){
+            startServer(con_server);
         });
 
         con_server->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[](){
             stopNonBlocking(0);
-        });
-
-        con_server->addHandler(ServerNetConfigManager::Events::STOP_DAC_STREAMING,[](){
-            stopDACNonBlocking(CDACStreamingManager::NR_STOP);
-        });
-
-        con_server->addHandler(ServerNetConfigManager::Events::START_ADC,[con_server,verbMode](){
-            startADC();
-            con_server->sendADCStarted();
         });
         
     }catch (std::exception& e)
@@ -235,14 +207,14 @@ int main(int argc, char *argv[])
         RP_LOG (LOG_ERR,"Error: Init ServerNetConfigManager() %s\n",e.what());
         exit(EXIT_FAILURE);
     }
-    if (verbMode){
-        fprintf(stdout,"streaming-server started %s\n", isMaster ? "[MASTER]" : "[SLAVE]");
-        RP_LOG (LOG_NOTICE, "streaming-server started %s", isMaster ? "[MASTER]" : "[SLAVE]");
-    }
+
+    fprintf(stdout,"streaming-server started\n");
+    RP_LOG (LOG_NOTICE, "streaming-server started");
 
     installTermSignalHandler();
     // Handle close child events
     handleCloseChildEvents();
+
     try {
 		CStreamingManager::MakeEmptyDir(FILE_PATH);
 	}catch (std::exception& e)
@@ -257,17 +229,14 @@ int main(int argc, char *argv[])
 
     try{
         stopServer(0);
-        stopDACServer(CDACStreamingManager::NR_STOP);
     }catch (std::exception& e)
     {
         fprintf(stderr, "Error: main() %s\n",e.what());
         RP_LOG(LOG_ERR, "Error: main() %s\n",e.what());
     }
     con_server->stop();
-    if (verbMode){
-        fprintf(stdout,  "streaming-server stopped.\n");
-        RP_LOG(LOG_INFO, "streaming-server stopped.");
-    }
+    fprintf(stdout,  "streaming-server stopped.\n");
+    RP_LOG(LOG_INFO, "streaming-server stopped.");
     closelog ();
     return (EXIT_SUCCESS);
 }

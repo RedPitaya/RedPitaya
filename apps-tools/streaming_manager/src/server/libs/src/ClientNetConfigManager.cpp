@@ -17,10 +17,7 @@ ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings
 }
 
 ClientNetConfigManager::~ClientNetConfigManager(){
-    removeHadlers();
-    for(auto &cli:m_clients){
-        cli->m_manager->stopAsioNet();
-    }
+
 }
 
 auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -> void{
@@ -92,25 +89,9 @@ auto ClientNetConfigManager::addHandler(ClientNetConfigManager::Events event, st
     m_callbacksStr.addListener(static_cast<int>(event),_func);
 }
 
-auto ClientNetConfigManager::removeHadlers() -> void{
-    m_errorCallback.removeHadlers();
-    m_callbacksStr.removeHadlers();
-}
-
-auto ClientNetConfigManager::getHosts() -> std::list<std::string>{
-    std::list<std::string> list;
-    for(auto &c : m_clients){
-        if (c->m_manager->isConnected()){
-            list.push_back(c->m_manager->getHost());
-        }
-    }
-    return list;
-}
-
-
 auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,std::string port) -> void{
     m_clients.clear();
-    for(std::string& host:_hosts){
+    for(std::string host:_hosts){
         auto cl = std::make_shared<Clients>();
         cl->m_manager = std::make_shared<CNetConfigManager>();
         cl->m_mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
@@ -126,14 +107,6 @@ auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,st
         m_clients.push_back(cl);
     }
 }
-
-auto ClientNetConfigManager::diconnectAll() -> void{
-    const std::lock_guard<std::mutex> lock(g_client_mutex);
-    for(const auto &c : m_clients){
-        c->m_manager->stopAsioNet();
-    }
-}
-
 
 auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Clients> sender) -> void{
     CNetConfigManager::Commands c = static_cast<CNetConfigManager::Commands>(command);
@@ -165,7 +138,7 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         g_client_mutex.lock();
         sender->m_current_state = Clients::States::NORMAL;
         if (sender->m_client_settings.isSetted()){
-            sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCESS);
+            sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_SUCCES);
         }else{
             sender->m_client_settings.reset();
             sender->m_manager->sendData(CNetConfigManager::Commands::SETTING_GET_FAIL);
@@ -174,7 +147,7 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
 
     }
 
-    if (c== CNetConfigManager::Commands::SETTING_GET_SUCCESS){
+    if (c== CNetConfigManager::Commands::SETTING_GET_SUCCES){
         m_callbacksStr.emitEvent(static_cast<int>(Events::SUCCESS_SEND_CONFIG),sender->m_manager->getHost());
     }
 
@@ -214,76 +187,6 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command,std::shared_ptr<Cli
         m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_STOPPED_SD_FULL),sender->m_manager->getHost());
     }
 
-    if (c== CNetConfigManager::Commands::SERVER_DAC_STARTED){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STARTED),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_DAC_STARTED_SD){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STARTED_SD),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_DONE){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_DONE),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_EMPTY){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_EMPTY),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_BROKEN){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_BROKEN),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_DAC_STOPPED_SD_MISSING){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_DAC_STOPPED_SD_MISSING),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::COPY_SETTINGS_TO_TEST_SETTINGS_DONE){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::COPY_SETTINGS_TO_TEST_SETTINGS_DONE),sender->m_manager->getHost());
-    }
-
-    // Loopback commands
-    if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_STARTED){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_STARTED),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_STOPPED){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_STOPPED),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_LOOPBACK_BUSY){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_LOOPBACK_BUSY),sender->m_manager->getHost());
-    }
-
-    // Server mode
-
-    if (c== CNetConfigManager::Commands::SERVER_MODE_SD){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_MODE_SD),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_MODE_TCP){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_MODE_TCP),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::SERVER_MODE_UDP){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::SERVER_MODE_UDP),sender->m_manager->getHost());
-    }
-
-
-    //ADC/DAC control
-
-    if (c== CNetConfigManager::Commands::START_ADC_DONE){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::START_ADC_DONE),sender->m_manager->getHost());
-    }
-
-    if (c== CNetConfigManager::Commands::START_DAC_DONE){
-        m_callbacksStr.emitEvent(static_cast<int>(Events::START_DAC_DONE),sender->m_manager->getHost());
-    }
-
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool{
@@ -308,7 +211,7 @@ auto ClientNetConfigManager::receiveValueStr(std::string key,std::string value,s
 
 auto ClientNetConfigManager::receiveValueInt(std::string key,uint32_t value,std::shared_ptr<Clients> sender) -> void{
     if (sender->m_current_state == Clients::States::GET_DATA){
-        if (!sender->m_client_settings.setValue(key,(int64_t)value)){
+        if (!sender->m_client_settings.setValue(key,value)){
             m_errorCallback.emitEvent(0,Errors::CANNT_SET_DATA_TO_CONFIG,sender->m_manager->getHost());
         }
     }
@@ -324,7 +227,8 @@ auto ClientNetConfigManager::receiveValueDouble(std::string key,double value,std
 
 
 auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<Clients> sender) -> void{
-    fprintf(stderr,"[ClientNetConfigManager] Server error: %s (%d)\n",error.message().c_str(),error.value());
+    UNUSED(error);
+    //fprintf(stderr,"[ClientNetConfigManager] Server error: %s (%d)\n",error.message().c_str(),error.value());
     m_errorCallback.emitEvent(0,Errors::SERVER_INTERNAL,sender-> m_manager->getHost());
     if (sender->m_current_state  == Clients::States::GET_DATA){
         sender->m_client_settings.reset();
@@ -334,11 +238,11 @@ auto ClientNetConfigManager::serverError(std::error_code error,std::shared_ptr<C
 }
 
 auto ClientNetConfigManager::connectTimeoutError(std::error_code error,std::shared_ptr<Clients> sender) -> void{
-    fprintf(stderr,"[ClientNetConfigManager] Connection timeout error: %s (%d)\n",error.message().c_str(),error.value());
+    UNUSED(error);
     m_errorCallback.emitEvent(0,Errors::CONNECT_TIMEOUT,sender->m_manager->getHost());
 }
 
-auto ClientNetConfigManager::sendConfig(const std::string &host) -> bool{
+auto ClientNetConfigManager::sendConfig(std::string host) -> bool{
     const std::lock_guard<std::mutex> lock(g_client_mutex);
     for(const auto &c : m_clients){
         if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE && host == c->m_manager->getHost()){
@@ -351,21 +255,6 @@ auto ClientNetConfigManager::sendConfig(const std::string &host) -> bool{
     }
     return false;
 }
-
-auto ClientNetConfigManager::sendTestConfig(const std::string &host,const CStreamSettings &settings) -> bool{
-    const std::lock_guard<std::mutex> lock(g_client_mutex);
-    for(const auto &c : m_clients){
-        if (c->m_mode != asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE && host == c->m_manager->getHost()){
-            auto ret =  sendTestConfig(c,true,settings);
-            if (!ret) {
-                c->m_manager->stopAsioNet();
-            }
-            return ret;
-        }
-    }
-    return false;
-}
-
 
 auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _async) -> bool{
     if (_client->m_manager->isConnected()) {
@@ -382,66 +271,13 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("attenuator",static_cast<uint32_t>(getAttenuator()),_async)) return false;
         if (!_client->m_manager->sendData("calibration",static_cast<uint32_t>(getCalibration()),_async)) return false;
         if (!_client->m_manager->sendData("coupling",static_cast<uint32_t>(getAC_DC()),_async)) return false;
-
-        if (!_client->m_manager->sendData("dac_file",getDACFile(),_async)) return false;
-        if (!_client->m_manager->sendData("dac_port",getDACPort(),_async)) return false;
-        if (!_client->m_manager->sendData("dac_file_type",static_cast<uint32_t>(getDACFileType()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_gain",static_cast<uint32_t>(getDACGain()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_mode",static_cast<uint32_t>(getDACMode()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_repeat",static_cast<uint32_t>(getDACRepeat()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_repeatCount",static_cast<uint32_t>(getDACRepeatCount()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_memoryUsage",static_cast<uint32_t>(getDACMemoryUsage()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_speed",static_cast<uint32_t>(getDACHz()),_async)) return false;
-
-        if (!_client->m_manager->sendData("loopback_timeout",static_cast<uint32_t>(getLoopbackTimeout()),_async)) return false;
-        if (!_client->m_manager->sendData("loopback_speed",static_cast<uint32_t>(getLoopbackSpeed()),_async)) return false;
-        if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(getLoopbackMode()),_async)) return false;
-        if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(getLoopbackChannels()),_async)) return false;
-
         if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
         return true;
     }
     return false;
 }
 
-auto ClientNetConfigManager::sendTestConfig(std::shared_ptr<Clients> _client, bool _async,const CStreamSettings &settings) -> bool{
-    if (_client->m_manager->isConnected()) {
-        if (!_client->m_manager->sendData(CNetConfigManager::Commands::BEGIN_SEND_TEST_SETTING,_async)) return false;
-        if (!_client->m_manager->sendData("port",settings.getPort(),_async)) return false;
-        if (!_client->m_manager->sendData("protocol",static_cast<uint32_t>(settings.getProtocol()),_async)) return false;
-        if (!_client->m_manager->sendData("samples",static_cast<uint32_t>(settings.getSamples()),_async)) return false;
-        if (!_client->m_manager->sendData("format",static_cast<uint32_t>(settings.getFormat()),_async)) return false;
-        if (!_client->m_manager->sendData("type",static_cast<uint32_t>(settings.getType()),_async)) return false;
-        if (!_client->m_manager->sendData("save_type",static_cast<uint32_t>(settings.getSaveType()),_async)) return false;
-        if (!_client->m_manager->sendData("channels",static_cast<uint32_t>(settings.getChannels()),_async)) return false;
-        if (!_client->m_manager->sendData("resolution",static_cast<uint32_t>(settings.getResolution()),_async)) return false;
-        if (!_client->m_manager->sendData("decimation",static_cast<uint32_t>(settings.getDecimation()),_async)) return false;
-        if (!_client->m_manager->sendData("attenuator",static_cast<uint32_t>(settings.getAttenuator()),_async)) return false;
-        if (!_client->m_manager->sendData("calibration",static_cast<uint32_t>(settings.getCalibration()),_async)) return false;
-        if (!_client->m_manager->sendData("coupling",static_cast<uint32_t>(settings.getAC_DC()),_async)) return false;
-
-        if (!_client->m_manager->sendData("dac_file",settings.getDACFile(),_async)) return false;
-        if (!_client->m_manager->sendData("dac_port",settings.getDACPort(),_async)) return false;
-        if (!_client->m_manager->sendData("dac_file_type",static_cast<uint32_t>(settings.getDACFileType()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_gain",static_cast<uint32_t>(settings.getDACGain()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_mode",static_cast<uint32_t>(settings.getDACMode()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_repeat",static_cast<uint32_t>(settings.getDACRepeat()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_repeatCount",static_cast<uint32_t>(settings.getDACRepeatCount()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_memoryUsage",static_cast<uint32_t>(settings.getDACMemoryUsage()),_async)) return false;
-        if (!_client->m_manager->sendData("dac_speed",static_cast<uint32_t>(settings.getDACHz()),_async)) return false;
-
-        if (!_client->m_manager->sendData("loopback_timeout",static_cast<uint32_t>(settings.getLoopbackTimeout()),_async)) return false;
-        if (!_client->m_manager->sendData("loopback_speed",static_cast<uint32_t>(settings.getLoopbackSpeed()),_async)) return false;
-        if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(settings.getLoopbackMode()),_async)) return false;
-        if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(settings.getLoopbackChannels()),_async)) return false;
-
-        if (!_client->m_manager->sendData(CNetConfigManager::Commands::END_SEND_TEST_SETTING,_async)) return false;
-        return true;
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::requestConfig(const std::string &host) -> bool{
+auto ClientNetConfigManager::requestConfig(std::string host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -451,29 +287,7 @@ auto ClientNetConfigManager::requestConfig(const std::string &host) -> bool{
     return false;
 }
 
-
-auto ClientNetConfigManager::sendCopyConfigToTest(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::COPY_SETTINGS_TO_TEST_SETTINGS);
-    }
-    return false;
-}
-
-
-auto ClientNetConfigManager::requestTestConfig(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::REQUEST_SERVER_TEST_SETTINGS);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::getLocalSettingsOfHost(const std::string &host) -> CStreamSettings*{
+auto ClientNetConfigManager::getLocalSettingsOfHost(std::string host) -> CStreamSettings*{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -483,17 +297,7 @@ auto ClientNetConfigManager::getLocalSettingsOfHost(const std::string &host) -> 
     return nullptr;
 }
 
-auto ClientNetConfigManager::getLocalTestSettingsOfHost(const std::string &host) -> CStreamSettings*{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return (CStreamSettings*)&(it->operator->()->m_testSettings);
-    }
-    return nullptr;
-}
-
-auto ClientNetConfigManager::sendSaveToFile(const std::string &host) -> bool{
+auto ClientNetConfigManager::sendSaveToFile(std::string host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -503,17 +307,17 @@ auto ClientNetConfigManager::sendSaveToFile(const std::string &host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendStart(const std::string &host,bool test_mode) -> bool{
+auto ClientNetConfigManager::sendStart(std::string host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
     if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(test_mode ?  CNetConfigManager::Commands::START_STREAMING_TEST : CNetConfigManager::Commands::START_STREAMING);
+        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_STREAMING);
     }
     return false;
 }
 
-auto ClientNetConfigManager::sendStop(const std::string &host) -> bool{
+auto ClientNetConfigManager::sendStop(std::string host) -> bool{
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
     });
@@ -523,68 +327,7 @@ auto ClientNetConfigManager::sendStop(const std::string &host) -> bool{
     return false;
 }
 
-auto ClientNetConfigManager::sendDACStart(const std::string &host,bool test_mode) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(test_mode ?  CNetConfigManager::Commands::START_DAC_STREAMING_TEST :CNetConfigManager::Commands::START_DAC_STREAMING);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendDACStop(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::STOP_DAC_STREAMING);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendStartADC(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_ADC);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendStartDAC(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::START_DAC);
-    }
-    return false;
-}
-
-
-auto ClientNetConfigManager::sendGetServerMode(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::GET_SERVER_MODE);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendGetServerTestMode(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::GET_SERVER_TEST_MODE);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::getModeByHost(const std::string &host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode{
+auto ClientNetConfigManager::getModeByHost(std::string host) -> asionet_broadcast::CAsioBroadcastSocket::ABMode{
     const std::lock_guard<std::mutex> lock(g_client_mutex);
     auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
         return c->m_manager->getHost()  == host;
@@ -593,73 +336,4 @@ auto ClientNetConfigManager::getModeByHost(const std::string &host) -> asionet_b
         return it->operator->()->m_mode;
     }
     return asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_NONE;
-}
-
-
-auto ClientNetConfigManager::sendLoopbackStart(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_START);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendLoopbackStop(const std::string &host) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        return it->operator->()->m_manager->sendData(CNetConfigManager::Commands::SERVER_LOOPBACK_STOP);
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendLoopbackDACSpeed(const std::string &host,int32_t value,bool _async) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        if (!it->operator->()->m_manager->sendData("loopback_speed",static_cast<uint32_t>(value),_async)) return false;
-        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
-        return true;
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendLoopbackMode(const std::string &host,int32_t value,bool _async) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        if (!it->operator->()->m_manager->sendData("loopback_mode",static_cast<uint32_t>(value),_async)) return false;
-        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
-        return true;
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendLoopbackChannels(const std::string &host,int32_t value,bool _async) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        if (!it->operator->()->m_manager->sendData("loopback_channels",static_cast<uint32_t>(value),_async)) return false;
-        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
-        return true;
-    }
-    return false;
-}
-
-auto ClientNetConfigManager::sendLoopbackTimeout(const std::string &host,int32_t value,bool _async) -> bool{
-    auto it = std::find_if(std::begin(m_clients),std::end(m_clients),[&host](const std::shared_ptr<Clients> c){
-        return c->m_manager->getHost()  == host;
-    });
-    if (it != std::end(m_clients)){
-        if (!it->operator->()->m_manager->sendData("loopback_timeout",static_cast<uint32_t>(value),_async)) return false;
-        if (!it->operator->()->m_manager->sendData(CNetConfigManager::Commands::END_SEND_SETTING,_async)) return false;
-        return true;
-    }
-    return false;
 }

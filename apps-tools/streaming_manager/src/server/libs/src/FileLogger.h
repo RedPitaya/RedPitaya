@@ -16,9 +16,9 @@ public:
     };
 
     using Ptr = std::shared_ptr<CFileLogger>;
-    static Ptr Create(std::string _filePath,bool testMode);
+    static Ptr Create(std::string _filePath);
 
-    CFileLogger(std::string _filePath,bool testMode);
+    CFileLogger(std::string _filePath);
     ~CFileLogger();
 
     void ResetCounters();
@@ -27,9 +27,6 @@ public:
     void AddMetric(uint64_t _samples_data,uint64_t _lost);
 
     void DumpToFile();
-
-    auto getNetworkLost() -> uint64_t;
-    auto getFileLost() -> uint64_t;
 
 private:
     
@@ -50,5 +47,4 @@ private:
     uint64_t    m_old_id;
     uint64_t    m_current_sample;
     std::ofstream m_fileLost;
-    bool        m_testMode;
 };

@@ -10,14 +10,6 @@ add_subdirectory(server_linux_test2)
 endif()
 
 if( NOT WIN32 )
-add_subdirectory(server_linux_master_slave_test)
-endif()
-
-if( NOT WIN32 )
-add_subdirectory(server_dac_test)
-endif()
-
-if( NOT WIN32 )
     add_subdirectory(dac_net_test)
 endif()
 
@@ -32,9 +24,4 @@ endif()
 if( NOT WIN32 )
     add_subdirectory(tdms_test)
 endif()
-
-if( NOT WIN32 )
-    add_subdirectory(reader_controller_test)
-endif()
-
 

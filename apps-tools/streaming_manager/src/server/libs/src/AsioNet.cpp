@@ -17,8 +17,7 @@ namespace  asionet {
             size_t _size_ch1 ,
             const void *_ch2 ,
             size_t _size_ch2 ,
-            size_t &_buffer_size,
-            int _channels){
+            size_t &_buffer_size ){
 
         size_t  prefix_lenght = sizeof(int8_t) * 16; // ID of pack (16 byte)
         prefix_lenght += sizeof(uint64_t);    // Index (8 byte)
@@ -29,10 +28,8 @@ namespace  asionet {
         prefix_lenght += sizeof(int32_t);     // resolution (4 byte)
         prefix_lenght += sizeof(int32_t);     // adc_mode (4 byte)
         prefix_lenght += sizeof(int32_t);     // adc_bits (4 byte)
-        prefix_lenght += sizeof(int32_t);     // channels (4 byte)
-
         size_t  buffer_size = prefix_lenght + _size_ch1 + _size_ch2;
-        // fprintf(stderr,"buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
+//        printf("buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
         auto buffer = new uint8_t[buffer_size];
         memcpy(buffer,ID_PACK,16);
         ((uint64_t*)buffer)[2] = _id;
@@ -44,7 +41,6 @@ namespace  asionet {
         ((uint32_t*)buffer)[12] = _resolution;
         ((uint32_t*)buffer)[13] = _adc_mode;
         ((uint32_t*)buffer)[14] = _adc_bits;
-        ((uint32_t*)buffer)[15] = _channels;
         if (_size_ch1>0){
 
             memcpy_neon((&(*buffer)+prefix_lenght), _ch1, _size_ch1);
@@ -71,8 +67,7 @@ namespace  asionet {
             size_t _size_ch1 ,
             const void  *_ch2 ,
             size_t _size_ch2 ,
-            size_t &_buffer_size,
-            int _channels){
+            size_t &_buffer_size){
         size_t  prefix_lenght = sizeof(int8_t) * 16; // ID of pack (16 byte)
         prefix_lenght += sizeof(uint64_t);    // Index (8 byte)
         prefix_lenght += sizeof(uint64_t);    // lostRate  (8 byte)
@@ -81,8 +76,6 @@ namespace  asionet {
         prefix_lenght += sizeof(int32_t) * 2; // size of channel1 and channel2 (8 byte)
         prefix_lenght += sizeof(int32_t);     // resolution (4 byte)
         prefix_lenght += sizeof(int32_t);     // adc_mode (4 byte)
-        prefix_lenght += sizeof(int32_t);     // channels (4 byte)
-
         size_t  buffer_size = prefix_lenght + _size_ch1 + _size_ch2;
 //       printf("buffer_size %d, prefix_size %d\n",buffer_size,prefix_lenght);
         memcpy(buffer,ID_PACK,16);
@@ -95,7 +88,6 @@ namespace  asionet {
         ((uint32_t*)buffer)[12] = _resolution;
         ((uint32_t*)buffer)[13] = _adc_mode;
         ((uint32_t*)buffer)[14] = _adc_bits;
-        ((uint32_t*)buffer)[15] = _channels;
         
         if (_size_ch1>0){
 
@@ -123,8 +115,7 @@ namespace  asionet {
                     CAsioSocket::send_buffer &_ch1 ,
                     size_t &_size_ch1 ,
                     CAsioSocket::send_buffer  &_ch2 ,
-                    size_t &_size_ch2,
-                    int &_channels){
+                    size_t &_size_ch2){
         UNUSED(_size);
 
         if (strncmp((const char*)_buffer,ID_PACK,16) == 0){
@@ -135,11 +126,9 @@ namespace  asionet {
             _size_ch1 = ((uint32_t*)_buffer)[10];
             _size_ch2 = ((uint32_t*)_buffer)[11];
             _resolution = ((uint32_t*)_buffer)[12];
-            _adc_mode = ((uint32_t*)_buffer)[13];
-            _adc_bits = ((uint32_t*)_buffer)[14];
-            _channels = ((uint32_t*)_buffer)[15];
-
-            uint16_t prefix = 64;
+            _adc_mode = ((uint32_t*)_buffer)[13];     
+            _adc_bits = ((uint32_t*)_buffer)[14];            
+            uint16_t prefix = 60;
 
             if (_size_ch1 > 0) {
                 _ch1 = new uint8_t[_size_ch1];
@@ -185,7 +174,6 @@ namespace  asionet {
         if (m_asio_th != nullptr){
             m_asio_th->join();
             delete  m_asio_th;
-            m_asio_th = nullptr;
         }
 
     }

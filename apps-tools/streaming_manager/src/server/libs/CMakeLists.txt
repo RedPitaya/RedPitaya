@@ -41,7 +41,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 endif()
 
 target_compile_options(rpsasrv
-    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
+    PRIVATE -std=c++11 -Wall -pedantic -Wextra -fpermissive -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
 
 
 
@@ -56,7 +56,6 @@ target_include_directories(${PROJECT_NAME}
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/libs/src/common/stream_settings.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/dac_settings.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/Writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/DataType.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/TDMS/File.cpp
@@ -65,7 +64,6 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/libs/src/common/file_async_writer.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavWriter.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/common/wavReader.cpp
-            ${CMAKE_SOURCE_DIR}/libs/src/common/ReaderController.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/NetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ServerNetConfigManager.cpp
             ${CMAKE_SOURCE_DIR}/libs/src/ClientNetConfigManager.cpp

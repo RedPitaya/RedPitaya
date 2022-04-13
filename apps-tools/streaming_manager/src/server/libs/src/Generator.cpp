@@ -20,7 +20,7 @@ inline void setRegister(volatile GeneratorMapT * baseOsc_addr,volatile uint32_t 
     *reg = value;
 }
 
-CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable,uint32_t dacHz,uint32_t maxDacHz)
+CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable)
 {
     // Validation
     if (_uio.mapList.size() < 2)
@@ -71,10 +71,10 @@ CGenerator::Ptr CGenerator::Create(const UioT &_uio, bool _channel1Enable, bool 
     }
 
    
-    return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,dacHz,maxDacHz);
+    return std::make_shared<CGenerator>(_channel1Enable,_channel2Enable, fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr);
 }
 
-CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t dacHz,uint32_t maxDacHz) :
+CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr) :
     m_Channel1(_channel1Enable),
     m_Channel2(_channel2Enable),
     m_Fd(_fd),
@@ -86,9 +86,7 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
     m_Map(nullptr),
     m_Buffer1(nullptr),
     m_Buffer2(nullptr),
-    m_waitLock(),
-    m_maxDacSpeedHz(maxDacHz),
-    m_dacSpeedHz(dacHz)
+    m_waitLock()
 {
     m_BufferNumber[0] = m_BufferNumber[1] = 0;
     m_calib_offset_ch1 = 0;
@@ -99,7 +97,6 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
     m_Map = reinterpret_cast<GeneratorMapT *>(Map);
     m_Buffer1 = static_cast<uint8_t *>(m_Buffer);
     m_Buffer2 = static_cast<uint8_t *>(m_Buffer) + dac_buf_size * 2;
-    memset(m_Buffer,0,dac_buf_size * 4);
 }
 
 CGenerator::~CGenerator()
@@ -108,16 +105,6 @@ CGenerator::~CGenerator()
     munmap(m_Regset, m_RegsetSize);
     munmap(m_Buffer, m_BufferSize);
     close(m_Fd);
-}
-
-auto CGenerator::getDacHz() -> uint32_t{
-    return m_dacSpeedHz;
-}
-
-auto CGenerator::setDacHz(uint32_t hz) -> bool{
-    if (((double)hz / (double)m_maxDacSpeedHz) * (1<<16) < 1) return false;
-    m_dacSpeedHz = hz;
-    return true;
 }
 
 void CGenerator::setReg(volatile GeneratorMapT *_Map){
@@ -146,11 +133,9 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map){
         // Set calib for chB
         setRegister(_Map,&(_Map->chB_calib),m_calib_offset_ch2 << 16 | m_calib_gain_ch2);
 
-        // Set step for pointer
-        double coff = (double)m_dacSpeedHz / (double)m_maxDacSpeedHz;
-        uint32_t step = (1 << 16) * coff; 
-        setRegister(_Map,&(_Map->chA_counter_step),step);
-        setRegister(_Map,&(_Map->chB_counter_step),step);
+        // Set step for pointer 
+        setRegister(_Map,&(_Map->chA_counter_step),1 << 16);
+        setRegister(_Map,&(_Map->chB_counter_step),1 << 16);
 
         // Set streaming DMA, reset Buffers and flags
         setRegister(_Map,&(_Map->dma_control),0x2222);
@@ -167,7 +152,7 @@ auto CGenerator::prepare() -> void
         exit(-1);
     }
     m_BufferNumber[0] = m_BufferNumber[1] = 0;
-
+    
 }
 
 auto CGenerator::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void{
@@ -179,68 +164,81 @@ auto CGenerator::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_o
     m_calib_offset_ch1 =  ch1_offset;
     m_calib_offset_ch2 =  ch2_offset;
 
-    m_calib_gain_ch1 = ch1_gain * 0x2000;
-    m_calib_gain_ch2 = ch2_gain * 0x2000;
+    m_calib_gain_ch1 = ch1_gain * 0x2000; 
+    m_calib_gain_ch2 = ch2_gain * 0x2000; 
 }
 
-auto CGenerator::initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool{
+auto CGenerator::initFirst(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool{
     const std::lock_guard<std::mutex> lock(m_waitLock);
     bool ret = false;
     if (_buffer1){
-        memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
+        memcpy_neon(m_Buffer1,_buffer1,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 6);
         ret = true;
     }
 
     if (_buffer2){
-        memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
+        memcpy_neon(m_Buffer2,_buffer2,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 14);
         ret = true;
     }
     return ret;
 }
 
-auto CGenerator::initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool{
+auto CGenerator::initSecond(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool{
     const std::lock_guard<std::mutex> lock(m_waitLock);
     bool ret = false;
     if (_buffer1){
-        memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
+        memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 7);
         ret = true;
     }
 
     if (_buffer2){
-        memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
+        memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
         setRegister(m_Map,&(m_Map->dma_control),1 << 15);
         ret = true;
     }
     return ret;
 }
 
-auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, size_t _size_ch2) -> bool
+auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size) -> bool
 {
     bool ret = false;
     const std::lock_guard<std::mutex> lock(m_waitLock);
-    auto status = m_Map->ch_dma_status;
-    if (m_BufferNumber[0] == 0){
-        if (status & 0x00030000 && status & 0x00000003){
-            // printReg();
-	        if (_buffer1 && _size_ch1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
-            if (_buffer2 && _size_ch2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
-            m_BufferNumber[0] = 1;
-            int command =  1 << 7  |  1 << 15;
-            setRegister(m_Map,&(m_Map->dma_control),command);
-            ret = true;
+    if (_buffer1){
+        if (m_BufferNumber[0] == 0){
+            if (m_Map->chA_dma_status & 0x3){
+                memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size);
+                m_BufferNumber[0] = 1;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 7);
+                ret = true;
+            }
+        }else{
+            if (m_Map->chA_dma_status & 0xC){
+                memcpy_neon(m_Buffer1,_buffer1,_size);
+                m_BufferNumber[0] = 0;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 6);
+                ret = true;
+            }
         }
-    }else{
-        if (status & 0x000C0000 && status & 0x0000000C){
-            // printReg();
-            if (_buffer1 && _size_ch1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
-            if (_buffer2 && _size_ch2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
-            m_BufferNumber[0] = 0;
-            int command =  1 << 6  |  1 << 14;
-            setRegister(m_Map,&(m_Map->dma_control),command);
-            ret = true;
+    }
+
+    if (_buffer2){
+        if (m_BufferNumber[1] == 0){
+            if (m_Map->chB_dma_status & 0x1){
+                memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size);
+                m_BufferNumber[1] = 1;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 15);
+                ret = true;
+            }
+        }else{
+            if (m_Map->chB_dma_status & 0x4){
+                memcpy_neon(m_Buffer2,_buffer2,_size);
+                m_BufferNumber[1] = 0;
+                setRegister(m_Map,&(m_Map->dma_control),1 << 14);
+                ret = true;
+            }
         }
     }
     return ret;
@@ -252,7 +250,7 @@ auto CGenerator::start() -> void{
     if (m_Map != nullptr){
         // Start event
         setRegister(m_Map,&(m_Map->event_status),0x2);
-
+        
         // Start DMA
        setRegister(m_Map,&(m_Map->dma_control),0x101);
     }else {
@@ -288,7 +286,8 @@ auto CGenerator::printReg() -> void{
     fprintf(stderr,"0x20 event_select = 0x%X\n", m_Map->event_select);
     fprintf(stderr,"0x24 trig_mask = 0x%X\n", m_Map->trig_mask);
     fprintf(stderr,"0x28 dma_control = 0x%X\n", m_Map->dma_control);
-    fprintf(stderr,"0x2C ch_dma_status = 0x%X\n", m_Map->ch_dma_status);
+    fprintf(stderr,"0x2C chA_dma_status = 0x%X\n", m_Map->chA_dma_status);
+    fprintf(stderr,"0x30 chB_dma_status = 0x%X\n", m_Map->chB_dma_status);
     fprintf(stderr,"0x34 dma_size = 0x%X\n", m_Map->dma_size);
     fprintf(stderr,"0x38 chA_dma_addr1 = 0x%X\n", m_Map->chA_dma_addr1);
     fprintf(stderr,"0x3C chA_dma_addr2 = 0x%X\n", m_Map->chA_dma_addr2);

@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-#include <fstream>
+#include <fstream>  
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -24,8 +24,6 @@
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
 #include "ServerNetConfigManager.h"
-#include "DACStreamingApplication.h"
-#include "DACStreamingManager.h"
 
 #ifdef Z20_250_12
 #include "rp-spi.h"
@@ -34,18 +32,14 @@
 
 
 
-void StartServer(bool testMode);
+void StartServer();
 void StopServer(int x);
 void StopNonBlocking(int x);
-
-auto startDACServer(bool testMode) -> void;
-auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void;
-auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void;
-
 void setConfig(bool _force);
 void updateUI();
 
-static std::mutex g_adc_mutex;
+static std::mutex mut;
+static pthread_mutex_t mutex;
 static constexpr char config_file[] = "/root/.streaming_config";
 
 #define SS_TCP		1
@@ -67,9 +61,7 @@ static constexpr char config_file[] = "/root/.streaming_config";
 
 //Parameters
 
-CBooleanParameter 	ss_start(			"SS_START", 			CBaseParameter::RW, false,0);
-
-CBooleanParameter 	ss_dac_start(		"SS_DAC_START", 		CBaseParameter::RW, false,0);
+CBooleanParameter 	ss_start(			"SS_START", 	        CBaseParameter::RW, false,0);
 
 
 CBooleanParameter 	ss_use_localfile(	"SS_USE_FILE", 	        CBaseParameter::RW, false,0);
@@ -84,43 +76,17 @@ CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2)
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 4 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
-CBooleanParameter 	ss_adc_data_pass(	"SS_ADC_DATA_PASS",		CBaseParameter::RW, false,0);
-CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RO, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
+CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RW, ADC_SAMPLE_RATE ,0,	0, ADC_SAMPLE_RATE);
 CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2);
 CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, RP_MODEL, 10);
-
-CStringParameter    ss_dac_file(		"SS_DAC_FILE",			CBaseParameter::RW, "", 0);
-CIntParameter    	ss_dac_file_type(	"SS_DAC_FILE_TYPE",		CBaseParameter::RW,  0 ,0, 0, 1);
-CIntParameter    	ss_dac_gain(		"SS_DAC_GAIN",			CBaseParameter::RW,  0 ,0, 0, 1);
-CIntParameter    	ss_dac_mode(		"SS_DAC_MODE",			CBaseParameter::RW,  0 ,0, 0, 1);
-CIntParameter		ss_dac_speed(		"SS_DAC_HZ", 			CBaseParameter::RW, DAC_FREQUENCY ,0,	1 / (65536 /DAC_FREQUENCY) + 1, DAC_FREQUENCY);
-CIntParameter		ss_dac_max_speed(	"SS_DAC_MAX_HZ",		CBaseParameter::RO, DAC_FREQUENCY ,0,	0, DAC_FREQUENCY);
-CIntParameter    	ss_dac_repeat(		"SS_DAC_REPEAT",		CBaseParameter::RW, -1 ,0, -2, 0);
-CIntParameter    	ss_dac_rep_count(	"SS_DAC_REPEAT_COUNT",	CBaseParameter::RW, 1 ,0, 1, 2000000000);
-CIntParameter		ss_dac_port(		"SS_DAC_PORT_NUMBER", 	CBaseParameter::RW, 8903,0,	1,65535);
-CIntParameter		ss_dac_memory(		"SS_DAC_MEMORYCACHE", 	CBaseParameter::RW, 1024 * 1024,0,	0, 1024 * 1024 * 64);
-CIntParameter		ss_dac_status( 		"SS_DAC_STATUS",		CBaseParameter::RW, 1 ,0,	0,100);
-
-CIntParameter    	ss_lb_mode(			"SS_LB_MODE",		    CBaseParameter::RW,  0,0,   0,100);
-CIntParameter		ss_lb_speed(		"SS_LB_SPEED", 			CBaseParameter::RW, -1,0,	-1,DAC_FREQUENCY);
-CIntParameter		ss_lb_timeout(		"SS_LB_TIMEOUT",	 	CBaseParameter::RW,  1,0,	0,1);
-CIntParameter		ss_lb_channels(		"SS_LB_CHANNELS",		CBaseParameter::RW,  1,0,	0,1);
-
 
 CStreamingApplication  *s_app = nullptr;
 CStreamingManager::Ptr 	s_manger = nullptr;
 COscilloscope::Ptr 		osc = nullptr;
 
-CDACStreamingApplication *g_dac_app = nullptr;
-CDACStreamingManager::Ptr g_dac_manger = nullptr;
-CGenerator::Ptr 		gen = nullptr;
-
 std::shared_ptr<ServerNetConfigManager> g_serverNetConfig;
 std::atomic_bool g_serverRun(false);
-std::atomic_bool g_dac_serverRun(false);
-
-void startADC();
 
 // void PrintLogInFile(const char *message){
 // #ifdef DEBUG_MODE
@@ -146,6 +112,8 @@ const char *rp_app_desc(void)
 	return (const char *)"Red Pitaya Stream server application.\n";
 }
 
+
+
 //Application init
 int rp_app_init(void)
 {
@@ -162,48 +130,25 @@ int rp_app_init(void)
 				auto mode = asionet_broadcast::CAsioBroadcastSocket::ABMode::AB_SERVER_SLAVE;
 			#endif 
 			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,mode,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::GET_NEW_SETTING,[g_serverNetConfig](){
 				updateUI();
 			});
 
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING,[](){
-				StartServer(false);
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING,[g_serverNetConfig](){
+				StartServer();
 			});
 
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_STREAMING_TEST,[](){
-				StartServer(true);
-			});
-
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[](){
+			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_STREAMING,[g_serverNetConfig](){
 				StopNonBlocking(0);
 			});
-
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING,[](){
-				startDACServer(false);
-			});
-
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_DAC_STREAMING_TEST,[](){
-				startDACServer(true);
-			});
-
-			g_serverNetConfig->addHandler(ServerNetConfigManager::Events::STOP_DAC_STREAMING,[](){
-				stopDACNonBlocking(CDACStreamingManager::NR_STOP);
-			});
-
-	        g_serverNetConfig->addHandler(ServerNetConfigManager::Events::START_ADC,[](){
-            	startADC();
-        	});
-
 		}catch (std::exception& e)
 			{
 				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());
 			}
 
 		ss_status.SendValue(0);
-		ss_adc_data_pass.SendValue(0);
 		ss_acd_max.SendValue(ADC_SAMPLE_RATE);
-		ss_dac_max_speed.SendValue(DAC_FREQUENCY);
-		if (g_serverNetConfig->getSettingsRef().isSetted()){
+		if (g_serverNetConfig->isSetted()){
 			updateUI();
 		}else{
 			setConfig(true);
@@ -254,17 +199,15 @@ void UpdateSignals(void)
 }
 
 void saveConfigInFile(){
-	if (!g_serverNetConfig->getSettingsRef().writeToFile(config_file)){
-		std::cerr << "Error save to file(" << config_file <<")\n";
+	if (!g_serverNetConfig->writeToFile(config_file)){
+		std::cerr << "Error save to file\n";
 	}
 }
 
 void updateUI(){
-	ss_port.SendValue(std::atoi(g_serverNetConfig->getSettingsRef().getPort().c_str()));
-	ss_dac_file.SendValue(g_serverNetConfig->getSettingsRef().getDACFile());
-	ss_dac_port.SendValue(std::atoi(g_serverNetConfig->getSettingsRef().getDACPort().c_str()));
+	ss_port.SendValue(std::atoi(g_serverNetConfig->getPort().c_str()));
 
-	switch (g_serverNetConfig->getSettingsRef().getSaveType())
+	switch (g_serverNetConfig->getSaveType())
 	{
 		case CStreamSettings::NET:
 			ss_use_localfile.SendValue(0);
@@ -274,7 +217,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getProtocol())
+	switch (g_serverNetConfig->getProtocol())
 	{
 		case CStreamSettings::TCP:
 			ss_protocol.SendValue(SS_TCP);
@@ -284,7 +227,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getChannels())
+	switch (g_serverNetConfig->getChannels())
 	{
 		case CStreamSettings::CH1:
 			ss_protocol.SendValue(1);
@@ -297,7 +240,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getResolution())
+	switch (g_serverNetConfig->getResolution())
 	{
 		case CStreamSettings::BIT_8:
 			ss_resolution.SendValue(SS_8BIT);
@@ -307,7 +250,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getType())
+	switch (g_serverNetConfig->getType())
 	{
 		case CStreamSettings::RAW:
 			ss_save_mode.SendValue(1);
@@ -317,7 +260,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getFormat())
+	switch (g_serverNetConfig->getFormat())
 	{
 		case CStreamSettings::WAV:
 			ss_format.SendValue(0);
@@ -330,7 +273,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getAttenuator())
+	switch (g_serverNetConfig->getAttenuator())
 	{
 		case CStreamSettings::A_1_1:
 			ss_attenuator.SendValue(1);
@@ -340,7 +283,7 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getAC_DC())
+	switch (g_serverNetConfig->getAC_DC())
 	{
 		case CStreamSettings::AC:
 			ss_ac_dc.SendValue(1);
@@ -350,50 +293,9 @@ void updateUI(){
 			break;
 	}
 
-	switch (g_serverNetConfig->getSettingsRef().getDACFileType())
-	{
-		case CStreamSettings::WAV:
-			ss_dac_file_type.SendValue(0);
-			break;
-		case CStreamSettings::TDMS:
-			ss_dac_file_type.SendValue(1);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getDACGain())
-	{
-		case CStreamSettings::X1:
-			ss_dac_gain.SendValue(0);
-			break;
-		case CStreamSettings::X5:
-			ss_dac_gain.SendValue(1);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getDACMode())
-	{
-		case CStreamSettings::DAC_NET:
-			ss_dac_mode.SendValue(0);
-			break;
-		case CStreamSettings::DAC_FILE:
-			ss_dac_mode.SendValue(1);
-			break;
-	}
-
-
-	ss_dac_repeat.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeat());
-	ss_dac_rep_count.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeatCount());
-	ss_dac_memory.SendValue(g_serverNetConfig->getSettingsRef().getDACMemoryUsage());
-	ss_dac_speed.SendValue(g_serverNetConfig->getSettingsRef().getDACHz());
-	ss_rate.SendValue(g_serverNetConfig->getSettingsRef().getDecimation());
-	ss_samples.SendValue(g_serverNetConfig->getSettingsRef().getSamples());
-	ss_calib.SendValue(g_serverNetConfig->getSettingsRef().getCalibration() ? 2 : 1);
-	
-	ss_lb_channels.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackChannels());
-	ss_lb_mode.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackMode());
-	ss_lb_timeout.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackTimeout());
-	ss_lb_speed.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackSpeed());
-	
+	ss_rate.SendValue(g_serverNetConfig->getDecimation());
+	ss_samples.SendValue(g_serverNetConfig->getSamples());
+	ss_calib.SendValue(g_serverNetConfig->getCalibration() ? 2 : 1);
 }
 
 void setConfig(bool _force){
@@ -401,21 +303,7 @@ void setConfig(bool _force){
 	if (ss_port.IsNewValue() || _force)
 	{
 		ss_port.Update();
-		g_serverNetConfig->getSettingsRef().setPort(std::to_string(ss_port.Value()));
-		needUpdate = true;
-	}
-
-	if (ss_dac_file.IsNewValue() || _force)
-	{
-		ss_dac_file.Update();
-		g_serverNetConfig->getSettingsRef().setDACFile(ss_dac_file.Value());
-		needUpdate = true;
-	}
-
-	if (ss_dac_port.IsNewValue() || _force)
-	{
-		ss_dac_port.Update();
-		g_serverNetConfig->getSettingsRef().setDACPort(std::to_string(ss_dac_port.Value()));
+		g_serverNetConfig->setPort(std::to_string(ss_port.Value()));
 		needUpdate = true;
 	}
 
@@ -447,9 +335,9 @@ void setConfig(bool _force){
 	{
 		ss_use_localfile.Update();
 		if (ss_use_localfile.Value() == 1)
-			g_serverNetConfig->getSettingsRef().setSaveType(CStreamSettings::FILE);
+			g_serverNetConfig->setSaveType(CStreamSettings::FILE);
 		else
-			g_serverNetConfig->getSettingsRef().setSaveType(CStreamSettings::NET);
+			g_serverNetConfig->setSaveType(CStreamSettings::NET);
 		needUpdate = true;
 	}
 
@@ -457,9 +345,9 @@ void setConfig(bool _force){
 	{
 		ss_protocol.Update();
 		if (ss_protocol.Value() == SS_TCP)
-			g_serverNetConfig->getSettingsRef().setProtocol(CStreamSettings::TCP);
+			g_serverNetConfig->setProtocol(CStreamSettings::TCP);
 		if (ss_protocol.Value() == SS_UDP)
-			g_serverNetConfig->getSettingsRef().setProtocol(CStreamSettings::UDP);
+			g_serverNetConfig->setProtocol(CStreamSettings::UDP);
 		needUpdate = true;
 	}
 
@@ -467,11 +355,11 @@ void setConfig(bool _force){
 	{
 		ss_channels.Update();
 		if (ss_channels.Value() == 1)
-			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::CH1);
+			g_serverNetConfig->setChannels(CStreamSettings::CH1);
 		if (ss_channels.Value() == 2)
-			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::CH2);
+			g_serverNetConfig->setChannels(CStreamSettings::CH2);
 		if (ss_channels.Value() == 3)
-			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::BOTH);
+			g_serverNetConfig->setChannels(CStreamSettings::BOTH);
 		needUpdate = true;
 	}
 
@@ -479,9 +367,9 @@ void setConfig(bool _force){
 	{
 		ss_resolution.Update();
 		if (ss_resolution.Value() == SS_8BIT)
-			g_serverNetConfig->getSettingsRef().setResolution(CStreamSettings::BIT_8);
+			g_serverNetConfig->setResolution(CStreamSettings::BIT_8);
 		if (ss_resolution.Value() == SS_16BIT)
-			g_serverNetConfig->getSettingsRef().setResolution(CStreamSettings::BIT_16);
+			g_serverNetConfig->setResolution(CStreamSettings::BIT_16);
 		needUpdate = true;
 	}
 
@@ -489,16 +377,16 @@ void setConfig(bool _force){
 	{
 		ss_save_mode.Update();
 		if (ss_save_mode.Value() == 1)
-			g_serverNetConfig->getSettingsRef().setType(CStreamSettings::RAW);
+			g_serverNetConfig->setType(CStreamSettings::RAW);
 		if (ss_save_mode.Value() == 2)
-			g_serverNetConfig->getSettingsRef().setType(CStreamSettings::VOLT);
+			g_serverNetConfig->setType(CStreamSettings::VOLT);
 		needUpdate = true;
 	}
 
 	if (ss_rate.IsNewValue() || _force)
 	{
 		ss_rate.Update();
-		g_serverNetConfig->getSettingsRef().setDecimation(ss_rate.Value());
+		g_serverNetConfig->setDecimation(ss_rate.Value());
 		needUpdate = true;
 	}
 
@@ -506,18 +394,18 @@ void setConfig(bool _force){
 	{
 		ss_format.Update();
 		if (ss_format.Value() == 0) 
-			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::WAV);
+			g_serverNetConfig->setFormat(CStreamSettings::WAV);
 		if (ss_format.Value() == 1) 
-			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::TDMS);
+			g_serverNetConfig->setFormat(CStreamSettings::TDMS);
 		if (ss_format.Value() == 2) 
-			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::CSV);
+			g_serverNetConfig->setFormat(CStreamSettings::CSV);
 		needUpdate = true;
 	}
 
 	if (ss_samples.IsNewValue() || _force)
 	{
 		ss_samples.Update();
-		g_serverNetConfig->getSettingsRef().setSamples(ss_samples.Value());
+		g_serverNetConfig->setSamples(ss_samples.Value());
 		needUpdate = true;
 	}
 
@@ -526,21 +414,21 @@ void setConfig(bool _force){
 	{
 		ss_attenuator.Update();
 		if (ss_attenuator.Value() == 1)
-			g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_1);
+			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
 		if (ss_attenuator.Value() == 2)
-			g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_20);
+			g_serverNetConfig->setAttenuator(CStreamSettings::A_1_20);
 		needUpdate = true;
 	}
 
 	if (ss_calib.IsNewValue() || _force)
 	{
 		ss_calib.Update();
-		g_serverNetConfig->getSettingsRef().setCalibration(ss_calib.Value() == 2);
+		g_serverNetConfig->setCalibration(ss_calib.Value() == 2);
 		needUpdate = true;
 	}
 #else
-	g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_1);
-	g_serverNetConfig->getSettingsRef().setCalibration(false);
+	g_serverNetConfig->setAttenuator(CStreamSettings::A_1_1);
+	g_serverNetConfig->setCalibration(false);
 #endif
 
 #ifdef Z20_250_12
@@ -548,106 +436,14 @@ void setConfig(bool _force){
 	{
 		ss_ac_dc.Update();
 		if (ss_ac_dc.Value() == 1)
-			g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::AC);
+			g_serverNetConfig->setAC_DC(CStreamSettings::AC);
 		if (ss_ac_dc.Value() == 2)
-			g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::DC);
+			g_serverNetConfig->setAC_DC(CStreamSettings::DC);
 		needUpdate = true;
 	}
 #else
-	g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::AC);
+	g_serverNetConfig->setAC_DC(CStreamSettings::AC);
 #endif
-
-	if (ss_dac_file_type.IsNewValue() || _force)
-	{
-		ss_dac_file_type.Update();
-		if (ss_dac_file_type.Value() == 0) 
-			g_serverNetConfig->getSettingsRef().setDACFileType(CStreamSettings::WAV);
-		if (ss_dac_file_type.Value() == 1) 
-			g_serverNetConfig->getSettingsRef().setDACFileType(CStreamSettings::TDMS);
-		needUpdate = true;
-	}
-
-#ifdef Z20_250_12
-	if (ss_dac_gain.IsNewValue() || _force)
-	{
-		ss_dac_gain.Update();
-		if (ss_dac_gain.Value() == 0)
-			g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X1);
-		if (ss_dac_gain.Value() == 1)
-			g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X5);
-		needUpdate = true;
-	}
-#else
-	g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X1);
-#endif
-
-	if (ss_dac_mode.IsNewValue() || _force)
-	{
-		ss_dac_mode.Update();
-		if (ss_dac_mode.Value() == 0)
-			g_serverNetConfig->getSettingsRef().setDACMode(CStreamSettings::DAC_NET);
-		if (ss_dac_mode.Value() == 1)
-			g_serverNetConfig->getSettingsRef().setDACMode(CStreamSettings::DAC_FILE);
-		needUpdate = true;
-	}
-
-	if (ss_dac_repeat.IsNewValue() || _force)
-	{
-		ss_dac_repeat.Update();
-		g_serverNetConfig->getSettingsRef().setDACRepeat((CStreamSettings::DACRepeat)ss_dac_repeat.Value());
-		needUpdate = true;
-	}
-
-	if (ss_dac_rep_count.IsNewValue() || _force)
-	{
-		ss_dac_rep_count.Update();
-		g_serverNetConfig->getSettingsRef().setDACRepeatCount(ss_dac_rep_count.Value());
-		needUpdate = true;
-	}
-
-	if (ss_dac_memory.IsNewValue() || _force)
-	{
-		ss_dac_memory.Update();
-		g_serverNetConfig->getSettingsRef().setDACMemoryUsage(ss_dac_memory.Value());
-		needUpdate = true;
-	}
-
-	if (ss_dac_speed.IsNewValue() || _force)
-	{
-		ss_dac_speed.Update();
-		g_serverNetConfig->getSettingsRef().setDACHz(ss_dac_speed.Value());
-		needUpdate = true;
-	}
-
-
-	if (ss_lb_channels.IsNewValue() || _force)
-	{
-		ss_lb_channels.Update();
-		g_serverNetConfig->getSettingsRef().setLoopbackChannels((CStreamSettings::LOOPBACKChannels)ss_lb_channels.Value());
-		needUpdate = true;
-	}
-
-	if (ss_lb_mode.IsNewValue() || _force)
-	{
-		ss_lb_mode.Update();
-		g_serverNetConfig->getSettingsRef().setLoopbackMode((CStreamSettings::LOOPBACKMode)ss_lb_mode.Value());
-		needUpdate = true;
-	}
-
-	if (ss_lb_speed.IsNewValue() || _force)
-	{
-		ss_lb_speed.Update();
-		g_serverNetConfig->getSettingsRef().setLoopbackSpeed(ss_lb_speed.Value());
-		needUpdate = true;
-	}
-
-	if (ss_lb_timeout.IsNewValue() || _force)
-	{
-		ss_lb_timeout.Update();
-		g_serverNetConfig->getSettingsRef().setLoopbackTimeout(ss_lb_timeout.Value());
-		needUpdate = true;
-	}
-	
 	if (needUpdate){
 		saveConfigInFile();
 	}
@@ -664,19 +460,9 @@ void UpdateParams(void)
 		{
 			ss_start.Update();
 			if (ss_start.Value() == 1){
-				StartServer(false);
+				StartServer();
 			}else{
 				StopNonBlocking(0);
-			}
-		}
-
-		if (ss_dac_start.IsNewValue())
-		{
-			ss_dac_start.Update();
-			if (ss_dac_start.Value() == 1){
-				startDACServer(false);
-			}else{
-				stopDACNonBlocking(CDACStreamingManager::NR_STOP);
 			}
 		}
 	}catch (std::exception& e)
@@ -703,37 +489,50 @@ void OnNewSignals(void)
 
 
 
-void StartServer(bool testMode){
+void StartServer(){
 	// Search oscilloscope
 
 	try{
-		std::lock_guard<std::mutex> guard(g_adc_mutex);
-		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
-		if (!settings.isSetted()) return;
-
-		auto resolution   = settings.getResolution();
-		auto format       = settings.getFormat();
-		auto sock_port    = settings.getPort();
-		auto use_file     = settings.getSaveType();
-		auto protocol     = settings.getProtocol();
-		auto channel      = settings.getChannels();
-		auto rate         = settings.getDecimation();
+		if (!g_serverNetConfig->isSetted()) return;
+		if (g_serverRun) {
+			if (s_manger){
+				if (!s_manger->isLocalMode()){
+					if (s_manger->getProtocol() == asionet::Protocol::TCP){
+						g_serverNetConfig->sendServerStartedTCP();
+					}
+					if (s_manger->getProtocol() == asionet::Protocol::UDP){
+						g_serverNetConfig->sendServerStartedUDP();
+					}
+				}else{
+					g_serverNetConfig->sendServerStartedSD();
+				}
+			}
+			return;
+		}
+		g_serverRun = true;
+		auto resolution   = g_serverNetConfig->getResolution();
+		auto format       = g_serverNetConfig->getFormat();
+		auto sock_port    = g_serverNetConfig->getPort();
+		auto use_file     = g_serverNetConfig->getSaveType();
+		auto protocol     = g_serverNetConfig->getProtocol();
+		auto channel      = g_serverNetConfig->getChannels();
+		auto rate         = g_serverNetConfig->getDecimation();
 		auto ip_addr_host = ss_ip_addr.Value();
-		auto samples      = settings.getSamples();
-		auto save_mode    = settings.getType();
+		auto samples      = g_serverNetConfig->getSamples();
+		auto save_mode    = g_serverNetConfig->getType();
 
 #ifdef Z20
 		auto use_calib = 0;
 		auto attenuator = 0;
 #else
-		auto use_calib    = settings.getCalibration();
-		auto attenuator   = settings.getAttenuator();
+		auto use_calib    = g_serverNetConfig->getCalibration();
+		auto attenuator   = g_serverNetConfig->getAttenuator();
 		rp_CalibInit();
 		auto osc_calib_params = rp_GetCalibrationSettings();
 #endif
 
 #ifdef Z20_250_12
-		auto ac_dc = settings.getAC_DC();
+		auto ac_dc = g_serverNetConfig->getAC_DC();
 #endif
 
 		std::vector<UioT> uioList = GetUioList();
@@ -821,11 +620,6 @@ void StartServer(bool testMode){
 		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
 #endif
 
-		if (s_app!= nullptr){
-			s_app->stop();
-			delete s_app;
-		}
-
 		for (const UioT &uio : uioList)
 		{
 			if (uio.nodeName == "rp_oscilloscope")
@@ -834,9 +628,8 @@ void StartServer(bool testMode){
 					auto isMaster = true;
 				#endif
 				#ifdef STREAMING_SLAVE
-					auto isMaster = false;
-				#endif
-				fprintf(stderr,"COscilloscope::Create\n");
+					auto isMaster = false
+				#endif 
 				osc = COscilloscope::Create(uio, (channel == CStreamSettings::CH1 || channel == CStreamSettings::BOTH), (channel == CStreamSettings::CH2 || channel == CStreamSettings::BOTH), rate,isMaster);
 				osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
 				osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
@@ -848,7 +641,6 @@ void StartServer(bool testMode){
 
 
 		if (use_file == CStreamSettings::NET) {
-			fprintf(stderr,"CStreamingManager::Create\n");
 			s_manger = CStreamingManager::Create(
 					ip_addr_host,
 					sock_port,
@@ -857,19 +649,20 @@ void StartServer(bool testMode){
 			auto file_type = Stream_FileType::WAV_TYPE;
 			if (format == CStreamSettings::TDMS) file_type = Stream_FileType::TDMS_TYPE;
 			if (format == CStreamSettings::CSV)  file_type = Stream_FileType::CSV_TYPE;
-
-			s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT,testMode);
+			s_manger = CStreamingManager::Create(file_type , FILE_PATH, samples , save_mode == CStreamSettings::VOLT);
 			s_manger->notifyStop = [](int status)
 								{
 									StopNonBlocking(status == 0 ? 2 : 3);
 								};
 		}
 
+		if (s_app!= nullptr){
+			s_app->stop();
+			delete s_app;
+		}
 
 		int resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
-		fprintf(stderr,"CStreamingApplication::Create\n");
 		s_app = new CStreamingApplication(s_manger, osc, resolution_val, rate, channel , attenuator , 16);
-		s_app->setTestMode(testMode);
 		ss_status.SendValue(1);
 		
 		char time_str[40];
@@ -879,12 +672,7 @@ void StartServer(bool testMode){
     	strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
     	std::string filenameDate = time_str;
 
-		s_app->runNonBlockNoADC(filenameDate);
-		
-		if (use_file == CStreamSettings::FILE) {
-			startADC();
-		}
-
+		s_app->runNonBlock(filenameDate);
 		if (!s_manger->isLocalMode()){
 			if (s_manger->getProtocol() == asionet::Protocol::TCP){
 				g_serverNetConfig->sendServerStartedTCP();
@@ -904,20 +692,6 @@ void StartServer(bool testMode){
 	}
 }
 
-void startADC(){
-	try{
-		if (s_app){
-			s_app->runADC();
-			ss_adc_data_pass.SendValue(1);
-           	g_serverNetConfig->sendADCStarted();
-		}
-	}catch (std::exception& e)
-	{
-		fprintf(stderr, "Error: startADC() %s\n",e.what());
-        syslog (LOG_ERR,"Error: startADC() %s\n",e.what());
-	}
-}
-
 void StopNonBlocking(int x){
 	try{
 		std::thread th(StopServer ,x);
@@ -931,7 +705,6 @@ void StopNonBlocking(int x){
 
 void StopServer(int x){
 	try{
-		std::lock_guard<std::mutex> guard(g_adc_mutex);
 		if (s_app!= nullptr)
 		{
 			s_app->stop();
@@ -939,7 +712,6 @@ void StopServer(int x){
 			s_app = nullptr;
 		}
 		ss_status.SendValue(x);
-		ss_adc_data_pass.SendValue(0);
 		switch (x)
 		{
 		case 0:
@@ -955,190 +727,10 @@ void StopServer(int x){
 			throw runtime_error("Unknown state");
 			break;
 		}
-		//g_serverRun = false;
+		g_serverRun = false;
 		fprintf(stderr,"[Streaming] Stop server\n");
 	}catch (std::exception& e)
 	{
 		fprintf(stderr, "Error: StopServer() %s\n",e.what());
-	}
-}
-
-
-auto startDACServer(bool testMode) -> void{
-    if (!g_serverNetConfig) return;
-	gen = nullptr;
-	try{
-		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
-		if (!settings.isSetted()) return;
-		// g_dac_serverRun = true;
-		auto use_file     =  settings.getDACMode();
-		auto sock_port    =  settings.getDACPort();
-		auto dac_speed    =  settings.getDACHz();
-		auto ip_addr_host = "127.0.0.1";
-
-#ifdef Z20
-		auto use_calib    = 0;
-		auto attenuator   = 0;
-#else
-		auto use_calib    = settings.getCalibration();
-		rp_CalibInit();
-		auto osc_calib_params = rp_GetCalibrationSettings();
-#endif
-
-#ifdef Z20_250_12
-		auto dac_gain = settings.getDACGain();
-#endif
-
-		std::vector<UioT> uioList = GetUioList();
-		uint32_t ch1_off = 0;
-		uint32_t ch2_off = 0;
-		float ch1_gain = 1;
-		float ch2_gain = 1;
-
-		if (use_calib == 1) {
-#ifdef Z20_250_12
-			if (dac_gain == CStreamSettings::X1) {
-				ch1_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch1_g_1);
-				ch2_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch2_g_1);
-				ch1_off  = osc_calib_params.gen_ch1_off_1;
-				ch2_off  = osc_calib_params.gen_ch2_off_1;
-			}else{
-				ch1_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch1_g_5);
-				ch2_gain = calibFullScaleToVoltage(osc_calib_params.gen_ch2_g_5);
-				ch1_off  = osc_calib_params.gen_ch1_off_5;
-				ch2_off  = osc_calib_params.gen_ch2_off_5;
-			}
-#endif
-
-#if defined Z10 || defined Z20_125
-			ch1_gain = calibFullScaleToVoltage(osc_calib_params.be_ch1_fs);
-			ch2_gain = calibFullScaleToVoltage(osc_calib_params.be_ch2_fs);
-			ch1_off  = osc_calib_params.be_ch1_dc_offs;
-			ch2_off  = osc_calib_params.be_ch2_dc_offs;
-#endif
-		}
-
-#ifdef Z20_250_12
-
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-
-#endif
-
-		if (g_dac_app!= nullptr){
-			g_dac_app->stop();
-			delete g_dac_app;
-		}
-
-		for (const UioT &uio : uioList)
-		{
-			 if (uio.nodeName == "rp_dac")
-			{
-				gen = CGenerator::Create(uio, true , true ,dac_speed,DAC_FREQUENCY);
-				gen->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
-				gen->setDacHz(dac_speed);
-			}
-		}
-
-		if (!gen){
-			fprintf(stdout,"[Streaming] Error init generator module\n");
-        	syslog (LOG_NOTICE, "[Streaming] Error init generator module\n");
-			return;
-		}
-
-
-		if (use_file == CStreamSettings::DAC_NET) {
-			g_dac_manger = CDACStreamingManager::Create(
-					ip_addr_host,
-					sock_port);
-		}else{
-
-			auto format = settings.getDACFileType();
-			auto filePath = settings.getDACFile();
-			auto dacRepeatMode = settings.getDACRepeat();
-			auto dacRepeatCount = settings.getDACRepeatCount();
-			auto dacMemory = settings.getDACMemoryUsage();
-
-			if (format == CStreamSettings::WAV) {
-				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
-			}else if (format == CStreamSettings::TDMS) {
-				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
-			}else{
-				return;
-			}
-			g_dac_manger->notifyStop = [](CDACStreamingManager::NotifyResult status)
-			{
-				stopDACNonBlocking(status);
-			};
-		}
-
-		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
-		g_dac_app->setTestMode(testMode);
-
-		g_dac_app->runNonBlock();
-		if (g_dac_manger->isLocalMode()){
-			g_serverNetConfig->sendDACServerStartedSD();
-		}else{
-			g_serverNetConfig->sendDACServerStarted();
-		}
-
-		fprintf(stdout,"[Streaming] Start dac server\n");
-        syslog (LOG_NOTICE, "[Streaming] Start dac server\n");
-	}catch (std::exception& e)
-	{
-		fprintf(stderr, "Error: startDACServer() %s\n",e.what());
-        syslog (LOG_ERR,"Error: startDACServer() %s\n",e.what());
-	}
-}
-
-auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void{
-	try{
-		std::thread th(stopDACServer ,x);
-		th.detach();
-	}catch (std::exception& e)
-	{
-		fprintf(stderr, "Error: StopNonBlocking() %s\n",e.what());
-        syslog (LOG_ERR,"Error: StopNonBlocking() %s\n",e.what());
-	}
-}
-
-
-auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void{
-	try{
-		if (g_dac_app)
-		{
-			g_dac_app->stop();
-			delete g_dac_app;
-			g_dac_app = nullptr;
-		}
-        if (g_serverNetConfig){
-            switch (x)
-            {
-				case CDACStreamingManager::NR_STOP:
-					g_serverNetConfig->sendDACServerStopped();
-					break;
-				case CDACStreamingManager::NR_ENDED:
-					g_serverNetConfig->sendDACServerStoppedSDDone();
-					break;
-				case CDACStreamingManager::NR_EMPTY:
-					g_serverNetConfig->sendDACServerStoppedSDEmpty();
-					break;
-				case CDACStreamingManager::NR_BROKEN:
-					g_serverNetConfig->sendDACServerStoppedSDBroken();
-					break;
-				case CDACStreamingManager::NR_MISSING_FILE:
-					g_serverNetConfig->sendDACServerStoppedSDMissingFile();
-					break;
-				default:
-					throw runtime_error("Unknown state");
-					break;
-            }
-        }
-        fprintf(stdout,"[Streaming] Stop dac server\n");
-        syslog (LOG_NOTICE, "[Streaming] Stop dac server\n");
-	}catch (std::exception& e)
-	{
-		fprintf(stderr, "Error: stopDACServer() %s\n",e.what());
-        syslog (LOG_ERR,"Error: stopDACServer() %s\n",e.what());
 	}
 }

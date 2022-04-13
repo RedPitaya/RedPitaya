@@ -3,7 +3,6 @@
 #include <fstream>
 #include <functional>
 #include <cstdlib>
-#include <deque>
 #include "DACStreamingApplication.h"
 #include "AsioNet.h"
 
@@ -16,9 +15,7 @@ CDACStreamingApplication::CDACStreamingApplication(CDACStreamingManager::Ptr _st
     mtx(),
     m_ReadyToPass(0),
     m_isRun(false),
-    m_isRunNonBloking(false),
-    m_testMode(false),
-    m_verbMode(false)
+    m_isRunNonBloking(false)
 {
     m_GenThreadRun.test_and_set();
 }
@@ -49,7 +46,7 @@ auto CDACStreamingApplication::runNonBlock() -> void {
     m_isRunNonBloking = true;    
     try {
         m_streamingManager->run(); // MUST BE INIT FIRST for thread logic
-        m_Thread = std::thread(&CDACStreamingApplication::genWorker, this);
+        m_Thread = std::thread(&CDACStreamingApplication::genWorker, this);        
     }
     catch (const asio::system_error &e)
     {
@@ -68,9 +65,7 @@ auto CDACStreamingApplication::stop(bool wait) -> bool{
             while(isRun());
         }
         m_streamingManager->stop();
-        m_streamingManager = nullptr;
         m_gen->stop();
-        m_gen = nullptr;
         state = true;
     }
     mtx.unlock();
@@ -85,47 +80,40 @@ void CDACStreamingApplication::genWorker()
     auto value = curTime.time_since_epoch();
 
     long long int timeBegin = value.count();
-    int64_t counter = 0;
-//    uintmax_t passCounter = 0;
-    //uint8_t   skipBuffs = 0;
-    //bool isFirstBufferInit = false;
-    //bool isSecondBufferInit = false;
+    uintmax_t counter = 0;
+    uintmax_t passCounter = 0;
+    uint8_t   skipBuffs = 0;
     m_gen->prepare();
-    m_gen->start();
-    
-    std::deque<CDACAsioNetController::BufferPack> packs;
 try{
     while (m_GenThreadRun.test_and_set())
     {
-        if (packs.size() < 10){
-            auto buf = m_streamingManager->getBuffer();
-            packs.push_back(buf);
-        }
 
-        if (packs.size() > 0) {
-            auto pack = packs[0];
-            if (m_gen->write(pack.ch1,pack.ch2,pack.size_ch1,pack.size_ch2)){
-                counter++;
-                if (pack.ch1){
-                    delete[] pack.ch1;
-                }
-
-                if (pack.ch2){
-                    delete[] pack.ch2;
-                }
-                packs.pop_front();
-            }
-        }
+        // oscNotify(overFlow, m_oscRate, m_adc_mode, m_adc_bits, m_WriteBuffer_ch1, m_size_ch1, m_WriteBuffer_ch2, m_size_ch2);
+        // ++counter;
 
         // timeNow = std::chrono::system_clock::now();
-        // value = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow).time_since_epoch();
+        // curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
+        // value = curTime.time_since_epoch();
 
+          
         // if ((value.count() - timeBegin) >= 5000) {
-        //     std::cout << "Get buffers: " << counter  << "\n";
+        //     std::cout << "Lost samples: " << m_lostRate  << "\n";
         //     counter = 0;
+        //     m_lostRate = 0;
+        //     passCounter = 0;
         //     timeBegin = value.count();
         // }
 
+        // if (!m_StreamingManager->isFileThreadWork()){
+            
+        //     if (m_StreamingManager->notifyStop){
+        //         if (m_StreamingManager->isOutOfSpace())
+        //             m_StreamingManager->notifyStop(0);
+        //         else 
+        //             m_StreamingManager->notifyStop(1);
+        //         m_StreamingManager->notifyStop = nullptr;                
+        //     }
+        // }
     }
     
 }catch (std::exception& e)
@@ -135,16 +123,9 @@ try{
     m_isRun = false;
 }
 
-void CDACStreamingApplication::signalHandler(const asio::error_code &, int _signalNumber)
+void CDACStreamingApplication::signalHandler(const asio::error_code &_error, int _signalNumber)
 {
+    UNUSED(_error);
     static_cast<void>(_signalNumber);
     stop(true);
-}
-
-auto CDACStreamingApplication::setTestMode(bool mode) -> void{
-    m_testMode = mode;
-}
-
-auto CDACStreamingApplication::setVerbousMode(bool mode) -> void{
-    m_verbMode = mode;
 }

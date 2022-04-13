@@ -27,14 +27,11 @@ class CWaveReader
 
 public:
     CWaveReader();
-    ~CWaveReader();
 
     auto openFile(string fileName) -> bool;
     auto getHeader() -> WavHeader_t;
-    auto getDataSize() -> uint64_t {return m_dataSize;};
     auto getBuffers(uint8_t **ch1,size_t *size_ch1, uint8_t **ch2,size_t *size_ch2) -> bool;
 private:
     std::fstream m_read_fs;
     WavHeader_t  m_header;
-    uint64_t     m_dataSize;
 };

@@ -11,8 +11,7 @@ CXXSOURCES=main.cpp
 
 CXXSOURCES_SERVICE = console_server/main.cpp \
 					 console_server/options.cpp \
-					 console_server/streaming.cpp \
- 					 console_server/dac_streaming.cpp
+					 console_server/streaming.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -35,7 +34,7 @@ LIBS += -L./server/libs
 
 COMMON_FLAGS+= -Wall -fPIC -Os -s -w -DASIO_STANDALONE -DASDASD
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE) -D$(MODEL)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++17 $(INCLUDE) -D$(MODEL)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
 LDWFLAGS+= -ljsoncpp -lrpsasrv
@@ -88,5 +87,5 @@ service: build_lib $(OBJECTS_SERVICE)
 	$(CXX) -o $(C_OUT_NAME_SERVICE) $(OBJECTS_SERVICE) $(CXXFLAGS) $(LDFLAGS) $(LDSFLAGS)
 
 clean_c_app:
-	$(RM) -f $(C_OUT_NAME) $(OBJECTS) $(OBJECTS_SERVICE) $(C_OUT_NAME_SERVICE)
+	$(RM) -f $(C_OUT_NAME) $(OBJECTS)
 	./build.sh clean
