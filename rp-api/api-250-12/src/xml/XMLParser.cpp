@@ -403,7 +403,7 @@ namespace XML
 		return node;
 	}
 
-	XMLNode * XMLParser::ParseXMLNodeName(XMLNode * _parentNode){
+	XMLNode * XMLParser::ParseXMLNodeName(XMLNode *){
 		buffer->MoveNext(1);
 		int endName = -1;
 		int i = buffer->GetPosition();

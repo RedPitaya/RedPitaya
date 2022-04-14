@@ -12,7 +12,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
-LINUX_VER = 1.06
+LINUX_VER = 1.07
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -30,6 +30,7 @@ export LINUX_VER
 # Z20_250_12 - for RepPitaya 250-12
 # Production test script
 MODEL ?= Z10
+CUR_DIR = $(PWD)
 
 ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
 ifeq ($(STREAMING),MASTER)
@@ -61,16 +62,17 @@ $(INSTALL_DIR):
 ################################################################################
 
 LIBRP_DIR       = rp-api/api
+LIBRP_HW_DIR    = rp-api/api-hw
 LIBRP2_DIR      = rp-api/api2
 LIBRP250_12_DIR = rp-api/api-250-12
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
-.PHONY: api api2 librp librp1 librp250_12
+.PHONY: api api2 librp librp1 librp250_12 librp_hw
 .PHONY: librpapp liblcr_meter
 
-api: librp
+api: librp librp_hw
 
 api2: librp2
 
@@ -79,9 +81,12 @@ librp: librp250_12
 else
 librp:
 endif
-	$(MAKE) -C $(LIBRP_DIR) clean
-	$(MAKE) -C $(LIBRP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRP_DIR)) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DIR) install
+
+librp_hw:
+	cmake -B$(abspath $(LIBRP_HW_DIR)) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_DIR) install
 
 librp1:
 	$(MAKE) -C $(LIBRP1_DIR) clean
@@ -93,10 +98,10 @@ librp2:
 	$(MAKE) -C $(LIBRP2_DIR)
 	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-librp250_12:
-	$(MAKE) -C $(LIBRP250_12_DIR) clean
-	$(MAKE) -C $(LIBRP250_12_DIR)
-	$(MAKE) -C $(LIBRP250_12_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+librp250_12: librp_hw
+	cmake -B$(LIBRP250_12_DIR) -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
+	$(MAKE) -C $(LIBRP250_12_DIR) install
+
 
 ifeq ($(ENABLE_LICENSING),1)
 
@@ -104,12 +109,12 @@ api: librpapp liblcr_meter
 
 librpapp: librp
 	$(MAKE) -C $(LIBRPAPP_DIR) clean
-	$(MAKE) -C $(LIBRPAPP_DIR)
+	$(MAKE) -C $(LIBRPAPP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 liblcr_meter: librp
 	$(MAKE) -C $(LIBRPLCR_DIR) clean
-	$(MAKE) -C $(LIBRPLCR_DIR)
+	$(MAKE) -C $(LIBRPLCR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 endif
 
@@ -239,7 +244,7 @@ streaming_slave:
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = 07364fc7b52389bc2c4d172ab42aea555b0c38fc
+SCPI_PARSER_TAG = 26aaabc20ef93754efe3ed43674e94c7cc444373
 #SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
@@ -300,15 +305,7 @@ LA_TEST_DIR        = rp-api/api2/test
 
 examples: lcr bode monitor calib spectrum acquire generator led_control
 
-ifeq ($(MODEL),Z20_250_12)
-examples: rp_i2c_tool
-endif
 # calibrate laboardtest
-
-rp_i2c_tool:
-	$(MAKE) -C $(LIBRP250_12_DIR) clean
-	$(MAKE) -C $(LIBRP250_12_DIR) tool
-	$(MAKE) -C $(LIBRP250_12_DIR) install_tool INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 # lcr:
 # 	$(MAKE) -C $(LCR_DIR) clean
@@ -555,7 +552,6 @@ clean:
 	make -C $(GENERATOR250_DIR) clean
 	make -C $(CALIB_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRP250_12_DIR)    clean
 	make -C $(LIBRP2_DIR)    clean
 	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean

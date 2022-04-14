@@ -160,7 +160,6 @@
                             <!-- WLAN ACCESS POINT SETTINGS -->
                             <div id="wlan0_ap_mode" class="wlan0_entries" style="display: none; padding-top: 25px">
 
-                                <div id="ssid_check_len" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>
                                 <div id="eth0_inputs_labels" class="status_labels">
                                     <div style="font-size: 15pt;">SSID:</div>
                                 </div>
@@ -169,9 +168,7 @@
                                         <input id="ssid_input" type="text" class="form-control inputs">
                                     </div>
                                 </div>
-
-                                <div id="pass_check_len" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
-                                <div id="pass_check_sym" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
+                                <div id="ssid_check_len" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>                              
                                 <div id="eth0_inputs_labels" class="status_labels">
                                     <div style="font-size: 15pt;">Password:</div>
                                 </div>
@@ -180,6 +177,8 @@
                                         <input id="password_input" type="password" class="form-control inputs">
                                     </div>
                                 </div>
+                                <div id="pass_check_len" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
+                                <div id="pass_check_sym" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
                                 <div>
                                     <button id="access_point_create" class="form-control btn eth0_apply">Create</button>
                                 </div>
@@ -195,7 +194,6 @@
                                     OR
                                 </div>
                                 <div style="display: block; padding-top: 25px">
-                                    <div id="ssid_check_len_c" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>
                                     <div id="eth0_inputs_labels" class="status_labels">
                                         <div style="font-size: 15pt;">SSID:</div>
                                     </div>
@@ -204,9 +202,7 @@
                                             <input id="ssid_input_client" type="text" class="form-control inputs">
                                         </div>
                                     </div>
-
-                                    <div id="pass_check_len_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
-                                    <div id="pass_check_sym_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
+                                    <div id="ssid_check_len_c" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>
                                     <div id="eth0_inputs_labels" class="status_labels">
                                         <div style="font-size: 15pt;">Password:</div>
                                     </div>
@@ -215,6 +211,9 @@
                                             <input id="password_input_client" type="password" class="form-control inputs">
                                         </div>
                                     </div>
+                                    <div id="pass_check_len_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
+                                    <div id="pass_check_sym_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
+
                                     <div>
                                         <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
                                         <button id="clear_entry" class="form-control btn eth0_apply">Clear</button>

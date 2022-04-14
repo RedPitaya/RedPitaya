@@ -1,6 +1,6 @@
 %% Define Red Pitaya as TCP/IP object
 
-IP= '192.168.178.111';           % Input IP of your Red Pitaya...
+IP= '';           % Input IP of your Red Pitaya...
 port = 5000;
 tcpipObj=tcpip(IP, port);
 

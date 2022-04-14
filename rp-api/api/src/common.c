@@ -17,8 +17,8 @@
 #include <sys/mman.h>
 #include <stdio.h>
 #include <math.h>
-#include "rp_cross.h"
 #include "common.h"
+#include "rp_cross.h"
 
 static int fd = 0;
 
@@ -81,20 +81,39 @@ int cmn_Unmap(size_t size, void** mapped)
     return RP_OK;
 }
 
-int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSetShift)
+void cmn_DebugReg(const char* msg,uint32_t value){
+    fprintf(stderr,"\tSet %s 0x%X\n",msg,value);
+}
+
+void cmn_DebugRegCh(const char* msg,int ch,uint32_t value){
+    rp_channel_t chV = (rp_channel_t)ch;
+    switch(chV){
+        case RP_CH_1:
+            fprintf(stderr,"\tSet %s [CH1] 0x%X\n",msg,value);
+        break;
+        case RP_CH_2:
+            fprintf(stderr,"\tSet %s [CH2] 0x%X\n",msg,value);
+        break;
+        default:
+            fprintf(stderr,"\tSet %s [Error channel] 0x%X\n",msg,value);
+        break;
+    }
+}
+
+
+int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSetShift,uint32_t *settedValue)
 {
     VALIDATE_BITS(value, mask);
-    uint32_t currentValue;
-    cmn_GetValue(field, &currentValue, 0xffffffff);
-    currentValue &=  ~(mask << bitsToSetShift); // Clear all bits at specified location
-    currentValue +=  (value << bitsToSetShift); // Set value at specified location
-    SET_VALUE(*field, currentValue);
+    cmn_GetValue(field, settedValue, 0xffffffff);
+    *settedValue &=  ~(mask << bitsToSetShift); // Clear all bits at specified location
+    *settedValue +=  (value << bitsToSetShift); // Set value at specified location
+    SET_VALUE(*field, *settedValue);
     return RP_OK;
 }
 
-int cmn_SetValue(volatile uint32_t* field, uint32_t value, uint32_t mask)
+int cmn_SetValue(volatile uint32_t* field, uint32_t value, uint32_t mask,uint32_t *settedValue)
 {
-    return cmn_SetShiftedValue(field, value, mask, 0);
+    return cmn_SetShiftedValue(field, value, mask, 0, settedValue);
 }
 
 int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift)

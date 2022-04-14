@@ -1,8 +1,9 @@
 #include "rp-i2c-max7311.h"
-#include "i2c/i2c.h"
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <pthread.h>
+#include "rp_hw.h"
 
 unsigned long g_sleep_time = 50 * 1000;
 
@@ -13,6 +14,8 @@ unsigned long g_sleep_time = 50 * 1000;
 #define MAX7311_DEFAULT_DEV     "/dev/i2c-0"
 
 char g_I2C_address = 0;
+
+pthread_mutex_t g_max_i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 std::string exec(const char* cmd) {
     char buffer[128];
@@ -32,35 +35,41 @@ std::string exec(const char* cmd) {
 }
 
 int max7311::initController(const char *i2c_dev_path,  char address){
+	pthread_mutex_lock(&g_max_i2c_mutex);
+    if (rp_I2C_InitDevice(i2c_dev_path,address) != RP_HW_OK){
+		pthread_mutex_unlock(&g_max_i2c_mutex);
+        return false;
+    }
+    rp_I2C_setForceMode(true);
     bool state = true;
-    char value = 0xAA;
+    uint8_t value = 0xAA;
     // setup reset relay 
-    state = (write_to_i2c(i2c_dev_path , address , 0x02, value , false) == 0) & state;
-    state = (write_to_i2c(i2c_dev_path , address , 0x03, value , false) == 0) & state;
+    state = (rp_I2C_SMBUS_Write(0x02, value) == RP_HW_OK) & state;
+    state = (rp_I2C_SMBUS_Write(0x03, value) == RP_HW_OK) & state;
     usleep(g_sleep_time);
     value = 0x00;
     // setup null level on all out ports
-    state = (write_to_i2c(i2c_dev_path , address , 0x02, value , false) == 0) & state;
-    state = (write_to_i2c(i2c_dev_path , address , 0x03, value , false) == 0) & state;
+    state = (rp_I2C_SMBUS_Write(0x02, value) == RP_HW_OK) & state;
+    state = (rp_I2C_SMBUS_Write(0x03, value) == RP_HW_OK) & state;
     // setup all port in outgoing mode
     value = 0x00;
-    state = (write_to_i2c(i2c_dev_path , address , 0x06, value , false) == 0) & state;
-    state = (write_to_i2c(i2c_dev_path , address , 0x07, value , false) == 0) & state;
+    state = (rp_I2C_SMBUS_Write(0x06, value) == RP_HW_OK) & state;
+    state = (rp_I2C_SMBUS_Write(0x07, value) == RP_HW_OK) & state;
 
     // check all regs
-    state = (read_from_i2c(i2c_dev_path , address , 0x02, value , false) == 0) & state;
+    state = (rp_I2C_SMBUS_Read(0x02, &value) == RP_HW_OK) & state;
     state = (value == 0x00) & state;
-    state = (read_from_i2c(i2c_dev_path , address , 0x03, value , false) == 0) & state;
+    state = (rp_I2C_SMBUS_Read(0x03, &value) == RP_HW_OK) & state;
     state = (value == 0x00) & state;
-    state = (read_from_i2c(i2c_dev_path , address , 0x06, value , false) == 0) & state;
+    state = (rp_I2C_SMBUS_Read(0x06, &value) == RP_HW_OK) & state;
     state = (value == 0x00) & state;
-    state = (read_from_i2c(i2c_dev_path , address , 0x07, value , false) == 0) & state;
+    state = (rp_I2C_SMBUS_Read(0x07, &value) == RP_HW_OK) & state;
     state = (value == 0x00) & state;
+	pthread_mutex_unlock(&g_max_i2c_mutex);  
     return state;
 }
 
 int max7311::initControllerDefault(){
-
     return initController(MAX7311_DEFAULT_DEV, getDefaultAddress());
 }
 
@@ -82,37 +91,57 @@ int max7311::getPIN(unsigned short pin){
 }
 
 int max7311::setPIN_EX(const char *i2c_dev_path,  char address, unsigned short pin,bool state){
-    char value = 0;
+  	pthread_mutex_lock(&g_max_i2c_mutex);
+
+    if (rp_I2C_InitDevice(i2c_dev_path,address) != RP_HW_OK){
+    	pthread_mutex_unlock(&g_max_i2c_mutex);
+        return -1;
+    }
+    rp_I2C_setForceMode(true);
+    uint8_t value = 0;
     char reg_addr = 0x02;
     if (pin > 0x80) {
         reg_addr = 0x03;
         pin = pin >> 8;
     }
 
-    if (read_from_i2c(i2c_dev_path , address , reg_addr, value , false) == -1)
+    if (rp_I2C_SMBUS_Read( reg_addr, &value ) != RP_HW_OK){
+	    pthread_mutex_unlock(&g_max_i2c_mutex);   
         return -1;
+    }
     
     value = (value & ~pin) | ((state ? 0xFF : 0) & pin);
 
 
-    if (write_to_i2c(i2c_dev_path , address , reg_addr, value , false) == -1) 
+    if (rp_I2C_SMBUS_Write(reg_addr, value) != RP_HW_OK){
+    	pthread_mutex_unlock(&g_max_i2c_mutex);
         return -1;
-    
+    }
+  	pthread_mutex_unlock(&g_max_i2c_mutex);
     return 0;
 }
    
 
 int max7311::getPIN_EX(const char *i2c_dev_path,  char address, unsigned short pin){
-    char value = 0;
+  	pthread_mutex_lock(&g_max_i2c_mutex);
+
+    if (rp_I2C_InitDevice(i2c_dev_path,address) != RP_HW_OK){
+  	    pthread_mutex_unlock(&g_max_i2c_mutex);        
+        return -1;
+    }
+    rp_I2C_setForceMode(true);
+    uint8_t value = 0;
     char reg_addr = 0x02;
     if (pin > 0x80) {
         reg_addr = 0x03;
         pin = pin >> 8;
     }
 
-    if (read_from_i2c(i2c_dev_path , address , reg_addr, value , false) == -1)
+    if (rp_I2C_SMBUS_Read( reg_addr, &value) != RP_HW_OK){
+       	pthread_mutex_unlock(&g_max_i2c_mutex);
         return -1;
-
+    }
+  	pthread_mutex_unlock(&g_max_i2c_mutex);
     return  (pin & value) > 0;
 }
 
@@ -121,7 +150,14 @@ int max7311::setPIN_GROUP(unsigned short pin_group,int state){
 }
 
 int max7311::setPIN_GROUP_EX(const char *i2c_dev_path, char address, unsigned short pin_group,int state){
-    char value = 0;
+  	pthread_mutex_lock(&g_max_i2c_mutex);
+
+    if (rp_I2C_InitDevice(i2c_dev_path,address) != RP_HW_OK){
+      	pthread_mutex_unlock(&g_max_i2c_mutex);
+        return -1;
+    }
+    rp_I2C_setForceMode(true);
+    uint8_t value = 0;
     char flag = 0;
     char reg_addr = 0x02;
     if (pin_group > 0xFF) {
@@ -129,16 +165,21 @@ int max7311::setPIN_GROUP_EX(const char *i2c_dev_path, char address, unsigned sh
         pin_group = pin_group >> 8;
     }
 
-    if (read_from_i2c(i2c_dev_path , address , reg_addr, value , false) == -1)
+    if (rp_I2C_SMBUS_Read( reg_addr, &value ) != RP_HW_OK){
+      	pthread_mutex_unlock(&g_max_i2c_mutex);
         return -1;
+    }
 
     if (state == 0) flag = 0xAA;
     if (state == 1) flag = 0x55;
 
     value = ((value & ~pin_group) | (pin_group & flag));
 
-    if (write_to_i2c(i2c_dev_path , address , reg_addr, value , false) == -1) 
+    if (rp_I2C_SMBUS_Write( reg_addr, value ) != RP_HW_OK){
+      	pthread_mutex_unlock(&g_max_i2c_mutex);
         return -1;
+    }
+  	pthread_mutex_unlock(&g_max_i2c_mutex);
     return 0;
 }
 
@@ -214,8 +255,16 @@ void rp_max7311::rp_setSleepTime(unsigned long time){
 
 char rp_max7311::rp_check(){
     if (max7311::getDefaultAddress() == MAX7311_DEFAULT_ADDRESS_1_2) return 0;
-    char value = 0;
-    if (read_from_i2c(MAX7311_DEFAULT_DEV , max7311::getDefaultAddress() , 0x08, value , false) == -1)
+  	pthread_mutex_lock(&g_max_i2c_mutex);    
+    if (rp_I2C_InitDevice(MAX7311_DEFAULT_DEV, max7311::getDefaultAddress()) != RP_HW_OK){
         return -1;
+    }
+    rp_I2C_setForceMode(true);
+    uint8_t value = 0;
+    if (rp_I2C_SMBUS_Read(0x08, &value) != RP_HW_OK){
+        pthread_mutex_unlock(&g_max_i2c_mutex);
+        return -1;
+    }
+    pthread_mutex_unlock(&g_max_i2c_mutex);   
     return value;
 }

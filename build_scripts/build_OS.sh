@@ -100,15 +100,15 @@ fi
 
 if [ -z "$1" ]
 then
-        echo -n "Download redpitaya ubuntu OS. "
-        cd $DL
-        wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
+    echo -n "Download redpitaya ubuntu OS. "
+    cd $DL
+    wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
 else
-        echo "Set ubuntu OS from parameter $1"
-	RP_UBUNTU=$1
-	cd build_scripts
-	cp -f $RP_UBUNTU $DL/$RP_UBUNTU
-	cd $DL
+    echo "Set ubuntu OS from parameter $1"
+    RP_UBUNTU=$1
+    cd build_scripts
+    cp -f $RP_UBUNTU $DL/$RP_UBUNTU
+    cd $DL
 fi
 
 

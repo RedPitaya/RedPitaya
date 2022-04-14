@@ -703,6 +703,7 @@ void COscilloscope::resetGen(){
 void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){
     if (_enable){
         rp_GenOutEnable(_ch);
+        rp_GenResetTrigger(_ch);
     }else{
         rp_GenOutDisable(_ch);
     }

@@ -237,7 +237,6 @@ void write_data_fpga(uint32_t ch,
     if(ch == 0) {
 
         /* Channel A */
-        g_awg_reg->state_machine_conf = 0x00000041;
         g_awg_reg->cha_scale_off      = awg->offsgain;
         g_awg_reg->cha_count_wrap     = awg->wrap;
         g_awg_reg->cha_count_step     = awg->step;
@@ -248,7 +247,6 @@ void write_data_fpga(uint32_t ch,
         }
     } else {
         /* Channel B */
-        g_awg_reg->state_machine_conf = 0x00410000;
         g_awg_reg->chb_scale_off      = awg->offsgain;
         g_awg_reg->chb_count_wrap     = awg->wrap;
         g_awg_reg->chb_count_step     = awg->step;
@@ -264,8 +262,8 @@ void write_data_fpga(uint32_t ch,
      *       Otherwise, the not-to-be-affected channel is restarted as well
      *       causing unwanted disturbances on that channel.
      */
-    g_awg_reg->state_machine_conf = 0x00510051; //need for sync channels     
-    g_awg_reg->state_machine_conf = 0x02110211;
+    g_awg_reg->state_machine_conf = 0x00400040; //need for sync channels
+    g_awg_reg->state_machine_conf = 0x02010201;
 
     fpga_awg_exit();
 }

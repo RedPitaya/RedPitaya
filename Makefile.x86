@@ -6,7 +6,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 
 GIT_MODE ?= GITHUB
-GITLAB_TOKEN ?= 
+GITLAB_TOKEN ?=
 
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
@@ -125,12 +125,12 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_CLASSIC 	= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_LOGIC		= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_0_94		= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_MERCURY	= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_AXI4LITE	= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_STREAM_APP = 977a4d0fe89f4815940385e19b6c3524a6c2a59b
+FPGA_CLASSIC 	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_LOGIC	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_0_94	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_MERCURY	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_AXI4LITE	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -143,8 +143,8 @@ ifeq ($(MODEL),Z20)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94 stream_app
 
-FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_0_94		= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_STREAM_APP = 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_0_94	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -157,12 +157,12 @@ ifeq ($(MODEL),Z20_125)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_CLASSIC 	= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_LOGIC		= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_0_94		= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_MERCURY	= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_AXI4LITE	= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_STREAM_APP = 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_CLASSIC 	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_LOGIC	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_0_94	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_MERCURY	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_AXI4LITE	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -175,9 +175,9 @@ ifeq ($(MODEL),Z20_250_12)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 
-FPGA_STREAM_APP_250 = 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_0_94_250		= 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_LOGIC_250		= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_STREAM_APP_250 = 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_0_94_250	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_LOGIC_250	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -190,8 +190,8 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
 # FPGA_PRJ_LST = stream_app logic
 
-FPGA_STREAM_APP = 748304679bc649f4f54b39dc88d42c84de55f17a
-FPGA_CLASSIC 	= 748304679bc649f4f54b39dc88d42c84de55f17a
+FPGA_STREAM_APP = 76cfba3fb0616f1e712af77a7532bb34b85ac17d
+FPGA_LOGIC	= 76cfba3fb0616f1e712af77a7532bb34b85ac17d
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -256,7 +256,6 @@ endif
 ifneq "$(FPGA_AXI4LITE)" ""
 	$(call build_fpga,axi4lite,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
 endif
-
 
 ifneq ($(STREAMING),SLAVE)
 	# copy archived FPGA bitstream images and decompress them
@@ -372,9 +371,9 @@ $(DTREE_DIR): $(DTREE_TAR)
 $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
-	cat fpga/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
+	cat fpga/$(FPGA_PRJ)/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
 	gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
 	# create device tree source from binary for reference
 	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
@@ -424,3 +423,51 @@ clean:
 	-make -C $(UBOOT_DIR) clean
 	# todo, remove downloaded libraries and symlinks
 	$(RM) $(INSTALL_DIR) -rf
+
+
+################################################################################
+#
+################################################################################
+
+
+gen_report:
+
+	./gen_fpga_report.sh BRANCH_KERNEL
+
+ifneq "$(FPGA_STREAM_APP)" ""
+	./gen_fpga_report.sh GEN stream_app $(FPGA_STREAM_APP)
+endif
+
+ifneq "$(FPGA_STREAM_APP_250)" ""
+	./gen_fpga_report.sh GEN stream_app_250 $(FPGA_STREAM_APP_250)
+endif
+
+ifneq "$(FPGA_CLASSIC)" ""
+	./gen_fpga_report.sh GEN classic $(FPGA_CLASSIC)
+endif
+
+ifneq "$(FPGA_LOGIC)" ""
+	./gen_fpga_report.sh GEN logic $(FPGA_LOGIC)
+endif
+
+ifneq "$(FPGA_LOGIC_250)" ""
+	./gen_fpga_report.sh GEN logic_250 $(FPGA_LOGIC_250)
+endif
+
+ifneq "$(FPGA_0_94)" ""
+	./gen_fpga_report.sh GEN v0.94 $(FPGA_0_94)
+endif
+
+ifneq "$(FPGA_0_94_250)" ""
+	./gen_fpga_report.sh GEN v0.94_250 $(FPGA_0_94_250)
+endif
+
+ifneq "$(FPGA_MERCURY)" ""
+	./gen_fpga_report.sh GEN mercury $(FPGA_MERCURY)
+endif
+
+ifneq "$(FPGA_AXI4LITE)" ""
+	./gen_fpga_report.sh GEN axi4lite $(FPGA_AXI4LITE)
+endif
+
+	./gen_fpga_report.sh PACK

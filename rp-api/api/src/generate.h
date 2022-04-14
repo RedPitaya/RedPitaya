@@ -38,8 +38,8 @@
 #define DUTY_CYCLE_MAX          100         // %
 #define BURST_COUNT_MIN         1
 #define BURST_COUNT_MAX         50000
-#define BURST_REPETITIONS_MIN   1
-#define BURST_REPETITIONS_MAX   50000
+#define BURST_REPETITIONS_MIN   0x1
+#define BURST_REPETITIONS_MAX   0x10000     // Used as value-1  0x10000 => 0xFFFF (inf mode)
 #define BURST_PERIOD_MIN        1           // us
 #define BURST_PERIOD_MAX        500000000   // us
 
@@ -143,9 +143,10 @@ int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
 int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
 //
 
+int generate_Trigger(rp_channel_t channel);
 int generate_simultaneousTrigger();
-int generate_Synchronise();
-int generate_Reset(rp_channel_t channel);
+int generate_ResetSM();
+int generate_ResetChannelSM(rp_channel_t channel);
 
 int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_t length);
 

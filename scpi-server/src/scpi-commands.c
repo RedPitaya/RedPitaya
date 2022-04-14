@@ -22,6 +22,10 @@
 #include "common.h"
 #include "dpin.h"
 #include "apin.h"
+#include "uart.h"
+#include "led.h"
+#include "spi.h"
+#include "i2c.h"
 #include "acquire.h"
 #include "generate.h"
 #include "scpi/error.h"
@@ -130,6 +134,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "RP:RELease", .callback                 = RP_ReleaseAll,},
     {.pattern = "RP:FPGABITREAM", .callback             = RP_FpgaBitStream,},
     {.pattern = "RP:DIg[:loop]", .callback              = RP_EnableDigLoop,},
+    {.pattern = "RP:LOGmode", .callback                 = RP_SetLogMode,},
 
     {.pattern = "DIG:RST", .callback                    = RP_DigitalPinReset,},
     {.pattern = "DIG:PIN", .callback                    = RP_DigitalPinState,},
@@ -213,10 +218,85 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
     {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
 
+    /* uart */
+    {.pattern = "UART:INIT", .callback                  = RP_Uart_Init,},
+    {.pattern = "UART:RELEASE", .callback               = RP_Uart_Release,},
+    {.pattern = "UART:SETUP", .callback                 = RP_Uart_SetSettings,},
+    {.pattern = "UART:BITS", .callback                  = RP_Uart_BIT_Size,},
+    {.pattern = "UART:BITS?", .callback                 = RP_Uart_BIT_SizeQ,},
+    {.pattern = "UART:SPEED", .callback                 = RP_Uart_Speed,},
+    {.pattern = "UART:SPEED?", .callback                = RP_Uart_SpeedQ,},
+    {.pattern = "UART:STOPB", .callback                 = RP_Uart_STOP_Bit,},
+    {.pattern = "UART:STOPB?", .callback                = RP_Uart_STOP_BitQ,},
+    {.pattern = "UART:PARITY", .callback                = RP_Uart_PARITY,},
+    {.pattern = "UART:PARITY?", .callback               = RP_Uart_PARITYQ,},
+    {.pattern = "UART:TIMEOUT", .callback               = RP_Uart_Timeout,},
+    {.pattern = "UART:TIMEOUT?", .callback              = RP_Uart_TimeoutQ,},
+    {.pattern = "UART:WRITE#", .callback                = RP_Uart_SendBuffer,},
+    {.pattern = "UART:READ#", .callback                 = RP_Uart_ReadBuffer,},
+
+    /* led */
+    {.pattern = "LED:MMC", .callback                    = RP_LED_MMC,},
+    {.pattern = "LED:MMC?", .callback                   = RP_LED_MMCQ,},
+    {.pattern = "LED:HB", .callback                     = RP_LED_HB,},
+    {.pattern = "LED:HB?", .callback                    = RP_LED_HBQ,},
+    {.pattern = "LED:ETH", .callback                    = RP_LED_ETH,},
+    {.pattern = "LED:ETH?", .callback                   = RP_LED_ETHQ,},
+
+    /* spi */
+    {.pattern = "SPI:INIT", .callback                   = RP_SPI_Init,},
+    {.pattern = "SPI:INIT:DEV", .callback               = RP_SPI_InitDev,},
+    {.pattern = "SPI:RELEASE", .callback                = RP_SPI_Release,},
+    {.pattern = "SPI:SETtings:DEF", .callback           = RP_SPI_SetDefault,},
+    {.pattern = "SPI:SETtings:SET", .callback           = RP_SPI_SetSettings,},
+    {.pattern = "SPI:SETtings:GET", .callback           = RP_SPI_GetSettings,},
+
+    {.pattern = "SPI:SETtings:MODE", .callback          = RP_SPI_SetMode,},
+    {.pattern = "SPI:SETtings:MODE?", .callback         = RP_SPI_GetMode,},
+    {.pattern = "SPI:SETtings:SPEED", .callback         = RP_SPI_SetSpeed,},
+    {.pattern = "SPI:SETtings:SPEED?", .callback        = RP_SPI_GetSpeed,},
+
+    {.pattern = "SPI:SETtings:WORD", .callback         = RP_SPI_SetWord,},
+    {.pattern = "SPI:SETtings:WORD?", .callback        = RP_SPI_GetWord,},
+
+
+    {.pattern = "SPI:MSG:CREATE", .callback             = RP_SPI_CreateMessage,},
+    {.pattern = "SPI:MSG:DEL", .callback                = RP_SPI_DestroyMessage,},
+    {.pattern = "SPI:MSG:SIZE?", .callback              = RP_SPI_GetMessageLen,},
+
+    {.pattern = "SPI:MSG#:TX#", .callback               = RP_SPI_SetTX,},
+    {.pattern = "SPI:MSG#:TX#:RX", .callback            = RP_SPI_SetTXRX,},
+    {.pattern = "SPI:MSG#:RX#", .callback               = RP_SPI_SetRX,},
+    {.pattern = "SPI:MSG#:TX#:CS", .callback            = RP_SPI_SetTXCS,},
+    {.pattern = "SPI:MSG#:TX#:RX:CS", .callback         = RP_SPI_SetTXRXCS,},
+    {.pattern = "SPI:MSG#:RX#:CS", .callback            = RP_SPI_SetRXCS,},
+    {.pattern = "SPI:MSG#:RX?", .callback               = RP_SPI_GetRXBuffer,},
+    {.pattern = "SPI:MSG#:TX?", .callback               = RP_SPI_GetTXBuffer,},
+    {.pattern = "SPI:MSG#:CS?", .callback               = RP_SPI_GetCSChangeState,},
+
+    {.pattern = "SPI:PASS", .callback                   = RP_SPI_Pass,},
+    
+     /* i2c */
+    {.pattern = "I2C:DEV#", .callback                  = RP_I2C_Dev,},
+    {.pattern = "I2C:DEV?", .callback                  = RP_I2C_DevQ,},
+    {.pattern = "I2C:FMODE", .callback                 = RP_I2C_ForceMode,},
+    {.pattern = "I2C:FMODE?", .callback                = RP_I2C_ForceModeQ,},
+
+    {.pattern = "I2C:Smbus:Read#", .callback           = RP_I2C_SMBUS_Read,},
+    {.pattern = "I2C:Smbus:Read#:Word", .callback      = RP_I2C_SMBUS_ReadWord,},
+    {.pattern = "I2C:Smbus:Read#:Buffer#", .callback   = RP_I2C_SMBUS_ReadBuffer,},
+    {.pattern = "I2C:IOctl:Read:Buffer#", .callback    = RP_I2C_IOCTL_ReadBuffer,},
+
+    {.pattern = "I2C:Smbus:Write#", .callback          = RP_I2C_SMBUS_Write,},
+    {.pattern = "I2C:Smbus:Write#:Word", .callback     = RP_I2C_SMBUS_WriteWord,},
+    {.pattern = "I2C:Smbus:Write#:Buffer#", .callback  = RP_I2C_SMBUS_WriteBuffer,},
+    {.pattern = "I2C:IOctl:Write:Buffer#", .callback   = RP_I2C_IOCTL_WriteBuffer,},
+
+
     SCPI_CMD_LIST_END
 };
 
-static scpi_interface_t scpi_interface = {
+static scpi_interface_t scpi_interface = {  
     .error   = SCPI_Error,
     .write   = SCPI_Write,
     .control = SCPI_Control,

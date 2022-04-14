@@ -26,5 +26,6 @@ make install
 rm -rf /tmp/cmake-3.22.1
 rm -rf /tmp/cmake-3.22.1.tar.gz
 
+echo 1.05 > /root/.version
 
 EOF_CHROOT

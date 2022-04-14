@@ -48,6 +48,7 @@ static const uint64_t ADC_SAMPLE_PERIOD = ADC_SAMPLE_PERIOD_DEF;
 static rp_pinState_t gain_ch_a = RP_LOW;
 static rp_pinState_t gain_ch_b = RP_LOW;
 
+
 #ifdef Z20_250_12
 /* @brief Currently set AC/DC state */
 static rp_acq_ac_dc_mode_t power_mode_ch_a = RP_AC_MODE;
@@ -69,12 +70,8 @@ static const uint32_t GAIN_HI_FILT_BB = 0x2F38B;
 static const uint32_t GAIN_HI_FILT_PP = 0x2666;
 static const uint32_t GAIN_HI_FILT_KK = 0xd9999a;
 
-void PrintLogInFile2(const char *message){
-    FILE *f = fopen("/tmp/debug.log", "a+");
-  	fprintf(f, "%s\n", message);
-    fclose(f);
-}
-
+float chA_hyst = 0.005;
+float chB_hyst = 0.005;
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -642,41 +639,23 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
 
     uint32_t cnt = cmn_CnvVToCnt(ADC_REG_BITS, voltage, gainV, gain == RP_HIGH ? false : true, calibScale, dc_offs, 0.0);
     if (channel == RP_CH_1) {
+        chA_hyst = voltage;
         return osc_SetHysteresisChA(cnt);
     }
     else {
+        chB_hyst = voltage;
         return osc_SetHysteresisChB(cnt);
     }
 }
 
 int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 {
-    float gainV;
-    rp_pinState_t gain;
-    uint32_t cnts;
-
     if (channel == RP_CH_1) {
-        osc_GetHysteresisChA(&cnts);
+        *voltage = chA_hyst;
     }
     else {
-        osc_GetHysteresisChB(&cnts);
+        *voltage = chB_hyst;
     }
-
-    acq_GetGainV(channel, &gainV);
-    acq_GetGain(channel, &gain);
-
-#ifdef Z20_250_12
-    rp_acq_ac_dc_mode_t power_mode;
-    acq_GetAC_DC(channel,&power_mode);
-    int32_t dc_offs = calib_getOffset(channel, gain,power_mode);
-    uint32_t calibScale = calib_GetFrontEndScale(channel, gain,power_mode);
-#else
-    int32_t dc_offs = calib_getOffset(channel, gain);
-    uint32_t calibScale = calib_GetFrontEndScale(channel, gain);
-#endif
-
-    *voltage = cmn_CnvCntToV(ADC_REG_BITS, cnts & ADC_REG_BITS_MASK, gainV, calibScale, dc_offs, 0.0);
-
     return RP_OK;
 }
 
@@ -1005,8 +984,8 @@ int acq_GetBufferSize(uint32_t *size) {
 int acq_SetDefault() {
     acq_SetChannelThreshold(RP_CH_1, 0.0);
     acq_SetChannelThreshold(RP_CH_2, 0.0);
-    acq_SetChannelThresholdHyst(RP_CH_1, 0.0);
-    acq_SetChannelThresholdHyst(RP_CH_2, 0.0);
+    acq_SetChannelThresholdHyst(RP_CH_1, chA_hyst);
+    acq_SetChannelThresholdHyst(RP_CH_2, chB_hyst);
 
     acq_SetGain(RP_CH_1, RP_LOW);
     acq_SetGain(RP_CH_2, RP_LOW);

@@ -690,7 +690,7 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenTrigger(channel);
+    result = rp_GenResetTrigger(channel);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:TRIG:INT Failed to set immediate "
             "trigger: %s\n", rp_GetError(result));
@@ -703,7 +703,7 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
 
 scpi_result_t RP_GenTriggerBoth(scpi_t *context) {   
     int result;
-    result = rp_GenTrigger(3);
+    result = rp_GenSynchronise();
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR:TRIG:INT Failed to set immediate "
             "trigger: %s\n", rp_GetError(result));

@@ -46,8 +46,8 @@ CC=$(CROSS_COMPILE)g++
 
 ifeq ($(MODEL),Z20_250_12)
 CFLAGS += -I$(INSTALL_DIR)/include/api250-12
-LIBS += -lrp-gpio -lrp-i2c -lrp-spi
-endif 
+LIBS += -lrp-gpio -lrp-i2c -lrp-spi -lrp-hw
+endif
 
 # Makefile is composed of so called 'targets'. They give basic structure what 
 # needs to be execued during various stages of the building/removing/installing
