@@ -222,39 +222,39 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
 
 ifneq "$(FPGA_STREAM_APP)" ""
-	$(call build_fpga,stream_app,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP))
+	$(call build_fpga,stream_app,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP))
 endif
 
 ifneq "$(FPGA_STREAM_APP_250)" ""
-	$(call build_fpga,stream_app_250,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP_250))
+	$(call build_fpga,stream_app_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP_250))
 endif
 
 ifneq "$(FPGA_CLASSIC)" ""
-	$(call build_fpga,classic,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_CLASSIC))
+	$(call build_fpga,classic,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_CLASSIC))
 endif
 
 ifneq "$(FPGA_LOGIC)" ""
-	$(call build_fpga,logic,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC))
+	$(call build_fpga,logic,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC))
 endif
 
 ifneq "$(FPGA_LOGIC_250)" ""
-	$(call build_fpga,logic_250,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC_250))
+	$(call build_fpga,logic_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC_250))
 endif
 
 ifneq "$(FPGA_0_94)" ""
-	$(call build_fpga,v0.94,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94))
+	$(call build_fpga,v0.94,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94))
 endif
 
 ifneq "$(FPGA_0_94_250)" ""
-	$(call build_fpga,v0.94_250,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94_250))
+	$(call build_fpga,v0.94_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94_250))
 endif
 
 ifneq "$(FPGA_MERCURY)" ""
-	$(call build_fpga,mercury,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_MERCURY))
+	$(call build_fpga,mercury,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_MERCURY))
 endif
 
 ifneq "$(FPGA_AXI4LITE)" ""
-	$(call build_fpga,axi4lite,$(MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
+	$(call build_fpga,axi4lite,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
 endif
 
 ifneq ($(STREAMING),SLAVE)
