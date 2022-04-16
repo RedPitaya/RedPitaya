@@ -40,7 +40,7 @@ export GREET_MSG
 
 all: fpga devicetree u-boot linux boot
 
-install: linux-install devicetree-install boot
+install: linux-install devicetree-install boot fpga_move
 
 ################################################################################
 #
@@ -180,9 +180,9 @@ FPGA_0_94_250	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
 FPGA_LOGIC_250	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
 
 # NEED for FSBL fpga image
-FPGA_PRJ = logic
+FPGA_PRJ = logic_250
 FPGA_MODEL ?= Z20_250
-DTS_PATH = dts
+DTS_PATH = dts_250
 endif
 endif
 
@@ -278,12 +278,18 @@ else
 	cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
-	mv $(INSTALL_DIR)/fpga/logic_250 $(INSTALL_DIR)/fpga/logic
-	mv $(INSTALL_DIR)/fpga/stream_app_250 $(INSTALL_DIR)/fpga/stream_app
+
 endif
 else
 	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+endif
+
+fpga_move:
+
+ifeq ($(FPGA_MODEL),Z20_250)
+	mv $(INSTALL_DIR)/fpga/v0.94_250 $(INSTALL_DIR)/fpga/v0.94
+	mv $(INSTALL_DIR)/fpga/logic_250 $(INSTALL_DIR)/fpga/logic
+	mv $(INSTALL_DIR)/fpga/stream_app_250 $(INSTALL_DIR)/fpga/stream_app
 endif
 
 ################################################################################
