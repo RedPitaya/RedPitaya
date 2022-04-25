@@ -34,7 +34,7 @@ static const float    ANALOG_IN_MIN_VAL          = 0.0;
 static const uint32_t ANALOG_IN_MAX_VAL_INTEGER  = 0xFFF;
 static const float    ANALOG_OUT_MAX_VAL         = 1.8;
 static const float    ANALOG_OUT_MIN_VAL         = 0.0;
-static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 156;
+static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 255;
 
 static volatile analog_mixed_signals_control_t *ams = NULL;
 
