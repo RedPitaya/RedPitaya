@@ -95,7 +95,7 @@ int ReadCalib(bool factory, bool verbose, bool z_mode)
         	}
         	fprintf(stdout, "\n");
 	}else{
-#ifdef Z20_250_12
+#if defined Z20_250_12 || defined Z20_125_4CH
 		fprintf(stdout, "Unsupport mode\n");
 #else
 		fprintf(stdout, "%20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d\n",

@@ -121,6 +121,76 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
 #endif
 
 
+#if defined Z20_125_4CH
+
+// Default values
+#define GAIN_LO_FILT_AA 0x7D93
+#define GAIN_LO_FILT_BB 0x437C7
+#define GAIN_LO_FILT_PP 0x2666
+#define GAIN_LO_FILT_KK 0xd9999a
+#define GAIN_HI_FILT_AA 0x4C5F
+#define GAIN_HI_FILT_BB 0x2F38B
+#define GAIN_HI_FILT_PP 0x2666
+#define GAIN_HI_FILT_KK 0xd9999a
+
+const char * c_wpCalParDesc[eCalParEnd][20]={
+    {"OSC_CH1_HIGH"},
+    {"OSC_CH2_HIGH"},
+    {"OSC_CH3_HIGH"},
+    {"OSC_CH4_HIGH"},
+    {"OSC_CH1_LOW"},
+    {"OSC_CH2_LOW"},
+    {"OSC_CH3_LOW"},
+    {"OSC_CH4_LOW"},
+    {"OSC_CH1_HIGH_OFFSET"},
+    {"OSC_CH1_HIGH_OFFSET"},
+    {"OSC_CH1_HIGH_OFFSET"},
+    {"OSC_CH1_HIGH_OFFSET"},
+    {"OSC_CH1_LOW_OFFSET"},
+    {"OSC_CH1_LOW_OFFSET"},
+    {"OSC_CH1_LOW_OFFSET"},
+    {"OSC_CH1_LOW_OFFSET"},
+
+    {"OSC_CH1_HIGH_AA"},
+    {"OSC_CH1_HIGH_BB"},
+    {"OSC_CH1_HIGH_PP"},
+    {"OSC_CH1_HIGH_KK"},
+    {"OSC_CH1_LOW_AA"},
+    {"OSC_CH1_LOW_BB"},
+    {"OSC_CH1_LOW_PP"},
+    {"OSC_CH1_LOW_KK"},
+
+    {"OSC_CH2_HIGH_AA"},
+    {"OSC_CH2_HIGH_BB"},
+    {"OSC_CH2_HIGH_PP"},
+    {"OSC_CH2_HIGH_KK"},
+    {"OSC_CH2_LOW_AA"},
+    {"OSC_CH2_LOW_BB"},
+    {"OSC_CH2_LOW_PP"},
+    {"OSC_CH2_LOW_KK"},
+
+    {"OSC_CH3_HIGH_AA"},
+    {"OSC_CH3_HIGH_BB"},
+    {"OSC_CH3_HIGH_PP"},
+    {"OSC_CH3_HIGH_KK"},
+    {"OSC_CH3_LOW_AA"},
+    {"OSC_CH3_LOW_BB"},
+    {"OSC_CH3_LOW_PP"},
+    {"OSC_CH3_LOW_KK"},
+
+    {"OSC_CH4_HIGH_AA"},
+    {"OSC_CH4_HIGH_BB"},
+    {"OSC_CH4_HIGH_PP"},
+    {"OSC_CH4_HIGH_KK"},
+    {"OSC_CH4_LOW_AA"},
+    {"OSC_CH4_LOW_BB"},
+    {"OSC_CH4_LOW_PP"},
+    {"OSC_CH4_LOW_KK"}
+
+};
+#endif
+
+
 int RpEepromCalDataRead(eepromWpData_t * eepromData, bool factory)
 {
 
@@ -165,6 +235,7 @@ if (eepromData->feCalPar[eCalParMagic] != CALIB_MAGIC_FILTER){
     eepromData->feCalPar[eCalPar_F_HI_KK_CH2] = GAIN_HI_FILT_KK;
 }
 #endif
+
     fclose(fp);
     return 0;
 }
