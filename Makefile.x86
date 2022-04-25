@@ -210,7 +210,7 @@ define build_fpga
 	./download_fpga.sh $(1) $(GIT_MODE) $(5) $(GITLAB_TOKEN)
 	mkdir -p $(INSTALL_DIR)/fpga/$(1)
 	make -C fpga/$(1) PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4)
-	
+
 	cp    fpga/$(1)/prj/$(1)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(1)/fpga.bit
 	cp    fpga/$(1)/prj/$(1)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(1)/fsbl.elf
 	cp -r fpga/$(1)/prj/$(1)/sdk/dts                  $(INSTALL_DIR)/fpga/$(1)

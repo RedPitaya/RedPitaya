@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.14)
-project(rp-hw)
+project(rp2)
 
+include(CMakeDoxy.txt)
 
 option(BUILD_SHARED "Builds shared library" ON)
 option(BUILD_STATIC "Builds static library" ON)
 option(IS_INSTALL "Install library" ON)
+option(BUILD_DOC "Build documentation" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
@@ -23,14 +25,6 @@ if(NOT DEFINED INSTALL_DIR)
     set(IS_INSTALL OFF)
 endif()
 
-if(NOT DEFINED VERSION)
-  set(VERSION 0.00-0000)
-endif()
-
-if(NOT DEFINED REVISION)
-  set(REVISION devbuild)
-endif()
-
 message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -45,13 +39,14 @@ message(STATUS "Install path ${INSTALL_DIR}")
 
 
 include_directories("include")
+include_directories("include/redpitaya")
 include_directories("src")
 
 file(GLOB PR_HW_SOURCES "src/*.c")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-std=c11 -Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-std=c11 -Wall -pedantic -Wextra  -DVERSION=${VERSION} -DREVISION=${REVISION} -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
 
@@ -66,7 +61,9 @@ if(BUILD_SHARED)
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-            DESTINATION ${INSTALL_DIR} PATTERN "*.h")            
+            DESTINATION ${INSTALL_DIR} FILES_MATCHING PATTERN "*.h")
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/
+            DESTINATION ${INSTALL_DIR}/include/api2 FILES_MATCHING PATTERN "*.h")
     endif()         
 endif()
 
@@ -81,8 +78,17 @@ if(BUILD_STATIC)
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-            DESTINATION ${INSTALL_DIR} PATTERN "*.h") 
+            DESTINATION ${INSTALL_DIR} FILES_MATCHING PATTERN "*.h")
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/
+            DESTINATION ${INSTALL_DIR}/include/api2 FILES_MATCHING PATTERN "*.h")
         endif()  
+endif()
+
+if(BUILD_DOC)
+set(DOXY_OUTPUT_LANGUAGE "English")
+set(DOXY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doc")
+set(DOXY_INPUT ${CMAKE_SOURCE_DIR})
+ADD_DOCUMENTATION(doc doc/doxyfile.inc)
 endif()
 
 unset(MODEL CACHE)

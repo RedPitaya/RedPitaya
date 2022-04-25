@@ -54,10 +54,7 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions);
 int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions);
 int gen_setBurstPeriod(rp_channel_t channel, uint32_t period);
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period);
-#ifndef Z20_250_12
-int gen_setBurstLastValue(rp_channel_t channel, float amplitude);
-int gen_getBurstLastValue(rp_channel_t channel, float *amplitude);
-#endif
+
 int gen_setTriggerSource(rp_channel_t chanel, rp_trig_src_t src);
 int gen_getTriggerSource(rp_channel_t chanel, rp_trig_src_t *src);
 int gen_Trigger(uint32_t channel);
@@ -67,12 +64,6 @@ int gen_TriggerOnly(uint32_t channel);
 int gen_SynchroniseSM();
 int gen_ResetChannelSM(rp_channel_t channel);
 int triggerIfInternal(rp_channel_t channel);
-
-int gen_setEnableTempProtection(rp_channel_t channel, bool enable);
-int gen_getEnableTempProtection(rp_channel_t channel, bool *enable);
-int gen_setLatchTempAlarm(rp_channel_t channel, bool status);
-int gen_getLatchTempAlarm(rp_channel_t channel, bool *status);
-int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status);
 
 int synthesize_signal(rp_channel_t channel);
 int synthesis_sin(float *data_out,uint16_t buffSize);
@@ -86,9 +77,19 @@ int synthesis_DC(float *data_out,uint16_t buffSize);
 int synthesis_DC_NEG(float *data_out,uint16_t buffSize);
 int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize);
 
+#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_125_4CH
+int gen_setBurstLastValue(rp_channel_t channel, float amplitude);
+int gen_getBurstLastValue(rp_channel_t channel, float *amplitude);
+#endif
+
 #ifdef Z20_250_12
 int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode);
 int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status);
+int gen_setEnableTempProtection(rp_channel_t channel, bool enable);
+int gen_getEnableTempProtection(rp_channel_t channel, bool *enable);
+int gen_setLatchTempAlarm(rp_channel_t channel, bool status);
+int gen_getLatchTempAlarm(rp_channel_t channel, bool *status);
+int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status);
 #endif
 
 #endif

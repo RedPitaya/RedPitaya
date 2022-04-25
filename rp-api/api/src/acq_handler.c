@@ -21,7 +21,6 @@
 #include "calib.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
-#include "calib.h"
 
 #ifdef Z20_250_12
 #include "rp-i2c-mcp47x6-c.h"
@@ -38,7 +37,7 @@
 // static const uint32_t DEC_65536 = 65536;
 
 /* @brief Trig. reg. value offset when set to 0 */
-static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE/2;
+static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE / 2;
 
 /* @brief Sampling period (non-decimated) - 8 [ns]. */
 static const uint64_t ADC_SAMPLE_PERIOD = ADC_SAMPLE_PERIOD_DEF;
@@ -49,7 +48,7 @@ static rp_pinState_t gain_ch_a = RP_LOW;
 static rp_pinState_t gain_ch_b = RP_LOW;
 
 
-#ifdef Z20_250_12
+#if defined Z20_250_12
 /* @brief Currently set AC/DC state */
 static rp_acq_ac_dc_mode_t power_mode_ch_a = RP_AC_MODE;
 static rp_acq_ac_dc_mode_t power_mode_ch_b = RP_AC_MODE;
@@ -72,6 +71,13 @@ static const uint32_t GAIN_HI_FILT_KK = 0xd9999a;
 
 float chA_hyst = 0.005;
 float chB_hyst = 0.005;
+
+#if defined Z20_125_4CH
+float chC_hyst = 0.005;
+float chD_hyst = 0.005;
+static rp_pinState_t gain_ch_c = RP_LOW;
+static rp_pinState_t gain_ch_d = RP_LOW;
+#endif
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -120,7 +126,7 @@ static int setEqFilters(rp_channel_t channel)
 
     rp_pinState_t gain;
     acq_GetGain(channel, &gain);
-#if defined Z10 || defined Z20_125
+#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
     uint32_t aa = calib_GetFilterCoff(channel,gain,AA);
     uint32_t bb = calib_GetFilterCoff(channel,gain,BB);
     uint32_t kk = calib_GetFilterCoff(channel,gain,KK);
@@ -129,10 +135,24 @@ static int setEqFilters(rp_channel_t channel)
     // Update equalization filter with default coefficients
     if (channel == RP_CH_1) {
         return osc_SetEqFiltersChA(aa, bb, kk, pp);
-    } else {
+    } 
+    
+    if (channel == RP_CH_2) {
         return osc_SetEqFiltersChB(aa, bb, kk, pp);
     }
-#else
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3) {
+        return osc_SetEqFiltersChC(aa, bb, kk, pp);
+    } 
+    
+    if (channel == RP_CH_4) {
+        return osc_SetEqFiltersChD(aa, bb, kk, pp);
+    }    
+#endif
+    return RP_EOOR;
+#endif
+
+#if defined Z20_250_12
     if (channel == RP_CH_1) {
         if (gain == RP_HIGH)  return osc_SetEqFiltersChA(GAIN_HI_FILT_AA, GAIN_HI_FILT_BB, GAIN_HI_FILT_KK, GAIN_HI_FILT_PP);
         else                  return osc_SetEqFiltersChA(GAIN_LO_FILT_AA, GAIN_LO_FILT_BB, GAIN_LO_FILT_KK, GAIN_LO_FILT_PP);
@@ -141,6 +161,11 @@ static int setEqFilters(rp_channel_t channel)
         else                  return osc_SetEqFiltersChB(GAIN_LO_FILT_AA, GAIN_LO_FILT_BB, GAIN_LO_FILT_KK, GAIN_LO_FILT_PP);
     }
 #endif
+
+#if defined Z20
+    return RP_EOOR;
+#endif
+
 }
 
 /*----------------------------------------------------------------------------*/
@@ -165,9 +190,19 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     if (channel == RP_CH_1) {
         gain = &gain_ch_a;
     }
-    else {
+    if (channel == RP_CH_2) {
         gain = &gain_ch_b;
     }
+
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3) {
+        gain = &gain_ch_c;
+    } 
+    
+    if (channel == RP_CH_4) {
+        gain = &gain_ch_d;
+    }
+#endif
 
     // Read old values which are dependent on the gain...
     rp_pinState_t old_gain;
@@ -214,20 +249,27 @@ int acq_GetGain(rp_channel_t channel, rp_pinState_t* state)
     if (channel == RP_CH_1) {
         *state = gain_ch_a;
     }
-    else {
+    if (channel == RP_CH_2) {
         *state = gain_ch_b;
     }
+
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3) {
+        *state = gain_ch_c;
+    } 
+    
+    if (channel == RP_CH_4) {
+        *state = gain_ch_d;
+    }
+#endif
+
     return RP_OK;
 }
 
-/**
- * Returns currently set gain in Volts
- * @param state
- * @return
- */
 int acq_GetGainV(rp_channel_t channel, float* voltage)
 {
-    #ifdef Z20 
+    #ifdef Z20
+        (void)(channel);
         *voltage = 0.5;
     #else 
         rp_pinState_t *gain = NULL;
@@ -235,9 +277,20 @@ int acq_GetGainV(rp_channel_t channel, float* voltage)
         if (channel == RP_CH_1) {
             gain = &gain_ch_a;
         }
-        else {
+
+        if (channel == RP_CH_2) {
             gain = &gain_ch_b;
         }
+
+#if defined Z20_125_4CH
+        if (channel == RP_CH_3) {
+            gain = &gain_ch_c;
+        } 
+        
+        if (channel == RP_CH_4) {
+            gain = &gain_ch_d;
+        }
+#endif
 
         if (*gain == RP_LOW) {
             *voltage = 1.0;
@@ -435,6 +488,7 @@ int acq_GetTriggerState(rp_acq_trig_state_t* state)
 
 int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
 {
+    (void)(updateMaxValue);
     int32_t trig_dly;
     if(decimated_data_num < -TRIG_DELAY_ZERO_OFFSET){
             trig_dly=0;
@@ -492,7 +546,13 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage)
     switch(channel){
         case RP_T_CH_1: return acq_SetChannelThreshold(RP_CH_1, voltage);
         case RP_T_CH_2: return acq_SetChannelThreshold(RP_CH_2, voltage);
-        #ifdef Z20_250_12
+
+#if defined Z20_125_4CH
+        case RP_T_CH_3: return acq_SetChannelThreshold(RP_CH_3, voltage);
+        case RP_T_CH_4: return acq_SetChannelThreshold(RP_CH_4, voltage);
+#endif
+
+#if defined Z20_250_12
         case RP_T_CH_EXT: {
                 int ret = rp_setExtTriggerLevel(voltage);
                 switch(ret){
@@ -503,7 +563,7 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage)
                         return RP_OK;
                 }   
         }
-        #endif
+#endif
         default:;
     }
     return RP_NOTS;
@@ -514,7 +574,13 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage)
     switch(channel){
         case RP_T_CH_1: return acq_GetChannelThreshold(RP_CH_1, voltage);
         case RP_T_CH_2: return acq_GetChannelThreshold(RP_CH_2, voltage);
-        #ifdef Z20_250_12
+
+#if defined Z20_125_4CH
+        case RP_T_CH_3: return acq_GetChannelThreshold(RP_CH_3, voltage);
+        case RP_T_CH_4: return acq_GetChannelThreshold(RP_CH_4, voltage);
+#endif        
+
+#ifdef Z20_250_12
         case RP_T_CH_EXT: {
                 int ret = rp_getExtTriggerLevel(voltage);
                 switch(ret){
@@ -525,7 +591,7 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage)
                         return RP_OK;
                 }   
         }
-        #endif
+#endif
         default:;
     }
     return RP_NOTS;
@@ -561,11 +627,17 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
     // We cut high bits of negative numbers
     cnt = cnt & ((1 << ADC_REG_BITS) - 1);
 #endif
-    if (channel == RP_CH_1) {
-        return osc_SetThresholdChA(cnt);
-    }
-    else {
-        return osc_SetThresholdChB(cnt);
+
+    switch(channel){
+        case RP_CH_1: return osc_SetThresholdChA(cnt);
+        case RP_CH_2: return osc_SetThresholdChB(cnt);
+
+#if defined Z20_125_4CH
+        case RP_CH_3: return osc_SetThresholdChC(cnt);
+        case RP_CH_4: return osc_SetThresholdChD(cnt);
+#endif        
+        default:
+            return RP_EOOR;
     }
 }
 
@@ -578,9 +650,20 @@ int acq_GetChannelThreshold(rp_channel_t channel, float* voltage)
     if (channel == RP_CH_1) {
         osc_GetThresholdChA(&cnts);
     }
-    else {
+
+    if (channel == RP_CH_2) {
         osc_GetThresholdChB(&cnts);
     }
+    
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3) {
+        osc_GetThresholdChC(&cnts);
+    } 
+    
+    if (channel == RP_CH_4) {
+        osc_GetThresholdChD(&cnts);
+    }
+#endif
 
     acq_GetGainV(channel, &gainV);
     acq_GetGain(channel, &gain);
@@ -604,6 +687,10 @@ int acq_SetTriggerHyst(float voltage)
 {
     acq_SetChannelThresholdHyst(RP_CH_1, voltage);
     acq_SetChannelThresholdHyst(RP_CH_2, voltage);
+#if defined Z20_125_4CH
+    acq_SetChannelThresholdHyst(RP_CH_3, voltage);
+    acq_SetChannelThresholdHyst(RP_CH_4, voltage);
+#endif
     return RP_OK;
 }
 
@@ -642,21 +729,49 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
         chA_hyst = voltage;
         return osc_SetHysteresisChA(cnt);
     }
-    else {
+
+    if (channel == RP_CH_2) {
         chB_hyst = voltage;
         return osc_SetHysteresisChB(cnt);
     }
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3) {
+        chA_hyst = voltage;
+        return osc_SetHysteresisChC(cnt);
+    }
+
+    if (channel == RP_CH_4) {
+        chB_hyst = voltage;
+        return osc_SetHysteresisChD(cnt);
+    }
+#endif
+    return RP_EOOR;
 }
 
 int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage)
 {
     if (channel == RP_CH_1) {
         *voltage = chA_hyst;
+        return RP_OK;
     }
-    else {
+
+    if (channel == RP_CH_2) {
         *voltage = chB_hyst;
+        return RP_OK;
     }
-    return RP_OK;
+
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3) {
+        *voltage = chC_hyst;
+        return RP_OK;
+    }
+
+    if (channel == RP_CH_4) {
+        *voltage = chD_hyst;
+        return RP_OK;
+    }
+#endif
+    return RP_EOOR;
 }
 
 int acq_Start()
@@ -686,9 +801,20 @@ static const volatile uint32_t* getRawBuffer(rp_channel_t channel)
     if (channel == RP_CH_1) {
         return osc_GetDataBufferChA();
     }
-    else {
+
+    if (channel == RP_CH_2) {
         return osc_GetDataBufferChB();
     }
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3) {
+        return osc_GetDataBufferChC();
+    }
+
+    if (channel == RP_CH_4) {
+        return osc_GetDataBufferChD();
+    }
+#endif    
+    return NULL;
 }
 
 static uint32_t getSizeFromStartEndPos(uint32_t start_pos, uint32_t end_pos)
@@ -738,10 +864,9 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     return RP_OK;
 }
 
-
+#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_250_12
 int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2)
 {
-
     *size = MIN(*size, ADC_BUFFER_SIZE);
     const volatile uint32_t* raw_buffer = getRawBuffer(RP_CH_1);
     const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
@@ -753,6 +878,26 @@ int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* b
 
     return RP_OK;
 }
+#endif
+
+#if defined Z20_125_4CH
+int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2, uint16_t* buffer3, uint16_t* buffer4)
+{
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+    const volatile uint32_t* raw_buffer = getRawBuffer(RP_CH_1);
+    const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
+    const volatile uint32_t* raw_buffer3 = getRawBuffer(RP_CH_3);
+    const volatile uint32_t* raw_buffer4 = getRawBuffer(RP_CH_4);
+    
+    for (uint32_t i = 0; i < (*size); ++i) {
+        buffer[i] =  (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
+        buffer2[i] = (raw_buffer2[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
+        buffer3[i] = (raw_buffer3[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
+        buffer4[i] = (raw_buffer4[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
+    }
+    return RP_OK;
+}
+#endif
 
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size)
 {
@@ -796,6 +941,7 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
+
 int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buffer)
 {
     *size = MIN(*size, ADC_BUFFER_SIZE);
@@ -825,6 +971,8 @@ int acq_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float* buf
 
     return RP_OK;
 }
+
+#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_250_12
 
 int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
 {
@@ -936,6 +1084,133 @@ int acq_GetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer
     return RP_OK;
 }
 
+#endif
+
+
+#if defined Z20_125_4CH
+
+int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2, float* buffer3, float* buffer4)
+{
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    float gainV1, gainV2, gainV3, gainV4;
+    rp_pinState_t gain1, gain2, gain3, gain4;
+    acq_GetGainV(RP_CH_1, &gainV1);
+    acq_GetGain(RP_CH_1, &gain1);
+    acq_GetGainV(RP_CH_2, &gainV2);
+    acq_GetGain(RP_CH_2, &gain2);
+    acq_GetGainV(RP_CH_3, &gainV3);
+    acq_GetGain(RP_CH_3, &gain3);
+    acq_GetGainV(RP_CH_4, &gainV4);
+    acq_GetGain(RP_CH_4, &gain4);
+
+    int32_t dc_offs1 = calib_getOffset(RP_CH_1, gain1);
+    uint32_t calibScale1 = calib_GetFrontEndScale(RP_CH_1, gain1);
+    int32_t dc_offs2 = calib_getOffset(RP_CH_2, gain2);
+    uint32_t calibScale2 = calib_GetFrontEndScale(RP_CH_2, gain2);
+    int32_t dc_offs3 = calib_getOffset(RP_CH_3, gain3);
+    uint32_t calibScale3 = calib_GetFrontEndScale(RP_CH_3, gain3);
+    int32_t dc_offs4 = calib_getOffset(RP_CH_4, gain4);
+    uint32_t calibScale4 = calib_GetFrontEndScale(RP_CH_4, gain4);
+
+    const volatile uint32_t* raw_buffer1 = getRawBuffer(RP_CH_1);
+    const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
+    const volatile uint32_t* raw_buffer3 = getRawBuffer(RP_CH_3);
+    const volatile uint32_t* raw_buffer4 = getRawBuffer(RP_CH_4);
+
+    uint32_t cnts1[*size];
+    uint32_t cnts2[*size];
+    uint32_t cnts3[*size];
+    uint32_t cnts4[*size];
+    uint32_t* ptr1 = cnts1;
+    uint32_t* ptr2 = cnts2;
+    uint32_t* ptr3 = cnts3;
+    uint32_t* ptr4 = cnts4;
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+        *ptr1++ = raw_buffer1[pos];
+        *ptr2++ = raw_buffer2[pos];
+        *ptr3++ = raw_buffer3[pos];
+        *ptr4++ = raw_buffer4[pos];
+        pos = (pos + 1) % ADC_BUFFER_SIZE;
+    }
+
+    ptr1 = cnts1;
+    ptr2 = cnts2;
+    ptr3 = cnts3;
+    ptr4 = cnts4;
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+        *buffer1++ = cmn_CnvCntToV(ADC_BITS, *ptr1++ & ADC_BITS_MASK, gainV1, calibScale1, dc_offs1, 0.0);
+        *buffer2++ = cmn_CnvCntToV(ADC_BITS, *ptr2++ & ADC_BITS_MASK, gainV2, calibScale2, dc_offs2, 0.0);
+        *buffer3++ = cmn_CnvCntToV(ADC_BITS, *ptr3++ & ADC_BITS_MASK, gainV3, calibScale3, dc_offs3, 0.0);
+        *buffer4++ = cmn_CnvCntToV(ADC_BITS, *ptr4++ & ADC_BITS_MASK, gainV4, calibScale4, dc_offs4, 0.0);
+    }
+    return RP_OK;
+}
+
+int acq_GetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2, double* buffer3, double* buffer4)
+{
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    float gainV1, gainV2, gainV3, gainV4;
+    rp_pinState_t gain1, gain2, gain3, gain4;
+    acq_GetGainV(RP_CH_1, &gainV1);
+    acq_GetGain(RP_CH_1, &gain1);
+    acq_GetGainV(RP_CH_2, &gainV2);
+    acq_GetGain(RP_CH_2, &gain2);
+    acq_GetGainV(RP_CH_3, &gainV3);
+    acq_GetGain(RP_CH_3, &gain3);
+    acq_GetGainV(RP_CH_4, &gainV4);
+    acq_GetGain(RP_CH_4, &gain4);
+
+    int32_t dc_offs1 = calib_getOffset(RP_CH_1, gain1);
+    uint32_t calibScale1 = calib_GetFrontEndScale(RP_CH_1, gain1);
+    int32_t dc_offs2 = calib_getOffset(RP_CH_2, gain2);
+    uint32_t calibScale2 = calib_GetFrontEndScale(RP_CH_2, gain2);
+    int32_t dc_offs3 = calib_getOffset(RP_CH_3, gain3);
+    uint32_t calibScale3 = calib_GetFrontEndScale(RP_CH_3, gain3);
+    int32_t dc_offs4 = calib_getOffset(RP_CH_4, gain4);
+    uint32_t calibScale4 = calib_GetFrontEndScale(RP_CH_4, gain4);
+
+    const volatile uint32_t* raw_buffer1 = getRawBuffer(RP_CH_1);
+    const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
+    const volatile uint32_t* raw_buffer3 = getRawBuffer(RP_CH_3);
+    const volatile uint32_t* raw_buffer4 = getRawBuffer(RP_CH_4);
+
+    uint32_t cnts1[*size];
+    uint32_t cnts2[*size];
+    uint32_t cnts3[*size];
+    uint32_t cnts4[*size];
+    uint32_t* ptr1 = cnts1;
+    uint32_t* ptr2 = cnts2;
+    uint32_t* ptr3 = cnts3;
+    uint32_t* ptr4 = cnts4;
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+        *ptr1++ = raw_buffer1[pos];
+        *ptr2++ = raw_buffer2[pos];
+        *ptr3++ = raw_buffer3[pos];
+        *ptr4++ = raw_buffer4[pos];
+        pos = (pos + 1) % ADC_BUFFER_SIZE;
+    }
+
+    ptr1 = cnts1;
+    ptr2 = cnts2;
+    ptr3 = cnts3;
+    ptr4 = cnts4;
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+        *buffer1++ = (double)cmn_CnvCntToV(ADC_BITS, *ptr1++ & ADC_BITS_MASK, gainV1, calibScale1, dc_offs1, 0.0);
+        *buffer2++ = (double)cmn_CnvCntToV(ADC_BITS, *ptr2++ & ADC_BITS_MASK, gainV2, calibScale2, dc_offs2, 0.0);
+        *buffer3++ = (double)cmn_CnvCntToV(ADC_BITS, *ptr3++ & ADC_BITS_MASK, gainV3, calibScale3, dc_offs3, 0.0);
+        *buffer4++ = (double)cmn_CnvCntToV(ADC_BITS, *ptr4++ & ADC_BITS_MASK, gainV4, calibScale4, dc_offs4, 0.0);
+    }
+    return RP_OK;
+}
+
+#endif
+
 int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size)
 {
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
@@ -984,8 +1259,8 @@ int acq_GetBufferSize(uint32_t *size) {
 int acq_SetDefault() {
     acq_SetChannelThreshold(RP_CH_1, 0.0);
     acq_SetChannelThreshold(RP_CH_2, 0.0);
-    acq_SetChannelThresholdHyst(RP_CH_1, chA_hyst);
-    acq_SetChannelThresholdHyst(RP_CH_2, chB_hyst);
+    acq_SetChannelThresholdHyst(RP_CH_1, 0.005);
+    acq_SetChannelThresholdHyst(RP_CH_2, 0.005);
 
     acq_SetGain(RP_CH_1, RP_LOW);
     acq_SetGain(RP_CH_2, RP_LOW);
@@ -994,10 +1269,20 @@ int acq_SetDefault() {
     acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED);
     acq_SetTriggerDelay(0, false);
     acq_SetTriggerDelayNs(0, false);
-#ifdef Z20_250_12
+#if defined Z20_250_12
     acq_SetAC_DC(RP_CH_1,RP_AC);
     acq_SetAC_DC(RP_CH_2,RP_AC);
 #endif
+
+#if defined Z20_125_4CH
+    acq_SetChannelThreshold(RP_CH_3, 0.0);
+    acq_SetChannelThreshold(RP_CH_4, 0.0);
+    acq_SetChannelThresholdHyst(RP_CH_3, 0.005);
+    acq_SetChannelThresholdHyst(RP_CH_4, 0.005);
+    acq_SetGain(RP_CH_3, RP_LOW);
+    acq_SetGain(RP_CH_4, RP_LOW);
+#endif
+
     return RP_OK;
 }
 
@@ -1047,6 +1332,14 @@ int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* co
     if (channel == RP_CH_2){
         return osc_GetEqFiltersChB(coef_aa,coef_bb,coef_kk,coef_pp);
     }
+#if defined Z20_125_4CH
+    if (channel == RP_CH_3){
+        return osc_GetEqFiltersChC(coef_aa,coef_bb,coef_kk,coef_pp);
+    }
+    if (channel == RP_CH_4){
+        return osc_GetEqFiltersChD(coef_aa,coef_bb,coef_kk,coef_pp);
+    }
+#endif    
     return RP_EOOR;
 }
 #endif

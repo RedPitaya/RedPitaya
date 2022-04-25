@@ -23,16 +23,14 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define RP_MODEL "Z20_125"
+#define RP_MODEL "Z20_125_4CH"
+
 #define ADC_SAMPLE_RATE 125e6
 #define ADC_BITS 14
 #define ADC_REG_BITS 14  
 #define ADC_BITS_MASK 0x3FFF
 #define ADC_REG_BITS_MASK 0x3FFF
-#define DAC_FREQUENCY 125e6
-
 #define ADC_BUFFER_SIZE         (16 * 1024)
-#define DAC_BUFFER_SIZE         (16 * 1024)
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -155,56 +153,25 @@ typedef enum {
     RP_AIN3        //!< Analog input 3
 } rp_apin_t;
 
-typedef enum {
-    RP_WAVEFORM_SINE,       //!< Wave form sine
-    RP_WAVEFORM_SQUARE,     //!< Wave form square
-    RP_WAVEFORM_TRIANGLE,   //!< Wave form triangle
-    RP_WAVEFORM_RAMP_UP,    //!< Wave form sawtooth (/|)
-    RP_WAVEFORM_RAMP_DOWN,  //!< Wave form reversed sawtooth (|\)
-    RP_WAVEFORM_DC,         //!< Wave form dc
-    RP_WAVEFORM_PWM,        //!< Wave form pwm
-    RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
-    RP_WAVEFORM_DC_NEG,     //!< Wave form negative dc
-    RP_WAVEFORM_SWEEP       //!< Wave form sweep
-} rp_waveform_t;
-
-typedef enum {
-    RP_GEN_MODE_CONTINUOUS, //!< Continuous signal generation
-    RP_GEN_MODE_BURST,      //!< Signal is generated N times, wher N is defined with rp_GenBurstCount method
-    RP_GEN_MODE_STREAM      //!< User can continuously write data to buffer
-} rp_gen_mode_t;
-
-typedef enum {
-    RP_GEN_SWEEP_DIR_NORMAL,     //!< Generate sweep signal from start frequency to end frequency
-    RP_GEN_SWEEP_DIR_UP_DOWN     //!< Generate sweep signal from start frequency to end frequency and back to start frequency
-} rp_gen_sweep_dir_t;
-
-typedef enum {
-    RP_GEN_SWEEP_MODE_LINEAR,     //!< Generate sweep signal in linear mode
-    RP_GEN_SWEEP_MODE_LOG         //!< Generate sweep signal in log mode
-} rp_gen_sweep_mode_t;
-
-typedef enum {
-    RP_GEN_TRIG_SRC_INTERNAL = 1,   //!< Internal trigger source
-    RP_GEN_TRIG_SRC_EXT_PE   = 2,   //!< External trigger source positive edge
-    RP_GEN_TRIG_SRC_EXT_NE   = 3    //!< External trigger source negative edge
-} rp_trig_src_t;
-
 /**
- * Type representing Input/Output channels.
+ * Type representing Input channels.
  */
 typedef enum {
     RP_CH_1,    //!< Channel A
-    RP_CH_2     //!< Channel B
+    RP_CH_2,    //!< Channel B
+    RP_CH_3,    //!< Channel C
+    RP_CH_4     //!< Channel D
 } rp_channel_t;
 
 
 /**
- * Type representing Input/Output channels in trigger.
+ * Type representing Input channels in trigger.
  */
 typedef enum {
     RP_T_CH_1,    //!< Channel A
     RP_T_CH_2,    //!< Channel B
+    RP_T_CH_3,    //!< Channel C
+    RP_T_CH_4,    //!< Channel D
     RP_T_CH_EXT,  
 } rp_channel_trigger_t;
 
@@ -277,6 +244,10 @@ typedef enum {
     RP_TRIG_SRC_CHA_NE,   //!< Trigger set to Channel A threshold negative edge
     RP_TRIG_SRC_CHB_PE,   //!< Trigger set to Channel B threshold positive edge
     RP_TRIG_SRC_CHB_NE,   //!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_CHC_PE,   //!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHC_NE,   //!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_CHD_PE,   //!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHD_NE,   //!< Trigger set to Channel B threshold negative edge
     RP_TRIG_SRC_EXT_PE,   //!< Trigger set to external trigger positive edge (DIO0_P pin)
     RP_TRIG_SRC_EXT_NE,   //!< Trigger set to external trigger negative edge (DIO0_P pin)
     RP_TRIG_SRC_AWG_PE,   //!< Trigger set to arbitrary wave generator application positive edge
@@ -297,35 +268,65 @@ typedef enum {
  * Calibration parameters, stored in the EEPROM device
  */
 typedef struct {
-    uint32_t fe_ch1_fs_g_hi;    //!< High gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_hi;    //!< High gain front end full scale voltage, channel B
-    uint32_t fe_ch1_fs_g_lo;    //!< Low gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_lo;    //!< Low gain front end full scale voltage, channel B
-    int32_t  fe_ch1_lo_offs;    //!< Front end DC offset, channel A
-    int32_t  fe_ch2_lo_offs;    //!< Front end DC offset, channel B
-    uint32_t be_ch1_fs;         //!< Back end full scale voltage, channel A
-    uint32_t be_ch2_fs;         //!< Back end full scale voltage, channel B
-    int32_t  be_ch1_dc_offs;    //!< Back end DC offset, channel A
-    int32_t  be_ch2_dc_offs;    //!< Back end DC offset, on channel B
-	uint32_t magic;			    //!
-    int32_t  fe_ch1_hi_offs;    //!< Front end DC offset, channel A
-    int32_t  fe_ch2_hi_offs;    //!< Front end DC offset, channel B
-    uint32_t low_filter_aa_ch1;  //!< Filter equalization coefficients AA for Low mode, channel A
-    uint32_t low_filter_bb_ch1;  //!< Filter equalization coefficients BB for Low mode, channel A
-    uint32_t low_filter_pp_ch1;  //!< Filter equalization coefficients PP for Low mode, channel A
-    uint32_t low_filter_kk_ch1;  //!< Filter equalization coefficients KK for Low mode, channel A
-    uint32_t low_filter_aa_ch2;  //!< Filter equalization coefficients AA for Low mode, channel B
-    uint32_t low_filter_bb_ch2;  //!< Filter equalization coefficients BB for Low mode, channel B
-    uint32_t low_filter_pp_ch2;  //!< Filter equalization coefficients PP for Low mode, channel B
-    uint32_t low_filter_kk_ch2;  //!< Filter equalization coefficients KK for Low mode, channel B
-    uint32_t  hi_filter_aa_ch1;  //!< Filter equalization coefficients AA for High mode, channel A
-    uint32_t  hi_filter_bb_ch1;  //!< Filter equalization coefficients BB for High mode, channel A
-    uint32_t  hi_filter_pp_ch1;  //!< Filter equalization coefficients PP for High mode, channel A
-    uint32_t  hi_filter_kk_ch1;  //!< Filter equalization coefficients KK for High mode, channel A
-    uint32_t  hi_filter_aa_ch2;  //!< Filter equalization coefficients AA for High mode, channel B
-    uint32_t  hi_filter_bb_ch2;  //!< Filter equalization coefficients BB for High mode, channel B
-    uint32_t  hi_filter_pp_ch2;  //!< Filter equalization coefficients PP for High mode, channel B
-    uint32_t  hi_filter_kk_ch2;  //!< Filter equalization coefficients KK for High mode, channel B   
+    uint32_t chA_g_hi;          //!< High gain front end full scale voltage, channel A
+    uint32_t chB_g_hi;          //!< High gain front end full scale voltage, channel B
+    uint32_t chC_g_hi;          //!< High gain front end full scale voltage, channel C
+    uint32_t chD_g_hi;          //!< High gain front end full scale voltage, channel D
+
+    uint32_t chA_g_low;         //!< Low gain front end full scale voltage, channel A
+    uint32_t chB_g_low;         //!< Low gain front end full scale voltage, channel B
+    uint32_t chC_g_low;         //!< Low gain front end full scale voltage, channel C
+    uint32_t chD_g_low;         //!< Low gain front end full scale voltage, channel D
+
+    int32_t  chA_hi_offs;       //!< Front end DC offset, channel A
+    int32_t  chB_hi_offs;       //!< Front end DC offset, channel B
+    int32_t  chC_hi_offs;       //!< Front end DC offset, channel C
+    int32_t  chD_hi_offs;       //!< Front end DC offset, channel D
+
+    int32_t  chA_low_offs;      //!< Front end DC offset, channel A
+    int32_t  chB_low_offs;      //!< Front end DC offset, channel B
+    int32_t  chC_low_offs;      //!< Front end DC offset, channel C
+    int32_t  chD_low_offs;      //!< Front end DC offset, channel D
+
+    uint32_t chA_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel A
+    uint32_t chA_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel A
+    uint32_t chA_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel A
+    uint32_t chA_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel A
+
+    uint32_t chA_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel A
+    uint32_t chA_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel A
+    uint32_t chA_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel A
+    uint32_t chA_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel A
+
+    uint32_t chB_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel B
+    uint32_t chB_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel B
+    uint32_t chB_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel B
+    uint32_t chB_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel B
+
+    uint32_t chB_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel B
+    uint32_t chB_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel B
+    uint32_t chB_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel B
+    uint32_t chB_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel B
+
+    uint32_t chC_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel C
+    uint32_t chC_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel C
+    uint32_t chC_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel C
+    uint32_t chC_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel C
+
+    uint32_t chC_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel C
+    uint32_t chC_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel C
+    uint32_t chC_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel C
+    uint32_t chC_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel C
+
+    uint32_t chD_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel D
+    uint32_t chD_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel D
+    uint32_t chD_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel D
+    uint32_t chD_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel D
+
+    uint32_t chD_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel D
+    uint32_t chD_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel D
+    uint32_t chD_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel D
+    uint32_t chD_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel D
 
 } rp_calib_params_t;
 
@@ -451,36 +452,6 @@ int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, 
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
-
-/**
-* Calibrates output channel offset.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEndOffset(rp_channel_t channel);
-
-/**
-* Calibrates output channel voltage scale.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEndScale(rp_channel_t channel);
-
-/**
-* Calibrates output channel.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
 
 /**
 * Set default calibration values.
@@ -1095,7 +1066,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2);
+int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2, uint16_t* buffer3, uint16_t* buffer4);
 
 /**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
@@ -1142,7 +1113,7 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* bu
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2);
+int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2, float* buffer3, float* buffer4);
 
 /**
  * Returns the ADC buffer in Volt units from specified position and desired size.
@@ -1154,7 +1125,7 @@ int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2);
+int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2, double* buffer3, double* buffer4);
 
 /**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.
@@ -1202,391 +1173,6 @@ int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
 ///@}
-/** @name Generate
-*/
-///@{
-
-
-/**
-* Sets generate to default values.
-*/
-int rp_GenReset();
-
-/**
-* Enables output
-* @param channel Channel A or B which we want to enable
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenOutEnable(rp_channel_t channel);
-
-/**
-* Runs/Stop two channels synchronously
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenOutEnableSync(bool enable);
-
-/**
-* Disables output
-* @param channel Channel A or B which we want to disable
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenOutDisable(rp_channel_t channel);
-
-/**
-* Gets value true if channel is enabled otherwise return false.
-* @param channel Channel A or B.
-* @param value Pointer where value will be returned
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenOutIsEnabled(rp_channel_t channel, bool *value);
-
-/**
-* Sets channel signal peak to peak amplitude.
-* @param channel Channel A or B for witch we want to set amplitude
-* @param amplitude Amplitude of the generated signal. From 0 to max value. Max amplitude is 1
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenAmp(rp_channel_t channel, float amplitude);
-
-/**
-* Gets channel signal peak to peak amplitude.
-* @param channel Channel A or B for witch we want to get amplitude.
-* @param amplitude Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetAmp(rp_channel_t channel, float *amplitude);
-
-/**
-* Sets DC offset of the signal. signal = signal + DC_offset.
-* @param channel Channel A or B for witch we want to set DC offset.
-* @param offset DC offset of the generated signal. Max offset is 2.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenOffset(rp_channel_t channel, float offset);
-
-/**
-* Gets DC offset of the signal.
-* @param channel Channel A or B for witch we want to get amplitude.
-* @param offset Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetOffset(rp_channel_t channel, float *offset);
-
-/**
-* Sets channel signal frequency.
-* @param channel Channel A or B for witch we want to set frequency.
-* @param frequency Frequency of the generated signal in Hz.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenFreq(rp_channel_t channel, float frequency);
-
-/**
-* Sets channel signal frequency in fpga without reset generator and rebuild signal.
-* @param channel Channel A or B for witch we want to set frequency.
-* @param frequency Frequency of the generated signal in Hz.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenFreqDirect(rp_channel_t channel, float frequency);
-
-/**
-* Gets channel signal frequency.
-* @param channel Channel A or B for witch we want to get frequency.
-* @param frequency Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetFreq(rp_channel_t channel, float *frequency);
-
-/**
-* Sets channel sweep signal start frequency.
-* @param channel Channel A or B for witch we want to set frequency.
-* @param frequency Frequency of the generated signal in Hz.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSweepStartFreq(rp_channel_t channel, float frequency);
-
-/**
-* Gets channel sweep signal start frequency.
-* @param channel Channel A or B for witch we want to get frequency.
-* @param frequency Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetSweepStartFreq(rp_channel_t channel, float *frequency);
-
-/**
-* Sets channel sweep signal end frequency.
-* @param channel Channel A or B for witch we want to set frequency.
-* @param frequency Frequency of the generated signal in Hz.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSweepEndFreq(rp_channel_t channel, float frequency);
-
-/**
-* Gets channel sweep signal end frequency.
-* @param channel Channel A or B for witch we want to get frequency.
-* @param frequency Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetSweepEndFreq(rp_channel_t channel, float *frequency);
-
-/**
-* Sets channel signal phase. This shifts the signal in time.
-* @param channel Channel A or B for witch we want to set phase.
-* @param phase Phase in degrees of the generated signal. From 0 deg to 180 deg.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenPhase(rp_channel_t channel, float phase);
-
-/**
-* Gets channel signal phase.
-* @param channel Channel A or B for witch we want to get phase.
-* @param phase Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetPhase(rp_channel_t channel, float *phase);
-
-/**
-* Sets channel signal waveform. This determines how the signal looks.
-* @param channel Channel A or B for witch we want to set waveform type.
-* @param form Wave form of the generated signal [SINE, SQUARE, TRIANGLE, SAWTOOTH, PWM, DC, ARBITRARY, SWEEP].
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type);
-
-/**
-* Gets channel signal waveform.
-* @param channel Channel A or B for witch we want to get waveform.
-* @param type Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type);
-
-/**
-* Sets the generation mode for the sweep signal.
-* @param channel Channel A or B for witch we want to set waveform type.
-* @param mode Mode of the generated signal [RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG].
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode);
-
-/**
-* Gets the generation mode for the sweep signal.
-* @param channel Channel A or B for witch we want to get waveform.
-* @param mode Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode);
-
-
-/**
-* Sets the direction of frequency change for sweep.
-* @param channel Channel A or B for witch we want to set waveform type.
-* @param mode Wave form of the generated signal [RP_GEN_SWEEP_DIR_NORMAL, RP_GEN_SWEEP_DIR_UP_DOWN].
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode);
-
-/**
-* Gets the direction of frequency change for sweep.
-* @param channel Channel A or B for witch we want to get waveform.
-* @param mode Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode);
-
-/**
-* Sets user defined waveform.
-* @param channel Channel A or B for witch we want to set waveform.
-* @param waveform Use defined wave form, where min is -1V an max is 1V.
-* @param length Length of waveform.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length);
-
-/**
-* Gets user defined waveform.
-* @param channel Channel A or B for witch we want to get waveform.
-* @param waveform Pointer where waveform will be returned.
-* @param length Pointer where waveform length will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length);
-
-/**
-* Sets duty cycle of PWM signal.
-* @param channel Channel A or B for witch we want to set duty cycle.
-* @param ratio Ratio betwen the time when signal in HIGH vs the time when signal is LOW.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenDutyCycle(rp_channel_t channel, float ratio);
-
-/**
-* Gets duty cycle of PWM signal.
-* @param channel Channel A or B for witch we want to get duty cycle.
-* @param ratio Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio);
-
-/**
-* Sets generation mode.
-* @param channel Channel A or B for witch we want to set generation mode.
-* @param mode Type of signal generation (CONTINUOUS, BURST, STREAM).
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode);
-
-/**
-* Gets generation mode.
-* @param channel Channel A or B for witch we want to get generation mode.
-* @param mode Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode);
-
-/**
-* Sets number of generated waveforms in a burst.
-* @param channel Channel A or B for witch we want to set number of generated waveforms in a burst.
-* @param num Number of generated waveforms. If -1 a continuous signal will be generated.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenBurstCount(rp_channel_t channel, int num);
-
-/**
-* Gets number of generated waveforms in a burst.
-* @param channel Channel A or B for witch we want to get number of generated waveforms in a burst.
-* @param num Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetBurstCount(rp_channel_t channel, int *num);
-
-/**
-* Sets the value to be set at the end of the generated signal in burst mode.
-* @param channel Channel A or B for witch we want to set number of generated waveforms in a burst.
-* @param amplitude Amplitude level at the end of the signal (Volt).
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenBurstLastValue(rp_channel_t channel, float amlitude);
-
-/**
-* Gets the value to be set at the end of the generated signal in burst mode.
-* @param channel Channel A or B for witch we want to get number of generated waveforms in a burst.
-* @param amplitude Amplitude where value will be returned (Volt).
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude);
-
-/**
-* Sets number of burst repetitions. This determines how many bursts will be generated.
-* @param channel Channel A or B for witch we want to set number of burst repetitions.
-* @param repetitions Number of generated bursts. If 0x10000, infinite bursts will be generated.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions);
-
-/**
-* Gets number of burst repetitions.
-* @param channel Channel A or B for witch we want to get number of burst repetitions.
-* @param repetitions Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions);
-
-/**
-* Sets the time/period of one burst in micro seconds. Period must be equal or greater then the time of one burst.
-* If it is greater than the difference will be the delay between two consequential bursts.
-* @param channel Channel A or B for witch we want to set burst period.
-* @param period Time in micro seconds.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period);
-
-/**
-* Gets the period of one burst in micro seconds.
-* @param channel Channel A or B for witch we want to get burst period.
-* @param period Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period);
-
-/**
-* Sets trigger source.
-* @param channel Channel A or B for witch we want to set trigger source.
-* @param src Trigger source (INTERNAL, EXTERNAL_PE, EXTERNAL_NE, GATED_BURST).
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
-
-/**
-* Gets trigger source.
-* @param channel Channel A or B for witch we want to get burst period.
-* @param src Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
-
-/**
-* The generator is reset on both channels.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenSynchronise();
-
-/**
-* The generator is reset on channels.
-* @param channel Channel A or B
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenResetTrigger(rp_channel_t channel);
-
-/**
-* Emit trigger for selected channel
-* @param channel Channel A or B
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-
-int rp_GenTriggerOnly(rp_channel_t channel);
-
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 

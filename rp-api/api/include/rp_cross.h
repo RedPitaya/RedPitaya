@@ -10,6 +10,9 @@
 #include "redpitaya/rp_Z20_125.h"
 #endif
 
+#ifdef Z20_125_4CH
+#include "redpitaya/rp_Z20_125_4CH.h"
+#endif
 
 #ifdef Z20_250_12
 #include "redpitaya/rp_Z20_250_12.h"

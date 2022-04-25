@@ -34,7 +34,7 @@ extern "C" {
 
 
 #define ADC_BUFFER_SIZE         (16 * 1024)
-#define BUFFER_LENGTH           (16 * 1024)
+#define DAC_BUFFER_SIZE         (16 * 1024)
 
 /** @name Error codes
  *  Various error codes returned by the API.

@@ -24,9 +24,10 @@ export LINUX_VER
 # MODEL USE FOR determine kind of assembly
 # USED parameters:
 # Z10 - for Redpitaya 125-14
-# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode  
+# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode
 # Z20 - for Redpitaya 122-16
 # Z20_125 - for Redpitaya Z20 125-14
+# Z20_125_4CH - for Redpitaya Z20 125-14 4CH ADC
 # Z20_250_12 - for RepPitaya 250-12
 # Production test script
 MODEL ?= Z10
@@ -39,6 +40,12 @@ endif
 endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
+ifeq ($(STREAMING),MASTER)
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
 ifeq ($(STREAMING),MASTER)
 all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
 endif
@@ -69,7 +76,7 @@ LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
-.PHONY: api api2 librp librp1 librp250_12 librp_hw
+.PHONY: api api2 librp librp250_12 librp_hw
 .PHONY: librpapp liblcr_meter
 
 api: librp librp_hw
@@ -81,26 +88,20 @@ librp: librp250_12
 else
 librp:
 endif
-	cmake -B$(abspath $(LIBRP_DIR)) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-	$(MAKE) -C $(LIBRP_DIR) install
+	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DIR)/build install
 
 librp_hw:
-	cmake -B$(abspath $(LIBRP_HW_DIR)) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-	$(MAKE) -C $(LIBRP_HW_DIR) install
-
-librp1:
-	$(MAKE) -C $(LIBRP1_DIR) clean
-	$(MAKE) -C $(LIBRP1_DIR)
-	$(MAKE) -C $(LIBRP1_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_DIR)/build install
 
 librp2:
-	$(MAKE) -C $(LIBRP2_DIR) clean
-	$(MAKE) -C $(LIBRP2_DIR)
-	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP2_DIR)/build install
 
 librp250_12: librp_hw
-	cmake -B$(LIBRP250_12_DIR) -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
-	$(MAKE) -C $(LIBRP250_12_DIR) install
+	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP250_12_DIR)/build install
 
 
 ifeq ($(ENABLE_LICENSING),1)
@@ -303,7 +304,13 @@ LA_TEST_DIR        = rp-api/api2/test
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest led_control
 
+
+
+ifeq ($(MODEL),Z20_125_4CH)
+examples: monitor calib spectrum acquire led_control
+else
 examples: lcr bode monitor calib spectrum acquire generator led_control
+endif
 
 # calibrate laboardtest
 
@@ -407,6 +414,12 @@ apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jup
 endif
 endif
 
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
+ifeq ($(STREAMING),MASTER)
+apps-tools: ecosystem updater network_manager scpi_manager calib_app
+endif
+endif
+
 ifeq ($(MODEL),$(filter $(MODEL),Z20))
 ifeq ($(STREAMING),MASTER)
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
@@ -502,7 +515,11 @@ else
 ifeq ($(MODEL),Z20)
 apps-pro:
 else
-apps-pro: la_pro ba_pro lcr_meter
+ifeq ($(MODEL),Z20_125_4CH)
+apps-pro:
+else
+apps-pro: la_pro
+endif
 endif
 endif
 
@@ -545,6 +562,11 @@ endif
 
 clean:
 	# todo, remove downloaded libraries and symlinks
+	rm -rf $(abspath $(LIBRP_DIR)/build)
+	rm -rf $(abspath $(LIBRP2_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
+	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
+	
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATOR_DIR) clean

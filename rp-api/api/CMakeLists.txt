@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.14)
 project(rp)
 
+include(CMakeDoxy.txt)
 
 option(BUILD_SHARED "Builds shared library" ON)
 option(BUILD_STATIC "Builds static library" ON)
 option(IS_INSTALL "Install library" ON)
+option(BUILD_DOC "Build documentation" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
@@ -13,6 +15,7 @@ set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 11)
 set(C_STANDARD 11)
+
 
 if(NOT DEFINED MODEL)
   set(MODEL Z10)
@@ -41,15 +44,15 @@ message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 
-message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
-message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
-message(STATUS "Compiler С version: ${CMAKE_C_COMPILER_VERSION}")
-message(STATUS "Compiler С is part: ${CMAKE_COMPILER_IS_GNUC}")
+message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
+message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
+message(STATUS "Compiler C version: ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "Compiler C is part: ${CMAKE_COMPILER_IS_GNUC}")
 
-message(STATUS "Compiler С++ path: ${CMAKE_CXX_COMPILER}")
-message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
+message(STATUS "Compiler C++ path: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 message(STATUS "Install path ${INSTALL_DIR}")
 
 
@@ -63,8 +66,6 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
             ${CMAKE_SOURCE_DIR}/src/oscilloscope.c
             ${CMAKE_SOURCE_DIR}/src/acq_handler.c
-            ${CMAKE_SOURCE_DIR}/src/generate.c
-            ${CMAKE_SOURCE_DIR}/src/gen_handler.c
             ${CMAKE_SOURCE_DIR}/src/spec_dsp.c
             ${CMAKE_SOURCE_DIR}/src/rp.c
         )
@@ -73,10 +74,18 @@ list(APPEND src
 if ("${MODEL}" STREQUAL "Z20_250_12")
     list(APPEND src
         ${CMAKE_SOURCE_DIR}/src/calib_250_12.c
+        ${CMAKE_SOURCE_DIR}/src/generate.c
+        ${CMAKE_SOURCE_DIR}/src/gen_handler.c
+    )
+elseif("${MODEL}" STREQUAL "Z20_125_4CH")
+    list(APPEND src
+        ${CMAKE_SOURCE_DIR}/src/calib_125_4ch.c
     )
 else()
     list(APPEND src
         ${CMAKE_SOURCE_DIR}/src/calib.c
+        ${CMAKE_SOURCE_DIR}/src/generate.c
+        ${CMAKE_SOURCE_DIR}/src/gen_handler.c
     )
 endif()
 
@@ -98,6 +107,12 @@ if ("${MODEL}" STREQUAL "Z20_125")
     )
 endif()
 
+if ("${MODEL}" STREQUAL "Z20_125_4CH")
+    list(APPEND header_rp
+        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125_4CH.h
+    )
+endif()
+
 if ("${MODEL}" STREQUAL "Z20_250_12")
     list(APPEND header_rp
         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_250_12.h
@@ -106,7 +121,7 @@ endif()
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-std=c11 -Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-std=c11 -Wall -pedantic -Wextra -Wno-unused-parameter -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -126,7 +141,7 @@ endif()
 if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
-    target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=src/exportmap)
+    target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
     target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
 
@@ -161,6 +176,13 @@ if(BUILD_STATIC)
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include RENAME "rp.h")
     endif()  
+endif()
+
+if(BUILD_DOC)
+set(DOXY_OUTPUT_LANGUAGE "English")
+set(DOXY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doc")
+set(DOXY_INPUT ${header_rp})
+ADD_DOCUMENTATION(doc Doxyfile)
 endif()
 
 unset(MODEL CACHE)
