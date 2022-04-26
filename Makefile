@@ -292,6 +292,7 @@ LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
 ACQUIRE_DIR        = Test/acquire
+ACQUIRE2_DIR       = Test/acquire2
 CALIB_DIR          = Test/calib
 CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
@@ -335,13 +336,12 @@ generator: api
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 acquire: api
-	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(ACQUIRE2_DIR)/build) -S$(abspath $(ACQUIRE2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(ACQUIRE2_DIR)/build install
 
-calib:
-	$(MAKE) -C $(CALIB_DIR) clean
-	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+calib: api
+	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(CALIB_DIR)/build install
 
 spectrum: api
 	$(MAKE) -C $(SPECTRUM_DIR) clean
@@ -567,12 +567,14 @@ clean:
 	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
 	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
 	
+
+	rm -rf $(abspath $(CALIB_DIR)/build)
+	rm -rf $(abspath $(ACQUIRE2_DIR)/build)
+
 	make -C $(NGINX_DIR) clean
 	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATOR_DIR) clean
-	make -C $(ACQUIRE_DIR) clean
 	make -C $(GENERATOR250_DIR) clean
-	make -C $(CALIB_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(LIBRP2_DIR)    clean
 	make -C $(LIBRP_DIR)    clean

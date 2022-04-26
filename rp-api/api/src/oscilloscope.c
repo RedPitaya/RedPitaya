@@ -110,6 +110,25 @@ int osc_GetAveraging(bool* enable)
 
 int osc_SetTriggerSource(uint32_t source)
 {
+#if defined Z20_125_4CH
+    if (emulate4Ch){
+        if (source == RP_TRIG_SRC_CHC_PE){
+            source = RP_TRIG_SRC_CHA_PE;
+        }
+
+        if (source == RP_TRIG_SRC_CHC_NE){
+            source = RP_TRIG_SRC_CHA_NE;
+        }
+
+        if (source == RP_TRIG_SRC_CHD_PE){
+            source = RP_TRIG_SRC_CHB_PE;
+        }
+        
+        if (source == RP_TRIG_SRC_CHD_NE){
+            source = RP_TRIG_SRC_CHB_NE;
+        }
+    }
+#endif
     uint32_t currentValue = 0;
     return cmn_SetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK,&currentValue);
 }

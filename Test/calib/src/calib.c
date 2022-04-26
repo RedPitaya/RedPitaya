@@ -86,7 +86,7 @@ int ReadCalib(bool factory, bool verbose, bool z_mode)
 	if (!z_mode) {
             int size = eCalParEnd;
 #if defined Z10 || defined Z20_125
-            if (eepromData.feCalPar[eCalParMagic] == CALIB_MAGIC){
+            if (eepromData.feCalPar[eCalParMagic] == (int)CALIB_MAGIC){
                 size = eCalPar_F_LOW_AA_CH1;
             }
 #endif
@@ -132,7 +132,10 @@ int WriteCalib(bool factory)
     if (ret) return ret;
 
     /* Get new values from stdin - up to eCalParEnd */
-    fgets(buf, sizeof(buf), stdin);
+    if (fgets(buf, sizeof(buf), stdin) == NULL){
+        return ret;
+    }
+    
     const char *p = strtok( buf, delimiters );
     int i = 0;
 

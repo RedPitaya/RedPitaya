@@ -238,20 +238,20 @@ typedef enum {
  * Type representing different trigger sources used at acquiring signal.
  */
 typedef enum {
-    RP_TRIG_SRC_DISABLED, //!< Trigger is disabled
-    RP_TRIG_SRC_NOW,      //!< Trigger triggered now (immediately)
-    RP_TRIG_SRC_CHA_PE,   //!< Trigger set to Channel A threshold positive edge
-    RP_TRIG_SRC_CHA_NE,   //!< Trigger set to Channel A threshold negative edge
-    RP_TRIG_SRC_CHB_PE,   //!< Trigger set to Channel B threshold positive edge
-    RP_TRIG_SRC_CHB_NE,   //!< Trigger set to Channel B threshold negative edge
-    RP_TRIG_SRC_CHC_PE,   //!< Trigger set to Channel B threshold positive edge
-    RP_TRIG_SRC_CHC_NE,   //!< Trigger set to Channel B threshold negative edge
-    RP_TRIG_SRC_CHD_PE,   //!< Trigger set to Channel B threshold positive edge
-    RP_TRIG_SRC_CHD_NE,   //!< Trigger set to Channel B threshold negative edge
-    RP_TRIG_SRC_EXT_PE,   //!< Trigger set to external trigger positive edge (DIO0_P pin)
-    RP_TRIG_SRC_EXT_NE,   //!< Trigger set to external trigger negative edge (DIO0_P pin)
-    RP_TRIG_SRC_AWG_PE,   //!< Trigger set to arbitrary wave generator application positive edge
-    RP_TRIG_SRC_AWG_NE    //!< Trigger set to arbitrary wave generator application negative edge
+    RP_TRIG_SRC_DISABLED = 0, //!< Trigger is disabled
+    RP_TRIG_SRC_NOW      = 1, //!< Trigger triggered now (immediately)
+    RP_TRIG_SRC_CHA_PE   = 2, //!< Trigger set to Channel A threshold positive edge
+    RP_TRIG_SRC_CHA_NE   = 3, //!< Trigger set to Channel A threshold negative edge
+    RP_TRIG_SRC_CHB_PE   = 4, //!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHB_NE   = 5, //!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_EXT_PE   = 6, //!< Trigger set to external trigger positive edge (DIO0_P pin)
+    RP_TRIG_SRC_EXT_NE   = 7, //!< Trigger set to external trigger negative edge (DIO0_P pin)
+    RP_TRIG_SRC_AWG_PE   = 8, //!< Trigger set to arbitrary wave generator application positive edge
+    RP_TRIG_SRC_AWG_NE   = 9, //!< Trigger set to arbitrary wave generator application negative edge
+    RP_TRIG_SRC_CHC_PE   = 10,//!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHC_NE   = 11,//!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_CHD_PE   = 12,//!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHD_NE   = 13 //!< Trigger set to Channel B threshold negative edge
 } rp_acq_trig_src_t;
 
 
