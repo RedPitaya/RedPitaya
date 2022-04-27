@@ -193,8 +193,8 @@ typedef enum {
  * Type representing Input/Output channels.
  */
 typedef enum {
-    RP_CH_1,    //!< Channel A
-    RP_CH_2     //!< Channel B
+    RP_CH_1 = 0,    //!< Channel A
+    RP_CH_2 = 1     //!< Channel B
 } rp_channel_t;
 
 
@@ -202,9 +202,9 @@ typedef enum {
  * Type representing Input/Output channels in trigger.
  */
 typedef enum {
-    RP_T_CH_1,    //!< Channel A
-    RP_T_CH_2,    //!< Channel B
-    RP_T_CH_EXT,  
+    RP_T_CH_1 = 0,    //!< Channel A
+    RP_T_CH_2 = 1,    //!< Channel B
+    RP_T_CH_EXT = 2,  
 } rp_channel_trigger_t;
 
 /**
@@ -1085,6 +1085,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
 /**
  * Returns the ADC buffer in raw units from specified position and desired size.
  * Output buffer must be at least 'size' long.
+ * Data not calibrated
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
  * @param pos Starting position of the ADC buffer to retrieve.
  * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.

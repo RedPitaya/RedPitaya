@@ -18,7 +18,7 @@ if(NOT DEFINED INSTALL_DIR)
 endif()
 
 if(NOT DEFINED VERSION)
-  set(VERSION 0.00-0000)
+  set(VERSION 0)
 endif()
 
 if(NOT DEFINED REVISION)
@@ -49,11 +49,21 @@ file(GLOB RP_HEADERS "src/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
+add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
+
+
+target_link_libraries(${PROJECT_NAME} PRIVATE  rp rp-hw)
+
+if ("${MODEL}" STREQUAL "Z20_250_12")
+    target_link_libraries(${PROJECT_NAME} PRIVATE  rp-i2c rp-spi rp-gpio)
+endif()
+
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
- 
+
 unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

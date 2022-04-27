@@ -837,16 +837,13 @@ uint32_t acq_GetNormalizedDataPos(uint32_t pos)
 
 int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer)
 {
-
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t cnts;
 
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
-
     rp_pinState_t gain;
     acq_GetGain(channel, &gain);
-    
 #ifdef Z20_250_12
     rp_acq_ac_dc_mode_t power_mode;
     acq_GetAC_DC(channel,&power_mode);
@@ -1320,7 +1317,7 @@ int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 
 #endif
 
-#if defined Z10 || defined Z20_125
+#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
 int acq_UpdateAcqFilter(rp_channel_t channel){
     return setEqFilters(channel);
 }

@@ -43,6 +43,7 @@ endif()
 message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "Install path ${INSTALL_DIR}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -53,7 +54,6 @@ message(STATUS "Compiler C++ path: ${CMAKE_CXX_COMPILER}")
 message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
-message(STATUS "Install path ${INSTALL_DIR}")
 
 
 include_directories("include")

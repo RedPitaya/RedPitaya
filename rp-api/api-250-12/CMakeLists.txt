@@ -28,6 +28,10 @@ if(NOT DEFINED INSTALL_DIR)
 endif()
 
 message(STATUS "RedPitaya model=${MODEL}")
+message(STATUS "VERSION=${VERSION}")
+message(STATUS "REVISION=${REVISION}")
+message(STATUS "Install path ${INSTALL_DIR}")
+
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
 message(STATUS "Compiler C version: ${CMAKE_C_COMPILER_VERSION}")
@@ -37,7 +41,6 @@ message(STATUS "Compiler C++ path: ${CMAKE_CXX_COMPILER}")
 message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
-message(STATUS "Install path ${INSTALL_DIR}")
 
 
 include_directories("src/xml")
@@ -64,7 +67,7 @@ file(GLOB RP_HEADERS "include/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 link_libraries(-L${INSTALL_DIR}/lib librp-hw.a)
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})

@@ -41,7 +41,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 endif()
 
 target_compile_options(rpsasrv
-    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
+    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
 

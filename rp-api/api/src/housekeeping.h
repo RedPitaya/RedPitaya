@@ -72,9 +72,14 @@ static volatile housekeeping_control_t *hk = NULL;
 
 static int hk_Init(bool reset) {
     cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
+
+#ifdef Z20_250_12
     if (reset) {
         house_SetPllControlEnable(false);
     }
+#else
+    (void)(reset);    
+#endif
     return RP_OK;
 }
 

@@ -42,7 +42,7 @@ struct Options {
         for(int i = 0; i < CHANNELS; i++){
             attenuator_mode[i] = RP_LOW;
 #if defined Z20_250_12
-            ac_dc_mode[CHANNELS] = RP_AC;
+            ac_dc_mode[i] = RP_AC;
 #endif
         }
         

@@ -6,6 +6,7 @@
 #include <ctime>
 #include <chrono>
 
+#include "version.h"
 #include "options.h"
 
 #define DEC_MAX 5
@@ -58,7 +59,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 #endif
 
 #if defined Z10 || defined Z20 || defined Z20_125
-    static constexpr char optstring[] = "esx1:2:vht:l:ocr";
+    static constexpr char optstring[] = "esx1:2:vht:l:oc";
     static struct option long_options[] = {
             /* These options set a flag. */
             {"equalization", no_argument,       0, 'e'},
@@ -97,7 +98,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 #endif
 
 #if defined Z20_125_4CH
-    static constexpr char optstring[] = "esx1:2:vht:l:ocr";
+    static constexpr char optstring[] = "esx1:2:3:4:vht:l:oc";
     static struct option long_options[] = {
             /* These options set a flag. */
             {"equalization", no_argument,       0, 'e'},
@@ -193,7 +194,8 @@ auto usage(char const* progName) -> void{
     
     auto n = name.c_str();
     
-    fprintf( stderr, g_format, n, ADC_BUFFER_SIZE,
+    fprintf(stderr,"%s Version: %s-%s\n",n,VERSION_STR, REVISION_STR);
+    fprintf(stderr, g_format, n, ADC_BUFFER_SIZE,
             g_dec[0],
             g_dec[1],
             g_dec[2],
@@ -212,7 +214,7 @@ auto parse(int argc, char* argv[]) -> Options{
     while ((ch = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
         switch (ch) {
 
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_125_CH4
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_125_4CH
             case '1': {
                 if (strcmp(optarg, "lv") == 0) {
                     opt.attenuator_mode[0] = RP_LOW;
@@ -240,7 +242,7 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 #endif
 
-#if defined Z20_125_CH4
+#if defined Z20_125_4CH
             case '3': {
                 if (strcmp(optarg, "lv") == 0) {
                     opt.attenuator_mode[2] = RP_LOW;
@@ -286,7 +288,7 @@ auto parse(int argc, char* argv[]) -> Options{
                 if (strcmp(optarg, "1") == 0) {
                     opt.attenuator_mode[1] = RP_LOW;
                 } else if (strcmp(optarg, "20") == 0) {
-                    opt.attenuator_mode[2] = RP_HIGH;
+                    opt.attenuator_mode[1] = RP_HIGH;
                 } else {
                     fprintf(stderr, "Error key --get: %s\n", optarg);
                     opt.error = true;
@@ -332,7 +334,7 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-#if defined Z20_125_CH4
+#if defined Z20_125_4CH
                 if (strcmp(optarg, "3P") == 0) {
                     opt.trigger_mode = RP_TRIG_SRC_CHC_PE;
                     break;
@@ -413,6 +415,8 @@ auto parse(int argc, char* argv[]) -> Options{
         }
     }
 
+    if (opt.error || opt.showHelp || opt.showVersion) 
+        return opt;
         
      /* Acquisition size */
     uint32_t size = 0;

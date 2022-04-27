@@ -25,7 +25,7 @@ static volatile uint32_t *osc_cha = NULL;
 static volatile uint32_t *osc_chb = NULL;
 
 #if defined Z20_125_4CH
-bool emulate4Ch = false;
+bool emulate4Ch = true;
 
 static volatile osc_control_t *osc_reg_4ch = NULL;
 
@@ -459,8 +459,11 @@ const volatile uint32_t* osc_GetDataBufferChB()
 
 const volatile uint32_t* osc_GetDataBufferChC()
 {
-#ifdef Z20_125_CH4
+#if defined Z20_125_4CH
+if (emulate4Ch)
     return osc_cha;
+else
+    return osc_chc;    
 #else
     return NULL;
 #endif
@@ -468,8 +471,11 @@ const volatile uint32_t* osc_GetDataBufferChC()
 
 const volatile uint32_t* osc_GetDataBufferChD()
 {
-#ifdef Z20_125_CH4
+#if defined Z20_125_4CH
+if (emulate4Ch)
     return osc_chb;
+else
+    return osc_chd;    
 #else
     return NULL;
 #endif

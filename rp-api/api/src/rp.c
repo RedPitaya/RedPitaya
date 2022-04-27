@@ -700,7 +700,7 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
 }
 
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
-{
+{    
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 

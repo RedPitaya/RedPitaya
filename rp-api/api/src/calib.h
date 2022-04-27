@@ -55,12 +55,12 @@ rp_calib_params_t calib_GetDefaultCalib();
          uint32_t calib_getGenScale(rp_channel_t channel);
 #endif
 
-#if defined Z10 || defined Z20_125 || defined Z20_125_CH4
+#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
               int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff , uint32_t value);
          uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff);
 #endif
 
-#if defined Z10 || defined Z20_125 || defined Z20_125_CH4 || defined Z20
+#if defined Z10 || defined Z20_125 || defined Z20_125_4CH || defined Z20
          uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain);
           int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain);
 #endif

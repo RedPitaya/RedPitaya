@@ -336,10 +336,12 @@ generator: api
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 acquire: api
+	rm -rf $(abspath $(ACQUIRE2_DIR)/build)
 	cmake -B$(abspath $(ACQUIRE2_DIR)/build) -S$(abspath $(ACQUIRE2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(ACQUIRE2_DIR)/build install
 
 calib: api
+	rm -rf $(abspath $(CALIB_DIR)/build)
 	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(CALIB_DIR)/build install
 
