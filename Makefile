@@ -72,14 +72,15 @@ LIBRP_DIR       = rp-api/api
 LIBRP_HW_DIR    = rp-api/api-hw
 LIBRP2_DIR      = rp-api/api2
 LIBRP250_12_DIR = rp-api/api-250-12
+LIBRP_DSP_DIR   = rp-api/api-dsp
 LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp
 .PHONY: librpapp liblcr_meter
 
-api: librp librp_hw
+api: librp librp_hw librp_dsp
 
 api2: librp2
 
@@ -94,6 +95,10 @@ endif
 librp_hw:
 	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_DIR)/build install
+
+librp_dsp:
+	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DSP_DIR)/build install
 
 librp2:
 	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
@@ -346,9 +351,9 @@ calib: api
 	$(MAKE) -C $(CALIB_DIR)/build install
 
 spectrum: api
-	$(MAKE) -C $(SPECTRUM_DIR) clean
-	$(MAKE) -C $(SPECTRUM_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(SPECTRUM_DIR)/build)
+	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(SPECTRUM_DIR)/build install
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
@@ -568,7 +573,7 @@ clean:
 	rm -rf $(abspath $(LIBRP2_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
 	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
-	
+	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
 
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE2_DIR)/build)

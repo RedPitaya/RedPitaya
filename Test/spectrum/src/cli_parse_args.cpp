@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <getopt.h>
+
 #include "cli_parse_args.h"
 
 std::string cli_help_string() {
@@ -15,27 +16,26 @@ std::string cli_help_string() {
     "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n";
 }
 
-bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
-    cli_args_t args;
-
-    const struct option long_opt[] = {
-        { "help", no_argument, nullptr, 'h' },
-        { "min", required_argument, nullptr, 'm' },
-        { "max", required_argument, nullptr, 'M' },
-        { "count", required_argument, nullptr, 'c' },
-        { "average", no_argument, nullptr, 'a' },
-        { "no-average", no_argument, nullptr, 'n' },
-        { "csv", no_argument, nullptr, 'C' },
-        { "csv-limit", no_argument, nullptr, 'L' },
-        { nullptr, 0, nullptr, 0 }
+const struct option long_opt[] = {
+        { "help",       no_argument,        0, 'h' },
+        { "min",        required_argument,  0, 'm' },
+        { "max",        required_argument,  0, 'M' },
+        { "count",      required_argument,  0, 'c' },
+        { "average",    no_argument,        0, 'a' },
+        { "no-average", no_argument,        0, 'n' },
+        { "csv",        no_argument,        0, 'C' },
+        { "csv-limit",  no_argument,        0, 'L' },
+        { 0,            0,                  0,  0  }
     };
 
+bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
+    cli_args_t args;
+    
     bool success = true;
-
     try {
         int short_opt;
-
-        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLt", long_opt, nullptr)) != -1) {
+        int option_index = 0;
+        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLt", long_opt, &option_index)) != -1) {            
             switch (short_opt) {
             case 'h':
                 args.help = true;
