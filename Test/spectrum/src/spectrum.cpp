@@ -21,50 +21,12 @@
 
 namespace {
 
-using signal_array_t = std::vector<float>;
-
 static rp_dsp_api::CDSP g_dsp(MAX_CHANNELS,ADC_BUFFER_SIZE,ADC_SAMPLE_RATE);
 static sig_atomic_t     g_quit_requested = 0;
-
-// struct rp_spectr_worker_res_t {
-//     float peak_pw_cha;
-//     float peak_pw_freq_cha;
-//     float peak_pw_chb;
-//     float peak_pw_freq_chb;
-// };
-
-
-//static constexpr size_t spectrum_signal_count = 3;
-//static constexpr size_t spectrum_signal_size = 8 * 1024;
 
 static void quit_handler(int) {
     g_quit_requested = 1;
 }
-
-// int spectr_fpga_cnv_freq_range_to_unit(int freq_range)
-// {
-//     /* Input freq. range: 0, 1, 2, 3, 4, 5 translates to:
-//      * Output: 0 - [MHz], 1 - [kHz], 2 - [Hz] */
-//     switch(freq_range) {
-//     case 0:
-//     case 1:
-//         return 2;
-//         break;
-//     case 2:
-//     case 3:
-//     case 4:
-//         return 1;
-//         break;
-//     case 5:
-//         return 0;
-//         break;
-//     default:
-//         return -1;
-//         break;
-//     };
-
-//     return -1;
-// }
 
 template<typename T>
 auto createArray(uint32_t signalLen) -> T** {
@@ -107,12 +69,6 @@ static void spectrum_worker(cli_args_t args) {
                     decimation = 1;
     }
 
-    // std::array<signal_array_t, spectrum_signal_count> tmp_signals = {};
-
-    // for (signal_array_t &signal_array : tmp_signals) {
-    //     signal_array = signal_array_t(spectrum_signal_size, 0);
-    // }
-
     auto tmp_signals = createArray<float>(g_dsp.getOutSignalMaxLength());
     auto max_signals = createArray<float>(g_dsp.getOutSignalMaxLength());
     auto min_signals = createArray<float>(g_dsp.getOutSignalMaxLength());
@@ -131,35 +87,6 @@ static void spectrum_worker(cli_args_t args) {
         peak_pw_max[ch] = std::numeric_limits<float>::lowest();
         peak_pw_freq_max[ch] = std::numeric_limits<float>::lowest();
     }
-
-    // std::vector<double> cha_in(dsp.getSignalMaxLength(), 0);
-    // std::vector<double> chb_in(rp_get_spectr_signal_max_length(), 0);
-    // std::vector<double> cha_fft(rp_get_spectr_out_signal_max_length(), 0);
-    // std::vector<double> chb_fft(rp_get_spectr_out_signal_max_length(), 0);
-
-    // API compatible
-    // float *tmp_signal_0 = tmp_signals[0].data();
-    // float *tmp_signal_1 = tmp_signals[1].data();
-    // float *tmp_signal_2 = tmp_signals[2].data();
-    // double *p_cha_fft = cha_fft.data();
-    // double *p_chb_fft = chb_fft.data();
-    // double *p_cha_in = cha_in.data();
-    // double *p_chb_in = chb_in.data();
-
-    // const float freq_step = current_freq_range / (g_dsp.getOutSignalMaxLength() - 1);
-    // const size_t freq_index_min = std::floor(args.freq_min / freq_step);
-    // const size_t freq_index_max = std::ceil(args.freq_max / freq_step);
-
-    // Peak values by frequency
-
-    // std::vector<signal_array_t> max_values(2);
-    // std::vector<signal_array_t> min_values(2);
-
-    
-    // float peak_ch0_freq = std::numeric_limits<float>::lowest();
-    // float peak_ch0_value = std::numeric_limits<float>::lowest();
-    // float peak_ch1_freq = std::numeric_limits<float>::lowest();
-    // float peak_ch1_value = std::numeric_limits<float>::lowest();
 
     int count = args.count;
 
@@ -210,37 +137,13 @@ static void spectrum_worker(cli_args_t args) {
 #else
         rp_AcqGetDataV2D(trig_pos,&buffer_size, ch_in[0], ch_in[1]);
 #endif
-        // rp_spectr_prepare_freq_vector(&tmp_signal_0, ADC_SAMPLE_RATE, decimation);
         g_dsp.windowFilter(ch_in,&ch_in);        
-        // rp_spectr_window_filter(p_cha_in, p_chb_in, &p_cha_in, &p_chb_in);
 
         g_dsp.fft(ch_in,&ch_fft);
-        // rp_spectr_fft(p_cha_in, p_chb_in, &p_cha_fft, &p_chb_fft);
         
         g_dsp.decimate(ch_fft,&tmp_signals,g_dsp.getOutSignalMaxLength(),g_dsp.getOutSignalMaxLength());
-        // rp_spectr_decimate(p_cha_fft, p_chb_fft, &tmp_signal_1, &tmp_signal_2, rp_get_spectr_out_signal_length(), spectrum_signal_size);
-        
-        
 
         g_dsp.cnvToDBMMaxValueRanged(tmp_signals,&tmp_signals,&peak_pw,&peak_pw_freq,decimation,args.freq_min,args.freq_max);
-        
-        // rp_spectr_worker_res_t tmp_result;
-        // rp_spectr_cnv_to_dBm(tmp_signal_1,
-        //                         tmp_signal_2,
-        //                         &tmp_signal_1,
-        //                         &tmp_signal_2,
-        //                         &tmp_result.peak_pw_cha,
-        //                         &tmp_result.peak_pw_freq_cha, &tmp_result.peak_pw_chb,
-        //                         &tmp_result.peak_pw_freq_chb,
-        //                         decimation);
-
-        // Peak calculation
-        // const auto it_ch0_max = std::max_element(std::begin(tmp_signals[1]) + freq_index_min, std::begin(tmp_signals[1]) + freq_index_max + 1);
-        // const auto it_ch1_max = std::max_element(std::begin(tmp_signals[2]) + freq_index_min, std::begin(tmp_signals[2]) + freq_index_max + 1);
-        // const float ch0_max = *it_ch0_max;
-        // const float ch0_max_freq = freq_step * std::distance(std::begin(tmp_signals[1]), it_ch0_max);
-        // const float ch1_max = *it_ch1_max;
-        // const float ch1_max_freq = freq_step * std::distance(std::begin(tmp_signals[2]), it_ch1_max);
 
         // Summary peak calculation
         if (peak_set) {
