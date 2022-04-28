@@ -331,9 +331,9 @@ bode: api
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor:
-	$(MAKE) -C $(MONITOR_DIR) clean
-	$(MAKE) -C $(MONITOR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(MONITOR_DIR)/build)
+	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(MONITOR_DIR)/build install
 
 generator: api
 	$(MAKE) -C $(GENERATOR_DIR) clean 
@@ -361,9 +361,9 @@ calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 led_control: api
-	$(MAKE) -C $(LED_CONTROL_DIR) clean
-	$(MAKE) -C $(LED_CONTROL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LED_CONTROL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LED_CONTROL_DIR)/build install
 
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
@@ -577,14 +577,14 @@ clean:
 
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE2_DIR)/build)
+	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	rm -rf $(abspath $(MONITOR_DIR)/build)
+	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 
 	make -C $(NGINX_DIR) clean
-	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATOR_DIR) clean
 	make -C $(GENERATOR250_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRP2_DIR)    clean
-	make -C $(LIBRP_DIR)    clean
 	make -C $(LIBRPAPP_DIR) clean
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean

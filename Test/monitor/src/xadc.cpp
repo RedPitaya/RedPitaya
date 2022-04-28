@@ -180,7 +180,7 @@ int AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
     return r;
 }
 
-int GetValueFromFile(char *file, uint32_t *value){
+int GetValueFromFile(const char* file, uint32_t *value){
     FILE *fp;
     fp = fopen (file, "r");
     int r = !fscanf (fp, "%d", value);
@@ -188,7 +188,7 @@ int GetValueFromFile(char *file, uint32_t *value){
     return r;
 }
 
-int GetFValueFromFile(char *file, float *value){
+int GetFValueFromFile(const char* file, float *value){
     FILE *fp;
     fp = fopen (file, "r");
     float r = !fscanf (fp, "%f", value);
@@ -206,7 +206,7 @@ int GetTempValueRaw( uint32_t* raw , float* value) {
     return 0;
 }
 
-int GetValueRaw(char * file, uint32_t* raw , float* value) {
+int GetValueRaw(const char* file, uint32_t* raw , float* value) {
     float scale = 0;
     char s_raw[200];
     char s_scale[200];
@@ -402,7 +402,7 @@ static void AmsList(amsS_t * a_amsReg)
 			case eSendNum:
 				break;
 		}
-		val=AmsConversion(i, raw,a_amsReg);
+		val=AmsConversion((ams_t)i, raw,a_amsReg);
 		printf("%d\t%s\t0x%08x\t%.3f\n",i,&amsDesc[i][0],raw,val);
 	}
 }

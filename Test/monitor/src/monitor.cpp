@@ -12,7 +12,9 @@
  * for more details on the language used herein.
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,7 +66,7 @@ int main(int argc, char **argv) {
 		
 		float *val = NULL;
 		ssize_t val_count = 0;
-		val = calloc(argc-2,sizeof(float));
+		val = (float*)calloc(argc-2,sizeof(float));
 		for (int i = 2; i < argc; ++i, ++val_count) {
 			val[val_count] = strtof(argv[i], 0 );
 		}
@@ -122,7 +124,7 @@ int main(int argc, char **argv) {
 }
 
 uint32_t read_value(uint32_t a_addr) {
-	void* virt_addr = map_base + (a_addr & MAP_MASK);
+	auto virt_addr = (uint32_t *)map_base + (a_addr & MAP_MASK);
 	uint32_t read_result = 0;
 	read_result = *((uint32_t *) virt_addr);
 	printf("0x%08x\n", read_result);
@@ -131,7 +133,7 @@ uint32_t read_value(uint32_t a_addr) {
 }
 
 void write_values(unsigned long a_addr, int a_type, unsigned long* a_values, ssize_t a_len) {
-	void* virt_addr = map_base + (a_addr & MAP_MASK);
+	auto virt_addr = (uint32_t *)map_base + (a_addr & MAP_MASK);
 
 	for (ssize_t i = 0; i < a_len; ++i) {
 		switch(a_type) {
@@ -156,7 +158,7 @@ int parse_from_argv(int a_argc, char **a_argv, unsigned long* a_addr,
 	int val_count = 0;
 
 	*a_addr = strtoul(a_argv[1], 0, 0);
-	*a_values = calloc(4*1024, sizeof(unsigned long));
+	*a_values = (long unsigned int*)calloc(4*1024, sizeof(unsigned long));
 
 	//if (a_argc > 2) {
 		*a_type = 'w';//tolower(a_argv[2][0]);
