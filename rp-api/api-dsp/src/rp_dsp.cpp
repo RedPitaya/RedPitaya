@@ -98,7 +98,7 @@ CDSP::CDSP(uint8_t max_channels,uint32_t max_adc_buffer,uint32_t adc_max_speed) 
     m_pimpl->m_kiss_fft_cfg = NULL;
 }
 
-CDSP::~CDSP(){
+CDSP::~CDSP(){    
     fftClean();
     window_clean();
     delete m_pimpl;
@@ -252,8 +252,8 @@ auto CDSP::getRemoveDC() -> bool {
     return m_pimpl->m_remove_DC;
 }
 
-auto CDSP::setMode(CDSP::mode_t enable) -> void {
-    m_pimpl->m_mode = enable;
+auto CDSP::setMode(CDSP::mode_t mode) -> void {
+    m_pimpl->m_mode = mode;
 }
 
 auto CDSP::getMode() -> CDSP::mode_t {
@@ -382,7 +382,7 @@ auto CDSP::decimate(double **_in,float ***_out,uint32_t in_len, uint32_t out_len
         
                 double ch_p = 0;
                 
-                //dBm
+                //dBm                
                 if (getMode() == DBM){
                     /* Conversion to power (Watts) */
                     // V -> RMS -> power
@@ -456,8 +456,8 @@ auto CDSP::cnvToDBM(float **_in,float ***_out,float **peak_power, float **peak_f
 
 auto CDSP::cnvToDBMMaxValueRanged(float **_in,float ***_out,float **peak_power, float **peak_freq,uint32_t  decimation,uint32_t minFreq,uint32_t maxFreq) -> int {
     float **ch_o = *_out;
-    float *p_power = *peak_power;
-    float *p_freq = *peak_freq;
+    float *p_power = (float*)peak_power;
+    float *p_freq = (float*)peak_freq;
     
     double *max_pw  = new double[m_pimpl->m_max_channels];
     int *max_pw_idx = new int[m_pimpl->m_max_channels];
@@ -506,8 +506,8 @@ auto CDSP::cnvToDBMMaxValueRanged(float **_in,float ***_out,float **peak_power, 
 auto CDSP::cnvToMetric(float **_in,float ***_out,float **peak_power, float **peak_freq,uint32_t  decimation) -> int{
     uint32_t i;
     float** ch_o = *_out;
-    float *p_power = *peak_power;
-    float *p_freq = *peak_freq;
+    float *p_power = (float*)peak_power;
+    float *p_freq =  (float*)peak_freq;
     
     double* max_pw = new double[m_pimpl->m_max_channels]; // -10000;
     int*    max_pw_idx = new int[m_pimpl->m_max_channels]; // 0;

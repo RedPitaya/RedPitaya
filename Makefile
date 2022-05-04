@@ -11,8 +11,8 @@ STREAMING ?= MASTER
 VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
-LINUX_VER = 1.07
+VERSION = $(VER)-$(BUILD_NUMBER)
+LINUX_VER = 1.08
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -73,7 +73,6 @@ LIBRP_HW_DIR    = rp-api/api-hw
 LIBRP2_DIR      = rp-api/api2
 LIBRP250_12_DIR = rp-api/api-250-12
 LIBRP_DSP_DIR   = rp-api/api-dsp
-LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
@@ -111,17 +110,12 @@ librp250_12: librp_hw
 
 ifeq ($(ENABLE_LICENSING),1)
 
-api: librpapp liblcr_meter
+api: librpapp
 
 librpapp: librp
-	$(MAKE) -C $(LIBRPAPP_DIR) clean
-	$(MAKE) -C $(LIBRPAPP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Debug -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
-liblcr_meter: librp
-	$(MAKE) -C $(LIBRPLCR_DIR) clean
-	$(MAKE) -C $(LIBRPLCR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 endif
 
 
@@ -580,13 +574,12 @@ clean:
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
 	rm -rf $(abspath $(MONITOR_DIR)/build)
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
+	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
 
 	make -C $(NGINX_DIR) clean
 	make -C $(GENERATOR_DIR) clean
 	make -C $(GENERATOR250_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRPAPP_DIR) clean
-	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(PRODUCTION_TEST_DIR) clean
 	apps-free-clean

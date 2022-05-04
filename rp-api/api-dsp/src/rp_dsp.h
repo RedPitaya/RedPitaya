@@ -61,9 +61,8 @@ public:
     auto setMode(CDSP::mode_t mode) -> void;
     auto getMode() -> CDSP::mode_t;
 
-    // UNUSED function ?? 
+    
     auto prepareFreqVector(float **freq_out, double f_s, float decimation) -> int;
-
 
     auto windowFilter(double **_in,double ***_out) -> int;
     auto fftInit() -> int;
