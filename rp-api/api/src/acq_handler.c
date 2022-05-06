@@ -16,11 +16,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "common.h"
 #include "calib.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
+#include "neon_asm.h"
 
 #ifdef Z20_250_12
 #include "rp-i2c-mcp47x6-c.h"

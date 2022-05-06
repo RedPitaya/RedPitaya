@@ -42,6 +42,7 @@ public:
     CDSP(uint8_t max_channels,uint32_t adc_buffer,uint32_t adc_max_speed);
     ~CDSP();
 
+    auto setChannel(uint8_t ch, bool enable) -> void;
     auto setSignalLength(uint32_t len) -> int;
     auto getSignalLength() -> uint32_t;
     auto getSignalMaxLength() -> uint32_t;

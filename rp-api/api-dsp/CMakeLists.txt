@@ -61,7 +61,8 @@ include_directories("src/kiss_fft")
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c
             ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
-            ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp_math.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp            
         )
 
 list(APPEND header

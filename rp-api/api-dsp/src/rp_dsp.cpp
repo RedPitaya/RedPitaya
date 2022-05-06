@@ -20,9 +20,13 @@
 #include <unistd.h>
 #include <math.h>
 #include <stdlib.h>
+#include <mutex>
+#include <map>
 
 #include "rp_dsp.h"
 #include "kiss_fftr.h"
+
+#include "rp_math.h"
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
@@ -79,6 +83,8 @@ struct CDSP::Impl {
     mode_t   m_mode = DBM;
     kiss_fft_cpx** m_kiss_fft_out = NULL;
     kiss_fftr_cfg  m_kiss_fft_cfg = NULL;
+    std::mutex m_channelMutex;
+    std::map<uint8_t,bool> m_channelState;
 };
 
 
@@ -96,6 +102,9 @@ CDSP::CDSP(uint8_t max_channels,uint32_t max_adc_buffer,uint32_t adc_max_speed) 
     m_pimpl->m_mode = DBM;
     m_pimpl->m_kiss_fft_out = NULL;
     m_pimpl->m_kiss_fft_cfg = NULL;
+    for(uint8_t i = 0 ;i < max_channels; i++){
+        m_pimpl->m_channelState[i] = true;
+    }
 }
 
 CDSP::~CDSP(){    
@@ -103,6 +112,12 @@ CDSP::~CDSP(){
     window_clean();
     delete m_pimpl;
 }
+
+auto CDSP::setChannel(uint8_t ch, bool enable) -> void{
+    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
+    m_pimpl->m_channelState[ch] = enable;
+}
+
 
 auto CDSP::setImpedance(double value) -> void {
     if (value > 0)
@@ -265,14 +280,15 @@ auto CDSP::prepareFreqVector(float **freq_out, double f_s, float decimation) -> 
     uint32_t i;
     float *f = *freq_out;
     float freq_smpl = f_s / decimation;
-    // (float)spectr_fpga_cnv_freq_range_to_dec(freq_range);
-    /* Divider to get to the right units - [MHz], [kHz] or [Hz] */
-    //float unit_div = 1e6;
-
+    
     if(!f) {
         fprintf(stderr, "rp_spectr_prepare_freq_vector() not initialized\n");
         return -1;
     }
+
+    // (float)spectr_fpga_cnv_freq_range_to_dec(freq_range);
+    /* Divider to get to the right units - [MHz], [kHz] or [Hz] */
+    //float unit_div = 1e6;
     
     for(i = 0; i < getOutSignalLength(); i++) {
         /* We use full FPGA signal length range for this calculation, eventhough
@@ -287,7 +303,7 @@ auto CDSP::prepareFreqVector(float **freq_out, double f_s, float decimation) -> 
 auto CDSP::windowFilter(double **_in,double ***_out) -> int {
     uint32_t i,j;
     double **ch_o = *_out;
-    
+
     if(!_in || !_out)
         return -1;
 
@@ -346,18 +362,22 @@ auto CDSP::fft(double **_in, double ***_out) -> int {
     }
 
     for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
+        if (!m_pimpl->m_channelState[j]) continue;
         kiss_fftr(m_pimpl->m_kiss_fft_cfg, (kiss_fft_scalar *)_in[j], m_pimpl->m_kiss_fft_out[j]);
     }
+
     for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
-        for(uint32_t i = 0; i < getOutSignalLength(); i++) {                     // FFT limited to fs/2, specter of amplitudes
-            ch_o[j][i] = sqrt(pow(m_pimpl->m_kiss_fft_out[j][i].r, 2) +
+        if (!m_pimpl->m_channelState[j]) continue;
+        for(uint32_t i = 0; i < getOutSignalLength(); i++) {                     // FFT limited to fs/2, specter of amplitudes            
+            ch_o[j][i] = sqrtf_neon(pow(m_pimpl->m_kiss_fft_out[j][i].r, 2) +
                             pow(m_pimpl->m_kiss_fft_out[j][i].i, 2));
         }
     }
     return 0;
 }
 
-auto CDSP::decimate(double **_in,float ***_out,uint32_t in_len, uint32_t out_len) -> int {
+auto CDSP::decimate(double **_in,float ***_out,uint32_t in_len, uint32_t out_len) -> int {    
+    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
     uint32_t step;
     uint32_t i, j;
     float **ch_o = *_out;
@@ -368,7 +388,11 @@ auto CDSP::decimate(double **_in,float ***_out,uint32_t in_len, uint32_t out_len
     step = (uint32_t)round((float)in_len / (float)out_len);
     if(step < 1)
         step = 1;
+    
+    float wsumf = 1.0 / (float)m_pimpl->m_window_sum * 2.0;
+
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+        if (!m_pimpl->m_channelState[c]) continue; 
         for(i = 0, j = 0; i < out_len; i++, j+=step) {
             uint32_t k=j;
 
@@ -386,15 +410,15 @@ auto CDSP::decimate(double **_in,float ***_out,uint32_t in_len, uint32_t out_len
                 if (getMode() == DBM){
                     /* Conversion to power (Watts) */
                     // V -> RMS -> power
-                    ch_p = pow((_in[c][k] / m_pimpl->m_window_sum * 2) / 1.414213562, 2) /m_pimpl->m_imp;
+                    ch_p = pow((_in[c][k] * wsumf) / 1.414213562, 2) /m_pimpl->m_imp;
                 }
                 // V
                 if (getMode() == VOLT){
-                    ch_p = _in[c][k] / m_pimpl->m_window_sum  * 2;
+                    ch_p = _in[c][k] * wsumf;
                 }
                 // dBu
                 if (getMode() == DBU){
-                    ch_p = _in[c][k] / m_pimpl->m_window_sum  * 2 / 1.414213562;
+                    ch_p = _in[c][k] * wsumf / 1.414213562;
                 }
         
                 ch_o[c][i] += (double)ch_p;  // Summing the power expressed in Watts associated to each FFT bin
@@ -407,11 +431,13 @@ auto CDSP::decimate(double **_in,float ***_out,uint32_t in_len, uint32_t out_len
 
 auto CDSP::cnvToDBM(float **_in,float ***_out,float **peak_power, float **peak_freq,uint32_t  decimation) -> int {
     float **ch_o = *_out;
-    float *p_power = *peak_power;
-    float *p_freq = *peak_freq;
+    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
+    float *p_power = (float*)peak_power;
+    float *p_freq = (float*)peak_freq;
     
     double *max_pw = new double[m_pimpl->m_max_channels];
     int *max_pw_idx = new int[m_pimpl->m_max_channels];
+
     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
    
     if (m_pimpl->m_remove_DC) {
@@ -421,20 +447,21 @@ auto CDSP::cnvToDBM(float **_in,float ***_out,float **peak_power, float **peak_f
     }
 
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+        if (!m_pimpl->m_channelState[c]) continue;
         max_pw[c] =  -1e5;
         max_pw_idx[c] = 0;
         for(uint32_t i = 0; i < getOutSignalLength(); i++) {
 
             /* Conversion to power (Watts) */
 
-            double ch_p=_in[c][i];
+            double ch_p = _in[c][i];
            
             // Avoiding -Inf due to log10(0.0)
             
             if (ch_p * g_w2mw > 1.0e-12 )	
-                ch_o[c][i] = 10 * log10(ch_p * g_w2mw);  // W -> mW -> dBm
+                ch_o[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
             else	
-                ch_o[c][i] = 10 * log10(1.0e-12);  
+                ch_o[c][i] = 10 * log10f_neon(1.0e-12);  
             
             
             /* Find peaks */
@@ -455,11 +482,12 @@ auto CDSP::cnvToDBM(float **_in,float ***_out,float **peak_power, float **peak_f
 }
 
 auto CDSP::cnvToDBMMaxValueRanged(float **_in,float ***_out,float **peak_power, float **peak_freq,uint32_t  decimation,uint32_t minFreq,uint32_t maxFreq) -> int {
+    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);    
     float **ch_o = *_out;
     float *p_power = (float*)peak_power;
     float *p_freq = (float*)peak_freq;
     
-    double *max_pw  = new double[m_pimpl->m_max_channels];
+    double *max_pw = new double[m_pimpl->m_max_channels];
     int *max_pw_idx = new int[m_pimpl->m_max_channels];
     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
     if (m_pimpl->m_remove_DC) {
@@ -468,20 +496,21 @@ auto CDSP::cnvToDBMMaxValueRanged(float **_in,float ***_out,float **peak_power, 
         }
     }    
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+        if (!m_pimpl->m_channelState[c]) continue;
         max_pw[c] =  -1e5;
         max_pw_idx[c] = 0;
         for(uint32_t i = 0; i < getOutSignalLength(); i++) {
 
             /* Conversion to power (Watts) */
 
-            double ch_p=_in[c][i];
+            double ch_p = _in[c][i];
            
             // Avoiding -Inf due to log10(0.0)
             
             if (ch_p * g_w2mw > 1.0e-12 )	
-                ch_o[c][i] = 10 * log10(ch_p * g_w2mw);  // W -> mW -> dBm
+                ch_o[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
             else	
-                ch_o[c][i] = 10 * log10(1.0e-12);  
+                ch_o[c][i] = 10 * log10f_neon(1.0e-12);  
             
             auto currentFreq = ((float)i / (float)getOutSignalLength() * freq_smpl  / 2);
             if (currentFreq < minFreq || currentFreq > maxFreq) continue;
@@ -498,19 +527,20 @@ auto CDSP::cnvToDBMMaxValueRanged(float **_in,float ***_out,float **peak_power, 
     }
     delete[] max_pw;
     delete[] max_pw_idx;
-
     return 0;
 }
 
 
 auto CDSP::cnvToMetric(float **_in,float ***_out,float **peak_power, float **peak_freq,uint32_t  decimation) -> int{
+    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
     uint32_t i;
     float** ch_o = *_out;
     float *p_power = (float*)peak_power;
     float *p_freq =  (float*)peak_freq;
     
-    double* max_pw = new double[m_pimpl->m_max_channels]; // -10000;
-    int*    max_pw_idx = new int[m_pimpl->m_max_channels]; // 0;
+    double *max_pw = new double[m_pimpl->m_max_channels];
+    int *max_pw_idx = new int[m_pimpl->m_max_channels];
+    
     float  freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
 
     if (m_pimpl->m_remove_DC) {
@@ -520,6 +550,7 @@ auto CDSP::cnvToMetric(float **_in,float ***_out,float **peak_power, float **pea
     }
 
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+        if (!m_pimpl->m_channelState[c]) continue;
         max_pw[c] = -10000;
         max_pw_idx[c] = 0;
         for(i = 0; i < getOutSignalLength(); i++) {
@@ -528,7 +559,7 @@ auto CDSP::cnvToMetric(float **_in,float ***_out,float **peak_power, float **pea
             if (getMode() == DBM){
                 double ch_p=_in[c][i];
                 if (ch_p * g_w2mw > 1.0e-12 )	
-                    ch_o[c][i] = 10 * log10(ch_p * g_w2mw);  // W -> mW -> dBm
+                    ch_o[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
                 else	
                     ch_o[c][i] = -120;            
             }
@@ -538,10 +569,10 @@ auto CDSP::cnvToMetric(float **_in,float ***_out,float **peak_power, float **pea
             }
 
             if (getMode() == DBU){
-                double ch_p=_in[c][i];
+                double ch_p = _in[c][i];
                 // ( 20*log10( 0.686 / .775 ))
                 if (ch_p * g_w2mw > 1.0e-12 )	
-                    ch_o[c][i] = 20 * log10(ch_p / 0.775);
+                    ch_o[c][i] = 20 * log10f_neon(ch_p / 0.775);
                 else	
                     ch_o[c][i] = -120;            
             }

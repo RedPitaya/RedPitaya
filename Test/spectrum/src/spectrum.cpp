@@ -142,8 +142,9 @@ static void spectrum_worker(cli_args_t args) {
         g_dsp.fft(ch_in,&ch_fft);
         
         g_dsp.decimate(ch_fft,&tmp_signals,g_dsp.getOutSignalMaxLength(),g_dsp.getOutSignalMaxLength());
-
-        g_dsp.cnvToDBMMaxValueRanged(tmp_signals,&tmp_signals,&peak_pw,&peak_pw_freq,decimation,args.freq_min,args.freq_max);
+        float* pw  = reinterpret_cast<float*>(&peak_pw);
+        float* pf  = reinterpret_cast<float*>(&peak_pw_freq);
+        g_dsp.cnvToDBMMaxValueRanged(tmp_signals,&tmp_signals,&pw,&pf,decimation,args.freq_min,args.freq_max);
 
         // Summary peak calculation
         if (peak_set) {
@@ -195,10 +196,10 @@ static void spectrum_worker(cli_args_t args) {
     if (peak_set) {
 
         if (args.csv) {
-            for (size_t i = freq_index_min; i < (freq_index_max + 1); ++i) {
+            for (size_t i = 0; i < (freq_index_max - freq_index_min + 1); ++i) {
                 std::cout << (freq_step * (freq_index_min + i));
                 for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-                    std::cout << ", " << tmp_signals[ch][i];
+                    std::cout << ", " << tmp_signals[ch][i + freq_index_min];
                 }
                 std::cout << "\n";
             }
@@ -206,7 +207,7 @@ static void spectrum_worker(cli_args_t args) {
             for (size_t i = 0; i < (freq_index_max - freq_index_min + 1); ++i) {
                 std::cout << (freq_step * (freq_index_min + i));
                 for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-                    std::cout << ", " << min_signals[ch][i] << ", " << min_signals[ch][i];
+                    std::cout << ", " << min_signals[ch][i + freq_index_min] << ", " << min_signals[ch][i + freq_index_min];
                 }
                 std::cout << "\n";
             }

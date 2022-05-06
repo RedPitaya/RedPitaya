@@ -65,6 +65,7 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/oscilloscope.c
             ${CMAKE_SOURCE_DIR}/src/acq_handler.c
             ${CMAKE_SOURCE_DIR}/src/rp.c
+            ${CMAKE_SOURCE_DIR}/src/neon_asm.cpp
         )
 
    

@@ -57,7 +57,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-dsp rp rp-hw)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-dsp rp rp-hw)
 
 if ("${MODEL}" STREQUAL "Z20_250_12")
     target_link_libraries(${PROJECT_NAME} PRIVATE  rp-i2c rp-spi rp-gpio)
