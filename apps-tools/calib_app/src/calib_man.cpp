@@ -32,7 +32,6 @@ m_calibMode(0)
 
 CCalibMan::~CCalibMan()
 {
-
 }
 
 void CCalibMan::init(){
@@ -397,23 +396,24 @@ auto g = getModeLV_HV();
 
 int CCalibMan::enableGen(rp_channel_t _ch,bool _enable){
     m_acq->enableGen(_ch,_enable);
+    return 0;
 }
 
 
 int CCalibMan::setFreq(rp_channel_t _ch,int _freq){
-    m_acq->setFreq(_ch,_freq);
+    return m_acq->setFreq(_ch,_freq);    
 }
 
 int CCalibMan::setAmp(rp_channel_t _ch,float _ampl){
-    m_acq->setAmp(_ch,_ampl);
+    return m_acq->setAmp(_ch,_ampl);    
 }
 
 int CCalibMan::setOffset(rp_channel_t _ch,float _offset){
-    m_acq->setOffset(_ch,_offset);
+    return m_acq->setOffset(_ch,_offset);    
 }
 
 int CCalibMan::setGenType(rp_channel_t _ch,int _type){
-    m_acq->setGenType(_ch,_type);
+    return m_acq->setGenType(_ch,_type);
 }
 
 void CCalibMan::updateGen(){

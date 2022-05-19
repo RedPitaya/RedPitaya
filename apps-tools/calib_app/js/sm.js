@@ -54,11 +54,13 @@
             .done(function(dresult) {
                 if (dresult.status == 'OK') {
                     try {
-                        SM.connectWebSocket();
+                        setTimeout(function() {
+                            SM.connectWebSocket();
+                        }, 1000);
                         //  var element = document.getElementById("loader-wrapper");
                         //  element.parentNode.removeChild(element);
-                        $('body').addClass('loaded');
-                        $('#main').removeAttr("style");
+                        // $('body').addClass('loaded');
+                        // $('#main').removeAttr("style");
                         console.log("Load manager");
                     } catch (e) {
                         SM.startApp();
@@ -128,6 +130,8 @@
                 SM.state.socket_opened = true;
                 SM.sendParameters();
                 SM.unexpectedClose = true;
+                $('body').addClass('loaded');
+                $('#main').removeAttr("style");
 
             };
 

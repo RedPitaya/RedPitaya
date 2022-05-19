@@ -16,10 +16,11 @@ struct TParam
 	int fpga_update;
 };
 
-//To get value from JSON object
+// //To get value from JSON object
 template <typename T>
 inline T GetValueFromJSON(JSONNode _node, const char* _at)
 {
+	return T();
 }
 
 //int specialization of function

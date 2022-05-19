@@ -267,6 +267,7 @@ public:
 	bool ForceSend()
 	{
 		m_Dirty = true;
+		return true;
 	}
 private:
 	bool m_Dirty;

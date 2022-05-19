@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>
 
 rp_websocket_server * s = NULL;
 
@@ -15,7 +16,7 @@ void start_ws_server(const struct server_parameters * _params)
     stop_ws_server();
 
 	fprintf(stderr, "start_ws_server()\n");
-
+	try{
 	struct server_parameters* loaded_params = load_params();
 	if(_params != 0)
 	{
@@ -39,7 +40,12 @@ void start_ws_server(const struct server_parameters * _params)
 	int port=loaded_params->port;
 	s = rp_websocket_server::create(loaded_params);
  	std::string docroot=".";
+	fprintf(stderr, "Running...\n");
 	s->start(docroot, port);
+	fprintf(stderr, "Running...[DONE]\n");
+	}catch(std::exception &ex){
+		fprintf(stderr, "Error: start_ws_server() %s\n",ex.what());
+	}
 }
 
 void stop_ws_server()
