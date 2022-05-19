@@ -16,33 +16,52 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 INSTALL_DIR ?= .
 STREAMING_MODE ?= MASTER
 
+# Hang if build on redpitaya
+#NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
+JOBS=$$(($(NUM_CPU)+1))
+
 CONTROLLER=controllerhf.so
-SERVICE=streaming-server
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
-ARTIFACTS=$(CONTROLLER)
 
-CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
-export CFLAGS
 
-.PHONY: all
-all: $(CONTROLLER)
+all: servers
 
-$(CONTROLLER):
-	$(MAKE) -C src MODEL=$(MODEL) STREAMING_MODE=$(STREAMING_MODE)
+servers:
+	cd src; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DSTREAMING_MODE=$(STREAMING_MODE) -DBUILD_RPSA_CLIENT=OFF -DBUILD_CONVERT_TOOL=OFF; \
+	make -C build -j $(JOBS)
+# VERBOSE=1
+	
+client:
+	cd src; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF; \
+	make -C build -j $(JOBS)
 
-$(ZIP): $(CONTROLLER)
-	-$(RM) target -rf
-	echo "#!/bin/sh" > fpga.sh
-ifeq ($(MODEL),Z20_250_12)
-	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app_250' >> fpga.sh
-else
-	echo '/opt/redpitaya/sbin/mkoverlay.sh stream_app' >> fpga.sh
-endif
+client-win:
+	cd src; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake; \
+	make -C build -j $(JOBS)
+
+install_servers:
+	cd src; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DSTREAMING_MODE=$(STREAMING_MODE) -DBUILD_RPSA_CLIENT=OFF -DBUILD_CONVERT_TOOL=OFF; \
+	make -C build -j $(JOBS) install 
+	
+install_client:
+	cd src; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DSTREAMING_MODE=$(STREAMING_MODE) -DBUILD_RPSA_CLIENT=OFF -DBUILD_CONVERT_TOOL=OFF; \
+	make -C build -j $(JOBS) install
+
+install_client_win:
+	cd src; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake; \
+	make -C build -j $(JOBS) install
+
+$(ZIP): install_servers
+	rm target -rf
 	mkdir -p target/$(APP)
-	mkdir -p $(INSTALL_DIR)/bin
-	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html fpga.sh info js target/$(APP)
-	cp $(SERVICE) $(INSTALL_DIR)/bin/$(SERVICE)
-	cp $(SERVICE).run.sh $(INSTALL_DIR)/bin/$(SERVICE).run.sh
+	mv $(INSTALL_DIR)/bin/libweb_server.so target/$(APP)/$(CONTROLLER)
+	cp -r fpga.conf nginx.conf css img *.html fpga.sh info js target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *
@@ -52,7 +71,4 @@ install: $(ZIP)
 	unzip -o $(ZIP) -d $(INSTALL_DIR)/www/apps
 
 clean:
-	$(MAKE) -C src clean
-	-$(RM) target -rf
-	-$(RM) $(SERVICE)
-	-$(RM) $(ZIP)
+	rm -rf src/build

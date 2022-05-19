@@ -1,6 +1,6 @@
 {
     "name": "Calibration",
-    "version": "1.00-0",
-    "revision": "",
+    "version": "1.04-BUILD_NUMBER",
+    "revision": "REVISION",
     "description": "Application for calibrating ADC and DAC"
 }
