@@ -57,7 +57,7 @@ auto COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,ui
     _buffer2 = m_OscBuffer2;
     _overFlow = 0;
     _size = osc_buf_size;
-    return true;    
+    return true;
 }
 
 auto COscilloscope::getDecimation() -> uint32_t {

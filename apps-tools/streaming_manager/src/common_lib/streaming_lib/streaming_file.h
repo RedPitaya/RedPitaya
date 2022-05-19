@@ -74,6 +74,7 @@ private:
     std::string       m_filePath;
     std::string       m_file_out;
     uint64_t          m_samples;
+    std::mutex        m_stopMtx;
     std::map<DataLib::EDataBuffersPackChannel,uint64_t> m_passSizeSamples;
     
     bool m_testMode;

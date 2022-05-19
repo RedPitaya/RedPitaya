@@ -15,6 +15,7 @@
 #include "data_lib/neon_asm.h"
 #include "data_lib/signal.hpp"
 #include "asio.hpp"
+#include "asio_service.h"
 
 #define  SOCKET_BUFFER_SIZE 65536
 #define  FIFO_BUFFER_SIZE  SOCKET_BUFFER_SIZE * 3
@@ -85,6 +86,7 @@ private:
     uint32_t  m_pos_last_in_fifo;
     uint64_t  m_last_pack_id;
     std::mutex m_mtx;
+    CAsioService *m_asio;
 };
 
 }

@@ -1,7 +1,6 @@
 #include <fstream>
 #include "asio_socket_simple.h"
 #include "data_lib/thread_cout.h"
-#include "asio_service.h"
 
 #define UNUSED(x) [&x]{}()
 #define SOCKET_BUFFER_SIZE 1024
@@ -22,8 +21,8 @@ CAsioSocketSimple::CAsioSocketSimple(std::string host, std::string port) :
         m_port(port),
         m_tcp_socket(),
         m_tcp_acceptor(),
-        m_timoutTimer(CAsioService::instance()->getIO()),
-//        m_is_tcp_connected(false),
+        m_asio(new CAsioService()),
+        m_timoutTimer(m_asio->getIO()),
         m_disableRestartServer(true),
         m_mtx()
 {
@@ -32,8 +31,9 @@ CAsioSocketSimple::CAsioSocketSimple(std::string host, std::string port) :
 
 CAsioSocketSimple::~CAsioSocketSimple() {
     m_disableRestartServer = true;
-    closeSocket();
+    closeSocket();    
     delete[] m_SocketReadBuffer;
+    delete m_asio;
 }
 
 auto CAsioSocketSimple::initServer() -> void {
@@ -41,8 +41,8 @@ auto CAsioSocketSimple::initServer() -> void {
     std::lock_guard<std::mutex> lock(m_mtx);
 //    m_is_tcp_connected = false;
     m_disableRestartServer = false;        
-    m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(CAsioService::instance()->getIO());
-    m_tcp_acceptor = std::make_shared<asio::ip::tcp::acceptor>(CAsioService::instance()->getIO());
+    m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(m_asio->getIO());
+    m_tcp_acceptor = std::make_shared<asio::ip::tcp::acceptor>(m_asio->getIO());
     asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), std::stoi(m_port));
     m_tcp_acceptor->open(endpoint.protocol());
     m_tcp_acceptor->set_option(asio::ip::tcp::acceptor::reuse_address(true));
@@ -56,8 +56,8 @@ auto CAsioSocketSimple::initClient() -> void {
     std::lock_guard<std::mutex> lock(m_mtx);
 //    m_is_tcp_connected = false;
     m_tcp_acceptor = nullptr;
-    m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(CAsioService::instance()->getIO());
-    asio::ip::tcp::resolver resolver(CAsioService::instance()->getIO());
+    m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(m_asio->getIO());
+    asio::ip::tcp::resolver resolver(m_asio->getIO());
     asio::ip::tcp::resolver::query query(m_host, m_port);
     asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
     m_tcp_endpoint = *iter;
@@ -133,12 +133,12 @@ auto CAsioSocketSimple::closeSocket() -> void {
 }
 
 auto CAsioSocketSimple::handlerReceive(const asio::error_code &error,size_t bytes_transferred) -> void {
+    std::lock_guard<std::mutex> lock(m_mtx);
     // Operation aborted
     if (error.value() == 125) return;
 
     if (!error){
-        recivedNotify(error,m_SocketReadBuffer,bytes_transferred);
-        std::lock_guard<std::mutex> lock(m_mtx);
+        recivedNotify(error,m_SocketReadBuffer,bytes_transferred);        
         if (m_tcp_socket){
             m_tcp_socket->async_receive(
                     asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
@@ -162,13 +162,13 @@ auto CAsioSocketSimple::isConnected() -> bool{
 }
 
 auto CAsioSocketSimple::handlerAccept(const asio::error_code &_error) -> void {
+    std::lock_guard<std::mutex> lock(m_mtx);
     // Operation aborted
     if (_error.value() == 125) return;
 
     if (!_error)
     {
-        connectNotify(m_tcp_endpoint.address().to_string());
-        std::lock_guard<std::mutex> lock(m_mtx);
+        connectNotify(m_tcp_endpoint.address().to_string());        
         if (m_tcp_socket){
             m_tcp_socket->async_receive(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
                                         std::bind(&CAsioSocketSimple::handlerReceive, this,

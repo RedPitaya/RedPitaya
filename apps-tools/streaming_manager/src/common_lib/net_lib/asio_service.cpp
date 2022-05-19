@@ -4,10 +4,10 @@
 using namespace net_lib;
 
 
-auto CAsioService::instance() -> CAsioService*{
-     static CAsioService inst;
-     return &inst;
-}
+//auto CAsioService::instance() -> CAsioService*{
+//     static CAsioService inst;
+//     return &inst;
+//}
 
 CAsioService::CAsioService():
     m_Ios(),

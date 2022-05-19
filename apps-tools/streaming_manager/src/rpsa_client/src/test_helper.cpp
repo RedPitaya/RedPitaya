@@ -157,30 +157,32 @@ auto printStatisitc(bool force) -> void{
             [](const std::map<std::string,long long int>::value_type &pair){return pair.first;});
 
         if (keys.size() > 0){
-            std::cout << "\n" << getTS() << "\n";
-            std::cout << "=====================================================================================================================\n";
-            std::cout << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |      Lost        |\n";
+            std::stringstream ss;
+            ss << "\n" << getTS() << "\n";
+            ss << "=====================================================================================================================\n";
+            ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |      Lost        |\n";
 
             bool first = true;
             for(auto const& host: keys){
                 if (first){
                     first = false;
-                    std::cout << "---------------------------------------------------------------------------------------------------------------------|\n";
+                    ss << "---------------------------------------------------------------------------------------------------------------------|\n";
                 }
                 auto bw = convertBtoSpeed(g_BytesCount[host],value.count() - g_timeHostBegin[host]);
-                std::cout << createStr(host,18) << "|";
-                std::cout << " " << createStr(convertBtoS(g_BytesCountTotal[host]),18) << "|";
-                std::cout << " " << createStr(bw,18) << "|";
-                std::cout << " " << createStr(std::to_string(g_packCounter_ch1[host]),18) << "|";
-                std::cout << " " << createStr(std::to_string(g_packCounter_ch2[host]),18) << "|";
-                std::cout << "                  |\n";
-                std::cout << "                  +...................+...................+...................+...................+";
-                std::cout << " " + createStr(std::to_string(g_lostRate[host]),17) << "|\n";
-                std::cout << "                  |";
-                std::cout << "Lost in UDP: " << createStr(std::to_string(g_lostNetRate[host]),26) << "|";
-                std::cout << "Lost in file: " << createStr(std::to_string(g_lostFileRate[host]),25) << "|";
-                std::cout << "                  |\n";
-
+                ss << createStr(host,18) << "|";
+                ss << " " << createStr(convertBtoS(g_BytesCountTotal[host]),18) << "|";
+                ss << " " << createStr(bw,18) << "|";
+                ss << " " << createStr(std::to_string(g_packCounter_ch1[host]),18) << "|";
+                ss << " " << createStr(std::to_string(g_packCounter_ch2[host]),18) << "|";
+                ss << "                  |\n";
+                ss << "                  +...................+...................+...................+...................+";
+                ss << " " + createStr(std::to_string(g_lostRate[host]),17) << "|\n";
+                ss << "                  |";
+                ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRate[host]),26) << "|";
+                ss << "Lost in file: " << createStr(std::to_string(g_lostFileRate[host]),25) << "|";
+                ss << "                  |\n";
+                ss << "                  +...................+...................+...................+...................+";
+                ss << "                  |\n";
                 g_BytesCount[host] = 0;
                 g_timeHostBegin[host] = value.count();
                 g_packCounter_ch1[host] = 0;
@@ -189,7 +191,8 @@ auto printStatisitc(bool force) -> void{
                 g_lostFileRate[host] = 0;
                 g_lostRate[host] = 0;
             }
-            std::cout << "=====================================================================================================================\n";
+            ss << "=====================================================================================================================\n";
+            aprintf(stdout,"%s",ss.str().c_str());
         }        
 
         g_timeBegin = value.count();
@@ -209,36 +212,40 @@ auto printFinalStatisitc() -> void{
         [](const std::map<std::string,long long int>::value_type &pair){return pair.first;});
 
     if (keys.size() > 0){
-        std::cout << "\n" << getTS() << " Total time: " << convertBtoST(value.count() - g_timeBeginTotal)  << "\n";
-        std::cout << "=====================================================================================================================\n";
-        std::cout << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |      Lost        |\n";
+        std::stringstream ss;
+        ss << "\n" << getTS() << " Total time: " << convertBtoST(value.count() - g_timeBeginTotal)  << "\n";
+        ss << "=====================================================================================================================\n";
+        ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |      Lost        |\n";
 
         bool first = true;
         for(auto const& host: keys){
             if (first){
                 first = false;
-                std::cout << "---------------------------------------------------------------------------------------------------------------------|\n";
+                ss << "---------------------------------------------------------------------------------------------------------------------|\n";
             }
             auto bw = convertBtoSpeed(g_BytesCountTotal[host],value.count() - g_timeBeginTotal);
-            std::cout << createStr(host,18) << "|";
-            std::cout << " " << createStr(convertBtoS(g_BytesCountTotal[host]),18) << "|";
-            std::cout << " " << createStr(bw,18) << "|";
-            std::cout << " " << createStr(std::to_string(g_packCounterTotal_ch1[host]),18) << "|";
-            std::cout << " " << createStr(std::to_string(g_packCounterTotal_ch2[host]),18) << "|";
-            std::cout << "                  |\n";
-            std::cout << "                  +...................+...................+...................+...................+";
-            std::cout << " " + createStr(std::to_string(g_lostRateTotal[host]),17) << "|\n";
-            std::cout << "                  |";
-            std::cout << "Lost in UDP: " << createStr(std::to_string(g_lostNetRateTotal[host]),26) << "|";
-            std::cout << "Lost in file: " << createStr(std::to_string(g_lostFileRateTotal[host]),25) << "|";
-            std::cout << "                  |\n";
+            ss << createStr(host,18) << "|";
+            ss << " " << createStr(convertBtoS(g_BytesCountTotal[host]),18) << "|";
+            ss << " " << createStr(bw,18) << "|";
+            ss << " " << createStr(std::to_string(g_packCounterTotal_ch1[host]),18) << "|";
+            ss << " " << createStr(std::to_string(g_packCounterTotal_ch2[host]),18) << "|";
+            ss << "                  |\n";
+            ss << "                  +...................+...................+...................+...................+";
+            ss << " " + createStr(std::to_string(g_lostRateTotal[host]),17) << "|\n";
+            ss << "                  |";
+            ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRateTotal[host]),26) << "|";
+            ss << "Lost in file: " << createStr(std::to_string(g_lostFileRateTotal[host]),25) << "|";
+            ss << "                  |\n";
+            ss << "                  +...................+...................+...................+...................+";
+            ss << "                  |\n";
             if (g_brokenBuffer.size() > 0 && g_brokenBuffer[host] != -1){
-                std::cout << "                  |";
-                std::cout << "Broken buffers: " << createStr(std::to_string(g_brokenBuffer[host]),23)<< "|";
-                std::cout << "                                       |                  |\n";
+                ss << "                  |";
+                ss << "Broken buffers: " << createStr(std::to_string(g_brokenBuffer[host]),23)<< "|";
+                ss << "                                       |                  |\n";
             }
         }
-        std::cout << "=====================================================================================================================\n";
+        ss << "=====================================================================================================================\n";
+        aprintf(stdout,"%s",ss.str().c_str());
     }
 }
 

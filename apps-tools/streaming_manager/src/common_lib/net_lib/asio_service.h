@@ -13,13 +13,15 @@ namespace  net_lib {
 class CAsioService {
 public:
 
-    static auto instance() -> CAsioService*;
+//    static auto instance() -> CAsioService*;
     auto getIO() -> asio::io_service&;
-
-private:
 
     CAsioService();
     ~CAsioService();
+
+private:
+
+
 
     CAsioService(const CAsioService &) = delete;
     CAsioService(CAsioService &&) = delete;

@@ -15,6 +15,7 @@
 #include "asio.hpp"
 #include "data_lib/signal.hpp"
 #include "data_lib/neon_asm.h"
+#include "asio_service.h"
 
 namespace  net_lib {
 
@@ -67,9 +68,9 @@ private:
     std::shared_ptr<asio::ip::tcp::socket> m_tcp_socket;
     std::shared_ptr<asio::ip::tcp::acceptor> m_tcp_acceptor;
     asio::ip::tcp::endpoint m_tcp_endpoint;
+    CAsioService *m_asio;
     asio::steady_timer  m_timoutTimer;
     uint8_t *m_SocketReadBuffer;
-//    bool m_is_tcp_connected;
     bool m_disableRestartServer;
     std::mutex m_mtx;
 };

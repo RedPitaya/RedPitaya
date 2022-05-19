@@ -10,11 +10,11 @@
 #include "remote.h"
 #include "test_helper.h"
 
-std::map<std::string,streaming_lib::CStreamingFile::Ptr> g_file_manager;
+//std::map<std::string,streaming_lib::CStreamingFile::Ptr> g_file_manager;
 std::map<std::string,converter_lib::CConverter::Ptr> g_converter;
-std::map<std::string,streaming_lib::CStreamingNetBuffer::Ptr> g_net_buffer;
+//std::map<std::string,streaming_lib::CStreamingNetBuffer::Ptr> g_net_buffer;
 
-std::map<std::string,net_lib::CAsioNet::Ptr> g_asionet;
+//std::map<std::string,net_lib::CAsioNet::Ptr> g_asionet;
 
 std::mutex         g_smutex;
 std::mutex         g_s_csv_mutex;
@@ -32,14 +32,10 @@ auto stopStreaming() -> void;
 auto stopStreaming(std::string host) -> void;
 
 
-void reciveData(std::error_code error,uint8_t *buff,size_t _size,std::string host){
-    if (!error && g_net_buffer[host]){
-        g_net_buffer[host]->addNewBuffer(buff,_size);
-    }
-}
+
 
 auto runClient(std::string  host,StateRunnedHosts state) -> void{
-    g_terminate[host] = false;
+    g_terminate[host] = false;    
     auto protocol = net_lib::EProtocol::P_TCP;
 
     if (g_soption.save_dir == "")
@@ -81,71 +77,70 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
         protocol = net_lib::EProtocol::P_UDP;
 
     bool testMode = g_soption.testmode == ClientOpt::TestMode::ENABLE;
-    g_file_manager[host] = streaming_lib::CStreamingFile::create(file_type, g_soption.save_dir, g_soption.samples , convert_v,testMode);
-    g_file_manager[host]->run(host + "_" + g_filenameDate);
-
-    g_net_buffer[host] = streaming_lib::CStreamingNetBuffer::create();
-    g_converter[host] = converter_lib::CConverter::create();
-
-    g_net_buffer[host]->outMemoryNotify.connect([=](uint64_t ram){
+    auto g_file_manager = streaming_lib::CStreamingFile::create(file_type, g_soption.save_dir, g_soption.samples , convert_v,testMode);
+    g_file_manager->run(host + "_" + g_filenameDate);
+    auto g_net_buffer = streaming_lib::CStreamingNetBuffer::create();
+    g_net_buffer->outMemoryNotify.connect([host](uint64_t ram){
         if (g_soption.verbous)
             aprintf(stderr,"%s Out of memory (%d)\n", getTS(": ").c_str(),host.c_str(),ram);
     });
 
-    auto g_s_file_w = std::weak_ptr<streaming_lib::CStreamingFile>(g_file_manager[host]);
-    g_net_buffer[host]->brokenPacksNotify.connect([g_s_file_w](uint64_t count){
+    auto g_s_file_w = std::weak_ptr<streaming_lib::CStreamingFile>(g_file_manager);
+    g_net_buffer->brokenPacksNotify.connect([g_s_file_w,host](uint64_t count){
         auto obj = g_s_file_w.lock();
         if(obj){
             obj->addNetWorkLost(count);
         }
     });
 
-    g_net_buffer[host]->receivedPackNotify.connect([=](DataLib::CDataBuffersPack::Ptr pack){
+
+    g_net_buffer->receivedPackNotify.connect([g_s_file_w,host](DataLib::CDataBuffersPack::Ptr pack){
         auto obj = g_s_file_w.lock();
         if (obj){
-        if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
-            uint64_t sempCh1 = 0;
-            uint64_t sempCh2 = 0;
-            uint64_t sizeCh1 = 0;
-            uint64_t sizeCh2 = 0;
-            uint64_t lostRate = 0;
-            auto ch1 = pack->getBuffer(DataLib::CH1);
-            auto ch2 = pack->getBuffer(DataLib::CH2);
-            if (ch1){
-                sempCh1 = ch1->getSamplesCount();
-                sizeCh1 = ch1->getBufferLenght();
-                lostRate += ch1->getLostSamplesAll();
-            }
+            if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
+                uint64_t sempCh1 = 0;
+                uint64_t sempCh2 = 0;
+                uint64_t sizeCh1 = 0;
+                uint64_t sizeCh2 = 0;
+                uint64_t lostRate = 0;
+                auto ch1 = pack->getBuffer(DataLib::CH1);
+                auto ch2 = pack->getBuffer(DataLib::CH2);
+                if (ch1){
+                    sempCh1 = ch1->getSamplesCount();
+                    sizeCh1 = ch1->getBufferLenght();
+                    lostRate += ch1->getLostSamplesAll();
+                }
 
-            if (ch2){
-                sempCh2 = ch2->getSamplesCount();
-                sizeCh2 = ch2->getBufferLenght();
-                lostRate += ch2->getLostSamplesAll();
-            }
+                if (ch2){
+                    sempCh2 = ch2->getSamplesCount();
+                    sizeCh2 = ch2->getBufferLenght();
+                    lostRate += ch2->getLostSamplesAll();
+                }
 
-            auto net   = obj->getNetworkLost();
-            auto flost = obj->getFileLost();
-            int  brokenBuffer = -1;
-            if (g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_TEST_DATA){
-                brokenBuffer = testBuffer(ch1 ? ch1->getBuffer().get() : nullptr,ch2 ? ch2->getBuffer().get() : nullptr,sizeCh1,sizeCh2) ? 0 : 1;
+                auto net   = obj->getNetworkLost();
+                auto flost = obj->getFileLost();
+                int  brokenBuffer = -1;
+                if (g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_TEST_DATA){
+                    brokenBuffer = testBuffer(ch1 ? ch1->getBuffer().get() : nullptr,ch2 ? ch2->getBuffer().get() : nullptr,sizeCh1,sizeCh2) ? 0 : 1;
+                }
+                auto h = host;
+                addStatisticSteaming(h,sizeCh1 + sizeCh2,sempCh1,sempCh2,lostRate, net, flost,brokenBuffer);
             }
-            auto h = host;
-            addStatisticSteaming(h,sizeCh1 + sizeCh2,sempCh1,sempCh2,lostRate, net, flost,brokenBuffer);
-        }
           obj->passBuffers(pack);
         }
-
     });
 
-    g_asionet[host] = net_lib::CAsioNet::create(net_lib::M_CLIENT, protocol ,host , g_soption.ports.streaming_port  != "" ? g_soption.ports.streaming_port : ClientOpt::Ports().streaming_port);
 
-    g_asionet[host]->clientConnectNotify.connect([](std::string host) {
+    auto g_asionet = net_lib::CAsioNet::create(net_lib::M_CLIENT, protocol ,host , g_soption.ports.streaming_port  != "" ? g_soption.ports.streaming_port : ClientOpt::Ports().streaming_port);
+
+    g_asionet->clientConnectNotify.connect([](std::string host) {
         const std::lock_guard<std::mutex> lock(g_smutex);
         if (g_soption.verbous)
             aprintf(stdout,"%s Connect %s\n",getTS(": ").c_str(),host.c_str());
         g_runClientCounter--;
     });
-    g_asionet[host]->clientErrorNotify.connect([host](std::error_code)
+
+    g_asionet->clientErrorNotify.connect([host](std::error_code)
     {
         const std::lock_guard<std::mutex> lock(g_smutex);
         if (g_soption.verbous)
@@ -154,12 +149,19 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
         g_runClientCounter--;
     });
 
-    g_asionet[host]->reciveNotify.connect(std::bind(&reciveData,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,host));
-    g_asionet[host]->start();
-
+    auto g_net_buffer_w = std::weak_ptr<streaming_lib::CStreamingNetBuffer>(g_net_buffer);
+    g_asionet->reciveNotify.connect([g_net_buffer_w](std::error_code error,uint8_t *buff,size_t _size){
+        auto obj = g_net_buffer_w.lock();        
+        if (obj){
+            if (!error){
+                obj->addNewBuffer(buff,_size);
+            }
+        }
+    });
+    g_asionet->start();    
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
     auto curTime = beginTime;
-    while(g_file_manager[host]->isFileThreadWork() &&  !g_terminate[host]){
+    while(g_file_manager->isFileThreadWork() &&  !g_terminate[host]){
         sleepMs(1);
         if (g_soption.timeout >= 0){
             if (curTime - beginTime >= g_soption.timeout) break;
@@ -169,12 +171,13 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
             printStatisitc(false);
         }
     }
-    
-    stopStreaming(host);
 
+    g_file_manager->stop();
+    g_asionet->stop();
     if (g_soption.streamign_type == ClientOpt::StreamingType::CSV && g_soption.testmode != ClientOpt::TestMode::ENABLE) {
         const std::lock_guard<std::mutex> lock(g_s_csv_mutex);
-        auto fileName = g_file_manager[host]->getCSVFileName();
+        auto fileName = g_file_manager->getCSVFileName();
+          g_converter[host] = converter_lib::CConverter::create();
         g_converter[host]->convertToCSV(fileName,host);
     }
 }
@@ -216,7 +219,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
     runned_hosts.clear();
     remote_opt.remote_mode = ClientOpt::RemoteMode::START;
     if (startRemote(cl,remote_opt,&runned_hosts)){
-        for(auto &kv:runned_hosts){
+        for(auto kv:runned_hosts){
             if (kv.second == StateRunnedHosts::TCP || kv.second == StateRunnedHosts::UDP)
                 clients.push_back(std::thread(runClient, kv.first,kv.second));
         }
@@ -232,26 +235,26 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
             aprintf(stdout,"%s Can't start ADC on remote machines\n", getTS(": ").c_str());
         }
 
-        cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors,std::string host,error_code err){
+        cl->errorNofiy.connect([](ClientNetConfigManager::Errors errors,std::string host,error_code err){
             if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
                 aprintf(stderr,"%s Error: %s %s\n", getTS(": ").c_str(),host.c_str(),err.message().c_str());
             }
             stopStreaming(host);
         });
 
-        cl->serverStoppedNofiy.connect([&](std::string host){
+        cl->serverStoppedNofiy.connect([](std::string host){
             if (g_soption.verbous)
                 aprintf(stderr,"%s Streaming stopped: %s [OK]\n", getTS(": ").c_str(),host.c_str());
             stopStreaming(host);
         });
 
-        cl->serverStoppedSDFullNofiy.connect([&](std::string host){
+        cl->serverStoppedSDFullNofiy.connect([](std::string host){
             if (g_soption.verbous)
                 aprintf(stderr,"%s Streaming stopped: %s SD is full [OK]\n", getTS(": ").c_str(),host.c_str());
             stopStreaming(host);
         });
 
-        cl->serverStoppedSDDoneNofiy.connect([&](std::string host){
+        cl->serverStoppedSDDoneNofiy.connect([](std::string host){
             if (g_soption.verbous)
                 aprintf(stderr,"%s Streaming stopped: %s Local mode [OK]\n", getTS(": ").c_str(),host.c_str());
             stopStreaming(host);
@@ -267,6 +270,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
         remote_opt.remote_mode = ClientOpt::RemoteMode::STOP;
         if (!startRemote(cl,remote_opt,&runned_hosts)){
             aprintf(stdout,"%s Can't stop streaming on remote machines\n", getTS(": ").c_str());
+            g_converter.clear();
             return;
         }
 
@@ -275,8 +279,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
             printFinalStatisitc();
         }
     }
-
-
+    g_converter.clear();
 }
 
 auto streamingSIGHandler() -> void{
@@ -292,10 +295,10 @@ auto stopCSV () -> void{
 }
 
 auto stopStreaming(std::string host) -> void{
-    if (g_file_manager.count(host))
-        g_file_manager[host]->stop();
-    if (g_asionet.count(host))
-        g_asionet[host]->stop();
+//    if (g_file_manager.count(host))
+//        g_file_manager[host]->stop();
+//    if (g_asionet.count(host))
+//        g_asionet[host]->stop();
     g_terminate[host] = true;
 }
 

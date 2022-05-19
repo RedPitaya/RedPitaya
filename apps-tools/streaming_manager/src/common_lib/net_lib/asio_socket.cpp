@@ -1,7 +1,6 @@
 #include <fstream>
 #include "asio_socket.h"
 #include "data_lib/thread_cout.h"
-#include "asio_service.h"
 
 #define UNUSED(x) [&x]{}()
 
@@ -25,7 +24,8 @@ CAsioSocket::CAsioSocket(net_lib::EProtocol _protocol, std::string host, std::st
         m_udp_endpoint(),
         m_pos_last_in_fifo(0),
         m_last_pack_id(0),
-        m_mtx()
+        m_mtx(),
+        m_asio(new CAsioService())
 {
     m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];
     m_tcp_fifo_buffer  = new uint8_t[FIFO_BUFFER_SIZE];
@@ -33,26 +33,26 @@ CAsioSocket::CAsioSocket(net_lib::EProtocol _protocol, std::string host, std::st
 
 CAsioSocket::~CAsioSocket() {
     closeSocket();
+    std::lock_guard<std::mutex> lock(m_mtx);
     delete[] m_SocketReadBuffer;
     delete[] m_tcp_fifo_buffer;
+    delete m_asio;
 }
 
 void CAsioSocket::initServer() {
     closeSocket();
     std::lock_guard<std::mutex> lock(m_mtx);
-//    m_is_udp_connected = false;
-//    m_is_tcp_connected = false;
     m_last_pack_id = 0;
     if (m_protocol == net_lib::EProtocol::P_UDP) {        
-        m_udp_socket = std::make_shared<asio::ip::udp::udp::socket>(CAsioService::instance()->getIO(), asio::ip::udp::udp::endpoint(asio::ip::udp::udp::v4(), std::stoi(m_port)));
+        m_udp_socket = std::make_shared<asio::ip::udp::udp::socket>(m_asio->getIO(), asio::ip::udp::udp::endpoint(asio::ip::udp::udp::v4(), std::stoi(m_port)));
         m_udp_socket->set_option(asio::ip::udp::socket::reuse_address(true));
         waitClient();
     }
 
     if (m_protocol == net_lib::EProtocol::P_TCP) {
 
-        m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(CAsioService::instance()->getIO());
-        m_tcp_acceptor = std::make_shared<asio::ip::tcp::acceptor>(CAsioService::instance()->getIO());
+        m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(m_asio->getIO());
+        m_tcp_acceptor = std::make_shared<asio::ip::tcp::acceptor>(m_asio->getIO());
         asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), std::stoi(m_port));
         m_tcp_acceptor->open(endpoint.protocol());
         m_tcp_acceptor->set_option(asio::ip::tcp::acceptor::reuse_address(true));
@@ -77,7 +77,6 @@ auto CAsioSocket::closeSocket() -> void{
         }
         if (m_udp_socket) {
             emitUDP = true;
-            m_udp_socket->cancel();
             m_udp_socket = nullptr;
         }
     }catch (...){
@@ -106,7 +105,8 @@ auto CAsioSocket::waitClient() -> void{
 }
 
 auto CAsioSocket::handlerReceiveFromClient(const asio::error_code &error) -> void {
-    // Operation aborted
+    // Operation aborted    
+    std::lock_guard<std::mutex> lock(m_mtx);
     if (error.value() == 125) return;
 
     if (!error) {
@@ -119,8 +119,7 @@ auto CAsioSocket::handlerReceiveFromClient(const asio::error_code &error) -> voi
         }
     } else {
         closeSocket();
-    }
-    std::lock_guard<std::mutex> lock(m_mtx);
+    }    
     if (m_udp_socket){
         m_udp_socket->async_receive_from(
                 asio::buffer(m_udp_recv_server_buffer, 1), m_udp_endpoint,
@@ -131,7 +130,10 @@ auto CAsioSocket::handlerReceiveFromClient(const asio::error_code &error) -> voi
 
 auto CAsioSocket::handlerReceiveFromServer(const asio::error_code &ErrorCode, size_t bytes_transferred) -> void{
     // Operation aborted
-    if (ErrorCode.value() == 125) return;
+    std::lock_guard<std::mutex> lock(m_mtx);
+    if (ErrorCode.value() == 125) {
+        return;
+    }
 
     if (!ErrorCode) {
     //    std::cout << "Byte received: " << bytes_transferred << "\n";
@@ -210,8 +212,7 @@ auto CAsioSocket::handlerReceiveFromServer(const asio::error_code &ErrorCode, si
                 if (m_pos_last_in_fifo <= size_id)
                     break;
             } while (find_all_flag);
-        }
-        std::lock_guard<std::mutex> lock(m_mtx);
+        }        
         if (m_udp_socket && m_protocol == net_lib::EProtocol::P_UDP) {
 //            if (strncmp((const char*)m_SocketReadBuffer,net_lib::ID_PACK,16) == 0) {
 //                uint64_t id_pack = ((uint64_t *) (m_SocketReadBuffer))[2];
@@ -235,7 +236,7 @@ auto CAsioSocket::handlerReceiveFromServer(const asio::error_code &ErrorCode, si
     }else{
         errorClientNotify(ErrorCode);
         closeSocket();
-    }
+    }    
 }
 
 auto CAsioSocket::isConnected() -> bool{
@@ -306,10 +307,10 @@ auto CAsioSocket::initClient() -> void{
 //    m_is_tcp_connected = false;
     m_pos_last_in_fifo = 0;
     if (m_protocol == net_lib::EProtocol::P_UDP) {
-        asio::ip::udp::udp::resolver resolver(CAsioService::instance()->getIO());
+        asio::ip::udp::udp::resolver resolver(m_asio->getIO());
         asio::ip::udp::udp::resolver::query query(asio::ip::udp::udp::v4(), m_host, m_port);
         asio::ip::udp::udp::resolver::iterator iter = resolver.resolve(query);
-        m_udp_socket = std::make_shared<asio::ip::udp::udp::socket>(CAsioService::instance()->getIO(), asio::ip::udp::udp::endpoint(asio::ip::udp::udp::v4(), 0));
+        m_udp_socket = std::make_shared<asio::ip::udp::udp::socket>(m_asio->getIO(), asio::ip::udp::udp::endpoint(asio::ip::udp::udp::v4(), 0));
         m_udp_endpoint = *iter;
         m_udp_socket->send_to(asio::buffer("\x01",1),m_udp_endpoint);
         connectClientNotify(m_udp_endpoint.address().to_string());
@@ -322,8 +323,8 @@ auto CAsioSocket::initClient() -> void{
 
     if (m_protocol == net_lib::EProtocol::P_TCP) {
 
-        m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(CAsioService::instance()->getIO());
-        asio::ip::tcp::resolver resolver(CAsioService::instance()->getIO());
+        m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(m_asio->getIO());
+        asio::ip::tcp::resolver resolver(m_asio->getIO());
         asio::ip::tcp::resolver::query query(m_host, m_port);
         asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
         m_tcp_endpoint = *iter;

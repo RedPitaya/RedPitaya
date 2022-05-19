@@ -111,20 +111,21 @@ auto CStreamingFile::disableNotify() -> void{
 }
 
 auto CStreamingFile::isFileThreadWork() -> bool {
-    if (m_file_manager != nullptr) {
+    if (m_file_manager) {
         return m_file_manager->isWork();
     }
     return false;
 }
 
 auto CStreamingFile::isOutOfSpace() -> bool {
-    if (m_file_manager != nullptr) {
+    if (m_file_manager) {
         return m_file_manager->isOutOfSpace();
     }
     return false;  
 }
 
 auto CStreamingFile::run(std::string _prefix) -> void {
+    m_passSizeSamples.clear();
     m_passSizeSamples[DataLib::CH1] = 0;
     m_passSizeSamples[DataLib::CH2] = 0;
     m_passSizeSamples[DataLib::CH3] = 0;
@@ -138,16 +139,19 @@ auto CStreamingFile::run(std::string _prefix) -> void {
 }
 
 auto CStreamingFile::stop(CStreamingFile::EStopReason reason) -> void{
+    std::lock_guard<std::mutex> lock(m_stopMtx);
     if (m_file_manager) {
         m_file_manager->stopWrite(false);
         if (m_testMode){
             m_file_manager->deleteFile();
-        }
+        }        
     }
     if (m_fileLogger && !m_testMode)
         m_fileLogger->dumpToFile();
-    if (!m_disableNotify)
+    if (!m_disableNotify){
         stopNotify(reason);
+        m_disableNotify = true;
+    }
 }
 
 auto CStreamingFile::stop() -> void {    
@@ -242,6 +246,7 @@ auto CStreamingFile::getCSVFileName() -> std::string{
 
 
 auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
+    if (!pack) return 0;
     if (m_fileType == CStreamSettings::TDMS) {
         // _adc_mode = 0 for 1:1 and 1 for 1:20 mode
 
