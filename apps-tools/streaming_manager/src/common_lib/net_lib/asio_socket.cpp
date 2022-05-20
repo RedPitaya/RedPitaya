@@ -32,11 +32,10 @@ CAsioSocket::CAsioSocket(net_lib::EProtocol _protocol, std::string host, std::st
 }
 
 CAsioSocket::~CAsioSocket() {
-    closeSocket();
-    std::lock_guard<std::mutex> lock(m_mtx);
+    closeSocket();    
+    delete m_asio;
     delete[] m_SocketReadBuffer;
     delete[] m_tcp_fifo_buffer;
-    delete m_asio;
 }
 
 void CAsioSocket::initServer() {
@@ -106,7 +105,6 @@ auto CAsioSocket::waitClient() -> void{
 
 auto CAsioSocket::handlerReceiveFromClient(const asio::error_code &error) -> void {
     // Operation aborted    
-    std::lock_guard<std::mutex> lock(m_mtx);
     if (error.value() == 125) return;
 
     if (!error) {
@@ -119,7 +117,8 @@ auto CAsioSocket::handlerReceiveFromClient(const asio::error_code &error) -> voi
         }
     } else {
         closeSocket();
-    }    
+    }
+    std::lock_guard<std::mutex> lock(m_mtx);
     if (m_udp_socket){
         m_udp_socket->async_receive_from(
                 asio::buffer(m_udp_recv_server_buffer, 1), m_udp_endpoint,
@@ -129,8 +128,7 @@ auto CAsioSocket::handlerReceiveFromClient(const asio::error_code &error) -> voi
 }
 
 auto CAsioSocket::handlerReceiveFromServer(const asio::error_code &ErrorCode, size_t bytes_transferred) -> void{
-    // Operation aborted
-    std::lock_guard<std::mutex> lock(m_mtx);
+    // Operation aborted    
     if (ErrorCode.value() == 125) {
         return;
     }
@@ -212,17 +210,9 @@ auto CAsioSocket::handlerReceiveFromServer(const asio::error_code &ErrorCode, si
                 if (m_pos_last_in_fifo <= size_id)
                     break;
             } while (find_all_flag);
-        }        
+        }
+        std::lock_guard<std::mutex> lock(m_mtx);
         if (m_udp_socket && m_protocol == net_lib::EProtocol::P_UDP) {
-//            if (strncmp((const char*)m_SocketReadBuffer,net_lib::ID_PACK,16) == 0) {
-//                uint64_t id_pack = ((uint64_t *) (m_SocketReadBuffer))[2];
-//                if (id_pack > m_last_pack_id){
-//                    m_callbackErrorUInt8Int.emitEvent(net_lib::ESocketEvents::RECIVED_DATA_FROM_SERVER, ErrorCode,
-//                                                      m_SocketReadBuffer,
-//                                                      (uint32_t) bytes_transferred);
-//                    m_last_pack_id = id_pack;
-//                }
-//            }
             m_udp_socket->async_receive_from(
                     asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE), m_udp_endpoint,
                     std::bind(&CAsioSocket::handlerReceiveFromServer, this,
@@ -236,7 +226,7 @@ auto CAsioSocket::handlerReceiveFromServer(const asio::error_code &ErrorCode, si
     }else{
         errorClientNotify(ErrorCode);
         closeSocket();
-    }    
+    }
 }
 
 auto CAsioSocket::isConnected() -> bool{

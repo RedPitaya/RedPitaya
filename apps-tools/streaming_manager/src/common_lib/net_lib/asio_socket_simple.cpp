@@ -31,9 +31,9 @@ CAsioSocketSimple::CAsioSocketSimple(std::string host, std::string port) :
 
 CAsioSocketSimple::~CAsioSocketSimple() {
     m_disableRestartServer = true;
-    closeSocket();    
-    delete[] m_SocketReadBuffer;
+    closeSocket();
     delete m_asio;
+    delete[] m_SocketReadBuffer;
 }
 
 auto CAsioSocketSimple::initServer() -> void {
@@ -132,13 +132,13 @@ auto CAsioSocketSimple::closeSocket() -> void {
     }
 }
 
-auto CAsioSocketSimple::handlerReceive(const asio::error_code &error,size_t bytes_transferred) -> void {
-    std::lock_guard<std::mutex> lock(m_mtx);
+auto CAsioSocketSimple::handlerReceive(const asio::error_code &error,size_t bytes_transferred) -> void {    
     // Operation aborted
     if (error.value() == 125) return;
 
     if (!error){
-        recivedNotify(error,m_SocketReadBuffer,bytes_transferred);        
+        recivedNotify(error,m_SocketReadBuffer,bytes_transferred);
+        std::lock_guard<std::mutex> lock(m_mtx);
         if (m_tcp_socket){
             m_tcp_socket->async_receive(
                     asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
@@ -161,14 +161,14 @@ auto CAsioSocketSimple::isConnected() -> bool{
     return false;
 }
 
-auto CAsioSocketSimple::handlerAccept(const asio::error_code &_error) -> void {
-    std::lock_guard<std::mutex> lock(m_mtx);
+auto CAsioSocketSimple::handlerAccept(const asio::error_code &_error) -> void {    
     // Operation aborted
     if (_error.value() == 125) return;
 
     if (!_error)
     {
-        connectNotify(m_tcp_endpoint.address().to_string());        
+        connectNotify(m_tcp_endpoint.address().to_string());
+        std::lock_guard<std::mutex> lock(m_mtx);
         if (m_tcp_socket){
             m_tcp_socket->async_receive(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
                                         std::bind(&CAsioSocketSimple::handlerReceive, this,
