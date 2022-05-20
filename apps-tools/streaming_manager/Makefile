@@ -16,8 +16,11 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 INSTALL_DIR ?= .
 STREAMING_MODE ?= MASTER
 
-# Hang if build on redpitaya
-#NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
+UNAME := $(shell uname -m)
+ifeq ($(UNAME), x86_64)
+NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
+endif
+
 JOBS=$$(($(NUM_CPU)+1))
 
 CONTROLLER=controllerhf.so
@@ -49,7 +52,7 @@ install_servers:
 	
 install_client:
 	cd src; \
-	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DSTREAMING_MODE=$(STREAMING_MODE) -DBUILD_RPSA_CLIENT=OFF -DBUILD_CONVERT_TOOL=OFF; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DSTREAMING_MODE=$(STREAMING_MODE) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF; \
 	make -C build -j $(JOBS) install
 
 install_client_win:

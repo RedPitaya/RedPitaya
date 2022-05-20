@@ -102,14 +102,15 @@ endif()
 
 if(IS_INSTALL)
        install(TARGETS ${PROJECT_NAME}
-              DESTINATION ${INSTALL_DIR}/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})
+              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})
 
        file(GLOB_RECURSE JSON_FILES
             "${PROJECT_SOURCE_DIR}/*.json"
            )
 
        install(FILES ${JSON_FILES}
-              DESTINATION ${INSTALL_DIR}/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})
+              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})
 
-
+        install(CODE "execute_process(COMMAND zip -urj ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}.zip ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})")
+        install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})")
 endif()

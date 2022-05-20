@@ -82,6 +82,8 @@ else()
 endif()
 
 if(IS_INSTALL)
-       install(TARGETS ${PROJECT_NAME}
-              DESTINATION ${INSTALL_DIR}/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})
+        install(TARGETS ${PROJECT_NAME}
+              DESTINATION ${INSTALL_DIR}/streaming/convert_tool-${VERSION}-${REVISION}${WIN_SUFFIX})
+        install(CODE "execute_process(COMMAND zip -urj ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}.zip ${INSTALL_DIR}/streaming/convert_tool-${VERSION}-${REVISION}${WIN_SUFFIX})")
+        install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/convert_tool-${VERSION}-${REVISION}${WIN_SUFFIX})")
 endif()
