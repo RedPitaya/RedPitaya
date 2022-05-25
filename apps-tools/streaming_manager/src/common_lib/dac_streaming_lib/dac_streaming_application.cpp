@@ -95,7 +95,8 @@ try{
     {
         if (packs.size() < 10){
             auto buf = m_streamingManager->getBuffer();
-            packs.push_back(buf);
+            if (!buf.empty)
+                packs.push_back(buf);
         }
 
         if (packs.size() > 0) {

@@ -67,7 +67,7 @@ auto CDACStreamingManager::startServer() -> void{
     m_asionet = nullptr;
     m_asionet = std::make_shared<CDACAsioNetController>();
     m_asionet->connectedNotify.connect([](std::string &host){
-         aprintf(stdout,"Client connected to DAC streaming server %s\n", host.c_str());
+        aprintf(stdout,"Client connected to DAC streaming server %s\n", host.c_str());
     });
     m_asionet->disconnectedNotify.connect([](std::string &host){
         aprintf(stdout,"Client disconnected from DAC streaming server %s\n", host.c_str());

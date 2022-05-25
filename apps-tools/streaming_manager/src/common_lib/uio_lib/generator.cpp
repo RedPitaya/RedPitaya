@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "data_lib/thread_cout.h"
+
 #define UNUSED(x) [&x]{}()
 
 using namespace uio_lib;
@@ -226,7 +228,7 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
     const std::lock_guard<std::mutex> lock(m_waitLock);
     auto status = m_Map->ch_dma_status;
     if (m_BufferNumber[0] == 0){
-        if (status & 0x00030000 && status & 0x00000003){
+        if (status & 0x00030003){
             // printReg();
 	        if (_buffer1 && _size_ch1) memcpy_neon((&(*m_Buffer1)+dac_buf_size),_buffer1,_size_ch1);
             if (_buffer2 && _size_ch2) memcpy_neon((&(*m_Buffer2)+dac_buf_size),_buffer2,_size_ch2);
@@ -236,7 +238,7 @@ auto CGenerator::write(uint8_t *_buffer1,uint8_t *_buffer2, size_t _size_ch1, si
             ret = true;
         }
     }else{
-        if (status & 0x000C0000 && status & 0x0000000C){
+        if (status & 0x000C000C){
             // printReg();
             if (_buffer1 && _size_ch1) memcpy_neon(m_Buffer1,_buffer1,_size_ch1);
             if (_buffer2 && _size_ch2) memcpy_neon(m_Buffer2,_buffer2,_size_ch2);
