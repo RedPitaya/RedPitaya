@@ -9,7 +9,7 @@ GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?=
 
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -23,7 +23,7 @@ STREAMING ?= MASTER
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)
+# Version: $(VER)-$(REVISION)
 # Build: $(BUILD_NUMBER)
 # Branch: $(GIT_LOCAL_BRANCH)
 # Commit: $(GIT_COMMIT)
@@ -409,7 +409,7 @@ $(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
 # tarball
 ################################################################################
 
-ZIPFILE=ecosystem-$(VERSION).zip
+ZIPFILE=ecosystem-$(VERSION)-$(REVISION).zip
 
 zip: $(ZIPFILE)
 
