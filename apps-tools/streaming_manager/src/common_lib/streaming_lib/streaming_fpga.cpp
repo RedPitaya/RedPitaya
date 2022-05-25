@@ -13,7 +13,6 @@
 
 using namespace streaming_lib;
 
-DataLib::CDataBuffersPack::Ptr g_testPack(nullptr);
 constexpr int quit_signal = SIGINT;
 
 CStreamingFPGA::CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, uint8_t _adc_bits) :
@@ -32,10 +31,12 @@ CStreamingFPGA::CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, uint8_t _adc_bi
     m_OscThreadRun = false;
     getBuffF = nullptr;
     unlockBuffF = nullptr;
+    m_testBuffer = nullptr;
 }
 
 CStreamingFPGA::~CStreamingFPGA(){
-    stop();    
+    stop();
+    delete[] m_testBuffer;
 }
 
 auto CStreamingFPGA::isRun() -> bool {
@@ -107,7 +108,12 @@ void CStreamingFPGA::oscWorker(){
     m_passRate = 0;
 
     if (m_testMode) {
-        prepareTestBuffers();
+        m_testBuffer = new uint8_t[uio_lib::osc_buf_size];
+
+        uint8_t z = 0;
+        for(uint32_t i = 0; i < uio_lib::osc_buf_size;i++,z++){
+            m_testBuffer[i] = z;
+        }
     }
     m_Osc_ch->prepare();
 
@@ -130,9 +136,6 @@ void CStreamingFPGA::oscWorker(){
             // auto timeNowP = std::chrono::system_clock::now();
             if (state){
 
-                if (m_testMode){
-                    pack = g_testPack;
-                }
 #ifndef RP_PLATFORM                
                  usleep(3000);
 #endif                                 
@@ -195,6 +198,11 @@ void CStreamingFPGA::oscWorker(){
         return nullptr;
     }
 
+    if (m_testMode) {
+        buffer_ch1 = m_testBuffer;
+        buffer_ch2 = m_testBuffer;
+    }
+
     if (m_printDebugBuffer){
         std::ofstream outfile2;
         outfile2.open("/tmp/test.txt", std::ios_base::app);  
@@ -223,7 +231,11 @@ void CStreamingFPGA::oscWorker(){
                 bCh1->setADCMode(settings.m_mode);
                 bCh1->setLostSamples(DataLib::FPGA,overFlow);
                 if (settings.m_bits == 8){
-                    memcpy_stride_8bit_neon(bCh1->getBuffer().get(),buffer_ch1,size);                                        
+                    if (m_testMode) {
+                        memcpy_neon(bCh1->getBuffer().get(),buffer_ch1,size);
+                    }else{
+                        memcpy_stride_8bit_neon(bCh1->getBuffer().get(),buffer_ch1,size);
+                    }
                 }
 
                 if (settings.m_bits == 16){
@@ -240,7 +252,11 @@ void CStreamingFPGA::oscWorker(){
                 bCh2->setADCMode(settings.m_mode);
                 bCh2->setLostSamples(DataLib::FPGA,overFlow);
                 if (settings.m_bits == 8){
-                    memcpy_stride_8bit_neon(bCh2->getBuffer().get(),buffer_ch2,size);
+                    if (m_testMode) {
+                        memcpy_neon(bCh2->getBuffer().get(),buffer_ch2,size);
+                    }else{
+                        memcpy_stride_8bit_neon(bCh2->getBuffer().get(),buffer_ch2,size);
+                    }
                 }
 
                 if (settings.m_bits == 16){
@@ -260,52 +276,4 @@ auto CStreamingFPGA::setTestMode(bool mode) -> void{
 
 auto CStreamingFPGA::setVerbousMode(bool mode) -> void{
     m_verbMode = mode;
-}
-
-auto CStreamingFPGA::prepareTestBuffers() -> void{
-
-    auto m_testBuffer = new uint8_t[uio_lib::osc_buf_size];
-
-    uint8_t z = 0;
-    for(uint32_t i = 0; i < uio_lib::osc_buf_size;i++,z++){
-        m_testBuffer[i] = z;
-    }
-
-    g_testPack = DataLib::CDataBuffersPack::Create();
-    g_testPack->setOSCRate(m_Osc_ch->getDecimation());
-
-    if (m_adcSettings.find(DataLib::EDataBuffersPackChannel::CH1) != m_adcSettings.end()){
-        auto settings = m_adcSettings.at(DataLib::EDataBuffersPackChannel::CH1);
-
-        if (settings.m_bits == 8){
-            auto buffer = DataLib::CDataBuffer::Create(m_testBuffer,uio_lib::osc_buf_size,8);
-            buffer->setADCMode(settings.m_mode);
-            g_testPack->addBuffer(DataLib::EDataBuffersPackChannel::CH1,buffer);
-        }
-
-        if (settings.m_bits == 16){
-            auto buffer = DataLib::CDataBuffer::Create(m_testBuffer,uio_lib::osc_buf_size,16);
-            buffer->setADCMode(settings.m_mode);
-            g_testPack->addBuffer(DataLib::EDataBuffersPackChannel::CH1,buffer);
-        }
-    }
-
-    if (m_adcSettings.find(DataLib::EDataBuffersPackChannel::CH2) != m_adcSettings.end()){
-        auto settings = m_adcSettings.at(DataLib::EDataBuffersPackChannel::CH2);
-
-        if (settings.m_bits == 8){
-            auto buffer = DataLib::CDataBuffer::Create(m_testBuffer,uio_lib::osc_buf_size,8);
-            buffer->setADCMode(settings.m_mode);
-            g_testPack->addBuffer(DataLib::EDataBuffersPackChannel::CH2,buffer);
-        }
-
-        if (settings.m_bits == 16){
-            auto buffer = DataLib::CDataBuffer::Create(m_testBuffer,uio_lib::osc_buf_size,16);
-            buffer->setADCMode(settings.m_mode);
-            g_testPack->addBuffer(DataLib::EDataBuffersPackChannel::CH2,buffer);
-        }
-    }
-
-    delete[] m_testBuffer;
-
 }

@@ -78,6 +78,8 @@ private:
     auto passCh() -> DataLib::CDataBuffersPack::Ptr;
     auto prepareTestBuffers() -> void;
     auto setIsRun(bool state) -> void;
+
+    uint8_t *m_testBuffer;
 };
 
 }
