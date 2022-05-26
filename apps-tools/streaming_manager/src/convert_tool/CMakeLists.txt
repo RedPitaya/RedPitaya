@@ -74,8 +74,8 @@ target_link_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib writer_lib)
 
-if(NOT WIN32 )    
-    target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
+if(NOT WIN32 )
+    target_link_libraries(${PROJECT_NAME} PRIVATE pthread -static-libstdc++ -static-libgcc)
 else()
     set(WIN_SUFFIX -win)
     target_link_libraries(${PROJECT_NAME} PRIVATE -static pthread wsock32 ws2_32)
