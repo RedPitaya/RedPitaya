@@ -373,6 +373,9 @@
         if (SM.ss_rate >= 5 && SM.ss_rate <= 7){
             SM.ss_rate = 8;
         }
+        if (SM.ss_rate >= 9 && SM.ss_rate <= 15){
+            SM.ss_rate = 16;
+        }
         return SM.ss_rate;
     }
 
