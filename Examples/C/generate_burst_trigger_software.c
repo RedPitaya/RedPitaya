@@ -17,6 +17,8 @@ int main(int argc, char **argv){
                 fprintf(stderr, "Rp api init failed!\n");
         }
 
+        rp_GenReset();
+
         rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
         rp_GenFreq(RP_CH_1, 1000);
         rp_GenAmp(RP_CH_1, 1.0);
@@ -25,9 +27,10 @@ int main(int argc, char **argv){
         rp_GenBurstCount(RP_CH_1, 1);
         rp_GenBurstRepetitions(RP_CH_1, 10000);
         rp_GenBurstPeriod(RP_CH_1, 5000);
-        rp_GenTrigger(1);
-        sleep(1);
+
         rp_GenOutEnable(RP_CH_1);
+        rp_GenTriggerOnly(RP_CH_1);
+
         rp_Release();
 }
 
