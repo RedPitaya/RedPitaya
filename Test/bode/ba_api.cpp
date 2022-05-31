@@ -555,7 +555,7 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
     }
 
 	fprintf(stderr,"Dec %d freq %f\n",new_dec,_freq);
-	int samples_period = round(ADC_SAMPLE_RATE / (_freq * new_dec));
+	//int samples_period = round(ADC_SAMPLE_RATE / (_freq * new_dec));
 
     acq_size = size_buff_limit;
     rp_BaSafeThreadAcqData(_buffer,new_dec, acq_size,_amplitude_in);
