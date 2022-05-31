@@ -194,6 +194,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
                 g_osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
                 g_osc->setFilterCalibrationCh2(aa_ch2,bb_ch2,kk_ch2,pp_ch2);
                 g_osc->setFilterBypass(filterBypass);
+                g_osc->set8BitMode(resolution == CStreamSettings::BIT_8);
 				break;
 			}
 		}

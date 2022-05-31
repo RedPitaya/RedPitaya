@@ -874,6 +874,7 @@ void startServer(bool testMode) {
                 g_osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
                 g_osc->setFilterCalibrationCh2(aa_ch2,bb_ch2,kk_ch2,pp_ch2);
                 g_osc->setFilterBypass(filterBypass);
+				g_osc->set8BitMode(resolution == CStreamSettings::BIT_8);
 				break;
 			}
 		}
@@ -1147,33 +1148,6 @@ auto startDACServer(bool testMode) -> void{
 			return;
 		}
 
-
-//		if (use_file == CStreamSettings::DAC_NET) {
-//			g_dac_manger = CDACStreamingManager::Create(
-//					ip_addr_host,
-//					sock_port);
-//		}else{
-
-//			auto format = settings.getDACFileType();
-//			auto filePath = settings.getDACFile();
-//			auto dacRepeatMode = settings.getDACRepeat();
-//			auto dacRepeatCount = settings.getDACRepeatCount();
-//			auto dacMemory = settings.getDACMemoryUsage();
-
-//			if (format == CStreamSettings::WAV) {
-//				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
-//			}else if (format == CStreamSettings::TDMS) {
-//				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE,filePath,dacRepeatMode,dacRepeatCount,dacMemory);
-//			}else{
-//				return;
-//			}
-//			g_dac_manger->notifyStop = [](CDACStreamingManager::NotifyResult status)
-//			{
-//				stopDACNonBlocking(status);
-//			};
-//		}
-
-
         if (use_file == CStreamSettings::DAC_NET) {
             g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(ip_addr_host,sock_port);
         }
@@ -1198,16 +1172,6 @@ auto startDACServer(bool testMode) -> void{
             });
 
         }
-
-//		g_dac_app = new CDACStreamingApplication(g_dac_manger, gen);
-//		g_dac_app->setTestMode(testMode);
-
-//		g_dac_app->runNonBlock();
-//		if (g_dac_manger->isLocalMode()){
-//			g_serverNetConfig->sendDACServerStartedSD();
-//		}else{
-//			g_serverNetConfig->sendDACServerStarted();
-//		}
 
         g_dac_app = std::make_shared<dac_streaming_lib::CDACStreamingApplication>(g_dac_manger, g_gen);
         g_dac_app->setTestMode(testMode);

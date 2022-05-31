@@ -144,6 +144,9 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void{
         // Trigger pre samples
         setRegister(_OscMap,&(_OscMap->trig_pre_samp),m_isMaster ? osc_buf_pre_samp : 0);
 
+        // set bit mode 8 bit = 1 or 16 bit = 0
+        setRegister(_OscMap,&(_OscMap->m_is8BitMode),m_is8BitMode ? 1 : 0);
+
         //_OscMap->trig_pre_samp = osc_buf_pre_samp;
 
         // Trigger post samples
@@ -193,6 +196,10 @@ auto COscilloscope::setFilterCalibrationCh2(int32_t _aa,int32_t _bb, int32_t _kk
     m_BB_ch2 = _bb;
     m_KK_ch2 = _kk;
     m_PP_ch2 = _pp;
+}
+
+auto COscilloscope::set8BitMode(bool mode) -> void{
+    m_is8BitMode = mode;
 }
 
 auto COscilloscope::setFilterBypass(bool _state) -> void {

@@ -73,6 +73,8 @@ struct OscilloscopeMapT
     uint32_t dec_rshift;            // 52  - offset 0x34
     uint32_t avg_en_addr;           // 56  - offset 0x38
     uint32_t filt_bypass;           // 60  - offset 0x3C
+    uint32_t digitalLoopBack;       // 64  - offset 0x40
+    uint32_t bitSwitch;             // 68  - offset 0x44
     uint32_t reserv[4];
     uint32_t dma_ctrl;              // 80  - offset 0x50
     uint32_t dma_sts_addr;          // 84  - offset 0x54
@@ -120,6 +122,7 @@ public:
     auto setFilterCalibrationCh1(int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void;
     auto setFilterCalibrationCh2(int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void;
     auto setFilterBypass(bool _state) -> void;
+    auto set8BitMode(bool mode) -> void;
     auto clearBuffer() -> bool;
     auto wait() -> bool;
     auto clearInterrupt() -> bool;
@@ -162,6 +165,7 @@ private:
     int32_t      m_KK_ch2;
     bool         m_filterBypass;
     bool         m_isMaster;
+    bool         m_is8BitMode;
 };
 
 }

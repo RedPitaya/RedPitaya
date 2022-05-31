@@ -79,3 +79,5 @@ auto COscilloscope::clearInterrupt() -> bool{
 auto COscilloscope::stop() -> void{}
 
 auto COscilloscope::printReg() -> void{}
+
+auto COscilloscope::set8BitMode(bool mode) -> void{}

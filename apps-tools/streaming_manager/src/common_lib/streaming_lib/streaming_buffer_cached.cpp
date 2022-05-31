@@ -50,9 +50,7 @@ auto CStreamingBufferCached::generateBuffers() -> void{
         for(auto s:m_channelsSize){
             auto osclen = s.second.first;
             auto bits = s.second.second;
-            auto buffLen =  bits == 8 ? osclen / 2 : osclen;
-            auto buff = DataLib::CDataBuffer::Create(std::shared_ptr<uint8_t[]>(new uint8_t[osclen]),buffLen, bits);
-            buff->recalcBufferLenght();
+            auto buff = DataLib::CDataBuffer::Create(std::shared_ptr<uint8_t[]>(new uint8_t[osclen]),osclen, bits);
             pack->addBuffer(s.first,buff);
         }
         m_buffers.push_back(pack);

@@ -230,17 +230,7 @@ void CStreamingFPGA::oscWorker(){
             if (bCh1){
                 bCh1->setADCMode(settings.m_mode);
                 bCh1->setLostSamples(DataLib::FPGA,overFlow);
-                if (settings.m_bits == 8){
-                    if (m_testMode) {
-                        memcpy_neon(bCh1->getBuffer().get(),buffer_ch1,size);
-                    }else{
-                        memcpy_stride_8bit_neon(bCh1->getBuffer().get(),buffer_ch1,size);
-                    }
-                }
-
-                if (settings.m_bits == 16){
-                    memcpy_neon(bCh1->getBuffer().get(),buffer_ch1,size);
-                }
+                memcpy_neon(bCh1->getBuffer().get(),buffer_ch1,size);
             }
         }
 
@@ -251,17 +241,7 @@ void CStreamingFPGA::oscWorker(){
             if (bCh2){
                 bCh2->setADCMode(settings.m_mode);
                 bCh2->setLostSamples(DataLib::FPGA,overFlow);
-                if (settings.m_bits == 8){
-                    if (m_testMode) {
-                        memcpy_neon(bCh2->getBuffer().get(),buffer_ch2,size);
-                    }else{
-                        memcpy_stride_8bit_neon(bCh2->getBuffer().get(),buffer_ch2,size);
-                    }
-                }
-
-                if (settings.m_bits == 16){
-                    memcpy_neon(bCh2->getBuffer().get(),buffer_ch2,size);
-                }
+                memcpy_neon(bCh2->getBuffer().get(),buffer_ch2,size);
             }
         }
         unlockBuffF();
