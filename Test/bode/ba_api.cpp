@@ -213,6 +213,7 @@ int filtring(rp_ba_buffer_t &buffer,uint32_t size,float _freq,int dec){
 		// buffer.ch1[i] = pow((1+alpha)/2.0,2) * (buffer.ch1[i] + 2* buffer.ch1[i-1] + buffer.ch1[i-2]) - 2 * alpha * 
 	
 	}
+	return 0;
 }
 
 int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
