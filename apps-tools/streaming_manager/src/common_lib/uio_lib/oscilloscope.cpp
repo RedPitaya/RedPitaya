@@ -145,7 +145,7 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void{
         setRegister(_OscMap,&(_OscMap->trig_pre_samp),m_isMaster ? osc_buf_pre_samp : 0);
 
         // set bit mode 8 bit = 1 or 16 bit = 0
-        setRegister(_OscMap,&(_OscMap->m_is8BitMode),m_is8BitMode ? 1 : 0);
+        setRegister(_OscMap,&(_OscMap->bitSwitch),m_is8BitMode ? 1 : 0);
 
         //_OscMap->trig_pre_samp = osc_buf_pre_samp;
 

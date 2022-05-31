@@ -75,7 +75,7 @@ struct OscilloscopeMapT
     uint32_t filt_bypass;           // 60  - offset 0x3C
     uint32_t digitalLoopBack;       // 64  - offset 0x40
     uint32_t bitSwitch;             // 68  - offset 0x44
-    uint32_t reserv[4];
+    uint32_t reserv[2];
     uint32_t dma_ctrl;              // 80  - offset 0x50
     uint32_t dma_sts_addr;          // 84  - offset 0x54
     uint32_t dma_buf_size;          // 88  - offset 0x58
