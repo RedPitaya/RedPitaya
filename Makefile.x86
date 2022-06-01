@@ -125,12 +125,12 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = baeb2bda352031dc0a207c1d729f650a72b16937
-FPGA_CLASSIC 	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_LOGIC	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_0_94	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_MERCURY	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_AXI4LITE	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
+FPGA_STREAM_APP = d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_CLASSIC 	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_LOGIC	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_0_94	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_MERCURY	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_AXI4LITE	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -143,8 +143,8 @@ ifeq ($(MODEL),Z20)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94 stream_app
 
-FPGA_STREAM_APP = f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_0_94	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
+FPGA_STREAM_APP = d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_0_94	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -157,12 +157,12 @@ ifeq ($(MODEL),Z20_125)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_CLASSIC 	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_LOGIC	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_0_94	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_MERCURY	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_AXI4LITE	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
+FPGA_STREAM_APP = d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_CLASSIC 	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_LOGIC	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_0_94	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_MERCURY	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_AXI4LITE	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -175,9 +175,9 @@ ifeq ($(MODEL),Z20_250_12)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 
-FPGA_STREAM_APP_250 = bb8558551619187024f6f156293405cc34dd3531
-FPGA_0_94_250	= bb8558551619187024f6f156293405cc34dd3531
-FPGA_LOGIC_250	= bb8558551619187024f6f156293405cc34dd3531
+FPGA_STREAM_APP_250 = d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_0_94_250	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_LOGIC_250	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic_250
@@ -190,9 +190,9 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
 # FPGA_PRJ_LST = stream_app logic v0.94
 
-FPGA_STREAM_APP = baeb2bda352031dc0a207c1d729f650a72b16937
-FPGA_LOGIC	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
-FPGA_0_94	= f9cc5c384798269cbc6ed68d612cf8c8036a5783
+FPGA_STREAM_APP = d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_LOGIC	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
+FPGA_0_94	= d9378d6aaa69dbfcbbfe87cd42ceecd5daabdb60
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
