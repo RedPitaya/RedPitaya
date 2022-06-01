@@ -523,6 +523,21 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 	return RP_OK;
 }
 
+void ba_getDecimationValue(float frequency, rp_acq_decimation_t *api_dec, int *dec_val)
+{
+	const int g_dec[] = { 1,  8,  64,  1024,  8192,  65536 };
+	int f = 0;
+
+	if (frequency >= 160000) f = 0;
+	else if (frequency >= 20000) f = 1;
+	else if (frequency >= 2500) f = 2;
+	else if (frequency >= 160) f = 3;
+	else if (frequency >= 20) f = 4;
+	else if (frequency >= 0) f = 5;
+
+	*api_dec = (rp_acq_decimation_t)f;
+	*dec_val = g_dec[f];
+}
 
 int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
 {
@@ -532,33 +547,39 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
 
     //Generate a sinusoidal wave form
     rp_BaSafeThreadGen(RP_CH_1, _freq, _amplitude_in, _dc_bias);
-    int size_buff_limit = ADC_BUFFER_SIZE;
-	int sampls = ADC_BUFFER_SIZE / _periods_number;
-	int new_dec = ADC_SAMPLE_RATE / (sampls * _freq);
+    int size_buff_limit = ADC_BUFFER_SIZE / 4;
+	int sampls = size_buff_limit / _periods_number;
+	int decimation = ADC_SAMPLE_RATE / (sampls * _freq);
 	//int new_dec = round(((double)_periods_number * (double)ADC_SAMPLE_RATE) / ((double)_freq * (double)size_buff_limit));
-	new_dec = new_dec < 1 ? 1 : new_dec;
+	decimation = decimation < 1 ? 1 : decimation;
 	
-	if (new_dec < 16){
-        if (new_dec >= 8)
-            new_dec = 8;
+	if (decimation < 16){
+        if (decimation >= 8)
+            decimation = 8;
         else
-            if (new_dec >= 4)
-                new_dec = 4;
+            if (decimation >= 4)
+                decimation = 4;
             else
-                if (new_dec >= 2)
-                    new_dec = 2;
+                if (decimation >= 2)
+                    decimation = 2;
                 else 
-                    new_dec = 1;
+                    decimation = 1;
     }
-    if (new_dec > 65536){
-        new_dec = 65536;
+    if (decimation > 65536){
+        decimation = 65536;
     }
 
-	fprintf(stderr,"Dec %d freq %f\n",new_dec,_freq);
+	// int decimation;    
+    // rp_acq_decimation_t api_decimation;
+    // ba_getDecimationValue(_freq, &api_decimation, &decimation);
+    
+	acq_size = round((static_cast<float>(_periods_number) * ADC_SAMPLE_RATE) / (_freq * decimation));
+
+	fprintf(stderr,"Dec %d freq %f acq_size %d\n",decimation,_freq,acq_size);
 	//int samples_period = round(ADC_SAMPLE_RATE / (_freq * new_dec));
 
-    acq_size = size_buff_limit;
-    rp_BaSafeThreadAcqData(_buffer,new_dec, acq_size,_amplitude_in);
+    // acq_size = size_buff_limit;
+    rp_BaSafeThreadAcqData(_buffer,decimation, acq_size,_amplitude_in);
 	// filtring(_buffer,acq_size,_freq,new_dec);
 
 	// double dt = 1.0/(double)(ADC_SAMPLE_RATE / new_dec);
@@ -572,7 +593,7 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
 
     rp_GenOutDisable(RP_CH_1);
     // int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / new_dec,_freq, samples_period,  &gain, &phase_out,_input_threshold);
-	int ret = rp_BaDataAnalysisTrap(_buffer, acq_size, _freq, new_dec,  &gain, &phase_out,_input_threshold);
+	int ret = rp_BaDataAnalysisTrap(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
     *_amplitude = 10.*logf(gain);
     *_phase = phase_out;
