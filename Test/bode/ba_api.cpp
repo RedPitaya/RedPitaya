@@ -211,7 +211,7 @@ int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
 		float w_out = _freq*2 * M_PI;
 
-        double ang, u_dut_1_ampl, u_dut_1_phase, u_dut_2_ampl, u_dut_2_phase, phase;
+        double ang, u_dut_1_phase, u_dut_2_phase, phase;
 
         double T = (decimation / ADC_SAMPLE_RATE);
         double u_dut_1[size];
