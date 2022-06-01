@@ -66,8 +66,7 @@ float ba_trapezoidalApprox(double *data, float T, int size)
 }
 
 
-float l_inter(float a, float b, float f)
-{
+float l_inter(float a, float b, float f){
     return a + f * (b - a);
 }
 
@@ -201,21 +200,6 @@ data_t phaseCalculator(data_t freq_HZ, data_t samplesPerSecond, int numSamples,i
 	return phaseShift;
 }
 
-int filtring(rp_ba_buffer_t &buffer,uint32_t size,float _freq,int dec){
-
-	double dt = 1.0/(double)(ADC_SAMPLE_RATE / dec);
-	double tau = 1.0 / (2.0 * M_PI * _freq * 1.2);
-	// double alpha = (dt - 2 * tau) / (dt + 2 * tau);
-	double alpha = dt / (dt + 2 * tau);
-	for (size_t i = 1; i < size; i++){
-		buffer.ch1[i] = alpha * (buffer.ch1[i] + buffer.ch1[i-1]) + (1-2* alpha) * buffer.ch1[i-1];
-		buffer.ch2[i] = alpha * (buffer.ch2[i] + buffer.ch2[i-1]) + (1-2* alpha) * buffer.ch2[i-1];
-		// buffer.ch1[i] = pow((1+alpha)/2.0,2) * (buffer.ch1[i] + 2* buffer.ch1[i-1] + buffer.ch1[i-2]) - 2 * alpha * 
-	
-	}
-	return 0;
-}
-
 int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
                                         uint32_t size,
                                         float _freq, // 2*pi*f
@@ -277,12 +261,12 @@ int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
         component_lock_in[1][1] = ba_trapezoidalApprox(u_dut_2_s[1], T, size); //I_Y
 
         /* Calculating voltage amplitude and phase */
-        u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
+        // u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
 
         u_dut_1_phase = atan2f(component_lock_in[0][1], component_lock_in[0][0]);
 
         /* Calculating current amplitude and phase */
-        u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
+        // u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
 
         u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
@@ -295,7 +279,12 @@ int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
                 phase -= 2*M_PI;
 
         *phase_out = phase * (180.0 / M_PI);
-        *gain = u_dut_1_ampl / u_dut_2_ampl;
+		// Old logic
+        // *gain = u_dut_1_ampl / u_dut_2_ampl;
+	
+		data_t sig1_rms =  RMS(buffer.ch1,size);	
+		data_t sig2_rms =  RMS(buffer.ch2,size);
+		*gain = sig2_rms / sig1_rms;
 
         return ret_value;
 }
@@ -305,7 +294,7 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 					uint32_t size,
 					float samplesPerSecond,
 					float _freq, 
-					int   samples_period,
+					float samples_period,
 					float *gain,
 					float *phase_out,
 					float input_threshold) 
@@ -321,9 +310,6 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	for (size_t i = 0; i < size; i++){
 		buf1[i] = buffer.ch1[i];
 		buf2[i] = buffer.ch2[i];
-		// Filtring 
-		//buf1[i]  = buf1[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (data_t)(size-1)));
-		//buf2[i]  = buf2[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (data_t)(size-1)));
 
 		// 
 		if ((buf1[i]) > max_ch1) {
@@ -493,8 +479,8 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 
 	pthread_mutex_lock(&mutex);
 	EXEC_CHECK_MUTEX(rp_AcqSetDecimationFactor(_decimation), mutex);
-	EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(ADC_BUFFER_SIZE / 2.0), mutex);
-	//EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(-ADC_BUFFER_SIZE / 2.0 + acq_u_size), mutex);
+	//EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(ADC_BUFFER_SIZE / 2.0), mutex);
+	EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(-ADC_BUFFER_SIZE / 2.0 + acq_u_size), mutex);
 	EXEC_CHECK_MUTEX(rp_AcqStart(), mutex);
 	usleep(sleep_time);
 	// Trigger, it is needed for the RP_DEC_1 decimation
@@ -517,26 +503,10 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 
 	EXEC_CHECK_MUTEX(rp_AcqStop(), mutex); // Why the write pointer is not stopped?
 	EXEC_CHECK_MUTEX(rp_AcqGetWritePointerAtTrig(&pos), mutex);
-	pos++;
+	//pos++;
 	EXEC_CHECK_MUTEX(rp_AcqGetDataV2(pos, &acq_u_size, _buffer.ch1.data(), _buffer.ch2.data()), mutex);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
-}
-
-void ba_getDecimationValue(float frequency, rp_acq_decimation_t *api_dec, int *dec_val)
-{
-	const int g_dec[] = { 1,  8,  64,  1024,  8192,  65536 };
-	int f = 0;
-
-	if (frequency >= 160000) f = 0;
-	else if (frequency >= 20000) f = 1;
-	else if (frequency >= 2500) f = 2;
-	else if (frequency >= 160) f = 3;
-	else if (frequency >= 20) f = 4;
-	else if (frequency >= 0) f = 5;
-
-	*api_dec = (rp_acq_decimation_t)f;
-	*dec_val = g_dec[f];
 }
 
 int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
@@ -550,7 +520,6 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
     int size_buff_limit = ADC_BUFFER_SIZE / 4;
 	int sampls = size_buff_limit / _periods_number;
 	int decimation = ADC_SAMPLE_RATE / (sampls * _freq);
-	//int new_dec = round(((double)_periods_number * (double)ADC_SAMPLE_RATE) / ((double)_freq * (double)size_buff_limit));
 	decimation = decimation < 1 ? 1 : decimation;
 	
 	if (decimation < 16){
@@ -568,31 +537,14 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
     if (decimation > 65536){
         decimation = 65536;
     }
-
-	// int decimation;    
-    // rp_acq_decimation_t api_decimation;
-    // ba_getDecimationValue(_freq, &api_decimation, &decimation);
-    
+	
 	acq_size = round((static_cast<float>(_periods_number) * ADC_SAMPLE_RATE) / (_freq * decimation));
 
 	fprintf(stderr,"Dec %d freq %f acq_size %d\n",decimation,_freq,acq_size);
-	//int samples_period = round(ADC_SAMPLE_RATE / (_freq * new_dec));
 
-    // acq_size = size_buff_limit;
     rp_BaSafeThreadAcqData(_buffer,decimation, acq_size,_amplitude_in);
-	// filtring(_buffer,acq_size,_freq,new_dec);
-
-	// double dt = 1.0/(double)(ADC_SAMPLE_RATE / new_dec);
-	// double tau = 1.0 / (2.0 * M_PI * _freq * 1.2);
-	// double alpha = dt / (dt + 2 * tau);
-	// for (size_t i = 1; i < acq_size; i++){
-	// 	_buffer.ch1[i] = alpha * (_buffer.ch1[i] + _buffer.ch1[i-1]) + (1-2* alpha) * _buffer.ch1[i-1];
-	// 	_buffer.ch2[i] = alpha * (_buffer.ch2[i] + _buffer.ch2[i-1]) + (1-2* alpha) * _buffer.ch2[i-1];
-	// }
-
-
     rp_GenOutDisable(RP_CH_1);
-    // int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / new_dec,_freq, samples_period,  &gain, &phase_out,_input_threshold);
+    //int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
 	int ret = rp_BaDataAnalysisTrap(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
     *_amplitude = 10.*logf(gain);
