@@ -138,7 +138,7 @@ void CFileLogger::dumpToFile(){
         log << "====   Data transfer report  " << buff <<      " =====================\n";
         log << "======================================================================\n";
         log << "\n\n";
-        log << "Current decimation factor:\t" << m_oscRate << "\n";
+        log << "Current ADC speed:\t" << m_oscRate << "\n";
         log << "\n\n";
         log << "Lost data during transfer by UDP network:\t" << m_udpLostRate << "\n";
         log << "Lost data due to file write buffer overflow:\t" << m_fileSystemLostRate << "\n";

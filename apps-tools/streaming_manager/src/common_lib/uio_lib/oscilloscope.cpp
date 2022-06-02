@@ -22,7 +22,7 @@ void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg
     *reg = value;
 }
 
-auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster) -> COscilloscope::Ptr{
+auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) -> COscilloscope::Ptr{
     // Validation
     if (_uio.mapList.size() < 2)
     {
@@ -72,10 +72,10 @@ auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster)
     }
 
    
-    return std::make_shared<COscilloscope>(fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor,_isMaster);
+    return std::make_shared<COscilloscope>(fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor,_isMaster,_adcMaxSpeed);
 }
 
-COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster) :
+COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) :
     m_Fd(_fd),
     m_Regset(_regset),
     m_RegsetSize(_regsetSize),
@@ -88,7 +88,8 @@ COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_
     m_OscBufferNumber(0),
     m_dec_factor(_dec_factor),
     m_filterBypass(true),
-    m_isMaster(_isMaster)
+    m_isMaster(_isMaster),
+    m_adcMaxSpeed(_adcMaxSpeed)
 {
     m_calib_offset_ch1 = 0;
     m_calib_gain_ch1 = 0x8000;
@@ -236,17 +237,12 @@ auto COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch
 }
 
 auto COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow) -> bool {
-    // if (((m_OscMap->dma_sts_addr & 0x1) && m_OscBufferNumber == 0) || ((m_OscMap->dma_sts_addr & 0x2) && m_OscBufferNumber == 1)){
-        // Interrupt ACQ
-        _buffer1 = m_OscBuffer1 + osc_buf_size * m_OscBufferNumber;
-        _buffer2 = m_OscBuffer2 + osc_buf_size * m_OscBufferNumber;
-        // This fix for FPGA
-        _overFlow = (m_OscBufferNumber == 1 ? m_OscMap->lost_samples_buf1 : m_OscMap->lost_samples_buf2);
-        _size = osc_buf_size;
-        return true;
-//    }
-//    _overFlow = 0;
-//    return false;
+    _buffer1 = m_OscBuffer1 + osc_buf_size * m_OscBufferNumber;
+    _buffer2 = m_OscBuffer2 + osc_buf_size * m_OscBufferNumber;
+    // This fix for FPGA
+    _overFlow = (m_OscBufferNumber == 1 ? m_OscMap->lost_samples_buf1 : m_OscMap->lost_samples_buf2);
+    _size = osc_buf_size;
+    return true;
 }
 
 
@@ -261,18 +257,6 @@ auto COscilloscope::clearBuffer() -> bool{
 }
 
 auto COscilloscope::wait() -> bool{
-    // int32_t cnt = 1;
-    // constexpr size_t cnt_size = sizeof(cnt);
-    // ssize_t bytes = write(m_Fd, &cnt, cnt_size);
-    // if (bytes == cnt_size) {
-    //     bytes = read(m_Fd, &cnt, cnt_size);
-    //     clearInterrupt();
-    //     if (bytes == cnt_size) {
-    //         return true;
-    //     }
-    // }
-    // return false;
-
     int32_t cnt = 1;
     constexpr size_t cnt_size = sizeof(cnt);
     ssize_t bytes = write(m_Fd, &cnt, cnt_size); // Unmmask interrupt
@@ -318,6 +302,11 @@ auto COscilloscope::stop() -> void {
 
 auto COscilloscope::getDecimation() -> u_int32_t {
     return m_dec_factor;
+}
+
+auto COscilloscope::getOSCRate() -> uint32_t{
+    if (m_dec_factor == 0) return 0;
+    return m_adcMaxSpeed / m_dec_factor;
 }
 
 

@@ -221,7 +221,7 @@ void CStreamingFPGA::oscWorker(){
     auto pack = getBuffF(overFlow);
 
     if (pack){
-        pack->setOSCRate(m_Osc_ch->getDecimation());
+        pack->setOSCRate(m_Osc_ch->getOSCRate());
         pack->setADCBits(m_adc_bits);
 
         if (m_adcSettings.find(DataLib::EDataBuffersPackChannel::CH1) != m_adcSettings.end()){

@@ -25,6 +25,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
     m_numChannels = 0;
     size_t maxSamples = 0;
     uint8_t maxBitBySample = 0;
+    uint32_t OSCRate = 0;
     std::vector<net_lib::net_buffer> channels;
     std::vector<uint8_t>  channelsBits;
     std::vector<size_t>   channelsSamples;
@@ -34,6 +35,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
         m_numChannels++;
         maxSamples = maxSamples < ch1.samplesCount ? ch1.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch1.bitsBySample ? ch1.bitsBySample : maxBitBySample;
+        OSCRate = ch1.adcSpeed;
         channels.push_back(ch1.buffer);
         channelsBits.push_back(ch1.bitsBySample);
         channelsSamples.push_back(ch1.samplesCount);
@@ -43,6 +45,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
         m_numChannels++;
         maxSamples = maxSamples < ch2.samplesCount ? ch2.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch2.bitsBySample ? ch2.bitsBySample : maxBitBySample;
+        OSCRate = ch2.adcSpeed;
         channels.push_back(ch2.buffer);
         channelsBits.push_back(ch2.bitsBySample);
         channelsSamples.push_back(ch2.samplesCount);
@@ -52,6 +55,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
         m_numChannels++;
         maxSamples = maxSamples < ch3.samplesCount ? ch3.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch3.bitsBySample ? ch3.bitsBySample : maxBitBySample;
+        OSCRate = ch3.adcSpeed;
         channels.push_back(ch3.buffer);
         channelsBits.push_back(ch3.bitsBySample);
         channelsSamples.push_back(ch3.samplesCount);
@@ -61,6 +65,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
         m_numChannels++;
         maxSamples = maxSamples < ch4.samplesCount ? ch4.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch4.bitsBySample ? ch4.bitsBySample : maxBitBySample;
+        OSCRate = ch4.adcSpeed;
         channels.push_back(ch4.buffer);
         channelsBits.push_back(ch4.bitsBySample);
         channelsSamples.push_back(ch4.samplesCount);
@@ -68,6 +73,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
 
     m_samplesPerChannel = maxSamples;
     m_bitDepth = maxBitBySample;
+    m_OSCRate = OSCRate;
 
     std::stringstream *memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
     if (m_headerInit)
@@ -176,7 +182,7 @@ auto CWaveWriter::BuildHeader(std::stringstream *memory) -> void{
     addInt32ToFileData (memory, 16); // format chunk size (16 for PCM)
     addInt16ToFileData (memory, data_format); // audio format = 1
     addInt16ToFileData (memory, (int16_t)m_numChannels); // num channels
-    addInt32ToFileData (memory, (int32_t)m_samplesPerChannel); // sample rate
+    addInt32ToFileData (memory, (int32_t)m_OSCRate); // sample rate
     
     int32_t numBytesPerSecond = (int32_t) ((m_numChannels * sampleRate * m_bitDepth) / 8);
     addInt32ToFileData (memory, numBytesPerSecond);

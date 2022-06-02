@@ -166,6 +166,7 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib
         pbuff.bufferLen = 0;
         pbuff.samplesCount = 0;
         pbuff.bitsBySample = 0;
+        pbuff.adcSpeed = 0;
         return pbuff;
     }
 
@@ -186,9 +187,8 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib
         pbuff.bufferLen = destSize;
         pbuff.samplesCount = src_buff->getSamplesCount() + src_buff->getLostSamplesAll();
         pbuff.bitsBySample = src_buff->getBitBySample();
+        pbuff.adcSpeed = pack->getOSCRate();
         return pbuff;
-
-
     }else{
         auto samples = src_buff->getSamplesCount();
         auto lostSamples = src_buff->getLostSamplesAll();
@@ -222,6 +222,7 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib
         pbuff.bufferLen = destSize;
         pbuff.samplesCount = samples + lostSamples;
         pbuff.bitsBySample = 32;
+        pbuff.adcSpeed = pack->getOSCRate();
         return pbuff;
     }
 }

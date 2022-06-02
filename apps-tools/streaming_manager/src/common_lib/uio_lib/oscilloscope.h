@@ -111,9 +111,9 @@ class COscilloscope
 public:
     using Ptr = std::shared_ptr<COscilloscope>;
 
-    static Ptr create(const UioT &_uio, uint32_t _dec_factor,bool _isMaster);
+    static Ptr create(const UioT &_uio, uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed);
 
-    COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster);
+    COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed);
     ~COscilloscope();
 
     auto prepare() -> void;
@@ -129,6 +129,7 @@ public:
     auto stop() -> void;
     auto printReg() -> void;
     auto getDecimation() -> uint32_t;
+    auto getOSCRate() -> uint32_t;
 
 private:
 
@@ -166,6 +167,7 @@ private:
     bool         m_filterBypass;
     bool         m_isMaster;
     bool         m_is8BitMode;
+    uint32_t     m_adcMaxSpeed;
 };
 
 }

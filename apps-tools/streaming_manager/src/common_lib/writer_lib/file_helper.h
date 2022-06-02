@@ -15,6 +15,7 @@ struct SBuffPass{
     size_t bufferLen;
     size_t samplesCount;
     uint8_t bitsBySample;
+    uint32_t adcSpeed;
 };
 
 auto getTotalSystemMemory() -> uint64_t;

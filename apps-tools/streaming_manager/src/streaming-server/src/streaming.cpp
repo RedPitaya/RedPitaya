@@ -3,6 +3,8 @@
 
 #ifdef RP_PLATFORM
 #include "rp.h"
+#else
+#define ADC_SAMPLE_RATE 100000000
 #endif
 
 #ifndef _WIN32
@@ -206,7 +208,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
         auto isMaster = false;
 #endif
         uio_lib::UioT uio_t;
-        g_osc = COscilloscope::create(uio_t,rate, isMaster);
+        g_osc = COscilloscope::create(uio_t,rate, isMaster,ADC_SAMPLE_RATE);
 #endif
 
         g_s_buffer = streaming_lib::CStreamingBufferCached::create();

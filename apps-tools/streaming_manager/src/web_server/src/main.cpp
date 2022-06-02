@@ -869,7 +869,7 @@ void startServer(bool testMode) {
 					auto isMaster = false;
 				#endif
 				fprintf(stderr,"COscilloscope::Create rate %d\n",rate);
-                g_osc = uio_lib::COscilloscope::create(uio,rate,isMaster);
+                g_osc = uio_lib::COscilloscope::create(uio,rate,isMaster,ADC_SAMPLE_RATE);
                 g_osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
                 g_osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
                 g_osc->setFilterCalibrationCh2(aa_ch2,bb_ch2,kk_ch2,pp_ch2);

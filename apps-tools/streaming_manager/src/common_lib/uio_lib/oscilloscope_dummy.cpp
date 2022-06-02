@@ -8,11 +8,11 @@
 
 using namespace uio_lib;
 
-auto COscilloscope::create(const UioT &,uint32_t _dec_factor,bool _isMaster) -> COscilloscope::Ptr {
-    return std::make_shared<COscilloscope>(0, nullptr, 0, nullptr, 0, 0,_dec_factor,_isMaster);
+auto COscilloscope::create(const UioT &,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) -> COscilloscope::Ptr {
+    return std::make_shared<COscilloscope>(0, nullptr, 0, nullptr, 0, 0,_dec_factor,_isMaster,_adcMaxSpeed);
 }
 
-COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster) :
+COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) :
     m_Fd(_fd),
     m_Regset(_regset),
     m_RegsetSize(_regsetSize),
@@ -25,7 +25,8 @@ COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_
     m_OscBufferNumber(0),
     m_dec_factor(_dec_factor),
     m_filterBypass(true),
-    m_isMaster(_isMaster)
+    m_isMaster(_isMaster),
+    m_adcMaxSpeed(_adcMaxSpeed)
 {    
     m_OscBuffer1 = new uint8_t[osc_buf_size];
     m_OscBuffer2 = new uint8_t[osc_buf_size];
@@ -64,6 +65,10 @@ auto COscilloscope::getDecimation() -> uint32_t {
     return m_dec_factor;
 }
 
+auto COscilloscope::getOSCRate() -> uint32_t{
+    return m_dec_factor;
+}
+
 auto COscilloscope::clearBuffer() -> bool{
     return true;
 }
@@ -80,4 +85,4 @@ auto COscilloscope::stop() -> void{}
 
 auto COscilloscope::printReg() -> void{}
 
-auto COscilloscope::set8BitMode(bool mode) -> void{}
+auto COscilloscope::set8BitMode(bool) -> void{}

@@ -27,7 +27,8 @@ private:
     bool m_headerInit;
     uint32_t m_numChannels;
     uint8_t  m_bitDepth;
-    uint32_t  m_samplesPerChannel;
+    uint32_t m_samplesPerChannel;
+    uint32_t m_OSCRate;
     CWaveWriter::Endianness m_endianness;
 };
 
