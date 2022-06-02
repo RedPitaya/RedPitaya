@@ -52,7 +52,11 @@ void stop_ws_server()
 {
 	fprintf(stderr, "stop_ws_server()\n");
 	if(s) {
-	    s->stop();
+		try{
+	    	s->stop();
+		}catch(std::exception &ex){
+			fprintf(stderr, "Error: stop_ws_server() %s\n",ex.what());
+		}
 	    delete s;
 	    s = NULL;
 	}

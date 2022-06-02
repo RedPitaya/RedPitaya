@@ -231,8 +231,16 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
         }
 
         remote_opt.remote_mode = ClientOpt::RemoteMode::START_FPGA_ADC;
+        std::vector<string> runnedThreads;
+        for (const auto& [key, _] : runned_hosts) {
+            runnedThreads.push_back(key);
+        }
         if (!startRemote(cl,remote_opt,&runned_hosts)){
             aprintf(stdout,"%s Can't start ADC on remote machines\n", getTS(": ").c_str());
+            for(auto &h:runnedThreads){
+                if (runned_hosts.count(h) == 0)
+                    stopStreaming(h);
+            }
         }
 
         cl->errorNofiy.connect([](ClientNetConfigManager::Errors errors,std::string host,error_code err){
@@ -295,10 +303,6 @@ auto stopCSV () -> void{
 }
 
 auto stopStreaming(std::string host) -> void{
-//    if (g_file_manager.count(host))
-//        g_file_manager[host]->stop();
-//    if (g_asionet.count(host))
-//        g_asionet[host]->stop();
     g_terminate[host] = true;
 }
 
