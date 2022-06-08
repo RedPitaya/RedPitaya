@@ -41,8 +41,8 @@ uint32_t      chA_burstPeriod          = 0,         chB_burstPeriod          = 0
 rp_waveform_t chA_waveform                ,         chB_waveform                ;
 rp_gen_sweep_mode_t  chA_sweepMode        ,         chB_sweepMode               ;
 rp_gen_sweep_dir_t   chA_sweepDir         ,         chB_sweepDir                ;
-uint32_t      chA_size     = BUFFER_LENGTH,         chB_size     = BUFFER_LENGTH;
-uint32_t      chA_arb_size = BUFFER_LENGTH,         chB_arb_size = BUFFER_LENGTH;
+uint32_t      chA_size     = DAC_BUFFER_SIZE,       chB_size     = DAC_BUFFER_SIZE;
+uint32_t      chA_arb_size = DAC_BUFFER_SIZE,       chB_arb_size = DAC_BUFFER_SIZE;
 rp_gen_mode_t chA_mode = RP_GEN_MODE_CONTINUOUS,    chB_mode = RP_GEN_MODE_CONTINUOUS;
 
 bool          chA_EnableTempProtection = 0, chB_EnableTempProtection = 0;
@@ -52,8 +52,8 @@ bool          chA_LatchTempAlarm       = 0, chB_LatchTempAlarm       = 0;
 rp_gen_gain_t chA_gain                    , chB_gain                    ;
 #endif
 
-float chA_arbitraryData[BUFFER_LENGTH];
-float chB_arbitraryData[BUFFER_LENGTH];
+float chA_arbitraryData[DAC_BUFFER_SIZE];
+float chB_arbitraryData[DAC_BUFFER_SIZE];
 
 int gen_SetDefaultValues() {
     gen_Disable(RP_CH_1);
@@ -131,13 +131,16 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
     CHANNEL_ACTION(channel,
             chA_amplitude = amplitude,
             chB_amplitude = amplitude)
+
 #ifdef Z20_250_12
     rp_gen_gain_t gain;
         CHANNEL_ACTION(channel,
             gain = chA_gain,
             gain = chB_gain)
     return generate_setAmplitude(channel, gain , amplitude);
-#else
+#endif
+
+#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_125_4CH
     return generate_setAmplitude(channel, amplitude);
 #endif
 }
@@ -164,13 +167,16 @@ int gen_setOffset(rp_channel_t channel, float offset) {
     CHANNEL_ACTION(channel,
             chA_offset = offset,
             chB_offset = offset)
+
 #ifdef Z20_250_12
     rp_gen_gain_t gain;
         CHANNEL_ACTION(channel,
             gain = chA_gain,
             gain = chB_gain)
     return generate_setDCOffset(channel, gain , offset);
-#else
+#endif
+
+#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_125_4CH
     return generate_setDCOffset(channel, offset);
 #endif
 }
@@ -304,8 +310,8 @@ int gen_setWaveform(rp_channel_t channel, rp_waveform_t type) {
     }
     else{
         CHANNEL_ACTION(channel,
-                chA_size = BUFFER_LENGTH,
-                chB_size = BUFFER_LENGTH)
+                chA_size = DAC_BUFFER_SIZE,
+                chB_size = DAC_BUFFER_SIZE)
     }
     return synthesize_signal(channel);
 }
@@ -348,7 +354,7 @@ int gen_getSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
 int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
     // Check if data is normalized
     float min = FLT_MAX, max = -FLT_MAX; // initial values
-    int i;
+    uint32_t i;
     for(i = 0; i < length; i++) {
         if (data[i] < min)
             min = data[i];
@@ -367,7 +373,7 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
     for(i = 0; i < length; i++) {
         pointer[i] = data[i];
     }
-    for(i = length; i < BUFFER_LENGTH; i++) { // clear the rest of the buffer
+    for(i = length; i < DAC_BUFFER_SIZE; i++) { // clear the rest of the buffer
         pointer[i] = 0;
     }
 
@@ -404,7 +410,7 @@ int gen_getArbWaveform(rp_channel_t channel, float *data, uint32_t *length) {
     else {
         return RP_EPN;
     }
-    for (int i = 0; i < *length; ++i) {
+    for (uint32_t i = 0; i < *length; ++i) {
         data[i] = pointer[i];
     }
     return RP_OK;
@@ -438,36 +444,12 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
         generate_setBurstDelay(channel, 0);
         generate_setBurstRepetitions(channel, 0);
         generate_setBurstCount(channel, 0);
-
-        // bool enable1,enable2;
-        // generate_getOutputEnabled(RP_CH_1,&enable1);
-        // generate_getOutputEnabled(RP_CH_2,&enable2);
-
-        // if (enable1 && enable2){
-        //     gen_Synchronise();
-        // }else{
-        //     if (enable1 || enable2)
-        //         generate_Reset(channel);
-        // }
-
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_BURST) {
         gen_setBurstCount(channel, channel == RP_CH_1 ? chA_burstCount : chB_burstCount);
         gen_setBurstRepetitions(channel, channel == RP_CH_1 ? chA_burstRepetition : chB_burstRepetition);
         gen_setBurstPeriod(channel, channel == RP_CH_1 ? chA_burstPeriod : chB_burstPeriod);
-        
-        // bool enable1,enable2;
-        // generate_getOutputEnabled(RP_CH_1,&enable1);
-        // generate_getOutputEnabled(RP_CH_2,&enable2);
-        
-        // if (enable1 && enable2){
-        //     gen_Synchronise();
-        // }else{
-        //     if (enable1 || enable2)
-        //         generate_Reset(channel);
-        // }
-
         return RP_OK;
     }
     else if (mode == RP_GEN_MODE_STREAM) {
@@ -513,7 +495,7 @@ int gen_getBurstCount(rp_channel_t channel, int *num) {
     return RP_OK;
 }
 
-#ifndef Z20_250_12
+#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_125_4CH
 int gen_setBurstLastValue(rp_channel_t channel, float amplitude){
     return generate_setBurstLastValue(channel,  amplitude);
 }
@@ -644,7 +626,6 @@ int gen_TriggerOnly(uint32_t channel){
     }
 }
 
-
 int gen_TriggerSync(){
     generate_ResetSM();
     return generate_simultaneousTrigger();
@@ -659,12 +640,12 @@ int gen_SynchroniseSM() {
 }
 
 int synthesize_signal(rp_channel_t channel) {
-    float data[BUFFER_LENGTH];
+    float data[DAC_BUFFER_SIZE];
     rp_waveform_t waveform;
     rp_gen_sweep_mode_t sweep_mode;
     rp_gen_sweep_dir_t sweep_dir;
     float dutyCycle, frequency,sweepStartFreq , sweepEndFreq;
-    uint32_t size = BUFFER_LENGTH;
+    uint32_t size = DAC_BUFFER_SIZE;
     int32_t phase;
     float  phaseRad = 0;
 
@@ -677,7 +658,7 @@ int synthesize_signal(rp_channel_t channel) {
         sweep_mode = chA_sweepMode;
         sweep_dir = chA_sweepDir;
         size = chA_size;
-        phase = (chA_phase * BUFFER_LENGTH / 360.0);
+        phase = (chA_phase * DAC_BUFFER_SIZE / 360.0);
         phaseRad = chA_phase/180.0 *  M_PI;
     }
     else if (channel == RP_CH_2) {
@@ -689,13 +670,13 @@ int synthesize_signal(rp_channel_t channel) {
         sweep_mode = chB_sweepMode;
         sweep_dir = chB_sweepDir;
         size = chB_size;
-        phase = (chB_phase * BUFFER_LENGTH / 360.0);
+        phase = (chB_phase * DAC_BUFFER_SIZE / 360.0);
         phaseRad = chB_phase/180.0 *  M_PI;
     }
     else{
         return RP_EPN;
     }
-    uint16_t buf_size = BUFFER_LENGTH;
+    uint16_t buf_size = DAC_BUFFER_SIZE;
     if(waveform == RP_WAVEFORM_SWEEP) phase = 0;
     
     switch (waveform) {
@@ -716,43 +697,43 @@ int synthesize_signal(rp_channel_t channel) {
 }
 
 int synthesis_sin(float *data_out,uint16_t buffSize) {
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) buffSize));
     }
     return RP_OK;
 }
 
 int synthesis_triangle(float *data_out,uint16_t buffSize) {
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) buffSize)) / M_PI * 2));
     }
     return RP_OK;
 }
 
 int synthesis_rampUp(float *data_out,uint16_t buffSize) {
-    data_out[BUFFER_LENGTH -1] = 0;
-    for(int unsigned i = 0; i < BUFFER_LENGTH-1; i++) {
-        data_out[BUFFER_LENGTH - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
+    data_out[DAC_BUFFER_SIZE -1] = 0;
+    for(int unsigned i = 0; i < DAC_BUFFER_SIZE-1; i++) {
+        data_out[DAC_BUFFER_SIZE - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
     }
     return RP_OK;
 }
 
 int synthesis_rampDown(float *data_out,uint16_t buffSize) {
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
     }
     return RP_OK;
 }
 
 int synthesis_DC(float *data_out,uint16_t buffSize) {
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < buffSize; i++) {
         data_out[i] = 1.0;
     }
     return RP_OK;
 }
 
 int synthesis_DC_NEG(float *data_out,uint16_t buffSize) {
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < buffSize; i++) {
         data_out[i] = -1.0;
     }
     return RP_OK;
@@ -762,7 +743,7 @@ int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize) {
     // calculate number of samples that need to be high
     int h = (int) (buffSize * ratio);
 
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for(int i = 0; i < DAC_BUFFER_SIZE; i++) {
         if (i < h) {
             data_out[i] = 1.0;
         }
@@ -778,7 +759,7 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
     CHANNEL_ACTION(channel,
             pointer = chA_arbitraryData,
             pointer = chB_arbitraryData)
-    for (int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for (int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         data_out[i] = pointer[i];
     }
     CHANNEL_ACTION(channel,
@@ -797,15 +778,15 @@ int synthesis_square(float frequency, float *data_out,uint16_t buffSize) {
         const int trans1 = 300;
 #endif
     
-    int trans = (int) (frequency / 1e6 * trans1); // 300 samples at 1 MHz
+    uint32_t trans = (uint32_t) (frequency / 1e6 * trans1); // 300 samples at 1 MHz
 
     if (trans <= 10)  trans = trans0;
 
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         int unsigned x = (i % buffSize);
-        if      ((0 <= x                      ) && (x <  buffSize/2 - trans))  data_out[i] =  1.0f;
+        if      (/*(0 <= x                  ) && */ (x <  buffSize/2 - trans))  data_out[i] =  1.0f;
         else if ((x >= buffSize/2 - trans) && (x <  buffSize/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (x - (buffSize/2 - trans));
-        else if ((0 <= buffSize/2        ) && (x <  buffSize   - trans))  data_out[i] = -1.0f;
+        else if (/*(0 <= buffSize/2         ) && */ (x <  buffSize   - trans))  data_out[i] = -1.0f;
         else if ((x >= buffSize   - trans) && (x <  buffSize          ))  data_out[i] = -1.0f + (2.0f / trans) * (x - (buffSize   - trans));
     }
 
@@ -813,8 +794,8 @@ int synthesis_square(float frequency, float *data_out,uint16_t buffSize) {
 }
 
 int synthesis_square_Z20_250(float frequency, float *data_out,uint16_t buffSize) {
-
-    for(int unsigned i = 0; i < BUFFER_LENGTH; i++) {
+    (void)(frequency);
+    for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         if ((i % buffSize) <  buffSize / 2.0)  
             data_out[i] =  1.0f;
         else  
@@ -865,6 +846,8 @@ int triggerIfInternal(rp_channel_t channel) {
 }
 
 
+#ifdef Z20_250_12
+
 int gen_setEnableTempProtection(rp_channel_t channel, bool enable) {
     CHANNEL_ACTION(channel,
             chA_EnableTempProtection = enable,
@@ -890,9 +873,6 @@ int gen_getLatchTempAlarm(rp_channel_t channel, bool *status) {
 int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status) {
     return generate_getRuntimeTempAlarm(channel, status);
 }
-
-
-#ifdef Z20_250_12
 
 int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
     rp_gen_gain_t *gain = NULL;

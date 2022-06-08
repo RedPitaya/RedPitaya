@@ -71,189 +71,10 @@ int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
     return RP_OK;
 }
 
-int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
-    #ifdef Z20_250_12
-        bool value;
-        CHANNEL_ACTION(channel,
-                value = generate->AtempProtected,
-                value = generate->BtempProtected)
-        *enable = value;
-        return RP_OK;
-    #else
-        return RP_NOTS;
-    #endif
-}
-
-int generate_setEnableTempProtection(rp_channel_t channel, bool enable) {
-    #ifdef Z20_250_12
-        if (channel == RP_CH_1) {
-            cmn_Debug("generate->AtempProtected",disable ? 1 : 0);
-            generate->AtempProtected = enable ? 1 : 0;
-        }
-        else if (channel == RP_CH_2) {
-            cmn_Debug("generate->BtempProtected",disable ? 1 : 0);
-            generate->BtempProtected = enable ? 1 : 0;
-        }
-        else {
-            return RP_EPN;
-        }
-        return RP_OK;
-    #else
-        return RP_NOTS;
-    #endif
-}
-
-int generate_getLatchTempAlarm(rp_channel_t channel, bool *state){
-    #ifdef Z20_250_12
-        bool value;
-        CHANNEL_ACTION(channel,
-                value = generate->AlatchedTempAlarm,
-                value = generate->BlatchedTempAlarm)
-        *state = value;
-        return RP_OK;
-    #else
-        return RP_NOTS;
-    #endif
-}
-
-int generate_setLatchTempAlarm(rp_channel_t channel, bool state) {
-    #ifdef Z20_250_12
-        if (channel == RP_CH_1) {
-            cmn_Debug("generate->AlatchedTempAlarm",disable ? 1 : 0);
-            generate->AlatchedTempAlarm = state ? 1 : 0;
-        }
-        else if (channel == RP_CH_2) {
-            cmn_Debug("generate->BlatchedTempAlarm",disable ? 1 : 0);
-            generate->BlatchedTempAlarm = state ? 1 : 0;
-        }
-        else {
-            return RP_EPN;
-        }
-        return RP_OK;
-    #else
-        return RP_NOTS;
-    #endif
-}
-
-int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state){
-    #ifdef Z20_250_12
-        bool value;
-        CHANNEL_ACTION(channel,
-                value = generate->AruntimeTempAlarm,
-                value = generate->BruntimeTempAlarm)
-        *state = value;
-        return RP_OK;
-    #else
-        return RP_NOTS;
-    #endif
-}
-
-#ifndef Z20_250_12
-
-int generate_setAmplitude(rp_channel_t channel, float amplitude) {
-    volatile ch_properties_t *ch_properties;
-    uint32_t amp_max = calib_getGenScale(channel);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX , false, amp_max, 0, 0.0);
-    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
-    ch_properties->amplitudeScale = value;
-    return RP_OK;
-}
-
-int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
-    volatile ch_properties_t *ch_properties;
-    uint32_t amp_max = calib_getGenScale(channel);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX , amp_max, 0, 0.0 , 1.0);
-    return RP_OK;
-}
-
-int generate_setDCOffset(rp_channel_t channel, float offset) {
-    volatile ch_properties_t *ch_properties;
-    int dc_offs = calib_getGenOffset(channel);
-    uint32_t amp_max = calib_getGenScale(channel);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset , (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
-    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
-    ch_properties->amplitudeOffset = value;
-    return RP_OK;
-}
-
-int generate_getDCOffset(rp_channel_t channel, float *offset) {
-    volatile ch_properties_t *ch_properties;
-    int dc_offs = calib_getGenOffset(channel);
-    uint32_t amp_max = calib_getGenScale(channel);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    *offset = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0 , 1.0);
-    return RP_OK;
-}
-
-int generate_setBurstLastValue(rp_channel_t channel, float amplitude){
-    int dc_offs = calib_getGenOffset(channel);
-    uint32_t amp_max = calib_getGenScale(channel);
-    uint32_t cnt = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX, false, amp_max, dc_offs, 0);
-    cmn_DebugCh("generate->BurstFinalValue_ch",channel,cnt);
-    CHANNEL_ACTION(channel,
-        generate->BurstFinalValue_chA = cnt,
-        generate->BurstFinalValue_chB = cnt)
-    return RP_OK;
-}
-
-int generate_getBurstLastValue(rp_channel_t channel, float *amplitude){
-    int dc_offs = calib_getGenOffset(channel);
-    uint32_t amp_max = calib_getGenScale(channel);
-    *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, channel == RP_CH_1 ? (generate->BurstFinalValue_chA) : (generate->BurstFinalValue_chB)
-        , AMPLITUDE_MAX , amp_max, dc_offs, 0.0 , 1.0);
-    return RP_OK;
-}
-
-
-#else
-
-int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitude) {
-    volatile ch_properties_t *ch_properties;
-    uint32_t amp_max = calib_getGenScale(channel,gain);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX , false, amp_max, 0, 0.0);
-    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
-    ch_properties->amplitudeScale = value;
-    return RP_OK;
-}
-
-int generate_getAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude) {
-    volatile ch_properties_t *ch_properties;
-    uint32_t amp_max = calib_getGenScale(channel,gain);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX  , amp_max, 0, 0.0, 1.0);
-    return RP_OK;
-}
-
-int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) {
-    volatile ch_properties_t *ch_properties;
-    int dc_offs = calib_getGenOffset(channel,gain);
-    uint32_t amp_max = calib_getGenScale(channel,gain);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
-    cmn_DebugCh("ch_properties->amplitudeOffset",channel,value);
-    ch_properties->amplitudeOffset = value;
-    return RP_OK;
-}
-
-int generate_getDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float *offset) {
-    volatile ch_properties_t *ch_properties;
-    int dc_offs = calib_getGenOffset(channel,gain);
-    uint32_t amp_max = calib_getGenScale(channel,gain);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    *offset = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0 , 1.0);
-    return RP_OK;
-}
-
-#endif
-
 int generate_setFrequency(rp_channel_t channel, float frequency) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    uint32_t value = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * BUFFER_LENGTH);
+    uint32_t value = (uint32_t) round(65536 * frequency / DAC_FREQUENCY * DAC_BUFFER_SIZE);
     cmn_DebugCh("ch_properties->counterStep",channel,value);
     ch_properties->counterStep = value;
     uint32_t wrap_flag = 1;
@@ -265,7 +86,7 @@ int generate_setFrequency(rp_channel_t channel, float frequency) {
 int generate_getFrequency(rp_channel_t channel, float *frequency) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    *frequency = (float) round((ch_properties->counterStep * DAC_FREQUENCY) / (65536 * BUFFER_LENGTH));
+    *frequency = (float) round((ch_properties->counterStep * DAC_FREQUENCY) / (65536 * DAC_BUFFER_SIZE));
     return RP_OK;
 }
 
@@ -429,9 +250,170 @@ int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_
     //rp_calib_params_t calib = calib_GetParams();
     int dc_offs = 0;//channel == RP_CH_1 ? calib.be_ch1_dc_offs: calib.be_ch2_dc_offs;
     uint32_t amp_max = 0; //channel == RP_CH_1 ? calib.be_ch1_fs: calib.be_ch2_fs;
-    if (start < 0) start += BUFFER_LENGTH;
-    for(int i = start; i < start+BUFFER_LENGTH; i++) {
-        dataOut[i % BUFFER_LENGTH] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i-start] * AMPLITUDE_MAX , AMPLITUDE_MAX, false, amp_max, dc_offs, 0.0);
+    if (start < 0) start += DAC_BUFFER_SIZE;
+    for(int i = start; i < start + DAC_BUFFER_SIZE; i++) {
+        dataOut[i % DAC_BUFFER_SIZE] = cmn_CnvVToCnt(DATA_BIT_LENGTH, data[i-start] * AMPLITUDE_MAX , AMPLITUDE_MAX, false, amp_max, dc_offs, 0.0);
     }
     return RP_OK;
 }
+
+
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_125_4CH
+
+int generate_setAmplitude(rp_channel_t channel, float amplitude) {
+    volatile ch_properties_t *ch_properties;
+    uint32_t amp_max = calib_getGenScale(channel);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX , false, amp_max, 0, 0.0);
+    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
+    ch_properties->amplitudeScale = value;
+    return RP_OK;
+}
+
+int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
+    volatile ch_properties_t *ch_properties;
+    uint32_t amp_max = calib_getGenScale(channel);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX , amp_max, 0, 0.0 , 1.0);
+    return RP_OK;
+}
+
+int generate_setDCOffset(rp_channel_t channel, float offset) {
+    volatile ch_properties_t *ch_properties;
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset , (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
+    ch_properties->amplitudeOffset = value;
+    return RP_OK;
+}
+
+int generate_getDCOffset(rp_channel_t channel, float *offset) {
+    volatile ch_properties_t *ch_properties;
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    *offset = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0 , 1.0);
+    return RP_OK;
+}
+
+int generate_setBurstLastValue(rp_channel_t channel, float amplitude){
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
+    uint32_t cnt = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX, false, amp_max, dc_offs, 0);
+    cmn_DebugCh("generate->BurstFinalValue_ch",channel,cnt);
+    CHANNEL_ACTION(channel,
+        generate->BurstFinalValue_chA = cnt,
+        generate->BurstFinalValue_chB = cnt)
+    return RP_OK;
+}
+
+int generate_getBurstLastValue(rp_channel_t channel, float *amplitude){
+    int dc_offs = calib_getGenOffset(channel);
+    uint32_t amp_max = calib_getGenScale(channel);
+    *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, channel == RP_CH_1 ? (generate->BurstFinalValue_chA) : (generate->BurstFinalValue_chB)
+        , AMPLITUDE_MAX , amp_max, dc_offs, 0.0 , 1.0);
+    return RP_OK;
+}
+
+#endif
+
+#ifdef Z20_250_12
+
+int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitude) {
+    volatile ch_properties_t *ch_properties;
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX , false, amp_max, 0, 0.0);
+    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
+    ch_properties->amplitudeScale = value;
+    return RP_OK;
+}
+
+int generate_getAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude) {
+    volatile ch_properties_t *ch_properties;
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX  , amp_max, 0, 0.0, 1.0);
+    return RP_OK;
+}
+
+int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) {
+    volatile ch_properties_t *ch_properties;
+    int dc_offs = calib_getGenOffset(channel,gain);
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
+    cmn_DebugCh("ch_properties->amplitudeOffset",channel,value);
+    ch_properties->amplitudeOffset = value;
+    return RP_OK;
+}
+
+int generate_getDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float *offset) {
+    volatile ch_properties_t *ch_properties;
+    int dc_offs = calib_getGenOffset(channel,gain);
+    uint32_t amp_max = calib_getGenScale(channel,gain);
+    getChannelPropertiesAddress(&ch_properties, channel);
+    *offset = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0 , 1.0);
+    return RP_OK;
+}
+
+int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
+    bool value;
+    CHANNEL_ACTION(channel,
+            value = generate->AtempProtected,
+            value = generate->BtempProtected)
+    *enable = value;
+    return RP_OK;
+}
+
+int generate_setEnableTempProtection(rp_channel_t channel, bool enable) {
+    if (channel == RP_CH_1) {
+        cmn_Debug("generate->AtempProtected",disable ? 1 : 0);
+        generate->AtempProtected = enable ? 1 : 0;
+    }
+    else if (channel == RP_CH_2) {
+        cmn_Debug("generate->BtempProtected",disable ? 1 : 0);
+        generate->BtempProtected = enable ? 1 : 0;
+    }
+    else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int generate_getLatchTempAlarm(rp_channel_t channel, bool *state){
+    bool value;
+    CHANNEL_ACTION(channel,
+            value = generate->AlatchedTempAlarm,
+            value = generate->BlatchedTempAlarm)
+    *state = value;
+    return RP_OK;
+}
+
+int generate_setLatchTempAlarm(rp_channel_t channel, bool state) {
+    if (channel == RP_CH_1) {
+        cmn_Debug("generate->AlatchedTempAlarm",disable ? 1 : 0);
+        generate->AlatchedTempAlarm = state ? 1 : 0;
+    }
+    else if (channel == RP_CH_2) {
+        cmn_Debug("generate->BlatchedTempAlarm",disable ? 1 : 0);
+        generate->BlatchedTempAlarm = state ? 1 : 0;
+    }
+    else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state){
+    bool value;
+    CHANNEL_ACTION(channel,
+            value = generate->AruntimeTempAlarm,
+            value = generate->BruntimeTempAlarm)
+    *state = value;
+    return RP_OK;
+}
+
+#endif

@@ -105,7 +105,66 @@ typedef enum {
 } calPar_t;
 #endif
 
+#ifdef Z20_125_4CH
+#define PACK_ID 3
+typedef enum {
+    eCalPar_OSC_C1_HI,
+    eCalPar_OSC_C2_HI,
+    eCalPar_OSC_C3_HI,
+    eCalPar_OSC_C4_HI,
+    eCalPar_OSC_C1_LO,
+    eCalPar_OSC_C2_LO,
+    eCalPar_OSC_C3_LO,
+    eCalPar_OSC_C4_LO,
+    
+    eCalPar_OSC_C1_HI_OFF,
+    eCalPar_OSC_C2_HI_OFF,
+    eCalPar_OSC_C3_HI_OFF,
+    eCalPar_OSC_C4_HI_OFF,
+    eCalPar_OSC_C1_LO_OFF,
+    eCalPar_OSC_C2_LO_OFF,
+    eCalPar_OSC_C3_LO_OFF,
+    eCalPar_OSC_C4_LO_OFF,
 
+    eCalPar_OSC_C1_HI_AA,
+    eCalPar_OSC_C1_HI_BB,
+    eCalPar_OSC_C1_HI_PP,
+    eCalPar_OSC_C1_HI_KK,
+    eCalPar_OSC_C1_LO_AA,
+    eCalPar_OSC_C1_LO_BB,
+    eCalPar_OSC_C1_LO_PP,
+    eCalPar_OSC_C1_LO_KK,
+
+    eCalPar_OSC_C2_HI_AA,
+    eCalPar_OSC_C2_HI_BB,
+    eCalPar_OSC_C2_HI_PP,
+    eCalPar_OSC_C2_HI_KK,
+    eCalPar_OSC_C2_LO_AA,
+    eCalPar_OSC_C2_LO_BB,
+    eCalPar_OSC_C2_LO_PP,
+    eCalPar_OSC_C2_LO_KK,
+
+    eCalPar_OSC_C3_HI_AA,
+    eCalPar_OSC_C3_HI_BB,
+    eCalPar_OSC_C3_HI_PP,
+    eCalPar_OSC_C3_HI_KK,
+    eCalPar_OSC_C3_LO_AA,
+    eCalPar_OSC_C3_LO_BB,
+    eCalPar_OSC_C3_LO_PP,
+    eCalPar_OSC_C3_LO_KK,
+
+    eCalPar_OSC_C4_HI_AA,
+    eCalPar_OSC_C4_HI_BB,
+    eCalPar_OSC_C4_HI_PP,
+    eCalPar_OSC_C4_HI_KK,
+    eCalPar_OSC_C4_LO_AA,
+    eCalPar_OSC_C4_LO_BB,
+    eCalPar_OSC_C4_LO_PP,
+    eCalPar_OSC_C4_LO_KK,
+
+    eCalParEnd
+} calPar_t;
+#endif
 
 
 

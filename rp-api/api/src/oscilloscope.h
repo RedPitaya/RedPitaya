@@ -23,6 +23,11 @@
 static const int OSC_BASE_ADDR = 0x00100000;
 static const int OSC_BASE_SIZE = 0x30000;
 
+
+#if defined Z20_125_4CH
+static const int OSC_BASE_ADDR_4CH = 0x00200000;
+#endif
+
 // Oscilloscope Channel A input signal buffer offset
 #define OSC_CHA_OFFSET 0x10000
 
@@ -252,10 +257,18 @@ int osc_SetThresholdChA(uint32_t threshold);
 int osc_GetThresholdChA(uint32_t* threshold);
 int osc_SetThresholdChB(uint32_t threshold);
 int osc_GetThresholdChB(uint32_t* threshold);
+int osc_SetThresholdChC(uint32_t threshold);
+int osc_GetThresholdChC(uint32_t* threshold);
+int osc_SetThresholdChD(uint32_t threshold);
+int osc_GetThresholdChD(uint32_t* threshold);
 int osc_SetHysteresisChA(uint32_t hysteresis);
 int osc_GetHysteresisChA(uint32_t* hysteresis);
 int osc_SetHysteresisChB(uint32_t hysteresis);
 int osc_GetHysteresisChB(uint32_t* hysteresis);
+int osc_SetHysteresisChC(uint32_t hysteresis);
+int osc_GetHysteresisChC(uint32_t* hysteresis);
+int osc_SetHysteresisChD(uint32_t hysteresis);
+int osc_GetHysteresisChD(uint32_t* hysteresis);
 int osc_SetTriggerDelay(uint32_t decimated_data_num);
 int osc_GetTriggerDelay(uint32_t* decimated_data_num);
 int osc_GetWritePointer(uint32_t* pos);
@@ -264,8 +277,14 @@ int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
+int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
+int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();
+const volatile uint32_t* osc_GetDataBufferChC();
+const volatile uint32_t* osc_GetDataBufferChD();
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

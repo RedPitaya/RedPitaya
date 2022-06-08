@@ -39,6 +39,23 @@ else { \
     return RP_EPN; \
 }
 
+#define CHANNEL_ACTION_4CH(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION, CHANNEL_3_ACTION, CHANNEL_4_ACTION) \
+if ((CHANNEL) == RP_CH_1) { \
+    CHANNEL_1_ACTION; \
+} \
+else if ((CHANNEL) == RP_CH_2) { \
+    CHANNEL_2_ACTION; \
+} \
+else if ((CHANNEL) == RP_CH_3) { \
+    CHANNEL_3_ACTION; \
+} \
+else if ((CHANNEL) == RP_CH_4) { \
+    CHANNEL_4_ACTION; \
+} \
+else { \
+    return RP_EPN; \
+}
+
 #ifdef DEBUG_REG
 #define cmn_Debug(X,Y) cmn_DebugReg(X,Y);
 #define cmn_DebugCh(X,Y,Z) cmn_DebugRegCh(X,Y,Z);

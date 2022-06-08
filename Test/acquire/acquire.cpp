@@ -420,11 +420,6 @@ int main(int argc, char *argv[])
             usage();
             exit( EXIT_SUCCESS );
             break;
-
-        default:
-            usage();
-            exit( EXIT_FAILURE );
-        }
     }
 
 #ifdef Z20_250_12

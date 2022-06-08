@@ -22,8 +22,11 @@
 #include "acq_handler.h"
 #include "analog_mixed_signals.h"
 #include "calib.h"
+
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
 #include "generate.h"
 #include "gen_handler.h"
+#endif
 
 static char version[50];
 int g_api_state = 0;
@@ -44,10 +47,12 @@ int rp_InitReset(bool reset)
     calib_Init();
     hk_Init(reset);
     ams_Init();
-    generate_Init();
-    osc_Init();
-    // TODO: Place other module initializations here
 
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
+    generate_Init();
+#endif
+
+    osc_Init();
     // Set default configuration per handler
     if (reset){
         rp_Reset();
@@ -63,20 +68,20 @@ int rp_IsApiInit(){
 int rp_CalibInit()
 {
     calib_Init();
-
     return RP_OK;
 }
 
 int rp_Release()
 {
     osc_Release();
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
     generate_Release();
+#endif    
     ams_Release();
     hk_Release();
     calib_Release();
     cmn_Release();
     g_api_state = false;
-    // TODO: Place other module releasing here (in reverse order)
     return RP_OK;
 }
 
@@ -84,9 +89,10 @@ int rp_Reset()
 {
     rp_DpinReset();
     rp_AOpinReset();
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
     rp_GenReset();
+#endif
     rp_AcqReset();
-    // TODO: Place other module resetting here (in reverse order)
     return 0;
 }
 
@@ -146,6 +152,8 @@ int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, 
     return calib_SetFrontEndScaleHV(channel, referentialVoltage, out_params);
 }
 
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
+
 int rp_CalibrateBackEndOffset(rp_channel_t channel) {
     return calib_SetBackEndOffset(channel);
 }
@@ -157,6 +165,8 @@ int rp_CalibrateBackEndScale(rp_channel_t channel) {
 int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
     return calib_CalibrateBackEnd(channel, out_params);
 }
+
+#endif
 
 int rp_CalibrationReset() {
     return calib_Reset();
@@ -182,6 +192,10 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings(){
     return calib_GetDefaultCalib();
 }
 
+float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
+{
+	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
+}
 
 /**
  * Identification
@@ -438,7 +452,7 @@ int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
         default:
             return RP_EPN;
     }
-    int r = !fscanf (fp, "%d", value);
+    int r = !fscanf (fp, "%u", value);
     fclose(fp);
     return r;
 }
@@ -494,6 +508,7 @@ int rp_AOpinGetValue(int unsigned pin, float* value) {
 }
 
 int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
+    (void)(pin);
     *min_val = ANALOG_OUT_MIN_VAL;
     *max_val = ANALOG_OUT_MAX_VAL;
     return RP_OK;
@@ -685,14 +700,44 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
 }
 
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
-{
+{    
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
+#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_250_12
 int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2)
 {
     return acq_GetDataRawV2(pos, size, buffer, buffer2);
 }
+
+int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
+{
+    return acq_GetDataV2(pos, size, buffer1, buffer2);
+}
+
+int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2){
+    return acq_GetDataV2D(pos, size, buffer1, buffer2);
+}
+
+#endif
+
+#if defined Z20_125_4CH
+int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2, uint16_t* buffer3, uint16_t* buffer4)
+{
+    return acq_GetDataRawV2(pos, size, buffer, buffer2, buffer3, buffer4);
+}
+
+int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2, float* buffer3, float* buffer4)
+{
+    return acq_GetDataV2(pos, size, buffer1, buffer2, buffer3, buffer4);
+}
+
+int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2, double* buffer3, double* buffer4)
+{
+    return acq_GetDataV2D(pos, size, buffer1, buffer2, buffer3, buffer4);
+}
+
+#endif
 
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
@@ -707,15 +752,6 @@ int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
 int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer)
 {
     return acq_GetDataV(channel, pos, size, buffer);
-}
-
-int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
-{
-    return acq_GetDataV2(pos, size, buffer1, buffer2);
-}
-
-int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2){
-    return acq_GetDataV2D(pos, size, buffer1, buffer2);
 }
 
 int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
@@ -742,7 +778,7 @@ int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 }
 #endif
 
-#if defined Z10 || defined Z20_125
+#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
 int rp_AcqUpdateAcqFilter(rp_channel_t channel){
     return acq_UpdateAcqFilter(channel);
 }
@@ -750,12 +786,26 @@ int rp_AcqUpdateAcqFilter(rp_channel_t channel){
 int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp){
     return acq_GetFilterCalibValue( channel,coef_aa, coef_bb, coef_kk, coef_pp);
 }
-
 #endif
+
 
 /**
 * Generate methods
 */
+
+#if defined Z10 || defined Z20 || defined Z20_125
+
+int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
+    return gen_setBurstLastValue(channel,amlitude);
+}
+
+int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
+    return gen_getBurstLastValue(channel,amlitude);
+}
+
+#endif
+
+#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
 
 int rp_GenReset() {
     return gen_SetDefaultValues();
@@ -881,16 +931,6 @@ int rp_GenGetBurstCount(rp_channel_t channel, int *num) {
     return gen_getBurstCount(channel, num);
 }
 
-#ifndef Z20_250_12
-int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
-    return gen_setBurstLastValue(channel,amlitude);
-}
-
-int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
-    return gen_getBurstLastValue(channel,amlitude);
-}
-#endif
-
 int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
     return gen_setBurstRepetitions(channel, repetitions);
 }
@@ -935,10 +975,9 @@ int rp_GenOutEnableSync(bool enable){
     return gen_EnableSync(enable);
 }
 
-float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
-{
-	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
-}
+#endif
+
+#ifdef Z20_250_12
 
 int rp_SetEnableTempProtection(rp_channel_t channel, bool enable){
     return gen_setEnableTempProtection(channel,enable);
@@ -972,7 +1011,6 @@ int rp_GetPllControlLocked(bool *status){
     return house_GetPllControlLocked(status);
 }
 
-#ifdef Z20_250_12
 int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode){
     return gen_setGainOut(channel,mode);
 }
@@ -981,3 +1019,4 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     return gen_getGainOut(channel,status);
 }
 #endif
+
