@@ -68,7 +68,7 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/neon_asm.cpp
         )
 
-   
+
 if ("${MODEL}" STREQUAL "Z20_250_12")
     list(APPEND src
         ${CMAKE_SOURCE_DIR}/src/calib_250_12.c
@@ -119,7 +119,7 @@ endif()
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-std=c11 -Wall -pedantic -Wextra -Wno-unused-parameter -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -129,7 +129,7 @@ add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
 if ("${MODEL}" STREQUAL "Z20_250_12")
     if(NOT DEFINED INSTALL_DIR)
-        message(FATAL_ERROR "You must specify the path to the libraries api-250-12")      
+        message(FATAL_ERROR "You must specify the path to the libraries api-250-12")
     endif()
     include_directories(${INSTALL_DIR}/include/api250-12)
     link_directories(${INSTALL_DIR}/lib)
@@ -150,10 +150,10 @@ if(BUILD_SHARED)
 
         install(FILES ${CMAKE_SOURCE_DIR}/include/redpitaya/version.h
             DESTINATION ${INSTALL_DIR}/include)
-        
+
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include RENAME "rp.h")
-    endif()         
+    endif()
 endif()
 
 
@@ -167,13 +167,13 @@ if(BUILD_STATIC)
         install(TARGETS ${PROJECT_NAME}-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-        
+
         install(FILES ${CMAKE_SOURCE_DIR}/include/redpitaya/version.h
             DESTINATION ${INSTALL_DIR}/include)
-        
+
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include RENAME "rp.h")
-    endif()  
+    endif()
 endif()
 
 if(BUILD_DOC)
