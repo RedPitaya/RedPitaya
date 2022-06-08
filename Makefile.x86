@@ -171,6 +171,19 @@ DTS_PATH = dts
 endif
 endif
 
+ifeq ($(MODEL),Z20_125_4CH)
+ifeq ($(STREAMING),MASTER)
+# FPGA_PRJ_LST = v0.94
+
+FPGA_0_94	= 2527ef3eb0f31b3996c4a779eab979a6bdc88966
+
+# NEED for FSBL fpga image
+FPGA_PRJ = v0.94
+FPGA_MODEL ?= Z20_4
+DTS_PATH = dts
+endif
+endif
+
 ifeq ($(MODEL),Z20_250_12) 
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
@@ -258,32 +271,53 @@ ifneq "$(FPGA_AXI4LITE)" ""
 	$(call build_fpga,axi4lite,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
 endif
 
-ifneq ($(STREAMING),SLAVE)
-	# copy archived FPGA bitstream images and decompress them
-	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
-	# backward compatibility, TODO, should be removed at next OS release
-
-ifneq ($(FPGA_MODEL),Z20_250)
+ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(STREAMING),MASTER)
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
 	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-ifeq ($(FPGA_MODEL), Z10)
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 endif
-ifeq ($(FPGA_MODEL), Z20_14)
+endif
+
+ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(STREAMING),SLAVE)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+endif
+endif
+
+ifeq ($(FPGA_MODEL),Z20)
+ifeq ($(STREAMING),MASTER)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+endif
+endif
+
+ifeq ($(FPGA_MODEL),Z20_125)
+ifeq ($(STREAMING),MASTER)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 endif
-else
+endif
+
+ifeq ($(FPGA_MODEL),Z20_125_4CH)
+ifeq ($(STREAMING),MASTER)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+endif
+endif
+
+ifeq ($(FPGA_MODEL),Z20_250_12)
+ifeq ($(STREAMING),MASTER)
 	cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+endif
+endif
 
-endif
-else
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif
 
 fpga_move:
 
