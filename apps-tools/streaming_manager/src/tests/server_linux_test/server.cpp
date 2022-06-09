@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
         if (uio.nodeName == "rp_dac")
         {
-            gen = CGenerator::Create(uio, true , true );
+            gen = CGenerator::Create(uio, true , true, 125e6, 125e6);
         }
     }
 
@@ -109,8 +109,8 @@ int main(int argc, char* argv[])
         gen->printReg();
         bool firstBuf = true;
         std::cerr << "\nInit first and second buffers\n";
-        gen->initFirst((uint8_t*)buf1,(uint8_t*)buf1,size * 2);
-        gen->initSecond((uint8_t*)buf2,(uint8_t*)buf2,size * 2);
+        gen->initFirst((uint8_t*)buf1,(uint8_t*)buf1,size * 2, size * 2);
+        gen->initSecond((uint8_t*)buf2,(uint8_t*)buf2,size * 2, size * 2);
         std::cerr << "\n";
         gen->printReg();
         gen->start();
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
         gen->printReg();
         while(stop == 0){
 //            sleep(1);
-            if (gen->write(firstBuf ? (uint8_t*)buf1 : (uint8_t*)buf2,nullptr, size * 2)){
+            if (gen->write(firstBuf ? (uint8_t*)buf1 : (uint8_t*)buf2,nullptr, size * 2, size * 2)){
             //    gen->printReg();
             //    std::cerr << "\n";
 //                std::cerr << firstBuf << "\n";

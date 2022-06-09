@@ -24,11 +24,12 @@ static struct option long_options[] = {
         {"file",             required_argument, 0, 'f'},
         {"port",             required_argument, 0, 'p'},
         {"search_port",      required_argument, 0, 's'},
+        {"verbose",          no_argument, 0, 'v'},
         {"help",             no_argument, 0, 'h'},
         {0, 0, 0, 0}
 };
 
-static constexpr char optstring[] = "bf:p:s:h";
+static constexpr char optstring[] = "bf:p:s:hv";
 
 std::vector<std::string> ClientOpt::split(const std::string& s, char seperator)
 {
@@ -103,6 +104,7 @@ auto ClientOpt::usage(char const* progName) -> void{
                 "\t                                By default uses the config file /root/.streaming_config.\n"
                 "\t--port=PORT           -p PORT   Port for configuration server (Default: 8901).\n"
                 "\t--search_port=PORT    -s PORT   Port for broadcast (Default: 8902).\n"
+                "\t--verbose             -v        Displays information.\n"
                 "\n"
                 "\t Example:\n"
                 "\t\t%s -b -f /root/.streaming_config_new\n";
@@ -139,6 +141,10 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options{
                 exit(EXIT_SUCCESS);
                 break;
             }
+
+            case 'v':
+                opt.verbose = true;
+                break;
 
             case 's': {
                 int config_port = 0;

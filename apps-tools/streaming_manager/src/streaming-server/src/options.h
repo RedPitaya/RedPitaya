@@ -24,12 +24,14 @@ namespace ClientOpt {
         std::string config_port;
         std::string broadcast_port;
         std::string conf_file;
-        
+        bool verbose;
+
         Options(){
+            verbose = false;
             background = false;
-            config_port = "8901";
-            broadcast_port = "8902";
-            conf_file = "/root/.streaming_config";
+            config_port = std::string("8901");
+            broadcast_port = std::string("8902");
+            conf_file = std::string("/root/.streaming_config");
         };
     };
     auto split(const std::string& s, char seperator) ->  std::vector<std::string>;

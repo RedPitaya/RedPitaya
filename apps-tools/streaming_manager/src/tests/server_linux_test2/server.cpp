@@ -5,17 +5,35 @@
 #include "Oscilloscope.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
+#include "DACStreamingApplication.h"
+#include "DACStreamingManager.h"
 
+#include "Generator.h"
 
-// void sigHandler (int sigNum){
-//     g_manger->stop();
-//     g_asionet->Stop();
-//     g_terminate = true;
-// }
+volatile int stop = 0;
+
+void sigHandler (int sigNum){
+    stop = 1;
+}
+
+void installTermSignalHandler()
+{
+#ifdef _WIN32
+    signal(SIGINT, sigHandler);
+    signal(SIGTERM, sigHandler);
+#else
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = sigHandler;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+#endif
+}
 
 
 int main(int argc, char* argv[])
 {
+    installTermSignalHandler();
     std::vector<UioT> uioList = GetUioList();
 
     // Print UIOs
@@ -44,7 +62,8 @@ int main(int argc, char* argv[])
 
     // Search oscilloscope
     COscilloscope::Ptr osc0 = nullptr;
-    COscilloscope::Ptr osc1 = nullptr;
+    CGenerator::Ptr gen = nullptr;
+
     int Decimation = 16;
     if (argc > 1) {
         Decimation = atoi(argv[1]);
@@ -58,8 +77,11 @@ int main(int argc, char* argv[])
             osc0 = COscilloscope::Create(uio, true , true , Decimation,true);
             osc0->setCalibration(0,1,0,1);
             osc0->setFilterBypass(true);
- //           osc1 = COscilloscope::Create(uio, 1 , 1);
-            break;
+        }
+
+        if (uio.nodeName == "rp_dac")
+        {
+            gen = CGenerator::Create(uio, true , true, 125e6, 125e6);
         }
     }
 
@@ -70,14 +92,23 @@ int main(int argc, char* argv[])
     }
 
 
+
     CStreamingManager::Ptr s_manger = nullptr;
-    s_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , ".", 100000,false);
-
-
+    s_manger = CStreamingManager::Create(Stream_FileType::CSV_TYPE , ".", 100000,false,false);
     // Run application
     CStreamingApplication app(s_manger,osc0, 16 , Decimation, 3, 0 , 16);
+    app.runNonBlock("");
 
-    app.run("");
+    CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create("127.0.0.1","12345");
+    CDACStreamingApplication dac(dac_manager,gen);
+
+    dac.runNonBlock();
+
+    while(stop == 0){
+    }
+    std::cout << "STOP\n";
+    app.stop();
+    dac.stop();
 
     return 0;
 }

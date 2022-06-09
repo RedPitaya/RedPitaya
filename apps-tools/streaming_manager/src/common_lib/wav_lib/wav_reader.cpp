@@ -6,7 +6,13 @@
 using namespace std;
 
 CWaveReader::CWaveReader(){
+    m_dataSize = 0;
     std::memset(&m_header,0,sizeof (m_header));
+}
+
+CWaveReader::~CWaveReader(){
+    if (m_read_fs.is_open())
+        m_read_fs.close();
 }
 
 auto CWaveReader::openFile(string fileName) -> bool{
@@ -17,6 +23,10 @@ auto CWaveReader::openFile(string fileName) -> bool{
         cout << "File " << fileName << " not exist" << std::endl;
         return false;
     }
+    m_read_fs.seekg (0, m_read_fs.end);
+    uint64_t length = m_read_fs.tellg();
+    m_read_fs.seekg (0, m_read_fs.beg);
+    m_dataSize = length - sizeof(WavHeader_t);
     m_read_fs.read((char*)&m_header, sizeof(WavHeader_t));
     if (m_read_fs){
         return true;
@@ -31,6 +41,16 @@ auto CWaveReader::getHeader() -> WavHeader_t{
 }
 
 auto CWaveReader::getBuffers(uint8_t **ch1,size_t *size_ch1, uint8_t **ch2,size_t *size_ch2) -> bool{
+    auto delFunc = [=](){
+        if (*size_ch1 == 0){
+            if (*ch1) delete[] *ch1;
+            *ch1 = nullptr;
+        }
+        if (*size_ch2 == 0){
+            if (*ch2) delete[] *ch2;
+            *ch2 = nullptr;
+        }
+    };
     *size_ch1 = 0;
     *size_ch2 = 0;
     if (strncmp((const char*)m_header.RIFF,"RIFF",4) == 0){
@@ -40,17 +60,16 @@ auto CWaveReader::getBuffers(uint8_t **ch1,size_t *size_ch1, uint8_t **ch2,size_
         if (dataBitSize != 16) return false;
         if (channels == 1 || channels == 2){
             *ch1 = new uint8_t[32 * 1024];
-            memset(*ch1,0,32 * 1024);
         }
         if (channels == 2){
             *ch2 = new uint8_t[32 * 1024];
-            memset(*ch2,0,32 * 1024);
         }
         int size = 16 * 1024;
         for(int i = 0 ; i < size; i++){
             uint16_t  value = 0;
             m_read_fs.read((char*)&value,sizeof(value));
             if (!m_read_fs){
+                delFunc();
                 return true;
             }
             if (*ch1){
@@ -62,6 +81,7 @@ auto CWaveReader::getBuffers(uint8_t **ch1,size_t *size_ch1, uint8_t **ch2,size_
                 value = 0;
                 m_read_fs.read((char*)&value,sizeof(value));
                 if (!m_read_fs){
+                    delFunc();
                     return true;
                 }
                 if (*ch2){
@@ -70,6 +90,7 @@ auto CWaveReader::getBuffers(uint8_t **ch1,size_t *size_ch1, uint8_t **ch2,size_
                 }
             }
         }
+        delFunc();
         return true;
     }
     return false;

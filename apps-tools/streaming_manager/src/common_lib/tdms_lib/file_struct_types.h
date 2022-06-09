@@ -37,20 +37,20 @@ namespace TDMS
 
 	struct RawData
 	{
-		long Offset;
+		long Offset = 0;
 		TDMS::DataType DataType;
-		int Dimension;
-		long Count;
-		long Size;
-		bool IsInterleaved;
-		int InterleaveStride;
+		int Dimension = 0;
+		long Count = 0;
+		long Size = 0;
+		bool IsInterleaved = false;
+		int InterleaveStride = 0;
 	};
 
 	struct Metadata
 	{
         TDMS::TableOfContents TableOfContents;
-        int Version;
-		string PathStr;
+        int Version = 0;
+		string PathStr = "";
 		vector<string> Path;
 		TDMS::RawData RawData;
 		map<string, DataType> Properties;
