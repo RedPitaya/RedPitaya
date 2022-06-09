@@ -119,7 +119,7 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const & e
 
 	if (ec) {
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app,
-				"Timer Error: "+ec.message());
+				"Signal timer Error: "+ec.message());
 		return;
 	}
 
@@ -152,7 +152,7 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const & ec
 
 	if (ec) {
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app,
-				"Timer Error: "+ec.message());
+				"Param timer Error: "+ec.message());
 		return;
 	}
 

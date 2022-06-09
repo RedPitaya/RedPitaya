@@ -46,15 +46,27 @@ static pthread_mutex_t mutex;
 data_t RMS(const std::vector<float> &data, int size){
     data_t result = 0;
     for(int i = 0; i < size; i++){
-        result += data[i] * data[i];
+		int x = data[i] * 1000;
+		double d = (double)x / 1000.0; 
+        result += d * d;
     }
-    result =  sqrt(result / size);
+    result =  sqrt(result / (double)size);
     return result;
 }
 
-
-float l_inter(float a, float b, float f)
+float ba_trapezoidalApprox(double *data, float T, int size) 
 {
+        double result = 0;
+
+        for(int i = 0; i < size - 1; i++){
+                result += data[i] + data[i+1];
+        }
+        result = ((T / 2.0) * result);
+        return result;
+}
+
+
+float l_inter(float a, float b, float f){
     return a + f * (b - a);
 }
 
@@ -188,11 +200,101 @@ data_t phaseCalculator(data_t freq_HZ, data_t samplesPerSecond, int numSamples,i
 	return phaseShift;
 }
 
+int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
+                                        uint32_t size,
+                                        float _freq, // 2*pi*f
+                                        int decimation,
+                                        float *gain,
+                                        float *phase_out,
+                                        float input_threshold) 
+{
+
+		float w_out = _freq*2 * M_PI;
+
+        double ang, u_dut_1_phase, u_dut_2_phase, phase;
+
+        double T = (decimation / ADC_SAMPLE_RATE);
+        double u_dut_1[size];
+        double u_dut_2[size];
+
+        double u_dut_1_s[2][size];
+        double u_dut_2_s[2][size];
+
+        double component_lock_in[2][2];
+        int ret_value = RP_OK;
+
+        for (size_t i = 0; i < size; i++){
+                u_dut_1[i] = ceil(buffer.ch2[i] * 1000.0) / 1000.0;
+                u_dut_2[i] = ceil(buffer.ch1[i] * 1000.0) / 1000.0;
+        }
+
+        if (size > 0){
+                double u1_max = u_dut_1[0];
+                double u1_min = u_dut_1[0];
+                double u2_max = u_dut_2[0];
+                double u2_min = u_dut_2[0];
+                for (size_t i = 1; i < size; i++){
+                        if (u1_max < u_dut_1[i]) u1_max = u_dut_1[i];
+                        if (u2_max < u_dut_2[i]) u2_max = u_dut_2[i];
+                        if (u1_min > u_dut_1[i]) u1_min = u_dut_1[i];
+                        if (u2_min > u_dut_2[i]) u2_min = u_dut_2[i];
+                }
+                if ((u1_max - u1_min) < input_threshold) ret_value = RP_EIPV;
+                if ((u2_max - u2_min) < input_threshold) ret_value = RP_EIPV;
+
+        }
+
+        for (size_t i = 0; i < size; i++){
+                ang = (i * T * w_out);
+
+                u_dut_1_s[0][i] = u_dut_1[i] * sin(ang);
+                u_dut_1_s[1][i] = u_dut_1[i] * sin(ang + (M_PI / 2));
+
+                u_dut_2_s[0][i] = u_dut_2[i] * sin(ang);
+                u_dut_2_s[1][i] = u_dut_2[i] * sin(ang + (M_PI / 2));
+        }
+
+        /* Trapezoidal approximation */
+        component_lock_in[0][0] = ba_trapezoidalApprox(u_dut_1_s[0], T, size); //U_X
+        component_lock_in[0][1] = ba_trapezoidalApprox(u_dut_1_s[1], T, size); //U_Y
+        component_lock_in[1][0] = ba_trapezoidalApprox(u_dut_2_s[0], T, size); //I_X
+        component_lock_in[1][1] = ba_trapezoidalApprox(u_dut_2_s[1], T, size); //I_Y
+
+        /* Calculating voltage amplitude and phase */
+        // u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
+
+        u_dut_1_phase = atan2f(component_lock_in[0][1], component_lock_in[0][0]);
+
+        /* Calculating current amplitude and phase */
+        // u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
+
+        u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
+
+        phase = u_dut_1_phase - u_dut_2_phase;
+
+        /* Phase has to be limited between M_PI and -M_PI. */
+        if (phase <= -M_PI) 
+                phase += 2*M_PI;
+        else if (phase >= M_PI) 
+                phase -= 2*M_PI;
+
+        *phase_out = phase * (180.0 / M_PI);
+		// Old logic
+        // *gain = u_dut_1_ampl / u_dut_2_ampl;
+	
+		data_t sig1_rms =  RMS(buffer.ch1,size);	
+		data_t sig2_rms =  RMS(buffer.ch2,size);
+		*gain = sig2_rms / sig1_rms;
+
+        return ret_value;
+}
+
+
 int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 					uint32_t size,
 					float samplesPerSecond,
 					float _freq, 
-					int   samples_period,
+					float samples_period,
 					float *gain,
 					float *phase_out,
 					float input_threshold) 
@@ -208,9 +310,6 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	for (size_t i = 0; i < size; i++){
 		buf1[i] = buffer.ch1[i];
 		buf2[i] = buffer.ch2[i];
-		// Filtring 
-		//buf1[i]  = buf1[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (data_t)(size-1)));
-		//buf2[i]  = buf2[i] * ( 0.54 - 0.46 * cos(2*M_PI*i / (data_t)(size-1)));
 
 		// 
 		if ((buf1[i]) > max_ch1) {
@@ -229,6 +328,12 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 
 	data_t sig1_rms =  RMS(buffer.ch1,size);
 	data_t sig2_rms =  RMS(buffer.ch2,size);
+	
+	fprintf(stderr,"freq %f\n",_freq);
+	fprintf(stderr,"RMS 1 %f min %f max %f\n",sig1_rms, min_ch1, max_ch1);
+	fprintf(stderr,"RMS 2 %f min %f max %f\n",sig2_rms, min_ch2, max_ch2);
+
+	
 	*gain = sig2_rms / sig1_rms;
 	
 	if ((max_ch1 - min_ch1) < input_threshold) ret_value = RP_EIPV;
@@ -374,8 +479,8 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 
 	pthread_mutex_lock(&mutex);
 	EXEC_CHECK_MUTEX(rp_AcqSetDecimationFactor(_decimation), mutex);
-	EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(ADC_BUFFER_SIZE / 2.0), mutex);
-	//EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(-ADC_BUFFER_SIZE / 2.0 + acq_u_size), mutex);
+	//EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(ADC_BUFFER_SIZE / 2.0), mutex);
+	EXEC_CHECK_MUTEX(rp_AcqSetTriggerDelay(-ADC_BUFFER_SIZE / 2.0 + acq_u_size), mutex);
 	EXEC_CHECK_MUTEX(rp_AcqStart(), mutex);
 	usleep(sleep_time);
 	// Trigger, it is needed for the RP_DEC_1 decimation
@@ -398,12 +503,11 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 
 	EXEC_CHECK_MUTEX(rp_AcqStop(), mutex); // Why the write pointer is not stopped?
 	EXEC_CHECK_MUTEX(rp_AcqGetWritePointerAtTrig(&pos), mutex);
-	pos++;
+	//pos++;
 	EXEC_CHECK_MUTEX(rp_AcqGetDataV2(pos, &acq_u_size, _buffer.ch1.data(), _buffer.ch2.data()), mutex);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
-
 
 int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
 {
@@ -413,31 +517,35 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
 
     //Generate a sinusoidal wave form
     rp_BaSafeThreadGen(RP_CH_1, _freq, _amplitude_in, _dc_bias);
-    int size_buff_limit = ADC_BUFFER_SIZE;
-	int new_dec = round((static_cast<float>(_periods_number) * ADC_SAMPLE_RATE) / (_freq * size_buff_limit));
-	new_dec = new_dec < 1 ? 1 : new_dec;
+    int size_buff_limit = ADC_BUFFER_SIZE / 4;
+	int sampls = size_buff_limit / _periods_number;
+	int decimation = ADC_SAMPLE_RATE / (sampls * _freq);
+	decimation = decimation < 1 ? 1 : decimation;
 	
-	if (new_dec < 16){
-        if (new_dec >= 8)
-            new_dec = 8;
+	if (decimation < 16){
+        if (decimation >= 8)
+            decimation = 8;
         else
-            if (new_dec >= 4)
-                new_dec = 4;
+            if (decimation >= 4)
+                decimation = 4;
             else
-                if (new_dec >= 2)
-                    new_dec = 2;
+                if (decimation >= 2)
+                    decimation = 2;
                 else 
-                    new_dec = 1;
+                    decimation = 1;
     }
-    if (new_dec > 65536){
-        new_dec = 65536;
+    if (decimation > 65536){
+        decimation = 65536;
     }
-	int samples_period = round(ADC_SAMPLE_RATE / (_freq * new_dec));
+	
+	acq_size = round((static_cast<float>(_periods_number) * ADC_SAMPLE_RATE) / (_freq * decimation));
 
-    acq_size = size_buff_limit;
-    rp_BaSafeThreadAcqData(_buffer,new_dec, acq_size,_amplitude_in);
+	fprintf(stderr,"Dec %d freq %f acq_size %d\n",decimation,_freq,acq_size);
+
+    rp_BaSafeThreadAcqData(_buffer,decimation, acq_size,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
-    int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / new_dec,_freq, samples_period,  &gain, &phase_out,_input_threshold);
+    //int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
+	int ret = rp_BaDataAnalysisTrap(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
     *_amplitude = 10.*logf(gain);
     *_phase = phase_out;

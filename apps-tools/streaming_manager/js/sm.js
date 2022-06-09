@@ -290,7 +290,14 @@
             }
         }
         SM.ss_status_last = ss_status;
+    }
 
+    SM.change_adc_data_pass = function(new_params) {
+        if (new_params['SS_ADC_DATA_PASS'].value == 1) {
+            $('#svg-is-data-pass').show();
+        }else{
+            $('#svg-is-data-pass').hide();
+        }
     }
 
     //Handlers
@@ -357,6 +364,18 @@
         if (val > SM.ss_max_rate)
             val = SM.ss_max_rate;
         SM.ss_rate = Math.round(SM.ss_full_rate / val);
+        if (SM.ss_rate >= 65536){
+            SM.ss_rate = 65536;
+        }
+        if (SM.ss_rate == 3){
+            SM.ss_rate = 4;
+        }
+        if (SM.ss_rate >= 5 && SM.ss_rate <= 7){
+            SM.ss_rate = 8;
+        }
+        if (SM.ss_rate >= 9 && SM.ss_rate <= 15){
+            SM.ss_rate = 16;
+        }
         return SM.ss_rate;
     }
 
@@ -427,6 +446,7 @@
     //    setInterval(parametersHandler, 50);
 
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
+    SM.param_callbacks["SS_ADC_DATA_PASS"] = SM.change_adc_data_pass;
 
 
 }(window.SM = window.SM || {}, jQuery));

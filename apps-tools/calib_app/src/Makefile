@@ -22,17 +22,17 @@ INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
 LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 
-COMMON_FLAGS+=-Wall -fPIC -Os -s -w -DASIO_STANDALONE
+COMMON_FLAGS+=-Wall -fPIC -pedantic -Os -s -w -DASIO_STANDALONE
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE) -D$(MODEL)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
-LDWFLAGS+= -lrp_sdk -lrp
+LDWFLAGS+= -lrp_sdk -lrp -lrp-hw
 LDWFLAGS+= -Wl,--no-whole-archive
 LDWFLAGS+= -shared
 
 LDWFLAGS_TEST+= -Wl,--whole-archive
-LDWFLAGS_TEST+=  -static -lpthread -lrp
+LDWFLAGS_TEST+=  -static -lpthread -lrp -lrp-hw
 LDWFLAGS_TEST+= -Wl,--no-whole-archive
 
 

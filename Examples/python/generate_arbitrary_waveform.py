@@ -34,6 +34,8 @@ for i in range(0, BUFF_SIZE-1):
 			x += str(math.sin(t[i]) + (1.0/3.0) + math.sin(t[i] * 3))
 			y += str((1.0 / 2.0) * math.sin(t[i]) + (1.0/4.0) * math.sin(t[i] * 4))		
 
+rp_s.tx_txt('GEN:RST')
+
 rp_s.tx_txt('SOUR1:FUNC ARBITRARY')
 rp_s.tx_txt('SOUR2:FUNC ARBITRARY')
 
@@ -46,8 +48,8 @@ rp_s.tx_txt('SOUR2:VOLT 1')
 rp_s.tx_txt('SOUR1:FREQ:FIX 4000')
 rp_s.tx_txt('SOUR2:FREQ:FIX 4000')
 
-rp_s.tx_txt('OUTPUT1:STATE ON')
-rp_s.tx_txt('OUTPUT2:STATE ON')
+rp_s.tx_txt('OUTPUT:STATE ON')
+rp_s.tx_txt('SOUR:TRIG:INT')
 
 #print x
 

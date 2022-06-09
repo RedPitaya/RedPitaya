@@ -25,15 +25,15 @@
 #if defined Z10 || defined Z20_125
 #include "filter_logic.h"
 #include "filter_logic2ch.h"
-CFilter_logic::Ptr g_filter_logic;
-CFilter_logic2ch::Ptr g_filter_logic2ch;
+CFilter_logic::Ptr g_filter_logic = nullptr;
+CFilter_logic2ch::Ptr g_filter_logic2ch  = nullptr;
 int g_sub_progress = 0;
 #endif
 
-COscilloscope::Ptr g_acq;
-CCalib::Ptr        g_calib;
-CCalibMan::Ptr     g_calib_man;
-
+COscilloscope::Ptr g_acq  = nullptr;
+CCalib::Ptr        g_calib  = nullptr;
+CCalibMan::Ptr     g_calib_man = nullptr;
+std::mutex	g_mtx;
 
 #ifdef Z20_250_12
 #define DAC_DEVIDER 4.0
@@ -172,6 +172,7 @@ const char *rp_app_desc(void)
 //Application init
 int rp_app_init(void)
 {
+	std::lock_guard<std::mutex> lock(g_mtx);
 	fprintf(stderr, "Loading calibraton app version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
 	rp_Init();
@@ -189,12 +190,14 @@ int rp_app_init(void)
     rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
 #endif
 	g_acq->start();
+	fprintf(stderr, "rp_app_init [OK]\n");
 	return 0;
 }
 
 //Application exit
 int rp_app_exit(void)
 {
+	std::lock_guard<std::mutex> lock(g_mtx);
 	g_acq->stop();
 	rp_Release();
 	fprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
@@ -244,6 +247,7 @@ void UpdateSignals(void)
 }
 
 void sendCalibInManualMode(bool _force){
+	if (!g_calib_man) return;
 	if (ch1_gain_adc.Value() != g_calib_man->getCalibValue(ADC_CH1_GAIN) || _force){
 		ch1_gain_adc.SendValue(g_calib_man->getCalibValue(ADC_CH1_GAIN));
 	}
@@ -272,6 +276,7 @@ void sendCalibInManualMode(bool _force){
 }
 
 void getNewCalib(){
+	if (!g_calib_man) return;
 	bool update = false;
 	if (ch1_gain_adc_new.IsNewValue()){
 		ch1_gain_adc_new.Update();
@@ -323,11 +328,12 @@ void getNewCalib(){
 }
 
 void setupGen(){
+	if (!g_calib_man) return;
 	if (gen1_enable.IsNewValue()){
 		gen1_enable.Update();
 		g_calib_man->enableGen(RP_CH_1,gen1_enable.Value());
 	}
-
+	
 	if (gen2_enable.IsNewValue()){
 		gen2_enable.Update();
 		g_calib_man->enableGen(RP_CH_2,gen2_enable.Value());
@@ -357,17 +363,17 @@ void setupGen(){
 		gen2_type.Update();
 		g_calib_man->setGenType(RP_CH_2,gen2_type.Value());
 	}
-
+	fprintf(stderr,"Cc %d\n",g_calib_man.get());
 	if (gen2_offset.IsNewValue()){
 		gen2_offset.Update();
 		g_calib_man->setOffset(RP_CH_2,gen2_offset.Value());
 	}
-
+	fprintf(stderr,"C1 %d\n",g_calib_man.get());
 	if (gen2_freq.IsNewValue()){
 		gen2_freq.Update();
 		g_calib_man->setFreq(RP_CH_2,gen2_freq.Value());
 	}
-
+	fprintf(stderr,"C2 %d\n",g_calib_man.get());
 	if (gen2_amp.IsNewValue()){
 		gen2_amp.Update();
 		g_calib_man->setAmp(RP_CH_2,gen2_amp.Value());
@@ -377,6 +383,7 @@ void setupGen(){
 #if defined Z10 || defined Z20_125
 
 void getNewFilterCalib(){
+	if (!g_calib_man) return;
         bool update = false;
         if (filt_aa.IsNewValue()){
                 filt_aa.Update();
@@ -410,6 +417,7 @@ void getNewFilterCalib(){
 }
 
 void setupGenFilter(){
+	if (!g_calib_man) return;
 	if (filt_gen1_enable.IsNewValue()){
 		filt_gen1_enable.Update();
 		g_calib_man->enableGen(RP_CH_1,filt_gen1_enable.Value());
@@ -440,6 +448,7 @@ void setupGenFilter(){
 }
 
 void updateFilterModeParameter(){
+	if (!g_acq || !g_calib_man) return;
 	if (cursor_x1.IsNewValue()){
 		cursor_x1.Update();
 		g_acq->setCursor1(cursor_x1.Value());
@@ -489,6 +498,8 @@ void updateFilterModeParameter(){
 }
 
 void calibFilter(){
+	if (!g_filter_logic || !g_calib_man) return;
+
 	if (filt_calib_step.Value() == 1){
 		g_filter_logic->init(adc_channel.Value() == 0 ? RP_CH_1 : RP_CH_2);
 		g_calib_man->setOffset(RP_CH_1,0);
@@ -557,7 +568,8 @@ void calibFilter(){
 }
 
 void calibAutoFilter(){
-
+	if (!g_filter_logic2ch || !g_calib_man || !g_acq) return;
+	
 	if (f_ref_volt.IsNewValue()){
 		f_ref_volt.Update();
 	}
@@ -821,8 +833,7 @@ void sendFilterCalibValues(rp_channel_t _ch){
 
 //Update parameters
 void UpdateParams(void)
-{
-
+{	if (!g_calib || !g_acq || !g_calib_man) return;
 	try{
 		auto x = g_acq->getData();
 		ch1_max.Value() = x.ch1_max;
@@ -980,11 +991,15 @@ void PostUpdateSignals(){}
 
 void OnNewParams(void)
 {
+	std::lock_guard<std::mutex> lock(g_mtx);
 	//Update parameters
+	fprintf(stderr, "OnNewParams [Start]\n");
 	UpdateParams();
+	fprintf(stderr, "rp_app_init [End]\n");	
 }
 
 void OnNewSignals(void)
 {
+	std::lock_guard<std::mutex> lock(g_mtx);
 	UpdateSignals();
 }

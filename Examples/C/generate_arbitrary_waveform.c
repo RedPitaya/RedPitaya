@@ -44,6 +44,7 @@ int main(int argc, char **argv){
 
 	rp_GenOutEnable(RP_CH_1);
 	rp_GenOutEnable(RP_CH_2);
+	rp_GenSynchronise();
 
 	/* Releasing resources */
 	free(y);

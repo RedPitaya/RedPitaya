@@ -11,8 +11,8 @@ STREAMING ?= MASTER
 VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
-LINUX_VER = 1.07
+VERSION = $(VER)-$(BUILD_NUMBER)
+LINUX_VER = 1.08
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -558,4 +558,5 @@ clean:
 	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(PRODUCTION_TEST_DIR) clean
+	make -C $(APP_STREAMINGMANAGER_DIR) clean
 	apps-free-clean

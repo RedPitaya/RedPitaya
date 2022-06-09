@@ -146,7 +146,7 @@ void COscilloscope::oscWorker(){
         {
            pthread_mutex_lock(&m_funcSelector);
            if (m_mode == 0){
-                acquire();
+               acquire();
            }
            if (m_mode == 1){
                acquireSquare();
@@ -700,29 +700,30 @@ void COscilloscope::resetGen(){
     setOffset(RP_CH_2,0);
 }
 
-void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){
+void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){    
     if (_enable){
         rp_GenOutEnable(_ch);
         rp_GenResetTrigger(_ch);
     }else{
         rp_GenOutDisable(_ch);
     }
+    fprintf(stderr,"enableGen2 %d\n",this);
 }
 
 int COscilloscope::setFreq(rp_channel_t _ch,int _freq){
-    rp_GenFreq(_ch,_freq);
+    return rp_GenFreq(_ch,_freq);
 }
 
 int COscilloscope::setAmp(rp_channel_t _ch,float _ampl){
-    rp_GenAmp(_ch,_ampl);
+    return rp_GenAmp(_ch,_ampl);
 }
 
 int COscilloscope::setOffset(rp_channel_t _ch,float _offset){
-    rp_GenOffset(_ch,_offset);
+    return rp_GenOffset(_ch,_offset);
 }
 
 int COscilloscope::setGenType(rp_channel_t _ch,int _type){
-    rp_GenWaveform(_ch, (rp_waveform_t)_type);
+    return rp_GenWaveform(_ch, (rp_waveform_t)_type);
 }
 
 

@@ -212,6 +212,7 @@
         }).done(function(msg) {});
     };
 
+    var routingIsGot = false;
     WIZARD.GetEth0Status = function() {
         $.ajax({
             url: '/get_eth0_status',
@@ -219,6 +220,19 @@
         }).success(function(msg) {
             var info = WIZARD.ParseAddress(msg);
             var gateway = msg.split("gateway:")[1].split("\n")[0];
+
+            const $select = document.querySelector('#eth0_mode');
+            if (!routingIsGot)
+            {
+                if (msg.includes("dynamic")) {
+                    $select.value = "#eth0_dhcp_mode";
+                    routingIsGot = true;
+                }
+                else {
+                    $select.value = "#eth0_static_mode";
+                    routingIsGot = true;
+                }
+            }
 
             if (!gateway) {
                 gateway = "None";

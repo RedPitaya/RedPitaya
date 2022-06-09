@@ -9,7 +9,7 @@ GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?=
 
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -23,7 +23,7 @@ STREAMING ?= MASTER
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)
+# Version: $(VER)-$(REVISION)
 # Build: $(BUILD_NUMBER)
 # Branch: $(GIT_LOCAL_BRANCH)
 # Commit: $(GIT_COMMIT)
@@ -125,12 +125,12 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 977a4d0fe89f4815940385e19b6c3524a6c2a59b
-FPGA_CLASSIC 	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_0_94	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_MERCURY	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_AXI4LITE	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_CLASSIC 	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_LOGIC	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_0_94	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_MERCURY	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_AXI4LITE	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -143,8 +143,8 @@ ifeq ($(MODEL),Z20)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94 stream_app
 
-FPGA_STREAM_APP = b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_0_94	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_0_94	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -157,12 +157,12 @@ ifeq ($(MODEL),Z20_125)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 977a4d0fe89f4815940385e19b6c3524a6c2a59b
-FPGA_CLASSIC 	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_0_94	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_MERCURY	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_AXI4LITE	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_CLASSIC 	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_LOGIC	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_0_94	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_MERCURY	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_AXI4LITE	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -175,9 +175,9 @@ ifeq ($(MODEL),Z20_250_12)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 
-FPGA_STREAM_APP_250 = 977a4d0fe89f4815940385e19b6c3524a6c2a59b
-FPGA_0_94_250	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC_250	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP_250 = 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_0_94_250	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_LOGIC_250	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic_250
@@ -188,10 +188,11 @@ endif
 
 ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
-# FPGA_PRJ_LST = stream_app logic
+# FPGA_PRJ_LST = stream_app logic v0.94
 
-FPGA_STREAM_APP = b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_LOGIC	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
+FPGA_0_94	= 5500c5c3ec2ff3c704cce44f2aa4bd187dcf7504
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -409,7 +410,7 @@ $(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
 # tarball
 ################################################################################
 
-ZIPFILE=ecosystem-$(VERSION).zip
+ZIPFILE=ecosystem-$(VERSION)-$(REVISION).zip
 
 zip: $(ZIPFILE)
 
@@ -478,3 +479,20 @@ ifneq "$(FPGA_AXI4LITE)" ""
 endif
 
 	./gen_fpga_report.sh PACK
+
+
+################################################################################
+# streaming_client
+################################################################################
+
+APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
+
+streaming:  streaming_client streaming_client_win
+
+streaming_client:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client
+
+streaming_client_win:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_win

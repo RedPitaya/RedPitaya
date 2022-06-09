@@ -36,7 +36,7 @@ VERSION=$(VER)-$(BUILD_NUMBER)
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
-	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(configuration);
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(configuration);	
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB):
