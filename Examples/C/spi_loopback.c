@@ -22,10 +22,10 @@ int main(int argc, char *argv[]){
 
     int res = rp_SPI_InitDevice("/dev/spidev1.0"); // Init spi api.
     printf("Init result: %d\n",res);
-    
+
     res = rp_SPI_SetDefaultSettings(); // Set default settings.
     printf("Set default settings: %d\n",res);
-    
+
     res = rp_SPI_GetSettings(); // Get uart speed.
     printf("Get current settings of spi: %d\n",res);
 
@@ -49,17 +49,17 @@ int main(int argc, char *argv[]){
 
     res = rp_SPI_SetBufferForMessage(1,0,true,100,false); // Create RX buffer.
     printf("Set buffers for second msg: %d\n",res);
-    
+
     res = rp_SPI_ReadWrite(); // Pass message to SPI.
     printf("Read/Write to spi: %d\n",res);
 
-    uint8_t *rx_buffer = 0;
+    const uint8_t *rx_buffer = 0;
     size_t rx_size = 0;
-    res = rp_SPI_GetRxBuffer(0,&rx_buffer,&rx_size); // Get pointer to rx buffer. No need free buffer. Api itself destroy buffer. 
+    res = rp_SPI_GetRxBuffer(0,&rx_buffer,&rx_size); // Get pointer to rx buffer. No need free buffer. Api itself destroy buffer.
 
     if (rx_buffer)
         printf("Read message: %s (res %d)\n",rx_buffer,res);
-    
+
     res = rp_SPI_DestoryMessage();
 
     res = rp_SPI_Release(); // Close spi api.
