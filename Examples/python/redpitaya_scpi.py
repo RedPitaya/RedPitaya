@@ -44,9 +44,7 @@ class scpi (object):
             chunk = self._socket.recv(chunksize).decode('utf-8') # Receive chunk size of 2^n preferably
             msg += chunk
             if (len(msg) and msg[-2:] == self.delimiter):
-                msg = msg[-2:]
-                break
-            if len(chunk) < chunksize:
+                msg = msg[:-2]
                 break
         return msg
 
