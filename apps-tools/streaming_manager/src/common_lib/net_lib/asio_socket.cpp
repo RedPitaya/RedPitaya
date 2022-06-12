@@ -6,8 +6,6 @@
 
 using namespace net_lib;
 
-uint64_t g_sendbufersId = 0;
-std::map<uint64_t,net_buffer> g_sendbuffers;
 
 auto CAsioSocket::create(net_lib::EProtocol _protocol, std::string host, std::string port) -> CAsioSocket::Ptr {
     return std::make_shared<CAsioSocket>( _protocol, host, port);
@@ -382,10 +380,10 @@ auto CAsioSocket::sendBuffer(bool async, net_lib::net_buffer _buffer, size_t _si
                 m_udp_socket->send_to(asio::buffer(_buffer.get(), _size), m_udp_endpoint, 0, _error);
                 this->handlerSend(_error,_size);
             } else {
-                g_sendbufersId++;
-                g_sendbuffers[g_sendbufersId] = std::shared_ptr<uint8_t[]>(_buffer);
+                m_sendbufersId++;
+                m_sendbuffers[m_sendbufersId] = _buffer;
                 m_udp_socket->async_send_to(asio::buffer(_buffer.get(),_size),m_udp_endpoint,
-                                        std::bind(&CAsioSocket::handlerSend2, this, std::placeholders::_1 ,std::placeholders::_2,g_sendbufersId));
+                                        std::bind(&CAsioSocket::handlerSend2, this, std::placeholders::_1 ,std::placeholders::_2,m_sendbufersId));
             }
             return  true;
         }
@@ -396,10 +394,10 @@ auto CAsioSocket::sendBuffer(bool async, net_lib::net_buffer _buffer, size_t _si
                 m_tcp_socket->send(asio::buffer(_buffer.get(), _size), 0, _error);
                 this->handlerSend(_error,_size);
             }else {
-                g_sendbufersId++;
-                g_sendbuffers[g_sendbufersId] = std::shared_ptr<uint8_t[]>(_buffer);
+                m_sendbufersId++;
+                m_sendbuffers[m_sendbufersId] = _buffer;
                 m_tcp_socket->async_send(asio::buffer(_buffer.get(),_size),
-                                            std::bind(&CAsioSocket::handlerSend2, this, std::placeholders::_1 ,std::placeholders::_2,g_sendbufersId));
+                                            std::bind(&CAsioSocket::handlerSend2, this, std::placeholders::_1 ,std::placeholders::_2,m_sendbufersId));
             }
             return  true;
         }
@@ -408,7 +406,10 @@ auto CAsioSocket::sendBuffer(bool async, net_lib::net_buffer _buffer, size_t _si
 }
 
 auto CAsioSocket::handlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint64_t bufferId) -> void{
-    g_sendbuffers.erase(bufferId);
+    {
+        std::lock_guard<std::mutex> lock(m_mtx);
+        m_sendbuffers.erase(bufferId);
+    }
     handlerSend(_error,_bytesTransferred);
 }
 

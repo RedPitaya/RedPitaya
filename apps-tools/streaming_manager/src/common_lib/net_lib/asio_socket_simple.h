@@ -73,6 +73,10 @@ private:
     uint8_t *m_SocketReadBuffer;
     bool m_disableRestartServer;
     std::mutex m_mtx;
+
+    uint64_t m_sendbufersSSId = 0;
+    std::map<uint64_t,net_buffer> m_sendbuffersSS;
+
 };
 
 }

@@ -80,7 +80,7 @@ static struct option long_options_dac_streaming[] = {
 
 static constexpr char optstring_dac_streaming[] = "oh:p:c:f:d:r:m:vb";
 
-auto getTS(std::string suffix) -> std::string{
+    auto getTS(std::string suffix) -> std::string{
 
     using namespace std;
     using namespace std::chrono;

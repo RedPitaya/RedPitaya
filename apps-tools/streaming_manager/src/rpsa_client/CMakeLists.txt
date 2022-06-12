@@ -94,7 +94,7 @@ target_link_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib converter_lib streaming_lib settings_lib)
 
 if(NOT WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE -static pthread -static-libstdc++ -static-libgcc)
+    target_link_libraries(${PROJECT_NAME} PRIVATE pthread -static-libstdc++ -static-libgcc)
 else()
     set(WIN_SUFFIX -win)
     target_link_libraries(${PROJECT_NAME} PRIVATE -static pthread wsock32 ws2_32)

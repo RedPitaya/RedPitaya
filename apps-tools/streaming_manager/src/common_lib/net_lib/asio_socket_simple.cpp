@@ -8,9 +8,6 @@
 
 using namespace net_lib;
 
-uint64_t g_sendbufersSSId = 0;
-std::map<uint64_t,net_buffer> g_sendbuffersSS;
-
 auto CAsioSocketSimple::create(std::string host, std::string port) -> CAsioSocketSimple::Ptr {
     return std::make_shared<CAsioSocketSimple>(host, port);
 }
@@ -201,10 +198,10 @@ auto CAsioSocketSimple::sendBuffer(bool async, net_buffer _buffer, size_t _size)
             }
             this->handlerSend(_error,offset);
         }else {            
-            g_sendbufersSSId++;
-            g_sendbuffersSS[g_sendbufersSSId] = std::shared_ptr<uint8_t[]>(_buffer);
+            m_sendbufersSSId++;
+            m_sendbuffersSS[m_sendbufersSSId] = _buffer;
             m_tcp_socket->async_send(asio::buffer(_buffer.get(),_size),
-                                        std::bind(&CAsioSocketSimple::handlerSend2, this, std::placeholders::_1 ,std::placeholders::_2,g_sendbufersSSId));
+                                        std::bind(&CAsioSocketSimple::handlerSend2, this, std::placeholders::_1 ,std::placeholders::_2,m_sendbufersSSId));
         }
         return  true;
     }
@@ -212,7 +209,10 @@ auto CAsioSocketSimple::sendBuffer(bool async, net_buffer _buffer, size_t _size)
 }
 
 auto CAsioSocketSimple::handlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint64_t bufferId) -> void{
-    g_sendbuffersSS.erase(bufferId);
+    {
+        std::lock_guard<std::mutex> lock(m_mtx);
+        m_sendbuffersSS.erase(bufferId);
+    }
     handlerSend(_error,_bytesTransferred);
 }
 
