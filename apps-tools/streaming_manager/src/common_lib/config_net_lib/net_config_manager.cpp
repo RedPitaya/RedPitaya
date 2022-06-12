@@ -251,8 +251,12 @@ auto CNetConfigManager::dyn_buffer::resize(uint32_t _size) -> void{
         m_size = _size;
     }
     uint8_t *new_buff = new uint8_t[_size];
-    if (m_buffers)
-        memcpy_neon(new_buff,m_buffers,m_size);
+    if (m_buffers){
+        for(uint32_t i = 0; i < m_size;i++){
+            new_buff[i] = m_buffers[i];
+        }
+    }
+//        memcpy_neon(new_buff,m_buffers,m_size);
     m_size = _size;
     delete[] m_buffers;
     m_buffers = new_buff;
@@ -260,7 +264,10 @@ auto CNetConfigManager::dyn_buffer::resize(uint32_t _size) -> void{
 
 auto CNetConfigManager::dyn_buffer::removeAtStart(uint32_t _size) -> void{
     if (_size > m_data_size) throw std::runtime_error("[Error] remove buffer wrong size");
-    memcpy_neon(m_buffers ,(&(*m_buffers)+_size),m_data_size - _size);
+    for(uint32_t i = 0; i < m_data_size - _size;i++){
+        m_buffers[i] = (&(*m_buffers)+_size)[i];
+    }
+//    memcpy_neon(m_buffers ,(&(*m_buffers)+_size),m_data_size - _size);
     m_data_size -= _size;
 }
 

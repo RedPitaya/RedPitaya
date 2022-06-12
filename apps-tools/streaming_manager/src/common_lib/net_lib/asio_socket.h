@@ -87,6 +87,9 @@ private:
     uint64_t  m_last_pack_id;
     std::mutex m_mtx;
     CAsioService *m_asio;
+    uint64_t m_sendbufersId = 0;
+    std::map<uint64_t,net_buffer> m_sendbuffers;
+
 };
 
 }

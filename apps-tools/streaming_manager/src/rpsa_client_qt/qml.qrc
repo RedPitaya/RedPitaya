@@ -1,0 +1,29 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/MainView.qml</file>
+        <file>fonts/BarlowSemiCondensed-Black.ttf</file>
+        <file>fonts/BarlowSemiCondensed-BlackItalic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-Bold.ttf</file>
+        <file>fonts/BarlowSemiCondensed-BoldItalic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-ExtraBold.ttf</file>
+        <file>fonts/BarlowSemiCondensed-ExtraBoldItalic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-ExtraLight.ttf</file>
+        <file>fonts/BarlowSemiCondensed-ExtraLightItalic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-Italic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-Light.ttf</file>
+        <file>fonts/BarlowSemiCondensed-LightItalic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-Medium.ttf</file>
+        <file>fonts/BarlowSemiCondensed-MediumItalic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-Regular.ttf</file>
+        <file>fonts/BarlowSemiCondensed-SemiBold.ttf</file>
+        <file>fonts/BarlowSemiCondensed-SemiBoldItalic.ttf</file>
+        <file>fonts/BarlowSemiCondensed-Thin.ttf</file>
+        <file>fonts/BarlowSemiCondensed-ThinItalic.ttf</file>
+        <file>qml/components/RPCellHeader.qml</file>
+        <file>qml/components/RPSettings.qml</file>
+        <file>qml/base_components/MultiSwitch.qml</file>
+        <file>qml/base_components/BaseButton.qml</file>
+        <file>qml/components/RPCell.qml</file>
+    </qresource>
+</RCC>

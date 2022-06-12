@@ -315,7 +315,7 @@ void updateUI(){
 	switch (g_serverNetConfig->getSettingsRef().getChannels())
 	{
 		case CStreamSettings::CH1:
-            ss_protocol.SendValue(SS_CH1);
+            ss_channels.SendValue(SS_CH1);
 			break;
 		case CStreamSettings::CH2:
             ss_channels.SendValue(SS_CH2);

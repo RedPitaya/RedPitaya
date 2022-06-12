@@ -124,20 +124,6 @@ auto ClientNetConfigManager::getBroadcastClients() -> const std::list<ClientNetC
     return copyClients;
 }
 
-
-//auto ClientNetConfigManager::addHandlerError(std::function<void(ClientNetConfigManager::Errors,std::string host)> _func) -> void{
-//    m_errorCallback.addListener(0,_func);
-//}
-
-//auto ClientNetConfigManager::addHandler(ClientNetConfigManager::Events event, std::function<void(std::string)> _func) -> void{
-//    m_callbacksStr.addListener(static_cast<int>(event),_func);
-//}
-
-//auto ClientNetConfigManager::removeHadlers() -> void{
-//    m_errorCallback.removeHadlers();
-//    m_callbacksStr.removeHadlers();
-//}
-
 auto ClientNetConfigManager::getHosts() -> std::list<std::string>{
     std::list<std::string> list;
     for(auto &c : m_clients){
@@ -156,13 +142,6 @@ auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts,st
         cl->m_manager = std::make_shared<CNetConfigManager>();
         cl->m_mode = broadcast_lib::AB_NONE;
 
-//        cl->m_manager->receivedCommandNotify.connect(&ClientNetConfigManager::receiveCommand,this);
-//        cl->m_manager->receivedStringNotify.connect(&ClientNetConfigManager::receiveValueStr,this);
-//        cl->m_manager->receivedIntNotify.connect(&ClientNetConfigManager::receiveValueInt,this);
-//        cl->m_manager->receivedDoubleNotify.connect(&ClientNetConfigManager::receiveValueDouble,this);
-//        cl->m_manager->connectNotify.connect(&ServerNetConfigManager::connected,this);
-//        cl->m_manager->disconnectNotify.connect(&ServerNetConfigManager::disconnected,this);
-//        cl->m_manager->errorNotify.connect(&ServerNetConfigManager::serverError,this);
         auto cl_weak = std::weak_ptr<Clients>(cl);
 
         cl->m_manager->receivedCommandNotify.connect(std::bind(&ClientNetConfigManager::receiveCommand, this, std::placeholders::_1,cl_weak));

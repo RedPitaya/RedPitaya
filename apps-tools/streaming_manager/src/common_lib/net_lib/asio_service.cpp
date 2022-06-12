@@ -1,3 +1,4 @@
+ #include <functional>
 #include "asio_service.h"
 #include "data_lib/thread_cout.h"
 
