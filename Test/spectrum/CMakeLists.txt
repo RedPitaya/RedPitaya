@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(C_STANDARD 17)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
@@ -55,12 +55,13 @@ add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DRE
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
+target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-dsp rp rp-hw)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-dsp rp)
 
 if ("${MODEL}" STREQUAL "Z20_250_12")
-    target_link_libraries(${PROJECT_NAME} PRIVATE  rp-i2c rp-spi rp-gpio)
+    target_link_libraries(${PROJECT_NAME} PRIVATE  rp-i2c rp-spi rp-gpio pthread rp-hw)
 endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
