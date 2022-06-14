@@ -94,7 +94,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
     });
 
 
-    g_net_buffer->receivedPackNotify.connect([g_s_file_w,host](DataLib::CDataBuffersPack::Ptr pack){
+    g_net_buffer->receivedPackNotify.connect([g_s_file_w,host](DataLib::CDataBuffersPack::Ptr pack,uint64_t){
         auto obj = g_s_file_w.lock();
         if (obj){
             if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){

@@ -6,8 +6,13 @@ import QtCharts 2.3
 import "../base_components"
 
 Row {
-    property int consoleChart: 0
+    property int consoleChart: 0    
     layer.enabled: true
+
+    Component.onCompleted: {
+        board.getConfig()
+    }
+
     Item {
         width: parent.width * 0.4
         height: parent.height
@@ -281,22 +286,25 @@ Row {
                                     running: consoleChart == 1
                                     repeat: true
                                     onTriggered: {
-                                        if (board.getChartNeedUpdate(0)){
+                                        var needreset = false
+                                        if (cdh.getChartNeedUpdate(board.ip)){
+                                            console.log("draw")
                                             lineSeries1.clear();
-                                            let points = board.getChartSignal(0);
+                                            let points = cdh.getChartSignal(board.ip,0);
                                             for(var k in points){
                                                 lineSeries1.append(k,points[k])
                                             }
-                                        }
 
-                                        if (board.getChartNeedUpdate(1)){
                                             lineSeries2.clear();
-                                            let points2 = board.getChartSignal(1);
+                                            let points2 = cdh.getChartSignal(board.ip,1);
                                             for(var k2 in points2){
                                                 lineSeries2.append(k2,points2[k2])
-                                            }                                            
+                                            }
+                                            needreset = true
                                         }
-
+                                        if (needreset){
+                                            cdh.clearChartBuffer(board.ip);
+                                        }
                                     }
                                 }
                         }

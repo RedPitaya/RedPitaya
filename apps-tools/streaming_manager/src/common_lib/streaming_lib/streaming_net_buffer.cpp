@@ -67,7 +67,7 @@ auto CStreamingNetBuffer::addNewBuffer(uint8_t* buffer,size_t len) -> void {
                             return;
                         }
                     }
-                    receivedPackNotify(m_currentPack);
+                    receivedPackNotify(m_currentPack,m_currentPackId);
                     resetInternalBuffers();
 
                 }else{

@@ -90,9 +90,8 @@ public:
     Q_INVOKABLE QString getSamplesCH1();
     Q_INVOKABLE QString getSamplesCH2();
     Q_INVOKABLE QString getLostCount();
+    Q_INVOKABLE QString getFLostCount();
     Q_INVOKABLE QString getSaveFileName();
-    Q_INVOKABLE QVector<qreal> getChartSignal(int index);
-    Q_INVOKABLE bool getChartNeedUpdate(int index);
 
 
 signals:
@@ -144,15 +143,13 @@ private:
 
     SStat m_stat;
 
-    std::mutex m_chartMutex;
-    std::mutex m_chartGetPointMutex;
-    DataLib::CDataBuffersPack::Ptr m_chartPack;
-    QVector<qreal>  m_chartPoints[2];
-    bool            m_chartNeedUpdate[2];
+//    std::mutex m_chartMutex;
+//    std::mutex m_chartGetPointMutex;
+//    DataLib::CDataBuffersPack::Ptr m_chartPack;
+//    QVector<qreal>  m_chartPoints[2];
+//    bool            m_chartNeedUpdate;
 
-    std::thread *m_chartThread;
-    bool         m_IsWorkThread;
-    uint32_t     m_chartWidth;
+
 };
 
 #endif // BOARD_H
