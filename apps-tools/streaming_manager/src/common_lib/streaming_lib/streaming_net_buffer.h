@@ -30,7 +30,7 @@ public:
 
     sigslot::signal<uint64_t> brokenPacksNotify;
     sigslot::signal<uint64_t> outMemoryNotify;
-    sigslot::signal<DataLib::CDataBuffersPack::Ptr> receivedPackNotify;
+    sigslot::signal<DataLib::CDataBuffersPack::Ptr,uint64_t> receivedPackNotify;
 
 
 //    sigslot::signal<> packDropNotify;

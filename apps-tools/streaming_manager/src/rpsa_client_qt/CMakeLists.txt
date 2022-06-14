@@ -57,6 +57,7 @@ set(HEADER_FILES
         src/models/boardsmodel.h
         src/models/board.h
         src/models/consolemodel.h
+        src/logic/chartdataholder.h
         src/logic/device_logic.h
         )
 
@@ -67,6 +68,7 @@ set(PROJECT_SOURCES
         src/models/boardsmodel.cpp
         src/models/board.cpp
         src/models/consolemodel.cpp
+        src/logic/chartdataholder.cpp
         src/logic/device_logic.cpp
         qml.qrc
 )

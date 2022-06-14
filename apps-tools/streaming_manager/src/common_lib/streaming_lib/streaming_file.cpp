@@ -282,8 +282,10 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
                 }
             }
             auto stream_data = buildTDMSStream(map);
-            if (!m_file_manager->addBufferToWrite(stream_data) && m_file_manager->isWork()){
-                m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE,1);
+            if (m_file_manager->isWork()){
+                if (!m_file_manager->addBufferToWrite(stream_data)){
+                    m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE,1);
+                }
             }
         }else{
             m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY,1);
@@ -328,9 +330,11 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
             }
 
             auto stream_data = m_waveWriter->BuildWAVStream(map);
-            if (!m_file_manager->addBufferToWrite(stream_data) && m_file_manager->isWork())
-            {
-                m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE,1);
+            if (m_file_manager->isWork()){
+                if (!m_file_manager->addBufferToWrite(stream_data))
+                {
+                    m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE,1);
+                }
             }
         }else{
             m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY,1);
@@ -353,9 +357,11 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
         }
 
         auto stream_data = buildBINStream(pack);
-        if (!m_file_manager->addBufferToWrite(stream_data) && m_file_manager->isWork())
-        {
-            m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE,1);
+        if ( m_file_manager->isWork()){
+            if (!m_file_manager->addBufferToWrite(stream_data))
+            {
+                m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE,1);
+            }
         }
     }
 

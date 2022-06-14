@@ -3,6 +3,8 @@
 #include <math.h>
 #include "board.h"
 
+#include "src/logic/chartdataholder.h"
+
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
 {
@@ -64,10 +66,10 @@ CBoard::CBoard(QString ip)
     ,m_lastOnline(0)
     ,m_mode(broadcast_lib::AB_NONE)
     ,m_chartEnable(false)
-    ,m_isADCStarted(false)
-    ,m_chartWidth(1000)
-    ,m_chartNeedUpdate{false,false}
+    ,m_isADCStarted(false)    
 {
+
+
     QQmlEngine::setObjectOwnership(this,QQmlEngine::CppOwnership);
     m_offlineTimer = new QTimer(this);
     connect(m_offlineTimer, &QTimer::timeout, this, QOverload<>::of(&CBoard::updateOffline));
@@ -81,13 +83,15 @@ CBoard::CBoard(QString ip)
 
     m_configManager->serverStartedTCPNofiy.connect([=](auto host){
         addLog("Streaming started in TCP");
-        createStreaming(net_lib::P_TCP);
+        createStreaming(net_lib::P_TCP);        
+        ChartDataHolder::instance()->regRP(ip);
         Q_EMIT updateSaveFileName();
     });
 
     m_configManager->serverStartedUDPNofiy.connect([=](auto host){
         addLog("Streaming started in UDP");
         createStreaming(net_lib::P_UDP);
+        ChartDataHolder::instance()->regRP(ip);
         Q_EMIT updateSaveFileName();
     });
 
@@ -98,6 +102,7 @@ CBoard::CBoard(QString ip)
     m_configManager->serverStoppedNofiy.connect([=](auto host){
         addLog("Streaming stopped");
         m_isADCStarted = false;
+        ChartDataHolder::instance()->removeRP(ip);
         Q_EMIT isADCStartedChanged();
     });
 
@@ -122,8 +127,7 @@ CBoard::CBoard(QString ip)
     std::vector ipList {ip.toStdString()};
     m_configManager->connectToServers(ipList,"8901");
 
-    m_IsWorkThread = true;
-    m_chartThread = new std::thread(&CBoard::chartPackThread,this);
+
 }
 
 auto CBoard::addLog(QString msg) -> void{
@@ -135,10 +139,6 @@ auto CBoard::addLog(QString msg) -> void{
 
 CBoard::~CBoard(){
     delete m_configManager;
-    m_IsWorkThread = false;
-    if (m_chartThread->joinable()){
-        m_chartThread->join();
-    }
 }
 
 auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
@@ -170,7 +170,7 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
     });
 
 
-    m_net_buffer->receivedPackNotify.connect([=](DataLib::CDataBuffersPack::Ptr pack){
+    m_net_buffer->receivedPackNotify.connect([=](DataLib::CDataBuffersPack::Ptr pack,uint64_t id){
         auto obj = g_s_file_w.lock();
         if (obj){
 
@@ -211,10 +211,8 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
                 Q_EMIT updateStatistic();
         }
 
-        std::lock_guard<std::mutex> lock(m_chartMutex);
-        if (!m_chartPack && m_chartEnable){
-            m_chartPack = pack;
-        }
+        ChartDataHolder::instance()->addBuffer(pack,id,m_ip,!m_chartEnable);
+
     });
 
 
@@ -336,7 +334,7 @@ auto CBoard::getNewSettings(std::string host) -> void{
     auto p = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getPort();
     m_configManager->setPort(p);
     auto dacp = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getDACPort();
-    m_configManager->setDACPort(dacp);
+    m_configManager->setDACPort(dacp);    
     Q_EMIT getNewSettingSignal();
 }
 
@@ -503,6 +501,10 @@ QString CBoard::getLostCount(){
     return QString::number(m_stat.lost);
 }
 
+QString CBoard::getFLostCount(){
+    return QString::number(m_stat.flost);
+}
+
 QString CBoard::getSaveFileName(){
     if (m_file_manager){
         return QString::fromStdString(m_file_manager->getCSVFileName());
@@ -510,72 +512,5 @@ QString CBoard::getSaveFileName(){
     return "";
 }
 
-auto CBoard::chartPackThread() -> void{
-    while(m_IsWorkThread){
-        DataLib::CDataBuffersPack::Ptr packForWork = nullptr;
-        m_chartMutex.lock();
-        auto chartWidth = m_chartWidth;
-        auto skipPack = false;
-        if (m_chartPack){
-            packForWork = m_chartPack;
-            m_chartPack = nullptr;
-        }
-        m_chartMutex.unlock();
 
-        auto pack = [&](int index,DataLib::CDataBuffer::Ptr buf){
-            if (!buf) return;
-            auto pointsCount = buf->getSamplesCount();
-            auto bitSize = buf->getBitBySample();
-            auto buffer = buf->getBuffer().get();
-            int step = buf->getSamplesCount() / chartWidth;
-            m_chartPoints[index].resize(chartWidth);
-            if (step <= 1) {
-                for(auto i = 0; i < pointsCount; i++){
-                    if (bitSize == 8){
-                        auto b = reinterpret_cast<int8_t*>(buffer);
-                        m_chartPoints[index][i] = (float)b[i] / 128.0;
-                    }
-                    if (bitSize == 16){
-                        auto b = reinterpret_cast<int16_t*>(buffer);
-                        m_chartPoints[index][i] = (float)b[i] / 32768.0;
-                    }
-                }
-            }else{
-                for(auto i = 1,w = 0; i < pointsCount - 1 && w < chartWidth; i+= step,w++){
-                    int64_t sum = 0;
-                    for(int j = 0; j < step  && i + j < pointsCount;j++){
-                        if (bitSize == 8){
-                            auto b = reinterpret_cast<int8_t*>(buffer);
-                            sum += b[i + j] << 8;
-                        }
-                        if (bitSize == 16){
-                            auto b = reinterpret_cast<int16_t*>(buffer);
-                            sum += b[i + j];
-                        }
-                    }
-                    m_chartPoints[index][w] = (float)(sum / step) / 32768.0;
-                }
-            }
-        };
 
-        if (!skipPack && chartWidth && packForWork){
-            m_chartGetPointMutex.lock();
-            pack(0,packForWork->getBuffer(DataLib::CH1));
-            pack(1,packForWork->getBuffer(DataLib::CH2));
-            m_chartNeedUpdate[0] = m_chartNeedUpdate[1] = true;
-            m_chartGetPointMutex.unlock();
-        }
-        QThread::usleep(1000 * 100);
-    }
-}
-
-QVector<qreal> CBoard::getChartSignal(int index){
-    std::lock_guard<std::mutex> lock(m_chartGetPointMutex);
-    m_chartNeedUpdate[index] = false;
-    return m_chartPoints[index];
-}
-
-bool CBoard::getChartNeedUpdate(int index){
-    std::lock_guard<std::mutex> lock(m_chartGetPointMutex);
-    return m_chartNeedUpdate[index];
-}
