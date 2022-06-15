@@ -52,18 +52,18 @@ auto ChartDataHolder::addBuffer(DataLib::CDataBuffersPack::Ptr pack,uint64_t id,
     if (skip){
         m_packId[ip] = maxID;
         m_pack[ip] = nullptr;
-        qDebug() << "Skip " << ip;
+//        qDebug() << "Skip " << ip;
         return;
     }
-    qDebug() << ip << "Max" << maxID << " id " << id;
+//    qDebug() << ip << "Max" << maxID << " id " << id;
     if (maxID < id){
         for(auto i:m_rp){
             m_packId[i] = 0;
             m_pack[i] = nullptr;
         }
-        qDebug() << "Reset all";
+//        qDebug() << "Reset all";
     }
-    qDebug() << "Set " << ip << id;
+//    qDebug() << "Set " << ip << id;
     m_pack[ip] = pack;
     m_packId[ip] = id;
 
@@ -124,7 +124,7 @@ auto ChartDataHolder::chartPackThread() -> void{
         };
 
         if (canGet){
-            qDebug() << Q_FUNC_INFO;
+//            qDebug() << Q_FUNC_INFO;
             m_chartGetPointMutex.lock();
             if (m_chartNeedDraw.size() == 0){
                 for(auto i:packForWork.keys()){
