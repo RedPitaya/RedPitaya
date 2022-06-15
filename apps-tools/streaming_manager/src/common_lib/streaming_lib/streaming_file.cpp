@@ -328,7 +328,6 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
                     }
                 }
             }
-
             auto stream_data = m_waveWriter->BuildWAVStream(map);
             if (m_file_manager->isWork()){
                 if (!m_file_manager->addBufferToWrite(stream_data))

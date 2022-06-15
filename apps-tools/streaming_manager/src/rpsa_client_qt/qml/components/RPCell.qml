@@ -283,22 +283,23 @@ Row {
                             Timer {
                                     id: refreshTimer
                                     interval: 1 / 60 * 1000 // 60 Hz
-                                    running: consoleChart == 1
+                                    running: true
                                     repeat: true
                                     onTriggered: {
                                         var needreset = false
                                         if (cdh.getChartNeedUpdate(board.ip)){
-                                            console.log("draw")
-                                            lineSeries1.clear();
-                                            let points = cdh.getChartSignal(board.ip,0);
-                                            for(var k in points){
-                                                lineSeries1.append(k,points[k])
-                                            }
+                                            if (consoleChart == 1){
+                                                lineSeries1.clear();
+                                                let points = cdh.getChartSignal(board.ip,0);
+                                                for(var k in points){
+                                                    lineSeries1.append(k,points[k])
+                                                }
 
-                                            lineSeries2.clear();
-                                            let points2 = cdh.getChartSignal(board.ip,1);
-                                            for(var k2 in points2){
-                                                lineSeries2.append(k2,points2[k2])
+                                                lineSeries2.clear();
+                                                let points2 = cdh.getChartSignal(board.ip,1);
+                                                for(var k2 in points2){
+                                                    lineSeries2.append(k2,points2[k2])
+                                                }
                                             }
                                             needreset = true
                                         }

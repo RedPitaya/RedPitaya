@@ -32,6 +32,7 @@ auto FileQueueManager::addBufferToWrite(std::iostream *buffer) -> bool{
         return false;
     }
  //   acout() << "m_threadWork: " << m_threadWork << " m_useMemory: " << m_useMemory << " m_aviablePhyMemory: " << m_aviablePhyMemory << '\n';
+ //   aprintf(stdout,"m_useMemory %lld m_aviablePhyMemory %lld\n",m_useMemory,m_aviablePhyMemory);
     if (m_threadWork && (m_useMemory < m_aviablePhyMemory)){
         pushQueue(buffer);
         return true;

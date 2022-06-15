@@ -145,13 +145,13 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
     m_stat = SStat();
     auto startTime = QDateTime::currentMSecsSinceEpoch();
     auto df = m_configManager->getFormat();
-    auto samples = m_configManager->getSamples();
+//    auto samples = m_configManager->getSamples();
 
     bool convert_v = m_configManager->getType() == CStreamSettings::VOLT;
 
 
     std::string dir = "output";
-    m_file_manager = streaming_lib::CStreamingFile::create(df, dir, samples, convert_v,false);
+    m_file_manager = streaming_lib::CStreamingFile::create(df, dir, -1, convert_v,false);
     QString str = m_ip + "_" + m_streamingDT.toString("yyyy-MM-dd_HH-mm-ss");
     m_file_manager->run(str.toStdString());
 
@@ -205,8 +205,7 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
                 m_stat.samples2 += sempCh2;
                 m_stat.lost += lostRate;
                 m_stat.flost += flost;
-                m_stat.broken_b = 0;
-
+                m_stat.broken_b = 0;                
                 obj->passBuffers(pack);
                 Q_EMIT updateStatistic();
         }
