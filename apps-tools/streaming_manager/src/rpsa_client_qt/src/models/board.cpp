@@ -1,4 +1,5 @@
 #include <QQmlEngine>
+#include <QSettings>
 #include <QDateTime>
 #include <math.h>
 #include "board.h"
@@ -66,9 +67,13 @@ CBoard::CBoard(QString ip)
     ,m_lastOnline(0)
     ,m_mode(broadcast_lib::AB_NONE)
     ,m_chartEnable(false)
-    ,m_isADCStarted(false)    
+    ,m_isADCStarted(false)
+    ,m_testMode(false)
 {
 
+    QSettings setting("RedPitaya","rpsa_cient_qt_"+m_ip);
+    m_chartEnable = setting.value("chartEnable",false).toBool();
+    m_testMode = setting.value("testMode",false).toBool();
 
     QQmlEngine::setObjectOwnership(this,QQmlEngine::CppOwnership);
     m_offlineTimer = new QTimer(this);
@@ -151,7 +156,7 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
 
 
     std::string dir = "output";
-    m_file_manager = streaming_lib::CStreamingFile::create(df, dir, -1, convert_v,false);
+    m_file_manager = streaming_lib::CStreamingFile::create(df, dir, -1, convert_v,m_testMode);
     QString str = m_ip + "_" + m_streamingDT.toString("yyyy-MM-dd_HH-mm-ss");
     m_file_manager->run(str.toStdString());
 
@@ -195,10 +200,7 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
 
                 auto net   = obj->getNetworkLost();
                 auto flost = obj->getFileLost();
-//            int  brokenBuffer = -1;
-//                if (g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_TEST_DATA){
-//                    brokenBuffer = testBuffer(ch1 ? ch1->getBuffer().get() : nullptr,ch2 ? ch2->getBuffer().get() : nullptr,sizeCh1,sizeCh2) ? 0 : 1;
-//                }
+
                 m_stat.bytes += sizeCh1 + sizeCh2;
                 m_stat.bw = convertBtoSpeed(m_stat.bytes,QDateTime::currentMSecsSinceEpoch() - startTime);
                 m_stat.samples1 += sempCh1;
@@ -307,6 +309,12 @@ auto CBoard::getConfigManagerConnected() -> bool{
 
 void CBoard::setChartEnable(bool enable){
     m_chartEnable = enable;
+    QSettings setting("RedPitaya","rpsa_cient_qt_"+m_ip);
+    setting.setValue("chartEnable",enable);
+}
+
+bool CBoard::getChartEnable(){
+    return m_chartEnable;
 }
 
 void CBoard::sendConfig(){
@@ -511,5 +519,17 @@ QString CBoard::getSaveFileName(){
     return "";
 }
 
+bool CBoard::getCouplingVisible(){
+    return m_model == broadcast_lib::EModel::RP_250_12;
+}
 
 
+bool CBoard::getTestMode(){
+    return m_testMode;
+}
+
+void CBoard::setTestMode(bool mode){
+    QSettings setting("RedPitaya","rpsa_cient_qt_"+m_ip);
+    setting.setValue("testMode",mode);
+    m_testMode = mode;
+}

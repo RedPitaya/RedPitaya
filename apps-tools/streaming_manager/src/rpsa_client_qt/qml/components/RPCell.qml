@@ -6,7 +6,7 @@ import QtCharts 2.3
 import "../base_components"
 
 Row {
-    property int consoleChart: 0    
+    property int consoleChart: board.getChartEnable()
     layer.enabled: true
 
     Component.onCompleted: {
@@ -58,9 +58,10 @@ Row {
                             fontFamily: applicationFont.name
                             radius: 5 * mainVisibleRootWindowId.scaleFactor
                             textSize: 15 * mainVisibleRootWindowId.scaleFactor
-                            borderColor: baseRedSwitchColor
-                            hoverColor: baseRedSwitchColor
+                            borderColor: baseGrayColor
+                            hoverColor: baseHoverColor
                             textColor: baseTextColor
+                            backColor: "transparent"
 
                             onClickButton: function(){
                                 board.getConfig()
@@ -81,9 +82,10 @@ Row {
                             fontFamily: applicationFont.name
                             radius: 5 * mainVisibleRootWindowId.scaleFactor
                             textSize: 15 * mainVisibleRootWindowId.scaleFactor
-                            borderColor: baseRedSwitchColor
-                            hoverColor: baseRedSwitchColor
+                            borderColor: baseGrayColor
+                            hoverColor: baseHoverColor
                             textColor: baseTextColor
+                            backColor: "transparent"
 
                             onClickButton: function(){
                                 board.sendConfig()
@@ -104,9 +106,10 @@ Row {
                             fontFamily: applicationFont.name
                             radius: 5 * mainVisibleRootWindowId.scaleFactor
                             textSize: 15 * mainVisibleRootWindowId.scaleFactor
-                            borderColor: baseRedSwitchColor
-                            hoverColor: baseRedSwitchColor
+                            borderColor: baseGrayColor
+                            hoverColor: baseHoverColor
                             textColor: baseTextColor
+                            backColor: "transparent"
 
                             onClickButton: function(){
                                 board.startStreaming()
@@ -127,9 +130,10 @@ Row {
                             fontFamily: applicationFont.name
                             radius: 5 * mainVisibleRootWindowId.scaleFactor
                             textSize: 15 * mainVisibleRootWindowId.scaleFactor
-                            borderColor: baseRedSwitchColor
-                            hoverColor: baseRedSwitchColor
+                            borderColor: baseGrayColor
+                            hoverColor: baseHoverColor
                             textColor: baseTextColor
+                            backColor: "transparent"
 
                             onClickButton: function(){
                                 board.stopStreaming()
@@ -184,7 +188,7 @@ Row {
                             anchors.leftMargin: 4 * mainVisibleRootWindowId.scaleFactor
                             anchors.rightMargin: 4 * mainVisibleRootWindowId.scaleFactor                            
                             buttonNames: ["CONSOLE", "SIGNAL"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -250,12 +254,15 @@ Row {
                                 series("signal 2").useOpenGL = openGL;
                             }
 
+                            backgroundColor: baseBackGroundColor
+
                             ValueAxis {
                                     id: axisY1
                                     min: -1
                                     max: 1
-
+                                    gridLineColor: "#40999999"
                                     color: "transparent"
+                                    labelsColor:baseTextColor
                                 }
                             ValueAxis {
                                     id: axisX
@@ -264,20 +271,21 @@ Row {
                                     labelsVisible: false
                                     gridVisible:false
                                     color: "transparent"
+                                    labelsColor:baseTextColor
                                 }
                             LineSeries {
                                     id: lineSeries1
                                     axisX: axisX
                                     axisY: axisY1
                                     useOpenGL: chartView.openGL
-                                    color: "red"
+                                    color: "#f3ec1a"
                                 }
                             LineSeries {
                                     id: lineSeries2
                                     axisX: axisX
                                     axisY: axisY1
                                     useOpenGL: chartView.openGL
-                                    color: "blue"
+                                    color: "#31b44b"
                                 }
 
                             Timer {

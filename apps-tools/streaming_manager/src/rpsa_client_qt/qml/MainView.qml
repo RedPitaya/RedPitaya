@@ -13,40 +13,46 @@ Item {
             height: parent.height - 50
             ListView {
                 anchors.fill: parent
-                model: ui_controller.getBoardsModel()
+                model: ui_controller.getBoardsModel()                
                 delegate: Item {
                     width: parent.width
                     height: 300 * mainVisibleRootWindowId.scaleFactor
-                    Rectangle {
-                        color: "transparent"
-                        border.width: 1
+                    Item{
                         anchors.fill: parent
-                    }
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 5 * mainVisibleRootWindowId.scaleFactor
-                        color: baseRedColor
-                    }
-                    Item {
-                        anchors.fill: parent
-                        anchors.leftMargin: 5 * mainVisibleRootWindowId.scaleFactor
-                        RPCellHeader {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            height: 40 * mainVisibleRootWindowId.scaleFactor
-                            isMaster: board.isMaster
-                            onLine:board.isOnline
-                            ipAddress:board.ip
-                            isConfigConnected: board.isConfigConnected
-                            isADCStarted: board.isADCStarted
-                        }
-
-                        RPCell {
-                            anchors.topMargin: 40 * mainVisibleRootWindowId.scaleFactor
+                        anchors.topMargin: 3 * mainVisibleRootWindowId.scaleFactor
+                        anchors.bottomMargin: 3 * mainVisibleRootWindowId.scaleFactor
+                        Rectangle {
+                            color: "transparent"
+                            border.width: 1
+                            border.color: baseGrayColor
                             anchors.fill: parent
+                        }
+    //                    Rectangle {
+    //                        anchors.left: parent.left
+    //                        anchors.top: parent.top
+    //                        anchors.bottom: parent.bottom
+    //                        width: 5 * mainVisibleRootWindowId.scaleFactor
+    //                        color: baseRedColor
+    //                    }
+                        Item {
+                            anchors.fill: parent
+                            anchors.leftMargin: 5 * mainVisibleRootWindowId.scaleFactor
+                            RPCellHeader {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                height: 40 * mainVisibleRootWindowId.scaleFactor
+                                isMaster: board.isMaster
+                                onLine:board.isOnline
+                                ipAddress:board.ip
+                                isConfigConnected: board.isConfigConnected
+                                isADCStarted: board.isADCStarted
+                            }
+
+                            RPCell {
+                                anchors.topMargin: 40 * mainVisibleRootWindowId.scaleFactor
+                                anchors.fill: parent
+                            }
                         }
                     }
                 }
@@ -71,9 +77,10 @@ Item {
                             fontFamily: applicationFont.name
                             radius: 5 * mainVisibleRootWindowId.scaleFactor
                             textSize: 15 * mainVisibleRootWindowId.scaleFactor
-                            borderColor: baseRedSwitchColor
-                            hoverColor: baseRedSwitchColor
-                            textColor: baseTextColor
+                            borderColor: baseGrayColor
+                            hoverColor: baseHoverColor
+                            textColor: baseGrayColor
+                            backColor: "transparent"
 
                             onClickButton: function(){
                                 ui_controller.runAll()
@@ -94,9 +101,10 @@ Item {
                             fontFamily: applicationFont.name
                             radius: 5 * mainVisibleRootWindowId.scaleFactor
                             textSize: 15 * mainVisibleRootWindowId.scaleFactor
-                            borderColor: baseRedSwitchColor
-                            hoverColor: baseRedSwitchColor
-                            textColor: baseTextColor
+                            borderColor: baseGrayColor
+                            hoverColor: baseHoverColor
+                            textColor: baseGrayColor
+                            backColor: "transparent"
 
                             onClickButton: function(){
                                 ui_controller.stopAll()
@@ -116,9 +124,10 @@ Item {
                             fontFamily: applicationFont.name
                             radius: 5 * mainVisibleRootWindowId.scaleFactor
                             textSize: 15 * mainVisibleRootWindowId.scaleFactor
-                            borderColor: baseRedSwitchColor
-                            hoverColor: baseRedSwitchColor
-                            textColor: baseTextColor
+                            borderColor: baseGrayColor
+                            hoverColor: baseHoverColor
+                            textColor: baseGrayColor
+                            backColor: "transparent"
 
                             onClickButton: function(){
                                 ui_controller.openFolder()
