@@ -15,10 +15,15 @@ ApplicationWindow {
     property double aspectRate: nativeWidth / nativeHeight
 
     property color  baseRedColor: "#d02321"
-    property color  baseRedSwitchColor: "#f5c4b8"
+    property color  baseRedSwitchColor: "#999"
     property color  baseGreenColor: "#10AF10"
-    property color  baseTextColor: "#101010"
+    property color  baseTextColor: "#999"
     property color  basebuttonTextColor: "#101010"
+
+    property color  baseBackGroundColor: "#343433"
+    property color  baseGrayColor: "#999"
+    property color  baseHoverColor: "#40999999"
+
 
     property double baseSpace: 5
 
@@ -48,6 +53,7 @@ ApplicationWindow {
         }
     }
 
+    color: baseBackGroundColor
 
     Item {
             id: mainRootWindowId

@@ -30,6 +30,8 @@ auto ChartDataHolder::regRP(const QString &ip) -> void{
     std::lock_guard<std::mutex> lock(m_add_mutex);
     m_rp.append(ip);
     m_packId[ip] = 0;
+    m_chartPoints[0][ip].clear();
+    m_chartPoints[1][ip].clear();
 }
 
 auto ChartDataHolder::removeRP(const QString &ip) -> void{

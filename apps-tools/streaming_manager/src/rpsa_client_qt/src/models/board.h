@@ -44,6 +44,7 @@ public:
     auto getIsADCStarted() -> bool;
 
     Q_INVOKABLE void setChartEnable(bool enable);
+    Q_INVOKABLE bool getChartEnable();
     Q_INVOKABLE QObject* getConsoleModel();
     Q_INVOKABLE void sendConfig();
     Q_INVOKABLE void getConfig();
@@ -93,6 +94,10 @@ public:
     Q_INVOKABLE QString getFLostCount();
     Q_INVOKABLE QString getSaveFileName();
 
+    Q_INVOKABLE bool getCouplingVisible();
+
+    Q_INVOKABLE bool getTestMode();
+    Q_INVOKABLE void setTestMode(bool mode);
 
 signals:
     void isOnlineChanged();
@@ -143,13 +148,7 @@ private:
 
     SStat m_stat;
 
-//    std::mutex m_chartMutex;
-//    std::mutex m_chartGetPointMutex;
-//    DataLib::CDataBuffersPack::Ptr m_chartPack;
-//    QVector<qreal>  m_chartPoints[2];
-//    bool            m_chartNeedUpdate;
-
-
+    bool m_testMode;
 };
 
 #endif // BOARD_H

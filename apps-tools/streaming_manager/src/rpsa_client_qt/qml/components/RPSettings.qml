@@ -59,7 +59,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getSaveType()
                             buttonNames: ["Network","SD card"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -106,7 +106,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getProtocol()
                             buttonNames: ["TCP","UDP"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -150,6 +150,13 @@ Column{
                             anchors.fill: parent
                             anchors.leftMargin:  10 * mainVisibleRootWindowId.scaleFactor
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
+                            color:baseTextColor
+                            background: Rectangle{
+                                color:baseBackGroundColor
+                                border.width: 1
+                                border.color: baseGrayColor
+                            }
+
                             text: board.getDecimation()
                             font.family: applicationFont.name
                             font.pixelSize:  parent.height * 0.5
@@ -193,6 +200,12 @@ Column{
                             anchors.leftMargin:  10 * mainVisibleRootWindowId.scaleFactor
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             text: board.getSampleLimit()
+                            color: baseTextColor
+                            background: Rectangle{
+                                color:baseBackGroundColor
+                                border.width: 1
+                                border.color: baseGrayColor
+                            }
                             font.family: applicationFont.name
                             font.pixelSize:  parent.height * 0.5
                             validator :RegExpValidator { regExp : /[0-9]{7}/ }
@@ -246,7 +259,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getResolution() - 1
                             buttonNames: ["8 bit","16 bit"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -293,7 +306,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getAttenuator() - 1
                             buttonNames: ["1:1","1:20"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -339,7 +352,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getCalibration()
                             buttonNames: ["No","Yes"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -385,7 +398,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getChannels() - 1
                             buttonNames: ["1 ch","2 ch","Both"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -437,7 +450,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getDataFormat()
                             buttonNames: ["WAV","TDMS","BIN"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -484,7 +497,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getSaveMode() - 1
                             buttonNames: ["RAW","VOLT"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -501,6 +514,7 @@ Column{
         Item{
             height: parent.height
             width: parent.width / 4.0
+            visible: board.getCouplingVisible()
             Item {
                 anchors.fill: parent
                 anchors.margins: 2 * mainVisibleRootWindowId.scaleFactor
@@ -530,7 +544,7 @@ Column{
                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                             stateIndex: board.getCoupling() - 1
                             buttonNames: ["AC","DC"]
-                            inactiveTextColor: "#303030"
+                            inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
                             buttonColor: baseRedSwitchColor
                             fontFamaly: applicationFont.name
@@ -538,6 +552,53 @@ Column{
                             maxTextHeight: 14 * mainVisibleRootWindowId.scaleFactor
                             onClickIndex: function(i){
                                 board.setCoupling(i + 1)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Item{
+            height: parent.height
+            width: parent.width / 4.0
+            Item {
+                anchors.fill: parent
+                anchors.margins: 2 * mainVisibleRootWindowId.scaleFactor
+                Column{
+                    anchors.fill: parent
+                    Item{
+                        width: parent.width
+                        height: parent.height * 0.3
+                        Text {
+                            anchors.fill: parent
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            color: baseTextColor
+                            font.pixelSize: height * 0.6
+                            font.family: applicationFont.name
+                            text: qsTr("TEST MODE")
+                        }
+                    }
+
+                    Item{
+                        width: parent.width
+                        height: parent.height * 0.7
+                        MultiSwitch{
+                            id:testModeId
+                            anchors.fill: parent
+                            anchors.leftMargin:  10 * mainVisibleRootWindowId.scaleFactor
+                            anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
+                            stateIndex: board.getTestMode()
+                            buttonNames: ["OFF","ON"]
+                            inactiveTextColor: baseGrayColor
+                            activeTextColor: "#303030"
+                            buttonColor: baseRedSwitchColor
+                            fontFamaly: applicationFont.name
+                            radiusVal:0
+                            maxTextHeight: 14 * mainVisibleRootWindowId.scaleFactor
+                            onClickIndex: function(i){
+                                board.setTestMode(i)
                             }
                         }
                     }

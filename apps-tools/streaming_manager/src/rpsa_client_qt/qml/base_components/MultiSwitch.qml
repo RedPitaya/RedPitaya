@@ -17,10 +17,10 @@ Item {
     property real buttonMargin: 5
     property double radiusVal: 5.0
     property double radiusValSmall: 5.0
-    property color backgraundColor: "#FFFFFF"
-    property color buttonColor: "#A0A0A0"
+    property color backgraundColor: baseBackGroundColor
+    property color buttonColor: baseGrayColor
     property color activeTextColor: "#000000"
-    property color inactiveTextColor: "#A00000"
+    property color inactiveTextColor: baseGrayColor
     property bool  denyAllAnimaton: false
     property bool  enableAnimation: false
     property real  maxTextHeight: 300
