@@ -29,10 +29,10 @@ extern "C" {
 #define ADC_REG_BITS 16 
 #define ADC_BITS_MASK 0xFFFF
 #define ADC_REG_BITS_MASK 0xFFFF
-#define DAC_FREQUENCY 122.880e6
-
-
+#define ADC_CHANNELS 2
 #define ADC_BUFFER_SIZE         (16 * 1024)
+
+#define DAC_FREQUENCY 122.880e6
 #define DAC_BUFFER_SIZE         (16 * 1024)
 
 /** @name Error codes

@@ -39,12 +39,15 @@ OBJECTS =	scpi-commands.o \
 		dpin.o \
 		apin.o \
 		acquire.o \
-		generate.o \
 		common.o \
 		uart.o \
 		led.o \
 		spi.o \
 		i2c.o
+
+ifeq ($(MODEL),$(filer $(MODEL),Z10 Z20 Z20_250_12 Z20_125))
+OBJECTS += generate.o
+endif
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 

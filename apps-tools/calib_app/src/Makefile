@@ -5,11 +5,11 @@ RM=rm
 
 PROJECT_ROOT=../..
 
-CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp filter_logic2ch.cpp
+CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp filter_logicNch.cpp
 CXXSOURCES_WEB=main.cpp
 CXXSOURCES_TEST=test.cpp
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125 Z20_125_4CH))
 CXXSOURCES += filter_logic.cpp
 endif
 

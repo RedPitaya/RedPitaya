@@ -30,7 +30,8 @@ extern "C" {
 #define ADC_REG_BITS 14  
 #define ADC_BITS_MASK 0x3FFF
 #define ADC_REG_BITS_MASK 0x3FFF
-#define ADC_BUFFER_SIZE         (16 * 1024)
+#define ADC_BUFFER_SIZE (16 * 1024)
+#define ADC_CHANNELS 4
 
 /** @name Error codes
  *  Various error codes returned by the API.

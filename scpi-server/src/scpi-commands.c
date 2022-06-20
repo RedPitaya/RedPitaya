@@ -27,7 +27,11 @@
 #include "spi.h"
 #include "i2c.h"
 #include "acquire.h"
+
+#ifndef Z20_125_4CH
 #include "generate.h"
+#endif
+
 #include "scpi/error.h"
 #include "scpi/ieee488.h"
 #include "scpi/minimal.h"
@@ -185,6 +189,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:TRIG:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
 #endif
 
+#ifndef Z20_125_4CH
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
     {.pattern = "PHAS:ALIGN", .callback                 = RP_GenSync,},
@@ -217,6 +222,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
     {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
+#endif
 
     /* uart */
     {.pattern = "UART:INIT", .callback                  = RP_Uart_Init,},

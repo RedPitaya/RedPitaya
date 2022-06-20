@@ -24,8 +24,10 @@
 #include "acquire.h"
 #include "dpin.h"
 #include "apin.h"
-#include "generate.h"
 
+#ifndef Z20_125_4CH
+#include "generate.h"
+#endif
 
 scpi_result_t RP_InitAll(scpi_t *context){
 
@@ -67,6 +69,7 @@ scpi_result_t RP_ResetAll(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
+#ifndef Z20_125_4CH
     result = RP_GenReset(context);
 
     if(result != RP_OK){
@@ -74,6 +77,7 @@ scpi_result_t RP_ResetAll(scpi_t *context){
             "Pitaya modules: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
+#endif
 
     RP_LOG(LOG_INFO, "*RP:RST Successfully reset Red Pitaya modules.\n");
     return SCPI_RES_OK;

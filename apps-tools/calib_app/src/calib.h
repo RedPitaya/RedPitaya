@@ -8,8 +8,7 @@ class CCalib {
     public:
         struct DataPass
         {
-            int32_t ch1;
-            int32_t ch2;
+            int32_t ch[ADC_CHANNELS];            
         };
 
         using Ptr = std::shared_ptr<CCalib>;
