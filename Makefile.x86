@@ -304,7 +304,7 @@ ifeq ($(STREAMING),MASTER)
 endif
 endif
 
-ifeq ($(FPGA_MODEL),Z20_125_4CH)
+ifeq ($(FPGA_MODEL),Z20_4)
 ifeq ($(STREAMING),MASTER)
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
 endif
