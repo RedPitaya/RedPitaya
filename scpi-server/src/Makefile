@@ -45,7 +45,7 @@ OBJECTS =	scpi-commands.o \
 		spi.o \
 		i2c.o
 
-ifeq ($(MODEL),$(filer $(MODEL),Z10 Z20 Z20_250_12 Z20_125))
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20 Z20_250_12 Z20_125))
 OBJECTS += generate.o
 endif
 
