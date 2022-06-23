@@ -15,6 +15,12 @@
 #include "dac_streaming_lib/dac_streaming_manager.h"
 #include "dac_streaming.h"
 
+#ifdef Z20_250_12
+#include "api250-12/rp-spi.h"
+#include "api250-12/rp-gpio-power.h"
+#include "api250-12/rp-i2c-max7311.h"
+#endif
+
 using namespace dac_streaming_lib;
 using namespace uio_lib;
 

@@ -39,8 +39,9 @@
 #include "config_net_lib/server_net_config_manager.h"
 
 #ifdef Z20_250_12
-#include "rp-spi.h"
-#include "rp-i2c-max7311.h"
+#include "api250-12/rp-spi.h"
+#include "api250-12/rp-gpio-power.h"
+#include "api250-12/rp-i2c-max7311.h"
 #endif
 
 
@@ -804,7 +805,7 @@ void startServer(bool testMode) {
 					ch2_off  = osc_calib_params.osc_ch2_off_1_dc;
 				}
 			}else{
-				if (ac_dc == CStreamSettings::A_1_1) {
+				if (ac_dc == CStreamSettings::AC) {
 					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_ac);  // 1:20
 					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_ac);  // 1:20
 					ch1_off  = osc_calib_params.osc_ch1_off_20_ac;

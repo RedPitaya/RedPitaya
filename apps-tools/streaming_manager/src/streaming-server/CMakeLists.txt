@@ -83,6 +83,10 @@ target_link_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib)
 
+if ("${MODEL}" STREQUAL "Z20_250_12")
+    target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio)
+endif()
+
 if(NOT WIN32 )
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++)
 else()
