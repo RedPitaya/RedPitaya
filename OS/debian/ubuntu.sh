@@ -7,7 +7,7 @@
 ################################################################################
 
 # Added by DM; 2017/10/17 to check ROOT_DIR setting
-if [ $ROOT_DIR ]; then 
+if [ $ROOT_DIR ]; then
     echo ROOT_DIR is "$ROOT_DIR"
 else
     echo Error: ROOT_DIR is not set
@@ -45,8 +45,8 @@ apt-get update
 apt-get -y upgrade
 apt-get install -y apt-utils
 
-# install HWE kernell
-pt-get -y install --install-recommends linux-tools-generic-hwe-16.04 linux-headers-generic-hwe-16.04
+# install HWE kernel
+apt-get -y install --install-recommends linux-tools-generic-hwe-16.04 linux-headers-generic-hwe-16.04
 
 # add package containing add-apt-repository
 apt-get -y install software-properties-common
