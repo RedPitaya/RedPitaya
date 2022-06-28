@@ -71,7 +71,7 @@
                     }
                 };
 
-                if (stem_ver == "STEM 250 12") {
+                if (stem_ver == "STEM 14-Z20-4CH") {
                     for (i = default_applications.length - 1; i >= 0; i -= 1) {
                         if (default_applications[i]["id"] === 'marketplace' ||
                             default_applications[i]["id"] === 'fpgaexamples' ||
@@ -327,6 +327,7 @@
                         if (obj['model'].startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
                         if (obj['model'].startsWith('STEM_122-16SDR_v1.0')) model = 'SDRlab 122-16 v1.0';
                         if (obj['model'].startsWith('STEM_122-16SDR_v1.1')) model = 'SDRlab 122-16 v1.1';
+                        if (obj['model'].startsWith('STEM_125-Z7020_4CH')) model = 'STEMlab 125-14-Z7020 4-ch';
                         if (obj['model'].includes('SLAVE')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);
                         $('#SI_MAC').text(obj['mac']);
