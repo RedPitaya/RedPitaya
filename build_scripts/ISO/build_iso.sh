@@ -14,6 +14,7 @@ fi
 
 ECO_FILE=$1
 PREFIX=$2
+SUFFIX=$3
 REV="$(echo $1 | cut -d'-' -f2)"
 NUM="$(echo $1 | cut -d'-' -f3)"
 
@@ -104,7 +105,7 @@ sudo losetup -d "$LOOP_DEV"
 
 sleep 2
 
-mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
-zip $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img') 
+mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img')
+zip $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') 
 rm -f $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
 echo "ALL DONE"
