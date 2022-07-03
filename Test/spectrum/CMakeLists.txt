@@ -61,7 +61,7 @@ target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-dsp rp)
 
 if ("${MODEL}" STREQUAL "Z20_250_12")
-    target_link_libraries(${PROJECT_NAME} PRIVATE  rp-i2c rp-spi rp-gpio pthread rp-hw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-i2c rp-spi rp-gpio pthread rp-hw)
 endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)

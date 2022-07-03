@@ -19,8 +19,6 @@ extern "C" {
 #endif
 
 float log10f_neon(float x);
-float sinf_neon(float x);
-float cosf_neon(float x);
 float sqrtf_neon(float x);
 
 #ifdef __cplusplus
