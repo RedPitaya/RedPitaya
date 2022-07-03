@@ -509,18 +509,35 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-apps-pro: scopegenpro spectrumpro 
-ifeq ($(MODEL),Z20_250_12)
-apps-pro: ba_pro lcr_meter la_pro
-else
-ifeq ($(MODEL),Z20)
-apps-pro:
-else
-ifeq ($(MODEL),Z20_125_4CH)
-apps-pro:
-else
-apps-pro: la_pro
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
 endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro
+endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro
+endif
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
+endif
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10))
+ifeq ($(STREAMING),SLAVE)
+apps-tools:
 endif
 endif
 
