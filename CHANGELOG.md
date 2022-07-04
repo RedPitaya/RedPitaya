@@ -1,4 +1,9 @@
-# Beta version (1.04-18)
+# Beta version (1.04-28)
+
+- Streaming application now supports X-channel system
+- Bode analyzer bug fixes
+
+# Stable version (1.04-18)
 
 - Burst generation mode added to WEB oscilloscope app
 - SCPI now supports commands to communicate over I2C, UART and SPI bus available on - Red Pitaya ext. connector
