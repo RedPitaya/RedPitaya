@@ -26,7 +26,7 @@ static volatile uint32_t *osc_chb = NULL;
 
 #if defined Z20_125_4CH
 
-bool emulate4Ch = false;
+bool emulate4Ch = true;
 
 static volatile osc_control_t *osc_reg_4ch = NULL;
 
