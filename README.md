@@ -48,7 +48,7 @@ There are several ways to program / develop with Red Pitaya.
    RedPitaya hardware features can be easily accessed through C APIs. Many starting examples are available at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html#examples).
 
 4. FPGA programming
-   Information on how to copile Red Pitaya open source FPGA code is [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/fpga.html).
+   Information on how to copile Red Pitaya open source FPGA code is [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/fpga/fpga.html).
 
 5. Creating own WEB applications
    Instructions on how to create your own Red Pitaya WEB applications can be found [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/webApps.html).
