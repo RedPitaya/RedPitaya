@@ -73,4 +73,5 @@ Sensors extension module provides direct connection to GroveSensors (e.g. Temper
 For more information about extension connector click [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/hardware/ext_modules.html)
 
 # How to start teaching with RedPitaya?
-[Teaching lectures / material](https://redpitaya.com/teaching-materials/).
+- [Teaching lectures / material](https://redpitaya.com/teaching-materials/)
+- [Red Pitaya Knowledge Base](https://redpitaya-knowledge-base.readthedocs.io/en/latest/index.html)
