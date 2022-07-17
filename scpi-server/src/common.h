@@ -20,7 +20,6 @@
 #include "scpi/parser.h"
 #include "rp.h"
 
-#define CH_NUM		4
 
 typedef enum {
     RP_SCPI_LOG_OFF,
