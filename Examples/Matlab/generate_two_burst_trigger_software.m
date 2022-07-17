@@ -4,7 +4,7 @@ clear all
 close all
 IP= ''; % Input IP of your Red Pitaya...
 port = 5000; % If you are using WiFi then IP is:
-tcpipObj=tcpip(IP, port); % 192.168.128.1
+tcpipObj=tcpip(IP, port);
 
 fopen(tcpipObj);
 tcpipObj.Terminator = 'CR/LF';

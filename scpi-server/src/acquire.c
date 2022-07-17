@@ -475,6 +475,26 @@ scpi_result_t RP_AcqTriggerHystQ(scpi_t *context){
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqTriggerFillQ(scpi_t *context){
+
+    int result;
+    bool fillRes;
+
+    result = rp_AcqGetBufferFillState(&fillRes);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:FILL Failed to get trigger "
+            "fill state: %s\n", rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultInt32(context, fillRes);
+
+    RP_LOG(LOG_INFO, "*ACQ:TRIG:FILL Successfully returned "
+        "fill state value to client.\n");
+
+    return SCPI_RES_OK;
+}
+
 //Todo: Custom error handling.
 scpi_result_t RP_AcqGain(scpi_t *context) {
 

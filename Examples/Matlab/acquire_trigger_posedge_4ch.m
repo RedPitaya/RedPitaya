@@ -40,7 +40,7 @@ fprintf(tcpipObj,'ACQ:START');
 % length and smaling rate
 pause(1)
 
-fprintf(tcpipObj,'ACQ:TRIG EXT_PE');  
+fprintf(tcpipObj,'ACQ:TRIG CH1_PE');  
 % Wait for trigger
 % Until trigger is true wait with acquiring
 % Be aware of while loop if trigger is not achieved
@@ -54,7 +54,7 @@ while 1
      break
    
      end
- end
+end
  
 % wait for fill adc buffer
 while 1
@@ -66,20 +66,28 @@ while 1
    
      end
 end 
- 
+
 % Read data from buffer 
 signal_str=query(tcpipObj,'ACQ:SOUR1:DATA?');
 signal_str_2=query(tcpipObj,'ACQ:SOUR2:DATA?');
+signal_str_3=query(tcpipObj,'ACQ:SOUR3:DATA?');
+signal_str_4=query(tcpipObj,'ACQ:SOUR4:DATA?');
 
 % Convert values to numbers.% First character in string is “{“   
 % and 2 latest are empty spaces and last is “}”.  
 
 signal_num=str2num(signal_str(1,2:length(signal_str)-3));
 signal_num_2=str2num(signal_str_2(1,2:length(signal_str_2)-3));
+signal_num_3=str2num(signal_str_3(1,2:length(signal_str_3)-3));
+signal_num_4=str2num(signal_str_4(1,2:length(signal_str_4)-3));
 
-plot(signal_num)
+plot(signal_num,'r')
 hold on
-plot(signal_num_2,'r')
+plot(signal_num_2,'g')
+hold on
+plot(signal_num_3,'b')
+hold on
+plot(signal_num_4,'m')
 grid on
 ylabel('Voltage / V')
 xlabel('samples')

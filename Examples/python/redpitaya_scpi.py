@@ -41,9 +41,9 @@ class scpi (object):
         """Receive text string and return it after removing the delimiter."""
         msg = ''
         while 1:
-            chunk = self._socket.recv(chunksize + len(self.delimiter)).decode('utf-8') # Receive chunk size of 2^n preferably
+            chunk = self._socket.recv(chunksize).decode('utf-8') # Receive chunk size of 2^n preferably
             msg += chunk
-            if (len(chunk) and chunk[-2:] == self.delimiter):
+            if (len(msg) and msg[-2:] == self.delimiter):
                 break
         return msg[:-2]
 

@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import redpitaya_scpi as scpi
 import sys
 import math

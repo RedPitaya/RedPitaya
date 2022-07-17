@@ -13,16 +13,11 @@ int main(int argc, char **argv){
                 fprintf(stderr, "Rp api init failed!\n");
         }
 
-        /*LOOB BACK FROM OUTPUT 2 - ONLY FOR TESTING*/
-        rp_GenReset();
-        rp_GenFreq(RP_CH_1, 20000.0);
-        rp_GenAmp(RP_CH_1, 1.0);
-        rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
-        rp_GenOutEnable(RP_CH_1);
-
-
         uint32_t buff_size = 16384;
-        float *buff = (float *)malloc(buff_size * sizeof(float));
+        float *buff_ch1 = (float *)malloc(buff_size * sizeof(float));
+        float *buff_ch2 = (float *)malloc(buff_size * sizeof(float));
+        float *buff_ch3 = (float *)malloc(buff_size * sizeof(float));
+        float *buff_ch4 = (float *)malloc(buff_size * sizeof(float));
 
         rp_AcqReset();
         rp_AcqSetDecimation(RP_DEC_8);
@@ -46,14 +41,24 @@ int main(int argc, char **argv){
                 }
         }
 
-        rp_AcqGetOldestDataV(RP_CH_1, &buff_size, buff);
+        bool fillState = false;
+        while(!fillState){
+		rp_AcqGetBufferFillState(&fillState);
+	}
+
+        uint32_t pos = 0;        
+	rp_AcqGetWritePointerAtTrig(&pos);
+        rp_AcqGetDataV2(pos, &buff_size, buff_ch1,buff_ch2, buff_ch3, buff_ch4);
 
         int i;
         for(i = 0; i < buff_size; i++){
-                printf("%f\n", buff[i]);
+                printf("%f %f %f %f\n", buff_ch1[i],buff_ch2[i],buff_ch3[i],buff_ch4[i]);
         }
         /* Releasing resources */
-        free(buff);
+        free(buff_ch1);
+        free(buff_ch2);
+        free(buff_ch3);
+        free(buff_ch4);
         rp_Release();
 
         return 0;
