@@ -68,6 +68,12 @@ const scpi_choice_def_t scpi_RpTrigSrc[] = {
     {"EXT_NE",      7},
     {"AWG_PE",      8},
     {"AWG_NE",      9},
+#ifdef Z20_125_4CH
+    {"CH3_PE",      10},
+    {"CH3_NE",      11},
+    {"CH4_PE",      12},
+    {"CH4_NE",      13},
+#endif
     SCPI_CHOICE_LIST_END
 };
 
