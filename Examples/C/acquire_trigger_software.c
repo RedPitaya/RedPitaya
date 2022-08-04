@@ -46,6 +46,11 @@ int main(int argc, char **argv){
                 }
         }
 
+        bool fillState = false;
+        while(!fillState){
+		rp_AcqGetBufferFillState(&fillState);
+	}
+
         rp_AcqGetOldestDataV(RP_CH_1, &buff_size, buff);
 
         int i;
