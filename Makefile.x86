@@ -173,12 +173,13 @@ endif
 
 ifeq ($(MODEL),Z20_125_4CH)
 ifeq ($(STREAMING),MASTER)
-# FPGA_PRJ_LST = v0.94
+# FPGA_PRJ_LST = v0.94 logic
 
-FPGA_0_94	= 133278b74b090483d56e44c47048519b4d169503
+FPGA_0_94	= bf9262c8dc8d5bc604a7f070bcb198ca8a9cd97c
+FPGA_LOGIC	= bf9262c8dc8d5bc604a7f070bcb198ca8a9cd97c
 
 # NEED for FSBL fpga image
-FPGA_PRJ = v0.94
+FPGA_PRJ = logic
 FPGA_MODEL ?= Z20_4
 DTS_PATH = dts
 endif
