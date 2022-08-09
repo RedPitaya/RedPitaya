@@ -4,7 +4,7 @@
  * @brief Simple program to read/write from/to any location in memory.
  *
  * @Author Crt Valentincic <crt.valentincic@redpitaya.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 
 
 	if (strncmp(argv[1], "-sdac", 5) == 0) {
-		
+
 		float *val = NULL;
 		ssize_t val_count = 0;
 		val = (float*)calloc(argc-2,sizeof(float));
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 			val_count = 4;
 		}
 
-		set_DAC(val,val_count);		
+		set_DAC(val,val_count);
 
 		free(val);
 		return 0;
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 	/* Map one page */
 	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, addr & ~MAP_MASK);
 	if(map_base == (void *) -1) FATAL;
-		
+
 	if (addr != 0) {
 		if (val_count == 0) {
 			read_value(addr);
@@ -119,12 +119,12 @@ int main(int argc, char **argv) {
 	if (fd != -1) {
 		close(fd);
 	}
-	
+
 	return retval;
 }
 
 uint32_t read_value(uint32_t a_addr) {
-	auto virt_addr = (uint32_t *)map_base + (a_addr & MAP_MASK);
+	void* virt_addr = map_base + (a_addr & MAP_MASK);
 	uint32_t read_result = 0;
 	read_result = *((uint32_t *) virt_addr);
 	printf("0x%08x\n", read_result);
@@ -133,7 +133,7 @@ uint32_t read_value(uint32_t a_addr) {
 }
 
 void write_values(unsigned long a_addr, int a_type, unsigned long* a_values, ssize_t a_len) {
-	auto virt_addr = (uint32_t *)map_base + (a_addr & MAP_MASK);
+	void* virt_addr = map_base + (a_addr & MAP_MASK);
 
 	for (ssize_t i = 0; i < a_len; ++i) {
 		switch(a_type) {
