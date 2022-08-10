@@ -175,7 +175,7 @@ ifeq ($(MODEL),Z20_125_4CH)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94
 
-FPGA_0_94	= bf9262c8dc8d5bc604a7f070bcb198ca8a9cd97c
+FPGA_0_94	= a117014d629eb090996cebceabf036ac61db7989
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
