@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 #include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -52,7 +54,7 @@ int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 		pthread_mutex_unlock(&i2c_mutex);
 		return ret_val;
 	}
-	
+
 	ret_val = i2c_smbus_write_byte_data(i2c_dev_node,
 					i2c_dev_reg_addr,
 					i2c_val_to_write);
@@ -63,8 +65,8 @@ int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
 	}
-    close(i2c_dev_node);                 
-	pthread_mutex_unlock(&i2c_mutex); 
+	close(i2c_dev_node);
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
@@ -90,8 +92,8 @@ int i2c_SBMUS_write_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
 	}
-    close(i2c_dev_node);      
-	pthread_mutex_unlock(&i2c_mutex);            
+	close(i2c_dev_node);
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 

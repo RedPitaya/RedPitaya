@@ -63,14 +63,15 @@ if(BUILD_SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
+    target_link_libraries(${PROJECT_NAME}-shared i2c)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-            DESTINATION ${INSTALL_DIR} PATTERN "*.h")            
-    endif()         
+            DESTINATION ${INSTALL_DIR} PATTERN "*.h")
+    endif()
 endif()
 
 
@@ -84,8 +85,8 @@ if(BUILD_STATIC)
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-            DESTINATION ${INSTALL_DIR} PATTERN "*.h") 
-        endif()  
+            DESTINATION ${INSTALL_DIR} PATTERN "*.h")
+        endif()
 endif()
 
 unset(MODEL CACHE)

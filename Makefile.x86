@@ -8,6 +8,8 @@ BUILD_NUMBER ?= 0
 GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?=
 
+CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
+
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
@@ -369,8 +371,8 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 	patch -t -p0 -i "${PWD}/patches/u-boot/set-extra-env.patch" -d "$@"
 
 $(UBOOT): $(UBOOT_DIR) $(TMP)
-	make -C $< arch=ARM zynq_red_pitaya_defconfig
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS)
+	make -C $< arch=ARM zynq_red_pitaya_defconfig -j $(CPU_CORES)
+	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) -j $(CPU_CORES)
 	cp $(UBOOT_DIR)/u-boot $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
@@ -401,8 +403,8 @@ endif
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
-	make -C $< ARCH=arm xilinx_zynq_defconfig
-	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
+	make -C $< ARCH=arm xilinx_zynq_defconfig -j $(CPU_CORES)
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS)  -j $(CPU_CORES) UIMAGE_LOADADDR=0x8000 uImage
 ifeq ($(KERNEL_HEADERS),YES)
 	make -C $< headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))/include/linux
 endif

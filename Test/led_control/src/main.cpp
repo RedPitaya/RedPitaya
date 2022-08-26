@@ -21,7 +21,9 @@
 #include <sys/param.h>
 #include <iostream>
 
+extern "C"{
 #include "rp_hw.h"
+}
 
 /** Program name */
 const char *g_argv0 = NULL;
@@ -55,7 +57,7 @@ void usage() {
             "   -e    LEDs on ethernet connector.\n"
             "\n"
             "Optional parameter:\n"
-            "    State = [Off | On]  Turns LEDs on or off"            
+            "    State = [Off | On]  Turns LEDs on or off"
             "\n";
 
     fprintf( stderr, format, g_argv0);
@@ -83,7 +85,7 @@ int main(int argc, char *argv[])
     }
 
     const char *optstring = "y::r::e::";
-    
+
     int ch = -1;
     while ( (ch = getopt( argc, argv, optstring )) != -1 ) {
         switch ( ch ) {

@@ -6,6 +6,9 @@
 
 NAME=redpitaya-nginx
 
+export LUAJIT_LIB=/usr/lib/arm-linux-gnueabihf
+export LUAJIT_INC=/usr/include/luajit-2.1
+
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
@@ -30,13 +33,14 @@ configuration += --add-module=../ngx_ext_modules/lua-nginx-module
 configuration += --error-log-path=/var/log/redpitaya_nginx/error.log
 configuration += --with-ipv6
 configuration += --with-http_dav_module
+configuration += --with-ld-opt="-Wl,-rpath,/usr/lib/arm-linux-gnueabihf"
 
 VERSION=$(VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
-	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(configuration);	
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(configuration);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB):

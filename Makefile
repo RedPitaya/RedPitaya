@@ -4,6 +4,8 @@ DL ?= dl
 INSTALL_DIR ?= build
 ENABLE_LICENSING ?= 0
 STREAMING ?= MASTER
+CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
+
 ################################################################################
 # versioning system
 ################################################################################
@@ -133,30 +135,38 @@ SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 STARTUPSH       = $(INSTALL_DIR)/sbin/startup.sh
 GETSYSINFOSH    = $(INSTALL_DIR)/sbin/getsysinfo.sh
 
-WEBSOCKETPP_TAG = 0.7.0
-LUANGINX_TAG    = v0.10.7
-NGINX_TAG       = 1.11.4
+WEBSOCKETPP_TAG = 0.8.2
+LUANGINX_TAG    = v0.10.21
+LUARESTY_TAG    = v0.1.23
+LUARESTY_L_TAG  = v0.13
+NGINX_TAG       = 1.19.10
 SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
-LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+LIBJSON_URL     = https://github.com/RedPitaya/libjson/archive/refs/tags/7.6.1.tar.gz
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
+LUARESTY_URL    = https://github.com/openresty/lua-resty-core/archive/refs/tags/$(LUARESTY_TAG).tar.gz
+LUARESTY_L_URL  = https://github.com/openresty/lua-resty-lrucache/archive/refs/tags/$(LUARESTY_L_TAG).tar.gz
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 SOCKPROC_URL	= https://github.com/juce/sockproc/archive/$(SOCKPROC_TAG).tar.gz
 
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
-LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
+LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tar.gz
+LUARESTY_TAR    = $(DL)/lua-resty-module-$(LUARESTY_TAG).tar.gz
+LUARESTY_L_TAR  = $(DL)/lua-resty-lrucache-module-$(LUARESTY_L_TAG).tar.gz
 NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 SOCKPROC_TAR	= $(DL)/sockproc-$(SOCKPROC_TAG).tar.gz
 
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
+LUARESTY_DIR    = Bazaar/nginx/ngx_ext_modules/lua-resty-module
+LUARESTY_L_DIR  = Bazaar/nginx/ngx_ext_modules/lua-resty-lrucache-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx
 SOCKPROC_DIR    = Bazaar/tools/sockproc
 
-.PHONY: ecosystem nginx
+.PHONY: ecosystem nginx $(LIBJSON_DIR) $(LIBJSON_TAR) $(DL) $(SOCKPROC_TAR) $(WEBSOCKETPP_DIR) $(WEBSOCKETPP_TAR) $(LUANGINX_TAR) $(NGINX_TAR) $(NGINX_SRC_DIR) $(LUANGINX_DIR)
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	wget $(WEBSOCKETPP_URL) -O $@ --show-progress
@@ -164,7 +174,7 @@ $(WEBSOCKETPP_TAR): | $(DL)
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
+#	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
 
 $(SOCKPROC_TAR): | $(DL)
 	wget $(SOCKPROC_URL) -O $@ --show-progress
@@ -178,7 +188,7 @@ $(LIBJSON_TAR): | $(DL)
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
 	mkdir -p $@
-	unzip $< -d $(@D)
+	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/libjson.patch
 
 $(LUANGINX_TAR): | $(DL)
@@ -188,6 +198,22 @@ $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
+$(LUARESTY_TAR): | $(DL)
+	wget $(LUARESTY_URL) -O $@ --show-progress
+
+$(LUARESTY_DIR): $(LUARESTY_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+	$(MAKE) -C $(LUARESTY_DIR) install PREFIX=$(abspath $(INSTALL_DIR)/www/conf)
+
+$(LUARESTY_L_TAR): | $(DL)
+	wget $(LUARESTY_L_URL) -O $@ --show-progress
+
+$(LUARESTY_L_DIR): $(LUARESTY_L_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+	$(MAKE) -C $(LUARESTY_L_DIR) install PREFIX=$(abspath $(INSTALL_DIR)/www/conf)
+
 $(NGINX_TAR): | $(DL)
 	wget $(NGINX_URL) -O $@ --show-progress
 
@@ -195,10 +221,10 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f apps-tools/nginx.conf $@/conf/
-	mkdir $@/conf/lua/
+	mkdir -p $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 
-$(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
+$(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUARESTY_DIR) $(LUARESTY_L_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 	$(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
@@ -365,7 +391,7 @@ laboardtest: api2
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	cp rp-api/api2/test/laboardtest $(abspath $(INSTALL_DIR))/bin/laboardtest
 	cp rp-api/api2/test/install.sh $(abspath $(INSTALL_DIR))/install.sh
-	
+
 rp_communication:
 	make -C $(COMM_DIR)
 

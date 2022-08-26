@@ -56,7 +56,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static -lrp-hw -lm -lstdc++ -lpthread)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static -lrp-hw -li2c -lm -lstdc++ -lpthread)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
