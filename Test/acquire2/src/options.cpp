@@ -31,6 +31,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
             {"volt",         no_argument,       0, 'o'},
             {"no_reg",       no_argument,       0, 'r'},
             {"calib",        no_argument,       0, 'c'},
+            {"hk",           no_argument,       0, 'k'},
             {0, 0, 0, 0}
     };
 
@@ -53,6 +54,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
             "  --volt          -o    Print value in volt.\n"
             "  --no_reg        -r    Disable load registers config (XML) for DAC and ADC.\n"
             "  --calib         -c    Disable calibration parameters\n"
+            "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
             "\n";
@@ -73,6 +75,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
             {"hex",          no_argument,       0, 'x'},
             {"volt",         no_argument,       0, 'o'},
             {"calib",        no_argument,       0, 'c'},
+            {"hk",           no_argument,       0, 'k'},
             {0, 0, 0, 0}
     };
 
@@ -92,6 +95,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
             "  --hex           -x    Print value in hex.\n"
             "  --volt          -o    Print value in volt.\n"
             "  --calib         -c    Disable calibration parameters\n"
+            "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
             "\n";
@@ -114,6 +118,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
             {"hex",          no_argument,       0, 'x'},
             {"volt",         no_argument,       0, 'o'},
             {"calib",        no_argument,       0, 'c'},
+            {"hk",           no_argument,       0, 'k'},
             {0, 0, 0, 0}
     };
 
@@ -135,6 +140,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
             "  --hex           -x    Print value in hex.\n"
             "  --volt          -o    Print value in volt.\n"
             "  --calib         -c    Disable calibration parameters\n"
+            "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
             "    SIZE                Number of samples to acquire [0 - %u].\n"
             "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
             "\n";
@@ -394,6 +400,11 @@ auto parse(int argc, char* argv[]) -> Options{
 
             case 'x': {
                 opt.showInHex = true;
+                break;
+            }
+
+            case 'k': {
+                opt.reset_hk = true;
                 break;
             }
 
