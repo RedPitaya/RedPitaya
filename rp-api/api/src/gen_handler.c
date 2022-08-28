@@ -31,6 +31,10 @@
 float         chA_amplitude            = 1,         chB_amplitude            = 1;
 float         chA_offset               = 0,         chB_offset               = 0;
 float         chA_dutyCycle            = 0,         chB_dutyCycle            = 0;
+float         chA_riseTime             = 1,         chB_riseTime             = 1;
+float         chA_fallTime             = 1,         chB_fallTime             = 1;
+float         chA_riseFallMin        = 0.1,         chB_riseFallMin        = 0.1;
+float         chA_riseFallMax       = 1000,         chB_riseFallMax       = 1000;
 float         chA_frequency               ,         chB_frequency               ;
 float         chA_sweepStartFrequency     ,         chB_sweepStartFrequency     ;
 float         chA_sweepEndFrequency       ,         chB_sweepEndFrequency       ;
@@ -60,6 +64,14 @@ int gen_SetDefaultValues() {
     gen_Disable(RP_CH_2);
     gen_setFrequency(RP_CH_1, 1000);
     gen_setFrequency(RP_CH_2, 1000);
+    gen_setRiseFallMin(RP_CH_1, 0.1);
+    gen_setRiseFallMin(RP_CH_2, 0.1);
+    gen_setRiseFallMax(RP_CH_1, 1000);
+    gen_setRiseFallMax(RP_CH_2, 1000);
+    gen_setRiseTime(RP_CH_1, 1);
+    gen_setRiseTime(RP_CH_2, 1);
+    gen_setFallTime(RP_CH_1, 1);
+    gen_setFallTime(RP_CH_2, 1);
     gen_setSweepStartFrequency(RP_CH_1, 1000);
     gen_setSweepEndFrequency(RP_CH_2, 1000);
     gen_setSweepStartFrequency(RP_CH_1, 1000);
@@ -193,6 +205,64 @@ int gen_getOffset(rp_channel_t channel, float *offset) {
     return RP_EPN;
 }
 
+int gen_setRiseFallMin(rp_channel_t channel, float min) {
+    if (channel == RP_CH_1) {
+        chA_riseFallMin = min;
+        if (chA_riseTime < chA_riseFallMin) {
+            chA_riseTime = chA_riseFallMin;
+        }
+        if (chA_fallTime < chA_riseFallMin) {
+            chA_fallTime = chA_riseFallMin;
+        }
+    } else if (channel == RP_CH_2) {
+        chB_riseFallMin = min;
+        if (chB_riseTime < chB_riseFallMin) {
+            chB_riseTime = chB_riseFallMin;
+        }
+        if (chB_fallTime < chB_riseFallMin) {
+            chB_fallTime = chB_riseFallMin;
+        }
+    } else {
+        return RP_EPN;
+    }
+    return RP_OK;
+}
+
+int gen_getRiseFallMin(rp_channel_t channel, float *min) {
+    CHANNEL_ACTION(channel,
+            *min = chA_riseFallMin,
+            *min = chB_riseFallMin);
+    return RP_OK;
+}
+
+int gen_setRiseFallMax(rp_channel_t channel, float max) {
+    if (channel == RP_CH_1) {
+        chA_riseFallMax = max;
+        if (chA_riseTime > chA_riseFallMax) {
+            chA_riseTime = chA_riseFallMax;
+        }
+        if (chA_fallTime > chA_riseFallMax) {
+            chA_fallTime = chA_riseFallMax;
+        }
+    } else if (channel == RP_CH_2) {
+        chB_riseFallMax = max;
+        if (chB_riseTime > chB_riseFallMax) {
+            chB_riseTime = chB_riseFallMax;
+        }
+        if (chB_fallTime > chB_riseFallMax) {
+            chB_fallTime = chB_riseFallMax;
+        }
+    }
+    return RP_OK;
+}
+
+int gen_getRiseFallMax(rp_channel_t channel, float *max) {
+    CHANNEL_ACTION(channel,
+            *max = chA_riseFallMax,
+            *max = chB_riseFallMax);
+    return RP_OK;
+}
+
 int gen_setFrequency(rp_channel_t channel, float frequency) {
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
         return RP_EOOR;
@@ -209,6 +279,8 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
     else {
         return RP_EPN;
     }
+    gen_setRiseFallMin(channel, 1000000.0 / frequency * RISE_FALL_MIN_RATIO);
+    gen_setRiseFallMax(channel, 1000000.0 / frequency * RISE_FALL_MAX_RATIO);
 
     generate_setFrequency(channel, frequency);
     return synthesize_signal(channel);
@@ -227,6 +299,9 @@ int gen_setFrequencyDirect(rp_channel_t channel, float frequency){
     else {
         return RP_EPN;
     }
+    gen_setRiseFallMin(channel, 1000000.0 / frequency * RISE_FALL_MIN_RATIO);
+    gen_setRiseFallMax(channel, 1000000.0 / frequency * RISE_FALL_MAX_RATIO);
+
     return generate_setFrequency(channel, frequency);
 }
 
@@ -430,6 +505,56 @@ int gen_getDutyCycle(rp_channel_t channel, float *ratio) {
     CHANNEL_ACTION(channel,
             *ratio = chA_dutyCycle,
             *ratio = chB_dutyCycle)
+    return RP_OK;
+}
+
+int gen_setRiseTime(rp_channel_t channel, float time) {
+    if (channel == RP_CH_1) {
+        if (time < chA_riseFallMin || time > chA_riseFallMax) {
+            return RP_EOOR;
+        }
+        chA_riseTime = time;
+    }
+    else if (channel == RP_CH_2) {
+        if (time < chB_riseFallMin || time > chB_riseFallMax) {
+            return RP_EOOR;
+        }
+        chB_riseTime = time;
+    }
+    else {
+        return RP_EPN;
+    }
+    return synthesize_signal(channel);
+}
+
+int gen_getRiseTime(rp_channel_t channel, float *time) {
+    CHANNEL_ACTION(channel,
+                   *time = chA_riseTime,
+                   *time = chB_riseTime)
+    return RP_OK;
+}
+
+int gen_setFallTime(rp_channel_t channel, float time) {
+    if (channel == RP_CH_1) {
+        if (time < chA_riseFallMin || time > chA_riseFallMax) {
+            return RP_EOOR;
+        }
+        chA_fallTime = time;
+    } else if (channel == RP_CH_2) {
+        if (time < chB_riseFallMin || time > chB_riseFallMax) {
+            return RP_EOOR;
+        }
+        chB_fallTime = time;
+    } else {
+        return RP_EPN;
+    }
+    return synthesize_signal(channel);
+}
+
+int gen_getFallTime(rp_channel_t channel, float *time) {
+    CHANNEL_ACTION(channel,
+                   *time = chA_fallTime,
+                   *time = chB_fallTime)
     return RP_OK;
 }
 
@@ -644,7 +769,7 @@ int synthesize_signal(rp_channel_t channel) {
     rp_waveform_t waveform;
     rp_gen_sweep_mode_t sweep_mode;
     rp_gen_sweep_dir_t sweep_dir;
-    float dutyCycle, frequency,sweepStartFreq , sweepEndFreq;
+    float dutyCycle, frequency, sweepStartFreq, sweepEndFreq, riseTime, fallTime;
     uint32_t size = DAC_BUFFER_SIZE;
     int32_t phase;
     float  phaseRad = 0;
@@ -653,6 +778,8 @@ int synthesize_signal(rp_channel_t channel) {
         waveform = chA_waveform;
         dutyCycle = chA_dutyCycle;
         frequency = chA_frequency;
+        riseTime = chA_riseTime;
+        fallTime = chA_fallTime;
         sweepStartFreq = chA_sweepStartFrequency;
         sweepEndFreq = chA_sweepEndFrequency;
         sweep_mode = chA_sweepMode;
@@ -665,6 +792,8 @@ int synthesize_signal(rp_channel_t channel) {
         waveform = chB_waveform;
         dutyCycle = chB_dutyCycle;
         frequency = chB_frequency;
+        riseTime = chB_riseTime;
+        fallTime = chB_fallTime;
         sweepStartFreq = chB_sweepStartFrequency;
         sweepEndFreq = chB_sweepEndFrequency;
         sweep_mode = chB_sweepMode;
@@ -682,7 +811,7 @@ int synthesize_signal(rp_channel_t channel) {
     switch (waveform) {
         case RP_WAVEFORM_SINE     : synthesis_sin      (data,buf_size);                 break;
         case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data,buf_size);                 break;
-        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, data,buf_size);      break;
+        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, riseTime, fallTime, data,buf_size);      break;
         case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data,buf_size);                 break;
         case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data,buf_size);                 break;
         case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
@@ -768,26 +897,25 @@ int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) 
     return RP_OK;
 }
 
-int synthesis_square(float frequency, float *data_out,uint16_t buffSize) {
-    // Various locally used constants - HW specific parameters
-#ifdef Z20_250_12
-        const int trans0 = 1;
-        const int trans1 = 100;
-#else
-        const int trans0 = 30;
-        const int trans1 = 300;
-#endif
-    
-    uint32_t trans = (uint32_t) (frequency / 1e6 * trans1); // 300 samples at 1 MHz
+int synthesis_square(float frequency, float riseTime, float fallTime, float *data_out, uint16_t buffSize) {
 
-    if (trans <= 10)  trans = trans0;
+    float period_us = 1000000.0 / frequency;
+    uint16_t riseTimeSamples = (uint16_t) (riseTime / period_us * buffSize);
+    if (riseTimeSamples == 0) riseTimeSamples = 1;
+    uint16_t fallTimeSamples = (uint16_t) (fallTime / period_us * buffSize);
+    if (fallTimeSamples == 0) fallTimeSamples = 1;
 
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         int unsigned x = (i % buffSize);
-        if      (/*(0 <= x                  ) && */ (x <  buffSize/2 - trans))  data_out[i] =  1.0f;
-        else if ((x >= buffSize/2 - trans) && (x <  buffSize/2        ))  data_out[i] =  1.0f - (2.0f / trans) * (x - (buffSize/2 - trans));
-        else if (/*(0 <= buffSize/2         ) && */ (x <  buffSize   - trans))  data_out[i] = -1.0f;
-        else if ((x >= buffSize   - trans) && (x <  buffSize          ))  data_out[i] = -1.0f + (2.0f / trans) * (x - (buffSize   - trans));
+        if ( x <  riseTimeSamples) {
+            data_out[i] =  - 1.0f + (2.0f * (float) x / (float) riseTimeSamples);
+        } else if (x < buffSize/2) {
+            data_out[i] =  1.0f;
+        } else if (x < buffSize - fallTimeSamples) {
+            data_out[i] = - 1.0f + 2.0f * (float) (1 - (x - buffSize/2) / (float) fallTimeSamples);
+        } else {
+            data_out[i] = - 1.0f;
+        }
     }
 
     return RP_OK;

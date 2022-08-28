@@ -35,6 +35,9 @@ extern "C" {
 #define DAC_FREQUENCY 122.880e6
 #define DAC_BUFFER_SIZE         (16 * 1024)
 
+#define RISE_FALL_MIN_RATIO     0.0001      // ratio of rise/fall time to period
+#define RISE_FALL_MAX_RATIO     0.1
+
 /** @name Error codes
  *  Various error codes returned by the API.
  */
@@ -1398,6 +1401,26 @@ int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenDutyCycle(rp_channel_t channel, float ratio);
+
+/**
+* Sets rise time of square signal.
+* @param channel Channel A or B for witch we want to set rise time.
+* @param time Rise time in microseconds.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+
+int rp_GenRiseTime(rp_channel_t channel, float time);
+
+/**
+ * Sets fall time of square signal.
+ * @param channel Channel A or B for witch we want to set fall time.
+ * @param time Fall time in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+
+int rp_GenFallTime(rp_channel_t channel, float time);
 
 /**
 * Gets duty cycle of PWM signal.

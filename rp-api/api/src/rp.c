@@ -911,6 +911,14 @@ int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
     return gen_setDutyCycle(channel, ratio);
 }
 
+int rp_GenRiseTime(rp_channel_t channel, float time) {
+    return gen_setRiseTime(channel, time);
+}
+
+int rp_GenFallTime(rp_channel_t channel, float time) {
+    return gen_setFallTime(channel, time);
+}
+
 int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio) {
     return gen_getDutyCycle(channel, ratio);
 }
