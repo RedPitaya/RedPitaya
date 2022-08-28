@@ -33,6 +33,9 @@ extern "C" {
 #define ADC_BUFFER_SIZE (16 * 1024)
 #define ADC_CHANNELS 4
 
+#define RISE_FALL_MIN_RATIO     0.0001      // ratio of rise/fall time to period
+#define RISE_FALL_MAX_RATIO     0.1
+
 /** @name Error codes
  *  Various error codes returned by the API.
  */
