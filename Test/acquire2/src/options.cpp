@@ -15,7 +15,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 
 
 #if defined Z20_250_12
-    static constexpr char optstring[] = "esx1:2:d:vht:l:orc";
+    static constexpr char optstring[] = "esx1:2:d:vht:l:orck";
     static struct option long_options[] = {
             /* These options set a flag. */
             {"equalization", no_argument,       0, 'e'},
@@ -61,7 +61,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 #endif
 
 #if defined Z10 || defined Z20 || defined Z20_125
-    static constexpr char optstring[] = "esx1:2:vht:l:oc";
+    static constexpr char optstring[] = "esx1:2:vht:l:ock";
     static struct option long_options[] = {
             /* These options set a flag. */
             {"equalization", no_argument,       0, 'e'},
@@ -102,7 +102,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 #endif
 
 #if defined Z20_125_4CH
-    static constexpr char optstring[] = "esx1:2:3:4:vht:l:oc";
+    static constexpr char optstring[] = "esx1:2:3:4:vht:l:ock";
     static struct option long_options[] = {
             /* These options set a flag. */
             {"equalization", no_argument,       0, 'e'},
@@ -197,9 +197,9 @@ auto usage(char const* progName) -> void{
     std::string name = "";
     if (arr.size() > 0)
         name = arr[arr.size()-1];
-    
+
     auto n = name.c_str();
-    
+
     fprintf(stderr,"%s Version: %s-%s\n",n,VERSION_STR, REVISION_STR);
     fprintf(stderr, g_format, n, ADC_BUFFER_SIZE,
             g_dec[0],
@@ -426,9 +426,9 @@ auto parse(int argc, char* argv[]) -> Options{
         }
     }
 
-    if (opt.error || opt.showHelp || opt.showVersion) 
+    if (opt.error || opt.showHelp || opt.showVersion)
         return opt;
-        
+
      /* Acquisition size */
     uint32_t size = 0;
     if (optind < argc) {
@@ -448,7 +448,7 @@ auto parse(int argc, char* argv[]) -> Options{
     /* Optional decimation */
     if (optind < argc) {
         opt.decimation = atoi(argv[optind]);
-        
+
         if (opt.decimation <= 16){
             auto findDec = false;
             for (int idx = 0; idx < DEC_MAX; idx++) {
