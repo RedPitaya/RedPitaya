@@ -17,7 +17,7 @@ export REVISION
 export VERSION
 
 SUBMODULE_UBT = "redpitaya-v2016.4"
-SUBMODULE_LIN = "branch-redpitaya-v2017.2"
+SUBMODULE_LIN = "branch-redpitaya-v2022.3"
 SUBMODULE_APP = ""
 
 STREAMING ?= MASTER
@@ -66,13 +66,15 @@ $(INSTALL_DIR):
 # X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
 ################################################################################
 
-UBOOT_TAG     = redpitaya-v2016.4.1
-LINUX_TAG     = branch-redpitaya-v2017.2
-DTREE_TAG     = xilinx-v2017.2
+UBOOT_TAG      = redpitaya-v2022.1
+#LINUX_TAG     = branch-redpitaya-v2022.3
+LINUX_TAG      = master
+DTREE_TAG      = xilinx_v2022.1
+DTREE_PATH_TAG = xilinx-v2022.1
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
-DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_TAG)
+DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_PATH_TAG)
 
 UBOOT_TAR     = $(DL)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
 LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
@@ -80,11 +82,13 @@ DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
 
 # it is possible to use an alternative download location (local) by setting environment variables
 UBOOT_URL     ?= https://github.com/RedPitaya/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
+
 LINUX_URL     ?= https://github.com/RedPitaya/linux-xlnx/archive/$(LINUX_TAG).tar.gz
+#LINUX_URL     ?= https://github.com/Xilinx/linux-xlnx/archive/refs/tags/xilinx-v2020.1.tar.gz
 DTREE_URL     ?= https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
 
 LINUX_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
-UBOOT_CFLAGS = "-O2 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
+
 
 KERNEL_HEADERS ?= YES
 
@@ -127,12 +131,12 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_CLASSIC 	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_LOGIC	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_0_94	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_MERCURY	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_AXI4LITE	= 42eae000c2ce968baa30f0204b87beea27850409
+FPGA_STREAM_APP = 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_CLASSIC 	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_LOGIC	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_MERCURY	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_AXI4LITE	= 07f102008aae01c49895ec92adfe467cd1f20288
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -145,8 +149,8 @@ ifeq ($(MODEL),Z20)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94 stream_app
 
-FPGA_STREAM_APP = 767d7804ae3851258e79f0b8e4fbd16fe106da9b
-FPGA_0_94	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_STREAM_APP = 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -159,12 +163,12 @@ ifeq ($(MODEL),Z20_125)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_CLASSIC 	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_LOGIC	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_0_94	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_MERCURY	= 42eae000c2ce968baa30f0204b87beea27850409
-FPGA_AXI4LITE	= 42eae000c2ce968baa30f0204b87beea27850409
+FPGA_STREAM_APP = 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_CLASSIC 	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_LOGIC	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_MERCURY	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_AXI4LITE	= 07f102008aae01c49895ec92adfe467cd1f20288
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -177,7 +181,7 @@ ifeq ($(MODEL),Z20_125_4CH)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94
 
-FPGA_0_94	= 42eae000c2ce968baa30f0204b87beea27850409
+FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -190,7 +194,7 @@ ifeq ($(MODEL),Z10_125_4CH_TEST)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94
 
-FPGA_0_94	= 42eae000c2ce968baa30f0204b87beea27850409
+FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -203,9 +207,9 @@ ifeq ($(MODEL),Z20_250_12)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 
-FPGA_STREAM_APP_250 = 767d7804ae3851258e79f0b8e4fbd16fe106da9b
-FPGA_0_94_250	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
-FPGA_LOGIC_250	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_STREAM_APP_250 = 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_0_94_250	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_LOGIC_250	= 07f102008aae01c49895ec92adfe467cd1f20288
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic_250
@@ -218,11 +222,10 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
 # FPGA_PRJ_LST = stream_app logic v0.94
 
-FPGA_STREAM_APP = 767d7804ae3851258e79f0b8e4fbd16fe106da9b
-FPGA_LOGIC	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_STREAM_APP = 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_LOGIC	= 07f102008aae01c49895ec92adfe467cd1f20288
 FPGA_0_94	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
-
-# NEED for FSBL fpga image
+07f102008aae01c49895ec92adfe467cd1f20288
 FPGA_PRJ = logic
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
@@ -238,7 +241,7 @@ fpga: $(INSTALL_DIR)/fpga
 define build_fpga
 	./download_fpga.sh $(1) $(GIT_MODE) $(5) $(GITLAB_TOKEN)
 	mkdir -p $(INSTALL_DIR)/fpga/$(1)
-	make -C fpga/$(1) PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4)
+	make -C fpga/$(1) PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4) DTS_VER=2022.1
 
 	cp    fpga/$(1)/prj/$(1)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(1)/fpga.bit
 	cp    fpga/$(1)/prj/$(1)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(1)/fsbl.elf
@@ -349,6 +352,43 @@ ifeq ($(FPGA_MODEL),Z20_250)
 endif
 
 ################################################################################
+# device tree processing
+################################################################################
+
+DEVICETREE = $(TMP)/dts/devicetree.dtb
+
+.PHONY: devicetree devicetree-install $(DEVICETREE)
+
+devicetree: $(DEVICETREE) $(DTREE_DIR)
+
+$(DTREE_TAR): | $(DL)
+	curl -L $(DTREE_URL) -o $@
+
+$(DTREE_DIR): $(DTREE_TAR)
+	mkdir -p $@
+	tar -zxf $< --strip-components=1 --directory=$@
+	mkdir -p fpga/tmp
+	cp -r $@ fpga/tmp
+
+$(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
+	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
+	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
+
+	gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
+	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
+
+	# cat fpga/$(FPGA_PRJ)/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
+	# gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
+	# tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
+	# create device tree source from binary for reference
+	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
+
+
+devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
+	cp $(DEVICETREE)                   $(INSTALL_DIR)
+	cp $(TMP)/dts/dtraw.dts            $(INSTALL_DIR)
+
+################################################################################
 # U-Boot build provides: $(UBOOT)
 ################################################################################
 
@@ -356,7 +396,7 @@ UBOOT           = $(TMP)/u-boot.elf
 
 UBOOT_SCRIPT    = $(INSTALL_DIR)/u-boot.scr
 
-.PHONY: u-boot
+.PHONY: u-boot $(UBOOT_TAR) $(UBOOT_DIR) $(UBOOT)
 
 u-boot: $(UBOOT) $(UBOOT_SCRIPT)
 
@@ -364,16 +404,19 @@ $(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
 
 $(UBOOT_DIR): $(UBOOT_TAR)
+	rm -rf $@
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
 
-	# Patch
-	patch -t -p0 -i "${PWD}/patches/u-boot/set-extra-env.patch" -d "$@"
-
-$(UBOOT): $(UBOOT_DIR) $(TMP)
-	make -C $< arch=ARM zynq_red_pitaya_defconfig -j $(CPU_CORES)
-	make -C $< arch=ARM CFLAGS=$(UBOOT_CFLAGS) -j $(CPU_CORES)
-	cp $(UBOOT_DIR)/u-boot $@
+$(UBOOT): $(UBOOT_DIR) $(TMP) $(DEVICETREE)
+	make -C $< distclean
+	make -C $< clean
+	make -C $< mrproper
+	mkdir -p $</arch/arm/dts/
+	cp  $(DEVICETREE) $</arch/arm/dts/red-pitaya.dtb
+	make -C $< zynq_red_pitaya_defconfig -j $(shell grep -c ^processor /proc/cpuinfo) DEVICE_TREE="red-pitaya"
+	make -C $< -j $(shell grep -c ^processor /proc/cpuinfo) DEVICE_TREE="red-pitaya"
+	cp $(UBOOT_DIR)/u-boot.elf $@
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
@@ -394,17 +437,17 @@ $(LINUX_TAR): | $(DL)
 $(LINUX_DIR): $(LINUX_TAR)
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	patch -t -p1 -i "${PWD}/patches/zynq-kernel-mempry-reserve-issue.patch" -d "${PWD}/$@"
-	patch -t -p1 -i "${PWD}/patches/zynq-kernel-i2c.patch" -d "${PWD}/$@"
-	patch -t -p1 -i "${PWD}/patches/xilinx_zynq_defconfig.patch" -d "${PWD}/$@" # patch for Wifi AP mode
+#	patch -t -p1 -i "${PWD}/patches/zynq-kernel-mempry-reserve-issue.patch" -d "${PWD}/$@"
+#	patch -t -p1 -i "${PWD}/patches/zynq-kernel-i2c.patch" -d "${PWD}/$@"
+#	patch -t -p1 -i "${PWD}/patches/xilinx_zynq_defconfig.patch" -d "${PWD}/$@" # patch for Wifi AP mode
 ifeq ($(MODEL),Z20_250_12)
-	patch -t -p1 -i "${PWD}/patches/zynq-kernel-lantiq_250_12.patch" -d "${PWD}/$@"
+#	patch -t -p1 -i "${PWD}/patches/zynq-kernel-lantiq_250_12.patch" -d "${PWD}/$@"
 endif
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
-	make -C $< ARCH=arm xilinx_zynq_defconfig -j $(CPU_CORES)
-	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS)  -j $(CPU_CORES) UIMAGE_LOADADDR=0x8000 uImage
+	make -C $< ARCH=arm xilinx_zynq_defconfig -j $(shell grep -c ^processor /proc/cpuinfo)
+	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
 ifeq ($(KERNEL_HEADERS),YES)
 	make -C $< headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))/include/linux
 endif
@@ -412,37 +455,6 @@ endif
 linux-install: $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
-################################################################################
-# device tree processing
-################################################################################
-
-DEVICETREE = $(TMP)/dts/devicetree.dtb
-
-.PHONY: devicetree devicetree-install
-
-devicetree: $(DEVICETREE)
-
-$(DTREE_TAR): | $(DL)
-	curl -L $(DTREE_URL) -o $@
-
-$(DTREE_DIR): $(DTREE_TAR)
-	mkdir -p $@
-	tar -zxf $< --strip-components=1 --directory=$@
-	mkdir -p fpga/tmp
-	cp -r $@ fpga/tmp
-
-$(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
-	cp -r $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/dts $(TMP)
-	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
-	cat fpga/$(FPGA_PRJ)/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
-	gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
-	# create device tree source from binary for reference
-	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
-
-devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
-	cp $(DEVICETREE)                   $(INSTALL_DIR)
-	cp $(TMP)/dts/dtraw.dts            $(INSTALL_DIR)
 
 ################################################################################
 # boot file generator
@@ -458,8 +470,9 @@ FPGA = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fpga.bit
 FSBL = $(INSTALL_DIR)/fpga/$(FPGA_PRJ)/fsbl.elf
 
 $(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
-	@echo img:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
-	bootgen -image boot_uboot.bif -w -o $@
+	@echo the_ROM_image:{[bootloader] $(FSBL) $(FPGA) $(UBOOT) } > boot_uboot.bif
+	bootgen -image boot_uboot.bif -arch zynq -o $@ -w on -log
+
 
 ################################################################################
 # tarball
