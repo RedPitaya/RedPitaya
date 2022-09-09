@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.19)
 
 project(rpsa_client_qt VERSION 0.1 LANGUAGES CXX)
 
@@ -35,7 +35,11 @@ message(STATUS "Compiler С++ path: ${CMAKE_CXX_COMPILER}")
 message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
-
+message(STATUS "QT: ${QT}")
+message(STATUS "QT_DIR: ${QT_DIR}")
+message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+list( APPEND CMAKE_FIND_ROOT_PATH "${QT}" )
+message(STATUS "CMAKE_FIND_ROOT_PATH: ${CMAKE_FIND_ROOT_PATH}" )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -46,9 +50,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui REQUIRED)
-#find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick Gui REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick Gui Charts Widgets REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH}  NO_DEFAULT_PATH)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick Gui Charts Widgets REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH} NO_DEFAULT_PATH)
 
 set(CMAKE_AUTOUIC OFF)
 
@@ -117,7 +120,7 @@ target_sources( ${PROJECT_NAME}
 
 target_compile_definitions(rpsa_client_qt
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-  
+
 target_link_libraries(rpsa_client_qt
   PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::Widgets)
 
@@ -127,7 +130,7 @@ if(NOT WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++ gcc)
 else()
     set(WIN_SUFFIX -win)
-    target_link_libraries(${PROJECT_NAME} PRIVATE -static pthread wsock32 ws2_32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -static pthread wsock32 ws2_32 gcc stdc++)
 endif()
 
 
@@ -145,10 +148,16 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 if(IS_INSTALL)
-       install(TARGETS ${PROJECT_NAME}
-              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX})
+      install(TARGETS ${PROJECT_NAME}
+              DESTINATION ${INSTALL_DIR}/streaming/out/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX})
 
-       
-        install(CODE "execute_process(COMMAND zip -urj ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}.zip ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX})")
-        install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX})")
+if(WIN32)
+	set(EXE_EXT ".exe")
+endif()
+      install(CODE "execute_process(COMMAND /usr/bin/cqtdeployer -bin ${INSTALL_DIR}/streaming/out/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/rpsa_client_qt${EXE_EXT} -qmake ${QT}/bin/qmake -qmlDir ${QT}/qml -targetDir ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX})")
+if(WIN32)
+      install(CODE "execute_process(COMMAND cp /usr/i686-w64-mingw32/lib/libwinpthread-1.dll ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/libwinpthread-1.dll)")
+      install(CODE "execute_process(COMMAND cp /usr/lib/gcc/i686-w64-mingw32/9.3-posix/libgcc_s_sjlj-1.dll ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/libgcc_s_sjlj-1.dll)")
+endif()
+      install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/out)")
 endif()

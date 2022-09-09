@@ -110,8 +110,8 @@ void CFilter_logic::print(){
 int CFilter_logic::setCalibParameters(){
     for(int i = 0 ; i < m_grid.size() ; i++){
         if (m_grid[i].calculate == false) {
-            m_calib_man->setCalibValue(m_grid[i].ch == RP_CH_1 ? F_AA_CH1 : F_AA_CH2  ,m_grid[i].aa);
-            m_calib_man->setCalibValue(m_grid[i].ch == RP_CH_1 ? F_BB_CH1 : F_BB_CH2  ,m_grid[i].bb);
+            m_calib_man->setCalibValue(m_grid[i].ch, F_AA_CH, m_grid[i].aa);
+            m_calib_man->setCalibValue(m_grid[i].ch, F_BB_CH, m_grid[i].bb);
             m_calib_man->updateCalib();
             m_calib_man->updateAcqFilter(m_grid[i].ch);
 //            std::cout  << "Cur step " << i <<  " aa = " << m_grid[i].aa << " bb = " << m_grid[i].bb << std::endl;
@@ -123,8 +123,8 @@ int CFilter_logic::setCalibParameters(){
 
 void CFilter_logic::setGoodCalibParameter(){
     sort();
-    m_calib_man->setCalibValue(m_lastGood.ch == RP_CH_1 ? F_AA_CH1 : F_AA_CH2  ,m_lastGood.aa);
-    m_calib_man->setCalibValue(m_lastGood.ch == RP_CH_1 ? F_BB_CH1 : F_BB_CH2  ,m_lastGood.bb);
+    m_calib_man->setCalibValue(m_lastGood.ch,F_AA_CH, m_lastGood.aa);
+    m_calib_man->setCalibValue(m_lastGood.ch,F_BB_CH, m_lastGood.bb);
     m_calib_man->updateCalib();
     m_calib_man->updateAcqFilter(m_lastGood.ch);
 }
@@ -256,10 +256,10 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item,float _nominal
 //        std::cout <<  "New PP :" << item.f_pp << std::endl;
         if (item.f_pp == MIN_PP) return -1;
         if (item.f_pp >= MAX_PP) return -1;
-        m_calib_man->setCalibValue(item.cur_channel == RP_CH_1 ? F_AA_CH1 : F_AA_CH2  ,item.f_aa);
-        m_calib_man->setCalibValue(item.cur_channel == RP_CH_1 ? F_BB_CH1 : F_BB_CH2  ,item.f_bb);
-        m_calib_man->setCalibValue(item.cur_channel == RP_CH_1 ? F_PP_CH1 : F_PP_CH2  ,item.f_pp);
-        m_calib_man->setCalibValue(item.cur_channel == RP_CH_1 ? F_KK_CH1 : F_KK_CH2  ,item.f_kk);
+        m_calib_man->setCalibValue(item.cur_channel,F_AA_CH,item.f_aa);
+        m_calib_man->setCalibValue(item.cur_channel,F_BB_CH,item.f_bb);
+        m_calib_man->setCalibValue(item.cur_channel,F_PP_CH,item.f_pp);
+        m_calib_man->setCalibValue(item.cur_channel,F_KK_CH,item.f_kk);
         m_calib_man->updateCalib();
         m_calib_man->updateAcqFilter(item.cur_channel);
         if (m_calibAmpl == 0) return -2; 

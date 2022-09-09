@@ -72,9 +72,14 @@ static volatile housekeeping_control_t *hk = NULL;
 
 static int hk_Init(bool reset) {
     cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
+
+#ifdef Z20_250_12
     if (reset) {
         house_SetPllControlEnable(false);
     }
+#else
+    (void)(reset);    
+#endif
     return RP_OK;
 }
 
@@ -83,31 +88,21 @@ static int hk_Release() {
     return RP_OK;
 }
 
-int house_GetPllControlEnable(bool *enable){
 #ifdef Z20_250_12
+int house_GetPllControlEnable(bool *enable){
     *enable = hk->pll_control.enable;
     return RP_OK;
-#else
-    return RP_NOTS;
-#endif
 }
 
 int house_SetPllControlEnable(bool enable){
-#ifdef Z20_250_12
     hk->pll_control.enable = enable;
     return RP_OK;
-#else
-    return RP_NOTS;
-#endif
 }
 
 int house_GetPllControlLocked(bool *status){
-#ifdef Z20_250_12
     *status = hk->pll_control.locked;
     return RP_OK;
-#else
-    return RP_NOTS;
-#endif
 }
+#endif
 
 #endif //__HOUSEKEEPING_H

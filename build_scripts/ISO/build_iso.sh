@@ -14,11 +14,12 @@ fi
 
 ECO_FILE=$1
 PREFIX=$2
+SUFFIX=$3
 REV="$(echo $1 | cut -d'-' -f2)"
 NUM="$(echo $1 | cut -d'-' -f3)"
 
-wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.07.img.zip
-unzip -n red_pitaya_OS-beta_1.07.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.08.img.zip
+unzip -n red_pitaya_OS-beta_1.08.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
@@ -104,7 +105,7 @@ sudo losetup -d "$LOOP_DEV"
 
 sleep 2
 
-mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
-zip $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img') 
+mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img')
+zip $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') 
 rm -f $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
 echo "ALL DONE"

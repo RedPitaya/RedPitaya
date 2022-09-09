@@ -42,6 +42,7 @@ scpi_result_t RP_AcqTriggerDelayNs(scpi_t * context);
 scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t * context);
 scpi_result_t RP_AcqTriggerHyst(scpi_t *context);
 scpi_result_t RP_AcqTriggerHystQ(scpi_t *context);
+scpi_result_t RP_AcqTriggerFillQ(scpi_t *context);
 scpi_result_t RP_AcqGain(scpi_t * context);
 scpi_result_t RP_AcqGainQ(scpi_t * context);
 scpi_result_t RP_AcqTriggerLevel(scpi_t *context);

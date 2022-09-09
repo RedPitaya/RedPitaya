@@ -23,17 +23,28 @@ if(NOT DEFINED INSTALL_DIR)
     set(IS_INSTALL OFF)
 endif()
 
-message(STATUS "RedPitaya model=${MODEL}")
-message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
-message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
-message(STATUS "Compiler С version: ${CMAKE_C_COMPILER_VERSION}")
-message(STATUS "Compiler С is part: ${CMAKE_COMPILER_IS_GNUC}")
+if(NOT DEFINED VERSION)
+  set(VERSION 0.00-0000)
+endif()
 
-message(STATUS "Compiler С++ path: ${CMAKE_CXX_COMPILER}")
-message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
+if(NOT DEFINED REVISION)
+  set(REVISION devbuild)
+endif()
+
+message(STATUS "RedPitaya model=${MODEL}")
+message(STATUS "VERSION=${VERSION}")
+message(STATUS "REVISION=${REVISION}")
 message(STATUS "Install path ${INSTALL_DIR}")
+
+message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
+message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
+message(STATUS "Compiler C version: ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "Compiler C is part: ${CMAKE_COMPILER_IS_GNUC}")
+
+message(STATUS "Compiler C++ path: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
 include_directories("include")
@@ -43,14 +54,14 @@ file(GLOB PR_HW_SOURCES "src/*.c")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-std=c11 -Wall -pedantic -Wextra -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-std=c11 -Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
 
 if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
-    target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=src/exportmap)
+    target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
 
     if(IS_INSTALL)

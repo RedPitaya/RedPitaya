@@ -24,9 +24,10 @@ export LINUX_VER
 # MODEL USE FOR determine kind of assembly
 # USED parameters:
 # Z10 - for Redpitaya 125-14
-# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode  
+# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode
 # Z20 - for Redpitaya 122-16
 # Z20_125 - for Redpitaya Z20 125-14
+# Z20_125_4CH - for Redpitaya Z20 125-14 4CH ADC
 # Z20_250_12 - for RepPitaya 250-12
 # Production test script
 MODEL ?= Z10
@@ -39,6 +40,12 @@ endif
 endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
+ifeq ($(STREAMING),MASTER)
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
 ifeq ($(STREAMING),MASTER)
 all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
 endif
@@ -65,14 +72,14 @@ LIBRP_DIR       = rp-api/api
 LIBRP_HW_DIR    = rp-api/api-hw
 LIBRP2_DIR      = rp-api/api2
 LIBRP250_12_DIR = rp-api/api-250-12
-LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
+LIBRP_DSP_DIR   = rp-api/api-dsp
 LIBRPAPP_DIR    = Applications/api/rpApplications
 ECOSYSTEM_DIR   = Applications/ecosystem
 
-.PHONY: api api2 librp librp1 librp250_12 librp_hw
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp
 .PHONY: librpapp liblcr_meter
 
-api: librp librp_hw
+api: librp librp_hw librp_dsp
 
 api2: librp2
 
@@ -81,41 +88,34 @@ librp: librp250_12
 else
 librp:
 endif
-	cmake -B$(abspath $(LIBRP_DIR)) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-	$(MAKE) -C $(LIBRP_DIR) install
+	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DIR)/build install
 
 librp_hw:
-	cmake -B$(abspath $(LIBRP_HW_DIR)) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-	$(MAKE) -C $(LIBRP_HW_DIR) install
+	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_DIR)/build install
 
-librp1:
-	$(MAKE) -C $(LIBRP1_DIR) clean
-	$(MAKE) -C $(LIBRP1_DIR)
-	$(MAKE) -C $(LIBRP1_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+librp_dsp:
+	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DSP_DIR)/build install
 
 librp2:
-	$(MAKE) -C $(LIBRP2_DIR) clean
-	$(MAKE) -C $(LIBRP2_DIR)
-	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP2_DIR)/build install
 
 librp250_12: librp_hw
-	cmake -B$(LIBRP250_12_DIR) -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL)
-	$(MAKE) -C $(LIBRP250_12_DIR) install
+	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP250_12_DIR)/build install
 
 
 ifeq ($(ENABLE_LICENSING),1)
 
-api: librpapp liblcr_meter
+api: librpapp
 
 librpapp: librp
-	$(MAKE) -C $(LIBRPAPP_DIR) clean
-	$(MAKE) -C $(LIBRPAPP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
-liblcr_meter: librp
-	$(MAKE) -C $(LIBRPLCR_DIR) clean
-	$(MAKE) -C $(LIBRPLCR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 endif
 
 
@@ -291,6 +291,7 @@ LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
 ACQUIRE_DIR        = Test/acquire
+ACQUIRE2_DIR       = Test/acquire2
 CALIB_DIR          = Test/calib
 CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
@@ -303,7 +304,13 @@ LA_TEST_DIR        = rp-api/api2/test
 .PHONY: examples rp_communication
 .PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest led_control
 
+
+
+ifeq ($(MODEL),Z20_125_4CH)
+examples: monitor calib spectrum acquire led_control
+else
 examples: lcr bode monitor calib spectrum acquire generator led_control
+endif
 
 # calibrate laboardtest
 
@@ -318,9 +325,9 @@ bode: api
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 monitor:
-	$(MAKE) -C $(MONITOR_DIR) clean
-	$(MAKE) -C $(MONITOR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(MONITOR_DIR)/build)
+	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(MONITOR_DIR)/build install
 
 generator: api
 	$(MAKE) -C $(GENERATOR_DIR) clean 
@@ -328,18 +335,19 @@ generator: api
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 acquire: api
-	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(ACQUIRE2_DIR)/build)
+	cmake -B$(abspath $(ACQUIRE2_DIR)/build) -S$(abspath $(ACQUIRE2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(ACQUIRE2_DIR)/build install
 
-calib:
-	$(MAKE) -C $(CALIB_DIR) clean
-	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+calib: api
+	rm -rf $(abspath $(CALIB_DIR)/build)
+	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(CALIB_DIR)/build install
 
 spectrum: api
-	$(MAKE) -C $(SPECTRUM_DIR) clean
-	$(MAKE) -C $(SPECTRUM_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(SPECTRUM_DIR)/build)
+	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(SPECTRUM_DIR)/build install
 
 calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) clean
@@ -347,9 +355,9 @@ calibrate: api
 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 led_control: api
-	$(MAKE) -C $(LED_CONTROL_DIR) clean
-	$(MAKE) -C $(LED_CONTROL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LED_CONTROL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LED_CONTROL_DIR)/build install
 
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
@@ -404,6 +412,12 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
 ifeq ($(STREAMING),MASTER)
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
+endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
+ifeq ($(STREAMING),MASTER)
+apps-tools: ecosystem updater network_manager scpi_manager calib_app
 endif
 endif
 
@@ -495,14 +509,35 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-apps-pro: scopegenpro spectrumpro 
-ifeq ($(MODEL),Z20_250_12)
-apps-pro: ba_pro lcr_meter la_pro
-else
-ifeq ($(MODEL),Z20)
-apps-pro:
-else
-apps-pro: la_pro ba_pro lcr_meter
+ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
+endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro
+endif
+endif
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro
+endif
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
+ifeq ($(STREAMING),MASTER)
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
+endif
+endif
+
+
+ifeq ($(MODEL),$(filter $(MODEL),Z10))
+ifeq ($(STREAMING),SLAVE)
+apps-tools:
 endif
 endif
 
@@ -545,17 +580,23 @@ endif
 
 clean:
 	# todo, remove downloaded libraries and symlinks
+	rm -rf $(abspath $(LIBRP_DIR)/build)
+	rm -rf $(abspath $(LIBRP2_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
+	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
+	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
+
+	rm -rf $(abspath $(CALIB_DIR)/build)
+	rm -rf $(abspath $(ACQUIRE2_DIR)/build)
+	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	rm -rf $(abspath $(MONITOR_DIR)/build)
+	rm -rf $(abspath $(SPECTRUM_DIR)/build)
+	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
+
 	make -C $(NGINX_DIR) clean
-	make -C $(MONITOR_DIR) clean
 	make -C $(GENERATOR_DIR) clean
-	make -C $(ACQUIRE_DIR) clean
 	make -C $(GENERATOR250_DIR) clean
-	make -C $(CALIB_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRP2_DIR)    clean
-	make -C $(LIBRP_DIR)    clean
-	make -C $(LIBRPAPP_DIR) clean
-	make -C $(LIBRPLCR_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(PRODUCTION_TEST_DIR) clean
 	make -C $(APP_STREAMINGMANAGER_DIR) clean

@@ -68,6 +68,12 @@ const scpi_choice_def_t scpi_RpTrigSrc[] = {
     {"EXT_NE",      7},
     {"AWG_PE",      8},
     {"AWG_NE",      9},
+#ifdef Z20_125_4CH
+    {"CH3_PE",      10},
+    {"CH3_NE",      11},
+    {"CH4_PE",      12},
+    {"CH4_NE",      13},
+#endif
     SCPI_CHOICE_LIST_END
 };
 
@@ -471,6 +477,26 @@ scpi_result_t RP_AcqTriggerHystQ(scpi_t *context){
 
     RP_LOG(LOG_INFO, "*ACQ:TRIG:HYST Successfully returned "
         "hysteresis value to client.\n");
+
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerFillQ(scpi_t *context){
+
+    int result;
+    bool fillRes;
+
+    result = rp_AcqGetBufferFillState(&fillRes);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:FILL Failed to get trigger "
+            "fill state: %s\n", rp_GetError(result));
+
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultInt32(context, fillRes);
+
+    RP_LOG(LOG_INFO, "*ACQ:TRIG:FILL Successfully returned "
+        "fill state value to client.\n");
 
     return SCPI_RES_OK;
 }

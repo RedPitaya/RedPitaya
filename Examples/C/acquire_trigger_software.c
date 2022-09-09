@@ -1,4 +1,4 @@
-/* Red Pitaya C API example Acquiring a signal from a buffer  
+/* Red Pitaya C API example Acquiring a signal from a buffer
  * This application acquires a signal on a specific channel */
 
 #include <stdio.h>
@@ -45,6 +45,11 @@ int main(int argc, char **argv){
                 break;
                 }
         }
+
+        bool fillState = false;
+        while(!fillState){
+		rp_AcqGetBufferFillState(&fillState);
+	}
 
         rp_AcqGetOldestDataV(RP_CH_1, &buff_size, buff);
 

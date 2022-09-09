@@ -18,17 +18,29 @@ $(function() {
     OBJ.adcModel = undefined;
 
     OBJ.adcSig1ArrayAVG = [];
-    OBJ.adcSig2ArrayAVG = [];
     OBJ.adcSig1ArrayMIN = [];
-    OBJ.adcSig2ArrayMIN = [];
     OBJ.adcSig1ArrayMAX = [];
+    OBJ.adcSig2ArrayAVG = [];
+    OBJ.adcSig2ArrayMIN = [];
     OBJ.adcSig2ArrayMAX = [];
-    OBJ.adcGraphCacheCh1 = undefined;
+    OBJ.adcSig3ArrayAVG = [];
+    OBJ.adcSig3ArrayMIN = [];
+    OBJ.adcSig3ArrayMAX = [];
+    OBJ.adcSig4ArrayAVG = [];
+    OBJ.adcSig4ArrayMIN = [];
+    OBJ.adcSig4ArrayMAX = [];
+    OBJ.adcGraphCacheCh = [];
     OBJ.adcCalibChange = false;
 
     OBJ.adcSetModel = function(_model) {
         if (OBJ.adcModel === undefined) {
             OBJ.adcModel = _model.value;
+            setInterval(OBJ.drawSignalsCH1, 100);
+            setInterval(OBJ.drawSignalsCH2, 100);
+            if(OBJ.adcModel === "Z20_125_4CH"){
+                setInterval(OBJ.drawSignalsCH3, 100);
+                setInterval(OBJ.drawSignalsCH4, 100);
+            }
         }
     }
 
@@ -42,42 +54,78 @@ $(function() {
     }
 
     OBJ.adcSetCH1Avg = function(_value) {
-        $("#CH1_AVG").val(_value.value + " V");
+        $("#CH1_AVG").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig1ArrayAVG, _value.value);
     }
-
-    OBJ.adcSetCH2Avg = function(_value) {
-        $("#CH2_AVG").val(_value.value + " V");
-        OBJ.adcPush(OBJ.adcSig2ArrayAVG, _value.value);
-    }
-
+    
     OBJ.adcSetCH1Max = function(_value) {
-        $("#CH1_MAX").val(_value.value + " V");
+        $("#CH1_MAX").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig1ArrayMAX, _value.value);
     }
 
-    OBJ.adcSetCH2Max = function(_value) {
-        $("#CH2_MAX").val(_value.value + " V");
-        OBJ.adcPush(OBJ.adcSig2ArrayMAX, _value.value);
-    }
-
     OBJ.adcSetCH1Min = function(_value) {
-        $("#CH1_MIN").val(_value.value + " V");
+        $("#CH1_MIN").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig1ArrayMIN, _value.value);
     }
 
+    OBJ.adcSetCH2Avg = function(_value) {
+        $("#CH2_AVG").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig2ArrayAVG, _value.value);
+    }
+
+    OBJ.adcSetCH2Max = function(_value) {
+        $("#CH2_MAX").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig2ArrayMAX, _value.value);
+    }
+
     OBJ.adcSetCH2Min = function(_value) {
-        $("#CH2_MIN").val(_value.value + " V");
+        $("#CH2_MIN").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig2ArrayMIN, _value.value);
+    }
+
+    OBJ.adcSetCH3Avg = function(_value) {
+        $("#CH3_AVG").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig3ArrayAVG, _value.value);
+    }
+
+    OBJ.adcSetCH3Max = function(_value) {
+        $("#CH3_MAX").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig3ArrayMAX, _value.value);
+    }
+
+    OBJ.adcSetCH3Min = function(_value) {
+        $("#CH3_MIN").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig3ArrayMIN, _value.value);
+    }
+
+    OBJ.adcSetCH4Avg = function(_value) {
+        $("#CH4_AVG").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig4ArrayAVG, _value.value);
+    }
+
+    OBJ.adcSetCH4Max = function(_value) {
+        $("#CH4_MAX").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig4ArrayMAX, _value.value);
+    }
+
+    OBJ.adcSetCH4Min = function(_value) {
+        $("#CH4_MIN").val(_value.value.toFixed(4) + " V");
+        OBJ.adcPush(OBJ.adcSig4ArrayMIN, _value.value);
     }
 
     OBJ.adcInitData = function() {
         OBJ.adcSig1ArrayAVG = [];
-        OBJ.adcSig2ArrayAVG = [];
         OBJ.adcSig1ArrayMIN = [];
-        OBJ.adcSig2ArrayMIN = [];
         OBJ.adcSig1ArrayMAX = [];
+        OBJ.adcSig2ArrayAVG = [];
+        OBJ.adcSig2ArrayMIN = [];
         OBJ.adcSig2ArrayMAX = [];
+        OBJ.adcSig3ArrayAVG = [];
+        OBJ.adcSig3ArrayMIN = [];
+        OBJ.adcSig3ArrayMAX = [];
+        OBJ.adcSig4ArrayAVG = [];
+        OBJ.adcSig4ArrayMIN = [];
+        OBJ.adcSig4ArrayMAX = [];
     }
 
     OBJ.adcInitRequest = function() {
@@ -88,10 +136,33 @@ $(function() {
     }
 
 
-    OBJ.prepareDataCH1 = function() {
-        var ar_avg = OBJ.adcSig1ArrayAVG.slice();
-        var ar_min = OBJ.adcSig1ArrayMIN.slice();
-        var ar_max = OBJ.adcSig1ArrayMAX.slice();
+    OBJ.prepareDataCH = function(ch) {
+        var ar_avg = undefined;
+        var ar_min = undefined;
+        var ar_max = undefined;
+        if (ch === 1){
+            ar_avg = OBJ.adcSig1ArrayAVG.slice();
+            ar_min = OBJ.adcSig1ArrayMIN.slice();
+            ar_max = OBJ.adcSig1ArrayMAX.slice();
+        }
+
+        if (ch === 2){
+            ar_avg = OBJ.adcSig2ArrayAVG.slice();
+            ar_min = OBJ.adcSig2ArrayMIN.slice();
+            ar_max = OBJ.adcSig2ArrayMAX.slice();
+        }
+
+        if (ch === 3){
+            ar_avg = OBJ.adcSig3ArrayAVG.slice();
+            ar_min = OBJ.adcSig3ArrayMIN.slice();
+            ar_max = OBJ.adcSig3ArrayMAX.slice();
+        }
+
+        if (ch === 4){
+            ar_avg = OBJ.adcSig4ArrayAVG.slice();
+            ar_min = OBJ.adcSig4ArrayMIN.slice();
+            ar_max = OBJ.adcSig4ArrayMAX.slice();
+        }
 
         var len = Math.min(ar_avg.length, ar_min.length, ar_max.length);
         if (len === 0) return undefined;
@@ -115,41 +186,14 @@ $(function() {
         return { CH_AVG: s_avg, CH_MAX: s_max, CH_MIN: s_min };
     }
 
-    OBJ.prepareDataCH2 = function() {
-        var ar_avg = OBJ.adcSig2ArrayAVG.slice();
-        var ar_min = OBJ.adcSig2ArrayMIN.slice();
-        var ar_max = OBJ.adcSig2ArrayMAX.slice();
-
-        var len = Math.min(ar_avg.length, ar_min.length, ar_max.length);
-        if (len === 0) return undefined;
-        var s_avg = [];
-        var s_min = [];
-        var s_max = [];
-        var z = 0;
-        for (var i = 0; i < 400 - len; i++) {
-            s_avg.push([i, undefined]);
-            s_max.push([i, undefined]);
-            s_min.push([i, undefined]);
-            z = i;
-        }
-
-        for (var i = 0; i < len; i++) {
-            z++;
-            s_avg.push([z, ar_avg[i]]);
-            s_max.push([z, ar_max[i]]);
-            s_min.push([z, ar_min[i]]);
-        }
-        return { CH_AVG: s_avg, CH_MAX: s_max, CH_MIN: s_min };
-    }
+    
+    OBJ.adcInitPlotCH = function(update,ch) {
+        delete OBJ.adcGraphCacheCh[ch];
+        $('#bode_plot_ch' + ch).remove();
 
 
-    OBJ.adcInitPlotCH1 = function(update) {
-        delete OBJ.adcGraphCacheCh1;
-        $('#bode_plot_ch1').remove();
-
-
-        OBJ.adcGraphCacheCh1 = {};
-        OBJ.adcGraphCacheCh1.elem = $('<div id="bode_plot_ch1" class="plot" style="width:268px;height:90px;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_ch1');
+        OBJ.adcGraphCacheCh[ch] = {};
+        OBJ.adcGraphCacheCh[ch].elem = $('<div id="bode_plot_ch'+ch+'" class="plot" style="width:268px;height:90px;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_ch'+ch);
 
         var t = null;
         var options = {
@@ -203,7 +247,7 @@ $(function() {
         var sig3 = [];
 
         if (update == true) {
-            var x = OBJ.prepareDataCH1();
+            var x = OBJ.prepareDataCH(ch);
             if (x !== undefined) {
                 sig1 = x.CH_AVG;
                 sig2 = x.CH_MAX;
@@ -211,132 +255,48 @@ $(function() {
             }
         }
         var data_points = [{ data: sig1, color: '#f3ec1a', label: "AVG" }, { data: sig2, color: '#ff0000', label: "MAX" }, { data: sig3, color: '#00FF00', label: "MIN" }];
-        OBJ.adcGraphCacheCh1.plot = $.plot(OBJ.adcGraphCacheCh1.elem, data_points, options);
+        OBJ.adcGraphCacheCh[ch].plot = $.plot(OBJ.adcGraphCacheCh[ch].elem, data_points, options);
         $('.flot-text').css('color', '#aaaaaa');
     }
 
-    OBJ.adcInitPlotCH2 = function(update) {
-        delete OBJ.adcGraphCacheCh2;
-        $('#bode_plot_ch2').remove();
-
-
-        OBJ.adcGraphCacheCh2 = {};
-        OBJ.adcGraphCacheCh2.elem = $('<div id="bode_plot_ch2" class="plot" style="width:268px;height:90px;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_ch2');
-
-
-        var t = null;
-        var options = {
-            series: {
-                shadowSize: 0
-            },
-            yaxes: [{
-                show: false,
-                min: null,
-                max: null,
-                labelWidth: 5,
-                alignTicksWithAxis: 1,
-                position: "left"
-            }],
-            xaxis: {
-                show: false,
-                color: '#aaaaaa',
-                tickColor: '#aaaaaa',
-                ticks: t,
-                // transform: function(v) {
-                //     if (BA.scale)
-                //         return Math.log(v + 0.0001); // move away from zero
-                //     else
-                //         return v;
-
-                // },
-                tickDecimals: 0,
-                reserveSpace: false,
-                // tickFormatter: funcxTickFormat,
-                min: null,
-                max: null,
-            },
-            grid: {
-                show: true,
-                color: '#aaaaaa',
-                borderColor: '#aaaaaa',
-                tickColor: '#aaaaaa',
-                tickColor: '#aaaaaa',
-                markingsColor: '#aaaaaa'
-            },
-            legend: {
-                show: false,
-                position: "sw",
-                backgroundOpacity: 0.15
-            }
-        };
-
+    OBJ.drawSignalsCH = function(ch) {
         var sig1 = [];
         var sig2 = [];
         var sig3 = [];
-
-        if (update == true) {
-            var x = OBJ.prepareDataCH2();
-            if (x !== undefined) {
-                sig1 = x.CH_AVG;
-                sig2 = x.CH_MAX;
-                sig3 = x.CH_MIN;
-            }
+        if (OBJ.adcGraphCacheCh[ch] == undefined) {
+            OBJ.adcInitPlotCH(false,ch);
         }
-        var data_points = [{ data: sig1, color: '#f3ec1a', label: "AVG" }, { data: sig2, color: '#ff0000', label: "MAX" }, { data: sig3, color: '#00FF00', label: "MIN" }];
-        OBJ.adcGraphCacheCh2.plot = $.plot(OBJ.adcGraphCacheCh2.elem, data_points, options);
-        $('.flot-text').css('color', '#aaaaaa');
+
+        var x = OBJ.prepareDataCH(ch);
+        if (x !== undefined) {
+            sig1 = x.CH_AVG;
+            sig2 = x.CH_MAX;
+            sig3 = x.CH_MIN;
+
+            OBJ.adcGraphCacheCh[ch].elem.show();
+            OBJ.adcGraphCacheCh[ch].plot.resize();
+            OBJ.adcGraphCacheCh[ch].plot.setupGrid();
+            var data_points = [{ data: sig1, color: '#f3ec1a', label: "AVG" }, { data: sig2, color: '#ff0000', label: "MAX" }, { data: sig3, color: '#00FF00', label: "MIN" }];
+
+            OBJ.adcGraphCacheCh[ch].plot.setData(data_points);
+            OBJ.adcGraphCacheCh[ch].plot.draw();
+        }
     }
 
     OBJ.drawSignalsCH1 = function() {
-
-        var sig1 = [];
-        var sig2 = [];
-        var sig3 = [];
-
-        if (OBJ.adcGraphCacheCh1 == undefined) {
-            OBJ.adcInitPlotCH1(false);
-        }
-
-        var x = OBJ.prepareDataCH1();
-        if (x !== undefined) {
-            sig1 = x.CH_AVG;
-            sig2 = x.CH_MAX;
-            sig3 = x.CH_MIN;
-
-            OBJ.adcGraphCacheCh1.elem.show();
-            OBJ.adcGraphCacheCh1.plot.resize();
-            OBJ.adcGraphCacheCh1.plot.setupGrid();
-            var data_points = [{ data: sig1, color: '#f3ec1a', label: "AVG" }, { data: sig2, color: '#ff0000', label: "MAX" }, { data: sig3, color: '#00FF00', label: "MIN" }];
-
-            OBJ.adcGraphCacheCh1.plot.setData(data_points);
-            OBJ.adcGraphCacheCh1.plot.draw();
-        }
+        OBJ.drawSignalsCH(1)        
     };
 
     OBJ.drawSignalsCH2 = function() {
+        OBJ.drawSignalsCH(2)
+    };
 
-        var sig1 = [];
-        var sig2 = [];
-        var sig3 = [];
+    OBJ.drawSignalsCH3 = function() {
+        OBJ.drawSignalsCH(3)
+    };
 
-        if (OBJ.adcGraphCacheCh2 == undefined) {
-            OBJ.adcInitPlotCH2(false);
-        }
-
-        var x = OBJ.prepareDataCH2();
-        if (x !== undefined) {
-            sig1 = x.CH_AVG;
-            sig2 = x.CH_MAX;
-            sig3 = x.CH_MIN;
-
-            OBJ.adcGraphCacheCh2.elem.show();
-            OBJ.adcGraphCacheCh2.plot.resize();
-            OBJ.adcGraphCacheCh2.plot.setupGrid();
-            var data_points = [{ data: sig1, color: '#f3ec1a', label: "AVG" }, { data: sig2, color: '#ff0000', label: "MAX" }, { data: sig3, color: '#00FF00', label: "MIN" }];
-
-            OBJ.adcGraphCacheCh2.plot.setData(data_points);
-            OBJ.adcGraphCacheCh2.plot.draw();
-        }
+    OBJ.drawSignalsCH4 = function() {
+        OBJ.drawSignalsCH(4)
     };
 
     OBJ.amSetCh1GainADC = function(_value) {
@@ -347,12 +307,28 @@ $(function() {
         $("#CH2_GAIN").val(_value.value);
     }
 
+    OBJ.amSetCh3GainADC = function(_value) {
+        $("#CH3_GAIN").val(_value.value);
+    }
+
+    OBJ.amSetCh4GainADC = function(_value) {
+        $("#CH4_GAIN").val(_value.value);
+    }
+
     OBJ.amSetCh1OffADC = function(_value) {
         $("#CH1_OFFSET").val(_value.value);
     }
 
     OBJ.amSetCh2OffADC = function(_value) {
         $("#CH2_OFFSET").val(_value.value);
+    }
+
+    OBJ.amSetCh3OffADC = function(_value) {
+        $("#CH3_OFFSET").val(_value.value);
+    }
+
+    OBJ.amSetCh4OffADC = function(_value) {
+        $("#CH4_OFFSET").val(_value.value);
     }
 
     OBJ.amSetCh1GainDAC = function(_value) {
@@ -412,6 +388,18 @@ $(function() {
             OBJ.adcCalibChange = true;
         }
 
+        if (_mode == "CH3_ADC_OFF") {
+            SM.parametersCache["ch3_off_adc_new"] = { value: parseInt($("#CH3_OFFSET").val()) + _new_val };
+            SM.sendParameters2("ch3_off_adc_new");
+            OBJ.adcCalibChange = true;
+        }
+
+        if (_mode == "CH4_ADC_OFF") {
+            SM.parametersCache["ch4_off_adc_new"] = { value: parseInt($("#CH4_OFFSET").val()) + _new_val };
+            SM.sendParameters2("ch4_off_adc_new");
+            OBJ.adcCalibChange = true;
+        }
+
         if (_mode == "CH1_ADC_GAIN") {
             SM.parametersCache["ch1_gain_adc_new"] = { value: parseInt($("#CH1_GAIN").val()) + _new_val };
             SM.sendParameters2("ch1_gain_adc_new");
@@ -421,6 +409,18 @@ $(function() {
         if (_mode == "CH2_ADC_GAIN") {
             SM.parametersCache["ch2_gain_adc_new"] = { value: parseInt($("#CH2_GAIN").val()) + _new_val };
             SM.sendParameters2("ch2_gain_adc_new");
+            OBJ.adcCalibChange = true;
+        }
+
+        if (_mode == "CH3_ADC_GAIN") {
+            SM.parametersCache["ch3_gain_adc_new"] = { value: parseInt($("#CH3_GAIN").val()) + _new_val };
+            SM.sendParameters2("ch3_gain_adc_new");
+            OBJ.adcCalibChange = true;
+        }
+
+        if (_mode == "CH4_ADC_GAIN") {
+            SM.parametersCache["ch4_gain_adc_new"] = { value: parseInt($("#CH4_GAIN").val()) + _new_val };
+            SM.sendParameters2("ch4_gain_adc_new");
             OBJ.adcCalibChange = true;
         }
 
@@ -487,9 +487,7 @@ $(function() {
 // Page onload event handler
 $(function() {
     // $('#am_ok_btn').on('click', function() { OBJ.amClickOkDialog() });
-    setInterval(OBJ.drawSignalsCH1, 100);
-    setInterval(OBJ.drawSignalsCH2, 100);
-
+    
     $('.man_flipswitch').change(function() {
         $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
         OBJ.amSetMode($(this).attr('id'), $(this).is(':checked'));
@@ -509,8 +507,12 @@ $(function() {
 
     SM.param_callbacks["ch1_gain_adc"] = OBJ.amSetCh1GainADC;
     SM.param_callbacks["ch2_gain_adc"] = OBJ.amSetCh2GainADC;
+    SM.param_callbacks["ch3_gain_adc"] = OBJ.amSetCh3GainADC;
+    SM.param_callbacks["ch4_gain_adc"] = OBJ.amSetCh4GainADC;
     SM.param_callbacks["ch1_off_adc"] = OBJ.amSetCh1OffADC;
     SM.param_callbacks["ch2_off_adc"] = OBJ.amSetCh2OffADC;
+    SM.param_callbacks["ch3_off_adc"] = OBJ.amSetCh3OffADC;
+    SM.param_callbacks["ch4_off_adc"] = OBJ.amSetCh4OffADC;
 
     SM.param_callbacks["ch1_gain_dac"] = OBJ.amSetCh1GainDAC;
     SM.param_callbacks["ch2_gain_dac"] = OBJ.amSetCh2GainDAC;
@@ -533,6 +535,22 @@ $(function() {
         OBJ.amSetNewCalib("CH2_ADC_OFF", parseInt($("#B_CH2_VALUE_OFF").val()));
     });
 
+    $('#B_CH3_SUB_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH3_ADC_OFF", parseInt($("#B_CH3_VALUE_OFF").val() * -1));
+    });
+
+    $('#B_CH3_ADD_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH3_ADC_OFF", parseInt($("#B_CH3_VALUE_OFF").val()));
+    });
+
+    $('#B_CH4_SUB_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH4_ADC_OFF", parseInt($("#B_CH4_VALUE_OFF").val() * -1));
+    });
+
+    $('#B_CH4_ADD_OFF').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH4_ADC_OFF", parseInt($("#B_CH4_VALUE_OFF").val()));
+    });
+
     $('#B_CH1_SUB_GAIN').on('click', function(ev) {
         OBJ.amSetNewCalib("CH1_ADC_GAIN", parseInt($("#B_CH1_VALUE_GAIN").val()) * -1);
     });
@@ -547,6 +565,22 @@ $(function() {
 
     $('#B_CH2_ADD_GAIN').on('click', function(ev) {
         OBJ.amSetNewCalib("CH2_ADC_GAIN", parseInt($("#B_CH2_VALUE_GAIN").val()));
+    });
+
+    $('#B_CH3_SUB_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH3_ADC_GAIN", parseInt($("#B_CH3_VALUE_GAIN").val() * -1));
+    });
+
+    $('#B_CH3_ADD_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH3_ADC_GAIN", parseInt($("#B_CH3_VALUE_GAIN").val()));
+    });
+
+    $('#B_CH4_SUB_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH4_ADC_GAIN", parseInt($("#B_CH4_VALUE_GAIN").val() * -1));
+    });
+
+    $('#B_CH4_ADD_GAIN').on('click', function(ev) {
+        OBJ.amSetNewCalib("CH4_ADC_GAIN", parseInt($("#B_CH4_VALUE_GAIN").val()));
     });
 
     $('#B_CH1_DAC_SUB_OFF').on('click', function(ev) {

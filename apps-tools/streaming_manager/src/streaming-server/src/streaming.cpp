@@ -21,6 +21,12 @@
 #include "streaming_buffer.h"
 #include "streaming.h"
 
+#ifdef Z20_250_12
+#include "api250-12/rp-spi.h"
+#include "api250-12/rp-gpio-power.h"
+#include "api250-12/rp-i2c-max7311.h"
+#endif
+
 using namespace streaming_lib;
 using namespace uio_lib;
 
@@ -127,7 +133,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
 					ch2_off  = osc_calib_params.osc_ch2_off_1_dc;
 				}
 			}else{
-				if (ac_dc == CStreamSettings::A_1_1) {
+				if (ac_dc == CStreamSettings::AC) {
 					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_ac);  // 1:20
 					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_ac);  // 1:20
 					ch1_off  = osc_calib_params.osc_ch1_off_20_ac;
@@ -291,7 +297,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
         };
 
         auto g_s_file_w = std::weak_ptr<CStreamingFile>(g_s_file);
-        g_s_fpga->oscNotify.connect([g_s_file_w,g_s_buffer_w](DataLib::CDataBuffersPack::Ptr pack) {
+        g_s_fpga->oscNotify.connect([g_s_file_w,g_s_buffer_w](DataLib::CDataBuffersPack::Ptr) {
             auto f_obj = g_s_file_w.lock();
 			auto b_obj = g_s_buffer_w.lock();
             if (f_obj && b_obj){
