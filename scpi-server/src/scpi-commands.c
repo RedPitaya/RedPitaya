@@ -27,7 +27,11 @@
 #include "spi.h"
 #include "i2c.h"
 #include "acquire.h"
+
+#ifndef Z20_125_4CH
 #include "generate.h"
+#endif
+
 #include "scpi/error.h"
 #include "scpi/ieee488.h"
 #include "scpi/minimal.h"
@@ -52,7 +56,7 @@ size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
                     len, written);
                 return total;
             }
-            
+
             len -= written;
             data += written;
             total += written;
@@ -66,7 +70,7 @@ scpi_result_t SCPI_Flush(scpi_t * context) {
 }
 
 int SCPI_Error(scpi_t * context, int_fast16_t err) {
-    const char error[] = "ERR!";
+    const char error[] = "ERR!\r\n";
     syslog(LOG_ERR, "**ERROR: %d, \"%s\"", (int32_t) err, SCPI_ErrorTranslate(err));
     SCPI_Write(context, error, strlen(error));
     return 0;
@@ -163,6 +167,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:TRIG:DLY:NS?", .callback           = RP_AcqTriggerDelayNsQ,},
     {.pattern = "ACQ:TRIG:HYST", .callback              = RP_AcqTriggerHyst,},
     {.pattern = "ACQ:TRIG:HYST?", .callback             = RP_AcqTriggerHystQ,},
+    {.pattern = "ACQ:TRIG:FILL?", .callback             = RP_AcqTriggerFillQ,},
     {.pattern = "ACQ:SOUR#:GAIN", .callback             = RP_AcqGain,},
     {.pattern = "ACQ:SOUR#:GAIN?", .callback            = RP_AcqGainQ,},
     {.pattern = "ACQ:TRIG:LEV", .callback               = RP_AcqTriggerLevel,},
@@ -185,6 +190,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:TRIG:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
 #endif
 
+#ifndef Z20_125_4CH
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
     {.pattern = "PHAS:ALIGN", .callback                 = RP_GenSync,},
@@ -217,6 +223,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
     {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
+#endif
 
     /* uart */
     {.pattern = "UART:INIT", .callback                  = RP_Uart_Init,},
@@ -275,7 +282,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SPI:MSG#:CS?", .callback               = RP_SPI_GetCSChangeState,},
 
     {.pattern = "SPI:PASS", .callback                   = RP_SPI_Pass,},
-    
+
      /* i2c */
     {.pattern = "I2C:DEV#", .callback                  = RP_I2C_Dev,},
     {.pattern = "I2C:DEV?", .callback                  = RP_I2C_DevQ,},
@@ -296,7 +303,7 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD_LIST_END
 };
 
-static scpi_interface_t scpi_interface = {  
+static scpi_interface_t scpi_interface = {
     .error   = SCPI_Error,
     .write   = SCPI_Write,
     .control = SCPI_Control,

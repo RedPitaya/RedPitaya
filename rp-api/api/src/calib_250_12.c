@@ -440,15 +440,15 @@ int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain) {
     usleep(1000000);
     rp_AcqStop();
 
-    int16_t data[BUFFER_LENGTH];
-    uint32_t bufferSize = (uint32_t) BUFFER_LENGTH;
+    int16_t data[ADC_BUFFER_SIZE];
+    uint32_t bufferSize = (uint32_t) ADC_BUFFER_SIZE;
     rp_AcqGetDataRaw(channel, 0, &bufferSize, data);
 
     long long avg = 0;
-    for(int i = 0; i < BUFFER_LENGTH; ++i)
+    for(int i = 0; i < ADC_BUFFER_SIZE; ++i)
         avg += data[i];
 
-    avg /= BUFFER_LENGTH;
+    avg /= ADC_BUFFER_SIZE;
     fprintf(stderr, "\ncalib_GetDataMedian: avg = %d\n", (int32_t)avg);
     return avg;
 }
@@ -460,7 +460,7 @@ float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
     rp_AcqStart();
     rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
     usleep(1000000);
-    int BUF_SIZE = BUFFER_LENGTH;
+    int BUF_SIZE = ADC_BUFFER_SIZE;
 
     rp_AcqStop();
 
@@ -469,10 +469,10 @@ float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain) {
     rp_AcqGetDataV(channel, 0, &bufferSize, data);
 
     double avg = 0;
-    for(int i = 0; i < BUFFER_LENGTH; ++i)
+    for(int i = 0; i < ADC_BUFFER_SIZE; ++i)
         avg += data[i];
 
-    avg /= BUFFER_LENGTH;
+    avg /= ADC_BUFFER_SIZE;
     fprintf(stderr, "\ncalib_GetDataMedianFloat: avg = %f\n", (float)avg);
     return avg;
 }
@@ -484,7 +484,7 @@ int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* mi
     rp_AcqStart();
     rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
     usleep(1000000);
-    int BUF_SIZE = BUFFER_LENGTH;
+    int BUF_SIZE = ADC_BUFFER_SIZE;
 
     rp_AcqStop();
 
@@ -494,7 +494,7 @@ int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* mi
 
     float _min = data[0];
     float _max = data[0];
-    for(int i = 1; i < BUFFER_LENGTH; ++i) {
+    for(int i = 1; i < ADC_BUFFER_SIZE; ++i) {
         _min = (_min > data[i]) ? data[i] : _min;
         _max = (_max < data[i]) ? data[i] : _max;
     }

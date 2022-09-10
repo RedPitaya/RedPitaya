@@ -339,7 +339,7 @@ scpi_result_t RP_GenDutyCycle(scpi_t *context) {
 }
 
 scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
     float duty_cycle;
     int result;
@@ -364,9 +364,9 @@ scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
-    
+
     rp_channel_t channel;
-    float buffer[BUFFER_LENGTH];
+    float buffer[DAC_BUFFER_SIZE];
     uint32_t size;
     int result;
 
@@ -392,9 +392,9 @@ scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
 }
 
 scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
-    float buffer[BUFFER_LENGTH];
+    float buffer[DAC_BUFFER_SIZE];
     uint32_t size;
     int result;
 

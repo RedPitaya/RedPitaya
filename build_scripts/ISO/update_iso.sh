@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.07.img.zip
-unzip -n red_pitaya_OS-beta_1.07.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.08.img.zip
+unzip -n red_pitaya_OS-beta_1.08.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
@@ -45,6 +45,13 @@ apt update -y
 apt -y install wireless-tools
 # Unlock services
 rm '/usr/sbin/policy-rc.d'
+
+add-apt-repository ppa:ubuntu-toolchain-r/test
+apt-get update
+apt-get -y install gcc-9 g++-9
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9
+
+echo 1.08 > /root/.version
 
 exit
 

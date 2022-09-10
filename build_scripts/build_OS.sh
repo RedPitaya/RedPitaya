@@ -2,7 +2,7 @@
 
 PATH_XILINX_SDK=/opt/Xilinx/SDK/2019.1
 PATH_XILINX_VIVADO=/opt/Xilinx/Vivado/2020.1
-RP_UBUNTU=redpitaya_ubuntu_04-oct-2021.tar.gz
+RP_UBUNTU=redpitaya_ubuntu_04-may-2022.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
 function print_ok(){
@@ -172,9 +172,9 @@ export PATH=$PATH:$PATH_XILINX_SDK/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin/
 ENABLE_PRODUCTION_TEST=0
 GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
 
-make -f Makefile.x86  MODEL=$MODEL
+make -f Makefile.x86  MODEL=$MODEL STREAMING=$STREAMING_MODE
 schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST
+make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST STREAMING=$STREAMING_MODE
 EOL_CHROOT
-make -f Makefile.x86 install MODEL=$MODEL
-make -f Makefile.x86 zip MODEL=$MODEL
+make -f Makefile.x86 install MODEL=$MODEL STREAMING=$STREAMING_MODE
+make -f Makefile.x86 zip MODEL=$MODEL STREAMING=$STREAMING_MODE

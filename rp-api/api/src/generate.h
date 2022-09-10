@@ -17,16 +17,8 @@
 #include "rp_cross.h"
 
 
-#ifdef Z20_250_12
- #define AMPLITUDE_MAX       1.0 // V
- #define LEVEL_MAX           1.0 // V
-#else 
- #define AMPLITUDE_MAX       1.0 // V
- #define LEVEL_MAX           1.0 // V
-#endif
-
-
-
+#define AMPLITUDE_MAX           1.0 // V
+#define LEVEL_MAX               1.0 // V
 #define ARBITRARY_MIN          -1.0         // V
 #define ARBITRARY_MAX           1.0         // V
 #define OFFSET_MAX              2.0         // V
@@ -109,19 +101,7 @@ int generate_Release();
 int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
 int generate_setOutputEnableSync(bool enable);
-#ifndef Z20_250_12
-int generate_setAmplitude(rp_channel_t channel, float amplitude);
-int generate_getAmplitude(rp_channel_t channel, float *amplitude);
-int generate_setDCOffset(rp_channel_t channel, float offset);
-int generate_getDCOffset(rp_channel_t channel, float *offset);
-int generate_setBurstLastValue(rp_channel_t channel, float amplitude);
-int generate_getBurstLastValue(rp_channel_t channel, float *amplitude);
-#else
-int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain,  float amplitude);
-int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);
-int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
-int generate_getDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float *offset);
-#endif
+
 int generate_setFrequency(rp_channel_t channel, float frequency);
 int generate_getFrequency(rp_channel_t channel, float *frequency);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
@@ -135,19 +115,33 @@ int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions);
 int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions);
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
 int generate_getBurstDelay(rp_channel_t channel, uint32_t *delay);
-// Only for 250_12
-int generate_getEnableTempProtection(rp_channel_t channel, bool *enable);
-int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
-int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
-int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
-int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
-//
-
 int generate_Trigger(rp_channel_t channel);
 int generate_simultaneousTrigger();
 int generate_ResetSM();
 int generate_ResetChannelSM(rp_channel_t channel);
 
 int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_t length);
+
+
+#if defined Z10 || defined Z20_125 || defined Z20
+int generate_setAmplitude(rp_channel_t channel, float amplitude);
+int generate_getAmplitude(rp_channel_t channel, float *amplitude);
+int generate_setDCOffset(rp_channel_t channel, float offset);
+int generate_getDCOffset(rp_channel_t channel, float *offset);
+int generate_setBurstLastValue(rp_channel_t channel, float amplitude);
+int generate_getBurstLastValue(rp_channel_t channel, float *amplitude);
+#endif
+
+#ifdef Z20_250_12
+int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain,  float amplitude);
+int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);
+int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
+int generate_getDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float *offset);
+int generate_getEnableTempProtection(rp_channel_t channel, bool *enable);
+int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
+int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
+int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
+int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
+#endif
 
 #endif //__GENERATE_H

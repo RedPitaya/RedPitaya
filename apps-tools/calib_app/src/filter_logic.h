@@ -13,7 +13,7 @@
 #include <vector>
 
 class CFilter_logic {
-    public:
+public:
     struct GridItem{
         int64_t index;
         rp_channel_t ch;
@@ -27,36 +27,38 @@ class CFilter_logic {
         bool     calculate; 
     };
  
-        using Ptr = std::shared_ptr<CFilter_logic>;
-         static Ptr Create(CCalibMan::Ptr _calib_man);
-                    CFilter_logic(CCalibMan::Ptr _calib_man);
-                    CFilter_logic(const CFilter_logic &) = delete;
-                    CFilter_logic(CFilter_logic &&) = delete;
+    using Ptr = std::shared_ptr<CFilter_logic>;
+    static Ptr Create(CCalibMan::Ptr _calib_man);
 
-                    auto init(rp_channel_t _ch) -> void;
-                    auto print() -> void;
-                    auto sort() -> void;
-                    auto setCalibParameters() -> int;
-                    auto setCalculatedValue(COscilloscope::DataPassAutoFilter item) -> int;
-                    auto nextSetupCalibParameters() -> int;
-                    auto removeHalfCalib() -> void;
-                    auto getCalibCount() -> int;
-                    auto getCalibDone() -> int;
-                    auto calcProgress() -> int;
-                    auto setGoodCalibParameter() -> void;
-                    auto calibPP(COscilloscope::DataPassAutoFilter item,float _nominal) -> int;
-                    auto setCalibRef(float _value) -> void;
-                    auto setCalibMode(int _mode) -> void;
-    private:
-        std::vector<GridItem> m_grid; 
-        GridItem              m_lastGood;
-        CCalibMan::Ptr        m_calib_man;
-        rp_channel_t          m_channel;
-        int64_t               m_index;
-        double                m_percent;  
-        int                   m_calibAmpl; // step calib amlitude 
-        float                 m_oldcalibAmpl;
-        int64_t               m_oldPP;
-        int                   m_calibMode; // 0 - External, 1 - Internal
-        float                 m_calibRef; 
+    CFilter_logic(CCalibMan::Ptr _calib_man);
+    CFilter_logic(const CFilter_logic &) = delete;
+    CFilter_logic(CFilter_logic &&) = delete;
+
+    auto init(rp_channel_t _ch) -> void;
+    auto print() -> void;
+    auto sort() -> void;
+    auto setCalibParameters() -> int;
+    auto setCalculatedValue(COscilloscope::DataPassAutoFilter item) -> int;
+    auto nextSetupCalibParameters() -> int;
+    auto removeHalfCalib() -> void;
+    auto getCalibCount() -> int;
+    auto getCalibDone() -> int;
+    auto calcProgress() -> int;
+    auto setGoodCalibParameter() -> void;
+    auto calibPP(COscilloscope::DataPassAutoFilter item,float _nominal) -> int;
+    auto setCalibRef(float _value) -> void;
+    auto setCalibMode(int _mode) -> void;
+
+private:
+    std::vector<GridItem> m_grid; 
+    GridItem              m_lastGood;
+    CCalibMan::Ptr        m_calib_man;
+    rp_channel_t          m_channel;
+    int64_t               m_index;
+    double                m_percent;  
+    int                   m_calibAmpl; // step calib amlitude 
+    float                 m_oldcalibAmpl;
+    int64_t               m_oldPP;
+    int                   m_calibMode; // 0 - External, 1 - Internal
+    float                 m_calibRef; 
 };

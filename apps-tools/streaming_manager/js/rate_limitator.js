@@ -5,11 +5,11 @@
     SM.max_SD_rate_1ch = [125e6, 125e6];
     SM.max_SD_rate_2chs = [125e6, 125e6];
 
-    SM.max_rate_devider_1ch = [2.0, 4.0];
-    SM.max_rate_devider_2chs = [4.0, 8.0];
+    SM.max_rate_devider_1ch = [8.0, 16.0];
+    SM.max_rate_devider_2chs = [8.0, 16.0];
 
-    SM.max_SD_rate_devider_1ch = [12.0, 24.0];
-    SM.max_SD_rate_devider_2chs = [24.0, 48.0];
+    SM.max_SD_rate_devider_1ch = [32.0, 32.0];
+    SM.max_SD_rate_devider_2chs = [64.0, 64.0];
     SM.first_run_net = true;
     SM.first_run_sd = true;
 
@@ -171,9 +171,7 @@
         SM.ss_max_rate = rate;
         SM.ss_max_rate_devider = rate_devider;
         if (SM.ss_rate != -1) {
-            SM.calcRateHz(SM.ss_full_rate / SM.ss_rate);
-            if (SM.ss_rate < 1)
-                SM.ss_rate = 1;
+            SM.calcRateHz(SM.ss_full_rate / SM.ss_rate);            
         }
         rateFocusOutValue();
     };

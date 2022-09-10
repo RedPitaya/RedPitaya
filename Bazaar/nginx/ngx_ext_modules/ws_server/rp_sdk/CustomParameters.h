@@ -98,6 +98,7 @@ public:
 
 		} else if(this->m_Value.max < value)
 		{
+            dbg_printf("Incorrect parameters value (max value)\n");
 			value = this->m_Value.max;
 		}
 
@@ -267,6 +268,7 @@ public:
 	bool ForceSend()
 	{
 		m_Dirty = true;
+		return true;
 	}
 private:
 	bool m_Dirty;

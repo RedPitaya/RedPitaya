@@ -148,6 +148,9 @@ install -v -m 664 -o root -D $OVERLAY/etc/fstab  $ROOT_DIR/etc/fstab
 # Up to version version 1.07
 . OS/debian/wireless_tool.sh
 
+# Up to version version 1.08
+. OS/debian/gcc9.sh
+
 #. OS/debian/tft.sh
 
 ################################################################################

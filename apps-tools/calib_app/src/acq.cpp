@@ -11,16 +11,7 @@
 #define assertm(exp, msg) assert(((void)msg, exp))
 #define ACQ_COUNT 5
 
-void PrintLogInFileACQ(const char *message){
-	std::time_t result = std::time(nullptr);
-	std::fstream fs;
-  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
-	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
-	fs.close();
-}
-
-inline int32_t rawToInt32(uint32_t cnts)
-{
+inline int32_t rawToInt32(uint32_t cnts){
     int32_t m;
     /* check sign */
     if(cnts & (1 << (ADC_BITS - 1))) {
@@ -33,8 +24,7 @@ inline int32_t rawToInt32(uint32_t cnts)
     return m;
 }
 
-COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation)
-{
+COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation){
     return std::make_shared<COscilloscope>(_decimation);
 }
 
@@ -59,7 +49,6 @@ COscilloscope::~COscilloscope()
 {
     stop();
 }
-
 
 void COscilloscope::stop(){
     m_OscThreadRun.clear();
@@ -105,7 +94,7 @@ void COscilloscope::startAutoFilter(uint32_t _decimation){
     pthread_mutex_unlock(&m_funcSelector);
 }
 
-void COscilloscope::startAutoFilter2Ch(uint32_t _decimation){
+void COscilloscope::startAutoFilterNCh(uint32_t _decimation){
     pthread_mutex_lock(&m_funcSelector);
     m_mode = 3;
     m_decimationSq = _decimation;
@@ -125,7 +114,7 @@ void COscilloscope::setHyst(float _value){
 }
 
 void COscilloscope::updateAcqFilter(rp_channel_t _ch){
-#if defined Z10 || defined Z20_125
+#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
     pthread_mutex_lock(&m_funcSelector);
     rp_AcqUpdateAcqFilter(_ch);
     pthread_mutex_unlock(&m_funcSelector);
@@ -146,7 +135,7 @@ void COscilloscope::oscWorker(){
         {
            pthread_mutex_lock(&m_funcSelector);
            if (m_mode == 0){
-                acquire();
+               acquire();
            }
            if (m_mode == 1){
                acquireSquare();
@@ -155,7 +144,7 @@ void COscilloscope::oscWorker(){
                acquireAutoFilter();
            }
            if (m_mode == 3){
-               acquireAutoFilter2Ch();
+               acquireAutoFilterSync();
            }
            pthread_mutex_unlock(&m_funcSelector);
            std::this_thread::sleep_for(std::chrono::microseconds(100));
@@ -195,49 +184,40 @@ void COscilloscope::acquire(){
     }
     rp_AcqStop();
     rp_AcqGetWritePointer(&pos);
+#ifdef Z20_125_4CH
+    rp_AcqGetDataV2(pos, &acq_u_size, m_buffer[0], m_buffer[1],m_buffer[2], m_buffer[3]);
+    rp_AcqGetDataRawV2(pos, &acq_u_size_raw, m_buffer_raw[0],m_buffer_raw[1],m_buffer_raw[2],m_buffer_raw[3]);
+#else
     rp_AcqGetDataV2(pos, &acq_u_size, m_buffer[0], m_buffer[1]);
     rp_AcqGetDataRawV2(pos, &acq_u_size_raw, m_buffer_raw[0],m_buffer_raw[1]);
+#endif    
     if (acq_u_size > 0) {
         DataPass localDP;
         localDP.index = m_index++;
-        localDP.ch1_avg = 0;
-        localDP.ch2_avg = 0;
-        localDP.ch1_max = m_buffer[0][0];
-        localDP.ch1_min = m_buffer[0][0];
-        localDP.ch2_max = m_buffer[1][0];
-        localDP.ch2_min = m_buffer[1][0];
-        localDP.ch1_avg_raw = 0;
-        localDP.ch2_avg_raw = 0;
-        localDP.ch1_min_raw = rawToInt32(m_buffer_raw[0][0]);
-        localDP.ch1_max_raw = rawToInt32(m_buffer_raw[0][0]);
-        localDP.ch2_min_raw = rawToInt32(m_buffer_raw[1][0]);
-        localDP.ch2_max_raw = rawToInt32(m_buffer_raw[1][0]);
-
-        for(auto i = 0 ; i < acq_u_size ; ++i){
-            if (localDP.ch1_max < m_buffer[0][i]) localDP.ch1_max = m_buffer[0][i];
-            if (localDP.ch2_max < m_buffer[1][i]) localDP.ch2_max = m_buffer[1][i];
-            if (localDP.ch1_min > m_buffer[0][i]) localDP.ch1_min = m_buffer[0][i];
-            if (localDP.ch2_min > m_buffer[1][i]) localDP.ch2_min = m_buffer[1][i];
-            localDP.ch1_avg += m_buffer[0][i];
-            localDP.ch2_avg += m_buffer[1][i];
-        }
-        localDP.ch1_avg /= (float)acq_u_size;
-        localDP.ch2_avg /= (float)acq_u_size;
-
-        for(auto i = 0 ; i < acq_u_size_raw; ++i){
-            auto ch1 = rawToInt32(m_buffer_raw[0][i]);
-            auto ch2 = rawToInt32(m_buffer_raw[1][i]);
+        for(auto i = 0u; i < ADC_CHANNELS; i++){
+            localDP.ch_avg[i] = 0;            
+            localDP.ch_max[i] = m_buffer[i][0];
+            localDP.ch_min[i] = m_buffer[i][0];
+            localDP.ch_avg_raw[i] = 0;            
+            localDP.ch_min_raw[i] = rawToInt32(m_buffer_raw[i][0]);
+            localDP.ch_max_raw[i] = rawToInt32(m_buffer_raw[i][0]);
             
-            if (localDP.ch1_max_raw < ch1) localDP.ch1_max_raw = ch1;
-            if (localDP.ch2_max_raw < ch2) localDP.ch2_max_raw = ch2; 
-            if (localDP.ch1_min_raw > ch1) localDP.ch1_min_raw = ch1;
-            if (localDP.ch2_min_raw > ch2) localDP.ch2_min_raw = ch2;
-            localDP.ch1_avg_raw += ch1;
-            localDP.ch2_avg_raw += ch2;
+            for(auto j = 0u; j < acq_u_size ; ++j){
+                if (localDP.ch_max[i] < m_buffer[i][j]) localDP.ch_max[i] = m_buffer[i][j];
+                if (localDP.ch_min[i] > m_buffer[i][j]) localDP.ch_min[i] = m_buffer[i][j];
+                localDP.ch_avg[i] += m_buffer[i][i];
+                
+            }
+            localDP.ch_avg[i] /= (float)acq_u_size;
+            
+            for(auto j = 0u ; j < acq_u_size_raw; ++j){
+                auto ch1 = rawToInt32(m_buffer_raw[i][j]);                                
+                if (localDP.ch_max_raw[i] < ch1) localDP.ch_max_raw[i] = ch1;
+                if (localDP.ch_min_raw[i] > ch1) localDP.ch_min_raw[i] = ch1;
+                localDP.ch_avg_raw[i] += ch1;
+            }
+            localDP.ch_avg_raw[i] /= (int32_t)acq_u_size_raw;            
         }
-        localDP.ch1_avg_raw /= (int32_t)acq_u_size_raw;
-        localDP.ch2_avg_raw /= (int32_t)acq_u_size_raw;
-
         pthread_mutex_lock(&m_mutex);
         m_crossData = localDP;
         pthread_mutex_unlock(&m_mutex);
@@ -264,9 +244,16 @@ void COscilloscope::acquireSquare(){
         case RP_CH_2:
             rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHB_PE);
         break;
+#ifdef Z20_125_4CH
+        case RP_CH_3:
+            rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHC_PE);
+        break;
+        case RP_CH_4:
+            rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHD_PE);
+        break;
+#endif
         default:
             assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
-
     }
     for (;timeout > 0;) {
         rp_AcqGetTriggerState(&trig_state);
@@ -289,11 +276,13 @@ void COscilloscope::acquireSquare(){
     rp_AcqStop();
  //   rp_AcqGetWritePointerAtTrig(&pos);
     rp_AcqGetWritePointer(&pos);
-    rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
-//    rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
+    rp_AcqGetDataV(m_channel,(pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[m_channel]);
+       
+//  rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
+//  rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
 
     if (acq_u_size > 0) {
-        auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1]; 
+        auto *ch = m_buffer[m_channel];
         //ch = filterBuffer(ch,acq_u_size);
         m_curCursor1 = std::min(m_curCursor1,m_curCursor2);
         m_curCursor2 = std::max(m_curCursor1,m_curCursor2);
@@ -359,7 +348,7 @@ COscilloscope::DataPassSq COscilloscope::selectRange(float *buffer,double _start
 
 
 void COscilloscope::acquireAutoFilter(){
-#if defined Z10 || defined Z20_125
+#if defined Z10 || defined Z20_125 || Z20_125_4CH
     DataPassAutoFilter localDP;
     uint32_t            pos = 0;
     int16_t             timeout = 1000000; // timeout 1 second
@@ -395,6 +384,14 @@ void COscilloscope::acquireAutoFilter(){
             case RP_CH_2:
                 rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHB_PE);
             break;
+#ifdef Z20_125_4CH
+            case RP_CH_3:
+                rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHC_PE);
+            break;
+            case RP_CH_4:
+                rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHD_PE);
+            break;
+#endif
             default:
                 assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
 
@@ -418,11 +415,16 @@ void COscilloscope::acquireAutoFilter(){
         if (timeout <= 0 ) return;
     //   rp_AcqGetWritePointerAtTrig(&pos);
         rp_AcqGetWritePointer(&pos);
-        rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
-        rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
+        rp_AcqGetDataV(m_channel,(pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[m_channel]);
+        rp_AcqGetDataRaw(m_channel,(pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, (int16_t*)m_buffer_raw[m_channel]);
+
+        // rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
+        // rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
+
         if (aa != localDP.f_aa || bb != localDP.f_bb || pp != localDP.f_pp || kk != localDP.f_kk) return;
-        auto *ch = m_buffer[m_channel == RP_CH_1 ? 0 : 1];
-        auto *ch_raw = m_buffer_raw[m_channel == RP_CH_1 ? 0 : 1];
+
+        auto *ch = m_buffer[m_channel];
+        auto *ch_raw = m_buffer_raw[m_channel];
         for(int i = 0 ; i < acq_u_size ; i++){
             m_acu_buffer[i] += ch[i];
             m_acu_buffer_raw[i] += convertCnts(ch_raw[i]);
@@ -454,29 +456,27 @@ void COscilloscope::acquireAutoFilter(){
 #endif    
 }
 
-void COscilloscope::acquireAutoFilter2Ch(){
-#if defined Z10 || defined Z20_125
-    DataPassAutoFilter2Ch localDP;
+void COscilloscope::acquireAutoFilterSync(){
+#if defined Z10 || defined Z20_125 || Z20_125_4CH
+    DataPassAutoFilterSync localDP;
     uint32_t            pos = 0;
     int16_t             timeout = 1000000; // timeout 1 second
     int16_t             repeat_count = 0;   
     bool                fillState = false;
-    uint32_t            aa1,bb1,pp1,kk1;
-    uint32_t            aa2,bb2,pp2,kk2;
+    uint32_t            aa[ADC_CHANNELS],bb[ADC_CHANNELS],pp[ADC_CHANNELS],kk[ADC_CHANNELS];    
     uint32_t            acq_u_size = ADC_BUFFER_SIZE;
     uint32_t            acq_u_size_raw = ADC_BUFFER_SIZE;
-    float               m_acu_buffer[2][ADC_BUFFER_SIZE];
-    float               m_acu_buffer_raw[2][ADC_BUFFER_SIZE];
-    memset(m_acu_buffer,0,sizeof(float) * ADC_BUFFER_SIZE * 2);
-    memset(m_acu_buffer_raw,0,sizeof(float) * ADC_BUFFER_SIZE * 2);
+    float               m_acu_buffer[ADC_CHANNELS][ADC_BUFFER_SIZE];
+    float               m_acu_buffer_raw[ADC_CHANNELS][ADC_BUFFER_SIZE];
+    memset(m_acu_buffer,0,sizeof(float) * ADC_BUFFER_SIZE * ADC_CHANNELS);
+    memset(m_acu_buffer_raw,0,sizeof(float) * ADC_BUFFER_SIZE * ADC_CHANNELS);
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
-    localDP.valueCH1.ampl = -1;
-    localDP.valueCH2.ampl = -1;
-    localDP.valueCH1.is_valid = false;
-    localDP.valueCH2.is_valid = false;
-    
-    rp_AcqGetFilterCalibValue(RP_CH_1,&localDP.valueCH1.f_aa,&localDP.valueCH1.f_bb,&localDP.valueCH1.f_kk,&localDP.valueCH1.f_pp);
-    rp_AcqGetFilterCalibValue(RP_CH_2,&localDP.valueCH2.f_aa,&localDP.valueCH2.f_bb,&localDP.valueCH2.f_kk,&localDP.valueCH2.f_pp);
+
+    for(auto i = 0u; i < ADC_CHANNELS; i++){
+        localDP.valueCH[i].ampl = -1;
+        localDP.valueCH[i].is_valid = false;
+        rp_AcqGetFilterCalibValue((rp_channel_t)i,&localDP.valueCH[i].f_aa,&localDP.valueCH[i].f_bb,&localDP.valueCH[i].f_kk,&localDP.valueCH[i].f_pp);
+    }
     
     while(repeat_count < ACQ_COUNT) {
         timeout = 1000000;
@@ -485,8 +485,9 @@ void COscilloscope::acquireAutoFilter2Ch(){
         rp_AcqSetDecimationFactor(m_decimationSq);
         rp_AcqSetTriggerDelay( ADC_BUFFER_SIZE/4.0);
         rp_AcqSetTriggerHyst(m_hyst);
-        rp_AcqGetFilterCalibValue(RP_CH_1,&aa1,&bb1,&kk1,&pp1);
-        rp_AcqGetFilterCalibValue(RP_CH_2,&aa2,&bb2,&kk2,&pp2);        
+        for(auto i = 0u; i < ADC_CHANNELS; i++){
+            rp_AcqGetFilterCalibValue((rp_channel_t)i,&aa[i],&bb[i],&kk[i],&pp[i]);
+        }
         rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
         rp_AcqStart();
         uint32_t time = (double)(ADC_BUFFER_SIZE / 4) * ((double)m_decimationSq / ADC_SAMPLE_RATE) * 1000000;
@@ -498,6 +499,14 @@ void COscilloscope::acquireAutoFilter2Ch(){
             case RP_CH_2:
                 rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHB_PE);
             break;
+#ifdef Z20_125_4CH
+            case RP_CH_3:
+                rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHC_PE);
+            break;
+            case RP_CH_4:
+                rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHD_PE);
+            break;
+#endif
             default:
                 assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
 
@@ -521,54 +530,55 @@ void COscilloscope::acquireAutoFilter2Ch(){
         if (timeout <= 0 ) return;
     //   rp_AcqGetWritePointerAtTrig(&pos);
         rp_AcqGetWritePointer(&pos);
+#ifdef Z20_125_4CH
+        rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1], m_buffer[2], m_buffer[3]);
+        rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1], m_buffer_raw[2], m_buffer_raw[3]);
+#else
         rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &acq_u_size, m_buffer[0], m_buffer[1]);
         rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &acq_u_size_raw, m_buffer_raw[0] , m_buffer_raw[1]);
-        if (aa1 != localDP.valueCH1.f_aa || bb1 != localDP.valueCH1.f_bb || pp1 != localDP.valueCH1.f_pp || kk1 != localDP.valueCH1.f_kk) return;
-        if (aa2 != localDP.valueCH2.f_aa || bb2 != localDP.valueCH2.f_bb || pp2 != localDP.valueCH2.f_pp || kk2 != localDP.valueCH2.f_kk) return;
-        for(int i = 0 ; i < acq_u_size ; i++){
-            m_acu_buffer[0][i] += m_buffer[0][i];
-            m_acu_buffer_raw[0][i] += convertCnts(m_buffer_raw[0][i]);
-            m_acu_buffer[1][i] += m_buffer[1][i];
-            m_acu_buffer_raw[1][i] += convertCnts(m_buffer_raw[1][i]);
+#endif
+        bool exitFlag = true;
+        for(auto i = 0u; i < ADC_CHANNELS; i++){
+            exitFlag &= (aa[i] != localDP.valueCH[i].f_aa || bb[i] != localDP.valueCH[i].f_bb || pp[i] != localDP.valueCH[i].f_pp || kk[i] != localDP.valueCH[i].f_kk);
         }
-        repeat_count++;            
+        if (exitFlag) return;
+        for(auto j = 0u; j < ADC_CHANNELS; j++){
+            for(int i = 0 ; i < acq_u_size ; i++){
+                m_acu_buffer[j][i] += m_buffer[j][i];
+                m_acu_buffer_raw[j][i] += convertCnts(m_buffer_raw[j][i]);
+            }
+        }
+        repeat_count++;
     }
-
-    for(int i = 0 ; i < acq_u_size ; i++){
-        m_acu_buffer[0][i] /= (double)repeat_count;
-        m_acu_buffer_raw[0][i] /= (double)repeat_count;
-        m_acu_buffer[1][i] /= (double)repeat_count;
-        m_acu_buffer_raw[1][i] /= (double)repeat_count;
+    for(auto j = 0u; j < ADC_CHANNELS; j++){
+        for(int i = 0 ; i < acq_u_size ; i++){
+            m_acu_buffer[j][i] /= (double)repeat_count;
+            m_acu_buffer_raw[j][i] /= (double)repeat_count;
+        }
     }
-    localDP.valueCH1.cur_channel = RP_CH_1;
-    localDP.valueCH1.index = m_index;
-    localDP.valueCH2.cur_channel = RP_CH_2;
-    localDP.valueCH2.index = m_index++;
+    for(auto j = 0u; j < ADC_CHANNELS; j++){
+        localDP.valueCH[j].cur_channel = (rp_channel_t)j;
+        localDP.valueCH[j].index = m_index;
+    }    
+    m_index++;
 
-    auto cross1 = calcCountCrossZero(m_acu_buffer[0],acq_u_size);
-    auto cross2 = calcCountCrossZero(m_acu_buffer[1],acq_u_size);
-    if (cross1.size() >= 2 && cross2.size() >= 2){
-        auto last_max1     = findLastMax(m_acu_buffer[0],acq_u_size,cross1[1]);
-        auto last_max_raw1 = findLastMax(m_acu_buffer_raw[0],acq_u_size,cross1[1]);
-        auto last_max2     = findLastMax(m_acu_buffer[1],acq_u_size,cross2[1]);
-        auto last_max_raw2 = findLastMax(m_acu_buffer_raw[1],acq_u_size,cross2[1]);
-        double value1 = calculate(m_acu_buffer[0], acq_u_size, m_acu_buffer[0][last_max1], cross1[0],cross1[1],localDP.valueCH1.deviation);
-        double value_raw1 = calculate(m_acu_buffer_raw[0], acq_u_size, m_acu_buffer_raw[0][last_max_raw1], cross1[0],cross1[1],localDP.valueCH1.deviation);
-        double value2 = calculate(m_acu_buffer[1], acq_u_size, m_acu_buffer[1][last_max2], cross2[0],cross2[1],localDP.valueCH2.deviation);
-        double value_raw2 = calculate(m_acu_buffer_raw[1], acq_u_size, m_acu_buffer_raw[1][last_max_raw2], cross2[0],cross2[1],localDP.valueCH2.deviation);
-        localDP.valueCH1.is_valid = true;
-        localDP.valueCH2.is_valid = true;
-        localDP.valueCH1.calib_value = value1;
-        localDP.valueCH1.calib_value_raw = value_raw1;        
-        localDP.valueCH1.ampl = m_acu_buffer[0][last_max1];
-        localDP.valueCH2.calib_value = value2;
-        localDP.valueCH2.calib_value_raw = value_raw2;        
-        localDP.valueCH2.ampl = m_acu_buffer[1][last_max2];
-        // std::cout << "\n" << last_max1 << " - " << m_acu_buffer[0][last_max1] << std::endl;
-        // std::cout << "\n" << last_max2 << " - " <<  m_acu_buffer[1][last_max2] << std::endl;
+    for(auto j = 0u; j < ADC_CHANNELS; j++){
+        auto cross1 = calcCountCrossZero(m_acu_buffer[j],acq_u_size);        
+        if (cross1.size() >= 2){
+            auto last_max1     = findLastMax(m_acu_buffer[j],acq_u_size,cross1[1]);
+            auto last_max_raw1 = findLastMax(m_acu_buffer_raw[j],acq_u_size,cross1[1]);
+            double value1 = calculate(m_acu_buffer[j], acq_u_size, m_acu_buffer[j][last_max1], cross1[0],cross1[1],localDP.valueCH[j].deviation);
+            double value_raw1 = calculate(m_acu_buffer_raw[j], acq_u_size, m_acu_buffer_raw[j][last_max_raw1], cross1[0],cross1[1],localDP.valueCH[j].deviation);
+            localDP.valueCH[j].is_valid = true;
+            localDP.valueCH[j].calib_value = value1;
+            localDP.valueCH[j].calib_value_raw = value_raw1;        
+            localDP.valueCH[j].ampl = m_acu_buffer[j][last_max1];
+            // std::cout << "\n" << last_max1 << " - " << m_acu_buffer[0][last_max1] << std::endl;
+            // std::cout << "\n" << last_max2 << " - " <<  m_acu_buffer[1][last_max2] << std::endl;
+        }
     }
     pthread_mutex_lock(&m_mutex);
-    m_crossDataAutoFilter2Ch = localDP;
+    m_crossDataAutoFilterSync = localDP;
     pthread_mutex_unlock(&m_mutex);
 #endif    
 }
@@ -580,15 +590,51 @@ void COscilloscope::setZoomMode(bool enable){
 
 
 void COscilloscope::setLV(){
-    rp_AcqSetGain(RP_CH_1, RP_LOW);
-    rp_AcqSetGain(RP_CH_2, RP_LOW);
+    for(auto j = 0u; j < ADC_CHANNELS; j++){        
+        rp_AcqSetGain((rp_channel_t)j, RP_LOW);
+    }    
 }
 
 void COscilloscope::setHV(){
-    rp_AcqSetGain(RP_CH_1, RP_HIGH);
-    rp_AcqSetGain(RP_CH_2, RP_HIGH);
+    for(auto j = 0u; j < ADC_CHANNELS; j++){
+        rp_AcqSetGain((rp_channel_t)j, RP_HIGH);
+    }
 }
 
+COscilloscope::DataPass COscilloscope::getData(){
+    DataPass local_pass;
+    pthread_mutex_lock(&m_mutex);
+    local_pass = m_crossData;
+    pthread_mutex_unlock(&m_mutex); 
+    return local_pass;
+}
+
+COscilloscope::DataPassSq COscilloscope::getDataSq(){
+    DataPassSq local_pass;
+    pthread_mutex_lock(&m_mutex);
+    local_pass = m_crossDataSq;
+    pthread_mutex_unlock(&m_mutex); 
+    return local_pass;
+}
+
+COscilloscope::DataPassAutoFilter COscilloscope::getDataAutoFilter(){
+    DataPassAutoFilter local_pass;
+    pthread_mutex_lock(&m_mutex);
+    local_pass = m_crossDataAutoFilter;
+    pthread_mutex_unlock(&m_mutex); 
+    return local_pass;
+}
+
+COscilloscope::DataPassAutoFilterSync COscilloscope::getDataAutoFilterSync(){
+    DataPassAutoFilterSync local_pass;
+    pthread_mutex_lock(&m_mutex);
+    local_pass = m_crossDataAutoFilterSync;
+    pthread_mutex_unlock(&m_mutex); 
+    return local_pass;
+}
+
+
+#if defined Z20_250_12 || defined Z10 || defined Z20 || defined Z20_125
 void COscilloscope::setGEN_DISABLE(){
     rp_GenOutDisable(RP_CH_1);
     rp_GenOutDisable(RP_CH_2);   
@@ -633,38 +679,6 @@ void COscilloscope::setGEN0_5_SINE(){
     rp_GenOutEnable(RP_CH_2);
 }
 
-COscilloscope::DataPass COscilloscope::getData(){
-    DataPass local_pass;
-    pthread_mutex_lock(&m_mutex);
-    local_pass = m_crossData;
-    pthread_mutex_unlock(&m_mutex); 
-    return local_pass;
-}
-
-COscilloscope::DataPassSq COscilloscope::getDataSq(){
-    DataPassSq local_pass;
-    pthread_mutex_lock(&m_mutex);
-    local_pass = m_crossDataSq;
-    pthread_mutex_unlock(&m_mutex); 
-    return local_pass;
-}
-
-COscilloscope::DataPassAutoFilter COscilloscope::getDataAutoFilter(){
-    DataPassAutoFilter local_pass;
-    pthread_mutex_lock(&m_mutex);
-    local_pass = m_crossDataAutoFilter;
-    pthread_mutex_unlock(&m_mutex); 
-    return local_pass;
-}
-
-COscilloscope::DataPassAutoFilter2Ch COscilloscope::getDataAutoFilter2Ch(){
-    DataPassAutoFilter2Ch local_pass;
-    pthread_mutex_lock(&m_mutex);
-    local_pass = m_crossDataAutoFilter2Ch;
-    pthread_mutex_unlock(&m_mutex); 
-    return local_pass;
-}
-
 #ifdef Z20_250_12
 void COscilloscope::setDC(){
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
@@ -700,32 +714,31 @@ void COscilloscope::resetGen(){
     setOffset(RP_CH_2,0);
 }
 
-void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){
+void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){    
     if (_enable){
         rp_GenOutEnable(_ch);
         rp_GenResetTrigger(_ch);
     }else{
         rp_GenOutDisable(_ch);
     }
+    fprintf(stderr,"enableGen2 %d\n",this);
 }
 
 int COscilloscope::setFreq(rp_channel_t _ch,int _freq){
-    rp_GenFreq(_ch,_freq);
+    return rp_GenFreq(_ch,_freq);
 }
 
 int COscilloscope::setAmp(rp_channel_t _ch,float _ampl){
-    rp_GenAmp(_ch,_ampl);
+    return rp_GenAmp(_ch,_ampl);
 }
 
 int COscilloscope::setOffset(rp_channel_t _ch,float _offset){
-    rp_GenOffset(_ch,_offset);
+    return rp_GenOffset(_ch,_offset);
 }
 
 int COscilloscope::setGenType(rp_channel_t _ch,int _type){
-    rp_GenWaveform(_ch, (rp_waveform_t)_type);
+    return rp_GenWaveform(_ch, (rp_waveform_t)_type);
 }
-
-
 
 void COscilloscope::updateGenCalib(){
     float x = 0;
@@ -738,3 +751,4 @@ void COscilloscope::updateGenCalib(){
     rp_GenGetOffset(RP_CH_2,&x);
     rp_GenOffset(RP_CH_2,x);
 }
+#endif

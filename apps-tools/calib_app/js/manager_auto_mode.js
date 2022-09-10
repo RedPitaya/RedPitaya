@@ -24,6 +24,15 @@
         9: { name: "Calibration complete", span: true, end: true }
     };
 
+    OBJ.STATES_125_14_4CH = {
+        0: { name: "Reset to default", span: true },
+        1: { name: "ADC offset (1:20)", img: "./img/125_4CH/RP_125_GND_HV.png", hint: "Please set HV mode and connect IN1, IN2, IN3 and IN2 to GND." },
+        2: { name: "ADC gain   (1:20)", img: "./img/125_4CH/RP_125_REF_HV.png", hint: "Please set HV mode and connect IN1, IN2, IN3 and IN2 to reference DC source.", input: 5 },
+        3: { name: "ADC offset (1:1)", img: "./img/125_4CH/RP_125_GND.png", hint: "Please set LV mode and connect IN1, IN2, IN3 and IN2 to GND." },
+        4: { name: "ADC gain   (1:1)", img: "./img/125_4CH/RP_125_REF.png", hint: "Please set LV mode and connect IN1, IN2, IN3 and IN2 to reference DC source.", input: 0.5 },
+        5: { name: "Calibration complete", span: true, end: true }
+    };
+
     OBJ.STATES_250_12 = {
         0: { name: "Reset to default", span: true },
         1: { name: "Set 1:1 DC mode", span: true },
@@ -58,12 +67,15 @@
     OBJ.amCurrentRowID = undefined;
     OBJ.amLastAVGCH1 = 0;
     OBJ.amLastAVGCH2 = 0;
+    OBJ.amLastAVGCH3 = 0;
+    OBJ.amLastAVGCH4 = 0;
     OBJ.amLastState = false;
 
     OBJ.amSetModel = function(_model) {
         if (OBJ.amModel === undefined) {
             OBJ.amModel = _model.value;
             if (OBJ.amModel === "Z10" || OBJ.amModel === "Z20_125") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z20_125_4CH") OBJ.amStates = OBJ.STATES_125_14_4CH;
             if (OBJ.amModel === "Z20_250_12") OBJ.amStates = OBJ.STATES_250_12;
         }
     }
@@ -96,10 +108,26 @@
         newCell.setAttribute("id", id + "_ch2_befor");
         newCell = row.insertCell(-1);
         newCell.setAttribute("id", id + "_ch2_after");
+        if (OBJ.amModel === "Z20_125_4CH"){
+            newCell = row.insertCell(-1);    
+            newCell.setAttribute("id", id + "_ch3_befor");
+            newCell = row.insertCell(-1);
+            newCell.setAttribute("id", id + "_ch3_after");
+            newCell = row.insertCell(-1);
+            newCell.setAttribute("id", id + "_ch4_befor");
+            newCell = row.insertCell(-1);
+            newCell.setAttribute("id", id + "_ch4_after");
+        }
         newCell = row.insertCell(-1);
         newCell.setAttribute("id", id + "_value_ch1");
         newCell = row.insertCell(-1);
         newCell.setAttribute("id", id + "_value_ch2");
+        if (OBJ.amModel === "Z20_125_4CH"){
+            newCell = row.insertCell(-1);
+            newCell.setAttribute("id", id + "_value_ch3");
+            newCell = row.insertCell(-1);
+            newCell.setAttribute("id", id + "_value_ch4");
+        }
         newCell = row.insertCell(-1);
         newCell.setAttribute("id", id + "_state");
         return id;
@@ -112,7 +140,11 @@
         row.setAttribute("id", id);
         let newCell = row.insertCell(-1);
         newCell.setAttribute("id", id + "_mode");
-        newCell.setAttribute("colspan", "7");
+        if (OBJ.amModel === "Z20_125_4CH"){
+            newCell.setAttribute("colspan", "13");
+        }else{
+            newCell.setAttribute("colspan", "7");
+        }
         newCell = row.insertCell(-1);
         newCell.setAttribute("id", id + "_state");
         return id;
@@ -306,6 +338,7 @@
         if (OBJ.amCheckEmptyVariables()) {
             OBJ.amLastAVGCH1 = _value;
             if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
                 if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
@@ -324,8 +357,47 @@
         if (OBJ.amCheckEmptyVariables()) {
             OBJ.amLastAVGCH2 = _value;
             if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                } else {
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
+            }
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
+                OBJ.amCheckInputRef();
+            }
+        }
+    }
+
+    OBJ.amSetCH3Avg = function(_value) {
+        if (OBJ.amCheckEmptyVariables()) {
+            OBJ.amLastAVGCH3 = _value;
+            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch3_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch3_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                } else {
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
+            }
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
+                OBJ.amCheckInputRef();
+            }
+        }
+    }
+
+    OBJ.amSetCH4Avg = function(_value) {
+        if (OBJ.amCheckEmptyVariables()) {
+            OBJ.amLastAVGCH4 = _value;
+            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch4_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch4_after");
                 if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
                     if (element_b != undefined) element_b.innerText = _value + " V";
                 } else {
@@ -341,6 +413,7 @@
     OBJ.amSetCH1Max = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
                 if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
@@ -355,8 +428,39 @@
     OBJ.amSetCH2Max = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                } else {
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
+            }
+        }
+    }
+
+    OBJ.amSetCH3Max = function(_value) {
+        if (OBJ.amCheckEmptyVariables()) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch3_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch3_after");
+                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
+                    if (element_b != undefined) element_b.innerText = _value + " V";
+                } else {
+                    if (element_a != undefined) element_a.innerText = _value + " V";
+                }
+            }
+        }
+    }
+
+    OBJ.amSetCH4Max = function(_value) {
+        if (OBJ.amCheckEmptyVariables()) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+                _value = _value.toFixed(4);
+                var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch4_befor");
+                var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch4_after");
                 if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
                     if (element_b != undefined) element_b.innerText = _value + " V";
                 } else {
@@ -380,6 +484,20 @@
         }
     }
 
+    OBJ.amSetCalibValueCh3 = function(_value) {
+        if (OBJ.amCheckEmptyVariables()) {
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch3");
+            if (element_b != undefined) element_b.innerText = _value.value;
+        }
+    }
+
+    OBJ.amSetCalibValueCh4 = function(_value) {
+        if (OBJ.amCheckEmptyVariables()) {
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch4");
+            if (element_b != undefined) element_b.innerText = _value.value;
+        }
+    }
+
 
 }(window.OBJ = window.OBJ || {}, jQuery));
 
@@ -390,5 +508,7 @@ $(function() {
     SM.param_callbacks["SS_STATE"] = OBJ.amGetStatus;
     SM.param_callbacks["ch1_calib_pass"] = OBJ.amSetCalibValueCh1;
     SM.param_callbacks["ch2_calib_pass"] = OBJ.amSetCalibValueCh2;
+    SM.param_callbacks["ch3_calib_pass"] = OBJ.amSetCalibValueCh3;
+    SM.param_callbacks["ch4_calib_pass"] = OBJ.amSetCalibValueCh4;
     $('#am_ok_btn').on('click', function() { OBJ.amClickOkDialog() });
 });

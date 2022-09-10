@@ -29,11 +29,14 @@ extern "C" {
 #define ADC_REG_BITS 16 
 #define ADC_BITS_MASK 0xFFFF
 #define ADC_REG_BITS_MASK 0xFFFF
-#define DAC_FREQUENCY 122.880e6
-
-
+#define ADC_CHANNELS 2
 #define ADC_BUFFER_SIZE         (16 * 1024)
-#define BUFFER_LENGTH           (16 * 1024)
+
+#define DAC_FREQUENCY 122.880e6
+#define DAC_BUFFER_SIZE         (16 * 1024)
+
+#define RISE_FALL_MIN_RATIO     0.0001      // ratio of rise/fall time to period
+#define RISE_FALL_MAX_RATIO     0.1
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -195,8 +198,8 @@ typedef enum {
  * Type representing Input/Output channels.
  */
 typedef enum {
-    RP_CH_1,    //!< Channel A
-    RP_CH_2     //!< Channel B
+    RP_CH_1 = 0,    //!< Channel A
+    RP_CH_2 = 1     //!< Channel B
 } rp_channel_t;
 
 
@@ -204,9 +207,9 @@ typedef enum {
  * Type representing Input/Output channels in trigger.
  */
 typedef enum {
-    RP_T_CH_1,    //!< Channel A
-    RP_T_CH_2,    //!< Channel B
-    RP_T_CH_EXT,  
+    RP_T_CH_1 = 0,    //!< Channel A
+    RP_T_CH_2 = 1,    //!< Channel B
+    RP_T_CH_EXT = 2  
 } rp_channel_trigger_t;
 
 /**
@@ -1059,6 +1062,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
 /**
  * Returns the ADC buffer in raw units from specified position and desired size.
  * Output buffer must be at least 'size' long.
+ * Data not calibrated
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
  * @param pos Starting position of the ADC buffer to retrieve.
  * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
@@ -1397,6 +1401,26 @@ int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenDutyCycle(rp_channel_t channel, float ratio);
+
+/**
+* Sets rise time of square signal.
+* @param channel Channel A or B for witch we want to set rise time.
+* @param time Rise time in microseconds.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+
+int rp_GenRiseTime(rp_channel_t channel, float time);
+
+/**
+ * Sets fall time of square signal.
+ * @param channel Channel A or B for witch we want to set fall time.
+ * @param time Fall time in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+
+int rp_GenFallTime(rp_channel_t channel, float time);
 
 /**
 * Gets duty cycle of PWM signal.

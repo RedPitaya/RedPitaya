@@ -1,7 +1,7 @@
 #include "acq_math.h"
 #include "acq.h"
 #include "filter_logic.h"
-#include "filter_logic2ch.h"
+#include "filter_logicNch.h"
 #include "rp.h"
 #include <iostream>
 

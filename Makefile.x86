@@ -9,7 +9,7 @@ GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?=
 
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
+VERSION = $(VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -23,7 +23,7 @@ STREAMING ?= MASTER
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)
+# Version: $(VER)-$(REVISION)
 # Build: $(BUILD_NUMBER)
 # Branch: $(GIT_LOCAL_BRANCH)
 # Commit: $(GIT_COMMIT)
@@ -125,12 +125,12 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 977a4d0fe89f4815940385e19b6c3524a6c2a59b
-FPGA_CLASSIC 	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_0_94	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_MERCURY	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_AXI4LITE	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_CLASSIC 	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_LOGIC	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_0_94	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_MERCURY	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_AXI4LITE	= 52353c7a117d787e921878f739902f7ba8c3b1f5
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -143,8 +143,8 @@ ifeq ($(MODEL),Z20)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94 stream_app
 
-FPGA_STREAM_APP = b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_0_94	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_0_94	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -157,12 +157,12 @@ ifeq ($(MODEL),Z20_125)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 977a4d0fe89f4815940385e19b6c3524a6c2a59b
-FPGA_CLASSIC 	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_0_94	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_MERCURY	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_AXI4LITE	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_CLASSIC 	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_LOGIC	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_0_94	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_MERCURY	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+FPGA_AXI4LITE	= 52353c7a117d787e921878f739902f7ba8c3b1f5
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -171,13 +171,39 @@ DTS_PATH = dts
 endif
 endif
 
+ifeq ($(MODEL),Z20_125_4CH)
+ifeq ($(STREAMING),MASTER)
+# FPGA_PRJ_LST = v0.94
+
+FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
+
+# NEED for FSBL fpga image
+FPGA_PRJ = v0.94
+FPGA_MODEL ?= Z20_4
+DTS_PATH = dts
+endif
+endif
+
+ifeq ($(MODEL),Z10_125_4CH_TEST)
+ifeq ($(STREAMING),MASTER)
+# FPGA_PRJ_LST = v0.94
+
+FPGA_0_94	= 52353c7a117d787e921878f739902f7ba8c3b1f5
+
+# NEED for FSBL fpga image
+FPGA_PRJ = v0.94
+FPGA_MODEL ?= Z10_4_test
+DTS_PATH = dts
+endif
+endif
+
 ifeq ($(MODEL),Z20_250_12)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 
-FPGA_STREAM_APP_250 = 977a4d0fe89f4815940385e19b6c3524a6c2a59b
-FPGA_0_94_250	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC_250	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP_250 = 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_0_94_250	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_LOGIC_250	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic_250
@@ -188,10 +214,11 @@ endif
 
 ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
-# FPGA_PRJ_LST = stream_app logic
+# FPGA_PRJ_LST = stream_app logic v0.94
 
-FPGA_STREAM_APP = b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
-FPGA_LOGIC	= b70f7f9cbb2fe0cb69664464d7b061fb07b5f20c
+FPGA_STREAM_APP = 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_LOGIC	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_0_94	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -257,32 +284,59 @@ ifneq "$(FPGA_AXI4LITE)" ""
 	$(call build_fpga,axi4lite,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
 endif
 
-ifneq ($(STREAMING),SLAVE)
-	# copy archived FPGA bitstream images and decompress them
-	cp fpga/archive/*.xz  $(INSTALL_DIR)/fpga
-	cd                    $(INSTALL_DIR)/fpga; xz -df *.xz
-	# backward compatibility, TODO, should be removed at next OS release
-
-ifneq ($(FPGA_MODEL),Z20_250)
+ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(STREAMING),MASTER)
 	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
 	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-ifeq ($(FPGA_MODEL), Z10)
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 endif
-ifeq ($(FPGA_MODEL), Z20_14)
+endif
+
+ifeq ($(FPGA_MODEL),Z10)
+ifeq ($(STREAMING),SLAVE)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
+endif
+endif
+
+ifeq ($(FPGA_MODEL),Z20)
+ifeq ($(STREAMING),MASTER)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
+endif
+endif
+
+ifeq ($(FPGA_MODEL),Z20_125)
+ifeq ($(STREAMING),MASTER)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
 endif
-else
+endif
+
+ifeq ($(FPGA_MODEL),Z20_4)
+ifeq ($(STREAMING),MASTER)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+endif
+endif
+
+ifeq ($(FPGA_MODEL),Z10_4_test)
+ifeq ($(STREAMING),MASTER)
+	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+endif
+endif
+
+ifeq ($(FPGA_MODEL),Z20_250_12)
+ifeq ($(STREAMING),MASTER)
 	cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
 	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
 	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
+endif
+endif
 
-endif
-else
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif
 
 fpga_move:
 
@@ -409,7 +463,7 @@ $(BOOT): $(INSTALL_DIR)/fpga $(UBOOT) $(INSTALL_DIR)
 # tarball
 ################################################################################
 
-ZIPFILE=ecosystem-$(VERSION).zip
+ZIPFILE=ecosystem-$(VERSION)-$(REVISION).zip
 
 zip: $(ZIPFILE)
 
@@ -478,3 +532,28 @@ ifneq "$(FPGA_AXI4LITE)" ""
 endif
 
 	./gen_fpga_report.sh PACK
+
+
+################################################################################
+# streaming_client
+################################################################################
+
+APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
+
+streaming:  streaming_client streaming_client_win
+
+streaming_client:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client
+
+streaming_client_win:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_win
+
+streaming_client_qt:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_qt
+
+streaming_client_qt_win:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_qt_win

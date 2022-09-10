@@ -239,11 +239,7 @@ $(function() {
         }
     }
 
-    OBJ.filterSetMode = function(_mode, _state) {
-        if (_mode == "FILTER_CHANNEL") {
-            SM.parametersCache["adc_channel"] = { value: _state };
-            SM.sendParameters2("adc_channel");
-        }
+    OBJ.filterSetMode = function(_mode, _state) {        
         if (_mode == "FILTER_HV_LV_MODE") {
             SM.parametersCache["filter_hv_lv_mode"] = { value: _state };
             SM.sendParameters2("filter_hv_lv_mode");
@@ -264,9 +260,6 @@ $(function() {
         }
 
         if (_mode == "am_filt_switch") {
-            OBJ.filtAutoMode = _state;
-            SM.parametersCache["filt_calib_auto_mode"] = { value: OBJ.filtAutoMode };
-            SM.sendParameters();
             if ($("#FILTER_HV_LV_MODE").is(':checked')) {
                 if (_state) {
                     $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_HV.png");
@@ -287,7 +280,10 @@ $(function() {
                     $("#am_filt_dialog_text").text("Please set LV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
                     $("#am_filt_dialog_input").show();
                 }
-            }
+            }            
+            OBJ.filtAutoMode = _state;
+            SM.parametersCache["filt_calib_auto_mode"] = { value: OBJ.filtAutoMode };
+            SM.sendParameters();
         }
     }
 
@@ -359,6 +355,10 @@ $(function() {
         $("#FILTER_DECIMATION").val(_value.value);
     }
 
+    OBJ.setSelectedChannel = function(_value) {
+        $("#FILTER_CHANNEL_4CH").val(_value.value);
+    }
+
 
 }(window.OBJ = window.OBJ || {}, jQuery));
 
@@ -375,30 +375,50 @@ $(function() {
     });
 
     $("#B_FILTER_AUTO").click(function() {
-
-        if ($("#FILTER_HV_LV_MODE").is(':checked')) {
-            if ($("#am_filt_switch").is(':checked')) {
-                $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_HV.png");
-                $("#am_filt_dialog_text").text("Please set HV mode and connect OUT1 to IN1 and OUT2 to IN2.");
-                $("#am_filt_dialog_input").hide();
+        if (OBJ.filterModel === "Z20_125_4CH"){
+            OBJ.filtAutoMode = 0;
+            if ($("#FILTER_HV_LV_MODE").is(':checked')) {
+                {
+                    $("#am_filt_dialog_img").attr("src", "./img/125_4CH/RP_125_REF_HV_FILTER.png");
+                    $("#am_filt_dialog_text").text("Please set HV mode and connect IN1, IN2, IN3 and IN4 to reference signal source and set SQUARE SIGNAL 1kHz.");
+                    $("#am_filt_dialog_input").show();
+                    $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeHVRef);
+                    SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeHVRef };
+                }
             } else {
-                $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_REF_HV_FILTER.png");
-                $("#am_filt_dialog_text").text("Please set HV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
-                $("#am_filt_dialog_input").show();
-                $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeHVRef);
-                SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeHVRef };
+                {
+                    $("#am_filt_dialog_img").attr("src", "./img/125_4CH/RP_125_REF_FILTER.png");
+                    $("#am_filt_dialog_text").text("Please set LV mode and connect IN1, IN2, IN3 and IN4 to reference signal source and set SQUARE SIGNAL 1kHz.");
+                    $("#am_filt_dialog_input").show();
+                    $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeLVRef);
+                    SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeLVRef };
+                }
             }
-        } else {
-            if ($("#am_filt_switch").is(':checked')) {
-                $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_GEN.png");
-                $("#am_filt_dialog_text").text("Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2.");
-                $("#am_filt_dialog_input").hide();
+        }else{
+            if ($("#FILTER_HV_LV_MODE").is(':checked')) {            
+                if ($("#am_filt_switch").is(':checked')) {
+                    $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_HV.png");
+                    $("#am_filt_dialog_text").text("Please set HV mode and connect OUT1 to IN1 and OUT2 to IN2.");
+                    $("#am_filt_dialog_input").hide();
+                } else {
+                    $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_REF_HV_FILTER.png");
+                    $("#am_filt_dialog_text").text("Please set HV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
+                    $("#am_filt_dialog_input").show();
+                    $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeHVRef);
+                    SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeHVRef };
+                }
             } else {
-                $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_REF_FILTER.png");
-                $("#am_filt_dialog_text").text("Please set LV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
-                $("#am_filt_dialog_input").show();
-                $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeLVRef);
-                SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeLVRef };
+                if ($("#am_filt_switch").is(':checked')) {
+                    $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_GEN.png");
+                    $("#am_filt_dialog_text").text("Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2.");
+                    $("#am_filt_dialog_input").hide();
+                } else {
+                    $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_REF_FILTER.png");
+                    $("#am_filt_dialog_text").text("Please set LV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
+                    $("#am_filt_dialog_input").show();
+                    $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeLVRef);
+                    SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeLVRef };
+                }
             }
         }
         SM.parametersCache["filt_calib_auto_mode"] = { value: OBJ.filtAutoMode };
@@ -479,5 +499,6 @@ $(function() {
     SM.param_callbacks["filt_kk"] = OBJ.filterSetKK;
     SM.param_callbacks["filt_calib_step"] = OBJ.filtGetCalibSig;
     SM.param_callbacks["filt_calib_progress"] = OBJ.filtSetProgress;
+    SM.param_callbacks["adc_channel"] = OBJ.setSelectedChannel;
 
 });

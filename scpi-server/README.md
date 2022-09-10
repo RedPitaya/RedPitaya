@@ -10,7 +10,7 @@
 
 
 ## How to build Red Pitaya `scpi-server`
-Before proceeding follow the [instructions](https://github.com/RedPitaya/RedPitaya/blob/master/doc/developer.rst) on how to set up working environment.
+Before proceeding follow the [instructions](https://redpitaya.com/rtd-iframe/?iframe=https://redpitaya.readthedocs.io/en/latest/quickStart/needs.html) on how to set up working environment.
 Then proceed by simply running the following command.
 ```bash
 make clean all

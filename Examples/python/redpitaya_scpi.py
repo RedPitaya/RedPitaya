@@ -26,7 +26,7 @@ class scpi (object):
             self._socket.connect((host, port))
 
         except socket.error as e:
-            print('SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e))
+            print('SCPI >> connect({!s:s}:{:d}) failed: {!s:s}'.format(host, port, e))
 
     def __del__(self):
         if self._socket is not None:
@@ -41,9 +41,9 @@ class scpi (object):
         """Receive text string and return it after removing the delimiter."""
         msg = ''
         while 1:
-            chunk = self._socket.recv(chunksize + len(self.delimiter)).decode('utf-8') # Receive chunk size of 2^n preferably
+            chunk = self._socket.recv(chunksize).decode('utf-8') # Receive chunk size of 2^n preferably
             msg += chunk
-            if (len(chunk) and chunk[-2:] == self.delimiter):
+            if (len(msg) and msg[-2:] == self.delimiter):
                 break
         return msg[:-2]
 
@@ -72,7 +72,7 @@ class scpi (object):
 
     def tx_txt(self, msg):
         """Send text string ending and append delimiter."""
-        return self._socket.send((msg + self.delimiter).encode('utf-8'))
+        return self._socket.sendall((msg + self.delimiter).encode('utf-8')) # was send(().encode('utf-8'))
 
     def txrx_txt(self, msg):
         """Send/receive text string."""
