@@ -1,3 +1,8 @@
+# load extra enviroment form eeprom
+i2c dev 0
+eeprom read  0 0x50 0 0x1800 0x400
+env import -b 0 0x400 hw_rev serial ethaddr
+
 # set main memory address table
 setenv addr_script 0x02000000
 setenv addr_eeprom 0x02003000
