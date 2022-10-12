@@ -396,9 +396,7 @@ $(LINUX_DIR): $(LINUX_TAR)
 	patch -t -p1 -i "${PWD}/patches/zynq-kernel-mempry-reserve-issue.patch" -d "${PWD}/$@"
 	patch -t -p1 -i "${PWD}/patches/zynq-kernel-i2c.patch" -d "${PWD}/$@"
 	patch -t -p1 -i "${PWD}/patches/xilinx_zynq_defconfig.patch" -d "${PWD}/$@" # patch for Wifi AP mode
-ifeq ($(MODEL),Z20_250_12)
-	patch -t -p1 -i "${PWD}/patches/zynq-kernel-lantiq_250_12.patch" -d "${PWD}/$@"
-endif
+	patch -t -p1 -i "${PWD}/patches/zynq-kernel-lantiq.patch" -d "${PWD}/$@"
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
