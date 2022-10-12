@@ -40,7 +40,7 @@ export GREET_MSG
 # targets
 ################################################################################
 
-all: fpga devicetree u-boot linux boot
+all: dtc_compiler fpga devicetree u-boot linux boot
 
 install: linux-install devicetree-install boot fpga_move
 
@@ -125,20 +125,23 @@ FPGA_MERCURY=
 # axi4lite
 FPGA_AXI4LITE=
 
+# barebone
+FPGA_BAREBONE=
 
 ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
-# FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
+# FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite barebones
 
-FPGA_STREAM_APP = 4a637398ff37fed60545e293a95034c59b53086e
-FPGA_CLASSIC 	= 4a637398ff37fed60545e293a95034c59b53086e
-FPGA_LOGIC	= 4a637398ff37fed60545e293a95034c59b53086e
-FPGA_0_94	= 4a637398ff37fed60545e293a95034c59b53086e
-FPGA_MERCURY	= 4a637398ff37fed60545e293a95034c59b53086e
-FPGA_AXI4LITE	= 4a637398ff37fed60545e293a95034c59b53086e
+FPGA_STREAM_APP = f59511b7d4aa1c054b9e06fc797bb5d7aecc39a6
+#FPGA_CLASSIC 	= 94eb72bbe89b1a9eb9408bdd391e62ed38077d09
+#FPGA_LOGIC	= 94eb72bbe89b1a9eb9408bdd391e62ed38077d09
+#FPGA_0_94	= 94eb72bbe89b1a9eb9408bdd391e62ed38077d09
+#FPGA_MERCURY	= 94eb72bbe89b1a9eb9408bdd391e62ed38077d09
+#FPGA_AXI4LITE	= 94eb72bbe89b1a9eb9408bdd391e62ed38077d09
+FPGA_BAREBONE = f59511b7d4aa1c054b9e06fc797bb5d7aecc39a6
 
 # NEED for FSBL fpga image
-FPGA_PRJ = logic
+FPGA_PRJ = barebones
 FPGA_MODEL ?= Z10
 DTS_PATH = dts
 endif
@@ -234,7 +237,7 @@ endif
 
 .PHONY: fpga $(INSTALL_DIR)/fpga
 
-fpga: $(INSTALL_DIR)/fpga
+fpga: dtc_compiler $(INSTALL_DIR)/fpga
 
 
 define build_fpga
@@ -246,11 +249,24 @@ define build_fpga
 	cp    fpga/$(1)/prj/$(1)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(1)/fsbl.elf
 	cp -r fpga/$(1)/prj/$(1)/sdk/dts                  $(INSTALL_DIR)/fpga/$(1)
 	cp    fpga/$(1)/prj/$(1)/dts/*                    $(INSTALL_DIR)/fpga/$(1)/dts/
-	tools/dtc/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(1)/fpga.dtbo -i fpga/$(1)/prj/$(1)/dts -i fpga/$(1)/dts fpga/$(1)/prj/$(1)/dts/fpga.dtso
+
+#fix bug with #address-cells and #size-cells for overlay
+	sed -i 's/#address-cells/\/\/#address-cells/g' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
+    sed -i 's/#size-cells/\/\/#size-cells/g' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
+	sed -i 's/red_pitaya.bit.bin/fpga.bit.bin/g' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
+	grep -qxF '/include/ "pl_patch.dtsi"' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi || echo '/include/ "pl_patch.dtsi"' >> fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
+
+	$(TMP)/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(1)/fpga.dtbo -i fpga/$(1)/prj/$(1)/dts -i fpga/$(1)/dts fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
+	echo -n "all:{ $(INSTALL_DIR)/fpga/$(1)/fpga.bit }" >  $(INSTALL_DIR)/fpga/$(1)/fpga.bif
+	bootgen -image $(INSTALL_DIR)/fpga/$(1)/fpga.bif -arch zynq -process_bitstream bin -o $(INSTALL_DIR)/fpga/$(1)/red_pitaya.bit.bin -w
 endef
 
 $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
+
+ifneq "$(FPGA_BAREBONE)" ""
+	$(call build_fpga,barebones,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE))
+endif
 
 ifneq "$(FPGA_STREAM_APP)" ""
 	$(call build_fpga,stream_app,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP))
@@ -288,60 +304,6 @@ ifneq "$(FPGA_AXI4LITE)" ""
 	$(call build_fpga,axi4lite,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
 endif
 
-ifeq ($(FPGA_MODEL),Z10)
-ifeq ($(STREAMING),MASTER)
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
-endif
-endif
-
-ifeq ($(FPGA_MODEL),Z10)
-ifeq ($(STREAMING),SLAVE)
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-endif
-endif
-
-ifeq ($(FPGA_MODEL),Z20)
-ifeq ($(STREAMING),MASTER)
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-endif
-endif
-
-ifeq ($(FPGA_MODEL),Z20_125)
-ifeq ($(STREAMING),MASTER)
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-	cp $(INSTALL_DIR)/fpga/stream_app/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-	cp $(INSTALL_DIR)/fpga/logic/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-	cp $(INSTALL_DIR)/fpga/classic/fpga.bit  $(INSTALL_DIR)/fpga/fpga_classic.bit
-endif
-endif
-
-ifeq ($(FPGA_MODEL),Z20_4)
-ifeq ($(STREAMING),MASTER)
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-endif
-endif
-
-ifeq ($(FPGA_MODEL),Z10_4_test)
-ifeq ($(STREAMING),MASTER)
-	cp $(INSTALL_DIR)/fpga/v0.94/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-endif
-endif
-
-ifeq ($(FPGA_MODEL),Z20_250_12)
-ifeq ($(STREAMING),MASTER)
-	cp $(INSTALL_DIR)/fpga/logic_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_la.bit
-	cp $(INSTALL_DIR)/fpga/stream_app_250/fpga.bit  $(INSTALL_DIR)/fpga/fpga_streaming.bit
-	cp $(INSTALL_DIR)/fpga/v0.94_250/fpga.bit    $(INSTALL_DIR)/fpga/fpga_0.94.bit
-endif
-endif
-
-
 fpga_move:
 
 ifeq ($(FPGA_MODEL),Z20_250)
@@ -358,7 +320,7 @@ DEVICETREE = $(TMP)/dts/devicetree.dtb
 
 .PHONY: devicetree devicetree-install $(DEVICETREE)
 
-devicetree: $(DEVICETREE) $(DTREE_DIR)
+devicetree: $(DEVICETREE) dtc_compiler
 
 $(DTREE_TAR): | $(DL)
 	curl -L $(DTREE_URL) -o $@
@@ -374,13 +336,12 @@ $(DEVICETREE): $(DTREE_DIR) $(INSTALL_DIR)/fpga $(TMP)
 	cat   $(TMP)/dts/fpga.dts >> $(TMP)/dts/system-top.dts
 
 	gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
-	tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
+	$(TMP)/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
 
-	# cat fpga/$(FPGA_PRJ)/$(DTS_PATH)/watchdog.dtsi >> $(TMP)/dts/system-top.dts
 	# gcc -I $(TMP)/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/system-top.dts.tmp $(TMP)/dts/system-top.dts
 	# tools/dtc/dtc -@ -I dts -O dtb -o $(DEVICETREE) -i $(TMP)/dts -i fpga/$(FPGA_PRJ)/$(DTS_PATH) $(TMP)/dts/system-top.dts.tmp
 	# create device tree source from binary for reference
-	tools/dtc/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
+	$(TMP)/dtc -I dtb -O dts --sort -o $(TMP)/dts/dtraw.dts $(DEVICETREE)
 
 
 devicetree-install: $(DEVICETREE) $(INSTALL_DIR)
@@ -438,9 +399,6 @@ $(LINUX_DIR): $(LINUX_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 #	patch -t -p1 -i "${PWD}/patches/zynq-kernel-mempry-reserve-issue.patch" -d "${PWD}/$@"
 #	patch -t -p1 -i "${PWD}/patches/zynq-kernel-i2c.patch" -d "${PWD}/$@"
-ifeq ($(MODEL),Z20_250_12)
-	patch -t -p1 -i "${PWD}/patches/zynq-kernel-lantiq_250_12.patch" -d "${PWD}/$@"
-endif
 
 $(LINUX): $(LINUX_DIR)
 	make -C $< mrproper
@@ -453,6 +411,8 @@ endif
 linux-install: $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
+dtc_compiler: $(LINUX)
+	cp -u $(LINUX_DIR)/scripts/dtc/dtc $(TMP)/dtc
 
 
 ################################################################################

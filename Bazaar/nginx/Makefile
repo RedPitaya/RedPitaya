@@ -54,6 +54,7 @@ install:
 	test -d '$(DESTDIR)/sbin'                 || mkdir -p '$(DESTDIR)/sbin'
 	test -d '$(DESTDIR)/lib'                  || mkdir -p '$(DESTDIR)/lib'
 	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'
+	test -d '$(DESTDIR)/www/conf/lib/lua'     || mkdir -p '$(DESTDIR)/www/conf/lib/lua'
 	test -d '$(DESTDIR)/www/apps'             || mkdir -p '$(DESTDIR)/www/apps'
 	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
 	test -d '$(DESTDIR)/rp_sdk' 		 	  || mkdir -p '$(DESTDIR)/rp_sdk'
@@ -65,6 +66,9 @@ install:
 	cp -r $(WS_SERVER_DIR)/rp_sdk/*.a '$(DESTDIR)/rp_sdk/'
 	cp -r $(LIBJSON_DIR)/*.h '$(DESTDIR)/rp_sdk/libjson/'
 	cp -r $(LIBJSON_DIR)/_internal '$(DESTDIR)/rp_sdk/libjson/'
+	make -C ngx_ext_modules/lua-resty-module install  PREFIX=/www/conf
+	make -C ngx_ext_modules/lua-resty-lrucache-module install  PREFIX=/www/conf
+
 
 
 clean:

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat /opt/redpitaya/fpga/fpga_0.94.bit > /dev/xdevcfg
+/opt/redpitaya/sbin/mkoverlay.sh v0.94
 
 /opt/redpitaya/sbin/getsysinfo.sh
 

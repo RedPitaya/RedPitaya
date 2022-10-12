@@ -327,15 +327,15 @@ COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
 
-.PHONY: examples rp_communication
+.PHONY: examples rp_communication fpgautils
 .PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest led_control
 
 
 
 ifeq ($(MODEL),Z20_125_4CH)
-examples: monitor calib spectrum acquire led_control
+examples: monitor calib spectrum acquire led_control fpgautils
 else
-examples: lcr bode monitor calib spectrum acquire generator led_control
+examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils
 endif
 
 # calibrate laboardtest
@@ -356,7 +356,7 @@ monitor:
 	$(MAKE) -C $(MONITOR_DIR)/build install
 
 generator: api
-	$(MAKE) -C $(GENERATOR_DIR) clean 
+	$(MAKE) -C $(GENERATOR_DIR) clean
 	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -394,6 +394,9 @@ laboardtest: api2
 
 rp_communication:
 	make -C $(COMM_DIR)
+
+fpgautils:
+	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
 
 
 ################################################################################
