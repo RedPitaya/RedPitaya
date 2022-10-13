@@ -414,12 +414,10 @@ void showAMS(){
     ams_Init();
 
     AOpinGetValueRaw(0,&reg.dac[0]);
-	AOpinGetValueRaw(1,&reg.dac[1]);
+    AOpinGetValueRaw(1,&reg.dac[1]);
     AOpinGetValueRaw(2,&reg.dac[2]);
     AOpinGetValueRaw(3,&reg.dac[3]);
-printf("TEST\n");
     AIpinGetValueRaw(0,&reg.aif[0]);
-printf("TEST2\n");
     AIpinGetValueRaw(1,&reg.aif[1]);
     AIpinGetValueRaw(2,&reg.aif[2]);
     AIpinGetValueRaw(3,&reg.aif[3]);
