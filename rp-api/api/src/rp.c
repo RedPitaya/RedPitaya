@@ -76,7 +76,7 @@ int rp_Release()
     osc_Release();
 #if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
     generate_Release();
-#endif    
+#endif
     ams_Release();
     hk_Release();
     calib_Release();
@@ -445,10 +445,10 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
 int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
     FILE *fp;
     switch (pin) {
-        case 0:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_vaux8_raw", "r");  break;
-        case 1:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_vaux0_raw" , "r");  break;
-        case 2:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_vaux1_raw", "r");  break;
-        case 3:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage12_vaux9_raw", "r");  break;
+        case 0:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage11_vaux8_raw", "r");  break;
+        case 1:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage9_vaux0_raw" , "r");  break;
+        case 2:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage10_vaux1_raw", "r");  break;
+        case 3:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_vaux9_raw", "r");  break;
         default:
             return RP_EPN;
     }
@@ -700,7 +700,7 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
 }
 
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
-{    
+{
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
@@ -896,7 +896,7 @@ int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode){
 }
 
 int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
-    return gen_getSweepDir(channel,mode);    
+    return gen_getSweepDir(channel,mode);
 }
 
 int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
@@ -1027,4 +1027,3 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     return gen_getGainOut(channel,status);
 }
 #endif
-
