@@ -26,6 +26,7 @@ auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster,
     // Validation
     if (_uio.mapList.size() < 2)
     {
+        printf("map list %d\n",_uio.mapList.size());
         // Error: validation.
         std::cerr << "Error: UIO validation." << std::endl;
         return COscilloscope::Ptr();
@@ -71,7 +72,7 @@ auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster,
         return COscilloscope::Ptr();
     }
 
-   
+
     return std::make_shared<COscilloscope>(fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor,_isMaster,_adcMaxSpeed);
 }
 
@@ -100,7 +101,7 @@ COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_
     uintptr_t oscMap = reinterpret_cast<uintptr_t>(m_Regset);
     m_OscMap = reinterpret_cast<OscilloscopeMapT *>(oscMap);
     m_OscBuffer1 = static_cast<uint8_t *>(m_Buffer);
-    m_OscBuffer2 = static_cast<uint8_t *>(m_Buffer) + osc_buf_size * 2;    
+    m_OscBuffer2 = static_cast<uint8_t *>(m_Buffer) + osc_buf_size * 2;
 }
 
 COscilloscope::~COscilloscope()
@@ -117,11 +118,11 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void{
         setRegister(_OscMap,&(_OscMap->dma_dst_addr2_ch1),m_BufferPhysAddr + osc_buf_size);
         setRegister(_OscMap,&(_OscMap->dma_dst_addr1_ch2),m_BufferPhysAddr + osc_buf_size * 2);
         setRegister(_OscMap,&(_OscMap->dma_dst_addr2_ch2),m_BufferPhysAddr + osc_buf_size * 3);
-        
-    
+
+
         setRegister(_OscMap,&(_OscMap->filt_bypass), m_filterBypass ? UINT32_C(0x00000001) : UINT32_C(0x00000000));
         //_OscMap->filt_bypass = UINT32_C(0x00000001);
-        
+
         // Event
         setRegister(_OscMap,&(_OscMap->event_sel),osc0_event_id);
         //_OscMap->event_sel =  osc0_event_id ;
@@ -151,12 +152,12 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void{
         //_OscMap->trig_pre_samp = osc_buf_pre_samp;
 
         // Trigger post samples
-        setRegister(_OscMap,&(_OscMap->trig_post_samp),osc_buf_post_samp);            
+        setRegister(_OscMap,&(_OscMap->trig_post_samp),osc_buf_post_samp);
         // _OscMap->trig_post_samp = osc_buf_post_samp;
 
         // Decimate factor
-        setRegister(_OscMap,&(_OscMap->dec_factor),m_dec_factor);   
-        //_OscMap->dec_factor = m_dec_factor; 
+        setRegister(_OscMap,&(_OscMap->dec_factor),m_dec_factor);
+        //_OscMap->dec_factor = m_dec_factor;
 
         setRegister(_OscMap,&(_OscMap->calib_offset_ch1),m_calib_offset_ch1);
 
@@ -232,8 +233,8 @@ auto COscilloscope::setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch
 
     m_calib_offset_ch1 =  ch1_offset * -4;
     m_calib_offset_ch2 =  ch2_offset * -4;
-    m_calib_gain_ch1 = ch1_gain * 32768; 
-    m_calib_gain_ch2 = ch2_gain * 32768; 
+    m_calib_gain_ch1 = ch1_gain * 32768;
+    m_calib_gain_ch2 = ch2_gain * 32768;
 }
 
 auto COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow) -> bool {
@@ -252,7 +253,7 @@ auto COscilloscope::clearBuffer() -> bool{
 
     uint32_t clearFlag = (m_OscBufferNumber == 0 ? 0x00000004 : 0x00000008); // reset buffer
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), clearFlag );
-    m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;    
+    m_OscBufferNumber = (m_OscBufferNumber == 0) ? 1 : 0;
     return true;
 }
 
@@ -277,7 +278,7 @@ auto COscilloscope::wait() -> bool{
         } else {
                perror("UIO::wait()");
         }
-        
+
         return true;
     }
     return false;
@@ -325,7 +326,7 @@ auto COscilloscope::printReg() -> void{
         fprintf(stderr,"0x20 trig_low_level = 0x%X\n", m_OscMap->trig_low_level);
         fprintf(stderr,"0x24 trig_high_level = 0x%X\n", m_OscMap->trig_high_level);
         fprintf(stderr,"0x28 trig_edge = 0x%X\n", m_OscMap->trig_edge);
-        
+
         fprintf(stderr,"0x30 dec_factor = 0x%X\n", m_OscMap->dec_factor);
         fprintf(stderr,"0x34 dec_rshift = 0x%X\n", m_OscMap->dec_rshift);
         fprintf(stderr,"0x38 avg_en_addr = 0x%X\n", m_OscMap->avg_en_addr);

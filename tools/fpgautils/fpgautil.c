@@ -137,19 +137,19 @@ int fpga_state()
 	char buf[10];
 	char *state_operating = "operating";
 	char *state_unknown = "unknown";
-	
-	system("cat /sys/class/fpga_manager/fpga0/state >> state.txt");
-	fptr = fopen("state.txt", "r");
+
+	system("cat /sys/class/fpga_manager/fpga0/state >> /tmp/fpga_util_state_bit.txt");
+	fptr = fopen("/tmp/fpga_util_state_bit.txt", "r");
 	if (fptr) {
 		fgets(buf, 10, fptr);
 		fclose(fptr);
-		system("rm state.txt");
+		system("rm /tmp/fpga_util_state_bit.txt");
 		if ((strncmp(buf, state_operating, 9) == 0) || (strncmp(buf, state_unknown, 7) == 0))
 			return 0;
 		else
 			return 1;
 	}
-	
+
 	return 1;
 }
 
@@ -161,11 +161,11 @@ static int fpga_overlay_check(char *cmd, char *state)
 
 	system(cmd);
 	len = strlen(state) + 1;
-	fptr = fopen("state.txt", "r");
+	fptr = fopen("/tmp/fpga_util_state.txt", "r");
 	if (fptr) {
 		fgets(buf, len, fptr);
 		fclose(fptr);
-		system("rm state.txt");
+		system("rm /tmp/fpga_util_state.txt");
 		if (!strcmp(buf, state))
 			return 0;
 		else
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 			break;
 		case 'k':
 			AesKey = optarg;
-			break;	 
+			break;
 		case 't':
 			if (optarg == NULL && argv[4] != NULL)
 				readback_type = atoi(argv[4]);
@@ -386,7 +386,7 @@ int main(int argc, char **argv)
 		gettimeofday(&t1, NULL);
 		time = gettime(t0, t1);
 
-		snprintf(command, sizeof(command), "cat %s/path >> state.txt", folder);
+		snprintf(command, sizeof(command), "cat %s/path >> /tmp/fpga_util_state.txt", folder);
 		ret = fpga_overlay_check(command, tmp1);
 		if (ret) {
 			printf("Failed to apply Overlay\n\r");
@@ -451,7 +451,7 @@ int main(int argc, char **argv)
 		if (readback_type > 1) {
 			printf("Invalid arugments :%s\n", strerror(1));
 			printf("For more information run %s -h\n", basename(argv[0]));
-			return -EINVAL;	
+			return -EINVAL;
 		}
 		snprintf(command, sizeof(command), "echo %x > /sys/module/zynqmp_fpga/parameters/readback_type", readback_type);
 		system(command);

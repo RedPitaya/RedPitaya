@@ -16,7 +16,7 @@
 #define ADC_POS_RANGE_CNT  0x7ff
 
 #define SLOW_DAC_NUM 4
-#define SLOW_DAC_RANGE_CNT 0x9c
+#define SLOW_DAC_RANGE_CNT 0xff
 #define ioread32(p) (*(volatile uint32_t *)(p))
 #define iowrite32(v,p) (*(volatile uint32_t *)(p) = (v))
 
@@ -32,7 +32,7 @@ static const float    ANALOG_IN_MIN_VAL          = 0.0;
 static const uint32_t ANALOG_IN_MAX_VAL_INTEGER  = 0xFFF;
 static const float    ANALOG_OUT_MAX_VAL         = 1.8;
 static const float    ANALOG_OUT_MIN_VAL         = 0.0;
-static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 156;
+static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 255;
 
 typedef struct analog_mixed_signals_control_s {
     uint32_t aif [4];
@@ -167,11 +167,11 @@ void set_DAC(float *values,int count){
 int AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
     FILE *fp;
     switch (pin) {
-        case 0:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_vaux8_raw", "r");  break;
-        case 1:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_vaux0_raw" , "r");  break;
-        case 2:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_vaux1_raw", "r");  break;
-        case 3:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage12_vaux9_raw", "r");  break;
-        case 4:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage8_vpvn_raw", "r");  break;
+        case 0:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");  break;
+        case 1:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage11_raw" , "r");  break;
+        case 2:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");  break;
+        case 3:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage8_raw", "r");  break;
+        case 4:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");  break;
         default:
             return -1;
     }
@@ -197,11 +197,11 @@ int GetFValueFromFile(const char* file, float *value){
 }
 
 int GetTempValueRaw( uint32_t* raw , float* value) {
-    uint32_t offset = 0;    
+    uint32_t offset = 0;
     float scale = 0;
-    GetValueFromFile("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_temp0_offset",&offset);
-    GetValueFromFile("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_temp0_raw",raw);
-    GetFValueFromFile("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_temp0_scale",&scale);
+    GetValueFromFile("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_temp0_offset",&offset);
+    GetValueFromFile("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_temp0_raw",raw);
+    GetFValueFromFile("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_temp0_scale",&scale);
     *value = ((float)(offset + *raw)) * scale / 1000.0;
     return 0;
 }
@@ -210,8 +210,8 @@ int GetValueRaw(const char* file, uint32_t* raw , float* value) {
     float scale = 0;
     char s_raw[200];
     char s_scale[200];
-    sprintf(s_raw,"/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/%s_raw",file);
-    sprintf(s_scale,"/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/%s_scale",file);
+    sprintf(s_raw,"/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/%s_raw",file);
+    sprintf(s_scale,"/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/%s_scale",file);
     GetValueFromFile(s_raw , raw);
     GetFValueFromFile(s_scale , &scale);
     *value = ((float)*raw) * scale / 1000.0;
@@ -412,17 +412,19 @@ void showAMS(){
     amsS_t reg;
     cmn_Init();
     ams_Init();
+
     AOpinGetValueRaw(0,&reg.dac[0]);
-    AOpinGetValueRaw(1,&reg.dac[1]);
+	AOpinGetValueRaw(1,&reg.dac[1]);
     AOpinGetValueRaw(2,&reg.dac[2]);
     AOpinGetValueRaw(3,&reg.dac[3]);
-
+printf("TEST\n");
     AIpinGetValueRaw(0,&reg.aif[0]);
+printf("TEST2\n");
     AIpinGetValueRaw(1,&reg.aif[1]);
     AIpinGetValueRaw(2,&reg.aif[2]);
     AIpinGetValueRaw(3,&reg.aif[3]);
     AIpinGetValueRaw(4,&reg.aif[4]);
-     
+
     GetTempValueRaw(&reg.temp,&reg.temp_val);
     GetValueRaw("in_voltage0_vccint",&reg.vccInt,&reg.vccIntV);
     GetValueRaw("in_voltage4_vccpaux",&reg.vccPaux,&reg.vccPauxV);
