@@ -49,10 +49,11 @@ int cmn_Init()
 {
     if (!fd) {
         if((fd = open("/dev/uio/api", O_RDWR | O_SYNC)) == -1) {
+			fprintf(stderr,"Error:  Can't open /dev/uio/api\n");
             return -1;
         }
     }
-    return 1;
+    return 0;
 }
 
 int cmn_Release()
@@ -63,7 +64,7 @@ int cmn_Release()
         }
     }
 
-    return 1;
+    return 0;
 }
 
 int cmn_Map(size_t size, size_t offset, void** mapped)
@@ -155,7 +156,7 @@ int AOpinGetValue(int unsigned pin, float* value) {
 
 
 void set_DAC(float *values,int count){
-    cmn_Init();
+    if (cmn_Init()) return;
     ams_Init();
     for (int i = 0 ;  i < count; ++i){
         AOpinSetValue(i,values[i]);
@@ -175,6 +176,10 @@ int AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
         default:
             return -1;
     }
+	if (fp==0) {
+		fprintf(stderr,"Error: Can't open /sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/*\n");
+		return -1;
+	}
     int r = !fscanf (fp, "%d", value);
     fclose(fp);
     return r;
@@ -183,6 +188,10 @@ int AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
 int GetValueFromFile(const char* file, uint32_t *value){
     FILE *fp;
     fp = fopen (file, "r");
+	if (fp==0) {
+		fprintf(stderr,"Error: Can't open %s\n",file);
+		return -1;
+	}
     int r = !fscanf (fp, "%d", value);
     fclose(fp);
     return r;
@@ -191,6 +200,10 @@ int GetValueFromFile(const char* file, uint32_t *value){
 int GetFValueFromFile(const char* file, float *value){
     FILE *fp;
     fp = fopen (file, "r");
+	if (fp==0) {
+		fprintf(stderr,"Error: Can't open %s\n",file);
+		return -1;
+	}
     float r = !fscanf (fp, "%f", value);
     fclose(fp);
     return r;
@@ -410,11 +423,11 @@ static void AmsList(amsS_t * a_amsReg)
 
 void showAMS(){
     amsS_t reg;
-    cmn_Init();
+    if (cmn_Init()) return;
     ams_Init();
 
     AOpinGetValueRaw(0,&reg.dac[0]);
-    AOpinGetValueRaw(1,&reg.dac[1]);
+	AOpinGetValueRaw(1,&reg.dac[1]);
     AOpinGetValueRaw(2,&reg.dac[2]);
     AOpinGetValueRaw(3,&reg.dac[3]);
     AIpinGetValueRaw(0,&reg.aif[0]);
