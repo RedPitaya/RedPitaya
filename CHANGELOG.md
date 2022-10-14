@@ -1,3 +1,56 @@
+# Beta version (1.04-11)
+
+- Spectrum analyzer got new features (improved spectrum resolution, added more windowing functions, units, scaling's and more)
+- SCPI server speed was improved
+- Signal generator freq. sweep support added
+- Bode Analyzer gain & phase calculation algorithms have been improved on speed and precision
+- Command line tool that enables user to disable LEDs blinking and lower RF noise to its minimum
+- other general improvements & bug fixes
+    - added more acquisition decimation options
+    - fixed trigger bug for osc. that appeared at very slow signals
+    - fixed issues with LA triggering
+    - fixed averaging after signal decimation
+    - OS updater notifications
+
+# Stable version (1.04-8)
+
+- Freq. calibration feature was added to the calibration utility that enables users to improve and flatten freq. response of 125-xx devices
+- CAN decoding was added to Logic analyzer app
+- STEMlab 125-10 now supports use of Logic analyzer extension module 
+- Logic analyzer app now stores all settings
+- Burst generator bug at higher frequencies was fixed
+- Ripple on slow analog outputs is fixed
+- LA trigger issue fixed
+- Jupyter calibration and overflow bug fixed
+- Other general improvements and updates including
+
+# Stable version (1.04-7)
+
+- The streaming application was improved. One of the main features is that users can now exactly know when and which samples are lost due to throughput problems or limitation
+- Watchdog was implemented for Linux and WEB applications. In case of fatal error or lost connection device will always return to its previous operation state. 
+- Open source FPGA code can now be compiled with Vivado 2020.1
+- New OS available notification was implemented into WEB interface
+other general improvements and updates
+- Added application for calibrating RP
+
+# Stable version (1.03-701)
+General improvements:
+- Access point working with official WIFI dongle
+- Client WIFI mode fixed
+- Trigger issues fixed
+- Broken acquired signal issues fixed
+- Jupyter slow analog inputs bug fixed
+- Improved UI of the oscilloscope and spectrum analyzer
+- Improved LCR application
+- LA data zooming bug fix
+- Shutdown button added to WEB interface
+- Added console server for streaming application
+- Multiple bug fixes in streaming applications
+- Added functionality limiting the number of samples in streaming application
+- Improved console applications. Added calibration support.
+- Other stability improvements & bug fixes.
+
+
 # Beta version (0.99-41)
 
 Streaming:

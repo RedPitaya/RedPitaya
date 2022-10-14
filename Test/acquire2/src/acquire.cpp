@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 #endif
 
 
-    if (rp_Init() != RP_OK){
+    if (rp_InitReset(option.reset_hk) != RP_OK){
         fprintf(stderr,"Error init rp api\n");
         return -1;
     }

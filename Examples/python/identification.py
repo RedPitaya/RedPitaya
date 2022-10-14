@@ -11,9 +11,9 @@ args = parser.parse_args()
 # connect to the instrument
 ###############################################################################
 
-import visa
+import pyvisa
 
-rm = visa.ResourceManager('@py')
+rm = pyvisa.ResourceManager('@py')
 #rm.list_resources()
 rp = rm.open_resource('TCPIP::{}::{}::SOCKET'.format(args.adr, args.port), read_termination = '\r\n')
 

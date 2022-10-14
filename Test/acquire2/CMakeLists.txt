@@ -56,12 +56,16 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-
 target_link_libraries(${PROJECT_NAME} PRIVATE -static rp rp-hw)
 
 if ("${MODEL}" STREQUAL "Z20_250_12")
     target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-i2c rp-spi rp-gpio)
 endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
+
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

@@ -34,6 +34,7 @@ struct Options {
     bool                 enableEqualization;
     bool                 enableShaping;
     bool                 error;
+    bool                 reset_hk;
 
 
     Options(){
@@ -58,6 +59,7 @@ struct Options {
         enableEqualization = false;
         enableShaping = false;
         error = true;
+        reset_hk = false;
     };
 };
 
