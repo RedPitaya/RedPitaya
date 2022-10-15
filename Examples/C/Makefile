@@ -10,7 +10,7 @@ INCLUDE += -I/opt/redpitaya/include/api250-12
 LDLIBS += -lrp-gpio -lrp-i2c
 endif
 
-LDLIBS += -lrp-hw -lm -lstdc++ -lpthread
+LDLIBS += -lrp-hw -lm -lstdc++ -lpthread -li2c
 
 
 # List of compiled object files (not yet linked to executable)
