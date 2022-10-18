@@ -15,4 +15,4 @@ FPGAS=/opt/redpitaya/fpga
 # before attempts are made to use the new drivers
 #sleep 0.5s
 
-fpgautil -b $FPGAS/$1/fpga.bit.bin -o $FPGAS/$1/fpga.dtbo -n Full
+/opt/redpitaya/bin/fpgautil -b $FPGAS/$1/fpga.bit.bin -o $FPGAS/$1/fpga.dtbo -n Full

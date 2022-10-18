@@ -20,4 +20,4 @@ FPGAS=/opt/redpitaya/fpga
 sleep 0.5s
 rmdir /configfs/device-tree/overlays/Full
 sleep 0.5s
-fpgautil -b $FPGAS/$1/fpga.bit.bin -o $FPGAS/$1/fpga.dtbo -n Full
+/opt/redpitaya/bin/fpgautil -b $FPGAS/$1/fpga.bit.bin -o $FPGAS/$1/fpga.dtbo -n Full
