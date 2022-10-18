@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 {
 	// apply required fpga bitstream mercury or classic
 	// system("cat /opt/redpitaya/fpga/fpga_classic.bit > /dev/xdevcfg");
-	
+
 	int repeat = 10;
 	if (argc==2)
 		repeat=atoi(argv[1]);
