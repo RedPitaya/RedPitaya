@@ -907,14 +907,16 @@ int synthesis_square(float frequency, float riseTime, float fallTime, float *dat
 
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         int unsigned x = (i % buffSize);
-        if ( x <  riseTimeSamples) {
-            data_out[i] =  - 1.0f + (2.0f * (float) x / (float) riseTimeSamples);
-        } else if (x < buffSize/2) {
-            data_out[i] =  1.0f;
-        } else if (x < buffSize - fallTimeSamples) {
-            data_out[i] = - 1.0f + 2.0f * (float) (1 - (x - buffSize/2) / (float) fallTimeSamples);
-        } else {
+        if ( x < riseTimeSamples / 2) {
+            data_out[i] = (float) x / ((float) riseTimeSamples / 2.0f);
+        } else if (x < (buffSize - fallTimeSamples) / 2) {
+            data_out[i] = 1.0f;
+        } else if (x < (buffSize + fallTimeSamples) / 2) {
+            data_out[i] = 1.0f - 2.0f * (float) (x - (buffSize - fallTimeSamples) / 2.0f) / ((float) fallTimeSamples);
+        } else if (x < buffSize - (riseTimeSamples / 2)) {
             data_out[i] = - 1.0f;
+        } else {
+            data_out[i] = - 1.0f + (float) (x - (buffSize - (riseTimeSamples / 2.0f))) / ((float) riseTimeSamples / 2.0f);
         }
     }
 
