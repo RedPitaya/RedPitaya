@@ -132,13 +132,13 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite barebones
 
-FPGA_STREAM_APP = 5069050ecc1b1d43b1dbe92de125b00d01b514db
-FPGA_CLASSIC 	= 5069050ecc1b1d43b1dbe92de125b00d01b514db
-FPGA_LOGIC	= 5069050ecc1b1d43b1dbe92de125b00d01b514db
-FPGA_0_94	= 5069050ecc1b1d43b1dbe92de125b00d01b514db
-FPGA_MERCURY	= 5069050ecc1b1d43b1dbe92de125b00d01b514db
-FPGA_AXI4LITE	= 5069050ecc1b1d43b1dbe92de125b00d01b514db
-FPGA_BAREBONE = 5069050ecc1b1d43b1dbe92de125b00d01b514db
+FPGA_STREAM_APP = dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_CLASSIC 	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_LOGIC	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_0_94	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_MERCURY	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_AXI4LITE	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_BAREBONE = dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
 
 # NEED for FSBL fpga image
 FPGA_PRJ = barebones
@@ -151,8 +151,8 @@ ifeq ($(MODEL),Z20)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94 stream_app
 
-FPGA_STREAM_APP = 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_STREAM_APP = dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_0_94	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -165,12 +165,12 @@ ifeq ($(MODEL),Z20_125)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app classic logic v0.94 mercury axi4lite
 
-FPGA_STREAM_APP = 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_CLASSIC 	= 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_LOGIC	= 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_MERCURY	= 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_AXI4LITE	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_STREAM_APP = dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_CLASSIC 	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_LOGIC	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_0_94	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_MERCURY	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_AXI4LITE	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -183,7 +183,7 @@ ifeq ($(MODEL),Z20_125_4CH)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94
 
-FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_0_94	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -196,7 +196,7 @@ ifeq ($(MODEL),Z10_125_4CH_TEST)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = v0.94
 
-FPGA_0_94	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_0_94	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
 
 # NEED for FSBL fpga image
 FPGA_PRJ = v0.94
@@ -209,9 +209,9 @@ ifeq ($(MODEL),Z20_250_12)
 ifeq ($(STREAMING),MASTER)
 # FPGA_PRJ_LST = stream_app_250 v0.94_250 logic_250
 
-FPGA_STREAM_APP_250 = 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_0_94_250	= 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_LOGIC_250	= 07f102008aae01c49895ec92adfe467cd1f20288
+FPGA_STREAM_APP_250 = dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_0_94_250	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_LOGIC_250	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic_250
@@ -224,9 +224,9 @@ ifeq ($(MODEL),Z10)
 ifeq ($(STREAMING),SLAVE)
 # FPGA_PRJ_LST = stream_app logic v0.94
 
-FPGA_STREAM_APP = 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_LOGIC	= 07f102008aae01c49895ec92adfe467cd1f20288
-FPGA_0_94	= 767d7804ae3851258e79f0b8e4fbd16fe106da9b
+FPGA_STREAM_APP = dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_LOGIC	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
+FPGA_0_94	= dc9ac83d8a6ff48f3e688b628885db7eaa1d4b66
 
 # NEED for FSBL fpga image
 FPGA_PRJ = logic
@@ -253,7 +253,7 @@ define build_fpga
 
 #fix bug with #address-cells and #size-cells for overlay
 	sed -i 's/#address-cells/\/\/#address-cells/g' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
-    sed -i 's/#size-cells/\/\/#size-cells/g' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
+	sed -i 's/#size-cells/\/\/#size-cells/g' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
 	sed -i 's/red_pitaya.bit.bin/fpga.bit.bin/g' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
 	grep -qxF '/include/ "pl_patch.dtsi"' fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi || echo '/include/ "pl_patch.dtsi"' >> fpga/$(1)/prj/$(1)/sdk/dts/pl.dtsi
 
