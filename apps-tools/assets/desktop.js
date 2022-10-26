@@ -264,7 +264,7 @@
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya-knowledge-base.readthedocs.io/en/latest/learn_fpga/fpga_learn.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "warranty_ext", name: "Unlock new benefits", description: "Keep your Red Pitaya fresh for longer", url: "https://go.redpitaya.com/refresh", image: "../assets/images/WarrantyExt.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jlab/lab/tree/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
     ];
 
     var backButton = {
