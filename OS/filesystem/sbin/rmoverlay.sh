@@ -1,13 +1,4 @@
 #!/bin/bash
 
-# common directories
-#FPGAS=/opt/redpitaya/fpga
-#OVERLAYS=/sys/kernel/config/device-tree/overlays
-
-# first argument is overlay name
-#OVERLAY=$1
-
-# first remove existing overlays, there is no way to unload the FPGA
-#rmdir $OVERLAYS/*
-
-rmdir /configfs/device-tree/overlays/Full
+rmdir /configfs/device-tree/overlays/Full 2> /dev/null
+rm /tmp/loaded_fpga.inf 2> /dev/null
