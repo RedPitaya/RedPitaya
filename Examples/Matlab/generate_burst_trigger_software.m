@@ -3,8 +3,8 @@ clc
 clear all
 close all
 IP= '';           % Input IP of your Red Pitaya...
-port = 5000;                    % If you are using WiFi then IP is:              
-tcpipObj=tcpip(IP, port);      
+port = 5000;                    % If you are using WiFi then IP is:
+tcpipObj=tcpip(IP, port);
 
 fopen(tcpipObj);
 tcpipObj.Terminator = 'CR/LF';
@@ -12,7 +12,7 @@ tcpipObj.Terminator = 'CR/LF';
 %% The example generate sine bursts every 0.5 seconds indefinety
 %fprintf(tcpipObj,'GEN:RST');               % Reset generator
 
-fprintf(tcpipObj,'SOUR1:FUNC SINE');                                                 
+fprintf(tcpipObj,'SOUR1:FUNC SINE');
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 1000');    % Set frequency of output signal
 fprintf(tcpipObj,'SOUR1:VOLT 1');           % Set amplitude of output signal
 
