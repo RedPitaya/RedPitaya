@@ -1,4 +1,4 @@
-/* Red Pitaya C API example Generating signal pulse on an external trigger 
+/* Red Pitaya C API example Generating signal pulse on an external trigger
  * This application generates a specific signal */
 
 #include <stdio.h>
@@ -33,13 +33,14 @@ int main(int argc, char **argv) {
         rp_GenBurstPeriod(RP_CH_2, 5000);
 
         rp_GenOutEnableSync(true);
+	rp_GenSynchronise();
         sleep(2);
 	rp_GenTriggerOnly(RP_CH_1);
         sleep(2);
 	rp_GenTriggerOnly(RP_CH_2);
         sleep(1);
 	rp_GenSynchronise();
-        
+
         rp_Release();
 }
 

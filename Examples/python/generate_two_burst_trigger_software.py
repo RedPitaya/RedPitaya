@@ -31,6 +31,7 @@ rp_s.tx_txt('SOUR2:BURS:NOR 1')
 rp_s.tx_txt('SOUR2:BURS:INT:PER 5000')
 
 rp_s.tx_txt('OUTPUT:STATE ON')
+rp_s.tx_txt('SOUR:TRIG:INT')
 time.sleep(2)
 rp_s.tx_txt('SOUR1:TRIG:INT')
 time.sleep(2)

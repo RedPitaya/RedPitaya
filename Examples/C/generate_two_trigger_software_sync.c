@@ -23,8 +23,7 @@ int main(int argc, char **argv) {
 	rp_GenAmp(RP_CH_2, 1);
 
 	rp_GenOutEnableSync(true);
-	rp_GenTriggerOnly(RP_CH_1);
-	rp_GenTriggerOnly(RP_CH_2);
+	rp_GenSynchronise();
 
 	/* Release rp resources */
 	rp_Release();
