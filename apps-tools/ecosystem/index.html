@@ -149,9 +149,36 @@
                         </table>
                     </div>
                 </div>
+                <div class="modal-header">
+                    <h4 class="modal-title" id="bazaar_naLabel">System settings</h4>
+                </div>
+                <div class="modal-body">
+                    <div style="text-align: left;margin-left: 10%;">
+                        <table>
+                            <col width="250px">
+                            <col width="200px">
+                            <tr style="height:40px;">
+                                <td>Enable File System Consistency Check after boot:</td>
+                                <td>
+                                    <label class="control control-checkbox">Enable<input id="fsck_chbox" type="checkbox" checked="checked" />
+                                        <div class="control_indicator"></div>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>Turn on LED:</td>
+                                <td>
+                                    <label  class="control control-checkbox">Enable<input id="led_chbox" type="checkbox" checked="checked" />
+                                        <div class="control_indicator"></div>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
                     </div>
                 </div>
             </div>

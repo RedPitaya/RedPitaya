@@ -334,12 +334,52 @@
                         $('#SI_DNA').text(obj['dna']);
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
-                        $('#sysinfo_dialog').modal("show");
                     } catch (error) {
                         console.error(error);
                     }
                 })
 
+            $.ajax({
+                    method: "GET",
+                    url: '/get_led_status'
+                })
+                .done(function(msg) {
+                    msg = msg.trim();
+                    if (msg === "1" || msg === "2"){
+                        var chkBox = document.getElementById('fsck_chbox');
+                        chkBox.checked = true
+                        if (msg === "2"){
+                            $.ajax({
+                                method: "GET",
+                                url: '/set_led_status?enable=true'
+                            });
+                        }
+                    }
+                    if (msg === "0"){
+                        var chkBox = document.getElementById('fsck_chbox');
+                        chkBox.checked = false
+                    }
+
+                    console.log("LED STATUS ",msg)
+                })
+                .fail(function(msg) {
+                    console.log("LED STATUS fail")
+                });
+
+            $.ajax({
+                method: "GET",
+                url: '/get_fsck_status'
+            })
+            .done(function(msg) {
+                msg = msg.trim().split(" ").slice(-1)[0];
+                var chkBox = document.getElementById('fsck_chbox');
+                chkBox.checked = (msg !== "-1");
+
+                console.log("FSCK STATUS ",msg)
+            })
+            .fail(function(msg) {
+                console.log("FSCK STATUS fail")
+            });
 
             $('#sysinfo_dialog').modal("show");
         });
@@ -356,6 +396,35 @@
                 Desktop.sys_info_obj = undefined;
             });
 
+            $('#fsck_chbox').click(function(event){
+                var chkBox = document.getElementById('fsck_chbox');
+                if (chkBox.checked){
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_fsck?enable=true'
+                    });
+                }else{
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_fsck?enable=false'
+                    });
+                }
+            });
+
+            $('#led_chbox').click(function(event){
+                var chkBox = document.getElementById('led_chbox');
+                if (chkBox.checked){
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_led_status?enable=true'
+                    });
+                }else{
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_led_status?enable=false'
+                    });
+                }
+            });
     });
 
 })(window.Desktop = window.Desktop || {}, jQuery);

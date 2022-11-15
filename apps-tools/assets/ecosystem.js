@@ -281,6 +281,7 @@
                 $('#ic_missing').modal('hide');
         });
 
+
     });
 
 })(window.RedPitayaOS = window.RedPitayaOS || {}, jQuery);
