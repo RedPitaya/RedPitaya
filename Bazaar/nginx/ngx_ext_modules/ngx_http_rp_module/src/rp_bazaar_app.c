@@ -307,6 +307,9 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
     //         fprintf(stderr, "Problem with idfile generation");
     //     once = 0;
     // }
+
+    rp_bazaar_app_unload_module(&rp_module_ctx.app);
+
     DIR *dp;
     struct dirent *ep;
 

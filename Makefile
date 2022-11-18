@@ -226,7 +226,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	cp -fr patches/lua/* $@/conf/lua/
 
 $(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUARESTY_DIR) $(LUARESTY_L_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
-	$(MAKE) -C $(NGINX_DIR) clean
+# $(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	mkdir -p $(INSTALL_DIR)/www/conf/lua
