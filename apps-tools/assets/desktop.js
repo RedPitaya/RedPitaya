@@ -39,64 +39,9 @@
                 url: '/get_info'
             })
             .done(function(result) {
-                stem_ver = result['stem_ver'];
-
-                if (stem_ver == "STEM 16") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver == "STEM 14-Z20") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver == "STEM 250 12") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver == "STEM 14-Z20-4CH") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver.includes("SLAVE")) {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'scpi' ||
-                            default_applications[i]["id"] === 'Development' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
                 applications = [];
                 $.extend(true, applications, listOfapplications);
+                applications = Desktop.filterApps(applications,result['stem_ver']);
                 var url_arr = window.location.href.split("/");
                 var url = url_arr[0] + '//' + url_arr[2] + '/';
 
