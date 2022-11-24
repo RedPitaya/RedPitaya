@@ -30,10 +30,11 @@
 #include <stdint.h>
 
 #include "version.h"
+#include "rp_hw-profiles.h"
 
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
- 
+
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
 
@@ -56,7 +57,9 @@ int main(int argc, char **argv) {
 			"\tread addr: address\n"
             "\twrite addr: address value\n"
 			"\tread analog mixed signals: -ams\n"
-			"\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n",
+			"\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
+			"\tShow current profile: -p\n"
+			"\tShow all profiles: -pa\n",
                         argv[0], VERSION_STR, REVISION_STR);
 		return EXIT_FAILURE;
 	}
@@ -85,6 +88,14 @@ int main(int argc, char **argv) {
 	if (strncmp(argv[1], "-ams", 4) == 0) {
 		showAMS();
 		return 0;
+	}
+
+	if (strncmp(argv[1], "-pa", 3) == 0) {
+		return rp_HPPrintAll();
+	}
+
+	if (strncmp(argv[1], "-p", 2) == 0) {
+		return rp_HPPrint();
 	}
 
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
@@ -152,7 +163,7 @@ void write_values(unsigned long a_addr, int a_type, unsigned long* a_values, ssi
 	fflush(stdout);
 }
 
-int parse_from_argv(int a_argc, char **a_argv, unsigned long* a_addr, 
+int parse_from_argv(int a_argc, char **a_argv, unsigned long* a_addr,
 	int* a_type, unsigned long** a_values, ssize_t* a_len) {
 
 	int val_count = 0;
@@ -171,5 +182,3 @@ int parse_from_argv(int a_argc, char **a_argv, unsigned long* a_addr,
 	*a_len = val_count;
 	return 0;
 }
-
-

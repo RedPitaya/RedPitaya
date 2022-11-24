@@ -49,12 +49,13 @@ file(GLOB RP_HEADERS "src/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
-
+add_compile_options(-Wall -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -lm -lstdc++ -lpthread)
+target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp rp-hw rp-hw-profiles i2c)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

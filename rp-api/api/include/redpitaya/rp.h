@@ -26,7 +26,7 @@ extern "C" {
 #define RP_MODEL "Z10"
 #define ADC_SAMPLE_RATE 125e6
 #define ADC_BITS 14
-#define ADC_REG_BITS 14  
+#define ADC_REG_BITS 14
 #define ADC_BITS_MASK 0x3FFF
 #define ADC_REG_BITS_MASK 0x3FFF
 #define ADC_CHANNELS 2
@@ -167,7 +167,7 @@ typedef enum {
     RP_WAVEFORM_DC,         //!< Wave form dc
     RP_WAVEFORM_PWM,        //!< Wave form pwm
     RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
-    RP_WAVEFORM_DC_NEG,     //!< Wave form negative dc 
+    RP_WAVEFORM_DC_NEG,     //!< Wave form negative dc
     RP_WAVEFORM_SWEEP       //!< Wave form sweep
 } rp_waveform_t;
 
@@ -208,7 +208,7 @@ typedef enum {
 typedef enum {
     RP_T_CH_1 = 0,    //!< Channel A
     RP_T_CH_2 = 1,    //!< Channel B
-    RP_T_CH_EXT = 2,  
+    RP_T_CH_EXT = 2,
 } rp_channel_trigger_t;
 
 /**
@@ -217,7 +217,7 @@ typedef enum {
 typedef enum {
     AA,    //!< AA
     BB,    //!< BB
-    PP,    //!< PP 
+    PP,    //!< PP
     KK     //!< KK
 } rp_eq_filter_cof_t;
 
@@ -327,7 +327,7 @@ typedef struct {
     uint32_t  hi_filter_aa_ch2;  //!< Filter equalization coefficients AA for High mode, channel B
     uint32_t  hi_filter_bb_ch2;  //!< Filter equalization coefficients BB for High mode, channel B
     uint32_t  hi_filter_pp_ch2;  //!< Filter equalization coefficients PP for High mode, channel B
-    uint32_t  hi_filter_kk_ch2;  //!< Filter equalization coefficients KK for High mode, channel B   
+    uint32_t  hi_filter_kk_ch2;  //!< Filter equalization coefficients KK for High mode, channel B
 
 } rp_calib_params_t;
 
@@ -799,7 +799,7 @@ int rp_AcqGetDecimation(rp_acq_decimation_t* decimation);
 int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation);
 
 /**
- * Sets the decimation used at acquiring signal. 
+ * Sets the decimation used at acquiring signal.
  * You can specify values in the range (1,2,4,8,16-65536)
  * @param decimation Decimation values
  * @return If the function is successful, the return value is RP_OK.

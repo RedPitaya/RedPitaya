@@ -71,15 +71,16 @@ $(INSTALL_DIR):
 # API libraries
 ################################################################################
 
-LIBRP_DIR       = rp-api/api
-LIBRP_HW_DIR    = rp-api/api-hw
-LIBRP2_DIR      = rp-api/api2
-LIBRP250_12_DIR = rp-api/api-250-12
-LIBRP_DSP_DIR   = rp-api/api-dsp
-LIBRPAPP_DIR    = Applications/api/rpApplications
-ECOSYSTEM_DIR   = Applications/ecosystem
+LIBRP_DIR       		= rp-api/api
+LIBRP_HW_DIR    		= rp-api/api-hw
+LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
+LIBRP2_DIR      		= rp-api/api2
+LIBRP250_12_DIR 		= rp-api/api-250-12
+LIBRP_DSP_DIR   		= rp-api/api-dsp
+LIBRPAPP_DIR    		= Applications/api/rpApplications
+ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles
 .PHONY: librpapp liblcr_meter
 
 api: librp librp_hw librp_dsp
@@ -87,9 +88,9 @@ api: librp librp_hw librp_dsp
 api2: librp2
 
 ifeq ($(MODEL),Z20_250_12)
-librp: librp250_12
+librp: librp250_12 librp_hw_profiles
 else
-librp:
+librp: librp_hw_profiles
 endif
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_DIR)/build install
@@ -97,6 +98,10 @@ endif
 librp_hw:
 	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_DIR)/build install
+
+librp_hw_profiles:
+	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_PROFILES_DIR)/build install
 
 librp_dsp:
 	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
@@ -300,8 +305,8 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 # git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
 # ZIP file name should be updated for each new build
-SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
-SDR_URL = http://downloads.redpitaya.com/hamlab/charly25ab/$(SDR_ZIP)
+SDR_ZIP = SDR-bundle-15-e6486886.zip
+SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
 ifeq ($(MODEL),$(filter $(MODEL),Z10))
@@ -351,7 +356,7 @@ bode: api
 	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-monitor:
+monitor: api
 	rm -rf $(abspath $(MONITOR_DIR)/build)
 	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(MONITOR_DIR)/build install
@@ -614,6 +619,7 @@ clean:
 	rm -rf $(abspath $(LIBRP_DIR)/build)
 	rm -rf $(abspath $(LIBRP2_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_PROFILES_DIR)/build)
 	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
 	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
 

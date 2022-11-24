@@ -449,6 +449,7 @@ int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
         case 1:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage11_raw" , "r");  break;
         case 2:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");  break;
         case 3:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage8_raw", "r");  break;
+        case 4:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");  break;
         default:
             return RP_EPN;
     }
@@ -463,7 +464,6 @@ int rp_AIpinGetValue(int unsigned pin, float* value) {
     *value = (((float)value_raw / ANALOG_IN_MAX_VAL_INTEGER) * (ANALOG_IN_MAX_VAL - ANALOG_IN_MIN_VAL)) + ANALOG_IN_MIN_VAL;
     return result;
 }
-
 
 /**
  * Analog Outputs
