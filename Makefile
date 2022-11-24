@@ -38,19 +38,19 @@ CUR_DIR = $(PWD)
 
 ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
 ifeq ($(STREAMING),MASTER)
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
 endif
 endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
 ifeq ($(STREAMING),MASTER)
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
 endif
 endif
 
 ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
 ifeq ($(STREAMING),MASTER)
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
 endif
 endif
 
