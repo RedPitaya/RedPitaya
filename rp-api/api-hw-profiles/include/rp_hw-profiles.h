@@ -53,20 +53,14 @@ typedef enum {
     STEM_125_10_v1_0,
     STEM_125_14_v1_0,
     STEM_125_14_v1_1,
-
     STEM_122_16SDR_v1_0,
     STEM_122_16SDR_v1_1,
-    STEM_125_14,
-    STEM_125_14_LN_CE1_v1_1,
-    STEM_125_14_LN_CE2_v1_1,
     STEM_125_14_LN_v1_1,
-    STEM_125_14_SUR1_v1_1,
-
+    STEM_125_14_Z7020_v1_0,
+    STEM_125_14_Z7020_LN_v1_1,
     STEM_125_14_Z7020_4IN_v1_0,
     STEM_125_14_Z7020_4IN_v1_2,
-    STEM_125_14_Z7020_LN_v1_1,
-    STEM_125_14_Z7020_v1_0,
-    STEM_14_B_v1_0,
+    STEM_125_14_Z7020_4IN_v1_3,
     STEM_250_12_v1_1,
     STEM_250_12_v1_2
 }  rp_HPeModels_t;
@@ -355,6 +349,24 @@ float rp_HPGetSlowDACFullScaleOrDefault(uint8_t channel);
 */
 int rp_HPGetIsGainDACx5(bool *value);
 bool rp_HPGetIsGainDACx5OrDefault();
+
+/**
+* Returns a sign of the presence of the calibration functionality for the board
+* Function rp_HPGetIsCalibrationLogicPresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetIsCalibrationLogicPresent(bool *value);
+bool rp_HPGetIsCalibrationLogicPresentOrDefault();
+
+/**
+* Returns a sign of the presence of logic for choosing a clock for fpga
+* Function rp_HPGetIsE2Pin21ClockSelectorOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetIsE2Pin21ClockSelector(bool *value);
+bool rp_HPGetIsE2Pin21ClockSelectorOrDefault();
 
 /**
  * Print all parameters for current profile

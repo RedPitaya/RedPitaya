@@ -71,7 +71,11 @@ profiles_t stem_125_14_v1_0 = {
     .slow_dac[3].bits = 8,
     .slow_dac[3].fullScale = 1.8,
 
-    .is_DAC_gain_x5 = false
+    .is_DAC_gain_x5 = false,
+
+    .is_fast_calibration = true,
+
+    .is_e2_pin21_external_clock_selector  = false
 };
 
 profiles_t* getProfile_STEM_125_14_v1_0(){

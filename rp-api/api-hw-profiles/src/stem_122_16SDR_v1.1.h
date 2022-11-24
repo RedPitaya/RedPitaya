@@ -3,7 +3,7 @@
  *
  * @brief Red Pitaya Hardware Profiles.
  *
- * Profile for boards STEM 125-14. Based on Z7010 chip;
+ * Profile for boards STEM 122-16. Based on Z7020 chip;
  *
  * @Author Red Pitaya
  *
@@ -16,9 +16,9 @@
 
 #include "common.h"
 
-#ifndef RP_HW_PROFILES_STEM_125_14_v1_1_H
-#define RP_HW_PROFILES_STEM_125_14_v1_1_H
+#ifndef RP_HW_PROFILES_STEM_122_16SDR_v1_1_H
+#define RP_HW_PROFILES_STEM_122_16SDR_v1_1_H
 
-profiles_t* getProfile_STEM_125_14_v1_1();
+profiles_t* getProfile_STEM_122_16SDR_v1_1();
 
 #endif

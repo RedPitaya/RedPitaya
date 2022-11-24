@@ -1,9 +1,9 @@
-#include "stem_125_14_v1.1.h"
+#include "stem_125_14_LN_v1.1.h"
 
 
-profiles_t stem_125_14_v1_1 = {
-    .boardModel = STEM_125_14_v1_1,
-    .boardName = "STEMlab 125-14 v1.1",
+profiles_t stem_125_14_LN_v1_1 = {
+    .boardModel = STEM_125_14_LN_v1_1,
+    .boardName = "STEMlab 125-14 LN v1.1",
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
     .zynqCPUModel = Z7010,
@@ -78,6 +78,6 @@ profiles_t stem_125_14_v1_1 = {
     .is_e2_pin21_external_clock_selector  = false
 };
 
-profiles_t* getProfile_STEM_125_14_v1_1(){
-    return &stem_125_14_v1_1;
+profiles_t* getProfile_STEM_125_14_LN_v1_1(){
+    return &stem_125_14_LN_v1_1;
 }

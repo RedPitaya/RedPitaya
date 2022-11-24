@@ -13,6 +13,7 @@
  */
 
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <dirent.h>
@@ -26,43 +27,136 @@
 #include "stem_125_10_v1.0.h"
 #include "stem_125_14_v1.0.h"
 #include "stem_125_14_v1.1.h"
+#include "stem_122_16SDR_v1.0.h"
+#include "stem_122_16SDR_v1.1.h"
+#include "stem_125_14_LN_v1.1.h"
+#include "stem_125_14_Z7020_v1.0.h"
+#include "stem_125_14_Z7020_LN_v1.1.h"
+#include "stem_125_14_Z7020_4IN_v1.0.h"
+#include "stem_125_14_Z7020_4IN_v1.2.h"
+#include "stem_125_14_Z7020_4IN_v1.3.h"
+#include "stem_250_12_v1.1.h"
+#include "stem_250_12_v1.2.h"
 
 #define LINE_LENGTH 0x400
 
 
 profiles_t *g_profile = NULL;
 
-// "STEM_125-14_v1.0" && "$HW_REV" != "STEM_125-14_v1.1" && "$HW_REV" != "STEM_125-14_LN_v1.1" && "$HW_REV" != "STEM_125-14_Z7020_v1.0" && "$HW_REV" != "STEM_125-14_Z7020_LN_v1.1"
-// "STEM_125-14_v1.0" && "$HW_REV" != "STEM_125-14_Z7020_v1.0" && "$HW_REV" != "STEM_125-10_v1.0"
-// "STEM_125-14_LN_CE1_v1.1"
-// "STEM_125-14_LN_CE2_v1.1"
+// "STEM_125-10_v1.0"
+// "STEM_125-14_v1.0"
+// "STEM_125-14_v1.1"
+// "STEM_125-14_LN_v1.1"
+// "STEM_125-14_Z7020_v1.0"
+// "STEM_125-14_Z7020_LN_v1.1"
 // "STEM_122-16SDR_v1.0"
 // "STEM_125-14_Z7020_4IN_v1.0"
 // "STEM_125-14_Z7020_4IN_v1.2"
 // "STEM_125-14_Z7020_4IN_v1.3"
+// "STEM_250-12_v1.2"
+// "STEM_250-12_v1.1"
 
-// "STEM_250-12_v1.2"  "STEM_250-12_v1.1"
 
+void convertToLowerCase(char *buff){
+	int size = strlen(buff);
+	while(size > 0){
+		size--;
+		buff[size] = tolower(buff[size]);
+	}
+}
 
 
 void hp_checkModel(char *model,char *eth_mac){
+	char modelOrig[255];
+	strcpy(modelOrig,model);
+	convertToLowerCase(model);
 	if (!model) return;
-	if (strcmp(model,"STEM_125-10_v1.0") == 0){
+	if (strcmp(model,"stem_125-10_v1.0") == 0){
 		g_profile = getProfile_STEM_125_10_v1_0();
-		strcpy(g_profile->boardModelEEPROM,model);
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
 	}
-	if (strcmp(model,"STEM_125-14_v1.0") == 0){
+	if (strcmp(model,"stem_125-14_v1.0") == 0){
 		g_profile = getProfile_STEM_125_14_v1_0();
-		strcpy(g_profile->boardModelEEPROM,model);
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
 	}
 
-	if (strcmp(model,"STEM_125-14_v1.1") == 0){
+	if (strcmp(model,"stem_125-14_v1.1") == 0){
 		g_profile = getProfile_STEM_125_14_v1_1();
-		strcpy(g_profile->boardModelEEPROM,model);
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_122-16sdr_v1.0") == 0){
+		g_profile = getProfile_STEM_122_16SDR_v1_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_122-16sdr_v1.1") == 0){
+		g_profile = getProfile_STEM_122_16SDR_v1_1();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_125-14_ln_v1.1") == 0){
+		g_profile = getProfile_STEM_125_14_LN_v1_1();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"STEM_125-14_Z7020_v1.0") == 0){
+		g_profile = getProfile_STEM_125_14_Z7020_v1_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"STEM_125-14_Z7020_LN_v1.1") == 0){
+		g_profile = getProfile_STEM_125_14_Z7020_LN_v1_1();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_125-14_z7020_4in_v1.0") == 0){
+		g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_125-14_z7020_4in_v1.2") == 0){
+		g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_2();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_125-14_z7020_4in_v1.3") == 0){
+		g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_3();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_250-12_v1.1") == 0){
+		g_profile = getProfile_STEM_250_12_v1_1();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_250-12_v1.2") == 0){
+		g_profile = getProfile_STEM_250_12_v1_2();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
 	}
@@ -174,13 +268,13 @@ int hp_cmn_Print(profiles_t *p){
 
 	fprintf(stdout,"FAST ADC HV mode (1:20): %d\n",p->is_LV_HV_mode);
 
-	for(int i = 0 ; i < p->fast_adc_count_channels; i++){
+	for(int i = 0 ; i < p->fast_adc_count_channels && p->is_LV_HV_mode; i++){
 		fprintf(stdout,"\t\t- Is signed: %u\n",p->fast_adc_1_20[i].is_signed);
 		fprintf(stdout,"\t\t- Bits: %u\n",p->fast_adc_1_20[i].bits);
 		fprintf(stdout,"\t\t- Full scale: %f\n",p->fast_adc_1_20[i].fullScale);
 	}
 
-	fprintf(stdout,"FAST ADC AD/DC mode: %d\n",p->is_LV_HV_mode);
+	fprintf(stdout,"FAST ADC AD/DC mode: %d\n",p->is_AC_DC_mode);
 
 	fprintf(stdout,"SLOW ADC\n");
 	fprintf(stdout,"\t* Count: %u\n",p->slow_adc_count_channels);
@@ -201,6 +295,10 @@ int hp_cmn_Print(profiles_t *p){
 	}
 
 	fprintf(stdout,"FAST DAC x5 gain: %d\n",p->is_DAC_gain_x5);
+	fprintf(stdout,"FAST ADC/DAC calibration: %d\n",p->is_fast_calibration);
+	fprintf(stdout,"E2 Pin21 as external clock selector: %d\n",p->is_e2_pin21_external_clock_selector);
+
+
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;
 }

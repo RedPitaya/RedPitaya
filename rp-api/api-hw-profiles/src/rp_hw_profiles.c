@@ -3,6 +3,16 @@
 #include "stem_125_10_v1.0.h"
 #include "stem_125_14_v1.0.h"
 #include "stem_125_14_v1.1.h"
+#include "stem_122_16SDR_v1.0.h"
+#include "stem_122_16SDR_v1.1.h"
+#include "stem_125_14_LN_v1.1.h"
+#include "stem_125_14_Z7020_v1.0.h"
+#include "stem_125_14_Z7020_LN_v1.1.h"
+#include "stem_125_14_Z7020_4IN_v1.0.h"
+#include "stem_125_14_Z7020_4IN_v1.2.h"
+#include "stem_125_14_Z7020_4IN_v1.3.h"
+#include "stem_250_12_v1.1.h"
+#include "stem_250_12_v1.2.h"
 
 
 profiles_t* getProfile(int *state){
@@ -44,7 +54,16 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_10_v1_0());
     hp_cmn_Print(getProfile_STEM_125_14_v1_0());
     hp_cmn_Print(getProfile_STEM_125_14_v1_1());
-
+    hp_cmn_Print(getProfile_STEM_122_16SDR_v1_0());
+    hp_cmn_Print(getProfile_STEM_122_16SDR_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_LN_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_v1_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_LN_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_4IN_v1_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_4IN_v1_2());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_4IN_v1_3());
+    hp_cmn_Print(getProfile_STEM_250_12_v1_1());
+    hp_cmn_Print(getProfile_STEM_250_12_v1_2());
     return RP_HP_OK;
 }
 
@@ -569,4 +588,34 @@ int rp_HPGetIsGainDACx5(bool *value){
 bool rp_HPGetIsGainDACx5OrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_DAC_gain_x5;
+}
+
+int rp_HPGetIsCalibrationLogicPresent(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_fast_calibration;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsCalibrationLogicPresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_fast_calibration;
+}
+
+int rp_HPGetIsE2Pin21ClockSelector(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_e2_pin21_external_clock_selector;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsE2Pin21ClockSelectorOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_e2_pin21_external_clock_selector;
 }
