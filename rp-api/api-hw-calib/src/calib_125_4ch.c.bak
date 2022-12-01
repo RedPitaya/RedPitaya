@@ -149,11 +149,11 @@ rp_calib_params_t getDefualtCalib(){
     memset (&calib,0,sizeof(rp_calib_params_t));
 
     calib.chA_g_hi = calib.chB_g_hi = calib.chC_g_hi = calib.chD_g_hi = cmn_CalibFullScaleFromVoltage(1.0 );
-    calib.chA_hi_offs = calib.chB_hi_offs = calib.chC_hi_offs = calib.chD_hi_offs = 0; 
+    calib.chA_hi_offs = calib.chB_hi_offs = calib.chC_hi_offs = calib.chD_hi_offs = 0;
 
     calib.chA_g_low = calib.chB_g_low = calib.chC_g_low = calib.chD_g_low = cmn_CalibFullScaleFromVoltage(20.0 );
-    calib.chA_low_offs = calib.chB_low_offs = calib.chC_low_offs = calib.chD_low_offs = 0; 
-    
+    calib.chA_low_offs = calib.chB_low_offs = calib.chC_low_offs = calib.chD_low_offs = 0;
+
     calib.chA_hi_aa = calib.chB_hi_aa = calib.chC_hi_aa = calib.chD_hi_aa = GAIN_HI_FILT_AA;
     calib.chA_hi_bb = calib.chB_hi_bb = calib.chC_hi_bb = calib.chD_hi_bb = GAIN_HI_FILT_BB;
     calib.chA_hi_pp = calib.chB_hi_pp = calib.chC_hi_pp = calib.chD_hi_pp = GAIN_HI_FILT_PP;
@@ -465,7 +465,7 @@ int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_c
                 case AA: params.chA_hi_aa = value; break;
                 case BB: params.chA_hi_bb = value; break;
                 case PP: params.chA_hi_pp = value; break;
-                case KK: params.chA_hi_kk = value; break; 
+                case KK: params.chA_hi_kk = value; break;
                 default:
                   break;
             }
@@ -475,20 +475,20 @@ int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_c
                 case AA: params.chA_low_aa = value; break;
                 case BB: params.chA_low_bb = value; break;
                 case PP: params.chA_low_pp = value; break;
-                case KK: params.chA_low_kk = value; break; 
+                case KK: params.chA_low_kk = value; break;
                 default:
                     break;
             }
         }
     }
-    
+
     if (channel == RP_CH_2){
         if (gain == RP_HIGH){
             switch(coff){
                 case AA: params.chB_hi_aa = value; break;
                 case BB: params.chB_hi_bb = value; break;
                 case PP: params.chB_hi_pp = value; break;
-                case KK: params.chB_hi_kk = value; break; 
+                case KK: params.chB_hi_kk = value; break;
                 default:
                   break;
             }
@@ -498,7 +498,7 @@ int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_c
                 case AA: params.chB_low_aa = value; break;
                 case BB: params.chB_low_bb = value; break;
                 case PP: params.chB_low_pp = value; break;
-                case KK: params.chB_low_kk = value; break; 
+                case KK: params.chB_low_kk = value; break;
                 default:
                     break;
             }
@@ -511,7 +511,7 @@ int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_c
                 case AA: params.chC_hi_aa = value; break;
                 case BB: params.chC_hi_bb = value; break;
                 case PP: params.chC_hi_pp = value; break;
-                case KK: params.chC_hi_kk = value; break; 
+                case KK: params.chC_hi_kk = value; break;
                 default:
                   break;
             }
@@ -521,7 +521,7 @@ int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_c
                 case AA: params.chC_low_aa = value; break;
                 case BB: params.chC_low_bb = value; break;
                 case PP: params.chC_low_pp = value; break;
-                case KK: params.chC_low_kk = value; break; 
+                case KK: params.chC_low_kk = value; break;
                 default:
                     break;
             }
@@ -534,7 +534,7 @@ int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_c
                 case AA: params.chD_hi_aa = value; break;
                 case BB: params.chD_hi_bb = value; break;
                 case PP: params.chD_hi_pp = value; break;
-                case KK: params.chD_hi_kk = value; break; 
+                case KK: params.chD_hi_kk = value; break;
                 default:
                   break;
             }
@@ -544,7 +544,7 @@ int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_c
                 case AA: params.chD_low_aa = value; break;
                 case BB: params.chD_low_bb = value; break;
                 case PP: params.chD_low_pp = value; break;
-                case KK: params.chD_low_kk = value; break; 
+                case KK: params.chD_low_kk = value; break;
                 default:
                     break;
             }
@@ -565,7 +565,7 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chA_hi_pp;
                 case KK:
-                return calib.chA_hi_kk; 
+                return calib.chA_hi_kk;
                 default:
                   break;
             }
@@ -579,7 +579,7 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chA_low_pp;
                 case KK:
-                return calib.chA_low_kk; 
+                return calib.chA_low_kk;
                 default:
                   break;
             }
@@ -596,7 +596,7 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chB_hi_pp;
                 case KK:
-                return calib.chB_hi_kk; 
+                return calib.chB_hi_kk;
                 default:
                   break;
             }
@@ -610,7 +610,7 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chB_low_pp;
                 case KK:
-                return calib.chB_low_kk; 
+                return calib.chB_low_kk;
                 default:
                   break;
             }
@@ -627,7 +627,7 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chC_hi_pp;
                 case KK:
-                return calib.chC_hi_kk; 
+                return calib.chC_hi_kk;
                 default:
                   break;
             }
@@ -641,7 +641,7 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chC_low_pp;
                 case KK:
-                return calib.chC_low_kk; 
+                return calib.chC_low_kk;
                 default:
                   break;
             }
@@ -658,7 +658,7 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chD_hi_pp;
                 case KK:
-                return calib.chD_hi_kk; 
+                return calib.chD_hi_kk;
                 default:
                   break;
             }
@@ -672,12 +672,12 @@ uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_fil
                 case PP:
                 return calib.chD_low_pp;
                 case KK:
-                return calib.chD_low_kk; 
+                return calib.chD_low_kk;
                 default:
                   break;
             }
         }
     }
-    
+
     return 0;
 }

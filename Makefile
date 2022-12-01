@@ -74,30 +74,31 @@ $(INSTALL_DIR):
 LIBRP_DIR       		= rp-api/api
 LIBRP_HW_DIR    		= rp-api/api-hw
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
+LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
 LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRPAPP_DIR    		= Applications/api/rpApplications
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration
 .PHONY: librpapp liblcr_meter
 
 api: librp librp_hw librp_dsp
 
 api2: librp2
 
-ifeq ($(MODEL),Z20_250_12)
-librp: librp250_12 librp_hw_profiles
-else
-librp: librp_hw_profiles
-endif
+librp: librp250_12 librp_hw_calibration librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_DIR)/build install
 
 librp_hw:
 	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_DIR)/build install
+
+librp_hw_calibration: librp_hw_profiles
+	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_CALIB_DIR)/build install
 
 librp_hw_profiles:
 	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
@@ -325,7 +326,7 @@ MONITOR_DIR        = Test/monitor
 ACQUIRE_DIR        = Test/acquire
 ACQUIRE2_DIR       = Test/acquire2
 CALIB_DIR          = Test/calib
-CALIBRATE_DIR      = Test/calibrate
+#CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
@@ -334,7 +335,7 @@ XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
 
 .PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest led_control
+.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control
 
 
 
@@ -381,10 +382,10 @@ spectrum: api
 	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(SPECTRUM_DIR)/build install
 
-calibrate: api
-	$(MAKE) -C $(CALIBRATE_DIR) clean
-	$(MAKE) -C $(CALIBRATE_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+# calibrate: api
+# 	$(MAKE) -C $(CALIBRATE_DIR) clean
+# 	$(MAKE) -C $(CALIBRATE_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+# 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 led_control: api
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
@@ -622,6 +623,8 @@ clean:
 	rm -rf $(abspath $(LIBRP_HW_PROFILES_DIR)/build)
 	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
 	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
+
 
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE2_DIR)/build)

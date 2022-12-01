@@ -27,7 +27,7 @@ extern "C" {
 
 #define ADC_SAMPLE_RATE 125e6
 #define ADC_BITS 14
-#define ADC_REG_BITS 14  
+#define ADC_REG_BITS 14
 #define ADC_BITS_MASK 0x3FFF
 #define ADC_REG_BITS_MASK 0x3FFF
 #define ADC_BUFFER_SIZE (16 * 1024)
@@ -176,7 +176,7 @@ typedef enum {
     RP_T_CH_2 = 1,    //!< Channel B
     RP_T_CH_3 = 2,    //!< Channel C
     RP_T_CH_4 = 3,    //!< Channel D
-    RP_T_CH_EXT = 4  
+    RP_T_CH_EXT = 4
 } rp_channel_trigger_t;
 
 /**
@@ -185,7 +185,7 @@ typedef enum {
 typedef enum {
     AA,    //!< AA
     BB,    //!< BB
-    PP,    //!< PP 
+    PP,    //!< PP
     KK     //!< KK
 } rp_eq_filter_cof_t;
 
@@ -266,74 +266,6 @@ typedef enum {
     RP_TRIG_STATE_TRIGGERED, //!< Trigger is triggered/disabled
     RP_TRIG_STATE_WAITING,   //!< Trigger is set up and waiting (to be triggered)
 } rp_acq_trig_state_t;
-
-
-/**
- * Calibration parameters, stored in the EEPROM device
- */
-typedef struct {
-    uint32_t chA_g_hi;          //!< High gain front end full scale voltage, channel A
-    uint32_t chB_g_hi;          //!< High gain front end full scale voltage, channel B
-    uint32_t chC_g_hi;          //!< High gain front end full scale voltage, channel C
-    uint32_t chD_g_hi;          //!< High gain front end full scale voltage, channel D
-
-    uint32_t chA_g_low;         //!< Low gain front end full scale voltage, channel A
-    uint32_t chB_g_low;         //!< Low gain front end full scale voltage, channel B
-    uint32_t chC_g_low;         //!< Low gain front end full scale voltage, channel C
-    uint32_t chD_g_low;         //!< Low gain front end full scale voltage, channel D
-
-    int32_t  chA_hi_offs;       //!< Front end DC offset, channel A
-    int32_t  chB_hi_offs;       //!< Front end DC offset, channel B
-    int32_t  chC_hi_offs;       //!< Front end DC offset, channel C
-    int32_t  chD_hi_offs;       //!< Front end DC offset, channel D
-
-    int32_t  chA_low_offs;      //!< Front end DC offset, channel A
-    int32_t  chB_low_offs;      //!< Front end DC offset, channel B
-    int32_t  chC_low_offs;      //!< Front end DC offset, channel C
-    int32_t  chD_low_offs;      //!< Front end DC offset, channel D
-
-    uint32_t chA_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel A
-    uint32_t chA_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel A
-    uint32_t chA_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel A
-    uint32_t chA_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel A
-
-    uint32_t chA_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel A
-    uint32_t chA_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel A
-    uint32_t chA_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel A
-    uint32_t chA_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel A
-
-    uint32_t chB_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel B
-    uint32_t chB_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel B
-    uint32_t chB_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel B
-    uint32_t chB_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel B
-
-    uint32_t chB_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel B
-    uint32_t chB_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel B
-    uint32_t chB_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel B
-    uint32_t chB_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel B
-
-    uint32_t chC_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel C
-    uint32_t chC_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel C
-    uint32_t chC_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel C
-    uint32_t chC_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel C
-
-    uint32_t chC_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel C
-    uint32_t chC_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel C
-    uint32_t chC_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel C
-    uint32_t chC_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel C
-
-    uint32_t chD_hi_aa;         //!< Filter equalization coefficients AA for High mode, channel D
-    uint32_t chD_hi_bb;         //!< Filter equalization coefficients BB for High mode, channel D
-    uint32_t chD_hi_pp;         //!< Filter equalization coefficients PP for High mode, channel D
-    uint32_t chD_hi_kk;         //!< Filter equalization coefficients KK for High mode, channel D
-
-    uint32_t chD_low_aa;        //!< Filter equalization coefficients AA for Low mode, channel D
-    uint32_t chD_low_bb;        //!< Filter equalization coefficients BB for Low mode, channel D
-    uint32_t chD_low_pp;        //!< Filter equalization coefficients PP for Low mode, channel D
-    uint32_t chD_low_kk;        //!< Filter equalization coefficients KK for Low mode, channel D
-
-} rp_calib_params_t;
-
 
 /** @name General
  */
@@ -773,7 +705,7 @@ int rp_AcqGetDecimation(rp_acq_decimation_t* decimation);
 int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation);
 
 /**
- * Sets the decimation used at acquiring signal. 
+ * Sets the decimation used at acquiring signal.
  * You can specify values in the range (1,2,4,8,16-65536)
  * @param decimation Decimation values
  * @return If the function is successful, the return value is RP_OK.
@@ -1063,7 +995,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
 /**
  * Returns the ADC buffer in raw units from specified position and desired size.
  * Output buffer must be at least 'size' long.
- * Data not calibrated 
+ * Data not calibrated
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
  * @param pos Starting position of the ADC buffer to retrieve.
  * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.

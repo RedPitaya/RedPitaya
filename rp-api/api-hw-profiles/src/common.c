@@ -296,8 +296,6 @@ int hp_cmn_Print(profiles_t *p){
 
 	fprintf(stdout,"FAST DAC x5 gain: %d\n",p->is_DAC_gain_x5);
 	fprintf(stdout,"FAST ADC/DAC calibration: %d\n",p->is_fast_calibration);
-	fprintf(stdout,"E2 Pin21 as external clock selector: %d\n",p->is_e2_pin21_external_clock_selector);
-
 
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;

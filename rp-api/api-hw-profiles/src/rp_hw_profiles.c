@@ -604,18 +604,3 @@ bool rp_HPGetIsCalibrationLogicPresentOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_fast_calibration;
 }
-
-int rp_HPGetIsE2Pin21ClockSelector(bool *value){
-    int state;
-    profiles_t* p = getProfile(&state);
-    if (p){
-        *value = p->is_e2_pin21_external_clock_selector;
-        return RP_HP_OK;
-    }
-    return state;
-}
-
-bool rp_HPGetIsE2Pin21ClockSelectorOrDefault(){
-    profiles_t* p = getProfileDefualt();
-    return p->is_e2_pin21_external_clock_selector;
-}

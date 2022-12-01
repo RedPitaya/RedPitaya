@@ -93,7 +93,7 @@ if(BUILD_SHARED)
         install(TARGETS ${PROJECT_NAME}-i2c-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-            
+
         install(TARGETS ${PROJECT_NAME}-spi-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
@@ -104,10 +104,10 @@ if(BUILD_SHARED)
 
         install(FILES ${RP_HEADERS}
             DESTINATION ${INSTALL_DIR}/include/api250-12)
-        
+
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/configs
             DESTINATION ${INSTALL_DIR}/lib FILES_MATCHING PATTERN "*.xml")
-    endif()         
+    endif()
 endif()
 
 
@@ -130,7 +130,7 @@ if(BUILD_STATIC)
         install(TARGETS ${PROJECT_NAME}-i2c-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-        
+
         install(TARGETS ${PROJECT_NAME}-spi-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
@@ -154,16 +154,16 @@ endif()
 
 if(BUILD_TOOL)
     add_executable(rp_i2c_tool ${CMAKE_SOURCE_DIR}/src/tool/main.cpp)
-    target_link_libraries(rp_i2c_tool PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
-    
+    target_link_libraries(rp_i2c_tool PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> -li2c)
+
     add_executable(rp_power_on ${CMAKE_SOURCE_DIR}/src/power_on/main.cpp)
-    target_link_libraries(rp_power_on PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-spi> $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
-    
+    target_link_libraries(rp_power_on PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-spi> $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> -li2c)
+
     if(IS_INSTALL)
         install(TARGETS rp_i2c_tool
             RUNTIME DESTINATION ${INSTALL_DIR}/bin)
         install(TARGETS rp_power_on
-            RUNTIME DESTINATION ${INSTALL_DIR}/bin)         
+            RUNTIME DESTINATION ${INSTALL_DIR}/bin)
     endif()
 endif()
 

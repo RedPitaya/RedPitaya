@@ -53,7 +53,6 @@ typedef struct {
     bool                is_DAC_gain_x5;
 
     bool                is_fast_calibration;
-    bool                is_e2_pin21_external_clock_selector;
 } profiles_t;
 
 

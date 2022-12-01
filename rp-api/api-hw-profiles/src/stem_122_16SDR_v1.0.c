@@ -66,9 +66,7 @@ profiles_t stem_122_16SDR_v1_0 = {
 
     .is_DAC_gain_x5 = false,
 
-    .is_fast_calibration = false,
-
-    .is_e2_pin21_external_clock_selector  = false
+    .is_fast_calibration = false
 };
 
 profiles_t* getProfile_STEM_122_16SDR_v1_0(){

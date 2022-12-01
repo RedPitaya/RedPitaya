@@ -71,17 +71,11 @@ list(APPEND src
 
 if ("${MODEL}" STREQUAL "Z20_250_12")
     list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/calib_250_12.c
         ${CMAKE_SOURCE_DIR}/src/generate.c
         ${CMAKE_SOURCE_DIR}/src/gen_handler.c
     )
-elseif("${MODEL}" STREQUAL "Z20_125_4CH")
-    list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/calib_125_4ch.c
-    )
 else()
     list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/calib.c
         ${CMAKE_SOURCE_DIR}/src/generate.c
         ${CMAKE_SOURCE_DIR}/src/gen_handler.c
     )
@@ -127,14 +121,14 @@ endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
-if ("${MODEL}" STREQUAL "Z20_250_12")
+#if ("${MODEL}" STREQUAL "Z20_250_12")
     if(NOT DEFINED INSTALL_DIR)
-        message(FATAL_ERROR "You must specify the path to the libraries api-250-12")
+        message(FATAL_ERROR "You must specify the path to the libraries api-250-12 api-hw-calib api-hw-profiles")
     endif()
     include_directories(${INSTALL_DIR}/include/api250-12)
     link_directories(${INSTALL_DIR}/lib)
     target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
-endif()
+#endif()
 
 if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
