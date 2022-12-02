@@ -22,8 +22,7 @@ if(NOT DEFINED MODEL)
 endif()
 
 if(NOT DEFINED INSTALL_DIR)
-    message(WARNING,"Installation path not set. Installation will be skipped")
-    set(IS_INSTALL OFF)
+    message(FATAL_ERROR,"Installation path not set. Installation will be skipped")
 endif()
 
 if(NOT DEFINED DEBUG_REG)
@@ -59,6 +58,8 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 include_directories("include")
 include_directories("src")
 include_directories("src/kiss_fft")
+include_directories(${INSTALL_DIR}/include)
+
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/common.c
@@ -66,50 +67,52 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/acq_handler.c
             ${CMAKE_SOURCE_DIR}/src/rp.c
             ${CMAKE_SOURCE_DIR}/src/neon_asm.cpp
+            ${CMAKE_SOURCE_DIR}/src/generate.c
+            ${CMAKE_SOURCE_DIR}/src/gen_handler.c
         )
 
 
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/generate.c
-        ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-    )
-else()
-    list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/generate.c
-        ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-    )
-endif()
+# if ("${MODEL}" STREQUAL "Z20_250_12")
+#     list(APPEND src
+#         ${CMAKE_SOURCE_DIR}/src/generate.c
+#         ${CMAKE_SOURCE_DIR}/src/gen_handler.c
+#     )
+# else()
+#     list(APPEND src
+#         ${CMAKE_SOURCE_DIR}/src/generate.c
+#         ${CMAKE_SOURCE_DIR}/src/gen_handler.c
+#     )
+# endif()
 
-if ("${MODEL}" STREQUAL "Z10")
+#if ("${MODEL}" STREQUAL "Z10")
     list(APPEND header_rp
         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
     )
-endif()
+#endif()
 
-if ("${MODEL}" STREQUAL "Z20")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20.h
-    )
-endif()
+# if ("${MODEL}" STREQUAL "Z20")
+#     list(APPEND header_rp
+#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20.h
+#     )
+# endif()
 
-if ("${MODEL}" STREQUAL "Z20_125")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125.h
-    )
-endif()
+# if ("${MODEL}" STREQUAL "Z20_125")
+#     list(APPEND header_rp
+#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125.h
+#     )
+# endif()
 
-if ("${MODEL}" STREQUAL "Z20_125_4CH")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125_4CH.h
-    )
-endif()
+# if ("${MODEL}" STREQUAL "Z20_125_4CH")
+#     list(APPEND header_rp
+#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125_4CH.h
+#     )
+# endif()
 
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_250_12.h
-    )
-endif()
+# if ("${MODEL}" STREQUAL "Z20_250_12")
+#     list(APPEND header_rp
+#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_250_12.h
+#     )
+# endif()
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)

@@ -50,9 +50,13 @@ add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
 
-
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+
+target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw-calib rp-hw-profiles m)
+
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
- 
+
 unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

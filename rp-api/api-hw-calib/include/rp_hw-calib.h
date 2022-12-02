@@ -43,8 +43,11 @@ extern "C" {
 /** Board Model Detection Error. */
 #define RP_HW_CALIB_EDM    4
 
-
 ///@}
+
+#define RP_HW_PACK_ID_V1 1
+#define RP_HW_PACK_ID_V2 2
+#define RP_HW_PACK_ID_V3 3
 
 /**
  * Type representing Input/Output channels.
@@ -92,6 +95,9 @@ typedef struct
 
 
 typedef struct {
+    char dataStructureId;
+    char wpCheck;
+
     uint8_t fast_adc_count_1_1; // For 250-12 is DC mode
     channel_calib_t fast_adc_1_1[4];
     channel_filter_t fast_adc_filter_1_1[4];
@@ -110,6 +116,13 @@ typedef struct {
     uint8_t fast_dac_count_x5; // For 250-12
     channel_calib_t fast_dac_x5[2];
 } rp_calib_params_t;
+
+typedef struct {
+    uint8_t  dataStructureId;
+    uint8_t  wpCheck;
+    uint8_t  reserved[6];
+    int32_t  feCalPar[100];
+} rp_eepromWpData_t;
 
 
 /** @name General
@@ -149,11 +162,10 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings();
 
 /**
 * Set default calibration values.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationReset();
+int rp_CalibrationReset(bool use_factory_zone);
 
 /**
 * Copy factory calibration values into user eeprom.
@@ -168,7 +180,7 @@ int rp_CalibrationFactoryReset();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params);
+int rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
 
 /**
 * Set calibration values in memory.
@@ -177,6 +189,28 @@ int rp_CalibrationWriteParams(rp_calib_params_t calib_params);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_CalibrationSetParams(rp_calib_params_t calib_params);
+
+/**
+* Returns the calibration as it is presented in the eeprom.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibGetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone);
+
+/**
+* The function converts the data to a common format
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out);
+
+/**
+* Displays calibration information
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_CalibPrint(rp_calib_params_t *calib);
+
 ///@}
 
 #ifdef __cplusplus

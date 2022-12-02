@@ -604,3 +604,18 @@ bool rp_HPGetIsCalibrationLogicPresentOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_fast_calibration;
 }
+
+int rp_HPGetIsPLLControlEnable(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_pll_control_present;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsPLLControlEnableOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_pll_control_present;
+}

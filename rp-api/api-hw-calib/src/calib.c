@@ -42,7 +42,7 @@ int calib_InitModel(rp_HPeModels_t model,bool use_factory_zone){
             }else{
                 if (buffer) free(buffer);
                 g_calib = getDefault(model);
-                fprintf(stderr,"[Error] Cann't load calibration v1. Set by default.\n");
+                fprintf(stderr,"[Error:calib_InitModel] Cann't load calibration v1. Set by default.\n");
                 return RP_HW_CALIB_ERE;
             }
             break;
@@ -61,7 +61,7 @@ int calib_InitModel(rp_HPeModels_t model,bool use_factory_zone){
             }else{
                 if (buffer) free(buffer);
                 g_calib = getDefault(model);
-                fprintf(stderr,"[Error] Cann't load calibration v1. Set by default.\n");
+                fprintf(stderr,"[Error:calib_InitModel] Cann't load calibration v1. Set by default.\n");
                 return RP_HW_CALIB_ERE;
             }
             break;
@@ -79,7 +79,7 @@ int calib_InitModel(rp_HPeModels_t model,bool use_factory_zone){
 
             }else{
                 g_calib = getDefault(model);
-                fprintf(stderr,"[Error] Cann't load calibration v2. Set by default.\n");
+                fprintf(stderr,"[Error:calib_InitModel] Cann't load calibration v2. Set by default.\n");
                 return RP_HW_CALIB_ERE;
             }
             break;
@@ -98,17 +98,17 @@ int calib_InitModel(rp_HPeModels_t model,bool use_factory_zone){
             }else{
                 if (buffer) free(buffer);
                 g_calib = getDefault(model);
-                fprintf(stderr,"[Error] Cann't load calibration v3. Set by default.\n");
+                fprintf(stderr,"[Error:calib_InitModel] Cann't load calibration v3. Set by default.\n");
                 return RP_HW_CALIB_ERE;
             }
             break;
         }
         default:
-            fprintf(stderr,"[Error] Unknown model: %d.\n",model);
+            fprintf(stderr,"[Error:calib_InitModel] Unknown model: %d.\n",model);
             break;
     }
     if (!recalculateGain(&g_calib)){
-        fprintf(stderr,"[Error] Cannot correctly recalculate gain on calibration.\n");
+        fprintf(stderr,"[Error:calib_InitModel] Cannot correctly recalculate gain on calibration.\n");
     }
     return RP_HW_CALIB_OK;
 }
@@ -117,7 +117,7 @@ int calib_Init(bool use_factory_zone){
     rp_HPeModels_t model = STEM_125_14_v1_1; // Default model
     int res = rp_HPGetModel(&model);
     if (res != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't load RP model version. Err: %d\n",res);
+        fprintf(stderr,"[Error:calib_Init] Can't load RP model version. Err: %d\n",res);
         g_model_loaded = false;
         g_model = STEM_125_14_v1_1;
     }else{
@@ -131,7 +131,7 @@ int calib_Init(bool use_factory_zone){
 int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool use_factory_zone){
 
     if (!recalculateCalibValue(calib_params)){
-        fprintf(stderr,"[Error] Cannot correctly recalculate calib values on calibration.\n");
+        fprintf(stderr,"[Error:calib_WriteParams] Cannot correctly recalculate calib values on calibration.\n");
         return RP_HW_CALIB_EWE;
     }
 
@@ -147,20 +147,21 @@ int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool
             uint16_t size = sizeof(rp_calib_params_v1_t);
             uint8_t* buf = (uint8_t *)malloc(size);
 	        if (!buf) {
-                fprintf(stderr,"[Error] Memory allocation error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Memory allocation error.\n");
 		        return RP_HW_CALIB_EWE;
 	        }
             rp_calib_params_v1_t calib_v1;
             if (!convertV1(calib_params,&calib_v1)){
                 free(buf);
-                fprintf(stderr,"[Error] Error converting calibration parameters.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Error converting calibration parameters.\n");
                 return RP_HW_CALIB_EWE;
             }
+            calib_v1.wpCheck++;
             memcpy(buf,&calib_v1,size);
             uint16_t ws = use_factory_zone ? writeToFactoryEpprom(buf,size) : writeToEpprom(buf,size);
             free(buf);
             if (ws != size) {
-                fprintf(stderr,"[Error] Eeprom write error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Eeprom write error.\n");
                 return RP_HW_CALIB_EWE;
             }
 
@@ -173,20 +174,21 @@ int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool
             uint16_t size = sizeof(rp_calib_params_v1_t);
             uint8_t* buf = (uint8_t *)malloc(size);
 	        if (!buf) {
-                fprintf(stderr,"[Error] Memory allocation error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Memory allocation error.\n");
 		        return RP_HW_CALIB_EWE;
 	        }
             rp_calib_params_v1_t calib_v1;
             if (!convertV1(calib_params,&calib_v1)){
                 free(buf);
-                fprintf(stderr,"[Error] Error converting calibration parameters.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Error converting calibration parameters.\n");
                 return RP_HW_CALIB_EWE;
             }
+            calib_v1.wpCheck++;
             memcpy(buf,&calib_v1,size);
             uint16_t ws = use_factory_zone ? writeToFactoryEpprom(buf,size) : writeToEpprom(buf,size);
             free(buf);
             if (ws != size) {
-                fprintf(stderr,"[Error] Eeprom write error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Eeprom write error.\n");
                 return RP_HW_CALIB_EWE;
             }
 
@@ -200,20 +202,21 @@ int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool
             uint16_t size = sizeof(rp_calib_params_v2_t);
             uint8_t* buf = (uint8_t *)malloc(size);
 	        if (!buf) {
-                fprintf(stderr,"[Error] Memory allocation error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Memory allocation error.\n");
 		        return RP_HW_CALIB_EWE;
 	        }
             rp_calib_params_v2_t calib_v2;
             if (!convertV2(calib_params,&calib_v2)){
                 free(buf);
-                fprintf(stderr,"[Error] Error converting calibration parameters.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Error converting calibration parameters.\n");
                 return RP_HW_CALIB_EWE;
             }
+            calib_v2.wpCheck++;
             memcpy(buf,&calib_v2,size);
             uint16_t ws = use_factory_zone ? writeToFactoryEpprom(buf,size) : writeToEpprom(buf,size);
             free(buf);
             if (ws != size) {
-                fprintf(stderr,"[Error] Eeprom write error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Eeprom write error.\n");
                 return RP_HW_CALIB_EWE;
             }
             break;
@@ -225,31 +228,29 @@ int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool
             uint16_t size = sizeof(rp_calib_params_v3_t);
             uint8_t* buf = (uint8_t *)malloc(size);
 	        if (!buf) {
-                fprintf(stderr,"[Error] Memory allocation error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Memory allocation error.\n");
 		        return RP_HW_CALIB_EWE;
 	        }
             rp_calib_params_v3_t calib_v3;
             if (!convertV3(calib_params,&calib_v3)){
                 free(buf);
-                fprintf(stderr,"[Error] Error converting calibration parameters.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Error converting calibration parameters.\n");
                 return RP_HW_CALIB_EWE;
             }
+            calib_v3.wpCheck++;
             memcpy(buf,&calib_v3,size);
             uint16_t ws = use_factory_zone ? writeToFactoryEpprom(buf,size) : writeToEpprom(buf,size);
             free(buf);
             if (ws != size) {
-                fprintf(stderr,"[Error] Eeprom write error.\n");
+                fprintf(stderr,"[Error:calib_WriteParams] Eeprom write error.\n");
                 return RP_HW_CALIB_EWE;
             }
             break;
         }
 
         default:
-            fprintf(stderr,"[Error] Unknown model: %d.\n",model);
+            fprintf(stderr,"[Error:calib_WriteParams] Unknown model: %d.\n",model);
             break;
-    }
-    if (recalculateGain(&g_calib)){
-        fprintf(stderr,"[Error] Cannot correctly recalculate gain on calibration.\n");
     }
     return RP_HW_CALIB_OK;
 }
@@ -264,42 +265,42 @@ rp_calib_params_t calib_GetDefaultCalib(){
         rp_HPeModels_t model = STEM_125_14_v1_1; // Default model
         int res = rp_HPGetModel(&model);
         if (res != RP_HP_OK){
-            fprintf(stderr,"[Error] Can't load RP model version. Err: %d\n",res);
+            fprintf(stderr,"[Error:calib_GetDefaultCalib] Can't load RP model version. Err: %d\n",res);
         }
         return getDefault(model);
     }
     return getDefault(g_model);
 }
 
-int calib_WriteDirectlyParams(rp_calib_params_t *calib_params){
+int calib_WriteDirectlyParams(rp_calib_params_t *calib_params,bool use_factory_zone){
     rp_HPeModels_t model = STEM_125_14_v1_1; // Default model
     if (!g_model_loaded){
         int res = rp_HPGetModel(&model);
         if (res != RP_HP_OK){
-            fprintf(stderr,"[Error] Can't load RP model version. Err: %d\n",res);
+            fprintf(stderr,"[Error:calib_WriteDirectlyParams] Can't load RP model version. Err: %d\n",res);
             return RP_HW_CALIB_EDM;
         }
 
     }else{
         model = g_model;
     }
-    return calib_WriteParams(model,&calib_params,false);
+    return calib_WriteParams(model,calib_params,use_factory_zone);
 }
 
 void calib_SetToZero() {
     g_calib = calib_GetDefaultCalib();
 }
 
-int calib_Reset() {
+int calib_Reset(bool use_factory_zone) {
     if (g_model_loaded){
         rp_calib_params_t calib = g_calib;
         calib_SetToZero();
-        int res = calib_WriteParams(g_model,&g_calib,false);
+        int res = calib_WriteParams(g_model,&g_calib,use_factory_zone);
         if (res != RP_HW_CALIB_OK){
             g_calib = calib;
             return res;
         }
-        return calib_Init(false);
+        return calib_Init(use_factory_zone);
     }
     else{
         return RP_HW_CALIB_ENI;
@@ -311,7 +312,7 @@ int calib_LoadFromFactoryZone(){
     if (!g_model_loaded){
         int res = rp_HPGetModel(&model);
         if (res != RP_HP_OK){
-            fprintf(stderr,"[Error] Can't load RP model version. Err: %d\n",res);
+            fprintf(stderr,"[Error:calib_LoadFromFactoryZone] Can't load RP model version. Err: %d\n",res);
             return RP_HW_CALIB_EDM;
         }
 
@@ -352,7 +353,7 @@ int calib_LoadFromFactoryZone(){
         }
 
         default:{
-            fprintf(stderr,"[Error] Unknown model: %d.\n",model);
+            fprintf(stderr,"[Error:calib_LoadFromFactoryZone] Unknown model: %d.\n",model);
             return RP_HW_CALIB_EDM;
             break;
         }
@@ -363,12 +364,12 @@ int calib_LoadFromFactoryZone(){
 
     if (!buffer || rs != size) {
         if (buffer) free(buffer);
-        fprintf(stderr,"[Error] Eeprom read from factory zone.\n");
+        fprintf(stderr,"[Error:calib_LoadFromFactoryZone] Eeprom read from factory zone.\n");
         return RP_HW_CALIB_ERE;
     }
     size = writeToEpprom(buffer,size);
     if (rs != size) {
-        fprintf(stderr,"[Error] Eeprom write to eeprom error.\n");
+        fprintf(stderr,"[Error:calib_LoadFromFactoryZone] Eeprom write to eeprom error.\n");
         return RP_HW_CALIB_EWE;
     }
     if (buffer) free(buffer);
@@ -378,6 +379,205 @@ int calib_LoadFromFactoryZone(){
 int calib_SetParams(rp_calib_params_t *calib_params){
     g_calib = *calib_params;
     return RP_HW_CALIB_OK;
+}
+
+int calib_GetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone){
+    rp_HPeModels_t model = STEM_125_14_v1_1; // Default model
+    if (!g_model_loaded){
+        int res = calib_Init(use_factory_zone);
+        if (res != RP_HP_OK){
+            fprintf(stderr,"[Error:calib_GetEEPROM] Err: %d\n",res);
+            return res;
+        }
+    }else{
+        model = g_model;
+    }
+
+    uint16_t size = 0;
+    switch (model)
+    {
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:{
+            size = sizeof(rp_calib_params_v1_t);
+            rp_calib_params_v1_t p_v1;
+            if (!convertV1(&g_calib,&p_v1)){
+                fprintf(stderr,"[Error:calib_GetEEPROM] Error converting calibration parameters.\n");
+            }
+            memcpy(calib_params,&p_v1,size);
+            return RP_HW_CALIB_OK;
+        }
+
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:{
+            size = sizeof(rp_calib_params_v1_t);
+            rp_calib_params_v1_t p_v1;
+            if (!convertV1(&g_calib,&p_v1)){
+                fprintf(stderr,"[Error:calib_GetEEPROM] Error converting calibration parameters.\n");
+            }
+            memcpy(calib_params,&p_v1,size);
+            return RP_HW_CALIB_OK;
+        }
+
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:{
+            size = sizeof(rp_calib_params_v2_t);
+            rp_calib_params_v2_t p_v2;
+            if (!convertV2(&g_calib,&p_v2)){
+                fprintf(stderr,"[Error:calib_GetEEPROM] Error converting calibration parameters.\n");
+            }
+            memcpy(calib_params,&p_v2,size);
+            return RP_HW_CALIB_OK;
+        }
+
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:{
+            size = sizeof(rp_calib_params_v3_t);
+            rp_calib_params_v3_t p_v3;
+            if (!convertV3(&g_calib,&p_v3)){
+                fprintf(stderr,"[Error:calib_GetEEPROM] Error converting calibration parameters.\n");
+            }
+            memcpy(calib_params,&p_v3,size);
+            return RP_HW_CALIB_OK;
+        }
+
+        default:{
+            fprintf(stderr,"[Error:calib_LoadFromFactoryZone] Unknown model: %d.\n",model);
+            return RP_HW_CALIB_EDM;
+            break;
+        }
+    }
+    return RP_HW_CALIB_EDM;
+}
+
+int calib_ConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out){
+    if (g_model_loaded){
+        uint16_t size = 0;
+        switch (g_model)
+        {
+            case STEM_125_10_v1_0:
+            case STEM_125_14_v1_0:
+            case STEM_125_14_v1_1:
+            case STEM_125_14_LN_v1_1:
+            case STEM_125_14_Z7020_v1_0:
+            case STEM_125_14_Z7020_LN_v1_1:{
+                size = sizeof(rp_calib_params_v1_t);
+                rp_calib_params_v1_t p_v1;
+                memcpy(&p_v1,calib_params,size);
+                *out = convertV1toCommon(&p_v1);
+                recalculateGain(out);
+                return RP_HW_CALIB_OK;
+            }
+
+            case STEM_122_16SDR_v1_0:
+            case STEM_122_16SDR_v1_1:{
+                size = sizeof(rp_calib_params_v1_t);
+                rp_calib_params_v1_t p_v1;
+                memcpy(&p_v1,calib_params,size);
+                *out = convertV1toCommon(&p_v1);
+                recalculateGain(out);
+                return RP_HW_CALIB_OK;
+            }
+
+            case STEM_125_14_Z7020_4IN_v1_0:
+            case STEM_125_14_Z7020_4IN_v1_2:
+            case STEM_125_14_Z7020_4IN_v1_3:{
+                size = sizeof(rp_calib_params_v2_t);
+                rp_calib_params_v2_t p_v2;
+                memcpy(&p_v2,calib_params,size);
+                *out = convertV2toCommon(&p_v2);
+                recalculateGain(out);
+                return RP_HW_CALIB_OK;
+            }
+
+            case STEM_250_12_v1_1:
+            case STEM_250_12_v1_2:{
+                size = sizeof(rp_calib_params_v3_t);
+                rp_calib_params_v3_t p_v3;
+                memcpy(&p_v3,calib_params,size);
+                *out = convertV3toCommon(&p_v3);
+                recalculateGain(out);
+                return RP_HW_CALIB_OK;
+            }
+
+            default:{
+                fprintf(stderr,"[Error:calib_ConvertEEPROM] Unknown model: %d.\n",g_model);
+                return RP_HW_CALIB_EDM;
+                break;
+            }
+        }
+    }
+    return RP_HW_CALIB_EDM;
+}
+
+int calib_Print(rp_calib_params_t *calib){
+    fprintf(stdout,"dataStructureId: %d\n",calib->dataStructureId);
+    fprintf(stdout,"wpCheck: %d\n\n",calib->wpCheck);
+    fprintf(stdout,"fast_adc_count_1_1: %d\n\n",calib->fast_adc_count_1_1);
+    for(int i = 0 ;i< calib->fast_adc_count_1_1; ++i){
+        fprintf(stdout,"\tChannel %d:\n",i+1);
+        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_1[i].fullScale);
+        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_1[i].calibValue);
+        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_1[i].offset);
+        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_1[i].gainCalc);
+        fprintf(stdout,"\t\t* AA: %d:\n",calib->fast_adc_filter_1_1[i].aa);
+        fprintf(stdout,"\t\t* BB: %d:\n",calib->fast_adc_filter_1_1[i].bb);
+        fprintf(stdout,"\t\t* PP: %d:\n",calib->fast_adc_filter_1_1[i].pp);
+        fprintf(stdout,"\t\t* KK: %d:\n",calib->fast_adc_filter_1_1[i].kk);
+    }
+
+    fprintf(stdout,"fast_adc_count_1_20: %d\n\n",calib->fast_adc_count_1_1);
+    for(int i = 0 ;i< calib->fast_adc_count_1_20; ++i){
+        fprintf(stdout,"\tChannel %d:\n",i+1);
+        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_20[i].fullScale);
+        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_20[i].calibValue);
+        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_20[i].offset);
+        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_20[i].gainCalc);
+        fprintf(stdout,"\t\t* AA: %d:\n",calib->fast_adc_filter_1_20[i].aa);
+        fprintf(stdout,"\t\t* BB: %d:\n",calib->fast_adc_filter_1_20[i].bb);
+        fprintf(stdout,"\t\t* PP: %d:\n",calib->fast_adc_filter_1_20[i].pp);
+        fprintf(stdout,"\t\t* KK: %d:\n",calib->fast_adc_filter_1_20[i].kk);
+    }
+
+    fprintf(stdout,"fast_adc_count_1_1_ac: %d\n\n",calib->fast_adc_count_1_1_ac);
+    for(int i = 0 ;i< calib->fast_adc_count_1_1_ac; ++i){
+        fprintf(stdout,"\tChannel %d:\n",i+1);
+        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_1_ac[i].fullScale);
+        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_1_ac[i].calibValue);
+        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_1_ac[i].offset);
+        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_1_ac[i].gainCalc);
+    }
+
+    fprintf(stdout,"fast_adc_count_1_20_ac: %d\n\n",calib->fast_adc_count_1_1_ac);
+    for(int i = 0 ;i< calib->fast_adc_count_1_20_ac; ++i){
+        fprintf(stdout,"\tChannel %d:\n",i+1);
+        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_20_ac[i].fullScale);
+        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_20_ac[i].calibValue);
+        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_20_ac[i].offset);
+        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_20_ac[i].gainCalc);
+    }
+
+    fprintf(stdout,"fast_dac_count_x1: %d\n\n",calib->fast_dac_count_x1);
+    for(int i = 0 ;i< calib->fast_dac_count_x1; ++i){
+        fprintf(stdout,"\tChannel %d:\n",i+1);
+        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_dac_x1[i].fullScale);
+        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_dac_x1[i].calibValue);
+        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_dac_x1[i].offset);
+        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_dac_x1[i].gainCalc);
+    }
+
+    fprintf(stdout,"fast_dac_count_x5: %d\n\n",calib->fast_dac_count_x5);
+    for(int i = 0 ;i< calib->fast_dac_count_x5; ++i){
+        fprintf(stdout,"\tChannel %d:\n",i+1);
+        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_dac_x5[i].fullScale);
+        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_dac_x5[i].calibValue);
+        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_dac_x5[i].offset);
+        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_dac_x5[i].gainCalc);
+    }
 }
 
 // /**

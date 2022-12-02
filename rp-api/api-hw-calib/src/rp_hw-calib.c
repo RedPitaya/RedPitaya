@@ -35,18 +35,30 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings(){
     return calib_GetDefaultCalib();
 }
 
-int rp_CalibrationReset(){
-    return calib_Reset();
+int rp_CalibrationReset(bool use_factory_zone){
+    return calib_Reset(use_factory_zone);
 }
 
 int rp_CalibrationFactoryReset(){
     return calib_LoadFromFactoryZone();
 }
 
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params){
-    return calib_WriteDirectlyParams(&calib_params);
+int rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone){
+    return calib_WriteDirectlyParams(&calib_params,use_factory_zone);
 }
 
 int rp_CalibrationSetParams(rp_calib_params_t calib_params){
     return calib_SetParams(&calib_params);
+}
+
+int rp_CalibGetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone){
+    return calib_GetEEPROM(calib_params,use_factory_zone);
+}
+
+int rp_CalibConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out){
+    return calib_ConvertEEPROM(calib_params,out);
+}
+
+int rp_CalibPrint(rp_calib_params_t *calib){
+    return calib_Print(calib);
 }

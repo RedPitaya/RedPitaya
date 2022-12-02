@@ -14,7 +14,8 @@
 
 #include "common.h"
 #include "oscilloscope.h"
-#include "rp_cross.h"
+#include "redpitaya/rp.h"
+
 // The FPGA register structure for oscilloscope
 static volatile osc_control_t *osc_reg = NULL;
 
@@ -24,19 +25,16 @@ static volatile uint32_t *osc_cha = NULL;
 // The FPGA input signal buffer pointer for channel B
 static volatile uint32_t *osc_chb = NULL;
 
-#if defined Z20_125_4CH
+static volatile osc_control_t *osc_reg_4ch = NULL;
+
+// The FPGA input signal buffer pointer for channel C
+static volatile uint32_t *osc_chc = NULL;
+
+// The FPGA input signal buffer pointer for channel D
+static volatile uint32_t *osc_chd = NULL;
 
 bool emulate4Ch = false;
 
-static volatile osc_control_t *osc_reg_4ch = NULL;
-
-// The FPGA input signal buffer pointer for channel A
-static volatile uint32_t *osc_chc = NULL;
-
-// The FPGA input signal buffer pointer for channel B
-static volatile uint32_t *osc_chd = NULL;
-
-#endif
 
 /**
  * general
@@ -124,7 +122,7 @@ int osc_SetTriggerSource(uint32_t source)
         if (source == RP_TRIG_SRC_CHD_PE){
             source = RP_TRIG_SRC_CHB_PE;
         }
-        
+
         if (source == RP_TRIG_SRC_CHD_NE){
             source = RP_TRIG_SRC_CHB_NE;
         }
@@ -228,7 +226,7 @@ int osc_SetThresholdChC(uint32_t threshold)
     return cmn_SetValue(&osc_reg_4ch->cha_thr, threshold, THRESHOLD_MASK,&currentValue);
 #else
     return RP_NOTS;
-#endif    
+#endif
 }
 
 int osc_GetThresholdChC(uint32_t* threshold)
@@ -464,7 +462,7 @@ const volatile uint32_t* osc_GetDataBufferChC()
 if (emulate4Ch)
     return osc_cha;
 else
-    return osc_chc;    
+    return osc_chc;
 #else
     return NULL;
 #endif
@@ -476,7 +474,7 @@ const volatile uint32_t* osc_GetDataBufferChD()
 if (emulate4Ch)
     return osc_chb;
 else
-    return osc_chd;    
+    return osc_chd;
 #else
     return NULL;
 #endif

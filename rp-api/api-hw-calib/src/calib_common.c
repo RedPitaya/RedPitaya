@@ -7,8 +7,8 @@
 
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
-static const int  eeprom_calib_off=0x0008;
-static const int  eeprom_calib_factory_off = 0x1c08;
+static const int  eeprom_calib_off=0x0000;
+static const int  eeprom_calib_factory_off = 0x1c00;
 
 
 inline uint32_t calibFullScaleFromVoltage(float voltageScale) {
@@ -30,7 +30,7 @@ uint8_t* readParams(uint16_t *size, bool use_factory_zone)
     /* open EEPROM device */
     fp = fopen(eeprom_device, "r");
     if(fp == NULL) {
-        fprintf(stderr,"[Error] Error opening eeprom file.\n");
+        fprintf(stderr,"[Error:readParams] Error opening eeprom file.\n");
         return NULL;
     }
 
@@ -43,7 +43,7 @@ uint8_t* readParams(uint16_t *size, bool use_factory_zone)
 
     uint8_t* buf = (uint8_t *)malloc(*size);
 	if (!buf) {
-        fprintf(stderr,"[Error] Memory allocation error.\n");
+        fprintf(stderr,"[Error:readParams] Memory allocation error.\n");
 		fclose(fp);
 		return NULL;
 	}
@@ -59,7 +59,7 @@ int writeParams(uint8_t *buffer,uint16_t size,bool use_factory_zone) {
     /* open EEPROM device */
     fp = fopen(eeprom_device, "w+");
     if(fp == NULL) {
-        fprintf(stderr,"[Error] Error opening eeprom file.\n");
+        fprintf(stderr,"[Error:readParams] Error opening eeprom file.\n");
         return -1;
     }
 
@@ -118,6 +118,8 @@ bool convertV1(rp_calib_params_t *param,rp_calib_params_v1_t *out){
     if (param->fast_dac_count_x5 != 0){
         return false;
     }
+    out->dataStructureId = param->dataStructureId;
+    out->wpCheck = param->wpCheck;
 
     out->fe_ch1_fs_g_hi = param->fast_adc_1_1[0].calibValue;
     out->fe_ch2_fs_g_hi = param->fast_adc_1_1[1].calibValue;
@@ -185,6 +187,8 @@ bool convertV2(rp_calib_params_t *param,rp_calib_params_v2_t *out){
         return false;
     }
 
+    out->dataStructureId = param->dataStructureId;
+    out->wpCheck = param->wpCheck;
 
     out->chA_g_hi = param->fast_adc_1_1[0].calibValue;
     out->chB_g_hi = param->fast_adc_1_1[1].calibValue;
@@ -275,6 +279,9 @@ bool convertV3(rp_calib_params_t *param,rp_calib_params_v3_t *out){
         return false;
     }
 
+    out->dataStructureId = param->dataStructureId;
+    out->wpCheck = param->wpCheck;
+
     out->gen_ch1_g_1 = param->fast_dac_x1[0].calibValue;
     out->gen_ch2_g_1 = param->fast_dac_x1[1].calibValue;
     out->gen_ch1_off_1 = param->fast_dac_x1[0].offset;
@@ -324,6 +331,7 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
         calib.fast_adc_count_1_1 = 2;
         calib.fast_adc_count_1_20 = 2;
         calib.fast_dac_count_x1 = 2;
+        calib.dataStructureId = RP_HW_PACK_ID_V1;
 
         for(int i = 0; i < 2; ++i){
             calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(1.0);
@@ -358,6 +366,8 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
     case STEM_122_16SDR_v1_1:
         calib.fast_adc_count_1_1 = 2;
         calib.fast_dac_count_x1 = 2;
+        calib.dataStructureId = RP_HW_PACK_ID_V1;
+
         for(int i = 0; i < 2; ++i){
             calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(0.5);
             calib.fast_adc_1_1[i].offset = 0;
@@ -376,6 +386,8 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
     case STEM_125_14_Z7020_4IN_v1_3:
         calib.fast_adc_count_1_1 = 4;
         calib.fast_adc_count_1_20 = 4;
+        calib.dataStructureId = RP_HW_PACK_ID_V3;
+
         for(int i = 0; i < 4; ++i){
             calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(1.0);
             calib.fast_adc_1_1[i].offset = 0;
@@ -397,6 +409,7 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
         calib.fast_adc_count_1_20_ac = 2;
         calib.fast_dac_count_x1 = 2;
         calib.fast_dac_count_x5 = 2;
+        calib.dataStructureId = RP_HW_PACK_ID_V2;
 
         for(int i = 0; i < 2; ++i){
             calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(20.0);
@@ -445,6 +458,8 @@ rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t *param){
     calib.fast_adc_count_1_1 = 2;
     calib.fast_adc_count_1_20 = 2;
     calib.fast_dac_count_x1 = 2;
+    calib.dataStructureId = param->dataStructureId;
+    calib.wpCheck = param->wpCheck;
 
     calib.fast_adc_1_1[0].fullScale = 1.0;
     calib.fast_adc_1_1[0].calibValue = param->fe_ch1_fs_g_hi;
@@ -517,6 +532,8 @@ rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param){
     memset(&calib,0,sizeof(rp_calib_params_t));
     calib.fast_adc_count_1_1 = 4;
     calib.fast_adc_count_1_20 = 4;
+    calib.dataStructureId = param->dataStructureId;
+    calib.wpCheck = param->wpCheck;
 
     calib.fast_adc_1_1[0].fullScale = 1.0;
     calib.fast_adc_1_1[0].calibValue = param->chA_g_hi;
@@ -604,6 +621,8 @@ rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param){
     calib.fast_adc_count_1_20_ac = 2;
     calib.fast_dac_count_x1 = 2;
     calib.fast_dac_count_x5 = 2;
+    calib.dataStructureId = param->dataStructureId;
+    calib.wpCheck = param->wpCheck;
 
     calib.fast_adc_1_1[0].fullScale = 1.0;
     calib.fast_adc_1_1[0].calibValue = param->osc_ch1_g_1_dc;

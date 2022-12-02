@@ -16,10 +16,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "rp_cross.h"
 #include "common.h"
 #include "generate.h"
-#include "calib.h"
 
 static volatile generate_control_t *generate = NULL;
 static volatile int32_t *data_chA = NULL;

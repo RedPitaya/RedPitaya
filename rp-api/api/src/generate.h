@@ -14,7 +14,8 @@
 #ifndef __GENERATE_H
 #define __GENERATE_H
 
-#include "rp_cross.h"
+#include "redpitaya/rp.h"
+#include "rp_hw-profiles.h"
 
 
 #define AMPLITUDE_MAX           1.0 // V
@@ -71,7 +72,7 @@ typedef struct generate_control_s {
     unsigned int AtempProtected     :1;
     unsigned int AlatchedTempAlarm  :1;
     unsigned int AruntimeTempAlarm  :1;
-    // 
+    //
     unsigned int                    :4;
 
     unsigned int BtriggerSelector   :4;
@@ -84,7 +85,7 @@ typedef struct generate_control_s {
     unsigned int BtempProtected     :1;
     unsigned int BlatchedTempAlarm  :1;
     unsigned int BruntimeTempAlarm  :1;
-    // 
+    //
     unsigned int                    :4;
 
     ch_properties_t properties_chA;

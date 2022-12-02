@@ -22,6 +22,10 @@
  * used in 125-14 and 125-10
  */
 typedef struct {
+    char dataStructureId;
+    char wpCheck;
+    char reserved[6];
+
     uint32_t fe_ch1_fs_g_hi;    //!< High gain front end full scale voltage, channel A
     uint32_t fe_ch2_fs_g_hi;    //!< High gain front end full scale voltage, channel B
     uint32_t fe_ch1_fs_g_lo;    //!< Low gain front end full scale voltage, channel A
@@ -61,6 +65,10 @@ typedef struct {
  */
 
 typedef struct {
+    char dataStructureId;
+    char wpCheck;
+    char reserved[6];
+
     uint32_t chA_g_hi;          //!< High gain front end full scale voltage, channel A
     uint32_t chB_g_hi;          //!< High gain front end full scale voltage, channel B
     uint32_t chC_g_hi;          //!< High gain front end full scale voltage, channel C
@@ -129,6 +137,10 @@ typedef struct {
  * used in 250-12 models
  */
 typedef struct {
+    char dataStructureId;
+    char wpCheck;
+    char reserved[6];
+
     uint32_t gen_ch1_g_1;
     uint32_t gen_ch2_g_1;
     int32_t  gen_ch1_off_1;

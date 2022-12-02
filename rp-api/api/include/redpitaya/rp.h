@@ -198,7 +198,9 @@ typedef enum {
  */
 typedef enum {
     RP_CH_1 = 0,    //!< Channel A
-    RP_CH_2 = 1     //!< Channel B
+    RP_CH_2 = 1,    //!< Channel B
+    RP_CH_3 = 2,    //!< Channel C
+    RP_CH_4 = 3     //!< Channel D
 } rp_channel_t;
 
 
@@ -294,43 +296,6 @@ typedef enum {
     RP_TRIG_STATE_WAITING,   //!< Trigger is set up and waiting (to be triggered)
 } rp_acq_trig_state_t;
 
-
-/**
- * Calibration parameters, stored in the EEPROM device
- */
-typedef struct {
-    uint32_t fe_ch1_fs_g_hi;    //!< High gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_hi;    //!< High gain front end full scale voltage, channel B
-    uint32_t fe_ch1_fs_g_lo;    //!< Low gain front end full scale voltage, channel A
-    uint32_t fe_ch2_fs_g_lo;    //!< Low gain front end full scale voltage, channel B
-    int32_t  fe_ch1_lo_offs;    //!< Front end DC offset, channel A
-    int32_t  fe_ch2_lo_offs;    //!< Front end DC offset, channel B
-    uint32_t be_ch1_fs;         //!< Back end full scale voltage, channel A
-    uint32_t be_ch2_fs;         //!< Back end full scale voltage, channel B
-    int32_t  be_ch1_dc_offs;    //!< Back end DC offset, channel A
-    int32_t  be_ch2_dc_offs;    //!< Back end DC offset, on channel B
-	uint32_t magic;			    //!
-    int32_t  fe_ch1_hi_offs;    //!< Front end DC offset, channel A
-    int32_t  fe_ch2_hi_offs;    //!< Front end DC offset, channel B
-    uint32_t low_filter_aa_ch1;  //!< Filter equalization coefficients AA for Low mode, channel A
-    uint32_t low_filter_bb_ch1;  //!< Filter equalization coefficients BB for Low mode, channel A
-    uint32_t low_filter_pp_ch1;  //!< Filter equalization coefficients PP for Low mode, channel A
-    uint32_t low_filter_kk_ch1;  //!< Filter equalization coefficients KK for Low mode, channel A
-    uint32_t low_filter_aa_ch2;  //!< Filter equalization coefficients AA for Low mode, channel B
-    uint32_t low_filter_bb_ch2;  //!< Filter equalization coefficients BB for Low mode, channel B
-    uint32_t low_filter_pp_ch2;  //!< Filter equalization coefficients PP for Low mode, channel B
-    uint32_t low_filter_kk_ch2;  //!< Filter equalization coefficients KK for Low mode, channel B
-    uint32_t  hi_filter_aa_ch1;  //!< Filter equalization coefficients AA for High mode, channel A
-    uint32_t  hi_filter_bb_ch1;  //!< Filter equalization coefficients BB for High mode, channel A
-    uint32_t  hi_filter_pp_ch1;  //!< Filter equalization coefficients PP for High mode, channel A
-    uint32_t  hi_filter_kk_ch1;  //!< Filter equalization coefficients KK for High mode, channel A
-    uint32_t  hi_filter_aa_ch2;  //!< Filter equalization coefficients AA for High mode, channel B
-    uint32_t  hi_filter_bb_ch2;  //!< Filter equalization coefficients BB for High mode, channel B
-    uint32_t  hi_filter_pp_ch2;  //!< Filter equalization coefficients PP for High mode, channel B
-    uint32_t  hi_filter_kk_ch2;  //!< Filter equalization coefficients KK for High mode, channel B
-
-} rp_calib_params_t;
-
 /** @name General
  */
 ///@{
@@ -354,8 +319,6 @@ int rp_Init(void);
 int rp_InitReset(bool reset);
 
 int rp_IsApiInit();
-
-int rp_CalibInit();
 
 /**
  * Releases the library resources. It must be called last, after library is not used anymore. Typically before
@@ -402,127 +365,6 @@ int rp_EnableDigitalLoop(bool enable);
 
 
 ///@}
-/** @name Calibrate
-*/
-///@{
-
-/**
-* Returns calibration settings.
-* These calibration settings are populated only once from EEPROM at rp_Init().
-* Each rp_GetCalibrationSettings call returns the same cached setting values.
-* @return Calibration settings
-*/
-rp_calib_params_t rp_GetCalibrationSettings();
-
-/**
-* Returns default calibration settings.
-* These calibration settings are populated only once from EEPROM at rp_Init().
-* Each rp_GetCalibrationSettings call returns the same cached setting values.
-* @return Calibration settings
-*/
-rp_calib_params_t rp_GetDefaultCalibrationSettings();
-
-/**
-* Calibrates input channel offset. This input channel must be grounded to calibrate properly.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) ;
-
-/**
-* Calibrates input channel low voltage scale. Jumpers must be set to LV.
-* This input channel must be connected to stable positive source.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @param referentialVoltage Voltage of the source.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
-
-/**
-* Calibrates input channel high voltage scale. Jumpers must be set to HV.
-* This input channel must be connected to stable positive source.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @param referentialVoltage Voltage of the source.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
-
-/**
-* Calibrates output channel offset.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEndOffset(rp_channel_t channel);
-
-/**
-* Calibrates output channel voltage scale.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEndScale(rp_channel_t channel);
-
-/**
-* Calibrates output channel.
-* This input channel must be connected to calibrated input channel with came number (CH1 to CH1 and CH2 to CH2).
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @param channel Channel witch is going to be calibrated
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
-
-/**
-* Set default calibration values.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrationReset();
-
-/**
-* Copy factory calibration values into user eeprom.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrationFactoryReset();
-
-/**
-* Set saved calibration values in case of roll-back calibration.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrationSetCachedParams();
-
-/**
-* Write calibration values.
-* Calibration data is written to EPROM and repopulated so that rp_GetCalibrationSettings works properly.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params);
-///@}
-
-/**
-* Set calibration values in memory.
-* Calibration values are written to temporary memory, but not permanently.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibrationSetParams(rp_calib_params_t calib_params);
-
 
 
 /** @name Identification
@@ -1611,6 +1453,35 @@ int rp_GenResetTrigger(rp_channel_t channel);
 
 int rp_GenTriggerOnly(rp_channel_t channel);
 
+///@}
+/** @name PLL Control for 250-12
+*/
+///@{
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param enable return current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetPllControlEnable(bool *enable);
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param enable Flag enabling PLL control.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetPllControlEnable(bool enable);
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param status Get current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetPllControlLocked(bool *status);
+///@}
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 

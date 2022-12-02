@@ -21,12 +21,9 @@
 #include "oscilloscope.h"
 #include "acq_handler.h"
 #include "analog_mixed_signals.h"
-#include "calib.h"
-
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
+#include "rp_hw-calib.h"
 #include "generate.h"
 #include "gen_handler.h"
-#endif
 
 static char version[50];
 int g_api_state = 0;
@@ -44,7 +41,7 @@ int rp_InitReset(bool reset)
 {
     cmn_Init();
 
-    calib_Init();
+    rp_CalibInit();
     hk_Init(reset);
     ams_Init();
 
@@ -65,12 +62,6 @@ int rp_IsApiInit(){
     return g_api_state;
 }
 
-int rp_CalibInit()
-{
-    calib_Init();
-    return RP_OK;
-}
-
 int rp_Release()
 {
     osc_Release();
@@ -79,7 +70,6 @@ int rp_Release()
 #endif
     ams_Release();
     hk_Release();
-    calib_Release();
     cmn_Release();
     g_api_state = false;
     return RP_OK;
@@ -135,62 +125,6 @@ const char* rp_GetError(int errorCode) {
  * Calibrate methods
  */
 
-rp_calib_params_t rp_GetCalibrationSettings()
-{
-    return calib_GetParams();
-}
-
-int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndOffset(channel, gain, out_params);
-}
-
-int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndScaleLV(channel, referentialVoltage, out_params);
-}
-
-int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndScaleHV(channel, referentialVoltage, out_params);
-}
-
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
-
-int rp_CalibrateBackEndOffset(rp_channel_t channel) {
-    return calib_SetBackEndOffset(channel);
-}
-
-int rp_CalibrateBackEndScale(rp_channel_t channel) {
-    return calib_SetBackEndScale(channel);
-}
-
-int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
-    return calib_CalibrateBackEnd(channel, out_params);
-}
-
-#endif
-
-int rp_CalibrationReset() {
-    return calib_Reset();
-}
-
-int rp_CalibrationFactoryReset() {
-    return calib_LoadFromFactoryZone();
-}
-
-int rp_CalibrationSetCachedParams() {
-    return calib_setCachedParams();
-}
-
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
-    return calib_WriteParams(calib_params,false);
-}
-
-int rp_CalibrationSetParams(rp_calib_params_t calib_params){
-    return calib_SetParams(calib_params);
-}
-
-rp_calib_params_t rp_GetDefaultCalibrationSettings(){
-    return calib_GetDefaultCalib();
-}
 
 float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
 {

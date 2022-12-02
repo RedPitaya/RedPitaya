@@ -360,13 +360,13 @@ int rp_HPGetIsCalibrationLogicPresent(bool *value);
 bool rp_HPGetIsCalibrationLogicPresentOrDefault();
 
 /**
-* Returns a sign of the presence of logic for choosing a clock for fpga
+* Returns the presence of the PLL functionality. Present in boards 250-12.
 * Function rp_HPGetIsE2Pin21ClockSelectorOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_HPGetIsE2Pin21ClockSelector(bool *value);
-bool rp_HPGetIsE2Pin21ClockSelectorOrDefault();
+int rp_HPGetIsPLLControlEnable(bool *value);
+bool rp_HPGetIsPLLControlEnableOrDefault();
 
 /**
  * Print all parameters for current profile

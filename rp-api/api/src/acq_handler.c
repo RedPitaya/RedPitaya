@@ -19,15 +19,12 @@
 #include <string.h>
 
 #include "common.h"
-#include "calib.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
 #include "neon_asm.h"
 
-#ifdef Z20_250_12
 #include "rp-i2c-mcp47x6-c.h"
 #include "rp-i2c-max7311-c.h"
-#endif
 
 
 // // Decimation constants
@@ -142,23 +139,23 @@ static int setEqFilters(rp_channel_t channel)
     uint32_t bb = calib_GetFilterCoff(channel,gain,BB);
     uint32_t kk = calib_GetFilterCoff(channel,gain,KK);
     uint32_t pp = calib_GetFilterCoff(channel,gain,PP);
-  
+
     // Update equalization filter with default coefficients
     if (channel == RP_CH_1) {
         return osc_SetEqFiltersChA(aa, bb, kk, pp);
-    } 
-    
+    }
+
     if (channel == RP_CH_2) {
         return osc_SetEqFiltersChB(aa, bb, kk, pp);
     }
 #if defined Z20_125_4CH
     if (channel == RP_CH_3) {
         return osc_SetEqFiltersChC(aa, bb, kk, pp);
-    } 
-    
+    }
+
     if (channel == RP_CH_4) {
         return osc_SetEqFiltersChD(aa, bb, kk, pp);
-    }    
+    }
 #endif
     return RP_EOOR;
 #endif
@@ -208,12 +205,12 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 #ifdef Z20_125_4CH
     if (channel == RP_CH_3) {
         gain = &gain_ch_c;
-    } 
-    
+    }
+
     if (channel == RP_CH_4) {
         gain = &gain_ch_d;
     }
-#endif    
+#endif
     // Read old values which are dependent on the gain...
     rp_pinState_t old_gain;
     float ch_thr, ch_hyst;
@@ -221,19 +218,19 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     old_gain = *gain;
     acq_GetChannelThreshold(channel, &ch_thr);
     acq_GetChannelThresholdHyst(channel, &ch_hyst);
-    
+
 #ifdef Z20_250_12
     int ch = (channel == RP_CH_1 ? RP_MAX7311_IN1 : RP_MAX7311_IN2);
     int att = (state == RP_LOW ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
-    status = rp_setAttenuator_C(ch,att);    
+    status = rp_setAttenuator_C(ch,att);
 #endif
 
     if (status == RP_OK) {
     // Now update the gain
-        *gain = state;        
+        *gain = state;
     }
-    
-    
+
+
     // And recalculate new values...
     status = acq_SetChannelThreshold(channel, ch_thr);
     if (status == RP_OK) {
@@ -242,7 +239,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
 
     // In case of an error, put old values back and report the error
     if (status != RP_OK) {
-        *gain = old_gain;        
+        *gain = old_gain;
         acq_SetChannelThreshold(channel, ch_thr);
         acq_SetChannelThresholdHyst(channel, ch_hyst);
     }
@@ -250,7 +247,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state)
     // Updating eq filters should never fail...
     else {
         status = setEqFilters(channel);
-    }    
+    }
     return status;
 }
 
@@ -266,8 +263,8 @@ int acq_GetGain(rp_channel_t channel, rp_pinState_t* state)
 #ifdef Z20_125_4CH
     if (channel == RP_CH_3) {
         *state = gain_ch_c;
-    } 
-    
+    }
+
     if (channel == RP_CH_4) {
         *state = gain_ch_d;
     }
@@ -281,7 +278,7 @@ int acq_GetGainV(rp_channel_t channel, float* voltage)
     #ifdef Z20
         (void)(channel);
         *voltage = 0.5;
-    #else 
+    #else
         rp_pinState_t *gain = NULL;
 
         if (channel == RP_CH_1) {
@@ -295,8 +292,8 @@ int acq_GetGainV(rp_channel_t channel, float* voltage)
 #ifdef Z20_125_4CH
         if (channel == RP_CH_3) {
             gain = &gain_ch_c;
-        } 
-        
+        }
+
         if (channel == RP_CH_4) {
             gain = &gain_ch_d;
         }
@@ -352,9 +349,9 @@ int acq_SetDecimationFactor(uint32_t decimation)
     if (decimation == 4)  check = true;
     if (decimation == 8)  check = true;
     if (decimation >= 16 && decimation <= 65536) check = true;
-    
+
     if (!check) return RP_EOOR;
-    osc_SetDecimation(decimation); 
+    osc_SetDecimation(decimation);
     // Now update trigger delay based on new decimation
     if (triggerDelayInNs) {
         acq_SetTriggerDelayNs(time_ns, true);
@@ -377,43 +374,43 @@ int acq_GetDecimationFactor(uint32_t* decimation)
 
 int acq_ConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation){
     switch (factor){
-        case RP_DEC_1 : 
+        case RP_DEC_1 :
             *decimation = RP_DEC_1;
             break;
-        case RP_DEC_2 : 
+        case RP_DEC_2 :
             *decimation = RP_DEC_2;
             break;
-        case RP_DEC_4 : 
+        case RP_DEC_4 :
             *decimation = RP_DEC_4;
             break;
-        case RP_DEC_8 : 
+        case RP_DEC_8 :
             *decimation = RP_DEC_8;
             break;
-        case RP_DEC_16 : 
+        case RP_DEC_16 :
             *decimation = RP_DEC_16;
             break;
-        case RP_DEC_32 : 
+        case RP_DEC_32 :
             *decimation = RP_DEC_32;
             break;
-        case RP_DEC_64 : 
+        case RP_DEC_64 :
             *decimation = RP_DEC_64;
             break;
-        case RP_DEC_128 : 
+        case RP_DEC_128 :
             *decimation = RP_DEC_128;
             break;
-        case RP_DEC_256 : 
+        case RP_DEC_256 :
             *decimation = RP_DEC_256;
             break;
-        case RP_DEC_512 : 
+        case RP_DEC_512 :
             *decimation = RP_DEC_512;
             break;
-        case RP_DEC_1024 : 
+        case RP_DEC_1024 :
             *decimation = RP_DEC_1024;
             break;
-        case RP_DEC_2048 : 
+        case RP_DEC_2048 :
             *decimation = RP_DEC_2048;
             break;
-        case RP_DEC_4096 : 
+        case RP_DEC_4096 :
             *decimation = RP_DEC_4096;
             break;
         case RP_DEC_8192 :
@@ -507,7 +504,7 @@ int acq_SetTriggerDelay(int32_t decimated_data_num, bool updateMaxValue)
         trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
     }
     osc_SetTriggerDelay(trig_dly);
-    
+
     triggerDelayInNs = false;
     return RP_OK;
 }
@@ -571,7 +568,7 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage)
                     case RP_I2C_EFWB: return RP_EFWB;
                     default:
                         return RP_OK;
-                }   
+                }
         }
 #endif
         default:;
@@ -588,7 +585,7 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage)
 #if defined Z20_125_4CH
         case RP_T_CH_3: return acq_GetChannelThreshold(RP_CH_3, voltage);
         case RP_T_CH_4: return acq_GetChannelThreshold(RP_CH_4, voltage);
-#endif        
+#endif
 
 #ifdef Z20_250_12
         case RP_T_CH_EXT: {
@@ -599,7 +596,7 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage)
                     case RP_I2C_EFWB: return RP_EFWB;
                     default:
                         return RP_OK;
-                }   
+                }
         }
 #endif
         default:;
@@ -614,7 +611,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
 
     acq_GetGainV(channel, &gainV);
     acq_GetGain(channel, &gain);
-    
+
     if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
     }
@@ -636,7 +633,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
     // We cut high bits of negative numbers
     cnt = cnt & ((1 << ADC_REG_BITS) - 1);
 #endif
-    
+
     if (channel == RP_CH_1) {
         chA_trash = voltage;
         return osc_SetThresholdChA(cnt);
@@ -648,7 +645,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage)
     }
 #if defined Z20_125_4CH
     if (channel == RP_CH_3) {
-        chC_trash = voltage;        
+        chC_trash = voltage;
         return osc_SetThresholdChC(cnt);
     }
 
@@ -711,11 +708,11 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
 
     acq_GetGainV(channel, &gainV);
     acq_GetGain(channel, &gain);
-    
+
     if (fabs(voltage) - fabs(gainV) > FLOAT_EPS) {
         return RP_EOOR;
     }
-        
+
 
 #ifdef Z20_250_12
     rp_acq_ac_dc_mode_t power_mode;
@@ -739,7 +736,7 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage)
     }
 #if defined Z20_125_4CH
     if (channel == RP_CH_3) {
-        chC_hyst = voltage;        
+        chC_hyst = voltage;
         return osc_SetHysteresisChC(cnt);
     }
 
@@ -816,7 +813,7 @@ static const volatile uint32_t* getRawBuffer(rp_channel_t channel)
     if (channel == RP_CH_4) {
         return osc_GetDataBufferChD();
     }
-#endif    
+#endif
     return NULL;
 }
 
@@ -870,7 +867,7 @@ int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* b
     *size = MIN(*size, ADC_BUFFER_SIZE);
     const volatile uint32_t* raw_buffer = getRawBuffer(RP_CH_1);
     const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
-    
+
     for (uint32_t i = 0; i < (*size); ++i) {
         buffer[i] =  (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
         buffer2[i] = (raw_buffer2[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
@@ -888,7 +885,7 @@ int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* b
     const volatile uint32_t* raw_buffer2 = getRawBuffer(RP_CH_2);
     const volatile uint32_t* raw_buffer3 = getRawBuffer(RP_CH_3);
     const volatile uint32_t* raw_buffer4 = getRawBuffer(RP_CH_4);
-    
+
     for (uint32_t i = 0; i < (*size); ++i) {
         buffer[i] =  (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
         buffer2[i] = (raw_buffer2[(pos + i) % ADC_BUFFER_SIZE]) & ADC_BITS_MASK;
@@ -1338,7 +1335,7 @@ int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* co
     if (channel == RP_CH_4){
         return osc_GetEqFiltersChD(coef_aa,coef_bb,coef_kk,coef_pp);
     }
-#endif    
+#endif
     return RP_EOOR;
 }
 #endif

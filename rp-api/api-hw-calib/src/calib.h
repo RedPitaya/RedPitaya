@@ -27,12 +27,15 @@ rp_calib_params_t calib_GetDefaultCalib();
 
 int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool use_factory_zone);
 int calib_SetParams(rp_calib_params_t *calib_params);
-int calib_WriteDirectlyParams(rp_calib_params_t *calib_params);
+int calib_WriteDirectlyParams(rp_calib_params_t *calib_params,bool use_factory_zone);
 
 void calib_SetToZero();
 int calib_LoadFromFactoryZone();
-int calib_Reset();
+int calib_Reset(bool use_factory_zone);
+int calib_GetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone);
+int calib_ConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out);
 
+int calib_Print(rp_calib_params_t *calib);
 
               // int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params);
               // int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);

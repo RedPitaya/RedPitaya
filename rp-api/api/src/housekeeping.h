@@ -19,14 +19,12 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "rp_cross.h"
+#include "redpitaya/rp.h"
+#include "rp_hw-profiles.h"
+
 // Base Housekeeping address
 static const int HOUSEKEEPING_BASE_ADDR = 0x00000000;
-#ifdef Z20_250_12
-    static const int HOUSEKEEPING_BASE_SIZE = 0x44;
-#else
-    static const int HOUSEKEEPING_BASE_SIZE = 0x34;
-#endif
+static const int HOUSEKEEPING_BASE_SIZE = 0x44;
 
 // Housekeeping structure declaration
 typedef struct pll_control_s {
@@ -47,12 +45,10 @@ typedef struct housekeeping_control_s {
     uint32_t reserved_2;
     uint32_t reserved_3;
     uint32_t led_control;
-#ifdef Z20_250_12
     uint32_t reserved_4;
     uint32_t reserved_5;
     uint32_t reserved_6;
     pll_control_t pll_control;
-#endif
 } housekeeping_control_t;
 
 
@@ -73,13 +69,11 @@ static volatile housekeeping_control_t *hk = NULL;
 static int hk_Init(bool reset) {
     cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
 
-#ifdef Z20_250_12
-    if (reset) {
-        house_SetPllControlEnable(false);
+    if (rp_HPGetIsPLLControlEnableOrDefault()){
+        if (reset) {
+            house_SetPllControlEnable(false);
+        }
     }
-#else
-    (void)(reset);    
-#endif
     return RP_OK;
 }
 
@@ -88,21 +82,31 @@ static int hk_Release() {
     return RP_OK;
 }
 
-#ifdef Z20_250_12
 int house_GetPllControlEnable(bool *enable){
-    *enable = hk->pll_control.enable;
-    return RP_OK;
+    if (rp_HPGetIsPLLControlEnableOrDefault()){
+        *enable = hk->pll_control.enable;
+        return RP_OK;
+    }else{
+        return RP_NOTS;
+    }
 }
 
 int house_SetPllControlEnable(bool enable){
-    hk->pll_control.enable = enable;
-    return RP_OK;
+    if (rp_HPGetIsPLLControlEnableOrDefault()){
+        hk->pll_control.enable = enable;
+        return RP_OK;
+    }else{
+        return RP_NOTS;
+    }
 }
 
 int house_GetPllControlLocked(bool *status){
-    *status = hk->pll_control.locked;
-    return RP_OK;
+    if (rp_HPGetIsPLLControlEnableOrDefault()){
+        *status = hk->pll_control.locked;
+        return RP_OK;
+    }else{
+        return RP_NOTS;
+    }
 }
-#endif
 
 #endif //__HOUSEKEEPING_H

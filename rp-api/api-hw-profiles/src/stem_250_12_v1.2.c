@@ -73,7 +73,9 @@ profiles_t stem_250_12_v1_2 = {
 
     .is_DAC_gain_x5 = true,
 
-    .is_fast_calibration = true
+    .is_fast_calibration = true,
+
+    .is_pll_control_present = true
 };
 
 profiles_t* getProfile_STEM_250_12_v1_2(){

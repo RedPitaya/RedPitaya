@@ -53,6 +53,8 @@ typedef struct {
     bool                is_DAC_gain_x5;
 
     bool                is_fast_calibration;
+
+    bool                is_pll_control_present;
 } profiles_t;
 
 
