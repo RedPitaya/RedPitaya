@@ -38,6 +38,7 @@ typedef struct {
     uint32_t            fast_adc_rate;
     uint8_t             fast_adc_count_channels;
     ADC_DAC_t           fast_adc[4];
+    bool                is_dac_present;
     uint32_t            fast_dac_rate;
     uint8_t             fast_dac_count_channels;
     ADC_DAC_t           fast_dac[4];
@@ -51,10 +52,12 @@ typedef struct {
     ADC_DAC_t           slow_dac[4];
 
     bool                is_DAC_gain_x5;
-
     bool                is_fast_calibration;
-
     bool                is_pll_control_present;
+    bool                is_fast_adc_filter_present;
+    bool                is_fast_dac_temp_protection;
+    bool                is_attenuator_controller_present;
+    bool                is_ext_trigger_level_available;
 } profiles_t;
 
 

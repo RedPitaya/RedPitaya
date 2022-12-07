@@ -18,6 +18,7 @@ profiles_t stem_250_12_v1_1 = {
     .fast_adc[1].bits = 12,
     .fast_adc[1].fullScale = 1,
 
+    .is_dac_present = true,
     .fast_dac_rate = 125000000,
     .fast_dac_count_channels = 2,
     .fast_dac[0].is_signed = true,
@@ -75,7 +76,15 @@ profiles_t stem_250_12_v1_1 = {
 
     .is_fast_calibration = true,
 
-    .is_pll_control_present = true
+    .is_pll_control_present = true,
+
+    .is_fast_adc_filter_present = true,
+
+    .is_fast_dac_temp_protection = true,
+
+    .is_attenuator_controller_present = true,
+
+    .is_ext_trigger_level_available = true
 };
 
 profiles_t* getProfile_STEM_250_12_v1_1(){

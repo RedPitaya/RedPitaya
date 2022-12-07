@@ -378,6 +378,16 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
             calib.fast_dac_x1[i].offset = 0;
             calib.fast_dac_x1[i].fullScale = 1.0;
             calib.fast_dac_x1[i].gainCalc = 1.0;
+
+            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
+            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
+            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
+            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+
+            calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
+            calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
+            calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
+            calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
         }
         break;
 
@@ -398,6 +408,16 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
             calib.fast_adc_1_20[i].offset = 0;
             calib.fast_adc_1_20[i].fullScale = 20.0;
             calib.fast_adc_1_20[i].gainCalc = 1.0;
+
+            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
+            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
+            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
+            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+
+            calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
+            calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
+            calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
+            calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
         }
         break;
 
@@ -441,6 +461,16 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
             calib.fast_dac_x5[i].offset = 0;
             calib.fast_dac_x5[i].fullScale = 2.0;
             calib.fast_dac_x5[i].gainCalc = 1.0;
+
+            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
+            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
+            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
+            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+
+            calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
+            calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
+            calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
+            calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
         }
 
         break;
@@ -656,6 +686,18 @@ rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param){
     calib.fast_adc_1_20_ac[1].fullScale = 20.0;
     calib.fast_adc_1_20_ac[1].calibValue = param->osc_ch2_g_20_ac;
     calib.fast_adc_1_20_ac[1].offset = param->osc_ch2_off_20_ac;
+
+    for(int i = 0 ;i < 2 ; ++i) {
+        calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
+        calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
+        calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
+        calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
+
+        calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
+        calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
+        calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+        calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
+    }
 
     return calib;
 }

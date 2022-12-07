@@ -18,6 +18,7 @@ profiles_t stem_122_16SDR_v1_0 = {
     .fast_adc[1].bits = 16,
     .fast_adc[1].fullScale = 0.5,
 
+    .is_dac_present = true,
     .fast_dac_rate = 122880000,
     .fast_dac_count_channels = 2,
     .fast_dac[0].is_signed = true,
@@ -68,7 +69,15 @@ profiles_t stem_122_16SDR_v1_0 = {
 
     .is_fast_calibration = false,
 
-    .is_pll_control_present = false
+    .is_pll_control_present = false,
+
+    .is_fast_adc_filter_present = false,
+
+    .is_fast_dac_temp_protection = false,
+
+    .is_attenuator_controller_present = false,
+
+    .is_ext_trigger_level_available = false
 };
 
 profiles_t* getProfile_STEM_122_16SDR_v1_0(){

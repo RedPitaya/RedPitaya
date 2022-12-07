@@ -45,11 +45,12 @@ int rp_InitReset(bool reset)
     hk_Init(reset);
     ams_Init();
 
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
-    generate_Init();
-#endif
+    if (rp_HPIsFastDAC_PresentOrDefault()){
+        generate_Init();
+    }
 
-    osc_Init();
+    osc_Init(rp_HPGetFastADCChannelsCountOrDefault());
+
     // Set default configuration per handler
     if (reset){
         rp_Reset();
@@ -65,9 +66,7 @@ int rp_IsApiInit(){
 int rp_Release()
 {
     osc_Release();
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
     generate_Release();
-#endif
     ams_Release();
     hk_Release();
     cmn_Release();
@@ -79,9 +78,11 @@ int rp_Reset()
 {
     rp_DpinReset();
     rp_AOpinReset();
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
-    rp_GenReset();
-#endif
+
+    if (rp_HPIsFastDAC_PresentOrDefault()){
+        rp_GenReset();
+    }
+
     rp_AcqReset();
     return 0;
 }
@@ -121,15 +122,6 @@ const char* rp_GetError(int errorCode) {
     }
 }
 
-/**
- * Calibrate methods
- */
-
-
-float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
-{
-	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
-}
 
 /**
  * Identification
@@ -359,16 +351,21 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
 }
 
 int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
+    rp_channel_calib_t ch = convertPINCh(pin);
     if (pin <= RP_AOUT3) {
-        *min_val = ANALOG_OUT_MIN_VAL;
-        *max_val = ANALOG_OUT_MAX_VAL;
-    } else if (pin <= RP_AIN3) {
-        *min_val = ANALOG_IN_MIN_VAL;
-        *max_val = ANALOG_IN_MAX_VAL;
-    } else {
-        return RP_EPN;
+        float fs = rp_HPGetSlowDACFullScaleOrDefault(ch);
+        *min_val = rp_HPGetSlowDACIsSignedOrDefault(ch) ? -fs: 0;
+        *max_val = fs;
+        return RP_OK;
     }
-    return RP_OK;
+
+    if (pin <= RP_AIN3) {
+        float fs = rp_HPGetSlowADCFullScaleOrDefault(ch);
+        *min_val = rp_HPGetSlowADCIsSignedOrDefault(ch) ? -fs: 0;
+        *max_val = fs;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 
@@ -395,7 +392,31 @@ int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
 int rp_AIpinGetValue(int unsigned pin, float* value) {
     uint32_t value_raw;
     int result = rp_AIpinGetValueRaw(pin, &value_raw);
-    *value = (((float)value_raw / ANALOG_IN_MAX_VAL_INTEGER) * (ANALOG_IN_MAX_VAL - ANALOG_IN_MIN_VAL)) + ANALOG_IN_MIN_VAL;
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    float fs = 0;
+    if (rp_HPGetSlowADCFullScale(ch,&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        return RP_EOOR;
+    }
+
+    bool is_signed = false;
+    if (rp_HPGetSlowADCIsSigned(ch,&is_signed) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        return RP_EOOR;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        return RP_EOOR;
+    }
+    if (is_signed){
+        *value = cmn_convertToVoltSigned(value_raw,bits,fs,1000,1000,0);
+    }
+    else{
+        *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
+    }
     return result;
 }
 
@@ -414,15 +435,44 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
     if (pin >= 4) {
         return RP_EPN;
     }
-    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
         return RP_EOOR;
     }
-    iowrite32((value & ANALOG_OUT_MASK) << ANALOG_OUT_BITS, &ams->dac[pin]);
+    uint32_t max_value = (1 << bits);
+    uint32_t mask = max_value - 1;
+    if (value >= max_value) {
+        return RP_EOOR;
+    }
+    iowrite32((value & mask) << 16, &ams->dac[pin]);
     return RP_OK;
 }
 
 int rp_AOpinSetValue(int unsigned pin, float value) {
-    uint32_t value_raw = (uint32_t) (((value - ANALOG_OUT_MIN_VAL) / (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) * ANALOG_OUT_MAX_VAL_INTEGER);
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    float fs = 0;
+    if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC full scale\n");
+        return RP_EOOR;
+    }
+
+    bool is_signed = false;
+    if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC sign state\n");
+        return RP_EOOR;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC bits\n");
+        return RP_EOOR;
+    }
+    uint32_t value_raw = cmn_convertToCnt(value,bits,fs,is_signed,1,0);
     return rp_AOpinSetValueRaw(pin, value_raw);
 }
 
@@ -430,22 +480,62 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
     if (pin >= 4) {
         return RP_EPN;
     }
-    *value = (ioread32(&ams->dac[pin]) >> ANALOG_OUT_BITS) & ANALOG_OUT_MASK;
+
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
+        return RP_EOOR;
+    }
+    uint32_t max_value = (1 << bits);
+    uint32_t mask = max_value - 1;
+
+    *value = (ioread32(&ams->dac[pin]) >> 16) & mask;
     return RP_OK;
 }
 
 int rp_AOpinGetValue(int unsigned pin, float* value) {
+
     uint32_t value_raw;
     int result = rp_AOpinGetValueRaw(pin, &value_raw);
-    *value = (((float)value_raw / ANALOG_OUT_MAX_VAL_INTEGER) * (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) + ANALOG_OUT_MIN_VAL;
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    float fs = 0;
+    if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        return RP_EOOR;
+    }
+
+    bool is_signed = false;
+    if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        return RP_EOOR;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        return RP_EOOR;
+    }
+    if (is_signed){
+        *value = cmn_convertToVoltSigned(value_raw,bits,fs,1000,1000,0);
+    }
+    else{
+        *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
+    }
     return result;
 }
 
 int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
-    (void)(pin);
-    *min_val = ANALOG_OUT_MIN_VAL;
-    *max_val = ANALOG_OUT_MAX_VAL;
-    return RP_OK;
+    rp_channel_calib_t ch = convertPINCh(pin);
+    if (pin <= RP_AOUT3) {
+        float fs = rp_HPGetSlowDACFullScaleOrDefault(ch);
+        *min_val = rp_HPGetSlowDACIsSignedOrDefault(ch) ? -fs: 0;
+        *max_val = fs;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 
@@ -488,16 +578,6 @@ int rp_AcqGetDecimationFactor(uint32_t* decimation)
 
 int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation){
     return acq_ConvertFactorToDecimation(factor,decimation);
-}
-
-int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
-{
-    return acq_SetSamplingRate(sampling_rate);
-}
-
-int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
-{
-    return acq_GetSamplingRate(sampling_rate);
 }
 
 int rp_AcqGetSamplingRateHz(float* sampling_rate)
@@ -638,40 +718,19 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
-#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_250_12
-int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2)
+int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out)
 {
-    return acq_GetDataRawV2(pos, size, buffer, buffer2);
+    return acq_GetDataRawV2(pos, out);
 }
 
-int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
+int rp_AcqGetDataV2(uint32_t pos, buffers_t *out)
 {
-    return acq_GetDataV2(pos, size, buffer1, buffer2);
+    return acq_GetDataV2(pos, out);
 }
 
-int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2){
-    return acq_GetDataV2D(pos, size, buffer1, buffer2);
+int rp_AcqGetDataV2D(uint32_t pos, buffers_t *out){
+    return acq_GetDataV2D(pos, out);
 }
-
-#endif
-
-#if defined Z20_125_4CH
-int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2, uint16_t* buffer3, uint16_t* buffer4)
-{
-    return acq_GetDataRawV2(pos, size, buffer, buffer2, buffer3, buffer4);
-}
-
-int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2, float* buffer3, float* buffer4)
-{
-    return acq_GetDataV2(pos, size, buffer1, buffer2, buffer3, buffer4);
-}
-
-int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2, double* buffer3, double* buffer4)
-{
-    return acq_GetDataV2D(pos, size, buffer1, buffer2, buffer3, buffer4);
-}
-
-#endif
 
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
@@ -702,224 +761,313 @@ int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
 }
 
-#ifdef Z20_250_12
 int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
+    if (!rp_HPGetFastADCIsAC_DCOrDefault())
+        return RP_NOTS;
     return acq_SetAC_DC(channel,mode);
 }
 
 int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
+    if (!rp_HPGetFastADCIsAC_DCOrDefault())
+        return RP_NOTS;
     return acq_GetAC_DC(channel,status);
 }
-#endif
 
-#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
 int rp_AcqUpdateAcqFilter(rp_channel_t channel){
+    if (!rp_HPGetFastADCIsFilterPresentOrDefault())
+        return RP_NOTS;
     return acq_UpdateAcqFilter(channel);
 }
 
 int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp){
+    if (!rp_HPGetFastADCIsFilterPresentOrDefault())
+        return RP_NOTS;
     return acq_GetFilterCalibValue( channel,coef_aa, coef_bb, coef_kk, coef_pp);
 }
-#endif
-
 
 /**
 * Generate methods
 */
 
-#if defined Z10 || defined Z20 || defined Z20_125
-
 int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    rp_HPeModels_t model;
+    if (rp_HPGetModel(&model) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_GenBurstLastValue] Can't get board model\n");
+        return RP_NOTS;
+    }
+    if (model == STEM_250_12_v1_1 || model == STEM_250_12_v1_2){
+        return RP_NOTS;
+    }
     return gen_setBurstLastValue(channel,amlitude);
 }
 
 int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstLastValue(channel,amlitude);
 }
 
-#endif
-
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
 
 int rp_GenReset() {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_SetDefaultValues();
 }
 
 int rp_GenOutDisable(rp_channel_t channel) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_Disable(channel);
 }
 
 int rp_GenOutEnable(rp_channel_t channel) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_Enable(channel);
 }
 
 int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_IsEnable(channel, value);
 }
 
 int rp_GenAmp(rp_channel_t channel, float amplitude) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setAmplitude(channel, amplitude);
 }
 
 int rp_GenGetAmp(rp_channel_t channel, float *amplitude) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getAmplitude(channel, amplitude);
 }
 
 int rp_GenOffset(rp_channel_t channel, float offset) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setOffset(channel, offset);
 }
 
 int rp_GenGetOffset(rp_channel_t channel, float *offset) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getOffset(channel, offset);
 }
 
 int rp_GenFreq(rp_channel_t channel, float frequency) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setFrequency(channel, frequency);
 }
 
 int rp_GenFreqDirect(rp_channel_t channel, float frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setFrequencyDirect(channel, frequency);
 }
 
 int rp_GenGetFreq(rp_channel_t channel, float *frequency) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getFrequency(channel, frequency);
 }
 
 int rp_GenSweepStartFreq(rp_channel_t channel, float frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepStartFrequency(channel,frequency);
 }
 
 int rp_GenGetSweepStartFreq(rp_channel_t channel, float *frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getSweepStartFrequency(channel,frequency);
 }
 
 int rp_GenSweepEndFreq(rp_channel_t channel, float frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepEndFrequency(channel,frequency);
 }
 
 int rp_GenGetSweepEndFreq(rp_channel_t channel, float *frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getSweepEndFrequency(channel,frequency);
 }
 
 int rp_GenPhase(rp_channel_t channel, float phase) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setPhase(channel, phase);
 }
 
 int rp_GenGetPhase(rp_channel_t channel, float *phase) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getPhase(channel, phase);
 }
 
 int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setWaveform(channel, type);
 }
 
 int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getWaveform(channel, type);
 }
 
 int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepMode(channel,mode);
 }
 
 int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getSweepMode(channel,mode);
 }
 
 int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepDir(channel,mode);
 }
 
 int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getSweepDir(channel,mode);
 }
 
 int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setArbWaveform(channel, waveform, length);
 }
 
 int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getArbWaveform(channel, waveform, length);
 }
 
 int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setDutyCycle(channel, ratio);
 }
 
 int rp_GenRiseTime(rp_channel_t channel, float time) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setRiseTime(channel, time);
 }
 
 int rp_GenFallTime(rp_channel_t channel, float time) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setFallTime(channel, time);
 }
 
 int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getDutyCycle(channel, ratio);
 }
 
 int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setGenMode(channel, mode);
 }
 
 int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getGenMode(channel, mode);
 }
 
 int rp_GenBurstCount(rp_channel_t channel, int num) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setBurstCount(channel, num);
 }
 
 int rp_GenGetBurstCount(rp_channel_t channel, int *num) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstCount(channel, num);
 }
 
 int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setBurstRepetitions(channel, repetitions);
 }
 
 int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstRepetitions(channel, repetitions);
 }
 
 int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setBurstPeriod(channel, period);
 }
 
 int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstPeriod(channel, period);
 }
 
 int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setTriggerSource(channel, src);
 }
 
 int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getTriggerSource(channel, src);
 }
 
-// int rp_GenTrigger(uint32_t channel) {
-//     return gen_Trigger(channel);
-// }
-
 int rp_GenTriggerOnly(rp_channel_t channel){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_TriggerOnly(channel);
 }
 
 int rp_GenSynchronise() {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_TriggerSync();
 }
 
 int rp_GenResetTrigger(rp_channel_t channel){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_Trigger(channel);
 }
 
 int rp_GenOutEnableSync(bool enable){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_EnableSync(enable);
 }
 
-#endif
-
-#ifdef Z20_250_12
 
 int rp_SetEnableTempProtection(rp_channel_t channel, bool enable){
     return gen_setEnableTempProtection(channel,enable);
@@ -946,6 +1094,7 @@ int rp_GetPllControlEnable(bool *enable){
 }
 
 int rp_SetPllControlEnable(bool enable){
+
     return house_SetPllControlEnable(enable);
 }
 
@@ -960,4 +1109,3 @@ int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode){
 int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     return gen_getGainOut(channel,status);
 }
-#endif

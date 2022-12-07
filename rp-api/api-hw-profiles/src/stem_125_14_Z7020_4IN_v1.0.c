@@ -24,6 +24,7 @@ profiles_t stem_125_14_Z7020_4IN_v1_0 = {
     .fast_adc[3].bits = 14,
     .fast_adc[3].fullScale = 1,
 
+    .is_dac_present = false,
     .fast_dac_rate = 0,
     .fast_dac_count_channels = 0,
 
@@ -79,7 +80,17 @@ profiles_t stem_125_14_Z7020_4IN_v1_0 = {
 
     .is_DAC_gain_x5 = false,
 
-    .is_fast_calibration = true
+    .is_fast_calibration = true,
+
+    .is_pll_control_present = false,
+
+    .is_fast_adc_filter_present = true,
+
+    .is_fast_dac_temp_protection = false,
+
+    .is_attenuator_controller_present = false,
+
+    .is_ext_trigger_level_available = false
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_4IN_v1_0(){

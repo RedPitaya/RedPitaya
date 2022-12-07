@@ -197,7 +197,7 @@ typedef enum {
 
 
 typedef enum {
-    RP_GAIN_1X = 0,         //!< Set output gain in x1 mode   
+    RP_GAIN_1X = 0,         //!< Set output gain in x1 mode
     RP_GAIN_5X = 1          //!< Set output gain in x5 mode
 } rp_gen_gain_t;
 
@@ -216,7 +216,7 @@ typedef enum {
 typedef enum {
     RP_T_CH_1 = 0,    //!< Channel A
     RP_T_CH_2 = 1,    //!< Channel B
-    RP_T_CH_EXT = 2  
+    RP_T_CH_EXT = 2
 } rp_channel_trigger_t;
 
 /**
@@ -267,7 +267,7 @@ typedef enum {
 } rp_acq_decimation_t;
 
 typedef enum {
-    RP_DC = 0, 
+    RP_DC = 0,
     RP_AC = 1
 } rp_acq_ac_dc_mode_t;
 
@@ -297,35 +297,7 @@ typedef enum {
 } rp_acq_trig_state_t;
 
 
-/**
- * Calibration parameters, stored in the EEPROM device
- */
-typedef struct {
-    uint32_t gen_ch1_g_1;
-    uint32_t gen_ch2_g_1;
-    int32_t  gen_ch1_off_1;
-    int32_t  gen_ch2_off_1;
-    uint32_t gen_ch1_g_5;
-    uint32_t gen_ch2_g_5;
-    int32_t  gen_ch1_off_5;
-    int32_t  gen_ch2_off_5;
-    uint32_t osc_ch1_g_1_ac;
-    uint32_t osc_ch2_g_1_ac;
-    int32_t  osc_ch1_off_1_ac;
-    int32_t  osc_ch2_off_1_ac;
-    uint32_t osc_ch1_g_1_dc; // HIGH
-    uint32_t osc_ch2_g_1_dc;
-    int32_t  osc_ch1_off_1_dc;
-    int32_t  osc_ch2_off_1_dc;
-    uint32_t osc_ch1_g_20_ac; // LOW
-    uint32_t osc_ch2_g_20_ac;
-    int32_t  osc_ch1_off_20_ac;
-    int32_t  osc_ch2_off_20_ac;
-    uint32_t osc_ch1_g_20_dc;
-    uint32_t osc_ch2_g_20_dc;
-    int32_t  osc_ch1_off_20_dc;
-    int32_t  osc_ch2_off_20_dc;
-} rp_calib_params_t;
+
 
 /** @name General
  */
@@ -793,7 +765,7 @@ int rp_AcqGetDecimation(rp_acq_decimation_t* decimation);
 int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation);
 
 /**
- * Sets the decimation used at acquiring signal. 
+ * Sets the decimation used at acquiring signal.
  * You can specify values in the range (1,2,4,8,16-65536)
  * @param decimation Decimation values
  * @return If the function is successful, the return value is RP_OK.
@@ -1614,29 +1586,6 @@ int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status);
 int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status);
 
 
-/**
-* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
-* @param enable return current state.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GetPllControlEnable(bool *enable);
-
-/**
-* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
-* @param enable Flag enabling PLL control.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_SetPllControlEnable(bool enable);
-
-/**
-* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
-* @param status Get current state.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GetPllControlLocked(bool *status);
 
 
 

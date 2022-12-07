@@ -17,6 +17,7 @@
 #include <sys/mman.h>
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 #include "common.h"
 #include "redpitaya/rp.h"
 
@@ -171,6 +172,165 @@ int int16cmp(const void *aa, const void *bb)
 int floatCmp(const void *a, const void *b) {
     float fa = *(const float*) a, fb = *(const float*) b;
     return (fa > fb) - (fa < fb);
+}
+
+rp_channel_calib_t convertCh(rp_channel_t ch){
+    switch (ch)
+    {
+    case RP_CH_1:
+        return RP_CH_1_CALIB;
+    case RP_CH_2:
+        return RP_CH_2_CALIB;
+    case RP_CH_3:
+        return RP_CH_3_CALIB;
+    case RP_CH_4:
+        return RP_CH_4_CALIB;
+
+    default:
+        fprintf(stderr,"[FATAL ERROR] Convert from %d\n",ch);
+        assert(false);
+    }
+    return RP_EOOR;
+}
+
+rp_channel_t convertChFromIndex(uint8_t index){
+    if (index == 0)  return RP_CH_1;
+    if (index == 1)  return RP_CH_2;
+    if (index == 2)  return RP_CH_3;
+    if (index == 3)  return RP_CH_4;
+
+    fprintf(stderr,"[FATAL ERROR] Convert from %d\n",index);
+    assert(false);
+    return RP_CH_1;
+}
+
+rp_channel_calib_t convertPINCh(rp_apin_t pin){
+    switch (pin)
+    {
+    case RP_AIN0:
+    case RP_AOUT0:
+        return RP_CH_1_CALIB;
+    case RP_AIN1:
+    case RP_AOUT1:
+        return RP_CH_2_CALIB;
+    case RP_AIN2:
+    case RP_AOUT2:
+        return RP_CH_3_CALIB;
+    case RP_AIN3:
+    case RP_AOUT3:
+        return RP_CH_4_CALIB;
+
+    default:
+        fprintf(stderr,"[FATAL ERROR] Convert from PIN %d\n",pin);
+        assert(false);
+    }
+    return RP_EOOR;
+}
+
+rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch){
+    switch (ch)
+    {
+    case RP_AC:
+        return RP_AC_CALIB;
+    case RP_DC:
+        return RP_DC_CALIB;
+    default:
+        fprintf(stderr,"[FATAL ERROR] Convert from %d\n",ch);
+        assert(false);
+    }
+    return RP_EOOR;
+}
+
+
+uint32_t cmn_convertToCnt(float voltage,uint8_t bits,float fullScale,bool is_signed,double gain, int32_t offset){
+    uint32_t mask = ((uint64_t)1 << bits) - 1;
+
+    if (gain == 0){
+        fprintf(stderr,"[FATAL ERROR] convertToCnt devide by zero\n");
+        assert(false);
+    }
+    voltage /= gain;
+
+    /* check and limit the specified voltage arguments towards */
+    /* maximal voltages which can be applied on ADC inputs */
+
+    if(voltage > fullScale)
+        voltage = fullScale;
+    else if(voltage < -fullScale)
+        voltage = -fullScale;
+
+    float fScaleDevider = is_signed ? fullScale * 2 : fullScale;
+    int32_t  cnts = (int)round(voltage * (float) (1 << bits) / fScaleDevider);
+
+    cnts += offset;
+
+    /* check and limit the specified cnt towards */
+    /* maximal cnt which can be applied on ADC inputs */
+    if(cnts > (1 << (bits - 1)) - 1)
+        cnts = (1 << (bits - 1)) - 1;
+    else if(cnts < -(1 << (bits - 1)))
+        cnts = -(1 << (bits - 1));
+
+    /* if negative remove higher bits that represent negative number */
+    if (cnts < 0)
+        cnts = cnts & mask;
+
+    return (uint32_t)cnts;
+}
+
+float cmn_convertToVoltSigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset){
+    int32_t calib_cnts = cmn_CalibCntsSigned(cnts, bits, gain, base, offset);
+    float ret_val = ((float)calib_cnts * fullScale / (float)(1 << (bits - 1)));
+    return ret_val;
+}
+
+float cmn_convertToVoltUnsigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset){
+    uint32_t calib_cnts = cmn_CalibCntsUnsigned(cnts, bits, gain, base, offset);
+    float ret_val = ((float)calib_cnts * fullScale / (float)(1 << (bits - 1)));
+    return ret_val;
+}
+
+int32_t cmn_CalibCntsSigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t base, int32_t offset){
+    int32_t m;
+
+    /* check sign */
+    if(cnts & (1 << (bits - 1))) {
+        /* negative number */
+        m = -1 *((cnts ^ ((1 << bits) - 1)) + 1);
+    } else {
+        /* positive number */
+        m = cnts;
+    }
+
+    /* adopt ADC count with calibrated DC offset */
+    m -= offset;
+
+    m = (gain * m) / base;
+
+    /* check limits */
+    if(m < -(1 << (bits - 1)))
+        m = -(1 << (bits - 1));
+    else if(m > (1 << (bits - 1)))
+        m = (1 << (bits - 1));
+
+    return m;
+}
+
+uint32_t cmn_CalibCntsUnsigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t base, int32_t offset){
+    int32_t m = cnts;
+
+    /* adopt ADC count with calibrated DC offset */
+    m -= offset;
+
+    m = (gain * m) / base;
+
+    /* check limits */
+    if(m < 0)
+        m = 0;
+    else if(m > (1 << (bits - 1)))
+        m = (1 << (bits - 1));
+
+    return m;
 }
 
 /*----------------------------------------------------------------------------*/

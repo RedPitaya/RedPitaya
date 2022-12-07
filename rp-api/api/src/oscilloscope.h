@@ -22,11 +22,7 @@
 // Base Oscilloscope address
 static const int OSC_BASE_ADDR = 0x00100000;
 static const int OSC_BASE_SIZE = 0x30000;
-
-
-#if defined Z20_125_4CH
 static const int OSC_BASE_ADDR_4CH = 0x00200000;
-#endif
 
 // Oscilloscope Channel A input signal buffer offset
 #define OSC_CHA_OFFSET 0x10000
@@ -237,7 +233,7 @@ static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
 static const uint32_t ARM_KEEP_MASK         = 0x8;          // (4 bit)
 static const uint32_t FILL_STATE_MASK       = 0x10;          // (1 bit)
 
-int osc_Init();
+int osc_Init(int channels);
 int osc_Release();
 
 int osc_SetDecimation(uint32_t decimation);

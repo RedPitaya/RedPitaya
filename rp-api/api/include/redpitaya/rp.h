@@ -23,16 +23,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define RP_MODEL "Z10"
-#define ADC_SAMPLE_RATE 125e6
-#define ADC_BITS 14
-#define ADC_REG_BITS 14
-#define ADC_BITS_MASK 0x3FFF
-#define ADC_REG_BITS_MASK 0x3FFF
-#define ADC_CHANNELS 2
 #define ADC_BUFFER_SIZE         (16 * 1024)
-
-#define DAC_FREQUENCY 125e6
 #define DAC_BUFFER_SIZE         (16 * 1024)
 
 #define RISE_FALL_MIN_RATIO     0.0001      // ratio of rise/fall time to period
@@ -192,7 +183,10 @@ typedef enum {
     RP_GEN_TRIG_SRC_EXT_PE   = 2,   //!< External trigger source positive edge
     RP_GEN_TRIG_SRC_EXT_NE   = 3    //!< External trigger source negative edge
 } rp_trig_src_t;
-
+typedef enum {
+    RP_GAIN_1X = 0,         //!< Set output gain in x1 mode
+    RP_GAIN_5X = 1          //!< Set output gain in x5 mode
+} rp_gen_gain_t;
 /**
  * Type representing Input/Output channels.
  */
@@ -210,7 +204,9 @@ typedef enum {
 typedef enum {
     RP_T_CH_1 = 0,    //!< Channel A
     RP_T_CH_2 = 1,    //!< Channel B
-    RP_T_CH_EXT = 2,
+    RP_T_CH_3 = 2,    //!< Channel C
+    RP_T_CH_4 = 3,    //!< Channel D
+    RP_T_CH_EXT = 4
 } rp_channel_trigger_t;
 
 /**
@@ -223,28 +219,37 @@ typedef enum {
     KK     //!< KK
 } rp_eq_filter_cof_t;
 
-/**
- * Type representing acquire signal sampling rate.
- */
-typedef enum {
-    RP_SMP_125M     = 1,       //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-    RP_SMP_62_500M  = 2,       //!< Sample rate 62.5Msps; Buffer time length 262us; Decimation 2
-    RP_SMP_31_250M  = 4,       //!< Sample rate 31.25Msps; Buffer time length 524us; Decimation 4
-    RP_SMP_15_625M  = 8,       //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-    RP_SMP_7_812M   = 16,      //!< Sample rate 7.8125Msps; Buffer time length 2.096ms; Decimation 16
-    RP_SMP_3_906M   = 32,      //!< Sample rate 3.906Msps; Buffer time length 4.192ms; Decimation 32
-    RP_SMP_1_953M   = 64,      //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-    RP_SMP_976_562K = 128,     //!< Sample rate 976ksps; Buffer time length 16.768ms; Decimation 128
-    RP_SMP_448_281K = 256,     //!< Sample rate 488ksps; Buffer time length 33.798ms; Decimation 256
-    RP_SMP_244_140K = 512,     //!< Sample rate 244ksps; Buffer time length 67.07ms; Decimation 512
-    RP_SMP_122_070K = 1024,    //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-    RP_SMP_61_035K  = 2048,    //!< Sample rate 61.035ksps; Buffer time length 268.288ms; Decimation 2048
-    RP_SMP_30_517K  = 4096,    //!< Sample rate 30.517ksps; Buffer time length 536.5ms; Decimation 4096
-    RP_SMP_15_258K  = 8192,    //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-    RP_SMP_7_629K   = 16384,   //!< Sample rate 7.629ksps; Buffer time length 2.146s; Decimation 16384
-    RP_SMP_3_814K   = 32768,   //!< Sample rate 3.814ksps; Buffer time length 4.292s; Decimation 32768
-    RP_SMP_1_907K   = 65536    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
-} rp_acq_sampling_rate_t;
+typedef struct
+{
+    uint32_t size;
+    int16_t  *ch_i[4];
+    double   *ch_d[4];
+    float    *ch_f[4];
+} buffers_t;
+
+
+// /**
+//  * Type representing acquire signal sampling rate.
+//  */
+// typedef enum {
+//     RP_SMP_125M     = 1,       //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
+//     RP_SMP_62_500M  = 2,       //!< Sample rate 62.5Msps; Buffer time length 262us; Decimation 2
+//     RP_SMP_31_250M  = 4,       //!< Sample rate 31.25Msps; Buffer time length 524us; Decimation 4
+//     RP_SMP_15_625M  = 8,       //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
+//     RP_SMP_7_812M   = 16,      //!< Sample rate 7.8125Msps; Buffer time length 2.096ms; Decimation 16
+//     RP_SMP_3_906M   = 32,      //!< Sample rate 3.906Msps; Buffer time length 4.192ms; Decimation 32
+//     RP_SMP_1_953M   = 64,      //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
+//     RP_SMP_976_562K = 128,     //!< Sample rate 976ksps; Buffer time length 16.768ms; Decimation 128
+//     RP_SMP_448_281K = 256,     //!< Sample rate 488ksps; Buffer time length 33.798ms; Decimation 256
+//     RP_SMP_244_140K = 512,     //!< Sample rate 244ksps; Buffer time length 67.07ms; Decimation 512
+//     RP_SMP_122_070K = 1024,    //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
+//     RP_SMP_61_035K  = 2048,    //!< Sample rate 61.035ksps; Buffer time length 268.288ms; Decimation 2048
+//     RP_SMP_30_517K  = 4096,    //!< Sample rate 30.517ksps; Buffer time length 536.5ms; Decimation 4096
+//     RP_SMP_15_258K  = 8192,    //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
+//     RP_SMP_7_629K   = 16384,   //!< Sample rate 7.629ksps; Buffer time length 2.146s; Decimation 16384
+//     RP_SMP_3_814K   = 32768,   //!< Sample rate 3.814ksps; Buffer time length 4.292s; Decimation 32768
+//     RP_SMP_1_907K   = 65536    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+// } rp_acq_sampling_rate_t;
 
 
 /**
@@ -270,21 +275,28 @@ typedef enum {
     RP_DEC_65536 = 65536    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
 } rp_acq_decimation_t;
 
-
+typedef enum {
+    RP_DC = 0,
+    RP_AC = 1
+} rp_acq_ac_dc_mode_t;
 /**
  * Type representing different trigger sources used at acquiring signal.
  */
 typedef enum {
-    RP_TRIG_SRC_DISABLED, //!< Trigger is disabled
-    RP_TRIG_SRC_NOW,      //!< Trigger triggered now (immediately)
-    RP_TRIG_SRC_CHA_PE,   //!< Trigger set to Channel A threshold positive edge
-    RP_TRIG_SRC_CHA_NE,   //!< Trigger set to Channel A threshold negative edge
-    RP_TRIG_SRC_CHB_PE,   //!< Trigger set to Channel B threshold positive edge
-    RP_TRIG_SRC_CHB_NE,   //!< Trigger set to Channel B threshold negative edge
-    RP_TRIG_SRC_EXT_PE,   //!< Trigger set to external trigger positive edge (DIO0_P pin)
-    RP_TRIG_SRC_EXT_NE,   //!< Trigger set to external trigger negative edge (DIO0_P pin)
-    RP_TRIG_SRC_AWG_PE,   //!< Trigger set to arbitrary wave generator application positive edge
-    RP_TRIG_SRC_AWG_NE    //!< Trigger set to arbitrary wave generator application negative edge
+    RP_TRIG_SRC_DISABLED = 0, //!< Trigger is disabled
+    RP_TRIG_SRC_NOW      = 1, //!< Trigger triggered now (immediately)
+    RP_TRIG_SRC_CHA_PE   = 2, //!< Trigger set to Channel A threshold positive edge
+    RP_TRIG_SRC_CHA_NE   = 3, //!< Trigger set to Channel A threshold negative edge
+    RP_TRIG_SRC_CHB_PE   = 4, //!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHB_NE   = 5, //!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_EXT_PE   = 6, //!< Trigger set to external trigger positive edge (DIO0_P pin)
+    RP_TRIG_SRC_EXT_NE   = 7, //!< Trigger set to external trigger negative edge (DIO0_P pin)
+    RP_TRIG_SRC_AWG_PE   = 8, //!< Trigger set to arbitrary wave generator application positive edge
+    RP_TRIG_SRC_AWG_NE   = 9, //!< Trigger set to arbitrary wave generator application negative edge
+    RP_TRIG_SRC_CHC_PE   = 10,//!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHC_NE   = 11,//!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_CHD_PE   = 12,//!< Trigger set to Channel B threshold positive edge
+    RP_TRIG_SRC_CHD_NE   = 13 //!< Trigger set to Channel B threshold negative edge
 } rp_acq_trig_src_t;
 
 
@@ -307,7 +319,7 @@ typedef enum {
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 
-int rp_Init(void);
+int rp_Init();
 
 /**
  * Initializes the library. It must be called first, before any other library method.
@@ -660,24 +672,6 @@ int rp_AcqSetDecimationFactor(uint32_t decimation);
 int rp_AcqGetDecimationFactor(uint32_t* decimation);
 
 /**
- * Sets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
- * values which can be specified. See the #rp_acq_sampling_rate_t enum values.
- * @param sampling_rate Specify one of pre-defined sampling rate value
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
-
-/**
- * Gets the sampling rate for acquiring signal. There is only a set of pre-defined sampling rate
- * values which can be returned. See the #rp_acq_sampling_rate_t enum values.
- * @param sampling_rate Returns one of pre-defined sampling rate value which is currently set
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
-
-/**
  * Gets the sampling rate for acquiring signal in a numerical form in Hz. Although this method returns a float
  * value representing the current value of the sampling rate, there is only a set of pre-defined sampling rate
  * values which can be returned. See the #rp_acq_sampling_rate_t enum values.
@@ -939,7 +933,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2);
+int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out);
 
 /**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
@@ -986,7 +980,7 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* bu
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2);
+int rp_AcqGetDataV2(uint32_t pos, buffers_t *out);
 
 
 /**
@@ -999,7 +993,7 @@ int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2);
+int rp_AcqGetDataV2D(uint32_t pos, buffers_t *out);
 
 /**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.
@@ -1453,7 +1447,93 @@ int rp_GenResetTrigger(rp_channel_t channel);
 
 int rp_GenTriggerOnly(rp_channel_t channel);
 
+/**
+* Sets the DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B for witch we want to set protection.
+* @param enable Flag enabling protection mode.total
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetEnableTempProtection(rp_channel_t channel, bool enable);
+
+/**
+* Get status of DAC protection mode from overheating. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B for witch we want to set protection.
+* @param enable Flag return current status.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetEnableTempProtection(rp_channel_t channel, bool *enable);
+
+/**
+* Resets the flag indicating that the DAC is overheated. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  New status for latch trigger.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetLatchTempAlarm(rp_channel_t channel, bool status);
+
+/**
+* Returns the status that there was an overheat. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  State of latch trigger.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status);
+
+/**
+* Returns the current DAC overheat status in real time. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status  Get current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status);
+
+/**
+* Sets the AC / DC modes for input.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param mode Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
+
+/**
+* Get the AC / DC modes for input.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+
+/**
+* Sets the gain modes for output.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param mode Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode);
+
+/**
+* Get the gain modes for output.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status);
+
 ///@}
+
 /** @name PLL Control for 250-12
 */
 ///@{
@@ -1482,8 +1562,6 @@ int rp_SetPllControlEnable(bool enable);
 */
 int rp_GetPllControlLocked(bool *status);
 ///@}
-
-float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
 
 #ifdef __cplusplus
 }

@@ -247,6 +247,7 @@ int hp_cmn_Print(profiles_t *p){
 
 	fprintf(stdout,"FAST ADC\n");
 	fprintf(stdout,"\t* Rate: %u\n",p->fast_adc_rate);
+	fprintf(stdout,"\t* Filter present: %u\n",p->is_fast_adc_filter_present);
 	fprintf(stdout,"\t* Count: %u\n",p->fast_adc_count_channels);
 
 	for(int i = 0 ; i < p->fast_adc_count_channels; i++){
@@ -257,6 +258,7 @@ int hp_cmn_Print(profiles_t *p){
 
 
 	fprintf(stdout,"FAST DAC\n");
+	fprintf(stdout,"\t* Is present: %u\n",p->is_dac_present);
 	fprintf(stdout,"\t* Rate: %u\n",p->fast_dac_rate);
 	fprintf(stdout,"\t* Count: %u\n",p->fast_dac_count_channels);
 
@@ -295,7 +297,10 @@ int hp_cmn_Print(profiles_t *p){
 	}
 
 	fprintf(stdout,"FAST DAC x5 gain: %d\n",p->is_DAC_gain_x5);
+	fprintf(stdout,"FAST DAC overheating protection: %d\n",p->is_fast_dac_temp_protection);
 	fprintf(stdout,"FAST ADC/DAC calibration: %d\n",p->is_fast_calibration);
+	fprintf(stdout,"FAST ADC attenuator controller: %d\n",p->is_attenuator_controller_present);
+	fprintf(stdout,"FAST ADC External trigger level available: %d\n",p->is_ext_trigger_level_available);
 
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;

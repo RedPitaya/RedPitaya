@@ -230,6 +230,35 @@ float rp_HPGetFastADCFullScaleOrDefault(uint8_t channel){
     return p->fast_adc[channel].fullScale;
 }
 
+int rp_HPIsFastDAC_Present(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_dac_present;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPIsFastDAC_PresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_dac_present;
+}
+
+int rp_HPGetFastDACIsTempProtection(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_fast_dac_temp_protection;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetFastDACIsTempProtectionOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_fast_dac_temp_protection;
+}
 
 
 int rp_HPGetBaseFastDACSpeedHz(uint32_t *value){
@@ -355,6 +384,20 @@ bool rp_HPGetFastADCIsAC_DCOrDefault(){
     return p->is_AC_DC_mode;
 }
 
+int rp_HPGetFastADCIsFilterPresent(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_fast_adc_filter_present;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetFastADCIsFilterPresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_fast_adc_filter_present;
+}
 
 int rp_HPGetFastADCIsSigned_1_20(uint8_t channel,bool *value){
     int state;
@@ -618,4 +661,34 @@ int rp_HPGetIsPLLControlEnable(bool *value){
 bool rp_HPGetIsPLLControlEnableOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_pll_control_present;
+}
+
+int rp_HPGetIsAttenuatorControllerPresent(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_attenuator_controller_present;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsAttenuatorControllerPresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_attenuator_controller_present;
+}
+
+int rp_HPGetIsExternalTriggerLevelPresent(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_ext_trigger_level_available;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsExternalTriggerLevelPresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_ext_trigger_level_available;
 }

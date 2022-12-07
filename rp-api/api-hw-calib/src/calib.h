@@ -37,6 +37,14 @@ int calib_ConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out);
 
 int calib_Print(rp_calib_params_t *calib);
 
+int calib_GetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out);
+int calib_GetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out);
+
+int calib_GetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
+int calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
+
+int calib_GetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
+
               // int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params);
               // int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
               // int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);

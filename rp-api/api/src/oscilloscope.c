@@ -40,35 +40,37 @@ bool emulate4Ch = false;
  * general
  */
 
-int osc_Init()
+int osc_Init(int channels)
 {
     cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg);
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
 
-#if defined Z20_125_4CH
-    size_t base_addr = OSC_BASE_ADDR_4CH;
-    if (emulate4Ch){
-        base_addr = OSC_BASE_ADDR;
+    if (channels == 4){
+        size_t base_addr = OSC_BASE_ADDR_4CH;
+        if (emulate4Ch){
+            base_addr = OSC_BASE_ADDR;
+        }
+        cmn_Map(OSC_BASE_SIZE, base_addr, (void**)&osc_reg_4ch);
+        osc_chc = (uint32_t*)((char*)osc_reg_4ch + OSC_CHA_OFFSET);
+        osc_chd = (uint32_t*)((char*)osc_reg_4ch + OSC_CHB_OFFSET);
     }
-    cmn_Map(OSC_BASE_SIZE, base_addr, (void**)&osc_reg_4ch);
-    osc_chc = (uint32_t*)((char*)osc_reg_4ch + OSC_CHA_OFFSET);
-    osc_chd = (uint32_t*)((char*)osc_reg_4ch + OSC_CHB_OFFSET);
-#endif
 
     return RP_OK;
 }
 
 int osc_Release()
 {
-    cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg);
+    if (osc_reg)
+        cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg);
+    if (osc_reg_4ch)
+        cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg_4ch);
+    osc_reg = NULL;
+    osc_reg_4ch = NULL;
     osc_cha = NULL;
     osc_chb = NULL;
-#if defined Z20_125_4CH
-    cmn_Unmap(OSC_BASE_SIZE, (void**)&osc_reg_4ch);
     osc_chc = NULL;
     osc_chd = NULL;
-#endif
     return RP_OK;
 }
 
@@ -109,7 +111,7 @@ int osc_GetAveraging(bool* enable)
 
 int osc_SetTriggerSource(uint32_t source)
 {
-#if defined Z20_125_4CH
+
     if (emulate4Ch){
         if (source == RP_TRIG_SRC_CHC_PE){
             source = RP_TRIG_SRC_CHA_PE;
@@ -127,7 +129,7 @@ int osc_SetTriggerSource(uint32_t source)
             source = RP_TRIG_SRC_CHB_NE;
         }
     }
-#endif
+
     uint32_t currentValue = 0;
     return cmn_SetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK,&currentValue);
 }
@@ -221,40 +223,32 @@ int osc_GetThresholdChB(uint32_t* threshold)
 
 int osc_SetThresholdChC(uint32_t threshold)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     uint32_t currentValue = 0;
     return cmn_SetValue(&osc_reg_4ch->cha_thr, threshold, THRESHOLD_MASK,&currentValue);
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_GetThresholdChC(uint32_t* threshold)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->cha_thr, threshold, THRESHOLD_MASK);
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_SetThresholdChD(uint32_t threshold)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     uint32_t currentValue = 0;
     return cmn_SetValue(&osc_reg_4ch->chb_thr, threshold, THRESHOLD_MASK,&currentValue);
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_GetThresholdChD(uint32_t* threshold)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->chb_thr, threshold, THRESHOLD_MASK);
-#else
-    return RP_NOTS;
-#endif
 }
 
 /**
@@ -284,40 +278,32 @@ int osc_GetHysteresisChB(uint32_t* hysteresis)
 
 int osc_SetHysteresisChC(uint32_t hysteresis)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     uint32_t currentValue = 0;
     return cmn_SetValue(&osc_reg_4ch->cha_hystersis, hysteresis, HYSTERESIS_MASK,&currentValue);
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_GetHysteresisChC(uint32_t* hysteresis)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->cha_hystersis, hysteresis, HYSTERESIS_MASK);
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_SetHysteresisChD(uint32_t hysteresis)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     uint32_t currentValue = 0;
     return cmn_SetValue(&osc_reg_4ch->chb_hystersis, hysteresis, HYSTERESIS_MASK,&currentValue);
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_GetHysteresisChD(uint32_t* hysteresis)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->chb_hystersis, hysteresis, HYSTERESIS_MASK);
-#else
-    return RP_NOTS;
-#endif
 }
 
 /**
@@ -371,7 +357,9 @@ int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 
 int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+
     uint32_t currentValueAA = 0;
     uint32_t currentValueBB = 0;
     uint32_t currentValueKK = 0;
@@ -382,27 +370,25 @@ int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
     cmn_SetValue(&osc_reg_4ch->cha_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
     cmn_SetValue(&osc_reg_4ch->cha_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+
     cmn_GetValue(&osc_reg_4ch->cha_filt_aa, coef_aa, EQ_FILTER_AA);
     cmn_GetValue(&osc_reg_4ch->cha_filt_bb, coef_bb, EQ_FILTER);
     cmn_GetValue(&osc_reg_4ch->cha_filt_kk, coef_kk, EQ_FILTER);
     cmn_GetValue(&osc_reg_4ch->cha_filt_pp, coef_pp, EQ_FILTER);
     return RP_OK;
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+
     uint32_t currentValueAA = 0;
     uint32_t currentValueBB = 0;
     uint32_t currentValueKK = 0;
@@ -412,22 +398,18 @@ int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
     cmn_SetValue(&osc_reg_4ch->chb_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
     cmn_SetValue(&osc_reg_4ch->chb_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
-#else
-    return RP_NOTS;
-#endif
 }
 
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp)
 {
-#if defined Z20_125_4CH
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+
     cmn_GetValue(&osc_reg_4ch->chb_filt_aa, coef_aa, EQ_FILTER_AA);
     cmn_GetValue(&osc_reg_4ch->chb_filt_bb, coef_bb, EQ_FILTER);
     cmn_GetValue(&osc_reg_4ch->chb_filt_kk, coef_kk, EQ_FILTER);
     cmn_GetValue(&osc_reg_4ch->chb_filt_pp, coef_pp, EQ_FILTER);
     return RP_OK;
-#else
-    return RP_NOTS;
-#endif
 }
 
 /**
@@ -458,24 +440,16 @@ const volatile uint32_t* osc_GetDataBufferChB()
 
 const volatile uint32_t* osc_GetDataBufferChC()
 {
-#if defined Z20_125_4CH
-if (emulate4Ch)
-    return osc_cha;
-else
-    return osc_chc;
-#else
-    return NULL;
-#endif
+    if (emulate4Ch)
+        return osc_cha;
+    else
+        return osc_chc;
 }
 
 const volatile uint32_t* osc_GetDataBufferChD()
 {
-#if defined Z20_125_4CH
-if (emulate4Ch)
-    return osc_chb;
-else
-    return osc_chd;
-#else
-    return NULL;
-#endif
+    if (emulate4Ch)
+        return osc_chb;
+    else
+        return osc_chd;
 }

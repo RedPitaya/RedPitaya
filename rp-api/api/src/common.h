@@ -18,6 +18,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "redpitaya/rp.h"
+#include "rp_hw-calib.h"
 
 
 #define ECHECK(x) { \
@@ -106,6 +108,18 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
 int intcmp(const void *a, const void *b);
 int int16cmp(const void *aa, const void *bb);
 int floatCmp(const void *a, const void *b);
+
+rp_channel_calib_t convertCh(rp_channel_t ch);
+rp_channel_t convertChFromIndex(uint8_t index);
+rp_channel_calib_t convertPINCh(rp_apin_t pin);
+rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch);
+
+uint32_t cmn_convertToCnt(float voltage, uint8_t bits, float fullScale, bool is_signed, double gain, int32_t offset);
+float cmn_convertToVoltSigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset);
+float cmn_convertToVoltUnsigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset);
+int32_t cmn_CalibCntsSigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t base, int32_t offset);
+uint32_t cmn_CalibCntsUnsigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t base, int32_t offset);
+
 
 // float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
 // uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale);

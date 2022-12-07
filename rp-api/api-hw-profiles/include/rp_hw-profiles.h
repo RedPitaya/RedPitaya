@@ -178,6 +178,24 @@ int rp_HPGetFastADCFullScale(uint8_t channel,float *value);
 float rp_HPGetFastADCFullScaleOrDefault(uint8_t channel);
 
 /**
+* Returns the generator presence flag
+* Function rp_HPIdFastDACOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPIsFastDAC_Present(bool *value);
+bool rp_HPIsFastDAC_PresentOrDefault();
+
+/**
+* Returns the presence of FAST DAC overheating protection
+* Function rp_HPGetFastDACIsTempProtectionOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetFastDACIsTempProtection(bool *value);
+bool rp_HPGetFastDACIsTempProtectionOrDefault();
+
+/**
 * Returns the clock frequency for DAC
 * Function rp_HPGetBaseFastDACSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
@@ -240,6 +258,15 @@ bool rp_HPGetFastADCIsLV_HVOrDefault();
 */
 int rp_HPGetFastADCIsAC_DC(bool *value);
 bool rp_HPGetFastADCIsAC_DCOrDefault();
+
+/**
+* Checks for the presence of fast ADC filtering functionality
+* Function rp_HPGetFastADCIsFilterPresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetFastADCIsFilterPresent(bool *value);
+bool rp_HPGetFastADCIsFilterPresentOrDefault();
 
 /**
 * Returns whether the ADC has a signed value in HV mode (1:20)
@@ -361,12 +388,30 @@ bool rp_HPGetIsCalibrationLogicPresentOrDefault();
 
 /**
 * Returns the presence of the PLL functionality. Present in boards 250-12.
-* Function rp_HPGetIsE2Pin21ClockSelectorOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Function rp_HPGetIsPLLControlEnableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
 int rp_HPGetIsPLLControlEnable(bool *value);
 bool rp_HPGetIsPLLControlEnableOrDefault();
+
+/**
+* Returns the presence of a hardware attenuator switch. Present in boards 250-12.
+* Function rp_HPGetIsAttenuatorControllerPresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetIsAttenuatorControllerPresent(bool *value);
+bool rp_HPGetIsAttenuatorControllerPresentOrDefault();
+
+/**
+* Returns whether it is possible to set the level for an external trigger. Present in boards 250-12.
+* Function rp_HPGetIsExternalTriggerLevelPresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetIsExternalTriggerLevelPresent(bool *value);
+bool rp_HPGetIsExternalTriggerLevelPresentOrDefault();
 
 /**
  * Print all parameters for current profile

@@ -578,6 +578,168 @@ int calib_Print(rp_calib_params_t *calib){
         fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_dac_x5[i].offset);
         fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_dac_x5[i].gainCalc);
     }
+    return RP_HW_CALIB_OK;
+}
+
+int calib_GetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out){
+    if (!g_model_loaded){
+        int res = calib_Init(false);
+        if (res != RP_HP_OK){
+            fprintf(stderr,"[Error:calib_GetFastADCFilter] Err: %d\n",res);
+            return res;
+        }
+    }
+
+    if (g_calib.fast_adc_count_1_1 <= channel){
+        fprintf(stderr,"[Error:calib_GetFastADCFilter] Wrong channel: %d\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+
+    *out = g_calib.fast_adc_filter_1_1[channel];
+    return RP_HW_CALIB_OK;
+}
+
+int calib_GetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out){
+    if (!g_model_loaded){
+        int res = calib_Init(false);
+        if (res != RP_HP_OK){
+            fprintf(stderr,"[Error:calib_GetFastADCFilter] Err: %d\n",res);
+            return res;
+        }
+    }
+
+    if (g_calib.fast_adc_count_1_20 <= channel){
+        fprintf(stderr,"[Error:calib_GetFastADCFilter] Wrong channel: %d\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+
+    *out = g_calib.fast_adc_filter_1_20[channel];
+    return RP_HW_CALIB_OK;
+}
+
+int calib_GetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib){
+    if (!g_model_loaded){
+        int res = calib_Init(false);
+        if (res != RP_HP_OK){
+            fprintf(stderr,"[Error:calib_GetFastADCFilter] Err: %d\n",res);
+            return res;
+        }
+    }
+
+    if (g_calib.fast_adc_count_1_1 <= channel && mode == RP_DC_CALIB){
+        fprintf(stderr,"[Error:calib_GetFastADCCalibValue] Wrong channel: %d in DC mode\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+
+    if (g_calib.fast_adc_count_1_1_ac <= channel && mode == RP_AC_CALIB){
+        fprintf(stderr,"[Error:calib_GetFastADCCalibValue] Wrong channel: %d in AC mode\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+    switch (mode)
+    {
+        case RP_DC_CALIB:{
+            *gain = g_calib.fast_adc_1_1[channel].gainCalc;
+            *offset = g_calib.fast_adc_1_1[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_1[channel],5);
+            break;
+        }
+
+        case RP_AC_CALIB:{
+            *gain = g_calib.fast_adc_1_1_ac[channel].gainCalc;
+            *offset = g_calib.fast_adc_1_1_ac[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_1_ac[channel],5);
+            break;
+        }
+
+        default:
+            return RP_HW_CALIB_EIP;
+    }
+
+    return RP_HW_CALIB_OK;
+}
+
+int calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib){
+    if (!g_model_loaded){
+        int res = calib_Init(false);
+        if (res != RP_HP_OK){
+            fprintf(stderr,"[Error:calib_GetFastADCFilter] Err: %d\n",res);
+            return res;
+        }
+    }
+
+    if (g_calib.fast_adc_count_1_1 <= channel && mode == RP_DC_CALIB){
+        fprintf(stderr,"[Error:calib_GetFastADCCalibValue] Wrong channel: %d in DC mode\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+
+    if (g_calib.fast_adc_count_1_1_ac <= channel && mode == RP_AC_CALIB){
+        fprintf(stderr,"[Error:calib_GetFastADCCalibValue] Wrong channel: %d in AC mode\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+    switch (mode)
+    {
+        case RP_DC_CALIB:{
+            *gain = g_calib.fast_adc_1_20[channel].gainCalc;
+            *offset = g_calib.fast_adc_1_20[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_20[channel],5);
+            break;
+        }
+
+        case RP_AC_CALIB:{
+            *gain = g_calib.fast_adc_1_20_ac[channel].gainCalc;
+            *offset = g_calib.fast_adc_1_20_ac[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_20_ac[channel],5);
+            break;
+        }
+
+        default:
+            return RP_HW_CALIB_EIP;
+    }
+
+    return RP_HW_CALIB_OK;
+}
+
+
+int calib_GetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib){
+    if (!g_model_loaded){
+        int res = calib_Init(false);
+        if (res != RP_HP_OK){
+            fprintf(stderr,"[Error:calib_GetFastDACCalibValue] Err: %d\n",res);
+            return res;
+        }
+    }
+
+    if (g_calib.fast_dac_count_x1 <= channel && mode == RP_GAIN_CALIB_1X){
+        fprintf(stderr,"[Error:calib_GetFastDACCalibValue] Wrong channel: %d in x1 mode\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+
+    if (g_calib.fast_dac_count_x5 <= channel && mode == RP_GAIN_CALIB_5X){
+        fprintf(stderr,"[Error:calib_GetFastDACCalibValue] Wrong channel: %d in x5 mode\n",channel);
+        return RP_HW_CALIB_ECH;
+    }
+
+    switch (mode)
+    {
+        case RP_GAIN_CALIB_1X:{
+            *gain = g_calib.fast_dac_x1[channel].gainCalc;
+            *offset = g_calib.fast_dac_x1[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_dac_x1[channel],5);
+            break;
+        }
+
+        case RP_GAIN_CALIB_5X:{
+            *gain = g_calib.fast_dac_x5[channel].gainCalc;
+            *offset = g_calib.fast_dac_x5[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_dac_x5[channel],5);
+            break;
+        }
+
+        default:
+            return RP_HW_CALIB_EIP;
+    }
+
+    return RP_HW_CALIB_OK;
 }
 
 // /**
