@@ -50,7 +50,8 @@ if (RP_PLATFORM)
     target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
     target_include_directories(${PROJECT_NAME} PUBLIC ${INSTALL_DIR}/include ${INSTALL_DIR}/rp_sdk ${INSTALL_DIR}/rp_sdk/libjson)
     target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib/ ${INSTALL_DIR}/rp_sdk)
-    target_link_libraries(${PROJECT_NAME} PUBLIC -Wl,--as-needed rp rp-hw rp_sdk -Wl,--no-as-needed)
+    target_link_libraries(${PROJECT_NAME} PUBLIC -Wl,--as-needed rp rp-hw rp_sdk rp-hw rp-hw-calib rp-hw-profiles -Wl,--no-as-needed)
+    target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio i2c)
 endif()
 
 target_compile_options(${PROJECT_NAME}
@@ -79,10 +80,6 @@ target_link_directories(${PROJECT_NAME}
 
 
 target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib pthread stdc++)
-
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio)
-endif()
 
 if(IS_INSTALL)
        install(TARGETS ${PROJECT_NAME}

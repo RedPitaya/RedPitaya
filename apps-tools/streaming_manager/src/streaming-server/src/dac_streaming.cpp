@@ -2,6 +2,11 @@
 
 #ifdef RP_PLATFORM
 #include "rp.h"
+#include "rp_hw-calib.h"
+#include "rp_hw-profiles.h"
+#include "api250-12/rp-spi.h"
+#include "api250-12/rp-gpio-power.h"
+#include "api250-12/rp-i2c-max7311.h"
 #endif
 
 #ifndef _WIN32
@@ -15,11 +20,6 @@
 #include "dac_streaming_lib/dac_streaming_manager.h"
 #include "dac_streaming.h"
 
-#ifdef Z20_250_12
-#include "api250-12/rp-spi.h"
-#include "api250-12/rp-gpio-power.h"
-#include "api250-12/rp-i2c-max7311.h"
-#endif
 
 using namespace dac_streaming_lib;
 using namespace uio_lib;
@@ -32,14 +32,6 @@ ServerNetConfigManager::Ptr   g_serverDACNetConfig = nullptr;
 bool                          g_dac_verbMode = false;
 std::atomic_bool              g_dac_serverRun(false);
 
-
-auto calibDACFullScaleToVoltage(uint32_t fullScaleGain) -> float {
-    /* no scale */
-    if (fullScaleGain == 0) {
-        return 1;
-    }
-    return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
-}
 
 auto setDACServer(ServerNetConfigManager::Ptr serverNetConfig) -> void{
     g_serverDACNetConfig = serverNetConfig;
@@ -69,71 +61,49 @@ auto startDACServer(bool verbMode,bool testMode) -> void{
 		auto dac_speed    =  settings.getDACHz();
 		auto ip_addr_host = "127.0.0.1";
 
-#ifdef Z20
 		auto use_calib    = false;
-		auto attenuator   = 0;
-#else
-#ifdef RP_PLATFORM
-        auto use_calib    = settings.getCalibration();
-        rp_CalibInit();
-		auto osc_calib_params = rp_GetCalibrationSettings();
-#endif
-#endif
 
-#ifdef Z20_250_12
+#ifdef RP_PLATFORM
+        use_calib    = settings.getCalibration();
+		if (rp_CalibInit() != RP_HW_CALIB_OK){
+	        fprintf(stderr,"Error init calibration\n");
+    	}
 		auto dac_gain = settings.getDACGain();
 #endif
 
+		auto channels = ClientOpt::getDACChannels();
 		std::vector<UioT> uioList = GetUioList();
-		uint32_t ch1_off = 0;
-		uint32_t ch2_off = 0;
-		float ch1_gain = 1;
-		float ch2_gain = 1;
+		int32_t ch_off[4] = { 0 , 0 , 0 , 0 };
+		double  ch_gain[4] = { 1 , 1 , 1 ,1 };
 #ifdef RP_PLATFORM
-		if (use_calib) {
-#ifdef Z20_250_12
-			if (dac_gain == CStreamSettings::X1) {			
-				ch1_gain = calibDACFullScaleToVoltage(osc_calib_params.gen_ch1_g_1);  
-				ch2_gain = calibDACFullScaleToVoltage(osc_calib_params.gen_ch2_g_1);  
-				ch1_off  = osc_calib_params.gen_ch1_off_1;
-				ch2_off  = osc_calib_params.gen_ch2_off_1;
-			}else{
-				ch1_gain = calibDACFullScaleToVoltage(osc_calib_params.gen_ch1_g_5);  
-				ch2_gain = calibDACFullScaleToVoltage(osc_calib_params.gen_ch2_g_5);  
-				ch1_off  = osc_calib_params.gen_ch1_off_5;
-				ch2_off  = osc_calib_params.gen_ch2_off_5;
-			}
-#endif
 
-#if defined Z10 || defined Z20_125
-			ch1_gain = calibDACFullScaleToVoltage(osc_calib_params.be_ch1_fs);
-			ch2_gain = calibDACFullScaleToVoltage(osc_calib_params.be_ch2_fs);
-			ch1_off  = osc_calib_params.be_ch1_dc_offs;
-			ch2_off  = osc_calib_params.be_ch2_dc_offs;
-#endif
+		if (use_calib) {
+			for(uint8_t ch = 0; ch < channels; ++ch){
+				rp_gen_gain_calib_t  mode = dac_gain == CStreamSettings::X1 ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
+				if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
+					fprintf(stderr,"Error get calibration channel: %d\n",ch);
+				}
+			}
 		}
 
-#ifdef Z20_250_12
-
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-
-#endif
+		if (rp_HPGetIsGainDACx5OrDefault()){
+        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
+        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
+		}
 
 		for (const UioT &uio : uioList)
 		{
 			 if (uio.nodeName == "rp_dac")
 			{
-                g_gen = CGenerator::create(uio, true , true ,dac_speed,DAC_FREQUENCY);
-				g_gen->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
+                g_gen = CGenerator::create(uio, true , true ,dac_speed,ClientOpt::getDACRate());
+				g_gen->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
 				g_gen->setDacHz(dac_speed);
 			}
 		}
-
 #else
         uio_lib::UioT uio_t;
-        g_gen = CGenerator::create(uio_t, true , true ,dac_speed,125e6);
-        g_gen->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
+        g_gen = CGenerator::create(uio_t, true , true ,dac_speed,ClientOpt::getDACRate());
+        g_gen->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
         g_gen->setDacHz(dac_speed);
 #endif
 
@@ -165,7 +135,7 @@ auto startDACServer(bool verbMode,bool testMode) -> void{
 			{
 				stopDACNonBlocking(status);
             });
-		
+
 		}
 
         g_dac_app = std::make_shared<CDACStreamingApplication>(g_dac_manger, g_gen);

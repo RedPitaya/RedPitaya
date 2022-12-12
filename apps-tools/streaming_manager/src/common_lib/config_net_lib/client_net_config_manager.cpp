@@ -18,7 +18,7 @@ ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings
         readFromFile(default_file_settings_path);
 }
 
-ClientNetConfigManager::~ClientNetConfigManager(){    
+ClientNetConfigManager::~ClientNetConfigManager(){
     removeHadlers();
     for(auto &cli:m_clients){
         cli->m_manager->stopAsioNet();
@@ -105,7 +105,7 @@ auto ClientNetConfigManager::startBroadcast(std::string host,std::string port) -
             }
             m_broadcastClients.remove_if([](const BroadCastClients &c){
                          return (std::time(0) - c.ts > BROADCAST_TIMEOUT);
-            });            
+            });
         }else{
             aprintf(stderr,"[ServerNetConfigManager] Broadcast client error: %s (%d)\n",er.message().c_str(),er.value());
             errorNofiy(Errors::BROADCAST_ERROR,host,er);
@@ -442,6 +442,8 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(getLoopbackMode()),_async)) return false;
         if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(getLoopbackChannels()),_async)) return false;
 
+        if (!_client->m_manager->sendData("mode",static_cast<uint32_t>(getBoardMode()),_async)) return false;
+
         if (!_client->m_manager->sendData(CNetConfigManager::ECommands::END_SEND_SETTING,_async)) return false;
         return true;
     }
@@ -478,6 +480,8 @@ auto ClientNetConfigManager::sendTestConfig(std::shared_ptr<Clients> _client, bo
         if (!_client->m_manager->sendData("loopback_speed",static_cast<uint32_t>(settings.getLoopbackSpeed()),_async)) return false;
         if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(settings.getLoopbackMode()),_async)) return false;
         if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(settings.getLoopbackChannels()),_async)) return false;
+
+        if (!_client->m_manager->sendData("mode",static_cast<uint32_t>(settings.getBoardMode()),_async)) return false;
 
         if (!_client->m_manager->sendData(CNetConfigManager::ECommands::END_SEND_TEST_SETTING,_async)) return false;
         return true;

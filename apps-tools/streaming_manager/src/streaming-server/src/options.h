@@ -19,6 +19,12 @@
 
 namespace ClientOpt {
 
+    typedef enum {
+        RP_125_14,
+        RP_250_12,
+        RP_125_14_4CH
+    } models_t;
+
     struct Options {
         bool background;
         std::string config_port;
@@ -38,6 +44,11 @@ namespace ClientOpt {
     auto usage(char const *progName) -> void;
     auto parse(int argc, char* argv[]) -> Options;
 
+    auto getADCChannels() -> uint8_t;
+    auto getDACChannels() -> uint8_t;
+    auto getDACRate() -> uint32_t;
+    auto getADCRate() -> uint32_t;
+    auto getModel() -> models_t;
 }
 
 #endif

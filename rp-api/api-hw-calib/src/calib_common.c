@@ -20,6 +20,7 @@ uint_gain_calib_t convertFloatToInt(channel_calib_t *param,uint8_t precision){
     calib.precision = precision;
     calib.base = pow(10,precision);
     calib.gain = param->gainCalc * calib.base;
+    calib.offset = param->offset;
     return calib;
 }
 

@@ -472,6 +472,7 @@ int rp_AOpinSetValue(int unsigned pin, float value) {
         fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC bits\n");
         return RP_EOOR;
     }
+
     uint32_t value_raw = cmn_convertToCnt(value,bits,fs,is_signed,1,0);
     return rp_AOpinSetValueRaw(pin, value_raw);
 }

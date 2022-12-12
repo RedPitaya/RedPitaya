@@ -37,6 +37,8 @@ CStreamSettings::CStreamSettings(){
     m_loopback_mode = LOOPBACKMode::DD;
     m_loopback_channels = LOOPBACKChannels::TWO;
 
+    m_rp_board_mode = MASTER;
+
     reset();
 }
 
@@ -68,7 +70,9 @@ void CStreamSettings::reset(){
                       {"m_loopback_timeout",  false},
                       {"m_loopback_speed_Hz", false},
                       {"m_loopback_mode",     false},
-                      {"m_loopback_channels", false}
+                      {"m_loopback_channels", false},
+
+                      {"m_rp_board_mode", false}
                       };
 }
 
@@ -86,7 +90,7 @@ auto CStreamSettings::resetDefault() -> void{
     setAttenuator(A_1_1);
     setDecimation(1);
     setCalibration(false);
-    setAC_DC(AC);
+    setAC_DC(DC);
 
     setDACGain(X1);
     setDACFileType(WAV);
@@ -101,6 +105,8 @@ auto CStreamSettings::resetDefault() -> void{
     setLoopbackSpeed(-1);
     setLoopbackMode(LOOPBACKMode::DD);
     setLoopbackChannels(LOOPBACKChannels::TWO);
+
+    setBoardMode(MASTER);
 }
 
 CStreamSettings::~CStreamSettings(){
@@ -146,6 +152,8 @@ auto CStreamSettings::copy(const CStreamSettings &src) -> void{
     m_loopback_channels  = src.m_loopback_channels;
 
     m_var_changed  = src.m_var_changed;
+
+    m_rp_board_mode = src.m_rp_board_mode;
 }
 
 
@@ -159,9 +167,12 @@ bool CStreamSettings::isSetted(){
 bool CStreamSettings::writeToFile(string _filename){
     if (isSetted()){
         Json::Value root;
+        Json::Value board_config;
         Json::Value adc_config;
         Json::Value dac_config;
         Json::Value loopback_config;
+
+        board_config["mode"] = getBoardMode();
 
         adc_config["port"] = getPort();
         adc_config["protocol"] = getProtocol();
@@ -192,10 +203,11 @@ bool CStreamSettings::writeToFile(string _filename){
         loopback_config["channels"] = getLoopbackChannels();
 
 
+        root["board"] = board_config;
         root["adc_streaming"] = adc_config;
         root["dac_streaming"] = dac_config;
         root["loopback"] = loopback_config;
-        
+
         Json::StreamWriterBuilder builder;
         const std::string json_file = Json::writeString(builder, root);
         ofstream file(_filename , 	ios::out | ios::trunc);
@@ -213,9 +225,12 @@ auto CStreamSettings::getJson()-> std::string{
     if (isSetted()){
 
         Json::Value root;
+        Json::Value board_config;
         Json::Value adc_config;
         Json::Value dac_config;
         Json::Value loopback_config;
+
+        board_config["mode"] = getBoardMode();
 
         adc_config["port"] = getPort();
         adc_config["protocol"] = getProtocol();
@@ -245,6 +260,7 @@ auto CStreamSettings::getJson()-> std::string{
         loopback_config["mode"] = getLoopbackMode();
         loopback_config["channels"] = getLoopbackChannels();
 
+        root["board"] = board_config;
         root["adc_streaming"] = adc_config;
         root["dac_streaming"] = dac_config;
         root["loopback"] = loopback_config;
@@ -259,6 +275,18 @@ auto CStreamSettings::getJson()-> std::string{
 auto CStreamSettings::String()-> std::string{
     if (isSetted()){
         std::string  str = "";
+
+        std::string  board_mode = "ERROR";
+        switch (getBoardMode()) {
+            case MASTER:
+                board_mode = "MASTER";
+                break;
+            case SLAVE:
+                board_mode = "SLAVE";
+                break;
+        }
+        str = str + "Baord Mode:\t\t" + board_mode  +"\n";
+
         str = str + "Port:\t\t\t"+getPort()+"\n";
 
         std::string  protocol = "ERROR";
@@ -362,7 +390,7 @@ auto CStreamSettings::String()-> std::string{
 
         str = str + "\n******************** DAC  streaming ********************\n";
         std::string  dac_mode = "ERROR";
-        
+
         switch (getDACMode()) {
             case DACType::DAC_NET:
                 dac_mode = "Network";
@@ -374,7 +402,7 @@ auto CStreamSettings::String()-> std::string{
 
         str = str + "Local file:\t\t" + getDACFile() + "\n";
         str = str + "Port:\t\t\t" + getDACPort() + "\n";
-        
+
         std::string  dac_format = "ERROR";
         switch (getDACFileType()) {
             case DataFormat::WAV:
@@ -419,7 +447,7 @@ auto CStreamSettings::String()-> std::string{
 
 
         str = str + "\n******************** Loopback **************************\n";
-        
+
         std::string  lb_mode = "ERROR";
         switch (getLoopbackMode()) {
             case LOOPBACKMode::DD:
@@ -437,7 +465,7 @@ auto CStreamSettings::String()-> std::string{
                 break;
             case LOOPBACKChannels::TWO:
                 lb_chs = "TWO";
-                break;                
+                break;
             default:
                 break;
         }
@@ -449,9 +477,9 @@ auto CStreamSettings::String()-> std::string{
         if (lb_speed == -1){
             str = str + "DAC Speed:\t\t" +"MAX\n";
         }else{
-            str = str + "DAC Speed:\t\t" + std::to_string(lb_speed)  +"\n";            
+            str = str + "DAC Speed:\t\t" + std::to_string(lb_speed)  +"\n";
         }
-        
+
         return str;
     }
     return "INCOMPLETE SETTING";
@@ -570,6 +598,7 @@ auto CStreamSettings::StringStreaming()-> std::string{
 auto CStreamSettings::readFromFile(string _filename) -> bool {
 
     Json::Value root;
+    Json::Value board_config;
     Json::Value adc_config;
     Json::Value dac_config;
     Json::Value loopback_config;
@@ -586,6 +615,13 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
     JSONCPP_STRING errs;
     if (!parseFromStream(builder, file, &root, &errs)) {
         std::cerr << "[CStreamSettings] Error parse json" << errs << std::endl;
+        return false;
+    }
+
+    if (root.isMember("board")){
+        board_config = root["board"];
+    }else{
+        std::cerr << "[CStreamSettings] Error parse json. Invalid file" << std::endl;
         return false;
     }
 
@@ -609,6 +645,9 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         std::cerr << "[CStreamSettings] Error parse json. Invalid file" << std::endl;
         return false;
     }
+
+    if (board_config.isMember("mode"))
+        setBoardMode(static_cast<RPBoardMode>(board_config["mode"].asInt()));
 
     if (adc_config.isMember("port"))
         setPort(adc_config["port"].asString());
@@ -656,7 +695,7 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         setDACMemoryUsage(dac_config["dac_memoryUsage"].asInt64());
     if (dac_config.isMember("dac_speed"))
         setDACHz(dac_config["dac_speed"].asInt());
-    
+
     if (loopback_config.isMember("timeout"))
         setLoopbackTimeout(loopback_config["timeout"].asInt());
     if (loopback_config.isMember("dac_speed"))
@@ -748,6 +787,15 @@ void CStreamSettings::setDecimation(uint32_t _decimation){
 
 uint32_t CStreamSettings::getDecimation() const{
     return m_decimation;
+}
+
+auto CStreamSettings::setBoardMode(RPBoardMode _mode) -> void{
+    m_rp_board_mode = _mode;
+    m_var_changed["m_rp_board_mode"] = true;
+}
+
+auto CStreamSettings::getBoardMode() const -> RPBoardMode{
+    return m_rp_board_mode;
 }
 
 auto CStreamSettings::setValue(std::string key,std::string value) -> bool{
@@ -1003,7 +1051,7 @@ auto CStreamSettings::getLoopbackTimeout() const -> uint32_t{
 
 auto CStreamSettings::setLoopbackTimeout(uint32_t value) -> void{
     m_loopback_timeout = value;
-    m_var_changed["m_loopback_timeout"] = true;    
+    m_var_changed["m_loopback_timeout"] = true;
 }
 
 auto CStreamSettings::getLoopbackSpeed() const -> int32_t{
@@ -1012,7 +1060,7 @@ auto CStreamSettings::getLoopbackSpeed() const -> int32_t{
 
 auto CStreamSettings::setLoopbackSpeed(int32_t value) -> void{
     m_loopback_speed_Hz = value;
-    m_var_changed["m_loopback_speed_Hz"] = true; 
+    m_var_changed["m_loopback_speed_Hz"] = true;
 }
 
 auto CStreamSettings::getLoopbackMode() const -> LOOPBACKMode{
@@ -1021,7 +1069,7 @@ auto CStreamSettings::getLoopbackMode() const -> LOOPBACKMode{
 
 auto CStreamSettings::setLoopbackMode(LOOPBACKMode mode) -> void{
     m_loopback_mode = mode;
-    m_var_changed["m_loopback_mode"] = true; 
+    m_var_changed["m_loopback_mode"] = true;
 }
 
 auto CStreamSettings::getLoopbackChannels() const -> LOOPBACKChannels{
@@ -1030,5 +1078,5 @@ auto CStreamSettings::getLoopbackChannels() const -> LOOPBACKChannels{
 
 auto CStreamSettings::setLoopbackChannels(LOOPBACKChannels channels) -> void{
     m_loopback_channels = channels;
-    m_var_changed["m_loopback_channels"] = true; 
+    m_var_changed["m_loopback_channels"] = true;
 }

@@ -388,7 +388,9 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
     getChannelPropertiesAddress(&ch_properties, channel);
 
     //uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX , false, amp_max, 0, 0.0);
+
     int32_t value = cmn_convertToCnt(amplitude,bits,fs,is_sign,gain_calib,0);
+
     cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
     ch_properties->amplitudeScale = value;
     return RP_OK;

@@ -249,6 +249,12 @@ uint32_t cmn_convertToCnt(float voltage,uint8_t bits,float fullScale,bool is_sig
         fprintf(stderr,"[FATAL ERROR] convertToCnt devide by zero\n");
         assert(false);
     }
+
+    if (fullScale == 0){
+        fprintf(stderr,"[FATAL ERROR] convertToCnt devide by zero\n");
+        assert(false);
+    }
+
     voltage /= gain;
 
     /* check and limit the specified voltage arguments towards */
@@ -259,17 +265,19 @@ uint32_t cmn_convertToCnt(float voltage,uint8_t bits,float fullScale,bool is_sig
     else if(voltage < -fullScale)
         voltage = -fullScale;
 
-    float fScaleDevider = is_signed ? fullScale * 2 : fullScale;
-    int32_t  cnts = (int)round(voltage * (float) (1 << bits) / fScaleDevider);
+    if (!is_signed && voltage < 0){
+        voltage = 0;
+    }
 
+    int32_t  cnts = (int)round(voltage * (float) (1 << (bits - (is_signed ? 1 : 0))) / fullScale);
     cnts += offset;
 
     /* check and limit the specified cnt towards */
     /* maximal cnt which can be applied on ADC inputs */
-    if(cnts > (1 << (bits - 1)) - 1)
-        cnts = (1 << (bits - 1)) - 1;
-    else if(cnts < -(1 << (bits - 1)))
-        cnts = -(1 << (bits - 1));
+    if(cnts > (1 << (bits - (is_signed ? 1 : 0))) - 1)
+        cnts = (1 << (bits - (is_signed ? 1 : 0))) - 1;
+    else if(cnts < -(1 << (bits - (is_signed ? 1 : 0))))
+        cnts = -(1 << (bits - (is_signed ? 1 : 0)));
 
     /* if negative remove higher bits that represent negative number */
     if (cnts < 0)
@@ -286,7 +294,7 @@ float cmn_convertToVoltSigned(uint32_t cnts, uint8_t bits, float fullScale, uint
 
 float cmn_convertToVoltUnsigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset){
     uint32_t calib_cnts = cmn_CalibCntsUnsigned(cnts, bits, gain, base, offset);
-    float ret_val = ((float)calib_cnts * fullScale / (float)(1 << (bits - 1)));
+    float ret_val = ((float)calib_cnts * fullScale / (float)(1 << bits));
     return ret_val;
 }
 
@@ -305,8 +313,7 @@ int32_t cmn_CalibCntsSigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t
     /* adopt ADC count with calibrated DC offset */
     m -= offset;
 
-    m = (gain * m) / base;
-
+    m = ((int32_t)gain * m) / (int32_t)base;
     /* check limits */
     if(m < -(1 << (bits - 1)))
         m = -(1 << (bits - 1));
@@ -327,8 +334,8 @@ uint32_t cmn_CalibCntsUnsigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint3
     /* check limits */
     if(m < 0)
         m = 0;
-    else if(m > (1 << (bits - 1)))
-        m = (1 << (bits - 1));
+    else if(m > (1 << bits))
+        m = (1 << bits);
 
     return m;
 }

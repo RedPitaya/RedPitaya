@@ -58,11 +58,15 @@ target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-dsp rp)
+target_link_libraries(${PROJECT_NAME} PRIVATE rp-dsp rp)
 
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-i2c rp-spi rp-gpio pthread rp-hw)
-endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE rp rp-hw rp-hw-calib rp-hw-profiles)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw i2c)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

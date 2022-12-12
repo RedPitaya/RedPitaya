@@ -55,7 +55,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp rp-hw rp-hw-profiles i2c)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

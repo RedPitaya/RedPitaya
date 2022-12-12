@@ -139,7 +139,7 @@ if(BUILD_SHARED)
     target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
     target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
-
+    target_link_libraries(${PROJECT_NAME}-shared rp-hw-calib rp-hw-profiles)
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib

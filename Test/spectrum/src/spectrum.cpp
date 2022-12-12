@@ -11,13 +11,29 @@
 #include <rp.h>
 #include <rp_dsp.h>
 
+#include "rp_hw-calib.h"
+#include "rp_hw-profiles.h"
+
 #include "cli_parse_args.h"
 
-#if defined Z20_125_4CH
-#define MAX_CHANNELS 4
-#else
-#define MAX_CHANNELS 2
-#endif
+uint8_t getADCChannels(){
+    uint8_t c = 0;
+    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+    }
+    return c;
+}
+
+uint32_t getADCSpeed(){
+    uint32_t c = 0;
+    if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC speed\n");
+    }
+    return c;
+}
+
+#define MAX_CHANNELS getADCChannels()
+#define ADC_SAMPLE_RATE getADCSpeed()
 
 namespace {
 
@@ -65,7 +81,7 @@ static void spectrum_worker(cli_args_t args) {
             else
                 if (decimation >= 2)
                     decimation = 2;
-                else 
+                else
                     decimation = 1;
     }
     auto data = g_dsp.createData();
@@ -74,7 +90,7 @@ static void spectrum_worker(cli_args_t args) {
 
     auto peak_pw_max = new float[MAX_CHANNELS];
     auto peak_pw_freq_max = new float[MAX_CHANNELS];
-    
+
     auto peak_set = false;
 
     for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
@@ -91,7 +107,7 @@ static void spectrum_worker(cli_args_t args) {
             std::cout << ", ch"<< ch << " (dB)";
         }
         std::cout << "\n";
-    } else if (args.csv_limit) {        
+    } else if (args.csv_limit) {
         std::cout << "Frequency (Hz)";
         for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
             std::cout << ", ch"<< ch << " min (dB)";
@@ -99,7 +115,7 @@ static void spectrum_worker(cli_args_t args) {
         }
         std::cout << "\n";
     }
-    
+
     bool is_infinity = count < 0;
     uint32_t buffer_size = ADC_BUFFER_SIZE;
     while (!g_quit_requested && ((count > 0) || is_infinity)) {
@@ -122,15 +138,17 @@ static void spectrum_worker(cli_args_t args) {
         }
         rp_AcqStop();
 
-        
+
         // Retrieve data and process it
         uint32_t trig_pos;
         rp_AcqGetWritePointerAtTrig(&trig_pos);
-#if defined Z20_125_4CH
-        rp_AcqGetDataV2D(trig_pos,&buffer_size, data->in[0], data->in[1], data->in[2], data->in[3]);
-#else
-        rp_AcqGetDataV2D(trig_pos,&buffer_size, data->in[0], data->in[1]);
-#endif
+        buffers_t buff;
+        buff.size = buffer_size;
+        for(int i = 0; i < MAX_CHANNELS; i++){
+            buff.ch_d[i] = data->in[i];
+        }
+
+        rp_AcqGetDataV2D(trig_pos,&buff);
 
         g_dsp.windowFilter(data);
 
@@ -160,7 +178,7 @@ static void spectrum_worker(cli_args_t args) {
                         max_signals[ch][i] = data->converted[ch][i];
                     }
                 }
-            } 
+            }
             peak_set = true;
         }
 
@@ -227,15 +245,15 @@ int main(int argc, char *argv[]) {
     std::cout.imbue(std::locale::classic());
 
     // Use fixed float values
-    std::cout << std::fixed << std::setprecision(2);    
-    cli_args_t args;    
+    std::cout << std::fixed << std::setprecision(2);
+    cli_args_t args;
     if (!cli_parse_args(argc, argv, args)) {
-        fprintf(stderr,"%s Version: %s-%s\n",argv[0],VERSION_STR, REVISION_STR);        
+        fprintf(stderr,"%s Version: %s-%s\n",argv[0],VERSION_STR, REVISION_STR);
         std::cerr << cli_help_string() << std::endl;
         return 1;
     }
 
-    if (args.help) {        
+    if (args.help) {
         // std::cout has used only for the measurement results
         fprintf(stderr,"%s Version: %s-%s\n",argv[0],VERSION_STR, REVISION_STR);
         std::cerr << cli_help_string() << std::endl;
@@ -258,7 +276,7 @@ int main(int argc, char *argv[]) {
         std::cerr << "Error: rp_Reset, code: " << error_code << std::endl;
         return 1;
     }
-    
+
 
     error_code = g_dsp.window_init(rp_dsp_api::CDSP::HANNING);
 

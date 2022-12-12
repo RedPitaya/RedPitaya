@@ -804,15 +804,17 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
 
     uint8_t bits = 0;
     int ret = 0;
-
+    bool is_sign = false;
     switch (mode)
     {
         case RP_LOW:
             ret = rp_HPGetFastADCBits(channel,&bits);
+            ret |= rp_HPGetFastADCIsSigned(channel,&is_sign);
             break;
 
         case RP_HIGH:
             ret = rp_HPGetFastADCBits_1_20(channel,&bits);
+            ret |= rp_HPGetFastADCIsSigned_1_20(channel,&is_sign);
             break;
 
         default:
@@ -830,7 +832,11 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
     for (uint32_t i = 0; i < (*size); ++i) {
-        buffer[i] = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & mask;
+        uint32_t cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & mask;
+        if (is_sign)
+            buffer[i] = cmn_CalibCntsSigned(cnts,bits,1,1,0);
+        else
+            buffer[i] = cmn_CalibCntsUnsigned(cnts,bits,1,1,0);
     }
 
     return RP_OK;

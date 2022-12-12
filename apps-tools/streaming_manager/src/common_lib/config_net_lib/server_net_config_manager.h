@@ -30,6 +30,8 @@ public:
     auto startBroadcast(broadcast_lib::EModel model,std::string host,std::string port) -> void;
     auto stop() -> void;
     auto isConnected() -> bool;
+    auto setMode(broadcast_lib::EMode mode) -> void;
+
     auto sendServerStartedTCP() -> bool;
     auto sendServerStartedUDP() -> bool;
     auto sendServerStartedSD() -> bool;
@@ -55,11 +57,11 @@ public:
     auto sendServerStartedLoopBackMode() -> bool;
     auto sendServerStoppedLoopBackMode() -> bool;
     auto sendStreamServerBusy() -> bool;
-    
+
     auto getSettingsRef() -> CStreamSettings&;
     auto getSettings() -> const CStreamSettings;
     auto getTempSettings() -> const CStreamSettings;
-    
+
     sigslot::signal<> getNewSettingsNofiy;
     sigslot::signal<> getNewTestSettingsNofiy;
 

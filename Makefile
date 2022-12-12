@@ -324,7 +324,6 @@ LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
 ACQUIRE_DIR        = Test/acquire
-ACQUIRE2_DIR       = Test/acquire2
 CALIB_DIR          = Test/calib
 #CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
@@ -353,9 +352,9 @@ endif
 #	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 bode: api
-	$(MAKE) -C $(BODE_DIR) clean
-	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(BODE_DIR)/build)
+	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(BODE_DIR)/build install
 
 monitor: api
 	rm -rf $(abspath $(MONITOR_DIR)/build)
@@ -363,14 +362,14 @@ monitor: api
 	$(MAKE) -C $(MONITOR_DIR)/build install
 
 generator: api
-	$(MAKE) -C $(GENERATOR_DIR) clean
-	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(GENERATOR_DIR)/build)
+	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(GENERATOR_DIR)/build install
 
 acquire: api
-	rm -rf $(abspath $(ACQUIRE2_DIR)/build)
-	cmake -B$(abspath $(ACQUIRE2_DIR)/build) -S$(abspath $(ACQUIRE2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
-	$(MAKE) -C $(ACQUIRE2_DIR)/build install
+	rm -rf $(abspath $(ACQUIRE_DIR)/build)
+	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(ACQUIRE_DIR)/build install
 
 calib: api
 	rm -rf $(abspath $(CALIB_DIR)/build)
@@ -627,15 +626,15 @@ clean:
 
 
 	rm -rf $(abspath $(CALIB_DIR)/build)
-	rm -rf $(abspath $(ACQUIRE2_DIR)/build)
+	rm -rf $(abspath $(BODE_DIR)/build)
+	rm -rf $(abspath $(ACQUIRE_DIR)/build)
+	rm -rf $(abspath $(GENERATOR_DIR)/build)
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
 	rm -rf $(abspath $(MONITOR_DIR)/build)
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
 
 	make -C $(NGINX_DIR) clean
-	make -C $(GENERATOR_DIR) clean
-	make -C $(GENERATOR250_DIR) clean
 	make -C $(SCPI_SERVER_DIR) clean
 	make -C $(COMM_DIR) clean
 	make -C $(PRODUCTION_TEST_DIR) clean
