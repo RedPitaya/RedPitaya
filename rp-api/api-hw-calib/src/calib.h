@@ -16,6 +16,7 @@
 #define __CALIB_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include "rp_hw-calib.h"
 #include "calib_common.h"
 
@@ -36,6 +37,7 @@ int calib_GetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone);
 int calib_ConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out);
 
 int calib_Print(rp_calib_params_t *calib);
+int calib_PrintEx(FILE *__restrict out,rp_calib_params_t *calib);
 
 int calib_GetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out);
 int calib_GetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out);

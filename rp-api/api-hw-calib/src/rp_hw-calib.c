@@ -81,12 +81,12 @@ int rp_CalibGetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mo
     return calib_GetFastADCCalibValue_1_20(channel,mode,gain,offset,&c);
 }
 
-int rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
+int rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
     double gain;
     return calib_GetFastADCCalibValue(channel,mode,&gain,&calib->offset,calib);
 }
 
-int rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
+int rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
     double gain;
     return calib_GetFastADCCalibValue_1_20(channel,mode,&gain,&calib->offset,calib);
 }

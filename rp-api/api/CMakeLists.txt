@@ -72,47 +72,9 @@ list(APPEND src
         )
 
 
-# if ("${MODEL}" STREQUAL "Z20_250_12")
-#     list(APPEND src
-#         ${CMAKE_SOURCE_DIR}/src/generate.c
-#         ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-#     )
-# else()
-#     list(APPEND src
-#         ${CMAKE_SOURCE_DIR}/src/generate.c
-#         ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-#     )
-# endif()
-
-#if ("${MODEL}" STREQUAL "Z10")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
-    )
-#endif()
-
-# if ("${MODEL}" STREQUAL "Z20")
-#     list(APPEND header_rp
-#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20.h
-#     )
-# endif()
-
-# if ("${MODEL}" STREQUAL "Z20_125")
-#     list(APPEND header_rp
-#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125.h
-#     )
-# endif()
-
-# if ("${MODEL}" STREQUAL "Z20_125_4CH")
-#     list(APPEND header_rp
-#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125_4CH.h
-#     )
-# endif()
-
-# if ("${MODEL}" STREQUAL "Z20_250_12")
-#     list(APPEND header_rp
-#         ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_250_12.h
-#     )
-# endif()
+list(APPEND header_rp
+    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
+)
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
@@ -124,14 +86,12 @@ endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
-#if ("${MODEL}" STREQUAL "Z20_250_12")
-    if(NOT DEFINED INSTALL_DIR)
-        message(FATAL_ERROR "You must specify the path to the libraries api-250-12 api-hw-calib api-hw-profiles")
-    endif()
-    include_directories(${INSTALL_DIR}/include/api250-12)
-    link_directories(${INSTALL_DIR}/lib)
-    target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
-#endif()
+if(NOT DEFINED INSTALL_DIR)
+    message(FATAL_ERROR "You must specify the path to the libraries api-250-12 api-hw-calib api-hw-profiles")
+endif()
+include_directories(${INSTALL_DIR}/include/api250-12)
+link_directories(${INSTALL_DIR}/lib)
+target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
 
 if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)

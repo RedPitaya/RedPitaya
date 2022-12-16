@@ -22,6 +22,8 @@ ARTIFACTS=$(CONTROLLER)
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
+.PHONY: all
+
 all: $(CONTROLLER)
 
 $(CONTROLLER):
@@ -31,18 +33,11 @@ $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
 
-	cp -r $(CONTROLLER) fpga.conf nginx.conf css img info js target/$(APP)
+	cp -r $(CONTROLLER) fpga.conf fpga.sh nginx.conf css img info js target/$(APP)
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20 Z20_250_12 Z20_125))
-	cp index.html target/$(APP)
-endif
+	cp index.html 2ch_adc.html 4ch_adc.html target/$(APP)
 
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
-	cp index_4ch.html target/$(APP)/index.html
-	sed -i target/$(APP)/info/info.json -e 's/DESC_INFO/Application for calibrating ADC/'
-else
-	sed -i target/$(APP)/info/info.json -e 's/DESC_INFO/Application for calibrating ADC and DAC/'
-endif
+	sed -i target/$(APP)/info/info.json -e 's/DESC_INFO/Board Calibration Application/'
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *

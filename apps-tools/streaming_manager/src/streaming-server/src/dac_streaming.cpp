@@ -73,8 +73,8 @@ auto startDACServer(bool verbMode,bool testMode) -> void{
 
 		auto channels = ClientOpt::getDACChannels();
 		std::vector<UioT> uioList = GetUioList();
-		int32_t ch_off[4] = { 0 , 0 , 0 , 0 };
-		double  ch_gain[4] = { 1 , 1 , 1 ,1 };
+		int32_t ch_off[MAX_DAC_CHANNELS] = { 0 , 0 };
+		double  ch_gain[MAX_DAC_CHANNELS] = { 1 , 1 };
 #ifdef RP_PLATFORM
 
 		if (use_calib) {

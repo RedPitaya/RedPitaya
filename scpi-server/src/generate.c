@@ -21,11 +21,12 @@
 //#include "../../api/src/generate.h"
 
 #include "rp.h"
+#include "rp_hw-profiles.h"
 #include "common.h"
 #include "scpi/parser.h"
 #include "scpi/units.h"
 
-/* These structures are a direct API mirror 
+/* These structures are a direct API mirror
 and should not be altered! */
 const scpi_choice_def_t scpi_RpWForm[] = {
     {"SINE",        0},
@@ -82,7 +83,7 @@ scpi_result_t RP_GenSync(scpi_t *context) {
 }
 
 scpi_result_t RP_GenSyncState(scpi_t *context) {
-    
+
     int result;
     bool state_c;
 
@@ -93,9 +94,9 @@ scpi_result_t RP_GenSyncState(scpi_t *context) {
     }
 
     result = rp_GenOutEnableSync(state_c);
-    
+
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUTPUT:STATE Failed to enable generate: %s\n", 
+        RP_LOG(LOG_ERR, "*OUTPUT:STATE Failed to enable generate: %s\n",
             rp_GetError(result));
 
         return SCPI_RES_ERR;
@@ -106,12 +107,12 @@ scpi_result_t RP_GenSyncState(scpi_t *context) {
 }
 
 scpi_result_t RP_GenState(scpi_t *context) {
-    
+
     int result;
     rp_channel_t channel;
     bool state_c;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
     /* Parse first, STATE argument */
@@ -126,7 +127,7 @@ scpi_result_t RP_GenState(scpi_t *context) {
     }
 
     if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n", 
+        RP_LOG(LOG_ERR, "*OUTPUT#:STATE Failed to enable generate: %s\n",
             rp_GetError(result));
 
         return SCPI_RES_ERR;
@@ -142,7 +143,7 @@ scpi_result_t RP_GenStateQ(scpi_t *context){
     int result;
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -165,7 +166,7 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
     rp_channel_t channel;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -186,12 +187,12 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
 }
 
 scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
-    
+
     float frequency;
     rp_channel_t channel;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -206,15 +207,15 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
 
     RP_LOG(LOG_INFO, "*OUTPUT#:STATE Successfully returned frequency value to client.\n");
     return SCPI_RES_OK;
-}    
+}
 
 scpi_result_t RP_GenWaveForm(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int32_t wave_form;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -222,7 +223,7 @@ scpi_result_t RP_GenWaveForm(scpi_t *context) {
     if(!SCPI_ParamChoice(context, scpi_RpWForm, &wave_form, true)){
         RP_LOG(LOG_ERR, "*SOUR#:FUNC Missing first parameter.\n");
         return SCPI_RES_ERR;
-    }    
+    }
 
     rp_waveform_t wf = wave_form;
     result = rp_GenWaveform(channel, wf);
@@ -238,12 +239,12 @@ scpi_result_t RP_GenWaveForm(scpi_t *context) {
 
 
 scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
-    
-    const char *wf_name; 
+
+    const char *wf_name;
     rp_channel_t channel;
     rp_waveform_t wave_form;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -267,12 +268,12 @@ scpi_result_t RP_GenWaveFormQ(scpi_t *context) {
 
 
 scpi_result_t RP_GenPhase(scpi_t *context) {
-    
+
     rp_channel_t channel;
     scpi_number_t phase;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -293,12 +294,12 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
 }
 
 scpi_result_t RP_GenPhaseQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result;
     float phase;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -307,7 +308,7 @@ scpi_result_t RP_GenPhaseQ(scpi_t *context) {
         RP_LOG(LOG_ERR, "*SOUR#:PHAS? Failed to get "
             "generate phase: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
-    } 
+    }
     SCPI_ResultFloat(context, phase);
 
     RP_LOG(LOG_INFO, "*SOUR#:PHAS? Successfully returned "
@@ -316,11 +317,11 @@ scpi_result_t RP_GenPhaseQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenDutyCycle(scpi_t *context) {
-    
+
     rp_channel_t channel;
     float duty_cycle;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -344,7 +345,7 @@ scpi_result_t RP_GenDutyCycleQ(scpi_t *context) {
     float duty_cycle;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -370,7 +371,7 @@ scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
     uint32_t size;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -398,7 +399,7 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
     uint32_t size;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -417,12 +418,12 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenGenerateMode(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int32_t usr_mode;
     int result;
-    
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -444,13 +445,13 @@ scpi_result_t RP_GenGenerateMode(scpi_t *context) {
 }
 
 scpi_result_t RP_GenGenerateModeQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result;
     const char *gen_mode;
     rp_gen_mode_t mode;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -476,11 +477,11 @@ scpi_result_t RP_GenGenerateModeQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenBurstCount(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result, count;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -505,8 +506,8 @@ scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
 
     rp_channel_t channel;
     int result, count;
-    
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -525,11 +526,11 @@ scpi_result_t RP_GenBurstCountQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenBurstRepetitions(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result, repetitions;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -551,11 +552,11 @@ scpi_result_t RP_GenBurstRepetitions(scpi_t *context) {
 }
 
 scpi_result_t RP_GenBurstRepetitionsQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result, repetitions;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -575,12 +576,12 @@ scpi_result_t RP_GenBurstRepetitionsQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenBurstPeriod(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result;
     uint32_t period;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -602,12 +603,12 @@ scpi_result_t RP_GenBurstPeriod(scpi_t *context) {
 }
 
 scpi_result_t RP_GenBurstPeriodQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result;
     uint32_t period;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -626,12 +627,12 @@ scpi_result_t RP_GenBurstPeriodQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenTriggerSource(scpi_t *context) {
-        
+
     rp_channel_t channel;
     int32_t trig_choice;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -655,11 +656,11 @@ scpi_result_t RP_GenTriggerSource(scpi_t *context) {
 }
 
 scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
     const char *trig_name;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -683,10 +684,10 @@ scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenTrigger(scpi_t *context) {
-    
+
     rp_channel_t channel;
     int result;
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -701,7 +702,7 @@ scpi_result_t RP_GenTrigger(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenTriggerBoth(scpi_t *context) {   
+scpi_result_t RP_GenTriggerBoth(scpi_t *context) {
     int result;
     result = rp_GenSynchronise();
     if(result != RP_OK){
@@ -715,9 +716,8 @@ scpi_result_t RP_GenTriggerBoth(scpi_t *context) {
 }
 
 
-#ifdef Z20_250_12
 scpi_result_t RP_GenAmplitude(scpi_t *context) {
-    
+
     rp_channel_t channel;
     scpi_number_t amplitude;
     rp_gen_gain_t gain;
@@ -725,7 +725,7 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
     float offset;
     float amp;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -745,15 +745,25 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to get gain out: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    if (gain == RP_GAIN_5X) offset *= 5;
 
     amp = amplitude.value;
-    if (fabs(offset) + fabs(amp) > 1.0) {
-        gain = RP_GAIN_5X;
+
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        if (gain == RP_GAIN_5X)
+            offset *= 5;
+
+        if (fabs(offset) + fabs(amp) > 1.0) {
+            gain = RP_GAIN_5X;
+        }else{
+            gain = RP_GAIN_1X;
+        }
     }else{
-        gain = RP_GAIN_1X;
+        if (gain == RP_GAIN_5X){
+            RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed. Wrong gain out: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
     }
-    
+
     result = rp_GenAmp(channel, amp / (gain == RP_GAIN_5X ? 5.0 : 1.0));
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set amplitude: %s\n", rp_GetError(result));
@@ -777,13 +787,13 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
 }
 
 scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
-   
+
     rp_channel_t channel;
     rp_gen_gain_t gain;
     float amplitude;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -798,9 +808,18 @@ scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT? Failed to get gain out: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    if (gain == RP_GAIN_5X) amplitude *= 5.0;
 
-    
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        if (gain == RP_GAIN_5X)
+            amplitude *= 5.0;
+    }else{
+        if (gain == RP_GAIN_5X){
+            RP_LOG(LOG_ERR, "*SOUR#:VOLT? Failed. Wrong gain out: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
+    }
+
+
     SCPI_ResultFloat(context, amplitude);
 
     RP_LOG(LOG_INFO, "*SOUR#:VOLT? Successfully returned amplitude value to client.\n");
@@ -808,7 +827,7 @@ scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
 }
 
 scpi_result_t RP_GenOffset(scpi_t *context) {
-    
+
     rp_channel_t channel;
     scpi_number_t offset;
     rp_gen_gain_t gain;
@@ -816,7 +835,7 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
     float amp;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -836,13 +855,22 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to get gain out: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    if (gain == RP_GAIN_5X) amp *= 5;
 
     offs = offset.value;
-    if (fabs(offs) + fabs(amp) > 1.0) {
-        gain = RP_GAIN_5X;
+
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        if (gain == RP_GAIN_5X) amp *= 5;
+
+        if (fabs(offs) + fabs(amp) > 1.0) {
+            gain = RP_GAIN_5X;
+        }else{
+            gain = RP_GAIN_1X;
+        }
     }else{
-        gain = RP_GAIN_1X;
+        if (gain == RP_GAIN_5X){
+            RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed. Wrong gain out: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
     }
 
 
@@ -869,13 +897,13 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
 }
 
 scpi_result_t RP_GenOffsetQ(scpi_t *context) {
-    
+
     rp_channel_t channel;
     rp_gen_gain_t gain;
     float offset;
     int result;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -891,101 +919,14 @@ scpi_result_t RP_GenOffsetQ(scpi_t *context) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Failed to get gain out: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    if (gain == RP_GAIN_5X) offset *= 5;
-
-    SCPI_ResultFloat(context, offset);
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS? Successfully returned offset to the client.\n");
-    return SCPI_RES_OK;
-}
-#else
-scpi_result_t RP_GenAmplitude(scpi_t *context) {
-    
-    rp_channel_t channel;
-    scpi_number_t amplitude;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &amplitude, true)) {
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to parse first parameter.\n");
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenAmp(channel, amplitude.value);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set amplitude: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT Successfully set amplitude.\n");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_GenAmplitudeQ(scpi_t *context) {
-   
-    rp_channel_t channel;
-    float amplitude;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenGetAmp(channel, &amplitude);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT? Failed to set amplitude: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    SCPI_ResultFloat(context, amplitude);
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT? Successfully returned amplitude value to client.\n");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_GenOffset(scpi_t *context) {
-    
-    rp_channel_t channel;
-    scpi_number_t offset;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &offset, true)) {
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to parse parameter.\n");
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenOffset(channel, offset.value);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set offset: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-
-    RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS Successfully set generate offset value.\n");
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_GenOffsetQ(scpi_t *context) {
-    
-    rp_channel_t channel;
-    float offset;
-    int result;
-
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
-        return SCPI_RES_ERR;
-    }
-
-    result = rp_GenGetOffset(channel, &offset);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Failed to get "
-            "generate offset: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        if (gain == RP_GAIN_5X)
+            offset *= 5;
+    }else{
+        if (gain == RP_GAIN_5X){
+            RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS? Failed. Wrong gain out: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
     }
 
     SCPI_ResultFloat(context, offset);
@@ -993,4 +934,3 @@ scpi_result_t RP_GenOffsetQ(scpi_t *context) {
     RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS? Successfully returned offset to the client.\n");
     return SCPI_RES_OK;
 }
-#endif

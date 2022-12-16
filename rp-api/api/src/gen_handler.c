@@ -34,37 +34,6 @@
         return RP_NOTS; \
     }
 
-// global variables
-// TODO: should be organized into a system status structure
-// float         chA_amplitude            = 1,         chB_amplitude            = 1;
-// float         chA_offset               = 0,         chB_offset               = 0;
-// float         chA_dutyCycle            = 0,         chB_dutyCycle            = 0;
-// float         chA_riseTime             = 1,         chB_riseTime             = 1;
-// float         chA_fallTime             = 1,         chB_fallTime             = 1;
-// float         chA_riseFallMin        = 0.1,         chB_riseFallMin        = 0.1;
-// float         chA_riseFallMax       = 1000,         chB_riseFallMax       = 1000;
-// float         chA_frequency               ,         chB_frequency               ;
-// float         chA_sweepStartFrequency     ,         chB_sweepStartFrequency     ;
-// float         chA_sweepEndFrequency       ,         chB_sweepEndFrequency       ;
-// float         chA_phase                = 0,         chB_phase                = 0;
-// int           chA_burstCount           = 1,         chB_burstCount           = 1;
-// int           chA_burstRepetition      = 1,         chB_burstRepetition      = 1;
-// uint32_t      chA_burstPeriod          = 0,         chB_burstPeriod          = 0;
-// rp_waveform_t chA_waveform                ,         chB_waveform                ;
-// rp_gen_sweep_mode_t  chA_sweepMode        ,         chB_sweepMode               ;
-// rp_gen_sweep_dir_t   chA_sweepDir         ,         chB_sweepDir                ;
-// uint32_t      chA_size     = DAC_BUFFER_SIZE,       chB_size     = DAC_BUFFER_SIZE;
-// uint32_t      chA_arb_size = DAC_BUFFER_SIZE,       chB_arb_size = DAC_BUFFER_SIZE;
-// rp_gen_mode_t chA_mode = RP_GEN_MODE_CONTINUOUS,    chB_mode = RP_GEN_MODE_CONTINUOUS;
-
-// bool          chA_EnableTempProtection = 0, chB_EnableTempProtection = 0;
-// bool          chA_LatchTempAlarm       = 0, chB_LatchTempAlarm       = 0;
-
-// rp_gen_gain_t chA_gain                    , chB_gain                    ;
-
-// float chA_arbitraryData[DAC_BUFFER_SIZE];
-// float chB_arbitraryData[DAC_BUFFER_SIZE];
-
 float         ch_amplitude[2] = {1 , 1};
 float         ch_offset[2] = {0 , 0};
 float         ch_dutyCycle[2] = {0 , 0};
@@ -250,10 +219,10 @@ int gen_setRiseFallMax(rp_channel_t channel, float max) {
     CHECK_CHANNEL("gen_setRiseFallMax")
 
     ch_riseFallMax[channel] = max;
-    if (ch_riseTime[channel] < ch_riseFallMax[channel]) {
+    if (ch_riseTime[channel] > ch_riseFallMax[channel]) {
         ch_riseTime[channel] = ch_riseFallMax[channel];
     }
-    if (ch_fallTime[channel] < ch_riseFallMax[channel]) {
+    if (ch_fallTime[channel] > ch_riseFallMax[channel]) {
         ch_fallTime[channel] = ch_riseFallMax[channel];
     }
 
@@ -538,9 +507,13 @@ int gen_setRiseTime(rp_channel_t channel, float time) {
 
     CHECK_CHANNEL("gen_setRiseTime")
 
-    if (time < ch_riseFallMin[channel] || time > ch_riseFallMax[channel]) {
-        return RP_EOOR;
+    if (time < ch_riseFallMin[channel]){
+        time = ch_riseFallMin[channel];
     }
+    if (time > ch_riseFallMax[channel]) {
+        time = ch_riseFallMax[channel];
+    }
+
     ch_riseTime[channel] = time;
     return synthesize_signal(channel);
 }
@@ -557,9 +530,13 @@ int gen_setFallTime(rp_channel_t channel, float time) {
 
     CHECK_CHANNEL("gen_setFallTime")
 
-    if (time < ch_riseFallMin[channel] || time > ch_riseFallMax[channel]) {
-        return RP_EOOR;
+    if (time < ch_riseFallMin[channel]){
+        time = ch_riseFallMin[channel];
     }
+    if (time > ch_riseFallMax[channel]) {
+        time = ch_riseFallMax[channel];
+    }
+
     ch_fallTime[channel] = time;
     return synthesize_signal(channel);
 }
@@ -1042,9 +1019,6 @@ int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
 int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status){
 
     CHECK_CHANNEL("gen_getGainOut")
-
-    if (!rp_HPGetIsGainDACx5OrDefault())
-        return RP_NOTS;
 
     *status = ch_gain[channel];
     return RP_OK;

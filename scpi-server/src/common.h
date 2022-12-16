@@ -19,7 +19,7 @@
 
 #include "scpi/parser.h"
 #include "rp.h"
-
+#include "rp_hw-profiles.h"
 
 typedef enum {
     RP_SCPI_LOG_OFF,
@@ -33,12 +33,19 @@ typedef enum {
 #define RP_F_NAME(X) X
 
 
-int RP_ParseChArgv(scpi_t *context, rp_channel_t *channel);
+int RP_ParseChArgvADC(scpi_t *context, rp_channel_t *channel);
+int RP_ParseChArgvDAC(scpi_t *context, rp_channel_t *channel);
 
 rp_scpi_log getLogMode();
 scpi_result_t RP_SetLogMode(scpi_t *context);
 
 void RP_LOG(int mode,const char * format, ...);
+
+uint8_t getADCChannels();
+uint8_t getDACChannels();
+uint32_t getDACRate();
+uint32_t getADCRate();
+rp_HPeModels_t getModel();
 
 
 #endif /* COMMON_H_ */

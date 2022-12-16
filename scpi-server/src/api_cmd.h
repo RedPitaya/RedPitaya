@@ -20,7 +20,6 @@
 scpi_result_t RP_InitAll(scpi_t *context);
 scpi_result_t RP_ResetAll(scpi_t *context);
 scpi_result_t RP_ReleaseAll(scpi_t *context);
-scpi_result_t RP_FpgaBitStream(scpi_t *context);
 scpi_result_t RP_EnableDigLoop(scpi_t *context);
 
 #endif /* API_CMD_H_ */

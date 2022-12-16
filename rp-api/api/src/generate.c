@@ -268,68 +268,6 @@ int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_
     return RP_OK;
 }
 
-
-
-// int generate_setAmplitude(rp_channel_t channel, float amplitude) {
-
-//     float fs = 0;
-//     if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
-//         fprintf(stderr,"[Error:generate_setAmplitude] Can't get fast DAC full scale\n");
-//         return RP_NOTS;
-//     }
-
-//     uint8_t bits = 0;
-//     if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
-//         fprintf(stderr,"[Error:generate_setAmplitude] Can't get fast DAC bits\n");
-//         return RP_NOTS;
-//     }
-
-//     bool is_sign = false;
-//     if (rp_HPGetFastDACIsSigned(channel,&is_sign) != RP_HP_OK){
-//         fprintf(stderr,"[Error:generate_setAmplitude] Can't get fast DAC sign value\n");
-//         return RP_NOTS;
-//     }
-
-//     volatile ch_properties_t *ch_properties;
-//     uint32_t amp_max = calib_getGenScale(channel);
-//     getChannelPropertiesAddress(&ch_properties, channel);
-//     uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude , AMPLITUDE_MAX , false, amp_max, 0, 0.0);
-//     cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
-//     ch_properties->amplitudeScale = value;
-//     return RP_OK;
-// }
-
-// int generate_getAmplitude(rp_channel_t channel, float *amplitude) {
-//     volatile ch_properties_t *ch_properties;
-//     uint32_t amp_max = calib_getGenScale(channel);
-//     getChannelPropertiesAddress(&ch_properties, channel);
-//     *amplitude = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeScale, AMPLITUDE_MAX , amp_max, 0, 0.0 , 1.0);
-//     return RP_OK;
-// }
-
-// int generate_setDCOffset(rp_channel_t channel, float offset) {
-//     volatile ch_properties_t *ch_properties;
-//     int dc_offs = calib_getGenOffset(channel);
-//     uint32_t amp_max = calib_getGenScale(channel);
-//     getChannelPropertiesAddress(&ch_properties, channel);
-//     uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset , (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
-//     cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
-//     ch_properties->amplitudeOffset = value;
-//     return RP_OK;
-// }
-
-// int generate_getDCOffset(rp_channel_t channel, float *offset) {
-//     volatile ch_properties_t *ch_properties;
-//     int dc_offs = calib_getGenOffset(channel);
-//     uint32_t amp_max = calib_getGenScale(channel);
-//     getChannelPropertiesAddress(&ch_properties, channel);
-//     *offset = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0 , 1.0);
-//     return RP_OK;
-// }
-
-
-
-
 int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitude) {
 
     float fs = 0;

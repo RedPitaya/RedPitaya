@@ -1010,7 +1010,6 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
 
     float *buffer_f = is_float ? (float*)in_buffer: NULL;
     double *buffer_d = !is_float ? (double*)in_buffer: NULL;
-
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
@@ -1282,16 +1281,8 @@ int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
 
 int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 
-    uint8_t channels = 0;
-    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        fprintf(stderr,"[Error:acq_GetAC_DC] Can't get fast ADC channels count\n");
-        return RP_NOTS;
-    }
+    CHECK_CHANNEL("acq_GetAC_DC")
 
-    if (channel >= channels){
-        fprintf(stderr,"[Error:acq_GetAC_DC] Channel is larger than allowed\n");
-        return RP_NOTS;
-    }
     *status = power_mode_ch[channel];
     return RP_OK;
 }

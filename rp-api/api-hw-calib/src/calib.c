@@ -18,9 +18,9 @@
 #include <unistd.h>
 #include "calib.h"
 
-rp_calib_params_t g_calib;
-bool g_model_loaded = false;
-rp_HPeModels_t g_model = STEM_125_10_v1_0;
+static rp_calib_params_t g_calib;
+static bool g_model_loaded = false;
+static rp_HPeModels_t g_model = STEM_125_10_v1_0;
 
 int calib_InitModel(rp_HPeModels_t model,bool use_factory_zone){
     switch (model)
@@ -378,6 +378,7 @@ int calib_LoadFromFactoryZone(){
 
 int calib_SetParams(rp_calib_params_t *calib_params){
     g_calib = *calib_params;
+    //calib_PrintEx(stderr,&g_calib);
     return RP_HW_CALIB_OK;
 }
 
@@ -514,71 +515,76 @@ int calib_ConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out){
     return RP_HW_CALIB_EDM;
 }
 
-int calib_Print(rp_calib_params_t *calib){
-    fprintf(stdout,"dataStructureId: %d\n",calib->dataStructureId);
-    fprintf(stdout,"wpCheck: %d\n\n",calib->wpCheck);
-    fprintf(stdout,"fast_adc_count_1_1: %d\n\n",calib->fast_adc_count_1_1);
+
+int calib_PrintEx(FILE *__restrict out,rp_calib_params_t *calib){
+    fprintf(out,"dataStructureId: %d\n",calib->dataStructureId);
+    fprintf(out,"wpCheck: %d\n\n",calib->wpCheck);
+    fprintf(out,"fast_adc_count_1_1: %d\n\n",calib->fast_adc_count_1_1);
     for(int i = 0 ;i< calib->fast_adc_count_1_1; ++i){
-        fprintf(stdout,"\tChannel %d:\n",i+1);
-        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_1[i].fullScale);
-        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_1[i].calibValue);
-        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_1[i].offset);
-        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_1[i].gainCalc);
-        fprintf(stdout,"\t\t* AA: %d:\n",calib->fast_adc_filter_1_1[i].aa);
-        fprintf(stdout,"\t\t* BB: %d:\n",calib->fast_adc_filter_1_1[i].bb);
-        fprintf(stdout,"\t\t* PP: %d:\n",calib->fast_adc_filter_1_1[i].pp);
-        fprintf(stdout,"\t\t* KK: %d:\n",calib->fast_adc_filter_1_1[i].kk);
+        fprintf(out,"\tChannel %d:\n",i+1);
+        fprintf(out,"\t\t* baseScale: %f:\n",calib->fast_adc_1_1[i].baseScale);
+        fprintf(out,"\t\t* calibValue: %d:\n",calib->fast_adc_1_1[i].calibValue);
+        fprintf(out,"\t\t* offset: %d:\n",calib->fast_adc_1_1[i].offset);
+        fprintf(out,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_1[i].gainCalc);
+        fprintf(out,"\t\t* AA: %d:\n",calib->fast_adc_filter_1_1[i].aa);
+        fprintf(out,"\t\t* BB: %d:\n",calib->fast_adc_filter_1_1[i].bb);
+        fprintf(out,"\t\t* PP: %d:\n",calib->fast_adc_filter_1_1[i].pp);
+        fprintf(out,"\t\t* KK: %d:\n",calib->fast_adc_filter_1_1[i].kk);
     }
 
-    fprintf(stdout,"fast_adc_count_1_20: %d\n\n",calib->fast_adc_count_1_1);
+    fprintf(out,"fast_adc_count_1_20: %d\n\n",calib->fast_adc_count_1_1);
     for(int i = 0 ;i< calib->fast_adc_count_1_20; ++i){
-        fprintf(stdout,"\tChannel %d:\n",i+1);
-        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_20[i].fullScale);
-        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_20[i].calibValue);
-        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_20[i].offset);
-        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_20[i].gainCalc);
-        fprintf(stdout,"\t\t* AA: %d:\n",calib->fast_adc_filter_1_20[i].aa);
-        fprintf(stdout,"\t\t* BB: %d:\n",calib->fast_adc_filter_1_20[i].bb);
-        fprintf(stdout,"\t\t* PP: %d:\n",calib->fast_adc_filter_1_20[i].pp);
-        fprintf(stdout,"\t\t* KK: %d:\n",calib->fast_adc_filter_1_20[i].kk);
+        fprintf(out,"\tChannel %d:\n",i+1);
+        fprintf(out,"\t\t* baseScale: %f:\n",calib->fast_adc_1_20[i].baseScale);
+        fprintf(out,"\t\t* calibValue: %d:\n",calib->fast_adc_1_20[i].calibValue);
+        fprintf(out,"\t\t* offset: %d:\n",calib->fast_adc_1_20[i].offset);
+        fprintf(out,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_20[i].gainCalc);
+        fprintf(out,"\t\t* AA: %d:\n",calib->fast_adc_filter_1_20[i].aa);
+        fprintf(out,"\t\t* BB: %d:\n",calib->fast_adc_filter_1_20[i].bb);
+        fprintf(out,"\t\t* PP: %d:\n",calib->fast_adc_filter_1_20[i].pp);
+        fprintf(out,"\t\t* KK: %d:\n",calib->fast_adc_filter_1_20[i].kk);
     }
 
-    fprintf(stdout,"fast_adc_count_1_1_ac: %d\n\n",calib->fast_adc_count_1_1_ac);
+    fprintf(out,"fast_adc_count_1_1_ac: %d\n\n",calib->fast_adc_count_1_1_ac);
     for(int i = 0 ;i< calib->fast_adc_count_1_1_ac; ++i){
-        fprintf(stdout,"\tChannel %d:\n",i+1);
-        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_1_ac[i].fullScale);
-        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_1_ac[i].calibValue);
-        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_1_ac[i].offset);
-        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_1_ac[i].gainCalc);
+        fprintf(out,"\tChannel %d:\n",i+1);
+        fprintf(out,"\t\t* baseScale: %f:\n",calib->fast_adc_1_1_ac[i].baseScale);
+        fprintf(out,"\t\t* calibValue: %d:\n",calib->fast_adc_1_1_ac[i].calibValue);
+        fprintf(out,"\t\t* offset: %d:\n",calib->fast_adc_1_1_ac[i].offset);
+        fprintf(out,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_1_ac[i].gainCalc);
     }
 
-    fprintf(stdout,"fast_adc_count_1_20_ac: %d\n\n",calib->fast_adc_count_1_1_ac);
+    fprintf(out,"fast_adc_count_1_20_ac: %d\n\n",calib->fast_adc_count_1_1_ac);
     for(int i = 0 ;i< calib->fast_adc_count_1_20_ac; ++i){
-        fprintf(stdout,"\tChannel %d:\n",i+1);
-        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_adc_1_20_ac[i].fullScale);
-        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_adc_1_20_ac[i].calibValue);
-        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_adc_1_20_ac[i].offset);
-        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_20_ac[i].gainCalc);
+        fprintf(out,"\tChannel %d:\n",i+1);
+        fprintf(out,"\t\t* baseScale: %f:\n",calib->fast_adc_1_20_ac[i].baseScale);
+        fprintf(out,"\t\t* calibValue: %d:\n",calib->fast_adc_1_20_ac[i].calibValue);
+        fprintf(out,"\t\t* offset: %d:\n",calib->fast_adc_1_20_ac[i].offset);
+        fprintf(out,"\t\t* gainCalc: %f:\n\n",calib->fast_adc_1_20_ac[i].gainCalc);
     }
 
-    fprintf(stdout,"fast_dac_count_x1: %d\n\n",calib->fast_dac_count_x1);
+    fprintf(out,"fast_dac_count_x1: %d\n\n",calib->fast_dac_count_x1);
     for(int i = 0 ;i< calib->fast_dac_count_x1; ++i){
-        fprintf(stdout,"\tChannel %d:\n",i+1);
-        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_dac_x1[i].fullScale);
-        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_dac_x1[i].calibValue);
-        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_dac_x1[i].offset);
-        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_dac_x1[i].gainCalc);
+        fprintf(out,"\tChannel %d:\n",i+1);
+        fprintf(out,"\t\t* baseScale: %f:\n",calib->fast_dac_x1[i].baseScale);
+        fprintf(out,"\t\t* calibValue: %d:\n",calib->fast_dac_x1[i].calibValue);
+        fprintf(out,"\t\t* offset: %d:\n",calib->fast_dac_x1[i].offset);
+        fprintf(out,"\t\t* gainCalc: %f:\n\n",calib->fast_dac_x1[i].gainCalc);
     }
 
-    fprintf(stdout,"fast_dac_count_x5: %d\n\n",calib->fast_dac_count_x5);
+    fprintf(out,"fast_dac_count_x5: %d\n\n",calib->fast_dac_count_x5);
     for(int i = 0 ;i< calib->fast_dac_count_x5; ++i){
-        fprintf(stdout,"\tChannel %d:\n",i+1);
-        fprintf(stdout,"\t\t* fullScale: %f:\n",calib->fast_dac_x5[i].fullScale);
-        fprintf(stdout,"\t\t* calibValue: %d:\n",calib->fast_dac_x5[i].calibValue);
-        fprintf(stdout,"\t\t* offset: %d:\n",calib->fast_dac_x5[i].offset);
-        fprintf(stdout,"\t\t* gainCalc: %f:\n\n",calib->fast_dac_x5[i].gainCalc);
+        fprintf(out,"\tChannel %d:\n",i+1);
+        fprintf(out,"\t\t* baseScale: %f:\n",calib->fast_dac_x5[i].baseScale);
+        fprintf(out,"\t\t* calibValue: %d:\n",calib->fast_dac_x5[i].calibValue);
+        fprintf(out,"\t\t* offset: %d:\n",calib->fast_dac_x5[i].offset);
+        fprintf(out,"\t\t* gainCalc: %f:\n\n",calib->fast_dac_x5[i].gainCalc);
     }
     return RP_HW_CALIB_OK;
+}
+
+int calib_Print(rp_calib_params_t *calib){
+    return calib_PrintEx(stdout,calib);
 }
 
 int calib_GetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out){

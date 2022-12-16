@@ -634,9 +634,7 @@ clean:
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
 
-	make -C $(NGINX_DIR) clean
-	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(COMM_DIR) clean
-	make -C $(PRODUCTION_TEST_DIR) clean
-	make -C $(APP_STREAMINGMANAGER_DIR) clean
-	apps-free-clean
+	$(MAKE) -C $(NGINX_DIR) clean
+	$(MAKE) -C $(SCPI_SERVER_DIR) clean
+	$(MAKE) -C $(COMM_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean

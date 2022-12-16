@@ -25,7 +25,7 @@
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 
-/* These structures are a direct API mirror 
+/* These structures are a direct API mirror
 and should not be altered! */
 const scpi_choice_def_t scpi_RpUnits[] = {
     {"VOLTS", 0},
@@ -39,13 +39,11 @@ const scpi_choice_def_t scpi_RpGain[] = {
     SCPI_CHOICE_LIST_END
 };
 
-#ifdef Z20_250_12
 const scpi_choice_def_t scpi_RpAC_DC[] = {
     {"DC", 0},
     {"AC", 1},
     SCPI_CHOICE_LIST_END
 };
-#endif
 
 // const scpi_choice_def_t scpi_RpSmpRate[] = {
 //     {"S_125MHz",   0}, //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
@@ -68,12 +66,10 @@ const scpi_choice_def_t scpi_RpTrigSrc[] = {
     {"EXT_NE",      7},
     {"AWG_PE",      8},
     {"AWG_NE",      9},
-#ifdef Z20_125_4CH
     {"CH3_PE",      10},
     {"CH3_NE",      11},
     {"CH4_PE",      12},
     {"CH4_NE",      13},
-#endif
     SCPI_CHOICE_LIST_END
 };
 
@@ -144,26 +140,6 @@ scpi_result_t RP_AcqStop(scpi_t *context) {
 
 scpi_result_t RP_AcqReset(scpi_t *context) {
     int result = rp_AcqReset();
-    
-#ifdef Z20_250_12
-    result = rp_AcqSetAC_DC(RP_CH_1,RP_DC);
-    if (result != RP_OK) {
-        RP_LOG(LOG_ERR, "Failed to set DC mode RP APP: %s", rp_GetError(result));
-        return (EXIT_FAILURE);
-    }
-    
-    result = rp_AcqSetAC_DC(RP_CH_2,RP_DC);
-    if (result != RP_OK) {
-        RP_LOG(LOG_ERR, "Failed to set DC mode RP APP: %s", rp_GetError(result));
-        return (EXIT_FAILURE);
-    }
-
-    result = rp_AcqSetTriggerLevel(RP_T_CH_EXT, 2.0);
-    if (result != RP_OK) {
-        RP_LOG(LOG_ERR, "Failed to set Ext. trigger level: %s", rp_GetError(result));
-        return (EXIT_FAILURE);
-    }
-#endif
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:RST Failed to reset Red Pitaya acquire: %s\n", rp_GetError(result));
@@ -177,34 +153,8 @@ scpi_result_t RP_AcqReset(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-// // TODO: remove this limited decimation options
-
-// static int getRpDecimation(uint32_t decimationInt, rp_acq_decimation_t *decimation) {
-//     switch (decimationInt) {
-//         case     1:  *decimation = RP_DEC_1    ;  return RP_OK;
-//         case     8:  *decimation = RP_DEC_8    ;  return RP_OK;
-//         case    64:  *decimation = RP_DEC_64   ;  return RP_OK;
-//         case  1024:  *decimation = RP_DEC_1024 ;  return RP_OK;
-//         case  8192:  *decimation = RP_DEC_8192 ;  return RP_OK;
-//         case 65536:  *decimation = RP_DEC_65536;  return RP_OK;
-//         default   :                               return RP_EOOR;
-//     }
-// }
-
-// static int getRpDecimationInt(rp_acq_decimation_t decimation, uint32_t *decimationInt) {
-//     switch (decimation) {
-//         case RP_DEC_1    :  *decimationInt =     1;  return RP_OK;
-//         case RP_DEC_8    :  *decimationInt =     8;  return RP_OK;
-//         case RP_DEC_64   :  *decimationInt =    64;  return RP_OK;
-//         case RP_DEC_1024 :  *decimationInt =  1024;  return RP_OK;
-//         case RP_DEC_8192 :  *decimationInt =  8192;  return RP_OK;
-//         case RP_DEC_65536:  *decimationInt = 65536;  return RP_OK;
-//         default          :                           return RP_EOOR;
-//     }
-// }
-
 scpi_result_t RP_AcqDecimation(scpi_t *context) {
-    
+
     uint32_t value;
 
     /* Read DECIMATION parameter */
@@ -243,10 +193,6 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
 
     // Convert decimation to int
     uint32_t value = (uint32_t)decimation;
-    // if (RP_OK != getRpDecimationInt(decimation, &value)) {
-    //     syslog(LOG_ERR, "*ACQ:DEC? Failed to convert decimation to integer: %s", rp_GetError(result));
-    //     return SCPI_RES_ERR;
-    // }
 
     // Return back result
     SCPI_ResultUInt32Base(context, value, 10);
@@ -256,7 +202,7 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
-    
+
     // get sampling rate
     float samplingRate;
     int result = rp_AcqGetSamplingRateHz(&samplingRate);
@@ -279,7 +225,7 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqAveraging(scpi_t *context) {
-    
+
     scpi_bool_t value;
 
     // read first parameter AVERAGING (OFF,ON)
@@ -318,7 +264,7 @@ scpi_result_t RP_AcqAveragingQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
-    
+
     int32_t trig_src;
 
     /* Read TRIGGER SOURCE parameter */
@@ -341,7 +287,7 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqTriggerSrcQ(scpi_t *context) {
-    
+
     const char *trig_name;
     // get trigger source
     rp_acq_trig_src_t source;
@@ -509,7 +455,7 @@ scpi_result_t RP_AcqGain(scpi_t *context) {
 
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -541,10 +487,10 @@ scpi_result_t RP_AcqGainQ(scpi_t *context){
     rp_pinState_t state;
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-    
+
     int result = rp_AcqGetGain(channel, &state);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "ACQ:SOUR#:GAIN? Failed to get gain: %s\n", rp_GetError(result));
@@ -637,7 +583,7 @@ scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
-    
+
     int32_t choice;
 
     /* Read UNITS parameters */
@@ -669,13 +615,13 @@ scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t *context){
 }
 
 scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
-    
+
     uint32_t start, end;
     int result;
 
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -694,18 +640,18 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
     if(unit == RP_SCPI_VOLTS){
         float buffer[size];
         result = rp_AcqGetDataPosV(channel, start, end, buffer, &size);
-        
+
         if(result != RP_OK){
             RP_LOG(LOG_ERR, "*ACQ:SOUR#:DATA:STA:END? Failed to get data in volts: %s\n", rp_GetError(result));
             return SCPI_RES_ERR;
         }
-        
+
         SCPI_ResultBufferFloat(context, buffer, size);
 
     }else{
         int16_t buffer[size];
         result = rp_AcqGetDataPosRaw(channel, start, end, buffer, &size);
-        
+
         if(result != RP_OK){
             RP_LOG(LOG_ERR, "*ACQ:SOUR#:DATA:STA:END? Failed to get raw data: %s\n", rp_GetError(result));
             return SCPI_RES_ERR;
@@ -725,7 +671,7 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
 
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -771,16 +717,16 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqDataOldestAllQ(scpi_t *context) {
-    
+
     uint32_t size;
     int result;
 
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-    
+
     rp_AcqGetBufSize(&size);
     if(unit == RP_SCPI_VOLTS){
         float buffer[size];
@@ -809,13 +755,13 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
-    
+
     uint32_t size;
     int result;
 
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -853,13 +799,13 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t *context) {
 }
 
 scpi_result_t RP_AcqLatestDataQ(scpi_t *context) {
-    
+
     uint32_t size;
     int result;
 
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -910,14 +856,13 @@ scpi_result_t RP_AcqBufferSizeQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-#ifdef Z20_250_12
 scpi_result_t RP_AcqAC_DC(scpi_t * context){
     const char *name;
     int32_t param;
 
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
 
@@ -948,10 +893,10 @@ scpi_result_t RP_AcqAC_DCQ(scpi_t * context){
     rp_acq_ac_dc_mode_t state;
     rp_channel_t channel;
 
-    if (RP_ParseChArgv(context, &channel) != RP_OK){
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-    
+
     int result = rp_AcqGetAC_DC(channel, &state);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "ACQ:SOUR#:COUP? Failed to get gain: %s\n", rp_GetError(result));
@@ -1002,6 +947,3 @@ scpi_result_t RP_AcqExtTriggerLevelQ(scpi_t *context) {
     RP_LOG(LOG_INFO, "*ACQ:TRIG:EXT:LEV? Successfully returned trigger level.\n");
     return SCPI_RES_OK;
 }
-
-
-#endif

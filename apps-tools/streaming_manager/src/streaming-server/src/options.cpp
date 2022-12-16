@@ -94,6 +94,10 @@ auto ClientOpt::getADCChannels() -> uint8_t{
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
     }
+    if (c > MAX_ADC_CHANNELS){
+        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
+        exit(-1);
+    }
 #else
     c = 2; // Emulation
 #endif
@@ -105,6 +109,10 @@ auto ClientOpt::getDACChannels() -> uint8_t{
 #ifdef RP_PLATFORM
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+    }
+    if (c > MAX_DAC_CHANNELS){
+        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
+        exit(-1);
     }
 #else
     c = 2; // Emulation

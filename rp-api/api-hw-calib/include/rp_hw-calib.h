@@ -84,7 +84,7 @@ typedef struct{
 } uint_gain_calib_t;
 
 typedef struct{
-    float       fullScale;
+    float       baseScale;
     uint32_t    calibValue;
     int32_t     offset;
     double      gainCalc;

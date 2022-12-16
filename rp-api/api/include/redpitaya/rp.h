@@ -123,8 +123,8 @@ typedef enum {
  * Type representing pin's high or low state (on/off).
  */
 typedef enum {
-    RP_LOW, //!< Low state
-    RP_HIGH //!< High state
+    RP_LOW, //!< Low state 1:1
+    RP_HIGH //!< High state 1:20
 } rp_pinState_t;
 
 /**

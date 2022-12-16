@@ -34,6 +34,14 @@
         if (OBJ.famModel === undefined) {
             OBJ.famModel = _model.value;
             if (OBJ.famModel === "Z10" || OBJ.famModel === "Z20_125" || OBJ.famModel === "Z20_125_4CH") OBJ.famStates = OBJ.F_STATES_125_14;
+
+            $('#am_a_filt_external_btn').on('click', function() { OBJ.famClickOkDialog() });
+
+            $('.a_filter_flipswitch').change(function() {
+                $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
+                OBJ.aFilterSetMode($(this).attr('id'), $(this).is(':checked'));
+
+            }).trigger('change');
         }
     }
 
@@ -44,7 +52,7 @@
     OBJ.famAddNewRow = function(row_id,ch) {
         var table = document.getElementById("fauto_calib_table");
         var row = table.insertRow(-1);
-        
+
         row.setAttribute("id", row_id);
         let newCell = row.insertCell(-1);
         newCell.setAttribute("class", row_id + "_mode");
@@ -75,7 +83,7 @@
         row.setAttribute("class", id);
         let newCell = row.insertCell(-1);
         newCell.setAttribute("class", id + "_mode");
-        newCell.setAttribute("colspan", "8");        
+        newCell.setAttribute("colspan", "8");
         newCell = row.insertCell(-1);
         newCell.setAttribute("class", id + "_state");
         return id;
@@ -88,7 +96,7 @@
     OBJ.famSetRowName = function(_id, _name) {
         $("." + _id + "_mode").text(_name);
     }
-    
+
 
     OBJ.famSetName = function() {
         if (OBJ.famCheckEmptyVariables()) {
@@ -124,7 +132,7 @@
             }
         }
     }
-    
+
 
     OBJ.famRemoveStateObject = function() {
         if (OBJ.famCheckEmptyVariables()) {
@@ -142,7 +150,7 @@
     OBJ.famSetWait = function() {
         if (OBJ.famCheckEmptyVariables()) {
             var arr = document.getElementsByClassName(OBJ.famCurrentRowID + "_state")
-            Array.from(arr).forEach(element => {     
+            Array.from(arr).forEach(element => {
                 var d2 = document.createElement("div");
                 element.appendChild(d2);
                 d2.setAttribute("class", "lds-ellipsis");
@@ -202,7 +210,7 @@
 
     OBJ.famAddNextStepRow = function() {
         if (OBJ.famStates[OBJ.famCurrentTest] !== undefined) {
-            if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("span")) {                
+            if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("span")) {
                 OBJ.famCurrentRowID = OBJ.famAddNewRowSpan();
                 OBJ.famSetName();
                 OBJ.famSetStartButton("");
@@ -215,7 +223,7 @@
                 OBJ.famSetNameEx(maxChannels);
                 OBJ.famSetStartButton(maxChannels);
             }
-            
+
         }
     }
 
@@ -569,11 +577,5 @@ $(function() {
     SM.param_callbacks["fauto_kk_Ch3"] = OBJ.famSetCalibKKCh3;
     SM.param_callbacks["fauto_kk_Ch4"] = OBJ.famSetCalibKKCh4;
 
-    $('#am_a_filt_external_btn').on('click', function() { OBJ.famClickOkDialog() });
 
-    $('.a_filter_flipswitch').change(function() {
-        $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
-        OBJ.aFilterSetMode($(this).attr('id'), $(this).is(':checked'));
-
-    }).trigger('change');
 });

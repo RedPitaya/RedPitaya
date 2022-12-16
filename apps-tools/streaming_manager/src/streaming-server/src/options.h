@@ -12,6 +12,9 @@
 #define SYS(X,...)
 #endif
 
+#define MAX_ADC_CHANNELS 4
+#define MAX_DAC_CHANNELS 2
+
 #define printWithLog(X,Y,...) \
     aprintf(Y,__VA_ARGS__); \
     SYS(X,__VA_ARGS__);

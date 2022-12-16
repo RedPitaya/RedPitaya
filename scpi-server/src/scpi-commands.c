@@ -136,7 +136,6 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "RP:INit", .callback                    = RP_InitAll,},
     {.pattern = "RP:REset", .callback                   = RP_ResetAll,},
     {.pattern = "RP:RELease", .callback                 = RP_ReleaseAll,},
-    {.pattern = "RP:FPGABITREAM", .callback             = RP_FpgaBitStream,},
     {.pattern = "RP:DIg[:loop]", .callback              = RP_EnableDigLoop,},
     {.pattern = "RP:LOGmode", .callback                 = RP_SetLogMode,},
 
@@ -183,14 +182,12 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
     {.pattern = "ACQ:SOUR#:DATA:LAT:N?", .callback      = RP_AcqLatestDataQ,},
     {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
-#ifdef Z20_250_12
+
     {.pattern = "ACQ:SOUR#:COUP", .callback             = RP_AcqAC_DC,},
     {.pattern = "ACQ:SOUR#:COUP?", .callback            = RP_AcqAC_DCQ,},
     {.pattern = "ACQ:TRIG:EXT:LEV", .callback           = RP_AcqExtTriggerLevel,},
     {.pattern = "ACQ:TRIG:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
-#endif
 
-#ifndef Z20_125_4CH
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
     {.pattern = "PHAS:ALIGN", .callback                 = RP_GenSync,},
@@ -223,7 +220,6 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
     {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
-#endif
 
     /* uart */
     {.pattern = "UART:INIT", .callback                  = RP_Uart_Init,},
@@ -328,4 +324,3 @@ scpi_t scpi_context = {
     .units = scpi_units_def,
     .idn = {"REDPITAYA", "INSTR2020", NULL, "01-02"},
 };
-

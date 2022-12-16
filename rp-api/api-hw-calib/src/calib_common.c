@@ -11,7 +11,7 @@ static const int  eeprom_calib_off=0x0000;
 static const int  eeprom_calib_factory_off = 0x1c00;
 
 
-inline uint32_t calibFullScaleFromVoltage(float voltageScale) {
+inline uint32_t calibBaseScaleFromVoltage(float voltageScale) {
     return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
 }
 
@@ -122,15 +122,15 @@ bool convertV1(rp_calib_params_t *param,rp_calib_params_v1_t *out){
     out->dataStructureId = param->dataStructureId;
     out->wpCheck = param->wpCheck;
 
-    out->fe_ch1_fs_g_hi = param->fast_adc_1_1[0].calibValue;
-    out->fe_ch2_fs_g_hi = param->fast_adc_1_1[1].calibValue;
-    out->fe_ch1_hi_offs = param->fast_adc_1_1[0].offset;
-    out->fe_ch2_hi_offs = param->fast_adc_1_1[1].offset;
+    out->fe_ch1_fs_g_hi = param->fast_adc_1_20[0].calibValue;
+    out->fe_ch2_fs_g_hi = param->fast_adc_1_20[1].calibValue;
+    out->fe_ch1_hi_offs = param->fast_adc_1_20[0].offset;
+    out->fe_ch2_hi_offs = param->fast_adc_1_20[1].offset;
 
-    out->fe_ch1_fs_g_lo = param->fast_adc_1_20[0].calibValue;
-    out->fe_ch2_fs_g_lo = param->fast_adc_1_20[1].calibValue;
-    out->fe_ch1_lo_offs = param->fast_adc_1_20[0].offset;
-    out->fe_ch2_lo_offs = param->fast_adc_1_20[1].offset;
+    out->fe_ch1_fs_g_lo = param->fast_adc_1_1[0].calibValue;
+    out->fe_ch2_fs_g_lo = param->fast_adc_1_1[1].calibValue;
+    out->fe_ch1_lo_offs = param->fast_adc_1_1[0].offset;
+    out->fe_ch2_lo_offs = param->fast_adc_1_1[1].offset;
 
     out->low_filter_aa_ch1 = param->fast_adc_filter_1_1[0].aa;
     out->low_filter_bb_ch1 = param->fast_adc_filter_1_1[0].bb;
@@ -191,65 +191,65 @@ bool convertV2(rp_calib_params_t *param,rp_calib_params_v2_t *out){
     out->dataStructureId = param->dataStructureId;
     out->wpCheck = param->wpCheck;
 
-    out->chA_g_hi = param->fast_adc_1_1[0].calibValue;
-    out->chB_g_hi = param->fast_adc_1_1[1].calibValue;
-    out->chC_g_hi = param->fast_adc_1_1[2].calibValue;
-    out->chD_g_hi = param->fast_adc_1_1[3].calibValue;
+    out->chA_g_hi = param->fast_adc_1_20[0].calibValue;
+    out->chB_g_hi = param->fast_adc_1_20[1].calibValue;
+    out->chC_g_hi = param->fast_adc_1_20[2].calibValue;
+    out->chD_g_hi = param->fast_adc_1_20[3].calibValue;
 
-    out->chA_g_low = param->fast_adc_1_20[0].calibValue;
-    out->chB_g_low = param->fast_adc_1_20[1].calibValue;
-    out->chC_g_low = param->fast_adc_1_20[2].calibValue;
-    out->chD_g_low = param->fast_adc_1_20[3].calibValue;
+    out->chA_g_low = param->fast_adc_1_1[0].calibValue;
+    out->chB_g_low = param->fast_adc_1_1[1].calibValue;
+    out->chC_g_low = param->fast_adc_1_1[2].calibValue;
+    out->chD_g_low = param->fast_adc_1_1[3].calibValue;
 
-    out->chA_hi_offs = param->fast_adc_1_1[0].offset;
-    out->chB_hi_offs = param->fast_adc_1_1[1].offset;
-    out->chC_hi_offs = param->fast_adc_1_1[2].offset;
-    out->chD_hi_offs = param->fast_adc_1_1[3].offset;
+    out->chA_hi_offs = param->fast_adc_1_20[0].offset;
+    out->chB_hi_offs = param->fast_adc_1_20[1].offset;
+    out->chC_hi_offs = param->fast_adc_1_20[2].offset;
+    out->chD_hi_offs = param->fast_adc_1_20[3].offset;
 
-    out->chA_low_offs = param->fast_adc_1_20[0].offset;
-    out->chB_low_offs = param->fast_adc_1_20[1].offset;
-    out->chC_low_offs = param->fast_adc_1_20[2].offset;
-    out->chD_low_offs = param->fast_adc_1_20[3].offset;
+    out->chA_low_offs = param->fast_adc_1_1[0].offset;
+    out->chB_low_offs = param->fast_adc_1_1[1].offset;
+    out->chC_low_offs = param->fast_adc_1_1[2].offset;
+    out->chD_low_offs = param->fast_adc_1_1[3].offset;
 
-    out->chA_hi_aa = param->fast_adc_filter_1_1[0].aa;
-    out->chA_hi_bb = param->fast_adc_filter_1_1[0].bb;
-    out->chA_hi_pp = param->fast_adc_filter_1_1[0].pp;
-    out->chA_hi_kk = param->fast_adc_filter_1_1[0].kk;
+    out->chA_hi_aa = param->fast_adc_filter_1_20[0].aa;
+    out->chA_hi_bb = param->fast_adc_filter_1_20[0].bb;
+    out->chA_hi_pp = param->fast_adc_filter_1_20[0].pp;
+    out->chA_hi_kk = param->fast_adc_filter_1_20[0].kk;
 
-    out->chA_low_aa = param->fast_adc_filter_1_20[0].aa;
-    out->chA_low_bb = param->fast_adc_filter_1_20[0].bb;
-    out->chA_low_pp = param->fast_adc_filter_1_20[0].pp;
-    out->chA_low_kk = param->fast_adc_filter_1_20[0].kk;
+    out->chA_low_aa = param->fast_adc_filter_1_1[0].aa;
+    out->chA_low_bb = param->fast_adc_filter_1_1[0].bb;
+    out->chA_low_pp = param->fast_adc_filter_1_1[0].pp;
+    out->chA_low_kk = param->fast_adc_filter_1_1[0].kk;
 
-    out->chB_hi_aa = param->fast_adc_filter_1_1[1].aa;
-    out->chB_hi_bb = param->fast_adc_filter_1_1[1].bb;
-    out->chB_hi_pp = param->fast_adc_filter_1_1[1].pp;
-    out->chB_hi_kk = param->fast_adc_filter_1_1[1].kk;
+    out->chB_hi_aa = param->fast_adc_filter_1_20[1].aa;
+    out->chB_hi_bb = param->fast_adc_filter_1_20[1].bb;
+    out->chB_hi_pp = param->fast_adc_filter_1_20[1].pp;
+    out->chB_hi_kk = param->fast_adc_filter_1_20[1].kk;
 
-    out->chB_low_aa = param->fast_adc_filter_1_20[1].aa;
-    out->chB_low_bb = param->fast_adc_filter_1_20[1].bb;
-    out->chB_low_pp = param->fast_adc_filter_1_20[1].pp;
-    out->chB_low_kk = param->fast_adc_filter_1_20[1].kk;
+    out->chB_low_aa = param->fast_adc_filter_1_1[1].aa;
+    out->chB_low_bb = param->fast_adc_filter_1_1[1].bb;
+    out->chB_low_pp = param->fast_adc_filter_1_1[1].pp;
+    out->chB_low_kk = param->fast_adc_filter_1_1[1].kk;
 
-    out->chC_hi_aa = param->fast_adc_filter_1_1[2].aa;
-    out->chC_hi_bb = param->fast_adc_filter_1_1[2].bb;
-    out->chC_hi_pp = param->fast_adc_filter_1_1[2].pp;
-    out->chC_hi_kk = param->fast_adc_filter_1_1[2].kk;
+    out->chC_hi_aa = param->fast_adc_filter_1_20[2].aa;
+    out->chC_hi_bb = param->fast_adc_filter_1_20[2].bb;
+    out->chC_hi_pp = param->fast_adc_filter_1_20[2].pp;
+    out->chC_hi_kk = param->fast_adc_filter_1_20[2].kk;
 
-    out->chC_low_aa = param->fast_adc_filter_1_20[2].aa;
-    out->chC_low_bb = param->fast_adc_filter_1_20[2].bb;
-    out->chC_low_pp = param->fast_adc_filter_1_20[2].pp;
-    out->chC_low_kk = param->fast_adc_filter_1_20[2].kk;
+    out->chC_low_aa = param->fast_adc_filter_1_1[2].aa;
+    out->chC_low_bb = param->fast_adc_filter_1_1[2].bb;
+    out->chC_low_pp = param->fast_adc_filter_1_1[2].pp;
+    out->chC_low_kk = param->fast_adc_filter_1_1[2].kk;
 
-    out->chD_hi_aa = param->fast_adc_filter_1_1[3].aa;
-    out->chD_hi_bb = param->fast_adc_filter_1_1[3].bb;
-    out->chD_hi_pp = param->fast_adc_filter_1_1[3].pp;
-    out->chD_hi_kk = param->fast_adc_filter_1_1[3].kk;
+    out->chD_hi_aa = param->fast_adc_filter_1_20[3].aa;
+    out->chD_hi_bb = param->fast_adc_filter_1_20[3].bb;
+    out->chD_hi_pp = param->fast_adc_filter_1_20[3].pp;
+    out->chD_hi_kk = param->fast_adc_filter_1_20[3].kk;
 
-    out->chD_low_aa = param->fast_adc_filter_1_20[3].aa;
-    out->chD_low_bb = param->fast_adc_filter_1_20[3].bb;
-    out->chD_low_pp = param->fast_adc_filter_1_20[3].pp;
-    out->chD_low_kk = param->fast_adc_filter_1_20[3].kk;
+    out->chD_low_aa = param->fast_adc_filter_1_1[3].aa;
+    out->chD_low_bb = param->fast_adc_filter_1_1[3].bb;
+    out->chD_low_pp = param->fast_adc_filter_1_1[3].pp;
+    out->chD_low_kk = param->fast_adc_filter_1_1[3].kk;
 
     return true;
 }
@@ -335,14 +335,14 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
         calib.dataStructureId = RP_HW_PACK_ID_V1;
 
         for(int i = 0; i < 2; ++i){
-            calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(1.0);
+            calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0);
             calib.fast_adc_1_1[i].offset = 0;
-            calib.fast_adc_1_1[i].fullScale = 1.0;
+            calib.fast_adc_1_1[i].baseScale = 20.0;
             calib.fast_adc_1_1[i].gainCalc = 1.0;
 
-            calib.fast_adc_1_20[i].calibValue = calibFullScaleFromVoltage(20.0);
+            calib.fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0);
             calib.fast_adc_1_20[i].offset = 0;
-            calib.fast_adc_1_20[i].fullScale = 20.0;
+            calib.fast_adc_1_20[i].baseScale = 1.0;
             calib.fast_adc_1_20[i].gainCalc = 1.0;
 
             calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
@@ -355,9 +355,9 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
             calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
             calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
 
-            calib.fast_dac_x1[i].calibValue = calibFullScaleFromVoltage(1.0);
+            calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0);
             calib.fast_dac_x1[i].offset = 0;
-            calib.fast_dac_x1[i].fullScale = 1.0;
+            calib.fast_dac_x1[i].baseScale = 1.0;
             calib.fast_dac_x1[i].gainCalc = 1.0;
         }
 
@@ -370,14 +370,14 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
         calib.dataStructureId = RP_HW_PACK_ID_V1;
 
         for(int i = 0; i < 2; ++i){
-            calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(0.5);
+            calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(0.5);
             calib.fast_adc_1_1[i].offset = 0;
-            calib.fast_adc_1_1[i].fullScale = 0.5;
+            calib.fast_adc_1_1[i].baseScale = 0.5;
             calib.fast_adc_1_1[i].gainCalc = 1.0;
 
-            calib.fast_dac_x1[i].calibValue = calibFullScaleFromVoltage(1.0);
+            calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0);
             calib.fast_dac_x1[i].offset = 0;
-            calib.fast_dac_x1[i].fullScale = 1.0;
+            calib.fast_dac_x1[i].baseScale = 1.0;
             calib.fast_dac_x1[i].gainCalc = 1.0;
 
             calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
@@ -400,14 +400,14 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
         calib.dataStructureId = RP_HW_PACK_ID_V3;
 
         for(int i = 0; i < 4; ++i){
-            calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(1.0);
+            calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0);
             calib.fast_adc_1_1[i].offset = 0;
-            calib.fast_adc_1_1[i].fullScale = 1.0;
+            calib.fast_adc_1_1[i].baseScale = 1.0;
             calib.fast_adc_1_1[i].gainCalc = 1.0;
 
-            calib.fast_adc_1_20[i].calibValue = calibFullScaleFromVoltage(20.0);
+            calib.fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(20.0);
             calib.fast_adc_1_20[i].offset = 0;
-            calib.fast_adc_1_20[i].fullScale = 20.0;
+            calib.fast_adc_1_20[i].baseScale = 20.0;
             calib.fast_adc_1_20[i].gainCalc = 1.0;
 
             calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
@@ -433,34 +433,34 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
         calib.dataStructureId = RP_HW_PACK_ID_V2;
 
         for(int i = 0; i < 2; ++i){
-            calib.fast_adc_1_1[i].calibValue = calibFullScaleFromVoltage(20.0);
+            calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0);
             calib.fast_adc_1_1[i].offset = 0;
-            calib.fast_adc_1_1[i].fullScale = 20.0;
+            calib.fast_adc_1_1[i].baseScale = 1.0;
             calib.fast_adc_1_1[i].gainCalc = 1.0;
 
-            calib.fast_adc_1_20[i].calibValue = calibFullScaleFromVoltage(1.0);
+            calib.fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(20.0);
             calib.fast_adc_1_20[i].offset = 0;
-            calib.fast_adc_1_20[i].fullScale = 1.0;
+            calib.fast_adc_1_20[i].baseScale = 20.0;
             calib.fast_adc_1_20[i].gainCalc = 1.0;
 
-            calib.fast_adc_1_1_ac[i].calibValue = calibFullScaleFromVoltage(20.0);
+            calib.fast_adc_1_1_ac[i].calibValue = calibBaseScaleFromVoltage(1.0);
             calib.fast_adc_1_1_ac[i].offset = 0;
-            calib.fast_adc_1_1_ac[i].fullScale = 20.0;
+            calib.fast_adc_1_1_ac[i].baseScale = 1.0;
             calib.fast_adc_1_1_ac[i].gainCalc = 1.0;
 
-            calib.fast_adc_1_20_ac[i].calibValue = calibFullScaleFromVoltage(1.0);
+            calib.fast_adc_1_20_ac[i].calibValue = calibBaseScaleFromVoltage(20.0);
             calib.fast_adc_1_20_ac[i].offset = 0;
-            calib.fast_adc_1_20_ac[i].fullScale = 1.0;
+            calib.fast_adc_1_20_ac[i].baseScale = 20.0;
             calib.fast_adc_1_20_ac[i].gainCalc = 1.0;
 
-            calib.fast_dac_x1[i].calibValue = calibFullScaleFromVoltage(2.0);
+            calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(2.0);
             calib.fast_dac_x1[i].offset = 0;
-            calib.fast_dac_x1[i].fullScale = 2.0;
+            calib.fast_dac_x1[i].baseScale = 2.0;
             calib.fast_dac_x1[i].gainCalc = 1.0;
 
-            calib.fast_dac_x5[i].calibValue = calibFullScaleFromVoltage(2.0);
+            calib.fast_dac_x5[i].calibValue = calibBaseScaleFromVoltage(2.0);
             calib.fast_dac_x5[i].offset = 0;
-            calib.fast_dac_x5[i].fullScale = 2.0;
+            calib.fast_dac_x5[i].baseScale = 2.0;
             calib.fast_dac_x5[i].gainCalc = 1.0;
 
             calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
@@ -492,27 +492,27 @@ rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t *param){
     calib.dataStructureId = param->dataStructureId;
     calib.wpCheck = param->wpCheck;
 
-    calib.fast_adc_1_1[0].fullScale = 1.0;
-    calib.fast_adc_1_1[0].calibValue = param->fe_ch1_fs_g_hi;
-    calib.fast_adc_1_1[0].offset = param->fe_ch1_hi_offs;
+    calib.fast_adc_1_1[0].baseScale = 20.0;
+    calib.fast_adc_1_1[0].calibValue = param->fe_ch1_fs_g_lo;
+    calib.fast_adc_1_1[0].offset = param->fe_ch1_lo_offs;
 
-    calib.fast_adc_1_1[1].fullScale = 1.0;
-    calib.fast_adc_1_1[1].calibValue = param->fe_ch2_fs_g_hi;
-    calib.fast_adc_1_1[1].offset = param->fe_ch2_hi_offs;
+    calib.fast_adc_1_1[1].baseScale = 20.0;
+    calib.fast_adc_1_1[1].calibValue = param->fe_ch2_fs_g_lo;
+    calib.fast_adc_1_1[1].offset = param->fe_ch2_lo_offs;
 
-    calib.fast_adc_1_20[0].fullScale = 20.0;
-    calib.fast_adc_1_20[0].calibValue = param->fe_ch1_fs_g_lo;
-    calib.fast_adc_1_20[0].offset = param->fe_ch1_lo_offs;
+    calib.fast_adc_1_20[0].baseScale = 1.0;
+    calib.fast_adc_1_20[0].calibValue = param->fe_ch1_fs_g_hi;
+    calib.fast_adc_1_20[0].offset = param->fe_ch1_hi_offs;
 
-    calib.fast_adc_1_20[1].fullScale = 20.0;
-    calib.fast_adc_1_20[1].calibValue = param->fe_ch2_fs_g_lo;
-    calib.fast_adc_1_20[1].offset = param->fe_ch2_lo_offs;
+    calib.fast_adc_1_20[1].baseScale = 1.0;
+    calib.fast_adc_1_20[1].calibValue = param->fe_ch2_fs_g_hi;
+    calib.fast_adc_1_20[1].offset = param->fe_ch2_hi_offs;
 
-    calib.fast_dac_x1[0].fullScale = 1.0;
+    calib.fast_dac_x1[0].baseScale = 1.0;
     calib.fast_dac_x1[0].calibValue = param->be_ch1_fs;
     calib.fast_dac_x1[0].offset = param->be_ch1_dc_offs;
 
-    calib.fast_dac_x1[1].fullScale = 1.0;
+    calib.fast_dac_x1[1].baseScale = 1.0;
     calib.fast_dac_x1[1].calibValue = param->be_ch2_fs;
     calib.fast_dac_x1[1].offset = param->be_ch2_dc_offs;
 
@@ -566,78 +566,78 @@ rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param){
     calib.dataStructureId = param->dataStructureId;
     calib.wpCheck = param->wpCheck;
 
-    calib.fast_adc_1_1[0].fullScale = 1.0;
-    calib.fast_adc_1_1[0].calibValue = param->chA_g_hi;
-    calib.fast_adc_1_1[0].offset = param->chA_hi_offs;
+    calib.fast_adc_1_1[0].baseScale = 1.0;
+    calib.fast_adc_1_1[0].calibValue = param->chA_g_low;
+    calib.fast_adc_1_1[0].offset = param->chA_low_offs;
 
-    calib.fast_adc_1_1[1].fullScale = 1.0;
-    calib.fast_adc_1_1[1].calibValue = param->chB_g_hi;
-    calib.fast_adc_1_1[1].offset = param->chB_hi_offs;
+    calib.fast_adc_1_1[1].baseScale = 1.0;
+    calib.fast_adc_1_1[1].calibValue = param->chB_g_low;
+    calib.fast_adc_1_1[1].offset = param->chB_low_offs;
 
-    calib.fast_adc_1_1[2].fullScale = 1.0;
-    calib.fast_adc_1_1[2].calibValue = param->chC_g_hi;
-    calib.fast_adc_1_1[2].offset = param->chC_hi_offs;
+    calib.fast_adc_1_1[2].baseScale = 1.0;
+    calib.fast_adc_1_1[2].calibValue = param->chC_g_low;
+    calib.fast_adc_1_1[2].offset = param->chC_low_offs;
 
-    calib.fast_adc_1_1[3].fullScale = 1.0;
-    calib.fast_adc_1_1[3].calibValue = param->chD_g_hi;
-    calib.fast_adc_1_1[3].offset = param->chD_hi_offs;
+    calib.fast_adc_1_1[3].baseScale = 1.0;
+    calib.fast_adc_1_1[3].calibValue = param->chD_g_low;
+    calib.fast_adc_1_1[3].offset = param->chD_low_offs;
 
-    calib.fast_adc_filter_1_1[0].aa = param->chA_hi_aa;
-    calib.fast_adc_filter_1_1[0].bb = param->chA_hi_bb;
-    calib.fast_adc_filter_1_1[0].pp = param->chA_hi_pp;
-    calib.fast_adc_filter_1_1[0].kk = param->chA_hi_kk;
+    calib.fast_adc_filter_1_1[0].aa = param->chA_low_aa;
+    calib.fast_adc_filter_1_1[0].bb = param->chA_low_bb;
+    calib.fast_adc_filter_1_1[0].pp = param->chA_low_pp;
+    calib.fast_adc_filter_1_1[0].kk = param->chA_low_kk;
 
-    calib.fast_adc_filter_1_1[1].aa = param->chB_hi_aa;
-    calib.fast_adc_filter_1_1[1].bb = param->chB_hi_bb;
-    calib.fast_adc_filter_1_1[1].pp = param->chB_hi_pp;
-    calib.fast_adc_filter_1_1[1].kk = param->chB_hi_kk;
+    calib.fast_adc_filter_1_1[1].aa = param->chB_low_aa;
+    calib.fast_adc_filter_1_1[1].bb = param->chB_low_bb;
+    calib.fast_adc_filter_1_1[1].pp = param->chB_low_pp;
+    calib.fast_adc_filter_1_1[1].kk = param->chB_low_kk;
 
-    calib.fast_adc_filter_1_1[2].aa = param->chC_hi_aa;
-    calib.fast_adc_filter_1_1[2].bb = param->chC_hi_bb;
-    calib.fast_adc_filter_1_1[2].pp = param->chC_hi_pp;
-    calib.fast_adc_filter_1_1[2].kk = param->chC_hi_kk;
+    calib.fast_adc_filter_1_1[2].aa = param->chC_low_aa;
+    calib.fast_adc_filter_1_1[2].bb = param->chC_low_bb;
+    calib.fast_adc_filter_1_1[2].pp = param->chC_low_pp;
+    calib.fast_adc_filter_1_1[2].kk = param->chC_low_kk;
 
-    calib.fast_adc_filter_1_1[3].aa = param->chD_hi_aa;
-    calib.fast_adc_filter_1_1[3].bb = param->chD_hi_bb;
-    calib.fast_adc_filter_1_1[3].pp = param->chD_hi_pp;
-    calib.fast_adc_filter_1_1[3].kk = param->chD_hi_kk;
+    calib.fast_adc_filter_1_1[3].aa = param->chD_low_aa;
+    calib.fast_adc_filter_1_1[3].bb = param->chD_low_bb;
+    calib.fast_adc_filter_1_1[3].pp = param->chD_low_pp;
+    calib.fast_adc_filter_1_1[3].kk = param->chD_low_kk;
 
 
-    calib.fast_adc_1_20[0].fullScale = 1.0;
-    calib.fast_adc_1_20[0].calibValue = param->chA_g_low;
-    calib.fast_adc_1_20[0].offset = param->chA_low_offs;
+    calib.fast_adc_1_20[0].baseScale = 20.0;
+    calib.fast_adc_1_20[0].calibValue = param->chA_g_hi;
+    calib.fast_adc_1_20[0].offset = param->chA_hi_offs;
 
-    calib.fast_adc_1_20[1].fullScale = 1.0;
-    calib.fast_adc_1_20[1].calibValue = param->chB_g_low;
-    calib.fast_adc_1_20[1].offset = param->chB_low_offs;
+    calib.fast_adc_1_20[1].baseScale = 20.0;
+    calib.fast_adc_1_20[1].calibValue = param->chB_g_hi;
+    calib.fast_adc_1_20[1].offset = param->chB_hi_offs;
 
-    calib.fast_adc_1_20[2].fullScale = 1.0;
-    calib.fast_adc_1_20[2].calibValue = param->chC_g_low;
-    calib.fast_adc_1_20[2].offset = param->chC_low_offs;
+    calib.fast_adc_1_20[2].baseScale = 20.0;
+    calib.fast_adc_1_20[2].calibValue = param->chC_g_hi;
+    calib.fast_adc_1_20[2].offset = param->chC_hi_offs;
 
-    calib.fast_adc_1_20[3].fullScale = 1.0;
-    calib.fast_adc_1_20[3].calibValue = param->chD_g_low;
-    calib.fast_adc_1_20[3].offset = param->chD_low_offs;
+    calib.fast_adc_1_20[3].baseScale = 20.0;
+    calib.fast_adc_1_20[3].calibValue = param->chD_g_hi;
+    calib.fast_adc_1_20[3].offset = param->chD_hi_offs;
 
-    calib.fast_adc_filter_1_20[0].aa = param->chA_low_aa;
-    calib.fast_adc_filter_1_20[0].bb = param->chA_low_bb;
-    calib.fast_adc_filter_1_20[0].pp = param->chA_low_pp;
-    calib.fast_adc_filter_1_20[0].kk = param->chA_low_kk;
+    calib.fast_adc_filter_1_20[0].aa = param->chA_hi_aa;
+    calib.fast_adc_filter_1_20[0].bb = param->chA_hi_bb;
+    calib.fast_adc_filter_1_20[0].pp = param->chA_hi_pp;
+    calib.fast_adc_filter_1_20[0].kk = param->chA_hi_kk;
 
-    calib.fast_adc_filter_1_20[1].aa = param->chB_low_aa;
-    calib.fast_adc_filter_1_20[1].bb = param->chB_low_bb;
-    calib.fast_adc_filter_1_20[1].pp = param->chB_low_pp;
-    calib.fast_adc_filter_1_20[1].kk = param->chB_low_kk;
+    calib.fast_adc_filter_1_20[1].aa = param->chB_hi_aa;
+    calib.fast_adc_filter_1_20[1].bb = param->chB_hi_bb;
+    calib.fast_adc_filter_1_20[1].pp = param->chB_hi_pp;
+    calib.fast_adc_filter_1_20[1].kk = param->chB_hi_kk;
 
-    calib.fast_adc_filter_1_20[2].aa = param->chC_low_aa;
-    calib.fast_adc_filter_1_20[2].bb = param->chC_low_bb;
-    calib.fast_adc_filter_1_20[2].pp = param->chC_low_pp;
-    calib.fast_adc_filter_1_20[2].kk = param->chC_low_kk;
+    calib.fast_adc_filter_1_20[2].aa = param->chC_hi_aa;
+    calib.fast_adc_filter_1_20[2].bb = param->chC_hi_bb;
+    calib.fast_adc_filter_1_20[2].pp = param->chC_hi_pp;
+    calib.fast_adc_filter_1_20[2].kk = param->chC_hi_kk;
 
-    calib.fast_adc_filter_1_20[3].aa = param->chD_low_aa;
-    calib.fast_adc_filter_1_20[3].bb = param->chD_low_bb;
-    calib.fast_adc_filter_1_20[3].pp = param->chD_low_pp;
-    calib.fast_adc_filter_1_20[3].kk = param->chD_low_kk;
+    calib.fast_adc_filter_1_20[3].aa = param->chD_hi_aa;
+    calib.fast_adc_filter_1_20[3].bb = param->chD_hi_bb;
+    calib.fast_adc_filter_1_20[3].pp = param->chD_hi_pp;
+    calib.fast_adc_filter_1_20[3].kk = param->chD_hi_kk;
 
     return calib;
 }
@@ -655,36 +655,36 @@ rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param){
     calib.dataStructureId = param->dataStructureId;
     calib.wpCheck = param->wpCheck;
 
-    calib.fast_adc_1_1[0].fullScale = 1.0;
+    calib.fast_adc_1_1[0].baseScale = 1.0;
     calib.fast_adc_1_1[0].calibValue = param->osc_ch1_g_1_dc;
     calib.fast_adc_1_1[0].offset = param->osc_ch1_off_1_dc;
 
-    calib.fast_adc_1_1[1].fullScale = 1.0;
+    calib.fast_adc_1_1[1].baseScale = 1.0;
     calib.fast_adc_1_1[1].calibValue = param->osc_ch2_g_1_dc;
     calib.fast_adc_1_1[1].offset = param->osc_ch2_off_1_dc;
 
-    calib.fast_adc_1_1_ac[0].fullScale = 1.0;
+    calib.fast_adc_1_1_ac[0].baseScale = 1.0;
     calib.fast_adc_1_1_ac[0].calibValue = param->osc_ch1_g_1_ac;
     calib.fast_adc_1_1_ac[0].offset = param->osc_ch1_off_1_ac;
 
-    calib.fast_adc_1_1_ac[1].fullScale = 1.0;
+    calib.fast_adc_1_1_ac[1].baseScale = 1.0;
     calib.fast_adc_1_1_ac[1].calibValue = param->osc_ch2_g_1_ac;
     calib.fast_adc_1_1_ac[1].offset = param->osc_ch2_off_1_ac;
 
 
-    calib.fast_adc_1_20[0].fullScale = 20.0;
+    calib.fast_adc_1_20[0].baseScale = 20.0;
     calib.fast_adc_1_20[0].calibValue = param->osc_ch1_g_20_dc;
     calib.fast_adc_1_20[0].offset = param->osc_ch1_off_20_dc;
 
-    calib.fast_adc_1_20[1].fullScale = 20.0;
+    calib.fast_adc_1_20[1].baseScale = 20.0;
     calib.fast_adc_1_20[1].calibValue = param->osc_ch2_g_20_dc;
     calib.fast_adc_1_20[1].offset = param->osc_ch2_off_20_dc;
 
-    calib.fast_adc_1_20_ac[0].fullScale = 20.0;
+    calib.fast_adc_1_20_ac[0].baseScale = 20.0;
     calib.fast_adc_1_20_ac[0].calibValue = param->osc_ch1_g_20_ac;
     calib.fast_adc_1_20_ac[0].offset = param->osc_ch1_off_20_ac;
 
-    calib.fast_adc_1_20_ac[1].fullScale = 20.0;
+    calib.fast_adc_1_20_ac[1].baseScale = 20.0;
     calib.fast_adc_1_20_ac[1].calibValue = param->osc_ch2_g_20_ac;
     calib.fast_adc_1_20_ac[1].offset = param->osc_ch2_off_20_ac;
 
@@ -708,37 +708,37 @@ bool recalculateGain(rp_calib_params_t *param){
 
     if (param->fast_adc_count_1_1 > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_1; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_1[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1[i].baseScale);
         param->fast_adc_1_1[i].gainCalc = (double)param->fast_adc_1_1[i].calibValue / baseValue;
     }
 
     if (param->fast_adc_count_1_20 > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_20[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20[i].baseScale);
         param->fast_adc_1_20[i].gainCalc = (double)param->fast_adc_1_20[i].calibValue / baseValue;
     }
 
     if (param->fast_adc_count_1_1_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_1_ac; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_1_ac[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1_ac[i].baseScale);
         param->fast_adc_1_1_ac[i].gainCalc = (double)param->fast_adc_1_1_ac[i].calibValue / baseValue;
     }
 
     if (param->fast_adc_count_1_20_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20_ac; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_20_ac[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20_ac[i].baseScale);
         param->fast_adc_1_20_ac[i].gainCalc = (double)param->fast_adc_1_20_ac[i].calibValue / baseValue;
     }
 
     if (param->fast_dac_count_x1 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x1; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_dac_x1[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x1[i].baseScale);
         param->fast_dac_x1[i].gainCalc = (double)param->fast_dac_x1[i].calibValue / baseValue;
     }
 
     if (param->fast_dac_count_x5 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x5; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_dac_x5[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x5[i].baseScale);
         param->fast_dac_x5[i].gainCalc = (double)param->fast_dac_x5[i].calibValue / baseValue;
     }
 
@@ -749,38 +749,38 @@ bool recalculateCalibValue(rp_calib_params_t *param){
 
     if (param->fast_adc_count_1_1 > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_1; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_1[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1[i].baseScale);
         param->fast_adc_1_1[i].calibValue = param->fast_adc_1_1[i].gainCalc * (double)baseValue;
     }
 
     if (param->fast_adc_count_1_20 > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_20[i].fullScale);
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20[i].baseScale);
         param->fast_adc_1_20[i].calibValue = param->fast_adc_1_20[i].gainCalc * (double)baseValue;
     }
 
     if (param->fast_adc_count_1_1_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_1_ac; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_1_ac[i].fullScale);
-        param->fast_adc_1_1_ac[i].fullScale = param->fast_adc_1_1_ac[i].gainCalc * (double)baseValue;
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1_ac[i].baseScale);
+        param->fast_adc_1_1_ac[i].calibValue = param->fast_adc_1_1_ac[i].gainCalc * (double)baseValue;
     }
 
     if (param->fast_adc_count_1_20_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20_ac; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_adc_1_20_ac[i].fullScale);
-        param->fast_adc_1_20_ac[i].fullScale = param->fast_adc_1_20_ac[i].gainCalc * (double)baseValue;
+        double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20_ac[i].baseScale);
+        param->fast_adc_1_20_ac[i].calibValue = param->fast_adc_1_20_ac[i].gainCalc * (double)baseValue;
     }
 
     if (param->fast_dac_count_x1 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x1; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_dac_x1[i].fullScale);
-        param->fast_dac_x1[i].fullScale = param->fast_dac_x1[i].gainCalc * (double)baseValue;
+        double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x1[i].baseScale);
+        param->fast_dac_x1[i].calibValue = param->fast_dac_x1[i].gainCalc * (double)baseValue;
     }
 
     if (param->fast_dac_count_x5 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x5; ++i){
-        double baseValue = calibFullScaleFromVoltage(param->fast_dac_x5[i].fullScale);
-        param->fast_dac_x5[i].fullScale = param->fast_dac_x5[i].gainCalc * (double)baseValue;
+        double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x5[i].baseScale);
+        param->fast_dac_x5[i].calibValue = param->fast_dac_x5[i].gainCalc * (double)baseValue;
     }
 
     return true;

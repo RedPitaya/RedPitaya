@@ -100,13 +100,13 @@ auto startServer(bool verbMode,bool testMode) -> void{
 
 
         auto uioList = uio_lib::GetUioList();
-		int32_t ch_off[4] = {0,0,0,0};
-		double  ch_gain[4] = {1,1,1,1};
+		int32_t ch_off[MAX_ADC_CHANNELS] = {0,0,0,0};
+		double  ch_gain[MAX_ADC_CHANNELS] = {1,1,1,1};
 		bool  filterBypass = true;
-		uint32_t aa_ch[4] = {0,0,0,0};
-		uint32_t bb_ch[4] = {0,0,0,0};
-		uint32_t kk_ch[4] = {0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF};
-		uint32_t pp_ch[4] = {0,0,0,0};
+		uint32_t aa_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
+		uint32_t bb_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
+		uint32_t kk_ch[MAX_ADC_CHANNELS] = {0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF};
+		uint32_t pp_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
 
 #ifdef RP_PLATFORM
         filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
