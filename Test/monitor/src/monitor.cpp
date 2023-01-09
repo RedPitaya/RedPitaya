@@ -59,7 +59,8 @@ int main(int argc, char **argv) {
 			"\tread analog mixed signals: -ams\n"
 			"\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
 			"\tShow current profile: -p\n"
-			"\tShow all profiles: -pa\n",
+			"\tShow all profiles: -pa\n"
+			"\tShow fpga version: -f\n",
                         argv[0], VERSION_STR, REVISION_STR);
 		return EXIT_FAILURE;
 	}
@@ -96,6 +97,57 @@ int main(int argc, char **argv) {
 
 	if (strncmp(argv[1], "-p", 2) == 0) {
 		return rp_HPPrint();
+	}
+
+	if (strncmp(argv[1], "-f", 2) == 0) {
+		rp_HPeModels_t model;
+		auto ret = rp_HPGetModel(&model);
+		switch (model)
+		{
+			case STEM_125_10_v1_0:
+				printf("z10_125");
+				break;
+			case STEM_125_14_v1_0:
+				printf("z10_125");
+				break;
+			case STEM_125_14_v1_1:
+				printf("z10_125");
+				break;
+			case STEM_125_14_LN_v1_1:
+				printf("z10_125");
+				break;
+			case STEM_122_16SDR_v1_0:
+				printf("z20_122");
+				break;
+			case STEM_122_16SDR_v1_1:
+				printf("z20_122");
+				break;
+			case STEM_125_14_Z7020_v1_0:
+				printf("z20_125");
+				break;
+			case STEM_125_14_Z7020_LN_v1_1:
+				printf("z20_125");
+				break;
+			case STEM_125_14_Z7020_4IN_v1_0:
+				printf("z20_125_4ch");
+				break;
+			case STEM_125_14_Z7020_4IN_v1_2:
+				printf("z20_125_4ch");
+				break;
+			case STEM_125_14_Z7020_4IN_v1_3:
+				printf("z20_125_4ch");
+				break;
+			case STEM_250_12_v1_1:
+				printf("z20_250");
+				break;
+			case STEM_250_12_v1_2:
+				printf("z20_250");
+				break;
+			default:
+				printf("undefined");
+				break;
+		}
+		return ret;
 	}
 
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
