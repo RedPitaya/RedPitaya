@@ -1,8 +1,9 @@
 #!/bin/bash
 
 FPGAS=/opt/redpitaya/fpga
+MODEL=$(/opt/redpitaya/bin/monitor -f)
 
-/opt/redpitaya/bin/fpgautil -b $FPGAS/$1/fpga.bit.bin -o $FPGAS/$1/fpga.dtbo -n Full
+/opt/redpitaya/bin/fpgautil -b $FPGAS/$MODEL/$1/fpga.bit.bin -o $FPGAS/$MODEL/$1/fpga.dtbo -n Full
 
 if [ "$?" = '0' ]
 then
