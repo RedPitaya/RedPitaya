@@ -112,14 +112,14 @@ void hp_checkModel(char *model,char *eth_mac){
 			strcpy(g_profile->boardETH_MAC,eth_mac);
 	}
 
-	if (strcmp(model,"STEM_125-14_Z7020_v1.0") == 0){
+	if (strcmp(model,"stem_125-14_z7020_v1.0") == 0){
 		g_profile = getProfile_STEM_125_14_Z7020_v1_0();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
 	}
 
-	if (strcmp(model,"STEM_125-14_Z7020_LN_v1.1") == 0){
+	if (strcmp(model,"stem_125-14_z7020_ln_v1.1") == 0){
 		g_profile = getProfile_STEM_125_14_Z7020_LN_v1_1();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)

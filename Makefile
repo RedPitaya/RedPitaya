@@ -36,29 +36,7 @@ BUILD_MODE ?= Release
 MODEL ?= Z10
 CUR_DIR = $(PWD)
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
-ifeq ($(STREAMING),MASTER)
 all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
-ifeq ($(STREAMING),MASTER)
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
-ifeq ($(STREAMING),MASTER)
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
-ifeq ($(STREAMING),SLAVE)
-all: nginx apps-tools streaming_slave startupsh
-endif
-endif
 
 
 $(DL):
@@ -262,11 +240,7 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 nginx: $(NGINX) $(SOCKPROC)
 
 startupsh:
-ifeq ($(MODEL),Z20_250_12)
-	cp -f patches/startup/startup.sh.Z250_12 $(STARTUPSH)
-else
 	cp -f patches/startup/startup.sh $(STARTUPSH)
-endif
 
 streaming_slave:
 	test -d $(INSTALL_DIR)/bin || mkdir -p $(INSTALL_DIR)/bin
@@ -336,13 +310,7 @@ LA_TEST_DIR        = rp-api/api2/test
 .PHONY: examples rp_communication fpgautils
 .PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control
 
-
-
-ifeq ($(MODEL),Z20_125_4CH)
-examples: monitor calib spectrum acquire led_control fpgautils
-else
 examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils
-endif
 
 # calibrate laboardtest
 
@@ -444,31 +412,7 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
 
-
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
-ifeq ($(STREAMING),MASTER)
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
-ifeq ($(STREAMING),MASTER)
-apps-tools: ecosystem updater network_manager scpi_manager calib_app
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20))
-ifeq ($(STREAMING),MASTER)
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
-endif
-endif
-
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
-ifeq ($(STREAMING),MASTER)
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
-endif
-endif
 
 
 ifeq ($(MODEL),$(filter $(MODEL),Z10))
@@ -545,37 +489,7 @@ APP_BA_PRO_DIR 		= Applications/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
-ifeq ($(STREAMING),MASTER)
 apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125_4CH))
-ifeq ($(STREAMING),MASTER)
-apps-tools: scopegenpro spectrumpro
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20))
-ifeq ($(STREAMING),MASTER)
-apps-tools: scopegenpro spectrumpro
-endif
-endif
-
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
-ifeq ($(STREAMING),MASTER)
-apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
-endif
-endif
-
-
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
-ifeq ($(STREAMING),SLAVE)
-apps-tools:
-endif
-endif
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean

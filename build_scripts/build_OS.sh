@@ -1,7 +1,7 @@
 #!/bin/bash
 
-PATH_XILINX_SDK=/opt/Xilinx/SDK/2019.1
-PATH_XILINX_VIVADO=/opt/Xilinx/Vivado/2020.1
+PATH_XILINX_SDK=/media/500gb/Xilinx/SDK/2019.1
+PATH_XILINX_VIVADO=/media/500gb/Xilinx/Vivado/2020.1
 RP_UBUNTU=redpitaya_ubuntu_04-may-2022.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
@@ -169,12 +169,22 @@ export ARCH=arm
 export PATH=$PATH:$PATH_XILINX_VIVADO/bin
 export PATH=$PATH:$PATH_XILINX_SDK/bin
 export PATH=$PATH:$PATH_XILINX_SDK/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin/
+
 ENABLE_PRODUCTION_TEST=0
 GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
 
-make -f Makefile.x86  MODEL=$MODEL STREAMING=$STREAMING_MODE
-schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST STREAMING=$STREAMING_MODE
-EOL_CHROOT
-make -f Makefile.x86 install MODEL=$MODEL STREAMING=$STREAMING_MODE
-make -f Makefile.x86 zip MODEL=$MODEL STREAMING=$STREAMING_MODE
+
+
+#make -f Makefile.x86 fpga MODEL=Z10 STREAMING=MASTER
+#make -f Makefile.x86 fpga MODEL=Z20 STREAMING=MASTER
+#make -f Makefile.x86 fpga MODEL=Z20_125 STREAMING=MASTER
+#make -f Makefile.x86 fpga MODEL=Z20_125_4CH STREAMING=MASTER
+#make -f Makefile.x86 fpga MODEL=Z20_250_12 STREAMING=MASTER
+
+make -f Makefile.x86
+
+#schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
+#make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST STREAMING=$STREAMING_MODE
+#EOL_CHROOT
+make -f Makefile.x86 install
+#make -f Makefile.x86 zip STREAMING=MASTER

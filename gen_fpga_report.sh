@@ -3,6 +3,7 @@
 MODE=$1
 FPGA_NAME=$2
 COMMIT=$3
+FPGA_VERSION=$4
 REPORT_FILE=report.xml
 
 if [[ "$MODE" == "BRANCH_KERNEL" ]]
@@ -25,7 +26,7 @@ cd fpga/$FPGA_NAME
 BRANCH=$(git name-rev $COMMIT)
 LOG=$(git log -n 1)
 cd ../..
-echo "<field name=\"$FPGA_NAME\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
+echo "<field name=\"$FPGA_VERSION-$FPGA_NAME\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
 fi
 
 if [[ "$MODE" == "PACK" ]]
@@ -35,7 +36,7 @@ mv $REPORT_FILE $REPORT_FILE.fpga.sub.tmp
 echo "<section name=\"FPGA\" fontcolor=\"\">" > $REPORT_FILE
 
 cat $REPORT_FILE.fpga.sub.tmp >> $REPORT_FILE
- 
+
 echo "</section>" >> $REPORT_FILE
 
 rm $REPORT_FILE.fpga.sub.tmp
