@@ -174,17 +174,16 @@ ENABLE_PRODUCTION_TEST=0
 GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
 
 
-
-#make -f Makefile.x86 fpga MODEL=Z10 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z10 STREAMING=MASTER
 #make -f Makefile.x86 fpga MODEL=Z20 STREAMING=MASTER
 #make -f Makefile.x86 fpga MODEL=Z20_125 STREAMING=MASTER
 #make -f Makefile.x86 fpga MODEL=Z20_125_4CH STREAMING=MASTER
 #make -f Makefile.x86 fpga MODEL=Z20_250_12 STREAMING=MASTER
 
-make -f Makefile.x86
+#make -f Makefile.x86
 
 #schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
 #make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST STREAMING=$STREAMING_MODE
 #EOL_CHROOT
-make -f Makefile.x86 install
+make -f Makefile.x86 zip_fpga MODEL=Z10 STREAMING=MASTER
 #make -f Makefile.x86 zip STREAMING=MASTER

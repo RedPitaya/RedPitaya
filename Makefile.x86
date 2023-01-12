@@ -6,7 +6,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 
 GIT_MODE ?= GITHUB
-GITLAB_TOKEN ?=
+GITLAB_TOKEN ?= NONE
 
 CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
 
@@ -143,12 +143,12 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: stream_app classic logic v0.94 mercury axi4lite barebones
 
-		FPGA_STREAM_APP = 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		FPGA_CLASSIC 	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		FPGA_LOGIC	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		FPGA_0_94	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		FPGA_MERCURY	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		FPGA_AXI4LITE	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		#FPGA_STREAM_APP = 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		#FPGA_CLASSIC 	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		#FPGA_LOGIC	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		#FPGA_0_94	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		#FPGA_MERCURY	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		#FPGA_AXI4LITE	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
 		FPGA_BAREBONE = 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
 
 		FPGA_MODEL = Z10
@@ -271,6 +271,7 @@ define build_fpga
 	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fsbl.elf
 	cp -r fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts                  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)
 	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/dts/*                    $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/dts/
+	cp -f fpga/$(FPGA_VERSION)/$(1)/git_info.txt                      $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/git_info.txt
 
 #fix bug with #address-cells and #size-cells for overlay
 	sed -i 's/#address-cells/\/\/#address-cells/g' fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
@@ -515,6 +516,7 @@ $(BOOT): $(UBOOT) $(FSBL) $(INSTALL_DIR)
 ################################################################################
 
 ZIPFILE=ecosystem-$(VERSION)-$(REVISION).zip
+ZIP_FPGA_FILE=fpga-$(MODEL)-$(STREAMING)-$(VERSION)-$(REVISION).zip
 
 zip: $(ZIPFILE)
 
@@ -524,6 +526,11 @@ $(ZIPFILE):
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
 	# build zip file
 	cd $(INSTALL_DIR); zip -r ../$(ZIPFILE) *
+
+zip_fpga: $(ZIP_FPGA_FILE)
+
+$(ZIP_FPGA_FILE):
+	cd $(INSTALL_DIR); zip -r ../$(ZIP_FPGA_FILE) *
 
 ################################################################################
 #

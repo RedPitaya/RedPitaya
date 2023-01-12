@@ -15,7 +15,13 @@ then
     cd fpga/$P
     git clone https://gitlab-ci-token:$TOKEN@gitlab.redpitaya.com/redpitaya-3.0/redpitaya-fpga.git .
     git checkout $COMMIT
+    BRANCH=$(git name-rev $COMMIT)
+    LOG=$(git log -n 1)
+    echo "$BRANCH" > git_info.txt
+    echo "$LOG" >> git_info.txt
     cd ../..
+
+
 fi
 
 if [[ "$MODE" == "GITHUB" ]]
@@ -26,5 +32,9 @@ then
     cd fpga/$P
     git clone https://github.com/RedPitaya/RedPitaya-FPGA.git .
     git checkout $COMMIT
+    BRANCH=$(git name-rev $COMMIT)
+    LOG=$(git log -n 1)
+    echo "$BRANCH" > git_info.txt
+    echo "$LOG" >> git_info.txt
     cd ../..
 fi
