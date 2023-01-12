@@ -42,8 +42,6 @@ export GREET_MSG
 
 all: dtc_compiler devicetree u-boot linux boot
 
-install: linux-install devicetree-install boot
-
 ################################################################################
 #
 ################################################################################
@@ -467,7 +465,7 @@ $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 
 LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
 
-.PHONY: linux linux-install linux_scripts $(LINUX) $(LINUX_DIR)
+.PHONY: linux linux_scripts $(LINUX) $(LINUX_DIR) dtc_compiler
 
 linux: $(LINUX)
 
@@ -488,8 +486,6 @@ $(LINUX): linux_scripts
 ifeq ($(KERNEL_HEADERS),YES)
 	make -C $(LINUX_DIR) headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))/include/linux
 endif
-
-linux-install: $(INSTALL_DIR)
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
 dtc_compiler: linux_scripts
