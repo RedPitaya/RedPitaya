@@ -143,12 +143,12 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: stream_app classic logic v0.94 mercury axi4lite barebones
 
-		#FPGA_STREAM_APP = 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		#FPGA_CLASSIC 	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		#FPGA_LOGIC	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		#FPGA_0_94	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		#FPGA_MERCURY	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
-		#FPGA_AXI4LITE	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		FPGA_STREAM_APP = 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		FPGA_CLASSIC 	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		FPGA_LOGIC	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		FPGA_0_94	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		FPGA_MERCURY	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
+		FPGA_AXI4LITE	= 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
 		FPGA_BAREBONE = 5616794ddefe0eef6f070c7def2eda2aa7c7dc8e
 
 		FPGA_MODEL = Z10
