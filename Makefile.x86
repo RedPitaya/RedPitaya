@@ -477,11 +477,15 @@ $(LINUX_DIR): $(LINUX_TAR)
 	tar -zxf $< --strip-components=1 --directory=$@
 
 linux_scripts: $(LINUX_DIR)
+	make -C $(LINUX_DIR) clean
 	make -C $(LINUX_DIR) mrproper
 	make -C $(LINUX_DIR) ARCH=arm redpitaya_zynq_defconfig -j $(shell grep -c ^processor /proc/cpuinfo)
 	make -C $(LINUX_DIR) scripts
 
 $(LINUX): linux_scripts
+	make -C $(LINUX_DIR) clean
+	make -C $(LINUX_DIR) mrproper
+	make -C $(LINUX_DIR) ARCH=arm redpitaya_zynq_defconfig -j $(shell grep -c ^processor /proc/cpuinfo)
 	make -C $(LINUX_DIR) ARCH=arm CFLAGS=$(LINUX_CFLAGS) -j $(shell grep -c ^processor /proc/cpuinfo) UIMAGE_LOADADDR=0x8000 uImage
 ifeq ($(KERNEL_HEADERS),YES)
 	make -C $(LINUX_DIR) headers_install ARCH=arm INSTALL_HDR_PATH=$(abspath $(INSTALL_DIR))/include/linux
