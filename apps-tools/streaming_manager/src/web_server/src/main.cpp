@@ -477,6 +477,7 @@ void updateUI(){
 
 void setConfig(bool _force){
 	bool needUpdate = false;
+	g_serverNetConfig->getSettingsRef().setBoardMode(CStreamSettings::MASTER);
 	if (ss_port.IsNewValue() || _force)
 	{
 		ss_port.Update();
@@ -617,7 +618,7 @@ void setConfig(bool _force){
 		}
 	}
 	else
-		g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::AC);
+		g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::DC);
 
 
 	if (ss_dac_file_type.IsNewValue() || _force)

@@ -21,7 +21,7 @@ CStreamSettings::CStreamSettings(){
     m_decimation = 1;
     m_attenuator = A_1_1;
     m_calib = false;
-    m_ac_dc = AC;
+    m_ac_dc = DC;
 
     m_dac_gain = X1;
     m_dac_file_type = WAV;
@@ -212,7 +212,7 @@ bool CStreamSettings::writeToFile(string _filename){
         const std::string json_file = Json::writeString(builder, root);
         ofstream file(_filename , 	ios::out | ios::trunc);
         if (!file.is_open()) {
-            std::cerr << "file write failed: " << std::strerror(errno) << "\n";
+            aprintf(stderr, "file write failed %d\n",std::strerror(errno));
             return false;
         }
         file << json_file;

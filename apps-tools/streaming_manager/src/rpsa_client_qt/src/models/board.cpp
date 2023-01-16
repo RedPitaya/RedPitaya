@@ -88,7 +88,7 @@ CBoard::CBoard(QString ip)
 
     m_configManager->serverStartedTCPNofiy.connect([=](auto host){
         addLog("Streaming started in TCP");
-        createStreaming(net_lib::P_TCP);        
+        createStreaming(net_lib::P_TCP);
         ChartDataHolder::instance()->regRP(ip);
         Q_EMIT updateSaveFileName();
     });
@@ -207,7 +207,7 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
                 m_stat.samples2 += sempCh2;
                 m_stat.lost += lostRate;
                 m_stat.flost += flost;
-                m_stat.broken_b = 0;                
+                m_stat.broken_b = 0;
                 obj->passBuffers(pack);
                 Q_EMIT updateStatistic();
         }
@@ -291,7 +291,7 @@ auto CBoard::getModel() -> QString{
     }
 }
 
-auto CBoard::configManagerConnected(std::string host) -> void{        
+auto CBoard::configManagerConnected(std::string host) -> void{
     addLog("Connected to configuration server");
     Q_EMIT configManagerConnectedChanged();
     getConfig();
@@ -323,6 +323,7 @@ void CBoard::sendConfig(){
         addLog(msg);
         return;
     }
+    m_configManager->setBoardMode(CStreamSettings::MASTER);
     m_configManager->sendConfig(m_ip.toStdString());
 }
 
@@ -335,13 +336,13 @@ void CBoard::getConfig(){
     m_configManager->requestConfig(m_ip.toStdString());
 }
 
-auto CBoard::getNewSettings(std::string host) -> void{    
+auto CBoard::getNewSettings(std::string host) -> void{
     QString msg = "Get settings from server";
     addLog(msg);
     auto p = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getPort();
     m_configManager->setPort(p);
     auto dacp = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getDACPort();
-    m_configManager->setDACPort(dacp);    
+    m_configManager->setDACPort(dacp);
     Q_EMIT getNewSettingSignal();
 }
 
