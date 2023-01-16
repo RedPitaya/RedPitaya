@@ -274,6 +274,11 @@ auto rp_app_init(void) -> int {
             	startADC();
         	});
 
+            g_serverNetConfig->getNewSettingsNofiy.connect([](){
+                fprintf(stderr, "Info: Get new settigns from client\n");
+            });
+
+
 		}catch (std::exception& e)
 			{
 				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());

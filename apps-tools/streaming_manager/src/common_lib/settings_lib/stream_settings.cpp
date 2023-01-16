@@ -172,7 +172,7 @@ bool CStreamSettings::writeToFile(string _filename){
         Json::Value dac_config;
         Json::Value loopback_config;
 
-        board_config["mode"] = getBoardMode();
+        board_config["board_mode"] = getBoardMode();
 
         adc_config["port"] = getPort();
         adc_config["protocol"] = getProtocol();
@@ -230,7 +230,7 @@ auto CStreamSettings::getJson()-> std::string{
         Json::Value dac_config;
         Json::Value loopback_config;
 
-        board_config["mode"] = getBoardMode();
+        board_config["board_mode"] = getBoardMode();
 
         adc_config["port"] = getPort();
         adc_config["protocol"] = getProtocol();
@@ -646,8 +646,8 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         return false;
     }
 
-    if (board_config.isMember("mode"))
-        setBoardMode(static_cast<RPBoardMode>(board_config["mode"].asInt()));
+    if (board_config.isMember("board_mode"))
+        setBoardMode(static_cast<RPBoardMode>(board_config["board_mode"].asInt()));
 
     if (adc_config.isMember("port"))
         setPort(adc_config["port"].asString());
@@ -922,6 +922,11 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
 
     if (key == "loopback_channels") {
         setLoopbackChannels(static_cast<LOOPBACKChannels>(value));
+        return true;
+    }
+
+    if (key == "board_mode") {
+        setBoardMode(static_cast<RPBoardMode>(value));
         return true;
     }
     return false;

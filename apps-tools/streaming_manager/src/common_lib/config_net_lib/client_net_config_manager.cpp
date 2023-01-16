@@ -442,7 +442,7 @@ auto ClientNetConfigManager::sendConfig(std::shared_ptr<Clients> _client, bool _
         if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(getLoopbackMode()),_async)) return false;
         if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(getLoopbackChannels()),_async)) return false;
 
-        if (!_client->m_manager->sendData("mode",static_cast<uint32_t>(getBoardMode()),_async)) return false;
+        if (!_client->m_manager->sendData("board_mode",static_cast<uint32_t>(getBoardMode()),_async)) return false;
 
         if (!_client->m_manager->sendData(CNetConfigManager::ECommands::END_SEND_SETTING,_async)) return false;
         return true;
@@ -481,7 +481,7 @@ auto ClientNetConfigManager::sendTestConfig(std::shared_ptr<Clients> _client, bo
         if (!_client->m_manager->sendData("loopback_mode",static_cast<uint32_t>(settings.getLoopbackMode()),_async)) return false;
         if (!_client->m_manager->sendData("loopback_channels",static_cast<uint32_t>(settings.getLoopbackChannels()),_async)) return false;
 
-        if (!_client->m_manager->sendData("mode",static_cast<uint32_t>(settings.getBoardMode()),_async)) return false;
+        if (!_client->m_manager->sendData("board_mode",static_cast<uint32_t>(settings.getBoardMode()),_async)) return false;
 
         if (!_client->m_manager->sendData(CNetConfigManager::ECommands::END_SEND_TEST_SETTING,_async)) return false;
         return true;
