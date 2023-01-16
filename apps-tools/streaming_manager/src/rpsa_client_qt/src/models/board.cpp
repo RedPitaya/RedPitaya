@@ -102,6 +102,7 @@ CBoard::CBoard(QString ip)
 
     m_configManager->serverStartedSDNofiy.connect([=](auto host){
         addLog("Streaming started in SD mode");
+        m_configManager->sendStartADC(m_ip.toStdString());
     });
 
     m_configManager->serverStoppedNofiy.connect([=](auto host){
