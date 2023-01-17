@@ -50,6 +50,7 @@
         if (model == "STEM 16") {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
+                    listOfapplications[i]["id"] === 'ba_pro' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'jupyter' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
@@ -87,6 +88,7 @@
         if (model == "STEM 14-Z20-4CH") {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
+                    listOfapplications[i]["id"] === 'ba_pro' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'jupyter' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
@@ -108,6 +110,7 @@
         if (model.includes("SLAVE")) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
+                    listOfapplications[i]["id"] === 'ba_pro' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'jupyter' ||
                     listOfapplications[i]["id"] === 'scpi' ||
