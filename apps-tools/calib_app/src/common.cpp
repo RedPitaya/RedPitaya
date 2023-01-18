@@ -81,7 +81,7 @@ auto getModelName() -> std::string{
         case STEM_250_12_v1_2:
             return "Z20_250_12";
         default:{
-            fprintf(stderr,"[Error:getCalibSize] Unknown model: %d.\n",model);
+            fprintf(stderr,"[Error:getModelName] Unknown model: %d.\n",model);
             return "";
         }
     }
