@@ -11,7 +11,7 @@ static const int  eeprom_calib_off=0x0000;
 static const int  eeprom_calib_factory_off = 0x1c00;
 
 
-inline uint32_t calibBaseScaleFromVoltage(float voltageScale) {
+uint32_t calibBaseScaleFromVoltage(float voltageScale) {
     return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
 }
 

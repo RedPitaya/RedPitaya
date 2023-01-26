@@ -472,8 +472,6 @@ int acq_GetWritePointerAtTrig(uint32_t* pos){
 
 int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage){
 
-    CHECK_CHANNEL("acq_SetTriggerLevel")
-
     switch(channel){
         case RP_T_CH_1: return acq_SetChannelThreshold(RP_CH_1, voltage);
         case RP_T_CH_2: return acq_SetChannelThreshold(RP_CH_2, voltage);
@@ -490,16 +488,18 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage){
                         default:
                             return RP_EOOR;
                     }
+                }else{
+                    fprintf(stderr,"[Error:acq_SetTriggerLevel] Unsupported\n");
+                    return RP_NOTS;
                 }
         }
-        default:;
+        default:
+            fprintf(stderr,"[Error:acq_SetTriggerLevel] Channel is larger than allowed: %d\n",channel);
     }
     return RP_NOTS;
 }
 
 int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage){
-
-    CHECK_CHANNEL("acq_GetTriggerLevel")
 
     switch(channel){
         case RP_T_CH_1: return acq_GetChannelThreshold(RP_CH_1, voltage);
@@ -517,9 +517,14 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage){
                         default:
                             return RP_OK;
                     }
+                }else{
+                    fprintf(stderr,"[Error:acq_GetTriggerLevel] Unsupported\n");
+                    return RP_NOTS;
                 }
         }
-        default:;
+        default:
+            fprintf(stderr,"[Error:acq_GetTriggerLevel] Channel is larger than allowed: %d\n",channel);
+
     }
     return RP_NOTS;
 }
@@ -536,10 +541,6 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
     }
 
     if (acq_GetGain(channel, &mode) != RP_OK){
-        return RP_EOOR;
-    }
-
-    if (fabs(voltage) - fabs(fullScale) > FLOAT_EPS) {
         return RP_EOOR;
     }
 
@@ -580,6 +581,18 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
+    if (voltage > fullScale) {
+        voltage = fullScale;
+    }
+    if (is_sign){
+        if (voltage < -fullScale) {
+            voltage = -fullScale;
+        }
+    }else{
+        if (voltage < 0) {
+            voltage = 0;
+        }
+    }
 
     uint32_t cnt = cmn_convertToCnt(voltage,bits,fullScale,is_sign,gain,offset);
     ch_trash[channel] = voltage;

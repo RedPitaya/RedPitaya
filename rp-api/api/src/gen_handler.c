@@ -882,7 +882,14 @@ int synthesis_square(float frequency, float riseTime, float fallTime, float *dat
         } else if (x < (buffSize - fallTimeSamples) / 2) {
             data_out[i] = 1.0f;
         } else if (x < (buffSize + fallTimeSamples) / 2) {
-            data_out[i] = 1.0f - 2.0f * (float) (x - (buffSize - fallTimeSamples) / 2.0f) / ((float) fallTimeSamples);
+            if (fallTimeSamples > 1){
+                data_out[i] = 1.0f - 2.0f * (float) (x - (buffSize - fallTimeSamples) / 2.0f) / ((float) fallTimeSamples);
+                if (data_out[i] > 1){
+                    data_out[i] = 1;
+                }
+            }else{
+                data_out[i] = 0;
+            }
         } else if (x < buffSize - (riseTimeSamples / 2)) {
             data_out[i] = - 1.0f;
         } else {
