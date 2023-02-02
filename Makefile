@@ -2,7 +2,7 @@
 DL ?= dl
 
 INSTALL_DIR ?= build
-ENABLE_LICENSING ?= 1
+ENABLE_LICENSING ?= 0
 STREAMING ?= MASTER
 CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
 
