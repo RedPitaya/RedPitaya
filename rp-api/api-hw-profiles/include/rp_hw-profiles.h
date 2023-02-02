@@ -50,20 +50,20 @@ extern "C" {
  * List of board models
  */
 typedef enum {
-    STEM_125_10_v1_0,
-    STEM_125_14_v1_0,
-    STEM_125_14_v1_1,
-    STEM_122_16SDR_v1_0,
-    STEM_122_16SDR_v1_1,
-    STEM_125_14_LN_v1_1,
-    STEM_125_14_Z7020_v1_0,
-    STEM_125_14_Z7020_LN_v1_1,
-    STEM_125_14_Z7020_4IN_v1_0,
-    STEM_125_14_Z7020_4IN_v1_2,
-    STEM_125_14_Z7020_4IN_v1_3,
-    STEM_250_12_v1_1,
-    STEM_250_12_v1_2,
-    STEM_250_12_120,
+    STEM_125_10_v1_0            = 0,
+    STEM_125_14_v1_0            = 1,
+    STEM_125_14_v1_1            = 2,
+    STEM_122_16SDR_v1_0         = 3,
+    STEM_122_16SDR_v1_1         = 4,
+    STEM_125_14_LN_v1_1         = 5,
+    STEM_125_14_Z7020_v1_0      = 6,
+    STEM_125_14_Z7020_LN_v1_1   = 7,
+    STEM_125_14_Z7020_4IN_v1_0  = 8,
+    STEM_125_14_Z7020_4IN_v1_2  = 9,
+    STEM_125_14_Z7020_4IN_v1_3  = 10,
+    STEM_250_12_v1_1            = 11,
+    STEM_250_12_v1_2            = 12,
+    STEM_250_12_120             = 13
 }  rp_HPeModels_t;
 
 /**

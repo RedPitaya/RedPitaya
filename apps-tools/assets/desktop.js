@@ -33,6 +33,73 @@
         return currentGroup;
     }
 
+    Desktop.convertModel = function(model){
+        /*
+         List of board models
+
+            typedef enum {
+                STEM_125_10_v1_0            = 0,
+                STEM_125_14_v1_0            = 1,
+                STEM_125_14_v1_1            = 2,
+                STEM_122_16SDR_v1_0         = 3,
+                STEM_122_16SDR_v1_1         = 4,
+                STEM_125_14_LN_v1_1         = 5,
+                STEM_125_14_Z7020_v1_0      = 6,
+                STEM_125_14_Z7020_LN_v1_1   = 7,
+                STEM_125_14_Z7020_4IN_v1_0  = 8,
+                STEM_125_14_Z7020_4IN_v1_2  = 9,
+                STEM_125_14_Z7020_4IN_v1_3  = 10,
+                STEM_250_12_v1_1            = 11,
+                STEM_250_12_v1_2            = 12,
+                STEM_250_12_120             = 13
+            }  rp_HPeModels_t;
+        */
+        if (model == 0){
+            return "STEM 10"
+        }
+        if (model == 1){
+            return "STEM 14"
+        }
+        if (model == 2){
+            return "STEM 14"
+        }
+        if (model == 3){
+            return "STEM 16"
+        }
+        if (model == 4){
+            return "STEM 16"
+        }
+        if (model == 5){
+            return "STEM 14"
+        }
+        if (model == 6){
+            return "STEM 14-Z20"
+        }
+        if (model == 7){
+            return "STEM 14-Z20"
+        }
+        if (model == 8){
+            return "STEM 14-Z20-4CH"
+        }
+        if (model == 9){
+            return "STEM 14-Z20-4CH"
+        }
+        if (model == 10){
+            return "STEM 14-Z20-4CH"
+        }
+        if (model == 11){
+            return "STEM 250 12"
+        }
+        if (model == 12){
+            return "STEM 250 12"
+        }
+        if (model == 13){
+            return "STEM 250 12"
+        }
+        console.log("[FATAL ERROR] Unknown model: " + model)
+        return ""
+    }
+
     Desktop.setApplications = function(listOfapplications) {
         $.ajax({
                 method: "GET",
@@ -41,7 +108,7 @@
             .done(function(result) {
                 applications = [];
                 $.extend(true, applications, listOfapplications);
-                applications = Desktop.filterApps(applications,result['stem_ver']);
+                applications = Desktop.filterApps(applications,Desktop.convertModel(result['stem_ver']));
                 var url_arr = window.location.href.split("/");
                 var url = url_arr[0] + '//' + url_arr[2] + '/';
 

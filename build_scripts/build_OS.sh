@@ -1,8 +1,8 @@
 #!/bin/bash
 
-PATH_XILINX_SDK=/media/500gb/Xilinx/SDK/2019.1
-PATH_XILINX_VIVADO=/media/500gb/Xilinx/Vivado/2020.1
-RP_UBUNTU=redpitaya_ubuntu_04-may-2022.tar.gz
+PATH_XILINX_SDK=/opt/Xilinx/Xilinx/SDK/2019.1
+PATH_XILINX_VIVADO=/opt/Xilinx/Xilinx/Vivado/2020.1
+RP_UBUNTU=redpitaya_OS_16-03-48_03-Nov-2022.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
 function print_ok(){
