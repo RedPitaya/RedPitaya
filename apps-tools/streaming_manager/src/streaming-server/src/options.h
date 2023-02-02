@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "data_lib/thread_cout.h"
+#include "broadcast_lib/asio_broadcast_socket.h"
 
 #ifndef _WIN32
 #include <syslog.h>
@@ -52,6 +53,7 @@ namespace ClientOpt {
     auto getDACRate() -> uint32_t;
     auto getADCRate() -> uint32_t;
     auto getModel() -> models_t;
+    auto getBroadcastModel() -> broadcast_lib::EModel;
 }
 
 #endif

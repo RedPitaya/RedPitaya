@@ -72,6 +72,7 @@ int CCalib::calib(uint16_t _step,float _refdc){
 
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_120:
             return calib_board_z20_250_12(_step,_refdc);
         default:
             fprintf(stderr,"[Error] Can't get board model\n");

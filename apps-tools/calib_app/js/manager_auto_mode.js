@@ -77,6 +77,7 @@
             if (OBJ.amModel === "Z10" || OBJ.amModel === "Z20_125") OBJ.amStates = OBJ.STATES_125_14;
             if (OBJ.amModel === "Z20_125_4CH") OBJ.amStates = OBJ.STATES_125_14_4CH;
             if (OBJ.amModel === "Z20_250_12") OBJ.amStates = OBJ.STATES_250_12;
+            if (OBJ.amModel === "Z20_250_12_120") OBJ.amStates = OBJ.STATES_250_12;
 
             $('#am_ok_btn').on('click', function() { OBJ.amClickOkDialog() });
         }

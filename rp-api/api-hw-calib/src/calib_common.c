@@ -424,6 +424,7 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
 
     case STEM_250_12_v1_1:
     case STEM_250_12_v1_2:
+    case STEM_250_12_120:
         calib.fast_adc_count_1_1 = 2;
         calib.fast_adc_count_1_20 = 2;
         calib.fast_adc_count_1_1_ac = 2;

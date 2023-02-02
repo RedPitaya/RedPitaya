@@ -79,7 +79,6 @@ int main(int argc, char* argv[])
     {
         if (uio.nodeName == "rp_oscilloscope")
         {
-            // TODO start server;
             osc0 = COscilloscope::Create(uio, true , true , Decimation,MASTER);
             osc0->setCalibration(0,1,0,1);
             osc0->setFilterBypass(true);
@@ -125,5 +124,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
-

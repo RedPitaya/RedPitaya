@@ -173,7 +173,6 @@ export PATH=$PATH:$PATH_XILINX_SDK/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin/
 ENABLE_PRODUCTION_TEST=0
 GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
 
-
 make -f Makefile.x86 fpga MODEL=Z10 STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z20 STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z20_125 STREAMING=MASTER
@@ -181,10 +180,18 @@ make -f Makefile.x86 fpga MODEL=Z20_125_4CH STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z20_250_12 STREAMING=MASTER
 
 make -f Makefile.x86
-make -f Makefile.x86 zip
 
-#schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-#make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST STREAMING=$STREAMING_MODE
-#EOL_CHROOT
-#make -f Makefile.x86 zip_fpga MODEL=Z10 STREAMING=MASTER
-#make -f Makefile.x86 zip STREAMING=MASTER
+schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
+make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST STREAMING=$STREAMING_MODE
+EOL_CHROOT
+
+# required min-gw
+#make -f Makefile.x86 streaming
+
+# FOR BUILD QT CLIENTS NEED SETUP QT 5.15.2
+#make -f Makefile.x86 streaming_client_qt
+#export QT_DIR=/srv/Qt5.15.2-win
+#make -f Makefile.x86 streaming_client_qt_win
+#unset QT_DIR
+
+make -f Makefile.x86 zip

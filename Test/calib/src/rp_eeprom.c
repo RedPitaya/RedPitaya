@@ -157,6 +157,7 @@ int getCalibSize(rp_HPeModels_t model){
             return eCalParEnd_v2;
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_120:
             return eCalParEnd_v3;
         default:{
             fprintf(stderr,"[Error:getCalibSize] Unknown model: %d.\n",model);
@@ -210,7 +211,8 @@ void RpPrintEepromCalData(rp_HPeModels_t model,rp_eepromWpData_t *_eepromData,bo
         }
 
         case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:{
+        case STEM_250_12_v1_2:
+        case STEM_250_12_120:{
             size = eCalParEnd_v3;
             if (verb){
                 printf(hex ? "dataStructureId = 0x%X\n" : "dataStructureId = %d\n",_eepromData->dataStructureId);
@@ -273,7 +275,8 @@ void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
                 case STEM_125_14_Z7020_4IN_v1_2:
                 case STEM_125_14_Z7020_4IN_v1_3:
                 case STEM_250_12_v1_1:
-                case STEM_250_12_v1_2:{
+                case STEM_250_12_v1_2:
+                case STEM_250_12_120:{
                     fprintf(stdout, "Unsupport mode\n");
                     break;
                 }

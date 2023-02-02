@@ -173,6 +173,8 @@ auto getModel() -> broadcast_lib::EModel{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
             return broadcast_lib::EModel::RP_250_12;
+		case STEM_250_12_120:
+			return broadcast_lib::EModel::RP_250_12;
         default:
             fprintf(stderr,"[Error] Can't get board model\n");
             exit(-1);
@@ -208,6 +210,8 @@ auto getModel() -> broadcast_lib::EModel{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
             return "Z20_250_12";
+		case STEM_250_12_120:
+            return "Z20_250_12_120";
         default:
             fprintf(stderr,"[Error] Can't get board model\n");
             exit(-1);
@@ -867,7 +871,7 @@ void startServer(bool testMode) {
 			if (uio.nodeName == "rp_oscilloscope")
 			{
 				fprintf(stderr,"COscilloscope::Create rate %d\n",rate);
-                g_osc = uio_lib::COscilloscope::create(uio,rate,is_master == CStreamSettings::MASTER,getADCRate());
+                g_osc = uio_lib::COscilloscope::create(uio,rate,is_master == CStreamSettings::MASTER,getADCRate(),!filterBypass);
                 g_osc->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
                 g_osc->setFilterCalibrationCh1(aa_ch[0],bb_ch[0],kk_ch[0],pp_ch[0]);
                 g_osc->setFilterCalibrationCh2(aa_ch[1],bb_ch[1],kk_ch[1],pp_ch[1]);

@@ -37,6 +37,7 @@
 #include "stem_125_14_Z7020_4IN_v1.3.h"
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
+#include "stem_250_12_120.h"
 
 #define LINE_LENGTH 0x400
 
@@ -55,6 +56,7 @@ profiles_t *g_profile = NULL;
 // "STEM_125-14_Z7020_4IN_v1.3"
 // "STEM_250-12_v1.2"
 // "STEM_250-12_v1.1"
+// "STEM_250-12_120"
 
 
 void convertToLowerCase(char *buff){
@@ -156,6 +158,13 @@ void hp_checkModel(char *model,char *eth_mac){
 
 	if (strcmp(model,"stem_250-12_v1.2") == 0){
 		g_profile = getProfile_STEM_250_12_v1_2();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_250-12_120") == 0){
+		g_profile = getProfile_STEM_250_12_120();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);

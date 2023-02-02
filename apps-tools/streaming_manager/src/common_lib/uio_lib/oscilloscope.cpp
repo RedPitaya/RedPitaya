@@ -22,7 +22,7 @@ void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg
     *reg = value;
 }
 
-auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) -> COscilloscope::Ptr{
+auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent) -> COscilloscope::Ptr{
     // Validation
     if (_uio.mapList.size() < 2)
     {
@@ -73,10 +73,10 @@ auto COscilloscope::create(const UioT &_uio,uint32_t _dec_factor,bool _isMaster,
     }
 
 
-    return std::make_shared<COscilloscope>(fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor,_isMaster,_adcMaxSpeed);
+    return std::make_shared<COscilloscope>(fd, regset, _uio.mapList[0].size, buffer, _uio.mapList[1].size, _uio.mapList[1].addr,_dec_factor,_isMaster,_adcMaxSpeed,_isADCFilterPresent);
 }
 
-COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) :
+COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent) :
     m_Fd(_fd),
     m_Regset(_regset),
     m_RegsetSize(_regsetSize),
@@ -90,7 +90,8 @@ COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_
     m_dec_factor(_dec_factor),
     m_filterBypass(true),
     m_isMaster(_isMaster),
-    m_adcMaxSpeed(_adcMaxSpeed)
+    m_adcMaxSpeed(_adcMaxSpeed),
+    m_isADCFilterPresent(_isADCFilterPresent)
 {
     m_calib_offset_ch1 = 0;
     m_calib_gain_ch1 = 0x8000;

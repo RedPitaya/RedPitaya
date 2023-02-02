@@ -48,7 +48,7 @@ struct OscilloscopeMapT
     uint32_t dma_dst_addr1_ch2;     // 108 - offset 0x6C
     uint32_t dma_dst_addr2_ch2;     // 112 - offset 0x70
     uint32_t calib_offset_ch1;      // 116 - offset 0x74
-    uint32_t calib_gain_ch1;        // 120 - offset 0x78  
+    uint32_t calib_gain_ch1;        // 120 - offset 0x78
     uint32_t calib_offset_ch2;      // 124 - offset 0x7C
     uint32_t calib_gain_ch2;        // 128 - offset 0x80
     uint32_t reserv2[6];
@@ -73,9 +73,9 @@ class COscilloscope
 public:
     using Ptr = std::shared_ptr<COscilloscope>;
 
-    static Ptr create(const UioT &_uio, uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed);
+    static Ptr create(const UioT &_uio, uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent);
 
-    COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed);
+    COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent);
     ~COscilloscope();
 
     auto prepare() -> void;
@@ -130,6 +130,7 @@ private:
     bool         m_isMaster;
     bool         m_is8BitMode;
     uint32_t     m_adcMaxSpeed;
+    bool         m_isADCFilterPresent;
 };
 
 }

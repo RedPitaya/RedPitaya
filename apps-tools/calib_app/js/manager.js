@@ -53,6 +53,10 @@
 
             }
 
+            if (OBJ.model === "Z20_250_12_120") {
+
+            }
+
             if (_visible) {
                 $("#adc_mode_body").show();
                 $("#B_APPLY_CONT").show();
@@ -71,6 +75,10 @@
             }
 
             if (OBJ.model === "Z20_250_12") {
+
+            }
+
+            if (OBJ.model === "Z20_250_12_120") {
 
             }
 
@@ -145,7 +153,7 @@
                 $('body').addClass('loaded');
                 $('#main').removeAttr("style");
                 OBJ.connectCallbacks();
-                if (OBJ.model !== "Z20_250_12") {
+                if (OBJ.model !== "Z20_250_12" && OBJ.model !== "Z20_250_12_120") {
                     $("#manual_x1_x5_mode").remove();
                     $("#manual_ac_dc_mode").remove();
                 } else {

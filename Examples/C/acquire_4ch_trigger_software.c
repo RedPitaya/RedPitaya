@@ -5,8 +5,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "rp.h"
+#include "rp_hw-profiles.h"
+
 
 int main(int argc, char **argv){
+
+        uint8_t c = 0;
+        if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
+                fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+                return 1;
+        }
+
+        if (c!= 4){
+                fprintf(stderr,"[Error] The number of channels is wrong\n");
+                return 1;
+        }
 
         /* Print error, if rp_Init() function failed */
         if(rp_Init() != RP_OK){
@@ -46,9 +59,16 @@ int main(int argc, char **argv){
 		rp_AcqGetBufferFillState(&fillState);
 	}
 
-        uint32_t pos = 0;        
+        uint32_t pos = 0;
 	rp_AcqGetWritePointerAtTrig(&pos);
-        rp_AcqGetDataV2(pos, &buff_size, buff_ch1,buff_ch2, buff_ch3, buff_ch4);
+        buffers_t b;
+        b.size = buff_size;
+        b.ch_f[0] = buff_ch1;
+        b.ch_f[1] = buff_ch2;
+        b.ch_f[2] = buff_ch3;
+        b.ch_f[3] = buff_ch4;
+
+        rp_AcqGetDataV2(pos, &b);
 
         int i;
         for(i = 0; i < buff_size; i++){
@@ -63,4 +83,3 @@ int main(int argc, char **argv){
 
         return 0;
 }
-

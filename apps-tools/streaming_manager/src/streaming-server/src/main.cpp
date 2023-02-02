@@ -64,7 +64,7 @@ static void handleCloseChildEvents()
     signal(SIGINT, termSignalHandler);
     signal(SIGTERM, termSignalHandler);
 #else
-    struct sigaction sigchld_action; 
+    struct sigaction sigchld_action;
     sigchld_action.sa_handler = SIG_DFL,
     sigchld_action.sa_flags = SA_NOCLDWAIT;
     sigaction(SIGCHLD, &sigchld_action, NULL);
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
         auto v_hosts = ClientOpt::split(hosts,'\n');
         auto v_whosts = ClientOpt::split(whosts,'\n');
         v_hosts.insert(std::end(v_hosts), std::begin(v_whosts), std::end(v_whosts));
-        std::string brchost; 
+        std::string brchost;
         for(auto h: v_hosts){
             std::smatch match;
             if(std::regex_search(h, match, pattern)) {
@@ -181,26 +181,7 @@ int main(int argc, char *argv[])
         auto brchost = "127.0.0.1";
 #endif
         auto mode = isMaster ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
-
-        #ifdef Z10
-        auto model = broadcast_lib::EModel::RP_125_14;
-		#endif
-
-		#ifdef Z20
-        auto model = broadcast_lib::EModel::RP_122_16;
-		#endif
-
-		#ifdef Z20_125
-        auto model = broadcast_lib::EModel::RP_125_14_Z20;
-		#endif
-
-		#ifdef Z20_250_12
-        auto model = broadcast_lib::EModel::RP_250_12;
-        #endif
-
-        #ifdef Z20_125_4CH
-        auto model = broadcast_lib::EModel::RP_125_4CH;
-        #endif
+        auto model = ClientOpt::getBroadcastModel();
 
 		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
         setServer(con_server);
@@ -247,7 +228,7 @@ int main(int argc, char *argv[])
             startADC();
             con_server->sendADCStarted();
         });
-        
+
     }catch (std::exception& e)
     {
         printWithLog(LOG_ERR,stderr,"Error: Init ServerNetConfigManager() %s\n",e.what());

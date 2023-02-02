@@ -60,7 +60,10 @@ int main(int argc, char **argv) {
 			"\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
 			"\tShow current profile: -p\n"
 			"\tShow all profiles: -pa\n"
-			"\tShow fpga version: -f\n",
+			"\tPrint fpga version: -f\n"
+			"\tPrint model name: -n\n"
+			"\tPrint model id: -i\n",
+
                         argv[0], VERSION_STR, REVISION_STR);
 		return EXIT_FAILURE;
 	}
@@ -143,9 +146,34 @@ int main(int argc, char **argv) {
 			case STEM_250_12_v1_2:
 				printf("z20_250");
 				break;
+			case STEM_250_12_120:
+				printf("z20_250");
+				break;
 			default:
 				printf("undefined");
 				break;
+		}
+		return ret;
+	}
+
+	if (strncmp(argv[1], "-n", 2) == 0) {
+		char *model_name = nullptr;
+		auto ret = rp_HPGetModelName(&model_name);
+		if (ret == RP_HP_OK){
+			printf("%s",model_name);
+		}else{
+			printf("[Error]");
+		}
+		return ret;
+	}
+
+	if (strncmp(argv[1], "-i", 2) == 0) {
+		rp_HPeModels_t model;
+		auto ret = rp_HPGetModel(&model);
+		if (ret == RP_HP_OK){
+			printf("%d",model);
+		}else{
+			printf("-1");
 		}
 		return ret;
 	}

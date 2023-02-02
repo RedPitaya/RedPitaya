@@ -16,7 +16,7 @@ COMMON_FLAGS+=-Wall -fPIC -Os -s
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS = -shared $(COMMON_FLAGS) $(LIBS)
 LDFLAGS+= -Wl,--whole-archive,--no-as-needed
-LDFLAGS+= -lcryptopp -lrpapp -lrp -lrp_sdk
+LDFLAGS+= -lcryptopp -lrpapp -lrp -lrp_sdk -lrp-hw-calib -lrp-hw-profiles
 LDFLAGS+= -Wl,--no-whole-archive
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)

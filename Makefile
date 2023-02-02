@@ -2,7 +2,7 @@
 DL ?= dl
 
 INSTALL_DIR ?= build
-ENABLE_LICENSING ?= 0
+ENABLE_LICENSING ?= 1
 STREAMING ?= MASTER
 CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
 
@@ -506,7 +506,7 @@ lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-la_pro: api api2 $(NGINX)
+la_pro: api api2
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))

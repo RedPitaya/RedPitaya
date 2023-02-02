@@ -163,7 +163,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
 		{
 			if (uio.nodeName == "rp_oscilloscope")
 			{
-                g_osc = COscilloscope::create(uio,rate, is_master == CStreamSettings::MASTER,ClientOpt::getADCRate());
+                g_osc = COscilloscope::create(uio,rate, is_master == CStreamSettings::MASTER,ClientOpt::getADCRate(),!filterBypass);
                 g_osc->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
                 g_osc->setFilterCalibrationCh1(aa_ch[0],bb_ch[0],kk_ch[0],pp_ch[0]);
                 g_osc->setFilterCalibrationCh2(aa_ch[1],bb_ch[1],kk_ch[1],pp_ch[1]);
@@ -174,7 +174,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
 		}
 #else
         uio_lib::UioT uio_t;
-        g_osc = COscilloscope::create(uio_t,rate, is_master == CStreamSettings::MASTER ,ClientOpt::getADCRate());
+        g_osc = COscilloscope::create(uio_t,rate, is_master == CStreamSettings::MASTER ,ClientOpt::getADCRate(),!filterBypass);
 #endif
 
         g_s_buffer = streaming_lib::CStreamingBufferCached::create();
