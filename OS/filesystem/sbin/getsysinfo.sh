@@ -6,7 +6,11 @@ DNA_2=""
 C=10
 SLAVE=$(cat /opt/redpitaya/bin/.streaming_mode 2> /dev/null)
 
-if [ "$SLAVE" = "slave mode" ] 
+STATE=$(cat /tmp/loaded_fpga.inf 2> /dev/null)
+if [ "$STATE" = "v0.94" ]
+then
+
+if [ "$SLAVE" = "slave mode" ]
 then
     while [[ "$READ_MAC" == "" || "$READ_HWREV" == "" ]] && [[ $C -ge  0 ]]
     do
@@ -36,3 +40,5 @@ echo \"dna\": \"$DNA_1$DNA_2\", >> /tmp/sysinfo.json
 echo \"ecosystem\": $(cat /opt/redpitaya/www/apps/info/info.json ), >> /tmp/sysinfo.json
 echo \"linux\": \"$(cat /root/.version)\"  >> /tmp/sysinfo.json
 echo } >> /tmp/sysinfo.json
+
+fi
