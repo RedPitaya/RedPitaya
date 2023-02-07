@@ -89,6 +89,27 @@ then
   setenv dts_path z20_250
 fi
 
+if test ${hw_rev} = 'STEM_250-12_120'
+then
+  setenv dts_path z20_250
+fi
+
+if test ${hw_rev} = 'STEM_125-14_LN_BO_v1.1'
+then
+  setenv dts_path z10_125
+fi
+
+if test ${hw_rev} = 'STEM_125-14_LN_CE1_v1.1'
+then
+  setenv dts_path z10_125
+fi
+
+if test ${hw_rev} = 'STEM_125-14_LN_CE2_v1.1'
+then
+  setenv dts_path z10_125
+fi
+
+
 echo Set devicetree and ramdisk high loading address to ${high}
 
 setenv fdt_high    ${high}
