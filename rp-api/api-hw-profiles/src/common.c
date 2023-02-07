@@ -58,6 +58,11 @@ profiles_t *g_profile = NULL;
 // "STEM_250-12_v1.1"
 // "STEM_250-12_120"
 
+// special boards
+// "STEM_125-14_LN_BO_v1.1"
+// "STEM_125-14_LN_CE1_v1.1"
+// "STEM_125-14_LN_CE2_v1.1"
+
 
 void convertToLowerCase(char *buff){
 	int size = strlen(buff);
@@ -169,6 +174,28 @@ void hp_checkModel(char *model,char *eth_mac){
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
 	}
+
+	if (strcmp(model,"stem_125-14_ln_bo_v1.1") == 0){
+		g_profile = getProfile_STEM_SPECIAL();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_125-14_ln_ce1_v1.1") == 0){
+		g_profile = getProfile_STEM_SPECIAL();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_125-14_ln_ce2_v1.1") == 0){
+		g_profile = getProfile_STEM_SPECIAL();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
 }
 
 int hp_cmn_Init(){
