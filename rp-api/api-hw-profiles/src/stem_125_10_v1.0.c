@@ -12,30 +12,30 @@ profiles_t stem_125_10_v1_0 = {
     .fast_adc_rate = 125000000,
     .fast_adc_count_channels = 2,
     .fast_adc[0].is_signed = true,
-    .fast_adc[0].bits = 10,
+    .fast_adc[0].bits = 14, // Must be 10, but fpga return value in 14 bit
     .fast_adc[0].fullScale = 1,
     .fast_adc[1].is_signed = true,
-    .fast_adc[1].bits = 10,
+    .fast_adc[1].bits = 14, // Must be 10, but fpga return value in 14 bit
     .fast_adc[1].fullScale = 1,
 
     .is_dac_present = true,
     .fast_dac_rate = 125000000,
     .fast_dac_count_channels = 2,
     .fast_dac[0].is_signed = true,
-    .fast_dac[0].bits = 10,
+    .fast_dac[0].bits = 14, // Must be 10, but fpga return value in 14 bit
     .fast_dac[0].fullScale = 1,
     .fast_dac[1].is_signed = true,
-    .fast_dac[1].bits = 10,
+    .fast_dac[1].bits = 14, // Must be 10, but fpga return value in 14 bit
     .fast_dac[1].fullScale = 1,
 
     .is_LV_HV_mode = true,
     .is_AC_DC_mode = false,
 
     .fast_adc_1_20[0].is_signed = true,
-    .fast_adc_1_20[0].bits = 10,
+    .fast_adc_1_20[0].bits = 14, // Must be 10, but fpga return value in 14 bit
     .fast_adc_1_20[0].fullScale = 20,
     .fast_adc_1_20[1].is_signed = true,
-    .fast_adc_1_20[1].bits = 10,
+    .fast_adc_1_20[1].bits = 14, // Must be 10, but fpga return value in 14 bit
     .fast_adc_1_20[1].fullScale = 20,
 
     .slow_adc_count_channels = 4,
