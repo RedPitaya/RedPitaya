@@ -38,6 +38,7 @@
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
 #include "stem_250_12_120.h"
+#include "stem_special.h"
 
 #define LINE_LENGTH 0x400
 
