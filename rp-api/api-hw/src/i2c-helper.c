@@ -3,6 +3,7 @@
 
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
+#include <i2c/smbus.h>
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -297,7 +298,7 @@ int i2c_IOCTL_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 	message.addr = i2c_dev_address;
 	message.flags = 1;
 	message.len = len;
-	message.buf = (char*)buffer;
+	message.buf = (unsigned char*)buffer;
 
 	data.msgs = &message;
 	data.nmsgs = 1;
@@ -339,7 +340,7 @@ int i2c_IOCTL_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 	message.addr = i2c_dev_address;
 	message.flags = 0;
 	message.len = len;
-	message.buf = (char*)buffer;
+	message.buf = (unsigned char*)buffer;
 
 	data.msgs = &message;
 	data.nmsgs = 1;

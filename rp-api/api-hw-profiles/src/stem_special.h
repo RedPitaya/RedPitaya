@@ -18,6 +18,6 @@
 #ifndef RP_HW_PROFILES_STEM_SPECIAL_H
 #define RP_HW_PROFILES_STEM_SPECIAL_H
 
-profiles_t* getProfile_STEM_125_14_v1_0();
+profiles_t* getProfile_STEM_SPECIAL();
 
 #endif
