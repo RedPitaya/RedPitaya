@@ -393,10 +393,10 @@ int calib_GetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone){
             fprintf(stderr,"[Error:calib_GetEEPROM] Err: %d\n",res);
             return res;
         }
+        model = g_model;
     }else{
         model = g_model;
     }
-
     uint16_t size = 0;
     switch (model)
     {

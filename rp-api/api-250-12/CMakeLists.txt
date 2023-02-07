@@ -80,6 +80,7 @@ if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-i2c-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-i2c-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-i2c)
     target_sources(${PROJECT_NAME}-i2c-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
+    target_link_libraries(${PROJECT_NAME}-i2c-shared i2c)
 
     add_library(${PROJECT_NAME}-spi-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-spi-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-spi)
