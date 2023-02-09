@@ -132,7 +132,7 @@ FPGA_AXI4LITE=
 FPGA_BAREBONE=
 
 # project fpga for build uboot
-FPGA_UBOOT=9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+FPGA_UBOOT=dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 
 ifeq ($(STREAMING),MASTER)
@@ -141,13 +141,13 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: stream_app classic logic v0.94 mercury axi4lite barebones
 
-		FPGA_STREAM_APP = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_CLASSIC 	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_LOGIC	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_0_94	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_MERCURY	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_AXI4LITE	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_BAREBONE = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+		FPGA_STREAM_APP = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_CLASSIC 	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_LOGIC	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_0_94	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_MERCURY	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_AXI4LITE	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_BAREBONE = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 		FPGA_MODEL = Z10
 		DTS_PATH = dts
@@ -158,9 +158,9 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: v0.94 stream_app
 
-		FPGA_STREAM_APP = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_0_94	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_BAREBONE = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+		FPGA_STREAM_APP = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_0_94	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_BAREBONE = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 		FPGA_MODEL = Z20
 		DTS_PATH = dts
@@ -172,13 +172,13 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: stream_app classic logic v0.94 mercury axi4lite
 
-		FPGA_STREAM_APP = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_CLASSIC 	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_LOGIC	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_0_94	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_MERCURY	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_AXI4LITE	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_BAREBONE = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+		FPGA_STREAM_APP = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_CLASSIC 	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_LOGIC	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_0_94	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_MERCURY	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_AXI4LITE	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_BAREBONE = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 		FPGA_MODEL = Z20_14
 		DTS_PATH = dts
@@ -190,8 +190,8 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: v0.94
 
-		FPGA_0_94	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_BAREBONE = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+		FPGA_0_94	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_BAREBONE = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 		FPGA_MODEL = Z20_4
 		DTS_PATH = dts
@@ -203,8 +203,8 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: v0.94
 
-		FPGA_0_94	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_BAREBONE = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+		FPGA_0_94	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_BAREBONE = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 		FPGA_MODEL = Z10_4_test
 		DTS_PATH = dts
@@ -216,10 +216,10 @@ ifeq ($(STREAMING),MASTER)
 
 		# Used in board: stream_app_250 v0.94_250 logic_250
 
-		FPGA_STREAM_APP_250 = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_0_94_250	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_LOGIC_250	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_BAREBONE_250 = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+		FPGA_STREAM_APP_250 = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_0_94_250	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_LOGIC_250	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_BAREBONE_250 = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 
 		FPGA_MODEL = Z20_250
@@ -235,10 +235,10 @@ ifeq ($(STREAMING),SLAVE)
 
 		# Used in board: stream_app logic v0.94
 
-		FPGA_STREAM_APP = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_LOGIC	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_0_94	= 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
-		FPGA_BAREBONE = 9400f53a2f3dfd955cbeacbbe95831bb6caa3cdb
+		FPGA_STREAM_APP = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_LOGIC	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_0_94	= dacabe3bc78b758a6398c9cd13f1f6e660a14c39
+		FPGA_BAREBONE = dacabe3bc78b758a6398c9cd13f1f6e660a14c39
 
 		### NEED for FSBL fpga image
 		### FPGA_PRJ = barebones
@@ -423,8 +423,8 @@ fsbl_ub: $(FSBL)
 
 $(FSBL): $(DEVICETREE_UB)
 	echo $@
-	make -C fpga/uboot PRJ=barebones MODEL=Z10 DEFINES= HWID= DTS_VER=2022.1
-	cp  fpga/uboot/prj/barebones/sdk/fsbl/executable.elf $@
+	make -C fpga/uboot PRJ=fsbl MODEL=Z10 DEFINES= HWID= DTS_VER=2022.1
+	cp  fpga/uboot/prj/fsbl/sdk/fsbl/executable.elf $@
 
 ################################################################################
 # U-Boot build provides: $(UBOOT)
