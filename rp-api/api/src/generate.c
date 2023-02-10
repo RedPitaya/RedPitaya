@@ -531,11 +531,11 @@ int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
 
 int generate_setEnableTempProtection(rp_channel_t channel, bool enable) {
     if (channel == RP_CH_1) {
-        cmn_Debug("generate->AtempProtected",disable ? 1 : 0);
+        cmn_Debug("generate->AtempProtected",enable ? 1 : 0);
         generate->AtempProtected = enable ? 1 : 0;
     }
     else if (channel == RP_CH_2) {
-        cmn_Debug("generate->BtempProtected",disable ? 1 : 0);
+        cmn_Debug("generate->BtempProtected",enable ? 1 : 0);
         generate->BtempProtected = enable ? 1 : 0;
     }
     else {
@@ -555,11 +555,11 @@ int generate_getLatchTempAlarm(rp_channel_t channel, bool *state){
 
 int generate_setLatchTempAlarm(rp_channel_t channel, bool state) {
     if (channel == RP_CH_1) {
-        cmn_Debug("generate->AlatchedTempAlarm",disable ? 1 : 0);
+        cmn_Debug("generate->AlatchedTempAlarm",state ? 1 : 0);
         generate->AlatchedTempAlarm = state ? 1 : 0;
     }
     else if (channel == RP_CH_2) {
-        cmn_Debug("generate->BlatchedTempAlarm",disable ? 1 : 0);
+        cmn_Debug("generate->BlatchedTempAlarm",state ? 1 : 0);
         generate->BlatchedTempAlarm = state ? 1 : 0;
     }
     else {
