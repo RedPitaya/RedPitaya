@@ -19,7 +19,7 @@ profiles_t stem_250_12_120 = {
     .fast_adc[1].fullScale = 1,
 
     .is_dac_present = true,
-    .fast_dac_rate = 125000000,
+    .fast_dac_rate = 250000000,
     .fast_dac_count_channels = 2,
     .fast_dac[0].is_signed = true,
     .fast_dac[0].bits = 14,

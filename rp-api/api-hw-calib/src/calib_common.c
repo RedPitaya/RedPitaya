@@ -456,12 +456,12 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
 
             calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(2.0);
             calib.fast_dac_x1[i].offset = 0;
-            calib.fast_dac_x1[i].baseScale = 2.0;
+            calib.fast_dac_x1[i].baseScale = 1.0;
             calib.fast_dac_x1[i].gainCalc = 1.0;
 
             calib.fast_dac_x5[i].calibValue = calibBaseScaleFromVoltage(2.0);
             calib.fast_dac_x5[i].offset = 0;
-            calib.fast_dac_x5[i].baseScale = 2.0;
+            calib.fast_dac_x5[i].baseScale = 1.0;
             calib.fast_dac_x5[i].gainCalc = 1.0;
 
             calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
@@ -700,19 +700,19 @@ rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param){
         calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
     }
 
-    calib.fast_dac_x1[0].baseScale = 2.0;
+    calib.fast_dac_x1[0].baseScale = 1.0;
     calib.fast_dac_x1[0].calibValue = param->gen_ch1_g_1;
     calib.fast_dac_x1[0].offset = param->gen_ch1_off_1;
 
-    calib.fast_dac_x1[1].baseScale = 2.0;
+    calib.fast_dac_x1[1].baseScale = 1.0;
     calib.fast_dac_x1[1].calibValue = param->gen_ch2_g_1;
     calib.fast_dac_x1[1].offset = param->gen_ch2_off_1;
 
-    calib.fast_dac_x5[0].baseScale = 2.0;
+    calib.fast_dac_x5[0].baseScale = 1.0;
     calib.fast_dac_x5[0].calibValue = param->gen_ch1_g_5;
     calib.fast_dac_x5[0].offset = param->gen_ch1_off_5;
 
-    calib.fast_dac_x5[1].baseScale = 2.0;
+    calib.fast_dac_x5[1].baseScale = 1.0;
     calib.fast_dac_x5[1].calibValue = param->gen_ch2_g_5;
     calib.fast_dac_x5[1].offset = param->gen_ch2_off_5;
 
